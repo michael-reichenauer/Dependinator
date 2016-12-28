@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Dependiator.Common;
-using Dependiator.Features.Diffing;
 using Dependiator.Features.StatusHandling;
 using LibGit2Sharp;
 
@@ -10,7 +9,6 @@ namespace Dependiator.Git
 {
 	internal class GitDiff
 	{
-		private readonly IDiffService diffService;
 		private readonly Diff diff;
 		private readonly Repository repository;
 		private static readonly SimilarityOptions DetectRenames =
@@ -24,9 +22,8 @@ namespace Dependiator.Git
 		{ ContextLines = 10000, Similarity = DetectRenames };
 
 
-		public GitDiff(IDiffService diffService, Diff diff, Repository repository)
+		public GitDiff(Diff diff, Repository repository)
 		{
-			this.diffService = diffService;
 			this.diff = diff;
 			this.repository = repository;
 		}

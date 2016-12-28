@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-
-
-namespace Dependiator.ApplicationHandling
+﻿namespace Dependiator.ApplicationHandling
 {
 	public interface ICommandLine
 	{

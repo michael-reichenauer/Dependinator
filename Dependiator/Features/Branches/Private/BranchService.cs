@@ -9,7 +9,6 @@ using Dependiator.GitModel;
 using Dependiator.MainWindowViews;
 using Dependiator.RepositoryViews;
 using Dependiator.Utils;
-using Dependiator.Common;
 
 
 namespace Dependiator.Features.Branches.Private

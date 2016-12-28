@@ -1,18 +1,14 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Windows;
 using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.Installation;
 using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.Common;
 using Dependiator.Common.MessageDialogs;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.Features.Diffing;
 using Dependiator.MainWindowViews;
 using Dependiator.Utils;
 
@@ -25,7 +21,6 @@ namespace Dependiator
 	public partial class App : Application
 	{
 		private readonly ICommandLine commandLine;
-		private readonly IDiffService diffService;
 		private readonly IThemeService themeService;
 		private readonly IInstaller installer;
 		private readonly Lazy<MainWindow> mainWindow;
@@ -38,14 +33,12 @@ namespace Dependiator
 
 		internal App(
 			ICommandLine commandLine,
-			IDiffService diffService,
 			IThemeService themeService,
 			IInstaller installer,
 			Lazy<MainWindow> mainWindow,
 			WorkingFolder workingFolder)
 		{
 			this.commandLine = commandLine;
-			this.diffService = diffService;
 			this.themeService = themeService;
 			this.installer = installer;
 			this.mainWindow = mainWindow;

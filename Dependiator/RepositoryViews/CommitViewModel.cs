@@ -107,9 +107,6 @@ namespace Dependiator.RepositoryViews
 
 
 		public Command ToggleDetailsCommand => Command(repositoryCommands.ToggleCommitDetails);
-		public Command ShowCommitDiffCommand => Command(
-			() => repositoryCommands.ShowDiff(
-				Commit.IsVirtual && !Commit.IsUncommitted ? Commit.FirstParent : Commit));
 
 		public Command SetCommitBranchCommand => Command(
 			() => commitsService.EditCommitBranchAsync(Commit));

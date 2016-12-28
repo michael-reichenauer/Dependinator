@@ -6,7 +6,6 @@ using Dependiator.ApplicationHandling;
 using Dependiator.Common;
 using Dependiator.Common.MessageDialogs;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.Features.Diffing;
 using Dependiator.Git;
 using Dependiator.GitModel;
 using Dependiator.RepositoryViews;
@@ -19,7 +18,6 @@ namespace Dependiator.Features.Commits.Private
 	internal class CommitDialogViewModel : ViewModel
 	{
 		private readonly ICommitsService commitsService;
-		private readonly IDiffService diffService;
 		private readonly IThemeService themeService;
 		private readonly IMessage message;
 		private readonly bool isMerging;
@@ -34,7 +32,6 @@ namespace Dependiator.Features.Commits.Private
 		public CommitDialogViewModel(
 			ICommitsService commitsService,
 			WorkingFolder workingFolder,
-			IDiffService diffService, 
 			IThemeService themeService,
 			IMessage message,
 			BranchName branchName,
@@ -45,7 +42,6 @@ namespace Dependiator.Features.Commits.Private
 			CommitFiles = files.ToList();
 
 			this.commitsService = commitsService;
-			this.diffService = diffService;
 			this.themeService = themeService;
 			this.message = message;
 			this.isMerging = isMerging;
@@ -80,8 +76,6 @@ namespace Dependiator.Features.Commits.Private
 		public Command<Window> OkCommand => Command<Window>(SetOK);
 
 		public Command<Window> CancelCommand => Command<Window>(w => w.DialogResult = false);
-
-		public Command ShowUncommittedDiffCommand => AsyncCommand(commitsService.ShowUncommittedDiffAsync);
 
 		public Command<string> UndoUncommittedFileCommand => Command<string>(UndoUncommittedFile);
 
@@ -158,7 +152,7 @@ namespace Dependiator.Features.Commits.Private
 
 		private CommitFileViewModel ToCommitFileViewModel(string workingFolder, CommitFile file)
 		{
-			return new CommitFileViewModel(diffService, themeService, file, UndoUncommittedFileCommand)
+			return new CommitFileViewModel(themeService, file, UndoUncommittedFileCommand)
 			{
 				WorkingFolder = workingFolder,
 				Id = CommitSha.Uncommitted,

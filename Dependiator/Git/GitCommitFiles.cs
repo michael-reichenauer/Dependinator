@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dependiator.Features.Diffing;
 using LibGit2Sharp;
 
 
@@ -9,16 +7,13 @@ namespace Dependiator.Git
 {
 	internal class GitCommitFiles
 	{
-		private readonly IDiffService diffService;
-
 		public string Id { get; set; }
 
 		public IReadOnlyList<GitFile> Files { get; set; }
 
 
-		public GitCommitFiles(IDiffService diffService, string commitId, TreeChanges treeChanges)
+		public GitCommitFiles(string commitId, TreeChanges treeChanges)
 		{
-			this.diffService = diffService;
 			Id = commitId;
 			if (treeChanges == null)
 			{
@@ -39,9 +34,8 @@ namespace Dependiator.Git
 
 
 
-		public GitCommitFiles(IDiffService diffService, string commitId, ConflictCollection conflicts)
+		public GitCommitFiles(string commitId, ConflictCollection conflicts)
 		{
-			this.diffService = diffService;
 			Id = commitId;
 
 			Files = conflicts
@@ -51,9 +45,8 @@ namespace Dependiator.Git
 
 
 
-		public GitCommitFiles(IDiffService diffService, string commitId, RepositoryStatus status, ConflictCollection conflicts)
+		public GitCommitFiles(string commitId, RepositoryStatus status, ConflictCollection conflicts)
 		{
-			this.diffService = diffService;
 			Id = commitId;
 			if (status == null)
 			{
@@ -130,15 +123,12 @@ namespace Dependiator.Git
 			List<GitFile> untracked = new List<GitFile>();
 
 			// When there are conflicts, tools create temp files like these, lets filter them. 
-			IReadOnlyList<string> tempNames = diffService.GetAllTempNames();
+			
 			foreach (StatusEntry statusEntry in status.Untracked)
 			{
 				string filePath = statusEntry.FilePath;
 
-				if (!tempNames.Any(name => -1 != filePath.IndexOf($".{name}.", StringComparison.Ordinal)))
-				{
-					untracked.Add(new GitFile(filePath, null, null, GitFileStatus.Added));
-				}
+				untracked.Add(new GitFile(filePath, null, null, GitFileStatus.Added));
 			}
 
 			return untracked;

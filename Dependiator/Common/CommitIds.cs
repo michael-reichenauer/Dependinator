@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using Dependiator.Utils;
-
-
-namespace Dependiator.Common
+﻿namespace Dependiator.Common
 {
 	//internal static class CommitIds
 	//{

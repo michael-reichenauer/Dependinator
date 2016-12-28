@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Dependiator.Common;
 using Dependiator.Common.MessageDialogs;
 using Dependiator.Common.ProgressHandling;
-using Dependiator.Features.Diffing;
 using Dependiator.Features.StatusHandling;
 using Dependiator.Git;
 using Dependiator.GitModel;
@@ -30,7 +29,6 @@ namespace Dependiator.Features.Commits.Private
 		private readonly IRepositoryCommands repositoryCommands;
 		private readonly Func<SetBranchPromptDialog> setBranchPromptDialogProvider;
 		private readonly IGitCommitsService gitCommitsService;
-		private readonly IDiffService diffService;
 		private readonly IRepositoryMgr repositoryMgr;
 		private readonly IProgressService progress;
 		private readonly IStatusService statusService;
@@ -41,7 +39,6 @@ namespace Dependiator.Features.Commits.Private
 			IRepositoryCommands repositoryCommands,
 			Func<SetBranchPromptDialog> setBranchPromptDialogProvider,
 			IGitCommitsService gitCommitsService,
-			IDiffService diffService,
 			IRepositoryMgr repositoryMgr,
 			IProgressService progressService,
 			IStatusService statusService,
@@ -57,7 +54,6 @@ namespace Dependiator.Features.Commits.Private
 			this.repositoryCommands = repositoryCommands;
 			this.setBranchPromptDialogProvider = setBranchPromptDialogProvider;
 			this.gitCommitsService = gitCommitsService;
-			this.diffService = diffService;
 			this.repositoryMgr = repositoryMgr;
 			this.progress = progressService;
 			this.statusService = statusService;
@@ -230,18 +226,6 @@ namespace Dependiator.Features.Commits.Private
 
 				message.ShowWarning(text);
 			}
-		}
-
-
-		public async Task ShowUncommittedDiffAsync()
-		{
-			if (repositoryMgr.Repository.UnComitted == null)
-			{
-				message.ShowInfo("There are no uncommitted changes");
-				return;
-			}
-
-			await diffService.ShowDiffAsync(CommitSha.Uncommitted);
 		}
 
 

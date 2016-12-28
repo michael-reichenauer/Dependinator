@@ -1,5 +1,4 @@
 using System.Linq;
-using Dependiator.Common;
 
 
 namespace Dependiator.GitModel.Private

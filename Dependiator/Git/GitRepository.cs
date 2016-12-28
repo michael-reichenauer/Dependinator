@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Dependiator.Common;
-using Dependiator.Features.Diffing;
 using Dependiator.Utils;
-using Dependiator.GitModel.Private;
 using LibGit2Sharp;
 
 
@@ -16,7 +14,6 @@ namespace Dependiator.Git
 	{
 		// string emptyTreeSha = "4b825dc642cb6eb9a060e54bf8d69288fbee4904";;
 
-		private readonly IDiffService diffService;
 		private readonly string workingFolder;
 		private readonly Repository repository;
 
@@ -30,19 +27,17 @@ namespace Dependiator.Git
 
 
 		private GitRepository(
-			IDiffService diffService,
 			string workingFolder, 
 			Repository repository)
 		{
-			this.diffService = diffService;
 			this.workingFolder = workingFolder;
 			this.repository = repository;
 		}
 
 
-		public static GitRepository Open(IDiffService diffService, string folder)
+		public static GitRepository Open(string folder)
 		{
-			return new GitRepository(diffService, folder, new Repository(folder));
+			return new GitRepository(folder, new Repository(folder));
 		}
 
 
@@ -63,7 +58,7 @@ namespace Dependiator.Git
 
 		public GitBranch Head => new GitBranch(repository.Head, repository);
 
-		public GitDiff Diff => new GitDiff(diffService, repository.Diff, repository);
+		public GitDiff Diff => new GitDiff(repository.Diff, repository);
 
 		public string UserName => repository.Config.GetValueOrDefault<string>("user.name");
 

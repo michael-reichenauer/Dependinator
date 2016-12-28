@@ -3,7 +3,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Dependiator.ApplicationHandling;
-using Dependiator.Features.Diffing;
 using Dependiator.Utils;
 using LibGit2Sharp;
 
@@ -13,15 +12,13 @@ namespace Dependiator.Git.Private
 	internal class RepoCaller : IRepoCaller
 	{
 		private readonly Lazy<WorkingFolder> lazyWorkingFolder;
-		private readonly Lazy<IDiffService> diffService;
+	
 
 
 		public RepoCaller(
-			Lazy<WorkingFolder> lazyWorkingFolder,
-			Lazy<IDiffService> diffService)
+			Lazy<WorkingFolder> lazyWorkingFolder)
 		{
 			this.lazyWorkingFolder = lazyWorkingFolder;
-			this.diffService = diffService;
 		}
 
 
@@ -34,7 +31,7 @@ namespace Dependiator.Git.Private
 			Log.Debug($"Start {memberName} in {workingFolder} ...");
 			try
 			{
-				using (GitRepository gitRepository = GitRepository.Open(diffService.Value, workingFolder))
+				using (GitRepository gitRepository = GitRepository.Open(workingFolder))
 				{
 					doAction(gitRepository);
 
@@ -166,7 +163,7 @@ namespace Dependiator.Git.Private
 			Log.Debug($"Start {memberName} in {workingFolder} ...");
 			try
 			{
-				using (GitRepository gitRepository = GitRepository.Open(diffService.Value, workingFolder))
+				using (GitRepository gitRepository = GitRepository.Open(workingFolder))
 				{
 					T functionResult = doFunction(gitRepository);
 
@@ -244,7 +241,7 @@ namespace Dependiator.Git.Private
 			Log.Debug($"Start {memberName} in {workingFolder} ...");
 			try
 			{
-				using (GitRepository gitRepository = GitRepository.Open(diffService.Value, workingFolder))
+				using (GitRepository gitRepository = GitRepository.Open(workingFolder))
 				{
 					R result = doFunction(gitRepository);
 
@@ -365,7 +362,7 @@ namespace Dependiator.Git.Private
 				Log.Debug($"{memberName} in {workingFolder} ...");
 				try
 				{
-					using (GitRepository gitRepository = GitRepository.Open(diffService.Value, workingFolder))
+					using (GitRepository gitRepository = GitRepository.Open(workingFolder))
 					{
 						T functionResult = await doFunction(gitRepository);
 

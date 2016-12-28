@@ -6,7 +6,6 @@ namespace Dependiator.Features.Commits
 {
 	internal interface ICommitsService
 	{
-		Task ShowUncommittedDiffAsync();
 		Task UndoUncommittedFileAsync(string path);
 		Task CommitChangesAsync();
 		Task UnCommitAsync(Commit commit);

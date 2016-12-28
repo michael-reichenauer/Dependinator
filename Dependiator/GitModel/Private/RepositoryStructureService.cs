@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dependiator.Common;
-using Dependiator.Features.Diffing;
 using Dependiator.Features.StatusHandling;
 using Dependiator.Git;
 using Dependiator.Utils;
@@ -20,7 +19,6 @@ namespace Dependiator.GitModel.Private
 		private readonly IBranchHierarchyService branchHierarchyService;
 		private readonly ITagService tagService;
 		private readonly ICommitsService commitsService;
-		private readonly IDiffService diffService;
 
 
 
@@ -31,8 +29,7 @@ namespace Dependiator.GitModel.Private
 			ICommitBranchNameService commitBranchNameService,
 			IBranchHierarchyService branchHierarchyService,
 			ITagService tagService,
-			ICommitsService commitsService,
-			IDiffService diffService)
+			ICommitsService commitsService)
 		{
 			this.branchService = branchService;
 			this.statusService = statusService;
@@ -41,7 +38,6 @@ namespace Dependiator.GitModel.Private
 			this.branchHierarchyService = branchHierarchyService;
 			this.tagService = tagService;
 			this.commitsService = commitsService;
-			this.diffService = diffService;
 		}
 
 
@@ -85,7 +81,7 @@ namespace Dependiator.GitModel.Private
 			Timing t = new Timing();
 			string gitRepositoryPath = repository.WorkingFolder;
 
-			using (GitRepository gitRepository = GitRepository.Open(diffService, gitRepositoryPath))
+			using (GitRepository gitRepository = GitRepository.Open(gitRepositoryPath))
 			{
 				repository.Status = status ?? statusService.GetStatus();
 				t.Log("Got status");

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Windows.Media;
 using Dependiator.Git;
-using Dependiator.GitModel;
 
 
 namespace Dependiator.Common.ThemeHandling

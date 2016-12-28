@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dependiator.ApplicationHandling;
-using Dependiator.Features.Diffing;
 using Dependiator.Git;
 using Dependiator.Git.Private;
 using Dependiator.Utils;
@@ -14,8 +13,7 @@ namespace Dependiator.Features.StatusHandling.Private
 {
 	[SingleInstance]
 	internal class GitStatusService : IGitStatusService
-	{
-		public IDiffService gitDiffService { get; set; }
+	{		
 		private static readonly StatusOptions StatusOptions =
 			new StatusOptions { DetectRenamesInWorkDir = true, DetectRenamesInIndex = true };
 
@@ -26,14 +24,12 @@ namespace Dependiator.Features.StatusHandling.Private
 
 		public GitStatusService(
 			WorkingFolder workingFolder,
-			IDiffService gitDiffService,
 			IRepoCaller repoCaller)
 		{
 			this.workingFolder = workingFolder;
 			this.repoCaller = repoCaller;
-			this.gitDiffService = gitDiffService;
 
-			tempNames = gitDiffService.GetAllTempNames();
+			tempNames = new string[0];
 		}
 
 

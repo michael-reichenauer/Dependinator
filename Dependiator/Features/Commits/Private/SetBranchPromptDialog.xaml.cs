@@ -4,7 +4,6 @@ using System.Windows;
 using System.Windows.Input;
 using Dependiator.Git;
 using Dependiator.MainWindowViews;
-using Log = Dependiator.Utils.Log;
 
 
 namespace Dependiator.Features.Commits.Private

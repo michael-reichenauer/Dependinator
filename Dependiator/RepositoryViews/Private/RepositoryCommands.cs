@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using Dependiator.Git;
 using Dependiator.GitModel;
 
@@ -30,8 +29,6 @@ namespace Dependiator.RepositoryViews.Private
 
 		public void ShowBranch(Branch branch) => viewModel.ShowBranch(branch);
 		public void ShowCurrentBranch() => viewModel.ShowCurrentBranch();
-		public void ShowDiff(Commit commit) => viewModel.ShowDiff(commit);
-		public Task ShowSelectedDiffAsync() => viewModel.ShowSelectedDiffAsync();
 
 		public Commit UnCommited => viewModel.UnCommited;
 

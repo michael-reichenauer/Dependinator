@@ -58,7 +58,7 @@ namespace Dependiator.RepositoryViews.Private
 		{
 			Timing t = new Timing();
 
-			List<Branch> specifiedBranches = repositoryViewModel.SpecifiedBranches.ToList();
+			List<Branch> specifiedBranches = new List<Branch>();
 
 			foreach (BranchName name in repositoryViewModel.SpecifiedBranchNames)
 			{

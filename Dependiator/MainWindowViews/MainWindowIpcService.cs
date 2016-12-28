@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows;
-using Dependiator.ApplicationHandling;
 using Dependiator.Features.Commits;
 using Dependiator.Utils;
 

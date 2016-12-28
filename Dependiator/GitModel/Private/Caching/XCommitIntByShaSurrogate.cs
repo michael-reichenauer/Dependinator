@@ -1,10 +1,4 @@
-﻿using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.Serialization;
-using Dependiator.Common;
-
-
-namespace Dependiator.GitModel.Private.Caching
+﻿namespace Dependiator.GitModel.Private.Caching
 {
 	//[DataContract, TypeConverter(typeof(CommitIntBySha))]
 	//internal class XCommitIntByShaSurrogate

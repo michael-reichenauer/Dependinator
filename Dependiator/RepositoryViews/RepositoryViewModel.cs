@@ -12,7 +12,6 @@ using Dependiator.Common.MessageDialogs;
 using Dependiator.Common.ProgressHandling;
 using Dependiator.Common.ThemeHandling;
 using Dependiator.Features.Commits;
-using Dependiator.Features.Diffing;
 using Dependiator.Git;
 using Dependiator.GitModel;
 using Dependiator.RepositoryViews.Private;
@@ -39,7 +38,6 @@ namespace Dependiator.RepositoryViews
 
 		private readonly IThemeService themeService;
 		private readonly IMessage message;
-		private readonly IDiffService diffService;
 		private readonly WorkingFolder workingFolder;
 		private readonly ICommandLine commandLine;
 		private readonly ICommitsService commitsService;
@@ -67,13 +65,12 @@ namespace Dependiator.RepositoryViews
 
 		//public string WorkingFolder { get; set; }
 
-		public IReadOnlyList<BranchName> SpecifiedBranchNames { get; set; }
+		public IReadOnlyList<BranchName> SpecifiedBranchNames { get; set; } = new List<BranchName>();
 		public ZoomableCanvas Canvas { get; set; }
 
 
 		public RepositoryViewModel(
 			WorkingFolder workingFolder,
-			IDiffService diffService,
 			ICommandLine commandLine,
 			IViewModelService viewModelService,
 			ICommitsService commitsService,
@@ -85,7 +82,6 @@ namespace Dependiator.RepositoryViews
 			Func<CommitDetailsViewModel> commitDetailsViewModelProvider)
 		{
 			this.workingFolder = workingFolder;
-			this.diffService = diffService;
 			this.commandLine = commandLine;
 			this.viewModelService = viewModelService;
 			this.commitsService = commitsService;
@@ -674,64 +670,6 @@ namespace Dependiator.RepositoryViews
 		public void ShowCurrentBranch()
 		{
 			viewModelService.ShowBranch(this, repositoryService.Repository.CurrentBranch);
-		}
-
-
-		public void ShowDiff(Commit commit)
-		{
-			if (ListBox.SelectedItems.Count < 2)
-			{
-				diffService.ShowDiffAsync(commit.RealCommitSha).RunInBackground();
-			}
-			else
-			{
-				CommitViewModel topCommit = ListBox.SelectedItems[0] as CommitViewModel;
-				int bottomIndex = ListBox.SelectedItems.Count - 1;
-				CommitViewModel bottomCommit = ListBox.SelectedItems[bottomIndex] as CommitViewModel;
-
-				if (topCommit != null && bottomCommit != null)
-				{
-					// Selection was made with ctrl-click. Lets take top and bottom commits as range
-					// even if there are more commits in the middle
-					CommitSha id1 = topCommit.Commit.RealCommitSha;
-					CommitSha id2 = bottomCommit.Commit.HasFirstParent
-						? bottomCommit.Commit.FirstParent.RealCommitSha
-						: bottomCommit.Commit.RealCommitSha;
-
-					diffService.ShowDiffRangeAsync(id1, id2).RunInBackground();
-				}
-				else if (topCommit != null)
-				{
-					// Selection was probably done with shift-click. Fore some reason SelectedItems
-					// only contains first selected item, other items are null, but there are one null
-					// item for each selected item plus one extra.
-					// Find the range by iterating first parents of the top commit (selected items count)
-					Commit current = topCommit.Commit;
-					for (int i = 0; i < bottomIndex; i++)
-					{
-						if (!current.HasFirstParent)
-						{
-							break;
-						}
-						current = current.FirstParent;
-					}
-
-					CommitSha id1 = topCommit.Commit.RealCommitSha;
-					CommitSha id2 = current.RealCommitSha;
-					diffService.ShowDiffRangeAsync(id1, id2).RunInBackground(); ;
-				}
-			}
-		}
-
-
-		public async Task ShowSelectedDiffAsync()
-		{
-			CommitViewModel commit = SelectedItem as CommitViewModel;
-
-			if (commit != null)
-			{
-				await diffService.ShowDiffAsync(commit.Commit.RealCommitSha);
-			}
 		}
 
 

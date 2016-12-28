@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using Dependiator.Common;
-using Dependiator.GitModel.Private;
 
 
 namespace Dependiator.Git
