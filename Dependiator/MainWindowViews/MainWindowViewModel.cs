@@ -9,7 +9,6 @@ using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Common;
 using Dependiator.Common.MessageDialogs;
-using Dependiator.Features.Commits;
 using Dependiator.Features.Remote;
 using Dependiator.Git;
 using Dependiator.RepositoryViews;
@@ -35,7 +34,6 @@ namespace Dependiator.MainWindowViews
 		private readonly IMessage message;
 		private readonly IRepositoryCommands repositoryCommands;
 		private readonly IRemoteService remoteService;
-		private readonly ICommitsService commitsService;
 
 		private bool isLoaded = false;
 
@@ -46,7 +44,6 @@ namespace Dependiator.MainWindowViews
 			IMessage message,
 			IRepositoryCommands repositoryCommands,
 			IRemoteService remoteService,
-			ICommitsService commitsService,
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
 			MainWindowIpcService mainWindowIpcService,
@@ -57,7 +54,6 @@ namespace Dependiator.MainWindowViews
 			this.message = message;
 			this.repositoryCommands = repositoryCommands;
 			this.remoteService = remoteService;
-			this.commitsService = commitsService;
 			this.latestVersionService = latestVersionService;
 			this.mainWindowService = mainWindowService;
 			this.mainWindowIpcService = mainWindowIpcService;
@@ -138,8 +134,6 @@ namespace Dependiator.MainWindowViews
 	
 		public Command ShowCurrentBranchCommand => Command(() => repositoryCommands.ShowCurrentBranch());
 
-		public Command CommitCommand => AsyncCommand(commitsService.CommitChangesAsync);
-
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
 
 		public Command SelectWorkingFolderCommand => AsyncCommand(SelectWorkingFolderAsync);
@@ -164,12 +158,7 @@ namespace Dependiator.MainWindowViews
 
 		public Command ClearFilterCommand => Command(ClearFilter);
 
-		public Command SpecifyCommitBranchCommand => AsyncCommand(SpecifyCommitBranchAsync);
-
 		public Command SearchCommand => Command(Search);
-
-		public Command CleanWorkingFolderCommand => AsyncCommand(
-			commitsService.CleanWorkingFolderAsync);
 
 
 		public async Task FirstLoadAsync()
@@ -429,16 +418,6 @@ namespace Dependiator.MainWindowViews
 				{
 					Log.Debug($"User selected an invalid working folder: {dialog.SelectedPath}");
 				}
-			}
-		}
-
-
-		private async Task SpecifyCommitBranchAsync()
-		{
-			var commit = RepositoryViewModel.SelectedItem as CommitViewModel;
-			if (commit != null)
-			{
-				await commit.SetCommitBranchCommand.ExecuteAsync();
 			}
 		}
 	}

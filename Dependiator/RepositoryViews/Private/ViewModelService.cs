@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Media;
 using Dependiator.Common;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.Features.Commits;
 using Dependiator.Git;
 using Dependiator.GitModel;
 using Dependiator.Utils;
@@ -22,7 +21,6 @@ namespace Dependiator.RepositoryViews.Private
 	{
 		private static readonly int CommitHeight = Converters.ToY(1);
 
-		private readonly ICommitsService commitsService;
 		private readonly IThemeService themeService;
 		private readonly IRepositoryMgr repositoryMgr;
 		private readonly IRepositoryCommands repositoryCommands;
@@ -32,13 +30,11 @@ namespace Dependiator.RepositoryViews.Private
 		private bool isFirstTime = true;
 
 		public ViewModelService(
-			ICommitsService commitsService,
 			IThemeService themeService,
 			IRepositoryMgr repositoryMgr,
 			IRepositoryCommands repositoryCommands,
 			Func<BranchViewModel> branchViewModelProvider)
 		{
-			this.commitsService = commitsService;
 			this.themeService = themeService;
 			this.repositoryMgr = repositoryMgr;
 			this.repositoryCommands = repositoryCommands;
@@ -492,7 +488,7 @@ namespace Dependiator.RepositoryViews.Private
 			SetNumberOfItems(
 				commits, 
 				sourceCommits.Count,
-				i => new CommitViewModel(themeService, repositoryCommands, commitsService));
+				i => new CommitViewModel(themeService, repositoryCommands));
 
 			commitsById.Clear();
 			int graphWidth = repositoryViewModel.GraphWidth;

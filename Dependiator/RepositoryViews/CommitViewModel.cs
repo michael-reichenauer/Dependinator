@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Media;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.Features.Commits;
 using Dependiator.Git;
 using Dependiator.GitModel;
 using Dependiator.Utils.UI;
@@ -13,19 +12,16 @@ namespace Dependiator.RepositoryViews
 	{
 		private readonly IThemeService themeService;
 		private readonly IRepositoryCommands repositoryCommands;
-		private readonly ICommitsService commitsService;
 
 		private int windowWidth;
 
 
 		public CommitViewModel(
 			IThemeService themeService,
-			IRepositoryCommands repositoryCommands,
-			ICommitsService commitsService)
+			IRepositoryCommands repositoryCommands)
 		{
 			this.themeService = themeService;
 			this.repositoryCommands = repositoryCommands;
-			this.commitsService = commitsService;
 		}
 
 
@@ -44,7 +40,6 @@ namespace Dependiator.RepositoryViews
 		public string CommitBranchName => Commit.Branch.Name;
 		public bool IsCurrent => Commit.IsCurrent;
 		public bool IsUncommitted => Commit.IsUncommitted;
-		public bool CanUncommit => UncommitCommand.CanExecute();
 		public bool IsShown => BranchTips == null;
 		public string BranchToolTip { get; set; }
 
@@ -103,20 +98,6 @@ namespace Dependiator.RepositoryViews
 
 
 		public Command ToggleDetailsCommand => Command(repositoryCommands.ToggleCommitDetails);
-
-		public Command SetCommitBranchCommand => Command(
-			() => commitsService.EditCommitBranchAsync(Commit));
-
-		public Command UndoUncommittedChangesCommand => AsyncCommand(
-			() => commitsService.UndoUncommittedChangesAsync());
-
-		public Command CleanWorkingFolderCommand => AsyncCommand(
-			commitsService.CleanWorkingFolderAsync);
-
-		public Command UncommitCommand => AsyncCommand(
-		 () => commitsService.UnCommitAsync(Commit), () => commitsService.CanUnCommit(Commit));
-
-
 
 
 		// Values used by other properties

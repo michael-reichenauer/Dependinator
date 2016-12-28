@@ -16,12 +16,10 @@ namespace Dependiator.RepositoryViews
 
 		public CommitFileViewModel(
 			IThemeService themeService,
-			CommitFile file,
-			Command<string> undoUncommittedFileCommand)
+			CommitFile file)
 		{
 			this.themeService = themeService;
 			this.file = file;
-			UndoUncommittedFileCommand = undoUncommittedFileCommand.With(() => Name);
 		}
 
 
@@ -53,10 +51,5 @@ namespace Dependiator.RepositoryViews
 			? themeService.Theme.TextBrush : themeService.Theme.ConflictBrush;
 
 		public bool IsUncommitted => HasNotConflicts && Id == CommitSha.Uncommitted;
-
-
-		public Command UndoUncommittedFileCommand { get; }
-
-
 	}
 }

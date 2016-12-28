@@ -155,12 +155,6 @@
     <Compile Include="RepositoryViews\Private\RepositoryCommands.cs" />
     <Compile Include="Utils\AsyncLock.cs" />
     <Compile Include="Utils\DependencyInjection.cs" />
-    <Compile Include="Features\Commits\Private\CommitDialog.xaml.cs">
-      <DependentUpon>CommitDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Features\Commits\Private\CommitDialogViewModel.cs" />
-    <Compile Include="Features\Commits\Private\CommitsService.cs" />
-    <Compile Include="Features\Commits\ICommitsService.cs" />
     <Compile Include="Features\StatusHandling\Private\FolderMonitorService.cs" />
     <Compile Include="Git\BranchName.cs" />
     <Compile Include="Git\GitDivergence.cs" />
@@ -225,9 +219,6 @@
     <Compile Include="Utils\UI\BusyProgress.cs" />
     <Compile Include="Utils\UI\HideableGridSplitter.cs" />
     <Compile Include="Utils\Compare.cs" />
-    <Compile Include="Features\Commits\Private\SetBranchPromptDialog.xaml.cs">
-      <DependentUpon>SetBranchPromptDialog.xaml</DependentUpon>
-    </Compile>
     <Compile Include="GitModel\CommitFile.cs" />
     <Compile Include="RepositoryViews\CommitViewModel.cs" />
     <Compile Include="RepositoryViews\Converters.cs" />
@@ -334,19 +325,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Features\Commits\Private\CommitDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="RepositoryViews\CommitDetailsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="RepositoryViews\RepositoryView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Features\Commits\Private\SetBranchPromptDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -11,7 +11,6 @@ using Dependiator.Common;
 using Dependiator.Common.MessageDialogs;
 using Dependiator.Common.ProgressHandling;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.Features.Commits;
 using Dependiator.Git;
 using Dependiator.GitModel;
 using Dependiator.RepositoryViews.Private;
@@ -39,8 +38,6 @@ namespace Dependiator.RepositoryViews
 		private readonly IThemeService themeService;
 		private readonly IMessage message;
 		private readonly WorkingFolder workingFolder;
-		private readonly ICommandLine commandLine;
-		private readonly ICommitsService commitsService;
 		private readonly IProgressService progress;
 
 
@@ -73,7 +70,6 @@ namespace Dependiator.RepositoryViews
 			WorkingFolder workingFolder,
 			ICommandLine commandLine,
 			IViewModelService viewModelService,
-			ICommitsService commitsService,
 			IRepositoryService repositoryService,
 			IGitInfoService gitInfoService,
 			IThemeService themeService,
@@ -82,9 +78,7 @@ namespace Dependiator.RepositoryViews
 			Func<CommitDetailsViewModel> commitDetailsViewModelProvider)
 		{
 			this.workingFolder = workingFolder;
-			this.commandLine = commandLine;
 			this.viewModelService = viewModelService;
-			this.commitsService = commitsService;
 			this.repositoryService = repositoryService;
 
 			this.gitInfoService = gitInfoService;

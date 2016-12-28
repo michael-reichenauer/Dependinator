@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Media;
 using Dependiator.Common;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.Features.Commits;
 using Dependiator.Git;
 using Dependiator.GitModel;
 using Dependiator.Utils.UI;
@@ -18,7 +17,6 @@ namespace Dependiator.RepositoryViews
 	internal class CommitDetailsViewModel : ViewModel
 	{
 		private readonly IThemeService themeService;
-		private readonly ICommitsService commitsService;
 		private readonly IGitCommitsService gitCommitsService;
 
 		private readonly ObservableCollection<CommitFileViewModel> files =
@@ -30,11 +28,9 @@ namespace Dependiator.RepositoryViews
 
 		public CommitDetailsViewModel(
 			IThemeService themeService,
-			ICommitsService commitsService,
 			IGitCommitsService gitCommitsService)
 		{
 			this.themeService = themeService;
-			this.commitsService = commitsService;
 			this.gitCommitsService = gitCommitsService;
 		}
 
@@ -116,10 +112,6 @@ namespace Dependiator.RepositoryViews
 		public string Tickets => CommitViewModel?.Tickets;
 		public string BranchTips => CommitViewModel?.BranchTips;
 
-		public Command EditBranchCommand => CommitViewModel.SetCommitBranchCommand;
-		public Command<string> UndoUncommittedFileCommand => Command<string>(
-			path => commitsService.UndoUncommittedFileAsync(path));
-
 
 		public override string ToString() => $"{CommitId} {Subject}";
 
@@ -133,7 +125,7 @@ namespace Dependiator.RepositoryViews
 					.OrderBy(f => f.Status, Comparer<GitFileStatus>.Create(Compare))
 					.ThenBy(f => f.Path)
 					.ForEach(f => files.Add(
-						new CommitFileViewModel(themeService, f, UndoUncommittedFileCommand)
+						new CommitFileViewModel(themeService, f)
 						{
 							Id = commit.RealCommitSha,
 							Name = f.Path,
