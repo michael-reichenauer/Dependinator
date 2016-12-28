@@ -2,21 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependiator.Common;
-using Dependiator.Features.Branches.Private;
 
 
 namespace Dependiator.GitModel.Private
 {
 	internal class BranchHierarchyService : IBranchHierarchyService
 	{
-		private readonly IGitBranchService gitBranchService;
-
-
-		public BranchHierarchyService(IGitBranchService gitBranchService)
-		{
-			this.gitBranchService = gitBranchService;
-		}
-
 
 		public void SetBranchHierarchy(MRepository repository)
 		{
@@ -31,8 +22,6 @@ namespace Dependiator.GitModel.Private
 			AddEmptyBranchesVirtualTipCommits(repository);
 
 			SetLocalOnlyAhead(repository);
-
-			SetLocalAndRemoteAhead(repository);
 
 			SetBranchHierarchyImpl(repository);
 		}
@@ -280,102 +269,7 @@ namespace Dependiator.GitModel.Private
 		}
 
 
-		private void SetLocalAndRemoteAhead(MRepository repository)
-		{
-			IEnumerable<MBranch> unsynkedBranches = repository.Branches.Values
-				.Where(b => 
-					b.IsActive &&
-					b.IsLocal && 
-					b.IsRemote && 
-					b.LocalTipCommitId != b.RemoteTipCommitId)
-					.ToList();
-
-			foreach (MBranch branch in unsynkedBranches)
-			{
-				MCommit localTipCommit = repository.Commits[branch.LocalTipCommitId];
-				MCommit remoteTipCommit = repository.Commits[branch.RemoteTipCommitId];
-
-				if (localTipCommit.Id == CommitId.Uncommitted)
-				{
-					localTipCommit = localTipCommit.FirstParent;
-				}
-
-				if (gitBranchService.CheckAheadBehind(
-					localTipCommit.Sha, remoteTipCommit.Sha).HasValue(out var div))
-				{
-					CommitSha commonTip = div.CommonId;
-					MCommit commonCommit = repository.Commits[new CommitId(commonTip.Sha)];
-
-					commonCommit
-						.CommitAndFirstAncestors()
-						.Where(c => c.BranchId == branch.Id)
-						.ForEach(c => c.IsCommon = true);
-
-					branch.Commits.ForEach(commit =>
-					{
-						commit.IsLocalAhead = false;
-						commit.IsRemoteAhead = false;
-					});
-
-					if (commonTip != localTipCommit.Sha || 
-						(repository.Commits[branch.LocalTipCommitId].IsUncommitted 
-							&& !repository.Commits[branch.FirstCommitId].IsUncommitted))
-					{
-						MakeLocalBranch(repository, branch, localTipCommit.Id, commonCommit.Id);
-					}
-
-					if (branch.IsLocal)
-					{
-						HashSet<CommitId> marked = new HashSet<CommitId>();
-						int localCount = 0;
-						Stack<MCommit> commits = new Stack<MCommit>();
-						commits.Push(localTipCommit);
-
-						while (commits.Any())
-						{
-							MCommit commit = commits.Pop();
-							if (!marked.Contains(commit.Id) && !commit.IsCommon && commit.Branch == branch)
-							{
-								commit.IsLocalAhead = true;
-								localCount++;
-								marked.Add(commit.Id);
-								commit.Parents
-									.Where(p => p.Branch == branch)
-									.ForEach(p => commits.Push(p));
-							}
-						}
-
-						branch.LocalAheadCount = localCount;
-					}
-
-					if (branch.IsRemote)
-					{
-						HashSet<CommitId> marked = new HashSet<CommitId>();
-						int remoteCount = 0;
-						Stack<MCommit> commits = new Stack<MCommit>();
-						commits.Push(remoteTipCommit);
-
-						while (commits.Any())
-						{
-							MCommit commit = commits.Pop();
-
-							if (!marked.Contains(commit.Id) && !commit.IsCommon && commit.Branch == branch)
-							{
-								commit.IsRemoteAhead = true;
-								remoteCount++;
-								marked.Add(commit.Id);
-							
-								commit.Parents
-									.Where(p => p.Branch == branch)
-									.ForEach(p => commits.Push(p));
-							}
-						}
-
-						branch.RemoteAheadCount = remoteCount;
-					}
-				}
-			}
-		}
+		
 
 
 		private static void SetLocalOnlyAhead(MRepository repository)

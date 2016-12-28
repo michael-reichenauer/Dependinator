@@ -4,7 +4,6 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.Features.Branches;
 using Dependiator.GitModel;
 using Dependiator.Utils.UI;
 
@@ -13,7 +12,6 @@ namespace Dependiator.RepositoryViews
 {
 	internal class BranchViewModel : ViewModel
 	{
-		private readonly IBranchService branchService;
 		private readonly IThemeService themeService;
 		private readonly IRepositoryCommands repositoryCommands;
 
@@ -22,13 +20,10 @@ namespace Dependiator.RepositoryViews
 		private readonly ObservableCollection<BranchItem> childBranches
 			= new ObservableCollection<BranchItem>();
 
-
 		public BranchViewModel(
-			IBranchService branchService,
 			IThemeService themeService,
 			IRepositoryCommands repositoryCommands)
 		{
-			this.branchService = branchService;
 			this.themeService = themeService;
 			this.repositoryCommands = repositoryCommands;
 			this.showBranchCommand = Command<Branch>(repositoryCommands.ShowBranch);
@@ -83,23 +78,6 @@ namespace Dependiator.RepositoryViews
 				return childBranches;
 			}
 		}
-
-		public Command SwitchBranchCommand => Command(
-			() => branchService.SwitchBranchAsync(Branch),
-			() => branchService.CanExecuteSwitchBranch(Branch));
-
-		public Command CreateBranchCommand => Command(
-			() => branchService.CreateBranchAsync(Branch));
-
-		public Command MergeBranchCommand => AsyncCommand(() => branchService.MergeBranchAsync(Branch));
-		public Command DeleteBranchCommand => AsyncCommand(
-			() => branchService.DeleteBranchAsync(Branch), () => branchService.CanDeleteBranch(Branch));
-
-		public Command PublishBranchCommand => Command(() => branchService.PublishBranchAsync(Branch));
-
-		public Command PushBranchCommand => Command(() => branchService.PushBranchAsync(Branch));
-
-		public Command UpdateBranchCommand => Command(() => branchService.UpdateBranchAsync(Branch));
 
 		public Command ChangeColorCommand => Command(() =>
 		{

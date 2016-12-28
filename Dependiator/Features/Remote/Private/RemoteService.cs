@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using Dependiator.Common;
 using Dependiator.Common.MessageDialogs;
 using Dependiator.Common.ProgressHandling;
-using Dependiator.Features.Branches.Private;
 using Dependiator.Features.StatusHandling;
 using Dependiator.Git;
 using Dependiator.Git.Private;
@@ -21,7 +20,6 @@ namespace Dependiator.Features.Remote.Private
 		private readonly IProgressService progress;
 		private readonly IMessage message;
 		private readonly IStatusService statusService;
-		private readonly IGitBranchService gitBranchService;
 		private readonly IGitNetworkService gitNetworkService;
 		private readonly IGitCommitBranchNameService gitCommitBranchNameService;
 
@@ -31,7 +29,6 @@ namespace Dependiator.Features.Remote.Private
 			IProgressService progress,
 			IMessage message,
 			IStatusService statusService,
-			IGitBranchService gitBranchService,
 			IGitNetworkService gitNetworkService,
 			IGitCommitBranchNameService gitCommitBranchNameService)
 		{
@@ -39,7 +36,6 @@ namespace Dependiator.Features.Remote.Private
 			this.progress = progress;
 			this.message = message;
 			this.statusService = statusService;
-			this.gitBranchService = gitBranchService;
 			this.gitNetworkService = gitNetworkService;
 			this.gitCommitBranchNameService = gitCommitBranchNameService;
 		}
@@ -92,7 +88,6 @@ namespace Dependiator.Features.Remote.Private
 				if (result.IsOk && currentBranch.CanBeUpdated)
 				{
 					progress.SetText($"Updating current branch {currentBranch.Name} ...");
-					result = await gitBranchService.MergeCurrentBranchAsync();
 				}
 
 				if (result.IsFaulted)
@@ -128,7 +123,6 @@ namespace Dependiator.Features.Remote.Private
 					R result = await FetchAsync();
 					if (result.IsOk)
 					{
-						result = await gitBranchService.MergeCurrentBranchAsync();
 
 						await FetchAllNotesAsync();
 					}

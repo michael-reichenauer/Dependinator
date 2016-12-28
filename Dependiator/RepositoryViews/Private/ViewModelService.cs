@@ -6,12 +6,10 @@ using System.Windows;
 using System.Windows.Media;
 using Dependiator.Common;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.Features.Branches;
 using Dependiator.Features.Commits;
 using Dependiator.Git;
 using Dependiator.GitModel;
 using Dependiator.Utils;
-using Dependiator.Utils.UI;
 
 
 namespace Dependiator.RepositoryViews.Private
@@ -24,34 +22,27 @@ namespace Dependiator.RepositoryViews.Private
 	{
 		private static readonly int CommitHeight = Converters.ToY(1);
 
-		private readonly IBranchService branchService;
 		private readonly ICommitsService commitsService;
 		private readonly IThemeService themeService;
 		private readonly IRepositoryMgr repositoryMgr;
 		private readonly IRepositoryCommands repositoryCommands;
 
 		private readonly Func<BranchViewModel> branchViewModelProvider;
-		private readonly Command<Branch> deleteBranchCommand;
 
 		private bool isFirstTime = true;
 
 		public ViewModelService(
-			IBranchService branchService,
 			ICommitsService commitsService,
 			IThemeService themeService,
 			IRepositoryMgr repositoryMgr,
 			IRepositoryCommands repositoryCommands,
 			Func<BranchViewModel> branchViewModelProvider)
 		{
-			this.branchService = branchService;
 			this.commitsService = commitsService;
 			this.themeService = themeService;
 			this.repositoryMgr = repositoryMgr;
 			this.repositoryCommands = repositoryCommands;
 			this.branchViewModelProvider = branchViewModelProvider;
-
-			this.deleteBranchCommand = new Command<Branch>(
-				branchService.DeleteBranchAsync, branchService.CanDeleteBranch, nameof(deleteBranchCommand));
 		}
 
 		public void UpdateViewModel(RepositoryViewModel repositoryViewModel)
@@ -128,11 +119,7 @@ namespace Dependiator.RepositoryViews.Private
 			showableBrancheItems.ForEach(b => repositoryViewModel.ShowableBranches.Add(b));
 
 			repositoryViewModel.DeletableBranches.Clear();
-			IEnumerable<Branch> deletableBranches = repositoryMgr.Repository.Branches
-				.Where(b => b.IsActive && b.Name != BranchName.Master);
-			IReadOnlyList<BranchItem> deletableBrancheItems = BranchItem.GetBranches(
-				deletableBranches, deleteBranchCommand);
-			deletableBrancheItems.ForEach(b => repositoryViewModel.DeletableBranches.Add(b));
+					
 
 			UpdateViewModel(repositoryViewModel, branches, commits);
 
@@ -505,7 +492,7 @@ namespace Dependiator.RepositoryViews.Private
 			SetNumberOfItems(
 				commits, 
 				sourceCommits.Count,
-				i => new CommitViewModel(branchService, themeService, repositoryCommands, commitsService));
+				i => new CommitViewModel(themeService, repositoryCommands, commitsService));
 
 			commitsById.Clear();
 			int graphWidth = repositoryViewModel.GraphWidth;

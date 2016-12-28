@@ -1,7 +1,6 @@
 using System.Windows;
 using System.Windows.Media;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.Features.Branches;
 using Dependiator.Features.Commits;
 using Dependiator.Git;
 using Dependiator.GitModel;
@@ -12,7 +11,6 @@ namespace Dependiator.RepositoryViews
 {
 	internal class CommitViewModel : ViewModel
 	{
-		private readonly IBranchService branchService;
 		private readonly IThemeService themeService;
 		private readonly IRepositoryCommands repositoryCommands;
 		private readonly ICommitsService commitsService;
@@ -21,12 +19,10 @@ namespace Dependiator.RepositoryViews
 
 
 		public CommitViewModel(
-			IBranchService branchService,
 			IThemeService themeService,
 			IRepositoryCommands repositoryCommands,
 			ICommitsService commitsService)
 		{
-			this.branchService = branchService;
 			this.themeService = themeService;
 			this.repositoryCommands = repositoryCommands;
 			this.commitsService = commitsService;
@@ -110,16 +106,6 @@ namespace Dependiator.RepositoryViews
 
 		public Command SetCommitBranchCommand => Command(
 			() => commitsService.EditCommitBranchAsync(Commit));
-		public Command SwitchToCommitCommand => Command(
-			() => branchService.SwitchToBranchCommitAsync(Commit),
-			() => branchService.CanExecuteSwitchToBranchCommit(Commit));
-
-		public Command SwitchToBranchCommand => Command(
-			() => branchService.SwitchBranchAsync(Commit.Branch),
-			() => branchService.CanExecuteSwitchBranch(Commit.Branch));
-
-		public Command CreateBranchFromCommitCommand => Command(
-			() => branchService.CreateBranchFromCommitAsync(Commit));
 
 		public Command UndoUncommittedChangesCommand => AsyncCommand(
 			() => commitsService.UndoUncommittedChangesAsync());
