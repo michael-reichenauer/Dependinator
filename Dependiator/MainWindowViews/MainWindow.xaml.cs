@@ -21,7 +21,6 @@ namespace Dependiator.MainWindowViews
 	public partial class MainWindow : Window
 	{
 		private readonly WorkingFolder workingFolder;
-		private readonly ICommandLine commandLine;
 	
 		private readonly DispatcherTimer remoteCheckTimer = new DispatcherTimer();
 
@@ -30,11 +29,9 @@ namespace Dependiator.MainWindowViews
 
 		internal MainWindow(
 			WorkingFolder workingFolder,
-			ICommandLine commandLine,
 			Func<MainWindowViewModel> mainWindowViewModelProvider)
 		{
 			this.workingFolder = workingFolder;
-			this.commandLine = commandLine;
 
 			InitializeComponent();
 	
@@ -204,13 +201,6 @@ namespace Dependiator.MainWindowViews
 			}
 
 			return false;
-		}
-
-
-		private IReadOnlyList<string> RestoreShownBranches()
-		{
-			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
-			return settings.ShownBranches;
 		}
 
 
