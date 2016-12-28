@@ -8,6 +8,7 @@ using System.Windows.Forms;
 using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Common;
+using Dependiator.Common.MessageDialogs;
 using Dependiator.Features.Commits;
 using Dependiator.Features.Remote;
 using Dependiator.Git;
@@ -31,6 +32,7 @@ namespace Dependiator.MainWindowViews
 		private IpcRemotingService ipcRemotingService = null;
 		private readonly WorkingFolder workingFolder;
 		private readonly WindowOwner owner;
+		private readonly IMessage message;
 		private readonly IRepositoryCommands repositoryCommands;
 		private readonly IRemoteService remoteService;
 		private readonly ICommitsService commitsService;
@@ -41,6 +43,7 @@ namespace Dependiator.MainWindowViews
 		internal MainWindowViewModel(
 			WorkingFolder workingFolder,
 			WindowOwner owner,
+			IMessage message,
 			IRepositoryCommands repositoryCommands,
 			IRemoteService remoteService,
 			ICommitsService commitsService,
@@ -51,6 +54,7 @@ namespace Dependiator.MainWindowViews
 		{
 			this.workingFolder = workingFolder;
 			this.owner = owner;
+			this.message = message;
 			this.repositoryCommands = repositoryCommands;
 			this.remoteService = remoteService;
 			this.commitsService = commitsService;
@@ -87,8 +91,9 @@ namespace Dependiator.MainWindowViews
 			get { return Get(); }
 			set
 			{
-				Set(value).Notify(nameof(IsInFilterMode));
-				SetSearchBoxValue(value);
+				message.ShowInfo("Search is not yet implemented.");
+				//Set(value).Notify(nameof(IsInFilterMode));
+				//SetSearchBoxValue(value);
 			}
 		}
 

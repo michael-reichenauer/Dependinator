@@ -26,23 +26,13 @@ namespace Dependiator.MainWindowViews
 
 		public void Activate(string[] args)
 		{
-			CommandLine commandLine = new CommandLine();
-
 			Application.Current.Dispatcher.InvokeAsync(() =>
 			{
 				Application.Current.MainWindow.WindowState = WindowState.Minimized;
 				Application.Current.MainWindow.Activate();
 				Application.Current.MainWindow.WindowState = WindowState.Normal;
 
-				if (commandLine.IsCommitCommand(args))
-				{
-					Log.Usage("Activated and commit");
-					commitsService.CommitChangesAsync().RunInBackground();					
-				}
-				else
-				{
-					Log.Usage("Activated");
-				}
+				Log.Usage("Activated");				
 			});
 		}
 	}

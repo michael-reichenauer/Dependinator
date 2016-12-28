@@ -51,21 +51,6 @@ namespace Dependiator.MainWindowViews
 			Activate();
 
 			RestoreWindowSettings(workingFolder);
-			SetBranchNames();
-		}
-
-
-		private void SetBranchNames()
-		{
-			IReadOnlyList<string> names = commandLine.BranchNames;
-
-			if (!names.Any())
-			{
-				names = RestoreShownBranches();
-			}
-
-			List<BranchName> branchNames = names.Select(name => new BranchName(name)).ToList();
-			viewModel.SpecifiedBranchNames = branchNames;
 		}
 
 

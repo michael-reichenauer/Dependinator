@@ -138,16 +138,13 @@ namespace Dependiator
 
 		private bool IsCommands()
 		{
-			return commandLine.IsShowDiff;
+			return false;
 		}
 
 
 		private void HandleCommands()
 		{
-			if (commandLine.IsShowDiff)
-			{
-				diffService.ShowDiff(CommitSha.Uncommitted);
-			}
+			// No commands yet
 		}
 
 		private bool IsActivatedOtherInstance()

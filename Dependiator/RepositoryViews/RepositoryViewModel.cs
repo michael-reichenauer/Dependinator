@@ -292,11 +292,6 @@ namespace Dependiator.RepositoryViews
 						t.Log("Read current local repository");
 					}
 
-					if (commandLine.IsCommit)
-					{
-						await commitsService.CommitChangesAsync();
-					}
-
 					await repositoryService.CheckRemoteChangesAsync(true);
 					t.Log("Checked remote");
 				}
@@ -416,26 +411,6 @@ namespace Dependiator.RepositoryViews
 				commit.SetNormal(viewModelService.GetSubjectBrush(commit.Commit));
 			}
 		}
-
-
-		//private async Task CheckRemoteChangesAsync(bool isFetchNotes)
-		//{
-		//	Log.Debug("Fetching");
-		//	R result = await remoteService.FetchAsync();
-		//	FetchErrorText = "";
-		//	if (result.IsFaulted)
-		//	{
-		//		string text = $"Fetch error: {result.Message}";
-		//		Log.Warn(text);
-		//		FetchErrorText = text;
-		//	}
-		//	else if (isFetchNotes)
-		//	{
-		//		await remoteService.FetchAllNotesAsync();
-		//	}
-
-		//	fetchedTime = DateTime.Now;
-		//}
 
 
 		private void UpdateViewModel()
