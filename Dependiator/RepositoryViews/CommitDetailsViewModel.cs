@@ -17,7 +17,6 @@ namespace Dependiator.RepositoryViews
 	internal class CommitDetailsViewModel : ViewModel
 	{
 		private readonly IThemeService themeService;
-		private readonly IGitCommitsService gitCommitsService;
 
 		private readonly ObservableCollection<CommitFileViewModel> files =
 			new ObservableCollection<CommitFileViewModel>();
@@ -27,11 +26,9 @@ namespace Dependiator.RepositoryViews
 
 
 		public CommitDetailsViewModel(
-			IThemeService themeService,
-			IGitCommitsService gitCommitsService)
+			IThemeService themeService)
 		{
 			this.themeService = themeService;
-			this.gitCommitsService = gitCommitsService;
 		}
 
 
@@ -86,13 +83,7 @@ namespace Dependiator.RepositoryViews
 			get
 			{
 				string subject = CommitViewModel?.Subject;
-				if (CommitViewModel != null)
-				{
-					CommitSha commitSha = CommitViewModel.Commit.RealCommitSha;
-					subject = gitCommitsService.GetFullMessage(commitSha)
-						.Or(CommitViewModel?.Subject);
-				}
-
+		
 				return subject;
 			}
 		}
