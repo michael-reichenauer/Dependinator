@@ -12,8 +12,6 @@ namespace Dependiator.GitModel
 
 		event EventHandler<RepositoryUpdatedEventArgs> RepositoryUpdated;
 
-		event EventHandler<RepositoryErrorEventArgs> RepositoryErrorChanged;
-
 		bool IsRepositoryCached(string workingFolder);
 
 		Task LoadRepositoryAsync(string workingFolder);

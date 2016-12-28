@@ -9,7 +9,6 @@ using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Common;
 using Dependiator.Common.MessageDialogs;
-using Dependiator.Features.Remote;
 using Dependiator.Git;
 using Dependiator.RepositoryViews;
 using Dependiator.Utils;
@@ -33,7 +32,6 @@ namespace Dependiator.MainWindowViews
 		private readonly WindowOwner owner;
 		private readonly IMessage message;
 		private readonly IRepositoryCommands repositoryCommands;
-		private readonly IRemoteService remoteService;
 
 		private bool isLoaded = false;
 
@@ -43,7 +41,6 @@ namespace Dependiator.MainWindowViews
 			WindowOwner owner,
 			IMessage message,
 			IRepositoryCommands repositoryCommands,
-			IRemoteService remoteService,
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
 			MainWindowIpcService mainWindowIpcService,
@@ -53,7 +50,6 @@ namespace Dependiator.MainWindowViews
 			this.owner = owner;
 			this.message = message;
 			this.repositoryCommands = repositoryCommands;
-			this.remoteService = remoteService;
 			this.latestVersionService = latestVersionService;
 			this.mainWindowService = mainWindowService;
 			this.mainWindowIpcService = mainWindowIpcService;
@@ -116,18 +112,6 @@ namespace Dependiator.MainWindowViews
 				return text;
 			}
 		}
-
-		public Command TryUpdateAllBranchesCommand => AsyncCommand(
-			remoteService.TryUpdateAllBranchesAsync, remoteService.CanExecuteTryUpdateAllBranches);
-
-		public Command PullCurrentBranchCommand => AsyncCommand(
-			remoteService.PullCurrentBranchAsync, remoteService.CanExecutePullCurrentBranch);
-
-		public Command TryPushAllBranchesCommand => AsyncCommand(
-			remoteService.TryPushAllBranchesAsync, remoteService.CanExecuteTryPushAllBranches);
-
-		public Command PushCurrentBranchCommand => AsyncCommand(
-			remoteService.PushCurrentBranchAsync, remoteService.CanExecutePushCurrentBranch);
 
 		public Command ShowUncommittedDetailsCommand => Command(
 			() => repositoryCommands.ShowUncommittedDetails());

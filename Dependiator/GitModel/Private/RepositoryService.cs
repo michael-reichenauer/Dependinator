@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dependiator.Common;
 using Dependiator.Common.ProgressHandling;
-using Dependiator.Features.Remote;
 using Dependiator.Features.StatusHandling;
 using Dependiator.Git;
 using Dependiator.RepositoryViews;
@@ -16,13 +15,11 @@ namespace Dependiator.GitModel.Private
 	[SingleInstance]
 	internal class RepositoryService : IRepositoryService, IRepositoryMgr
 	{
-		private static readonly TimeSpan RemoteRepositoryInterval = TimeSpan.FromSeconds(15);
 		private static readonly TimeSpan MinCreateTimeBeforeCaching = TimeSpan.FromMilliseconds(500);
 
 		private readonly IStatusService statusService;
 		private readonly ICacheService cacheService;
 		private readonly ICommitsFiles commitsFiles;
-		private readonly Lazy<IRemoteService> remoteService;
 		private readonly IRepositoryStructureService repositoryStructureService;
 		private readonly IProgressService progressService;
 		private readonly IBranchTipMonitorService branchTipMonitorService;
@@ -33,7 +30,6 @@ namespace Dependiator.GitModel.Private
 			IStatusService statusService,
 			ICacheService cacheService,
 			ICommitsFiles commitsFiles,
-			Lazy<IRemoteService> remoteService,
 			IRepositoryStructureService repositoryStructureService,
 			IProgressService progressService,
 			IBranchTipMonitorService branchTipMonitorService)
@@ -41,7 +37,6 @@ namespace Dependiator.GitModel.Private
 			this.statusService = statusService;
 			this.cacheService = cacheService;
 			this.commitsFiles = commitsFiles;
-			this.remoteService = remoteService;
 			this.repositoryStructureService = repositoryStructureService;
 			this.progressService = progressService;
 			this.branchTipMonitorService = branchTipMonitorService;
@@ -55,8 +50,6 @@ namespace Dependiator.GitModel.Private
 		public bool IsPaused => statusService.IsPaused;
 
 		public event EventHandler<RepositoryUpdatedEventArgs> RepositoryUpdated;
-
-		public event EventHandler<RepositoryErrorEventArgs> RepositoryErrorChanged;
 
 
 		public void Monitor(string workingFolder)
@@ -151,27 +144,7 @@ namespace Dependiator.GitModel.Private
 
 		public async Task CheckRemoteChangesAsync(bool isFetchNotes)
 		{
-			if (DateTime.Now - fetchedTime < RemoteRepositoryInterval)
-			{
-				Log.Debug("No need the check remote yet");
-				return;
-			}
-
-			Log.Debug("Fetching");
-			R result = await remoteService.Value.FetchAsync();
-			RepositoryErrorChanged?.Invoke(this, new RepositoryErrorEventArgs(""));
-			if (result.IsFaulted)
-			{
-				string text = $"Fetch error: {result.Error.Exception.Message}";
-				Log.Warn(text);
-				RepositoryErrorChanged?.Invoke(this, new RepositoryErrorEventArgs(text));
-			}
-			else if (isFetchNotes)
-			{
-				await remoteService.Value.FetchAllNotesAsync();
-			}
-
-			fetchedTime = DateTime.Now;
+			await Task.Yield();
 		}
 
 

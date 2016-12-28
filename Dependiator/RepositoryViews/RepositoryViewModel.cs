@@ -95,7 +95,6 @@ namespace Dependiator.RepositoryViews
 			CommitDetailsViewModel = commitDetailsViewModelProvider();
 
 			repositoryService.RepositoryUpdated += (s, e) => OnRepositoryUpdated();
-			repositoryService.RepositoryErrorChanged += (s, e) => FetchErrorText = e.ErrorText;
 		}	
 
 		public Branch MergingBranch { get; private set; }
