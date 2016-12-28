@@ -1,0 +1,301 @@
+﻿<Window 
+	x:Class="Dependiator.MainWindowViews.MainWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:common="clr-namespace:Dependiator.Common"
+	xmlns:repositoryViews="clr-namespace:Dependiator.RepositoryViews"
+	xmlns:mainWindowViews="clr-namespace:Dependiator.MainWindowViews"
+	xmlns:ui="clr-namespace:Dependiator.Utils.UI"
+	Title="{Binding Title}"	Icon="Application.ico"
+	Width="800" Height="695"
+	BorderBrush="{DynamicResource BorderBrush}" BorderThickness="3"
+	WindowStyle="None" AllowsTransparency="True"
+	Loaded="MainWindow_OnLoaded"
+	ui:InputBindingsBehavior.TakesInputBindingPrecedence="True" Closed="MainWindow_OnClosed">
+
+
+	<!-- Enable "normal" windows behavior with drag and resize,
+	this does require WindowChrome.IsHitTestVisibleInChrome="True" in controls below. -->
+	<Window.Resources>
+		<Style TargetType="{x:Type mainWindowViews:MainWindow}">
+			<Setter Property="WindowChrome.WindowChrome">
+				<Setter.Value>
+					<WindowChrome />
+				</Setter.Value>
+			</Setter>
+		</Style>
+	</Window.Resources>
+
+
+	<Window.InputBindings>
+		<KeyBinding Key="Escape" Command="{Binding EscapeCommand}" />
+		<KeyBinding Modifiers="Shift" Key="Escape" Command="{Binding ExitCommand}" />
+		<KeyBinding Modifiers="Alt" Key="F4" Command="{Binding ExitCommand}" />
+		<KeyBinding Modifiers="Ctrl" Key="Q" Command="{Binding ExitCommand}" />
+		<KeyBinding Key="F1" Command="{Binding HelpCommand}" />
+		<KeyBinding Key="F5" Command="{Binding RefreshCommand}" />
+		<KeyBinding Modifiers="Control" Key="Enter" Command="{Binding ShowUncommittedDiffCommand}" />
+		<KeyBinding Modifiers="Control+Shift" Key="Enter" Command="{Binding CommitCommand}" />
+		<KeyBinding Modifiers="Control" Key="D" Command="{Binding ShowSelectedDiffCommand}" />
+		<KeyBinding Modifiers="Control" Key="Up" Command="{Binding PushCurrentBranchCommand}" />
+		<KeyBinding Modifiers="Control+Shift" Key="Up" Command="{Binding TryPushAllBranchesCommand}" />
+		<KeyBinding Modifiers="Control" Key="Down" Command="{Binding PullCurrentBranchCommand}" />
+		<KeyBinding Modifiers="Control+Shift" Key="Down" Command="{Binding TryUpdateAllBranchesCommand}" />
+		<KeyBinding Modifiers="Control" Key="F" Command="{Binding SearchCommand}" />
+
+	</Window.InputBindings>
+
+
+	<!-- Main window -->
+	<Grid Background="{DynamicResource BackgroundBrush}">
+		<Grid.RowDefinitions>
+			<!-- Title and tool bar -->
+			<RowDefinition Height="Auto" />
+			<!-- Repository view -->
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
+
+		<!--Title and tool bar -->
+		<Border	Grid.Row="0" BorderThickness="1" 
+						BorderBrush="{DynamicResource BorderBrush}" Background="{DynamicResource TitlebarBackgroundBrush}">
+			<Grid >
+				<Grid.ColumnDefinitions>
+					<!-- Left part, with icon, working folder, status indicators -->
+					<ColumnDefinition Width="*"/>
+					<!-- Middle part, mostly empty, which makes widow drag-able, on the right the Hamburger button -->
+					<ColumnDefinition Width="Auto"/>
+					<!-- Right part, search field and mini, max and close buttons -->
+					<ColumnDefinition Width="258"/>
+				</Grid.ColumnDefinitions>
+
+				<!-- Left part of title bar, with icon, working folder, status indicators -->
+				<StackPanel Grid.Column="0" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+					
+					<!-- Application icon -->
+					<Image 
+						Source="Application.ico" Width="15" Height="15" Margin="5,0" 
+						ToolTip="{Binding VersionText}"/>
+
+					<!-- Working folder -->
+					<Button 	
+						Style="{DynamicResource BaseButtonStyle}"
+						FontSize="12"
+						Foreground="{DynamicResource TextBrush}"
+						Command="{Binding ShowCurrentBranchCommand}"
+						Margin="2,0,10,0">
+						<Button.ToolTip>
+							<ToolTip
+								BorderThickness="2"
+								BorderBrush="{Binding RepositoryViewModel.CurrentBranchBrush}">
+								<StackPanel Orientation="Horizontal">
+									<TextBlock Text="Show current branch " Foreground="{DynamicResource TextBrush}"/>
+									<TextBlock Text="{Binding RepositoryViewModel.CurrentBranchName}" Foreground="{DynamicResource TextBrush}"/>
+								</StackPanel>
+							</ToolTip>
+						</Button.ToolTip>
+						<StackPanel Orientation="Horizontal">
+							<TextBlock Text="{Binding WorkingFolder}"/>
+							<Path 
+								Margin="5,2,0,0"
+								Stroke="{Binding RepositoryViewModel.CurrentBranchBrush}" 
+								StrokeThickness="3" 
+								Data="M 3,2 L 3,12"/>
+						</StackPanel>
+					</Button>
+
+
+					<!-- Conflict status -->
+					<Button		
+						Style="{DynamicResource IconButtonStyle}"
+						Visibility="{Binding RepositoryViewModel.ConflictsText, Converter={StaticResource VC}}"
+						Command="{Binding ShowUncommittedDetailsCommand}"
+						ToolTip="{Binding RepositoryViewModel.ConflictsText}">
+						<TextBlock					
+							FontFamily="{StaticResource IconFont}"
+							Foreground="{DynamicResource ConflictBrush}"
+							Text="&#xE259;"
+							FontSize="18">
+							<TextBlock.RenderTransform>
+								<RotateTransform Angle="90" CenterX="9" CenterY="9"/>
+							</TextBlock.RenderTransform>
+						</TextBlock>
+					</Button>
+
+					<!-- Commit status button -->
+					<Button 
+						Content="&#xE430;"
+						Style="{DynamicResource IconButtonStyle}"
+						Visibility="{Binding RepositoryViewModel.IsUncommitted, Converter={StaticResource VC}}"				
+						Foreground="{DynamicResource UncomittedBrush}"					
+						Click="Uncommitted_OnClick"
+						ToolTip="{Binding RepositoryViewModel.StatusText}">
+						<Button.ContextMenu>
+							<ContextMenu Name="UncommittedContextMenu">
+
+								<MenuItem 
+									Header="Show uncommitted diff ..." 
+									InputGestureText="Ctrl-Enter"
+									Command="{Binding ShowUncommittedDiffCommand}">
+									<MenuItem.Icon>
+										<Border>
+											<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE915;"/>
+										</Border>
+									</MenuItem.Icon>
+								</MenuItem>
+
+								<Separator Background="{DynamicResource BorderBrush}"/>
+
+								<MenuItem 
+									Header="Commit ..." 
+									InputGestureText="Ctrl-Shift-Enter"
+									Command="{Binding CommitCommand}">
+									<MenuItem.Icon>
+										<Border>
+											<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE5DD;"/>
+										</Border>
+									</MenuItem.Icon>
+								</MenuItem>
+							</ContextMenu>
+
+						</Button.ContextMenu>
+					</Button>
+
+
+					<!-- Remote ahead status "-->
+					<Button
+						Content="&#xE258;"
+						Visibility="{Binding RepositoryViewModel.RemoteAheadText, Converter={StaticResource VC}}"					
+						Style="{DynamicResource IconButtonStyle}"
+						Foreground="{DynamicResource RemoteAheadBrush}"
+						Click="RemoteAhead_OnClick"
+						ToolTip="{Binding RepositoryViewModel.RemoteAheadText}">
+
+						<Button.ContextMenu>
+							<ContextMenu Name="RemoteAheadContextMenu">
+
+								<MenuItem
+									Header="Update all branches"
+									InputGestureText="Ctrl+Shift-Down"
+									Command="{Binding TryUpdateAllBranchesCommand}">
+									<MenuItem.Icon>
+										<Grid Margin="0">
+											<TextBlock Text="&#xE258;" Style="{DynamicResource MenuIconStyle}" Padding="2,0,0,0" Foreground="{DynamicResource RemoteAheadBrush}"/>
+											<TextBlock Text="&#xE258;" Style="{DynamicResource MenuIconStyle}" Margin="4,0" Padding="0" Background="Transparent" Foreground="{DynamicResource RemoteAheadBrush}"/>
+										</Grid>
+									</MenuItem.Icon>
+								</MenuItem>
+
+								<Separator Background="{DynamicResource BorderBrush}"/>
+
+								<MenuItem
+									Header="{Binding RepositoryViewModel.PullCurrentBranchText}"
+									InputGestureText="Ctrl-Down"
+									Command="{Binding PullCurrentBranchCommand}">
+									<MenuItem.Icon>
+										<Border>
+											<TextBlock Text="&#xE258;" Style="{DynamicResource MenuIconStyle}" Foreground="{DynamicResource RemoteAheadBrush}"/>
+										</Border>
+									</MenuItem.Icon>
+								</MenuItem>
+							</ContextMenu>
+						</Button.ContextMenu>
+					</Button>
+
+					<!-- Local ahead status -->
+					<Button
+						Content="&#xE25A;"
+						Visibility="{Binding RepositoryViewModel.LocalAheadText, Converter={StaticResource VC}}"					
+						Style="{DynamicResource IconButtonStyle}"
+						Foreground="{DynamicResource LocalAheadBrush}"
+						Click="LocalAhead_OnClick"
+						ToolTip="{Binding RepositoryViewModel.LocalAheadText}">
+
+						<Button.ContextMenu>
+							<ContextMenu Name="LocalAheadContextMenu">
+
+								<MenuItem
+									Header="Push all branches"
+									InputGestureText="Ctrl+Shift-Up"
+									Command="{Binding TryPushAllBranchesCommand}">
+									<MenuItem.Icon>
+										<Grid Margin="0">
+											<TextBlock Text="&#xE25A;" Style="{DynamicResource MenuIconStyle}" Padding="2,0,0,0" Foreground="{DynamicResource LocalAheadBrush}"/>
+											<TextBlock Text="&#xE25A;" Style="{DynamicResource MenuIconStyle}" Margin="4,0" Padding="0" Background="Transparent" Foreground="{DynamicResource LocalAheadBrush}"/>
+										</Grid>
+									</MenuItem.Icon>
+								</MenuItem>
+
+								<Separator Background="{DynamicResource BorderBrush}"/>
+
+								<MenuItem 
+									Header="{Binding RepositoryViewModel.PushCurrentBranchText}"
+									InputGestureText="Ctrl-Up"
+									Command="{Binding PushCurrentBranchCommand}">
+									<MenuItem.Icon>
+										<Border>
+											<TextBlock Text="&#xE25A;" Style="{DynamicResource MenuIconStyle}" Foreground="{DynamicResource LocalAheadBrush}"/>
+										</Border>
+									</MenuItem.Icon>
+								</MenuItem>
+							</ContextMenu>
+						</Button.ContextMenu>
+					</Button>
+					
+					<!-- Busy Indicator  -->
+					<StackPanel Orientation="Horizontal">
+						<Label Content="{Binding Busy.ProgressText}" Foreground="{DynamicResource TextBrush}" Margin="10,0,0,0" FontSize="12"/>
+						<Label Content="{Binding Busy.Text}" Foreground="{DynamicResource BusyBrush}" Margin="0,0,10,0" FontSize="10"/>
+					</StackPanel>
+				</StackPanel>
+
+
+				<!-- Middle part, mostly empty, which makes widow drag-able, on the right the Hamburger button -->
+				<StackPanel Grid.Column="1" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+
+					<!-- Fetch error indicator -->
+					<Button 
+						Content="&#xE888;"
+						Style="{DynamicResource IconButtonStyle}"			
+						Foreground="{DynamicResource ConflictBrush}"			
+						FontWeight="Bold"
+						Visibility="{Binding RepositoryViewModel.FetchErrorText, Converter={StaticResource VC}}"			
+						ToolTip="{Binding RepositoryViewModel.FetchErrorText}" />
+					
+					<!-- Latest version button -->
+					<Button 
+						Content="&#xE863;"
+						Style="{DynamicResource IconButtonStyle}"			
+						Foreground="Green"			
+						FontWeight="Bold"
+						Visibility="{Binding IsNewVersionVisible, Converter={StaticResource VC}}"			
+						Command="{Binding RunLatestVersionCommand}"
+						ToolTip="New version of Dependiator is available, click to reload ..." />
+
+					<!-- Hamburger button -->
+					<mainWindowViews:HamburgerButton/>
+
+				</StackPanel>
+
+
+				<!-- Right part, search field and mini, max and close buttons -->
+				<StackPanel Grid.Column="2" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+					
+					<!-- Search and filter box  -->
+					<common:SearchFilter x:Name="Search"/>
+
+					<!-- The 3 minimize, maximize and close window control buttons in the title bar -->
+					<common:WindowControlButtons/>
+
+				</StackPanel>
+				
+			</Grid>
+		</Border>
+
+		<!-- Repository view -->
+		<repositoryViews:RepositoryView 
+			x:Name="RepositoryView"
+			Grid.Row="1"
+			DataContext="{Binding RepositoryViewModel}"/>
+
+	</Grid>
+</Window>
