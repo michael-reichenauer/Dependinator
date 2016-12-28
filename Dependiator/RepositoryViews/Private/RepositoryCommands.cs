@@ -1,5 +1,4 @@
 using System;
-using Dependiator.Git;
 using Dependiator.GitModel;
 
 

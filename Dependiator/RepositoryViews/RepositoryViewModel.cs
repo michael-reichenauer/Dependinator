@@ -11,7 +11,6 @@ using Dependiator.Common;
 using Dependiator.Common.MessageDialogs;
 using Dependiator.Common.ProgressHandling;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.Git;
 using Dependiator.GitModel;
 using Dependiator.RepositoryViews.Private;
 using Dependiator.Utils;
@@ -33,10 +32,7 @@ namespace Dependiator.RepositoryViews
 		private readonly IViewModelService viewModelService;
 		private readonly IRepositoryService repositoryService;
 
-		private readonly IGitInfoService gitInfoService;
-
 		private readonly IThemeService themeService;
-		private readonly IMessage message;
 		private readonly WorkingFolder workingFolder;
 		private readonly IProgressService progress;
 
@@ -68,12 +64,9 @@ namespace Dependiator.RepositoryViews
 
 		public RepositoryViewModel(
 			WorkingFolder workingFolder,
-			ICommandLine commandLine,
 			IViewModelService viewModelService,
 			IRepositoryService repositoryService,
-			IGitInfoService gitInfoService,
 			IThemeService themeService,
-			IMessage message,
 			IProgressService progressService,
 			Func<CommitDetailsViewModel> commitDetailsViewModelProvider)
 		{
@@ -81,10 +74,7 @@ namespace Dependiator.RepositoryViews
 			this.viewModelService = viewModelService;
 			this.repositoryService = repositoryService;
 
-			this.gitInfoService = gitInfoService;
-
 			this.themeService = themeService;
-			this.message = message;
 			this.progress = progressService;
 
 			VirtualItemsSource = new RepositoryVirtualItemsSource(Branches, Merges, Commits);

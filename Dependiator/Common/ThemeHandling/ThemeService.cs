@@ -5,7 +5,6 @@ using System.Windows;
 using System.Windows.Media;
 using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.Git;
 using Dependiator.GitModel;
 using Dependiator.Utils;
 

@@ -1,7 +1,7 @@
 using System;
 
 
-namespace Dependiator.Git
+namespace Dependiator.GitModel
 {
 	[Flags]
 	public enum GitFileStatus

@@ -2,7 +2,7 @@
 using Dependiator.Utils;
 
 
-namespace Dependiator.Git
+namespace Dependiator.GitModel
 {
 	/// <summary>
 	/// Branch name type, which handles branch names as case insensitive strings.

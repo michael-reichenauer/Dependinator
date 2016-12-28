@@ -1,5 +1,4 @@
 using Dependiator.Common;
-using Dependiator.Git;
 
 
 namespace Dependiator.GitModel.Private

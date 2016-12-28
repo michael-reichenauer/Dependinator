@@ -1,6 +1,5 @@
 ﻿using System;
 using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.Git;
 using Dependiator.Utils;
 
 
@@ -10,17 +9,14 @@ namespace Dependiator.ApplicationHandling.Private
 	internal class WorkingFolderService : IWorkingFolderService
 	{
 		private readonly ICommandLine commandLine;
-		private readonly IGitInfoService gitInfoService;
 
 		private string workingFolder;
 
 
 		public WorkingFolderService(
-			ICommandLine commandLine,
-			IGitInfoService gitInfoService)
+			ICommandLine commandLine)
 		{
 			this.commandLine = commandLine;
-			this.gitInfoService = gitInfoService;
 		}
 
 
@@ -133,7 +129,8 @@ namespace Dependiator.ApplicationHandling.Private
 				return Error.From("No working folder");
 			}
 
-			return gitInfoService.GetCurrentRootPath(path);
+			return @"D:\My Work\Dependiator";
+			//eturn gitInfoService.GetCurrentRootPath(path);
 		}
 	}
 }

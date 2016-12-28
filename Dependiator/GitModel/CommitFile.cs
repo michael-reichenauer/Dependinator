@@ -1,6 +1,3 @@
-using Dependiator.Git;
-
-
 namespace Dependiator.GitModel
 {
 	public class CommitFile
@@ -8,8 +5,6 @@ namespace Dependiator.GitModel
 		
 		public string Path => "";
 		public string OldPath => "";
-
-		public GitConflict Conflict => null;
 
 		public GitFileStatus Status => GitFileStatus.Modified;
 
@@ -33,11 +28,6 @@ namespace Dependiator.GitModel
 			else if (Status.HasFlag(GitFileStatus.Deleted))
 			{
 				return "D";
-			}
-			else if (Status.HasFlag(GitFileStatus.Conflict) && 
-				(Conflict.IsOursDeleted || Conflict.IsTheirsDeleted))
-			{
-				return "CD";
 			}
 			else if (Status.HasFlag(GitFileStatus.Conflict))
 			{

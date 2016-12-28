@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.Runtime.Serialization;
-using Dependiator.Git;
 
 
 namespace Dependiator.GitModel.Private.Caching

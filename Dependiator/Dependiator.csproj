@@ -136,22 +136,14 @@
     <Compile Include="Utils\AsyncLock.cs" />
     <Compile Include="Utils\DependencyInjection.cs" />
     <Compile Include="Features\FolderMonitoring\FolderMonitorService.cs" />
-    <Compile Include="Git\BranchName.cs" />
-    <Compile Include="Git\GitDivergence.cs" />
-    <Compile Include="Git\Private\GitInfoService.cs" />
-    <Compile Include="Git\IGitInfoService.cs" />
-    <Compile Include="Git\Private\IRepoCaller.cs" />
-    <Compile Include="Git\Private\RepoCaller.cs" />
+    <Compile Include="GitModel\BranchName.cs" />
     <Compile Include="MainWindowViews\IMainWindowService.cs" />
     <Compile Include="MainWindowViews\MainWindowIpcService.cs" />
     <Compile Include="MainWindowViews\MainWindowService.cs" />
     <Compile Include="MainWindowViews\WindowOwner.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Common\CredentialHandler.cs" />
-    <Compile Include="Git\GitConflict.cs" />
-    <Compile Include="Git\GitFileStatus.cs" />
-    <Compile Include="Git\GitNote.cs" />
-    <Compile Include="Git\ICredentialHandler.cs" />
+    <Compile Include="GitModel\GitFileStatus.cs" />
     <Compile Include="ApplicationHandling\AssemblyResolver.cs" />
     <Compile Include="Utils\Throttler.cs" />
     <Compile Include="Utils\UI\CredentialsDialog.cs" />
@@ -183,8 +175,6 @@
     <Compile Include="Common\SearchFilter.xaml.cs">
       <DependentUpon>SearchFilter.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Git\GitDiff.cs" />
-    <Compile Include="Git\GitRepository.cs" />
     <Compile Include="MainWindowViews\HamburgerButton.xaml.cs">
       <DependentUpon>HamburgerButton.xaml</DependentUpon>
     </Compile>
@@ -211,8 +201,6 @@
     <Compile Include="GitModel\Private\MCommit.cs" />
     <Compile Include="GitModel\Private\MSubBranch.cs" />
     <Compile Include="GitModel\Repository.cs" />
-    <Compile Include="Git\GitCommitFiles.cs" />
-    <Compile Include="Git\GitFile.cs" />
     <Compile Include="Utils\IReadOnlyKeyedList.cs" />
     <Compile Include="Utils\KeyedList.cs" />
     <Compile Include="GitModel\Private\MRepository.cs" />
@@ -242,8 +230,6 @@
     <Compile Include="Utils\UI\MyWpfExtensions.cs" />
     <Compile Include="Utils\UI\Property.cs" />
     <Compile Include="Utils\UI\Command.cs" />
-    <Compile Include="Git\GitBranch.cs" />
-    <Compile Include="Git\GitTag.cs" />
     <Compile Include="MainWindowViews\MainWindowViewModel.cs" />
     <Compile Include="Utils\Asserter.cs" />
     <Compile Include="Utils\Sorter.cs" />
@@ -262,7 +248,6 @@
     <Compile Include="Utils\Cmd.cs" />
     <Compile Include="Utils\ICmd.cs" />
     <Compile Include="Utils\Log.cs" />
-    <Compile Include="Git\GitLibCommit.cs" />
     <Compile Include="Utils\MicroDiContainer.cs" />
     <Compile Include="Utils\UI\VirtualCanvas\VirtualPanel.cs" />
     <Compile Include="Utils\UI\VirtualCanvas\ZoomableCanvas.cs" />

@@ -9,7 +9,7 @@ using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Common;
 using Dependiator.Common.MessageDialogs;
-using Dependiator.Git;
+using Dependiator.GitModel;
 using Dependiator.RepositoryViews;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;

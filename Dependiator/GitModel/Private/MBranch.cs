@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using Dependiator.Common;
-using Dependiator.Git;
 
 
 namespace Dependiator.GitModel.Private

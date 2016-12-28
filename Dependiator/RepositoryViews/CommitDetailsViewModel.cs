@@ -6,7 +6,6 @@ using System.Windows;
 using System.Windows.Media;
 using Dependiator.Common;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.Git;
 using Dependiator.GitModel;
 using Dependiator.Utils.UI;
 using Dependiator.Utils;
