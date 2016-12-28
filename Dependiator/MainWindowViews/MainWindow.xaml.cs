@@ -143,28 +143,6 @@ namespace Dependiator.MainWindowViews
 			////}
 		}
 
-
-		private void RemoteAhead_OnClick(object sender, RoutedEventArgs e)
-		{
-			RemoteAheadContextMenu.PlacementTarget = this;
-			RemoteAheadContextMenu.IsOpen = true;
-		}
-
-
-		private void LocalAhead_OnClick(object sender, RoutedEventArgs e)
-		{
-			LocalAheadContextMenu.PlacementTarget = this;
-			LocalAheadContextMenu.IsOpen = true;
-		}
-
-
-		private void Uncommitted_OnClick(object sender, RoutedEventArgs e)
-		{
-			UncommittedContextMenu.PlacementTarget = this;
-			UncommittedContextMenu.IsOpen = true;
-		}
-
-
 		private void MainWindow_OnClosed(object sender, EventArgs e)
 		{
 			StoreWindowSettings();

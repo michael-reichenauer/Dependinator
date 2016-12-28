@@ -34,14 +34,7 @@
 		<KeyBinding Modifiers="Ctrl" Key="Q" Command="{Binding ExitCommand}" />
 		<KeyBinding Key="F1" Command="{Binding HelpCommand}" />
 		<KeyBinding Key="F5" Command="{Binding RefreshCommand}" />
-		<KeyBinding Modifiers="Control" Key="Enter" Command="{Binding ShowUncommittedDiffCommand}" />
-		<KeyBinding Modifiers="Control+Shift" Key="Enter" Command="{Binding CommitCommand}" />
-		<KeyBinding Modifiers="Control" Key="D" Command="{Binding ShowSelectedDiffCommand}" />
-		<KeyBinding Modifiers="Control" Key="Up" Command="{Binding PushCurrentBranchCommand}" />
-		<KeyBinding Modifiers="Control+Shift" Key="Up" Command="{Binding TryPushAllBranchesCommand}" />
-		<KeyBinding Modifiers="Control" Key="Down" Command="{Binding PullCurrentBranchCommand}" />
-		<KeyBinding Modifiers="Control+Shift" Key="Down" Command="{Binding TryUpdateAllBranchesCommand}" />
-		<KeyBinding Modifiers="Control" Key="F" Command="{Binding SearchCommand}" />
+				<KeyBinding Modifiers="Control" Key="F" Command="{Binding SearchCommand}" />
 
 	</Window.InputBindings>
 
@@ -81,165 +74,21 @@
 						Style="{DynamicResource BaseButtonStyle}"
 						FontSize="12"
 						Foreground="{DynamicResource TextBrush}"
-						Command="{Binding ShowCurrentBranchCommand}"
 						Margin="2,0,10,0">
 						<Button.ToolTip>
 							<ToolTip
 								BorderThickness="2"
-								BorderBrush="{Binding RepositoryViewModel.CurrentBranchBrush}">
+								BorderBrush="{DynamicResource BorderBrush}">
 								<StackPanel Orientation="Horizontal">
-									<TextBlock Text="Show current branch " Foreground="{DynamicResource TextBrush}"/>
-									<TextBlock Text="{Binding RepositoryViewModel.CurrentBranchName}" Foreground="{DynamicResource TextBrush}"/>
+									<TextBlock Text="Working folder " Foreground="{DynamicResource TextBrush}"/>
 								</StackPanel>
 							</ToolTip>
 						</Button.ToolTip>
 						<StackPanel Orientation="Horizontal">
 							<TextBlock Text="{Binding WorkingFolder}"/>
-							<Path 
-								Margin="5,2,0,0"
-								Stroke="{Binding RepositoryViewModel.CurrentBranchBrush}" 
-								StrokeThickness="3" 
-								Data="M 3,2 L 3,12"/>
 						</StackPanel>
 					</Button>
 
-
-					<!-- Conflict status -->
-					<Button		
-						Style="{DynamicResource IconButtonStyle}"
-						Visibility="{Binding RepositoryViewModel.ConflictsText, Converter={StaticResource VC}}"
-						Command="{Binding ShowUncommittedDetailsCommand}"
-						ToolTip="{Binding RepositoryViewModel.ConflictsText}">
-						<TextBlock					
-							FontFamily="{StaticResource IconFont}"
-							Foreground="{DynamicResource ConflictBrush}"
-							Text="&#xE259;"
-							FontSize="18">
-							<TextBlock.RenderTransform>
-								<RotateTransform Angle="90" CenterX="9" CenterY="9"/>
-							</TextBlock.RenderTransform>
-						</TextBlock>
-					</Button>
-
-					<!-- Commit status button -->
-					<Button 
-						Content="&#xE430;"
-						Style="{DynamicResource IconButtonStyle}"
-						Visibility="{Binding RepositoryViewModel.IsUncommitted, Converter={StaticResource VC}}"				
-						Foreground="{DynamicResource UncomittedBrush}"					
-						Click="Uncommitted_OnClick"
-						ToolTip="{Binding RepositoryViewModel.StatusText}">
-						<Button.ContextMenu>
-							<ContextMenu Name="UncommittedContextMenu">
-
-								<MenuItem 
-									Header="Show uncommitted diff ..." 
-									InputGestureText="Ctrl-Enter"
-									Command="{Binding ShowUncommittedDiffCommand}">
-									<MenuItem.Icon>
-										<Border>
-											<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE915;"/>
-										</Border>
-									</MenuItem.Icon>
-								</MenuItem>
-
-								<Separator Background="{DynamicResource BorderBrush}"/>
-
-								<MenuItem 
-									Header="Commit ..." 
-									InputGestureText="Ctrl-Shift-Enter"
-									Command="{Binding CommitCommand}">
-									<MenuItem.Icon>
-										<Border>
-											<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE5DD;"/>
-										</Border>
-									</MenuItem.Icon>
-								</MenuItem>
-							</ContextMenu>
-
-						</Button.ContextMenu>
-					</Button>
-
-
-					<!-- Remote ahead status "-->
-					<Button
-						Content="&#xE258;"
-						Visibility="{Binding RepositoryViewModel.RemoteAheadText, Converter={StaticResource VC}}"					
-						Style="{DynamicResource IconButtonStyle}"
-						Foreground="{DynamicResource RemoteAheadBrush}"
-						Click="RemoteAhead_OnClick"
-						ToolTip="{Binding RepositoryViewModel.RemoteAheadText}">
-
-						<Button.ContextMenu>
-							<ContextMenu Name="RemoteAheadContextMenu">
-
-								<MenuItem
-									Header="Update all branches"
-									InputGestureText="Ctrl+Shift-Down"
-									Command="{Binding TryUpdateAllBranchesCommand}">
-									<MenuItem.Icon>
-										<Grid Margin="0">
-											<TextBlock Text="&#xE258;" Style="{DynamicResource MenuIconStyle}" Padding="2,0,0,0" Foreground="{DynamicResource RemoteAheadBrush}"/>
-											<TextBlock Text="&#xE258;" Style="{DynamicResource MenuIconStyle}" Margin="4,0" Padding="0" Background="Transparent" Foreground="{DynamicResource RemoteAheadBrush}"/>
-										</Grid>
-									</MenuItem.Icon>
-								</MenuItem>
-
-								<Separator Background="{DynamicResource BorderBrush}"/>
-
-								<MenuItem
-									Header="{Binding RepositoryViewModel.PullCurrentBranchText}"
-									InputGestureText="Ctrl-Down"
-									Command="{Binding PullCurrentBranchCommand}">
-									<MenuItem.Icon>
-										<Border>
-											<TextBlock Text="&#xE258;" Style="{DynamicResource MenuIconStyle}" Foreground="{DynamicResource RemoteAheadBrush}"/>
-										</Border>
-									</MenuItem.Icon>
-								</MenuItem>
-							</ContextMenu>
-						</Button.ContextMenu>
-					</Button>
-
-					<!-- Local ahead status -->
-					<Button
-						Content="&#xE25A;"
-						Visibility="{Binding RepositoryViewModel.LocalAheadText, Converter={StaticResource VC}}"					
-						Style="{DynamicResource IconButtonStyle}"
-						Foreground="{DynamicResource LocalAheadBrush}"
-						Click="LocalAhead_OnClick"
-						ToolTip="{Binding RepositoryViewModel.LocalAheadText}">
-
-						<Button.ContextMenu>
-							<ContextMenu Name="LocalAheadContextMenu">
-
-								<MenuItem
-									Header="Push all branches"
-									InputGestureText="Ctrl+Shift-Up"
-									Command="{Binding TryPushAllBranchesCommand}">
-									<MenuItem.Icon>
-										<Grid Margin="0">
-											<TextBlock Text="&#xE25A;" Style="{DynamicResource MenuIconStyle}" Padding="2,0,0,0" Foreground="{DynamicResource LocalAheadBrush}"/>
-											<TextBlock Text="&#xE25A;" Style="{DynamicResource MenuIconStyle}" Margin="4,0" Padding="0" Background="Transparent" Foreground="{DynamicResource LocalAheadBrush}"/>
-										</Grid>
-									</MenuItem.Icon>
-								</MenuItem>
-
-								<Separator Background="{DynamicResource BorderBrush}"/>
-
-								<MenuItem 
-									Header="{Binding RepositoryViewModel.PushCurrentBranchText}"
-									InputGestureText="Ctrl-Up"
-									Command="{Binding PushCurrentBranchCommand}">
-									<MenuItem.Icon>
-										<Border>
-											<TextBlock Text="&#xE25A;" Style="{DynamicResource MenuIconStyle}" Foreground="{DynamicResource LocalAheadBrush}"/>
-										</Border>
-									</MenuItem.Icon>
-								</MenuItem>
-							</ContextMenu>
-						</Button.ContextMenu>
-					</Button>
 					
 					<!-- Busy Indicator  -->
 					<StackPanel Orientation="Horizontal">
