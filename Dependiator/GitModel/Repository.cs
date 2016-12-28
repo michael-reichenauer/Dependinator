@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using Dependiator.Common;
-using Dependiator.Features.StatusHandling;
 using Dependiator.GitModel.Private;
 using Dependiator.Utils;
 
@@ -25,13 +24,11 @@ namespace Dependiator.GitModel
 			Lazy<Branch> currentBranch,
 			Lazy<Commit> currentCommit,
 			ICommitsFiles commitsFiles,
-			Status status,
 			CommitId rootId,
 			CommitId unComittedId)
 		{
 			MRepository = mRepository;
 			CommitsFiles = commitsFiles;
-			Status = status;
 
 			this.branches = branches;
 			this.commits = commits;
@@ -47,7 +44,6 @@ namespace Dependiator.GitModel
 		public Commit CurrentCommit => currentCommit.Value;
 		public MRepository MRepository { get; }
 		public ICommitsFiles CommitsFiles { get; }
-		public Status Status { get; }
 		public Commit RootCommit => commits.Value[rootId];
 		public Commit UnComitted => unComittedId == CommitId.Uncommitted ? commits.Value[unComittedId] : null;
 	}

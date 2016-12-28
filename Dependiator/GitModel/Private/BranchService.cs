@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependiator.Common;
-using Dependiator.Features.StatusHandling;
 using Dependiator.Git;
 
 
@@ -31,8 +30,6 @@ namespace Dependiator.GitModel.Private
 
 		public void AddActiveBranches(GitRepository gitRepository, MRepository repository)
 		{
-			Status status = repository.Status;
-
 			GitBranch currentBranch = gitRepository.Head;
 
 			foreach (GitBranch gitBranch in gitRepository.Branches)
@@ -45,26 +42,12 @@ namespace Dependiator.GitModel.Private
 
 				MSubBranch subBranch = ToBranch(gitBranch, repository);
 				repository.SubBranches[subBranch.SubBranchId] = subBranch;
-
-				if (!status.IsOK && gitBranch.IsCurrent && !gitBranch.IsRemote)
-				{
-					// Setting virtual uncommitted commit as tip of the current branch
-					subBranch.TipCommitId = repository.Uncommitted.Id;
-					subBranch.TipCommit.SubBranchId = subBranch.SubBranchId;
-				}
 			}
 
 			if (currentBranch.IsDetached)
 			{
 				MSubBranch subBranch = ToBranch(currentBranch, repository);
 				repository.SubBranches[subBranch.SubBranchId] = subBranch;
-
-				if (!status.IsOK)
-				{
-					// Setting virtual uncommitted commit as tip of the detached branch
-					subBranch.TipCommitId = repository.Uncommitted.Id;
-					subBranch.TipCommit.SubBranchId = subBranch.SubBranchId;
-				}
 			}
 		}
 

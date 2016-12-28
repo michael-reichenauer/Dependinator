@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dependiator.Common;
-using Dependiator.Common.ProgressHandling;
-using Dependiator.Features.StatusHandling;
 using Dependiator.Git;
 using Dependiator.RepositoryViews;
 using Dependiator.Utils;
@@ -15,47 +13,22 @@ namespace Dependiator.GitModel.Private
 	[SingleInstance]
 	internal class RepositoryService : IRepositoryService, IRepositoryMgr
 	{
-		private static readonly TimeSpan MinCreateTimeBeforeCaching = TimeSpan.FromMilliseconds(500);
 
-		private readonly IStatusService statusService;
 		private readonly ICacheService cacheService;
 		private readonly ICommitsFiles commitsFiles;
-		private readonly IRepositoryStructureService repositoryStructureService;
-		private readonly IProgressService progressService;
-		private readonly IBranchTipMonitorService branchTipMonitorService;
 
-		private DateTime fetchedTime = DateTime.MinValue;
+
 
 		public RepositoryService(
-			IStatusService statusService,
 			ICacheService cacheService,
-			ICommitsFiles commitsFiles,
-			IRepositoryStructureService repositoryStructureService,
-			IProgressService progressService,
-			IBranchTipMonitorService branchTipMonitorService)
+			ICommitsFiles commitsFiles)
 		{
-			this.statusService = statusService;
 			this.cacheService = cacheService;
 			this.commitsFiles = commitsFiles;
-			this.repositoryStructureService = repositoryStructureService;
-			this.progressService = progressService;
-			this.branchTipMonitorService = branchTipMonitorService;
-
-			statusService.StatusChanged += (s, e) => OnStatusChanged(e.NewStatus);
-			statusService.RepoChanged += (s, e) => OnRepoChanged(e.BranchIds);
 		}
 
 		public Repository Repository { get; private set; }
 
-		public bool IsPaused => statusService.IsPaused;
-
-		public event EventHandler<RepositoryUpdatedEventArgs> RepositoryUpdated;
-
-
-		public void Monitor(string workingFolder)
-		{
-			statusService.Monitor(workingFolder);
-		}
 
 
 		public bool IsRepositoryCached(string workingFolder)
@@ -66,170 +39,10 @@ namespace Dependiator.GitModel.Private
 
 		public async Task LoadRepositoryAsync(string workingFolder)
 		{
-			Monitor(workingFolder);
-
 			R<Repository> repository = await GetCachedRepositoryAsync(workingFolder);
-			if (!repository.IsOk)
-			{
-				repository = await GetFreshRepositoryAsync(workingFolder, null);
-			}
+			
 
 			Repository = repository.Value;			
-		}
-
-
-		public async Task GetFreshRepositoryAsync()
-		{
-			string workingFolder = Repository.MRepository.WorkingFolder;
-			R<Repository> repository = await GetFreshRepositoryAsync(workingFolder, Repository.MRepository.GitCommits);
-
-			if (repository.IsOk)
-			{
-				Repository = repository.Value;
-				RepositoryUpdated?.Invoke(this, new RepositoryUpdatedEventArgs());
-			}
-		}
-
-
-		public Task CheckLocalRepositoryAsync()
-		{
-			return UpdateRepositoryAsync(null, null);
-		}
-
-
-		public async Task CheckBranchTipCommitsAsync()
-		{
-			Timing t = new Timing();
-			await branchTipMonitorService.CheckAsync(Repository);
-			t.Log("branchTipMonitorService.Check");
-		}
-
-
-		public async Task UpdateRepositoryAfterCommandAsync()
-		{
-			Task<Status> statusTask = statusService.GetStatusAsync();
-			Task<IReadOnlyList<string>> repoIdsTask = statusService.GetRepoIdsAsync();
-
-			Status status = await statusTask;
-			IReadOnlyList<string> repoIds = await repoIdsTask;
-
-			if (Repository.Status.IsSame(status)
-			    && Repository.MRepository.RepositoryIds.SequenceEqual(repoIds))
-			{
-				Log.Debug("Repository has not changed after command");
-				return;
-			}
-
-			await UpdateRepositoryAsync(status, repoIds);
-		}
-
-
-		public async Task RefreshAfterCommandAsync(bool useFreshRepository)
-		{
-			Log.Debug("Refreshing after command ...");
-			fetchedTime = DateTime.MinValue;
-			await CheckRemoteChangesAsync(true);
-
-			if (useFreshRepository)
-			{
-				Log.Debug("Getting fresh repository");
-				await GetFreshRepositoryAsync();
-			}
-			else
-			{
-				await UpdateRepositoryAfterCommandAsync();
-			}
-		}
-
-
-		public async Task CheckRemoteChangesAsync(bool isFetchNotes)
-		{
-			await Task.Yield();
-		}
-
-
-		public async Task GetRemoteAndFreshRepositoryAsync()
-		{
-			Timing t = new Timing();
-			fetchedTime = DateTime.MinValue;
-			await CheckRemoteChangesAsync(true);
-			t.Log("Remote check");
-			await GetFreshRepositoryAsync();
-			t.Log("Got Fresh Repository");
-		}
-
-
-		private async void OnRepoChanged(IReadOnlyList<string> repoIds)
-		{
-			if (Repository?.MRepository?.RepositoryIds.SequenceEqual(repoIds) ?? false) 
-			{
-				Log.Debug("Same repo");
-				return;
-			}
-
-			using (progressService.ShowBusy())
-			{
-				Log.Debug("Changed repo");
-				Status status = Repository.Status;
-				await UpdateRepositoryAsync(status, repoIds);
-			}
-		}
-
-
-		private async void OnStatusChanged(Status status)
-		{
-			if (Repository?.Status?.IsSame(status) ?? false)
-			{
-				Log.Debug("Same status");
-				return;
-			}
-
-			using (progressService.ShowBusy())
-			{
-				Log.Debug("Changed status");
-				IReadOnlyList<string> repoIds = Repository.MRepository.RepositoryIds;
-				await UpdateRepositoryAsync(status, repoIds);
-			}
-		}
-
-
-		private async Task UpdateRepositoryAsync(Status status, IReadOnlyList<string> repoIds)
-		{
-			Repository = await UpdateRepositoryAsync(Repository, status, repoIds);
-
-			RepositoryUpdated?.Invoke(this, new RepositoryUpdatedEventArgs());
-		}
-
-
-		private async Task<R<Repository>> GetFreshRepositoryAsync(
-			string workingFolder, Dictionary<CommitId, GitCommit> gitCommits)
-		{
-			Log.Debug("No cached repository");
-			MRepository mRepository = new MRepository();
-			mRepository.WorkingFolder = workingFolder;
-
-			mRepository.GitCommits = gitCommits ?? new Dictionary<CommitId, GitCommit>();
-
-			Timing t = new Timing();
-			await repositoryStructureService.UpdateAsync(mRepository, null, null);
-			mRepository.TimeToCreateFresh = t.Elapsed;
-			t.Log("Updated mRepository");
-
-			if (mRepository.TimeToCreateFresh > MinCreateTimeBeforeCaching)
-			{
-				Log.Usage($"Caching repository ({t.Elapsed} ms)");
-				await cacheService.CacheAsync(mRepository);
-			}
-			else
-			{
-				Log.Usage($"No need for cached repository ({t.Elapsed} ms)");
-				cacheService.TryDeleteCache(workingFolder);
-			}
-
-			Repository repository = ToRepository(mRepository);
-			t.Log($"Repository {repository.Branches.Count} branches, {repository.Commits.Count} commits");
-
-			return repository;		
 		}
 
 
@@ -258,40 +71,9 @@ namespace Dependiator.GitModel.Private
 				Log.Warn($"Failed to read cached repository {e}");		
 				return e;
 			}
-			finally
-			{
-				cacheService.TryDeleteCache(workingFolder);
-			}
+
 		}
 
-
-		private async Task<Repository> UpdateRepositoryAsync(
-			Repository sourcerepository, Status status, IReadOnlyList<string> branchIds)
-		{
-			Log.Debug($"Updating repository");
-
-			MRepository mRepository = sourcerepository.MRepository;
-			mRepository.IsCached = false;
-
-			Timing t = new Timing();
-
-			await repositoryStructureService.UpdateAsync(mRepository, status, branchIds);
-			t.Log("Updated mRepository");
-
-			if (mRepository.TimeToCreateFresh > MinCreateTimeBeforeCaching)
-			{
-				await cacheService.CacheAsync(mRepository);
-			}
-
-			Repository repository = ToRepository(mRepository);
-			int branchesCount = repository.Branches.Count;
-			int commitsCount = repository.Commits.Count;
-
-			t.Log($"Updated repository {branchesCount} branches, {commitsCount} commits");
-			Log.Debug("Updated to repository");
-
-			return repository;
-		}
 
 
 		private Repository ToRepository(MRepository mRepository)
@@ -312,7 +94,6 @@ namespace Dependiator.GitModel.Private
 				new Lazy<Branch>(() => currentBranch),
 				new Lazy<Commit>(() => currentCommit),
 				commitsFiles,
-				mRepository.Status,
 				rootCommit.Id,
 				mRepository.Uncommitted?.Id ?? CommitId.None);
 

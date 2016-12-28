@@ -715,12 +715,8 @@ namespace Dependiator.RepositoryViews.Private
 				.Select(b => b.Branch.FirstCommit)
 				.ToList();
 
-			bool isMergeInProgress =
-				repositoryMgr.Repository.Status.IsMerging
-				&& branches.Any(b => b.Branch == repositoryMgr.Repository.CurrentBranch)
-				&& repositoryViewModel.MergingBranch != null
-				&& branches.Any(b => b.Branch.Id == repositoryViewModel.MergingBranch.Id)
-				&& repositoryMgr.Repository.UnComitted != null;
+			bool isMergeInProgress = false;
+	
 
 			int mergeCount = mergePoints.Count + branchStarts.Count + (isMergeInProgress ? 1 : 0);
 

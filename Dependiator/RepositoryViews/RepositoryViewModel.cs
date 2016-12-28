@@ -93,8 +93,6 @@ namespace Dependiator.RepositoryViews
 			filterTriggerTimer.Interval = FilterDelay;
 
 			CommitDetailsViewModel = commitDetailsViewModelProvider();
-
-			repositoryService.RepositoryUpdated += (s, e) => OnRepositoryUpdated();
 		}	
 
 		public Branch MergingBranch { get; private set; }
@@ -265,62 +263,33 @@ namespace Dependiator.RepositoryViews
 					LoadViewModel();
 					t.Log("Updated view model after cached/fresh");
 				}
-
-				if (!gitInfoService.IsSupportedRemoteUrl(workingFolder))
-				{
-					message.ShowWarning(
-						"SSH URL protocol is not yet supported for remote access.\n" +
-						"Use git:// or https:// instead.");
-				}
-
-				using (progress.ShowBusy())
-				{
-					if (repositoryService.Repository.MRepository.IsCached)
-					{
-						await repositoryService.CheckLocalRepositoryAsync();
-						t.Log("Read current local repository");
-					}
-
-					await repositoryService.CheckRemoteChangesAsync(true);
-					t.Log("Checked remote");
-				}
-
-				await repositoryService.CheckBranchTipCommitsAsync();
 			}
 		}
 
 
 		public async Task ActivateRefreshAsync()
-		{	
-			if (!repositoryService.IsPaused)
+		{			
+			Log.Usage("Activate window");
+
+			Timing t = new Timing();
+			themeService.SetThemeWpfColors();
+			t.Log("SetThemeWpfColors");
+
+			using (progress.ShowBusy())
 			{
-				Log.Usage("Activate window");
+				await Task.Yield();
+			}
 
-				Timing t = new Timing();
-				themeService.SetThemeWpfColors();
-				t.Log("SetThemeWpfColors");
-
-				using (progress.ShowBusy())
-				{
-					await repositoryService.CheckRemoteChangesAsync(false);
-				}
-
-				t.Log("Activate refresh done");
-			}	
+			t.Log("Activate refresh done");			
 		}
 
 
 		public async Task AutoRemoteCheckAsync()
 		{	
-			if (!repositoryService.IsPaused)
-			{
-				Timing t = new Timing();
-				Log.Usage("Automatic remote check");
-				await repositoryService.CheckRemoteChangesAsync(false);
-				t.Log("Auto refresh done");
-			}
-
-			await repositoryService.CheckBranchTipCommitsAsync();
+			Timing t = new Timing();
+			Log.Usage("Automatic remote check");
+			await Task.Yield();
+			t.Log("Auto refresh done");		
 		}
 
 
@@ -347,13 +316,7 @@ namespace Dependiator.RepositoryViews
 		{
 			using (progress.ShowDialog("Refreshing view ..."))
 			{
-				using (await refreshLock.LockAsync())
-				{
-					Log.Debug("Refreshing after manual trigger ...");
-
-					Log.Debug("Get fresh repository from scratch");
-					await repositoryService.GetRemoteAndFreshRepositoryAsync();
-				}
+				await Task.Yield();
 			}
 		}
 
@@ -487,9 +450,7 @@ namespace Dependiator.RepositoryViews
 			Commit uncommitted = repository.UnComitted;
 			UnCommited = uncommitted;
 
-			ConflictsText = repository.Status.ConflictCount > 0
-				? $"Conflicts in {repository.Status.ConflictCount} files\""
-				: null;
+			ConflictsText = null;
 		}
 
 

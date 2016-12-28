@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 
 
@@ -8,25 +7,7 @@ namespace Dependiator.GitModel
 	{
 		Repository Repository { get; }
 
-		bool IsPaused { get;}
-
-		event EventHandler<RepositoryUpdatedEventArgs> RepositoryUpdated;
-
-		bool IsRepositoryCached(string workingFolder);
 
 		Task LoadRepositoryAsync(string workingFolder);
-
-		Task GetFreshRepositoryAsync();
-
-		Task CheckLocalRepositoryAsync();
-
-		Task CheckBranchTipCommitsAsync();
-
-		Task UpdateRepositoryAfterCommandAsync();
-
-		Task RefreshAfterCommandAsync(bool useFreshRepository);
-		Task CheckRemoteChangesAsync(bool b);
-
-		Task GetRemoteAndFreshRepositoryAsync();
 	}
 }

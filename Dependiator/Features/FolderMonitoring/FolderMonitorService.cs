@@ -4,7 +4,7 @@ using System.Windows.Threading;
 using Dependiator.Utils;
 
 
-namespace Dependiator.Features.StatusHandling.Private
+namespace Dependiator.Features.FolderMonitoring
 {
 	[SingleInstance]
 	internal class FolderMonitorService : IFolderMonitorService

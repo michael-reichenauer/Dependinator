@@ -126,17 +126,8 @@
     </Compile>
     <Compile Include="Common\ProgressHandling\ProgressDialogViewModel.cs" />
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
-    <Compile Include="Features\StatusHandling\IStatusService.cs" />
-    <Compile Include="Features\StatusHandling\Private\FileEventArgs.cs" />
-    <Compile Include="Features\StatusHandling\Private\GitStatusService.cs" />
-    <Compile Include="Features\StatusHandling\Private\IFolderMonitorService.cs" />
-    <Compile Include="Features\StatusHandling\Private\IGitStatusService.cs" />
-    <Compile Include="Features\StatusHandling\Private\RepoChangedEventArgs.cs" />
-    <Compile Include="Features\StatusHandling\Private\StatusChangedEventArgs.cs" />
-    <Compile Include="Features\StatusHandling\Status.cs" />
-    <Compile Include="Features\StatusHandling\StatusFile.cs" />
-    <Compile Include="Features\StatusHandling\Private\StatusService.cs" />
-    <Compile Include="Features\StatusHandling\Refresh.cs" />
+    <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
+    <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
     <Compile Include="GitModel\ICommitsFiles.cs" />
     <Compile Include="GitModel\Private\BranchTipMonitorService.cs" />
     <Compile Include="GitModel\Private\Caching\BranchNameSurrogate.cs" />
@@ -153,7 +144,7 @@
     <Compile Include="RepositoryViews\Private\RepositoryCommands.cs" />
     <Compile Include="Utils\AsyncLock.cs" />
     <Compile Include="Utils\DependencyInjection.cs" />
-    <Compile Include="Features\StatusHandling\Private\FolderMonitorService.cs" />
+    <Compile Include="Features\FolderMonitoring\FolderMonitorService.cs" />
     <Compile Include="Git\BranchName.cs" />
     <Compile Include="Git\GitDivergence.cs" />
     <Compile Include="Git\INetworkService.cs" />

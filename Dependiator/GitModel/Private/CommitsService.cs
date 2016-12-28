@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependiator.Common;
-using Dependiator.Features.StatusHandling;
 using Dependiator.Git;
 using Dependiator.Utils;
 
@@ -13,8 +11,6 @@ namespace Dependiator.GitModel.Private
 	{ 
 		public void AddBranchCommits(GitRepository gitRepository, MRepository repository)
 		{
-			Status status = repository.Status;
-
 			Timing t = new Timing();
 			IEnumerable<CommitSha> rootCommits = gitRepository.Branches.Select(b => new CommitSha(b.TipId));
 
@@ -88,12 +84,6 @@ namespace Dependiator.GitModel.Private
 					gitCommit.SetBranchNameFromSubject(subjectBranchName);
 				}
 			}
-
-			if (!status.IsOK)
-			{
-				// Adding a virtual "uncommitted" commit since current working folder status has changes
-				AddVirtualUncommitted(gitRepository, status, repository);
-			}
 		}
 
 
@@ -126,21 +116,7 @@ namespace Dependiator.GitModel.Private
 			commit.IsSet = true;
 		}
 
-
-		private void AddVirtualUncommitted(
-			GitRepository gitRepository, Status status, MRepository repository)
-		{
-			MCommit commit = repository.Commit(CommitId.Uncommitted);
-			repository.Uncommitted = commit;
-			
-			commit.IsVirtual = true;
-
-			CommitId headId = new CommitId(gitRepository.Head.TipId);
-			MCommit headCommit = repository.Commit(headId);
-			CopyToUncommitedCommit(gitRepository, repository, status, commit, headCommit.Id);
-
-			SetChildOfParents(commit);
-		}
+		
 
 
 		private static void AddParents(
@@ -230,53 +206,7 @@ namespace Dependiator.GitModel.Private
 		}
 
 
-		private static void CopyToUncommitedCommit(
-			GitRepository gitRepository,
-			MRepository repository,
-			Status status, 
-			MCommit commit,
-			CommitId parentId)
-		{
-			int modifiedCount = status.ChangedCount;
-			int conflictCount = status.ConflictCount;
 
-			string subject = $"{modifiedCount} uncommitted changes in working folder";
-
-			if (conflictCount > 0)
-			{
-				subject = 
-					$"{conflictCount} conflicts and {modifiedCount} changes, {ShortSubject(status)}";
-				commit.HasConflicts = true;
-			}
-			else if (status.IsMerging)
-			{
-				subject = $"{modifiedCount} changes, {ShortSubject(status)}";
-				commit.IsMerging = true;
-			}
-
-			GitCommit gitCommit = new GitCommit(
-				CommitSha.Uncommitted,
-				subject,
-				gitRepository.UserName ?? "",
-				DateTime.Now,
-				DateTime.Now,
-				new List<CommitId> { parentId });
-
-			repository.GitCommits[CommitId.Uncommitted] = gitCommit;
-
-			commit.SetBranchName(gitRepository.Head.Name);
-
-			commit.Tickets = "";
-			commit.BranchId = null;
-		}
-
-
-		private static string ShortSubject(Status status)
-		{
-			string subject = status.MergeMessage?.Trim() ?? "";
-			string firstLine = subject.Split("\n".ToCharArray())[0];
-			return firstLine;
-		}
 
 
 		private static bool IsMergeCommit(GitCommit gitCommit)

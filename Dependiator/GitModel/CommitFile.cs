@@ -1,4 +1,3 @@
-using Dependiator.Features.StatusHandling;
 using Dependiator.Git;
 
 
@@ -6,21 +5,13 @@ namespace Dependiator.GitModel
 {
 	public class CommitFile
 	{
-		private readonly StatusFile gitFile;
+		
+		public string Path => "";
+		public string OldPath => "";
 
+		public GitConflict Conflict => null;
 
-		public CommitFile(StatusFile gitFile)
-		{
-			this.gitFile = gitFile;
-		}
-
-
-		public string Path => gitFile.FilePath;
-		public string OldPath => gitFile.OldFilePath;
-
-		public GitConflict Conflict => gitFile.Conflict;
-
-		public GitFileStatus Status => gitFile.Status;
+		public GitFileStatus Status => GitFileStatus.Modified;
 
 		public string StatusText => GetStatusText();
 

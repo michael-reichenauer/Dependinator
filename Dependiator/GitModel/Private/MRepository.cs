@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using Dependiator.Common;
-using Dependiator.Features.StatusHandling;
 
 
 namespace Dependiator.GitModel.Private
@@ -32,8 +31,6 @@ namespace Dependiator.GitModel.Private
 		public string WorkingFolder { get; set; }
 
 		public bool IsCached { get; set; }
-
-		public Status Status { get; set; } = Status.Default;
 
 		public MCommit Uncommitted { get; set; }
 

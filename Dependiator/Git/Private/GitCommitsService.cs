@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dependiator.ApplicationHandling;
 using Dependiator.Common;
-using Dependiator.Features.StatusHandling;
 using Dependiator.GitModel;
 using Dependiator.GitModel.Private;
 using Dependiator.RepositoryViews;
@@ -23,7 +22,6 @@ namespace Dependiator.Git.Private
 		private readonly WorkingFolder workingFolder;
 		private readonly Lazy<IRepositoryMgr> repositoryMgr;
 		private readonly IGitCommitBranchNameService gitCommitBranchNameService;
-		private readonly IStatusService statusService;
 		private readonly IRepoCaller repoCaller;
 
 
@@ -32,26 +30,12 @@ namespace Dependiator.Git.Private
 			WorkingFolder workingFolder,
 			Lazy<IRepositoryMgr> repositoryMgr,
 			IGitCommitBranchNameService gitCommitBranchNameService,
-			IStatusService statusService,
 			IRepoCaller repoCaller)
 		{
 			this.workingFolder = workingFolder;
 			this.repositoryMgr = repositoryMgr;
 			this.gitCommitBranchNameService = gitCommitBranchNameService;
-			this.statusService = statusService;
 			this.repoCaller = repoCaller;
-		}
-
-
-		public async Task<R<IReadOnlyList<StatusFile>>> GetFilesForCommitAsync(CommitSha commitSha)
-		{
-			if (commitSha == CommitSha.Uncommitted)
-			{
-				Status status = repositoryMgr.Value.Repository.Status;
-				return R.From(status.ChangedFiles);
-			}
-
-			return await repoCaller.UseRepoAsync(repo => repo.Diff.GetFiles(workingFolder, commitSha));
 		}
 
 
@@ -221,35 +205,7 @@ namespace Dependiator.Git.Private
 		{
 			Log.Debug($"Undo uncommitted file {path} ...");
 
-			Status status = await statusService.GetStatusAsync();
-			await repoCaller.UseLibRepoAsync(repo =>
-			{
-				StatusFile statusFile = status.ChangedFiles.FirstOrDefault(f => f.FilePath == path);
-
-				if (statusFile != null)
-				{
-					if (statusFile.IsModified || statusFile.IsDeleted)
-					{
-						CheckoutOptions options = new CheckoutOptions { CheckoutModifiers = CheckoutModifiers.Force };
-						repo.CheckoutPaths("HEAD", new[] { path }, options);
-					}
-
-					if (statusFile.IsAdded || statusFile.IsRenamed)
-					{
-						string fullPath = Path.Combine(workingFolder, path);
-						if (File.Exists(fullPath))
-						{
-							File.Delete(fullPath);
-						}
-					}
-
-					if (statusFile.IsRenamed)
-					{
-						CheckoutOptions options = new CheckoutOptions { CheckoutModifiers = CheckoutModifiers.Force };
-						repo.CheckoutPaths("HEAD", new[] { statusFile.OldFilePath }, options);
-					}
-				}
-			});
+			await Task.Yield();
 		}
 
 		public R<string> GetFullMessage(CommitSha commitSha)
