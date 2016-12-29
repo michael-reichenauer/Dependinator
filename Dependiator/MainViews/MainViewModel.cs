@@ -29,7 +29,7 @@ namespace Dependiator.MainViews
 		private static readonly TimeSpan FilterDelay = TimeSpan.FromMilliseconds(300);
 
 	//	private readonly IViewModelService viewModelService;
-		private readonly IRepositoryService repositoryService;
+		//private readonly IRepositoryService repositoryService;
 
 		private readonly IThemeService themeService;
 		private readonly WorkingFolder workingFolder;
@@ -40,7 +40,7 @@ namespace Dependiator.MainViews
 		private string settingFilterText = "";
 
 		private int width = 0;
-		private int graphWidth = 0;
+		//private int graphWidth = 0;
 
 		//public List<BranchViewModel> Branches { get; } = new List<BranchViewModel>();
 		//public List<MergeViewModel> Merges { get; } = new List<MergeViewModel>();
@@ -54,25 +54,25 @@ namespace Dependiator.MainViews
 		private readonly AsyncLock refreshLock = new AsyncLock();
 
 
-		public IReadOnlyList<Branch> SpecifiedBranches { get; set; } = new Branch[0];
+		//public IReadOnlyList<Branch> SpecifiedBranches { get; set; } = new Branch[0];
 
 		//public string WorkingFolder { get; set; }
 
-		public IReadOnlyList<BranchName> SpecifiedBranchNames { get; set; } = new List<BranchName>();
+		//public IReadOnlyList<BranchName> SpecifiedBranchNames { get; set; } = new List<BranchName>();
 		public ZoomableCanvas Canvas { get; set; }
 
 
 		public MainViewModel(
 			WorkingFolder workingFolder,
 			//IViewModelService viewModelService,
-			IRepositoryService repositoryService,
+			//IRepositoryService repositoryService,
 			IThemeService themeService,
-			IProgressService progressService,
-			Func<CommitDetailsViewModel> commitDetailsViewModelProvider)
+			IProgressService progressService)
+			//Func<CommitDetailsViewModel> commitDetailsViewModelProvider)
 		{
 			this.workingFolder = workingFolder;
 			//this.viewModelService = viewModelService;
-			this.repositoryService = repositoryService;
+			//this.repositoryService = repositoryService;
 
 			this.themeService = themeService;
 			this.progress = progressService;
@@ -82,11 +82,13 @@ namespace Dependiator.MainViews
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
 
-			CommitDetailsViewModel = commitDetailsViewModelProvider();
-		}	
+			//CommitDetailsViewModel = commitDetailsViewModelProvider();
+		}
 
-		public Branch MergingBranch { get; private set; }
+		//public Branch MergingBranch { get; private set; }
 
+
+		public MainViewVirtualItemsSource VirtualItemsSource { get; }
 
 		public void ShowCommitDetails()
 		{
@@ -108,42 +110,42 @@ namespace Dependiator.MainViews
 
 
 
-		public string CurrentBranchName
-		{
-			get { return Get(); }
-			set { Set(value).Notify(nameof(PullCurrentBranchText), nameof(PushCurrentBranchText)); }
-		}
+		//public string CurrentBranchName
+		//{
+		//	get { return Get(); }
+		//	set { Set(value).Notify(nameof(PullCurrentBranchText), nameof(PushCurrentBranchText)); }
+		//}
 
-		public Brush CurrentBranchBrush
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
+		//public Brush CurrentBranchBrush
+		//{
+		//	get { return Get(); }
+		//	set { Set(value); }
+		//}
 
-		public string PullCurrentBranchText => $"Update current branch '{CurrentBranchName}'";
+		//public string PullCurrentBranchText => $"Update current branch '{CurrentBranchName}'";
 
-		public string PushCurrentBranchText => $"Push current branch '{CurrentBranchName}'";
+		//public string PushCurrentBranchText => $"Push current branch '{CurrentBranchName}'";
 
 
-		public Command<Branch> ShowBranchCommand => Command<Branch>(ShowBranch);
+		//public Command<Branch> ShowBranchCommand => Command<Branch>(ShowBranch);
 
-		public Command<Branch> HideBranchCommand => Command<Branch>(HideBranch);
+		//public Command<Branch> HideBranchCommand => Command<Branch>(HideBranch);
 
 		public Command ToggleDetailsCommand => Command(ToggleCommitDetails);
 
-		public MainViewVirtualItemsSource VirtualItemsSource { get; }
+		
 
-		public ObservableCollection<BranchItem> ShowableBranches { get; }
-			= new ObservableCollection<BranchItem>();
+		//public ObservableCollection<BranchItem> ShowableBranches { get; }
+		//	= new ObservableCollection<BranchItem>();
 
-		public ObservableCollection<BranchItem> DeletableBranches { get; }
-			= new ObservableCollection<BranchItem>();
+		//public ObservableCollection<BranchItem> DeletableBranches { get; }
+		//	= new ObservableCollection<BranchItem>();
 
-		public ObservableCollection<BranchItem> HidableBranches { get; }
-			= new ObservableCollection<BranchItem>();
+		//public ObservableCollection<BranchItem> HidableBranches { get; }
+		//	= new ObservableCollection<BranchItem>();
 
-		public ObservableCollection<BranchItem> ShownBranches { get; }
-			= new ObservableCollection<BranchItem>();
+		//public ObservableCollection<BranchItem> ShownBranches { get; }
+		//	= new ObservableCollection<BranchItem>();
 
 
 		public CommitDetailsViewModel CommitDetailsViewModel { get; }
@@ -177,24 +179,24 @@ namespace Dependiator.MainViews
 			}
 		}
 
-		public int GraphWidth
-		{
-			get { return graphWidth; }
-			set
-			{
-				if (graphWidth != value)
-				{
-					graphWidth = value;
-					//Commits.ForEach(commit => commit.GraphWidth = graphWidth);
-				}
-			}
-		}
+		//public int GraphWidth
+		//{
+		//	get { return graphWidth; }
+		//	set
+		//	{
+		//		if (graphWidth != value)
+		//		{
+		//			graphWidth = value;
+		//			//Commits.ForEach(commit => commit.GraphWidth = graphWidth);
+		//		}
+		//	}
+		//}
 
 
-		public void ShowBranch(BranchName branchName)
-		{
-			SpecifiedBranchNames = new[] { branchName };
-		}
+		//public void ShowBranch(BranchName branchName)
+		//{
+		//	SpecifiedBranchNames = new[] { branchName };
+		//}
 
 
 		public void RefreshView()
@@ -213,7 +215,7 @@ namespace Dependiator.MainViews
 
 				using (progress.ShowDialog("Loading branch view ..."))
 				{
-					await repositoryService.LoadRepositoryAsync(workingFolder);
+					//await repositoryService.LoadRepositoryAsync(workingFolder);
 					t.Log("Read cached/fresh repository");
 					LoadViewModel();
 					t.Log("Updated view model after cached/fresh");
@@ -371,13 +373,11 @@ namespace Dependiator.MainViews
 		private void UpdateViewModelImpl()
 		{
 			//Commits.ForEach(commit => commit.WindowWidth = Width);
-			CommitDetailsViewModel.NotifyAll();
+			//CommitDetailsViewModel.NotifyAll();
 			NotifyAll();
 
 			VirtualItemsSource.DataChanged();
 		}
-
-
 
 
 		public int SelectedIndex
@@ -418,100 +418,100 @@ namespace Dependiator.MainViews
 		}
 
 
-		private class CommitPosition
+		//private class CommitPosition
+		//{
+		//	public CommitPosition(Commit commit, int index)
+		//	{
+		//		Commit = commit;
+		//		Index = index;
+		//	}
+
+		//	public Commit Commit { get; }
+		//	public int Index { get; }
+		//}
+
+		private void FilterTrigger(object sender, EventArgs e)
 		{
-			public CommitPosition(Commit commit, int index)
-			{
-				Commit = commit;
-				Index = index;
-			}
+			//filterTriggerTimer.Stop();
+			//string filterText = settingFilterText;
+			//FilterText = filterText;
 
-			public Commit Commit { get; }
-			public int Index { get; }
-		}
+			//Log.Debug($"Filter triggered for: {FilterText}");
 
-		private async void FilterTrigger(object sender, EventArgs e)
-		{
-			filterTriggerTimer.Stop();
-			string filterText = settingFilterText;
-			FilterText = filterText;
+			//CommitPosition commitPosition = TryGetSelectedCommitPosition();
 
-			Log.Debug($"Filter triggered for: {FilterText}");
-
-			CommitPosition commitPosition = TryGetSelectedCommitPosition();
-
-			using (progress.ShowBusy())
-			{
-				//await viewModelService.SetFilterAsync(this, filterText);
-				await Task.Yield();
-			}
-
-			TrySetSelectedCommitPosition(commitPosition, true);
-			CommitDetailsViewModel.NotifyAll();
-
-			VirtualItemsSource.DataChanged();
-		}
-
-
-		private CommitPosition TryGetSelectedCommitPosition()
-		{
-			//Commit selected = (SelectedItem as CommitViewModel)?.Commit;
-			//int index = -1;
-
-			//if (selected != null)
+			//using (progress.ShowBusy())
 			//{
-			//	index = Commits.FindIndex(c => c.Commit.Id == selected.Id);
+			//	//await viewModelService.SetFilterAsync(this, filterText);
+			//	await Task.Yield();
 			//}
 
-			//if (selected != null && index != -1)
-			//{
-			//	return new CommitPosition(selected, index);
-			//}
+			//TrySetSelectedCommitPosition(commitPosition, true);
+			//CommitDetailsViewModel.NotifyAll();
 
-			return null;
+			//VirtualItemsSource.DataChanged();
 		}
 
 
-		private void TrySetSelectedCommitPosition(
-			CommitPosition commitPosition, bool ignoreTopIndex = false)
-		{
-			//if (commitPosition != null)
-			//{
-			//	if (!ignoreTopIndex && commitPosition.Index == 0)
-			//	{
-			//		// The index was 0 (top) lest ensure the index remains 0 again
-			//		Log.Debug("Scroll to 0 since first position was 0");
-			//		ScrollTo(0);
-			//		//if (Commits.Any())
-			//		//{
-			//		//	SelectedIndex = 0;
-			//		//	SelectedItem = Commits.First();
-			//		//}
+		//private CommitPosition TryGetSelectedCommitPosition()
+		//{
+		//	//Commit selected = (SelectedItem as CommitViewModel)?.Commit;
+		//	//int index = -1;
 
-			//		return;
-			//	}
+		//	//if (selected != null)
+		//	//{
+		//	//	index = Commits.FindIndex(c => c.Commit.Id == selected.Id);
+		//	//}
 
-			//	Commit selected = commitPosition.Commit;
+		//	//if (selected != null && index != -1)
+		//	//{
+		//	//	return new CommitPosition(selected, index);
+		//	//}
 
-			//	int indexAfter = Commits.FindIndex(c => c.Commit.Id == selected.Id);
+		//	return null;
+		//}
 
-			//	if (selected != null && indexAfter != -1)
-			//	{
-			//		int indexBefore = commitPosition.Index;
-			//		ScrollRows(indexBefore - indexAfter);
-			//		SelectedIndex = indexAfter;
-			//		SelectedItem = Commits[indexAfter];
-			//		return;
-			//	}
-			//}
 
-			//ScrollTo(0);
-			//if (Commits.Any())
-			//{
-			//	SelectedIndex = 0;
-			//	SelectedItem = Commits.First();
-			//}
-		}
+		//private void TrySetSelectedCommitPosition(
+		//	CommitPosition commitPosition, bool ignoreTopIndex = false)
+		//{
+		//	//if (commitPosition != null)
+		//	//{
+		//	//	if (!ignoreTopIndex && commitPosition.Index == 0)
+		//	//	{
+		//	//		// The index was 0 (top) lest ensure the index remains 0 again
+		//	//		Log.Debug("Scroll to 0 since first position was 0");
+		//	//		ScrollTo(0);
+		//	//		//if (Commits.Any())
+		//	//		//{
+		//	//		//	SelectedIndex = 0;
+		//	//		//	SelectedItem = Commits.First();
+		//	//		//}
+
+		//	//		return;
+		//	//	}
+
+		//	//	Commit selected = commitPosition.Commit;
+
+		//	//	int indexAfter = Commits.FindIndex(c => c.Commit.Id == selected.Id);
+
+		//	//	if (selected != null && indexAfter != -1)
+		//	//	{
+		//	//		int indexBefore = commitPosition.Index;
+		//	//		ScrollRows(indexBefore - indexAfter);
+		//	//		SelectedIndex = indexAfter;
+		//	//		SelectedItem = Commits[indexAfter];
+		//	//		return;
+		//	//	}
+		//	//}
+
+		//	//ScrollTo(0);
+		//	//if (Commits.Any())
+		//	//{
+		//	//	SelectedIndex = 0;
+		//	//	SelectedItem = Commits.First();
+		//	//}
+		//}
 
 
 		public void ScrollRows(int rows)

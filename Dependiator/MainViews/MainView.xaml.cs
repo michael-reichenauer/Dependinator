@@ -51,11 +51,11 @@ namespace Dependiator.MainViews
 
 		private void MouseDobleClick(object sender, MouseButtonEventArgs e)
 		{
-			Point viewPoint = e.GetPosition(ItemsListBox);
-			if (viewPoint.X > viewModel.GraphWidth)
-			{
-				viewModel.ToggleCommitDetails();
-			}
+			//Point viewPoint = e.GetPosition(ItemsListBox);
+			//if (viewPoint.X > viewModel.GraphWidth)
+			//{
+			//	viewModel.ToggleCommitDetails();
+			//}
 		}
 
 
