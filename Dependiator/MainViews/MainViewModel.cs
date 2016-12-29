@@ -5,7 +5,6 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Dependiator.ApplicationHandling;
-using Dependiator.Common;
 using Dependiator.Common.ProgressHandling;
 using Dependiator.Common.ThemeHandling;
 using Dependiator.MainViews.Private;
@@ -25,9 +24,6 @@ namespace Dependiator.MainViews
 	{
 		private static readonly TimeSpan FilterDelay = TimeSpan.FromMilliseconds(300);
 
-	//	private readonly IViewModelService viewModelService;
-		//private readonly IRepositoryService repositoryService;
-
 		private readonly IThemeService themeService;
 		private readonly WorkingFolder workingFolder;
 		private readonly IProgressService progress;
@@ -37,40 +33,21 @@ namespace Dependiator.MainViews
 		private string settingFilterText = "";
 
 		private int width = 0;
-		//private int graphWidth = 0;
-
-		//public List<BranchViewModel> Branches { get; } = new List<BranchViewModel>();
-		//public List<MergeViewModel> Merges { get; } = new List<MergeViewModel>();
-		//public List<CommitViewModel> Commits { get; } = new List<CommitViewModel>();
-
+	
 		public List<ModuleViewModel> Modules { get; } = new List<ModuleViewModel>();
-
-		//public Dictionary<CommitId, CommitViewModel> CommitsById { get; } =
-		//	new Dictionary<CommitId, CommitViewModel>();
 
 		private readonly AsyncLock refreshLock = new AsyncLock();
 
 
-		//public IReadOnlyList<Branch> SpecifiedBranches { get; set; } = new Branch[0];
-
-		//public string WorkingFolder { get; set; }
-
-		//public IReadOnlyList<BranchName> SpecifiedBranchNames { get; set; } = new List<BranchName>();
 		public ZoomableCanvas Canvas { get; set; }
-
+		public System.Windows.Controls.ListBox ListBox { get; set; }
 
 		public MainViewModel(
 			WorkingFolder workingFolder,
-			//IViewModelService viewModelService,
-			//IRepositoryService repositoryService,
 			IThemeService themeService,
 			IProgressService progressService)
-			//Func<CommitDetailsViewModel> commitDetailsViewModelProvider)
 		{
 			this.workingFolder = workingFolder;
-			//this.viewModelService = viewModelService;
-			//this.repositoryService = repositoryService;
-
 			this.themeService = themeService;
 			this.progress = progressService;
 
@@ -79,11 +56,20 @@ namespace Dependiator.MainViews
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
 
-			//CommitDetailsViewModel = commitDetailsViewModelProvider();
+			Modules.Add(new ModuleViewModel
+			{
+				Brush = Brushes.Aqua,
+				Rect = new Rect(100, 100, 100, 100),
+				Rectangle = new Rect(2, 2, 70, 70),
+			});
+
+			Modules.Add(new ModuleViewModel
+			{
+				Brush = Brushes.CornflowerBlue,
+				Rect = new Rect(400, 200, 100, 100),
+				Rectangle = new Rect(2, 2, 20, 70),
+			});
 		}
-
-		//public Branch MergingBranch { get; private set; }
-
 
 		public MainViewVirtualItemsSource VirtualItemsSource { get; }
 
@@ -105,62 +91,17 @@ namespace Dependiator.MainViews
 			set { Set(value); }
 		}
 
-
-
-		//public string CurrentBranchName
-		//{
-		//	get { return Get(); }
-		//	set { Set(value).Notify(nameof(PullCurrentBranchText), nameof(PushCurrentBranchText)); }
-		//}
-
-		//public Brush CurrentBranchBrush
-		//{
-		//	get { return Get(); }
-		//	set { Set(value); }
-		//}
-
-		//public string PullCurrentBranchText => $"Update current branch '{CurrentBranchName}'";
-
-		//public string PushCurrentBranchText => $"Push current branch '{CurrentBranchName}'";
-
-
-		//public Command<Branch> ShowBranchCommand => Command<Branch>(ShowBranch);
-
-		//public Command<Branch> HideBranchCommand => Command<Branch>(HideBranch);
-
 		public Command ToggleDetailsCommand => Command(ToggleCommitDetails);
-
-		
-
-		//public ObservableCollection<BranchItem> ShowableBranches { get; }
-		//	= new ObservableCollection<BranchItem>();
-
-		//public ObservableCollection<BranchItem> DeletableBranches { get; }
-		//	= new ObservableCollection<BranchItem>();
-
-		//public ObservableCollection<BranchItem> HidableBranches { get; }
-		//	= new ObservableCollection<BranchItem>();
-
-		//public ObservableCollection<BranchItem> ShownBranches { get; }
-		//	= new ObservableCollection<BranchItem>();
-
-
-		//public CommitDetailsViewModel CommitDetailsViewModel { get; }
 
 		public string FilterText { get; private set; } = "";
 
-
-		public System.Windows.Controls.ListBox ListBox { get; set; }
-
-		//public IReadOnlyList<Branch> PreFilterBranches { get; set; }
-
-		//public CommitViewModel PreFilterSelectedItem { get; set; }
 
 		public bool IsShowCommitDetails
 		{
 			get { return Get(); }
 			set { Set(value); }
 		}
+
 
 		public int Width
 		{
@@ -170,30 +111,11 @@ namespace Dependiator.MainViews
 				if (width != value)
 				{
 					width = value;
-					//Commits.ForEach(commit => commit.WindowWidth = width - 2);
 					VirtualItemsSource.DataChanged();
 				}
 			}
 		}
 
-		//public int GraphWidth
-		//{
-		//	get { return graphWidth; }
-		//	set
-		//	{
-		//		if (graphWidth != value)
-		//		{
-		//			graphWidth = value;
-		//			//Commits.ForEach(commit => commit.GraphWidth = graphWidth);
-		//		}
-		//	}
-		//}
-
-
-		//public void ShowBranch(BranchName branchName)
-		//{
-		//	SpecifiedBranchNames = new[] { branchName };
-		//}
 
 
 		public void RefreshView()
@@ -212,7 +134,6 @@ namespace Dependiator.MainViews
 
 				using (progress.ShowDialog("Loading branch view ..."))
 				{
-					//await repositoryService.LoadRepositoryAsync(workingFolder);
 					t.Log("Read cached/fresh repository");
 					LoadViewModel();
 					t.Log("Updated view model after cached/fresh");
@@ -318,8 +239,6 @@ namespace Dependiator.MainViews
 
 			if (!IsInFilterMode())
 			{
-				//viewModelService.UpdateViewModel(this);
-
 				UpdateViewModelImpl();
 
 				t.Log("Updated repository view model");
@@ -337,31 +256,7 @@ namespace Dependiator.MainViews
 		{
 			Timing t = new Timing();
 
-			Modules.Add(new ModuleViewModel
-			{
-				Brush = Brushes.Aqua,
-				Rect = new Rect(100, 100, 100, 100),
-				Rectangle = new Rect(2, 2, 70, 70),
-
-			});
-
-			Modules.Add(new ModuleViewModel
-			{
-				Brush = Brushes.CornflowerBlue,
-				Rect = new Rect(400, 200, 100, 100),
-				Rectangle = new Rect(2, 2, 20, 70),
-
-			});
-
-		//	viewModelService.UpdateViewModel(this);
-
 			UpdateViewModelImpl();
-
-			//if (Commits.Any())
-			//{
-			//	SelectedIndex = 0;
-			//	SelectedItem = Commits.First();
-			//}
 
 			t.Log("Updated repository view model");
 		}
@@ -369,8 +264,6 @@ namespace Dependiator.MainViews
 
 		private void UpdateViewModelImpl()
 		{
-			//Commits.ForEach(commit => commit.WindowWidth = Width);
-			//CommitDetailsViewModel.NotifyAll();
 			NotifyAll();
 
 			VirtualItemsSource.DataChanged();
@@ -390,20 +283,8 @@ namespace Dependiator.MainViews
 			set
 			{
 				Set(value);
-				//CommitViewModel commit = value as CommitViewModel;
-				//if (commit != null)
-				//{
-				//	SetCommitsDetails(commit);
-				//}
 			}
 		}
-
-
-
-		//private void SetCommitsDetails(CommitViewModel commit)
-		//{
-		//	CommitDetailsViewModel.CommitViewModel = commit;
-		//}
 
 
 		public void SetFilter(string text)
@@ -415,100 +296,11 @@ namespace Dependiator.MainViews
 		}
 
 
-		//private class CommitPosition
-		//{
-		//	public CommitPosition(Commit commit, int index)
-		//	{
-		//		Commit = commit;
-		//		Index = index;
-		//	}
-
-		//	public Commit Commit { get; }
-		//	public int Index { get; }
-		//}
-
 		private void FilterTrigger(object sender, EventArgs e)
 		{
-			//filterTriggerTimer.Stop();
-			//string filterText = settingFilterText;
-			//FilterText = filterText;
-
-			//Log.Debug($"Filter triggered for: {FilterText}");
-
-			//CommitPosition commitPosition = TryGetSelectedCommitPosition();
-
-			//using (progress.ShowBusy())
-			//{
-			//	//await viewModelService.SetFilterAsync(this, filterText);
-			//	await Task.Yield();
-			//}
-
-			//TrySetSelectedCommitPosition(commitPosition, true);
-			//CommitDetailsViewModel.NotifyAll();
-
 			//VirtualItemsSource.DataChanged();
 		}
 
-
-		//private CommitPosition TryGetSelectedCommitPosition()
-		//{
-		//	//Commit selected = (SelectedItem as CommitViewModel)?.Commit;
-		//	//int index = -1;
-
-		//	//if (selected != null)
-		//	//{
-		//	//	index = Commits.FindIndex(c => c.Commit.Id == selected.Id);
-		//	//}
-
-		//	//if (selected != null && index != -1)
-		//	//{
-		//	//	return new CommitPosition(selected, index);
-		//	//}
-
-		//	return null;
-		//}
-
-
-		//private void TrySetSelectedCommitPosition(
-		//	CommitPosition commitPosition, bool ignoreTopIndex = false)
-		//{
-		//	//if (commitPosition != null)
-		//	//{
-		//	//	if (!ignoreTopIndex && commitPosition.Index == 0)
-		//	//	{
-		//	//		// The index was 0 (top) lest ensure the index remains 0 again
-		//	//		Log.Debug("Scroll to 0 since first position was 0");
-		//	//		ScrollTo(0);
-		//	//		//if (Commits.Any())
-		//	//		//{
-		//	//		//	SelectedIndex = 0;
-		//	//		//	SelectedItem = Commits.First();
-		//	//		//}
-
-		//	//		return;
-		//	//	}
-
-		//	//	Commit selected = commitPosition.Commit;
-
-		//	//	int indexAfter = Commits.FindIndex(c => c.Commit.Id == selected.Id);
-
-		//	//	if (selected != null && indexAfter != -1)
-		//	//	{
-		//	//		int indexBefore = commitPosition.Index;
-		//	//		ScrollRows(indexBefore - indexAfter);
-		//	//		SelectedIndex = indexAfter;
-		//	//		SelectedItem = Commits[indexAfter];
-		//	//		return;
-		//	//	}
-		//	//}
-
-		//	//ScrollTo(0);
-		//	//if (Commits.Any())
-		//	//{
-		//	//	SelectedIndex = 0;
-		//	//	SelectedItem = Commits.First();
-		//	//}
-		//}
 
 
 		public void ScrollRows(int rows)
@@ -525,26 +317,11 @@ namespace Dependiator.MainViews
 		}
 
 
-		//public void ShowBranch(Branch branch)
-		//{
-		//	//viewModelService.ShowBranch(this, branch);
-		//}
-
-		//public void HideBranch(Branch branch)
-		//{
-		//	//viewModelService.HideBranch(this, branch);
-		//}
-
 		public void ShowUncommittedDetails()
 		{
 			SelectedIndex = 0;
 			ScrollTo(0);
 			IsShowCommitDetails = true;
-		}
-
-		public void ShowCurrentBranch()
-		{
-			//viewModelService.ShowBranch(this, repositoryService.Repository.CurrentBranch);
 		}
 
 
@@ -573,17 +350,5 @@ namespace Dependiator.MainViews
 			//	Clicked(commitViewModel);
 			//}
 		}
-
-		//private void Clicked(CommitViewModel commitViewModel)
-		//{
-		//	//if (commitViewModel.IsMergePoint)
-		//	//{
-		//	//	// User clicked on a merge point (toggle between expanded and collapsed)
-		//	//	int rowsChange = viewModelService.ToggleMergePoint(this, commitViewModel.Commit);
-
-		//	//	ScrollRows(rowsChange);
-		//	//	VirtualItemsSource.DataChanged();
-		//	//}
-		//}
 	}
 }
