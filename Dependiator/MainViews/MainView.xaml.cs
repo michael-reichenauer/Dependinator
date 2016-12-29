@@ -6,7 +6,7 @@ using Dependiator.Utils.UI.VirtualCanvas;
 using UserControl = System.Windows.Controls.UserControl;
 
 
-namespace Dependiator.RepositoryViews
+namespace Dependiator.MainViews
 {
 	/// <summary>
 	/// Interaction logic for MainView.xaml

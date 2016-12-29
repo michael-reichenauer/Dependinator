@@ -1,12 +1,12 @@
 ﻿<UserControl
-	x:Class="Dependiator.RepositoryViews.MainView"
+	x:Class="Dependiator.MainViews.MainView"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:ui="clr-namespace:Dependiator.Utils.UI"
 	xmlns:virtualCanvas="clr-namespace:Dependiator.Utils.UI.VirtualCanvas"
-	xmlns:local="clr-namespace:Dependiator.RepositoryViews"
+	xmlns:local="clr-namespace:Dependiator.MainViews"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 

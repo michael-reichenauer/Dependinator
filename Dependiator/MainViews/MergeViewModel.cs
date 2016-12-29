@@ -3,7 +3,7 @@ using System.Windows.Media;
 using Dependiator.Utils.UI;
 
 
-namespace Dependiator.RepositoryViews
+namespace Dependiator.MainViews
 {
 	internal class MergeViewModel : ViewModel
 	{

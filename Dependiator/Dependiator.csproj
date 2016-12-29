@@ -131,8 +131,8 @@
     <Compile Include="GitModel\ICommitsFiles.cs" />
     <Compile Include="GitModel\Private\Caching\BranchNameSurrogate.cs" />
     <Compile Include="GitModel\Private\GitCommit.cs" />
-    <Compile Include="RepositoryViews\IRepositoryMgr.cs" />
-    <Compile Include="RepositoryViews\Private\RepositoryCommands.cs" />
+    <Compile Include="MainViews\IRepositoryMgr.cs" />
+    <Compile Include="MainViews\Private\RepositoryCommands.cs" />
     <Compile Include="Utils\AsyncLock.cs" />
     <Compile Include="Utils\DependencyInjection.cs" />
     <Compile Include="Features\FolderMonitoring\FolderMonitorService.cs" />
@@ -148,7 +148,7 @@
     <Compile Include="Utils\Throttler.cs" />
     <Compile Include="Utils\UI\CredentialsDialog.cs" />
     <Compile Include="Utils\Disposable.cs" />
-    <Compile Include="RepositoryViews\IRepositoryCommands.cs" />
+    <Compile Include="MainViews\IRepositoryCommands.cs" />
     <Compile Include="ApplicationHandling\SettingsHandling\Settings.cs" />
     <Compile Include="ApplicationHandling\SettingsHandling\Options.cs" />
     <Compile Include="ApplicationHandling\SettingsHandling\WorkFolderSettings.cs" />
@@ -160,16 +160,16 @@
     <Compile Include="Utils\UI\InputBindingsBehavior.cs" />
     <Compile Include="Utils\UI\VisibleWindow.cs" />
     <Compile Include="Utils\UI\WpfBindingTraceListener.cs" />
-    <Compile Include="RepositoryViews\BranchItem.cs" />
-    <Compile Include="RepositoryViews\BranchNameItem.cs" />
-    <Compile Include="RepositoryViews\BranchViewModel.cs" />
+    <Compile Include="MainViews\BranchItem.cs" />
+    <Compile Include="MainViews\BranchNameItem.cs" />
+    <Compile Include="MainViews\BranchViewModel.cs" />
     <Compile Include="Common\ThemeHandling\ThemeService.cs" />
-    <Compile Include="RepositoryViews\CommitDetailsView.xaml.cs">
+    <Compile Include="MainViews\CommitDetailsView.xaml.cs">
       <DependentUpon>CommitDetailsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="RepositoryViews\CommitDetailsViewModel.cs" />
-    <Compile Include="RepositoryViews\CommitFileViewModel.cs" />
-    <Compile Include="RepositoryViews\MainView.xaml.cs">
+    <Compile Include="MainViews\CommitDetailsViewModel.cs" />
+    <Compile Include="MainViews\CommitFileViewModel.cs" />
+    <Compile Include="MainViews\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Common\SearchFilter.xaml.cs">
@@ -183,14 +183,14 @@
     <Compile Include="Utils\UI\HideableGridSplitter.cs" />
     <Compile Include="Utils\Compare.cs" />
     <Compile Include="GitModel\CommitFile.cs" />
-    <Compile Include="RepositoryViews\CommitViewModel.cs" />
-    <Compile Include="RepositoryViews\Converters.cs" />
+    <Compile Include="MainViews\CommitViewModel.cs" />
+    <Compile Include="MainViews\Converters.cs" />
     <Compile Include="Common\ThemeHandling\IThemeService.cs" />
-    <Compile Include="RepositoryViews\IViewModelService.cs" />
-    <Compile Include="RepositoryViews\MergeViewModel.cs" />
-    <Compile Include="RepositoryViews\Private\RepositoryVirtualItemsSource.cs" />
-    <Compile Include="RepositoryViews\RepositoryViewModel.cs" />
-    <Compile Include="RepositoryViews\Private\ViewModelService.cs" />
+    <Compile Include="MainViews\IViewModelService.cs" />
+    <Compile Include="MainViews\MergeViewModel.cs" />
+    <Compile Include="MainViews\Private\RepositoryVirtualItemsSource.cs" />
+    <Compile Include="MainViews\MainViewModel.cs" />
+    <Compile Include="MainViews\Private\ViewModelService.cs" />
     <Compile Include="GitModel\Branch.cs" />
     <Compile Include="GitModel\Commit.cs" />
     <Compile Include="GitModel\CommitFiles.cs" />
@@ -262,11 +262,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="RepositoryViews\CommitDetailsView.xaml">
+    <Page Include="MainViews\CommitDetailsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="RepositoryViews\MainView.xaml">
+    <Page Include="MainViews\MainView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -1,7 +1,7 @@
 ﻿using System.Windows.Controls;
 
 
-namespace Dependiator.RepositoryViews
+namespace Dependiator.MainViews
 {
 	/// <summary>
 	/// Interaction logic for CommitDetailsView.xaml

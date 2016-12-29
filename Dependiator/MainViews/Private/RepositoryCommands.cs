@@ -2,7 +2,7 @@ using System;
 using Dependiator.GitModel;
 
 
-namespace Dependiator.RepositoryViews.Private
+namespace Dependiator.MainViews.Private
 {
 	internal class RepositoryCommands : IRepositoryCommands
 	{

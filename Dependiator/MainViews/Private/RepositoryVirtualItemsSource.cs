@@ -3,7 +3,7 @@ using System.Windows;
 using Dependiator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependiator.RepositoryViews.Private
+namespace Dependiator.MainViews.Private
 {
 	internal class RepositoryVirtualItemsSource : VirtualItemsSource
 	{

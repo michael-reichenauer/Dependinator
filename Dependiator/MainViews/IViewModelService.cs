@@ -3,7 +3,7 @@ using System.Windows.Media;
 using Dependiator.GitModel;
 
 
-namespace Dependiator.RepositoryViews
+namespace Dependiator.MainViews
 {
 	internal interface IViewModelService
 	{

@@ -10,7 +10,7 @@ using Dependiator.GitModel;
 using Dependiator.Utils;
 
 
-namespace Dependiator.RepositoryViews.Private
+namespace Dependiator.MainViews.Private
 {
 	/// <summary>
 	/// ViewModelService

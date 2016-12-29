@@ -10,7 +10,7 @@ using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Common;
 using Dependiator.Common.MessageDialogs;
 using Dependiator.GitModel;
-using Dependiator.RepositoryViews;
+using Dependiator.MainViews;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
 using Application = System.Windows.Application;

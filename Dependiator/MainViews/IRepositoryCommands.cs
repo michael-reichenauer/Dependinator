@@ -1,7 +1,7 @@
 using Dependiator.GitModel;
 
 
-namespace Dependiator.RepositoryViews
+namespace Dependiator.MainViews
 {
 	internal interface IRepositoryCommands
 	{

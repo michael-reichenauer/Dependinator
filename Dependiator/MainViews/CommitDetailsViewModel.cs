@@ -11,7 +11,7 @@ using Dependiator.Utils.UI;
 using Dependiator.Utils;
 
 
-namespace Dependiator.RepositoryViews
+namespace Dependiator.MainViews
 {
 	internal class CommitDetailsViewModel : ViewModel
 	{

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dependiator.Common;
-using Dependiator.RepositoryViews;
+using Dependiator.MainViews;
 using Dependiator.Utils;
 
 

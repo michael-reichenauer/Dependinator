@@ -12,14 +12,14 @@ using Dependiator.Common.MessageDialogs;
 using Dependiator.Common.ProgressHandling;
 using Dependiator.Common.ThemeHandling;
 using Dependiator.GitModel;
-using Dependiator.RepositoryViews.Private;
+using Dependiator.MainViews.Private;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
 using Dependiator.Utils.UI.VirtualCanvas;
-using ListBox = System.Windows.Controls.ListBox;
+//using ListBox = System.Windows.Controls.ListBox;
 
 
-namespace Dependiator.RepositoryViews
+namespace Dependiator.MainViews
 {
 	/// <summary>
 	/// View model
@@ -151,7 +151,7 @@ namespace Dependiator.RepositoryViews
 		public string FilterText { get; private set; } = "";
 
 
-		public ListBox ListBox { get; set; }
+		public System.Windows.Controls.ListBox ListBox { get; set; }
 
 		public IReadOnlyList<Branch> PreFilterBranches { get; set; }
 

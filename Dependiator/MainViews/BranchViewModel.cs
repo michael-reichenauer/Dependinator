@@ -8,7 +8,7 @@ using Dependiator.GitModel;
 using Dependiator.Utils.UI;
 
 
-namespace Dependiator.RepositoryViews
+namespace Dependiator.MainViews
 {
 	internal class BranchViewModel : ViewModel
 	{
