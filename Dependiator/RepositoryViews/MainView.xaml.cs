@@ -9,14 +9,14 @@ using UserControl = System.Windows.Controls.UserControl;
 namespace Dependiator.RepositoryViews
 {
 	/// <summary>
-	/// Interaction logic for RepositoryView.xaml
+	/// Interaction logic for MainView.xaml
 	/// </summary>
-	public partial class RepositoryView : UserControl
+	public partial class MainView : UserControl
 	{
 		private RepositoryViewModel viewModel;
 
 
-		public RepositoryView()
+		public MainView()
 		{
 			InitializeComponent();
 		}

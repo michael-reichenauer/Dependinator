@@ -141,7 +141,7 @@
 		</Border>
 
 		<!-- Repository view -->
-		<repositoryViews:RepositoryView 
+		<repositoryViews:MainView 
 			x:Name="RepositoryView"
 			Grid.Row="1"
 			DataContext="{Binding RepositoryViewModel}"/>

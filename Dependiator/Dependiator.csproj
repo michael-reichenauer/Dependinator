@@ -169,8 +169,8 @@
     </Compile>
     <Compile Include="RepositoryViews\CommitDetailsViewModel.cs" />
     <Compile Include="RepositoryViews\CommitFileViewModel.cs" />
-    <Compile Include="RepositoryViews\RepositoryView.xaml.cs">
-      <DependentUpon>RepositoryView.xaml</DependentUpon>
+    <Compile Include="RepositoryViews\MainView.xaml.cs">
+      <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Common\SearchFilter.xaml.cs">
       <DependentUpon>SearchFilter.xaml</DependentUpon>
@@ -266,7 +266,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="RepositoryViews\RepositoryView.xaml">
+    <Page Include="RepositoryViews\MainView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
