@@ -9,7 +9,7 @@ using ProtoBuf.Meta;
 using ProtoSerializer = ProtoBuf.Serializer;
 
 
-namespace Dependiator.GitModel.Private.Caching
+namespace Dependiator.Utils
 {
 	public static class Serializer
 	{

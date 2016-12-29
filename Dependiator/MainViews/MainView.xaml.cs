@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Dependiator.Utils.UI.VirtualCanvas;
@@ -128,14 +127,14 @@ namespace Dependiator.MainViews
 		private void EventMouseUp(object sender, MouseButtonEventArgs e)
 		{
 			ListBoxItem item = sender as ListBoxItem;
-			if (item != null)
-			{
-				BranchViewModel branch = item.Content as BranchViewModel;
-				if (branch != null)
-				{
+			//if (item != null)
+			//{
+			//	BranchViewModel branch = item.Content as BranchViewModel;
+			//	if (branch != null)
+			//	{
 
-				}
-			}
+			//	}
+			//}
 		}
 	}
 }

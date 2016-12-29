@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Media;
-using Dependiator.GitModel;
 
 
 namespace Dependiator.Common.ThemeHandling
@@ -116,7 +115,7 @@ namespace Dependiator.Common.ThemeHandling
 		}
 
 
-		public Brush GetBrush(BranchName name)
+		public Brush GetBrush(string name)
 		{
 			int branchBrushId = (Math.Abs(name.GetHashCode()) % (brushes.Count - 2)) + 2;
 			return brushes[branchBrushId];

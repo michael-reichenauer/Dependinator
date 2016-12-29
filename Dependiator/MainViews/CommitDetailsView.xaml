@@ -151,7 +151,7 @@
 				HorizontalContentAlignment="Stretch">
 
 				<ListBox.ItemTemplate>
-					<DataTemplate DataType="{x:Type local:CommitFileViewModel}">
+					<DataTemplate DataType="{x:Type local:ModuleViewModel}">
 						<Grid>
 							<Grid.ColumnDefinitions>
 								<ColumnDefinition Width="*" />

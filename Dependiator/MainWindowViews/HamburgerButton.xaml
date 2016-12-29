@@ -17,28 +17,7 @@
 			ToolTip="Customize and control">
 
 			<Button.ContextMenu>
-				<ContextMenu Name="HamburgerContextMenu">
-
-					<!--Show Branch menu item -->
-					<MenuItem 
-						Header="Show branch"
-						ItemsSource="{Binding MainViewModel.ShowableBranches}">
-					<MenuItem.Icon>
-						<Border>
-							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE3CD;"/>
-						</Border>
-					</MenuItem.Icon>
-					<MenuItem.Resources>
-						<HierarchicalDataTemplate 
-								DataType="{x:Type commitsHistory:BranchItem}"
-								ItemsSource="{Binding Children}">
-							<MenuItem 
-									Header="{Binding Text}" 
-									Command="{Binding BranchCommand}"
-									CommandParameter="{Binding Branch}"/>
-						</HierarchicalDataTemplate>
-					</MenuItem.Resources>
-				</MenuItem>
+			<ContextMenu Name="HamburgerContextMenu">
 
 				<MenuItem 
 					Header="Refresh"
@@ -62,32 +41,6 @@
 				</MenuItem>
 
 				<Separator Background="{DynamicResource BorderBrush}"/>
-
-				<!-- Delete branch -->
-				<MenuItem 
-					Header="Delete branch ..."
-					ItemsSource="{Binding MainViewModel.DeletableBranches}">
-					<MenuItem.Icon>
-						<Border>
-							<TextBlock 
-								Style="{DynamicResource MenuIconStyle}" 
-								FontSize="14"
-								Margin="9,0,7,0"
-								Foreground="{DynamicResource UndoBrush}"
-								Text="&#xE14E;"/>
-						</Border>
-					</MenuItem.Icon>
-					<MenuItem.Resources>
-						<HierarchicalDataTemplate 
-								DataType="{x:Type commitsHistory:BranchItem}"
-								ItemsSource="{Binding Children}">
-							<MenuItem 
-								Header="{Binding Text}" 
-								Command="{Binding BranchCommand}"
-								CommandParameter="{Binding Branch}"/>
-						</HierarchicalDataTemplate>
-					</MenuItem.Resources>
-				</MenuItem>
 
 				<!-- Undo -->
 				<MenuItem Header="Undo">

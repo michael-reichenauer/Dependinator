@@ -1,13 +1,13 @@
-using System.Threading.Tasks;
+//using System.Threading.Tasks;
 
 
-namespace Dependiator.GitModel
-{
-	internal interface IRepositoryService
-	{
-		Repository Repository { get; }
+//namespace Dependiator.GitModel
+//{
+//	internal interface IRepositoryService
+//	{
+//		Repository Repository { get; }
 
 
-		Task LoadRepositoryAsync(string workingFolder);
-	}
-}
+//		Task LoadRepositoryAsync(string workingFolder);
+//	}
+//}

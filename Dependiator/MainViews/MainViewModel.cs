@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
@@ -10,7 +8,6 @@ using Dependiator.ApplicationHandling;
 using Dependiator.Common;
 using Dependiator.Common.ProgressHandling;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.GitModel;
 using Dependiator.MainViews.Private;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
@@ -48,8 +45,8 @@ namespace Dependiator.MainViews
 
 		public List<ModuleViewModel> Modules { get; } = new List<ModuleViewModel>();
 
-		public Dictionary<CommitId, CommitViewModel> CommitsById { get; } =
-			new Dictionary<CommitId, CommitViewModel>();
+		//public Dictionary<CommitId, CommitViewModel> CommitsById { get; } =
+		//	new Dictionary<CommitId, CommitViewModel>();
 
 		private readonly AsyncLock refreshLock = new AsyncLock();
 
@@ -148,16 +145,16 @@ namespace Dependiator.MainViews
 		//	= new ObservableCollection<BranchItem>();
 
 
-		public CommitDetailsViewModel CommitDetailsViewModel { get; }
+		//public CommitDetailsViewModel CommitDetailsViewModel { get; }
 
 		public string FilterText { get; private set; } = "";
 
 
 		public System.Windows.Controls.ListBox ListBox { get; set; }
 
-		public IReadOnlyList<Branch> PreFilterBranches { get; set; }
+		//public IReadOnlyList<Branch> PreFilterBranches { get; set; }
 
-		public CommitViewModel PreFilterSelectedItem { get; set; }
+		//public CommitViewModel PreFilterSelectedItem { get; set; }
 
 		public bool IsShowCommitDetails
 		{
@@ -271,48 +268,48 @@ namespace Dependiator.MainViews
 		}
 
 
-		public void MouseEnterBranch(BranchViewModel branch)
-		{
-			branch.SetHighlighted();
+		//public void MouseEnterBranch(BranchViewModel branch)
+		//{
+		//	branch.SetHighlighted();
 
-			//if (branch.Branch.IsLocalPart)
-			//{
-			//	// Local part branch, then do not dim common commits in main branch part
-			//	foreach (CommitViewModel commit in Commits)
-			//	{
-			//		if (commit.Commit.Branch.Id != branch.Branch.Id
-			//			&& !(commit.Commit.IsCommon
-			//				&& commit.Commit.Branch.IsMainPart
-			//				&& commit.Commit.Branch.LocalSubBranch == branch.Branch))
-			//		{
-			//			commit.SetDim();
-			//		}
-			//	}
+		//	//if (branch.Branch.IsLocalPart)
+		//	//{
+		//	//	// Local part branch, then do not dim common commits in main branch part
+		//	//	foreach (CommitViewModel commit in Commits)
+		//	//	{
+		//	//		if (commit.Commit.Branch.Id != branch.Branch.Id
+		//	//			&& !(commit.Commit.IsCommon
+		//	//				&& commit.Commit.Branch.IsMainPart
+		//	//				&& commit.Commit.Branch.LocalSubBranch == branch.Branch))
+		//	//		{
+		//	//			commit.SetDim();
+		//	//		}
+		//	//	}
 
-			//}
-			//else
-			//{
-			//	// Normal branches and main branches
-			//	foreach (CommitViewModel commit in Commits)
-			//	{
-			//		if (commit.Commit.Branch.Id != branch.Branch.Id)
-			//		{
-			//			commit.SetDim();
-			//		}
-			//	}
-			//}
-		}
+		//	//}
+		//	//else
+		//	//{
+		//	//	// Normal branches and main branches
+		//	//	foreach (CommitViewModel commit in Commits)
+		//	//	{
+		//	//		if (commit.Commit.Branch.Id != branch.Branch.Id)
+		//	//		{
+		//	//			commit.SetDim();
+		//	//		}
+		//	//	}
+		//	//}
+		//}
 
 
-		public void MouseLeaveBranch(BranchViewModel branch)
-		{
-			branch.SetNormal();
+		//public void MouseLeaveBranch(BranchViewModel branch)
+		//{
+		//	branch.SetNormal();
 
-			//foreach (CommitViewModel commit in Commits)
-			//{
-			//	commit.SetNormal(viewModelService.GetSubjectBrush(commit.Commit));
-			//}
-		}
+		//	//foreach (CommitViewModel commit in Commits)
+		//	//{
+		//	//	commit.SetNormal(viewModelService.GetSubjectBrush(commit.Commit));
+		//	//}
+		//}
 
 
 		private void UpdateViewModel()
@@ -393,20 +390,20 @@ namespace Dependiator.MainViews
 			set
 			{
 				Set(value);
-				CommitViewModel commit = value as CommitViewModel;
-				if (commit != null)
-				{
-					SetCommitsDetails(commit);
-				}
+				//CommitViewModel commit = value as CommitViewModel;
+				//if (commit != null)
+				//{
+				//	SetCommitsDetails(commit);
+				//}
 			}
 		}
 
 
 
-		private void SetCommitsDetails(CommitViewModel commit)
-		{
-			CommitDetailsViewModel.CommitViewModel = commit;
-		}
+		//private void SetCommitsDetails(CommitViewModel commit)
+		//{
+		//	CommitDetailsViewModel.CommitViewModel = commit;
+		//}
 
 
 		public void SetFilter(string text)
@@ -528,15 +525,15 @@ namespace Dependiator.MainViews
 		}
 
 
-		public void ShowBranch(Branch branch)
-		{
-			//viewModelService.ShowBranch(this, branch);
-		}
+		//public void ShowBranch(Branch branch)
+		//{
+		//	//viewModelService.ShowBranch(this, branch);
+		//}
 
-		public void HideBranch(Branch branch)
-		{
-			//viewModelService.HideBranch(this, branch);
-		}
+		//public void HideBranch(Branch branch)
+		//{
+		//	//viewModelService.HideBranch(this, branch);
+		//}
 
 		public void ShowUncommittedDetails()
 		{
@@ -577,16 +574,16 @@ namespace Dependiator.MainViews
 			//}
 		}
 
-		private void Clicked(CommitViewModel commitViewModel)
-		{
-			//if (commitViewModel.IsMergePoint)
-			//{
-			//	// User clicked on a merge point (toggle between expanded and collapsed)
-			//	int rowsChange = viewModelService.ToggleMergePoint(this, commitViewModel.Commit);
+		//private void Clicked(CommitViewModel commitViewModel)
+		//{
+		//	//if (commitViewModel.IsMergePoint)
+		//	//{
+		//	//	// User clicked on a merge point (toggle between expanded and collapsed)
+		//	//	int rowsChange = viewModelService.ToggleMergePoint(this, commitViewModel.Commit);
 
-			//	ScrollRows(rowsChange);
-			//	VirtualItemsSource.DataChanged();
-			//}
-		}
+		//	//	ScrollRows(rowsChange);
+		//	//	VirtualItemsSource.DataChanged();
+		//	//}
+		//}
 	}
 }

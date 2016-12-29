@@ -1,145 +1,144 @@
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Media;
-using Dependiator.Common;
-using Dependiator.Common.ThemeHandling;
-using Dependiator.GitModel;
-using Dependiator.Utils.UI;
-using Dependiator.Utils;
+//using System.Collections.Generic;
+//using System.Collections.ObjectModel;
+//using System.Linq;
+//using System.Threading.Tasks;
+//using System.Windows;
+//using System.Windows.Media;
+//using Dependiator.Common;
+//using Dependiator.Common.ThemeHandling;
+//using Dependiator.Utils.UI;
+//using Dependiator.Utils;
 
 
-namespace Dependiator.MainViews
-{
-	internal class CommitDetailsViewModel : ViewModel
-	{
-		private readonly IThemeService themeService;
+//namespace Dependiator.MainViews
+//{
+//	internal class CommitDetailsViewModel : ViewModel
+//	{
+//		private readonly IThemeService themeService;
 
-		private readonly ObservableCollection<CommitFileViewModel> files =
-			new ObservableCollection<CommitFileViewModel>();
+//		private readonly ObservableCollection<CommitFileViewModel> files =
+//			new ObservableCollection<CommitFileViewModel>();
 
-		private CommitId filesCommitId = null;
-		private CommitViewModel commitViewModel;
-
-
-		public CommitDetailsViewModel(
-			IThemeService themeService)
-		{
-			this.themeService = themeService;
-		}
+//		private CommitId filesCommitId = null;
+//		private CommitViewModel commitViewModel;
 
 
-		public CommitViewModel CommitViewModel
-		{
-			get { return commitViewModel; }
-			set
-			{
-				if (value != commitViewModel)
-				{
-					commitViewModel = value;
-					NotifyAll();
-				}
-
-				NotifyAll();
-			}
-		}
-
-		public ObservableCollection<CommitFileViewModel> Files
-		{
-			get
-			{
-				SetFiles();
-
-				return files;
-			}
-		}
+//		public CommitDetailsViewModel(
+//			IThemeService themeService)
+//		{
+//			this.themeService = themeService;
+//		}
 
 
-		private void SetFiles()
-		{
-			if (CommitViewModel != null)
-			{
-				if (filesCommitId != CommitViewModel.Commit.RealCommitId
-					|| filesCommitId == Common.CommitId.Uncommitted)
-				{
-					files.Clear();
-					filesCommitId = CommitViewModel.Commit.RealCommitId;
-					SetFilesAsync(commitViewModel.Commit).RunInBackground();
-				}
-			}
-			else
-			{
-				files.Clear();
-				filesCommitId = null;
-			}
-		}
+//		public CommitViewModel CommitViewModel
+//		{
+//			get { return commitViewModel; }
+//			set
+//			{
+//				if (value != commitViewModel)
+//				{
+//					commitViewModel = value;
+//					NotifyAll();
+//				}
+
+//				NotifyAll();
+//			}
+//		}
+
+//		public ObservableCollection<CommitFileViewModel> Files
+//		{
+//			get
+//			{
+//				SetFiles();
+
+//				return files;
+//			}
+//		}
 
 
-		public string Subject
-		{
-			get
-			{
-				string subject = CommitViewModel?.Subject;
+//		private void SetFiles()
+//		{
+//			if (CommitViewModel != null)
+//			{
+//				if (filesCommitId != CommitViewModel.Commit.RealCommitId
+//					|| filesCommitId == Common.CommitId.Uncommitted)
+//				{
+//					files.Clear();
+//					filesCommitId = CommitViewModel.Commit.RealCommitId;
+//					SetFilesAsync(commitViewModel.Commit).RunInBackground();
+//				}
+//			}
+//			else
+//			{
+//				files.Clear();
+//				filesCommitId = null;
+//			}
+//		}
+
+
+//		public string Subject
+//		{
+//			get
+//			{
+//				string subject = CommitViewModel?.Subject;
 		
-				return subject;
-			}
-		}
+//				return subject;
+//			}
+//		}
 
-		public string CommitId => CommitViewModel?.Commit.RealCommitSha.Sha;
-		public string ShortId => CommitViewModel?.ShortId;
-		public string BranchName => CommitViewModel?.Commit?.Branch?.Name;
-		public FontStyle BranchNameStyle => !string.IsNullOrEmpty(SpecifiedBranchName)
-			? FontStyles.Oblique : FontStyles.Normal;
-		public string BranchNameUnderline => !string.IsNullOrEmpty(SpecifiedBranchName) ? "Underline" : "None";
-		public string BranchNameToolTip => SpecifiedBranchName != null ? "Manually specified branch" : null;
-		public string SpecifiedBranchName => CommitViewModel?.Commit?.SpecifiedBranchName;
-		public Brush BranchBrush => CommitViewModel?.Brush;
-		public Brush SubjectBrush => CommitViewModel?.SubjectBrush;
-		public FontStyle SubjectStyle => FontStyles.Normal;
-		public string Tags => CommitViewModel?.Tags;
-		public string Tickets => CommitViewModel?.Tickets;
-		public string BranchTips => CommitViewModel?.BranchTips;
-
-
-		public override string ToString() => $"{CommitId} {Subject}";
-
-		private async Task SetFilesAsync(Commit commit)
-		{
-			IEnumerable<CommitFile> commitFiles = await commit.FilesTask;
-			if (filesCommitId == commit.RealCommitId)
-			{
-				files.Clear();
-				commitFiles
-					.OrderBy(f => f.Status, Comparer<GitFileStatus>.Create(Compare))
-					.ThenBy(f => f.Path)
-					.ForEach(f => files.Add(
-						new CommitFileViewModel(themeService, f)
-						{
-							Id = commit.RealCommitSha,
-							Name = f.Path,
-							Status = f.StatusText,
-							WorkingFolder = commit.WorkingFolder
-						}));
-			}
-		}
+//		public string CommitId => CommitViewModel?.Commit.RealCommitSha.Sha;
+//		public string ShortId => CommitViewModel?.ShortId;
+//		public string BranchName => CommitViewModel?.Commit?.Branch?.Name;
+//		public FontStyle BranchNameStyle => !string.IsNullOrEmpty(SpecifiedBranchName)
+//			? FontStyles.Oblique : FontStyles.Normal;
+//		public string BranchNameUnderline => !string.IsNullOrEmpty(SpecifiedBranchName) ? "Underline" : "None";
+//		public string BranchNameToolTip => SpecifiedBranchName != null ? "Manually specified branch" : null;
+//		public string SpecifiedBranchName => CommitViewModel?.Commit?.SpecifiedBranchName;
+//		public Brush BranchBrush => CommitViewModel?.Brush;
+//		public Brush SubjectBrush => CommitViewModel?.SubjectBrush;
+//		public FontStyle SubjectStyle => FontStyles.Normal;
+//		public string Tags => CommitViewModel?.Tags;
+//		public string Tickets => CommitViewModel?.Tickets;
+//		public string BranchTips => CommitViewModel?.BranchTips;
 
 
-		private static int Compare(GitFileStatus s1, GitFileStatus s2)
-		{
-			if (s1 == GitFileStatus.Conflict && s2 != GitFileStatus.Conflict)
-			{
-				return -1;
-			}
-			else if (s2 == GitFileStatus.Conflict && s1 != GitFileStatus.Conflict)
-			{
-				return 1;
-			}
-			else
-			{
-				return 0;
-			}
-		}
-	}
-}
+//		public override string ToString() => $"{CommitId} {Subject}";
+
+//		private async Task SetFilesAsync(Commit commit)
+//		{
+//			IEnumerable<CommitFile> commitFiles = await commit.FilesTask;
+//			if (filesCommitId == commit.RealCommitId)
+//			{
+//				files.Clear();
+//				commitFiles
+//					.OrderBy(f => f.Status, Comparer<GitFileStatus>.Create(Compare))
+//					.ThenBy(f => f.Path)
+//					.ForEach(f => files.Add(
+//						new CommitFileViewModel(themeService, f)
+//						{
+//							Id = commit.RealCommitSha,
+//							Name = f.Path,
+//							Status = f.StatusText,
+//							WorkingFolder = commit.WorkingFolder
+//						}));
+//			}
+//		}
+
+
+//		private static int Compare(GitFileStatus s1, GitFileStatus s2)
+//		{
+//			if (s1 == GitFileStatus.Conflict && s2 != GitFileStatus.Conflict)
+//			{
+//				return -1;
+//			}
+//			else if (s2 == GitFileStatus.Conflict && s1 != GitFileStatus.Conflict)
+//			{
+//				return 1;
+//			}
+//			else
+//			{
+//				return 0;
+//			}
+//		}
+//	}
+//}
