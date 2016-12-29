@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -9,7 +8,6 @@ using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Common;
 using Dependiator.Common.MessageDialogs;
-using Dependiator.GitModel;
 using Dependiator.MainViews;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;

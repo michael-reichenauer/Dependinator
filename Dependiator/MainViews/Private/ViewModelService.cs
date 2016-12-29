@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
-using Dependiator.Common;
 using Dependiator.Common.ThemeHandling;
 using Dependiator.GitModel;
 using Dependiator.Utils;

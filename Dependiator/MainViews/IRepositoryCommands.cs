@@ -1,6 +1,3 @@
-using Dependiator.GitModel;
-
-
 namespace Dependiator.MainViews
 {
 	internal interface IRepositoryCommands

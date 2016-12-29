@@ -1,5 +1,4 @@
 using System;
-using Dependiator.GitModel;
 
 
 namespace Dependiator.MainViews.Private

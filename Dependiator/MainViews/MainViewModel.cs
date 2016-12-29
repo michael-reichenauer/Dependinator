@@ -8,7 +8,6 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using Dependiator.ApplicationHandling;
 using Dependiator.Common;
-using Dependiator.Common.MessageDialogs;
 using Dependiator.Common.ProgressHandling;
 using Dependiator.Common.ThemeHandling;
 using Dependiator.GitModel;
@@ -16,7 +15,7 @@ using Dependiator.MainViews.Private;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
 using Dependiator.Utils.UI.VirtualCanvas;
-//using ListBox = System.Windows.Controls.ListBox;
+
 
 
 namespace Dependiator.MainViews
