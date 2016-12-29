@@ -135,88 +135,29 @@
 
 						<Style.Triggers>
 
-							<!-- Branch line -->
-							<DataTrigger Binding="{Binding Type}" Value="BranchViewModel">
-								<Setter Property="IsEnabled" Value="true" />
-								<Setter Property="Focusable" Value="False" />
-								<Setter Property="Background" Value="Transparent" />
 
-								<Setter Property="ContentTemplate">
-									<Setter.Value>
-										<DataTemplate>
-											<Grid
-												Background="Transparent">
-												<Path
-													Data="{Binding Line}"
-													Stroke="{Binding Brush}"
-													StrokeThickness="{Binding StrokeThickness}"
-													StrokeDashArray="{Binding Dashes}"
-													SnapsToDevicePixels="True">
-													<Path.Effect>
-														<DropShadowEffect
-															x:Name="myDropShadowEffect"
-															Color="{Binding DimColor}"
-															ShadowDepth="0"
-															Direction="0"
-															BlurRadius="{Binding NeonEffect}" />
-													</Path.Effect>
-												</Path>
-
-												<Grid.ToolTip>
-													<ToolTip
-														Content="{Binding BranchToolTip}"
-														Placement="Mouse"
-														BorderBrush="{Binding Brush}"
-														BorderThickness="2" />
-												</Grid.ToolTip>
-
-												<!-- Branch line context menu -->
-												<Grid.ContextMenu>
-													<ContextMenu>
-										
-														<Separator Background="{DynamicResource BorderBrush}" />
-
-														<MenuItem
-															Header="Change color"
-															Command="{Binding ChangeColorCommand}">
-															<MenuItem.Icon>
-																<Border>
-																	<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE891;" />
-																</Border>
-															</MenuItem.Icon>
-														</MenuItem>
-
-														<Separator Background="{DynamicResource BorderBrush}" />
-
-													</ContextMenu>
-												</Grid.ContextMenu>
-											</Grid>
-										</DataTemplate>
-									</Setter.Value>
-								</Setter>
-							</DataTrigger>
-
-
-							<!-- Merge line -->
-							<DataTrigger Binding="{Binding Type}" Value="MergeViewModel">
+							<!-- Module line -->
+							<DataTrigger Binding="{Binding Type}" Value="ModuleViewModel">
 								<Setter Property="IsEnabled" Value="false" />
 								<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
 								<Setter Property="ContentTemplate">
 									<Setter.Value>
 										<DataTemplate>
 											<Grid>
-												<Path
-													Data="{Binding Line}"
+												<Rectangle
+													Width="{Binding Rectangle.Width}"
+													Height="{Binding Rectangle.Height}"
+													Fill="{DynamicResource ItemBrush}"
 													Stroke="{Binding Brush}"
-													StrokeThickness="{Binding Stroke}"
-													StrokeDashArray="{Binding StrokeDash}" />
+													StrokeThickness="2" />		
+			
 											</Grid>
 										</DataTemplate>
 									</Setter.Value>
 								</Setter>
 							</DataTrigger>
 
-						
+
 						</Style.Triggers>
 
 					</Style>

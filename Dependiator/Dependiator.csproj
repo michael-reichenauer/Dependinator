@@ -132,6 +132,7 @@
     <Compile Include="GitModel\Private\Caching\BranchNameSurrogate.cs" />
     <Compile Include="GitModel\Private\GitCommit.cs" />
     <Compile Include="MainViews\IRepositoryMgr.cs" />
+    <Compile Include="MainViews\ModuleViewModel.cs" />
     <Compile Include="MainViews\Private\RepositoryCommands.cs" />
     <Compile Include="Utils\AsyncLock.cs" />
     <Compile Include="Utils\DependencyInjection.cs" />
@@ -188,7 +189,7 @@
     <Compile Include="Common\ThemeHandling\IThemeService.cs" />
     <Compile Include="MainViews\IViewModelService.cs" />
     <Compile Include="MainViews\MergeViewModel.cs" />
-    <Compile Include="MainViews\Private\RepositoryVirtualItemsSource.cs" />
+    <Compile Include="MainViews\Private\MainViewVirtualItemsSource.cs" />
     <Compile Include="MainViews\MainViewModel.cs" />
     <Compile Include="MainViews\Private\ViewModelService.cs" />
     <Compile Include="GitModel\Branch.cs" />

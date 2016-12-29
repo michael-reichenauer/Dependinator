@@ -259,7 +259,7 @@ namespace Dependiator.MainViews.Private
 				maninViewModel.ScrollRows(-(y - 10));
 			}
 
-			maninViewModel.VirtualItemsSource.DataChanged(maninViewModel.Width);
+			maninViewModel.VirtualItemsSource.DataChanged();
 		}
 
 		public void HideBranch(MainViewModel maninViewModel, Branch branch)
@@ -286,7 +286,7 @@ namespace Dependiator.MainViews.Private
 				maninViewModel.SpecifiedBranches = currentlyShownBranches;
 				UpdateViewModel(maninViewModel);
 
-				maninViewModel.VirtualItemsSource.DataChanged(maninViewModel.Width);
+				maninViewModel.VirtualItemsSource.DataChanged();
 			}
 		}
 

@@ -46,6 +46,7 @@ namespace Dependiator.MainViews
 		public List<MergeViewModel> Merges { get; } = new List<MergeViewModel>();
 		public List<CommitViewModel> Commits { get; } = new List<CommitViewModel>();
 
+		public List<ModuleViewModel> Modules { get; } = new List<ModuleViewModel>();
 
 		public Dictionary<CommitId, CommitViewModel> CommitsById { get; } =
 			new Dictionary<CommitId, CommitViewModel>();
@@ -76,7 +77,7 @@ namespace Dependiator.MainViews
 			this.themeService = themeService;
 			this.progress = progressService;
 
-			VirtualItemsSource = new RepositoryVirtualItemsSource(Branches, Merges, Commits);
+			VirtualItemsSource = new MainViewVirtualItemsSource(Modules);
 
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
@@ -130,7 +131,7 @@ namespace Dependiator.MainViews
 
 		public Command ToggleDetailsCommand => Command(ToggleCommitDetails);
 
-		public RepositoryVirtualItemsSource VirtualItemsSource { get; }
+		public MainViewVirtualItemsSource VirtualItemsSource { get; }
 
 		public ObservableCollection<BranchItem> ShowableBranches { get; }
 			= new ObservableCollection<BranchItem>();
@@ -171,7 +172,7 @@ namespace Dependiator.MainViews
 				{
 					width = value;
 					Commits.ForEach(commit => commit.WindowWidth = width - 2);
-					VirtualItemsSource.DataChanged(width);
+					VirtualItemsSource.DataChanged();
 				}
 			}
 		}
@@ -336,7 +337,23 @@ namespace Dependiator.MainViews
 		private void LoadViewModel()
 		{
 			Timing t = new Timing();
-			
+
+			Modules.Add(new ModuleViewModel
+			{
+				Brush = Brushes.Aqua,
+				Rect = new Rect(100, 100, 100, 100),
+				Rectangle = new Rect(2, 2, 70, 70),
+
+			});
+
+			Modules.Add(new ModuleViewModel
+			{
+				Brush = Brushes.CornflowerBlue,
+				Rect = new Rect(400, 200, 100, 100),
+				Rectangle = new Rect(2, 2, 20, 70),
+
+			});
+
 			viewModelService.UpdateViewModel(this);
 
 			UpdateViewModelImpl();
@@ -357,7 +374,7 @@ namespace Dependiator.MainViews
 			CommitDetailsViewModel.NotifyAll();
 			NotifyAll();
 
-			VirtualItemsSource.DataChanged(width);
+			VirtualItemsSource.DataChanged();
 		}
 
 
@@ -431,7 +448,7 @@ namespace Dependiator.MainViews
 			TrySetSelectedCommitPosition(commitPosition, true);
 			CommitDetailsViewModel.NotifyAll();
 
-			VirtualItemsSource.DataChanged(width);
+			VirtualItemsSource.DataChanged();
 		}
 
 
@@ -567,7 +584,7 @@ namespace Dependiator.MainViews
 				int rowsChange = viewModelService.ToggleMergePoint(this, commitViewModel.Commit);
 
 				ScrollRows(rowsChange);
-				VirtualItemsSource.DataChanged(width);
+				VirtualItemsSource.DataChanged();
 			}
 		}
 	}
