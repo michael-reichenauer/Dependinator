@@ -100,54 +100,12 @@ namespace Dependiator.RepositoryViews
 		}
 
 
-		public Commit UnCommited
-		{
-			get { return Get<Commit>(); }
-			set
-			{
-				Set(value);
-				StatusText = value?.Subject;
-				IsUncommitted = value != null && !value.HasConflicts;
-				Notify(nameof(StatusText));
-			}
-		}
-
-		public string StatusText
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
-
 		public string FetchErrorText
 		{
 			get { return Get(); }
 			set { Set(value); }
 		}
 
-		public bool IsUncommitted
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
-
-
-		public string RemoteAheadText
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
-
-		public string LocalAheadText
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
-
-		public string ConflictsText
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
 
 
 		public string CurrentBranchName
@@ -191,6 +149,13 @@ namespace Dependiator.RepositoryViews
 		public CommitDetailsViewModel CommitDetailsViewModel { get; }
 
 		public string FilterText { get; private set; } = "";
+
+
+		public ListBox ListBox { get; set; }
+
+		public IReadOnlyList<Branch> PreFilterBranches { get; set; }
+
+		public CommitViewModel PreFilterSelectedItem { get; set; }
 
 		public bool IsShowCommitDetails
 		{
@@ -289,7 +254,6 @@ namespace Dependiator.RepositoryViews
 			Timing t = new Timing();
 			using (progress.ShowBusy())
 			{
-				UpdateViewModel();
 			}
 
 			t.Log("Updated view model after updated repository");
@@ -401,47 +365,9 @@ namespace Dependiator.RepositoryViews
 			NotifyAll();
 
 			VirtualItemsSource.DataChanged(width);
-
-			UpdateStatusIndicators();
 		}
 
 
-		private void UpdateStatusIndicators()
-		{
-			Repository repository = repositoryService.Repository;
-
-			CurrentBranchName = repository.CurrentBranch.Name;
-			CurrentBranchBrush = themeService.GetBranchBrush(repository.CurrentBranch);
-
-			IEnumerable<Branch> remoteAheadBranches = repository.Branches
-				.Where(b => b.RemoteAheadCount > 0).ToList();
-
-			string remoteAheadText = remoteAheadBranches.Any()
-				? "Branches with remote commits:\n" : null;
-			foreach (Branch branch in remoteAheadBranches)
-			{
-				remoteAheadText += $"\n    {branch.RemoteAheadCount}\t{branch.Name}";
-			}
-
-			RemoteAheadText = remoteAheadText;
-
-			IEnumerable<Branch> localAheadBranches = repository.Branches
-				.Where(b => b.IsLocal && (b.IsRemote || b.IsLocalPart) && b.LocalAheadCount > 0).ToList();
-
-			string localAheadText = localAheadBranches.Any()
-				? "Branches with local commits:\n" : null;
-			foreach (Branch branch in localAheadBranches)
-			{
-				localAheadText += $"\n    {branch.LocalAheadCount}\t{branch.Name}";
-			}
-
-			LocalAheadText = localAheadText;
-
-			Commit uncommitted = repository.UnComitted;
-			UnCommited = uncommitted;
-
-			ConflictsText = null;
-		}
 
 
 		public int SelectedIndex
@@ -465,9 +391,6 @@ namespace Dependiator.RepositoryViews
 			}
 		}
 
-		public ListBox ListBox { get; set; }
-		public IReadOnlyList<Branch> PreFilterBranches { get; set; }
-		public CommitViewModel PreFilterSelectedItem { get; set; }
 
 
 		private void SetCommitsDetails(CommitViewModel commit)

@@ -138,9 +138,8 @@ namespace Dependiator.MainWindowViews
 
 				// Adjust the offset to make the point under the mouse stay still.
 				Point point = e.GetPosition(RepositoryView.ItemsListBox);
-				point = new Point(point.X - 15, point.Y - 30);
+				point = new Point(point.X - 10, point.Y - 30);
 				Vector position = (Vector)point;
-
 				canvas.Offset = (System.Windows.Point)((Vector)
 					(canvas.Offset + position) * zoom - position);
 

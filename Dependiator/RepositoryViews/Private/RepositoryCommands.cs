@@ -19,19 +19,9 @@ namespace Dependiator.RepositoryViews.Private
 
 		public void RefreshView() => viewModel.RefreshView();
 
-		public bool IsShowCommitDetails => viewModel.IsShowCommitDetails;
 		public void ShowCommitDetails() => viewModel.ShowCommitDetails();
 
 		public void ToggleCommitDetails() => viewModel.ToggleCommitDetails();
-		public void ShowUncommittedDetails() => viewModel.ShowUncommittedDetails();
-
-
-		public void ShowBranch(Branch branch) => viewModel.ShowBranch(branch);
-		public void ShowCurrentBranch() => viewModel.ShowCurrentBranch();
-
-		public Commit UnCommited => viewModel.UnCommited;
-
-		public void ShowBranch(BranchName branchName) => viewModel.ShowBranch(branchName);
 
 		public void SetCurrentMerging(Branch branch) => viewModel.SetCurrentMerging(branch);
 	}

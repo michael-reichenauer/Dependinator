@@ -15,7 +15,6 @@ namespace Dependiator.RepositoryViews
 		private readonly IThemeService themeService;
 		private readonly IRepositoryCommands repositoryCommands;
 
-		private readonly Command<Branch> showBranchCommand;
 
 		private readonly ObservableCollection<BranchItem> childBranches
 			= new ObservableCollection<BranchItem>();
@@ -26,7 +25,6 @@ namespace Dependiator.RepositoryViews
 		{
 			this.themeService = themeService;
 			this.repositoryCommands = repositoryCommands;
-			this.showBranchCommand = Command<Branch>(repositoryCommands.ShowBranch);
 		}
 
 		// UI properties
@@ -74,7 +72,6 @@ namespace Dependiator.RepositoryViews
 			get
 			{
 				childBranches.Clear();
-				GetChildBranches().ForEach(b => childBranches.Add(b));
 				return childBranches;
 			}
 		}
@@ -114,16 +111,6 @@ namespace Dependiator.RepositoryViews
 
 		public override string ToString() => $"{Branch}";
 
-
-		private IReadOnlyList<BranchItem> GetChildBranches()
-		{
-			return BranchItem.GetBranches(
-				Branch.GetChildBranches()
-					.Where(b => !ActiveBranches.Any(ab => ab.Branch == b))
-					.Take(50)
-					.ToList(),
-				showBranchCommand);
-		}
 
 
 		public void SetColor(Brush brush)
