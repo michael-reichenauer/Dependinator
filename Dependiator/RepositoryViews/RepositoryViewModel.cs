@@ -273,32 +273,32 @@ namespace Dependiator.RepositoryViews
 		{
 			branch.SetHighlighted();
 
-			if (branch.Branch.IsLocalPart)
-			{
-				// Local part branch, then do not dim common commits in main branch part
-				foreach (CommitViewModel commit in Commits)
-				{
-					if (commit.Commit.Branch.Id != branch.Branch.Id
-						&& !(commit.Commit.IsCommon
-							&& commit.Commit.Branch.IsMainPart
-							&& commit.Commit.Branch.LocalSubBranch == branch.Branch))
-					{
-						commit.SetDim();
-					}
-				}
+			//if (branch.Branch.IsLocalPart)
+			//{
+			//	// Local part branch, then do not dim common commits in main branch part
+			//	foreach (CommitViewModel commit in Commits)
+			//	{
+			//		if (commit.Commit.Branch.Id != branch.Branch.Id
+			//			&& !(commit.Commit.IsCommon
+			//				&& commit.Commit.Branch.IsMainPart
+			//				&& commit.Commit.Branch.LocalSubBranch == branch.Branch))
+			//		{
+			//			commit.SetDim();
+			//		}
+			//	}
 
-			}
-			else
-			{
-				// Normal branches and main branches
-				foreach (CommitViewModel commit in Commits)
-				{
-					if (commit.Commit.Branch.Id != branch.Branch.Id)
-					{
-						commit.SetDim();
-					}
-				}
-			}
+			//}
+			//else
+			//{
+			//	// Normal branches and main branches
+			//	foreach (CommitViewModel commit in Commits)
+			//	{
+			//		if (commit.Commit.Branch.Id != branch.Branch.Id)
+			//		{
+			//			commit.SetDim();
+			//		}
+			//	}
+			//}
 		}
 
 
@@ -306,10 +306,10 @@ namespace Dependiator.RepositoryViews
 		{
 			branch.SetNormal();
 
-			foreach (CommitViewModel commit in Commits)
-			{
-				commit.SetNormal(viewModelService.GetSubjectBrush(commit.Commit));
-			}
+			//foreach (CommitViewModel commit in Commits)
+			//{
+			//	commit.SetNormal(viewModelService.GetSubjectBrush(commit.Commit));
+			//}
 		}
 
 
