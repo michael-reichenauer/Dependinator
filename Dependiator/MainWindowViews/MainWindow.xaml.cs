@@ -12,6 +12,7 @@ using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Utils;
 using Dependiator.Utils.UI.VirtualCanvas;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
+using Point = System.Windows.Point;
 
 
 namespace Dependiator.MainWindowViews
@@ -120,12 +121,12 @@ namespace Dependiator.MainWindowViews
 			//if ((Keyboard.Modifiers & ModifierKeys.Control) > 0)
 			{
 				// Adjust X in "e.Delta / X" to adjust zoom speed
-				double x = Math.Pow(2, e.Delta / 10.0 / Mouse.MouseWheelDeltaForOneLine);
+				double zoom = Math.Pow(2, e.Delta / 10.0 / Mouse.MouseWheelDeltaForOneLine);
 
 				ZoomableCanvas canvas = viewModel.RepositoryViewModel.Canvas;
-				double newScale = canvas.Scale * x;
+				double newScale = canvas.Scale * zoom;
 
-				Log.Debug($"Scroll {x}, scale {canvas.Scale}, offset {canvas.Offset}");
+				Log.Debug($"Zoom {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
 				if (newScale < 0.5 || newScale > 10)
 				{
 					Log.Warn($"Zoom to large");
@@ -136,10 +137,14 @@ namespace Dependiator.MainWindowViews
 				canvas.Scale = newScale;
 
 				// Adjust the offset to make the point under the mouse stay still.
-				Vector position = (Vector)e.GetPosition(RepositoryView.ItemsListBox);
+				Point point = e.GetPosition(RepositoryView.ItemsListBox);
+				point = new Point(point.X - 15, point.Y - 30);
+				Vector position = (Vector)point;
+
 				canvas.Offset = (System.Windows.Point)((Vector)
-					(canvas.Offset + position) * x - position);
-				Log.Debug($"Scroll {x}, scale {canvas.Scale}, offset {canvas.Offset}");
+					(canvas.Offset + position) * zoom - position);
+
+				Log.Debug($"Scroll {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
 
 				e.Handled = true;
 			}
