@@ -23,6 +23,11 @@ namespace Dependiator.Common.ThemeHandling
 		{
 			this.workingFolder = workingFolder;
 
+			Options options = Settings.Get<Options>();
+
+			// Setting options to ensure that readonly options like DefaultTheme is written correctly
+			Settings.Set(options);
+
 			LoadTheme();
 
 			LoadCustomBranchColors();
@@ -121,9 +126,6 @@ namespace Dependiator.Common.ThemeHandling
 		private static ThemeOption GetCurrentThemeOption()
 		{
 			Options options = Settings.Get<Options>();
-
-			// Setting options to ensure that readonly options like DefaultTheme is written correctly
-			Settings.Set(options);
 
 			ThemeOption theme = options.Themes.CustomThemes
 				.FirstOrDefault(t => t.Name == options.Themes.CurrentTheme)
