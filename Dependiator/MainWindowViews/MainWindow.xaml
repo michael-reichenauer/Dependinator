@@ -34,7 +34,7 @@
 		<KeyBinding Modifiers="Ctrl" Key="Q" Command="{Binding ExitCommand}" />
 		<KeyBinding Key="F1" Command="{Binding HelpCommand}" />
 		<KeyBinding Key="F5" Command="{Binding RefreshCommand}" />
-				<KeyBinding Modifiers="Control" Key="F" Command="{Binding SearchCommand}" />
+		<KeyBinding Modifiers="Control" Key="F" Command="{Binding SearchCommand}" />
 
 	</Window.InputBindings>
 

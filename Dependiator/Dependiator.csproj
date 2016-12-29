@@ -129,7 +129,6 @@
     <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
     <Compile Include="MainViews\Private\Caching\BranchNameSurrogate.cs" />
-    <Compile Include="MainViews\IRepositoryMgr.cs" />
     <Compile Include="MainViews\ModuleViewModel.cs" />
     <Compile Include="MainViews\Private\RepositoryCommands.cs" />
     <Compile Include="Utils\AsyncLock.cs" />
@@ -145,7 +144,7 @@
     <Compile Include="Utils\Throttler.cs" />
     <Compile Include="Utils\UI\CredentialsDialog.cs" />
     <Compile Include="Utils\Disposable.cs" />
-    <Compile Include="MainViews\IRepositoryCommands.cs" />
+    <Compile Include="MainViews\IMainViewCommands.cs" />
     <Compile Include="ApplicationHandling\SettingsHandling\Settings.cs" />
     <Compile Include="ApplicationHandling\SettingsHandling\Options.cs" />
     <Compile Include="ApplicationHandling\SettingsHandling\WorkFolderSettings.cs" />
@@ -157,15 +156,10 @@
     <Compile Include="Utils\UI\InputBindingsBehavior.cs" />
     <Compile Include="Utils\UI\VisibleWindow.cs" />
     <Compile Include="Utils\UI\WpfBindingTraceListener.cs" />
-    <Compile Include="MainViews\BranchItem.cs" />
-    <Compile Include="MainViews\BranchNameItem.cs" />
-    <Compile Include="MainViews\BranchViewModel.cs" />
     <Compile Include="Common\ThemeHandling\ThemeService.cs" />
     <Compile Include="MainViews\CommitDetailsView.xaml.cs">
       <DependentUpon>CommitDetailsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="MainViews\CommitDetailsViewModel.cs" />
-    <Compile Include="MainViews\CommitFileViewModel.cs" />
     <Compile Include="MainViews\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>
@@ -179,14 +173,11 @@
     <Compile Include="Utils\UI\BusyProgress.cs" />
     <Compile Include="Utils\UI\HideableGridSplitter.cs" />
     <Compile Include="Utils\Compare.cs" />
-    <Compile Include="MainViews\CommitViewModel.cs" />
     <Compile Include="MainViews\Converters.cs" />
     <Compile Include="Common\ThemeHandling\IThemeService.cs" />
-    <Compile Include="MainViews\IViewModelService.cs" />
     <Compile Include="MainViews\MergeViewModel.cs" />
     <Compile Include="MainViews\Private\MainViewVirtualItemsSource.cs" />
     <Compile Include="MainViews\MainViewModel.cs" />
-    <Compile Include="MainViews\Private\ViewModelService.cs" />
     <Compile Include="Utils\IReadOnlyKeyedList.cs" />
     <Compile Include="Utils\KeyedList.cs" />
     <Compile Include="Common\ExceptionHandling.cs" />

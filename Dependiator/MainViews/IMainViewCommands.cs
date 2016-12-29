@@ -1,6 +1,6 @@
 namespace Dependiator.MainViews
 {
-	internal interface IRepositoryCommands
+	internal interface IMainViewCommands
 	{
 		void ShowCommitDetails();
 		void ToggleCommitDetails();
