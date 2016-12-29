@@ -123,7 +123,7 @@ namespace Dependiator.MainWindowViews
 				// Adjust X in "e.Delta / X" to adjust zoom speed
 				double zoom = Math.Pow(2, e.Delta / 10.0 / Mouse.MouseWheelDeltaForOneLine);
 
-				ZoomableCanvas canvas = viewModel.RepositoryViewModel.Canvas;
+				ZoomableCanvas canvas = viewModel.MainViewModel.Canvas;
 				double newScale = canvas.Scale * zoom;
 
 				Log.Debug($"Zoom {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
@@ -152,7 +152,7 @@ namespace Dependiator.MainWindowViews
 		protected override void OnPreviewMouseMove(MouseEventArgs e)
 		{
 			System.Windows.Point position = e.GetPosition(RepositoryView.ItemsListBox);
-			ZoomableCanvas canvas = viewModel.RepositoryViewModel.Canvas;
+			ZoomableCanvas canvas = viewModel.MainViewModel.Canvas;
 
 			if (e.LeftButton == MouseButtonState.Pressed && position.Y < 0 )
 			{
@@ -195,9 +195,9 @@ namespace Dependiator.MainWindowViews
 			settings.Height = Height;
 			settings.Width = Width;
 			settings.IsMaximized = WindowState == WindowState.Maximized;
-			settings.IsShowCommitDetails = viewModel.RepositoryViewModel.IsShowCommitDetails;
+			settings.IsShowCommitDetails = viewModel.MainViewModel.IsShowCommitDetails;
 
-			settings.ShownBranches = viewModel.RepositoryViewModel.Branches
+			settings.ShownBranches = viewModel.MainViewModel.Branches
 				.Select(b => b.Branch.Name.ToString())
 				.Distinct()
 				.ToList();
@@ -224,7 +224,7 @@ namespace Dependiator.MainWindowViews
 
 			WindowState = settings.IsMaximized ? WindowState.Maximized : WindowState.Normal;
 
-			viewModel.RepositoryViewModel.IsShowCommitDetails = settings.IsShowCommitDetails;
+			viewModel.MainViewModel.IsShowCommitDetails = settings.IsShowCommitDetails;
 		}
 
 

@@ -22,7 +22,7 @@
 					<!--Show Branch menu item -->
 					<MenuItem 
 						Header="Show branch"
-						ItemsSource="{Binding RepositoryViewModel.ShowableBranches}">
+						ItemsSource="{Binding MainViewModel.ShowableBranches}">
 					<MenuItem.Icon>
 						<Border>
 							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE3CD;"/>
@@ -66,7 +66,7 @@
 				<!-- Delete branch -->
 				<MenuItem 
 					Header="Delete branch ..."
-					ItemsSource="{Binding RepositoryViewModel.DeletableBranches}">
+					ItemsSource="{Binding MainViewModel.DeletableBranches}">
 					<MenuItem.Icon>
 						<Border>
 							<TextBlock 

@@ -51,7 +51,7 @@ namespace Dependiator.MainWindowViews
 			this.mainWindowService = mainWindowService;
 			this.mainWindowIpcService = mainWindowIpcService;
 
-			RepositoryViewModel = repositoryViewModel;
+			MainViewModel = repositoryViewModel;
 
 			workingFolder.OnChange += (s, e) => Notify(nameof(WorkingFolder));
 			latestVersionService.OnNewVersionAvailable += (s, e) => IsNewVersionVisible = true;
@@ -89,13 +89,13 @@ namespace Dependiator.MainWindowViews
 
 		private void SetSearchBoxValue(string text)
 		{
-			RepositoryViewModel.SetFilter(text);
+			MainViewModel.SetFilter(text);
 		}
 
 
 		public BusyIndicator Busy => BusyIndicator();
 
-		public MainViewModel RepositoryViewModel { get; }
+		public MainViewModel MainViewModel { get; }
 
 
 		public string VersionText
@@ -199,19 +199,19 @@ namespace Dependiator.MainWindowViews
 
 			Notify(nameof(Title));
 
-			await RepositoryViewModel.LoadAsync();
+			await MainViewModel.LoadAsync();
 			isLoaded = true;
 		}
 
 
 		private Task ManualRefreshAsync()
 		{
-			return RepositoryViewModel.ManualRefreshAsync();
+			return MainViewModel.ManualRefreshAsync();
 		}
 
 		public Task AutoRemoteCheckAsync()
 		{
-			return RepositoryViewModel.AutoRemoteCheckAsync();
+			return MainViewModel.AutoRemoteCheckAsync();
 		}
 
 
@@ -228,7 +228,7 @@ namespace Dependiator.MainWindowViews
 				return Task.CompletedTask;
 			}
 
-			return RepositoryViewModel.ActivateRefreshAsync();
+			return MainViewModel.ActivateRefreshAsync();
 		}
 
 
@@ -239,9 +239,9 @@ namespace Dependiator.MainWindowViews
 				SearchBox = "";
 				mainWindowService.SetRepositoryViewFocus();
 			}
-			else if (RepositoryViewModel.IsShowCommitDetails)
+			else if (MainViewModel.IsShowCommitDetails)
 			{
-				RepositoryViewModel.IsShowCommitDetails = false;
+				MainViewModel.IsShowCommitDetails = false;
 				mainWindowService.SetRepositoryViewFocus();
 			}
 			else
@@ -253,7 +253,7 @@ namespace Dependiator.MainWindowViews
 
 		public int WindowWith
 		{
-			set { RepositoryViewModel.Width = value; }
+			set { MainViewModel.Width = value; }
 		}
 
 

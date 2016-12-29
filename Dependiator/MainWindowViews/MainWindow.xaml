@@ -107,8 +107,8 @@
 						Style="{DynamicResource IconButtonStyle}"			
 						Foreground="{DynamicResource ConflictBrush}"			
 						FontWeight="Bold"
-						Visibility="{Binding RepositoryViewModel.FetchErrorText, Converter={StaticResource VC}}"			
-						ToolTip="{Binding RepositoryViewModel.FetchErrorText}" />
+						Visibility="{Binding MainViewModel.FetchErrorText, Converter={StaticResource VC}}"			
+						ToolTip="{Binding MainViewModel.FetchErrorText}" />
 					
 					<!-- Latest version button -->
 					<Button 
@@ -144,7 +144,7 @@
 		<repositoryViews:MainView 
 			x:Name="RepositoryView"
 			Grid.Row="1"
-			DataContext="{Binding RepositoryViewModel}"/>
+			DataContext="{Binding MainViewModel}"/>
 
 	</Grid>
 </Window>
