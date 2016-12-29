@@ -7,15 +7,15 @@ namespace Dependiator.RepositoryViews
 {
 	internal interface IViewModelService
 	{
-		void UpdateViewModel(RepositoryViewModel repositoryViewModel);
+		void UpdateViewModel(MainViewModel mainViewModel);
 
-		int ToggleMergePoint(RepositoryViewModel repositoryViewModel, Commit commit);
+		int ToggleMergePoint(MainViewModel repositoryViewModel, Commit commit);
 
-		Task SetFilterAsync(RepositoryViewModel repositoryViewModel, string filterText);
+		Task SetFilterAsync(MainViewModel repositoryViewModel, string filterText);
 
-		void ShowBranch(RepositoryViewModel repositoryViewModel, Branch branch);
+		void ShowBranch(MainViewModel repositoryViewModel, Branch branch);
 
-		void HideBranch(RepositoryViewModel repositoryViewModel, Branch branch);
+		void HideBranch(MainViewModel repositoryViewModel, Branch branch);
 		Brush GetSubjectBrush(Commit commit);
 	}
 }

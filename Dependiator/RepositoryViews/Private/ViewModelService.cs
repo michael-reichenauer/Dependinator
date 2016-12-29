@@ -40,13 +40,13 @@ namespace Dependiator.RepositoryViews.Private
 			this.branchViewModelProvider = branchViewModelProvider;
 		}
 
-		public void UpdateViewModel(RepositoryViewModel repositoryViewModel)
+		public void UpdateViewModel(MainViewModel mainViewModel)
 		{
 			Timing t = new Timing();
 
 			List<Branch> specifiedBranches = new List<Branch>();
 
-			foreach (BranchName name in repositoryViewModel.SpecifiedBranchNames)
+			foreach (BranchName name in mainViewModel.SpecifiedBranchNames)
 			{
 				Branch branch;
 
@@ -92,53 +92,53 @@ namespace Dependiator.RepositoryViews.Private
 
 			List<Commit> commits = GetCommits(branches);
 
-			repositoryViewModel.ShownBranches.Clear();
+			mainViewModel.ShownBranches.Clear();
 			branches
 				.OrderBy(b => b.Name)
-				.ForEach(b => repositoryViewModel.ShownBranches.Add(
-					new BranchItem(b, repositoryViewModel.ShowBranchCommand, null)));
+				.ForEach(b => mainViewModel.ShownBranches.Add(
+					new BranchItem(b, mainViewModel.ShowBranchCommand, null)));
 
-			repositoryViewModel.HidableBranches.Clear();
+			mainViewModel.HidableBranches.Clear();
 			branches
 				.Where(b => b.Name != BranchName.Master)
 				.OrderBy(b => b.Name)
-				.ForEach(b => repositoryViewModel.HidableBranches.Add(
-					new BranchItem(b, repositoryViewModel.ShowBranchCommand, null)));
+				.ForEach(b => mainViewModel.HidableBranches.Add(
+					new BranchItem(b, mainViewModel.ShowBranchCommand, null)));
 
-			repositoryViewModel.ShowableBranches.Clear();
+			mainViewModel.ShowableBranches.Clear();
 			IEnumerable<Branch> showableBranches = repositoryMgr.Repository.Branches
 				.Where(b => b.IsActive);
 			IReadOnlyList<BranchItem> showableBrancheItems = BranchItem.GetBranches(
 				showableBranches,
-				repositoryViewModel.ShowBranchCommand);
-			showableBrancheItems.ForEach(b => repositoryViewModel.ShowableBranches.Add(b));
+				mainViewModel.ShowBranchCommand);
+			showableBrancheItems.ForEach(b => mainViewModel.ShowableBranches.Add(b));
 
-			repositoryViewModel.DeletableBranches.Clear();
+			mainViewModel.DeletableBranches.Clear();
 					
 
-			UpdateViewModel(repositoryViewModel, branches, commits);
+			UpdateViewModel(mainViewModel, branches, commits);
 
 			t.Log("Updated view model");
 		}
 
 
 		private void UpdateViewModel(
-			RepositoryViewModel repositoryViewModel,
+			MainViewModel mainViewModel,
 			IReadOnlyList<Branch> branches,
 			List<Commit> commits)
 		{
-			UpdateBranches(branches, commits, repositoryViewModel);
+			UpdateBranches(branches, commits, mainViewModel);
 
-			UpdateCommits(commits, repositoryViewModel);
+			UpdateCommits(commits, mainViewModel);
 
-			UpdateMerges(branches, repositoryViewModel);
+			UpdateMerges(branches, mainViewModel);
 
-			repositoryViewModel.SpecifiedBranches = branches.ToList();
-			repositoryViewModel.SpecifiedBranchNames = new BranchName[0];
+			mainViewModel.SpecifiedBranches = branches.ToList();
+			mainViewModel.SpecifiedBranchNames = new BranchName[0];
 		}
 
 
-		public int ToggleMergePoint(RepositoryViewModel repositoryViewModel, Commit commit)
+		public int ToggleMergePoint(MainViewModel repositoryViewModel, Commit commit)
 		{
 			List<Branch> currentlyShownBranches = repositoryViewModel.SpecifiedBranches.ToList();
 
@@ -233,7 +233,7 @@ namespace Dependiator.RepositoryViews.Private
 		}
 
 
-		public void ShowBranch(RepositoryViewModel repositoryViewModel, Branch branch)
+		public void ShowBranch(MainViewModel repositoryViewModel, Branch branch)
 		{
 			List<Branch> currentlyShownBranches = repositoryViewModel.SpecifiedBranches.ToList();
 
@@ -263,7 +263,7 @@ namespace Dependiator.RepositoryViews.Private
 			repositoryViewModel.VirtualItemsSource.DataChanged(repositoryViewModel.Width);
 		}
 
-		public void HideBranch(RepositoryViewModel repositoryViewModel, Branch branch)
+		public void HideBranch(MainViewModel repositoryViewModel, Branch branch)
 		{
 			List<Branch> currentlyShownBranches = repositoryViewModel.SpecifiedBranches.ToList();
 
@@ -292,7 +292,7 @@ namespace Dependiator.RepositoryViews.Private
 		}
 
 
-		public async Task SetFilterAsync(RepositoryViewModel repositoryViewModel, string filterText)
+		public async Task SetFilterAsync(MainViewModel repositoryViewModel, string filterText)
 		{
 			if (string.IsNullOrEmpty(filterText))
 			{
@@ -479,7 +479,7 @@ namespace Dependiator.RepositoryViews.Private
 
 		private void UpdateCommits(
 			IReadOnlyList<Commit> sourceCommits,
-			RepositoryViewModel repositoryViewModel)
+			MainViewModel repositoryViewModel)
 		{
 			List<CommitViewModel> commits = repositoryViewModel.Commits;
 			var commitsById = repositoryViewModel.CommitsById;
@@ -535,7 +535,7 @@ namespace Dependiator.RepositoryViews.Private
 		private void UpdateBranches(
 			IReadOnlyList<Branch> sourceBranches,
 			List<Commit> commits,
-			RepositoryViewModel repositoryViewModel)
+			MainViewModel repositoryViewModel)
 		{
 			int maxColumn = 0;
 			var branches = repositoryViewModel.Branches;
@@ -698,7 +698,7 @@ namespace Dependiator.RepositoryViews.Private
 
 		private void UpdateMerges(
 			IEnumerable<Branch> sourceBranches,
-			RepositoryViewModel repositoryViewModel)
+			MainViewModel repositoryViewModel)
 		{
 			var branches = repositoryViewModel.Branches;
 			var commits = repositoryViewModel.Commits;
@@ -815,7 +815,7 @@ namespace Dependiator.RepositoryViews.Private
 
 
 		private BranchViewModel GetBranchViewModel(
-			RepositoryViewModel repositoryViewModel, Branch branch)
+			MainViewModel repositoryViewModel, Branch branch)
 		{
 			foreach (BranchViewModel current in repositoryViewModel.Branches)
 			{

@@ -13,7 +13,7 @@ namespace Dependiator.RepositoryViews
 	/// </summary>
 	public partial class MainView : UserControl
 	{
-		private RepositoryViewModel viewModel;
+		private MainViewModel viewModel;
 
 
 		public MainView()
@@ -24,7 +24,7 @@ namespace Dependiator.RepositoryViews
 
 		private void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
 		{
-			viewModel = (RepositoryViewModel)DataContext;
+			viewModel = (MainViewModel)DataContext;
 			viewModel.Canvas = (ZoomableCanvas)sender;
 			viewModel.ListBox = ItemsListBox;
 

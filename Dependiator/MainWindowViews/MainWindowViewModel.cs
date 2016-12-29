@@ -42,7 +42,7 @@ namespace Dependiator.MainWindowViews
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
 			MainWindowIpcService mainWindowIpcService,
-			RepositoryViewModel repositoryViewModel)
+			MainViewModel repositoryViewModel)
 		{
 			this.workingFolder = workingFolder;
 			this.owner = owner;
@@ -95,7 +95,7 @@ namespace Dependiator.MainWindowViews
 
 		public BusyIndicator Busy => BusyIndicator();
 
-		public RepositoryViewModel RepositoryViewModel { get; }
+		public MainViewModel RepositoryViewModel { get; }
 
 
 		public string VersionText

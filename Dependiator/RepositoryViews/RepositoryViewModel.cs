@@ -25,7 +25,7 @@ namespace Dependiator.RepositoryViews
 	/// View model
 	/// </summary>
 	[SingleInstance]
-	internal class RepositoryViewModel : ViewModel
+	internal class MainViewModel : ViewModel
 	{
 		private static readonly TimeSpan FilterDelay = TimeSpan.FromMilliseconds(300);
 
@@ -62,7 +62,7 @@ namespace Dependiator.RepositoryViews
 		public ZoomableCanvas Canvas { get; set; }
 
 
-		public RepositoryViewModel(
+		public MainViewModel(
 			WorkingFolder workingFolder,
 			IViewModelService viewModelService,
 			IRepositoryService repositoryService,
