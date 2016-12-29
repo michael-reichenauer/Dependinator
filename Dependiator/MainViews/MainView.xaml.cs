@@ -61,67 +61,67 @@ namespace Dependiator.MainViews
 
 		private void MouseEntering(object sender, MouseEventArgs e)
 		{
-			ListBoxItem item = sender as ListBoxItem;
-			if (item != null)
-			{
-				BranchViewModel branch = item.Content as BranchViewModel;
-				if (branch != null)
-				{
-					viewModel.MouseEnterBranch(branch);
-				}
+			//ListBoxItem item = sender as ListBoxItem;
+			//if (item != null)
+			//{
+			//	BranchViewModel branch = item.Content as BranchViewModel;
+			//	if (branch != null)
+			//	{
+			//		viewModel.MouseEnterBranch(branch);
+			//	}
 
-				CommitViewModel commit = item.Content as CommitViewModel;
-				if (commit != null)
-				{
-					Point viewPoint = e.GetPosition(ItemsListBox);
-					if (viewPoint.X < viewModel.GraphWidth)
-					{
-						branch = viewModel.Branches.FirstOrDefault(b => b.Branch == commit.Commit.Branch);
-						if (branch != null)
-						{
-							viewModel.MouseEnterBranch(branch);
-						}
-					}
+			//	CommitViewModel commit = item.Content as CommitViewModel;
+			//	if (commit != null)
+			//	{
+			//		Point viewPoint = e.GetPosition(ItemsListBox);
+			//		if (viewPoint.X < viewModel.GraphWidth)
+			//		{
+			//			branch = viewModel.Branches.FirstOrDefault(b => b.Branch == commit.Commit.Branch);
+			//			if (branch != null)
+			//			{
+			//				viewModel.MouseEnterBranch(branch);
+			//			}
+			//		}
 
-					if (viewPoint.X > viewModel.GraphWidth)
-					{
-						branch = viewModel.Branches.FirstOrDefault(b => b.Branch == commit.Commit.Branch);
-						if (branch != null)
-						{
-							viewModel.MouseLeaveBranch(branch);
-						}
+			//		if (viewPoint.X > viewModel.GraphWidth)
+			//		{
+			//			branch = viewModel.Branches.FirstOrDefault(b => b.Branch == commit.Commit.Branch);
+			//			if (branch != null)
+			//			{
+			//				viewModel.MouseLeaveBranch(branch);
+			//			}
 
-					}
-				}
-			}
+			//		}
+			//	}
+			//}
 		}
 
 
 		private void MouseLeaving(object sender, MouseEventArgs e)
 		{
-			ListBoxItem item = sender as ListBoxItem;
-			if (item != null)
-			{
-				BranchViewModel branch = item.Content as BranchViewModel;
-				if (branch != null)
-				{
-					viewModel.MouseLeaveBranch(branch);
-				}
+			//ListBoxItem item = sender as ListBoxItem;
+			//if (item != null)
+			//{
+			//	BranchViewModel branch = item.Content as BranchViewModel;
+			//	if (branch != null)
+			//	{
+			//		viewModel.MouseLeaveBranch(branch);
+			//	}
 
-				CommitViewModel commit = item.Content as CommitViewModel;
-				if (commit != null)
-				{
-					Point viewPoint = e.GetPosition(ItemsListBox);
-					if (viewPoint.X < viewModel.GraphWidth)
-					{
-						branch = viewModel.Branches.FirstOrDefault(b => b.Branch == commit.Commit.Branch);
-						if (branch != null)
-						{
-							viewModel.MouseLeaveBranch(branch);
-						}
-					}
-				}
-			}
+			//	CommitViewModel commit = item.Content as CommitViewModel;
+			//	if (commit != null)
+			//	{
+			//		Point viewPoint = e.GetPosition(ItemsListBox);
+			//		if (viewPoint.X < viewModel.GraphWidth)
+			//		{
+			//			branch = viewModel.Branches.FirstOrDefault(b => b.Branch == commit.Commit.Branch);
+			//			if (branch != null)
+			//			{
+			//				viewModel.MouseLeaveBranch(branch);
+			//			}
+			//		}
+			//	}
+			//}
 		}
 
 

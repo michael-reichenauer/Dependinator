@@ -197,10 +197,10 @@ namespace Dependiator.MainWindowViews
 			settings.IsMaximized = WindowState == WindowState.Maximized;
 			settings.IsShowCommitDetails = viewModel.MainViewModel.IsShowCommitDetails;
 
-			settings.ShownBranches = viewModel.MainViewModel.Branches
-				.Select(b => b.Branch.Name.ToString())
-				.Distinct()
-				.ToList();
+			//settings.ShownBranches = viewModel.MainViewModel.Branches
+			//	.Select(b => b.Branch.Name.ToString())
+			//	.Distinct()
+			//	.ToList();
 
 			Settings.SetWorkFolderSetting(workingFolder, settings);
 		}

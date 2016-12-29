@@ -28,7 +28,7 @@ namespace Dependiator.MainViews
 	{
 		private static readonly TimeSpan FilterDelay = TimeSpan.FromMilliseconds(300);
 
-		private readonly IViewModelService viewModelService;
+	//	private readonly IViewModelService viewModelService;
 		private readonly IRepositoryService repositoryService;
 
 		private readonly IThemeService themeService;
@@ -42,9 +42,9 @@ namespace Dependiator.MainViews
 		private int width = 0;
 		private int graphWidth = 0;
 
-		public List<BranchViewModel> Branches { get; } = new List<BranchViewModel>();
-		public List<MergeViewModel> Merges { get; } = new List<MergeViewModel>();
-		public List<CommitViewModel> Commits { get; } = new List<CommitViewModel>();
+		//public List<BranchViewModel> Branches { get; } = new List<BranchViewModel>();
+		//public List<MergeViewModel> Merges { get; } = new List<MergeViewModel>();
+		//public List<CommitViewModel> Commits { get; } = new List<CommitViewModel>();
 
 		public List<ModuleViewModel> Modules { get; } = new List<ModuleViewModel>();
 
@@ -64,14 +64,14 @@ namespace Dependiator.MainViews
 
 		public MainViewModel(
 			WorkingFolder workingFolder,
-			IViewModelService viewModelService,
+			//IViewModelService viewModelService,
 			IRepositoryService repositoryService,
 			IThemeService themeService,
 			IProgressService progressService,
 			Func<CommitDetailsViewModel> commitDetailsViewModelProvider)
 		{
 			this.workingFolder = workingFolder;
-			this.viewModelService = viewModelService;
+			//this.viewModelService = viewModelService;
 			this.repositoryService = repositoryService;
 
 			this.themeService = themeService;
@@ -171,7 +171,7 @@ namespace Dependiator.MainViews
 				if (width != value)
 				{
 					width = value;
-					Commits.ForEach(commit => commit.WindowWidth = width - 2);
+					//Commits.ForEach(commit => commit.WindowWidth = width - 2);
 					VirtualItemsSource.DataChanged();
 				}
 			}
@@ -185,7 +185,7 @@ namespace Dependiator.MainViews
 				if (graphWidth != value)
 				{
 					graphWidth = value;
-					Commits.ForEach(commit => commit.GraphWidth = graphWidth);
+					//Commits.ForEach(commit => commit.GraphWidth = graphWidth);
 				}
 			}
 		}
@@ -319,7 +319,7 @@ namespace Dependiator.MainViews
 
 			if (!IsInFilterMode())
 			{
-				viewModelService.UpdateViewModel(this);
+				//viewModelService.UpdateViewModel(this);
 
 				UpdateViewModelImpl();
 
@@ -354,15 +354,15 @@ namespace Dependiator.MainViews
 
 			});
 
-			viewModelService.UpdateViewModel(this);
+		//	viewModelService.UpdateViewModel(this);
 
 			UpdateViewModelImpl();
 
-			if (Commits.Any())
-			{
-				SelectedIndex = 0;
-				SelectedItem = Commits.First();
-			}
+			//if (Commits.Any())
+			//{
+			//	SelectedIndex = 0;
+			//	SelectedItem = Commits.First();
+			//}
 
 			t.Log("Updated repository view model");
 		}
@@ -370,7 +370,7 @@ namespace Dependiator.MainViews
 
 		private void UpdateViewModelImpl()
 		{
-			Commits.ForEach(commit => commit.WindowWidth = Width);
+			//Commits.ForEach(commit => commit.WindowWidth = Width);
 			CommitDetailsViewModel.NotifyAll();
 			NotifyAll();
 
@@ -442,7 +442,8 @@ namespace Dependiator.MainViews
 
 			using (progress.ShowBusy())
 			{
-				await viewModelService.SetFilterAsync(this, filterText);
+				//await viewModelService.SetFilterAsync(this, filterText);
+				await Task.Yield();
 			}
 
 			TrySetSelectedCommitPosition(commitPosition, true);
@@ -454,18 +455,18 @@ namespace Dependiator.MainViews
 
 		private CommitPosition TryGetSelectedCommitPosition()
 		{
-			Commit selected = (SelectedItem as CommitViewModel)?.Commit;
-			int index = -1;
+			//Commit selected = (SelectedItem as CommitViewModel)?.Commit;
+			//int index = -1;
 
-			if (selected != null)
-			{
-				index = Commits.FindIndex(c => c.Commit.Id == selected.Id);
-			}
+			//if (selected != null)
+			//{
+			//	index = Commits.FindIndex(c => c.Commit.Id == selected.Id);
+			//}
 
-			if (selected != null && index != -1)
-			{
-				return new CommitPosition(selected, index);
-			}
+			//if (selected != null && index != -1)
+			//{
+			//	return new CommitPosition(selected, index);
+			//}
 
 			return null;
 		}
@@ -474,42 +475,42 @@ namespace Dependiator.MainViews
 		private void TrySetSelectedCommitPosition(
 			CommitPosition commitPosition, bool ignoreTopIndex = false)
 		{
-			if (commitPosition != null)
-			{
-				if (!ignoreTopIndex && commitPosition.Index == 0)
-				{
-					// The index was 0 (top) lest ensure the index remains 0 again
-					Log.Debug("Scroll to 0 since first position was 0");
-					ScrollTo(0);
-					if (Commits.Any())
-					{
-						SelectedIndex = 0;
-						SelectedItem = Commits.First();
-					}
+			//if (commitPosition != null)
+			//{
+			//	if (!ignoreTopIndex && commitPosition.Index == 0)
+			//	{
+			//		// The index was 0 (top) lest ensure the index remains 0 again
+			//		Log.Debug("Scroll to 0 since first position was 0");
+			//		ScrollTo(0);
+			//		//if (Commits.Any())
+			//		//{
+			//		//	SelectedIndex = 0;
+			//		//	SelectedItem = Commits.First();
+			//		//}
 
-					return;
-				}
+			//		return;
+			//	}
 
-				Commit selected = commitPosition.Commit;
+			//	Commit selected = commitPosition.Commit;
 
-				int indexAfter = Commits.FindIndex(c => c.Commit.Id == selected.Id);
+			//	int indexAfter = Commits.FindIndex(c => c.Commit.Id == selected.Id);
 
-				if (selected != null && indexAfter != -1)
-				{
-					int indexBefore = commitPosition.Index;
-					ScrollRows(indexBefore - indexAfter);
-					SelectedIndex = indexAfter;
-					SelectedItem = Commits[indexAfter];
-					return;
-				}
-			}
+			//	if (selected != null && indexAfter != -1)
+			//	{
+			//		int indexBefore = commitPosition.Index;
+			//		ScrollRows(indexBefore - indexAfter);
+			//		SelectedIndex = indexAfter;
+			//		SelectedItem = Commits[indexAfter];
+			//		return;
+			//	}
+			//}
 
-			ScrollTo(0);
-			if (Commits.Any())
-			{
-				SelectedIndex = 0;
-				SelectedItem = Commits.First();
-			}
+			//ScrollTo(0);
+			//if (Commits.Any())
+			//{
+			//	SelectedIndex = 0;
+			//	SelectedItem = Commits.First();
+			//}
 		}
 
 
@@ -529,12 +530,12 @@ namespace Dependiator.MainViews
 
 		public void ShowBranch(Branch branch)
 		{
-			viewModelService.ShowBranch(this, branch);
+			//viewModelService.ShowBranch(this, branch);
 		}
 
 		public void HideBranch(Branch branch)
 		{
-			viewModelService.HideBranch(this, branch);
+			//viewModelService.HideBranch(this, branch);
 		}
 
 		public void ShowUncommittedDetails()
@@ -546,46 +547,46 @@ namespace Dependiator.MainViews
 
 		public void ShowCurrentBranch()
 		{
-			viewModelService.ShowBranch(this, repositoryService.Repository.CurrentBranch);
+			//viewModelService.ShowBranch(this, repositoryService.Repository.CurrentBranch);
 		}
 
 
 		public void Clicked(Point position)
 		{
-			double clickX = position.X - 9;
-			double clickY = position.Y - 5;
+			//double clickX = position.X - 9;
+			//double clickY = position.Y - 5;
 
-			int row = Converters.ToRow(clickY);
+			//int row = Converters.ToRow(clickY);
 
-			if (row < 0 || row >= Commits.Count - 1 || clickX < 0 || clickX >= graphWidth)
-			{
-				// Click is not within supported area.
-				return;
-			}
+			//if (row < 0 || row >= Commits.Count - 1 || clickX < 0 || clickX >= graphWidth)
+			//{
+			//	// Click is not within supported area.
+			//	return;
+			//}
 
-			CommitViewModel commitViewModel = Commits[row];
-			int xDotCenter = commitViewModel.X;
-			int yDotCenter = commitViewModel.Y;
+			//CommitViewModel commitViewModel = Commits[row];
+			//int xDotCenter = commitViewModel.X;
+			//int yDotCenter = commitViewModel.Y;
 
-			double absx = Math.Abs(xDotCenter - clickX);
-			double absy = Math.Abs(yDotCenter - clickY);
+			//double absx = Math.Abs(xDotCenter - clickX);
+			//double absy = Math.Abs(yDotCenter - clickY);
 
-			if ((absx < 10) && (absy < 10))
-			{
-				Clicked(commitViewModel);
-			}
+			//if ((absx < 10) && (absy < 10))
+			//{
+			//	Clicked(commitViewModel);
+			//}
 		}
 
 		private void Clicked(CommitViewModel commitViewModel)
 		{
-			if (commitViewModel.IsMergePoint)
-			{
-				// User clicked on a merge point (toggle between expanded and collapsed)
-				int rowsChange = viewModelService.ToggleMergePoint(this, commitViewModel.Commit);
+			//if (commitViewModel.IsMergePoint)
+			//{
+			//	// User clicked on a merge point (toggle between expanded and collapsed)
+			//	int rowsChange = viewModelService.ToggleMergePoint(this, commitViewModel.Commit);
 
-				ScrollRows(rowsChange);
-				VirtualItemsSource.DataChanged();
-			}
+			//	ScrollRows(rowsChange);
+			//	VirtualItemsSource.DataChanged();
+			//}
 		}
 	}
 }
