@@ -31,7 +31,6 @@ namespace Dependiator.MainWindowViews
 		private readonly WorkingFolder workingFolder;
 		private readonly WindowOwner owner;
 		private readonly IMessage message;
-		private readonly IRepositoryCommands repositoryCommands;
 
 		private bool isLoaded = false;
 
@@ -40,7 +39,6 @@ namespace Dependiator.MainWindowViews
 			WorkingFolder workingFolder,
 			WindowOwner owner,
 			IMessage message,
-			IRepositoryCommands repositoryCommands,
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
 			MainWindowIpcService mainWindowIpcService,
@@ -49,7 +47,6 @@ namespace Dependiator.MainWindowViews
 			this.workingFolder = workingFolder;
 			this.owner = owner;
 			this.message = message;
-			this.repositoryCommands = repositoryCommands;
 			this.latestVersionService = latestVersionService;
 			this.mainWindowService = mainWindowService;
 			this.mainWindowIpcService = mainWindowIpcService;
@@ -112,11 +109,6 @@ namespace Dependiator.MainWindowViews
 				return text;
 			}
 		}
-
-		public Command ShowUncommittedDetailsCommand => Command(
-			() => repositoryCommands.ShowUncommittedDetails());
-	
-		public Command ShowCurrentBranchCommand => Command(() => repositoryCommands.ShowCurrentBranch());
 
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
 
@@ -259,18 +251,10 @@ namespace Dependiator.MainWindowViews
 		}
 
 
-		public IReadOnlyList<BranchName> SpecifiedBranchNames
-		{
-			set { RepositoryViewModel.SpecifiedBranchNames = value; }
-		}
-
-
 		public int WindowWith
 		{
 			set { RepositoryViewModel.Width = value; }
 		}
-
-
 
 
 		private void Minimize()
