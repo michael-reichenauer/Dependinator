@@ -9,13 +9,13 @@ namespace Dependiator.RepositoryViews
 	{
 		void UpdateViewModel(MainViewModel mainViewModel);
 
-		int ToggleMergePoint(MainViewModel repositoryViewModel, Commit commit);
+		int ToggleMergePoint(MainViewModel maninViewModel, Commit commit);
 
-		Task SetFilterAsync(MainViewModel repositoryViewModel, string filterText);
+		Task SetFilterAsync(MainViewModel maninViewModel, string filterText);
 
-		void ShowBranch(MainViewModel repositoryViewModel, Branch branch);
+		void ShowBranch(MainViewModel maninViewModel, Branch branch);
 
-		void HideBranch(MainViewModel repositoryViewModel, Branch branch);
+		void HideBranch(MainViewModel maninViewModel, Branch branch);
 		Brush GetSubjectBrush(Commit commit);
 	}
 }

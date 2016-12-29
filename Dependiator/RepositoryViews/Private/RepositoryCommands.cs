@@ -6,16 +6,16 @@ namespace Dependiator.RepositoryViews.Private
 {
 	internal class RepositoryCommands : IRepositoryCommands
 	{
-		private readonly Lazy<MainViewModel> lazyRepositoryViewModel;
+		private readonly Lazy<MainViewModel> lazyMainViewModel;
 
 
-		public RepositoryCommands(Lazy<MainViewModel> lazyRepositoryViewModel)
+		public RepositoryCommands(Lazy<MainViewModel> lazyMainViewModel)
 		{
-			this.lazyRepositoryViewModel = lazyRepositoryViewModel;
+			this.lazyMainViewModel = lazyMainViewModel;
 		}
 
 
-		private MainViewModel viewModel => lazyRepositoryViewModel.Value;
+		private MainViewModel viewModel => lazyMainViewModel.Value;
 
 		public void RefreshView() => viewModel.RefreshView();
 

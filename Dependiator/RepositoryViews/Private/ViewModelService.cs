@@ -138,11 +138,11 @@ namespace Dependiator.RepositoryViews.Private
 		}
 
 
-		public int ToggleMergePoint(MainViewModel repositoryViewModel, Commit commit)
+		public int ToggleMergePoint(MainViewModel maninViewModel, Commit commit)
 		{
-			List<Branch> currentlyShownBranches = repositoryViewModel.SpecifiedBranches.ToList();
+			List<Branch> currentlyShownBranches = maninViewModel.SpecifiedBranches.ToList();
 
-			BranchViewModel clickedBranch = repositoryViewModel
+			BranchViewModel clickedBranch = maninViewModel
 				.Branches.First(b => b.Branch == commit.Branch);
 
 			Commit stableCommit = commit;
@@ -166,7 +166,7 @@ namespace Dependiator.RepositoryViews.Private
 					&& commit.SecondParent.Branch != commit.Branch
 					&& currentlyShownBranches.Contains(commit.SecondParent.Branch))
 				{
-					otherBranch = repositoryViewModel.Branches
+					otherBranch = maninViewModel.Branches
 						.First(b => b.Branch == commit.SecondParent.Branch);
 
 					if (clickedBranch.BranchColumn > otherBranch.BranchColumn)
@@ -184,14 +184,14 @@ namespace Dependiator.RepositoryViews.Private
 					stableCommit = commit.Branch.ParentCommit;
 					if (clickedBranch.Branch.IsLocalPart)
 					{
-						otherBranch = repositoryViewModel
+						otherBranch = maninViewModel
 							.Branches.First(b => b.Branch == clickedBranch.Branch.MainbBranch);
 						stableCommit = otherBranch.Branch.ParentCommit;
 					}
 				}
 				else
 				{
-					otherBranch = repositoryViewModel.Branches
+					otherBranch = maninViewModel.Branches
 						.First(b => b.Branch == commit.FirstParent.Branch);
 
 					if (clickedBranch.BranchColumn > otherBranch.BranchColumn)
@@ -204,7 +204,7 @@ namespace Dependiator.RepositoryViews.Private
 
 				if (otherBranch.Branch.IsLocalPart)
 				{
-					otherBranch = repositoryViewModel.Branches
+					otherBranch = maninViewModel.Branches
 						.First(b => b.Branch == otherBranch.Branch.MainbBranch);
 					stableCommit = otherBranch.Branch.ParentCommit;
 				}
@@ -217,14 +217,14 @@ namespace Dependiator.RepositoryViews.Private
 				currentlyShownBranches.RemoveAll(b => b.Name != BranchName.Master && closingBranches.Contains(b));
 			}
 
-			CommitViewModel stableCommitViewModel = repositoryViewModel.CommitsById[stableCommit.Id];
+			CommitViewModel stableCommitViewModel = maninViewModel.CommitsById[stableCommit.Id];
 
 			int currentRow = stableCommitViewModel.RowIndex;
-			repositoryViewModel.SelectedIndex = currentRow;
-			repositoryViewModel.SpecifiedBranches = currentlyShownBranches;
-			UpdateViewModel(repositoryViewModel);
+			maninViewModel.SelectedIndex = currentRow;
+			maninViewModel.SpecifiedBranches = currentlyShownBranches;
+			UpdateViewModel(maninViewModel);
 
-			CommitViewModel newCommitViewModel = repositoryViewModel.CommitsById[stableCommit.Id];
+			CommitViewModel newCommitViewModel = maninViewModel.CommitsById[stableCommit.Id];
 
 			int newRow = newCommitViewModel.RowIndex;
 			Log.Debug($"Row {currentRow}->{newRow} for {stableCommit}");
@@ -233,9 +233,9 @@ namespace Dependiator.RepositoryViews.Private
 		}
 
 
-		public void ShowBranch(MainViewModel repositoryViewModel, Branch branch)
+		public void ShowBranch(MainViewModel maninViewModel, Branch branch)
 		{
-			List<Branch> currentlyShownBranches = repositoryViewModel.SpecifiedBranches.ToList();
+			List<Branch> currentlyShownBranches = maninViewModel.SpecifiedBranches.ToList();
 
 			bool isShowing = currentlyShownBranches.Contains(branch);
 
@@ -248,24 +248,24 @@ namespace Dependiator.RepositoryViews.Private
 					currentlyShownBranches.Add(branch.LocalSubBranch);
 				}
 
-				repositoryViewModel.SpecifiedBranches = currentlyShownBranches;
-				UpdateViewModel(repositoryViewModel);
+				maninViewModel.SpecifiedBranches = currentlyShownBranches;
+				UpdateViewModel(maninViewModel);
 			}
 
-			var x = repositoryViewModel.Branches.FirstOrDefault(b => b.Branch == branch);
+			var x = maninViewModel.Branches.FirstOrDefault(b => b.Branch == branch);
 			if (x != null)
 			{
 				var y = x.TipRowIndex;
-				repositoryViewModel.ScrollRows(repositoryViewModel.Commits.Count);
-				repositoryViewModel.ScrollRows(-(y - 10));
+				maninViewModel.ScrollRows(maninViewModel.Commits.Count);
+				maninViewModel.ScrollRows(-(y - 10));
 			}
 
-			repositoryViewModel.VirtualItemsSource.DataChanged(repositoryViewModel.Width);
+			maninViewModel.VirtualItemsSource.DataChanged(maninViewModel.Width);
 		}
 
-		public void HideBranch(MainViewModel repositoryViewModel, Branch branch)
+		public void HideBranch(MainViewModel maninViewModel, Branch branch)
 		{
-			List<Branch> currentlyShownBranches = repositoryViewModel.SpecifiedBranches.ToList();
+			List<Branch> currentlyShownBranches = maninViewModel.SpecifiedBranches.ToList();
 
 			bool isShowing = currentlyShownBranches.Contains(branch);
 
@@ -284,35 +284,35 @@ namespace Dependiator.RepositoryViews.Private
 
 				currentlyShownBranches.RemoveAll(b => b.Name != BranchName.Master && closingBranches.Contains(b));
 
-				repositoryViewModel.SpecifiedBranches = currentlyShownBranches;
-				UpdateViewModel(repositoryViewModel);
+				maninViewModel.SpecifiedBranches = currentlyShownBranches;
+				UpdateViewModel(maninViewModel);
 
-				repositoryViewModel.VirtualItemsSource.DataChanged(repositoryViewModel.Width);
+				maninViewModel.VirtualItemsSource.DataChanged(maninViewModel.Width);
 			}
 		}
 
 
-		public async Task SetFilterAsync(MainViewModel repositoryViewModel, string filterText)
+		public async Task SetFilterAsync(MainViewModel maninViewModel, string filterText)
 		{
 			if (string.IsNullOrEmpty(filterText))
 			{
-				List<Branch> preFilterBranches = repositoryViewModel.PreFilterBranches.ToList();
-				CommitViewModel preFilterSelectedItem = repositoryViewModel.PreFilterSelectedItem;
-				repositoryViewModel.PreFilterBranches = null;
-				repositoryViewModel.PreFilterSelectedItem = null;
+				List<Branch> preFilterBranches = maninViewModel.PreFilterBranches.ToList();
+				CommitViewModel preFilterSelectedItem = maninViewModel.PreFilterSelectedItem;
+				maninViewModel.PreFilterBranches = null;
+				maninViewModel.PreFilterSelectedItem = null;
 
-				var commit = repositoryViewModel.SelectedItem as CommitViewModel;
+				var commit = maninViewModel.SelectedItem as CommitViewModel;
 				if (commit != null && !preFilterBranches.Contains(commit.Commit.Branch))
 				{
 					preFilterBranches.Add(commit.Commit.Branch);
 				}
 				else if (commit == null)
 				{
-					repositoryViewModel.SelectedItem = preFilterSelectedItem;
+					maninViewModel.SelectedItem = preFilterSelectedItem;
 				}
 
-				repositoryViewModel.SpecifiedBranches = preFilterBranches;
-				UpdateViewModel(repositoryViewModel);
+				maninViewModel.SpecifiedBranches = preFilterBranches;
+				UpdateViewModel(maninViewModel);
 			}
 			else
 			{
@@ -320,16 +320,16 @@ namespace Dependiator.RepositoryViews.Private
 				List<Commit> commits = await GetFilteredCommitsAsync(filterText);
 				t.Log($"Got filtered {commits.Count} commits");
 
-				if (repositoryViewModel.PreFilterBranches == null)
+				if (maninViewModel.PreFilterBranches == null)
 				{
 					// Storing pre-filter mode state to be used when leaving filter mode
-					repositoryViewModel.PreFilterBranches = repositoryViewModel.SpecifiedBranches;
-					repositoryViewModel.PreFilterSelectedItem = repositoryViewModel.SelectedItem as CommitViewModel;
-					repositoryViewModel.PreFilterSelectedItem = null;
+					maninViewModel.PreFilterBranches = maninViewModel.SpecifiedBranches;
+					maninViewModel.PreFilterSelectedItem = maninViewModel.SelectedItem as CommitViewModel;
+					maninViewModel.PreFilterSelectedItem = null;
 				}
 
 				Branch[] branches = new Branch[0];
-				UpdateViewModel(repositoryViewModel, branches, commits);
+				UpdateViewModel(maninViewModel, branches, commits);
 			}
 		}
 
@@ -479,10 +479,10 @@ namespace Dependiator.RepositoryViews.Private
 
 		private void UpdateCommits(
 			IReadOnlyList<Commit> sourceCommits,
-			MainViewModel repositoryViewModel)
+			MainViewModel maninViewModel)
 		{
-			List<CommitViewModel> commits = repositoryViewModel.Commits;
-			var commitsById = repositoryViewModel.CommitsById;
+			List<CommitViewModel> commits = maninViewModel.Commits;
+			var commitsById = maninViewModel.CommitsById;
 
 			SetNumberOfItems(
 				commits, 
@@ -490,7 +490,7 @@ namespace Dependiator.RepositoryViews.Private
 				i => new CommitViewModel(themeService, repositoryCommands));
 
 			commitsById.Clear();
-			int graphWidth = repositoryViewModel.GraphWidth;
+			int graphWidth = maninViewModel.GraphWidth;
 
 			int index = 0;
 			foreach (Commit commit in sourceCommits)
@@ -501,7 +501,7 @@ namespace Dependiator.RepositoryViews.Private
 				commitViewModel.Commit = commit;
 				commitViewModel.RowIndex = index++;
 
-				commitViewModel.BranchViewModel = GetBranchViewModel(repositoryViewModel, commit.Branch);
+				commitViewModel.BranchViewModel = GetBranchViewModel(maninViewModel, commit.Branch);
 
 				int x = commitViewModel.BranchViewModel?.X ?? -20;
 				int y = Converters.ToY(commitViewModel.RowIndex);
@@ -511,7 +511,7 @@ namespace Dependiator.RepositoryViews.Private
 					: commitViewModel.IsMergePoint ? 2 + x : 4 + x;
 
 				commitViewModel.GraphWidth = graphWidth;
-				commitViewModel.Width = repositoryViewModel.Width - 35;
+				commitViewModel.Width = maninViewModel.Width - 35;
 
 				commitViewModel.Rect = new Rect(0, y, commitViewModel.Width, CommitHeight);
 
@@ -535,10 +535,10 @@ namespace Dependiator.RepositoryViews.Private
 		private void UpdateBranches(
 			IReadOnlyList<Branch> sourceBranches,
 			List<Commit> commits,
-			MainViewModel repositoryViewModel)
+			MainViewModel maninViewModel)
 		{
 			int maxColumn = 0;
-			var branches = repositoryViewModel.Branches;
+			var branches = maninViewModel.Branches;
 
 			SetNumberOfItems(branches, sourceBranches.Count, i => branchViewModelProvider());
 
@@ -549,8 +549,8 @@ namespace Dependiator.RepositoryViews.Private
 				BranchViewModel branch = branches[index++];
 				branch.Branch = sourceBranch;
 
-				branch.ActiveBranches = repositoryViewModel.HidableBranches;
-				branch.ShownBranches = repositoryViewModel.ShownBranches;
+				branch.ActiveBranches = maninViewModel.HidableBranches;
+				branch.ShownBranches = maninViewModel.ShownBranches;
 
 				branch.TipRowIndex = commits.FindIndex(c => c == sourceBranch.TipCommit);
 				branch.FirstRowIndex = commits.FindIndex(c => c == sourceBranch.FirstCommit);
@@ -602,7 +602,7 @@ namespace Dependiator.RepositoryViews.Private
 				}
 			}
 
-			repositoryViewModel.GraphWidth = Converters.ToX(maxColumn + 1);
+			maninViewModel.GraphWidth = Converters.ToX(maxColumn + 1);
 		}
 
 
@@ -698,12 +698,12 @@ namespace Dependiator.RepositoryViews.Private
 
 		private void UpdateMerges(
 			IEnumerable<Branch> sourceBranches,
-			MainViewModel repositoryViewModel)
+			MainViewModel maninViewModel)
 		{
-			var branches = repositoryViewModel.Branches;
-			var commits = repositoryViewModel.Commits;
-			var commitsById = repositoryViewModel.CommitsById;
-			var merges = repositoryViewModel.Merges;
+			var branches = maninViewModel.Branches;
+			var commits = maninViewModel.Commits;
+			var commitsById = maninViewModel.CommitsById;
+			var merges = maninViewModel.Merges;
 
 			var mergePoints = commits
 				.Where(c => c.IsMergePoint && c.Commit.HasSecondParent && sourceBranches.Contains(c.Commit.SecondParent.Branch))
@@ -815,9 +815,9 @@ namespace Dependiator.RepositoryViews.Private
 
 
 		private BranchViewModel GetBranchViewModel(
-			MainViewModel repositoryViewModel, Branch branch)
+			MainViewModel maninViewModel, Branch branch)
 		{
-			foreach (BranchViewModel current in repositoryViewModel.Branches)
+			foreach (BranchViewModel current in maninViewModel.Branches)
 			{
 				if (current.Branch == branch)
 				{

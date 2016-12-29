@@ -42,7 +42,7 @@ namespace Dependiator.MainWindowViews
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
 			MainWindowIpcService mainWindowIpcService,
-			MainViewModel repositoryViewModel)
+			MainViewModel mainViewModel)
 		{
 			this.workingFolder = workingFolder;
 			this.owner = owner;
@@ -51,7 +51,7 @@ namespace Dependiator.MainWindowViews
 			this.mainWindowService = mainWindowService;
 			this.mainWindowIpcService = mainWindowIpcService;
 
-			MainViewModel = repositoryViewModel;
+			MainViewModel = mainViewModel;
 
 			workingFolder.OnChange += (s, e) => Notify(nameof(WorkingFolder));
 			latestVersionService.OnNewVersionAvailable += (s, e) => IsNewVersionVisible = true;
