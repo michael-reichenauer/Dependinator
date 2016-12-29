@@ -23,6 +23,5 @@ namespace Dependiator.RepositoryViews.Private
 
 		public void ToggleCommitDetails() => viewModel.ToggleCommitDetails();
 
-		public void SetCurrentMerging(Branch branch) => viewModel.SetCurrentMerging(branch);
 	}
 }

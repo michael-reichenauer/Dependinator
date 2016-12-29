@@ -739,14 +739,6 @@ namespace Dependiator.RepositoryViews.Private
 
 				SetMerge(merge, branches, commitsById[childCommit.Id], parentCommit, false);
 			}
-
-			if (isMergeInProgress)
-			{
-				CommitId mergeSourceId = repositoryViewModel.MergingBranch.TipCommit.Id;
-				CommitViewModel parentCommit = commitsById[mergeSourceId];
-				MergeViewModel merge = merges[index++];
-				SetMerge(merge, branches, commitsById[parentCommit.Commit.Repository.UnComitted.Id], parentCommit);
-			}
 		}
 
 

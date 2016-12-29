@@ -8,7 +8,6 @@ namespace Dependiator.RepositoryViews
 		void ShowCommitDetails();
 		void ToggleCommitDetails();
 		
-		void SetCurrentMerging(Branch branch);
 		void RefreshView();
 	}
 }

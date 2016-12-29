@@ -260,12 +260,6 @@ namespace Dependiator.RepositoryViews
 		}
 
 
-		public void SetCurrentMerging(Branch branch)
-		{
-			MergingBranch = branch;
-		}
-
-
 		public async Task ManualRefreshAsync()
 		{
 			using (progress.ShowDialog("Refreshing view ..."))
