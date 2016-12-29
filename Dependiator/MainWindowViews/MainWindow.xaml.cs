@@ -1,15 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Utils;
+using Dependiator.Utils.UI.VirtualCanvas;
+using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 
 
 namespace Dependiator.MainWindowViews
@@ -25,6 +27,7 @@ namespace Dependiator.MainWindowViews
 		private readonly DispatcherTimer remoteCheckTimer = new DispatcherTimer();
 
 		private readonly MainWindowViewModel viewModel;
+		private System.Windows.Point lastMousePosition;
 
 
 		internal MainWindow(
@@ -114,31 +117,62 @@ namespace Dependiator.MainWindowViews
 
 		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
 		{
-			////if ((Keyboard.Modifiers & ModifierKeys.Control) > 0)
-			////{
-			////	// Adjust X in "e.Delta / X" to adjust zoom speed
-			////	double x = Math.Pow(2, e.Delta / 10.0 / Mouse.MouseWheelDeltaForOneLine);
-			////	double newScale = canvas.Scale * x;
+			//if ((Keyboard.Modifiers & ModifierKeys.Control) > 0)
+			{
+				// Adjust X in "e.Delta / X" to adjust zoom speed
+				double x = Math.Pow(2, e.Delta / 10.0 / Mouse.MouseWheelDeltaForOneLine);
 
-			////	Log.Debug($"Scroll {x}, scale {canvas.Scale}, offset {canvas.Offset}");
-			////	if (newScale < 0.5 || newScale > 10)
-			////	{
-			////		Log.Warn($"Zoom to large");
-			////		e.Handled = true;
-			////		return;
-			////	}
+				ZoomableCanvas canvas = viewModel.RepositoryViewModel.Canvas;
+				double newScale = canvas.Scale * x;
 
-			////	canvas.Scale = newScale;
+				Log.Debug($"Scroll {x}, scale {canvas.Scale}, offset {canvas.Offset}");
+				if (newScale < 0.5 || newScale > 10)
+				{
+					Log.Warn($"Zoom to large");
+					e.Handled = true;
+					return;
+				}
 
-			////	// Adjust the offset to make the point under the mouse stay still.
-			////	Vector position = (Vector)e.GetPosition(ItemsListBox);
-			////	canvas.Offset = (Point)((Vector)
-			////		(canvas.Offset + position) * x - position);
-			////	Log.Debug($"Scroll {x}, scale {canvas.Scale}, offset {canvas.Offset}");
+				canvas.Scale = newScale;
 
-			////	e.Handled = true;
-			////}
+				// Adjust the offset to make the point under the mouse stay still.
+				Vector position = (Vector)e.GetPosition(RepositoryView.ItemsListBox);
+				canvas.Offset = (System.Windows.Point)((Vector)
+					(canvas.Offset + position) * x - position);
+				Log.Debug($"Scroll {x}, scale {canvas.Scale}, offset {canvas.Offset}");
+
+				e.Handled = true;
+			}
 		}
+
+		protected override void OnPreviewMouseMove(MouseEventArgs e)
+		{
+			System.Windows.Point position = e.GetPosition(RepositoryView.ItemsListBox);
+			ZoomableCanvas canvas = viewModel.RepositoryViewModel.Canvas;
+
+			if (e.LeftButton == MouseButtonState.Pressed && position.Y < 0 )
+			{
+				ReleaseMouseCapture();
+				return;
+			}
+
+			if (e.LeftButton == MouseButtonState.Pressed
+					&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
+			{
+				Log.Debug($"Mouse {position}");
+				CaptureMouse();
+				canvas.Offset -= position - lastMousePosition;
+				e.Handled = true;
+			}
+			else
+			{
+				ReleaseMouseCapture();
+			}
+
+			lastMousePosition = position;
+		}
+
+
 
 		private void MainWindow_OnClosed(object sender, EventArgs e)
 		{

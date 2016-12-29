@@ -303,9 +303,9 @@ namespace Dependiator.MainWindowViews
 		{
 			try
 			{
-				Process proc = new Process();
-				proc.StartInfo.FileName = "mailto:michael.reichenauer@gmail.com&subject=Dependiator Feedback";
-				proc.Start();
+				Process process = new Process();
+				process.StartInfo.FileName = "mailto:michael.reichenauer@gmail.com&subject=Dependiator Feedback";
+				process.Start();
 			}
 			catch (Exception ex) when (ex.IsNotFatal())
 			{
@@ -319,10 +319,10 @@ namespace Dependiator.MainWindowViews
 			try
 			{
 				Settings.EnsureExists<Options>();
-				Process proc = new Process();
+				Process process = new Process();
 				string optionsName = nameof(Options);
-				proc.StartInfo.FileName = Path.Combine(ProgramPaths.DataFolderPath, $"{optionsName}.json");
-				proc.Start();
+				process.StartInfo.FileName = Path.Combine(ProgramPaths.DataFolderPath, $"{optionsName}.json");
+				process.Start();
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
@@ -335,9 +335,9 @@ namespace Dependiator.MainWindowViews
 		{
 			try
 			{
-				Process proc = new Process();
-				proc.StartInfo.FileName = "https://github.com/michael-reichenauer/Dependiator/wiki/Help";
-				proc.Start();
+				Process process = new Process();
+				process.StartInfo.FileName = "https://github.com/michael-reichenauer/Dependiator/wiki/Help";
+				process.Start();
 			}
 			catch (Exception ex) when (ex.IsNotFatal())
 			{
