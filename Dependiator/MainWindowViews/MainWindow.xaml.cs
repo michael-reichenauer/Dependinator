@@ -2,16 +2,11 @@
 using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
-using System.Windows.Input;
 using System.Windows.Threading;
 using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Utils;
-using Dependiator.Utils.UI.VirtualCanvas;
-using MouseEventArgs = System.Windows.Input.MouseEventArgs;
-using Point = System.Windows.Point;
 
 
 namespace Dependiator.MainWindowViews

@@ -56,20 +56,31 @@ namespace Dependiator.MainViews
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
 
+			InitModules();
+		}
+
+
+		private void InitModules()
+		{
 			Modules.Add(new ModuleViewModel
 			{
-				Brush = Brushes.Aqua,
-				Rect = new Rect(100, 100, 100, 100),
-				Rectangle = new Rect(2, 2, 70, 70),
+				RectangleBrush = Brushes.Aqua,
+				CanvasBounds = new Rect(100, 100, 100, 100),
 			});
 
 			Modules.Add(new ModuleViewModel
 			{
-				Brush = Brushes.CornflowerBlue,
-				Rect = new Rect(400, 200, 100, 100),
-				Rectangle = new Rect(2, 2, 20, 70),
+				RectangleBrush = Brushes.CornflowerBlue,
+				CanvasBounds = new Rect(400, 200, 100, 100),
+			});
+
+			Modules.Add(new ModuleViewModel
+			{
+				RectangleBrush = Brushes.CornflowerBlue,
+				CanvasBounds = new Rect(200, 300, 100, 100),
 			});
 		}
+
 
 		public MainViewVirtualItemsSource VirtualItemsSource { get; }
 

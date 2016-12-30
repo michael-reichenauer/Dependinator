@@ -32,7 +32,7 @@
 				Style="{DynamicResource ListBoxScrollbarStyle}"
 				SelectionMode="Extended"
 				SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
-				SelectedItem="{Binding SelectedItem, Mode=TwoWay}" >
+				SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
 
 				<ListBox.InputBindings>
 					<KeyBinding Key="Enter" Command="{Binding ToggleDetailsCommand}" />
@@ -52,7 +52,46 @@
 				<ListBox.ItemContainerStyle>
 					<Style TargetType="ListBoxItem">
 
-						<Setter Property="Canvas.ZIndex" Value="{Binding ZIndex}" />
+						<Setter Property="Canvas.ZIndex" Value="{Binding CanvasZIndex}" />
+						<Setter Property="Canvas.Top" Value="{Binding CanvasTop}" />
+						<Setter Property="Canvas.Left" Value="{Binding CanvasLeft}" />
+						<Setter Property="Width">
+							<Setter.Value>
+								<MultiBinding
+									Converter="{x:Static virtualCanvas:ArithmeticConverter.Default}"
+									ConverterParameter="*">
+									<Binding Path="CanvasWidth" />
+									<Binding
+										Path="Scale"
+										RelativeSource="{RelativeSource	AncestorType=virtualCanvas:ZoomableCanvas}" />
+								</MultiBinding>
+							</Setter.Value>
+						</Setter>
+
+						<Setter Property="Height">
+							<Setter.Value>
+								<MultiBinding
+									Converter="{x:Static virtualCanvas:ArithmeticConverter.Default}"
+									ConverterParameter="*">
+									<Binding Path="CanvasHeight" />
+									<Binding
+										Path="Scale"
+										RelativeSource="{RelativeSource	AncestorType=virtualCanvas:ZoomableCanvas}" />
+								</MultiBinding>
+							</Setter.Value>
+						</Setter>
+
+						<Setter Property="Background" Value="Transparent" />
+						<Setter Property="Padding" Value="0" />
+						<Setter Property="HorizontalContentAlignment" Value="Stretch" />
+						<Setter Property="VerticalContentAlignment" Value="Stretch" />
+						
+						<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
+						
+						<EventSetter Event="MouseDoubleClick" Handler="MouseDobleClick" />
+						<EventSetter Event="MouseUp" Handler="EventMouseUp" />
+						<EventSetter Event="MouseEnter" Handler="MouseEntering" />
+						<EventSetter Event="MouseLeave" Handler="MouseLeaving" />
 
 						<!-- Style for list items (selected/hoover) -->
 						<Setter Property="Template">
@@ -92,48 +131,6 @@
 								</ControlTemplate>
 							</Setter.Value>
 						</Setter>
-
-
-						<Setter Property="Canvas.Top" Value="{Binding Top}" />
-						<Setter Property="Canvas.Left" Value="{Binding Left}" />
-
-						<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
-						<EventSetter Event="MouseDoubleClick" Handler="MouseDobleClick" />
-						<EventSetter Event="MouseUp" Handler="EventMouseUp" />
-						<EventSetter Event="MouseEnter" Handler="MouseEntering" />
-						<EventSetter Event="MouseLeave" Handler="MouseLeaving" />
-
-						<Setter Property="Width">
-							<Setter.Value>
-								<MultiBinding
-									Converter="{x:Static virtualCanvas:ArithmeticConverter.Default}"
-									ConverterParameter="*">
-									<Binding Path="Width" />
-									<Binding
-										Path="Scale"
-										RelativeSource="{RelativeSource	AncestorType=virtualCanvas:ZoomableCanvas}" />
-								</MultiBinding>
-							</Setter.Value>
-						</Setter>
-
-						<Setter Property="Height">
-							<Setter.Value>
-								<MultiBinding
-									Converter="{x:Static virtualCanvas:ArithmeticConverter.Default}"
-									ConverterParameter="*">
-									<Binding Path="Height" />
-									<Binding
-										Path="Scale"
-										RelativeSource="{RelativeSource	AncestorType=virtualCanvas:ZoomableCanvas}" />
-								</MultiBinding>
-							</Setter.Value>
-						</Setter>
-
-						<Setter Property="VerticalContentAlignment" Value="Stretch" />
-						<Setter Property="HorizontalContentAlignment" Value="Stretch" />
-						<Setter Property="Padding" Value="0" />
-						<Setter Property="Background" Value="Transparent" />
-
 						<Style.Triggers>
 
 
@@ -146,12 +143,12 @@
 										<DataTemplate>
 											<Grid>
 												<Rectangle
-													Width="{Binding Rectangle.Width}"
-													Height="{Binding Rectangle.Height}"
+													Width="{Binding RectangleWidth}"
+													Height="{Binding RectangleHeight}"
 													Fill="{DynamicResource ItemBrush}"
-													Stroke="{Binding Brush}"
-													StrokeThickness="2" />		
-			
+													Stroke="{Binding RectangleBrush}"
+													StrokeThickness="{Binding StrokeThickness}" />
+
 											</Grid>
 										</DataTemplate>
 									</Setter.Value>

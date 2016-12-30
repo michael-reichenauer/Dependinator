@@ -7,31 +7,22 @@ namespace Dependiator.MainViews
 {
 	internal class ModuleViewModel : ViewModel
 	{
-		//private readonly IThemeService themeService;
-		//private readonly IRepositoryCommands repositoryCommands;
-
-		//public ModuleViewModel(
-		//	IThemeService themeService,
-		//	IRepositoryCommands repositoryCommands)
-		//{
-		//	this.themeService = themeService;
-		//	this.repositoryCommands = repositoryCommands;
-		//}
-
 		// UI properties
 		public string Type => nameof(ModuleViewModel);
-		public int ZIndex => 200;
+		public int CanvasZIndex => 200;
+		public double CanvasWidth => CanvasBounds.Width;
+		public double CanvasTop => CanvasBounds.Top;
+		public double CanvasLeft => CanvasBounds.Left;
+		public double CanvasHeight => CanvasBounds.Height;
 
-		public Rect Rect { get; set; }
-		public Rect Rectangle { get; set; }
-		public Brush Brush { get; set; }
+		public int StrokeThickness => 1;
+		public int RectangleWidth => (int)CanvasBounds.Width - StrokeThickness * 2;
+		public int RectangleHeight => (int)CanvasBounds.Height - StrokeThickness * 2;
+		public Brush RectangleBrush { get; set; }
 
-		public double Width => Rect.Width;
-		public double Top => Rect.Top;
-		public double Left => Rect.Left;
-		public double Height => Rect.Height;
+		// Data
+		public Rect CanvasBounds { get; set; }
 
-		
 
 		//public string Id => Branch.Id;
 		//public string Name => Branch.Name;
@@ -49,7 +40,7 @@ namespace Dependiator.MainViews
 		//	repositoryCommands.RefreshView();
 		//});
 
-	
+
 
 
 		public override string ToString() => $"Module";

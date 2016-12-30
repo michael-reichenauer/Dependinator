@@ -32,7 +32,7 @@ namespace Dependiator.MainViews.Private
 
 			foreach (ModuleViewModel module in modules)
 			{
-				virtualArea.Union(module.Rect);
+				virtualArea.Union(module.CanvasBounds);
 			}
 
 			TriggerInvalidated();
@@ -69,7 +69,7 @@ namespace Dependiator.MainViews.Private
 			for (int i = 0; i < modules.Count; i++)
 			{
 				ModuleViewModel merge = modules[i];
-				if (viewArea.IntersectsWith(merge.Rect))
+				if (viewArea.IntersectsWith(merge.CanvasBounds))
 				{
 					yield return i + minMergeIndex;
 				}
