@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -9,10 +8,7 @@ using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Common;
 using Dependiator.Common.MessageDialogs;
-using Dependiator.Features.Commits;
-using Dependiator.Features.Remote;
-using Dependiator.Git;
-using Dependiator.RepositoryViews;
+using Dependiator.MainViews;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
 using Application = System.Windows.Application;
@@ -33,9 +29,6 @@ namespace Dependiator.MainWindowViews
 		private readonly WorkingFolder workingFolder;
 		private readonly WindowOwner owner;
 		private readonly IMessage message;
-		private readonly IRepositoryCommands repositoryCommands;
-		private readonly IRemoteService remoteService;
-		private readonly ICommitsService commitsService;
 
 		private bool isLoaded = false;
 
@@ -44,25 +37,19 @@ namespace Dependiator.MainWindowViews
 			WorkingFolder workingFolder,
 			WindowOwner owner,
 			IMessage message,
-			IRepositoryCommands repositoryCommands,
-			IRemoteService remoteService,
-			ICommitsService commitsService,
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
 			MainWindowIpcService mainWindowIpcService,
-			RepositoryViewModel repositoryViewModel)
+			MainViewModel mainViewModel)
 		{
 			this.workingFolder = workingFolder;
 			this.owner = owner;
 			this.message = message;
-			this.repositoryCommands = repositoryCommands;
-			this.remoteService = remoteService;
-			this.commitsService = commitsService;
 			this.latestVersionService = latestVersionService;
 			this.mainWindowService = mainWindowService;
 			this.mainWindowIpcService = mainWindowIpcService;
 
-			RepositoryViewModel = repositoryViewModel;
+			MainViewModel = mainViewModel;
 
 			workingFolder.OnChange += (s, e) => Notify(nameof(WorkingFolder));
 			latestVersionService.OnNewVersionAvailable += (s, e) => IsNewVersionVisible = true;
@@ -100,13 +87,13 @@ namespace Dependiator.MainWindowViews
 
 		private void SetSearchBoxValue(string text)
 		{
-			RepositoryViewModel.SetFilter(text);
+			MainViewModel.SetFilter(text);
 		}
 
 
 		public BusyIndicator Busy => BusyIndicator();
 
-		public RepositoryViewModel RepositoryViewModel { get; }
+		public MainViewModel MainViewModel { get; }
 
 
 		public string VersionText
@@ -120,25 +107,6 @@ namespace Dependiator.MainWindowViews
 				return text;
 			}
 		}
-
-		public Command TryUpdateAllBranchesCommand => AsyncCommand(
-			remoteService.TryUpdateAllBranchesAsync, remoteService.CanExecuteTryUpdateAllBranches);
-
-		public Command PullCurrentBranchCommand => AsyncCommand(
-			remoteService.PullCurrentBranchAsync, remoteService.CanExecutePullCurrentBranch);
-
-		public Command TryPushAllBranchesCommand => AsyncCommand(
-			remoteService.TryPushAllBranchesAsync, remoteService.CanExecuteTryPushAllBranches);
-
-		public Command PushCurrentBranchCommand => AsyncCommand(
-			remoteService.PushCurrentBranchAsync, remoteService.CanExecutePushCurrentBranch);
-
-		public Command ShowUncommittedDetailsCommand => Command(
-			() => repositoryCommands.ShowUncommittedDetails());
-	
-		public Command ShowCurrentBranchCommand => Command(() => repositoryCommands.ShowCurrentBranch());
-
-		public Command CommitCommand => AsyncCommand(commitsService.CommitChangesAsync);
 
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
 
@@ -164,12 +132,7 @@ namespace Dependiator.MainWindowViews
 
 		public Command ClearFilterCommand => Command(ClearFilter);
 
-		public Command SpecifyCommitBranchCommand => AsyncCommand(SpecifyCommitBranchAsync);
-
 		public Command SearchCommand => Command(Search);
-
-		public Command CleanWorkingFolderCommand => AsyncCommand(
-			commitsService.CleanWorkingFolderAsync);
 
 
 		public async Task FirstLoadAsync()
@@ -234,19 +197,19 @@ namespace Dependiator.MainWindowViews
 
 			Notify(nameof(Title));
 
-			await RepositoryViewModel.LoadAsync();
+			await MainViewModel.LoadAsync();
 			isLoaded = true;
 		}
 
 
 		private Task ManualRefreshAsync()
 		{
-			return RepositoryViewModel.ManualRefreshAsync();
+			return MainViewModel.ManualRefreshAsync();
 		}
 
 		public Task AutoRemoteCheckAsync()
 		{
-			return RepositoryViewModel.AutoRemoteCheckAsync();
+			return MainViewModel.AutoRemoteCheckAsync();
 		}
 
 
@@ -263,7 +226,7 @@ namespace Dependiator.MainWindowViews
 				return Task.CompletedTask;
 			}
 
-			return RepositoryViewModel.ActivateRefreshAsync();
+			return MainViewModel.ActivateRefreshAsync();
 		}
 
 
@@ -274,9 +237,9 @@ namespace Dependiator.MainWindowViews
 				SearchBox = "";
 				mainWindowService.SetRepositoryViewFocus();
 			}
-			else if (RepositoryViewModel.IsShowCommitDetails)
+			else if (MainViewModel.IsShowCommitDetails)
 			{
-				RepositoryViewModel.IsShowCommitDetails = false;
+				MainViewModel.IsShowCommitDetails = false;
 				mainWindowService.SetRepositoryViewFocus();
 			}
 			else
@@ -286,18 +249,10 @@ namespace Dependiator.MainWindowViews
 		}
 
 
-		public IReadOnlyList<BranchName> SpecifiedBranchNames
-		{
-			set { RepositoryViewModel.SpecifiedBranchNames = value; }
-		}
-
-
 		public int WindowWith
 		{
-			set { RepositoryViewModel.Width = value; }
+			set { MainViewModel.Width = value; }
 		}
-
-
 
 
 		private void Minimize()
@@ -346,9 +301,9 @@ namespace Dependiator.MainWindowViews
 		{
 			try
 			{
-				Process proc = new Process();
-				proc.StartInfo.FileName = "mailto:michael.reichenauer@gmail.com&subject=Dependiator Feedback";
-				proc.Start();
+				Process process = new Process();
+				process.StartInfo.FileName = "mailto:michael.reichenauer@gmail.com&subject=Dependiator Feedback";
+				process.Start();
 			}
 			catch (Exception ex) when (ex.IsNotFatal())
 			{
@@ -362,10 +317,10 @@ namespace Dependiator.MainWindowViews
 			try
 			{
 				Settings.EnsureExists<Options>();
-				Process proc = new Process();
+				Process process = new Process();
 				string optionsName = nameof(Options);
-				proc.StartInfo.FileName = Path.Combine(ProgramPaths.DataFolderPath, $"{optionsName}.json");
-				proc.Start();
+				process.StartInfo.FileName = Path.Combine(ProgramPaths.DataFolderPath, $"{optionsName}.json");
+				process.Start();
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
@@ -378,9 +333,9 @@ namespace Dependiator.MainWindowViews
 		{
 			try
 			{
-				Process proc = new Process();
-				proc.StartInfo.FileName = "https://github.com/michael-reichenauer/Dependiator/wiki/Help";
-				proc.Start();
+				Process process = new Process();
+				process.StartInfo.FileName = "https://github.com/michael-reichenauer/Dependiator/wiki/Help";
+				process.Start();
 			}
 			catch (Exception ex) when (ex.IsNotFatal())
 			{
@@ -429,16 +384,6 @@ namespace Dependiator.MainWindowViews
 				{
 					Log.Debug($"User selected an invalid working folder: {dialog.SelectedPath}");
 				}
-			}
-		}
-
-
-		private async Task SpecifyCommitBranchAsync()
-		{
-			var commit = RepositoryViewModel.SelectedItem as CommitViewModel;
-			if (commit != null)
-			{
-				await commit.SetCommitBranchCommand.ExecuteAsync();
 			}
 		}
 	}

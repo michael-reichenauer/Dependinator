@@ -5,8 +5,6 @@ using System.Windows;
 using System.Windows.Media;
 using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.Git;
-using Dependiator.GitModel;
 using Dependiator.Utils;
 
 
@@ -24,6 +22,11 @@ namespace Dependiator.Common.ThemeHandling
 		{
 			this.workingFolder = workingFolder;
 
+			Options options = Settings.Get<Options>();
+
+			// Setting options to ensure that readonly options like DefaultTheme is written correctly
+			Settings.Set(options);
+
 			LoadTheme();
 
 			LoadCustomBranchColors();
@@ -34,30 +37,30 @@ namespace Dependiator.Common.ThemeHandling
 
 		public Theme Theme => currentTheme;
 
-		public Brush GetBranchBrush(Branch branch)
-		{
-			if (branch.IsMultiBranch)
-			{
-				return currentTheme.GetMultiBranchBrush();
-			}
+		public Brush GetBranchBrush(string name)
+		{			//if (branch.IsMultiBranch)
+			//{
+			//	return currentTheme.GetMultiBranchBrush();
+			//}
 
-			if (branch.Name == BranchName.Master)
-			{
-				return currentTheme.GetMasterBranchBrush();
-			}
+			//if (branch.Name == BranchName.Master)
+			//{
+			//	return currentTheme.GetMasterBranchBrush();
+			//}
 
-			if (customBranchBrushes.TryGetValue(branch.Name, out Brush branchBrush))
+
+			if (customBranchBrushes.TryGetValue(name, out Brush branchBrush))
 			{
 				return branchBrush;
 			}
 
-			return currentTheme.GetBrush(branch.Name);
+			return currentTheme.GetBrush(name);
 		}
 
 
-		public Brush ChangeBranchBrush(Branch branch)
+		public Brush ChangeBranchBrush(string name)
 		{
-			Brush currentBrush = GetBranchBrush(branch);
+			Brush currentBrush = GetBranchBrush(name);
 			int index = currentTheme.GetBrushIndex(currentBrush);
 	
 			// Select next brush
@@ -67,7 +70,7 @@ namespace Dependiator.Common.ThemeHandling
 			string brushHex = Converter.HexFromBrush(brush);
 
 			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
-			settings.BranchColors[branch.Name] = brushHex;
+			settings.BranchColors[name] = brushHex;
 			Settings.SetWorkFolderSetting(workingFolder, settings);
 
 			LoadCustomBranchColors();
@@ -122,9 +125,6 @@ namespace Dependiator.Common.ThemeHandling
 		private static ThemeOption GetCurrentThemeOption()
 		{
 			Options options = Settings.Get<Options>();
-
-			// Setting options to ensure that readonly options like DefaultTheme is written correctly
-			Settings.Set(options);
 
 			ThemeOption theme = options.Themes.CustomThemes
 				.FirstOrDefault(t => t.Name == options.Themes.CurrentTheme)

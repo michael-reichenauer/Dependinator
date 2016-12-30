@@ -1,5 +1,4 @@
 using System.Windows.Media;
-using Dependiator.GitModel;
 
 
 namespace Dependiator.Common.ThemeHandling
@@ -8,9 +7,9 @@ namespace Dependiator.Common.ThemeHandling
 	{
 		Theme Theme { get; }
 
-		Brush GetBranchBrush(Branch branch);
+		Brush GetBranchBrush(string name);
 	
-		Brush ChangeBranchBrush(Branch branch);
+		Brush ChangeBranchBrush(string name);
 
 		void SetThemeWpfColors();
 	}

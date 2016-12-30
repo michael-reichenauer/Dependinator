@@ -1,15 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Utils;
+using Dependiator.Utils.UI.VirtualCanvas;
+using MouseEventArgs = System.Windows.Input.MouseEventArgs;
+using Point = System.Windows.Point;
 
 
 namespace Dependiator.MainWindowViews
@@ -21,20 +23,18 @@ namespace Dependiator.MainWindowViews
 	public partial class MainWindow : Window
 	{
 		private readonly WorkingFolder workingFolder;
-		private readonly ICommandLine commandLine;
 	
 		private readonly DispatcherTimer remoteCheckTimer = new DispatcherTimer();
 
 		private readonly MainWindowViewModel viewModel;
+		
 
 
 		internal MainWindow(
 			WorkingFolder workingFolder,
-			ICommandLine commandLine,
 			Func<MainWindowViewModel> mainWindowViewModelProvider)
 		{
 			this.workingFolder = workingFolder;
-			this.commandLine = commandLine;
 
 			InitializeComponent();
 	
@@ -115,54 +115,7 @@ namespace Dependiator.MainWindowViews
 		}
 
 
-		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
-		{
-			////if ((Keyboard.Modifiers & ModifierKeys.Control) > 0)
-			////{
-			////	// Adjust X in "e.Delta / X" to adjust zoom speed
-			////	double x = Math.Pow(2, e.Delta / 10.0 / Mouse.MouseWheelDeltaForOneLine);
-			////	double newScale = canvas.Scale * x;
-
-			////	Log.Debug($"Scroll {x}, scale {canvas.Scale}, offset {canvas.Offset}");
-			////	if (newScale < 0.5 || newScale > 10)
-			////	{
-			////		Log.Warn($"Zoom to large");
-			////		e.Handled = true;
-			////		return;
-			////	}
-
-			////	canvas.Scale = newScale;
-
-			////	// Adjust the offset to make the point under the mouse stay still.
-			////	Vector position = (Vector)e.GetPosition(ItemsListBox);
-			////	canvas.Offset = (Point)((Vector)
-			////		(canvas.Offset + position) * x - position);
-			////	Log.Debug($"Scroll {x}, scale {canvas.Scale}, offset {canvas.Offset}");
-
-			////	e.Handled = true;
-			////}
-		}
-
-
-		private void RemoteAhead_OnClick(object sender, RoutedEventArgs e)
-		{
-			RemoteAheadContextMenu.PlacementTarget = this;
-			RemoteAheadContextMenu.IsOpen = true;
-		}
-
-
-		private void LocalAhead_OnClick(object sender, RoutedEventArgs e)
-		{
-			LocalAheadContextMenu.PlacementTarget = this;
-			LocalAheadContextMenu.IsOpen = true;
-		}
-
-
-		private void Uncommitted_OnClick(object sender, RoutedEventArgs e)
-		{
-			UncommittedContextMenu.PlacementTarget = this;
-			UncommittedContextMenu.IsOpen = true;
-		}
+	
 
 
 		private void MainWindow_OnClosed(object sender, EventArgs e)
@@ -182,12 +135,12 @@ namespace Dependiator.MainWindowViews
 			settings.Height = Height;
 			settings.Width = Width;
 			settings.IsMaximized = WindowState == WindowState.Maximized;
-			settings.IsShowCommitDetails = viewModel.RepositoryViewModel.IsShowCommitDetails;
+			settings.IsShowCommitDetails = viewModel.MainViewModel.IsShowCommitDetails;
 
-			settings.ShownBranches = viewModel.RepositoryViewModel.Branches
-				.Select(b => b.Branch.Name.ToString())
-				.Distinct()
-				.ToList();
+			//settings.ShownBranches = viewModel.MainViewModel.Branches
+			//	.Select(b => b.Branch.Name.ToString())
+			//	.Distinct()
+			//	.ToList();
 
 			Settings.SetWorkFolderSetting(workingFolder, settings);
 		}
@@ -211,7 +164,7 @@ namespace Dependiator.MainWindowViews
 
 			WindowState = settings.IsMaximized ? WindowState.Maximized : WindowState.Normal;
 
-			viewModel.RepositoryViewModel.IsShowCommitDetails = settings.IsShowCommitDetails;
+			viewModel.MainViewModel.IsShowCommitDetails = settings.IsShowCommitDetails;
 		}
 
 
@@ -226,13 +179,6 @@ namespace Dependiator.MainWindowViews
 			}
 
 			return false;
-		}
-
-
-		private IReadOnlyList<string> RestoreShownBranches()
-		{
-			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
-			return settings.ShownBranches;
 		}
 
 
