@@ -25,6 +25,7 @@
 
 			<ListBox
 				x:Name="ItemsListBox"
+				Background="Transparent"
 				ItemsSource="{Binding VirtualItemsSource}"
 				IsTextSearchEnabled="False"
 				Padding="4"

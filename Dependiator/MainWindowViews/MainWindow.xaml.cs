@@ -27,7 +27,7 @@ namespace Dependiator.MainWindowViews
 		private readonly DispatcherTimer remoteCheckTimer = new DispatcherTimer();
 
 		private readonly MainWindowViewModel viewModel;
-		private System.Windows.Point lastMousePosition;
+		
 
 
 		internal MainWindow(
@@ -115,66 +115,7 @@ namespace Dependiator.MainWindowViews
 		}
 
 
-		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
-		{
-			//if ((Keyboard.Modifiers & ModifierKeys.Control) > 0)
-			{
-				// Adjust X in "e.Delta / X" to adjust zoom speed
-				double zoom = Math.Pow(2, e.Delta / 10.0 / Mouse.MouseWheelDeltaForOneLine);
-
-				ZoomableCanvas canvas = viewModel.MainViewModel.Canvas;
-				double newScale = canvas.Scale * zoom;
-
-				Log.Debug($"Zoom {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
-				if (newScale < 0.5 || newScale > 10)
-				{
-					Log.Warn($"Zoom to large");
-					e.Handled = true;
-					return;
-				}
-
-				canvas.Scale = newScale;
-
-				// Adjust the offset to make the point under the mouse stay still.
-				Point point = e.GetPosition(RepositoryView.ItemsListBox);
-				point = new Point(point.X - 10, point.Y - 30);
-				Vector position = (Vector)point;
-				canvas.Offset = (System.Windows.Point)((Vector)
-					(canvas.Offset + position) * zoom - position);
-
-				Log.Debug($"Scroll {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
-
-				e.Handled = true;
-			}
-		}
-
-		protected override void OnPreviewMouseMove(MouseEventArgs e)
-		{
-			System.Windows.Point position = e.GetPosition(RepositoryView.ItemsListBox);
-			ZoomableCanvas canvas = viewModel.MainViewModel.Canvas;
-
-			if (e.LeftButton == MouseButtonState.Pressed && position.Y < 0 )
-			{
-				ReleaseMouseCapture();
-				return;
-			}
-
-			if (e.LeftButton == MouseButtonState.Pressed
-					&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
-			{
-				Log.Debug($"Mouse {position}");
-				CaptureMouse();
-				canvas.Offset -= position - lastMousePosition;
-				e.Handled = true;
-			}
-			else
-			{
-				ReleaseMouseCapture();
-			}
-
-			lastMousePosition = position;
-		}
-
+	
 
 
 		private void MainWindow_OnClosed(object sender, EventArgs e)

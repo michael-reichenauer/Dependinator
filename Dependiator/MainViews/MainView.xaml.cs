@@ -1,6 +1,10 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Forms.VisualStyles;
 using System.Windows.Input;
+using Dependiator.Utils;
 using Dependiator.Utils.UI.VirtualCanvas;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -14,6 +18,7 @@ namespace Dependiator.MainViews
 	{
 		private MainViewModel viewModel;
 
+		private System.Windows.Point lastMousePosition;
 
 		public MainView()
 		{
@@ -29,6 +34,67 @@ namespace Dependiator.MainViews
 
 			ItemsListBox.Focus();
 		}
+
+		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
+		{
+			//if ((Keyboard.Modifiers & ModifierKeys.Control) > 0)
+			{
+				// Adjust X in "e.Delta / X" to adjust zoom speed
+				double zoom = Math.Pow(2, e.Delta / 10.0 / Mouse.MouseWheelDeltaForOneLine);
+
+				ZoomableCanvas canvas = viewModel.Canvas;
+				double newScale = canvas.Scale * zoom;
+
+				Log.Debug($"Zoom {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
+				if (newScale < 0.5 || newScale > 10)
+				{
+					Log.Warn($"Zoom to large");
+					e.Handled = true;
+					return;
+				}
+
+				canvas.Scale = newScale;
+
+				// Adjust the offset to make the point under the mouse stay still.
+				Point point = e.GetPosition(ItemsListBox);
+				point = new Point(point.X - 10, point.Y - 30);
+				Vector position = (Vector)point;
+				canvas.Offset = (System.Windows.Point)((Vector)
+					(canvas.Offset + position) * zoom - position);
+
+				Log.Debug($"Scroll {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
+
+				e.Handled = true;
+			}
+		}
+
+		protected override void OnPreviewMouseMove(MouseEventArgs e)
+		{
+			System.Windows.Point position = e.GetPosition(ItemsListBox);
+			ZoomableCanvas canvas = viewModel.Canvas;
+
+			if (e.LeftButton == MouseButtonState.Pressed && position.Y < 0)
+			{
+				ReleaseMouseCapture();
+				return;
+			}
+
+			if (e.LeftButton == MouseButtonState.Pressed
+					&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
+			{
+				Log.Debug($"Mouse {position}");
+				CaptureMouse();
+				canvas.Offset -= position - lastMousePosition;
+				e.Handled = true;
+			}
+			else
+			{
+				ReleaseMouseCapture();
+			}
+
+			lastMousePosition = position;
+		}
+
 
 
 		protected override void OnPreviewMouseUp(MouseButtonEventArgs e)
