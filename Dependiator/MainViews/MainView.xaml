@@ -43,7 +43,7 @@
 						<virtualCanvas:ZoomableCanvas
 							Loaded="ZoomableCanvas_Loaded"
 							RealizationLimit="1000"
-							RealizationRate="20"
+							RealizationRate="30"
 							RealizationPriority="Normal"
 							ApplyTransform="false" />
 					</ItemsPanelTemplate>
@@ -145,7 +145,7 @@
 												<Rectangle
 													Width="{Binding RectangleWidth}"
 													Height="{Binding RectangleHeight}"
-													Fill="{DynamicResource ItemBrush}"
+													Fill="Transparent"
 													Stroke="{Binding RectangleBrush}"
 													StrokeThickness="{Binding StrokeThickness}" />
 

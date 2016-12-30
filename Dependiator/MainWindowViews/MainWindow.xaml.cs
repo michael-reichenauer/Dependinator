@@ -109,10 +109,6 @@ namespace Dependiator.MainWindowViews
 			viewModel.WindowWith = (int)sizeInfo.NewSize.Width;
 		}
 
-
-	
-
-
 		private void MainWindow_OnClosed(object sender, EventArgs e)
 		{
 			StoreWindowSettings();
@@ -130,12 +126,7 @@ namespace Dependiator.MainWindowViews
 			settings.Height = Height;
 			settings.Width = Width;
 			settings.IsMaximized = WindowState == WindowState.Maximized;
-			settings.IsShowCommitDetails = viewModel.MainViewModel.IsShowCommitDetails;
-
-			//settings.ShownBranches = viewModel.MainViewModel.Branches
-			//	.Select(b => b.Branch.Name.ToString())
-			//	.Distinct()
-			//	.ToList();
+			
 
 			Settings.SetWorkFolderSetting(workingFolder, settings);
 		}
@@ -158,8 +149,6 @@ namespace Dependiator.MainWindowViews
 			}
 
 			WindowState = settings.IsMaximized ? WindowState.Maximized : WindowState.Normal;
-
-			viewModel.MainViewModel.IsShowCommitDetails = settings.IsShowCommitDetails;
 		}
 
 

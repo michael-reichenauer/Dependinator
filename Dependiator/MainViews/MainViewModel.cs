@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
@@ -33,8 +34,6 @@ namespace Dependiator.MainViews
 		private string settingFilterText = "";
 
 		private int width = 0;
-	
-		public List<ModuleViewModel> Modules { get; } = new List<ModuleViewModel>();
 
 		private readonly AsyncLock refreshLock = new AsyncLock();
 
@@ -51,7 +50,7 @@ namespace Dependiator.MainViews
 			this.themeService = themeService;
 			this.progress = progressService;
 
-			VirtualItemsSource = new MainViewVirtualItemsSource(Modules);
+			VirtualItemsSource = new MainViewVirtualItemsSource();
 
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
@@ -62,23 +61,27 @@ namespace Dependiator.MainViews
 
 		private void InitModules()
 		{
-			Modules.Add(new ModuleViewModel
-			{
-				RectangleBrush = Brushes.Aqua,
-				CanvasBounds = new Rect(100, 100, 100, 100),
-			});
+			Timing t = new Timing(); 
+			VirtualItemsSource.Add(GetModules());
+			t.Log("Created 10000 modules");
+		}
 
-			Modules.Add(new ModuleViewModel
-			{
-				RectangleBrush = Brushes.CornflowerBlue,
-				CanvasBounds = new Rect(400, 200, 100, 100),
-			});
 
-			Modules.Add(new ModuleViewModel
+		private IEnumerable<Module> GetModules()
+		{
+			int total = 1000;
+
+			for (int y = 0; y < total; y++)
 			{
-				RectangleBrush = Brushes.CornflowerBlue,
-				CanvasBounds = new Rect(200, 300, 100, 100),
-			});
+				for (int x = 0; x < total; x++)
+				{
+					yield return new Module
+					{
+						RectangleBrush = themeService.GetNextBrush(),
+						ItemBounds = new Rect(x * 50, y * 50, 45, 45),
+					};
+				}
+			}
 		}
 
 
@@ -122,7 +125,7 @@ namespace Dependiator.MainViews
 				if (width != value)
 				{
 					width = value;
-					VirtualItemsSource.DataChanged();
+					VirtualItemsSource.TriggerExtentChanged();
 				}
 			}
 		}
@@ -276,8 +279,6 @@ namespace Dependiator.MainViews
 		private void UpdateViewModelImpl()
 		{
 			NotifyAll();
-
-			VirtualItemsSource.DataChanged();
 		}
 
 

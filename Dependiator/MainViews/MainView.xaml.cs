@@ -34,6 +34,7 @@ namespace Dependiator.MainViews
 			ItemsListBox.Focus();
 		}
 
+
 		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
 		{
 			//if ((Keyboard.Modifiers & ModifierKeys.Control) > 0)
@@ -45,7 +46,7 @@ namespace Dependiator.MainViews
 				double newScale = canvas.Scale * zoom;
 
 				Log.Debug($"Zoom {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
-				if (newScale < 0.5 || newScale > 10)
+				if (newScale < 0.1 || newScale > 5)
 				{
 					Log.Warn($"Zoom to large");
 					e.Handled = true;

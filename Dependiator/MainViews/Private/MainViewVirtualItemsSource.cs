@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using Dependiator.Utils.UI.VirtualCanvas;
 
@@ -7,45 +8,108 @@ namespace Dependiator.MainViews.Private
 {
 	internal class MainViewVirtualItemsSource : VirtualItemsSource
 	{
-		private const int minCommitIndex = 0;
-		private const int minBranchIndex = 1000000;
-		private const int minMergeIndex = 2000000;
+		private readonly PriorityQuadTree<IVirtualItem> viewItemsTree = new PriorityQuadTree<IVirtualItem>();
+		private readonly List<IVirtualItem> viewItems = new List<IVirtualItem>();
 
-		private const int maxCommitIndex = minBranchIndex;
-		private const int maxBranchIndex = minMergeIndex;
-		private const int maxMergeIndex = 3000000;
+		private Rect virtualArea = EmptyExtent;
+		private Rect lastViewAreaQuery = EmptyExtent;
 
-		private readonly IReadOnlyList<ModuleViewModel> modules;
+		protected override Rect VirtualArea => virtualArea;
 
-		private Rect virtualArea;
 
-		public MainViewVirtualItemsSource(
-			IReadOnlyList<ModuleViewModel> modules)
+		public void Add(IEnumerable<IVirtualItem> virtualItems)
 		{
-			this.modules = modules;
-		}
+			bool isQueryItemsChanged = false;
+			Rect newArea = virtualArea;
 
-
-		public void DataChanged()
-		{
-			virtualArea = EmptyExtent;
-
-			foreach (ModuleViewModel module in modules)
+			foreach (IVirtualItem virtualItem in virtualItems)
 			{
-				virtualArea.Union(module.CanvasBounds);
+				virtualItem.VirtualId = new ViewItem(viewItems.Count, virtualItem.ItemBounds);
+				viewItems.Add(virtualItem);
+
+				viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, 0);
+
+				newArea.Union(virtualItem.ItemBounds);
+
+				if (!isQueryItemsChanged && virtualItem.ItemBounds.IntersectsWith(lastViewAreaQuery))
+				{
+					isQueryItemsChanged = true;
+				}
 			}
 
-			TriggerInvalidated();
+			if (newArea != virtualArea)
+			{
+				virtualArea = newArea;
+				TriggerExtentChanged();
+			}
+
+			if (isQueryItemsChanged)
+			{
+				TriggerItemsChanged();
+			}		
 		}
 
-		//public void DataChanged()
+
+		//public void Add(IVirtualItem virtualItem)
 		//{
-		//	virtualArea = new Rect(0, 0, width, Converters.ToRowExtent(commits.Count));
-		//	TriggerInvalidated();
+		//	Rect newArea = virtualArea;
+
+		//	ViewItem viewItem = new ViewItem(viewItems.Count, virtualItem);
+		//	viewItems.Add(viewItem);
+
+		//	viewItemsTree.Insert(viewItem, viewItem.ItemBounds, 0);
+
+		//	newArea.Union(viewItem.ItemBounds);
+
+		//	if (newArea != virtualArea)
+		//	{
+		//		virtualArea = newArea;
+		//		TriggerExtentChanged();
+		//	}
+
+		//	if (viewItem.ItemBounds.IntersectsWith(lastViewAreaQuery))
+		//	{
+		//		TriggerItemsChanged();
+		//	}
 		//}
 
 
-		protected override Rect VirtualArea => virtualArea;
+		public void Update(IVirtualItem virtualItem)
+		{
+			ViewItem viewItem = (ViewItem)virtualItem.VirtualId;
+
+			Rect oldItemBounds = viewItem.ItemBounds;
+			viewItemsTree.Remove(virtualItem, oldItemBounds);
+
+			Rect newItemBounds = virtualItem.ItemBounds;
+			viewItem.ItemBounds = newItemBounds;
+			viewItemsTree.Insert(virtualItem, viewItem.ItemBounds, 0);
+
+			ItemsAreaChanged();
+
+			if (oldItemBounds.IntersectsWith(lastViewAreaQuery) 
+				|| newItemBounds.IntersectsWith(lastViewAreaQuery))
+			{
+				TriggerItemsChanged();
+			}
+		}
+
+
+		private void ItemsAreaChanged()
+		{
+			Rect previousArea = virtualArea;
+			virtualArea = EmptyExtent;
+
+			foreach (IVirtualItem virtualItem in viewItems)
+			{
+				virtualArea.Union(virtualItem.ItemBounds);
+			}
+
+			if (previousArea != virtualArea)
+			{
+				TriggerExtentChanged();
+			}
+		}
 
 
 		/// <summary>
@@ -53,28 +117,10 @@ namespace Dependiator.MainViews.Private
 		/// </summary>
 		protected override IEnumerable<int> GetItemIds(Rect viewArea)
 		{
-			if (VirtualArea == Rect.Empty || viewArea == Rect.Empty)
-			{
-				yield break;
-			}
+			lastViewAreaQuery = viewArea;
 
-			// Get the part of the rectangle that is visible
-			viewArea.Intersect(VirtualArea);
-
-			//int viewAreaTopIndex = Converters.ToTopRowIndex(viewArea, commits.Count);
-			//int viewAreaBottomIndex = Converters.ToBottomRowIndex(viewArea, commits.Count);
-
-
-			// Return visible modules
-			for (int i = 0; i < modules.Count; i++)
-			{
-				ModuleViewModel merge = modules[i];
-				if (viewArea.IntersectsWith(merge.CanvasBounds))
-				{
-					yield return i + minMergeIndex;
-				}
-			}
-			
+			return viewItemsTree.GetItemsIntersecting(viewArea)
+				.Select(i => ((ViewItem)i.VirtualId).Index);
 		}
 
 
@@ -86,45 +132,21 @@ namespace Dependiator.MainViews.Private
 		/// </summary>
 		protected override object GetItem(int virtualId)
 		{
-			//if (virtualId >= minCommitIndex && virtualId < maxCommitIndex)
-			//{
-			//	int commitIndex = virtualId - minCommitIndex;
-			//	if (commitIndex < commits.Count)
-			//	{
-			//		return commits[commitIndex];
-			//	}
-			//}
-			//else if (virtualId >= minBranchIndex && virtualId < maxBranchIndex)
-			//{
-			//	int branchIndex = virtualId - minBranchIndex;
-			//	if (branchIndex < branches.Count)
-			//	{
-			//		return branches[branchIndex];
-			//	}
-			//}
-			if (virtualId >= minMergeIndex && virtualId < maxMergeIndex)
-			{
-				int mergeIndex = virtualId - minMergeIndex;
-				if (mergeIndex < modules.Count)
-				{
-					return modules[mergeIndex];
-				}
-			}
-
-			return null;
+			return viewItems[virtualId].ViewModel;
 		}
 
 
-		private static bool IsVisable(
-			int areaTopIndex,
-			int areaBottomIndex,
-			int itemTopIndex,
-			int ItemBottomIndex)
+		private class ViewItem
 		{
-			return
-				(itemTopIndex >= areaTopIndex && itemTopIndex <= areaBottomIndex)
-				|| (ItemBottomIndex >= areaTopIndex && ItemBottomIndex <= areaBottomIndex)
-				|| (itemTopIndex <= areaTopIndex && ItemBottomIndex >= areaBottomIndex);
+			public ViewItem(int index, Rect itemBounds)
+			{
+				Index = index;
+				ItemBounds = itemBounds;
+			}
+
+			public int Index { get; set; }
+
+			public Rect ItemBounds { get; set; }
 		}
 	}
 }
