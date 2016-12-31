@@ -31,7 +31,7 @@ namespace Dependiator.MainViews.Private
 
 			foreach (IVirtualItem virtualItem in virtualItems)
 			{
-				virtualItem.VirtualId = new ViewItem(viewItems.Count, virtualItem.ItemBounds);
+				virtualItem.VirtualId = new ViewItem(viewItems.Count, virtualItem.ItemBounds, virtualItem);
 				viewItems.Add(virtualItem);
 
 				viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, virtualItem.Priority);
@@ -102,6 +102,12 @@ namespace Dependiator.MainViews.Private
 		}
 
 
+		public IEnumerable<IVirtualItem> GetItemsInArea(Rect area)
+		{
+			return viewItemsTree.GetItemsIntersecting(area).Select(i => i);
+		}
+
+
 		public void ItemsBoundsChanged()
 		{
 			Rect currentBounds = EmptyExtent;
@@ -150,15 +156,18 @@ namespace Dependiator.MainViews.Private
 
 		private class ViewItem
 		{
-			public ViewItem(int index, Rect itemBounds)
+			public ViewItem(int index, Rect itemBounds, IVirtualItem virtualItem)
 			{
 				Index = index;
 				ItemBounds = itemBounds;
+				VirtualItem = virtualItem;
 			}
 
 			public int Index { get; set; }
 
 			public Rect ItemBounds { get; set; }
+
+			public IVirtualItem VirtualItem { get; }
 		}
 	}
 }

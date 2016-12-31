@@ -16,5 +16,7 @@ namespace Dependiator.MainViews.Private
 		void Update(IVirtualItem virtualItem);
 
 		void TriggerExtentChanged();
+
+		IEnumerable<IVirtualItem> GetItemsInArea(Rect nearArea);
 	}
 }
