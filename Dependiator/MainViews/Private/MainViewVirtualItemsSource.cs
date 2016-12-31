@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -105,6 +104,12 @@ namespace Dependiator.MainViews.Private
 		public IEnumerable<IVirtualItem> GetItemsInArea(Rect area)
 		{
 			return viewItemsTree.GetItemsIntersecting(area).Select(i => i);
+		}
+
+
+		public IEnumerable<IVirtualItem> GetItemsInView()
+		{
+			return GetItemsInArea(lastViewAreaQuery);
 		}
 
 

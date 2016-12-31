@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -29,70 +28,34 @@ namespace Dependiator.MainViews
 		}
 
 
+		public double Scale => canvas.Scale;
+
 		public bool ZoomCanvas(int zoomDelta, Point viewPosition)
 		{
 			// Adjust X in "zoomDelta / X" to adjust zoom speed
 			double zoom = Math.Pow(2, zoomDelta / 10.0 / Mouse.MouseWheelDeltaForOneLine);
 
-			double oldScale = canvas.Scale;
 			double newScale = canvas.Scale * zoom;
 
-			Log.Debug($"Zoom {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
+			// Log.Debug($"Zoom {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
 			if (newScale < 0.1 || newScale > 5)
 			{
-				Log.Warn($"Zoom to large");
 				return true;
-			}
-
-			Point canvasPosition = GetCanvasPosition(viewPosition);
-
-			Point centerPosition = viewPosition;
-			IVirtualItem item = null;
-
-			for (int i = 1; i < 100; i = i + 5)
-			{
-				double nearSize = GetNearSize(oldScale, i);
-				Rect nearArea = new Rect(
-					canvasPosition.X - nearSize, canvasPosition.Y - nearSize, nearSize * 2, nearSize * 2);
-				IEnumerable<IVirtualItem> itemsInArea = itemsSource.GetItemsInArea(nearArea);
-				item = itemsInArea.FirstOrDefault(); 
-
-				if (item != null)
-				{
-					Rect itemBounds = item.ItemBounds;
-					canvasPosition = new Point(
-						itemBounds.Left + (itemBounds.Width * zoom) / 2,
-						itemBounds.Top + (itemBounds.Height * zoom) / 2);
-					centerPosition = GetViewPosition(canvasPosition);
-
-					break;
-				}
-			}
-
-			if (item == null)
-			{
-				Log.Warn("Did not find item");
 			}
 
 			canvas.Scale = newScale;
 
-
 			// Adjust the offset to make the point under the mouse stay still.
-			Vector position = (Vector)centerPosition;
+			Vector position = (Vector)viewPosition;
 			canvas.Offset = (Point)((Vector)(canvas.Offset + position) * zoom - position);
 
-			Log.Debug($"Scroll {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
+			// Log.Debug($"Scroll {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
+
+			itemsSource.GetItemsInView().ForEach(item => item.ZoomChanged());
 
 			return true;
 		}
-
-
-		private static double GetNearSize(double scale, int size)
-		{
-			double scaledSize = (size / scale);
-			return scaledSize == 0 ? 1 : scaledSize;
-		}
-
+		
 
 		public bool MoveCanvas(Vector viewOffset)
 		{

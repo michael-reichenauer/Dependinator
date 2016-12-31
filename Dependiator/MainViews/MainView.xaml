@@ -136,7 +136,8 @@
 
 							<!-- Module line -->
 							<DataTrigger Binding="{Binding Type}" Value="ModuleViewModel">
-								<Setter Property="IsEnabled" Value="false" />
+								<Setter Property="IsEnabled" Value="true" />
+								<Setter Property="Focusable" Value="False" />
 								<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
 								<Setter Property="ContentTemplate">
 									<Setter.Value>

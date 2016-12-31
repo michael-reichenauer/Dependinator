@@ -7,10 +7,13 @@ namespace Dependiator.MainViews
 	internal class ModuleViewModel : ViewModel
 	{
 		private readonly Module module;
+		private readonly ICanvasService canvasService;
 
-		public ModuleViewModel(Module module)
+
+		public ModuleViewModel(Module module, ICanvasService canvasService)
 		{
 			this.module = module;
+			this.canvasService = canvasService;
 		}
 
 		// UI properties
@@ -22,8 +25,8 @@ namespace Dependiator.MainViews
 		public double CanvasHeight => module.ItemBounds.Height;
 
 		public int StrokeThickness => 1;
-		public int RectangleWidth => (int)module.ItemBounds.Width - StrokeThickness * 2;
-		public int RectangleHeight => (int)module.ItemBounds.Height - StrokeThickness * 2;
+		public double RectangleWidth => module.ItemBounds.Width * canvasService.Scale - StrokeThickness * 2;
+		public double RectangleHeight => module.ItemBounds.Height * canvasService.Scale - StrokeThickness * 2;
 		public Brush RectangleBrush => module.RectangleBrush;
 
 

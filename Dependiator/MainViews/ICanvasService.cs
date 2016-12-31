@@ -13,5 +13,7 @@ namespace Dependiator.MainViews
 		Point GetCanvasPosition(Point viewPosition);
 
 		void SetCanvas(ZoomableCanvas zoomableCanvas);
+
+		double Scale { get; }
 	}
 }

@@ -10,15 +10,21 @@ namespace Dependiator.MainViews
 	{
 		private readonly Lazy<ModuleViewModel> viewModel;
 
-		public Module()
+		public Module(ICanvasService canvasService)
 		{
-			viewModel = new Lazy<ModuleViewModel>(() => new ModuleViewModel(this));
+			viewModel = new Lazy<ModuleViewModel>(() => new ModuleViewModel(this, canvasService));
 		}
 
 		public object VirtualId { get; set; }
 		public Rect ItemBounds { get; set; }
 
 		public double Priority { get; set; }
+
+		public void ZoomChanged()
+		{
+			ModuleViewModel.NotifyAll();
+		}
+
 
 		public object ViewModel => viewModel.Value;
 

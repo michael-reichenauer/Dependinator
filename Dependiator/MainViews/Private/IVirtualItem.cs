@@ -12,5 +12,7 @@ namespace Dependiator.MainViews.Private
 		Rect ItemBounds { get; }
 
 		double Priority { get; }
+
+		void ZoomChanged();
 	}
 }
