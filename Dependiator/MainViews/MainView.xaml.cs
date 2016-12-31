@@ -29,8 +29,7 @@ namespace Dependiator.MainViews
 		private void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
 		{
 			viewModel = (MainViewModel)DataContext;
-			viewModel.Canvas = (ZoomableCanvas)sender;
-			viewModel.ListBox = ItemsListBox;
+			viewModel.SetCanvas((ZoomableCanvas)sender);
 
 			ItemsListBox.Focus();
 		}

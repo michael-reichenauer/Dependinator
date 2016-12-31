@@ -1,12 +1,31 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using Dependiator.Utils;
 using Dependiator.Utils.UI.VirtualCanvas;
 
 
 namespace Dependiator.MainViews.Private
 {
-	internal class MainViewVirtualItemsSource : VirtualItemsSource
+	internal interface IMainViewVirtualItemsSource
+	{
+		VirtualItemsSource VirtualItemsSource { get; }
+
+		Rect Extent { get; }
+
+		void Add(IEnumerable<IVirtualItem> virtualItems);
+		void Update(IVirtualItem virtualItem);
+
+		void ItemsAreaChanged();
+		
+		void TriggerInvalidated();
+		void TriggerExtentChanged();
+	}
+
+
+	[SingleInstance]
+	internal class MainViewVirtualItemsSource : VirtualItemsSource, IMainViewVirtualItemsSource
 	{
 		private readonly PriorityQuadTree<IVirtualItem> viewItemsTree = new PriorityQuadTree<IVirtualItem>();
 		private readonly List<IVirtualItem> viewItems = new List<IVirtualItem>();
@@ -15,6 +34,9 @@ namespace Dependiator.MainViews.Private
 		private Rect lastViewAreaQuery = EmptyExtent;
 
 		protected override Rect VirtualArea => virtualArea;
+
+
+		public VirtualItemsSource VirtualItemsSource => this;
 
 
 		public void Add(IEnumerable<IVirtualItem> virtualItems)
@@ -95,7 +117,7 @@ namespace Dependiator.MainViews.Private
 		}
 
 
-		private void ItemsAreaChanged()
+		public void ItemsAreaChanged()
 		{
 			Rect previousArea = virtualArea;
 			virtualArea = EmptyExtent;

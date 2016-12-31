@@ -6,9 +6,12 @@ namespace Dependiator.MainViews
 {
 	public interface ICanvasService
 	{
-		bool ZoomCanvas(ZoomableCanvas canvas, int zoomDelta, Point viewPosition);
+		bool ZoomCanvas(int zoomDelta, Point viewPosition);
 
-		bool MoveCanvas(ZoomableCanvas canvas, Vector viewOffset);
-		Point GetCanvasPosition(ZoomableCanvas canvas, Point viewPosition);
+		bool MoveCanvas(Vector viewOffset);
+
+		Point GetCanvasPosition(Point viewPosition);
+
+		void SetCanvas(ZoomableCanvas zoomableCanvas);
 	}
 }

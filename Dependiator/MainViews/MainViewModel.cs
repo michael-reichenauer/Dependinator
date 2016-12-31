@@ -28,6 +28,7 @@ namespace Dependiator.MainViews
 		private readonly IThemeService themeService;
 		private readonly ICanvasService canvasService;
 		private readonly WorkingFolder workingFolder;
+		private readonly IMainViewVirtualItemsSource mainViewVirtualItemsSource;
 		private readonly IProgressService progress;
 
 
@@ -38,22 +39,24 @@ namespace Dependiator.MainViews
 
 		private readonly AsyncLock refreshLock = new AsyncLock();
 
+		public VirtualItemsSource VirtualItemsSource { get; }
+		
 
-		public ZoomableCanvas Canvas { get; set; }
-		public System.Windows.Controls.ListBox ListBox { get; set; }
 
 		public MainViewModel(
 			WorkingFolder workingFolder,
+			IMainViewVirtualItemsSource mainViewVirtualItemsSource,
 			IThemeService themeService,
 			ICanvasService canvasService,
 			IProgressService progressService)
 		{
 			this.workingFolder = workingFolder;
+			this.mainViewVirtualItemsSource = mainViewVirtualItemsSource;
 			this.themeService = themeService;
 			this.canvasService = canvasService;
 			this.progress = progressService;
 
-			VirtualItemsSource = new MainViewVirtualItemsSource();
+			VirtualItemsSource = mainViewVirtualItemsSource.VirtualItemsSource;
 
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
@@ -65,7 +68,7 @@ namespace Dependiator.MainViews
 		private void InitModules()
 		{
 			Timing t = new Timing(); 
-			VirtualItemsSource.Add(GetModules());
+			mainViewVirtualItemsSource.Add(GetModules());
 			t.Log("Created 10000 modules");
 		}
 
@@ -73,16 +76,20 @@ namespace Dependiator.MainViews
 
 		public bool ZoomCanvas(int zoomDelta, Point viewPosition)
 		{
-			return canvasService.ZoomCanvas(Canvas, zoomDelta, viewPosition);
+			return canvasService.ZoomCanvas(zoomDelta, viewPosition);
 		}
 
 
 		public bool MoveCanvas(Vector viewOffset)
 		{
-			return canvasService.MoveCanvas(Canvas, viewOffset);
+			return canvasService.MoveCanvas(viewOffset);
 		}
 
-		
+
+		public void SetCanvas(ZoomableCanvas zoomableCanvas)
+		{
+			canvasService.SetCanvas(zoomableCanvas);
+		}
 
 		private IEnumerable<Module> GetModules()
 		{
@@ -104,7 +111,8 @@ namespace Dependiator.MainViews
 		}
 
 
-		public MainViewVirtualItemsSource VirtualItemsSource { get; }
+	
+
 
 		public void ShowCommitDetails()
 		{
@@ -144,7 +152,7 @@ namespace Dependiator.MainViews
 				if (width != value)
 				{
 					width = value;
-					VirtualItemsSource.TriggerExtentChanged();
+					mainViewVirtualItemsSource.TriggerExtentChanged();
 				}
 			}
 		}
@@ -327,7 +335,7 @@ namespace Dependiator.MainViews
 
 		public void Clicked(Point viewPosition)
 		{
-			Point canvasPosition = canvasService.GetCanvasPosition(Canvas, viewPosition);
+			Point canvasPosition = canvasService.GetCanvasPosition(viewPosition);
 
 			//double clickX = position.X - 9;
 			//double clickY = position.Y - 5;
