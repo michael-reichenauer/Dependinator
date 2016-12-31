@@ -10,8 +10,8 @@ namespace Dependiator.MainViews.Private
 	[SingleInstance]
 	internal class MainViewItemsSource : VirtualItemsSource, IMainViewItemsSource
 	{
-		private readonly PriorityQuadTree<IVirtualItem> viewItemsTree = new PriorityQuadTree<IVirtualItem>();
-		private readonly List<IVirtualItem> viewItems = new List<IVirtualItem>();
+		private readonly PriorityQuadTree<IItem> viewItemsTree = new PriorityQuadTree<IItem>();
+		private readonly List<IItem> viewItems = new List<IItem>();
 
 		private Rect lastViewAreaQuery = EmptyExtent;
 
@@ -23,12 +23,12 @@ namespace Dependiator.MainViews.Private
 		public VirtualItemsSource VirtualItemsSource => this;
 
 
-		public void Add(IEnumerable<IVirtualItem> virtualItems)
+		public void Add(IEnumerable<IItem> virtualItems)
 		{
 			bool isQueryItemsChanged = false;
 			Rect currentBounds = TotalBounds;
 
-			foreach (IVirtualItem virtualItem in virtualItems)
+			foreach (IItem virtualItem in virtualItems)
 			{
 				virtualItem.VirtualId = new ViewItem(viewItems.Count, virtualItem.ItemBounds, virtualItem);
 				viewItems.Add(virtualItem);
@@ -56,11 +56,11 @@ namespace Dependiator.MainViews.Private
 		}
 
 
-		//public void Add(IVirtualItem virtualItem)
+		//public void Add(IItem item)
 		//{
 		//	Rect newArea = virtualArea;
 
-		//	ViewItem viewItem = new ViewItem(viewItems.Count, virtualItem);
+		//	ViewItem viewItem = new ViewItem(viewItems.Count, item);
 		//	viewItems.Add(viewItem);
 
 		//	viewItemsTree.Insert(viewItem, viewItem.ItemBounds, 0);
@@ -80,16 +80,16 @@ namespace Dependiator.MainViews.Private
 		//}
 
 
-		public void Update(IVirtualItem virtualItem)
+		public void Update(IItem item)
 		{
-			ViewItem viewItem = (ViewItem)virtualItem.VirtualId;
+			ViewItem viewItem = (ViewItem)item.VirtualId;
 
 			Rect oldItemBounds = viewItem.ItemBounds;
-			viewItemsTree.Remove(virtualItem, oldItemBounds);
+			viewItemsTree.Remove(item, oldItemBounds);
 
-			Rect newItemBounds = virtualItem.ItemBounds;
+			Rect newItemBounds = item.ItemBounds;
 			viewItem.ItemBounds = newItemBounds;
-			viewItemsTree.Insert(virtualItem, viewItem.ItemBounds, 0);
+			viewItemsTree.Insert(item, viewItem.ItemBounds, 0);
 
 			ItemsBoundsChanged();
 
@@ -101,13 +101,13 @@ namespace Dependiator.MainViews.Private
 		}
 
 
-		public IEnumerable<IVirtualItem> GetItemsInArea(Rect area)
+		public IEnumerable<IItem> GetItemsInArea(Rect area)
 		{
 			return viewItemsTree.GetItemsIntersecting(area).Select(i => i);
 		}
 
 
-		public IEnumerable<IVirtualItem> GetItemsInView()
+		public IEnumerable<IItem> GetItemsInView()
 		{
 			return GetItemsInArea(lastViewAreaQuery);
 		}
@@ -117,7 +117,7 @@ namespace Dependiator.MainViews.Private
 		{
 			Rect currentBounds = EmptyExtent;
 
-			foreach (IVirtualItem virtualItem in viewItems)
+			foreach (IItem virtualItem in viewItems)
 			{
 				currentBounds.Union(virtualItem.ItemBounds);
 			}
@@ -161,18 +161,18 @@ namespace Dependiator.MainViews.Private
 
 		private class ViewItem
 		{
-			public ViewItem(int index, Rect itemBounds, IVirtualItem virtualItem)
+			public ViewItem(int index, Rect itemBounds, IItem item)
 			{
 				Index = index;
 				ItemBounds = itemBounds;
-				VirtualItem = virtualItem;
+				Item = item;
 			}
 
 			public int Index { get; set; }
 
 			public Rect ItemBounds { get; set; }
 
-			public IVirtualItem VirtualItem { get; }
+			public IItem Item { get; }
 		}
 	}
 }

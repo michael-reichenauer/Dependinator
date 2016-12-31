@@ -130,7 +130,10 @@
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
     <Compile Include="MainViews\CanvasService.cs" />
     <Compile Include="MainViews\ICanvasService.cs" />
+    <Compile Include="MainViews\Item.cs" />
+    <Compile Include="MainViews\ItemViewModel.cs" />
     <Compile Include="MainViews\Module.cs" />
+    <Compile Include="MainViews\ModuleName.cs" />
     <Compile Include="MainViews\Private\Caching\BranchNameSurrogate.cs" />
     <Compile Include="MainViews\ModuleViewModel.cs" />
     <Compile Include="MainViews\Private\IMainViewVirtualItemsSource.cs" />

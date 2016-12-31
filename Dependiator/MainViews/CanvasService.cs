@@ -12,6 +12,8 @@ namespace Dependiator.MainViews
 	[SingleInstance]
 	internal class CanvasService : ICanvasService
 	{
+		private static readonly double ZoomSpeed = 600.0;
+
 		private readonly IMainViewItemsSource itemsSource;
 
 		private ZoomableCanvas canvas;
@@ -31,18 +33,12 @@ namespace Dependiator.MainViews
 		public double Scale => canvas.Scale;
 
 		public bool ZoomCanvas(int zoomDelta, Point viewPosition)
-		{
-			// Adjust X in "zoomDelta / X" to adjust zoom speed
-			double zoom = Math.Pow(2, zoomDelta / 10.0 / Mouse.MouseWheelDeltaForOneLine);
+		{		
+			double zoom = Math.Pow(2, zoomDelta / ZoomSpeed );
 
 			double newScale = canvas.Scale * zoom;
 
-			//Log.Debug($"Zoom {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
-			//if (newScale < 0.3 || newScale > 20)
-			//{
-			//	return true;
-			//}
-
+			// Limit zooming
 			if (zoomDelta < 0 && canvas.ActualViewbox.Width >= canvas.Extent.Width
 				&& canvas.ActualViewbox.Height > canvas.Extent.Height
 				|| newScale > 20)
@@ -80,6 +76,7 @@ namespace Dependiator.MainViews
 			return canvasPosition;
 		}
 
+
 		public Point GetViewPosition(Point canvasPosition)
 		{
 			double x = canvasPosition.X - canvas.Offset.X;
@@ -88,6 +85,5 @@ namespace Dependiator.MainViews
 			Point viewPosition = new Point(x, y);
 			return viewPosition;
 		}
-
 	}
 }

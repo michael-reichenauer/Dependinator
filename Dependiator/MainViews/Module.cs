@@ -1,37 +1,37 @@
 using System;
-using System.Windows;
+using System.Collections.Generic;
 using System.Windows.Media;
-using Dependiator.MainViews.Private;
 
 
 namespace Dependiator.MainViews
 {
-	internal class Module : IVirtualItem
+	internal class Module : Item
 	{
 		private readonly Lazy<ModuleViewModel> viewModel;
 
 		public Module(ICanvasService canvasService)
 		{
 			viewModel = new Lazy<ModuleViewModel>(() => new ModuleViewModel(this, canvasService));
+			ZIndex = 200;
 		}
 
-		public object VirtualId { get; set; }
-		public Rect ItemBounds { get; set; }
+		public override object ViewModel => viewModel.Value;
 
-		public double Priority { get; set; }
 
-		public void ZoomChanged()
+		public override void ZoomChanged()
 		{
 			ModuleViewModel.NotifyAll();
 		}
 
 
-		public object ViewModel => viewModel.Value;
+		//public ModuleName Name { get; set; }
+
+		public Module Parent { get; set; }
+
+		public List<Module> Children { get; } = new List<Module>();
+
 
 		public ModuleViewModel ModuleViewModel => viewModel.Value;
 		public SolidColorBrush RectangleBrush { get; set; }
-
-		public int ZIndex = 200;
-		
 	}
 }

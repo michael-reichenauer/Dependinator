@@ -3,7 +3,7 @@ using System.Windows;
 
 namespace Dependiator.MainViews.Private
 {
-	internal interface IVirtualItem
+	internal interface IItem
 	{
 		object VirtualId { get; set; }
 
@@ -12,6 +12,8 @@ namespace Dependiator.MainViews.Private
 		Rect ItemBounds { get; }
 
 		double Priority { get; }
+
+		int ZIndex { get; set; }
 
 		void ZoomChanged();
 	}

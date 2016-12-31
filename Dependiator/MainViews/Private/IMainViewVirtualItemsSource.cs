@@ -11,13 +11,13 @@ namespace Dependiator.MainViews.Private
 
 		Rect TotalBounds { get; }
 
-		void Add(IEnumerable<IVirtualItem> virtualItems);
+		void Add(IEnumerable<IItem> virtualItems);
 
-		void Update(IVirtualItem virtualItem);
+		void Update(IItem item);
 
 		void TriggerExtentChanged();
 
-		IEnumerable<IVirtualItem> GetItemsInArea(Rect nearArea);
-		IEnumerable<IVirtualItem> GetItemsInView();
+		IEnumerable<IItem> GetItemsInArea(Rect nearArea);
+		IEnumerable<IItem> GetItemsInView();
 	}
 }
