@@ -132,8 +132,10 @@
     <Compile Include="MainViews\ICanvasService.cs" />
     <Compile Include="MainViews\Private\Caching\BranchNameSurrogate.cs" />
     <Compile Include="MainViews\ModuleViewModel.cs" />
+    <Compile Include="MainViews\Private\IMainViewVirtualItemsSource.cs" />
     <Compile Include="MainViews\Private\IVirtualItem.cs" />
     <Compile Include="MainViews\Private\MainViewCommands.cs" />
+    <Compile Include="Modeling\IModelService.cs" />
     <Compile Include="Modeling\ModelService.cs" />
     <Compile Include="Utils\AsyncLock.cs" />
     <Compile Include="Utils\DependencyInjection.cs" />

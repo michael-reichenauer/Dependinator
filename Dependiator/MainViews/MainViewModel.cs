@@ -9,6 +9,7 @@ using Dependiator.ApplicationHandling;
 using Dependiator.Common.ProgressHandling;
 using Dependiator.Common.ThemeHandling;
 using Dependiator.MainViews.Private;
+using Dependiator.Modeling;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
 using Dependiator.Utils.UI.VirtualCanvas;
@@ -28,7 +29,8 @@ namespace Dependiator.MainViews
 		private readonly IThemeService themeService;
 		private readonly ICanvasService canvasService;
 		private readonly WorkingFolder workingFolder;
-		private readonly IMainViewVirtualItemsSource mainViewVirtualItemsSource;
+		private readonly IMainViewItemsSource mainViewItemsSource;
+		private readonly IModelService modelService;
 		private readonly IProgressService progress;
 
 
@@ -39,39 +41,29 @@ namespace Dependiator.MainViews
 
 		private readonly AsyncLock refreshLock = new AsyncLock();
 
-		public VirtualItemsSource VirtualItemsSource { get; }
+		public VirtualItemsSource ItemsSource { get; }
 		
-
 
 		public MainViewModel(
 			WorkingFolder workingFolder,
-			IMainViewVirtualItemsSource mainViewVirtualItemsSource,
+			IMainViewItemsSource mainViewItemsSource,
+			IModelService modelService,
 			IThemeService themeService,
 			ICanvasService canvasService,
 			IProgressService progressService)
 		{
 			this.workingFolder = workingFolder;
-			this.mainViewVirtualItemsSource = mainViewVirtualItemsSource;
+			this.mainViewItemsSource = mainViewItemsSource;
+			this.modelService = modelService;
 			this.themeService = themeService;
 			this.canvasService = canvasService;
 			this.progress = progressService;
 
-			VirtualItemsSource = mainViewVirtualItemsSource.VirtualItemsSource;
+			ItemsSource = mainViewItemsSource.VirtualItemsSource;
 
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
-
-			InitModules();
 		}
-
-
-		private void InitModules()
-		{
-			Timing t = new Timing(); 
-			mainViewVirtualItemsSource.Add(GetModules());
-			t.Log("Created 10000 modules");
-		}
-
 
 
 		public bool ZoomCanvas(int zoomDelta, Point viewPosition)
@@ -91,29 +83,6 @@ namespace Dependiator.MainViews
 			canvasService.SetCanvas(zoomableCanvas);
 		}
 
-		private IEnumerable<Module> GetModules()
-		{
-			Random random = new Random();
-			int total = 5;
-
-			for (int y = 0; y < total; y++)
-			{
-				for (int x = 0; x < total; x++)
-				{
-					yield return new Module
-					{
-						RectangleBrush = themeService.GetNextBrush(),
-						ItemBounds = new Rect(x * 100, y * 100, 60, 45),
-						Priority = random.NextDouble()
-					};
-				}
-			}
-		}
-
-
-	
-
-
 		public void ShowCommitDetails()
 		{
 			IsShowCommitDetails = true;
@@ -125,6 +94,11 @@ namespace Dependiator.MainViews
 			IsShowCommitDetails = !IsShowCommitDetails;
 		}
 
+
+		public void Loaded()
+		{
+			modelService.InitModules();
+		}
 
 		public string FetchErrorText
 		{
@@ -152,7 +126,7 @@ namespace Dependiator.MainViews
 				if (width != value)
 				{
 					width = value;
-					mainViewVirtualItemsSource.TriggerExtentChanged();
+					mainViewItemsSource.TriggerExtentChanged();
 				}
 			}
 		}

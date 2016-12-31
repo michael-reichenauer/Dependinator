@@ -32,6 +32,8 @@ namespace Dependiator.MainViews
 			viewModel.SetCanvas((ZoomableCanvas)sender);
 
 			ItemsListBox.Focus();
+
+			viewModel.Loaded();
 		}
 
 

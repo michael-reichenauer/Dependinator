@@ -26,7 +26,7 @@
 			<ListBox
 				x:Name="ItemsListBox"
 				Background="Transparent"
-				ItemsSource="{Binding VirtualItemsSource}"
+				ItemsSource="{Binding ItemsSource}"
 				IsTextSearchEnabled="False"
 				Padding="4"
 				Style="{DynamicResource ListBoxScrollbarStyle}"
@@ -176,9 +176,9 @@
 			Height="2" />
 
 		<!-- Commit details -->
-		<local:CommitDetailsView
+		<!--<local:CommitDetailsView
 			Grid.Row="2"
-			DataContext="{Binding CommitDetailsViewModel}" />
+			DataContext="{Binding CommitDetailsViewModel}" />-->
 
 	</Grid>
 

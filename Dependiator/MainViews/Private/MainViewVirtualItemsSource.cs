@@ -8,32 +8,17 @@ using Dependiator.Utils.UI.VirtualCanvas;
 
 namespace Dependiator.MainViews.Private
 {
-	internal interface IMainViewVirtualItemsSource
-	{
-		VirtualItemsSource VirtualItemsSource { get; }
-
-		Rect Extent { get; }
-
-		void Add(IEnumerable<IVirtualItem> virtualItems);
-		void Update(IVirtualItem virtualItem);
-
-		void ItemsAreaChanged();
-		
-		void TriggerInvalidated();
-		void TriggerExtentChanged();
-	}
-
-
 	[SingleInstance]
-	internal class MainViewVirtualItemsSource : VirtualItemsSource, IMainViewVirtualItemsSource
+	internal class MainViewItemsSource : VirtualItemsSource, IMainViewItemsSource
 	{
 		private readonly PriorityQuadTree<IVirtualItem> viewItemsTree = new PriorityQuadTree<IVirtualItem>();
 		private readonly List<IVirtualItem> viewItems = new List<IVirtualItem>();
 
-		private Rect virtualArea = EmptyExtent;
 		private Rect lastViewAreaQuery = EmptyExtent;
 
-		protected override Rect VirtualArea => virtualArea;
+		public Rect TotalBounds { get; private set; } = EmptyExtent;
+
+		protected override Rect VirtualArea => TotalBounds;
 
 
 		public VirtualItemsSource VirtualItemsSource => this;
@@ -42,7 +27,7 @@ namespace Dependiator.MainViews.Private
 		public void Add(IEnumerable<IVirtualItem> virtualItems)
 		{
 			bool isQueryItemsChanged = false;
-			Rect newArea = virtualArea;
+			Rect currentBounds = TotalBounds;
 
 			foreach (IVirtualItem virtualItem in virtualItems)
 			{
@@ -51,7 +36,7 @@ namespace Dependiator.MainViews.Private
 
 				viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, virtualItem.Priority);
 
-				newArea.Union(virtualItem.ItemBounds);
+				currentBounds.Union(virtualItem.ItemBounds);
 
 				if (!isQueryItemsChanged && virtualItem.ItemBounds.IntersectsWith(lastViewAreaQuery))
 				{
@@ -59,9 +44,9 @@ namespace Dependiator.MainViews.Private
 				}
 			}
 
-			if (newArea != virtualArea)
+			if (currentBounds != TotalBounds)
 			{
-				virtualArea = newArea;
+				TotalBounds = currentBounds;
 				TriggerExtentChanged();
 			}
 
@@ -107,7 +92,7 @@ namespace Dependiator.MainViews.Private
 			viewItem.ItemBounds = newItemBounds;
 			viewItemsTree.Insert(virtualItem, viewItem.ItemBounds, 0);
 
-			ItemsAreaChanged();
+			ItemsBoundsChanged();
 
 			if (oldItemBounds.IntersectsWith(lastViewAreaQuery) 
 				|| newItemBounds.IntersectsWith(lastViewAreaQuery))
@@ -117,18 +102,18 @@ namespace Dependiator.MainViews.Private
 		}
 
 
-		public void ItemsAreaChanged()
+		public void ItemsBoundsChanged()
 		{
-			Rect previousArea = virtualArea;
-			virtualArea = EmptyExtent;
+			Rect currentBounds = EmptyExtent;
 
 			foreach (IVirtualItem virtualItem in viewItems)
 			{
-				virtualArea.Union(virtualItem.ItemBounds);
+				currentBounds.Union(virtualItem.ItemBounds);
 			}
 
-			if (previousArea != virtualArea)
+			if (currentBounds != TotalBounds)
 			{
+				TotalBounds = currentBounds;
 				TriggerExtentChanged();
 			}
 		}
@@ -154,6 +139,11 @@ namespace Dependiator.MainViews.Private
 		/// </summary>
 		protected override object GetItem(int virtualId)
 		{
+			if (virtualId >= viewItems.Count)
+			{
+				return null;
+			}
+
 			return viewItems[virtualId].ViewModel;
 		}
 
