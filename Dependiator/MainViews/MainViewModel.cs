@@ -71,11 +71,18 @@ namespace Dependiator.MainViews
 
 
 
-		public bool HandleZoom(int zoomDelta, Point currentPosition)
+		public bool ZoomCanvas(int zoomDelta, Point viewPosition)
 		{
-			return canvasService.HandleZoom(Canvas, zoomDelta, currentPosition);
+			return canvasService.ZoomCanvas(Canvas, zoomDelta, viewPosition);
 		}
 
+
+		public bool MoveCanvas(Vector viewOffset)
+		{
+			return canvasService.MoveCanvas(Canvas, viewOffset);
+		}
+
+		
 
 		private IEnumerable<Module> GetModules()
 		{
@@ -318,8 +325,10 @@ namespace Dependiator.MainViews
 		}
 
 
-		public void Clicked(Point position)
+		public void Clicked(Point viewPosition)
 		{
+			Point canvasPosition = canvasService.GetCanvasPosition(Canvas, viewPosition);
+
 			//double clickX = position.X - 9;
 			//double clickY = position.Y - 5;
 

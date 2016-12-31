@@ -10,7 +10,7 @@ namespace Dependiator.MainViews
 	[SingleInstance]
 	public class CanvasService : ICanvasService
 	{
-		public bool HandleZoom(ZoomableCanvas canvas, int zoomDelta, Point currentPosition)
+		public bool ZoomCanvas(ZoomableCanvas canvas, int zoomDelta, Point currentPosition)
 		{
 			// Adjust X in "zoomDelta / X" to adjust zoom speed
 			double zoom = Math.Pow(2, zoomDelta / 10.0 / Mouse.MouseWheelDeltaForOneLine);
@@ -36,5 +36,23 @@ namespace Dependiator.MainViews
 
 			return true;
 		}
+
+
+		public bool MoveCanvas(ZoomableCanvas canvas, Vector viewOffset)
+		{
+			canvas.Offset -= viewOffset;
+			return true;
+		}
+
+
+		public Point GetCanvasPosition(ZoomableCanvas canvas, Point viewPosition)
+		{
+			double x = viewPosition.X + canvas.Offset.X;
+			double y = viewPosition.Y + canvas.Offset.Y;
+
+			Point canvasPosition = new Point(x, y);
+			return canvasPosition;
+		}
+
 	}
 }

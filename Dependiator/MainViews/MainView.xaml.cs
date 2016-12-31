@@ -17,7 +17,8 @@ namespace Dependiator.MainViews
 	{
 		private MainViewModel viewModel;
 
-		private System.Windows.Point lastMousePosition;
+		private Point lastMousePosition;
+
 
 		public MainView()
 		{
@@ -38,40 +39,32 @@ namespace Dependiator.MainViews
 		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
 		{
 			int zoomDelta = e.Delta;
-			Point currentPosition = e.GetPosition(ItemsListBox);
+			Point viewPosition = e.GetPosition(ItemsListBox);
 
-			e.Handled = viewModel.HandleZoom(zoomDelta, currentPosition);		
+			e.Handled = viewModel.ZoomCanvas(zoomDelta, viewPosition);		
 		}
 
 
 
 		protected override void OnPreviewMouseMove(MouseEventArgs e)
 		{
-			System.Windows.Point position = e.GetPosition(ItemsListBox);
-			ZoomableCanvas canvas = viewModel.Canvas;
-
-			if (e.LeftButton == MouseButtonState.Pressed && position.Y < 0)
-			{
-				ReleaseMouseCapture();
-				return;
-			}
-
+			Point viewPosition = e.GetPosition(ItemsListBox);
+			
 			if (e.LeftButton == MouseButtonState.Pressed
-					&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
+				&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
 			{
-				Log.Debug($"Mouse {position}");
+				Log.Debug($"Mouse {viewPosition}");
 				CaptureMouse();
-				canvas.Offset -= position - lastMousePosition;
-				e.Handled = true;
+				Vector viewOffset = viewPosition - lastMousePosition;
+				e.Handled = viewModel.MoveCanvas(viewOffset);
 			}
 			else
 			{
 				ReleaseMouseCapture();
 			}
 
-			lastMousePosition = position;
+			lastMousePosition = viewPosition;
 		}
-
 
 
 		protected override void OnPreviewMouseUp(MouseButtonEventArgs e)
@@ -80,15 +73,14 @@ namespace Dependiator.MainViews
 
 			if (e.ChangedButton == MouseButton.Left)
 			{
-				Point viewPoint = e.GetPosition(ItemsListBox);
+				Point viewPosition = e.GetPosition(ItemsListBox);
 
-				Point position = new Point(viewPoint.X + viewModel.Canvas.Offset.X, viewPoint.Y + viewModel.Canvas.Offset.Y);
-
-				viewModel.Clicked(position);
+				viewModel.Clicked(viewPosition);
 			}
 
 			base.OnPreviewMouseUp(e);
 		}
+
 
 
 		private void MouseDobleClick(object sender, MouseButtonEventArgs e)
