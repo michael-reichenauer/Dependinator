@@ -27,7 +27,7 @@ namespace Dependiator.MainViews.Private
 				virtualItem.VirtualId = new ViewItem(viewItems.Count, virtualItem.ItemBounds);
 				viewItems.Add(virtualItem);
 
-				viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, 0);
+				viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, virtualItem.Priority);
 
 				newArea.Union(virtualItem.ItemBounds);
 

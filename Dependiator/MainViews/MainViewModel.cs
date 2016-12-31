@@ -26,6 +26,7 @@ namespace Dependiator.MainViews
 		private static readonly TimeSpan FilterDelay = TimeSpan.FromMilliseconds(300);
 
 		private readonly IThemeService themeService;
+		private readonly ICanvasService canvasService;
 		private readonly WorkingFolder workingFolder;
 		private readonly IProgressService progress;
 
@@ -44,10 +45,12 @@ namespace Dependiator.MainViews
 		public MainViewModel(
 			WorkingFolder workingFolder,
 			IThemeService themeService,
+			ICanvasService canvasService,
 			IProgressService progressService)
 		{
 			this.workingFolder = workingFolder;
 			this.themeService = themeService;
+			this.canvasService = canvasService;
 			this.progress = progressService;
 
 			VirtualItemsSource = new MainViewVirtualItemsSource();
@@ -67,9 +70,17 @@ namespace Dependiator.MainViews
 		}
 
 
+
+		public bool HandleZoom(int zoomDelta, Point currentPosition)
+		{
+			return canvasService.HandleZoom(Canvas, zoomDelta, currentPosition);
+		}
+
+
 		private IEnumerable<Module> GetModules()
 		{
-			int total = 1000;
+			Random random = new Random();
+			int total = 5;
 
 			for (int y = 0; y < total; y++)
 			{
@@ -78,7 +89,8 @@ namespace Dependiator.MainViews
 					yield return new Module
 					{
 						RectangleBrush = themeService.GetNextBrush(),
-						ItemBounds = new Rect(x * 50, y * 50, 45, 45),
+						ItemBounds = new Rect(x * 100, y * 100, 60, 45),
+						Priority = random.NextDouble()
 					};
 				}
 			}
@@ -205,45 +217,14 @@ namespace Dependiator.MainViews
 
 		//public void MouseEnterBranch(BranchViewModel branch)
 		//{
-		//	branch.SetHighlighted();
 
-		//	//if (branch.Branch.IsLocalPart)
-		//	//{
-		//	//	// Local part branch, then do not dim common commits in main branch part
-		//	//	foreach (CommitViewModel commit in Commits)
-		//	//	{
-		//	//		if (commit.Commit.Branch.Id != branch.Branch.Id
-		//	//			&& !(commit.Commit.IsCommon
-		//	//				&& commit.Commit.Branch.IsMainPart
-		//	//				&& commit.Commit.Branch.LocalSubBranch == branch.Branch))
-		//	//		{
-		//	//			commit.SetDim();
-		//	//		}
-		//	//	}
-
-		//	//}
-		//	//else
-		//	//{
-		//	//	// Normal branches and main branches
-		//	//	foreach (CommitViewModel commit in Commits)
-		//	//	{
-		//	//		if (commit.Commit.Branch.Id != branch.Branch.Id)
-		//	//		{
-		//	//			commit.SetDim();
-		//	//		}
-		//	//	}
 		//	//}
 		//}
 
 
 		//public void MouseLeaveBranch(BranchViewModel branch)
 		//{
-		//	branch.SetNormal();
-
-		//	//foreach (CommitViewModel commit in Commits)
-		//	//{
-		//	//	commit.SetNormal(viewModelService.GetSubjectBrush(commit.Commit));
-		//	//}
+		
 		//}
 
 
@@ -317,15 +298,15 @@ namespace Dependiator.MainViews
 
 		public void ScrollRows(int rows)
 		{
-			int offsetY = Converters.ToY(rows);
-			Canvas.Offset = new Point(Canvas.Offset.X, Math.Max(Canvas.Offset.Y - offsetY, 0));
+			//int offsetY = Converters.ToY(rows);
+			//Canvas.Offset = new Point(Canvas.Offset.X, Math.Max(Canvas.Offset.Y - offsetY, 0));
 		}
 
 
 		private void ScrollTo(int rows)
 		{
-			int offsetY = Converters.ToY(rows);
-			Canvas.Offset = new Point(Canvas.Offset.X, Math.Max(offsetY, 0));
+			//int offsetY = Converters.ToY(rows);
+			//Canvas.Offset = new Point(Canvas.Offset.X, Math.Max(offsetY, 0));
 		}
 
 

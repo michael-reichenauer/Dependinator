@@ -37,36 +37,13 @@ namespace Dependiator.MainViews
 
 		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
 		{
-			//if ((Keyboard.Modifiers & ModifierKeys.Control) > 0)
-			{
-				// Adjust X in "e.Delta / X" to adjust zoom speed
-				double zoom = Math.Pow(2, e.Delta / 10.0 / Mouse.MouseWheelDeltaForOneLine);
+			int zoomDelta = e.Delta;
+			Point currentPosition = e.GetPosition(ItemsListBox);
 
-				ZoomableCanvas canvas = viewModel.Canvas;
-				double newScale = canvas.Scale * zoom;
-
-				Log.Debug($"Zoom {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
-				if (newScale < 0.1 || newScale > 5)
-				{
-					Log.Warn($"Zoom to large");
-					e.Handled = true;
-					return;
-				}
-
-				canvas.Scale = newScale;
-
-				// Adjust the offset to make the point under the mouse stay still.
-				Point point = e.GetPosition(ItemsListBox);
-				point = new Point(point.X - 10, point.Y - 30);
-				Vector position = (Vector)point;
-				canvas.Offset = (System.Windows.Point)((Vector)
-					(canvas.Offset + position) * zoom - position);
-
-				Log.Debug($"Scroll {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
-
-				e.Handled = true;
-			}
+			e.Handled = viewModel.HandleZoom(zoomDelta, currentPosition);		
 		}
+
+
 
 		protected override void OnPreviewMouseMove(MouseEventArgs e)
 		{

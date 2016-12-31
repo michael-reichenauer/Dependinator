@@ -19,6 +19,8 @@ namespace Dependiator.MainViews
 		public object VirtualId { get; set; }
 		public Rect ItemBounds { get; set; }
 
+		public double Priority { get; set; }
+
 		public object ViewModel => viewModel.Value;
 
 		public ModuleViewModel ModuleViewModel => viewModel.Value;

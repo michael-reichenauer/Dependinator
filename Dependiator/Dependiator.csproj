@@ -128,6 +128,8 @@
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
     <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
+    <Compile Include="MainViews\CanvasService.cs" />
+    <Compile Include="MainViews\ICanvasService.cs" />
     <Compile Include="MainViews\Private\Caching\BranchNameSurrogate.cs" />
     <Compile Include="MainViews\ModuleViewModel.cs" />
     <Compile Include="MainViews\Private\IVirtualItem.cs" />
@@ -174,7 +176,6 @@
     <Compile Include="Utils\UI\BusyProgress.cs" />
     <Compile Include="Utils\UI\HideableGridSplitter.cs" />
     <Compile Include="Utils\Compare.cs" />
-    <Compile Include="MainViews\Converters.cs" />
     <Compile Include="Common\ThemeHandling\IThemeService.cs" />
     <Compile Include="MainViews\MergeViewModel.cs" />
     <Compile Include="MainViews\Private\MainViewVirtualItemsSource.cs" />

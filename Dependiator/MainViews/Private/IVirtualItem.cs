@@ -10,5 +10,7 @@ namespace Dependiator.MainViews.Private
 		object ViewModel { get; }
 
 		Rect ItemBounds { get; }
+
+		double Priority { get; }
 	}
 }
