@@ -28,6 +28,7 @@ namespace Dependiator.MainViews
 		public double RectangleWidth => module.ItemBounds.Width * canvasService.Scale - StrokeThickness * 2;
 		public double RectangleHeight => module.ItemBounds.Height * canvasService.Scale - StrokeThickness * 2;
 		public Brush RectangleBrush => module.RectangleBrush;
+		public Brush HoverBrush => module.RectangleBrush;
 
 
 

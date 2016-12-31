@@ -37,8 +37,15 @@ namespace Dependiator.MainViews
 
 			double newScale = canvas.Scale * zoom;
 
-			// Log.Debug($"Zoom {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
-			if (newScale < 0.1 || newScale > 5)
+			//Log.Debug($"Zoom {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
+			//if (newScale < 0.3 || newScale > 20)
+			//{
+			//	return true;
+			//}
+
+			if (zoomDelta < 0 && canvas.ActualViewbox.Width >= canvas.Extent.Width
+				&& canvas.ActualViewbox.Height > canvas.Extent.Height
+				|| newScale > 20)
 			{
 				return true;
 			}

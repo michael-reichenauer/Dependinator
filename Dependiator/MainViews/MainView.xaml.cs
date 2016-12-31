@@ -53,7 +53,7 @@ namespace Dependiator.MainViews
 			if (e.LeftButton == MouseButtonState.Pressed
 				&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
 			{
-				Log.Debug($"Mouse {viewPosition}");
+				//Log.Debug($"Mouse {viewPosition}");
 				CaptureMouse();
 				Vector viewOffset = viewPosition - lastMousePosition;
 				e.Handled = viewModel.MoveCanvas(viewOffset);
