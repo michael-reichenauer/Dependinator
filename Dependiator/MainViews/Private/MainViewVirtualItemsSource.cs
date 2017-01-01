@@ -1,51 +1,133 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
+using Dependiator.Utils;
 using Dependiator.Utils.UI.VirtualCanvas;
 
 
 namespace Dependiator.MainViews.Private
 {
-	internal class MainViewVirtualItemsSource : VirtualItemsSource
+	[SingleInstance]
+	internal class MainViewItemsSource : VirtualItemsSource, IMainViewItemsSource
 	{
-		private const int minCommitIndex = 0;
-		private const int minBranchIndex = 1000000;
-		private const int minMergeIndex = 2000000;
+		private readonly PriorityQuadTree<IItem> viewItemsTree = new PriorityQuadTree<IItem>();
+		private readonly List<IItem> viewItems = new List<IItem>();
 
-		private const int maxCommitIndex = minBranchIndex;
-		private const int maxBranchIndex = minMergeIndex;
-		private const int maxMergeIndex = 3000000;
+		private Rect lastViewAreaQuery = EmptyExtent;
 
-		private readonly IReadOnlyList<ModuleViewModel> modules;
+		public Rect TotalBounds { get; private set; } = EmptyExtent;
 
-		private Rect virtualArea;
+		protected override Rect VirtualArea => TotalBounds;
 
-		public MainViewVirtualItemsSource(
-			IReadOnlyList<ModuleViewModel> modules)
+
+		public VirtualItemsSource VirtualItemsSource => this;
+
+
+		public void Add(IEnumerable<IItem> virtualItems)
 		{
-			this.modules = modules;
-		}
+			bool isQueryItemsChanged = false;
+			Rect currentBounds = TotalBounds;
 
-
-		public void DataChanged()
-		{
-			virtualArea = EmptyExtent;
-
-			foreach (ModuleViewModel module in modules)
+			foreach (IItem virtualItem in virtualItems)
 			{
-				virtualArea.Union(module.Rect);
+				virtualItem.VirtualId = new ViewItem(viewItems.Count, virtualItem.ItemBounds, virtualItem);
+				viewItems.Add(virtualItem);
+
+				viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, virtualItem.Priority);
+
+				currentBounds.Union(virtualItem.ItemBounds);
+
+				if (!isQueryItemsChanged && virtualItem.ItemBounds.IntersectsWith(lastViewAreaQuery))
+				{
+					isQueryItemsChanged = true;
+				}
 			}
 
-			TriggerInvalidated();
+			if (currentBounds != TotalBounds)
+			{
+				TotalBounds = currentBounds;
+				TriggerExtentChanged();
+			}
+
+			if (isQueryItemsChanged)
+			{
+				TriggerItemsChanged();
+			}		
 		}
 
-		//public void DataChanged()
+
+		//public void Add(IItem item)
 		//{
-		//	virtualArea = new Rect(0, 0, width, Converters.ToRowExtent(commits.Count));
-		//	TriggerInvalidated();
+		//	Rect newArea = virtualArea;
+
+		//	ViewItem viewItem = new ViewItem(viewItems.Count, item);
+		//	viewItems.Add(viewItem);
+
+		//	viewItemsTree.Insert(viewItem, viewItem.ItemBounds, 0);
+
+		//	newArea.Union(viewItem.ItemBounds);
+
+		//	if (newArea != virtualArea)
+		//	{
+		//		virtualArea = newArea;
+		//		TriggerExtentChanged();
+		//	}
+
+		//	if (viewItem.ItemBounds.IntersectsWith(lastViewAreaQuery))
+		//	{
+		//		TriggerItemsChanged();
+		//	}
 		//}
 
 
-		protected override Rect VirtualArea => virtualArea;
+		public void Update(IItem item)
+		{
+			ViewItem viewItem = (ViewItem)item.VirtualId;
+
+			Rect oldItemBounds = viewItem.ItemBounds;
+			viewItemsTree.Remove(item, oldItemBounds);
+
+			Rect newItemBounds = item.ItemBounds;
+			viewItem.ItemBounds = newItemBounds;
+			viewItemsTree.Insert(item, viewItem.ItemBounds, 0);
+
+			ItemsBoundsChanged();
+
+			if (oldItemBounds.IntersectsWith(lastViewAreaQuery) 
+				|| newItemBounds.IntersectsWith(lastViewAreaQuery))
+			{
+				TriggerItemsChanged();
+			}
+		}
+
+
+		public IEnumerable<IItem> GetItemsInArea(Rect area)
+		{
+			return viewItemsTree.GetItemsIntersecting(area).Select(i => i);
+		}
+
+
+		public IEnumerable<IItem> GetItemsInView()
+		{
+			return GetItemsInArea(lastViewAreaQuery);
+		}
+
+
+		public void ItemsBoundsChanged()
+		{
+			Rect currentBounds = EmptyExtent;
+
+			foreach (IItem virtualItem in viewItems)
+			{
+				currentBounds.Union(virtualItem.ItemBounds);
+			}
+
+			if (currentBounds != TotalBounds)
+			{
+				TotalBounds = currentBounds;
+				TriggerExtentChanged();
+			}
+		}
 
 
 		/// <summary>
@@ -53,28 +135,10 @@ namespace Dependiator.MainViews.Private
 		/// </summary>
 		protected override IEnumerable<int> GetItemIds(Rect viewArea)
 		{
-			if (VirtualArea == Rect.Empty || viewArea == Rect.Empty)
-			{
-				yield break;
-			}
+			lastViewAreaQuery = viewArea;
 
-			// Get the part of the rectangle that is visible
-			viewArea.Intersect(VirtualArea);
-
-			//int viewAreaTopIndex = Converters.ToTopRowIndex(viewArea, commits.Count);
-			//int viewAreaBottomIndex = Converters.ToBottomRowIndex(viewArea, commits.Count);
-
-
-			// Return visible modules
-			for (int i = 0; i < modules.Count; i++)
-			{
-				ModuleViewModel merge = modules[i];
-				if (viewArea.IntersectsWith(merge.Rect))
-				{
-					yield return i + minMergeIndex;
-				}
-			}
-			
+			return viewItemsTree.GetItemsIntersecting(viewArea)
+				.Select(i => ((ViewItem)i.VirtualId).Index);
 		}
 
 
@@ -86,45 +150,29 @@ namespace Dependiator.MainViews.Private
 		/// </summary>
 		protected override object GetItem(int virtualId)
 		{
-			//if (virtualId >= minCommitIndex && virtualId < maxCommitIndex)
-			//{
-			//	int commitIndex = virtualId - minCommitIndex;
-			//	if (commitIndex < commits.Count)
-			//	{
-			//		return commits[commitIndex];
-			//	}
-			//}
-			//else if (virtualId >= minBranchIndex && virtualId < maxBranchIndex)
-			//{
-			//	int branchIndex = virtualId - minBranchIndex;
-			//	if (branchIndex < branches.Count)
-			//	{
-			//		return branches[branchIndex];
-			//	}
-			//}
-			if (virtualId >= minMergeIndex && virtualId < maxMergeIndex)
+			if (virtualId >= viewItems.Count)
 			{
-				int mergeIndex = virtualId - minMergeIndex;
-				if (mergeIndex < modules.Count)
-				{
-					return modules[mergeIndex];
-				}
+				return null;
 			}
 
-			return null;
+			return viewItems[virtualId].ViewModel;
 		}
 
 
-		private static bool IsVisable(
-			int areaTopIndex,
-			int areaBottomIndex,
-			int itemTopIndex,
-			int ItemBottomIndex)
+		private class ViewItem
 		{
-			return
-				(itemTopIndex >= areaTopIndex && itemTopIndex <= areaBottomIndex)
-				|| (ItemBottomIndex >= areaTopIndex && ItemBottomIndex <= areaBottomIndex)
-				|| (itemTopIndex <= areaTopIndex && ItemBottomIndex >= areaBottomIndex);
+			public ViewItem(int index, Rect itemBounds, IItem item)
+			{
+				Index = index;
+				ItemBounds = itemBounds;
+				Item = item;
+			}
+
+			public int Index { get; set; }
+
+			public Rect ItemBounds { get; set; }
+
+			public IItem Item { get; }
 		}
 	}
 }

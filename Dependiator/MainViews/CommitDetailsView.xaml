@@ -5,6 +5,7 @@
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:local="clr-namespace:Dependiator.MainViews"
+	xmlns:modeling="clr-namespace:Dependiator.Modeling"
 	mc:Ignorable="d">
 
 
@@ -151,7 +152,7 @@
 				HorizontalContentAlignment="Stretch">
 
 				<ListBox.ItemTemplate>
-					<DataTemplate DataType="{x:Type local:ModuleViewModel}">
+					<DataTemplate DataType="{x:Type modeling:ModuleViewModel}">
 						<Grid>
 							<Grid.ColumnDefinitions>
 								<ColumnDefinition Width="*" />

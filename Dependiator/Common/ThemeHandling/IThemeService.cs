@@ -12,5 +12,7 @@ namespace Dependiator.Common.ThemeHandling
 		Brush ChangeBranchBrush(string name);
 
 		void SetThemeWpfColors();
+
+		SolidColorBrush GetNextBrush();
 	}
 }

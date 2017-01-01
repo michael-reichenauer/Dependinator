@@ -1,13 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Threading;
 using Dependiator.ApplicationHandling;
 using Dependiator.Common.ProgressHandling;
 using Dependiator.Common.ThemeHandling;
 using Dependiator.MainViews.Private;
+using Dependiator.Modeling;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
 using Dependiator.Utils.UI.VirtualCanvas;
@@ -25,7 +24,10 @@ namespace Dependiator.MainViews
 		private static readonly TimeSpan FilterDelay = TimeSpan.FromMilliseconds(300);
 
 		private readonly IThemeService themeService;
+		private readonly ICanvasService canvasService;
 		private readonly WorkingFolder workingFolder;
+		private readonly IMainViewItemsSource mainViewItemsSource;
+		private readonly IModelService modelService;
 		private readonly IProgressService progress;
 
 
@@ -33,45 +35,50 @@ namespace Dependiator.MainViews
 		private string settingFilterText = "";
 
 		private int width = 0;
-	
-		public List<ModuleViewModel> Modules { get; } = new List<ModuleViewModel>();
 
 		private readonly AsyncLock refreshLock = new AsyncLock();
 
-
-		public ZoomableCanvas Canvas { get; set; }
-		public System.Windows.Controls.ListBox ListBox { get; set; }
+		public VirtualItemsSource ItemsSource { get; }
+		
 
 		public MainViewModel(
 			WorkingFolder workingFolder,
+			IMainViewItemsSource mainViewItemsSource,
+			IModelService modelService,
 			IThemeService themeService,
+			ICanvasService canvasService,
 			IProgressService progressService)
 		{
 			this.workingFolder = workingFolder;
+			this.mainViewItemsSource = mainViewItemsSource;
+			this.modelService = modelService;
 			this.themeService = themeService;
+			this.canvasService = canvasService;
 			this.progress = progressService;
 
-			VirtualItemsSource = new MainViewVirtualItemsSource(Modules);
+			ItemsSource = mainViewItemsSource.VirtualItemsSource;
 
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
-
-			Modules.Add(new ModuleViewModel
-			{
-				Brush = Brushes.Aqua,
-				Rect = new Rect(100, 100, 100, 100),
-				Rectangle = new Rect(2, 2, 70, 70),
-			});
-
-			Modules.Add(new ModuleViewModel
-			{
-				Brush = Brushes.CornflowerBlue,
-				Rect = new Rect(400, 200, 100, 100),
-				Rectangle = new Rect(2, 2, 20, 70),
-			});
 		}
 
-		public MainViewVirtualItemsSource VirtualItemsSource { get; }
+
+		public bool ZoomCanvas(int zoomDelta, Point viewPosition)
+		{
+			return canvasService.ZoomCanvas(zoomDelta, viewPosition);
+		}
+
+
+		public bool MoveCanvas(Vector viewOffset)
+		{
+			return canvasService.MoveCanvas(viewOffset);
+		}
+
+
+		public void SetCanvas(ZoomableCanvas zoomableCanvas)
+		{
+			canvasService.SetCanvas(zoomableCanvas);
+		}
 
 		public void ShowCommitDetails()
 		{
@@ -84,6 +91,11 @@ namespace Dependiator.MainViews
 			IsShowCommitDetails = !IsShowCommitDetails;
 		}
 
+
+		public void Loaded()
+		{
+			modelService.InitModules();
+		}
 
 		public string FetchErrorText
 		{
@@ -111,7 +123,7 @@ namespace Dependiator.MainViews
 				if (width != value)
 				{
 					width = value;
-					VirtualItemsSource.DataChanged();
+					mainViewItemsSource.TriggerExtentChanged();
 				}
 			}
 		}
@@ -191,45 +203,14 @@ namespace Dependiator.MainViews
 
 		//public void MouseEnterBranch(BranchViewModel branch)
 		//{
-		//	branch.SetHighlighted();
 
-		//	//if (branch.Branch.IsLocalPart)
-		//	//{
-		//	//	// Local part branch, then do not dim common commits in main branch part
-		//	//	foreach (CommitViewModel commit in Commits)
-		//	//	{
-		//	//		if (commit.Commit.Branch.Id != branch.Branch.Id
-		//	//			&& !(commit.Commit.IsCommon
-		//	//				&& commit.Commit.Branch.IsMainPart
-		//	//				&& commit.Commit.Branch.LocalSubBranch == branch.Branch))
-		//	//		{
-		//	//			commit.SetDim();
-		//	//		}
-		//	//	}
-
-		//	//}
-		//	//else
-		//	//{
-		//	//	// Normal branches and main branches
-		//	//	foreach (CommitViewModel commit in Commits)
-		//	//	{
-		//	//		if (commit.Commit.Branch.Id != branch.Branch.Id)
-		//	//		{
-		//	//			commit.SetDim();
-		//	//		}
-		//	//	}
 		//	//}
 		//}
 
 
 		//public void MouseLeaveBranch(BranchViewModel branch)
 		//{
-		//	branch.SetNormal();
-
-		//	//foreach (CommitViewModel commit in Commits)
-		//	//{
-		//	//	commit.SetNormal(viewModelService.GetSubjectBrush(commit.Commit));
-		//	//}
+		
 		//}
 
 
@@ -265,8 +246,6 @@ namespace Dependiator.MainViews
 		private void UpdateViewModelImpl()
 		{
 			NotifyAll();
-
-			VirtualItemsSource.DataChanged();
 		}
 
 
@@ -305,15 +284,15 @@ namespace Dependiator.MainViews
 
 		public void ScrollRows(int rows)
 		{
-			int offsetY = Converters.ToY(rows);
-			Canvas.Offset = new Point(Canvas.Offset.X, Math.Max(Canvas.Offset.Y - offsetY, 0));
+			//int offsetY = Converters.ToY(rows);
+			//Canvas.Offset = new Point(Canvas.Offset.X, Math.Max(Canvas.Offset.Y - offsetY, 0));
 		}
 
 
 		private void ScrollTo(int rows)
 		{
-			int offsetY = Converters.ToY(rows);
-			Canvas.Offset = new Point(Canvas.Offset.X, Math.Max(offsetY, 0));
+			//int offsetY = Converters.ToY(rows);
+			//Canvas.Offset = new Point(Canvas.Offset.X, Math.Max(offsetY, 0));
 		}
 
 
@@ -325,8 +304,10 @@ namespace Dependiator.MainViews
 		}
 
 
-		public void Clicked(Point position)
+		public void Clicked(Point viewPosition)
 		{
+			Point canvasPosition = canvasService.GetCanvasPosition(viewPosition);
+
 			//double clickX = position.X - 9;
 			//double clickY = position.Y - 5;
 

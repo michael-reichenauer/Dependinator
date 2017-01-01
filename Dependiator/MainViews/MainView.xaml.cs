@@ -1,8 +1,6 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Forms.VisualStyles;
 using System.Windows.Input;
 using Dependiator.Utils;
 using Dependiator.Utils.UI.VirtualCanvas;
@@ -18,7 +16,8 @@ namespace Dependiator.MainViews
 	{
 		private MainViewModel viewModel;
 
-		private System.Windows.Point lastMousePosition;
+		private Point lastMousePosition;
+
 
 		public MainView()
 		{
@@ -29,72 +28,43 @@ namespace Dependiator.MainViews
 		private void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
 		{
 			viewModel = (MainViewModel)DataContext;
-			viewModel.Canvas = (ZoomableCanvas)sender;
-			viewModel.ListBox = ItemsListBox;
+			viewModel.SetCanvas((ZoomableCanvas)sender);
 
 			ItemsListBox.Focus();
+
+			viewModel.Loaded();
 		}
+
 
 		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
 		{
-			//if ((Keyboard.Modifiers & ModifierKeys.Control) > 0)
-			{
-				// Adjust X in "e.Delta / X" to adjust zoom speed
-				double zoom = Math.Pow(2, e.Delta / 10.0 / Mouse.MouseWheelDeltaForOneLine);
+			int zoomDelta = e.Delta;
+			Point viewPosition = e.GetPosition(ItemsListBox);
 
-				ZoomableCanvas canvas = viewModel.Canvas;
-				double newScale = canvas.Scale * zoom;
-
-				Log.Debug($"Zoom {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
-				if (newScale < 0.5 || newScale > 10)
-				{
-					Log.Warn($"Zoom to large");
-					e.Handled = true;
-					return;
-				}
-
-				canvas.Scale = newScale;
-
-				// Adjust the offset to make the point under the mouse stay still.
-				Point point = e.GetPosition(ItemsListBox);
-				point = new Point(point.X - 10, point.Y - 30);
-				Vector position = (Vector)point;
-				canvas.Offset = (System.Windows.Point)((Vector)
-					(canvas.Offset + position) * zoom - position);
-
-				Log.Debug($"Scroll {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
-
-				e.Handled = true;
-			}
+			e.Handled = viewModel.ZoomCanvas(zoomDelta, viewPosition);		
 		}
+
+
 
 		protected override void OnPreviewMouseMove(MouseEventArgs e)
 		{
-			System.Windows.Point position = e.GetPosition(ItemsListBox);
-			ZoomableCanvas canvas = viewModel.Canvas;
-
-			if (e.LeftButton == MouseButtonState.Pressed && position.Y < 0)
-			{
-				ReleaseMouseCapture();
-				return;
-			}
-
+			Point viewPosition = e.GetPosition(ItemsListBox);
+			
 			if (e.LeftButton == MouseButtonState.Pressed
-					&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
+				&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
 			{
-				Log.Debug($"Mouse {position}");
+				//Log.Debug($"Mouse {viewPosition}");
 				CaptureMouse();
-				canvas.Offset -= position - lastMousePosition;
-				e.Handled = true;
+				Vector viewOffset = viewPosition - lastMousePosition;
+				e.Handled = viewModel.MoveCanvas(viewOffset);
 			}
 			else
 			{
 				ReleaseMouseCapture();
 			}
 
-			lastMousePosition = position;
+			lastMousePosition = viewPosition;
 		}
-
 
 
 		protected override void OnPreviewMouseUp(MouseButtonEventArgs e)
@@ -103,15 +73,14 @@ namespace Dependiator.MainViews
 
 			if (e.ChangedButton == MouseButton.Left)
 			{
-				Point viewPoint = e.GetPosition(ItemsListBox);
+				Point viewPosition = e.GetPosition(ItemsListBox);
 
-				Point position = new Point(viewPoint.X + viewModel.Canvas.Offset.X, viewPoint.Y + viewModel.Canvas.Offset.Y);
-
-				viewModel.Clicked(position);
+				viewModel.Clicked(viewPosition);
 			}
 
 			base.OnPreviewMouseUp(e);
 		}
+
 
 
 		private void MouseDobleClick(object sender, MouseButtonEventArgs e)

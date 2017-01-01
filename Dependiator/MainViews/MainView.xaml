@@ -26,13 +26,13 @@
 			<ListBox
 				x:Name="ItemsListBox"
 				Background="Transparent"
-				ItemsSource="{Binding VirtualItemsSource}"
+				ItemsSource="{Binding ItemsSource}"
 				IsTextSearchEnabled="False"
 				Padding="4"
 				Style="{DynamicResource ListBoxScrollbarStyle}"
 				SelectionMode="Extended"
 				SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
-				SelectedItem="{Binding SelectedItem, Mode=TwoWay}" >
+				SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
 
 				<ListBox.InputBindings>
 					<KeyBinding Key="Enter" Command="{Binding ToggleDetailsCommand}" />
@@ -43,7 +43,7 @@
 						<virtualCanvas:ZoomableCanvas
 							Loaded="ZoomableCanvas_Loaded"
 							RealizationLimit="1000"
-							RealizationRate="20"
+							RealizationRate="30"
 							RealizationPriority="Normal"
 							ApplyTransform="false" />
 					</ItemsPanelTemplate>
@@ -52,7 +52,46 @@
 				<ListBox.ItemContainerStyle>
 					<Style TargetType="ListBoxItem">
 
-						<Setter Property="Canvas.ZIndex" Value="{Binding ZIndex}" />
+						<Setter Property="Canvas.ZIndex" Value="{Binding CanvasZIndex}" />
+						<Setter Property="Canvas.Top" Value="{Binding CanvasTop}" />
+						<Setter Property="Canvas.Left" Value="{Binding CanvasLeft}" />
+						<Setter Property="Width">
+							<Setter.Value>
+								<MultiBinding
+									Converter="{x:Static virtualCanvas:ArithmeticConverter.Default}"
+									ConverterParameter="*">
+									<Binding Path="CanvasWidth" />
+									<Binding
+										Path="Scale"
+										RelativeSource="{RelativeSource	AncestorType=virtualCanvas:ZoomableCanvas}" />
+								</MultiBinding>
+							</Setter.Value>
+						</Setter>
+
+						<Setter Property="Height">
+							<Setter.Value>
+								<MultiBinding
+									Converter="{x:Static virtualCanvas:ArithmeticConverter.Default}"
+									ConverterParameter="*">
+									<Binding Path="CanvasHeight" />
+									<Binding
+										Path="Scale"
+										RelativeSource="{RelativeSource	AncestorType=virtualCanvas:ZoomableCanvas}" />
+								</MultiBinding>
+							</Setter.Value>
+						</Setter>
+
+						<Setter Property="Background" Value="Transparent" />
+						<Setter Property="Padding" Value="0" />
+						<Setter Property="HorizontalContentAlignment" Value="Stretch" />
+						<Setter Property="VerticalContentAlignment" Value="Stretch" />
+						
+						<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
+						
+						<EventSetter Event="MouseDoubleClick" Handler="MouseDobleClick" />
+						<EventSetter Event="MouseUp" Handler="EventMouseUp" />
+						<EventSetter Event="MouseEnter" Handler="MouseEntering" />
+						<EventSetter Event="MouseLeave" Handler="MouseLeaving" />
 
 						<!-- Style for list items (selected/hoover) -->
 						<Setter Property="Template">
@@ -92,66 +131,45 @@
 								</ControlTemplate>
 							</Setter.Value>
 						</Setter>
-
-
-						<Setter Property="Canvas.Top" Value="{Binding Top}" />
-						<Setter Property="Canvas.Left" Value="{Binding Left}" />
-
-						<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
-						<EventSetter Event="MouseDoubleClick" Handler="MouseDobleClick" />
-						<EventSetter Event="MouseUp" Handler="EventMouseUp" />
-						<EventSetter Event="MouseEnter" Handler="MouseEntering" />
-						<EventSetter Event="MouseLeave" Handler="MouseLeaving" />
-
-						<Setter Property="Width">
-							<Setter.Value>
-								<MultiBinding
-									Converter="{x:Static virtualCanvas:ArithmeticConverter.Default}"
-									ConverterParameter="*">
-									<Binding Path="Width" />
-									<Binding
-										Path="Scale"
-										RelativeSource="{RelativeSource	AncestorType=virtualCanvas:ZoomableCanvas}" />
-								</MultiBinding>
-							</Setter.Value>
-						</Setter>
-
-						<Setter Property="Height">
-							<Setter.Value>
-								<MultiBinding
-									Converter="{x:Static virtualCanvas:ArithmeticConverter.Default}"
-									ConverterParameter="*">
-									<Binding Path="Height" />
-									<Binding
-										Path="Scale"
-										RelativeSource="{RelativeSource	AncestorType=virtualCanvas:ZoomableCanvas}" />
-								</MultiBinding>
-							</Setter.Value>
-						</Setter>
-
-						<Setter Property="VerticalContentAlignment" Value="Stretch" />
-						<Setter Property="HorizontalContentAlignment" Value="Stretch" />
-						<Setter Property="Padding" Value="0" />
-						<Setter Property="Background" Value="Transparent" />
-
 						<Style.Triggers>
 
 
 							<!-- Module line -->
 							<DataTrigger Binding="{Binding Type}" Value="ModuleViewModel">
-								<Setter Property="IsEnabled" Value="false" />
+								<Setter Property="IsEnabled" Value="true" />
+								<Setter Property="Focusable" Value="False" />
 								<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
 								<Setter Property="ContentTemplate">
 									<Setter.Value>
 										<DataTemplate>
 											<Grid>
 												<Rectangle
-													Width="{Binding Rectangle.Width}"
-													Height="{Binding Rectangle.Height}"
-													Fill="{DynamicResource ItemBrush}"
-													Stroke="{Binding Brush}"
-													StrokeThickness="2" />		
-			
+													Width="{Binding RectangleWidth}"
+													Height="{Binding RectangleHeight}"
+													Fill="Transparent"
+													Stroke="{Binding RectangleBrush}"
+													StrokeThickness="{Binding StrokeThickness}" />
+
+											</Grid>
+										</DataTemplate>
+									</Setter.Value>
+								</Setter>
+							</DataTrigger>
+
+							<DataTrigger Binding="{Binding Type}" Value="ModuleNameViewModel">
+								<Setter Property="IsEnabled" Value="false" />
+								<Setter Property="Focusable" Value="False" />
+								<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
+								<Setter Property="ContentTemplate">
+									<Setter.Value>
+										<DataTemplate>
+											<Grid>
+												<TextBlock
+														Text="{Binding Name}"
+														Foreground="{DynamicResource TextBrush}"
+														FontSize="{Binding FontSize}"
+														HorizontalAlignment="Left"
+														VerticalAlignment="Center" />
 											</Grid>
 										</DataTemplate>
 									</Setter.Value>
@@ -179,9 +197,9 @@
 			Height="2" />
 
 		<!-- Commit details -->
-		<local:CommitDetailsView
+		<!--<local:CommitDetailsView
 			Grid.Row="2"
-			DataContext="{Binding CommitDetailsViewModel}" />
+			DataContext="{Binding CommitDetailsViewModel}" />-->
 
 	</Grid>
 

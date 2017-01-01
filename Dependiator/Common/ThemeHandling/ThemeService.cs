@@ -16,6 +16,8 @@ namespace Dependiator.Common.ThemeHandling
 		private readonly WorkingFolder workingFolder;
 		private readonly Dictionary<string, Brush> customBranchBrushes = new Dictionary<string, Brush>();
 
+		private int currentIndex = 0;
+
 		private Theme currentTheme;
 
 		public ThemeService(WorkingFolder workingFolder)
@@ -111,6 +113,12 @@ namespace Dependiator.Common.ThemeHandling
 			colors["SelectedItemBackgroundBrush"] = Theme.SelectedItemBackgroundBrush;
 			colors["HoverItemBrush"] = Theme.HoverItemBrush;
 
+		}
+
+
+		public SolidColorBrush GetNextBrush()
+		{
+			return Theme.brushes[(currentIndex++) % Theme.brushes.Count];
 		}
 
 
