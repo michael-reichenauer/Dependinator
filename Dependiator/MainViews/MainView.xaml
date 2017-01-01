@@ -169,7 +169,7 @@
 														Foreground="{DynamicResource TextBrush}"
 														FontSize="{Binding FontSize}"
 														HorizontalAlignment="Left"
-														VerticalAlignment="Center" />
+														VerticalAlignment="Top" />
 											</Grid>
 										</DataTemplate>
 									</Setter.Value>

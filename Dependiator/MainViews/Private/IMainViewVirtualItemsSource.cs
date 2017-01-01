@@ -13,7 +13,11 @@ namespace Dependiator.MainViews.Private
 
 		void Add(IEnumerable<IItem> virtualItems);
 
+		void Add(IItem virtualItem);
+
 		void Update(IItem item);
+
+		void Remove(IItem item);
 
 		void TriggerExtentChanged();
 

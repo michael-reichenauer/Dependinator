@@ -30,7 +30,7 @@ namespace Dependiator.MainViews.Private
 
 			foreach (IItem virtualItem in virtualItems)
 			{
-				virtualItem.VirtualId = new ViewItem(viewItems.Count, virtualItem.ItemBounds, virtualItem);
+				virtualItem.ItemState = new ViewItem(viewItems.Count, virtualItem.ItemBounds, virtualItem);
 				viewItems.Add(virtualItem);
 
 				viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, virtualItem.Priority);
@@ -56,33 +56,39 @@ namespace Dependiator.MainViews.Private
 		}
 
 
-		//public void Add(IItem item)
-		//{
-		//	Rect newArea = virtualArea;
+		public void Add(IItem virtualItem)
+		{
+			bool isQueryItemsChanged = false;
+			Rect currentBounds = TotalBounds;
 
-		//	ViewItem viewItem = new ViewItem(viewItems.Count, item);
-		//	viewItems.Add(viewItem);
+			virtualItem.ItemState = new ViewItem(viewItems.Count, virtualItem.ItemBounds, virtualItem);
+			viewItems.Add(virtualItem);
 
-		//	viewItemsTree.Insert(viewItem, viewItem.ItemBounds, 0);
+			viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, virtualItem.Priority);
 
-		//	newArea.Union(viewItem.ItemBounds);
+			currentBounds.Union(virtualItem.ItemBounds);
 
-		//	if (newArea != virtualArea)
-		//	{
-		//		virtualArea = newArea;
-		//		TriggerExtentChanged();
-		//	}
+			if (virtualItem.ItemBounds.IntersectsWith(lastViewAreaQuery))
+			{
+				isQueryItemsChanged = true;
+			}		
 
-		//	if (viewItem.ItemBounds.IntersectsWith(lastViewAreaQuery))
-		//	{
-		//		TriggerItemsChanged();
-		//	}
-		//}
+			if (currentBounds != TotalBounds)
+			{
+				TotalBounds = currentBounds;
+				TriggerExtentChanged();
+			}
+
+			if (isQueryItemsChanged)
+			{
+				TriggerItemsChanged();
+			}
+		}
 
 
 		public void Update(IItem item)
 		{
-			ViewItem viewItem = (ViewItem)item.VirtualId;
+			ViewItem viewItem = (ViewItem)item.ItemState;
 
 			Rect oldItemBounds = viewItem.ItemBounds;
 			viewItemsTree.Remove(item, oldItemBounds);
@@ -95,6 +101,22 @@ namespace Dependiator.MainViews.Private
 
 			if (oldItemBounds.IntersectsWith(lastViewAreaQuery) 
 				|| newItemBounds.IntersectsWith(lastViewAreaQuery))
+			{
+				TriggerItemsChanged();
+			}
+		}
+
+		public void Remove(IItem item)
+		{
+			ViewItem viewItem = (ViewItem)item.ItemState;
+
+			Rect itemBounds = viewItem.ItemBounds;
+			viewItemsTree.Remove(item, itemBounds);
+			item.ItemState = null;
+
+			ItemsBoundsChanged();
+
+			if (itemBounds.IntersectsWith(lastViewAreaQuery))
 			{
 				TriggerItemsChanged();
 			}
@@ -138,7 +160,7 @@ namespace Dependiator.MainViews.Private
 			lastViewAreaQuery = viewArea;
 
 			return viewItemsTree.GetItemsIntersecting(viewArea)
-				.Select(i => ((ViewItem)i.VirtualId).Index);
+				.Select(i => ((ViewItem)i.ItemState).Index);
 		}
 
 
@@ -165,14 +187,14 @@ namespace Dependiator.MainViews.Private
 			{
 				Index = index;
 				ItemBounds = itemBounds;
-				Item = item;
+				Node = item;
 			}
 
 			public int Index { get; set; }
 
 			public Rect ItemBounds { get; set; }
 
-			public IItem Item { get; }
+			public IItem Node { get; }
 		}
 	}
 }

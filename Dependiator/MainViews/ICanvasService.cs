@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using Dependiator.Utils.UI.VirtualCanvas;
 
 
@@ -15,5 +16,6 @@ namespace Dependiator.MainViews
 		void SetCanvas(ZoomableCanvas zoomableCanvas);
 
 		double Scale { get; }
+		event EventHandler ScaleChanged;
 	}
 }

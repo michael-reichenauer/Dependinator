@@ -12,18 +12,14 @@ namespace Dependiator.Modeling
 	[SingleInstance]
 	internal class ModelService : IModelService
 	{
-		private readonly IMainViewItemsSource itemsSource;
-		private readonly ICanvasService canvasService;
+		private readonly INodeService nodeService;
 		private readonly IThemeService themeService;
 
-
 		public ModelService(
-			IMainViewItemsSource mainViewItemsSource,
-			ICanvasService canvasService,
+			INodeService nodeService,
 			IThemeService themeService)
 		{
-			this.itemsSource = mainViewItemsSource;
-			this.canvasService = canvasService;
+			this.nodeService = nodeService;
 			this.themeService = themeService;
 		}
 
@@ -31,37 +27,25 @@ namespace Dependiator.Modeling
 		public void InitModules()
 		{
 			Timing t = new Timing();
-			itemsSource.Add(GetModules());
+			nodeService.ShowNodes(GetNodes());
 			t.Log("Created modules");
 		}
 
 
-		private IEnumerable<Item> GetModules()
+		private IEnumerable<Node> GetNodes()
 		{
-			Random random = new Random();
 			int total = 10;
 
 			for (int y = 0; y < total; y++)
 			{
 				for (int x = 0; x < total; x++)
 				{
-					double priority = random.NextDouble();
-					Module module = new Module(canvasService)
+					Module module = new Module(nodeService, $"Name {x},{y}", new Point(x * 200, y * 200));
+
+					foreach (var node in module.GetShowableNodes())
 					{
-						RectangleBrush = themeService.GetNextBrush(),
-						ItemBounds = new Rect(x * 100, y * 100, 90, 45),
-						Priority = priority,
-						Name = new ModuleName(canvasService)
-						{
-							ItemBounds = new Rect(x * 100 + 10, y * 100 + 5, 70, 20),
-							Priority = priority,
-							Name = $"Name {x},{y}"
-						}
-					};
-
-
-					yield return module;
-					yield return module.Name;
+						yield return node;
+					}
 				}
 			}
 		}

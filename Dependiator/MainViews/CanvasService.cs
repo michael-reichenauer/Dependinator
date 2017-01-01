@@ -14,15 +14,11 @@ namespace Dependiator.MainViews
 	{
 		private static readonly double ZoomSpeed = 600.0;
 
-		private readonly IMainViewItemsSource itemsSource;
-
 		private ZoomableCanvas canvas;
 
+		public event EventHandler ScaleChanged;
 
-		public CanvasService(IMainViewItemsSource itemsSource)
-		{
-			this.itemsSource = itemsSource;
-		}
+
 
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
@@ -32,19 +28,33 @@ namespace Dependiator.MainViews
 
 		public double Scale => canvas.Scale;
 
+
 		public bool ZoomCanvas(int zoomDelta, Point viewPosition)
 		{		
-			double zoom = Math.Pow(2, zoomDelta / ZoomSpeed );
+			double zoom = Math.Pow(2, zoomDelta / ZoomSpeed);
+
+			double maxScale = 20;
+			double minScale = GetMinScale();
 
 			double newScale = canvas.Scale * zoom;
 
 			// Limit zooming
-			if (zoomDelta < 0 && canvas.ActualViewbox.Width >= canvas.Extent.Width
-				&& canvas.ActualViewbox.Height > canvas.Extent.Height
-				|| newScale > 20)
+			if (newScale < minScale)
+			{
+				newScale = minScale;
+				
+			}
+			else if (newScale > maxScale)
+			{
+				newScale = maxScale;
+			}
+
+			if (newScale == canvas.Scale)
 			{
 				return true;
 			}
+
+			zoom = newScale / canvas.Scale;
 
 			canvas.Scale = newScale;
 
@@ -54,11 +64,20 @@ namespace Dependiator.MainViews
 
 			// Log.Debug($"Scroll {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
 
-			itemsSource.GetItemsInView().ForEach(item => item.ZoomChanged());
+			ScaleChanged?.Invoke(this, EventArgs.Empty);
 
 			return true;
 		}
-		
+
+
+		private double GetMinScale()
+		{
+			double minScaleWidth = canvas.ActualWidth / canvas.Extent.Width;
+			double minScaleHeight = canvas.ActualHeight / canvas.Extent.Height;
+			double minScale = Math.Min(minScaleWidth, minScaleHeight);
+			return minScale;
+		}
+
 
 		public bool MoveCanvas(Vector viewOffset)
 		{

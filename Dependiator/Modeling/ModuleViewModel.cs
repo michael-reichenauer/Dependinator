@@ -7,20 +7,17 @@ namespace Dependiator.Modeling
 	internal class ModuleViewModel : ItemViewModel
 	{
 		private readonly Module module;
-		private readonly ICanvasService canvasService;
 
-
-		public ModuleViewModel(Module module, ICanvasService canvasService)
+		public ModuleViewModel(Module module)
 			: base(module)
 		{
 			this.module = module;
-			this.canvasService = canvasService;
 		}
 
 
 		public int StrokeThickness => 1;
-		public double RectangleWidth => module.ItemBounds.Width * canvasService.Scale - StrokeThickness * 2;
-		public double RectangleHeight => module.ItemBounds.Height * canvasService.Scale - StrokeThickness * 2;
+		public double RectangleWidth => module.ItemBounds.Width * module.Scale - StrokeThickness * 2;
+		public double RectangleHeight => module.ItemBounds.Height * module.Scale - StrokeThickness * 2;
 		public Brush RectangleBrush => module.RectangleBrush;
 		public Brush HoverBrush => module.RectangleBrush;
 

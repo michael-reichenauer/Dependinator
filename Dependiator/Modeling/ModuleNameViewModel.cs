@@ -8,14 +8,11 @@ namespace Dependiator.Modeling
 	internal class ModuleNameViewModel : ItemViewModel
 	{
 		private readonly ModuleName moduleName;
-		private readonly ICanvasService canvasService;
 
-
-		public ModuleNameViewModel(ModuleName moduleName, ICanvasService canvasService)
+		public ModuleNameViewModel(ModuleName moduleName)
 			: base(moduleName)
 		{
 			this.moduleName = moduleName;
-			this.canvasService = canvasService;
 		}
 
 
@@ -25,9 +22,9 @@ namespace Dependiator.Modeling
 		{
 			get
 			{
-				int fontSize = (int)(12 * canvasService.Scale);
+				int fontSize = (int)(12 * moduleName.Scale);
 				fontSize = Math.Max(8, fontSize);
-				return Math.Min(40, fontSize);
+				return Math.Min(20, fontSize);
 			} 
 		}
 	}

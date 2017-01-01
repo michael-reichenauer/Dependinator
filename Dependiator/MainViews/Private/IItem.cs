@@ -6,7 +6,7 @@ namespace Dependiator.MainViews.Private
 {
 	internal interface IItem
 	{
-		object VirtualId { get; set; }
+		object ItemState { get; set; }
 
 		ViewModel ViewModel { get; }
 
@@ -14,8 +14,10 @@ namespace Dependiator.MainViews.Private
 
 		double Priority { get; }
 
-		int ZIndex { get; set; }
+		int ZIndex { get; }
 
-		void ZoomChanged();
+		bool IsAdded { get; }
+
+		void ChangedScale();
 	}
 }
