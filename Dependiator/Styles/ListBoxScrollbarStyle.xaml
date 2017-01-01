@@ -73,7 +73,7 @@
 		</Grid>
 	</ControlTemplate>
 
-	<SolidColorBrush x:Key="ScrollBarDisabledBackground" Color="#F4F4F4"/>
+	<SolidColorBrush x:Key="ScrollBarDisabledBackground" Color="Transparent"/>
 
 	<Style x:Key="ScrollBarButton" TargetType="{x:Type RepeatButton}">
 		<Setter Property="OverridesDefaultStyle" Value="true"/>
@@ -115,7 +115,7 @@
 		<Setter Property="Template">
 			<Setter.Value>
 				<ControlTemplate TargetType="{x:Type Thumb}">
-					<Rectangle Width="10" Fill="{DynamicResource ScrollbarBrush}" RadiusX="2" RadiusY="2">
+					<Rectangle Width="3" Fill="{DynamicResource ScrollbarBrush}" RadiusX="2" RadiusY="2">
 						<!--<Rectangle.Effect>
 								<DropShadowEffect ShadowDepth="0" BlurRadius="1" Color="{StaticResource ScrollbarBrush}" />
 							</Rectangle.Effect>-->

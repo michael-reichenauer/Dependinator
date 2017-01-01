@@ -1,10 +1,4 @@
-﻿using System;
-using System.Windows;
-using Dependiator.MainViews.Private;
-using Dependiator.Utils.UI;
-
-
-namespace Dependiator.MainViews
+﻿namespace Dependiator.Modeling
 {
 //	internal class ModuleName : IItem
 //	{

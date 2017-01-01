@@ -132,10 +132,10 @@
     <Compile Include="MainViews\ICanvasService.cs" />
     <Compile Include="MainViews\Item.cs" />
     <Compile Include="MainViews\ItemViewModel.cs" />
-    <Compile Include="MainViews\Module.cs" />
-    <Compile Include="MainViews\ModuleName.cs" />
+    <Compile Include="Modeling\Module.cs" />
+    <Compile Include="Modeling\ModuleName.cs" />
     <Compile Include="MainViews\Private\Caching\BranchNameSurrogate.cs" />
-    <Compile Include="MainViews\ModuleViewModel.cs" />
+    <Compile Include="Modeling\ModuleViewModel.cs" />
     <Compile Include="MainViews\Private\IMainViewVirtualItemsSource.cs" />
     <Compile Include="MainViews\Private\IVirtualItem.cs" />
     <Compile Include="MainViews\Private\MainViewCommands.cs" />

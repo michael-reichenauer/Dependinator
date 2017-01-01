@@ -1,9 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Media;
+using Dependiator.MainViews;
 
 
-namespace Dependiator.MainViews
+namespace Dependiator.Modeling
 {
 	internal class Module : Item
 	{
