@@ -36,21 +36,32 @@ namespace Dependiator.Modeling
 		}
 
 
-		private IEnumerable<Module> GetModules()
+		private IEnumerable<Item> GetModules()
 		{
 			Random random = new Random();
-			int total = 20;
+			int total = 10;
 
 			for (int y = 0; y < total; y++)
 			{
 				for (int x = 0; x < total; x++)
 				{
-					yield return new Module(canvasService)
+					double priority = random.NextDouble();
+					Module module = new Module(canvasService)
 					{
 						RectangleBrush = themeService.GetNextBrush(),
-						ItemBounds = new Rect(x * 100, y * 100, 60, 45),
-						Priority = random.NextDouble()
+						ItemBounds = new Rect(x * 100, y * 100, 90, 45),
+						Priority = priority,
+						Name = new ModuleName(canvasService)
+						{
+							ItemBounds = new Rect(x * 100 + 10, y * 100 + 5, 70, 20),
+							Priority = priority,
+							Name = $"Name {x},{y}"
+						}
 					};
+
+
+					yield return module;
+					yield return module.Name;
 				}
 			}
 		}

@@ -135,6 +135,7 @@
     <Compile Include="Modeling\Module.cs" />
     <Compile Include="Modeling\ModuleName.cs" />
     <Compile Include="MainViews\Private\Caching\BranchNameSurrogate.cs" />
+    <Compile Include="Modeling\ModuleNameViewModel.cs" />
     <Compile Include="Modeling\ModuleViewModel.cs" />
     <Compile Include="MainViews\Private\IMainViewVirtualItemsSource.cs" />
     <Compile Include="MainViews\Private\IVirtualItem.cs" />

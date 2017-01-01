@@ -43,9 +43,5 @@ namespace Dependiator.Modeling
 		//	repositoryCommands.RefreshView();
 		//});
 
-
-
-
-		public override string ToString() => $"Module";
 	}
 }

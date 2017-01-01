@@ -1,4 +1,5 @@
 using System.Windows;
+using Dependiator.Utils.UI;
 
 
 namespace Dependiator.MainViews.Private
@@ -7,7 +8,7 @@ namespace Dependiator.MainViews.Private
 	{
 		object VirtualId { get; set; }
 
-		object ViewModel { get; }
+		ViewModel ViewModel { get; }
 
 		Rect ItemBounds { get; }
 
