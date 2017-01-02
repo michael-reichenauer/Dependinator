@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using System.Windows.Media;
 using Dependiator.Common.ThemeHandling;
 using Dependiator.MainViews;
 using Dependiator.MainViews.Private;
@@ -18,7 +16,7 @@ namespace Dependiator.Modeling
 		private readonly IMainViewItemsSource itemsSource;
 		private readonly IThemeService themeService;
 
-		private List<Node> rootNodes = new List<Node>();
+		private readonly List<Node> rootNodes = new List<Node>();
 
 		public NodeService(
 			ICanvasService canvasService,
@@ -35,10 +33,12 @@ namespace Dependiator.Modeling
 
 		public double Scale => canvasService.Scale;
 
+
 		public void ShowNodes(IEnumerable<Node> nodes)
 		{
 			itemsSource.Add(nodes);
 		}
+
 
 		public void ShowNode(Node node)
 		{
@@ -72,15 +72,7 @@ namespace Dependiator.Modeling
 
 		private void OnScaleChanged()
 		{
-			IEnumerable<IItem> itemsInView = itemsSource.GetItemsInView().ToList();
-
-			itemsInView
-				.ForEach(item => item.ChangedScale());
-
-			rootNodes
-				.Where(node => !node.IsAdded)
-				.ToList()
-				.ForEach(node => node.TryAddNode());
+			rootNodes.ToList().ForEach(node => node.ChangedScale());
 		}
 	}
 }

@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Windows;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.MainViews;
-using Dependiator.MainViews.Private;
 using Dependiator.Utils;
 
 

@@ -10,7 +10,7 @@ namespace Dependiator.Modeling
 	{
 		private Node parentNode;
 		private readonly List<Node> childNodes = new List<Node>();
-		private Rect relativeBounds;
+		private Rect actualNodeBounds;
 
 		private readonly INodeService nodeService;
 
@@ -21,6 +21,10 @@ namespace Dependiator.Modeling
 		}
 
 		public double Scale => nodeService.Scale;
+
+		public IReadOnlyList<Node> ChildNodes => childNodes;
+
+		public abstract bool CanBeShown();
 
 		public Node ParentNode
 		{
@@ -33,27 +37,30 @@ namespace Dependiator.Modeling
 			}
 		}
 
-		public IReadOnlyList<Node> ChildNodes => childNodes;
 
-		public Rect RelativeBounds
+		public Rect ActualNodeBounds
 		{
-			get { return relativeBounds; }
-			protected set
+			get { return actualNodeBounds; }
+			set
 			{
-				relativeBounds = value;
+				actualNodeBounds = value;
 				SetItemBounds();
 			}
 		}
 
+		public Rect ViewNodeBounds => new Rect(
+			actualNodeBounds.TopLeft, 
+			new Size(actualNodeBounds.Width * Scale, actualNodeBounds.Height * Scale));
+
 
 		public void ShowNode()
 		{
-			if (!IsAdded)
+			if (!IsAdded && CanBeShown())
 			{
 				nodeService.ShowNode(this);
 
 				ChildNodes.Where(node => !node.IsAdded)
-					.ForEach(node => node.TryAddNode());
+					.ForEach(node => node.ShowNode());
 			}
 		}
 
@@ -70,21 +77,21 @@ namespace Dependiator.Modeling
 		}
 
 
-		public abstract void TryAddNode();
+
 
 		private void SetItemBounds()
 		{
 			if (ParentNode != null)
 			{
 				ItemBounds = new Rect(
-					ParentNode.ItemBounds.X + relativeBounds.X,
-					ParentNode.ItemBounds.Y + relativeBounds.Y,
-					relativeBounds.Width,
-					relativeBounds.Height);
+					ParentNode.ItemBounds.X + actualNodeBounds.X,
+					ParentNode.ItemBounds.Y + actualNodeBounds.Y,
+					actualNodeBounds.Width,
+					actualNodeBounds.Height);
 			}
 			else
 			{
-				ItemBounds = relativeBounds;
+				ItemBounds = actualNodeBounds;
 			}
 		}
 
@@ -115,21 +122,40 @@ namespace Dependiator.Modeling
 
 		public override void ChangedScale()
 		{
-			base.ChangedScale();
+			bool canBeShown = CanBeShown();
 
-			ChildNodes
-				.Where(node => !node.IsAdded)
-				.ForEach(node => node.TryAddNode());
+			if (IsAdded)
+			{
+				if (!canBeShown)
+				{
+					HideNode();
+				}
+			}
+			else
+			{
+				if (canBeShown)
+				{
+					ShowNode();
+				}
+			}
+
+			if (IsAdded)
+			{	
+				base.ChangedScale();
+				
+				ChildNodes
+					.ForEach(node => node.ChangedScale());
+			}
 		}
 
 
-		public override void Activated()
-		{
-			base.Activated();
+		//public override void Activated()
+		//{
+		//	base.Activated();
 
-			ChildNodes
-			.Where(node => !node.IsAdded)
-			.ForEach(node => node.TryAddNode());
-		}
+		//	ChildNodes
+		//		.Where(node => !node.IsAdded)
+		//		.ForEach(node => node.TryAddNode());
+		//}
 	}
 }

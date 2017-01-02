@@ -15,6 +15,7 @@ namespace Dependiator.MainViews.Private
 		}
 
 		public object ItemState { get; set; }
+		public bool IsAdded => ItemState != null;
 		public ViewModel ViewModel => viewModel.Value;
 
 		public Rect ItemBounds { get; protected set; }
@@ -25,13 +26,14 @@ namespace Dependiator.MainViews.Private
 
 		public virtual void ChangedScale()
 		{
-			ViewModel.NotifyAll();
+			if (IsAdded)
+			{
+				ViewModel.NotifyAll();
+			}
 		}
 
 		public virtual void Activated()
 		{
-		}
-
-		public bool IsAdded => ItemState != null;
+		}		
 	}
 }

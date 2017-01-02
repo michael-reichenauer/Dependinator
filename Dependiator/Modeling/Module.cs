@@ -1,9 +1,8 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependiator.MainViews;
+using Dependiator.Utils;
 
 
 namespace Dependiator.Modeling
@@ -16,9 +15,11 @@ namespace Dependiator.Modeling
 			Point position)		
 			: base(nodeService, null)
 		{
-			RelativeBounds = new Rect(position, new Size(100, 50));
+			ActualNodeBounds = new Rect(position, new Size(100, 50));
 
-			Name = new ModuleName(nodeService, name, new Point(5, 5));
+			Name = new ModuleName(nodeService, name);
+			Name.ActualNodeBounds = new Rect(5, 5, ActualNodeBounds.Width - 10, 20);
+
 			AddChild(Name);
 			nodeService.AddRootNode(this);
 
@@ -44,26 +45,9 @@ namespace Dependiator.Modeling
 		}
 
 
-		public override void TryAddNode()
+		public override bool CanBeShown()
 		{
-			if (Scale < 0.4)
-			{
-				return;
-			}
-
-			ShowNode();				
-		}
-
-		public override void ChangedScale()
-		{
-			if (Scale < 0.4)
-			{
-				HideNode();
-			}
-			else
-			{
-				base.ChangedScale();
-			}
+			return ViewNodeBounds.Width > 40;
 		}
 	}
 }

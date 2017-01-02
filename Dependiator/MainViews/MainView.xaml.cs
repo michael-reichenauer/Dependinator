@@ -2,7 +2,6 @@
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using Dependiator.Utils;
 using Dependiator.Utils.UI.VirtualCanvas;
 using UserControl = System.Windows.Controls.UserControl;
 

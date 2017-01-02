@@ -85,9 +85,9 @@
 						<Setter Property="Padding" Value="0" />
 						<Setter Property="HorizontalContentAlignment" Value="Stretch" />
 						<Setter Property="VerticalContentAlignment" Value="Stretch" />
-						
+
 						<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
-						
+
 						<EventSetter Event="MouseDoubleClick" Handler="MouseDobleClick" />
 						<EventSetter Event="MouseUp" Handler="EventMouseUp" />
 						<EventSetter Event="MouseEnter" Handler="MouseEntering" />
@@ -168,7 +168,7 @@
 														Text="{Binding Name}"
 														Foreground="{DynamicResource TextBrush}"
 														FontSize="{Binding FontSize}"
-														HorizontalAlignment="Left"
+														HorizontalAlignment="center"
 														VerticalAlignment="Top" />
 											</Grid>
 										</DataTemplate>

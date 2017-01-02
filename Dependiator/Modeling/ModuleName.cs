@@ -1,16 +1,13 @@
-﻿using System;
-using System.Windows;
-using Dependiator.MainViews;
+﻿using Dependiator.MainViews;
 
 
 namespace Dependiator.Modeling
 {
 	internal class ModuleName : Node
 	{
-		public ModuleName(INodeService nodeService, string name, Point position) 
+		public ModuleName(INodeService nodeService, string name) 
 			: base(nodeService, null)
 		{
-			RelativeBounds = new Rect(position, new Size(70, 20));
 			Name = name;
 		}
 
@@ -19,27 +16,23 @@ namespace Dependiator.Modeling
 		public string Name { get; }
 
 
-		public override void TryAddNode()
+		public override bool CanBeShown()
 		{
-			if (Scale < 0.6)
-			{
-				return;
-			}
-
-			ShowNode();
+			return ViewNodeBounds.Width > 50;
 		}
 
 
-		public override void ChangedScale()
-		{
-			if (Scale < 0.5)
-			{
-				HideNode();
-			}
-			else
-			{
-				base.ChangedScale();
-			}
-		}
+		//private Size MeasureString(string candidate)
+		//{
+		//	var formattedText = new FormattedText(
+		//			candidate,
+		//			CultureInfo.CurrentUICulture,
+		//			FlowDirection.LeftToRight,
+		//			new Typeface(FontFamily.., FontStyles.Normal, FontWeights.Normal, FontStretches.Normal),
+		//			this.textBlock.FontSize,
+		//			Brushes.Black);
+
+		//	return new Size(formattedText.Width, formattedText.Height);
+		//}
 	}
 }

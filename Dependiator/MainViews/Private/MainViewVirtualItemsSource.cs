@@ -22,6 +22,7 @@ namespace Dependiator.MainViews.Private
 
 		public VirtualItemsSource VirtualItemsSource => this;
 
+		public bool HasItems => viewItems.Any();
 
 		public void Add(IEnumerable<IItem> virtualItems)
 		{

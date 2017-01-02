@@ -1,6 +1,5 @@
 ﻿using System;
 using Dependiator.MainViews;
-using Dependiator.Utils.UI;
 
 
 namespace Dependiator.Modeling

@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Linq;
 using System.Windows;
-using System.Windows.Input;
-using Dependiator.MainViews.Private;
 using Dependiator.Utils;
 using Dependiator.Utils.UI.VirtualCanvas;
 
@@ -19,14 +16,13 @@ namespace Dependiator.MainViews
 		public event EventHandler ScaleChanged;
 
 
-
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
 			canvas = zoomableCanvas;
 		}
 
 
-		public double Scale => canvas.Scale;
+		public double Scale => canvas?.Scale ?? 1;
 
 
 		public bool ZoomCanvas(int zoomDelta, Point viewPosition)
@@ -34,7 +30,7 @@ namespace Dependiator.MainViews
 			double zoom = Math.Pow(2, zoomDelta / ZoomSpeed);
 
 			double maxScale = 20;
-			double minScale = GetMinScale();
+			double minScale = 0.3;
 
 			double newScale = canvas.Scale * zoom;
 
@@ -64,9 +60,15 @@ namespace Dependiator.MainViews
 
 			// Log.Debug($"Scroll {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
 
-			ScaleChanged?.Invoke(this, EventArgs.Empty);
+			TriggerScaleChanged();
 
 			return true;
+		}
+
+
+		private void TriggerScaleChanged()
+		{
+			ScaleChanged?.Invoke(this, EventArgs.Empty);
 		}
 
 
