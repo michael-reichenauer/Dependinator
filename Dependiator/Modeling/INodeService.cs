@@ -8,10 +8,14 @@ namespace Dependiator.Modeling
 	{
 		double Scale { get; }
 
+		void ShowNodes(IEnumerable<Node> nodes);
+
+		void HideNodes(IEnumerable<Node> nodes);
+
 		void ShowNode(Node node);
 
 		void HideNode(Node node);
-		void ShowNodes(IEnumerable<Node> nodes);
+
 		Brush GetNextBrush();
 
 		void RemoveRootNode(Node node);

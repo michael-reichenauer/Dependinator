@@ -40,6 +40,12 @@ namespace Dependiator.Modeling
 		}
 
 
+		public void HideNodes(IEnumerable<Node> nodes)
+		{
+			itemsSource.Remove(nodes);
+		}
+
+
 		public void ShowNode(Node node)
 		{
 			itemsSource.Add(node);

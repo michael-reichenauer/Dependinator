@@ -107,6 +107,32 @@ namespace Dependiator.MainViews.Private
 			}
 		}
 
+
+		public void Remove(IEnumerable<IItem> virtualItems)
+		{
+			bool isQueryItemsChanged = false;
+			foreach (IItem item in virtualItems)
+			{
+				ViewItem viewItem = (ViewItem)item.ItemState;
+
+				Rect itemBounds = viewItem.ItemBounds;
+				viewItemsTree.Remove(item, itemBounds);
+				item.ItemState = null;
+
+				if (itemBounds.IntersectsWith(lastViewAreaQuery))
+				{
+					isQueryItemsChanged = true;
+				}
+			}
+
+			ItemsBoundsChanged();
+
+			if (isQueryItemsChanged)
+			{
+				TriggerItemsChanged();
+			}
+		}
+
 		public void Remove(IItem item)
 		{
 			ViewItem viewItem = (ViewItem)item.ItemState;

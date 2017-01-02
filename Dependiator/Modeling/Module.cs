@@ -18,7 +18,7 @@ namespace Dependiator.Modeling
 			ActualNodeBounds = new Rect(position, new Size(100, 50));
 
 			Name = new ModuleName(nodeService, name);
-			Name.ActualNodeBounds = new Rect(5, 5, ActualNodeBounds.Width - 10, 20);
+			Name.ActualNodeBounds = new Rect(0, 0, ActualNodeBounds.Width, 20);
 
 			AddChild(Name);
 			nodeService.AddRootNode(this);
@@ -37,12 +37,6 @@ namespace Dependiator.Modeling
 		public ModuleViewModel ModuleViewModel => ViewModel as ModuleViewModel;
 		public Brush RectangleBrush { get; }
 
-
-		internal IEnumerable<Node> GetShowableNodes()
-		{
-			yield return this;
-			yield return Name;
-		}
 
 
 		public override bool CanBeShown()

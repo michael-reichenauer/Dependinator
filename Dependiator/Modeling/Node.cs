@@ -55,28 +55,53 @@ namespace Dependiator.Modeling
 
 		public void ShowNode()
 		{
-			if (!IsAdded && CanBeShown())
-			{
-				nodeService.ShowNode(this);
-
-				ChildNodes.Where(node => !node.IsAdded)
-					.ForEach(node => node.ShowNode());
-			}
+			nodeService.ShowNodes(GetShowableNodes());			
 		}
 
 
 		public void HideNode()
 		{
-			if (IsAdded)
-			{
-				ChildNodes.Where(node => node.IsAdded)
-					.ForEach(node => node.HideNode());
-
-				nodeService.HideNode(this);
-			}
+			nodeService.HideNodes(GetHidableNodes());
 		}
 
 
+		internal IEnumerable<Node> GetShowableNodes()
+		{
+			if (!IsAdded && CanBeShown())
+			{
+				yield return this;
+
+				IEnumerable<Node> showableChildren = ChildNodes
+					.Where(node => !node.IsAdded && node.CanBeShown());
+
+				foreach (Node childNode in showableChildren)
+				{
+					foreach (Node decedentNode in childNode.GetShowableNodes())
+					{
+						yield return decedentNode;
+					}
+				}
+			}
+		}
+
+		internal IEnumerable<Node> GetHidableNodes()
+		{
+			if (IsAdded && !CanBeShown())
+			{
+				yield return this;
+
+				IEnumerable<Node> showableChildren = ChildNodes
+					.Where(node => node.IsAdded && !node.CanBeShown());
+
+				foreach (Node childNode in showableChildren)
+				{
+					foreach (Node decedentNode in childNode.GetHidableNodes())
+					{
+						yield return decedentNode;
+					}
+				}
+			}
+		}
 
 
 		private void SetItemBounds()
