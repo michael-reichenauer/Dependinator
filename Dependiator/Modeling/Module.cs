@@ -24,7 +24,8 @@ namespace Dependiator.Modeling
 
 			ActualNodeBounds = new Rect(position, new Size(100, 50));
 
-			//Name = new ModuleName(nodeService, name, this);
+			Name = new ModuleName(nodeService, name, this);
+			AddChildNode(Name);
 	
 			//AddModuleChildren();			
 
@@ -67,7 +68,7 @@ namespace Dependiator.Modeling
 			{
 				HideChildren();
 				base.ItemVirtualized();
-				//ParentNode?.RemoveChild(this);
+				//ParentNode?.RemoveChildNode(this);
 			}
 		}
 
@@ -75,13 +76,13 @@ namespace Dependiator.Modeling
 
 		private void AddModuleChildren()
 		{
-			int total = 2;
+			int total = 3;
 
-			for (int y = 0; y < total; y++)
+			for (int y = 0; y < total - 1; y++)
 			{
 				for (int x = 0; x < total; x++)
 				{
-					AddChild(new Module(nodeService, $"Name {x},{y}", new Point(x * 200 + 10, y * 100 + 10), this));
+					AddChildNode(new Module(nodeService, $"Name {x},{y}", new Point(x * 150 + 10, y * 70 + 70), this));
 				}
 			}
 		}
@@ -91,7 +92,7 @@ namespace Dependiator.Modeling
 		{
 			foreach (var child in Children.ToList())
 			{
-				RemoveChild(child);
+				RemoveChildNode(child);
 			}			
 		}
 	}

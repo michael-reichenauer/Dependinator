@@ -43,7 +43,6 @@ namespace Dependiator.Modeling
 		public void HideNodes(IEnumerable<Node> nodes)
 		{
 			itemsSource.Remove(nodes);
-			//nodes.ForEach(node => node.NotifyAll());
 		}
 
 

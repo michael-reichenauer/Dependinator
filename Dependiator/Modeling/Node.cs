@@ -9,11 +9,14 @@ namespace Dependiator.Modeling
 {
 	internal abstract class Node : Item
 	{
+		public static readonly int NodeScaleFactor = 5;
+
 		private Node parentNode;
 		private readonly List<Node> childNodes = new List<Node>();
 		private Rect actualNodeBounds;
 
 		private readonly INodeService nodeService;
+
 
 		protected Node(INodeService nodeService, Node parentNode)
 		{
@@ -35,7 +38,7 @@ namespace Dependiator.Modeling
 					return 1;
 				}
 
-				return ParentNode.NodeScale / 5;
+				return ParentNode.NodeScale / NodeScaleFactor;
 			}
 		}
 
@@ -52,7 +55,7 @@ namespace Dependiator.Modeling
 
 				if (parentNode != null)
 				{
-					parentNode.AddChild(this);
+					parentNode.AddChildNode(this);
 				}
 			}
 		}
@@ -65,6 +68,16 @@ namespace Dependiator.Modeling
 			{
 				actualNodeBounds = value;
 				actualNodeBounds.Scale(NodeScale, NodeScale);
+				SetItemBounds();
+			}
+		}
+
+		public Rect ActualNodeBoundsNoScale
+		{
+			get { return actualNodeBounds; }
+			set
+			{
+				actualNodeBounds = value;
 				SetItemBounds();
 			}
 		}
@@ -161,7 +174,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		protected void AddChild(Node child)
+		protected void AddChildNode(Node child)
 		{
 			if (!childNodes.Contains(child))
 			{
@@ -173,7 +186,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void RemoveChild(Node child)
+		public void RemoveChildNode(Node child)
 		{
 			childNodes.Remove(child);
 			child.NotifyAll();
