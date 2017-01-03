@@ -10,14 +10,11 @@ namespace Dependiator.Modeling
 	internal class ModelService : IModelService
 	{
 		private readonly INodeService nodeService;
-		private readonly IThemeService themeService;
 
 		public ModelService(
-			INodeService nodeService,
-			IThemeService themeService)
+			INodeService nodeService)
 		{
 			this.nodeService = nodeService;
-			this.themeService = themeService;
 		}
 
 
@@ -41,11 +38,6 @@ namespace Dependiator.Modeling
 					nodeService.AddRootNode(module);
 
 					yield return module;
-
-					//foreach (var node in module.GetShowableNodes())
-					//{
-					//	yield return node;
-					//}
 				}
 			}
 		}

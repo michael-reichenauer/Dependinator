@@ -10,6 +10,7 @@
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
+
 	<Grid>
 		<Grid.RowDefinitions>
 			<!-- Commits log -->
@@ -134,48 +135,20 @@
 						<Style.Triggers>
 
 
-							<!-- Module line -->
+							<!-- Module  -->
 							<DataTrigger Binding="{Binding Type}" Value="ModuleViewModel">
 								<Setter Property="IsEnabled" Value="true" />
 								<Setter Property="Focusable" Value="False" />
 								<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
-								<Setter Property="ContentTemplate">
-									<Setter.Value>
-										<DataTemplate>
-											<Grid>
-												<Rectangle
-													Width="{Binding RectangleWidth}"
-													Height="{Binding RectangleHeight}"
-													Fill="Transparent"
-													Stroke="{Binding RectangleBrush}"
-													StrokeThickness="{Binding StrokeThickness}" />
-
-											</Grid>
-										</DataTemplate>
-									</Setter.Value>
-								</Setter>
+								<Setter Property="ContentTemplate" Value="{StaticResource ModuleViewTemplate}" />
 							</DataTrigger>
 
 							<DataTrigger Binding="{Binding Type}" Value="ModuleNameViewModel">
 								<Setter Property="IsEnabled" Value="false" />
 								<Setter Property="Focusable" Value="False" />
 								<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
-								<Setter Property="ContentTemplate">
-									<Setter.Value>
-										<DataTemplate>
-											<Grid>
-												<TextBlock
-														Text="{Binding Name}"
-														Foreground="{DynamicResource TextBrush}"
-														FontSize="{Binding FontSize}"
-														HorizontalAlignment="center"
-														VerticalAlignment="Top" />
-											</Grid>
-										</DataTemplate>
-									</Setter.Value>
-								</Setter>
+								<Setter Property="ContentTemplate" Value="{StaticResource ModuleNameViewTemplate}" />
 							</DataTrigger>
-
 
 						</Style.Triggers>
 

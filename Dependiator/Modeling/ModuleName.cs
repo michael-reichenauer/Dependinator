@@ -10,7 +10,7 @@ namespace Dependiator.Modeling
 			: base(nodeService, module)
 		{
 			Name = name;
-			ActualNodeBoundsNoScale = new Rect(0, 0, module.ActualNodeBounds.Width, 20);
+			ActualNodeBoundsNoScale = new Rect(0, 0, module.ActualNodeBounds.Width, 18);
 		}
 
 		public override ItemViewModel ViewModelFactory() => new ModuleNameViewModel(this);

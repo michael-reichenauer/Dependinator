@@ -45,7 +45,7 @@ namespace Dependiator.Modeling
 
 		public override bool CanBeShown()
 		{
-			return ViewNodeSize.Width > 40;
+			return ViewNodeSize.Width > 40 && (ParentNode?.ItemBounds.Contains(ItemBounds) ?? true);
 		}
 
 		public override void ItemRealized()
@@ -76,7 +76,7 @@ namespace Dependiator.Modeling
 
 		private void AddModuleChildren()
 		{
-			int total = 3;
+			int total = 4;
 
 			for (int y = 0; y < total - 1; y++)
 			{

@@ -1,0 +1,17 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:Dependiator.Modeling">
+
+	<DataTemplate x:Key="ModuleViewTemplate">
+		<Grid>
+			<Rectangle
+													Width="{Binding RectangleWidth}"
+													Height="{Binding RectangleHeight}"
+													Fill="Transparent"
+													Stroke="{Binding RectangleBrush}"
+													StrokeThickness="{Binding StrokeThickness}" />
+
+		</Grid>
+	</DataTemplate>
+	
+</ResourceDictionary>

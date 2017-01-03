@@ -82,6 +82,8 @@ namespace Dependiator.Modeling
 			}
 		}
 
+		public Rect ViewNodeBounds => new Rect(new Point(0, 0), ViewNodeSize);
+
 		public Size ViewNodeSize =>
 			new Size(ItemBounds.Width * Scale, ItemBounds.Height * Scale);
 
