@@ -31,7 +31,7 @@ namespace Dependiator.Modeling
 
 		private IEnumerable<Node> GetNodes()
 		{
-			int total = 2;
+			int total = 20;
 
 			for (int y = 0; y < total; y++)
 			{

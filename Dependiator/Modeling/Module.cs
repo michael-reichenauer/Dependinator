@@ -29,7 +29,7 @@ namespace Dependiator.Modeling
 	
 			//AddModuleChildren();			
 
-			RectangleBrush = parent?.RectangleBrush ?? nodeService.GetNextBrush();
+			RectangleBrush = nodeService.GetNextBrush();
 		}
 
 		public override ItemViewModel ViewModelFactory() => new ModuleViewModel(this);
