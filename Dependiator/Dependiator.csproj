@@ -128,7 +128,7 @@
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
     <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
-    <Compile Include="MainViews\CanvasService.cs" />
+    <Compile Include="MainViews\Private\CanvasService.cs" />
     <Compile Include="MainViews\ICanvasService.cs" />
     <Compile Include="Modeling\Node.cs" />
     <Compile Include="MainViews\ItemViewModel.cs" />
@@ -169,6 +169,7 @@
     <Compile Include="Utils\Serializer.cs" />
     <Compile Include="Utils\SingleInstanceAttribute.cs" />
     <Compile Include="Utils\UI\InputBindingsBehavior.cs" />
+    <Compile Include="Utils\UI\VirtualCanvas\ItemEventArgs.cs" />
     <Compile Include="Utils\UI\VisibleWindow.cs" />
     <Compile Include="Utils\UI\WpfBindingTraceListener.cs" />
     <Compile Include="Common\ThemeHandling\ThemeService.cs" />

@@ -28,5 +28,8 @@ namespace Dependiator.MainViews.Private
 		IEnumerable<IItem> GetItemsInArea(Rect nearArea);
 		IEnumerable<IItem> GetItemsInView();
 		void Remove(IEnumerable<IItem> virtualItems);
+
+		void ItemRealized(int virtualId);
+		void ItemVirtualized(int virtualId);
 	}
 }

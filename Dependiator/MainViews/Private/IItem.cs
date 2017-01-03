@@ -19,5 +19,7 @@ namespace Dependiator.MainViews.Private
 		bool IsAdded { get; }
 
 		void ChangedScale();
+		void ItemRealized();
+		void ItemVirtualized();
 	}
 }

@@ -133,6 +133,29 @@ namespace Dependiator.MainViews.Private
 			}
 		}
 
+
+		public void ItemRealized(int virtualId)
+		{
+			if (virtualId >= viewItems.Count)
+			{
+				return;
+			}
+
+			viewItems[virtualId].ItemRealized();
+		}
+
+
+		public void ItemVirtualized(int virtualId)
+		{
+			if (virtualId >= viewItems.Count)
+			{
+				return;
+			}
+
+			viewItems[virtualId].ItemVirtualized();
+		}
+
+
 		public void Remove(IItem item)
 		{
 			ViewItem viewItem = (ViewItem)item.ItemState;

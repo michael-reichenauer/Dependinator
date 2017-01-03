@@ -22,9 +22,16 @@ namespace Dependiator.MainViews.Private
 		public int ZIndex { get; protected set; }
 		public double Priority { get; protected set; }
 
+		public bool IsRealized { get; private set; }
+
 		public abstract ItemViewModel ViewModelFactory();
 
 		public virtual void ChangedScale()
+		{
+			NotifyAll();
+		}
+
+		public void NotifyAll()
 		{
 			if (IsAdded)
 			{
@@ -32,8 +39,16 @@ namespace Dependiator.MainViews.Private
 			}
 		}
 
-		public virtual void Activated()
+
+		public virtual void ItemRealized()
 		{
-		}		
+			IsRealized = true;
+		}
+
+
+		public virtual void ItemVirtualized()
+		{
+			IsRealized = false;
+		}
 	}
 }

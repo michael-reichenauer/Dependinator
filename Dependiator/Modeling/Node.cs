@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -20,7 +21,23 @@ namespace Dependiator.Modeling
 			ParentNode = parentNode;
 		}
 
+		public int NodeLevel => ParentNode?.NodeLevel + 1 ?? 0;
+
+
 		public double Scale => nodeService.Scale;
+
+		public double NodeScale
+		{
+			get
+			{
+				if (ParentNode == null)
+				{
+					return 1;
+				}
+
+				return ParentNode.NodeScale / 5;
+			}
+		}
 
 		public IReadOnlyList<Node> ChildNodes => childNodes;
 
@@ -29,11 +46,14 @@ namespace Dependiator.Modeling
 		public Node ParentNode
 		{
 			get { return parentNode; }
-			private set
+			set
 			{
 				parentNode = value;
 
-				SetItemBounds();
+				if (parentNode != null)
+				{
+					parentNode.AddChild(this);
+				}
 			}
 		}
 
@@ -44,63 +64,83 @@ namespace Dependiator.Modeling
 			set
 			{
 				actualNodeBounds = value;
+				actualNodeBounds.Scale(NodeScale, NodeScale);
 				SetItemBounds();
 			}
 		}
 
-		public Rect ViewNodeBounds => new Rect(
-			actualNodeBounds.TopLeft, 
-			new Size(actualNodeBounds.Width * Scale, actualNodeBounds.Height * Scale));
+		public Size ViewNodeSize =>
+			new Size(ItemBounds.Width * Scale, ItemBounds.Height * Scale);
 
 
 		public void ShowNode()
 		{
-			nodeService.ShowNodes(GetShowableNodes());			
+			if (!IsAdded && CanBeShown())
+			{
+				nodeService.ShowNode(this);
+			}
 		}
 
+		public void ShowChildren()
+		{
+			ChildNodes.ForEach(node => node.ShowNode());
+		}
 
 		public void HideNode()
 		{
-			nodeService.HideNodes(GetHidableNodes());
+			nodeService.HideNodes(GetHidableDecedentAndSelf());
 		}
 
-
-		internal IEnumerable<Node> GetShowableNodes()
+		public void HideChildren()
 		{
-			if (!IsAdded && CanBeShown())
-			{
-				yield return this;
-
-				IEnumerable<Node> showableChildren = ChildNodes
-					.Where(node => !node.IsAdded && node.CanBeShown());
-
-				foreach (Node childNode in showableChildren)
-				{
-					foreach (Node decedentNode in childNode.GetShowableNodes())
-					{
-						yield return decedentNode;
-					}
-				}
-			}
+			nodeService.HideNodes(GetHidableDecedent());
 		}
 
-		internal IEnumerable<Node> GetHidableNodes()
+
+		//internal IEnumerable<Node> GetShowableNodes()
+		//{
+		//	if (!IsAdded && CanBeShown())
+		//	{
+		//		yield return this;
+
+		//		IEnumerable<Node> showableChildren = ChildNodes
+		//			.Where(node => !node.IsAdded && node.CanBeShown());
+
+		//		foreach (Node childNode in showableChildren)
+		//		{
+		//			foreach (Node decedentNode in childNode.GetShowableNodes())
+		//			{
+		//				yield return decedentNode;
+		//			}
+		//		}
+		//	}
+		//}
+
+		internal IEnumerable<Node> GetHidableDecedentAndSelf()
 		{
 			if (IsAdded && !CanBeShown())
 			{
-				yield return this;
+				yield return this;			
 
-				IEnumerable<Node> showableChildren = ChildNodes
-					.Where(node => node.IsAdded && !node.CanBeShown());
-
-				foreach (Node childNode in showableChildren)
-				{
-					foreach (Node decedentNode in childNode.GetHidableNodes())
-					{
-						yield return decedentNode;
-					}
+				foreach (Node node in GetHidableDecedent())
+				{			
+					yield return node;					
 				}
 			}
+		}
+
+		internal IEnumerable<Node> GetHidableDecedent()
+		{
+			IEnumerable<Node> showableChildren = ChildNodes
+				.Where(node => node.IsAdded && !node.CanBeShown());
+
+			foreach (Node childNode in showableChildren)
+			{
+				foreach (Node decedentNode in childNode.GetHidableDecedentAndSelf())
+				{
+					yield return decedentNode;
+				}
+			}		
 		}
 
 
@@ -109,8 +149,8 @@ namespace Dependiator.Modeling
 			if (ParentNode != null)
 			{
 				ItemBounds = new Rect(
-					ParentNode.ItemBounds.X + actualNodeBounds.X,
-					ParentNode.ItemBounds.Y + actualNodeBounds.Y,
+					ParentNode.ItemBounds.X + (actualNodeBounds.X),
+					ParentNode.ItemBounds.Y + (actualNodeBounds.Y),
 					actualNodeBounds.Width,
 					actualNodeBounds.Height);
 			}
@@ -128,22 +168,17 @@ namespace Dependiator.Modeling
 				childNodes.Add(child);
 			}
 
-			if (child.ParentNode != this)
-			{
-				child.ParentNode?.RemoveChild(child);
-			}
-
-			child.ParentNode = this;
 			child.Priority = Priority - 0.1;
 			child.ZIndex = ZIndex + 10;
 		}
 
 
-		private void RemoveChild(Node child)
+		public void RemoveChild(Node child)
 		{
 			childNodes.Remove(child);
-			child.ParentNode = null;
+			child.NotifyAll();
 		}
+
 
 		public override void ChangedScale()
 		{
@@ -164,7 +199,7 @@ namespace Dependiator.Modeling
 				}
 			}
 
-			if (IsAdded)
+			if (IsAdded && IsRealized)
 			{	
 				base.ChangedScale();
 				
@@ -172,15 +207,5 @@ namespace Dependiator.Modeling
 					.ForEach(node => node.ChangedScale());
 			}
 		}
-
-
-		//public override void Activated()
-		//{
-		//	base.Activated();
-
-		//	ChildNodes
-		//		.Where(node => !node.IsAdded)
-		//		.ForEach(node => node.TryAddNode());
-		//}
 	}
 }

@@ -31,18 +31,21 @@ namespace Dependiator.Modeling
 
 		private IEnumerable<Node> GetNodes()
 		{
-			int total = 10;
+			int total = 2;
 
 			for (int y = 0; y < total; y++)
 			{
 				for (int x = 0; x < total; x++)
 				{
-					Module module = new Module(nodeService, $"Name {x},{y}", new Point(x * 200, y * 200));
+					Module module = new Module(nodeService, $"Name {x},{y}", new Point(x * 200, y * 200), null);
+					nodeService.AddRootNode(module);
 
-					foreach (var node in module.GetShowableNodes())
-					{
-						yield return node;
-					}
+					yield return module;
+
+					//foreach (var node in module.GetShowableNodes())
+					//{
+					//	yield return node;
+					//}
 				}
 			}
 		}

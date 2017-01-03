@@ -1,14 +1,16 @@
-﻿using Dependiator.MainViews;
+﻿using System.Windows;
+using Dependiator.MainViews;
 
 
 namespace Dependiator.Modeling
 {
 	internal class ModuleName : Node
 	{
-		public ModuleName(INodeService nodeService, string name) 
-			: base(nodeService, null)
+		public ModuleName(INodeService nodeService, string name, Module module) 
+			: base(nodeService, module)
 		{
 			Name = name;
+			ActualNodeBounds = new Rect(0, 0, module.ActualNodeBounds.Width, 20);
 		}
 
 		public override ItemViewModel ViewModelFactory() => new ModuleNameViewModel(this);
@@ -18,7 +20,7 @@ namespace Dependiator.Modeling
 
 		public override bool CanBeShown()
 		{
-			return ViewNodeBounds.Width > 50;
+			return ParentNode.ViewNodeSize.Width > 50;
 		}
 
 

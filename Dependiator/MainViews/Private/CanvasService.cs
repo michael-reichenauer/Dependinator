@@ -4,11 +4,12 @@ using Dependiator.Utils;
 using Dependiator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependiator.MainViews
+namespace Dependiator.MainViews.Private
 {
 	[SingleInstance]
 	internal class CanvasService : ICanvasService
 	{
+		private readonly IMainViewItemsSource itemsSource;
 		private static readonly double ZoomSpeed = 600.0;
 
 		private ZoomableCanvas canvas;
@@ -16,9 +17,17 @@ namespace Dependiator.MainViews
 		public event EventHandler ScaleChanged;
 
 
+		public CanvasService(IMainViewItemsSource itemsSource)
+		{
+			this.itemsSource = itemsSource;
+		}
+
+
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
 			canvas = zoomableCanvas;
+			canvas.ItemRealized += (s, e) => itemsSource.ItemRealized(e.VirtualId);
+			canvas.ItemVirtualized += (s, e) => itemsSource.ItemVirtualized(e.VirtualId);
 		}
 
 
@@ -29,26 +38,25 @@ namespace Dependiator.MainViews
 		{		
 			double zoom = Math.Pow(2, zoomDelta / ZoomSpeed);
 
-			double maxScale = 20;
-			double minScale = 0.3;
+			//double maxScale = 20;
+			//double minScale = 0.01;
 
 			double newScale = canvas.Scale * zoom;
 
-			// Limit zooming
-			if (newScale < minScale)
-			{
-				newScale = minScale;
-				
-			}
-			else if (newScale > maxScale)
-			{
-				newScale = maxScale;
-			}
+			//// Limit zooming
+			//if (newScale < minScale)
+			//{
+			//	newScale = minScale;			
+			//}
+			//else if (newScale > maxScale)
+			//{
+			//	newScale = maxScale;
+			//}
 
-			if (newScale == canvas.Scale)
-			{
-				return true;
-			}
+			//if (newScale == canvas.Scale)
+			//{
+			//	return true;
+			//}
 
 			zoom = newScale / canvas.Scale;
 

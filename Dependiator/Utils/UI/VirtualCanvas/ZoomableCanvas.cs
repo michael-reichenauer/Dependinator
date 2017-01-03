@@ -34,6 +34,11 @@ namespace Dependiator.Utils.UI.VirtualCanvas
 	{
 		#region ApplyTransformProperty
 
+		public event EventHandler<ItemEventArgs> ItemVirtualized;
+
+		public event EventHandler<ItemEventArgs> ItemRealized;
+
+
 		/// <summary>
 		/// Identifies the <see cref="ApplyTransform"/> dependency property.
 		/// </summary>
@@ -1298,14 +1303,6 @@ namespace Dependiator.Utils.UI.VirtualCanvas
 		/// <param name="e">The event arguments.</param>
 		private void OnSpatialQueryInvalidated(object sender, EventArgs e)
 		{
-			//// Clearing all already realized items by first virtualizing them and clear the liist
-			//foreach (var realizedItem in RealizedItems)
-			//{
-			//	VirtualizeItem(realizedItem);
-			//}
-
-			//RealizedItems.Clear();
-
 			InvalidateReality();
 		}
 
@@ -1406,6 +1403,7 @@ namespace Dependiator.Utils.UI.VirtualCanvas
 						{
 							// If it was not already realized, realize it now and create a new node for it.
 							RealizeItem(index);
+							ItemRealized?.Invoke(this, new ItemEventArgs(index));
 							node = new LinkedListNode<int>(index);
 						}
 
@@ -1440,8 +1438,9 @@ namespace Dependiator.Utils.UI.VirtualCanvas
 					if (container == null
 						|| (!container.IsMouseCaptureWithin && !container.IsKeyboardFocusWithin))
 					{
-						VirtualizeItem(index);
+						VirtualizeItem(index);						
 						RealizedItems.Remove(node);
+						ItemVirtualized?.Invoke(this, new ItemEventArgs(index));
 					}
 
 					// Yield control for throttling.

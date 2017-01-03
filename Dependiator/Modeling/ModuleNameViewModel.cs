@@ -21,7 +21,7 @@ namespace Dependiator.Modeling
 		{
 			get
 			{
-				int fontSize = (int)(12 * moduleName.Scale);
+				int fontSize = (int)(12 * moduleName.ParentNode.Scale);
 				fontSize = Math.Max(8, fontSize);
 				return Math.Min(20, fontSize);
 			} 
