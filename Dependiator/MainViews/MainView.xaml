@@ -95,59 +95,24 @@
 						<EventSetter Event="MouseLeave" Handler="MouseLeaving" />
 
 						<!-- Style for list items (selected/hoover) -->
-						<Setter Property="Template">
-							<Setter.Value>
-								<ControlTemplate TargetType="ListBoxItem">
-									<Border
-										Name="ItemBorder"
-										CornerRadius="0"
-										BorderBrush="{x:Null}"
-										BorderThickness="1"
-										Margin="0"
-										Background="{x:Null}">
-										<ContentPresenter />
-									</Border>
-									<ControlTemplate.Triggers>
-										<Trigger Property="IsSelected" Value="True">
-											<Setter
-												TargetName="ItemBorder"
-												Property="BorderBrush"
-												Value="{DynamicResource SelectedItemBorderBrush}" />
-											<Setter
-												TargetName="ItemBorder"
-												Property="Background"
-												Value="{x:Null}" />
-										</Trigger>
-										<MultiTrigger>
-											<MultiTrigger.Conditions>
-												<Condition Property="IsMouseOver" Value="True" />
-												<Condition Property="IsSelected" Value="False" />
-											</MultiTrigger.Conditions>
-											<Setter
-												TargetName="ItemBorder"
-												Property="BorderBrush"
-												Value="{Binding HoverBrush}" />
-										</MultiTrigger>
-									</ControlTemplate.Triggers>
-								</ControlTemplate>
-							</Setter.Value>
-						</Setter>
-						<Style.Triggers>
+						<Setter Property="Template" Value="{StaticResource ListBoxItemControlTemplate}" />
 
+						<Style.Triggers>
 
 							<!-- Module  -->
 							<DataTrigger Binding="{Binding Type}" Value="ModuleViewModel">
+								<Setter Property="ContentTemplate" Value="{StaticResource ModuleViewTemplate}" />
 								<Setter Property="IsEnabled" Value="true" />
 								<Setter Property="Focusable" Value="False" />
 								<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
-								<Setter Property="ContentTemplate" Value="{StaticResource ModuleViewTemplate}" />
 							</DataTrigger>
 
+							<!-- ModuleName  -->
 							<DataTrigger Binding="{Binding Type}" Value="ModuleNameViewModel">
+								<Setter Property="ContentTemplate" Value="{StaticResource ModuleNameViewTemplate}" />
 								<Setter Property="IsEnabled" Value="false" />
 								<Setter Property="Focusable" Value="False" />
 								<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
-								<Setter Property="ContentTemplate" Value="{StaticResource ModuleNameViewTemplate}" />
 							</DataTrigger>
 
 						</Style.Triggers>
@@ -157,7 +122,6 @@
 				</ListBox.ItemContainerStyle>
 
 			</ListBox>
-
 
 		</Border>
 
