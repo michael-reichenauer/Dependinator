@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -10,8 +11,10 @@ namespace Dependiator.Modeling
 {
 	internal class Module : Node
 	{
-		private readonly INodeService nodeService;
+		static Random random = new Random(1234);
 
+		private readonly INodeService nodeService;
+		private readonly int nbrOfChildModules;
 
 		public Module(
 			INodeService nodeService,
@@ -21,8 +24,11 @@ namespace Dependiator.Modeling
 			: base(nodeService, parent)
 		{
 			this.nodeService = nodeService;
+			nbrOfChildModules = random.Next(0, 20);
 
-			ActualNodeBounds = new Rect(position, new Size(100, 50));
+			ActualNodeBounds = new Rect(position, new Size(100, 60));
+
+			NodeScaleFactor = 7;
 
 			Name = new ModuleName(nodeService, name, this);
 			AddChildNode(Name);
@@ -45,7 +51,7 @@ namespace Dependiator.Modeling
 
 		public override bool CanBeShown()
 		{
-			return ViewNodeSize.Width > 40 && (ParentNode?.ItemBounds.Contains(ItemBounds) ?? true);
+			return ViewNodeSize.Width > 20 && (ParentNode?.ItemBounds.Contains(ItemBounds) ?? true);
 		}
 
 		public override void ItemRealized()
@@ -62,6 +68,14 @@ namespace Dependiator.Modeling
 			}
 		}
 
+
+		public override void ChangedScale()
+		{
+			
+			base.ChangedScale();
+		}
+
+
 		public override void ItemVirtualized()
 		{
 			if (IsRealized)
@@ -75,14 +89,22 @@ namespace Dependiator.Modeling
 
 
 		private void AddModuleChildren()
-		{
-			int total = 4;
-
+		{		
+			int total = 5;
+			int count = 0;
 			for (int y = 0; y < total - 1; y++)
 			{
 				for (int x = 0; x < total; x++)
 				{
-					AddChildNode(new Module(nodeService, $"Name {x},{y}", new Point(x * 150 + 10, y * 70 + 70), this));
+					AddChildNode(new Module(
+						nodeService, 
+						$"Name {x},{y}",
+						new Point(x * 130 + 30, y * 70 + 100), this));
+
+					if (count++ > nbrOfChildModules)
+					{
+						return;
+					}
 				}
 			}
 		}

@@ -5,13 +5,20 @@
 	<DataTemplate x:Key="ModuleViewTemplate">
 		<Grid>
 			<Rectangle
-													Width="{Binding RectangleWidth}"
-													Height="{Binding RectangleHeight}"
-													Fill="Transparent"
-													Stroke="{Binding RectangleBrush}"
-													StrokeThickness="{Binding StrokeThickness}" />
+				Width="{Binding RectangleWidth}"
+				Height="{Binding RectangleHeight}"
+				Fill="Transparent"
+				Stroke="{Binding RectangleBrush}"
+				StrokeThickness="{Binding StrokeThickness}"/>
 
+			<Grid.ToolTip>
+				<ToolTip
+					Content="{Binding ToolTip}"
+					Placement="Mouse"
+					BorderBrush="{Binding RectangleBrush}"
+					BorderThickness="1" />
+			</Grid.ToolTip>
 		</Grid>
 	</DataTemplate>
-	
+
 </ResourceDictionary>

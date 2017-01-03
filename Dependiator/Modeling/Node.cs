@@ -9,8 +9,6 @@ namespace Dependiator.Modeling
 {
 	internal abstract class Node : Item
 	{
-		public static readonly int NodeScaleFactor = 5;
-
 		private Node parentNode;
 		private readonly List<Node> childNodes = new List<Node>();
 		private Rect actualNodeBounds;
@@ -26,8 +24,10 @@ namespace Dependiator.Modeling
 
 		public int NodeLevel => ParentNode?.NodeLevel + 1 ?? 0;
 
+		public double NodeScaleFactor { get; set; } = 7;
 
 		public double Scale => nodeService.Scale;
+		public double ViewScale => Scale * NodeScale;
 
 		public double NodeScale
 		{

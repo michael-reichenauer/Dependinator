@@ -15,6 +15,7 @@ namespace Dependiator.Modeling
 		}
 
 
+		public string ToolTip => module.Name.Name;
 		public int StrokeThickness => 1;
 		public double RectangleWidth => module.ItemBounds.Width * module.Scale - StrokeThickness * 2;
 		public double RectangleHeight => module.ItemBounds.Height * module.Scale - StrokeThickness * 2;

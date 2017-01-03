@@ -66,7 +66,7 @@ namespace Dependiator.MainViews.Private
 			Vector position = (Vector)viewPosition;
 			canvas.Offset = (Point)((Vector)(canvas.Offset + position) * zoom - position);
 
-			// Log.Debug($"Scroll {zoom}, scale {canvas.Scale}, offset {canvas.Offset}");
+			Log.Debug($"Scale: {canvas.Scale}");
 
 			TriggerScaleChanged();
 
