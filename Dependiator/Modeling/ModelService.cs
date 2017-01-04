@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
 using Dependiator.Common.ThemeHandling;
+using Dependiator.Modeling.Analyzing;
 using Dependiator.Utils;
 
 
@@ -9,17 +10,21 @@ namespace Dependiator.Modeling
 	[SingleInstance]
 	internal class ModelService : IModelService
 	{
+		private readonly IAnalyzerService analyzerService;
 		private readonly INodeService nodeService;
 
 		public ModelService(
+			IAnalyzerService analyzerService,
 			INodeService nodeService)
 		{
+			this.analyzerService = analyzerService;
 			this.nodeService = nodeService;
 		}
 
 
 		public void InitModules()
 		{
+			analyzerService.Analyze();
 			Timing t = new Timing();
 			nodeService.ShowNodes(GetNodes());
 			t.Log("Created modules");

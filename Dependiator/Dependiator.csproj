@@ -130,6 +130,8 @@
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
     <Compile Include="MainViews\Private\CanvasService.cs" />
     <Compile Include="MainViews\ICanvasService.cs" />
+    <Compile Include="Modeling\Analyzing\AnalyzerService.cs" />
+    <Compile Include="Modeling\Analyzing\IAnalyzerService.cs" />
     <Compile Include="Modeling\Node.cs" />
     <Compile Include="MainViews\ItemViewModel.cs" />
     <Compile Include="MainViews\Private\Item.cs" />
