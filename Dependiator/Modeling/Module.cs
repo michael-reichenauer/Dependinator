@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependiator.MainViews;
+using Dependiator.Modeling.Analyzing;
 using Dependiator.Utils;
 
 
@@ -11,26 +12,25 @@ namespace Dependiator.Modeling
 {
 	internal class Module : Node
 	{
-		static Random random = new Random(1234);
-
 		private readonly INodeService nodeService;
-		private readonly int nbrOfChildModules;
+		private readonly Element element;
+
 
 		public Module(
 			INodeService nodeService,
-			string name,
+			Element element,
 			Point position,
 			Module parent)		
 			: base(nodeService, parent)
 		{
 			this.nodeService = nodeService;
-			nbrOfChildModules = random.Next(0, 20);
+			this.element = element;
 
 			ActualNodeBounds = new Rect(position, new Size(100, 60));
 
 			NodeScaleFactor = 7;
 
-			Name = new ModuleName(nodeService, name, this);
+			Name = new ModuleName(nodeService, element.Name, this);
 			AddChildNode(Name);
 	
 			//AddModuleChildren();			
@@ -41,6 +41,8 @@ namespace Dependiator.Modeling
 		public override ItemViewModel ViewModelFactory() => new ModuleViewModel(this);
 		
 		public ModuleName Name { get; }
+
+		public string FullName => element.FullName;
 
 
 
@@ -89,23 +91,16 @@ namespace Dependiator.Modeling
 
 
 		private void AddModuleChildren()
-		{		
-			int total = 5;
+		{
 			int count = 0;
-			for (int y = 0; y < total - 1; y++)
+			foreach (Element childElement in element.ChildElements)
 			{
-				for (int x = 0; x < total; x++)
-				{
-					AddChildNode(new Module(
-						nodeService, 
-						$"Name {x},{y}",
-						new Point(x * 130 + 30, y * 70 + 100), this));
+				int x = count % 5;
+				int y = count / 5;
 
-					if (count++ > nbrOfChildModules)
-					{
-						return;
-					}
-				}
+				Module module = new Module(nodeService, childElement, new Point(x * 130 + 30, y * 70 + 100), this);
+				AddChildNode(module);
+				count++;
 			}
 		}
 

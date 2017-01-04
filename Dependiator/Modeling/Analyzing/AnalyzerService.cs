@@ -8,6 +8,10 @@ namespace Dependiator.Modeling.Analyzing
 {
 	internal class AnalyzerService : IAnalyzerService
 	{
+		internal const BindingFlags DeclaredOnlyFlags =
+			BindingFlags.Public | BindingFlags.NonPublic
+			| BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
+
 		private static readonly char[] DotSeparator = ".".ToCharArray();
 
 
@@ -42,8 +46,30 @@ namespace Dependiator.Modeling.Analyzing
 					nameSpace = CreateNameSpaceElement(nameSpaceFullName, nameSpaces);
 				}
 
-				TypeElement type = new TypeElement(typeInfo.Name, typeInfo.FullName);
-				nameSpace.AddChild(type);
+				if (typeInfo.Name.IndexOf("<") == -1)
+				{
+					TypeElement type = new TypeElement(typeInfo.Name, typeInfo.FullName);
+					nameSpace.AddChild(type);
+
+					AddMembers(typeInfo, type);
+				}
+				
+			}
+		}
+
+
+		private void AddMembers(TypeInfo typeInfo, TypeElement type)
+		{
+			foreach (MemberInfo memberInfo in typeInfo.GetMembers(DeclaredOnlyFlags))
+			{
+				string name = memberInfo.Name;
+
+					string fullName = memberInfo.DeclaringType != null 
+					? memberInfo.DeclaringType.FullName + "."  + name
+					: name;
+
+					MemberElement member= new MemberElement(name, fullName);
+					type.AddChild(member);			
 			}
 		}
 

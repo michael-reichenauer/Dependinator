@@ -24,26 +24,27 @@ namespace Dependiator.Modeling
 
 		public void InitModules()
 		{
-			analyzerService.Analyze();
+			ElementTree elementTree = analyzerService.Analyze();
 			Timing t = new Timing();
-			nodeService.ShowNodes(GetNodes());
+			IEnumerable<Node> enumerable = GetNodes(elementTree);
+
+			nodeService.ShowNodes(enumerable);
 			t.Log("Created modules");
 		}
 
 
-		private IEnumerable<Node> GetNodes()
+		private IEnumerable<Node> GetNodes(ElementTree elementTree)
 		{
-			int total = 20;
-
-			for (int y = 0; y < total; y++)
+			int count = 0;
+			foreach (Element element in elementTree.Root.ChildElements)
 			{
-				for (int x = 0; x < total; x++)
-				{
-					Module module = new Module(nodeService, $"Name {x},{y}", new Point(x * 200, y * 200), null);
-					nodeService.AddRootNode(module);
+				int x = count % 10;
+				int y = count / 10;
 
-					yield return module;
-				}
+				Module module = new Module(nodeService, element, new Point(x * 150 + 30, y * 100 + 30), null);
+				nodeService.AddRootNode(module);
+				yield return module;
+				count++;
 			}
 		}
 	}
