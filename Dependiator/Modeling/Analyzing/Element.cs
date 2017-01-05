@@ -25,6 +25,55 @@ namespace Dependiator.Modeling.Analyzing
 
 		public IEnumerable<Element> ChildElements => childElements;
 
+		public IEnumerable<Reference> SourceReferences => references.Where(r => r.Source == this);
+		public IEnumerable<Reference> TargetReferences => references.Where(r => r.Target == this);
+
+
+		public IEnumerable<Reference> DescendentAndSelfSourceReferences()
+		{
+			foreach (Element element in DescendentsAndSelfElements())
+			{
+				foreach (Reference reference in element.SourceReferences)
+				{
+					yield return reference;
+				}
+			}
+		}
+
+		public IEnumerable<Reference> DescendentAndSelfTargetReferences()
+		{
+			foreach (Element element in DescendentsAndSelfElements())
+			{
+				foreach (Reference reference in element.TargetReferences)
+				{
+					yield return reference;
+				}
+			}
+		}
+
+
+		public IEnumerable<Element> DescendentsAndSelfElements()
+		{
+			yield return this;
+			foreach (Element descendent in DescendentElements())
+			{		
+				yield return descendent;
+				
+			}
+		}
+
+		public IEnumerable<Element> DescendentElements()
+		{
+			foreach (Element child in ChildElements)
+			{
+				yield return child;
+				foreach (Element descendent in child.DescendentElements())
+				{
+					yield return descendent;
+				}
+			}
+		} 
+
 
 		public void AddChild(Element child)
 		{
@@ -49,6 +98,7 @@ namespace Dependiator.Modeling.Analyzing
 
 			references.Add(reference);
 		}
+
 
 
 		public override string ToString() => FullName;

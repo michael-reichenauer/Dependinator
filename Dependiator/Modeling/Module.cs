@@ -40,7 +40,8 @@ namespace Dependiator.Modeling
 
 		public string Name => element.Name;
 
-		public string FullName => element.FullName + $" ({Children.Count()}) Level; {NodeLevel} Scale: {NodeScale} ";
+		public string FullName => 
+			element.FullName + $" children: {Children.Count()}, decedents: {element.DescendentElements().Count()}  ";
 
 
 
