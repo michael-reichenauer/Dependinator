@@ -6,8 +6,8 @@ namespace Dependiator.Modeling.Analyzing
 {
 	internal class TypeElement : Element
 	{
-		public TypeElement(string name, string fullName)
-			: base(name, fullName)
+		public TypeElement(string name, string fullName, Element element)
+			: base(name, fullName, element)
 		{
 		}
 

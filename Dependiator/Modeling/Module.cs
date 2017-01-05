@@ -40,8 +40,10 @@ namespace Dependiator.Modeling
 
 		public string Name => element.Name;
 
-		public string FullName => 
-			element.FullName + $" children: {Children.Count()}, decedents: {element.DescendentElements().Count()}  ";
+		public string FullName => element.FullName +
+			$"\nchildren: {Children.Count()}, decedents: {element.DescendentElements().Count()}\n" +
+			$"SourceRefs {element.DescendentAndSelfSourceReferences().Count()} " +
+			$"TargetRefs {element.DescendentAndSelfTargetReferences().Count()}";
 
 
 

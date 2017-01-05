@@ -14,12 +14,16 @@ namespace Dependiator.Modeling.Analyzing
 
 		public string Name { get; }
 		public string FullName { get; }
+		public string DeclaringName => ParentElement?.FullName ?? "";
+
+		public Element ParentElement { get; }
 
 
-		public Element(string name, string fullName)
+		public Element(string name, string fullName, Element parentElement)
 		{
 			Name = name;
 			FullName = fullName;
+			ParentElement = parentElement;
 		}
 
 
@@ -98,8 +102,6 @@ namespace Dependiator.Modeling.Analyzing
 
 			references.Add(reference);
 		}
-
-
 
 		public override string ToString() => FullName;
 	}

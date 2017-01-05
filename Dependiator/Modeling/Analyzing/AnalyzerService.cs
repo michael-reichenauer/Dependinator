@@ -46,7 +46,7 @@ namespace Dependiator.Modeling.Analyzing
 				}
 
 				NameSpaceElement nameSpace = GetOrAddNameSpaceElement(nameSpaces, typeInfo.Namespace);
-				TypeElement typeElement = new TypeElement(typeInfo.Name, typeInfo.FullName);
+				TypeElement typeElement = new TypeElement(typeInfo.Name, typeInfo.FullName, nameSpace);
 				nameSpace.AddChild(typeElement);
 
 				AddMembers(typeInfo, typeElement, nameSpaces);
@@ -85,7 +85,7 @@ namespace Dependiator.Modeling.Analyzing
 
 				string fullName = GetFullName(memberInfo);
 
-				MemberElement memberElement = new MemberElement(name, fullName);
+				MemberElement memberElement = new MemberElement(name, fullName, typeElement);
 				typeElement.AddChild(memberElement);
 
 				AddReferences(memberInfo, memberElement, nameSpaces);
@@ -155,35 +155,36 @@ namespace Dependiator.Modeling.Analyzing
 
 
 		private void AddReferencedTypes(
-			Type type,
-			Element memberElement,
+			Type targetType,
+			Element sourceElement,
 			Dictionary<string, NameSpaceElement> nameSpaces)
 		{
-			if (type == typeof(void) || type == null)
+			if (targetType == typeof(void) || targetType == null)
 			{
 				// For method return values, the type is void, and e.g. interfaces do not have base type
 				return;
 			}
 
-			if (type.Namespace != null
-			    && (type.Namespace.StartsWith("System", StringComparison.Ordinal)
-			        || type.Namespace.StartsWith("Microsoft", StringComparison.Ordinal)))
+			if (targetType.Namespace != null
+			    && (targetType.Namespace.StartsWith("System", StringComparison.Ordinal)
+			        || targetType.Namespace.StartsWith("Microsoft", StringComparison.Ordinal)))
 			{
 				// Ignore "System" and "Microsoft" namespaces for now
 				return;
 			}
 
-			NameSpaceElement nameSpace = GetOrAddNameSpaceElement(nameSpaces, type.Namespace);
+			NameSpaceElement nameSpace = GetOrAddNameSpaceElement(nameSpaces, targetType.Namespace);
 
-			TypeElement typeElement = GetOrAddTypeElement(nameSpace, type);
+			TypeElement targetElement = GetOrAddTypeElement(nameSpace, targetType);
 
-			Reference reference = new Reference(memberElement, typeElement);
-			typeElement.AddReference(reference);
+			Reference reference = new Reference(sourceElement, targetElement);
+			sourceElement.AddReference(reference);
+			targetElement.AddReference(reference);
 
-			if (type.IsGenericType)
+			if (targetType.IsGenericType)
 			{
-				type.GetGenericArguments()
-					.ForEach(argType => AddReferencedTypes(argType, memberElement, nameSpaces));
+				targetType.GetGenericArguments()
+					.ForEach(argType => AddReferencedTypes(argType, sourceElement, nameSpaces));
 			}
 		}
 
@@ -194,7 +195,7 @@ namespace Dependiator.Modeling.Analyzing
 
 			if (typeElement == null)
 			{
-				typeElement = new TypeElement(type.Name, type.FullName);
+				typeElement = new TypeElement(type.Name, type.FullName, nameSpace);
 				nameSpace.AddChild(typeElement);
 			}
 
@@ -229,7 +230,7 @@ namespace Dependiator.Modeling.Analyzing
 				if (!nameSpaces.TryGetValue(fullName, out NameSpaceElement nameSpace))
 				{
 					string name = GetNameSpaceNamePart(fullName);
-					nameSpace = new NameSpaceElement(name, fullName);
+					nameSpace = new NameSpaceElement(name, fullName, baseNameSpace);
 
 					baseNameSpace.AddChild(nameSpace);
 					nameSpaces[fullName] = nameSpace;
@@ -288,19 +289,5 @@ namespace Dependiator.Modeling.Analyzing
 
 			return nameSpaceFullName.Substring(index + 1);
 		}
-	}
-
-
-	internal class Reference
-	{
-		public Reference(Element source, Element target)
-		{
-			Source = source;
-			Target = target;
-		}
-
-
-		public Element Source { get; }
-		public Element Target { get; }
 	}
 }

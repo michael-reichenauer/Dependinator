@@ -6,8 +6,8 @@ namespace Dependiator.Modeling.Analyzing
 {
 	internal class NameSpaceElement : Element
 	{
-		public NameSpaceElement(string name, string fullName)
-			: base(name, fullName)
+		public NameSpaceElement(string name, string fullName, NameSpaceElement parentElement)
+			: base(name, fullName, parentElement)
 		{
 		}
 

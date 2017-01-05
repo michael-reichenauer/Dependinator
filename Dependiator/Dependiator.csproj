@@ -136,6 +136,7 @@
     <Compile Include="Modeling\Analyzing\IAnalyzerService.cs" />
     <Compile Include="Modeling\Analyzing\MemberElement.cs" />
     <Compile Include="Modeling\Analyzing\NameSpaceElement.cs" />
+    <Compile Include="Modeling\Analyzing\Reference.cs" />
     <Compile Include="Modeling\Analyzing\TypeElement.cs" />
     <Compile Include="Modeling\Node.cs" />
     <Compile Include="MainViews\ItemViewModel.cs" />
