@@ -131,7 +131,12 @@
     <Compile Include="MainViews\Private\CanvasService.cs" />
     <Compile Include="MainViews\ICanvasService.cs" />
     <Compile Include="Modeling\Analyzing\AnalyzerService.cs" />
+    <Compile Include="Modeling\Analyzing\Element.cs" />
+    <Compile Include="Modeling\Analyzing\ElementTree.cs" />
     <Compile Include="Modeling\Analyzing\IAnalyzerService.cs" />
+    <Compile Include="Modeling\Analyzing\MemberElement.cs" />
+    <Compile Include="Modeling\Analyzing\NameSpaceElement.cs" />
+    <Compile Include="Modeling\Analyzing\TypeElement.cs" />
     <Compile Include="Modeling\Node.cs" />
     <Compile Include="MainViews\ItemViewModel.cs" />
     <Compile Include="MainViews\Private\Item.cs" />
