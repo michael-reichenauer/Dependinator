@@ -3,22 +3,39 @@
                     xmlns:local="clr-namespace:Dependiator.Modeling">
 
 	<DataTemplate x:Key="ModuleViewTemplate">
-		<Grid>
-			<Rectangle
-				Width="{Binding RectangleWidth}"
-				Height="{Binding RectangleHeight}"
-				Fill="Transparent"
-				Stroke="{Binding RectangleBrush}"
-				StrokeThickness="{Binding StrokeThickness}"/>
 
-			<Grid.ToolTip>
-				<ToolTip
-					Content="{Binding ToolTip}"
-					Placement="Mouse"
-					BorderBrush="{Binding RectangleBrush}"
-					BorderThickness="1" />
-			</Grid.ToolTip>
-		</Grid>
+		<Border BorderBrush="{Binding RectangleBrush}" BorderThickness="1">
+			<Grid Background="Transparent">
+
+				<Grid.RowDefinitions>
+					<!-- Title -->
+					<RowDefinition Height="Auto" />
+
+					<!-- Sub modules -->
+					<RowDefinition Height="*" />
+
+				</Grid.RowDefinitions>
+
+				<!-- Title -->
+				<Grid Grid.Row="0" Background="Transparent">
+					<TextBlock
+
+						Text="{Binding Name}"
+						Foreground="{DynamicResource TextBrush}"
+						FontSize="{Binding FontSize}"
+						HorizontalAlignment="Center"
+						VerticalAlignment="Top" />
+
+					<Grid.ToolTip>
+						<ToolTip
+							Content="{Binding ToolTip}"
+							Placement="Mouse"
+							BorderBrush="{Binding RectangleBrush}"
+							BorderThickness="1" />
+					</Grid.ToolTip>
+				</Grid>
+			</Grid>
+		</Border>
 	</DataTemplate>
 
 </ResourceDictionary>

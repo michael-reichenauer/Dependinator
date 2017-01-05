@@ -67,7 +67,7 @@ namespace Dependiator.Modeling
 			set
 			{
 				actualNodeBounds = value;
-				actualNodeBounds.Scale(NodeScale, NodeScale);
+				
 				SetItemBounds();
 			}
 		}
@@ -163,11 +163,14 @@ namespace Dependiator.Modeling
 		{
 			if (ParentNode != null)
 			{
+				Rect bounds = actualNodeBounds;
+				bounds.Scale(NodeScale, NodeScale);
+
 				ItemBounds = new Rect(
-					ParentNode.ItemBounds.X + (actualNodeBounds.X),
-					ParentNode.ItemBounds.Y + (actualNodeBounds.Y),
-					actualNodeBounds.Width,
-					actualNodeBounds.Height);
+					ParentNode.ItemBounds.X + (bounds.X),
+					ParentNode.ItemBounds.Y + (bounds.Y),
+					bounds.Width,
+					bounds.Height);
 			}
 			else
 			{

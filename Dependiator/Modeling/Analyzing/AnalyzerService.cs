@@ -46,14 +46,13 @@ namespace Dependiator.Modeling.Analyzing
 					nameSpace = CreateNameSpaceElement(nameSpaceFullName, nameSpaces);
 				}
 
-				if (typeInfo.Name.IndexOf("<") == -1)
+				if (!IsCompilerGenerated(typeInfo))
 				{
 					TypeElement type = new TypeElement(typeInfo.Name, typeInfo.FullName);
 					nameSpace.AddChild(type);
 
 					AddMembers(typeInfo, type);
-				}
-				
+				}	
 			}
 		}
 
@@ -64,9 +63,7 @@ namespace Dependiator.Modeling.Analyzing
 			{
 				string name = memberInfo.Name;
 
-					string fullName = memberInfo.DeclaringType != null 
-					? memberInfo.DeclaringType.FullName + "."  + name
-					: name;
+					string fullName = GetFullName(memberInfo);
 
 					MemberElement member= new MemberElement(name, fullName);
 					type.AddChild(member);			
@@ -96,6 +93,20 @@ namespace Dependiator.Modeling.Analyzing
 			}
 
 			return baseNameSpace;
+		}
+
+
+		private static string GetFullName(MemberInfo memberInfo)
+		{
+			return memberInfo.DeclaringType != null 
+				? memberInfo.DeclaringType.FullName + "."  + memberInfo.Name
+				: memberInfo.Name;
+		}
+
+
+		private static bool IsCompilerGenerated(TypeInfo typeInfo)
+		{
+			return typeInfo.Name.IndexOf("<", StringComparison.Ordinal) != -1;
 		}
 
 

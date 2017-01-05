@@ -1,3 +1,4 @@
+using System;
 using System.Windows.Media;
 using Dependiator.MainViews;
 
@@ -22,7 +23,18 @@ namespace Dependiator.Modeling
 		public Brush RectangleBrush => module.RectangleBrush;
 		public Brush HoverBrush => module.RectangleBrush;
 
+		public string Name => module.ViewNodeSize.Width > 40 ? module.Name : " ";
 
+
+		public int FontSize
+		{
+			get
+			{
+				int fontSize = (int)(12 * module.Scale * module.NodeScale);
+				fontSize = Math.Max(8, fontSize);
+				return Math.Min(20, fontSize);
+			}
+		}
 
 
 		//public string Id => Branch.Id;
