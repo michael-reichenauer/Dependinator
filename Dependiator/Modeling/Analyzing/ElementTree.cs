@@ -5,18 +5,11 @@ namespace Dependiator.Modeling.Analyzing
 {
 	internal class ElementTree
 	{
-		public NameSpaceElement Root { get; } = new NameSpaceElement("", "", null);
-
-
-		public void AddChild(Element child)
+		public ElementTree(NameSpaceElement root)
 		{
-			Root.AddChild(child);
+			Root = root;
 		}
 
-
-		public void AddChildren(IEnumerable<Element> children)
-		{
-			Root.AddChildren(children);
-		}
+		public NameSpaceElement Root { get; } 
 	}
 }

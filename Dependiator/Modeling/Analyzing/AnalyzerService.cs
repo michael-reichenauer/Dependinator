@@ -8,6 +8,7 @@ namespace Dependiator.Modeling.Analyzing
 {
 	internal class AnalyzerService : IAnalyzerService
 	{
+		private readonly IElementFactory elementFactory;
 		internal const BindingFlags DeclaredOnlyFlags =
 			BindingFlags.Public | BindingFlags.NonPublic
 			| BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
@@ -15,9 +16,15 @@ namespace Dependiator.Modeling.Analyzing
 		private static readonly char[] DotSeparator = ".".ToCharArray();
 
 
+		public AnalyzerService(IElementFactory elementFactory)
+		{
+			this.elementFactory = elementFactory;
+		}
+
 		public ElementTree Analyze()
 		{
-			ElementTree tree = new ElementTree();
+			NameSpaceElement root = elementFactory.CreateNameSpace(new ElementName("", ""), null);
+			ElementTree tree = new ElementTree(root);
 			string location = Assembly.GetExecutingAssembly().Location;
 
 			Assembly assembly = Assembly.ReflectionOnlyLoadFrom(location);
@@ -25,7 +32,7 @@ namespace Dependiator.Modeling.Analyzing
 			IReadOnlyList<TypeInfo> typeInfos = assembly.DefinedTypes.ToList();
 
 			Dictionary<string, NameSpaceElement> nameSpaces = new Dictionary<string, NameSpaceElement>();
-			nameSpaces[tree.Root.FullName] = tree.Root;
+			nameSpaces[tree.Root.Name.FullName] = tree.Root;
 
 			AddTypes(typeInfos, nameSpaces);
 
@@ -46,8 +53,9 @@ namespace Dependiator.Modeling.Analyzing
 				}
 
 				NameSpaceElement nameSpace = GetOrAddNameSpaceElement(nameSpaces, typeInfo.Namespace);
-				TypeElement typeElement = new TypeElement(typeInfo.Name, typeInfo.FullName, nameSpace);
-				nameSpace.AddChild(typeElement);
+				ElementName name = new ElementName(typeInfo.Name, typeInfo.FullName);
+				TypeElement typeElement = elementFactory.CreateType(name, nameSpace);
+				nameSpace.Children.Add(typeElement);
 
 				AddMembers(typeInfo, typeElement, nameSpaces);
 
@@ -82,11 +90,10 @@ namespace Dependiator.Modeling.Analyzing
 			foreach (MemberInfo memberInfo in memberInfos)
 			{
 				string name = memberInfo.Name;
-
 				string fullName = GetFullName(memberInfo);
-
-				MemberElement memberElement = new MemberElement(name, fullName, typeElement);
-				typeElement.AddChild(memberElement);
+				ElementName elementName = new ElementName(name, fullName);
+				MemberElement memberElement = elementFactory.CreateMember(elementName, typeElement);
+				typeElement.Children.Add(memberElement);
 
 				AddReferences(memberInfo, memberElement, nameSpaces);
 			}
@@ -178,8 +185,8 @@ namespace Dependiator.Modeling.Analyzing
 			TypeElement targetElement = GetOrAddTypeElement(nameSpace, targetType);
 
 			Reference reference = new Reference(sourceElement, targetElement);
-			sourceElement.AddReference(reference);
-			targetElement.AddReference(reference);
+			sourceElement.References.AddReference(reference);
+			targetElement.References.AddReference(reference);
 
 			if (targetType.IsGenericType)
 			{
@@ -191,12 +198,13 @@ namespace Dependiator.Modeling.Analyzing
 
 		private TypeElement GetOrAddTypeElement(NameSpaceElement nameSpace, Type type)
 		{
-			TypeElement typeElement = nameSpace.Types.FirstOrDefault(t => t.Name == type.Name);
+			TypeElement typeElement = nameSpace.Types.FirstOrDefault(t => t.Name.Name == type.Name);
 
 			if (typeElement == null)
 			{
-				typeElement = new TypeElement(type.Name, type.FullName, nameSpace);
-				nameSpace.AddChild(typeElement);
+				ElementName name = new ElementName(type.Name, type.FullName);
+				typeElement = elementFactory.CreateType(name, nameSpace);
+				nameSpace.Children.Add(typeElement);
 			}
 
 			return typeElement;
@@ -230,9 +238,10 @@ namespace Dependiator.Modeling.Analyzing
 				if (!nameSpaces.TryGetValue(fullName, out NameSpaceElement nameSpace))
 				{
 					string name = GetNameSpaceNamePart(fullName);
-					nameSpace = new NameSpaceElement(name, fullName, baseNameSpace);
+					ElementName elementName = new ElementName(name, fullName);
+					nameSpace = elementFactory.CreateNameSpace(elementName, baseNameSpace);
 
-					baseNameSpace.AddChild(nameSpace);
+					baseNameSpace.Children.Add(nameSpace);
 					nameSpaces[fullName] = nameSpace;
 				}
 

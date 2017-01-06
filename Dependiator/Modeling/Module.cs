@@ -6,6 +6,7 @@ using System.Windows.Media;
 using Dependiator.MainViews;
 using Dependiator.Modeling.Analyzing;
 using Dependiator.Utils;
+using Dependiator.Utils.UI;
 
 
 namespace Dependiator.Modeling
@@ -34,16 +35,18 @@ namespace Dependiator.Modeling
 			//AddModuleChildren();			
 
 			RectangleBrush = nodeService.GetNextBrush();
+			ViewModel = new ModuleViewModel(this);
 		}
 
-		public override ItemViewModel ViewModelFactory() => new ModuleViewModel(this);
+		public override ViewModel ViewModel { get; }
 
-		public string Name => element.Name;
 
-		public string FullName => element.FullName +
-			$"\nchildren: {Children.Count()}, decedents: {element.DescendentElements().Count()}\n" +
-			$"SourceRefs {element.DescendentAndSelfSourceReferences().Count()} " +
-			$"TargetRefs {element.DescendentAndSelfTargetReferences().Count()}";
+		public string Name => element.Name.Name;
+
+		public string FullName => element.Name.FullName +
+			$"\nchildren: {Children.Count()}, decedents: {element.Children.Descendents().Count()}\n" +
+			$"SourceRefs {element.References.DescendentAndSelfSourceReferences().Count()} " +
+			$"TargetRefs {element.References.DescendentAndSelfTargetReferences().Count()}";
 
 
 
@@ -102,7 +105,7 @@ namespace Dependiator.Modeling
 
 			//size = new Size((parentSize.Width / NodeScale) * 0.8, (parentSize.Height / NodeScale) * 0.8);
 
-			int childCount = element.ChildElements.Count();
+			int childCount = element.Children.Count();
 
 			//int columnLength = 1;
 
@@ -198,7 +201,7 @@ namespace Dependiator.Modeling
 			//}
 
 			int count = 0;
-			foreach (Element childElement in element.ChildElements)
+			foreach (Element childElement in element.Children)
 			{
 				int x = count % rowLength;
 				int y = count / rowLength;

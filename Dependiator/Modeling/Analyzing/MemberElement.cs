@@ -2,8 +2,8 @@
 {
 	internal class MemberElement : Element
 	{
-		public MemberElement(string name, string fullName, Element parentElement)
-			: base(name, fullName, parentElement)
+		public MemberElement(ElementName name, TypeElement parent)
+			: base(name, parent)
 		{
 		}
 	}

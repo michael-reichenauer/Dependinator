@@ -36,7 +36,7 @@ namespace Dependiator.Modeling
 		private IEnumerable<Node> GetNodes(ElementTree elementTree)
 		{
 			int count = 0;
-			foreach (Element element in elementTree.Root.ChildElements)
+			foreach (Element element in elementTree.Root.Children)
 			{
 				int x = count % 10;
 				int y = count / 10;

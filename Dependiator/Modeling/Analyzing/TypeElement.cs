@@ -6,11 +6,11 @@ namespace Dependiator.Modeling.Analyzing
 {
 	internal class TypeElement : Element
 	{
-		public TypeElement(string name, string fullName, Element element)
-			: base(name, fullName, element)
+		public TypeElement(ElementName name, Element element)
+			: base(name, element)
 		{
 		}
 
-		public IEnumerable<MemberElement> TypeItems => ChildElements.OfType<MemberElement>();
+		public IEnumerable<MemberElement> TypeItems => Children.OfType<MemberElement>();
 	}
 }

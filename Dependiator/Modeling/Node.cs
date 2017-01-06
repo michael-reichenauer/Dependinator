@@ -2,19 +2,53 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using Dependiator.MainViews;
 using Dependiator.MainViews.Private;
+using Dependiator.Utils.UI;
 
 
 namespace Dependiator.Modeling
 {
-	internal abstract class Node : Item
+	internal abstract class Node : IItem
 	{
 		private Node parentNode;
 		private readonly List<Node> childNodes = new List<Node>();
 		private Rect actualNodeBounds;
 
 		private readonly INodeService nodeService;
+		
 
+		public object ItemState { get; set; }
+		public bool IsAdded => ItemState != null;
+		public abstract ViewModel ViewModel { get; }
+
+		public Rect ItemBounds { get; protected set; }
+		public int ZIndex { get; protected set; }
+		public double Priority { get; protected set; }
+
+		public bool IsRealized { get; private set; }
+
+
+
+		public void NotifyAll()
+		{
+			if (IsAdded)
+			{
+				ViewModel.NotifyAll();
+			}
+		}
+
+
+		public virtual void ItemRealized()
+		{
+			IsRealized = true;
+		}
+
+
+		public virtual void ItemVirtualized()
+		{
+			IsRealized = false;
+		}
 
 		protected Node(INodeService nodeService, Node parentNode)
 		{
@@ -198,7 +232,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public override void ChangedScale()
+		public virtual void ChangedScale()
 		{
 			bool canBeShown = CanBeShown();
 
@@ -218,8 +252,8 @@ namespace Dependiator.Modeling
 			}
 
 			if (IsAdded && IsRealized)
-			{	
-				base.ChangedScale();
+			{
+				NotifyAll();
 				
 				ChildNodes
 					.ForEach(node => node.ChangedScale());
