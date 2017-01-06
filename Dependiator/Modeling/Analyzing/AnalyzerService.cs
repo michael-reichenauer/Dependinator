@@ -184,7 +184,7 @@ namespace Dependiator.Modeling.Analyzing
 
 			TypeElement targetElement = GetOrAddTypeElement(nameSpace, targetType);
 
-			Reference reference = new Reference(sourceElement, targetElement);
+			Reference reference = new Reference(sourceElement, targetElement, ReferenceKind.Direkt);
 			sourceElement.References.AddReference(reference);
 			targetElement.References.AddReference(reference);
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Dependiator.MainViews.Private;
 
 
@@ -9,6 +10,28 @@ namespace Dependiator.Modeling.Analyzing
 		public ElementName Name { get; }
 
 		public Element Parent { get; }
+
+
+		public IEnumerable<Element> AncestorsAndSelf()
+		{
+			yield return this;
+
+			foreach (Element ancestor in Ancestors())
+			{			
+				yield return ancestor;
+			}
+		}
+
+		public IEnumerable<Element> Ancestors()
+		{
+			Element current = Parent;
+
+			while (current != null)
+			{
+				yield return current;
+				current = current.Parent;
+			}
+		}
 
 		public ElementChildren Children { get; }
 
