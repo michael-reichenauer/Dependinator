@@ -20,7 +20,7 @@ namespace Dependiator.Modeling
 			INodeService nodeService,
 			Element element,
 			Rect bounds,
-			Module parent)		
+			Module parent)
 			: base(nodeService, parent)
 		{
 			Element = element;
@@ -30,7 +30,7 @@ namespace Dependiator.Modeling
 
 			//Name = new ModuleName(nodeService, element.Name, this);
 			//AddChildNode(Name);
-	
+
 			//AddModuleChildren();			
 
 			RectangleBrush = nodeService.GetNextBrush();
@@ -46,10 +46,9 @@ namespace Dependiator.Modeling
 		public string Name => Element.Name.Name;
 
 		public string FullName => Element.Name.FullName +
-			$"\nchildren: {ChildModules.Count()}, decedents: {Element.Children.Descendents().Count()}\n" +
-			$"SourceRefs {Element.References.DescendentAndSelfSourceReferences().Count()} " +
-			$"TargetRefs {Element.References.DescendentAndSelfTargetReferences().Count()}";
-
+		                          $"\nchildren: {ChildModules.Count()}, decedents: {Element.Children.Descendents().Count()}\n" +
+		                          $"SourceRefs {Element.References.DescendentAndSelfSourceReferences().Count()} " +
+		                          $"TargetRefs {Element.References.DescendentAndSelfTargetReferences().Count()}";
 
 
 		public ModuleViewModel ModuleViewModel => ViewModel as ModuleViewModel;
@@ -59,10 +58,12 @@ namespace Dependiator.Modeling
 
 		public IEnumerable<Link> Links => ChildNodes.OfType<Link>();
 
+
 		public override bool CanBeShown()
 		{
 			return ViewNodeSize.Width > 20 && (ParentNode?.ItemBounds.Contains(ItemBounds) ?? true);
 		}
+
 
 		public override void ItemRealized()
 		{
@@ -72,7 +73,6 @@ namespace Dependiator.Modeling
 				if (!ChildModules.Any())
 				{
 					AddModuleChildren();
-					
 				}
 				if (!Links.Any())
 				{
@@ -87,7 +87,6 @@ namespace Dependiator.Modeling
 
 		public override void ChangedScale()
 		{
-			
 			base.ChangedScale();
 		}
 
@@ -104,7 +103,6 @@ namespace Dependiator.Modeling
 
 
 		public override string ToString() => Element.Name.FullName;
-		
 
 
 		private void AddModuleChildren()
@@ -125,7 +123,7 @@ namespace Dependiator.Modeling
 				int y = count / rowLength;
 
 				Point position = new Point(x * (size.Width + padding) + xMargin, y * (size.Height + padding) + yMargin);
-				
+
 				Rect bounds = new Rect(position, size);
 
 				Module module = new Module(nodeService, childElement, bounds, this);
@@ -137,61 +135,91 @@ namespace Dependiator.Modeling
 
 		private void AddReferences()
 		{
-			int count = Element.References.Count();
-
 			foreach (Reference reference in Element.References)
 			{
-				Reference childReference = reference.SubReferences
-					.FirstOrDefault(r => r.Kind == ReferenceKind.Child);
+				Node sourceNode;
+				Node targetNode;
+				double x1;
+				double y1;
+				double x2;
+				double y2;
 
-				if (childReference != null)
+				if (reference.SubReferences.Any(r => r.Kind == ReferenceKind.Child))
 				{
-					Node sourceNode = this;
-					Node targetNode = ChildModules.First(m => m.Element == reference.Target);
-
+					sourceNode = this;
+					targetNode = ChildModules.First(m => m.Element == reference.Target);
 					Rect targetRect = targetNode.RelativeNodeBounds;
-					double x1 = ActualNodeBounds.Width / 2;
-					double y1 = 0;
 
-					double x2 = targetRect.X + targetRect.Width / 2;
-					double y2 = targetRect.Y;
+					x1 = ActualNodeBounds.Width / 2;
+					y1 = 0;
+					x2 = targetRect.X + targetRect.Width / 2;
+					y2 = targetRect.Y;
+				}
+				else if (reference.Source != Element
+				         && reference.Target != Element
+				         && reference.SubReferences.Any(r => r.Kind == ReferenceKind.Sibling))
+				{
+					sourceNode = ChildModules.First(m => m.Element == reference.Source);
+					targetNode = ChildModules.First(m => m.Element == reference.Target);
+					Rect sourceRect = sourceNode.RelativeNodeBounds;
+					Rect targetRect = targetNode.RelativeNodeBounds;
 
-					Rect bounds;
-					Point source;
-					Point target;
-					if (x1 < x2)
-					{
-						source = new Point(0, 0);
-						target = new Point(x2 - x1, y2 - y1);
-						bounds = new Rect(new Point(x1, y1), new Size(target.X + 1, target.Y + 1));
-					}
-					else
-					{
-						source = new Point(x1 - x2, y1);
-						target = new Point(0, y2 - y1);
-						bounds = new Rect(new Point(x2, y1), new Size(x1 - x2 + 1, y2 - y1 + 1));
-					}
-
-					bounds.Scale(NodeScaleFactor, NodeScaleFactor);
-
-					Link link = new Link(nodeService, reference, bounds, source, target, this, sourceNode, targetNode);
-					AddChildNode(link);
+					x1 = sourceRect.X + sourceRect.Width / 2;
+					y1 = sourceRect.Y + sourceRect.Height;
+					x2 = targetRect.X + targetRect.Width / 2;
+					y2 = targetRect.Y;
+				}
+				else if (reference.SubReferences.Any(r => r.Kind == ReferenceKind.Parent))
+				{
+					sourceNode = ChildModules.First(m => m.Element == reference.Source);
+					targetNode = this;
+					Rect sourceRect = sourceNode.RelativeNodeBounds;
+					
+					x1 = sourceRect.X + sourceRect.Width / 2;
+					y1 = sourceRect.Y + sourceRect.Height;
+					x2 = ActualNodeBounds.Width / 2;
+					y2 = ActualNodeBounds.Height;
+				}
+				else
+				{
+					continue;
 				}
 
-				//if (reference.SubReferences.Any(r => r.Kind != ReferenceKind.Direkt))
-				//{
-				//	Rect rec = new Rect(
-				//		new Point(50, 10),
-				//		new Size(50, 50));
-				//	rec.Scale(NodeScaleFactor, NodeScaleFactor);
+				double x = Math.Min(x1, x2);
+				double y = Math.Min(y1, y2);
+				double width = Math.Abs(x2 - x1);
+				double height = Math.Abs(y2 - y1);
 
-				//	//Size size = new Size((ActualNodeBounds.Width - 20) * NodeScaleFactor, (ActualNodeBounds.Height - 20) * NodeScaleFactor);
-				//	//Point location = new Point(10 * NodeScaleFactor, 10 * NodeScaleFactor);
-				//	//Rect bounds = new Rect(location, size);
+				Point source;
+				Point target;
 
-				//	Link link = new Link(nodeService, reference, rec, new Point(0, 0), new Point(48, 48), this);
-				//	AddChildNode(link);
-				//}			
+				if (x1 <= x2 && y1 <= y2)
+				{
+					source = new Point(0, 0);
+					target = new Point(width, height);
+				}
+				else if (x1 <= x2 && y1 > y2)
+				{
+					source = new Point(0, height);
+					target = new Point(width, 0);
+				}
+				else if (x1 > x2 && y1 <= y2)
+				{
+					source = new Point(width, 0);
+					target = new Point(0, height);
+				}
+				else
+				{
+					source = new Point(width, height);
+					target = new Point(0, 0);
+				}
+
+				Rect bounds = new Rect(new Point(x, y), new Size(width + 1, height + 1));
+
+				bounds.Scale(NodeScaleFactor, NodeScaleFactor);
+
+				Link link = new Link(nodeService, reference, bounds, source, target, this, sourceNode, targetNode);
+				AddChildNode(link);
 			}
 		}
 	}
