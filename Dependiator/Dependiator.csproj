@@ -143,14 +143,14 @@
     <Compile Include="Modeling\Analyzing\Reference.cs" />
     <Compile Include="Modeling\Analyzing\References.cs" />
     <Compile Include="Modeling\Analyzing\TypeElement.cs" />
+    <Compile Include="Modeling\Link.cs" />
+    <Compile Include="Modeling\LinkViewModel.cs" />
     <Compile Include="Modeling\Node.cs" />
     <Compile Include="MainViews\ItemViewModel.cs" />
     <Compile Include="MainViews\Private\Item.cs" />
     <Compile Include="Modeling\INodeService.cs" />
     <Compile Include="Modeling\Module.cs" />
-    <Compile Include="Modeling\ModuleName.cs" />
     <Compile Include="MainViews\Private\Caching\BranchNameSurrogate.cs" />
-    <Compile Include="Modeling\ModuleNameViewModel.cs" />
     <Compile Include="Modeling\ModuleViewModel.cs" />
     <Compile Include="MainViews\Private\IMainViewVirtualItemsSource.cs" />
     <Compile Include="MainViews\Private\IItem.cs" />
@@ -292,7 +292,7 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Modeling\ModuleNameView.xaml">
+    <Page Include="Modeling\LinkView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

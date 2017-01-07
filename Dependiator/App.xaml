@@ -25,7 +25,7 @@
 				<ResourceDictionary Source="Styles\ListBoxItemControlTemplate.xaml"/>
 
 				<ResourceDictionary Source="Modeling\ModuleView.xaml"/>
-				<ResourceDictionary Source="Modeling\ModuleNameView.xaml"/>
+				<ResourceDictionary Source="Modeling\LinkView.xaml"/>
 
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>

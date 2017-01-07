@@ -14,7 +14,6 @@ namespace Dependiator.Modeling
 	internal class Module : Node
 	{
 		private readonly INodeService nodeService;
-		private readonly Element element;
 
 
 		public Module(
@@ -24,8 +23,8 @@ namespace Dependiator.Modeling
 			Module parent)		
 			: base(nodeService, parent)
 		{
+			Element = element;
 			this.nodeService = nodeService;
-			this.element = element;
 
 			ActualNodeBounds = bounds;
 
@@ -38,15 +37,18 @@ namespace Dependiator.Modeling
 			ViewModel = new ModuleViewModel(this);
 		}
 
+
+		public Element Element { get; }
+
 		public override ViewModel ViewModel { get; }
 
 
-		public string Name => element.Name.Name;
+		public string Name => Element.Name.Name;
 
-		public string FullName => element.Name.FullName +
-			$"\nchildren: {Children.Count()}, decedents: {element.Children.Descendents().Count()}\n" +
-			$"SourceRefs {element.References.DescendentAndSelfSourceReferences().Count()} " +
-			$"TargetRefs {element.References.DescendentAndSelfTargetReferences().Count()}";
+		public string FullName => Element.Name.FullName +
+			$"\nchildren: {Children.Count()}, decedents: {Element.Children.Descendents().Count()}\n" +
+			$"SourceRefs {Element.References.DescendentAndSelfSourceReferences().Count()} " +
+			$"TargetRefs {Element.References.DescendentAndSelfTargetReferences().Count()}";
 
 
 
@@ -54,6 +56,8 @@ namespace Dependiator.Modeling
 		public Brush RectangleBrush { get; }
 
 		public IEnumerable<Module> Children => ChildNodes.OfType<Module>();
+
+		public IEnumerable<Link> Links => ChildNodes.OfType<Link>();
 
 		public override bool CanBeShown()
 		{
@@ -67,10 +71,31 @@ namespace Dependiator.Modeling
 				base.ItemRealized();
 				if (!Children.Any())
 				{
-					AddModuleChildren();			
+					AddModuleChildren();
+					
+				}
+				if (!Links.Any())
+				{
+					AddReferences();
 				}
 
+
 				ShowChildren();
+			}
+		}
+
+
+		private void AddReferences()
+		{
+			foreach (Reference reference in Element.References)
+			{
+				if (reference.SubReferences.Any(r => r.Kind != ReferenceKind.Direkt))
+				{
+					Size size = new Size((ActualNodeBounds.Width - 100 / NodeScaleFactor) * NodeScaleFactor, (ActualNodeBounds.Height - 100 / NodeScaleFactor) * NodeScaleFactor);
+					Rect bounds = new Rect(new Point(50, 50), size);
+					Link link = new Link(nodeService, reference, bounds, this);
+					AddChildNode(link);
+				}			
 			}
 		}
 
@@ -105,7 +130,7 @@ namespace Dependiator.Modeling
 
 			//size = new Size((parentSize.Width / NodeScale) * 0.8, (parentSize.Height / NodeScale) * 0.8);
 
-			int childCount = element.Children.Count();
+			int childCount = Element.Children.Count();
 
 			//int columnLength = 1;
 
@@ -201,12 +226,12 @@ namespace Dependiator.Modeling
 			//}
 
 			int count = 0;
-			foreach (Element childElement in element.Children)
+			foreach (Element childElement in Element.Children)
 			{
 				int x = count % rowLength;
 				int y = count / rowLength;
 
-				Point position = new Point(x * (size.Width + 20) + 30, y * (size.Height + 20) + 160);
+				Point position = new Point(x * (size.Width + 20) + 50, y * (size.Height + 20) + 150);
 				
 				Rect bounds = new Rect(position, size);
 
@@ -214,15 +239,6 @@ namespace Dependiator.Modeling
 				AddChildNode(module);
 				count++;
 			}
-		}
-
-
-		private void RemoveModuleChildren()
-		{
-			foreach (var child in Children.ToList())
-			{
-				RemoveChildNode(child);
-			}			
 		}
 	}
 }

@@ -107,13 +107,13 @@
 								<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
 							</DataTrigger>
 
-							<!-- ModuleName  -->
-							<!--<DataTrigger Binding="{Binding Type}" Value="ModuleNameViewModel">
-								<Setter Property="ContentTemplate" Value="{StaticResource ModuleNameViewTemplate}" />
-								<Setter Property="IsEnabled" Value="false" />
+							<!-- Link  -->
+							<DataTrigger Binding="{Binding Type}" Value="LinkViewModel">
+								<Setter Property="ContentTemplate" Value="{StaticResource LinkViewTemplate}" />
+								<Setter Property="IsEnabled" Value="true" />
 								<Setter Property="Focusable" Value="False" />
 								<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
-							</DataTrigger>-->
+							</DataTrigger>
 
 						</Style.Triggers>
 

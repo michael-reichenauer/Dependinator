@@ -1,0 +1,27 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:Dependiator.Modeling">
+
+	<DataTemplate x:Key="LinkViewTemplate">
+
+		<Border BorderBrush="Beige" BorderThickness="0">
+		<Grid>
+			<Path
+				Data="{Binding Line}"
+				Stroke="{Binding LineBrush}"
+				StrokeThickness="{Binding StrokeThickness}"
+				StrokeDashArray="{Binding StrokeDash}" >
+
+				<Path.ToolTip>
+					<ToolTip
+							Content="{Binding ToolTip}"
+							Placement="Mouse"
+							BorderBrush="{Binding LineBrush}"
+							BorderThickness="1" />
+				</Path.ToolTip>
+			</Path>
+		</Grid>
+		</Border>
+
+	</DataTemplate>
+</ResourceDictionary>

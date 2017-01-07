@@ -41,7 +41,7 @@ namespace Dependiator.Modeling
 				int x = count % 10;
 				int y = count / 10;
 
-				Point position = new Point(x * 250 + 30, y * 150 + 30);
+				Point position = new Point(x * 250 + 30, y * 150 + 50);
 				Size size = new Size(200, 100);
 				Rect bounds = new Rect(position, size);
 				Module module = new Module(nodeService, element, bounds, null);

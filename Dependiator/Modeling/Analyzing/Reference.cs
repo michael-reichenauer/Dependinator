@@ -15,7 +15,7 @@ namespace Dependiator.Modeling.Analyzing
 
 	internal class Reference
 	{
-		List<Reference> subReferences = new List<Reference>();
+		private List<Reference> subReferences = new List<Reference>();
 
 		public Reference(Element source, Element target, ReferenceKind kind)
 		{
@@ -27,6 +27,8 @@ namespace Dependiator.Modeling.Analyzing
 		public Element Source { get; }
 
 		public Element Target { get; }
+
+		public IReadOnlyList<Reference> SubReferences => subReferences;
 
 		public ReferenceKind Kind { get; }
 
