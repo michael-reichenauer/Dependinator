@@ -105,6 +105,15 @@ namespace Dependiator.Modeling.Analyzing
 			MemberElement memberElement,
 			Dictionary<string, NameSpaceElement> nameSpaces)
 		{
+			if (
+					memberInfo.Name.StartsWith("get")
+				|| memberInfo.Name.StartsWith("set")
+				|| memberInfo.Name.StartsWith("add_")
+				|| memberInfo.Name.StartsWith("remove_"))
+			{
+
+			}
+
 			if (memberInfo is FieldInfo fieldInfo)
 			{
 				AddReferencedTypes(fieldInfo, memberElement, nameSpaces);
@@ -112,6 +121,10 @@ namespace Dependiator.Modeling.Analyzing
 			else if (memberInfo is PropertyInfo propertyInfo)
 			{
 				AddReferencedTypes(propertyInfo, memberElement, nameSpaces);
+			}
+			else if (memberInfo is EventInfo eventInfo)
+			{
+				AddReferencedTypes(eventInfo, memberElement, nameSpaces);
 			}
 			else if (memberInfo is MethodInfo methodInfo)
 			{
@@ -139,12 +152,34 @@ namespace Dependiator.Modeling.Analyzing
 			AddReferencedTypes(propertyType, memberElement, nameSpaces);
 		}
 
+		private void AddReferencedTypes(
+			EventInfo eventInfo,
+			MemberElement memberElement,
+			Dictionary<string, NameSpaceElement> nameSpaces)
+		{
+			Type eventHandlerType = eventInfo.EventHandlerType;
+			AddReferencedTypes(eventHandlerType, memberElement, nameSpaces);
+		}
+
 
 		private void AddReferencedTypes(
 			MethodInfo methodInfo,
 			MemberElement memberElement,
 			Dictionary<string, NameSpaceElement> nameSpaces)
 		{
+			if (methodInfo.IsSpecialName)
+			{
+				if (!(
+					methodInfo.Name.StartsWith("get_")
+				|| methodInfo.Name.StartsWith("set_")
+				|| methodInfo.Name.StartsWith("add_")
+				|| methodInfo.Name.StartsWith("remove_")))
+				{
+					// skipping get,set,add,remove methods for now !!!
+					return;
+				}				
+			}
+
 			Type returnType = methodInfo.ReturnType;
 			AddReferencedTypes(returnType, memberElement, nameSpaces);
 
@@ -152,9 +187,9 @@ namespace Dependiator.Modeling.Analyzing
 				.Select(parameter => parameter.ParameterType)
 				.ForEach(parameterType => AddReferencedTypes(parameterType, memberElement, nameSpaces));
 
-			methodInfo.GetMethodBody()?.LocalVariables
-				.Select(variable => variable.LocalType)
-				.ForEach(variableType => AddReferencedTypes(variableType, memberElement, nameSpaces));
+			//methodInfo.GetMethodBody()?.LocalVariables
+			//	.Select(variable => variable.LocalType)
+			//	.ForEach(variableType => AddReferencedTypes(variableType, memberElement, nameSpaces));
 
 			// Check https://blogs.msdn.microsoft.com/haibo_luo/2005/10/04/read-il-from-methodbody/
 			// byte[] bodyIl = methodBody.GetILAsByteArray();
