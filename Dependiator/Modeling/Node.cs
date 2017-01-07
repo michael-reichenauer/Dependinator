@@ -106,15 +106,8 @@ namespace Dependiator.Modeling
 			}
 		}
 
-		public Rect ActualNodeBoundsNoScale
-		{
-			get { return actualNodeBounds; }
-			set
-			{
-				actualNodeBounds = value;
-				SetItemBounds();
-			}
-		}
+		public Rect RelativeNodeBounds { get; set; }
+		
 
 		public Rect ViewNodeBounds => new Rect(new Point(0, 0), ViewNodeSize);
 
@@ -205,10 +198,16 @@ namespace Dependiator.Modeling
 					ParentNode.ItemBounds.Y + (bounds.Y),
 					bounds.Width,
 					bounds.Height);
+
+				Rect bounds2 = actualNodeBounds;
+				bounds2.Scale(1 / NodeScaleFactor, 1 / NodeScaleFactor);
+
+				RelativeNodeBounds = bounds2;
 			}
 			else
 			{
 				ItemBounds = actualNodeBounds;
+				RelativeNodeBounds = actualNodeBounds;
 			}
 		}
 

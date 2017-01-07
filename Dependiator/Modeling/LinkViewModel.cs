@@ -1,4 +1,5 @@
 using System;
+using System.Windows.Forms;
 using System.Windows.Media;
 using Dependiator.MainViews;
 
@@ -16,16 +17,17 @@ namespace Dependiator.Modeling
 		}
 
 
-		private double x1 => 0;
-		private double y1 => 0;
-		private double x2 => CanvasWidth * link.NodeScaleFactor / link.NodeScale;
-		private double y2 => CanvasHeight * link.NodeScaleFactor  / link.NodeScale;
+
+		public double X1 => link.X1 * link.ParentNode.ViewScale;
+		public double Y1 => link.Y1 * link.ParentNode.ViewScale;
+		public double X2 => link.X2 * link.ParentNode.ViewScale;
+		public double Y2 => link.Y2 * link.ParentNode.ViewScale;
 
 		public string ToolTip => $"Count {link.Reference.SubReferences.Count} {link.Reference}";
 		public int StrokeThickness => 1;
-		public string Line => $"M {x1},{y1} L {x2},{y2}";
+		//public string Line => $"M {x1},{y1} L {x2},{y2}";
 		public Brush LineBrush => link.LinkBrush;
-		public Brush HoverBrush => link.LinkBrush;
+		public Brush HoverBrush => Brushes.Transparent;
 		public string StrokeDash { get; set; } = "";
 
 

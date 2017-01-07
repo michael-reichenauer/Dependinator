@@ -17,6 +17,8 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
+		public int Count => references.Count;
+
 		public IEnumerable<Reference> SourceReferences => references
 			.Where(r => r.Source == ownerElement);
 
@@ -24,19 +26,7 @@ namespace Dependiator.Modeling.Analyzing
 			.Where(r => r.Target == ownerElement);
 
 
-		public IEnumerable<Reference> OutReferences()
-		{
-			foreach (Reference reference in SourceReferences)
-			{
-				Element source = reference.Source;
-				Element target = reference.Source;
-
-
-				yield return reference;
-			}
-		}
-
-
+		
 		public void AddReference(Reference reference)
 		{
 			Asserter.Requires(reference.Kind == ReferenceKind.Direkt);

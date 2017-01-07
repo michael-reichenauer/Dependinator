@@ -46,7 +46,7 @@ namespace Dependiator.Modeling
 		public string Name => Element.Name.Name;
 
 		public string FullName => Element.Name.FullName +
-			$"\nchildren: {Children.Count()}, decedents: {Element.Children.Descendents().Count()}\n" +
+			$"\nchildren: {ChildModules.Count()}, decedents: {Element.Children.Descendents().Count()}\n" +
 			$"SourceRefs {Element.References.DescendentAndSelfSourceReferences().Count()} " +
 			$"TargetRefs {Element.References.DescendentAndSelfTargetReferences().Count()}";
 
@@ -55,7 +55,7 @@ namespace Dependiator.Modeling
 		public ModuleViewModel ModuleViewModel => ViewModel as ModuleViewModel;
 		public Brush RectangleBrush { get; }
 
-		public IEnumerable<Module> Children => ChildNodes.OfType<Module>();
+		public IEnumerable<Module> ChildModules => ChildNodes.OfType<Module>();
 
 		public IEnumerable<Link> Links => ChildNodes.OfType<Link>();
 
@@ -69,7 +69,7 @@ namespace Dependiator.Modeling
 			if (!IsRealized)
 			{
 				base.ItemRealized();
-				if (!Children.Any())
+				if (!ChildModules.Any())
 				{
 					AddModuleChildren();
 					
@@ -81,21 +81,6 @@ namespace Dependiator.Modeling
 
 
 				ShowChildren();
-			}
-		}
-
-
-		private void AddReferences()
-		{
-			foreach (Reference reference in Element.References)
-			{
-				if (reference.SubReferences.Any(r => r.Kind != ReferenceKind.Direkt))
-				{
-					Size size = new Size((ActualNodeBounds.Width - 100 / NodeScaleFactor) * NodeScaleFactor, (ActualNodeBounds.Height - 100 / NodeScaleFactor) * NodeScaleFactor);
-					Rect bounds = new Rect(new Point(50, 50), size);
-					Link link = new Link(nodeService, reference, bounds, this);
-					AddChildNode(link);
-				}			
 			}
 		}
 
@@ -118,112 +103,20 @@ namespace Dependiator.Modeling
 		}
 
 
+		public override string ToString() => Element.Name.FullName;
+		
+
 
 		private void AddModuleChildren()
 		{
-			// Original size new Size(200, 120)
-			
+			// Original size new Size(200, 120)		
 			int rowLength = 6;
-			//Size size = new Size(1100, 1100 * 0.50);
-			Size parentSize = ParentNode?.ActualNodeBounds.Size ?? new Size(200, 100);
-			Size size = parentSize;
 
-			//size = new Size((parentSize.Width / NodeScale) * 0.8, (parentSize.Height / NodeScale) * 0.8);
+			Size size = ActualNodeBounds.Size;
+			int padding = 20;
 
-			int childCount = Element.Children.Count();
-
-			//int columnLength = 1;
-
-
-			////if (NodeLevel == 0)
-			//{
-			//	if (childCount > 20)
-			//	{
-			//		rowLength = 6;
-			//		/*columnLength = 5*/;
-			//		size = new Size(200, 120);
-			//	}
-			//	else if (childCount > 12)
-			//	{
-			//		rowLength = 5;
-			//		//columnLength = 4;
-			//		size = new Size(250, 120);
-			//	}
-			//	else if (childCount > 6)
-			//	{
-			//		rowLength = 4;
-			//		//columnLength = 3;
-			//		size = new Size(310, 160);
-			//	}
-			//	else if (childCount > 2)
-			//	{
-			//		rowLength = 3;
-			//		//columnLength = 2;
-			//		size = new Size(430, 280);
-			//	}
-			//	else if (childCount > 1)
-			//	{
-			//		rowLength = 2;
-			//		//columnLength = 1;
-			//		size = new Size(600, 400);
-			//	}
-			//}
-
-			//double subWidth = ((((parentSize.Width) * NodeScaleFactor) / rowLength) * 0.75) / NodeScale;
-			//double subHeight = subWidth / 2;
-
-			//try
-			//{
-			//	size = new Size(subWidth, subHeight);
-			//}
-			//catch (Exception e)
-			//{
-			//	Console.WriteLine(e);
-			//	throw;
-			//}
-			
-
-			//}
-			//if (NodeLevel == 1)
-			//{
-			//	if (childCount > 12)
-			//	{
-			//		rowLength = 5;
-			//		size = new Size(100, 70);
-			//	}
-			//	else if (childCount > 6)
-			//	{
-			//		rowLength = 4;
-			//		size = new Size(310, 160);
-			//	}
-			//	else if (childCount > 2)
-			//	{
-			//		rowLength = 3;
-			//		size = new Size(2450, 1500);
-			//	}
-			//	else if (childCount > 1)
-			//	{
-			//		rowLength = 2;
-			//		size = new Size(600, 400);
-			//	}
-			//}
-
-			//double nscale = ParentNode?.NodeScale ?? 1;
-
-			//if (NodeLevel == 1)
-			//{
-			//	size = new Size(size.Width * ((NodeLevel) * 2), size.Height * ((NodeLevel) * 2));
-			//}
-
-			//if (NodeLevel >=  2)
-			//{
-			//	return;
-			//}
-
-			//if (NodeLevel == 2)
-			//{
-			//	size = new Size(size.Width * ((NodeLevel) * 60), size.Height * ((NodeLevel) * 60));
-			//}
+			double xMargin = ((size.Width * NodeScaleFactor) - ((size.Width + padding) * rowLength)) / 2;
+			double yMargin = 25 * NodeScaleFactor;
 
 			int count = 0;
 			foreach (Element childElement in Element.Children)
@@ -231,13 +124,74 @@ namespace Dependiator.Modeling
 				int x = count % rowLength;
 				int y = count / rowLength;
 
-				Point position = new Point(x * (size.Width + 20) + 50, y * (size.Height + 20) + 150);
+				Point position = new Point(x * (size.Width + padding) + xMargin, y * (size.Height + padding) + yMargin);
 				
 				Rect bounds = new Rect(position, size);
 
 				Module module = new Module(nodeService, childElement, bounds, this);
 				AddChildNode(module);
 				count++;
+			}
+		}
+
+
+		private void AddReferences()
+		{
+			int count = Element.References.Count();
+
+			foreach (Reference reference in Element.References)
+			{
+				Reference childReference = reference.SubReferences
+					.FirstOrDefault(r => r.Kind == ReferenceKind.Child);
+
+				if (childReference != null)
+				{
+					Node sourceNode = this;
+					Node targetNode = ChildModules.First(m => m.Element == reference.Target);
+
+					Rect targetRect = targetNode.RelativeNodeBounds;
+					double x1 = ActualNodeBounds.Width / 2;
+					double y1 = 0;
+
+					double x2 = targetRect.X + targetRect.Width / 2;
+					double y2 = targetRect.Y;
+
+					Rect bounds;
+					Point source;
+					Point target;
+					if (x1 < x2)
+					{
+						source = new Point(0, 0);
+						target = new Point(x2 - x1, y2 - y1);
+						bounds = new Rect(new Point(x1, y1), new Size(target.X + 1, target.Y + 1));
+					}
+					else
+					{
+						source = new Point(x1 - x2, y1);
+						target = new Point(0, y2 - y1);
+						bounds = new Rect(new Point(x2, y1), new Size(x1 - x2 + 1, y2 - y1 + 1));
+					}
+
+					bounds.Scale(NodeScaleFactor, NodeScaleFactor);
+
+					Link link = new Link(nodeService, reference, bounds, source, target, this, sourceNode, targetNode);
+					AddChildNode(link);
+				}
+
+				//if (reference.SubReferences.Any(r => r.Kind != ReferenceKind.Direkt))
+				//{
+				//	Rect rec = new Rect(
+				//		new Point(50, 10),
+				//		new Size(50, 50));
+				//	rec.Scale(NodeScaleFactor, NodeScaleFactor);
+
+				//	//Size size = new Size((ActualNodeBounds.Width - 20) * NodeScaleFactor, (ActualNodeBounds.Height - 20) * NodeScaleFactor);
+				//	//Point location = new Point(10 * NodeScaleFactor, 10 * NodeScaleFactor);
+				//	//Rect bounds = new Rect(location, size);
+
+				//	Link link = new Link(nodeService, reference, rec, new Point(0, 0), new Point(48, 48), this);
+				//	AddChildNode(link);
+				//}			
 			}
 		}
 	}

@@ -11,18 +11,30 @@ namespace Dependiator.Modeling
 	internal class Link : Node
 	{
 		private readonly INodeService nodeService;
+		private readonly Point source;
+		private readonly Point target;
+		private readonly Node sourceNode;
+		private readonly Node targetNode;
 
 
 		public Link(
 			INodeService nodeService,
 			Reference reference,
 			Rect bounds,
-			Module owner)
+			Point source, 
+			Point target,
+			Module owner,
+			Node sourceNode,
+			Node targetNode)
 			: base(nodeService, owner)
 		{
 			Reference = reference;
 
 			this.nodeService = nodeService;
+			this.source = source;
+			this.target = target;
+			this.sourceNode = sourceNode;
+			this.targetNode = targetNode;
 
 			ActualNodeBounds = bounds;
 
@@ -31,6 +43,9 @@ namespace Dependiator.Modeling
 		}
 
 
+		//private double Width => ParentNode.ActualNodeBounds.Width;
+		//private double Height => ParentNode.ActualNodeBounds.Height;
+
 		public Reference Reference { get; }
 
 
@@ -38,10 +53,15 @@ namespace Dependiator.Modeling
 
 		public Brush LinkBrush { get; }
 
+		public double X1 => source.X;
+		public double Y1 => source.Y;
+		public double X2 => target.X;
+		public double Y2 => target.Y;
+
 
 		public override bool CanBeShown()
 		{
-			return true;
+			return sourceNode.CanBeShown() && targetNode.CanBeShown();
 		}
 
 		public override void ItemRealized()
