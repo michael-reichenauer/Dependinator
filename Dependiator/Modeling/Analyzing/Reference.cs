@@ -34,6 +34,6 @@ namespace Dependiator.Modeling.Analyzing
 
 		public void Add(Reference subReference) => subReferences.Add(subReference);
 
-		public override string ToString() => $"{Source} -> {Target} ({subReferences.Count})";
+		public override string ToString() => $"{Source} -> {Target}";
 	}
 }

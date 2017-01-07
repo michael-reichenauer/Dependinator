@@ -23,7 +23,7 @@ namespace Dependiator.Modeling
 		public double X2 => link.X2 * link.ParentNode.ViewScale;
 		public double Y2 => link.Y2 * link.ParentNode.ViewScale;
 
-		public string ToolTip => $"Count {link.Reference.SubReferences.Count} {link.Reference}";
+		public string ToolTip => link.ToolTip;
 		public int StrokeThickness => 1;
 		public Brush LineBrush => link.LinkBrush;
 		public Brush HoverBrush => Brushes.Transparent;

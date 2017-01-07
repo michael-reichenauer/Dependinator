@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using Dependiator.Utils;
 
 
 namespace Dependiator.Modeling.Analyzing
@@ -90,6 +91,12 @@ namespace Dependiator.Modeling.Analyzing
 			foreach (MemberInfo memberInfo in memberInfos)
 			{
 				string name = memberInfo.Name;
+				if (memberInfo.Name.IndexOf("<") != -1)
+				{
+					// Ignoring members with '<' in name
+					continue;
+				}
+
 				string fullName = GetFullName(memberInfo);
 				ElementName elementName = new ElementName(name, fullName);
 				MemberElement memberElement = elementFactory.CreateMember(elementName, typeElement);
@@ -105,15 +112,6 @@ namespace Dependiator.Modeling.Analyzing
 			MemberElement memberElement,
 			Dictionary<string, NameSpaceElement> nameSpaces)
 		{
-			if (
-					memberInfo.Name.StartsWith("get")
-				|| memberInfo.Name.StartsWith("set")
-				|| memberInfo.Name.StartsWith("add_")
-				|| memberInfo.Name.StartsWith("remove_"))
-			{
-
-			}
-
 			if (memberInfo is FieldInfo fieldInfo)
 			{
 				AddReferencedTypes(fieldInfo, memberElement, nameSpaces);
@@ -169,11 +167,11 @@ namespace Dependiator.Modeling.Analyzing
 		{
 			if (methodInfo.IsSpecialName)
 			{
-				if (!(
+				if (
 					methodInfo.Name.StartsWith("get_")
 				|| methodInfo.Name.StartsWith("set_")
 				|| methodInfo.Name.StartsWith("add_")
-				|| methodInfo.Name.StartsWith("remove_")))
+				|| methodInfo.Name.StartsWith("remove_"))
 				{
 					// skipping get,set,add,remove methods for now !!!
 					return;

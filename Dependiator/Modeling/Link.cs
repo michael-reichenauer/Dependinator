@@ -21,11 +21,12 @@ namespace Dependiator.Modeling
 			INodeService nodeService,
 			Reference reference,
 			Rect bounds,
-			Point source, 
-			Point target,
+			Point source,
+			Point target, 
 			Module owner,
 			Node sourceNode,
-			Node targetNode)
+			Node targetNode, 
+			Brush linkBrush)
 			: base(nodeService, owner)
 		{
 			Reference = reference;
@@ -38,18 +39,30 @@ namespace Dependiator.Modeling
 
 			ActualNodeBounds = bounds;
 
-			LinkBrush = nodeService.GetNextBrush();
+			LinkBrush = linkBrush;
 			ViewModel = new LinkViewModel(this);
 		}
 
-
-		//private double Width => ParentNode.ActualNodeBounds.Width;
-		//private double Height => ParentNode.ActualNodeBounds.Height;
 
 		public Reference Reference { get; }
 
 
 		public override ViewModel ViewModel { get; }
+
+		public string ToolTip
+		{
+			get
+			{
+				string tip = $"{Reference}, part of {Reference.SubReferences.Count} references:";
+				foreach (Reference reference in Reference.SubReferences)
+				{
+					tip += $"\n  {reference.SubReferences[0]}";
+				}
+
+				return tip;
+			}
+		}
+
 
 		public Brush LinkBrush { get; }
 
@@ -64,9 +77,10 @@ namespace Dependiator.Modeling
 			return sourceNode.CanBeShown() && targetNode.CanBeShown();
 		}
 
+
 		public override void ItemRealized()
 		{
-			base.ItemRealized();				
+			base.ItemRealized();
 		}
 
 

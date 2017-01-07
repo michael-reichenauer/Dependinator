@@ -137,12 +137,13 @@ namespace Dependiator.Modeling
 		{
 			foreach (Reference reference in Element.References)
 			{
-				Node sourceNode;
-				Node targetNode;
+				Module sourceNode;
+				Module targetNode;
 				double x1;
 				double y1;
 				double x2;
 				double y2;
+				Brush linkBrush;
 
 				if (reference.SubReferences.Any(r => r.Kind == ReferenceKind.Child))
 				{
@@ -154,6 +155,7 @@ namespace Dependiator.Modeling
 					y1 = 0;
 					x2 = targetRect.X + targetRect.Width / 2;
 					y2 = targetRect.Y;
+					linkBrush = targetNode.RectangleBrush;
 				}
 				else if (reference.Source != Element
 				         && reference.Target != Element
@@ -168,6 +170,7 @@ namespace Dependiator.Modeling
 					y1 = sourceRect.Y + sourceRect.Height;
 					x2 = targetRect.X + targetRect.Width / 2;
 					y2 = targetRect.Y;
+					linkBrush = sourceNode.RectangleBrush;
 				}
 				else if (reference.SubReferences.Any(r => r.Kind == ReferenceKind.Parent))
 				{
@@ -179,6 +182,7 @@ namespace Dependiator.Modeling
 					y1 = sourceRect.Y + sourceRect.Height;
 					x2 = ActualNodeBounds.Width / 2;
 					y2 = ActualNodeBounds.Height;
+					linkBrush = sourceNode.RectangleBrush;
 				}
 				else
 				{
@@ -218,7 +222,8 @@ namespace Dependiator.Modeling
 
 				bounds.Scale(NodeScaleFactor, NodeScaleFactor);
 
-				Link link = new Link(nodeService, reference, bounds, source, target, this, sourceNode, targetNode);
+				Link link = new Link(
+					nodeService, reference, bounds, source, target, this, sourceNode, targetNode, linkBrush);
 				AddChildNode(link);
 			}
 		}
