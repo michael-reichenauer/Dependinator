@@ -62,7 +62,12 @@ namespace Dependiator.Modeling.Analyzing
 
 		private void AddPartReferences(Reference reference)
 		{
+			if (reference.Source.Name.FullName.EndsWith("MainWindowIpcService"))
+			{
+
+			}
 			AddPartReference(null, reference);
+			
 		}
 
 
@@ -85,16 +90,17 @@ namespace Dependiator.Modeling.Analyzing
 				// Source is same as target, (self reference)
 				return;
 			}
-			else if (source.Parent == target.Parent)
-			{
-				// source and target are siblings
-				kind = ReferenceKind.Sibling;
-			}
 			else if (target.Ancestors().Any(ancestor => ancestor == source))
 			{
 				// Source is Ancestor of target		
 				kind = ReferenceKind.Child;
 				target = target.AncestorsAndSelf().First(ancestor => ancestor.Parent == source);
+			}
+			else if (target.Ancestors().Any(ancestor => ancestor == source.Parent))
+			{
+				// source and target are siblings or source and an target ancestor is siblings
+				kind = ReferenceKind.Sibling;
+				target = target.AncestorsAndSelf().First(ancestor => ancestor.Parent == source.Parent);
 			}
 			else
 			{
