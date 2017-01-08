@@ -35,20 +35,35 @@ namespace Dependiator.Modeling
 
 		private IEnumerable<Node> GetNodes(ElementTree elementTree)
 		{
-			int count = 0;
-			foreach (Element element in elementTree.Root.Children)
-			{
-				int x = count % 10;
-				int y = count / 10;
+			int x = 0;
+			int y = 0;
 
-				Point position = new Point(x * 250 + 30, y * 150 + 50);
-				Size size = new Size(200, 100);
-				Rect bounds = new Rect(position, size);
-				Module module = new Module(nodeService, element, bounds, null);
-				nodeService.AddRootNode(module);
-				yield return module;
-				count++;
-			}
+			Point position = new Point(x * 250 + 30, y * 150 + 50);
+			Size size = new Size(200, 100);
+			Rect bounds = new Rect(position, size);
+			Module module = new Module(nodeService, elementTree.Root, bounds, null);
+			nodeService.AddRootNode(module);
+			yield return module;
 		}
+
+
+
+		//	private IEnumerable<Node> GetNodes(ElementTree elementTree)
+		//{
+		//	int count = 0;
+		//	foreach (Element element in elementTree.Root.Children)
+		//	{
+		//		int x = count % 10;
+		//		int y = count / 10;
+
+		//		Point position = new Point(x * 250 + 30, y * 150 + 50);
+		//		Size size = new Size(200, 100);
+		//		Rect bounds = new Rect(position, size);
+		//		Module module = new Module(nodeService, element, bounds, null);
+		//		nodeService.AddRootNode(module);
+		//		yield return module;
+		//		count++;
+		//	}
+		// }
 	}
 }

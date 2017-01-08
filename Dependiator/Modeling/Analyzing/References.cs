@@ -62,12 +62,7 @@ namespace Dependiator.Modeling.Analyzing
 
 		private void AddPartReferences(Reference reference)
 		{
-			if (reference.Source.Name.FullName.EndsWith("MainWindowIpcService"))
-			{
-
-			}
 			AddPartReference(null, reference);
-			
 		}
 
 
