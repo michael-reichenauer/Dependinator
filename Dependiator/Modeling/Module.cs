@@ -79,7 +79,6 @@ namespace Dependiator.Modeling
 					AddReferences();
 				}
 
-
 				ShowChildren();
 			}
 		}
@@ -138,94 +137,54 @@ namespace Dependiator.Modeling
 		{
 			foreach (Reference reference in Element.References)
 			{
-				Module sourceNode;
-				Module targetNode;
-				double x1;
-				double y1;
-				double x2;
-				double y2;
-				Brush linkBrush;
+				AddLink(reference);
+			}
+		}
 
-				if (reference.SubReferences.Any(r => r.Kind == ReferenceKind.Child))
-				{
-					sourceNode = this;
-					targetNode = ChildModules.First(m => m.Element == reference.Target);
-					Rect targetRect = targetNode.RelativeNodeBounds;
 
-					x1 = ActualNodeBounds.Width / 2;
-					y1 = 0;
-					x2 = targetRect.X + targetRect.Width / 2;
-					y2 = targetRect.Y;
-					linkBrush = targetNode.RectangleBrush;
-				}
-				else if (reference.Source != Element
-				         && reference.Target != Element
-				         && reference.SubReferences.Any(r => r.Kind == ReferenceKind.Sibling))
-				{
-					sourceNode = ChildModules.First(m => m.Element == reference.Source);
-					targetNode = ChildModules.First(m => m.Element == reference.Target);
-					Rect sourceRect = sourceNode.RelativeNodeBounds;
-					Rect targetRect = targetNode.RelativeNodeBounds;
+		private void AddLink(Reference reference)
+		{
+			Module sourceNode;
+			Module targetNode;
 
-					x1 = sourceRect.X + sourceRect.Width / 2;
-					y1 = sourceRect.Y + sourceRect.Height;
-					x2 = targetRect.X + targetRect.Width / 2;
-					y2 = targetRect.Y;
-					linkBrush = sourceNode.RectangleBrush;
-				}
-				else if (reference.SubReferences.Any(r => r.Kind == ReferenceKind.Parent))
-				{
-					sourceNode = ChildModules.First(m => m.Element == reference.Source);
-					targetNode = this;
-					Rect sourceRect = sourceNode.RelativeNodeBounds;
-					
-					x1 = sourceRect.X + sourceRect.Width / 2;
-					y1 = sourceRect.Y + sourceRect.Height;
-					x2 = ActualNodeBounds.Width / 2;
-					y2 = ActualNodeBounds.Height;
-					linkBrush = sourceNode.RectangleBrush;
-				}
-				else
-				{
-					continue;
-				}
+			if (reference.SubReferences.Any(r => r.Kind == ReferenceKind.Child))
+			{
+				sourceNode = this;
+				targetNode = ChildModules.First(m => m.Element == reference.Target);
+			}
+			else if (reference.Source != Element
+			         && reference.Target != Element
+			         && reference.SubReferences.Any(r => r.Kind == ReferenceKind.Sibling))
+			{
+				sourceNode = ChildModules.First(m => m.Element == reference.Source);
+				targetNode = ChildModules.First(m => m.Element == reference.Target);
+			}
+			else if (reference.SubReferences.Any(r => r.Kind == ReferenceKind.Parent))
+			{
+				sourceNode = ChildModules.First(m => m.Element == reference.Source);
+				targetNode = this;
+			}
+			else
+			{
+				return;
+			}
 
-				double x = Math.Min(x1, x2);
-				double y = Math.Min(y1, y2);
-				double width = Math.Abs(x2 - x1);
-				double height = Math.Abs(y2 - y1);
+			Link link = new Link(nodeService, reference, this, sourceNode, targetNode);
+			AddChildNode(link);
+		}
 
-				Point source;
-				Point target;
 
-				if (x1 <= x2 && y1 <= y2)
-				{
-					source = new Point(0, 0);
-					target = new Point(width, height);
-				}
-				else if (x1 <= x2 && y1 > y2)
-				{
-					source = new Point(0, height);
-					target = new Point(width, 0);
-				}
-				else if (x1 > x2 && y1 <= y2)
-				{
-					source = new Point(width, 0);
-					target = new Point(0, height);
-				}
-				else
-				{
-					source = new Point(width, height);
-					target = new Point(0, 0);
-				}
+		public void UpdateLinksFor(Node node)
+		{
+			IEnumerable<Link> links = ChildNodes
+				.OfType<Link>()
+				.Where(link => link.SourceNode == node || link.TargetNode == node)
+				.ToList();
 
-				Rect bounds = new Rect(new Point(x, y), new Size(width + 1, height + 1));
-
-				bounds.Scale(NodeScaleFactor, NodeScaleFactor);
-
-				Link link = new Link(
-					nodeService, reference, bounds, source, target, this, sourceNode, targetNode, linkBrush);
-				AddChildNode(link);
+			foreach (Link link in links)
+			{
+				link.SetLinkLine();
+				link.NotifyAll();			
 			}
 		}
 	}

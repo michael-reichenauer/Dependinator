@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -11,38 +12,31 @@ namespace Dependiator.Modeling
 	internal class Link : Node
 	{
 		private readonly INodeService nodeService;
-		private readonly Point source;
-		private readonly Point target;
-		private readonly Node sourceNode;
-		private readonly Node targetNode;
-
+		private Point sourcePoint;
+		private Point targetPoint;
+		
 
 		public Link(
 			INodeService nodeService,
 			Reference reference,
-			Rect bounds,
-			Point source,
-			Point target, 
 			Module owner,
-			Node sourceNode,
-			Node targetNode, 
-			Brush linkBrush)
+			Module sourceNode,
+			Module targetNode)
 			: base(nodeService, owner)
 		{
 			Reference = reference;
-
 			this.nodeService = nodeService;
-			this.source = source;
-			this.target = target;
-			this.sourceNode = sourceNode;
-			this.targetNode = targetNode;
+			this.SourceNode = sourceNode;
+			this.TargetNode = targetNode;
 
-			ActualNodeBounds = bounds;
+			SetLinkLine();
 
-			LinkBrush = linkBrush;
 			ViewModel = new LinkViewModel(this);
 		}
 
+		public Module SourceNode { get; }
+
+		public Module TargetNode { get; }
 
 		public Reference Reference { get; }
 
@@ -64,18 +58,18 @@ namespace Dependiator.Modeling
 		}
 
 
-		public Brush LinkBrush { get; }
+		public Brush LinkBrush { get; private set; }
 
-		public double X1 => source.X;
-		public double Y1 => source.Y;
-		public double X2 => target.X;
-		public double Y2 => target.Y;
+		public double X1 => sourcePoint.X;
+		public double Y1 => sourcePoint.Y;
+		public double X2 => targetPoint.X;
+		public double Y2 => targetPoint.Y;
 
 		public double SubLinkCount => Reference.SubReferences.Count; 
 
 		public override bool CanBeShown()
 		{
-			return sourceNode.CanBeShown() && targetNode.CanBeShown();
+			return SourceNode.CanBeShown() && TargetNode.CanBeShown();
 		}
 
 
@@ -98,5 +92,86 @@ namespace Dependiator.Modeling
 				base.ItemVirtualized();
 			}
 		}
+
+
+		public void SetLinkLine()
+		{
+			double x1;
+			double y1;
+			double x2;
+			double y2;
+
+			if (SourceNode == TargetNode.ParentNode)
+			{
+				Rect targetRect = TargetNode.RelativeNodeBounds;
+
+				x1 = SourceNode.ActualNodeBounds.Width / 2;
+				y1 = 0;
+				x2 = targetRect.X + targetRect.Width / 2;
+				y2 = targetRect.Y;
+				LinkBrush = TargetNode.RectangleBrush;
+			}
+			else if (SourceNode.ParentNode == TargetNode.ParentNode)
+			{
+				Rect sourceRect = SourceNode.RelativeNodeBounds;
+				Rect targetRect = TargetNode.RelativeNodeBounds;
+
+				x1 = sourceRect.X + sourceRect.Width / 2;
+				y1 = sourceRect.Y + sourceRect.Height;
+				x2 = targetRect.X + targetRect.Width / 2;
+				y2 = targetRect.Y;
+				LinkBrush = SourceNode.RectangleBrush;
+			}
+			else if (SourceNode.ParentNode == TargetNode)
+			{
+				Rect sourceRect = SourceNode.RelativeNodeBounds;
+
+				x1 = sourceRect.X + sourceRect.Width / 2;
+				y1 = sourceRect.Y + sourceRect.Height;
+				x2 = SourceNode.ActualNodeBounds.Width / 2;
+				y2 = SourceNode.ActualNodeBounds.Height;
+				LinkBrush = SourceNode.RectangleBrush;
+			}
+			else
+			{
+				// Only child, sibling or parent nodes supported for now, no direct links
+				return;
+			}
+
+			double x = Math.Min(x1, x2);
+			double y = Math.Min(y1, y2);
+			double width = Math.Abs(x2 - x1);
+			double height = Math.Abs(y2 - y1);
+
+		
+			if (x1 <= x2 && y1 <= y2)
+			{
+				sourcePoint = new Point(0, 0);
+				targetPoint = new Point(width, height);
+			}
+			else if (x1 <= x2 && y1 > y2)
+			{
+				sourcePoint = new Point(0, height);
+				targetPoint = new Point(width, 0);
+			}
+			else if (x1 > x2 && y1 <= y2)
+			{
+				sourcePoint = new Point(width, 0);
+				targetPoint = new Point(0, height);
+			}
+			else
+			{
+				sourcePoint = new Point(width, height);
+				targetPoint = new Point(0, 0);
+			}
+
+			Rect bounds = new Rect(new Point(x, y), new Size(width + 1, height + 1));
+
+			bounds.Scale(NodeScaleFactor, NodeScaleFactor);
+			ActualNodeBounds = bounds;
+		}
+
+
+		public override string ToString() => Reference.ToString();
 	}
 }

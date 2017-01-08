@@ -16,7 +16,7 @@ namespace Dependiator.Modeling
 		private Rect actualNodeBounds;
 
 		private readonly INodeService nodeService;
-		
+
 
 		public object ItemState { get; set; }
 		public bool IsAdded => ItemState != null;
@@ -27,7 +27,6 @@ namespace Dependiator.Modeling
 		public double Priority { get; protected set; }
 
 		public bool IsRealized { get; private set; }
-
 
 
 		public void NotifyAll()
@@ -50,11 +49,13 @@ namespace Dependiator.Modeling
 			IsRealized = false;
 		}
 
+
 		protected Node(INodeService nodeService, Node parentNode)
 		{
 			this.nodeService = nodeService;
 			ParentNode = parentNode;
 		}
+
 
 		public int NodeLevel => ParentNode?.NodeLevel + 1 ?? 0;
 
@@ -69,7 +70,7 @@ namespace Dependiator.Modeling
 			{
 				if (ParentNode == null)
 				{
-					return 1 / NodeScaleFactor;
+					return 1;
 				}
 
 				return ParentNode.NodeScale / NodeScaleFactor;
@@ -101,13 +102,13 @@ namespace Dependiator.Modeling
 			set
 			{
 				actualNodeBounds = value;
-				
+
 				SetItemBounds();
 			}
 		}
 
 		public Rect RelativeNodeBounds { get; set; }
-		
+
 
 		public Rect ViewNodeBounds => new Rect(new Point(0, 0), ViewNodeSize);
 
@@ -123,15 +124,18 @@ namespace Dependiator.Modeling
 			}
 		}
 
+
 		public void ShowChildren()
 		{
 			ChildNodes.ForEach(node => node.ShowNode());
 		}
 
+
 		public void HideNode()
 		{
 			nodeService.HideNodes(GetHidableDecedentAndSelf());
 		}
+
 
 		public void HideChildren()
 		{
@@ -152,17 +156,24 @@ namespace Dependiator.Modeling
 				ActualNodeBounds.Size);
 
 			nodeService.UpdateNode(this);
-			
+
 			NotifyAll();
 
 			Vector childOffset = new Vector(offset.X * NodeScale, offset.Y * NodeScale);
 
 			foreach (Node childNode in ChildNodes)
 			{
-
-					childNode.MoveAsChild(childOffset);
-				
+				childNode.MoveAsChild(childOffset);
 			}
+
+			Module parentModule = ParentNode as Module;
+			if (parentModule != null)
+			{
+				parentModule.UpdateLinksFor(this);
+			}
+			
+
+
 		}
 
 
@@ -184,7 +195,7 @@ namespace Dependiator.Modeling
 
 			foreach (Node childNode in ChildNodes)
 			{
-				childNode.MoveAsChild(childOffset);			
+				childNode.MoveAsChild(childOffset);
 			}
 		}
 
@@ -193,14 +204,15 @@ namespace Dependiator.Modeling
 		{
 			if (IsAdded && !CanBeShown())
 			{
-				yield return this;			
+				yield return this;
 
 				foreach (Node node in GetHidableDecedent())
-				{			
-					yield return node;					
+				{
+					yield return node;
 				}
 			}
 		}
+
 
 		internal IEnumerable<Node> GetHidableDecedent()
 		{
@@ -213,7 +225,7 @@ namespace Dependiator.Modeling
 				{
 					yield return decedentNode;
 				}
-			}		
+			}
 		}
 
 
@@ -284,7 +296,7 @@ namespace Dependiator.Modeling
 			if (IsAdded && IsRealized)
 			{
 				NotifyAll();
-				
+
 				ChildNodes
 					.ForEach(node => node.ChangedScale());
 			}
