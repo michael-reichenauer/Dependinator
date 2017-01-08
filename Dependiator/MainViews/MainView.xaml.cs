@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using Dependiator.Utils;
 using Dependiator.Utils.UI.VirtualCanvas;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -44,12 +45,14 @@ namespace Dependiator.MainViews
 		}
 
 
+		private object movingObject = null;
 
 		protected override void OnPreviewMouseMove(MouseEventArgs e)
 		{
 			Point viewPosition = e.GetPosition(ItemsListBox);
 			
-			if (e.LeftButton == MouseButtonState.Pressed
+			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
+				&& e.LeftButton == MouseButtonState.Pressed
 				&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
 			{
 				//Log.Debug($"Mouse {viewPosition}");
@@ -57,8 +60,35 @@ namespace Dependiator.MainViews
 				Vector viewOffset = viewPosition - lastMousePosition;
 				e.Handled = viewModel.MoveCanvas(viewOffset);
 			}
+			else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
+			 && e.LeftButton == MouseButtonState.Pressed)
+			{
+				//Log.Debug($"Mouse {viewPosition}");
+				CaptureMouse();
+				Vector viewOffset = viewPosition - lastMousePosition;
+
+				if (movingObject == null)
+				{
+					Log.Debug("Start moving");
+				}
+				movingObject = viewModel.MoveNode(viewPosition, viewOffset, movingObject);
+				
+				e.Handled = movingObject != null;
+
+				if (movingObject == null)
+				{
+					Log.Debug("Stop moving");
+				}
+				//Log.Debug($"Move {viewOffset}");
+			}
 			else
 			{
+				//Log.Debug($"Release move");
+				if (movingObject != null)
+				{
+					Log.Debug("Stop moving lower down !!!!");
+				}
+				movingObject = null;
 				ReleaseMouseCapture();
 			}
 

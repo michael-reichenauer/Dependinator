@@ -69,7 +69,7 @@ namespace Dependiator.Modeling
 			{
 				if (ParentNode == null)
 				{
-					return 1;
+					return 1 / NodeScaleFactor;
 				}
 
 				return ParentNode.NodeScale / NodeScaleFactor;
@@ -139,24 +139,55 @@ namespace Dependiator.Modeling
 		}
 
 
-		//internal IEnumerable<Node> GetShowableNodes()
-		//{
-		//	if (!IsAdded && CanBeShown())
-		//	{
-		//		yield return this;
+		public void Move(Vector viewOffset)
+		{
+			Vector offset = new Vector(
+				(viewOffset.X / NodeScale) / Scale,
+				(viewOffset.Y / NodeScale) / Scale);
 
-		//		IEnumerable<Node> showableChildren = ChildNodes
-		//			.Where(node => !node.IsAdded && node.CanBeShown());
+			ActualNodeBounds = new Rect(
+				new Point(
+					ActualNodeBounds.X + offset.X,
+					ActualNodeBounds.Y + offset.Y),
+				ActualNodeBounds.Size);
 
-		//		foreach (Node childNode in showableChildren)
-		//		{
-		//			foreach (Node decedentNode in childNode.GetShowableNodes())
-		//			{
-		//				yield return decedentNode;
-		//			}
-		//		}
-		//	}
-		//}
+			nodeService.UpdateNode(this);
+			
+			NotifyAll();
+
+			Vector childOffset = new Vector(offset.X * NodeScale, offset.Y * NodeScale);
+
+			foreach (Node childNode in ChildNodes)
+			{
+
+					childNode.MoveAsChild(childOffset);
+				
+			}
+		}
+
+
+		private void MoveAsChild(Vector offset)
+		{
+			ActualNodeBounds = new Rect(
+				new Point(
+					ActualNodeBounds.X + offset.X,
+					ActualNodeBounds.Y + offset.Y),
+				ActualNodeBounds.Size);
+
+			if (IsAdded)
+			{
+				nodeService.UpdateNode(this);
+				NotifyAll();
+			}
+
+			Vector childOffset = new Vector(offset.X / NodeScaleFactor, offset.Y / NodeScaleFactor);
+
+			foreach (Node childNode in ChildNodes)
+			{
+				childNode.MoveAsChild(childOffset);			
+			}
+		}
+
 
 		internal IEnumerable<Node> GetHidableDecedentAndSelf()
 		{

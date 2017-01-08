@@ -14,6 +14,7 @@ namespace Dependiator.MainViews.Private
 
 		private ZoomableCanvas canvas;
 
+
 		public event EventHandler ScaleChanged;
 
 
@@ -29,6 +30,11 @@ namespace Dependiator.MainViews.Private
 			canvas.ItemRealized += (s, e) => itemsSource.ItemRealized(e.VirtualId);
 			canvas.ItemVirtualized += (s, e) => itemsSource.ItemVirtualized(e.VirtualId);
 		}
+
+
+		public Point GetCanvasPoint(Point screenPoint) => canvas.GetCanvasPoint(screenPoint);
+
+		public Point Offset => canvas?.Offset ?? new Point(0, 0);
 
 
 		public double Scale => canvas?.Scale ?? 1;

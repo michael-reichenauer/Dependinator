@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Windows;
 using System.Windows.Media;
 
 
@@ -20,5 +21,8 @@ namespace Dependiator.Modeling
 
 		void RemoveRootNode(Node node);
 		void AddRootNode(Node node);
+
+		object MoveNode(Point viewPosition, Vector viewOffset, object movingObject);
+		void UpdateNode(Node node);
 	}
 }

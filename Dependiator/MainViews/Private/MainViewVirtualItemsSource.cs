@@ -96,7 +96,7 @@ namespace Dependiator.MainViews.Private
 
 			Rect newItemBounds = item.ItemBounds;
 			viewItem.ItemBounds = newItemBounds;
-			viewItemsTree.Insert(item, viewItem.ItemBounds, 0);
+			viewItemsTree.Insert(item, viewItem.ItemBounds, item.Priority);
 
 			ItemsBoundsChanged();
 

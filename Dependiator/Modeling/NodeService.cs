@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using Dependiator.Common.ThemeHandling;
 using Dependiator.MainViews;
 using Dependiator.MainViews.Private;
@@ -32,6 +34,7 @@ namespace Dependiator.Modeling
 
 
 		public double Scale => canvasService.Scale;
+		public Point Offset => canvasService.Offset;
 
 
 		public void ShowNodes(IEnumerable<Node> nodes)
@@ -57,6 +60,10 @@ namespace Dependiator.Modeling
 			itemsSource.Remove(node);
 		}
 
+		public void UpdateNode(Node node)
+		{
+			itemsSource.Update(node);
+		}
 
 		public Brush GetNextBrush()
 		{
@@ -69,6 +76,40 @@ namespace Dependiator.Modeling
 			rootNodes.Add(node);
 		}
 
+
+		public object MoveNode(Point viewPosition, Vector viewOffset, object movingObject)
+		{
+			Module module = movingObject as Module;
+
+			if (module == null)
+			{
+				Point point = canvasService.GetCanvasPoint(viewPosition);
+
+				Rect area = new Rect(point, new Size(1 / Scale, 1 / Scale));
+
+				module = itemsSource
+					.GetItemsInArea(area)
+					.OfType<Module>()
+					.LastOrDefault(node => node.ParentNode != null);
+
+				Log.Debug($"Found module '{module}'");
+			}
+			
+			if (module != null)
+			{
+				Log.Debug($"Move object '{movingObject}' {viewOffset}");
+				MoveNode(module, viewOffset);
+			}
+			
+			return module;
+		}
+
+
+
+		private void MoveNode(Module module, Vector viewOffset)
+		{
+			module.Move(viewOffset);
+		}
 
 		public void RemoveRootNode(Node node)
 		{

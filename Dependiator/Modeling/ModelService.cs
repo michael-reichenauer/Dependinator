@@ -33,6 +33,12 @@ namespace Dependiator.Modeling
 		}
 
 
+		public object MoveNode(Point viewPosition, Vector viewOffset, object movingObject)
+		{
+			return nodeService.MoveNode(viewPosition, viewOffset, movingObject);
+		}
+
+
 		private IEnumerable<Node> GetNodes(ElementTree elementTree)
 		{
 			int x = 0;
