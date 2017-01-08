@@ -1,6 +1,7 @@
 using System;
 using System.Windows.Media;
 using Dependiator.MainViews;
+using Dependiator.Modeling.Analyzing;
 
 
 namespace Dependiator.Modeling
@@ -13,11 +14,12 @@ namespace Dependiator.Modeling
 			: base(module)
 		{
 			this.module = module;
+			StrokeThickness = module.Element is MemberElement ? 0.3 : 1;
 		}
 
 
 		public string ToolTip => module.FullName;
-		public int StrokeThickness => 1;
+		public double StrokeThickness { get; }
 		public double RectangleWidth => module.ItemBounds.Width * module.Scale - StrokeThickness * 2;
 		public double RectangleHeight => module.ItemBounds.Height * module.Scale - StrokeThickness * 2;
 		public Brush RectangleBrush => module.RectangleBrush;

@@ -116,9 +116,11 @@ namespace Dependiator.Common.ThemeHandling
 		}
 
 
-		public SolidColorBrush GetNextBrush()
+		public SolidColorBrush GetRectangleBrush()
 		{
-			return Theme.brushes[(currentIndex++) % Theme.brushes.Count];
+			int index = (currentIndex++) % Theme.brushes.Count;
+			
+			return Theme.brushes[index];
 		}
 
 

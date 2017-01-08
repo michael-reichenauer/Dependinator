@@ -33,7 +33,7 @@ namespace Dependiator.Modeling
 
 			//AddModuleChildren();			
 
-			RectangleBrush = nodeService.GetNextBrush();
+			RectangleBrush = nodeService.GetRectangleBrush();
 			ViewModel = new ModuleViewModel(this);
 		}
 
@@ -110,7 +110,8 @@ namespace Dependiator.Modeling
 			// Original size new Size(200, 120)		
 			int rowLength = 6;
 
-			Size size = ActualNodeBounds.Size;
+			Size size = Element is TypeElement ? new Size(200, 60) : new Size(200, 100);
+
 			int padding = 20;
 
 			double xMargin = ((size.Width * NodeScaleFactor) - ((size.Width + padding) * rowLength)) / 2;

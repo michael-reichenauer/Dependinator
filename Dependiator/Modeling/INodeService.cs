@@ -17,7 +17,7 @@ namespace Dependiator.Modeling
 
 		void HideNode(Node node);
 
-		Brush GetNextBrush();
+		Brush GetRectangleBrush();
 
 		void RemoveRootNode(Node node);
 		void AddRootNode(Node node);

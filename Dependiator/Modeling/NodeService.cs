@@ -65,9 +65,9 @@ namespace Dependiator.Modeling
 			itemsSource.Update(node);
 		}
 
-		public Brush GetNextBrush()
+		public Brush GetRectangleBrush()
 		{
-			return themeService.GetNextBrush();
+			return themeService.GetRectangleBrush();
 		}
 
 

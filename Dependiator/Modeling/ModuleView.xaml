@@ -4,7 +4,8 @@
 
 	<DataTemplate x:Key="ModuleViewTemplate">
 
-		<Border BorderBrush="{Binding RectangleBrush}" BorderThickness="1">
+		<Border 
+			BorderBrush="{Binding RectangleBrush}" BorderThickness="{Binding StrokeThickness}"  >
 			<Grid Background="Transparent">
 
 				<Grid.RowDefinitions>
