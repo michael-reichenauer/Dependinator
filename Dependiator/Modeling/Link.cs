@@ -53,7 +53,7 @@ namespace Dependiator.Modeling
 		{
 			get
 			{
-				string tip = $"{Reference}, part of {Reference.SubReferences.Count} references:";
+				string tip = $"{Reference},  {Reference.SubReferences.Count} references:";
 				foreach (Reference reference in Reference.SubReferences)
 				{
 					tip += $"\n  {reference.SubReferences[0]}";
@@ -71,6 +71,7 @@ namespace Dependiator.Modeling
 		public double X2 => target.X;
 		public double Y2 => target.Y;
 
+		public double SubLinkCount => Reference.SubReferences.Count; 
 
 		public override bool CanBeShown()
 		{

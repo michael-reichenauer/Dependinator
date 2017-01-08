@@ -24,9 +24,31 @@ namespace Dependiator.Modeling
 		public double Y2 => link.Y2 * link.ParentNode.ViewScale;
 
 		public string ToolTip => link.ToolTip;
-		public int StrokeThickness => 1;
 		public Brush LineBrush => link.LinkBrush;
 		public Brush HoverBrush => Brushes.Transparent;
 		public string StrokeDash { get; set; } = "";
+
+		public int StrokeThickness
+		{
+			get
+			{
+				if (link.SubLinkCount < 3)
+				{
+					return 1;
+				}
+				else if (link.SubLinkCount < 7)
+				{
+					return 2;
+				}
+				else if (link.SubLinkCount < 15)
+				{
+					return 3;
+				}
+				else
+				{
+					return 4;
+				}
+			}
+		}
 	}
 }
