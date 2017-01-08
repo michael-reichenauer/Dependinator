@@ -23,7 +23,7 @@ namespace Dependiator.Modeling
 		public abstract ViewModel ViewModel { get; }
 
 		public Rect ItemBounds { get; protected set; }
-		public int ZIndex { get; protected set; }
+		public int ZIndex { get; set; }
 		public double Priority { get; protected set; }
 
 		public bool IsRealized { get; private set; }
@@ -149,11 +149,22 @@ namespace Dependiator.Modeling
 				(viewOffset.X / NodeScale) / Scale,
 				(viewOffset.Y / NodeScale) / Scale);
 
-			ActualNodeBounds = new Rect(
+
+			Rect nodeBounds = new Rect(
 				new Point(
 					ActualNodeBounds.X + offset.X,
 					ActualNodeBounds.Y + offset.Y),
 				ActualNodeBounds.Size);
+
+			if ((nodeBounds.X + nodeBounds.Width > ParentNode.ActualNodeBounds.Width * NodeScaleFactor)
+				|| (nodeBounds.Y + nodeBounds.Height > ParentNode.ActualNodeBounds.Height * NodeScaleFactor)
+				|| nodeBounds.X < 0
+				|| nodeBounds.Y < 0)
+			{
+				return;
+			}
+
+			ActualNodeBounds = nodeBounds;
 
 			nodeService.UpdateNode(this);
 
@@ -171,9 +182,6 @@ namespace Dependiator.Modeling
 			{
 				parentModule.UpdateLinksFor(this);
 			}
-			
-
-
 		}
 
 

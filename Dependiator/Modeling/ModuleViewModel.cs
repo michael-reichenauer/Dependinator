@@ -14,7 +14,7 @@ namespace Dependiator.Modeling
 			: base(module)
 		{
 			this.module = module;
-			StrokeThickness = module.Element is MemberElement ? 0.3 : 1;
+			StrokeThickness = module.Element is MemberElement ? 0.5 : 1;
 		}
 
 
@@ -24,6 +24,8 @@ namespace Dependiator.Modeling
 		public double RectangleHeight => module.ItemBounds.Height * module.Scale - StrokeThickness * 2;
 		public Brush RectangleBrush => module.RectangleBrush;
 		public Brush HoverBrush => module.RectangleBrush;
+
+		public Brush BackgroundBrush => module.BackgroundBrush;
 
 		public string Name => module.ViewNodeSize.Width > 40 ? module.Name : " ";
 

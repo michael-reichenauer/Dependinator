@@ -169,7 +169,7 @@ namespace Dependiator.Common.ThemeHandling
 		private SolidColorBrush DarkBrush(SolidColorBrush brush)
 		{
 			SolidColorBrush darkerBrush = new SolidColorBrush(brush.Color);
-			darkerBrush.Color = Converter.InterpolateColors(brush.Color, BackgroundBrush.Color, 0.6f);
+			darkerBrush.Color = Converter.InterpolateColors(brush.Color, BackgroundBrush.Color, 0.97f);
 			return darkerBrush;
 		}
 

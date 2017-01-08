@@ -24,5 +24,6 @@ namespace Dependiator.Modeling
 
 		object MoveNode(Point viewPosition, Vector viewOffset, object movingObject);
 		void UpdateNode(Node node);
+		Brush GetRectangleBackgroundBrush(Brush brush);
 	}
 }

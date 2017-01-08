@@ -34,6 +34,7 @@ namespace Dependiator.Modeling
 			//AddModuleChildren();			
 
 			RectangleBrush = nodeService.GetRectangleBrush();
+			BackgroundBrush = nodeService.GetRectangleBackgroundBrush(RectangleBrush);
 			ViewModel = new ModuleViewModel(this);
 		}
 
@@ -53,6 +54,7 @@ namespace Dependiator.Modeling
 
 		public ModuleViewModel ModuleViewModel => ViewModel as ModuleViewModel;
 		public Brush RectangleBrush { get; }
+		public Brush BackgroundBrush { get; }
 
 		public IEnumerable<Module> ChildModules => ChildNodes.OfType<Module>();
 
@@ -110,7 +112,7 @@ namespace Dependiator.Modeling
 			// Original size new Size(200, 120)		
 			int rowLength = 6;
 
-			Size size = Element is TypeElement ? new Size(200, 60) : new Size(200, 100);
+			Size size = new Size(200, 100);
 
 			int padding = 20;
 

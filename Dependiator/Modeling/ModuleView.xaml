@@ -5,7 +5,7 @@
 	<DataTemplate x:Key="ModuleViewTemplate">
 
 		<Border 
-			BorderBrush="{Binding RectangleBrush}" BorderThickness="{Binding StrokeThickness}"  >
+			BorderBrush="{Binding RectangleBrush}" BorderThickness="{Binding StrokeThickness}" Background="{Binding BackgroundBrush}" >
 			<Grid Background="Transparent">
 
 				<Grid.RowDefinitions>
