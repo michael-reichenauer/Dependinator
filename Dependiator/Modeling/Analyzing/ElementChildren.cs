@@ -60,5 +60,8 @@ namespace Dependiator.Modeling.Analyzing
 		{
 			return GetEnumerator();
 		}
+
+
+		public override string ToString() => $"{children.Count} children";
 	}
 }

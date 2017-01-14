@@ -1,8 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Dependiator.MainViews;
 using Dependiator.MainViews.Private;
 using Dependiator.Utils.UI;
 

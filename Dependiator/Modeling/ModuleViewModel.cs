@@ -14,7 +14,7 @@ namespace Dependiator.Modeling
 			: base(module)
 		{
 			this.module = module;
-			StrokeThickness = module.Element is MemberElement ? 0.5 : 1;
+			StrokeThickness = module.Element.Type == Element.MemberType ? 0.5 : 1;
 		}
 
 

@@ -1,18 +1,14 @@
-using System.Collections.Generic;
-using System.Linq;
-
-
 namespace Dependiator.Modeling.Analyzing
 {
-	internal class NameSpaceElement : Element
-	{
-		public NameSpaceElement(ElementName name, NameSpaceElement parent)
-			: base(name, parent)
-		{
-		}
+	//internal class NameSpaceElement : Element
+	//{
+	//	public NameSpaceElement(ElementName name, NameSpaceElement parent)
+	//		: base(name, parent)
+	//	{
+	//	}
 
 
-		public IEnumerable<NameSpaceElement> NameSpaces => Children.OfType<NameSpaceElement>();
-		public IEnumerable<TypeElement> Types => Children.OfType<TypeElement>();
-	}
+	//	public IEnumerable<NameSpaceElement> NameSpaces => Children.OfType<NameSpaceElement>();
+	//	public IEnumerable<TypeElement> Types => Children.OfType<TypeElement>();
+	//}
 }

@@ -27,12 +27,17 @@ namespace Dependiator.Modeling.Analyzing
 
 
 		
-		public void AddReference(Reference reference)
+		public void Add(Reference reference)
 		{
 			Asserter.Requires(reference.Kind == ReferenceKind.Direkt);
 			Asserter.Requires(reference.Source == ownerElement || reference.Target == ownerElement);
 
-			if (reference.Source == reference.Target)
+			if (reference.Target.Name.Name == "Dependiator")
+			{
+				
+			}
+
+			if (reference.Source.Name.FullName == reference.Target.Name.FullName)
 			{
 				// Self reference, e.g. A type contains a field or parameter of the same type.
 				return;
@@ -172,5 +177,7 @@ namespace Dependiator.Modeling.Analyzing
 		{
 			return GetEnumerator();
 		}
+
+		public override string ToString() => $"{references.Count} references";
 	}
 }

@@ -143,6 +143,8 @@
     <Compile Include="Modeling\Analyzing\Reference.cs" />
     <Compile Include="Modeling\Analyzing\References.cs" />
     <Compile Include="Modeling\Analyzing\TypeElement.cs" />
+    <Compile Include="Modeling\ElementService.cs" />
+    <Compile Include="Modeling\IElementService.cs" />
     <Compile Include="Modeling\Link.cs" />
     <Compile Include="Modeling\LinkViewModel.cs" />
     <Compile Include="Modeling\Node.cs" />
@@ -159,6 +161,11 @@
     <Compile Include="Modeling\ModelService.cs" />
     <Compile Include="Modeling\NodeService.cs" />
     <Compile Include="Modeling\NodeTree.cs" />
+    <Compile Include="Modeling\Serializing\Data.cs" />
+    <Compile Include="Modeling\Serializing\DataLink.cs" />
+    <Compile Include="Modeling\Serializing\DataNode.cs" />
+    <Compile Include="Modeling\Serializing\DataSerializer.cs" />
+    <Compile Include="Modeling\Serializing\IDataSerializer.cs" />
     <Compile Include="Utils\AsyncLock.cs" />
     <Compile Include="Utils\DependencyInjection.cs" />
     <Compile Include="Features\FolderMonitoring\FolderMonitorService.cs" />
@@ -203,7 +210,6 @@
     <Compile Include="Utils\UI\HideableGridSplitter.cs" />
     <Compile Include="Utils\Compare.cs" />
     <Compile Include="Common\ThemeHandling\IThemeService.cs" />
-    <Compile Include="MainViews\MergeViewModel.cs" />
     <Compile Include="MainViews\Private\MainViewVirtualItemsSource.cs" />
     <Compile Include="MainViews\MainViewModel.cs" />
     <Compile Include="Utils\IReadOnlyKeyedList.cs" />

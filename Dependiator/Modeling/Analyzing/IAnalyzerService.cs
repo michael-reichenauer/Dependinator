@@ -1,7 +1,10 @@
-﻿namespace Dependiator.Modeling.Analyzing
+﻿using Dependiator.Modeling.Serializing;
+
+
+namespace Dependiator.Modeling.Analyzing
 {
-	internal interface IAnalyzerService
+	internal interface IReflectionService
 	{
-		ElementTree Analyze();
+		Data Analyze();
 	}
 }

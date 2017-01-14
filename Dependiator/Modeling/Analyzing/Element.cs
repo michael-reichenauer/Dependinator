@@ -1,15 +1,26 @@
-using System;
 using System.Collections.Generic;
-using Dependiator.MainViews.Private;
+using Dependiator.Modeling.Serializing;
 
 
 namespace Dependiator.Modeling.Analyzing
 {
 	internal class Element
 	{
+		public static string NameSpaceType = DataNode.NameSpaceType;
+		public static readonly string TypeType = DataNode.TypeType;
+		public static readonly string MemberType = DataNode.MemberType;
+
+		public static string RootName = "";
+
 		public ElementName Name { get; }
 
+		public string Type { get; private set; }
+
 		public Element Parent { get; }
+
+		public ElementChildren Children { get; }
+
+		public References References { get; }
 
 
 		public IEnumerable<Element> AncestorsAndSelf()
@@ -22,6 +33,7 @@ namespace Dependiator.Modeling.Analyzing
 			}
 		}
 
+
 		public IEnumerable<Element> Ancestors()
 		{
 			Element current = Parent;
@@ -33,20 +45,21 @@ namespace Dependiator.Modeling.Analyzing
 			}
 		}
 
-		public ElementChildren Children { get; }
 
-		public References References { get; }
-
-
-		//public string DeclaringName => Parent?.Name.FullName ?? "";
-
-		public Element(ElementName name, Element parent)
+		public Element(ElementName name, string type, Element parent)
 		{
+			Type = type;
 			References = new References(this);
 			Children = new ElementChildren(this);
 			Name = name;
 
 			Parent = parent;
+		}
+
+
+		public void SetType(string type)
+		{
+			Type = type;
 		}
 
 		public override string ToString() => Name.FullName;
