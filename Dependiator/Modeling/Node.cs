@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -184,6 +185,105 @@ namespace Dependiator.Modeling
 			{
 				parentModule.UpdateLinksFor(this);
 			}
+		}
+
+		public void Resize(Point canvasPoint, Vector viewOffset)
+		{
+			double xdist = Math.Abs(ItemBounds.X - canvasPoint.X);
+			double ydist = Math.Abs(ItemBounds.Y - canvasPoint.Y);
+
+			double wdist = Math.Abs(ItemBounds.Right - canvasPoint.X);
+			double hdist = Math.Abs(ItemBounds.Bottom - canvasPoint.Y);
+
+			double xd = xdist * Scale;
+			double yd = ydist * Scale;
+
+			double wd = wdist * Scale;
+			double hd = hdist * Scale;
+
+			int xf = 1;
+			int yf = 1;
+			int wf = 0;
+			int hf = 0;
+
+			if (ItemBounds.Width * Scale > 80)
+			{
+				if (xd < 20 && yd < 20)
+				{
+					xf = 1;
+					yf = 1;
+					wf = -1;
+					hf = -1;
+				}
+				else if (wd < 20 && hd < 20)
+				{
+					xf = 0;
+					yf = 0;
+					wf = 1;
+					hf = 1;
+				}
+				else if (xd < 20 && hd < 20)
+				{
+					xf = 1;
+					yf = 0;
+					wf = -1;
+					hf = 1;
+				}
+				else if (wd < 20 && yd < 20)
+				{
+					xf = 0;
+					yf = 1;
+					wf = 1;
+					hf = -1;
+				}
+			}
+
+			Vector offset = new Vector(
+				(viewOffset.X / NodeScale) / Scale,
+				(viewOffset.Y / NodeScale) / Scale);
+
+			Point location = new Point(
+				ActualNodeBounds.X + xf * offset.X,
+				ActualNodeBounds.Y + yf * offset.Y);
+
+
+			Size size = new Size(
+				ActualNodeBounds.Size.Width + (wf * offset.X), actualNodeBounds.Size.Height + (hf * offset.Y));
+
+			Rect nodeBounds = new Rect(location, size);
+
+			if ((nodeBounds.X + nodeBounds.Width > ParentNode.ActualNodeBounds.Width * NodeScaleFactor)
+				|| (nodeBounds.Y + nodeBounds.Height > ParentNode.ActualNodeBounds.Height * NodeScaleFactor)
+				|| nodeBounds.X < 0
+				|| nodeBounds.Y < 0)
+			{
+				return;
+			}
+
+			ActualNodeBounds = nodeBounds;
+
+			nodeService.UpdateNode(this);
+
+			NotifyAll();
+
+			Vector childOffset = new Vector(offset.X * NodeScale, offset.Y * NodeScale);
+
+			foreach (Node childNode in ChildNodes)
+			{
+				childNode.MoveAsChild(childOffset);
+			}
+
+			Module module = this as Module;
+			if (module != null)
+			{
+				module.UpdateLinksFor(this);
+			}
+
+			Module parentModule = ParentNode as Module;
+			if (parentModule != null)
+			{
+				parentModule.UpdateLinksFor(this);
+			}	
 		}
 
 

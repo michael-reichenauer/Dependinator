@@ -94,11 +94,11 @@ namespace Dependiator.Modeling
 		{
 			Module module = movingObject as Module;
 
+			Point canvasPoint = canvasService.GetCanvasPoint(viewPosition);
+
 			if (module == null)
 			{
-				Point point = canvasService.GetCanvasPoint(viewPosition);
-
-				Rect area = new Rect(point, new Size(1 / Scale, 1 / Scale));
+				Rect area = new Rect(canvasPoint, new Size(1 / Scale, 1 / Scale));
 
 				module = itemsSource
 					.GetItemsInArea(area)
@@ -108,7 +108,7 @@ namespace Dependiator.Modeling
 			
 			if (module != null)
 			{
-				MoveNode(module, viewOffset);
+				MoveNode(module, canvasPoint, viewOffset);
 			}
 			
 			return module;
@@ -116,9 +116,10 @@ namespace Dependiator.Modeling
 
 
 
-		private void MoveNode(Module module, Vector viewOffset)
+		private void MoveNode(Module module, Point canvasPoint, Vector viewOffset)
 		{
-			module.Move(viewOffset);
+			//module.Move(viewOffset);
+			module.Resize(canvasPoint, viewOffset);
 		}
 
 		public void RemoveRootNode(Node node)
