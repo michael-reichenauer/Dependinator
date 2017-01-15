@@ -17,6 +17,7 @@ namespace Dependiator.MainViews
 
 		double Scale { get; }
 		Point Offset{ get; }
+		Rect CurrentViewPort { get; }
 		event EventHandler ScaleChanged;
 		Point GetCanvasPoint(Point screenPoint);
 	}

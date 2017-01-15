@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
+using Dependiator.MainViews;
 using Dependiator.Modeling.Analyzing;
 using Dependiator.Modeling.Serializing;
 using Dependiator.Utils;
@@ -72,11 +73,14 @@ namespace Dependiator.Modeling
 
 		private IEnumerable<Node> GetNodes(ElementTree elementTree)
 		{
-			int x = 0;
-			int y = 0;
+			Rect viewBox = nodeService.CurrentViewPort;
 
-			Point position = new Point(x * 250 + 30, y * 150 + 50);
 			Size size = new Size(200, 100);
+
+			double x = (viewBox.Width - viewBox.X) / 2 - (size.Width / 2);
+			double y = (viewBox.Height - viewBox.Y) / 2 -(size.Height / 2);
+
+			Point position = new Point(x, y);
 			Rect bounds = new Rect(position, size);
 			Module module = new Module(nodeService, elementTree.Root, bounds, null);
 			nodeService.AddRootNode(module);

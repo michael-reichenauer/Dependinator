@@ -15,6 +15,8 @@ namespace Dependiator.MainViews.Private
 		private ZoomableCanvas canvas;
 
 
+		public Rect CurrentViewPort => canvas.ActualViewbox;
+
 		public event EventHandler ScaleChanged;
 
 

@@ -9,6 +9,8 @@ namespace Dependiator.Modeling
 	{
 		double Scale { get; }
 
+		Rect CurrentViewPort { get; }
+
 		void ShowNodes(IEnumerable<Node> nodes);
 
 		void HideNodes(IEnumerable<Node> nodes);

@@ -33,6 +33,9 @@ namespace Dependiator.Modeling
 
 
 		public double Scale => canvasService.Scale;
+
+		public Rect CurrentViewPort => canvasService.CurrentViewPort;
+
 		public Point Offset => canvasService.Offset;
 
 
