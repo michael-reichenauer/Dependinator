@@ -51,9 +51,9 @@ namespace Dependiator.Modeling
 			// elementTree = elementService.ToElementTree(data3);
 
 			Timing t = new Timing();
-			IEnumerable<Node> enumerable = GetNodes(elementTree);
+			Node rootNode = GetNode(elementTree);
 
-			nodeService.ShowNodes(enumerable);
+			nodeService.ShowRootNode(rootNode);
 			t.Log("Created modules");
 		}
 
@@ -71,23 +71,26 @@ namespace Dependiator.Modeling
 		}
 
 
-		private IEnumerable<Node> GetNodes(ElementTree elementTree)
+		private Node GetNode(ElementTree elementTree)
 		{
-			Size size = new Size(200, 100);
+			Size size = new Size(200000, 100000);
 			Rect viewBox = nodeService.CurrentViewPort;
-			double scale = (viewBox.Width * 0.6) / size.Width;
+
+			double scale = 1 ;
 			nodeService.Scale = scale;
 
 			viewBox = nodeService.CurrentViewPort;
-			double x = (viewBox.Width - viewBox.X) / 2 - (size.Width / 2);
-			double y = (viewBox.Height - viewBox.Y) / 2 -(size.Height / 2);
+			//double x = ((viewBox.Width - viewBox.X) / 2 - (size.Width / 2)) + 1000;
+			//double y = ((viewBox.Height - viewBox.Y) / 2 -(size.Height / 2)) + 500;
+			double x = 0 - (size.Width / 2);
+			double y = 0 - (size.Height / 2);
 
 
 			Point position = new Point(x, y);
 			Rect bounds = new Rect(position, size);
 			Module module = new Module(nodeService, elementTree.Root, bounds, null);
 			nodeService.AddRootNode(module);
-			yield return module;
+			return module;
 		}
 	}
 }

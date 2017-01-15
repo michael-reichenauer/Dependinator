@@ -22,7 +22,7 @@ namespace Dependiator.Modeling
 		private int hf = 0;
 
 		public object ItemState { get; set; }
-		public bool IsAdded => ItemState != null;
+		public bool IsAdded => ItemState != null || ParentNode == null;
 		public abstract ViewModel ViewModel { get; }
 
 		public Rect ItemBounds { get; protected set; }
@@ -73,7 +73,7 @@ namespace Dependiator.Modeling
 			{
 				if (ParentNode == null)
 				{
-					return 1;
+					return NodeScaleFactor;
 				}
 
 				return ParentNode.NodeScale / NodeScaleFactor;
@@ -211,33 +211,61 @@ namespace Dependiator.Modeling
 
 				if (ItemBounds.Width * Scale > 80)
 				{
-					if (xd < 20 && yd < 20)
+					if (xd < 10 && yd < 10)
 					{
 						xf = 1;
 						yf = 1;
 						wf = -1;
 						hf = -1;
 					}
-					else if (wd < 20 && hd < 20)
+					else if (wd < 10 && hd < 10)
 					{
 						xf = 0;
 						yf = 0;
 						wf = 1;
 						hf = 1;
 					}
-					else if (xd < 20 && hd < 20)
+					else if (xd < 10 && hd < 10)
 					{
 						xf = 1;
 						yf = 0;
 						wf = -1;
 						hf = 1;
 					}
-					else if (wd < 20 && yd < 20)
+					else if (wd < 10 && yd < 10)
 					{
 						xf = 0;
 						yf = 1;
 						wf = 1;
 						hf = -1;
+					}
+					else if (xd < 10)
+					{
+						xf = 1;
+						yf = 0;
+						wf = -1;
+						hf = 0;
+					}
+					else if (yd < 10)
+					{
+						xf = 0;
+						yf = 1;
+						wf = 0;
+						hf = -1;
+					}
+					else if (wd < 10)
+					{
+						xf = 0;
+						yf = 0;
+						wf = 1;
+						hf = 0;
+					}
+					else if (hd < 10)
+					{
+						xf = 0;
+						yf = 0;
+						wf = 0;
+						hf = 1;
 					}
 					else
 					{
@@ -246,6 +274,13 @@ namespace Dependiator.Modeling
 						wf = 0;
 						hf = 0;
 					}
+				}
+				else
+				{
+					xf = 1;
+					yf = 1;
+					wf = 0;
+					hf = 0;
 				}
 			}
 
@@ -284,7 +319,9 @@ namespace Dependiator.Modeling
 
 			NotifyAll();
 
-			Vector childOffset = new Vector(offset.X * NodeScale, offset.Y * NodeScale);
+			Vector childOffset = new Vector(
+				offset.X * NodeScale * ((1 / NodeScaleFactor) / NodeScaleFactor), 
+				offset.Y * NodeScale * ((1 / NodeScaleFactor) / NodeScaleFactor));
 
 			foreach (Node childNode in ChildNodes)
 			{

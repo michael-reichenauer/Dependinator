@@ -43,6 +43,12 @@ namespace Dependiator.Modeling
 		public Point Offset => canvasService.Offset;
 
 
+		public void ShowRootNode(Node node)
+		{
+			node.ItemRealized();
+		}
+
+
 		public void ShowNodes(IEnumerable<Node> nodes)
 		{
 			itemsSource.Add(nodes);

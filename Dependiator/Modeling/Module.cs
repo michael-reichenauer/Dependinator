@@ -121,6 +121,13 @@ namespace Dependiator.Modeling
 			double xMargin = ((DefaultSize.Width * NodeScaleFactor) - ((DefaultSize.Width + padding) * rowLength)) / 2;
 			double yMargin = 25 * NodeScaleFactor;
 
+			if (ParentNode == null)
+			{
+				xMargin += ActualNodeBounds.Width / 2;
+				yMargin += ActualNodeBounds.Height / 2;
+			}
+
+
 			int count = 0;
 			foreach (Element childElement in Element.Children)
 			{
