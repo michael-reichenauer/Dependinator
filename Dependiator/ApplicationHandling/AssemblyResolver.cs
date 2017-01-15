@@ -16,6 +16,45 @@ namespace Dependiator.ApplicationHandling
 		public static void Activate()
 		{
 			AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
+			AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += OnReflectionOnlyAssemblyResolve;
+		}
+
+
+		private static Assembly OnReflectionOnlyAssemblyResolve(object sender, ResolveEventArgs args)
+		{
+			try
+			{
+				Assembly executingAssembly = Assembly.GetExecutingAssembly();
+				string name = executingAssembly.FullName.Split(',')[0];
+				string resolveName = args.Name.Split(',')[0];
+				string resourceName = $"{name}.Dependencies.{resolveName}.dll";
+
+				// Load the requested assembly from the resources
+				using (Stream stream = executingAssembly.GetManifestResourceStream(resourceName))
+				{
+					if (stream == null)
+					{
+						if (resolveName != "Dependiator.resources")
+						{
+							Assembly assembly = Assembly.ReflectionOnlyLoad(args.Name);
+							return assembly;
+						}
+
+						return null;
+					}
+
+					long bytestreamMaxLength = stream.Length;
+					byte[] buffer = new byte[bytestreamMaxLength];
+					stream.Read(buffer, 0, (int)bytestreamMaxLength);
+					Log.Debug($"Resolved {resolveName}");
+					return Assembly.ReflectionOnlyLoad(buffer);
+				}
+			}
+			catch (Exception e)
+			{
+				Log.Error($"Failed to load, {e}");
+				throw;
+			}
 		}
 
 

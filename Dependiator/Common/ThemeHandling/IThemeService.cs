@@ -13,6 +13,7 @@ namespace Dependiator.Common.ThemeHandling
 
 		void SetThemeWpfColors();
 
-		SolidColorBrush GetNextBrush();
+		SolidColorBrush GetRectangleBrush();
+		Brush GetRectangleBackgroundBrush(Brush brush);
 	}
 }

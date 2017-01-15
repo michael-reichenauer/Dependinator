@@ -1,5 +1,7 @@
+using System;
 using System.Windows.Media;
 using Dependiator.MainViews;
+using Dependiator.Modeling.Analyzing;
 
 
 namespace Dependiator.Modeling
@@ -7,24 +9,36 @@ namespace Dependiator.Modeling
 	internal class ModuleViewModel : ItemViewModel
 	{
 		private readonly Module module;
-		private readonly ICanvasService canvasService;
 
-
-		public ModuleViewModel(Module module, ICanvasService canvasService)
+		public ModuleViewModel(Module module)
 			: base(module)
 		{
 			this.module = module;
-			this.canvasService = canvasService;
+			StrokeThickness = module.Element.Type == Element.MemberType ? 0.5 : 1;
 		}
 
 
-		public int StrokeThickness => 1;
-		public double RectangleWidth => module.ItemBounds.Width * canvasService.Scale - StrokeThickness * 2;
-		public double RectangleHeight => module.ItemBounds.Height * canvasService.Scale - StrokeThickness * 2;
+		public string ToolTip => module.FullName;
+		public double StrokeThickness { get; }
+		public double RectangleWidth => module.ItemBounds.Width * module.Scale - StrokeThickness * 2;
+		public double RectangleHeight => module.ItemBounds.Height * module.Scale - StrokeThickness * 2;
 		public Brush RectangleBrush => module.RectangleBrush;
 		public Brush HoverBrush => module.RectangleBrush;
 
+		public Brush BackgroundBrush => module.BackgroundBrush;
 
+		public string Name => module.ViewNodeSize.Width > 40 ? module.Name : " ";
+
+
+		public int FontSize
+		{
+			get
+			{
+				int fontSize = (int)(12 * module.Scale * module.NodeScale);
+				fontSize = Math.Max(8, fontSize);
+				return Math.Min(20, fontSize);
+			}
+		}
 
 
 		//public string Id => Branch.Id;

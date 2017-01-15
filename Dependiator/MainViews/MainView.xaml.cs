@@ -45,21 +45,35 @@ namespace Dependiator.MainViews
 		}
 
 
+		private object movingObject = null;
 
 		protected override void OnPreviewMouseMove(MouseEventArgs e)
 		{
 			Point viewPosition = e.GetPosition(ItemsListBox);
 			
-			if (e.LeftButton == MouseButtonState.Pressed
+			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
+				&& e.LeftButton == MouseButtonState.Pressed
 				&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
 			{
-				//Log.Debug($"Mouse {viewPosition}");
 				CaptureMouse();
 				Vector viewOffset = viewPosition - lastMousePosition;
 				e.Handled = viewModel.MoveCanvas(viewOffset);
 			}
+			else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
+			 && e.LeftButton == MouseButtonState.Pressed)
+			{
+				CaptureMouse();
+				Vector viewOffset = viewPosition - lastMousePosition;
+
+
+				movingObject = viewModel.MoveNode(viewPosition, viewOffset, movingObject);
+				
+				e.Handled = movingObject != null;
+			}
 			else
 			{
+
+				movingObject = null;
 				ReleaseMouseCapture();
 			}
 

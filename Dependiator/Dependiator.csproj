@@ -128,20 +128,44 @@
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
     <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
-    <Compile Include="MainViews\CanvasService.cs" />
+    <Compile Include="MainViews\Private\CanvasService.cs" />
     <Compile Include="MainViews\ICanvasService.cs" />
-    <Compile Include="MainViews\Item.cs" />
+    <Compile Include="Modeling\Analyzing\ReflectionService.cs" />
+    <Compile Include="Modeling\Analyzing\Element.cs" />
+    <Compile Include="Modeling\Analyzing\ElementChildren.cs" />
+    <Compile Include="Modeling\Analyzing\ElementFactory.cs" />
+    <Compile Include="Modeling\Analyzing\ElementName.cs" />
+    <Compile Include="Modeling\Analyzing\ElementTree.cs" />
+    <Compile Include="Modeling\Analyzing\IReflectionService.cs" />
+    <Compile Include="Modeling\Analyzing\IElementFactory.cs" />
+    <Compile Include="Modeling\Analyzing\MemberElement.cs" />
+    <Compile Include="Modeling\Analyzing\NameSpaceElement.cs" />
+    <Compile Include="Modeling\Analyzing\Reference.cs" />
+    <Compile Include="Modeling\Analyzing\References.cs" />
+    <Compile Include="Modeling\Analyzing\TypeElement.cs" />
+    <Compile Include="Modeling\ElementService.cs" />
+    <Compile Include="Modeling\IElementService.cs" />
+    <Compile Include="Modeling\Link.cs" />
+    <Compile Include="Modeling\LinkViewModel.cs" />
+    <Compile Include="Modeling\Node.cs" />
     <Compile Include="MainViews\ItemViewModel.cs" />
+    <Compile Include="MainViews\Private\Item.cs" />
+    <Compile Include="Modeling\INodeService.cs" />
     <Compile Include="Modeling\Module.cs" />
-    <Compile Include="Modeling\ModuleName.cs" />
     <Compile Include="MainViews\Private\Caching\BranchNameSurrogate.cs" />
-    <Compile Include="Modeling\ModuleNameViewModel.cs" />
     <Compile Include="Modeling\ModuleViewModel.cs" />
     <Compile Include="MainViews\Private\IMainViewVirtualItemsSource.cs" />
-    <Compile Include="MainViews\Private\IVirtualItem.cs" />
+    <Compile Include="MainViews\Private\IItem.cs" />
     <Compile Include="MainViews\Private\MainViewCommands.cs" />
     <Compile Include="Modeling\IModelService.cs" />
     <Compile Include="Modeling\ModelService.cs" />
+    <Compile Include="Modeling\NodeService.cs" />
+    <Compile Include="Modeling\NodeTree.cs" />
+    <Compile Include="Modeling\Serializing\Data.cs" />
+    <Compile Include="Modeling\Serializing\DataLink.cs" />
+    <Compile Include="Modeling\Serializing\DataNode.cs" />
+    <Compile Include="Modeling\Serializing\DataSerializer.cs" />
+    <Compile Include="Modeling\Serializing\IDataSerializer.cs" />
     <Compile Include="Utils\AsyncLock.cs" />
     <Compile Include="Utils\DependencyInjection.cs" />
     <Compile Include="Features\FolderMonitoring\FolderMonitorService.cs" />
@@ -165,6 +189,7 @@
     <Compile Include="Utils\Serializer.cs" />
     <Compile Include="Utils\SingleInstanceAttribute.cs" />
     <Compile Include="Utils\UI\InputBindingsBehavior.cs" />
+    <Compile Include="Utils\UI\VirtualCanvas\ItemEventArgs.cs" />
     <Compile Include="Utils\UI\VisibleWindow.cs" />
     <Compile Include="Utils\UI\WpfBindingTraceListener.cs" />
     <Compile Include="Common\ThemeHandling\ThemeService.cs" />
@@ -185,7 +210,6 @@
     <Compile Include="Utils\UI\HideableGridSplitter.cs" />
     <Compile Include="Utils\Compare.cs" />
     <Compile Include="Common\ThemeHandling\IThemeService.cs" />
-    <Compile Include="MainViews\MergeViewModel.cs" />
     <Compile Include="MainViews\Private\MainViewVirtualItemsSource.cs" />
     <Compile Include="MainViews\MainViewModel.cs" />
     <Compile Include="Utils\IReadOnlyKeyedList.cs" />
@@ -274,6 +298,14 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Modeling\LinkView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Modeling\ModuleView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Styles\ButtonStyle.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -295,6 +327,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Styles\LabelStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\ListBoxItemControlTemplate.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -10,6 +10,7 @@
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
+
 	<Grid>
 		<Grid.RowDefinitions>
 			<!-- Commits log -->
@@ -85,97 +86,34 @@
 						<Setter Property="Padding" Value="0" />
 						<Setter Property="HorizontalContentAlignment" Value="Stretch" />
 						<Setter Property="VerticalContentAlignment" Value="Stretch" />
-						
+
 						<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
-						
+
 						<EventSetter Event="MouseDoubleClick" Handler="MouseDobleClick" />
 						<EventSetter Event="MouseUp" Handler="EventMouseUp" />
 						<EventSetter Event="MouseEnter" Handler="MouseEntering" />
 						<EventSetter Event="MouseLeave" Handler="MouseLeaving" />
 
 						<!-- Style for list items (selected/hoover) -->
-						<Setter Property="Template">
-							<Setter.Value>
-								<ControlTemplate TargetType="ListBoxItem">
-									<Border
-										Name="ItemBorder"
-										CornerRadius="0"
-										BorderBrush="{x:Null}"
-										BorderThickness="1"
-										Margin="0"
-										Background="{x:Null}">
-										<ContentPresenter />
-									</Border>
-									<ControlTemplate.Triggers>
-										<Trigger Property="IsSelected" Value="True">
-											<Setter
-												TargetName="ItemBorder"
-												Property="BorderBrush"
-												Value="{DynamicResource SelectedItemBorderBrush}" />
-											<Setter
-												TargetName="ItemBorder"
-												Property="Background"
-												Value="{x:Null}" />
-										</Trigger>
-										<MultiTrigger>
-											<MultiTrigger.Conditions>
-												<Condition Property="IsMouseOver" Value="True" />
-												<Condition Property="IsSelected" Value="False" />
-											</MultiTrigger.Conditions>
-											<Setter
-												TargetName="ItemBorder"
-												Property="BorderBrush"
-												Value="{Binding HoverBrush}" />
-										</MultiTrigger>
-									</ControlTemplate.Triggers>
-								</ControlTemplate>
-							</Setter.Value>
-						</Setter>
+						<Setter Property="Template" Value="{StaticResource ListBoxItemControlTemplate}" />
+
 						<Style.Triggers>
 
-
-							<!-- Module line -->
+							<!-- Module  -->
 							<DataTrigger Binding="{Binding Type}" Value="ModuleViewModel">
+								<Setter Property="ContentTemplate" Value="{StaticResource ModuleViewTemplate}" />
 								<Setter Property="IsEnabled" Value="true" />
 								<Setter Property="Focusable" Value="False" />
 								<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
-								<Setter Property="ContentTemplate">
-									<Setter.Value>
-										<DataTemplate>
-											<Grid>
-												<Rectangle
-													Width="{Binding RectangleWidth}"
-													Height="{Binding RectangleHeight}"
-													Fill="Transparent"
-													Stroke="{Binding RectangleBrush}"
-													StrokeThickness="{Binding StrokeThickness}" />
-
-											</Grid>
-										</DataTemplate>
-									</Setter.Value>
-								</Setter>
 							</DataTrigger>
 
-							<DataTrigger Binding="{Binding Type}" Value="ModuleNameViewModel">
-								<Setter Property="IsEnabled" Value="false" />
+							<!-- Link  -->
+							<DataTrigger Binding="{Binding Type}" Value="LinkViewModel">
+								<Setter Property="ContentTemplate" Value="{StaticResource LinkViewTemplate}" />
+								<Setter Property="IsEnabled" Value="true" />
 								<Setter Property="Focusable" Value="False" />
 								<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
-								<Setter Property="ContentTemplate">
-									<Setter.Value>
-										<DataTemplate>
-											<Grid>
-												<TextBlock
-														Text="{Binding Name}"
-														Foreground="{DynamicResource TextBrush}"
-														FontSize="{Binding FontSize}"
-														HorizontalAlignment="Left"
-														VerticalAlignment="Center" />
-											</Grid>
-										</DataTemplate>
-									</Setter.Value>
-								</Setter>
 							</DataTrigger>
-
 
 						</Style.Triggers>
 
@@ -184,7 +122,6 @@
 				</ListBox.ItemContainerStyle>
 
 			</ListBox>
-
 
 		</Border>
 

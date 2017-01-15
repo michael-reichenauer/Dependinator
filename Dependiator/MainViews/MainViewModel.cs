@@ -74,6 +74,11 @@ namespace Dependiator.MainViews
 			return canvasService.MoveCanvas(viewOffset);
 		}
 
+		public object MoveNode(Point viewPosition, Vector viewOffset, object movingObject)
+		{
+			return modelService.MoveNode(viewPosition, viewOffset, movingObject);
+		}
+
 
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
@@ -330,6 +335,12 @@ namespace Dependiator.MainViews
 			//{
 			//	Clicked(commitViewModel);
 			//}
+		}
+
+
+		public void ClosingWindow()
+		{
+			modelService.Close();
 		}
 	}
 }

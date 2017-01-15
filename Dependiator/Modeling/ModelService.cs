@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Windows;
-using Dependiator.Common.ThemeHandling;
 using Dependiator.MainViews;
-using Dependiator.MainViews.Private;
+using Dependiator.Modeling.Analyzing;
+using Dependiator.Modeling.Serializing;
 using Dependiator.Utils;
 
 
@@ -12,58 +11,86 @@ namespace Dependiator.Modeling
 	[SingleInstance]
 	internal class ModelService : IModelService
 	{
-		private readonly IMainViewItemsSource itemsSource;
-		private readonly ICanvasService canvasService;
-		private readonly IThemeService themeService;
+		private readonly IReflectionService reflectionService;
+		private readonly IElementService elementService;
+		private readonly INodeService nodeService;
+		private readonly IDataSerializer dataSerializer;
 
+		private ElementTree elementTree;
 
 		public ModelService(
-			IMainViewItemsSource mainViewItemsSource,
-			ICanvasService canvasService,
-			IThemeService themeService)
+			IReflectionService reflectionService,
+			IElementService elementService,
+			INodeService nodeService,
+			IDataSerializer dataSerializer)
 		{
-			this.itemsSource = mainViewItemsSource;
-			this.canvasService = canvasService;
-			this.themeService = themeService;
+			this.reflectionService = reflectionService;
+			this.elementService = elementService;
+			this.nodeService = nodeService;
+			this.dataSerializer = dataSerializer;
 		}
 
 
 		public void InitModules()
 		{
+			if (!dataSerializer.TryDeserialize(out Data data))
+			{
+				data = reflectionService.Analyze();
+			}
+
+			elementTree = elementService.ToElementTree(data);
+
+			//Data data2 = elementService.ToData(elementTree);
+			//serializer.Serialize(data2);
+
+			//elementTree = elementService.ToElementTree(data2);
+
+			//Data data3 = elementService.ToData(elementTree);
+			//serializer.Serialize(data3);
+
+			// elementTree = elementService.ToElementTree(data3);
+
 			Timing t = new Timing();
-			itemsSource.Add(GetModules());
+			Node rootNode = GetNode(elementTree);
+
+			nodeService.ShowRootNode(rootNode);
 			t.Log("Created modules");
 		}
 
 
-		private IEnumerable<Item> GetModules()
+		public object MoveNode(Point viewPosition, Vector viewOffset, object movingObject)
 		{
-			Random random = new Random();
-			int total = 10;
-
-			for (int y = 0; y < total; y++)
-			{
-				for (int x = 0; x < total; x++)
-				{
-					double priority = random.NextDouble();
-					Module module = new Module(canvasService)
-					{
-						RectangleBrush = themeService.GetNextBrush(),
-						ItemBounds = new Rect(x * 100, y * 100, 90, 45),
-						Priority = priority,
-						Name = new ModuleName(canvasService)
-						{
-							ItemBounds = new Rect(x * 100 + 10, y * 100 + 5, 70, 20),
-							Priority = priority,
-							Name = $"Name {x},{y}"
-						}
-					};
+			return nodeService.MoveNode(viewPosition, viewOffset, movingObject);
+		}
 
 
-					yield return module;
-					yield return module.Name;
-				}
-			}
+		public void Close()
+		{
+			Data data = elementService.ToData(elementTree);
+			dataSerializer.Serialize(data);
+		}
+
+
+		private Node GetNode(ElementTree elementTree)
+		{
+			Size size = new Size(200000, 100000);
+			Rect viewBox = nodeService.CurrentViewPort;
+
+			double scale = 1 ;
+			nodeService.Scale = scale;
+
+			viewBox = nodeService.CurrentViewPort;
+			//double x = ((viewBox.Width - viewBox.X) / 2 - (size.Width / 2)) + 1000;
+			//double y = ((viewBox.Height - viewBox.Y) / 2 -(size.Height / 2)) + 500;
+			double x = 0 - (size.Width / 2);
+			double y = 0 - (size.Height / 2);
+
+
+			Point position = new Point(x, y);
+			Rect bounds = new Rect(position, size);
+			Module module = new Module(nodeService, elementTree.Root, bounds, null);
+			nodeService.AddRootNode(module);
+			return module;
 		}
 	}
 }

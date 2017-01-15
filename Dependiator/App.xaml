@@ -22,6 +22,11 @@
 				<ResourceDictionary Source="Styles\ComboBoxStyle.xaml"/>
 				<ResourceDictionary Source="Styles\CheckboxStyle.xaml"/>
 
+				<ResourceDictionary Source="Styles\ListBoxItemControlTemplate.xaml"/>
+
+				<ResourceDictionary Source="Modeling\ModuleView.xaml"/>
+				<ResourceDictionary Source="Modeling\LinkView.xaml"/>
+
 			</ResourceDictionary.MergedDictionaries>
 		</ResourceDictionary>
 			

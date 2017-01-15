@@ -156,6 +156,12 @@ namespace Dependiator.MainWindowViews
 		}
 
 
+		public void ClosingWindow()
+		{
+			MainViewModel.ClosingWindow();
+		}
+
+
 		private async Task SelectWorkingFolderAsync()
 		{
 			isLoaded = false;
