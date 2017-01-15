@@ -62,7 +62,7 @@ namespace Dependiator.Modeling
 
 		public override bool CanBeShown()
 		{
-			return ViewNodeSize.Width > 20 && (ParentNode?.ItemBounds.Contains(ItemBounds) ?? true);
+			return ViewNodeSize.Width > 10 && (ParentNode?.ItemBounds.Contains(ItemBounds) ?? true);
 		}
 
 

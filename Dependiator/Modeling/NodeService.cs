@@ -32,7 +32,11 @@ namespace Dependiator.Modeling
 		}
 
 
-		public double Scale => canvasService.Scale;
+		public double Scale
+		{
+			get { return canvasService.Scale; }
+			set { canvasService.Scale = value; }			
+		} 
 
 		public Rect CurrentViewPort => canvasService.CurrentViewPort;
 

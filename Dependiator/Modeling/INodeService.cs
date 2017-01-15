@@ -7,7 +7,7 @@ namespace Dependiator.Modeling
 {
 	internal interface INodeService
 	{
-		double Scale { get; }
+		double Scale { get; set; }
 
 		Rect CurrentViewPort { get; }
 

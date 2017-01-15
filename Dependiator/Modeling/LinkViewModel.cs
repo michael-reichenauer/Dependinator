@@ -30,21 +30,17 @@ namespace Dependiator.Modeling
 		{
 			get
 			{
-				if (link.SubLinkCount < 3)
+				if (link.SubLinkCount < 5)
 				{
 					return 1;
 				}
-				else if (link.SubLinkCount < 7)
+				else if (link.SubLinkCount < 15)
 				{
 					return 2;
 				}
-				else if (link.SubLinkCount < 15)
+				else 
 				{
 					return 3;
-				}
-				else
-				{
-					return 4;
 				}
 			}
 		}

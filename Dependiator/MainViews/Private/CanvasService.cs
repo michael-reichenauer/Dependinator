@@ -39,7 +39,18 @@ namespace Dependiator.MainViews.Private
 		public Point Offset => canvas?.Offset ?? new Point(0, 0);
 
 
-		public double Scale => canvas?.Scale ?? 1;
+		public double Scale
+		{
+			get { return canvas?.Scale ?? 1; }
+			set
+			{
+				if (canvas != null)
+				{
+					canvas.Scale = value;
+				}
+			}
+		}
+
 
 
 		public bool ZoomCanvas(int zoomDelta, Point viewPosition)

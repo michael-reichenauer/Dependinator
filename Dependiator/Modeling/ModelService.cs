@@ -73,12 +73,15 @@ namespace Dependiator.Modeling
 
 		private IEnumerable<Node> GetNodes(ElementTree elementTree)
 		{
-			Rect viewBox = nodeService.CurrentViewPort;
-
 			Size size = new Size(200, 100);
+			Rect viewBox = nodeService.CurrentViewPort;
+			double scale = (viewBox.Width * 0.6) / size.Width;
+			nodeService.Scale = scale;
 
+			viewBox = nodeService.CurrentViewPort;
 			double x = (viewBox.Width - viewBox.X) / 2 - (size.Width / 2);
 			double y = (viewBox.Height - viewBox.Y) / 2 -(size.Height / 2);
+
 
 			Point position = new Point(x, y);
 			Rect bounds = new Rect(position, size);
