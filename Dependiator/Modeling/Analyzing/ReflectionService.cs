@@ -176,9 +176,12 @@ namespace Dependiator.Modeling.Analyzing
 				return;
 			}
 
+			string name = targetType.Namespace != null
+				? targetType.Namespace + "." + targetType.Name
+				: targetType.Name;
 			DataLink link = new DataLink
 			{
-				Target = targetType.FullName
+				Target = name
 			};
 
 			sourceNode.Links = sourceNode.Links ?? new List<DataLink>();
