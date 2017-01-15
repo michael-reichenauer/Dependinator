@@ -294,7 +294,7 @@ namespace Dependiator.Modeling
 			Module module = this as Module;
 			if (module != null)
 			{
-				module.UpdateLinksFor(this);
+				module.UpdateLinksFor();
 			}
 
 			Module parentModule = ParentNode as Module;

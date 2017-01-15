@@ -126,8 +126,8 @@ namespace Dependiator.Modeling
 
 				x1 = sourceRect.X + sourceRect.Width / 2;
 				y1 = sourceRect.Y + sourceRect.Height;
-				x2 = SourceNode.ActualNodeBounds.Width / 2;
-				y2 = SourceNode.ActualNodeBounds.Height;
+				x2 = TargetNode.ActualNodeBounds.Width / 2;
+				y2 = TargetNode.ActualNodeBounds.Height;
 				LinkBrush = SourceNode.RectangleBrush;
 			}
 			else

@@ -201,5 +201,19 @@ namespace Dependiator.Modeling
 				link.NotifyAll();
 			}
 		}
+
+		public void UpdateLinksFor()
+		{
+			IEnumerable<Link> links = ChildNodes
+				.OfType<Link>()
+				
+				.ToList();
+
+			foreach (Link link in links)
+			{
+				link.SetLinkLine();
+				link.NotifyAll();
+			}
+		}
 	}
 }
