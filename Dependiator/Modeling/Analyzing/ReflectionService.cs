@@ -179,6 +179,7 @@ namespace Dependiator.Modeling.Analyzing
 			string name = targetType.Namespace != null
 				? targetType.Namespace + "." + targetType.Name
 				: targetType.Name;
+
 			DataLink link = new DataLink
 			{
 				Target = name

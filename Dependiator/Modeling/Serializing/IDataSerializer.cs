@@ -4,5 +4,6 @@
 	{
 		void Serialize(Data data);
 
+		bool TryDeserialize(out Data data);
 	}
 }

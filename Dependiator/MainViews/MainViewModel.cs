@@ -336,5 +336,11 @@ namespace Dependiator.MainViews
 			//	Clicked(commitViewModel);
 			//}
 		}
+
+
+		public void ClosingWindow()
+		{
+			modelService.Close();
+		}
 	}
 }

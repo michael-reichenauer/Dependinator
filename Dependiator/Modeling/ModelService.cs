@@ -13,39 +13,41 @@ namespace Dependiator.Modeling
 		private readonly IReflectionService reflectionService;
 		private readonly IElementService elementService;
 		private readonly INodeService nodeService;
-		private readonly IDataSerializer serializer;
+		private readonly IDataSerializer dataSerializer;
 
+		private ElementTree elementTree;
 
 		public ModelService(
 			IReflectionService reflectionService,
 			IElementService elementService,
 			INodeService nodeService,
-			IDataSerializer serializer)
+			IDataSerializer dataSerializer)
 		{
 			this.reflectionService = reflectionService;
 			this.elementService = elementService;
 			this.nodeService = nodeService;
-			this.serializer = serializer;
+			this.dataSerializer = dataSerializer;
 		}
 
 
 		public void InitModules()
 		{
-			Data data = reflectionService.Analyze();
+			if (!dataSerializer.TryDeserialize(out Data data))
+			{
+				data = reflectionService.Analyze();
+			}
 
-			serializer.Serialize(data);
+			elementTree = elementService.ToElementTree(data);
 
-			ElementTree elementTree = elementService.ToElementTree(data);
+			//Data data2 = elementService.ToData(elementTree);
+			//serializer.Serialize(data2);
 
-			Data data2 = elementService.ToData(elementTree);
-			serializer.Serialize(data2);
+			//elementTree = elementService.ToElementTree(data2);
 
-			elementTree = elementService.ToElementTree(data2);
+			//Data data3 = elementService.ToData(elementTree);
+			//serializer.Serialize(data3);
 
-			Data data3 = elementService.ToData(elementTree);
-			serializer.Serialize(data3);
-
-			elementTree = elementService.ToElementTree(data3);
+			// elementTree = elementService.ToElementTree(data3);
 
 			Timing t = new Timing();
 			IEnumerable<Node> enumerable = GetNodes(elementTree);
@@ -61,6 +63,13 @@ namespace Dependiator.Modeling
 		}
 
 
+		public void Close()
+		{
+			Data data = elementService.ToData(elementTree);
+			dataSerializer.Serialize(data);
+		}
+
+
 		private IEnumerable<Node> GetNodes(ElementTree elementTree)
 		{
 			int x = 0;
@@ -73,6 +82,5 @@ namespace Dependiator.Modeling
 			nodeService.AddRootNode(module);
 			yield return module;
 		}
-
 	}
 }

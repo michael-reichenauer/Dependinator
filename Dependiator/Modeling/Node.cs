@@ -102,13 +102,17 @@ namespace Dependiator.Modeling
 				actualNodeBounds = value;
 
 				SetItemBounds();
+
+				SetElementBounds();
 			}
 		}
+
 
 		public Rect RelativeNodeBounds { get; set; }
 
 
 		public Rect ViewNodeBounds => new Rect(new Point(0, 0), ViewNodeSize);
+
 
 		public Size ViewNodeSize =>
 			new Size(ItemBounds.Width * Scale, ItemBounds.Height * Scale);
@@ -180,6 +184,11 @@ namespace Dependiator.Modeling
 			{
 				parentModule.UpdateLinksFor(this);
 			}
+		}
+
+
+		protected virtual void SetElementBounds()
+		{
 		}
 
 

@@ -55,7 +55,6 @@ namespace Dependiator.MainViews
 				&& e.LeftButton == MouseButtonState.Pressed
 				&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
 			{
-				//Log.Debug($"Mouse {viewPosition}");
 				CaptureMouse();
 				Vector viewOffset = viewPosition - lastMousePosition;
 				e.Handled = viewModel.MoveCanvas(viewOffset);
@@ -63,31 +62,17 @@ namespace Dependiator.MainViews
 			else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
 			 && e.LeftButton == MouseButtonState.Pressed)
 			{
-				//Log.Debug($"Mouse {viewPosition}");
 				CaptureMouse();
 				Vector viewOffset = viewPosition - lastMousePosition;
 
-				if (movingObject == null)
-				{
-					Log.Debug("Start moving");
-				}
+
 				movingObject = viewModel.MoveNode(viewPosition, viewOffset, movingObject);
 				
 				e.Handled = movingObject != null;
-
-				if (movingObject == null)
-				{
-					Log.Debug("Stop moving");
-				}
-				//Log.Debug($"Move {viewOffset}");
 			}
 			else
 			{
-				//Log.Debug($"Release move");
-				if (movingObject != null)
-				{
-					Log.Debug("Stop moving lower down !!!!");
-				}
+
 				movingObject = null;
 				ReleaseMouseCapture();
 			}

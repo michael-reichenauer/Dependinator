@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Windows;
 using Dependiator.Modeling.Serializing;
 
 
@@ -21,6 +22,10 @@ namespace Dependiator.Modeling.Analyzing
 		public ElementChildren Children { get; }
 
 		public References References { get; }
+
+		public Point? Location { get; private set; }
+
+		public Size? Size { get; private set; }
 
 
 		public IEnumerable<Element> AncestorsAndSelf()
@@ -63,5 +68,12 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 		public override string ToString() => Name.FullName;
+
+
+		public void SetLocationAndSize(Point? location, Size? dataNodeSize)
+		{
+			Location = location;
+			Size = dataNodeSize;
+		}
 	}
 }

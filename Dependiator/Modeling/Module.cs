@@ -11,6 +11,7 @@ namespace Dependiator.Modeling
 	internal class Module : Node
 	{
 		private readonly INodeService nodeService;
+		private static readonly Size DefaultSize = new Size(200, 100);
 
 
 		public Module(
@@ -43,10 +44,11 @@ namespace Dependiator.Modeling
 
 		public string Name => Element.Name.Name;
 
-		public string FullName => Element.Name.FullName +
-		                          $"\nchildren: {ChildModules.Count()}, decedents: {Element.Children.Descendents().Count()}\n" +
-		                          $"SourceRefs {Element.References.DescendentAndSelfSourceReferences().Count()} " +
-		                          $"TargetRefs {Element.References.DescendentAndSelfTargetReferences().Count()}";
+		public string FullName =>
+			Element.Name.FullName +
+			$"\nchildren: {ChildModules.Count()}, decedents: {Element.Children.Descendents().Count()}\n" +
+			$"SourceRefs {Element.References.DescendentAndSelfSourceReferences().Count()} " +
+			$"TargetRefs {Element.References.DescendentAndSelfTargetReferences().Count()}";
 
 
 		public ModuleViewModel ModuleViewModel => ViewModel as ModuleViewModel;
@@ -83,6 +85,12 @@ namespace Dependiator.Modeling
 		}
 
 
+		protected override void SetElementBounds()
+		{
+			Element.SetLocationAndSize(ActualNodeBounds.Location, ActualNodeBounds.Size);
+		}
+
+
 		public override void ChangedScale()
 		{
 			base.ChangedScale();
@@ -99,7 +107,6 @@ namespace Dependiator.Modeling
 			}
 		}
 
-		
 
 		public override string ToString() => Element.Name.FullName;
 
@@ -109,22 +116,29 @@ namespace Dependiator.Modeling
 			// Original size new Size(200, 120)		
 			int rowLength = 6;
 
-			Size size = new Size(200, 100);
-
 			int padding = 20;
 
-			double xMargin = ((size.Width * NodeScaleFactor) - ((size.Width + padding) * rowLength)) / 2;
+			double xMargin = ((DefaultSize.Width * NodeScaleFactor) - ((DefaultSize.Width + padding) * rowLength)) / 2;
 			double yMargin = 25 * NodeScaleFactor;
 
 			int count = 0;
 			foreach (Element childElement in Element.Children)
 			{
-				int x = count % rowLength;
-				int y = count / rowLength;
+				Size size = childElement.Size ?? DefaultSize;
 
-				Point position = new Point(x * (size.Width + padding) + xMargin, y * (size.Height + padding) + yMargin);
+				Point location;
+				if (childElement.Location != null)
+				{
+					location = childElement.Location.Value;
+				}
+				else
+				{
+					int x = count % rowLength;
+					int y = count / rowLength;
+					location = new Point(x * (DefaultSize.Width + padding) + xMargin, y * (DefaultSize.Height + padding) + yMargin);
+				}
 
-				Rect bounds = new Rect(position, size);
+				Rect bounds = new Rect(location, size);
 
 				Module module = new Module(nodeService, childElement, bounds, this);
 				AddChildNode(module);
@@ -184,7 +198,7 @@ namespace Dependiator.Modeling
 			foreach (Link link in links)
 			{
 				link.SetLinkLine();
-				link.NotifyAll();			
+				link.NotifyAll();
 			}
 		}
 	}

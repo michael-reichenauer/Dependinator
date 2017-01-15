@@ -97,13 +97,10 @@ namespace Dependiator.Modeling
 					.GetItemsInArea(area)
 					.OfType<Module>()
 					.LastOrDefault(node => node.ParentNode != null);
-
-				Log.Debug($"Found module '{module}'");
 			}
 			
 			if (module != null)
 			{
-				Log.Debug($"Move object '{movingObject}' {viewOffset}");
 				MoveNode(module, viewOffset);
 			}
 			

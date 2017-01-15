@@ -18,7 +18,7 @@ namespace Dependiator.Modeling
 
 			foreach (DataNode node in data.Nodes)
 			{
-				AddNode(node, null, elements);
+				AddElement(node, null, elements);
 			}
 
 			ElementTree tree = new ElementTree(root);
@@ -41,7 +41,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void AddNode(
+		private void AddElement(
 			DataNode dataNode,
 			string parentName,
 			Dictionary<string, Element> elements)
@@ -50,18 +50,14 @@ namespace Dependiator.Modeling
 
 			Element element = GetOrAddElement(name, elements);
 			element.SetType(dataNode.Type);
+			element.SetLocationAndSize(dataNode.Location, dataNode.Size);
 
 			if (dataNode.Nodes != null)
 			{
 				foreach (DataNode childNode in dataNode.Nodes)
 				{
-					AddNode(childNode, name, elements);
+					AddElement(childNode, name, elements);
 				}
-			}
-
-			if (name == "Dependiator")
-			{
-				
 			}
 
 			if (dataNode.Links != null)
@@ -83,7 +79,9 @@ namespace Dependiator.Modeling
 				Name = element.Name.Name,
 				Type = element.Type,
 				Nodes = ToChildren(element.Children),
-				Links = ToLinks(element.References)
+				Links = ToLinks(element.References),
+				Location = element.Location,
+				Size = element.Size
 			};
 
 			return node;

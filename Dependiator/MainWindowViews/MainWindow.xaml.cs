@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
@@ -109,12 +110,14 @@ namespace Dependiator.MainWindowViews
 			viewModel.WindowWith = (int)sizeInfo.NewSize.Width;
 		}
 
-		private void MainWindow_OnClosed(object sender, EventArgs e)
+		private void MainWindow_OnClosing(object sender, CancelEventArgs e)
 		{
+			viewModel.ClosingWindow();
 			StoreWindowSettings();
 
 			StoreLasteUsedFolder();
 		}
+
 
 
 		private void StoreWindowSettings()
