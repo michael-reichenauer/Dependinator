@@ -4,7 +4,7 @@
 
 	<DataTemplate x:Key="LinkViewTemplate">
 
-		<Border BorderBrush="Beige" BorderThickness="0">
+		<Border BorderBrush="Transparent" BorderThickness="0">
 			<Grid>
 
 				<Line
@@ -13,7 +13,7 @@
 					X2="{Binding X2}"
 					Y2="{Binding Y2}"
 					Stroke="Transparent"
-					StrokeThickness="10"
+					StrokeThickness="8"
 					StrokeDashArray="{Binding StrokeDash}">
 
 					<Line.ToolTip>
@@ -32,17 +32,12 @@
 					Y2="{Binding Y2}"
 					Stroke="{Binding LineBrush}"
 					StrokeThickness="3"
-					StrokeDashArray="{Binding StrokeDash}">
-					
-					<Line.ToolTip>
-						<ToolTip
-							Content="{Binding ToolTip}"
-							Placement="Mouse"
-							BorderBrush="{Binding LineBrush}"
-							BorderThickness="{Binding StrokeThickness}" />
-					</Line.ToolTip>
+					StrokeDashArray="{Binding StrokeDash}"
+					IsHitTestVisible="False">
 				</Line>
+				
 			</Grid>
+			
 		</Border>
 
 	</DataTemplate>

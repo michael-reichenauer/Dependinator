@@ -1,11 +1,14 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:Dependiator.Modeling">
+﻿<ResourceDictionary
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:local="clr-namespace:Dependiator.Modeling">
 
 	<DataTemplate x:Key="ModuleViewTemplate">
 
-		<Border 
-			BorderBrush="{Binding RectangleBrush}" BorderThickness="{Binding StrokeThickness}" Background="{Binding BackgroundBrush}" >
+		<Border
+			BorderBrush="{Binding RectangleBrush}"
+			BorderThickness="{Binding StrokeThickness}"
+			Background="{Binding BackgroundBrush}">
 			<Grid Background="Transparent">
 
 				<Grid.RowDefinitions>

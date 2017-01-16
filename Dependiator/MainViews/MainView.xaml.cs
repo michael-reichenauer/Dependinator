@@ -47,6 +47,7 @@ namespace Dependiator.MainViews
 
 		private object movingObject = null;
 
+
 		protected override void OnPreviewMouseMove(MouseEventArgs e)
 		{
 			Point viewPosition = e.GetPosition(ItemsListBox);
@@ -64,15 +65,13 @@ namespace Dependiator.MainViews
 			{
 				CaptureMouse();
 				Vector viewOffset = viewPosition - lastMousePosition;
-
-
-				movingObject = viewModel.MoveNode(viewPosition, viewOffset, movingObject);
 				
+				movingObject = viewModel.MoveNode(viewPosition, viewOffset, movingObject);
+
 				e.Handled = movingObject != null;
 			}
 			else
 			{
-
 				movingObject = null;
 				ReleaseMouseCapture();
 			}
