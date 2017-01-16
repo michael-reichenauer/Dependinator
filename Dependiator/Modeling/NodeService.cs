@@ -105,7 +105,8 @@ namespace Dependiator.Modeling
 
 			if (module == null)
 			{
-				Rect area = new Rect(canvasPoint, new Size(1 / Scale, 1 / Scale));
+				Point point = new Point(canvasPoint.X - 6 / Scale, canvasPoint.Y - 6 / Scale);
+				Rect area = new Rect(point, new Size(6 / Scale, 6 / Scale));
 
 				module = itemsSource
 					.GetItemsInArea(area)
