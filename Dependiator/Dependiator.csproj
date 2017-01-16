@@ -146,7 +146,13 @@
     <Compile Include="Modeling\ElementService.cs" />
     <Compile Include="Modeling\IElementService.cs" />
     <Compile Include="Modeling\Link.cs" />
+    <Compile Include="Modeling\LinkView.xaml.cs">
+      <DependentUpon>LinkView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Modeling\LinkViewModel.cs" />
+    <Compile Include="Modeling\ModelView.xaml.cs">
+      <DependentUpon>ModelView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Modeling\Node.cs" />
     <Compile Include="MainViews\ItemViewModel.cs" />
     <Compile Include="MainViews\Private\Item.cs" />
@@ -302,7 +308,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Modeling\ModuleView.xaml">
+    <Page Include="Modeling\ModelView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

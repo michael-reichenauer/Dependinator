@@ -7,6 +7,7 @@
 	xmlns:ui="clr-namespace:Dependiator.Utils.UI"
 	xmlns:virtualCanvas="clr-namespace:Dependiator.Utils.UI.VirtualCanvas"
 	xmlns:local="clr-namespace:Dependiator.MainViews"
+	xmlns:modeling="clr-namespace:Dependiator.Modeling"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
@@ -101,7 +102,13 @@
 
 							<!-- Module  -->
 							<DataTrigger Binding="{Binding Type}" Value="ModuleViewModel">
-								<Setter Property="ContentTemplate" Value="{StaticResource ModuleViewTemplate}" />
+								<Setter Property="ContentTemplate">
+									<Setter.Value>
+										<DataTemplate>
+											<modeling:ModelView/>
+										</DataTemplate>
+									</Setter.Value>
+								</Setter>
 								<Setter Property="IsEnabled" Value="true" />
 								<Setter Property="Focusable" Value="False" />
 								<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
@@ -109,7 +116,13 @@
 
 							<!-- Link  -->
 							<DataTrigger Binding="{Binding Type}" Value="LinkViewModel">
-								<Setter Property="ContentTemplate" Value="{StaticResource LinkViewTemplate}" />
+								<Setter Property="ContentTemplate">
+									<Setter.Value>
+										<DataTemplate>
+											<modeling:LinkView/>
+										</DataTemplate>
+									</Setter.Value>
+								</Setter>
 								<Setter Property="IsEnabled" Value="true" />
 								<Setter Property="Focusable" Value="False" />
 								<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
