@@ -31,8 +31,16 @@
 					X2="{Binding X2}"
 					Y2="{Binding Y2}"
 					Stroke="{Binding LineBrush}"
-					StrokeThickness="{Binding StrokeThickness}"
+					StrokeThickness="3"
 					StrokeDashArray="{Binding StrokeDash}">
+					
+					<Line.ToolTip>
+						<ToolTip
+							Content="{Binding ToolTip}"
+							Placement="Mouse"
+							BorderBrush="{Binding LineBrush}"
+							BorderThickness="{Binding StrokeThickness}" />
+					</Line.ToolTip>
 				</Line>
 			</Grid>
 		</Border>
