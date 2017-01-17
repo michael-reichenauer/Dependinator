@@ -14,9 +14,9 @@ namespace Dependiator.Modeling.Analyzing
 			| BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
 
-		public Data Analyze()
+		public Data Analyze(string path)
 		{
-			IReadOnlyList<TypeInfo> typeInfos = GetAssemblyTypes();
+			IReadOnlyList<TypeInfo> typeInfos = GetAssemblyTypes(path);
 
 			Data data = new Data
 			{
@@ -27,10 +27,9 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		private static IReadOnlyList<TypeInfo> GetAssemblyTypes()
-		{
-			string location = Assembly.GetExecutingAssembly().Location;
-			Assembly assembly = Assembly.ReflectionOnlyLoadFrom(location);
+		private static IReadOnlyList<TypeInfo> GetAssemblyTypes(string path)
+		{			
+			Assembly assembly = Assembly.ReflectionOnlyLoadFrom(path);
 
 			IReadOnlyList<TypeInfo> typeInfos = assembly.DefinedTypes.ToList();
 			return typeInfos;

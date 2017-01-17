@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Utils;
 
@@ -130,7 +131,30 @@ namespace Dependiator.ApplicationHandling.Private
 			}
 
 			return @"D:\My Work\Dependiator";
+
+			////if (IsValidPath(path))
+			////{
+			////	return Error.From("No valid file");
+			////}
+
+			////return path;
 			//eturn gitInfoService.GetCurrentRootPath(path);
+		}
+
+
+		private static bool IsValidPath(string path)
+		{
+			if (path == null || !File.Exists(path))
+			{
+				return false;
+			}
+
+			if (!(path.EndsWith(".dll") || path.EndsWith(".exe")))
+			{
+				return false;
+			}
+
+			return true;
 		}
 	}
 }

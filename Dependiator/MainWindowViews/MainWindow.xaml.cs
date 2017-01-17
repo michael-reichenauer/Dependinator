@@ -44,7 +44,7 @@ namespace Dependiator.MainWindowViews
 
 			Activate();
 
-			RestoreWindowSettings(workingFolder);
+			RestoreWindowSettings();
 		}
 
 
@@ -122,7 +122,7 @@ namespace Dependiator.MainWindowViews
 
 		private void StoreWindowSettings()
 		{
-			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
+			ProgramSettings settings = Settings.Get<ProgramSettings>();
 
 			settings.Top = Top;
 			settings.Left = Left;
@@ -130,14 +130,13 @@ namespace Dependiator.MainWindowViews
 			settings.Width = Width;
 			settings.IsMaximized = WindowState == WindowState.Maximized;
 			
-
-			Settings.SetWorkFolderSetting(workingFolder, settings);
+			Settings.Set(settings);
 		}
 
 
-		private void RestoreWindowSettings(string workingFolder)
+		private void RestoreWindowSettings()
 		{
-			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
+			ProgramSettings settings = Settings.Get<ProgramSettings>();
 
 			Rectangle rect = new Rectangle(
 				(int)settings.Left, (int)settings.Top, (int)settings.Width, (int)settings.Height);

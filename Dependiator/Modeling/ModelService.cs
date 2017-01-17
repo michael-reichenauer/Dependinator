@@ -31,11 +31,11 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void InitModules()
+		public void InitModules(string path)
 		{
 			if (!dataSerializer.TryDeserialize(out Data data))
 			{
-				data = reflectionService.Analyze();
+				data = reflectionService.Analyze(path);
 			}
 
 			elementTree = elementService.ToElementTree(data);

@@ -178,6 +178,8 @@ namespace Dependiator.MainWindowViews
 
 		private async Task SetWorkingFolderAsync()
 		{
+			await Task.Yield();
+
 			if (ipcRemotingService != null)
 			{
 				ipcRemotingService.Dispose();
@@ -203,7 +205,7 @@ namespace Dependiator.MainWindowViews
 
 			Notify(nameof(Title));
 
-			await MainViewModel.LoadAsync();
+			//await MainViewModel.LoadAsync();
 			isLoaded = true;
 		}
 
