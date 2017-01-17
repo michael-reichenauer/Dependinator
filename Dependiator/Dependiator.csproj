@@ -150,8 +150,8 @@
       <DependentUpon>LinkView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Modeling\LinkViewModel.cs" />
-    <Compile Include="Modeling\ModelView.xaml.cs">
-      <DependentUpon>ModelView.xaml</DependentUpon>
+    <Compile Include="Modeling\ModuleView.xaml.cs">
+      <DependentUpon>ModuleView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Modeling\Node.cs" />
     <Compile Include="MainViews\ItemViewModel.cs" />
@@ -308,7 +308,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Modeling\ModelView.xaml">
+    <Page Include="Modeling\ModuleView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

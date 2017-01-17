@@ -105,7 +105,7 @@
 								<Setter Property="ContentTemplate">
 									<Setter.Value>
 										<DataTemplate>
-											<modeling:ModelView/>
+											<modeling:ModuleView/>
 										</DataTemplate>
 									</Setter.Value>
 								</Setter>

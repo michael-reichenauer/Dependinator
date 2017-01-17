@@ -1,4 +1,5 @@
 using System;
+using System.Windows;
 using System.Windows.Media;
 using Dependiator.MainViews;
 using Dependiator.Modeling.Analyzing;
@@ -41,21 +42,27 @@ namespace Dependiator.Modeling
 		}
 
 
+		internal void MouseMove(Point viewPosition, Vector viewOffset, bool isFirst)
+		{
+			module.Resize(viewPosition, viewOffset, isFirst);
+		}
+
+
 		//public string Id => Branch.Id;
-		//public string Name => Branch.Name;
-		//public string Dashes { get; set; }
-		//public int NeonEffect { get; set; }
-		//public int StrokeThickness { get; set; }
+			//public string Name => Branch.Name;
+			//public string Dashes { get; set; }
+			//public int NeonEffect { get; set; }
+			//public int StrokeThickness { get; set; }
 
 
 
 
 
-		//public Command ChangeColorCommand => Command(() =>
-		//{
-		//	themeService.ChangeBranchBrush(Branch);
-		//	repositoryCommands.RefreshView();
-		//});
+			//public Command ChangeColorCommand => Command(() =>
+			//{
+			//	themeService.ChangeBranchBrush(Branch);
+			//	repositoryCommands.RefreshView();
+			//});
 
 	}
 }
