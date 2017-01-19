@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using System.Windows.Threading;
 using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
+using Dependiator.MainViews;
 using Dependiator.Utils;
 
 
@@ -19,7 +20,8 @@ namespace Dependiator.MainWindowViews
 	public partial class MainWindow : Window
 	{
 		private readonly WorkingFolder workingFolder;
-	
+		private readonly ICanvasService canvasService;
+
 		private readonly DispatcherTimer remoteCheckTimer = new DispatcherTimer();
 
 		private readonly MainWindowViewModel viewModel;
@@ -28,9 +30,11 @@ namespace Dependiator.MainWindowViews
 
 		internal MainWindow(
 			WorkingFolder workingFolder,
+			ICanvasService canvasService,
 			Func<MainWindowViewModel> mainWindowViewModelProvider)
 		{
 			this.workingFolder = workingFolder;
+			this.canvasService = canvasService;
 
 			InitializeComponent();
 	
@@ -70,6 +74,10 @@ namespace Dependiator.MainWindowViews
 		{
 			await viewModel.FirstLoadAsync();
 			SetRepositoryViewFocus();
+			canvasService.Scale = Settings.Get<ProgramSettings>().Scale;
+			double x = Settings.Get<ProgramSettings>().X;
+			double y = Settings.Get<ProgramSettings>().Y;
+			canvasService.Offset = new System.Windows.Point(x, y);
 			StartRemoteCheck();
 		}
 
@@ -129,7 +137,10 @@ namespace Dependiator.MainWindowViews
 			settings.Height = Height;
 			settings.Width = Width;
 			settings.IsMaximized = WindowState == WindowState.Maximized;
-			
+			settings.Scale = canvasService.Scale;
+			settings.X = canvasService.Offset.X;
+			settings.Y = canvasService.Offset.Y;
+
 			Settings.Set(settings);
 		}
 

@@ -31,7 +31,7 @@ namespace Dependiator.ApplicationHandling
 
 		public bool HasValue => Path != null;
 
-		public string Name => HasValue ? System.IO.Path.GetFileName(Path) : null;
+		public string Name => HasValue ? System.IO.Path.GetFileNameWithoutExtension(FilePath) : null;
 
 		public static implicit operator string(WorkingFolder workingFolder) => workingFolder.Path;
 

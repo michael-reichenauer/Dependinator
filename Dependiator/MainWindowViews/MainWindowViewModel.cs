@@ -66,7 +66,9 @@ namespace Dependiator.MainWindowViews
 			set { Set(value); }
 		}
 
-		public string WorkingFolder => workingFolder;
+		public string WorkingFolder => workingFolder.Name;
+
+		public string WorkingFolderPath => workingFolder.FilePath;
 
 
 

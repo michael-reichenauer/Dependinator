@@ -81,7 +81,7 @@
 								BorderThickness="2"
 								BorderBrush="{DynamicResource BorderBrush}">
 								<StackPanel Orientation="Horizontal">
-									<TextBlock Text="Working folder " Foreground="{DynamicResource TextBrush}"/>
+									<TextBlock Text="{Binding WorkingFolderPath}" Foreground="{DynamicResource TextBrush}"/>
 								</StackPanel>
 							</ToolTip>
 						</Button.ToolTip>

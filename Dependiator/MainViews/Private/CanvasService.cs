@@ -36,7 +36,11 @@ namespace Dependiator.MainViews.Private
 
 		public Point GetCanvasPoint(Point screenPoint) => canvas.GetCanvasPoint(screenPoint);
 
-		public Point Offset => canvas?.Offset ?? new Point(0, 0);
+		public Point Offset
+		{
+			get { return canvas?.Offset ?? new Point(0, 0); }
+			set { canvas.Offset = value; }
+		}
 
 
 		public double Scale
@@ -50,7 +54,6 @@ namespace Dependiator.MainViews.Private
 				}
 			}
 		}
-
 
 
 		public bool ZoomCanvas(int zoomDelta, Point viewPosition)
