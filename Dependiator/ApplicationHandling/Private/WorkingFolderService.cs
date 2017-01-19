@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Utils;
 
@@ -40,10 +41,12 @@ namespace Dependiator.ApplicationHandling.Private
 			}
 		}
 
+		public string FilePath { get; private set; }
+
 
 		public bool TrySetPath(string path)
 		{
-			if (GetRootFolderPath(path).HasValue(out string rootFolder))
+			if (GetWorkingFolderPath(path).HasValue(out string rootFolder))
 			{
 				if (workingFolder != rootFolder)
 				{
@@ -67,9 +70,7 @@ namespace Dependiator.ApplicationHandling.Private
 		{
 			if (IsValid)
 			{
-				ProgramSettings settings = Settings.Get<ProgramSettings>();
-				settings.LastUsedWorkingFolder = workingFolder;
-				Settings.Set(settings);
+				Settings.Edit<ProgramSettings>(settings => settings.LastUsedWorkingFolder = workingFolder);
 			}
 		}
 
@@ -82,38 +83,34 @@ namespace Dependiator.ApplicationHandling.Private
 		// * Starting with parameters "/test"
 		private string GetInitialWorkingFolder()
 		{
-			R<string> rootFolder;
-			if (commandLine.HasFolder)
+			R<string> folderPath;
+			if (commandLine.HasFile)
 			{
-				// Call from e.g. Windows Explorer folder context menu
-				rootFolder = GetRootFolderPath(commandLine.Folder);
-				IsValid = rootFolder.IsOk;
-				return rootFolder.IsOk ? rootFolder.Value : commandLine.Folder;
+				// Call from e.g. Windows Explorer file context menu
+				folderPath = GetWorkingFolderPath(commandLine.FilePath);
+				IsValid = folderPath.IsOk;
+				return folderPath.IsOk ? folderPath.Value : commandLine.FilePath;
 			}
 
-			rootFolder = GetRootFolderPath(Environment.CurrentDirectory);
-			if (!rootFolder.IsOk)
+			string lastUsedFolder = GetLastUsedWorkingFolder();
+			if (!string.IsNullOrWhiteSpace(lastUsedFolder))
 			{
-				string lastUsedFolder = GetLastUsedWorkingFolder();
-				if (!string.IsNullOrWhiteSpace(lastUsedFolder))
-				{
-					rootFolder = GetRootFolderPath(lastUsedFolder);
-				}
+				folderPath = lastUsedFolder;
+			}
+			else
+			{
+				folderPath = GetWorkingFolderPath(Assembly.GetEntryAssembly().Location);
 			}
 
-			IsValid = rootFolder.IsOk;
-			if (rootFolder.IsOk)
+
+			IsValid = folderPath.IsOk;
+			if (folderPath.IsOk)
 			{
-				return rootFolder.Value;
+				FilePath = Settings.GetWorkFolderSetting(folderPath.Value).FilePath;
+				return folderPath.Value;
 			}
 
-			return GetMyDocumentsPath();
-		}
-
-
-		private static string GetMyDocumentsPath()
-		{
-			return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+			return GetWorkingFolderPath(Assembly.GetEntryAssembly().Location).Value;
 		}
 
 
@@ -123,22 +120,24 @@ namespace Dependiator.ApplicationHandling.Private
 		}
 
 
-		public R<string> GetRootFolderPath(string path)
+		public R<string> GetWorkingFolderPath(string path)
 		{
-			if (path == null)
+			if (!IsValidPath(path))
 			{
-				return Error.From("No working folder");
+				return Error.From("No valid file");
 			}
 
-			return @"D:\My Work\Dependiator";
+			string workingFolder = ProgramPaths.GetWorkingFolderPath(path);
 
-			////if (IsValidPath(path))
-			////{
-			////	return Error.From("No valid file");
-			////}
+			if (0 != string.Compare(path, workingFolder, StringComparison.OrdinalIgnoreCase))
+			{
+				Settings.EditWorkingFolderSettings(workingFolder, settings => settings.FilePath = path);
 
-			////return path;
-			//eturn gitInfoService.GetCurrentRootPath(path);
+				FilePath = path;
+			}
+
+			FilePath = Settings.GetWorkFolderSetting(workingFolder).FilePath;
+			return workingFolder;
 		}
 
 

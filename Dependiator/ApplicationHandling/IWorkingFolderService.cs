@@ -7,6 +7,7 @@ namespace Dependiator.ApplicationHandling
 	{
 		event EventHandler OnChange;
 		string Path { get; }
+		string FilePath { get; }
 		bool IsValid { get; }
 
 		bool TrySetPath(string path);

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
+using Dependiator.ApplicationHandling;
 using Dependiator.MainViews;
 using Dependiator.Modeling.Analyzing;
 using Dependiator.Modeling.Serializing;
@@ -11,6 +12,7 @@ namespace Dependiator.Modeling
 	[SingleInstance]
 	internal class ModelService : IModelService
 	{
+		private readonly WorkingFolder workingFolder;
 		private readonly IReflectionService reflectionService;
 		private readonly IElementService elementService;
 		private readonly INodeService nodeService;
@@ -19,11 +21,13 @@ namespace Dependiator.Modeling
 		private ElementTree elementTree;
 
 		public ModelService(
+			WorkingFolder workingFolder,
 			IReflectionService reflectionService,
 			IElementService elementService,
 			INodeService nodeService,
 			IDataSerializer dataSerializer)
 		{
+			this.workingFolder = workingFolder;
 			this.reflectionService = reflectionService;
 			this.elementService = elementService;
 			this.nodeService = nodeService;
@@ -31,11 +35,11 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void InitModules(string path)
+		public void InitModules()
 		{
 			if (!dataSerializer.TryDeserialize(out Data data))
 			{
-				data = reflectionService.Analyze(path);
+				data = reflectionService.Analyze(workingFolder.FilePath);
 			}
 
 			elementTree = elementService.ToElementTree(data);

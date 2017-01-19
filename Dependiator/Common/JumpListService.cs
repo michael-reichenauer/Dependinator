@@ -11,22 +11,22 @@ namespace Dependiator.Common
 		private static readonly int MaxTitleLength = 25;
 
 
-		public void Add(string workingFolder)
+		public void Add(string path)
 		{
 			JumpList jumpList = JumpList.GetJumpList(Application.Current) ?? new JumpList();
 
-			string folderName = Path.GetFileName(workingFolder) ?? workingFolder;
+			string name = Path.GetFileNameWithoutExtension(path) ?? path;
 
-			string title = folderName.Length < MaxTitleLength
-				? folderName
-				: folderName.Substring(0, MaxTitleLength) + "...";
+			string title = name.Length < MaxTitleLength
+				? name
+				: name.Substring(0, MaxTitleLength) + "...";
 
 			JumpTask jumpTask = new JumpTask();
 			jumpTask.Title = title;
 			jumpTask.ApplicationPath = ProgramPaths.GetInstallFilePath();
-			jumpTask.Arguments = $"/d:\"{workingFolder}\"";
+			jumpTask.Arguments = $"\"{path}\"";
 			jumpTask.IconResourcePath = ProgramPaths.GetInstallFilePath();
-			jumpTask.Description = workingFolder;
+			jumpTask.Description = path;
 
 			jumpList.ShowRecentCategory = true;
 

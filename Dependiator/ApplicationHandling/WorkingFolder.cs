@@ -25,6 +25,8 @@ namespace Dependiator.ApplicationHandling
 
 		public string Path => workingFolderService.Path;
 
+		public string FilePath => workingFolderService.FilePath;
+
 		public bool IsValid => workingFolderService.IsValid;
 
 		public bool HasValue => Path != null;

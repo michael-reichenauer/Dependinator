@@ -26,14 +26,17 @@ namespace Dependiator.ApplicationHandling.SettingsHandling
 		private static readonly string LatestETagFileName = "latestetag";
 		private static readonly string LatestInfoFileName = "latestinfo";
 
+		private static readonly string workingFoldersRoot = "WorkingFolders";
+
 
 		public static string DataFolderPath
 		{
 			get
 			{
-				string dataFolderPath = Path.Combine(
-					Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-					ProgramName);
+				string programDataPath = Environment.GetFolderPath(
+					Environment.SpecialFolder.CommonApplicationData);
+
+				string dataFolderPath = Path.Combine(programDataPath, ProgramName);
 
 				EnsureFolderExists(dataFolderPath);
 
@@ -42,20 +45,7 @@ namespace Dependiator.ApplicationHandling.SettingsHandling
 		}
 
 
-		private static void EnsureFolderExists(string dataFolderPath)
-		{
-			try
-			{
-				if (!Directory.Exists(dataFolderPath))
-				{
-					Directory.CreateDirectory(dataFolderPath);
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Warn($"Failed to create {dataFolderPath}, {e}");
-			}			
-		}
+
 
 
 		public static string RemoteSetupPath
@@ -98,6 +88,17 @@ namespace Dependiator.ApplicationHandling.SettingsHandling
 			return Path.Combine(programDataFolderPath, tempName);
 		}
 
+
+		private static string GetWorkingFoldersRoot()
+		{		
+			string programDataFolderPath = GetProgramDataFolderPath();
+			string path = Path.Combine(programDataFolderPath, workingFoldersRoot);
+
+			EnsureFolderExists(path);
+
+			return path;
+		}
+
 		public static string GetTempFolderPath()
 		{
 			return GetProgramDataFolderPath();
@@ -131,10 +132,7 @@ namespace Dependiator.ApplicationHandling.SettingsHandling
 
 		public static string GetProgramDataFolderPath()
 		{
-			string programDataFolderPath = Environment.GetFolderPath(
-				Environment.SpecialFolder.CommonApplicationData);
-
-			return Path.Combine(programDataFolderPath, ProgramName);
+			return DataFolderPath;
 		}
 
 
@@ -238,5 +236,54 @@ namespace Dependiator.ApplicationHandling.SettingsHandling
 			string folderPath = GetProgramDataFolderPath();
 			return Path.Combine(folderPath, ProgramLogName);
 		}
+
+
+		public static string GetWorkingFolderPath(string path)
+		{
+			string directoryName = Path.GetDirectoryName(path);
+			string workingFolders = GetWorkingFoldersRoot();
+
+			if (0 == string.Compare(directoryName, workingFolders,
+				    StringComparison.InvariantCultureIgnoreCase))
+			{
+				// the path is already a working folder path
+				return path;
+			}
+
+			string workingFolderName = EncodePath(path);
+
+			string workingFolderPath = Path.Combine(workingFolders, workingFolderName);
+			EnsureFolderExists(workingFolderPath);
+
+			return workingFolderPath;
+		}
+
+
+		private static string EncodePath(string path)
+		{
+			string encoded = path.Replace("%", "%%");
+			encoded = encoded.Replace(":", "%;");
+			encoded = encoded.Replace("/", "%(");
+			encoded = encoded.Replace("\\", "%)");
+
+			return encoded;
+		}
+
+
+		private static void EnsureFolderExists(string dataFolderPath)
+		{
+			try
+			{
+				if (!Directory.Exists(dataFolderPath))
+				{
+					Directory.CreateDirectory(dataFolderPath);
+				}
+			}
+			catch (Exception e)
+			{
+				Log.Warn($"Failed to create {dataFolderPath}, {e}");
+			}
+		}
+
 	}
 }

@@ -146,9 +146,8 @@ namespace Dependiator.MainViews
 
 			using (progress.ShowDialog("Loading branch view ..."))
 			{
-				string path = Assembly.GetExecutingAssembly().Location;
-				modelService.InitModules(path)
-					;
+			
+				modelService.InitModules();
 				t.Log("Read cached/fresh repository");
 				LoadViewModel();
 				t.Log("Updated view model after cached/fresh");
