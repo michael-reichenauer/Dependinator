@@ -31,11 +31,11 @@
 				</MenuItem>
 
 				<MenuItem 
-					Header="Open working folder ..." 
-					Command="{Binding SelectWorkingFolderCommand}">
+					Header="Open file ..." 
+					Command="{Binding OpenFileCommand}">
 					<MenuItem.Icon>
 						<Border>
-							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE2C8;"/>
+							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE800;"/>
 						</Border>
 					</MenuItem.Icon>
 				</MenuItem>

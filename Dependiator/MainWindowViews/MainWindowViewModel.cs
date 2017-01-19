@@ -112,7 +112,7 @@ namespace Dependiator.MainWindowViews
 
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
 
-		public Command SelectWorkingFolderCommand => AsyncCommand(SelectWorkingFolderAsync);
+		public Command OpenFileCommand => AsyncCommand(OpenFileAsync);
 
 		public Command RunLatestVersionCommand => AsyncCommand(RunLatestVersionAsync);
 
@@ -147,7 +147,7 @@ namespace Dependiator.MainWindowViews
 			{
 				isLoaded = false;
 
-				if (!TryLetUserSelectWorkingFolder())
+				if (!TryOpenFile())
 				{
 					Application.Current.Shutdown(0);
 					return;
@@ -164,17 +164,19 @@ namespace Dependiator.MainWindowViews
 		}
 
 
-		private async Task SelectWorkingFolderAsync()
+		private async Task OpenFileAsync()
 		{
 			isLoaded = false;
 
-			if (!TryLetUserSelectWorkingFolder())
+			if (!TryOpenFile())
 			{
 				isLoaded = true;
 				return;
 			}
 
 			await SetWorkingFolderAsync();
+
+			await MainViewModel.LoadAsync();
 		}
 
 
@@ -363,7 +365,7 @@ namespace Dependiator.MainWindowViews
 		}
 
 
-		public bool TryLetUserSelectWorkingFolder()
+		public bool TryOpenFile()
 		{
 			while (true)
 			{
