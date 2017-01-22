@@ -284,73 +284,98 @@ namespace Dependiator.Modeling.Analyzing
 
 		private static Assembly OnReflectionOnlyAssemblyResolve(object sender, ResolveEventArgs args)
 		{
-			try
+			string assemblyName = args.Name.Split(',')[0];
+
+			if (assemblyName == "Dependiator.resources")
 			{
-				string resolveName = args.Name.Split(',')[0];
-
-				if (resolveName != "Dependiator.resources")
-				{
-					Assembly assembly = Assembly.ReflectionOnlyLoad(args.Name);
-					return assembly;
-				}
-
 				return null;
 			}
-			catch (Exception e)
+
+			if (TryGetAssemblyByName(args, out Assembly assembly))
 			{
-				Log.Error($"Failed to load {args.Name}, {e}");
+				Log.Debug($"Resolve assembly by name {args.Name}");
+				return assembly;
+			}
 
-				try
-				{
-					string resolveName = args.Name.Split(',')[0];
-					Log.Debug($"Try to load {resolveName}");
-					return Assembly.ReflectionOnlyLoadFrom(resolveName + ".dll");
-				}
-				catch (Exception ex)
-				{
-					Log.Error($"Failed to load {args.Name}.dll, {ex}");
+			if (TryGetAssemblyByFile(assemblyName + ".dll", out assembly))
+			{
+				Log.Debug($"Resolve assembly by file {assemblyName + ".dll"}");
+				return assembly;
+			}
 
-					Assembly assembly = TryLoadFromResources(args);
-					if (assembly == null)
-					{
-						throw;
-					}
+			if (TryLoadFromResources(args, out assembly))
+			{
+				Log.Debug($"Resolve assembly from resources {args.Name}");
+				return assembly;
+			}
 
-					return assembly;
-				}			
-			}		
+			Log.Error($"Failed to resolve assembly {args.Name}");
+
+			return null;
 		}
 
 
-		private static Assembly TryLoadFromResources(ResolveEventArgs args)
+		private static bool TryGetAssemblyByName(ResolveEventArgs args, out Assembly assembly)
 		{
 			try
 			{
-				Assembly executingAssembly = Assembly.GetExecutingAssembly();
-				string name = executingAssembly.FullName.Split(',')[0];
-				string resolveName = args.Name.Split(',')[0];
-				string resourceName = $"{name}.Dependencies.{resolveName}.dll";
-
-				// Try load the requested assembly from the resources
-				using (Stream stream = executingAssembly.GetManifestResourceStream(resourceName))
-				{
-					if (stream == null)
-					{
-						return null;
-					}
-
-					// Load assembly from resources
-					long bytestreamMaxLength = stream.Length;
-					byte[] buffer = new byte[bytestreamMaxLength];
-					stream.Read(buffer, 0, (int)bytestreamMaxLength);
-					Log.Debug($"Resolved {resolveName}");
-					return Assembly.ReflectionOnlyLoad(buffer);
-				}
+				assembly = Assembly.ReflectionOnlyLoad(args.Name);
+				return true;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
-				Log.Error($"Failed to load, {ex}");
-				throw;
+				assembly = null;
+				return false;
+			}
+		}
+
+
+		private static bool TryGetAssemblyByFile(string path, out Assembly assembly)
+		{
+			try
+			{
+				assembly = Assembly.ReflectionOnlyLoadFrom(path);
+				return true;
+			}
+			catch (Exception)
+			{
+				assembly = null;
+				return false;
+			}
+		}
+
+
+		private static bool TryLoadFromResources(ResolveEventArgs args, out Assembly assembly)
+		{
+			Assembly executingAssembly = Assembly.GetExecutingAssembly();
+
+			if (args.RequestingAssembly.FullName != executingAssembly.FullName)
+			{
+				// Requesting assembly is not Dependiator, no need to check resources
+				assembly = null;
+				return false;
+			}
+
+			string name = executingAssembly.FullName.Split(',')[0];
+			string resolveName = args.Name.Split(',')[0];
+			string resourceName = $"{name}.Dependencies.{resolveName}.dll";
+
+			// Try load the requested assembly from the resources
+			using (Stream stream = executingAssembly.GetManifestResourceStream(resourceName))
+			{
+				if (stream == null)
+				{
+					// Assembly not embedded in the resources
+					assembly = null;
+					return false;
+				}
+
+				// Load assembly from resources
+				byte[] buffer = new byte[stream.Length];
+				stream.Read(buffer, 0, buffer.Length);
+
+				assembly = Assembly.ReflectionOnlyLoad(buffer);
+				return true;
 			}
 		}
 	}
