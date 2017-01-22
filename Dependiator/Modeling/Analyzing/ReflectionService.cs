@@ -32,6 +32,7 @@ namespace Dependiator.Modeling.Analyzing
 			try
 			{
 				Environment.CurrentDirectory = Path.GetDirectoryName(path) ?? currentDirectory;
+				Log.Debug($"Current directory '{Environment.CurrentDirectory}'");
 				AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += OnReflectionOnlyAssemblyResolve;
 
 				IReadOnlyList<TypeInfo> typeInfos = GetAssemblyTypes(path);
@@ -124,17 +125,29 @@ namespace Dependiator.Modeling.Analyzing
 
 		private DataNode ToNode(TypeInfo typeInfo)
 		{
-			DataNode node = new DataNode
+			try
 			{
-				Name = typeInfo.FullName,
-				Type = DataNode.TypeType
-			};
+				DataNode node = new DataNode
+				{
+					Name = typeInfo.FullName,
+					Type = DataNode.TypeType
+				};
 
-			AddMembers(typeInfo, node);
+				AddMembers(typeInfo, node);
 
-			AddLinksToBaseTypes(typeInfo, node);
+				AddLinksToBaseTypes(typeInfo, node);
 
-			return node;
+				return node;
+			}
+			catch (Exception e)
+			{
+				Log.Warn($"Failed to add node for {typeInfo}, {e}");
+				return new DataNode
+				{
+					Name = typeInfo.FullName,
+					Type = DataNode.TypeType
+				};
+			}
 		}
 
 
@@ -151,69 +164,90 @@ namespace Dependiator.Modeling.Analyzing
 
 		private void AddMember(MemberInfo memberInfo, DataNode typeNode)
 		{
-			if (memberInfo.Name.IndexOf("<") != -1)
+			try
 			{
-				// Ignoring members with '<' in name
-				return;
-			}
-
-			if (memberInfo is MethodInfo methodInfo && methodInfo.IsSpecialName)
-			{
-				if (
-					methodInfo.Name.StartsWith("get_")
-					|| methodInfo.Name.StartsWith("set_")
-					|| methodInfo.Name.StartsWith("add_")
-					|| methodInfo.Name.StartsWith("remove_")
-					|| methodInfo.Name.StartsWith("op_"))
+				if (memberInfo.Name.IndexOf("<") != -1)
 				{
-					// skipping get,set,add,remove and operator methods for now !!!
+					// Ignoring members with '<' in name
 					return;
 				}
+
+				if (memberInfo is MethodInfo methodInfo && methodInfo.IsSpecialName)
+				{
+					if (
+						methodInfo.Name.StartsWith("get_")
+						|| methodInfo.Name.StartsWith("set_")
+						|| methodInfo.Name.StartsWith("add_")
+						|| methodInfo.Name.StartsWith("remove_")
+						|| methodInfo.Name.StartsWith("op_"))
+					{
+						// skipping get,set,add,remove and operator methods for now !!!
+						return;
+					}
+				}
+
+				DataNode memberNode = new DataNode
+				{
+					Type = DataNode.MemberType,
+					Name = GetNamePartIfDotted(memberInfo.Name),
+				};
+
+				typeNode.Nodes = typeNode.Nodes ?? new List<DataNode>();
+				typeNode.Nodes.Add(memberNode);
+
+				AddLinks(memberNode, memberInfo);
 			}
-
-			DataNode memberNode = new DataNode
+			catch (Exception e)
 			{
-				Type = DataNode.MemberType,
-				Name = GetNamePartIfDotted(memberInfo.Name),
-			};
-
-			typeNode.Nodes = typeNode.Nodes ?? new List<DataNode>();
-			typeNode.Nodes.Add(memberNode);
-
-			AddLinks(memberNode, memberInfo);
+				Log.Warn($"Failed to add member {memberInfo} in {typeNode}, {e}");
+			}
 		}
 
 
 		private void AddLinksToBaseTypes(TypeInfo typeInfo, DataNode typeNode)
 		{
-			Type baseType = typeInfo.BaseType;
-			if (baseType != null && baseType != typeof(object))
+			try
 			{
-				AddLinks(typeNode, baseType);
-			}
+				Type baseType = typeInfo.BaseType;
+				if (baseType != null && baseType != typeof(object))
+				{
+					AddLinks(typeNode, baseType);
+				}
 
-			typeInfo.ImplementedInterfaces
-				.ForEach(interfaceType => AddLinks(typeNode, interfaceType));
+				typeInfo.ImplementedInterfaces
+					.ForEach(interfaceType => AddLinks(typeNode, interfaceType));
+			}
+			catch (Exception e)
+			{
+				Log.Warn($"Failed to add base type for {typeInfo} in {typeNode}, {e}");
+			}
 		}
 
 
 		private void AddLinks(DataNode sourceNode, MemberInfo memberInfo)
 		{
-			if (memberInfo is FieldInfo fieldInfo)
+			try
 			{
-				AddLinks(sourceNode, fieldInfo.FieldType);
+				if (memberInfo is FieldInfo fieldInfo)
+				{
+					AddLinks(sourceNode, fieldInfo.FieldType);
+				}
+				else if (memberInfo is PropertyInfo propertyInfo)
+				{
+					AddLinks(sourceNode, propertyInfo.PropertyType);
+				}
+				else if (memberInfo is EventInfo eventInfo)
+				{
+					AddLinks(sourceNode, eventInfo.EventHandlerType);
+				}
+				else if (memberInfo is MethodInfo methodInfo)
+				{
+					AddLinks(sourceNode, methodInfo);
+				}
 			}
-			else if (memberInfo is PropertyInfo propertyInfo)
+			catch (Exception e)
 			{
-				AddLinks(sourceNode, propertyInfo.PropertyType);
-			}
-			else if (memberInfo is EventInfo eventInfo)
-			{
-				AddLinks(sourceNode, eventInfo.EventHandlerType);
-			}
-			else if (memberInfo is MethodInfo methodInfo)
-			{
-				AddLinks(sourceNode, methodInfo);
+				Log.Warn($"Failed to links for member {memberInfo} in {sourceNode}, {e}");
 			}
 		}
 
@@ -295,7 +329,6 @@ namespace Dependiator.Modeling.Analyzing
 		{
 			AssemblyName assemblyName = new AssemblyName(args.Name);
 
-
 			if (assemblyName.Name == "Dependiator.resources")
 			{
 				return null;
@@ -307,7 +340,7 @@ namespace Dependiator.Modeling.Analyzing
 				return assembly;
 			}
 
-			if (TryGetAssemblyByFile(assemblyName + ".dll", out assembly))
+			if (TryGetAssemblyByFile(assemblyName.Name + ".dll", out assembly))
 			{
 				Log.Debug($"Resolve assembly by file {assemblyName + ".dll"}");
 				return assembly;
@@ -344,6 +377,7 @@ namespace Dependiator.Modeling.Analyzing
 		{
 			try
 			{
+				Log.Debug($"Try load {path}");
 				assembly = Assembly.ReflectionOnlyLoadFrom(path);
 				return true;
 			}

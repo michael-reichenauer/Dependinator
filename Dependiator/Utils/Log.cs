@@ -113,7 +113,7 @@ namespace Dependiator.Utils
 			int lineNumber,
 			[CallerFilePath] string sourceFilePath = "")
 		{
-			int prefixLength = sourceFilePath.Length - 20;
+			int prefixLength = sourceFilePath.Length - 18;
 			filePath = filePath.Substring(prefixLength);
 			string text = $"{level} [{ProcessID}] {filePath}({lineNumber}) {memberName} - {msg}";
 
