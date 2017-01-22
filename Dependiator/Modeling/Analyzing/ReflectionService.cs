@@ -302,7 +302,9 @@ namespace Dependiator.Modeling.Analyzing
 
 				try
 				{
-					return Assembly.ReflectionOnlyLoadFrom(args.Name + ".dll");
+					string resolveName = args.Name.Split(',')[0];
+					Log.Debug($"Try to load {resolveName}");
+					return Assembly.ReflectionOnlyLoad(resolveName);
 				}
 				catch (Exception ex)
 				{
