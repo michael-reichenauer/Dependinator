@@ -299,6 +299,46 @@ namespace Dependiator.Modeling.Analyzing
 			catch (Exception e)
 			{
 				Log.Error($"Failed to load {args.Name}, {e}");
+
+				Assembly assembly = TryLoadFromResources(args);
+				if (assembly == null)
+				{
+					throw;
+				}
+
+				return assembly;
+			}		
+		}
+
+
+		private static Assembly TryLoadFromResources(ResolveEventArgs args)
+		{
+			try
+			{
+				Assembly executingAssembly = Assembly.GetExecutingAssembly();
+				string name = executingAssembly.FullName.Split(',')[0];
+				string resolveName = args.Name.Split(',')[0];
+				string resourceName = $"{name}.Dependencies.{resolveName}.dll";
+
+				// Try load the requested assembly from the resources
+				using (Stream stream = executingAssembly.GetManifestResourceStream(resourceName))
+				{
+					if (stream == null)
+					{
+						return null;
+					}
+
+					// Load assembly from resources
+					long bytestreamMaxLength = stream.Length;
+					byte[] buffer = new byte[bytestreamMaxLength];
+					stream.Read(buffer, 0, (int)bytestreamMaxLength);
+					Log.Debug($"Resolved {resolveName}");
+					return Assembly.ReflectionOnlyLoad(buffer);
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.Error($"Failed to load, {ex}");
 				throw;
 			}
 		}
