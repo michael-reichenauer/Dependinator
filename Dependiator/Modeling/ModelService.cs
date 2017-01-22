@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
+using Dependiator.ApplicationHandling;
+using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.MainViews;
 using Dependiator.Modeling.Analyzing;
 using Dependiator.Modeling.Serializing;
@@ -11,23 +13,29 @@ namespace Dependiator.Modeling
 	[SingleInstance]
 	internal class ModelService : IModelService
 	{
+		private readonly WorkingFolder workingFolder;
 		private readonly IReflectionService reflectionService;
 		private readonly IElementService elementService;
 		private readonly INodeService nodeService;
 		private readonly IDataSerializer dataSerializer;
+		private readonly ICanvasService canvasService;
 
 		private ElementTree elementTree;
 
 		public ModelService(
+			WorkingFolder workingFolder,
 			IReflectionService reflectionService,
 			IElementService elementService,
 			INodeService nodeService,
-			IDataSerializer dataSerializer)
+			IDataSerializer dataSerializer,
+			ICanvasService canvasService)
 		{
+			this.workingFolder = workingFolder;
 			this.reflectionService = reflectionService;
 			this.elementService = elementService;
 			this.nodeService = nodeService;
 			this.dataSerializer = dataSerializer;
+			this.canvasService = canvasService;
 		}
 
 
@@ -35,7 +43,12 @@ namespace Dependiator.Modeling
 		{
 			if (!dataSerializer.TryDeserialize(out Data data))
 			{
-				data = reflectionService.Analyze();
+				data = reflectionService.Analyze(workingFolder.FilePath);
+			}
+
+			if (elementTree != null)
+			{
+				nodeService.ClearAll();
 			}
 
 			elementTree = elementService.ToElementTree(data);
@@ -54,6 +67,14 @@ namespace Dependiator.Modeling
 			Node rootNode = GetNode(elementTree);
 
 			nodeService.ShowRootNode(rootNode);
+
+			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
+
+			canvasService.Scale = settings.Scale;
+			double x = settings.X;
+			double y = settings.Y;
+			canvasService.Offset = new System.Windows.Point(x, y);
+
 			t.Log("Created modules");
 		}
 
@@ -68,6 +89,14 @@ namespace Dependiator.Modeling
 		{
 			Data data = elementService.ToData(elementTree);
 			dataSerializer.Serialize(data);
+
+			Settings.EditWorkingFolderSettings(workingFolder,
+				settings =>
+				{
+					settings.Scale = canvasService.Scale;
+					settings.X = canvasService.Offset.X;
+					settings.Y = canvasService.Offset.Y;
+				});
 		}
 
 

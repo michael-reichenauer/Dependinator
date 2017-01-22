@@ -1,41 +1,46 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:Dependiator.Modeling">
+﻿<UserControl
+	x:Class="Dependiator.Modeling.LinkView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:local="clr-namespace:Dependiator.Modeling"
+	mc:Ignorable="d"
+	d:DesignHeight="300" d:DesignWidth="300">
+	
+	<Border BorderBrush="Transparent" BorderThickness="0">
+		<Grid>
 
-	<DataTemplate x:Key="LinkViewTemplate">
+			<Line
+				X1="{Binding X1}"
+				Y1="{Binding Y1}"
+				X2="{Binding X2}"
+				Y2="{Binding Y2}"
+				Stroke="Transparent"
+				StrokeThickness="8"
+				StrokeDashArray="{Binding StrokeDash}">
 
-		<Border BorderBrush="Beige" BorderThickness="0">
-			<Grid>
+				<Line.ToolTip>
+					<ToolTip
+						Content="{Binding ToolTip}"
+						Placement="Mouse"
+						BorderBrush="{Binding LineBrush}"
+						BorderThickness="1" />
+				</Line.ToolTip>
+			</Line>
 
-				<Line
-					X1="{Binding X1}"
-					Y1="{Binding Y1}"
-					X2="{Binding X2}"
-					Y2="{Binding Y2}"
-					Stroke="Transparent"
-					StrokeThickness="10"
-					StrokeDashArray="{Binding StrokeDash}">
+			<Line
+				X1="{Binding X1}"
+				Y1="{Binding Y1}"
+				X2="{Binding X2}"
+				Y2="{Binding Y2}"
+				Stroke="{Binding LineBrush}"
+				StrokeThickness="3"
+				StrokeDashArray="{Binding StrokeDash}"
+				IsHitTestVisible="False" />
 
-					<Line.ToolTip>
-						<ToolTip
-							Content="{Binding ToolTip}"
-							Placement="Mouse"
-							BorderBrush="{Binding LineBrush}"
-							BorderThickness="1" />
-					</Line.ToolTip>
-				</Line>
+		</Grid>
 
-				<Line
-					X1="{Binding X1}"
-					Y1="{Binding Y1}"
-					X2="{Binding X2}"
-					Y2="{Binding Y2}"
-					Stroke="{Binding LineBrush}"
-					StrokeThickness="{Binding StrokeThickness}"
-					StrokeDashArray="{Binding StrokeDash}">
-				</Line>
-			</Grid>
-		</Border>
-
-	</DataTemplate>
-</ResourceDictionary>
+	</Border>
+	
+</UserControl>

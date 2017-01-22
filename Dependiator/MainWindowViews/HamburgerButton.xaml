@@ -31,41 +31,14 @@
 				</MenuItem>
 
 				<MenuItem 
-					Header="Open working folder ..." 
-					Command="{Binding SelectWorkingFolderCommand}">
+					Header="Open file ..." 
+					Command="{Binding OpenFileCommand}">
 					<MenuItem.Icon>
 						<Border>
-							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE2C8;"/>
+							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE89D;"/>
 						</Border>
 					</MenuItem.Icon>
 				</MenuItem>
-
-				<Separator Background="{DynamicResource BorderBrush}"/>
-
-				<!-- Undo -->
-				<MenuItem Header="Undo">
-					<MenuItem.Icon>
-						<Border>
-							<TextBlock 
-								Style="{DynamicResource MenuIconStyle}" 
-								Text="&#xE166;" 
-								Foreground="{DynamicResource UndoBrush}"/>
-						</Border>
-					</MenuItem.Icon>
-					<MenuItem 
-						Header="Clean untracked/ignored files" 
-						Command="{Binding CleanWorkingFolderCommand}">
-						<MenuItem.Icon>
-							<Border>
-								<TextBlock 
-									Style="{DynamicResource MenuIconStyle}" 
-									Text="&#xE92B;"
-									Foreground="{DynamicResource UndoBrush}"/>
-							</Border>
-						</MenuItem.Icon>
-					</MenuItem>
-				</MenuItem>
-
 
 
 				<Separator Background="{DynamicResource BorderBrush}"/>

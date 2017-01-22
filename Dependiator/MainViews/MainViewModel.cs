@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -10,7 +11,6 @@ using Dependiator.Modeling;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
 using Dependiator.Utils.UI.VirtualCanvas;
-
 
 
 namespace Dependiator.MainViews
@@ -39,7 +39,7 @@ namespace Dependiator.MainViews
 		private readonly AsyncLock refreshLock = new AsyncLock();
 
 		public VirtualItemsSource ItemsSource { get; }
-		
+
 
 		public MainViewModel(
 			WorkingFolder workingFolder,
@@ -74,6 +74,7 @@ namespace Dependiator.MainViews
 			return canvasService.MoveCanvas(viewOffset);
 		}
 
+
 		public object MoveNode(Point viewPosition, Vector viewOffset, object movingObject)
 		{
 			return modelService.MoveNode(viewPosition, viewOffset, movingObject);
@@ -84,6 +85,7 @@ namespace Dependiator.MainViews
 		{
 			canvasService.SetCanvas(zoomableCanvas);
 		}
+
 
 		public void ShowCommitDetails()
 		{
@@ -97,10 +99,6 @@ namespace Dependiator.MainViews
 		}
 
 
-		public void Loaded()
-		{
-			modelService.InitModules();
-		}
 
 		public string FetchErrorText
 		{
@@ -134,33 +132,32 @@ namespace Dependiator.MainViews
 		}
 
 
-
 		public void RefreshView()
 		{
 			UpdateViewModel();
 		}
 
 
-		public async Task LoadAsync()
+		public Task LoadAsync()
 		{
 			Timing t = new Timing();
 
-			using (await refreshLock.LockAsync())
-			{
-				Log.Debug("Loading repository ...");
+			Log.Debug("Loading repository ...");
 
-				using (progress.ShowDialog("Loading branch view ..."))
-				{
-					t.Log("Read cached/fresh repository");
-					LoadViewModel();
-					t.Log("Updated view model after cached/fresh");
-				}
+			using (progress.ShowDialog("Loading branch view ..."))
+			{		
+				modelService.InitModules();
+
+				LoadViewModel();
+				t.Log("Updated view model after cached/fresh");
 			}
+
+			return Task.CompletedTask;
 		}
 
 
 		public async Task ActivateRefreshAsync()
-		{			
+		{
 			Log.Usage("Activate window");
 
 			Timing t = new Timing();
@@ -172,16 +169,16 @@ namespace Dependiator.MainViews
 				await Task.Yield();
 			}
 
-			t.Log("Activate refresh done");			
+			t.Log("Activate refresh done");
 		}
 
 
 		public async Task AutoRemoteCheckAsync()
-		{	
+		{
 			Timing t = new Timing();
 			Log.Usage("Automatic remote check");
 			await Task.Yield();
-			t.Log("Auto refresh done");		
+			t.Log("Auto refresh done");
 		}
 
 
@@ -215,7 +212,7 @@ namespace Dependiator.MainViews
 
 		//public void MouseLeaveBranch(BranchViewModel branch)
 		//{
-		
+
 		//}
 
 
@@ -264,10 +261,7 @@ namespace Dependiator.MainViews
 		public object SelectedItem
 		{
 			get { return Get().Value; }
-			set
-			{
-				Set(value);
-			}
+			set { Set(value); }
 		}
 
 
@@ -284,7 +278,6 @@ namespace Dependiator.MainViews
 		{
 			//VirtualItemsSource.DataChanged();
 		}
-
 
 
 		public void ScrollRows(int rows)

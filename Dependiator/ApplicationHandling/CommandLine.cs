@@ -29,9 +29,9 @@ namespace Dependiator.ApplicationHandling
 
 		public bool IsTest => args.Contains("/test");
 
-		public bool HasFolder => args.Any(a => a.StartsWith("/d:")) || IsTest;
+		public bool HasFile => args.Skip(1).Any(a => !a.StartsWith("/")) || IsTest;
 
-		public string Folder => args.FirstOrDefault(a => a.StartsWith("/d:"))?.Substring(3);
+		public string FilePath => args.Skip(1).FirstOrDefault(a => !a.StartsWith("/"));
 
 
 		private bool IsSetupFile()

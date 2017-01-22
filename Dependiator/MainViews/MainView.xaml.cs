@@ -25,14 +25,14 @@ namespace Dependiator.MainViews
 		}
 
 
-		private void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
+		private async void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
 		{
 			viewModel = (MainViewModel)DataContext;
 			viewModel.SetCanvas((ZoomableCanvas)sender);
 
 			ItemsListBox.Focus();
 
-			viewModel.Loaded();
+			await viewModel.LoadAsync();
 		}
 
 
@@ -46,6 +46,8 @@ namespace Dependiator.MainViews
 
 
 		private object movingObject = null;
+
+		
 
 		protected override void OnPreviewMouseMove(MouseEventArgs e)
 		{
@@ -65,14 +67,12 @@ namespace Dependiator.MainViews
 				CaptureMouse();
 				Vector viewOffset = viewPosition - lastMousePosition;
 
-
 				movingObject = viewModel.MoveNode(viewPosition, viewOffset, movingObject);
-				
+
 				e.Handled = movingObject != null;
 			}
 			else
 			{
-
 				movingObject = null;
 				ReleaseMouseCapture();
 			}

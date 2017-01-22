@@ -25,7 +25,7 @@ namespace Dependiator.MainWindowViews
 
 		private readonly JumpListService jumpListService = new JumpListService();
 
-		private IpcRemotingService ipcRemotingService = null;
+		// private IpcRemotingService ipcRemotingService = null;
 		private readonly WorkingFolder workingFolder;
 		private readonly WindowOwner owner;
 		private readonly IMessage message;
@@ -66,7 +66,9 @@ namespace Dependiator.MainWindowViews
 			set { Set(value); }
 		}
 
-		public string WorkingFolder => workingFolder;
+		public string WorkingFolder => workingFolder.Name;
+
+		public string WorkingFolderPath => workingFolder.FilePath;
 
 
 
@@ -110,7 +112,7 @@ namespace Dependiator.MainWindowViews
 
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
 
-		public Command SelectWorkingFolderCommand => AsyncCommand(SelectWorkingFolderAsync);
+		public Command OpenFileCommand => AsyncCommand(OpenFileAsync);
 
 		public Command RunLatestVersionCommand => AsyncCommand(RunLatestVersionAsync);
 
@@ -145,7 +147,7 @@ namespace Dependiator.MainWindowViews
 			{
 				isLoaded = false;
 
-				if (!TryLetUserSelectWorkingFolder())
+				if (!TryOpenFile())
 				{
 					Application.Current.Shutdown(0);
 					return;
@@ -162,48 +164,52 @@ namespace Dependiator.MainWindowViews
 		}
 
 
-		private async Task SelectWorkingFolderAsync()
+		private async Task OpenFileAsync()
 		{
 			isLoaded = false;
 
-			if (!TryLetUserSelectWorkingFolder())
+			if (!TryOpenFile())
 			{
 				isLoaded = true;
 				return;
 			}
 
 			await SetWorkingFolderAsync();
+
+			await MainViewModel.LoadAsync();
 		}
 
 
 		private async Task SetWorkingFolderAsync()
 		{
-			if (ipcRemotingService != null)
-			{
-				ipcRemotingService.Dispose();
-			}
+			await Task.Yield();
 
-			ipcRemotingService = new IpcRemotingService();
+			//if (ipcRemotingService != null)
+			//{
+			//	ipcRemotingService.Dispose();
+			//}
 
-			string id = MainWindowIpcService.GetId(workingFolder);
-			if (ipcRemotingService.TryCreateServer(id))
-			{
-				ipcRemotingService.PublishService(mainWindowIpcService);
-			}
-			else
-			{
-				// Another Dependiator instance for that working folder is already running, activate that.
-				ipcRemotingService.CallService<MainWindowIpcService>(id, service => service.Activate(null));
-				Application.Current.Shutdown(0);
-				ipcRemotingService.Dispose();
-				return;
-			}
+			//ipcRemotingService = new IpcRemotingService();
 
-			jumpListService.Add(workingFolder);
+			//string id = MainWindowIpcService.GetId(workingFolder);
+			//if (ipcRemotingService.TryCreateServer(id))
+			//{
+			//	ipcRemotingService.PublishService(mainWindowIpcService);
+			//}
+			//else
+			//{
+			//	// Another Dependiator instance for that working folder is already running, activate that.
+			//	ipcRemotingService.CallService<MainWindowIpcService>(id, service => service.Activate(null));
+			//	Application.Current.Shutdown(0);
+			//	ipcRemotingService.Dispose();
+			//	return;
+			//}
+
+			jumpListService.Add(workingFolder.FilePath);
 
 			Notify(nameof(Title));
 
-			await MainViewModel.LoadAsync();
+			//await MainViewModel.LoadAsync();
 			isLoaded = true;
 		}
 
@@ -359,36 +365,39 @@ namespace Dependiator.MainWindowViews
 		}
 
 
-		public bool TryLetUserSelectWorkingFolder()
+		public bool TryOpenFile()
 		{
 			while (true)
 			{
-				var dialog = new FolderBrowserDialog()
-				{
-					Description = "Select a working folder with a valid git repository.",
-					ShowNewFolderButton = false,
-					RootFolder = Environment.SpecialFolder.MyComputer
-				};
+				// Create OpenFileDialog 
+				Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
 
-				if (workingFolder.HasValue)
-				{
-					dialog.SelectedPath = workingFolder;
-				}
+				// Set filter for file extension and default file extension 
+				dlg.DefaultExt = ".exe";
+				dlg.Filter = "Files (*.exe, *.dll)|*.exe;*.dll|.NET libs (*.dll)|*.dll|.NET Programs (*.exe)|*.exe";
+				dlg.CheckFileExists = true;
+				dlg.Multiselect = false;
+				dlg.Title = "Select a .NET .dll or .exe file";
+				dlg.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
 
-				if (dialog.ShowDialog(owner.Win32Window) != DialogResult.OK)
+				bool? result = dlg.ShowDialog();
+
+				// Get the selected file name and display in a TextBox 
+				if (result != true)
 				{
-					Log.Debug("User canceled selecting a Working folder");
+					Log.Debug("User canceled selecting a file");
 					return false;
 				}
 
-				if (workingFolder.TrySetPath(dialog.SelectedPath))
+
+				if (workingFolder.TrySetPath(dlg.FileName))
 				{
-					Log.Debug($"User selected valid '{dialog.SelectedPath}' in root '{workingFolder}'");
+					Log.Debug($"User selected valid '{dlg.FileName}' in root '{workingFolder}'");
 					return true;
 				}
 				else
 				{
-					Log.Debug($"User selected an invalid working folder: {dialog.SelectedPath}");
+					Log.Debug($"User selected an invalid working folder: {dlg.FileName}");
 				}
 			}
 		}

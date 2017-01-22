@@ -1,36 +1,113 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using Dependiator.Common.MessageDialogs;
 using Dependiator.Modeling.Serializing;
+using Dependiator.Utils;
 
 
 namespace Dependiator.Modeling.Analyzing
 {
 	internal class ReflectionService : IReflectionService
 	{
+		private readonly IMessage messageService;
+
 		internal const BindingFlags DeclaredOnlyFlags =
 			BindingFlags.Public | BindingFlags.NonPublic
 			| BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
 
-		public Data Analyze()
+		public ReflectionService(IMessage message)
 		{
-			IReadOnlyList<TypeInfo> typeInfos = GetAssemblyTypes();
-
-			Data data = new Data
-			{
-				Nodes = ToDataNodes(typeInfos)
-			};
-
-			return data;
+			this.messageService = message;
 		}
 
 
-		private static IReadOnlyList<TypeInfo> GetAssemblyTypes()
+		public Data Analyze(string path)
 		{
-			string location = Assembly.GetExecutingAssembly().Location;
-			Assembly assembly = Assembly.ReflectionOnlyLoadFrom(location);
+			string currentDirectory = Environment.CurrentDirectory;
+			try
+			{
+				Environment.CurrentDirectory = Path.GetDirectoryName(path) ?? currentDirectory;
+				Log.Debug($"Current directory '{Environment.CurrentDirectory}'");
+				AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += OnReflectionOnlyAssemblyResolve;
+
+				IReadOnlyList<TypeInfo> typeInfos = GetAssemblyTypes(path);
+
+				Data data = new Data
+				{
+					Nodes = ToDataNodes(typeInfos)
+				};
+
+				return data;
+			}
+			catch (ReflectionTypeLoadException e)
+			{
+				var missingAssemblies = e.LoaderExceptions
+					.Select(l => l.Message)
+					.Distinct()
+					.Select(ToAssemblyName)
+					.ToList();
+
+				int maxCount = 10;
+				int count = missingAssemblies.Count;
+				string names = string.Join("\n   ", missingAssemblies.Take(maxCount));
+				if (count > maxCount)
+				{
+					names += "\n   ...";
+				}
+
+				string message =
+					$"Failed to load '{path}'\n" +
+					$"Could not locate {count} referenced assemblies:\n" +
+					$"   {names}";
+
+				Log.Warn($"{message}\n {e}");
+				// messageService.ShowError(message);
+			}
+			catch (FileLoadException e)
+			{
+				string message =
+				$"Failed to load '{path}'\n" +
+				$"Could not locate referenced assembly:\n" +
+				$"   {ToAssemblyName(e.Message)}";
+
+				Log.Warn($"{message}\n {e}");
+			}
+			catch (Exception e) when (e.IsNotFatal())
+			{
+				Log.Warn($"Failed to get types from {path}, {e}");
+				throw;
+			}
+			finally
+			{
+				AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve -= OnReflectionOnlyAssemblyResolve;
+				Environment.CurrentDirectory = currentDirectory;
+			}
+
+			return new Data
+			{
+				Nodes = new List<DataNode>()
+			};
+		}
+
+
+		private static string ToAssemblyName(string message)
+		{
+			int index = message.IndexOf('\'');
+			int index2 = message.IndexOf(',', index + 1);
+
+			string name = message.Substring(index + 1, (index2 - index - 1));
+			return name;
+		}
+
+
+		private static IReadOnlyList<TypeInfo> GetAssemblyTypes(string path)
+		{
+			Assembly assembly = Assembly.ReflectionOnlyLoadFrom(path);
 
 			IReadOnlyList<TypeInfo> typeInfos = assembly.DefinedTypes.ToList();
 			return typeInfos;
@@ -48,17 +125,29 @@ namespace Dependiator.Modeling.Analyzing
 
 		private DataNode ToNode(TypeInfo typeInfo)
 		{
-			DataNode node = new DataNode
+			try
 			{
-				Name = typeInfo.FullName,
-				Type = DataNode.TypeType
-			};
+				DataNode node = new DataNode
+				{
+					Name = typeInfo.FullName,
+					Type = DataNode.TypeType
+				};
 
-			AddMembers(typeInfo, node);
+				AddMembers(typeInfo, node);
 
-			AddLinksToBaseTypes(typeInfo, node);
+				AddLinksToBaseTypes(typeInfo, node);
 
-			return node;
+				return node;
+			}
+			catch (Exception e)
+			{
+				Log.Warn($"Failed to add node for {typeInfo}, {e}");
+				return new DataNode
+				{
+					Name = typeInfo.FullName,
+					Type = DataNode.TypeType
+				};
+			}
 		}
 
 
@@ -75,69 +164,90 @@ namespace Dependiator.Modeling.Analyzing
 
 		private void AddMember(MemberInfo memberInfo, DataNode typeNode)
 		{
-			if (memberInfo.Name.IndexOf("<") != -1)
+			try
 			{
-				// Ignoring members with '<' in name
-				return;
-			}
-
-			if (memberInfo is MethodInfo methodInfo && methodInfo.IsSpecialName)
-			{
-				if (
-					methodInfo.Name.StartsWith("get_")
-					|| methodInfo.Name.StartsWith("set_")
-					|| methodInfo.Name.StartsWith("add_")
-					|| methodInfo.Name.StartsWith("remove_")
-					|| methodInfo.Name.StartsWith("op_"))
+				if (memberInfo.Name.IndexOf("<") != -1)
 				{
-					// skipping get,set,add,remove and operator methods for now !!!
+					// Ignoring members with '<' in name
 					return;
 				}
+
+				if (memberInfo is MethodInfo methodInfo && methodInfo.IsSpecialName)
+				{
+					if (
+						methodInfo.Name.StartsWith("get_")
+						|| methodInfo.Name.StartsWith("set_")
+						|| methodInfo.Name.StartsWith("add_")
+						|| methodInfo.Name.StartsWith("remove_")
+						|| methodInfo.Name.StartsWith("op_"))
+					{
+						// skipping get,set,add,remove and operator methods for now !!!
+						return;
+					}
+				}
+
+				DataNode memberNode = new DataNode
+				{
+					Type = DataNode.MemberType,
+					Name = GetNamePartIfDotted(memberInfo.Name),
+				};
+
+				typeNode.Nodes = typeNode.Nodes ?? new List<DataNode>();
+				typeNode.Nodes.Add(memberNode);
+
+				AddLinks(memberNode, memberInfo);
 			}
-
-			DataNode memberNode = new DataNode
+			catch (Exception e)
 			{
-				Type = DataNode.MemberType,
-				Name = GetNamePartIfDotted(memberInfo.Name),
-			};
-
-			typeNode.Nodes = typeNode.Nodes ?? new List<DataNode>();
-			typeNode.Nodes.Add(memberNode);
-
-			AddLinks(memberNode, memberInfo);
+				Log.Warn($"Failed to add member {memberInfo} in {typeNode}, {e}");
+			}
 		}
 
 
 		private void AddLinksToBaseTypes(TypeInfo typeInfo, DataNode typeNode)
 		{
-			Type baseType = typeInfo.BaseType;
-			if (baseType != null && baseType != typeof(object))
+			try
 			{
-				AddLinks(typeNode, baseType);
-			}
+				Type baseType = typeInfo.BaseType;
+				if (baseType != null && baseType != typeof(object))
+				{
+					AddLinks(typeNode, baseType);
+				}
 
-			typeInfo.ImplementedInterfaces
-				.ForEach(interfaceType => AddLinks(typeNode, interfaceType));
+				typeInfo.ImplementedInterfaces
+					.ForEach(interfaceType => AddLinks(typeNode, interfaceType));
+			}
+			catch (Exception e)
+			{
+				Log.Warn($"Failed to add base type for {typeInfo} in {typeNode}, {e}");
+			}
 		}
 
 
 		private void AddLinks(DataNode sourceNode, MemberInfo memberInfo)
 		{
-			if (memberInfo is FieldInfo fieldInfo)
+			try
 			{
-				AddLinks(sourceNode, fieldInfo.FieldType);
+				if (memberInfo is FieldInfo fieldInfo)
+				{
+					AddLinks(sourceNode, fieldInfo.FieldType);
+				}
+				else if (memberInfo is PropertyInfo propertyInfo)
+				{
+					AddLinks(sourceNode, propertyInfo.PropertyType);
+				}
+				else if (memberInfo is EventInfo eventInfo)
+				{
+					AddLinks(sourceNode, eventInfo.EventHandlerType);
+				}
+				else if (memberInfo is MethodInfo methodInfo)
+				{
+					AddLinks(sourceNode, methodInfo);
+				}
 			}
-			else if (memberInfo is PropertyInfo propertyInfo)
+			catch (Exception e)
 			{
-				AddLinks(sourceNode, propertyInfo.PropertyType);
-			}
-			else if (memberInfo is EventInfo eventInfo)
-			{
-				AddLinks(sourceNode, eventInfo.EventHandlerType);
-			}
-			else if (memberInfo is MethodInfo methodInfo)
-			{
-				AddLinks(sourceNode, methodInfo);
+				Log.Warn($"Failed to links for member {memberInfo} in {sourceNode}, {e}");
 			}
 		}
 
@@ -163,8 +273,8 @@ namespace Dependiator.Modeling.Analyzing
 		private void AddLinks(DataNode sourceNode, Type targetType)
 		{
 			if (targetType.Namespace != null
-					&& (targetType.Namespace.StartsWith("System", StringComparison.Ordinal)
-							|| targetType.Namespace.StartsWith("Microsoft", StringComparison.Ordinal)))
+			    && (targetType.Namespace.StartsWith("System", StringComparison.Ordinal)
+			        || targetType.Namespace.StartsWith("Microsoft", StringComparison.Ordinal)))
 			{
 				// Ignore "System" and "Microsoft" namespaces for now
 				return;
@@ -212,6 +322,105 @@ namespace Dependiator.Modeling.Analyzing
 			}
 
 			return fullName.Substring(index + 1);
+		}
+
+
+		private static Assembly OnReflectionOnlyAssemblyResolve(object sender, ResolveEventArgs args)
+		{
+			AssemblyName assemblyName = new AssemblyName(args.Name);
+
+			if (assemblyName.Name == "Dependiator.resources")
+			{
+				return null;
+			}
+
+			if (TryGetAssemblyByName(assemblyName, out Assembly assembly))
+			{
+				Log.Debug($"Resolve assembly by name {args.Name}");
+				return assembly;
+			}
+
+			if (TryGetAssemblyByFile(assemblyName.Name + ".dll", out assembly))
+			{
+				Log.Debug($"Resolve assembly by file {assemblyName + ".dll"}");
+				return assembly;
+			}
+
+			if (TryLoadFromResources(args, out assembly))
+			{
+				Log.Debug($"Resolve assembly from resources {args.Name}");
+				return assembly;
+			}
+
+			Log.Error($"Failed to resolve assembly {args.Name}");
+
+			return null;
+		}
+
+
+		private static bool TryGetAssemblyByName(AssemblyName assemblyName, out Assembly assembly)
+		{
+			try
+			{
+				assembly = Assembly.ReflectionOnlyLoad(assemblyName.FullName);
+				return true;
+			}
+			catch (Exception)
+			{
+				assembly = null;
+				return false;
+			}
+		}
+
+
+		private static bool TryGetAssemblyByFile(string path, out Assembly assembly)
+		{
+			try
+			{
+				Log.Debug($"Try load {path}");
+				assembly = Assembly.ReflectionOnlyLoadFrom(path);
+				return true;
+			}
+			catch (Exception)
+			{
+				assembly = null;
+				return false;
+			}
+		}
+
+
+		private static bool TryLoadFromResources(ResolveEventArgs args, out Assembly assembly)
+		{
+			Assembly executingAssembly = Assembly.GetExecutingAssembly();
+
+			if (args.RequestingAssembly.FullName != executingAssembly.FullName)
+			{
+				// Requesting assembly is not Dependiator, no need to check resources
+				assembly = null;
+				return false;
+			}
+
+			string name = executingAssembly.FullName.Split(',')[0];
+			string resolveName = args.Name.Split(',')[0];
+			string resourceName = $"{name}.Dependencies.{resolveName}.dll";
+
+			// Try load the requested assembly from the resources
+			using (Stream stream = executingAssembly.GetManifestResourceStream(resourceName))
+			{
+				if (stream == null)
+				{
+					// Assembly not embedded in the resources
+					assembly = null;
+					return false;
+				}
+
+				// Load assembly from resources
+				byte[] buffer = new byte[stream.Length];
+				stream.Read(buffer, 0, buffer.Length);
+
+				assembly = Assembly.ReflectionOnlyLoad(buffer);
+				return true;
+			}
 		}
 	}
 }

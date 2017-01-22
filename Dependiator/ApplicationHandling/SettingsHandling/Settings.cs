@@ -28,6 +28,20 @@ namespace Dependiator.ApplicationHandling.SettingsHandling
 			}
 		}
 
+		public static void EditWorkingFolderSettings(string workingFolder, Action<WorkFolderSettings> editAction)
+		{
+			try
+			{
+				WorkFolderSettings settings = GetWorkFolderSetting(workingFolder);
+				editAction(settings);
+				SetWorkFolderSetting(workingFolder, settings);
+			}
+			catch (Exception e)
+			{
+				Log.Warn($"Error editing the settings {e}");
+			}
+		}
+
 		public static T Get<T>()
 		{
 			string path = GetProgramSettingsPath<T>();
@@ -151,7 +165,7 @@ namespace Dependiator.ApplicationHandling.SettingsHandling
 
 		private static string GetWorkFolderSettingsPath(string workingFolder)
 		{
-			return Path.Combine(workingFolder, ".git", "Dependiator.Setting.json");
+			return Path.Combine(workingFolder, typeof(WorkFolderSettings).Name + ".json");
 		}
 	}
 }

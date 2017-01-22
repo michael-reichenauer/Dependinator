@@ -25,11 +25,13 @@ namespace Dependiator.ApplicationHandling
 
 		public string Path => workingFolderService.Path;
 
+		public string FilePath => workingFolderService.FilePath;
+
 		public bool IsValid => workingFolderService.IsValid;
 
 		public bool HasValue => Path != null;
 
-		public string Name => HasValue ? System.IO.Path.GetFileName(Path) : null;
+		public string Name => HasValue ? System.IO.Path.GetFileNameWithoutExtension(FilePath) : null;
 
 		public static implicit operator string(WorkingFolder workingFolder) => workingFolder.Path;
 

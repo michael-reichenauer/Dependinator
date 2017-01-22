@@ -7,7 +7,7 @@
 		bool IsUninstall { get; }
 		bool IsRunInstalled { get; }
 		bool IsTest { get; }
-		bool HasFolder { get; }
-		string Folder { get; }
+		bool HasFile { get; }
+		string FilePath { get; }
 	}
 }

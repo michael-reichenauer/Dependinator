@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using System.Windows.Threading;
 using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
+using Dependiator.MainViews;
 using Dependiator.Utils;
 
 
@@ -19,7 +20,7 @@ namespace Dependiator.MainWindowViews
 	public partial class MainWindow : Window
 	{
 		private readonly WorkingFolder workingFolder;
-	
+
 		private readonly DispatcherTimer remoteCheckTimer = new DispatcherTimer();
 
 		private readonly MainWindowViewModel viewModel;
@@ -44,7 +45,7 @@ namespace Dependiator.MainWindowViews
 
 			Activate();
 
-			RestoreWindowSettings(workingFolder);
+			RestoreWindowSettings();
 		}
 
 
@@ -122,22 +123,21 @@ namespace Dependiator.MainWindowViews
 
 		private void StoreWindowSettings()
 		{
-			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
+			ProgramSettings settings = Settings.Get<ProgramSettings>();
 
 			settings.Top = Top;
 			settings.Left = Left;
 			settings.Height = Height;
 			settings.Width = Width;
 			settings.IsMaximized = WindowState == WindowState.Maximized;
-			
 
-			Settings.SetWorkFolderSetting(workingFolder, settings);
+			Settings.Set(settings);
 		}
 
 
-		private void RestoreWindowSettings(string workingFolder)
+		private void RestoreWindowSettings()
 		{
-			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
+			ProgramSettings settings = Settings.Get<ProgramSettings>();
 
 			Rectangle rect = new Rectangle(
 				(int)settings.Left, (int)settings.Top, (int)settings.Width, (int)settings.Height);

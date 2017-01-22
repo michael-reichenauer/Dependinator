@@ -283,6 +283,10 @@ namespace Dependiator.Modeling
 					hf = 0;
 				}
 			}
+			else
+			{
+				
+			}
 
 			Vector offset = new Vector(
 				(viewOffset.X / NodeScale) / Scale,

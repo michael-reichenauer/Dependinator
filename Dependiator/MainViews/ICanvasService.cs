@@ -16,7 +16,7 @@ namespace Dependiator.MainViews
 		void SetCanvas(ZoomableCanvas zoomableCanvas);
 
 		double Scale { get; set; }
-		Point Offset{ get; }
+		Point Offset{ get; set; }
 		Rect CurrentViewPort { get; }
 		event EventHandler ScaleChanged;
 		Point GetCanvasPoint(Point screenPoint);

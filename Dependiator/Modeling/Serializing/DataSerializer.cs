@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Utils;
 using Newtonsoft.Json;
@@ -16,6 +17,13 @@ namespace Dependiator.Modeling.Serializing
 			NullValueHandling = NullValueHandling.Ignore,
 		};
 
+		private readonly WorkingFolder workingFolder;
+
+
+		public DataSerializer(WorkingFolder workingFolder)
+		{
+			this.workingFolder = workingFolder;
+		}
 
 		//public static T As<T>(string json) => JsonConvert.DeserializeObject<T>(json, Settings);
 
@@ -60,9 +68,9 @@ namespace Dependiator.Modeling.Serializing
 
 
 
-		private static string GetDataFilePath()
+		private string GetDataFilePath()
 		{
-			return Path.Combine(ProgramPaths.DataFolderPath, "data.json");
+			return Path.Combine(workingFolder, "data.json");
 		}
 
 
