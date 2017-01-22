@@ -300,13 +300,22 @@ namespace Dependiator.Modeling.Analyzing
 			{
 				Log.Error($"Failed to load {args.Name}, {e}");
 
-				Assembly assembly = TryLoadFromResources(args);
-				if (assembly == null)
+				try
 				{
-					throw;
+					return Assembly.ReflectionOnlyLoadFrom(args.Name + ".dll");
 				}
+				catch (Exception ex)
+				{
+					Log.Error($"Failed to load {args.Name}.dll, {ex}");
 
-				return assembly;
+					Assembly assembly = TryLoadFromResources(args);
+					if (assembly == null)
+					{
+						throw;
+					}
+
+					return assembly;
+				}			
 			}		
 		}
 
