@@ -28,5 +28,6 @@ namespace Dependiator.Modeling
 		void UpdateNode(Node node);
 		Brush GetRectangleBackgroundBrush(Brush brush);
 		void ShowRootNode(Node node);
+		void ClearAll();
 	}
 }

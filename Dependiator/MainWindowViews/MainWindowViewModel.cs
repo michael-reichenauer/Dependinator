@@ -374,7 +374,7 @@ namespace Dependiator.MainWindowViews
 
 				// Set filter for file extension and default file extension 
 				dlg.DefaultExt = ".exe";
-				dlg.Filter = ".NET Assemblies (*.dll)|*.dll|.NET Executable (*.exe)|*.exe";
+				dlg.Filter = "Files (*.exe, *.dll)|*.exe;*.dll|.NET libs (*.dll)|*.dll|.NET Programs (*.exe)|*.exe";
 				dlg.CheckFileExists = true;
 				dlg.Multiselect = false;
 				dlg.Title = "Select a .NET .dll or .exe file";

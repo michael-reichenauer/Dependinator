@@ -48,6 +48,10 @@ namespace Dependiator.Modeling
 			node.ItemRealized();
 		}
 
+		public void ClearAll()
+		{
+			itemsSource.Clear();
+		}
 
 		public void ShowNodes(IEnumerable<Node> nodes)
 		{

@@ -1,34 +1,102 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using Dependiator.Common.MessageDialogs;
 using Dependiator.Modeling.Serializing;
+using Dependiator.Utils;
 
 
 namespace Dependiator.Modeling.Analyzing
 {
 	internal class ReflectionService : IReflectionService
 	{
+		private readonly IMessage messageService;
+
 		internal const BindingFlags DeclaredOnlyFlags =
 			BindingFlags.Public | BindingFlags.NonPublic
 			| BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
 
+		public ReflectionService(IMessage message)
+		{
+			this.messageService = message;
+		}
+
+
 		public Data Analyze(string path)
 		{
-			IReadOnlyList<TypeInfo> typeInfos = GetAssemblyTypes(path);
-
-			Data data = new Data
+			string currentDirectory = Environment.CurrentDirectory;
+			try
 			{
-				Nodes = ToDataNodes(typeInfos)
-			};
+				Environment.CurrentDirectory = Path.GetDirectoryName(path) ?? currentDirectory;
+				AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += OnReflectionOnlyAssemblyResolve;
 
-			return data;
+				IReadOnlyList<TypeInfo> typeInfos = GetAssemblyTypes(path);
+
+				Data data = new Data
+				{
+					Nodes = ToDataNodes(typeInfos)
+				};
+
+				return data;
+			}
+			catch (ReflectionTypeLoadException e)
+			{
+				var missingAssemblies = e.LoaderExceptions
+					.Select(l => l.Message)
+					.Distinct()
+					.Select(ToAssemblyName)
+					.ToList();
+
+				int maxCount = 10;
+				int count = missingAssemblies.Count;
+				string names = string.Join("\n   ", missingAssemblies.Take(maxCount));
+				if (count > maxCount)
+				{
+					names += "\n   ...";
+				}
+
+				string message =
+					$"Failed to load '{path}'\n" +
+					$"Could not locate {count} referenced assemblies:\n" +
+					$"   {names}";
+
+				Log.Warn($"{message}\n {e}");
+				// messageService.ShowError(message);
+			}
+			catch (Exception e) when (e.IsNotFatal())
+			{
+				Log.Warn($"Failed to get types from {path}, {e}");
+				throw;
+			}
+			finally
+			{
+				AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve -= OnReflectionOnlyAssemblyResolve;
+				Environment.CurrentDirectory = currentDirectory;
+			}
+
+			return new Data
+			{
+				Nodes = new List<DataNode>()
+			};
+		}
+
+
+		private static string ToAssemblyName(string message)
+		{
+			int index = message.IndexOf('\'');
+			int index2 = message.IndexOf(',', index + 1);
+
+			string name = message.Substring(index + 1, (index2 - index - 1));
+			return name;
 		}
 
 
 		private static IReadOnlyList<TypeInfo> GetAssemblyTypes(string path)
-		{			
+		{
 			Assembly assembly = Assembly.ReflectionOnlyLoadFrom(path);
 
 			IReadOnlyList<TypeInfo> typeInfos = assembly.DefinedTypes.ToList();
@@ -162,8 +230,8 @@ namespace Dependiator.Modeling.Analyzing
 		private void AddLinks(DataNode sourceNode, Type targetType)
 		{
 			if (targetType.Namespace != null
-					&& (targetType.Namespace.StartsWith("System", StringComparison.Ordinal)
-							|| targetType.Namespace.StartsWith("Microsoft", StringComparison.Ordinal)))
+			    && (targetType.Namespace.StartsWith("System", StringComparison.Ordinal)
+			        || targetType.Namespace.StartsWith("Microsoft", StringComparison.Ordinal)))
 			{
 				// Ignore "System" and "Microsoft" namespaces for now
 				return;
@@ -211,6 +279,28 @@ namespace Dependiator.Modeling.Analyzing
 			}
 
 			return fullName.Substring(index + 1);
+		}
+
+
+		private static Assembly OnReflectionOnlyAssemblyResolve(object sender, ResolveEventArgs args)
+		{
+			try
+			{
+				string resolveName = args.Name.Split(',')[0];
+
+				if (resolveName != "Dependiator.resources")
+				{
+					Assembly assembly = Assembly.ReflectionOnlyLoad(args.Name);
+					return assembly;
+				}
+
+				return null;
+			}
+			catch (Exception e)
+			{
+				Log.Error($"Failed to load {args.Name}, {e}");
+				throw;
+			}
 		}
 	}
 }

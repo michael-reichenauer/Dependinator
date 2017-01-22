@@ -23,6 +23,9 @@ namespace Dependiator.MainViews.Private
 
 		void Remove(IItem item);
 
+		void Clear();
+
+
 		void TriggerExtentChanged();
 
 		IEnumerable<IItem> GetItemsInArea(Rect nearArea);

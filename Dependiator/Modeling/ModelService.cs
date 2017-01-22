@@ -37,9 +37,15 @@ namespace Dependiator.Modeling
 
 		public void InitModules()
 		{
-			if (!dataSerializer.TryDeserialize(out Data data))
+			Data data;
+			//if (!dataSerializer.TryDeserialize(out Data data))
 			{
 				data = reflectionService.Analyze(workingFolder.FilePath);
+			}
+
+			if (elementTree != null)
+			{
+				nodeService.ClearAll();
 			}
 
 			elementTree = elementService.ToElementTree(data);

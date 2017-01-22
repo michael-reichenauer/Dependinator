@@ -173,6 +173,13 @@ namespace Dependiator.MainViews.Private
 		}
 
 
+		public void Clear()
+		{
+			viewItemsTree.Clear();
+			TriggerInvalidated();
+		}
+
+
 		public IEnumerable<IItem> GetItemsInArea(Rect area)
 		{
 			return viewItemsTree.GetItemsIntersecting(area).Select(i => i);
