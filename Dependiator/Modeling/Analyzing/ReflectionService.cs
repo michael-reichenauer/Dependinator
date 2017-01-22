@@ -304,7 +304,7 @@ namespace Dependiator.Modeling.Analyzing
 				{
 					string resolveName = args.Name.Split(',')[0];
 					Log.Debug($"Try to load {resolveName}");
-					return Assembly.ReflectionOnlyLoad(resolveName);
+					return Assembly.ReflectionOnlyLoadFrom(resolveName + ".dll");
 				}
 				catch (Exception ex)
 				{
