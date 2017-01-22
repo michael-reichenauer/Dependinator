@@ -67,6 +67,15 @@ namespace Dependiator.Modeling.Analyzing
 				Log.Warn($"{message}\n {e}");
 				// messageService.ShowError(message);
 			}
+			catch (FileLoadException e)
+			{
+				string message =
+				$"Failed to load '{path}'\n" +
+				$"Could not locate referenced assembly:\n" +
+				$"   {ToAssemblyName(e.Message)}";
+
+				Log.Warn($"{message}\n {e}");
+			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
 				Log.Warn($"Failed to get types from {path}, {e}");
@@ -284,14 +293,15 @@ namespace Dependiator.Modeling.Analyzing
 
 		private static Assembly OnReflectionOnlyAssemblyResolve(object sender, ResolveEventArgs args)
 		{
-			string assemblyName = args.Name.Split(',')[0];
+			AssemblyName assemblyName = new AssemblyName(args.Name);
 
-			if (assemblyName == "Dependiator.resources")
+
+			if (assemblyName.Name == "Dependiator.resources")
 			{
 				return null;
 			}
 
-			if (TryGetAssemblyByName(args, out Assembly assembly))
+			if (TryGetAssemblyByName(assemblyName, out Assembly assembly))
 			{
 				Log.Debug($"Resolve assembly by name {args.Name}");
 				return assembly;
@@ -315,11 +325,11 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		private static bool TryGetAssemblyByName(ResolveEventArgs args, out Assembly assembly)
+		private static bool TryGetAssemblyByName(AssemblyName assemblyName, out Assembly assembly)
 		{
 			try
 			{
-				assembly = Assembly.ReflectionOnlyLoad(args.Name);
+				assembly = Assembly.ReflectionOnlyLoad(assemblyName.FullName);
 				return true;
 			}
 			catch (Exception)
