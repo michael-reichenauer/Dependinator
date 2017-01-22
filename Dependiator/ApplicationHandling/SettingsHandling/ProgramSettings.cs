@@ -11,8 +11,5 @@ namespace Dependiator.ApplicationHandling.SettingsHandling
 		public double Width { get; set; } = 800;
 		public double Height { get; set; } = 695;
 		public bool IsMaximized { get; set; } = false;
-		public double Scale { get; set; } = 1;
-		public double X { get; set; } = 0;
-		public double Y { get; set; } = 0;
 	}
 }
