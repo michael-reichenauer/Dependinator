@@ -41,10 +41,13 @@ namespace Dependiator.Modeling
 
 		public void InitModules()
 		{
-			if (!dataSerializer.TryDeserialize(out Data data))
+			Timing t = new Timing();
+			Data data;
+			if (!dataSerializer.TryDeserialize(out data))
 			{
 				data = reflectionService.Analyze(workingFolder.FilePath);
 			}
+			t.Log("After read data");
 
 			if (elementTree != null)
 			{
@@ -63,7 +66,7 @@ namespace Dependiator.Modeling
 
 			// elementTree = elementService.ToElementTree(data3);
 
-			Timing t = new Timing();
+			
 			Node rootNode = GetNode(elementTree);
 
 			nodeService.ShowRootNode(rootNode);

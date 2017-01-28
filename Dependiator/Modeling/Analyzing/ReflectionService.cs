@@ -336,7 +336,7 @@ namespace Dependiator.Modeling.Analyzing
 
 			if (TryGetAssemblyByName(assemblyName, out Assembly assembly))
 			{
-				Log.Debug($"Resolve assembly by name {args.Name}");
+				// Log.Debug($"Resolve assembly by name {args.Name}");
 				return assembly;
 			}
 
@@ -348,7 +348,7 @@ namespace Dependiator.Modeling.Analyzing
 
 			if (TryLoadFromResources(args, out assembly))
 			{
-				Log.Debug($"Resolve assembly from resources {args.Name}");
+				Log.Warn($"Resolve assembly from resources {args.Name}");
 				return assembly;
 			}
 
@@ -377,7 +377,7 @@ namespace Dependiator.Modeling.Analyzing
 		{
 			try
 			{
-				Log.Debug($"Try load {path}");
+				// Log.Debug($"Try load {path}");
 				assembly = Assembly.ReflectionOnlyLoadFrom(path);
 				return true;
 			}
