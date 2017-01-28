@@ -45,10 +45,9 @@ namespace Dependiator.Modeling
 		public string Name => Element.Name.Name;
 
 		public string FullName =>
-			Element.Name.FullName +
-			$"\nchildren: {ChildModules.Count()}, decedents: {Element.Children.Descendents().Count()}\n" +
-			$"SourceRefs {Element.References.DescendentAndSelfSourceReferences().Count()} " +
-			$"TargetRefs {Element.References.DescendentAndSelfTargetReferences().Count()}";
+			$"{Element.Name.FullName}\n" +
+			$"children: {ChildModules.Count()}, decedents: {Element.Children.Descendents().Count()}\n" +
+			$"Scale: {Scale:#.##}, Level: {NodeLevel}, ViewScale: {ViewScale:#.##}, NSF: {NodeScaleFactor}";
 
 
 		public ModuleViewModel ModuleViewModel => ViewModel as ModuleViewModel;

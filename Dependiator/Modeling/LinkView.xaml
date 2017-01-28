@@ -35,7 +35,7 @@
 				X2="{Binding X2}"
 				Y2="{Binding Y2}"
 				Stroke="{Binding LineBrush}"
-				StrokeThickness="3"
+				StrokeThickness="{Binding StrokeThickness}"
 				StrokeDashArray="{Binding StrokeDash}"
 				IsHitTestVisible="False" />
 

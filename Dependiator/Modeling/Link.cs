@@ -12,7 +12,7 @@ namespace Dependiator.Modeling
 		private readonly INodeService nodeService;
 		private Point sourcePoint;
 		private Point targetPoint;
-		
+		private LinkViewModel linkViewModel;
 
 		public Link(
 			INodeService nodeService,
@@ -29,7 +29,8 @@ namespace Dependiator.Modeling
 
 			SetLinkLine();
 
-			ViewModel = new LinkViewModel(this);
+			linkViewModel = new LinkViewModel(this);
+			ViewModel = linkViewModel;
 		}
 
 		public Module SourceNode { get; }
@@ -67,7 +68,9 @@ namespace Dependiator.Modeling
 
 		public override bool CanBeShown()
 		{
-			return SourceNode.CanBeShown() && TargetNode.CanBeShown();
+			return 
+				SourceNode.CanBeShown() && TargetNode.CanBeShown()
+				&& ParentNode.ViewScale > 1 && linkViewModel.StrokeThickness > 0.5;
 		}
 
 
