@@ -31,7 +31,7 @@ namespace Dependiator.Modeling
 		{
 			get
 			{
-				double scale = link.ViewScale.MM(0.1, 1);
+				double scale = (link.ViewScale * 0.5).MM(0.1, 1);
 				double thickness = 0;
 
 				if (link.SubLinkCount < 5)
