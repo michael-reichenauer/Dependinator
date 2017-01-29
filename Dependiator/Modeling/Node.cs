@@ -165,7 +165,6 @@ namespace Dependiator.Modeling
 				ActualNodeBounds.X + xf * offset.X,
 				ActualNodeBounds.Y + yf * offset.Y);
 
-
 			double width = ActualNodeBounds.Size.Width + (wf * offset.X);
 			double height = actualNodeBounds.Size.Height + (hf * offset.Y);
 
@@ -192,9 +191,15 @@ namespace Dependiator.Modeling
 
 			NotifyAll();
 
+			double cxf = 0;
+			//if (xf == 1 && offset.X < 0)
+			//{
+			//	cxf = 1;
+			//}
+
 			Vector childOffset = new Vector(
-				offset.X * NodeScale * ((1 / NodeScaleFactor) / NodeScaleFactor), 
-				offset.Y * NodeScale * ((1 / NodeScaleFactor) / NodeScaleFactor));
+				(offset.X) * NodeScale * ((1 / NodeScaleFactor) / NodeScaleFactor) + cxf, 
+				(offset.Y)  * NodeScale * ((1 / NodeScaleFactor) / NodeScaleFactor));
 
 			foreach (Node childNode in ChildNodes)
 			{

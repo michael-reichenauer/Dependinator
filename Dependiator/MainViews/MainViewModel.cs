@@ -198,7 +198,7 @@ namespace Dependiator.MainViews
 		{
 			using (progress.ShowDialog("Refreshing view ..."))
 			{
-				await Task.Yield();
+				await modelService.Refresh();
 			}
 		}
 
