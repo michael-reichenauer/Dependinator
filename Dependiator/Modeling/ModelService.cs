@@ -43,7 +43,7 @@ namespace Dependiator.Modeling
 		{
 			Timing t = new Timing();
 			Data data;
-			if (!dataSerializer.TryDeserialize(out data))
+			//if (!dataSerializer.TryDeserialize(out data))
 			{
 				data = reflectionService.Analyze(workingFolder.FilePath);
 			}

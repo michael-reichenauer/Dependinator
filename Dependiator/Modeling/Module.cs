@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependiator.Modeling.Analyzing;
+using Dependiator.Utils;
 using Dependiator.Utils.UI;
 
 
@@ -24,12 +26,7 @@ namespace Dependiator.Modeling
 			Element = element;
 			this.nodeService = nodeService;
 
-			ActualNodeBounds = bounds;
-
-			//Name = new ModuleName(nodeService, element.Name, this);
-			//AddChildNode(Name);
-
-			//AddModuleChildren();			
+			ActualNodeBounds = bounds;		
 
 			RectangleBrush = nodeService.GetRectangleBrush();
 			BackgroundBrush = nodeService.GetRectangleBackgroundBrush(RectangleBrush);
@@ -70,13 +67,15 @@ namespace Dependiator.Modeling
 			if (!IsRealized)
 			{
 				base.ItemRealized();
+
 				if (!ChildModules.Any())
 				{
 					AddModuleChildren();
 				}
+
 				if (!Links.Any())
 				{
-					AddReferences();
+					AddLinks();				
 				}
 
 				ShowChildren();
@@ -128,7 +127,10 @@ namespace Dependiator.Modeling
 
 
 			int count = 0;
-			foreach (Element childElement in Element.Children)
+			var children = Element.Children.OrderBy(e => e, Compare.With<Element>(CompareElements));
+			//Sorter.Sort(children, Compare.With<Element>(CompareElements));
+
+			foreach (Element childElement in children)
 			{
 				Size size = childElement.Size ?? DefaultSize;
 
@@ -153,7 +155,64 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void AddReferences()
+		private int CompareElements(Element e1, Element e2)
+		{
+			Reference e1ToE2 = Element.References
+				.FirstOrDefault(r => r.Source == e1 && r.Target == e2);
+			Reference e2ToE1 = Element.References
+				.FirstOrDefault(r => r.Source == e2 && r.Target == e1);
+
+			int e1ToE2Count = e1ToE2?.SubReferences.Count ?? 0;
+			int e2ToE1Count = e2ToE1?.SubReferences.Count ?? 0;
+
+			if (e1ToE2Count > e2ToE1Count)
+			{
+				return -1;
+			}
+			else if (e1ToE2Count < e2ToE1Count)
+			{
+				return 1;
+			}
+
+			Reference parentToE1 = Element.References
+				.FirstOrDefault(r => r.Source == Element && r.Target == e1);
+			Reference parentToE2 = Element.References
+				.FirstOrDefault(r => r.Source == Element && r.Target == e2);
+
+			int parentToE1Count = parentToE1?.SubReferences.Count ?? 0;
+			int parentToE2Count = parentToE2?.SubReferences.Count ?? 0;
+
+			if (parentToE1Count > parentToE2Count)
+			{
+				return -1;
+			}
+			else if (parentToE1Count < parentToE2Count)
+			{
+				return 1;
+			}
+
+			Reference e1ToParent = Element.References
+				.FirstOrDefault(r => r.Source == e1 && r.Target == Element);
+			Reference e2ToParent = Element.References
+				.FirstOrDefault(r => r.Source == e2 && r.Target == Element);
+
+			int e1ToParentCount = e1ToParent?.SubReferences.Count ?? 0;
+			int e2ToParentCount = e2ToParent?.SubReferences.Count ?? 0;
+
+			if (e1ToParentCount > e2ToParentCount)
+			{
+				return -1;
+			}
+			else if (e1ToParentCount < e2ToParentCount)
+			{
+				return 1;
+			}
+
+			return 0;
+		}
+
+
+		private void AddLinks()
 		{
 			foreach (Reference reference in Element.References)
 			{
@@ -211,8 +270,7 @@ namespace Dependiator.Modeling
 		public void UpdateLinksFor()
 		{
 			IEnumerable<Link> links = ChildNodes
-				.OfType<Link>()
-				
+				.OfType<Link>()		
 				.ToList();
 
 			foreach (Link link in links)

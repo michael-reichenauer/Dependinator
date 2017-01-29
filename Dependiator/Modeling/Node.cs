@@ -239,34 +239,34 @@ namespace Dependiator.Modeling
 						wf = 1;
 						hf = -1;
 					}
-					else if (xd < 10)
-					{
-						xf = 1;
-						yf = 0;
-						wf = -1;
-						hf = 0;
-					}
-					else if (yd < 10)
-					{
-						xf = 0;
-						yf = 1;
-						wf = 0;
-						hf = -1;
-					}
-					else if (wd < 10)
-					{
-						xf = 0;
-						yf = 0;
-						wf = 1;
-						hf = 0;
-					}
-					else if (hd < 10)
-					{
-						xf = 0;
-						yf = 0;
-						wf = 0;
-						hf = 1;
-					}
+					//else if (xd < 10)
+					//{
+					//	xf = 1;
+					//	yf = 0;
+					//	wf = -1;
+					//	hf = 0;
+					//}
+					//else if (yd < 10)
+					//{
+					//	xf = 0;
+					//	yf = 1;
+					//	wf = 0;
+					//	hf = -1;
+					//}
+					//else if (wd < 10)
+					//{
+					//	xf = 0;
+					//	yf = 0;
+					//	wf = 1;
+					//	hf = 0;
+					//}
+					//else if (hd < 10)
+					//{
+					//	xf = 0;
+					//	yf = 0;
+					//	wf = 0;
+					//	hf = 1;
+					//}
 					else
 					{
 						xf = 1;
