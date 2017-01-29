@@ -26,7 +26,7 @@ namespace Dependiator.Modeling
 		public abstract ViewModel ViewModel { get; }
 
 		public Rect ItemBounds { get; protected set; }
-		public int ZIndex { get; set; }
+		public double ZIndex { get; set; }
 		public double Priority { get; protected set; }
 
 		public bool IsRealized { get; private set; }
@@ -437,7 +437,8 @@ namespace Dependiator.Modeling
 			}
 
 			child.Priority = Priority - 0.1;
-			child.ZIndex = ZIndex + 10;
+
+			child.ZIndex = ZIndex + ((child is Link) ? 1 : 2);
 		}
 
 
