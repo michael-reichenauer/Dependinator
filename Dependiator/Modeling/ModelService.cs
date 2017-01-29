@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows;
 using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
@@ -41,10 +42,13 @@ namespace Dependiator.Modeling
 
 		public void InitModules()
 		{
-			if (!dataSerializer.TryDeserialize(out Data data))
+			Timing t = new Timing();
+			Data data;
+			if (!dataSerializer.TryDeserialize(out data))
 			{
 				data = reflectionService.Analyze(workingFolder.FilePath);
 			}
+			t.Log("After read data");
 
 			if (elementTree != null)
 			{
@@ -52,18 +56,8 @@ namespace Dependiator.Modeling
 			}
 
 			elementTree = elementService.ToElementTree(data);
-
-			//Data data2 = elementService.ToData(elementTree);
-			//serializer.Serialize(data2);
-
-			//elementTree = elementService.ToElementTree(data2);
-
-			//Data data3 = elementService.ToData(elementTree);
-			//serializer.Serialize(data3);
-
-			// elementTree = elementService.ToElementTree(data3);
-
-			Timing t = new Timing();
+		
+			
 			Node rootNode = GetNode(elementTree);
 
 			nodeService.ShowRootNode(rootNode);
@@ -73,9 +67,20 @@ namespace Dependiator.Modeling
 			canvasService.Scale = settings.Scale;
 			double x = settings.X;
 			double y = settings.Y;
-			canvasService.Offset = new System.Windows.Point(x, y);
+			canvasService.Offset = new Point(x, y);
 
 			t.Log("Created modules");
+		}
+
+
+		public Task Refresh()
+		{
+			//Data newData = reflectionService.Analyze(workingFolder.FilePath);
+
+			//Data data = elementService.ToData(elementTree);
+
+			return Task.CompletedTask;
+
 		}
 
 

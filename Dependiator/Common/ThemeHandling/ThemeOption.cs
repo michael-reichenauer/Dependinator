@@ -10,7 +10,7 @@ namespace Dependiator.Common.ThemeHandling
 		public string ForegroundColor { get; set; } = "#FFFFFFFF";
 		public string TitlebarBackgroundColor { get; set; } = "#FF0E0E0E";
 
-		public string BorderColor { get; set; } = "#FF5240B7";
+		public string BorderColor { get; set; } = "#FF0192D1";
 		public string TextColor { get; set; } = "#FFD4D4D4";
 		public string TextLowColor { get; set; } = "#FFB0C4DE";
 		public string HoverColor { get; set; } = "#996495ED";
@@ -18,7 +18,7 @@ namespace Dependiator.Common.ThemeHandling
 		public string UndoColor { get; set; } = "#FFF75B54";
 
 		public string BusyColor { get; set; } = "#FFE540FF";
-		public string ScrollbarColor { get; set; } = "#FF9932CC";
+		public string ScrollbarColor { get; set; } = "#FF0192D1";
 		public string ItemBackgroundColor { get; set; } = "#00FFFFFF";
 		public string SelectedItemBorderColor { get; set; } = "#FF6495ED";
 		public string SelectedItemBackgroundColor { get; set; } = "#000025";

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependiator.Modeling.Analyzing;
@@ -10,9 +11,10 @@ namespace Dependiator.Modeling
 	internal class Link : Node
 	{
 		private readonly INodeService nodeService;
+		private readonly LinkViewModel linkViewModel;
 		private Point sourcePoint;
 		private Point targetPoint;
-		
+
 
 		public Link(
 			INodeService nodeService,
@@ -29,7 +31,8 @@ namespace Dependiator.Modeling
 
 			SetLinkLine();
 
-			ViewModel = new LinkViewModel(this);
+			linkViewModel = new LinkViewModel(this);
+			ViewModel = linkViewModel;
 		}
 
 		public Module SourceNode { get; }
@@ -46,9 +49,15 @@ namespace Dependiator.Modeling
 			get
 			{
 				string tip = $"{Reference},  {Reference.SubReferences.Count} references:";
-				foreach (Reference reference in Reference.SubReferences)
+				int maxLinks = 40;
+				foreach (Reference reference in Reference.SubReferences.Take(maxLinks))
 				{
 					tip += $"\n  {reference.SubReferences[0]}";
+				}
+
+				if (Reference.SubReferences.Count > maxLinks)
+				{
+					tip += "\n  ...";
 				}
 
 				return tip;
@@ -63,11 +72,14 @@ namespace Dependiator.Modeling
 		public double X2 => targetPoint.X;
 		public double Y2 => targetPoint.Y;
 
-		public double SubLinkCount => Reference.SubReferences.Count; 
+		public int SubLinkCount => Reference.SubReferences.Count; 
 
 		public override bool CanBeShown()
 		{
-			return SourceNode.CanBeShown() && TargetNode.CanBeShown();
+			return 
+				SourceNode.CanBeShown() && TargetNode.CanBeShown()
+				&& ParentNode.ViewScale > 2 
+				&& linkViewModel.StrokeThickness > 0.5;
 		}
 
 

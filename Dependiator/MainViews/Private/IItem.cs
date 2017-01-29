@@ -14,7 +14,7 @@ namespace Dependiator.MainViews.Private
 
 		double Priority { get; }
 
-		int ZIndex { get; }
+		double ZIndex { get; }
 
 		bool IsAdded { get; }
 

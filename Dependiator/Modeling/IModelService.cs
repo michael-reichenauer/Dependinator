@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Threading.Tasks;
+using System.Windows;
 
 
 namespace Dependiator.Modeling
@@ -8,5 +9,6 @@ namespace Dependiator.Modeling
 		void InitModules();
 		object MoveNode(Point viewPosition, Vector viewOffset, object movingObject);
 		void Close();
+		Task Refresh();
 	}
 }

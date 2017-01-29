@@ -1,3 +1,4 @@
+using System;
 using System.Windows.Media;
 using Dependiator.MainViews;
 
@@ -26,22 +27,27 @@ namespace Dependiator.Modeling
 		public Brush HoverBrush => Brushes.Transparent;
 		public string StrokeDash { get; set; } = "";
 
-		public int StrokeThickness
+		public double StrokeThickness
 		{
 			get
 			{
+				double scale = (link.ViewScale * 0.4).MM(0.1, 1);
+				double thickness = 0;
+
 				if (link.SubLinkCount < 5)
 				{
-					return 1;
+					thickness = 1;
 				}
 				else if (link.SubLinkCount < 15)
 				{
-					return 2;
+					thickness = 2;
 				}
-				else 
+				else
 				{
-					return 3;
+					thickness = 3;
 				}
+
+				return thickness * scale;
 			}
 		}
 	}

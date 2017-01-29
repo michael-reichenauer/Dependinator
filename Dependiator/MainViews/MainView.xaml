@@ -44,7 +44,7 @@
 					<ItemsPanelTemplate>
 						<virtualCanvas:ZoomableCanvas
 							Loaded="ZoomableCanvas_Loaded"
-							RealizationLimit="1000"
+							RealizationLimit="500"
 							RealizationRate="30"
 							RealizationPriority="Normal"
 							ApplyTransform="false" />

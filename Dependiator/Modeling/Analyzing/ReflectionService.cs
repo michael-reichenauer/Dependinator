@@ -119,6 +119,7 @@ namespace Dependiator.Modeling.Analyzing
 			return typeInfos
 				.Where(typeInfo => !IsCompilerGenerated(typeInfo))
 				.Select(ToNode)
+				.Where(node => node != null)
 				.ToList();
 		}
 
@@ -132,6 +133,12 @@ namespace Dependiator.Modeling.Analyzing
 					Name = typeInfo.FullName,
 					Type = DataNode.TypeType
 				};
+
+				if (node.Name.Contains(">"))
+				{
+					Log.Warn($"Skipping Node name {node.Name}");
+					return null;
+				}
 
 				AddMembers(typeInfo, node);
 
@@ -261,9 +268,9 @@ namespace Dependiator.Modeling.Analyzing
 				.Select(parameter => parameter.ParameterType)
 				.ForEach(parameterType => AddLinks(memberNode, parameterType));
 
-			//methodInfo.GetMethodBody()?.LocalVariables
-			//	.Select(variable => variable.LocalType)
-			//	.ForEach(variableType => AddReferencedTypes(variableType, memberElement, nameSpaces));
+			methodInfo.GetMethodBody()?.LocalVariables
+				.Select(variable => variable.LocalType)
+				.ForEach(variableType => AddLinks(memberNode, variableType));
 
 			// Check https://blogs.msdn.microsoft.com/haibo_luo/2005/10/04/read-il-from-methodbody/
 			// byte[] bodyIl = methodBody.GetILAsByteArray();
@@ -290,12 +297,24 @@ namespace Dependiator.Modeling.Analyzing
 				? targetType.Namespace + "." + targetType.Name
 				: targetType.Name;
 
+			if (name.Contains(">"))
+			{
+				return;
+			}
+
 			DataLink link = new DataLink
 			{
 				Target = name
 			};
 
 			sourceNode.Links = sourceNode.Links ?? new List<DataLink>();
+
+			if (sourceNode.Links.Any(l => l.Target == name))
+			{
+				// Log.Warn($"Skipping link {sourceNode.Name} => {name}");
+				return;
+			}
+
 			sourceNode.Links.Add(link);
 
 			if (targetType.IsGenericType)
@@ -336,7 +355,7 @@ namespace Dependiator.Modeling.Analyzing
 
 			if (TryGetAssemblyByName(assemblyName, out Assembly assembly))
 			{
-				Log.Debug($"Resolve assembly by name {args.Name}");
+				// Log.Debug($"Resolve assembly by name {args.Name}");
 				return assembly;
 			}
 
@@ -348,7 +367,7 @@ namespace Dependiator.Modeling.Analyzing
 
 			if (TryLoadFromResources(args, out assembly))
 			{
-				Log.Debug($"Resolve assembly from resources {args.Name}");
+				Log.Warn($"Resolve assembly from resources {args.Name}");
 				return assembly;
 			}
 
@@ -377,7 +396,7 @@ namespace Dependiator.Modeling.Analyzing
 		{
 			try
 			{
-				Log.Debug($"Try load {path}");
+				// Log.Debug($"Try load {path}");
 				assembly = Assembly.ReflectionOnlyLoadFrom(path);
 				return true;
 			}
