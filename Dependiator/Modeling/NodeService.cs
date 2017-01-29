@@ -132,7 +132,7 @@ namespace Dependiator.Modeling
 		private void MoveNode(Module module, Point canvasPoint, Vector viewOffset, bool isFirst)
 		{
 			//module.Move(viewOffset);
-			module.Resize(canvasPoint, viewOffset, isFirst);
+			module.MoveOrResize(canvasPoint, viewOffset, isFirst);
 		}
 
 		public void RemoveRootNode(Node node)

@@ -11,7 +11,9 @@
 	<Border
 		BorderBrush="{Binding RectangleBrush}"
 		BorderThickness="{Binding StrokeThickness}"
-		Background="{Binding BackgroundBrush}">
+		Background="{Binding BackgroundBrush}" 
+		CornerRadius="{Binding CornerRadius}">
+		
 		<Grid Background="Transparent">
 
 			<Grid.RowDefinitions>
@@ -26,7 +28,6 @@
 			<!-- Title -->
 			<Grid Grid.Row="0" Background="Transparent">
 				<TextBlock
-
 					Text="{Binding Name}"
 					Foreground="{DynamicResource TextBrush}"
 					FontSize="{Binding FontSize}"
@@ -40,6 +41,7 @@
 						BorderBrush="{Binding RectangleBrush}"
 						BorderThickness="1" />
 				</Grid.ToolTip>
+				
 			</Grid>
 		</Grid>
 	</Border>

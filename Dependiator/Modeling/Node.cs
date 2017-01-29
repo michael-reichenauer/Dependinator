@@ -150,142 +150,11 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void Move(Vector viewOffset)
-		{
-			Vector offset = new Vector(
-				(viewOffset.X / NodeScale) / Scale,
-				(viewOffset.Y / NodeScale) / Scale);
-
-
-			Rect nodeBounds = new Rect(
-				new Point(
-					ActualNodeBounds.X + offset.X,
-					ActualNodeBounds.Y + offset.Y),
-				ActualNodeBounds.Size);
-
-			if ((nodeBounds.X + nodeBounds.Width > ParentNode.ActualNodeBounds.Width * NodeScaleFactor)
-			    || (nodeBounds.Y + nodeBounds.Height > ParentNode.ActualNodeBounds.Height * NodeScaleFactor)
-			    || nodeBounds.X < 0
-			    || nodeBounds.Y < 0)
-			{
-				return;
-			}
-
-			ActualNodeBounds = nodeBounds;
-
-			nodeService.UpdateNode(this);
-
-			NotifyAll();
-
-			Vector childOffset = new Vector(offset.X * NodeScale, offset.Y * NodeScale);
-
-			foreach (Node childNode in ChildNodes)
-			{
-				childNode.MoveAsChild(childOffset);
-			}
-
-			Module parentModule = ParentNode as Module;
-			if (parentModule != null)
-			{
-				parentModule.UpdateLinksFor(this);
-			}
-		}
-
-
-		public void Resize(Point canvasPoint, Vector viewOffset, bool isFirst)
+		public void MoveOrResize(Point canvasPoint, Vector viewOffset, bool isFirst)
 		{
 			if (isFirst)
 			{
-				double xdist = Math.Abs(ItemBounds.X - canvasPoint.X);
-				double ydist = Math.Abs(ItemBounds.Y - canvasPoint.Y);
-
-				double wdist = Math.Abs(ItemBounds.Right - canvasPoint.X);
-				double hdist = Math.Abs(ItemBounds.Bottom - canvasPoint.Y);
-
-				double xd = xdist * Scale;
-				double yd = ydist * Scale;
-
-				double wd = wdist * Scale;
-				double hd = hdist * Scale;
-
-
-				if (ItemBounds.Width * Scale > 80)
-				{
-					if (xd < 10 && yd < 10)
-					{
-						xf = 1;
-						yf = 1;
-						wf = -1;
-						hf = -1;
-					}
-					else if (wd < 10 && hd < 10)
-					{
-						xf = 0;
-						yf = 0;
-						wf = 1;
-						hf = 1;
-					}
-					else if (xd < 10 && hd < 10)
-					{
-						xf = 1;
-						yf = 0;
-						wf = -1;
-						hf = 1;
-					}
-					else if (wd < 10 && yd < 10)
-					{
-						xf = 0;
-						yf = 1;
-						wf = 1;
-						hf = -1;
-					}
-					//else if (xd < 10)
-					//{
-					//	xf = 1;
-					//	yf = 0;
-					//	wf = -1;
-					//	hf = 0;
-					//}
-					//else if (yd < 10)
-					//{
-					//	xf = 0;
-					//	yf = 1;
-					//	wf = 0;
-					//	hf = -1;
-					//}
-					//else if (wd < 10)
-					//{
-					//	xf = 0;
-					//	yf = 0;
-					//	wf = 1;
-					//	hf = 0;
-					//}
-					//else if (hd < 10)
-					//{
-					//	xf = 0;
-					//	yf = 0;
-					//	wf = 0;
-					//	hf = 1;
-					//}
-					else
-					{
-						xf = 1;
-						yf = 1;
-						wf = 0;
-						hf = 0;
-					}
-				}
-				else
-				{
-					xf = 1;
-					yf = 1;
-					wf = 0;
-					hf = 0;
-				}
-			}
-			else
-			{
-				
+				GetMoveResizeFactors(canvasPoint);
 			}
 
 			Vector offset = new Vector(
@@ -342,6 +211,75 @@ namespace Dependiator.Modeling
 			if (parentModule != null)
 			{
 				parentModule.UpdateLinksFor(this);
+			}
+		}
+
+
+		private void GetMoveResizeFactors(Point canvasPoint)
+		{
+			double xdist = Math.Abs(ItemBounds.X - canvasPoint.X);
+			double ydist = Math.Abs(ItemBounds.Y - canvasPoint.Y);
+
+			double wdist = Math.Abs(ItemBounds.Right - canvasPoint.X);
+			double hdist = Math.Abs(ItemBounds.Bottom - canvasPoint.Y);
+
+			double xd = xdist * Scale;
+			double yd = ydist * Scale;
+
+			double wd = wdist * Scale;
+			double hd = hdist * Scale;
+
+
+			if (ItemBounds.Width * Scale > 80)
+			{
+				if (xd < 10 && yd < 10)
+				{
+					// Upper left corner (resize)
+					xf = 1;
+					yf = 1;
+					wf = -1;
+					hf = -1;
+				}
+				else if (wd < 10 && hd < 10)
+				{
+					// Lower rigth corner (resize)
+					xf = 0;
+					yf = 0;
+					wf = 1;
+					hf = 1;
+				}
+				else if (xd < 10 && hd < 10)
+				{
+					// Lower left corner (resize)
+					xf = 1;
+					yf = 0;
+					wf = -1;
+					hf = 1;
+				}
+				else if (wd < 10 && yd < 10)
+				{
+					// Upper rigth corner (resize)
+					xf = 0;
+					yf = 1;
+					wf = 1;
+					hf = -1;
+				}
+				else
+				{
+					// Inside rectangle, (normal mover)
+					xf = 1;
+					yf = 1;
+					wf = 0;
+					hf = 0;
+				}
+			}
+			else
+			{
+				// Rectangle to small to resize (normal mover)
+				xf = 1;
+				yf = 1;
+				wf = 0;
+				hf = 0;
 			}
 		}
 

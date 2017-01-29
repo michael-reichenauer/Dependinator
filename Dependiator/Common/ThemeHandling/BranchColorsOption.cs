@@ -11,7 +11,6 @@ namespace Dependiator.Common.ThemeHandling
 		public List<string> Colors { get; set; } = new List<string>
 		{
 			"#FFE540FF", // master branch (violet)
-			"#FFFFFFFF", // multi- branch (white)
 			"#FFFFB300", // Vivid Yellow
 			"#FFA12B8E", // Strong Purple
 			"#FFFF6800", // Vivid Orange

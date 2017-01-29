@@ -15,7 +15,19 @@ namespace Dependiator.Modeling
 			: base(module)
 		{
 			this.module = module;
-			StrokeThickness = module.Element.Type == Element.MemberType ? 0.5 : 1;
+
+			if (module.Element.Type == Element.MemberType)
+			{
+				StrokeThickness = 0.5;
+			}
+			else if (module.Element.Type == Element.TypeType)
+			{
+				StrokeThickness = 2;
+			}
+			else
+			{
+				StrokeThickness = 1;
+			}
 		}
 
 
@@ -30,21 +42,23 @@ namespace Dependiator.Modeling
 
 		public string Name => module.ViewNodeSize.Width > 40 ? module.Name : " ";
 
+		public int CornerRadius => module.Element.Type == Element.TypeType
+			? (int)(module.ViewScale * 10).MM(0, 30)
+			: 0;
 
 		public int FontSize
 		{
 			get
 			{
 				int fontSize = (int)(12 * module.Scale * module.NodeScale);
-				fontSize = Math.Max(8, fontSize);
-				return Math.Min(20, fontSize);
+				return fontSize.MM(8, 20);
 			}
 		}
 
 
 		internal void MouseMove(Point viewPosition, Vector viewOffset, bool isFirst)
 		{
-			module.Resize(viewPosition, viewOffset, isFirst);
+			module.MoveOrResize(viewPosition, viewOffset, isFirst);
 		}
 
 
