@@ -8,7 +8,7 @@ namespace Dependiator.Modeling
 {
 	internal class ElementService : IElementService
 	{
-		public ElementTree ToElementTree(Data data)
+		public ElementTree ToElementTree(Data data, Data oldData)
 		{
 			ElementName rootName = new ElementName(Element.RootName, Element.RootName);
 			Element root = new Element(rootName, DataNode.NameSpaceType, null);
@@ -18,7 +18,7 @@ namespace Dependiator.Modeling
 
 			foreach (DataNode node in data.Nodes)
 			{
-				AddElement(node, null, elements);
+				AddElement(node, null, elements, oldData);
 			}
 
 			ElementTree tree = new ElementTree(root);
@@ -28,14 +28,13 @@ namespace Dependiator.Modeling
 
 		public Data ToData(ElementTree elementTree)
 		{
+			Data data = new Data();	
+
 			List<DataNode> nodes = elementTree.Root.Children
-				.Select(ToNode)
+				.Select(element => ToNode(element, data))
 				.ToList();
 
-			Data data = new Data
-			{
-				Nodes = nodes
-			};
+			data.Nodes = nodes;
 
 			return data;
 		}
@@ -44,19 +43,32 @@ namespace Dependiator.Modeling
 		private void AddElement(
 			DataNode dataNode,
 			string parentName,
-			Dictionary<string, Element> elements)
+			Dictionary<string, Element> elements,
+			Data oldData)
 		{
 			string name = parentName != null ? parentName + "." + dataNode.Name : dataNode.Name;
 
-			Element element = GetOrAddElement(name, elements);
+			Element element = GetOrAddElement(name, elements, oldData);
 			element.SetType(dataNode.Type);
-			element.SetLocationAndSize(dataNode.Location, dataNode.Size);
+
+			if (dataNode.Location.HasValue || dataNode.Size.HasValue)
+			{
+				element.SetLocationAndSize(dataNode.Location, dataNode.Size);
+			}
+			else
+			{
+				if (oldData != null && oldData.NodesByName.TryGetValue(name, out DataNode oldNode))
+				{
+					element.SetLocationAndSize(oldNode.Location, oldNode.Size);
+				}
+			}
+
 
 			if (dataNode.Nodes != null)
 			{
 				foreach (DataNode childNode in dataNode.Nodes)
 				{
-					AddElement(childNode, name, elements);
+					AddElement(childNode, name, elements, oldData);
 				}
 			}
 
@@ -64,7 +76,7 @@ namespace Dependiator.Modeling
 			{
 				foreach (DataLink dataLink in dataNode.Links)
 				{
-					Element targetElement = GetOrAddElement(dataLink.Target, elements);
+					Element targetElement = GetOrAddElement(dataLink.Target, elements, oldData);
 					Reference reference = new Reference(element, targetElement, ReferenceKind.Direkt);
 					element.References.Add(reference);
 				}
@@ -72,17 +84,19 @@ namespace Dependiator.Modeling
 		}
 
 
-		private DataNode ToNode(Element element)
+		private DataNode ToNode(Element element, Data data)
 		{
 			DataNode node = new DataNode
 			{
 				Name = element.Name.Name,
 				Type = element.Type,
-				Nodes = ToChildren(element.Children),
+				Nodes = ToChildren(element.Children, data),
 				Links = ToLinks(element.References),
 				Location = element.Location,
 				Size = element.Size
 			};
+
+			data.NodesByName[element.Name.FullName] = node;
 
 			return node;
 		}
@@ -118,7 +132,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private List<DataNode> ToChildren(ElementChildren elementChildren)
+		private List<DataNode> ToChildren(ElementChildren elementChildren, Data data)
 		{
 			if (!elementChildren.Any())
 			{
@@ -126,36 +140,41 @@ namespace Dependiator.Modeling
 			}
 
 			return elementChildren
-				.Select(ToNode)
+				.Select(element => ToNode(element, data))
 				.ToList();
 		}
 
 
-		private Element GetOrAddElement(string name, Dictionary<string, Element> elements)
+		private Element GetOrAddElement(string name, Dictionary<string, Element> elements, Data oldData)
 		{
 			if (!elements.TryGetValue(name, out Element element))
 			{
-				element = CreateElement(name, elements);
+				element = CreateElement(name, elements, oldData);
 			}
 
 			return element;
 		}
 
 
-		private Element CreateElement(string name, IDictionary<string, Element> elements)
+		private Element CreateElement(string name, IDictionary<string, Element> elements, Data oldData)
 		{
 			string parentName = GetParentName(name);
 
 			if (!elements.TryGetValue(parentName, out Element parent))
 			{
-				parent = CreateElement(parentName, elements);
+				parent = CreateElement(parentName, elements, oldData);
 			}
 
 			string shortName = GetNamePart(name);
 			ElementName elementName = new ElementName(shortName, name);
 			Element element = new Element(elementName, null, parent);
 
-			parent.Children.Add(element);
+			if (oldData != null && oldData.NodesByName.TryGetValue(name, out DataNode oldNode))
+			{
+				element.SetLocationAndSize(oldNode.Location, oldNode.Size);
+			}
+
+				parent.Children.Add(element);
 			elements[name] = element;
 
 			return element;

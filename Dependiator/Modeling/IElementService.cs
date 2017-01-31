@@ -6,7 +6,7 @@ namespace Dependiator.Modeling
 {
 	internal interface IElementService
 	{
-		ElementTree ToElementTree(Data data);
+		ElementTree ToElementTree(Data data, Data oldData);
 
 		Data ToData(ElementTree elementTree);
 	}

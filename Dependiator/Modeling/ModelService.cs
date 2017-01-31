@@ -55,7 +55,7 @@ namespace Dependiator.Modeling
 				nodeService.ClearAll();
 			}
 
-			elementTree = elementService.ToElementTree(data);
+			elementTree = elementService.ToElementTree(data, null);
 		
 			
 			Node rootNode = GetNode(elementTree);
@@ -73,14 +73,42 @@ namespace Dependiator.Modeling
 		}
 
 
-		public Task Refresh()
+		public async Task Refresh()
 		{
-			//Data newData = reflectionService.Analyze(workingFolder.FilePath);
+			await Task.Yield();
 
-			//Data data = elementService.ToData(elementTree);
+			Timing t = new Timing();
 
-			return Task.CompletedTask;
+			Data oldData = elementService.ToData(elementTree);
 
+			ElementTree tree = await Task.Run(() =>
+			{
+				Data newData = reflectionService.Analyze(workingFolder.FilePath);
+
+				return elementService.ToElementTree(newData, oldData);
+			});
+		
+			t.Log("Read fresh data");
+
+			var scale = canvasService.Scale;
+			var offset = canvasService.Offset;
+
+			if (elementTree != null)
+			{
+				nodeService.ClearAll();
+			}
+
+			elementTree = tree;
+			t.Log("ToElementTree");
+
+			Node rootNode = GetNode(elementTree);
+
+			nodeService.ShowRootNode(rootNode);
+
+			canvasService.Scale = scale;
+			canvasService.Offset = offset;
+
+			t.Log("Created modules");
 		}
 
 

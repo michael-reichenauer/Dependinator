@@ -195,8 +195,8 @@ namespace Dependiator.Modeling.Analyzing
 
 				DataNode memberNode = new DataNode
 				{
-					Type = DataNode.MemberType,
 					Name = GetNamePartIfDotted(memberInfo.Name),
+					Type = DataNode.MemberType			
 				};
 
 				typeNode.Nodes = typeNode.Nodes ?? new List<DataNode>();
