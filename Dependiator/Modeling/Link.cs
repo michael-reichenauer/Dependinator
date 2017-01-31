@@ -78,8 +78,7 @@ namespace Dependiator.Modeling
 		{
 			return 
 				SourceNode.CanBeShown() && TargetNode.CanBeShown()
-				&& ParentNode.ViewScale > 2 
-				&& linkViewModel.StrokeThickness > 0.5;
+				&& ParentNode.ViewScale > 3.5;
 		}
 
 
