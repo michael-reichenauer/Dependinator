@@ -18,7 +18,7 @@
 //		public bool IsAdded => ItemState != null;
 //		public ViewModel ViewModel => viewModel.Value;
 
-//		public Rect ItemBounds { get; protected set; }
+//		public Rect ItemCanvasBounds { get; protected set; }
 //		public int ZIndex { get; protected set; }
 //		public double Priority { get; protected set; }
 

@@ -33,8 +33,8 @@ namespace Dependiator.Modeling
 
 		public string ToolTip => module.FullName;
 		public double StrokeThickness { get; }
-		public double RectangleWidth => module.ItemBounds.Width * module.Scale - StrokeThickness * 2;
-		public double RectangleHeight => module.ItemBounds.Height * module.Scale - StrokeThickness * 2;
+		public double RectangleWidth => module.ItemCanvasBounds.Width * module.CanvasScale - StrokeThickness * 2;
+		public double RectangleHeight => module.ItemCanvasBounds.Height * module.CanvasScale - StrokeThickness * 2;
 		public Brush RectangleBrush => module.RectangleBrush;
 		public Brush HoverBrush => module.RectangleBrush;
 
@@ -43,14 +43,14 @@ namespace Dependiator.Modeling
 		public string Name => module.ViewNodeSize.Width > 40 ? module.Name : " ";
 
 		public int CornerRadius => module.Element.Type == Element.TypeType
-			? (int)(module.ViewScale * 10).MM(0, 30)
+			? (int)(module.NodeScale * 10).MM(0, 30)
 			: 0;
 
 		public int FontSize
 		{
 			get
 			{
-				int fontSize = (int)(12 * module.Scale * module.NodeScale);
+				int fontSize = (int)(12 * module.NodeScale);
 				return fontSize.MM(8, 20);
 			}
 		}

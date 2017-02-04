@@ -26,7 +26,7 @@ namespace Dependiator.Modeling
 			Element = element;
 			this.nodeService = nodeService;
 
-			ActualNodeBounds = bounds;		
+			NodeBounds = bounds;		
 
 			RectangleBrush = nodeService.GetRectangleBrush();
 			BackgroundBrush = nodeService.GetRectangleBackgroundBrush(RectangleBrush);
@@ -44,7 +44,7 @@ namespace Dependiator.Modeling
 		public string FullName =>
 			$"{Element.Name.FullName}\n" +
 			$"children: {ChildModules.Count()}, decedents: {Element.Children.Descendents().Count()}\n" +
-			$"Scale: {Scale:#.##}, Level: {NodeLevel}, ViewScale: {ViewScale:#.##}, NSF: {NodeScaleFactor}";
+			$"Scale: {CanvasScale:#.##}, Level: {NodeLevel}, NodeScale: {NodeScale:#.##}, NSF: {ThisNodeScaleFactor}";
 
 
 		public ModuleViewModel ModuleViewModel => ViewModel as ModuleViewModel;
@@ -58,7 +58,7 @@ namespace Dependiator.Modeling
 
 		public override bool CanBeShown()
 		{
-			return ViewNodeSize.Width > 10 && (ParentNode?.ItemBounds.Contains(ItemBounds) ?? true);
+			return ViewNodeSize.Width > 10 && (ParentNode?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
 		}
 
 
@@ -85,7 +85,7 @@ namespace Dependiator.Modeling
 
 		protected override void SetElementBounds()
 		{
-			Element.SetLocationAndSize(ActualNodeBounds.Location, ActualNodeBounds.Size);
+			Element.SetLocationAndSize(NodeBounds.Location, NodeBounds.Size);
 		}
 
 
@@ -116,13 +116,13 @@ namespace Dependiator.Modeling
 
 			int padding = 20;
 
-			double xMargin = ((DefaultSize.Width * NodeScaleFactor) - ((DefaultSize.Width + padding) * rowLength)) / 2;
-			double yMargin = 25 * NodeScaleFactor;
+			double xMargin = ((DefaultSize.Width * ThisNodeScaleFactor) - ((DefaultSize.Width + padding) * rowLength)) / 2;
+			double yMargin = 25 * ThisNodeScaleFactor;
 
 			if (ParentNode == null)
 			{
-				xMargin += ActualNodeBounds.Width / 2;
-				yMargin += ActualNodeBounds.Height / 2;
+				xMargin += NodeBounds.Width / 2;
+				yMargin += NodeBounds.Height / 2;
 			}
 
 

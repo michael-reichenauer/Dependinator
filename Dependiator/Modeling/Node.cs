@@ -12,7 +12,7 @@ namespace Dependiator.Modeling
 	{
 		private Node parentNode;
 		private readonly List<Node> childNodes = new List<Node>();
-		private Rect actualNodeBounds;
+		private Rect nodeBounds;
 
 		private readonly INodeService nodeService;
 
@@ -21,14 +21,13 @@ namespace Dependiator.Modeling
 		private int wf = 0;
 		private int hf = 0;
 
-		public object ItemState { get; set; }
-		public bool IsAdded => ItemState != null || ParentNode == null;
-		public abstract ViewModel ViewModel { get; }
-
-		public Rect ItemBounds { get; protected set; }
+		public Rect ItemCanvasBounds { get; protected set; }
 		public double ZIndex { get; set; }
 		public double Priority { get; protected set; }
+		public abstract ViewModel ViewModel { get; }
+		public object ItemState { get; set; }
 
+		public bool IsAdded => ItemState != null || ParentNode == null;
 		public bool IsRealized { get; private set; }
 
 
@@ -40,18 +39,10 @@ namespace Dependiator.Modeling
 			}
 		}
 
-
-		public virtual void ItemRealized()
-		{
-			IsRealized = true;
-		}
-
-
-		public virtual void ItemVirtualized()
-		{
-			IsRealized = false;
-		}
-
+		public virtual void ItemRealized() => IsRealized = true;
+		
+		public virtual void ItemVirtualized() => IsRealized = false;
+		
 
 		protected Node(INodeService nodeService, Node parentNode)
 		{
@@ -62,21 +53,22 @@ namespace Dependiator.Modeling
 
 		public int NodeLevel => ParentNode?.NodeLevel + 1 ?? 0;
 
-		public double NodeScaleFactor { get; set; } = 7;
+		public double ThisNodeScaleFactor { get; set; } = 7;
 
-		public double Scale => nodeService.Scale;
-		public double ViewScale => Scale * NodeScale;
+		public double CanvasScale => nodeService.Scale;
 
-		public double NodeScale
+		public double NodeScale => CanvasScale * NodeScaleFactor;
+
+		public double NodeScaleFactor
 		{
 			get
 			{
 				if (ParentNode == null)
 				{
-					return NodeScaleFactor;
+					return ThisNodeScaleFactor;
 				}
 
-				return ParentNode.NodeScale / NodeScaleFactor;
+				return ParentNode.NodeScaleFactor / ThisNodeScaleFactor;
 			}
 		}
 
@@ -99,12 +91,12 @@ namespace Dependiator.Modeling
 		}
 
 
-		public Rect ActualNodeBounds
+		public Rect NodeBounds
 		{
-			get { return actualNodeBounds; }
+			get { return nodeBounds; }
 			set
 			{
-				actualNodeBounds = value;
+				nodeBounds = value;
 
 				SetItemBounds();
 
@@ -113,14 +105,14 @@ namespace Dependiator.Modeling
 		}
 
 
-		public Rect RelativeNodeBounds { get; set; }
+		public Rect RelativeNodeBounds { get; private set; }
 
 
 		public Rect ViewNodeBounds => new Rect(new Point(0, 0), ViewNodeSize);
 
 
 		public Size ViewNodeSize =>
-			new Size(ItemBounds.Width * Scale, ItemBounds.Height * Scale);
+			new Size(ItemCanvasBounds.Width * CanvasScale, ItemCanvasBounds.Height * CanvasScale);
 
 
 		public void ShowNode()
@@ -157,16 +149,14 @@ namespace Dependiator.Modeling
 				GetMoveResizeFactors(canvasPoint);
 			}
 
-			Vector offset = new Vector(
-				(viewOffset.X / NodeScale) / Scale,
-				(viewOffset.Y / NodeScale) / Scale);
+			Vector offset = new Vector(viewOffset.X / NodeScale, viewOffset.Y / NodeScale);
 
 			Point location = new Point(
-				ActualNodeBounds.X + xf * offset.X,
-				ActualNodeBounds.Y + yf * offset.Y);
+				NodeBounds.X + xf * offset.X,
+				NodeBounds.Y + yf * offset.Y);
 
-			double width = ActualNodeBounds.Size.Width + (wf * offset.X);
-			double height = actualNodeBounds.Size.Height + (hf * offset.Y);
+			double width = NodeBounds.Size.Width + (wf * offset.X);
+			double height = this.nodeBounds.Size.Height + (hf * offset.Y);
 
 			if (width < 0 || height < 0)
 			{
@@ -177,32 +167,38 @@ namespace Dependiator.Modeling
 
 			Rect nodeBounds = new Rect(location, size);
 
-			if ((nodeBounds.X + nodeBounds.Width > ParentNode.ActualNodeBounds.Width * NodeScaleFactor)
-			    || (nodeBounds.Y + nodeBounds.Height > ParentNode.ActualNodeBounds.Height * NodeScaleFactor)
+			if ((nodeBounds.X + nodeBounds.Width > ParentNode.NodeBounds.Width * ThisNodeScaleFactor)
+			    || (nodeBounds.Y + nodeBounds.Height > ParentNode.NodeBounds.Height * ThisNodeScaleFactor)
 			    || nodeBounds.X < 0
 			    || nodeBounds.Y < 0)
 			{
 				return;
 			}
 
-			ActualNodeBounds = nodeBounds;
+			NodeBounds = nodeBounds;
 
 			nodeService.UpdateNode(this);
 
 			NotifyAll();
 
-			double cxf = 0;
+			//double cxf = 0;
 			//if (xf == 1 && offset.X < 0)
 			//{
 			//	cxf = 1;
 			//}
 
-			Vector childOffset = new Vector(
-				(offset.X) * NodeScale * ((1 / NodeScaleFactor) / NodeScaleFactor) + cxf, 
-				(offset.Y)  * NodeScale * ((1 / NodeScaleFactor) / NodeScaleFactor));
+		
 
 			foreach (Node childNode in ChildNodes)
 			{
+				//Vector childOffset = new Vector(
+				//	(offset.X) * NodeScaleFactor * ((1 / ThisNodeScaleFactor) / ThisNodeScaleFactor),
+				//	(offset.Y) * NodeScaleFactor * ((1 / ThisNodeScaleFactor) / ThisNodeScaleFactor));
+
+				Vector childOffset = new Vector(
+					offset.X * childNode.NodeScale, 
+					offset.Y * childNode.NodeScale);
+
 				childNode.MoveAsChild(childOffset);
 			}
 
@@ -222,20 +218,20 @@ namespace Dependiator.Modeling
 
 		private void GetMoveResizeFactors(Point canvasPoint)
 		{
-			double xdist = Math.Abs(ItemBounds.X - canvasPoint.X);
-			double ydist = Math.Abs(ItemBounds.Y - canvasPoint.Y);
+			double xdist = Math.Abs(ItemCanvasBounds.X - canvasPoint.X);
+			double ydist = Math.Abs(ItemCanvasBounds.Y - canvasPoint.Y);
 
-			double wdist = Math.Abs(ItemBounds.Right - canvasPoint.X);
-			double hdist = Math.Abs(ItemBounds.Bottom - canvasPoint.Y);
+			double wdist = Math.Abs(ItemCanvasBounds.Right - canvasPoint.X);
+			double hdist = Math.Abs(ItemCanvasBounds.Bottom - canvasPoint.Y);
 
-			double xd = xdist * Scale;
-			double yd = ydist * Scale;
+			double xd = xdist * CanvasScale;
+			double yd = ydist * CanvasScale;
 
-			double wd = wdist * Scale;
-			double hd = hdist * Scale;
+			double wd = wdist * CanvasScale;
+			double hd = hdist * CanvasScale;
 
 
-			if (ItemBounds.Width * Scale > 80)
+			if (ItemCanvasBounds.Width * CanvasScale > 80)
 			{
 				if (xd < 10 && yd < 10)
 				{
@@ -296,11 +292,11 @@ namespace Dependiator.Modeling
 
 		private void MoveAsChild(Vector offset)
 		{
-			ActualNodeBounds = new Rect(
+			NodeBounds = new Rect(
 				new Point(
-					ActualNodeBounds.X + offset.X,
-					ActualNodeBounds.Y + offset.Y),
-				ActualNodeBounds.Size);
+					NodeBounds.X + offset.X,
+					NodeBounds.Y + offset.Y),
+				NodeBounds.Size);
 
 			if (IsAdded)
 			{
@@ -308,7 +304,7 @@ namespace Dependiator.Modeling
 				NotifyAll();
 			}
 
-			Vector childOffset = new Vector(offset.X / NodeScaleFactor, offset.Y / NodeScaleFactor);
+			Vector childOffset = new Vector(offset.X / ThisNodeScaleFactor, offset.Y / ThisNodeScaleFactor);
 
 			foreach (Node childNode in ChildNodes)
 			{
@@ -350,24 +346,24 @@ namespace Dependiator.Modeling
 		{
 			if (ParentNode != null)
 			{
-				Rect bounds = actualNodeBounds;
-				bounds.Scale(NodeScale, NodeScale);
+				Rect bounds = nodeBounds;
+				bounds.Scale(NodeScaleFactor, NodeScaleFactor);
 
-				ItemBounds = new Rect(
-					ParentNode.ItemBounds.X + (bounds.X),
-					ParentNode.ItemBounds.Y + (bounds.Y),
+				ItemCanvasBounds = new Rect(
+					ParentNode.ItemCanvasBounds.X + (bounds.X),
+					ParentNode.ItemCanvasBounds.Y + (bounds.Y),
 					bounds.Width,
 					bounds.Height);
 
-				Rect bounds2 = actualNodeBounds;
-				bounds2.Scale(1 / NodeScaleFactor, 1 / NodeScaleFactor);
+				Rect bounds2 = nodeBounds;
+				bounds2.Scale(1 / ThisNodeScaleFactor, 1 / ThisNodeScaleFactor);
 
 				RelativeNodeBounds = bounds2;
 			}
 			else
 			{
-				ItemBounds = actualNodeBounds;
-				RelativeNodeBounds = actualNodeBounds;
+				ItemCanvasBounds = nodeBounds;
+				RelativeNodeBounds = nodeBounds;
 			}
 		}
 
