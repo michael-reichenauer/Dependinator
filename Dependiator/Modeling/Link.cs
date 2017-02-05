@@ -114,7 +114,7 @@ namespace Dependiator.Modeling
 			{
 				Rect targetRect = TargetNode.RelativeNodeBounds;
 
-				x1 = SourceNode.NodeBounds.Width / 2;
+				x1 = SourceNode.ItemBounds.Width / 2;
 				y1 = 0;
 				x2 = targetRect.X + targetRect.Width / 2;
 				y2 = targetRect.Y;
@@ -137,8 +137,8 @@ namespace Dependiator.Modeling
 
 				x1 = sourceRect.X + sourceRect.Width / 2;
 				y1 = sourceRect.Y + sourceRect.Height;
-				x2 = TargetNode.NodeBounds.Width / 2;
-				y2 = TargetNode.NodeBounds.Height;
+				x2 = TargetNode.ItemBounds.Width / 2;
+				y2 = TargetNode.ItemBounds.Height;
 				LinkBrush = SourceNode.RectangleBrush;
 			}
 			else
@@ -177,7 +177,7 @@ namespace Dependiator.Modeling
 			Rect bounds = new Rect(new Point(x, y), new Size(width + 1, height + 1));
 
 			bounds.Scale(ThisItemScaleFactor, ThisItemScaleFactor);
-			NodeBounds = bounds;
+			ItemBounds = bounds;
 		}
 
 

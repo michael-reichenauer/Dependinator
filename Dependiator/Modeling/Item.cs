@@ -12,7 +12,7 @@ namespace Dependiator.Modeling
 	{
 		private Item parentItem;
 		private readonly List<Item> childItems = new List<Item>();
-		private Rect nodeBounds;
+		private Rect itemBounds;
 
 		private readonly IItemService itemService;
 
@@ -91,12 +91,12 @@ namespace Dependiator.Modeling
 		}
 
 
-		public Rect NodeBounds
+		public Rect ItemBounds
 		{
-			get { return nodeBounds; }
+			get { return itemBounds; }
 			set
 			{
-				nodeBounds = value;
+				itemBounds = value;
 
 				SetItemBounds();
 
@@ -152,11 +152,11 @@ namespace Dependiator.Modeling
 			Vector offset = new Vector(viewOffset.X / ItemScale, viewOffset.Y / ItemScale);
 
 			Point location = new Point(
-				NodeBounds.X + xf * offset.X,
-				NodeBounds.Y + yf * offset.Y);
+				ItemBounds.X + xf * offset.X,
+				ItemBounds.Y + yf * offset.Y);
 
-			double width = NodeBounds.Size.Width + (wf * offset.X);
-			double height = this.nodeBounds.Size.Height + (hf * offset.Y);
+			double width = ItemBounds.Size.Width + (wf * offset.X);
+			double height = this.itemBounds.Size.Height + (hf * offset.Y);
 
 			if (width < 0 || height < 0)
 			{
@@ -167,15 +167,15 @@ namespace Dependiator.Modeling
 
 			Rect nodeBounds = new Rect(location, size);
 
-			if ((nodeBounds.X + nodeBounds.Width > ParentItem.NodeBounds.Width * ThisItemScaleFactor)
-			    || (nodeBounds.Y + nodeBounds.Height > ParentItem.NodeBounds.Height * ThisItemScaleFactor)
+			if ((nodeBounds.X + nodeBounds.Width > ParentItem.ItemBounds.Width * ThisItemScaleFactor)
+			    || (nodeBounds.Y + nodeBounds.Height > ParentItem.ItemBounds.Height * ThisItemScaleFactor)
 			    || nodeBounds.X < 0
 			    || nodeBounds.Y < 0)
 			{
 				return;
 			}
 
-			NodeBounds = nodeBounds;
+			ItemBounds = nodeBounds;
 
 			itemService.UpdateItem(this);
 
@@ -292,11 +292,11 @@ namespace Dependiator.Modeling
 
 		private void MoveAsChild(Vector offset)
 		{
-			NodeBounds = new Rect(
+			ItemBounds = new Rect(
 				new Point(
-					NodeBounds.X + offset.X,
-					NodeBounds.Y + offset.Y),
-				NodeBounds.Size);
+					ItemBounds.X + offset.X,
+					ItemBounds.Y + offset.Y),
+				ItemBounds.Size);
 
 			if (IsAdded)
 			{
@@ -346,7 +346,7 @@ namespace Dependiator.Modeling
 		{
 			if (ParentItem != null)
 			{
-				Rect bounds = nodeBounds;
+				Rect bounds = itemBounds;
 				bounds.Scale(ItemScaleFactor, ItemScaleFactor);
 
 				ItemCanvasBounds = new Rect(
@@ -355,15 +355,15 @@ namespace Dependiator.Modeling
 					bounds.Width,
 					bounds.Height);
 
-				Rect bounds2 = nodeBounds;
+				Rect bounds2 = itemBounds;
 				bounds2.Scale(1 / ThisItemScaleFactor, 1 / ThisItemScaleFactor);
 
 				RelativeNodeBounds = bounds2;
 			}
 			else
 			{
-				ItemCanvasBounds = nodeBounds;
-				RelativeNodeBounds = nodeBounds;
+				ItemCanvasBounds = itemBounds;
+				RelativeNodeBounds = itemBounds;
 			}
 		}
 

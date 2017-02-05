@@ -26,7 +26,7 @@ namespace Dependiator.Modeling
 			Element = element;
 			this.itemService = itemService;
 
-			NodeBounds = bounds;		
+			ItemBounds = bounds;		
 
 			RectangleBrush = itemService.GetRectangleBrush();
 			BackgroundBrush = itemService.GetRectangleBackgroundBrush(RectangleBrush);
@@ -85,7 +85,7 @@ namespace Dependiator.Modeling
 
 		protected override void SetElementBounds()
 		{
-			Element.SetLocationAndSize(NodeBounds.Location, NodeBounds.Size);
+			Element.SetLocationAndSize(ItemBounds.Location, ItemBounds.Size);
 		}
 
 
@@ -121,8 +121,8 @@ namespace Dependiator.Modeling
 
 			if (ParentItem == null)
 			{
-				xMargin += NodeBounds.Width / 2;
-				yMargin += NodeBounds.Height / 2;
+				xMargin += ItemBounds.Width / 2;
+				yMargin += ItemBounds.Height / 2;
 			}
 
 
