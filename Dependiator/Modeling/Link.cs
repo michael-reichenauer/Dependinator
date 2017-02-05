@@ -10,22 +10,22 @@ namespace Dependiator.Modeling
 {
 	internal class Link : Item
 	{
-		private readonly INodeService nodeService;
+		private readonly IItemService itemService;
 		private readonly LinkViewModel linkViewModel;
 		private Point sourcePoint;
 		private Point targetPoint;
 
 
 		public Link(
-			INodeService nodeService,
+			IItemService itemService,
 			Reference reference,
 			Node owner,
 			Node sourceNode,
 			Node targetNode)
-			: base(nodeService, owner)
+			: base(itemService, owner)
 		{
 			Reference = reference;
-			this.nodeService = nodeService;
+			this.itemService = itemService;
 			this.SourceNode = sourceNode;
 			this.TargetNode = targetNode;
 

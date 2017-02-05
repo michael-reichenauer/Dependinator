@@ -14,7 +14,7 @@ namespace Dependiator.Modeling
 		private readonly List<Item> childNodes = new List<Item>();
 		private Rect nodeBounds;
 
-		private readonly INodeService nodeService;
+		private readonly IItemService itemService;
 
 		private int xf = 1;
 		private int yf = 1;
@@ -44,9 +44,9 @@ namespace Dependiator.Modeling
 		public virtual void ItemVirtualized() => IsRealized = false;
 		
 
-		protected Item(INodeService nodeService, Item parentItem)
+		protected Item(IItemService itemService, Item parentItem)
 		{
-			this.nodeService = nodeService;
+			this.itemService = itemService;
 			ParentItem = parentItem;
 		}
 
@@ -55,7 +55,7 @@ namespace Dependiator.Modeling
 
 		public double ThisNodeScaleFactor { get; set; } = 7;
 
-		public double CanvasScale => nodeService.Scale;
+		public double CanvasScale => itemService.Scale;
 
 		public double NodeScale => CanvasScale * NodeScaleFactor;
 
@@ -119,7 +119,7 @@ namespace Dependiator.Modeling
 		{
 			if (!IsAdded && CanBeShown())
 			{
-				nodeService.ShowNode(this);
+				itemService.ShowNode(this);
 			}
 		}
 
@@ -132,13 +132,13 @@ namespace Dependiator.Modeling
 
 		public void HideNode()
 		{
-			nodeService.HideNodes(GetHidableDecedentAndSelf());
+			itemService.HideNodes(GetHidableDecedentAndSelf());
 		}
 
 
 		public void HideChildren()
 		{
-			nodeService.HideNodes(GetHidableDecedent());
+			itemService.HideNodes(GetHidableDecedent());
 		}
 
 
@@ -177,7 +177,7 @@ namespace Dependiator.Modeling
 
 			NodeBounds = nodeBounds;
 
-			nodeService.UpdateNode(this);
+			itemService.UpdateNode(this);
 
 			NotifyAll();
 
@@ -300,7 +300,7 @@ namespace Dependiator.Modeling
 
 			if (IsAdded)
 			{
-				nodeService.UpdateNode(this);
+				itemService.UpdateNode(this);
 				NotifyAll();
 			}
 

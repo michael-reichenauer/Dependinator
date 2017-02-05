@@ -11,7 +11,7 @@ using Brush = System.Windows.Media.Brush;
 namespace Dependiator.Modeling
 {
 	[SingleInstance]
-	internal class NodeService : INodeService
+	internal class ItemService : IItemService
 	{
 		private readonly ICanvasService canvasService;
 		private readonly IMainViewItemsSource itemsSource;
@@ -19,7 +19,7 @@ namespace Dependiator.Modeling
 
 		private readonly List<Item> rootNodes = new List<Item>();
 
-		public NodeService(
+		public ItemService(
 			ICanvasService canvasService,
 			IMainViewItemsSource itemsSource,
 			IThemeService themeService)

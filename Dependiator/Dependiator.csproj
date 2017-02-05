@@ -165,7 +165,6 @@
     <Compile Include="Modeling\IModelService.cs" />
     <Compile Include="Modeling\ModelService.cs" />
     <Compile Include="Modeling\NodeService.cs" />
-    <Compile Include="Modeling\NodeTree.cs" />
     <Compile Include="Modeling\Serializing\Data.cs" />
     <Compile Include="Modeling\Serializing\DataLink.cs" />
     <Compile Include="Modeling\Serializing\DataNode.cs" />

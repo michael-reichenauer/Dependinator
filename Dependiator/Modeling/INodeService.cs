@@ -5,7 +5,7 @@ using System.Windows.Media;
 
 namespace Dependiator.Modeling
 {
-	internal interface INodeService
+	internal interface IItemService
 	{
 		double Scale { get; set; }
 

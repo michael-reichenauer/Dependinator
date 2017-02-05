@@ -17,7 +17,7 @@ namespace Dependiator.Modeling
 		private readonly WorkingFolder workingFolder;
 		private readonly IReflectionService reflectionService;
 		private readonly IElementService elementService;
-		private readonly INodeService nodeService;
+		private readonly IItemService itemService;
 		private readonly IDataSerializer dataSerializer;
 		private readonly ICanvasService canvasService;
 
@@ -27,14 +27,14 @@ namespace Dependiator.Modeling
 			WorkingFolder workingFolder,
 			IReflectionService reflectionService,
 			IElementService elementService,
-			INodeService nodeService,
+			IItemService itemService,
 			IDataSerializer dataSerializer,
 			ICanvasService canvasService)
 		{
 			this.workingFolder = workingFolder;
 			this.reflectionService = reflectionService;
 			this.elementService = elementService;
-			this.nodeService = nodeService;
+			this.itemService = itemService;
 			this.dataSerializer = dataSerializer;
 			this.canvasService = canvasService;
 		}
@@ -52,7 +52,7 @@ namespace Dependiator.Modeling
 
 			if (elementTree != null)
 			{
-				nodeService.ClearAll();
+				itemService.ClearAll();
 			}
 
 			elementTree = elementService.ToElementTree(data, null);
@@ -60,7 +60,7 @@ namespace Dependiator.Modeling
 			
 			Item rootItem = GetNode(elementTree);
 
-			nodeService.ShowRootNode(rootItem);
+			itemService.ShowRootNode(rootItem);
 
 			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
 
@@ -95,7 +95,7 @@ namespace Dependiator.Modeling
 
 			if (elementTree != null)
 			{
-				nodeService.ClearAll();
+				itemService.ClearAll();
 			}
 
 			elementTree = tree;
@@ -103,7 +103,7 @@ namespace Dependiator.Modeling
 
 			Item rootItem = GetNode(elementTree);
 
-			nodeService.ShowRootNode(rootItem);
+			itemService.ShowRootNode(rootItem);
 
 			canvasService.Scale = scale;
 			canvasService.Offset = offset;
@@ -114,7 +114,7 @@ namespace Dependiator.Modeling
 
 		public object MoveNode(Point viewPosition, Vector viewOffset, object movingObject)
 		{
-			return nodeService.MoveNode(viewPosition, viewOffset, movingObject);
+			return itemService.MoveNode(viewPosition, viewOffset, movingObject);
 		}
 
 
@@ -138,15 +138,15 @@ namespace Dependiator.Modeling
 			Size size = new Size(200000, 100000);
 			
 			double scale = 1 ;
-			nodeService.Scale = scale;
+			itemService.Scale = scale;
 
 			double x = 0 - (size.Width / 2);
 			double y = 0 - (size.Height / 2);
 
 			Point position = new Point(x, y);
 			Rect bounds = new Rect(position, size);
-			Node node = new Node(nodeService, elementTree.Root, bounds, null);
-			nodeService.AddRootNode(node);
+			Node node = new Node(itemService, elementTree.Root, bounds, null);
+			itemService.AddRootNode(node);
 			return node;
 		}
 	}

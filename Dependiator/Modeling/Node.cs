@@ -12,24 +12,24 @@ namespace Dependiator.Modeling
 {
 	internal class Node : Item
 	{
-		private readonly INodeService nodeService;
+		private readonly IItemService itemService;
 		private static readonly Size DefaultSize = new Size(200, 100);
 
 
 		public Node(
-			INodeService nodeService,
+			IItemService itemService,
 			Element element,
 			Rect bounds,
 			Node parent)
-			: base(nodeService, parent)
+			: base(itemService, parent)
 		{
 			Element = element;
-			this.nodeService = nodeService;
+			this.itemService = itemService;
 
 			NodeBounds = bounds;		
 
-			RectangleBrush = nodeService.GetRectangleBrush();
-			BackgroundBrush = nodeService.GetRectangleBackgroundBrush(RectangleBrush);
+			RectangleBrush = itemService.GetRectangleBrush();
+			BackgroundBrush = itemService.GetRectangleBackgroundBrush(RectangleBrush);
 			ViewModel = new NodeViewModel(this);
 		}
 
@@ -148,7 +148,7 @@ namespace Dependiator.Modeling
 
 				Rect bounds = new Rect(location, size);
 
-				Node node = new Node(nodeService, childElement, bounds, this);
+				Node node = new Node(itemService, childElement, bounds, this);
 				AddChildNode(node);
 				count++;
 			}
@@ -248,7 +248,7 @@ namespace Dependiator.Modeling
 				return;
 			}
 
-			Link link = new Link(nodeService, reference, this, sourceNode, targetNode);
+			Link link = new Link(itemService, reference, this, sourceNode, targetNode);
 			AddChildNode(link);
 		}
 
