@@ -83,7 +83,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		protected override void SetElementBounds()
+		protected override void ItemBoundsChanged()
 		{
 			Element.SetLocationAndSize(ItemBounds.Location, ItemBounds.Size);
 		}

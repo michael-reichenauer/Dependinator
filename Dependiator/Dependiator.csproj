@@ -158,7 +158,7 @@
     <Compile Include="Modeling\IItemService.cs" />
     <Compile Include="Modeling\Node.cs" />
     <Compile Include="MainViews\Private\Caching\BranchNameSurrogate.cs" />
-    <Compile Include="Modeling\ModuleViewModel.cs" />
+    <Compile Include="Modeling\NodeViewModel.cs" />
     <Compile Include="MainViews\Private\IMainViewVirtualItemsSource.cs" />
     <Compile Include="MainViews\Private\IItem.cs" />
     <Compile Include="MainViews\Private\MainViewCommands.cs" />

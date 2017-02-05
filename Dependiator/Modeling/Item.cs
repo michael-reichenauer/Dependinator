@@ -97,10 +97,9 @@ namespace Dependiator.Modeling
 			set
 			{
 				itemBounds = value;
-
 				ItemCanvasBounds = ParentItem?.GetChildItemCanvasBounds(itemBounds) ?? itemBounds;
 
-				SetElementBounds();
+				ItemBoundsChanged();
 			}
 		}
 
@@ -279,7 +278,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		protected virtual void SetElementBounds()
+		protected virtual void ItemBoundsChanged()
 		{
 		}
 
