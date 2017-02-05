@@ -32,7 +32,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public double Scale
+		public double CanvasScale
 		{
 			get { return canvasService.Scale; }
 			set { canvasService.Scale = value; }			
@@ -43,7 +43,7 @@ namespace Dependiator.Modeling
 		public Point Offset => canvasService.Offset;
 
 
-		public void ShowRootNode(Item item)
+		public void ShowRootItem(Item item)
 		{
 			item.ItemRealized();
 		}
@@ -53,30 +53,30 @@ namespace Dependiator.Modeling
 			itemsSource.Clear();
 		}
 
-		public void ShowNodes(IEnumerable<Item> nodes)
+		public void ShowItems(IEnumerable<Item> nodes)
 		{
 			itemsSource.Add(nodes);
 		}
 
 
-		public void HideNodes(IEnumerable<Item> nodes)
+		public void HideItems(IEnumerable<Item> nodes)
 		{
 			itemsSource.Remove(nodes);
 		}
 
 
-		public void ShowNode(Item item)
+		public void ShowItem(Item item)
 		{
 			itemsSource.Add(item);
 		}
 
 
-		public void HideNode(Item item)
+		public void HideItem(Item item)
 		{
 			itemsSource.Remove(item);
 		}
 
-		public void UpdateNode(Item item)
+		public void UpdateItem(Item item)
 		{
 			itemsSource.Update(item);
 		}
@@ -94,13 +94,13 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void AddRootNode(Item item)
+		public void AddRootItem(Item item)
 		{
 			rootNodes.Add(item);
 		}
 
 
-		public object MoveNode(Point viewPosition, Vector viewOffset, object movingObject)
+		public object MoveItem(Point viewPosition, Vector viewOffset, object movingObject)
 		{
 			Node node = movingObject as Node;
 
@@ -109,8 +109,8 @@ namespace Dependiator.Modeling
 
 			if (node == null)
 			{
-				Point point = new Point(canvasPoint.X - 6 / Scale, canvasPoint.Y - 6 / Scale);
-				Rect area = new Rect(point, new Size(6 / Scale, 6 / Scale));
+				Point point = new Point(canvasPoint.X - 6 / CanvasScale, canvasPoint.Y - 6 / CanvasScale);
+				Rect area = new Rect(point, new Size(6 / CanvasScale, 6 / CanvasScale));
 
 				node = itemsSource
 					.GetItemsInArea(area)

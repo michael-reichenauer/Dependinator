@@ -7,27 +7,27 @@ namespace Dependiator.Modeling
 {
 	internal interface IItemService
 	{
-		double Scale { get; set; }
+		double CanvasScale { get; set; }
 
 		Rect CurrentViewPort { get; }
 
-		void ShowNodes(IEnumerable<Item> nodes);
+		void ShowItems(IEnumerable<Item> nodes);
 
-		void HideNodes(IEnumerable<Item> nodes);
+		void HideItems(IEnumerable<Item> nodes);
 
-		void ShowNode(Item item);
+		void ShowItem(Item item);
 
-		void HideNode(Item item);
+		void HideItem(Item item);
 
 		Brush GetRectangleBrush();
 
 		void RemoveRootNode(Item item);
-		void AddRootNode(Item item);
+		void AddRootItem(Item item);
 
-		object MoveNode(Point viewPosition, Vector viewOffset, object movingObject);
-		void UpdateNode(Item item);
+		object MoveItem(Point viewPosition, Vector viewOffset, object movingObject);
+		void UpdateItem(Item item);
 		Brush GetRectangleBackgroundBrush(Brush brush);
-		void ShowRootNode(Item item);
+		void ShowRootItem(Item item);
 		void ClearAll();
 	}
 }

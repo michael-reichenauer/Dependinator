@@ -55,7 +55,7 @@ namespace Dependiator.Modeling
 
 		public double ThisNodeScaleFactor { get; set; } = 7;
 
-		public double CanvasScale => itemService.Scale;
+		public double CanvasScale => itemService.CanvasScale;
 
 		public double NodeScale => CanvasScale * NodeScaleFactor;
 
@@ -119,7 +119,7 @@ namespace Dependiator.Modeling
 		{
 			if (!IsAdded && CanBeShown())
 			{
-				itemService.ShowNode(this);
+				itemService.ShowItem(this);
 			}
 		}
 
@@ -132,13 +132,13 @@ namespace Dependiator.Modeling
 
 		public void HideNode()
 		{
-			itemService.HideNodes(GetHidableDecedentAndSelf());
+			itemService.HideItems(GetHidableDecedentAndSelf());
 		}
 
 
 		public void HideChildren()
 		{
-			itemService.HideNodes(GetHidableDecedent());
+			itemService.HideItems(GetHidableDecedent());
 		}
 
 
@@ -177,7 +177,7 @@ namespace Dependiator.Modeling
 
 			NodeBounds = nodeBounds;
 
-			itemService.UpdateNode(this);
+			itemService.UpdateItem(this);
 
 			NotifyAll();
 
@@ -300,7 +300,7 @@ namespace Dependiator.Modeling
 
 			if (IsAdded)
 			{
-				itemService.UpdateNode(this);
+				itemService.UpdateItem(this);
 				NotifyAll();
 			}
 

@@ -49,7 +49,7 @@ namespace Dependiator.Modeling
 		//		Vector viewOffset = viewPosition - lastMousePosition;
 		//		viewModel.MouseMove(viewPosition, viewOffset, isFirst);
 
-		//		//movingObject = viewModel.MoveNode(viewPosition, viewOffset, movingObject);
+		//		//movingObject = viewModel.MoveItem(viewPosition, viewOffset, movingObject);
 
 		//		//e.Handled = true;
 		//		//e.Handled = movingObject != null;

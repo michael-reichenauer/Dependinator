@@ -60,7 +60,7 @@ namespace Dependiator.Modeling
 			
 			Item rootItem = GetNode(elementTree);
 
-			itemService.ShowRootNode(rootItem);
+			itemService.ShowRootItem(rootItem);
 
 			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
 
@@ -103,7 +103,7 @@ namespace Dependiator.Modeling
 
 			Item rootItem = GetNode(elementTree);
 
-			itemService.ShowRootNode(rootItem);
+			itemService.ShowRootItem(rootItem);
 
 			canvasService.Scale = scale;
 			canvasService.Offset = offset;
@@ -114,7 +114,7 @@ namespace Dependiator.Modeling
 
 		public object MoveNode(Point viewPosition, Vector viewOffset, object movingObject)
 		{
-			return itemService.MoveNode(viewPosition, viewOffset, movingObject);
+			return itemService.MoveItem(viewPosition, viewOffset, movingObject);
 		}
 
 
@@ -138,7 +138,7 @@ namespace Dependiator.Modeling
 			Size size = new Size(200000, 100000);
 			
 			double scale = 1 ;
-			itemService.Scale = scale;
+			itemService.CanvasScale = scale;
 
 			double x = 0 - (size.Width / 2);
 			double y = 0 - (size.Height / 2);
@@ -146,7 +146,7 @@ namespace Dependiator.Modeling
 			Point position = new Point(x, y);
 			Rect bounds = new Rect(position, size);
 			Node node = new Node(itemService, elementTree.Root, bounds, null);
-			itemService.AddRootNode(node);
+			itemService.AddRootItem(node);
 			return node;
 		}
 	}
