@@ -97,10 +97,16 @@ namespace Dependiator.Modeling
 			set
 			{
 				itemBounds = value;
-				ItemCanvasBounds = ParentItem?.GetChildItemCanvasBounds(itemBounds) ?? itemBounds;
+				SetItemCanvasBounds();
 
 				ItemBoundsChanged();
 			}
+		}
+
+
+		private void SetItemCanvasBounds()
+		{
+			ItemCanvasBounds = ParentItem?.GetChildItemCanvasBounds(itemBounds) ?? itemBounds;
 		}
 
 
@@ -142,33 +148,32 @@ namespace Dependiator.Modeling
 				GetMoveResizeFactors(canvasPoint);
 			}
 
-			Vector offset = new Vector(viewOffset.X / ItemScale, viewOffset.Y / ItemScale);
+			Vector itemOffset = new Vector(viewOffset.X / ItemScale, viewOffset.Y / ItemScale);
 
-			Point location = new Point(
-				ItemBounds.X + xf * offset.X,
-				ItemBounds.Y + yf * offset.Y);
+			Point newItemLocation = new Point(
+				ItemBounds.X + xf * itemOffset.X, 
+				ItemBounds.Y + yf * itemOffset.Y);
 
-			double width = ItemBounds.Size.Width + (wf * offset.X);
-			double height = this.itemBounds.Size.Height + (hf * offset.Y);
+			double width = ItemBounds.Size.Width + (wf * itemOffset.X);
+			double height = this.itemBounds.Size.Height + (hf * itemOffset.Y);
 
 			if (width < 0 || height < 0)
 			{
 				return;
 			}
 
-			Size size = new Size(width, height);
+			Size newItemSize = new Size(width, height);
+			Rect newItemBounds = new Rect(newItemLocation, newItemSize);
 
-			Rect nodeBounds = new Rect(location, size);
-
-			if ((nodeBounds.X + nodeBounds.Width > ParentItem.ItemBounds.Width * ThisItemScaleFactor)
-			    || (nodeBounds.Y + nodeBounds.Height > ParentItem.ItemBounds.Height * ThisItemScaleFactor)
-			    || nodeBounds.X < 0
-			    || nodeBounds.Y < 0)
+			if ((newItemBounds.X + newItemBounds.Width > ParentItem.ItemBounds.Width * ThisItemScaleFactor)
+			    || (newItemBounds.Y + newItemBounds.Height > ParentItem.ItemBounds.Height * ThisItemScaleFactor)
+			    || newItemBounds.X < 0
+			    || newItemBounds.Y < 0)
 			{
 				return;
 			}
 
-			ItemBounds = nodeBounds;
+			ItemBounds = newItemBounds;
 
 			itemService.UpdateItem(this);
 
@@ -182,25 +187,29 @@ namespace Dependiator.Modeling
 
 		
 
-			foreach (Item childNode in ChildItems)
+			foreach (Item childItem in ChildItems)
 			{
-				//Vector childOffset = new Vector(
-				//	(offset.X) * ItemScaleFactor * ((1 / ThisItemScaleFactor) / ThisItemScaleFactor),
-				//	(offset.Y) * ItemScaleFactor * ((1 / ThisItemScaleFactor) / ThisItemScaleFactor));
+				if (wf != 0 && hf != 0)
+				{
+					// Resizing iten, ensure that child items do not move
+					childItem.ItemBounds = new Rect(
+						new Point(
+							childItem.ItemBounds.X - xf * itemOffset.X * ThisItemScaleFactor,
+							childItem.itemBounds.Y - yf * itemOffset.Y * ThisItemScaleFactor),
+						childItem.itemBounds.Size);
+				}			
 
-				Vector childOffset = new Vector(
-					offset.X * childNode.ItemScale, 
-					offset.Y * childNode.ItemScale);
-
-				childNode.MoveAsChild(childOffset);
+				childItem.UpdateItemCanvasBounds();
 			}
 
+			// Updates link within this node
 			Node node = this as Node;
 			if (node != null)
 			{
 				node.UpdateLinksFor();
 			}
 
+			// Update links to or from this node (parent links)
 			Node parentNode = ParentItem as Node;
 			if (parentNode != null)
 			{
@@ -208,6 +217,22 @@ namespace Dependiator.Modeling
 			}
 		}
 
+
+		private void UpdateItemCanvasBounds()
+		{
+			ItemBounds = itemBounds;
+
+			if (IsAdded)
+			{
+				itemService.UpdateItem(this);
+				NotifyAll();
+			}
+
+			foreach (Item childNode in ChildItems)
+			{
+				childNode.UpdateItemCanvasBounds();
+			}
+		}
 
 		private void GetMoveResizeFactors(Point canvasPoint)
 		{
@@ -283,27 +308,6 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void MoveAsChild(Vector offset)
-		{
-			ItemBounds = new Rect(
-				new Point(
-					ItemBounds.X + offset.X,
-					ItemBounds.Y + offset.Y),
-				ItemBounds.Size);
-
-			if (IsAdded)
-			{
-				itemService.UpdateItem(this);
-				NotifyAll();
-			}
-
-			Vector childOffset = new Vector(offset.X / ThisItemScaleFactor, offset.Y / ThisItemScaleFactor);
-
-			foreach (Item childNode in ChildItems)
-			{
-				childNode.MoveAsChild(childOffset);
-			}
-		}
 
 
 		internal IEnumerable<Item> GetHidableDecedentAndSelf()
