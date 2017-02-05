@@ -149,7 +149,7 @@ namespace Dependiator.Modeling
 				Rect bounds = new Rect(location, size);
 
 				Node node = new Node(itemService, childElement, bounds, this);
-				AddChildNode(node);
+				AddChildItem(node);
 				count++;
 			}
 		}
@@ -249,7 +249,7 @@ namespace Dependiator.Modeling
 			}
 
 			Link link = new Link(itemService, reference, this, sourceNode, targetNode);
-			AddChildNode(link);
+			AddChildItem(link);
 		}
 
 

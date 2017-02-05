@@ -85,7 +85,7 @@ namespace Dependiator.Modeling
 
 				if (parentItem != null)
 				{
-					parentItem.AddChildNode(this);
+					parentItem.AddChildItem(this);
 				}
 			}
 		}
@@ -368,7 +368,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		protected void AddChildNode(Item child)
+		protected void AddChildItem(Item child)
 		{
 			if (!childItems.Contains(child))
 			{
