@@ -2,421 +2,281 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Dependiator.MainViews.Private;
+using System.Windows.Media;
+using Dependiator.Modeling.Analyzing;
+using Dependiator.Utils;
 using Dependiator.Utils.UI;
 
 
 namespace Dependiator.Modeling
 {
-	internal abstract class Node : IItem
+	internal class Node : Item
 	{
-		private Node parentNode;
-		private readonly List<Node> childNodes = new List<Node>();
-		private Rect actualNodeBounds;
-
-		private readonly INodeService nodeService;
-
-		private int xf = 1;
-		private int yf = 1;
-		private int wf = 0;
-		private int hf = 0;
-
-		public object ItemState { get; set; }
-		public bool IsAdded => ItemState != null || ParentNode == null;
-		public abstract ViewModel ViewModel { get; }
-
-		public Rect ItemBounds { get; protected set; }
-		public double ZIndex { get; set; }
-		public double Priority { get; protected set; }
-
-		public bool IsRealized { get; private set; }
+		private readonly IItemService itemService;
+		private static readonly Size DefaultSize = new Size(200, 100);
 
 
-		public void NotifyAll()
+		public Node(
+			IItemService itemService,
+			Element element,
+			Rect bounds,
+			Node parent)
+			: base(itemService, parent)
 		{
-			if (IsAdded)
+			Element = element;
+			this.itemService = itemService;
+
+			NodeBounds = bounds;		
+
+			RectangleBrush = itemService.GetRectangleBrush();
+			BackgroundBrush = itemService.GetRectangleBackgroundBrush(RectangleBrush);
+			ViewModel = new NodeViewModel(this);
+		}
+
+
+		public Element Element { get; }
+
+		public override ViewModel ViewModel { get; }
+
+
+		public string Name => Element.Name.Name;
+
+		public string FullName =>
+			$"{Element.Name.FullName}\n" +
+			$"children: {ChildModules.Count()}, decedents: {Element.Children.Descendents().Count()}\n" +
+			$"Scale: {CanvasScale:#.##}, Level: {NodeLevel}, NodeScale: {NodeScale:#.##}, NSF: {ThisNodeScaleFactor}";
+
+
+		public NodeViewModel ModuleViewModel => ViewModel as NodeViewModel;
+		public Brush RectangleBrush { get; }
+		public Brush BackgroundBrush { get; }
+
+		public IEnumerable<Node> ChildModules => ChildNodes.OfType<Node>();
+
+		public IEnumerable<Link> Links => ChildNodes.OfType<Link>();
+
+
+		public override bool CanBeShown()
+		{
+			return ViewNodeSize.Width > 10 && (ParentItem?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
+		}
+
+
+		public override void ItemRealized()
+		{
+			if (!IsRealized)
 			{
-				ViewModel.NotifyAll();
-			}
-		}
+				base.ItemRealized();
 
-
-		public virtual void ItemRealized()
-		{
-			IsRealized = true;
-		}
-
-
-		public virtual void ItemVirtualized()
-		{
-			IsRealized = false;
-		}
-
-
-		protected Node(INodeService nodeService, Node parentNode)
-		{
-			this.nodeService = nodeService;
-			ParentNode = parentNode;
-		}
-
-
-		public int NodeLevel => ParentNode?.NodeLevel + 1 ?? 0;
-
-		public double NodeScaleFactor { get; set; } = 7;
-
-		public double Scale => nodeService.Scale;
-		public double ViewScale => Scale * NodeScale;
-
-		public double NodeScale
-		{
-			get
-			{
-				if (ParentNode == null)
+				if (!ChildModules.Any())
 				{
-					return NodeScaleFactor;
+					AddModuleChildren();
 				}
 
-				return ParentNode.NodeScale / NodeScaleFactor;
-			}
-		}
-
-		public IReadOnlyList<Node> ChildNodes => childNodes;
-
-		public abstract bool CanBeShown();
-
-		public Node ParentNode
-		{
-			get { return parentNode; }
-			set
-			{
-				parentNode = value;
-
-				if (parentNode != null)
+				if (!Links.Any())
 				{
-					parentNode.AddChildNode(this);
+					AddLinks();				
 				}
+
+				ShowChildren();
 			}
 		}
 
 
-		public Rect ActualNodeBounds
+		protected override void SetElementBounds()
 		{
-			get { return actualNodeBounds; }
-			set
+			Element.SetLocationAndSize(NodeBounds.Location, NodeBounds.Size);
+		}
+
+
+		public override void ChangedScale()
+		{
+			base.ChangedScale();
+		}
+
+
+		public override void ItemVirtualized()
+		{
+			if (IsRealized)
 			{
-				actualNodeBounds = value;
-
-				SetItemBounds();
-
-				SetElementBounds();
+				HideChildren();
+				base.ItemVirtualized();
+				//ParentNode?.RemoveChildNode(this);
 			}
 		}
 
 
-		public Rect RelativeNodeBounds { get; set; }
+		public override string ToString() => Element.Name.FullName;
 
 
-		public Rect ViewNodeBounds => new Rect(new Point(0, 0), ViewNodeSize);
-
-
-		public Size ViewNodeSize =>
-			new Size(ItemBounds.Width * Scale, ItemBounds.Height * Scale);
-
-
-		public void ShowNode()
+		private void AddModuleChildren()
 		{
-			if (!IsAdded && CanBeShown())
+			// Original size new Size(200, 120)		
+			int rowLength = 6;
+
+			int padding = 20;
+
+			double xMargin = ((DefaultSize.Width * ThisNodeScaleFactor) - ((DefaultSize.Width + padding) * rowLength)) / 2;
+			double yMargin = 25 * ThisNodeScaleFactor;
+
+			if (ParentItem == null)
 			{
-				nodeService.ShowNode(this);
-			}
-		}
-
-
-		public void ShowChildren()
-		{
-			ChildNodes.ForEach(node => node.ShowNode());
-		}
-
-
-		public void HideNode()
-		{
-			nodeService.HideNodes(GetHidableDecedentAndSelf());
-		}
-
-
-		public void HideChildren()
-		{
-			nodeService.HideNodes(GetHidableDecedent());
-		}
-
-
-		public void MoveOrResize(Point canvasPoint, Vector viewOffset, bool isFirst)
-		{
-			if (isFirst)
-			{
-				GetMoveResizeFactors(canvasPoint);
+				xMargin += NodeBounds.Width / 2;
+				yMargin += NodeBounds.Height / 2;
 			}
 
-			Vector offset = new Vector(
-				(viewOffset.X / NodeScale) / Scale,
-				(viewOffset.Y / NodeScale) / Scale);
 
-			Point location = new Point(
-				ActualNodeBounds.X + xf * offset.X,
-				ActualNodeBounds.Y + yf * offset.Y);
+			int count = 0;
+			var children = Element.Children.OrderBy(e => e, Compare.With<Element>(CompareElements));
+			//Sorter.Sort(children, Compare.With<Element>(CompareElements));
 
-			double width = ActualNodeBounds.Size.Width + (wf * offset.X);
-			double height = actualNodeBounds.Size.Height + (hf * offset.Y);
-
-			if (width < 0 || height < 0)
+			foreach (Element childElement in children)
 			{
-				return;
-			}
+				Size size = childElement.Size ?? DefaultSize;
 
-			Size size = new Size(width, height);
-
-			Rect nodeBounds = new Rect(location, size);
-
-			if ((nodeBounds.X + nodeBounds.Width > ParentNode.ActualNodeBounds.Width * NodeScaleFactor)
-			    || (nodeBounds.Y + nodeBounds.Height > ParentNode.ActualNodeBounds.Height * NodeScaleFactor)
-			    || nodeBounds.X < 0
-			    || nodeBounds.Y < 0)
-			{
-				return;
-			}
-
-			ActualNodeBounds = nodeBounds;
-
-			nodeService.UpdateNode(this);
-
-			NotifyAll();
-
-			double cxf = 0;
-			//if (xf == 1 && offset.X < 0)
-			//{
-			//	cxf = 1;
-			//}
-
-			Vector childOffset = new Vector(
-				(offset.X) * NodeScale * ((1 / NodeScaleFactor) / NodeScaleFactor) + cxf, 
-				(offset.Y)  * NodeScale * ((1 / NodeScaleFactor) / NodeScaleFactor));
-
-			foreach (Node childNode in ChildNodes)
-			{
-				childNode.MoveAsChild(childOffset);
-			}
-
-			Module module = this as Module;
-			if (module != null)
-			{
-				module.UpdateLinksFor();
-			}
-
-			Module parentModule = ParentNode as Module;
-			if (parentModule != null)
-			{
-				parentModule.UpdateLinksFor(this);
-			}
-		}
-
-
-		private void GetMoveResizeFactors(Point canvasPoint)
-		{
-			double xdist = Math.Abs(ItemBounds.X - canvasPoint.X);
-			double ydist = Math.Abs(ItemBounds.Y - canvasPoint.Y);
-
-			double wdist = Math.Abs(ItemBounds.Right - canvasPoint.X);
-			double hdist = Math.Abs(ItemBounds.Bottom - canvasPoint.Y);
-
-			double xd = xdist * Scale;
-			double yd = ydist * Scale;
-
-			double wd = wdist * Scale;
-			double hd = hdist * Scale;
-
-
-			if (ItemBounds.Width * Scale > 80)
-			{
-				if (xd < 10 && yd < 10)
+				Point location;
+				if (childElement.Location != null)
 				{
-					// Upper left corner (resize)
-					xf = 1;
-					yf = 1;
-					wf = -1;
-					hf = -1;
-				}
-				else if (wd < 10 && hd < 10)
-				{
-					// Lower rigth corner (resize)
-					xf = 0;
-					yf = 0;
-					wf = 1;
-					hf = 1;
-				}
-				else if (xd < 10 && hd < 10)
-				{
-					// Lower left corner (resize)
-					xf = 1;
-					yf = 0;
-					wf = -1;
-					hf = 1;
-				}
-				else if (wd < 10 && yd < 10)
-				{
-					// Upper rigth corner (resize)
-					xf = 0;
-					yf = 1;
-					wf = 1;
-					hf = -1;
+					location = childElement.Location.Value;
 				}
 				else
 				{
-					// Inside rectangle, (normal mover)
-					xf = 1;
-					yf = 1;
-					wf = 0;
-					hf = 0;
+					int x = count % rowLength;
+					int y = count / rowLength;
+					location = new Point(x * (DefaultSize.Width + padding) + xMargin, y * (DefaultSize.Height + padding) + yMargin);
 				}
+
+				Rect bounds = new Rect(location, size);
+
+				Node node = new Node(itemService, childElement, bounds, this);
+				AddChildNode(node);
+				count++;
+			}
+		}
+
+
+		private int CompareElements(Element e1, Element e2)
+		{
+			Reference e1ToE2 = Element.References
+				.FirstOrDefault(r => r.Source == e1 && r.Target == e2);
+			Reference e2ToE1 = Element.References
+				.FirstOrDefault(r => r.Source == e2 && r.Target == e1);
+
+			int e1ToE2Count = e1ToE2?.SubReferences.Count ?? 0;
+			int e2ToE1Count = e2ToE1?.SubReferences.Count ?? 0;
+
+			if (e1ToE2Count > e2ToE1Count)
+			{
+				return -1;
+			}
+			else if (e1ToE2Count < e2ToE1Count)
+			{
+				return 1;
+			}
+
+			Reference parentToE1 = Element.References
+				.FirstOrDefault(r => r.Source == Element && r.Target == e1);
+			Reference parentToE2 = Element.References
+				.FirstOrDefault(r => r.Source == Element && r.Target == e2);
+
+			int parentToE1Count = parentToE1?.SubReferences.Count ?? 0;
+			int parentToE2Count = parentToE2?.SubReferences.Count ?? 0;
+
+			if (parentToE1Count > parentToE2Count)
+			{
+				return -1;
+			}
+			else if (parentToE1Count < parentToE2Count)
+			{
+				return 1;
+			}
+
+			Reference e1ToParent = Element.References
+				.FirstOrDefault(r => r.Source == e1 && r.Target == Element);
+			Reference e2ToParent = Element.References
+				.FirstOrDefault(r => r.Source == e2 && r.Target == Element);
+
+			int e1ToParentCount = e1ToParent?.SubReferences.Count ?? 0;
+			int e2ToParentCount = e2ToParent?.SubReferences.Count ?? 0;
+
+			if (e1ToParentCount > e2ToParentCount)
+			{
+				return -1;
+			}
+			else if (e1ToParentCount < e2ToParentCount)
+			{
+				return 1;
+			}
+
+			return 0;
+		}
+
+
+		private void AddLinks()
+		{
+			foreach (Reference reference in Element.References)
+			{
+				AddLink(reference);
+			}
+		}
+
+
+		private void AddLink(Reference reference)
+		{
+			Node sourceNode;
+			Node targetNode;
+
+			if (reference.SubReferences.Any(r => r.Kind == ReferenceKind.Child))
+			{
+				sourceNode = this;
+				targetNode = ChildModules.First(m => m.Element == reference.Target);
+			}
+			else if (reference.Source != Element
+			         && reference.Target != Element
+			         && reference.SubReferences.Any(r => r.Kind == ReferenceKind.Sibling))
+			{
+				sourceNode = ChildModules.First(m => m.Element == reference.Source);
+				targetNode = ChildModules.First(m => m.Element == reference.Target);
+			}
+			else if (reference.SubReferences.Any(r => r.Kind == ReferenceKind.Parent))
+			{
+				sourceNode = ChildModules.First(m => m.Element == reference.Source);
+				targetNode = this;
 			}
 			else
 			{
-				// Rectangle to small to resize (normal mover)
-				xf = 1;
-				yf = 1;
-				wf = 0;
-				hf = 0;
+				return;
 			}
+
+			Link link = new Link(itemService, reference, this, sourceNode, targetNode);
+			AddChildNode(link);
 		}
 
 
-		protected virtual void SetElementBounds()
+		public void UpdateLinksFor(Item item)
 		{
-		}
+			IEnumerable<Link> links = ChildNodes
+				.OfType<Link>()
+				.Where(link => link.SourceNode == item || link.TargetNode == item)
+				.ToList();
 
-
-		private void MoveAsChild(Vector offset)
-		{
-			ActualNodeBounds = new Rect(
-				new Point(
-					ActualNodeBounds.X + offset.X,
-					ActualNodeBounds.Y + offset.Y),
-				ActualNodeBounds.Size);
-
-			if (IsAdded)
+			foreach (Link link in links)
 			{
-				nodeService.UpdateNode(this);
-				NotifyAll();
-			}
-
-			Vector childOffset = new Vector(offset.X / NodeScaleFactor, offset.Y / NodeScaleFactor);
-
-			foreach (Node childNode in ChildNodes)
-			{
-				childNode.MoveAsChild(childOffset);
+				link.SetLinkLine();
+				link.NotifyAll();
 			}
 		}
 
-
-		internal IEnumerable<Node> GetHidableDecedentAndSelf()
+		public void UpdateLinksFor()
 		{
-			if (IsAdded && !CanBeShown())
+			IEnumerable<Link> links = ChildNodes
+				.OfType<Link>()		
+				.ToList();
+
+			foreach (Link link in links)
 			{
-				yield return this;
-
-				foreach (Node node in GetHidableDecedent())
-				{
-					yield return node;
-				}
-			}
-		}
-
-
-		internal IEnumerable<Node> GetHidableDecedent()
-		{
-			IEnumerable<Node> showableChildren = ChildNodes
-				.Where(node => node.IsAdded && !node.CanBeShown());
-
-			foreach (Node childNode in showableChildren)
-			{
-				foreach (Node decedentNode in childNode.GetHidableDecedentAndSelf())
-				{
-					yield return decedentNode;
-				}
-			}
-		}
-
-
-		private void SetItemBounds()
-		{
-			if (ParentNode != null)
-			{
-				Rect bounds = actualNodeBounds;
-				bounds.Scale(NodeScale, NodeScale);
-
-				ItemBounds = new Rect(
-					ParentNode.ItemBounds.X + (bounds.X),
-					ParentNode.ItemBounds.Y + (bounds.Y),
-					bounds.Width,
-					bounds.Height);
-
-				Rect bounds2 = actualNodeBounds;
-				bounds2.Scale(1 / NodeScaleFactor, 1 / NodeScaleFactor);
-
-				RelativeNodeBounds = bounds2;
-			}
-			else
-			{
-				ItemBounds = actualNodeBounds;
-				RelativeNodeBounds = actualNodeBounds;
-			}
-		}
-
-
-		protected void AddChildNode(Node child)
-		{
-			if (!childNodes.Contains(child))
-			{
-				childNodes.Add(child);
-			}
-
-			child.Priority = Priority - 0.1;
-
-			child.ZIndex = ZIndex + ((child is Link) ? 1 : 2);
-		}
-
-
-		public void RemoveChildNode(Node child)
-		{
-			childNodes.Remove(child);
-			child.NotifyAll();
-		}
-
-
-		public virtual void ChangedScale()
-		{
-			bool canBeShown = CanBeShown();
-
-			if (IsAdded)
-			{
-				if (!canBeShown)
-				{
-					HideNode();
-				}
-			}
-			else
-			{
-				if (canBeShown)
-				{
-					ShowNode();
-				}
-			}
-
-			if (IsAdded && IsRealized)
-			{
-				NotifyAll();
-
-				ChildNodes
-					.ForEach(node => node.ChangedScale());
+				link.SetLinkLine();
+				link.NotifyAll();
 			}
 		}
 	}

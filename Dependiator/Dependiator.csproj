@@ -150,14 +150,13 @@
       <DependentUpon>LinkView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Modeling\LinkViewModel.cs" />
-    <Compile Include="Modeling\ModuleView.xaml.cs">
-      <DependentUpon>ModuleView.xaml</DependentUpon>
+    <Compile Include="Modeling\NodeView.xaml.cs">
+      <DependentUpon>NodeView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Modeling\Node.cs" />
+    <Compile Include="Modeling\Item.cs" />
     <Compile Include="MainViews\ItemViewModel.cs" />
-    <Compile Include="MainViews\Private\Item.cs" />
-    <Compile Include="Modeling\INodeService.cs" />
-    <Compile Include="Modeling\Module.cs" />
+    <Compile Include="Modeling\IItemService.cs" />
+    <Compile Include="Modeling\Node.cs" />
     <Compile Include="MainViews\Private\Caching\BranchNameSurrogate.cs" />
     <Compile Include="Modeling\ModuleViewModel.cs" />
     <Compile Include="MainViews\Private\IMainViewVirtualItemsSource.cs" />
@@ -165,8 +164,7 @@
     <Compile Include="MainViews\Private\MainViewCommands.cs" />
     <Compile Include="Modeling\IModelService.cs" />
     <Compile Include="Modeling\ModelService.cs" />
-    <Compile Include="Modeling\NodeService.cs" />
-    <Compile Include="Modeling\NodeTree.cs" />
+    <Compile Include="Modeling\ItemService.cs" />
     <Compile Include="Modeling\Serializing\Data.cs" />
     <Compile Include="Modeling\Serializing\DataLink.cs" />
     <Compile Include="Modeling\Serializing\DataNode.cs" />
@@ -309,7 +307,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Modeling\ModuleView.xaml">
+    <Page Include="Modeling\NodeView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

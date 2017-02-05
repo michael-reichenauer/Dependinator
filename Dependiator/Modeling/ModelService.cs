@@ -17,7 +17,7 @@ namespace Dependiator.Modeling
 		private readonly WorkingFolder workingFolder;
 		private readonly IReflectionService reflectionService;
 		private readonly IElementService elementService;
-		private readonly INodeService nodeService;
+		private readonly IItemService itemService;
 		private readonly IDataSerializer dataSerializer;
 		private readonly ICanvasService canvasService;
 
@@ -27,14 +27,14 @@ namespace Dependiator.Modeling
 			WorkingFolder workingFolder,
 			IReflectionService reflectionService,
 			IElementService elementService,
-			INodeService nodeService,
+			IItemService itemService,
 			IDataSerializer dataSerializer,
 			ICanvasService canvasService)
 		{
 			this.workingFolder = workingFolder;
 			this.reflectionService = reflectionService;
 			this.elementService = elementService;
-			this.nodeService = nodeService;
+			this.itemService = itemService;
 			this.dataSerializer = dataSerializer;
 			this.canvasService = canvasService;
 		}
@@ -44,7 +44,7 @@ namespace Dependiator.Modeling
 		{
 			Timing t = new Timing();
 			Data data;
-			if (!dataSerializer.TryDeserialize(out data))
+			//if (!dataSerializer.TryDeserialize(out data))
 			{
 				data = reflectionService.Analyze(workingFolder.FilePath);
 			}
@@ -52,15 +52,15 @@ namespace Dependiator.Modeling
 
 			if (elementTree != null)
 			{
-				nodeService.ClearAll();
+				itemService.ClearAll();
 			}
 
-			elementTree = elementService.ToElementTree(data);
+			elementTree = elementService.ToElementTree(data, null);
 		
 			
-			Node rootNode = GetNode(elementTree);
+			Item rootItem = GetNode(elementTree);
 
-			nodeService.ShowRootNode(rootNode);
+			itemService.ShowRootNode(rootItem);
 
 			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
 
@@ -73,20 +73,48 @@ namespace Dependiator.Modeling
 		}
 
 
-		public Task Refresh()
+		public async Task Refresh()
 		{
-			//Data newData = reflectionService.Analyze(workingFolder.FilePath);
+			await Task.Yield();
 
-			//Data data = elementService.ToData(elementTree);
+			Timing t = new Timing();
 
-			return Task.CompletedTask;
+			Data oldData = elementService.ToData(elementTree);
 
+			ElementTree tree = await Task.Run(() =>
+			{
+				Data newData = reflectionService.Analyze(workingFolder.FilePath);
+
+				return elementService.ToElementTree(newData, oldData);
+			});
+		
+			t.Log("Read fresh data");
+
+			var scale = canvasService.Scale;
+			var offset = canvasService.Offset;
+
+			if (elementTree != null)
+			{
+				itemService.ClearAll();
+			}
+
+			elementTree = tree;
+			t.Log("ToElementTree");
+
+			Item rootItem = GetNode(elementTree);
+
+			itemService.ShowRootNode(rootItem);
+
+			canvasService.Scale = scale;
+			canvasService.Offset = offset;
+
+			t.Log("Created modules");
 		}
 
 
 		public object MoveNode(Point viewPosition, Vector viewOffset, object movingObject)
 		{
-			return nodeService.MoveNode(viewPosition, viewOffset, movingObject);
+			return itemService.MoveNode(viewPosition, viewOffset, movingObject);
 		}
 
 
@@ -105,26 +133,21 @@ namespace Dependiator.Modeling
 		}
 
 
-		private Node GetNode(ElementTree elementTree)
+		private Item GetNode(ElementTree elementTree)
 		{
 			Size size = new Size(200000, 100000);
-			Rect viewBox = nodeService.CurrentViewPort;
-
+			
 			double scale = 1 ;
-			nodeService.Scale = scale;
+			itemService.Scale = scale;
 
-			viewBox = nodeService.CurrentViewPort;
-			//double x = ((viewBox.Width - viewBox.X) / 2 - (size.Width / 2)) + 1000;
-			//double y = ((viewBox.Height - viewBox.Y) / 2 -(size.Height / 2)) + 500;
 			double x = 0 - (size.Width / 2);
 			double y = 0 - (size.Height / 2);
 
-
 			Point position = new Point(x, y);
 			Rect bounds = new Rect(position, size);
-			Module module = new Module(nodeService, elementTree.Root, bounds, null);
-			nodeService.AddRootNode(module);
-			return module;
+			Node node = new Node(itemService, elementTree.Root, bounds, null);
+			itemService.AddRootNode(node);
+			return node;
 		}
 	}
 }

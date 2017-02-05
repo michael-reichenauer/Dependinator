@@ -101,11 +101,11 @@
 						<Style.Triggers>
 
 							<!-- Module  -->
-							<DataTrigger Binding="{Binding Type}" Value="ModuleViewModel">
+							<DataTrigger Binding="{Binding Type}" Value="NodeViewModel">
 								<Setter Property="ContentTemplate">
 									<Setter.Value>
 										<DataTemplate>
-											<modeling:ModuleView/>
+											<modeling:NodeView/>
 										</DataTemplate>
 									</Setter.Value>
 								</Setter>

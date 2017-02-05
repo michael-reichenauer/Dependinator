@@ -11,15 +11,15 @@ using Brush = System.Windows.Media.Brush;
 namespace Dependiator.Modeling
 {
 	[SingleInstance]
-	internal class NodeService : INodeService
+	internal class ItemService : IItemService
 	{
 		private readonly ICanvasService canvasService;
 		private readonly IMainViewItemsSource itemsSource;
 		private readonly IThemeService themeService;
 
-		private readonly List<Node> rootNodes = new List<Node>();
+		private readonly List<Item> rootNodes = new List<Item>();
 
-		public NodeService(
+		public ItemService(
 			ICanvasService canvasService,
 			IMainViewItemsSource itemsSource,
 			IThemeService themeService)
@@ -43,9 +43,9 @@ namespace Dependiator.Modeling
 		public Point Offset => canvasService.Offset;
 
 
-		public void ShowRootNode(Node node)
+		public void ShowRootNode(Item item)
 		{
-			node.ItemRealized();
+			item.ItemRealized();
 		}
 
 		public void ClearAll()
@@ -53,32 +53,32 @@ namespace Dependiator.Modeling
 			itemsSource.Clear();
 		}
 
-		public void ShowNodes(IEnumerable<Node> nodes)
+		public void ShowNodes(IEnumerable<Item> nodes)
 		{
 			itemsSource.Add(nodes);
 		}
 
 
-		public void HideNodes(IEnumerable<Node> nodes)
+		public void HideNodes(IEnumerable<Item> nodes)
 		{
 			itemsSource.Remove(nodes);
 		}
 
 
-		public void ShowNode(Node node)
+		public void ShowNode(Item item)
 		{
-			itemsSource.Add(node);
+			itemsSource.Add(item);
 		}
 
 
-		public void HideNode(Node node)
+		public void HideNode(Item item)
 		{
-			itemsSource.Remove(node);
+			itemsSource.Remove(item);
 		}
 
-		public void UpdateNode(Node node)
+		public void UpdateNode(Item item)
 		{
-			itemsSource.Update(node);
+			itemsSource.Update(item);
 		}
 
 
@@ -94,50 +94,50 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void AddRootNode(Node node)
+		public void AddRootNode(Item item)
 		{
-			rootNodes.Add(node);
+			rootNodes.Add(item);
 		}
 
 
 		public object MoveNode(Point viewPosition, Vector viewOffset, object movingObject)
 		{
-			Module module = movingObject as Module;
+			Node node = movingObject as Node;
 
 			Point canvasPoint = canvasService.GetCanvasPoint(viewPosition);
 			bool isFirst = false;
 
-			if (module == null)
+			if (node == null)
 			{
 				Point point = new Point(canvasPoint.X - 6 / Scale, canvasPoint.Y - 6 / Scale);
 				Rect area = new Rect(point, new Size(6 / Scale, 6 / Scale));
 
-				module = itemsSource
+				node = itemsSource
 					.GetItemsInArea(area)
-					.OfType<Module>()
-					.LastOrDefault(node => node.ParentNode != null);
+					.OfType<Node>()
+					.LastOrDefault(item => item.ParentItem != null);
 				isFirst = true;
 			}
 			
-			if (module != null)
+			if (node != null)
 			{
-				MoveNode(module, canvasPoint, viewOffset, isFirst);
+				MoveNode(node, canvasPoint, viewOffset, isFirst);
 			}
 			
-			return module;
+			return node;
 		}
 
 
 
-		private void MoveNode(Module module, Point canvasPoint, Vector viewOffset, bool isFirst)
+		private void MoveNode(Node node, Point canvasPoint, Vector viewOffset, bool isFirst)
 		{
 			//module.Move(viewOffset);
-			module.MoveOrResize(canvasPoint, viewOffset, isFirst);
+			node.MoveOrResize(canvasPoint, viewOffset, isFirst);
 		}
 
-		public void RemoveRootNode(Node node)
+		public void RemoveRootNode(Item item)
 		{
-			rootNodes.Remove(node);
+			rootNodes.Remove(item);
 		}
 
 

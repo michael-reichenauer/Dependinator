@@ -18,9 +18,9 @@ namespace Dependiator.MainViews
 		// UI properties
 		public string Type => this.GetType().Name;
 		public double CanvasZIndex => item.ZIndex;
-		public double CanvasWidth => item.ItemBounds.Width;
-		public double CanvasTop => item.ItemBounds.Top;
-		public double CanvasLeft => item.ItemBounds.Left;
-		public double CanvasHeight => item.ItemBounds.Height;
+		public double CanvasWidth => item.ItemCanvasBounds.Width;
+		public double CanvasTop => item.ItemCanvasBounds.Top;
+		public double CanvasLeft => item.ItemCanvasBounds.Left;
+		public double CanvasHeight => item.ItemCanvasBounds.Height;
 	}
 }

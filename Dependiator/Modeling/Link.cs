@@ -8,24 +8,24 @@ using Dependiator.Utils.UI;
 
 namespace Dependiator.Modeling
 {
-	internal class Link : Node
+	internal class Link : Item
 	{
-		private readonly INodeService nodeService;
+		private readonly IItemService itemService;
 		private readonly LinkViewModel linkViewModel;
 		private Point sourcePoint;
 		private Point targetPoint;
 
 
 		public Link(
-			INodeService nodeService,
+			IItemService itemService,
 			Reference reference,
-			Module owner,
-			Module sourceNode,
-			Module targetNode)
-			: base(nodeService, owner)
+			Node owner,
+			Node sourceNode,
+			Node targetNode)
+			: base(itemService, owner)
 		{
 			Reference = reference;
-			this.nodeService = nodeService;
+			this.itemService = itemService;
 			this.SourceNode = sourceNode;
 			this.TargetNode = targetNode;
 
@@ -35,9 +35,9 @@ namespace Dependiator.Modeling
 			ViewModel = linkViewModel;
 		}
 
-		public Module SourceNode { get; }
+		public Node SourceNode { get; }
 
-		public Module TargetNode { get; }
+		public Node TargetNode { get; }
 
 		public Reference Reference { get; }
 
@@ -78,8 +78,7 @@ namespace Dependiator.Modeling
 		{
 			return 
 				SourceNode.CanBeShown() && TargetNode.CanBeShown()
-				&& ParentNode.ViewScale > 2 
-				&& linkViewModel.StrokeThickness > 0.5;
+				&& ParentItem.NodeScale > 3.5;
 		}
 
 
@@ -111,17 +110,17 @@ namespace Dependiator.Modeling
 			double x2;
 			double y2;
 
-			if (SourceNode == TargetNode.ParentNode)
+			if (SourceNode == TargetNode.ParentItem)
 			{
 				Rect targetRect = TargetNode.RelativeNodeBounds;
 
-				x1 = SourceNode.ActualNodeBounds.Width / 2;
+				x1 = SourceNode.NodeBounds.Width / 2;
 				y1 = 0;
 				x2 = targetRect.X + targetRect.Width / 2;
 				y2 = targetRect.Y;
 				LinkBrush = TargetNode.RectangleBrush;
 			}
-			else if (SourceNode.ParentNode == TargetNode.ParentNode)
+			else if (SourceNode.ParentItem == TargetNode.ParentItem)
 			{
 				Rect sourceRect = SourceNode.RelativeNodeBounds;
 				Rect targetRect = TargetNode.RelativeNodeBounds;
@@ -132,14 +131,14 @@ namespace Dependiator.Modeling
 				y2 = targetRect.Y;
 				LinkBrush = SourceNode.RectangleBrush;
 			}
-			else if (SourceNode.ParentNode == TargetNode)
+			else if (SourceNode.ParentItem == TargetNode)
 			{
 				Rect sourceRect = SourceNode.RelativeNodeBounds;
 
 				x1 = sourceRect.X + sourceRect.Width / 2;
 				y1 = sourceRect.Y + sourceRect.Height;
-				x2 = TargetNode.ActualNodeBounds.Width / 2;
-				y2 = TargetNode.ActualNodeBounds.Height;
+				x2 = TargetNode.NodeBounds.Width / 2;
+				y2 = TargetNode.NodeBounds.Height;
 				LinkBrush = SourceNode.RectangleBrush;
 			}
 			else
@@ -177,8 +176,8 @@ namespace Dependiator.Modeling
 
 			Rect bounds = new Rect(new Point(x, y), new Size(width + 1, height + 1));
 
-			bounds.Scale(NodeScaleFactor, NodeScaleFactor);
-			ActualNodeBounds = bounds;
+			bounds.Scale(ThisNodeScaleFactor, ThisNodeScaleFactor);
+			NodeBounds = bounds;
 		}
 
 
