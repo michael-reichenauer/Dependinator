@@ -155,7 +155,6 @@
     </Compile>
     <Compile Include="Modeling\Node.cs" />
     <Compile Include="MainViews\ItemViewModel.cs" />
-    <Compile Include="MainViews\Private\Item.cs" />
     <Compile Include="Modeling\INodeService.cs" />
     <Compile Include="Modeling\Module.cs" />
     <Compile Include="MainViews\Private\Caching\BranchNameSurrogate.cs" />

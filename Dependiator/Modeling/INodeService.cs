@@ -11,23 +11,23 @@ namespace Dependiator.Modeling
 
 		Rect CurrentViewPort { get; }
 
-		void ShowNodes(IEnumerable<Node> nodes);
+		void ShowNodes(IEnumerable<Item> nodes);
 
-		void HideNodes(IEnumerable<Node> nodes);
+		void HideNodes(IEnumerable<Item> nodes);
 
-		void ShowNode(Node node);
+		void ShowNode(Item item);
 
-		void HideNode(Node node);
+		void HideNode(Item item);
 
 		Brush GetRectangleBrush();
 
-		void RemoveRootNode(Node node);
-		void AddRootNode(Node node);
+		void RemoveRootNode(Item item);
+		void AddRootNode(Item item);
 
 		object MoveNode(Point viewPosition, Vector viewOffset, object movingObject);
-		void UpdateNode(Node node);
+		void UpdateNode(Item item);
 		Brush GetRectangleBackgroundBrush(Brush brush);
-		void ShowRootNode(Node node);
+		void ShowRootNode(Item item);
 		void ClearAll();
 	}
 }

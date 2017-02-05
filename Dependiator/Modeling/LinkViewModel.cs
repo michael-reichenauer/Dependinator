@@ -17,10 +17,10 @@ namespace Dependiator.Modeling
 
 
 
-		public double X1 => link.X1 * link.ParentNode.NodeScale;
-		public double Y1 => link.Y1 * link.ParentNode.NodeScale;
-		public double X2 => link.X2 * link.ParentNode.NodeScale;
-		public double Y2 => link.Y2 * link.ParentNode.NodeScale;
+		public double X1 => link.X1 * link.ParentItem.NodeScale;
+		public double Y1 => link.Y1 * link.ParentItem.NodeScale;
+		public double X2 => link.X2 * link.ParentItem.NodeScale;
+		public double Y2 => link.Y2 * link.ParentItem.NodeScale;
 
 		public string ToolTip => link.ToolTip;
 		public Brush LineBrush => link.LinkBrush;

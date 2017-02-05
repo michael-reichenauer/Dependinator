@@ -8,7 +8,7 @@ using Dependiator.Utils.UI;
 
 namespace Dependiator.Modeling
 {
-	internal class Link : Node
+	internal class Link : Item
 	{
 		private readonly INodeService nodeService;
 		private readonly LinkViewModel linkViewModel;
@@ -78,7 +78,7 @@ namespace Dependiator.Modeling
 		{
 			return 
 				SourceNode.CanBeShown() && TargetNode.CanBeShown()
-				&& ParentNode.NodeScale > 3.5;
+				&& ParentItem.NodeScale > 3.5;
 		}
 
 
@@ -110,7 +110,7 @@ namespace Dependiator.Modeling
 			double x2;
 			double y2;
 
-			if (SourceNode == TargetNode.ParentNode)
+			if (SourceNode == TargetNode.ParentItem)
 			{
 				Rect targetRect = TargetNode.RelativeNodeBounds;
 
@@ -120,7 +120,7 @@ namespace Dependiator.Modeling
 				y2 = targetRect.Y;
 				LinkBrush = TargetNode.RectangleBrush;
 			}
-			else if (SourceNode.ParentNode == TargetNode.ParentNode)
+			else if (SourceNode.ParentItem == TargetNode.ParentItem)
 			{
 				Rect sourceRect = SourceNode.RelativeNodeBounds;
 				Rect targetRect = TargetNode.RelativeNodeBounds;
@@ -131,7 +131,7 @@ namespace Dependiator.Modeling
 				y2 = targetRect.Y;
 				LinkBrush = SourceNode.RectangleBrush;
 			}
-			else if (SourceNode.ParentNode == TargetNode)
+			else if (SourceNode.ParentItem == TargetNode)
 			{
 				Rect sourceRect = SourceNode.RelativeNodeBounds;
 

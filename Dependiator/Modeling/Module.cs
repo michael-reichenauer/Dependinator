@@ -10,7 +10,7 @@ using Dependiator.Utils.UI;
 
 namespace Dependiator.Modeling
 {
-	internal class Module : Node
+	internal class Module : Item
 	{
 		private readonly INodeService nodeService;
 		private static readonly Size DefaultSize = new Size(200, 100);
@@ -58,7 +58,7 @@ namespace Dependiator.Modeling
 
 		public override bool CanBeShown()
 		{
-			return ViewNodeSize.Width > 10 && (ParentNode?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
+			return ViewNodeSize.Width > 10 && (ParentItem?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
 		}
 
 
@@ -119,7 +119,7 @@ namespace Dependiator.Modeling
 			double xMargin = ((DefaultSize.Width * ThisNodeScaleFactor) - ((DefaultSize.Width + padding) * rowLength)) / 2;
 			double yMargin = 25 * ThisNodeScaleFactor;
 
-			if (ParentNode == null)
+			if (ParentItem == null)
 			{
 				xMargin += NodeBounds.Width / 2;
 				yMargin += NodeBounds.Height / 2;
@@ -253,11 +253,11 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void UpdateLinksFor(Node node)
+		public void UpdateLinksFor(Item item)
 		{
 			IEnumerable<Link> links = ChildNodes
 				.OfType<Link>()
-				.Where(link => link.SourceNode == node || link.TargetNode == node)
+				.Where(link => link.SourceNode == item || link.TargetNode == item)
 				.ToList();
 
 			foreach (Link link in links)

@@ -17,7 +17,7 @@ namespace Dependiator.Modeling
 		private readonly IMainViewItemsSource itemsSource;
 		private readonly IThemeService themeService;
 
-		private readonly List<Node> rootNodes = new List<Node>();
+		private readonly List<Item> rootNodes = new List<Item>();
 
 		public NodeService(
 			ICanvasService canvasService,
@@ -43,9 +43,9 @@ namespace Dependiator.Modeling
 		public Point Offset => canvasService.Offset;
 
 
-		public void ShowRootNode(Node node)
+		public void ShowRootNode(Item item)
 		{
-			node.ItemRealized();
+			item.ItemRealized();
 		}
 
 		public void ClearAll()
@@ -53,32 +53,32 @@ namespace Dependiator.Modeling
 			itemsSource.Clear();
 		}
 
-		public void ShowNodes(IEnumerable<Node> nodes)
+		public void ShowNodes(IEnumerable<Item> nodes)
 		{
 			itemsSource.Add(nodes);
 		}
 
 
-		public void HideNodes(IEnumerable<Node> nodes)
+		public void HideNodes(IEnumerable<Item> nodes)
 		{
 			itemsSource.Remove(nodes);
 		}
 
 
-		public void ShowNode(Node node)
+		public void ShowNode(Item item)
 		{
-			itemsSource.Add(node);
+			itemsSource.Add(item);
 		}
 
 
-		public void HideNode(Node node)
+		public void HideNode(Item item)
 		{
-			itemsSource.Remove(node);
+			itemsSource.Remove(item);
 		}
 
-		public void UpdateNode(Node node)
+		public void UpdateNode(Item item)
 		{
-			itemsSource.Update(node);
+			itemsSource.Update(item);
 		}
 
 
@@ -94,9 +94,9 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void AddRootNode(Node node)
+		public void AddRootNode(Item item)
 		{
-			rootNodes.Add(node);
+			rootNodes.Add(item);
 		}
 
 
@@ -115,7 +115,7 @@ namespace Dependiator.Modeling
 				module = itemsSource
 					.GetItemsInArea(area)
 					.OfType<Module>()
-					.LastOrDefault(node => node.ParentNode != null);
+					.LastOrDefault(node => node.ParentItem != null);
 				isFirst = true;
 			}
 			
@@ -135,9 +135,9 @@ namespace Dependiator.Modeling
 			module.MoveOrResize(canvasPoint, viewOffset, isFirst);
 		}
 
-		public void RemoveRootNode(Node node)
+		public void RemoveRootNode(Item item)
 		{
-			rootNodes.Remove(node);
+			rootNodes.Remove(item);
 		}
 
 

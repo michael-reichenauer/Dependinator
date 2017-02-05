@@ -8,10 +8,10 @@ using Dependiator.Utils.UI;
 
 namespace Dependiator.Modeling
 {
-	internal abstract class Node : IItem
+	internal abstract class Item : IItem
 	{
-		private Node parentNode;
-		private readonly List<Node> childNodes = new List<Node>();
+		private Item parentItem;
+		private readonly List<Item> childNodes = new List<Item>();
 		private Rect nodeBounds;
 
 		private readonly INodeService nodeService;
@@ -27,7 +27,7 @@ namespace Dependiator.Modeling
 		public abstract ViewModel ViewModel { get; }
 		public object ItemState { get; set; }
 
-		public bool IsAdded => ItemState != null || ParentNode == null;
+		public bool IsAdded => ItemState != null || ParentItem == null;
 		public bool IsRealized { get; private set; }
 
 
@@ -44,14 +44,14 @@ namespace Dependiator.Modeling
 		public virtual void ItemVirtualized() => IsRealized = false;
 		
 
-		protected Node(INodeService nodeService, Node parentNode)
+		protected Item(INodeService nodeService, Item parentItem)
 		{
 			this.nodeService = nodeService;
-			ParentNode = parentNode;
+			ParentItem = parentItem;
 		}
 
 
-		public int NodeLevel => ParentNode?.NodeLevel + 1 ?? 0;
+		public int NodeLevel => ParentItem?.NodeLevel + 1 ?? 0;
 
 		public double ThisNodeScaleFactor { get; set; } = 7;
 
@@ -63,29 +63,29 @@ namespace Dependiator.Modeling
 		{
 			get
 			{
-				if (ParentNode == null)
+				if (ParentItem == null)
 				{
 					return ThisNodeScaleFactor;
 				}
 
-				return ParentNode.NodeScaleFactor / ThisNodeScaleFactor;
+				return ParentItem.NodeScaleFactor / ThisNodeScaleFactor;
 			}
 		}
 
-		public IReadOnlyList<Node> ChildNodes => childNodes;
+		public IReadOnlyList<Item> ChildNodes => childNodes;
 
 		public abstract bool CanBeShown();
 
-		public Node ParentNode
+		public Item ParentItem
 		{
-			get { return parentNode; }
+			get { return parentItem; }
 			set
 			{
-				parentNode = value;
+				parentItem = value;
 
-				if (parentNode != null)
+				if (parentItem != null)
 				{
-					parentNode.AddChildNode(this);
+					parentItem.AddChildNode(this);
 				}
 			}
 		}
@@ -167,8 +167,8 @@ namespace Dependiator.Modeling
 
 			Rect nodeBounds = new Rect(location, size);
 
-			if ((nodeBounds.X + nodeBounds.Width > ParentNode.NodeBounds.Width * ThisNodeScaleFactor)
-			    || (nodeBounds.Y + nodeBounds.Height > ParentNode.NodeBounds.Height * ThisNodeScaleFactor)
+			if ((nodeBounds.X + nodeBounds.Width > ParentItem.NodeBounds.Width * ThisNodeScaleFactor)
+			    || (nodeBounds.Y + nodeBounds.Height > ParentItem.NodeBounds.Height * ThisNodeScaleFactor)
 			    || nodeBounds.X < 0
 			    || nodeBounds.Y < 0)
 			{
@@ -189,7 +189,7 @@ namespace Dependiator.Modeling
 
 		
 
-			foreach (Node childNode in ChildNodes)
+			foreach (Item childNode in ChildNodes)
 			{
 				//Vector childOffset = new Vector(
 				//	(offset.X) * NodeScaleFactor * ((1 / ThisNodeScaleFactor) / ThisNodeScaleFactor),
@@ -208,7 +208,7 @@ namespace Dependiator.Modeling
 				module.UpdateLinksFor();
 			}
 
-			Module parentModule = ParentNode as Module;
+			Module parentModule = ParentItem as Module;
 			if (parentModule != null)
 			{
 				parentModule.UpdateLinksFor(this);
@@ -306,20 +306,20 @@ namespace Dependiator.Modeling
 
 			Vector childOffset = new Vector(offset.X / ThisNodeScaleFactor, offset.Y / ThisNodeScaleFactor);
 
-			foreach (Node childNode in ChildNodes)
+			foreach (Item childNode in ChildNodes)
 			{
 				childNode.MoveAsChild(childOffset);
 			}
 		}
 
 
-		internal IEnumerable<Node> GetHidableDecedentAndSelf()
+		internal IEnumerable<Item> GetHidableDecedentAndSelf()
 		{
 			if (IsAdded && !CanBeShown())
 			{
 				yield return this;
 
-				foreach (Node node in GetHidableDecedent())
+				foreach (Item node in GetHidableDecedent())
 				{
 					yield return node;
 				}
@@ -327,14 +327,14 @@ namespace Dependiator.Modeling
 		}
 
 
-		internal IEnumerable<Node> GetHidableDecedent()
+		internal IEnumerable<Item> GetHidableDecedent()
 		{
-			IEnumerable<Node> showableChildren = ChildNodes
+			IEnumerable<Item> showableChildren = ChildNodes
 				.Where(node => node.IsAdded && !node.CanBeShown());
 
-			foreach (Node childNode in showableChildren)
+			foreach (Item childNode in showableChildren)
 			{
-				foreach (Node decedentNode in childNode.GetHidableDecedentAndSelf())
+				foreach (Item decedentNode in childNode.GetHidableDecedentAndSelf())
 				{
 					yield return decedentNode;
 				}
@@ -344,14 +344,14 @@ namespace Dependiator.Modeling
 
 		private void SetItemBounds()
 		{
-			if (ParentNode != null)
+			if (ParentItem != null)
 			{
 				Rect bounds = nodeBounds;
 				bounds.Scale(NodeScaleFactor, NodeScaleFactor);
 
 				ItemCanvasBounds = new Rect(
-					ParentNode.ItemCanvasBounds.X + (bounds.X),
-					ParentNode.ItemCanvasBounds.Y + (bounds.Y),
+					ParentItem.ItemCanvasBounds.X + (bounds.X),
+					ParentItem.ItemCanvasBounds.Y + (bounds.Y),
 					bounds.Width,
 					bounds.Height);
 
@@ -368,7 +368,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		protected void AddChildNode(Node child)
+		protected void AddChildNode(Item child)
 		{
 			if (!childNodes.Contains(child))
 			{
@@ -381,7 +381,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void RemoveChildNode(Node child)
+		public void RemoveChildNode(Item child)
 		{
 			childNodes.Remove(child);
 			child.NotifyAll();

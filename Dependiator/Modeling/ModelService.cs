@@ -44,7 +44,7 @@ namespace Dependiator.Modeling
 		{
 			Timing t = new Timing();
 			Data data;
-			if (!dataSerializer.TryDeserialize(out data))
+			//if (!dataSerializer.TryDeserialize(out data))
 			{
 				data = reflectionService.Analyze(workingFolder.FilePath);
 			}
@@ -58,9 +58,9 @@ namespace Dependiator.Modeling
 			elementTree = elementService.ToElementTree(data, null);
 		
 			
-			Node rootNode = GetNode(elementTree);
+			Item rootItem = GetNode(elementTree);
 
-			nodeService.ShowRootNode(rootNode);
+			nodeService.ShowRootNode(rootItem);
 
 			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
 
@@ -101,9 +101,9 @@ namespace Dependiator.Modeling
 			elementTree = tree;
 			t.Log("ToElementTree");
 
-			Node rootNode = GetNode(elementTree);
+			Item rootItem = GetNode(elementTree);
 
-			nodeService.ShowRootNode(rootNode);
+			nodeService.ShowRootNode(rootItem);
 
 			canvasService.Scale = scale;
 			canvasService.Offset = offset;
@@ -133,20 +133,15 @@ namespace Dependiator.Modeling
 		}
 
 
-		private Node GetNode(ElementTree elementTree)
+		private Item GetNode(ElementTree elementTree)
 		{
 			Size size = new Size(200000, 100000);
-			Rect viewBox = nodeService.CurrentViewPort;
-
+			
 			double scale = 1 ;
 			nodeService.Scale = scale;
 
-			viewBox = nodeService.CurrentViewPort;
-			//double x = ((viewBox.Width - viewBox.X) / 2 - (size.Width / 2)) + 1000;
-			//double y = ((viewBox.Height - viewBox.Y) / 2 -(size.Height / 2)) + 500;
 			double x = 0 - (size.Width / 2);
 			double y = 0 - (size.Height / 2);
-
 
 			Point position = new Point(x, y);
 			Rect bounds = new Rect(position, size);
