@@ -112,7 +112,8 @@ namespace Dependiator.Modeling
 
 			if (SourceNode == TargetNode.ParentItem)
 			{
-				Rect targetRect = TargetNode.RelativeNodeBounds;
+				Rect targetRect = TargetNode.ItemBounds;
+				targetRect.Scale(1 / ThisItemScaleFactor, 1 / ThisItemScaleFactor);
 
 				x1 = SourceNode.ItemBounds.Width / 2;
 				y1 = 0;
@@ -122,8 +123,10 @@ namespace Dependiator.Modeling
 			}
 			else if (SourceNode.ParentItem == TargetNode.ParentItem)
 			{
-				Rect sourceRect = SourceNode.RelativeNodeBounds;
-				Rect targetRect = TargetNode.RelativeNodeBounds;
+				Rect targetRect = TargetNode.ItemBounds;
+				targetRect.Scale(1 / ThisItemScaleFactor, 1 / ThisItemScaleFactor);
+				Rect sourceRect = SourceNode.ItemBounds;
+				sourceRect.Scale(1 / ThisItemScaleFactor, 1 / ThisItemScaleFactor);
 
 				x1 = sourceRect.X + sourceRect.Width / 2;
 				y1 = sourceRect.Y + sourceRect.Height;
@@ -133,7 +136,8 @@ namespace Dependiator.Modeling
 			}
 			else if (SourceNode.ParentItem == TargetNode)
 			{
-				Rect sourceRect = SourceNode.RelativeNodeBounds;
+				Rect sourceRect = SourceNode.ItemBounds;
+				sourceRect.Scale(1 / ThisItemScaleFactor, 1 / ThisItemScaleFactor);
 
 				x1 = sourceRect.X + sourceRect.Width / 2;
 				y1 = sourceRect.Y + sourceRect.Height;

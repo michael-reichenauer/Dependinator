@@ -44,7 +44,7 @@ namespace Dependiator.Modeling
 		public string FullName =>
 			$"{Element.Name.FullName}\n" +
 			$"children: {ChildModules.Count()}, decedents: {Element.Children.Descendents().Count()}\n" +
-			$"Scale: {CanvasScale:#.##}, Level: {NodeLevel}, NodeScale: {ItemScale:#.##}, NSF: {ThisItemScaleFactor}";
+			$"Scale: {CanvasScale:#.##}, Level: {ItemLevel}, NodeScale: {ItemScale:#.##}, NSF: {ThisItemScaleFactor}";
 
 
 		public NodeViewModel ModuleViewModel => ViewModel as NodeViewModel;
@@ -58,7 +58,7 @@ namespace Dependiator.Modeling
 
 		public override bool CanBeShown()
 		{
-			return ViewNodeSize.Width > 10 && (ParentItem?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
+			return ItemViewSize.Width > 10 && (ParentItem?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
 		}
 
 

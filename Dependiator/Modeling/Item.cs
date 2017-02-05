@@ -21,6 +21,12 @@ namespace Dependiator.Modeling
 		private int wf = 0;
 		private int hf = 0;
 
+		protected Item(IItemService itemService, Item parentItem)
+		{
+			this.itemService = itemService;
+			ParentItem = parentItem;
+		}
+
 		public Rect ItemCanvasBounds { get; protected set; }
 		public double ZIndex { get; set; }
 		public double Priority { get; protected set; }
@@ -44,14 +50,8 @@ namespace Dependiator.Modeling
 		public virtual void ItemVirtualized() => IsRealized = false;
 		
 
-		protected Item(IItemService itemService, Item parentItem)
-		{
-			this.itemService = itemService;
-			ParentItem = parentItem;
-		}
 
-
-		public int NodeLevel => ParentItem?.NodeLevel + 1 ?? 0;
+		public int ItemLevel => ParentItem?.ItemLevel + 1 ?? 0;
 
 		public double ThisItemScaleFactor { get; set; } = 7;
 
@@ -105,13 +105,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public Rect RelativeNodeBounds { get; private set; }
-
-
-		public Rect ViewNodeBounds => new Rect(new Point(0, 0), ViewNodeSize);
-
-
-		public Size ViewNodeSize =>
+		public Size ItemViewSize =>
 			new Size(ItemCanvasBounds.Width * CanvasScale, ItemCanvasBounds.Height * CanvasScale);
 
 
@@ -354,16 +348,10 @@ namespace Dependiator.Modeling
 					ParentItem.ItemCanvasBounds.Y + (bounds.Y),
 					bounds.Width,
 					bounds.Height);
-
-				Rect bounds2 = itemBounds;
-				bounds2.Scale(1 / ThisItemScaleFactor, 1 / ThisItemScaleFactor);
-
-				RelativeNodeBounds = bounds2;
 			}
 			else
 			{
 				ItemCanvasBounds = itemBounds;
-				RelativeNodeBounds = itemBounds;
 			}
 		}
 
