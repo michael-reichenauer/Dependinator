@@ -16,14 +16,14 @@ using System.Windows.Shapes;
 namespace Dependiator.Modeling
 {
 	/// <summary>
-	/// Interaction logic for ModuleView.xaml
+	/// Interaction logic for NodeView.xaml
 	/// </summary>
-	public partial class ModuleView : UserControl
+	public partial class NodeView : UserControl
 	{
 		//private Point lastMousePosition;
 		//private bool isMoving = false;
 
-		public ModuleView()
+		public NodeView()
 		{
 			InitializeComponent();
 		}

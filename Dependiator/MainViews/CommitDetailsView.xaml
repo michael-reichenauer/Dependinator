@@ -152,7 +152,7 @@
 				HorizontalContentAlignment="Stretch">
 
 				<ListBox.ItemTemplate>
-					<DataTemplate DataType="{x:Type modeling:ModuleViewModel}">
+					<DataTemplate DataType="{x:Type modeling:NodeViewModel}">
 						<Grid>
 							<Grid.ColumnDefinitions>
 								<ColumnDefinition Width="*" />

@@ -30,7 +30,7 @@ namespace Dependiator.Modeling
 
 			RectangleBrush = nodeService.GetRectangleBrush();
 			BackgroundBrush = nodeService.GetRectangleBackgroundBrush(RectangleBrush);
-			ViewModel = new ModuleViewModel(this);
+			ViewModel = new NodeViewModel(this);
 		}
 
 
@@ -47,7 +47,7 @@ namespace Dependiator.Modeling
 			$"Scale: {CanvasScale:#.##}, Level: {NodeLevel}, NodeScale: {NodeScale:#.##}, NSF: {ThisNodeScaleFactor}";
 
 
-		public ModuleViewModel ModuleViewModel => ViewModel as ModuleViewModel;
+		public NodeViewModel ModuleViewModel => ViewModel as NodeViewModel;
 		public Brush RectangleBrush { get; }
 		public Brush BackgroundBrush { get; }
 

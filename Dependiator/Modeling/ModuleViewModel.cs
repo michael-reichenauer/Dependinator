@@ -7,11 +7,11 @@ using Dependiator.Modeling.Analyzing;
 
 namespace Dependiator.Modeling
 {
-	internal class ModuleViewModel : ItemViewModel
+	internal class NodeViewModel : ItemViewModel
 	{
 		private readonly Node node;
 
-		public ModuleViewModel(Node node)
+		public NodeViewModel(Node node)
 			: base(node)
 		{
 			this.node = node;
