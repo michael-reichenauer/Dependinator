@@ -102,37 +102,37 @@ namespace Dependiator.Modeling
 
 		public object MoveNode(Point viewPosition, Vector viewOffset, object movingObject)
 		{
-			Module module = movingObject as Module;
+			Node node = movingObject as Node;
 
 			Point canvasPoint = canvasService.GetCanvasPoint(viewPosition);
 			bool isFirst = false;
 
-			if (module == null)
+			if (node == null)
 			{
 				Point point = new Point(canvasPoint.X - 6 / Scale, canvasPoint.Y - 6 / Scale);
 				Rect area = new Rect(point, new Size(6 / Scale, 6 / Scale));
 
-				module = itemsSource
+				node = itemsSource
 					.GetItemsInArea(area)
-					.OfType<Module>()
-					.LastOrDefault(node => node.ParentItem != null);
+					.OfType<Node>()
+					.LastOrDefault(item => item.ParentItem != null);
 				isFirst = true;
 			}
 			
-			if (module != null)
+			if (node != null)
 			{
-				MoveNode(module, canvasPoint, viewOffset, isFirst);
+				MoveNode(node, canvasPoint, viewOffset, isFirst);
 			}
 			
-			return module;
+			return node;
 		}
 
 
 
-		private void MoveNode(Module module, Point canvasPoint, Vector viewOffset, bool isFirst)
+		private void MoveNode(Node node, Point canvasPoint, Vector viewOffset, bool isFirst)
 		{
 			//module.Move(viewOffset);
-			module.MoveOrResize(canvasPoint, viewOffset, isFirst);
+			node.MoveOrResize(canvasPoint, viewOffset, isFirst);
 		}
 
 		public void RemoveRootNode(Item item)

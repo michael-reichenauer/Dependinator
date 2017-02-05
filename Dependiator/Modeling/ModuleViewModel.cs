@@ -9,18 +9,18 @@ namespace Dependiator.Modeling
 {
 	internal class ModuleViewModel : ItemViewModel
 	{
-		private readonly Module module;
+		private readonly Node node;
 
-		public ModuleViewModel(Module module)
-			: base(module)
+		public ModuleViewModel(Node node)
+			: base(node)
 		{
-			this.module = module;
+			this.node = node;
 
-			if (module.Element.Type == Element.MemberType)
+			if (node.Element.Type == Element.MemberType)
 			{
 				StrokeThickness = 0.5;
 			}
-			else if (module.Element.Type == Element.TypeType)
+			else if (node.Element.Type == Element.TypeType)
 			{
 				StrokeThickness = 2;
 			}
@@ -31,26 +31,26 @@ namespace Dependiator.Modeling
 		}
 
 
-		public string ToolTip => module.FullName;
+		public string ToolTip => node.FullName;
 		public double StrokeThickness { get; }
-		public double RectangleWidth => module.ItemCanvasBounds.Width * module.CanvasScale - StrokeThickness * 2;
-		public double RectangleHeight => module.ItemCanvasBounds.Height * module.CanvasScale - StrokeThickness * 2;
-		public Brush RectangleBrush => module.RectangleBrush;
-		public Brush HoverBrush => module.RectangleBrush;
+		public double RectangleWidth => node.ItemCanvasBounds.Width * node.CanvasScale - StrokeThickness * 2;
+		public double RectangleHeight => node.ItemCanvasBounds.Height * node.CanvasScale - StrokeThickness * 2;
+		public Brush RectangleBrush => node.RectangleBrush;
+		public Brush HoverBrush => node.RectangleBrush;
 
-		public Brush BackgroundBrush => module.BackgroundBrush;
+		public Brush BackgroundBrush => node.BackgroundBrush;
 
-		public string Name => module.ViewNodeSize.Width > 40 ? module.Name : " ";
+		public string Name => node.ViewNodeSize.Width > 40 ? node.Name : " ";
 
-		public int CornerRadius => module.Element.Type == Element.TypeType
-			? (int)(module.NodeScale * 10).MM(0, 30)
+		public int CornerRadius => node.Element.Type == Element.TypeType
+			? (int)(node.NodeScale * 10).MM(0, 30)
 			: 0;
 
 		public int FontSize
 		{
 			get
 			{
-				int fontSize = (int)(12 * module.NodeScale);
+				int fontSize = (int)(12 * node.NodeScale);
 				return fontSize.MM(8, 20);
 			}
 		}
@@ -58,7 +58,7 @@ namespace Dependiator.Modeling
 
 		internal void MouseMove(Point viewPosition, Vector viewOffset, bool isFirst)
 		{
-			module.MoveOrResize(viewPosition, viewOffset, isFirst);
+			node.MoveOrResize(viewPosition, viewOffset, isFirst);
 		}
 
 

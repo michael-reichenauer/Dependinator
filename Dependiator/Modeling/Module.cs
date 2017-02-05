@@ -10,17 +10,17 @@ using Dependiator.Utils.UI;
 
 namespace Dependiator.Modeling
 {
-	internal class Module : Item
+	internal class Node : Item
 	{
 		private readonly INodeService nodeService;
 		private static readonly Size DefaultSize = new Size(200, 100);
 
 
-		public Module(
+		public Node(
 			INodeService nodeService,
 			Element element,
 			Rect bounds,
-			Module parent)
+			Node parent)
 			: base(nodeService, parent)
 		{
 			Element = element;
@@ -51,7 +51,7 @@ namespace Dependiator.Modeling
 		public Brush RectangleBrush { get; }
 		public Brush BackgroundBrush { get; }
 
-		public IEnumerable<Module> ChildModules => ChildNodes.OfType<Module>();
+		public IEnumerable<Node> ChildModules => ChildNodes.OfType<Node>();
 
 		public IEnumerable<Link> Links => ChildNodes.OfType<Link>();
 
@@ -148,8 +148,8 @@ namespace Dependiator.Modeling
 
 				Rect bounds = new Rect(location, size);
 
-				Module module = new Module(nodeService, childElement, bounds, this);
-				AddChildNode(module);
+				Node node = new Node(nodeService, childElement, bounds, this);
+				AddChildNode(node);
 				count++;
 			}
 		}
@@ -223,8 +223,8 @@ namespace Dependiator.Modeling
 
 		private void AddLink(Reference reference)
 		{
-			Module sourceNode;
-			Module targetNode;
+			Node sourceNode;
+			Node targetNode;
 
 			if (reference.SubReferences.Any(r => r.Kind == ReferenceKind.Child))
 			{

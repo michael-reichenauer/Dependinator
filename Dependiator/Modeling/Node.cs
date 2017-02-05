@@ -202,16 +202,16 @@ namespace Dependiator.Modeling
 				childNode.MoveAsChild(childOffset);
 			}
 
-			Module module = this as Module;
-			if (module != null)
+			Node node = this as Node;
+			if (node != null)
 			{
-				module.UpdateLinksFor();
+				node.UpdateLinksFor();
 			}
 
-			Module parentModule = ParentItem as Module;
-			if (parentModule != null)
+			Node parentNode = ParentItem as Node;
+			if (parentNode != null)
 			{
-				parentModule.UpdateLinksFor(this);
+				parentNode.UpdateLinksFor(this);
 			}
 		}
 

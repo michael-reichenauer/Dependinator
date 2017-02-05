@@ -145,9 +145,9 @@ namespace Dependiator.Modeling
 
 			Point position = new Point(x, y);
 			Rect bounds = new Rect(position, size);
-			Module module = new Module(nodeService, elementTree.Root, bounds, null);
-			nodeService.AddRootNode(module);
-			return module;
+			Node node = new Node(nodeService, elementTree.Root, bounds, null);
+			nodeService.AddRootNode(node);
+			return node;
 		}
 	}
 }

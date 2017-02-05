@@ -19,9 +19,9 @@ namespace Dependiator.Modeling
 		public Link(
 			INodeService nodeService,
 			Reference reference,
-			Module owner,
-			Module sourceNode,
-			Module targetNode)
+			Node owner,
+			Node sourceNode,
+			Node targetNode)
 			: base(nodeService, owner)
 		{
 			Reference = reference;
@@ -35,9 +35,9 @@ namespace Dependiator.Modeling
 			ViewModel = linkViewModel;
 		}
 
-		public Module SourceNode { get; }
+		public Node SourceNode { get; }
 
-		public Module TargetNode { get; }
+		public Node TargetNode { get; }
 
 		public Reference Reference { get; }
 
