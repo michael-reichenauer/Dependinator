@@ -98,7 +98,7 @@ namespace Dependiator.Modeling
 			{
 				itemBounds = value;
 
-				SetItemBounds();
+				ItemCanvasBounds = ParentItem?.GetChildItemCanvasBounds(itemBounds) ?? itemBounds;
 
 				SetElementBounds();
 			}
@@ -336,23 +336,16 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void SetItemBounds()
+		private Rect GetChildItemCanvasBounds(Rect childItemBounds)
 		{
-			if (ParentItem != null)
-			{
-				Rect bounds = itemBounds;
-				bounds.Scale(ItemScaleFactor, ItemScaleFactor);
+			double childItemScale = ItemScaleFactor / ThisItemScaleFactor;
+			childItemBounds.Scale(childItemScale, childItemScale);
 
-				ItemCanvasBounds = new Rect(
-					ParentItem.ItemCanvasBounds.X + (bounds.X),
-					ParentItem.ItemCanvasBounds.Y + (bounds.Y),
-					bounds.Width,
-					bounds.Height);
-			}
-			else
-			{
-				ItemCanvasBounds = itemBounds;
-			}
+			return new Rect(
+				ItemCanvasBounds.X + (childItemBounds.X),
+				ItemCanvasBounds.Y + (childItemBounds.Y),
+				childItemBounds.Width,
+				childItemBounds.Height);	
 		}
 
 
