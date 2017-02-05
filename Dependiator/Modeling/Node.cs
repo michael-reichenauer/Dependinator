@@ -44,16 +44,16 @@ namespace Dependiator.Modeling
 		public string FullName =>
 			$"{Element.Name.FullName}\n" +
 			$"children: {ChildModules.Count()}, decedents: {Element.Children.Descendents().Count()}\n" +
-			$"Scale: {CanvasScale:#.##}, Level: {NodeLevel}, NodeScale: {NodeScale:#.##}, NSF: {ThisNodeScaleFactor}";
+			$"Scale: {CanvasScale:#.##}, Level: {NodeLevel}, NodeScale: {ItemScale:#.##}, NSF: {ThisItemScaleFactor}";
 
 
 		public NodeViewModel ModuleViewModel => ViewModel as NodeViewModel;
 		public Brush RectangleBrush { get; }
 		public Brush BackgroundBrush { get; }
 
-		public IEnumerable<Node> ChildModules => ChildNodes.OfType<Node>();
+		public IEnumerable<Node> ChildModules => ChildItems.OfType<Node>();
 
-		public IEnumerable<Link> Links => ChildNodes.OfType<Link>();
+		public IEnumerable<Link> Links => ChildItems.OfType<Link>();
 
 
 		public override bool CanBeShown()
@@ -116,8 +116,8 @@ namespace Dependiator.Modeling
 
 			int padding = 20;
 
-			double xMargin = ((DefaultSize.Width * ThisNodeScaleFactor) - ((DefaultSize.Width + padding) * rowLength)) / 2;
-			double yMargin = 25 * ThisNodeScaleFactor;
+			double xMargin = ((DefaultSize.Width * ThisItemScaleFactor) - ((DefaultSize.Width + padding) * rowLength)) / 2;
+			double yMargin = 25 * ThisItemScaleFactor;
 
 			if (ParentItem == null)
 			{
@@ -255,7 +255,7 @@ namespace Dependiator.Modeling
 
 		public void UpdateLinksFor(Item item)
 		{
-			IEnumerable<Link> links = ChildNodes
+			IEnumerable<Link> links = ChildItems
 				.OfType<Link>()
 				.Where(link => link.SourceNode == item || link.TargetNode == item)
 				.ToList();
@@ -269,7 +269,7 @@ namespace Dependiator.Modeling
 
 		public void UpdateLinksFor()
 		{
-			IEnumerable<Link> links = ChildNodes
+			IEnumerable<Link> links = ChildItems
 				.OfType<Link>()		
 				.ToList();
 

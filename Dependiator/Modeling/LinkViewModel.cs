@@ -17,10 +17,10 @@ namespace Dependiator.Modeling
 
 
 
-		public double X1 => link.X1 * link.ParentItem.NodeScale;
-		public double Y1 => link.Y1 * link.ParentItem.NodeScale;
-		public double X2 => link.X2 * link.ParentItem.NodeScale;
-		public double Y2 => link.Y2 * link.ParentItem.NodeScale;
+		public double X1 => link.X1 * link.ParentItem.ItemScale;
+		public double Y1 => link.Y1 * link.ParentItem.ItemScale;
+		public double X2 => link.X2 * link.ParentItem.ItemScale;
+		public double Y2 => link.Y2 * link.ParentItem.ItemScale;
 
 		public string ToolTip => link.ToolTip;
 		public Brush LineBrush => link.LinkBrush;
@@ -31,7 +31,7 @@ namespace Dependiator.Modeling
 		{
 			get
 			{
-				double scale = (link.NodeScale * 0.4).MM(0.1, 1);
+				double scale = (link.ItemScale * 0.4).MM(0.1, 1);
 				double thickness = 0;
 
 				if (link.SubLinkCount < 5)

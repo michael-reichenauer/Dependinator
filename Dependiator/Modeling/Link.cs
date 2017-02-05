@@ -78,7 +78,7 @@ namespace Dependiator.Modeling
 		{
 			return 
 				SourceNode.CanBeShown() && TargetNode.CanBeShown()
-				&& ParentItem.NodeScale > 3.5;
+				&& ParentItem.ItemScale > 3.5;
 		}
 
 
@@ -176,7 +176,7 @@ namespace Dependiator.Modeling
 
 			Rect bounds = new Rect(new Point(x, y), new Size(width + 1, height + 1));
 
-			bounds.Scale(ThisNodeScaleFactor, ThisNodeScaleFactor);
+			bounds.Scale(ThisItemScaleFactor, ThisItemScaleFactor);
 			NodeBounds = bounds;
 		}
 

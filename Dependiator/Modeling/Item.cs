@@ -11,7 +11,7 @@ namespace Dependiator.Modeling
 	internal abstract class Item : IItem
 	{
 		private Item parentItem;
-		private readonly List<Item> childNodes = new List<Item>();
+		private readonly List<Item> childItems = new List<Item>();
 		private Rect nodeBounds;
 
 		private readonly IItemService itemService;
@@ -53,26 +53,26 @@ namespace Dependiator.Modeling
 
 		public int NodeLevel => ParentItem?.NodeLevel + 1 ?? 0;
 
-		public double ThisNodeScaleFactor { get; set; } = 7;
+		public double ThisItemScaleFactor { get; set; } = 7;
 
 		public double CanvasScale => itemService.CanvasScale;
 
-		public double NodeScale => CanvasScale * NodeScaleFactor;
+		public double ItemScale => CanvasScale * ItemScaleFactor;
 
-		public double NodeScaleFactor
+		public double ItemScaleFactor
 		{
 			get
 			{
 				if (ParentItem == null)
 				{
-					return ThisNodeScaleFactor;
+					return ThisItemScaleFactor;
 				}
 
-				return ParentItem.NodeScaleFactor / ThisNodeScaleFactor;
+				return ParentItem.ItemScaleFactor / ThisItemScaleFactor;
 			}
 		}
 
-		public IReadOnlyList<Item> ChildNodes => childNodes;
+		public IReadOnlyList<Item> ChildItems => childItems;
 
 		public abstract bool CanBeShown();
 
@@ -126,7 +126,7 @@ namespace Dependiator.Modeling
 
 		public void ShowChildren()
 		{
-			ChildNodes.ForEach(node => node.ShowNode());
+			ChildItems.ForEach(node => node.ShowNode());
 		}
 
 
@@ -149,7 +149,7 @@ namespace Dependiator.Modeling
 				GetMoveResizeFactors(canvasPoint);
 			}
 
-			Vector offset = new Vector(viewOffset.X / NodeScale, viewOffset.Y / NodeScale);
+			Vector offset = new Vector(viewOffset.X / ItemScale, viewOffset.Y / ItemScale);
 
 			Point location = new Point(
 				NodeBounds.X + xf * offset.X,
@@ -167,8 +167,8 @@ namespace Dependiator.Modeling
 
 			Rect nodeBounds = new Rect(location, size);
 
-			if ((nodeBounds.X + nodeBounds.Width > ParentItem.NodeBounds.Width * ThisNodeScaleFactor)
-			    || (nodeBounds.Y + nodeBounds.Height > ParentItem.NodeBounds.Height * ThisNodeScaleFactor)
+			if ((nodeBounds.X + nodeBounds.Width > ParentItem.NodeBounds.Width * ThisItemScaleFactor)
+			    || (nodeBounds.Y + nodeBounds.Height > ParentItem.NodeBounds.Height * ThisItemScaleFactor)
 			    || nodeBounds.X < 0
 			    || nodeBounds.Y < 0)
 			{
@@ -189,15 +189,15 @@ namespace Dependiator.Modeling
 
 		
 
-			foreach (Item childNode in ChildNodes)
+			foreach (Item childNode in ChildItems)
 			{
 				//Vector childOffset = new Vector(
-				//	(offset.X) * NodeScaleFactor * ((1 / ThisNodeScaleFactor) / ThisNodeScaleFactor),
-				//	(offset.Y) * NodeScaleFactor * ((1 / ThisNodeScaleFactor) / ThisNodeScaleFactor));
+				//	(offset.X) * ItemScaleFactor * ((1 / ThisItemScaleFactor) / ThisItemScaleFactor),
+				//	(offset.Y) * ItemScaleFactor * ((1 / ThisItemScaleFactor) / ThisItemScaleFactor));
 
 				Vector childOffset = new Vector(
-					offset.X * childNode.NodeScale, 
-					offset.Y * childNode.NodeScale);
+					offset.X * childNode.ItemScale, 
+					offset.Y * childNode.ItemScale);
 
 				childNode.MoveAsChild(childOffset);
 			}
@@ -304,9 +304,9 @@ namespace Dependiator.Modeling
 				NotifyAll();
 			}
 
-			Vector childOffset = new Vector(offset.X / ThisNodeScaleFactor, offset.Y / ThisNodeScaleFactor);
+			Vector childOffset = new Vector(offset.X / ThisItemScaleFactor, offset.Y / ThisItemScaleFactor);
 
-			foreach (Item childNode in ChildNodes)
+			foreach (Item childNode in ChildItems)
 			{
 				childNode.MoveAsChild(childOffset);
 			}
@@ -329,7 +329,7 @@ namespace Dependiator.Modeling
 
 		internal IEnumerable<Item> GetHidableDecedent()
 		{
-			IEnumerable<Item> showableChildren = ChildNodes
+			IEnumerable<Item> showableChildren = ChildItems
 				.Where(node => node.IsAdded && !node.CanBeShown());
 
 			foreach (Item childNode in showableChildren)
@@ -347,7 +347,7 @@ namespace Dependiator.Modeling
 			if (ParentItem != null)
 			{
 				Rect bounds = nodeBounds;
-				bounds.Scale(NodeScaleFactor, NodeScaleFactor);
+				bounds.Scale(ItemScaleFactor, ItemScaleFactor);
 
 				ItemCanvasBounds = new Rect(
 					ParentItem.ItemCanvasBounds.X + (bounds.X),
@@ -356,7 +356,7 @@ namespace Dependiator.Modeling
 					bounds.Height);
 
 				Rect bounds2 = nodeBounds;
-				bounds2.Scale(1 / ThisNodeScaleFactor, 1 / ThisNodeScaleFactor);
+				bounds2.Scale(1 / ThisItemScaleFactor, 1 / ThisItemScaleFactor);
 
 				RelativeNodeBounds = bounds2;
 			}
@@ -370,9 +370,9 @@ namespace Dependiator.Modeling
 
 		protected void AddChildNode(Item child)
 		{
-			if (!childNodes.Contains(child))
+			if (!childItems.Contains(child))
 			{
-				childNodes.Add(child);
+				childItems.Add(child);
 			}
 
 			child.Priority = Priority - 0.1;
@@ -383,7 +383,7 @@ namespace Dependiator.Modeling
 
 		public void RemoveChildNode(Item child)
 		{
-			childNodes.Remove(child);
+			childItems.Remove(child);
 			child.NotifyAll();
 		}
 
@@ -411,7 +411,7 @@ namespace Dependiator.Modeling
 			{
 				NotifyAll();
 
-				ChildNodes
+				ChildItems
 					.ForEach(node => node.ChangedScale());
 			}
 		}

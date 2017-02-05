@@ -43,14 +43,14 @@ namespace Dependiator.Modeling
 		public string Name => node.ViewNodeSize.Width > 40 ? node.Name : " ";
 
 		public int CornerRadius => node.Element.Type == Element.TypeType
-			? (int)(node.NodeScale * 10).MM(0, 30)
+			? (int)(node.ItemScale * 10).MM(0, 30)
 			: 0;
 
 		public int FontSize
 		{
 			get
 			{
-				int fontSize = (int)(12 * node.NodeScale);
+				int fontSize = (int)(12 * node.ItemScale);
 				return fontSize.MM(8, 20);
 			}
 		}
