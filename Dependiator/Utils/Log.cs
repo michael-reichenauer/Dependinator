@@ -52,7 +52,14 @@ namespace Dependiator.Utils
 
 				Native.OutputDebugString(logText);
 
-				//Debugger.Log(0, Debugger.DefaultCategory, logText);
+				try
+				{		
+					WriteToFile(logText);
+				}
+				catch (Exception e) when (e.IsNotFatal())
+				{
+					Native.OutputDebugString("ERROR Failed to log to file, " + e);
+				}
 			}
 		}
 
@@ -123,16 +130,12 @@ namespace Dependiator.Utils
 			}
 
 			try
-			{
-				//byte[] bytes = System.Text.Encoding.UTF8.GetBytes(text);
-				//UdpClient.Send(bytes, bytes.Length, LocalLogEndPoint);
-				SendLog(text);
-				WriteToFile(text);			
+			{		
+				SendLog(text);		
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
-				//Debugger.Log(0, Debugger.DefaultCategory, "ERROR Failed to log to udp " + e);
-				SendLog("ERROR Failed to log to udp " + e);
+				SendLog("ERROR Failed to log " + e);
 			}
 		}
 
@@ -167,9 +170,9 @@ namespace Dependiator.Utils
 
 		private static void WriteToFile(string text)
 		{
+			Exception error = null;
 			lock (syncRoot)
 			{
-				Exception error = null;
 				for (int i = 0; i < 10; i++)
 				{
 					try
@@ -197,9 +200,12 @@ namespace Dependiator.Utils
 						error = e;
 					}
 				}
+			}
 
-				SendLog("ERROR Failed to log to file: " + error);
-			}		
+			if (error != null)
+			{
+				throw error;
+			}
 		}
 
 

@@ -43,31 +43,16 @@ namespace Dependiator.Modeling
 		public void InitModules()
 		{
 			Timing t = new Timing();
-			Data data;
-			if (!dataSerializer.TryDeserialize(out data))
-			{
-				data = reflectionService.Analyze(workingFolder.FilePath);
-			}
+
+			Data data = GetCachedOrFreshModelData();
+
 			t.Log("After read data");
 
-			if (elementTree != null)
-			{
-				itemService.ClearAll();
-			}
+			ElementTree model = elementService.ToElementTree(data, null);
 
-			elementTree = elementService.ToElementTree(data, null);
-		
-			
-			Item rootItem = GetNode(elementTree);
+			ShowModel(model);
 
-			itemService.ShowRootItem(rootItem);
-
-			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
-
-			canvasService.Scale = settings.Scale;
-			double x = settings.X;
-			double y = settings.Y;
-			canvasService.Offset = new Point(x, y);
+			RestoreViewSettings();
 
 			t.Log("Created modules");
 		}
@@ -79,36 +64,76 @@ namespace Dependiator.Modeling
 
 			Timing t = new Timing();
 
-			Data oldData = elementService.ToData(elementTree);
+			StoreViewSettings();
+			t.Log("stored setting");
+			t.Log("stored setting");
+			t.Log("stored setting");
+			t.Log("stored setting");
+			t.Log("stored setting");
+			t.Log("stored setting");
+			t.Log("stored setting");
 
+
+			Data currentModelData = elementService.ToData(elementTree);
+			t.Log("Got current model data");
+
+			ElementTree tree = await RefreshElementTreeAsync(currentModelData);
+
+			t.Log("Read fresh data");
+
+			ShowModel(tree);
+			
+			RestoreViewSettings();
+
+			t.Log("Created modules");
+		}
+
+
+		private Data GetCachedOrFreshModelData()
+		{
+			Data data;
+			if (!TryReadCachedData(out data))
+			{
+				data = ReadFreshData();
+			}
+			return data;
+		}
+
+
+		private void ShowModel(ElementTree tree)
+		{
+			if (elementTree != null)
+			{
+				itemService.ClearAll();
+			}
+
+			Item rootItem = GetNode(tree);
+			itemService.ShowRootItem(rootItem);
+			elementTree = tree;
+		}
+
+
+		private async Task<ElementTree> RefreshElementTreeAsync(Data oldData)
+		{
 			ElementTree tree = await Task.Run(() =>
 			{
 				Data newData = reflectionService.Analyze(workingFolder.FilePath);
 
 				return elementService.ToElementTree(newData, oldData);
 			});
-		
-			t.Log("Read fresh data");
+			return tree;
+		}
 
-			var scale = canvasService.Scale;
-			var offset = canvasService.Offset;
 
-			if (elementTree != null)
-			{
-				itemService.ClearAll();
-			}
+		private bool TryReadCachedData(out Data data)
+		{
+			return dataSerializer.TryDeserialize(out data);
+		}
 
-			elementTree = tree;
-			t.Log("ToElementTree");
 
-			Item rootItem = GetNode(elementTree);
-
-			itemService.ShowRootItem(rootItem);
-
-			canvasService.Scale = scale;
-			canvasService.Offset = offset;
-
-			t.Log("Created modules");
+		private Data ReadFreshData()
+		{
+			return reflectionService.Analyze(workingFolder.FilePath);
 		}
 
 
@@ -129,6 +154,12 @@ namespace Dependiator.Modeling
 			Data data = elementService.ToData(elementTree);
 			dataSerializer.Serialize(data);
 
+			StoreViewSettings();
+		}
+
+
+		private void StoreViewSettings()
+		{
 			Settings.EditWorkingFolderSettings(workingFolder,
 				settings =>
 				{
@@ -136,6 +167,15 @@ namespace Dependiator.Modeling
 					settings.X = canvasService.Offset.X;
 					settings.Y = canvasService.Offset.Y;
 				});
+		}
+
+
+		private void RestoreViewSettings()
+		{
+			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
+
+			canvasService.Scale = settings.Scale;
+			canvasService.Offset = new Point(settings.X, settings.Y);
 		}
 
 
