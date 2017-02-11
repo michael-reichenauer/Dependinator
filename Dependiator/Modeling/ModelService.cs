@@ -44,17 +44,20 @@ namespace Dependiator.Modeling
 		{
 			Timing t = new Timing();
 
-			Data data = GetCachedOrFreshModelData();
+			DataModel data = GetCachedOrFreshModelData();
 
 			t.Log("After read data");
 
 			ElementTree model = elementService.ToElementTree(data, null);
 
+			t.Log("To model");
+
 			ShowModel(model);
+			t.Log("Show model");
 
 			RestoreViewSettings();
 
-			t.Log("Created modules");
+			t.Log("Showed model");
 		}
 
 
@@ -66,15 +69,8 @@ namespace Dependiator.Modeling
 
 			StoreViewSettings();
 			t.Log("stored setting");
-			t.Log("stored setting");
-			t.Log("stored setting");
-			t.Log("stored setting");
-			t.Log("stored setting");
-			t.Log("stored setting");
-			t.Log("stored setting");
 
-
-			Data currentModelData = elementService.ToData(elementTree);
+			DataModel currentModelData = elementService.ToData(elementTree);
 			t.Log("Got current model data");
 
 			ElementTree tree = await RefreshElementTreeAsync(currentModelData);
@@ -82,16 +78,18 @@ namespace Dependiator.Modeling
 			t.Log("Read fresh data");
 
 			ShowModel(tree);
-			
+
+			t.Log("Show model");
+
 			RestoreViewSettings();
 
-			t.Log("Created modules");
+			t.Log("Refreshed model");
 		}
 
 
-		private Data GetCachedOrFreshModelData()
+		private DataModel GetCachedOrFreshModelData()
 		{
-			Data data;
+			DataModel data;
 			if (!TryReadCachedData(out data))
 			{
 				data = ReadFreshData();
@@ -113,11 +111,11 @@ namespace Dependiator.Modeling
 		}
 
 
-		private async Task<ElementTree> RefreshElementTreeAsync(Data oldData)
+		private async Task<ElementTree> RefreshElementTreeAsync(DataModel oldData)
 		{
 			ElementTree tree = await Task.Run(() =>
 			{
-				Data newData = reflectionService.Analyze(workingFolder.FilePath);
+				DataModel newData = reflectionService.Analyze(workingFolder.FilePath);
 
 				return elementService.ToElementTree(newData, oldData);
 			});
@@ -125,13 +123,13 @@ namespace Dependiator.Modeling
 		}
 
 
-		private bool TryReadCachedData(out Data data)
+		private bool TryReadCachedData(out DataModel data)
 		{
 			return dataSerializer.TryDeserialize(out data);
 		}
 
 
-		private Data ReadFreshData()
+		private DataModel ReadFreshData()
 		{
 			return reflectionService.Analyze(workingFolder.FilePath);
 		}
@@ -151,7 +149,7 @@ namespace Dependiator.Modeling
 
 		public void Close()
 		{
-			Data data = elementService.ToData(elementTree);
+			DataModel data = elementService.ToData(elementTree);
 			dataSerializer.Serialize(data);
 
 			StoreViewSettings();

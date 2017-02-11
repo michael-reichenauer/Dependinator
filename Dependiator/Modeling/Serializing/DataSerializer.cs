@@ -25,19 +25,17 @@ namespace Dependiator.Modeling.Serializing
 			this.workingFolder = workingFolder;
 		}
 
-		//public static T As<T>(string json) => JsonConvert.DeserializeObject<T>(json, Settings);
-
-
-		public void Serialize(Data data)
+		
+		public void Serialize(DataModel data)
 		{
-			string json = JsonConvert.SerializeObject(data, typeof(Data), Settings);
+			string json = JsonConvert.SerializeObject(data.Model, typeof(Data.Model), Settings);
 			string path = GetDataFilePath();
 
 			WriteFileText(path, json);
 		}
 
 
-		public bool TryDeserialize(out Data data)
+		public bool TryDeserialize(out DataModel data)
 		{
 			string path = GetDataFilePath();
 			if (TryReadFileText(path, out string json))
@@ -50,11 +48,12 @@ namespace Dependiator.Modeling.Serializing
 		}
 
 
-		private bool TryDeSerialize(string json, out Data data)
+		private bool TryDeSerialize(string json, out DataModel data)
 		{
 			try
 			{
-				data = JsonConvert.DeserializeObject<Data>(json, Settings);
+				Data.Model model = JsonConvert.DeserializeObject<Data.Model>(json, Settings);
+				data = new DataModel { Model = model };
 				return true;
 			}
 			catch (Exception e) when (e.IsNotFatal())

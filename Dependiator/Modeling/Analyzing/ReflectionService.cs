@@ -26,7 +26,7 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		public Data Analyze(string path)
+		public DataModel Analyze(string path)
 		{
 			string currentDirectory = Environment.CurrentDirectory;
 			try
@@ -37,12 +37,12 @@ namespace Dependiator.Modeling.Analyzing
 
 				IReadOnlyList<TypeInfo> typeInfos = GetAssemblyTypes(path);
 
-				Data data = new Data
+				Data.Model data = new Data.Model
 				{
 					Nodes = ToDataNodes(typeInfos)
 				};
 
-				return data;
+				return new DataModel() {Model = data};
 			}
 			catch (ReflectionTypeLoadException e)
 			{
@@ -71,9 +71,9 @@ namespace Dependiator.Modeling.Analyzing
 			catch (FileLoadException e)
 			{
 				string message =
-				$"Failed to load '{path}'\n" +
-				$"Could not locate referenced assembly:\n" +
-				$"   {ToAssemblyName(e.Message)}";
+					$"Failed to load '{path}'\n" +
+					$"Could not locate referenced assembly:\n" +
+					$"   {ToAssemblyName(e.Message)}";
 
 				Log.Warn($"{message}\n {e}");
 			}
@@ -88,9 +88,12 @@ namespace Dependiator.Modeling.Analyzing
 				Environment.CurrentDirectory = currentDirectory;
 			}
 
-			return new Data
+			return new DataModel
 			{
-				Nodes = new List<DataNode>()
+				Model = new Data.Model
+				{
+					Nodes = new List<Data.Node>()
+				}
 			};
 		}
 
@@ -114,7 +117,7 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		private List<DataNode> ToDataNodes(IEnumerable<TypeInfo> typeInfos)
+		private List<Data.Node> ToDataNodes(IEnumerable<TypeInfo> typeInfos)
 		{
 			return typeInfos
 				.Where(typeInfo => !IsCompilerGenerated(typeInfo))
@@ -124,14 +127,14 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		private DataNode ToNode(TypeInfo typeInfo)
+		private Data.Node ToNode(TypeInfo typeInfo)
 		{
 			try
 			{
-				DataNode node = new DataNode
+				Data.Node node = new Data.Node
 				{
 					Name = typeInfo.FullName,
-					Type = DataNode.TypeType
+					Type = Element.TypeType
 				};
 
 				if (node.Name.Contains(">"))
@@ -149,16 +152,16 @@ namespace Dependiator.Modeling.Analyzing
 			catch (Exception e)
 			{
 				Log.Warn($"Failed to add node for {typeInfo}, {e}");
-				return new DataNode
+				return new Data.Node
 				{
 					Name = typeInfo.FullName,
-					Type = DataNode.TypeType
+					Type = Element.TypeType
 				};
 			}
 		}
 
 
-		private void AddMembers(TypeInfo typeInfo, DataNode typeNode)
+		private void AddMembers(TypeInfo typeInfo, Data.Node typeNode)
 		{
 			MemberInfo[] memberInfos = typeInfo.GetMembers(DeclaredOnlyFlags);
 
@@ -169,7 +172,7 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		private void AddMember(MemberInfo memberInfo, DataNode typeNode)
+		private void AddMember(MemberInfo memberInfo, Data.Node typeNode)
 		{
 			try
 			{
@@ -193,13 +196,13 @@ namespace Dependiator.Modeling.Analyzing
 					}
 				}
 
-				DataNode memberNode = new DataNode
+				Data.Node memberNode = new Data.Node
 				{
 					Name = GetNamePartIfDotted(memberInfo.Name),
-					Type = DataNode.MemberType			
+					Type = Element.MemberType			
 				};
 
-				typeNode.Nodes = typeNode.Nodes ?? new List<DataNode>();
+				typeNode.Nodes = typeNode.Nodes ?? new List<Data.Node>();
 				typeNode.Nodes.Add(memberNode);
 
 				AddLinks(memberNode, memberInfo);
@@ -211,7 +214,7 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		private void AddLinksToBaseTypes(TypeInfo typeInfo, DataNode typeNode)
+		private void AddLinksToBaseTypes(TypeInfo typeInfo, Data.Node typeNode)
 		{
 			try
 			{
@@ -231,7 +234,7 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		private void AddLinks(DataNode sourceNode, MemberInfo memberInfo)
+		private void AddLinks(Data.Node sourceNode, MemberInfo memberInfo)
 		{
 			try
 			{
@@ -259,7 +262,7 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		private void AddLinks(DataNode memberNode, MethodInfo methodInfo)
+		private void AddLinks(Data.Node memberNode, MethodInfo methodInfo)
 		{
 			Type returnType = methodInfo.ReturnType;
 			AddLinks(memberNode, returnType);
@@ -277,7 +280,7 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		private void AddLinks(DataNode sourceNode, Type targetType)
+		private void AddLinks(Data.Node sourceNode, Type targetType)
 		{
 			if (targetType.Namespace != null
 			    && (targetType.Namespace.StartsWith("System", StringComparison.Ordinal)
@@ -302,12 +305,12 @@ namespace Dependiator.Modeling.Analyzing
 				return;
 			}
 
-			DataLink link = new DataLink
+			Data.Link link = new Data.Link
 			{
 				Target = name
 			};
 
-			sourceNode.Links = sourceNode.Links ?? new List<DataLink>();
+			sourceNode.Links = sourceNode.Links ?? new List<Data.Link>();
 
 			if (sourceNode.Links.Any(l => l.Target == name))
 			{

@@ -8,15 +8,15 @@ namespace Dependiator.Modeling
 {
 	internal class ElementService : IElementService
 	{
-		public ElementTree ToElementTree(Data data, Data oldData)
+		public ElementTree ToElementTree(DataModel data, DataModel oldData)
 		{
 			ElementName rootName = new ElementName(Element.RootName, Element.RootName);
-			Element root = new Element(rootName, DataNode.NameSpaceType, null);
+			Element root = new Element(rootName, Element.NameSpaceType, null);
 
 			Dictionary<string, Element> elements = new Dictionary<string, Element>();
 			elements[root.Name.FullName] = root;
 
-			foreach (DataNode node in data.Nodes)
+			foreach (Data.Node node in data.Model.Nodes)
 			{
 				AddElement(node, null, elements, oldData);
 			}
@@ -26,47 +26,49 @@ namespace Dependiator.Modeling
 		}
 
 
-		public Data ToData(ElementTree elementTree)
+		public DataModel ToData(ElementTree elementTree)
 		{
-			Data data = new Data();	
+			DataModel data = new DataModel();	
 
-			List<DataNode> nodes = elementTree.Root.Children
+			List<Data.Node> nodes = elementTree.Root.Children
 				.Select(element => ToNode(element, data))
 				.ToList();
 
-			data.Nodes = nodes;
+			Data.Model model = new Data.Model();
+			model.Nodes = nodes;
+			data.Model = model;
 
 			return data;
 		}
 
 
 		private void AddElement(
-			DataNode dataNode,
+			Data.Node dataNode,
 			string parentName,
 			Dictionary<string, Element> elements,
-			Data oldData)
+			DataModel oldData)
 		{
 			string name = parentName != null ? parentName + "." + dataNode.Name : dataNode.Name;
 
 			Element element = GetOrAddElement(name, elements, oldData);
 			element.SetType(dataNode.Type);
 
-			if (dataNode.Location.HasValue || dataNode.Size.HasValue)
+			if (dataNode.ViewData != null)
 			{
-				element.SetLocationAndSize(dataNode.Location, dataNode.Size);
+				element.SetLocationAndSize(dataNode.ViewData);
 			}
 			else
 			{
-				if (oldData != null && oldData.NodesByName.TryGetValue(name, out DataNode oldNode))
+				if (oldData != null && oldData.NodesByName.TryGetValue(name, out Data.Node oldNode))
 				{
-					element.SetLocationAndSize(oldNode.Location, oldNode.Size);
+					element.SetLocationAndSize(oldNode.ViewData);
 				}
 			}
 
 
 			if (dataNode.Nodes != null)
 			{
-				foreach (DataNode childNode in dataNode.Nodes)
+				foreach (Data.Node childNode in dataNode.Nodes)
 				{
 					AddElement(childNode, name, elements, oldData);
 				}
@@ -74,7 +76,7 @@ namespace Dependiator.Modeling
 
 			if (dataNode.Links != null)
 			{
-				foreach (DataLink dataLink in dataNode.Links)
+				foreach (Data.Link dataLink in dataNode.Links)
 				{
 					Element targetElement = GetOrAddElement(dataLink.Target, elements, oldData);
 					Reference reference = new Reference(element, targetElement, ReferenceKind.Direkt);
@@ -84,17 +86,26 @@ namespace Dependiator.Modeling
 		}
 
 
-		private DataNode ToNode(Element element, Data data)
+		private Data.Node ToNode(Element element, DataModel data)
 		{
-			DataNode node = new DataNode
+			Data.Node node = new Data.Node
 			{
 				Name = element.Name.Name,
 				Type = element.Type,
 				Nodes = ToChildren(element.Children, data),
 				Links = ToLinks(element.References),
-				Location = element.Location,
-				Size = element.Size
 			};
+
+			if (element.Location.HasValue && element.Size.HasValue)
+			{
+				node.ViewData = new Data.ViewData
+				{
+					X = element.Location.Value.X,
+					Y = element.Location.Value.Y,
+					Width = element.Size.Value.Width,
+					Height = element.Size.Value.Height
+				};
+			}
 
 			data.NodesByName[element.Name.FullName] = node;
 
@@ -102,14 +113,14 @@ namespace Dependiator.Modeling
 		}
 
 
-		private List<DataLink> ToLinks(References references)
+		private List<Data.Link> ToLinks(References references)
 		{
 			if (!references.Any())
 			{
 				return null;
 			}
 
-			List<DataLink> links = null;
+			List<Data.Link> links = null;
 
 			foreach (Reference reference in references
 				.Where(r => r.Kind == ReferenceKind.Main))
@@ -120,10 +131,10 @@ namespace Dependiator.Modeling
 					{
 						if (links == null)
 						{
-							links = new List<DataLink>();
+							links = new List<Data.Link>();
 						}
 
-						links.Add(new DataLink { Target = subReference.Target.Name.FullName});
+						links.Add(new Data.Link { Target = subReference.Target.Name.FullName});
 					}
 				}
 			}
@@ -132,7 +143,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private List<DataNode> ToChildren(ElementChildren elementChildren, Data data)
+		private List<Data.Node> ToChildren(ElementChildren elementChildren, DataModel data)
 		{
 			if (!elementChildren.Any())
 			{
@@ -145,7 +156,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private Element GetOrAddElement(string name, Dictionary<string, Element> elements, Data oldData)
+		private Element GetOrAddElement(string name, Dictionary<string, Element> elements, DataModel oldData)
 		{
 			if (!elements.TryGetValue(name, out Element element))
 			{
@@ -156,7 +167,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private Element CreateElement(string name, IDictionary<string, Element> elements, Data oldData)
+		private Element CreateElement(string name, IDictionary<string, Element> elements, DataModel oldData)
 		{
 			string parentName = GetParentName(name);
 
@@ -169,9 +180,9 @@ namespace Dependiator.Modeling
 			ElementName elementName = new ElementName(shortName, name);
 			Element element = new Element(elementName, null, parent);
 
-			if (oldData != null && oldData.NodesByName.TryGetValue(name, out DataNode oldNode))
+			if (oldData != null && oldData.NodesByName.TryGetValue(name, out Data.Node oldNode))
 			{
-				element.SetLocationAndSize(oldNode.Location, oldNode.Size);
+				element.SetLocationAndSize(oldNode.ViewData);
 			}
 
 				parent.Children.Add(element);

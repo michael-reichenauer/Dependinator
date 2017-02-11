@@ -166,8 +166,7 @@
     <Compile Include="Modeling\ModelService.cs" />
     <Compile Include="Modeling\ItemService.cs" />
     <Compile Include="Modeling\Serializing\Data.cs" />
-    <Compile Include="Modeling\Serializing\DataLink.cs" />
-    <Compile Include="Modeling\Serializing\DataNode.cs" />
+    <Compile Include="Modeling\Serializing\DataModel.cs" />
     <Compile Include="Modeling\Serializing\DataSerializer.cs" />
     <Compile Include="Modeling\Serializing\IDataSerializer.cs" />
     <Compile Include="Utils\MathExtensions.cs" />

@@ -2,8 +2,8 @@
 {
 	internal interface IDataSerializer
 	{
-		void Serialize(Data data);
+		void Serialize(DataModel data);
 
-		bool TryDeserialize(out Data data);
+		bool TryDeserialize(out DataModel data);
 	}
 }

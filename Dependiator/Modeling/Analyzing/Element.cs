@@ -7,9 +7,9 @@ namespace Dependiator.Modeling.Analyzing
 {
 	internal class Element
 	{
-		public static string NameSpaceType = DataNode.NameSpaceType;
-		public static readonly string TypeType = DataNode.TypeType;
-		public static readonly string MemberType = DataNode.MemberType;
+		public static string NameSpaceType = "NameSpace";
+		public static readonly string TypeType = "Type";
+		public static readonly string MemberType = "Member";
 
 		public static string RootName = "";
 
@@ -70,10 +70,27 @@ namespace Dependiator.Modeling.Analyzing
 		public override string ToString() => Name.FullName;
 
 
-		public void SetLocationAndSize(Point? location, Size? dataNodeSize)
+		public void SetLocationAndSize(Data.ViewData viewData)
 		{
+			if (viewData != null)
+			{
+				Location = new Point(viewData.X, viewData.Y);
+
+				Size = new Size(viewData.Width, viewData.Height);
+			}
+			else
+			{
+				Location = null;
+
+				Size = null;
+			}		
+		}
+
+		public void SetLocationAndSize(Point location, Size size)
+		{			
 			Location = location;
-			Size = dataNodeSize;
+
+			Size = size;			
 		}
 	}
 }
