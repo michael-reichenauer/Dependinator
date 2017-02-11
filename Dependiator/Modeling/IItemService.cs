@@ -25,6 +25,7 @@ namespace Dependiator.Modeling
 		void AddRootItem(Item item);
 
 		object MoveItem(Point viewPosition, Vector viewOffset, object movingObject);
+		bool ZoomItem(int zoomDelta, Point viewPosition);
 		void UpdateItem(Item item);
 		Brush GetRectangleBackgroundBrush(Brush brush);
 		void ShowRootItem(Item item);

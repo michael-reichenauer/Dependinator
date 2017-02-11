@@ -61,22 +61,14 @@ namespace Dependiator.Modeling
 			node.MoveOrResize(viewPosition, viewOffset, isFirst);
 		}
 
+		public void Zoom(int zoomDelta, Point viewPosition)
+		{
+			//node.Zoom(zoomDelta, viewPosition);
+		}
 
-		//public string Id => Branch.Id;
-			//public string Name => Branch.Name;
-			//public string Dashes { get; set; }
-			//public int NeonEffect { get; set; }
-			//public int StrokeThickness { get; set; }
-
-
-
-
-
-			//public Command ChangeColorCommand => Command(() =>
-			//{
-			//	themeService.ChangeBranchBrush(Branch);
-			//	repositoryCommands.RefreshView();
-			//});
-
+		public void Resize(int zoomDelta, Point viewPosition)
+		{
+			node.Resize(zoomDelta, viewPosition);
+		}
 	}
 }

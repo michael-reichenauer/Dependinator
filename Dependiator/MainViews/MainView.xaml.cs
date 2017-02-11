@@ -17,6 +17,7 @@ namespace Dependiator.MainViews
 		private MainViewModel viewModel;
 
 		private Point lastMousePosition;
+		private object movingObject = null;
 
 
 		public MainView()
@@ -38,16 +39,14 @@ namespace Dependiator.MainViews
 
 		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
 		{
+			bool isNodeZoom = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+			
 			int zoomDelta = e.Delta;
 			Point viewPosition = e.GetPosition(ItemsListBox);
 
-			e.Handled = viewModel.ZoomCanvas(zoomDelta, viewPosition);		
+			e.Handled = viewModel.Zoom(zoomDelta, viewPosition, isNodeZoom);
 		}
 
-
-		private object movingObject = null;
-
-		
 
 		protected override void OnPreviewMouseMove(MouseEventArgs e)
 		{
@@ -57,6 +56,7 @@ namespace Dependiator.MainViews
 				&& e.LeftButton == MouseButtonState.Pressed
 				&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
 			{
+				// Move canvas
 				CaptureMouse();
 				Vector viewOffset = viewPosition - lastMousePosition;
 				e.Handled = viewModel.MoveCanvas(viewOffset);
@@ -64,6 +64,7 @@ namespace Dependiator.MainViews
 			else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
 			 && e.LeftButton == MouseButtonState.Pressed)
 			{
+				// Move node
 				CaptureMouse();
 				Vector viewOffset = viewPosition - lastMousePosition;
 
@@ -73,6 +74,7 @@ namespace Dependiator.MainViews
 			}
 			else
 			{
+				// End of move
 				movingObject = null;
 				ReleaseMouseCapture();
 			}

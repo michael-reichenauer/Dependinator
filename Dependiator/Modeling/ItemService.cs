@@ -76,6 +76,10 @@ namespace Dependiator.Modeling
 			itemsSource.Remove(item);
 		}
 
+
+
+
+
 		public void UpdateItem(Item item)
 		{
 			itemsSource.Update(item);
@@ -127,7 +131,10 @@ namespace Dependiator.Modeling
 			return node;
 		}
 
-
+		public bool ZoomItem(int zoomDelta, Point viewPosition)
+		{
+			return true;
+		}
 
 		private void MoveNode(Node node, Point canvasPoint, Vector viewOffset, bool isFirst)
 		{

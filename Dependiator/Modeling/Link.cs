@@ -109,13 +109,19 @@ namespace Dependiator.Modeling
 			double y1;
 			double x2;
 			double y2;
+			double scaleFactor = ParentItem?.ThisItemScaleFactor ?? ThisItemScaleFactor;
+			//double scaleFactor2 = ParentItem?.ParentItem?.ThisItemScaleFactor ?? ThisItemScaleFactor;
 
 			if (SourceNode == TargetNode.ParentItem)
 			{
 				Rect targetRect = TargetNode.ItemBounds;
-				targetRect.Scale(1 / ThisItemScaleFactor, 1 / ThisItemScaleFactor);
+				targetRect.Scale(1 / scaleFactor, 1 / scaleFactor);
 
-				x1 = SourceNode.ItemBounds.Width / 2;
+				Rect sourceRect = SourceNode.ItemBounds;
+
+				////sourceRect.Scale(1 / scaleFactor2, 1 / scaleFactor2);
+
+				x1 = (sourceRect.Width / 2) * (scaleFactor / ThisItemScaleFactor);
 				y1 = 0;
 				x2 = targetRect.X + targetRect.Width / 2;
 				y2 = targetRect.Y;
@@ -124,9 +130,10 @@ namespace Dependiator.Modeling
 			else if (SourceNode.ParentItem == TargetNode.ParentItem)
 			{
 				Rect targetRect = TargetNode.ItemBounds;
-				targetRect.Scale(1 / ThisItemScaleFactor, 1 / ThisItemScaleFactor);
+				targetRect.Scale(1 / scaleFactor, 1 / scaleFactor);
+
 				Rect sourceRect = SourceNode.ItemBounds;
-				sourceRect.Scale(1 / ThisItemScaleFactor, 1 / ThisItemScaleFactor);
+				sourceRect.Scale(1 / scaleFactor, 1 / scaleFactor);
 
 				x1 = sourceRect.X + sourceRect.Width / 2;
 				y1 = sourceRect.Y + sourceRect.Height;
@@ -136,13 +143,16 @@ namespace Dependiator.Modeling
 			}
 			else if (SourceNode.ParentItem == TargetNode)
 			{
+				Rect targetRect = TargetNode.ItemBounds;
+				//targetRect.Scale(1 / ThisItemScaleFactor, 1 / ThisItemScaleFactor);
+
 				Rect sourceRect = SourceNode.ItemBounds;
-				sourceRect.Scale(1 / ThisItemScaleFactor, 1 / ThisItemScaleFactor);
+				sourceRect.Scale(1 / scaleFactor, 1 / scaleFactor);
 
 				x1 = sourceRect.X + sourceRect.Width / 2;
 				y1 = sourceRect.Y + sourceRect.Height;
-				x2 = TargetNode.ItemBounds.Width / 2;
-				y2 = TargetNode.ItemBounds.Height;
+				x2 = (targetRect.Width / 2) * ( scaleFactor / ThisItemScaleFactor);
+				y2 = targetRect.Height * (scaleFactor / ThisItemScaleFactor);
 				LinkBrush = SourceNode.RectangleBrush;
 			}
 			else
@@ -180,7 +190,7 @@ namespace Dependiator.Modeling
 
 			Rect bounds = new Rect(new Point(x, y), new Size(width + 1, height + 1));
 
-			bounds.Scale(ThisItemScaleFactor, ThisItemScaleFactor);
+			bounds.Scale(scaleFactor, scaleFactor);
 			ItemBounds = bounds;
 		}
 

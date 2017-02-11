@@ -44,7 +44,7 @@ namespace Dependiator.Modeling
 		{
 			Timing t = new Timing();
 			Data data;
-			//if (!dataSerializer.TryDeserialize(out data))
+			if (!dataSerializer.TryDeserialize(out data))
 			{
 				data = reflectionService.Analyze(workingFolder.FilePath);
 			}
@@ -115,6 +115,12 @@ namespace Dependiator.Modeling
 		public object MoveNode(Point viewPosition, Vector viewOffset, object movingObject)
 		{
 			return itemService.MoveItem(viewPosition, viewOffset, movingObject);
+		}
+
+
+		public bool ZoomNode(int zoomDelta, Point viewPosition)
+		{
+			return itemService.ZoomItem(zoomDelta, viewPosition);
 		}
 
 

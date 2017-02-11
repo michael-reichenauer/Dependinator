@@ -10,6 +10,8 @@ namespace Dependiator.Modeling
 {
 	internal abstract class Item : IItem
 	{
+		private static readonly double ZoomSpeed = 2000.0;
+
 		private Item parentItem;
 		private readonly List<Item> childItems = new List<Item>();
 		private Rect itemBounds;
@@ -174,18 +176,9 @@ namespace Dependiator.Modeling
 			}
 
 			ItemBounds = newItemBounds;
-
 			itemService.UpdateItem(this);
-
 			NotifyAll();
 
-			//double cxf = 0;
-			//if (xf == 1 && offset.X < 0)
-			//{
-			//	cxf = 1;
-			//}
-
-		
 
 			foreach (Item childItem in ChildItems)
 			{
@@ -199,6 +192,110 @@ namespace Dependiator.Modeling
 						childItem.itemBounds.Size);
 				}			
 
+				childItem.UpdateItemCanvasBounds();
+			}
+
+			// Updates link within this node
+			Node node = this as Node;
+			if (node != null)
+			{
+				node.UpdateLinksFor();
+			}
+
+			// Update links to or from this node (parent links)
+			Node parentNode = ParentItem as Node;
+			if (parentNode != null)
+			{
+				parentNode.UpdateLinksFor(this);
+			}
+		}
+
+
+		public void Resize(int zoomDelta, Point viewPosition)
+		{
+			double delta = (double)zoomDelta / 20.0;
+			xf = 1;
+			yf = 1;
+			wf = 2;
+			hf = 2;
+
+			Vector itemOffset = new Vector(delta / ItemScale, delta / ItemScale);
+
+			Point newItemLocation = new Point(
+				ItemBounds.X - xf * itemOffset.X,
+				ItemBounds.Y - yf * itemOffset.Y);
+
+			double width = ItemBounds.Size.Width + (wf * itemOffset.X);
+			double height = this.itemBounds.Size.Height + (hf * itemOffset.Y);
+
+			if (width < 0 || height < 0)
+			{
+				return;
+			}
+
+			Size newItemSize = new Size(width, height);
+			Rect newItemBounds = new Rect(newItemLocation, newItemSize);
+
+			if ((newItemBounds.X + newItemBounds.Width > ParentItem.ItemBounds.Width * ThisItemScaleFactor)
+					|| (newItemBounds.Y + newItemBounds.Height > ParentItem.ItemBounds.Height * ThisItemScaleFactor)
+					|| newItemBounds.X < 0
+					|| newItemBounds.Y < 0)
+			{
+				return;
+			}
+
+			ItemBounds = newItemBounds;
+			itemService.UpdateItem(this);
+			NotifyAll();
+
+
+			foreach (Item childItem in ChildItems)
+			{
+				// Resizing iten, ensure that child items do not move
+				childItem.ItemBounds = new Rect(
+					new Point(
+						childItem.ItemBounds.X + xf * itemOffset.X * ThisItemScaleFactor,
+						childItem.itemBounds.Y + yf * itemOffset.Y * ThisItemScaleFactor),
+					childItem.itemBounds.Size);
+
+				childItem.UpdateItemCanvasBounds();
+			}
+
+			// Updates link within this node
+			Node node = this as Node;
+			if (node != null)
+			{
+				node.UpdateLinksFor();
+			}
+
+			// Update links to or from this node (parent links)
+			Node parentNode = ParentItem as Node;
+			if (parentNode != null)
+			{
+				parentNode.UpdateLinksFor(this);
+			}
+		}
+
+
+		public void Zoom(int zoomDelta, Point viewPosition)
+		{
+			if (!childItems.Any(item => item.IsAdded))
+			{
+				return;
+			}
+
+
+			double zoom = Math.Pow(2, -zoomDelta / ZoomSpeed);
+
+			ThisItemScaleFactor *= zoom;
+
+			ItemBounds = ItemBounds;
+			itemService.UpdateItem(this);
+			NotifyAll();
+
+
+			foreach (Item childItem in ChildItems)
+			{
 				childItem.UpdateItemCanvasBounds();
 			}
 

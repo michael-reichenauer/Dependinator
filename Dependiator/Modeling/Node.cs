@@ -110,8 +110,7 @@ namespace Dependiator.Modeling
 
 
 		private void AddModuleChildren()
-		{
-			// Original size new Size(200, 120)		
+		{	
 			int rowLength = 6;
 
 			int padding = 20;
@@ -128,7 +127,6 @@ namespace Dependiator.Modeling
 
 			int count = 0;
 			var children = Element.Children.OrderBy(e => e, Compare.With<Element>(CompareElements));
-			//Sorter.Sort(children, Compare.With<Element>(CompareElements));
 
 			foreach (Element childElement in children)
 			{

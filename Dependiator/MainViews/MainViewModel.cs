@@ -63,9 +63,18 @@ namespace Dependiator.MainViews
 		}
 
 
-		public bool ZoomCanvas(int zoomDelta, Point viewPosition)
+		public bool Zoom(int zoomDelta, Point viewPosition, bool isNodeZoom)
 		{
-			return canvasService.ZoomCanvas(zoomDelta, viewPosition);
+			if (!isNodeZoom)
+			{
+				return canvasService.ZoomCanvas(zoomDelta, viewPosition);
+			}
+
+			return false;
+			//else
+			//{
+			//	return modelService.ZoomNode(zoomDelta, viewPosition);
+			//}
 		}
 
 

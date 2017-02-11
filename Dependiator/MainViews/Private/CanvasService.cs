@@ -60,26 +60,7 @@ namespace Dependiator.MainViews.Private
 		{		
 			double zoom = Math.Pow(2, zoomDelta / ZoomSpeed);
 
-			//double maxScale = 20;
-			//double minScale = 0.01;
-
 			double newScale = canvas.Scale * zoom;
-
-			//// Limit zooming
-			//if (newScale < minScale)
-			//{
-			//	newScale = minScale;			
-			//}
-			//else if (newScale > maxScale)
-			//{
-			//	newScale = maxScale;
-			//}
-
-			//if (newScale == canvas.Scale)
-			//{
-			//	return true;
-			//}
-
 			zoom = newScale / canvas.Scale;
 
 			canvas.Scale = newScale;
