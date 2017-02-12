@@ -150,6 +150,7 @@
       <DependentUpon>LinkView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Modeling\LinkViewModel.cs" />
+    <Compile Include="Modeling\ModelViewData.cs" />
     <Compile Include="Modeling\NodeView.xaml.cs">
       <DependentUpon>NodeView.xaml</DependentUpon>
     </Compile>

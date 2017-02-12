@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Dependiator.Modeling.Analyzing;
 using Dependiator.Modeling.Serializing;
@@ -8,7 +9,7 @@ namespace Dependiator.Modeling
 {
 	internal class ElementService : IElementService
 	{
-		public ElementTree ToElementTree(DataModel data, DataModel oldData)
+		public ElementTree ToElementTree(Data.Model data, ModelViewData modelViewData)
 		{
 			ElementName rootName = new ElementName(Element.RootName, Element.RootName);
 			Element root = new Element(rootName, Element.NameSpaceType, null);
@@ -16,9 +17,14 @@ namespace Dependiator.Modeling
 			Dictionary<string, Element> elements = new Dictionary<string, Element>();
 			elements[root.Name.FullName] = root;
 
-			foreach (Data.Node node in data.Model.Nodes)
+			foreach (Data.Node node in data.Nodes ?? Enumerable.Empty<Data.Node>())
 			{
-				AddElement(node, null, elements, oldData);
+				AddElement(node, null, elements, modelViewData);
+			}
+
+			foreach (Data.Link link in data.Links ?? Enumerable.Empty<Data.Link>())
+			{
+				AddLink(link, elements, modelViewData);
 			}
 
 			ElementTree tree = new ElementTree(root);
@@ -26,19 +32,51 @@ namespace Dependiator.Modeling
 		}
 
 
-		public DataModel ToData(ElementTree elementTree)
+		public Data.Model ToData(ElementTree elementTree)
 		{
-			DataModel data = new DataModel();	
-
 			List<Data.Node> nodes = elementTree.Root.Children
-				.Select(element => ToNode(element, data))
+				.Select(ToNode)
 				.ToList();
 
 			Data.Model model = new Data.Model();
 			model.Nodes = nodes;
-			data.Model = model;
 
-			return data;
+			return model;
+		}
+
+
+		public ModelViewData ToViewData(ElementTree elementTree)
+		{
+			ModelViewData modelViewData = new ModelViewData();
+
+			foreach (Element child in elementTree.Root.Children)
+			{
+				AddViewData(child, modelViewData);
+			}
+
+			return modelViewData;
+		}
+
+
+		private void AddViewData(Element element, ModelViewData modelViewData)
+		{
+			if (element.Location.HasValue && element.Size.HasValue)
+			{
+				Data.ViewData nodeViewData = new Data.ViewData
+				{
+					X = element.Location.Value.X,
+					Y = element.Location.Value.Y,
+					Width = element.Size.Value.Width,
+					Height = element.Size.Value.Height
+				};
+
+				modelViewData.viewDataByName[element.Name.FullName] = nodeViewData;
+			}
+
+			foreach (Element child in element.Children)
+			{
+				AddViewData(child, modelViewData);
+			}
 		}
 
 
@@ -46,11 +84,13 @@ namespace Dependiator.Modeling
 			Data.Node dataNode,
 			string parentName,
 			Dictionary<string, Element> elements,
-			DataModel oldData)
+			ModelViewData modelViewData)
 		{
-			string name = parentName != null ? parentName + "." + dataNode.Name : dataNode.Name;
+			string fullName = string.IsNullOrEmpty(parentName)
+				? dataNode.Name
+				: parentName + "." + dataNode.Name;
 
-			Element element = GetOrAddElement(name, elements, oldData);
+			Element element = GetOrAddElement(fullName, elements, modelViewData);
 			element.SetType(dataNode.Type);
 
 			if (dataNode.ViewData != null)
@@ -59,9 +99,10 @@ namespace Dependiator.Modeling
 			}
 			else
 			{
-				if (oldData != null && oldData.NodesByName.TryGetValue(name, out Data.Node oldNode))
+				if (modelViewData != null && modelViewData.viewDataByName.TryGetValue(
+					fullName, out Data.ViewData viewData))
 				{
-					element.SetLocationAndSize(oldNode.ViewData);
+					element.SetLocationAndSize(viewData);
 				}
 			}
 
@@ -70,7 +111,7 @@ namespace Dependiator.Modeling
 			{
 				foreach (Data.Node childNode in dataNode.Nodes)
 				{
-					AddElement(childNode, name, elements, oldData);
+					AddElement(childNode, fullName, elements, modelViewData);
 				}
 			}
 
@@ -78,7 +119,7 @@ namespace Dependiator.Modeling
 			{
 				foreach (Data.Link dataLink in dataNode.Links)
 				{
-					Element targetElement = GetOrAddElement(dataLink.Target, elements, oldData);
+					Element targetElement = GetOrAddElement(dataLink.Target, elements, modelViewData);
 					Reference reference = new Reference(element, targetElement, ReferenceKind.Direkt);
 					element.References.Add(reference);
 				}
@@ -86,13 +127,25 @@ namespace Dependiator.Modeling
 		}
 
 
-		private Data.Node ToNode(Element element, DataModel data)
+		private void AddLink(
+			Data.Link link, 
+			Dictionary<string, Element> elements, 
+			ModelViewData modelViewData)
+		{
+			Element sourceElement = GetOrAddElement(link.Source, elements, modelViewData);
+			Element targetElement = GetOrAddElement(link.Target, elements, modelViewData);
+			Reference reference = new Reference(sourceElement, targetElement, ReferenceKind.Direkt);
+			sourceElement.References.Add(reference);
+		}
+
+
+		private Data.Node ToNode(Element element)
 		{
 			Data.Node node = new Data.Node
 			{
 				Name = element.Name.Name,
 				Type = element.Type,
-				Nodes = ToChildren(element.Children, data),
+				Nodes = ToChildren(element.Children),
 				Links = ToLinks(element.References),
 			};
 
@@ -106,8 +159,6 @@ namespace Dependiator.Modeling
 					Height = element.Size.Value.Height
 				};
 			}
-
-			data.NodesByName[element.Name.FullName] = node;
 
 			return node;
 		}
@@ -134,7 +185,7 @@ namespace Dependiator.Modeling
 							links = new List<Data.Link>();
 						}
 
-						links.Add(new Data.Link { Target = subReference.Target.Name.FullName});
+						links.Add(new Data.Link { Target = subReference.Target.Name.FullName });
 					}
 				}
 			}
@@ -143,7 +194,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private List<Data.Node> ToChildren(ElementChildren elementChildren, DataModel data)
+		private List<Data.Node> ToChildren(ElementChildren elementChildren)
 		{
 			if (!elementChildren.Any())
 			{
@@ -151,41 +202,52 @@ namespace Dependiator.Modeling
 			}
 
 			return elementChildren
-				.Select(element => ToNode(element, data))
+				.Select(ToNode)
 				.ToList();
 		}
 
 
-		private Element GetOrAddElement(string name, Dictionary<string, Element> elements, DataModel oldData)
+		private Element GetOrAddElement(
+			string name,
+			Dictionary<string, Element> elements,
+			ModelViewData modelViewData)
 		{
 			if (!elements.TryGetValue(name, out Element element))
 			{
-				element = CreateElement(name, elements, oldData);
+				element = CreateElement(name, elements, modelViewData);
 			}
 
 			return element;
 		}
 
 
-		private Element CreateElement(string name, IDictionary<string, Element> elements, DataModel oldData)
+		private Element CreateElement(
+			string name, IDictionary<string, Element> elements,
+			ModelViewData modelViewData)
 		{
 			string parentName = GetParentName(name);
 
+			if (parentName == "Axis")
+			{
+				
+			}
+
 			if (!elements.TryGetValue(parentName, out Element parent))
 			{
-				parent = CreateElement(parentName, elements, oldData);
+				parent = CreateElement(parentName, elements, modelViewData);
 			}
 
 			string shortName = GetNamePart(name);
 			ElementName elementName = new ElementName(shortName, name);
 			Element element = new Element(elementName, null, parent);
 
-			if (oldData != null && oldData.NodesByName.TryGetValue(name, out Data.Node oldNode))
+			if (modelViewData != null && modelViewData.viewDataByName.TryGetValue(
+				name, out Data.ViewData viewData))
 			{
-				element.SetLocationAndSize(oldNode.ViewData);
+				element.SetLocationAndSize(viewData);
 			}
 
-				parent.Children.Add(element);
+			parent.Children.Add(element);
 			elements[name] = element;
 
 			return element;

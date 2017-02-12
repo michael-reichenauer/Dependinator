@@ -26,34 +26,33 @@ namespace Dependiator.Modeling.Serializing
 		}
 
 		
-		public void Serialize(DataModel data)
+		public void Serialize(Data.Model model)
 		{
-			string json = JsonConvert.SerializeObject(data.Model, typeof(Data.Model), Settings);
+			string json = JsonConvert.SerializeObject(model, typeof(Data.Model), Settings);
 			string path = GetDataFilePath();
 
 			WriteFileText(path, json);
 		}
 
 
-		public bool TryDeserialize(out DataModel data)
+		public bool TryDeserialize(out Data.Model model)
 		{
 			string path = GetDataFilePath();
 			if (TryReadFileText(path, out string json))
 			{
-				return TryDeSerialize(json, out data);
+				return TryDeSerialize(json, out model);
 			}
 
-			data = null;
+			model = null;
 			return false;
 		}
 
 
-		private bool TryDeSerialize(string json, out DataModel data)
+		private bool TryDeSerialize(string json, out Data.Model model)
 		{
 			try
 			{
-				Data.Model model = JsonConvert.DeserializeObject<Data.Model>(json, Settings);
-				data = new DataModel { Model = model };
+				model = JsonConvert.DeserializeObject<Data.Model>(json, Settings);
 				return true;
 			}
 			catch (Exception e) when (e.IsNotFatal())
@@ -61,7 +60,7 @@ namespace Dependiator.Modeling.Serializing
 				Log.Error($"Failed to deserialize json data, {e}");
 			}
 
-			data = null;
+			model = null;
 			return false;
 		}
 

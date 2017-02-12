@@ -44,7 +44,7 @@ namespace Dependiator.Modeling
 		{
 			Timing t = new Timing();
 
-			DataModel data = GetCachedOrFreshModelData();
+			Data.Model data = GetCachedOrFreshModelData();
 
 			t.Log("After read data");
 
@@ -70,10 +70,10 @@ namespace Dependiator.Modeling
 			StoreViewSettings();
 			t.Log("stored setting");
 
-			DataModel currentModelData = elementService.ToData(elementTree);
+			ModelViewData modelViewData = elementService.ToViewData(elementTree);
 			t.Log("Got current model data");
 
-			ElementTree tree = await RefreshElementTreeAsync(currentModelData);
+			ElementTree tree = await RefreshElementTreeAsync(modelViewData);
 
 			t.Log("Read fresh data");
 
@@ -87,9 +87,9 @@ namespace Dependiator.Modeling
 		}
 
 
-		private DataModel GetCachedOrFreshModelData()
+		private Data.Model GetCachedOrFreshModelData()
 		{
-			DataModel data;
+			Data.Model data;
 			if (!TryReadCachedData(out data))
 			{
 				data = ReadFreshData();
@@ -111,27 +111,29 @@ namespace Dependiator.Modeling
 		}
 
 
-		private async Task<ElementTree> RefreshElementTreeAsync(DataModel oldData)
+		private async Task<ElementTree> RefreshElementTreeAsync(ModelViewData modelViewData)
 		{
 			ElementTree tree = await Task.Run(() =>
 			{
-				DataModel newData = reflectionService.Analyze(workingFolder.FilePath);
+				Data.Model newData = reflectionService.Analyze(workingFolder.FilePath);		
 
-				return elementService.ToElementTree(newData, oldData);
+				return elementService.ToElementTree(newData, modelViewData);
 			});
 			return tree;
 		}
 
 
-		private bool TryReadCachedData(out DataModel data)
+		private bool TryReadCachedData(out Data.Model data)
 		{
 			return dataSerializer.TryDeserialize(out data);
 		}
 
 
-		private DataModel ReadFreshData()
+		private Data.Model ReadFreshData()
 		{
-			return reflectionService.Analyze(workingFolder.FilePath);
+			Data.Model model = reflectionService.Analyze(workingFolder.FilePath);
+
+			return model;
 		}
 
 
@@ -149,7 +151,7 @@ namespace Dependiator.Modeling
 
 		public void Close()
 		{
-			DataModel data = elementService.ToData(elementTree);
+			Data.Model data = elementService.ToData(elementTree);
 			dataSerializer.Serialize(data);
 
 			StoreViewSettings();
