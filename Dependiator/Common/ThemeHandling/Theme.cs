@@ -144,6 +144,10 @@ namespace Dependiator.Common.ThemeHandling
 			Color color = colorBrush.Color;
 
 			int index = brushes.FindIndex(b => b.Color == color);
+			if (index == -1)
+			{
+				
+			}
 			return index;
 		}
 

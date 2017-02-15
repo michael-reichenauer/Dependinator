@@ -26,9 +26,11 @@ namespace Dependiator.Modeling
 			Element = element;
 			this.itemService = itemService;
 
-			ItemBounds = bounds;		
+			ItemBounds = bounds;
+			element.ElementBounds = bounds;
 
-			RectangleBrush = itemService.GetRectangleBrush();
+			RectangleBrush = element.ElementBrush ?? itemService.GetRectangleBrush();
+			element.ElementBrush = RectangleBrush;
 			BackgroundBrush = itemService.GetRectangleBackgroundBrush(RectangleBrush);
 			ViewModel = new NodeViewModel(this);
 		}
@@ -85,7 +87,7 @@ namespace Dependiator.Modeling
 
 		protected override void ItemBoundsChanged()
 		{
-			Element.SetLocationAndSize(ItemBounds.Location, ItemBounds.Size);
+			Element.ElementBounds = ItemBounds;
 		}
 
 
@@ -130,12 +132,12 @@ namespace Dependiator.Modeling
 
 			foreach (Element childElement in children)
 			{
-				Size size = childElement.Size ?? DefaultSize;
+				Size size = childElement.ElementBounds?.Size ?? DefaultSize;
 
 				Point location;
-				if (childElement.Location != null)
+				if (childElement.ElementBounds.HasValue)
 				{
-					location = childElement.Location.Value;
+					location = childElement.ElementBounds.Value.Location;
 				}
 				else
 				{

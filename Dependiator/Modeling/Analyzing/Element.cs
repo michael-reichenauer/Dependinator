@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Media;
 using Dependiator.Modeling.Serializing;
 
 
@@ -23,9 +24,9 @@ namespace Dependiator.Modeling.Analyzing
 
 		public References References { get; }
 
-		public Point? Location { get; private set; }
+		public Rect? ElementBounds { get; set; }
 
-		public Size? Size { get; private set; }
+		public Brush ElementBrush { get; set; }
 
 
 		public IEnumerable<Element> AncestorsAndSelf()
@@ -68,29 +69,5 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 		public override string ToString() => Name.FullName;
-
-
-		public void SetLocationAndSize(Data.ViewData viewData)
-		{
-			if (viewData != null)
-			{
-				Location = new Point(viewData.X, viewData.Y);
-
-				Size = new Size(viewData.Width, viewData.Height);
-			}
-			else
-			{
-				Location = null;
-
-				Size = null;
-			}		
-		}
-
-		public void SetLocationAndSize(Point location, Size size)
-		{			
-			Location = location;
-
-			Size = size;			
-		}
 	}
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
+using Dependiator.Common.ThemeHandling;
 using Dependiator.Modeling.Analyzing;
 using Dependiator.Modeling.Serializing;
 
@@ -60,23 +62,34 @@ namespace Dependiator.Modeling
 
 		private void AddViewData(Element element, ModelViewData modelViewData)
 		{
-			if (element.Location.HasValue && element.Size.HasValue)
-			{
-				Data.ViewData nodeViewData = new Data.ViewData
-				{
-					X = element.Location.Value.X,
-					Y = element.Location.Value.Y,
-					Width = element.Size.Value.Width,
-					Height = element.Size.Value.Height
-				};
+			Data.ViewData nodeViewData = ToViewData(element);
 
-				modelViewData.viewDataByName[element.Name.FullName] = nodeViewData;
-			}
-
+			modelViewData.viewDataByName[element.Name.FullName] = nodeViewData;
+			
 			foreach (Element child in element.Children)
 			{
 				AddViewData(child, modelViewData);
 			}
+		}
+
+
+		private static Data.ViewData ToViewData(Element element)
+		{
+			Data.ViewData viewData = new Data.ViewData
+			{
+				Color = Converter.HexFromBrush(element.ElementBrush),
+			};
+
+			if (element.ElementBounds.HasValue)
+			{
+				viewData.X = element.ElementBounds.Value.X;
+				viewData.Y = element.ElementBounds.Value.Y;
+				viewData.Width = element.ElementBounds.Value.Width;
+				viewData.Height = element.ElementBounds.Value.Height;
+			}
+
+
+			return viewData;
 		}
 
 
@@ -95,14 +108,16 @@ namespace Dependiator.Modeling
 
 			if (dataNode.ViewData != null)
 			{
-				element.SetLocationAndSize(dataNode.ViewData);
+				element.ElementBounds = ToBounds(dataNode.ViewData);
+				//element.ElementBrush = Converter.BrushFromHex(dataNode.ViewData.Color);
 			}
 			else
 			{
 				if (modelViewData != null && modelViewData.viewDataByName.TryGetValue(
 					fullName, out Data.ViewData viewData))
 				{
-					element.SetLocationAndSize(viewData);
+					element.ElementBounds = ToBounds(viewData);
+					//element.ElementBrush = Converter.BrushFromHex(viewData.Color);
 				}
 			}
 
@@ -127,9 +142,22 @@ namespace Dependiator.Modeling
 		}
 
 
+		private static Rect? ToBounds(Data.ViewData viewData)
+		{
+			if (viewData == null || viewData.Width == 0)
+			{
+				return null;
+			}
+
+			return new Rect(
+				new Point(viewData.X, viewData.Y),
+				new Size(viewData.Width, viewData.Height));
+		}
+
+
 		private void AddLink(
-			Data.Link link, 
-			Dictionary<string, Element> elements, 
+			Data.Link link,
+			Dictionary<string, Element> elements,
 			ModelViewData modelViewData)
 		{
 			Element sourceElement = GetOrAddElement(link.Source, elements, modelViewData);
@@ -147,18 +175,9 @@ namespace Dependiator.Modeling
 				Type = element.Type,
 				Nodes = ToChildren(element.Children),
 				Links = ToLinks(element.References),
+				ViewData = ToViewData(element)
 			};
 
-			if (element.Location.HasValue && element.Size.HasValue)
-			{
-				node.ViewData = new Data.ViewData
-				{
-					X = element.Location.Value.X,
-					Y = element.Location.Value.Y,
-					Width = element.Size.Value.Width,
-					Height = element.Size.Value.Height
-				};
-			}
 
 			return node;
 		}
@@ -227,11 +246,6 @@ namespace Dependiator.Modeling
 		{
 			string parentName = GetParentName(name);
 
-			if (parentName == "Axis")
-			{
-				
-			}
-
 			if (!elements.TryGetValue(parentName, out Element parent))
 			{
 				parent = CreateElement(parentName, elements, modelViewData);
@@ -244,7 +258,8 @@ namespace Dependiator.Modeling
 			if (modelViewData != null && modelViewData.viewDataByName.TryGetValue(
 				name, out Data.ViewData viewData))
 			{
-				element.SetLocationAndSize(viewData);
+				element.ElementBounds = ToBounds(viewData);
+				//element.ElementBrush = Converter.BrushFromHex(viewData.Color);
 			}
 
 			parent.Children.Add(element);
@@ -254,9 +269,9 @@ namespace Dependiator.Modeling
 		}
 
 
-		private string GetParentName(string name)
+		private string GetParentName(string fullName)
 		{
-			int index = name.LastIndexOf('.');
+			int index = fullName.LastIndexOf('.');
 
 			if (index == -1)
 			{
@@ -264,7 +279,7 @@ namespace Dependiator.Modeling
 				return "";
 			}
 
-			return name.Substring(0, index);
+			return fullName.Substring(0, index);
 		}
 
 
