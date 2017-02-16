@@ -157,9 +157,9 @@ namespace Dependiator.Modeling
 
 		private int CompareElements(Element e1, Element e2)
 		{
-			Reference e1ToE2 = Element.References
+			Reference e1ToE2 = Element.NodeLinks
 				.FirstOrDefault(r => r.Source == e1 && r.Target == e2);
-			Reference e2ToE1 = Element.References
+			Reference e2ToE1 = Element.NodeLinks
 				.FirstOrDefault(r => r.Source == e2 && r.Target == e1);
 
 			int e1ToE2Count = e1ToE2?.SubReferences.Count ?? 0;
@@ -174,9 +174,9 @@ namespace Dependiator.Modeling
 				return 1;
 			}
 
-			Reference parentToE1 = Element.References
+			Reference parentToE1 = Element.NodeLinks
 				.FirstOrDefault(r => r.Source == Element && r.Target == e1);
-			Reference parentToE2 = Element.References
+			Reference parentToE2 = Element.NodeLinks
 				.FirstOrDefault(r => r.Source == Element && r.Target == e2);
 
 			int parentToE1Count = parentToE1?.SubReferences.Count ?? 0;
@@ -191,9 +191,9 @@ namespace Dependiator.Modeling
 				return 1;
 			}
 
-			Reference e1ToParent = Element.References
+			Reference e1ToParent = Element.NodeLinks
 				.FirstOrDefault(r => r.Source == e1 && r.Target == Element);
-			Reference e2ToParent = Element.References
+			Reference e2ToParent = Element.NodeLinks
 				.FirstOrDefault(r => r.Source == e2 && r.Target == Element);
 
 			int e1ToParentCount = e1ToParent?.SubReferences.Count ?? 0;
@@ -214,7 +214,7 @@ namespace Dependiator.Modeling
 
 		private void AddLinks()
 		{
-			foreach (Reference reference in Element.References)
+			foreach (Reference reference in Element.NodeLinks)
 			{
 				AddLink(reference);
 			}

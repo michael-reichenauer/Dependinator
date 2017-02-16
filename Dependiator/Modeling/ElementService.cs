@@ -136,7 +136,7 @@ namespace Dependiator.Modeling
 				{
 					Element targetElement = GetOrAddElement(dataLink.Target, elements, modelViewData);
 					Reference reference = new Reference(element, targetElement, ReferenceKind.Direkt);
-					element.References.Add(reference);
+					element.NodeLinks.Add(reference);
 				}
 			}
 		}
@@ -163,7 +163,7 @@ namespace Dependiator.Modeling
 			Element sourceElement = GetOrAddElement(link.Source, elements, modelViewData);
 			Element targetElement = GetOrAddElement(link.Target, elements, modelViewData);
 			Reference reference = new Reference(sourceElement, targetElement, ReferenceKind.Direkt);
-			sourceElement.References.Add(reference);
+			sourceElement.NodeLinks.Add(reference);
 		}
 
 
@@ -174,7 +174,7 @@ namespace Dependiator.Modeling
 				Name = element.Name.Name,
 				Type = element.Type,
 				Nodes = ToChildren(element.Children),
-				Links = ToLinks(element.References),
+				Links = ToLinks(element.NodeLinks),
 				ViewData = ToViewData(element)
 			};
 
@@ -183,16 +183,16 @@ namespace Dependiator.Modeling
 		}
 
 
-		private List<Data.Link> ToLinks(References references)
+		private List<Data.Link> ToLinks(NodeLinks nodeLinks)
 		{
-			if (!references.Any())
+			if (!nodeLinks.Any())
 			{
 				return null;
 			}
 
 			List<Data.Link> links = null;
 
-			foreach (Reference reference in references
+			foreach (Reference reference in nodeLinks
 				.Where(r => r.Kind == ReferenceKind.Main))
 			{
 				foreach (Reference subReference in reference.SubReferences)

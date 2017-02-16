@@ -22,7 +22,7 @@ namespace Dependiator.Modeling.Analyzing
 
 		public ElementChildren Children { get; }
 
-		public References References { get; }
+		public NodeLinks NodeLinks { get; }
 
 		public Rect? ElementBounds { get; set; }
 
@@ -55,7 +55,7 @@ namespace Dependiator.Modeling.Analyzing
 		public Element(ElementName name, string type, Element parent)
 		{
 			Type = type;
-			References = new References(this);
+			NodeLinks = new NodeLinks(this);
 			Children = new ElementChildren(this);
 			Name = name;
 

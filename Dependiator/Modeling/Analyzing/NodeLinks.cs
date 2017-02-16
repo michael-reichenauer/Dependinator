@@ -5,13 +5,13 @@ using Dependiator.Utils;
 
 namespace Dependiator.Modeling.Analyzing
 {
-	internal class References : IEnumerable<Reference>
+	internal class NodeLinks : IEnumerable<Reference>
 	{
 		private readonly Element ownerElement;
 		private readonly List<Reference> references = new List<Reference>();
 
 
-		public References(Element ownerElement)
+		public NodeLinks(Element ownerElement)
 		{
 			this.ownerElement = ownerElement;
 		}
@@ -113,11 +113,11 @@ namespace Dependiator.Modeling.Analyzing
 			partReference.Add(originalReference);
 			if (kind == ReferenceKind.Sibling || kind == ReferenceKind.Parent)
 			{
-				source.Parent.References.AddPartReference(partReference, originalReference);
+				source.Parent.NodeLinks.AddPartReference(partReference, originalReference);
 			}
 			else
 			{
-				source.References.AddPartReference(partReference, originalReference);
+				source.NodeLinks.AddPartReference(partReference, originalReference);
 			}
 		}
 
@@ -147,7 +147,7 @@ namespace Dependiator.Modeling.Analyzing
 		{
 			foreach (Element element in ownerElement.Children.DescendentsAndSelf())
 			{
-				foreach (Reference reference in element.References.SourceReferences)
+				foreach (Reference reference in element.NodeLinks.SourceReferences)
 				{
 					yield return reference;
 				}
@@ -159,7 +159,7 @@ namespace Dependiator.Modeling.Analyzing
 		{
 			foreach (Element element in ownerElement.Children.DescendentsAndSelf())
 			{
-				foreach (Reference reference in element.References.TargetReferences)
+				foreach (Reference reference in element.NodeLinks.TargetReferences)
 				{
 					yield return reference;
 				}
