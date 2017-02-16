@@ -162,8 +162,8 @@ namespace Dependiator.Modeling
 			LinkGroup e2ToE1 = Element.NodeLinks
 				.FirstOrDefault(r => r.Source == e2 && r.Target == e1);
 
-			int e1ToE2Count = e1ToE2?.SubLinks.Count ?? 0;
-			int e2ToE1Count = e2ToE1?.SubLinks.Count ?? 0;
+			int e1ToE2Count = e1ToE2?.Links.Count ?? 0;
+			int e2ToE1Count = e2ToE1?.Links.Count ?? 0;
 
 			if (e1ToE2Count > e2ToE1Count)
 			{
@@ -179,8 +179,8 @@ namespace Dependiator.Modeling
 			LinkGroup parentToE2 = Element.NodeLinks
 				.FirstOrDefault(r => r.Source == Element && r.Target == e2);
 
-			int parentToE1Count = parentToE1?.SubLinks.Count ?? 0;
-			int parentToE2Count = parentToE2?.SubLinks.Count ?? 0;
+			int parentToE1Count = parentToE1?.Links.Count ?? 0;
+			int parentToE2Count = parentToE2?.Links.Count ?? 0;
 
 			if (parentToE1Count > parentToE2Count)
 			{
@@ -196,8 +196,8 @@ namespace Dependiator.Modeling
 			LinkGroup e2ToParent = Element.NodeLinks
 				.FirstOrDefault(r => r.Source == e2 && r.Target == Element);
 
-			int e1ToParentCount = e1ToParent?.SubLinks.Count ?? 0;
-			int e2ToParentCount = e2ToParent?.SubLinks.Count ?? 0;
+			int e1ToParentCount = e1ToParent?.Links.Count ?? 0;
+			int e2ToParentCount = e2ToParent?.Links.Count ?? 0;
 
 			if (e1ToParentCount > e2ToParentCount)
 			{
@@ -226,19 +226,19 @@ namespace Dependiator.Modeling
 			Node sourceNode;
 			Node targetNode;
 
-			if (reference.SubLinks.Any(r => r.Kind == LinkKind.Child))
+			if (reference.Links.Any(r => r.Kind == LinkKind.Child))
 			{
 				sourceNode = this;
 				targetNode = ChildModules.First(m => m.Element == reference.Target);
 			}
 			else if (reference.Source != Element
 			         && reference.Target != Element
-			         && reference.SubLinks.Any(r => r.Kind == LinkKind.Sibling))
+			         && reference.Links.Any(r => r.Kind == LinkKind.Sibling))
 			{
 				sourceNode = ChildModules.First(m => m.Element == reference.Source);
 				targetNode = ChildModules.First(m => m.Element == reference.Target);
 			}
-			else if (reference.SubLinks.Any(r => r.Kind == LinkKind.Parent))
+			else if (reference.Links.Any(r => r.Kind == LinkKind.Parent))
 			{
 				sourceNode = ChildModules.First(m => m.Element == reference.Source);
 				targetNode = this;

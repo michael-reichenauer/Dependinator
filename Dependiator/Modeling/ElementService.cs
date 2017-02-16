@@ -195,7 +195,7 @@ namespace Dependiator.Modeling
 			foreach (LinkGroup reference in nodeLinks)
 		//		.Where(r => r.Kind == LinkKind.Main))
 			{
-				foreach (LinkX subReference in reference.SubLinks)
+				foreach (LinkX subReference in reference.Links)
 				{
 					if (subReference.Kind == LinkKind.Direkt)
 					{

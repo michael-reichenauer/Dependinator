@@ -104,7 +104,6 @@ namespace Dependiator.Modeling.Analyzing
 			}
 
 			LinkX partReference = new LinkX(source, target, kind);
-			//partReference.Add(originalReference);
 			if (kind == LinkKind.Sibling || kind == LinkKind.Parent)
 			{
 				source.Parent.NodeLinks.AddPartReference(partReference, originalReference);

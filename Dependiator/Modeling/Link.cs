@@ -48,14 +48,14 @@ namespace Dependiator.Modeling
 		{
 			get
 			{
-				string tip = $"{Reference},  {Reference.SubLinks.Count} references:";
+				string tip = $"{Reference},  {Reference.Links.Count} references:";
 				int maxLinks = 40;
-				foreach (LinkX reference in Reference.SubLinks.Take(maxLinks))
+				foreach (LinkX reference in Reference.Links.Take(maxLinks))
 				{
 					tip += $"\n  {reference}";
 				}
 
-				if (Reference.SubLinks.Count > maxLinks)
+				if (Reference.Links.Count > maxLinks)
 				{
 					tip += "\n  ...";
 				}
@@ -72,7 +72,7 @@ namespace Dependiator.Modeling
 		public double X2 => targetPoint.X;
 		public double Y2 => targetPoint.Y;
 
-		public int SubLinkCount => Reference.SubLinks.Count; 
+		public int SubLinkCount => Reference.Links.Count; 
 
 		public override bool CanBeShown()
 		{
