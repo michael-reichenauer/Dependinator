@@ -157,13 +157,13 @@ namespace Dependiator.Modeling
 
 		private int CompareElements(Element e1, Element e2)
 		{
-			Reference e1ToE2 = Element.NodeLinks
+			LinkGroup e1ToE2 = Element.NodeLinks
 				.FirstOrDefault(r => r.Source == e1 && r.Target == e2);
-			Reference e2ToE1 = Element.NodeLinks
+			LinkGroup e2ToE1 = Element.NodeLinks
 				.FirstOrDefault(r => r.Source == e2 && r.Target == e1);
 
-			int e1ToE2Count = e1ToE2?.SubReferences.Count ?? 0;
-			int e2ToE1Count = e2ToE1?.SubReferences.Count ?? 0;
+			int e1ToE2Count = e1ToE2?.SubLinks.Count ?? 0;
+			int e2ToE1Count = e2ToE1?.SubLinks.Count ?? 0;
 
 			if (e1ToE2Count > e2ToE1Count)
 			{
@@ -174,13 +174,13 @@ namespace Dependiator.Modeling
 				return 1;
 			}
 
-			Reference parentToE1 = Element.NodeLinks
+			LinkGroup parentToE1 = Element.NodeLinks
 				.FirstOrDefault(r => r.Source == Element && r.Target == e1);
-			Reference parentToE2 = Element.NodeLinks
+			LinkGroup parentToE2 = Element.NodeLinks
 				.FirstOrDefault(r => r.Source == Element && r.Target == e2);
 
-			int parentToE1Count = parentToE1?.SubReferences.Count ?? 0;
-			int parentToE2Count = parentToE2?.SubReferences.Count ?? 0;
+			int parentToE1Count = parentToE1?.SubLinks.Count ?? 0;
+			int parentToE2Count = parentToE2?.SubLinks.Count ?? 0;
 
 			if (parentToE1Count > parentToE2Count)
 			{
@@ -191,13 +191,13 @@ namespace Dependiator.Modeling
 				return 1;
 			}
 
-			Reference e1ToParent = Element.NodeLinks
+			LinkGroup e1ToParent = Element.NodeLinks
 				.FirstOrDefault(r => r.Source == e1 && r.Target == Element);
-			Reference e2ToParent = Element.NodeLinks
+			LinkGroup e2ToParent = Element.NodeLinks
 				.FirstOrDefault(r => r.Source == e2 && r.Target == Element);
 
-			int e1ToParentCount = e1ToParent?.SubReferences.Count ?? 0;
-			int e2ToParentCount = e2ToParent?.SubReferences.Count ?? 0;
+			int e1ToParentCount = e1ToParent?.SubLinks.Count ?? 0;
+			int e2ToParentCount = e2ToParent?.SubLinks.Count ?? 0;
 
 			if (e1ToParentCount > e2ToParentCount)
 			{
@@ -214,31 +214,31 @@ namespace Dependiator.Modeling
 
 		private void AddLinks()
 		{
-			foreach (Reference reference in Element.NodeLinks)
+			foreach (LinkGroup reference in Element.NodeLinks)
 			{
 				AddLink(reference);
 			}
 		}
 
 
-		private void AddLink(Reference reference)
+		private void AddLink(LinkGroup reference)
 		{
 			Node sourceNode;
 			Node targetNode;
 
-			if (reference.SubReferences.Any(r => r.Kind == ReferenceKind.Child))
+			if (reference.SubLinks.Any(r => r.Kind == LinkKind.Child))
 			{
 				sourceNode = this;
 				targetNode = ChildModules.First(m => m.Element == reference.Target);
 			}
 			else if (reference.Source != Element
 			         && reference.Target != Element
-			         && reference.SubReferences.Any(r => r.Kind == ReferenceKind.Sibling))
+			         && reference.SubLinks.Any(r => r.Kind == LinkKind.Sibling))
 			{
 				sourceNode = ChildModules.First(m => m.Element == reference.Source);
 				targetNode = ChildModules.First(m => m.Element == reference.Target);
 			}
-			else if (reference.SubReferences.Any(r => r.Kind == ReferenceKind.Parent))
+			else if (reference.SubLinks.Any(r => r.Kind == LinkKind.Parent))
 			{
 				sourceNode = ChildModules.First(m => m.Element == reference.Source);
 				targetNode = this;

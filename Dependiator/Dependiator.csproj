@@ -130,6 +130,7 @@
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
     <Compile Include="MainViews\Private\CanvasService.cs" />
     <Compile Include="MainViews\ICanvasService.cs" />
+    <Compile Include="Modeling\Analyzing\LinkKind.cs" />
     <Compile Include="Modeling\Analyzing\ReflectionService.cs" />
     <Compile Include="Modeling\Analyzing\Element.cs" />
     <Compile Include="Modeling\Analyzing\ElementChildren.cs" />

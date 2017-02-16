@@ -18,7 +18,7 @@ namespace Dependiator.Modeling
 
 		public Link(
 			IItemService itemService,
-			Reference reference,
+			LinkGroup reference,
 			Node owner,
 			Node sourceNode,
 			Node targetNode)
@@ -39,7 +39,7 @@ namespace Dependiator.Modeling
 
 		public Node TargetNode { get; }
 
-		public Reference Reference { get; }
+		public LinkGroup Reference { get; }
 
 
 		public override ViewModel ViewModel { get; }
@@ -48,14 +48,14 @@ namespace Dependiator.Modeling
 		{
 			get
 			{
-				string tip = $"{Reference},  {Reference.SubReferences.Count} references:";
+				string tip = $"{Reference},  {Reference.SubLinks.Count} references:";
 				int maxLinks = 40;
-				foreach (Reference reference in Reference.SubReferences.Take(maxLinks))
+				foreach (LinkX reference in Reference.SubLinks.Take(maxLinks))
 				{
-					tip += $"\n  {reference.SubReferences[0]}";
+					tip += $"\n  {reference}";
 				}
 
-				if (Reference.SubReferences.Count > maxLinks)
+				if (Reference.SubLinks.Count > maxLinks)
 				{
 					tip += "\n  ...";
 				}
@@ -72,7 +72,7 @@ namespace Dependiator.Modeling
 		public double X2 => targetPoint.X;
 		public double Y2 => targetPoint.Y;
 
-		public int SubLinkCount => Reference.SubReferences.Count; 
+		public int SubLinkCount => Reference.SubLinks.Count; 
 
 		public override bool CanBeShown()
 		{

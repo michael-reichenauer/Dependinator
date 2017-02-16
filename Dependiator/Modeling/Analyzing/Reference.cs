@@ -1,23 +1,44 @@
 using System.Collections.Generic;
+using System.Linq;
 
 
 namespace Dependiator.Modeling.Analyzing
 {
-	internal enum ReferenceKind
+	internal class LinkGroup
 	{
-		Main,
-		Direkt,
-		Sibling,
-		Parent,
-		Child
+		private List<LinkX> subLinks = new List<LinkX>();
+
+		public LinkGroup(Element source, Element target)
+		{
+			Source = source;
+			Target = target;
+		}
+
+		public Element Source { get; }
+
+		public Element Target { get; }
+
+		public IReadOnlyList<LinkX> SubLinks => subLinks;
+
+
+		public void Add(LinkX link)
+		{
+			if (subLinks
+				.Any(l => l.Source == link.Source && l.Target == link.Target && l.Kind == link.Kind))
+			{
+				return;
+			}
+
+			subLinks.Add(link);
+		}
+
+		public override string ToString() => $"{Source} -> {Target}";
 	}
 
 
-	internal class Reference
+	internal class LinkX
 	{
-		private List<Reference> subReferences = new List<Reference>();
-
-		public Reference(Element source, Element target, ReferenceKind kind)
+		public LinkX(Element source, Element target, LinkKind kind)
 		{
 			Source = source;
 			Target = target;
@@ -28,11 +49,7 @@ namespace Dependiator.Modeling.Analyzing
 
 		public Element Target { get; }
 
-		public IReadOnlyList<Reference> SubReferences => subReferences;
-
-		public ReferenceKind Kind { get; }
-
-		public void Add(Reference subReference) => subReferences.Add(subReference);
+		public LinkKind Kind { get; }
 
 		public override string ToString() => $"{Source} -> {Target}";
 	}

@@ -5,10 +5,10 @@ using Dependiator.Utils;
 
 namespace Dependiator.Modeling.Analyzing
 {
-	internal class NodeLinks : IEnumerable<Reference>
+	internal class NodeLinks : IEnumerable<LinkGroup>
 	{
 		private readonly Element ownerElement;
-		private readonly List<Reference> references = new List<Reference>();
+		private readonly List<LinkGroup> references = new List<LinkGroup>();
 
 
 		public NodeLinks(Element ownerElement)
@@ -19,59 +19,53 @@ namespace Dependiator.Modeling.Analyzing
 
 		public int Count => references.Count;
 
-		public IEnumerable<Reference> SourceReferences => references
+		public IEnumerable<LinkGroup> SourceReferences => references
 			.Where(r => r.Source == ownerElement);
 
-		public IEnumerable<Reference> TargetReferences => references
+		public IEnumerable<LinkGroup> TargetReferences => references
 			.Where(r => r.Target == ownerElement);
 
 
 		
-		public void Add(Reference reference)
+		public void Add(LinkX link)
 		{
-			Asserter.Requires(reference.Kind == ReferenceKind.Direkt);
-			Asserter.Requires(reference.Source == ownerElement || reference.Target == ownerElement);
+			Asserter.Requires(link.Kind == LinkKind.Direkt);
+			Asserter.Requires(link.Source == ownerElement || link.Target == ownerElement);
 
-			if (reference.Target.Name.Name == "Dependiator")
-			{
-				
-			}
-
-			if (reference.Source.Name.FullName == reference.Target.Name.FullName)
+			if (link.Source.Name.FullName == link.Target.Name.FullName)
 			{
 				// Self reference, e.g. A type contains a field or parameter of the same type.
 				return;
 			}
 
-			Reference existing = references.FirstOrDefault(
-				r => r.Source == reference.Source && r.Target == reference.Target);
+			LinkGroup existing = references.FirstOrDefault(
+				r => r.Source == link.Source && r.Target == link.Target);
 
 			if (existing != null)
 			{
-				existing.Add(reference);
+				existing.Add(link);
 				return;
 			}
 
-			Reference mainReference = new Reference(
-				reference.Source, reference.Target, ReferenceKind.Main);
-			mainReference.Add(reference);
+			LinkGroup linkGroup = new LinkGroup(link.Source, link.Target);
+			linkGroup.Add(link);
 
-			references.Add(mainReference);
+			references.Add(linkGroup);
 
-			if (reference.Source == ownerElement)
+			if (link.Source == ownerElement)
 			{
-				AddPartReferences(reference);
+				AddPartReferences(link);
 			}
 		}
 
 
-		private void AddPartReferences(Reference reference)
+		private void AddPartReferences(LinkX reference)
 		{
 			AddPartReference(null, reference);
 		}
 
 
-		private void AddPartReference(Reference currentReference, Reference originalReference)
+		private void AddPartReference(LinkX currentReference, LinkX originalReference)
 		{
 			Element source = originalReference.Source;
 			Element target = originalReference.Target;
@@ -83,7 +77,7 @@ namespace Dependiator.Modeling.Analyzing
 				source = currentReference.Target;
 			}
 
-			ReferenceKind kind;
+			LinkKind kind;
 
 			if (source == target)
 			{
@@ -93,25 +87,25 @@ namespace Dependiator.Modeling.Analyzing
 			else if (target.Ancestors().Any(ancestor => ancestor == source))
 			{
 				// Source is Ancestor of target		
-				kind = ReferenceKind.Child;
+				kind = LinkKind.Child;
 				target = target.AncestorsAndSelf().First(ancestor => ancestor.Parent == source);
 			}
 			else if (target.Ancestors().Any(ancestor => ancestor == source.Parent))
 			{
 				// source and target are siblings or source and an target ancestor is siblings
-				kind = ReferenceKind.Sibling;
+				kind = LinkKind.Sibling;
 				target = target.AncestorsAndSelf().First(ancestor => ancestor.Parent == source.Parent);
 			}
 			else
 			{
 				// Source is Decedent of target	
-				kind = ReferenceKind.Parent;
+				kind = LinkKind.Parent;
 				target = source.Parent;
 			}
 
-			Reference partReference = new Reference(source, target, kind);
-			partReference.Add(originalReference);
-			if (kind == ReferenceKind.Sibling || kind == ReferenceKind.Parent)
+			LinkX partReference = new LinkX(source, target, kind);
+			//partReference.Add(originalReference);
+			if (kind == LinkKind.Sibling || kind == LinkKind.Parent)
 			{
 				source.Parent.NodeLinks.AddPartReference(partReference, originalReference);
 			}
@@ -122,11 +116,11 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		public void AddSubReference(Reference reference)
+		public void AddSubReference(LinkX reference)
 		{
-			Asserter.Requires(reference.Kind != ReferenceKind.Direkt);
+			Asserter.Requires(reference.Kind != LinkKind.Direkt);
 
-			Reference existing = references.FirstOrDefault(
+			LinkGroup existing = references.FirstOrDefault(
 				r => r.Source == reference.Source && r.Target == reference.Target);
 
 			if (existing != null)
@@ -135,19 +129,18 @@ namespace Dependiator.Modeling.Analyzing
 				return;
 			}
 
-			Reference mainReference = new Reference(
-				reference.Source, reference.Target, ReferenceKind.Main);
-			mainReference.Add(reference);
+			LinkGroup linkGroup = new LinkGroup(reference.Source, reference.Target);
+			linkGroup.Add(reference);
 
-			references.Add(mainReference);
+			references.Add(linkGroup);
 		}
 
 
-		public IEnumerable<Reference> DescendentAndSelfSourceReferences()
+		public IEnumerable<LinkGroup> DescendentAndSelfSourceReferences()
 		{
 			foreach (Element element in ownerElement.Children.DescendentsAndSelf())
 			{
-				foreach (Reference reference in element.NodeLinks.SourceReferences)
+				foreach (LinkGroup reference in element.NodeLinks.SourceReferences)
 				{
 					yield return reference;
 				}
@@ -155,11 +148,11 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		public IEnumerable<Reference> DescendentAndSelfTargetReferences()
+		public IEnumerable<LinkGroup> DescendentAndSelfTargetReferences()
 		{
 			foreach (Element element in ownerElement.Children.DescendentsAndSelf())
 			{
-				foreach (Reference reference in element.NodeLinks.TargetReferences)
+				foreach (LinkGroup reference in element.NodeLinks.TargetReferences)
 				{
 					yield return reference;
 				}
@@ -167,7 +160,7 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		public IEnumerator<Reference> GetEnumerator()
+		public IEnumerator<LinkGroup> GetEnumerator()
 		{
 			return references.GetEnumerator();
 		}
