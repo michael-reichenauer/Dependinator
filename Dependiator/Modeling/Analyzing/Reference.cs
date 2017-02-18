@@ -6,7 +6,7 @@ namespace Dependiator.Modeling.Analyzing
 {
 	internal class LinkGroup
 	{
-		private List<LinkX> links = new List<LinkX>();
+		private List<NodeLink> links = new List<NodeLink>();
 
 		public LinkGroup(Element source, Element target)
 		{
@@ -18,27 +18,27 @@ namespace Dependiator.Modeling.Analyzing
 
 		public Element Target { get; }
 
-		public IReadOnlyList<LinkX> Links => links;
+		public IReadOnlyList<NodeLink> Links => links;
 
 
-		public void Add(LinkX link)
+		public void Add(NodeLink nodeLink)
 		{
 			if (links
-				.Any(l => l.Source == link.Source && l.Target == link.Target && l.Kind == link.Kind))
+				.Any(l => l.Source == nodeLink.Source && l.Target == nodeLink.Target && l.Kind == nodeLink.Kind))
 			{
 				return;
 			}
 
-			links.Add(link);
+			links.Add(nodeLink);
 		}
 
 		public override string ToString() => $"{Source} -> {Target}";
 	}
 
 
-	internal class LinkX
+	internal class NodeLink
 	{
-		public LinkX(Element source, Element target, LinkKind kind)
+		public NodeLink(Element source, Element target, LinkKind kind)
 		{
 			Source = source;
 			Target = target;

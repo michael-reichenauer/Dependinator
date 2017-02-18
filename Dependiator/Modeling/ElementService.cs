@@ -135,7 +135,7 @@ namespace Dependiator.Modeling
 				foreach (Data.Link dataLink in dataNode.Links)
 				{
 					Element targetElement = GetOrAddElement(dataLink.Target, elements, modelViewData);
-					LinkX reference = new LinkX(element, targetElement, LinkKind.Direkt);
+					NodeLink reference = new NodeLink(element, targetElement, LinkKind.Direkt);
 					element.NodeLinks.Add(reference);
 				}
 			}
@@ -162,7 +162,7 @@ namespace Dependiator.Modeling
 		{
 			Element sourceElement = GetOrAddElement(link.Source, elements, modelViewData);
 			Element targetElement = GetOrAddElement(link.Target, elements, modelViewData);
-			LinkX reference = new LinkX(sourceElement, targetElement, LinkKind.Direkt);
+			NodeLink reference = new NodeLink(sourceElement, targetElement, LinkKind.Direkt);
 			sourceElement.NodeLinks.Add(reference);
 		}
 
@@ -195,7 +195,7 @@ namespace Dependiator.Modeling
 			foreach (LinkGroup reference in nodeLinks)
 		//		.Where(r => r.Kind == LinkKind.Main))
 			{
-				foreach (LinkX subReference in reference.Links)
+				foreach (NodeLink subReference in reference.Links)
 				{
 					if (subReference.Kind == LinkKind.Direkt)
 					{

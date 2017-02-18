@@ -50,7 +50,7 @@ namespace Dependiator.Modeling
 			{
 				string tip = $"{Reference},  {Reference.Links.Count} references:";
 				int maxLinks = 40;
-				foreach (LinkX reference in Reference.Links.Take(maxLinks))
+				foreach (NodeLink reference in Reference.Links.Take(maxLinks))
 				{
 					tip += $"\n  {reference}";
 				}

@@ -27,45 +27,45 @@ namespace Dependiator.Modeling.Analyzing
 
 
 		
-		public void Add(LinkX link)
+		public void Add(NodeLink nodeLink)
 		{
-			Asserter.Requires(link.Kind == LinkKind.Direkt);
-			Asserter.Requires(link.Source == ownerElement || link.Target == ownerElement);
+			Asserter.Requires(nodeLink.Kind == LinkKind.Direkt);
+			Asserter.Requires(nodeLink.Source == ownerElement || nodeLink.Target == ownerElement);
 
-			if (link.Source.Name.FullName == link.Target.Name.FullName)
+			if (nodeLink.Source.Name.FullName == nodeLink.Target.Name.FullName)
 			{
 				// Self reference, e.g. A type contains a field or parameter of the same type.
 				return;
 			}
 
 			LinkGroup existing = references.FirstOrDefault(
-				r => r.Source == link.Source && r.Target == link.Target);
+				r => r.Source == nodeLink.Source && r.Target == nodeLink.Target);
 
 			if (existing != null)
 			{
-				existing.Add(link);
+				existing.Add(nodeLink);
 				return;
 			}
 
-			LinkGroup linkGroup = new LinkGroup(link.Source, link.Target);
-			linkGroup.Add(link);
+			LinkGroup linkGroup = new LinkGroup(nodeLink.Source, nodeLink.Target);
+			linkGroup.Add(nodeLink);
 
 			references.Add(linkGroup);
 
-			if (link.Source == ownerElement)
+			if (nodeLink.Source == ownerElement)
 			{
-				AddPartReferences(link);
+				AddPartReferences(nodeLink);
 			}
 		}
 
 
-		private void AddPartReferences(LinkX reference)
+		private void AddPartReferences(NodeLink reference)
 		{
 			AddPartReference(null, reference);
 		}
 
 
-		private void AddPartReference(LinkX currentReference, LinkX originalReference)
+		private void AddPartReference(NodeLink currentReference, NodeLink originalReference)
 		{
 			Element source = originalReference.Source;
 			Element target = originalReference.Target;
@@ -103,7 +103,7 @@ namespace Dependiator.Modeling.Analyzing
 				target = source.Parent;
 			}
 
-			LinkX partReference = new LinkX(source, target, kind);
+			NodeLink partReference = new NodeLink(source, target, kind);
 			if (kind == LinkKind.Sibling || kind == LinkKind.Parent)
 			{
 				source.Parent.NodeLinks.AddPartReference(partReference, originalReference);
@@ -115,7 +115,7 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		public void AddSubReference(LinkX reference)
+		public void AddSubReference(NodeLink reference)
 		{
 			Asserter.Requires(reference.Kind != LinkKind.Direkt);
 
