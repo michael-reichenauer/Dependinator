@@ -71,7 +71,7 @@ namespace Dependiator.Modeling
 
 		public IEnumerable<Node> ChildNodeItems => ChildItems.OfType<Node>();
 
-		public IEnumerable<Link> LinkItemss => ChildItems.OfType<Link>();
+		public IEnumerable<Link> LinkItems => ChildItems.OfType<Link>();
 
 		public Rect? ElementBounds { get; set; }
 
@@ -230,8 +230,8 @@ namespace Dependiator.Modeling
 			Link e2ToE1 = NodeLinks
 				.FirstOrDefault(r => r.Source == e2 && r.Target == e1);
 
-			int e1ToE2Count = e1ToE2?.Links.Count ?? 0;
-			int e2ToE1Count = e2ToE1?.Links.Count ?? 0;
+			int e1ToE2Count = e1ToE2?.NodeLinks.Count ?? 0;
+			int e2ToE1Count = e2ToE1?.NodeLinks.Count ?? 0;
 
 			if (e1ToE2Count > e2ToE1Count)
 			{
@@ -247,8 +247,8 @@ namespace Dependiator.Modeling
 			Link parentToE2 = NodeLinks
 				.FirstOrDefault(r => r.Source == this && r.Target == e2);
 
-			int parentToE1Count = parentToE1?.Links.Count ?? 0;
-			int parentToE2Count = parentToE2?.Links.Count ?? 0;
+			int parentToE1Count = parentToE1?.NodeLinks.Count ?? 0;
+			int parentToE2Count = parentToE2?.NodeLinks.Count ?? 0;
 
 			if (parentToE1Count > parentToE2Count)
 			{
@@ -264,8 +264,8 @@ namespace Dependiator.Modeling
 			Link e2ToParent = NodeLinks
 				.FirstOrDefault(r => r.Source == e2 && r.Target == this);
 
-			int e1ToParentCount = e1ToParent?.Links.Count ?? 0;
-			int e2ToParentCount = e2ToParent?.Links.Count ?? 0;
+			int e1ToParentCount = e1ToParent?.NodeLinks.Count ?? 0;
+			int e2ToParentCount = e2ToParent?.NodeLinks.Count ?? 0;
 
 			if (e1ToParentCount > e2ToParentCount)
 			{
@@ -294,7 +294,7 @@ namespace Dependiator.Modeling
 			if (link.Source == this)
 			{	
 				AddChildItem(link);
-				link.SetLinkLine();
+				link.UpdateLinkLine();
 			}
 		}
 
@@ -308,7 +308,7 @@ namespace Dependiator.Modeling
 
 			foreach (Link link in links)
 			{
-				link.SetLinkLine();
+				link.UpdateLinkLine();
 				link.NotifyAll();
 			}
 		}
@@ -321,7 +321,7 @@ namespace Dependiator.Modeling
 
 			foreach (Link link in links)
 			{
-				link.SetLinkLine();
+				link.UpdateLinkLine();
 				link.NotifyAll();
 			}
 		}

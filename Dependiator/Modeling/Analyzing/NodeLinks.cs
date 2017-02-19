@@ -31,10 +31,8 @@ namespace Dependiator.Modeling.Analyzing
 		
 		public void Add(NodeLink nodeLink)
 		{
-			Asserter.Requires(nodeLink.Kind == LinkKind.Direkt);
 			Asserter.Requires(nodeLink.Source == ownerNode);
 
-			//Asserter.Requires(nodeLink.Source.Name.FullName != nodeLink.Target.Name.FullName);
 			if (nodeLink.Source.NodeName.FullName == nodeLink.Target.NodeName.FullName)
 			{
 				// Self reference, e.g. A type contains a field or parameter of the same type.
@@ -50,19 +48,11 @@ namespace Dependiator.Modeling.Analyzing
 				return;
 			}
 
-			//LinkGroup linkGroup = new LinkGroup(nodeLink.Source, nodeLink.Target);
-			//linkGroup.Add(nodeLink);
-
-			//links.Add(linkGroup);
-
-			//if (nodeLink.Source == ownerElement)
-			//{
-				AddPartReferences(nodeLink);
-			//}
+			AddPartReferences(nodeLink);			
 		}
 
 
-		private void AddPartReferences(NodeLink reference)
+		private static void AddPartReferences(NodeLink reference)
 		{
 			AddPartReference(null, reference);
 		}
@@ -81,8 +71,6 @@ namespace Dependiator.Modeling.Analyzing
 				source = linkPart.Target;
 			}
 
-			LinkKind kind;
-
 			if (source == target)
 			{
 				// Source is same as target, reached end
@@ -91,38 +79,27 @@ namespace Dependiator.Modeling.Analyzing
 			else if (target.Ancestors().Any(ancestor => ancestor == source))
 			{
 				// Source is Ancestor of target		
-				kind = LinkKind.Child;
 				target = target.AncestorsAndSelf().First(ancestor => ancestor.ParentNode == source);
 			}
 			else if (target.Ancestors().Any(ancestor => ancestor == source.ParentNode))
 			{
 				// source and target are siblings or source and an target ancestor is siblings
-				kind = LinkKind.Sibling;
 				target = target.AncestorsAndSelf().First(ancestor => ancestor.ParentNode == source.ParentNode);
 			}
 			else
 			{
 				// Source is Decedent of target	
-				kind = LinkKind.Parent;
 				target = source.ParentNode;
 			}
 
-			NodeLink partReference = new NodeLink(source, target, kind);
-			//if (kind == LinkKind.Sibling || kind == LinkKind.Parent)
-			//{
-			//	source.Parent.NodeLinks.AddPartReference(partReference, actualNodeLink);
-			//}
-			//else
-			//{
-				AddPartReference(partReference, actualNodeLink);
-			//}
+			NodeLink partReference = new NodeLink(source, target);
+			
+			AddPartReference(partReference, actualNodeLink);
 		}
 
 
 		public void AddLinkPart(NodeLink linkPart, NodeLink actualNodeLink)
 		{
-			Asserter.Requires(linkPart.Kind != LinkKind.Direkt);
-
 			Link existing = links.FirstOrDefault(
 				l => l.Source == linkPart.Source && l.Target == linkPart.Target);
 

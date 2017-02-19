@@ -11,10 +11,8 @@ namespace Dependiator.Modeling
 {
 	internal class Link : Item
 	{
-		private readonly LinkViewModel linkViewModel;
-		private Point sourcePoint;
-		private Point targetPoint;
-		private List<NodeLink> links = new List<NodeLink>();
+		private readonly List<NodeLink> nodeLinks = new List<NodeLink>();
+	
 
 		public Link(
 			IItemService itemService,
@@ -22,48 +20,54 @@ namespace Dependiator.Modeling
 			Node target)
 			: base(itemService, source)
 		{
-			this.Source = source;
-			this.Target = target;
+			Source = source;
+			Target = target;
 
-
-			linkViewModel = new LinkViewModel(this);
-			ViewModel = linkViewModel;
+			ViewModel = new LinkViewModel(this);
 		}
 
-		public IReadOnlyList<NodeLink> Links => links;
+
+		public IReadOnlyList<NodeLink> NodeLinks => nodeLinks;
 
 		public Node Source { get; }
 
 		public Node Target { get; }
 
 
-
 		public void Add(NodeLink nodeLink)
 		{
-			if (links
-				.Any(l => l.Source == nodeLink.Source && l.Target == nodeLink.Target && l.Kind == nodeLink.Kind))
+			if (nodeLinks.Any(l => l.Source == nodeLink.Source && l.Target == nodeLink.Target))
 			{
 				return;
 			}
 
-			links.Add(nodeLink);
+			nodeLinks.Add(nodeLink);
 		}
 
 
 		public override ViewModel ViewModel { get; }
 
+		
+
+		public Brush LinkBrush => Source.RectangleBrush;
+
+		public double X1 { get; private set; }
+		public double Y1 { get; private set; }
+		public double X2 { get; private set; }
+		public double Y2 { get; private set; }
+
 		public string ToolTip
 		{
 			get
 			{
-				string tip = $"{this},  {Links.Count} references:";
+				string tip = $"{this},  {NodeLinks.Count} references:";
 				int maxLinks = 40;
-				foreach (NodeLink reference in Links.Take(maxLinks))
+				foreach (NodeLink reference in NodeLinks.Take(maxLinks))
 				{
 					tip += $"\n  {reference}";
 				}
 
-				if (Links.Count > maxLinks)
+				if (NodeLinks.Count > maxLinks)
 				{
 					tip += "\n  ...";
 				}
@@ -73,32 +77,9 @@ namespace Dependiator.Modeling
 		}
 
 
-		public Brush LinkBrush => Source.RectangleBrush;
-
-		public double X1 => sourcePoint.X;
-		public double Y1 => sourcePoint.Y;
-		public double X2 => targetPoint.X;
-		public double Y2 => targetPoint.Y;
-
-		public int SubLinkCount => Links.Count; 
-
 		public override bool CanBeShown()
 		{
-			return true;
-			//	SourceNode.CanBeShown() && TargetNode.CanBeShown();
-			//&& ParentItem.ItemScale > 3.5;
-		}
-
-
-		public override void ItemRealized()
-		{
-			base.ItemRealized();
-		}
-
-
-		public override void ChangedScale()
-		{
-			base.ChangedScale();
+			return ItemScale > 0.03 && (Source.CanBeShown() || Target.CanBeShown());
 		}
 
 
@@ -110,137 +91,58 @@ namespace Dependiator.Modeling
 			}
 		}
 
-		public void SetLinkLine()
+		public double LineThickness
+		{
+			get
+			{
+				double scale = (ItemScale * 7).MM(0.1, 1);
+				double thickness = 0;
+
+				if (NodeLinks.Count < 5)
+				{
+					thickness = 1;
+				}
+				else if (NodeLinks.Count < 15)
+				{
+					thickness = 2;
+				}
+				else
+				{
+					thickness = 3;
+				}
+
+				return thickness * scale;
+			}
+		}
+
+
+		public void UpdateLinkLine()
 		{
 			double x1 = Source.ItemCanvasBounds.X + Source.ItemCanvasBounds.Width / 2;
 			double y1 = Source.ItemCanvasBounds.Y + Source.ItemCanvasBounds.Height;
 			double x2 = Target.ItemCanvasBounds.X + Target.ItemCanvasBounds.Width / 2;
 			double y2 = Target.ItemCanvasBounds.Y; 
 
-
+			// Line bounds
 			double x = Math.Min(x1, x2);
 			double y = Math.Min(y1, y2);
 			double width = Math.Abs(x2 - x1);
 			double height = Math.Abs(y2 - y1);
+			double margin = 1;
+			ItemCanvasBounds = new Rect(x, y, Math.Max(width, margin), Math.Max(height,margin));
 
+			// Line drawing within the bounds
+			X1 = 0;
+			Y1 = 0;
+			X2 = width;
+			Y2 = height;
 
-			if (x1 <= x2 && y1 <= y2)
+			if (x1 <= x2 && y1 > y2 || x1 > x2 && y1 <= y2)
 			{
-				sourcePoint = new Point(0, 0);
-				targetPoint = new Point(width, height);
-			}
-			else if (x1 <= x2 && y1 > y2)
-			{
-				sourcePoint = new Point(0, height);
-				targetPoint = new Point(width, 0);
-			}
-			else if (x1 > x2 && y1 <= y2)
-			{
-				sourcePoint = new Point(width, 0);
-				targetPoint = new Point(0, height);
-			}
-			else
-			{
-				sourcePoint = new Point(width, height);
-				targetPoint = new Point(0, 0);
-			}
-
-			Rect bounds = new Rect(new Point(x, y), new Size(width, height));
-
-			ItemCanvasBounds = bounds;
+				Y1 = height;
+				Y2 = 0;
+			}		
 		}
-
-
-		//public void SetLinkLine()
-		//{
-		//	double x1;
-		//	double y1;
-		//	double x2;
-		//	double y2;
-		//	double scaleFactor = ParentItem?.ThisItemScaleFactor ?? ThisItemScaleFactor;
-		//	//double scaleFactor2 = ParentItem?.ParentItem?.ThisItemScaleFactor ?? ThisItemScaleFactor;
-
-		//	if (SourceNode == TargetNode.ParentItem)
-		//	{
-		//		Rect targetRect = TargetNode.ItemBounds;
-		//		targetRect.Scale(1 / scaleFactor, 1 / scaleFactor);
-
-		//		Rect sourceRect = SourceNode.ItemBounds;
-
-		//		////sourceRect.Scale(1 / scaleFactor2, 1 / scaleFactor2);
-
-		//		x1 = (sourceRect.Width / 2) * (scaleFactor / ThisItemScaleFactor);
-		//		y1 = 0;
-		//		x2 = targetRect.X + targetRect.Width / 2;
-		//		y2 = targetRect.Y;
-		//		LinkBrush = TargetNode.RectangleBrush;
-		//	}
-		//	else if (SourceNode.ParentItem == TargetNode.ParentItem)
-		//	{
-		//		Rect targetRect = TargetNode.ItemBounds;
-		//		targetRect.Scale(1 / scaleFactor, 1 / scaleFactor);
-
-		//		Rect sourceRect = SourceNode.ItemBounds;
-		//		sourceRect.Scale(1 / scaleFactor, 1 / scaleFactor);
-
-		//		x1 = sourceRect.X + sourceRect.Width / 2;
-		//		y1 = sourceRect.Y + sourceRect.Height;
-		//		x2 = targetRect.X + targetRect.Width / 2;
-		//		y2 = targetRect.Y;
-		//		LinkBrush = SourceNode.RectangleBrush;
-		//	}
-		//	else if (SourceNode.ParentItem == TargetNode)
-		//	{
-		//		Rect targetRect = TargetNode.ItemBounds;
-		//		//targetRect.Scale(1 / ThisItemScaleFactor, 1 / ThisItemScaleFactor);
-
-		//		Rect sourceRect = SourceNode.ItemBounds;
-		//		sourceRect.Scale(1 / scaleFactor, 1 / scaleFactor);
-
-		//		x1 = sourceRect.X + sourceRect.Width / 2;
-		//		y1 = sourceRect.Y + sourceRect.Height;
-		//		x2 = (targetRect.Width / 2) * ( scaleFactor / ThisItemScaleFactor);
-		//		y2 = targetRect.Height * (scaleFactor / ThisItemScaleFactor);
-		//		LinkBrush = SourceNode.RectangleBrush;
-		//	}
-		//	else
-		//	{
-		//		// Only child, sibling or parent nodes supported for now, no direct links
-		//		return;
-		//	}
-
-		//	double x = Math.Min(x1, x2);
-		//	double y = Math.Min(y1, y2);
-		//	double width = Math.Abs(x2 - x1);
-		//	double height = Math.Abs(y2 - y1);
-
-
-		//	if (x1 <= x2 && y1 <= y2)
-		//	{
-		//		sourcePoint = new Point(0, 0);
-		//		targetPoint = new Point(width, height);
-		//	}
-		//	else if (x1 <= x2 && y1 > y2)
-		//	{
-		//		sourcePoint = new Point(0, height);
-		//		targetPoint = new Point(width, 0);
-		//	}
-		//	else if (x1 > x2 && y1 <= y2)
-		//	{
-		//		sourcePoint = new Point(width, 0);
-		//		targetPoint = new Point(0, height);
-		//	}
-		//	else
-		//	{
-		//		sourcePoint = new Point(width, height);
-		//		targetPoint = new Point(0, 0);
-		//	}
-
-		//	Rect bounds = new Rect(new Point(x, y), new Size(width + 1, height + 1));
-
-		//	bounds.Scale(scaleFactor, scaleFactor);
-		//	ItemBounds = bounds;
-		//}
 
 
 		public override string ToString() => $"{Source} -> {Target}";
