@@ -8,7 +8,7 @@ namespace Dependiator.Modeling.Analyzing
 	internal class NodeLinks : IEnumerable<LinkGroup>
 	{
 		private readonly Element ownerElement;
-		private readonly List<LinkGroup> references = new List<LinkGroup>();
+		private readonly List<LinkGroup> links = new List<LinkGroup>();
 
 
 		public NodeLinks(Element ownerElement)
@@ -17,12 +17,12 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		public int Count => references.Count;
+		public int Count => links.Count;
 
-		public IEnumerable<LinkGroup> SourceReferences => references
+		public IEnumerable<LinkGroup> SourceReferences => links
 			.Where(r => r.Source == ownerElement);
 
-		public IEnumerable<LinkGroup> TargetReferences => references
+		public IEnumerable<LinkGroup> TargetReferences => links
 			.Where(r => r.Target == ownerElement);
 
 
@@ -30,16 +30,17 @@ namespace Dependiator.Modeling.Analyzing
 		public void Add(NodeLink nodeLink)
 		{
 			Asserter.Requires(nodeLink.Kind == LinkKind.Direkt);
-			Asserter.Requires(nodeLink.Source == ownerElement || nodeLink.Target == ownerElement);
+			Asserter.Requires(nodeLink.Source == ownerElement);
 
+			//Asserter.Requires(nodeLink.Source.Name.FullName != nodeLink.Target.Name.FullName);
 			if (nodeLink.Source.Name.FullName == nodeLink.Target.Name.FullName)
 			{
 				// Self reference, e.g. A type contains a field or parameter of the same type.
 				return;
 			}
 
-			LinkGroup existing = references.FirstOrDefault(
-				r => r.Source == nodeLink.Source && r.Target == nodeLink.Target);
+			LinkGroup existing = links.FirstOrDefault(
+				l => l.Source == nodeLink.Source && l.Target == nodeLink.Target);
 
 			if (existing != null)
 			{
@@ -47,15 +48,15 @@ namespace Dependiator.Modeling.Analyzing
 				return;
 			}
 
-			LinkGroup linkGroup = new LinkGroup(nodeLink.Source, nodeLink.Target);
-			linkGroup.Add(nodeLink);
+			//LinkGroup linkGroup = new LinkGroup(nodeLink.Source, nodeLink.Target);
+			//linkGroup.Add(nodeLink);
 
-			references.Add(linkGroup);
+			//links.Add(linkGroup);
 
-			if (nodeLink.Source == ownerElement)
-			{
+			//if (nodeLink.Source == ownerElement)
+			//{
 				AddPartReferences(nodeLink);
-			}
+			//}
 		}
 
 
@@ -65,23 +66,24 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		private void AddPartReference(NodeLink currentReference, NodeLink originalReference)
+		private static void AddPartReference(NodeLink linkPart, NodeLink actualNodeLink)
 		{
-			Element source = originalReference.Source;
-			Element target = originalReference.Target;
+			Element source = actualNodeLink.Source;
+			Element target = actualNodeLink.Target;
 
-			if (currentReference != null)
+			if (linkPart != null)
 			{
 				// A step on the way to the actual target
-				AddSubReference(currentReference);
-				source = currentReference.Target;
+				linkPart.Source.NodeLinks.AddLinkPart(linkPart, actualNodeLink);
+				linkPart.Target.NodeLinks.AddLinkPart(linkPart, actualNodeLink);
+				source = linkPart.Target;
 			}
 
 			LinkKind kind;
 
 			if (source == target)
 			{
-				// Source is same as target, (self reference)
+				// Source is same as target, reached end
 				return;
 			}
 			else if (target.Ancestors().Any(ancestor => ancestor == source))
@@ -104,34 +106,33 @@ namespace Dependiator.Modeling.Analyzing
 			}
 
 			NodeLink partReference = new NodeLink(source, target, kind);
-			if (kind == LinkKind.Sibling || kind == LinkKind.Parent)
-			{
-				source.Parent.NodeLinks.AddPartReference(partReference, originalReference);
-			}
-			else
-			{
-				source.NodeLinks.AddPartReference(partReference, originalReference);
-			}
+			//if (kind == LinkKind.Sibling || kind == LinkKind.Parent)
+			//{
+			//	source.Parent.NodeLinks.AddPartReference(partReference, actualNodeLink);
+			//}
+			//else
+			//{
+				AddPartReference(partReference, actualNodeLink);
+			//}
 		}
 
 
-		public void AddSubReference(NodeLink reference)
+		public void AddLinkPart(NodeLink linkPart, NodeLink actualNodeLink)
 		{
-			Asserter.Requires(reference.Kind != LinkKind.Direkt);
+			Asserter.Requires(linkPart.Kind != LinkKind.Direkt);
 
-			LinkGroup existing = references.FirstOrDefault(
-				r => r.Source == reference.Source && r.Target == reference.Target);
+			LinkGroup existing = links.FirstOrDefault(
+				l => l.Source == linkPart.Source && l.Target == linkPart.Target);
 
 			if (existing != null)
 			{
-				existing.Add(reference);
+				existing.Add(actualNodeLink);
 				return;
 			}
 
-			LinkGroup linkGroup = new LinkGroup(reference.Source, reference.Target);
-			linkGroup.Add(reference);
-
-			references.Add(linkGroup);
+			LinkGroup linkGroup = new LinkGroup(linkPart.Source, linkPart.Target);
+			linkGroup.Add(actualNodeLink);
+			links.Add(linkGroup);
 		}
 
 
@@ -161,7 +162,7 @@ namespace Dependiator.Modeling.Analyzing
 
 		public IEnumerator<LinkGroup> GetEnumerator()
 		{
-			return references.GetEnumerator();
+			return links.GetEnumerator();
 		}
 
 
@@ -170,6 +171,6 @@ namespace Dependiator.Modeling.Analyzing
 			return GetEnumerator();
 		}
 
-		public override string ToString() => $"{references.Count} references";
+		public override string ToString() => $"{links.Count} references";
 	}
 }

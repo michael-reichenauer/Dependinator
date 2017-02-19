@@ -13,7 +13,7 @@ namespace Dependiator.Modeling
 	{
 		public ElementTree ToElementTree(Data.Model data, ModelViewData modelViewData)
 		{
-			ElementName rootName = new ElementName(Element.RootName, Element.RootName);
+			NodeName rootName = new NodeName(Element.RootName, Element.RootName);
 			Element root = new Element(rootName, Element.NameSpaceType, null);
 
 			Dictionary<string, Element> elements = new Dictionary<string, Element>();
@@ -252,8 +252,8 @@ namespace Dependiator.Modeling
 			}
 
 			string shortName = GetNamePart(name);
-			ElementName elementName = new ElementName(shortName, name);
-			Element element = new Element(elementName, null, parent);
+			NodeName nodeName = new NodeName(shortName, name);
+			Element element = new Element(nodeName, null, parent);
 
 			if (modelViewData != null && modelViewData.viewDataByName.TryGetValue(
 				name, out Data.ViewData viewData))

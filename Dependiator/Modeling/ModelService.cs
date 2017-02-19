@@ -90,7 +90,7 @@ namespace Dependiator.Modeling
 		private Data.Model GetCachedOrFreshModelData()
 		{
 			Data.Model data;
-			if (!TryReadCachedData(out data))
+			//if (!TryReadCachedData(out data))
 			{
 				data = ReadFreshData();
 			}
@@ -191,7 +191,8 @@ namespace Dependiator.Modeling
 
 			Point position = new Point(x, y);
 			Rect bounds = new Rect(position, size);
-			Node node = new Node(itemService, elementTree.Root, bounds, null);
+			Node node = new Node(itemService, elementTree.Root, null);
+			node.SetBounds(bounds);
 			itemService.AddRootItem(node);
 			return node;
 		}

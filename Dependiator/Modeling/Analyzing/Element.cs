@@ -14,7 +14,7 @@ namespace Dependiator.Modeling.Analyzing
 
 		public static string RootName = "";
 
-		public ElementName Name { get; }
+		public NodeName Name { get; }
 
 		public string Type { get; private set; }
 
@@ -52,7 +52,7 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		public Element(ElementName name, string type, Element parent)
+		public Element(NodeName name, string type, Element parent)
 		{
 			Type = type;
 			NodeLinks = new NodeLinks(this);

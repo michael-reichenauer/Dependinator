@@ -1,8 +1,8 @@
 namespace Dependiator.Modeling.Analyzing
 {
-	internal class ElementName
+	internal class NodeName
 	{
-		public ElementName(string name, string fullName)
+		public NodeName(string name, string fullName)
 		{
 			Name = name;
 			FullName = fullName;

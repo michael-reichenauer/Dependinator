@@ -15,32 +15,36 @@ namespace Dependiator.Modeling
 		private readonly IItemService itemService;
 		private static readonly Size DefaultSize = new Size(200, 100);
 
+		private ViewModel viewModel;
 
 		public Node(
 			IItemService itemService,
 			Element element,
-			Rect bounds,
 			Node parent)
 			: base(itemService, parent)
 		{
 			Element = element;
-			this.itemService = itemService;
+			this.itemService = itemService;	
+		}
 
+
+		public void SetBounds(Rect bounds)
+		{
 			ItemBounds = bounds;
-			element.ElementBounds = bounds;
+			Element.ElementBounds = bounds;
 
-			RectangleBrush = element.ElementBrush ?? itemService.GetRectangleBrush();
-			element.ElementBrush = RectangleBrush;
+			RectangleBrush = Element.ElementBrush ?? itemService.GetRectangleBrush();
+			Element.ElementBrush = RectangleBrush;
 			BackgroundBrush = itemService.GetRectangleBackgroundBrush(RectangleBrush);
-			ViewModel = new NodeViewModel(this);
+			viewModel = new NodeViewModel(this);
 		}
 
 
 		public Element Element { get; }
 
-		public override ViewModel ViewModel { get; }
+		public override ViewModel ViewModel => viewModel;
 
-
+		public Node ParentNode => (Node)ParentItem;
 		public string Name => Element.Name.Name;
 
 		public string FullName =>
@@ -50,8 +54,8 @@ namespace Dependiator.Modeling
 
 
 		public NodeViewModel ModuleViewModel => ViewModel as NodeViewModel;
-		public Brush RectangleBrush { get; }
-		public Brush BackgroundBrush { get; }
+		public Brush RectangleBrush { get; private set; }
+		public Brush BackgroundBrush { get; private set; }
 
 		public IEnumerable<Node> ChildModules => ChildItems.OfType<Node>();
 
@@ -148,7 +152,8 @@ namespace Dependiator.Modeling
 
 				Rect bounds = new Rect(location, size);
 
-				Node node = new Node(itemService, childElement, bounds, this);
+				Node node = new Node(itemService, childElement, this);
+				node.SetBounds(bounds);
 				AddChildItem(node);
 				count++;
 			}
@@ -223,33 +228,53 @@ namespace Dependiator.Modeling
 
 		private void AddLink(LinkGroup reference)
 		{
-			Node sourceNode;
-			Node targetNode;
+			if (reference.Source == this.Element)
+			{
+				Node sourceNode = this;
+				Node targetNode;
+				if (reference.Target == ParentNode?.Element)
+				{
+					targetNode = ParentNode;
+				}
+				else
+				{
 
-			if (reference.Links.Any(r => r.Kind == LinkKind.Child))
-			{
-				sourceNode = this;
-				targetNode = ChildModules.First(m => m.Element == reference.Target);
-			}
-			else if (reference.Source != Element
-			         && reference.Target != Element
-			         && reference.Links.Any(r => r.Kind == LinkKind.Sibling))
-			{
-				sourceNode = ChildModules.First(m => m.Element == reference.Source);
-				targetNode = ChildModules.First(m => m.Element == reference.Target);
-			}
-			else if (reference.Links.Any(r => r.Kind == LinkKind.Parent))
-			{
-				sourceNode = ChildModules.First(m => m.Element == reference.Source);
-				targetNode = this;
-			}
-			else
-			{
-				return;
+					targetNode = ParentNode?.ChildModules.FirstOrDefault(c => c.Element == reference.Target);
+
+					if (targetNode == null)
+					{
+						targetNode = ChildModules.FirstOrDefault(c => c.Element == reference.Target);
+					}
+				}
+
+				Link link = new Link(itemService, reference, this, sourceNode, targetNode);
+				AddChildItem(link);
 			}
 
-			Link link = new Link(itemService, reference, this, sourceNode, targetNode);
-			AddChildItem(link);
+			//if (reference.Links.Any(r => r.Kind == LinkKind.Child))
+			//{
+			//	sourceNode = this;
+			//	targetNode = ChildModules.First(m => m.Element == reference.Target);
+			//}
+			//else if (reference.Source != Element
+			//         && reference.Target != Element
+			//         && reference.Links.Any(r => r.Kind == LinkKind.Sibling))
+			//{
+			//	sourceNode = ChildModules.First(m => m.Element == reference.Source);
+			//	targetNode = ChildModules.First(m => m.Element == reference.Target);
+			//}
+			//else if (reference.Links.Any(r => r.Kind == LinkKind.Parent))
+			//{
+			//	sourceNode = ChildModules.First(m => m.Element == reference.Source);
+			//	targetNode = this;
+			//}
+			//else
+			//{
+			//	return;
+			//}
+
+			//Link link = new Link(itemService, reference, this, sourceNode, targetNode);
+			//AddChildItem(link);
 		}
 
 

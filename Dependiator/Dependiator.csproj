@@ -135,7 +135,7 @@
     <Compile Include="Modeling\Analyzing\Element.cs" />
     <Compile Include="Modeling\Analyzing\ElementChildren.cs" />
     <Compile Include="Modeling\Analyzing\ElementFactory.cs" />
-    <Compile Include="Modeling\Analyzing\ElementName.cs" />
+    <Compile Include="Modeling\Analyzing\NodeName.cs" />
     <Compile Include="Modeling\Analyzing\ElementTree.cs" />
     <Compile Include="Modeling\Analyzing\IReflectionService.cs" />
     <Compile Include="Modeling\Analyzing\IElementFactory.cs" />
