@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
@@ -13,30 +14,40 @@ namespace Dependiator.Modeling
 		private readonly LinkViewModel linkViewModel;
 		private Point sourcePoint;
 		private Point targetPoint;
-
+		private List<NodeLink> links = new List<NodeLink>();
 
 		public Link(
 			IItemService itemService,
-			LinkGroup reference,
-			Node owner,
-			Node sourceNode,
-			Node targetNode)
-			: base(itemService, owner)
+			Node source,
+			Node target)
+			: base(itemService, source)
 		{
-			Reference = reference;
-			this.SourceNode = sourceNode;
-			this.TargetNode = targetNode;
+			this.Source = source;
+			this.Target = target;
 
 
 			linkViewModel = new LinkViewModel(this);
 			ViewModel = linkViewModel;
 		}
 
-		public Node SourceNode { get; }
+		public IReadOnlyList<NodeLink> Links => links;
 
-		public Node TargetNode { get; }
+		public Node Source { get; }
 
-		public LinkGroup Reference { get; }
+		public Node Target { get; }
+
+
+
+		public void Add(NodeLink nodeLink)
+		{
+			if (links
+				.Any(l => l.Source == nodeLink.Source && l.Target == nodeLink.Target && l.Kind == nodeLink.Kind))
+			{
+				return;
+			}
+
+			links.Add(nodeLink);
+		}
 
 
 		public override ViewModel ViewModel { get; }
@@ -45,14 +56,14 @@ namespace Dependiator.Modeling
 		{
 			get
 			{
-				string tip = $"{Reference},  {Reference.Links.Count} references:";
+				string tip = $"{this},  {Links.Count} references:";
 				int maxLinks = 40;
-				foreach (NodeLink reference in Reference.Links.Take(maxLinks))
+				foreach (NodeLink reference in Links.Take(maxLinks))
 				{
 					tip += $"\n  {reference}";
 				}
 
-				if (Reference.Links.Count > maxLinks)
+				if (Links.Count > maxLinks)
 				{
 					tip += "\n  ...";
 				}
@@ -62,14 +73,14 @@ namespace Dependiator.Modeling
 		}
 
 
-		public Brush LinkBrush => Reference.Source.RectangleBrush;
+		public Brush LinkBrush => Source.RectangleBrush;
 
 		public double X1 => sourcePoint.X;
 		public double Y1 => sourcePoint.Y;
 		public double X2 => targetPoint.X;
 		public double Y2 => targetPoint.Y;
 
-		public int SubLinkCount => Reference.Links.Count; 
+		public int SubLinkCount => Links.Count; 
 
 		public override bool CanBeShown()
 		{
@@ -101,10 +112,10 @@ namespace Dependiator.Modeling
 
 		public void SetLinkLine()
 		{
-			double x1 = Reference.Source.ItemCanvasBounds.X + Reference.Source.ItemCanvasBounds.Width / 2;
-			double y1 = Reference.Source.ItemCanvasBounds.Y + Reference.Source.ItemCanvasBounds.Height;
-			double x2 = Reference.Target.ItemCanvasBounds.X + Reference.Target.ItemCanvasBounds.Width / 2;
-			double y2 = Reference.Target.ItemCanvasBounds.Y; 
+			double x1 = Source.ItemCanvasBounds.X + Source.ItemCanvasBounds.Width / 2;
+			double y1 = Source.ItemCanvasBounds.Y + Source.ItemCanvasBounds.Height;
+			double x2 = Target.ItemCanvasBounds.X + Target.ItemCanvasBounds.Width / 2;
+			double y2 = Target.ItemCanvasBounds.Y; 
 
 
 			double x = Math.Min(x1, x2);
@@ -232,6 +243,6 @@ namespace Dependiator.Modeling
 		//}
 
 
-		public override string ToString() => Reference.ToString();
+		public override string ToString() => $"{Source} -> {Target}";
 	}
 }

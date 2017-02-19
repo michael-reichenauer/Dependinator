@@ -5,24 +5,26 @@ using Dependiator.Utils;
 
 namespace Dependiator.Modeling.Analyzing
 {
-	internal class NodeLinks : IEnumerable<LinkGroup>
+	internal class NodeLinks : IEnumerable<Link>
 	{
+		private readonly IItemService itemService;
 		private readonly Node ownerNode;
-		private readonly List<LinkGroup> links = new List<LinkGroup>();
+		private readonly List<Link> links = new List<Link>();
 
 
-		public NodeLinks(Node ownerNode)
+		public NodeLinks(IItemService itemService, Node ownerNode)
 		{
+			this.itemService = itemService;
 			this.ownerNode = ownerNode;
 		}
 
 
 		public int Count => links.Count;
 
-		public IEnumerable<LinkGroup> SourceReferences => links
+		public IEnumerable<Link> SourceReferences => links
 			.Where(r => r.Source == ownerNode);
 
-		public IEnumerable<LinkGroup> TargetReferences => links
+		public IEnumerable<Link> TargetReferences => links
 			.Where(r => r.Target == ownerNode);
 
 
@@ -39,7 +41,7 @@ namespace Dependiator.Modeling.Analyzing
 				return;
 			}
 
-			LinkGroup existing = links.FirstOrDefault(
+			Link existing = links.FirstOrDefault(
 				l => l.Source == nodeLink.Source && l.Target == nodeLink.Target);
 
 			if (existing != null)
@@ -121,7 +123,7 @@ namespace Dependiator.Modeling.Analyzing
 		{
 			Asserter.Requires(linkPart.Kind != LinkKind.Direkt);
 
-			LinkGroup existing = links.FirstOrDefault(
+			Link existing = links.FirstOrDefault(
 				l => l.Source == linkPart.Source && l.Target == linkPart.Target);
 
 			if (existing != null)
@@ -130,17 +132,17 @@ namespace Dependiator.Modeling.Analyzing
 				return;
 			}
 
-			LinkGroup linkGroup = new LinkGroup(linkPart.Source, linkPart.Target);
+			Link linkGroup = new Link(itemService, linkPart.Source, linkPart.Target);
 			linkGroup.Add(actualNodeLink);
 			links.Add(linkGroup);
 		}
 
 
-		public IEnumerable<LinkGroup> DescendentAndSelfSourceReferences()
+		public IEnumerable<Link> DescendentAndSelfSourceReferences()
 		{
 			foreach (Node node in ownerNode.DescendentsAndSelf())
 			{
-				foreach (LinkGroup reference in node.NodeLinks.SourceReferences)
+				foreach (Link reference in node.NodeLinks.SourceReferences)
 				{
 					yield return reference;
 				}
@@ -148,11 +150,11 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		public IEnumerable<LinkGroup> DescendentAndSelfTargetReferences()
+		public IEnumerable<Link> DescendentAndSelfTargetReferences()
 		{
 			foreach (Node node in ownerNode.DescendentsAndSelf())
 			{
-				foreach (LinkGroup reference in node.NodeLinks.TargetReferences)
+				foreach (Link reference in node.NodeLinks.TargetReferences)
 				{
 					yield return reference;
 				}
@@ -160,7 +162,7 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		public IEnumerator<LinkGroup> GetEnumerator()
+		public IEnumerator<Link> GetEnumerator()
 		{
 			return links.GetEnumerator();
 		}

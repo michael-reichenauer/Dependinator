@@ -4,36 +4,36 @@ using System.Linq;
 
 namespace Dependiator.Modeling.Analyzing
 {
-	internal class LinkGroup
-	{
-		private List<NodeLink> links = new List<NodeLink>();
+	//internal class LinkGroup
+	//{
+	
 
-		public LinkGroup(Node source, Node target)
-		{
-			Source = source;
-			Target = target;
-		}
+	//	public LinkGroup(Node source, Node target)
+	//	{
+	//		Source = source;
+	//		Target = target;
+	//	}
 
-		public Node Source { get; }
+	//	public Node Source { get; }
 
-		public Node Target { get; }
+	//	public Node Target { get; }
 
-		public IReadOnlyList<NodeLink> Links => links;
+	//	public IReadOnlyList<NodeLink> Links => links;
 
 
-		public void Add(NodeLink nodeLink)
-		{
-			if (links
-				.Any(l => l.Source == nodeLink.Source && l.Target == nodeLink.Target && l.Kind == nodeLink.Kind))
-			{
-				return;
-			}
+	//	public void Add(NodeLink nodeLink)
+	//	{
+	//		if (links
+	//			.Any(l => l.Source == nodeLink.Source && l.Target == nodeLink.Target && l.Kind == nodeLink.Kind))
+	//		{
+	//			return;
+	//		}
 
-			links.Add(nodeLink);
-		}
+	//		links.Add(nodeLink);
+	//	}
 
-		public override string ToString() => $"{Source} -> {Target}";
-	}
+	//	public override string ToString() => $"{Source} -> {Target}";
+	//}
 
 
 	internal class NodeLink

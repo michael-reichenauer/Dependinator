@@ -48,7 +48,7 @@ namespace Dependiator.Modeling
 
 		public Data.Model ToData(ElementTree elementTree)
 		{
-			List<Data.Node> nodes = elementTree.Root.ChildNodes
+			List<Data.Node> nodes = elementTree.Root.ChildNodeItems
 				.Select(ToNode)
 				.ToList();
 
@@ -63,7 +63,7 @@ namespace Dependiator.Modeling
 		{
 			ModelViewData modelViewData = new ModelViewData();
 
-			foreach (Node child in elementTree.Root.ChildNodes)
+			foreach (Node child in elementTree.Root.ChildNodeItems)
 			{
 				AddViewData(child, modelViewData);
 			}
@@ -78,7 +78,7 @@ namespace Dependiator.Modeling
 
 			modelViewData.viewDataByName[element.NodeName.FullName] = nodeViewData;
 			
-			foreach (Node child in element.ChildNodes)
+			foreach (Node child in element.ChildNodeItems)
 			{
 				AddViewData(child, modelViewData);
 			}
@@ -185,7 +185,7 @@ namespace Dependiator.Modeling
 			{
 				Name = element.NodeName.Name,
 				Type = element.NodeType,
-				Nodes = ToChildren(element.ChildNodes),
+				Nodes = ToChildren(element.ChildNodeItems),
 				Links = ToLinks(element.NodeLinks),
 				ViewData = ToViewData(element)
 			};
@@ -204,7 +204,7 @@ namespace Dependiator.Modeling
 
 			List<Data.Link> links = null;
 
-			foreach (LinkGroup reference in nodeLinks)
+			foreach (Link reference in nodeLinks)
 		//		.Where(r => r.Kind == LinkKind.Main))
 			{
 				foreach (NodeLink subReference in reference.Links)
