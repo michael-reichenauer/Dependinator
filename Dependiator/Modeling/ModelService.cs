@@ -40,15 +40,23 @@ namespace Dependiator.Modeling
 		}
 
 
+
+
 		public void InitModules()
 		{
 			Timing t = new Timing();
 
-			Data.Model data = GetCachedOrFreshModelData();
+			DataModel dataModel = new DataModel()
+				.AddType("Axis.Class1")
+				.AddType("Axis.Class2")
+				.AddLink("Axis.Class1", "Axis.Class2");
+
+
+			//Data.Model data = GetCachedOrFreshModelData();
 
 			t.Log("After read data");
 
-			ElementTree model = elementService.ToElementTree(data, null);
+			ElementTree model = elementService.ToElementTree(dataModel.Model, null);
 
 			t.Log("To model");
 
@@ -115,7 +123,7 @@ namespace Dependiator.Modeling
 		{
 			ElementTree tree = await Task.Run(() =>
 			{
-				Data.Model newData = reflectionService.Analyze(workingFolder.FilePath);		
+				Data.Model newData = reflectionService.Analyze(workingFolder.FilePath);
 
 				return elementService.ToElementTree(newData, modelViewData);
 			});
@@ -182,8 +190,8 @@ namespace Dependiator.Modeling
 		private Item GetNode(ElementTree elementTree)
 		{
 			Size size = new Size(200000, 100000);
-			
-			double scale = 1 ;
+
+			double scale = 1;
 			itemService.CanvasScale = scale;
 
 			double x = 0 - (size.Width / 2);
@@ -191,10 +199,39 @@ namespace Dependiator.Modeling
 
 			Point position = new Point(x, y);
 			Rect bounds = new Rect(position, size);
-			Node node = new Node(itemService, elementTree.Root, null);
+			Node node = elementTree.Root;
 			node.SetBounds(bounds);
 			itemService.AddRootItem(node);
 			return node;
+		}
+	}
+
+
+	internal class DataModel
+	{
+		public Data.Model Model { get; } = new Data.Model
+		{
+			Nodes = new List<Data.Node>(),
+			Links = new List<Data.Link>()
+		};
+
+
+		public DataModel AddType(string name)
+		{
+			Model.Nodes.Add(new Data.Node { Name = name, Type = "Type" });
+			return this;
+		}
+
+		public DataModel AddMember(string name)
+		{
+			Model.Nodes.Add(new Data.Node {Name = name, Type = "Member"});
+			return this;
+		}
+
+		public DataModel AddLink(string source, string target)
+		{
+			Model.Links.Add(new Data.Link { Source = source, Target = target });
+			return this;
 		}
 	}
 }

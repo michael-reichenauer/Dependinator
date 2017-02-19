@@ -7,33 +7,33 @@ namespace Dependiator.Modeling.Analyzing
 {
 	internal class NodeLinks : IEnumerable<LinkGroup>
 	{
-		private readonly Element ownerElement;
+		private readonly Node ownerNode;
 		private readonly List<LinkGroup> links = new List<LinkGroup>();
 
 
-		public NodeLinks(Element ownerElement)
+		public NodeLinks(Node ownerNode)
 		{
-			this.ownerElement = ownerElement;
+			this.ownerNode = ownerNode;
 		}
 
 
 		public int Count => links.Count;
 
 		public IEnumerable<LinkGroup> SourceReferences => links
-			.Where(r => r.Source == ownerElement);
+			.Where(r => r.Source == ownerNode);
 
 		public IEnumerable<LinkGroup> TargetReferences => links
-			.Where(r => r.Target == ownerElement);
+			.Where(r => r.Target == ownerNode);
 
 
 		
 		public void Add(NodeLink nodeLink)
 		{
 			Asserter.Requires(nodeLink.Kind == LinkKind.Direkt);
-			Asserter.Requires(nodeLink.Source == ownerElement);
+			Asserter.Requires(nodeLink.Source == ownerNode);
 
 			//Asserter.Requires(nodeLink.Source.Name.FullName != nodeLink.Target.Name.FullName);
-			if (nodeLink.Source.Name.FullName == nodeLink.Target.Name.FullName)
+			if (nodeLink.Source.NodeName.FullName == nodeLink.Target.NodeName.FullName)
 			{
 				// Self reference, e.g. A type contains a field or parameter of the same type.
 				return;
@@ -68,8 +68,8 @@ namespace Dependiator.Modeling.Analyzing
 
 		private static void AddPartReference(NodeLink linkPart, NodeLink actualNodeLink)
 		{
-			Element source = actualNodeLink.Source;
-			Element target = actualNodeLink.Target;
+			Node source = actualNodeLink.Source;
+			Node target = actualNodeLink.Target;
 
 			if (linkPart != null)
 			{
@@ -90,19 +90,19 @@ namespace Dependiator.Modeling.Analyzing
 			{
 				// Source is Ancestor of target		
 				kind = LinkKind.Child;
-				target = target.AncestorsAndSelf().First(ancestor => ancestor.Parent == source);
+				target = target.AncestorsAndSelf().First(ancestor => ancestor.ParentNode == source);
 			}
-			else if (target.Ancestors().Any(ancestor => ancestor == source.Parent))
+			else if (target.Ancestors().Any(ancestor => ancestor == source.ParentNode))
 			{
 				// source and target are siblings or source and an target ancestor is siblings
 				kind = LinkKind.Sibling;
-				target = target.AncestorsAndSelf().First(ancestor => ancestor.Parent == source.Parent);
+				target = target.AncestorsAndSelf().First(ancestor => ancestor.ParentNode == source.ParentNode);
 			}
 			else
 			{
 				// Source is Decedent of target	
 				kind = LinkKind.Parent;
-				target = source.Parent;
+				target = source.ParentNode;
 			}
 
 			NodeLink partReference = new NodeLink(source, target, kind);
@@ -138,9 +138,9 @@ namespace Dependiator.Modeling.Analyzing
 
 		public IEnumerable<LinkGroup> DescendentAndSelfSourceReferences()
 		{
-			foreach (Element element in ownerElement.Children.DescendentsAndSelf())
+			foreach (Node node in ownerNode.DescendentsAndSelf())
 			{
-				foreach (LinkGroup reference in element.NodeLinks.SourceReferences)
+				foreach (LinkGroup reference in node.NodeLinks.SourceReferences)
 				{
 					yield return reference;
 				}
@@ -150,9 +150,9 @@ namespace Dependiator.Modeling.Analyzing
 
 		public IEnumerable<LinkGroup> DescendentAndSelfTargetReferences()
 		{
-			foreach (Element element in ownerElement.Children.DescendentsAndSelf())
+			foreach (Node node in ownerNode.DescendentsAndSelf())
 			{
-				foreach (LinkGroup reference in element.NodeLinks.TargetReferences)
+				foreach (LinkGroup reference in node.NodeLinks.TargetReferences)
 				{
 					yield return reference;
 				}

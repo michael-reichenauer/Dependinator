@@ -8,15 +8,15 @@ namespace Dependiator.Modeling.Analyzing
 	{
 		private List<NodeLink> links = new List<NodeLink>();
 
-		public LinkGroup(Element source, Element target)
+		public LinkGroup(Node source, Node target)
 		{
 			Source = source;
 			Target = target;
 		}
 
-		public Element Source { get; }
+		public Node Source { get; }
 
-		public Element Target { get; }
+		public Node Target { get; }
 
 		public IReadOnlyList<NodeLink> Links => links;
 
@@ -38,16 +38,16 @@ namespace Dependiator.Modeling.Analyzing
 
 	internal class NodeLink
 	{
-		public NodeLink(Element source, Element target, LinkKind kind)
+		public NodeLink(Node source, Node target, LinkKind kind)
 		{
 			Source = source;
 			Target = target;
 			Kind = kind;
 		}
 
-		public Element Source { get; }
+		public Node Source { get; }
 
-		public Element Target { get; }
+		public Node Target { get; }
 
 		public LinkKind Kind { get; }
 

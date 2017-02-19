@@ -2,11 +2,11 @@ namespace Dependiator.Modeling.Analyzing
 {
 	internal class ElementTree
 	{
-		public ElementTree(Element root)
+		public ElementTree(Node root)
 		{
 			Root = root;
 		}
 
-		public Element Root { get; } 
+		public Node Root { get; }
 	}
 }

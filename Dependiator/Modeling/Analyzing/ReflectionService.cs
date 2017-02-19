@@ -147,7 +147,7 @@ namespace Dependiator.Modeling.Analyzing
 				Data.Node typeNode = new Data.Node
 				{
 					Name = typeInfo.FullName,
-					Type = Element.TypeType
+					Type = Node.TypeType
 				};
 
 				model.Nodes[typeNode.Name] = typeNode;
@@ -228,7 +228,7 @@ namespace Dependiator.Modeling.Analyzing
 				Data.Node memberNode = new Data.Node
 				{
 					Name = memberName,
-					Type = Element.MemberType
+					Type = Node.MemberType
 				};
 
 

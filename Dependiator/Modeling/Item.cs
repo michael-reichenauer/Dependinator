@@ -116,7 +116,7 @@ namespace Dependiator.Modeling
 			new Size(ItemCanvasBounds.Width * CanvasScale, ItemCanvasBounds.Height * CanvasScale);
 
 
-		public void ShowNode()
+		public void ShowItem()
 		{
 			if (!IsAdded && CanBeShown())
 			{
@@ -127,7 +127,7 @@ namespace Dependiator.Modeling
 
 		public void ShowChildren()
 		{
-			ChildItems.ForEach(node => node.ShowNode());
+			ChildItems.ForEach(item => item.ShowItem());
 		}
 
 
@@ -484,7 +484,7 @@ namespace Dependiator.Modeling
 			{
 				if (canBeShown)
 				{
-					ShowNode();
+					ShowItem();
 				}
 			}
 

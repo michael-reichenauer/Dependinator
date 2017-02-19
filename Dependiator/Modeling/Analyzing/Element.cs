@@ -1,73 +1,62 @@
-using System.Collections.Generic;
-using System.Windows;
-using System.Windows.Media;
-using Dependiator.Modeling.Serializing;
+//using System.Collections.Generic;
+//using System.Windows;
+//using System.Windows.Media;
+//using Dependiator.Modeling.Serializing;
 
 
-namespace Dependiator.Modeling.Analyzing
-{
-	internal class Element
-	{
-		public static string NameSpaceType = "NameSpace";
-		public static readonly string TypeType = "Type";
-		public static readonly string MemberType = "Member";
+//namespace Dependiator.Modeling.Analyzing
+//{
+//	internal class Element
+//	{
+	
+	
 
-		public static string RootName = "";
+//		//public Element Parent { get; }
 
-		public NodeName Name { get; }
+//		//public ElementChildren Children { get; }
 
-		public string Type { get; private set; }
+//		//public NodeLinks NodeLinks { get; }
 
-		public Element Parent { get; }
+//		//public Rect? ElementBounds { get; set; }
 
-		public ElementChildren Children { get; }
-
-		public NodeLinks NodeLinks { get; }
-
-		public Rect? ElementBounds { get; set; }
-
-		public Brush ElementBrush { get; set; }
+//		//public Brush ElementBrush { get; set; }
 
 
-		public IEnumerable<Element> AncestorsAndSelf()
-		{
-			yield return this;
+//		//public IEnumerable<Element> AncestorsAndSelf()
+//		//{
+//		//	yield return this;
 
-			foreach (Element ancestor in Ancestors())
-			{			
-				yield return ancestor;
-			}
-		}
-
-
-		public IEnumerable<Element> Ancestors()
-		{
-			Element current = Parent;
-
-			while (current != null)
-			{
-				yield return current;
-				current = current.Parent;
-			}
-		}
+//		//	foreach (Element ancestor in Ancestors())
+//		//	{			
+//		//		yield return ancestor;
+//		//	}
+//		//}
 
 
-		public Element(NodeName name, string type, Element parent)
-		{
-			Type = type;
-			NodeLinks = new NodeLinks(this);
-			Children = new ElementChildren(this);
-			Name = name;
+//		//public IEnumerable<Element> Ancestors()
+//		//{
+//		//	Element current = Parent;
 
-			Parent = parent;
-		}
+//		//	while (current != null)
+//		//	{
+//		//		yield return current;
+//		//		current = current.Parent;
+//		//	}
+//		}
 
 
-		public void SetType(string type)
-		{
-			Type = type;
-		}
+//		public Element(NodeName name, string type, Element parent)
+//		{
+//			Type = type;
+//			NodeLinks = new NodeLinks(this);
+//			Children = new ElementChildren(this);
+//			Name = name;
 
-		public override string ToString() => Name.FullName;
-	}
-}
+//			Parent = parent;
+//		}
+
+
+
+//		public override string ToString() => Name.FullName;
+//	}
+//}

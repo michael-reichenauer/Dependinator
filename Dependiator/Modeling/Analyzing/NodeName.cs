@@ -2,6 +2,8 @@ namespace Dependiator.Modeling.Analyzing
 {
 	internal class NodeName
 	{
+		public static string Root = "";
+
 		public NodeName(string name, string fullName)
 		{
 			Name = name;

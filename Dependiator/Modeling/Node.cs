@@ -12,6 +12,11 @@ namespace Dependiator.Modeling
 {
 	internal class Node : Item
 	{
+		public static string NameSpaceType = "NameSpace";
+		public static readonly string TypeType = "Type";
+		public static readonly string MemberType = "Member";
+		
+
 		private readonly IItemService itemService;
 		private static readonly Size DefaultSize = new Size(200, 100);
 
@@ -19,11 +24,16 @@ namespace Dependiator.Modeling
 
 		public Node(
 			IItemService itemService,
-			Element element,
-			Node parent)
+		//	Element element,
+			Node parent,
+			NodeName name, 
+			string type)
 			: base(itemService, parent)
 		{
-			Element = element;
+			//Element = element;
+			NodeName = name;
+			NodeType = type;
+			NodeLinks = new NodeLinks(this);
 			this.itemService = itemService;	
 		}
 
@@ -31,25 +41,30 @@ namespace Dependiator.Modeling
 		public void SetBounds(Rect bounds)
 		{
 			ItemBounds = bounds;
-			Element.ElementBounds = bounds;
 
-			RectangleBrush = Element.ElementBrush ?? itemService.GetRectangleBrush();
-			Element.ElementBrush = RectangleBrush;
+			//RectangleBrush = Element.ElementBrush ?? itemService.GetRectangleBrush();
+			RectangleBrush = itemService.GetRectangleBrush();
 			BackgroundBrush = itemService.GetRectangleBackgroundBrush(RectangleBrush);
 			viewModel = new NodeViewModel(this);
 		}
 
 
-		public Element Element { get; }
+		//public Element Element { get; }
 
 		public override ViewModel ViewModel => viewModel;
 
 		public Node ParentNode => (Node)ParentItem;
-		public string Name => Element.Name.Name;
+		public string Name => NodeName.Name;
+
+		public NodeName NodeName { get; }
+
+		public string NodeType { get; private set; }
+
+		public NodeLinks NodeLinks { get; }
+
 
 		public string FullName =>
-			$"{Element.Name.FullName}\n" +
-			$"children: {ChildModules.Count()}, decedents: {Element.Children.Descendents().Count()}\n" +
+			$"{NodeName.FullName}\n" +
 			$"Scale: {CanvasScale:#.##}, Level: {ItemLevel}, NodeScale: {ItemScale:#.##}, NSF: {ThisItemScaleFactor}";
 
 
@@ -57,14 +72,26 @@ namespace Dependiator.Modeling
 		public Brush RectangleBrush { get; private set; }
 		public Brush BackgroundBrush { get; private set; }
 
-		public IEnumerable<Node> ChildModules => ChildItems.OfType<Node>();
+		public IEnumerable<Node> ChildNodes => ChildItems.OfType<Node>();
 
 		public IEnumerable<Link> Links => ChildItems.OfType<Link>();
+		public Rect? ElementBounds { get; set; }
 
 
 		public override bool CanBeShown()
 		{
 			return ItemViewSize.Width > 10 && (ParentItem?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
+		}
+
+		public void SetType(string nodeType)
+		{
+			NodeType = nodeType;
+		}
+
+
+		public void AddChild(Node child)
+		{
+			AddChildItem(child);
 		}
 
 
@@ -74,12 +101,12 @@ namespace Dependiator.Modeling
 			{
 				base.ItemRealized();
 
-				if (!ChildModules.Any())
+				//if (!ChildNodes.Any())
 				{
 					AddModuleChildren();
 				}
 
-				if (!Links.Any())
+				//if (!Links.Any())
 				{
 					AddLinks();				
 				}
@@ -89,10 +116,10 @@ namespace Dependiator.Modeling
 		}
 
 
-		protected override void ItemBoundsChanged()
-		{
-			Element.ElementBounds = ItemBounds;
-		}
+		//protected override void ItemBoundsChanged()
+		//{
+		//	Element.ElementBounds = ItemBounds;
+		//}
 
 
 		public override void ChangedScale()
@@ -112,8 +139,51 @@ namespace Dependiator.Modeling
 		}
 
 
-		public override string ToString() => Element.Name.FullName;
+		public override string ToString() => NodeName.FullName;
 
+		public IEnumerable<Node> Ancestors()
+		{
+			Node current = ParentNode;
+
+			while (current != null)
+			{
+				yield return current;
+				current = current.ParentNode;
+			}
+		}
+
+		public IEnumerable<Node> AncestorsAndSelf()
+		{
+			yield return this;
+
+			foreach (Node ancestor in Ancestors())
+			{
+				yield return ancestor;
+			}
+		}
+
+		public IEnumerable<Node> Descendents()
+		{
+			foreach (Node child in ChildNodes)
+			{
+				yield return child;
+
+				foreach (Node descendent in child.Descendents())
+				{
+					yield return descendent;
+				}
+			}
+		}
+
+		public IEnumerable<Node> DescendentsAndSelf()
+		{
+			yield return this;
+
+			foreach (Node descendent in Descendents())
+			{
+				yield return descendent;
+			}
+		}
 
 		private void AddModuleChildren()
 		{	
@@ -132,18 +202,19 @@ namespace Dependiator.Modeling
 
 
 			int count = 0;
-			var children = Element.Children.OrderBy(e => e, Compare.With<Element>(CompareElements));
+			var children = ChildNodes.OrderBy(e => e, Compare.With<Node>(CompareElements));
 
-			foreach (Element childElement in children)
+			foreach (Node childNode in children)
 			{
-				Size size = childElement.ElementBounds?.Size ?? DefaultSize;
+				//Size size = childElement.ElementBounds?.Size ?? DefaultSize;
+				Size size =  DefaultSize;
 
 				Point location;
-				if (childElement.ElementBounds.HasValue)
-				{
-					location = childElement.ElementBounds.Value.Location;
-				}
-				else
+				//if (childElement.ElementBounds.HasValue)
+				//{
+				//	location = childElement.ElementBounds.Value.Location;
+				//}
+				//else
 				{
 					int x = count % rowLength;
 					int y = count / rowLength;
@@ -152,19 +223,18 @@ namespace Dependiator.Modeling
 
 				Rect bounds = new Rect(location, size);
 
-				Node node = new Node(itemService, childElement, this);
-				node.SetBounds(bounds);
-				AddChildItem(node);
+				//Node node = new Node(itemService, childElement, this);
+				childNode.SetBounds(bounds);
 				count++;
 			}
 		}
 
 
-		private int CompareElements(Element e1, Element e2)
+		private int CompareElements(Node e1, Node e2)
 		{
-			LinkGroup e1ToE2 = Element.NodeLinks
+			LinkGroup e1ToE2 = NodeLinks
 				.FirstOrDefault(r => r.Source == e1 && r.Target == e2);
-			LinkGroup e2ToE1 = Element.NodeLinks
+			LinkGroup e2ToE1 = NodeLinks
 				.FirstOrDefault(r => r.Source == e2 && r.Target == e1);
 
 			int e1ToE2Count = e1ToE2?.Links.Count ?? 0;
@@ -179,10 +249,10 @@ namespace Dependiator.Modeling
 				return 1;
 			}
 
-			LinkGroup parentToE1 = Element.NodeLinks
-				.FirstOrDefault(r => r.Source == Element && r.Target == e1);
-			LinkGroup parentToE2 = Element.NodeLinks
-				.FirstOrDefault(r => r.Source == Element && r.Target == e2);
+			LinkGroup parentToE1 = NodeLinks
+				.FirstOrDefault(r => r.Source == this && r.Target == e1);
+			LinkGroup parentToE2 = NodeLinks
+				.FirstOrDefault(r => r.Source == this && r.Target == e2);
 
 			int parentToE1Count = parentToE1?.Links.Count ?? 0;
 			int parentToE2Count = parentToE2?.Links.Count ?? 0;
@@ -196,10 +266,10 @@ namespace Dependiator.Modeling
 				return 1;
 			}
 
-			LinkGroup e1ToParent = Element.NodeLinks
-				.FirstOrDefault(r => r.Source == e1 && r.Target == Element);
-			LinkGroup e2ToParent = Element.NodeLinks
-				.FirstOrDefault(r => r.Source == e2 && r.Target == Element);
+			LinkGroup e1ToParent = NodeLinks
+				.FirstOrDefault(r => r.Source == e1 && r.Target == this);
+			LinkGroup e2ToParent = NodeLinks
+				.FirstOrDefault(r => r.Source == e2 && r.Target == this);
 
 			int e1ToParentCount = e1ToParent?.Links.Count ?? 0;
 			int e2ToParentCount = e2ToParent?.Links.Count ?? 0;
@@ -219,7 +289,7 @@ namespace Dependiator.Modeling
 
 		private void AddLinks()
 		{
-			foreach (LinkGroup reference in Element.NodeLinks)
+			foreach (LinkGroup reference in NodeLinks)
 			{
 				AddLink(reference);
 			}
@@ -228,24 +298,24 @@ namespace Dependiator.Modeling
 
 		private void AddLink(LinkGroup reference)
 		{
-			if (reference.Source == this.Element)
+			if (reference.Source == this)
 			{
 				Node sourceNode = this;
-				Node targetNode;
-				if (reference.Target == ParentNode?.Element)
-				{
-					targetNode = ParentNode;
-				}
-				else
-				{
+				Node targetNode = reference.Target;
+				//if (reference.Target == ParentNode)
+				//{
+				//	targetNode = ParentNode;
+				//}
+				//else
+				//{
 
-					targetNode = ParentNode?.ChildModules.FirstOrDefault(c => c.Element == reference.Target);
+				//	targetNode = ParentNode?.ChildNodes.FirstOrDefault(c => c.Element == reference.Target);
 
-					if (targetNode == null)
-					{
-						targetNode = ChildModules.FirstOrDefault(c => c.Element == reference.Target);
-					}
-				}
+				//	if (targetNode == null)
+				//	{
+				//		targetNode = ChildNodes.FirstOrDefault(c => c.Element == reference.Target);
+				//	}
+				//}
 
 				Link link = new Link(itemService, reference, this, sourceNode, targetNode);
 				AddChildItem(link);
