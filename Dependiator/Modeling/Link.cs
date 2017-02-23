@@ -27,27 +27,13 @@ namespace Dependiator.Modeling
 		}
 
 
+		public override ViewModel ViewModel { get; }
+
 		public IReadOnlyList<NodeLink> NodeLinks => nodeLinks;
 
 		public Node Source { get; }
 
-		public Node Target { get; }
-
-
-		public void Add(NodeLink nodeLink)
-		{
-			if (nodeLinks.Any(l => l.Source == nodeLink.Source && l.Target == nodeLink.Target))
-			{
-				return;
-			}
-
-			nodeLinks.Add(nodeLink);
-		}
-
-
-		public override ViewModel ViewModel { get; }
-
-		
+		public Node Target { get; }	
 
 		public Brush LinkBrush => Source.RectangleBrush;
 
@@ -76,6 +62,16 @@ namespace Dependiator.Modeling
 			}
 		}
 
+		public void Add(NodeLink nodeLink)
+		{
+			if (nodeLinks.Any(l => l.Source == nodeLink.Source && l.Target == nodeLink.Target))
+			{
+				return;
+			}
+
+			nodeLinks.Add(nodeLink);
+		}
+
 
 		public override bool CanBeShown()
 		{
@@ -90,6 +86,7 @@ namespace Dependiator.Modeling
 				base.ItemVirtualized();
 			}
 		}
+
 
 		public double LineThickness
 		{

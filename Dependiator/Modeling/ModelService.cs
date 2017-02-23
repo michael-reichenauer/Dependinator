@@ -16,24 +16,24 @@ namespace Dependiator.Modeling
 	{
 		private readonly WorkingFolder workingFolder;
 		private readonly IReflectionService reflectionService;
-		private readonly IElementService elementService;
+		private readonly INodeService nodeService;
 		private readonly IItemService itemService;
 		private readonly IDataSerializer dataSerializer;
 		private readonly ICanvasService canvasService;
 
-		private ElementTree elementTree;
+		private Model elementTree;
 
 		public ModelService(
 			WorkingFolder workingFolder,
 			IReflectionService reflectionService,
-			IElementService elementService,
+			INodeService nodeService,
 			IItemService itemService,
 			IDataSerializer dataSerializer,
 			ICanvasService canvasService)
 		{
 			this.workingFolder = workingFolder;
 			this.reflectionService = reflectionService;
-			this.elementService = elementService;
+			this.nodeService = nodeService;
 			this.itemService = itemService;
 			this.dataSerializer = dataSerializer;
 			this.canvasService = canvasService;
@@ -56,7 +56,7 @@ namespace Dependiator.Modeling
 
 			t.Log("After read data");
 
-			ElementTree model = elementService.ToElementTree(dataModel.Model, null);
+			Model model = nodeService.ToModel(dataModel.Model, null);
 
 			t.Log("To model");
 
@@ -78,10 +78,10 @@ namespace Dependiator.Modeling
 			StoreViewSettings();
 			t.Log("stored setting");
 
-			ModelViewData modelViewData = elementService.ToViewData(elementTree);
+			ModelViewData modelViewData = nodeService.ToViewData(elementTree);
 			t.Log("Got current model data");
 
-			ElementTree tree = await RefreshElementTreeAsync(modelViewData);
+			Model tree = await RefreshElementTreeAsync(modelViewData);
 
 			t.Log("Read fresh data");
 
@@ -106,7 +106,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void ShowModel(ElementTree tree)
+		private void ShowModel(Model tree)
 		{
 			if (elementTree != null)
 			{
@@ -119,13 +119,13 @@ namespace Dependiator.Modeling
 		}
 
 
-		private async Task<ElementTree> RefreshElementTreeAsync(ModelViewData modelViewData)
+		private async Task<Model> RefreshElementTreeAsync(ModelViewData modelViewData)
 		{
-			ElementTree tree = await Task.Run(() =>
+			Model tree = await Task.Run(() =>
 			{
 				Data.Model newData = reflectionService.Analyze(workingFolder.FilePath);
 
-				return elementService.ToElementTree(newData, modelViewData);
+				return nodeService.ToModel(newData, modelViewData);
 			});
 			return tree;
 		}
@@ -159,7 +159,7 @@ namespace Dependiator.Modeling
 
 		public void Close()
 		{
-			Data.Model data = elementService.ToData(elementTree);
+			Data.Model data = nodeService.ToData(elementTree);
 			dataSerializer.Serialize(data);
 
 			StoreViewSettings();
@@ -187,7 +187,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private Item GetNode(ElementTree elementTree)
+		private Item GetNode(Model elementTree)
 		{
 			Size size = new Size(200000, 100000);
 

@@ -301,8 +301,7 @@ namespace Dependiator.Modeling
 
 		public void UpdateLinksFor(Item item)
 		{
-			IEnumerable<Link> links = ChildItems
-				.OfType<Link>()
+			IEnumerable<Link> links = NodeLinks
 				.Where(link => link.Source == item || link.Target == item)
 				.ToList();
 
@@ -315,8 +314,7 @@ namespace Dependiator.Modeling
 
 		public void UpdateLinksFor()
 		{
-			IEnumerable<Link> links = ChildItems
-				.OfType<Link>()		
+			IEnumerable<Link> links = NodeLinks	
 				.ToList();
 
 			foreach (Link link in links)
