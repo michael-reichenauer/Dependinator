@@ -9,7 +9,7 @@ namespace Dependiator.Modeling
 	{
 		Model ToModel(Data.Model dataModel, ModelViewData modelViewData);
 
-		Data.Model ToData(Model elementTree);
+		Data.Model ToDataModel(Model elementTree);
 
 		ModelViewData ToViewData(Model elementTree);
 	}

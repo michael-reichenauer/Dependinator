@@ -159,7 +159,7 @@ namespace Dependiator.Modeling
 
 		public void Close()
 		{
-			Data.Model data = nodeService.ToData(elementTree);
+			Data.Model data = nodeService.ToDataModel(elementTree);
 			dataSerializer.Serialize(data);
 
 			StoreViewSettings();

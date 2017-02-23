@@ -6,7 +6,7 @@ namespace Dependiator.Modeling
 {
 	internal class ModelViewData
 	{
-		public IDictionary<string, Data.ViewData> viewDataByName { get; } =
+		public IDictionary<string, Data.ViewData> viewData { get; } =
 			new Dictionary<string, Data.ViewData>();
 	}
 }

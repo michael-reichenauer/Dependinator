@@ -69,7 +69,7 @@ namespace Dependiator.Modeling
 		public Brush RectangleBrush { get; private set; }
 		public Brush BackgroundBrush { get; private set; }
 
-		public IEnumerable<Node> ChildNodeItems => ChildItems.OfType<Node>();
+		public IEnumerable<Node> ChildNodes => ChildItems.OfType<Node>();
 
 		public IEnumerable<Link> LinkItems => ChildItems.OfType<Link>();
 
@@ -157,7 +157,7 @@ namespace Dependiator.Modeling
 
 		public IEnumerable<Node> Descendents()
 		{
-			foreach (Node child in ChildNodeItems)
+			foreach (Node child in ChildNodes)
 			{
 				yield return child;
 
@@ -195,7 +195,7 @@ namespace Dependiator.Modeling
 
 
 			int count = 0;
-			var children = ChildNodeItems.OrderBy(e => e, Compare.With<Node>(CompareElements));
+			var children = ChildNodes.OrderBy(e => e, Compare.With<Node>(CompareElements));
 
 			foreach (Node childNode in children)
 			{

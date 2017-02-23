@@ -25,10 +25,8 @@ namespace Dependiator.Modeling
 			IEnumerable<Data.Node> nodes = dataModel.Nodes ?? Enumerable.Empty<Data.Node>();
 			IEnumerable<Data.Link> links = dataModel.Links ?? Enumerable.Empty<Data.Link>();
 
-			NodeName rootName = new NodeName(NodeName.Root, NodeName.Root);
-			Node root = new Node(itemService, null, rootName, Node.NameSpaceType);
+			Node root = CreateRootNode();
 			Model model = new Model(root);
-
 
 			foreach (Data.Node node in nodes)
 			{
@@ -40,19 +38,25 @@ namespace Dependiator.Modeling
 				AddLink(link, model, modelViewData);
 			}
 
-
 			return model;
 		}
 
 
-		public Data.Model ToData(Model model)
+		private Node CreateRootNode()
 		{
-			List<Data.Node> nodes = model.Root.ChildNodeItems
+			NodeName rootName = new NodeName(NodeName.Root, NodeName.Root);
+			Node root = new Node(itemService, null, rootName, Node.NameSpaceType);
+			return root;
+		}
+
+
+		public Data.Model ToDataModel(Model model)
+		{
+			Data.Model dataModel = new Data.Model();
+
+			dataModel.Nodes = model.Root.ChildNodes
 				.Select(ToDataNode)
 				.ToList();
-
-			Data.Model dataModel = new Data.Model();
-			dataModel.Nodes = nodes;
 
 			return dataModel;
 		}
@@ -62,11 +66,8 @@ namespace Dependiator.Modeling
 		{
 			ModelViewData modelViewData = new ModelViewData();
 
-			foreach (Node child in model.Root.ChildNodeItems)
-			{
-				AddViewData(child, modelViewData);
-			}
-
+			AddViewData(model.Root, modelViewData);
+		
 			return modelViewData;
 		}
 
@@ -75,11 +76,11 @@ namespace Dependiator.Modeling
 		{
 			Data.ViewData nodeViewData = ToViewData(node);
 
-			modelViewData.viewDataByName[node.NodeName.FullName] = nodeViewData;
+			modelViewData.viewData[node.NodeName.FullName] = nodeViewData;
 
-			foreach (Node child in node.ChildNodeItems)
+			foreach (Node childNode in node.ChildNodes)
 			{
-				AddViewData(child, modelViewData);
+				AddViewData(childNode, modelViewData);
 			}
 		}
 
@@ -99,7 +100,6 @@ namespace Dependiator.Modeling
 				viewData.Height = node.ElementBounds.Value.Height;
 			}
 
-
 			return viewData;
 		}
 
@@ -115,6 +115,7 @@ namespace Dependiator.Modeling
 				: parentName + "." + dataNode.Name;
 
 			Node node = GetOrAddNode(fullName, model, modelViewData);
+
 			node.SetType(dataNode.Type);
 
 			if (dataNode.ViewData != null)
@@ -124,8 +125,8 @@ namespace Dependiator.Modeling
 			}
 			else
 			{
-				if (modelViewData != null && modelViewData.viewDataByName.TryGetValue(
-					fullName, out Data.ViewData viewData))
+				if (modelViewData != null 
+					&& modelViewData.viewData.TryGetValue(fullName, out Data.ViewData viewData))
 				{
 					node.ElementBounds = ToBounds(viewData);
 					//element.ElementBrush = Converter.BrushFromHex(viewData.Color);
@@ -135,9 +136,9 @@ namespace Dependiator.Modeling
 
 			if (dataNode.Nodes != null)
 			{
-				foreach (Data.Node childNode in dataNode.Nodes)
+				foreach (Data.Node childDataNode in dataNode.Nodes)
 				{
-					AddNode(childNode, fullName, model, modelViewData);
+					AddNode(childDataNode, fullName, model, modelViewData);
 				}
 			}
 
@@ -170,8 +171,9 @@ namespace Dependiator.Modeling
 		{
 			Node sourceNode = GetOrAddNode(link.Source, model, modelViewData);
 			Node targetNode = GetOrAddNode(link.Target, model, modelViewData);
-			NodeLink reference = new NodeLink(sourceNode, targetNode);
-			sourceNode.NodeLinks.Add(reference);
+
+			NodeLink nodeLink = new NodeLink(sourceNode, targetNode);
+			sourceNode.NodeLinks.Add(nodeLink);
 		}
 
 
@@ -181,35 +183,35 @@ namespace Dependiator.Modeling
 			{
 				Name = node.NodeName.Name,
 				Type = node.NodeType,
-				Nodes = ToChildren(node.ChildNodeItems),
-				Links = ToLinks(node.NodeLinks),
+				Nodes = ToChildren(node.ChildNodes),
+				Links = ToLinks(node),
 				ViewData = ToViewData(node)
 			};
-
 
 			return dataNode;
 		}
 
 
-		private List<Data.Link> ToLinks(NodeLinks nodeLinks)
+		private static List<Data.Link> ToLinks(Node node)
 		{
-			if (!nodeLinks.Any())
+			if (!node.NodeLinks.Any())
 			{
 				return null;
 			}
 
 			List<Data.Link> links = null;
 
-			foreach (Link link in nodeLinks)
+			foreach (Link link in node.NodeLinks)
 			{
-				foreach (NodeLink nodeLink in link.NodeLinks)
+				foreach (NodeLink nodeLink in link.NodeLinks.Where(n => n.Source == node))
 				{
 					if (links == null)
 					{
 						links = new List<Data.Link>();
 					}
 
-					links.Add(new Data.Link { Target = nodeLink.Target.NodeName.FullName });
+					Data.Link dataLink = new Data.Link { Target = nodeLink.Target.NodeName.FullName };
+					links.Add(dataLink);
 				}
 			}
 
@@ -254,7 +256,7 @@ namespace Dependiator.Modeling
 			NodeName nodeName = new NodeName(shortName, name);
 			Node node = new Node(itemService, parentNode, nodeName, null);
 
-			if (modelViewData != null && modelViewData.viewDataByName.TryGetValue(
+			if (modelViewData != null && modelViewData.viewData.TryGetValue(
 				name, out Data.ViewData viewData))
 			{
 				node.ElementBounds = ToBounds(viewData);
@@ -268,7 +270,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private string GetParentName(string fullName)
+		private static string GetParentName(string fullName)
 		{
 			int index = fullName.LastIndexOf('.');
 
@@ -282,7 +284,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private string GetNamePart(string fullName)
+		private static string GetNamePart(string fullName)
 		{
 			int index = fullName.LastIndexOf('.');
 
