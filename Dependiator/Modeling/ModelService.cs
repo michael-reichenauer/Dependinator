@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Windows;
 using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
@@ -56,7 +55,7 @@ namespace Dependiator.Modeling
 
 			t.Log("After read data");
 
-			Model model = nodeService.ToModel(dataModel.Model, null);
+			Model model = nodeService.ToModel(dataModel, null);
 
 			t.Log("To model");
 
@@ -95,14 +94,15 @@ namespace Dependiator.Modeling
 		}
 
 
-		private Data.Model GetCachedOrFreshModelData()
+		private DataModel GetCachedOrFreshModelData()
 		{
-			Data.Model data;
-			//if (!TryReadCachedData(out data))
+			DataModel dataModel;
+			//if (!TryReadCachedData(out dataModel))
 			{
-				data = ReadFreshData();
+				dataModel = ReadFreshData();
 			}
-			return data;
+
+			return dataModel;
 		}
 
 
@@ -121,25 +121,26 @@ namespace Dependiator.Modeling
 
 		private async Task<Model> RefreshElementTreeAsync(ModelViewData modelViewData)
 		{
-			Model tree = await Task.Run(() =>
+			Model model = await Task.Run(() =>
 			{
-				Data.Model newData = reflectionService.Analyze(workingFolder.FilePath);
+				DataModel dataModel = reflectionService.Analyze(workingFolder.FilePath);
 
-				return nodeService.ToModel(newData, modelViewData);
+				return nodeService.ToModel(dataModel, modelViewData);
 			});
-			return tree;
+
+			return model;
 		}
 
 
-		private bool TryReadCachedData(out Data.Model data)
+		private bool TryReadCachedData(out DataModel dataModel)
 		{
-			return dataSerializer.TryDeserialize(out data);
+			return dataSerializer.TryDeserialize(out dataModel);
 		}
 
 
-		private Data.Model ReadFreshData()
+		private DataModel ReadFreshData()
 		{
-			Data.Model model = reflectionService.Analyze(workingFolder.FilePath);
+			DataModel model = reflectionService.Analyze(workingFolder.FilePath);
 
 			return model;
 		}
@@ -159,8 +160,8 @@ namespace Dependiator.Modeling
 
 		public void Close()
 		{
-			Data.Model data = nodeService.ToDataModel(elementTree);
-			dataSerializer.Serialize(data);
+			DataModel dataModel = nodeService.ToDataModel(elementTree);
+			dataSerializer.Serialize(dataModel);
 
 			StoreViewSettings();
 		}
@@ -187,7 +188,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private Item GetNode(Model elementTree)
+		private Item GetNode(Model model)
 		{
 			Size size = new Size(200000, 100000);
 
@@ -199,39 +200,10 @@ namespace Dependiator.Modeling
 
 			Point position = new Point(x, y);
 			Rect bounds = new Rect(position, size);
-			Node node = elementTree.Root;
+			Node node = model.Root;
 			node.SetBounds(bounds);
 			itemService.AddRootItem(node);
 			return node;
-		}
-	}
-
-
-	internal class DataModel
-	{
-		public Data.Model Model { get; } = new Data.Model
-		{
-			Nodes = new List<Data.Node>(),
-			Links = new List<Data.Link>()
-		};
-
-
-		public DataModel AddType(string name)
-		{
-			Model.Nodes.Add(new Data.Node { Name = name, Type = "Type" });
-			return this;
-		}
-
-		public DataModel AddMember(string name)
-		{
-			Model.Nodes.Add(new Data.Node {Name = name, Type = "Member"});
-			return this;
-		}
-
-		public DataModel AddLink(string source, string target)
-		{
-			Model.Links.Add(new Data.Link { Source = source, Target = target });
-			return this;
 		}
 	}
 }

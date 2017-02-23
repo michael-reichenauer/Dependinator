@@ -7,9 +7,9 @@ namespace Dependiator.Modeling
 {
 	internal interface INodeService
 	{
-		Model ToModel(Data.Model dataModel, ModelViewData modelViewData);
+		Model ToModel(DataModel dataModel, ModelViewData modelViewData);
 
-		Data.Model ToDataModel(Model elementTree);
+		DataModel ToDataModel(Model elementTree);
 
 		ModelViewData ToViewData(Model elementTree);
 	}

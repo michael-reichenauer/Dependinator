@@ -20,7 +20,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public Model ToModel(Data.Model dataModel, ModelViewData modelViewData)
+		public Model ToModel(DataModel dataModel, ModelViewData modelViewData)
 		{
 			IEnumerable<Data.Node> nodes = dataModel.Nodes ?? Enumerable.Empty<Data.Node>();
 			IEnumerable<Data.Link> links = dataModel.Links ?? Enumerable.Empty<Data.Link>();
@@ -50,9 +50,9 @@ namespace Dependiator.Modeling
 		}
 
 
-		public Data.Model ToDataModel(Model model)
+		public DataModel ToDataModel(Model model)
 		{
-			Data.Model dataModel = new Data.Model();
+			DataModel dataModel = new DataModel();
 
 			dataModel.Nodes = model.Root.ChildNodes
 				.Select(ToDataNode)

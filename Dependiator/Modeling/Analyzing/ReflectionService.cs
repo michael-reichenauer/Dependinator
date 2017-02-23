@@ -27,16 +27,12 @@ namespace Dependiator.Modeling.Analyzing
 				new Dictionary<string, Data.Link>();
 		}
 
-		public Data.Model Analyze(string path)
+		public DataModel Analyze(string path)
 		{
 			string currentDirectory = Environment.CurrentDirectory;
 
-			Data.Model model = new Data.Model
-			{
-				Nodes = new List<Data.Node>(),
-				Links = new List<Data.Link>()
-			};
-
+			DataModel model = new DataModel();
+		
 			try
 			{
 				Environment.CurrentDirectory = Path.GetDirectoryName(path) ?? currentDirectory;

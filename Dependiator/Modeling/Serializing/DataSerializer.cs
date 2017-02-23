@@ -26,8 +26,9 @@ namespace Dependiator.Modeling.Serializing
 		}
 
 		
-		public void Serialize(Data.Model model)
+		public void Serialize(DataModel dataModel)
 		{
+			Data.Model model = new Data.Model {Nodes = dataModel.Nodes, Links = dataModel.Links};
 			string json = JsonConvert.SerializeObject(model, typeof(Data.Model), Settings);
 			string path = GetDataFilePath();
 
@@ -35,7 +36,7 @@ namespace Dependiator.Modeling.Serializing
 		}
 
 
-		public bool TryDeserialize(out Data.Model model)
+		public bool TryDeserialize(out DataModel model)
 		{
 			string path = GetDataFilePath();
 			if (TryReadFileText(path, out string json))
@@ -48,11 +49,12 @@ namespace Dependiator.Modeling.Serializing
 		}
 
 
-		private bool TryDeSerialize(string json, out Data.Model model)
+		private static bool TryDeSerialize(string json, out DataModel dataModel)
 		{
 			try
 			{
-				model = JsonConvert.DeserializeObject<Data.Model>(json, Settings);
+				Data.Model model = JsonConvert.DeserializeObject<Data.Model>(json, Settings);
+				dataModel = new DataModel {Nodes = model.Nodes, Links = model.Links};
 				return true;
 			}
 			catch (Exception e) when (e.IsNotFatal())
@@ -60,7 +62,7 @@ namespace Dependiator.Modeling.Serializing
 				Log.Error($"Failed to deserialize json data, {e}");
 			}
 
-			model = null;
+			dataModel = null;
 			return false;
 		}
 

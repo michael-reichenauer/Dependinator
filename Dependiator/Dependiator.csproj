@@ -143,6 +143,7 @@
     <Compile Include="Modeling\Analyzing\NameSpaceElement.cs" />
     <Compile Include="Modeling\Analyzing\NodeLink.cs" />
     <Compile Include="Modeling\Analyzing\NodeLinks.cs" />
+    <Compile Include="Modeling\Serializing\DataModel.cs" />
     <Compile Include="Modeling\NodeService.cs" />
     <Compile Include="Modeling\INodeService.cs" />
     <Compile Include="Modeling\Link.cs" />
@@ -167,7 +168,6 @@
     <Compile Include="Modeling\ModelService.cs" />
     <Compile Include="Modeling\ItemService.cs" />
     <Compile Include="Modeling\Serializing\Data.cs" />
-    <Compile Include="Modeling\Serializing\DataModel.cs" />
     <Compile Include="Modeling\Serializing\DataSerializer.cs" />
     <Compile Include="Modeling\Serializing\IDataSerializer.cs" />
     <Compile Include="Utils\MathExtensions.cs" />
