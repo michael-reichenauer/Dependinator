@@ -11,10 +11,7 @@ using Dependiator.Utils.UI;
 namespace Dependiator.Modeling
 {
 	internal class Node : Item
-	{
-		public static string NameSpaceType = "NameSpace";
-		public static readonly string TypeType = "Type";
-		public static readonly string MemberType = "Member";
+	{		
 		private static readonly Size DefaultSize = new Size(200, 100);
 
 		private readonly IItemService itemService;
@@ -26,7 +23,7 @@ namespace Dependiator.Modeling
 			IItemService itemService,
 			Node parent,
 			NodeName name, 
-			string type)
+			NodeType type)
 			: base(itemService, parent)
 		{
 			NodeName = name;
@@ -55,7 +52,7 @@ namespace Dependiator.Modeling
 
 		public NodeName NodeName { get; }
 
-		public string NodeType { get; private set; }
+		public NodeType NodeType { get; private set; }
 
 		public NodeLinks NodeLinks { get; }
 
@@ -81,7 +78,7 @@ namespace Dependiator.Modeling
 			return ItemViewSize.Width > 10 && (ParentItem?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
 		}
 
-		public void SetType(string nodeType)
+		public void SetType(NodeType nodeType)
 		{
 			NodeType = nodeType;
 		}
@@ -195,7 +192,7 @@ namespace Dependiator.Modeling
 
 
 			int count = 0;
-			var children = ChildNodes.OrderBy(e => e, Compare.With<Node>(CompareElements));
+			var children = ChildNodes.OrderBy(e => e, Compare.With<Node>(CompareNodes));
 
 			foreach (Node childNode in children)
 			{
@@ -223,7 +220,53 @@ namespace Dependiator.Modeling
 		}
 
 
-		private int CompareElements(Node e1, Node e2)
+		private void AddLinks()
+		{
+			foreach (Link link in NodeLinks)
+			{
+				AddLink(link);
+			}
+		}
+
+
+		private void AddLink(Link link)
+		{
+			if (link.Source == this)
+			{	
+				AddChildItem(link);
+				link.UpdateLinkLine();
+			}
+		}
+
+
+		public void UpdateLinksFor(Item item)
+		{
+			IEnumerable<Link> links = NodeLinks
+				.Where(link => link.Source == item || link.Target == item)
+				.ToList();
+
+			foreach (Link link in links)
+			{
+				link.UpdateLinkLine();
+				link.NotifyAll();
+			}
+		}
+
+
+		public void UpdateLinksFor()
+		{
+			IEnumerable<Link> links = NodeLinks	
+				.ToList();
+
+			foreach (Link link in links)
+			{
+				link.UpdateLinkLine();
+				link.NotifyAll();
+			}
+		}
+
+
+		private int CompareNodes(Node e1, Node e2)
 		{
 			Link e1ToE2 = NodeLinks
 				.FirstOrDefault(r => r.Source == e1 && r.Target == e2);
@@ -277,51 +320,6 @@ namespace Dependiator.Modeling
 			}
 
 			return 0;
-		}
-
-
-		private void AddLinks()
-		{
-			foreach (Link link in NodeLinks)
-			{
-				AddLink(link);
-			}
-		}
-
-
-		private void AddLink(Link link)
-		{
-			if (link.Source == this)
-			{	
-				AddChildItem(link);
-				link.UpdateLinkLine();
-			}
-		}
-
-
-		public void UpdateLinksFor(Item item)
-		{
-			IEnumerable<Link> links = NodeLinks
-				.Where(link => link.Source == item || link.Target == item)
-				.ToList();
-
-			foreach (Link link in links)
-			{
-				link.UpdateLinkLine();
-				link.NotifyAll();
-			}
-		}
-
-		public void UpdateLinksFor()
-		{
-			IEnumerable<Link> links = NodeLinks	
-				.ToList();
-
-			foreach (Link link in links)
-			{
-				link.UpdateLinkLine();
-				link.NotifyAll();
-			}
 		}
 	}
 }

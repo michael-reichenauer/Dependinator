@@ -83,5 +83,12 @@ namespace Dependiator.Modeling.Serializing
 			public double Height { get; set; }
 			public string Color { get; set; }
 		}
+
+		internal static class NodeType
+		{
+			public static string NameSpaceType = "NameSpace";
+			public static readonly string TypeType = "Type";
+			public static readonly string MemberType = "Member";
+		}
 	}
 }

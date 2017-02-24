@@ -45,7 +45,7 @@ namespace Dependiator.Modeling
 		private Node CreateRootNode()
 		{
 			NodeName rootName = new NodeName(NodeName.Root, NodeName.Root);
-			Node root = new Node(itemService, null, rootName, Node.NameSpaceType);
+			Node root = new Node(itemService, null, rootName, NodeType.NameSpaceType);
 			return root;
 		}
 

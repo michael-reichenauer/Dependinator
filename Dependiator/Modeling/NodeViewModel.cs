@@ -14,13 +14,13 @@ namespace Dependiator.Modeling
 		public NodeViewModel(Node node)
 			: base(node)
 		{
-			this.node = node;
+			this.node = node; 
 
-			if (node.NodeType == Node.MemberType)
+			if (node.NodeType == NodeType.MemberType)
 			{
 				StrokeThickness = 0.5;
 			}
-			else if (node.NodeType == Node.TypeType)
+			else if (node.NodeType == NodeType.TypeType)
 			{
 				StrokeThickness = 2;
 			}
@@ -42,7 +42,7 @@ namespace Dependiator.Modeling
 
 		public string Name => node.ItemViewSize.Width > 40 ? node.Name : " ";
 
-		public int CornerRadius => node.NodeType == Node.TypeType
+		public int CornerRadius => node.NodeType == NodeType.TypeType
 			? (int)(node.ItemScale * 10).MM(0, 30)
 			: 0;
 
