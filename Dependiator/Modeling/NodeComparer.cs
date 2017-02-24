@@ -15,9 +15,9 @@ namespace Dependiator.Modeling
 
 		private static int CompareNodes(Node parent, Node e1, Node e2)
 		{
-			Link e1ToE2 = parent.NodeLinks
+			Link e1ToE2 = parent.Links
 				.FirstOrDefault(r => r.Source == e1 && r.Target == e2);
-			Link e2ToE1 = parent.NodeLinks
+			Link e2ToE1 = parent.Links
 				.FirstOrDefault(r => r.Source == e2 && r.Target == e1);
 
 			int e1ToE2Count = e1ToE2?.NodeLinks.Count ?? 0;
@@ -32,9 +32,9 @@ namespace Dependiator.Modeling
 				return 1;
 			}
 
-			Link parentToE1 = parent.NodeLinks
+			Link parentToE1 = parent.Links
 				.FirstOrDefault(r => r.Source == parent && r.Target == e1);
-			Link parentToE2 = parent.NodeLinks
+			Link parentToE2 = parent.Links
 				.FirstOrDefault(r => r.Source == parent && r.Target == e2);
 
 			int parentToE1Count = parentToE1?.NodeLinks.Count ?? 0;
@@ -49,9 +49,9 @@ namespace Dependiator.Modeling
 				return 1;
 			}
 
-			Link e1ToParent = parent.NodeLinks
+			Link e1ToParent = parent.Links
 				.FirstOrDefault(r => r.Source == e1 && r.Target == parent);
-			Link e2ToParent = parent.NodeLinks
+			Link e2ToParent = parent.Links
 				.FirstOrDefault(r => r.Source == e2 && r.Target == parent);
 
 			int e1ToParentCount = e1ToParent?.NodeLinks.Count ?? 0;

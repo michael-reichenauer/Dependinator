@@ -147,7 +147,7 @@ namespace Dependiator.Modeling
 				{
 					Node targetNode = GetOrAddNode(dataLink.Target, model, modelViewData);
 					NodeLink reference = new NodeLink(node, targetNode);
-					node.NodeLinks.Add(reference);
+					node.Links.Add(reference);
 				}
 			}
 		}
@@ -172,7 +172,7 @@ namespace Dependiator.Modeling
 			Node targetNode = GetOrAddNode(link.Target, model, modelViewData);
 
 			NodeLink nodeLink = new NodeLink(sourceNode, targetNode);
-			sourceNode.NodeLinks.Add(nodeLink);
+			sourceNode.Links.Add(nodeLink);
 		}
 
 
@@ -193,14 +193,14 @@ namespace Dependiator.Modeling
 
 		private static List<Data.Link> ToLinks(Node node)
 		{
-			if (!node.NodeLinks.Any())
+			if (!node.Links.Any())
 			{
 				return null;
 			}
 
 			List<Data.Link> links = null;
 
-			foreach (Link link in node.NodeLinks)
+			foreach (Link link in node.Links)
 			{
 				foreach (NodeLink nodeLink in link.NodeLinks.Where(n => n.Source == node))
 				{

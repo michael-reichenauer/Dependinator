@@ -28,33 +28,20 @@ namespace Dependiator.Modeling
 		{
 			NodeName = name;
 			NodeType = type;
-			NodeLinks = new NodeLinks(itemService, this);
+			Links = new NodeLinks(itemService, this);
 			this.itemService = itemService;	
 		}
-
-
-		public void SetBounds(Rect bounds)
-		{
-			ItemBounds = bounds;
-
-			//RectangleBrush = Element.ElementBrush ?? itemService.GetRectangleBrush();
-			RectangleBrush = itemService.GetRectangleBrush();
-			BackgroundBrush = itemService.GetRectangleBackgroundBrush(RectangleBrush);
-			viewModel = new NodeViewModel(this);
-		}
-
 
 
 		public override ViewModel ViewModel => viewModel;
 
 		public Node ParentNode => (Node)ParentItem;
-		public string Name => NodeName.ShortName;
 
 		public NodeName NodeName { get; }
 
 		public NodeType NodeType { get; private set; }
 
-		public NodeLinks NodeLinks { get; }
+		public NodeLinks Links { get; }
 	
 
 		public NodeViewModel ModuleViewModel => ViewModel as NodeViewModel;
@@ -68,9 +55,22 @@ namespace Dependiator.Modeling
 		public Rect? ElementBounds { get; set; }
 
 
+		public void SetBounds(Rect bounds)
+		{
+			ItemBounds = bounds;
+
+			//RectangleBrush = Element.ElementBrush ?? itemService.GetRectangleBrush();
+			RectangleBrush = itemService.GetRectangleBrush();
+			BackgroundBrush = itemService.GetRectangleBackgroundBrush(RectangleBrush);
+			viewModel = new NodeViewModel(this);
+		}
+
+
 		public override bool CanBeShown()
 		{
-			return ItemViewSize.Width > 10 && (ParentItem?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
+			return 
+				ItemViewSize.Width > 10
+				&& (ParentItem?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
 		}
 
 		public void SetType(NodeType nodeType)
@@ -212,7 +212,7 @@ namespace Dependiator.Modeling
 	
 		private void AddLinks()
 		{
-			foreach (Link link in NodeLinks)
+			foreach (Link link in Links)
 			{
 				AddLink(link);
 			}
@@ -231,7 +231,7 @@ namespace Dependiator.Modeling
 
 		public void UpdateLinksFor(Item item)
 		{
-			IEnumerable<Link> links = NodeLinks
+			IEnumerable<Link> links = Links
 				.Where(link => link.Source == item || link.Target == item)
 				.ToList();
 
@@ -245,7 +245,7 @@ namespace Dependiator.Modeling
 
 		public void UpdateLinksFor()
 		{
-			IEnumerable<Link> links = NodeLinks	
+			IEnumerable<Link> links = Links	
 				.ToList();
 
 			foreach (Link link in links)

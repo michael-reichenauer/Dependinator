@@ -2,7 +2,7 @@ using System;
 using Dependiator.Utils;
 
 
-namespace Dependiator.Modeling.Analyzing
+namespace Dependiator.Modeling
 {
 	internal class NodeName : Equatable<NodeName>
 	{

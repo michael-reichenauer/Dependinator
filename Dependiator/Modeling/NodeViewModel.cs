@@ -39,7 +39,7 @@ namespace Dependiator.Modeling
 
 		public Brush BackgroundBrush => node.BackgroundBrush;
 
-		public string Name => node.ItemViewSize.Width > 40 ? node.Name : " ";
+		public string Name => node.ItemViewSize.Width > 40 ? node.NodeName.ShortName : " ";
 
 		public int CornerRadius => node.NodeType == NodeType.TypeType
 			? (int)(node.ItemScale * 10).MM(0, 30)

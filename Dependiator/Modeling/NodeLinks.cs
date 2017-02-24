@@ -3,7 +3,7 @@ using System.Linq;
 using Dependiator.Utils;
 
 
-namespace Dependiator.Modeling.Analyzing
+namespace Dependiator.Modeling
 {
 	internal class NodeLinks : IEnumerable<Link>
 	{
@@ -66,8 +66,8 @@ namespace Dependiator.Modeling.Analyzing
 			if (linkPart != null)
 			{
 				// A step on the way to the actual target
-				linkPart.Source.NodeLinks.AddLinkPart(linkPart, actualNodeLink);
-				linkPart.Target.NodeLinks.AddLinkPart(linkPart, actualNodeLink);
+				linkPart.Source.Links.AddLinkPart(linkPart, actualNodeLink);
+				linkPart.Target.Links.AddLinkPart(linkPart, actualNodeLink);
 				source = linkPart.Target;
 			}
 
@@ -119,7 +119,7 @@ namespace Dependiator.Modeling.Analyzing
 		{
 			foreach (Node node in ownerNode.DescendentsAndSelf())
 			{
-				foreach (Link reference in node.NodeLinks.SourceReferences)
+				foreach (Link reference in node.Links.SourceReferences)
 				{
 					yield return reference;
 				}
@@ -131,7 +131,7 @@ namespace Dependiator.Modeling.Analyzing
 		{
 			foreach (Node node in ownerNode.DescendentsAndSelf())
 			{
-				foreach (Link reference in node.NodeLinks.TargetReferences)
+				foreach (Link reference in node.Links.TargetReferences)
 				{
 					yield return reference;
 				}

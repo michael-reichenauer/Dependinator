@@ -1,8 +1,4 @@
-using System.Collections.Generic;
-using System.Linq;
-
-
-namespace Dependiator.Modeling.Analyzing
+namespace Dependiator.Modeling
 {
 	internal class NodeLink
 	{
