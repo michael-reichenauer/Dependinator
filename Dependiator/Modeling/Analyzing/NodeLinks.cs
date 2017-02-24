@@ -33,7 +33,7 @@ namespace Dependiator.Modeling.Analyzing
 		{
 			Asserter.Requires(nodeLink.Source == ownerNode);
 
-			if (nodeLink.Source.NodeName.FullName == nodeLink.Target.NodeName.FullName)
+			if (nodeLink.Source.NodeName == nodeLink.Target.NodeName)
 			{
 				// Self reference, e.g. A type contains a field or parameter of the same type.
 				return;

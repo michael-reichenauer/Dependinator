@@ -31,7 +31,6 @@ namespace Dependiator.Modeling
 		}
 
 
-		public string ToolTip => node.FullName;
 		public double StrokeThickness { get; }
 		public double RectangleWidth => node.ItemCanvasBounds.Width * node.CanvasScale - StrokeThickness * 2;
 		public double RectangleHeight => node.ItemCanvasBounds.Height * node.CanvasScale - StrokeThickness * 2;
@@ -45,6 +44,11 @@ namespace Dependiator.Modeling
 		public int CornerRadius => node.NodeType == NodeType.TypeType
 			? (int)(node.ItemScale * 10).MM(0, 30)
 			: 0;
+
+		public string ToolTip =>
+			$"{node.NodeName}\nScale: {node.CanvasScale:#.##}, Level: {node.ItemLevel}, " +
+			$"NodeScale: {node.ItemScale:#.##}, NSF: {node.ThisItemScaleFactor}";
+
 
 		public int FontSize
 		{

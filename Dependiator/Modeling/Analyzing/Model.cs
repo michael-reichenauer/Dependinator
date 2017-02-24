@@ -5,23 +5,23 @@ namespace Dependiator.Modeling.Analyzing
 {
 	internal class Model
 	{
-		private readonly Dictionary<string, Node> nodes  = new Dictionary<string, Node>();
+		private readonly Dictionary<NodeName, Node> nodes  = new Dictionary<NodeName, Node>();
 
 
 		public Model(Node root)
 		{
 			Root = root;
-			nodes[root.NodeName.FullName] = root;
+			nodes[root.NodeName] = root;
 		}
 
 		public Node Root { get; }
 
-		public IReadOnlyDictionary<string, Node> Nodes => nodes;
+		public IReadOnlyDictionary<NodeName, Node> Nodes => nodes;
 
 
 		public void AddNode(Node node)
 		{
-			nodes[node.NodeName.FullName] = node;
+			nodes[node.NodeName] = node;
 		}
 	}
 }

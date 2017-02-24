@@ -17,7 +17,7 @@ namespace Dependiator.Modeling
 		private readonly IItemService itemService;
 
 		private ViewModel viewModel;
-
+		private bool isAdded = false;
 
 		public Node(
 			IItemService itemService,
@@ -48,19 +48,14 @@ namespace Dependiator.Modeling
 		public override ViewModel ViewModel => viewModel;
 
 		public Node ParentNode => (Node)ParentItem;
-		public string Name => NodeName.Name;
+		public string Name => NodeName.ShortName;
 
 		public NodeName NodeName { get; }
 
 		public NodeType NodeType { get; private set; }
 
 		public NodeLinks NodeLinks { get; }
-
-
-		public string FullName =>
-			$"{NodeName.FullName}\n" +
-			$"Scale: {CanvasScale:#.##}, Level: {ItemLevel}, NodeScale: {ItemScale:#.##}, NSF: {ThisItemScaleFactor}";
-
+	
 
 		public NodeViewModel ModuleViewModel => ViewModel as NodeViewModel;
 		public Brush RectangleBrush { get; private set; }
@@ -96,14 +91,11 @@ namespace Dependiator.Modeling
 			{
 				base.ItemRealized();
 
-				//if (!ChildNodeItems.Any())
+				if (!isAdded)
 				{
+					isAdded = true;
 					AddModuleChildren();
-				}
-
-				//if (!LinkItemss.Any())
-				{
-					AddLinks();				
+					AddLinks();
 				}
 
 				ShowChildren();
@@ -129,7 +121,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public override string ToString() => NodeName.FullName;
+		public override string ToString() => NodeName;
 
 		public IEnumerable<Node> Ancestors()
 		{
@@ -190,9 +182,8 @@ namespace Dependiator.Modeling
 				yMargin += ItemBounds.Height / 2;
 			}
 
-
 			int count = 0;
-			var children = ChildNodes.OrderBy(e => e, Compare.With<Node>(CompareNodes));
+			var children = ChildNodes.OrderBy(child => child, NodeComparer.Comparer(this));
 
 			foreach (Node childNode in children)
 			{
@@ -212,14 +203,13 @@ namespace Dependiator.Modeling
 				}
 
 				Rect bounds = new Rect(location, size);
-
-				//Node node = new Node(itemService, childElement, this);
 				childNode.SetBounds(bounds);
+
 				count++;
 			}
 		}
 
-
+	
 		private void AddLinks()
 		{
 			foreach (Link link in NodeLinks)
@@ -263,63 +253,6 @@ namespace Dependiator.Modeling
 				link.UpdateLinkLine();
 				link.NotifyAll();
 			}
-		}
-
-
-		private int CompareNodes(Node e1, Node e2)
-		{
-			Link e1ToE2 = NodeLinks
-				.FirstOrDefault(r => r.Source == e1 && r.Target == e2);
-			Link e2ToE1 = NodeLinks
-				.FirstOrDefault(r => r.Source == e2 && r.Target == e1);
-
-			int e1ToE2Count = e1ToE2?.NodeLinks.Count ?? 0;
-			int e2ToE1Count = e2ToE1?.NodeLinks.Count ?? 0;
-
-			if (e1ToE2Count > e2ToE1Count)
-			{
-				return -1;
-			}
-			else if (e1ToE2Count < e2ToE1Count)
-			{
-				return 1;
-			}
-
-			Link parentToE1 = NodeLinks
-				.FirstOrDefault(r => r.Source == this && r.Target == e1);
-			Link parentToE2 = NodeLinks
-				.FirstOrDefault(r => r.Source == this && r.Target == e2);
-
-			int parentToE1Count = parentToE1?.NodeLinks.Count ?? 0;
-			int parentToE2Count = parentToE2?.NodeLinks.Count ?? 0;
-
-			if (parentToE1Count > parentToE2Count)
-			{
-				return -1;
-			}
-			else if (parentToE1Count < parentToE2Count)
-			{
-				return 1;
-			}
-
-			Link e1ToParent = NodeLinks
-				.FirstOrDefault(r => r.Source == e1 && r.Target == this);
-			Link e2ToParent = NodeLinks
-				.FirstOrDefault(r => r.Source == e2 && r.Target == this);
-
-			int e1ToParentCount = e1ToParent?.NodeLinks.Count ?? 0;
-			int e2ToParentCount = e2ToParent?.NodeLinks.Count ?? 0;
-
-			if (e1ToParentCount > e2ToParentCount)
-			{
-				return -1;
-			}
-			else if (e1ToParentCount < e2ToParentCount)
-			{
-				return 1;
-			}
-
-			return 0;
 		}
 	}
 }

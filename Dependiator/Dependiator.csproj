@@ -143,6 +143,7 @@
     <Compile Include="Modeling\Analyzing\NameSpaceElement.cs" />
     <Compile Include="Modeling\Analyzing\NodeLink.cs" />
     <Compile Include="Modeling\Analyzing\NodeLinks.cs" />
+    <Compile Include="Modeling\NodeComparer.cs" />
     <Compile Include="Modeling\NodeType.cs" />
     <Compile Include="Modeling\Serializing\DataModel.cs" />
     <Compile Include="Modeling\NodeService.cs" />
