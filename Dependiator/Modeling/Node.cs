@@ -14,10 +14,9 @@ namespace Dependiator.Modeling
 	{		
 		private static readonly Size DefaultSize = new Size(200, 100);
 
-		private readonly IItemService itemService;
-
 		private ViewModel viewModel;
 		private bool isAdded = false;
+
 
 		public Node(
 			IItemService itemService,
@@ -29,7 +28,6 @@ namespace Dependiator.Modeling
 			NodeName = name;
 			NodeType = type;
 			Links = new NodeLinks(itemService, this);
-			this.itemService = itemService;	
 		}
 
 
@@ -53,6 +51,7 @@ namespace Dependiator.Modeling
 		public IEnumerable<Link> LinkItems => ChildItems.OfType<Link>();
 
 		public Rect? ElementBounds { get; set; }
+
 
 
 		public void SetBounds(Rect bounds)

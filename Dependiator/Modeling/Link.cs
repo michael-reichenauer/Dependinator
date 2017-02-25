@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependiator.Modeling.Analyzing;
+using Dependiator.Utils;
 using Dependiator.Utils.UI;
 
 
@@ -33,7 +34,7 @@ namespace Dependiator.Modeling
 
 		public Node Source { get; }
 
-		public Node Target { get; }	
+		public Node Target { get; }
 
 		public Brush LinkBrush => Source.RectangleBrush;
 
@@ -79,12 +80,15 @@ namespace Dependiator.Modeling
 		}
 
 
+		public override void ItemRealized()
+		{
+			base.ItemRealized();
+		}
+
+
 		public override void ItemVirtualized()
 		{
-			if (IsRealized)
-			{
-				base.ItemVirtualized();
-			}
+			base.ItemVirtualized();			
 		}
 
 
@@ -113,9 +117,65 @@ namespace Dependiator.Modeling
 		}
 
 
+		//public void UpdateLinkLine()
+		//{
+		//	// Assume link nodes are siblings, 
+		//	double x1 = Source.ItemBounds.X + Source.ItemBounds.Width / 2;
+		//	double y1 = Source.ItemBounds.Y + Source.ItemBounds.Height;
+		//	double x2 = Target.ItemBounds.X + Target.ItemBounds.Width / 2;
+		//	double y2 = Target.ItemBounds.Y;
+
+		//	if (Source.ParentNode == Target)
+		//	{
+		//		// To parent (out of node to some external node)
+		//		y2 = Target.ItemCanvasBounds.Y + Target.ItemCanvasBounds.Height;
+		//	}
+		//	else if (Source == Target.ParentNode)
+		//	{
+		//		// To child (into node to child node)
+		//		y1 = Source.ItemCanvasBounds.Y;
+		//	}
+
+		//	// Line bounds
+		//	double x = Math.Min(x1, x2);
+		//	double y = Math.Min(y1, y2);
+		//	double width = Math.Abs(x2 - x1);
+		//	double height = Math.Abs(y2 - y1);
+		//	double margin = 1;
+		//	ItemBounds = new Rect(x, y, Math.Max(width, margin), Math.Max(height, margin));
+		//	//Rect itemCanvasBounds = ItemCanvasBounds;
+
+		//	//Rect childItemBounds = ItemCanvasBounds;
+		//	//double childItemScale = 1 / ItemScaleFactor;
+		//	//childItemBounds.Scale(childItemScale, childItemScale);
+
+		//	//Rect itemBounds = new Rect(
+		//	//	x,
+		//	//	y,
+		//	//	childItemBounds.Width,
+		//	//	childItemBounds.Height);
+
+		//	////Rect newRect = ParentItem.GetChildItemCanvasBounds(itemBounds);
+
+		//	//ItemBounds = itemBounds;
+
+
+		//	// Line drawing within the bounds
+		//	X1 = 0;
+		//	Y1 = 0;
+		//	X2 = width;
+		//	Y2 = height;
+
+		//	if (x1 <= x2 && y1 > y2 || x1 > x2 && y1 <= y2)
+		//	{
+		//		Y1 = height;
+		//		Y2 = 0;
+		//	}
+		//}
+
 		public void UpdateLinkLine()
 		{
-			// Assume siblings
+			// Assume link nodes are siblings, 
 			double x1 = Source.ItemCanvasBounds.X + Source.ItemCanvasBounds.Width / 2;
 			double y1 = Source.ItemCanvasBounds.Y + Source.ItemCanvasBounds.Height;
 			double x2 = Target.ItemCanvasBounds.X + Target.ItemCanvasBounds.Width / 2;
@@ -138,7 +198,8 @@ namespace Dependiator.Modeling
 			double width = Math.Abs(x2 - x1);
 			double height = Math.Abs(y2 - y1);
 			double margin = 1;
-			ItemCanvasBounds = new Rect(x, y, Math.Max(width, margin), Math.Max(height,margin));
+			ItemCanvasBounds = new Rect(x, y, Math.Max(width, margin), Math.Max(height, margin));
+		
 
 			// Line drawing within the bounds
 			X1 = 0;
@@ -150,7 +211,7 @@ namespace Dependiator.Modeling
 			{
 				Y1 = height;
 				Y2 = 0;
-			}		
+			}
 		}
 
 		public override string ToString() => $"{Source} -> {Target}";

@@ -16,7 +16,7 @@ namespace Dependiator.Modeling
 		private readonly List<Item> childItems = new List<Item>();
 		private Rect itemBounds;
 
-		private readonly IItemService itemService;
+		protected readonly IItemService itemService;
 
 		private int xf = 1;
 		private int yf = 1;
@@ -436,7 +436,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private Rect GetChildItemCanvasBounds(Rect childItemBounds)
+		public Rect GetChildItemCanvasBounds(Rect childItemBounds)
 		{
 			double childItemScale = ItemScaleFactor / ThisItemScaleFactor;
 			childItemBounds.Scale(childItemScale, childItemScale);
@@ -462,11 +462,11 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void RemoveChildNode(Item child)
-		{
-			childItems.Remove(child);
-			child.NotifyAll();
-		}
+		//public void RemoveChildNode(Item child)
+		//{
+		//	childItems.Remove(child);
+		//	child.NotifyAll();
+		//}
 
 
 		public virtual void ChangedScale()
