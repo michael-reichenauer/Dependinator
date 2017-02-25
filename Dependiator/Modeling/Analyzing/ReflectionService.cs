@@ -35,7 +35,11 @@ namespace Dependiator.Modeling.Analyzing
 		
 			try
 			{
-				Environment.CurrentDirectory = Path.GetDirectoryName(path) ?? currentDirectory;
+				string directoryName = Path.GetDirectoryName(path) ?? currentDirectory;
+				if (Directory.Exists(directoryName))
+				{
+					Environment.CurrentDirectory = directoryName;
+				}
 				Log.Debug($"Current directory '{Environment.CurrentDirectory}'");
 				AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += OnReflectionOnlyAssemblyResolve;
 

@@ -46,12 +46,17 @@ namespace Dependiator.Modeling
 			Timing t = new Timing();
 
 			DataModel dataModel = new DataModel()
-				.AddType("Axis.Class1")
-				.AddType("Axis.Class2")
-				.AddLink("Axis.Class1", "Axis.Class2");
+				.AddType("Axis.Ns1")
+				.AddType("Axis.Ns2")
+				.AddType("Axis.Ns1.Class1")
+				.AddType("Axis.Ns1.Class2")
+				.AddType("Axis.Ns2.Class1")
+				.AddLink("Axis.Ns1.Class1", "Axis.Ns1.Class2")
+				.AddLink("Axis.Ns1.Class1", "Axis.Ns2.Class2")
+				;
 
 
-			//Data.Model data = GetCachedOrFreshModelData();
+			//DataModel dataModel = GetCachedOrFreshModelData();
 
 			t.Log("After read data");
 

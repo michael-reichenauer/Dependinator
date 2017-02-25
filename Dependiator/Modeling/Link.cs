@@ -12,7 +12,7 @@ namespace Dependiator.Modeling
 	internal class Link : Item
 	{
 		private readonly List<NodeLink> nodeLinks = new List<NodeLink>();
-	
+
 
 		public Link(
 			IItemService itemService,
@@ -115,10 +115,22 @@ namespace Dependiator.Modeling
 
 		public void UpdateLinkLine()
 		{
+			// Assume siblings
 			double x1 = Source.ItemCanvasBounds.X + Source.ItemCanvasBounds.Width / 2;
 			double y1 = Source.ItemCanvasBounds.Y + Source.ItemCanvasBounds.Height;
 			double x2 = Target.ItemCanvasBounds.X + Target.ItemCanvasBounds.Width / 2;
-			double y2 = Target.ItemCanvasBounds.Y; 
+			double y2 = Target.ItemCanvasBounds.Y;
+
+			if (Source.ParentNode == Target)
+			{
+				// To parent (out of node to some external node)
+				y2 = Target.ItemCanvasBounds.Y + Target.ItemCanvasBounds.Height;
+			}
+			else if (Source == Target.ParentNode)
+			{
+				// To child (into node to child node)
+				y1 = Source.ItemCanvasBounds.Y;
+			}
 
 			// Line bounds
 			double x = Math.Min(x1, x2);
@@ -140,7 +152,6 @@ namespace Dependiator.Modeling
 				Y2 = 0;
 			}		
 		}
-
 
 		public override string ToString() => $"{Source} -> {Target}";
 	}

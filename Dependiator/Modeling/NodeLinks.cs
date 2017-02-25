@@ -33,85 +33,70 @@ namespace Dependiator.Modeling
 		{
 			Asserter.Requires(nodeLink.Source == ownerNode);
 
-			if (nodeLink.Source.NodeName == nodeLink.Target.NodeName)
-			{
-				// Self reference, e.g. A type contains a field or parameter of the same type.
-				return;
-			}
-
-			Link existing = links.FirstOrDefault(
-				l => l.Source == nodeLink.Source && l.Target == nodeLink.Target);
-
-			if (existing != null)
-			{
-				existing.Add(nodeLink);
-				return;
-			}
-
-			AddPartReferences(nodeLink);			
+			AddLineSegments(nodeLink);
 		}
 
 
-		private static void AddPartReferences(NodeLink reference)
+		private void AddLineSegments(NodeLink nodeLink)
 		{
-			AddPartReference(null, reference);
+			// Start with first segment at the start of the line 
+			Node segementSource = nodeLink.Source;
+
+			// Iterate segments until line end is reached
+			while (segementSource != nodeLink.Target)
+			{
+				// Try to asume next segement target is a child node by searching if segment source
+				// is a ancestor of end target node
+				Node segmentTarget = nodeLink.Target.AncestorsAndSelf()
+					.FirstOrDefault(ancestor => ancestor.ParentNode == segementSource);
+
+				if (segmentTarget == null)
+				{
+					// Not a child, lets try to asume target is a sibling node
+					segmentTarget = nodeLink.Target.AncestorsAndSelf()
+						.FirstOrDefault(ancestor => ancestor.ParentNode == segementSource.ParentNode);
+				}
+
+				if (segmentTarget == null)
+				{
+					// Neither child not sibling, then next segemtn target node must be the parent node
+					segmentTarget = segementSource.ParentNode;
+				}
+
+				AddSegment(segementSource, segmentTarget, nodeLink);
+
+				// Goto next segment in the line segments 
+				segementSource = segmentTarget;
+			}
 		}
 
 
-		private static void AddPartReference(NodeLink linkPart, NodeLink actualNodeLink)
+		private void AddSegment(Node source, Node target, NodeLink nodeLink)
 		{
-			Node source = actualNodeLink.Source;
-			Node target = actualNodeLink.Target;
+			// Try to check if source node already contains this segement link
+			Link segment = source.Links.FirstOrDefault(
+				l => l.Source == source && l.Target == target);
 
-			if (linkPart != null)
+			if (segment == null)
 			{
-				// A step on the way to the actual target
-				linkPart.Source.Links.AddLinkPart(linkPart, actualNodeLink);
-				linkPart.Target.Links.AddLinkPart(linkPart, actualNodeLink);
-				source = linkPart.Target;
-			}
-
-			if (source == target)
-			{
-				// Source is same as target, reached end
-				return;
-			}
-			else if (target.Ancestors().Any(ancestor => ancestor == source))
-			{
-				// Source is Ancestor of target		
-				target = target.AncestorsAndSelf().First(ancestor => ancestor.ParentNode == source);
-			}
-			else if (target.Ancestors().Any(ancestor => ancestor == source.ParentNode))
-			{
-				// source and target are siblings or source and an target ancestor is siblings
-				target = target.AncestorsAndSelf().First(ancestor => ancestor.ParentNode == source.ParentNode);
-			}
-			else
-			{
-				// Source is Decedent of target	
-				target = source.ParentNode;
+				// No existing segment link, create the link and add to both source and target node
+				segment = new Link(itemService, source, target);
+				source.Links.AddLinkSegment(segment);
+				target.Links.AddLinkSegment(segment);
 			}
 
-			NodeLink partReference = new NodeLink(source, target);
-			
-			AddPartReference(partReference, actualNodeLink);
+			segment.Add(nodeLink);
 		}
 
 
-		public void AddLinkPart(NodeLink linkPart, NodeLink actualNodeLink)
+		private void AddLinkSegment(Link segment)
 		{
-			Link existing = links.FirstOrDefault(
-				l => l.Source == linkPart.Source && l.Target == linkPart.Target);
-
-			if (existing != null)
+			if (links.Any(l => l.Source == segment.Source && l.Target == segment.Target))
 			{
-				existing.Add(actualNodeLink);
 				return;
 			}
 
-			Link linkGroup = new Link(itemService, linkPart.Source, linkPart.Target);
-			linkGroup.Add(actualNodeLink);
-			links.Add(linkGroup);
+			links.Add(segment);
 		}
 
 
