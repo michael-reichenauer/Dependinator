@@ -8,7 +8,7 @@ using Dependiator.Utils.UI.VirtualCanvas;
 namespace Dependiator.MainViews.Private
 {
 	[SingleInstance]
-	internal class MainViewItemsSource : VirtualItemsSource, IMainViewItemsSource
+	internal class NodeItemsSource : VirtualItemsSource, INodeItemsSource
 	{
 		private readonly PriorityQuadTree<IItem> viewItemsTree = new PriorityQuadTree<IItem>();
 		private readonly List<IItem> viewItems = new List<IItem>();

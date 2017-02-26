@@ -1,33 +1,37 @@
 using System;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using Dependiator.MainViews;
-using Dependiator.Modeling.Analyzing;
+using Dependiator.MainViews.Private;
+using Dependiator.Utils.UI;
+using Dependiator.Utils.UI.VirtualCanvas;
 
 
 namespace Dependiator.Modeling
 {
-	internal class NodeViewModel : ItemViewModel
+	internal class NodeWithChildrenViewModel : ItemViewModel
 	{
 		private readonly Node node;
 
-		public NodeViewModel(Node node)
+		private ZoomableCanvas canvas;
+
+		public VirtualItemsSource ItemsSource { get; }
+
+		private INodeItemsSource nodeItemsSource;
+
+		public NodeWithChildrenViewModel(Node node)
 			: base(node)
 		{
 			this.node = node;
 
-			if (node.NodeType == NodeType.MemberType)
-			{
-				StrokeThickness = 0.5;
-			}
-			else if (node.NodeType == NodeType.TypeType)
-			{
-				StrokeThickness = 2;
-			}
-			else
-			{
-				StrokeThickness = 1;
-			}
+			nodeItemsSource = new NodeItemsSource();
+			ItemsSource = nodeItemsSource.VirtualItemsSource;
+
+			nodeItemsSource.Add(new NodeItem(new Rect(10, 10, 70, 40)));
+
+			StrokeThickness = 1;
+			
 		}
 
 
@@ -73,6 +77,18 @@ namespace Dependiator.Modeling
 		public void Resize(int zoomDelta, Point viewPosition)
 		{
 			node.Resize(zoomDelta, viewPosition);
+		}
+
+
+		public void SetCanvas(ZoomableCanvas zoomableCanvas)
+		{
+			canvas = zoomableCanvas;
+		}
+
+
+		public Task LoadAsync()
+		{
+			return Task.CompletedTask;
 		}
 	}
 }

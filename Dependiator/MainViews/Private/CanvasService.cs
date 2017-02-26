@@ -9,7 +9,7 @@ namespace Dependiator.MainViews.Private
 	[SingleInstance]
 	internal class CanvasService : ICanvasService
 	{
-		private readonly IMainViewItemsSource itemsSource;
+		private readonly INodeItemsSource itemsSource;
 		private static readonly double ZoomSpeed = 600.0;
 
 		private ZoomableCanvas canvas;
@@ -20,7 +20,7 @@ namespace Dependiator.MainViews.Private
 		public event EventHandler ScaleChanged;
 
 
-		public CanvasService(IMainViewItemsSource itemsSource)
+		public CanvasService(INodeItemsSource itemsSource)
 		{
 			this.itemsSource = itemsSource;
 		}

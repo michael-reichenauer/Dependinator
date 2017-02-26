@@ -131,6 +131,10 @@
     <Compile Include="MainViews\Private\CanvasService.cs" />
     <Compile Include="MainViews\ICanvasService.cs" />
     <Compile Include="Modeling\Analyzing\ReflectionService.cs" />
+    <Compile Include="Modeling\NodeItem.cs" />
+    <Compile Include="Modeling\NodeLeafView.xaml.cs">
+      <DependentUpon>NodeLeafView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Modeling\NodeName.cs" />
     <Compile Include="Modeling\Model.cs" />
     <Compile Include="Modeling\Analyzing\IReflectionService.cs" />
@@ -138,6 +142,11 @@
     <Compile Include="Modeling\NodeLinks.cs" />
     <Compile Include="Modeling\NodeComparer.cs" />
     <Compile Include="Modeling\NodeType.cs" />
+    <Compile Include="Modeling\NodeWithChildrenView.xaml.cs">
+      <DependentUpon>NodeWithChildrenView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modeling\NodeWithChildrenViewModel.cs" />
+    <Compile Include="Modeling\NodeLeafViewModel.cs" />
     <Compile Include="Modeling\Serializing\DataModel.cs" />
     <Compile Include="Modeling\NodeService.cs" />
     <Compile Include="Modeling\INodeService.cs" />
@@ -156,7 +165,7 @@
     <Compile Include="Modeling\Node.cs" />
     <Compile Include="MainViews\Private\Caching\BranchNameSurrogate.cs" />
     <Compile Include="Modeling\NodeViewModel.cs" />
-    <Compile Include="MainViews\Private\IMainViewVirtualItemsSource.cs" />
+    <Compile Include="MainViews\Private\INodeItemsSource.cs" />
     <Compile Include="MainViews\Private\IItem.cs" />
     <Compile Include="MainViews\Private\MainViewCommands.cs" />
     <Compile Include="Modeling\IModelService.cs" />
@@ -210,7 +219,7 @@
     <Compile Include="Utils\UI\HideableGridSplitter.cs" />
     <Compile Include="Utils\Compare.cs" />
     <Compile Include="Common\ThemeHandling\IThemeService.cs" />
-    <Compile Include="MainViews\Private\MainViewVirtualItemsSource.cs" />
+    <Compile Include="MainViews\Private\NodeItemsSource.cs" />
     <Compile Include="MainViews\MainViewModel.cs" />
     <Compile Include="Utils\IReadOnlyKeyedList.cs" />
     <Compile Include="Utils\KeyedList.cs" />
@@ -302,7 +311,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Modeling\NodeLeafView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Modeling\NodeView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Modeling\NodeWithChildrenView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -6,7 +6,7 @@ using Dependiator.Utils.UI.VirtualCanvas;
 
 namespace Dependiator.MainViews.Private
 {
-	internal interface IMainViewItemsSource
+	internal interface INodeItemsSource
 	{
 		event EventHandler ExtentChanged;
 

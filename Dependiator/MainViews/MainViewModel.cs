@@ -26,7 +26,7 @@ namespace Dependiator.MainViews
 		private readonly IThemeService themeService;
 		private readonly ICanvasService canvasService;
 		private readonly WorkingFolder workingFolder;
-		private readonly IMainViewItemsSource mainViewItemsSource;
+		private readonly INodeItemsSource nodeItemsSource;
 		private readonly IModelService modelService;
 		private readonly IProgressService progress;
 
@@ -43,20 +43,20 @@ namespace Dependiator.MainViews
 
 		public MainViewModel(
 			WorkingFolder workingFolder,
-			IMainViewItemsSource mainViewItemsSource,
+			INodeItemsSource nodeItemsSource,
 			IModelService modelService,
 			IThemeService themeService,
 			ICanvasService canvasService,
 			IProgressService progressService)
 		{
 			this.workingFolder = workingFolder;
-			this.mainViewItemsSource = mainViewItemsSource;
+			this.nodeItemsSource = nodeItemsSource;
 			this.modelService = modelService;
 			this.themeService = themeService;
 			this.canvasService = canvasService;
 			this.progress = progressService;
 
-			ItemsSource = mainViewItemsSource.VirtualItemsSource;
+			ItemsSource = nodeItemsSource.VirtualItemsSource;
 
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
@@ -135,7 +135,7 @@ namespace Dependiator.MainViews
 				if (width != value)
 				{
 					width = value;
-					mainViewItemsSource.TriggerExtentChanged();
+					nodeItemsSource.TriggerExtentChanged();
 				}
 			}
 		}

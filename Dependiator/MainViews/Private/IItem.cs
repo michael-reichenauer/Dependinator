@@ -6,8 +6,12 @@ namespace Dependiator.MainViews.Private
 {
 	internal interface IItem
 	{
-		Rect ItemCanvasBounds { get; }
+		// !!! Ta bort :::
 		double ZIndex { get; }
+
+
+		Rect ItemCanvasBounds { get; }
+		
 		double Priority { get; }
 		ViewModel ViewModel { get; }
 		object ItemState { get; set; }

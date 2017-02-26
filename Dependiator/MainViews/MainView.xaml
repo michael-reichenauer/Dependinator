@@ -14,7 +14,7 @@
 
 	<Grid>
 		<Grid.RowDefinitions>
-			<!-- Commits log -->
+			<!-- Model -->
 			<RowDefinition Height="*" />
 			<!-- Grid splitter -->
 			<RowDefinition Height="Auto" />
@@ -22,7 +22,7 @@
 			<RowDefinition Height="150" />
 		</Grid.RowDefinitions>
 
-		<!-- Commits log -->
+		<!-- Model -->
 		<Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
 
 			<ListBox
@@ -100,12 +100,25 @@
 
 						<Style.Triggers>
 
-							<!-- Module  -->
+							<!-- Node  -->
 							<DataTrigger Binding="{Binding Type}" Value="NodeViewModel">
 								<Setter Property="ContentTemplate">
 									<Setter.Value>
 										<DataTemplate>
 											<modeling:NodeView/>
+										</DataTemplate>
+									</Setter.Value>
+								</Setter>
+								<Setter Property="IsEnabled" Value="true" />
+								<Setter Property="Focusable" Value="False" />
+								<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
+							</DataTrigger>
+
+							<DataTrigger Binding="{Binding Type}" Value="NodeWithChildrenViewModel">
+								<Setter Property="ContentTemplate">
+									<Setter.Value>
+										<DataTemplate>
+											<modeling:NodeWithChildrenView/>
 										</DataTemplate>
 									</Setter.Value>
 								</Setter>

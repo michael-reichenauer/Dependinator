@@ -61,7 +61,15 @@ namespace Dependiator.Modeling
 			//RectangleBrush = Element.ElementBrush ?? itemService.GetRectangleBrush();
 			RectangleBrush = itemService.GetRectangleBrush();
 			BackgroundBrush = itemService.GetRectangleBackgroundBrush(RectangleBrush);
-			viewModel = new NodeViewModel(this);
+
+			if (!ChildNodes.Any())
+			{
+				viewModel = new NodeWithChildrenViewModel(this);
+			}
+			else
+			{
+				viewModel = new NodeViewModel(this);
+			}
 		}
 
 

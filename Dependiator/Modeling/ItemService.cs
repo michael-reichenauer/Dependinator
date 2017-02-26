@@ -14,14 +14,14 @@ namespace Dependiator.Modeling
 	internal class ItemService : IItemService
 	{
 		private readonly ICanvasService canvasService;
-		private readonly IMainViewItemsSource itemsSource;
+		private readonly INodeItemsSource itemsSource;
 		private readonly IThemeService themeService;
 
 		private readonly List<Item> rootNodes = new List<Item>();
 
 		public ItemService(
 			ICanvasService canvasService,
-			IMainViewItemsSource itemsSource,
+			INodeItemsSource itemsSource,
 			IThemeService themeService)
 		{
 			this.canvasService = canvasService;
