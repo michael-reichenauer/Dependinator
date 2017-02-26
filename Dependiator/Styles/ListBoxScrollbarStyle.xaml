@@ -22,6 +22,7 @@
 				<ControlTemplate TargetType="{x:Type ListBox}">
 					<Grid>
 						<!--<Rectangle Fill="Pink" RadiusX="10" RadiusY="10" Opacity="0.195" />-->
+						<!-- the border around the whole area -->
 						<Border CornerRadius="10" x:Name="Bd" BorderBrush="{TemplateBinding BorderBrush}" 
 										BorderThickness="{TemplateBinding BorderThickness}" Padding="1" 
 										SnapsToDevicePixels="true">
@@ -154,8 +155,8 @@
 		<Setter Property="Stylus.IsPressAndHoldEnabled" Value="false"/>
 		<Setter Property="Stylus.IsFlicksEnabled" Value="false"/>
 		<Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
-		<Setter Property="Width" Value="{DynamicResource {x:Static SystemParameters.VerticalScrollBarWidthKey}}"/>
-		<Setter Property="MinWidth" Value="{DynamicResource {x:Static SystemParameters.VerticalScrollBarWidthKey}}"/>
+		<Setter Property="Width" Value="3"/>
+		<Setter Property="MinWidth" Value="3"/>
 
 		<Setter Property="Template">
 			<Setter.Value>
