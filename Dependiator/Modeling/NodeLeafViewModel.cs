@@ -8,15 +8,19 @@ namespace Dependiator.Modeling
 {
 	internal class NodeLeafViewModel : ItemViewModel
 	{
-		public NodeLeafViewModel(NodeItem node)
+		private readonly Node node;
+
+
+		public NodeLeafViewModel(Node node)
 			: base(node)
 		{
+			this.node = node;
 		}
 
 
 		public double StrokeThickness => 1;
-		public Brush RectangleBrush => Brushes.Aquamarine;
-		public Brush HoverBrush => Brushes.Red;
+		public Brush RectangleBrush => node.RectangleBrush;
+		public Brush HoverBrush => node.RectangleBrush;
 
 		public Brush BackgroundBrush => Brushes.Transparent;
 
@@ -27,6 +31,13 @@ namespace Dependiator.Modeling
 		public string ToolTip => "Node";
 
 
-		public int FontSize => 10;
+		public int FontSize
+		{
+			get
+			{
+				int fontSize = (int)(12 * node.NodeScale);
+				return fontSize.MM(8, 20);
+			}
+		}
 	}
 }

@@ -32,37 +32,39 @@ namespace Dependiator.Modeling
 
 
 		public double StrokeThickness { get; }
-		public double RectangleWidth => node.ItemCanvasBounds.Width * node.CanvasScale - StrokeThickness * 2;
-		public double RectangleHeight => node.ItemCanvasBounds.Height * node.CanvasScale - StrokeThickness * 2;
+		//public double RectangleWidth => node.ItemCanvasBounds.Width * node.CanvasScale - StrokeThickness * 2;
+		//public double RectangleHeight => node.ItemCanvasBounds.Height * node.CanvasScale - StrokeThickness * 2;
 		public Brush RectangleBrush => node.RectangleBrush;
 		public Brush HoverBrush => node.RectangleBrush;
 
 		public Brush BackgroundBrush => node.BackgroundBrush;
 
-		public string Name => node.ItemViewSize.Width > 40 ? node.NodeName.ShortName : " ";
+		public string Name => "Node name";
+			//node.ItemViewSize.Width > 40 ? node.NodeName.ShortName : " ";
 
-		public int CornerRadius => node.NodeType == NodeType.TypeType
-			? (int)(node.ItemScale * 10).MM(0, 30)
-			: 0;
+		public int CornerRadius => 0;
+			//node.NodeType == NodeType.TypeType
+			//? (int)(node.ItemScale * 10).MM(0, 30)
+			//: 0;
 
-		public string ToolTip =>
-			$"{node.NodeName}\nScale: {node.CanvasScale:#.##}, Level: {node.ItemLevel}, " +
-			$"NodeScale: {node.ItemScale:#.##}, NSF: {node.ThisItemScaleFactor}";
+		public string ToolTip => "Tool tip";
+			//$"{node.NodeName}\nScale: {node.CanvasScale:#.##}, Level: {node.ItemLevel}, " +
+			//$"NodeScale: {node.ItemScale:#.##}, NSF: {node.ThisItemScaleFactor}";
 
 
-		public int FontSize
-		{
-			get
-			{
-				int fontSize = (int)(12 * node.ItemScale);
-				return fontSize.MM(8, 20);
-			}
-		}
+		public int FontSize => 10;
+		//{
+		//	get
+		//	{
+		//		int fontSize = (int)(12 * node.ItemScale);
+		//		return fontSize.MM(8, 20);
+		//	}
+		//}
 
 
 		internal void MouseMove(Point viewPosition, Vector viewOffset, bool isFirst)
 		{
-			node.MoveOrResize(viewPosition, viewOffset, isFirst);
+			//node.MoveOrResize(viewPosition, viewOffset, isFirst);
 		}
 
 		public void Zoom(int zoomDelta, Point viewPosition)
@@ -72,7 +74,7 @@ namespace Dependiator.Modeling
 
 		public void Resize(int zoomDelta, Point viewPosition)
 		{
-			node.Resize(zoomDelta, viewPosition);
+			//node.Resize(zoomDelta, viewPosition);
 		}
 	}
 }

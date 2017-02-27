@@ -67,7 +67,9 @@ namespace Dependiator.MainViews
 		{
 			if (!isNodeZoom)
 			{
-				return canvasService.ZoomCanvas(zoomDelta, viewPosition);
+				canvasService.ZoomCanvas(zoomDelta, viewPosition);
+				modelService.ZoomRoot(canvasService.Scale);
+				return true;
 			}
 
 			return false;

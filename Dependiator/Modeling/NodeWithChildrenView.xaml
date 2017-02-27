@@ -11,7 +11,7 @@
 	d:DesignHeight="300" d:DesignWidth="300">
 
 	<Border
-		BorderBrush="White"
+		BorderBrush="{Binding RectangleBrush}"
 		BorderThickness="{Binding StrokeThickness}"
 		Background="{Binding BackgroundBrush}"
 		CornerRadius="{Binding CornerRadius}" MouseWheel="UIElement_OnMouseWheel">
@@ -45,7 +45,7 @@
 				</Grid.ToolTip>
 			</Grid>
 
-			<Border Grid.Row="1" BorderBrush="Yellow" BorderThickness="1">
+			<Border Grid.Row="1" BorderBrush="Transparent" BorderThickness="0">
 
 				<ListBox
 					x:Name="ItemsListBox"

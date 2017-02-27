@@ -14,75 +14,71 @@ namespace Dependiator.Modeling
 	{
 		private readonly Node node;
 
+
+		public VirtualItemsSource ItemsSource => node.VirtualItemsSource;
 		private ZoomableCanvas canvas;
-
-		public VirtualItemsSource ItemsSource { get; }
-
-		private INodeItemsSource nodeItemsSource;
 
 		public NodeWithChildrenViewModel(Node node)
 			: base(node)
 		{
-			this.node = node;
-
-			nodeItemsSource = new NodeItemsSource();
-			ItemsSource = nodeItemsSource.VirtualItemsSource;
-
-			nodeItemsSource.Add(new NodeItem(new Rect(10, 10, 70, 40)));
-
-			StrokeThickness = 1;
-			
+			this.node = node;		
 		}
 
 
-		public double StrokeThickness { get; }
-		public double RectangleWidth => node.ItemCanvasBounds.Width * node.CanvasScale - StrokeThickness * 2;
-		public double RectangleHeight => node.ItemCanvasBounds.Height * node.CanvasScale - StrokeThickness * 2;
+		public double StrokeThickness => 1;
 		public Brush RectangleBrush => node.RectangleBrush;
 		public Brush HoverBrush => node.RectangleBrush;
 
 		public Brush BackgroundBrush => node.BackgroundBrush;
 
-		public string Name => node.ItemViewSize.Width > 40 ? node.NodeName.ShortName : " ";
+		public string Name => node.NodeName.ShortName;
 
-		public int CornerRadius => node.NodeType == NodeType.TypeType
-			? (int)(node.ItemScale * 10).MM(0, 30)
-			: 0;
+		public int CornerRadius => 0;
 
-		public string ToolTip =>
-			$"{node.NodeName}\nScale: {node.CanvasScale:#.##}, Level: {node.ItemLevel}, " +
-			$"NodeScale: {node.ItemScale:#.##}, NSF: {node.ThisItemScaleFactor}";
+		public string ToolTip => $"{node.NodeName}";
+		//$"{node.NodeName}\nScale: {node.CanvasScale:#.##}, Level: {node.ItemLevel}, " +
+		//$"NodeScale: {node.ItemScale:#.##}, NSF: {node.ThisItemScaleFactor}";
 
 
 		public int FontSize
 		{
 			get
 			{
-				int fontSize = (int)(12 * node.ItemScale);
+				int fontSize = (int)(12 * node.NodeScale);
 				return fontSize.MM(8, 20);
 			}
 		}
 
 
-		internal void MouseMove(Point viewPosition, Vector viewOffset, bool isFirst)
-		{
-			node.MoveOrResize(viewPosition, viewOffset, isFirst);
-		}
+//internal void MouseMove(Point viewPosition, Vector viewOffset, bool isFirst)
+//{
+//	node.MoveOrResize(viewPosition, viewOffset, isFirst);
+//}
 
-		public void Zoom(int zoomDelta, Point viewPosition)
-		{
-			//node.Zoom(zoomDelta, viewPosition);
-		}
+//public void Zoom(int zoomDelta, Point viewPosition)
+//{
+//	//node.Zoom(zoomDelta, viewPosition);
+//}
 
-		public void Resize(int zoomDelta, Point viewPosition)
-		{
-			node.Resize(zoomDelta, viewPosition);
-		}
+//public void Resize(int zoomDelta, Point viewPosition)
+//{
+//	node.Resize(zoomDelta, viewPosition);
+//}
 
 
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
 			canvas = zoomableCanvas;
+			UpdateZoomScale();
+		}
+
+
+		public void UpdateZoomScale()
+		{
+			if (canvas != null)
+			{
+				canvas.Scale = node.NodeScale;
+			}
 		}
 
 

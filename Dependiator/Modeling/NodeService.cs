@@ -11,12 +11,13 @@ namespace Dependiator.Modeling
 {
 	internal class NodeService : INodeService
 	{
-		private readonly IItemService itemService;
+		private readonly INodeItemService nodeItemService;
 
 
-		public NodeService(IItemService itemService)
+
+		public NodeService(INodeItemService nodeItemService)
 		{
-			this.itemService = itemService;
+			this.nodeItemService = nodeItemService;
 		}
 
 
@@ -44,7 +45,7 @@ namespace Dependiator.Modeling
 
 		private Node CreateRootNode()
 		{
-			Node root = new Node(itemService, null, NodeName.Root, NodeType.NameSpaceType);
+			Node root = new Node(nodeItemService, null, NodeName.Root, NodeType.NameSpaceType);
 			return root;
 		}
 
@@ -147,7 +148,7 @@ namespace Dependiator.Modeling
 				{
 					Node targetNode = GetOrAddNode(dataLink.Target, model, modelViewData);
 					NodeLink reference = new NodeLink(node, targetNode);
-					node.Links.Add(reference);
+				//	node.Links.Add(reference);
 				}
 			}
 		}
@@ -172,7 +173,7 @@ namespace Dependiator.Modeling
 			Node targetNode = GetOrAddNode(link.Target, model, modelViewData);
 
 			NodeLink nodeLink = new NodeLink(sourceNode, targetNode);
-			sourceNode.Links.Add(nodeLink);
+			//sourceNode.Links.Add(nodeLink);
 		}
 
 
@@ -193,26 +194,26 @@ namespace Dependiator.Modeling
 
 		private static List<Data.Link> ToLinks(Node node)
 		{
-			if (!node.Links.Any())
-			{
-				return null;
-			}
+			//if (!node.Links.Any())
+			//{
+			//	return null;
+			//}
 
 			List<Data.Link> links = null;
 
-			foreach (Link link in node.Links)
-			{
-				foreach (NodeLink nodeLink in link.NodeLinks.Where(n => n.Source == node))
-				{
-					if (links == null)
-					{
-						links = new List<Data.Link>();
-					}
+			//foreach (Link link in node.Links)
+			//{
+			//	foreach (NodeLink nodeLink in link.NodeLinks.Where(n => n.Source == node))
+			//	{
+			//		if (links == null)
+			//		{
+			//			links = new List<Data.Link>();
+			//		}
 
-					Data.Link dataLink = new Data.Link { Target = nodeLink.Target.NodeName };
-					links.Add(dataLink);
-				}
-			}
+			//		Data.Link dataLink = new Data.Link { Target = nodeLink.Target.NodeName };
+			//		links.Add(dataLink);
+			//	}
+			//}
 
 			return links;
 		}
@@ -251,7 +252,7 @@ namespace Dependiator.Modeling
 				parentNode = CreateNode(parentName, model, modelViewData);
 			}
 
-			Node node = new Node(itemService, parentNode, nodeName, null);
+			Node node = new Node(nodeItemService, parentNode, nodeName, null);
 
 			if (modelViewData != null && modelViewData.viewData.TryGetValue(
 				nodeName, out Data.ViewData viewData))
