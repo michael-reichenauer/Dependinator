@@ -83,15 +83,7 @@ namespace Dependiator.MainViews.Private
 		}
 
 
-		private double GetMinScale()
-		{
-			double minScaleWidth = canvas.ActualWidth / canvas.Extent.Width;
-			double minScaleHeight = canvas.ActualHeight / canvas.Extent.Height;
-			double minScale = Math.Min(minScaleWidth, minScaleHeight);
-			return minScale;
-		}
-
-
+		
 		public bool MoveCanvas(Vector viewOffset)
 		{
 			canvas.Offset -= viewOffset;

@@ -9,7 +9,7 @@ namespace Dependiator.MainViews
 	{
 		bool ZoomCanvas(int zoomDelta, Point viewPosition);
 
-		bool MoveCanvas(Vector viewOffset);
+		//bool MoveCanvas(Vector viewOffset);
 
 		Point GetCanvasPosition(Point viewPosition);
 
@@ -17,7 +17,7 @@ namespace Dependiator.MainViews
 
 		double Scale { get; set; }
 		Point Offset{ get; set; }
-		Rect CurrentViewPort { get; }
+		//Rect CurrentViewPort { get; }
 		event EventHandler ScaleChanged;
 		Point GetCanvasPoint(Point screenPoint);
 	}

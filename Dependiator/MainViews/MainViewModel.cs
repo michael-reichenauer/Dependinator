@@ -39,23 +39,23 @@ namespace Dependiator.MainViews
 		private readonly AsyncLock refreshLock = new AsyncLock();
 
 		public VirtualItemsSource ItemsSource { get; }
+		private ZoomableCanvas canvas;
 
 
 		public MainViewModel(
 			WorkingFolder workingFolder,
-			INodeItemsSource nodeItemsSource,
 			IModelService modelService,
 			IThemeService themeService,
 			ICanvasService canvasService,
 			IProgressService progressService)
 		{
 			this.workingFolder = workingFolder;
-			this.nodeItemsSource = nodeItemsSource;
 			this.modelService = modelService;
 			this.themeService = themeService;
 			this.canvasService = canvasService;
 			this.progress = progressService;
 
+			nodeItemsSource = new NodeItemsSource();
 			ItemsSource = nodeItemsSource.VirtualItemsSource;
 
 			filterTriggerTimer.Tick += FilterTrigger;
@@ -68,7 +68,7 @@ namespace Dependiator.MainViews
 			if (!isNodeZoom)
 			{
 				canvasService.ZoomCanvas(zoomDelta, viewPosition);
-				modelService.ZoomRoot(canvasService.Scale);
+				modelService.ZoomRoot(canvas.Scale);
 				return true;
 			}
 
@@ -82,7 +82,8 @@ namespace Dependiator.MainViews
 
 		public bool MoveCanvas(Vector viewOffset)
 		{
-			return canvasService.MoveCanvas(viewOffset);
+			canvas.Offset -= viewOffset;
+			return true;
 		}
 
 
@@ -94,6 +95,7 @@ namespace Dependiator.MainViews
 
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
+			canvas = zoomableCanvas;
 			canvasService.SetCanvas(zoomableCanvas);
 		}
 
@@ -157,7 +159,7 @@ namespace Dependiator.MainViews
 
 			using (progress.ShowDialog("Loading branch view ..."))
 			{		
-				modelService.InitModules();
+				modelService.InitModules(nodeItemsSource);
 
 				LoadViewModel();
 				t.Log("Updated view model after cached/fresh");
@@ -209,7 +211,7 @@ namespace Dependiator.MainViews
 		{
 			using (progress.ShowDialog("Refreshing view ..."))
 			{
-				await modelService.Refresh();
+				await modelService.Refresh(nodeItemsSource);
 			}
 		}
 

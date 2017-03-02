@@ -17,7 +17,7 @@ namespace Dependiator.Modeling
 		private readonly WorkingFolder workingFolder;
 		private readonly IReflectionService reflectionService;
 		private readonly INodeService nodeService;
-		private readonly INodeItemsSource itemsSource;
+		//private readonly INodeItemsSource itemsSource;
 		//private readonly IItemService itemService;
 		private readonly IDataSerializer dataSerializer;
 		private readonly ICanvasService canvasService;
@@ -36,7 +36,7 @@ namespace Dependiator.Modeling
 			this.workingFolder = workingFolder;
 			this.reflectionService = reflectionService;
 			this.nodeService = nodeService;
-			this.itemsSource = itemsSource;
+			//this.itemsSource = itemsSource;
 			//this.itemService = itemService;
 			this.dataSerializer = dataSerializer;
 			this.canvasService = canvasService;
@@ -45,7 +45,7 @@ namespace Dependiator.Modeling
 
 
 
-		public void InitModules()
+		public void InitModules(INodeItemsSource itemsSource)
 		{
 			Timing t = new Timing();
 
@@ -69,7 +69,7 @@ namespace Dependiator.Modeling
 
 			t.Log("To model");
 
-			ShowModel();
+			ShowModel(itemsSource);
 			t.Log("Show model");
 
 			RestoreViewSettings();
@@ -78,7 +78,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public async Task Refresh()
+		public async Task Refresh(INodeItemsSource itemsSource)
 		{
 			await Task.Yield();
 
@@ -94,7 +94,7 @@ namespace Dependiator.Modeling
 
 			t.Log("Read fresh data");
 
-			ShowModel();
+			ShowModel(itemsSource);
 
 			t.Log("Show model");
 
@@ -116,7 +116,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void ShowModel()
+		private void ShowModel(INodeItemsSource itemsSource)
 		{
 			//if (elementTree != null)
 			//{
