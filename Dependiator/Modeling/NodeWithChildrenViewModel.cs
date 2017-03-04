@@ -17,7 +17,7 @@ namespace Dependiator.Modeling
 
 
 		//public VirtualItemsSource ItemsSource => node.VirtualItemsSource;
-		private ItemsCanvas canvas = new ItemsCanvas();
+		//private ItemsCanvas canvas = new ItemsCanvas();
 
 		public NodeWithChildrenViewModel(Node node)
 			: base(node)
@@ -25,6 +25,7 @@ namespace Dependiator.Modeling
 			this.node = node;		
 		}
 
+		public NodesViewModel NodesViewModel { get; } = new NodesViewModel();
 
 		public double StrokeThickness => 1;
 		public Brush RectangleBrush => node.RectangleBrush;
@@ -69,16 +70,16 @@ namespace Dependiator.Modeling
 
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
-			canvas.SetCanvas(zoomableCanvas);
+			NodesViewModel.SetCanvas(zoomableCanvas);
 			UpdateZoomScale();
 		}
 
 
 		public void UpdateZoomScale()
 		{
-			if (canvas != null)
+			if (NodesViewModel.ItemsCanvas != null)
 			{
-				canvas.Scale = node.NodeScale;
+				NodesViewModel.ItemsCanvas.Scale = node.NodeScale;
 			}
 		}
 
@@ -91,7 +92,7 @@ namespace Dependiator.Modeling
 
 		public void Add(Node childNode)
 		{
-			canvas.AddItem(childNode);
+			NodesViewModel.ItemsCanvas.AddItem(childNode);
 		}
 	}
 }

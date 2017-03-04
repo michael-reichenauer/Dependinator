@@ -16,7 +16,6 @@ namespace Dependiator.Modeling
 	internal class Node : IItem
 	{
 		private readonly INodeItemService nodeItemService;
-		//private readonly IItemService itemService;
 
 		private static readonly Size DefaultSize = new Size(200, 100);
 

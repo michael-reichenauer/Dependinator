@@ -36,7 +36,7 @@ namespace Dependiator.MainViews
 		private int width = 0;
 
 
-		private readonly ItemsCanvas itemsCanvas = new ItemsCanvas();
+	//	private readonly ItemsCanvas itemsCanvas = new ItemsCanvas();
 
 
 		public MainViewModel(
@@ -58,12 +58,15 @@ namespace Dependiator.MainViews
 		}
 
 
+		public NodesViewModel NodesViewModel { get; } = new NodesViewModel();
+
+
 		public bool Zoom(int zoomDelta, Point viewPosition, bool isNodeZoom)
 		{
 			if (!isNodeZoom)
 			{
-				itemsCanvas.Zoom(zoomDelta, viewPosition);
-				modelService.ZoomRoot(itemsCanvas.Scale);
+				NodesViewModel.ItemsCanvas.Zoom(zoomDelta, viewPosition);
+				modelService.ZoomRoot(NodesViewModel.ItemsCanvas.Scale);
 				return true;
 			}
 
@@ -77,7 +80,7 @@ namespace Dependiator.MainViews
 
 		public bool MoveCanvas(Vector viewOffset)
 		{
-			itemsCanvas.Offset -= viewOffset;
+			NodesViewModel.ItemsCanvas.Offset -= viewOffset;
 			return true;
 		}
 
@@ -90,7 +93,7 @@ namespace Dependiator.MainViews
 
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
-			itemsCanvas.SetCanvas(zoomableCanvas);		
+			NodesViewModel.SetCanvas(zoomableCanvas);		
 		}
 
 
@@ -133,7 +136,7 @@ namespace Dependiator.MainViews
 				if (width != value)
 				{
 					width = value;
-					itemsCanvas?.TriggerExtentChanged();
+					NodesViewModel?.ItemsCanvas?.TriggerExtentChanged();
 				}
 			}
 		}
@@ -153,7 +156,7 @@ namespace Dependiator.MainViews
 
 			using (progress.ShowDialog("Loading branch view ..."))
 			{		
-				modelService.InitModules(itemsCanvas);
+				modelService.InitModules(NodesViewModel.ItemsCanvas);
 
 				LoadViewModel();
 				t.Log("Updated view model after cached/fresh");
@@ -205,7 +208,7 @@ namespace Dependiator.MainViews
 		{
 			using (progress.ShowDialog("Refreshing view ..."))
 			{
-				await modelService.Refresh(itemsCanvas);
+				await modelService.Refresh(NodesViewModel.ItemsCanvas);
 			}
 		}
 

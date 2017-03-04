@@ -22,22 +22,9 @@ namespace Dependiator.Modeling
 	/// </summary>
 	public partial class NodeWithChildrenView : UserControl
 	{
-		private NodeWithChildrenViewModel viewModel;
-
 		public NodeWithChildrenView()
 		{
 			InitializeComponent();
-		}
-
-
-		private async void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
-		{
-			viewModel = (NodeWithChildrenViewModel)DataContext;
-			viewModel.SetCanvas((ZoomableCanvas)sender);
-
-			ItemsListBox.Focus();
-
-			await viewModel.LoadAsync();
 		}
 
 
