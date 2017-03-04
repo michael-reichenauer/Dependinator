@@ -1,35 +1,31 @@
 ﻿using System;
 using System.Windows;
-using Dependiator.Utils;
 using Dependiator.Utils.UI.VirtualCanvas;
 
 
 namespace Dependiator.MainViews.Private
 {
-
 	internal class ItemsCanvas
 	{
 		private static readonly double ZoomSpeed = 600.0;
 
+		private readonly ItemsSource itemsSource = new ItemsSource();
 		private ZoomableCanvas canvas;
-		private readonly NodeItemsSource nodeItemsSource = new NodeItemsSource();
-
-		public Rect CurrentViewPort => canvas.ActualViewbox;
-
-		public event EventHandler ScaleChanged;
-
 
 
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
 			canvas = zoomableCanvas;
-			canvas.ItemsOwner.ItemsSource = nodeItemsSource.VirtualItemsSource;
+			canvas.ItemsOwner.ItemsSource = itemsSource.VirtualItemsSource;
 
-			canvas.ItemRealized += (s, e) => nodeItemsSource.ItemRealized(e.VirtualId);
-			canvas.ItemVirtualized += (s, e) => nodeItemsSource.ItemVirtualized(e.VirtualId);
+			canvas.ItemRealized += (s, e) => itemsSource.ItemRealized(e.VirtualId);
+			canvas.ItemVirtualized += (s, e) => itemsSource.ItemVirtualized(e.VirtualId);
 		}
 
 
+		public event EventHandler ScaleChanged;
+
+		public Rect CurrentViewPort => canvas.ActualViewbox;
 
 		public Point GetCanvasPoint(Point screenPoint) => canvas.GetCanvasPoint(screenPoint);
 
@@ -53,8 +49,14 @@ namespace Dependiator.MainViews.Private
 		}
 
 
-		public bool ZoomCanvas(int zoomDelta, Point viewPosition)
-		{		
+		public void AddItem(IItem item)
+		{
+			itemsSource.Add(item);
+		}
+
+
+		public bool Zoom(int zoomDelta, Point viewPosition)
+		{
 			double zoom = Math.Pow(2, zoomDelta / ZoomSpeed);
 
 			double newScale = canvas.Scale * zoom;
@@ -74,14 +76,7 @@ namespace Dependiator.MainViews.Private
 		}
 
 
-		private void TriggerScaleChanged()
-		{
-			ScaleChanged?.Invoke(this, EventArgs.Empty);
-		}
-
-
-		
-		public bool MoveCanvas(Vector viewOffset)
+		public bool Move(Vector viewOffset)
 		{
 			canvas.Offset -= viewOffset;
 			return true;
@@ -110,13 +105,13 @@ namespace Dependiator.MainViews.Private
 
 		public void TriggerExtentChanged()
 		{
-			nodeItemsSource.TriggerExtentChanged();
+			itemsSource.TriggerExtentChanged();
 		}
 
 
-		public void AddItem(IItem item)
+		private void TriggerScaleChanged()
 		{
-			nodeItemsSource.Add(item);
+			ScaleChanged?.Invoke(this, EventArgs.Empty);
 		}
 	}
 }

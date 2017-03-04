@@ -128,7 +128,7 @@
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
     <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
-    <Compile Include="MainViews\Private\ItemsCanvas.cs" />
+    <Compile Include="Modeling\Items\ItemsCanvas.cs" />
     <Compile Include="Modeling\Analyzing\ReflectionService.cs" />
     <Compile Include="Modeling\NodeItem.cs" />
     <Compile Include="Modeling\NodeLeafView.xaml.cs">
@@ -159,13 +159,11 @@
       <DependentUpon>NodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Modeling\Item.cs" />
-    <Compile Include="MainViews\ItemViewModel.cs" />
-    <Compile Include="Modeling\IItemService.cs" />
+    <Compile Include="Modeling\Items\ItemViewModel.cs" />
     <Compile Include="Modeling\Node.cs" />
     <Compile Include="MainViews\Private\Caching\BranchNameSurrogate.cs" />
     <Compile Include="Modeling\NodeViewModel.cs" />
-    <Compile Include="MainViews\Private\INodeItemsSource.cs" />
-    <Compile Include="MainViews\Private\IItem.cs" />
+    <Compile Include="Modeling\Items\IItem.cs" />
     <Compile Include="MainViews\Private\MainViewCommands.cs" />
     <Compile Include="Modeling\IModelService.cs" />
     <Compile Include="Modeling\ModelService.cs" />
@@ -218,7 +216,7 @@
     <Compile Include="Utils\UI\HideableGridSplitter.cs" />
     <Compile Include="Utils\Compare.cs" />
     <Compile Include="Common\ThemeHandling\IThemeService.cs" />
-    <Compile Include="MainViews\Private\NodeItemsSource.cs" />
+    <Compile Include="Modeling\Items\ItemsSource.cs" />
     <Compile Include="MainViews\MainViewModel.cs" />
     <Compile Include="Utils\IReadOnlyKeyedList.cs" />
     <Compile Include="Utils\KeyedList.cs" />

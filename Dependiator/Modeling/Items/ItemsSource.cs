@@ -1,14 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Dependiator.Utils;
 using Dependiator.Utils.UI.VirtualCanvas;
 
 
 namespace Dependiator.MainViews.Private
 {
-	[SingleInstance]
-	internal class NodeItemsSource : VirtualItemsSource, INodeItemsSource
+	internal class ItemsSource : VirtualItemsSource
 	{
 		private readonly PriorityQuadTree<IItem> viewItemsTree = new PriorityQuadTree<IItem>();
 		private readonly List<IItem> viewItems = new List<IItem>();
@@ -53,7 +51,7 @@ namespace Dependiator.MainViews.Private
 			if (isQueryItemsChanged)
 			{
 				TriggerItemsChanged();
-			}		
+			}
 		}
 
 
@@ -72,7 +70,7 @@ namespace Dependiator.MainViews.Private
 			if (virtualItem.ItemCanvasBounds.IntersectsWith(lastViewAreaQuery))
 			{
 				isQueryItemsChanged = true;
-			}		
+			}
 
 			if (currentBounds != TotalBounds)
 			{
@@ -100,7 +98,7 @@ namespace Dependiator.MainViews.Private
 
 			ItemsBoundsChanged();
 
-			if (oldItemBounds.IntersectsWith(lastViewAreaQuery) 
+			if (oldItemBounds.IntersectsWith(lastViewAreaQuery)
 				|| newItemBounds.IntersectsWith(lastViewAreaQuery))
 			{
 				TriggerItemsChanged();
