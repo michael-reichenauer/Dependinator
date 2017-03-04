@@ -1,10 +1,6 @@
 ﻿using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using Dependiator.Modeling;
-using Dependiator.Utils;
-using Dependiator.Utils.UI.VirtualCanvas;
 using UserControl = System.Windows.Controls.UserControl;
 
 
@@ -30,7 +26,7 @@ namespace Dependiator.MainViews
 		private async void MainView_OnLoaded(object sender, RoutedEventArgs e)
 		{
 			viewModel = (MainViewModel)DataContext;
-			NodesView.ItemsListBox.Focus();
+			NodesView.SetFocus();
 			await viewModel.LoadAsync();
 		}
 
@@ -95,9 +91,5 @@ namespace Dependiator.MainViews
 
 			base.OnPreviewMouseUp(e);
 		}
-
-
-
-
 	}
 }

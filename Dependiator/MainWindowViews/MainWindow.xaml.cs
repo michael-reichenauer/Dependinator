@@ -7,7 +7,6 @@ using System.Windows.Forms;
 using System.Windows.Threading;
 using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.MainViews;
 using Dependiator.Utils;
 
 

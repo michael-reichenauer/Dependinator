@@ -1,14 +1,10 @@
 using System;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using Dependiator.ApplicationHandling;
 using Dependiator.Common.ProgressHandling;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.MainViews.Private;
 using Dependiator.Modeling;
-using Dependiator.Modeling.Items;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
 using Dependiator.Utils.UI.VirtualCanvas;
@@ -65,8 +61,8 @@ namespace Dependiator.MainViews
 		{
 			if (!isNodeZoom)
 			{
-				NodesViewModel.ItemsCanvas.Zoom(zoomDelta, viewPosition);
-				modelService.ZoomRoot(NodesViewModel.ItemsCanvas.Scale);
+				NodesViewModel.Zoom(zoomDelta, viewPosition);
+				modelService.ZoomRoot(NodesViewModel.Scale);
 				return true;
 			}
 
@@ -80,7 +76,7 @@ namespace Dependiator.MainViews
 
 		public bool MoveCanvas(Vector viewOffset)
 		{
-			NodesViewModel.ItemsCanvas.Offset -= viewOffset;
+			NodesViewModel.MoveCanvas(viewOffset);
 			return true;
 		}
 
@@ -136,7 +132,7 @@ namespace Dependiator.MainViews
 				if (width != value)
 				{
 					width = value;
-					NodesViewModel?.ItemsCanvas?.TriggerExtentChanged();
+					NodesViewModel.SizeChanged();
 				}
 			}
 		}
@@ -156,7 +152,7 @@ namespace Dependiator.MainViews
 
 			using (progress.ShowDialog("Loading branch view ..."))
 			{		
-				modelService.InitModules(NodesViewModel.ItemsCanvas);
+				modelService.InitModules(NodesViewModel);
 
 				LoadViewModel();
 				t.Log("Updated view model after cached/fresh");
@@ -208,7 +204,7 @@ namespace Dependiator.MainViews
 		{
 			using (progress.ShowDialog("Refreshing view ..."))
 			{
-				await modelService.Refresh(NodesViewModel.ItemsCanvas);
+				await modelService.Refresh(NodesViewModel);
 			}
 		}
 

@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
-using Dependiator.Common.MessageDialogs;
 using Dependiator.Modeling.Serializing;
 using Dependiator.Utils;
 

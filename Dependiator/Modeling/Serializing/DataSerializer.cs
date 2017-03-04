@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using Dependiator.ApplicationHandling;
-using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Utils;
 using Newtonsoft.Json;
 

@@ -1,11 +1,7 @@
 using System;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Media;
-using Dependiator.MainViews;
-using Dependiator.MainViews.Private;
 using Dependiator.Modeling.Items;
-using Dependiator.Utils.UI;
 using Dependiator.Utils.UI.VirtualCanvas;
 
 
@@ -77,10 +73,7 @@ namespace Dependiator.Modeling
 
 		public void UpdateZoomScale()
 		{
-			if (NodesViewModel.ItemsCanvas != null)
-			{
-				NodesViewModel.ItemsCanvas.Scale = node.NodeScale;
-			}
+			NodesViewModel.Scale = node.NodeScale;
 		}
 
 
@@ -92,7 +85,7 @@ namespace Dependiator.Modeling
 
 		public void Add(Node childNode)
 		{
-			NodesViewModel.ItemsCanvas.AddItem(childNode);
+			NodesViewModel.AddItem(childNode);
 		}
 	}
 }

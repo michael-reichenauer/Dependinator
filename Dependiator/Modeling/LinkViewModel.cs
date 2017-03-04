@@ -1,8 +1,3 @@
-using System;
-using System.Windows.Media;
-using Dependiator.MainViews;
-
-
 namespace Dependiator.Modeling
 {
 	//internal class LinkViewModel : ItemViewModel

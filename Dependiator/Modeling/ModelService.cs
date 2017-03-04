@@ -2,8 +2,6 @@
 using System.Windows;
 using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.MainViews;
-using Dependiator.MainViews.Private;
 using Dependiator.Modeling.Analyzing;
 using Dependiator.Modeling.Items;
 using Dependiator.Modeling.Serializing;
@@ -45,7 +43,7 @@ namespace Dependiator.Modeling
 
 
 
-		public void InitModules(ItemsCanvas itemsCanvas)
+		public void InitModules(NodesViewModel nodesViewModel)
 		{
 			Timing t = new Timing();
 
@@ -69,7 +67,7 @@ namespace Dependiator.Modeling
 
 			t.Log("To model");
 
-			ShowModel(itemsCanvas);
+			ShowModel(nodesViewModel);
 			t.Log("Show model");
 
 			RestoreViewSettings();
@@ -78,7 +76,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public async Task Refresh(ItemsCanvas itemsCanvas)
+		public async Task Refresh(NodesViewModel nodesViewModel)
 		{
 			await Task.Yield();
 
@@ -94,7 +92,7 @@ namespace Dependiator.Modeling
 
 			t.Log("Read fresh data");
 
-			ShowModel(itemsCanvas);
+			ShowModel(nodesViewModel);
 
 			t.Log("Show model");
 
@@ -116,7 +114,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void ShowModel(ItemsCanvas itemsCanvas)
+		private void ShowModel(NodesViewModel nodesViewModel)
 		{
 			//if (elementTree != null)
 			//{
@@ -124,7 +122,7 @@ namespace Dependiator.Modeling
 			//}
 
 			IItem rootItem = GetNode(model);
-			itemsCanvas.AddItem(rootItem);
+			nodesViewModel.AddItem(rootItem);
 			//itemService.ShowRootItem(rootItem);
 
 		}

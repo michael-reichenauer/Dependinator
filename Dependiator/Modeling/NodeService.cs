@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.Modeling.Analyzing;
 using Dependiator.Modeling.Serializing;
 
 

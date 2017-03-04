@@ -1,8 +1,3 @@
-using System.Windows;
-using Dependiator.MainViews.Private;
-using Dependiator.Utils.UI;
-
-
 namespace Dependiator.Modeling
 {
 	//internal class NodeItem : IItem

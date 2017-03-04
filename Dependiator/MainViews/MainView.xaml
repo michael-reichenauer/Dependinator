@@ -14,22 +14,24 @@
 
 	<Grid>
 		<Grid.RowDefinitions>
+			
 			<!-- Model -->
 			<RowDefinition Height="*" />
+			
 			<!-- Grid splitter -->
 			<RowDefinition Height="Auto" />
-			<!-- Commit details -->
+			
+			<!-- Details -->
 			<RowDefinition Height="150" />
 		</Grid.RowDefinitions>
 
+		
 		<!-- Model -->
 		<Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-
 			<modeling:NodesView x:Name="NodesView" DataContext="{Binding NodesViewModel}"/>
-			
-
 		</Border>
 
+		
 		<ui:HideableGridSplitter
 			Grid.Row="1"
 			Visibility="{Binding IsShowCommitDetails, Converter={StaticResource VC}}"

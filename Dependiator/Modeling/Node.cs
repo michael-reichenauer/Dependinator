@@ -3,12 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using Dependiator.MainViews.Private;
-using Dependiator.Modeling.Analyzing;
 using Dependiator.Modeling.Items;
-using Dependiator.Utils;
 using Dependiator.Utils.UI;
-using Dependiator.Utils.UI.VirtualCanvas;
 
 
 namespace Dependiator.Modeling
@@ -36,7 +32,7 @@ namespace Dependiator.Modeling
 		public Node(
 			INodeItemService nodeItemService,
 			Node parent,
-			NodeName name, 
+			NodeName name,
 			NodeType type)
 		{
 			this.nodeItemService = nodeItemService;
@@ -70,7 +66,7 @@ namespace Dependiator.Modeling
 
 		public NodeType NodeType { get; private set; }
 
-	//	public NodeLinks Links { get; }
+		//	public NodeLinks Links { get; }
 
 		//public VirtualItemsSource VirtualItemsSource => nodeItemsSource;
 
@@ -88,7 +84,7 @@ namespace Dependiator.Modeling
 		public void Zoom(Double scale)
 		{
 			canvasScale = scale;
-			UpdateScale();		
+			UpdateScale();
 		}
 
 
@@ -102,13 +98,13 @@ namespace Dependiator.Modeling
 			foreach (Node childNode in ChildNodes)
 			{
 				childNode.UpdateScale();
-			}		
+			}
 		}
 
 
 		public void SetBounds(Rect bounds)
 		{
-			ItemCanvasBounds = bounds;		
+			ItemCanvasBounds = bounds;
 
 			RectangleBrush = nodeItemService.GetRectangleBrush();
 			BackgroundBrush = nodeItemService.GetRectangleBackgroundBrush(RectangleBrush);
@@ -129,8 +125,8 @@ namespace Dependiator.Modeling
 		public bool CanBeShown()
 		{
 			return true;
-				//ItemViewSize.Width > 10
-				//&& (ParentItem?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
+			//ItemViewSize.Width > 10
+			//&& (ParentItem?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
 		}
 
 		public void SetType(NodeType nodeType)
@@ -228,7 +224,7 @@ namespace Dependiator.Modeling
 		}
 
 		private void AddModuleChildren()
-		{	
+		{
 			int rowLength = 6;
 
 			int padding = 20;
@@ -243,7 +239,7 @@ namespace Dependiator.Modeling
 			foreach (Node childNode in children)
 			{
 				//Size size = childElement.ElementBounds?.Size ?? DefaultSize;
-				Size size =  DefaultSize;
+				Size size = DefaultSize;
 
 				Point location;
 				//if (childElement.ElementBounds.HasValue)
@@ -269,7 +265,7 @@ namespace Dependiator.Modeling
 			}
 		}
 
-	
+
 		//private void AddLinks()
 		//{
 		//	foreach (Link link in Links)
