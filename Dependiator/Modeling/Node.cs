@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Media;
 using Dependiator.MainViews.Private;
 using Dependiator.Modeling.Analyzing;
+using Dependiator.Modeling.Items;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
 using Dependiator.Utils.UI.VirtualCanvas;

@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using Dependiator.MainViews;
+using Dependiator.Modeling.Items;
 
 
 namespace Dependiator.Modeling

@@ -8,6 +8,7 @@ using Dependiator.Common.ProgressHandling;
 using Dependiator.Common.ThemeHandling;
 using Dependiator.MainViews.Private;
 using Dependiator.Modeling;
+using Dependiator.Modeling.Items;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
 using Dependiator.Utils.UI.VirtualCanvas;

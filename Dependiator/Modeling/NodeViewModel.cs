@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Media;
 using Dependiator.MainViews;
 using Dependiator.Modeling.Analyzing;
+using Dependiator.Modeling.Items;
 
 
 namespace Dependiator.Modeling

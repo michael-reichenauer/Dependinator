@@ -1,8 +1,7 @@
-using Dependiator.MainViews.Private;
 using Dependiator.Utils.UI;
 
 
-namespace Dependiator.MainViews
+namespace Dependiator.Modeling.Items
 {
 	internal class ItemViewModel : ViewModel
 	{

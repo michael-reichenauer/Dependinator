@@ -5,6 +5,7 @@ using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.MainViews;
 using Dependiator.MainViews.Private;
 using Dependiator.Modeling.Analyzing;
+using Dependiator.Modeling.Items;
 using Dependiator.Modeling.Serializing;
 using Dependiator.Utils;
 

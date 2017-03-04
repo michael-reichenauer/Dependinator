@@ -3,7 +3,7 @@ using System.Windows;
 using Dependiator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependiator.MainViews.Private
+namespace Dependiator.Modeling.Items
 {
 	internal class ItemsCanvas
 	{

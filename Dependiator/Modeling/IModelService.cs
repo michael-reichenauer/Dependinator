@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using System.Windows;
 using Dependiator.MainViews.Private;
+using Dependiator.Modeling.Items;
 
 
 namespace Dependiator.Modeling

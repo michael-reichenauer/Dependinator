@@ -2,7 +2,7 @@ using System.Windows;
 using Dependiator.Utils.UI;
 
 
-namespace Dependiator.MainViews.Private
+namespace Dependiator.Modeling.Items
 {
 	internal interface IItem
 	{
