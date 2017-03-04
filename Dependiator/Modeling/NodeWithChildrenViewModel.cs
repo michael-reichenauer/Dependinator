@@ -15,8 +15,8 @@ namespace Dependiator.Modeling
 		private readonly Node node;
 
 
-		public VirtualItemsSource ItemsSource => node.VirtualItemsSource;
-		private ZoomableCanvas canvas;
+		//public VirtualItemsSource ItemsSource => node.VirtualItemsSource;
+		private ItemsCanvas canvas = new ItemsCanvas();
 
 		public NodeWithChildrenViewModel(Node node)
 			: base(node)
@@ -68,7 +68,7 @@ namespace Dependiator.Modeling
 
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
-			canvas = zoomableCanvas;
+			canvas.SetCanvas(zoomableCanvas);
 			UpdateZoomScale();
 		}
 
@@ -85,6 +85,12 @@ namespace Dependiator.Modeling
 		public Task LoadAsync()
 		{
 			return Task.CompletedTask;
+		}
+
+
+		public void Add(Node childNode)
+		{
+			canvas.AddItem(childNode);
 		}
 	}
 }

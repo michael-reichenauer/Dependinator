@@ -24,9 +24,7 @@ namespace Dependiator.MainViews
 		private static readonly TimeSpan FilterDelay = TimeSpan.FromMilliseconds(300);
 
 		private readonly IThemeService themeService;
-		private readonly ICanvasService canvasService;
-		private readonly WorkingFolder workingFolder;
-		private readonly INodeItemsSource nodeItemsSource;
+
 		private readonly IModelService modelService;
 		private readonly IProgressService progress;
 
@@ -36,27 +34,23 @@ namespace Dependiator.MainViews
 
 		private int width = 0;
 
-		private readonly AsyncLock refreshLock = new AsyncLock();
 
-		public VirtualItemsSource ItemsSource { get; }
-		private ZoomableCanvas canvas;
+		private readonly ItemsCanvas itemsCanvas = new ItemsCanvas();
 
 
 		public MainViewModel(
-			WorkingFolder workingFolder,
 			IModelService modelService,
 			IThemeService themeService,
-			ICanvasService canvasService,
 			IProgressService progressService)
 		{
-			this.workingFolder = workingFolder;
+
 			this.modelService = modelService;
 			this.themeService = themeService;
-			this.canvasService = canvasService;
+
 			this.progress = progressService;
 
-			nodeItemsSource = new NodeItemsSource();
-			ItemsSource = nodeItemsSource.VirtualItemsSource;
+			
+			//ItemsSource = nodeItemsSource.VirtualItemsSource;
 
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
@@ -67,8 +61,8 @@ namespace Dependiator.MainViews
 		{
 			if (!isNodeZoom)
 			{
-				canvasService.ZoomCanvas(zoomDelta, viewPosition);
-				modelService.ZoomRoot(canvas.Scale);
+				itemsCanvas.ZoomCanvas(zoomDelta, viewPosition);
+				modelService.ZoomRoot(itemsCanvas.Scale);
 				return true;
 			}
 
@@ -82,7 +76,7 @@ namespace Dependiator.MainViews
 
 		public bool MoveCanvas(Vector viewOffset)
 		{
-			canvas.Offset -= viewOffset;
+			itemsCanvas.Offset -= viewOffset;
 			return true;
 		}
 
@@ -95,8 +89,7 @@ namespace Dependiator.MainViews
 
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
-			canvas = zoomableCanvas;
-			canvasService.SetCanvas(zoomableCanvas);
+			itemsCanvas.SetCanvas(zoomableCanvas);		
 		}
 
 
@@ -139,7 +132,7 @@ namespace Dependiator.MainViews
 				if (width != value)
 				{
 					width = value;
-					nodeItemsSource.TriggerExtentChanged();
+					itemsCanvas?.TriggerExtentChanged();
 				}
 			}
 		}
@@ -159,7 +152,7 @@ namespace Dependiator.MainViews
 
 			using (progress.ShowDialog("Loading branch view ..."))
 			{		
-				modelService.InitModules(nodeItemsSource);
+				modelService.InitModules(itemsCanvas);
 
 				LoadViewModel();
 				t.Log("Updated view model after cached/fresh");
@@ -211,7 +204,7 @@ namespace Dependiator.MainViews
 		{
 			using (progress.ShowDialog("Refreshing view ..."))
 			{
-				await modelService.Refresh(nodeItemsSource);
+				await modelService.Refresh(itemsCanvas);
 			}
 		}
 
@@ -317,7 +310,7 @@ namespace Dependiator.MainViews
 
 		public void Clicked(Point viewPosition)
 		{
-			Point canvasPosition = canvasService.GetCanvasPosition(viewPosition);
+			//Point canvasPosition = canvasService.GetCanvasPosition(viewPosition);
 
 			//double clickX = position.X - 9;
 			//double clickY = position.Y - 5;

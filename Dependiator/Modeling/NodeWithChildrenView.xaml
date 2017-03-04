@@ -50,7 +50,7 @@
 				<ListBox
 					x:Name="ItemsListBox"
 					Background="Transparent"
-					ItemsSource="{Binding ItemsSource}"
+					
 					IsTextSearchEnabled="False"
 					Padding="4"
 					SelectionMode="Extended"

@@ -6,32 +6,29 @@ using Dependiator.Utils.UI.VirtualCanvas;
 
 namespace Dependiator.MainViews.Private
 {
-	[SingleInstance]
-	internal class CanvasService : ICanvasService
+
+	internal class ItemsCanvas
 	{
-		private readonly INodeItemsSource itemsSource;
 		private static readonly double ZoomSpeed = 600.0;
 
 		private ZoomableCanvas canvas;
-
+		private readonly NodeItemsSource nodeItemsSource = new NodeItemsSource();
 
 		public Rect CurrentViewPort => canvas.ActualViewbox;
 
 		public event EventHandler ScaleChanged;
 
 
-		public CanvasService(INodeItemsSource itemsSource)
-		{
-			this.itemsSource = itemsSource;
-		}
-
 
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
 			canvas = zoomableCanvas;
-			canvas.ItemRealized += (s, e) => itemsSource.ItemRealized(e.VirtualId);
-			canvas.ItemVirtualized += (s, e) => itemsSource.ItemVirtualized(e.VirtualId);
+			canvas.ItemsOwner.ItemsSource = nodeItemsSource.VirtualItemsSource;
+
+			canvas.ItemRealized += (s, e) => nodeItemsSource.ItemRealized(e.VirtualId);
+			canvas.ItemVirtualized += (s, e) => nodeItemsSource.ItemVirtualized(e.VirtualId);
 		}
+
 
 
 		public Point GetCanvasPoint(Point screenPoint) => canvas.GetCanvasPoint(screenPoint);
@@ -108,6 +105,18 @@ namespace Dependiator.MainViews.Private
 
 			Point viewPosition = new Point(x, y);
 			return viewPosition;
+		}
+
+
+		public void TriggerExtentChanged()
+		{
+			nodeItemsSource.TriggerExtentChanged();
+		}
+
+
+		public void AddItem(IItem item)
+		{
+			nodeItemsSource.Add(item);
 		}
 	}
 }

@@ -28,7 +28,6 @@
 			<ListBox
 				x:Name="ItemsListBox"
 				Background="Transparent"
-				ItemsSource="{Binding ItemsSource}"
 				IsTextSearchEnabled="False"
 				Padding="4"
 
@@ -105,7 +104,7 @@
 								<Setter Property="ContentTemplate">
 									<Setter.Value>
 										<DataTemplate>
-											<modeling:NodeView/>
+											<modeling:NodeView />
 										</DataTemplate>
 									</Setter.Value>
 								</Setter>
@@ -118,7 +117,7 @@
 								<Setter Property="ContentTemplate">
 									<Setter.Value>
 										<DataTemplate>
-											<modeling:NodeWithChildrenView/>
+											<modeling:NodeWithChildrenView />
 										</DataTemplate>
 									</Setter.Value>
 								</Setter>
@@ -132,7 +131,7 @@
 								<Setter Property="ContentTemplate">
 									<Setter.Value>
 										<DataTemplate>
-											<modeling:LinkView/>
+											<modeling:LinkView />
 										</DataTemplate>
 									</Setter.Value>
 								</Setter>

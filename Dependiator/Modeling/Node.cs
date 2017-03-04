@@ -25,7 +25,7 @@ namespace Dependiator.Modeling
 		public ViewModel ViewModel { get; private set; }
 		public object ItemState { get; set; }
 
-		private NodeItemsSource nodeItemsSource;
+		//private NodeItemsSource nodeItemsSource;
 		private double thisNodeScaleFactor = 7;
 		private double canvasScale = 1;
 
@@ -72,7 +72,7 @@ namespace Dependiator.Modeling
 
 	//	public NodeLinks Links { get; }
 
-		public VirtualItemsSource VirtualItemsSource => nodeItemsSource;
+		//public VirtualItemsSource VirtualItemsSource => nodeItemsSource;
 
 		public NodeViewModel ModuleViewModel => ViewModel as NodeViewModel;
 		public Brush RectangleBrush { get; private set; }
@@ -115,10 +115,9 @@ namespace Dependiator.Modeling
 
 			if (ChildNodes.Any())
 			{
-				nodeItemsSource = new NodeItemsSource();
-				AddModuleChildren();
-			
+				//nodeItemsSource = new NodeItemsSource();
 				ViewModel = new NodeWithChildrenViewModel(this);
+				AddModuleChildren();
 			}
 			else
 			{
@@ -260,7 +259,12 @@ namespace Dependiator.Modeling
 
 				Rect bounds = new Rect(location, size);
 				childNode.SetBounds(bounds);
-				nodeItemsSource.Add(childNode);
+
+				if (ViewModel is NodeWithChildrenViewModel vm)
+				{
+					vm.Add(childNode);
+				}
+
 				count++;
 			}
 		}

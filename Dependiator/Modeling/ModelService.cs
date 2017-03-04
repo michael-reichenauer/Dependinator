@@ -20,7 +20,7 @@ namespace Dependiator.Modeling
 		//private readonly INodeItemsSource itemsSource;
 		//private readonly IItemService itemService;
 		private readonly IDataSerializer dataSerializer;
-		private readonly ICanvasService canvasService;
+
 
 		private Model model;
 
@@ -28,10 +28,9 @@ namespace Dependiator.Modeling
 			WorkingFolder workingFolder,
 			IReflectionService reflectionService,
 			INodeService nodeService,
-			INodeItemsSource itemsSource,
+
 			//IItemService itemService,
-			IDataSerializer dataSerializer,
-			ICanvasService canvasService)
+			IDataSerializer dataSerializer)
 		{
 			this.workingFolder = workingFolder;
 			this.reflectionService = reflectionService;
@@ -39,13 +38,13 @@ namespace Dependiator.Modeling
 			//this.itemsSource = itemsSource;
 			//this.itemService = itemService;
 			this.dataSerializer = dataSerializer;
-			this.canvasService = canvasService;
+
 		}
 
 
 
 
-		public void InitModules(INodeItemsSource itemsSource)
+		public void InitModules(ItemsCanvas itemsCanvas)
 		{
 			Timing t = new Timing();
 
@@ -69,7 +68,7 @@ namespace Dependiator.Modeling
 
 			t.Log("To model");
 
-			ShowModel(itemsSource);
+			ShowModel(itemsCanvas);
 			t.Log("Show model");
 
 			RestoreViewSettings();
@@ -78,7 +77,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public async Task Refresh(INodeItemsSource itemsSource)
+		public async Task Refresh(ItemsCanvas itemsCanvas)
 		{
 			await Task.Yield();
 
@@ -94,7 +93,7 @@ namespace Dependiator.Modeling
 
 			t.Log("Read fresh data");
 
-			ShowModel(itemsSource);
+			ShowModel(itemsCanvas);
 
 			t.Log("Show model");
 
@@ -116,7 +115,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void ShowModel(INodeItemsSource itemsSource)
+		private void ShowModel(ItemsCanvas itemsCanvas)
 		{
 			//if (elementTree != null)
 			//{
@@ -124,7 +123,7 @@ namespace Dependiator.Modeling
 			//}
 
 			IItem rootItem = GetNode(model);
-			itemsSource.Add(rootItem);
+			itemsCanvas.AddItem(rootItem);
 			//itemService.ShowRootItem(rootItem);
 
 		}
@@ -192,9 +191,9 @@ namespace Dependiator.Modeling
 			Settings.EditWorkingFolderSettings(workingFolder,
 				settings =>
 				{
-					settings.Scale = canvasService.Scale;
-					settings.X = canvasService.Offset.X;
-					settings.Y = canvasService.Offset.Y;
+					//settings.Scale = canvasService.Scale;
+					//settings.X = canvasService.Offset.X;
+					//settings.Y = canvasService.Offset.Y;
 				});
 		}
 

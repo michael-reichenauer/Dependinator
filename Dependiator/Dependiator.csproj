@@ -128,8 +128,7 @@
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
     <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
-    <Compile Include="MainViews\Private\CanvasService.cs" />
-    <Compile Include="MainViews\ICanvasService.cs" />
+    <Compile Include="MainViews\Private\ItemsCanvas.cs" />
     <Compile Include="Modeling\Analyzing\ReflectionService.cs" />
     <Compile Include="Modeling\NodeItem.cs" />
     <Compile Include="Modeling\NodeLeafView.xaml.cs">
