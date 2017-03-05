@@ -50,16 +50,12 @@ namespace Dependiator.Modeling.Items
 		}
 
 
-		public void AddItem(IItem item)
-		{
-			itemsSource.Add(item);
-		}
+		public void AddItem(IItem item) => itemsSource.Add(item);
 
 
-		public void AddItems(IEnumerable<IItem> items)
-		{
-			itemsSource.Add(items);
-		}
+		public void AddItems(IEnumerable<IItem> items) => itemsSource.Add(items);
+
+		public void RemoveItem(IItem item) => itemsSource.Remove(item);
 
 
 

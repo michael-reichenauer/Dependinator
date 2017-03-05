@@ -44,5 +44,8 @@ namespace Dependiator.Modeling
 		public void AddItem(IItem item) => canvas.AddItem(item);
 
 		public void AddItems(IEnumerable<IItem> items) => canvas.AddItems(items);
+
+
+		public void RemoveItem(IItem item) => canvas.RemoveItem(item);
 	}
 }

@@ -16,6 +16,9 @@ namespace Dependiator.Modeling
 		private double canvasScale = 1;
 		private Brush nodeBrush;
 		private ViewModel viewModel;
+		private NodesNodeViewModel nodesNodeViewModel;
+		private NodeLeafViewModel nodeLeafViewModel;
+		private bool isShown = false;
 
 		public Node(
 			INodeItemService nodeItemService,
@@ -34,7 +37,8 @@ namespace Dependiator.Modeling
 		public Rect ItemBounds { get; private set; }
 		public double Priority { get; private set; } = 0;
 		public ViewModel ViewModel => GetViewModel();
-	
+
+		public NodesViewModel NodesViewModel;
 
 		public object ItemState { get; set; }
 		public double ScaleFactor { get; private set; } = 7;
@@ -73,7 +77,7 @@ namespace Dependiator.Modeling
 
 		//public List<Link> LinkItems => ChildItems.OfType<Link>();
 
-	
+
 
 		public void SetScale(Double scale)
 		{
@@ -87,7 +91,7 @@ namespace Dependiator.Modeling
 		{
 			if (viewModel is NodesNodeViewModel vm)
 			{
-				vm.UpdateZoomScale();		
+				vm.UpdateZoomScale();
 			}
 
 			foreach (Node childNode in ChildNodes)
@@ -97,19 +101,103 @@ namespace Dependiator.Modeling
 		}
 
 
+		public void ShowNode()
+		{
+			if (ParentNode == null)
+			{
+				foreach (Node childNode in ChildNodes)
+				{
+					childNode.ShowNode();
+				}
+
+				return;
+			}
+
+
+			if (CanBeShown())
+			{
+				if (!isShown)
+				{
+					ParentNode.NodesViewModel.AddItem(this);
+				}
+
+				foreach (Node childNode in ChildNodes)
+				{
+
+				}
+
+			}
+		}
+
+		public void UpdateAdvisability()
+		{
+			if (ParentNode == null)
+			{
+				foreach (Node childNode in ChildNodes)
+				{
+					childNode.UpdateAdvisability();
+				}
+
+				return;
+			}
+
+			bool canBeShown = CanBeShown();
+
+			if (!isShown && canBeShown)
+			{
+				ParentNode.NodesViewModel.AddItem(this);
+
+				foreach (Node childNode in ChildNodes)
+				{
+					childNode.UpdateAdvisability();
+				}
+			}
+
+			if (isShown && !canBeShown)
+			{
+				ParentNode.NodesViewModel.RemoveItem(this);
+			}
+
+			if (canBeShown)
+			{
+				if (!isShown)
+				{
+					ParentNode.NodesViewModel.AddItem(this);
+				}
+
+				foreach (Node childNode in ChildNodes)
+				{
+
+				}
+
+			}
+		}
+
+
 		private ViewModel GetViewModel()
 		{
 			if (viewModel == null)
 			{
+				if (!CanBeShown())
+				{
+					return null;
+				}
+
 				if (ChildNodes.Any())
 				{
-					NodesNodeViewModel nodesNodeViewModel = new NodesNodeViewModel(this);
+					if (nodeLeafViewModel == null)
+					{
+						nodesNodeViewModel = new NodesNodeViewModel(this);
+					}
+
 					nodesNodeViewModel.AddItems(ChildNodes);
 					viewModel = nodesNodeViewModel;
 				}
 				else
 				{
-					viewModel = new NodeLeafViewModel(this);
+					NodeLeafViewModel nodeLeafViewModel = new NodeLeafViewModel(this);
+
+					viewModel = nodeLeafViewModel;
 				}
 			}
 
@@ -127,7 +215,7 @@ namespace Dependiator.Modeling
 
 		public bool CanBeShown()
 		{
-			return true;
+			return ItemBounds.Size.Width * NodeScale > 20;
 			//ItemViewSize.Width > 10
 			//&& (ParentItem?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
 		}
@@ -243,7 +331,7 @@ namespace Dependiator.Modeling
 				nodeBrush = nodeItemService.GetRandomRectangleBrush();
 				NodeColor = nodeItemService.GetHexColorFromBrush(nodeBrush);
 			}
-			
+
 			return nodeBrush;
 		}
 
