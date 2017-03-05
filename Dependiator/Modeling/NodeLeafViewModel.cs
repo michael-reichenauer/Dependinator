@@ -18,10 +18,10 @@ namespace Dependiator.Modeling
 
 
 		public double StrokeThickness => 1;
-		public Brush RectangleBrush => node.RectangleBrush;
-		public Brush HoverBrush => node.RectangleBrush;
+		public Brush RectangleBrush => node.GetNodeBrush();
+		public Brush BackgroundBrush => node.GetBackgroundNodeBrush();
+		public Brush HoverBrush => RectangleBrush;
 
-		public Brush BackgroundBrush => Brushes.Transparent;
 
 		public string Name => "NodeLeaf";
 

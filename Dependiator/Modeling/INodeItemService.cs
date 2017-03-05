@@ -5,8 +5,10 @@ namespace Dependiator.Modeling
 {
 	internal interface INodeItemService
 	{
-		Brush GetRectangleBrush();
+		Brush GetRandomRectangleBrush();
 		Brush GetRectangleBackgroundBrush(Brush brush);
 		void AddModuleChildren(Node parent, NodesViewModel viewModel);
+		Brush GetBrushFromHex(string hexColor);
+		string GetHexColorFromBrush(Brush brush);
 	}
 }

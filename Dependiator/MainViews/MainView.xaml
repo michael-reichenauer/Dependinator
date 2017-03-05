@@ -32,13 +32,13 @@
 		</Border>
 
 		
-		<ui:HideableGridSplitter
+		<!--<ui:HideableGridSplitter
 			Grid.Row="1"
 			Visibility="{Binding IsShowCommitDetails, Converter={StaticResource VC}}"
 			Background="{DynamicResource BorderBrush}"
 			HorizontalAlignment="Stretch"
 			VerticalAlignment="Center"
-			Height="2" />
+			Height="2" />-->
 
 		<!-- Commit details -->
 		<!--<local:CommitDetailsView

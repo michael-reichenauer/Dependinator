@@ -78,7 +78,7 @@
 				<Style.Triggers>
 
 					<!-- Node  -->
-					<DataTrigger Binding="{Binding Type}" Value="NodeViewModel">
+					<!--<DataTrigger Binding="{Binding Type}" Value="NodeViewModel">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>
@@ -89,7 +89,7 @@
 						<Setter Property="IsEnabled" Value="true" />
 						<Setter Property="Focusable" Value="False" />
 						<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
-					</DataTrigger>
+					</DataTrigger>-->
 
 					<DataTrigger Binding="{Binding Type}" Value="NodeWithChildrenViewModel">
 						<Setter Property="ContentTemplate">

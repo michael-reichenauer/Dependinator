@@ -13,15 +13,10 @@ namespace Dependiator.Modeling
 	{
 		private readonly INodeItemService nodeItemService;
 
-		public Rect ItemBounds { get; private set; }
-		public double Priority { get; private set; }
-		public ViewModel ViewModel { get; private set; }
-		public object ItemState { get; set; }
-
-
-		public double ScaleFactor { get; private set; } = 7;
 		private double canvasScale = 1;
+		private Brush nodeBrush;
 
+	
 
 		public Node(
 			INodeItemService nodeItemService,
@@ -34,7 +29,15 @@ namespace Dependiator.Modeling
 			NodeName = name;
 			NodeType = type;
 			//Links = new NodeLinks(this);
+			NodeColor = null;
 		}
+
+		public Rect ItemBounds { get; private set; }
+		public double Priority { get; private set; }
+		public ViewModel ViewModel { get; private set; }
+		public object ItemState { get; set; }
+		public double ScaleFactor { get; private set; } = 7;
+
 
 
 		public double NodeScale
@@ -59,17 +62,20 @@ namespace Dependiator.Modeling
 
 		//	public NodeLinks Links { get; }
 
+		public string NodeColor { get; private set; }
 
-		public NodeViewModel ModuleViewModel => ViewModel as NodeViewModel;
-		public Brush RectangleBrush { get; private set; }
-		public Brush BackgroundBrush { get; private set; }
+		public Rect? NodeBounds { get; set; }
+
+
+
+		//public Brush RectangleBrush { get; private set; }
+		//public Brush BackgroundBrush { get; private set; }
 
 		public List<Node> ChildNodes { get; } = new List<Node>();
 
 		//public List<Link> LinkItems => ChildItems.OfType<Link>();
 
-		public Rect? ElementBounds { get; set; }
-
+	
 
 		public void Zoom(Double scale)
 		{
@@ -97,8 +103,8 @@ namespace Dependiator.Modeling
 		{
 			ItemBounds = bounds;
 
-			RectangleBrush = nodeItemService.GetRectangleBrush();
-			BackgroundBrush = nodeItemService.GetRectangleBackgroundBrush(RectangleBrush);
+			//RectangleBrush = nodeItemService.GetRectangleBrush();
+			//BackgroundBrush = nodeItemService.GetRectangleBackgroundBrush(RectangleBrush);
 
 			if (ChildNodes.Any())
 			{
@@ -214,7 +220,34 @@ namespace Dependiator.Modeling
 			}
 		}
 
-		
+
+		public Brush GetNodeBrush()
+		{
+			if (nodeBrush != null)
+			{
+				return nodeBrush;
+			}
+
+			if (NodeColor != null)
+			{
+				nodeBrush = nodeItemService.GetBrushFromHex(NodeColor);
+			}
+			else
+			{
+				nodeBrush = nodeItemService.GetRandomRectangleBrush();
+				NodeColor = nodeItemService.GetHexColorFromBrush(nodeBrush);
+			}
+			
+			return nodeBrush;
+		}
+
+
+		public Brush GetBackgroundNodeBrush()
+		{
+			Brush brush = GetNodeBrush();
+			return nodeItemService.GetRectangleBackgroundBrush(brush);
+		}
+
 
 		//private void AddLinks()
 		//{

@@ -32,10 +32,10 @@ namespace Dependiator.Modeling
 		public double StrokeThickness { get; }
 		//public double RectangleWidth => node.ItemCanvasBounds.Width * node.CanvasScale - StrokeThickness * 2;
 		//public double RectangleHeight => node.ItemCanvasBounds.Height * node.CanvasScale - StrokeThickness * 2;
-		public Brush RectangleBrush => node.RectangleBrush;
-		public Brush HoverBrush => node.RectangleBrush;
+		public Brush RectangleBrush => Brushes.Aqua;
+		public Brush HoverBrush => Brushes.Aqua;
 
-		public Brush BackgroundBrush => node.BackgroundBrush;
+		public Brush BackgroundBrush => Brushes.Aqua;
 
 		public string Name => "Node name";
 			//node.ItemViewSize.Width > 40 ? node.NodeName.ShortName : " ";

@@ -87,15 +87,15 @@ namespace Dependiator.Modeling
 		{
 			Data.ViewData viewData = new Data.ViewData
 			{
-				Color = Converter.HexFromBrush(node.RectangleBrush),
+				Color = node.NodeColor,
 			};
 
-			if (node.ElementBounds.HasValue)
+			if (node.NodeBounds.HasValue)
 			{
-				viewData.X = node.ElementBounds.Value.X;
-				viewData.Y = node.ElementBounds.Value.Y;
-				viewData.Width = node.ElementBounds.Value.Width;
-				viewData.Height = node.ElementBounds.Value.Height;
+				viewData.X = node.NodeBounds.Value.X;
+				viewData.Y = node.NodeBounds.Value.Y;
+				viewData.Width = node.NodeBounds.Value.Width;
+				viewData.Height = node.NodeBounds.Value.Height;
 			}
 
 			return viewData;
@@ -118,7 +118,7 @@ namespace Dependiator.Modeling
 
 			if (dataNode.ViewData != null)
 			{
-				node.ElementBounds = ToBounds(dataNode.ViewData);
+				node.NodeBounds = ToBounds(dataNode.ViewData);
 				//element.ElementBrush = Converter.BrushFromHex(dataNode.ViewData.Color);
 			}
 			else
@@ -126,7 +126,7 @@ namespace Dependiator.Modeling
 				if (modelViewData != null 
 					&& modelViewData.viewData.TryGetValue(fullName, out Data.ViewData viewData))
 				{
-					node.ElementBounds = ToBounds(viewData);
+					node.NodeBounds = ToBounds(viewData);
 					//element.ElementBrush = Converter.BrushFromHex(viewData.Color);
 				}
 			}
@@ -255,7 +255,7 @@ namespace Dependiator.Modeling
 			if (modelViewData != null && modelViewData.viewData.TryGetValue(
 				nodeName, out Data.ViewData viewData))
 			{
-				node.ElementBounds = ToBounds(viewData);
+				node.NodeBounds = ToBounds(viewData);
 				//node.ElementBrush = Converter.BrushFromHex(viewData.Color);
 			}
 

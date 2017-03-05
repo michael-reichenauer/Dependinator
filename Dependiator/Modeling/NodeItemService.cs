@@ -30,11 +30,20 @@ namespace Dependiator.Modeling
 		}
 
 
-		public Brush GetRectangleBrush()
+		public Brush GetRandomRectangleBrush()
 		{
 			return themeService.GetRectangleBrush();
 		}
 
+		public Brush GetBrushFromHex(string hexColor)
+		{
+			return themeService.GetBrushFromHex(hexColor);
+		}
+
+		public string GetHexColorFromBrush(Brush brush)
+		{
+			return themeService.GetHexColorFromBrush(brush);
+		}
 
 		public Brush GetRectangleBackgroundBrush(Brush brush)
 		{
@@ -60,10 +69,10 @@ namespace Dependiator.Modeling
 				Size size;
 				Point location;
 
-				if (childNode.ElementBounds.HasValue)
+				if (childNode.NodeBounds.HasValue)
 				{
-					size = childNode.ElementBounds.Value.Size;
-					location = childNode.ElementBounds.Value.Location;
+					size = childNode.NodeBounds.Value.Size;
+					location = childNode.NodeBounds.Value.Location;
 				}
 				else
 				{

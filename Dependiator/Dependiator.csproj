@@ -203,9 +203,6 @@
     <Compile Include="Utils\UI\VisibleWindow.cs" />
     <Compile Include="Utils\UI\WpfBindingTraceListener.cs" />
     <Compile Include="Common\ThemeHandling\ThemeService.cs" />
-    <Compile Include="MainViews\CommitDetailsView.xaml.cs">
-      <DependentUpon>CommitDetailsView.xaml</DependentUpon>
-    </Compile>
     <Compile Include="MainViews\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>
@@ -276,10 +273,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Common\ProgressHandling\ProgressDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="MainViews\CommitDetailsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

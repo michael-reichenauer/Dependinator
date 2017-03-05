@@ -59,6 +59,15 @@ namespace Dependiator.Common.ThemeHandling
 			return currentTheme.GetBrush(name);
 		}
 
+		public Brush GetBrushFromHex(string hexColor)
+		{    
+			return Converter.BrushFromHex(hexColor);
+		}
+
+		public string GetHexColorFromBrush(Brush brush)
+		{
+			return Converter.HexFromBrush(brush);
+		}
 
 		public Brush ChangeBranchBrush(string name)
 		{
