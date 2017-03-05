@@ -89,55 +89,27 @@ namespace Dependiator.Modeling
 
 		public void UpdateScale()
 		{
-			if (viewModel is NodesNodeViewModel vm)
+			if (NodesViewModel != null && ParentNode != null)
 			{
-				vm.UpdateZoomScale();
+				NodesViewModel.Scale = NodeScale;
+				ViewModel.NotifyAll();
 			}
 
 			foreach (Node childNode in ChildNodes)
 			{
 				childNode.UpdateScale();
 			}
+
+			UpdateVisibility();
 		}
 
 
-		public void ShowNode()
+
+		public void UpdateVisibility()
 		{
 			if (ParentNode == null)
 			{
-				foreach (Node childNode in ChildNodes)
-				{
-					childNode.ShowNode();
-				}
-
-				return;
-			}
-
-
-			if (CanBeShown())
-			{
-				if (!isShown)
-				{
-					ParentNode.NodesViewModel.AddItem(this);
-				}
-
-				foreach (Node childNode in ChildNodes)
-				{
-
-				}
-
-			}
-		}
-
-		public void UpdateAdvisability()
-		{
-			if (ParentNode == null)
-			{
-				foreach (Node childNode in ChildNodes)
-				{
-					childNode.UpdateAdvisability();
-				}
-
+				UpdateChildrenVisibility();
 				return;
 			}
 
@@ -145,31 +117,31 @@ namespace Dependiator.Modeling
 
 			if (!isShown && canBeShown)
 			{
+				// Node is not shown and can be shown, Lets show it and check children as well
 				ParentNode.NodesViewModel.AddItem(this);
+				isShown = true;
 
-				foreach (Node childNode in ChildNodes)
-				{
-					childNode.UpdateAdvisability();
-				}
+				UpdateChildrenVisibility();
 			}
-
-			if (isShown && !canBeShown)
+			else if (isShown && !canBeShown)
 			{
+				// This node can no longer be shown, removing it and children are removed automatically
 				ParentNode.NodesViewModel.RemoveItem(this);
+				isShown = false;
 			}
-
-			if (canBeShown)
+			else if (isShown && canBeShown)
 			{
-				if (!isShown)
-				{
-					ParentNode.NodesViewModel.AddItem(this);
-				}
+				// This node is shown and should continue the be shown, check children
+				UpdateChildrenVisibility();
+			}
+		}
 
-				foreach (Node childNode in ChildNodes)
-				{
 
-				}
-
+		private void UpdateChildrenVisibility()
+		{
+			foreach (Node childNode in ChildNodes)
+			{
+				childNode.UpdateVisibility();
 			}
 		}
 
@@ -188,14 +160,17 @@ namespace Dependiator.Modeling
 					if (nodeLeafViewModel == null)
 					{
 						nodesNodeViewModel = new NodesNodeViewModel(this);
+						NodesViewModel = nodesNodeViewModel.NodesViewModel;
 					}
 
-					nodesNodeViewModel.AddItems(ChildNodes);
 					viewModel = nodesNodeViewModel;
 				}
 				else
 				{
-					NodeLeafViewModel nodeLeafViewModel = new NodeLeafViewModel(this);
+					if (nodeLeafViewModel == null)
+					{
+						nodeLeafViewModel = new NodeLeafViewModel(this);
+					}		
 
 					viewModel = nodeLeafViewModel;
 				}
@@ -215,7 +190,7 @@ namespace Dependiator.Modeling
 
 		public bool CanBeShown()
 		{
-			return ItemBounds.Size.Width * NodeScale > 20;
+			return ItemBounds.Size.Width * ParentNode.NodeScale > 40;
 			//ItemViewSize.Width > 10
 			//&& (ParentItem?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
 		}

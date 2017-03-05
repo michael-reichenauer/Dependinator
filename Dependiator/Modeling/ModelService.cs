@@ -132,6 +132,8 @@ namespace Dependiator.Modeling
 			//nodesViewModel.AddItem(rootNode);
 
 			Node rootNode = model.Root;
+			rootNode.NodesViewModel = nodesViewModel;
+
 			nodeItemService.SetChildrenItemBounds(rootNode);
 
 			nodesViewModel.AddItems(rootNode.ChildNodes);

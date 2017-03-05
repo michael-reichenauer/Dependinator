@@ -215,6 +215,7 @@ namespace Dependiator.Modeling.Items
 			lastViewAreaQuery = viewArea;
 
 			return viewItemsTree.GetItemsIntersecting(viewArea)
+				.Where(i => i.ItemState != null)
 				.Select(i => ((ViewItem)i.ItemState).Index);
 		}
 

@@ -50,7 +50,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void UpdateZoomScale()
+		public void UpdateScale()
 		{
 			NodesViewModel.Scale = node.NodeScale;
 			NotifyAll();
