@@ -146,10 +146,10 @@
     </Compile>
     <Compile Include="Modeling\NodesViewModel.cs" />
     <Compile Include="Modeling\NodeType.cs" />
-    <Compile Include="Modeling\NodeWithChildrenView.xaml.cs">
-      <DependentUpon>NodeWithChildrenView.xaml</DependentUpon>
+    <Compile Include="Modeling\NodesNodeView.xaml.cs">
+      <DependentUpon>NodesNodeView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Modeling\NodeWithChildrenViewModel.cs" />
+    <Compile Include="Modeling\NodesNodeViewModel.cs" />
     <Compile Include="Modeling\NodeLeafViewModel.cs" />
     <Compile Include="Modeling\Serializing\DataModel.cs" />
     <Compile Include="Modeling\NodeService.cs" />
@@ -316,7 +316,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Modeling\NodeWithChildrenView.xaml">
+    <Page Include="Modeling\NodesNodeView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
