@@ -29,14 +29,14 @@ namespace Dependiator.Modeling.Items
 
 			foreach (IItem virtualItem in virtualItems)
 			{
-				virtualItem.ItemState = new ViewItem(viewItems.Count, virtualItem.ItemCanvasBounds, virtualItem);
+				virtualItem.ItemState = new ViewItem(viewItems.Count, virtualItem.ItemBounds, virtualItem);
 				viewItems.Add(virtualItem);
 
-				viewItemsTree.Insert(virtualItem, virtualItem.ItemCanvasBounds, virtualItem.Priority);
+				viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, virtualItem.Priority);
 
-				currentBounds.Union(virtualItem.ItemCanvasBounds);
+				currentBounds.Union(virtualItem.ItemBounds);
 
-				if (!isQueryItemsChanged && virtualItem.ItemCanvasBounds.IntersectsWith(lastViewAreaQuery))
+				if (!isQueryItemsChanged && virtualItem.ItemBounds.IntersectsWith(lastViewAreaQuery))
 				{
 					isQueryItemsChanged = true;
 				}
@@ -60,14 +60,14 @@ namespace Dependiator.Modeling.Items
 			bool isQueryItemsChanged = false;
 			Rect currentBounds = TotalBounds;
 
-			virtualItem.ItemState = new ViewItem(viewItems.Count, virtualItem.ItemCanvasBounds, virtualItem);
+			virtualItem.ItemState = new ViewItem(viewItems.Count, virtualItem.ItemBounds, virtualItem);
 			viewItems.Add(virtualItem);
 
-			viewItemsTree.Insert(virtualItem, virtualItem.ItemCanvasBounds, virtualItem.Priority);
+			viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, virtualItem.Priority);
 
-			currentBounds.Union(virtualItem.ItemCanvasBounds);
+			currentBounds.Union(virtualItem.ItemBounds);
 
-			if (virtualItem.ItemCanvasBounds.IntersectsWith(lastViewAreaQuery))
+			if (virtualItem.ItemBounds.IntersectsWith(lastViewAreaQuery))
 			{
 				isQueryItemsChanged = true;
 			}
@@ -92,7 +92,7 @@ namespace Dependiator.Modeling.Items
 			Rect oldItemBounds = viewItem.ItemBounds;
 			viewItemsTree.Remove(item, oldItemBounds);
 
-			Rect newItemBounds = item.ItemCanvasBounds;
+			Rect newItemBounds = item.ItemBounds;
 			viewItem.ItemBounds = newItemBounds;
 			viewItemsTree.Insert(item, viewItem.ItemBounds, item.Priority);
 
@@ -196,7 +196,7 @@ namespace Dependiator.Modeling.Items
 
 			foreach (IItem virtualItem in viewItems)
 			{
-				currentBounds.Union(virtualItem.ItemCanvasBounds);
+				currentBounds.Union(virtualItem.ItemBounds);
 			}
 
 			if (currentBounds != TotalBounds)

@@ -128,6 +128,7 @@
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
     <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
+    <Compile Include="Modeling\INodeItemService.cs" />
     <Compile Include="Modeling\Items\ItemsCanvas.cs" />
     <Compile Include="Modeling\Analyzing\ReflectionService.cs" />
     <Compile Include="Modeling\NodeItem.cs" />
@@ -170,7 +171,7 @@
     <Compile Include="MainViews\Private\MainViewCommands.cs" />
     <Compile Include="Modeling\IModelService.cs" />
     <Compile Include="Modeling\ModelService.cs" />
-    <Compile Include="Modeling\ItemService.cs" />
+    <Compile Include="Modeling\NodeItemService.cs" />
     <Compile Include="Modeling\Serializing\Data.cs" />
     <Compile Include="Modeling\Serializing\DataSerializer.cs" />
     <Compile Include="Modeling\Serializing\IDataSerializer.cs" />

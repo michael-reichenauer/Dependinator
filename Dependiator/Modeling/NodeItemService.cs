@@ -8,6 +8,8 @@
 //using Brush = System.Windows.Media.Brush;
 
 
+using System.Linq;
+using System.Windows;
 using System.Windows.Media;
 using Dependiator.Common.ThemeHandling;
 
@@ -16,30 +18,72 @@ namespace Dependiator.Modeling
 {
 	internal class NodeItemService : INodeItemService
 	{
+		private static readonly Size DefaultSize = new Size(200, 100);
+
 		private readonly IThemeService themeService;
 
 
-		public NodeItemService(IThemeService themeService)
+		public NodeItemService(
+			IThemeService themeService)
 		{
 			this.themeService = themeService;
 		}
+
 
 		public Brush GetRectangleBrush()
 		{
 			return themeService.GetRectangleBrush();
 		}
 
+
 		public Brush GetRectangleBackgroundBrush(Brush brush)
 		{
 			return themeService.GetRectangleBackgroundBrush(brush);
 		}
-	}
 
 
-	internal interface INodeItemService
-	{
-		Brush GetRectangleBrush();
-		Brush GetRectangleBackgroundBrush(Brush brush);
+		public void AddModuleChildren(Node parent, NodesViewModel viewModel)
+		{
+			int rowLength = 6;
+
+			int padding = 20;
+
+			double xMargin = 10;
+			double yMargin = 50;
+
+
+			int count = 0;
+			var children = parent.ChildNodes.OrderBy(child => child, NodeComparer.Comparer(parent));
+
+			foreach (Node childNode in children)
+			{
+				Size size;
+				Point location;
+
+				if (childNode.ElementBounds.HasValue)
+				{
+					size = childNode.ElementBounds.Value.Size;
+					location = childNode.ElementBounds.Value.Location;
+				}
+				else
+				{
+					size = DefaultSize;
+					double x = (count % rowLength) * (size.Width + padding) + xMargin;
+					double y = (count / rowLength) * (size.Height + padding) + yMargin;
+					location = new Point(x, y);
+				}
+
+				Rect bounds = new Rect(location, size);
+				childNode.SetBounds(bounds);
+
+
+				viewModel.AddItem(childNode);
+
+
+				count++;
+			}
+		}
+
 	}
 }
 

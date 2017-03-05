@@ -10,7 +10,7 @@ namespace Dependiator.Modeling
 		object MoveNode(Point viewPosition, Vector viewOffset, object movingObject);
 		bool ZoomNode(int zoomDelta, Point viewPosition);
 
-		bool ZoomRoot(double scale);
+		bool Zoom(NodesViewModel nodesViewModel, int zoomDelta, Point viewPosition);
 
 		void Close();
 		Task Refresh(NodesViewModel nodesViewModel);

@@ -12,9 +12,6 @@ using Dependiator.Utils.UI.VirtualCanvas;
 
 namespace Dependiator.MainViews
 {
-	/// <summary>
-	/// View model
-	/// </summary>
 	[SingleInstance]
 	internal class MainViewModel : ViewModel
 	{
@@ -32,22 +29,15 @@ namespace Dependiator.MainViews
 		private int width = 0;
 
 
-	//	private readonly ItemsCanvas itemsCanvas = new ItemsCanvas();
-
 
 		public MainViewModel(
 			IModelService modelService,
 			IThemeService themeService,
 			IProgressService progressService)
 		{
-
 			this.modelService = modelService;
 			this.themeService = themeService;
-
 			this.progress = progressService;
-
-			
-			//ItemsSource = nodeItemsSource.VirtualItemsSource;
 
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
@@ -57,12 +47,30 @@ namespace Dependiator.MainViews
 		public NodesViewModel NodesViewModel { get; } = new NodesViewModel();
 
 
+		public Task LoadAsync()
+		{
+			Timing t = new Timing();
+
+			Log.Debug("Loading repository ...");
+
+			using (progress.ShowDialog("Loading branch view ..."))
+			{		
+				modelService.InitModules(NodesViewModel);
+
+				LoadViewModel();
+				//Zoom(1, new Point(1, 1), false);
+				t.Log("Updated view model after cached/fresh");
+			}
+
+			return Task.CompletedTask;
+		}
+
+
 		public bool Zoom(int zoomDelta, Point viewPosition, bool isNodeZoom)
 		{
 			if (!isNodeZoom)
-			{
-				NodesViewModel.Zoom(zoomDelta, viewPosition);
-				modelService.ZoomRoot(NodesViewModel.Scale);
+			{				
+				modelService.Zoom(NodesViewModel, zoomDelta, viewPosition);
 				return true;
 			}
 
@@ -105,14 +113,15 @@ namespace Dependiator.MainViews
 		}
 
 
-
 		public string FetchErrorText
 		{
 			get { return Get(); }
 			set { Set(value); }
 		}
 
+
 		public Command ToggleDetailsCommand => Command(ToggleCommitDetails);
+
 
 		public string FilterText { get; private set; } = "";
 
@@ -141,24 +150,6 @@ namespace Dependiator.MainViews
 		public void RefreshView()
 		{
 			UpdateViewModel();
-		}
-
-
-		public Task LoadAsync()
-		{
-			Timing t = new Timing();
-
-			Log.Debug("Loading repository ...");
-
-			using (progress.ShowDialog("Loading branch view ..."))
-			{		
-				modelService.InitModules(NodesViewModel);
-
-				LoadViewModel();
-				t.Log("Updated view model after cached/fresh");
-			}
-
-			return Task.CompletedTask;
 		}
 
 
@@ -228,7 +219,7 @@ namespace Dependiator.MainViews
 
 			if (!IsInFilterMode())
 			{
-				UpdateViewModelImpl();
+				NotifyAll(); ;
 
 				t.Log("Updated repository view model");
 			}
@@ -245,16 +236,12 @@ namespace Dependiator.MainViews
 		{
 			Timing t = new Timing();
 
-			UpdateViewModelImpl();
+			NotifyAll(); ;
 
 			t.Log("Updated repository view model");
 		}
 
 
-		private void UpdateViewModelImpl()
-		{
-			NotifyAll();
-		}
 
 
 		public int SelectedIndex

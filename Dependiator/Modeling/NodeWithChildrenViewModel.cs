@@ -11,17 +11,15 @@ namespace Dependiator.Modeling
 	{
 		private readonly Node node;
 
-
-		//public VirtualItemsSource ItemsSource => node.VirtualItemsSource;
-		//private ItemsCanvas canvas = new ItemsCanvas();
-
 		public NodeWithChildrenViewModel(Node node)
 			: base(node)
 		{
-			this.node = node;		
+			this.node = node;
+			NodesViewModel = new NodesViewModel();
+			NodesViewModel.Scale = node.NodeScale;
 		}
 
-		public NodesViewModel NodesViewModel { get; } = new NodesViewModel();
+		public NodesViewModel NodesViewModel { get; }
 
 		public double StrokeThickness => 1;
 		public Brush RectangleBrush => node.RectangleBrush;
@@ -33,9 +31,9 @@ namespace Dependiator.Modeling
 
 		public int CornerRadius => 0;
 
-		public string ToolTip => $"{node.NodeName}";
-		//$"{node.NodeName}\nScale: {node.CanvasScale:#.##}, Level: {node.ItemLevel}, " +
-		//$"NodeScale: {node.ItemScale:#.##}, NSF: {node.ThisItemScaleFactor}";
+		public string ToolTip =>
+			$"{node.NodeName}\nScale: {node.NodeScale:0.00} NSF: {node.ScaleFactor}";
+
 
 
 		public int FontSize
@@ -48,32 +46,10 @@ namespace Dependiator.Modeling
 		}
 
 
-//internal void MouseMove(Point viewPosition, Vector viewOffset, bool isFirst)
-//{
-//	node.MoveOrResize(viewPosition, viewOffset, isFirst);
-//}
-
-//public void Zoom(int zoomDelta, Point viewPosition)
-//{
-//	//node.Zoom(zoomDelta, viewPosition);
-//}
-
-//public void Resize(int zoomDelta, Point viewPosition)
-//{
-//	node.Resize(zoomDelta, viewPosition);
-//}
-
-
-		public void SetCanvas(ZoomableCanvas zoomableCanvas)
-		{
-			NodesViewModel.SetCanvas(zoomableCanvas);
-			UpdateZoomScale();
-		}
-
-
 		public void UpdateZoomScale()
 		{
 			NodesViewModel.Scale = node.NodeScale;
+			NotifyAll();
 		}
 
 
@@ -83,9 +59,27 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void Add(Node childNode)
-		{
-			NodesViewModel.AddItem(childNode);
-		}
+		//public void Add(Node childNode)
+		//{
+		//	NodesViewModel.AddItem(childNode);
+		//}
+
+
+		//internal void MouseMove(Point viewPosition, Vector viewOffset, bool isFirst)
+		//{
+		//	node.MoveOrResize(viewPosition, viewOffset, isFirst);
+		//}
+
+		//public void Zoom(int zoomDelta, Point viewPosition)
+		//{
+		//	//node.Zoom(zoomDelta, viewPosition);
+		//}
+
+		//public void Resize(int zoomDelta, Point viewPosition)
+		//{
+		//	node.Resize(zoomDelta, viewPosition);
+		//}
+
+
 	}
 }

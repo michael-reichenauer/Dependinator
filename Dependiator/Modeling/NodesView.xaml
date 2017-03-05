@@ -15,13 +15,7 @@
 		IsTextSearchEnabled="False"
 		Padding="4"
 
-		SelectionMode="Extended"
-		SelectedIndex="{Binding SelectedIndex, Mode=TwoWay}"
-		SelectedItem="{Binding SelectedItem, Mode=TwoWay}">
-
-		<ListBox.InputBindings>
-			<KeyBinding Key="Enter" Command="{Binding ToggleDetailsCommand}" />
-		</ListBox.InputBindings>
+		SelectionMode="Extended">
 
 		<ListBox.ItemsPanel>
 			<ItemsPanelTemplate>
@@ -37,7 +31,7 @@
 		<ListBox.ItemContainerStyle>
 			<Style TargetType="ListBoxItem">
 
-				<Setter Property="Canvas.ZIndex" Value="{Binding CanvasZIndex}" />
+				<!--<Setter Property="Canvas.ZIndex" Value="{Binding CanvasZIndex}" />-->
 				<Setter Property="Canvas.Top" Value="{Binding CanvasTop}" />
 				<Setter Property="Canvas.Left" Value="{Binding CanvasLeft}" />
 				<Setter Property="Width">

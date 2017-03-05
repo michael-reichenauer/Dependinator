@@ -13,20 +13,14 @@ namespace Dependiator.Modeling
 	{
 		private readonly INodeItemService nodeItemService;
 
-		private static readonly Size DefaultSize = new Size(200, 100);
-
-		public Rect ItemCanvasBounds { get; private set; }
-		public double ZIndex { get; private set; }
+		public Rect ItemBounds { get; private set; }
 		public double Priority { get; private set; }
 		public ViewModel ViewModel { get; private set; }
 		public object ItemState { get; set; }
 
-		//private NodeItemsSource nodeItemsSource;
-		private double thisNodeScaleFactor = 7;
+
+		public double ScaleFactor { get; private set; } = 7;
 		private double canvasScale = 1;
-
-
-		//private bool isAdded = false;
 
 
 		public Node(
@@ -36,7 +30,6 @@ namespace Dependiator.Modeling
 			NodeType type)
 		{
 			this.nodeItemService = nodeItemService;
-			//this.itemService = itemService;
 			ParentNode = parent;
 			NodeName = name;
 			NodeType = type;
@@ -50,15 +43,13 @@ namespace Dependiator.Modeling
 			{
 				if (ParentNode == null)
 				{
-					return canvasScale / thisNodeScaleFactor;
+					return canvasScale;
 				}
 
-				return ParentNode.NodeScale / thisNodeScaleFactor;
+				return ParentNode.NodeScale / ScaleFactor;
 			}
 		}
 
-
-		//public override ViewModel ViewModel => viewModel;
 
 		public Node ParentNode { get; }
 
@@ -68,7 +59,6 @@ namespace Dependiator.Modeling
 
 		//	public NodeLinks Links { get; }
 
-		//public VirtualItemsSource VirtualItemsSource => nodeItemsSource;
 
 		public NodeViewModel ModuleViewModel => ViewModel as NodeViewModel;
 		public Brush RectangleBrush { get; private set; }
@@ -88,7 +78,8 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void UpdateScale()
+
+		public void UpdateScale()
 		{
 			if (ViewModel is NodeWithChildrenViewModel vm)
 			{
@@ -104,16 +95,16 @@ namespace Dependiator.Modeling
 
 		public void SetBounds(Rect bounds)
 		{
-			ItemCanvasBounds = bounds;
+			ItemBounds = bounds;
 
 			RectangleBrush = nodeItemService.GetRectangleBrush();
 			BackgroundBrush = nodeItemService.GetRectangleBackgroundBrush(RectangleBrush);
 
 			if (ChildNodes.Any())
 			{
-				//nodeItemsSource = new NodeItemsSource();
-				ViewModel = new NodeWithChildrenViewModel(this);
-				AddModuleChildren();
+				NodeWithChildrenViewModel nodeWithChildrenViewModel = new NodeWithChildrenViewModel(this);
+				ViewModel = nodeWithChildrenViewModel;
+				nodeItemService.AddModuleChildren(this, nodeWithChildrenViewModel.NodesViewModel);
 			}
 			else
 			{
@@ -223,48 +214,7 @@ namespace Dependiator.Modeling
 			}
 		}
 
-		private void AddModuleChildren()
-		{
-			int rowLength = 6;
-
-			int padding = 20;
-
-			double xMargin = 10;
-			double yMargin = 50;
-
-
-			int count = 0;
-			var children = ChildNodes.OrderBy(child => child, NodeComparer.Comparer(this));
-
-			foreach (Node childNode in children)
-			{
-				//Size size = childElement.ElementBounds?.Size ?? DefaultSize;
-				Size size = DefaultSize;
-
-				Point location;
-				//if (childElement.ElementBounds.HasValue)
-				//{
-				//	location = childElement.ElementBounds.Value.Location;
-				//}
-				//else
-				{
-					int x = count % rowLength;
-					int y = count / rowLength;
-					location = new Point(x * (DefaultSize.Width + padding) + xMargin, y * (DefaultSize.Height + padding) + yMargin);
-				}
-
-				Rect bounds = new Rect(location, size);
-				childNode.SetBounds(bounds);
-
-				if (ViewModel is NodeWithChildrenViewModel vm)
-				{
-					vm.Add(childNode);
-				}
-
-				count++;
-			}
-		}
-
+		
 
 		//private void AddLinks()
 		//{

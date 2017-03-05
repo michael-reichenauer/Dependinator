@@ -16,8 +16,8 @@ namespace Dependiator.Modeling
 		private readonly WorkingFolder workingFolder;
 		private readonly IReflectionService reflectionService;
 		private readonly INodeService nodeService;
-		//private readonly INodeItemsSource itemsSource;
-		//private readonly IItemService itemService;
+		private readonly INodeItemService nodeItemService;
+
 		private readonly IDataSerializer dataSerializer;
 
 
@@ -27,15 +27,13 @@ namespace Dependiator.Modeling
 			WorkingFolder workingFolder,
 			IReflectionService reflectionService,
 			INodeService nodeService,
-
-			//IItemService itemService,
+			INodeItemService nodeItemService,
 			IDataSerializer dataSerializer)
 		{
 			this.workingFolder = workingFolder;
 			this.reflectionService = reflectionService;
 			this.nodeService = nodeService;
-			//this.itemsSource = itemsSource;
-			//this.itemService = itemService;
+			this.nodeItemService = nodeItemService;
 			this.dataSerializer = dataSerializer;
 
 		}
@@ -121,10 +119,26 @@ namespace Dependiator.Modeling
 			//	itemService.ClearAll();
 			//}
 
-			IItem rootItem = GetNode(model);
-			nodesViewModel.AddItem(rootItem);
+			//Node rootNode = GetNode(model);
+
+
+			//nodesViewModel.AddItem(rootNode);
+
+			Node rootNode = model.Root;
+			nodeItemService.AddModuleChildren(rootNode, nodesViewModel);
+
+			//rootNode.Zoom(nodesViewModel.Scale);
+
 			//itemService.ShowRootItem(rootItem);
 
+		}
+
+
+		public bool Zoom(NodesViewModel nodesViewModel, int zoomDelta, Point viewPosition)
+		{
+			nodesViewModel.Zoom(zoomDelta, viewPosition);
+			model.Root.Zoom(nodesViewModel.Scale);
+			return true;
 		}
 
 
@@ -169,13 +183,6 @@ namespace Dependiator.Modeling
 		}
 
 
-		public bool ZoomRoot(double scale)
-		{
-			model.Root.Zoom(scale);
-			return true;
-		}
-
-
 		public void Close()
 		{
 			DataModel dataModel = nodeService.ToDataModel(model);
@@ -206,22 +213,21 @@ namespace Dependiator.Modeling
 		}
 
 
-		private IItem GetNode(Model model)
-		{
-			Size size = new Size(200, 100);
+		//private Node GetNode(Model model)
+		//{
+		//	Size size = new Size(200, 100);
 
-			//double scale = 1;
-			//itemService.CanvasScale = scale;
+		//	//double scale = 1;
+		//	//itemService.CanvasScale = scale;
 
-			double x = 100;
-			double y = 100;
+		//	double x = 100;
+		//	double y = 100;
 
-			Point position = new Point(x, y);
-			Rect bounds = new Rect(position, size);
-			Node node = model.Root;
-			node.SetBounds(bounds);
-			//itemService.AddRootItem(node);
-			return node;
-		}
+		//	Point position = new Point(x, y);
+		//	//Rect bounds = new Rect(position, size);
+		//	Node node = model.Root;
+		//	//node.SetBounds(bounds);
+		//	return node;
+		//}
 	}
 }

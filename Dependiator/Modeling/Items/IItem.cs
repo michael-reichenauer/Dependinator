@@ -6,11 +6,7 @@ namespace Dependiator.Modeling.Items
 {
 	internal interface IItem
 	{
-		// !!! Ta bort :::
-		double ZIndex { get; }
-
-
-		Rect ItemCanvasBounds { get; }
+		Rect ItemBounds { get; }
 		
 		double Priority { get; }
 		ViewModel ViewModel { get; }
