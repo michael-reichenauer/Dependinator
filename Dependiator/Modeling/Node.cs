@@ -103,9 +103,9 @@ namespace Dependiator.Modeling
 			{
 				if (ChildNodes.Any())
 				{
-					NodesNodeViewModel NodesNodeViewModel = new NodesNodeViewModel(this);
-					NodesNodeViewModel.NodesViewModel.AddItems(ChildNodes);
-					viewModel = NodesNodeViewModel;
+					NodesNodeViewModel nodesNodeViewModel = new NodesNodeViewModel(this);
+					nodesNodeViewModel.AddItems(ChildNodes);
+					viewModel = nodesNodeViewModel;
 				}
 				else
 				{

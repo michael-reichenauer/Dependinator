@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media;
 using Dependiator.Modeling.Items;
 using Dependiator.Utils.UI.VirtualCanvas;
@@ -11,6 +13,7 @@ namespace Dependiator.Modeling
 	{
 		private readonly Node node;
 
+
 		public NodesNodeViewModel(Node node)
 			: base(node)
 		{
@@ -18,6 +21,7 @@ namespace Dependiator.Modeling
 			NodesViewModel = new NodesViewModel();
 			NodesViewModel.Scale = node.NodeScale;
 		}
+
 
 		public NodesViewModel NodesViewModel { get; }
 
@@ -52,6 +56,11 @@ namespace Dependiator.Modeling
 			NotifyAll();
 		}
 
+		public void AddItems(IEnumerable<Node> childNodes)
+		{
+			NodesViewModel.AddItems(childNodes);
+		}
+
 
 		public Task LoadAsync()
 		{
@@ -59,27 +68,21 @@ namespace Dependiator.Modeling
 		}
 
 
-		//public void Add(Node childNode)
-		//{
-		//	NodesViewModel.AddItem(childNode);
-		//}
+		public void Zoom(int zoomDelta, Point viewPosition)
+		{
+			//node.Zoom(zoomDelta, viewPosition);
+		}
+
+		public void Resize(int zoomDelta, Point viewPosition)
+		{
+			// node.Resize(zoomDelta, viewPosition);
+		}
+
 
 
 		//internal void MouseMove(Point viewPosition, Vector viewOffset, bool isFirst)
 		//{
 		//	node.MoveOrResize(viewPosition, viewOffset, isFirst);
 		//}
-
-		//public void Zoom(int zoomDelta, Point viewPosition)
-		//{
-		//	//node.Zoom(zoomDelta, viewPosition);
-		//}
-
-		//public void Resize(int zoomDelta, Point viewPosition)
-		//{
-		//	node.Resize(zoomDelta, viewPosition);
-		//}
-
-
 	}
 }

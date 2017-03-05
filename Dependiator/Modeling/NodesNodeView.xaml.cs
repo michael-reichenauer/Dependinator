@@ -23,7 +23,7 @@ namespace Dependiator.Modeling
 				return;
 			}
 
-			NodeViewModel viewModel = DataContext as NodeViewModel;
+			NodesNodeViewModel viewModel = DataContext as NodesNodeViewModel;
 			if (viewModel == null)
 			{
 				return;
