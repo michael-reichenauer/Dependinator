@@ -4,9 +4,6 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-	xmlns:ui="clr-namespace:Dependiator.Utils.UI"
-	xmlns:virtualCanvas="clr-namespace:Dependiator.Utils.UI.VirtualCanvas"
-	xmlns:local="clr-namespace:Dependiator.MainViews"
 	xmlns:modeling="clr-namespace:Dependiator.Modeling"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300" Loaded="MainView_OnLoaded">
@@ -18,11 +15,6 @@
 			<!-- Model -->
 			<RowDefinition Height="*" />
 			
-			<!-- Grid splitter -->
-			<RowDefinition Height="Auto" />
-			
-			<!-- Details -->
-			<RowDefinition Height="150" />
 		</Grid.RowDefinitions>
 
 		
@@ -30,20 +22,6 @@
 		<Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
 			<modeling:NodesView x:Name="NodesView" DataContext="{Binding NodesViewModel}"/>
 		</Border>
-
-		
-		<!--<ui:HideableGridSplitter
-			Grid.Row="1"
-			Visibility="{Binding IsShowCommitDetails, Converter={StaticResource VC}}"
-			Background="{DynamicResource BorderBrush}"
-			HorizontalAlignment="Stretch"
-			VerticalAlignment="Center"
-			Height="2" />-->
-
-		<!-- Commit details -->
-		<!--<local:CommitDetailsView
-			Grid.Row="2"
-			DataContext="{Binding CommitDetailsViewModel}" />-->
 
 	</Grid>
 

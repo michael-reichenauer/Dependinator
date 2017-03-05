@@ -15,8 +15,7 @@ namespace Dependiator.Modeling
 
 		private double canvasScale = 1;
 		private Brush nodeBrush;
-
-	
+		private ViewModel viewModel;
 
 		public Node(
 			INodeItemService nodeItemService,
@@ -33,8 +32,10 @@ namespace Dependiator.Modeling
 		}
 
 		public Rect ItemBounds { get; private set; }
-		public double Priority { get; private set; }
-		public ViewModel ViewModel { get; private set; }
+		public double Priority { get; private set; } = 0;
+		public ViewModel ViewModel => GetViewModel();
+	
+
 		public object ItemState { get; set; }
 		public double ScaleFactor { get; private set; } = 7;
 
@@ -68,16 +69,13 @@ namespace Dependiator.Modeling
 
 
 
-		//public Brush RectangleBrush { get; private set; }
-		//public Brush BackgroundBrush { get; private set; }
-
 		public List<Node> ChildNodes { get; } = new List<Node>();
 
 		//public List<Link> LinkItems => ChildItems.OfType<Link>();
 
 	
 
-		public void Zoom(Double scale)
+		public void SetScale(Double scale)
 		{
 			canvasScale = scale;
 			UpdateScale();
@@ -87,9 +85,9 @@ namespace Dependiator.Modeling
 
 		public void UpdateScale()
 		{
-			if (ViewModel is NodeWithChildrenViewModel vm)
+			if (viewModel is NodeWithChildrenViewModel vm)
 			{
-				vm.UpdateZoomScale();
+				vm.UpdateZoomScale();		
 			}
 
 			foreach (Node childNode in ChildNodes)
@@ -99,23 +97,31 @@ namespace Dependiator.Modeling
 		}
 
 
+		private ViewModel GetViewModel()
+		{
+			if (viewModel == null)
+			{
+				if (ChildNodes.Any())
+				{
+					NodeWithChildrenViewModel nodeWithChildrenViewModel = new NodeWithChildrenViewModel(this);
+					nodeWithChildrenViewModel.NodesViewModel.AddItems(ChildNodes);
+					viewModel = nodeWithChildrenViewModel;
+				}
+				else
+				{
+					viewModel = new NodeLeafViewModel(this);
+				}
+			}
+
+			return viewModel;
+		}
+
+
 		public void SetBounds(Rect bounds)
 		{
 			ItemBounds = bounds;
 
-			//RectangleBrush = nodeItemService.GetRectangleBrush();
-			//BackgroundBrush = nodeItemService.GetRectangleBackgroundBrush(RectangleBrush);
-
-			if (ChildNodes.Any())
-			{
-				NodeWithChildrenViewModel nodeWithChildrenViewModel = new NodeWithChildrenViewModel(this);
-				ViewModel = nodeWithChildrenViewModel;
-				nodeItemService.AddModuleChildren(this, nodeWithChildrenViewModel.NodesViewModel);
-			}
-			else
-			{
-				ViewModel = new NodeLeafViewModel(this);
-			}
+			nodeItemService.SetChildrenItemBounds(this);
 		}
 
 

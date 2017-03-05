@@ -125,7 +125,9 @@ namespace Dependiator.Modeling
 			//nodesViewModel.AddItem(rootNode);
 
 			Node rootNode = model.Root;
-			nodeItemService.AddModuleChildren(rootNode, nodesViewModel);
+			nodeItemService.SetChildrenItemBounds(rootNode);
+
+			nodesViewModel.AddItems(rootNode.ChildNodes);
 
 			//rootNode.Zoom(nodesViewModel.Scale);
 
@@ -137,7 +139,7 @@ namespace Dependiator.Modeling
 		public bool Zoom(NodesViewModel nodesViewModel, int zoomDelta, Point viewPosition)
 		{
 			nodesViewModel.Zoom(zoomDelta, viewPosition);
-			model.Root.Zoom(nodesViewModel.Scale);
+			model.Root.SetScale(nodesViewModel.Scale);
 			return true;
 		}
 

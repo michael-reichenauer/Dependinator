@@ -51,7 +51,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void AddModuleChildren(Node parent, NodesViewModel viewModel)
+		public void SetChildrenItemBounds(Node parent)
 		{
 			int rowLength = 6;
 
@@ -84,10 +84,6 @@ namespace Dependiator.Modeling
 
 				Rect bounds = new Rect(location, size);
 				childNode.SetBounds(bounds);
-
-
-				viewModel.AddItem(childNode);
-
 
 				count++;
 			}

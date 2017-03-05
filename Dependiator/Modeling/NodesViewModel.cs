@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows;
 using Dependiator.Modeling.Items;
 using Dependiator.Utils.UI;
@@ -41,5 +42,7 @@ namespace Dependiator.Modeling
 
 
 		public void AddItem(IItem item) => canvas.AddItem(item);
+
+		public void AddItems(IEnumerable<IItem> items) => canvas.AddItems(items);
 	}
 }

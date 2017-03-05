@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Windows;
 using Dependiator.Utils.UI.VirtualCanvas;
 
@@ -53,6 +54,13 @@ namespace Dependiator.Modeling.Items
 		{
 			itemsSource.Add(item);
 		}
+
+
+		public void AddItems(IEnumerable<IItem> items)
+		{
+			itemsSource.Add(items);
+		}
+
 
 
 		public bool Zoom(int zoomDelta, Point viewPosition)

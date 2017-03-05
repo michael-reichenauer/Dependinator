@@ -7,7 +7,7 @@ namespace Dependiator.Modeling
 	{
 		Brush GetRandomRectangleBrush();
 		Brush GetRectangleBackgroundBrush(Brush brush);
-		void AddModuleChildren(Node parent, NodesViewModel viewModel);
+		void SetChildrenItemBounds(Node parent);
 		Brush GetBrushFromHex(string hexColor);
 		string GetHexColorFromBrush(Brush brush);
 	}
