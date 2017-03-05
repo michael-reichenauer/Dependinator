@@ -104,6 +104,16 @@
 						</Setter>
 					</DataTrigger>
 
+					<DataTrigger Binding="{Binding Type}" Value="NodeLeafViewModel">
+						<Setter Property="ContentTemplate">
+							<Setter.Value>
+								<DataTemplate>
+									<local:NodeLeafView />
+								</DataTemplate>
+							</Setter.Value>
+						</Setter>
+					</DataTrigger>
+
 					<!-- Link  -->
 					<DataTrigger Binding="{Binding Type}" Value="LinkViewModel">
 						<Setter Property="ContentTemplate">

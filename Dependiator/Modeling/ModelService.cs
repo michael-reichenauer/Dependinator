@@ -35,7 +35,6 @@ namespace Dependiator.Modeling
 			this.nodeService = nodeService;
 			this.nodeItemService = nodeItemService;
 			this.dataSerializer = dataSerializer;
-
 		}
 
 
@@ -45,19 +44,7 @@ namespace Dependiator.Modeling
 		{
 			Timing t = new Timing();
 
-			DataModel dataModel = new DataModel()
-				.AddType("Axis.Ns1")
-				.AddType("Axis.Ns2")
-				.AddType("Axis.Ns1.Class1")
-				.AddType("Axis.Ns1.Class2")
-				.AddType("Axis.Ns2.Class1")
-				.AddType("Other.Ns1.Class1")
-				.AddLink("Axis.Ns1.Class1", "Axis.Ns1.Class2")
-				.AddLink("Axis.Ns1.Class1", "Axis.Ns2.Class2")
-				;
-
-
-			//DataModel dataModel = GetCachedOrFreshModelData();
+			DataModel dataModel = GetDataModel();
 
 			t.Log("After read data");
 
@@ -71,6 +58,26 @@ namespace Dependiator.Modeling
 			RestoreViewSettings();
 
 			t.Log("Showed model");
+		}
+
+
+		private static DataModel GetDataModel()
+		{
+			DataModel dataModel = new DataModel()
+					.AddType("Axis.Ns1")
+					.AddType("Axis.Ns2")
+					.AddType("Axis.Ns1.Class1")
+					.AddType("Axis.Ns1.Class2")
+					.AddType("Axis.Ns2.Class1")
+					.AddType("Axis.Ns2.NS3.Class1")
+					.AddType("Other.Ns1.Class1")
+					.AddLink("Axis.Ns1.Class1", "Axis.Ns1.Class2")
+					.AddLink("Axis.Ns1.Class1", "Axis.Ns2.Class2")
+				;
+
+
+			//DataModel dataModel = GetCachedOrFreshModelData();
+			return dataModel;
 		}
 
 

@@ -36,7 +36,7 @@ namespace Dependiator.Modeling
 		public int CornerRadius => 0;
 
 		public string ToolTip =>
-			$"{node.NodeName}\nScale: {node.NodeScale:0.00} NSF: {node.ScaleFactor}";
+			$"{node.NodeName} ({node.ChildNodes.Count})\nScale: {node.NodeScale:0.00} NSF: {node.ScaleFactor}";
 
 
 
@@ -44,7 +44,7 @@ namespace Dependiator.Modeling
 		{
 			get
 			{
-				int fontSize = (int)(12 * node.NodeScale);
+				int fontSize = (int)(12 * node.NodeScale * 10);
 				return fontSize.MM(8, 20);
 			}
 		}

@@ -47,7 +47,7 @@ namespace Dependiator.MainViews
 		public NodesViewModel NodesViewModel { get; } = new NodesViewModel();
 
 
-		public Task LoadAsync()
+		public async Task LoadAsync()
 		{
 			Timing t = new Timing();
 
@@ -58,11 +58,11 @@ namespace Dependiator.MainViews
 				modelService.InitModules(NodesViewModel);
 
 				LoadViewModel();
-				//Zoom(1, new Point(1, 1), false);
+				//Zoom(-120, new Point(1, 1), false);
 				t.Log("Updated view model after cached/fresh");
 			}
 
-			return Task.CompletedTask;
+			await Task.Yield();
 		}
 
 
