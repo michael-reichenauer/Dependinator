@@ -7,11 +7,11 @@ using Dependiator.Utils.UI.VirtualCanvas;
 
 namespace Dependiator.Modeling
 {
-	internal class NodeWithChildrenViewModel : ItemViewModel
+	internal class NodesNodeViewModel : ItemViewModel
 	{
 		private readonly Node node;
 
-		public NodeWithChildrenViewModel(Node node)
+		public NodesNodeViewModel(Node node)
 			: base(node)
 		{
 			this.node = node;

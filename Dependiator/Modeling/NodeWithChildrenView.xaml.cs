@@ -6,11 +6,11 @@ using System.Windows.Input;
 namespace Dependiator.Modeling
 {
 	/// <summary>
-	/// Interaction logic for NodeWithChildrenView.xaml
+	/// Interaction logic for NodesNodeView.xaml
 	/// </summary>
-	public partial class NodeWithChildrenView : UserControl
+	public partial class NodesNodeView : UserControl
 	{
-		public NodeWithChildrenView()
+		public NodesNodeView()
 		{
 			InitializeComponent();
 		}

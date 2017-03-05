@@ -85,7 +85,7 @@ namespace Dependiator.Modeling
 
 		public void UpdateScale()
 		{
-			if (viewModel is NodeWithChildrenViewModel vm)
+			if (viewModel is NodesNodeViewModel vm)
 			{
 				vm.UpdateZoomScale();		
 			}
@@ -103,9 +103,9 @@ namespace Dependiator.Modeling
 			{
 				if (ChildNodes.Any())
 				{
-					NodeWithChildrenViewModel nodeWithChildrenViewModel = new NodeWithChildrenViewModel(this);
-					nodeWithChildrenViewModel.NodesViewModel.AddItems(ChildNodes);
-					viewModel = nodeWithChildrenViewModel;
+					NodesNodeViewModel NodesNodeViewModel = new NodesNodeViewModel(this);
+					NodesNodeViewModel.NodesViewModel.AddItems(ChildNodes);
+					viewModel = NodesNodeViewModel;
 				}
 				else
 				{

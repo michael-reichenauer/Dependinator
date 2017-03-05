@@ -94,11 +94,11 @@
 						<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
 					</DataTrigger>-->
 
-					<DataTrigger Binding="{Binding Type}" Value="NodeWithChildrenViewModel">
+					<DataTrigger Binding="{Binding Type}" Value="NodesNodeViewModel">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>
-									<local:NodeWithChildrenView />
+									<local:NodesNodeView />
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>
