@@ -40,7 +40,7 @@ namespace Dependiator.Modeling
 
 
 
-		public void InitModules(NodesViewModel nodesViewModel)
+		public void InitModules(ItemsCanvas rootCanvas)
 		{
 			Timing t = new Timing();
 
@@ -52,7 +52,7 @@ namespace Dependiator.Modeling
 
 			t.Log("To model");
 
-			ShowModel(nodesViewModel);
+			ShowModel(rootCanvas);
 			t.Log("Show model");
 
 			RestoreViewSettings();
@@ -81,7 +81,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public async Task Refresh(NodesViewModel nodesViewModel)
+		public async Task Refresh(ItemsCanvas rootCanvas)
 		{
 			await Task.Yield();
 
@@ -97,7 +97,7 @@ namespace Dependiator.Modeling
 
 			t.Log("Read fresh data");
 
-			ShowModel(nodesViewModel);
+			ShowModel(rootCanvas);
 
 			t.Log("Show model");
 
@@ -119,7 +119,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void ShowModel(NodesViewModel nodesViewModel)
+		private void ShowModel(ItemsCanvas rootCanvas)
 		{
 			//if (elementTree != null)
 			//{
@@ -132,11 +132,14 @@ namespace Dependiator.Modeling
 			//nodesViewModel.AddItem(rootNode);
 
 			Node rootNode = model.Root;
-			rootNode.NodesViewModel = nodesViewModel;
+			rootNode.SetBounds(new Rect(100, 100, 200, 100));
 
-			nodeItemService.SetChildrenItemBounds(rootNode);
+			rootCanvas.Scale = 1.0;
+			rootNode.SetRootCanvas(rootCanvas);
 
-			nodesViewModel.AddItems(rootNode.ChildNodes);
+			//nodeItemService.SetChildrenItemBounds(rootNode);
+
+			//nodesViewModel.AddItems(rootNode.ChildNodes);
 
 			//rootNode.Zoom(nodesViewModel.Scale);
 
@@ -145,10 +148,9 @@ namespace Dependiator.Modeling
 		}
 
 
-		public bool Zoom(NodesViewModel nodesViewModel, int zoomDelta, Point viewPosition)
+		public bool Zoom(int zoomDelta, Point viewPosition)
 		{
-			nodesViewModel.Zoom(zoomDelta, viewPosition);
-			model.Root.SetScale(nodesViewModel.Scale);
+			model.Root.Zoom(zoomDelta, viewPosition);
 			return true;
 		}
 

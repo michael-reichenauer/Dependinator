@@ -55,7 +55,7 @@ namespace Dependiator.MainViews
 
 			using (progress.ShowDialog("Loading branch view ..."))
 			{		
-				modelService.InitModules(NodesViewModel);
+				modelService.InitModules(NodesViewModel.ItemsCanvas);
 
 				LoadViewModel();
 				//Zoom(-120, new Point(1, 1), false);
@@ -70,7 +70,7 @@ namespace Dependiator.MainViews
 		{
 			if (!isNodeZoom)
 			{				
-				modelService.Zoom(NodesViewModel, zoomDelta, viewPosition);
+				modelService.Zoom(zoomDelta, viewPosition);
 				return true;
 			}
 
@@ -195,7 +195,7 @@ namespace Dependiator.MainViews
 		{
 			using (progress.ShowDialog("Refreshing view ..."))
 			{
-				await modelService.Refresh(NodesViewModel);
+				await modelService.Refresh(NodesViewModel.ItemsCanvas);
 			}
 		}
 

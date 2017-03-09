@@ -58,6 +58,8 @@ namespace Dependiator.Modeling.Items
 		public void RemoveItem(IItem item) => itemsSource.Remove(item);
 
 
+		public void UpdateItem(IItem item) => itemsSource.Update(item);
+
 
 		public bool Zoom(int zoomDelta, Point viewPosition)
 		{

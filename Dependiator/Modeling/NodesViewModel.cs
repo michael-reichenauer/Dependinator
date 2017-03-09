@@ -19,11 +19,14 @@ namespace Dependiator.Modeling
 		}
 
 
+
 		public double Scale
 		{
 			get { return canvas.Scale; }
 			set { canvas.Scale = value; }
 		}
+
+		public ItemsCanvas ItemsCanvas => canvas;
 
 
 		public Task LoadAsync()
@@ -47,5 +50,8 @@ namespace Dependiator.Modeling
 
 
 		public void RemoveItem(IItem item) => canvas.RemoveItem(item);
+
+
+		public void UpdateItem(IItem item) => canvas.UpdateItem(item);
 	}
 }

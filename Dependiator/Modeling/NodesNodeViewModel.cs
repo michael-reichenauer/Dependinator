@@ -24,6 +24,7 @@ namespace Dependiator.Modeling
 
 
 		public NodesViewModel NodesViewModel { get; }
+		public ItemsCanvas NodesCanvas => NodesViewModel.ItemsCanvas;
 
 		public double StrokeThickness => 1;
 		public Brush RectangleBrush => node.GetNodeBrush();

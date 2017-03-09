@@ -4,21 +4,53 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependiator.Modeling.Items;
+using Dependiator.Utils;
 using Dependiator.Utils.UI;
 
 
 namespace Dependiator.Modeling
 {
-	internal class Node : IItem
+	internal class NodeItem : IItem
+	{
+		private readonly Node node;
+
+		public Rect ItemBounds { get; }
+		public double Priority { get; }
+		public ViewModel ViewModel { get; }
+		public object ItemState { get; set; }
+
+		public bool IsShown { get; public set; }
+
+
+		public NodeItem(Node node)
+		{
+			this.node = node;
+		}
+
+		public void ItemRealized()
+		{
+			IsShown = true;
+		}
+
+
+		public void ItemVirtualized()
+		{
+			IsShown = false;
+		}
+	}
+
+
+	internal class Node
 	{
 		private readonly INodeItemService nodeItemService;
 
 		private double canvasScale = 1;
 		private Brush nodeBrush;
+		private ItemsCanvas nodesCanvas;
 		private ViewModel viewModel;
 		private NodesNodeViewModel nodesNodeViewModel;
 		private NodeLeafViewModel nodeLeafViewModel;
-		private bool isShown = false;
+
 
 		public Node(
 			INodeItemService nodeItemService,
@@ -40,144 +72,17 @@ namespace Dependiator.Modeling
 
 		public NodesViewModel NodesViewModel;
 
-		public object ItemState { get; set; }
+
 		public double ScaleFactor { get; private set; } = 7;
-
-
-
-		public double NodeScale
-		{
-			get
-			{
-				if (ParentNode == null)
-				{
-					return canvasScale;
-				}
-
-				return ParentNode.NodeScale / ScaleFactor;
-			}
-		}
-
-
+		public double NodeScale => ParentNode?.NodeScale / ScaleFactor ?? canvasScale;
 		public Node ParentNode { get; }
-
 		public NodeName NodeName { get; }
-
 		public NodeType NodeType { get; private set; }
-
-		//	public NodeLinks Links { get; }
-
+		//public NodeLinks Links { get; }
+		// public List<Link> LinkItems => ChildItems.OfType<Link>();
 		public string NodeColor { get; private set; }
-
 		public Rect? NodeBounds { get; set; }
-
-
-
 		public List<Node> ChildNodes { get; } = new List<Node>();
-
-		//public List<Link> LinkItems => ChildItems.OfType<Link>();
-
-
-
-		public void SetScale(Double scale)
-		{
-			canvasScale = scale;
-			UpdateScale();
-		}
-
-
-
-		public void UpdateScale()
-		{
-			if (NodesViewModel != null && ParentNode != null)
-			{
-				NodesViewModel.Scale = NodeScale;
-				ViewModel.NotifyAll();
-			}
-
-			foreach (Node childNode in ChildNodes)
-			{
-				childNode.UpdateScale();
-			}
-
-			UpdateVisibility();
-		}
-
-
-
-		public void UpdateVisibility()
-		{
-			if (ParentNode == null)
-			{
-				UpdateChildrenVisibility();
-				return;
-			}
-
-			bool canBeShown = CanBeShown();
-
-			if (!isShown && canBeShown)
-			{
-				// Node is not shown and can be shown, Lets show it and check children as well
-				ParentNode.NodesViewModel.AddItem(this);
-				isShown = true;
-
-				UpdateChildrenVisibility();
-			}
-			else if (isShown && !canBeShown)
-			{
-				// This node can no longer be shown, removing it and children are removed automatically
-				ParentNode.NodesViewModel.RemoveItem(this);
-				isShown = false;
-			}
-			else if (isShown && canBeShown)
-			{
-				// This node is shown and should continue the be shown, check children
-				UpdateChildrenVisibility();
-			}
-		}
-
-
-		private void UpdateChildrenVisibility()
-		{
-			foreach (Node childNode in ChildNodes)
-			{
-				childNode.UpdateVisibility();
-			}
-		}
-
-
-		private ViewModel GetViewModel()
-		{
-			if (viewModel == null)
-			{
-				if (!CanBeShown())
-				{
-					return null;
-				}
-
-				if (ChildNodes.Any())
-				{
-					if (nodeLeafViewModel == null)
-					{
-						nodesNodeViewModel = new NodesNodeViewModel(this);
-						NodesViewModel = nodesNodeViewModel.NodesViewModel;
-					}
-
-					viewModel = nodesNodeViewModel;
-				}
-				else
-				{
-					if (nodeLeafViewModel == null)
-					{
-						nodeLeafViewModel = new NodeLeafViewModel(this);
-					}		
-
-					viewModel = nodeLeafViewModel;
-				}
-			}
-
-			return viewModel;
-		}
 
 
 		public void SetBounds(Rect bounds)
@@ -188,12 +93,219 @@ namespace Dependiator.Modeling
 		}
 
 
+		public void SetRootCanvas(ItemsCanvas rootCanvas)
+		{
+			nodesCanvas = rootCanvas;
+			canvasScale = rootCanvas.Scale;
+
+			UpdateOnScaleChange();
+		}
+
+
+		public void Zoom(int zoomDelta, Point viewPosition)
+		{
+			if (nodesCanvas == null)
+			{
+				return;
+			}
+
+			nodesCanvas.Zoom(zoomDelta, viewPosition);
+			canvasScale = nodesCanvas.Scale;
+
+			UpdateOnScaleChange();
+		}
+
+
+
+		private void UpdateOnScaleChange()
+		{
+			if (ParentNode == null)
+			{
+				foreach (Node childNode in ChildNodes)
+				{
+					childNode.UpdateOnScaleChange();
+				}
+
+				// Root node is not visible, lets exit
+				return;
+			}
+
+			if (viewModel is NodesNodeViewModel nvm)
+			{
+				nvm.UpdateScale();
+			}
+
+			UpdateVisibility();
+
+			if (viewModel is NodesNodeViewModel)
+			{
+				foreach (Node childNode in ChildNodes)
+				{
+					childNode.UpdateOnScaleChange();
+				}
+			}
+		}
+
+
+		public void UpdateVisibility()
+		{
+			bool canBeShown = CanBeShown();
+
+			Log.Debug($"Update  {NodeName} IsShown={IsShown}, CanShow={canBeShown}, CanShowChildren?{CanShowChildren()}");
+
+			if (!IsShown && canBeShown)
+			{
+				// Node is not shown and can be shown, Lets show it and check children as well
+				Log.Debug($"Show {NodeName}");
+
+				ParentNode.nodesCanvas?.AddItem(this);
+
+				//				UpdateChildrenVisibility();
+			}
+			else if (IsShown && !canBeShown)
+			{
+				// This node can no longer be shown, removing it and children are removed automatically
+				Log.Debug($"Hide {NodeName}");
+				ParentNode.nodesCanvas?.RemoveItem(this);
+				viewModel = null;
+			}
+			else if (IsShown && canBeShown)
+			{
+				Log.Debug($"Update {NodeName}");
+				UpdateNode();
+				// This node is shown and should continue the be shown, check children
+				//				UpdateChildrenVisibility();
+			}
+
+			Log.Debug($"Updated {NodeName} IsShown={IsShown}, CanShow={canBeShown}, CanShowChildren?{CanShowChildren()}");
+		}
+
+
+
+		private void UpdateNode()
+		{
+			if (CanShowChildren())
+			{
+				if (!(viewModel is NodesNodeViewModel))
+				{
+					//if (nodesNodeViewModel == null)
+					//{
+					//	nodesNodeViewModel = new NodesNodeViewModel(this);
+					//	nodesCanvas = nodesNodeViewModel.NodesCanvas;
+					//}
+
+					//viewModel = nodesNodeViewModel;
+					//nodesNodeViewModel.UpdateScale();
+					ItemBounds = new Rect(
+						ItemBounds.X + 100, ItemBounds.Y + 100, ItemBounds.Size.Width, ItemBounds.Size.Height);
+					ParentNode.nodesCanvas?.UpdateItem(this);
+					viewModel.NotifyAll();
+					Log.Warn($"Switch to nodes node for {NodeName}");
+				}
+				else
+				{
+					Log.Debug("No change of node type");
+				}
+			}
+			else if (!CanShowChildren())
+			{
+				if (!(viewModel is NodeLeafViewModel))
+				{
+					if (nodeLeafViewModel == null)
+					{
+						nodeLeafViewModel = new NodeLeafViewModel(this);
+						nodesCanvas = null;
+					}
+
+					viewModel = nodeLeafViewModel;
+					ParentNode.nodesCanvas?.UpdateItem(this);
+					viewModel.NotifyAll();
+
+					Log.Warn($"Switch to leaf node for {NodeName}");
+				}
+				else
+				{
+					Log.Debug("No change of node type");
+				}
+			}
+		}
+
+
+
+		private ViewModel GetViewModel()
+		{
+			if (viewModel == null)
+			{
+				if (!CanBeShown())
+				{
+					Log.Debug($"Get No view model for {NodeName}");
+					return null;
+				}
+
+				if (CanShowChildren())
+				{
+					Log.Debug($"Get Nodes node ViewModel for {NodeName}");
+
+					if (nodesNodeViewModel == null)
+					{
+						nodesNodeViewModel = new NodesNodeViewModel(this);
+						nodesCanvas = nodesNodeViewModel.NodesCanvas;
+					}
+
+					nodesNodeViewModel.UpdateScale();
+
+					if (viewModel is NodeLeafViewModel)
+					{
+						Log.Warn($"Switch to nodes node for {NodeName}");
+						viewModel = nodesNodeViewModel;
+						nodesCanvas = nodesNodeViewModel.NodesCanvas;
+						viewModel.NotifyAll();
+					}
+					else
+					{
+						viewModel = nodesNodeViewModel;
+					}
+				}
+				else
+				{
+					Log.Debug($"Get Leaf node ViewModel for {NodeName}");
+
+					if (nodeLeafViewModel == null)
+					{
+						nodeLeafViewModel = new NodeLeafViewModel(this);
+					}
+
+					if (viewModel is NodesNodeViewModel)
+					{
+						Log.Warn($"Switch to leaf node for {NodeName}");
+						viewModel = nodeLeafViewModel;
+						nodesCanvas = null;
+						viewModel.NotifyAll();
+					}
+					else
+					{
+						viewModel = nodeLeafViewModel;
+					}
+				}
+			}
+
+			Log.Warn($"Get ViewModel for {NodeName}");
+			return viewModel;
+		}
+
+
 		public bool CanBeShown()
 		{
 			return ItemBounds.Size.Width * ParentNode.NodeScale > 40;
 			//ItemViewSize.Width > 10
 			//&& (ParentItem?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
 		}
+
+		private bool CanShowChildren()
+		{
+			return ChildNodes.Any() && ItemBounds.Size.Width * ParentNode.NodeScale > 400;
+		}
+
 
 		public void SetType(NodeType nodeType)
 		{
@@ -209,37 +321,21 @@ namespace Dependiator.Modeling
 
 		public void ItemRealized()
 		{
-			//if (!IsRealized)
-			//{
-			//	base.ItemRealized();
-
-			//	if (!isAdded)
-			//	{
-			//		isAdded = true;
-			//		AddModuleChildren();
-			//		AddLinks();
-			//	}
-
-			//	ShowChildren();
-			//}
-		}
-
-
-
-		public void ChangedScale()
-		{
-			//base.ChangedScale();
+			if (!IsShown)
+			{
+				IsShown = true;
+				Log.Warn($"Showing {NodeName} IsShown={IsShown}, CanShowChildren?{CanShowChildren()}");
+			}
 		}
 
 
 		public void ItemVirtualized()
 		{
-			//if (IsRealized)
-			//{
-			//	HideChildren();
-			//	base.ItemVirtualized();
-			//	//ParentNode?.RemoveChildNode(this);
-			//}
+			if (IsShown)
+			{
+				IsShown = false;
+				Log.Warn($"Hiding {NodeName} IsShown={IsShown}, CanShowChildren?{CanShowChildren()}");
+			}
 		}
 
 

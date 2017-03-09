@@ -29,7 +29,7 @@ namespace Dependiator.Modeling
 			$"{node.NodeName} ({node.ChildNodes.Count})\nScale: {node.NodeScale:0.00} NSF: {node.ScaleFactor}";
 
 
-		public int CornerRadius => 0;
+		public int CornerRadius => 10;
 
 
 
