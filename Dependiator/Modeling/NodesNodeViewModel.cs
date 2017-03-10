@@ -23,7 +23,9 @@ namespace Dependiator.Modeling
 
 
 		public NodesViewModel NodesViewModel { get; }
-		public ItemsCanvas NodesCanvas => NodesViewModel.ItemsCanvas;
+
+		public double ScaleFactor { get; private set; } = 1;
+		private ItemsCanvas NodesCanvas => NodesViewModel.ItemsCanvas;
 
 		public double StrokeThickness => 1;
 		public Brush RectangleBrush => node.GetNodeBrush();
@@ -48,14 +50,15 @@ namespace Dependiator.Modeling
 			}
 		}
 
+		public double Scale => NodesCanvas.Scale;
+
 
 		public override Rect GetItemBounds() => node.ItemBounds;
 
 
 		public void UpdateScale()
 		{
-			Log.Warn($"Update {node.NodeName} scale to {node.NodeScale}");
-			NodesViewModel.Scale = node.NodeScale;
+			NodesViewModel.Scale = node.NodeScale / ScaleFactor;
 			NotifyAll();
 		}
 
@@ -68,7 +71,8 @@ namespace Dependiator.Modeling
 
 		public void Zoom(int zoomDelta, Point viewPosition)
 		{
-			//node.Zoom(zoomDelta, viewPosition);
+			NodesCanvas.Zoom(zoomDelta, viewPosition);
+			ScaleFactor = node.NodeScale / NodesCanvas.Scale;
 		}
 
 		public void Resize(int zoomDelta, Point viewPosition)

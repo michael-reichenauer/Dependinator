@@ -12,11 +12,13 @@ namespace Dependiator.Modeling.Items
 
 		private readonly ItemsSource itemsSource = new ItemsSource();
 		private ZoomableCanvas canvas;
+		private double scale = 1.0;
 
 
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
 			canvas = zoomableCanvas;
+			canvas.Scale = scale;
 			canvas.ItemsOwner.ItemsSource = itemsSource.VirtualItemsSource;
 
 			canvas.ItemRealized += (s, e) => itemsSource.ItemRealized(e.VirtualId);
@@ -45,6 +47,11 @@ namespace Dependiator.Modeling.Items
 				if (canvas != null)
 				{
 					canvas.Scale = value;
+					scale = value;
+				}
+				else
+				{
+					scale = value;
 				}
 			}
 		}

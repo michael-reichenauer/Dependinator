@@ -16,6 +16,35 @@ namespace Dependiator.Modeling
 		}
 
 
+		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
+		{
+			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+			{
+				return;
+			}
+
+			NodesNodeViewModel viewModel = DataContext as NodesNodeViewModel;
+			if (viewModel == null)
+			{
+				return;
+			}
+
+			int zoomDelta = e.Delta;
+			Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
+
+			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+			{
+				viewModel.Resize(zoomDelta, viewPosition);
+			}
+			else
+			{
+				viewModel.Zoom(zoomDelta, viewPosition);				
+			}
+
+			e.Handled = true;
+		}
+	
+
 		private void UIElement_OnMouseWheel(object sender, MouseWheelEventArgs e)
 		{
 			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))

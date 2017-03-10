@@ -41,8 +41,11 @@ namespace Dependiator.Modeling
 
 		public bool IsShown => viewModel?.IsShown ?? false;
 
-		public double ScaleFactor { get; private set; } = 7;
+		public double ScaleFactor = 7;
 		public double NodeScale => ParentNode?.NodeScale / ScaleFactor ?? rootNodesCanvas.Scale;
+
+		public double ChildScale => nodesNodeViewModel?.IsShown?? false ? nodesNodeViewModel.Scale : NodeScale;
+
 		public Node ParentNode { get; }
 		public NodeName NodeName { get; }
 		public NodeType NodeType { get; private set; }
@@ -71,9 +74,11 @@ namespace Dependiator.Modeling
 
 		public void Zoom(int zoomDelta, Point viewPosition)
 		{
-			rootNodesCanvas.Zoom(zoomDelta, viewPosition);
+			if (ParentNode == null)
+			{
+				rootNodesCanvas.Zoom(zoomDelta, viewPosition);
+			}
 
-			UpdateOnScaleChange();
 			UpdateOnScaleChange();
 		}
 
@@ -143,28 +148,16 @@ namespace Dependiator.Modeling
 		{
 			bool canBeShown = CanBeShown();
 
-			Log.Debug($"Update  {NodeName} IsShown={IsShown}, CanShow={canBeShown}, CanShowChildren?{CanShowChildren()}");
-
-			if (!IsShown && canBeShown)
+			if (canBeShown)
 			{
 				// Node is not shown and can be shown, Lets show it
-				Log.Debug($"Show {NodeName}");
 				ShowNode();
 			}
-			else if (IsShown && !canBeShown)
+			else if (IsShown)
 			{
 				// This node can no longer be shown, removing it and children are removed automatically
-				Log.Debug($"Hide {NodeName}");
 				HideNode();
 			}
-			else if (IsShown && canBeShown)
-			{
-				// This node is shown and should continue the be shown, possible switch between leaf and nodes
-				Log.Debug($"Update {NodeName}");
-				ShowNode();
-			}
-
-			Log.Debug($"Updated {NodeName} IsShown={IsShown}, CanShow={canBeShown}, CanShowChildren?{CanShowChildren()}");
 		}
 
 
@@ -185,11 +178,8 @@ namespace Dependiator.Modeling
 
 		private void ShowNodesNode()
 		{
-			Log.Debug($"Show Nodes node ViewModel for {NodeName}");
-
 			if (viewModel is NodeLeafViewModel)
 			{
-				Log.Warn($"Switch to nodes node for {NodeName}");
 				HideNode();
 			}
 
@@ -203,11 +193,8 @@ namespace Dependiator.Modeling
 
 		private void ShowLeafNode()
 		{
-			Log.Debug($"Show Leaf node ViewModel for {NodeName}");
-
 			if (viewModel is NodesNodeViewModel)
 			{
-				Log.Warn($"Switch to leaf node for {NodeName}");
 				HideNode();
 			}
 
@@ -239,7 +226,6 @@ namespace Dependiator.Modeling
 		{
 			if (viewModel != itemViewModel || !itemViewModel.IsShown)
 			{
-				Log.Warn($"Show {NodeName}, (type: {itemViewModel.Type}), Parent Scale: {ParentNode.NodeScale}");
 				viewModel = itemViewModel;
 				ParentNode?.AddChildItem(viewModel);
 			}
@@ -250,7 +236,6 @@ namespace Dependiator.Modeling
 		{
 			if (viewModel != null)
 			{
-				Log.Warn($"Hide {NodeName}, (type: {viewModel.Type})");
 				ParentNode?.RemoveChildItem(viewModel);
 				viewModel = null;
 			}
@@ -259,10 +244,12 @@ namespace Dependiator.Modeling
 
 		public bool CanBeShown()
 		{
-			return ItemBounds.Size.Width * ParentNode.NodeScale > 40;
+			return ItemBounds.Size.Width * ParentNode.ChildScale > 40;
 			//ItemViewSize.Width > 10
 			//&& (ParentItem?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
 		}
+
+
 
 		private bool CanShowChildren()
 		{
