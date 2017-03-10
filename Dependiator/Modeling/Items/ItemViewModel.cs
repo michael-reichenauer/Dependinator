@@ -1,24 +1,39 @@
+using System.Windows;
 using Dependiator.Utils.UI;
 
 
 namespace Dependiator.Modeling.Items
 {
-	internal class ItemViewModel : ViewModel
+	internal abstract class ItemViewModel : ViewModel, IItem
 	{
-		private readonly IItem item;
+		// UI properties
+		public string Type => this.GetType().Name;
 
+		public double CanvasWidth => ItemBounds.Width;
+		public double CanvasTop => ItemBounds.Top;
+		public double CanvasLeft => ItemBounds.Left;
+		public double CanvasHeight => ItemBounds.Height;
 
-		public ItemViewModel(IItem item)
+		public Rect ItemBounds => GetItemBounds();
+
+		public double Priority { get; }
+		public ViewModel ViewModel => this;
+		public object ItemState { get; set; }
+
+		public bool IsShown { get; private set; }
+
+		public void ItemRealized()
 		{
-			this.item = item;
+			IsShown = true;
 		}
 
 
-		// UI properties
-		public string Type => this.GetType().Name;
-		public double CanvasWidth => item.ItemBounds.Width;
-		public double CanvasTop => item.ItemBounds.Top;
-		public double CanvasLeft => item.ItemBounds.Left;
-		public double CanvasHeight => item.ItemBounds.Height;
+		public void ItemVirtualized()
+		{
+			IsShown = false;
+		}
+
+
+		public abstract Rect GetItemBounds();
 	}
 }

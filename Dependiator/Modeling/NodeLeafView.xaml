@@ -18,7 +18,7 @@
 			Foreground="{DynamicResource TextBrush}"
 			FontSize="{Binding FontSize}"
 			HorizontalAlignment="Center"
-			VerticalAlignment="Top" />
+			VerticalAlignment="Center" />
 
 		<Border.ToolTip>
 			<ToolTip

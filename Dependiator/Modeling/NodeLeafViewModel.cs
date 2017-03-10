@@ -1,4 +1,5 @@
 using System;
+using System.Windows;
 using System.Windows.Media;
 using Dependiator.Modeling.Items;
 
@@ -11,11 +12,11 @@ namespace Dependiator.Modeling
 
 
 		public NodeLeafViewModel(Node node)
-			: base(node)
 		{
 			this.node = node;
 		}
 
+		public override Rect GetItemBounds() => node.ItemBounds;
 
 		public double StrokeThickness => 1;
 		public Brush RectangleBrush => node.GetNodeBrush();
@@ -32,13 +33,11 @@ namespace Dependiator.Modeling
 		public int CornerRadius => 10;
 
 
-
-
 		public int FontSize
 		{
 			get
 			{
-				int fontSize = (int)(12 * node.NodeScale);
+				int fontSize = (int)(12 * node.NodeScale * 10);
 				return fontSize.MM(8, 20);
 			}
 		}

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using Dependiator.Modeling.Items;
+using Dependiator.Utils;
 using Dependiator.Utils.UI.VirtualCanvas;
 
 
@@ -13,9 +14,7 @@ namespace Dependiator.Modeling
 	{
 		private readonly Node node;
 
-
 		public NodesNodeViewModel(Node node)
-			: base(node)
 		{
 			this.node = node;
 			NodesViewModel = new NodesViewModel();
@@ -40,7 +39,6 @@ namespace Dependiator.Modeling
 			$"{node.NodeName} ({node.ChildNodes.Count})\nScale: {node.NodeScale:0.00} NSF: {node.ScaleFactor}";
 
 
-
 		public int FontSize
 		{
 			get
@@ -51,15 +49,14 @@ namespace Dependiator.Modeling
 		}
 
 
+		public override Rect GetItemBounds() => node.ItemBounds;
+
+
 		public void UpdateScale()
 		{
+			Log.Warn($"Update {node.NodeName} scale to {node.NodeScale}");
 			NodesViewModel.Scale = node.NodeScale;
 			NotifyAll();
-		}
-
-		public void AddItems(IEnumerable<Node> childNodes)
-		{
-			NodesViewModel.AddItems(childNodes);
 		}
 
 
@@ -81,9 +78,20 @@ namespace Dependiator.Modeling
 
 
 
+
 		//internal void MouseMove(Point viewPosition, Vector viewOffset, bool isFirst)
 		//{
 		//	node.MoveOrResize(viewPosition, viewOffset, isFirst);
 		//}
+		public void AddItem(IItem item)
+		{
+			NodesCanvas.AddItem(item);
+		}
+
+
+		public void RemoveItem(IItem item)
+		{
+			NodesCanvas.RemoveItem(item);
+		}
 	}
 }

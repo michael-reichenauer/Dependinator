@@ -10,7 +10,9 @@ namespace Dependiator.Modeling.Items
 	internal class ItemsSource : VirtualItemsSource
 	{
 		private readonly PriorityQuadTree<IItem> viewItemsTree = new PriorityQuadTree<IItem>();
-		private readonly List<IItem> viewItems = new List<IItem>();
+
+		private readonly Dictionary<int, IItem> viewItems = new Dictionary<int, IItem>();
+		private int currentItemId = 0;
 
 		private Rect lastViewAreaQuery = EmptyExtent;
 
@@ -30,8 +32,9 @@ namespace Dependiator.Modeling.Items
 
 			foreach (IItem virtualItem in virtualItems)
 			{
-				virtualItem.ItemState = new ViewItem(viewItems.Count, virtualItem.ItemBounds, virtualItem);
-				viewItems.Add(virtualItem);
+				int itemId = currentItemId++;
+				virtualItem.ItemState = new ViewItem(itemId, virtualItem.ItemBounds, virtualItem);
+				viewItems[itemId] = virtualItem;
 
 				viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, virtualItem.Priority);
 
@@ -61,8 +64,9 @@ namespace Dependiator.Modeling.Items
 			bool isQueryItemsChanged = false;
 			Rect currentBounds = TotalBounds;
 
-			virtualItem.ItemState = new ViewItem(viewItems.Count, virtualItem.ItemBounds, virtualItem);
-			viewItems.Add(virtualItem);
+			int itemId = currentItemId++;
+			virtualItem.ItemState = new ViewItem(itemId, virtualItem.ItemBounds, virtualItem);
+			viewItems[itemId] = virtualItem;
 
 			viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, virtualItem.Priority);
 
@@ -88,14 +92,18 @@ namespace Dependiator.Modeling.Items
 
 		public void Update(IItem item)
 		{
-			ViewItem viewItem = (ViewItem)item.ItemState;
+			ViewItem oldViewItem = (ViewItem)item.ItemState;
 
-			Rect oldItemBounds = viewItem.ItemBounds;
+			Rect oldItemBounds = oldViewItem.ItemBounds;
 			viewItemsTree.Remove(item, oldItemBounds);
+			viewItems.Remove(oldViewItem.ItemId);
 
+			int itemId = currentItemId++;
 			Rect newItemBounds = item.ItemBounds;
-			viewItem.ItemBounds = newItemBounds;
-			viewItemsTree.Insert(item, viewItem.ItemBounds, item.Priority);
+			item.ItemState = new ViewItem(itemId, newItemBounds, item);
+
+			viewItemsTree.Insert(item, newItemBounds, item.Priority);
+			viewItems[itemId] = item;
 
 			ItemsBoundsChanged();
 
@@ -195,7 +203,7 @@ namespace Dependiator.Modeling.Items
 		{
 			Rect currentBounds = EmptyExtent;
 
-			foreach (IItem virtualItem in viewItems)
+			foreach (IItem virtualItem in viewItems.Values)
 			{
 				currentBounds.Union(virtualItem.ItemBounds);
 			}
@@ -217,7 +225,7 @@ namespace Dependiator.Modeling.Items
 
 			return viewItemsTree.GetItemsIntersecting(viewArea)
 				.Where(i => i.ItemState != null)
-				.Select(i => ((ViewItem)i.ItemState).Index);
+				.Select(i => ((ViewItem)i.ItemState).ItemId);
 		}
 
 
@@ -229,25 +237,25 @@ namespace Dependiator.Modeling.Items
 		/// </summary>
 		protected override object GetItem(int virtualId)
 		{
-			if (virtualId >= viewItems.Count)
+			if (viewItems.TryGetValue(virtualId, out var item))
 			{
-				return null;
+				return item.ViewModel;
 			}
 
-			return viewItems[virtualId].ViewModel;
+			return null;
 		}
 
 
 		private class ViewItem
 		{
-			public ViewItem(int index, Rect itemBounds, IItem item)
+			public ViewItem(int itemId, Rect itemBounds, IItem item)
 			{
-				Index = index;
+				ItemId = itemId;
 				ItemBounds = itemBounds;
 				Node = item;
 			}
 
-			public int Index { get; set; }
+			public int ItemId { get; }
 
 			public Rect ItemBounds { get; set; }
 
