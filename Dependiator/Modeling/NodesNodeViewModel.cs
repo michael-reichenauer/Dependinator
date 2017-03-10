@@ -81,12 +81,11 @@ namespace Dependiator.Modeling
 		}
 
 
-
-
 		//internal void MouseMove(Point viewPosition, Vector viewOffset, bool isFirst)
 		//{
 		//	node.MoveOrResize(viewPosition, viewOffset, isFirst);
 		//}
+
 		public void AddItem(IItem item)
 		{
 			NodesCanvas.AddItem(item);
@@ -96,6 +95,13 @@ namespace Dependiator.Modeling
 		public void RemoveItem(IItem item)
 		{
 			NodesCanvas.RemoveItem(item);
+		}
+
+
+		public bool MoveCanvas(Vector viewOffset)
+		{
+			NodesViewModel.MoveCanvas(viewOffset);
+			return true;
 		}
 	}
 }

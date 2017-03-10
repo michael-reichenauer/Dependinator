@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 
 
@@ -10,6 +11,8 @@ namespace Dependiator.Modeling
 	/// </summary>
 	public partial class NodesNodeView : UserControl
 	{
+		private Point lastMousePosition;
+
 		public NodesNodeView()
 		{
 			InitializeComponent();
@@ -43,7 +46,36 @@ namespace Dependiator.Modeling
 
 			e.Handled = true;
 		}
-	
+
+		protected override void OnPreviewMouseMove(MouseEventArgs e)
+		{
+			Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
+
+			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
+				&& e.LeftButton == MouseButtonState.Pressed
+				&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
+			{
+				NodesNodeViewModel viewModel = DataContext as NodesNodeViewModel;
+				if (viewModel == null)
+				{
+					return;
+				}
+
+				// Move canvas
+				CaptureMouse();
+				Vector viewOffset = viewPosition - lastMousePosition;
+				e.Handled = viewModel.MoveCanvas(viewOffset);
+			}
+			else
+			{
+				// End of move
+				ReleaseMouseCapture();
+			}
+
+			lastMousePosition = viewPosition;
+		}
+
+
 
 		private void UIElement_OnMouseWheel(object sender, MouseWheelEventArgs e)
 		{
