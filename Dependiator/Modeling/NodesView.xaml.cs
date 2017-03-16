@@ -24,9 +24,12 @@ namespace Dependiator.Modeling
 		private async void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
 		{
 			viewModel = (NodesViewModel)DataContext;
-			viewModel.SetCanvas((ZoomableCanvas)sender);
+			if (viewModel != null)
+			{
+				viewModel.SetCanvas((ZoomableCanvas)sender);
 
-			await viewModel.LoadAsync();
+				await viewModel.LoadAsync();
+			}
 		}
 
 

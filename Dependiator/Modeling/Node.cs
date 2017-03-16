@@ -44,7 +44,7 @@ namespace Dependiator.Modeling
 		public double ScaleFactor = 7;
 		public double NodeScale => ParentNode?.NodeScale / ScaleFactor ?? rootNodesCanvas.Scale;
 
-		public double ChildScale => nodesNodeViewModel?.IsShown?? false ? nodesNodeViewModel.Scale : NodeScale;
+		public double ChildScale => nodesNodeViewModel?.IsShown ?? false ? nodesNodeViewModel.Scale : NodeScale;
 
 		public Node ParentNode { get; }
 		public NodeName NodeName { get; }
@@ -92,7 +92,7 @@ namespace Dependiator.Modeling
 			else
 			{
 				nodesNodeViewModel?.AddItem(item);
-			}			
+			}
 		}
 
 		public void RemoveChildItem(IItem item)
@@ -104,7 +104,7 @@ namespace Dependiator.Modeling
 			else
 			{
 				nodesNodeViewModel?.RemoveItem(item);
-			}		
+			}
 		}
 
 

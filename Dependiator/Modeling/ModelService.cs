@@ -61,22 +61,22 @@ namespace Dependiator.Modeling
 		}
 
 
-		private static DataModel GetDataModel()
+		private DataModel GetDataModel()
 		{
-			DataModel dataModel = new DataModel()
-					.AddType("Axis.Ns1")
-					.AddType("Axis.Ns2")
-					.AddType("Axis.Ns1.Class1")
-					.AddType("Axis.Ns1.Class2")
-					.AddType("Axis.Ns2.Class1")
-					.AddType("Axis.Ns2.NS3.Class1")
-					.AddType("Other.Ns1.Class1")
-					.AddLink("Axis.Ns1.Class1", "Axis.Ns1.Class2")
-					.AddLink("Axis.Ns1.Class1", "Axis.Ns2.Class2")
-				;
+			//DataModel dataModel = new DataModel()
+			//		.AddType("Axis.Ns1")
+			//		.AddType("Axis.Ns2")
+			//		.AddType("Axis.Ns1.Class1")
+			//		.AddType("Axis.Ns1.Class2")
+			//		.AddType("Axis.Ns2.Class1")
+			//		.AddType("Axis.Ns2.NS3.Class1")
+			//		.AddType("Other.Ns1.Class1")
+			//		.AddLink("Axis.Ns1.Class1", "Axis.Ns1.Class2")
+			//		.AddLink("Axis.Ns1.Class1", "Axis.Ns2.Class2")
+			//	;
 
 
-			//DataModel dataModel = GetCachedOrFreshModelData();
+			DataModel dataModel = GetCachedOrFreshModelData();
 			return dataModel;
 		}
 
