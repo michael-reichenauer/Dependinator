@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -9,17 +10,31 @@ namespace Dependiator.Modeling.Items
 {
 	internal class ItemsSource : VirtualItemsSource
 	{
+		private readonly ItemsCanvas itemsCanvas;
 		private readonly PriorityQuadTree<IItem> viewItemsTree = new PriorityQuadTree<IItem>();
 
 		private readonly Dictionary<int, IItem> viewItems = new Dictionary<int, IItem>();
+		private readonly Dictionary<int, IItem> removedItems = new Dictionary<int, IItem>();
+		public static int ItemCount = 0;
+
 		private int currentItemId = 0;
 
+		private static int currentId = 0;
+		private int id = 0;
+
 		private Rect lastViewAreaQuery = EmptyExtent;
+
+
+		public ItemsSource(ItemsCanvas itemsCanvas)
+		{
+			this.itemsCanvas = itemsCanvas;
+			id = ++currentId;
+			Log.Debug($"Id: {id}");
+		}
 
 		public Rect TotalBounds { get; private set; } = EmptyExtent;
 
 		protected override Rect VirtualArea => TotalBounds;
-
 
 		public VirtualItemsSource VirtualItemsSource => this;
 
@@ -37,6 +52,7 @@ namespace Dependiator.Modeling.Items
 				viewItems[itemId] = virtualItem;
 
 				viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, virtualItem.Priority);
+				ItemCount++;
 
 				currentBounds.Union(virtualItem.ItemBounds);
 
@@ -69,6 +85,7 @@ namespace Dependiator.Modeling.Items
 			viewItems[itemId] = virtualItem;
 
 			viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, virtualItem.Priority);
+			ItemCount++;
 
 			currentBounds.Union(virtualItem.ItemBounds);
 
@@ -124,6 +141,9 @@ namespace Dependiator.Modeling.Items
 
 				Rect itemBounds = viewItem.ItemBounds;
 				viewItemsTree.Remove(item, itemBounds);
+				removedItems[viewItem.ItemId] = item;
+
+				ItemCount--;
 				item.ItemState = null;
 
 				if (itemBounds.IntersectsWith(lastViewAreaQuery))
@@ -141,34 +161,26 @@ namespace Dependiator.Modeling.Items
 		}
 
 
-		public void ItemRealized(int virtualId)
-		{
-			if (virtualId >= viewItems.Count)
-			{
-				return;
-			}
-
-			viewItems[virtualId].ItemRealized();
-		}
-
-
-		public void ItemVirtualized(int virtualId)
-		{
-			if (virtualId >= viewItems.Count)
-			{
-				return;
-			}
-
-			viewItems[virtualId].ItemVirtualized();
-		}
-
-
 		public void Remove(IItem item)
 		{
 			ViewItem viewItem = (ViewItem)item.ItemState;
 
+			if (viewItem == null)
+			{
+				return;
+			}
+
 			Rect itemBounds = viewItem.ItemBounds;
-			viewItemsTree.Remove(item, itemBounds);
+			if (viewItemsTree.Remove(item, itemBounds))
+			{
+				removedItems[viewItem.ItemId] = item;
+			}
+			else
+			{
+				Log.Warn($"Failed to remove {item}");
+			}
+
+			ItemCount--;
 			item.ItemState = null;
 
 			ItemsBoundsChanged();
@@ -176,6 +188,30 @@ namespace Dependiator.Modeling.Items
 			if (itemBounds.IntersectsWith(lastViewAreaQuery))
 			{
 				TriggerItemsChanged();
+			}
+		}
+
+
+		public void ItemRealized(int virtualId)
+		{
+			if (viewItems.TryGetValue(virtualId, out var item))
+			{
+				item.ItemRealized();
+			}
+		}
+
+
+		public void ItemVirtualized(int virtualId)
+		{
+			if (viewItems.TryGetValue(virtualId, out IItem item))
+			{
+				item.ItemVirtualized();
+			}
+
+			if (removedItems.ContainsKey(virtualId))
+			{
+				removedItems.Remove(virtualId);
+				viewItems.Remove(virtualId);
 			}
 		}
 
@@ -221,11 +257,49 @@ namespace Dependiator.Modeling.Items
 		/// </summary>
 		protected override IEnumerable<int> GetItemIds(Rect viewArea)
 		{
-			lastViewAreaQuery = viewArea;
+			// !!!!###### Enable inflate in Zoomable line 1369
 
-			return viewItemsTree.GetItemsIntersecting(viewArea)
-				.Where(i => i.ItemState != null)
+			//Log.Debug($"Id: {id}, ViewPort {itemsCanvas.CurrentViewPort}, Inflated: {viewArea}, ");
+
+			if (itemsCanvas.ParentCanvas != null 
+				&& itemsCanvas.ParentCanvas.LastViewAreaQuery != Rect.Empty)
+			{
+				Rect parentViewbox = itemsCanvas.ParentCanvas.LastViewAreaQuery;
+
+				Rect itemRect = itemsCanvas.ItemBounds;
+				Double scaleFactor = itemsCanvas.ScaleFactor;
+
+				double x = (parentViewbox.X - itemRect.X) * scaleFactor;
+				double y = (parentViewbox.Y - itemRect.Y) * scaleFactor;
+				double w = parentViewbox.Width * scaleFactor;
+				double h = parentViewbox.Height * scaleFactor;
+
+				//Rect newViewArea = viewArea;
+				viewArea.Intersect(new Rect(x, y, w, h));
+
+				//parentViewbox.Inflate(parentViewbox.Width / 10, parentViewbox.Height / 10);
+
+				//Log.Debug($"Id: {id}, ItemRect {itemRect}, ParentViewPort: {itemsCanvas.ParentCanvas?.CurrentViewPort}, inflated: {parentViewbox}");
+
+				//Log.Debug($"Id: {id}, ItemRect {itemRect}, ParentViewPort: {itemsCanvas.ParentCanvas?.CurrentViewPort}, inflated: {parentViewbox}");
+				//Log.Debug($"Id: {id}, newViewArea {newViewArea}, ScaleFactor: {scaleFactor}");
+			}
+
+
+			lastViewAreaQuery = viewArea;
+			itemsCanvas.LastViewAreaQuery = viewArea;
+
+			if (viewArea == Rect.Empty)
+			{
+				return Enumerable.Empty<int>();
+			}
+
+			IEnumerable<int> itemIds = viewItemsTree.GetItemsIntersecting(viewArea)
+				.Where(i => i.ItemState != null && i.IsVisible)
 				.Select(i => ((ViewItem)i.ItemState).ItemId);
+
+			//Log.Debug($"Id: {id}, Count: {itemIds.Count()}");
+			return itemIds;
 		}
 
 

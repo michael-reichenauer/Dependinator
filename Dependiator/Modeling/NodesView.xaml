@@ -23,8 +23,8 @@
 				<virtualCanvas:ZoomableCanvas
 					Loaded="ZoomableCanvas_Loaded"
 					RealizationLimit="500"
-					RealizationRate="30"
-					RealizationPriority="Normal"
+					RealizationRate="10"
+					RealizationPriority="Background"
 					ApplyTransform="false" />
 			</ItemsPanelTemplate>
 		</ListBox.ItemsPanel>

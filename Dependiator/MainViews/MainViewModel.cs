@@ -44,7 +44,7 @@ namespace Dependiator.MainViews
 		}
 
 
-		public NodesViewModel NodesViewModel { get; } = new NodesViewModel();
+		public NodesViewModel NodesViewModel { get; } = new NodesViewModel(null, null);
 
 
 		public async Task LoadAsync()
@@ -84,7 +84,8 @@ namespace Dependiator.MainViews
 
 		public bool MoveCanvas(Vector viewOffset)
 		{
-			NodesViewModel.MoveCanvas(viewOffset);
+			
+			modelService.Move(viewOffset);
 			return true;
 		}
 

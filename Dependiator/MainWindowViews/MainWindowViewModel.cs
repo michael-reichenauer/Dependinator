@@ -8,6 +8,7 @@ using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Common;
 using Dependiator.Common.MessageDialogs;
 using Dependiator.MainViews;
+using Dependiator.Modeling.Items;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
 using Application = System.Windows.Application;

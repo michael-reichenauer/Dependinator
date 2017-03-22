@@ -12,6 +12,7 @@ namespace Dependiator.Modeling
 		bool ZoomNode(int zoomDelta, Point viewPosition);
 
 		bool Zoom(int zoomDelta, Point viewPosition);
+		void Move(Vector viewOffset);
 
 		void Close();
 		Task Refresh(ItemsCanvas rootCanvas);

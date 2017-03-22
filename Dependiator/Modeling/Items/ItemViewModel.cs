@@ -1,4 +1,6 @@
+using System.Threading;
 using System.Windows;
+using Dependiator.Utils;
 using Dependiator.Utils.UI;
 
 
@@ -6,6 +8,10 @@ namespace Dependiator.Modeling.Items
 {
 	internal abstract class ItemViewModel : ViewModel, IItem
 	{
+		public static int ItemsCount = 0;
+
+		public int InstanceCount = 0;
+
 		// UI properties
 		public string Type => this.GetType().Name;
 
@@ -15,6 +21,7 @@ namespace Dependiator.Modeling.Items
 		public double CanvasHeight => ItemBounds.Height;
 
 		public Rect ItemBounds => GetItemBounds();
+		public double ItemsScaleFactor => GetScaleFactor();
 
 		public double Priority { get; }
 		public ViewModel ViewModel => this;
@@ -22,18 +29,28 @@ namespace Dependiator.Modeling.Items
 
 		public bool IsShown { get; private set; }
 
-		public void ItemRealized()
+		public bool IsVisible { get; set; }
+
+		public virtual void ItemRealized()
 		{
+			ItemsCount++;
+			InstanceCount++;
 			IsShown = true;
+			Log.Debug($"{GetType()} {this}, count {ItemsCount} (instance {InstanceCount})");
 		}
 
 
-		public void ItemVirtualized()
+		public virtual void ItemVirtualized()
 		{
+			ItemsCount--;
+			InstanceCount--;
 			IsShown = false;
+			Log.Debug($"{GetType()} {this}, count {ItemsCount} (instance {InstanceCount})");
 		}
 
 
 		public abstract Rect GetItemBounds();
+		public abstract double GetScaleFactor();
+
 	}
 }

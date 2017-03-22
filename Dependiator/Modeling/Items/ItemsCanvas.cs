@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows;
+using Dependiator.Utils;
 using Dependiator.Utils.UI.VirtualCanvas;
 
 
@@ -10,21 +11,56 @@ namespace Dependiator.Modeling.Items
 	{
 		private static readonly double ZoomSpeed = 600.0;
 
-		private readonly ItemsSource itemsSource = new ItemsSource();
+		private readonly IItem item;
+		private readonly ItemsSource itemsSource;
+		
 		private ZoomableCanvas canvas;
 		private double scale = 1.0;
+
+		public ItemsCanvas(IItem item, ItemsCanvas parentCanvas)
+		{
+			this.item = item;
+			ParentCanvas = parentCanvas;
+			itemsSource = new ItemsSource(this);
+		}
+
+		public Rect LastViewAreaQuery { get; set; }
 
 
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
+			if (canvas != null)
+			{
+				canvas.ItemRealized -= Canvas_ItemRealized;
+				canvas.ItemVirtualized -= Canvas_ItemVirtualized;
+			}
+
 			canvas = zoomableCanvas;
 			canvas.Scale = scale;
 			canvas.ItemsOwner.ItemsSource = itemsSource.VirtualItemsSource;
 
-			canvas.ItemRealized += (s, e) => itemsSource.ItemRealized(e.VirtualId);
-			canvas.ItemVirtualized += (s, e) => itemsSource.ItemVirtualized(e.VirtualId);
+			canvas.ItemRealized += Canvas_ItemRealized;
+			canvas.ItemVirtualized += Canvas_ItemVirtualized;
 		}
 
+
+		private void Canvas_ItemRealized(object sender, ItemEventArgs e)
+		{
+			itemsSource.ItemRealized(e.VirtualId);
+		}
+
+
+		private void Canvas_ItemVirtualized(object sender, ItemEventArgs e)
+		{
+			itemsSource.ItemVirtualized(e.VirtualId);
+		}
+
+
+		public Rect ItemBounds => item?.ItemBounds ?? canvas?.ActualViewbox ?? Rect.Empty;
+
+		public double ScaleFactor => item?.ItemsScaleFactor ?? 1;
+
+		public ItemsCanvas ParentCanvas { get; }
 
 		public event EventHandler ScaleChanged;
 
@@ -35,7 +71,19 @@ namespace Dependiator.Modeling.Items
 		public Point Offset
 		{
 			get { return canvas?.Offset ?? new Point(0, 0); }
-			set { canvas.Offset = value; }
+			set
+			{
+				canvas.Offset = value;
+				// Log.Debug("offset changed");
+				foreach (IItem item in itemsSource.GetItemsInView())
+				{			
+					if (item is NodesNodeViewModel nodesNodeViewModel)
+					{
+						//Log.Debug("item is NodesNodeViewModel");
+						nodesNodeViewModel.NodesViewModel.ItemsCanvas.TriggerInvalidated();
+					}
+				}
+			}
 		}
 
 
@@ -55,7 +103,6 @@ namespace Dependiator.Modeling.Items
 				}
 			}
 		}
-
 
 		public void AddItem(IItem item) => itemsSource.Add(item);
 
@@ -119,6 +166,11 @@ namespace Dependiator.Modeling.Items
 		public void TriggerExtentChanged()
 		{
 			itemsSource.TriggerExtentChanged();
+		}
+
+		public void TriggerInvalidated()
+		{
+			itemsSource.TriggerInvalidated();
 		}
 
 

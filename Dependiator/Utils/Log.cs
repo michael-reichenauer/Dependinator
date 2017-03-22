@@ -33,6 +33,7 @@ namespace Dependiator.Utils
 		private static readonly string LevelWarn = "WARN ";
 		private static readonly string LevelError = "ERROR";
 		private static readonly Lazy<bool> DisableErrorAndUsageReporting;
+		private static int prefixLength = 0;
 
 		static Log()
 		{
@@ -41,6 +42,14 @@ namespace Dependiator.Utils
 		
 			Task.Factory.StartNew(SendBufferedLogRows, TaskCreationOptions.LongRunning)
 				.RunInBackground();
+
+			prefixLength = GetSourceFilePrefixLength();
+		}
+
+
+		private static int GetSourceFilePrefixLength([CallerFilePath] string sourceFilePath = "")
+		{
+			return sourceFilePath.IndexOf("Dependiator\\Utils\\Log.cs");
 		}
 
 
@@ -117,10 +126,8 @@ namespace Dependiator.Utils
 			string msg,
 			string memberName,
 			string filePath,
-			int lineNumber,
-			[CallerFilePath] string sourceFilePath = "")
+			int lineNumber)
 		{
-			int prefixLength = sourceFilePath.Length - 18;
 			filePath = filePath.Substring(prefixLength);
 			string text = $"{level} [{ProcessID}] {filePath}({lineNumber}) {memberName} - {msg}";
 

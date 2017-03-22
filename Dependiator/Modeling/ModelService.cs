@@ -63,20 +63,26 @@ namespace Dependiator.Modeling
 
 		private DataModel GetDataModel()
 		{
-			//DataModel dataModel = new DataModel()
-			//		.AddType("Axis.Ns1")
-			//		.AddType("Axis.Ns2")
-			//		.AddType("Axis.Ns1.Class1")
-			//		.AddType("Axis.Ns1.Class2")
-			//		.AddType("Axis.Ns2.Class1")
-			//		.AddType("Axis.Ns2.NS3.Class1")
-			//		.AddType("Other.Ns1.Class1")
-			//		.AddLink("Axis.Ns1.Class1", "Axis.Ns1.Class2")
-			//		.AddLink("Axis.Ns1.Class1", "Axis.Ns2.Class2")
-			//	;
+			DataModel dataModel = new DataModel()
+					.AddType("Axis.Ns1")
+					.AddType("Axis.Ns2")
+					.AddType("Axis.Ns1.Class1")
+					.AddType("Axis.Ns1.Class2")
+					.AddType("Axis.Ns2.Class1")
+					.AddType("Axis.Ns2.NS3.Class1")
+					.AddType("Other.Ns1.Class1")
+					.AddType("Other.Ns2")
+					.AddType("Other.Ns3")
+					.AddType("Other.Ns4")
+					.AddType("Other.Ns5")
+					.AddType("Other.Ns6")
+					.AddLink("Axis.Ns1.Class1", "Axis.Ns1.Class2")
+					.AddLink("Axis.Ns1.Class1", "Axis.Ns2.Class2")
+				;
 
 
-			DataModel dataModel = GetCachedOrFreshModelData();
+			//dataModel = GetCachedOrFreshModelData();
+
 			return dataModel;
 		}
 
@@ -152,6 +158,12 @@ namespace Dependiator.Modeling
 		{
 			model.Root.Zoom(zoomDelta, viewPosition);
 			return true;
+		}
+
+
+		public void Move(Vector viewOffset)
+		{
+			model.Root.Move(viewOffset);
 		}
 
 

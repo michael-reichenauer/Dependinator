@@ -10,7 +10,13 @@ namespace Dependiator.Modeling
 {
 	internal class NodesViewModel : ViewModel
 	{
-		private readonly ItemsCanvas canvas = new ItemsCanvas();
+		private readonly ItemsCanvas canvas;
+
+
+		public NodesViewModel(IItem item, ItemsCanvas parentCanvas)
+		{
+			canvas = new ItemsCanvas(item, parentCanvas);
+		}
 
 
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)

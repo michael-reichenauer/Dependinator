@@ -1366,7 +1366,7 @@ namespace Dependiator.Utils.UI.VirtualCanvas
 					var limit = RealizationLimit;
 
 					// Buffer the viewbox so that panning by small amounts is smooth.
-					viewbox.Inflate(viewbox.Width / 10, viewbox.Height / 10);
+					// viewbox.Inflate(viewbox.Width / 10, viewbox.Height / 10);
 
 					// Query the index for all items that intersect our viewbox, up to our realization limit.
 					query = SpatialIndex.Query(viewbox).Take(limit);

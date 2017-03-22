@@ -14,10 +14,10 @@ namespace Dependiator.Modeling
 	{
 		private readonly Node node;
 
-		public NodesNodeViewModel(Node node)
+		public NodesNodeViewModel(Node node, ItemsCanvas parentCanvas)
 		{
 			this.node = node;
-			NodesViewModel = new NodesViewModel();
+			NodesViewModel = new NodesViewModel(this, parentCanvas);
 			NodesViewModel.Scale = node.NodeScale;
 		}
 
@@ -25,7 +25,8 @@ namespace Dependiator.Modeling
 		public NodesViewModel NodesViewModel { get; }
 
 		public double ScaleFactor { get; private set; } = 1;
-		private ItemsCanvas NodesCanvas => NodesViewModel.ItemsCanvas;
+
+		public ItemsCanvas ItemsCanvas => NodesViewModel.ItemsCanvas;
 
 		public double StrokeThickness => 1;
 		public Brush RectangleBrush => node.GetNodeBrush();
@@ -38,8 +39,23 @@ namespace Dependiator.Modeling
 		public int CornerRadius => 0;
 
 		public string ToolTip =>
-			$"{node.NodeName} ({node.ChildNodes.Count})\nScale: {node.NodeScale:0.00} NSF: {node.ScaleFactor}";
+			$"{node.NodeName} ({node.ChildNodes.Count})\n" +
+			$"Scale: {node.NodeScale:0.00} NSF: {node.ScaleFactor}, Items: {ItemsCount}, {ItemsSource.ItemCount}" +
+			$"\nParentScale: {node.ParentNode.NodeScale:0.00}, Node Canvas Scale: {Scale:0.00}";
 
+
+		public override void ItemRealized()
+		{
+			base.ItemRealized();
+			node.ShowAllChildren();
+		}
+
+
+		public override void ItemVirtualized()
+		{
+			node.HideAllChildren();
+			base.ItemVirtualized();
+		}
 
 		public int FontSize
 		{
@@ -50,7 +66,7 @@ namespace Dependiator.Modeling
 			}
 		}
 
-		public double Scale => NodesCanvas.Scale;
+		public double Scale => ItemsCanvas.Scale;
 
 
 		public override Rect GetItemBounds() => node.ItemBounds;
@@ -71,8 +87,8 @@ namespace Dependiator.Modeling
 
 		public void Zoom(int zoomDelta, Point viewPosition)
 		{
-			NodesCanvas.Zoom(zoomDelta, viewPosition);
-			ScaleFactor = node.NodeScale / NodesCanvas.Scale;
+			ItemsCanvas.Zoom(zoomDelta, viewPosition);
+			ScaleFactor = node.NodeScale / ItemsCanvas.Scale;
 		}
 
 		public void Resize(int zoomDelta, Point viewPosition)
@@ -88,13 +104,14 @@ namespace Dependiator.Modeling
 
 		public void AddItem(IItem item)
 		{
-			NodesCanvas.AddItem(item);
+			ItemsCanvas.AddItem(item);
 		}
 
 
 		public void RemoveItem(IItem item)
 		{
-			NodesCanvas.RemoveItem(item);
+			Log.Debug($"{item}");
+			ItemsCanvas.RemoveItem(item);
 		}
 
 
@@ -103,5 +120,9 @@ namespace Dependiator.Modeling
 			NodesViewModel.MoveCanvas(viewOffset);
 			return true;
 		}
+
+
+		public override string ToString() => node.NodeName;
+		public override double GetScaleFactor() => node.ScaleFactor;
 	}
 }
