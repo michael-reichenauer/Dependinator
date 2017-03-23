@@ -81,7 +81,7 @@ namespace Dependiator.Modeling
 				;
 
 
-			//dataModel = GetCachedOrFreshModelData();
+			dataModel = GetCachedOrFreshModelData();
 
 			return dataModel;
 		}
