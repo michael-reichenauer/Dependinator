@@ -29,7 +29,7 @@ namespace Dependiator.Modeling
 
 		public string ToolTip =>
 			$"{node.NodeName} ({node.ChildNodes.Count})\n" + 
-			$"Scale: {node.NodeScale:0.00} NSF: {node.ScaleFactor}, Items: {ItemsCount}, {ItemsSource.ItemCount}" +
+			$"Scale: {node.NodeScale:0.00} NSF: {node.ScaleFactor}, Items: {TotalCount}, {ItemsSource.ItemCount}" +
 			$"\nParentScale: {node.ParentNode.NodeScale:0.00}";
 
 
@@ -47,6 +47,5 @@ namespace Dependiator.Modeling
 
 		public override string ToString() => node.NodeName;
 		public override double GetScaleFactor() => node.ScaleFactor;
-
 	}
 }

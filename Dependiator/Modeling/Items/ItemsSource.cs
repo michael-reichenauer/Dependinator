@@ -51,7 +51,7 @@ namespace Dependiator.Modeling.Items
 				virtualItem.ItemState = new ViewItem(itemId, virtualItem.ItemBounds, virtualItem);
 				viewItems[itemId] = virtualItem;
 
-				viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, virtualItem.Priority);
+				viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, 0);
 				ItemCount++;
 
 				currentBounds.Union(virtualItem.ItemBounds);
@@ -84,7 +84,7 @@ namespace Dependiator.Modeling.Items
 			virtualItem.ItemState = new ViewItem(itemId, virtualItem.ItemBounds, virtualItem);
 			viewItems[itemId] = virtualItem;
 
-			viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, virtualItem.Priority);
+			viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, 0);
 			ItemCount++;
 
 			currentBounds.Union(virtualItem.ItemBounds);
@@ -119,7 +119,7 @@ namespace Dependiator.Modeling.Items
 			Rect newItemBounds = item.ItemBounds;
 			item.ItemState = new ViewItem(itemId, newItemBounds, item);
 
-			viewItemsTree.Insert(item, newItemBounds, item.Priority);
+			viewItemsTree.Insert(item, newItemBounds, 0);
 			viewItems[itemId] = item;
 
 			ItemsBoundsChanged();
@@ -295,7 +295,7 @@ namespace Dependiator.Modeling.Items
 			}
 
 			IEnumerable<int> itemIds = viewItemsTree.GetItemsIntersecting(viewArea)
-				.Where(i => i.ItemState != null && i.IsVisible)
+				.Where(i => i.ItemState != null && i.IsShowEnabled)
 				.Select(i => ((ViewItem)i.ItemState).ItemId);
 
 			//Log.Debug($"Id: {id}, Count: {itemIds.Count()}");

@@ -40,7 +40,7 @@ namespace Dependiator.Modeling
 
 		public string ToolTip =>
 			$"{node.NodeName} ({node.ChildNodes.Count})\n" +
-			$"Scale: {node.NodeScale:0.00} NSF: {node.ScaleFactor}, Items: {ItemsCount}, {ItemsSource.ItemCount}" +
+			$"Scale: {node.NodeScale:0.00} NSF: {node.ScaleFactor}, Items Total: {TotalCount}, Instance: {InstanceCount}" +
 			$"\nParentScale: {node.ParentNode.NodeScale:0.00}, Node Canvas Scale: {Scale:0.00}";
 
 

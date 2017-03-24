@@ -8,9 +8,8 @@ namespace Dependiator.Modeling.Items
 	{
 		Rect ItemBounds { get; }
 		double ItemsScaleFactor { get; }
-		bool IsVisible { get; }
+		bool IsShowEnabled { get; }
 		
-		double Priority { get; }
 		ViewModel ViewModel { get; }
 		object ItemState { get; set; }
 

@@ -10,6 +10,6 @@ namespace Dependiator.Modeling
 		Brush GetRectangleBackgroundBrush(Brush brush);
 		Brush GetBrushFromHex(string hexColor);
 		string GetHexColorFromBrush(Brush brush);
-		void SetInitalRootNodeBounds(Node node, Rect bounds);
+		void SetChildrenItemBounds(Node parent);
 	}
 }

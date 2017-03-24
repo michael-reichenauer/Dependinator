@@ -138,10 +138,9 @@ namespace Dependiator.Modeling
 			//nodesViewModel.AddItem(rootNode);
 
 			Node rootNode = model.Root;
-			nodeItemService.SetInitalRootNodeBounds(rootNode, new Rect(100, 100, 200, 100));
-
+	
 			rootCanvas.Scale = 1.0;
-			rootNode.SetRootCanvas(rootCanvas);
+			rootNode.Show(rootCanvas);
 
 			//nodeItemService.SetChildrenItemBounds(rootNode);
 

@@ -37,14 +37,13 @@ namespace Dependiator.Modeling
 			NodeColor = null;
 		}
 
-		public Rect ItemBounds { get; set; }
+		
 
+		public Rect ItemBounds { get; set; }
 
 		public double ScaleFactor = 7;
 		public double NodeScale => ParentNode?.NodeScale / ScaleFactor ?? ChildItemsCanvas.Scale;
-
-		public double ChildScale => compositeNodeViewModel?.IsVisible ?? false ? compositeNodeViewModel.Scale : NodeScale;
-
+		public double ChildScale => compositeNodeViewModel?.IsShowEnabled ?? false ? compositeNodeViewModel.Scale : NodeScale;
 		public ItemsCanvas ChildItemsCanvas { get; private set; }
 
 		public NodeName NodeName { get; }
@@ -58,13 +57,22 @@ namespace Dependiator.Modeling
 		public Rect? NodeBounds { get; set; }
 
 
-		public void SetRootCanvas(ItemsCanvas rootCanvas)
+		private bool IsCompositeNodeView => currentViewModel is CompositeNodeViewModel;
+		private bool IsSingleNodeView => currentViewModel is SingleNodeViewModel;
+
+
+		public void Show(ItemsCanvas itemsCanvas)
 		{
 			Asserter.Requires(ParentNode == null);
 
-			ChildItemsCanvas = rootCanvas;
+			// The root node is not visible, but children of the root node are visible
+			ItemBounds = Rect.Empty;
+			nodeItemService.SetChildrenItemBounds(this);
 
-			ChildNodes.ForEach(childNode => childNode.UpdateVisibility());
+			// Show children of the root noode
+			ChildItemsCanvas = itemsCanvas;
+
+			UpdateVisibility();
 		}
 
 
@@ -75,7 +83,7 @@ namespace Dependiator.Modeling
 				ChildItemsCanvas.Zoom(zoomDelta, viewPosition);
 			}
 
-			ChildNodes.ForEach(childNode => childNode.UpdateVisibility());
+			UpdateVisibility();
 		}
 
 
@@ -85,6 +93,8 @@ namespace Dependiator.Modeling
 			{
 				ChildItemsCanvas.Move(viewOffset);
 			}
+
+			UpdateVisibility();
 		}
 
 
@@ -98,7 +108,7 @@ namespace Dependiator.Modeling
 
 			await Task.Yield();
 
-			if (currentViewModel is CompositeNodeViewModel)
+			if (IsCompositeNodeView)
 			{
 				ChildNodes.ForEach(childNode => childNode.UpdateVisibility());
 			}
@@ -107,7 +117,7 @@ namespace Dependiator.Modeling
 
 		private void UpdateScale()
 		{
-			if (currentViewModel is CompositeNodeViewModel)
+			if (IsCompositeNodeView)
 			{
 				compositeNodeViewModel.UpdateScale();
 			}
@@ -121,10 +131,10 @@ namespace Dependiator.Modeling
 				// Node is not shown and can be shown, Lets show it
 				ShowNode();
 			}
-			else if (currentViewModel.IsVisible)
+			else if (currentViewModel.IsShowEnabled)
 			{
 				// This node can no longer be shown, removing it and children are removed automatically
-				currentViewModel.IsVisible = false;
+				currentViewModel.Hide();
 			}
 		}
 
@@ -146,21 +156,21 @@ namespace Dependiator.Modeling
 
 		private void ShowCompositeNode()
 		{
-			if (currentViewModel is CompositeNodeViewModel && currentViewModel.IsVisible)
+			if (IsCompositeNodeView && currentViewModel.IsShowEnabled)
 			{
 				// Already showing nodes node, lets just update scale
 				compositeNodeViewModel.UpdateScale();
 				return;
 			}
 
-			if (currentViewModel is SingleNodeViewModel)
+			if (IsSingleNodeView)
 			{
 				// Switching from single to composite node
-				singleNodeViewModel.IsVisible = false;
+				singleNodeViewModel.Hide();			
 			}
 
 			compositeNodeViewModel.UpdateScale();
-			compositeNodeViewModel.IsVisible = true;
+			compositeNodeViewModel.Show();
 
 			currentViewModel = compositeNodeViewModel;
 
@@ -169,21 +179,22 @@ namespace Dependiator.Modeling
 		}
 
 
+
 		private void ShowSingleNode()
 		{
-			if (currentViewModel is SingleNodeViewModel && currentViewModel.IsVisible)
+			if (IsSingleNodeView && currentViewModel.IsShowEnabled)
 			{
 				// Already showing nodes node, no need to change
 				return;
 			}
 
-			if (currentViewModel is CompositeNodeViewModel)
+			if (IsCompositeNodeView)
 			{
 				// Switching from composite to single node
-				compositeNodeViewModel.IsVisible = false;
+				compositeNodeViewModel.Hide();
 			}
 
-			singleNodeViewModel.IsVisible = true;
+			singleNodeViewModel.Show();
 
 			currentViewModel = singleNodeViewModel;
 
@@ -207,7 +218,7 @@ namespace Dependiator.Modeling
 
 			foreach (Node childNode in ChildNodes)
 			{
-				if (childNode.currentViewModel?.IsVisible ?? false)
+				if (childNode.currentViewModel?.IsShowEnabled ?? false)
 				{
 					childNode.ShowAllChildren();
 				}
@@ -219,10 +230,10 @@ namespace Dependiator.Modeling
 		{
 			foreach (Node childNode in ChildNodes)
 			{
-				if (childNode.currentViewModel?.IsVisible ?? false)
+				if (childNode.currentViewModel?.IsShowEnabled ?? false)
 				{
 					childNode.HideAllChildren();
-					childNode.currentViewModel.IsVisible = false;
+					childNode.currentViewModel.Hide();
 				}
 			}
 
@@ -333,14 +344,23 @@ namespace Dependiator.Modeling
 
 
 		private void InitNodeIfNeeded()
-		{
-			if (isInitialized || ParentNode == null)
+		{			
+			if (isInitialized)
 			{
 				return;
 			}
 
 			Log.Debug($"Init {NodeName}");
 			isInitialized = true;
+
+			if (ParentNode == null)
+			{
+				singleNodeViewModel = new SingleNodeViewModel(this);
+				compositeNodeViewModel = new CompositeNodeViewModel(this, null);
+				currentViewModel = compositeNodeViewModel;
+
+				return;				
+			}
 
 			singleNodeViewModel = new SingleNodeViewModel(this);
 			ParentNode.ChildItemsCanvas.AddItem(singleNodeViewModel);

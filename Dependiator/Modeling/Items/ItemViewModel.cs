@@ -8,7 +8,7 @@ namespace Dependiator.Modeling.Items
 {
 	internal abstract class ItemViewModel : ViewModel, IItem
 	{
-		public static int ItemsCount = 0;
+		public static int TotalCount = 0;
 
 		public int InstanceCount = 0;
 
@@ -23,27 +23,52 @@ namespace Dependiator.Modeling.Items
 		public Rect ItemBounds => GetItemBounds();
 		public double ItemsScaleFactor => GetScaleFactor();
 
-		public double Priority { get; }
 		public ViewModel ViewModel => this;
 		public object ItemState { get; set; }
 
 
-		public bool IsVisible { get; set; }
+		public bool IsShowEnabled { get; private set; }
+		public bool IsShowing { get; private set; }
+
+
+		public void Hide()
+		{
+			IsShowEnabled = false;
+		}
+
+		public void Show()
+		{
+			IsShowEnabled = true;
+		}
+
 
 		public virtual void ItemRealized()
 		{
-			ItemsCount++;
+			TotalCount++;
 			InstanceCount++;
+			Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
 
-			Log.Debug($"{GetType()} {this}, count {ItemsCount} (instance {InstanceCount})");
+			if (IsShowing)
+			{
+				Log.Warn("Item already realized");
+			}
+
+			IsShowing = true;			
 		}
 
 
 		public virtual void ItemVirtualized()
 		{
-			ItemsCount--;
+			TotalCount--;
 			InstanceCount--;
-			Log.Debug($"{GetType()} {this}, count {ItemsCount} (instance {InstanceCount})");
+			Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
+
+			if (!IsShowing)
+			{
+				Log.Warn("Item already virtualized");
+			}
+
+			IsShowing = false;
 		}
 
 
