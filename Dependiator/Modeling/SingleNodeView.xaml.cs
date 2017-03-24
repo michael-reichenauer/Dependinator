@@ -4,11 +4,11 @@
 namespace Dependiator.Modeling
 {
 	/// <summary>
-	/// Interaction logic for NodeLeafView.xaml
+	/// Interaction logic for SingleNodeView.xaml
 	/// </summary>
-	public partial class NodeLeafView : UserControl
+	public partial class SingleNodeView : UserControl
 	{
-		public NodeLeafView()
+		public SingleNodeView()
 		{
 			InitializeComponent();
 		}

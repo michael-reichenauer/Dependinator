@@ -6,12 +6,12 @@ using Dependiator.Modeling.Items;
 
 namespace Dependiator.Modeling
 {
-	internal class NodeLeafViewModel : ItemViewModel
+	internal class SingleNodeViewModel : ItemViewModel
 	{
 		private readonly Node node;
 
 
-		public NodeLeafViewModel(Node node)
+		public SingleNodeViewModel(Node node)
 		{
 			this.node = node;
 		}

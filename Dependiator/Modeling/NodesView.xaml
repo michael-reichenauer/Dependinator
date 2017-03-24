@@ -104,11 +104,11 @@
 						</Setter>
 					</DataTrigger>
 
-					<DataTrigger Binding="{Binding Type}" Value="NodeLeafViewModel">
+					<DataTrigger Binding="{Binding Type}" Value="SingleNodeViewModel">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>
-									<local:NodeLeafView />
+									<local:SingleNodeView />
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>

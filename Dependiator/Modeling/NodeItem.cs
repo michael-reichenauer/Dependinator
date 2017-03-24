@@ -13,7 +13,7 @@ namespace Dependiator.Modeling
 	//	public NodeItem(Rect bounds)
 	//	{
 	//		ItemCanvasBounds = bounds;
-	//		ViewModel = new NodeLeafViewModel(this);
+	//		ViewModel = new SingleNodeViewModel(this);
 	//	}
 
 

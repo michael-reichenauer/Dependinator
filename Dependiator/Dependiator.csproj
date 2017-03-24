@@ -132,8 +132,8 @@
     <Compile Include="Modeling\Items\ItemsCanvas.cs" />
     <Compile Include="Modeling\Analyzing\ReflectionService.cs" />
     <Compile Include="Modeling\NodeItem.cs" />
-    <Compile Include="Modeling\NodeLeafView.xaml.cs">
-      <DependentUpon>NodeLeafView.xaml</DependentUpon>
+    <Compile Include="Modeling\SingleNodeView.xaml.cs">
+      <DependentUpon>SingleNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Modeling\NodeName.cs" />
     <Compile Include="Modeling\Model.cs" />
@@ -150,7 +150,7 @@
       <DependentUpon>CompositeNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Modeling\CompositeNodeViewModel.cs" />
-    <Compile Include="Modeling\NodeLeafViewModel.cs" />
+    <Compile Include="Modeling\SingleNodeViewModel.cs" />
     <Compile Include="Modeling\Serializing\DataModel.cs" />
     <Compile Include="Modeling\NodeService.cs" />
     <Compile Include="Modeling\INodeService.cs" />
@@ -300,7 +300,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Modeling\NodeLeafView.xaml">
+    <Page Include="Modeling\SingleNodeView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

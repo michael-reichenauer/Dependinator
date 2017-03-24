@@ -16,7 +16,7 @@ namespace Dependiator.Modeling
 		private readonly INodeItemService nodeItemService;
 
 		private CompositeNodeViewModel compositeNodeViewModel;
-		private NodeLeafViewModel leafNodeViewModel;
+		private SingleNodeViewModel singleNodeViewModel;
 
 		private Brush nodeBrush;
 		private ItemsCanvas rootNodesCanvas;
@@ -136,9 +136,9 @@ namespace Dependiator.Modeling
 
 		private void AddNodeAsChildToParent()
 		{
-			leafNodeViewModel = new NodeLeafViewModel(this);
-			ParentNode.AddChildItem(leafNodeViewModel);
-			currentViewModel = leafNodeViewModel;
+			singleNodeViewModel = new SingleNodeViewModel(this);
+			ParentNode.AddChildItem(singleNodeViewModel);
+			currentViewModel = singleNodeViewModel;
 			currentViewModel.IsVisible = false;
 
 			if (ChildNodes.Any())
@@ -178,18 +178,18 @@ namespace Dependiator.Modeling
 		{
 			if (CanShowChildren())
 			{
-				CompositeNode();
+				ShowCompositeNode();
 			}
 			else
 			{
-				ShowLeafNode();
+				ShowSingleNode();
 			}
 
 			currentViewModel.NotifyAll();
 		}
 
 
-		private void CompositeNode()
+		private void ShowCompositeNode()
 		{
 			if (currentViewModel is CompositeNodeViewModel && currentViewModel.IsVisible)
 			{
@@ -198,10 +198,10 @@ namespace Dependiator.Modeling
 				return;
 			}
 
-			if (currentViewModel is NodeLeafViewModel)
+			if (currentViewModel is SingleNodeViewModel)
 			{
-				// SWitching from leaf to nodes node
-				leafNodeViewModel.IsVisible = false;
+				// Switching from single to composite node
+				singleNodeViewModel.IsVisible = false;
 			}
 
 			compositeNodeViewModel.UpdateScale();
@@ -214,9 +214,9 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void ShowLeafNode()
+		private void ShowSingleNode()
 		{
-			if (currentViewModel is NodeLeafViewModel && currentViewModel.IsVisible)
+			if (currentViewModel is SingleNodeViewModel && currentViewModel.IsVisible)
 			{
 				// Already showing nodes node, no need to change
 				return;
@@ -224,13 +224,13 @@ namespace Dependiator.Modeling
 
 			if (currentViewModel is CompositeNodeViewModel)
 			{
-				// SWitching from nodes node to leaf
+				// Switching from composite to single node
 				compositeNodeViewModel.IsVisible = false;
 			}
 
-			leafNodeViewModel.IsVisible = true;
+			singleNodeViewModel.IsVisible = true;
 
-			currentViewModel = leafNodeViewModel;
+			currentViewModel = singleNodeViewModel;
 
 			// Notify parent item canvas that node view has changed
 			ParentNode.ItemsCanvas.TriggerInvalidated();
