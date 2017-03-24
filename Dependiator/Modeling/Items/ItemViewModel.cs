@@ -27,7 +27,6 @@ namespace Dependiator.Modeling.Items
 		public ViewModel ViewModel => this;
 		public object ItemState { get; set; }
 
-		public bool IsShown { get; private set; }
 
 		public bool IsVisible { get; set; }
 
@@ -35,7 +34,7 @@ namespace Dependiator.Modeling.Items
 		{
 			ItemsCount++;
 			InstanceCount++;
-			IsShown = true;
+
 			Log.Debug($"{GetType()} {this}, count {ItemsCount} (instance {InstanceCount})");
 		}
 
@@ -44,7 +43,6 @@ namespace Dependiator.Modeling.Items
 		{
 			ItemsCount--;
 			InstanceCount--;
-			IsShown = false;
 			Log.Debug($"{GetType()} {this}, count {ItemsCount} (instance {InstanceCount})");
 		}
 

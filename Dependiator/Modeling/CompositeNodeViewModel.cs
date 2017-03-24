@@ -102,17 +102,6 @@ namespace Dependiator.Modeling
 		//	node.MoveOrResize(viewPosition, viewOffset, isFirst);
 		//}
 
-		public void AddItem(IItem item)
-		{
-			ItemsCanvas.AddItem(item);
-		}
-
-
-		public void RemoveItem(IItem item)
-		{
-			Log.Debug($"{item}");
-			ItemsCanvas.RemoveItem(item);
-		}
 
 
 		public bool MoveCanvas(Vector viewOffset)

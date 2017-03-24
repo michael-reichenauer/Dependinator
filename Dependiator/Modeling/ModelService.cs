@@ -138,7 +138,7 @@ namespace Dependiator.Modeling
 			//nodesViewModel.AddItem(rootNode);
 
 			Node rootNode = model.Root;
-			rootNode.SetBounds(new Rect(100, 100, 200, 100));
+			nodeItemService.SetInitalRootNodeBounds(rootNode, new Rect(100, 100, 200, 100));
 
 			rootCanvas.Scale = 1.0;
 			rootNode.SetRootCanvas(rootCanvas);
@@ -251,7 +251,7 @@ namespace Dependiator.Modeling
 		//	Point position = new Point(x, y);
 		//	//Rect bounds = new Rect(position, size);
 		//	Node node = model.Root;
-		//	//node.SetBounds(bounds);
+		//	//node.SetInitalRootNodeBounds(bounds);
 		//	return node;
 		//}
 	}

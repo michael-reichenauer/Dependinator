@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Media;
 
 
@@ -7,8 +8,8 @@ namespace Dependiator.Modeling
 	{
 		Brush GetRandomRectangleBrush();
 		Brush GetRectangleBackgroundBrush(Brush brush);
-		void SetChildrenItemBounds(Node parent);
 		Brush GetBrushFromHex(string hexColor);
 		string GetHexColorFromBrush(Brush brush);
+		void SetInitalRootNodeBounds(Node node, Rect bounds);
 	}
 }

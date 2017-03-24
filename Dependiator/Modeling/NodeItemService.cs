@@ -51,7 +51,16 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void SetChildrenItemBounds(Node parent)
+		public void SetInitalRootNodeBounds(Node node, Rect bounds)
+		{
+			node.ItemBounds = bounds;
+
+			SetChildrenItemBounds(node);
+		}
+
+
+
+		private static void SetChildrenItemBounds(Node parent)
 		{
 			int rowLength = 6;
 
@@ -83,7 +92,8 @@ namespace Dependiator.Modeling
 				}
 
 				Rect bounds = new Rect(location, size);
-				childNode.SetBounds(bounds);
+				childNode.ItemBounds = bounds;
+				SetChildrenItemBounds(childNode);
 
 				count++;
 			}

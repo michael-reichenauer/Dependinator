@@ -19,9 +19,9 @@ namespace Dependiator.Modeling
 		private SingleNodeViewModel singleNodeViewModel;
 
 		private Brush nodeBrush;
-		private ItemsCanvas rootNodesCanvas;
+
 		private ItemViewModel currentViewModel;
-		private bool isAdded;
+		private bool isInitialized;
 
 		public Node(
 			INodeItemService nodeItemService,
@@ -37,44 +37,34 @@ namespace Dependiator.Modeling
 			NodeColor = null;
 		}
 
-		public Rect ItemBounds { get; private set; }
+		public Rect ItemBounds { get; set; }
 
-
-		public bool IsShown => currentViewModel?.IsShown ?? false;
 
 		public double ScaleFactor = 7;
-		public double NodeScale => ParentNode?.NodeScale / ScaleFactor ?? rootNodesCanvas.Scale;
+		public double NodeScale => ParentNode?.NodeScale / ScaleFactor ?? ChildItemsCanvas.Scale;
 
-		public double ChildScale => compositeNodeViewModel?.IsShown ?? false ? compositeNodeViewModel.Scale : NodeScale;
+		public double ChildScale => compositeNodeViewModel?.IsVisible ?? false ? compositeNodeViewModel.Scale : NodeScale;
 
-		public ItemsCanvas ItemsCanvas => rootNodesCanvas ?? compositeNodeViewModel?.ItemsCanvas;
+		public ItemsCanvas ChildItemsCanvas { get; private set; }
 
-		public Node ParentNode { get; }
 		public NodeName NodeName { get; }
 		public NodeType NodeType { get; private set; }
+		public Node ParentNode { get; }
+		public List<Node> ChildNodes { get; } = new List<Node>();
+
 		//public NodeLinks Links { get; }
 		// public List<Link> LinkItems => ChildItems.OfType<Link>();
 		public string NodeColor { get; private set; }
 		public Rect? NodeBounds { get; set; }
-		public List<Node> ChildNodes { get; } = new List<Node>();
-		
-
-
-		public void SetBounds(Rect bounds)
-		{
-			ItemBounds = bounds;
-
-			nodeItemService.SetChildrenItemBounds(this);
-		}
 
 
 		public void SetRootCanvas(ItemsCanvas rootCanvas)
 		{
 			Asserter.Requires(ParentNode == null);
 
-			rootNodesCanvas = rootCanvas;
+			ChildItemsCanvas = rootCanvas;
 
-			UpdateOnScaleChange();
+			ChildNodes.ForEach(childNode => childNode.UpdateVisibility());
 		}
 
 
@@ -82,70 +72,35 @@ namespace Dependiator.Modeling
 		{
 			if (ParentNode == null)
 			{
-				rootNodesCanvas.Zoom(zoomDelta, viewPosition);
+				ChildItemsCanvas.Zoom(zoomDelta, viewPosition);
 			}
 
-			UpdateOnScaleChange();
+			ChildNodes.ForEach(childNode => childNode.UpdateVisibility());
 		}
+
 
 		public void Move(Vector viewOffset)
 		{
 			if (ParentNode == null)
 			{
-				rootNodesCanvas.Move(viewOffset);
+				ChildItemsCanvas.Move(viewOffset);
 			}
 		}
 
 
-		private async void UpdateOnScaleChange()
+		private async void UpdateVisibility()
 		{
-			if (ParentNode == null)
-			{
-				foreach (Node childNode in ChildNodes)
-				{
-					childNode.UpdateOnScaleChange();
-					await Task.Yield();
-				}
-
-				// Root node is not visible, lets exit
-				return;
-			}
-
-			if (!isAdded)
-			{
-				Log.Debug($"Add {NodeName}");
-				AddNodeAsChildToParent();
-				isAdded = true;
-			}
+			InitNodeIfNeeded();
 
 			UpdateScale();
 
-			UpdateVisibility();
+			UpdateThisNodeVisibility();
 
-			//// Enable next row when everything works !!!!!!!!!!!!!!!!!!!
+			await Task.Yield();
+
 			if (currentViewModel is CompositeNodeViewModel)
 			{
-				foreach (Node childNode in ChildNodes)
-				{
-					childNode.UpdateOnScaleChange();
-					await Task.Yield();
-				}
-			}
-		}
-
-
-		private void AddNodeAsChildToParent()
-		{
-			singleNodeViewModel = new SingleNodeViewModel(this);
-			ParentNode.AddChildItem(singleNodeViewModel);
-			currentViewModel = singleNodeViewModel;
-			currentViewModel.IsVisible = false;
-
-			if (ChildNodes.Any())
-			{
-				Log.Debug($"Add composite node for {NodeName}");
-				compositeNodeViewModel = new CompositeNodeViewModel(this, ParentNode?.ItemsCanvas);
-				ParentNode.AddChildItem(compositeNodeViewModel);
+				ChildNodes.ForEach(childNode => childNode.UpdateVisibility());
 			}
 		}
 
@@ -159,7 +114,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void UpdateVisibility()
+		private void UpdateThisNodeVisibility()
 		{
 			if (CanBeShown())
 			{
@@ -210,7 +165,7 @@ namespace Dependiator.Modeling
 			currentViewModel = compositeNodeViewModel;
 
 			// Notify parent item canvas that node view has changed
-			ParentNode.ItemsCanvas.TriggerInvalidated();
+			ParentNode.ChildItemsCanvas.TriggerInvalidated();
 		}
 
 
@@ -233,22 +188,9 @@ namespace Dependiator.Modeling
 			currentViewModel = singleNodeViewModel;
 
 			// Notify parent item canvas that node view has changed
-			ParentNode.ItemsCanvas.TriggerInvalidated();
+			ParentNode.ChildItemsCanvas.TriggerInvalidated();
 		}
 
-
-		private void AddChildItem(IItem item)
-		{
-			Log.Debug($"Add item {item}");
-			if (ParentNode == null)
-			{
-				rootNodesCanvas.AddItem(item);
-			}
-			else
-			{
-				compositeNodeViewModel.AddItem(item);
-			}
-		}
 
 
 		public void ShowAllChildren()
@@ -261,7 +203,7 @@ namespace Dependiator.Modeling
 				}
 			}
 
-			ItemsCanvas?.TriggerInvalidated();
+			ChildItemsCanvas?.TriggerInvalidated();
 
 			foreach (Node childNode in ChildNodes)
 			{
@@ -284,15 +226,14 @@ namespace Dependiator.Modeling
 				}
 			}
 
-			ItemsCanvas?.TriggerInvalidated();
+			ChildItemsCanvas?.TriggerInvalidated();
 		}
 
 
-		public bool CanBeShown()
+		private bool CanBeShown()
 		{
-			return ItemBounds.Size.Width * ParentNode.ChildScale > 40;
-			//ItemViewSize.Width > 10
-			//&& (ParentItem?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
+			return ParentNode != null
+				&& ItemBounds.Size.Width * ParentNode.ChildScale > 40;
 		}
 
 
@@ -390,6 +331,29 @@ namespace Dependiator.Modeling
 			return nodeItemService.GetRectangleBackgroundBrush(brush);
 		}
 
+
+		private void InitNodeIfNeeded()
+		{
+			if (isInitialized || ParentNode == null)
+			{
+				return;
+			}
+
+			Log.Debug($"Init {NodeName}");
+			isInitialized = true;
+
+			singleNodeViewModel = new SingleNodeViewModel(this);
+			ParentNode.ChildItemsCanvas.AddItem(singleNodeViewModel);
+
+			if (ChildNodes.Any())
+			{
+				compositeNodeViewModel = new CompositeNodeViewModel(this, ParentNode.ChildItemsCanvas);
+				ChildItemsCanvas = compositeNodeViewModel.ItemsCanvas;
+				ParentNode.ChildItemsCanvas.AddItem(compositeNodeViewModel);
+			}
+
+			currentViewModel = singleNodeViewModel;
+		}
 
 		//private void AddLinks()
 		//{
