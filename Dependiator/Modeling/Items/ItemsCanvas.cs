@@ -77,10 +77,10 @@ namespace Dependiator.Modeling.Items
 				// Log.Debug("offset changed");
 				foreach (IItem item in itemsSource.GetItemsInView())
 				{			
-					if (item is NodesNodeViewModel nodesNodeViewModel)
+					if (item is CompositeNodeViewModel compositeNodeViewModel)
 					{
-						//Log.Debug("item is NodesNodeViewModel");
-						nodesNodeViewModel.NodesViewModel.ItemsCanvas.TriggerInvalidated();
+						//Log.Debug("item is CompositeNodeViewModel");
+						compositeNodeViewModel.NodesViewModel.ItemsCanvas.TriggerInvalidated();
 					}
 				}
 			}

@@ -15,7 +15,7 @@ namespace Dependiator.Modeling
 	{
 		private readonly INodeItemService nodeItemService;
 
-		private NodesNodeViewModel nodesNodeViewModel;
+		private CompositeNodeViewModel compositeNodeViewModel;
 		private NodeLeafViewModel leafNodeViewModel;
 
 		private Brush nodeBrush;
@@ -45,9 +45,9 @@ namespace Dependiator.Modeling
 		public double ScaleFactor = 7;
 		public double NodeScale => ParentNode?.NodeScale / ScaleFactor ?? rootNodesCanvas.Scale;
 
-		public double ChildScale => nodesNodeViewModel?.IsShown ?? false ? nodesNodeViewModel.Scale : NodeScale;
+		public double ChildScale => compositeNodeViewModel?.IsShown ?? false ? compositeNodeViewModel.Scale : NodeScale;
 
-		public ItemsCanvas ItemsCanvas => rootNodesCanvas ?? nodesNodeViewModel?.ItemsCanvas;
+		public ItemsCanvas ItemsCanvas => rootNodesCanvas ?? compositeNodeViewModel?.ItemsCanvas;
 
 		public Node ParentNode { get; }
 		public NodeName NodeName { get; }
@@ -123,7 +123,7 @@ namespace Dependiator.Modeling
 			UpdateVisibility();
 
 			//// Enable next row when everything works !!!!!!!!!!!!!!!!!!!
-			if (currentViewModel is NodesNodeViewModel)
+			if (currentViewModel is CompositeNodeViewModel)
 			{
 				foreach (Node childNode in ChildNodes)
 				{
@@ -143,18 +143,18 @@ namespace Dependiator.Modeling
 
 			if (ChildNodes.Any())
 			{
-				Log.Debug($"Add nodesnode for {NodeName}");
-				nodesNodeViewModel = new NodesNodeViewModel(this, ParentNode?.ItemsCanvas);
-				ParentNode.AddChildItem(nodesNodeViewModel);
+				Log.Debug($"Add composite node for {NodeName}");
+				compositeNodeViewModel = new CompositeNodeViewModel(this, ParentNode?.ItemsCanvas);
+				ParentNode.AddChildItem(compositeNodeViewModel);
 			}
 		}
 
 
 		private void UpdateScale()
 		{
-			if (currentViewModel is NodesNodeViewModel)
+			if (currentViewModel is CompositeNodeViewModel)
 			{
-				nodesNodeViewModel.UpdateScale();
+				compositeNodeViewModel.UpdateScale();
 			}
 		}
 
@@ -178,7 +178,7 @@ namespace Dependiator.Modeling
 		{
 			if (CanShowChildren())
 			{
-				ShowNodesNode();
+				CompositeNode();
 			}
 			else
 			{
@@ -189,12 +189,12 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void ShowNodesNode()
+		private void CompositeNode()
 		{
-			if (currentViewModel is NodesNodeViewModel && currentViewModel.IsVisible)
+			if (currentViewModel is CompositeNodeViewModel && currentViewModel.IsVisible)
 			{
 				// Already showing nodes node, lets just update scale
-				nodesNodeViewModel.UpdateScale();
+				compositeNodeViewModel.UpdateScale();
 				return;
 			}
 
@@ -204,10 +204,10 @@ namespace Dependiator.Modeling
 				leafNodeViewModel.IsVisible = false;
 			}
 
-			nodesNodeViewModel.UpdateScale();
-			nodesNodeViewModel.IsVisible = true;
+			compositeNodeViewModel.UpdateScale();
+			compositeNodeViewModel.IsVisible = true;
 
-			currentViewModel = nodesNodeViewModel;
+			currentViewModel = compositeNodeViewModel;
 
 			// Notify parent item canvas that node view has changed
 			ParentNode.ItemsCanvas.TriggerInvalidated();
@@ -222,10 +222,10 @@ namespace Dependiator.Modeling
 				return;
 			}
 
-			if (currentViewModel is NodesNodeViewModel)
+			if (currentViewModel is CompositeNodeViewModel)
 			{
 				// SWitching from nodes node to leaf
-				nodesNodeViewModel.IsVisible = false;
+				compositeNodeViewModel.IsVisible = false;
 			}
 
 			leafNodeViewModel.IsVisible = true;
@@ -246,7 +246,7 @@ namespace Dependiator.Modeling
 			}
 			else
 			{
-				nodesNodeViewModel.AddItem(item);
+				compositeNodeViewModel.AddItem(item);
 			}
 		}
 

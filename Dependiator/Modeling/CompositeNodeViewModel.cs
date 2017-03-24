@@ -10,11 +10,11 @@ using Dependiator.Utils.UI.VirtualCanvas;
 
 namespace Dependiator.Modeling
 {
-	internal class NodesNodeViewModel : ItemViewModel
+	internal class CompositeNodeViewModel : ItemViewModel
 	{
 		private readonly Node node;
 
-		public NodesNodeViewModel(Node node, ItemsCanvas parentCanvas)
+		public CompositeNodeViewModel(Node node, ItemsCanvas parentCanvas)
 		{
 			this.node = node;
 			NodesViewModel = new NodesViewModel(this, parentCanvas);

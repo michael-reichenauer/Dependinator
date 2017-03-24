@@ -7,13 +7,13 @@ using System.Windows.Input;
 namespace Dependiator.Modeling
 {
 	/// <summary>
-	/// Interaction logic for NodesNodeView.xaml
+	/// Interaction logic for CompositeNodeView.xaml
 	/// </summary>
-	public partial class NodesNodeView : UserControl
+	public partial class CompositeNodeView : UserControl
 	{
 		private Point lastMousePosition;
 
-		public NodesNodeView()
+		public CompositeNodeView()
 		{
 			InitializeComponent();
 		}
@@ -26,7 +26,7 @@ namespace Dependiator.Modeling
 				return;
 			}
 
-			NodesNodeViewModel viewModel = DataContext as NodesNodeViewModel;
+			CompositeNodeViewModel viewModel = DataContext as CompositeNodeViewModel;
 			if (viewModel == null)
 			{
 				return;
@@ -55,7 +55,7 @@ namespace Dependiator.Modeling
 				&& e.LeftButton == MouseButtonState.Pressed
 				&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
 			{
-				NodesNodeViewModel viewModel = DataContext as NodesNodeViewModel;
+				CompositeNodeViewModel viewModel = DataContext as CompositeNodeViewModel;
 				if (viewModel == null)
 				{
 					return;
@@ -84,7 +84,7 @@ namespace Dependiator.Modeling
 				return;
 			}
 
-			NodesNodeViewModel viewModel = DataContext as NodesNodeViewModel;
+			CompositeNodeViewModel viewModel = DataContext as CompositeNodeViewModel;
 			if (viewModel == null)
 			{
 				return;

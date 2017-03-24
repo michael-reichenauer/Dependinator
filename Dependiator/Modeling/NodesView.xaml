@@ -94,11 +94,11 @@
 						<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
 					</DataTrigger>-->
 
-					<DataTrigger Binding="{Binding Type}" Value="NodesNodeViewModel">
+					<DataTrigger Binding="{Binding Type}" Value="CompositeNodeViewModel">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>
-									<local:NodesNodeView />
+									<local:CompositeNodeView />
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>
