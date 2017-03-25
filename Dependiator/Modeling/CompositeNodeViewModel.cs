@@ -47,13 +47,13 @@ namespace Dependiator.Modeling
 		public override void ItemRealized()
 		{
 			base.ItemRealized();
-			node.ShowAllChildren();
+			node.NodeRealized();
 		}
 
 
 		public override void ItemVirtualized()
 		{
-			node.HideAllChildren();
+			node.NodeVirtualized();
 			base.ItemVirtualized();
 		}
 

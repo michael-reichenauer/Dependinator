@@ -58,6 +58,7 @@ namespace Dependiator.Modeling
 
 
 		private bool IsCompositeNodeView => currentViewModel is CompositeNodeViewModel;
+		private bool IsCompositeShowing => IsCompositeNodeView && currentViewModel.IsShowing;
 		private bool IsSingleNodeView => currentViewModel is SingleNodeViewModel;
 
 
@@ -195,6 +196,34 @@ namespace Dependiator.Modeling
 
 			// Notify parent item canvas that node view has changed
 			ParentNode.ChildItemsCanvas.TriggerInvalidated();
+		}
+
+
+		public void NodeRealized()
+		{
+			ShowAllChildren();
+		}
+
+		public void NodeVirtualized()
+		{
+			HideAllChildren();
+
+			foreach (Node childNode in ChildNodes)
+			{
+				childNode.ParentNodeVirtualized();
+			}
+		}
+
+
+		public void ParentNodeVirtualized()
+		{
+			compositeNodeViewModel?.SetParentVirtualized();
+
+			foreach (Node childNode in ChildNodes)
+			{
+				childNode.compositeNodeViewModel?.SetParentVirtualized();
+				childNode.ParentNodeVirtualized();
+			}
 		}
 
 

@@ -44,14 +44,14 @@ namespace Dependiator.Modeling.Items
 
 		public virtual void ItemRealized()
 		{
-			TotalCount++;
-			InstanceCount++;
-			Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
+			//TotalCount++;
+			//InstanceCount++;
+			//Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
 
-			if (IsShowing)
-			{
-				Log.Warn("Item already realized");
-			}
+			//if (IsShowing)
+			//{
+			//	Log.Warn("Item already realized");
+			//}
 
 			IsShowing = true;			
 		}
@@ -59,14 +59,29 @@ namespace Dependiator.Modeling.Items
 
 		public virtual void ItemVirtualized()
 		{
-			TotalCount--;
-			InstanceCount--;
-			Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
+			//TotalCount--;
+			//InstanceCount--;
+			//Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
 
-			if (!IsShowing)
-			{
-				Log.Warn("Item already virtualized");
-			}
+			//if (!IsShowing)
+			//{
+			//	Log.Warn("Item already virtualized");
+			//}
+
+			IsShowing = false;
+		}
+
+
+		public virtual void SetParentVirtualized()
+		{
+			//if (!IsShowing)
+			//{
+			//	return;
+			//}
+
+			//TotalCount--;
+			//InstanceCount--;
+			//Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
 
 			IsShowing = false;
 		}
