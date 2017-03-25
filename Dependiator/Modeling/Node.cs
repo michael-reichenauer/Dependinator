@@ -64,14 +64,9 @@ namespace Dependiator.Modeling
 		public void Show(ItemsCanvas itemsCanvas)
 		{
 			Asserter.Requires(ParentNode == null);
-
-			// The root node is not visible, but children of the root node are visible
-			ItemBounds = Rect.Empty;
-			nodeItemService.SetChildrenItemBounds(this);
-
+		
 			// Show children of the root noode
 			ChildItemsCanvas = itemsCanvas;
-
 			UpdateVisibility();
 		}
 
@@ -270,51 +265,7 @@ namespace Dependiator.Modeling
 
 		public override string ToString() => NodeName;
 
-		public IEnumerable<Node> Ancestors()
-		{
-			Node current = ParentNode;
-
-			while (current != null)
-			{
-				yield return current;
-				current = current.ParentNode;
-			}
-		}
-
-		public IEnumerable<Node> AncestorsAndSelf()
-		{
-			yield return this;
-
-			foreach (Node ancestor in Ancestors())
-			{
-				yield return ancestor;
-			}
-		}
-
-		public IEnumerable<Node> Descendents()
-		{
-			foreach (Node child in ChildNodes)
-			{
-				yield return child;
-
-				foreach (Node descendent in child.Descendents())
-				{
-					yield return descendent;
-				}
-			}
-		}
-
-		public IEnumerable<Node> DescendentsAndSelf()
-		{
-			yield return this;
-
-			foreach (Node descendent in Descendents())
-			{
-				yield return descendent;
-			}
-		}
-
-
+	
 		public Brush GetNodeBrush()
 		{
 			if (nodeBrush != null)
@@ -352,6 +303,8 @@ namespace Dependiator.Modeling
 
 			Log.Debug($"Init {NodeName}");
 			isInitialized = true;
+
+			nodeItemService.SetChildrenLayout(this);
 
 			if (ParentNode == null)
 			{
@@ -420,5 +373,50 @@ namespace Dependiator.Modeling
 		//	}
 		//}
 
+
+
+		//public IEnumerable<Node> Ancestors()
+		//{
+		//	Node current = ParentNode;
+
+		//	while (current != null)
+		//	{
+		//		yield return current;
+		//		current = current.ParentNode;
+		//	}
+		//}
+
+		//public IEnumerable<Node> AncestorsAndSelf()
+		//{
+		//	yield return this;
+
+		//	foreach (Node ancestor in Ancestors())
+		//	{
+		//		yield return ancestor;
+		//	}
+		//}
+
+		//public IEnumerable<Node> Descendents()
+		//{
+		//	foreach (Node child in ChildNodes)
+		//	{
+		//		yield return child;
+
+		//		foreach (Node descendent in child.Descendents())
+		//		{
+		//			yield return descendent;
+		//		}
+		//	}
+		//}
+
+		//public IEnumerable<Node> DescendentsAndSelf()
+		//{
+		//	yield return this;
+
+		//	foreach (Node descendent in Descendents())
+		//	{
+		//		yield return descendent;
+		//	}
+		//}
 	}
 }

@@ -51,10 +51,7 @@ namespace Dependiator.Modeling
 		}
 
 
-
-
-
-		public void SetChildrenItemBounds(Node parent)
+		public void SetChildrenLayout(Node parent)
 		{
 			int rowLength = 6;
 
@@ -62,7 +59,6 @@ namespace Dependiator.Modeling
 
 			double xMargin = 10;
 			double yMargin = 50;
-
 
 			int count = 0;
 			var children = parent.ChildNodes.OrderBy(child => child, NodeComparer.Comparer(parent));
@@ -87,12 +83,9 @@ namespace Dependiator.Modeling
 
 				Rect bounds = new Rect(location, size);
 				childNode.ItemBounds = bounds;
-				SetChildrenItemBounds(childNode);
-
 				count++;
 			}
 		}
-
 	}
 }
 
