@@ -48,7 +48,7 @@
 			</Grid>
 
 			<!-- Child nodes -->
-			<Border Grid.Row="1" BorderBrush="Transparent" BorderThickness="2">
+			<Border Grid.Row="1" BorderBrush="{Binding RectangleBrush}" BorderThickness="0.2">
 
 				<modeling:NodesView x:Name="NodesView" DataContext="{Binding NodesViewModel}"/>
 				

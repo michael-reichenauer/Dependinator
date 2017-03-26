@@ -19,7 +19,7 @@ namespace Dependiator.Modeling
 		public override Rect GetItemBounds() => node.ItemBounds;
 
 
-		public double StrokeThickness => 1;
+		public double StrokeThickness => 0.8;
 		public Brush RectangleBrush => node.GetNodeBrush();
 		public Brush BackgroundBrush => node.GetBackgroundNodeBrush();
 		public Brush HoverBrush => RectangleBrush;
@@ -33,7 +33,7 @@ namespace Dependiator.Modeling
 			$"\nParentScale: {node.ParentNode.NodeScale:0.00}";
 
 
-		public int CornerRadius => 10;
+		public int CornerRadius => 3;
 
 
 		public int FontSize

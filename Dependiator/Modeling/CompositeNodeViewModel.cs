@@ -28,7 +28,7 @@ namespace Dependiator.Modeling
 
 		public ItemsCanvas ItemsCanvas => NodesViewModel.ItemsCanvas;
 
-		public double StrokeThickness => 1;
+		public double StrokeThickness => 0.8;
 		public Brush RectangleBrush => node.GetNodeBrush();
 		public Brush BackgroundBrush => node.GetBackgroundNodeBrush();
 		public Brush HoverBrush => RectangleBrush;
@@ -37,7 +37,7 @@ namespace Dependiator.Modeling
 
 		public string Name => node.NodeName.ShortName;
 
-		public int CornerRadius => 0;
+		public int CornerRadius => 3;
 
 		public string ToolTip =>
 			$"{node.NodeName} ({node.ChildNodes.Count})\n" +
