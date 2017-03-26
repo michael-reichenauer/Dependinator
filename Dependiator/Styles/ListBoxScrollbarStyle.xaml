@@ -410,7 +410,6 @@
 		<Setter Property="Stylus.IsFlicksEnabled" Value="False" />
 		<Setter Property="VerticalContentAlignment" Value="Center" />
 
-		<Setter Property="i:Interaction.Behaviors" Value="local:IgnoreMouseWheelBehavior" />
 
 		<Setter Property="Template">
 			<Setter.Value>

@@ -92,11 +92,9 @@ namespace Dependiator.Modeling
 			ScaleFactor = node.NodeScale / ItemsCanvas.Scale;
 		}
 
-		public void Resize(int zoomDelta, Point viewPosition)
-		{
-			// node.Resize(zoomDelta, viewPosition);
-		}
+		public void Resize(int zoomDelta, Point viewPosition) => node.Resize(zoomDelta, viewPosition);
 
+		public void MoveNode(Vector viewOffset) => node.MoveNode(viewOffset);
 
 		//internal void MouseMove(Point viewPosition, Vector viewOffset, bool isFirst)
 		//{
@@ -105,17 +103,10 @@ namespace Dependiator.Modeling
 
 
 
-		public bool MoveCanvas(Vector viewOffset)
-		{
-			NodesViewModel.MoveCanvas(viewOffset);
-			return true;
-		}
-
-
 		public override string ToString() => node.NodeName;
 		public override double GetScaleFactor() => node.ScaleFactor;
 
 
-		public void MoveNode(Vector viewOffset) => node.MoveNode(viewOffset);
+
 	}
 }

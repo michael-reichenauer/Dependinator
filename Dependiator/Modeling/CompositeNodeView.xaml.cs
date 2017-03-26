@@ -37,14 +37,16 @@ namespace Dependiator.Modeling
 			int zoomDelta = e.Delta;
 			Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
 
-			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
-			{
-				viewModel.Resize(zoomDelta, viewPosition);
-			}
-			else
+			if (e.OriginalSource is ListBox)
 			{
 				viewModel.Zoom(zoomDelta, viewPosition);
 			}
+			else
+			{
+				viewModel.Resize(zoomDelta, viewPosition);
+			}
+		
+					
 
 			e.Handled = true;
 		}

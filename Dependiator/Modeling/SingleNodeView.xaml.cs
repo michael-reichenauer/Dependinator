@@ -18,6 +18,33 @@ namespace Dependiator.Modeling
 			InitializeComponent();
 		}
 
+		protected override void OnMouseWheel(MouseWheelEventArgs e)
+		{
+			//if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+			//{
+			//	return;
+			//}
+
+			//CompositeNodeViewModel viewModel = DataContext as CompositeNodeViewModel;
+			//if (viewModel == null)
+			//{
+			//	return;
+			//}
+
+			//int zoomDelta = e.Delta;
+			////Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
+
+			//if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+			//{
+			//	viewModel.Resize(zoomDelta, viewPosition);
+			//}
+
+			//viewModel.Zoom(zoomDelta, viewPosition);
+
+			//e.Handled = true;
+		}
+
+
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
 			SingleNodeViewModel viewModel = DataContext as SingleNodeViewModel;

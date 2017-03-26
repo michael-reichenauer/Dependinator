@@ -20,9 +20,9 @@
 		Padding="0"
 		SelectionMode="Extended">
 
-		<!--<i:Interaction.Behaviors>
+		<i:Interaction.Behaviors>
 			<local:IgnoreMouseWheelBehavior />
-		</i:Interaction.Behaviors>-->
+		</i:Interaction.Behaviors>
 
 		<ListBox.ItemsPanel>
 			<ItemsPanelTemplate>

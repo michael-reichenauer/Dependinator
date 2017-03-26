@@ -9,7 +9,7 @@ namespace Dependiator.Modeling.Items
 {
 	internal class ItemsCanvas
 	{
-		private static readonly double ZoomSpeed = 600.0;
+		private static readonly double ZoomSpeed = 1000.0;
 
 		private readonly IItem item;
 		private readonly ItemsSource itemsSource;

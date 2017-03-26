@@ -119,6 +119,37 @@ namespace Dependiator.Modeling
 		}
 
 
+		public void Resize(int zoomDelta, Point viewPosition)
+		{
+			double delta = (double)zoomDelta / 5;
+
+			double scaledDelta = delta / ParentNode.NodeScale;
+
+			Point newItemLocation = new Point(
+				ItemBounds.X - scaledDelta,
+				ItemBounds.Y);
+
+			double width = ItemBounds.Size.Width + (2 * scaledDelta);
+			double height = ItemBounds.Size.Height + (2 * scaledDelta);
+
+			if (width < 0 || height < 0)
+			{
+				return;
+			}
+
+			Size newItemSize = new Size(width, height);
+			ItemBounds = new Rect(newItemLocation, newItemSize);
+
+			ParentNode.ChildItemsCanvas.UpdateItem(singleNodeViewModel);
+
+			if (compositeNodeViewModel != null)
+			{
+				ParentNode.ChildItemsCanvas.UpdateItem(compositeNodeViewModel);
+			}
+
+			currentViewModel.NotifyAll();
+		}
+
 		private async void UpdateVisibility()
 		{
 			InitNodeIfNeeded();
@@ -472,5 +503,6 @@ namespace Dependiator.Modeling
 		//		yield return descendent;
 		//	}
 		//}
+	
 	}
 }
