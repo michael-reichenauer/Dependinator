@@ -96,10 +96,6 @@ namespace Dependiator.MainViews
 		}
 
 
-		public void SetCanvas(ZoomableCanvas zoomableCanvas)
-		{
-			NodesViewModel.SetCanvas(zoomableCanvas);		
-		}
 
 
 		public void ShowCommitDetails()

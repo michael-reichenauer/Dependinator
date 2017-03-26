@@ -162,7 +162,7 @@ namespace Dependiator.Modeling
 
 		public void Move(Vector viewOffset)
 		{
-			model.Root.Move(viewOffset);
+			model.Root.MoveChildren(viewOffset);
 		}
 
 

@@ -14,7 +14,7 @@ namespace Dependiator.MainViews
 		private MainViewModel viewModel;
 
 		private Point lastMousePosition;
-		private object movingObject = null;
+		//private object movingObject = null;
 
 
 		public MainView()
@@ -34,8 +34,14 @@ namespace Dependiator.MainViews
 
 		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
 		{
+			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+			{
+				e.Handled = false;
+				return;
+			}
+
 			bool isNodeZoom = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
-			
+
 			int zoomDelta = e.Delta;
 			Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
 
@@ -56,21 +62,21 @@ namespace Dependiator.MainViews
 				Vector viewOffset = viewPosition - lastMousePosition;
 				e.Handled = viewModel.MoveCanvas(viewOffset);
 			}
-			else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
-			 && e.LeftButton == MouseButtonState.Pressed)
-			{
-				// Move node
-				CaptureMouse();
-				Vector viewOffset = viewPosition - lastMousePosition;
+			//else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
+			// && e.LeftButton == MouseButtonState.Pressed)
+			//{
+			//	// Move node
+			//	CaptureMouse();
+			//	Vector viewOffset = viewPosition - lastMousePosition;
 
-				movingObject = viewModel.MoveNode(viewPosition, viewOffset, movingObject);
+			//	movingObject = viewModel.MoveNode(viewPosition, viewOffset, movingObject);
 
-				e.Handled = movingObject != null;
-			}
+			//	e.Handled = movingObject != null;
+			//}
 			else
 			{
 				// End of move
-				movingObject = null;
+				//movingObject = null;
 				ReleaseMouseCapture();
 			}
 

@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System;
+using System.CodeDom;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
@@ -19,7 +21,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
+		protected override void OnMouseWheel(MouseWheelEventArgs e)
 		{
 			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
 			{
@@ -41,30 +43,33 @@ namespace Dependiator.Modeling
 			}
 			else
 			{
-				viewModel.Zoom(zoomDelta, viewPosition);				
+				viewModel.Zoom(zoomDelta, viewPosition);
 			}
 
 			e.Handled = true;
 		}
 
-		protected override void OnPreviewMouseMove(MouseEventArgs e)
+
+		protected override void OnMouseMove(MouseEventArgs e)
 		{
-			Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
+			CompositeNodeViewModel viewModel = DataContext as CompositeNodeViewModel;
+			if (viewModel == null)
+			{
+				return;
+			}
+
+			Point viewPosition = e.GetPosition(viewModel.ParentView);
 
 			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
 				&& e.LeftButton == MouseButtonState.Pressed
 				&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
 			{
-				CompositeNodeViewModel viewModel = DataContext as CompositeNodeViewModel;
-				if (viewModel == null)
-				{
-					return;
-				}
-
-				// Move canvas
+				// Move node
 				CaptureMouse();
 				Vector viewOffset = viewPosition - lastMousePosition;
-				e.Handled = viewModel.MoveCanvas(viewOffset);
+				e.Handled = true;
+
+				viewModel.MoveNode(viewOffset);
 			}
 			else
 			{
@@ -77,32 +82,10 @@ namespace Dependiator.Modeling
 
 
 
+
 		private void UIElement_OnMouseWheel(object sender, MouseWheelEventArgs e)
 		{
-			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
-			{
-				return;
-			}
-
-			CompositeNodeViewModel viewModel = DataContext as CompositeNodeViewModel;
-			if (viewModel == null)
-			{
-				return;
-			}
-
-			int zoomDelta = e.Delta;
-			Point viewPosition = e.GetPosition(sender as IInputElement);
-
-			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
-			{
-				viewModel.Zoom(zoomDelta, viewPosition);
-			}
-			else
-			{
-				viewModel.Resize(zoomDelta, viewPosition);
-			}
-
-			e.Handled = true;
+			// No needed since the OnMouseWheel() handles this event.
 		}
 	}
 }

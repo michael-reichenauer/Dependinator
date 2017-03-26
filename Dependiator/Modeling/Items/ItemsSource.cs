@@ -113,14 +113,14 @@ namespace Dependiator.Modeling.Items
 
 			Rect oldItemBounds = oldViewItem.ItemBounds;
 			viewItemsTree.Remove(item, oldItemBounds);
-			viewItems.Remove(oldViewItem.ItemId);
+			//viewItems.Remove(oldViewItem.ItemId);
 
-			int itemId = currentItemId++;
+			//int itemId = currentItemId++;
 			Rect newItemBounds = item.ItemBounds;
-			item.ItemState = new ViewItem(itemId, newItemBounds, item);
+			item.ItemState = new ViewItem(oldViewItem.ItemId, newItemBounds, item);
 
 			viewItemsTree.Insert(item, newItemBounds, 0);
-			viewItems[itemId] = item;
+			//viewItems[itemId] = item;
 
 			ItemsBoundsChanged();
 

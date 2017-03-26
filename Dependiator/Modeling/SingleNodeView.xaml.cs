@@ -1,4 +1,7 @@
-﻿using System.Windows.Controls;
+﻿using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 
 
 namespace Dependiator.Modeling
@@ -8,9 +11,43 @@ namespace Dependiator.Modeling
 	/// </summary>
 	public partial class SingleNodeView : UserControl
 	{
+		private Point lastMousePosition;
+
 		public SingleNodeView()
 		{
 			InitializeComponent();
 		}
+
+		protected override void OnMouseMove(MouseEventArgs e)
+		{
+			SingleNodeViewModel viewModel = DataContext as SingleNodeViewModel;
+				if (viewModel == null)
+			{
+				return;
+			}
+
+			Point viewPosition = e.GetPosition(viewModel.ParentView);
+
+
+			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
+				&& e.LeftButton == MouseButtonState.Pressed
+				&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
+			{
+				// Move node
+				CaptureMouse();
+				Vector viewOffset = viewPosition - lastMousePosition;
+				e.Handled = true;
+
+				viewModel.MoveNode(viewOffset);
+			}
+			else
+			{
+				// End of move
+				ReleaseMouseCapture();
+			}
+
+			lastMousePosition = viewPosition;
+		}
+
 	}
 }

@@ -41,7 +41,7 @@ namespace Dependiator.Modeling
 
 		public Rect ItemBounds { get; set; }
 
-		public double ScaleFactor = 7;
+		public double ScaleFactor { get; set; } = 7;
 		public double NodeScale => ParentNode?.NodeScale / ScaleFactor ?? ChildItemsCanvas.Scale;
 		public double ChildScale => compositeNodeViewModel?.IsShowEnabled ?? false ? compositeNodeViewModel.Scale : NodeScale;
 		public ItemsCanvas ChildItemsCanvas { get; private set; }
@@ -58,9 +58,12 @@ namespace Dependiator.Modeling
 
 
 		private bool IsCompositeNodeView => currentViewModel is CompositeNodeViewModel;
-		private bool IsCompositeShowing => IsCompositeNodeView && currentViewModel.IsShowing;
+		private bool IsCompositeNodeShowing => IsCompositeNodeView && currentViewModel.IsShowing;
 		private bool IsSingleNodeView => currentViewModel is SingleNodeViewModel;
+		private bool IsSingleNodeShowing => IsSingleNodeView && currentViewModel.IsShowing;
 
+		public NodesView ParentView => ParentNode?.View;
+		public NodesView View => compositeNodeViewModel?.NodesViewModel?.NodeView;
 
 		public void Show(ItemsCanvas itemsCanvas)
 		{
@@ -83,7 +86,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void Move(Vector viewOffset)
+		public void MoveChildren(Vector viewOffset)
 		{
 			if (ParentNode == null)
 			{
@@ -91,6 +94,28 @@ namespace Dependiator.Modeling
 			}
 
 			UpdateVisibility();
+		}
+
+		public void MoveNode(Vector viewOffset)
+		{
+			Vector scaledOffset = viewOffset / ParentNode.NodeScale;
+			ItemBounds = new Rect(ItemBounds.Location + scaledOffset, ItemBounds.Size);
+
+			ParentNode.ChildItemsCanvas.UpdateItem(singleNodeViewModel);
+
+			if (compositeNodeViewModel != null)
+			{
+				ParentNode.ChildItemsCanvas.UpdateItem(compositeNodeViewModel);
+			}
+
+			currentViewModel.NotifyAll();
+
+			//if (ParentNode == null)
+			//{
+			//	ChildItemsCanvas.Move(viewOffset);
+			//}
+
+			// UpdateVisibility();
 		}
 
 
@@ -106,7 +131,7 @@ namespace Dependiator.Modeling
 
 			if (IsCompositeNodeView)
 			{
-				ChildNodes.ForEach(childNode => childNode.UpdateVisibility());
+				ChildNodes.ForEach(n => n.UpdateVisibility());
 			}
 		}
 
@@ -152,7 +177,7 @@ namespace Dependiator.Modeling
 
 		private void ShowCompositeNode()
 		{
-			if (IsCompositeNodeView && currentViewModel.IsShowEnabled)
+			if (IsCompositeNodeShowing)
 			{
 				// Already showing nodes node, lets just update scale
 				compositeNodeViewModel.UpdateScale();
@@ -178,7 +203,7 @@ namespace Dependiator.Modeling
 
 		private void ShowSingleNode()
 		{
-			if (IsSingleNodeView && currentViewModel.IsShowEnabled)
+			if (IsSingleNodeShowing && currentViewModel.IsShowEnabled)
 			{
 				// Already showing nodes node, no need to change
 				return;

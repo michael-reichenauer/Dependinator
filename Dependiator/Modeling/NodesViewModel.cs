@@ -11,6 +11,7 @@ namespace Dependiator.Modeling
 	internal class NodesViewModel : ViewModel
 	{
 		private readonly ItemsCanvas canvas;
+		
 
 
 		public NodesViewModel(IItem item, ItemsCanvas parentCanvas)
@@ -19,12 +20,13 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void SetCanvas(ZoomableCanvas zoomableCanvas)
+		public void SetCanvas(ZoomableCanvas zoomableCanvas, NodesView nodeView)
 		{
 			canvas.SetCanvas(zoomableCanvas);
+			NodeView = nodeView;
 		}
 
-
+		public NodesView NodeView { get; private set; }
 
 		public double Scale
 		{

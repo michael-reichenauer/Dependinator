@@ -1,7 +1,8 @@
 ﻿<ResourceDictionary
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-	xmlns:themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero">
+	xmlns:themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero"
+	xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity">
 
 	<Style
 		TargetType="ScrollBar"
@@ -408,6 +409,8 @@
 		<Setter Property="ScrollViewer.PanningMode" Value="Both" />
 		<Setter Property="Stylus.IsFlicksEnabled" Value="False" />
 		<Setter Property="VerticalContentAlignment" Value="Center" />
+
+		<Setter Property="i:Interaction.Behaviors" Value="local:IgnoreMouseWheelBehavior" />
 
 		<Setter Property="Template">
 			<Setter.Value>

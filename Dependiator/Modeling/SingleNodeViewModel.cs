@@ -24,7 +24,7 @@ namespace Dependiator.Modeling
 		public Brush BackgroundBrush => node.GetBackgroundNodeBrush();
 		public Brush HoverBrush => RectangleBrush;
 
-
+		public NodesView ParentView => node.ParentView;
 		public string Name => node.NodeName.ShortName;
 
 		public string ToolTip =>
@@ -47,5 +47,8 @@ namespace Dependiator.Modeling
 
 		public override string ToString() => node.NodeName;
 		public override double GetScaleFactor() => node.ScaleFactor;
+
+
+		public void MoveNode(Vector viewOffset) => node.MoveNode(viewOffset);
 	}
 }

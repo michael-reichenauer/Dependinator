@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using Dependiator.Utils.UI.VirtualCanvas;
 
@@ -11,6 +12,7 @@ namespace Dependiator.Modeling
 	/// </summary>
 	public partial class NodesView : UserControl
 	{
+		private Point lastMousePosition;
 		private NodesViewModel viewModel;
 
 
@@ -26,7 +28,7 @@ namespace Dependiator.Modeling
 			viewModel = (NodesViewModel)DataContext;
 			if (viewModel != null)
 			{
-				viewModel.SetCanvas((ZoomableCanvas)sender);
+				viewModel.SetCanvas((ZoomableCanvas)sender, this);
 
 				await viewModel.LoadAsync();
 			}
@@ -56,6 +58,31 @@ namespace Dependiator.Modeling
 		private void MouseLeaving(object sender, MouseEventArgs e)
 		{
 		}
+
+
+		protected override void OnMouseMove(MouseEventArgs e)
+		{
+			Point viewPosition = e.GetPosition(ItemsListBox);
+
+			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
+				&& e.LeftButton == MouseButtonState.Pressed
+				&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
+			{
+				// Move canvas
+				CaptureMouse();
+				Vector viewOffset = viewPosition - lastMousePosition;
+				e.Handled = true;
+				viewModel.MoveCanvas(viewOffset);
+			}
+			else
+			{
+				// End of move
+				ReleaseMouseCapture();
+			}
+
+			lastMousePosition = viewPosition;
+		}
+
 
 
 		//private void MouseDobleClick(object sender, MouseButtonEventArgs e)
