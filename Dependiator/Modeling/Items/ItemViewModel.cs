@@ -21,24 +21,23 @@ namespace Dependiator.Modeling.Items
 		public double CanvasHeight => ItemBounds.Height;
 
 		public Rect ItemBounds => GetItemBounds();
-		public double ItemsScaleFactor => GetScaleFactor();
 
 		public ViewModel ViewModel => this;
 		public object ItemState { get; set; }
 
 
-		public bool IsShowEnabled { get; private set; }
+		public bool CanShow { get; private set; }
 		public bool IsShowing { get; private set; }
 
 
 		public void Hide()
 		{
-			IsShowEnabled = false;
+			CanShow = false;
 		}
 
 		public void Show()
 		{
-			IsShowEnabled = true;
+			CanShow = true;
 		}
 
 
@@ -50,12 +49,11 @@ namespace Dependiator.Modeling.Items
 			//InstanceCount++;
 			// Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
 
-			//if (IsShowing)
-			//{
-			//	Log.Warn("Item already realized");
-			//}
-
-			IsShowing = true;
+			if (!IsShowing)
+			{
+				IsShowing = true;
+				TotalCount++;
+			}
 		}
 
 
@@ -67,12 +65,11 @@ namespace Dependiator.Modeling.Items
 			//InstanceCount--;
 			// Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
 
-			//if (!IsShowing)
-			//{
-			//	Log.Warn("Item already virtualized");
-			//}
-
-			IsShowing = false;
+			if (IsShowing)
+			{
+				IsShowing = false;
+				TotalCount--;
+			}
 		}
 
 
@@ -90,11 +87,10 @@ namespace Dependiator.Modeling.Items
 			//Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
 
 			IsShowing = false;
+			TotalCount--;
 		}
 
 
 		public abstract Rect GetItemBounds();
-		public abstract double GetScaleFactor();
-
 	}
 }

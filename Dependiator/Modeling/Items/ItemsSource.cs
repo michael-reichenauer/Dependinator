@@ -22,7 +22,11 @@ namespace Dependiator.Modeling.Items
 		private static int currentId = 0;
 		private int id = 0;
 
-		private Rect lastViewAreaQuery = EmptyExtent;
+		public Rect LastViewAreaQuery { get; private set; } = EmptyExtent;
+
+	//	LastViewAreaQuery { get; set; }
+
+	//private Rect lastViewAreaQuery = EmptyExtent;
 
 
 		public ItemsSource(ItemsCanvas itemsCanvas)
@@ -54,11 +58,11 @@ namespace Dependiator.Modeling.Items
 				viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, 0);
 				ItemCount++;
 
-				if (virtualItem.IsShowEnabled)
+				if (virtualItem.CanShow)
 				{
 					currentBounds.Union(virtualItem.ItemBounds);
 
-					if (!isQueryItemsChanged && virtualItem.ItemBounds.IntersectsWith(lastViewAreaQuery))
+					if (!isQueryItemsChanged && virtualItem.ItemBounds.IntersectsWith(LastViewAreaQuery))
 					{
 						isQueryItemsChanged = true;
 					}
@@ -90,11 +94,11 @@ namespace Dependiator.Modeling.Items
 			viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, 0);
 			ItemCount++;
 
-			if (virtualItem.IsShowEnabled)
+			if (virtualItem.CanShow)
 			{
 				currentBounds.Union(virtualItem.ItemBounds);
 
-				if (virtualItem.ItemBounds.IntersectsWith(lastViewAreaQuery))
+				if (virtualItem.ItemBounds.IntersectsWith(LastViewAreaQuery))
 				{
 					isQueryItemsChanged = true;
 				}
@@ -127,8 +131,8 @@ namespace Dependiator.Modeling.Items
 
 			ItemsBoundsChanged();
 
-			if (oldItemBounds.IntersectsWith(lastViewAreaQuery)
-				|| newItemBounds.IntersectsWith(lastViewAreaQuery))
+			if (oldItemBounds.IntersectsWith(LastViewAreaQuery)
+				|| newItemBounds.IntersectsWith(LastViewAreaQuery))
 			{
 				TriggerItemsChanged();
 			}
@@ -149,9 +153,9 @@ namespace Dependiator.Modeling.Items
 				ItemCount--;
 				item.ItemState = null;
 
-				if (item.IsShowEnabled)
+				if (item.CanShow)
 				{
-					if (itemBounds.IntersectsWith(lastViewAreaQuery))
+					if (itemBounds.IntersectsWith(LastViewAreaQuery))
 					{
 						isQueryItemsChanged = true;
 					}
@@ -191,9 +195,9 @@ namespace Dependiator.Modeling.Items
 
 			ItemsBoundsChanged();
 
-			if (item.IsShowEnabled)
+			if (item.CanShow)
 			{
-				if (itemBounds.IntersectsWith(lastViewAreaQuery))
+				if (itemBounds.IntersectsWith(LastViewAreaQuery))
 				{
 					TriggerItemsChanged();
 				}
@@ -240,7 +244,7 @@ namespace Dependiator.Modeling.Items
 
 		public IEnumerable<IItem> GetItemsInView()
 		{
-			return GetItemsInArea(lastViewAreaQuery);
+			return GetItemsInArea(LastViewAreaQuery);
 		}
 
 
@@ -250,7 +254,7 @@ namespace Dependiator.Modeling.Items
 
 			foreach (IItem virtualItem in viewItems.Values)
 			{
-				if (virtualItem.IsShowEnabled)
+				if (virtualItem.CanShow)
 				{
 					currentBounds.Union(virtualItem.ItemBounds);
 				}
@@ -280,8 +284,10 @@ namespace Dependiator.Modeling.Items
 
 				Rect itemRect = itemsCanvas.ItemBounds;
 
-				Double scaleFactor = itemsCanvas.ParentCanvas.ZoomableCanvas.Scale 
-					/ itemsCanvas.ZoomableCanvas.Scale;
+				Double scaleFactor = itemsCanvas.ScaleFactor;
+
+				//Double scaleFactor = itemsCanvas.ParentCanvas.ZoomableCanvas.Scale 
+				//	/ itemsCanvas.ZoomableCanvas.Scale;
 
 				double x = (parentViewArea.X - itemRect.X) * scaleFactor;
 				double y = (parentViewArea.Y - itemRect.Y) * scaleFactor;
@@ -294,8 +300,7 @@ namespace Dependiator.Modeling.Items
 			}
 
 
-			lastViewAreaQuery = viewArea;
-			itemsCanvas.LastViewAreaQuery = viewArea;
+			LastViewAreaQuery = viewArea;
 
 			if (viewArea == Rect.Empty)
 			{
@@ -303,7 +308,7 @@ namespace Dependiator.Modeling.Items
 			}
 
 			IEnumerable<int> itemIds = viewItemsTree.GetItemsIntersecting(viewArea)
-				.Where(i => i.ItemState != null && i.IsShowEnabled)
+				.Where(i => i.ItemState != null && i.CanShow)
 				.Select(i => ((ViewItem)i.ItemState).ItemId);
 
 			//Log.Debug($"Id: {id}, Count: {itemIds.Count()}");

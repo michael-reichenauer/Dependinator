@@ -13,100 +13,111 @@ namespace Dependiator.Modeling.Items
 
 		private readonly IItem item;
 		private readonly ItemsSource itemsSource;
-		
-		private ZoomableCanvas canvas;
-		private double scale = 1.0;
 
-		public ItemsCanvas(IItem item, ItemsCanvas parentCanvas)
+		private ZoomableCanvas zoomableCanvas;
+		private double scale = 1.0;
+		private Point offset = new Point(0, 0);
+
+
+		public ItemsCanvas(IItem item, ItemsCanvas parentItemsCanvas)
 		{
 			this.item = item;
-			ParentCanvas = parentCanvas;
+			ParentCanvas = parentItemsCanvas;
 			itemsSource = new ItemsSource(this);
 		}
 
-		public Rect LastViewAreaQuery { get; set; }
 
-
-		public ZoomableCanvas ZoomableCanvas => canvas;
-
-
-		public void SetCanvas(ZoomableCanvas zoomableCanvas)
-		{
-			if (canvas != null)
-			{
-				// New canvas replacing previous canvas
-				canvas.ItemRealized -= Canvas_ItemRealized;
-				canvas.ItemVirtualized -= Canvas_ItemVirtualized;
-			}
-
-			canvas = zoomableCanvas;
-			canvas.Scale = scale;
-			canvas.ItemsOwner.ItemsSource = itemsSource.VirtualItemsSource;
-
-			canvas.ItemRealized += Canvas_ItemRealized;
-			canvas.ItemVirtualized += Canvas_ItemVirtualized;
-		}
-
-
-		private void Canvas_ItemRealized(object sender, ItemEventArgs e)
-		{
-			itemsSource.ItemRealized(e.VirtualId);
-		}
-
-
-		private void Canvas_ItemVirtualized(object sender, ItemEventArgs e)
-		{
-			itemsSource.ItemVirtualized(e.VirtualId);
-		}
-
-
-		public Rect ItemBounds => item?.ItemBounds ?? canvas?.ActualViewbox ?? Rect.Empty;
-
-		public double ScaleFactor => item?.ItemsScaleFactor ?? 1;
-
+		public Rect LastViewAreaQuery => itemsSource.LastViewAreaQuery;
+		public Rect ItemBounds => item?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
 		public ItemsCanvas ParentCanvas { get; }
 
-		public event EventHandler ScaleChanged;
 
-		public Rect CurrentViewPort => canvas.ActualViewbox;
+		public double ScaleFactor { get; private set; } = 1.0;
+		//{
+		//	get { return scaleFactor; }
+		//	set
+		//	{
+		//		scaleFactor 
 
+
+		//	}
+		//}=> ParentCanvas?.scale / scale ?? 1.0;
 		
 
 		public Point Offset
 		{
-			get { return canvas?.Offset ?? new Point(0, 0); }
+			get { return offset; }
 			set
 			{
-				canvas.Offset = value;
-				// Log.Debug("offset changed");
-				foreach (IItem item in itemsSource.GetItemsInView())
-				{			
-					if (item is CompositeNodeViewModel compositeNodeViewModel)
-					{
-						//Log.Debug("item is CompositeNodeViewModel");
-						compositeNodeViewModel.NodesViewModel.ItemsCanvas.TriggerInvalidated();
-					}
+				offset = value;
+
+				if (zoomableCanvas != null)
+				{
+					zoomableCanvas.Offset = value;
 				}
+
+				//// Log.Debug("offset changed");
+				//foreach (IItem item in itemsSource.GetItemsInView())
+				//{			
+				//	if (item is CompositeNodeViewModel compositeNodeViewModel)
+				//	{
+				//		//Log.Debug("item is CompositeNodeViewModel");
+				//		compositeNodeViewModel.NodesViewModel.ItemsCanvas.TriggerInvalidated();
+				//	}
+				//}
 			}
 		}
 
 
 		public double Scale
 		{
-			get { return canvas?.Scale ?? 1; }
+			get { return scale; }
 			set
 			{
-				if (canvas != null)
+				scale = value;
+
+				if (zoomableCanvas != null)
 				{
-					canvas.Scale = value;
-					scale = value;
+					zoomableCanvas.Scale = value;
 				}
-				else
+
+				if (ParentCanvas != null)
 				{
-					scale = value;
+					ScaleFactor = ParentCanvas.scale / scale;
 				}
 			}
 		}
+
+
+		public void UpdateScale()
+		{
+			if (ParentCanvas != null)
+			{
+				Scale = ParentCanvas.scale / ScaleFactor;
+			}			
+		}
+
+
+		public void SetCanvas(ZoomableCanvas canvas)
+		{
+			if (zoomableCanvas != null)
+			{
+				// New canvas replacing previous canvas
+				zoomableCanvas.ItemRealized -= Canvas_ItemRealized;
+				zoomableCanvas.ItemVirtualized -= Canvas_ItemVirtualized;
+			}
+
+			zoomableCanvas = canvas;
+
+			zoomableCanvas.Scale = scale;
+			zoomableCanvas.Offset = offset;
+
+			zoomableCanvas.ItemsOwner.ItemsSource = itemsSource.VirtualItemsSource;
+
+			zoomableCanvas.ItemRealized += Canvas_ItemRealized;
+			zoomableCanvas.ItemVirtualized += Canvas_ItemVirtualized;
+		}
+
 
 		public void AddItem(IItem item) => itemsSource.Add(item);
 
@@ -123,18 +134,18 @@ namespace Dependiator.Modeling.Items
 		{
 			double zoom = Math.Pow(2, zoomDelta / ZoomSpeed);
 
-			double newScale = canvas.Scale * zoom;
-			zoom = newScale / canvas.Scale;
+			double newScale = Scale * zoom;
+			zoom = newScale / Scale;
 
-			canvas.Scale = newScale;
+			Scale = newScale;
 
 			// Adjust the offset to make the point under the mouse stay still.
 			Vector position = (Vector)viewPosition;
-			canvas.Offset = (Point)((Vector)(canvas.Offset + position) * zoom - position);
+			Offset = (Point)((Vector)(Offset + position) * zoom - position);
 
 			// Log.Debug($"Scale: {canvas.Scale}");
 
-			TriggerScaleChanged();
+			//TriggerScaleChanged();
 
 			return true;
 		}
@@ -142,29 +153,10 @@ namespace Dependiator.Modeling.Items
 
 		public bool Move(Vector viewOffset)
 		{
-			canvas.Offset -= viewOffset;
+			Offset -= viewOffset;
 			return true;
 		}
 
-
-		public Point GetCanvasPosition(Point viewPosition)
-		{
-			double x = viewPosition.X + canvas.Offset.X;
-			double y = viewPosition.Y + canvas.Offset.Y;
-
-			Point canvasPosition = new Point(x, y);
-			return canvasPosition;
-		}
-
-
-		public Point GetViewPosition(Point canvasPosition)
-		{
-			double x = canvasPosition.X - canvas.Offset.X;
-			double y = canvasPosition.Y - canvas.Offset.Y;
-
-			Point viewPosition = new Point(x, y);
-			return viewPosition;
-		}
 
 
 		public void TriggerExtentChanged()
@@ -178,13 +170,23 @@ namespace Dependiator.Modeling.Items
 		}
 
 
-		private void TriggerScaleChanged()
-		{
-			ScaleChanged?.Invoke(this, EventArgs.Empty);
-		}
+		//private void TriggerScaleChanged()
+		//{
+		//	ScaleChanged?.Invoke(this, EventArgs.Empty);
+		//}
 
 
 		public override string ToString() => item?.ToString() ?? "<root>";
 
+		private void Canvas_ItemRealized(object sender, ItemEventArgs e)
+		{
+			itemsSource.ItemRealized(e.VirtualId);
+		}
+
+
+		private void Canvas_ItemVirtualized(object sender, ItemEventArgs e)
+		{
+			itemsSource.ItemVirtualized(e.VirtualId);
+		}
 	}
 }

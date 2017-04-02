@@ -5,6 +5,7 @@ using System.Windows.Threading;
 using Dependiator.Common.ProgressHandling;
 using Dependiator.Common.ThemeHandling;
 using Dependiator.Modeling;
+using Dependiator.Modeling.Items;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
 using Dependiator.Utils.UI.VirtualCanvas;
@@ -44,7 +45,7 @@ namespace Dependiator.MainViews
 		}
 
 
-		public NodesViewModel NodesViewModel { get; } = new NodesViewModel(null, null);
+		public NodesViewModel NodesViewModel { get; } = new NodesViewModel(new ItemsCanvas(null, null));
 
 
 		public async Task LoadAsync()

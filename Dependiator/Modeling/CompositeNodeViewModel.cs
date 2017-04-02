@@ -14,19 +14,23 @@ namespace Dependiator.Modeling
 	{
 		private readonly Node node;
 
+
 		public CompositeNodeViewModel(Node node, ItemsCanvas parentCanvas)
 		{
 			this.node = node;
-			NodesViewModel = new NodesViewModel(this, parentCanvas);
-			NodesViewModel.Scale = node.NodeScale;
+
+			ItemsCanvas = new ItemsCanvas(this, parentCanvas);
+			NodesViewModel = new NodesViewModel(ItemsCanvas);
 		}
 
 
 		public NodesViewModel NodesViewModel { get; }
 
-		public double ScaleFactor { get; private set; } = 1;
+		public ItemsCanvas ItemsCanvas { get; }
 
-		public ItemsCanvas ItemsCanvas => NodesViewModel.ItemsCanvas;
+		public double Scale => ItemsCanvas.Scale;
+
+
 
 		public double StrokeThickness => 0.8;
 		public Brush RectangleBrush => node.GetNodeBrush();
@@ -39,10 +43,7 @@ namespace Dependiator.Modeling
 
 		public int CornerRadius => 3;
 
-		public string ToolTip =>
-			$"{node.NodeName} ({node.ChildNodes.Count})\n" +
-			$"Scale: {node.NodeScale:0.00} NSF: {node.ScaleFactor}, Items Total: {TotalCount}, Instance: {InstanceCount}" +
-			$"\nParentScale: {node.ParentNode.NodeScale:0.00}, Node Canvas Scale: {Scale:0.00}";
+		public string ToolTip => $"{node.NodeName}{node.ToolTip}";
 
 
 		public override void ItemRealized()
@@ -58,16 +59,16 @@ namespace Dependiator.Modeling
 			base.ItemVirtualized();
 		}
 
-		public int FontSize
-		{
-			get
-			{
-				int fontSize = (int)(12 * node.NodeScale * 10);
-				return fontSize.MM(8, 20);
-			}
-		}
 
-		public double Scale => ItemsCanvas.Scale;
+		public int FontSize => 15;
+		//{
+		//	get
+		//	{
+		//		int fontSize = (int)(12 * node.NodeItemScale * 10);
+		//		return fontSize.MM(8, 20);
+		//	}
+		//}
+
 
 
 		public override Rect GetItemBounds() => node.ItemBounds;
@@ -75,7 +76,7 @@ namespace Dependiator.Modeling
 
 		public void UpdateScale()
 		{
-			NodesViewModel.Scale = node.NodeScale / ScaleFactor;
+			ItemsCanvas.UpdateScale();
 			NotifyAll();
 		}
 
@@ -89,7 +90,6 @@ namespace Dependiator.Modeling
 		public void Zoom(int zoomDelta, Point viewPosition)
 		{
 			ItemsCanvas.Zoom(zoomDelta, viewPosition);
-			ScaleFactor = node.NodeScale / ItemsCanvas.Scale;
 		}
 
 		public void Resize(int zoomDelta, Point viewPosition) => node.Resize(zoomDelta, viewPosition);
@@ -98,6 +98,5 @@ namespace Dependiator.Modeling
 
 
 		public override string ToString() => node.NodeName;
-		public override double GetScaleFactor() => node.ScaleFactor;
 	}
 }

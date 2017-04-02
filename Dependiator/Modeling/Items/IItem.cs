@@ -7,9 +7,9 @@ namespace Dependiator.Modeling.Items
 	internal interface IItem
 	{
 		Rect ItemBounds { get; }
-		double ItemsScaleFactor { get; }
-		bool IsShowEnabled { get; }
-		
+		bool CanShow { get; }
+		bool IsShowing { get; }
+
 		ViewModel ViewModel { get; }
 		object ItemState { get; set; }
 

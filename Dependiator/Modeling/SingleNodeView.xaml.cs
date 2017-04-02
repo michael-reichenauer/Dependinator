@@ -53,6 +53,12 @@ namespace Dependiator.Modeling
 				return;
 			}
 
+			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+			{
+				viewModel.NotifyAll();
+				return;
+			}
+
 			Point viewPosition = e.GetPosition(viewModel.ParentView);
 
 

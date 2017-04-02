@@ -27,10 +27,7 @@ namespace Dependiator.Modeling
 		public NodesView ParentView => node.ParentView;
 		public string Name => node.NodeName.ShortName;
 
-		public string ToolTip =>
-			$"{node.NodeName} ({node.ChildNodes.Count})\n" + 
-			$"Scale: {node.NodeScale:0.00} NSF: {node.ScaleFactor}, Items: {TotalCount}, {ItemsSource.ItemCount}" +
-			$"\nParentScale: {node.ParentNode.NodeScale:0.00}";
+		public string ToolTip =>$"{node.NodeName}{node.ToolTip}";
 
 
 		public int CornerRadius => 3;
@@ -40,13 +37,12 @@ namespace Dependiator.Modeling
 		{
 			get
 			{
-				int fontSize = (int)(12 * node.NodeScale * 10);
-				return fontSize.MM(8, 20);
+				int fontSize = (int)(14 * node.NodeItemScale);
+				return fontSize.MM(8, 15);
 			}
 		}
 
 		public override string ToString() => node.NodeName;
-		public override double GetScaleFactor() => node.ScaleFactor;
 
 
 		public void MoveNode(Vector viewOffset) => node.MoveNode(viewOffset);

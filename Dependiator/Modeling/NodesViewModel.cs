@@ -10,31 +10,23 @@ namespace Dependiator.Modeling
 {
 	internal class NodesViewModel : ViewModel
 	{
-		private readonly ItemsCanvas canvas;
-		
-
-
-		public NodesViewModel(IItem item, ItemsCanvas parentCanvas)
+		public NodesViewModel(ItemsCanvas itemsCanvas)
 		{
-			canvas = new ItemsCanvas(item, parentCanvas);
+			ItemsCanvas = itemsCanvas;
 		}
 
 
 		public void SetCanvas(ZoomableCanvas zoomableCanvas, NodesView nodeView)
 		{
-			canvas.SetCanvas(zoomableCanvas);
+			ItemsCanvas.SetCanvas(zoomableCanvas);
 			NodeView = nodeView;
 		}
 
+
 		public NodesView NodeView { get; private set; }
 
-		public double Scale
-		{
-			get { return canvas.Scale; }
-			set { canvas.Scale = value; }
-		}
 
-		public ItemsCanvas ItemsCanvas => canvas;
+		public ItemsCanvas ItemsCanvas { get; }
 
 
 		public Task LoadAsync()
@@ -43,23 +35,21 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void Zoom(int zoomDelta, Point viewPosition) => canvas.Zoom(zoomDelta, viewPosition);
+
+		public void MoveCanvas(Vector viewOffset) => ItemsCanvas.Offset -= viewOffset;
 
 
-		public void MoveCanvas(Vector viewOffset) => canvas.Offset -= viewOffset;
+		public void SizeChanged() => ItemsCanvas.TriggerExtentChanged();
 
 
-		public void SizeChanged() => canvas.TriggerExtentChanged();
+		public void AddItem(IItem item) => ItemsCanvas.AddItem(item);
+
+		public void AddItems(IEnumerable<IItem> items) => ItemsCanvas.AddItems(items);
 
 
-		public void AddItem(IItem item) => canvas.AddItem(item);
-
-		public void AddItems(IEnumerable<IItem> items) => canvas.AddItems(items);
+		public void RemoveItem(IItem item) => ItemsCanvas.RemoveItem(item);
 
 
-		public void RemoveItem(IItem item) => canvas.RemoveItem(item);
-
-
-		public void UpdateItem(IItem item) => canvas.UpdateItem(item);
+		public void UpdateItem(IItem item) => ItemsCanvas.UpdateItem(item);
 	}
 }

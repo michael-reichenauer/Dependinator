@@ -36,14 +36,12 @@ namespace Dependiator.Modeling
 			//Links = new NodeLinks(this);
 			NodeColor = null;
 		}
-
-		
+	
 
 		public Rect ItemBounds { get; set; }
 
-		public double ScaleFactor { get; set; } = 7;
-		public double NodeScale => ParentNode?.NodeScale / ScaleFactor ?? ChildItemsCanvas.Scale;
-		public double ChildScale => compositeNodeViewModel?.IsShowEnabled ?? false ? compositeNodeViewModel.Scale : NodeScale;
+		public double NodeItemScale => ParentNode?.ChildItemsCanvas.Scale ?? 1.0;
+
 		public ItemsCanvas ChildItemsCanvas { get; private set; }
 
 		public NodeName NodeName { get; }
@@ -64,6 +62,12 @@ namespace Dependiator.Modeling
 
 		public NodesView ParentView => ParentNode?.View;
 		public NodesView View => compositeNodeViewModel?.NodesViewModel?.NodeView;
+
+
+		public string ToolTip =>
+			$"\n Children: {ChildNodes.Count} Items: {ItemViewModel.TotalCount}, {ItemsSource.ItemCount}\n" +
+			$"Scale: {NodeItemScale:0.00}, ParentScale: {ParentNode.NodeItemScale:0.00}";
+
 
 		public void Show(ItemsCanvas itemsCanvas)
 		{
@@ -98,7 +102,7 @@ namespace Dependiator.Modeling
 
 		public void MoveNode(Vector viewOffset)
 		{
-			Vector scaledOffset = viewOffset / ParentNode.NodeScale;
+			Vector scaledOffset = viewOffset / ParentNode.NodeItemScale;
 			ItemBounds = new Rect(ItemBounds.Location + scaledOffset, ItemBounds.Size);
 
 			ParentNode.ChildItemsCanvas.UpdateItem(singleNodeViewModel);
@@ -137,7 +141,7 @@ namespace Dependiator.Modeling
 		{
 			double delta = (double)zoomDelta / 5;
 
-			double scaledDelta = delta / ParentNode.NodeScale;
+			double scaledDelta = delta / ParentNode.NodeItemScale;
 
 			Point newItemLocation = new Point(
 				ItemBounds.X - scaledDelta,
@@ -192,12 +196,12 @@ namespace Dependiator.Modeling
 
 		private void UpdateThisNodeVisibility()
 		{
-			if (CanBeShown())
+			if (CanShowNode())
 			{
 				// Node is not shown and can be shown, Lets show it
 				ShowNode();
 			}
-			else if (currentViewModel.IsShowEnabled)
+			else if (currentViewModel.CanShow)
 			{
 				// This node can no longer be shown, removing it and children are removed automatically
 				currentViewModel.Hide();
@@ -248,7 +252,7 @@ namespace Dependiator.Modeling
 
 		private void ShowSingleNode()
 		{
-			if (IsSingleNodeShowing && currentViewModel.IsShowEnabled)
+			if (IsSingleNodeShowing && currentViewModel.CanShow)
 			{
 				// Already showing nodes node, no need to change
 				return;
@@ -302,7 +306,7 @@ namespace Dependiator.Modeling
 		{
 			foreach (Node childNode in ChildNodes)
 			{
-				if (childNode.CanBeShown())
+				if (childNode.CanShowNode())
 				{
 					childNode.ShowNode();
 				}
@@ -312,7 +316,7 @@ namespace Dependiator.Modeling
 
 			foreach (Node childNode in ChildNodes)
 			{
-				if (childNode.currentViewModel?.IsShowEnabled ?? false)
+				if (childNode.currentViewModel?.CanShow ?? false)
 				{
 					childNode.ShowAllChildren();
 				}
@@ -324,7 +328,7 @@ namespace Dependiator.Modeling
 		{
 			foreach (Node childNode in ChildNodes)
 			{
-				if (childNode.currentViewModel?.IsShowEnabled ?? false)
+				if (childNode.currentViewModel?.CanShow ?? false)
 				{
 					childNode.HideAllChildren();
 					childNode.currentViewModel.Hide();
@@ -335,18 +339,24 @@ namespace Dependiator.Modeling
 		}
 
 
-		private bool CanBeShown()
+		private bool CanShowNode()
 		{
 			return ParentNode != null
-				&& ItemBounds.Size.Width * ParentNode.ChildScale > 40;
+				&& ItemBounds.Size.Width * NodeItemScale > 40;
 		}
 
 
 
 		private bool CanShowChildren()
 		{
-			//return ChildNodes.Any() && ItemBounds.Size.Width * NodeScale >= (200 / ScaleFactor);
-			return ChildNodes.Any(child => child.CanBeShown());
+			if (IsCompositeNodeShowing)
+			{
+				return ChildNodes.Any(child => child.CanShowNode());
+			}
+
+			return ChildNodes
+				.Any(child => child.ItemBounds.Size.Width * NodeItemScale / ChildItemsCanvas.ScaleFactor > 40);
+
 		}
 
 
@@ -408,6 +418,7 @@ namespace Dependiator.Modeling
 			if (ParentNode == null)
 			{
 				singleNodeViewModel = new SingleNodeViewModel(this);
+			
 				compositeNodeViewModel = new CompositeNodeViewModel(this, null);
 				currentViewModel = compositeNodeViewModel;
 
@@ -420,7 +431,10 @@ namespace Dependiator.Modeling
 			if (ChildNodes.Any())
 			{
 				compositeNodeViewModel = new CompositeNodeViewModel(this, ParentNode.ChildItemsCanvas);
+
 				ChildItemsCanvas = compositeNodeViewModel.ItemsCanvas;
+				ChildItemsCanvas.Scale = ParentNode.ChildItemsCanvas.Scale / 7;
+
 				ParentNode.ChildItemsCanvas.AddItem(compositeNodeViewModel);
 			}
 
