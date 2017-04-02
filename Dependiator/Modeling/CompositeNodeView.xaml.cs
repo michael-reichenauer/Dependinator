@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using Dependiator.Utils;
 
 
 namespace Dependiator.Modeling
@@ -54,11 +55,24 @@ namespace Dependiator.Modeling
 
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
+			
+
 			CompositeNodeViewModel viewModel = DataContext as CompositeNodeViewModel;
 			if (viewModel == null)
 			{
 				return;
 			}
+
+			//if (Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+			//{
+			//	Point window = Mouse.GetPosition(Application.Current.MainWindow);
+			//	Point canvasPosition = viewModel.ItemsCanvas.ZoomableCanvas.MousePosition;
+			//	Point visualPoint = viewModel.ItemsCanvas.ZoomableCanvas.GetVisualPoint(canvasPosition);
+
+			//	Log.Debug($"Window: {window}, Visual: {visualPoint}, Canvas: {canvasPosition}");
+			//	return;
+			//}
+
 
 			Point viewPosition = e.GetPosition(viewModel.ParentView);
 

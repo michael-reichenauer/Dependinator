@@ -2,6 +2,7 @@
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using Dependiator.Utils;
 using Dependiator.Utils.UI.VirtualCanvas;
 
 
@@ -62,6 +63,25 @@ namespace Dependiator.Modeling
 
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
+			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
+			{
+				Point windowPoint = Mouse.GetPosition(Application.Current.MainWindow);
+				Point canvasPoint = viewModel.ItemsCanvas.ZoomableCanvas.MousePosition;
+				Point visualPoint = viewModel.ItemsCanvas.ZoomableCanvas.GetVisualPoint(canvasPoint);
+
+				Point point1 = viewModel.ItemsCanvas.ZoomableCanvas.GetCanvasPoint(windowPoint);
+				Point point2 = viewModel.ItemsCanvas.ZoomableCanvas.GetVisualPoint(point1);
+				Point point3 = viewModel.ItemsCanvas.ZoomableCanvas.GetCanvasPoint(point2);
+
+
+				Log.Debug($"{viewModel.ItemsCanvas}: Window: {windowPoint.TS()}, Visual: {visualPoint.TS()}, Canvas: {canvasPoint.TS()}");
+
+				Log.Debug($"{viewModel.ItemsCanvas}: Window: {windowPoint.TS()}, Canvas: {point1.TS()}, p2: {point2.TS()}, p3: {point3.TS()}");
+
+				return;
+			}
+
+
 			Point viewPosition = e.GetPosition(ItemsListBox);
 
 			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)

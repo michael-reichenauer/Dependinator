@@ -197,6 +197,7 @@
     <Compile Include="Utils\SingleInstanceAttribute.cs" />
     <Compile Include="Utils\UI\InputBindingsBehavior.cs" />
     <Compile Include="Utils\UI\VirtualCanvas\ItemEventArgs.cs" />
+    <Compile Include="Utils\UI\VirtualCanvas\WindowsExtensions.cs" />
     <Compile Include="Utils\UI\VisibleWindow.cs" />
     <Compile Include="Utils\UI\WpfBindingTraceListener.cs" />
     <Compile Include="Common\ThemeHandling\ThemeService.cs" />

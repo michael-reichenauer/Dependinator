@@ -54,11 +54,14 @@ namespace Dependiator.Modeling.Items
 				viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, 0);
 				ItemCount++;
 
-				currentBounds.Union(virtualItem.ItemBounds);
-
-				if (!isQueryItemsChanged && virtualItem.ItemBounds.IntersectsWith(lastViewAreaQuery))
+				if (virtualItem.IsShowEnabled)
 				{
-					isQueryItemsChanged = true;
+					currentBounds.Union(virtualItem.ItemBounds);
+
+					if (!isQueryItemsChanged && virtualItem.ItemBounds.IntersectsWith(lastViewAreaQuery))
+					{
+						isQueryItemsChanged = true;
+					}
 				}
 			}
 
@@ -87,11 +90,14 @@ namespace Dependiator.Modeling.Items
 			viewItemsTree.Insert(virtualItem, virtualItem.ItemBounds, 0);
 			ItemCount++;
 
-			currentBounds.Union(virtualItem.ItemBounds);
-
-			if (virtualItem.ItemBounds.IntersectsWith(lastViewAreaQuery))
+			if (virtualItem.IsShowEnabled)
 			{
-				isQueryItemsChanged = true;
+				currentBounds.Union(virtualItem.ItemBounds);
+
+				if (virtualItem.ItemBounds.IntersectsWith(lastViewAreaQuery))
+				{
+					isQueryItemsChanged = true;
+				}
 			}
 
 			if (currentBounds != TotalBounds)
@@ -113,14 +119,11 @@ namespace Dependiator.Modeling.Items
 
 			Rect oldItemBounds = oldViewItem.ItemBounds;
 			viewItemsTree.Remove(item, oldItemBounds);
-			//viewItems.Remove(oldViewItem.ItemId);
 
-			//int itemId = currentItemId++;
 			Rect newItemBounds = item.ItemBounds;
 			item.ItemState = new ViewItem(oldViewItem.ItemId, newItemBounds, item);
 
 			viewItemsTree.Insert(item, newItemBounds, 0);
-			//viewItems[itemId] = item;
 
 			ItemsBoundsChanged();
 
@@ -146,9 +149,12 @@ namespace Dependiator.Modeling.Items
 				ItemCount--;
 				item.ItemState = null;
 
-				if (itemBounds.IntersectsWith(lastViewAreaQuery))
+				if (item.IsShowEnabled)
 				{
-					isQueryItemsChanged = true;
+					if (itemBounds.IntersectsWith(lastViewAreaQuery))
+					{
+						isQueryItemsChanged = true;
+					}
 				}
 			}
 
@@ -185,9 +191,12 @@ namespace Dependiator.Modeling.Items
 
 			ItemsBoundsChanged();
 
-			if (itemBounds.IntersectsWith(lastViewAreaQuery))
+			if (item.IsShowEnabled)
 			{
-				TriggerItemsChanged();
+				if (itemBounds.IntersectsWith(lastViewAreaQuery))
+				{
+					TriggerItemsChanged();
+				}
 			}
 		}
 
@@ -241,7 +250,10 @@ namespace Dependiator.Modeling.Items
 
 			foreach (IItem virtualItem in viewItems.Values)
 			{
-				currentBounds.Union(virtualItem.ItemBounds);
+				if (virtualItem.IsShowEnabled)
+				{
+					currentBounds.Union(virtualItem.ItemBounds);
+				}
 			}
 
 			if (currentBounds != TotalBounds)
@@ -266,16 +278,56 @@ namespace Dependiator.Modeling.Items
 			{
 				Rect parentViewbox = itemsCanvas.ParentCanvas.LastViewAreaQuery;
 
+				Point pc1 = parentViewbox.Location;
+				Point pc2 = (Point)parentViewbox.Size;
+
+
 				Rect itemRect = itemsCanvas.ItemBounds;
-				Double scaleFactor = itemsCanvas.ScaleFactor;
 
-				double x = (parentViewbox.X - itemRect.X) * scaleFactor;
-				double y = (parentViewbox.Y - itemRect.Y) * scaleFactor;
-				double w = parentViewbox.Width * scaleFactor;
-				double h = parentViewbox.Height * scaleFactor;
+				Point offset = itemsCanvas.Offset;
 
+				//Log.Debug($"{itemsCanvas} : {offset}");
+
+				//Double scaleFactor = itemsCanvas.ScaleFactor;
+				Double scaleFactor = itemsCanvas.ParentCanvas.ZoomableCanvas.Scale / itemsCanvas.ZoomableCanvas.Scale;
+
+				double x = (pc1.X - itemRect.X) * scaleFactor;
+				double y = (pc1.Y - itemRect.Y) * scaleFactor;
+				double w = pc2.X * scaleFactor;
+				double h = pc2.Y * scaleFactor;
+
+
+				Point p1 = new Point(x + viewArea.X, y + viewArea.Y);
+				Point p2 = new Point(w, h);
+				Rect rect = new Rect(p1.X, p1.Y, p2.X, p2.Y);
+				//Rect rect = new Rect(x, y, w, h);
+
+
+				Point c1 = itemsCanvas.ZoomableCanvas.GetCanvasPoint(new Point(0, 0));
+				Point c2 = itemsCanvas.ZoomableCanvas.GetVisualPoint(new Point(x, y));
+
+				//Point p2 = itemsCanvas.ZoomableCanvas.GetCanvasPoint(new Point(x + w, y + h));
 				//Rect newViewArea = viewArea;
-				viewArea.Intersect(new Rect(x, y, w, h));
+				//Rect rect = new Rect(x + offset.X, y + offset.Y, w, h);
+				//Rect rect = new Rect(p1.X, p1.Y, w, h);
+
+				Rect v1 = viewArea;
+				if (itemsCanvas.ToString() == "Server")
+				{
+					//Log.Debug($"{itemsCanvas} Parent: {parentViewbox.TS()}, Rect {rect.TS()}  {scaleFactor}");
+					//Log.Debug($"Parent Canvas point {p1.TS()}, view point: {p2.TS()}");
+					//Log.Debug($"ItemRect {itemRect.TS()}, ActualBox: {itemsCanvas.ZoomableCanvas.ActualViewbox.TS()}");
+					//Log.Debug($"ItemRect {itemRect.TS()}, ViewBox: {itemsCanvas.ZoomableCanvas.Viewbox.TS()}");
+					//Log.Debug($"Child {c1.TS()}, view point: {c2.TS()}");
+				}
+
+				viewArea.Intersect(rect);
+
+				if (itemsCanvas.ToString() == "Server")
+				{
+					//Log.Debug($"{itemsCanvas} View1: {v1.TS()} View2: {viewArea.TS()}");
+				}
+
 
 				//parentViewbox.Inflate(parentViewbox.Width / 10, parentViewbox.Height / 10);
 

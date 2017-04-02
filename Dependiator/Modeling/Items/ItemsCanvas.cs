@@ -27,6 +27,9 @@ namespace Dependiator.Modeling.Items
 		public Rect LastViewAreaQuery { get; set; }
 
 
+		public ZoomableCanvas ZoomableCanvas => canvas;
+
+
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
 			if (canvas != null)
@@ -178,5 +181,9 @@ namespace Dependiator.Modeling.Items
 		{
 			ScaleChanged?.Invoke(this, EventArgs.Empty);
 		}
+
+
+		public override string ToString() => item?.ToString() ?? "<root>";
+
 	}
 }

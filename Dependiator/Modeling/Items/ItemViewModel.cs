@@ -44,24 +44,28 @@ namespace Dependiator.Modeling.Items
 
 		public virtual void ItemRealized()
 		{
+			Log.Debug($"{GetType()} {this}");
+
 			//TotalCount++;
 			//InstanceCount++;
-			//Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
+			// Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
 
 			//if (IsShowing)
 			//{
 			//	Log.Warn("Item already realized");
 			//}
 
-			IsShowing = true;			
+			IsShowing = true;
 		}
 
 
 		public virtual void ItemVirtualized()
 		{
+			Log.Debug($"{GetType()} {this}");
+
 			//TotalCount--;
 			//InstanceCount--;
-			//Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
+			// Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
 
 			//if (!IsShowing)
 			//{
@@ -74,10 +78,12 @@ namespace Dependiator.Modeling.Items
 
 		public virtual void SetParentVirtualized()
 		{
-			//if (!IsShowing)
-			//{
-			//	return;
-			//}
+			if (!IsShowing)
+			{
+				return;
+			}
+
+			Log.Debug($"{GetType()} {this}");
 
 			//TotalCount--;
 			//InstanceCount--;
