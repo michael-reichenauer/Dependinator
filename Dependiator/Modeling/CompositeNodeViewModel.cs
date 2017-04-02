@@ -59,8 +59,9 @@ namespace Dependiator.Modeling
 			base.ItemVirtualized();
 		}
 
+		public int FontSize => ((int)(15 * node.NodeItemScale)).MM(8, 15);
 
-		public int FontSize => 15;
+		//public int FontSize => 15;
 		//{
 		//	get
 		//	{

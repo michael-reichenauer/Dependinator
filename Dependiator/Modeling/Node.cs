@@ -349,6 +349,8 @@ namespace Dependiator.Modeling
 
 		private bool CanShowChildren()
 		{
+			//return ChildNodes.Any();
+
 			if (IsCompositeNodeShowing)
 			{
 				return ChildNodes.Any(child => child.CanShowNode());
