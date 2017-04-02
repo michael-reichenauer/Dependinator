@@ -14,8 +14,7 @@
 		BorderBrush="{Binding RectangleBrush}"
 		BorderThickness="{Binding StrokeThickness}"
 		Background="{Binding BackgroundBrush}"
-		CornerRadius="{Binding CornerRadius}" 
-		MouseWheel="UIElement_OnMouseWheel">
+		CornerRadius="{Binding CornerRadius}">
 
 		<Grid Background="Transparent">
 

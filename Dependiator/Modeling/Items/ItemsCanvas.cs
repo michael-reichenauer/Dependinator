@@ -34,6 +34,7 @@ namespace Dependiator.Modeling.Items
 		{
 			if (canvas != null)
 			{
+				// New canvas replacing previous canvas
 				canvas.ItemRealized -= Canvas_ItemRealized;
 				canvas.ItemVirtualized -= Canvas_ItemVirtualized;
 			}
@@ -69,7 +70,7 @@ namespace Dependiator.Modeling.Items
 
 		public Rect CurrentViewPort => canvas.ActualViewbox;
 
-		public Point GetCanvasPoint(Point screenPoint) => canvas.GetCanvasPoint(screenPoint);
+		
 
 		public Point Offset
 		{

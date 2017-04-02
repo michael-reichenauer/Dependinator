@@ -93,7 +93,7 @@ namespace Dependiator.Modeling
 				ChildItemsCanvas.Move(viewOffset);
 			}
 
-			UpdateVisibility();
+			TriggerQueryInvalidatedInChildren();
 		}
 
 		public void MoveNode(Vector viewOffset)
@@ -110,12 +110,26 @@ namespace Dependiator.Modeling
 
 			currentViewModel.NotifyAll();
 
-			//if (ParentNode == null)
-			//{
-			//	ChildItemsCanvas.Move(viewOffset);
-			//}
+			TriggerQueryInvalidated();
+			TriggerQueryInvalidatedInChildren();
+		}
 
-			// UpdateVisibility();
+
+		private void TriggerQueryInvalidated()
+		{
+			ChildItemsCanvas?.TriggerInvalidated();
+		}
+
+
+		private void TriggerQueryInvalidatedInChildren()
+		{
+			ChildNodes
+				.Where(node => node.IsCompositeNodeShowing)
+				.ForEach(node =>
+				{
+					node.TriggerQueryInvalidated();
+					node.TriggerQueryInvalidatedInChildren();
+				});
 		}
 
 
@@ -227,7 +241,7 @@ namespace Dependiator.Modeling
 			currentViewModel = compositeNodeViewModel;
 
 			// Notify parent item canvas that node view has changed
-			ParentNode.ChildItemsCanvas.TriggerInvalidated();
+			ParentNode.TriggerQueryInvalidated();
 		}
 
 
@@ -251,7 +265,7 @@ namespace Dependiator.Modeling
 			currentViewModel = singleNodeViewModel;
 
 			// Notify parent item canvas that node view has changed
-			ParentNode.ChildItemsCanvas.TriggerInvalidated();
+			ParentNode.TriggerQueryInvalidated();
 		}
 
 

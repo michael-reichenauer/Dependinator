@@ -96,17 +96,8 @@ namespace Dependiator.Modeling
 
 		public void MoveNode(Vector viewOffset) => node.MoveNode(viewOffset);
 
-		//internal void MouseMove(Point viewPosition, Vector viewOffset, bool isFirst)
-		//{
-		//	node.MoveOrResize(viewPosition, viewOffset, isFirst);
-		//}
-
-
 
 		public override string ToString() => node.NodeName;
 		public override double GetScaleFactor() => node.ScaleFactor;
-
-
-
 	}
 }
