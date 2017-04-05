@@ -10,11 +10,13 @@ namespace Dependiator.Modeling
 {
 	internal class NodesViewModel : ViewModel
 	{
+		private readonly Node node;
 		private readonly ItemsCanvas itemsCanvas;
 
 
-		public NodesViewModel(ItemsCanvas itemsCanvas)
+		public NodesViewModel(Node node, ItemsCanvas itemsCanvas)
 		{
+			this.node = node;
 			this.itemsCanvas = itemsCanvas;
 		}
 
@@ -32,7 +34,7 @@ namespace Dependiator.Modeling
 
 
 
-		public void MoveCanvas(Vector viewOffset) => itemsCanvas.Offset -= viewOffset;
+		public void MoveCanvas(Vector viewOffset) => node?.MoveChildren(viewOffset);
 
 
 		public void SizeChanged() => itemsCanvas.TriggerExtentChanged();

@@ -91,10 +91,7 @@ namespace Dependiator.Modeling
 
 		public void MoveChildren(Vector viewOffset)
 		{
-			if (ParentNode == null)
-			{
-				itemsCanvas.Move(viewOffset);
-			}
+			itemsCanvas.Move(viewOffset);
 
 			TriggerQueryInvalidatedInChildren();
 		}

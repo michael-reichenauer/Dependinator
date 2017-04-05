@@ -20,7 +20,7 @@ namespace Dependiator.Modeling
 			this.node = node;
 
 			ItemsCanvas = new ItemsCanvas(this, parentCanvas);
-			NodesViewModel = new NodesViewModel(ItemsCanvas);
+			NodesViewModel = new NodesViewModel(node, ItemsCanvas);
 		}
 
 

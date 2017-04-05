@@ -43,7 +43,7 @@ namespace Dependiator.MainViews
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
 
-			NodesViewModel = new NodesViewModel(itemsCanvas);
+			NodesViewModel = new NodesViewModel(null, itemsCanvas);
 
 		}
 
