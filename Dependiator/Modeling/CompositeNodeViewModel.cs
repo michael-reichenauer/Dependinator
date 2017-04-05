@@ -23,6 +23,8 @@ namespace Dependiator.Modeling
 			NodesViewModel = new NodesViewModel(node, ItemsCanvas);
 		}
 
+		protected override Rect GetItemBounds() => node.ItemBounds;
+
 
 		public NodesViewModel NodesViewModel { get; }
 
@@ -63,7 +65,7 @@ namespace Dependiator.Modeling
 
 
 
-		public override Rect GetItemBounds() => node.ItemBounds;
+		
 
 
 		public void UpdateScale()

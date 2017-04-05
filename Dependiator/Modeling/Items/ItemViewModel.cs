@@ -45,10 +45,6 @@ namespace Dependiator.Modeling.Items
 		{
 			Log.Debug($"{GetType()} {this}");
 
-			//TotalCount++;
-			//InstanceCount++;
-			// Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
-
 			if (!IsShowing)
 			{
 				IsShowing = true;
@@ -60,10 +56,6 @@ namespace Dependiator.Modeling.Items
 		public virtual void ItemVirtualized()
 		{
 			Log.Debug($"{GetType()} {this}");
-
-			//TotalCount--;
-			//InstanceCount--;
-			// Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
 
 			if (IsShowing)
 			{
@@ -82,15 +74,11 @@ namespace Dependiator.Modeling.Items
 
 			Log.Debug($"{GetType()} {this}");
 
-			//TotalCount--;
-			//InstanceCount--;
-			//Log.Debug($"{GetType()} {this}, Total: {TotalCount}, Instance: {InstanceCount}");
-
 			IsShowing = false;
 			TotalCount--;
 		}
 
 
-		public abstract Rect GetItemBounds();
+		protected abstract Rect GetItemBounds();
 	}
 }

@@ -16,7 +16,7 @@ namespace Dependiator.Modeling
 			this.node = node;
 		}
 
-		public override Rect GetItemBounds() => node.ItemBounds;
+		protected override Rect GetItemBounds() => node.ItemBounds;
 
 
 		public double StrokeThickness => 0.8;

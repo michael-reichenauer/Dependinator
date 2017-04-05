@@ -35,7 +35,7 @@ namespace Dependiator.Modeling
 			ParentNode = parent;
 			NodeName = name;
 			NodeType = type;
-			//Links = new NodeLinks(this);
+			Links = new NodeLinks(this);
 			NodeColor = null;
 		}
 	
@@ -43,15 +43,16 @@ namespace Dependiator.Modeling
 		public Rect ItemBounds { get; set; }
 
 		public double NodeItemScale => ParentNode?.itemsCanvas.Scale ?? 1.0;
+		public double ItemsCanvasScale => itemsCanvas.Scale;
 
-		
+
 
 		public NodeName NodeName { get; }
 		public NodeType NodeType { get; private set; }
 		public Node ParentNode { get; }
 		public List<Node> ChildNodes { get; } = new List<Node>();
 
-		//public NodeLinks Links { get; }
+		public NodeLinks Links { get; }
 		// public List<Link> LinkItems => ChildItems.OfType<Link>();
 		public string NodeColor { get; private set; }
 		public Rect? NodeBounds { get; set; }
@@ -199,7 +200,7 @@ namespace Dependiator.Modeling
 
 		private void UpdateThisNodeVisibility()
 		{
-			if (CanShowNode())
+			if (ParentNode != null && CanShowNode())
 			{
 				// Node is not shown and can be shown, Lets show it
 				ShowNode();
@@ -342,7 +343,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private bool CanShowNode() => ParentNode != null && IsVisitableAtScale(NodeItemScale);
+		public bool CanShowNode() => IsVisitableAtScale(NodeItemScale);
 
 
 		private bool IsVisitableAtScale(double scale) => ItemBounds.Size.Width * scale > 40;
@@ -491,49 +492,49 @@ namespace Dependiator.Modeling
 
 
 
-		//public IEnumerable<Node> Ancestors()
-		//{
-		//	Node current = ParentNode;
+		public IEnumerable<Node> Ancestors()
+		{
+			Node current = ParentNode;
 
-		//	while (current != null)
-		//	{
-		//		yield return current;
-		//		current = current.ParentNode;
-		//	}
-		//}
+			while (current != null)
+			{
+				yield return current;
+				current = current.ParentNode;
+			}
+		}
 
-		//public IEnumerable<Node> AncestorsAndSelf()
-		//{
-		//	yield return this;
+		public IEnumerable<Node> AncestorsAndSelf()
+		{
+			yield return this;
 
-		//	foreach (Node ancestor in Ancestors())
-		//	{
-		//		yield return ancestor;
-		//	}
-		//}
+			foreach (Node ancestor in Ancestors())
+			{
+				yield return ancestor;
+			}
+		}
 
-		//public IEnumerable<Node> Descendents()
-		//{
-		//	foreach (Node child in ChildNodes)
-		//	{
-		//		yield return child;
+		public IEnumerable<Node> Descendents()
+		{
+			foreach (Node child in ChildNodes)
+			{
+				yield return child;
 
-		//		foreach (Node descendent in child.Descendents())
-		//		{
-		//			yield return descendent;
-		//		}
-		//	}
-		//}
+				foreach (Node descendent in child.Descendents())
+				{
+					yield return descendent;
+				}
+			}
+		}
 
-		//public IEnumerable<Node> DescendentsAndSelf()
-		//{
-		//	yield return this;
+		public IEnumerable<Node> DescendentsAndSelf()
+		{
+			yield return this;
 
-		//	foreach (Node descendent in Descendents())
-		//	{
-		//		yield return descendent;
-		//	}
-		//}
-	
+			foreach (Node descendent in Descendents())
+			{
+				yield return descendent;
+			}
+		}
+
 	}
 }
