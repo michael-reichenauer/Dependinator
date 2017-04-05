@@ -25,10 +25,10 @@ namespace Dependiator.MainViews
 
 
 		private readonly DispatcherTimer filterTriggerTimer = new DispatcherTimer();
+		private readonly ItemsCanvas itemsCanvas = new ItemsCanvas(null, null);
 		private string settingFilterText = "";
 
 		private int width = 0;
-
 
 
 		public MainViewModel(
@@ -42,10 +42,13 @@ namespace Dependiator.MainViews
 
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
+
+			NodesViewModel = new NodesViewModel(itemsCanvas);
+
 		}
 
 
-		public NodesViewModel NodesViewModel { get; } = new NodesViewModel(new ItemsCanvas(null, null));
+		public NodesViewModel NodesViewModel { get; }
 
 
 		public async Task LoadAsync()
@@ -56,7 +59,7 @@ namespace Dependiator.MainViews
 
 			using (progress.ShowDialog("Loading branch view ..."))
 			{		
-				modelService.InitModules(NodesViewModel.ItemsCanvas);
+				modelService.InitModules(itemsCanvas);
 
 				LoadViewModel();
 				//Zoom(-120, new Point(1, 1), false);
@@ -193,7 +196,7 @@ namespace Dependiator.MainViews
 		{
 			using (progress.ShowDialog("Refreshing view ..."))
 			{
-				await modelService.Refresh(NodesViewModel.ItemsCanvas);
+				await modelService.Refresh(itemsCanvas);
 			}
 		}
 

@@ -90,7 +90,7 @@ namespace Dependiator.Modeling
 
 		public void Zoom(int zoomDelta, Point viewPosition)
 		{
-			ItemsCanvas.Zoom(zoomDelta, viewPosition);
+			node.Zoom(zoomDelta, viewPosition);
 		}
 
 		public void Resize(int zoomDelta, Point viewPosition) => node.Resize(zoomDelta, viewPosition);

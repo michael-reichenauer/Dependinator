@@ -11,7 +11,7 @@ namespace Dependiator.Modeling.Items
 	{
 		private static readonly double ZoomSpeed = 1000.0;
 
-		private readonly IItem item;
+		private readonly IItem ownerItem;
 		private readonly ItemsSource itemsSource;
 
 		private ZoomableCanvas zoomableCanvas;
@@ -19,29 +19,21 @@ namespace Dependiator.Modeling.Items
 		private Point offset = new Point(0, 0);
 
 
-		public ItemsCanvas(IItem item, ItemsCanvas parentItemsCanvas)
+		public ItemsCanvas(IItem ownerItem, ItemsCanvas parentItemsCanvas)
 		{
-			this.item = item;
-			ParentCanvas = parentItemsCanvas;
+			this.ownerItem = ownerItem;
+			ParentItemsCanvas = parentItemsCanvas;
 			itemsSource = new ItemsSource(this);
 		}
 
 
 		public Rect LastViewAreaQuery => itemsSource.LastViewAreaQuery;
-		public Rect ItemBounds => item?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
-		public ItemsCanvas ParentCanvas { get; }
+		public Rect ItemBounds => ownerItem?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
+		public ItemsCanvas ParentItemsCanvas { get; }
 
 
 		public double ScaleFactor { get; private set; } = 1.0;
-		//{
-		//	get { return scaleFactor; }
-		//	set
-		//	{
-		//		scaleFactor 
 
-
-		//	}
-		//}=> ParentCanvas?.scale / scale ?? 1.0;
 		
 
 		public Point Offset
@@ -55,16 +47,6 @@ namespace Dependiator.Modeling.Items
 				{
 					zoomableCanvas.Offset = value;
 				}
-
-				//// Log.Debug("offset changed");
-				//foreach (IItem item in itemsSource.GetItemsInView())
-				//{			
-				//	if (item is CompositeNodeViewModel compositeNodeViewModel)
-				//	{
-				//		//Log.Debug("item is CompositeNodeViewModel");
-				//		compositeNodeViewModel.NodesViewModel.ItemsCanvas.TriggerInvalidated();
-				//	}
-				//}
 			}
 		}
 
@@ -81,9 +63,9 @@ namespace Dependiator.Modeling.Items
 					zoomableCanvas.Scale = value;
 				}
 
-				if (ParentCanvas != null)
+				if (ParentItemsCanvas != null)
 				{
-					ScaleFactor = ParentCanvas.scale / scale;
+					ScaleFactor = ParentItemsCanvas.scale / scale;
 				}
 			}
 		}
@@ -91,9 +73,9 @@ namespace Dependiator.Modeling.Items
 
 		public void UpdateScale()
 		{
-			if (ParentCanvas != null)
+			if (ParentItemsCanvas != null)
 			{
-				Scale = ParentCanvas.scale / ScaleFactor;
+				Scale = ParentItemsCanvas.scale / ScaleFactor;
 			}			
 		}
 
@@ -108,14 +90,12 @@ namespace Dependiator.Modeling.Items
 			}
 
 			zoomableCanvas = canvas;
-
-			zoomableCanvas.Scale = scale;
-			zoomableCanvas.Offset = offset;
-
-			zoomableCanvas.ItemsOwner.ItemsSource = itemsSource.VirtualItemsSource;
-
 			zoomableCanvas.ItemRealized += Canvas_ItemRealized;
 			zoomableCanvas.ItemVirtualized += Canvas_ItemVirtualized;
+			zoomableCanvas.ItemsOwner.ItemsSource = itemsSource.VirtualItemsSource;
+
+			zoomableCanvas.Scale = scale;
+			zoomableCanvas.Offset = offset;		
 		}
 
 
@@ -125,7 +105,6 @@ namespace Dependiator.Modeling.Items
 		public void AddItems(IEnumerable<IItem> items) => itemsSource.Add(items);
 
 		public void RemoveItem(IItem item) => itemsSource.Remove(item);
-
 
 		public void UpdateItem(IItem item) => itemsSource.Update(item);
 
@@ -143,9 +122,6 @@ namespace Dependiator.Modeling.Items
 			Vector position = (Vector)viewPosition;
 			Offset = (Point)((Vector)(Offset + position) * zoom - position);
 
-			// Log.Debug($"Scale: {canvas.Scale}");
-
-			//TriggerScaleChanged();
 
 			return true;
 		}
@@ -176,7 +152,7 @@ namespace Dependiator.Modeling.Items
 		//}
 
 
-		public override string ToString() => item?.ToString() ?? "<root>";
+		public override string ToString() => ownerItem?.ToString() ?? "<root>";
 
 		private void Canvas_ItemRealized(object sender, ItemEventArgs e)
 		{

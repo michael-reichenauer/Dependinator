@@ -13,10 +13,12 @@ namespace Dependiator.Modeling
 {
 	internal class Node
 	{
+		private const int InitialScaleFactor = 7;
 		private readonly INodeItemService nodeItemService;
 
 		private CompositeNodeViewModel compositeNodeViewModel;
 		private SingleNodeViewModel singleNodeViewModel;
+		private ItemsCanvas itemsCanvas;
 
 		private Brush nodeBrush;
 
@@ -40,9 +42,9 @@ namespace Dependiator.Modeling
 
 		public Rect ItemBounds { get; set; }
 
-		public double NodeItemScale => ParentNode?.ChildItemsCanvas.Scale ?? 1.0;
+		public double NodeItemScale => ParentNode?.itemsCanvas.Scale ?? 1.0;
 
-		public ItemsCanvas ChildItemsCanvas { get; private set; }
+		
 
 		public NodeName NodeName { get; }
 		public NodeType NodeType { get; private set; }
@@ -69,22 +71,19 @@ namespace Dependiator.Modeling
 			$"Scale: {NodeItemScale:0.00}, ParentScale: {ParentNode.NodeItemScale:0.00}";
 
 
-		public void Show(ItemsCanvas itemsCanvas)
+		public void Show(ItemsCanvas rootItemsCanvas)
 		{
 			Asserter.Requires(ParentNode == null);
 		
 			// Show children of the root noode
-			ChildItemsCanvas = itemsCanvas;
+			itemsCanvas = rootItemsCanvas;
 			UpdateVisibility();
 		}
 
 
 		public void Zoom(int zoomDelta, Point viewPosition)
 		{
-			if (ParentNode == null)
-			{
-				ChildItemsCanvas.Zoom(zoomDelta, viewPosition);
-			}
+			itemsCanvas.Zoom(zoomDelta, viewPosition);
 
 			UpdateVisibility();
 		}
@@ -94,22 +93,23 @@ namespace Dependiator.Modeling
 		{
 			if (ParentNode == null)
 			{
-				ChildItemsCanvas.Move(viewOffset);
+				itemsCanvas.Move(viewOffset);
 			}
 
 			TriggerQueryInvalidatedInChildren();
 		}
 
+
 		public void MoveNode(Vector viewOffset)
 		{
-			Vector scaledOffset = viewOffset / ParentNode.NodeItemScale;
+			Vector scaledOffset = viewOffset / NodeItemScale;
 			ItemBounds = new Rect(ItemBounds.Location + scaledOffset, ItemBounds.Size);
 
-			ParentNode.ChildItemsCanvas.UpdateItem(singleNodeViewModel);
+			ParentNode.itemsCanvas.UpdateItem(singleNodeViewModel);
 
 			if (compositeNodeViewModel != null)
 			{
-				ParentNode.ChildItemsCanvas.UpdateItem(compositeNodeViewModel);
+				ParentNode.itemsCanvas.UpdateItem(compositeNodeViewModel);
 			}
 
 			currentViewModel.NotifyAll();
@@ -121,7 +121,7 @@ namespace Dependiator.Modeling
 
 		private void TriggerQueryInvalidated()
 		{
-			ChildItemsCanvas?.TriggerInvalidated();
+			itemsCanvas?.TriggerInvalidated();
 		}
 
 
@@ -158,11 +158,11 @@ namespace Dependiator.Modeling
 			Size newItemSize = new Size(width, height);
 			ItemBounds = new Rect(newItemLocation, newItemSize);
 
-			ParentNode.ChildItemsCanvas.UpdateItem(singleNodeViewModel);
+			ParentNode.itemsCanvas.UpdateItem(singleNodeViewModel);
 
 			if (compositeNodeViewModel != null)
 			{
-				ParentNode.ChildItemsCanvas.UpdateItem(compositeNodeViewModel);
+				ParentNode.itemsCanvas.UpdateItem(compositeNodeViewModel);
 			}
 
 			currentViewModel.NotifyAll();
@@ -312,7 +312,7 @@ namespace Dependiator.Modeling
 				}
 			}
 
-			ChildItemsCanvas?.TriggerInvalidated();
+			itemsCanvas?.TriggerInvalidated();
 
 			foreach (Node childNode in ChildNodes)
 			{
@@ -335,7 +335,7 @@ namespace Dependiator.Modeling
 				}
 			}
 
-			ChildItemsCanvas?.TriggerInvalidated();
+			itemsCanvas?.TriggerInvalidated();
 		}
 
 
@@ -357,7 +357,7 @@ namespace Dependiator.Modeling
 			}
 
 			return ChildNodes
-				.Any(child => child.ItemBounds.Size.Width * NodeItemScale / ChildItemsCanvas.ScaleFactor > 40);
+				.Any(child => child.ItemBounds.Size.Width * NodeItemScale / itemsCanvas.ScaleFactor > 40);
 
 		}
 
@@ -428,16 +428,16 @@ namespace Dependiator.Modeling
 			}
 
 			singleNodeViewModel = new SingleNodeViewModel(this);
-			ParentNode.ChildItemsCanvas.AddItem(singleNodeViewModel);
+			ParentNode.itemsCanvas.AddItem(singleNodeViewModel);
 
 			if (ChildNodes.Any())
 			{
-				compositeNodeViewModel = new CompositeNodeViewModel(this, ParentNode.ChildItemsCanvas);
+				compositeNodeViewModel = new CompositeNodeViewModel(this, ParentNode.itemsCanvas);
 
-				ChildItemsCanvas = compositeNodeViewModel.ItemsCanvas;
-				ChildItemsCanvas.Scale = ParentNode.ChildItemsCanvas.Scale / 7;
+				itemsCanvas = compositeNodeViewModel.ItemsCanvas;
+				itemsCanvas.Scale = ParentNode.itemsCanvas.Scale / InitialScaleFactor;
 
-				ParentNode.ChildItemsCanvas.AddItem(compositeNodeViewModel);
+				ParentNode.itemsCanvas.AddItem(compositeNodeViewModel);
 			}
 
 			currentViewModel = singleNodeViewModel;

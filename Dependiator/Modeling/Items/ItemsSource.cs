@@ -277,16 +277,16 @@ namespace Dependiator.Modeling.Items
 
 			//Log.Debug($"Id: {id}, ViewPort {itemsCanvas.CurrentViewPort}, Inflated: {viewArea}, ");
 
-			if (itemsCanvas.ParentCanvas != null 
-				&& itemsCanvas.ParentCanvas.LastViewAreaQuery != Rect.Empty)
+			if (itemsCanvas.ParentItemsCanvas != null 
+				&& itemsCanvas.ParentItemsCanvas.LastViewAreaQuery != Rect.Empty)
 			{
-				Rect parentViewArea = itemsCanvas.ParentCanvas.LastViewAreaQuery;
+				Rect parentViewArea = itemsCanvas.ParentItemsCanvas.LastViewAreaQuery;
 
 				Rect itemRect = itemsCanvas.ItemBounds;
 
 				Double scaleFactor = itemsCanvas.ScaleFactor;
 
-				//Double scaleFactor = itemsCanvas.ParentCanvas.ZoomableCanvas.Scale 
+				//Double scaleFactor = itemsCanvas.ParentItemsCanvas.ZoomableCanvas.Scale 
 				//	/ itemsCanvas.ZoomableCanvas.Scale;
 
 				double x = (parentViewArea.X - itemRect.X) * scaleFactor;
