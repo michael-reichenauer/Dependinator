@@ -83,6 +83,12 @@ namespace Dependiator.Modeling
 
 		public void Zoom(int zoomDelta, Point viewPosition)
 		{
+			double newScale = itemsCanvas.GetZoomScale(zoomDelta);
+			if (!ChildNodes.Any(child => child.IsVisitableAtScale(newScale)))
+			{
+				return;
+			}
+
 			itemsCanvas.Zoom(zoomDelta, viewPosition);
 
 			UpdateVisibility();
@@ -336,12 +342,10 @@ namespace Dependiator.Modeling
 		}
 
 
-		private bool CanShowNode()
-		{
-			return ParentNode != null
-				&& ItemBounds.Size.Width * NodeItemScale > 40;
-		}
+		private bool CanShowNode() => ParentNode != null && IsVisitableAtScale(NodeItemScale);
 
+
+		private bool IsVisitableAtScale(double scale) => ItemBounds.Size.Width * scale > 40;
 
 
 		private bool CanShowChildren()

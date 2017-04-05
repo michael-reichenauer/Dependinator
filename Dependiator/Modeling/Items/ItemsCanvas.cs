@@ -109,6 +109,9 @@ namespace Dependiator.Modeling.Items
 		public void UpdateItem(IItem item) => itemsSource.Update(item);
 
 
+		public double GetZoomScale(int zoomDelta) => Scale * Math.Pow(2, zoomDelta / ZoomSpeed);
+
+
 		public bool Zoom(int zoomDelta, Point viewPosition)
 		{
 			double zoom = Math.Pow(2, zoomDelta / ZoomSpeed);
@@ -121,7 +124,6 @@ namespace Dependiator.Modeling.Items
 			// Adjust the offset to make the point under the mouse stay still.
 			Vector position = (Vector)viewPosition;
 			Offset = (Point)((Vector)(Offset + position) * zoom - position);
-
 
 			return true;
 		}

@@ -61,15 +61,6 @@ namespace Dependiator.Modeling
 
 		public int FontSize => ((int)(15 * node.NodeItemScale)).MM(8, 15);
 
-		//public int FontSize => 15;
-		//{
-		//	get
-		//	{
-		//		int fontSize = (int)(12 * node.NodeItemScale * 10);
-		//		return fontSize.MM(8, 20);
-		//	}
-		//}
-
 
 
 		public override Rect GetItemBounds() => node.ItemBounds;
@@ -82,16 +73,8 @@ namespace Dependiator.Modeling
 		}
 
 
-		public Task LoadAsync()
-		{
-			return Task.CompletedTask;
-		}
 
-
-		public void Zoom(int zoomDelta, Point viewPosition)
-		{
-			node.Zoom(zoomDelta, viewPosition);
-		}
+		public void Zoom(int zoomDelta, Point viewPosition) => node.Zoom(zoomDelta, viewPosition);
 
 		public void Resize(int zoomDelta, Point viewPosition) => node.Resize(zoomDelta, viewPosition);
 
