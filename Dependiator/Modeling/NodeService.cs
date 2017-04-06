@@ -145,8 +145,8 @@ namespace Dependiator.Modeling
 				foreach (Data.Link dataLink in dataNode.Links)
 				{
 					Node targetNode = GetOrAddNode(dataLink.Target, model, modelViewData);
-					NodeLink reference = new NodeLink(node, targetNode);
-				//	node.Links.Add(reference);
+					Link link = new Link(node, targetNode);
+					node.Links.Add(link);
 				}
 			}
 		}
@@ -165,13 +165,13 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void AddLink(Data.Link link, Model model, ModelViewData modelViewData)
+		private void AddLink(Data.Link dataLink, Model model, ModelViewData modelViewData)
 		{
-			Node sourceNode = GetOrAddNode(link.Source, model, modelViewData);
-			Node targetNode = GetOrAddNode(link.Target, model, modelViewData);
+			Node sourceNode = GetOrAddNode(dataLink.Source, model, modelViewData);
+			Node targetNode = GetOrAddNode(dataLink.Target, model, modelViewData);
 
-			NodeLink nodeLink = new NodeLink(sourceNode, targetNode);
-			//sourceNode.Links.Add(nodeLink);
+			Link link = new Link(sourceNode, targetNode);
+			sourceNode.Links.Add(link);
 		}
 
 
@@ -182,7 +182,7 @@ namespace Dependiator.Modeling
 				Name = node.NodeName.ShortName,
 				Type = node.NodeType,
 				Nodes = ToChildren(node.ChildNodes),
-				Links = ToLinks(node),
+				Links = ToDataLinks(node),
 				ViewData = ToViewData(node)
 			};
 
@@ -190,28 +190,26 @@ namespace Dependiator.Modeling
 		}
 
 
-		private static List<Data.Link> ToLinks(Node node)
+		private static List<Data.Link> ToDataLinks(Node node)
 		{
-			//if (!node.Links.Any())
-			//{
-			//	return null;
-			//}
+			if (!node.Links.SourceSegments.Any())
+			{
+				return null;
+			}
 
 			List<Data.Link> links = null;
 
-			//foreach (Link link in node.Links)
-			//{
-			//	foreach (NodeLink nodeLink in link.NodeLinks.Where(n => n.Source == node))
-			//	{
-			//		if (links == null)
-			//		{
-			//			links = new List<Data.Link>();
-			//		}
+			foreach (Link link in node.Links.Links)
+			{				
+				Data.Link dataLink = new Data.Link { Target = link.Target.NodeName };
 
-			//		Data.Link dataLink = new Data.Link { Target = nodeLink.Target.NodeName };
-			//		links.Add(dataLink);
-			//	}
-			//}
+				if (links == null)
+				{
+					links = new List<Data.Link>();
+				}
+
+				links.Add(dataLink);				
+			}
 
 			return links;
 		}

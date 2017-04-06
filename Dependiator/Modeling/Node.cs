@@ -35,7 +35,6 @@ namespace Dependiator.Modeling
 			ParentNode = parent;
 			NodeName = name;
 			NodeType = type;
-			Links = new NodeLinks(this);
 			NodeColor = null;
 		}
 	
@@ -52,8 +51,8 @@ namespace Dependiator.Modeling
 		public Node ParentNode { get; }
 		public List<Node> ChildNodes { get; } = new List<Node>();
 
-		public NodeLinks Links { get; }
-		// public List<Link> LinkItems => ChildItems.OfType<Link>();
+		public NodeLinks Links { get; } = new NodeLinks();
+
 		public string NodeColor { get; private set; }
 		public Rect? NodeBounds { get; set; }
 
@@ -535,6 +534,5 @@ namespace Dependiator.Modeling
 				yield return descendent;
 			}
 		}
-
 	}
 }
