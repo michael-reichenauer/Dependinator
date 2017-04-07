@@ -110,10 +110,14 @@ namespace Dependiator.Modeling
 
 			ParentNode.itemsCanvas.UpdateItem(singleNodeViewModel);
 
+
 			if (compositeNodeViewModel != null)
 			{
 				ParentNode.itemsCanvas.UpdateItem(compositeNodeViewModel);
 			}
+
+			Links.SourceSegments.ForEach(segment => segment.UpdateLine(true));
+			Links.TargetSegments.ForEach(segment => segment.UpdateLine(true));
 
 			currentViewModel.NotifyAll();
 
@@ -199,6 +203,20 @@ namespace Dependiator.Modeling
 
 		private void UpdateThisNodeVisibility()
 		{
+			Links.OwnedSegments.ForEach(segment =>
+			{
+				if (segment.CanBeShown())
+				{
+					segment.ViewModel.Show();
+					segment.ViewModel.NotifyAll();
+				}
+				else
+				{
+					segment.ViewModel.Hide();
+					segment.ViewModel.NotifyAll();
+				}
+			});
+
 			if (ParentNode != null && CanShowNode())
 			{
 				// Node is not shown and can be shown, Lets show it
@@ -418,30 +436,33 @@ namespace Dependiator.Modeling
 
 			nodeItemService.SetChildrenLayout(this);
 
-			if (ParentNode == null)
-			{
-				singleNodeViewModel = new SingleNodeViewModel(this);
-			
-				compositeNodeViewModel = new CompositeNodeViewModel(this, null);
-				currentViewModel = compositeNodeViewModel;
-
-				return;				
-			}
-
 			singleNodeViewModel = new SingleNodeViewModel(this);
-			ParentNode.itemsCanvas.AddItem(singleNodeViewModel);
+			ParentNode?.itemsCanvas.AddItem(singleNodeViewModel);
+	
 
 			if (ChildNodes.Any())
 			{
-				compositeNodeViewModel = new CompositeNodeViewModel(this, ParentNode.itemsCanvas);
+				compositeNodeViewModel = new CompositeNodeViewModel(this, ParentNode?.itemsCanvas);
+				ParentNode?.itemsCanvas.AddItem(compositeNodeViewModel);
 
-				itemsCanvas = compositeNodeViewModel.ItemsCanvas;
-				itemsCanvas.Scale = ParentNode.itemsCanvas.Scale / InitialScaleFactor;
+				if (ParentNode != null)
+				{
+					itemsCanvas = compositeNodeViewModel.ItemsCanvas;
+					itemsCanvas.Scale = ParentNode.itemsCanvas.Scale / InitialScaleFactor;
+				}
 
-				ParentNode.itemsCanvas.AddItem(compositeNodeViewModel);
+				Links.OwnedSegments.ForEach(segment => segment.UpdateLine());
+				itemsCanvas.AddItems(Links.OwnedSegments.Select(segment => segment.ViewModel));
 			}
 
-			currentViewModel = singleNodeViewModel;
+			if (ParentNode == null)
+			{
+				currentViewModel = compositeNodeViewModel;
+			}
+			else
+			{
+				currentViewModel = singleNodeViewModel;
+			}		
 		}
 
 		//private void AddLinks()

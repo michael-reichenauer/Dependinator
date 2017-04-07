@@ -14,7 +14,6 @@ namespace Dependiator.Modeling
 	{
 		private readonly List<Link> nodeLinks = new List<Link>();
 
-		private LinkSegmentViewModel viewModel;
 
 		public LinkSegment(
 			Node source,
@@ -25,9 +24,10 @@ namespace Dependiator.Modeling
 			Source = source;
 			Target = target;
 
-			viewModel = new LinkSegmentViewModel(this);
+			ViewModel = new LinkSegmentViewModel(this);
 		}
 
+		public LinkSegmentViewModel ViewModel { get; }
 
 		public Rect ItemBounds { get; private set; }
 		public double LinkScale => Owner.ItemsCanvasScale;
@@ -113,7 +113,7 @@ namespace Dependiator.Modeling
 
 		
 
-		public void UpdateLinkLine()
+		public void UpdateLine(bool isUpdateViewModel = false)
 		{
 			// Assume link nodes are siblings, 
 			Rect sourceBounds = Source.ItemBounds;
@@ -153,6 +153,11 @@ namespace Dependiator.Modeling
 			{
 				Y1 = height;
 				Y2 = 0;
+			}
+
+			if (isUpdateViewModel)
+			{
+				ViewModel.NotifyAll();
 			}
 		}
 
