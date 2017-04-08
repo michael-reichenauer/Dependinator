@@ -125,7 +125,7 @@
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>
-									<local:LinkView />
+									<local:LinkSegmentView />
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>

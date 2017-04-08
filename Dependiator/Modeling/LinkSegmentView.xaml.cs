@@ -4,11 +4,11 @@
 namespace Dependiator.Modeling
 {
 	/// <summary>
-	/// Interaction logic for LinkView.xaml
+	/// Interaction logic for LinkSegmentView.xaml
 	/// </summary>
-	public partial class LinkView : UserControl
+	public partial class LinkSegmentView : UserControl
 	{
-		public LinkView()
+		public LinkSegmentView()
 		{
 			InitializeComponent();
 		}
