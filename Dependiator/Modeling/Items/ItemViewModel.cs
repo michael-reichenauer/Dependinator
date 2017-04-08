@@ -57,11 +57,6 @@ namespace Dependiator.Modeling.Items
 		{
 			Log.Debug($"{GetType()} {this}");
 
-			if (this is LinkSegmentViewModel)
-			{
-				
-			}
-
 			if (IsShowing)
 			{
 				IsShowing = false;

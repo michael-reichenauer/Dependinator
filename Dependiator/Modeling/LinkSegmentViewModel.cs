@@ -14,7 +14,7 @@ namespace Dependiator.Modeling
 			this.linkSegment = linkSegment;
 		}
 
-		protected override Rect GetItemBounds() => linkSegment.ItemBounds;
+		protected override Rect GetItemBounds() => linkSegment.GetItemBounds();
 
 
 		public double X1 => linkSegment.X1 * linkSegment.LinkScale;

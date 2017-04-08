@@ -34,7 +34,22 @@ namespace Dependiator.Modeling.Items
 
 		public double ScaleFactor { get; private set; } = 1.0;
 
-		
+		public Rect ActualViewbox => zoomableCanvas?.ActualViewbox ?? Rect.Empty;
+
+		public Rect CanvasViewbox
+		{
+			get
+			{
+				if (zoomableCanvas == null)
+				{
+					return Rect.Empty;
+				}
+
+				Point canvasPoint = zoomableCanvas.GetCanvasPoint(ActualViewbox.Location);
+				Point canvasSize = zoomableCanvas.GetCanvasPoint((Point)ActualViewbox.Size);
+				return new Rect(canvasPoint, canvasSize);
+			}
+		}
 
 		public Point Offset
 		{
@@ -69,6 +84,7 @@ namespace Dependiator.Modeling.Items
 				}
 			}
 		}
+
 
 
 		public void UpdateScale()

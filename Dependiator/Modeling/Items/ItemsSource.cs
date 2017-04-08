@@ -120,6 +120,10 @@ namespace Dependiator.Modeling.Items
 		public void Update(IItem item)
 		{
 			ViewItem oldViewItem = (ViewItem)item.ItemState;
+			if (oldViewItem == null)
+			{
+				return;
+			}
 
 			Rect oldItemBounds = oldViewItem.ItemBounds;
 			viewItemsTree.Remove(item, oldItemBounds);

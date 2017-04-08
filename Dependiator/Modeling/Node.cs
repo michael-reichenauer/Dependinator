@@ -43,7 +43,8 @@ namespace Dependiator.Modeling
 
 		public double NodeItemScale => ParentNode?.itemsCanvas.Scale ?? 1.0;
 		public double ItemsCanvasScale => itemsCanvas.Scale;
-
+		public Rect ActualViewbox => itemsCanvas?.ActualViewbox ?? Rect.Empty;
+		public Rect CanvasViewbox => itemsCanvas?.CanvasViewbox ?? Rect.Empty;
 
 
 		public NodeName NodeName { get; }
@@ -118,8 +119,8 @@ namespace Dependiator.Modeling
 
 			Links.ReferencingSegments.ForEach(segment =>
 			{
-				segment.UpdateLine(true);
-				segment.Owner.itemsCanvas.UpdateItem(segment.ViewModel);
+				
+				segment.ViewModel.NotifyAll();
 			});
 
 			currentViewModel.NotifyAll();
@@ -191,6 +192,7 @@ namespace Dependiator.Modeling
 			if (IsCompositeNodeView)
 			{
 				ChildNodes.ForEach(n => n.UpdateVisibility());
+				Links.ManagedSegments.ForEach(segment => segment.UpdateVisability());
 			}
 		}
 
@@ -206,20 +208,6 @@ namespace Dependiator.Modeling
 
 		private void UpdateThisNodeVisibility()
 		{
-			Links.ManagedSegments.ForEach(segment =>
-			{
-				if (segment.CanBeShown())
-				{
-					segment.ViewModel.Show();
-					segment.ViewModel.NotifyAll();
-				}
-				else
-				{
-					segment.ViewModel.Hide();
-					segment.ViewModel.NotifyAll();
-				}
-			});
-
 			if (ParentNode != null && CanShowNode())
 			{
 				// Node is not shown and can be shown, Lets show it
@@ -427,6 +415,12 @@ namespace Dependiator.Modeling
 		}
 
 
+		public void UpdateItem(ItemViewModel viewModel)
+		{
+			itemsCanvas.UpdateItem(viewModel);
+		}
+
+
 		private void InitNodeIfNeeded()
 		{			
 			if (isInitialized)
@@ -454,7 +448,6 @@ namespace Dependiator.Modeling
 					itemsCanvas.Scale = ParentNode.itemsCanvas.Scale / InitialScaleFactor;
 				}
 
-				Links.ManagedSegments.ForEach(segment => segment.UpdateLine());
 				itemsCanvas.AddItems(Links.ManagedSegments.Select(segment => segment.ViewModel));
 			}
 
@@ -467,52 +460,6 @@ namespace Dependiator.Modeling
 				currentViewModel = singleNodeViewModel;
 			}		
 		}
-
-		//private void AddLinks()
-		//{
-		//	foreach (Link link in Links)
-		//	{
-		//		AddLink(link);
-		//	}
-		//}
-
-
-		//private void AddLink(Link link)
-		//{
-		//	if (link.Source == this)
-		//	{	
-		//		AddChildItem(link);
-		//		link.UpdateLinkLine();
-		//	}
-		//}
-
-
-		//public void UpdateLinksFor(Item item)
-		//{
-		//	IEnumerable<Link> links = Links
-		//		.Where(link => link.Source == item || link.Target == item)
-		//		.ToList();
-
-		//	foreach (Link link in links)
-		//	{
-		//		link.UpdateLinkLine();
-		//		link.NotifyAll();
-		//	}
-		//}
-
-
-		//public void UpdateLinksFor()
-		//{
-		//	IEnumerable<Link> links = Links	
-		//		.ToList();
-
-		//	foreach (Link link in links)
-		//	{
-		//		link.UpdateLinkLine();
-		//		link.NotifyAll();
-		//	}
-		//}
-
 
 
 		public IEnumerable<Node> Ancestors()

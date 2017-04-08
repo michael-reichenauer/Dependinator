@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Media;
+using System.Xml.Linq;
 using Dependiator.Modeling.Analyzing;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
@@ -13,7 +15,9 @@ namespace Dependiator.Modeling
 	internal class LinkSegment
 	{
 		private readonly List<Link> nodeLinks = new List<Link>();
-
+		private Rect itemBounds;
+		private Rect sourceBounds;
+		private Rect targetBounds;
 
 		public LinkSegment(
 			Node source,
@@ -29,7 +33,35 @@ namespace Dependiator.Modeling
 
 		public LinkSegmentViewModel ViewModel { get; }
 
-		public Rect ItemBounds { get; private set; }
+
+		public Rect GetItemBounds()
+		{
+			if (Source.ItemBounds == Rect.Empty || Target.ItemBounds == Rect.Empty)
+			{
+				return Rect.Empty;
+			}
+
+			if (sourceBounds != Source.ItemBounds || targetBounds != Target.ItemBounds)
+			{
+				// Source or target has moved, lets upate values
+				sourceBounds = Source.ItemBounds;
+				targetBounds = Target.ItemBounds;
+
+				UpdateLine();
+
+			}
+
+			return itemBounds;
+		}
+
+
+		public double X1 { get; private set; }
+		public double Y1 { get; private set; }
+		public double X2 { get; private set; }
+		public double Y2 { get; private set; }
+
+
+
 		public double LinkScale => Owner.ItemsCanvasScale;
 
 		public IReadOnlyList<Link> NodeLinks => nodeLinks;
@@ -42,10 +74,9 @@ namespace Dependiator.Modeling
 
 		public Brush LinkBrush => Source.GetNodeBrush();
 
-		public double X1 { get; private set; }
-		public double Y1 { get; private set; }
-		public double X2 { get; private set; }
-		public double Y2 { get; private set; }
+		
+
+		public double LineThickness => GetLineThickness();
 
 
 		public string ToolTip
@@ -68,6 +99,7 @@ namespace Dependiator.Modeling
 			}
 		}
 
+
 		public void Add(Link link)
 		{
 			if (nodeLinks.Any(l => l.Source == link.Source && l.Target == link.Target))
@@ -85,37 +117,47 @@ namespace Dependiator.Modeling
 		}
 
 
-
-		public double LineThickness
+		public void UpdateVisability()
 		{
-			get
+			if (CanBeShown())
 			{
-				double scale = (Owner.ItemsCanvasScale / 5).MM(0.1, 1);
-				double thickness = 0;
-
-				if (NodeLinks.Count < 5)
-				{
-					thickness = 1;
-				}
-				else if (NodeLinks.Count < 15)
-				{
-					thickness = 2;
-				}
-				else
-				{
-					thickness = 3;
-				}
-
-				return thickness * scale;
+				ViewModel.Show();
+				ViewModel.NotifyAll();
+			}
+			else
+			{
+				ViewModel.Hide();
+				ViewModel.NotifyAll();
 			}
 		}
 
 
-		
-
-		public void UpdateLine(bool isUpdateViewModel = false)
+		private double GetLineThickness()
 		{
-			// Assume link nodes are siblings, 
+			double scale = (Owner.ItemsCanvasScale / 2.5).MM(0.1, 1);
+			double thickness;
+
+			if (NodeLinks.Count < 5)
+			{
+				thickness = 1;
+			}
+			else if (NodeLinks.Count < 15)
+			{
+				thickness = 2;
+			}
+			else
+			{
+				thickness = 3;
+			}
+
+			return thickness * scale;
+		}
+
+
+		private void UpdateLine()
+		{
+			// We start by assuming source and target nodes are siblings, 
+			// I.e. line starts at source middle bottom and ends at target middle top
 			Rect sourceBounds = Source.ItemBounds;
 			Rect targetBounds = Target.ItemBounds;
 			double x1 = sourceBounds.X + sourceBounds.Width / 2;
@@ -125,22 +167,39 @@ namespace Dependiator.Modeling
 
 			if (Source.ParentNode == Target)
 			{
-				// To parent (out of node to some external node)
+				// The target is a parent of the source, i.e. line ends at the botom of the target node
 				y2 = targetBounds.Y + targetBounds.Height;
+
+				Rect targetViewbox = Target.ActualViewbox;
+				if (targetViewbox != Rect.Empty)
+				{
+					x2 = targetViewbox.X + (targetViewbox.Width / 2);
+					y2 = targetViewbox.Y + targetViewbox.Height;
+				}
 			}
 			else if (Source == Target.ParentNode)
 			{
-				// To child (into node to child node)
-				y1 = sourceBounds.Y;
+				// The target is the child of the source, i.e. line start at the top of the source
+				y1 = 0;
+				Rect sourceViewBox = Source.ActualViewbox;
+				if (sourceViewBox != Rect.Empty)
+				{
+					x1 = sourceViewBox.X + (sourceViewBox.Width / 2);
+					y1 = sourceViewBox.Y;
+				}
 			}
 
-			// Line bounds
+			// Line rect bounds:
 			double x = Math.Min(x1, x2);
 			double y = Math.Min(y1, y2);
 			double width = Math.Abs(x2 - x1);
 			double height = Math.Abs(y2 - y1);
-			double margin = 1;
-			ItemBounds = new Rect(x, y, Math.Max(width, margin), Math.Max(height, margin));
+
+			// Ensure the rect is at list big enaought to contain the width of the line
+			width = Math.Max(width, LineThickness + 1);
+			height = Math.Max(height, LineThickness + 1);
+
+			itemBounds = new Rect(x, y, width, height);
 
 			// Line drawing within the bounds
 			X1 = 0;
@@ -150,14 +209,12 @@ namespace Dependiator.Modeling
 
 			if (x1 <= x2 && y1 > y2 || x1 > x2 && y1 <= y2)
 			{
+				// Need to flip the line
 				Y1 = height;
 				Y2 = 0;
 			}
 
-			if (isUpdateViewModel)
-			{
-				ViewModel.NotifyAll();
-			}
+			Owner.UpdateItem(ViewModel);
 		}
 
 		public override string ToString() => $"{Source} -> {Target}";
