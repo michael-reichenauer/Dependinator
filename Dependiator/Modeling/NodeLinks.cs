@@ -8,18 +8,17 @@ namespace Dependiator.Modeling
 	internal class NodeLinks
 	{
 		private readonly List<Link> links = new List<Link>();
-		private readonly List<LinkSegment> ownedSegments = new List<LinkSegment>();
-		private readonly List<LinkSegment> sourceSegments = new List<LinkSegment>();
-		private readonly List<LinkSegment> targetSegments = new List<LinkSegment>();
-
+		private readonly List<LinkSegment> managedSegments = new List<LinkSegment>();
+		private readonly List<LinkSegment> referencingSegments = new List<LinkSegment>();
+	
 
 		public IReadOnlyList<Link> Links => links;
 
-		public IReadOnlyList<LinkSegment> OwnedSegments => ownedSegments;
+		public IReadOnlyList<LinkSegment> ManagedSegments => managedSegments;
 
-		public IReadOnlyList<LinkSegment> SourceSegments => sourceSegments;
+		public IReadOnlyList<LinkSegment> ReferencingSegments => referencingSegments;
 
-		public IReadOnlyList<LinkSegment> TargetSegments => targetSegments;
+		
 
 
 		public void Add(Link link)
@@ -61,25 +60,25 @@ namespace Dependiator.Modeling
 		
 		private static void AddSegment(Node source, Node target, Link link)
 		{
-			Node segmentOwner = GetLinkSegmentOwner(source, target);
+			Node segmentManager = GetLinkSegmentManager(source, target);
 
-			LinkSegment segment = segmentOwner.Links.ownedSegments
+			LinkSegment segment = segmentManager.Links.managedSegments
 				.FirstOrDefault(l => l.Source == source && l.Target == target);
 
 			if (segment == null)
 			{
-				segment = new LinkSegment(source, target, segmentOwner);
+				segment = new LinkSegment(source, target, segmentManager);
 
-				segmentOwner.Links.ownedSegments.Add(segment);
-				source.Links.sourceSegments.Add(segment);
-				target.Links.targetSegments.Add(segment);
+				segmentManager.Links.managedSegments.Add(segment);
+				source.Links.referencingSegments.Add(segment);
+				target.Links.referencingSegments.Add(segment);
 			}
 
 			segment.Add(link);
 		}
 
 
-		private static Node GetLinkSegmentOwner(Node source, Node target)
+		private static Node GetLinkSegmentManager(Node source, Node target)
 		{
 			if (source == target.ParentNode)
 			{
@@ -95,6 +94,6 @@ namespace Dependiator.Modeling
 
 
 
-		public override string ToString() => $"{ownedSegments.Count} links";
+		public override string ToString() => $"{managedSegments.Count} links";
 	}
 }

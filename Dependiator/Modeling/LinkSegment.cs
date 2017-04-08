@@ -90,7 +90,7 @@ namespace Dependiator.Modeling
 		{
 			get
 			{
-				double scale = (Owner.ItemsCanvasScale * 7).MM(0.1, 1);
+				double scale = (Owner.ItemsCanvasScale / 5).MM(0.1, 1);
 				double thickness = 0;
 
 				if (NodeLinks.Count < 5)
@@ -141,7 +141,6 @@ namespace Dependiator.Modeling
 			double height = Math.Abs(y2 - y1);
 			double margin = 1;
 			ItemBounds = new Rect(x, y, Math.Max(width, margin), Math.Max(height, margin));
-
 
 			// Line drawing within the bounds
 			X1 = 0;

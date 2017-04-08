@@ -116,8 +116,11 @@ namespace Dependiator.Modeling
 				ParentNode.itemsCanvas.UpdateItem(compositeNodeViewModel);
 			}
 
-			Links.SourceSegments.ForEach(segment => segment.UpdateLine(true));
-			Links.TargetSegments.ForEach(segment => segment.UpdateLine(true));
+			Links.ReferencingSegments.ForEach(segment =>
+			{
+				segment.UpdateLine(true);
+				segment.Owner.itemsCanvas.UpdateItem(segment.ViewModel);
+			});
 
 			currentViewModel.NotifyAll();
 
@@ -203,7 +206,7 @@ namespace Dependiator.Modeling
 
 		private void UpdateThisNodeVisibility()
 		{
-			Links.OwnedSegments.ForEach(segment =>
+			Links.ManagedSegments.ForEach(segment =>
 			{
 				if (segment.CanBeShown())
 				{
@@ -451,8 +454,8 @@ namespace Dependiator.Modeling
 					itemsCanvas.Scale = ParentNode.itemsCanvas.Scale / InitialScaleFactor;
 				}
 
-				Links.OwnedSegments.ForEach(segment => segment.UpdateLine());
-				itemsCanvas.AddItems(Links.OwnedSegments.Select(segment => segment.ViewModel));
+				Links.ManagedSegments.ForEach(segment => segment.UpdateLine());
+				itemsCanvas.AddItems(Links.ManagedSegments.Select(segment => segment.ViewModel));
 			}
 
 			if (ParentNode == null)

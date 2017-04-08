@@ -192,11 +192,6 @@ namespace Dependiator.Modeling
 
 		private static List<Data.Link> ToDataLinks(Node node)
 		{
-			if (!node.Links.SourceSegments.Any())
-			{
-				return null;
-			}
-
 			List<Data.Link> links = null;
 
 			foreach (Link link in node.Links.Links)

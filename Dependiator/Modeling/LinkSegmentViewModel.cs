@@ -27,5 +27,7 @@ namespace Dependiator.Modeling
 		public Brush HoverBrush => Brushes.Transparent;
 		public string StrokeDash { get; set; } = "";
 		public string ToolTip => linkSegment.ToolTip;
+
+		public override string ToString() => linkSegment.ToString();
 	}
 }
