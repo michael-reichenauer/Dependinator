@@ -18,7 +18,10 @@ namespace Dependiator.Modeling
 
 		private CompositeNodeViewModel compositeNodeViewModel;
 		private SingleNodeViewModel singleNodeViewModel;
-		private ItemsCanvas itemsCanvas;
+
+
+		// ######### public !!!!!!!!!!!!!!
+		public ItemsCanvas itemsCanvas;
 
 		private Brush nodeBrush;
 
@@ -44,7 +47,6 @@ namespace Dependiator.Modeling
 		public double NodeItemScale => ParentNode?.itemsCanvas.Scale ?? 1.0;
 		public double ItemsCanvasScale => itemsCanvas.Scale;
 		public Rect ActualViewbox => itemsCanvas?.ActualViewbox ?? Rect.Empty;
-		public Rect CanvasViewbox => itemsCanvas?.CanvasViewbox ?? Rect.Empty;
 
 
 		public NodeName NodeName { get; }
@@ -85,20 +87,24 @@ namespace Dependiator.Modeling
 		public void Zoom(int zoomDelta, Point viewPosition)
 		{
 			double newScale = itemsCanvas.GetZoomScale(zoomDelta);
-			if (!ChildNodes.Any(child => child.IsVisitableAtScale(newScale)))
+			if (!ChildNodes.Any(child => child.IsVisibleAtScale(newScale)))
 			{
 				return;
 			}
 
 			itemsCanvas.Zoom(zoomDelta, viewPosition);
 
-			UpdateVisibility();
+			UpdateVisibility();	
 		}
+
+
+	
 
 
 		public void MoveChildren(Vector viewOffset)
 		{
 			itemsCanvas.Move(viewOffset);
+			Links.ManagedSegments.ForEach(segment => segment.ViewModel.NotifyAll());
 
 			TriggerQueryInvalidatedInChildren();
 		}
@@ -117,11 +123,7 @@ namespace Dependiator.Modeling
 				ParentNode.itemsCanvas.UpdateItem(compositeNodeViewModel);
 			}
 
-			Links.ReferencingSegments.ForEach(segment =>
-			{
-				
-				segment.ViewModel.NotifyAll();
-			});
+			Links.ReferencingSegments.ForEach(segment => segment.ViewModel.NotifyAll());
 
 			currentViewModel.NotifyAll();
 
@@ -177,9 +179,13 @@ namespace Dependiator.Modeling
 			}
 
 			currentViewModel.NotifyAll();
+
+			Links.ManagedSegments.ForEach(segment => segment.ViewModel.NotifyAll());
+
+			TriggerQueryInvalidatedInChildren();
 		}
 
-		private async void UpdateVisibility()
+		private void UpdateVisibility()
 		{
 			InitNodeIfNeeded();
 
@@ -187,7 +193,7 @@ namespace Dependiator.Modeling
 
 			UpdateThisNodeVisibility();
 
-			await Task.Yield();
+			//await Task.Yield();
 
 			if (IsCompositeNodeView)
 			{
@@ -351,10 +357,10 @@ namespace Dependiator.Modeling
 		}
 
 
-		public bool CanShowNode() => IsVisitableAtScale(NodeItemScale);
+		public bool CanShowNode() => IsVisibleAtScale(NodeItemScale);
 
 
-		private bool IsVisitableAtScale(double scale) => ItemBounds.Size.Width * scale > 40;
+		private bool IsVisibleAtScale(double scale) => ItemBounds.Size.Width * scale > 40;
 
 
 		private bool CanShowChildren()

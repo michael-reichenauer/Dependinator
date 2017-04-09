@@ -21,7 +21,7 @@
 			<Grid.RowDefinitions>
 				
 				<!-- Title -->
-				<RowDefinition Height="Auto" />
+				<RowDefinition Height="20" />
 
 				<!-- Child nodes -->
 				<RowDefinition Height="*" />

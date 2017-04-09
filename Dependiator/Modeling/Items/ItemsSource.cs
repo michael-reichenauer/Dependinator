@@ -16,17 +16,21 @@ namespace Dependiator.Modeling.Items
 		private readonly Dictionary<int, IItem> viewItems = new Dictionary<int, IItem>();
 		private readonly Dictionary<int, IItem> removedItems = new Dictionary<int, IItem>();
 		public static int ItemCount = 0;
+		//private Rect lastViewArea = EmptyExtent;
 
 		private int currentItemId = 0;
 
 		private static int currentId = 0;
 		private int id = 0;
 
+	//	public event EventHandler ViewAreaChanged;
+
 		public Rect LastViewAreaQuery { get; private set; } = EmptyExtent;
+		
 
-	//	LastViewAreaQuery { get; set; }
+		//	LastViewAreaQuery { get; set; }
 
-	//private Rect lastViewAreaQuery = EmptyExtent;
+		//private Rect lastViewAreaQuery = EmptyExtent;
 
 
 		public ItemsSource(ItemsCanvas itemsCanvas)
@@ -252,7 +256,7 @@ namespace Dependiator.Modeling.Items
 		}
 
 
-		public void ItemsBoundsChanged()
+		private void ItemsBoundsChanged()
 		{
 			Rect currentBounds = EmptyExtent;
 
@@ -280,6 +284,19 @@ namespace Dependiator.Modeling.Items
 			// !!!!###### Enable inflate in Zoomable line 1369
 
 			//Log.Debug($"Id: {id}, ViewPort {itemsCanvas.CurrentViewPort}, Inflated: {viewArea}, ");
+			//if (lastViewArea != viewArea)
+			//{
+			//	lastViewArea = viewArea;
+			//	//ViewAreaChanged?.Invoke(this, EventArgs.Empty);
+			//}
+			
+
+			if (viewArea == Rect.Empty)
+			{
+				return Enumerable.Empty<int>();
+			}
+
+			LastViewAreaQuery = viewArea;
 
 			if (itemsCanvas.ParentItemsCanvas != null 
 				&& itemsCanvas.ParentItemsCanvas.LastViewAreaQuery != Rect.Empty)
@@ -298,18 +315,12 @@ namespace Dependiator.Modeling.Items
 				double w = parentViewArea.Width * scaleFactor;
 				double h = parentViewArea.Height * scaleFactor;
 
-				Rect scaledParentViewArea = new Rect(x + viewArea.X, y + viewArea.Y, w, h);		
+				Rect scaledParentViewArea = new Rect(x + viewArea.X, y + viewArea.Y, w, h);
 
-				viewArea.Intersect(scaledParentViewArea);
+				LastViewAreaQuery.Intersect(scaledParentViewArea);
 			}
 
 
-			LastViewAreaQuery = viewArea;
-
-			if (viewArea == Rect.Empty)
-			{
-				return Enumerable.Empty<int>();
-			}
 
 			IEnumerable<int> itemIds = viewItemsTree.GetItemsIntersecting(viewArea)
 				.Where(i => i.ItemState != null && i.CanShow)

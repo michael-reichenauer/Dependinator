@@ -14,7 +14,9 @@ namespace Dependiator.Modeling.Items
 		private readonly IItem ownerItem;
 		private readonly ItemsSource itemsSource;
 
-		private ZoomableCanvas zoomableCanvas;
+
+		// ######## public !!!!!!!!!!!!!!!!!!!!!!!!!!!
+		public ZoomableCanvas zoomableCanvas;
 		private double scale = 1.0;
 		private Point offset = new Point(0, 0);
 
@@ -31,25 +33,17 @@ namespace Dependiator.Modeling.Items
 		public Rect ItemBounds => ownerItem?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
 		public ItemsCanvas ParentItemsCanvas { get; }
 
+		//public event EventHandler ViewAreaChanged
+		//{
+		//	add => itemsSource.ViewAreaChanged += value;
+		//	remove => itemsSource.ViewAreaChanged -= value;
+		//}
+
 
 		public double ScaleFactor { get; private set; } = 1.0;
 
 		public Rect ActualViewbox => zoomableCanvas?.ActualViewbox ?? Rect.Empty;
 
-		public Rect CanvasViewbox
-		{
-			get
-			{
-				if (zoomableCanvas == null)
-				{
-					return Rect.Empty;
-				}
-
-				Point canvasPoint = zoomableCanvas.GetCanvasPoint(ActualViewbox.Location);
-				Point canvasSize = zoomableCanvas.GetCanvasPoint((Point)ActualViewbox.Size);
-				return new Rect(canvasPoint, canvasSize);
-			}
-		}
 
 		public Point Offset
 		{
@@ -57,7 +51,6 @@ namespace Dependiator.Modeling.Items
 			set
 			{
 				offset = value;
-
 				if (zoomableCanvas != null)
 				{
 					zoomableCanvas.Offset = value;

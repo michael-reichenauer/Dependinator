@@ -18,6 +18,9 @@ namespace Dependiator.Modeling
 		private Rect itemBounds;
 		private Rect sourceBounds;
 		private Rect targetBounds;
+		private Point? sourceOffset;
+		private Point? targetOffset;
+
 
 		public LinkSegment(
 			Node source,
@@ -31,6 +34,8 @@ namespace Dependiator.Modeling
 			ViewModel = new LinkSegmentViewModel(this);
 		}
 
+
+
 		public LinkSegmentViewModel ViewModel { get; }
 
 
@@ -41,14 +46,19 @@ namespace Dependiator.Modeling
 				return Rect.Empty;
 			}
 
-			if (sourceBounds != Source.ItemBounds || targetBounds != Target.ItemBounds)
+
+			if (sourceBounds != Source.ItemBounds 
+				|| targetBounds != Target.ItemBounds
+				|| sourceOffset != Source.itemsCanvas?.Offset
+				|| targetOffset != Target.itemsCanvas?.Offset)
 			{
 				// Source or target has moved, lets upate values
+				sourceOffset = Source.itemsCanvas?.Offset;
+				targetOffset = Target.itemsCanvas?.Offset;
 				sourceBounds = Source.ItemBounds;
 				targetBounds = Target.ItemBounds;
 
 				UpdateLine();
-
 			}
 
 			return itemBounds;
@@ -72,7 +82,9 @@ namespace Dependiator.Modeling
 
 		public Node Owner { get; }
 
-		public Brush LinkBrush => Source.GetNodeBrush();
+		public Brush LinkBrush => Source == Target.ParentNode
+			? Target.GetNodeBrush()
+			: Source.GetNodeBrush();
 
 		
 
@@ -121,20 +133,26 @@ namespace Dependiator.Modeling
 		{
 			if (CanBeShown())
 			{
-				ViewModel.Show();
-				ViewModel.NotifyAll();
+				//if (!ViewModel.CanShow)
+				{
+					ViewModel.Show();
+					ViewModel.NotifyAll();
+				}
 			}
 			else
 			{
-				ViewModel.Hide();
-				ViewModel.NotifyAll();
+				if (ViewModel.CanShow)
+				{
+					ViewModel.Hide();
+					ViewModel.NotifyAll();
+				}
 			}
 		}
 
 
 		private double GetLineThickness()
 		{
-			double scale = (Owner.ItemsCanvasScale / 2.5).MM(0.1, 1);
+			double scale = (Owner.ItemsCanvasScale).MM(0.1, 0.7);
 			double thickness;
 
 			if (NodeLinks.Count < 5)
@@ -158,8 +176,6 @@ namespace Dependiator.Modeling
 		{
 			// We start by assuming source and target nodes are siblings, 
 			// I.e. line starts at source middle bottom and ends at target middle top
-			Rect sourceBounds = Source.ItemBounds;
-			Rect targetBounds = Target.ItemBounds;
 			double x1 = sourceBounds.X + sourceBounds.Width / 2;
 			double y1 = sourceBounds.Y + sourceBounds.Height;
 			double x2 = targetBounds.X + targetBounds.Width / 2;
@@ -170,22 +186,24 @@ namespace Dependiator.Modeling
 				// The target is a parent of the source, i.e. line ends at the botom of the target node
 				y2 = targetBounds.Y + targetBounds.Height;
 
-				Rect targetViewbox = Target.ActualViewbox;
-				if (targetViewbox != Rect.Empty)
+				if (Target.itemsCanvas.zoomableCanvas != null)
 				{
-					x2 = targetViewbox.X + (targetViewbox.Width / 2);
-					y2 = targetViewbox.Y + targetViewbox.Height;
+					x2 = (targetBounds.Width / 2) * Target.itemsCanvas.ScaleFactor
+							 + Target.itemsCanvas.Offset.X / Target.itemsCanvas.Scale;
+					y2 = (targetBounds.Height) * Target.itemsCanvas.ScaleFactor
+						+ (Target.itemsCanvas.Offset.Y - 20) / Target.itemsCanvas.Scale;
 				}
 			}
 			else if (Source == Target.ParentNode)
 			{
 				// The target is the child of the source, i.e. line start at the top of the source
 				y1 = 0;
-				Rect sourceViewBox = Source.ActualViewbox;
-				if (sourceViewBox != Rect.Empty)
+
+				if (Source.itemsCanvas.zoomableCanvas != null)
 				{
-					x1 = sourceViewBox.X + (sourceViewBox.Width / 2);
-					y1 = sourceViewBox.Y;
+					x1 = (sourceBounds.Width / 2) * Source.itemsCanvas.ScaleFactor
+						+ Source.itemsCanvas.Offset.X / Source.itemsCanvas.Scale;
+					y1 = Source.itemsCanvas.Offset.Y / Source.itemsCanvas.Scale;
 				}
 			}
 
