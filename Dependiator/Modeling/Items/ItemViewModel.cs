@@ -1,4 +1,3 @@
-using System.Threading;
 using System.Windows;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;

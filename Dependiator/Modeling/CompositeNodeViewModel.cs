@@ -1,11 +1,7 @@
 using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using Dependiator.Modeling.Items;
-using Dependiator.Utils;
-using Dependiator.Utils.UI.VirtualCanvas;
 
 
 namespace Dependiator.Modeling

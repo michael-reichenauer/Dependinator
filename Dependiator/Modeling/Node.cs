@@ -1,12 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using Dependiator.Modeling.Items;
 using Dependiator.Utils;
-using Dependiator.Utils.UI;
 
 
 namespace Dependiator.Modeling
@@ -20,8 +17,7 @@ namespace Dependiator.Modeling
 		private SingleNodeViewModel singleNodeViewModel;
 
 
-		// ######### public !!!!!!!!!!!!!!
-		public ItemsCanvas itemsCanvas;
+		private ItemsCanvas itemsCanvas;
 
 		private Brush nodeBrush;
 
@@ -45,9 +41,9 @@ namespace Dependiator.Modeling
 		public Rect ItemBounds { get; set; }
 
 		public double NodeItemScale => ParentNode?.itemsCanvas.Scale ?? 1.0;
-		public double ItemsCanvasScale => itemsCanvas.Scale;
-		public Rect ActualViewbox => itemsCanvas?.ActualViewbox ?? Rect.Empty;
-
+		public double ItemsCanvasScale => itemsCanvas?.Scale ?? 1;
+		public double ItemsScaleFactor => itemsCanvas?.ScaleFactor ?? 1;
+		public Point ItemsOffset => itemsCanvas?.Offset ?? new Point();
 
 		public NodeName NodeName { get; }
 		public NodeType NodeType { get; private set; }
@@ -72,6 +68,7 @@ namespace Dependiator.Modeling
 		public string ToolTip =>
 			$"\n Children: {ChildNodes.Count} Items: {ItemViewModel.TotalCount}, {ItemsSource.ItemCount}\n" +
 			$"Scale: {NodeItemScale:0.00}, ParentScale: {ParentNode.NodeItemScale:0.00}";
+		
 
 
 		public void Show(ItemsCanvas rootItemsCanvas)

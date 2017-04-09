@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Windows;
-using Dependiator.Utils;
 using Dependiator.Utils.UI.VirtualCanvas;
 
 
@@ -33,21 +32,14 @@ namespace Dependiator.Modeling.Items
 		public Rect ItemBounds => ownerItem?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
 		public ItemsCanvas ParentItemsCanvas { get; }
 
-		//public event EventHandler ViewAreaChanged
-		//{
-		//	add => itemsSource.ViewAreaChanged += value;
-		//	remove => itemsSource.ViewAreaChanged -= value;
-		//}
-
 
 		public double ScaleFactor { get; private set; } = 1.0;
 
-		public Rect ActualViewbox => zoomableCanvas?.ActualViewbox ?? Rect.Empty;
 
 
 		public Point Offset
 		{
-			get { return offset; }
+			get => offset;
 			set
 			{
 				offset = value;

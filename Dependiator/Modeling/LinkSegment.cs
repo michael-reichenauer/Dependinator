@@ -1,13 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Windows;
 using System.Windows.Media;
-using System.Xml.Linq;
-using Dependiator.Modeling.Analyzing;
-using Dependiator.Utils;
-using Dependiator.Utils.UI;
 
 
 namespace Dependiator.Modeling
@@ -17,9 +12,11 @@ namespace Dependiator.Modeling
 		private readonly List<Link> nodeLinks = new List<Link>();
 		private Rect itemBounds;
 		private Rect sourceBounds;
+		private Point sourceOffset;
+		private double sourceScale;
 		private Rect targetBounds;
-		private Point? sourceOffset;
-		private Point? targetOffset;
+		private Point targetOffset;
+		private double targetScale;
 
 
 		public LinkSegment(
@@ -47,16 +44,20 @@ namespace Dependiator.Modeling
 			}
 
 
-			if (sourceBounds != Source.ItemBounds 
+			if (sourceBounds != Source.ItemBounds
 				|| targetBounds != Target.ItemBounds
-				|| sourceOffset != Source.itemsCanvas?.Offset
-				|| targetOffset != Target.itemsCanvas?.Offset)
+				|| sourceOffset != Source.ItemsOffset
+				|| targetOffset != Target.ItemsOffset
+				|| sourceScale != Source.ItemsCanvasScale
+				|| targetScale != Target.ItemsCanvasScale)
 			{
 				// Source or target has moved, lets upate values
-				sourceOffset = Source.itemsCanvas?.Offset;
-				targetOffset = Target.itemsCanvas?.Offset;
 				sourceBounds = Source.ItemBounds;
+				sourceOffset = Source.ItemsOffset;
+				sourceScale = Source.ItemsCanvasScale;
+				targetOffset = Target.ItemsOffset;
 				targetBounds = Target.ItemBounds;
+				targetScale = Target.ItemsCanvasScale;
 
 				UpdateLine();
 			}
@@ -86,7 +87,7 @@ namespace Dependiator.Modeling
 			? Target.GetNodeBrush()
 			: Source.GetNodeBrush();
 
-		
+
 
 		public double LineThickness => GetLineThickness();
 
@@ -184,27 +185,18 @@ namespace Dependiator.Modeling
 			if (Source.ParentNode == Target)
 			{
 				// The target is a parent of the source, i.e. line ends at the botom of the target node
-				y2 = targetBounds.Y + targetBounds.Height;
+				x2 = (targetBounds.Width / 2) * Target.ItemsScaleFactor
+							+ Target.ItemsOffset.X / Target.ItemsCanvasScale;
+				y2 = (targetBounds.Height) * Target.ItemsScaleFactor
+					+ (Target.ItemsOffset.Y - 20) / Target.ItemsCanvasScale;
 
-				if (Target.itemsCanvas.zoomableCanvas != null)
-				{
-					x2 = (targetBounds.Width / 2) * Target.itemsCanvas.ScaleFactor
-							 + Target.itemsCanvas.Offset.X / Target.itemsCanvas.Scale;
-					y2 = (targetBounds.Height) * Target.itemsCanvas.ScaleFactor
-						+ (Target.itemsCanvas.Offset.Y - 20) / Target.itemsCanvas.Scale;
-				}
 			}
 			else if (Source == Target.ParentNode)
 			{
 				// The target is the child of the source, i.e. line start at the top of the source
-				y1 = 0;
-
-				if (Source.itemsCanvas.zoomableCanvas != null)
-				{
-					x1 = (sourceBounds.Width / 2) * Source.itemsCanvas.ScaleFactor
-						+ Source.itemsCanvas.Offset.X / Source.itemsCanvas.Scale;
-					y1 = Source.itemsCanvas.Offset.Y / Source.itemsCanvas.Scale;
-				}
+				x1 = (sourceBounds.Width / 2) * Source.ItemsScaleFactor
+					+ Source.ItemsOffset.X / Source.ItemsCanvasScale;
+				y1 = Source.ItemsOffset.Y / Source.ItemsCanvasScale;
 			}
 
 			// Line rect bounds:

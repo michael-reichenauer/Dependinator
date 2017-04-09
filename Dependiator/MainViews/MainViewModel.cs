@@ -8,7 +8,6 @@ using Dependiator.Modeling;
 using Dependiator.Modeling.Items;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
-using Dependiator.Utils.UI.VirtualCanvas;
 
 
 namespace Dependiator.MainViews
