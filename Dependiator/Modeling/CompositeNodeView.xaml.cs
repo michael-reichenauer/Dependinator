@@ -32,16 +32,16 @@ namespace Dependiator.Modeling
 				return;
 			}
 
-			int zoomDelta = e.Delta;
+			int wheelDelta = e.Delta;
 			Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
 
 			if (e.OriginalSource is ListBox)
 			{
-				viewModel.Zoom(zoomDelta, viewPosition);
+				viewModel.Zoom(wheelDelta, viewPosition);
 			}
 			else
 			{
-				viewModel.Resize(zoomDelta, viewPosition);
+				viewModel.ZoomResize(wheelDelta);
 			}					
 
 			e.Handled = true;

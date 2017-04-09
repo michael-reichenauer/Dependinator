@@ -95,7 +95,22 @@ namespace Dependiator.Modeling
 		}
 
 
-	
+
+		public void Zoom(double zoom)
+		{
+			double newScale = itemsCanvas.Scale * zoom;
+			if (zoom < 1 && !ChildNodes.Any(child => child.IsVisibleAtScale(newScale)))
+			{
+				return;
+			}
+
+			itemsCanvas.Zoom(zoom);
+
+			UpdateVisibility();
+		}
+
+
+
 
 
 		public void MoveChildren(Vector viewOffset)
@@ -147,20 +162,19 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void Resize(int zoomDelta, Point viewPosition)
+		public void ZoomResize(int wheelDelta)
 		{
-			double delta = (double)zoomDelta / 5;
+			double delta = (double)wheelDelta / 12;
 
-			double scaledDelta = delta / ParentNode.NodeItemScale;
+			double scaledDelta = delta / NodeItemScale;
 
-			Point newItemLocation = new Point(
-				ItemBounds.X - scaledDelta,
-				ItemBounds.Y);
+			Point newItemLocation = new Point(ItemBounds.X - scaledDelta, ItemBounds.Y);
 
 			double width = ItemBounds.Size.Width + (2 * scaledDelta);
 			double height = ItemBounds.Size.Height + (2 * scaledDelta);
+			double zoom = width / ItemBounds.Size.Width;
 
-			if (width < 0 || height < 0)
+			if (width < 40 || height < 20)
 			{
 				return;
 			}
@@ -180,6 +194,8 @@ namespace Dependiator.Modeling
 			Links.ManagedSegments.ForEach(segment => segment.ViewModel.NotifyAll());
 
 			TriggerQueryInvalidatedInChildren();
+
+			Zoom(zoom);
 		}
 
 		private void UpdateVisibility()

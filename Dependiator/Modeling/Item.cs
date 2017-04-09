@@ -211,7 +211,7 @@
 //		}
 
 
-//		public void Resize(int zoomDelta, Point viewPosition)
+//		public void ZoomResize(int zoomDelta, Point viewPosition)
 //		{
 //			double delta = (double)zoomDelta / 20.0;
 //			xf = 1;
