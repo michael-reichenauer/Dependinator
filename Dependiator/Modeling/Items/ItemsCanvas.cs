@@ -73,7 +73,7 @@ namespace Dependiator.Modeling.Items
 		{
 			if (ParentItemsCanvas != null)
 			{
-				Scale = ParentItemsCanvas.scale / ScaleFactor;
+				Scale = ParentItemsCanvas.Scale / ScaleFactor;
 			}			
 		}
 

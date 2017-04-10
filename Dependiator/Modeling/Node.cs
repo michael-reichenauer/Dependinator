@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using Dependiator.Modeling.Items;
@@ -120,7 +121,6 @@ namespace Dependiator.Modeling
 
 			ParentNode.itemsCanvas.UpdateItem(singleNodeViewModel);
 
-
 			if (compositeNodeViewModel != null)
 			{
 				ParentNode.itemsCanvas.UpdateItem(compositeNodeViewModel);
@@ -163,8 +163,8 @@ namespace Dependiator.Modeling
 
 			double width = ItemBounds.Size.Width + (2 * scaledDelta);
 			double height = ItemBounds.Size.Height + (2 * scaledDelta);
-			double zoom = width / ItemBounds.Size.Width;
 
+			// double zoom = width / ItemBounds.Size.Width;
 			if (width < 40 || height < 20)
 			{
 				return;
@@ -190,7 +190,8 @@ namespace Dependiator.Modeling
 			MoveChildren(new Vector(scaledDelta * NodeItemScale, 0));
 		}
 
-		private void UpdateVisibility()
+
+		private async void UpdateVisibility()
 		{
 			InitNodeIfNeeded();
 
@@ -198,11 +199,11 @@ namespace Dependiator.Modeling
 
 			UpdateThisNodeVisibility();
 
-			//await Task.Yield();
+			await Task.Yield();
 
-			if (IsCompositeNodeView)
+			if ((IsRootNode || currentViewModel.CanShow) && IsCompositeNodeView)
 			{
-				ChildNodes.ForEach(n => n.UpdateVisibility());
+				ChildNodes.ForEach(child => child.UpdateVisibility());
 				Links.ManagedSegments.ForEach(segment => segment.UpdateVisability());
 			}
 		}
