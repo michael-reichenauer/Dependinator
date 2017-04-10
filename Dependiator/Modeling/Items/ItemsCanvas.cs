@@ -8,14 +8,11 @@ namespace Dependiator.Modeling.Items
 {
 	internal class ItemsCanvas
 	{
-		private static readonly double ZoomSpeed = 1000.0;
-
 		private readonly IItem ownerItem;
 		private readonly ItemsSource itemsSource;
 
 
-		// ######## public !!!!!!!!!!!!!!!!!!!!!!!!!!!
-		public ZoomableCanvas zoomableCanvas;
+		private ZoomableCanvas zoomableCanvas;
 		private double scale = 1.0;
 		private Point offset = new Point(0, 0);
 
@@ -53,7 +50,7 @@ namespace Dependiator.Modeling.Items
 
 		public double Scale
 		{
-			get { return scale; }
+			get => scale;
 			set
 			{
 				scale = value;
@@ -110,35 +107,21 @@ namespace Dependiator.Modeling.Items
 		public void UpdateItem(IItem item) => itemsSource.Update(item);
 
 
-		public double GetZoomScale(int zoomDelta) => Scale * Math.Pow(2, zoomDelta / ZoomSpeed);
-
-
-		public void Zoom(int zoomDelta, Point viewPosition)
-		{
-			double zoom = Math.Pow(2, zoomDelta / ZoomSpeed);
-
-			double newScale = Scale * zoom;
-			zoom = newScale / Scale;
-
-			Scale = newScale;
-
-			// Adjust the offset to make the point under the mouse stay still.
-			Vector position = (Vector)viewPosition;
-			Offset = (Point)((Vector)(Offset + position) * zoom - position);
-		}
-
-		public void Zoom(double zoom)
+		public void Zoom(double zoom, Point? zoomCenter = null)
 		{
 			double newScale = Scale * zoom;
-			zoom = newScale / Scale;
-
+			double scaleFactor = newScale / Scale;
 			Scale = newScale;
 
-			//// Adjust the offset to make the point under the mouse stay still.
-			//Vector position = (Vector)viewPosition;
-			//Offset = (Point)((Vector)(Offset + position) * zoom - position);
+			// Adjust the offset to make the point under the mouse stay still (if provided).
+			if (zoomCenter.HasValue)
+			{		
+				Vector position = (Vector)zoomCenter;
+				Offset = (Point)((Vector)(Offset + position) * scaleFactor - position);
+			}
 		}
 
+	
 
 		public void Move(Vector viewOffset)
 		{
@@ -156,13 +139,6 @@ namespace Dependiator.Modeling.Items
 		{
 			itemsSource.TriggerInvalidated();
 		}
-
-
-		//private void TriggerScaleChanged()
-		//{
-		//	ScaleChanged?.Invoke(this, EventArgs.Empty);
-		//}
-
 
 		public override string ToString() => ownerItem?.ToString() ?? "<root>";
 

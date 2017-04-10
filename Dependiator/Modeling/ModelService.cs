@@ -153,11 +153,8 @@ namespace Dependiator.Modeling
 		}
 
 
-		public bool Zoom(int zoomDelta, Point viewPosition)
-		{
-			model.Root.Zoom(zoomDelta, viewPosition);
-			return true;
-		}
+		public void Zoom(double zoomFactor, Point zoomCenter) =>
+			model.Root.Zoom(zoomFactor, zoomCenter);
 
 
 		public void Move(Vector viewOffset)

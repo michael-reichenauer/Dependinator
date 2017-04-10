@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
@@ -11,6 +12,8 @@ namespace Dependiator.Modeling
 	/// </summary>
 	public partial class CompositeNodeView : UserControl
 	{
+		private static readonly double ZoomSpeed = 1000.0;
+
 		private Point lastMousePosition;
 
 		public CompositeNodeView()
@@ -37,7 +40,8 @@ namespace Dependiator.Modeling
 
 			if (e.OriginalSource is ListBox)
 			{
-				viewModel.Zoom(wheelDelta, viewPosition);
+				double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
+				viewModel.Zoom(zoom, viewPosition);
 			}
 			else
 			{

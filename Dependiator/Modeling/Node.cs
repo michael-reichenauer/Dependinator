@@ -56,6 +56,9 @@ namespace Dependiator.Modeling
 		public Rect? NodeBounds { get; set; }
 
 
+		private bool IsShowing => currentViewModel.IsShowing;
+		private bool IsRootNode => ParentNode == null;
+
 		private bool IsCompositeNodeView => currentViewModel is CompositeNodeViewModel;
 		private bool IsCompositeNodeShowing => IsCompositeNodeView && currentViewModel.IsShowing;
 		private bool IsSingleNodeView => currentViewModel is SingleNodeViewModel;
@@ -73,7 +76,7 @@ namespace Dependiator.Modeling
 
 		public void Show(ItemsCanvas rootItemsCanvas)
 		{
-			Asserter.Requires(ParentNode == null);
+			Asserter.Requires(IsRootNode);
 		
 			// Show children of the root noode
 			itemsCanvas = rootItemsCanvas;
@@ -81,40 +84,28 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void Zoom(int zoomDelta, Point viewPosition)
+		public void Zoom(double zoomFactor, Point zoomCenter)
 		{
-			double newScale = itemsCanvas.GetZoomScale(zoomDelta);
-			if (!ChildNodes.Any(child => child.IsVisibleAtScale(newScale)))
+			double newScale = itemsCanvas.Scale * zoomFactor;
+			if (newScale < 1 && !ChildNodes.Any(child => child.IsVisibleAtScale(newScale)))
 			{
 				return;
 			}
 
-			itemsCanvas.Zoom(zoomDelta, viewPosition);
+			itemsCanvas.Zoom(zoomFactor, zoomCenter);
 
 			UpdateVisibility();	
 		}
 
 
 
-		public void Zoom(double zoom)
+		public void MoveChildren(Vector viewOffset)
 		{
-			double newScale = itemsCanvas.Scale * zoom;
-			if (zoom < 1 && !ChildNodes.Any(child => child.IsVisibleAtScale(newScale)))
+			if (!ChildNodes.Any(child => child.CanShowNode()))
 			{
 				return;
 			}
 
-			itemsCanvas.Zoom(zoom);
-
-			UpdateVisibility();
-		}
-
-
-
-
-
-		public void MoveChildren(Vector viewOffset)
-		{
 			itemsCanvas.Move(viewOffset);
 			Links.ManagedSegments.ForEach(segment => segment.ViewModel.NotifyAll());
 
@@ -182,6 +173,7 @@ namespace Dependiator.Modeling
 			Size newItemSize = new Size(width, height);
 			ItemBounds = new Rect(newItemLocation, newItemSize);
 
+		
 			ParentNode.itemsCanvas.UpdateItem(singleNodeViewModel);
 
 			if (compositeNodeViewModel != null)
@@ -195,7 +187,7 @@ namespace Dependiator.Modeling
 
 			TriggerQueryInvalidatedInChildren();
 
-			Zoom(zoom);
+			MoveChildren(new Vector(scaledDelta * NodeItemScale, 0));
 		}
 
 		private void UpdateVisibility()
@@ -378,15 +370,15 @@ namespace Dependiator.Modeling
 
 		private bool CanShowChildren()
 		{
-			//return ChildNodes.Any();
+			return ChildNodes.Any();
 
-			if (IsCompositeNodeShowing)
-			{
-				return ChildNodes.Any(child => child.CanShowNode());
-			}
+			//if (IsCompositeNodeShowing)
+			//{
+			//	return ChildNodes.Any(child => child.CanShowNode());
+			//}
 
-			return ChildNodes
-				.Any(child => child.ItemBounds.Size.Width * NodeItemScale / itemsCanvas.ScaleFactor > 40);
+			//return ChildNodes
+			//	.Any(child => child.ItemBounds.Size.Width * NodeItemScale / itemsCanvas.ScaleFactor > 40);
 
 		}
 
@@ -459,10 +451,10 @@ namespace Dependiator.Modeling
 			if (ChildNodes.Any())
 			{
 				compositeNodeViewModel = new CompositeNodeViewModel(this, ParentNode?.itemsCanvas);
-				ParentNode?.itemsCanvas.AddItem(compositeNodeViewModel);
-
-				if (ParentNode != null)
+				
+				if (!IsRootNode)
 				{
+					ParentNode.itemsCanvas.AddItem(compositeNodeViewModel);
 					itemsCanvas = compositeNodeViewModel.ItemsCanvas;
 					itemsCanvas.Scale = ParentNode.itemsCanvas.Scale / InitialScaleFactor;
 				}
@@ -470,7 +462,7 @@ namespace Dependiator.Modeling
 				itemsCanvas.AddItems(Links.ManagedSegments.Select(segment => segment.ViewModel));
 			}
 
-			if (ParentNode == null)
+			if (IsRootNode)
 			{
 				currentViewModel = compositeNodeViewModel;
 			}

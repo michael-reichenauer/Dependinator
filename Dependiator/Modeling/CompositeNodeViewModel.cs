@@ -72,7 +72,7 @@ namespace Dependiator.Modeling
 
 
 
-		public void Zoom(int zoomDelta, Point viewPosition) => node.Zoom(zoomDelta, viewPosition);
+		public void Zoom(double zoomFactor, Point viewPosition) => node.Zoom(zoomFactor, viewPosition);
 
 		public void ZoomResize(int wheelDelta) => node.ZoomResize(wheelDelta);
 

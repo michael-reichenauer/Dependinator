@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using UserControl = System.Windows.Controls.UserControl;
@@ -11,6 +12,8 @@ namespace Dependiator.MainViews
 	/// </summary>
 	public partial class MainView : UserControl
 	{
+		private static readonly double ZoomSpeed = 1000.0;
+
 		private MainViewModel viewModel;
 
 		private Point lastMousePosition;
@@ -40,12 +43,12 @@ namespace Dependiator.MainViews
 				return;
 			}
 
-			bool isNodeZoom = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
-
-			int zoomDelta = e.Delta;
+			int wheelDelta = e.Delta;
 			Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
 
-			e.Handled = viewModel.Zoom(zoomDelta, viewPosition, isNodeZoom);
+			double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
+			viewModel.Zoom(zoom, viewPosition);
+			e.Handled = true;
 		}
 
 

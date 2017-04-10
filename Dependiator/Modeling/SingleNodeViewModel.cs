@@ -33,7 +33,7 @@ namespace Dependiator.Modeling
 		public int CornerRadius => 3;
 
 
-		public int FontSize => ((int)(14 * node.NodeItemScale)).MM(8, 15);
+		public int FontSize => ((int)(15 * node.NodeItemScale * 1.5)).MM(8, 15);
 		//{
 		//	get
 		//	{
