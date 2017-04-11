@@ -87,5 +87,18 @@ namespace Dependiator.Modeling
 
 			lastMousePosition = viewPosition;
 		}
+
+
+		private void ToolTip_OnOpened(object sender, RoutedEventArgs e)
+		{
+			CompositeNodeViewModel viewModel = DataContext as CompositeNodeViewModel;
+			if (viewModel == null)
+			{
+				return;
+			}
+
+			viewModel.UpdateToolTip();
+
+		}
 	}
 }

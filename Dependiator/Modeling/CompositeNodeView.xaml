@@ -42,7 +42,7 @@
 						Content="{Binding ToolTip}"
 						Placement="Mouse"
 						BorderBrush="{Binding RectangleBrush}"
-						BorderThickness="1" />
+						BorderThickness="1"  Opened="ToolTip_OnOpened"/>
 				</Grid.ToolTip>
 			</Grid>
 

@@ -42,7 +42,7 @@ namespace Dependiator.Modeling.Items
 
 		public virtual void ItemRealized()
 		{
-			//Log.Debug($"{GetType()} {this}");
+			Log.Debug($"{GetType()} {this}");
 
 			if (!IsShowing)
 			{
@@ -54,7 +54,7 @@ namespace Dependiator.Modeling.Items
 
 		public virtual void ItemVirtualized()
 		{
-			//Log.Debug($"{GetType()} {this}");
+			Log.Debug($"{GetType()} {this}");
 
 			if (IsShowing)
 			{
@@ -64,18 +64,18 @@ namespace Dependiator.Modeling.Items
 		}
 
 
-		public virtual void SetParentVirtualized()
-		{
-			if (!IsShowing)
-			{
-				return;
-			}
+		//public virtual void SetParentVirtualized()
+		//{
+		//	if (!IsShowing)
+		//	{
+		//		return;
+		//	}
 
-			//Log.Debug($"{GetType()} {this}");
+		//	//Log.Debug($"{GetType()} {this}");
 
-			IsShowing = false;
-			TotalCount--;
-		}
+		//	IsShowing = false;
+		//	TotalCount--;
+		//}
 
 
 		protected abstract Rect GetItemBounds();

@@ -126,7 +126,7 @@ namespace Dependiator.Modeling
 
 		public bool CanBeShown()
 		{
-			return LinkScale > 0.3 && (Source.CanShowNode() || Target.CanShowNode());
+			return (Source.CanShowNode() && Target.CanShowNode());
 		}
 
 

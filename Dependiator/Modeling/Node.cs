@@ -64,7 +64,7 @@ namespace Dependiator.Modeling
 
 
 		public string ToolTip =>
-			$"\n Children: {ChildNodes.Count} Items: {ItemViewModel.TotalCount}, {ItemsSource.ItemCount}\n" +
+			$"\n Children: {ChildNodes.Count} Shown Items: {CountShowingNodes()}\n" +
 			$"Scale: {NodeItemScale:0.00}, ParentScale: {ParentNode.NodeItemScale:0.00}";
 		
 
@@ -111,7 +111,7 @@ namespace Dependiator.Modeling
 
 			ParentNode.itemsCanvas.UpdateItem(currentViewModel);
 
-			Links.ReferencingSegments.ForEach(segment => segment.ViewModel.NotifyAll());
+			Links.ReferencingSegments.ForEach(segment => segment.UpdateVisibility());
 
 			currentViewModel.NotifyAll();
 
@@ -129,7 +129,7 @@ namespace Dependiator.Modeling
 			}
 
 			itemsCanvas.Move(viewOffset);
-			Links.ManagedSegments.ForEach(segment => segment.ViewModel.NotifyAll());
+			Links.ManagedSegments.ForEach(segment => segment.UpdateVisibility());
 
 			TriggerQueryInvalidatedInChildren();
 		}
@@ -178,7 +178,7 @@ namespace Dependiator.Modeling
 
 			currentViewModel.NotifyAll();
 
-			Links.ManagedSegments.ForEach(segment => segment.ViewModel.NotifyAll());
+			Links.ManagedSegments.ForEach(segment => segment.UpdateVisibility());
 
 			TriggerQueryInvalidatedInChildren();
 
@@ -362,36 +362,36 @@ namespace Dependiator.Modeling
 		}
 
 
-		//private int CountShowingNodes()
-		//{
-		//	Log.Debug("Counting shown nodes:");
-		//	Stack<Node> nodes = new Stack<Node>();
+		private int CountShowingNodes()
+		{
+			Log.Debug("Counting shown nodes:");
+			Stack<Node> nodes = new Stack<Node>();
 
-		//	Node startNode = this;
-		//	while (!startNode.IsRootNode)
-		//	{
-		//		startNode = startNode.ParentNode;
-		//	}
+			Node startNode = this;
+			while (!startNode.IsRootNode)
+			{
+				startNode = startNode.ParentNode;
+			}
 
-		//	nodes.Push(startNode);
+			nodes.Push(startNode);
 
-		//	int count = 0;
-		//	while (nodes.Any())
-		//	{
-		//		Node node = nodes.Pop();
-		//		if (node.IsShowing)
-		//		{
-		//			count++;
-		//			Log.Debug($"  IsShowing {node}");
-		//			node.ChildNodes.ForEach(nodes.Push);
-		//		}
-		//	}
+			int count = 0;
+			while (nodes.Any())
+			{
+				Node node = nodes.Pop();
+				if (node.IsShowing)
+				{
+					count++;
+					Log.Debug($"  IsShowing {node}");
+					node.ChildNodes.ForEach(nodes.Push);
+				}
+			}
 
-		//	return count;
-		//}
+			return count - 1;
+		}
 
 
-		private void InitNodeIfNeeded()
+			private void InitNodeIfNeeded()
 		{			
 			if (isInitialized)
 			{

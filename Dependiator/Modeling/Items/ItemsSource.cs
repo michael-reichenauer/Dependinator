@@ -135,6 +135,7 @@ namespace Dependiator.Modeling.Items
 			item.ItemState = new ViewItem(oldViewItem.ItemId, newItemBounds, item);
 
 			viewItemsTree.Insert(item, newItemBounds, 0);
+			//Log.Debug($"Updated {id} count:{viewItemsTree.Count()}");
 
 			ItemsBoundsChanged();
 

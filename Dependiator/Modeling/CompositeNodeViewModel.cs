@@ -80,5 +80,11 @@ namespace Dependiator.Modeling
 
 
 		public override string ToString() => node.NodeName;
+
+
+		public void UpdateToolTip()
+		{
+			Notify(nameof(ToolTip));
+		}
 	}
 }
