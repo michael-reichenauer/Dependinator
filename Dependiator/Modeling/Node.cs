@@ -364,7 +364,7 @@ namespace Dependiator.Modeling
 
 		private int CountShowingNodes()
 		{
-			Log.Debug("Counting shown nodes:");
+			// Log.Debug("Counting shown nodes:");
 			Stack<Node> nodes = new Stack<Node>();
 
 			Node startNode = this;
@@ -382,7 +382,7 @@ namespace Dependiator.Modeling
 				if (node.IsShowing)
 				{
 					count++;
-					Log.Debug($"  IsShowing {node}");
+					// Log.Debug($"  IsShowing {node}");
 					node.ChildNodes.ForEach(nodes.Push);
 				}
 			}

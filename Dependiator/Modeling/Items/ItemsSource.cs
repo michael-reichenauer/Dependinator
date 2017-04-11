@@ -281,11 +281,8 @@ namespace Dependiator.Modeling.Items
 		/// </summary>
 		protected override IEnumerable<int> GetItemIds(Rect viewArea)
 		{
-			// !!!!###### Enable inflate in Zoomable line 1369
-
-			//Log.Debug($"Id: {id}, ViewPort {itemsCanvas.CurrentViewPort}, Inflated: {viewArea}, ");
-			
-
+			//Inflate is Enabled in Zoomable line 1369
+	
 			if (viewArea == Rect.Empty)
 			{
 				return Enumerable.Empty<int>();
@@ -318,10 +315,16 @@ namespace Dependiator.Modeling.Items
 				//{
 				//	Log.Warn($"{itemsCanvas}: ViewArea {viewArea.TS()}, Parent {scaledParentViewArea.TS()}");
 				//}
+
+				if (viewArea == Rect.Empty)
+				{
+					return Enumerable.Empty<int>();
+				}
 			}
 
-			LastViewAreaQuery = viewArea;
+			LastViewAreaQuery = viewArea;		
 
+			viewArea.Inflate(viewArea.Width / 10, viewArea.Height / 10);
 
 			IEnumerable<int> itemIds = viewItemsTree.GetItemsIntersecting(viewArea)
 				.Where(i => i.ItemState != null && i.CanShow)

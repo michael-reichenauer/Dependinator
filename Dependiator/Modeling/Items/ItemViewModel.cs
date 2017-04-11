@@ -7,10 +7,6 @@ namespace Dependiator.Modeling.Items
 {
 	internal abstract class ItemViewModel : ViewModel, IItem
 	{
-		public static int TotalCount = 0;
-
-		public int InstanceCount = 0;
-
 		// UI properties
 		public string Type => this.GetType().Name;
 
@@ -42,41 +38,16 @@ namespace Dependiator.Modeling.Items
 
 		public virtual void ItemRealized()
 		{
-			Log.Debug($"{GetType()} {this}");
-
-			if (!IsShowing)
-			{
-				IsShowing = true;
-				TotalCount++;
-			}
+			// Log.Debug($"{GetType()} {this}");
+			IsShowing = true;
 		}
 
 
 		public virtual void ItemVirtualized()
 		{
-			Log.Debug($"{GetType()} {this}");
-
-			if (IsShowing)
-			{
-				IsShowing = false;
-				TotalCount--;
-			}
+			//Log.Debug($"{GetType()} {this}");
+			IsShowing = false;
 		}
-
-
-		//public virtual void SetParentVirtualized()
-		//{
-		//	if (!IsShowing)
-		//	{
-		//		return;
-		//	}
-
-		//	//Log.Debug($"{GetType()} {this}");
-
-		//	IsShowing = false;
-		//	TotalCount--;
-		//}
-
 
 		protected abstract Rect GetItemBounds();
 	}
