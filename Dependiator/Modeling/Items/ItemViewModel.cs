@@ -42,7 +42,7 @@ namespace Dependiator.Modeling.Items
 
 		public virtual void ItemRealized()
 		{
-			Log.Debug($"{GetType()} {this}");
+			//Log.Debug($"{GetType()} {this}");
 
 			if (!IsShowing)
 			{
@@ -54,7 +54,7 @@ namespace Dependiator.Modeling.Items
 
 		public virtual void ItemVirtualized()
 		{
-			Log.Debug($"{GetType()} {this}");
+			//Log.Debug($"{GetType()} {this}");
 
 			if (IsShowing)
 			{
@@ -71,7 +71,7 @@ namespace Dependiator.Modeling.Items
 				return;
 			}
 
-			Log.Debug($"{GetType()} {this}");
+			//Log.Debug($"{GetType()} {this}");
 
 			IsShowing = false;
 			TotalCount--;

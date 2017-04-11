@@ -57,7 +57,7 @@ namespace Dependiator.Modeling
 		public Rect? NodeBounds { get; set; }
 
 
-		private bool IsShowing => currentViewModel.IsShowing;
+		private bool IsShowing => IsRootNode || (currentViewModel?.IsShowing ?? false);
 		private bool IsRootNode => ParentNode == null;
 
 		private bool IsCompositeNodeView => currentViewModel is CompositeNodeViewModel;
@@ -79,7 +79,7 @@ namespace Dependiator.Modeling
 		{
 			Asserter.Requires(IsRootNode);
 		
-			// Show children of the root noode
+			// Show children of the root node
 			itemsCanvas = rootItemsCanvas;
 			UpdateVisibility();
 		}
@@ -95,10 +95,39 @@ namespace Dependiator.Modeling
 
 			itemsCanvas.Zoom(zoomFactor, zoomCenter);
 
-			UpdateVisibility();	
+			UpdateVisibility();		
 		}
 
 
+		//private int CountShowingNodes()
+		//{
+		//	Log.Debug("Counting shown nodes:");
+		//	Stack<Node> nodes = new Stack<Node>();
+
+		//	Node startNode = this;
+		//	while (!startNode.IsRootNode)
+		//	{
+		//		startNode = startNode.ParentNode;
+		//	}
+
+		//	nodes.Push(startNode);
+
+		//	int count = 0;
+		//	while (nodes.Any())
+		//	{
+		//		Node node = nodes.Pop();
+		//		if (node.IsShowing)
+		//		{
+		//			count++;
+		//			Log.Debug($"  IsShowing {node}");
+		//			node.ChildNodes.ForEach(nodes.Push);
+		//		}
+		//	}
+
+		//	return count;
+		//}
+
+	
 
 		public void MoveChildren(Vector viewOffset)
 		{
@@ -191,7 +220,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private async void UpdateVisibility()
+		private void UpdateVisibility()
 		{
 			InitNodeIfNeeded();
 
@@ -199,9 +228,9 @@ namespace Dependiator.Modeling
 
 			UpdateThisNodeVisibility();
 
-			await Task.Yield();
+			//await Task.Yield();
 
-			if ((IsRootNode || currentViewModel.CanShow) && IsCompositeNodeView)
+			if (IsRootNode || IsCompositeNodeShowing)
 			{
 				ChildNodes.ForEach(child => child.UpdateVisibility());
 				Links.ManagedSegments.ForEach(segment => segment.UpdateVisability());
@@ -269,7 +298,7 @@ namespace Dependiator.Modeling
 			currentViewModel = compositeNodeViewModel;
 
 			// Notify parent item canvas that node view has changed
-			ParentNode.TriggerQueryInvalidated();
+			ParentNode?.TriggerQueryInvalidated();
 		}
 
 
@@ -440,7 +469,7 @@ namespace Dependiator.Modeling
 				return;
 			}
 
-			Log.Debug($"Init {NodeName}");
+			//Log.Debug($"Init {NodeName}");
 			isInitialized = true;
 
 			nodeItemService.SetChildrenLayout(this);

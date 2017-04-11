@@ -37,7 +37,6 @@ namespace Dependiator.Modeling.Items
 		{
 			this.itemsCanvas = itemsCanvas;
 			id = ++currentId;
-			Log.Debug($"Id: {id}");
 		}
 
 		public Rect TotalBounds { get; private set; } = EmptyExtent;
@@ -284,11 +283,6 @@ namespace Dependiator.Modeling.Items
 			// !!!!###### Enable inflate in Zoomable line 1369
 
 			//Log.Debug($"Id: {id}, ViewPort {itemsCanvas.CurrentViewPort}, Inflated: {viewArea}, ");
-			//if (lastViewArea != viewArea)
-			//{
-			//	lastViewArea = viewArea;
-			//	//ViewAreaChanged?.Invoke(this, EventArgs.Empty);
-			//}
 			
 
 			if (viewArea == Rect.Empty)
@@ -296,8 +290,7 @@ namespace Dependiator.Modeling.Items
 				return Enumerable.Empty<int>();
 			}
 
-			LastViewAreaQuery = viewArea;
-
+			
 			if (itemsCanvas.ParentItemsCanvas != null 
 				&& itemsCanvas.ParentItemsCanvas.LastViewAreaQuery != Rect.Empty)
 			{
@@ -307,8 +300,6 @@ namespace Dependiator.Modeling.Items
 
 				Double scaleFactor = itemsCanvas.ScaleFactor;
 
-				//Double scaleFactor = itemsCanvas.ParentItemsCanvas.ZoomableCanvas.Scale 
-				//	/ itemsCanvas.ZoomableCanvas.Scale;
 
 				double x = (parentViewArea.X - itemRect.X) * scaleFactor;
 				double y = (parentViewArea.Y - itemRect.Y) * scaleFactor;
@@ -317,9 +308,18 @@ namespace Dependiator.Modeling.Items
 
 				Rect scaledParentViewArea = new Rect(x + viewArea.X, y + viewArea.Y, w, h);
 
-				LastViewAreaQuery.Intersect(scaledParentViewArea);
+				//if (itemsCanvas.ToString() == "Server")
+				//{
+				//	Log.Warn($"{itemsCanvas}: ViewArea {viewArea.TS()}, Parent {scaledParentViewArea.TS()}");
+				//}
+				viewArea.Intersect(scaledParentViewArea);
+				//if (itemsCanvas.ToString() == "Server")
+				//{
+				//	Log.Warn($"{itemsCanvas}: ViewArea {viewArea.TS()}, Parent {scaledParentViewArea.TS()}");
+				//}
 			}
 
+			LastViewAreaQuery = viewArea;
 
 
 			IEnumerable<int> itemIds = viewItemsTree.GetItemsIntersecting(viewArea)
