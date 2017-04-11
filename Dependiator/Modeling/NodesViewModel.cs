@@ -20,20 +20,14 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void SetCanvas(ZoomableCanvas zoomableCanvas, NodesView nodeView)
+		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
 			itemsCanvas.SetCanvas(zoomableCanvas);
-			NodeView = nodeView;
 		}
 
 
-		public NodesView NodeView { get; private set; }
 
-
-
-
-
-		public void MoveCanvas(Vector viewOffset) => node?.MoveChildren(viewOffset);
+		public void MoveCanvas(Vector viewOffset) => node?.MoveItems(viewOffset);
 
 
 		public void SizeChanged() => itemsCanvas.TriggerExtentChanged();

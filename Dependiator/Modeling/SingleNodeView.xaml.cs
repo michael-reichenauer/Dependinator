@@ -18,30 +18,6 @@ namespace Dependiator.Modeling
 			InitializeComponent();
 		}
 
-		protected override void OnMouseWheel(MouseWheelEventArgs e)
-		{
-			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
-			{
-				return;
-			}
-
-			SingleNodeViewModel viewModel = DataContext as SingleNodeViewModel;
-			if (viewModel == null)
-			{
-				return;
-			}
-
-			int zoomDelta = e.Delta;
-			Point viewPosition = e.GetPosition(viewModel.ParentView);
-
-			viewModel.Resize(zoomDelta, viewPosition);
-
-			e.Handled = true;
-		}
-
-
-
-
 
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
@@ -57,8 +33,7 @@ namespace Dependiator.Modeling
 				return;
 			}
 
-			Point viewPosition = e.GetPosition(viewModel.ParentView);
-
+			Point viewPosition = e.GetPosition(Application.Current.MainWindow);
 
 			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
 				&& e.LeftButton == MouseButtonState.Pressed

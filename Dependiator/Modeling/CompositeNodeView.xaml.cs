@@ -66,7 +66,7 @@ namespace Dependiator.Modeling
 				return;
 			}
 
-			Point viewPosition = e.GetPosition(viewModel.ParentView);
+			Point viewPosition = e.GetPosition(Application.Current.MainWindow);
 
 			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
 				&& e.LeftButton == MouseButtonState.Pressed

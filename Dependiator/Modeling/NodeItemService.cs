@@ -205,7 +205,7 @@ namespace Dependiator.Modeling
 
 //			if (node != null)
 //			{
-//				MoveNode(node, canvasPoint, viewOffset, isFirst);
+//				Move(node, canvasPoint, viewOffset, isFirst);
 //			}
 
 //			return node;
@@ -216,7 +216,7 @@ namespace Dependiator.Modeling
 //			return true;
 //		}
 
-//		private void MoveNode(Node node, Point canvasPoint, Vector viewOffset, bool isFirst)
+//		private void Move(Node node, Point canvasPoint, Vector viewOffset, bool isFirst)
 //		{
 //			//module.Move(viewOffset);
 //			node.MoveOrResize(canvasPoint, viewOffset, isFirst);

@@ -14,12 +14,17 @@ namespace Dependiator.Modeling
 		private const int InitialScaleFactor = 7;
 		private readonly INodeItemService nodeItemService;
 
+		private readonly List<Node> childNodes = new List<Node>();
+
 		private ItemsCanvas itemsCanvas;
 
 		private Brush nodeBrush;
 
-		private ItemViewModel currentViewModel;
-		private bool isInitialized;
+		private ItemViewModel viewModel;
+
+		private bool IsShowing => IsRootNode || (viewModel?.IsShowing ?? false);
+		private bool IsRootNode => ParentNode == null;
+
 
 		public Node(
 			INodeItemService nodeItemService,
@@ -37,15 +42,15 @@ namespace Dependiator.Modeling
 
 		public Rect ItemBounds { get; set; }
 
-		public double NodeItemScale => ParentNode?.itemsCanvas.Scale ?? 1.0;
-		public double ItemsCanvasScale => itemsCanvas?.Scale ?? 1;
+		public double NodeScale => ParentNode?.itemsCanvas.Scale ?? 1.0;
+		public double ItemsScale => itemsCanvas?.Scale ?? 1;
 		public double ItemsScaleFactor => itemsCanvas?.ScaleFactor ?? 1;
 		public Point ItemsOffset => itemsCanvas?.Offset ?? new Point();
 
 		public NodeName NodeName { get; }
 		public NodeType NodeType { get; private set; }
 		public Node ParentNode { get; }
-		public List<Node> ChildNodes { get; } = new List<Node>();
+		public IReadOnlyList<Node> ChildNodes => childNodes;
 
 		public NodeLinks Links { get; } = new NodeLinks();
 
@@ -53,74 +58,62 @@ namespace Dependiator.Modeling
 		public Rect? NodeBounds { get; set; }
 
 
-		private bool IsShowing => IsRootNode || (currentViewModel?.IsShowing ?? false);
-		private bool IsRootNode => ParentNode == null;
-
-		private bool IsCompositeNodeView => currentViewModel is CompositeNodeViewModel;
-		private bool IsCompositeNodeShowing => IsCompositeNodeView && currentViewModel.IsShowing;
-	
-		public NodesView ParentView => 
-			((CompositeNodeViewModel)ParentNode.currentViewModel)?.NodesViewModel?.NodeView;
-
-
-		public string ToolTip =>
+		public string DebugToolTip =>
 			$"\n Children: {ChildNodes.Count} Shown Items: {CountShowingNodes()}\n" +
-			$"Scale: {NodeItemScale:0.00}, ParentScale: {ParentNode.NodeItemScale:0.00}";
-		
+			$"Items Scale: {ItemsScale:0.00}";
+
+
+		public bool CanShowNode() => IsVisibleAtScale(NodeScale);
+
+		private bool IsVisibleAtScale(double scale) => ItemBounds.Size.Width * scale > 40;
 
 
 		public void Show(ItemsCanvas rootItemsCanvas)
 		{
 			Asserter.Requires(IsRootNode);
 		
-			// Show children of the root node
 			itemsCanvas = rootItemsCanvas;
-			InitAllNodes();
+			DescendentsAndSelf().ForEach(child => child.Init());
 
 			UpdateVisibility();
 		}
 
 
-		private void InitAllNodes()
-		{
-			Timing t = new Timing();
-			DescendentsAndSelf().ForEach(child => child.InitNodeIfNeeded());
-			t.Log("Init of all nodes");
-		}
-
-
 		public void Zoom(double zoomFactor, Point zoomCenter)
-		{
-			double newScale = itemsCanvas.Scale * zoomFactor;
-			if (newScale < 1 && !ChildNodes.Any(child => child.IsVisibleAtScale(newScale)))
+		{		
+			if (IsMinZoomLimit(zoomFactor))
 			{
 				return;
 			}
 
 			itemsCanvas.Zoom(zoomFactor, zoomCenter);
 
-			UpdateVisibility();		
+			UpdateVisibility();
+
+			Links.ManagedSegments
+				.Where(segment => segment.Source == this || segment.Target == this)
+				.ForEach(segment => segment.UpdateVisibility());
 		}
 
 
-		public void MoveNode(Vector viewOffset)
+		public void Move(Vector viewOffset)
 		{
-			Vector scaledOffset = viewOffset / NodeItemScale;
+			Vector scaledOffset = viewOffset / NodeScale;
 			Point newLocation = ItemBounds.Location + scaledOffset;
 			ItemBounds = new Rect(newLocation, ItemBounds.Size);
 
-			ParentNode.itemsCanvas.UpdateItem(currentViewModel);
+			ParentNode.itemsCanvas.UpdateItem(viewModel);
 
 			Links.ReferencingSegments.ForEach(segment => segment.UpdateVisibility());
 
-			currentViewModel.NotifyAll();
+			viewModel.NotifyAll();
 
-			TriggerQueryInvalidated();
-			TriggerQueryInvalidatedInChildren();
+			UpdateShownItems();
+			UpdateShownItemsInChildNodes();
 		}
 
 
-		public void MoveChildren(Vector viewOffset)
+		public void MoveItems(Vector viewOffset)
 		{
 			if (!ChildNodes.Any(child => child.CanShowNode()))
 			{
@@ -129,74 +122,75 @@ namespace Dependiator.Modeling
 			}
 
 			itemsCanvas.Move(viewOffset);
-			Links.ManagedSegments.ForEach(segment => segment.UpdateVisibility());
 
-			TriggerQueryInvalidatedInChildren();
+			Links.ManagedSegments
+				.Where(segment=> segment.Source == this || segment.Target == this)
+				.ForEach(segment => segment.UpdateVisibility());
+
+			UpdateShownItemsInChildNodes();
 		}
 
 
-		private void TriggerQueryInvalidated()
-		{
-			itemsCanvas?.TriggerInvalidated();
-		}
-
-
-		private void TriggerQueryInvalidatedInChildren()
-		{
-			ChildNodes
-				.Where(node => node.IsCompositeNodeShowing)
-				.ForEach(node =>
-				{
-					node.TriggerQueryInvalidated();
-					node.TriggerQueryInvalidatedInChildren();
-				});
-		}
-
-
-		public void ZoomResize(int wheelDelta)
+		public void Resize(int wheelDelta)
 		{
 			double delta = (double)wheelDelta / 12;
-
-			double scaledDelta = delta / NodeItemScale;
-
-			Point newItemLocation = new Point(ItemBounds.X - scaledDelta, ItemBounds.Y);
-
+			double scaledDelta = delta / NodeScale;
+			
 			double width = ItemBounds.Size.Width + (2 * scaledDelta);
 			double height = ItemBounds.Size.Height + (2 * scaledDelta);
-
-			// double zoom = width / ItemBounds.Size.Width;
+		
 			if (width < 40 || height < 20)
 			{
 				return;
 			}
 
+			// double zoomFactor = width / ItemBounds.Size.Width;
+			Point newLocation = new Point(ItemBounds.X - scaledDelta, ItemBounds.Y);
 			Size newItemSize = new Size(width, height);
-			ItemBounds = new Rect(newItemLocation, newItemSize);
+			ItemBounds = new Rect(newLocation, newItemSize);
+	
+			ParentNode.itemsCanvas.UpdateItem(viewModel);
 
-		
-			ParentNode.itemsCanvas.UpdateItem(currentViewModel);
+			viewModel.NotifyAll();	
 
-			currentViewModel.NotifyAll();
 
-			Links.ManagedSegments.ForEach(segment => segment.UpdateVisibility());
+			MoveItems(new Vector(scaledDelta * NodeScale, 0));
 
-			TriggerQueryInvalidatedInChildren();
+			Links.ManagedSegments
+				.Where(segment => segment.Target == this)
+				.ForEach(segment => segment.UpdateVisibility());
+		}
 
-			MoveChildren(new Vector(scaledDelta * NodeItemScale, 0));
+
+		private void UpdateShownItems()
+		{
+			itemsCanvas?.TriggerInvalidated();
+		}
+
+
+		private void UpdateShownItemsInChildNodes()
+		{
+			ChildNodes
+				.Where(node => node.IsShowing)
+				.ForEach(node =>
+				{
+					node.UpdateShownItems();
+					node.UpdateShownItemsInChildNodes();
+				});
 		}
 
 
 		private void UpdateVisibility()
 		{
-			//InitNodeIfNeeded();
-
-			UpdateScale();
+			if (itemsCanvas != null)
+			{
+				itemsCanvas.UpdateScale();
+				viewModel.NotifyAll();
+			}
 
 			UpdateThisNodeVisibility();
 
-			//await Task.Yield();
-
-			if (IsRootNode || IsCompositeNodeShowing)
+			if (IsShowing)
 			{
 				ChildNodes.ForEach(child => child.UpdateVisibility());
 				Links.ManagedSegments.ForEach(segment => segment.UpdateVisibility());
@@ -204,41 +198,32 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void UpdateScale()
-		{
-			if (currentViewModel is  CompositeNodeViewModel compositeViewModel)
-			{
-				compositeViewModel.UpdateScale();
-			}
-		}
-
-
 		private void UpdateThisNodeVisibility()
 		{
-			if (ParentNode != null && CanShowNode())
+			if (!IsRootNode && CanShowNode())
 			{
 				// Node is not shown and can be shown, Lets show it
 				ShowNode();
 			}
-			else if (currentViewModel.CanShow)
+			else if (viewModel.CanShow)
 			{
 				// This node can no longer be shown, removing it and children are removed automatically
-				currentViewModel.Hide();
+				viewModel.Hide();
 			}
 		}
 
 
 		private void ShowNode()
 		{
-			if (currentViewModel.IsShowing)
+			if (viewModel.IsShowing)
 			{
 				return;
 			}
 
-			currentViewModel.Show();
-			ParentNode.TriggerQueryInvalidated();
+			viewModel.Show();
+			ParentNode.UpdateShownItems();
 
-			currentViewModel.NotifyAll();
+			viewModel.NotifyAll();
 		}
 
 
@@ -255,7 +240,7 @@ namespace Dependiator.Modeling
 
 
 
-		public void ShowAllChildren()
+		private void ShowAllChildren()
 		{
 			foreach (Node childNode in ChildNodes)
 			{
@@ -265,11 +250,11 @@ namespace Dependiator.Modeling
 				}
 			}
 
-			itemsCanvas?.TriggerInvalidated();
+			UpdateShownItems();
 
 			foreach (Node childNode in ChildNodes)
 			{
-				if (childNode.currentViewModel?.CanShow ?? false)
+				if (childNode.viewModel?.CanShow ?? false)
 				{
 					childNode.ShowAllChildren();
 				}
@@ -277,25 +262,22 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void HideAllChildren()
+		private void HideAllChildren()
 		{
 			foreach (Node childNode in ChildNodes)
 			{
-				if (childNode.currentViewModel?.CanShow ?? false)
+				if (childNode.viewModel?.CanShow ?? false)
 				{
 					childNode.HideAllChildren();
-					childNode.currentViewModel.Hide();
+					childNode.viewModel.Hide();
 				}
 			}
 
-			itemsCanvas?.TriggerInvalidated();
+			UpdateShownItems();
 		}
 
 
-		public bool CanShowNode() => IsVisibleAtScale(NodeItemScale);
-
-
-		private bool IsVisibleAtScale(double scale) => ItemBounds.Size.Width * scale > 40;
+		
 
 
 		//private bool CanShowChildren()
@@ -321,7 +303,7 @@ namespace Dependiator.Modeling
 
 		public void AddChild(Node child)
 		{
-			ChildNodes.Add(child);
+			childNodes.Add(child);
 		}
 
 
@@ -391,23 +373,15 @@ namespace Dependiator.Modeling
 		}
 
 
-			private void InitNodeIfNeeded()
+		private void Init()
 		{			
-			if (isInitialized)
-			{
-				return;
-			}
-
 			//Log.Debug($"Init {NodeName}");
-			isInitialized = true;
-
 			nodeItemService.SetChildrenLayout(this);
-
 
 			if (ChildNodes.Any())
 			{
 				var compositeViewModel = new CompositeNodeViewModel(this, ParentNode?.itemsCanvas);
-				currentViewModel = compositeViewModel;
+				viewModel = compositeViewModel;
 
 				if (!IsRootNode)
 				{
@@ -419,12 +393,19 @@ namespace Dependiator.Modeling
 			}
 			else
 			{
-				currentViewModel = new SingleNodeViewModel(this);			
+				viewModel = new SingleNodeViewModel(this);			
 			}
 
-			ParentNode?.itemsCanvas.AddItem(currentViewModel);
+			ParentNode?.itemsCanvas.AddItem(viewModel);
 		}
 
+
+		private bool IsMinZoomLimit(double zoomFactor)
+		{
+			double newScale = itemsCanvas.Scale * zoomFactor;
+
+			return newScale < 1 && !ChildNodes.Any(child => child.IsVisibleAtScale(newScale));
+		}
 
 		public IEnumerable<Node> Ancestors()
 		{

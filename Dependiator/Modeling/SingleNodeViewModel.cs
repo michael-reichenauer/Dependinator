@@ -24,16 +24,15 @@ namespace Dependiator.Modeling
 		public Brush BackgroundBrush => node.GetBackgroundNodeBrush();
 		public Brush HoverBrush => RectangleBrush;
 
-		public NodesView ParentView => node.ParentView;
 		public string Name => node.NodeName.ShortName;
 
-		public string ToolTip =>$"{node.NodeName}{node.ToolTip}";
+		public string ToolTip =>$"{node.NodeName}{node.DebugToolTip}";
 
 
 		public int CornerRadius => 3;
 
 
-		public int FontSize => ((int)(15 * node.NodeItemScale * 1.5)).MM(8, 15);
+		public int FontSize => ((int)(15 * node.NodeScale * 1.5)).MM(8, 15);
 		//{
 		//	get
 		//	{
@@ -45,9 +44,9 @@ namespace Dependiator.Modeling
 		public override string ToString() => node.NodeName;
 
 
-		public void MoveNode(Vector viewOffset) => node.MoveNode(viewOffset);
+		public void MoveNode(Vector viewOffset) => node.Move(viewOffset);
 
-		public void Resize(int zoomDelta, Point viewPosition) => node.ZoomResize(zoomDelta);
+		public void Resize(int zoomDelta) => node.Resize(zoomDelta);
 
 	}
 }

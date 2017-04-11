@@ -28,7 +28,7 @@ namespace Dependiator.Modeling
 			viewModel = (NodesViewModel)DataContext;
 			if (viewModel != null)
 			{
-				viewModel.SetCanvas((ZoomableCanvas)sender, this);
+				viewModel.SetCanvas((ZoomableCanvas)sender);
 
 			}
 		}

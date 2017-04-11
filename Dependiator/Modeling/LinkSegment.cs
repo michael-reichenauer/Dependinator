@@ -48,16 +48,16 @@ namespace Dependiator.Modeling
 				|| targetBounds != Target.ItemBounds
 				|| sourceOffset != Source.ItemsOffset
 				|| targetOffset != Target.ItemsOffset
-				|| sourceScale != Source.ItemsCanvasScale
-				|| targetScale != Target.ItemsCanvasScale)
+				|| sourceScale != Source.ItemsScale
+				|| targetScale != Target.ItemsScale)
 			{
 				// Source or target has moved, lets upate values
 				sourceBounds = Source.ItemBounds;
 				sourceOffset = Source.ItemsOffset;
-				sourceScale = Source.ItemsCanvasScale;
+				sourceScale = Source.ItemsScale;
 				targetOffset = Target.ItemsOffset;
 				targetBounds = Target.ItemBounds;
-				targetScale = Target.ItemsCanvasScale;
+				targetScale = Target.ItemsScale;
 
 				UpdateLine();
 			}
@@ -73,7 +73,7 @@ namespace Dependiator.Modeling
 
 
 
-		public double LinkScale => Owner.ItemsCanvasScale;
+		public double LinkScale => Owner.ItemsScale;
 
 		public IReadOnlyList<Link> NodeLinks => nodeLinks;
 
@@ -153,7 +153,7 @@ namespace Dependiator.Modeling
 
 		private double GetLineThickness()
 		{
-			double scale = (Owner.ItemsCanvasScale).MM(0.1, 0.7);
+			double scale = (Owner.ItemsScale).MM(0.1, 0.7);
 			double thickness;
 
 			if (NodeLinks.Count < 5)
@@ -184,19 +184,19 @@ namespace Dependiator.Modeling
 
 			if (Source.ParentNode == Target)
 			{
-				// The target is a parent of the source, i.e. line ends at the botom of the target node
+				// The target is a parent of the source, i.e. line ends at the bottom of the target node
 				x2 = (targetBounds.Width / 2) * Target.ItemsScaleFactor
-							+ Target.ItemsOffset.X / Target.ItemsCanvasScale;
+							+ Target.ItemsOffset.X / Target.ItemsScale;
 				y2 = (targetBounds.Height) * Target.ItemsScaleFactor
-					+ (Target.ItemsOffset.Y - 20) / Target.ItemsCanvasScale;
+					+ (Target.ItemsOffset.Y - 28) / Target.ItemsScale;
 
 			}
 			else if (Source == Target.ParentNode)
 			{
 				// The target is the child of the source, i.e. line start at the top of the source
 				x1 = (sourceBounds.Width / 2) * Source.ItemsScaleFactor
-					+ Source.ItemsOffset.X / Source.ItemsCanvasScale;
-				y1 = Source.ItemsOffset.Y / Source.ItemsCanvasScale;
+					+ Source.ItemsOffset.X / Source.ItemsScale;
+				y1 = Source.ItemsOffset.Y / Source.ItemsScale;
 			}
 
 			// Line rect bounds:
@@ -205,7 +205,7 @@ namespace Dependiator.Modeling
 			double width = Math.Abs(x2 - x1);
 			double height = Math.Abs(y2 - y1);
 
-			// Ensure the rect is at list big enaought to contain the width of the line
+			// Ensure the rect is at list big enough to contain the width of the line
 			width = Math.Max(width, LineThickness + 1);
 			height = Math.Max(height, LineThickness + 1);
 

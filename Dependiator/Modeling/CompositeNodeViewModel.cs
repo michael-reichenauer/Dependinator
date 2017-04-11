@@ -35,13 +35,11 @@ namespace Dependiator.Modeling
 		public Brush BackgroundBrush => node.GetBackgroundNodeBrush();
 		public Brush HoverBrush => RectangleBrush;
 
-		public NodesView ParentView => node.ParentView;
-
 		public string Name => node.NodeName.ShortName;
 
 		public int CornerRadius => 3;
 
-		public string ToolTip => $"{node.NodeName}{node.ToolTip}";
+		public string ToolTip => $"{node.NodeName}{node.DebugToolTip}";
 
 
 		public override void ItemRealized()
@@ -57,7 +55,7 @@ namespace Dependiator.Modeling
 			base.ItemVirtualized();
 		}
 
-		public int FontSize => ((int)(15 * node.NodeItemScale)).MM(8, 15);
+		public int FontSize => ((int)(15 * node.NodeScale)).MM(8, 15);
 
 
 
@@ -74,9 +72,9 @@ namespace Dependiator.Modeling
 
 		public void Zoom(double zoomFactor, Point viewPosition) => node.Zoom(zoomFactor, viewPosition);
 
-		public void ZoomResize(int wheelDelta) => node.ZoomResize(wheelDelta);
+		public void ZoomResize(int wheelDelta) => node.Resize(wheelDelta);
 
-		public void MoveNode(Vector viewOffset) => node.MoveNode(viewOffset);
+		public void MoveNode(Vector viewOffset) => node.Move(viewOffset);
 
 
 		public override string ToString() => node.NodeName;

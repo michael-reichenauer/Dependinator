@@ -72,7 +72,7 @@ namespace Dependiator.MainViews
 			//	CaptureMouse();
 			//	Vector viewOffset = viewPosition - lastMousePosition;
 
-			//	movingObject = viewModel.MoveNode(viewPosition, viewOffset, movingObject);
+			//	movingObject = viewModel.Move(viewPosition, viewOffset, movingObject);
 
 			//	e.Handled = movingObject != null;
 			//}
