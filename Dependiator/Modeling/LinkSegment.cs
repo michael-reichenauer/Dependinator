@@ -130,7 +130,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void UpdateVisability()
+		public void UpdateVisibility()
 		{
 			if (CanBeShown())
 			{
