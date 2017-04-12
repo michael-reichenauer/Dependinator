@@ -10,5 +10,6 @@ namespace Dependiator.Modeling
 		Brush GetBrushFromHex(string hexColor);
 		string GetHexColorFromBrush(Brush brush);
 		void SetChildrenLayout(Node parent);
+		void UpdateLine(LinkSegment segment);
 	}
 }

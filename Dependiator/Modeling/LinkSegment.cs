@@ -9,16 +9,19 @@ namespace Dependiator.Modeling
 {
 	internal class LinkSegment
 	{
+		private readonly IItemService itemService;
 		private readonly List<Link> nodeLinks = new List<Link>();
 		private Rect itemBounds;
-		
+
 		private bool isUpdated = false;
 
 		public LinkSegment(
+			IItemService itemService,
 			Node source,
 			Node target,
 			Node owner)
 		{
+			this.itemService = itemService;
 			Owner = owner;
 			Source = source;
 			Target = target;
@@ -30,24 +33,8 @@ namespace Dependiator.Modeling
 		public LinkSegmentViewModel ViewModel { get; }
 
 
-		public Rect GetItemBounds()
-		{
-			if (!isUpdated)
-			{
-				isUpdated = true;
-
-				if (Source.NodeBounds == Rect.Empty || Target.NodeBounds == Rect.Empty)
-				{
-					return Rect.Empty;
-				}
-
-				UpdateLine(this);
-			}
-
-			return itemBounds;
-		}
-
 		public Point L1 { get; private set; }
+
 		public Point L2 { get; private set; }
 
 
@@ -67,30 +54,45 @@ namespace Dependiator.Modeling
 			: Source.GetNodeBrush();
 
 
-
 		public double LineThickness => GetLineThickness();
 
+		public bool CanBeShown() => (Source.CanShowNode() && Target.CanShowNode());
 
-		public string ToolTip
+		public string GetToolTip()
 		{
-			get
+			string tip = $"{this},  {NodeLinks.Count} references:";
+			int maxLinks = 40;
+
+			foreach (Link reference in NodeLinks.Take(maxLinks))
 			{
-				string tip = $"{this},  {NodeLinks.Count} references:";
-				int maxLinks = 40;
-				foreach (Link reference in NodeLinks.Take(maxLinks))
-				{
-					tip += $"\n  {reference}";
-				}
-
-				if (NodeLinks.Count > maxLinks)
-				{
-					tip += "\n  ...";
-				}
-
-				return tip;
+				tip += $"\n  {reference}";
 			}
+
+			if (NodeLinks.Count > maxLinks)
+			{
+				tip += "\n  ...";
+			}
+
+			return tip;
 		}
 
+
+		public Rect GetItemBounds()
+		{
+			if (!isUpdated)
+			{
+				isUpdated = true;
+
+				if (Source.NodeBounds == Rect.Empty || Target.NodeBounds == Rect.Empty)
+				{
+					return Rect.Empty;
+				}
+
+				itemService.UpdateLine(this);
+			}
+
+			return itemBounds;
+		}
 
 		public void Add(Link link)
 		{
@@ -102,23 +104,13 @@ namespace Dependiator.Modeling
 			nodeLinks.Add(link);
 		}
 
-
-		public bool CanBeShown()
-		{
-			return (Source.CanShowNode() && Target.CanShowNode());
-		}
-
-
 		public void UpdateVisibility()
 		{
 			isUpdated = false;
 			if (CanBeShown())
 			{
-				//if (!ViewModel.CanShow)
-				{
-					ViewModel.Show();
-					ViewModel.NotifyAll();
-				}
+				ViewModel.Show();
+				ViewModel.NotifyAll();
 			}
 			else
 			{
@@ -153,70 +145,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		private static void UpdateLine(LinkSegment segment)
-		{
-			Node source = segment.Source;
-			Node target = segment.Target;
-			Rect sourceBounds = source.NodeBounds;
-			Rect targetBounds = target.NodeBounds;
-
-			// We start by assuming source and target nodes are siblings, 
-			// I.e. line starts at source middle bottom and ends at target middle top
-			double x1 = sourceBounds.X + sourceBounds.Width / 2;
-			double y1 = sourceBounds.Y + sourceBounds.Height;
-			double x2 = targetBounds.X + targetBounds.Width / 2;
-			double y2 = targetBounds.Y;
-
-			if (source.ParentNode == target)
-			{
-				// The target is a parent of the source, i.e. line ends at the bottom of the target node
-				x2 = (targetBounds.Width / 2) * target.ItemsScaleFactor
-							+ target.ItemsOffset.X / target.ItemsScale;
-				y2 = (targetBounds.Height) * target.ItemsScaleFactor
-					+ (target.ItemsOffset.Y - 28) / target.ItemsScale;
-
-			}
-			else if (source == target.ParentNode)
-			{
-				// The target is the child of the source, i.e. line start at the top of the source
-				x1 = (sourceBounds.Width / 2) * source.ItemsScaleFactor
-					+ source.ItemsOffset.X / source.ItemsScale;
-				y1 = source.ItemsOffset.Y / source.ItemsScale;
-			}
-
-			// Line bounds:
-			double x = Math.Min(x1, x2);
-			double y = Math.Min(y1, y2);
-			double width = Math.Abs(x2 - x1);
-			double height = Math.Abs(y2 - y1);
-
-			// Ensure the rect is at least big enough to contain the width of the line
-			width = Math.Max(width, segment.LineThickness + 1);
-			height = Math.Max(height, segment.LineThickness + 1);
-
-			Rect lineBounds = new Rect(x, y, width, height);
-
-			// Line drawing within the bounds
-			double lx1 = 0;
-			double ly1 = 0;
-			double lx2 = width;
-			double ly2 = height;
-
-			if (x1 <= x2 && y1 > y2 || x1 > x2 && y1 <= y2)
-			{
-				// Need to flip the line
-				ly1 = height;
-				ly2 = 0;
-			}
-
-			Point l1 = new Point(lx1, ly1);
-			Point l2 = new Point(lx2, ly2);
-
-			segment.SetBounds(lineBounds, l1, l2);
-		}
-
-
-		private void SetBounds(Rect lineBounds, Point l1, Point l2)
+		public void SetBounds(Rect lineBounds, Point l1, Point l2)
 		{
 			itemBounds = lineBounds;
 			L1 = l1;

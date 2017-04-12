@@ -8,6 +8,7 @@
 //using Brush = System.Windows.Media.Brush;
 
 
+using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
@@ -85,6 +86,68 @@ namespace Dependiator.Modeling
 				childNode.NodeBounds = bounds;
 				count++;
 			}
+		}
+
+		public void UpdateLine(LinkSegment segment)
+		{
+			Node source = segment.Source;
+			Node target = segment.Target;
+			Rect sourceBounds = source.NodeBounds;
+			Rect targetBounds = target.NodeBounds;
+
+			// We start by assuming source and target nodes are siblings, 
+			// I.e. line starts at source middle bottom and ends at target middle top
+			double x1 = sourceBounds.X + sourceBounds.Width / 2;
+			double y1 = sourceBounds.Y + sourceBounds.Height;
+			double x2 = targetBounds.X + targetBounds.Width / 2;
+			double y2 = targetBounds.Y;
+
+			if (source.ParentNode == target)
+			{
+				// The target is a parent of the source, i.e. line ends at the bottom of the target node
+				x2 = (targetBounds.Width / 2) * target.ItemsScaleFactor
+				     + target.ItemsOffset.X / target.ItemsScale;
+				y2 = (targetBounds.Height) * target.ItemsScaleFactor
+				     + (target.ItemsOffset.Y - 28) / target.ItemsScale;
+
+			}
+			else if (source == target.ParentNode)
+			{
+				// The target is the child of the source, i.e. line start at the top of the source
+				x1 = (sourceBounds.Width / 2) * source.ItemsScaleFactor
+				     + source.ItemsOffset.X / source.ItemsScale;
+				y1 = source.ItemsOffset.Y / source.ItemsScale;
+			}
+
+			// Line bounds:
+			double x = Math.Min(x1, x2);
+			double y = Math.Min(y1, y2);
+			double width = Math.Abs(x2 - x1);
+			double height = Math.Abs(y2 - y1);
+
+			// Ensure the rect is at least big enough to contain the width of the line
+			width = Math.Max(width, segment.LineThickness + 1);
+			height = Math.Max(height, segment.LineThickness + 1);
+
+			Rect lineBounds = new Rect(x, y, width, height);
+
+			// Line drawing within the bounds
+			double lx1 = 0;
+			double ly1 = 0;
+			double lx2 = width;
+			double ly2 = height;
+
+			if (x1 <= x2 && y1 > y2 || x1 > x2 && y1 <= y2)
+			{
+				// Need to flip the line
+				ly1 = height;
+				ly2 = 0;
+			}
+
+			Point l1 = new Point(lx1, ly1);
+			Point l2 = new Point(lx2, ly2);
+
+			segment.SetBounds(lineBounds, l1, l2);
 		}
 	}
 }

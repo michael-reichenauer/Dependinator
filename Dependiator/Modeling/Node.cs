@@ -37,6 +37,7 @@ namespace Dependiator.Modeling
 			NodeName = name;
 			NodeType = type;
 			PersistentNodeColor = null;
+			Links = new NodeLinks(itemService);
 		}
 
 
@@ -52,7 +53,7 @@ namespace Dependiator.Modeling
 		public double ItemsScaleFactor => itemsCanvas?.ScaleFactor ?? 1;
 		public Point ItemsOffset => itemsCanvas?.Offset ?? new Point();
 
-		public NodeLinks Links { get; } = new NodeLinks();
+		public NodeLinks Links { get; }
 
 		public string PersistentNodeColor { get; private set; }
 		public Rect? PersistentNodeBounds { get; set; }

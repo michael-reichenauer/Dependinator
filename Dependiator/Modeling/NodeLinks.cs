@@ -6,6 +6,7 @@ namespace Dependiator.Modeling
 {
 	internal class NodeLinks
 	{
+		private readonly IItemService itemService;
 		private readonly List<Link> links = new List<Link>();
 		private readonly List<LinkSegment> managedSegments = new List<LinkSegment>();
 		private readonly List<LinkSegment> referencingSegments = new List<LinkSegment>();
@@ -17,6 +18,11 @@ namespace Dependiator.Modeling
 
 		public IReadOnlyList<LinkSegment> ReferencingSegments => referencingSegments;
 
+
+		public NodeLinks(IItemService itemService)
+		{
+			this.itemService = itemService;
+		}
 		
 
 
@@ -51,13 +57,13 @@ namespace Dependiator.Modeling
 
 				AddSegment(segmentSource, segmentTarget, link);
 
-				// Goto next segment in the line segments 
+				// Go to next segment in the line segments 
 				segmentSource = segmentTarget;
 			}
 		}
 
 		
-		private static void AddSegment(Node source, Node target, Link link)
+		private void AddSegment(Node source, Node target, Link link)
 		{
 			Node segmentManager = GetLinkSegmentManager(source, target);
 
@@ -66,7 +72,7 @@ namespace Dependiator.Modeling
 
 			if (segment == null)
 			{
-				segment = new LinkSegment(source, target, segmentManager);
+				segment = new LinkSegment(itemService, source, target, segmentManager);
 
 				segmentManager.Links.managedSegments.Add(segment);
 				source.Links.referencingSegments.Add(segment);
