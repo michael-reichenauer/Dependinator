@@ -77,7 +77,7 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void Zoom(double zoomFactor, Point zoomCenter)
+		public void Zoom(double zoomFactor, Point? zoomCenter = null)
 		{		
 			if (IsMinZoomLimit(zoomFactor))
 			{
@@ -142,7 +142,7 @@ namespace Dependiator.Modeling
 				return;
 			}
 
-			// double zoomFactor = width / NodeBounds.Size.Width;
+			double zoomFactor = width / NodeBounds.Size.Width;
 			Point newLocation = new Point(NodeBounds.X - scaledDelta, NodeBounds.Y);
 			Size newItemSize = new Size(width, height);
 			NodeBounds = new Rect(newLocation, newItemSize);
@@ -151,12 +151,13 @@ namespace Dependiator.Modeling
 
 			viewModel.NotifyAll();	
 
+			Zoom(zoomFactor);
 
-			MoveItems(new Vector(scaledDelta * NodeScale, 0));
+			//MoveItems(new Vector(scaledDelta * NodeScale, 0));
 
-			Links.ManagedSegments
-				.Where(segment => segment.Target == this)
-				.ForEach(segment => segment.UpdateVisibility());
+			//Links.ManagedSegments
+			//	.Where(segment => segment.Target == this)
+			//	.ForEach(segment => segment.UpdateVisibility());
 		}
 
 
@@ -414,7 +415,7 @@ namespace Dependiator.Modeling
 		{
 			double newScale = itemsCanvas.Scale * zoomFactor;
 
-			return newScale < 1 && !ChildNodes.Any(child => child.IsVisibleAtScale(newScale));
+			return zoomFactor < 1 && !ChildNodes.Any(child => child.IsVisibleAtScale(newScale));
 		}
 
 		public IEnumerable<Node> Ancestors()
