@@ -11,15 +11,14 @@ namespace Dependiator.Modeling
 		private readonly Node node;
 
 
-		public CompositeNodeViewModel(Node node, ItemsCanvas parentCanvas)
+		public CompositeNodeViewModel(Node node, ItemsCanvas itemsCanvas)
 		{
 			this.node = node;
-
-			ItemsCanvas = new ItemsCanvas(this, parentCanvas);
+			ItemsCanvas = itemsCanvas;
 			NodesViewModel = new NodesViewModel(node, ItemsCanvas);
 		}
 
-		protected override Rect GetItemBounds() => node.ItemBounds;
+		protected override Rect GetItemBounds() => node.NodeBounds;
 
 
 		public NodesViewModel NodesViewModel { get; }

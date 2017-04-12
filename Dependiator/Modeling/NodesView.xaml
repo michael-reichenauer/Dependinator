@@ -124,7 +124,7 @@
 					<DataTrigger Binding="{Binding Type}" Value="LinkSegmentViewModel">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
-								<DataTemplate>
+								<DataTemplate >
 									<local:LinkSegmentView />
 								</DataTemplate>
 							</Setter.Value>

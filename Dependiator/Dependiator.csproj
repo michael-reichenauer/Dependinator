@@ -132,6 +132,7 @@
     <Compile Include="Modeling\IgnoreMouseWheelBehavior.cs" />
     <Compile Include="Modeling\ILinkItemsService.cs" />
     <Compile Include="Modeling\INodeItemService.cs" />
+    <Compile Include="Modeling\Items\IItemBounds.cs" />
     <Compile Include="Modeling\Items\ItemsCanvas.cs" />
     <Compile Include="Modeling\Analyzing\ReflectionService.cs" />
     <Compile Include="Modeling\LinkItemsService.cs" />
@@ -163,7 +164,6 @@
     </Compile>
     <Compile Include="Modeling\LinkSegmentViewModel.cs" />
     <Compile Include="Modeling\ModelViewData.cs" />
-    <Compile Include="Modeling\Item.cs" />
     <Compile Include="Modeling\Items\ItemViewModel.cs" />
     <Compile Include="Modeling\Node.cs" />
     <Compile Include="Modeling\Items\IItem.cs" />

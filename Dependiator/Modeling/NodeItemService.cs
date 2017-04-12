@@ -68,10 +68,10 @@ namespace Dependiator.Modeling
 				Size size;
 				Point location;
 
-				if (childNode.NodeBounds.HasValue)
+				if (childNode.PersistentNodeBounds.HasValue)
 				{
-					size = childNode.NodeBounds.Value.Size;
-					location = childNode.NodeBounds.Value.Location;
+					size = childNode.PersistentNodeBounds.Value.Size;
+					location = childNode.PersistentNodeBounds.Value.Location;
 				}
 				else
 				{
@@ -82,7 +82,7 @@ namespace Dependiator.Modeling
 				}
 
 				Rect bounds = new Rect(location, size);
-				childNode.ItemBounds = bounds;
+				childNode.NodeBounds = bounds;
 				count++;
 			}
 		}

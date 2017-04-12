@@ -38,25 +38,25 @@ namespace Dependiator.Modeling
 
 		public Rect GetItemBounds()
 		{
-			if (Source.ItemBounds == Rect.Empty || Target.ItemBounds == Rect.Empty)
+			if (Source.NodeBounds == Rect.Empty || Target.NodeBounds == Rect.Empty)
 			{
 				return Rect.Empty;
 			}
 
 
-			if (sourceBounds != Source.ItemBounds
-				|| targetBounds != Target.ItemBounds
+			if (sourceBounds != Source.NodeBounds
+				|| targetBounds != Target.NodeBounds
 				|| sourceOffset != Source.ItemsOffset
 				|| targetOffset != Target.ItemsOffset
 				|| sourceScale != Source.ItemsScale
 				|| targetScale != Target.ItemsScale)
 			{
 				// Source or target has moved, lets upate values
-				sourceBounds = Source.ItemBounds;
+				sourceBounds = Source.NodeBounds;
 				sourceOffset = Source.ItemsOffset;
 				sourceScale = Source.ItemsScale;
 				targetOffset = Target.ItemsOffset;
-				targetBounds = Target.ItemBounds;
+				targetBounds = Target.NodeBounds;
 				targetScale = Target.ItemsScale;
 
 				UpdateLine();

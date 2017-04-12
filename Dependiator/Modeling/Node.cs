@@ -9,7 +9,7 @@ using Dependiator.Utils;
 
 namespace Dependiator.Modeling
 {
-	internal class Node
+	internal class Node : IItemBounds
 	{
 		private const int InitialScaleFactor = 7;
 		private readonly INodeItemService nodeItemService;
@@ -36,26 +36,26 @@ namespace Dependiator.Modeling
 			ParentNode = parent;
 			NodeName = name;
 			NodeType = type;
-			NodeColor = null;
+			PersistentNodeColor = null;
 		}
-	
 
-		public Rect ItemBounds { get; set; }
 
+		public NodeName NodeName { get; }
+		public NodeType NodeType { get; private set; }
+		public Rect NodeBounds { get; set; }
 		public double NodeScale => ParentNode?.itemsCanvas.Scale ?? 1.0;
+
+		public Node ParentNode { get; }
+
+		public IReadOnlyList<Node> ChildNodes => childNodes;
 		public double ItemsScale => itemsCanvas?.Scale ?? 1;
 		public double ItemsScaleFactor => itemsCanvas?.ScaleFactor ?? 1;
 		public Point ItemsOffset => itemsCanvas?.Offset ?? new Point();
 
-		public NodeName NodeName { get; }
-		public NodeType NodeType { get; private set; }
-		public Node ParentNode { get; }
-		public IReadOnlyList<Node> ChildNodes => childNodes;
-
 		public NodeLinks Links { get; } = new NodeLinks();
 
-		public string NodeColor { get; private set; }
-		public Rect? NodeBounds { get; set; }
+		public string PersistentNodeColor { get; private set; }
+		public Rect? PersistentNodeBounds { get; set; }
 
 
 		public string DebugToolTip =>
@@ -65,18 +65,20 @@ namespace Dependiator.Modeling
 
 		public bool CanShowNode() => IsVisibleAtScale(NodeScale);
 
-		private bool IsVisibleAtScale(double scale) => ItemBounds.Size.Width * scale > 40;
+		private bool IsVisibleAtScale(double scale) => NodeBounds.Size.Width * scale > 40;
 
 
 		public void Show(ItemsCanvas rootItemsCanvas)
 		{
 			Asserter.Requires(IsRootNode);
 		
-			itemsCanvas = rootItemsCanvas;
-			DescendentsAndSelf().ForEach(child => child.Init());
+			InitNodeTree(rootItemsCanvas);
 
 			UpdateVisibility();
 		}
+
+
+
 
 
 		public void Zoom(double zoomFactor, Point zoomCenter)
@@ -99,8 +101,8 @@ namespace Dependiator.Modeling
 		public void Move(Vector viewOffset)
 		{
 			Vector scaledOffset = viewOffset / NodeScale;
-			Point newLocation = ItemBounds.Location + scaledOffset;
-			ItemBounds = new Rect(newLocation, ItemBounds.Size);
+			Point newLocation = NodeBounds.Location + scaledOffset;
+			NodeBounds = new Rect(newLocation, NodeBounds.Size);
 
 			ParentNode.itemsCanvas.UpdateItem(viewModel);
 
@@ -136,18 +138,18 @@ namespace Dependiator.Modeling
 			double delta = (double)wheelDelta / 12;
 			double scaledDelta = delta / NodeScale;
 			
-			double width = ItemBounds.Size.Width + (2 * scaledDelta);
-			double height = ItemBounds.Size.Height + (2 * scaledDelta);
+			double width = NodeBounds.Size.Width + (2 * scaledDelta);
+			double height = NodeBounds.Size.Height + (2 * scaledDelta);
 		
 			if (width < 40 || height < 20)
 			{
 				return;
 			}
 
-			// double zoomFactor = width / ItemBounds.Size.Width;
-			Point newLocation = new Point(ItemBounds.X - scaledDelta, ItemBounds.Y);
+			// double zoomFactor = width / NodeBounds.Size.Width;
+			Point newLocation = new Point(NodeBounds.X - scaledDelta, NodeBounds.Y);
 			Size newItemSize = new Size(width, height);
-			ItemBounds = new Rect(newLocation, newItemSize);
+			NodeBounds = new Rect(newLocation, newItemSize);
 	
 			ParentNode.itemsCanvas.UpdateItem(viewModel);
 
@@ -240,6 +242,58 @@ namespace Dependiator.Modeling
 
 
 
+
+
+
+		public void SetType(NodeType nodeType)
+		{
+			NodeType = nodeType;
+		}
+
+
+		public void AddChild(Node child)
+		{
+			childNodes.Add(child);
+		}
+
+
+		public override string ToString() => NodeName;
+
+	
+		public Brush GetNodeBrush()
+		{
+			if (nodeBrush != null)
+			{
+				return nodeBrush;
+			}
+
+			if (PersistentNodeColor != null)
+			{
+				nodeBrush = nodeItemService.GetBrushFromHex(PersistentNodeColor);
+			}
+			else
+			{
+				nodeBrush = nodeItemService.GetRandomRectangleBrush();
+				PersistentNodeColor = nodeItemService.GetHexColorFromBrush(nodeBrush);
+			}
+
+			return nodeBrush;
+		}
+
+
+		public Brush GetBackgroundNodeBrush()
+		{
+			Brush brush = GetNodeBrush();
+			return nodeItemService.GetRectangleBackgroundBrush(brush);
+		}
+
+
+		public void UpdateItem(ItemViewModel viewModel)
+		{
+			itemsCanvas.UpdateItem(viewModel);
+		}
+
+
 		private void ShowAllChildren()
 		{
 			foreach (Node childNode in ChildNodes)
@@ -275,75 +329,6 @@ namespace Dependiator.Modeling
 
 			UpdateShownItems();
 		}
-
-
-		
-
-
-		//private bool CanShowChildren()
-		//{
-		//	return ChildNodes.Any();
-
-		//	//if (IsCompositeNodeShowing)
-		//	//{
-		//	//	return ChildNodes.Any(child => child.CanShowNode());
-		//	//}
-
-		//	//return ChildNodes
-		//	//	.Any(child => child.ItemBounds.Size.Width * NodeItemScale / itemsCanvas.ScaleFactor > 40);
-
-		//}
-
-
-		public void SetType(NodeType nodeType)
-		{
-			NodeType = nodeType;
-		}
-
-
-		public void AddChild(Node child)
-		{
-			childNodes.Add(child);
-		}
-
-
-		public override string ToString() => NodeName;
-
-	
-		public Brush GetNodeBrush()
-		{
-			if (nodeBrush != null)
-			{
-				return nodeBrush;
-			}
-
-			if (NodeColor != null)
-			{
-				nodeBrush = nodeItemService.GetBrushFromHex(NodeColor);
-			}
-			else
-			{
-				nodeBrush = nodeItemService.GetRandomRectangleBrush();
-				NodeColor = nodeItemService.GetHexColorFromBrush(nodeBrush);
-			}
-
-			return nodeBrush;
-		}
-
-
-		public Brush GetBackgroundNodeBrush()
-		{
-			Brush brush = GetNodeBrush();
-			return nodeItemService.GetRectangleBackgroundBrush(brush);
-		}
-
-
-		public void UpdateItem(ItemViewModel viewModel)
-		{
-			itemsCanvas.UpdateItem(viewModel);
-		}
-
-
 		private int CountShowingNodes()
 		{
 			// Log.Debug("Counting shown nodes:");
@@ -373,30 +358,47 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void Init()
-		{			
-			//Log.Debug($"Init {NodeName}");
-			nodeItemService.SetChildrenLayout(this);
+		private void InitNodeTree(ItemsCanvas rootCanvas)
+		{
+			itemsCanvas = rootCanvas;
+			viewModel = new CompositeNodeViewModel(this, rootCanvas);
 
+			InitNode();
+		}
+
+
+		private void InitNode()
+		{
 			if (ChildNodes.Any())
 			{
-				var compositeViewModel = new CompositeNodeViewModel(this, ParentNode?.itemsCanvas);
-				viewModel = compositeViewModel;
+				nodeItemService.SetChildrenLayout(this);
 
-				if (!IsRootNode)
-				{
-					itemsCanvas = compositeViewModel.ItemsCanvas;
-					itemsCanvas.Scale = ParentNode.itemsCanvas.Scale / InitialScaleFactor;
-				}
+				var childViewModels = ChildNodes.Select(childNode => childNode.CreateViewModel());
+				var segmentViewModels = Links.ManagedSegments.Select(segment => segment.ViewModel);
 
-				itemsCanvas.AddItems(Links.ManagedSegments.Select(segment => segment.ViewModel));
+				var itemViewModels = segmentViewModels.Concat(childViewModels);
+				itemsCanvas.AddItems(itemViewModels);
+
+				ChildNodes.ForEach(childNode => childNode.InitNode());
+			}		
+		}
+
+
+		private ItemViewModel CreateViewModel()
+		{
+			if (ChildNodes.Any())
+			{
+				itemsCanvas = new ItemsCanvas(this, ParentNode.itemsCanvas);
+				itemsCanvas.Scale = ParentNode.itemsCanvas.Scale / InitialScaleFactor;
+			
+				viewModel = new CompositeNodeViewModel(this, itemsCanvas);
 			}
 			else
 			{
-				viewModel = new SingleNodeViewModel(this);			
+				viewModel = new SingleNodeViewModel(this);
 			}
 
-			ParentNode?.itemsCanvas.AddItem(viewModel);
+			return viewModel;
 		}
 
 

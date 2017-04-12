@@ -86,15 +86,15 @@ namespace Dependiator.Modeling
 		{
 			Data.ViewData viewData = new Data.ViewData
 			{
-				Color = node.NodeColor,
+				Color = node.PersistentNodeColor,
 			};
 
-			if (node.NodeBounds.HasValue)
+			if (node.PersistentNodeBounds.HasValue)
 			{
-				viewData.X = node.NodeBounds.Value.X;
-				viewData.Y = node.NodeBounds.Value.Y;
-				viewData.Width = node.NodeBounds.Value.Width;
-				viewData.Height = node.NodeBounds.Value.Height;
+				viewData.X = node.PersistentNodeBounds.Value.X;
+				viewData.Y = node.PersistentNodeBounds.Value.Y;
+				viewData.Width = node.PersistentNodeBounds.Value.Width;
+				viewData.Height = node.PersistentNodeBounds.Value.Height;
 			}
 
 			return viewData;
@@ -117,7 +117,7 @@ namespace Dependiator.Modeling
 
 			if (dataNode.ViewData != null)
 			{
-				node.NodeBounds = ToBounds(dataNode.ViewData);
+				node.PersistentNodeBounds = ToBounds(dataNode.ViewData);
 				//element.ElementBrush = Converter.BrushFromHex(dataNode.ViewData.Color);
 			}
 			else
@@ -125,7 +125,7 @@ namespace Dependiator.Modeling
 				if (modelViewData != null 
 					&& modelViewData.viewData.TryGetValue(fullName, out Data.ViewData viewData))
 				{
-					node.NodeBounds = ToBounds(viewData);
+					node.PersistentNodeBounds = ToBounds(viewData);
 					//element.ElementBrush = Converter.BrushFromHex(viewData.Color);
 				}
 			}
@@ -247,7 +247,7 @@ namespace Dependiator.Modeling
 			if (modelViewData != null && modelViewData.viewData.TryGetValue(
 				nodeName, out Data.ViewData viewData))
 			{
-				node.NodeBounds = ToBounds(viewData);
+				node.PersistentNodeBounds = ToBounds(viewData);
 				//node.ElementBrush = Converter.BrushFromHex(viewData.Color);
 			}
 

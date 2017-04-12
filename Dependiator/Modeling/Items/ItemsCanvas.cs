@@ -8,7 +8,8 @@ namespace Dependiator.Modeling.Items
 {
 	internal class ItemsCanvas
 	{
-		private readonly IItem ownerItem;
+		private readonly IItemBounds itemBounds;
+
 		private readonly ItemsSource itemsSource;
 
 
@@ -17,16 +18,16 @@ namespace Dependiator.Modeling.Items
 		private Point offset = new Point(0, 0);
 
 
-		public ItemsCanvas(IItem ownerItem, ItemsCanvas parentItemsCanvas)
+		public ItemsCanvas(IItemBounds itemBounds, ItemsCanvas parentItemsCanvas)
 		{
-			this.ownerItem = ownerItem;
+			this.itemBounds = itemBounds;
 			ParentItemsCanvas = parentItemsCanvas;
 			itemsSource = new ItemsSource(this);
 		}
 
 
 		public Rect LastViewAreaQuery => itemsSource.LastViewAreaQuery;
-		public Rect ItemBounds => ownerItem?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
+		public Rect ItemBounds => itemBounds?.NodeBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
 		public ItemsCanvas ParentItemsCanvas { get; }
 
 
@@ -140,7 +141,7 @@ namespace Dependiator.Modeling.Items
 			itemsSource.TriggerInvalidated();
 		}
 
-		public override string ToString() => ownerItem?.ToString() ?? "<root>";
+		public override string ToString() => itemBounds?.ToString() ?? "<root>";
 
 		private void Canvas_ItemRealized(object sender, ItemEventArgs e)
 		{
