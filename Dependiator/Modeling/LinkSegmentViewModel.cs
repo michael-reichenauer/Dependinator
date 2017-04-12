@@ -17,10 +17,10 @@ namespace Dependiator.Modeling
 		protected override Rect GetItemBounds() => linkSegment.GetItemBounds();
 
 
-		public double X1 => linkSegment.X1 * linkSegment.LinkScale;
-		public double Y1 => linkSegment.Y1 * linkSegment.LinkScale;
-		public double X2 => linkSegment.X2 * linkSegment.LinkScale;
-		public double Y2 => linkSegment.Y2 * linkSegment.LinkScale;
+		public double X1 => linkSegment.L1.X * linkSegment.LinkScale;
+		public double Y1 => linkSegment.L1.Y * linkSegment.LinkScale;
+		public double X2 => linkSegment.L2.X * linkSegment.LinkScale;
+		public double Y2 => linkSegment.L2.Y * linkSegment.LinkScale;
 		public double StrokeThickness => linkSegment.LineThickness;
 
 		public Brush LineBrush => linkSegment.LinkBrush;

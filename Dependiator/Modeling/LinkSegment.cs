@@ -41,17 +41,14 @@ namespace Dependiator.Modeling
 					return Rect.Empty;
 				}
 
-				UpdateLine();
+				UpdateLine(this);
 			}
 
 			return itemBounds;
 		}
 
-
-		public double X1 { get; private set; }
-		public double Y1 { get; private set; }
-		public double X2 { get; private set; }
-		public double Y2 { get; private set; }
+		public Point L1 { get; private set; }
+		public Point L2 { get; private set; }
 
 
 
@@ -156,10 +153,13 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void UpdateLine()
+		private static void UpdateLine(LinkSegment segment)
 		{
-			Rect sourceBounds = Source.NodeBounds;
-			Rect targetBounds = Target.NodeBounds;
+			Node source = segment.Source;
+			Node target = segment.Target;
+			Rect sourceBounds = source.NodeBounds;
+			Rect targetBounds = target.NodeBounds;
+
 			// We start by assuming source and target nodes are siblings, 
 			// I.e. line starts at source middle bottom and ends at target middle top
 			double x1 = sourceBounds.X + sourceBounds.Width / 2;
@@ -167,48 +167,62 @@ namespace Dependiator.Modeling
 			double x2 = targetBounds.X + targetBounds.Width / 2;
 			double y2 = targetBounds.Y;
 
-			if (Source.ParentNode == Target)
+			if (source.ParentNode == target)
 			{
 				// The target is a parent of the source, i.e. line ends at the bottom of the target node
-				x2 = (targetBounds.Width / 2) * Target.ItemsScaleFactor
-							+ Target.ItemsOffset.X / Target.ItemsScale;
-				y2 = (targetBounds.Height) * Target.ItemsScaleFactor
-					+ (Target.ItemsOffset.Y - 28) / Target.ItemsScale;
+				x2 = (targetBounds.Width / 2) * target.ItemsScaleFactor
+							+ target.ItemsOffset.X / target.ItemsScale;
+				y2 = (targetBounds.Height) * target.ItemsScaleFactor
+					+ (target.ItemsOffset.Y - 28) / target.ItemsScale;
 
 			}
-			else if (Source == Target.ParentNode)
+			else if (source == target.ParentNode)
 			{
 				// The target is the child of the source, i.e. line start at the top of the source
-				x1 = (sourceBounds.Width / 2) * Source.ItemsScaleFactor
-					+ Source.ItemsOffset.X / Source.ItemsScale;
-				y1 = Source.ItemsOffset.Y / Source.ItemsScale;
+				x1 = (sourceBounds.Width / 2) * source.ItemsScaleFactor
+					+ source.ItemsOffset.X / source.ItemsScale;
+				y1 = source.ItemsOffset.Y / source.ItemsScale;
 			}
 
-			// Line rect bounds:
+			// Line bounds:
 			double x = Math.Min(x1, x2);
 			double y = Math.Min(y1, y2);
 			double width = Math.Abs(x2 - x1);
 			double height = Math.Abs(y2 - y1);
 
-			// Ensure the rect is at list big enough to contain the width of the line
-			width = Math.Max(width, LineThickness + 1);
-			height = Math.Max(height, LineThickness + 1);
+			// Ensure the rect is at least big enough to contain the width of the line
+			width = Math.Max(width, segment.LineThickness + 1);
+			height = Math.Max(height, segment.LineThickness + 1);
 
-			itemBounds = new Rect(x, y, width, height);
+			Rect lineBounds = new Rect(x, y, width, height);
 
 			// Line drawing within the bounds
-			X1 = 0;
-			Y1 = 0;
-			X2 = width;
-			Y2 = height;
+			double XX1 = 0;
+			double XY1 = 0;
+			double XX2 = width;
+			double XY2 = height;
 
 			if (x1 <= x2 && y1 > y2 || x1 > x2 && y1 <= y2)
 			{
 				// Need to flip the line
-				Y1 = height;
-				Y2 = 0;
+				XY1 = height;
+				XY2 = 0;
 			}
+
+			Point l1 = new Point(XX1, XY1);
+			Point l2 = new Point(XX2, XY2);
+
+			segment.SetBounds(lineBounds, l1, l2);
 		}
+
+
+		private void SetBounds(Rect lineBounds, Point l1, Point l2)
+		{
+			itemBounds = lineBounds;
+			L1 = l1;
+			L2 = l2;
+		}
+
 
 		public override string ToString() => $"{Source} -> {Target}";
 	}
