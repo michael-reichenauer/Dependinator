@@ -147,6 +147,44 @@ namespace Dependiator.Modeling.Items
 		}
 
 
+		public void Update(IEnumerable<IItem> items)
+		{
+			bool isTriggerItemsChanged = false;
+
+			foreach (IItem item in items)
+			{
+				ViewItem oldViewItem = (ViewItem)item.ItemState;
+				if (oldViewItem == null)
+				{
+					return;
+				}
+
+				Rect oldItemBounds = oldViewItem.ItemBounds;
+				viewItemsTree.Remove(item, oldItemBounds);
+
+				Rect newItemBounds = item.ItemBounds;
+				item.ItemState = new ViewItem(oldViewItem.ItemId, newItemBounds, item);
+
+				viewItemsTree.Insert(item, newItemBounds, 0);
+				//Log.Debug($"Updated {id} count:{viewItemsTree.Count()}");
+
+				if (oldItemBounds.IntersectsWith(LastViewAreaQuery)
+				    || newItemBounds.IntersectsWith(LastViewAreaQuery))
+				{
+					isTriggerItemsChanged = true;
+				}
+			}
+
+			ItemsBoundsChanged();
+
+			if (isTriggerItemsChanged)
+			{
+				TriggerItemsChanged();
+			}
+		}
+
+
+
 		public void Remove(IEnumerable<IItem> virtualItems)
 		{
 			bool isQueryItemsChanged = false;

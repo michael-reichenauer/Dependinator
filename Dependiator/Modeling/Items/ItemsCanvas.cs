@@ -107,6 +107,8 @@ namespace Dependiator.Modeling.Items
 
 		public void UpdateItem(IItem item) => itemsSource.Update(item);
 
+		public void UpdateItems(IEnumerable<IItem> items) => itemsSource.Update(items);
+
 
 		public void Zoom(double zoom, Point? zoomCenter = null)
 		{
@@ -153,5 +155,6 @@ namespace Dependiator.Modeling.Items
 		{
 			itemsSource.ItemVirtualized(e.VirtualId);
 		}
+
 	}
 }

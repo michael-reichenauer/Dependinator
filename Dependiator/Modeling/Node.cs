@@ -74,11 +74,8 @@ namespace Dependiator.Modeling
 		
 			InitNodeTree(rootItemsCanvas);
 
-			UpdateVisibility();
+			UpdateNodeVisibility();
 		}
-
-
-
 
 
 		public void Zoom(double zoomFactor, Point zoomCenter)
@@ -90,7 +87,7 @@ namespace Dependiator.Modeling
 
 			itemsCanvas.Zoom(zoomFactor, zoomCenter);
 
-			UpdateVisibility();
+			UpdateNodeVisibility();
 
 			Links.ManagedSegments
 				.Where(segment => segment.Source == this || segment.Target == this)
@@ -181,67 +178,68 @@ namespace Dependiator.Modeling
 				});
 		}
 
+	
 
-		private void UpdateVisibility()
+		private void UpdateNodeVisibility()
 		{
-			if (itemsCanvas != null)
+			IEnumerable<Node> childrenToUpdate = Enumerable.Empty<Node>();
+
+			if (ChildNodes.Any())
 			{
 				itemsCanvas.UpdateScale();
-				viewModel.NotifyAll();
-			}
 
-			UpdateThisNodeVisibility();
+				var childrenToShow = ChildNodes
+					.Where(child => !child.viewModel.CanShow && child.CanShowNode())
+					.Select(child => child.viewModel);
+
+				var childrenToHide = ChildNodes
+					.Where(child => child.viewModel.CanShow && !child.CanShowNode())
+					.Select(child => child.viewModel);
+
+				childrenToUpdate = ChildNodes
+					.Where(child => child.viewModel.CanShow && child.viewModel.IsShowing && child.CanShowNode())
+					.ToList();
+
+				var segmentsToShow = Links.ManagedSegments
+					.Where(segment => !segment.ViewModel.CanShow && segment.CanBeShown())
+					.Select(segment => segment.ViewModel);
+
+				var segmentsToHide = Links.ManagedSegments
+					.Where(segment => segment.ViewModel.CanShow && !segment.CanBeShown())
+					.Select(segment => segment.ViewModel);
+		
+
+				var itemsToShow = childrenToShow.Concat(segmentsToShow);
+				var itemsToHide = childrenToHide.Concat(segmentsToHide);
+
+				itemsToShow.ForEach(item => item.Show());
+				itemsToHide.ForEach(item => item.Hide());
+
+				var itemsToUpdate = itemsToHide.Concat(itemsToShow).ToList();
+
+				itemsCanvas.UpdateItems(itemsToUpdate);
+			}
 
 			if (IsShowing)
 			{
-				ChildNodes.ForEach(child => child.UpdateVisibility());
+				viewModel.NotifyAll();
+
+				childrenToUpdate.ForEach(child => child.UpdateNodeVisibility());
 				Links.ManagedSegments.ForEach(segment => segment.UpdateVisibility());
 			}
-		}
-
-
-		private void UpdateThisNodeVisibility()
-		{
-			if (!IsRootNode && CanShowNode())
-			{
-				// Node is not shown and can be shown, Lets show it
-				ShowNode();
-			}
-			else if (viewModel.CanShow)
-			{
-				// This node can no longer be shown, removing it and children are removed automatically
-				viewModel.Hide();
-			}
-		}
-
-
-		private void ShowNode()
-		{
-			if (viewModel.IsShowing)
-			{
-				return;
-			}
-
-			viewModel.Show();
-			ParentNode.UpdateShownItems();
-
-			viewModel.NotifyAll();
 		}
 
 
 
 		public void NodeRealized()
 		{
-			ShowAllChildren();
+			UpdateNodeVisibility();
 		}
 
 		public void NodeVirtualized()
 		{
 			HideAllChildren();
 		}
-
-
-
 
 
 
@@ -300,7 +298,13 @@ namespace Dependiator.Modeling
 			{
 				if (childNode.CanShowNode())
 				{
-					childNode.ShowNode();
+					if (!childNode.viewModel.IsShowing)
+					{
+						childNode.viewModel.Show();
+						childNode.ParentNode.UpdateShownItems();
+
+						childNode.viewModel.NotifyAll();
+					}
 				}
 			}
 
