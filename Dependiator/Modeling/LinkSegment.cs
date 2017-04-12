@@ -197,20 +197,20 @@ namespace Dependiator.Modeling
 			Rect lineBounds = new Rect(x, y, width, height);
 
 			// Line drawing within the bounds
-			double XX1 = 0;
-			double XY1 = 0;
-			double XX2 = width;
-			double XY2 = height;
+			double lx1 = 0;
+			double ly1 = 0;
+			double lx2 = width;
+			double ly2 = height;
 
 			if (x1 <= x2 && y1 > y2 || x1 > x2 && y1 <= y2)
 			{
 				// Need to flip the line
-				XY1 = height;
-				XY2 = 0;
+				ly1 = height;
+				ly2 = 0;
 			}
 
-			Point l1 = new Point(XX1, XY1);
-			Point l2 = new Point(XX2, XY2);
+			Point l1 = new Point(lx1, ly1);
+			Point l2 = new Point(lx2, ly2);
 
 			segment.SetBounds(lineBounds, l1, l2);
 		}

@@ -83,6 +83,9 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ValueTuple, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.3.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Xml" />
@@ -131,7 +134,7 @@
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
     <Compile Include="Modeling\IgnoreMouseWheelBehavior.cs" />
     <Compile Include="Modeling\ILinkItemsService.cs" />
-    <Compile Include="Modeling\INodeItemService.cs" />
+    <Compile Include="Modeling\IItemService.cs" />
     <Compile Include="Modeling\Items\IItemBounds.cs" />
     <Compile Include="Modeling\Items\ItemsCanvas.cs" />
     <Compile Include="Modeling\Analyzing\ReflectionService.cs" />
@@ -170,7 +173,7 @@
     <Compile Include="MainViews\Private\MainViewCommands.cs" />
     <Compile Include="Modeling\IModelService.cs" />
     <Compile Include="Modeling\ModelService.cs" />
-    <Compile Include="Modeling\NodeItemService.cs" />
+    <Compile Include="Modeling\ItemService.cs" />
     <Compile Include="Modeling\Serializing\Data.cs" />
     <Compile Include="Modeling\Serializing\DataSerializer.cs" />
     <Compile Include="Modeling\Serializing\IDataSerializer.cs" />
@@ -433,11 +436,15 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Dependencies\System.ValueTuple.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>mkdir "$(ProjectDir)\Dependencies" 2&gt; NUL
 copy /Y /B "$(SolutionDir)packages\Autofac.4.1.1\lib\net45\Autofac.dll" "$(ProjectDir)\Dependencies\Autofac.dll"
+copy /Y /B "$(SolutionDir)packages\System.ValueTuple.4.3.0\lib\netstandard1.0\System.ValueTuple.dll" "$(ProjectDir)\Dependencies\System.ValueTuple.dll"
+
 copy /Y /B "$(SolutionDir)packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll" "$(ProjectDir)\Dependencies\Newtonsoft.Json.dll"
 copy /Y /B "$(SolutionDir)packages\protobuf-net.2.1.0\lib\net451\protobuf-net.dll" "$(ProjectDir)\Dependencies\protobuf-net.dll"
 copy /Y /B "$(SolutionDir)packages\LibGit2Sharp.0.22.0\lib\net40\LibGit2Sharp.dll" "$(ProjectDir)\Dependencies\LibGit2Sharp.dll"

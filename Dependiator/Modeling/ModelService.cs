@@ -16,7 +16,7 @@ namespace Dependiator.Modeling
 		private readonly WorkingFolder workingFolder;
 		private readonly IReflectionService reflectionService;
 		private readonly INodeService nodeService;
-		private readonly INodeItemService nodeItemService;
+		private readonly IItemService itemService;
 
 		private readonly IDataSerializer dataSerializer;
 
@@ -27,13 +27,13 @@ namespace Dependiator.Modeling
 			WorkingFolder workingFolder,
 			IReflectionService reflectionService,
 			INodeService nodeService,
-			INodeItemService nodeItemService,
+			IItemService itemService,
 			IDataSerializer dataSerializer)
 		{
 			this.workingFolder = workingFolder;
 			this.reflectionService = reflectionService;
 			this.nodeService = nodeService;
-			this.nodeItemService = nodeItemService;
+			this.itemService = itemService;
 			this.dataSerializer = dataSerializer;
 		}
 
@@ -142,7 +142,7 @@ namespace Dependiator.Modeling
 			rootCanvas.Scale = 1.0;
 			rootNode.Show(rootCanvas);
 
-			//nodeItemService.SetChildrenItemBounds(rootNode);
+			//itemService.SetChildrenItemBounds(rootNode);
 
 			//nodesViewModel.AddItems(rootNode.ChildNodes);
 

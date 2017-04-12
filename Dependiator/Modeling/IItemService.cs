@@ -3,7 +3,7 @@ using System.Windows.Media;
 
 namespace Dependiator.Modeling
 {
-	internal interface INodeItemService
+	internal interface IItemService
 	{
 		Brush GetRandomRectangleBrush();
 		Brush GetRectangleBackgroundBrush(Brush brush);

@@ -12,7 +12,7 @@ namespace Dependiator.Modeling
 	internal class Node : IItemBounds
 	{
 		private const int InitialScaleFactor = 7;
-		private readonly INodeItemService nodeItemService;
+		private readonly IItemService itemService;
 
 		private readonly List<Node> childNodes = new List<Node>();
 
@@ -27,12 +27,12 @@ namespace Dependiator.Modeling
 
 
 		public Node(
-			INodeItemService nodeItemService,
+			IItemService itemService,
 			Node parent,
 			NodeName name,
 			NodeType type)
 		{
-			this.nodeItemService = nodeItemService;
+			this.itemService = itemService;
 			ParentNode = parent;
 			NodeName = name;
 			NodeType = type;
@@ -198,12 +198,12 @@ namespace Dependiator.Modeling
 
 			if (PersistentNodeColor != null)
 			{
-				nodeBrush = nodeItemService.GetBrushFromHex(PersistentNodeColor);
+				nodeBrush = itemService.GetBrushFromHex(PersistentNodeColor);
 			}
 			else
 			{
-				nodeBrush = nodeItemService.GetRandomRectangleBrush();
-				PersistentNodeColor = nodeItemService.GetHexColorFromBrush(nodeBrush);
+				nodeBrush = itemService.GetRandomRectangleBrush();
+				PersistentNodeColor = itemService.GetHexColorFromBrush(nodeBrush);
 			}
 
 			return nodeBrush;
@@ -213,7 +213,7 @@ namespace Dependiator.Modeling
 		public Brush GetBackgroundNodeBrush()
 		{
 			Brush brush = GetNodeBrush();
-			return nodeItemService.GetRectangleBackgroundBrush(brush);
+			return itemService.GetRectangleBackgroundBrush(brush);
 		}
 
 
@@ -380,7 +380,7 @@ namespace Dependiator.Modeling
 		{
 			if (ChildNodes.Any())
 			{
-				nodeItemService.SetChildrenLayout(this);
+				itemService.SetChildrenLayout(this);
 
 				var childViewModels = ChildNodes.Select(childNode => childNode.CreateViewModel());
 				var segmentViewModels = Links.ManagedSegments.Select(segment => segment.ViewModel);

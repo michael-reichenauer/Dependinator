@@ -16,14 +16,14 @@ using Dependiator.Common.ThemeHandling;
 
 namespace Dependiator.Modeling
 {
-	internal class NodeItemService : INodeItemService
+	internal class ItemService : IItemService
 	{
 		private static readonly Size DefaultSize = new Size(200, 100);
 
 		private readonly IThemeService themeService;
 
 
-		public NodeItemService(
+		public ItemService(
 			IThemeService themeService)
 		{
 			this.themeService = themeService;
