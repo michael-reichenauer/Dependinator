@@ -11,13 +11,8 @@ namespace Dependiator.Modeling
 	{
 		private readonly List<Link> nodeLinks = new List<Link>();
 		private Rect itemBounds;
-		private Rect sourceBounds;
-		private Point sourceOffset;
-		private double sourceScale;
-		private Rect targetBounds;
-		private Point targetOffset;
-		private double targetScale;
-
+		
+		private bool isUpdated = false;
 
 		public LinkSegment(
 			Node source,
@@ -32,32 +27,19 @@ namespace Dependiator.Modeling
 		}
 
 
-
 		public LinkSegmentViewModel ViewModel { get; }
 
 
 		public Rect GetItemBounds()
 		{
-			if (Source.NodeBounds == Rect.Empty || Target.NodeBounds == Rect.Empty)
+			if (!isUpdated)
 			{
-				return Rect.Empty;
-			}
+				isUpdated = true;
 
-
-			if (sourceBounds != Source.NodeBounds
-				|| targetBounds != Target.NodeBounds
-				|| sourceOffset != Source.ItemsOffset
-				|| targetOffset != Target.ItemsOffset
-				|| sourceScale != Source.ItemsScale
-				|| targetScale != Target.ItemsScale)
-			{
-				// Source or target has moved, lets upate values
-				sourceBounds = Source.NodeBounds;
-				sourceOffset = Source.ItemsOffset;
-				sourceScale = Source.ItemsScale;
-				targetOffset = Target.ItemsOffset;
-				targetBounds = Target.NodeBounds;
-				targetScale = Target.ItemsScale;
+				if (Source.NodeBounds == Rect.Empty || Target.NodeBounds == Rect.Empty)
+				{
+					return Rect.Empty;
+				}
 
 				UpdateLine();
 			}
@@ -132,6 +114,7 @@ namespace Dependiator.Modeling
 
 		public void UpdateVisibility()
 		{
+			isUpdated = false;
 			if (CanBeShown())
 			{
 				//if (!ViewModel.CanShow)
@@ -175,6 +158,8 @@ namespace Dependiator.Modeling
 
 		private void UpdateLine()
 		{
+			Rect sourceBounds = Source.NodeBounds;
+			Rect targetBounds = Target.NodeBounds;
 			// We start by assuming source and target nodes are siblings, 
 			// I.e. line starts at source middle bottom and ends at target middle top
 			double x1 = sourceBounds.X + sourceBounds.Width / 2;
@@ -223,8 +208,6 @@ namespace Dependiator.Modeling
 				Y1 = height;
 				Y2 = 0;
 			}
-
-			Owner.UpdateItem(ViewModel);
 		}
 
 		public override string ToString() => $"{Source} -> {Target}";

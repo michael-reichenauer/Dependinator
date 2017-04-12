@@ -65,7 +65,6 @@ namespace Dependiator.Modeling
 
 		public bool CanShowNode() => IsVisibleAtScale(NodeScale);
 
-		private bool IsVisibleAtScale(double scale) => NodeBounds.Size.Width * scale > 40;
 
 
 		public void Show(ItemsCanvas rootItemsCanvas)
@@ -161,6 +160,70 @@ namespace Dependiator.Modeling
 		}
 
 
+
+		public void NodeRealized()
+		{
+			UpdateNodeVisibility();
+		}
+
+		public void NodeVirtualized()
+		{
+			HideAllChildren();
+		}
+
+
+
+		public void SetType(NodeType nodeType)
+		{
+			NodeType = nodeType;
+		}
+
+
+		public void AddChild(Node child)
+		{
+			childNodes.Add(child);
+		}
+
+
+		public override string ToString() => NodeName;
+
+
+		public Brush GetNodeBrush()
+		{
+			if (nodeBrush != null)
+			{
+				return nodeBrush;
+			}
+
+			if (PersistentNodeColor != null)
+			{
+				nodeBrush = nodeItemService.GetBrushFromHex(PersistentNodeColor);
+			}
+			else
+			{
+				nodeBrush = nodeItemService.GetRandomRectangleBrush();
+				PersistentNodeColor = nodeItemService.GetHexColorFromBrush(nodeBrush);
+			}
+
+			return nodeBrush;
+		}
+
+
+		public Brush GetBackgroundNodeBrush()
+		{
+			Brush brush = GetNodeBrush();
+			return nodeItemService.GetRectangleBackgroundBrush(brush);
+		}
+
+
+		public void UpdateItem(ItemViewModel itemViewModel)
+		{
+			itemsCanvas.UpdateItem(itemViewModel);
+		}
+
+		private bool IsVisibleAtScale(double scale) => NodeBounds.Size.Width * scale > 40;
+
+
 		private void UpdateShownItems()
 		{
 			itemsCanvas?.TriggerInvalidated();
@@ -231,65 +294,6 @@ namespace Dependiator.Modeling
 
 
 
-		public void NodeRealized()
-		{
-			UpdateNodeVisibility();
-		}
-
-		public void NodeVirtualized()
-		{
-			HideAllChildren();
-		}
-
-
-
-		public void SetType(NodeType nodeType)
-		{
-			NodeType = nodeType;
-		}
-
-
-		public void AddChild(Node child)
-		{
-			childNodes.Add(child);
-		}
-
-
-		public override string ToString() => NodeName;
-
-	
-		public Brush GetNodeBrush()
-		{
-			if (nodeBrush != null)
-			{
-				return nodeBrush;
-			}
-
-			if (PersistentNodeColor != null)
-			{
-				nodeBrush = nodeItemService.GetBrushFromHex(PersistentNodeColor);
-			}
-			else
-			{
-				nodeBrush = nodeItemService.GetRandomRectangleBrush();
-				PersistentNodeColor = nodeItemService.GetHexColorFromBrush(nodeBrush);
-			}
-
-			return nodeBrush;
-		}
-
-
-		public Brush GetBackgroundNodeBrush()
-		{
-			Brush brush = GetNodeBrush();
-			return nodeItemService.GetRectangleBackgroundBrush(brush);
-		}
-
-
-		public void UpdateItem(ItemViewModel viewModel)
-		{
-			itemsCanvas.UpdateItem(viewModel);
-		}
 
 
 		private void ShowAllChildren()
