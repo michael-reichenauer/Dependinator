@@ -64,7 +64,9 @@ namespace Dependiator.Modeling
 
 		public string DebugToolTip =>
 			$"\n Children: {ChildNodes.Count} Shown Items: {CountShowingNodes()}\n" +
-			$"Items Scale: {ItemsScale:0.00}";
+			$"Items Scale: {ItemsScale:0.00}\n" +
+			$"Rect: {NodeBounds.TS()}, {(NodeBounds.Location - (Vector)ParentNode.ItemsOffset).TS()}\n" +
+			$"Pos in parent: {itemsCanvas?.GetParentCanvasPoint(NodeBounds.Location)}";
 
 
 		public bool CanShowNode() => IsVisibleAtScale(NodeScale);
