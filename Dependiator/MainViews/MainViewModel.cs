@@ -83,13 +83,6 @@ namespace Dependiator.MainViews
 		}
 
 
-		public object MoveNode(Point viewPosition, Vector viewOffset, object movingObject)
-		{
-			return modelService.MoveNode(viewPosition, viewOffset, movingObject);
-		}
-
-
-
 
 		public void ShowCommitDetails()
 		{

@@ -80,6 +80,9 @@ namespace Dependiator.Modeling.Serializing
 			public double Y { get; set; }
 			public double Width { get; set; }
 			public double Height { get; set; }
+			public double Scale { get; set; }
+			public double OffsetX { get; set; }
+			public double OffsetY { get; set; }
 			public string Color { get; set; }
 		}
 

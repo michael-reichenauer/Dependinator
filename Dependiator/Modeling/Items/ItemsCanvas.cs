@@ -74,7 +74,10 @@ namespace Dependiator.Modeling.Items
 		{
 			if (ParentItemsCanvas != null)
 			{
-				Scale = ParentItemsCanvas.Scale / ScaleFactor;
+				double newScale = ParentItemsCanvas.Scale / ScaleFactor;
+				double zoom = newScale / Scale;
+
+				Zoom(zoom, new Point(0, 0));
 			}			
 		}
 

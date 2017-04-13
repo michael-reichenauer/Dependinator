@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -55,8 +56,10 @@ namespace Dependiator.Modeling
 
 		public NodeLinks Links { get; }
 
-		public string PersistentNodeColor { get; private set; }
+		public string PersistentNodeColor { get; set; }
 		public Rect? PersistentNodeBounds { get; set; }
+		public double? PersistentScale { get; set; }
+		public Point? PersistentOffset { get; set; }
 
 
 		public string DebugToolTip =>
@@ -298,32 +301,32 @@ namespace Dependiator.Modeling
 
 
 
-		private void ShowAllChildren()
-		{
-			foreach (Node childNode in ChildNodes)
-			{
-				if (childNode.CanShowNode())
-				{
-					if (!childNode.viewModel.IsShowing)
-					{
-						childNode.viewModel.Show();
-						childNode.ParentNode.UpdateShownItems();
+		//private void ShowAllChildren()
+		//{
+		//	foreach (Node childNode in ChildNodes)
+		//	{
+		//		if (childNode.CanShowNode())
+		//		{
+		//			if (!childNode.viewModel.IsShowing)
+		//			{
+		//				childNode.viewModel.Show();
+		//				childNode.ParentNode.UpdateShownItems();
 
-						childNode.viewModel.NotifyAll();
-					}
-				}
-			}
+		//				childNode.viewModel.NotifyAll();
+		//			}
+		//		}
+		//	}
 
-			UpdateShownItems();
+		//	UpdateShownItems();
 
-			foreach (Node childNode in ChildNodes)
-			{
-				if (childNode.viewModel?.CanShow ?? false)
-				{
-					childNode.ShowAllChildren();
-				}
-			}
-		}
+		//	foreach (Node childNode in ChildNodes)
+		//	{
+		//		if (childNode.viewModel?.CanShow ?? false)
+		//		{
+		//			childNode.ShowAllChildren();
+		//		}
+		//	}
+		//}
 
 
 		private void HideAllChildren()
@@ -339,6 +342,8 @@ namespace Dependiator.Modeling
 
 			UpdateShownItems();
 		}
+
+
 		private int CountShowingNodes()
 		{
 			// Log.Debug("Counting shown nodes:");
@@ -399,8 +404,20 @@ namespace Dependiator.Modeling
 			if (ChildNodes.Any())
 			{
 				itemsCanvas = new ItemsCanvas(this, ParentNode.itemsCanvas);
-				itemsCanvas.Scale = ParentNode.itemsCanvas.Scale / InitialScaleFactor;
-			
+
+				double scale = PersistentScale ?? 0;
+				if (Math.Abs(scale) > 0.001)
+				{
+					itemsCanvas.Scale = scale;
+				}
+				else
+				{
+					itemsCanvas.Scale = ParentNode.itemsCanvas.Scale / InitialScaleFactor;
+				}
+
+				Point offset = PersistentOffset ?? new Point(0, 0);
+				itemsCanvas.Offset = offset;
+
 				viewModel = new CompositeNodeViewModel(this, itemsCanvas);
 			}
 			else

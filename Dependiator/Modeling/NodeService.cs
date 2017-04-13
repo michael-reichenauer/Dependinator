@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using Dependiator.Common.ThemeHandling;
 using Dependiator.Modeling.Serializing;
 
 
@@ -87,15 +88,14 @@ namespace Dependiator.Modeling
 			Data.ViewData viewData = new Data.ViewData
 			{
 				Color = node.PersistentNodeColor,
-			};
-
-			if (node.PersistentNodeBounds.HasValue)
-			{
-				viewData.X = node.PersistentNodeBounds.Value.X;
-				viewData.Y = node.PersistentNodeBounds.Value.Y;
-				viewData.Width = node.PersistentNodeBounds.Value.Width;
-				viewData.Height = node.PersistentNodeBounds.Value.Height;
-			}
+				X = node.NodeBounds.X,
+				Y = node.NodeBounds.Y,
+				Width = node.NodeBounds.Width,
+				Height = node.NodeBounds.Height,
+				Scale = node.ItemsScale,
+				OffsetX = node.ItemsOffset.X,
+				OffsetY = node.ItemsOffset.Y
+			};	
 
 			return viewData;
 		}
@@ -118,7 +118,9 @@ namespace Dependiator.Modeling
 			if (dataNode.ViewData != null)
 			{
 				node.PersistentNodeBounds = ToBounds(dataNode.ViewData);
-				//element.ElementBrush = Converter.BrushFromHex(dataNode.ViewData.Color);
+				node.PersistentScale = dataNode.ViewData.Scale;
+				node.PersistentNodeColor = dataNode.ViewData.Color;
+				node.PersistentOffset = new Point(dataNode.ViewData.OffsetX, dataNode.ViewData.OffsetY);
 			}
 			else
 			{
@@ -126,7 +128,9 @@ namespace Dependiator.Modeling
 					&& modelViewData.viewData.TryGetValue(fullName, out Data.ViewData viewData))
 				{
 					node.PersistentNodeBounds = ToBounds(viewData);
-					//element.ElementBrush = Converter.BrushFromHex(viewData.Color);
+					node.PersistentScale = viewData.Scale;
+					node.PersistentNodeColor = viewData.Color;
+					node.PersistentOffset = new Point(viewData.OffsetX, viewData.OffsetY);
 				}
 			}
 

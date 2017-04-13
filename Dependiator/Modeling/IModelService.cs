@@ -8,8 +8,6 @@ namespace Dependiator.Modeling
 	internal interface IModelService
 	{
 		void InitModules(ItemsCanvas rootCanvas);
-		object MoveNode(Point viewPosition, Vector viewOffset, object movingObject);
-		bool ZoomNode(int zoomDelta, Point viewPosition);
 
 		void Zoom(double zoomFactor, Point zoomCenter);
 		void Move(Vector viewOffset);
