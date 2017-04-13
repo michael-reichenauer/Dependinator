@@ -13,7 +13,7 @@ namespace Dependiator.Modeling.Items
 
 		private readonly ItemsSource itemsSource;
 		private NodesView view;
-		private Vector relative;
+		//private Vector relative;
 
 		private ZoomableCanvas zoomableCanvas;
 		private double scale = 1.0;
@@ -86,9 +86,9 @@ namespace Dependiator.Modeling.Items
 		public Point GetParentCanvasPoint(Point canvasPoint)
 		{
 			if (ParentItemsCanvas?.view != null && view != null)
-			{	
+			{
 				// Compensate the canvas view for the nodes vew position relative nodes border 
-				Point compensatedPoint = canvasPoint + relative;
+				Point compensatedPoint = canvasPoint;
 
 				Vector vector = (Vector)ParentItemsCanvas.Offset / ParentItemsCanvas.Scale;
 
@@ -116,11 +116,13 @@ namespace Dependiator.Modeling.Items
 		{
 			view = nodesView;
 
-			// Get the position of the nodes view relative the nodes border
-			UIElement innerBorder = VisualTreeHelper.GetParent(view) as UIElement;
-			UIElement grid = VisualTreeHelper.GetParent(innerBorder) as UIElement;
-			UIElement nodesBorder = VisualTreeHelper.GetParent(grid) as UIElement;
-			relative = (Vector)view.TranslatePoint(new Point(0, 0), nodesBorder);
+			//// Get the position of the nodes view relative the nodes border
+			//UIElement innerBorder = VisualTreeHelper.GetParent(view) as UIElement;
+			//UIElement grid = VisualTreeHelper.GetParent(innerBorder) as UIElement;
+			//UIElement nodesBorder = VisualTreeHelper.GetParent(grid) as UIElement;
+			
+			//relative = (Vector)view.TranslatePoint(new Point(0, 0), nodesBorder);
+			
 
 			if (zoomableCanvas != null)
 			{
