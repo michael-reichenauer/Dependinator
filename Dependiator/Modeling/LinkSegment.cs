@@ -60,7 +60,11 @@ namespace Dependiator.Modeling
 
 		public string GetToolTip()
 		{
-			string tip = $"{this},  {NodeLinks.Count} references:";
+			var targetCount = NodeLinks
+				.GroupBy(l => l.Target, p => p, (k, g) => new { target = k, links = g})
+				.Count();
+
+			string tip = $"{this},  {NodeLinks.Count} links ({targetCount} targets:";
 			int maxLinks = 40;
 
 			foreach (Link reference in NodeLinks.Take(maxLinks))
