@@ -135,6 +135,15 @@ namespace Dependiator.Modeling.Items
 		}
 
 
+		public Rect GetItemsCanvasViewArea()
+		{
+			Size renderSize = (Size)((Vector)ItemBounds.Size * ParentItemsCanvas.Scale);
+			Rect value = new Rect(
+				Offset.X / Scale, Offset.Y / Scale, renderSize.Width / Scale, renderSize.Height / Scale);
+
+			return value;
+		}
+
 		public void SetCanvas(ZoomableCanvas canvas, NodesView nodesView)
 		{
 			view = nodesView;

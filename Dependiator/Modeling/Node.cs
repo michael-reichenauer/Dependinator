@@ -67,7 +67,8 @@ namespace Dependiator.Modeling
 			$"Items Scale: {ItemsScale:0.00}\n" +
 			$"Rect: {NodeBounds.TS()}, {(NodeBounds.Location - (Vector)ParentNode.ItemsOffset).TS()}\n" +
 			$"Pos parent coord: {ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location).TS()}\n"+
-			$"Pos in child coord: {ParentNode?.itemsCanvas?.GetParentToChildCanvasPoint(ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location) ?? new Point(0,0)).TS()}";
+			$"Pos in child coord: {ParentNode?.itemsCanvas?.GetParentToChildCanvasPoint(ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location) ?? new Point(0, 0)).TS()}\n" +
+			$"Visual rect {itemsCanvas?.GetItemsCanvasViewArea().TS()}";
 
 
 		public bool CanShowNode() => IsVisibleAtScale(NodeScale);
