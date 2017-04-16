@@ -68,7 +68,10 @@ namespace Dependiator.Modeling
 			$"Rect: {NodeBounds.TS()}, {(NodeBounds.Location - (Vector)ParentNode.ItemsOffset).TS()}\n" +
 			$"Pos parent coord: {ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location).TS()}\n"+
 			$"Pos in child coord: {ParentNode?.itemsCanvas?.GetParentToChildCanvasPoint(ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location) ?? new Point(0, 0)).TS()}\n" +
-			$"Visual rect {itemsCanvas?.GetItemsCanvasViewArea().TS()}";
+			$"Visual area {itemsCanvas?.ViewArea.TS()}\n" +
+			$"ParentVisual view area {ParentNode?.itemsCanvas?.ViewArea.TS()}\n" +
+			$"Recursive viewArea {itemsCanvas?.GetVisualAncestorsArea().TS()}";
+			
 
 
 		public bool CanShowNode() => IsVisibleAtScale(NodeScale);
@@ -139,7 +142,7 @@ namespace Dependiator.Modeling
 
 		public void Resize(int wheelDelta)
 		{
-			double delta = (double)wheelDelta / 12;
+			double delta = (double)wheelDelta / 30;
 			double scaledDelta = delta / NodeScale;
 			
 			double width = NodeBounds.Size.Width + (2 * scaledDelta);

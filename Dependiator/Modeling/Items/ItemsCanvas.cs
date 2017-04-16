@@ -35,6 +35,7 @@ namespace Dependiator.Modeling.Items
 
 		public double ScaleFactor { get; private set; } = 1.0;
 
+		public Rect ViewArea { get; private set; }
 
 
 		public Point Offset
@@ -47,6 +48,8 @@ namespace Dependiator.Modeling.Items
 				{
 					zoomableCanvas.Offset = value;
 				}
+
+				ViewArea = GetItemsCanvasViewArea();
 			}
 		}
 
@@ -67,9 +70,10 @@ namespace Dependiator.Modeling.Items
 				{
 					ScaleFactor = ParentItemsCanvas.scale / scale;
 				}
+
+				ViewArea = GetItemsCanvasViewArea();
 			}
 		}
-
 
 
 		public void UpdateScale()
@@ -135,14 +139,7 @@ namespace Dependiator.Modeling.Items
 		}
 
 
-		public Rect GetItemsCanvasViewArea()
-		{
-			Size renderSize = (Size)((Vector)ItemBounds.Size * ParentItemsCanvas.Scale);
-			Rect value = new Rect(
-				Offset.X / Scale, Offset.Y / Scale, renderSize.Width / Scale, renderSize.Height / Scale);
 
-			return value;
-		}
 
 		public void SetCanvas(ZoomableCanvas canvas, NodesView nodesView)
 		{
@@ -222,6 +219,37 @@ namespace Dependiator.Modeling.Items
 
 		public override string ToString() => itemBounds?.ToString() ?? "<root>";
 
+
+		public Rect GetVisualAncestorsArea()
+		{
+			if (ParentItemsCanvas != null)
+			{
+				Rect parentArea = ParentItemsCanvas.GetVisualAncestorsArea();
+				Point p1 = GetParentToChildCanvasPoint(parentArea.Location);
+				Size s1 = (Size)((Vector)parentArea.Size * ScaleFactor);
+				Rect scaledParentViewArea = new Rect(p1, s1);
+				Rect viewArea = GetItemsCanvasViewArea();
+				viewArea.Intersect(scaledParentViewArea);
+				return viewArea;
+			}
+			else
+			{
+				return ViewArea;
+			}
+		}
+
+
+		private Rect GetItemsCanvasViewArea()
+		{
+			double parentScale = ParentItemsCanvas?.Scale ?? Scale;
+			Size renderSize = (Size)((Vector)ItemBounds.Size * parentScale);
+			Rect value = new Rect(
+				Offset.X / Scale, Offset.Y / Scale, renderSize.Width / Scale, renderSize.Height / Scale);
+
+			return value;
+		}
+
+
 		private void Canvas_ItemRealized(object sender, ItemEventArgs e)
 		{
 			itemsSource.ItemRealized(e.VirtualId);
@@ -232,6 +260,5 @@ namespace Dependiator.Modeling.Items
 		{
 			itemsSource.ItemVirtualized(e.VirtualId);
 		}
-
 	}
 }
