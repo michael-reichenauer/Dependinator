@@ -27,22 +27,20 @@
 				<RowDefinition Height="*" />
 
 			</Grid.RowDefinitions>
-
-			<!-- Title -->
-			
+	
 
 			<!-- Child nodes -->
-			<Border Grid.Row="0">
+			<modeling:NodesView Grid.Row="0" x:Name="NodesView" DataContext="{Binding NodesViewModel}"/>
 
-				<modeling:NodesView x:Name="NodesView" DataContext="{Binding NodesViewModel}"/>
-				
-			</Border>
+			<!-- Title -->
 			<Border
 				Grid.Row="0"
 				BorderBrush="{Binding RectangleBrush}" 
 				BorderThickness="0.3"
 				Height="20"
-				Background="Transparent" VerticalAlignment="Top">
+				Background="Transparent" VerticalAlignment="Top"
+				ForceCursor="true" 
+				Cursor="Hand">
 			
 				<TextBlock
 					Height="20"
@@ -61,7 +59,14 @@
 						BorderThickness="1"  Opened="ToolTip_OnOpened"/>
 				</Border.ToolTip>
 			</Border>
-			
+
+			<Border 
+				Name="ResizeBorder"
+				Grid.Row="0" 
+				BorderThickness="5" 
+				BorderBrush="Transparent"
+				ForceCursor="true" 
+				Cursor="SizeAll"/>
 		</Grid>
 		
 	</Border>

@@ -24,6 +24,7 @@ namespace Dependiator.Modeling
 
 		protected override void OnMouseWheel(MouseWheelEventArgs e)
 		{
+			//Cursors.SizeAll
 			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
 			{
 				return;
@@ -61,6 +62,7 @@ namespace Dependiator.Modeling
 			}
 
 			Point viewPosition = e.GetPosition(Application.Current.MainWindow);
+			Point viewPosition2 = e.GetPosition(e.OriginalSource as IInputElement);
 
 			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
 				&& e.LeftButton == MouseButtonState.Pressed
@@ -71,7 +73,7 @@ namespace Dependiator.Modeling
 				Vector viewOffset = viewPosition - lastMousePosition;
 				e.Handled = true;
 
-				viewModel.MoveNode(viewOffset);
+				viewModel.MoveNode(viewOffset, viewPosition2);
 			}
 			else
 			{

@@ -73,7 +73,7 @@ namespace Dependiator.Modeling
 
 		public void ZoomResize(int wheelDelta) => node.Resize(wheelDelta);
 
-		public void MoveNode(Vector viewOffset) => node.Move(viewOffset);
+		public void MoveNode(Vector viewOffset, Point viewPosition2) => node.Move(viewOffset, viewPosition2);
 
 
 		public override string ToString() => node.NodeName;

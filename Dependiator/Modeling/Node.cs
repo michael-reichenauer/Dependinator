@@ -106,11 +106,42 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void Move(Vector viewOffset)
+		public void Move(Vector viewOffset, Point? viewPosition2)
 		{
 			Vector scaledOffset = viewOffset / NodeScale;
+
 			Point newLocation = NodeBounds.Location + scaledOffset;
-			NodeBounds = new Rect(newLocation, NodeBounds.Size);
+			Size size = NodeBounds.Size;
+
+			if (viewPosition2.HasValue)
+			{
+				Point p = new Point(viewPosition2.Value.X / NodeScale, viewPosition2.Value.Y / NodeScale);
+				double dist = 8 / NodeScale;
+
+				if (Math.Abs(p.X - 0) < dist)
+				{
+					newLocation = new Point(NodeBounds.Location.X + scaledOffset.X, NodeBounds.Location.Y);
+					size = new Size(size.Width - scaledOffset.X, size.Height);
+				}
+				else if (Math.Abs(p.X - NodeBounds.Width) < dist)
+				{
+					newLocation = NodeBounds.Location;
+					size = new Size(size.Width + scaledOffset.X, size.Height);
+				}
+
+				if (Math.Abs(p.Y - 0) < dist)
+				{
+					newLocation = new Point(NodeBounds.Location.X, NodeBounds.Location.Y + scaledOffset.Y);
+					size = new Size(size.Width, size.Height - scaledOffset.Y);
+				}
+				else if (Math.Abs(p.Y - NodeBounds.Height) < dist)
+				{
+					newLocation = NodeBounds.Location;
+					size = new Size(size.Width, size.Height + scaledOffset.Y);
+				}
+			}
+
+			NodeBounds = new Rect(newLocation, size);
 
 			ParentNode.itemsCanvas.UpdateItem(viewModel);
 
