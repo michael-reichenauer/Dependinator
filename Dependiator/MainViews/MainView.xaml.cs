@@ -12,7 +12,7 @@ namespace Dependiator.MainViews
 	/// </summary>
 	public partial class MainView : UserControl
 	{
-		private static readonly double ZoomSpeed = 1000.0;
+		private static readonly double ZoomSpeed = 2000.0;
 
 		private MainViewModel viewModel;
 

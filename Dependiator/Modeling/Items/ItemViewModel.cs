@@ -38,14 +38,19 @@ namespace Dependiator.Modeling.Items
 
 		public virtual void ItemRealized()
 		{
-			// Log.Debug($"{GetType()} {this}");
+			Log.Debug($"{GetType()} {this}");
 			IsShowing = true;
 		}
 
 
 		public virtual void ItemVirtualized()
 		{
-			//Log.Debug($"{GetType()} {this}");
+			Log.Debug($"{GetType()} {this}");
+
+			if (this.ToString().EndsWith("Acs"))
+			{
+				
+			}
 			IsShowing = false;
 		}
 

@@ -59,7 +59,7 @@ namespace Dependiator.Modeling
 			int padding = 20;
 
 			double xMargin = 10;
-			double yMargin = 50;
+			double yMargin = 100;
 
 			int count = 0;
 			var children = parent.ChildNodes.OrderBy(child => child, NodeComparer.Comparer(parent));
@@ -108,7 +108,7 @@ namespace Dependiator.Modeling
 				x2 = (targetBounds.Width / 2) * target.ItemsScaleFactor
 				     + target.ItemsOffset.X / target.ItemsScale;
 				y2 = (targetBounds.Height) * target.ItemsScaleFactor
-				     + (target.ItemsOffset.Y - 28) / target.ItemsScale;
+				     + (target.ItemsOffset.Y) / target.ItemsScale;
 
 			}
 			else if (source == target.ParentNode)

@@ -56,7 +56,11 @@ namespace Dependiator.Modeling
 
 		public double LineThickness => GetLineThickness();
 
-		public bool CanBeShown() => (Source.CanShowNode() && Target.CanShowNode());
+		public bool CanBeShown()
+		{
+			return (Source.CanShowNode() && Target.CanShowNode());
+		}
+
 
 		public string GetToolTip()
 		{
@@ -93,6 +97,7 @@ namespace Dependiator.Modeling
 				}
 
 				itemService.UpdateLine(this);
+
 			}
 
 			return itemBounds;
@@ -124,6 +129,8 @@ namespace Dependiator.Modeling
 					ViewModel.NotifyAll();
 				}
 			}
+
+			Owner.UpdateItem(ViewModel);
 		}
 
 

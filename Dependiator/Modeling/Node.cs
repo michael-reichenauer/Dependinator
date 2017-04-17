@@ -53,6 +53,7 @@ namespace Dependiator.Modeling
 		public double ItemsScale => itemsCanvas?.Scale ?? 1;
 		public double ItemsScaleFactor => itemsCanvas?.ScaleFactor ?? 1;
 		public Point ItemsOffset => itemsCanvas?.Offset ?? new Point();
+		public Point ItemsCanvasOffset => (Point)((Vector)ItemsOffset / ItemsScale);
 
 		public NodeLinks Links { get; }
 
@@ -64,16 +65,16 @@ namespace Dependiator.Modeling
 
 		public string DebugToolTip =>
 			$"\n Children: {ChildNodes.Count} Shown Items: {CountShowingNodes()}\n" +
-			$"Items Scale: {ItemsScale:0.00}\n" +
-			$"Rect: {NodeBounds.TS()}, {(NodeBounds.Location - (Vector)ParentNode.ItemsOffset).TS()}\n" +
-			$"Pos parent coord: {ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location).TS()}\n"+
+			$"Items Scale: {ItemsScale:0.00}, Scalefactor: {ItemsScaleFactor:0.00}\n" +
+			$"Offset: {ItemsOffset.TS()}, CanvasOffset: {ItemsCanvasOffset.TS()}\n" +
+			$"Rect: {NodeBounds.TS()}\n" +
+			$"Pos in parent coord: {ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location).TS()}\n"+
 			$"Pos in child coord: {ParentNode?.itemsCanvas?.GetParentToChildCanvasPoint(ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location) ?? new Point(0, 0)).TS()}\n" +
 			$"Visual area {itemsCanvas?.ViewArea.TS()}\n" +
-			$"ParentVisual view area {ParentNode?.itemsCanvas?.ViewArea.TS()}\n" +
-			$"Recursive viewArea {itemsCanvas?.GetVisualAncestorsArea().TS()}";
-			
+			$"Recursive viewArea {itemsCanvas?.GetVisualAncestorsArea().TS()}\n\n" +
+			$"Parent {ParentNode?.NodeName}:{ParentNode?.DebugToolTip}";
 
-
+	
 		public bool CanShowNode() => IsVisibleAtScale(NodeScale);
 
 

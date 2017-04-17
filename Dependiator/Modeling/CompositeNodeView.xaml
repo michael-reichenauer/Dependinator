@@ -21,7 +21,7 @@
 			<Grid.RowDefinitions>
 				
 				<!-- Title -->
-				<RowDefinition Height="20" />
+				<!--<RowDefinition Height="20" />-->
 
 				<!-- Child nodes -->
 				<RowDefinition Height="*" />
@@ -29,30 +29,39 @@
 			</Grid.RowDefinitions>
 
 			<!-- Title -->
-			<Grid Grid.Row="0" Background="Transparent">
+			
+
+			<!-- Child nodes -->
+			<Border Grid.Row="0">
+
+				<modeling:NodesView x:Name="NodesView" DataContext="{Binding NodesViewModel}"/>
+				
+			</Border>
+			<Border
+				Grid.Row="0"
+				BorderBrush="{Binding RectangleBrush}" 
+				BorderThickness="0.3"
+				Height="20"
+				Background="Transparent" VerticalAlignment="Top">
+			
 				<TextBlock
+					Height="20"
+					Margin="5,0"
 					Text="{Binding Name}"
 					Foreground="{DynamicResource TextBrush}"
 					FontSize="{Binding FontSize}"
-					HorizontalAlignment="Center"
+					HorizontalAlignment="Left"
 					VerticalAlignment="Top" />
 
-				<Grid.ToolTip>
+				<Border.ToolTip>
 					<ToolTip
 						Content="{Binding ToolTip}"
 						Placement="Mouse"
 						BorderBrush="{Binding RectangleBrush}"
 						BorderThickness="1"  Opened="ToolTip_OnOpened"/>
-				</Grid.ToolTip>
-			</Grid>
-
-			<!-- Child nodes -->
-			<Border Grid.Row="1" BorderBrush="{Binding RectangleBrush}" BorderThickness="0.2">
-
-				<modeling:NodesView x:Name="NodesView" DataContext="{Binding NodesViewModel}"/>
-				
+				</Border.ToolTip>
 			</Border>
-
+			
 		</Grid>
 		
 	</Border>

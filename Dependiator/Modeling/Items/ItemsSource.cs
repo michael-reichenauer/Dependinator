@@ -327,28 +327,15 @@ namespace Dependiator.Modeling.Items
 			}
 
 			
-			if (itemsCanvas.ParentItemsCanvas != null 
-				&& itemsCanvas.ParentItemsCanvas.LastViewAreaQuery != Rect.Empty)
+			if (itemsCanvas.ParentItemsCanvas != null)
 			{
-				Rect parentViewArea = itemsCanvas.ParentItemsCanvas.LastViewAreaQuery;
-
-				Rect itemRect = itemsCanvas.ItemBounds;
-
-				Double scaleFactor = itemsCanvas.ScaleFactor;
-
-
-				double x = (parentViewArea.X - itemRect.X) * scaleFactor;
-				double y = (parentViewArea.Y - itemRect.Y) * scaleFactor;
-				double w = parentViewArea.Width * scaleFactor;
-				double h = parentViewArea.Height * scaleFactor;
-
-				Rect scaledParentViewArea = new Rect(x + viewArea.X, y + viewArea.Y, w, h);
+				Rect ancestorsViewArea = itemsCanvas.GetVisualAncestorsArea();
 
 				//if (itemsCanvas.ToString() == "Server")
 				//{
 				//	Log.Warn($"{itemsCanvas}: ViewArea {viewArea.TS()}, Parent {scaledParentViewArea.TS()}");
 				//}
-				viewArea.Intersect(scaledParentViewArea);
+				viewArea.Intersect(ancestorsViewArea);
 				//if (itemsCanvas.ToString() == "Server")
 				//{
 				//	Log.Warn($"{itemsCanvas}: ViewArea {viewArea.TS()}, Parent {scaledParentViewArea.TS()}");
@@ -360,9 +347,9 @@ namespace Dependiator.Modeling.Items
 				}
 			}
 
-			LastViewAreaQuery = viewArea;		
 
 			viewArea.Inflate(viewArea.Width / 10, viewArea.Height / 10);
+			LastViewAreaQuery = viewArea;
 
 			IEnumerable<int> itemIds = viewItemsTree.GetItemsIntersecting(viewArea)
 				.Where(i => i.ItemState != null && i.CanShow)

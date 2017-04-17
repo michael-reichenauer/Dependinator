@@ -12,7 +12,7 @@ namespace Dependiator.Modeling
 	/// </summary>
 	public partial class CompositeNodeView : UserControl
 	{
-		private static readonly double ZoomSpeed = 1000.0;
+		private static readonly double ZoomSpeed = 3000.0;
 
 		private Point lastMousePosition;
 
