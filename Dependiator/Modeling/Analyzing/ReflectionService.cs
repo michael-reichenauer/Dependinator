@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
-using Dependiator.Common.MessageDialogs;
 using Dependiator.Modeling.Serializing;
 using Dependiator.Utils;
 
@@ -13,36 +11,45 @@ namespace Dependiator.Modeling.Analyzing
 {
 	internal class ReflectionService : IReflectionService
 	{
-		private readonly IMessage messageService;
-
 		internal const BindingFlags DeclaredOnlyFlags =
 			BindingFlags.Public | BindingFlags.NonPublic
 			| BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
 
-		public ReflectionService(IMessage message)
+		private class ReflectionModel
 		{
-			this.messageService = message;
+			public Dictionary<string, Data.Node> Nodes { get; } =
+				new Dictionary<string, Data.Node>();
+
+			public Dictionary<string, Data.Link> Links { get; } =
+				new Dictionary<string, Data.Link>();
 		}
 
-
-		public Data Analyze(string path)
+		public DataModel Analyze(string path)
 		{
 			string currentDirectory = Environment.CurrentDirectory;
+
+			DataModel model = new DataModel();
+		
 			try
 			{
-				Environment.CurrentDirectory = Path.GetDirectoryName(path) ?? currentDirectory;
+				string directoryName = Path.GetDirectoryName(path) ?? currentDirectory;
+				if (Directory.Exists(directoryName))
+				{
+					Environment.CurrentDirectory = directoryName;
+				}
 				Log.Debug($"Current directory '{Environment.CurrentDirectory}'");
 				AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += OnReflectionOnlyAssemblyResolve;
 
 				IReadOnlyList<TypeInfo> typeInfos = GetAssemblyTypes(path);
+				ReflectionModel reflectionModel = new ReflectionModel();
 
-				Data data = new Data
-				{
-					Nodes = ToDataNodes(typeInfos)
-				};
+				AddTypes(typeInfos, reflectionModel);
 
-				return data;
+				model.Nodes = reflectionModel.Nodes.Values.ToList();
+				model.Links = reflectionModel.Links.Values.ToList();
+
+				return model;
 			}
 			catch (ReflectionTypeLoadException e)
 			{
@@ -71,9 +78,9 @@ namespace Dependiator.Modeling.Analyzing
 			catch (FileLoadException e)
 			{
 				string message =
-				$"Failed to load '{path}'\n" +
-				$"Could not locate referenced assembly:\n" +
-				$"   {ToAssemblyName(e.Message)}";
+					$"Failed to load '{path}'\n" +
+					$"Could not locate referenced assembly:\n" +
+					$"   {ToAssemblyName(e.Message)}";
 
 				Log.Warn($"{message}\n {e}");
 			}
@@ -88,10 +95,7 @@ namespace Dependiator.Modeling.Analyzing
 				Environment.CurrentDirectory = currentDirectory;
 			}
 
-			return new Data
-			{
-				Nodes = new List<DataNode>()
-			};
+			return model;
 		}
 
 
@@ -114,62 +118,86 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		private List<DataNode> ToDataNodes(IEnumerable<TypeInfo> typeInfos)
+		private void AddTypes(
+			IEnumerable<TypeInfo> types,
+			ReflectionModel model)
 		{
-			return typeInfos
-				.Where(typeInfo => !IsCompilerGenerated(typeInfo))
-				.Select(ToNode)
-				.Where(node => node != null)
-				.ToList();
+			IEnumerable<TypeInfo> definedTypes = types
+				.Where(type => !IsCompilerGenerated(type));
+
+			foreach (TypeInfo type in definedTypes)
+			{
+				AddType(type, model);
+			}
 		}
 
 
-		private DataNode ToNode(TypeInfo typeInfo)
+		private void AddType(TypeInfo typeInfo, ReflectionModel model)
 		{
 			try
 			{
-				DataNode node = new DataNode
+				if (typeInfo.FullName.Contains(">"))
 				{
-					Name = typeInfo.FullName,
-					Type = DataNode.TypeType
-				};
-
-				if (node.Name.Contains(">"))
-				{
-					Log.Warn($"Skipping Node name {node.Name}");
-					return null;
+					//Log.Warn($"Skipping type {typeInfo.FullName}");
+					return;
 				}
 
-				AddMembers(typeInfo, node);
-
-				AddLinksToBaseTypes(typeInfo, node);
-
-				return node;
-			}
-			catch (Exception e)
-			{
-				Log.Warn($"Failed to add node for {typeInfo}, {e}");
-				return new DataNode
+				Data.Node typeNode = new Data.Node
 				{
 					Name = typeInfo.FullName,
-					Type = DataNode.TypeType
+					Type = NodeType.TypeType
 				};
+
+				model.Nodes[typeNode.Name] = typeNode;
+
+				AddMembers(typeNode, typeInfo, model);
+
+				AddLinksToBaseTypes(typeNode, typeInfo, model);
+			}
+			catch (Exception e) when (e.IsNotFatal())
+			{
+				Log.Warn($"Failed to add node for {typeInfo}, {e}");
 			}
 		}
 
+		//private void AddTargetType(Type type, ReflectionModel model)
+		//{
+		//	try
+		//	{
+		//		if (type.FullName.Contains(">"))
+		//		{
+		//			Log.Warn($"Skipping type {type.FullName}");
+		//			return;
+		//		}
 
-		private void AddMembers(TypeInfo typeInfo, DataNode typeNode)
+		//		ImportData.Node typeNode = new ImportData.Node
+		//		{
+		//			Name = type.FullName,
+		//			Type = Element.TypeType
+		//		};
+
+		//		model.Nodes[typeNode.Name] = typeNode;
+		//	}
+		//	catch (Exception e) when (e.IsNotFatal())
+		//	{
+		//		Log.Warn($"Failed to add node for {type}, {e}");
+		//	}
+		//}
+
+
+
+		private void AddMembers(Data.Node typeNode, TypeInfo typeInfo, ReflectionModel model)
 		{
 			MemberInfo[] memberInfos = typeInfo.GetMembers(DeclaredOnlyFlags);
 
 			foreach (MemberInfo memberInfo in memberInfos)
 			{
-				AddMember(memberInfo, typeNode);
+				AddMember(typeNode, memberInfo, model);
 			}
 		}
 
 
-		private void AddMember(MemberInfo memberInfo, DataNode typeNode)
+		private void AddMember(Data.Node typeNode, MemberInfo memberInfo, ReflectionModel model)
 		{
 			try
 			{
@@ -193,95 +221,103 @@ namespace Dependiator.Modeling.Analyzing
 					}
 				}
 
-				DataNode memberNode = new DataNode
+				string memberName = typeNode.Name + "." + RemoveDotIfDotInName(memberInfo.Name);
+
+				Data.Node memberNode = new Data.Node
 				{
-					Name = GetNamePartIfDotted(memberInfo.Name),
-					Type = DataNode.MemberType			
+					Name = memberName,
+					Type = NodeType.MemberType
 				};
 
-				typeNode.Nodes = typeNode.Nodes ?? new List<DataNode>();
-				typeNode.Nodes.Add(memberNode);
 
-				AddLinks(memberNode, memberInfo);
+				model.Nodes[memberNode.Name] = memberNode;
+
+				AddLinks(memberNode, memberInfo, model);
 			}
 			catch (Exception e)
 			{
-				Log.Warn($"Failed to add member {memberInfo} in {typeNode}, {e}");
+				Log.Warn($"Failed to add member {memberInfo} in {typeNode.Name}, {e}");
 			}
 		}
 
 
-		private void AddLinksToBaseTypes(TypeInfo typeInfo, DataNode typeNode)
+		private void AddLinks(Data.Node sourceNode, MemberInfo memberInfo, ReflectionModel model)
+		{
+			try
+			{
+				if (memberInfo is FieldInfo fieldInfo)
+				{
+					AddLinks(sourceNode, fieldInfo.FieldType, model);
+				}
+				else if (memberInfo is PropertyInfo propertyInfo)
+				{
+					AddLinks(sourceNode, propertyInfo.PropertyType, model);
+				}
+				else if (memberInfo is EventInfo eventInfo)
+				{
+					AddLinks(sourceNode, eventInfo.EventHandlerType, model);
+				}
+				else if (memberInfo is MethodInfo methodInfo)
+				{
+					AddLinks(sourceNode, methodInfo, model);
+				}
+			}
+			catch (Exception e)
+			{
+				Log.Warn($"Failed to links for member {memberInfo} in {sourceNode.Name}, {e}");
+			}
+		}
+
+
+		private void AddLinksToBaseTypes(
+			Data.Node sourceNode, 
+			TypeInfo typeInfo, 
+			ReflectionModel model)
 		{
 			try
 			{
 				Type baseType = typeInfo.BaseType;
 				if (baseType != null && baseType != typeof(object))
 				{
-					AddLinks(typeNode, baseType);
+					AddLinks(sourceNode, baseType, model);
 				}
 
 				typeInfo.ImplementedInterfaces
-					.ForEach(interfaceType => AddLinks(typeNode, interfaceType));
+					.ForEach(interfaceType => AddLinks(sourceNode, interfaceType, model));
 			}
 			catch (Exception e)
 			{
-				Log.Warn($"Failed to add base type for {typeInfo} in {typeNode}, {e}");
+				Log.Warn($"Failed to add base type for {typeInfo} in {sourceNode.Name}, {e}");
 			}
 		}
 
 
-		private void AddLinks(DataNode sourceNode, MemberInfo memberInfo)
-		{
-			try
-			{
-				if (memberInfo is FieldInfo fieldInfo)
-				{
-					AddLinks(sourceNode, fieldInfo.FieldType);
-				}
-				else if (memberInfo is PropertyInfo propertyInfo)
-				{
-					AddLinks(sourceNode, propertyInfo.PropertyType);
-				}
-				else if (memberInfo is EventInfo eventInfo)
-				{
-					AddLinks(sourceNode, eventInfo.EventHandlerType);
-				}
-				else if (memberInfo is MethodInfo methodInfo)
-				{
-					AddLinks(sourceNode, methodInfo);
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Warn($"Failed to links for member {memberInfo} in {sourceNode}, {e}");
-			}
-		}
-
-
-		private void AddLinks(DataNode memberNode, MethodInfo methodInfo)
+		private void AddLinks(Data.Node memberNode, MethodInfo methodInfo, ReflectionModel model)
 		{
 			Type returnType = methodInfo.ReturnType;
-			AddLinks(memberNode, returnType);
+			AddLinks(memberNode, returnType, model);
 
 			methodInfo.GetParameters()
 				.Select(parameter => parameter.ParameterType)
-				.ForEach(parameterType => AddLinks(memberNode, parameterType));
+				.ForEach(parameterType => AddLinks(memberNode, parameterType, model));
 
 			methodInfo.GetMethodBody()?.LocalVariables
 				.Select(variable => variable.LocalType)
-				.ForEach(variableType => AddLinks(memberNode, variableType));
+				.ForEach(variableType => AddLinks(memberNode, variableType, model));
 
 			// Check https://blogs.msdn.microsoft.com/haibo_luo/2005/10/04/read-il-from-methodbody/
 			// byte[] bodyIl = methodBody.GetILAsByteArray();
 		}
 
 
-		private void AddLinks(DataNode sourceNode, Type targetType)
+		private void AddLinks(
+			Data.Node sourceNode, 
+			Type targetType, 
+			ReflectionModel model)
 		{
 			if (targetType.Namespace != null
-			    && (targetType.Namespace.StartsWith("System", StringComparison.Ordinal)
-			        || targetType.Namespace.StartsWith("Microsoft", StringComparison.Ordinal)))
+					&& (targetType.Namespace.StartsWith("System", StringComparison.Ordinal)
+							|| targetType.Namespace.StartsWith("Microsoft", StringComparison.Ordinal)))
 			{
 				// Ignore "System" and "Microsoft" namespaces for now
 				return;
@@ -293,34 +329,32 @@ namespace Dependiator.Modeling.Analyzing
 				return;
 			}
 
-			string name = targetType.Namespace != null
+			string targetNodeName = targetType.Namespace != null
 				? targetType.Namespace + "." + targetType.Name
 				: targetType.Name;
 
-			if (name.Contains(">"))
+			if (targetNodeName.Contains(">"))
 			{
 				return;
 			}
 
-			DataLink link = new DataLink
+			// AddTargetType(targetType, model);
+
+			Data.Link link = new Data.Link
 			{
-				Target = name
+				Source = sourceNode.Name,
+				Target = targetNodeName
 			};
 
-			sourceNode.Links = sourceNode.Links ?? new List<DataLink>();
 
-			if (sourceNode.Links.Any(l => l.Target == name))
-			{
-				// Log.Warn($"Skipping link {sourceNode.Name} => {name}");
-				return;
-			}
+			string linkName = $"{link.Source}->{link.Target}";
 
-			sourceNode.Links.Add(link);
+			model.Links[linkName] = link;
 
 			if (targetType.IsGenericType)
 			{
 				targetType.GetGenericArguments()
-					.ForEach(argType => AddLinks(sourceNode, argType));
+					.ForEach(argType => AddLinks(sourceNode, argType, model));
 			}
 		}
 
@@ -331,7 +365,7 @@ namespace Dependiator.Modeling.Analyzing
 		}
 
 
-		private string GetNamePartIfDotted(string fullName)
+		private string RemoveDotIfDotInName(string fullName)
 		{
 			int index = fullName.LastIndexOf('.');
 
@@ -361,7 +395,7 @@ namespace Dependiator.Modeling.Analyzing
 
 			if (TryGetAssemblyByFile(assemblyName.Name + ".dll", out assembly))
 			{
-				Log.Debug($"Resolve assembly by file {assemblyName + ".dll"}");
+				// Log.Debug($"Resolve assembly by file {assemblyName + ".dll"}");
 				return assembly;
 			}
 

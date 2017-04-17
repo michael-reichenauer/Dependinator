@@ -1,14 +1,18 @@
 ﻿using System.Threading.Tasks;
 using System.Windows;
+using Dependiator.Modeling.Items;
 
 
 namespace Dependiator.Modeling
 {
 	internal interface IModelService
 	{
-		void InitModules();
-		object MoveNode(Point viewPosition, Vector viewOffset, object movingObject);
+		void InitModules(ItemsCanvas rootCanvas);
+
+		void Zoom(double zoomFactor, Point zoomCenter);
+		void Move(Vector viewOffset);
+
 		void Close();
-		Task Refresh();
+		Task Refresh(ItemsCanvas rootCanvas);
 	}
 }

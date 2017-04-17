@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using Dependiator.ApplicationHandling;
-using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Utils;
 using Newtonsoft.Json;
 
@@ -25,36 +24,36 @@ namespace Dependiator.Modeling.Serializing
 			this.workingFolder = workingFolder;
 		}
 
-		//public static T As<T>(string json) => JsonConvert.DeserializeObject<T>(json, Settings);
-
-
-		public void Serialize(Data data)
+		
+		public void Serialize(DataModel dataModel)
 		{
-			string json = JsonConvert.SerializeObject(data, typeof(Data), Settings);
+			Data.Model model = new Data.Model {Nodes = dataModel.Nodes, Links = dataModel.Links};
+			string json = JsonConvert.SerializeObject(model, typeof(Data.Model), Settings);
 			string path = GetDataFilePath();
 
 			WriteFileText(path, json);
 		}
 
 
-		public bool TryDeserialize(out Data data)
+		public bool TryDeserialize(out DataModel model)
 		{
 			string path = GetDataFilePath();
 			if (TryReadFileText(path, out string json))
 			{
-				return TryDeSerialize(json, out data);
+				return TryDeSerialize(json, out model);
 			}
 
-			data = null;
+			model = null;
 			return false;
 		}
 
 
-		private bool TryDeSerialize(string json, out Data data)
+		private static bool TryDeSerialize(string json, out DataModel dataModel)
 		{
 			try
 			{
-				data = JsonConvert.DeserializeObject<Data>(json, Settings);
+				Data.Model model = JsonConvert.DeserializeObject<Data.Model>(json, Settings);
+				dataModel = new DataModel {Nodes = model.Nodes, Links = model.Links};
 				return true;
 			}
 			catch (Exception e) when (e.IsNotFatal())
@@ -62,7 +61,7 @@ namespace Dependiator.Modeling.Serializing
 				Log.Error($"Failed to deserialize json data, {e}");
 			}
 
-			data = null;
+			dataModel = null;
 			return false;
 		}
 

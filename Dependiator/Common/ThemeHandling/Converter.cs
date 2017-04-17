@@ -7,12 +7,22 @@ namespace Dependiator.Common.ThemeHandling
 	{
 		public static SolidColorBrush BrushFromHex(string hexText)
 		{
+			if (string.IsNullOrEmpty(hexText))
+			{
+				return null;
+			}
+
 			return (SolidColorBrush)new BrushConverter().ConvertFrom(hexText);
 		}
 
 
 		public static string HexFromBrush(Brush brush)
 		{
+			if (brush == null)
+			{
+				return null;
+
+			}
 			return (string)new BrushConverter().ConvertTo(brush, typeof(string));
 		}
 

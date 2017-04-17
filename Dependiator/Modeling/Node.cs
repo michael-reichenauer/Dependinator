@@ -1,282 +1,507 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
-using Dependiator.Modeling.Analyzing;
+using Dependiator.Modeling.Items;
 using Dependiator.Utils;
-using Dependiator.Utils.UI;
 
 
 namespace Dependiator.Modeling
 {
-	internal class Node : Item
+	internal class Node : IItemBounds
 	{
+		private const int InitialScaleFactor = 7;
 		private readonly IItemService itemService;
-		private static readonly Size DefaultSize = new Size(200, 100);
+
+		private readonly List<Node> childNodes = new List<Node>();
+
+		private ItemsCanvas itemsCanvas;
+
+		private Brush nodeBrush;
+
+		private ItemViewModel viewModel;
+
+		private bool IsShowing => IsRootNode || (viewModel?.IsShowing ?? false);
+		private bool IsRootNode => ParentNode == null;
 
 
 		public Node(
 			IItemService itemService,
-			Element element,
-			Rect bounds,
-			Node parent)
-			: base(itemService, parent)
+			Node parent,
+			NodeName name,
+			NodeType type)
 		{
-			Element = element;
 			this.itemService = itemService;
-
-			NodeBounds = bounds;		
-
-			RectangleBrush = itemService.GetRectangleBrush();
-			BackgroundBrush = itemService.GetRectangleBackgroundBrush(RectangleBrush);
-			ViewModel = new NodeViewModel(this);
+			ParentNode = parent;
+			NodeName = name;
+			NodeType = type;
+			PersistentNodeColor = null;
+			Links = new NodeLinks(itemService);
 		}
 
 
-		public Element Element { get; }
+		public NodeName NodeName { get; }
+		public NodeType NodeType { get; private set; }
+		public Rect NodeBounds { get; set; }
+		public double NodeScale => ParentNode?.itemsCanvas.Scale ?? 1.0;
 
-		public override ViewModel ViewModel { get; }
+		public Node ParentNode { get; }
+
+		public IReadOnlyList<Node> ChildNodes => childNodes;
+		public double ItemsScale => itemsCanvas?.Scale ?? 1;
+		public double ItemsScaleFactor => itemsCanvas?.ScaleFactor ?? 1;
+		public Point ItemsOffset => itemsCanvas?.Offset ?? new Point();
+		public Point ItemsCanvasOffset => (Point)((Vector)ItemsOffset / ItemsScale);
+
+		public NodeLinks Links { get; }
+
+		public string PersistentNodeColor { get; set; }
+		public Rect? PersistentNodeBounds { get; set; }
+		public double? PersistentScale { get; set; }
+		public Point? PersistentOffset { get; set; }
 
 
-		public string Name => Element.Name.Name;
+		public string DebugToolTip => "";
+			//$"\n Children: {ChildNodes.Count} Shown Items: {CountShowingNodes()}\n" +
+			//$"Items Scale: {ItemsScale:0.00}, Scalefactor: {ItemsScaleFactor:0.00}\n" +
+			//$"Offset: {ItemsOffset.TS()}, CanvasOffset: {ItemsCanvasOffset.TS()}\n" +
+			//$"Rect: {NodeBounds.TS()}\n" +
+			//$"Pos in parent coord: {ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location).TS()}\n"+
+			//$"Pos in child coord: {ParentNode?.itemsCanvas?.GetParentToChildCanvasPoint(ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location) ?? new Point(0, 0)).TS()}\n" +
+			//$"Visual area {itemsCanvas?.ViewArea.TS()}\n" +
+			//$"Recursive viewArea {itemsCanvas?.GetVisualAncestorsArea().TS()}\n\n" +
+			//$"Parent {ParentNode?.NodeName}:{ParentNode?.DebugToolTip}";
 
-		public string FullName =>
-			$"{Element.Name.FullName}\n" +
-			$"children: {ChildModules.Count()}, decedents: {Element.Children.Descendents().Count()}\n" +
-			$"Scale: {CanvasScale:#.##}, Level: {NodeLevel}, NodeScale: {NodeScale:#.##}, NSF: {ThisNodeScaleFactor}";
-
-
-		public NodeViewModel ModuleViewModel => ViewModel as NodeViewModel;
-		public Brush RectangleBrush { get; }
-		public Brush BackgroundBrush { get; }
-
-		public IEnumerable<Node> ChildModules => ChildNodes.OfType<Node>();
-
-		public IEnumerable<Link> Links => ChildNodes.OfType<Link>();
+	
+		public bool CanShowNode() => IsVisibleAtScale(NodeScale);
 
 
-		public override bool CanBeShown()
+
+		public void Show(ItemsCanvas rootItemsCanvas)
 		{
-			return ViewNodeSize.Width > 10 && (ParentItem?.ItemCanvasBounds.Contains(ItemCanvasBounds) ?? true);
+			Asserter.Requires(IsRootNode);
+		
+			InitNodeTree(rootItemsCanvas);
+
+			UpdateNodeVisibility();
 		}
 
 
-		public override void ItemRealized()
-		{
-			if (!IsRealized)
-			{
-				base.ItemRealized();
-
-				if (!ChildModules.Any())
-				{
-					AddModuleChildren();
-				}
-
-				if (!Links.Any())
-				{
-					AddLinks();				
-				}
-
-				ShowChildren();
-			}
-		}
-
-
-		protected override void SetElementBounds()
-		{
-			Element.SetLocationAndSize(NodeBounds.Location, NodeBounds.Size);
-		}
-
-
-		public override void ChangedScale()
-		{
-			base.ChangedScale();
-		}
-
-
-		public override void ItemVirtualized()
-		{
-			if (IsRealized)
-			{
-				HideChildren();
-				base.ItemVirtualized();
-				//ParentNode?.RemoveChildNode(this);
-			}
-		}
-
-
-		public override string ToString() => Element.Name.FullName;
-
-
-		private void AddModuleChildren()
-		{
-			// Original size new Size(200, 120)		
-			int rowLength = 6;
-
-			int padding = 20;
-
-			double xMargin = ((DefaultSize.Width * ThisNodeScaleFactor) - ((DefaultSize.Width + padding) * rowLength)) / 2;
-			double yMargin = 25 * ThisNodeScaleFactor;
-
-			if (ParentItem == null)
-			{
-				xMargin += NodeBounds.Width / 2;
-				yMargin += NodeBounds.Height / 2;
-			}
-
-
-			int count = 0;
-			var children = Element.Children.OrderBy(e => e, Compare.With<Element>(CompareElements));
-			//Sorter.Sort(children, Compare.With<Element>(CompareElements));
-
-			foreach (Element childElement in children)
-			{
-				Size size = childElement.Size ?? DefaultSize;
-
-				Point location;
-				if (childElement.Location != null)
-				{
-					location = childElement.Location.Value;
-				}
-				else
-				{
-					int x = count % rowLength;
-					int y = count / rowLength;
-					location = new Point(x * (DefaultSize.Width + padding) + xMargin, y * (DefaultSize.Height + padding) + yMargin);
-				}
-
-				Rect bounds = new Rect(location, size);
-
-				Node node = new Node(itemService, childElement, bounds, this);
-				AddChildNode(node);
-				count++;
-			}
-		}
-
-
-		private int CompareElements(Element e1, Element e2)
-		{
-			Reference e1ToE2 = Element.References
-				.FirstOrDefault(r => r.Source == e1 && r.Target == e2);
-			Reference e2ToE1 = Element.References
-				.FirstOrDefault(r => r.Source == e2 && r.Target == e1);
-
-			int e1ToE2Count = e1ToE2?.SubReferences.Count ?? 0;
-			int e2ToE1Count = e2ToE1?.SubReferences.Count ?? 0;
-
-			if (e1ToE2Count > e2ToE1Count)
-			{
-				return -1;
-			}
-			else if (e1ToE2Count < e2ToE1Count)
-			{
-				return 1;
-			}
-
-			Reference parentToE1 = Element.References
-				.FirstOrDefault(r => r.Source == Element && r.Target == e1);
-			Reference parentToE2 = Element.References
-				.FirstOrDefault(r => r.Source == Element && r.Target == e2);
-
-			int parentToE1Count = parentToE1?.SubReferences.Count ?? 0;
-			int parentToE2Count = parentToE2?.SubReferences.Count ?? 0;
-
-			if (parentToE1Count > parentToE2Count)
-			{
-				return -1;
-			}
-			else if (parentToE1Count < parentToE2Count)
-			{
-				return 1;
-			}
-
-			Reference e1ToParent = Element.References
-				.FirstOrDefault(r => r.Source == e1 && r.Target == Element);
-			Reference e2ToParent = Element.References
-				.FirstOrDefault(r => r.Source == e2 && r.Target == Element);
-
-			int e1ToParentCount = e1ToParent?.SubReferences.Count ?? 0;
-			int e2ToParentCount = e2ToParent?.SubReferences.Count ?? 0;
-
-			if (e1ToParentCount > e2ToParentCount)
-			{
-				return -1;
-			}
-			else if (e1ToParentCount < e2ToParentCount)
-			{
-				return 1;
-			}
-
-			return 0;
-		}
-
-
-		private void AddLinks()
-		{
-			foreach (Reference reference in Element.References)
-			{
-				AddLink(reference);
-			}
-		}
-
-
-		private void AddLink(Reference reference)
-		{
-			Node sourceNode;
-			Node targetNode;
-
-			if (reference.SubReferences.Any(r => r.Kind == ReferenceKind.Child))
-			{
-				sourceNode = this;
-				targetNode = ChildModules.First(m => m.Element == reference.Target);
-			}
-			else if (reference.Source != Element
-			         && reference.Target != Element
-			         && reference.SubReferences.Any(r => r.Kind == ReferenceKind.Sibling))
-			{
-				sourceNode = ChildModules.First(m => m.Element == reference.Source);
-				targetNode = ChildModules.First(m => m.Element == reference.Target);
-			}
-			else if (reference.SubReferences.Any(r => r.Kind == ReferenceKind.Parent))
-			{
-				sourceNode = ChildModules.First(m => m.Element == reference.Source);
-				targetNode = this;
-			}
-			else
+		public void Zoom(double zoomFactor, Point? zoomCenter = null)
+		{		
+			if (IsMinZoomLimit(zoomFactor))
 			{
 				return;
 			}
 
-			Link link = new Link(itemService, reference, this, sourceNode, targetNode);
-			AddChildNode(link);
+			itemsCanvas.Zoom(zoomFactor, zoomCenter);
+
+			UpdateNodeVisibility();
+
+			Links.ManagedSegments
+				.Where(segment => segment.Source == this || segment.Target == this)
+				.ForEach(segment => segment.UpdateVisibility());
 		}
 
 
-		public void UpdateLinksFor(Item item)
+		public void Move(Vector viewOffset)
 		{
-			IEnumerable<Link> links = ChildNodes
-				.OfType<Link>()
-				.Where(link => link.SourceNode == item || link.TargetNode == item)
-				.ToList();
+			Vector scaledOffset = viewOffset / NodeScale;
+			Point newLocation = NodeBounds.Location + scaledOffset;
+			NodeBounds = new Rect(newLocation, NodeBounds.Size);
 
-			foreach (Link link in links)
+			ParentNode.itemsCanvas.UpdateItem(viewModel);
+
+			Links.ReferencingSegments.ForEach(segment => segment.UpdateVisibility());
+
+			viewModel.NotifyAll();
+
+			UpdateShownItems();
+			UpdateShownItemsInChildNodes();
+		}
+
+
+		public void MoveItems(Vector viewOffset)
+		{
+			if (!ChildNodes.Any(child => child.CanShowNode()))
 			{
-				link.SetLinkLine();
-				link.NotifyAll();
+				// No children to move
+				return;
+			}
+
+			itemsCanvas.Move(viewOffset);
+
+			Links.ManagedSegments
+				.Where(segment=> segment.Source == this || segment.Target == this)
+				.ForEach(segment => segment.UpdateVisibility());
+
+			UpdateShownItemsInChildNodes();
+		}
+
+
+		public void Resize(int wheelDelta)
+		{
+			double delta = (double)wheelDelta / 30;
+			double scaledDelta = delta / NodeScale;
+			
+			double width = NodeBounds.Size.Width + (2 * scaledDelta);
+			double height = NodeBounds.Size.Height + (2 * scaledDelta);
+		
+			if (width < 40 || height < 20)
+			{
+				return;
+			}
+
+			double zoomFactor = width / NodeBounds.Size.Width;
+			Point newLocation = new Point(NodeBounds.X - scaledDelta, NodeBounds.Y);
+			Size newItemSize = new Size(width, height);
+			NodeBounds = new Rect(newLocation, newItemSize);
+	
+			ParentNode.itemsCanvas.UpdateItem(viewModel);
+
+			viewModel.NotifyAll();	
+
+			Zoom(zoomFactor);
+
+			//MoveItems(new Vector(scaledDelta * NodeScale, 0));
+
+			//Links.ManagedSegments
+			//	.Where(segment => segment.Target == this)
+			//	.ForEach(segment => segment.UpdateVisibility());
+		}
+
+
+		public void UpdateAllNodesScalesBeforeClose()
+		{
+			Stack<Node> nodes = new Stack<Node>();
+			nodes.Push(this);
+
+			while (nodes.Any())
+			{
+				Node node = nodes.Pop();
+
+				if (node.ChildNodes.Any())
+				{
+					node.itemsCanvas.UpdateScale();
+					node.ChildNodes.ForEach(child => nodes.Push(child));
+				}
 			}
 		}
 
-		public void UpdateLinksFor()
-		{
-			IEnumerable<Link> links = ChildNodes
-				.OfType<Link>()		
-				.ToList();
 
-			foreach (Link link in links)
+		public void NodeRealized()
+		{
+			UpdateNodeVisibility();
+		}
+
+		public void NodeVirtualized()
+		{
+			HideAllChildren();
+		}
+
+
+
+		public void SetType(NodeType nodeType)
+		{
+			NodeType = nodeType;
+		}
+
+
+		public void AddChild(Node child)
+		{
+			childNodes.Add(child);
+		}
+
+
+		public override string ToString() => NodeName;
+
+
+		public Brush GetNodeBrush()
+		{
+			if (nodeBrush != null)
 			{
-				link.SetLinkLine();
-				link.NotifyAll();
+				return nodeBrush;
+			}
+
+			if (PersistentNodeColor != null)
+			{
+				nodeBrush = itemService.GetBrushFromHex(PersistentNodeColor);
+			}
+			else
+			{
+				nodeBrush = itemService.GetRandomRectangleBrush();
+				PersistentNodeColor = itemService.GetHexColorFromBrush(nodeBrush);
+			}
+
+			return nodeBrush;
+		}
+
+
+		public Brush GetBackgroundNodeBrush()
+		{
+			Brush brush = GetNodeBrush();
+			return itemService.GetRectangleBackgroundBrush(brush);
+		}
+
+
+		public void UpdateItem(ItemViewModel itemViewModel)
+		{
+			itemsCanvas.UpdateItem(itemViewModel);
+		}
+
+		private bool IsVisibleAtScale(double scale) => NodeBounds.Size.Width * scale > 40;
+
+
+		private void UpdateShownItems()
+		{
+			itemsCanvas?.TriggerInvalidated();
+		}
+
+
+		private void UpdateShownItemsInChildNodes()
+		{
+			ChildNodes
+				.Where(node => node.IsShowing)
+				.ForEach(node =>
+				{
+					node.UpdateShownItems();
+					node.UpdateShownItemsInChildNodes();
+				});
+		}
+
+	
+
+		private void UpdateNodeVisibility()
+		{
+			IEnumerable<Node> childrenToUpdate = Enumerable.Empty<Node>();
+
+			if (ChildNodes.Any())
+			{
+				itemsCanvas.UpdateScale();
+
+				var childrenToShow = ChildNodes
+					.Where(child => !child.viewModel.CanShow && child.CanShowNode())
+					.Select(child => child.viewModel);
+
+				var childrenToHide = ChildNodes
+					.Where(child => child.viewModel.CanShow && !child.CanShowNode())
+					.Select(child => child.viewModel);
+
+				childrenToUpdate = ChildNodes
+					.Where(child => child.viewModel.CanShow && child.viewModel.IsShowing && child.CanShowNode())
+					.ToList();
+
+				var segmentsToShow = Links.ManagedSegments
+					.Where(segment => !segment.ViewModel.CanShow && segment.CanBeShown())
+					.Select(segment => segment.ViewModel);
+
+				var segmentsToHide = Links.ManagedSegments
+					.Where(segment => segment.ViewModel.CanShow && !segment.CanBeShown())
+					.Select(segment => segment.ViewModel);
+		
+
+				var itemsToShow = childrenToShow.Concat(segmentsToShow);
+				var itemsToHide = childrenToHide.Concat(segmentsToHide);
+
+				itemsToShow.ForEach(item => item.Show());
+				itemsToHide.ForEach(item => item.Hide());
+
+				var itemsToUpdate = itemsToHide.Concat(itemsToShow).ToList();
+
+				itemsCanvas.UpdateItems(itemsToUpdate);
+			}
+
+			if (IsShowing)
+			{
+				viewModel.NotifyAll();
+
+				childrenToUpdate.ForEach(child => child.UpdateNodeVisibility());
+				Links.ManagedSegments.ForEach(segment => segment.UpdateVisibility());
+			}
+		}
+
+
+
+
+
+		//private void ShowAllChildren()
+		//{
+		//	foreach (Node childNode in ChildNodes)
+		//	{
+		//		if (childNode.CanShowNode())
+		//		{
+		//			if (!childNode.viewModel.IsShowing)
+		//			{
+		//				childNode.viewModel.Show();
+		//				childNode.ParentNode.UpdateShownItems();
+
+		//				childNode.viewModel.NotifyAll();
+		//			}
+		//		}
+		//	}
+
+		//	UpdateShownItems();
+
+		//	foreach (Node childNode in ChildNodes)
+		//	{
+		//		if (childNode.viewModel?.CanShow ?? false)
+		//		{
+		//			childNode.ShowAllChildren();
+		//		}
+		//	}
+		//}
+
+
+		private void HideAllChildren()
+		{
+			foreach (Node childNode in ChildNodes)
+			{
+				if (childNode.viewModel?.CanShow ?? false)
+				{
+					childNode.HideAllChildren();
+					childNode.viewModel.Hide();
+				}
+			}
+
+			UpdateShownItems();
+		}
+
+
+		private int CountShowingNodes()
+		{
+			// Log.Debug("Counting shown nodes:");
+			Stack<Node> nodes = new Stack<Node>();
+
+			Node startNode = this;
+			while (!startNode.IsRootNode)
+			{
+				startNode = startNode.ParentNode;
+			}
+
+			nodes.Push(startNode);
+
+			int count = 0;
+			while (nodes.Any())
+			{
+				Node node = nodes.Pop();
+				if (node.IsShowing)
+				{
+					count++;
+					// Log.Debug($"  IsShowing {node}");
+					node.ChildNodes.ForEach(nodes.Push);
+				}
+			}
+
+			return count - 1;
+		}
+
+
+		private void InitNodeTree(ItemsCanvas rootCanvas)
+		{
+			itemsCanvas = rootCanvas;
+			viewModel = new CompositeNodeViewModel(this, rootCanvas);
+
+			InitNode();
+		}
+
+
+		private void InitNode()
+		{
+			if (ChildNodes.Any())
+			{
+				itemService.SetChildrenLayout(this);
+
+				var childViewModels = ChildNodes.Select(childNode => childNode.CreateViewModel());
+				var segmentViewModels = Links.ManagedSegments.Select(segment => segment.ViewModel);
+
+				var itemViewModels = segmentViewModels.Concat(childViewModels);
+				itemsCanvas.AddItems(itemViewModels);
+
+				ChildNodes.ForEach(childNode => childNode.InitNode());
+			}		
+		}
+
+
+		private ItemViewModel CreateViewModel()
+		{
+			if (ChildNodes.Any())
+			{
+				itemsCanvas = new ItemsCanvas(this, ParentNode.itemsCanvas);
+
+				double scale = PersistentScale ?? 0;
+				if (Math.Abs(scale) > 0.001)
+				{
+					itemsCanvas.Scale = scale;
+				}
+				else
+				{
+					itemsCanvas.Scale = ParentNode.itemsCanvas.Scale / InitialScaleFactor;
+				}
+
+				Point offset = PersistentOffset ?? new Point(0, 0);
+				itemsCanvas.Offset = offset;
+
+				viewModel = new CompositeNodeViewModel(this, itemsCanvas);
+			}
+			else
+			{
+				viewModel = new SingleNodeViewModel(this);
+			}
+
+			return viewModel;
+		}
+
+
+		private bool IsMinZoomLimit(double zoomFactor)
+		{
+			double newScale = itemsCanvas.Scale * zoomFactor;
+
+			return zoomFactor < 1 && !ChildNodes.Any(child => child.IsVisibleAtScale(newScale));
+		}
+
+		public IEnumerable<Node> Ancestors()
+		{
+			Node current = ParentNode;
+
+			while (current != null)
+			{
+				yield return current;
+				current = current.ParentNode;
+			}
+		}
+
+		public IEnumerable<Node> AncestorsAndSelf()
+		{
+			yield return this;
+
+			foreach (Node ancestor in Ancestors())
+			{
+				yield return ancestor;
+			}
+		}
+
+		public IEnumerable<Node> Descendents()
+		{
+			foreach (Node child in ChildNodes)
+			{
+				yield return child;
+
+				foreach (Node descendent in child.Descendents())
+				{
+					yield return descendent;
+				}
+			}
+		}
+
+		public IEnumerable<Node> DescendentsAndSelf()
+		{
+			yield return this;
+
+			foreach (Node descendent in Descendents())
+			{
+				yield return descendent;
 			}
 		}
 	}

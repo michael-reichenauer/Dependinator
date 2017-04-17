@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Dependiator.ApplicationHandling.SettingsHandling;
@@ -33,6 +34,7 @@ namespace Dependiator.Utils
 		private static readonly string LevelWarn = "WARN ";
 		private static readonly string LevelError = "ERROR";
 		private static readonly Lazy<bool> DisableErrorAndUsageReporting;
+		private static readonly int prefixLength = 0;
 
 		static Log()
 		{
@@ -41,18 +43,57 @@ namespace Dependiator.Utils
 		
 			Task.Factory.StartNew(SendBufferedLogRows, TaskCreationOptions.LongRunning)
 				.RunInBackground();
+
+			prefixLength = GetSourceFilePrefixLength();
+		}
+
+
+		private static int GetSourceFilePrefixLength([CallerFilePath] string sourceFilePath = "")
+		{
+			return sourceFilePath.IndexOf("Dependiator\\Utils\\Log.cs");
 		}
 
 
 		private static void SendBufferedLogRows()
 		{
+			StringBuilder batchedTexts = new StringBuilder();
 			while (!logTexts.IsCompleted)
 			{
+				bool isBatched = false;
+
+				// Wait for texts to log
 				string logText = logTexts.Take();
 
-				Native.OutputDebugString(logText);
+				// Check if there might be more buffered log texts, if so add them in batch
+				while (logTexts.TryTake(out string moreText))
+				{
+					if (!isBatched)
+					{
+						isBatched = true;
+						batchedTexts.AppendLine(logText);
+						batchedTexts.AppendLine(moreText);
+					}
+					else
+					{
+						batchedTexts.AppendLine(moreText);
+					}
+				}
 
-				//Debugger.Log(0, Debugger.DefaultCategory, logText);
+				if (isBatched)
+				{
+					logText = batchedTexts.ToString();
+					batchedTexts = new StringBuilder();
+				}
+
+				try
+				{
+					Native.OutputDebugString(logText);
+					WriteToFile(logText);
+				}
+				catch (Exception e) when (e.IsNotFatal())
+				{
+					Native.OutputDebugString("ERROR Failed to log to file, " + e);
+				}
 			}
 		}
 
@@ -110,10 +151,8 @@ namespace Dependiator.Utils
 			string msg,
 			string memberName,
 			string filePath,
-			int lineNumber,
-			[CallerFilePath] string sourceFilePath = "")
+			int lineNumber)
 		{
-			int prefixLength = sourceFilePath.Length - 18;
 			filePath = filePath.Substring(prefixLength);
 			string text = $"{level} [{ProcessID}] {filePath}({lineNumber}) {memberName} - {msg}";
 
@@ -123,16 +162,12 @@ namespace Dependiator.Utils
 			}
 
 			try
-			{
-				//byte[] bytes = System.Text.Encoding.UTF8.GetBytes(text);
-				//UdpClient.Send(bytes, bytes.Length, LocalLogEndPoint);
-				SendLog(text);
-				WriteToFile(text);			
+			{		
+				SendLog(text);		
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
-				//Debugger.Log(0, Debugger.DefaultCategory, "ERROR Failed to log to udp " + e);
-				SendLog("ERROR Failed to log to udp " + e);
+				SendLog("ERROR Failed to log " + e);
 			}
 		}
 
@@ -167,9 +202,9 @@ namespace Dependiator.Utils
 
 		private static void WriteToFile(string text)
 		{
+			Exception error = null;
 			lock (syncRoot)
 			{
-				Exception error = null;
 				for (int i = 0; i < 10; i++)
 				{
 					try
@@ -197,9 +232,12 @@ namespace Dependiator.Utils
 						error = e;
 					}
 				}
+			}
 
-				SendLog("ERROR Failed to log to file: " + error);
-			}		
+			if (error != null)
+			{
+				throw error;
+			}
 		}
 
 

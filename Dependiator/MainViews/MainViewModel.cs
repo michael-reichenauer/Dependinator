@@ -1,90 +1,87 @@
 using System;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using Dependiator.ApplicationHandling;
 using Dependiator.Common.ProgressHandling;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.MainViews.Private;
 using Dependiator.Modeling;
+using Dependiator.Modeling.Items;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
-using Dependiator.Utils.UI.VirtualCanvas;
 
 
 namespace Dependiator.MainViews
 {
-	/// <summary>
-	/// View model
-	/// </summary>
 	[SingleInstance]
 	internal class MainViewModel : ViewModel
 	{
 		private static readonly TimeSpan FilterDelay = TimeSpan.FromMilliseconds(300);
 
 		private readonly IThemeService themeService;
-		private readonly ICanvasService canvasService;
-		private readonly WorkingFolder workingFolder;
-		private readonly IMainViewItemsSource mainViewItemsSource;
+
 		private readonly IModelService modelService;
 		private readonly IProgressService progress;
 
 
 		private readonly DispatcherTimer filterTriggerTimer = new DispatcherTimer();
+		private readonly ItemsCanvas itemsCanvas = new ItemsCanvas(null, null);
 		private string settingFilterText = "";
 
 		private int width = 0;
 
-		private readonly AsyncLock refreshLock = new AsyncLock();
-
-		public VirtualItemsSource ItemsSource { get; }
-
 
 		public MainViewModel(
-			WorkingFolder workingFolder,
-			IMainViewItemsSource mainViewItemsSource,
 			IModelService modelService,
 			IThemeService themeService,
-			ICanvasService canvasService,
 			IProgressService progressService)
 		{
-			this.workingFolder = workingFolder;
-			this.mainViewItemsSource = mainViewItemsSource;
 			this.modelService = modelService;
 			this.themeService = themeService;
-			this.canvasService = canvasService;
 			this.progress = progressService;
-
-			ItemsSource = mainViewItemsSource.VirtualItemsSource;
 
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
+
+			NodesViewModel = new NodesViewModel(null, itemsCanvas);
+
 		}
 
 
-		public bool ZoomCanvas(int zoomDelta, Point viewPosition)
+		public NodesViewModel NodesViewModel { get; }
+
+
+		public async Task LoadAsync()
 		{
-			return canvasService.ZoomCanvas(zoomDelta, viewPosition);
+			Timing t = new Timing();
+
+			Log.Debug("Loading repository ...");
+
+			using (progress.ShowDialog("Loading branch view ..."))
+			{		
+				modelService.InitModules(itemsCanvas);
+
+				LoadViewModel();
+				//Zoom(-120, new Point(1, 1), false);
+				t.Log("Updated view model after cached/fresh");
+			}
+
+			await Task.Yield();
+		}
+
+
+		public void Zoom(double zoom, Point viewPosition)
+		{
+			modelService.Zoom(zoom, viewPosition);
 		}
 
 
 		public bool MoveCanvas(Vector viewOffset)
 		{
-			return canvasService.MoveCanvas(viewOffset);
+			
+			modelService.Move(viewOffset);
+			return true;
 		}
 
-
-		public object MoveNode(Point viewPosition, Vector viewOffset, object movingObject)
-		{
-			return modelService.MoveNode(viewPosition, viewOffset, movingObject);
-		}
-
-
-		public void SetCanvas(ZoomableCanvas zoomableCanvas)
-		{
-			canvasService.SetCanvas(zoomableCanvas);
-		}
 
 
 		public void ShowCommitDetails()
@@ -99,14 +96,15 @@ namespace Dependiator.MainViews
 		}
 
 
-
 		public string FetchErrorText
 		{
 			get { return Get(); }
 			set { Set(value); }
 		}
 
+
 		public Command ToggleDetailsCommand => Command(ToggleCommitDetails);
+
 
 		public string FilterText { get; private set; } = "";
 
@@ -126,7 +124,7 @@ namespace Dependiator.MainViews
 				if (width != value)
 				{
 					width = value;
-					mainViewItemsSource.TriggerExtentChanged();
+					NodesViewModel.SizeChanged();
 				}
 			}
 		}
@@ -135,24 +133,6 @@ namespace Dependiator.MainViews
 		public void RefreshView()
 		{
 			UpdateViewModel();
-		}
-
-
-		public Task LoadAsync()
-		{
-			Timing t = new Timing();
-
-			Log.Debug("Loading repository ...");
-
-			using (progress.ShowDialog("Loading branch view ..."))
-			{		
-				modelService.InitModules();
-
-				LoadViewModel();
-				t.Log("Updated view model after cached/fresh");
-			}
-
-			return Task.CompletedTask;
 		}
 
 
@@ -198,7 +178,7 @@ namespace Dependiator.MainViews
 		{
 			using (progress.ShowDialog("Refreshing view ..."))
 			{
-				await modelService.Refresh();
+				await modelService.Refresh(itemsCanvas);
 			}
 		}
 
@@ -222,7 +202,7 @@ namespace Dependiator.MainViews
 
 			if (!IsInFilterMode())
 			{
-				UpdateViewModelImpl();
+				NotifyAll(); ;
 
 				t.Log("Updated repository view model");
 			}
@@ -239,16 +219,12 @@ namespace Dependiator.MainViews
 		{
 			Timing t = new Timing();
 
-			UpdateViewModelImpl();
+			NotifyAll(); ;
 
 			t.Log("Updated repository view model");
 		}
 
 
-		private void UpdateViewModelImpl()
-		{
-			NotifyAll();
-		}
 
 
 		public int SelectedIndex
@@ -304,7 +280,7 @@ namespace Dependiator.MainViews
 
 		public void Clicked(Point viewPosition)
 		{
-			Point canvasPosition = canvasService.GetCanvasPosition(viewPosition);
+			//Point canvasPosition = canvasService.GetCanvasPosition(viewPosition);
 
 			//double clickX = position.X - 9;
 			//double clickY = position.Y - 5;
