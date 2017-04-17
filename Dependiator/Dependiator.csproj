@@ -83,7 +83,11 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ValueTuple, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.3.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    </Reference>
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -128,36 +132,44 @@
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
     <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
-    <Compile Include="MainViews\Private\CanvasService.cs" />
-    <Compile Include="MainViews\ICanvasService.cs" />
+    <Compile Include="Modeling\IgnoreMouseWheelBehavior.cs" />
+    <Compile Include="Modeling\ILinkItemsService.cs" />
+    <Compile Include="Modeling\IItemService.cs" />
+    <Compile Include="Modeling\Items\IItemBounds.cs" />
+    <Compile Include="Modeling\Items\ItemsCanvas.cs" />
     <Compile Include="Modeling\Analyzing\ReflectionService.cs" />
+    <Compile Include="Modeling\LinkItemsService.cs" />
+    <Compile Include="Modeling\SingleNodeView.xaml.cs">
+      <DependentUpon>SingleNodeView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Modeling\NodeName.cs" />
     <Compile Include="Modeling\Model.cs" />
     <Compile Include="Modeling\Analyzing\IReflectionService.cs" />
-    <Compile Include="Modeling\NodeLink.cs" />
+    <Compile Include="Modeling\Link.cs" />
     <Compile Include="Modeling\NodeLinks.cs" />
     <Compile Include="Modeling\NodeComparer.cs" />
+    <Compile Include="Modeling\NodesView.xaml.cs">
+      <DependentUpon>NodesView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modeling\NodesViewModel.cs" />
     <Compile Include="Modeling\NodeType.cs" />
+    <Compile Include="Modeling\CompositeNodeView.xaml.cs">
+      <DependentUpon>CompositeNodeView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modeling\CompositeNodeViewModel.cs" />
+    <Compile Include="Modeling\SingleNodeViewModel.cs" />
     <Compile Include="Modeling\Serializing\DataModel.cs" />
     <Compile Include="Modeling\NodeService.cs" />
     <Compile Include="Modeling\INodeService.cs" />
-    <Compile Include="Modeling\Link.cs" />
-    <Compile Include="Modeling\LinkView.xaml.cs">
-      <DependentUpon>LinkView.xaml</DependentUpon>
+    <Compile Include="Modeling\LinkSegment.cs" />
+    <Compile Include="Modeling\LinkSegmentView.xaml.cs">
+      <DependentUpon>LinkSegmentView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Modeling\LinkViewModel.cs" />
+    <Compile Include="Modeling\LinkSegmentViewModel.cs" />
     <Compile Include="Modeling\ModelViewData.cs" />
-    <Compile Include="Modeling\NodeView.xaml.cs">
-      <DependentUpon>NodeView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Modeling\Item.cs" />
-    <Compile Include="MainViews\ItemViewModel.cs" />
-    <Compile Include="Modeling\IItemService.cs" />
+    <Compile Include="Modeling\Items\ItemViewModel.cs" />
     <Compile Include="Modeling\Node.cs" />
-    <Compile Include="MainViews\Private\Caching\BranchNameSurrogate.cs" />
-    <Compile Include="Modeling\NodeViewModel.cs" />
-    <Compile Include="MainViews\Private\IMainViewVirtualItemsSource.cs" />
-    <Compile Include="MainViews\Private\IItem.cs" />
+    <Compile Include="Modeling\Items\IItem.cs" />
     <Compile Include="MainViews\Private\MainViewCommands.cs" />
     <Compile Include="Modeling\IModelService.cs" />
     <Compile Include="Modeling\ModelService.cs" />
@@ -190,12 +202,10 @@
     <Compile Include="Utils\SingleInstanceAttribute.cs" />
     <Compile Include="Utils\UI\InputBindingsBehavior.cs" />
     <Compile Include="Utils\UI\VirtualCanvas\ItemEventArgs.cs" />
+    <Compile Include="Utils\UI\VirtualCanvas\WindowsExtensions.cs" />
     <Compile Include="Utils\UI\VisibleWindow.cs" />
     <Compile Include="Utils\UI\WpfBindingTraceListener.cs" />
     <Compile Include="Common\ThemeHandling\ThemeService.cs" />
-    <Compile Include="MainViews\CommitDetailsView.xaml.cs">
-      <DependentUpon>CommitDetailsView.xaml</DependentUpon>
-    </Compile>
     <Compile Include="MainViews\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>
@@ -210,13 +220,12 @@
     <Compile Include="Utils\UI\HideableGridSplitter.cs" />
     <Compile Include="Utils\Compare.cs" />
     <Compile Include="Common\ThemeHandling\IThemeService.cs" />
-    <Compile Include="MainViews\Private\MainViewVirtualItemsSource.cs" />
+    <Compile Include="Modeling\Items\ItemsSource.cs" />
     <Compile Include="MainViews\MainViewModel.cs" />
     <Compile Include="Utils\IReadOnlyKeyedList.cs" />
     <Compile Include="Utils\KeyedList.cs" />
     <Compile Include="Common\ExceptionHandling.cs" />
     <Compile Include="Utils\FatalExceptionsExtensions.cs" />
-    <Compile Include="MainViews\Private\Caching\CacheService.cs" />
     <Compile Include="ApplicationHandling\CommandLine.cs" />
     <Compile Include="ApplicationHandling\ICommandLine.cs" />
     <Compile Include="Utils\AsyncSemaphore.cs" />
@@ -270,10 +279,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MainViews\CommitDetailsView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="MainViews\MainView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -298,11 +303,19 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Modeling\LinkView.xaml">
+    <Page Include="Modeling\LinkSegmentView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Modeling\NodeView.xaml">
+    <Page Include="Modeling\SingleNodeView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Modeling\NodesView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Modeling\CompositeNodeView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -423,11 +436,15 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Dependencies\System.ValueTuple.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>mkdir "$(ProjectDir)\Dependencies" 2&gt; NUL
 copy /Y /B "$(SolutionDir)packages\Autofac.4.1.1\lib\net45\Autofac.dll" "$(ProjectDir)\Dependencies\Autofac.dll"
+copy /Y /B "$(SolutionDir)packages\System.ValueTuple.4.3.0\lib\netstandard1.0\System.ValueTuple.dll" "$(ProjectDir)\Dependencies\System.ValueTuple.dll"
+
 copy /Y /B "$(SolutionDir)packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll" "$(ProjectDir)\Dependencies\Newtonsoft.Json.dll"
 copy /Y /B "$(SolutionDir)packages\protobuf-net.2.1.0\lib\net451\protobuf-net.dll" "$(ProjectDir)\Dependencies\protobuf-net.dll"
 copy /Y /B "$(SolutionDir)packages\LibGit2Sharp.0.22.0\lib\net40\LibGit2Sharp.dll" "$(ProjectDir)\Dependencies\LibGit2Sharp.dll"

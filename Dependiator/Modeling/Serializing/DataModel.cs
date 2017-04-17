@@ -27,5 +27,8 @@ namespace Dependiator.Modeling.Serializing
 			Links.Add(new Data.Link { Source = source, Target = target });
 			return this;
 		}
+
+
+		public override string ToString() => $"{Nodes.Count} nodes, {Links.Count} links.";
 	}
 }

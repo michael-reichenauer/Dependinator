@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
-using Dependiator.Common.MessageDialogs;
 using Dependiator.Modeling.Serializing;
 using Dependiator.Utils;
 
@@ -140,7 +138,7 @@ namespace Dependiator.Modeling.Analyzing
 			{
 				if (typeInfo.FullName.Contains(">"))
 				{
-					Log.Warn($"Skipping type {typeInfo.FullName}");
+					//Log.Warn($"Skipping type {typeInfo.FullName}");
 					return;
 				}
 
@@ -397,7 +395,7 @@ namespace Dependiator.Modeling.Analyzing
 
 			if (TryGetAssemblyByFile(assemblyName.Name + ".dll", out assembly))
 			{
-				Log.Debug($"Resolve assembly by file {assemblyName + ".dll"}");
+				// Log.Debug($"Resolve assembly by file {assemblyName + ".dll"}");
 				return assembly;
 			}
 

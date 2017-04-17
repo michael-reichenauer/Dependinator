@@ -122,7 +122,7 @@ namespace Dependiator.Utils.UI.VirtualCanvas
 					{
 						yield return Tuple.Create(n, n != this ? n.Next.Priority : double.NaN);
 					}
-				} while (n != this);
+				} while (!ReferenceEquals(n.Node, this.Node));
 			}
 
 			/// <summary>

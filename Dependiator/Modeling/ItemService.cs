@@ -1,90 +1,50 @@
-using System.Collections.Generic;
+//using System.Collections.Generic;
+//using System.Linq;
+//using System.Windows;
+//using Dependiator.Common.ThemeHandling;
+//using Dependiator.MainViews;
+//using Dependiator.MainViews.Private;
+//using Dependiator.Utils;
+//using Brush = System.Windows.Media.Brush;
+
+
+using System;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.MainViews;
-using Dependiator.MainViews.Private;
-using Dependiator.Utils;
-using Brush = System.Windows.Media.Brush;
 
 
 namespace Dependiator.Modeling
 {
-	[SingleInstance]
 	internal class ItemService : IItemService
 	{
-		private readonly ICanvasService canvasService;
-		private readonly IMainViewItemsSource itemsSource;
+		private static readonly Size DefaultSize = new Size(200, 100);
+
 		private readonly IThemeService themeService;
 
-		private readonly List<Item> rootNodes = new List<Item>();
 
 		public ItemService(
-			ICanvasService canvasService,
-			IMainViewItemsSource itemsSource,
 			IThemeService themeService)
 		{
-			this.canvasService = canvasService;
-			this.itemsSource = itemsSource;
 			this.themeService = themeService;
-
-			canvasService.ScaleChanged += (s, e) => OnScaleChanged();
 		}
 
 
-		public double CanvasScale
+		public Brush GetRandomRectangleBrush()
 		{
-			get { return canvasService.Scale; }
-			set { canvasService.Scale = value; }			
-		} 
-
-		public Rect CurrentViewPort => canvasService.CurrentViewPort;
-
-		public Point Offset => canvasService.Offset;
-
-
-		public void ShowRootItem(Item item)
-		{
-			item.ItemRealized();
+			return themeService.GetRectangleBrush();
 		}
 
-		public void ClearAll()
+		public Brush GetBrushFromHex(string hexColor)
 		{
-			itemsSource.Clear();
+			return themeService.GetBrushFromHex(hexColor);
 		}
 
-		public void ShowItems(IEnumerable<Item> nodes)
+		public string GetHexColorFromBrush(Brush brush)
 		{
-			itemsSource.Add(nodes);
+			return themeService.GetHexColorFromBrush(brush);
 		}
-
-
-		public void HideItems(IEnumerable<Item> nodes)
-		{
-			itemsSource.Remove(nodes);
-		}
-
-
-		public void ShowItem(Item item)
-		{
-			itemsSource.Add(item);
-		}
-
-
-		public void HideItem(Item item)
-		{
-			itemsSource.Remove(item);
-		}
-
-
-
-
-
-		public void UpdateItem(Item item)
-		{
-			itemsSource.Update(item);
-		}
-
 
 		public Brush GetRectangleBackgroundBrush(Brush brush)
 		{
@@ -92,65 +52,248 @@ namespace Dependiator.Modeling
 		}
 
 
-		public Brush GetRectangleBrush()
+		public void SetChildrenLayout(Node parent)
 		{
-			return themeService.GetRectangleBrush();
-		}
+			int rowLength = 6;
 
+			int padding = 20;
 
-		public void AddRootItem(Item item)
-		{
-			rootNodes.Add(item);
-		}
+			double xMargin = 10;
+			double yMargin = 100;
 
+			int count = 0;
+			var children = parent.ChildNodes.OrderBy(child => child, NodeComparer.Comparer(parent));
 
-		public object MoveItem(Point viewPosition, Vector viewOffset, object movingObject)
-		{
-			Node node = movingObject as Node;
-
-			Point canvasPoint = canvasService.GetCanvasPoint(viewPosition);
-			bool isFirst = false;
-
-			if (node == null)
+			foreach (Node childNode in children)
 			{
-				Point point = new Point(canvasPoint.X - 6 / CanvasScale, canvasPoint.Y - 6 / CanvasScale);
-				Rect area = new Rect(point, new Size(6 / CanvasScale, 6 / CanvasScale));
+				Size size;
+				Point location;
 
-				node = itemsSource
-					.GetItemsInArea(area)
-					.OfType<Node>()
-					.LastOrDefault(item => item.ParentItem != null);
-				isFirst = true;
+				if (childNode.PersistentNodeBounds.HasValue)
+				{
+					size = childNode.PersistentNodeBounds.Value.Size;
+					location = childNode.PersistentNodeBounds.Value.Location;
+				}
+				else
+				{
+					size = DefaultSize;
+					double x = (count % rowLength) * (size.Width + padding) + xMargin;
+					double y = (count / rowLength) * (size.Height + padding) + yMargin;
+					location = new Point(x, y);
+				}
+
+				Rect bounds = new Rect(location, size);
+				childNode.NodeBounds = bounds;
+				count++;
 			}
-			
-			if (node != null)
+		}
+
+		public void UpdateLine(LinkSegment segment)
+		{
+			Node source = segment.Source;
+			Node target = segment.Target;
+			Rect sourceBounds = source.NodeBounds;
+			Rect targetBounds = target.NodeBounds;
+
+			// We start by assuming source and target nodes are siblings, 
+			// I.e. line starts at source middle bottom and ends at target middle top
+			double x1 = sourceBounds.X + sourceBounds.Width / 2;
+			double y1 = sourceBounds.Y + sourceBounds.Height;
+			double x2 = targetBounds.X + targetBounds.Width / 2;
+			double y2 = targetBounds.Y;
+
+			if (source.ParentNode == target)
 			{
-				MoveNode(node, canvasPoint, viewOffset, isFirst);
+				// The target is a parent of the source, i.e. line ends at the bottom of the target node
+				x2 = (targetBounds.Width / 2) * target.ItemsScaleFactor
+				     + target.ItemsOffset.X / target.ItemsScale;
+				y2 = (targetBounds.Height) * target.ItemsScaleFactor
+				     + (target.ItemsOffset.Y) / target.ItemsScale;
+
 			}
-			
-			return node;
-		}
+			else if (source == target.ParentNode)
+			{
+				// The target is the child of the source, i.e. line start at the top of the source
+				x1 = (sourceBounds.Width / 2) * source.ItemsScaleFactor
+				     + source.ItemsOffset.X / source.ItemsScale;
+				y1 = source.ItemsOffset.Y / source.ItemsScale;
+			}
 
-		public bool ZoomItem(int zoomDelta, Point viewPosition)
-		{
-			return true;
-		}
+			// Line bounds:
+			double x = Math.Min(x1, x2);
+			double y = Math.Min(y1, y2);
+			double width = Math.Abs(x2 - x1);
+			double height = Math.Abs(y2 - y1);
 
-		private void MoveNode(Node node, Point canvasPoint, Vector viewOffset, bool isFirst)
-		{
-			//module.Move(viewOffset);
-			node.MoveOrResize(canvasPoint, viewOffset, isFirst);
-		}
+			// Ensure the rect is at least big enough to contain the width of the line
+			width = width + 5;
+			height = height + 5;
 
-		public void RemoveRootNode(Item item)
-		{
-			rootNodes.Remove(item);
-		}
+			Rect lineBounds = new Rect(x - 2, y - 2, width, height);
 
+			// Line drawing within the bounds
+			double lx1 = 2;
+			double ly1 = 2;
+			double lx2 = width - 2;
+			double ly2 = height - 2;
 
-		private void OnScaleChanged()
-		{
-			rootNodes.ToList().ForEach(node => node.ChangedScale());
+			if (x1 <= x2 && y1 > y2 || x1 > x2 && y1 <= y2)
+			{
+				// Need to flip the line
+				ly1 = height - 2;
+				ly2 = 2;
+			}
+
+			Point l1 = new Point(lx1, ly1);
+			Point l2 = new Point(lx2, ly2);
+
+			segment.SetBounds(lineBounds, l1, l2);
 		}
 	}
 }
+
+
+//	[SingleInstance]
+//	internal class ItemService : IItemService
+//	{
+//		private readonly ICanvasService canvasService;
+//		private readonly INodeItemsSource itemsSource;
+//		private readonly IThemeService themeService;
+
+//		private readonly List<Item> rootNodes = new List<Item>();
+
+//		public ItemService(
+//			ICanvasService canvasService,
+//			INodeItemsSource itemsSource,
+//			IThemeService themeService)
+//		{
+//			this.canvasService = canvasService;
+//			this.itemsSource = itemsSource;
+//			this.themeService = themeService;
+
+//			canvasService.ScaleChanged += (s, e) => OnScaleChanged();
+//		}
+
+
+//		public double CanvasScale
+//		{
+//			get { return canvasService.Scale; }
+//			set { canvasService.Scale = value; }			
+//		} 
+
+//		public Rect CurrentViewPort => canvasService.CurrentViewPort;
+
+//		public Point Offset => canvasService.Offset;
+
+
+//		public void ShowRootItem(Item item)
+//		{
+//			item.ItemRealized();
+//		}
+
+//		public void ClearAll()
+//		{
+//			itemsSource.Clear();
+//		}
+
+//		public void ShowItems(IEnumerable<Item> nodes)
+//		{
+//			itemsSource.Add(nodes);
+//		}
+
+
+//		public void HideItems(IEnumerable<Item> nodes)
+//		{
+//			itemsSource.Remove(nodes);
+//		}
+
+
+//		public void ShowItem(Item item)
+//		{
+//			itemsSource.Add(item);
+//		}
+
+
+//		public void HideItem(Item item)
+//		{
+//			itemsSource.Remove(item);
+//		}
+
+
+
+
+
+//		public void UpdateItem(Item item)
+//		{
+//			itemsSource.Update(item);
+//		}
+
+
+//		public Brush GetRectangleBackgroundBrush(Brush brush)
+//		{
+//			return themeService.GetRectangleBackgroundBrush(brush);
+//		}
+
+
+//		public Brush GetRectangleBrush()
+//		{
+//			return themeService.GetRectangleBrush();
+//		}
+
+
+//		public void AddRootItem(Item item)
+//		{
+//			rootNodes.Add(item);
+//		}
+
+
+//		public object MoveItem(Point viewPosition, Vector viewOffset, object movingObject)
+//		{
+//			Node node = movingObject as Node;
+
+//			Point canvasPoint = canvasService.GetCanvasPoint(viewPosition);
+//			bool isFirst = false;
+
+//			if (node == null)
+//			{
+//				Point point = new Point(canvasPoint.X - 6 / CanvasScale, canvasPoint.Y - 6 / CanvasScale);
+//				Rect area = new Rect(point, new Size(6 / CanvasScale, 6 / CanvasScale));
+
+//				node = itemsSource
+//					.GetItemsInArea(area)
+//					.OfType<Node>()
+//					.LastOrDefault(item => item.ParentItem != null);
+//				isFirst = true;
+//			}
+
+//			if (node != null)
+//			{
+//				Move(node, canvasPoint, viewOffset, isFirst);
+//			}
+
+//			return node;
+//		}
+
+//		public bool ZoomItem(int zoomDelta, Point viewPosition)
+//		{
+//			return true;
+//		}
+
+//		private void Move(Node node, Point canvasPoint, Vector viewOffset, bool isFirst)
+//		{
+//			//module.Move(viewOffset);
+//			node.MoveOrResize(canvasPoint, viewOffset, isFirst);
+//		}
+
+//		public void RemoveRootNode(Item item)
+//		{
+//			rootNodes.Remove(item);
+//		}
+
+
+//		private void OnScaleChanged()
+//		{
+//			rootNodes.ToList().ForEach(node => node.ChangedScale());
+//		}
+//	}
+//}

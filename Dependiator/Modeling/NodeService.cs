@@ -1,9 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using Dependiator.Common.ThemeHandling;
-using Dependiator.Modeling.Analyzing;
 using Dependiator.Modeling.Serializing;
 
 
@@ -12,6 +10,7 @@ namespace Dependiator.Modeling
 	internal class NodeService : INodeService
 	{
 		private readonly IItemService itemService;
+
 
 
 		public NodeService(IItemService itemService)
@@ -88,16 +87,15 @@ namespace Dependiator.Modeling
 		{
 			Data.ViewData viewData = new Data.ViewData
 			{
-				Color = Converter.HexFromBrush(node.RectangleBrush),
-			};
-
-			if (node.ElementBounds.HasValue)
-			{
-				viewData.X = node.ElementBounds.Value.X;
-				viewData.Y = node.ElementBounds.Value.Y;
-				viewData.Width = node.ElementBounds.Value.Width;
-				viewData.Height = node.ElementBounds.Value.Height;
-			}
+				Color = node.PersistentNodeColor,
+				X = node.NodeBounds.X,
+				Y = node.NodeBounds.Y,
+				Width = node.NodeBounds.Width,
+				Height = node.NodeBounds.Height,
+				Scale = node.ItemsScale,
+				OffsetX = node.ItemsOffset.X,
+				OffsetY = node.ItemsOffset.Y
+			};	
 
 			return viewData;
 		}
@@ -119,16 +117,20 @@ namespace Dependiator.Modeling
 
 			if (dataNode.ViewData != null)
 			{
-				node.ElementBounds = ToBounds(dataNode.ViewData);
-				//element.ElementBrush = Converter.BrushFromHex(dataNode.ViewData.Color);
+				node.PersistentNodeBounds = ToBounds(dataNode.ViewData);
+				node.PersistentScale = dataNode.ViewData.Scale;
+				node.PersistentNodeColor = dataNode.ViewData.Color;
+				node.PersistentOffset = new Point(dataNode.ViewData.OffsetX, dataNode.ViewData.OffsetY);
 			}
 			else
 			{
 				if (modelViewData != null 
 					&& modelViewData.viewData.TryGetValue(fullName, out Data.ViewData viewData))
 				{
-					node.ElementBounds = ToBounds(viewData);
-					//element.ElementBrush = Converter.BrushFromHex(viewData.Color);
+					node.PersistentNodeBounds = ToBounds(viewData);
+					node.PersistentScale = viewData.Scale;
+					node.PersistentNodeColor = viewData.Color;
+					node.PersistentOffset = new Point(viewData.OffsetX, viewData.OffsetY);
 				}
 			}
 
@@ -146,8 +148,8 @@ namespace Dependiator.Modeling
 				foreach (Data.Link dataLink in dataNode.Links)
 				{
 					Node targetNode = GetOrAddNode(dataLink.Target, model, modelViewData);
-					NodeLink reference = new NodeLink(node, targetNode);
-					node.Links.Add(reference);
+					Link link = new Link(node, targetNode);
+					node.Links.Add(link);
 				}
 			}
 		}
@@ -166,13 +168,13 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void AddLink(Data.Link link, Model model, ModelViewData modelViewData)
+		private void AddLink(Data.Link dataLink, Model model, ModelViewData modelViewData)
 		{
-			Node sourceNode = GetOrAddNode(link.Source, model, modelViewData);
-			Node targetNode = GetOrAddNode(link.Target, model, modelViewData);
+			Node sourceNode = GetOrAddNode(dataLink.Source, model, modelViewData);
+			Node targetNode = GetOrAddNode(dataLink.Target, model, modelViewData);
 
-			NodeLink nodeLink = new NodeLink(sourceNode, targetNode);
-			sourceNode.Links.Add(nodeLink);
+			Link link = new Link(sourceNode, targetNode);
+			sourceNode.Links.Add(link);
 		}
 
 
@@ -183,7 +185,7 @@ namespace Dependiator.Modeling
 				Name = node.NodeName.ShortName,
 				Type = node.NodeType,
 				Nodes = ToChildren(node.ChildNodes),
-				Links = ToLinks(node),
+				Links = ToDataLinks(node),
 				ViewData = ToViewData(node)
 			};
 
@@ -191,27 +193,20 @@ namespace Dependiator.Modeling
 		}
 
 
-		private static List<Data.Link> ToLinks(Node node)
+		private static List<Data.Link> ToDataLinks(Node node)
 		{
-			if (!node.Links.Any())
-			{
-				return null;
-			}
-
 			List<Data.Link> links = null;
 
-			foreach (Link link in node.Links)
-			{
-				foreach (NodeLink nodeLink in link.NodeLinks.Where(n => n.Source == node))
-				{
-					if (links == null)
-					{
-						links = new List<Data.Link>();
-					}
+			foreach (Link link in node.Links.Links)
+			{				
+				Data.Link dataLink = new Data.Link { Target = link.Target.NodeName };
 
-					Data.Link dataLink = new Data.Link { Target = nodeLink.Target.NodeName };
-					links.Add(dataLink);
+				if (links == null)
+				{
+					links = new List<Data.Link>();
 				}
+
+				links.Add(dataLink);				
 			}
 
 			return links;
@@ -256,7 +251,7 @@ namespace Dependiator.Modeling
 			if (modelViewData != null && modelViewData.viewData.TryGetValue(
 				nodeName, out Data.ViewData viewData))
 			{
-				node.ElementBounds = ToBounds(viewData);
+				node.PersistentNodeBounds = ToBounds(viewData);
 				//node.ElementBrush = Converter.BrushFromHex(viewData.Color);
 			}
 

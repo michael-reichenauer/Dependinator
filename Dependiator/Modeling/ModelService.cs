@@ -2,8 +2,8 @@
 using System.Windows;
 using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.MainViews;
 using Dependiator.Modeling.Analyzing;
+using Dependiator.Modeling.Items;
 using Dependiator.Modeling.Serializing;
 using Dependiator.Utils;
 
@@ -16,64 +16,81 @@ namespace Dependiator.Modeling
 		private readonly WorkingFolder workingFolder;
 		private readonly IReflectionService reflectionService;
 		private readonly INodeService nodeService;
-		private readonly IItemService itemService;
-		private readonly IDataSerializer dataSerializer;
-		private readonly ICanvasService canvasService;
+		
 
-		private Model elementTree;
+		private readonly IDataSerializer dataSerializer;
+
+
+		private Model model;
 
 		public ModelService(
 			WorkingFolder workingFolder,
 			IReflectionService reflectionService,
 			INodeService nodeService,
-			IItemService itemService,
-			IDataSerializer dataSerializer,
-			ICanvasService canvasService)
+			IDataSerializer dataSerializer)
 		{
 			this.workingFolder = workingFolder;
 			this.reflectionService = reflectionService;
 			this.nodeService = nodeService;
-			this.itemService = itemService;
 			this.dataSerializer = dataSerializer;
-			this.canvasService = canvasService;
 		}
 
 
 
 
-		public void InitModules()
+		public void InitModules(ItemsCanvas rootCanvas)
 		{
 			Timing t = new Timing();
 
-			DataModel dataModel = new DataModel()
-				.AddType("Axis.Ns1")
-				.AddType("Axis.Ns2")
-				.AddType("Axis.Ns1.Class1")
-				.AddType("Axis.Ns1.Class2")
-				.AddType("Axis.Ns2.Class1")
-				.AddLink("Axis.Ns1.Class1", "Axis.Ns1.Class2")
-				.AddLink("Axis.Ns1.Class1", "Axis.Ns2.Class2")
-				;
+			DataModel dataModel = GetDataModel();
 
+			t.Log($"Get data model {dataModel}");
 
-			//DataModel dataModel = GetCachedOrFreshModelData();
-
-			t.Log("After read data");
-
-			Model model = nodeService.ToModel(dataModel, null);
+			model = nodeService.ToModel(dataModel, null);
 
 			t.Log("To model");
 
-			ShowModel(model);
+			ShowModel(rootCanvas);
 			t.Log("Show model");
-
-			RestoreViewSettings();
 
 			t.Log("Showed model");
 		}
 
 
-		public async Task Refresh()
+		private DataModel GetDataModel()
+		{
+			//DataModel dataModel = new DataModel()
+			//		.AddType("Axis.Ns1")	
+			//		.AddType("Other.Ns2")			
+			//		.AddLink("Axis.Ns1", "Other.Ns2")
+
+			//	;
+
+			//DataModel dataModel = new DataModel()
+			//		.AddType("Axis.Ns1")
+			//		.AddType("Axis.Ns2")
+			//		.AddType("Axis.Ns1.Class1")
+			//		.AddType("Axis.Ns1.Class2")
+			//		.AddType("Axis.Ns2.Class1")
+			//		.AddType("Axis.Ns2.NS3.Class1")
+			//		.AddType("Other.Ns1.Class1")
+			//		.AddType("Other.Ns2")
+			//		.AddType("Other.Ns3")
+			//		.AddType("Other.Ns4")
+			//		.AddType("Other.Ns5")
+			//		.AddType("Other.Ns6")
+			//		.AddLink("Axis.Ns1.Class1", "Axis.Ns1.Class2")
+			//		.AddLink("Axis.Ns1.Class1", "Axis.Ns2.Class2")
+			//	;
+
+
+			DataModel dataModel = GetCachedOrFreshModelData();
+
+			return dataModel;
+		}
+
+
+		public async Task Refresh(ItemsCanvas rootCanvas)
 		{
 			await Task.Yield();
 
@@ -82,18 +99,16 @@ namespace Dependiator.Modeling
 			StoreViewSettings();
 			t.Log("stored setting");
 
-			ModelViewData modelViewData = nodeService.ToViewData(elementTree);
+			ModelViewData modelViewData = nodeService.ToViewData(model);
 			t.Log("Got current model data");
 
-			Model tree = await RefreshElementTreeAsync(modelViewData);
+			model = await RefreshElementTreeAsync(modelViewData);
 
 			t.Log("Read fresh data");
 
-			ShowModel(tree);
+			ShowModel(rootCanvas);
 
 			t.Log("Show model");
-
-			RestoreViewSettings();
 
 			t.Log("Refreshed model");
 		}
@@ -102,7 +117,7 @@ namespace Dependiator.Modeling
 		private DataModel GetCachedOrFreshModelData()
 		{
 			DataModel dataModel;
-			//if (!TryReadCachedData(out dataModel))
+			if (!TryReadCachedData(out dataModel))
 			{
 				dataModel = ReadFreshData();
 			}
@@ -111,16 +126,23 @@ namespace Dependiator.Modeling
 		}
 
 
-		private void ShowModel(Model tree)
+		private void ShowModel(ItemsCanvas rootCanvas)
 		{
-			if (elementTree != null)
-			{
-				itemService.ClearAll();
-			}
+			RestoreViewSettings(rootCanvas);
 
-			Item rootItem = GetNode(tree);
-			itemService.ShowRootItem(rootItem);
-			elementTree = tree;
+			Node rootNode = model.Root;
+
+			rootNode.Show(rootCanvas);
+		}
+
+
+		public void Zoom(double zoomFactor, Point zoomCenter) =>
+			model.Root.Zoom(zoomFactor, zoomCenter);
+
+
+		public void Move(Vector viewOffset)
+		{
+			model.Root.MoveItems(viewOffset);
 		}
 
 
@@ -151,21 +173,10 @@ namespace Dependiator.Modeling
 		}
 
 
-		public object MoveNode(Point viewPosition, Vector viewOffset, object movingObject)
-		{
-			return itemService.MoveItem(viewPosition, viewOffset, movingObject);
-		}
-
-
-		public bool ZoomNode(int zoomDelta, Point viewPosition)
-		{
-			return itemService.ZoomItem(zoomDelta, viewPosition);
-		}
-
-
 		public void Close()
 		{
-			DataModel dataModel = nodeService.ToDataModel(elementTree);
+			model.Root.UpdateAllNodesScalesBeforeClose();
+			DataModel dataModel = nodeService.ToDataModel(model);
 			dataSerializer.Serialize(dataModel);
 
 			StoreViewSettings();
@@ -177,38 +188,18 @@ namespace Dependiator.Modeling
 			Settings.EditWorkingFolderSettings(workingFolder,
 				settings =>
 				{
-					settings.Scale = canvasService.Scale;
-					settings.X = canvasService.Offset.X;
-					settings.Y = canvasService.Offset.Y;
+					settings.Scale = model.Root.ItemsScale;
+					settings.X = model.Root.ItemsOffset.X;
+					settings.Y = model.Root.ItemsOffset.Y;
 				});
 		}
 
 
-		private void RestoreViewSettings()
+		private void RestoreViewSettings(ItemsCanvas rootCanvas)
 		{
 			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
-
-			canvasService.Scale = settings.Scale;
-			canvasService.Offset = new Point(settings.X, settings.Y);
-		}
-
-
-		private Item GetNode(Model model)
-		{
-			Size size = new Size(200000, 100000);
-
-			double scale = 1;
-			itemService.CanvasScale = scale;
-
-			double x = 0 - (size.Width / 2);
-			double y = 0 - (size.Height / 2);
-
-			Point position = new Point(x, y);
-			Rect bounds = new Rect(position, size);
-			Node node = model.Root;
-			node.SetBounds(bounds);
-			itemService.AddRootItem(node);
-			return node;
+			rootCanvas.Scale = settings.Scale;
+			rootCanvas.Offset = new Point(settings.X, settings.Y);
 		}
 	}
 }

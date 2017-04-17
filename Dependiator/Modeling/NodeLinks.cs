@@ -1,140 +1,104 @@
 using System.Collections.Generic;
 using System.Linq;
-using Dependiator.Utils;
 
 
 namespace Dependiator.Modeling
 {
-	internal class NodeLinks : IEnumerable<Link>
+	internal class NodeLinks
 	{
 		private readonly IItemService itemService;
-		private readonly Node ownerNode;
 		private readonly List<Link> links = new List<Link>();
+		private readonly List<LinkSegment> managedSegments = new List<LinkSegment>();
+		private readonly List<LinkSegment> referencingSegments = new List<LinkSegment>();
+	
+
+		public IReadOnlyList<Link> Links => links;
+
+		public IReadOnlyList<LinkSegment> ManagedSegments => managedSegments;
+
+		public IReadOnlyList<LinkSegment> ReferencingSegments => referencingSegments;
 
 
-		public NodeLinks(IItemService itemService, Node ownerNode)
+		public NodeLinks(IItemService itemService)
 		{
 			this.itemService = itemService;
-			this.ownerNode = ownerNode;
 		}
-
-
-		public int Count => links.Count;
-
-		public IEnumerable<Link> SourceReferences => links
-			.Where(r => r.Source == ownerNode);
-
-		public IEnumerable<Link> TargetReferences => links
-			.Where(r => r.Target == ownerNode);
-
-
 		
-		public void Add(NodeLink nodeLink)
+
+
+		public void Add(Link link)
 		{
-			Asserter.Requires(nodeLink.Source == ownerNode);
+			links.Add(link);
 
-			AddLineSegments(nodeLink);
-		}
-
-
-		private void AddLineSegments(NodeLink nodeLink)
-		{
-			// Start with first segment at the start of the line 
-			Node segementSource = nodeLink.Source;
+			// Start with first segment at the start of the segmented line 
+			Node segmentSource = link.Source;
 
 			// Iterate segments until line end is reached
-			while (segementSource != nodeLink.Target)
+			while (segmentSource != link.Target)
 			{
-				// Try to asume next segement target is a child node by searching if segment source
+				// Try to assume next segment target is a child node by searching if segment source
 				// is a ancestor of end target node
-				Node segmentTarget = nodeLink.Target.AncestorsAndSelf()
-					.FirstOrDefault(ancestor => ancestor.ParentNode == segementSource);
+				Node segmentTarget = link.Target.AncestorsAndSelf()
+					.FirstOrDefault(ancestor => ancestor.ParentNode == segmentSource);
 
 				if (segmentTarget == null)
 				{
-					// Not a child, lets try to asume target is a sibling node
-					segmentTarget = nodeLink.Target.AncestorsAndSelf()
-						.FirstOrDefault(ancestor => ancestor.ParentNode == segementSource.ParentNode);
+					// Segment target was not a child, lets try to assume target is a sibling node
+					segmentTarget = link.Target.AncestorsAndSelf()
+						.FirstOrDefault(ancestor => ancestor.ParentNode == segmentSource.ParentNode);
 				}
 
 				if (segmentTarget == null)
 				{
-					// Neither child not sibling, then next segemtn target node must be the parent node
-					segmentTarget = segementSource.ParentNode;
+					// Segment target was neither child nor a sibling, next segment target node must
+					// be the parent node
+					segmentTarget = segmentSource.ParentNode;
 				}
 
-				AddSegment(segementSource, segmentTarget, nodeLink);
+				AddSegment(segmentSource, segmentTarget, link);
 
-				// Goto next segment in the line segments 
-				segementSource = segmentTarget;
+				// Go to next segment in the line segments 
+				segmentSource = segmentTarget;
 			}
 		}
 
-
-		private void AddSegment(Node source, Node target, NodeLink nodeLink)
+		
+		private void AddSegment(Node source, Node target, Link link)
 		{
-			// Try to check if source node already contains this segement link
-			Link segment = source.Links.FirstOrDefault(
-				l => l.Source == source && l.Target == target);
+			Node segmentManager = GetLinkSegmentManager(source, target);
+
+			LinkSegment segment = segmentManager.Links.managedSegments
+				.FirstOrDefault(l => l.Source == source && l.Target == target);
 
 			if (segment == null)
 			{
-				// No existing segment link, create the link and add to both source and target node
-				segment = new Link(itemService, source, target);
-				source.Links.AddLinkSegment(segment);
-				target.Links.AddLinkSegment(segment);
+				segment = new LinkSegment(itemService, source, target, segmentManager);
+
+				segmentManager.Links.managedSegments.Add(segment);
+				source.Links.referencingSegments.Add(segment);
+				target.Links.referencingSegments.Add(segment);
 			}
 
-			segment.Add(nodeLink);
+			segment.Add(link);
 		}
 
 
-		private void AddLinkSegment(Link segment)
+		private static Node GetLinkSegmentManager(Node source, Node target)
 		{
-			if (links.Any(l => l.Source == segment.Source && l.Target == segment.Target))
+			if (source == target.ParentNode)
 			{
-				return;
+				// The target is the child of the target, let the source own the segment
+				return source;
 			}
-
-			links.Add(segment);
-		}
-
-
-		public IEnumerable<Link> DescendentAndSelfSourceReferences()
-		{
-			foreach (Node node in ownerNode.DescendentsAndSelf())
+			else
 			{
-				foreach (Link reference in node.Links.SourceReferences)
-				{
-					yield return reference;
-				}
+				// The target is either a sibling or a parent of the source, let the source parent own
+				return source.ParentNode;
 			}
 		}
 
 
-		public IEnumerable<Link> DescendentAndSelfTargetReferences()
-		{
-			foreach (Node node in ownerNode.DescendentsAndSelf())
-			{
-				foreach (Link reference in node.Links.TargetReferences)
-				{
-					yield return reference;
-				}
-			}
-		}
 
-
-		public IEnumerator<Link> GetEnumerator()
-		{
-			return links.GetEnumerator();
-		}
-
-
-		System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
-		public override string ToString() => $"{links.Count} references";
+		public override string ToString() => $"{managedSegments.Count} links";
 	}
 }
