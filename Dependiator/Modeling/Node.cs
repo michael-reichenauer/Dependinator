@@ -116,7 +116,7 @@ namespace Dependiator.Modeling
 			if (viewPosition2.HasValue)
 			{
 				Point p = new Point(viewPosition2.Value.X / NodeScale, viewPosition2.Value.Y / NodeScale);
-				double dist = 8 / NodeScale;
+				double dist = 5 / NodeScale;
 
 				if (Math.Abs(p.X - 0) < dist)
 				{
