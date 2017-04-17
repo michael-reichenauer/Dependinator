@@ -126,22 +126,22 @@ namespace Dependiator.Modeling
 			double height = Math.Abs(y2 - y1);
 
 			// Ensure the rect is at least big enough to contain the width of the line
-			width = Math.Max(width, segment.LineThickness + 1);
-			height = Math.Max(height, segment.LineThickness + 1);
+			width = width + 5;
+			height = height + 5;
 
-			Rect lineBounds = new Rect(x, y, width, height);
+			Rect lineBounds = new Rect(x - 2, y - 2, width, height);
 
 			// Line drawing within the bounds
-			double lx1 = 0;
-			double ly1 = 0;
-			double lx2 = width;
-			double ly2 = height;
+			double lx1 = 2;
+			double ly1 = 2;
+			double lx2 = width - 2;
+			double ly2 = height - 2;
 
 			if (x1 <= x2 && y1 > y2 || x1 > x2 && y1 <= y2)
 			{
 				// Need to flip the line
-				ly1 = height;
-				ly2 = 0;
+				ly1 = height - 2;
+				ly2 = 2;
 			}
 
 			Point l1 = new Point(lx1, ly1);

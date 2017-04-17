@@ -60,6 +60,13 @@ namespace Dependiator.Modeling
 		private DataModel GetDataModel()
 		{
 			//DataModel dataModel = new DataModel()
+			//		.AddType("Axis.Ns1")	
+			//		.AddType("Other.Ns2")			
+			//		.AddLink("Axis.Ns1", "Other.Ns2")
+
+			//	;
+
+			//DataModel dataModel = new DataModel()
 			//		.AddType("Axis.Ns1")
 			//		.AddType("Axis.Ns2")
 			//		.AddType("Axis.Ns1.Class1")
@@ -168,6 +175,7 @@ namespace Dependiator.Modeling
 
 		public void Close()
 		{
+			model.Root.UpdateAllNodesScalesBeforeClose();
 			DataModel dataModel = nodeService.ToDataModel(model);
 			dataSerializer.Serialize(dataModel);
 
