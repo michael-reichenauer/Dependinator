@@ -11,6 +11,7 @@
 using System;
 using System.Linq;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Media;
 using Dependiator.Common.ThemeHandling;
 
@@ -126,22 +127,24 @@ namespace Dependiator.Modeling
 			double height = Math.Abs(y2 - y1);
 
 			// Ensure the rect is at least big enough to contain the width of the line
-			width = width + 5;
-			height = height + 5;
+			double margin = 5 / segment.Owner.ItemsScale;
+			double hm = margin / 2;
+			width = width + margin;
+			height = height + margin;
 
-			Rect lineBounds = new Rect(x - 2, y - 2, width, height);
+			Rect lineBounds = new Rect(x - hm, y - hm, width, height);
 
 			// Line drawing within the bounds
-			double lx1 = 2;
-			double ly1 = 2;
-			double lx2 = width - 2;
-			double ly2 = height - 2;
+			double lx1 = hm;
+			double ly1 = hm;
+			double lx2 = width - hm;
+			double ly2 = height - hm;
 
 			if (x1 <= x2 && y1 > y2 || x1 > x2 && y1 <= y2)
 			{
 				// Need to flip the line
-				ly1 = height - 2;
-				ly2 = 2;
+				ly1 = height - hm;
+				ly2 = hm;
 			}
 
 			Point l1 = new Point(lx1, ly1);

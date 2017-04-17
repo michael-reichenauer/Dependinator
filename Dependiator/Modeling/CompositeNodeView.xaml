@@ -38,9 +38,7 @@
 				BorderBrush="{Binding RectangleBrush}" 
 				BorderThickness="0.3"
 				Height="20"
-				Background="Transparent" VerticalAlignment="Top"
-				ForceCursor="true" 
-				Cursor="Hand">
+				Background="Transparent" VerticalAlignment="Top">
 			
 				<TextBlock
 					Height="20"
@@ -56,7 +54,8 @@
 						Content="{Binding ToolTip}"
 						Placement="Mouse"
 						BorderBrush="{Binding RectangleBrush}"
-						BorderThickness="1"  Opened="ToolTip_OnOpened"/>
+						BorderThickness="1"  
+						Opened="ToolTip_OnOpened"/>
 				</Border.ToolTip>
 			</Border>
 
@@ -64,9 +63,7 @@
 				Name="ResizeBorder"
 				Grid.Row="0" 
 				BorderThickness="5" 
-				BorderBrush="Transparent"
-				ForceCursor="true" 
-				Cursor="SizeAll"/>
+				BorderBrush="Transparent"/>
 		</Grid>
 		
 	</Border>

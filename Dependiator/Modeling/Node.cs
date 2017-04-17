@@ -141,6 +141,11 @@ namespace Dependiator.Modeling
 				}
 			}
 
+			if (size.Width * NodeScale < 40 || size.Height * NodeScale < 20)
+			{
+				return;
+			}
+
 			NodeBounds = new Rect(newLocation, size);
 
 			ParentNode.itemsCanvas.UpdateItem(viewModel);

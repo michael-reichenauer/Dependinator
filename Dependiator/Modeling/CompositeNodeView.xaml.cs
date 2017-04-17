@@ -24,7 +24,7 @@ namespace Dependiator.Modeling
 
 		protected override void OnMouseWheel(MouseWheelEventArgs e)
 		{
-			//Cursors.SizeAll
+			//Cursors.
 			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
 			{
 				return;
