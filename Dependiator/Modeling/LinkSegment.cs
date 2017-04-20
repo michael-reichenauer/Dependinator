@@ -64,22 +64,35 @@ namespace Dependiator.Modeling
 
 		public string GetToolTip()
 		{
+			char[] separator = ".".ToCharArray();
+			string source = Source.NodeName.ToString();
+			string[] sourceParts = source.Split(separator);
+
 			var targetCount = NodeLinks
-				.GroupBy(l => l.Target, p => p, (k, g) => new { target = k, links = g})
+				.GroupBy(l => l.Target, p => p, (k, g) => new { target = k, links = g })
 				.Count();
+			string tip =
+				$"{this},  {NodeLinks.Count} links ({targetCount} targets:";
 
-			string tip = $"{this},  {NodeLinks.Count} links ({targetCount} targets:";
-			int maxLinks = 40;
-
-			foreach (Link reference in NodeLinks.Take(maxLinks))
+			foreach (var group in NodeLinks
+				.GroupBy(
+					l => l.Source.NodeName.ToString().Split(separator)[sourceParts.Length]))
 			{
-				tip += $"\n  {reference}";
+				tip += $"\n  {group.Key} {group.Count()} links";
 			}
 
-			if (NodeLinks.Count > maxLinks)
-			{
-				tip += "\n  ...";
-			}
+
+		//	int maxLinks = 40;
+
+			//foreach (Link reference in NodeLinks.Take(maxLinks))
+			//{
+			//	tip += $"\n  {reference}";
+			//}
+
+			//if (NodeLinks.Count > maxLinks)
+			//{
+			//	tip += "\n  ...";
+			//}
 
 			return tip;
 		}
