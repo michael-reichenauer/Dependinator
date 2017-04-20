@@ -54,10 +54,14 @@ namespace Dependiator.MainViews
 
 		protected override void OnPreviewMouseMove(MouseEventArgs e)
 		{
+			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+			{
+				return;
+			}
+
 			Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
 			
-			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
-				&& e.LeftButton == MouseButtonState.Pressed
+			if (e.LeftButton == MouseButtonState.Pressed
 				&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
 			{
 				// Move canvas

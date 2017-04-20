@@ -63,7 +63,8 @@
 				Name="ResizeBorder"
 				Grid.Row="0" 
 				BorderThickness="5" 
-				BorderBrush="Transparent"/>
+				BorderBrush="Transparent" 
+				/>
 		</Grid>
 		
 	</Border>

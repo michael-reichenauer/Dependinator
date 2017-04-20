@@ -44,7 +44,7 @@ namespace Dependiator.Modeling
 		public override string ToString() => node.NodeName;
 
 
-		public void MoveNode(Vector viewOffset) => node.Move(viewOffset, null);
+		public void MoveNode(Vector viewOffset) => node.Move(viewOffset, null, false);
 
 		public void Resize(int zoomDelta) => node.Resize(zoomDelta);
 

@@ -106,11 +106,91 @@ namespace Dependiator.Modeling
 		}
 
 
-		public void Move(Vector viewOffset, Point? viewPosition2)
+		private int direction = 0;
+
+		public void Move(Vector viewOffset, Point? viewPosition2, bool isDoing)
 		{
 			Vector scaledOffset = viewOffset / NodeScale;
 
 			Point newLocation = NodeBounds.Location + scaledOffset;
+			Size size = NodeBounds.Size;
+
+			if (!isDoing)
+			{
+				direction = 0;
+			}
+
+			bool isMove = false;
+			Vector move = new Vector();
+
+			if ((viewPosition2.HasValue || direction > 0) && !(isDoing && direction == 0))
+			{
+				Point p = new Point(viewPosition2.Value.X / NodeScale, viewPosition2.Value.Y / NodeScale);
+				double dist = 10 / NodeScale;
+				double dist2 = 5 / NodeScale;
+
+				if (Math.Abs(p.X - 0) < dist || direction == 1)
+				{
+					newLocation = new Point(NodeBounds.Location.X + scaledOffset.X, NodeBounds.Location.Y);
+					size = new Size(size.Width - scaledOffset.X, size.Height);
+					direction = 1;
+					isMove = true;
+					move = new Vector(viewOffset.X, 0);
+				}
+				else if (Math.Abs(p.X - NodeBounds.Width) < dist || direction == 2)
+				{
+					newLocation = NodeBounds.Location;
+					size = new Size(size.Width + scaledOffset.X, size.Height);
+					direction = 2;
+				}
+				else if (Math.Abs(p.Y - 0) < dist2 || direction == 3)
+				{
+					newLocation = new Point(NodeBounds.Location.X, NodeBounds.Location.Y + scaledOffset.Y);
+					size = new Size(size.Width, size.Height - scaledOffset.Y);
+					direction = 3;
+					isMove = true;
+					move = new Vector(0, viewOffset.Y);
+				}
+				else if (Math.Abs(p.Y - NodeBounds.Height) < dist || direction == 4)
+				{
+					newLocation = NodeBounds.Location;
+					size = new Size(size.Width, size.Height + scaledOffset.Y);
+					direction = 4;
+				}
+			}
+
+			if (size.Width * NodeScale < 40 || size.Height * NodeScale < 20)
+			{
+				return;
+			}
+
+			NodeBounds = new Rect(newLocation, size);
+
+			ParentNode.itemsCanvas.UpdateItem(viewModel);
+
+			Links.ReferencingSegments.ForEach(segment => segment.UpdateVisibility());
+
+			viewModel.NotifyAll();
+
+		
+
+			if (isMove)
+			{
+				MoveItems(-move);
+			}
+			else
+			{
+				UpdateShownItems();
+				UpdateShownItemsInChildNodes();
+			}
+		}
+
+
+		public void Resize(Vector viewOffset, Point? viewPosition2)
+		{
+			Vector scaledOffset = viewOffset / NodeScale;
+
+			Point newLocation = NodeBounds.Location;
 			Size size = NodeBounds.Size;
 
 			if (viewPosition2.HasValue)

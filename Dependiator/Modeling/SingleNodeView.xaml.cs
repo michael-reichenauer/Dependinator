@@ -22,14 +22,8 @@ namespace Dependiator.Modeling
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
 			SingleNodeViewModel viewModel = DataContext as SingleNodeViewModel;
-				if (viewModel == null)
+			if (viewModel == null)
 			{
-				return;
-			}
-
-			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Alt))
-			{
-				viewModel.NotifyAll();
 				return;
 			}
 

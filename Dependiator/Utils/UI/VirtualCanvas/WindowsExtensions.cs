@@ -11,5 +11,10 @@
 		{
 			return $"{Math.Round(p.X, 0)},{Math.Round(p.Y, 0)}";
 		}
+
+		public static string TS(this Vector p)
+		{
+			return $"{Math.Round(p.X, 0)},{Math.Round(p.Y, 0)}";
+		}
 	}
 }
