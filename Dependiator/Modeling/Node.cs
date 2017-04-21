@@ -505,6 +505,7 @@ namespace Dependiator.Modeling
 				if (node.IsShowing)
 				{
 					count++;
+					count += node.Links.ManagedSegments.Count(l => l.ViewModel.IsShowing);
 					// Log.Debug($"  IsShowing {node}");
 					node.ChildNodes.ForEach(nodes.Push);
 				}

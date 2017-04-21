@@ -9,6 +9,8 @@ namespace Dependiator.Modeling
 {
 	internal class LinkSegment
 	{
+		private static readonly char[] Separator = ".".ToCharArray();
+
 		private readonly IItemService itemService;
 		private readonly List<Link> nodeLinks = new List<Link>();
 		private Rect itemBounds;
@@ -64,25 +66,55 @@ namespace Dependiator.Modeling
 
 		public string GetToolTip()
 		{
-			char[] separator = ".".ToCharArray();
 			string source = Source.NodeName.ToString();
-			string[] sourceParts = source.Split(separator);
+			string[] sourceParts = source.Split(Separator);
+			string[] targetParts = Target.NodeName.ToString().Split(Separator);
 
-			var targetCount = NodeLinks
-				.GroupBy(l => l.Target, p => p, (k, g) => new { target = k, links = g })
-				.Count();
-			string tip =
-				$"{this},  {NodeLinks.Count} links ({targetCount} targets:";
+			string tip = $"";
 
-			foreach (var group in NodeLinks
-				.GroupBy(
-					l => l.Source.NodeName.ToString().Split(separator)[sourceParts.Length]))
+			int sourcePartsCount = 0;
+			int targetPartsCount = 0;
+			int count = 0;
+
+			if (Source.ParentNode == Target.ParentNode)
 			{
-				tip += $"\n  {group.Key} {group.Count()} links";
+				// Siblings
+				sourcePartsCount = sourceParts.Length + 1;
+				targetPartsCount = targetParts.Length + 1;
+
+			}
+			else if (Source == Target.ParentNode)
+			{
+				// Source is parent of target
+				sourcePartsCount = sourceParts.Length;
+				targetPartsCount = targetParts.Length + 1;
+			}
+			else if (Source.ParentNode == Target)
+			{
+				// Source is child of target
+				sourcePartsCount = sourceParts.Length + 1;
+				targetPartsCount = targetParts.Length;
 			}
 
+			var groupBySources = NodeLinks.GroupBy(l => GetName(l.Source.NodeName, sourcePartsCount));
 
-		//	int maxLinks = 40;
+			foreach (var group in groupBySources)
+			{
+				string groupName = group.Key;
+
+				var groupedTargets = group.GroupBy(l => GetName(l.Target.NodeName, targetPartsCount));
+
+				tip += $"\n  {groupName} ({group.Count()}):";
+				foreach (var reference in groupedTargets)
+				{
+					tip += $"\n     -> {reference.Key} ({reference.Count()})";
+					count++;
+				}
+			}
+
+			tip = $"{NodeLinks.Count} links, splits into {count} links:"  + tip;
+			//int maxLinks = 40;
+			//tip += $"\n";
 
 			//foreach (Link reference in NodeLinks.Take(maxLinks))
 			//{
@@ -95,6 +127,12 @@ namespace Dependiator.Modeling
 			//}
 
 			return tip;
+		}
+
+
+		string GetName(string fullname, int parts)
+		{
+			return string.Join(".", fullname.Split(Separator).Take(parts));
 		}
 
 

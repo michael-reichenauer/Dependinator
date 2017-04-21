@@ -29,7 +29,7 @@
 				<virtualCanvas:ZoomableCanvas
 					Loaded="ZoomableCanvas_Loaded"
 					RealizationLimit="500"
-					RealizationRate="10"
+					RealizationRate="100"
 					RealizationPriority="Background"
 					ApplyTransform="false" />
 			</ItemsPanelTemplate>

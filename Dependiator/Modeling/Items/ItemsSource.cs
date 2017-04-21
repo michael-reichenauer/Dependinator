@@ -16,27 +16,17 @@ namespace Dependiator.Modeling.Items
 		private readonly Dictionary<int, IItem> viewItems = new Dictionary<int, IItem>();
 		private readonly Dictionary<int, IItem> removedItems = new Dictionary<int, IItem>();
 		public static int ItemCount = 0;
-		//private Rect lastViewArea = EmptyExtent;
+
 
 		private int currentItemId = 0;
 
-		private static int currentId = 0;
-		private int id = 0;
-
-	//	public event EventHandler ViewAreaChanged;
 
 		public Rect LastViewAreaQuery { get; private set; } = EmptyExtent;
 		
 
-		//	LastViewAreaQuery { get; set; }
-
-		//private Rect lastViewAreaQuery = EmptyExtent;
-
-
 		public ItemsSource(ItemsCanvas itemsCanvas)
 		{
 			this.itemsCanvas = itemsCanvas;
-			id = ++currentId;
 		}
 
 		public Rect TotalBounds { get; private set; } = EmptyExtent;
