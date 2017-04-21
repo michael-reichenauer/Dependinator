@@ -9,8 +9,6 @@ namespace Dependiator.Modeling
 {
 	internal class LinkSegment
 	{
-		private static readonly char[] Separator = ".".ToCharArray();
-
 		private readonly IItemService itemService;
 		private readonly List<Link> nodeLinks = new List<Link>();
 		private Rect itemBounds;
@@ -66,48 +64,44 @@ namespace Dependiator.Modeling
 
 		public string GetToolTip()
 		{
-			string source = Source.NodeName.ToString();
-			string[] sourceParts = source.Split(Separator);
-			string[] targetParts = Target.NodeName.ToString().Split(Separator);
-
+			
 			string tip = $"";
 
-			int sourcePartsCount = 0;
-			int targetPartsCount = 0;
+			int sourceLevel = 0;
+			int targetLevel = 0;
 			int count = 0;
 
 			if (Source.ParentNode == Target.ParentNode)
 			{
 				// Siblings
-				sourcePartsCount = sourceParts.Length + 1;
-				targetPartsCount = targetParts.Length + 1;
+				sourceLevel = Source.NodeName.GetLevelCount() + 1;
+				targetLevel = Target.NodeName.GetLevelCount() + 1;
 
 			}
 			else if (Source == Target.ParentNode)
 			{
 				// Source is parent of target
-				sourcePartsCount = sourceParts.Length;
-				targetPartsCount = targetParts.Length + 1;
+				sourceLevel = Source.NodeName.GetLevelCount();
+				targetLevel = Target.NodeName.GetLevelCount() + 1;
 			}
 			else if (Source.ParentNode == Target)
 			{
 				// Source is child of target
-				sourcePartsCount = sourceParts.Length + 1;
-				targetPartsCount = targetParts.Length;
+				sourceLevel = Source.NodeName.GetLevelCount() + 1;
+				targetLevel = Target.NodeName.GetLevelCount();
 			}
 
-			var groupBySources = NodeLinks.GroupBy(l => GetName(l.Source.NodeName, sourcePartsCount));
+			var groupBySources = NodeLinks.GroupBy(l => l.Source.NodeName.GetLevelName(sourceLevel));
 
-			foreach (var group in groupBySources)
+			foreach (var sourceGroup in groupBySources)
 			{
-				string groupName = group.Key;
+				tip += $"\n  {sourceGroup.Key} ({sourceGroup.Count()}):";
 
-				var groupedTargets = group.GroupBy(l => GetName(l.Target.NodeName, targetPartsCount));
+				var groupByTargets = sourceGroup.GroupBy(l => l.Target.NodeName.GetLevelName(targetLevel));
 
-				tip += $"\n  {groupName} ({group.Count()}):";
-				foreach (var reference in groupedTargets)
+				foreach (var targetGroup in groupByTargets)
 				{
-					tip += $"\n     -> {reference.Key} ({reference.Count()})";
+					tip += $"\n     -> {targetGroup.Key} ({targetGroup.Count()})";
 					count++;
 				}
 			}
@@ -130,12 +124,6 @@ namespace Dependiator.Modeling
 		}
 
 
-		string GetName(string fullname, int parts)
-		{
-			return string.Join(".", fullname.Split(Separator).Take(parts));
-		}
-
-
 		public Rect GetItemBounds()
 		{
 			if (!isUpdated)
@@ -154,6 +142,7 @@ namespace Dependiator.Modeling
 			return itemBounds;
 		}
 
+
 		public void Add(Link link)
 		{
 			if (nodeLinks.Any(l => l.Source == link.Source && l.Target == link.Target))
@@ -163,6 +152,9 @@ namespace Dependiator.Modeling
 
 			nodeLinks.Add(link);
 		}
+
+
+	
 
 		public void UpdateVisibility()
 		{

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Dependiator.Utils;
 
 
@@ -6,6 +7,8 @@ namespace Dependiator.Modeling
 {
 	internal class NodeName : Equatable<NodeName>
 	{
+		private static readonly char[] Separator = ".".ToCharArray();
+
 		public static NodeName Root = new NodeName("");
 
 		private readonly string fullName;
@@ -33,6 +36,14 @@ namespace Dependiator.Modeling
 		protected override bool IsEqual(NodeName other) => fullName == other.fullName;
 
 		protected override int GetHash() => fullName?.GetHashCode() ?? 0;
+
+		public int GetLevelCount() => fullName.Count(c => c == '.') + 1;
+
+
+		public string GetLevelName(int parts)
+		{
+			return string.Join(".", fullName.Split(Separator).Take(parts));
+		}
 
 
 		private string GetShortName()
