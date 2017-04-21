@@ -64,21 +64,12 @@ namespace Dependiator.Modeling
 
 		public string GetToolTip()
 		{
-			
 			string tip = $"";
 
-			int sourceLevel = 0;
-			int targetLevel = 0;
-			int count = 0;
+			int sourceLevel;
+			int targetLevel;
 
-			if (Source.ParentNode == Target.ParentNode)
-			{
-				// Siblings
-				sourceLevel = Source.NodeName.GetLevelCount() + 1;
-				targetLevel = Target.NodeName.GetLevelCount() + 1;
-
-			}
-			else if (Source == Target.ParentNode)
+			if (Source == Target.ParentNode)
 			{
 				// Source is parent of target
 				sourceLevel = Source.NodeName.GetLevelCount();
@@ -90,9 +81,16 @@ namespace Dependiator.Modeling
 				sourceLevel = Source.NodeName.GetLevelCount() + 1;
 				targetLevel = Target.NodeName.GetLevelCount();
 			}
+			else
+			{
+				// Siblings
+				sourceLevel = Source.NodeName.GetLevelCount() + 1;
+				targetLevel = Target.NodeName.GetLevelCount() + 1;
+			}
 
 			var groupBySources = NodeLinks.GroupBy(l => l.Source.NodeName.GetLevelName(sourceLevel));
 
+			int count = 0;
 			foreach (var sourceGroup in groupBySources)
 			{
 				tip += $"\n  {sourceGroup.Key} ({sourceGroup.Count()}):";
@@ -106,7 +104,7 @@ namespace Dependiator.Modeling
 				}
 			}
 
-			tip = $"{NodeLinks.Count} links, splits into {count} links:"  + tip;
+			tip = $"{NodeLinks.Count} links, splits into {count} links:" + tip;
 			//int maxLinks = 40;
 			//tip += $"\n";
 
@@ -154,7 +152,7 @@ namespace Dependiator.Modeling
 		}
 
 
-	
+
 
 		public void UpdateVisibility()
 		{
