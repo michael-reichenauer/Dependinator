@@ -63,16 +63,16 @@ namespace Dependiator.Modeling
 		public Point? PersistentOffset { get; set; }
 
 
-		public string DebugToolTip => "";
-			//$"\n Children: {ChildNodes.Count} Shown Items: {CountShowingNodes()}\n" +
-			//$"Items Scale: {ItemsScale:0.00}, Scalefactor: {ItemsScaleFactor:0.00}\n" +
-			//$"Offset: {ItemsOffset.TS()}, CanvasOffset: {ItemsCanvasOffset.TS()}\n" +
-			//$"Rect: {NodeBounds.TS()}\n" +
-			//$"Pos in parent coord: {ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location).TS()}\n"+
-			//$"Pos in child coord: {ParentNode?.itemsCanvas?.GetParentToChildCanvasPoint(ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location) ?? new Point(0, 0)).TS()}\n" +
-			//$"Visual area {itemsCanvas?.ViewArea.TS()}\n" +
-			//$"Recursive viewArea {itemsCanvas?.GetVisualAncestorsArea().TS()}\n\n" +
-			//$"Parent {ParentNode?.NodeName}:{ParentNode?.DebugToolTip}";
+		public string DebugToolTip =>
+			$"\n Children: {ChildNodes.Count} Shown Items: {CountShowingNodes()}\n" +
+			$"Items Scale: {ItemsScale:0.00}, Scalefactor: {ItemsScaleFactor:0.00}\n" +
+			$"Offset: {ItemsOffset.TS()}, CanvasOffset: {ItemsCanvasOffset.TS()}\n" +
+			$"Rect: {NodeBounds.TS()}\n" +
+			$"Pos in parent coord: {ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location).TS()}\n"+
+			$"Pos in child coord: {ParentNode?.itemsCanvas?.GetParentToChildCanvasPoint(ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location) ?? new Point(0, 0)).TS()}\n" +
+			$"Visual area {itemsCanvas?.ViewArea.TS()}\n" +
+			$"Recursive viewArea {itemsCanvas?.GetVisualAncestorsArea().TS()}\n\n" +
+			$"Parent {ParentNode?.NodeName}:{ParentNode?.DebugToolTip}";
 
 	
 		public bool CanShowNode() => IsVisibleAtScale(NodeScale);
