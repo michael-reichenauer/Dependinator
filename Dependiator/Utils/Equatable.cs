@@ -36,6 +36,18 @@ namespace Dependiator.Utils
 		public static bool operator !=(Equatable<T> obj1, Equatable<T> obj2) => !(obj1 == obj2);
 
 		public override int GetHashCode() => GetHash();
+
+
+		protected int GetCombinedHash(params object[] items)
+		{
+			int code = 0;
+			foreach (object item in items)
+			{
+				code += code * 17 + item.GetHashCode();
+			}
+
+			return code;
+		}
 	}
 
 

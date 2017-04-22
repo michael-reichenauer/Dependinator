@@ -28,6 +28,11 @@ namespace Dependiator.Modeling
 
 		public void Add(Link link)
 		{
+			if (links.Contains(link))
+			{
+				return;
+			}
+
 			links.Add(link);
 
 			// Start with first segment at the start of the segmented line 

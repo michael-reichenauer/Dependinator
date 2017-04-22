@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using Dependiator.Utils;
 
 
 namespace Dependiator.Modeling
 {
-	internal class LinkSegment
+	internal class LinkSegment : Equatable<LinkSegment>
 	{
 		private readonly IItemService itemService;
 		private readonly List<Link> nodeLinks = new List<Link>();
@@ -206,5 +207,11 @@ namespace Dependiator.Modeling
 
 
 		public override string ToString() => $"{Source} -> {Target}";
+
+		protected override bool IsEqual(LinkSegment other)
+			=> Source == other.Source && Target == other.Target;
+
+
+		protected override int GetHash() => GetCombinedHash(Source, Target);
 	}
 }

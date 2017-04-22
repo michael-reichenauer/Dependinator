@@ -10,7 +10,7 @@ using Dependiator.Utils;
 
 namespace Dependiator.Modeling
 {
-	internal class Node : IItemBounds
+	internal class Node : Equatable<Node>, IItemBounds
 	{
 		private const int InitialScaleFactor = 7;
 		private readonly IItemService itemService;
@@ -68,13 +68,13 @@ namespace Dependiator.Modeling
 			$"Items Scale: {ItemsScale:0.00}, Scalefactor: {ItemsScaleFactor:0.00}\n" +
 			$"Offset: {ItemsOffset.TS()}, CanvasOffset: {ItemsCanvasOffset.TS()}\n" +
 			$"Rect: {NodeBounds.TS()}\n" +
-			$"Pos in parent coord: {ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location).TS()}\n"+
+			$"Pos in parent coord: {ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location).TS()}\n" +
 			$"Pos in child coord: {ParentNode?.itemsCanvas?.GetParentToChildCanvasPoint(ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location) ?? new Point(0, 0)).TS()}\n" +
 			$"Visual area {itemsCanvas?.ViewArea.TS()}\n" +
 			$"Recursive viewArea {itemsCanvas?.GetVisualAncestorsArea().TS()}\n\n" +
 			$"Parent {ParentNode?.NodeName}:{ParentNode?.DebugToolTip}";
 
-	
+
 		public bool CanShowNode() => IsVisibleAtScale(NodeScale);
 
 
@@ -82,7 +82,7 @@ namespace Dependiator.Modeling
 		public void Show(ItemsCanvas rootItemsCanvas)
 		{
 			Asserter.Requires(IsRootNode);
-		
+
 			InitNodeTree(rootItemsCanvas);
 
 			UpdateNodeVisibility();
@@ -90,7 +90,7 @@ namespace Dependiator.Modeling
 
 
 		public void Zoom(double zoomFactor, Point? zoomCenter = null)
-		{		
+		{
 			if (IsMinZoomLimit(zoomFactor))
 			{
 				return;
@@ -172,7 +172,7 @@ namespace Dependiator.Modeling
 
 			viewModel.NotifyAll();
 
-		
+
 
 			if (isMove)
 			{
@@ -250,7 +250,7 @@ namespace Dependiator.Modeling
 			itemsCanvas.Move(viewOffset);
 
 			Links.ManagedSegments
-				.Where(segment=> segment.Source == this || segment.Target == this)
+				.Where(segment => segment.Source == this || segment.Target == this)
 				.ForEach(segment => segment.UpdateVisibility());
 
 			UpdateShownItemsInChildNodes();
@@ -261,10 +261,10 @@ namespace Dependiator.Modeling
 		{
 			double delta = (double)wheelDelta / 30;
 			double scaledDelta = delta / NodeScale;
-			
+
 			double width = NodeBounds.Size.Width + (2 * scaledDelta);
 			double height = NodeBounds.Size.Height + (2 * scaledDelta);
-		
+
 			if (width < 40 || height < 20)
 			{
 				return;
@@ -274,10 +274,10 @@ namespace Dependiator.Modeling
 			Point newLocation = new Point(NodeBounds.X - scaledDelta, NodeBounds.Y);
 			Size newItemSize = new Size(width, height);
 			NodeBounds = new Rect(newLocation, newItemSize);
-	
+
 			ParentNode.itemsCanvas.UpdateItem(viewModel);
 
-			viewModel.NotifyAll();	
+			viewModel.NotifyAll();
 
 			Zoom(zoomFactor);
 
@@ -387,7 +387,7 @@ namespace Dependiator.Modeling
 				});
 		}
 
-	
+
 
 		private void UpdateNodeVisibility()
 		{
@@ -416,7 +416,7 @@ namespace Dependiator.Modeling
 				var segmentsToHide = Links.ManagedSegments
 					.Where(segment => segment.ViewModel.CanShow && !segment.CanBeShown())
 					.Select(segment => segment.ViewModel);
-		
+
 
 				var itemsToShow = childrenToShow.Concat(segmentsToShow);
 				var itemsToHide = childrenToHide.Concat(segmentsToHide);
@@ -537,7 +537,7 @@ namespace Dependiator.Modeling
 				itemsCanvas.AddItems(itemViewModels);
 
 				ChildNodes.ForEach(childNode => childNode.InitNode());
-			}		
+			}
 		}
 
 
@@ -621,5 +621,10 @@ namespace Dependiator.Modeling
 				yield return descendent;
 			}
 		}
+
+
+		protected override bool IsEqual(Node other) => NodeName == other.NodeName;
+
+		protected override int GetHash() => NodeName.GetHashCode();
 	}
 }
