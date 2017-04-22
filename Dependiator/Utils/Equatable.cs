@@ -38,7 +38,7 @@ namespace Dependiator.Utils
 		public override int GetHashCode() => GetHash();
 
 
-		protected int GetCombinedHash(params object[] items)
+		protected int GetHashes(params object[] items)
 		{
 			int code = 0;
 			foreach (object item in items)

@@ -1,7 +1,7 @@
 ﻿using System.Windows.Controls;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Links
 {
 	/// <summary>
 	/// Interaction logic for LinkSegmentView.xaml

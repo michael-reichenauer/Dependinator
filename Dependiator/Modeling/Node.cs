@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
 using Dependiator.Modeling.Items;
+using Dependiator.Modeling.Links;
 using Dependiator.Utils;
 
 

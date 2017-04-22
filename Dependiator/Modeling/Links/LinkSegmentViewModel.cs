@@ -3,7 +3,7 @@ using System.Windows.Media;
 using Dependiator.Modeling.Items;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Links
 {
 	internal class LinkSegmentViewModel : ItemViewModel
 	{

@@ -6,7 +6,7 @@ using System.Windows.Media;
 using Dependiator.Utils;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Links
 {
 	internal class LinkSegment : Equatable<LinkSegment>
 	{
@@ -144,14 +144,11 @@ namespace Dependiator.Modeling
 
 		public void Add(Link link)
 		{
-			if (nodeLinks.Any(l => l.Source == link.Source && l.Target == link.Target))
+			if (!nodeLinks.Contains(link))
 			{
-				return;
-			}
-
-			nodeLinks.Add(link);
+				nodeLinks.Add(link);
+			}		
 		}
-
 
 
 
@@ -212,6 +209,6 @@ namespace Dependiator.Modeling
 			=> Source == other.Source && Target == other.Target;
 
 
-		protected override int GetHash() => GetCombinedHash(Source, Target);
+		protected override int GetHash() => GetHashes(Source, Target);
 	}
 }

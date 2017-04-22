@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Windows;
 using Dependiator.Common.ThemeHandling;
+using Dependiator.Modeling.Links;
 using Dependiator.Modeling.Serializing;
 
 

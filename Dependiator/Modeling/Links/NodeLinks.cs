@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Links
 {
 	internal class NodeLinks
 	{
