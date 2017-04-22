@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Dependiator.Utils;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Nodes
 {
 	internal class NodeComparer
 	{

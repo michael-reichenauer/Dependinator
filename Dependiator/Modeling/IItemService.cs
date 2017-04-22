@@ -1,5 +1,6 @@
 using System.Windows.Media;
 using Dependiator.Modeling.Links;
+using Dependiator.Modeling.Nodes;
 
 
 namespace Dependiator.Modeling

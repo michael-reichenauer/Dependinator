@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Dependiator.Modeling.Nodes;
 
 
 namespace Dependiator.Modeling.Links

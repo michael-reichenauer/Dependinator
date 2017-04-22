@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using Dependiator.Modeling.Nodes;
 using Dependiator.Modeling.Serializing;
 using Dependiator.Utils;
 

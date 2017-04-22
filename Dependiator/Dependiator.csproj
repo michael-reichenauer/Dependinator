@@ -132,35 +132,35 @@
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
     <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
-    <Compile Include="Modeling\IgnoreMouseWheelBehavior.cs" />
+    <Compile Include="Modeling\Nodes\IgnoreMouseWheelBehavior.cs" />
     <Compile Include="Modeling\Links\ILinkItemsService.cs" />
     <Compile Include="Modeling\IItemService.cs" />
     <Compile Include="Modeling\Items\IItemBounds.cs" />
     <Compile Include="Modeling\Items\ItemsCanvas.cs" />
     <Compile Include="Modeling\Analyzing\ReflectionService.cs" />
     <Compile Include="Modeling\Links\LinkItemsService.cs" />
-    <Compile Include="Modeling\SingleNodeView.xaml.cs">
+    <Compile Include="Modeling\Nodes\SingleNodeView.xaml.cs">
       <DependentUpon>SingleNodeView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Modeling\NodeName.cs" />
+    <Compile Include="Modeling\Nodes\NodeName.cs" />
     <Compile Include="Modeling\Model.cs" />
     <Compile Include="Modeling\Analyzing\IReflectionService.cs" />
     <Compile Include="Modeling\Links\Link.cs" />
     <Compile Include="Modeling\Links\NodeLinks.cs" />
-    <Compile Include="Modeling\NodeComparer.cs" />
-    <Compile Include="Modeling\NodesView.xaml.cs">
+    <Compile Include="Modeling\Nodes\NodeComparer.cs" />
+    <Compile Include="Modeling\Nodes\NodesView.xaml.cs">
       <DependentUpon>NodesView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Modeling\NodesViewModel.cs" />
-    <Compile Include="Modeling\NodeType.cs" />
-    <Compile Include="Modeling\CompositeNodeView.xaml.cs">
+    <Compile Include="Modeling\Nodes\NodesViewModel.cs" />
+    <Compile Include="Modeling\Nodes\NodeType.cs" />
+    <Compile Include="Modeling\Nodes\CompositeNodeView.xaml.cs">
       <DependentUpon>CompositeNodeView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Modeling\CompositeNodeViewModel.cs" />
-    <Compile Include="Modeling\SingleNodeViewModel.cs" />
+    <Compile Include="Modeling\Nodes\CompositeNodeViewModel.cs" />
+    <Compile Include="Modeling\Nodes\SingleNodeViewModel.cs" />
     <Compile Include="Modeling\Serializing\DataModel.cs" />
-    <Compile Include="Modeling\NodeService.cs" />
-    <Compile Include="Modeling\INodeService.cs" />
+    <Compile Include="Modeling\Nodes\NodeService.cs" />
+    <Compile Include="Modeling\Nodes\INodeService.cs" />
     <Compile Include="Modeling\Links\LinkSegment.cs" />
     <Compile Include="Modeling\Links\LinkSegmentView.xaml.cs">
       <DependentUpon>LinkSegmentView.xaml</DependentUpon>
@@ -168,7 +168,7 @@
     <Compile Include="Modeling\Links\LinkSegmentViewModel.cs" />
     <Compile Include="Modeling\ModelViewData.cs" />
     <Compile Include="Modeling\Items\ItemViewModel.cs" />
-    <Compile Include="Modeling\Node.cs" />
+    <Compile Include="Modeling\Nodes\Node.cs" />
     <Compile Include="Modeling\Items\IItem.cs" />
     <Compile Include="MainViews\Private\MainViewCommands.cs" />
     <Compile Include="Modeling\IModelService.cs" />
@@ -307,15 +307,15 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Modeling\SingleNodeView.xaml">
+    <Page Include="Modeling\Nodes\SingleNodeView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Modeling\NodesView.xaml">
+    <Page Include="Modeling\Nodes\NodesView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Modeling\CompositeNodeView.xaml">
+    <Page Include="Modeling\Nodes\CompositeNodeView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

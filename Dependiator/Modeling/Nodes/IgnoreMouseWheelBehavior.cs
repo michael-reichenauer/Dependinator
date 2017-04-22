@@ -3,7 +3,7 @@ using System.Windows.Input;
 using System.Windows.Interactivity;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Nodes
 {
 	/// <summary>
 	/// Captures and eats MouseWheel events so that a nested ListBox does not
@@ -29,8 +29,8 @@ namespace Dependiator.Modeling
 			var targetElement = e.OriginalSource as FrameworkElement;
 			var targetContext = targetElement?.DataContext as NodesViewModel;
 
-			var sourceElemnt = sender as FrameworkElement;
-			var sourceContext= sourceElemnt?.DataContext as NodesViewModel;
+			var sourceElement = sender as FrameworkElement;
+			var sourceContext= sourceElement?.DataContext as NodesViewModel;
 
 			if (sourceContext != null && sourceContext == targetContext)
 			{

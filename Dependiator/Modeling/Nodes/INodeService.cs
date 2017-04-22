@@ -1,7 +1,7 @@
 ﻿using Dependiator.Modeling.Serializing;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Nodes
 {
 	internal interface INodeService
 	{

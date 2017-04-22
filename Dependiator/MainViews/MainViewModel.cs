@@ -6,6 +6,7 @@ using Dependiator.Common.ProgressHandling;
 using Dependiator.Common.ThemeHandling;
 using Dependiator.Modeling;
 using Dependiator.Modeling.Items;
+using Dependiator.Modeling.Nodes;
 using Dependiator.Utils;
 using Dependiator.Utils.UI;
 

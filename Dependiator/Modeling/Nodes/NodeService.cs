@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Dependiator.Common.ThemeHandling;
 using Dependiator.Modeling.Links;
 using Dependiator.Modeling.Serializing;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Nodes
 {
 	internal class NodeService : INodeService
 	{

@@ -2,7 +2,7 @@ using Dependiator.Modeling.Serializing;
 using Dependiator.Utils;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Nodes
 {
 	internal class NodeType : Equatable<NodeType>
 	{

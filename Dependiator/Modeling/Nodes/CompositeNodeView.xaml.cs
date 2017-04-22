@@ -6,7 +6,7 @@ using System.Windows.Input;
 using Dependiator.Utils;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Nodes
 {
 	/// <summary>
 	/// Interaction logic for CompositeNodeView.xaml

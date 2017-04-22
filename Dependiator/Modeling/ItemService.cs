@@ -15,6 +15,7 @@ using System.Windows.Forms;
 using System.Windows.Media;
 using Dependiator.Common.ThemeHandling;
 using Dependiator.Modeling.Links;
+using Dependiator.Modeling.Nodes;
 
 
 namespace Dependiator.Modeling

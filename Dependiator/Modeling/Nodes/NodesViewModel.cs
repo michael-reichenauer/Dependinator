@@ -5,7 +5,7 @@ using Dependiator.Utils.UI;
 using Dependiator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Nodes
 {
 	internal class NodesViewModel : ViewModel
 	{

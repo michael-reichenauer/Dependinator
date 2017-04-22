@@ -4,6 +4,7 @@ using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
 using Dependiator.Modeling.Analyzing;
 using Dependiator.Modeling.Items;
+using Dependiator.Modeling.Nodes;
 using Dependiator.Modeling.Serializing;
 using Dependiator.Utils;
 
