@@ -1,4 +1,6 @@
 ﻿using System.Windows.Controls;
+using System.Windows.Input;
+using Dependiator.Modeling.Nodes;
 
 
 namespace Dependiator.Modeling.Links
@@ -11,6 +13,17 @@ namespace Dependiator.Modeling.Links
 		public LinkSegmentView()
 		{
 			InitializeComponent();
+		}
+
+
+
+		private void UIElement_OnMouseDown(object sender, MouseButtonEventArgs e)
+		{
+			if (e.ClickCount == 2 && DataContext is LinkSegmentViewModel viewModel)
+			{
+				viewModel.ToggleLine();
+				e.Handled = true;
+			}
 		}
 	}
 }

@@ -29,5 +29,8 @@ namespace Dependiator.Modeling.Links
 		public string ToolTip => linkSegment.GetToolTip();
 
 		public override string ToString() => linkSegment.ToString();
+
+
+		public void ToggleLine() => linkSegment.ToggleLine();
 	}
 }

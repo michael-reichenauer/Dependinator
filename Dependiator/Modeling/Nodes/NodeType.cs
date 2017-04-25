@@ -23,7 +23,5 @@ namespace Dependiator.Modeling.Nodes
 		public static implicit operator string(NodeType nodeType) => nodeType?.type;
 
 		protected override bool IsEqual(NodeType other) => type == other.type;
-
-		protected override int GetHash() => type?.GetHashCode() ?? 0;
 	}
 }

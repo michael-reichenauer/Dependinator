@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 
 
 namespace Dependiator.Utils
@@ -24,7 +25,13 @@ namespace Dependiator.Utils
 		// }
 		protected abstract bool IsEqual(T other);
 
-		protected abstract int GetHash();
+
+		protected virtual int GetHash()
+		{
+			throw new NotSupportedException(
+				$"To support GetHashCode() in {GetType()} for use in e.g. Dictionary,\n" +
+				"you need to implement/override GetHash() in {GetType()}");
+		}
 
 		public bool Equals(T other) => (other != null) && IsEqual(other);
 

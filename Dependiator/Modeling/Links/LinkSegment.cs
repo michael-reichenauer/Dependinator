@@ -15,6 +15,8 @@ namespace Dependiator.Modeling.Links
 		private readonly List<Link> nodeLinks = new List<Link>();
 		private Rect itemBounds;
 
+		private bool isEmpty = false;
+
 		private bool isUpdated = false;
 
 		public LinkSegment(
@@ -51,7 +53,8 @@ namespace Dependiator.Modeling.Links
 
 		public Node Owner { get; }
 
-		public Brush LinkBrush => Source == Target.ParentNode
+		public Brush LinkBrush => isEmpty ? Brushes.DimGray :
+			Source == Target.ParentNode
 			? Target.GetNodeBrush()
 			: Source.GetNodeBrush();
 
@@ -66,47 +69,16 @@ namespace Dependiator.Modeling.Links
 
 		public string GetToolTip()
 		{
-			string tip = $"";
-
-			int sourceLevel;
-			int targetLevel;
-
-			if (Source == Target.ParentNode)
+			IReadOnlyList<LinkGroup> linkGroups = GetLinkGroups();
+			string tip = "";
+		
+			foreach (var group in linkGroups)
 			{
-				// Source is parent of target
-				sourceLevel = Source.NodeName.GetLevelCount();
-				targetLevel = Target.NodeName.GetLevelCount() + 1;
-			}
-			else if (Source.ParentNode == Target)
-			{
-				// Source is child of target
-				sourceLevel = Source.NodeName.GetLevelCount() + 1;
-				targetLevel = Target.NodeName.GetLevelCount();
-			}
-			else
-			{
-				// Siblings
-				sourceLevel = Source.NodeName.GetLevelCount() + 1;
-				targetLevel = Target.NodeName.GetLevelCount() + 1;
+				tip += $"\n  {group.Source} -> {group.Target} ({group.Links.Count})";
 			}
 
-			var groupBySources = NodeLinks.GroupBy(l => l.Source.NodeName.GetLevelName(sourceLevel));
+			tip = $"{this} {NodeLinks.Count} links, splits into {linkGroups.Count} links:" + tip;
 
-			int count = 0;
-			foreach (var sourceGroup in groupBySources)
-			{
-				tip += $"\n  {sourceGroup.Key} ({sourceGroup.Count()}):";
-
-				var groupByTargets = sourceGroup.GroupBy(l => l.Target.NodeName.GetLevelName(targetLevel));
-
-				foreach (var targetGroup in groupByTargets)
-				{
-					tip += $"\n     -> {targetGroup.Key} ({targetGroup.Count()})";
-					count++;
-				}
-			}
-
-			tip = $"{NodeLinks.Count} links, splits into {count} links:" + tip;
 			//int maxLinks = 40;
 			//tip += $"\n";
 
@@ -120,8 +92,10 @@ namespace Dependiator.Modeling.Links
 			//	tip += "\n  ...";
 			//}
 
+
 			return tip;
 		}
+
 
 
 		public Rect GetItemBounds()
@@ -148,7 +122,7 @@ namespace Dependiator.Modeling.Links
 			if (!nodeLinks.Contains(link))
 			{
 				nodeLinks.Add(link);
-			}		
+			}
 		}
 
 
@@ -204,6 +178,27 @@ namespace Dependiator.Modeling.Links
 		}
 
 
+		public void ToggleLine()
+		{
+			IReadOnlyList<LinkGroup> linkGroups = GetLinkGroups();
+
+			foreach (LinkGroup group in linkGroups)
+			{
+				Node commonAncestor = group.Source.Ancestors()
+					.First(node => group.Target.Ancestors().Contains(node));
+
+				LinkSegment segment = new LinkSegment(
+					itemService, group.Source, group.Target, commonAncestor);
+				group.Links.ForEach(link => segment.Add(link));
+				
+				commonAncestor.AddOwnedSegment(segment);
+			}
+			ViewModel.StrokeDash = "2,2";
+			isEmpty = true;
+			UpdateVisibility();
+		}
+
+
 		public override string ToString() => $"{Source} -> {Target}";
 
 		protected override bool IsEqual(LinkSegment other)
@@ -211,5 +206,80 @@ namespace Dependiator.Modeling.Links
 
 
 		protected override int GetHash() => GetHashes(Source, Target);
+
+
+		private IReadOnlyList<LinkGroup> GetLinkGroups()
+		{
+			int sourceLevel = Source.Ancestors().Count();
+			int targetLevel = Target.Ancestors().Count();
+
+			if (Source == Target.ParentNode)
+			{
+				// Source is parent of target
+				targetLevel += 1;
+			}
+			else if (Source.ParentNode == Target)
+			{
+				// Source is child of target
+				sourceLevel += 1;
+			}
+			else
+			{
+				// Siblings
+				sourceLevel += 1;
+				targetLevel += 1;
+			}
+
+			var groupBySources = NodeLinks.GroupBy(l => NodeAtLevel(l.Source, sourceLevel));
+
+			List<LinkGroup> linkGroups = new List<LinkGroup>();
+			foreach (var sourceGroup in groupBySources)
+			{
+				var groupByTargets = sourceGroup.GroupBy(l => NodeAtLevel(l.Target, targetLevel));
+
+				foreach (var targetGroup in groupByTargets)
+				{
+					linkGroups.Add(new LinkGroup(sourceGroup.Key, targetGroup.Key, targetGroup.ToList()));
+				}
+			}
+
+			return linkGroups;
+		}
+
+
+		private static Node NodeAtLevel(Node node, int sourceLevel)
+		{
+			int count = 0;
+			Node current = null;
+			foreach (Node ancestor in node.AncestorsAndSelf().Reverse())
+			{
+				current = ancestor;
+				if (count++ == sourceLevel)
+				{
+					break;
+				}
+			}
+
+			return current;
+		}
+
+
+		private class LinkGroup
+		{
+			public LinkGroup(Node source, Node target, IReadOnlyList<Link> links)
+			{
+				Source = source;
+				Target = target;
+				Links = links;
+			}
+
+
+			public Node Source { get; }
+			public Node Target { get; }
+			public IReadOnlyList<Link> Links { get; }
+
+			public override string ToString() => $"{Source} -> {Target} ({Links.Count})";
+		}
+
 	}
 }

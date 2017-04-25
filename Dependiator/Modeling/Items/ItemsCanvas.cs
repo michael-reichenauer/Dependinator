@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
+using Dependiator.Modeling.Nodes;
 using Dependiator.Utils.UI.VirtualCanvas;
 
 
@@ -12,7 +13,7 @@ namespace Dependiator.Modeling.Items
 		private readonly IItemBounds itemBounds;
 
 		private readonly ItemsSource itemsSource;
-		private Nodes.NodesView view;
+		private NodesView view;
 		//private Vector relative = new Vector(0, 0);
 
 		private ZoomableCanvas zoomableCanvas;
@@ -143,9 +144,14 @@ namespace Dependiator.Modeling.Items
 		}
 
 
+		public Point GetDevicePoint()
+		{
+			return view.TranslatePoint(new Point(0, 0), Application.Current.MainWindow);
+		}
 
 
-		public void SetCanvas(ZoomableCanvas canvas, Nodes.NodesView nodesView)
+
+		public void SetCanvas(ZoomableCanvas canvas, NodesView nodesView)
 		{
 			view = nodesView;
 

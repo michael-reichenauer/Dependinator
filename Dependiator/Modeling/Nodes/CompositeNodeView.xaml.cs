@@ -33,11 +33,11 @@ namespace Dependiator.Modeling.Nodes
 				return;
 			}
 
-			CompositeNodeViewModel viewModel = DataContext as CompositeNodeViewModel;
-			if (viewModel == null)
+			if (!(DataContext is CompositeNodeViewModel viewModel))
 			{
 				return;
 			}
+			
 
 			int wheelDelta = e.Delta;
 			Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
@@ -58,8 +58,7 @@ namespace Dependiator.Modeling.Nodes
 
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
-			CompositeNodeViewModel viewModel = DataContext as CompositeNodeViewModel;
-			if (viewModel == null)
+			if (!(DataContext is CompositeNodeViewModel viewModel))
 			{
 				return;
 			}
@@ -95,14 +94,10 @@ namespace Dependiator.Modeling.Nodes
 
 		private void ToolTip_OnOpened(object sender, RoutedEventArgs e)
 		{
-			CompositeNodeViewModel viewModel = DataContext as CompositeNodeViewModel;
-			if (viewModel == null)
+			if (DataContext is CompositeNodeViewModel viewModel)
 			{
-				return;
+				viewModel.UpdateToolTip();
 			}
-
-			viewModel.UpdateToolTip();
-
 		}
 
 

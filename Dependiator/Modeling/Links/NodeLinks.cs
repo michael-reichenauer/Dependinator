@@ -9,13 +9,13 @@ namespace Dependiator.Modeling.Links
 	{
 		private readonly IItemService itemService;
 		private readonly List<Link> links = new List<Link>();
-		private readonly List<LinkSegment> managedSegments = new List<LinkSegment>();
+		private readonly List<LinkSegment> ownedSegments = new List<LinkSegment>();
 		private readonly List<LinkSegment> referencingSegments = new List<LinkSegment>();
 	
 
 		public IReadOnlyList<Link> Links => links;
 
-		public IReadOnlyList<LinkSegment> ManagedSegments => managedSegments;
+		public IReadOnlyList<LinkSegment> OwnedSegments => ownedSegments;
 
 		public IReadOnlyList<LinkSegment> ReferencingSegments => referencingSegments;
 
@@ -24,7 +24,13 @@ namespace Dependiator.Modeling.Links
 		{
 			this.itemService = itemService;
 		}
-		
+
+
+		public void AddDirectLink(Node groupSource, Node groupTarget, IReadOnlyList<Link> groupLinks)
+		{
+
+		}
+
 
 
 		public void Add(Link link)
@@ -71,25 +77,50 @@ namespace Dependiator.Modeling.Links
 		
 		private void AddSegment(Node source, Node target, Link link)
 		{
-			Node segmentManager = GetLinkSegmentManager(source, target);
+			Node segmentOwner = GetLinkSegmentOwner(source, target);
 
-			LinkSegment segment = segmentManager.Links.managedSegments
+			LinkSegment segment = segmentOwner.Links.ownedSegments
 				.FirstOrDefault(l => l.Source == source && l.Target == target);
 
 			if (segment == null)
 			{
-				segment = new LinkSegment(itemService, source, target, segmentManager);
+				segment = new LinkSegment(itemService, source, target, segmentOwner);
 
-				segmentManager.Links.managedSegments.Add(segment);
-				source.Links.referencingSegments.Add(segment);
-				target.Links.referencingSegments.Add(segment);
+				AddSegment(segment);
 			}
 
 			segment.Add(link);
+			link.Add(segment);
 		}
 
 
-		private static Node GetLinkSegmentManager(Node source, Node target)
+		private static void AddSegment(LinkSegment segment)
+		{
+			segment.Owner.Links.AddOwnedSegment(segment);
+			segment.Source.Links.AddReferencedSegment(segment);
+			segment.Target.Links.AddReferencedSegment(segment);
+		}
+
+
+		public void AddOwnedSegment(LinkSegment segment)
+		{
+			if (!ownedSegments.Contains(segment))
+			{
+				ownedSegments.Add(segment);
+			}
+		}
+
+
+		public void AddReferencedSegment(LinkSegment segment)
+		{
+			if (!referencingSegments.Contains(segment))
+			{
+				referencingSegments.Add(segment);
+			}
+		}
+
+
+		private static Node GetLinkSegmentOwner(Node source, Node target)
 		{
 			if (source == target.ParentNode)
 			{
@@ -105,6 +136,6 @@ namespace Dependiator.Modeling.Links
 
 
 
-		public override string ToString() => $"{managedSegments.Count} links";
+		public override string ToString() => $"{ownedSegments.Count} links";
 	}
 }
