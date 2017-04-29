@@ -13,7 +13,7 @@ namespace Dependiator.Modeling.Nodes
 	internal class Node : Equatable<Node>, IItemBounds
 	{
 		private const int InitialScaleFactor = 7;
-		private readonly INodeItemService nodeItemService;
+		private readonly INodeService nodeService;
 
 		private readonly List<Node> childNodes = new List<Node>();
 
@@ -28,18 +28,18 @@ namespace Dependiator.Modeling.Nodes
 
 
 		public Node(
-			INodeItemService nodeItemService,
-			ILinkItemService linkItemService,
+			INodeService nodeService,
+			ILinkService linkService,
 			Node parent,
 			NodeName name,
 			NodeType type)
 		{
-			this.nodeItemService = nodeItemService;
+			this.nodeService = nodeService;
 			ParentNode = parent;
 			NodeName = name;
 			NodeType = type;
 			PersistentNodeColor = null;
-			Links = new NodeLinks(linkItemService);
+			Links = new NodeLinks(linkService);
 		}
 
 
@@ -353,12 +353,12 @@ namespace Dependiator.Modeling.Nodes
 
 			if (PersistentNodeColor != null)
 			{
-				nodeBrush = nodeItemService.GetBrushFromHex(PersistentNodeColor);
+				nodeBrush = nodeService.GetBrushFromHex(PersistentNodeColor);
 			}
 			else
 			{
-				nodeBrush = nodeItemService.GetRandomRectangleBrush();
-				PersistentNodeColor = nodeItemService.GetHexColorFromBrush(nodeBrush);
+				nodeBrush = nodeService.GetRandomRectangleBrush();
+				PersistentNodeColor = nodeService.GetHexColorFromBrush(nodeBrush);
 			}
 
 			return nodeBrush;
@@ -368,7 +368,7 @@ namespace Dependiator.Modeling.Nodes
 		public Brush GetBackgroundNodeBrush()
 		{
 			Brush brush = GetNodeBrush();
-			return nodeItemService.GetRectangleBackgroundBrush(brush);
+			return nodeService.GetRectangleBackgroundBrush(brush);
 		}
 
 
@@ -538,7 +538,7 @@ namespace Dependiator.Modeling.Nodes
 		{
 			if (ChildNodes.Any())
 			{
-				nodeItemService.SetChildrenLayout(this);
+				nodeService.SetChildrenLayout(this);
 
 				var childViewModels = ChildNodes.Select(childNode => childNode.CreateViewModel());
 				var segmentViewModels = Links.OwnedSegments.Select(segment => segment.ViewModel);

@@ -17,7 +17,7 @@ namespace Dependiator.MainViews.Private
 	{
 		private readonly WorkingFolder workingFolder;
 		private readonly IReflectionService reflectionService;
-		private readonly INodeService nodeService;
+		private readonly IModelService modelService;
 		
 
 		private readonly IDataSerializer dataSerializer;
@@ -28,12 +28,12 @@ namespace Dependiator.MainViews.Private
 		public ModelViewService(
 			WorkingFolder workingFolder,
 			IReflectionService reflectionService,
-			INodeService nodeService,
+			IModelService modelService,
 			IDataSerializer dataSerializer)
 		{
 			this.workingFolder = workingFolder;
 			this.reflectionService = reflectionService;
-			this.nodeService = nodeService;
+			this.modelService = modelService;
 			this.dataSerializer = dataSerializer;
 		}
 
@@ -48,7 +48,7 @@ namespace Dependiator.MainViews.Private
 
 			t.Log($"Get data model {dataModel}");
 
-			model = nodeService.ToModel(dataModel, null);
+			model = modelService.ToModel(dataModel, null);
 
 			t.Log("To model");
 
@@ -101,7 +101,7 @@ namespace Dependiator.MainViews.Private
 			StoreViewSettings();
 			t.Log("stored setting");
 
-			ModelViewData modelViewData = nodeService.ToViewData(model);
+			ModelViewData modelViewData = modelService.ToViewData(model);
 			t.Log("Got current model data");
 
 			model = await RefreshElementTreeAsync(modelViewData);
@@ -154,7 +154,7 @@ namespace Dependiator.MainViews.Private
 			{
 				DataModel dataModel = reflectionService.Analyze(workingFolder.FilePath);
 
-				return nodeService.ToModel(dataModel, modelViewData);
+				return modelService.ToModel(dataModel, modelViewData);
 			});
 
 			return model;
@@ -178,7 +178,7 @@ namespace Dependiator.MainViews.Private
 		public void Close()
 		{
 			model.Root.UpdateAllNodesScalesBeforeClose();
-			DataModel dataModel = nodeService.ToDataModel(model);
+			DataModel dataModel = modelService.ToDataModel(model);
 			dataSerializer.Serialize(dataModel);
 
 			StoreViewSettings();

@@ -1,10 +1,12 @@
 using System.Windows;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Links
 {
 	internal class LinkSegmentLine
 	{
+		public static LinkSegmentLine Empty = new LinkSegmentLine(Rect.Empty, new Point(0, 0), new Point(0, 0));
+
 		public LinkSegmentLine(Rect itemBounds, Point source, Point target)
 		{
 			ItemBounds = itemBounds;

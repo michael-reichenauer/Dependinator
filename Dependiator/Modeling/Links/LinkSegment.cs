@@ -11,7 +11,7 @@ namespace Dependiator.Modeling.Links
 {
 	internal class LinkSegment : Equatable<LinkSegment>
 	{
-		private readonly ILinkItemService linkItemService;
+		private readonly ILinkService linkService;
 		private readonly List<Link> nodeLinks = new List<Link>();
 		private Rect itemBounds;
 
@@ -20,17 +20,17 @@ namespace Dependiator.Modeling.Links
 
 
 		public LinkSegment(
-			ILinkItemService linkItemService,
+			ILinkService linkService,
 			Node source,
 			Node target,
 			Node owner)
 		{
-			this.linkItemService = linkItemService;
+			this.linkService = linkService;
 			Owner = owner;
 			Source = source;
 			Target = target;
 
-			ViewModel = new LinkSegmentViewModel(linkItemService, this);
+			ViewModel = new LinkSegmentViewModel(linkService, this);
 		}
 
 
@@ -64,13 +64,8 @@ namespace Dependiator.Modeling.Links
 			if (!isUpdated)
 			{
 				isUpdated = true;
-
-				if (Source.NodeBounds == Rect.Empty || Target.NodeBounds == Rect.Empty)
-				{
-					return Rect.Empty;
-				}
-
-				LinkSegmentLine line = linkItemService.GetLinkSegmentLine(this);
+				
+				LinkSegmentLine line = linkService.GetLinkSegmentLine(this);
 				UpdateBounds(line);
 			}
 
@@ -109,17 +104,9 @@ namespace Dependiator.Modeling.Links
 		}
 
 
-		private void UpdateBounds(LinkSegmentLine line)
-		{
-			itemBounds = line.ItemBounds;
-			L1 = line.Source;
-			L2 = line.Target;
-		}
-
-
 		public void ToggleLine()
 		{
-			IReadOnlyList<LinkGroup> linkGroups = linkItemService.GetLinkGroups(this);
+			IReadOnlyList<LinkGroup> linkGroups = linkService.GetLinkGroups(this);
 
 			foreach (LinkGroup group in linkGroups)
 			{
@@ -127,14 +114,22 @@ namespace Dependiator.Modeling.Links
 					.First(node => group.Target.Ancestors().Contains(node));
 
 				LinkSegment segment = new LinkSegment(
-					linkItemService, group.Source, group.Target, commonAncestor);
+					linkService, group.Source, group.Target, commonAncestor);
 				group.Links.ForEach(link => segment.Add(link));
 				
 				commonAncestor.AddOwnedSegment(segment);
 			}
-			ViewModel.StrokeDash = "2,2";
+
 			IsEmpty = true;
 			UpdateVisibility();
+		}
+
+
+		private void UpdateBounds(LinkSegmentLine line)
+		{
+			itemBounds = line.ItemBounds;
+			L1 = line.Source;
+			L2 = line.Target;
 		}
 
 

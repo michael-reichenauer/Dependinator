@@ -1,14 +1,14 @@
-﻿using Dependiator.Modeling.Serializing;
+using System.Windows.Media;
 
 
 namespace Dependiator.Modeling.Nodes
 {
 	internal interface INodeService
 	{
-		Model ToModel(DataModel dataModel, ModelViewData modelViewData);
-
-		DataModel ToDataModel(Model elementTree);
-
-		ModelViewData ToViewData(Model elementTree);
+		Brush GetRandomRectangleBrush();
+		Brush GetRectangleBackgroundBrush(Brush brush);
+		Brush GetBrushFromHex(string hexColor);
+		string GetHexColorFromBrush(Brush brush);
+		void SetChildrenLayout(Node parent);
 	}
 }

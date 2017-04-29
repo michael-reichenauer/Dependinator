@@ -132,17 +132,15 @@
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
     <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
-    <Compile Include="Modeling\Links\ILinkItemService.cs" />
-    <Compile Include="Modeling\Links\LinkItemService.cs" />
-    <Compile Include="Modeling\LinkSegmentLine.cs" />
+    <Compile Include="Modeling\Links\ILinkService.cs" />
+    <Compile Include="Modeling\Links\LinkService.cs" />
+    <Compile Include="Modeling\Links\LinkSegmentLine.cs" />
     <Compile Include="Modeling\Links\LinkGroup.cs" />
     <Compile Include="Modeling\Nodes\IgnoreMouseWheelBehavior.cs" />
-    <Compile Include="Modeling\Links\ILinkItemsService.cs" />
-    <Compile Include="Modeling\Nodes\INodeItemService.cs" />
+    <Compile Include="Modeling\Nodes\INodeService.cs" />
     <Compile Include="Modeling\Items\IItemBounds.cs" />
     <Compile Include="Modeling\Items\ItemsCanvas.cs" />
     <Compile Include="Modeling\Analyzing\ReflectionService.cs" />
-    <Compile Include="Modeling\Links\LinkItemsService.cs" />
     <Compile Include="Modeling\Nodes\SingleNodeView.xaml.cs">
       <DependentUpon>SingleNodeView.xaml</DependentUpon>
     </Compile>
@@ -163,8 +161,8 @@
     <Compile Include="Modeling\Nodes\CompositeNodeViewModel.cs" />
     <Compile Include="Modeling\Nodes\SingleNodeViewModel.cs" />
     <Compile Include="Modeling\Serializing\DataModel.cs" />
-    <Compile Include="Modeling\Nodes\NodeService.cs" />
-    <Compile Include="Modeling\Nodes\INodeService.cs" />
+    <Compile Include="Modeling\ModelService.cs" />
+    <Compile Include="Modeling\IModelService.cs" />
     <Compile Include="Modeling\Links\LinkSegment.cs" />
     <Compile Include="Modeling\Links\LinkSegmentView.xaml.cs">
       <DependentUpon>LinkSegmentView.xaml</DependentUpon>
@@ -177,7 +175,7 @@
     <Compile Include="MainViews\Private\MainViewCommands.cs" />
     <Compile Include="MainViews\Private\IModelViewService.cs" />
     <Compile Include="MainViews\Private\ModelViewService.cs" />
-    <Compile Include="Modeling\Nodes\NodeItemService.cs" />
+    <Compile Include="Modeling\Nodes\NodeService.cs" />
     <Compile Include="Modeling\Serializing\Data.cs" />
     <Compile Include="Modeling\Serializing\DataSerializer.cs" />
     <Compile Include="Modeling\Serializing\IDataSerializer.cs" />
