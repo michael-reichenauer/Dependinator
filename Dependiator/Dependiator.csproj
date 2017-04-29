@@ -175,8 +175,8 @@
     <Compile Include="Modeling\Nodes\Node.cs" />
     <Compile Include="Modeling\Items\IItem.cs" />
     <Compile Include="MainViews\Private\MainViewCommands.cs" />
-    <Compile Include="Modeling\IModelService.cs" />
-    <Compile Include="Modeling\ModelService.cs" />
+    <Compile Include="MainViews\Private\IModelViewService.cs" />
+    <Compile Include="MainViews\Private\ModelViewService.cs" />
     <Compile Include="Modeling\Nodes\NodeItemService.cs" />
     <Compile Include="Modeling\Serializing\Data.cs" />
     <Compile Include="Modeling\Serializing\DataSerializer.cs" />

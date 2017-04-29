@@ -2,6 +2,7 @@
 using System.Windows;
 using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
+using Dependiator.Modeling;
 using Dependiator.Modeling.Analyzing;
 using Dependiator.Modeling.Items;
 using Dependiator.Modeling.Nodes;
@@ -9,10 +10,10 @@ using Dependiator.Modeling.Serializing;
 using Dependiator.Utils;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.MainViews.Private
 {
 	[SingleInstance]
-	internal class ModelService : IModelService
+	internal class ModelViewService : IModelViewService
 	{
 		private readonly WorkingFolder workingFolder;
 		private readonly IReflectionService reflectionService;
@@ -24,7 +25,7 @@ namespace Dependiator.Modeling
 
 		private Model model;
 
-		public ModelService(
+		public ModelViewService(
 			WorkingFolder workingFolder,
 			IReflectionService reflectionService,
 			INodeService nodeService,

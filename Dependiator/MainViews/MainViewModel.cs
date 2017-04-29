@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Threading;
 using Dependiator.Common.ProgressHandling;
 using Dependiator.Common.ThemeHandling;
+using Dependiator.MainViews.Private;
 using Dependiator.Modeling;
 using Dependiator.Modeling.Items;
 using Dependiator.Modeling.Nodes;
@@ -20,7 +21,7 @@ namespace Dependiator.MainViews
 
 		private readonly IThemeService themeService;
 
-		private readonly IModelService modelService;
+		private readonly IModelViewService modelViewService;
 		private readonly IProgressService progress;
 
 
@@ -32,11 +33,11 @@ namespace Dependiator.MainViews
 
 
 		public MainViewModel(
-			IModelService modelService,
+			IModelViewService modelViewService,
 			IThemeService themeService,
 			IProgressService progressService)
 		{
-			this.modelService = modelService;
+			this.modelViewService = modelViewService;
 			this.themeService = themeService;
 			this.progress = progressService;
 
@@ -59,7 +60,7 @@ namespace Dependiator.MainViews
 
 			using (progress.ShowDialog("Loading branch view ..."))
 			{		
-				modelService.InitModules(itemsCanvas);
+				modelViewService.InitModules(itemsCanvas);
 
 				LoadViewModel();
 				//Zoom(-120, new Point(1, 1), false);
@@ -72,14 +73,14 @@ namespace Dependiator.MainViews
 
 		public void Zoom(double zoom, Point viewPosition)
 		{
-			modelService.Zoom(zoom, viewPosition);
+			modelViewService.Zoom(zoom, viewPosition);
 		}
 
 
 		public bool MoveCanvas(Vector viewOffset)
 		{
 			
-			modelService.Move(viewOffset);
+			modelViewService.Move(viewOffset);
 			return true;
 		}
 
@@ -179,7 +180,7 @@ namespace Dependiator.MainViews
 		{
 			using (progress.ShowDialog("Refreshing view ..."))
 			{
-				await modelService.Refresh(itemsCanvas);
+				await modelViewService.Refresh(itemsCanvas);
 			}
 		}
 
@@ -310,7 +311,7 @@ namespace Dependiator.MainViews
 
 		public void ClosingWindow()
 		{
-			modelService.Close();
+			modelViewService.Close();
 		}
 	}
 }

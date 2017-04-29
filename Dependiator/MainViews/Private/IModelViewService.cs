@@ -3,9 +3,9 @@ using System.Windows;
 using Dependiator.Modeling.Items;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.MainViews.Private
 {
-	internal interface IModelService
+	internal interface IModelViewService
 	{
 		void InitModules(ItemsCanvas rootCanvas);
 
