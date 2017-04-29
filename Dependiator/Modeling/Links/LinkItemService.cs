@@ -1,87 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using System.Windows.Forms;
-using System.Windows.Media;
-using Dependiator.Common.ThemeHandling;
-using Dependiator.Modeling.Links;
 using Dependiator.Modeling.Nodes;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Links
 {
-	internal class ItemService : IItemService
+	internal class LinkItemService : ILinkItemService
 	{
-		private static readonly Size DefaultSize = new Size(200, 100);
-
-		private readonly IThemeService themeService;
-
-
-		public ItemService(
-			IThemeService themeService)
-		{
-			this.themeService = themeService;
-		}
-
-
-		public Brush GetRandomRectangleBrush()
-		{
-			return themeService.GetRectangleBrush();
-		}
-
-		public Brush GetBrushFromHex(string hexColor)
-		{
-			return themeService.GetBrushFromHex(hexColor);
-		}
-
-		public string GetHexColorFromBrush(Brush brush)
-		{
-			return themeService.GetHexColorFromBrush(brush);
-		}
-
-		public Brush GetRectangleBackgroundBrush(Brush brush)
-		{
-			return themeService.GetRectangleBackgroundBrush(brush);
-		}
-
-
-		public void SetChildrenLayout(Node parent)
-		{
-			int rowLength = 6;
-
-			int padding = 20;
-
-			double xMargin = 10;
-			double yMargin = 100;
-
-			int count = 0;
-			var children = parent.ChildNodes.OrderBy(child => child, NodeComparer.Comparer(parent));
-
-			foreach (Node childNode in children)
-			{
-				Size size;
-				Point location;
-
-				if (childNode.PersistentNodeBounds.HasValue)
-				{
-					size = childNode.PersistentNodeBounds.Value.Size;
-					location = childNode.PersistentNodeBounds.Value.Location;
-				}
-				else
-				{
-					size = DefaultSize;
-					double x = (count % rowLength) * (size.Width + padding) + xMargin;
-					double y = (count / rowLength) * (size.Height + padding) + yMargin;
-					location = new Point(x, y);
-				}
-
-				Rect bounds = new Rect(location, size);
-				childNode.NodeBounds = bounds;
-				count++;
-			}
-		}
-
-		public void UpdateLine(LinkSegment segment)
+		public LinkSegmentLine GetLinkSegmentLine(LinkSegment segment)
 		{
 			Node source = segment.Source;
 			Node target = segment.Target;
@@ -146,31 +74,91 @@ namespace Dependiator.Modeling
 			double width = Math.Abs(x2 - x1);
 			double height = Math.Abs(y2 - y1);
 
-			// Ensure the rect is at least big enough to contain the width of the line
+			// Ensure the rect is at least big enough to contain the width of the actual line
 			double margin = 5 / segment.Owner.ItemsScale;
-			double hm = margin / 2;
+			double halfMargin = margin / 2;
 			width = width + margin;
 			height = height + margin;
 
-			Rect lineBounds = new Rect(x - hm, y - hm, width, height);
+			Rect lineBounds = new Rect(x - halfMargin, y - halfMargin, width, height);
 
 			// Line drawing within the bounds
-			double lx1 = hm;
-			double ly1 = hm;
-			double lx2 = width - hm;
-			double ly2 = height - hm;
+			double lx1 = halfMargin;
+			double ly1 = halfMargin;
+			double lx2 = width - halfMargin;
+			double ly2 = height - halfMargin;
 
 			if (x1 <= x2 && y1 > y2 || x1 > x2 && y1 <= y2)
 			{
 				// Need to flip the line
-				ly1 = height - hm;
-				ly2 = hm;
+				ly1 = height - halfMargin;
+				ly2 = halfMargin;
 			}
 
 			Point l1 = new Point(lx1, ly1);
 			Point l2 = new Point(lx2, ly2);
 
-			segment.SetBounds(lineBounds, l1, l2);
+			return new LinkSegmentLine(lineBounds, l1, l2);
+		}
+
+
+		public IReadOnlyList<LinkGroup> GetLinkGroups(LinkSegment segment)
+		{
+			Node source = segment.Source;
+			Node target = segment.Target;
+			IReadOnlyList<Link> links = segment.NodeLinks;
+
+			int sourceLevel = source.Ancestors().Count();
+			int targetLevel = target.Ancestors().Count();
+
+			if (source == target.ParentNode)
+			{
+				// Source is parent of target
+				targetLevel += 1;
+			}
+			else if (source.ParentNode == target)
+			{
+				// Source is child of target
+				sourceLevel += 1;
+			}
+			else
+			{
+				// Siblings
+				sourceLevel += 1;
+				targetLevel += 1;
+			}
+
+			var groupBySources = links.GroupBy(l => NodeAtLevel(l.Source, sourceLevel));
+
+			List<LinkGroup> linkGroups = new List<LinkGroup>();
+			foreach (var sourceGroup in groupBySources)
+			{
+				var groupByTargets = sourceGroup.GroupBy(l => NodeAtLevel(l.Target, targetLevel));
+
+				foreach (var targetGroup in groupByTargets)
+				{
+					linkGroups.Add(new LinkGroup(sourceGroup.Key, targetGroup.Key, targetGroup.ToList()));
+				}
+			}
+
+			return linkGroups;
+		}
+
+
+		private static Node NodeAtLevel(Node node, int sourceLevel)
+		{
+			int count = 0;
+			Node current = null;
+			foreach (Node ancestor in node.AncestorsAndSelf().Reverse())
+			{
+				current = ancestor;
+				if (count++ == sourceLevel)
+				{
+					break;
+				}
+			}
+
+			return current;
 		}
 	}
 }

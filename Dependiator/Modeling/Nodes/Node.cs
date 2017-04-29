@@ -13,7 +13,7 @@ namespace Dependiator.Modeling.Nodes
 	internal class Node : Equatable<Node>, IItemBounds
 	{
 		private const int InitialScaleFactor = 7;
-		private readonly IItemService itemService;
+		private readonly INodeItemService nodeItemService;
 
 		private readonly List<Node> childNodes = new List<Node>();
 
@@ -28,17 +28,18 @@ namespace Dependiator.Modeling.Nodes
 
 
 		public Node(
-			IItemService itemService,
+			INodeItemService nodeItemService,
+			ILinkItemService linkItemService,
 			Node parent,
 			NodeName name,
 			NodeType type)
 		{
-			this.itemService = itemService;
+			this.nodeItemService = nodeItemService;
 			ParentNode = parent;
 			NodeName = name;
 			NodeType = type;
 			PersistentNodeColor = null;
-			Links = new NodeLinks(itemService);
+			Links = new NodeLinks(linkItemService);
 		}
 
 
@@ -64,6 +65,8 @@ namespace Dependiator.Modeling.Nodes
 
 		public Point GetChildToParentCanvasPoint(Point childPoint) => 
 			itemsCanvas.GetChildToParentCanvasPoint(childPoint);
+
+		private static bool IsVisibleAtScale(double scale) => scale > 0.15;
 
 		public string DebugToolTip =>
 			$"\n Children: {ChildNodes.Count} Shown Items: {CountShowingNodes()}\n" +
@@ -128,37 +131,40 @@ namespace Dependiator.Modeling.Nodes
 
 			if ((viewPosition2.HasValue || direction > 0) && !(isDoing && direction == 0))
 			{
-				Point p = new Point(viewPosition2.Value.X / NodeScale, viewPosition2.Value.Y / NodeScale);
-				double dist = 10 / NodeScale;
-				double dist2 = 5 / NodeScale;
+				if (direction > 0 || (direction == 0 && size.Width * NodeScale > 60 && size.Height * NodeScale > 30))
+				{
+					Point p = new Point(viewPosition2.Value.X / NodeScale, viewPosition2.Value.Y / NodeScale);
+					double dist = 10 / NodeScale;
+					double dist2 = 5 / NodeScale;
 
-				if (Math.Abs(p.X - 0) < dist || direction == 1)
-				{
-					newLocation = new Point(NodeBounds.Location.X + scaledOffset.X, NodeBounds.Location.Y);
-					size = new Size(size.Width - scaledOffset.X, size.Height);
-					direction = 1;
-					isMove = true;
-					move = new Vector(viewOffset.X, 0);
-				}
-				else if (Math.Abs(p.X - NodeBounds.Width) < dist || direction == 2)
-				{
-					newLocation = NodeBounds.Location;
-					size = new Size(size.Width + scaledOffset.X, size.Height);
-					direction = 2;
-				}
-				else if (Math.Abs(p.Y - 0) < dist2 || direction == 3)
-				{
-					newLocation = new Point(NodeBounds.Location.X, NodeBounds.Location.Y + scaledOffset.Y);
-					size = new Size(size.Width, size.Height - scaledOffset.Y);
-					direction = 3;
-					isMove = true;
-					move = new Vector(0, viewOffset.Y);
-				}
-				else if (Math.Abs(p.Y - NodeBounds.Height) < dist || direction == 4)
-				{
-					newLocation = NodeBounds.Location;
-					size = new Size(size.Width, size.Height + scaledOffset.Y);
-					direction = 4;
+					if (Math.Abs(p.X - 0) < dist || direction == 1)
+					{
+						newLocation = new Point(NodeBounds.Location.X + scaledOffset.X, NodeBounds.Location.Y);
+						size = new Size(size.Width - scaledOffset.X, size.Height);
+						direction = 1;
+						isMove = true;
+						move = new Vector(viewOffset.X, 0);
+					}
+					else if (Math.Abs(p.X - NodeBounds.Width) < dist || direction == 2)
+					{
+						newLocation = NodeBounds.Location;
+						size = new Size(size.Width + scaledOffset.X, size.Height);
+						direction = 2;
+					}
+					else if (Math.Abs(p.Y - 0) < dist2 || direction == 3)
+					{
+						newLocation = new Point(NodeBounds.Location.X, NodeBounds.Location.Y + scaledOffset.Y);
+						size = new Size(size.Width, size.Height - scaledOffset.Y);
+						direction = 3;
+						isMove = true;
+						move = new Vector(0, viewOffset.Y);
+					}
+					else if (Math.Abs(p.Y - NodeBounds.Height) < dist || direction == 4)
+					{
+						newLocation = NodeBounds.Location;
+						size = new Size(size.Width, size.Height + scaledOffset.Y);
+						direction = 4;
+					}
 				}
 			}
 
@@ -347,12 +353,12 @@ namespace Dependiator.Modeling.Nodes
 
 			if (PersistentNodeColor != null)
 			{
-				nodeBrush = itemService.GetBrushFromHex(PersistentNodeColor);
+				nodeBrush = nodeItemService.GetBrushFromHex(PersistentNodeColor);
 			}
 			else
 			{
-				nodeBrush = itemService.GetRandomRectangleBrush();
-				PersistentNodeColor = itemService.GetHexColorFromBrush(nodeBrush);
+				nodeBrush = nodeItemService.GetRandomRectangleBrush();
+				PersistentNodeColor = nodeItemService.GetHexColorFromBrush(nodeBrush);
 			}
 
 			return nodeBrush;
@@ -362,7 +368,7 @@ namespace Dependiator.Modeling.Nodes
 		public Brush GetBackgroundNodeBrush()
 		{
 			Brush brush = GetNodeBrush();
-			return itemService.GetRectangleBackgroundBrush(brush);
+			return nodeItemService.GetRectangleBackgroundBrush(brush);
 		}
 
 
@@ -371,7 +377,7 @@ namespace Dependiator.Modeling.Nodes
 			itemsCanvas.UpdateItem(itemViewModel);
 		}
 
-		private bool IsVisibleAtScale(double scale) => NodeBounds.Size.Width * scale > 40;
+		
 
 
 		private void UpdateShownItems()
@@ -414,11 +420,11 @@ namespace Dependiator.Modeling.Nodes
 					.ToList();
 
 				var segmentsToShow = Links.OwnedSegments
-					.Where(segment => !segment.ViewModel.CanShow && segment.CanBeShown())
+					.Where(segment => !segment.ViewModel.CanShow && segment.CanShowSegment())
 					.Select(segment => segment.ViewModel);
 
 				var segmentsToHide = Links.OwnedSegments
-					.Where(segment => segment.ViewModel.CanShow && !segment.CanBeShown())
+					.Where(segment => segment.ViewModel.CanShow && !segment.CanShowSegment())
 					.Select(segment => segment.ViewModel);
 
 
@@ -532,7 +538,7 @@ namespace Dependiator.Modeling.Nodes
 		{
 			if (ChildNodes.Any())
 			{
-				itemService.SetChildrenLayout(this);
+				nodeItemService.SetChildrenLayout(this);
 
 				var childViewModels = ChildNodes.Select(childNode => childNode.CreateViewModel());
 				var segmentViewModels = Links.OwnedSegments.Select(segment => segment.ViewModel);
@@ -591,7 +597,7 @@ namespace Dependiator.Modeling.Nodes
 		{
 			double newScale = itemsCanvas.Scale * zoomFactor;
 
-			return zoomFactor < 1 && !ChildNodes.Any(child => child.IsVisibleAtScale(newScale));
+			return zoomFactor < 1 && !IsVisibleAtScale(newScale);
 		}
 
 		public IEnumerable<Node> Ancestors()

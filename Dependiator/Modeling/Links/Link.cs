@@ -15,6 +15,7 @@ namespace Dependiator.Modeling.Links
 			Target = target;
 		}
 
+
 		public Node Source { get; }
 
 		public Node Target { get; }
@@ -28,6 +29,11 @@ namespace Dependiator.Modeling.Links
 			}
 		}
 
+
+		public void Remove(LinkSegment segment)
+		{
+			segments.Remove(segment);
+		}
 
 
 		protected override bool IsEqual(Link other) => Source == other.Source && Target == other.Target;

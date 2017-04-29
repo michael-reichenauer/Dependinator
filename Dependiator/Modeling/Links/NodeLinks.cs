@@ -7,7 +7,7 @@ namespace Dependiator.Modeling.Links
 {
 	internal class NodeLinks
 	{
-		private readonly IItemService itemService;
+		private readonly ILinkItemService linkItemService;
 		private readonly List<Link> links = new List<Link>();
 		private readonly List<LinkSegment> ownedSegments = new List<LinkSegment>();
 		private readonly List<LinkSegment> referencingSegments = new List<LinkSegment>();
@@ -20,9 +20,9 @@ namespace Dependiator.Modeling.Links
 		public IReadOnlyList<LinkSegment> ReferencingSegments => referencingSegments;
 
 
-		public NodeLinks(IItemService itemService)
+		public NodeLinks(ILinkItemService linkItemService)
 		{
-			this.itemService = itemService;
+			this.linkItemService = linkItemService;
 		}
 
 
@@ -84,7 +84,7 @@ namespace Dependiator.Modeling.Links
 
 			if (segment == null)
 			{
-				segment = new LinkSegment(itemService, source, target, segmentOwner);
+				segment = new LinkSegment(linkItemService, source, target, segmentOwner);
 
 				AddSegment(segment);
 			}

@@ -9,13 +9,14 @@ namespace Dependiator.Modeling.Nodes
 {
 	internal class NodeService : INodeService
 	{
-		private readonly IItemService itemService;
+		private readonly INodeItemService nodeItemService;
+		private readonly ILinkItemService linkItemService;
 
 
-
-		public NodeService(IItemService itemService)
+		public NodeService(INodeItemService nodeItemService, ILinkItemService linkItemService)
 		{
-			this.itemService = itemService;
+			this.nodeItemService = nodeItemService;
+			this.linkItemService = linkItemService;
 		}
 
 
@@ -43,7 +44,7 @@ namespace Dependiator.Modeling.Nodes
 
 		private Node CreateRootNode()
 		{
-			Node root = new Node(itemService, null, NodeName.Root, NodeType.NameSpaceType);
+			Node root = new Node(nodeItemService, linkItemService, null, NodeName.Root, NodeType.NameSpaceType);
 			return root;
 		}
 
@@ -246,7 +247,7 @@ namespace Dependiator.Modeling.Nodes
 				parentNode = CreateNode(parentName, model, modelViewData);
 			}
 
-			Node node = new Node(itemService, parentNode, nodeName, null);
+			Node node = new Node(nodeItemService, linkItemService,  parentNode, nodeName, null);
 
 			if (modelViewData != null && modelViewData.viewData.TryGetValue(
 				nodeName, out Data.ViewData viewData))

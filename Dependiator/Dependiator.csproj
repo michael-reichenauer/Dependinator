@@ -132,9 +132,13 @@
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
     <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
+    <Compile Include="Modeling\Links\ILinkItemService.cs" />
+    <Compile Include="Modeling\Links\LinkItemService.cs" />
+    <Compile Include="Modeling\LinkSegmentLine.cs" />
+    <Compile Include="Modeling\Links\LinkGroup.cs" />
     <Compile Include="Modeling\Nodes\IgnoreMouseWheelBehavior.cs" />
     <Compile Include="Modeling\Links\ILinkItemsService.cs" />
-    <Compile Include="Modeling\IItemService.cs" />
+    <Compile Include="Modeling\Nodes\INodeItemService.cs" />
     <Compile Include="Modeling\Items\IItemBounds.cs" />
     <Compile Include="Modeling\Items\ItemsCanvas.cs" />
     <Compile Include="Modeling\Analyzing\ReflectionService.cs" />
@@ -173,7 +177,7 @@
     <Compile Include="MainViews\Private\MainViewCommands.cs" />
     <Compile Include="Modeling\IModelService.cs" />
     <Compile Include="Modeling\ModelService.cs" />
-    <Compile Include="Modeling\ItemService.cs" />
+    <Compile Include="Modeling\Nodes\NodeItemService.cs" />
     <Compile Include="Modeling\Serializing\Data.cs" />
     <Compile Include="Modeling\Serializing\DataSerializer.cs" />
     <Compile Include="Modeling\Serializing\IDataSerializer.cs" />

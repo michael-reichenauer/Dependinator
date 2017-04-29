@@ -11,27 +11,30 @@ namespace Dependiator.Modeling.Links
 {
 	internal class LinkSegment : Equatable<LinkSegment>
 	{
-		private readonly IItemService itemService;
+		private readonly ILinkItemService linkItemService;
 		private readonly List<Link> nodeLinks = new List<Link>();
 		private Rect itemBounds;
 
-		private bool isEmpty = false;
 
 		private bool isUpdated = false;
 
+
 		public LinkSegment(
-			IItemService itemService,
+			ILinkItemService linkItemService,
 			Node source,
 			Node target,
 			Node owner)
 		{
-			this.itemService = itemService;
+			this.linkItemService = linkItemService;
 			Owner = owner;
 			Source = source;
 			Target = target;
 
-			ViewModel = new LinkSegmentViewModel(this);
+			ViewModel = new LinkSegmentViewModel(linkItemService, this);
 		}
+
+
+		public bool IsEmpty { get; private set; }
 
 
 		public LinkSegmentViewModel ViewModel { get; }
@@ -42,8 +45,7 @@ namespace Dependiator.Modeling.Links
 		public Point L2 { get; private set; }
 
 
-
-		public double LinkScale => Owner.ItemsScale;
+		public double ItemsScale => Owner.ItemsScale;
 
 		public IReadOnlyList<Link> NodeLinks => nodeLinks;
 
@@ -53,49 +55,8 @@ namespace Dependiator.Modeling.Links
 
 		public Node Owner { get; }
 
-		public Brush LinkBrush => isEmpty ? Brushes.DimGray :
-			Source == Target.ParentNode
-			? Target.GetNodeBrush()
-			: Source.GetNodeBrush();
-
-
-		public double LineThickness => GetLineThickness();
-
-		public bool CanBeShown()
-		{
-			return (Source.CanShowNode() && Target.CanShowNode());
-		}
-
-
-		public string GetToolTip()
-		{
-			IReadOnlyList<LinkGroup> linkGroups = GetLinkGroups();
-			string tip = "";
-		
-			foreach (var group in linkGroups)
-			{
-				tip += $"\n  {group.Source} -> {group.Target} ({group.Links.Count})";
-			}
-
-			tip = $"{this} {NodeLinks.Count} links, splits into {linkGroups.Count} links:" + tip;
-
-			//int maxLinks = 40;
-			//tip += $"\n";
-
-			//foreach (Link reference in NodeLinks.Take(maxLinks))
-			//{
-			//	tip += $"\n  {reference}";
-			//}
-
-			//if (NodeLinks.Count > maxLinks)
-			//{
-			//	tip += "\n  ...";
-			//}
-
-
-			return tip;
-		}
-
+	
+		public bool CanShowSegment() => Source.CanShowNode() && Target.CanShowNode();
 
 
 		public Rect GetItemBounds()
@@ -109,8 +70,8 @@ namespace Dependiator.Modeling.Links
 					return Rect.Empty;
 				}
 
-				itemService.UpdateLine(this);
-
+				LinkSegmentLine line = linkItemService.GetLinkSegmentLine(this);
+				UpdateBounds(line);
 			}
 
 			return itemBounds;
@@ -130,7 +91,7 @@ namespace Dependiator.Modeling.Links
 		public void UpdateVisibility()
 		{
 			isUpdated = false;
-			if (CanBeShown())
+			if (CanShowSegment())
 			{
 				ViewModel.Show();
 				ViewModel.NotifyAll();
@@ -148,39 +109,17 @@ namespace Dependiator.Modeling.Links
 		}
 
 
-		private double GetLineThickness()
+		private void UpdateBounds(LinkSegmentLine line)
 		{
-			double scale = (Owner.ItemsScale).MM(0.1, 0.7);
-			double thickness;
-
-			if (NodeLinks.Count < 5)
-			{
-				thickness = 1;
-			}
-			else if (NodeLinks.Count < 15)
-			{
-				thickness = 2;
-			}
-			else
-			{
-				thickness = 3;
-			}
-
-			return thickness * scale;
-		}
-
-
-		public void SetBounds(Rect lineBounds, Point l1, Point l2)
-		{
-			itemBounds = lineBounds;
-			L1 = l1;
-			L2 = l2;
+			itemBounds = line.ItemBounds;
+			L1 = line.Source;
+			L2 = line.Target;
 		}
 
 
 		public void ToggleLine()
 		{
-			IReadOnlyList<LinkGroup> linkGroups = GetLinkGroups();
+			IReadOnlyList<LinkGroup> linkGroups = linkItemService.GetLinkGroups(this);
 
 			foreach (LinkGroup group in linkGroups)
 			{
@@ -188,13 +127,13 @@ namespace Dependiator.Modeling.Links
 					.First(node => group.Target.Ancestors().Contains(node));
 
 				LinkSegment segment = new LinkSegment(
-					itemService, group.Source, group.Target, commonAncestor);
+					linkItemService, group.Source, group.Target, commonAncestor);
 				group.Links.ForEach(link => segment.Add(link));
 				
 				commonAncestor.AddOwnedSegment(segment);
 			}
 			ViewModel.StrokeDash = "2,2";
-			isEmpty = true;
+			IsEmpty = true;
 			UpdateVisibility();
 		}
 
@@ -204,82 +143,6 @@ namespace Dependiator.Modeling.Links
 		protected override bool IsEqual(LinkSegment other)
 			=> Source == other.Source && Target == other.Target;
 
-
-		protected override int GetHash() => GetHashes(Source, Target);
-
-
-		private IReadOnlyList<LinkGroup> GetLinkGroups()
-		{
-			int sourceLevel = Source.Ancestors().Count();
-			int targetLevel = Target.Ancestors().Count();
-
-			if (Source == Target.ParentNode)
-			{
-				// Source is parent of target
-				targetLevel += 1;
-			}
-			else if (Source.ParentNode == Target)
-			{
-				// Source is child of target
-				sourceLevel += 1;
-			}
-			else
-			{
-				// Siblings
-				sourceLevel += 1;
-				targetLevel += 1;
-			}
-
-			var groupBySources = NodeLinks.GroupBy(l => NodeAtLevel(l.Source, sourceLevel));
-
-			List<LinkGroup> linkGroups = new List<LinkGroup>();
-			foreach (var sourceGroup in groupBySources)
-			{
-				var groupByTargets = sourceGroup.GroupBy(l => NodeAtLevel(l.Target, targetLevel));
-
-				foreach (var targetGroup in groupByTargets)
-				{
-					linkGroups.Add(new LinkGroup(sourceGroup.Key, targetGroup.Key, targetGroup.ToList()));
-				}
-			}
-
-			return linkGroups;
-		}
-
-
-		private static Node NodeAtLevel(Node node, int sourceLevel)
-		{
-			int count = 0;
-			Node current = null;
-			foreach (Node ancestor in node.AncestorsAndSelf().Reverse())
-			{
-				current = ancestor;
-				if (count++ == sourceLevel)
-				{
-					break;
-				}
-			}
-
-			return current;
-		}
-
-
-		private class LinkGroup
-		{
-			public LinkGroup(Node source, Node target, IReadOnlyList<Link> links)
-			{
-				Source = source;
-				Target = target;
-				Links = links;
-			}
-
-
-			public Node Source { get; }
-			public Node Target { get; }
-			public IReadOnlyList<Link> Links { get; }
-
-			public override string ToString() => $"{Source} -> {Target} ({Links.Count})";
-		}
-
+		protected override int GetHash() => GetHashes(Source, Target);	
 	}
 }
