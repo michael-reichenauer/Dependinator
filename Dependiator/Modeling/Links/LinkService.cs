@@ -32,48 +32,68 @@ namespace Dependiator.Modeling.Links
 
 		public LinkSegmentLine GetLinkSegmentLine(LinkSegment segment)
 		{
-			if (segment.Source.NodeBounds == Rect.Empty || segment.Target.NodeBounds == Rect.Empty)
+			if (!IsNodesInitialized(segment))
 			{
 				return LinkSegmentLine.Empty;
 			}
 
-			(Point p1, Point p2) = GetLineEndPoints(segment);
+			(Point p1, Point p2) = GetLinkSegmentEndPoints(segment);
 
+			// Ensure the rect is at least big enough to contain the width of the actual line
+			double margin = 2.5 / segment.ItemsScale;
+
+			Rect lineBounds = GetLineBounds(p1, p2, margin);
+
+			(Point l1, Point l2) = GetLineEndPoints(p1, p2, margin);
+
+			return new LinkSegmentLine(lineBounds, l1, l2);
+		}
+
+
+		private static (Point l1, Point l2) GetLineEndPoints(Point p1, Point p2, double margin)
+		{
+			// Line drawing within the bounds
+			double width = Math.Abs(p2.X - p1.X);
+			double height = Math.Abs(p2.Y - p1.Y);
+
+
+			if (p1.X <= p2.X && p1.Y <= p2.Y )
+			{
+				return (new Point(margin, margin), new Point(width, height));
+			}
+			else if (p1.X > p2.X && p1.Y <= p2.Y)
+			{
+				return (new Point(width, margin), new Point(margin, height));
+			}
+			else if (p1.X <= p2.X && p1.Y > p2.Y)
+			{
+				return (new Point(margin, height), new Point(width, margin));
+			}
+			else
+			{
+				return (new Point(width, height), new Point(margin, margin));
+			}
+		}
+
+
+		private static Rect GetLineBounds(Point p1, Point p2, double margin)
+		{
 			// Line bounds:
 			double x = Math.Min(p1.X, p2.X);
 			double y = Math.Min(p1.Y, p2.Y);
 			double width = Math.Abs(p2.X - p1.X);
 			double height = Math.Abs(p2.Y - p1.Y);
 
-			// Ensure the rect is at least big enough to contain the width of the actual line
-			double margin = 5 / segment.Owner.ItemsScale;
-			double halfMargin = margin / 2;
-			width = width + margin;
-			height = height + margin;
+			x = x - margin;
+			y = y - margin;
+			width = width + margin * 2;
+			height = height + margin * 2;
 
-			Rect lineBounds = new Rect(x - halfMargin, y - halfMargin, width, height);
-
-			// Line drawing within the bounds
-			double lx1 = halfMargin;
-			double ly1 = halfMargin;
-			double lx2 = width - halfMargin;
-			double ly2 = height - halfMargin;
-
-			if (p1.X <= p2.X && p1.Y > p2.Y || p1.X > p2.X && p1.Y <= p2.Y)
-			{
-				// Need to flip the line
-				ly1 = height - halfMargin;
-				ly2 = halfMargin;
-			}
-
-			Point l1 = new Point(lx1, ly1);
-			Point l2 = new Point(lx2, ly2);
-
-			return new LinkSegmentLine(lineBounds, l1, l2);
+			return new Rect(x, y, width, height);
 		}
 
 
-		private static (Point source, Point target) GetLineEndPoints(LinkSegment segment)
+		private static (Point source, Point target) GetLinkSegmentEndPoints(LinkSegment segment)
 		{
 			Node source = segment.Source;
 			Node target = segment.Target;
@@ -105,26 +125,9 @@ namespace Dependiator.Modeling.Links
 			else if (source.ParentNode != target.ParentNode)
 			{
 				// Nodes are not direct siblings, need to use the common ancestor (owner)
-				Point sp = new Point(x1, y1);
-				foreach (Node ancestor in source.Ancestors())
-				{
-					sp = ancestor.GetChildToParentCanvasPoint(sp);
-					if (ancestor == segment.Owner)
-					{
-						break;
-					}
-				}
-
-				Point tp = new Point(x2, y2);
-				foreach (Node ancestor in target.Ancestors())
-				{
-					tp = ancestor.GetChildToParentCanvasPoint(tp);
-					if (ancestor == segment.Owner)
-					{
-						break;
-					}
-				}
-
+				Point sp = GetPointInAncestorPoint(segment, x1, y1, source);
+				Point tp = GetPointInAncestorPoint(segment, x2, y2, target);
+				
 				x1 = sp.X;
 				y1 = sp.Y;
 				x2 = tp.X;
@@ -133,6 +136,26 @@ namespace Dependiator.Modeling.Links
 
 			return (new Point(x1, y1), new Point(x2, y2));
 		}
+
+
+		private static Point GetPointInAncestorPoint(LinkSegment segment, double x, double y, Node node)
+		{
+			Point point = new Point(x, y);
+			foreach (Node ancestor in node.Ancestors())
+			{
+				point = ancestor.GetChildToParentCanvasPoint(point);
+				if (ancestor == segment.Owner)
+				{
+					break;
+				}
+			}
+
+			return point;
+		}
+
+
+		private static bool IsNodesInitialized(LinkSegment segment) =>
+			segment.Source.NodeBounds != Rect.Empty && segment.Target.NodeBounds != Rect.Empty;
 
 
 		/// <summary>
