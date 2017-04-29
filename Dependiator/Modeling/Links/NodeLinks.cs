@@ -11,7 +11,7 @@ namespace Dependiator.Modeling.Links
 		private readonly List<Link> links = new List<Link>();
 		private readonly List<LinkSegment> ownedSegments = new List<LinkSegment>();
 		private readonly List<LinkSegment> referencingSegments = new List<LinkSegment>();
-	
+
 
 		public IReadOnlyList<Link> Links => links;
 
@@ -32,7 +32,6 @@ namespace Dependiator.Modeling.Links
 		}
 
 
-
 		public void Add(Link link)
 		{
 			if (links.Contains(link))
@@ -42,55 +41,26 @@ namespace Dependiator.Modeling.Links
 
 			links.Add(link);
 
-			// Start with first segment at the start of the segmented line 
-			Node segmentSource = link.Source;
-
-			// Iterate segments until line end is reached
-			while (segmentSource != link.Target)
-			{
-				// Try to assume next segment target is a child node by searching if segment source
-				// is a ancestor of end target node
-				Node segmentTarget = link.Target.AncestorsAndSelf()
-					.FirstOrDefault(ancestor => ancestor.ParentNode == segmentSource);
-
-				if (segmentTarget == null)
-				{
-					// Segment target was not a child, lets try to assume target is a sibling node
-					segmentTarget = link.Target.AncestorsAndSelf()
-						.FirstOrDefault(ancestor => ancestor.ParentNode == segmentSource.ParentNode);
-				}
-
-				if (segmentTarget == null)
-				{
-					// Segment target was neither child nor a sibling, next segment target node must
-					// be the parent node
-					segmentTarget = segmentSource.ParentNode;
-				}
-
-				AddSegment(segmentSource, segmentTarget, link);
-
-				// Go to next segment in the line segments 
-				segmentSource = segmentTarget;
-			}
+			linkService
+				.GetLinkSegments(link)
+				.ForEach(segment => AddSegment(segment, link));
 		}
 
-		
-		private void AddSegment(Node source, Node target, Link link)
+
+
+		private static void AddSegment(LinkSegment segment, Link link)
 		{
-			Node segmentOwner = GetLinkSegmentOwner(source, target);
+			LinkSegment existingSegment =
+				segment.Owner.Links.ownedSegments.Find(s => s == segment);
 
-			LinkSegment segment = segmentOwner.Links.ownedSegments
-				.FirstOrDefault(l => l.Source == source && l.Target == target);
-
-			if (segment == null)
+			if (existingSegment == null)
 			{
-				segment = new LinkSegment(linkService, source, target, segmentOwner);
-
 				AddSegment(segment);
+				existingSegment = segment;
 			}
 
-			segment.Add(link);
-			link.Add(segment);
+			existingSegment.Add(link);
+			link.Add(existingSegment);
 		}
 
 

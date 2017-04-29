@@ -8,5 +8,6 @@ namespace Dependiator.Modeling.Links
 		LinkSegmentLine GetLinkSegmentLine(LinkSegment segment);
 		IReadOnlyList<LinkGroup> GetLinkGroups(LinkSegment segment);
 		double GetLineThickness(LinkSegment linkSegment);
+		IReadOnlyList<LinkSegment> GetLinkSegments(Link link);
 	}
 }

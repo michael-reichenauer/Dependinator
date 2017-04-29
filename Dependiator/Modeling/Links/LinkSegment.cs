@@ -56,7 +56,7 @@ namespace Dependiator.Modeling.Links
 		public Node Owner { get; }
 
 	
-		public bool CanShowSegment() => Source.CanShowNode() && Target.CanShowNode();
+		public bool CanShowSegment() => Source.CanShowNode() || Target.CanShowNode();
 
 
 		public Rect GetItemBounds()
