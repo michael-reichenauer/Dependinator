@@ -66,11 +66,11 @@ namespace Dependiator.Modeling.Links
 			double scale = (linkSegment.Owner.ItemsScale).MM(0.1, 0.7);
 			double thickness;
 
-			if (linkSegment.NodeLinks.Count < 5)
+			if (linkSegment.Links.Count < 5)
 			{
 				thickness = 1;
 			}
-			else if (linkSegment.NodeLinks.Count < 15)
+			else if (linkSegment.Links.Count < 15)
 			{
 				thickness = 2;
 			}
@@ -218,7 +218,7 @@ namespace Dependiator.Modeling.Links
 		{
 			Node source = segment.Source;
 			Node target = segment.Target;
-			IReadOnlyList<Link> links = segment.NodeLinks;
+			IReadOnlyList<Link> links = segment.Links;
 
 			(int sourceLevel, int targetLevel) = GetNodeLevels(source, target);
 

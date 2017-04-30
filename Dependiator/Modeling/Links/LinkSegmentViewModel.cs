@@ -55,7 +55,7 @@ namespace Dependiator.Modeling.Links
 				tip += $"\n  {group.Source} -> {group.Target} ({group.Links.Count})";
 			}
 
-			int linksCount = linkSegment.NodeLinks.Count;
+			int linksCount = linkSegment.Links.Count;
 			tip = $"{this} {linksCount} links:" + tip;
 
 			return tip;

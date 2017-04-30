@@ -43,12 +43,12 @@ namespace Dependiator.Modeling.Links
 
 			linkService
 				.GetLinkSegments(link)
-				.ForEach(segment => AddSegment(segment, link));
+				.ForEach(segment => AddSegmentLink(segment, link));
 		}
 
 
 
-		private static void AddSegment(LinkSegment segment, Link link)
+		private static void AddSegmentLink(LinkSegment segment, Link link)
 		{
 			LinkSegment existingSegment =
 				segment.Owner.Links.ownedSegments.Find(s => s == segment);
@@ -59,49 +59,31 @@ namespace Dependiator.Modeling.Links
 				existingSegment = segment;
 			}
 
-			existingSegment.Add(link);
-			link.Add(existingSegment);
+			existingSegment.TryAddLink(link);
+			link.TryAdd(existingSegment);
 		}
 
 
 		private static void AddSegment(LinkSegment segment)
 		{
-			segment.Owner.Links.AddOwnedSegment(segment);
-			segment.Source.Links.AddReferencedSegment(segment);
-			segment.Target.Links.AddReferencedSegment(segment);
+			segment.Owner.Links.TryAddOwnedSegment(segment);
+			segment.Source.Links.TryAddReferencedSegment(segment.Source, segment);
+			segment.Target.Links.TryAddReferencedSegment(segment.Target, segment);
 		}
 
 
-		public void AddOwnedSegment(LinkSegment segment)
+		public bool TryAddOwnedSegment(LinkSegment segment) => ownedSegments.TryAdd(segment);
+
+
+		public bool TryAddReferencedSegment(Node referencingNode, LinkSegment segment)
 		{
-			if (!ownedSegments.Contains(segment))
+			if (referencingSegments.TryAdd(segment))
 			{
-				ownedSegments.Add(segment);
+				segment.TryAddReferencingNode(referencingNode);
+				return true;
 			}
-		}
 
-
-		public void AddReferencedSegment(LinkSegment segment)
-		{
-			if (!referencingSegments.Contains(segment))
-			{
-				referencingSegments.Add(segment);
-			}
-		}
-
-
-		private static Node GetLinkSegmentOwner(Node source, Node target)
-		{
-			if (source == target.ParentNode)
-			{
-				// The target is the child of the target, let the source own the segment
-				return source;
-			}
-			else
-			{
-				// The target is either a sibling or a parent of the source, let the source parent own
-				return source.ParentNode;
-			}
+			return false;
 		}
 
 

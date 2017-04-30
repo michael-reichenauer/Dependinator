@@ -553,11 +553,11 @@ namespace Dependiator.Modeling.Nodes
 
 		public void AddOwnedSegment(LinkSegment segment)
 		{
-			Links.AddOwnedSegment(segment);
+			Links.TryAddOwnedSegment(segment);
 
-			segment.Source.AncestorsAndSelf().ForEach(node => node.Links.AddReferencedSegment(segment));
+			segment.Source.AncestorsAndSelf().ForEach(node => node.Links.TryAddReferencedSegment(node, segment));
 
-			segment.Target.AncestorsAndSelf().ForEach(node => node.Links.AddReferencedSegment(segment));
+			segment.Target.AncestorsAndSelf().ForEach(node => node.Links.TryAddReferencedSegment(node, segment));
 
 			itemsCanvas.AddItem(segment.ViewModel);
 			segment.UpdateVisibility();
@@ -610,6 +610,24 @@ namespace Dependiator.Modeling.Nodes
 				current = current.ParentNode;
 			}
 		}
+
+		//public IEnumerable<Node> Ancestors2()
+		//{
+		//	return Iterate(ParentNode, n => n != null, n => n.ParentNode);
+		//}
+
+		//public IEnumerable<Node> Iterate(
+		//	Node initial, Predicate<Node> predicate, Func<Node, Node> next)
+		//{
+		//	Node current = initial;
+
+		//	while (predicate(current))
+		//	{
+		//		yield return current;
+		//		current = next(current);
+		//	}
+		//}
+
 
 		public IEnumerable<Node> AncestorsAndSelf()
 		{

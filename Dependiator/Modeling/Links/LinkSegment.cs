@@ -12,7 +12,9 @@ namespace Dependiator.Modeling.Links
 	internal class LinkSegment : Equatable<LinkSegment>
 	{
 		private readonly ILinkService linkService;
-		private readonly List<Link> nodeLinks = new List<Link>();
+		private readonly List<Link> links = new List<Link>();
+		private readonly List<Node> referencingNodes = new List<Node>();
+
 		private Rect itemBounds;
 
 
@@ -47,7 +49,9 @@ namespace Dependiator.Modeling.Links
 
 		public double ItemsScale => Owner.ItemsScale;
 
-		public IReadOnlyList<Link> NodeLinks => nodeLinks;
+		public IReadOnlyList<Link> Links => links;
+
+		public IReadOnlyList<Node> ReferencingNodes => referencingNodes;
 
 		public Node Source { get; }
 
@@ -62,25 +66,18 @@ namespace Dependiator.Modeling.Links
 		public Rect GetItemBounds()
 		{
 			if (!isUpdated)
-			{
+			{							
+				UpdateSegmentLine();
 				isUpdated = true;
-				
-				LinkSegmentLine line = linkService.GetLinkSegmentLine(this);
-				UpdateBounds(line);
 			}
 
 			return itemBounds;
 		}
 
 
-		public void Add(Link link)
-		{
-			if (!nodeLinks.Contains(link))
-			{
-				nodeLinks.Add(link);
-			}
-		}
+		public bool TryAddLink(Link link) => links.TryAdd(link);
 
+		public bool TryAddReferencingNode(Node node) => referencingNodes.TryAdd(node);
 
 
 		public void UpdateVisibility()
@@ -106,27 +103,33 @@ namespace Dependiator.Modeling.Links
 
 		public void ToggleLine()
 		{
-			IReadOnlyList<LinkGroup> linkGroups = linkService.GetLinkGroups(this);
-
-			foreach (LinkGroup group in linkGroups)
+			if (!IsEmpty)
 			{
-				Node commonAncestor = group.Source.Ancestors()
-					.First(node => group.Target.Ancestors().Contains(node));
+				IReadOnlyList<LinkGroup> linkGroups = linkService.GetLinkGroups(this);
 
-				LinkSegment segment = new LinkSegment(
-					linkService, group.Source, group.Target, commonAncestor);
-				group.Links.ForEach(link => segment.Add(link));
-				
-				commonAncestor.AddOwnedSegment(segment);
+				foreach (LinkGroup group in linkGroups)
+				{
+					Node commonAncestor = group.Source.Ancestors()
+						.First(node => group.Target.Ancestors().Contains(node));
+
+					LinkSegment segment = new LinkSegment(
+						linkService, group.Source, group.Target, commonAncestor);
+					group.Links.ForEach(link => segment.TryAddLink(link));
+
+					commonAncestor.AddOwnedSegment(segment);
+				}
+
+				IsEmpty = true;
 			}
 
-			IsEmpty = true;
 			UpdateVisibility();
 		}
 
 
-		private void UpdateBounds(LinkSegmentLine line)
+		private void UpdateSegmentLine()
 		{
+			LinkSegmentLine line = linkService.GetLinkSegmentLine(this);
+
 			itemBounds = line.ItemBounds;
 			L1 = line.Source;
 			L2 = line.Target;

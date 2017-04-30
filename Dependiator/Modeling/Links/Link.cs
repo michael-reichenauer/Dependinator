@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Dependiator.Modeling.Nodes;
 using Dependiator.Utils;
 
@@ -21,19 +22,10 @@ namespace Dependiator.Modeling.Links
 		public Node Target { get; }
 
 
-		public void Add(LinkSegment segment)
-		{
-			if (!segments.Contains(segment))
-			{
-				segments.Add(segment);
-			}
-		}
+		public bool TryAdd(LinkSegment segment) => segments.TryAdd(segment);
 
 
-		public void Remove(LinkSegment segment)
-		{
-			segments.Remove(segment);
-		}
+		public bool Remove(LinkSegment segment) => segments.Remove(segment);
 
 
 		protected override bool IsEqual(Link other) => Source == other.Source && Target == other.Target;
