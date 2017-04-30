@@ -3,11 +3,11 @@ using System.Windows;
 
 namespace Dependiator.Modeling.Links
 {
-	internal class LinkSegmentLine
+	internal class LinkLineBounds
 	{
-		public static LinkSegmentLine Empty = new LinkSegmentLine(Rect.Empty, new Point(0, 0), new Point(0, 0));
+		public static LinkLineBounds Empty = new LinkLineBounds(Rect.Empty, new Point(0, 0), new Point(0, 0));
 
-		public LinkSegmentLine(Rect itemBounds, Point source, Point target)
+		public LinkLineBounds(Rect itemBounds, Point source, Point target)
 		{
 			ItemBounds = itemBounds;
 			Source = source;

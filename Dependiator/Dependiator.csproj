@@ -134,7 +134,7 @@
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
     <Compile Include="Modeling\Links\ILinkService.cs" />
     <Compile Include="Modeling\Links\LinkService.cs" />
-    <Compile Include="Modeling\Links\LinkSegmentLine.cs" />
+    <Compile Include="Modeling\Links\LinkLineBounds.cs" />
     <Compile Include="Modeling\Links\LinkGroup.cs" />
     <Compile Include="Modeling\Nodes\IgnoreMouseWheelBehavior.cs" />
     <Compile Include="Modeling\Nodes\INodeService.cs" />

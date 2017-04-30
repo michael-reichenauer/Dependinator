@@ -82,11 +82,11 @@ namespace Dependiator.Modeling.Links
 			return thickness * scale;
 		}
 
-		public LinkSegmentLine GetLinkSegmentLine(LinkSegment segment)
+		public LinkLineBounds GetLinkSegmentLine(LinkSegment segment)
 		{
 			if (!IsNodesInitialized(segment))
 			{
-				return LinkSegmentLine.Empty;
+				return LinkLineBounds.Empty;
 			}
 
 			(Point p1, Point p2) = GetLinkSegmentEndPoints(segment);
@@ -98,7 +98,7 @@ namespace Dependiator.Modeling.Links
 
 			(Point l1, Point l2) = GetLineEndPoints(p1, p2, margin);
 
-			return new LinkSegmentLine(lineBounds, l1, l2);
+			return new LinkLineBounds(lineBounds, l1, l2);
 		}
 
 

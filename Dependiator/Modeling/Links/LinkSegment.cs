@@ -141,11 +141,11 @@ namespace Dependiator.Modeling.Links
 
 		private void UpdateSegmentLine()
 		{
-			LinkSegmentLine line = linkService.GetLinkSegmentLine(this);
+			LinkLineBounds lineBounds = linkService.GetLinkSegmentLine(this);
 
-			itemBounds = line.ItemBounds;
-			L1 = line.Source;
-			L2 = line.Target;
+			itemBounds = lineBounds.ItemBounds;
+			L1 = lineBounds.Source;
+			L2 = lineBounds.Target;
 		}
 
 
