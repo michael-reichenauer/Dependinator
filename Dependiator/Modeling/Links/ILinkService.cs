@@ -5,9 +5,9 @@ namespace Dependiator.Modeling.Links
 {
 	internal interface ILinkService
 	{
-		LinkLineBounds GetLinkSegmentLine(LinkSegment segment);
-		IReadOnlyList<LinkGroup> GetLinkGroups(LinkSegment segment);
-		double GetLineThickness(LinkSegment linkSegment);
-		IReadOnlyList<LinkSegment> GetLinkSegments(Link link);
+		LinkLineBounds GetLinkLineBounds(LinkLine line);
+		IReadOnlyList<LinkGroup> GetLinkGroups(LinkLine line);
+		double GetLineThickness(LinkLine linkLine);
+		IReadOnlyList<LinkLine> GetLinkSegments(Link link);
 	}
 }

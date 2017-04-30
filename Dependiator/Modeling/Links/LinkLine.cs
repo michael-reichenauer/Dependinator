@@ -9,7 +9,7 @@ using Dependiator.Utils;
 
 namespace Dependiator.Modeling.Links
 {
-	internal class LinkSegment : Equatable<LinkSegment>
+	internal class LinkLine : Equatable<LinkLine>
 	{
 		private readonly ILinkService linkService;
 		private readonly List<Link> links = new List<Link>();
@@ -21,7 +21,7 @@ namespace Dependiator.Modeling.Links
 		private bool isUpdated = false;
 
 
-		public LinkSegment(
+		public LinkLine(
 			ILinkService linkService,
 			Node source,
 			Node target,
@@ -32,14 +32,14 @@ namespace Dependiator.Modeling.Links
 			Source = source;
 			Target = target;
 
-			ViewModel = new LinkSegmentViewModel(linkService, this);
+			ViewModel = new LinkLineViewModel(linkService, this);
 		}
 
 
 		public bool IsEmpty { get; private set; }
 
 
-		public LinkSegmentViewModel ViewModel { get; }
+		public LinkLineViewModel ViewModel { get; }
 
 
 		public Point L1 { get; private set; }
@@ -125,11 +125,11 @@ namespace Dependiator.Modeling.Links
 					Node commonAncestor = group.Source.Ancestors()
 						.First(node => group.Target.Ancestors().Contains(node));
 
-					LinkSegment segment = new LinkSegment(
+					LinkLine line = new LinkLine(
 						linkService, group.Source, group.Target, commonAncestor);
-					group.Links.ForEach(link => segment.TryAddLink(link));
+					group.Links.ForEach(link => line.TryAddLink(link));
 
-					commonAncestor.AddOwnedSegment(segment);
+					commonAncestor.AddOwnedLine(line);
 				}
 
 				IsEmpty = true;
@@ -141,7 +141,7 @@ namespace Dependiator.Modeling.Links
 
 		private void UpdateSegmentLine()
 		{
-			LinkLineBounds lineBounds = linkService.GetLinkSegmentLine(this);
+			LinkLineBounds lineBounds = linkService.GetLinkLineBounds(this);
 
 			itemBounds = lineBounds.ItemBounds;
 			L1 = lineBounds.Source;
@@ -151,7 +151,7 @@ namespace Dependiator.Modeling.Links
 
 		public override string ToString() => $"{Source} -> {Target}";
 
-		protected override bool IsEqual(LinkSegment other)
+		protected override bool IsEqual(LinkLine other)
 			=> Source == other.Source && Target == other.Target;
 
 		protected override int GetHash() => GetHashes(Source, Target);	

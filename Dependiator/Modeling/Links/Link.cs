@@ -8,7 +8,7 @@ namespace Dependiator.Modeling.Links
 {
 	internal class Link : Equatable<Link>
 	{
-		private readonly List<LinkSegment> segments = new List<LinkSegment>();
+		private readonly List<LinkLine> lines = new List<LinkLine>();
 
 		public Link(Node source, Node target)
 		{
@@ -22,10 +22,10 @@ namespace Dependiator.Modeling.Links
 		public Node Target { get; }
 
 
-		public bool TryAdd(LinkSegment segment) => segments.TryAdd(segment);
+		public bool TryAdd(LinkLine line) => lines.TryAdd(line);
 
 
-		public bool Remove(LinkSegment segment) => segments.Remove(segment);
+		public bool Remove(LinkLine line) => lines.Remove(line);
 
 
 		protected override bool IsEqual(Link other) => Source == other.Source && Target == other.Target;

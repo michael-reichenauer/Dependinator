@@ -6,11 +6,11 @@ using Dependiator.Modeling.Nodes;
 namespace Dependiator.Modeling.Links
 {
 	/// <summary>
-	/// Interaction logic for LinkSegmentView.xaml
+	/// Interaction logic for LinkLineView.xaml
 	/// </summary>
-	public partial class LinkSegmentView : UserControl
+	public partial class LinkLineView : UserControl
 	{
-		public LinkSegmentView()
+		public LinkLineView()
 		{
 			InitializeComponent();
 		}
@@ -19,7 +19,7 @@ namespace Dependiator.Modeling.Links
 
 		private void UIElement_OnMouseDown(object sender, MouseButtonEventArgs e)
 		{
-			if (e.ClickCount == 2 && DataContext is LinkSegmentViewModel viewModel)
+			if (e.ClickCount == 2 && DataContext is LinkLineViewModel viewModel)
 			{
 				viewModel.ToggleLine();
 				e.Handled = true;

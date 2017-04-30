@@ -133,6 +133,9 @@
     <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
     <Compile Include="Modeling\Links\ILinkService.cs" />
+    <Compile Include="Modeling\Links\LinkLineView.xaml.cs">
+      <DependentUpon>LinkLineView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Modeling\Links\LinkService.cs" />
     <Compile Include="Modeling\Links\LinkLineBounds.cs" />
     <Compile Include="Modeling\Links\LinkGroup.cs" />
@@ -163,11 +166,8 @@
     <Compile Include="Modeling\Serializing\DataModel.cs" />
     <Compile Include="Modeling\ModelService.cs" />
     <Compile Include="Modeling\IModelService.cs" />
-    <Compile Include="Modeling\Links\LinkSegment.cs" />
-    <Compile Include="Modeling\Links\LinkSegmentView.xaml.cs">
-      <DependentUpon>LinkSegmentView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Modeling\Links\LinkSegmentViewModel.cs" />
+    <Compile Include="Modeling\Links\LinkLine.cs" />
+    <Compile Include="Modeling\Links\LinkLineViewModel.cs" />
     <Compile Include="Modeling\ModelViewData.cs" />
     <Compile Include="Modeling\Items\ItemViewModel.cs" />
     <Compile Include="Modeling\Nodes\Node.cs" />
@@ -306,9 +306,9 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Page Include="Modeling\Links\LinkSegmentView.xaml">
-      <SubType>Designer</SubType>
+    <Page Include="Modeling\Links\LinkLineView.xaml">
       <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="Modeling\Nodes\SingleNodeView.xaml">
       <SubType>Designer</SubType>

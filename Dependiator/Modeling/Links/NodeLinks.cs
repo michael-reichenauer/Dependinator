@@ -9,15 +9,15 @@ namespace Dependiator.Modeling.Links
 	{
 		private readonly ILinkService linkService;
 		private readonly List<Link> links = new List<Link>();
-		private readonly List<LinkSegment> ownedSegments = new List<LinkSegment>();
-		private readonly List<LinkSegment> referencingSegments = new List<LinkSegment>();
+		private readonly List<LinkLine> ownedLines = new List<LinkLine>();
+		private readonly List<LinkLine> referencingLines = new List<LinkLine>();
 
 
 		public IReadOnlyList<Link> Links => links;
 
-		public IReadOnlyList<LinkSegment> OwnedSegments => ownedSegments;
+		public IReadOnlyList<LinkLine> OwnedLines => ownedLines;
 
-		public IReadOnlyList<LinkSegment> ReferencingSegments => referencingSegments;
+		public IReadOnlyList<LinkLine> ReferencingLines => referencingLines;
 
 
 		public NodeLinks(ILinkService linkService)
@@ -48,38 +48,38 @@ namespace Dependiator.Modeling.Links
 
 
 
-		private static void AddSegmentLink(LinkSegment segment, Link link)
+		private static void AddSegmentLink(LinkLine line, Link link)
 		{
-			LinkSegment existingSegment =
-				segment.Owner.Links.ownedSegments.Find(s => s == segment);
+			LinkLine existingLine =
+				line.Owner.Links.ownedLines.Find(s => s == line);
 
-			if (existingSegment == null)
+			if (existingLine == null)
 			{
-				AddSegment(segment);
-				existingSegment = segment;
+				AddLinkLine(line);
+				existingLine = line;
 			}
 
-			existingSegment.TryAddLink(link);
-			link.TryAdd(existingSegment);
+			existingLine.TryAddLink(link);
+			link.TryAdd(existingLine);
 		}
 
 
-		private static void AddSegment(LinkSegment segment)
+		private static void AddLinkLine(LinkLine line)
 		{
-			segment.Owner.Links.TryAddOwnedSegment(segment);
-			segment.Source.Links.TryAddReferencedSegment(segment.Source, segment);
-			segment.Target.Links.TryAddReferencedSegment(segment.Target, segment);
+			line.Owner.Links.TryAddOwnedLine(line);
+			line.Source.Links.TryAddReferencedLine(line.Source, line);
+			line.Target.Links.TryAddReferencedLine(line.Target, line);
 		}
 
 
-		public bool TryAddOwnedSegment(LinkSegment segment) => ownedSegments.TryAdd(segment);
+		public bool TryAddOwnedLine(LinkLine line) => ownedLines.TryAdd(line);
 
 
-		public bool TryAddReferencedSegment(Node referencingNode, LinkSegment segment)
+		public bool TryAddReferencedLine(Node referencingNode, LinkLine line)
 		{
-			if (referencingSegments.TryAdd(segment))
+			if (referencingLines.TryAdd(line))
 			{
-				segment.TryAddReferencingNode(referencingNode);
+				line.TryAddReferencingNode(referencingNode);
 				return true;
 			}
 
@@ -88,6 +88,6 @@ namespace Dependiator.Modeling.Links
 
 
 
-		public override string ToString() => $"{ownedSegments.Count} links";
+		public override string ToString() => $"{ownedLines.Count} links";
 	}
 }

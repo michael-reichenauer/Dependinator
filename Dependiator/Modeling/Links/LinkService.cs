@@ -10,17 +10,17 @@ namespace Dependiator.Modeling.Links
 	internal class LinkService : ILinkService
 	{
 
-		public IReadOnlyList<LinkSegment> GetLinkSegments(Link link)
+		public IReadOnlyList<LinkLine> GetLinkSegments(Link link)
 		{
-			List<LinkSegment> segments = new List<LinkSegment>();
+			List<LinkLine> segments = new List<LinkLine>();
 
-			// Start with first segment at the start of the segmented line 
+			// Start with first line at the start of the segmented line 
 			Node segmentSource = link.Source;
 
 			// Iterate segments until line end is reached
 			while (segmentSource != link.Target)
 			{
-				// Try to assume next segment target is a child node by searching if segment source
+				// Try to assume next line target is a child node by searching if line source
 				// is a ancestor of end target node
 				Node segmentTarget = link.Target.AncestorsAndSelf()
 					.FirstOrDefault(ancestor => ancestor.ParentNode == segmentSource);
@@ -34,16 +34,16 @@ namespace Dependiator.Modeling.Links
 
 				if (segmentTarget == null)
 				{
-					// Segment target was neither child nor a sibling, next segment target node must
+					// Segment target was neither child nor a sibling, next line target node must
 					// be the parent node
 					segmentTarget = segmentSource.ParentNode;
 				}
 
-				LinkSegment segment = GetSegment(segmentSource, segmentTarget, link);
+				LinkLine line = GetSegment(segmentSource, segmentTarget, link);
 
-				segments.Add(segment);
+				segments.Add(line);
 
-				// Go to next segment in the line segments 
+				// Go to next line in the line segments 
 				segmentSource = segmentTarget;
 			}
 
@@ -51,26 +51,26 @@ namespace Dependiator.Modeling.Links
 		}
 
 
-		private LinkSegment GetSegment(Node source, Node target, Link link)
+		private LinkLine GetSegment(Node source, Node target, Link link)
 		{
-			// The target is the child of the target, let the source own the segment otherwise
+			// The target is the child of the target, let the source own the line otherwise
 			// the target is either a sibling or a parent of the source, let the source parent own.
 			Node segmentOwner = source == target.ParentNode ? source : source.ParentNode;
 
-			return new LinkSegment(this, source, target, segmentOwner);
+			return new LinkLine(this, source, target, segmentOwner);
 		}
 
 
-		public double GetLineThickness(LinkSegment linkSegment)
+		public double GetLineThickness(LinkLine linkLine)
 		{
-			double scale = (linkSegment.Owner.ItemsScale).MM(0.1, 0.7);
+			double scale = (linkLine.Owner.ItemsScale).MM(0.1, 0.7);
 			double thickness;
 
-			if (linkSegment.Links.Count < 5)
+			if (linkLine.Links.Count < 5)
 			{
 				thickness = 1;
 			}
-			else if (linkSegment.Links.Count < 15)
+			else if (linkLine.Links.Count < 15)
 			{
 				thickness = 2;
 			}
@@ -82,17 +82,17 @@ namespace Dependiator.Modeling.Links
 			return thickness * scale;
 		}
 
-		public LinkLineBounds GetLinkSegmentLine(LinkSegment segment)
+		public LinkLineBounds GetLinkLineBounds(LinkLine line)
 		{
-			if (!IsNodesInitialized(segment))
+			if (!IsNodesInitialized(line))
 			{
 				return LinkLineBounds.Empty;
 			}
 
-			(Point p1, Point p2) = GetLinkSegmentEndPoints(segment);
+			(Point p1, Point p2) = GetLinkSegmentEndPoints(line);
 
 			// Ensure the rect is at least big enough to contain the width of the actual line
-			double margin = 2.5 / segment.ItemsScale;
+			double margin = 2.5 / line.ItemsScale;
 
 			Rect lineBounds = GetLineBounds(p1, p2, margin);
 
@@ -145,10 +145,10 @@ namespace Dependiator.Modeling.Links
 		}
 
 
-		private static (Point source, Point target) GetLinkSegmentEndPoints(LinkSegment segment)
+		private static (Point source, Point target) GetLinkSegmentEndPoints(LinkLine line)
 		{
-			Node source = segment.Source;
-			Node target = segment.Target;
+			Node source = line.Source;
+			Node target = line.Target;
 			Rect sourceBounds = source.NodeBounds;
 			Rect targetBounds = target.NodeBounds;
 
@@ -177,8 +177,8 @@ namespace Dependiator.Modeling.Links
 			else if (source.ParentNode != target.ParentNode)
 			{
 				// Nodes are not direct siblings, need to use the common ancestor (owner)
-				Point sp = GetPointInAncestorPoint(segment, x1, y1, source);
-				Point tp = GetPointInAncestorPoint(segment, x2, y2, target);
+				Point sp = GetPointInAncestorPoint(line, x1, y1, source);
+				Point tp = GetPointInAncestorPoint(line, x2, y2, target);
 				
 				x1 = sp.X;
 				y1 = sp.Y;
@@ -190,13 +190,13 @@ namespace Dependiator.Modeling.Links
 		}
 
 
-		private static Point GetPointInAncestorPoint(LinkSegment segment, double x, double y, Node node)
+		private static Point GetPointInAncestorPoint(LinkLine line, double x, double y, Node node)
 		{
 			Point point = new Point(x, y);
 			foreach (Node ancestor in node.Ancestors())
 			{
 				point = ancestor.GetChildToParentCanvasPoint(point);
-				if (ancestor == segment.Owner)
+				if (ancestor == line.Owner)
 				{
 					break;
 				}
@@ -206,19 +206,19 @@ namespace Dependiator.Modeling.Links
 		}
 
 
-		private static bool IsNodesInitialized(LinkSegment segment) =>
-			segment.Source.NodeBounds != Rect.Empty && segment.Target.NodeBounds != Rect.Empty;
+		private static bool IsNodesInitialized(LinkLine line) =>
+			line.Source.NodeBounds != Rect.Empty && line.Target.NodeBounds != Rect.Empty;
 
 
 		/// <summary>
-		/// Gets the links in the segment grouped first by source and then by target at the
+		/// Gets the links in the line grouped first by source and then by target at the
 		/// appropriate node levels.
 		/// </summary>
-		public IReadOnlyList<LinkGroup> GetLinkGroups(LinkSegment segment)
+		public IReadOnlyList<LinkGroup> GetLinkGroups(LinkLine line)
 		{
-			Node source = segment.Source;
-			Node target = segment.Target;
-			IReadOnlyList<Link> links = segment.Links;
+			Node source = line.Source;
+			Node target = line.Target;
+			IReadOnlyList<Link> links = line.Links;
 
 			(int sourceLevel, int targetLevel) = GetNodeLevels(source, target);
 

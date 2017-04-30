@@ -122,12 +122,12 @@
 						</Setter>
 					</DataTrigger>
 
-					<!-- LinkSegment -->
-					<DataTrigger Binding="{Binding Type}" Value="LinkSegmentViewModel">
+					<!-- Link Line -->
+					<DataTrigger Binding="{Binding Type}" Value="LinkLineViewModel">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate >
-									<links:LinkSegmentView />
+									<links:LinkLineView />
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>

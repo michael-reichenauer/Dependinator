@@ -106,9 +106,9 @@ namespace Dependiator.Modeling.Nodes
 
 			UpdateNodeVisibility();
 
-			Links.OwnedSegments
-				.Where(segment => segment.Source == this || segment.Target == this)
-				.ForEach(segment => segment.UpdateVisibility());
+			Links.OwnedLines
+				.Where(line => line.Source == this || line.Target == this)
+				.ForEach(line => line.UpdateVisibility());
 		}
 
 
@@ -177,7 +177,7 @@ namespace Dependiator.Modeling.Nodes
 
 			ParentNode.itemsCanvas.UpdateItem(viewModel);
 
-			Links.ReferencingSegments.ForEach(segment => segment.UpdateVisibility());
+			Links.ReferencingLines.ForEach(line => line.UpdateVisibility());
 
 			viewModel.NotifyAll();
 
@@ -239,7 +239,7 @@ namespace Dependiator.Modeling.Nodes
 
 			ParentNode.itemsCanvas.UpdateItem(viewModel);
 
-			Links.ReferencingSegments.ForEach(segment => segment.UpdateVisibility());
+			Links.ReferencingLines.ForEach(line => line.UpdateVisibility());
 
 			viewModel.NotifyAll();
 
@@ -258,9 +258,9 @@ namespace Dependiator.Modeling.Nodes
 
 			itemsCanvas.Move(viewOffset);
 
-			Links.OwnedSegments
-				.Where(segment => segment.Source == this || segment.Target == this)
-				.Concat(Links.ReferencingSegments.Where(segment => segment.Source != this && segment.Target != this))
+			Links.OwnedLines
+				.Where(line => line.Source == this || line.Target == this)
+				.Concat(Links.ReferencingLines.Where(line => line.Source != this && line.Target != this))
 				.ForEach(segment => segment.UpdateVisibility());
 
 			UpdateShownItemsInChildNodes();
@@ -293,9 +293,9 @@ namespace Dependiator.Modeling.Nodes
 
 			//MoveItems(new Vector(scaledDelta * NodeScale, 0));
 
-			//Links.OwnedSegments
-			//	.Where(segment => segment.Target == this)
-			//	.ForEach(segment => segment.UpdateVisibility());
+			//Links.OwnedLines
+			//	.Where(line => line.Target == this)
+			//	.ForEach(line => line.UpdateVisibility());
 		}
 
 
@@ -419,17 +419,17 @@ namespace Dependiator.Modeling.Nodes
 					.Where(child => child.viewModel.CanShow && child.viewModel.IsShowing && child.CanShowNode())
 					.ToList();
 
-				var segmentsToShow = Links.OwnedSegments
-					.Where(segment => !segment.ViewModel.CanShow && segment.CanShowSegment())
-					.Select(segment => segment.ViewModel);
+				var linesToShow = Links.OwnedLines
+					.Where(line => !line.ViewModel.CanShow && line.CanShowSegment())
+					.Select(line => line.ViewModel);
 
-				var segmentsToHide = Links.OwnedSegments
-					.Where(segment => segment.ViewModel.CanShow && !segment.CanShowSegment())
-					.Select(segment => segment.ViewModel);
+				var linesToHide = Links.OwnedLines
+					.Where(line => line.ViewModel.CanShow && !line.CanShowSegment())
+					.Select(line => line.ViewModel);
 
 
-				var itemsToShow = childrenToShow.Concat(segmentsToShow);
-				var itemsToHide = childrenToHide.Concat(segmentsToHide);
+				var itemsToShow = childrenToShow.Concat(linesToShow);
+				var itemsToHide = childrenToHide.Concat(linesToHide);
 
 				itemsToShow.ForEach(item => item.Show());
 				itemsToHide.ForEach(item => item.Hide());
@@ -444,7 +444,7 @@ namespace Dependiator.Modeling.Nodes
 				viewModel.NotifyAll();
 
 				childrenToUpdate.ForEach(child => child.UpdateNodeVisibility());
-				Links.OwnedSegments.ForEach(segment => segment.UpdateVisibility());
+				Links.OwnedLines.ForEach(line => line.UpdateVisibility());
 			}
 		}
 
@@ -515,7 +515,7 @@ namespace Dependiator.Modeling.Nodes
 				if (node.IsShowing)
 				{
 					count++;
-					count += node.Links.OwnedSegments.Count(l => l.ViewModel.IsShowing);
+					count += node.Links.OwnedLines.Count(l => l.ViewModel.IsShowing);
 					// Log.Debug($"  IsShowing {node}");
 					node.ChildNodes.ForEach(nodes.Push);
 				}
@@ -541,9 +541,9 @@ namespace Dependiator.Modeling.Nodes
 				nodeService.SetChildrenLayout(this);
 
 				var childViewModels = ChildNodes.Select(childNode => childNode.CreateViewModel());
-				var segmentViewModels = Links.OwnedSegments.Select(segment => segment.ViewModel);
+				var lineViewModels = Links.OwnedLines.Select(segment => segment.ViewModel);
 
-				var itemViewModels = segmentViewModels.Concat(childViewModels);
+				var itemViewModels = lineViewModels.Concat(childViewModels);
 				itemsCanvas.AddItems(itemViewModels);
 
 				ChildNodes.ForEach(childNode => childNode.InitNode());
@@ -551,16 +551,16 @@ namespace Dependiator.Modeling.Nodes
 		}
 
 
-		public void AddOwnedSegment(LinkSegment segment)
+		public void AddOwnedLine(LinkLine line)
 		{
-			Links.TryAddOwnedSegment(segment);
+			Links.TryAddOwnedLine(line);
 
-			segment.Source.AncestorsAndSelf().ForEach(node => node.Links.TryAddReferencedSegment(node, segment));
+			line.Source.AncestorsAndSelf().ForEach(node => node.Links.TryAddReferencedLine(node, line));
 
-			segment.Target.AncestorsAndSelf().ForEach(node => node.Links.TryAddReferencedSegment(node, segment));
+			line.Target.AncestorsAndSelf().ForEach(node => node.Links.TryAddReferencedLine(node, line));
 
-			itemsCanvas.AddItem(segment.ViewModel);
-			segment.UpdateVisibility();
+			itemsCanvas.AddItem(line.ViewModel);
+			line.UpdateVisibility();
 		}
 
 		private ItemViewModel CreateViewModel()
