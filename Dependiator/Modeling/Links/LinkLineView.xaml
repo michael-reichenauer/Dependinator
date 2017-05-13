@@ -27,8 +27,7 @@
 				X2="{Binding X2}"
 				Y2="{Binding Y2}"
 				Stroke="Transparent"
-				StrokeThickness="8"
-				StrokeDashArray="{Binding StrokeDash}"
+				StrokeThickness="10"
 				MouseDown="UIElement_OnMouseDown">
 
 				<Line.ToolTip>
