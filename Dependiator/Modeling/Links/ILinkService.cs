@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Dependiator.Modeling.Nodes;
 
 
 namespace Dependiator.Modeling.Links
@@ -8,6 +9,9 @@ namespace Dependiator.Modeling.Links
 		LinkLineBounds GetLinkLineBounds(LinkLine line);
 		IReadOnlyList<LinkGroup> GetLinkGroups(LinkLine line);
 		double GetLineThickness(LinkLine linkLine);
-		IReadOnlyList<LinkLine> GetLinkSegments(Link link);
+	
+		void AddLinkLines(Link link);
+		void ZoomInLinkLine(LinkLine linkLine);
+		void ZoomOutLinkLine(LinkLine linkLine);
 	}
 }

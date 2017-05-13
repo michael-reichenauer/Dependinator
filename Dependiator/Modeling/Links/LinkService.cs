@@ -9,10 +9,229 @@ namespace Dependiator.Modeling.Links
 {
 	internal class LinkService : ILinkService
 	{
-
-		public IReadOnlyList<LinkLine> GetLinkSegments(Link link)
+		public void AddLinkLines(Link link)
 		{
-			List<LinkLine> segments = new List<LinkLine>();
+			var linkSegments = GetNormalLinkSegments(link);
+
+			linkSegments.ForEach(AddNormalLinkSegment);
+			link.SetLinkSegments(linkSegments);
+		}
+
+
+		public void ZoomInLinkLine(LinkLine linkLine)
+		{
+			IReadOnlyList<Link> links = linkLine.Links.ToList();
+
+			foreach (Link link in links)
+			{
+				IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
+
+				var zoomedSegments = GetZoomedInReplacedSegments(currentLinkSegments, linkLine);
+
+				LinkSegment zoomedInSegment = GetZoomedInSegment(zoomedSegments, link);
+
+				var newSegments = GetNewLinkSegments(currentLinkSegments, zoomedInSegment);
+
+				var replacedLines = GetLines(link.Lines, zoomedSegments);
+
+				replacedLines.ForEach(line => HideLinkFromLine(line, link));
+
+				AddDirectLine(zoomedInSegment);
+
+				link.SetLinkSegments(newSegments);
+			}
+
+			linkLine.Owner.AncestorsAndSelf().Last().UpdateNodeVisibility();
+		}
+
+
+		public void ZoomOutLinkLine(LinkLine linkLine)
+		{
+			IReadOnlyList<Link> links = linkLine.HiddenLinks.ToList();
+			foreach (Link link in links)
+			{
+				IReadOnlyList<LinkSegment> normalLinkSegments = GetNormalLinkSegments(link);
+				IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
+
+				var zoomedSegments = GetZoomedInReplacedSegments(normalLinkSegments, linkLine);
+
+				LinkSegment zoomedInSegment = GetZoomedInSegment(zoomedSegments, link);
+				var replacedLines = GetLines(link.Lines, new [] { zoomedInSegment });
+				replacedLines.ForEach(line => HideLinkFromLine(line, link));
+
+				zoomedSegments.ForEach(segment => AddDirectLine(segment));
+
+				var newSegments = GetNewLinkSegments(currentLinkSegments, linkLine, zoomedSegments);
+				link.SetLinkSegments(newSegments);
+			}
+
+			linkLine.Owner.AncestorsAndSelf().Last().UpdateNodeVisibility();
+		}
+
+
+		
+
+		private static void HideLinkFromLine(LinkLine line, Link link)
+		{
+			line.HideLink(link);
+			link.Remove(line);
+			
+			if (!line.IsNormal && !line.Links.Any())
+			{
+				line.Owner.RemoveOwnedLineItem(line);
+				line.Owner.Links.RemoveOwnedLine(line);
+
+				line.Source.Links.RemoveReferencedLine(line);
+				line.Target.Links.RemoveReferencedLine(line);
+
+				line.Source.AncestorsAndSelf()
+					.TakeWhile(node => node != line.Owner)
+					.ForEach(node => node.Links.RemoveReferencedLine(line));
+
+				line.Target.AncestorsAndSelf()
+					.TakeWhile(node => node != line.Owner)
+					.ForEach(node => node.Links.RemoveReferencedLine(line));
+			}
+		}
+
+
+		private static IReadOnlyList<LinkLine> GetLines(
+			IReadOnlyList<LinkLine> linkLines, 
+			IReadOnlyList<LinkSegment> replacedSegments)
+		{
+			return replacedSegments
+				.Where(segment => linkLines.Any(
+					line => line.Source == segment.Source && line.Target == segment.Target))
+				.Select(segment => linkLines.First(
+					line => line.Source == segment.Source && line.Target == segment.Target))
+				.ToList();
+		}
+
+
+		private static IReadOnlyList<LinkSegment> GetZoomedInReplacedSegments(
+			IEnumerable<LinkSegment> linkSegments,
+			LinkLine linkLine)
+		{
+			Node source = linkLine.Source;
+			Node target = linkLine.Target;
+
+			// Get the segments that are one before the line and one after the line
+			return linkSegments
+				.SkipWhile(segment => segment.Source != source && segment.Target != source)
+				.TakeWhile(segment =>
+					segment.Target == source || segment.Source == source || segment.Source == target)
+				.ToList();
+		}
+
+
+		private static LinkSegment GetZoomedInSegment(
+			IReadOnlyList<LinkSegment> replacedSegments, Link link)
+		{
+			Node newSource = replacedSegments.First().Source;
+			Node newTarget = replacedSegments.Last().Target;
+
+			Node segmentOwner = newSource.AncestorsAndSelf()
+				.First(node => newTarget.AncestorsAndSelf().Contains(node));
+
+			return new LinkSegment(newSource, newTarget, segmentOwner, link);
+		}
+	
+
+		private void AddDirectLine(LinkSegment segment)
+		{
+			LinkLine existingLine = segment.Owner.Links.OwnedLines
+				.FirstOrDefault(line => line.Source == segment.Source && line.Target == segment.Target);
+
+			if (existingLine == null)
+			{
+				existingLine = new LinkLine(this, segment.Source, segment.Target, segment.Owner);
+				AddLinkLine(existingLine);
+
+				segment.Owner.AddOwnedLineItem(existingLine);
+
+				segment.Source.AncestorsAndSelf()
+					.TakeWhile(node => node != segment.Owner)
+					.ForEach(node => node.Links.TryAddReferencedLine(existingLine));
+				segment.Target.AncestorsAndSelf()
+					.TakeWhile(node => node != segment.Owner)
+					.ForEach(node => node.Links.TryAddReferencedLine(existingLine));
+			}
+
+			existingLine.TryAddLink(segment.Link);
+			segment.Link.TryAddLinkLine(existingLine);
+		}
+
+
+		private void AddNormalLinkSegment(LinkSegment segment)
+		{
+			LinkLine existingLine = segment.Owner.Links.OwnedLines
+				.FirstOrDefault(line => line.Source == segment.Source && line.Target == segment.Target);
+
+			if (existingLine == null)
+			{
+				existingLine = new LinkLine(this, segment.Source, segment.Target, segment.Owner);
+				AddLinkLine(existingLine);
+			}
+
+			existingLine.IsNormal = true;
+
+			existingLine.TryAddLink(segment.Link);
+			segment.Link.TryAddLinkLine(existingLine);
+		}
+
+
+		private static void AddLinkLine(LinkLine line)
+		{
+			line.Owner.Links.TryAddOwnedLine(line);
+			line.Source.Links.TryAddReferencedLine(line);
+			line.Target.Links.TryAddReferencedLine(line);
+		}
+
+
+
+		public IReadOnlyList<LinkSegment> GetNewLinkSegments(
+			IReadOnlyList<LinkSegment> linkSegments, LinkSegment newSegment)
+		{
+			// Get the segments that are before the new segment
+			IEnumerable<LinkSegment> preSegments = linkSegments
+				.TakeWhile(segment => segment.Source != newSegment.Source);
+
+			// Get the segments that are after the new segments
+			IEnumerable<LinkSegment> postSegments = linkSegments
+				.SkipWhile(segment => segment.Source != newSegment.Target);
+		
+			return
+				preSegments
+				.Concat(new[] { newSegment })
+				.Concat(postSegments)
+				.ToList();
+		}
+
+
+		public IReadOnlyList<LinkSegment> GetNewLinkSegments(
+			IReadOnlyList<LinkSegment> linkSegments, 
+			LinkLine linkLine, 
+			IReadOnlyList<LinkSegment> newSegments)
+		{
+			// Get the segments that are before the new segment
+			IEnumerable<LinkSegment> preSegments = linkSegments
+				.TakeWhile(segment => segment.Source != linkLine.Source);
+
+			// Get the segments that are after the new segments
+			IEnumerable<LinkSegment> postSegments = linkSegments
+				.SkipWhile(segment => segment.Source != linkLine.Target);
+
+			return
+				preSegments
+					.Concat(newSegments)
+					.Concat(postSegments)
+					.ToList();
+		}
+
+
+		private static IReadOnlyList<LinkSegment> GetNormalLinkSegments(Link link)
+		{
+			List<LinkSegment> segments = new List<LinkSegment>();
 
 			// Start with first line at the start of the segmented line 
 			Node segmentSource = link.Source;
@@ -39,9 +258,10 @@ namespace Dependiator.Modeling.Links
 					segmentTarget = segmentSource.ParentNode;
 				}
 
-				LinkLine line = GetSegment(segmentSource, segmentTarget, link);
+				Node segmentOwner = segmentSource == segmentTarget.ParentNode ? segmentSource : segmentSource.ParentNode;
+				LinkSegment segment = new LinkSegment(segmentSource, segmentTarget, segmentOwner, link);
 
-				segments.Add(line);
+				segments.Add(segment);
 
 				// Go to next line in the line segments 
 				segmentSource = segmentTarget;
@@ -51,14 +271,14 @@ namespace Dependiator.Modeling.Links
 		}
 
 
-		private LinkLine GetSegment(Node source, Node target, Link link)
-		{
-			// The target is the child of the target, let the source own the line otherwise
-			// the target is either a sibling or a parent of the source, let the source parent own.
-			Node segmentOwner = source == target.ParentNode ? source : source.ParentNode;
+		//private static LinkSegment GetSegment(Node source, Node target, Node segmentOwner, Link link)
+		//{		
+		//	// Segment owner is the first common ancestor of the source and target
+		//	Node segmentOwner = source.AncestorsAndSelf()
+		//		.First(node => target.AncestorsAndSelf().Contains(node));
 
-			return new LinkLine(this, source, target, segmentOwner);
-		}
+		//	return new LinkSegment(source, target, segmentOwner, link);
+		//}
 
 
 		public double GetLineThickness(LinkLine linkLine)

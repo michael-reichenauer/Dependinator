@@ -13,7 +13,8 @@ namespace Dependiator.Modeling.Links
 	{
 		private readonly ILinkService linkService;
 		private readonly List<Link> links = new List<Link>();
-		private readonly List<Node> referencingNodes = new List<Node>();
+		private readonly List<Link> hiddenLinks = new List<Link>();
+		
 
 		private Rect itemBounds;
 
@@ -35,8 +36,10 @@ namespace Dependiator.Modeling.Links
 			ViewModel = new LinkLineViewModel(linkService, this);
 		}
 
+		public bool IsNormal { get; set; }
 
-		public bool IsEmpty { get; private set; }
+		public bool IsEmpty => !links.Any();
+		public bool HasHidden => hiddenLinks.Any();
 
 
 		public LinkLineViewModel ViewModel { get; }
@@ -50,8 +53,8 @@ namespace Dependiator.Modeling.Links
 		public double ItemsScale => Owner.ItemsScale;
 
 		public IReadOnlyList<Link> Links => links;
+		public IReadOnlyList<Link> HiddenLinks => hiddenLinks;
 
-		public IReadOnlyList<Node> ReferencingNodes => referencingNodes;
 
 		public Node Source { get; }
 
@@ -88,9 +91,21 @@ namespace Dependiator.Modeling.Links
 		}
 
 
-		public bool TryAddLink(Link link) => links.TryAdd(link);
+		public bool TryAddLink(Link link)
+		{
+			hiddenLinks.Remove(link);
+			return links.TryAdd(link);
+		}
 
-		public bool TryAddReferencingNode(Node node) => referencingNodes.TryAdd(node);
+
+
+		public void HideLink(Link link)
+		{
+			if (links.Remove(link))
+			{
+				hiddenLinks.TryAdd(link);
+			}
+		}
 
 
 		public void UpdateVisibility()
@@ -118,25 +133,17 @@ namespace Dependiator.Modeling.Links
 		{
 			if (!IsEmpty)
 			{
-				IReadOnlyList<LinkGroup> linkGroups = linkService.GetLinkGroups(this);
-
-				foreach (LinkGroup group in linkGroups)
-				{
-					Node commonAncestor = group.Source.Ancestors()
-						.First(node => group.Target.Ancestors().Contains(node));
-
-					LinkLine line = new LinkLine(
-						linkService, group.Source, group.Target, commonAncestor);
-					group.Links.ForEach(link => line.TryAddLink(link));
-
-					commonAncestor.AddOwnedLine(line);
-				}
-
-				IsEmpty = true;
+				linkService.ZoomInLinkLine(this);	
+			}
+			else
+			{
+				linkService.ZoomOutLinkLine(this);
 			}
 
 			UpdateVisibility();
 		}
+
+
 
 
 		private void UpdateSegmentLine()
@@ -149,7 +156,7 @@ namespace Dependiator.Modeling.Links
 		}
 
 
-		public override string ToString() => $"{Source} -> {Target}";
+		public override string ToString() => $"{Source} -> {Target} ({links.Count})";
 
 		protected override bool IsEqual(LinkLine other)
 			=> Source == other.Source && Target == other.Target;

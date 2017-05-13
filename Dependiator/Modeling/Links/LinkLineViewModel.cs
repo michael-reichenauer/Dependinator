@@ -36,7 +36,7 @@ namespace Dependiator.Modeling.Links
 				: linkLine.Source.GetNodeBrush();
 
 		public Brush HoverBrush => Brushes.Transparent;
-		public string StrokeDash => linkLine.IsEmpty ? "2,2" : "";
+		public string StrokeDash => linkLine.HasHidden ? "2,2" : "";
 		public string ToolTip => GetToolTip();
 
 		public override string ToString() => linkLine.ToString();

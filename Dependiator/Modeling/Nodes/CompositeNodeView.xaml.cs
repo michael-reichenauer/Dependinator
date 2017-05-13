@@ -76,14 +76,12 @@ namespace Dependiator.Modeling.Nodes
 				Vector viewOffset = viewPosition - lastMousePosition;
 				e.Handled = true;
 
-				Log.Debug($"Move {viewOffset.TS()}");
 				viewModel.MoveNode(viewOffset, viewPosition2, isDoing);
 				isDoing = true;
 			}
 			else
 			{
 				// End of move
-				Log.Debug("Release");
 				isDoing = false;
 				ReleaseMouseCapture();
 			}

@@ -399,7 +399,7 @@ namespace Dependiator.Modeling.Nodes
 
 
 
-		private void UpdateNodeVisibility()
+		public void UpdateNodeVisibility()
 		{
 			IEnumerable<Node> childrenToUpdate = Enumerable.Empty<Node>();
 
@@ -551,17 +551,22 @@ namespace Dependiator.Modeling.Nodes
 		}
 
 
-		public void AddOwnedLine(LinkLine line)
+		public void AddOwnedLineItem(LinkLine line)
 		{
-			Links.TryAddOwnedLine(line);
-
-			line.Source.AncestorsAndSelf().ForEach(node => node.Links.TryAddReferencedLine(node, line));
-
-			line.Target.AncestorsAndSelf().ForEach(node => node.Links.TryAddReferencedLine(node, line));
-
-			itemsCanvas.AddItem(line.ViewModel);
-			line.UpdateVisibility();
+			if (itemsCanvas != null)
+			{
+				itemsCanvas.AddItem(line.ViewModel);
+			}
 		}
+
+		public void RemoveOwnedLineItem(LinkLine line)
+		{
+			if (itemsCanvas != null)
+			{
+				itemsCanvas.RemoveItem(line.ViewModel);
+			}
+		}
+
 
 		private ItemViewModel CreateViewModel()
 		{

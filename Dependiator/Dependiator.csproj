@@ -136,6 +136,7 @@
     <Compile Include="Modeling\Links\LinkLineView.xaml.cs">
       <DependentUpon>LinkLineView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Modeling\Links\LinkSegment.cs" />
     <Compile Include="Modeling\Links\LinkService.cs" />
     <Compile Include="Modeling\Links\LinkLineBounds.cs" />
     <Compile Include="Modeling\Links\LinkGroup.cs" />

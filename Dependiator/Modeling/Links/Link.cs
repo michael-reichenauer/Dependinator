@@ -9,6 +9,7 @@ namespace Dependiator.Modeling.Links
 	internal class Link : Equatable<Link>
 	{
 		private readonly List<LinkLine> lines = new List<LinkLine>();
+		private IReadOnlyList<LinkSegment> currentLinkSegments;
 
 		public Link(Node source, Node target)
 		{
@@ -21,8 +22,11 @@ namespace Dependiator.Modeling.Links
 
 		public Node Target { get; }
 
+		public IReadOnlyList<LinkLine> Lines => lines;
+		public IReadOnlyList<LinkSegment> LinkSegments => currentLinkSegments;
 
-		public bool TryAdd(LinkLine line) => lines.TryAdd(line);
+
+		public bool TryAddLinkLine(LinkLine line) => lines.TryAdd(line);
 
 
 		public bool Remove(LinkLine line) => lines.Remove(line);
@@ -31,5 +35,11 @@ namespace Dependiator.Modeling.Links
 		protected override bool IsEqual(Link other) => Source == other.Source && Target == other.Target;
 
 		public override string ToString() => $"{Source} -> {Target}";
+
+
+		public void SetLinkSegments(IReadOnlyList<LinkSegment> linkSegments)
+		{
+			currentLinkSegments = linkSegments;
+		}
 	}
 }

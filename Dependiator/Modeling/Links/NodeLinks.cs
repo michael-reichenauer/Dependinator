@@ -41,49 +41,20 @@ namespace Dependiator.Modeling.Links
 
 			links.Add(link);
 
-			linkService
-				.GetLinkSegments(link)
-				.ForEach(segment => AddSegmentLink(segment, link));
+			linkService.AddLinkLines(link);
 		}
-
-
-
-		private static void AddSegmentLink(LinkLine line, Link link)
-		{
-			LinkLine existingLine =
-				line.Owner.Links.ownedLines.Find(s => s == line);
-
-			if (existingLine == null)
-			{
-				AddLinkLine(line);
-				existingLine = line;
-			}
-
-			existingLine.TryAddLink(link);
-			link.TryAdd(existingLine);
-		}
-
-
-		private static void AddLinkLine(LinkLine line)
-		{
-			line.Owner.Links.TryAddOwnedLine(line);
-			line.Source.Links.TryAddReferencedLine(line.Source, line);
-			line.Target.Links.TryAddReferencedLine(line.Target, line);
-		}
-
+	
 
 		public bool TryAddOwnedLine(LinkLine line) => ownedLines.TryAdd(line);
 
+		public bool RemoveOwnedLine(LinkLine line) => ownedLines.Remove(line);
 
-		public bool TryAddReferencedLine(Node referencingNode, LinkLine line)
+		public bool RemoveReferencedLine(LinkLine line) => referencingLines.Remove(line);
+
+
+		public bool TryAddReferencedLine(LinkLine line)
 		{
-			if (referencingLines.TryAdd(line))
-			{
-				line.TryAddReferencingNode(referencingNode);
-				return true;
-			}
-
-			return false;
+			return referencingLines.TryAdd(line);
 		}
 
 
