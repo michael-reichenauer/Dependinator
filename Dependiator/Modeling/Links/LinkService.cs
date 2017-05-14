@@ -18,15 +18,15 @@ namespace Dependiator.Modeling.Links
 		}
 
 
-		public void ZoomInLinkLine(LinkLine linkLine)
+		public void ZoomInLinkLine(LinkLine line)
 		{
-			IReadOnlyList<Link> links = linkLine.Links.ToList();
+			IReadOnlyList<Link> links = line.Links.ToList();
 
 			foreach (Link link in links)
 			{
 				IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
 
-				var zoomedSegments = GetZoomedInReplacedSegments(currentLinkSegments, linkLine);
+				var zoomedSegments = GetZoomedInReplacedSegments(currentLinkSegments, line);
 
 				LinkSegment zoomedInSegment = GetZoomedInSegment(zoomedSegments, link);
 
@@ -34,14 +34,14 @@ namespace Dependiator.Modeling.Links
 
 				var replacedLines = GetLines(link.Lines, zoomedSegments);
 
-				replacedLines.ForEach(line => HideLinkFromLine(line, link));
+				replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
 
 				AddDirectLine(zoomedInSegment);
 
 				link.SetLinkSegments(newSegments);
 			}
 
-			linkLine.Owner.AncestorsAndSelf().Last().UpdateNodeVisibility();
+			line.Owner.RootNode.UpdateNodeVisibility();
 		}
 
 
@@ -61,7 +61,7 @@ namespace Dependiator.Modeling.Links
 
 				zoomedSegments.ForEach(segment => AddDirectLine(segment));
 
-				var newSegments = GetNewLinkSegments(currentLinkSegments, linkLine, zoomedSegments);
+				var newSegments = GetNewLinkSegments(currentLinkSegments, zoomedSegments);
 				link.SetLinkSegments(newSegments);
 			}
 
@@ -127,13 +127,13 @@ namespace Dependiator.Modeling.Links
 		private static LinkSegment GetZoomedInSegment(
 			IReadOnlyList<LinkSegment> replacedSegments, Link link)
 		{
-			Node newSource = replacedSegments.First().Source;
-			Node newTarget = replacedSegments.Last().Target;
+			Node source = replacedSegments.First().Source;
+			Node target = replacedSegments.Last().Target;
 
-			Node segmentOwner = newSource.AncestorsAndSelf()
-				.First(node => newTarget.AncestorsAndSelf().Contains(node));
+			Node segmentOwner = source.AncestorsAndSelf()
+				.First(node => target.AncestorsAndSelf().Contains(node));
 
-			return new LinkSegment(newSource, newTarget, segmentOwner, link);
+			return new LinkSegment(source, target, segmentOwner, link);
 		}
 	
 
@@ -210,16 +210,18 @@ namespace Dependiator.Modeling.Links
 
 		public IReadOnlyList<LinkSegment> GetNewLinkSegments(
 			IReadOnlyList<LinkSegment> linkSegments, 
-			LinkLine linkLine, 
 			IReadOnlyList<LinkSegment> newSegments)
 		{
+			Node source = newSegments.First().Source;
+			Node target = newSegments.Last().Target;
+
 			// Get the segments that are before the new segment
 			IEnumerable<LinkSegment> preSegments = linkSegments
-				.TakeWhile(segment => segment.Source != linkLine.Source);
+				.TakeWhile(segment => segment.Source != source);
 
 			// Get the segments that are after the new segments
 			IEnumerable<LinkSegment> postSegments = linkSegments
-				.SkipWhile(segment => segment.Source != linkLine.Target);
+				.SkipWhile(segment => segment.Source != target);
 
 			return
 				preSegments

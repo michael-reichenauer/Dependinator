@@ -40,6 +40,7 @@ namespace Dependiator.Modeling.Nodes
 			NodeType = type;
 			PersistentNodeColor = null;
 			Links = new NodeLinks(linkService);
+			RootNode = parent?.RootNode ?? this;
 		}
 
 
@@ -79,6 +80,8 @@ namespace Dependiator.Modeling.Nodes
 			$"Visual area {itemsCanvas?.ViewArea.TS()}\n" +
 			$"Recursive viewArea {itemsCanvas?.GetVisualAncestorsArea().TS()}\n\n" +
 			$"Parent {ParentNode?.NodeName}:{ParentNode?.DebugToolTip}";
+
+		public Node RootNode { get; }
 
 
 		public bool CanShowNode() => IsVisibleAtScale(NodeScale);
@@ -553,18 +556,12 @@ namespace Dependiator.Modeling.Nodes
 
 		public void AddOwnedLineItem(LinkLine line)
 		{
-			if (itemsCanvas != null)
-			{
-				itemsCanvas.AddItem(line.ViewModel);
-			}
+			itemsCanvas?.AddItem(line.ViewModel);
 		}
 
 		public void RemoveOwnedLineItem(LinkLine line)
 		{
-			if (itemsCanvas != null)
-			{
-				itemsCanvas.RemoveItem(line.ViewModel);
-			}
+			itemsCanvas?.RemoveItem(line.ViewModel);
 		}
 
 

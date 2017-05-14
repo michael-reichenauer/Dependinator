@@ -29,14 +29,12 @@ namespace Dependiator.Modeling.Items
 		}
 
 
-		//public Rect LastViewAreaQuery => itemsSource.LastViewAreaQuery;
 		public Rect ItemBounds => itemBounds?.NodeBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
 		public ItemsCanvas ParentItemsCanvas { get; }
 
 
 		public double ScaleFactor { get; private set; } = 1.0;
 
-		//public Rect ViewArea { get; private set; }
 
 		public Rect ViewArea => GetItemsCanvasViewArea();
 
@@ -51,8 +49,6 @@ namespace Dependiator.Modeling.Items
 				{
 					zoomableCanvas.Offset = value;
 				}
-
-				//ViewArea = GetItemsCanvasViewArea();
 			}
 		}
 
@@ -73,8 +69,6 @@ namespace Dependiator.Modeling.Items
 				{
 					ScaleFactor = ParentItemsCanvas.scale / scale;
 				}
-
-				//ViewArea = GetItemsCanvasViewArea();
 			}
 		}
 
@@ -154,16 +148,6 @@ namespace Dependiator.Modeling.Items
 		public void SetCanvas(ZoomableCanvas canvas, NodesView nodesView)
 		{
 			view = nodesView;
-
-			//if (ParentItemsCanvas != null)
-			//{
-			//	// Get the position of the nodes items view relative the nodes border
-			//	UIElement innerBorder = VisualTreeHelper.GetParent(view) as UIElement;
-			//	UIElement grid = VisualTreeHelper.GetParent(innerBorder) as UIElement;
-			//	UIElement nodesBorder = VisualTreeHelper.GetParent(grid) as UIElement;
-
-			//	relative = (Vector)view.TranslatePoint(new Point(0, 0), nodesBorder);
-			//}
 
 			if (zoomableCanvas != null)
 			{
@@ -254,12 +238,6 @@ namespace Dependiator.Modeling.Items
 			double parentScale = ParentItemsCanvas?.Scale ?? Scale;
 
 			Size renderSize = (Size)((Vector)ItemBounds.Size * parentScale);
-			//if (ParentItemsCanvas != null)
-			//{
-			//	renderSize = new Size(
-			//		Math.Max(renderSize.Width - relative.X / parentScale, 0), 
-			//		Math.Max(renderSize.Height - relative.Y / parentScale, 0));
-			//}
 
 			Rect value = new Rect(
 				Offset.X / Scale, Offset.Y / Scale, renderSize.Width / Scale, renderSize.Height / Scale);
