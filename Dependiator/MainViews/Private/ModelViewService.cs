@@ -68,26 +68,26 @@ namespace Dependiator.MainViews.Private
 
 			//	;
 
-			DataModel dataModel = new DataModel()
-					.AddType("Axis.Ns1")
-					.AddType("Axis.Ns2")
-					.AddType("Axis.Ns1.Class1")
-					.AddType("Axis.Ns1.Class2")
-					.AddType("Axis.Ns2.Class1")
-					.AddType("Axis.Ns2.NS3.Class1")
-					.AddType("Other.Ns1.Class1")
-					.AddType("Other.Ns2")
-					.AddType("Other.Ns3")
-					.AddType("Other.Ns4")
-					.AddType("Other.Ns5")
-					.AddType("Other.Ns6")
-					.AddLink("Axis.Ns1.Class1", "Axis.Ns1.Class2")
-					.AddLink("Axis.Ns1.Class1", "Axis.Ns2.Class2")
-					.AddLink("Axis.Ns1.Class1", "Other.Ns1.Class1")
-				;
+			//DataModel dataModel = new DataModel()
+			//		.AddType("Axis.Ns1")
+			//		.AddType("Axis.Ns2")
+			//		.AddType("Axis.Ns1.Class1")
+			//		.AddType("Axis.Ns1.Class2")
+			//		.AddType("Axis.Ns2.Class1")
+			//		.AddType("Axis.Ns2.NS3.Class1")
+			//		.AddType("Other.Ns1.Class1")
+			//		.AddType("Other.Ns2")
+			//		.AddType("Other.Ns3")
+			//		.AddType("Other.Ns4")
+			//		.AddType("Other.Ns5")
+			//		.AddType("Other.Ns6")
+			//		.AddLink("Axis.Ns1.Class1", "Axis.Ns1.Class2")
+			//		.AddLink("Axis.Ns1.Class1", "Axis.Ns2.Class2")
+			//		.AddLink("Axis.Ns1.Class1", "Other.Ns1.Class1")
+			//	;
 
 
-			//DataModel dataModel = GetCachedOrFreshModelData();
+			DataModel dataModel = GetCachedOrFreshModelData();
 
 			return dataModel;
 		}

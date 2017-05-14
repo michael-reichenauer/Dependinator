@@ -9,9 +9,18 @@ namespace Dependiator.Modeling.Links
 {
 	internal class LinkService : ILinkService
 	{
+		private readonly ILinkSegmentService segmentService;
+
+
+		public LinkService(ILinkSegmentService segmentService)
+		{
+			this.segmentService = segmentService;
+		}
+
+
 		public void AddLinkLines(Link link)
 		{
-			var linkSegments = GetNormalLinkSegments(link);
+			var linkSegments = segmentService.GetNormalLinkSegments(link);
 
 			linkSegments.ForEach(AddNormalLinkSegment);
 			link.SetLinkSegments(linkSegments);
@@ -26,11 +35,11 @@ namespace Dependiator.Modeling.Links
 			{
 				IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
 
-				var zoomedSegments = GetZoomedInReplacedSegments(currentLinkSegments, line);
+				var zoomedSegments = segmentService.GetZoomedInReplacedSegments(currentLinkSegments, line.Source, line.Target);
 
-				LinkSegment zoomedInSegment = GetZoomedInSegment(zoomedSegments, link);
+				LinkSegment zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
 
-				var newSegments = GetNewLinkSegments(currentLinkSegments, zoomedInSegment);
+				var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedInSegment);
 
 				var replacedLines = GetLines(link.Lines, zoomedSegments);
 
@@ -45,29 +54,28 @@ namespace Dependiator.Modeling.Links
 		}
 
 
-		public void ZoomOutLinkLine(LinkLine linkLine)
+		public void ZoomOutLinkLine(LinkLine line)
 		{
-			IReadOnlyList<Link> links = linkLine.HiddenLinks.ToList();
+			IReadOnlyList<Link> links = line.HiddenLinks.ToList();
 			foreach (Link link in links)
 			{
-				IReadOnlyList<LinkSegment> normalLinkSegments = GetNormalLinkSegments(link);
+				IReadOnlyList<LinkSegment> normalLinkSegments = segmentService.GetNormalLinkSegments(link);
 				IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
 
-				var zoomedSegments = GetZoomedInReplacedSegments(normalLinkSegments, linkLine);
+				var zoomedSegments = segmentService.GetZoomedOutReplacedSegments(normalLinkSegments, currentLinkSegments, line.Source, line.Target);
 
-				LinkSegment zoomedInSegment = GetZoomedInSegment(zoomedSegments, link);
+				LinkSegment zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
 				var replacedLines = GetLines(link.Lines, new [] { zoomedInSegment });
-				replacedLines.ForEach(line => HideLinkFromLine(line, link));
+				replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
 
 				zoomedSegments.ForEach(segment => AddDirectLine(segment));
 
-				var newSegments = GetNewLinkSegments(currentLinkSegments, zoomedSegments);
+				var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedSegments);
 				link.SetLinkSegments(newSegments);
 			}
 
-			linkLine.Owner.AncestorsAndSelf().Last().UpdateNodeVisibility();
+			line.Owner.AncestorsAndSelf().Last().UpdateNodeVisibility();
 		}
-
 
 		
 
@@ -107,35 +115,6 @@ namespace Dependiator.Modeling.Links
 				.ToList();
 		}
 
-
-		private static IReadOnlyList<LinkSegment> GetZoomedInReplacedSegments(
-			IEnumerable<LinkSegment> linkSegments,
-			LinkLine linkLine)
-		{
-			Node source = linkLine.Source;
-			Node target = linkLine.Target;
-
-			// Get the segments that are one before the line and one after the line
-			return linkSegments
-				.SkipWhile(segment => segment.Source != source && segment.Target != source)
-				.TakeWhile(segment =>
-					segment.Target == source || segment.Source == source || segment.Source == target)
-				.ToList();
-		}
-
-
-		private static LinkSegment GetZoomedInSegment(
-			IReadOnlyList<LinkSegment> replacedSegments, Link link)
-		{
-			Node source = replacedSegments.First().Source;
-			Node target = replacedSegments.Last().Target;
-
-			Node segmentOwner = source.AncestorsAndSelf()
-				.First(node => target.AncestorsAndSelf().Contains(node));
-
-			return new LinkSegment(source, target, segmentOwner, link);
-		}
-	
 
 		private void AddDirectLine(LinkSegment segment)
 		{
@@ -187,100 +166,6 @@ namespace Dependiator.Modeling.Links
 			line.Target.Links.TryAddReferencedLine(line);
 		}
 
-
-
-		public IReadOnlyList<LinkSegment> GetNewLinkSegments(
-			IReadOnlyList<LinkSegment> linkSegments, LinkSegment newSegment)
-		{
-			// Get the segments that are before the new segment
-			IEnumerable<LinkSegment> preSegments = linkSegments
-				.TakeWhile(segment => segment.Source != newSegment.Source);
-
-			// Get the segments that are after the new segments
-			IEnumerable<LinkSegment> postSegments = linkSegments
-				.SkipWhile(segment => segment.Source != newSegment.Target);
-		
-			return
-				preSegments
-				.Concat(new[] { newSegment })
-				.Concat(postSegments)
-				.ToList();
-		}
-
-
-		public IReadOnlyList<LinkSegment> GetNewLinkSegments(
-			IReadOnlyList<LinkSegment> linkSegments, 
-			IReadOnlyList<LinkSegment> newSegments)
-		{
-			Node source = newSegments.First().Source;
-			Node target = newSegments.Last().Target;
-
-			// Get the segments that are before the new segment
-			IEnumerable<LinkSegment> preSegments = linkSegments
-				.TakeWhile(segment => segment.Source != source);
-
-			// Get the segments that are after the new segments
-			IEnumerable<LinkSegment> postSegments = linkSegments
-				.SkipWhile(segment => segment.Source != target);
-
-			return
-				preSegments
-					.Concat(newSegments)
-					.Concat(postSegments)
-					.ToList();
-		}
-
-
-		private static IReadOnlyList<LinkSegment> GetNormalLinkSegments(Link link)
-		{
-			List<LinkSegment> segments = new List<LinkSegment>();
-
-			// Start with first line at the start of the segmented line 
-			Node segmentSource = link.Source;
-
-			// Iterate segments until line end is reached
-			while (segmentSource != link.Target)
-			{
-				// Try to assume next line target is a child node by searching if line source
-				// is a ancestor of end target node
-				Node segmentTarget = link.Target.AncestorsAndSelf()
-					.FirstOrDefault(ancestor => ancestor.ParentNode == segmentSource);
-
-				if (segmentTarget == null)
-				{
-					// Segment target was not a child, lets try to assume target is a sibling node
-					segmentTarget = link.Target.AncestorsAndSelf()
-						.FirstOrDefault(ancestor => ancestor.ParentNode == segmentSource.ParentNode);
-				}
-
-				if (segmentTarget == null)
-				{
-					// Segment target was neither child nor a sibling, next line target node must
-					// be the parent node
-					segmentTarget = segmentSource.ParentNode;
-				}
-
-				Node segmentOwner = segmentSource == segmentTarget.ParentNode ? segmentSource : segmentSource.ParentNode;
-				LinkSegment segment = new LinkSegment(segmentSource, segmentTarget, segmentOwner, link);
-
-				segments.Add(segment);
-
-				// Go to next line in the line segments 
-				segmentSource = segmentTarget;
-			}
-
-			return segments;
-		}
-
-
-		//private static LinkSegment GetSegment(Node source, Node target, Node segmentOwner, Link link)
-		//{		
-		//	// Segment owner is the first common ancestor of the source and target
-		//	Node segmentOwner = source.AncestorsAndSelf()
-		//		.First(node => target.AncestorsAndSelf().Contains(node));
-
-		//	return new LinkSegment(source, target, segmentOwner, link);
-		//}
 
 
 		public double GetLineThickness(LinkLine linkLine)
@@ -398,9 +283,32 @@ namespace Dependiator.Modeling.Links
 			}
 			else if (source.ParentNode != target.ParentNode)
 			{
-				// Nodes are not direct siblings, need to use the common ancestor (owner)
-				Point sp = GetPointInAncestorPoint(line, x1, y1, source);
-				Point tp = GetPointInAncestorPoint(line, x2, y2, target);
+				Point sp;
+				Point tp;
+				if (source == line.Owner)
+				{
+					x1 = (sourceBounds.Width / 2) * source.ItemsScaleFactor
+					     + source.ItemsOffset.X / source.ItemsScale;
+					y1 = (source.ItemsOffset.Y + 1) / source.ItemsScale;
+					sp = new Point(x1, y1);
+					tp = GetPointInAncestorPoint(line, x2, y2, target);
+				}
+				else if (target == line.Owner)
+				{
+					x2 = (targetBounds.Width / 2) * target.ItemsScaleFactor
+					     + target.ItemsOffset.X / target.ItemsScale;
+					y2 = (targetBounds.Height - 1) * target.ItemsScaleFactor
+					     + (target.ItemsOffset.Y) / target.ItemsScale;
+					tp = new Point(x2, y2);
+					sp = GetPointInAncestorPoint(line, x1, y1, target);
+				}
+				else
+				{
+					// Nodes are not direct siblings, need to use the common ancestor (owner)
+					sp = GetPointInAncestorPoint(line, x1, y1, source);
+					tp = GetPointInAncestorPoint(line, x2, y2, target);
+				}
+				
 				
 				x1 = sp.X;
 				y1 = sp.Y;
@@ -415,15 +323,17 @@ namespace Dependiator.Modeling.Links
 		private static Point GetPointInAncestorPoint(LinkLine line, double x, double y, Node node)
 		{
 			Point point = new Point(x, y);
+
 			foreach (Node ancestor in node.Ancestors())
 			{
-				point = ancestor.GetChildToParentCanvasPoint(point);
 				if (ancestor == line.Owner)
 				{
 					break;
 				}
-			}
 
+				point = ancestor.GetChildToParentCanvasPoint(point);				
+			}
+			
 			return point;
 		}
 

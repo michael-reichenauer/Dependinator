@@ -132,11 +132,13 @@
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
     <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
+    <Compile Include="Modeling\Links\ILinkSegmentService.cs" />
     <Compile Include="Modeling\Links\ILinkService.cs" />
     <Compile Include="Modeling\Links\LinkLineView.xaml.cs">
       <DependentUpon>LinkLineView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Modeling\Links\LinkSegment.cs" />
+    <Compile Include="Modeling\Links\LinkSegmentService.cs" />
     <Compile Include="Modeling\Links\LinkService.cs" />
     <Compile Include="Modeling\Links\LinkLineBounds.cs" />
     <Compile Include="Modeling\Links\LinkGroup.cs" />
