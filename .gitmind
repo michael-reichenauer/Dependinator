@@ -1,0 +1,3 @@
+issue: https://github.com/michael-reichenauer/Dependiator/issues/{0} #(\d+)
+tag: https://github.com/michael-reichenauer/Dependiator/releases/tag/{0} (v\d+\.\d+\.\d+\.\d+)
+tag: https://github.com/michael-reichenauer/Dependiatorreleases/latest (^latest$) 
