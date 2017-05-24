@@ -87,7 +87,7 @@ namespace Dependiator.Modeling.Items
 
 		public Point GetChildToParentCanvasPoint(Point childCanvasPoint)
 		{
-			if (ParentItemsCanvas != null && zoomableCanvas != null)
+			if (ParentItemsCanvas != null)
 			{
 				// Compensate the canvas view for the nodes vew position relative nodes border 
 				//Point compensatedPoint = childCanvasPoint - relative;

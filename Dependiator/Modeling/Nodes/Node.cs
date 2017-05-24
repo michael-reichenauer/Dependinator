@@ -71,17 +71,17 @@ namespace Dependiator.Modeling.Nodes
 
 		private static bool IsVisibleAtScale(double scale) => scale > 0.15;
 
-		public string DebugToolTip =>
-			$"\n Children: {ChildNodes.Count} Shown Items: {CountShowingNodes()}\n" +
-			$"Items Scale: {ItemsScale:0.00}, Scalefactor: {ItemsScaleFactor:0.00}\n" +
-			$"Offset: {ItemsOffset.TS()}, CanvasOffset: {ItemsCanvasOffset.TS()}\n" +
-			$"Rect: {NodeBounds.TS()}\n" +
-			$"Pos in parent coord: {ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location).TS()}\n" +
-			$"Pos in child coord: {ParentNode?.itemsCanvas?.GetParentToChildCanvasPoint(ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location) ?? new Point(0, 0)).TS()}\n" +
-			$"Pos in mainwindow coord: {itemsCanvas?.GetDevicePoint().TS()}\n" +
-			$"Visual area {itemsCanvas?.ViewArea.TS()}\n" +
-			$"Recursive viewArea {itemsCanvas?.GetVisualAncestorsArea().TS()}\n\n" +
-			$"Parent {ParentNode?.NodeName}:{ParentNode?.DebugToolTip}";
+		public string DebugToolTip => "";
+			//$"\n Children: {ChildNodes.Count} Shown Items: {CountShowingNodes()}\n" +
+			//$"Items Scale: {ItemsScale:0.00}, Scalefactor: {ItemsScaleFactor:0.00}\n" +
+			//$"Offset: {ItemsOffset.TS()}, CanvasOffset: {ItemsCanvasOffset.TS()}\n" +
+			//$"Rect: {NodeBounds.TS()}\n" +
+			//$"Pos in parent coord: {ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location).TS()}\n" +
+			//$"Pos in child coord: {ParentNode?.itemsCanvas?.GetParentToChildCanvasPoint(ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location) ?? new Point(0, 0)).TS()}\n" +
+			//$"Pos in mainwindow coord: {itemsCanvas?.GetDevicePoint().TS()}\n" +
+			//$"Visual area {itemsCanvas?.ViewArea.TS()}\n" +
+			//$"Recursive viewArea {itemsCanvas?.GetVisualAncestorsArea().TS()}\n\n" +
+			//$"Parent {ParentNode?.NodeName}:{ParentNode?.DebugToolTip}";
 
 
 		public Node RootNode { get; }

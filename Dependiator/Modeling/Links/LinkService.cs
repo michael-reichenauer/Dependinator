@@ -141,13 +141,10 @@ namespace Dependiator.Modeling.Links
 
 					var newSegments = segmentService.GetNewLinkSegments(normalLinkSegments, zoomedInSegment);
 
-					//var replacedLines = GetLines(link.Lines, zoomedSegments);
-
-					//replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
 					HideLinkFromLine(line, link);
 
 					newSegments.ForEach(segment => AddDirectLine(segment));
-					//AddDirectLine(zoomedInSegment);
+
 
 					link.SetLinkSegments(newSegments);
 				}		
