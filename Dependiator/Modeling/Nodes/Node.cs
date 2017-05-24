@@ -120,20 +120,37 @@ namespace Dependiator.Modeling.Nodes
 
 		public void ZoomLinks(double zoom, Point viewPosition)
 		{
-			IEnumerable<LinkLine> linkLines = Links.ReferencingLines
-				.Where(l => l.Target == this).ToList();
-
-			foreach (LinkLine linkLine in linkLines)
+			if (zoom > 1)
 			{
-				if (zoom > 1 && !linkLine.IsEmpty)
+				IEnumerable<LinkLine> linkLines = Links.ReferencingLines
+					.Where(l => l.Target == this)
+					.ToList();
+
+				foreach (LinkLine linkLine in linkLines)
 				{
-					linkService.ZoomInLinkLine(linkLine, this);
-				}
-				else if (zoom < 1 && !linkLine.IsEmpty)
-				{
-					linkService.ZoomOutLinkLine(linkLine, this);
+					if (!linkLine.IsEmpty)
+					{
+						linkService.ZoomInLinkLine(linkLine, this);
+						break;
+					}
 				}
 			}
+			else
+			{
+				IEnumerable<LinkLine> linkLines = Links.ReferencingLines
+					.Where(l => l.Target == this)
+					.Reverse()
+					.ToList();
+
+				foreach (LinkLine linkLine in linkLines)
+				{				
+					if (!linkLine.IsNormal && !linkLine.IsEmpty)
+					{
+						linkService.ZoomOutLinkLine(linkLine, this);
+						break;
+					}
+				}
+			}			
 		}
 
 
