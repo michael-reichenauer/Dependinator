@@ -63,7 +63,9 @@ namespace Dependiator.Modeling.Links
 		public Node Owner { get; }
 
 
-		public bool CanShowSegment() => !IsNormal || Source.CanShowNode() && Target.CanShowNode();
+		public bool CanShowSegment() => 
+			!IsNormal 
+			|| (Owner.ItemsScale < 7.4 && Source.CanShowNode() && Target.CanShowNode());
 
 		
 

@@ -14,6 +14,7 @@ namespace Dependiator.Modeling.Nodes
 	{
 		private const int InitialScaleFactor = 7;
 		private readonly INodeService nodeService;
+		private readonly ILinkService linkService;
 
 		private readonly List<Node> childNodes = new List<Node>();
 
@@ -25,7 +26,7 @@ namespace Dependiator.Modeling.Nodes
 
 		private bool IsShowing => IsRootNode || (viewModel?.IsShowing ?? false);
 		private bool IsRootNode => ParentNode == null;
-
+		private int direction = 0;
 
 		public Node(
 			INodeService nodeService,
@@ -35,6 +36,7 @@ namespace Dependiator.Modeling.Nodes
 			NodeType type)
 		{
 			this.nodeService = nodeService;
+			this.linkService = linkService;
 			ParentNode = parent;
 			NodeName = name;
 			NodeType = type;
@@ -76,10 +78,11 @@ namespace Dependiator.Modeling.Nodes
 			$"Rect: {NodeBounds.TS()}\n" +
 			$"Pos in parent coord: {ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location).TS()}\n" +
 			$"Pos in child coord: {ParentNode?.itemsCanvas?.GetParentToChildCanvasPoint(ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location) ?? new Point(0, 0)).TS()}\n" +
-			$"Pos in mainwindow coord: {itemsCanvas?.GetDevicePoint().TS()}\n" + 
+			$"Pos in mainwindow coord: {itemsCanvas?.GetDevicePoint().TS()}\n" +
 			$"Visual area {itemsCanvas?.ViewArea.TS()}\n" +
 			$"Recursive viewArea {itemsCanvas?.GetVisualAncestorsArea().TS()}\n\n" +
 			$"Parent {ParentNode?.NodeName}:{ParentNode?.DebugToolTip}";
+
 
 		public Node RootNode { get; }
 
@@ -115,7 +118,26 @@ namespace Dependiator.Modeling.Nodes
 		}
 
 
-		private int direction = 0;
+		public void ZoomLinks(double zoom, Point viewPosition)
+		{
+			IEnumerable<LinkLine> linkLines = Links.ReferencingLines
+				.Where(l => l.Target == this).ToList();
+
+			foreach (LinkLine linkLine in linkLines)
+			{
+				if (zoom > 1 && !linkLine.IsEmpty)
+				{
+					linkService.ZoomInLinkLine(linkLine, this);
+				}
+				else if (zoom < 1 && !linkLine.IsEmpty)
+				{
+					linkService.ZoomOutLinkLine(linkLine, this);
+				}
+			}
+		}
+
+
+
 
 		public void Move(Vector viewOffset, Point? viewPosition2, bool isDoing)
 		{
@@ -452,35 +474,6 @@ namespace Dependiator.Modeling.Nodes
 		}
 
 
-
-
-
-		//private void ShowAllChildren()
-		//{
-		//	foreach (Node childNode in ChildNodes)
-		//	{
-		//		if (childNode.CanShowNode())
-		//		{
-		//			if (!childNode.viewModel.IsShowing)
-		//			{
-		//				childNode.viewModel.Show();
-		//				childNode.ParentNode.UpdateShownItems();
-
-		//				childNode.viewModel.NotifyAll();
-		//			}
-		//		}
-		//	}
-
-		//	UpdateShownItems();
-
-		//	foreach (Node childNode in ChildNodes)
-		//	{
-		//		if (childNode.viewModel?.CanShow ?? false)
-		//		{
-		//			childNode.ShowAllChildren();
-		//		}
-		//	}
-		//}
 
 
 		private void HideAllChildren()

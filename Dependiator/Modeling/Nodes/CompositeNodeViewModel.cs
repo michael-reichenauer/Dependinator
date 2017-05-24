@@ -18,6 +18,7 @@ namespace Dependiator.Modeling.Nodes
 			NodesViewModel = new NodesViewModel(node, ItemsCanvas);
 		}
 
+
 		protected override Rect GetItemBounds() => node.NodeBounds;
 
 
@@ -54,11 +55,12 @@ namespace Dependiator.Modeling.Nodes
 			base.ItemVirtualized();
 		}
 
+
 		public int FontSize => ((int)(25 * node.NodeScale)).MM(8, 15);
 
 
 
-		
+
 
 
 		public void UpdateScale()
@@ -73,8 +75,10 @@ namespace Dependiator.Modeling.Nodes
 
 		public void ZoomResize(int wheelDelta) => node.Resize(wheelDelta);
 
-		public void MoveNode(Vector viewOffset, Point viewPosition2, bool isDoing) => 
+
+		public void MoveNode(Vector viewOffset, Point viewPosition2, bool isDoing) =>
 			node.Move(viewOffset, viewPosition2, isDoing);
+
 
 		public void ResizeeNode(Vector viewOffset, Point viewPosition2) => node.Resize(viewOffset, viewPosition2);
 
@@ -86,5 +90,8 @@ namespace Dependiator.Modeling.Nodes
 		{
 			Notify(nameof(ToolTip));
 		}
+
+
+		public void ZoomLinks(double zoom, Point viewPosition) => node.ZoomLinks(zoom, viewPosition);
 	}
 }

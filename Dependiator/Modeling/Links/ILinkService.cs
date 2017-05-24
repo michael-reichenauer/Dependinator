@@ -12,6 +12,8 @@ namespace Dependiator.Modeling.Links
 	
 		void AddLinkLines(Link link);
 		void ZoomInLinkLine(LinkLine linkLine);
+		void ZoomInLinkLine(LinkLine line, Node node);
 		void ZoomOutLinkLine(LinkLine linkLine);
+		void ZoomOutLinkLine(LinkLine line, Node node);
 	}
 }

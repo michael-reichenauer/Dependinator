@@ -120,6 +120,32 @@ namespace Dependiator.Modeling.Links
 				.ToList();
 		}
 
+		public IReadOnlyList<LinkSegment> GetZoomedInBeforeReplacedSegments(
+			IEnumerable<LinkSegment> linkSegments,
+			Node source,
+			Node target)
+		{
+			// Get the segments that are one before the line
+			return linkSegments
+				.SkipWhile(segment => segment.Source != source && segment.Target != source)
+				.TakeWhile(segment => segment.Target == source || segment.Source == source)
+				.ToList();
+		}
+
+
+
+		public IReadOnlyList<LinkSegment> GetZoomedInAfterReplacedSegments(
+			IEnumerable<LinkSegment> linkSegments,
+			Node source,
+			Node target)
+		{
+			// Get the segments that are one after the line
+			return linkSegments
+				.SkipWhile(segment => segment.Source != source)
+				.TakeWhile(segment => segment.Source == source || segment.Source == target)
+				.ToList();
+		}
+
 
 		public IReadOnlyList<LinkSegment> GetZoomedOutReplacedSegments(
 			IReadOnlyList<LinkSegment> normalSegments,
@@ -127,8 +153,47 @@ namespace Dependiator.Modeling.Links
 			Node source,
 			Node target)
 		{
-			// Get the segments that are one before the line and one after the line
 			int index1 = normalSegments.TakeWhile(s => s.Source != source).Count();
+			int a1 = 0;
+			for (int i = index1; i > -1; i--)
+			{
+				LinkSegment segment = normalSegments[i];
+				if (currentSegments.Any(s => s.Source == segment.Source))
+				{
+					a1 = i;
+					break;
+				}
+			}
+
+			int index2 = normalSegments.TakeWhile(s => s.Target != target).Count();
+			int a2 = 0;
+			for (int i = index2; i < normalSegments.Count; i++)
+			{
+				LinkSegment segment = normalSegments[i];
+				if (currentSegments.Any(s => s.Target == segment.Target))
+				{
+					a2 = i;
+					break;
+				}
+			}
+
+			List<LinkSegment> segments = new List<LinkSegment>();
+			for (int i = a1; i <= a2; i++)
+			{
+				segments.Add(normalSegments[i]);
+			}
+
+			return segments;
+		}
+
+
+		public IReadOnlyList<LinkSegment> GetZoomedOutBeforeReplacedSegments(
+			IReadOnlyList<LinkSegment> normalSegments,
+			IReadOnlyList<LinkSegment> currentSegments,
+			Node source,
+			Node target)
+		{
+			int index1 = normalSegments.TakeWhile(s => s.Source != source).Count() + 1;
 			int a1 = 0;
 			for (int i = index1; i > -1; i--)
 			{

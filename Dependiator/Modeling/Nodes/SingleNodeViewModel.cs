@@ -48,5 +48,7 @@ namespace Dependiator.Modeling.Nodes
 
 		public void Resize(int zoomDelta) => node.Resize(zoomDelta);
 
+
+		public void ZoomLinks(double zoom, Point viewPosition) => node.ZoomLinks(zoom, viewPosition);
 	}
 }

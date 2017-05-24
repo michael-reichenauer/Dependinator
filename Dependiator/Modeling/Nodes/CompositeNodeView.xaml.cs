@@ -27,7 +27,6 @@ namespace Dependiator.Modeling.Nodes
 
 		protected override void OnMouseWheel(MouseWheelEventArgs e)
 		{
-			//Cursors.
 			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
 			{
 				return;
@@ -41,15 +40,28 @@ namespace Dependiator.Modeling.Nodes
 
 			int wheelDelta = e.Delta;
 			Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
-
+			double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
 			if (e.OriginalSource is ListBox)
 			{
-				double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
-				viewModel.Zoom(zoom, viewPosition);
+				if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+				{
+					viewModel.ZoomLinks(zoom, viewPosition);
+				}
+				else
+				{
+					viewModel.Zoom(zoom, viewPosition);
+				}
 			}
 			else
 			{
-				viewModel.ZoomResize(wheelDelta);
+				if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+				{
+					viewModel.ZoomLinks(zoom, viewPosition);
+				}
+				else
+				{
+					viewModel.ZoomResize(wheelDelta);
+				}
 			}					
 
 			e.Handled = true;

@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
@@ -11,6 +12,8 @@ namespace Dependiator.Modeling.Nodes
 	/// </summary>
 	public partial class SingleNodeView : UserControl
 	{
+		private static readonly double ZoomSpeed = 3000.0;
+
 		private Point lastMousePosition;
 
 		public SingleNodeView()
@@ -47,6 +50,34 @@ namespace Dependiator.Modeling.Nodes
 			}
 
 			lastMousePosition = viewPosition;
+		}
+
+		protected override void OnMouseWheel(MouseWheelEventArgs e)
+		{
+			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+			{
+				return;
+			}
+
+			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
+			{
+				return;
+			}
+
+			if (!(DataContext is SingleNodeViewModel viewModel))
+			{
+				return;
+			}
+
+			int wheelDelta = e.Delta;
+			Point viewPosition = e.GetPosition(this);
+		
+			double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
+
+			viewModel.ZoomLinks(zoom, viewPosition);
+					
+
+			e.Handled = true;
 		}
 
 	}

@@ -33,5 +33,17 @@ namespace Dependiator.Modeling.Links
 
 
 		IReadOnlyList<LinkSegment> GetNormalLinkSegments(Link link);
+
+
+		IReadOnlyList<LinkSegment> GetZoomedInBeforeReplacedSegments(
+			IEnumerable<LinkSegment> linkSegments,
+			Node source,
+			Node target);
+
+
+		IReadOnlyList<LinkSegment> GetZoomedInAfterReplacedSegments(
+			IEnumerable<LinkSegment> linkSegments,
+			Node source,
+			Node target);
 	}
 }

@@ -54,9 +54,46 @@ namespace Dependiator.Modeling.Links
 		}
 
 
-		public void ZoomOutLinkLine(LinkLine line)
+		public void ZoomInLinkLine(LinkLine line, Node node)
 		{
+			IReadOnlyList<Link> links = line.Links.ToList();
+
+			foreach (Link link in links)
+			{
+				IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
+
+				IReadOnlyList<LinkSegment> zoomedSegments;
+				if (node == line.Target)
+				{
+					zoomedSegments = segmentService.GetZoomedInBeforeReplacedSegments(currentLinkSegments, line.Source, line.Target);
+				}
+				else
+				{
+					zoomedSegments = segmentService.GetZoomedInAfterReplacedSegments(currentLinkSegments, line.Source, line.Target);
+				}
+			
+				LinkSegment zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
+
+				var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedInSegment);
+
+				var replacedLines = GetLines(link.Lines, zoomedSegments);
+
+				replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
+
+				AddDirectLine(zoomedInSegment);
+
+				link.SetLinkSegments(newSegments);
+			}
+
+			line.Owner.RootNode.UpdateNodeVisibility();
+		}
+
+
+
+		public void ZoomOutLinkLine(LinkLine line)
+		{ 
 			IReadOnlyList<Link> links = line.HiddenLinks.ToList();
+
 			foreach (Link link in links)
 			{
 				IReadOnlyList<LinkSegment> normalLinkSegments = segmentService.GetNormalLinkSegments(link);
@@ -77,7 +114,49 @@ namespace Dependiator.Modeling.Links
 			line.Owner.AncestorsAndSelf().Last().UpdateNodeVisibility();
 		}
 
-		
+
+		public void ZoomOutLinkLine(LinkLine line, Node node)
+		{
+			IReadOnlyList<Link> links = line.Links.ToList();
+
+			foreach (Link link in links)
+			{
+				IReadOnlyList<LinkSegment> normalLinkSegments = segmentService.GetNormalLinkSegments(link);
+				IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
+
+				IReadOnlyList<LinkSegment> zoomedSegments = segmentService.GetZoomedOutReplacedSegments(normalLinkSegments, currentLinkSegments, line.Source, line.Target);
+
+				if (zoomedSegments.Count > 1)
+				{
+					if (node == line.Target)
+					{
+						zoomedSegments = zoomedSegments.Skip(1).ToList();
+					}
+					else
+					{
+						zoomedSegments = zoomedSegments.Take(zoomedSegments.Count - 1).ToList();
+					}
+
+					LinkSegment zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
+
+					var newSegments = segmentService.GetNewLinkSegments(normalLinkSegments, zoomedInSegment);
+
+					//var replacedLines = GetLines(link.Lines, zoomedSegments);
+
+					//replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
+					HideLinkFromLine(line, link);
+
+					newSegments.ForEach(segment => AddDirectLine(segment));
+					//AddDirectLine(zoomedInSegment);
+
+					link.SetLinkSegments(newSegments);
+				}		
+			}
+
+			line.Owner.RootNode.UpdateNodeVisibility();
+		}
+
+
 
 		private static void HideLinkFromLine(LinkLine line, Link link)
 		{
