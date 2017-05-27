@@ -43,25 +43,11 @@ namespace Dependiator.Modeling.Nodes
 			double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
 			if (e.OriginalSource is ListBox)
 			{
-				if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
-				{
-					viewModel.ZoomLinks(zoom, viewPosition);
-				}
-				else
-				{
-					viewModel.Zoom(zoom, viewPosition);
-				}
+				viewModel.Zoom(zoom, viewPosition);	
 			}
 			else
-			{
-				if (Keyboard.Modifiers.HasFlag(ModifierKeys.Shift))
-				{
-					viewModel.ZoomLinks(zoom, viewPosition);
-				}
-				else
-				{
-					viewModel.ZoomResize(wheelDelta);
-				}
+			{			
+				viewModel.ZoomResize(wheelDelta);				
 			}					
 
 			e.Handled = true;

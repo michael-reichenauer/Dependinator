@@ -90,8 +90,5 @@ namespace Dependiator.Modeling.Nodes
 		{
 			Notify(nameof(ToolTip));
 		}
-
-
-		public void ZoomLinks(double zoom, Point viewPosition) => node.ZoomLinks(zoom, viewPosition);
 	}
 }

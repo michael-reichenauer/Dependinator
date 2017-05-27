@@ -40,7 +40,7 @@ namespace Dependiator.Modeling.Links
 
 		public bool IsEmpty => !links.Any();
 		public bool HasHidden => hiddenLinks.Any();
-
+		public bool IsMouseOver => ViewModel.IsMouseOver;
 
 		public LinkLineViewModel ViewModel { get; }
 
@@ -67,7 +67,85 @@ namespace Dependiator.Modeling.Links
 			!IsNormal 
 			|| (Owner.ItemsScale < 7.4 && Source.CanShowNode() && Target.CanShowNode());
 
-		
+
+
+		public void ZoomLinks(double zoom, Point viewPosition)
+		{
+			bool isStart = (viewPosition - L1).Length < (viewPosition - L2).Length;
+
+			if (isStart)
+			{
+				if (zoom > 1)
+				{
+					IEnumerable<LinkLine> linkLines = Source.Links.ReferencingLines
+						.Where(l => l.Source == Source)
+						.Where(l => l.links.Intersect(links.Concat(hiddenLinks)).Any())
+						.ToList();
+
+					foreach (LinkLine linkLine in linkLines)
+					{
+						if (!linkLine.IsEmpty)
+						{
+							linkService.ZoomInLinkLine(linkLine, Source);
+							break;
+						}
+					}
+				}
+				else
+				{
+					IEnumerable<LinkLine> linkLines = Source.Links.ReferencingLines
+						.Where(l => l.Source == Source)
+						.Where(l => l.links.Intersect(links.Concat(hiddenLinks)).Any())
+						.Reverse()
+						.ToList();
+
+					foreach (LinkLine linkLine in linkLines)
+					{
+						if (!linkLine.IsNormal && !linkLine.IsEmpty)
+						{
+							linkService.ZoomOutLinkLine(linkLine, Source);
+							break;
+						}
+					}
+				}
+			}
+			else
+			{
+				if (zoom > 1)
+				{
+					IEnumerable<LinkLine> linkLines = Target.Links.ReferencingLines
+						.Where(l => l.Target == Target)
+						.Where(l => l.links.Intersect(links.Concat(hiddenLinks)).Any())
+						.ToList();
+
+					foreach (LinkLine linkLine in linkLines)
+					{
+						if (!linkLine.IsEmpty)
+						{
+							linkService.ZoomInLinkLine(linkLine, Target);
+							break;
+						}
+					}
+				}
+				else
+				{
+					IEnumerable<LinkLine> linkLines = Target.Links.ReferencingLines
+						.Where(l => l.Target == Target)
+						.Where(l => l.links.Intersect(links.Concat(hiddenLinks)).Any())
+						.Reverse()
+						.ToList();
+
+					foreach (LinkLine linkLine in linkLines)
+					{
+						if (!linkLine.IsNormal && !linkLine.IsEmpty)
+						{
+							linkService.ZoomOutLinkLine(linkLine, Target);
+							break;
+						}
+					}
+				}
+			}
+		}
 
 
 		public Rect GetItemBounds()
@@ -122,16 +200,11 @@ namespace Dependiator.Modeling.Links
 
 		public void ToggleLine()
 		{
-			if (!IsEmpty)
+			if (!IsNormal && IsEmpty)
 			{
-				linkService.ZoomInLinkLine(this);	
-			}
-			else
-			{
-				linkService.ZoomOutLinkLine(this);
-			}
-
-			UpdateVisibility();
+				linkService.CloseLine(this);
+				UpdateVisibility();
+			}	
 		}
 
 
@@ -152,6 +225,6 @@ namespace Dependiator.Modeling.Links
 		protected override bool IsEqual(LinkLine other)
 			=> Source == other.Source && Target == other.Target;
 
-		protected override int GetHash() => GetHashes(Source, Target);	
+		protected override int GetHash() => GetHashes(Source, Target);
 	}
 }

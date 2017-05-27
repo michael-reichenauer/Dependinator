@@ -118,43 +118,6 @@ namespace Dependiator.Modeling.Nodes
 		}
 
 
-		public void ZoomLinks(double zoom, Point viewPosition)
-		{
-			if (zoom > 1)
-			{
-				IEnumerable<LinkLine> linkLines = Links.ReferencingLines
-					.Where(l => l.Target == this)
-					.ToList();
-
-				foreach (LinkLine linkLine in linkLines)
-				{
-					if (!linkLine.IsEmpty)
-					{
-						linkService.ZoomInLinkLine(linkLine, this);
-						break;
-					}
-				}
-			}
-			else
-			{
-				IEnumerable<LinkLine> linkLines = Links.ReferencingLines
-					.Where(l => l.Target == this)
-					.Reverse()
-					.ToList();
-
-				foreach (LinkLine linkLine in linkLines)
-				{				
-					if (!linkLine.IsNormal && !linkLine.IsEmpty)
-					{
-						linkService.ZoomOutLinkLine(linkLine, this);
-						break;
-					}
-				}
-			}			
-		}
-
-
-
 
 		public void Move(Vector viewOffset, Point? viewPosition2, bool isDoing)
 		{
@@ -412,6 +375,14 @@ namespace Dependiator.Modeling.Nodes
 			Brush brush = GetNodeBrush();
 			return nodeService.GetRectangleBackgroundBrush(brush);
 		}
+
+
+		public Brush GetHighlightNodeBrush()
+		{
+			Brush brush = GetNodeBrush();
+			return nodeService.GetRectangleHighlightBrush(brush);
+		}
+
 
 
 		public void UpdateItem(ItemViewModel itemViewModel)

@@ -11,7 +11,7 @@ namespace Dependiator.Modeling.Links
 	{
 		private readonly ILinkService linkService;
 		private readonly LinkLine linkLine;
-
+		
 		public LinkLineViewModel(
 			ILinkService linkService,
 			LinkLine linkLine)
@@ -27,15 +27,42 @@ namespace Dependiator.Modeling.Links
 		public double Y1 => linkLine.L1.Y * linkLine.ItemsScale;
 		public double X2 => linkLine.L2.X * linkLine.ItemsScale;
 		public double Y2 => linkLine.L2.Y * linkLine.ItemsScale;
-		public double StrokeThickness => linkService.GetLineThickness(linkLine);
+		public double StrokeThickness =>
+			IsMouseOver ? 
+			linkService.GetLineThickness(linkLine) * 2: 
+			linkService.GetLineThickness(linkLine);
 
 		
-		public Brush LineBrush => linkLine.IsEmpty ? Brushes.DimGray :
-			linkLine.Source == linkLine.Target.ParentNode
+		public Brush LineBrush => GetLineBrush();
+
+		public Brush LineBackgroundBrush => Brushes.Transparent;
+
+
+		public bool IsMouseOver { get; private set; }
+
+
+		private Brush GetLineBrush()
+		{
+			if (IsMouseOver)
+			{
+				return linkLine.Source == linkLine.Target.ParentNode
+					? linkLine.Target.GetHighlightNodeBrush()
+					: linkLine.Source.GetHighlightNodeBrush();
+			}
+
+			if (linkLine.IsEmpty)
+			{
+				return Brushes.DimGray;
+			}
+
+			return linkLine.Source == linkLine.Target.ParentNode
 				? linkLine.Target.GetNodeBrush()
 				: linkLine.Source.GetNodeBrush();
+		}
 
-		public Brush HoverBrush => Brushes.Transparent;
+
+		public Brush HoverBrush => Brushes.GhostWhite;
+
 		public string StrokeDash => linkLine.HasHidden ? "2,2" : "";
 		public string ToolTip => GetToolTip();
 
@@ -59,6 +86,26 @@ namespace Dependiator.Modeling.Links
 			tip = $"{this} {linksCount} links:" + tip;
 
 			return tip;
+		}
+
+
+		public void ZoomLinks(double zoom, Point viewPosition)
+		{
+			linkLine.ZoomLinks(zoom, viewPosition);
+		}
+
+
+		public void OnMouseEnter()
+		{
+			IsMouseOver = true;
+			Notify(nameof(LineBrush), nameof(StrokeThickness));
+		}
+
+
+		public void OnMouseLeave()
+		{
+			IsMouseOver = false;
+			Notify(nameof(LineBrush), nameof(StrokeThickness));
 		}
 	}
 }

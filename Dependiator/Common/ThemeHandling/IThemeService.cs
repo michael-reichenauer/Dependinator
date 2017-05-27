@@ -17,5 +17,6 @@ namespace Dependiator.Common.ThemeHandling
 		Brush GetRectangleBackgroundBrush(Brush brush);
 		string GetHexColorFromBrush(Brush brush);
 		Brush GetBrushFromHex(string hexColor);
+		Brush GetRectangleHighlighterBrush(Brush brush);
 	}
 }

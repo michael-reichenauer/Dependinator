@@ -26,9 +26,11 @@
 				Y1="{Binding Y1}"
 				X2="{Binding X2}"
 				Y2="{Binding Y2}"
-				Stroke="Transparent"
+				Stroke="{Binding LineBackgroundBrush}"
 				StrokeThickness="10"
-				MouseDown="UIElement_OnMouseDown">
+				MouseDown="UIElement_OnMouseDown"
+        MouseEnter="UIElement_OnMouseEnter"
+        MouseLeave="UIElement_OnMouseLeave">       
 
 				<Line.ToolTip>
 					<ToolTip

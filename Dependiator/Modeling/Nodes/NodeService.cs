@@ -40,6 +40,11 @@ namespace Dependiator.Modeling.Nodes
 			return themeService.GetRectangleBackgroundBrush(brush);
 		}
 
+		public Brush GetRectangleHighlightBrush(Brush brush)
+		{
+			return themeService.GetRectangleHighlighterBrush(brush);
+		}
+
 
 		public void SetChildrenLayout(Node parent)
 		{

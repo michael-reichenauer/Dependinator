@@ -27,31 +27,31 @@ namespace Dependiator.Modeling.Links
 		}
 
 
-		public void ZoomInLinkLine(LinkLine line)
-		{
-			IReadOnlyList<Link> links = line.Links.ToList();
+		//public void ZoomInLinkLine(LinkLine line)
+		//{
+		//	IReadOnlyList<Link> links = line.Links.ToList();
 
-			foreach (Link link in links)
-			{
-				IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
+		//	foreach (Link link in links)
+		//	{
+		//		IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
 
-				var zoomedSegments = segmentService.GetZoomedInReplacedSegments(currentLinkSegments, line.Source, line.Target);
+		//		var zoomedSegments = segmentService.GetZoomedInReplacedSegments(currentLinkSegments, line.Source, line.Target);
 
-				LinkSegment zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
+		//		LinkSegment zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
 
-				var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedInSegment);
+		//		var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedInSegment);
 
-				var replacedLines = GetLines(link.Lines, zoomedSegments);
+		//		var replacedLines = GetLines(link.Lines, zoomedSegments);
 
-				replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
+		//		replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
 
-				AddDirectLine(zoomedInSegment);
+		//		AddDirectLine(zoomedInSegment);
 
-				link.SetLinkSegments(newSegments);
-			}
+		//		link.SetLinkSegments(newSegments);
+		//	}
 
-			line.Owner.RootNode.UpdateNodeVisibility();
-		}
+		//	line.Owner.RootNode.UpdateNodeVisibility();
+		//}
 
 
 		public void ZoomInLinkLine(LinkLine line, Node node)
@@ -80,9 +80,11 @@ namespace Dependiator.Modeling.Links
 
 				replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
 
-				AddDirectLine(zoomedInSegment);
-
 				link.SetLinkSegments(newSegments);
+				if (AddDirectLine(zoomedInSegment))
+				{
+					break;
+				}
 			}
 
 			line.Owner.RootNode.UpdateNodeVisibility();
@@ -90,29 +92,29 @@ namespace Dependiator.Modeling.Links
 
 
 
-		public void ZoomOutLinkLine(LinkLine line)
-		{ 
-			IReadOnlyList<Link> links = line.HiddenLinks.ToList();
+		//public void ZoomOutLinkLine(LinkLine line)
+		//{ 
+		//	IReadOnlyList<Link> links = line.HiddenLinks.ToList();
 
-			foreach (Link link in links)
-			{
-				IReadOnlyList<LinkSegment> normalLinkSegments = segmentService.GetNormalLinkSegments(link);
-				IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
+		//	foreach (Link link in links)
+		//	{
+		//		IReadOnlyList<LinkSegment> normalLinkSegments = segmentService.GetNormalLinkSegments(link);
+		//		IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
 
-				var zoomedSegments = segmentService.GetZoomedOutReplacedSegments(normalLinkSegments, currentLinkSegments, line.Source, line.Target);
+		//		var zoomedSegments = segmentService.GetZoomedOutReplacedSegments(normalLinkSegments, currentLinkSegments, line.Source, line.Target);
 
-				LinkSegment zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
-				var replacedLines = GetLines(link.Lines, new [] { zoomedInSegment });
-				replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
+		//		LinkSegment zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
+		//		var replacedLines = GetLines(link.Lines, new [] { zoomedInSegment });
+		//		replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
 
-				zoomedSegments.ForEach(segment => AddDirectLine(segment));
+		//		zoomedSegments.ForEach(segment => AddDirectLine(segment));
 
-				var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedSegments);
-				link.SetLinkSegments(newSegments);
-			}
+		//		var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedSegments);
+		//		link.SetLinkSegments(newSegments);
+		//	}
 
-			line.Owner.AncestorsAndSelf().Last().UpdateNodeVisibility();
-		}
+		//	line.Owner.AncestorsAndSelf().Last().UpdateNodeVisibility();
+		//}
 
 
 		public void ZoomOutLinkLine(LinkLine line, Node node)
@@ -154,27 +156,32 @@ namespace Dependiator.Modeling.Links
 		}
 
 
+		public void CloseLine(LinkLine line)
+		{
+			line.Owner.RemoveOwnedLineItem(line);
+			line.Owner.Links.RemoveOwnedLine(line);
 
-		private static void HideLinkFromLine(LinkLine line, Link link)
+			line.Source.Links.RemoveReferencedLine(line);
+			line.Target.Links.RemoveReferencedLine(line);
+
+			line.Source.AncestorsAndSelf()
+				.TakeWhile(node => node != line.Owner)
+				.ForEach(node => node.Links.RemoveReferencedLine(line));
+
+			line.Target.AncestorsAndSelf()
+				.TakeWhile(node => node != line.Owner)
+				.ForEach(node => node.Links.RemoveReferencedLine(line));
+		}
+
+
+		private void HideLinkFromLine(LinkLine line, Link link)
 		{
 			line.HideLink(link);
 			link.Remove(line);
 			
-			if (!line.IsNormal && !line.Links.Any())
+			if (!line.IsMouseOver && !line.IsNormal && !line.Links.Any())
 			{
-				line.Owner.RemoveOwnedLineItem(line);
-				line.Owner.Links.RemoveOwnedLine(line);
-
-				line.Source.Links.RemoveReferencedLine(line);
-				line.Target.Links.RemoveReferencedLine(line);
-
-				line.Source.AncestorsAndSelf()
-					.TakeWhile(node => node != line.Owner)
-					.ForEach(node => node.Links.RemoveReferencedLine(line));
-
-				line.Target.AncestorsAndSelf()
-					.TakeWhile(node => node != line.Owner)
-					.ForEach(node => node.Links.RemoveReferencedLine(line));
+				CloseLine(line);
 			}
 		}
 
@@ -192,8 +199,9 @@ namespace Dependiator.Modeling.Links
 		}
 
 
-		private void AddDirectLine(LinkSegment segment)
+		private bool AddDirectLine(LinkSegment segment)
 		{
+			bool isNewAdded = false;
 			LinkLine existingLine = segment.Owner.Links.OwnedLines
 				.FirstOrDefault(line => line.Source == segment.Source && line.Target == segment.Target);
 
@@ -210,10 +218,13 @@ namespace Dependiator.Modeling.Links
 				segment.Target.AncestorsAndSelf()
 					.TakeWhile(node => node != segment.Owner)
 					.ForEach(node => node.Links.TryAddReferencedLine(existingLine));
+				isNewAdded = true;
 			}
 
 			existingLine.TryAddLink(segment.Link);
 			segment.Link.TryAddLinkLine(existingLine);
+
+			return isNewAdded;
 		}
 
 
@@ -249,11 +260,13 @@ namespace Dependiator.Modeling.Links
 			double scale = (linkLine.Owner.ItemsScale).MM(0.1, 0.7);
 			double thickness;
 
-			if (linkLine.Links.Count < 5)
+			int linksCount = linkLine.Links.Count + linkLine.HiddenLinks.Count;
+
+			if (linksCount < 5)
 			{
 				thickness = 1;
 			}
-			else if (linkLine.Links.Count < 15)
+			else if (linksCount < 15)
 			{
 				thickness = 2;
 			}

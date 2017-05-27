@@ -11,9 +11,10 @@ namespace Dependiator.Modeling.Links
 		double GetLineThickness(LinkLine linkLine);
 	
 		void AddLinkLines(Link link);
-		void ZoomInLinkLine(LinkLine linkLine);
+		//void ZoomInLinkLine(LinkLine linkLine);
 		void ZoomInLinkLine(LinkLine line, Node node);
-		void ZoomOutLinkLine(LinkLine linkLine);
+		//void ZoomOutLinkLine(LinkLine linkLine);
 		void ZoomOutLinkLine(LinkLine line, Node node);
+		void CloseLine(LinkLine linkLine);
 	}
 }

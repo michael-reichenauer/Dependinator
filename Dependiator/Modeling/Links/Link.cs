@@ -33,6 +33,9 @@ namespace Dependiator.Modeling.Links
 
 
 		protected override bool IsEqual(Link other) => Source == other.Source && Target == other.Target;
+		protected override int GetHash() => GetHashes(Source, Target);
+
+
 
 		public override string ToString() => $"{Source} -> {Target}";
 
