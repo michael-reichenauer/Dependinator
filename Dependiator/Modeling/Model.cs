@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Dependiator.Modeling.Nodes;
 
 
 namespace Dependiator.Modeling

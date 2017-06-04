@@ -2,7 +2,7 @@ using Dependiator.Modeling.Serializing;
 using Dependiator.Utils;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Nodes
 {
 	internal class NodeType : Equatable<NodeType>
 	{
@@ -23,7 +23,5 @@ namespace Dependiator.Modeling
 		public static implicit operator string(NodeType nodeType) => nodeType?.type;
 
 		protected override bool IsEqual(NodeType other) => type == other.type;
-
-		protected override int GetHash() => type?.GetHashCode() ?? 0;
 	}
 }

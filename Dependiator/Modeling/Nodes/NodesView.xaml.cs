@@ -5,7 +5,7 @@ using System.Windows.Input;
 using Dependiator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Nodes
 {
 	/// <summary>
 	/// Interaction logic for NodesView.xaml

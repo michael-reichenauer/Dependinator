@@ -139,6 +139,13 @@ namespace Dependiator.Common.ThemeHandling
 		}
 
 
+		public Brush GetRectangleHighlighterBrush(Brush brush)
+		{
+			return Theme.GetLighterLighterBrush(brush);
+		}
+
+
+
 		private void LoadTheme()
 		{
 			ThemeOption themeOption = GetCurrentThemeOption();

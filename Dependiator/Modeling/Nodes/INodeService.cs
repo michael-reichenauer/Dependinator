@@ -1,15 +1,15 @@
 using System.Windows.Media;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Nodes
 {
-	internal interface IItemService
+	internal interface INodeService
 	{
 		Brush GetRandomRectangleBrush();
 		Brush GetRectangleBackgroundBrush(Brush brush);
 		Brush GetBrushFromHex(string hexColor);
 		string GetHexColorFromBrush(Brush brush);
 		void SetChildrenLayout(Node parent);
-		void UpdateLine(LinkSegment segment);
+		Brush GetRectangleHighlightBrush(Brush brush);
 	}
 }

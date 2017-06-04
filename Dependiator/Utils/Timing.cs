@@ -17,6 +17,8 @@ namespace Dependiator.Utils
 			stopwatch.Start();
 		}
 
+		public static Timing Start() => new Timing();
+
 
 		public TimeSpan Stop()
 		{
@@ -73,10 +75,6 @@ namespace Dependiator.Utils
 		}
 
 		
-		public override string ToString() => $"Timing: {DiffMs}ms ({ElapsedMs}ms)";
-
-		public struct StopParameter
-		{
-		}
+		public override string ToString() => $"Timing: {DiffMs}ms ({ElapsedMs}ms)";		
 	}
 }

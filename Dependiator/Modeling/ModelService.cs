@@ -1,205 +1,285 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
-using Dependiator.ApplicationHandling;
-using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.Modeling.Analyzing;
-using Dependiator.Modeling.Items;
+using Dependiator.Modeling.Links;
+using Dependiator.Modeling.Nodes;
 using Dependiator.Modeling.Serializing;
 using Dependiator.Utils;
 
 
 namespace Dependiator.Modeling
 {
-	[SingleInstance]
 	internal class ModelService : IModelService
 	{
-		private readonly WorkingFolder workingFolder;
-		private readonly IReflectionService reflectionService;
 		private readonly INodeService nodeService;
-		
-
-		private readonly IDataSerializer dataSerializer;
+		private readonly ILinkService linkService;
 
 
-		private Model model;
-
-		public ModelService(
-			WorkingFolder workingFolder,
-			IReflectionService reflectionService,
-			INodeService nodeService,
-			IDataSerializer dataSerializer)
+		public ModelService(INodeService nodeService, ILinkService linkService)
 		{
-			this.workingFolder = workingFolder;
-			this.reflectionService = reflectionService;
 			this.nodeService = nodeService;
-			this.dataSerializer = dataSerializer;
+			this.linkService = linkService;
 		}
 
 
-
-
-		public void InitModules(ItemsCanvas rootCanvas)
+		public Model ToModel(DataModel dataModel, ModelViewData modelViewData)
 		{
-			Timing t = new Timing();
+			IEnumerable<Data.Node> nodes = dataModel.Nodes ?? Enumerable.Empty<Data.Node>();
+			IEnumerable<Data.Link> links = dataModel.Links ?? Enumerable.Empty<Data.Link>();
 
-			DataModel dataModel = GetDataModel();
+			Node root = CreateRootNode();
+			Model model = new Model(root);
 
-			t.Log($"Get data model {dataModel}");
+			Timing t = Timing.Start();
+			foreach (Data.Node node in nodes)
+			{
+				AddNode(node, null, model, modelViewData);
+			}
+			t.Log("Added nodes");
 
-			model = nodeService.ToModel(dataModel, null);
+			foreach (Data.Link link in links)
+			{
+				AddLink(link, model, modelViewData);
+			}
+			t.Log("Added links");
 
-			t.Log("To model");
-
-			ShowModel(rootCanvas);
-			t.Log("Show model");
-
-			t.Log("Showed model");
+			return model;
 		}
 
 
-		private DataModel GetDataModel()
+		private Node CreateRootNode()
 		{
-			//DataModel dataModel = new DataModel()
-			//		.AddType("Axis.Ns1")	
-			//		.AddType("Other.Ns2")			
-			//		.AddLink("Axis.Ns1", "Other.Ns2")
-
-			//	;
-
-			//DataModel dataModel = new DataModel()
-			//		.AddType("Axis.Ns1")
-			//		.AddType("Axis.Ns2")
-			//		.AddType("Axis.Ns1.Class1")
-			//		.AddType("Axis.Ns1.Class2")
-			//		.AddType("Axis.Ns2.Class1")
-			//		.AddType("Axis.Ns2.NS3.Class1")
-			//		.AddType("Other.Ns1.Class1")
-			//		.AddType("Other.Ns2")
-			//		.AddType("Other.Ns3")
-			//		.AddType("Other.Ns4")
-			//		.AddType("Other.Ns5")
-			//		.AddType("Other.Ns6")
-			//		.AddLink("Axis.Ns1.Class1", "Axis.Ns1.Class2")
-			//		.AddLink("Axis.Ns1.Class1", "Axis.Ns2.Class2")
-			//	;
+			Node root = new Node(nodeService, linkService, null, NodeName.Root, NodeType.NameSpaceType);
+			return root;
+		}
 
 
-			DataModel dataModel = GetCachedOrFreshModelData();
+		public DataModel ToDataModel(Model model)
+		{
+			DataModel dataModel = new DataModel();
+
+			dataModel.Nodes = model.Root.ChildNodes
+				.Select(ToDataNode)
+				.ToList();
 
 			return dataModel;
 		}
 
 
-		public async Task Refresh(ItemsCanvas rootCanvas)
+		public ModelViewData ToViewData(Model model)
 		{
-			await Task.Yield();
+			ModelViewData modelViewData = new ModelViewData();
 
-			Timing t = new Timing();
-
-			StoreViewSettings();
-			t.Log("stored setting");
-
-			ModelViewData modelViewData = nodeService.ToViewData(model);
-			t.Log("Got current model data");
-
-			model = await RefreshElementTreeAsync(modelViewData);
-
-			t.Log("Read fresh data");
-
-			ShowModel(rootCanvas);
-
-			t.Log("Show model");
-
-			t.Log("Refreshed model");
+			AddViewData(model.Root, modelViewData);
+		
+			return modelViewData;
 		}
 
 
-		private DataModel GetCachedOrFreshModelData()
+		private static void AddViewData(Node node, ModelViewData modelViewData)
 		{
-			DataModel dataModel;
-			if (!TryReadCachedData(out dataModel))
+			Data.ViewData nodeViewData = ToViewData(node);
+
+			modelViewData.viewData[node.NodeName] = nodeViewData;
+
+			foreach (Node childNode in node.ChildNodes)
 			{
-				dataModel = ReadFreshData();
+				AddViewData(childNode, modelViewData);
+			}
+		}
+
+
+		private static Data.ViewData ToViewData(Node node)
+		{
+			if (node.NodeName.ShortName == "GitMind")
+			{
+				
+			}
+			Data.ViewData viewData = new Data.ViewData
+			{
+				Color = node.PersistentNodeColor,
+				X = node.NodeBounds.X,
+				Y = node.NodeBounds.Y,
+				Width = node.NodeBounds.Width,
+				Height = node.NodeBounds.Height,
+				Scale = node.ItemsScale,
+				OffsetX = node.ItemsOffset.X,
+				OffsetY = node.ItemsOffset.Y
+			};	
+
+			return viewData;
+		}
+
+
+		private void AddNode(
+			Data.Node dataNode,
+			NodeName parentName,
+			Model model,
+			ModelViewData modelViewData)
+		{
+			NodeName fullName = string.IsNullOrEmpty(parentName)
+				? dataNode.Name
+				: parentName + "." + dataNode.Name;
+
+			Node node = GetOrAddNode(fullName, model, modelViewData);
+
+			node.SetType(dataNode.Type);
+
+			TrySetViewData(dataNode.ViewData, modelViewData, node, fullName);
+
+
+			if (dataNode.Nodes != null)
+			{
+				foreach (Data.Node childDataNode in dataNode.Nodes)
+				{
+					AddNode(childDataNode, fullName, model, modelViewData);
+				}
 			}
 
-			return dataModel;
-		}
-
-
-		private void ShowModel(ItemsCanvas rootCanvas)
-		{
-			RestoreViewSettings(rootCanvas);
-
-			Node rootNode = model.Root;
-
-			rootNode.Show(rootCanvas);
-		}
-
-
-		public void Zoom(double zoomFactor, Point zoomCenter) =>
-			model.Root.Zoom(zoomFactor, zoomCenter);
-
-
-		public void Move(Vector viewOffset)
-		{
-			model.Root.MoveItems(viewOffset);
-		}
-
-
-		private async Task<Model> RefreshElementTreeAsync(ModelViewData modelViewData)
-		{
-			Model model = await Task.Run(() =>
+			if (dataNode.Links != null)
 			{
-				DataModel dataModel = reflectionService.Analyze(workingFolder.FilePath);
-
-				return nodeService.ToModel(dataModel, modelViewData);
-			});
-
-			return model;
-		}
-
-
-		private bool TryReadCachedData(out DataModel dataModel)
-		{
-			return dataSerializer.TryDeserialize(out dataModel);
-		}
-
-
-		private DataModel ReadFreshData()
-		{
-			DataModel model = reflectionService.Analyze(workingFolder.FilePath);
-
-			return model;
-		}
-
-
-		public void Close()
-		{
-			model.Root.UpdateAllNodesScalesBeforeClose();
-			DataModel dataModel = nodeService.ToDataModel(model);
-			dataSerializer.Serialize(dataModel);
-
-			StoreViewSettings();
-		}
-
-
-		private void StoreViewSettings()
-		{
-			Settings.EditWorkingFolderSettings(workingFolder,
-				settings =>
+				foreach (Data.Link dataLink in dataNode.Links)
 				{
-					settings.Scale = model.Root.ItemsScale;
-					settings.X = model.Root.ItemsOffset.X;
-					settings.Y = model.Root.ItemsOffset.Y;
-				});
+					Node targetNode = GetOrAddNode(dataLink.Target, model, modelViewData);
+					Link link = new Link(node, targetNode);
+					node.Links.Add(link);
+				}
+			}
 		}
 
 
-		private void RestoreViewSettings(ItemsCanvas rootCanvas)
+		private static Rect? ToBounds(Data.ViewData viewData)
 		{
-			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
-			rootCanvas.Scale = settings.Scale;
-			rootCanvas.Offset = new Point(settings.X, settings.Y);
+			if (viewData == null || viewData.Width == 0)
+			{
+				return null;
+			}
+
+			return new Rect(
+				new Point(viewData.X, viewData.Y),
+				new Size(viewData.Width, viewData.Height));
 		}
+
+
+		private void AddLink(Data.Link dataLink, Model model, ModelViewData modelViewData)
+		{
+			Node sourceNode = GetOrAddNode(dataLink.Source, model, modelViewData);
+			Node targetNode = GetOrAddNode(dataLink.Target, model, modelViewData);
+
+			Link link = new Link(sourceNode, targetNode);
+			sourceNode.Links.Add(link);
+		}
+
+
+		private Data.Node ToDataNode(Node node)
+		{
+			Data.Node dataNode = new Data.Node
+			{
+				Name = node.NodeName.ShortName,
+				Type = node.NodeType,
+				Nodes = ToChildren(node.ChildNodes),
+				Links = ToDataLinks(node),
+				ViewData = ToViewData(node)
+			};
+
+			return dataNode;
+		}
+
+
+		private static List<Data.Link> ToDataLinks(Node node)
+		{
+			List<Data.Link> links = null;
+
+			foreach (Link link in node.Links.Links)
+			{				
+				Data.Link dataLink = new Data.Link { Target = link.Target.NodeName };
+
+				if (links == null)
+				{
+					links = new List<Data.Link>();
+				}
+
+				links.Add(dataLink);				
+			}
+
+			return links;
+		}
+
+
+		private List<Data.Node> ToChildren(IEnumerable<Node> nodeChildren)
+		{
+			if (!nodeChildren.Any())
+			{
+				return null;
+			}
+
+			return nodeChildren
+				.Select(ToDataNode)
+				.ToList();
+		}
+
+
+		private Node GetOrAddNode(NodeName nodeName, Model model, ModelViewData modelViewData)
+		{
+			if (!model.Nodes.TryGetValue(nodeName, out Node node))
+			{
+				node = CreateNode(nodeName, model, modelViewData);
+			}
+
+			return node;
+		}
+
+
+		private Node CreateNode(NodeName nodeName, Model model, ModelViewData modelViewData)
+		{
+			NodeName parentName = nodeName.ParentName;
+
+			if (!model.Nodes.TryGetValue(parentName, out Node parentNode))
+			{
+				parentNode = CreateNode(parentName, model, modelViewData);
+			}
+
+			Node node = new Node(nodeService, linkService,  parentNode, nodeName, null);
+
+			TrySetViewData(null, modelViewData, node, nodeName);
+
+			parentNode.AddChild(node);
+			model.AddNode(node);
+
+			return node;
+		}
+
+
+		private static void TrySetViewData(
+			Data.ViewData viewData,
+			ModelViewData modelViewData,
+			Node node,
+			NodeName fullName)
+		{
+			if (viewData != null)
+			{
+				SetViewData(node, viewData);
+			}
+			else
+			{
+				if (modelViewData != null
+				    && modelViewData.viewData.TryGetValue(fullName, out viewData))
+				{
+					SetViewData(node, viewData);
+				}
+			}
+		}
+
+
+		private static void SetViewData(Node node, Data.ViewData viewData)
+		{
+			node.PersistentNodeBounds = ToBounds(viewData);
+			node.PersistentScale = viewData.Scale;
+			node.PersistentNodeColor = viewData.Color;
+			node.PersistentOffset = new Point(viewData.OffsetX, viewData.OffsetY);
+		}
+
+
+
 	}
 }

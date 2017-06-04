@@ -4,7 +4,7 @@ using System.Windows.Media;
 using Dependiator.Modeling.Items;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Nodes
 {
 	internal class CompositeNodeViewModel : ItemViewModel
 	{
@@ -17,6 +17,7 @@ namespace Dependiator.Modeling
 			ItemsCanvas = itemsCanvas;
 			NodesViewModel = new NodesViewModel(node, ItemsCanvas);
 		}
+
 
 		protected override Rect GetItemBounds() => node.NodeBounds;
 
@@ -54,11 +55,12 @@ namespace Dependiator.Modeling
 			base.ItemVirtualized();
 		}
 
-		public int FontSize => ((int)(15 * node.NodeScale)).MM(8, 15);
+
+		public int FontSize => ((int)(25 * node.NodeScale)).MM(8, 15);
 
 
 
-		
+
 
 
 		public void UpdateScale()
@@ -73,8 +75,10 @@ namespace Dependiator.Modeling
 
 		public void ZoomResize(int wheelDelta) => node.Resize(wheelDelta);
 
-		public void MoveNode(Vector viewOffset, Point viewPosition2, bool isDoing) => 
+
+		public void MoveNode(Vector viewOffset, Point viewPosition2, bool isDoing) =>
 			node.Move(viewOffset, viewPosition2, isDoing);
+
 
 		public void ResizeeNode(Vector viewOffset, Point viewPosition2) => node.Resize(viewOffset, viewPosition2);
 

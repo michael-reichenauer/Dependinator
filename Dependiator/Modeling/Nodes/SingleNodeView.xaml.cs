@@ -1,10 +1,11 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Nodes
 {
 	/// <summary>
 	/// Interaction logic for SingleNodeView.xaml
@@ -48,6 +49,5 @@ namespace Dependiator.Modeling
 
 			lastMousePosition = viewPosition;
 		}
-
 	}
 }

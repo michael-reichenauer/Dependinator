@@ -5,6 +5,7 @@
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:modeling="clr-namespace:Dependiator.Modeling"
+	xmlns:nodes="clr-namespace:Dependiator.Modeling.Nodes"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300" Loaded="MainView_OnLoaded">
 
@@ -20,7 +21,7 @@
 		
 		<!-- Model -->
 		<Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-			<modeling:NodesView x:Name="NodesView" DataContext="{Binding NodesViewModel}"/>
+			<nodes:NodesView x:Name="NodesView" DataContext="{Binding NodesViewModel}"/>
 		</Border>
 
 	</Grid>

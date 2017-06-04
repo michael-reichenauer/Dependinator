@@ -1,18 +1,14 @@
-﻿using System.Threading.Tasks;
-using System.Windows;
-using Dependiator.Modeling.Items;
+﻿using Dependiator.Modeling.Serializing;
 
 
 namespace Dependiator.Modeling
 {
 	internal interface IModelService
 	{
-		void InitModules(ItemsCanvas rootCanvas);
+		Model ToModel(DataModel dataModel, ModelViewData modelViewData);
 
-		void Zoom(double zoomFactor, Point zoomCenter);
-		void Move(Vector viewOffset);
+		DataModel ToDataModel(Model elementTree);
 
-		void Close();
-		Task Refresh(ItemsCanvas rootCanvas);
+		ModelViewData ToViewData(Model elementTree);
 	}
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 
 
 namespace Dependiator.Utils
@@ -24,7 +25,13 @@ namespace Dependiator.Utils
 		// }
 		protected abstract bool IsEqual(T other);
 
-		protected abstract int GetHash();
+
+		protected virtual int GetHash()
+		{
+			throw new NotSupportedException(
+				$"To support GetHashCode() in {GetType()} for use in e.g. Dictionary,\n" +
+				"you need to implement/override GetHash() in {GetType()}");
+		}
 
 		public bool Equals(T other) => (other != null) && IsEqual(other);
 
@@ -36,6 +43,18 @@ namespace Dependiator.Utils
 		public static bool operator !=(Equatable<T> obj1, Equatable<T> obj2) => !(obj1 == obj2);
 
 		public override int GetHashCode() => GetHash();
+
+
+		protected int GetHashes(params object[] items)
+		{
+			int code = 0;
+			foreach (object item in items)
+			{
+				code += code * 17 + item.GetHashCode();
+			}
+
+			return code;
+		}
 	}
 
 

@@ -6,7 +6,7 @@ using System.Windows.Input;
 using Dependiator.Utils;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Nodes
 {
 	/// <summary>
 	/// Interaction logic for CompositeNodeView.xaml
@@ -27,29 +27,27 @@ namespace Dependiator.Modeling
 
 		protected override void OnMouseWheel(MouseWheelEventArgs e)
 		{
-			//Cursors.
 			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
 			{
 				return;
 			}
 
-			CompositeNodeViewModel viewModel = DataContext as CompositeNodeViewModel;
-			if (viewModel == null)
+			if (!(DataContext is CompositeNodeViewModel viewModel))
 			{
 				return;
 			}
+			
 
 			int wheelDelta = e.Delta;
 			Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
-
+			double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
 			if (e.OriginalSource is ListBox)
 			{
-				double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
-				viewModel.Zoom(zoom, viewPosition);
+				viewModel.Zoom(zoom, viewPosition);	
 			}
 			else
-			{
-				viewModel.ZoomResize(wheelDelta);
+			{			
+				viewModel.ZoomResize(wheelDelta);				
 			}					
 
 			e.Handled = true;
@@ -58,8 +56,7 @@ namespace Dependiator.Modeling
 
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
-			CompositeNodeViewModel viewModel = DataContext as CompositeNodeViewModel;
-			if (viewModel == null)
+			if (!(DataContext is CompositeNodeViewModel viewModel))
 			{
 				return;
 			}
@@ -77,14 +74,12 @@ namespace Dependiator.Modeling
 				Vector viewOffset = viewPosition - lastMousePosition;
 				e.Handled = true;
 
-				Log.Debug($"Move {viewOffset.TS()}");
 				viewModel.MoveNode(viewOffset, viewPosition2, isDoing);
 				isDoing = true;
 			}
 			else
 			{
 				// End of move
-				Log.Debug("Release");
 				isDoing = false;
 				ReleaseMouseCapture();
 			}
@@ -95,14 +90,10 @@ namespace Dependiator.Modeling
 
 		private void ToolTip_OnOpened(object sender, RoutedEventArgs e)
 		{
-			CompositeNodeViewModel viewModel = DataContext as CompositeNodeViewModel;
-			if (viewModel == null)
+			if (DataContext is CompositeNodeViewModel viewModel)
 			{
-				return;
+				viewModel.UpdateToolTip();
 			}
-
-			viewModel.UpdateToolTip();
-
 		}
 
 

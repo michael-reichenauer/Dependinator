@@ -4,7 +4,7 @@ using System.Windows.Media;
 using Dependiator.Modeling.Items;
 
 
-namespace Dependiator.Modeling
+namespace Dependiator.Modeling.Nodes
 {
 	internal class SingleNodeViewModel : ItemViewModel
 	{
@@ -47,6 +47,5 @@ namespace Dependiator.Modeling
 		public void MoveNode(Vector viewOffset) => node.Move(viewOffset, null, false);
 
 		public void Resize(int zoomDelta) => node.Resize(zoomDelta);
-
 	}
 }
