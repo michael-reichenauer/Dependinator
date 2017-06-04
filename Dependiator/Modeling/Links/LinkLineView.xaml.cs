@@ -93,13 +93,13 @@ namespace Dependiator.Modeling.Links
 
 		private void UIElement_OnMouseEnter(object sender, MouseEventArgs e)
 		{
-			ViewModel.OnMouseEnter();
+			ViewModel?.OnMouseEnter();
 		}
 
 
 		private void UIElement_OnMouseLeave(object sender, MouseEventArgs e)
 		{
-			ViewModel.OnMouseLeave();
+			ViewModel?.OnMouseLeave();
 		}
 	}
 }
