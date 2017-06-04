@@ -194,6 +194,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Common\CredentialHandler.cs" />
     <Compile Include="ApplicationHandling\AssemblyResolver.cs" />
+    <Compile Include="Utils\StopParameter.cs" />
     <Compile Include="Utils\Throttler.cs" />
     <Compile Include="Utils\UI\CredentialsDialog.cs" />
     <Compile Include="Utils\Disposable.cs" />

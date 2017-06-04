@@ -38,8 +38,10 @@ namespace Dependiator.Modeling.Serializing
 		public bool TryDeserialize(out DataModel model)
 		{
 			string path = GetDataFilePath();
+			Timing t = new Timing();
 			if (TryReadFileText(path, out string json))
 			{
+				t.Log("Read data file");
 				return TryDeSerialize(json, out model);
 			}
 
@@ -52,8 +54,10 @@ namespace Dependiator.Modeling.Serializing
 		{
 			try
 			{
+				Timing t = new Timing();
 				Data.Model model = JsonConvert.DeserializeObject<Data.Model>(json, Settings);
 				dataModel = new DataModel {Nodes = model.Nodes, Links = model.Links};
+				t.Log("Deserialized");
 				return true;
 			}
 			catch (Exception e) when (e.IsNotFatal())

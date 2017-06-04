@@ -241,7 +241,7 @@ namespace Dependiator.Modeling.Links
 
 			existingLine.IsNormal = true;
 
-			existingLine.TryAddLink(segment.Link);
+			existingLine.AddLink(segment.Link);
 			segment.Link.TryAddLinkLine(existingLine);
 		}
 

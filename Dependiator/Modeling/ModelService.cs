@@ -4,6 +4,7 @@ using System.Windows;
 using Dependiator.Modeling.Links;
 using Dependiator.Modeling.Nodes;
 using Dependiator.Modeling.Serializing;
+using Dependiator.Utils;
 
 
 namespace Dependiator.Modeling
@@ -29,15 +30,18 @@ namespace Dependiator.Modeling
 			Node root = CreateRootNode();
 			Model model = new Model(root);
 
+			Timing t = Timing.Start();
 			foreach (Data.Node node in nodes)
 			{
 				AddNode(node, null, model, modelViewData);
 			}
+			t.Log("Added nodes");
 
 			foreach (Data.Link link in links)
 			{
 				AddLink(link, model, modelViewData);
 			}
+			t.Log("Added links");
 
 			return model;
 		}

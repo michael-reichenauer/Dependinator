@@ -52,12 +52,7 @@ namespace Dependiator.Modeling.Links
 		public bool RemoveReferencedLine(LinkLine line) => referencingLines.Remove(line);
 
 
-		public bool TryAddReferencedLine(LinkLine line)
-		{
-			return referencingLines.TryAdd(line);
-		}
-
-
+		public bool TryAddReferencedLine(LinkLine line) => referencingLines.TryAdd(line);
 
 		public override string ToString() => $"{ownedLines.Count} links";
 	}

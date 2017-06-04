@@ -170,9 +170,10 @@ namespace Dependiator.MainViews.Private
 
 		private DataModel ReadFreshData()
 		{
-			DataModel model = reflectionService.Analyze(workingFolder.FilePath);
-
-			return model;
+			Timing t = Timing.Start();
+			DataModel newModel = reflectionService.Analyze(workingFolder.FilePath);
+			t.Log("Read fresh model");
+			return newModel;
 		}
 
 

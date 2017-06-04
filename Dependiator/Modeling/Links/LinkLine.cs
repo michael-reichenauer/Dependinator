@@ -65,7 +65,7 @@ namespace Dependiator.Modeling.Links
 
 		public bool CanShowSegment() => 
 			!IsNormal 
-			|| (Owner.ItemsScale < 7.4 && Source.CanShowNode() && Target.CanShowNode());
+			|| (Source.CanShowNode() && Target.CanShowNode());
 
 
 
@@ -164,6 +164,12 @@ namespace Dependiator.Modeling.Links
 		{
 			hiddenLinks.Remove(link);
 			return links.TryAdd(link);
+		}
+
+		public void AddLink(Link link)
+		{
+			//hiddenLinks.Remove(link);
+			links.Add(link);
 		}
 
 

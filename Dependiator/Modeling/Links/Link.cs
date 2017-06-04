@@ -28,7 +28,6 @@ namespace Dependiator.Modeling.Links
 
 		public bool TryAddLinkLine(LinkLine line) => lines.TryAdd(line);
 
-
 		public bool Remove(LinkLine line) => lines.Remove(line);
 
 
