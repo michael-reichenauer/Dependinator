@@ -12,21 +12,68 @@ namespace Dependiator.Modeling.Analyzing
 {
 	internal class ReflectionService : IReflectionService
 	{
+		private static readonly string PathParameterName = "path";
+		private static readonly string ResultName = "result";
+
+
+		private readonly IDataSerializer dataSerializer;
+
+
 		internal const BindingFlags DeclaredOnlyFlags =
 			BindingFlags.Public | BindingFlags.NonPublic
 			| BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
 
-		private class ReflectionModel
+		public ReflectionService(IDataSerializer dataSerializer)
 		{
-			public Dictionary<string, Data.Node> Nodes { get; } =
-				new Dictionary<string, Data.Node>();
-
-			public Dictionary<string, Data.Link> Links { get; } =
-				new Dictionary<string, Data.Link>();
+			this.dataSerializer = dataSerializer;
 		}
 
+
 		public DataModel Analyze(string path)
+		{
+			// To avoid locking files when loading them for reflection, a seperate AppDomain is created
+			// where the reflection can be done. This doman can then be unloaded
+			AppDomain reflectionDomain = AppDomain.CreateDomain(Guid.NewGuid().ToString());
+			reflectionDomain.SetData(PathParameterName, path);
+
+			// Calle the Analyze in the sepetrate domain
+			reflectionDomain.DoCallBack(AnalyseInAppDomain);
+
+			// Get the result as a json string and unload the domain.
+			string result = reflectionDomain.GetData(ResultName) as string;
+			AppDomain.Unload(reflectionDomain);
+
+			// Deserialize the json sin model cannot be returned as object from other domain
+			if (dataSerializer.TryDeserializeJson(result, out DataModel dataModel))
+			{
+				return dataModel;
+			}
+
+			throw new FileLoadException($"Failed to load {path}");
+		}
+
+
+		private static void AnalyseInAppDomain()
+		{
+			// Get the path of the file to analyze
+			string path = AppDomain.CurrentDomain.GetData(PathParameterName) as string;
+
+			// Create a reflection service 
+			DataSerializer serializer = new DataSerializer();
+			ReflectionService reflectionService = new ReflectionService(serializer);
+
+			// Analyze the file
+			DataModel dataModel = reflectionService.AnalyzeImpl(path);
+
+			// Serailize the result to make it possible to transfer to main domain
+			string json = serializer.SerializeAsJson(dataModel);
+			AppDomain.CurrentDomain.SetData(ResultName, json);
+		}
+
+
+
+		private DataModel AnalyzeImpl(string path)
 		{
 			string currentDirectory = Environment.CurrentDirectory;
 
@@ -112,10 +159,14 @@ namespace Dependiator.Modeling.Analyzing
 
 		private static IReadOnlyList<TypeInfo> GetAssemblyTypes(string path)
 		{
-			Assembly assembly = Assembly.ReflectionOnlyLoadFrom(path);
+			if (TryGetAssemblyByFile(path, out Assembly assembly))
+			{
+				IReadOnlyList<TypeInfo> typeInfos = assembly.DefinedTypes.ToList();
+				return typeInfos;
+			}
+		
 
-			IReadOnlyList<TypeInfo> typeInfos = assembly.DefinedTypes.ToList();
-			return typeInfos;
+			throw new FileLoadException($"Failed to load essembly {path}");
 		}
 
 
@@ -388,15 +439,19 @@ namespace Dependiator.Modeling.Analyzing
 				return null;
 			}
 
-			if (TryGetAssemblyByName(assemblyName, out Assembly assembly))
+			Assembly assembly;
+
+			string path = assemblyName.Name + ".dll";
+
+			if (File.Exists(path) && TryGetAssemblyByFile(path, out assembly))
 			{
-				// Log.Debug($"Resolve assembly by name {args.Name}");
+				// Log.Debug($"Resolve assembly by file {assemblyName + ".dll"}");
 				return assembly;
 			}
 
-			if (TryGetAssemblyByFile(assemblyName.Name + ".dll", out assembly))
+			if (TryGetAssemblyByName(assemblyName, out assembly))
 			{
-				// Log.Debug($"Resolve assembly by file {assemblyName + ".dll"}");
+				// Log.Debug($"Resolve assembly by name {args.Name}");
 				return assembly;
 			}
 
@@ -416,6 +471,7 @@ namespace Dependiator.Modeling.Analyzing
 		{
 			try
 			{
+				Log.Debug($"Try load {assemblyName}");
 				assembly = Assembly.ReflectionOnlyLoad(assemblyName.FullName);
 				return true;
 			}
@@ -431,12 +487,13 @@ namespace Dependiator.Modeling.Analyzing
 		{
 			try
 			{
-				// Log.Debug($"Try load {path}");
+				Log.Debug($"Try load {path}");
 				assembly = Assembly.ReflectionOnlyLoadFrom(path);
 				return true;
 			}
-			catch (Exception)
+			catch (Exception e)
 			{
+				Log.Warn($"Failed to load {path}, {e.GetType()}, {e.Message}");
 				assembly = null;
 				return false;
 			}
@@ -475,6 +532,16 @@ namespace Dependiator.Modeling.Analyzing
 				assembly = Assembly.ReflectionOnlyLoad(buffer);
 				return true;
 			}
+		}
+
+
+		private class ReflectionModel
+		{
+			public Dictionary<string, Data.Node> Nodes { get; } =
+				new Dictionary<string, Data.Node>();
+
+			public Dictionary<string, Data.Link> Links { get; } =
+				new Dictionary<string, Data.Link>();
 		}
 	}
 }

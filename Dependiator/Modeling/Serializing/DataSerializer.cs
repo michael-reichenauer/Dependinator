@@ -16,33 +16,30 @@ namespace Dependiator.Modeling.Serializing
 			NullValueHandling = NullValueHandling.Ignore,
 		};
 
-		private readonly WorkingFolder workingFolder;
-
-
-		public DataSerializer(WorkingFolder workingFolder)
-		{
-			this.workingFolder = workingFolder;
-		}
-
 		
-		public void Serialize(DataModel dataModel)
+		public void Serialize(DataModel dataModel, string path)
 		{
 			Data.Model model = new Data.Model {Nodes = dataModel.Nodes, Links = dataModel.Links};
 			string json = JsonConvert.SerializeObject(model, typeof(Data.Model), Settings);
-			string path = GetDataFilePath();
 
 			WriteFileText(path, json);
 		}
 
 
-		public bool TryDeserialize(out DataModel model)
+		public string SerializeAsJson(DataModel dataModel)
 		{
-			string path = GetDataFilePath();
+			Data.Model model = new Data.Model { Nodes = dataModel.Nodes, Links = dataModel.Links };
+			return JsonConvert.SerializeObject(model, typeof(Data.Model), Settings);
+		}
+
+
+		public bool TryDeserialize(string path, out DataModel model)
+		{
 			Timing t = new Timing();
 			if (TryReadFileText(path, out string json))
 			{
 				t.Log("Read data file");
-				return TryDeSerialize(json, out model);
+				return TryDeserializeJson(json, out model);
 			}
 
 			model = null;
@@ -50,7 +47,7 @@ namespace Dependiator.Modeling.Serializing
 		}
 
 
-		private static bool TryDeSerialize(string json, out DataModel dataModel)
+		public bool TryDeserializeJson(string json, out DataModel dataModel)
 		{
 			try
 			{
@@ -70,11 +67,6 @@ namespace Dependiator.Modeling.Serializing
 		}
 
 
-
-		private string GetDataFilePath()
-		{
-			return Path.Combine(workingFolder, "data.json");
-		}
 
 
 		private static void WriteFileText(string path, string text)
