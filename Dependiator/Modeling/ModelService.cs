@@ -91,6 +91,10 @@ namespace Dependiator.Modeling
 
 		private static Data.ViewData ToViewData(Node node)
 		{
+			if (node.NodeName.ShortName == "GitMind")
+			{
+				
+			}
 			Data.ViewData viewData = new Data.ViewData
 			{
 				Color = node.PersistentNodeColor,
@@ -121,24 +125,7 @@ namespace Dependiator.Modeling
 
 			node.SetType(dataNode.Type);
 
-			if (dataNode.ViewData != null)
-			{
-				node.PersistentNodeBounds = ToBounds(dataNode.ViewData);
-				node.PersistentScale = dataNode.ViewData.Scale;
-				node.PersistentNodeColor = dataNode.ViewData.Color;
-				node.PersistentOffset = new Point(dataNode.ViewData.OffsetX, dataNode.ViewData.OffsetY);
-			}
-			else
-			{
-				if (modelViewData != null 
-					&& modelViewData.viewData.TryGetValue(fullName, out Data.ViewData viewData))
-				{
-					node.PersistentNodeBounds = ToBounds(viewData);
-					node.PersistentScale = viewData.Scale;
-					node.PersistentNodeColor = viewData.Color;
-					node.PersistentOffset = new Point(viewData.OffsetX, viewData.OffsetY);
-				}
-			}
+			TrySetViewData(dataNode.ViewData, modelViewData, node, fullName);
 
 
 			if (dataNode.Nodes != null)
@@ -254,18 +241,45 @@ namespace Dependiator.Modeling
 
 			Node node = new Node(nodeService, linkService,  parentNode, nodeName, null);
 
-			if (modelViewData != null && modelViewData.viewData.TryGetValue(
-				nodeName, out Data.ViewData viewData))
-			{
-				node.PersistentNodeBounds = ToBounds(viewData);
-				//node.ElementBrush = Converter.BrushFromHex(viewData.Color);
-			}
+			TrySetViewData(null, modelViewData, node, nodeName);
 
 			parentNode.AddChild(node);
 			model.AddNode(node);
 
 			return node;
 		}
+
+
+		private static void TrySetViewData(
+			Data.ViewData viewData,
+			ModelViewData modelViewData,
+			Node node,
+			NodeName fullName)
+		{
+			if (viewData != null)
+			{
+				SetViewData(node, viewData);
+			}
+			else
+			{
+				if (modelViewData != null
+				    && modelViewData.viewData.TryGetValue(fullName, out viewData))
+				{
+					SetViewData(node, viewData);
+				}
+			}
+		}
+
+
+		private static void SetViewData(Node node, Data.ViewData viewData)
+		{
+			node.PersistentNodeBounds = ToBounds(viewData);
+			node.PersistentScale = viewData.Scale;
+			node.PersistentNodeColor = viewData.Color;
+			node.PersistentOffset = new Point(viewData.OffsetX, viewData.OffsetY);
+		}
+
+
 
 	}
 }
