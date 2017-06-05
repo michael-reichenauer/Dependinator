@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using Dependiator.Modeling.Nodes;
 using Dependiator.Modeling.Serializing;
 using Dependiator.Utils;
@@ -76,7 +78,6 @@ namespace Dependiator.Modeling.Analyzing.Private
 			// Handle referenced assemblies
 			Assemblies.RegisterReferencedAssembliesHandler();
 			
-	
 			try
 			{
 				// Set current directory to easier find referenced assemblies 
@@ -147,7 +148,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 
 				AddTypeMembers(type, typeNode, model);
 
-				AddLinksToBaseTypes(type, typeNode, model);
+				AddLinksToBaseTypes(typeNode, type, model);
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
@@ -168,11 +169,11 @@ namespace Dependiator.Modeling.Analyzing.Private
 		{
 			try
 			{
-				string memberName = Reflection.GetMemberName(memberInfo, typeNode);
+				string memberName = Reflection.GetMemberName(memberInfo, typeNode.Name);
 
 				var memberNode = model.AddNode(memberName, NodeType.MemberType);
 
-				AddLinkToMember(memberNode, memberInfo, model);
+				AddMemberLinks(memberNode, memberInfo, model);
 			}
 			catch (Exception e)
 			{
@@ -180,39 +181,37 @@ namespace Dependiator.Modeling.Analyzing.Private
 			}
 		}
 
-
-
-		private static void AddLinkToMember
-			(Data.Node sourceNode, MemberInfo member, ReflectionModel model)
+		private static void AddMemberLinks(
+			Data.Node sourceMemberNode, MemberInfo member, ReflectionModel model)
 		{
 			try
 			{
 				if (member is FieldInfo field)
 				{
-					AddLinkToType(sourceNode, field.FieldType, model);
+					AddLinkToType(sourceMemberNode, field.FieldType, model);
 				}
 				else if (member is PropertyInfo property)
 				{
-					AddLinkToType(sourceNode, property.PropertyType, model);
+					AddLinkToType(sourceMemberNode, property.PropertyType, model);
 				}
 				else if (member is EventInfo eventInfo)
 				{
-					AddLinkToType(sourceNode, eventInfo.EventHandlerType, model);
+					AddLinkToType(sourceMemberNode, eventInfo.EventHandlerType, model);
 				}
 				else if (member is MethodInfo method)
 				{
-					AddLinkToMethod(sourceNode, method, model);
+					AddMethodLinks(sourceMemberNode, method, model);
 				}
 			}
 			catch (Exception e)
 			{
-				Log.Warn($"Failed to links for member {member} in {sourceNode.Name}, {e}");
+				Log.Warn($"Failed to links for member {member} in {sourceMemberNode.Name}, {e}");
 			}
 		}
 
 
 		private static void AddLinksToBaseTypes(
-			TypeInfo type, Data.Node sourceNode, ReflectionModel model)
+			Data.Node sourceNode, TypeInfo type, ReflectionModel model)
 		{
 			try
 			{
@@ -232,7 +231,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 		}
 
 
-		private static void AddLinkToMethod(
+		private static void AddMethodLinks(
 			Data.Node memberNode, MethodInfo method, ReflectionModel model)
 		{
 			Type returnType = method.ReturnType;
@@ -242,12 +241,58 @@ namespace Dependiator.Modeling.Analyzing.Private
 				.Select(parameter => parameter.ParameterType)
 				.ForEach(parameterType => AddLinkToType(memberNode, parameterType, model));
 
-			method.GetMethodBody()?.LocalVariables
+			AddMethodBodyLinks(memberNode, method, model);
+		}
+
+
+		private static void AddMethodBodyLinks(
+			Data.Node memberNode, MethodInfo method, ReflectionModel model)
+		{
+			MethodBody methodBody = method.GetMethodBody();
+
+			methodBody?.LocalVariables
 				.Select(variable => variable.LocalType)
 				.ForEach(variableType => AddLinkToType(memberNode, variableType, model));
 
 			// Check https://blogs.msdn.microsoft.com/haibo_luo/2005/10/04/read-il-from-methodbody/
 			// byte[] bodyIl = methodBody.GetILAsByteArray();
+			MethodBodyReader methodBodyReader = new MethodBodyReader(method);
+			List<ILInstruction> instructions = methodBodyReader.instructions;
+
+			foreach (ILInstruction instruction in instructions)
+			{
+				if (instruction.Code.FlowControl == FlowControl.Call)
+				{
+					MethodInfo methodCall = instruction.Operand as MethodInfo;
+					if (methodCall != null)
+					{
+						AddLinkToCallMethod(memberNode, methodCall, model);
+					}
+				}
+			}
+		}
+
+
+		private static void AddLinkToCallMethod(
+			Data.Node memberNode, MethodInfo method, ReflectionModel model)
+		{
+			Type declaringType = method.DeclaringType;
+
+			if (IsIgnoredType(declaringType))
+			{
+				// Ignore "System" and "Microsoft" namespaces for now
+				return;
+			}
+
+			string methodName = Reflection.GetMemberName(method, declaringType.FullName);
+			model.AddLink(memberNode.Name, methodName);
+
+			Type returnType = method.ReturnType;
+			AddLinkToType(memberNode, returnType, model);
+
+			method.GetParameters()
+				.Select(parameter => parameter.ParameterType)
+				.ForEach(parameterType => AddLinkToType(memberNode, parameterType, model));
 		}
 
 
@@ -256,6 +301,11 @@ namespace Dependiator.Modeling.Analyzing.Private
 			Type targetType, 
 			ReflectionModel model)
 		{
+			if (targetType == typeof(void))
+			{
+				return;
+			}
+
 			if (IsIgnoredType(targetType))
 			{
 				// Ignore "System" and "Microsoft" namespaces for now
@@ -272,7 +322,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 				? targetType.Namespace + "." + targetType.Name
 				: targetType.Name;
 
-			if (targetNodeName.Contains(">"))
+			if (Reflection.IsCompilerGenerated(targetNodeName))
 			{
 				return;
 			}

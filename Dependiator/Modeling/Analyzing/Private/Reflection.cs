@@ -11,12 +11,12 @@ namespace Dependiator.Modeling.Analyzing.Private
 		public static bool IsCompilerGenerated(string name) => name.Contains("<");
 
 
-		public static string GetMemberName(MemberInfo memberInfo, Data.Node typeNode)
+		public static string GetMemberName(MemberInfo memberInfo, string typeName)
 		{
 			string name;
 			if (IsContructorName(memberInfo.Name))
 			{
-				name = GetLastPartIfDotInName(typeNode.Name);
+				name = GetLastPartIfDotInName(typeName);
 			}
 			else if (IsSpecialName(memberInfo))
 			{
@@ -27,7 +27,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 				name = GetLastPartIfDotInName(memberInfo.Name);
 			}
 
-			return typeNode.Name + "." + name;
+			return typeName + "." + name;
 		}
 
 		public static string GetSpecialName(MemberInfo methodInfo)

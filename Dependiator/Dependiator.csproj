@@ -133,8 +133,11 @@
     <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
     <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
     <Compile Include="Modeling\Analyzing\Private\Assemblies.cs" />
+    <Compile Include="Modeling\Analyzing\Private\ILInstruction.cs" />
+    <Compile Include="Modeling\Analyzing\Private\MethodBodyReader.cs" />
     <Compile Include="Modeling\Analyzing\Private\Reflection.cs" />
     <Compile Include="Modeling\Analyzing\Private\ReflectionModel.cs" />
+    <Compile Include="Modeling\Analyzing\Private\Globals.cs" />
     <Compile Include="Modeling\Links\ILinkSegmentService.cs" />
     <Compile Include="Modeling\Links\ILinkService.cs" />
     <Compile Include="Modeling\Links\LinkLineView.xaml.cs">
