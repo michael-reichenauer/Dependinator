@@ -254,6 +254,10 @@ namespace Dependiator.Modeling.Analyzing.Private
 				.Select(variable => variable.LocalType)
 				.ForEach(variableType => AddLinkToType(memberNode, variableType, model));
 
+			if (memberNode.Name.Contains("WithCancellation"))
+			{
+				
+			}
 			// Check https://blogs.msdn.microsoft.com/haibo_luo/2005/10/04/read-il-from-methodbody/
 			// byte[] bodyIl = methodBody.GetILAsByteArray();
 			MethodBodyReader methodBodyReader = new MethodBodyReader(method);

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using Dependiator.Utils;
 
 
 namespace Dependiator.Modeling.Analyzing.Private
@@ -14,7 +15,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 	{
 		public List<ILInstruction> instructions = null;
 		protected byte[] il = null;
-		private MethodInfo mi = null;
+		private MethodBase mi = null;
 
 		#region il read methods
 		private int ReadInt16(byte[] _il, ref int position)
@@ -57,6 +58,11 @@ namespace Dependiator.Modeling.Analyzing.Private
 		/// <param name="module"></param>
 		private void ConstructInstructions(Module module)
 		{
+			if (mi.IsGenericMethod)
+			{
+				
+			}
+
 			byte[] il = this.il;
 			int position = 0;
 			instructions = new List<ILInstruction>();
@@ -80,6 +86,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 				instruction.Code = code;
 				instruction.Offset = position - 1;
 				int metadataToken = 0;
+
 				// get the operand of the current operation
 				switch (code.OperandType)
 				{
@@ -89,8 +96,24 @@ namespace Dependiator.Modeling.Analyzing.Private
 					instruction.Operand = metadataToken;
 					break;
 				case OperandType.InlineField:
-					metadataToken = ReadInt32(il, ref position);
-					instruction.Operand = module.ResolveField(metadataToken);
+					try
+					{
+						metadataToken = ReadInt32(il, ref position);
+						instruction.Operand = module.ResolveField(metadataToken);
+					}
+					catch (Exception)
+					{
+						//Try generic member
+						try
+						{
+							instruction.Operand = module.ResolveField(metadataToken, mi.DeclaringType.GetGenericArguments(), mi.GetGenericArguments());
+						}
+						catch (Exception e)
+						{
+							Log.Warn($"Error in {mi}, {e.Message}");
+						}
+					}
+				
 					break;
 				case OperandType.InlineMethod:
 					metadataToken = ReadInt32(il, ref position);
@@ -100,22 +123,56 @@ namespace Dependiator.Modeling.Analyzing.Private
 					}
 					catch
 					{
-						instruction.Operand = module.ResolveMember(metadataToken);
+						try
+						{
+							instruction.Operand = module.ResolveMember(metadataToken);
+						}
+						catch (Exception)
+						{
+							//Try generic method
+							try
+							{
+								instruction.Operand = module.ResolveMethod(metadataToken, mi.DeclaringType.GetGenericArguments(), mi.GetGenericArguments());
+							}
+							catch (Exception)
+							{
+
+								//Try generic member
+								try
+								{
+									instruction.Operand = module.ResolveMember(metadataToken, mi.DeclaringType.GetGenericArguments(), mi.GetGenericArguments());
+								}
+								catch (Exception e)
+								{
+									Log.Warn($"Error in {mi}, {e.Message}");
+									throw;
+								}
+							}
+
+						}
 					}
 					break;
-				case OperandType.InlineSig:
-					metadataToken = ReadInt32(il, ref position);
-					instruction.Operand = module.ResolveSignature(metadataToken);
-					break;
+					case OperandType.InlineSig:
+						metadataToken = ReadInt32(il, ref position);
+						instruction.Operand = module.ResolveSignature(metadataToken);
+						break;
 				case OperandType.InlineTok:
 					metadataToken = ReadInt32(il, ref position);
 					try
 					{
 						instruction.Operand = module.ResolveType(metadataToken);
 					}
-					catch
+					catch (Exception)
 					{
-
+						// Try generic
+						try
+						{
+							instruction.Operand = module.ResolveType(metadataToken, this.mi.DeclaringType.GetGenericArguments(), this.mi.GetGenericArguments());
+						}
+						catch (Exception e)
+						{
+							Log.Warn($"Error in {mi}, {e.Message}");
+						}
 					}
 					// SSS : see what to do here
 					break;
@@ -125,8 +182,14 @@ namespace Dependiator.Modeling.Analyzing.Private
 					// to support decompilation of generic methods and classes
 
 					// thanks to the guys from code project who commented on this missing feature
-
-					instruction.Operand = module.ResolveType(metadataToken, this.mi.DeclaringType.GetGenericArguments(), this.mi.GetGenericArguments());
+					try
+					{
+						instruction.Operand = module.ResolveType(metadataToken);
+					}
+					catch (Exception)
+					{
+						instruction.Operand = module.ResolveType(metadataToken, this.mi.DeclaringType.GetGenericArguments(), this.mi.GetGenericArguments());
+					}
 					break;
 				case OperandType.InlineI:
 				{
@@ -196,6 +259,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 				}
 				default:
 				{
+					Log.Warn($"Unknown operand type in {mi}");
 					throw new Exception("Unknown operand type.");
 				}
 				}
@@ -251,14 +315,22 @@ namespace Dependiator.Modeling.Analyzing.Private
 		/// <param name="mi">
 		/// The System.Reflection defined MethodInfo
 		/// </param>
-		public MethodBodyReader(MethodInfo mi)
+		public MethodBodyReader(MethodBase mi)
 		{
-			this.mi = mi;
-			if (mi.GetMethodBody() != null)
+			try
 			{
-				il = mi.GetMethodBody().GetILAsByteArray();
-				ConstructInstructions(mi.Module);
+				this.mi = mi;
+				if (mi.GetMethodBody() != null)
+				{
+					il = mi.GetMethodBody().GetILAsByteArray();
+					ConstructInstructions(mi.Module);
+				}
 			}
+			catch (Exception e)
+			{
+				Log.Warn($"Error {e}");
+				throw;
+			}		
 		}
 	}
 }

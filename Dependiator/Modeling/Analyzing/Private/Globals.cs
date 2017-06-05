@@ -120,6 +120,13 @@ namespace Dependiator.Modeling.Analyzing.Private
 		public static OpCode[] singleByteOpCodes;
 		public static Module[] modules = null;
 
+
+		static Globals()
+		{
+			LoadOpCodes();
+		}
+
+
 		public static void LoadOpCodes()
 		{
 			singleByteOpCodes = new OpCode[0x100];
