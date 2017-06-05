@@ -60,7 +60,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 
 			// Create a reflection service 
 			DataSerializer serializer = new DataSerializer();
-		
+
 			// Analyze the file
 			DataModel dataModel = AnalyzeAssemblyPath(path);
 
@@ -77,7 +77,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 
 			// Handle referenced assemblies
 			Assemblies.RegisterReferencedAssembliesHandler();
-			
+
 			try
 			{
 				// Set current directory to easier find referenced assemblies 
@@ -112,7 +112,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 			{
 				// Restore
 				Assemblies.UnregisterReferencedAssembliesHandler();
-			
+
 				Environment.CurrentDirectory = currentDirectory;
 			}
 
@@ -250,27 +250,24 @@ namespace Dependiator.Modeling.Analyzing.Private
 		{
 			MethodBody methodBody = method.GetMethodBody();
 
-			methodBody?.LocalVariables
-				.Select(variable => variable.LocalType)
-				.ForEach(variableType => AddLinkToType(memberNode, variableType, model));
-
-			if (memberNode.Name.Contains("WithCancellation"))
+			if (methodBody != null)
 			{
-				
-			}
-			// Check https://blogs.msdn.microsoft.com/haibo_luo/2005/10/04/read-il-from-methodbody/
-			// byte[] bodyIl = methodBody.GetILAsByteArray();
-			MethodBodyReader methodBodyReader = new MethodBodyReader(method);
-			List<ILInstruction> instructions = methodBodyReader.instructions;
+				methodBody.LocalVariables
+					.Select(variable => variable.LocalType)
+					.ForEach(variableType => AddLinkToType(memberNode, variableType, model));
 
-			foreach (ILInstruction instruction in instructions)
-			{
-				if (instruction.Code.FlowControl == FlowControl.Call)
+				MethodBodyReader methodBodyReader = new MethodBodyReader(method, methodBody);
+				List<ILInstruction> instructions = methodBodyReader.instructions;
+
+				foreach (ILInstruction instruction in instructions)
 				{
-					MethodInfo methodCall = instruction.Operand as MethodInfo;
-					if (methodCall != null)
+					if (instruction.Code.FlowControl == FlowControl.Call)
 					{
-						AddLinkToCallMethod(memberNode, methodCall, model);
+						MethodInfo methodCall = instruction.Operand as MethodInfo;
+						if (methodCall != null)
+						{
+							AddLinkToCallMethod(memberNode, methodCall, model);
+						}
 					}
 				}
 			}
@@ -301,8 +298,8 @@ namespace Dependiator.Modeling.Analyzing.Private
 
 
 		private static void AddLinkToType(
-			Data.Node sourceNode, 
-			Type targetType, 
+			Data.Node sourceNode,
+			Type targetType,
 			ReflectionModel model)
 		{
 			if (targetType == typeof(void))
@@ -332,7 +329,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 			}
 
 			model.AddLink(sourceNode.Name, targetNodeName);
-			
+
 			if (targetType.IsGenericType)
 			{
 				targetType.GetGenericArguments()
@@ -345,12 +342,12 @@ namespace Dependiator.Modeling.Analyzing.Private
 		{
 			//if (targetType.Assembly?.FullName.StartsWithOic("mscore,") ?? false)
 			//{
-				
+
 			//}
-			return 
+			return
 				targetType.Namespace != null
-			  && (targetType.Namespace.StartsWith("System", StringComparison.Ordinal)
-			  || targetType.Namespace.StartsWith("Microsoft", StringComparison.Ordinal));
+				&& (targetType.Namespace.StartsWith("System", StringComparison.Ordinal)
+				|| targetType.Namespace.StartsWith("Microsoft", StringComparison.Ordinal));
 		}
 
 
@@ -375,6 +372,6 @@ namespace Dependiator.Modeling.Analyzing.Private
 			}
 
 			Log.Debug($"Current directory '{Environment.CurrentDirectory}'");
-		}	
+		}
 	}
 }

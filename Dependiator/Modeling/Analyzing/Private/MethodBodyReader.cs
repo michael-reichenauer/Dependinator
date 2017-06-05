@@ -10,6 +10,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 	/// <summary>
 	/// Based on:
 	/// https://www.codeproject.com/Articles/14058/Parsing-the-IL-of-a-Method-Body
+	/// https://blogs.msdn.microsoft.com/haibo_luo/2005/10/04/read-il-from-methodbody/
 	/// </summary>
 	public class MethodBodyReader
 	{
@@ -309,20 +310,22 @@ namespace Dependiator.Modeling.Analyzing.Private
 
 		}
 
+
 		/// <summary>
 		/// MethodBodyReader constructor
 		/// </summary>
 		/// <param name="mi">
-		/// The System.Reflection defined MethodInfo
+		///   The System.Reflection defined MethodInfo
 		/// </param>
-		public MethodBodyReader(MethodBase mi)
+		/// <param name="methodBody"></param>
+		public MethodBodyReader(MethodBase mi, MethodBody methodBody)
 		{
 			try
 			{
 				this.mi = mi;
-				if (mi.GetMethodBody() != null)
+				if (methodBody != null)
 				{
-					il = mi.GetMethodBody().GetILAsByteArray();
+					il = methodBody.GetILAsByteArray();
 					ConstructInstructions(mi.Module);
 				}
 			}
