@@ -287,6 +287,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 
 			string methodName = Reflection.GetMemberName(method, declaringType.FullName);
 			model.AddLink(memberNode.Name, methodName);
+			Log.Debug($"Add {memberNode.Name}->{methodName}");
 
 			Type returnType = method.ReturnType;
 			AddLinkToType(memberNode, returnType, model);
