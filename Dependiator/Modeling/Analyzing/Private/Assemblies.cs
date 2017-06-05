@@ -9,11 +9,24 @@ namespace Dependiator.Modeling.Analyzing.Private
 {
 	internal static class Assemblies
 	{
-		public static Assembly GetAssembly(string path)
+		public static void RegisterReferencedAssembliesHandler()
+		{
+			AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += ResolveReferencedAssemblies;
+		}
+
+
+		public static void UnregisterReferencedAssembliesHandler()
+		{
+			AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve -= ResolveReferencedAssemblies;
+		}
+
+
+		public static Assembly LoadAssembly(string path)
 		{
 			Log.Debug($"Try load {path}");
 			return Assembly.ReflectionOnlyLoadFrom(path);
 		}
+
 
 		public static string GetErrorMessage(string path, ReflectionTypeLoadException e)
 		{
@@ -39,14 +52,15 @@ namespace Dependiator.Modeling.Analyzing.Private
 		}
 
 
-		public static string ToAssemblyName(string message)
+		public static string ToAssemblyName(string errorMessage)
 		{
-			int index = message.IndexOf('\'');
-			int index2 = message.IndexOf(',', index + 1);
+			int index = errorMessage.IndexOf('\'');
+			int index2 = errorMessage.IndexOf(',', index + 1);
 
-			string name = message.Substring(index + 1, (index2 - index - 1));
+			string name = errorMessage.Substring(index + 1, (index2 - index - 1));
 			return name;
 		}
+
 
 		private static Assembly ResolveReferencedAssemblies(object sender, ResolveEventArgs args)
 		{
@@ -150,18 +164,6 @@ namespace Dependiator.Modeling.Analyzing.Private
 				assembly = Assembly.ReflectionOnlyLoad(buffer);
 				return true;
 			}
-		}
-
-
-		public static void RegisterReferencedAssembliesHandler()
-		{
-			AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve += ResolveReferencedAssemblies;
-		}
-
-
-		public static void UnregisterReferencedAssembliesHandler()
-		{
-			AppDomain.CurrentDomain.ReflectionOnlyAssemblyResolve -= ResolveReferencedAssemblies;
 		}
 	}
 }

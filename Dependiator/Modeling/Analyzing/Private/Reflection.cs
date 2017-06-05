@@ -7,15 +7,8 @@ namespace Dependiator.Modeling.Analyzing.Private
 {
 	internal class Reflection
 	{
-		public static bool IsCompilerGenerated(string name)
-		{
-			if (name.IndexOf("<", StringComparison.Ordinal) != -1)
-			{
-				
-			}
-
-			return name.IndexOf("<", StringComparison.Ordinal) != -1;
-		}
+		// Compiler generated names seems to contain "<", while generic names use "'"
+		public static bool IsCompilerGenerated(string name) => name.Contains("<");
 
 
 		public static string GetMemberName(MemberInfo memberInfo, Data.Node typeNode)

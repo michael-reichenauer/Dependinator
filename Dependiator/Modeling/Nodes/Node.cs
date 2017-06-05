@@ -101,6 +101,16 @@ namespace Dependiator.Modeling.Nodes
 		}
 
 
+		public void Clear()
+		{
+			if (ChildNodes.Any())
+			{
+				ChildNodes.ForEach(child => child.Clear());
+				itemsCanvas?.Clear();
+			}
+		}
+
+
 		public void Zoom(double zoomFactor, Point? zoomCenter = null)
 		{
 			if (IsMinZoomLimit(zoomFactor))

@@ -123,7 +123,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 		{
 			ReflectionModel model = new ReflectionModel();
 
-			Assembly assembly = Assemblies.GetAssembly(path);
+			Assembly assembly = Assemblies.LoadAssembly(path);
 
 			AddAssemblyTypes(assembly, model);
 

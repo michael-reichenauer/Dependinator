@@ -106,6 +106,8 @@ namespace Dependiator.MainViews.Private
 			ModelViewData modelViewData = modelService.ToViewData(model);
 			t.Log("Got current model data");
 
+			model.Root.Clear();
+
 			model = await RefreshElementTreeAsync(modelViewData);
 
 			t.Log("Read fresh data");

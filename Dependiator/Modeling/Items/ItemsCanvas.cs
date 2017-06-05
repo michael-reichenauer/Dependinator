@@ -173,6 +173,9 @@ namespace Dependiator.Modeling.Items
 
 		public void RemoveItem(IItem item) => itemsSource.Remove(item);
 
+		public void Clear() => itemsSource.Clear();
+
+
 		public void UpdateItem(IItem item) => itemsSource.Update(item);
 
 		public void UpdateItems(IEnumerable<IItem> items) => itemsSource.Update(items);
