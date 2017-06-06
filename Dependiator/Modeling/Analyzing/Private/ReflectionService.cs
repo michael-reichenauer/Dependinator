@@ -144,7 +144,8 @@ namespace Dependiator.Modeling.Analyzing.Private
 		{
 			try
 			{
-				Data.Node typeNode = model.AddNode(type.FullName, NodeType.TypeType);
+				string typeFullName = Reflection.GetTypeFullName(type);
+				Data.Node typeNode = model.AddNode(typeFullName, NodeType.TypeType);
 
 				AddTypeMembers(type, typeNode, model);
 
@@ -169,7 +170,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 		{
 			try
 			{
-				string memberName = Reflection.GetMemberName(memberInfo, typeNode.Name);
+				string memberName = Reflection.GetMemberFullName(memberInfo, typeNode.Name);
 
 				var memberNode = model.AddNode(memberName, NodeType.MemberType);
 
@@ -241,11 +242,6 @@ namespace Dependiator.Modeling.Analyzing.Private
 				.Select(parameter => parameter.ParameterType)
 				.ForEach(parameterType => AddLinkToType(memberNode, parameterType, model));
 
-			if (memberNode.Name.Contains("ReIndex"))
-			{
-				
-			}
-
 			AddMethodBodyLinks(memberNode, method, model);
 		}
 
@@ -283,13 +279,13 @@ namespace Dependiator.Modeling.Analyzing.Private
 		{
 			Type declaringType = method.DeclaringType;
 
-			if (IsIgnoredType(declaringType))
+			if (IsIgnoredSystemType(declaringType))
 			{
 				// Ignore "System" and "Microsoft" namespaces for now
 				return;
 			}
 
-			string methodName = Reflection.GetMemberName(method, declaringType);
+			string methodName = Reflection.GetMemberFullName(method, declaringType);
 			model.AddLink(memberNode.Name, methodName);
 			Log.Debug($"Add {memberNode.Name}->{methodName}");
 
@@ -307,63 +303,15 @@ namespace Dependiator.Modeling.Analyzing.Private
 			Type targetType,
 			ReflectionModel model)
 		{
-			if (targetType == typeof(void))
+			if (targetType == typeof(void)
+			  || targetType.IsGenericParameter
+				|| IsIgnoredSystemType(targetType)
+				|| IsGenericTypeArgument(targetType))
 			{
 				return;
 			}
 
-			if (IsIgnoredType(targetType))
-			{
-				// Ignore "System" and "Microsoft" namespaces for now
-				return;
-			}
-
-			if (targetType.IsGenericParameter)
-			{
-				// Ignoring if type is a generic type parameter T, as in e.g. Get<T>(T value)
-				return;
-			}
-
-			if (targetType.FullName == null && targetType.DeclaringType == null && !targetType.IsInterface)
-			{
-				// Ignoring if type is a generic type parameter T, as in e.g. Get<T>(T value)
-				return;
-			}
-
-			if (targetType.FullName == null)
-			{
-				// Ignoring if type is a generic type, as in e.g. Get<T>(T value)
-				//return;
-			}
-
-			string targetNodeName;
-
-			if (targetType.FullName != null)
-			{
-				targetNodeName = targetType.FullName;
-			}
-			else
-			{
-				Type type = targetType;
-				string name = null;
-				while (string.IsNullOrEmpty(type.FullName))
-				{
-					name = name == null ? type.Name : $"{type.Name}.{name}";
-
-					if (type.DeclaringType == null)
-					{
-						break;
-					}
-
-					type = type.DeclaringType;
-				}
-
-				targetNodeName = type.Namespace != null
-					? type.Namespace + "." + name
-					: name;
-			}
-
-		
+			string targetNodeName = Reflection.GetTypeFullName(targetType);
 
 			if (Reflection.IsCompilerGenerated(targetNodeName))
 			{
@@ -380,7 +328,19 @@ namespace Dependiator.Modeling.Analyzing.Private
 		}
 
 
-		private static bool IsIgnoredType(Type targetType)
+		/// <summary>
+		/// Return true if type is a generic type parameter T, as in e.g. Get<T>(T value)
+		/// </summary>
+		private static bool IsGenericTypeArgument(Type targetType)
+		{
+			return 
+				targetType.FullName == null 
+				&& targetType.DeclaringType == null 
+				&& !targetType.IsInterface;
+		}
+
+
+		private static bool IsIgnoredSystemType(Type targetType)
 		{
 			//if (targetType.Assembly?.FullName.StartsWithOic("mscore,") ?? false)
 			//{

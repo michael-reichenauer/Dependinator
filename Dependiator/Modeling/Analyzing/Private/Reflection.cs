@@ -11,55 +11,63 @@ namespace Dependiator.Modeling.Analyzing.Private
 		public static bool IsCompilerGenerated(string name) => name.Contains("<");
 
 
-		public static string GetMemberName(MemberInfo memberInfo, string typeName)
+		public static string GetTypeFullName(Type type)
 		{
-			string name;
-			if (IsContructorName(memberInfo.Name))
+			if (type.FullName != null)
 			{
-				name = GetLastPartIfDotInName(typeName);
-			}
-			else if (IsSpecialName(memberInfo))
-			{
-				name = GetSpecialName(memberInfo);
-			}
-			else
-			{
-				name = GetLastPartIfDotInName(memberInfo.Name);
+				return type.FullName;
 			}
 
-			return typeName + "." + name;
+			Type currentType = type;
+			string name = null;
+			while (true)
+			{
+				if (currentType.FullName != null)
+				{
+					// Found a "normal" type, lets return combined name
+					return $"{currentType.FullName}.{name}";
+				}
+
+				name = name == null ? currentType.Name : $"{currentType.Name}.{name}";
+
+				if (currentType.DeclaringType == null)
+				{
+					// No more "parent" type
+					return currentType.Namespace != null ? $"{currentType.Namespace}.{name}" : name;
+				}
+
+				// Try parent type
+				currentType = currentType.DeclaringType;
+			}
 		}
 
 
-		public static string GetMemberName(MemberInfo memberInfo, Type declaringType)
-		{
-			if (!string.IsNullOrEmpty(declaringType.FullName))
-			{
-				return GetMemberName(memberInfo, declaringType.FullName);
-			}
 
-			string name;
+		public static string GetMemberFullName(MemberInfo memberInfo, string typeFullName)
+		{
+			string memberName;
 			if (IsContructorName(memberInfo.Name))
 			{
-				name = GetLastPartIfDotInName(declaringType.Name);
+				memberName = GetLastPartIfDotInName(typeFullName);
 			}
 			else if (IsSpecialName(memberInfo))
 			{
-				name = GetSpecialName(memberInfo);
+				memberName = GetSpecialName(memberInfo);
 			}
 			else
 			{
-				name = GetLastPartIfDotInName(memberInfo.Name);
+				memberName = GetLastPartIfDotInName(memberInfo.Name);
 			}
 
-			Type type = declaringType;
-			while (string.IsNullOrEmpty(type.FullName))
-			{
-				name = $"{type.Name}.{name}";
-				type = type.DeclaringType;
-			}
+			return $"{typeFullName}.{memberName}";
+		}
 
-			return $"{type.FullName}.{name}";
+
+		public static string GetMemberFullName(MemberInfo memberInfo, Type declaringType)
+		{
+			string fullTypeName = GetTypeFullName(declaringType);
+
+			return GetMemberFullName(memberInfo, fullTypeName);
 		}
 
 
