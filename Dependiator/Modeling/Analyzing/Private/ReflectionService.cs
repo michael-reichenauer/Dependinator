@@ -241,6 +241,11 @@ namespace Dependiator.Modeling.Analyzing.Private
 				.Select(parameter => parameter.ParameterType)
 				.ForEach(parameterType => AddLinkToType(memberNode, parameterType, model));
 
+			if (memberNode.Name.Contains("ReIndex"))
+			{
+				
+			}
+
 			AddMethodBodyLinks(memberNode, method, model);
 		}
 
@@ -284,7 +289,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 				return;
 			}
 
-			string methodName = Reflection.GetMemberName(method, declaringType.FullName);
+			string methodName = Reflection.GetMemberName(method, declaringType);
 			model.AddLink(memberNode.Name, methodName);
 			Log.Debug($"Add {memberNode.Name}->{methodName}");
 
@@ -313,15 +318,52 @@ namespace Dependiator.Modeling.Analyzing.Private
 				return;
 			}
 
-			if (targetType.FullName == null)
+			if (targetType.IsGenericParameter)
 			{
-				// Ignoring if type is a generic type, as in e.g. Get<T>(T value)
+				// Ignoring if type is a generic type parameter T, as in e.g. Get<T>(T value)
 				return;
 			}
 
-			string targetNodeName = targetType.Namespace != null
-				? targetType.Namespace + "." + targetType.Name
-				: targetType.Name;
+			if (targetType.FullName == null && targetType.DeclaringType == null && !targetType.IsInterface)
+			{
+				// Ignoring if type is a generic type parameter T, as in e.g. Get<T>(T value)
+				return;
+			}
+
+			if (targetType.FullName == null)
+			{
+				// Ignoring if type is a generic type, as in e.g. Get<T>(T value)
+				//return;
+			}
+
+			string targetNodeName;
+
+			if (targetType.FullName != null)
+			{
+				targetNodeName = targetType.FullName;
+			}
+			else
+			{
+				Type type = targetType;
+				string name = null;
+				while (string.IsNullOrEmpty(type.FullName))
+				{
+					name = name == null ? type.Name : $"{type.Name}.{name}";
+
+					if (type.DeclaringType == null)
+					{
+						break;
+					}
+
+					type = type.DeclaringType;
+				}
+
+				targetNodeName = type.Namespace != null
+					? type.Namespace + "." + name
+					: name;
+			}
+
+		
 
 			if (Reflection.IsCompilerGenerated(targetNodeName))
 			{

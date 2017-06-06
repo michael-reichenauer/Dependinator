@@ -30,6 +30,39 @@ namespace Dependiator.Modeling.Analyzing.Private
 			return typeName + "." + name;
 		}
 
+
+		public static string GetMemberName(MemberInfo memberInfo, Type declaringType)
+		{
+			if (!string.IsNullOrEmpty(declaringType.FullName))
+			{
+				return GetMemberName(memberInfo, declaringType.FullName);
+			}
+
+			string name;
+			if (IsContructorName(memberInfo.Name))
+			{
+				name = GetLastPartIfDotInName(declaringType.Name);
+			}
+			else if (IsSpecialName(memberInfo))
+			{
+				name = GetSpecialName(memberInfo);
+			}
+			else
+			{
+				name = GetLastPartIfDotInName(memberInfo.Name);
+			}
+
+			Type type = declaringType;
+			while (string.IsNullOrEmpty(type.FullName))
+			{
+				name = $"{type.Name}.{name}";
+				type = type.DeclaringType;
+			}
+
+			return $"{type.FullName}.{name}";
+		}
+
+
 		public static string GetSpecialName(MemberInfo methodInfo)
 		{
 			string name = methodInfo.Name;
