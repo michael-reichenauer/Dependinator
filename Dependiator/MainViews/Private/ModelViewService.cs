@@ -94,7 +94,7 @@ namespace Dependiator.MainViews.Private
 		}
 
 
-		public async Task Refresh(ItemsCanvas rootCanvas)
+		public async Task Refresh(ItemsCanvas rootCanvas, bool refreshLayout)
 		{
 			await Task.Yield();
 
@@ -103,7 +103,7 @@ namespace Dependiator.MainViews.Private
 			StoreViewSettings();
 			t.Log("stored setting");
 
-			ModelViewData modelViewData = modelService.ToViewData(model);
+			ModelViewData modelViewData = refreshLayout ? null : modelService.ToViewData(model);
 			t.Log("Got current model data");
 
 			model.Root.Clear();

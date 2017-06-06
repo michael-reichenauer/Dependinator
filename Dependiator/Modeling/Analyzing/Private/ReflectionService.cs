@@ -160,9 +160,16 @@ namespace Dependiator.Modeling.Analyzing.Private
 
 		private static void AddTypeMembers(TypeInfo type, Data.Node typeNode, ReflectionModel model)
 		{
+			if (typeNode.Name.EndsWith("Properties.Settings"))
+			{
+
+			}
+
 			type.GetMembers(SupportedTypeMembersFlags)
 				.Where(member => !Reflection.IsCompilerGenerated(member.Name))
 				.ForEach(member => AddMember(member, typeNode, model));
+
+
 		}
 
 
@@ -249,6 +256,11 @@ namespace Dependiator.Modeling.Analyzing.Private
 		private static void AddMethodBodyLinks(
 			Data.Node memberNode, MethodInfo method, ReflectionModel model)
 		{
+			//if (memberNode.Name.EndsWith(".Default"))
+			//{
+				
+			//}
+
 			MethodBody methodBody = method.GetMethodBody();
 
 			if (methodBody != null)

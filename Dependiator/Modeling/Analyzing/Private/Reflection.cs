@@ -46,11 +46,15 @@ namespace Dependiator.Modeling.Analyzing.Private
 		public static string GetMemberFullName(MemberInfo memberInfo, string typeFullName)
 		{
 			string memberName;
-			if (IsContructorName(memberInfo.Name))
-			{
-				memberName = GetLastPartIfDotInName(typeFullName);
-			}
-			else if (IsSpecialName(memberInfo))
+			//if (IsContructorName(memberInfo.Name))
+			//{
+			//	memberName = GetLastPartIfDotInName(typeFullName);
+			//}
+			//else if (IsStaticContructorName(memberInfo.Name))
+			//{
+			//	memberName = "_s_" + GetLastPartIfDotInName(typeFullName);
+			//}
+			if (IsSpecialName(memberInfo))
 			{
 				memberName = GetSpecialName(memberInfo);
 			}
@@ -104,5 +108,6 @@ namespace Dependiator.Modeling.Analyzing.Private
 
 
 		private static bool IsContructorName(string name) => name == ".ctor";
+		private static bool IsStaticContructorName(string name) => name == ".cctor";
 	}
 }

@@ -176,11 +176,11 @@ namespace Dependiator.MainViews
 		}
 
 
-		public async Task ManualRefreshAsync()
+		public async Task ManualRefreshAsync(bool refreshLayout = false)
 		{
 			using (progress.ShowDialog("Refreshing view ..."))
 			{
-				await modelViewService.Refresh(itemsCanvas);
+				await modelViewService.Refresh(itemsCanvas, refreshLayout);
 			}
 		}
 

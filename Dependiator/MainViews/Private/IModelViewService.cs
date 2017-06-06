@@ -13,6 +13,6 @@ namespace Dependiator.MainViews.Private
 		void Move(Vector viewOffset);
 
 		void Close();
-		Task Refresh(ItemsCanvas rootCanvas);
+		Task Refresh(ItemsCanvas rootCanvas, bool refreshLayout);
 	}
 }

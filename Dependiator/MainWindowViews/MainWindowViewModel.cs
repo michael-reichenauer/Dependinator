@@ -110,6 +110,7 @@ namespace Dependiator.MainWindowViews
 		}
 
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
+		public Command RefreshLayoutCommand => AsyncCommand(ManualRefreshLayoutAsync);
 
 		public Command OpenFileCommand => AsyncCommand(OpenFileAsync);
 
@@ -216,6 +217,11 @@ namespace Dependiator.MainWindowViews
 		private Task ManualRefreshAsync()
 		{
 			return MainViewModel.ManualRefreshAsync();
+		}
+
+		private Task ManualRefreshLayoutAsync()
+		{
+			return MainViewModel.ManualRefreshAsync(true);
 		}
 
 		public Task AutoRemoteCheckAsync()
