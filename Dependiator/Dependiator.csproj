@@ -190,6 +190,7 @@
     <Compile Include="Modeling\Serializing\DataSerializer.cs" />
     <Compile Include="Modeling\Serializing\IDataSerializer.cs" />
     <Compile Include="Utils\CollectionExtensions.cs" />
+    <Compile Include="Utils\ExceptionAsyncExtensions.cs" />
     <Compile Include="Utils\ExceptionExtensions.cs" />
     <Compile Include="Utils\MathExtensions.cs" />
     <Compile Include="Utils\AsyncLock.cs" />
@@ -202,6 +203,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Common\CredentialHandler.cs" />
     <Compile Include="ApplicationHandling\AssemblyResolver.cs" />
+    <Compile Include="Utils\StackTraceExtensions.cs" />
     <Compile Include="Utils\StopParameter.cs" />
     <Compile Include="Utils\Throttler.cs" />
     <Compile Include="Utils\Txt.cs" />

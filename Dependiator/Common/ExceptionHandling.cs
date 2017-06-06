@@ -91,7 +91,7 @@ namespace Dependiator.Common
 
 			hasShutdown = true;
 
-			string errorMessage = $"{message}:\n{e}";
+			string errorMessage = $"{message}:\n{e.Txt()}";
 			Log.Error(errorMessage);
 
 			if (IsDispatcherInitialized)
