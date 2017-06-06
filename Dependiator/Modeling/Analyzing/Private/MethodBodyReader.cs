@@ -14,10 +14,31 @@ namespace Dependiator.Modeling.Analyzing.Private
 	/// </summary>
 	public class MethodBodyReader
 	{
-		public List<ILInstruction> instructions = null;
-		protected byte[] il = null;
+		private List<ILInstruction> instructions = null;
+		private byte[] il = null;
 		private MethodBase mi = null;
 
+	
+
+		public IReadOnlyList<ILInstruction> Parse(MethodBase mi, MethodBody methodBody)
+		{
+			try
+			{
+				this.mi = mi;
+				if (methodBody != null)
+				{
+					il = methodBody.GetILAsByteArray();
+					ConstructInstructions(mi.Module);
+				}
+			}
+			catch (Exception e)
+			{
+				Log.Warn($"Error {e}");
+				throw;
+			}
+
+			return instructions;
+		}
 
 		/// <summary>
 		/// Constructs the array of ILInstructions according to the IL byte code.
@@ -25,11 +46,6 @@ namespace Dependiator.Modeling.Analyzing.Private
 		/// <param name="module"></param>
 		private void ConstructInstructions(Module module)
 		{
-			if (mi.IsGenericMethod)
-			{
-
-			}
-
 			byte[] il = this.il;
 			int position = 0;
 			instructions = new List<ILInstruction>();
@@ -248,9 +264,9 @@ namespace Dependiator.Modeling.Analyzing.Private
 						Type t = modules[j].ResolveType(metadataToken);
 						return t;
 					}
-					catch
+					catch (Exception e)
 					{
-
+						Log.Warn($"Error: {e.Msg()}");
 					}
 
 				}
@@ -291,34 +307,6 @@ namespace Dependiator.Modeling.Analyzing.Private
 		private Single ReadSingle(byte[] _il, ref int position)
 		{
 			return (Single)(((il[position++] | (il[position++] << 8)) | (il[position++] << 0x10)) | (il[position++] << 0x18));
-		}
-
-
-
-
-		/// <summary>
-		/// MethodBodyReader constructor
-		/// </summary>
-		/// <param name="mi">
-		///   The System.Reflection defined MethodInfo
-		/// </param>
-		/// <param name="methodBody"></param>
-		public MethodBodyReader(MethodBase mi, MethodBody methodBody)
-		{
-			try
-			{
-				this.mi = mi;
-				if (methodBody != null)
-				{
-					il = methodBody.GetILAsByteArray();
-					ConstructInstructions(mi.Module);
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Warn($"Error {e}");
-				throw;
-			}
 		}
 	}
 }

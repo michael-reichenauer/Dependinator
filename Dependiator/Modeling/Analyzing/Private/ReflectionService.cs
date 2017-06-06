@@ -256,8 +256,8 @@ namespace Dependiator.Modeling.Analyzing.Private
 					.Select(variable => variable.LocalType)
 					.ForEach(variableType => AddLinkToType(memberNode, variableType, model));
 
-				MethodBodyReader methodBodyReader = new MethodBodyReader(method, methodBody);
-				List<ILInstruction> instructions = methodBodyReader.instructions;
+				MethodBodyReader methodBodyReader = new MethodBodyReader();
+				IReadOnlyList<ILInstruction> instructions = methodBodyReader.Parse(method, methodBody);
 
 				foreach (ILInstruction instruction in instructions)
 				{
