@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
 
@@ -12,7 +13,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 		/// Gets the IL code of the method
 		/// </summary>
 		/// <returns></returns>
-		public static string GetBodyCode(List<ILInstruction> instructions)
+		public static string GetIlText(IEnumerable<ILInstruction> instructions)
 		{
 			StringBuilder sb = new StringBuilder();
 
@@ -36,72 +37,73 @@ namespace Dependiator.Modeling.Analyzing.Private
 			{
 				switch (code.OperandType)
 				{
-				case OperandType.InlineField:
-					System.Reflection.FieldInfo fOperand = ((System.Reflection.FieldInfo)operand);
-					result += " " + Globals.ProcessSpecialTypes(fOperand.FieldType.ToString()) + " " +
-					          Globals.ProcessSpecialTypes(fOperand.ReflectedType.ToString()) +
-					          "::" + fOperand.Name + "";
-					break;
-				case OperandType.InlineMethod:
-					try
-					{
-						System.Reflection.MethodInfo mOperand = (System.Reflection.MethodInfo)operand;
-						result += " ";
-						if (!mOperand.IsStatic) result += "instance ";
-						result += Globals.ProcessSpecialTypes(mOperand.ReturnType.ToString()) +
-						          " " + Globals.ProcessSpecialTypes(mOperand.ReflectedType.ToString()) +
-						          "::" + mOperand.Name + "()";
-					}
-					catch
-					{
+					case OperandType.InlineField:
+						System.Reflection.FieldInfo fOperand = ((System.Reflection.FieldInfo)operand);
+						result += " " + Globals.ProcessSpecialTypes(fOperand.FieldType.ToString()) + " " +
+											Globals.ProcessSpecialTypes(fOperand.ReflectedType.ToString()) +
+											"::" + fOperand.Name + "";
+						break;
+					case OperandType.InlineMethod:
 						try
 						{
-							System.Reflection.ConstructorInfo mOperand = (System.Reflection.ConstructorInfo)operand;
+							System.Reflection.MethodInfo mOperand = (System.Reflection.MethodInfo)operand;
 							result += " ";
 							if (!mOperand.IsStatic) result += "instance ";
-							result += "void " +
-							          Globals.ProcessSpecialTypes(mOperand.ReflectedType.ToString()) +
-							          "::" + mOperand.Name + "()";
+							result += Globals.ProcessSpecialTypes(mOperand.ReturnType.ToString()) +
+												" " + Globals.ProcessSpecialTypes(mOperand.ReflectedType.ToString()) +
+												"::" + mOperand.Name + "()";
 						}
 						catch
 						{
+							try
+							{
+								System.Reflection.ConstructorInfo mOperand = (System.Reflection.ConstructorInfo)operand;
+								result += " ";
+								if (!mOperand.IsStatic) result += "instance ";
+								result += "void " +
+													Globals.ProcessSpecialTypes(mOperand.ReflectedType.ToString()) +
+													"::" + mOperand.Name + "()";
+							}
+							catch
+							{
+							}
 						}
-					}
-					break;
-				case OperandType.ShortInlineBrTarget:
-				case OperandType.InlineBrTarget:
-					result += " " + GetExpandedOffset((int)operand);
-					break;
-				case OperandType.InlineType:
-					result += " " + Globals.ProcessSpecialTypes(operand.ToString());
-					break;
-				case OperandType.InlineString:
-					if (operand.ToString() == "\r\n") result += " \"\\r\\n\"";
-					else result += " \"" + operand.ToString() + "\"";
-					break;
-				case OperandType.ShortInlineVar:
-					result += operand.ToString();
-					break;
-				case OperandType.InlineI:
-				case OperandType.InlineI8:
-				case OperandType.InlineR:
-				case OperandType.ShortInlineI:
-				case OperandType.ShortInlineR:
-					result += operand.ToString();
-					break;
-				case OperandType.InlineTok:
-					if (operand is Type)
-						result += ((Type)operand).FullName;
-					else
-						result += "not supported";
-					break;
+						break;
+					case OperandType.ShortInlineBrTarget:
+					case OperandType.InlineBrTarget:
+						result += " " + GetExpandedOffset((int)operand);
+						break;
+					case OperandType.InlineType:
+						result += " " + Globals.ProcessSpecialTypes(operand.ToString());
+						break;
+					case OperandType.InlineString:
+						if (operand.ToString() == "\r\n") result += " \"\\r\\n\"";
+						else result += " \"" + operand.ToString() + "\"";
+						break;
+					case OperandType.ShortInlineVar:
+						result += operand.ToString();
+						break;
+					case OperandType.InlineI:
+					case OperandType.InlineI8:
+					case OperandType.InlineR:
+					case OperandType.ShortInlineI:
+					case OperandType.ShortInlineR:
+						result += operand.ToString();
+						break;
+					case OperandType.InlineTok:
+						if (operand is Type)
+							result += ((Type)operand).FullName;
+						else
+							result += "not supported";
+						break;
 
-				default: result += "not supported"; break;
+					default: result += "not supported"; break;
 				}
 			}
 			return result;
 
 		}
+
 
 		/// <summary>
 		/// Add enough zeros to a number as to be represented on 4 characters
@@ -113,6 +115,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 			{
 				result = "0" + result;
 			}
+
 			return result;
 		}
 	}
