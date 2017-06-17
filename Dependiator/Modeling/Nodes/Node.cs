@@ -48,7 +48,18 @@ namespace Dependiator.Modeling.Nodes
 
 		public NodeName NodeName { get; }
 		public NodeType NodeType { get; private set; }
-		public Rect NodeBounds { get; set; }
+
+		public Rect nodeBounds;
+		public Rect NodeBounds
+		{
+			get { return NodeType == NodeType.MemberType 
+					? new Rect(nodeBounds.X, nodeBounds.Y, 
+					nodeBounds.Width.MM(nodeBounds.Width, 150 / NodeScale), 
+					nodeBounds.Height.MM(nodeBounds.Height, 40 / NodeScale)) 
+					: nodeBounds;
+			}
+			set { nodeBounds = value; }
+		}
 		public double NodeScale => ParentNode?.itemsCanvas.Scale ?? 1.0;
 
 		public Node ParentNode { get; }

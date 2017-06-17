@@ -18,7 +18,6 @@ namespace Dependiator.Modeling.Nodes
 
 		protected override Rect GetItemBounds() => node.NodeBounds;
 
-
 		public double StrokeThickness => 0.8;
 		public Brush RectangleBrush => node.GetNodeBrush();
 		public Brush BackgroundBrush => node.GetBackgroundNodeBrush();

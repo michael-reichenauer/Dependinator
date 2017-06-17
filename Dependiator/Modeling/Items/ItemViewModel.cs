@@ -1,5 +1,4 @@
 using System.Windows;
-using Dependiator.Utils;
 using Dependiator.Utils.UI;
 
 
@@ -13,7 +12,7 @@ namespace Dependiator.Modeling.Items
 		public double CanvasWidth => ItemBounds.Width;
 		public double CanvasTop => ItemBounds.Top;
 		public double CanvasLeft => ItemBounds.Left;
-		public double CanvasHeight => ItemBounds.Height;
+		public virtual double CanvasHeight => ItemBounds.Height;
 
 		public Rect ItemBounds => GetItemBounds();
 
@@ -49,7 +48,7 @@ namespace Dependiator.Modeling.Items
 
 			if (this.ToString().EndsWith("Acs"))
 			{
-				
+
 			}
 			IsShowing = false;
 		}
