@@ -539,6 +539,18 @@ namespace Dependiator.Modeling.Nodes
 		}
 
 
+		public void AddOwnedLineItem(LinkLine line)
+		{
+			itemsCanvas?.AddItem(line.ViewModel);
+		}
+
+
+		public void RemoveOwnedLineItem(LinkLine line)
+		{
+			itemsCanvas?.RemoveItem(line.ViewModel);
+		}
+
+
 		private void InitNode()
 		{
 			if (ChildNodes.Any())
@@ -556,20 +568,9 @@ namespace Dependiator.Modeling.Nodes
 		}
 
 
-		public void AddOwnedLineItem(LinkLine line)
-		{
-			itemsCanvas?.AddItem(line.ViewModel);
-		}
-
-		public void RemoveOwnedLineItem(LinkLine line)
-		{
-			itemsCanvas?.RemoveItem(line.ViewModel);
-		}
-
-
 		private ItemViewModel CreateViewModel()
 		{
-			if (ChildNodes.Any())
+			if (NodeType != NodeType.MemberType)
 			{
 				itemsCanvas = new ItemsCanvas(this, ParentNode.itemsCanvas);
 
@@ -590,7 +591,7 @@ namespace Dependiator.Modeling.Nodes
 			}
 			else
 			{
-				viewModel = new SingleNodeViewModel(this);
+				viewModel = new MemberNodeViewModel(this);
 			}
 
 			return viewModel;

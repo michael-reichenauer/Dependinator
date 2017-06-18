@@ -1,5 +1,5 @@
 ﻿<UserControl
-	x:Class="Dependiator.Modeling.Nodes.SingleNodeView"
+	x:Class="Dependiator.Modeling.Nodes.MemberNodeView"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -10,7 +10,7 @@
 
 	<Border
 		BorderBrush="{Binding RectangleBrush}"
-		BorderThickness="{Binding StrokeThickness}"
+		BorderThickness="0.5"
 		Background="{Binding BackgroundBrush}"
 		CornerRadius="{Binding CornerRadius}">
 
@@ -18,8 +18,8 @@
 			Text="{Binding Name}"
 			Foreground="{DynamicResource TextBrush}"
 			FontSize="{Binding FontSize}"
-			HorizontalAlignment="Left"
-			VerticalAlignment="Top" />
+			HorizontalAlignment="Center"
+			VerticalAlignment="Center" />
 
 		<Border.ToolTip>
 			<ToolTip

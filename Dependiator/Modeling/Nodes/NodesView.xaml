@@ -122,6 +122,12 @@
 						</Setter>
 					</DataTrigger>
 
+					<DataTrigger Binding="{Binding Type}" Value="MemberNodeViewModel">
+						<Setter Property="ContentTemplate">
+							<Setter.Value><DataTemplate><nodes:MemberNodeView/></DataTemplate></Setter.Value>
+						</Setter>
+					</DataTrigger>
+
 					<!-- Link Line -->
 					<DataTrigger Binding="{Binding Type}" Value="LinkLineViewModel">
 						<Setter Property="ContentTemplate">
