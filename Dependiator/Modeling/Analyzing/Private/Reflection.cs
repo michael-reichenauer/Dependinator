@@ -15,7 +15,7 @@ namespace Dependiator.Modeling.Analyzing.Private
 		{
 			if (type.FullName != null)
 			{
-				return type.FullName;
+				return type.IsNested ? type.FullName.Replace("+", ".") : type.FullName;
 			}
 
 			Type currentType = type;

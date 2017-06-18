@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Reflection;
 using Dependiator.ApplicationHandling;
 using Dependiator.Common;
+using Dependiator.Features.FolderMonitoring;
 using Dependiator.Utils;
 
 
@@ -73,5 +74,18 @@ namespace Dependiator
 			FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 			return fvi.FileVersion;
 		}
+
+
+		private class TestInnerType
+		{
+			public IFolderMonitorService MonitorService { get; }
+
+
+			public TestInnerType(IFolderMonitorService monitorService)
+			{
+				MonitorService = monitorService;
+			}
+		}
+
 	}
 }

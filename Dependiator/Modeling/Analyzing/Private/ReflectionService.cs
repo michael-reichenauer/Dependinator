@@ -147,6 +147,11 @@ namespace Dependiator.Modeling.Analyzing.Private
 				string typeFullName = Reflection.GetTypeFullName(type);
 				Data.Node typeNode = model.AddNode(typeFullName, NodeType.TypeType);
 
+				if (typeFullName.Contains("TestInnerType"))
+				{
+					string tname = Reflection.GetTypeFullName(type);
+				}
+
 				AddTypeMembers(type, typeNode, model);
 
 				AddLinksToBaseTypes(typeNode, type, model);
