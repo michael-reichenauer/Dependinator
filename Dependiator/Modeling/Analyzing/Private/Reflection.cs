@@ -13,22 +13,13 @@ namespace Dependiator.Modeling.Analyzing.Private
 
 		public static string GetTypeFullName(Type type)
 		{
-			if (type.FullName != null)
-			{
-				return type.IsNested ? type.FullName.Replace("+", ".") : type.FullName;
-			}
-
 			Type currentType = type;
 			string name = null;
 			while (true)
 			{
-				if (currentType.FullName != null)
-				{
-					// Found a "normal" type, lets return combined name
-					return $"{currentType.FullName}.{name}";
-				}
-
-				name = name == null ? currentType.Name : $"{currentType.Name}.{name}";
+				name = name == null 
+					? currentType.IsByRef ? currentType.Name.Replace("&", "") : currentType.Name
+					: $"{currentType.Name}.{name}";
 
 				if (currentType.DeclaringType == null)
 				{
@@ -36,24 +27,16 @@ namespace Dependiator.Modeling.Analyzing.Private
 					return currentType.Namespace != null ? $"{currentType.Namespace}.{name}" : name;
 				}
 
-				// Try parent type
+				// Current type is nested within another type, lets try the parent type
 				currentType = currentType.DeclaringType;
 			}
 		}
 
 
-
 		public static string GetMemberFullName(MemberInfo memberInfo, string typeFullName)
 		{
 			string memberName;
-			//if (IsContructorName(memberInfo.Name))
-			//{
-			//	memberName = GetLastPartIfDotInName(typeFullName);
-			//}
-			//else if (IsStaticContructorName(memberInfo.Name))
-			//{
-			//	memberName = "_s_" + GetLastPartIfDotInName(typeFullName);
-			//}
+
 			if (IsSpecialName(memberInfo))
 			{
 				memberName = GetSpecialName(memberInfo);

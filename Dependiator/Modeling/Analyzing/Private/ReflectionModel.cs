@@ -33,6 +33,10 @@ namespace Dependiator.Modeling.Analyzing.Private
 
 		public void AddLink(string sourceNodeName, string targetNodeName)
 		{
+			if (targetNodeName.Contains("&"))
+			{
+			}
+
 			Data.Link link = new Data.Link
 			{
 				Source = sourceNodeName,
