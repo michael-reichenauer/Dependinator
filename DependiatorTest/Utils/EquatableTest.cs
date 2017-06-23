@@ -86,10 +86,8 @@ namespace DependiatorTest.Utils
 			public Id(string id)
 			{
 				this.id = id;
+				IsEqualWhen(other => id == other.id, id);
 			}
-
-			protected override bool IsEqual(Id other) => id == other.id;
-			protected override int GetHash() => id?.GetHashCode() ?? 0;
 		}
 
 		// Class, which implements IEquatable<T>, by using Equatable helper class
@@ -102,6 +100,7 @@ namespace DependiatorTest.Utils
 				this.id = id;
 			}
 
+			public override int GetHashCode() => id?.GetHashCode() ?? 0;
 			public bool Equals(IdImpl other) => this == other;
 
 			public override bool Equals(object obj) => obj is IdImpl && Equals((IdImpl)obj);
@@ -109,9 +108,7 @@ namespace DependiatorTest.Utils
 			public static bool operator ==(IdImpl obj1, IdImpl obj2) =>
 				Equatable.IsEqual(obj1, obj2, (o1, o2) => o1.id == o2.id);
 
-			public static bool operator !=(IdImpl obj1, IdImpl obj2) => !(obj1 == obj2);
-
-			public override int GetHashCode() => id.GetHashCode();
+			public static bool operator !=(IdImpl obj1, IdImpl obj2) => !(obj1 == obj2);		
 		}
 	}
 }
