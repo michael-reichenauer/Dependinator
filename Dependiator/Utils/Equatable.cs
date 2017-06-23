@@ -31,7 +31,7 @@ namespace Dependiator.Utils
 
 		protected void IsEqualWhen(
 			Func<T, bool> isEqual,
-			object getHashCodeObject, 
+			object getHashCodeObject,
 			params object[] getHashCodeObjects)
 		{
 			isEqualFunc = isEqual;
@@ -100,7 +100,7 @@ namespace Dependiator.Utils
 				public static bool operator ==(Id obj1, Id obj2) =>
 					Equatable.IsEqualWhen(obj1, obj2, (o1, o2) => o1.id == o2.id);
 				public static bool operator !=(Id obj1, Id obj2) => !(obj1 == obj2);
-				public override int GetHashCode() => id.GetHashCode();
+				public override int GetHashCode() => id?.GetHashCode() ?? 0;
 			}
 
 		*/
