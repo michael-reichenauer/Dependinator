@@ -41,6 +41,7 @@ namespace Dependiator.Modeling.Nodes
 			PersistentNodeColor = null;
 			Links = new NodeLinks(linkService);
 			RootNode = parent?.RootNode ?? this;
+			IsEqualWhen(other => NodeName == other.NodeName, NodeName);
 		}
 
 
@@ -696,9 +697,5 @@ namespace Dependiator.Modeling.Nodes
 				yield return descendent;
 			}
 		}
-
-
-		protected override bool IsEqual(Node other) => NodeName == other.NodeName;
-		protected override int GetHash() => NodeName.GetHashCode();
 	}
 }

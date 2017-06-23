@@ -16,12 +16,11 @@ namespace Dependiator.Modeling.Nodes
 		public NodeType(string type)
 		{
 			this.type = type;
+			IsEqualWhen(other => type == other.type, type);
 		}
 
 		public static implicit operator NodeType(string text) => new NodeType(text);
 
 		public static implicit operator string(NodeType nodeType) => nodeType?.type;
-
-		protected override bool IsEqual(NodeType other) => type == other.type;
 	}
 }

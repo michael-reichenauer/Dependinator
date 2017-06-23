@@ -49,6 +49,8 @@ namespace Dependiator.Utils
 			{
 				Log.Warn($"Error: {Message}");
 			}
+
+			IsEqualWhen(IsSameError, 0);
 		}
 
 
@@ -73,7 +75,9 @@ namespace Dependiator.Utils
 		}
 
 
-		protected override bool IsEqual(Error other)
+		public override string ToString() => Text;
+
+		protected bool IsSameError(Error other)
 		{
 			if ((ReferenceEquals(this, None) && !ReferenceEquals(other, None))
 					|| !ReferenceEquals(this, None) && ReferenceEquals(other, None))
@@ -87,9 +91,5 @@ namespace Dependiator.Utils
 				|| (GetType() == other.GetType() && exception != null && other.exception != null
 					&& other.exception.GetType().IsInstanceOfType(this));
 		}
-
-		protected override int GetHash() => 0;
-
-		public override string ToString() => Text;
 	}
 }

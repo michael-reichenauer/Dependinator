@@ -17,6 +17,7 @@ namespace Dependiator.Common
 		public CommitSha()
 		{
 			shortSha = new Lazy<string>(() => Sha.Substring(0, 6));
+			IsEqualWhen(other => Sha == other.Sha, Sha);
 		}
 
 		public CommitSha(string commitSha)
@@ -29,10 +30,6 @@ namespace Dependiator.Common
 		public string Sha { get; private set; }
 
 		public string ShortSha => shortSha.Value;
-
-		protected override bool IsEqual(CommitSha other) => Sha == other.Sha;
-
-		protected override int GetHash() => Sha.GetHashCode();
 
 		public override string ToString() => Sha;
 	}
