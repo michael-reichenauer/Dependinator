@@ -14,7 +14,6 @@ namespace Dependiator.Modeling.Nodes
 	{
 		private const int InitialScaleFactor = 7;
 		private readonly INodeService nodeService;
-		private readonly ILinkService linkService;
 
 		private readonly List<Node> childNodes = new List<Node>();
 
@@ -36,7 +35,6 @@ namespace Dependiator.Modeling.Nodes
 			NodeType type)
 		{
 			this.nodeService = nodeService;
-			this.linkService = linkService;
 			ParentNode = parent;
 			NodeName = name;
 			NodeType = type;
@@ -52,15 +50,18 @@ namespace Dependiator.Modeling.Nodes
 		public Rect nodeBounds;
 		public Rect NodeBounds
 		{
-			get { return NodeType == NodeType.MemberType 
-					? new Rect(nodeBounds.X, nodeBounds.Y, 
-					nodeBounds.Width.MM(nodeBounds.Width, 150 / NodeScale), 
-					nodeBounds.Height.MM(nodeBounds.Height, 40 / NodeScale)) 
+			get
+			{
+				return NodeType == NodeType.MemberType
+			? new Rect(nodeBounds.X, nodeBounds.Y,
+					nodeBounds.Width.MM(nodeBounds.Width, 150 / NodeScale),
+					nodeBounds.Height.MM(nodeBounds.Height, 40 / NodeScale))
 					: nodeBounds;
 			}
 			set { nodeBounds = value; }
 		}
-		public double NodeScale => ParentNode?.itemsCanvas.Scale ?? 1.0;
+
+		public double NodeScale => ParentNode?.ItemsScale ?? 1.0;
 
 		public Node ParentNode { get; }
 
@@ -77,22 +78,30 @@ namespace Dependiator.Modeling.Nodes
 		public double? PersistentScale { get; set; }
 		public Point? PersistentOffset { get; set; }
 
-		public Point GetChildToParentCanvasPoint(Point childPoint) => 
+		public Point GetChildToParentCanvasPoint(Point childPoint) =>
 			itemsCanvas.GetChildToParentCanvasPoint(childPoint);
 
 		private static bool IsVisibleAtScale(double scale) => scale > 0.15;
 
-		public string DebugToolTip => "";
-			//$"\n Children: {ChildNodes.Count} Shown Items: {CountShowingNodes()}\n" +
-			//$"Items Scale: {ItemsScale:0.00}, Scalefactor: {ItemsScaleFactor:0.00}\n" +
-			//$"Offset: {ItemsOffset.TS()}, CanvasOffset: {ItemsCanvasOffset.TS()}\n" +
-			//$"Rect: {NodeBounds.TS()}\n" +
-			//$"Pos in parent coord: {ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location).TS()}\n" +
-			//$"Pos in child coord: {ParentNode?.itemsCanvas?.GetParentToChildCanvasPoint(ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location) ?? new Point(0, 0)).TS()}\n" +
-			//$"Pos in mainwindow coord: {itemsCanvas?.GetDevicePoint().TS()}\n" +
-			//$"Visual area {itemsCanvas?.ViewArea.TS()}\n" +
-			//$"Recursive viewArea {itemsCanvas?.GetVisualAncestorsArea().TS()}\n\n" +
-			//$"Parent {ParentNode?.NodeName}:{ParentNode?.DebugToolTip}";
+		public string DebugToolTip => ItemsToolTip;
+		
+
+		public string ItemsToolTip =>
+			$"\nChildren: {ChildNodes.Count}, Lines: {Links.OwnedLines.Count}\n" +
+			$"Total Nodes: {CountShowingNodes()}, Lines: {CountShowingLines()}\n" +
+			$"Node Scale: {NodeScale:0.00}, Items Scale: {ItemsScale:0.00}, (Factor: {ItemsScaleFactor:0.00})\n";
+
+		public string ZoomToolTip =>
+			$"\n Children: {ChildNodes.Count} Shown Items: {CountShowingNodes()}\n" +
+			$"Items Scale: {ItemsScale:0.00}, Scalefactor: {ItemsScaleFactor:0.00}\n" +
+			$"Offset: {ItemsOffset.TS()}, CanvasOffset: {ItemsCanvasOffset.TS()}\n" +
+			$"Rect: {NodeBounds.TS()}\n" +
+			$"Pos in parent coord: {ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location).TS()}\n" +
+			$"Pos in child coord: {ParentNode?.itemsCanvas?.GetParentToChildCanvasPoint(ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location) ?? new Point(0, 0)).TS()}\n" +
+			$"Pos in mainwindow coord: {itemsCanvas?.GetDevicePoint().TS()}\n" +
+			$"Visual area {itemsCanvas?.ViewArea.TS()}\n" +
+			$"Recursive viewArea {itemsCanvas?.GetVisualAncestorsArea().TS()}\n\n" +
+			$"Parent {ParentNode?.NodeName}:{ParentNode?.DebugToolTip}";
 
 
 		public Node RootNode { get; }
@@ -411,7 +420,7 @@ namespace Dependiator.Modeling.Nodes
 			itemsCanvas.UpdateItem(itemViewModel);
 		}
 
-		
+
 
 
 		private void UpdateShownItems()
@@ -502,16 +511,9 @@ namespace Dependiator.Modeling.Nodes
 
 		private int CountShowingNodes()
 		{
-			// Log.Debug("Counting shown nodes:");
 			Stack<Node> nodes = new Stack<Node>();
 
-			Node startNode = this;
-			while (!startNode.IsRootNode)
-			{
-				startNode = startNode.ParentNode;
-			}
-
-			nodes.Push(startNode);
+			nodes.Push(GetRootNode());
 
 			int count = 0;
 			while (nodes.Any())
@@ -520,13 +522,41 @@ namespace Dependiator.Modeling.Nodes
 				if (node.IsShowing)
 				{
 					count++;
-					count += node.Links.OwnedLines.Count(l => l.ViewModel.IsShowing);
-					// Log.Debug($"  IsShowing {node}");
 					node.ChildNodes.ForEach(nodes.Push);
 				}
 			}
 
+			// Skip root node, which is not shown
 			return count - 1;
+		}
+
+
+		private int CountShowingLines()
+		{
+			Stack<Node> nodes = new Stack<Node>();
+			nodes.Push(GetRootNode());
+
+			int count = 0;
+			while (nodes.Any())
+			{
+				Node node = nodes.Pop();
+				count += node.Links.OwnedLines.Count(l => l.ViewModel.IsShowing);
+
+				node.ChildNodes.ForEach(nodes.Push);			
+			}
+
+			return count;
+		}
+
+		private Node GetRootNode()
+		{
+			Node startNode = this;
+			while (!startNode.IsRootNode)
+			{
+				startNode = startNode.ParentNode;
+			}
+
+			return startNode;
 		}
 
 
