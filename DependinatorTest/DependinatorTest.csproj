@@ -53,7 +53,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Dependiator\Dependiator.csproj">
+    <ProjectReference Include="..\Dependinator\Dependinator.csproj">
       <Project>{5bec2bbc-5480-44b9-a412-659c0d057d41}</Project>
       <Name>Dependiator</Name>
     </ProjectReference>
