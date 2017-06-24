@@ -1,9 +1,9 @@
 ﻿
 using System.Windows;
-using Dependiator.Utils.UI;
+using Dependinator.Utils.UI;
 
 
-namespace Dependiator.Common.MessageDialogs
+namespace Dependinator.Common.MessageDialogs
 {
 	internal class MessageDialogViewModel : ViewModel
 	{

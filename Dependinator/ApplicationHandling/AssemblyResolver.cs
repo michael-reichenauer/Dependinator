@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 using System.Reflection;
-using Dependiator.Utils;
+using Dependinator.Utils;
 
 
-namespace Dependiator.ApplicationHandling
+namespace Dependinator.ApplicationHandling
 {
 	internal class AssemblyResolver
 	{

@@ -1,7 +1,7 @@
 ﻿using System;
 
 
-namespace Dependiator.Features.FolderMonitoring
+namespace Dependinator.Features.FolderMonitoring
 {
 	public class FileEventArgs : EventArgs
 	{

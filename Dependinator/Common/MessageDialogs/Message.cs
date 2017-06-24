@@ -1,9 +1,9 @@
 ﻿using System.Media;
 using System.Windows;
-using Dependiator.MainWindowViews;
+using Dependinator.MainWindowViews;
 
 
-namespace Dependiator.Common.MessageDialogs
+namespace Dependinator.Common.MessageDialogs
 {
 	internal interface IMessage
 	{

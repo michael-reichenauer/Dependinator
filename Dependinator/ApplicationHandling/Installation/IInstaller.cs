@@ -1,4 +1,4 @@
-﻿namespace Dependiator.ApplicationHandling.Installation
+﻿namespace Dependinator.ApplicationHandling.Installation
 {
 	public interface IInstaller
 	{

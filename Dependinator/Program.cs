@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reflection;
-using Dependiator.ApplicationHandling;
-using Dependiator.Common;
-using Dependiator.Features.FolderMonitoring;
-using Dependiator.Utils;
+using Dependinator.ApplicationHandling;
+using Dependinator.Common;
+using Dependinator.Features.FolderMonitoring;
+using Dependinator.Utils;
 
 
-namespace Dependiator
+namespace Dependinator
 {
 	public class Program
 	{

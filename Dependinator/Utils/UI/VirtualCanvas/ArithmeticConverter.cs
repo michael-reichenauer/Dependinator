@@ -12,7 +12,7 @@ using System.Windows;
 using System.Windows.Data;
 
 
-namespace Dependiator.Utils.UI.VirtualCanvas
+namespace Dependinator.Utils.UI.VirtualCanvas
 {
 	/// <summary>
 	/// Represents the converter that performs simple arithmetic operations on numeric values. 

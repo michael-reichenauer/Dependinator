@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Windows.Threading;
-using Dependiator.Utils.UI;
+using Dependinator.Utils.UI;
 
 
-namespace Dependiator.Common.ProgressHandling
+namespace Dependinator.Common.ProgressHandling
 {
 	internal class ProgressDialogViewModel : ViewModel
 	{

@@ -1,9 +1,9 @@
 using System;
 using System.Linq;
-using Dependiator.Utils;
+using Dependinator.Utils;
 
 
-namespace Dependiator.Modeling.Nodes
+namespace Dependinator.Modeling.Nodes
 {
 	internal class NodeName : Equatable<NodeName>
 	{

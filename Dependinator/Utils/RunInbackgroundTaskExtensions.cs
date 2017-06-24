@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 
 
-namespace Dependiator.Utils
+namespace Dependinator.Utils
 {
 	public static class RunInbackgroundTaskExtensions
 	{

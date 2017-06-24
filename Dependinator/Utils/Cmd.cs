@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Text;
 
 
-namespace Dependiator.Utils
+namespace Dependinator.Utils
 {
 	public class Cmd : ICmd
 	{

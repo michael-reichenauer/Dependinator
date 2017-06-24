@@ -2,10 +2,10 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Dependiator.Utils;
+using Dependinator.Utils;
 
 
-namespace Dependiator.Modeling.Analyzing.Private
+namespace Dependinator.Modeling.Analyzing.Private
 {
 	internal static class Assemblies
 	{

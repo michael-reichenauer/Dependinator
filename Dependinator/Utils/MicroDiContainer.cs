@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 
 
-namespace Dependiator.Utils
+namespace Dependinator.Utils
 {
 	/// <summary>
 	/// MicroDIContainer is a simple dependency injection container similar to e.g. AutoFac.

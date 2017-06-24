@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 
 
-namespace Dependiator.Utils
+namespace Dependinator.Utils
 {
 	public class CmdResult
 	{

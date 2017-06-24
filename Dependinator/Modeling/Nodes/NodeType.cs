@@ -1,8 +1,8 @@
-using Dependiator.Modeling.Serializing;
-using Dependiator.Utils;
+using Dependinator.Modeling.Serializing;
+using Dependinator.Utils;
 
 
-namespace Dependiator.Modeling.Nodes
+namespace Dependinator.Modeling.Nodes
 {
 	internal class NodeType : Equatable<NodeType>
 	{

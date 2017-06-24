@@ -1,11 +1,11 @@
 using System;
 using System.IO;
-using Dependiator.ApplicationHandling;
-using Dependiator.Utils;
+using Dependinator.ApplicationHandling;
+using Dependinator.Utils;
 using Newtonsoft.Json;
 
 
-namespace Dependiator.Modeling.Serializing
+namespace Dependinator.Modeling.Serializing
 {
 	internal class DataSerializer : IDataSerializer
 	{

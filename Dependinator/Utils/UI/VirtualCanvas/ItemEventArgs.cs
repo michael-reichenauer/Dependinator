@@ -1,7 +1,7 @@
 using System;
 
 
-namespace Dependiator.Utils.UI.VirtualCanvas
+namespace Dependinator.Utils.UI.VirtualCanvas
 {
 	public class ItemEventArgs : EventArgs
 	{

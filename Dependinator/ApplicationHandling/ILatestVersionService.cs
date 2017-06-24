@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 
 
-namespace Dependiator.ApplicationHandling
+namespace Dependinator.ApplicationHandling
 {
 	internal interface ILatestVersionService
 	{

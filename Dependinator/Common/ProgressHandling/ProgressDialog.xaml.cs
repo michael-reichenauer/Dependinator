@@ -2,7 +2,7 @@
 using System.Windows;
 
 
-namespace Dependiator.Common.ProgressHandling
+namespace Dependinator.Common.ProgressHandling
 {
 	/// <summary>
 	/// Interaction logic for ProgressDialog.xaml

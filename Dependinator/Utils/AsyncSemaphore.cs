@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 
 
-namespace Dependiator.Utils
+namespace Dependinator.Utils
 {
 	/// <summary>
 	/// An asynchronous semaphore. Can be used for throttling or handling concurrent access to a

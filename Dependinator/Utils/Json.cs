@@ -1,7 +1,7 @@
 using Newtonsoft.Json;
 
 
-namespace Dependiator.Utils
+namespace Dependinator.Utils
 {
 	public static class Json
 	{

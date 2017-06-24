@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Dependiator.Modeling.Nodes;
+using Dependinator.Modeling.Nodes;
 
 
-namespace Dependiator.Modeling.Links
+namespace Dependinator.Modeling.Links
 {
 	internal interface ILinkService
 	{

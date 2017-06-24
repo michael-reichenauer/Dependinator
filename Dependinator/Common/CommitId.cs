@@ -1,8 +1,8 @@
 ﻿using System.Runtime.Serialization;
-using Dependiator.Utils;
+using Dependinator.Utils;
 
 
-namespace Dependiator.Common
+namespace Dependinator.Common
 {
 
 	[DataContract]

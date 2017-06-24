@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
-using Dependiator.Modeling.Nodes;
-using Dependiator.Utils.UI.VirtualCanvas;
+using Dependinator.Modeling.Nodes;
+using Dependinator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependiator.Modeling.Items
+namespace Dependinator.Modeling.Items
 {
 	internal class ItemsCanvas
 	{

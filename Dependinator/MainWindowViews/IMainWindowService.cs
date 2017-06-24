@@ -1,4 +1,4 @@
-﻿namespace Dependiator.MainWindowViews
+﻿namespace Dependinator.MainWindowViews
 {
 	public interface IMainWindowService
 	{

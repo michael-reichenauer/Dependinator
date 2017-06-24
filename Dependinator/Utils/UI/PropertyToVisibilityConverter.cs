@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Data;
 
 
-namespace Dependiator.Utils.UI
+namespace Dependinator.Utils.UI
 {
 	/// <summary>
 	/// Convert between boolean and visibility

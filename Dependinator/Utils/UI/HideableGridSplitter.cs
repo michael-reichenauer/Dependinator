@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 
 
-namespace Dependiator.Utils.UI
+namespace Dependinator.Utils.UI
 {
 	/// <summary>
 	/// Grid splitter, which can toggle visibility of grid row after a the grid splitter

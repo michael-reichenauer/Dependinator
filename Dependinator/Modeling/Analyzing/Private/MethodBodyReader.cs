@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
-using Dependiator.Utils;
+using Dependinator.Utils;
 
 
-namespace Dependiator.Modeling.Analyzing.Private
+namespace Dependinator.Modeling.Analyzing.Private
 {
 	/// <summary>
 	/// Based on:

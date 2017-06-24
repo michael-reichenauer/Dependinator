@@ -7,8 +7,8 @@
     <ProjectGuid>{24BF4E2A-398D-4328-A691-4E0C042CE417}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DependiatorTest</RootNamespace>
-    <AssemblyName>DependiatorTest</AssemblyName>
+    <RootNamespace>DependiantorTest</RootNamespace>
+    <AssemblyName>DependinatorTest</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -55,7 +55,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Dependinator\Dependinator.csproj">
       <Project>{5bec2bbc-5480-44b9-a412-659c0d057d41}</Project>
-      <Name>Dependiator</Name>
+      <Name>Dependinator</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

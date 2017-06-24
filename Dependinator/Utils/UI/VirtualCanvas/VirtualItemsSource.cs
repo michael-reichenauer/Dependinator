@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Windows;
 
 
-namespace Dependiator.Utils.UI.VirtualCanvas
+namespace Dependinator.Utils.UI.VirtualCanvas
 {
 	public abstract class VirtualItemsSource : ISpatialItemsSource, IList
 	{

@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
-using Dependiator.Modeling.Items;
+using Dependinator.Modeling.Items;
 
 
-namespace Dependiator.Modeling.Links
+namespace Dependinator.Modeling.Links
 {
 	internal class LinkLineViewModel : ItemViewModel
 	{

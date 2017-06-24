@@ -1,7 +1,7 @@
 using System;
 
 
-namespace Dependiator.Utils
+namespace Dependinator.Utils
 {
 	internal class Disposable : IDisposable
 	{

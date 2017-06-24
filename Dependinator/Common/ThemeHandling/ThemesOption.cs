@@ -1,4 +1,4 @@
-namespace Dependiator.Common.ThemeHandling
+namespace Dependinator.Common.ThemeHandling
 {
 	public class ThemesOption
 	{

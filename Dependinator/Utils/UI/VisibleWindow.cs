@@ -4,7 +4,7 @@ using System.Windows.Interop;
 
 
 
-namespace Dependiator.Utils.UI
+namespace Dependinator.Utils.UI
 {
 	public class VisibleWindow
 	{

@@ -1,7 +1,7 @@
-﻿using Dependiator.Modeling.Serializing;
+﻿using Dependinator.Modeling.Serializing;
 
 
-namespace Dependiator.Modeling.Analyzing
+namespace Dependinator.Modeling.Analyzing
 {
 	internal interface IReflectionService
 	{

@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using Dependiator.Modeling.Items;
-using Dependiator.Modeling.Links;
-using Dependiator.Utils;
+using Dependinator.Modeling.Items;
+using Dependinator.Modeling.Links;
+using Dependinator.Utils;
 
 
-namespace Dependiator.Modeling.Nodes
+namespace Dependinator.Modeling.Nodes
 {
 	internal class Node : Equatable<Node>, IItemBounds
 	{

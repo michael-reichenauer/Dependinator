@@ -5,7 +5,7 @@ using Autofac;
 using Autofac.Core.Activators.Reflection;
 
 
-namespace Dependiator.Utils
+namespace Dependinator.Utils
 {
 	internal class DependencyInjection
 	{

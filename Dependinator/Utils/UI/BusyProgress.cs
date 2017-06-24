@@ -1,7 +1,7 @@
 using System;
 
 
-namespace Dependiator.Utils.UI
+namespace Dependinator.Utils.UI
 {
 	internal class BusyProgress : IDisposable
 	{

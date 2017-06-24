@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Dependiator.Utils;
-using Dependiator.Utils.UI.VirtualCanvas;
+using Dependinator.Utils;
+using Dependinator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependiator.Modeling.Items
+namespace Dependinator.Modeling.Items
 {
 	internal class ItemsSource : VirtualItemsSource
 	{

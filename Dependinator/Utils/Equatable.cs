@@ -1,7 +1,7 @@
 using System;
 
 
-namespace Dependiator.Utils
+namespace Dependinator.Utils
 {
 	/// <summary>
 	/// Base class, which implement IEquatable'T' interface and makes it easier to prt

@@ -1,10 +1,10 @@
 ﻿using System.IO;
 using System.Windows;
 using System.Windows.Shell;
-using Dependiator.ApplicationHandling.SettingsHandling;
+using Dependinator.ApplicationHandling.SettingsHandling;
 
 
-namespace Dependiator.Common
+namespace Dependinator.Common
 {
 	public class JumpListService
 	{

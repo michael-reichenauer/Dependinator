@@ -1,7 +1,7 @@
-using Dependiator.Common.ThemeHandling;
+using Dependinator.Common.ThemeHandling;
 
 
-namespace Dependiator.ApplicationHandling.SettingsHandling
+namespace Dependinator.ApplicationHandling.SettingsHandling
 {
 	public class Options
 	{

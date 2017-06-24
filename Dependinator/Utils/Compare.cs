@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 
 
-namespace Dependiator.Utils
+namespace Dependinator.Utils
 {
 	internal static class Compare
 	{

@@ -3,7 +3,7 @@ using System.ComponentModel;
 using System.Linq;
 
 
-namespace Dependiator.Utils.UI
+namespace Dependinator.Utils.UI
 {
 	internal class WhenSetter
 	{

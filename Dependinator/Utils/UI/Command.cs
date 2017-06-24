@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 
 
-namespace Dependiator.Utils.UI
+namespace Dependinator.Utils.UI
 {
 	public class Command : ICommand
 	{

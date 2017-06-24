@@ -1,7 +1,7 @@
 ﻿using System;
 
 
-namespace Dependiator.Utils
+namespace Dependinator.Utils
 {
 	/// <summary>
 	/// Attribute used to mark types that should be registered as a single instance in

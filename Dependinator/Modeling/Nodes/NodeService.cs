@@ -1,10 +1,10 @@
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using Dependiator.Common.ThemeHandling;
+using Dependinator.Common.ThemeHandling;
 
 
-namespace Dependiator.Modeling.Nodes
+namespace Dependinator.Modeling.Nodes
 {
 	internal class NodeService : INodeService
 	{

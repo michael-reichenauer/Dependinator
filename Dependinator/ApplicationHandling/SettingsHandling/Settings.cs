@@ -1,9 +1,9 @@
 using System;
 using System.IO;
-using Dependiator.Utils;
+using Dependinator.Utils;
 
 
-namespace Dependiator.ApplicationHandling.SettingsHandling
+namespace Dependinator.ApplicationHandling.SettingsHandling
 {
 	public static class Settings
 	{

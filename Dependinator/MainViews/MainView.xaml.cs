@@ -5,7 +5,7 @@ using System.Windows.Input;
 using UserControl = System.Windows.Controls.UserControl;
 
 
-namespace Dependiator.MainViews
+namespace Dependinator.MainViews
 {
 	/// <summary>
 	/// Interaction logic for MainView.xaml

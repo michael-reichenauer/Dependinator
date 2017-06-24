@@ -5,7 +5,7 @@ using System.Linq;
 using System.Windows;
 
 
-namespace Dependiator.Utils.UI.VirtualCanvas
+namespace Dependinator.Utils.UI.VirtualCanvas
 {
 	/// <summary>
 	/// This class efficiently stores and lazily retrieves arbitrarily sized and positioned objects in a prioritized order in a quad-tree data structure.

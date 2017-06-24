@@ -1,7 +1,7 @@
 ﻿using System;
 
 
-namespace Dependiator.MainWindowViews
+namespace Dependinator.MainWindowViews
 {
 	internal class MainWindowService : IMainWindowService
 	{

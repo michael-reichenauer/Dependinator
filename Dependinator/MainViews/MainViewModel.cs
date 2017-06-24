@@ -2,17 +2,17 @@ using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using Dependiator.Common.ProgressHandling;
-using Dependiator.Common.ThemeHandling;
-using Dependiator.MainViews.Private;
-using Dependiator.Modeling;
-using Dependiator.Modeling.Items;
-using Dependiator.Modeling.Nodes;
-using Dependiator.Utils;
-using Dependiator.Utils.UI;
+using Dependinator.Modeling;
+using Dependinator.Common.ProgressHandling;
+using Dependinator.Common.ThemeHandling;
+using Dependinator.MainViews.Private;
+using Dependinator.Modeling.Items;
+using Dependinator.Modeling.Nodes;
+using Dependinator.Utils;
+using Dependinator.Utils.UI;
 
 
-namespace Dependiator.MainViews
+namespace Dependinator.MainViews
 {
 	[SingleInstance]
 	internal class MainViewModel : ViewModel

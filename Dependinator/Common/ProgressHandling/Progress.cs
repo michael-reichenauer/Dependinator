@@ -1,7 +1,7 @@
 ﻿using System;
 
 
-namespace Dependiator.Common.ProgressHandling
+namespace Dependinator.Common.ProgressHandling
 {
 	internal class Progress : IDisposable
 	{

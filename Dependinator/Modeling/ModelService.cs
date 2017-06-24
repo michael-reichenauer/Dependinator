@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Dependiator.Modeling.Links;
-using Dependiator.Modeling.Nodes;
-using Dependiator.Modeling.Serializing;
-using Dependiator.Utils;
+using Dependinator.Modeling.Links;
+using Dependinator.Modeling.Nodes;
+using Dependinator.Modeling.Serializing;
+using Dependinator.Utils;
 
 
-namespace Dependiator.Modeling
+namespace Dependinator.Modeling
 {
 	internal class ModelService : IModelService
 	{

@@ -1,17 +1,17 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
-using Dependiator.ApplicationHandling;
-using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.Modeling;
-using Dependiator.Modeling.Analyzing;
-using Dependiator.Modeling.Items;
-using Dependiator.Modeling.Nodes;
-using Dependiator.Modeling.Serializing;
-using Dependiator.Utils;
+using Dependinator.ApplicationHandling;
+using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Modeling;
+using Dependinator.Modeling.Analyzing;
+using Dependinator.Modeling.Items;
+using Dependinator.Modeling.Nodes;
+using Dependinator.Modeling.Serializing;
+using Dependinator.Utils;
 
 
-namespace Dependiator.MainViews.Private
+namespace Dependinator.MainViews.Private
 {
 	[SingleInstance]
 	internal class ModelViewService : IModelViewService

@@ -1,9 +1,9 @@
 ﻿using System.Threading.Tasks;
 using System.Windows;
-using Dependiator.Modeling.Items;
+using Dependinator.Modeling.Items;
 
 
-namespace Dependiator.MainViews.Private
+namespace Dependinator.MainViews.Private
 {
 	internal interface IModelViewService
 	{

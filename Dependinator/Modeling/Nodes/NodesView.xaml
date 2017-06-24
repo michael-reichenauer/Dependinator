@@ -1,14 +1,14 @@
 ﻿<UserControl
-	x:Class="Dependiator.Modeling.Nodes.NodesView"
+	x:Class="Dependinator.Modeling.Nodes.NodesView"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-	xmlns:local="clr-namespace:Dependiator.Modeling"
-	xmlns:virtualCanvas="clr-namespace:Dependiator.Utils.UI.VirtualCanvas"
+	xmlns:local="clr-namespace:Dependinator.Modeling"
+	xmlns:virtualCanvas="clr-namespace:Dependinator.Utils.UI.VirtualCanvas"
 	xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-	xmlns:links="clr-namespace:Dependiator.Modeling.Links"
-	xmlns:nodes="clr-namespace:Dependiator.Modeling.Nodes"
+	xmlns:links="clr-namespace:Dependinator.Modeling.Links"
+	xmlns:nodes="clr-namespace:Dependinator.Modeling.Nodes"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 

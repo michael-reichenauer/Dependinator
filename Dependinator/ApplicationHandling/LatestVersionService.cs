@@ -6,11 +6,11 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.Utils;
+using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Utils;
 
 
-namespace Dependiator.ApplicationHandling
+namespace Dependinator.ApplicationHandling
 {
 	[SingleInstance]
 	internal class LatestVersionService : ILatestVersionService

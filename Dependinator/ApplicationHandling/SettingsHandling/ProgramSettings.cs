@@ -1,4 +1,4 @@
-namespace Dependiator.ApplicationHandling.SettingsHandling
+namespace Dependinator.ApplicationHandling.SettingsHandling
 {
 	internal class ProgramSettings
 	{

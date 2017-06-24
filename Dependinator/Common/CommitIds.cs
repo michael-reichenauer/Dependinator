@@ -1,4 +1,4 @@
-﻿namespace Dependiator.Common
+﻿namespace Dependinator.Common
 {
 	//internal static class CommitIds
 	//{

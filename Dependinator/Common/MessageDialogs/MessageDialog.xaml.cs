@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 
 
-namespace Dependiator.Common.MessageDialogs
+namespace Dependinator.Common.MessageDialogs
 {
 	/// <summary>
 	/// Interaction logic for MessageDialog.xaml

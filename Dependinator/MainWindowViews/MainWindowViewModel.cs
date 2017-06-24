@@ -3,17 +3,17 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
-using Dependiator.ApplicationHandling;
-using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.Common;
-using Dependiator.Common.MessageDialogs;
-using Dependiator.MainViews;
-using Dependiator.Utils;
-using Dependiator.Utils.UI;
+using Dependinator.ApplicationHandling;
+using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Common;
+using Dependinator.Common.MessageDialogs;
+using Dependinator.MainViews;
+using Dependinator.Utils;
+using Dependinator.Utils.UI;
 using Application = System.Windows.Application;
 
 
-namespace Dependiator.MainWindowViews
+namespace Dependinator.MainWindowViews
 {
 	[SingleInstance]
 	internal class MainWindowViewModel : ViewModel

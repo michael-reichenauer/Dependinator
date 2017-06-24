@@ -1,8 +1,8 @@
 ﻿using System;
-using Dependiator.Utils;
+using Dependinator.Utils;
 
 
-namespace Dependiator.ApplicationHandling
+namespace Dependinator.ApplicationHandling
 {
 	[SingleInstance]
 	internal class WorkingFolder

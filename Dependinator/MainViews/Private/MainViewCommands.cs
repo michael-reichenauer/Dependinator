@@ -1,7 +1,7 @@
 using System;
 
 
-namespace Dependiator.MainViews.Private
+namespace Dependinator.MainViews.Private
 {
 	internal class MainViewCommands : IMainViewCommands
 	{

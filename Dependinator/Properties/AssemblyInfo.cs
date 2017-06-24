@@ -52,7 +52,7 @@ using System.Windows;
 // by using the '*' as shown below:
 [assembly: AssemblyVersion("0.3.*")]
 
-[assembly: InternalsVisibleTo("DependiatorTest")]
+[assembly: InternalsVisibleTo("DependinatorTest")]
 
 [assembly: CLSCompliant(true)]
 

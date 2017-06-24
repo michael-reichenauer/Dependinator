@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 
-namespace Dependiator.Modeling.Serializing
+namespace Dependinator.Modeling.Serializing
 {
 	////internal static class ImportData
 	////{

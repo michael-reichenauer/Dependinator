@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Dependiator.MainWindowViews;
-using Dependiator.Utils;
+using Dependinator.MainWindowViews;
+using Dependinator.Utils;
 
 
-namespace Dependiator.Common.ProgressHandling
+namespace Dependinator.Common.ProgressHandling
 {
 	internal class ProgressService : IProgressService
 	{

@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Media;
 
 
-namespace Dependiator.Utils.UI
+namespace Dependinator.Utils.UI
 {
 	internal class Property
 	{

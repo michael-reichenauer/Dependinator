@@ -4,16 +4,16 @@ using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Windows;
-using Dependiator.ApplicationHandling;
-using Dependiator.ApplicationHandling.Installation;
-using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.Common.MessageDialogs;
-using Dependiator.Common.ThemeHandling;
-using Dependiator.MainWindowViews;
-using Dependiator.Utils;
+using Dependinator.ApplicationHandling;
+using Dependinator.ApplicationHandling.Installation;
+using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Common.MessageDialogs;
+using Dependinator.Common.ThemeHandling;
+using Dependinator.MainWindowViews;
+using Dependinator.Utils;
 
 
-namespace Dependiator
+namespace Dependinator
 {
 	/// <summary>
 	/// Interaction logic for App.xaml.

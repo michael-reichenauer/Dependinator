@@ -2,7 +2,7 @@ using System;
 using System.Windows.Threading;
 
 
-namespace Dependiator.Utils.UI
+namespace Dependinator.Utils.UI
 {
 	internal class BusyIndicator : ViewModel
 	{

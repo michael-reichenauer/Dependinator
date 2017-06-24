@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Dependiator.Modeling.Nodes;
+using Dependinator.Modeling.Nodes;
 
 
-namespace Dependiator.Modeling.Links
+namespace Dependinator.Modeling.Links
 {
 	internal class LinkService : ILinkService
 	{

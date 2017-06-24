@@ -1,7 +1,7 @@
-﻿using Dependiator.Modeling.Serializing;
+﻿using Dependinator.Modeling.Serializing;
 
 
-namespace Dependiator.Modeling
+namespace Dependinator.Modeling
 {
 	internal interface IModelService
 	{

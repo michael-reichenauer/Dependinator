@@ -9,7 +9,7 @@ using System;
 using System.Windows;
 
 
-namespace Dependiator.Utils.UI.VirtualCanvas
+namespace Dependinator.Utils.UI.VirtualCanvas
 {
 	/// <summary>
 	/// Provides extension methods for rects.

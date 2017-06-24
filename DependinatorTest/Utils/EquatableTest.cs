@@ -1,5 +1,5 @@
 ﻿using System;
-using Dependiator.Utils;
+using Dependinator.Utils;
 using NUnit.Framework;
 
 

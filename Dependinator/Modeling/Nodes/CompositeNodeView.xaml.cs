@@ -3,10 +3,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using Dependiator.Utils;
+using Dependinator.Utils;
 
 
-namespace Dependiator.Modeling.Nodes
+namespace Dependinator.Modeling.Nodes
 {
 	/// <summary>
 	/// Interaction logic for CompositeNodeView.xaml

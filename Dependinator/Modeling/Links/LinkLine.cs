@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using Dependiator.Modeling.Nodes;
-using Dependiator.Utils;
+using Dependinator.Modeling.Nodes;
+using Dependinator.Utils;
 
 
-namespace Dependiator.Modeling.Links
+namespace Dependinator.Modeling.Links
 {
 	internal class LinkLine : Equatable<LinkLine>
 	{

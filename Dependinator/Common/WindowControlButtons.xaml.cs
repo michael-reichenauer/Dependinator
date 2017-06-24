@@ -1,7 +1,7 @@
 ﻿using System.Windows.Controls;
 
 
-namespace Dependiator.Common
+namespace Dependinator.Common
 {
 	/// <summary>
 	/// Interaction logic for WindowControlButtons.xaml

@@ -8,7 +8,7 @@ using System.Runtime.Serialization.Formatters;
 using System.Threading;
 
 
-namespace Dependiator.Utils
+namespace Dependinator.Utils
 {
 	internal class IpcRemotingService : IDisposable
 	{

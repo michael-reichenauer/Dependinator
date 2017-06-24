@@ -1,7 +1,7 @@
 using System.Windows.Media;
 
 
-namespace Dependiator.Modeling.Nodes
+namespace Dependinator.Modeling.Nodes
 {
 	internal interface INodeService
 	{

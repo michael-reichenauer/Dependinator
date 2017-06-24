@@ -2,7 +2,7 @@
 using System.Windows.Controls;
 
 
-namespace Dependiator.MainWindowViews
+namespace Dependinator.MainWindowViews
 {
 	/// <summary>
 	/// Interaction logic for HamburgerButton.xaml.

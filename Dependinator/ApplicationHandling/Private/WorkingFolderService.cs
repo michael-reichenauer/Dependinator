@@ -1,11 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
-using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.Utils;
+using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Utils;
 
 
-namespace Dependiator.ApplicationHandling.Private
+namespace Dependinator.ApplicationHandling.Private
 {
 	[SingleInstance]
 	internal class WorkingFolderService : IWorkingFolderService

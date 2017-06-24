@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Dependiator.Properties {
+namespace Dependinator.Properties {
     using System;
     
     

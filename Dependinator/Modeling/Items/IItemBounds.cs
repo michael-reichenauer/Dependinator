@@ -1,7 +1,7 @@
 using System.Windows;
 
 
-namespace Dependiator.Modeling.Items
+namespace Dependinator.Modeling.Items
 {
 	internal interface IItemBounds
 	{

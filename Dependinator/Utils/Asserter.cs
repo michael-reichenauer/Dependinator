@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Dependiator.Common;
+using Dependinator.Common;
 
 
-namespace Dependiator.Utils
+namespace Dependinator.Utils
 {
 	public static class Asserter
 	{

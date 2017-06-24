@@ -24,7 +24,7 @@ using System.Windows.Media;
 #pragma warning disable 1584, 1711, 1572, 1581, 1580
 
 
-namespace Dependiator.Utils.UI.VirtualCanvas
+namespace Dependinator.Utils.UI.VirtualCanvas
 {
 	/// <summary>
 	/// Defines an area within which you can explicitly position an infinite number of child elements

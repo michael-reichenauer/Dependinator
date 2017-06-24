@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
-using Dependiator.Modeling.Items;
-using Dependiator.Utils.UI;
-using Dependiator.Utils.UI.VirtualCanvas;
+using Dependinator.Modeling.Items;
+using Dependinator.Utils.UI;
+using Dependinator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependiator.Modeling.Nodes
+namespace Dependinator.Modeling.Nodes
 {
 	internal class NodesViewModel : ViewModel
 	{

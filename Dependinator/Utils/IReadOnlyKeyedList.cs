@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 
-namespace Dependiator.Utils
+namespace Dependinator.Utils
 {
 	internal interface IReadOnlyKeyedList<in TKey, TValue> : IReadOnlyList<TValue>
 	{

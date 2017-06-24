@@ -1,7 +1,7 @@
 using System.Windows;
 
 
-namespace Dependiator.Modeling.Links
+namespace Dependinator.Modeling.Links
 {
 	internal class LinkLineBounds
 	{

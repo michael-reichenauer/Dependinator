@@ -3,13 +3,13 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.Common.MessageDialogs;
-using Dependiator.Utils;
-using Dependiator.Utils.UI;
+using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Common.MessageDialogs;
+using Dependinator.Utils;
+using Dependinator.Utils.UI;
 
 
-namespace Dependiator.Common
+namespace Dependinator.Common
 {
 	internal static class ExceptionHandling
 	{

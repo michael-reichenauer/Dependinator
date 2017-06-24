@@ -9,7 +9,7 @@ using ProtoBuf.Meta;
 using ProtoSerializer = ProtoBuf.Serializer;
 
 
-namespace Dependiator.Utils
+namespace Dependinator.Utils
 {
 	public static class Serializer
 	{

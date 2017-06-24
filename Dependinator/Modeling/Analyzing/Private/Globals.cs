@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 
 
-namespace Dependiator.Modeling.Analyzing.Private
+namespace Dependinator.Modeling.Analyzing.Private
 {
 	//public enum AssemblyType
 	//{

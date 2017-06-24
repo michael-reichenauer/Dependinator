@@ -1,8 +1,8 @@
 using System.Windows;
-using Dependiator.Utils.UI;
+using Dependinator.Utils.UI;
 
 
-namespace Dependiator.Modeling.Items
+namespace Dependinator.Modeling.Items
 {
 	internal abstract class ItemViewModel : ViewModel, IItem
 	{

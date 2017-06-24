@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Windows;
-using Dependiator.Utils;
+using Dependinator.Utils;
 
 
-namespace Dependiator.MainWindowViews
+namespace Dependinator.MainWindowViews
 {
 	[SingleInstance]
 	internal class WindowOwner

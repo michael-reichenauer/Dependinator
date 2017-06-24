@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Dependiator.Common;
+using Dependinator.Common;
 
 
 namespace System

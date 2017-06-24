@@ -2,10 +2,10 @@
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using Dependiator.Utils.UI.VirtualCanvas;
+using Dependinator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependiator.Modeling.Nodes
+namespace Dependinator.Modeling.Nodes
 {
 	/// <summary>
 	/// Interaction logic for NodesView.xaml

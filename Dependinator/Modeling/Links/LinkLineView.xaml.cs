@@ -2,10 +2,10 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Dependiator.Modeling.Nodes;
+using Dependinator.Modeling.Nodes;
 
 
-namespace Dependiator.Modeling.Links
+namespace Dependinator.Modeling.Links
 {
 	/// <summary>
 	/// Interaction logic for LinkLineView.xaml

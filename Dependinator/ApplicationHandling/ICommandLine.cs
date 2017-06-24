@@ -1,4 +1,4 @@
-﻿namespace Dependiator.ApplicationHandling
+﻿namespace Dependinator.ApplicationHandling
 {
 	public interface ICommandLine
 	{

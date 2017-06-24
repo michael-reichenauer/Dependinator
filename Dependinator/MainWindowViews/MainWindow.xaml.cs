@@ -5,12 +5,12 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Threading;
-using Dependiator.ApplicationHandling;
-using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.Utils;
+using Dependinator.ApplicationHandling;
+using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Utils;
 
 
-namespace Dependiator.MainWindowViews
+namespace Dependinator.MainWindowViews
 {
 	/// <summary>
 	/// Interaction logic for MainWindow.xaml

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using Dependiator.Utils;
+using Dependinator.Utils;
 
 
-namespace Dependiator.Modeling.Nodes
+namespace Dependinator.Modeling.Nodes
 {
 	internal class NodeComparer
 	{

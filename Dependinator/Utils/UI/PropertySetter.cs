@@ -1,4 +1,4 @@
-namespace Dependiator.Utils.UI
+namespace Dependinator.Utils.UI
 {
 	internal class PropertySetter
 	{

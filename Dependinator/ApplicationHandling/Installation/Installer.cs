@@ -1,13 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.Common.MessageDialogs;
-using Dependiator.Utils;
+using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Common.MessageDialogs;
+using Dependinator.Utils;
 using Microsoft.Win32;
 
 
-namespace Dependiator.ApplicationHandling.Installation
+namespace Dependinator.ApplicationHandling.Installation
 {
 	internal class Installer : IInstaller
 	{

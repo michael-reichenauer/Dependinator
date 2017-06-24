@@ -1,7 +1,7 @@
 using System.Diagnostics;
 
 
-namespace Dependiator.Utils.UI
+namespace Dependinator.Utils.UI
 {
 	/// <summary>
 	/// Support warning logging of WPF binding errors

@@ -2,10 +2,10 @@
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Dependiator.Utils;
+using Dependinator.Utils;
 
 
-namespace Dependiator.ApplicationHandling
+namespace Dependinator.ApplicationHandling
 {
 	[SingleInstance]
 	internal class CommandLine : ICommandLine

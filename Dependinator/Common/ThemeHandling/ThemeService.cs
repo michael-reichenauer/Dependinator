@@ -3,12 +3,12 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using Dependiator.ApplicationHandling;
-using Dependiator.ApplicationHandling.SettingsHandling;
-using Dependiator.Utils;
+using Dependinator.ApplicationHandling;
+using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Utils;
 
 
-namespace Dependiator.Common.ThemeHandling
+namespace Dependinator.Common.ThemeHandling
 {
 	[SingleInstance]
 	internal class ThemeService : IThemeService

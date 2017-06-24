@@ -1,10 +1,10 @@
 using System;
 using System.Windows;
 using System.Windows.Media;
-using Dependiator.Modeling.Items;
+using Dependinator.Modeling.Items;
 
 
-namespace Dependiator.Modeling.Nodes
+namespace Dependinator.Modeling.Nodes
 {
 	internal class MemberNodeViewModel : ItemViewModel
 	{

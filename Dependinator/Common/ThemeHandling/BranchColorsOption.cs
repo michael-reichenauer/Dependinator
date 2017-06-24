@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 
 
-namespace Dependiator.Common.ThemeHandling
+namespace Dependinator.Common.ThemeHandling
 {
 	public class BranchColorsOption
 	{

@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Windows;
-using Dependiator.ApplicationHandling.Installation;
-using Dependiator.Utils;
+using Dependinator.ApplicationHandling.Installation;
+using Dependinator.Utils;
 
 
-namespace Dependiator.MainWindowViews
+namespace Dependinator.MainWindowViews
 {
 	internal class MainWindowIpcService : IpcService
 	{

@@ -1,4 +1,4 @@
-namespace Dependiator.MainViews
+namespace Dependinator.MainViews
 {
 	internal interface IMainViewCommands
 	{

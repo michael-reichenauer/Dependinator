@@ -2,10 +2,10 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using Dependiator.Utils;
+using Dependinator.Utils;
 
 
-namespace Dependiator.ApplicationHandling.SettingsHandling
+namespace Dependinator.ApplicationHandling.SettingsHandling
 {
 	internal static class ProgramPaths
 	{

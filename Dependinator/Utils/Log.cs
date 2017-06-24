@@ -9,10 +9,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Dependiator.ApplicationHandling.SettingsHandling;
+using Dependinator.ApplicationHandling.SettingsHandling;
 
 
-namespace Dependiator.Utils
+namespace Dependinator.Utils
 {
 	internal static class Log
 	{
@@ -50,7 +50,7 @@ namespace Dependiator.Utils
 
 		private static int GetSourceFilePrefixLength([CallerFilePath] string sourceFilePath = "")
 		{
-			return sourceFilePath.IndexOf("Dependiator\\Utils\\Log.cs");
+			return sourceFilePath.IndexOf("Dependinator\\Utils\\Log.cs");
 		}
 
 

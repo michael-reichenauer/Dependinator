@@ -5,7 +5,7 @@ using System.Reflection.Emit;
 using System.Text;
 
 
-namespace Dependiator.Modeling.Analyzing.Private
+namespace Dependinator.Modeling.Analyzing.Private
 {
 	internal static class IlToText
 	{

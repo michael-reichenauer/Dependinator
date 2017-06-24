@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Media;
 
-namespace Dependiator.Common.ThemeHandling
+namespace Dependinator.Common.ThemeHandling
 {
 	internal static class Converter
 	{
