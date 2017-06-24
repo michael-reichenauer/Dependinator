@@ -2,7 +2,7 @@
 using NUnit.Framework;
 
 
-namespace DependiatorTest.Utils
+namespace DependinatorTest.Utils
 {
 	[TestFixture]
 	public class ProcessTest

@@ -19,8 +19,8 @@ namespace Dependinator.ApplicationHandling
 		private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(3);
 
 		private static readonly string latestUri =
-			"https://api.github.com/repos/michael-reichenauer/Dependiator/releases/latest";
-		private static readonly string UserAgent = "Dependiator";
+			"https://api.github.com/repos/michael-reichenauer/Dependinator/releases/latest";
+		private static readonly string UserAgent = "Dependinator";
 
 		private readonly ICmd cmd;
 
@@ -125,7 +125,7 @@ namespace Dependinator.ApplicationHandling
 
 		private static async Task<string> DownloadSetupAsync(HttpClient httpClient, LatestInfo latestInfo)
 		{
-			Asset setupFileInfo = latestInfo.assets.First(a => a.name == "DependiatorSetup.exe");
+			Asset setupFileInfo = latestInfo.assets.First(a => a.name == "DependinatorSetup.exe");
 
 			string downloadUrl = setupFileInfo.browser_download_url;
 			Log.Debug($"Downloading {latestInfo.tag_name} from {downloadUrl} ...");

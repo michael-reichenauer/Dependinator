@@ -43,7 +43,7 @@ namespace Dependinator.ApplicationHandling
 				{
 					if (stream == null)
 					{
-						if (resolveName != "Dependiator.resources")
+						if (resolveName != "Dependinator.resources")
 						{
 							Log.Warn($"Failed to resolve assembly {resolveName}");
 						}

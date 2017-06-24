@@ -71,7 +71,7 @@ namespace Dependinator.MainWindowViews
 
 
 
-		public string Title => $"{workingFolder.Name} - Dependiator";
+		public string Title => $"{workingFolder.Name} - Dependinator";
 
 
 		public string SearchBox
@@ -198,7 +198,7 @@ namespace Dependinator.MainWindowViews
 			//}
 			//else
 			//{
-			//	// Another Dependiator instance for that working folder is already running, activate that.
+			//	// Another Dependinator instance for that working folder is already running, activate that.
 			//	ipcRemotingService.CallService<MainWindowIpcService>(id, service => service.Activate(null));
 			//	Application.Current.Shutdown(0);
 			//	ipcRemotingService.Dispose();
@@ -319,7 +319,7 @@ namespace Dependinator.MainWindowViews
 			try
 			{
 				Process process = new Process();
-				process.StartInfo.FileName = "mailto:michael.reichenauer@gmail.com&subject=Dependiator Feedback";
+				process.StartInfo.FileName = "mailto:michael.reichenauer@gmail.com&subject=Dependinator Feedback";
 				process.Start();
 			}
 			catch (Exception ex) when (ex.IsNotFatal())
@@ -351,7 +351,7 @@ namespace Dependinator.MainWindowViews
 			try
 			{
 				Process process = new Process();
-				process.StartInfo.FileName = "https://github.com/michael-reichenauer/Dependiator/wiki/Help";
+				process.StartInfo.FileName = "https://github.com/michael-reichenauer/Dependinator/wiki/Help";
 				process.Start();
 			}
 			catch (Exception ex) when (ex.IsNotFatal())

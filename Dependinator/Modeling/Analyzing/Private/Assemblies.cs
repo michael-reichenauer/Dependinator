@@ -66,7 +66,7 @@ namespace Dependinator.Modeling.Analyzing.Private
 		{
 			AssemblyName assemblyName = new AssemblyName(args.Name);
 
-			if (assemblyName.Name == "Dependiator.resources")
+			if (assemblyName.Name == "Dependinator.resources")
 			{
 				return null;
 			}
@@ -138,7 +138,7 @@ namespace Dependinator.Modeling.Analyzing.Private
 
 			if (args.RequestingAssembly.FullName != executingAssembly.FullName)
 			{
-				// Requesting assembly is not Dependiator, no need to check resources
+				// Requesting assembly is not this instance, no need to check resources
 				assembly = null;
 				return false;
 			}

@@ -149,7 +149,7 @@ namespace Dependinator
 				{
 					if (!ipcRemotingService.TryCreateServer(id))
 					{
-						// Another Dependiator instance for that working folder is already running, activate that.
+						// Another instance for that working folder is already running, activate that.
 						var args = Environment.GetCommandLineArgs();
 						ipcRemotingService.CallService<MainWindowIpcService>(id, service => service.Activate(args));
 						return true;

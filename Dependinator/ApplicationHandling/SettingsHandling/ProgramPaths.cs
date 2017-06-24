@@ -10,14 +10,14 @@ namespace Dependinator.ApplicationHandling.SettingsHandling
 	internal static class ProgramPaths
 	{
 		private static readonly string remoteSetupFilePath1 =
-			@"D:\My Work\Dependiator\Dependiator\bin\Debug\Dependiator.exe";
+			@"D:\My Work\Dependinator\Dependinator\bin\Debug\Dependinator.exe";
 
 		private static readonly string remoteSetupFilePath2 =
-			@"\\storage03\n_axis_releases_sa\Dependiator\DependiatorSetup.exe";
+			@"\\storage03\n_axis_releases_sa\Dependinator\DependinatorSetup.exe";
 
 		public static readonly string TempPrefix = "_tmp_";
 
-		public static readonly string ProgramName = "Dependiator";
+		public static readonly string ProgramName = "Dependinator";
 		public static readonly string ProgramFileName = ProgramName + ".exe";
 		public static readonly string ProgramLogName = ProgramName + ".log";
 		public static readonly string VersionFileName = ProgramName + ".Version.txt";

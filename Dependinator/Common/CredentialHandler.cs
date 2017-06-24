@@ -2,14 +2,14 @@
 //using System.Net;
 //using System.Windows.Forms;
 //using System.Windows.Threading;
-//using Dependiator.Git;
-//using Dependiator.MainWindowViews;
-//using Dependiator.Utils;
-//using Dependiator.Utils.UI;
+//using Dependinator.Git;
+//using Dependinator.MainWindowViews;
+//using Dependinator.Utils;
+//using Dependinator.Utils.UI;
 //using Application = System.Windows.Application;
 
 
-//namespace Dependiator.Common
+//namespace Dependinator.Common
 //{
 //	internal class CredentialHandler : ICredentialHandler
 //	{
@@ -79,7 +79,7 @@
 //		private void ShowDialog(string target, string usernameFromUrl, string message)
 //		{
 //			networkCredential = null;
-//			dialog = new CredentialsDialog(target, "Dependiator", message);
+//			dialog = new CredentialsDialog(target, "Dependinator", message);
 
 //			// dialog.AlwaysDisplay = true;
 

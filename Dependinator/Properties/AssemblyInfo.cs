@@ -7,11 +7,11 @@ using System.Windows;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Dependiator")]
-[assembly: AssemblyDescription("Dependiator")]
+[assembly: AssemblyTitle("Dependiantor")]
+[assembly: AssemblyDescription("Dependinator")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Michael Reichenauer")]
-[assembly: AssemblyProduct("Dependiator")]
+[assembly: AssemblyProduct("Dependinator")]
 [assembly: AssemblyCopyright("Copyright © Michael Reichenauer 2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

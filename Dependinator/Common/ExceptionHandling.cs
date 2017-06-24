@@ -141,7 +141,7 @@ namespace Dependinator.Common
 
 			if (DateTime.Now - StartTime < MinTimeBeforeAutoRestart)
 			{
-				Message.ShowError("Sorry, but an unexpected error just occurred", "Dependiator");
+				Message.ShowError("Sorry, but an unexpected error just occurred", "Dependinator");
 				StartTime = DateTime.Now;
 			}
 

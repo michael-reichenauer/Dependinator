@@ -64,7 +64,7 @@ namespace Dependinator.Common.MessageDialogs
 			MessageDialog dialog = new MessageDialog(
 				owner,
 				text,
-				title ?? "Dependiator",
+				title ?? "Dependinator",
 				button,
 				image);
 
@@ -82,7 +82,7 @@ namespace Dependinator.Common.MessageDialogs
 			MessageDialog dialog = new MessageDialog(
 				null,
 				message,
-				title ?? "Dependiator",
+				title ?? "Dependinator",
 				MessageBoxButton.OK,
 				MessageBoxImage.Information);
 
@@ -98,7 +98,7 @@ namespace Dependinator.Common.MessageDialogs
 			MessageDialog dialog = new MessageDialog(
 				owner,
 				message,
-				title ?? "Dependiator",
+				title ?? "Dependinator",
 				MessageBoxButton.OK,
 				MessageBoxImage.Information);
 
@@ -112,7 +112,7 @@ namespace Dependinator.Common.MessageDialogs
 			MessageDialog dialog = new MessageDialog(
 				null,
 				message,
-				title ?? "Dependiator",
+				title ?? "Dependinator",
 				MessageBoxButton.OKCancel,
 				MessageBoxImage.Question);
 
@@ -128,7 +128,7 @@ namespace Dependinator.Common.MessageDialogs
 			MessageDialog dialog = new MessageDialog(
 				owner,
 				message,
-				title ?? "Dependiator",
+				title ?? "Dependinator",
 				MessageBoxButton.OKCancel,
 				MessageBoxImage.Question);
 
@@ -144,7 +144,7 @@ namespace Dependinator.Common.MessageDialogs
 			MessageDialog dialog = new MessageDialog(
 				owner,
 				message,
-				title ?? "Dependiator",
+				title ?? "Dependinator",
 				MessageBoxButton.OK,
 				MessageBoxImage.Warning);
 
@@ -156,7 +156,7 @@ namespace Dependinator.Common.MessageDialogs
 			MessageDialog dialog = new MessageDialog(
 				owner,
 				message,
-				title ?? "Dependiator",
+				title ?? "Dependinator",
 				MessageBoxButton.YesNo,
 				MessageBoxImage.Warning);
 
@@ -170,7 +170,7 @@ namespace Dependinator.Common.MessageDialogs
 			MessageDialog dialog = new MessageDialog(
 				null,
 				message,
-				title ?? "Dependiator",
+				title ?? "Dependinator",
 				MessageBoxButton.OK,
 				MessageBoxImage.Error);
 
@@ -187,7 +187,7 @@ namespace Dependinator.Common.MessageDialogs
 			MessageDialog dialog = new MessageDialog(
 				owner,
 				message,
-				title ?? "Dependiator",
+				title ?? "Dependinator",
 				MessageBoxButton.OK,
 				MessageBoxImage.Error);
 

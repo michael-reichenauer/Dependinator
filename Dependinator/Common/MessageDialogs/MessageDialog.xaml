@@ -6,7 +6,7 @@
 				xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 				xmlns:local="clr-namespace:Dependinator.Common.MessageDialogs"
 				mc:Ignorable="d"
-				Title="Dependiator" SizeToContent="WidthAndHeight" ResizeMode="NoResize" 
+				Title="Dependinator" SizeToContent="WidthAndHeight" ResizeMode="NoResize" 
 				Background="{DynamicResource BackgroundBrush}"
 				WindowStyle="None" AllowsTransparency="True"
 				BorderBrush="{DynamicResource BorderBrush}" BorderThickness="3"

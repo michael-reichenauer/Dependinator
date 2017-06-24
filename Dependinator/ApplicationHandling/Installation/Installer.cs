@@ -18,9 +18,9 @@ namespace Dependinator.ApplicationHandling.Installation
 			$"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{{{ProductGuid}}}_is1";
 		private static readonly string UninstallRegKey = "HKEY_CURRENT_USER\\" + UninstallSubKey;
 		private static readonly string subFolderContextMenuPath =
-			"Software\\Classes\\Folder\\shell\\dependiator";
+			"Software\\Classes\\Folder\\shell\\dependinator";
 		private static readonly string subDirectoryBackgroundContextMenuPath =
-			"Software\\Classes\\Directory\\Background\\shell\\dependiator";
+			"Software\\Classes\\Directory\\Background\\shell\\dependinator";
 		private static readonly string folderContextMenuPath =
 			"HKEY_CURRENT_USER\\" + subFolderContextMenuPath;
 		private static readonly string directoryContextMenuPath =
@@ -29,7 +29,7 @@ namespace Dependinator.ApplicationHandling.Installation
 			folderContextMenuPath + "\\command";
 		private static readonly string directoryCommandContextMenuPath =
 			directoryContextMenuPath + "\\command";
-		private static readonly string SetupTitle = "Dependiator - Setup";
+		private static readonly string SetupTitle = "Dependinator - Setup";
 
 
 		private readonly ICmd cmd;
@@ -83,12 +83,12 @@ namespace Dependinator.ApplicationHandling.Installation
 			Log.Usage("Install normal.");
 
 			if (!Message.ShowAskOkCancel(
-				"Welcome to the Dependiator setup.\n\n" +
+				"Welcome to the Dependinator setup.\n\n" +
 				" This will:\n" +
-				" - Add a Dependiator shortcut in the Start Menu.\n" +
-				" - Add a 'Dependiator' context menu item in Windows File Explorer.\n" +
-				" - Make Dependiator command available in Command Prompt window.\n\n" +
-				"Click OK to install Dependiator or Cancel to exit Setup.",
+				" - Add a Dependinator shortcut in the Start Menu.\n" +
+				" - Add a 'Dependinator' context menu item in Windows File Explorer.\n" +
+				" - Make Dependinator command available in Command Prompt window.\n\n" +
+				"Click OK to install Dependinator or Cancel to exit Setup.",
 				SetupTitle))
 			{
 				return;
@@ -103,7 +103,7 @@ namespace Dependinator.ApplicationHandling.Installation
 			Log.Usage("Installed normal.");
 
 			Message.ShowInfo(
-				"Setup has finished installing Dependiator.",
+				"Setup has finished installing Dependinator.",
 				SetupTitle);
 
 			StartInstalled();
@@ -130,9 +130,9 @@ namespace Dependinator.ApplicationHandling.Installation
 						return true;
 					}
 
-					Log.Debug("Dependiator instance is already running, needs to be closed.");
+					Log.Debug("Dependinator instance is already running, needs to be closed.");
 					if (!Message.ShowAskOkCancel(
-						"Please close all instances of Dependiator before continue the installation."))
+						"Please close all instances of Dependinator before continue the installation."))
 					{
 						return false;
 					}
@@ -168,7 +168,7 @@ namespace Dependinator.ApplicationHandling.Installation
 			}
 
 			if (!Message.ShowAskOkCancel(
-				"Do you want to uninstall Dependiator?"))
+				"Do you want to uninstall Dependinator?"))
 			{
 				return;
 			}
@@ -180,7 +180,7 @@ namespace Dependinator.ApplicationHandling.Installation
 
 			UninstallSilent();
 			Log.Usage("Uninstalled normal");
-			Message.ShowInfo("Uninstallation of Dependiator is completed.");
+			Message.ShowInfo("Uninstallation of Dependinator is completed.");
 		}
 
 
@@ -439,9 +439,9 @@ namespace Dependinator.ApplicationHandling.Installation
 		private static bool IsInstalledInstance()
 		{
 			string folderPath = Path.GetDirectoryName(ProgramPaths.GetCurrentInstancePath());
-			string programFolderDependiator = ProgramPaths.GetProgramFolderPath();
+			string programFolderDependinator = ProgramPaths.GetProgramFolderPath();
 
-			return folderPath == programFolderDependiator;
+			return folderPath == programFolderDependinator;
 		}
 
 

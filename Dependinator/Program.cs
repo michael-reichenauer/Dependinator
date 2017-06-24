@@ -29,7 +29,7 @@ namespace Dependinator
 			// Add handler and logging for unhandled exceptions
 			ExceptionHandling.HandleUnhandledException();
 
-			// Make external assemblies that Dependiator depends on available, when needed (extracted)
+			// Make external assemblies that Dependinator depends on available, when needed (extracted)
 			ActivateExternalDependenciesResolver();
 
 			// Activate dependency injection support

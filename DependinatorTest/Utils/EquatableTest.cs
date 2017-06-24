@@ -3,7 +3,7 @@ using Dependinator.Utils;
 using NUnit.Framework;
 
 
-namespace DependiatorTest.Utils
+namespace DependinatorTest.Utils
 {
 	/// <summary>
 	///  Test class to test IEquatable
