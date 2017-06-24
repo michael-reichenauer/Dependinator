@@ -21,8 +21,9 @@
 
 		</Grid.RowDefinitions>
 
+		
+
 		<Rectangle
-			Grid.RowSpan="2"
 			Stroke="{Binding RectangleBrush}"
 			StrokeThickness="{Binding StrokeThickness}"
 			StrokeDashArray="{Binding StrokeDash}"
@@ -38,7 +39,7 @@
 		<Border
 			Grid.Row="0"
 			BorderBrush="{Binding RectangleBrush}"
-			BorderThickness="0.3"
+			BorderThickness="0 0 0 0.3"
 			Height="20"
 			Background="Transparent" VerticalAlignment="Top">
 
@@ -59,7 +60,15 @@
 					BorderThickness="1"
 					Opened="ToolTip_OnOpened" />
 			</Border.ToolTip>
+			
 		</Border>
+		
+		<!-- Scroll indicators -->
+		<!--<Border
+			Grid.Row="0"
+			Margin="4"
+			BorderThickness="{Binding ScrollDash}"
+			BorderBrush="{Binding RectangleBrush}" />-->
 
 		<Border
 			Name="ResizeBorder"

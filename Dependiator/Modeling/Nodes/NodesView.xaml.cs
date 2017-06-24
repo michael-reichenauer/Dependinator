@@ -172,5 +172,9 @@ namespace Dependiator.Modeling.Nodes
 		//		}
 		//	}
 		//}
+		private void OnManipulationBoundaryFeedback(object sender, ManipulationBoundaryFeedbackEventArgs e)
+		{
+			e.Handled = true;
+		}
 	}
 }
