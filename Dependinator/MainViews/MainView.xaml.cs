@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using Dependinator.Utils;
 using UserControl = System.Windows.Controls.UserControl;
 
 
@@ -17,7 +18,7 @@ namespace Dependinator.MainViews
 		private MainViewModel viewModel;
 
 		private Point lastMousePosition;
-		//private object movingObject = null;
+		private bool isTouchMove = false;
 
 
 		public MainView()
@@ -54,6 +55,12 @@ namespace Dependinator.MainViews
 		
 		protected override void OnPreviewMouseMove(MouseEventArgs e)
 		{
+			if (isTouchMove)
+			{
+				// Touch is already moving, so this is a fake mouse event
+				e.Handled = true;
+				return;
+			}
 			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
 			{
 				return;
@@ -68,22 +75,9 @@ namespace Dependinator.MainViews
 				CaptureMouse();
 				Vector viewOffset = viewPosition - lastMousePosition;
 				e.Handled = viewModel.MoveCanvas(viewOffset);
-			}
-			//else if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
-			// && e.LeftButton == MouseButtonState.Pressed)
-			//{
-			//	// Move node
-			//	CaptureMouse();
-			//	Vector viewOffset = viewPosition - lastMousePosition;
-
-			//	movingObject = viewModel.Move(viewPosition, viewOffset, movingObject);
-
-			//	e.Handled = movingObject != null;
-			//}
+			}			
 			else
 			{
-				// End of move
-				//movingObject = null;
 				ReleaseMouseCapture();
 			}
 
@@ -93,25 +87,31 @@ namespace Dependinator.MainViews
 
 		protected override void OnPreviewTouchDown(TouchEventArgs e)
 		{
+			// Touch move is starting
+			CaptureMouse();
+
 			TouchPoint viewPosition = e.GetTouchPoint(NodesView.ItemsListBox);
 			lastMousePosition = viewPosition.Position;
-			CaptureMouse();
+			e.Handled = true;
+			isTouchMove = true;
 		}
 
 		protected override void OnPreviewTouchUp(TouchEventArgs e)
 		{
+			// Touch move is ending
 			ReleaseMouseCapture();
+
+			e.Handled = true;
+			isTouchMove = false;
 		}
 
 
 		protected override void OnPreviewTouchMove(TouchEventArgs e)
 		{
 			TouchPoint viewPosition = e.GetTouchPoint(NodesView.ItemsListBox);
+			Vector offset = viewPosition.Position - lastMousePosition;
 
-			// Move canvas
-			Vector viewOffset = viewPosition.Position - lastMousePosition;
-			e.Handled = viewModel.MoveCanvas(viewOffset);
-
+			e.Handled = viewModel.MoveCanvas(offset);
 			lastMousePosition = viewPosition.Position;
 		}
 
