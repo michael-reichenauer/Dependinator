@@ -12,7 +12,7 @@
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
-	
+
 	<ListBox 
 		x:Name="ItemsListBox"
 		BorderBrush="Transparent"
@@ -20,7 +20,11 @@
 		Background="Transparent"
 		IsTextSearchEnabled="False"
 		Padding="0"
-		SelectionMode="Extended">
+		SelectionMode="Extended"
+		IsManipulationEnabled="True"
+		ManipulationBoundaryFeedback="OnManipulationBoundaryFeedback"
+		ScrollViewer.HorizontalScrollBarVisibility="Auto"
+		ScrollViewer.VerticalScrollBarVisibility="Auto">
 
 		<i:Interaction.Behaviors>
 			<nodes:IgnoreMouseWheelBehavior />
@@ -119,6 +123,12 @@
 									<nodes:SingleNodeView />
 								</DataTemplate>
 							</Setter.Value>
+						</Setter>
+					</DataTrigger>
+
+					<DataTrigger Binding="{Binding Type}" Value="MemberNodeViewModel">
+						<Setter Property="ContentTemplate">
+							<Setter.Value><DataTemplate><nodes:MemberNodeView/></DataTemplate></Setter.Value>
 						</Setter>
 					</DataTrigger>
 

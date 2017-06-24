@@ -51,7 +51,7 @@ namespace Dependiator.MainViews
 			e.Handled = true;
 		}
 
-
+		
 		protected override void OnPreviewMouseMove(MouseEventArgs e)
 		{
 			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
@@ -88,6 +88,31 @@ namespace Dependiator.MainViews
 			}
 
 			lastMousePosition = viewPosition;
+		}
+		
+
+		protected override void OnPreviewTouchDown(TouchEventArgs e)
+		{
+			TouchPoint viewPosition = e.GetTouchPoint(NodesView.ItemsListBox);
+			lastMousePosition = viewPosition.Position;
+			CaptureMouse();
+		}
+
+		protected override void OnPreviewTouchUp(TouchEventArgs e)
+		{
+			ReleaseMouseCapture();
+		}
+
+
+		protected override void OnPreviewTouchMove(TouchEventArgs e)
+		{
+			TouchPoint viewPosition = e.GetTouchPoint(NodesView.ItemsListBox);
+
+			// Move canvas
+			Vector viewOffset = viewPosition.Position - lastMousePosition;
+			e.Handled = viewModel.MoveCanvas(viewOffset);
+
+			lastMousePosition = viewPosition.Position;
 		}
 
 

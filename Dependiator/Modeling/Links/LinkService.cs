@@ -360,7 +360,7 @@ namespace Dependiator.Modeling.Links
 				// The target is a parent of the source, i.e. line ends at the bottom of the target node
 				x2 = (targetBounds.Width / 2) * target.ItemsScaleFactor
 				     + target.ItemsOffset.X / target.ItemsScale;
-				y2 = (targetBounds.Height - 1) * target.ItemsScaleFactor
+				y2 = (targetBounds.Height) * target.ItemsScaleFactor
 				     + (target.ItemsOffset.Y) / target.ItemsScale;
 			}
 			else if (source == target.ParentNode)
@@ -368,7 +368,7 @@ namespace Dependiator.Modeling.Links
 				// The target is the child of the source, i.e. line start at the top of the source
 				x1 = (sourceBounds.Width / 2) * source.ItemsScaleFactor
 				     + source.ItemsOffset.X / source.ItemsScale;
-				y1 = (source.ItemsOffset.Y + 1) / source.ItemsScale;
+				y1 = (source.ItemsOffset.Y) / source.ItemsScale;
 			}
 			else if (source.ParentNode != target.ParentNode)
 			{
@@ -378,7 +378,7 @@ namespace Dependiator.Modeling.Links
 				{
 					x1 = (sourceBounds.Width / 2) * source.ItemsScaleFactor
 					     + source.ItemsOffset.X / source.ItemsScale;
-					y1 = (source.ItemsOffset.Y + 1) / source.ItemsScale;
+					y1 = (source.ItemsOffset.Y) / source.ItemsScale;
 					sp = new Point(x1, y1);
 					tp = GetPointInAncestorPoint(line, x2, y2, target);
 				}
@@ -386,7 +386,7 @@ namespace Dependiator.Modeling.Links
 				{
 					x2 = (targetBounds.Width / 2) * target.ItemsScaleFactor
 					     + target.ItemsOffset.X / target.ItemsScale;
-					y2 = (targetBounds.Height - 1) * target.ItemsScaleFactor
+					y2 = (targetBounds.Height) * target.ItemsScaleFactor
 					     + (target.ItemsOffset.Y) / target.ItemsScale;
 					tp = new Point(x2, y2);
 					sp = GetPointInAncestorPoint(line, x1, y1, target);

@@ -14,6 +14,7 @@ namespace Dependiator.Common
 
 		public CommitId()
 		{
+			IsEqualWhen(other => Id == other.Id, Id);
 		}
 
 
@@ -31,10 +32,6 @@ namespace Dependiator.Common
 
 		[DataMember]
 		public string Id { get; private set; }
-
-		protected override bool IsEqual(CommitId other) => Id == other.Id;
-
-		protected override int GetHash() => Id.GetHashCode();
 
 		public override string ToString() => Id;
 	}

@@ -23,7 +23,7 @@
 				<Setter Property="FrameworkElement.MinHeight" Value="2" />
 
 				
-				<Setter Property="Panel.Background" Value ="Aqua"/>
+				<Setter Property="Panel.Background" Value ="Transparent"/>
 
 				<!-- Horizontal scrollbar background -->
 				<Setter Property="Control.Template">
@@ -79,7 +79,7 @@
 														<ResourceDictionary />
 													</Style.Resources>
 													<Setter Property="FrameworkElement.OverridesDefaultStyle" Value="True" />
-													<Setter Property="Panel.Background" Value="BlueViolet" />
+													<Setter Property="Panel.Background" Value="Transparent" />
 													<Setter Property="UIElement.Focusable" Value="False" />
 													<Setter Property="KeyboardNavigation.IsTabStop" Value="False" />
 													<Setter Property="Control.Template">
@@ -133,7 +133,7 @@
 														<ResourceDictionary />
 													</Style.Resources>
 													<Setter Property="FrameworkElement.OverridesDefaultStyle" Value="True" />
-													<Setter Property="Panel.Background" Value="Violet" />
+													<Setter Property="Panel.Background" Value="Transparent" />
 													<Setter Property="UIElement.Focusable" Value="False" />
 													<Setter Property="KeyboardNavigation.IsTabStop" Value="False" />
 													<Setter Property="Control.Template">
@@ -191,7 +191,7 @@
 							<!-- ? -->
 							<ControlTemplate.Triggers>
 								<Trigger Property="UIElement.IsEnabled">
-									<Setter Property="Panel.Background" TargetName="Bg" Value="Blue" />
+									<Setter Property="Panel.Background" TargetName="Bg" Value="Transparent" />
 									<Trigger.Value>
 										<s:Boolean>False</s:Boolean>
 									</Trigger.Value>
@@ -211,13 +211,13 @@
 		</Style.Resources>
 
 		<!-- Right background -->
-		<Setter Property="Panel.Background" Value="CadetBlue" />
+		<Setter Property="Panel.Background" Value="Transparent" />
 
 		<Setter Property="Stylus.IsPressAndHoldEnabled" Value="False" />
 
 		<Setter Property="Stylus.IsFlicksEnabled" Value="False" />
 
-		<Setter Property="TextElement.Foreground" Value="Chocolate"/>
+		<Setter Property="TextElement.Foreground" Value="Transparent"/>
 			
 
 

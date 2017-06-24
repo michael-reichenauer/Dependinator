@@ -15,6 +15,7 @@ namespace Dependiator.Modeling.Links
 		{
 			Source = source;
 			Target = target;
+			IsEqualWhen(other => Source == other.Source && Target == other.Target, Source, Target);
 		}
 
 
@@ -29,11 +30,6 @@ namespace Dependiator.Modeling.Links
 		public bool TryAddLinkLine(LinkLine line) => lines.TryAdd(line);
 
 		public bool Remove(LinkLine line) => lines.Remove(line);
-
-
-		protected override bool IsEqual(Link other) => Source == other.Source && Target == other.Target;
-		protected override int GetHash() => GetHashes(Source, Target);
-
 
 
 		public override string ToString() => $"{Source} -> {Target}";

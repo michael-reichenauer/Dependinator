@@ -1806,10 +1806,11 @@ namespace Dependiator.Utils.UI.VirtualCanvas
 		{
 			get
 			{
+				// Adjust scale with 0.95 to compensate when items are just at the border
 				return Math.Max(Math.Max(
 					this.ActualViewbox.Bottom,
 					this.Extent.Bottom) - Math.Min(this.ActualViewbox.Top,
-					this.Extent.Top), 0.0) * Scale;
+					this.Extent.Top), 0.0) * (Scale * 0.95);
 			}
 		}
 
@@ -1818,9 +1819,10 @@ namespace Dependiator.Utils.UI.VirtualCanvas
 		{
 			get
 			{
+				// Adjust scale with 0.99 to compensate when items are just at the border
 				return Math.Max(Math.Max(
 					this.ActualViewbox.Right, this.Extent.Right) - Math.Min(
-						this.ActualViewbox.Left, this.Extent.Left), 0.0) * Scale;
+						this.ActualViewbox.Left, this.Extent.Left), 0.0) * (Scale * 0.99);
 			}
 		}
 

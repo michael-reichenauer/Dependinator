@@ -34,6 +34,7 @@ namespace Dependiator.Modeling.Links
 			Target = target;
 
 			ViewModel = new LinkLineViewModel(linkService, this);
+			IsEqualWhen(other => Source == other.Source && Target == other.Target, Source, Target);
 		}
 
 		public bool IsNormal { get; set; }
@@ -227,10 +228,5 @@ namespace Dependiator.Modeling.Links
 
 
 		public override string ToString() => $"{Source} -> {Target} ({links.Count})";
-
-		protected override bool IsEqual(LinkLine other)
-			=> Source == other.Source && Target == other.Target;
-
-		protected override int GetHash() => GetHashes(Source, Target);
 	}
 }

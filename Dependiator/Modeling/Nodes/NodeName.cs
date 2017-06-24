@@ -21,6 +21,7 @@ namespace Dependiator.Modeling.Nodes
 			this.fullName = fullName;
 			shortName = new Lazy<string>(GetShortName);
 			parentName = new Lazy<NodeName>(GetParentName);
+			IsEqualWhen(other => fullName == other.fullName, fullName);
 		}
 
 		public string ShortName => shortName.Value;
@@ -33,9 +34,6 @@ namespace Dependiator.Modeling.Nodes
 
 		public override string ToString() => fullName;
 
-		protected override bool IsEqual(NodeName other) => fullName == other.fullName;
-
-		protected override int GetHash() => fullName?.GetHashCode() ?? 0;
 
 		public int GetLevelCount() => fullName.Count(c => c == '.') + 1;
 

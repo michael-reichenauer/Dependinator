@@ -6,12 +6,12 @@ using Dependiator.Modeling.Items;
 
 namespace Dependiator.Modeling.Nodes
 {
-	internal class SingleNodeViewModel : ItemViewModel
+	internal class MemberNodeViewModel : ItemViewModel
 	{
 		private readonly Node node;
 
 
-		public SingleNodeViewModel(Node node)
+		public MemberNodeViewModel(Node node)
 		{
 			this.node = node;
 		}
@@ -25,20 +25,14 @@ namespace Dependiator.Modeling.Nodes
 
 		public string Name => node.NodeName.ShortName;
 
-		public string ToolTip =>$"{node.NodeName}{node.DebugToolTip}";
+		public string ToolTip => $"{node.NodeName}{node.DebugToolTip}";
 
 
-		public int CornerRadius => 10;
+		public int CornerRadius => 3;
 
 
 		public int FontSize => ((int)(15 * node.NodeScale * 1.5)).MM(8, 15);
-		//{
-		//	get
-		//	{
-		//		int fontSize = ((int)(14 * node.NodeItemScale)).MM(8, 15);
-		//		return fontSize.MM(8, 15);
-		//	}
-		//}
+
 
 		public override string ToString() => node.NodeName;
 

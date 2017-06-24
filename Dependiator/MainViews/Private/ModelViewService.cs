@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using Dependiator.ApplicationHandling;
 using Dependiator.ApplicationHandling.SettingsHandling;
@@ -93,7 +94,7 @@ namespace Dependiator.MainViews.Private
 		}
 
 
-		public async Task Refresh(ItemsCanvas rootCanvas)
+		public async Task Refresh(ItemsCanvas rootCanvas, bool refreshLayout)
 		{
 			await Task.Yield();
 
@@ -102,8 +103,10 @@ namespace Dependiator.MainViews.Private
 			StoreViewSettings();
 			t.Log("stored setting");
 
-			ModelViewData modelViewData = modelService.ToViewData(model);
+			ModelViewData modelViewData = refreshLayout ? null : modelService.ToViewData(model);
 			t.Log("Got current model data");
+
+			model.Root.Clear();
 
 			model = await RefreshElementTreeAsync(modelViewData);
 
@@ -164,7 +167,8 @@ namespace Dependiator.MainViews.Private
 
 		private bool TryReadCachedData(out DataModel dataModel)
 		{
-			return dataSerializer.TryDeserialize(out dataModel);
+			string dataFilePath = GetDataFilePath();
+			return dataSerializer.TryDeserialize(dataFilePath, out dataModel);
 		}
 
 
@@ -181,9 +185,17 @@ namespace Dependiator.MainViews.Private
 		{
 			model.Root.UpdateAllNodesScalesBeforeClose();
 			DataModel dataModel = modelService.ToDataModel(model);
-			dataSerializer.Serialize(dataModel);
+			string dataFilePath = GetDataFilePath();
+
+			dataSerializer.Serialize(dataModel, dataFilePath);
 
 			StoreViewSettings();
+		}
+
+
+		private string GetDataFilePath()
+		{
+			return Path.Combine(workingFolder, "data.json");
 		}
 
 

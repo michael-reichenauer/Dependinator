@@ -40,6 +40,10 @@ namespace Dependiator.Common
 				HandleException("unobserved task exception", e.Exception);
 				e.SetObserved();
 			};
+
+			// Add event handler for fatal execptions using catch condition "when (e.IsNotFatal())"
+			FatalExceptionsExtensions.FatalExeption += (s, e) =>
+				HandleException(e.Message, e.Exception);
 		}
 
 
@@ -91,7 +95,7 @@ namespace Dependiator.Common
 
 			hasShutdown = true;
 
-			string errorMessage = $"{message}:\n{e}";
+			string errorMessage = $"{message}:\n{e.Txt()}";
 			Log.Error(errorMessage);
 
 			if (IsDispatcherInitialized)
