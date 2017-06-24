@@ -2,21 +2,48 @@
 echo Building setup ...
 echo.
 
-del DependiatorSetup.exe >nul 2>&1
+del DependinatorSetup.exe >nul 2>&1
 del version.txt >nul 2>&1
 
-call nuget restore Dependiator.sln
-echo.
 
-"%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Professional\MSBuild\15.0\Bin\MSBuild.exe" Dependiator.sln /t:rebuild /v:m /nologo
+if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe" (
+  set MSBUILD="%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe"
+)
+if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Professional\MSBuild\15.0\Bin\MSBuild.exe" (
+  set MSBUILD="%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Professional\MSBuild\15.0\Bin\MSBuild.exe"
+)
+if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\MSBuild.exe" (
+  set MSBUILD="%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\MSBuild.exe"
+)
 
-echo.
-copy Dependiator\bin\Debug\Dependiator.exe DependiatorSetup.exe /Y 
+if exist %MSBUILD% (
+  echo Using MSBuild: %MSBUILD%
+  echo.
 
-PowerShell -Command "& {(Get-Item DependiatorSetup.exe).VersionInfo.FILEVERSION }" > version.txt
-echo.
-echo DependiatorSetup.exe version:
-type version.txt 
+
+  echo Restore nuget packets ...
+  rem call %MSBUILD% /nologo /t:restore /v:m Dependinator.sln
+  .\Binaries\nuget.exe restore Dependinator.sln
+  echo.
+
+  echo Building ...
+  %MSBUILD% /t:rebuild /v:m /nologo Dependinator.sln 
+  echo.
+
+  echo Copy to Setup file ...
+  copy Dependinator\bin\Debug\Dependinator.exe DependinatorSetup.exe /Y 
+
+  echo Get built version...
+  PowerShell -Command "& {(Get-Item DependinatorSetup.exe).VersionInfo.FILEVERSION }" > version.txt
+  echo.
+
+  echo DependinatorSetup.exe version:
+  type version.txt 
+  
+) else (
+  echo.
+  echo Error: Failed to locate compatible msbuild.exe
+)
 
 echo.
 echo.

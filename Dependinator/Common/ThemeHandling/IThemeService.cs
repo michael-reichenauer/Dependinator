@@ -1,0 +1,22 @@
+using System.Windows.Media;
+
+
+namespace Dependinator.Common.ThemeHandling
+{
+	internal interface IThemeService
+	{
+		Theme Theme { get; }
+
+		Brush GetBranchBrush(string name);
+	
+		Brush ChangeBranchBrush(string name);
+
+		void SetThemeWpfColors();
+
+		SolidColorBrush GetRectangleBrush();
+		Brush GetRectangleBackgroundBrush(Brush brush);
+		string GetHexColorFromBrush(Brush brush);
+		Brush GetBrushFromHex(string hexColor);
+		Brush GetRectangleHighlighterBrush(Brush brush);
+	}
+}

@@ -1,0 +1,498 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\LibGit2Sharp.NativeBinaries.1.0.129\build\LibGit2Sharp.NativeBinaries.props" Condition="Exists('..\packages\LibGit2Sharp.NativeBinaries.1.0.129\build\LibGit2Sharp.NativeBinaries.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{5BEC2BBC-5480-44B9-A412-659C0D057D41}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Dependinator</RootNamespace>
+    <AssemblyName>Dependinator</AssemblyName>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>MainWindowViews\Application.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>Dependinator.Program</StartupObject>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Autofac, Version=4.1.1.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
+      <HintPath>..\packages\Autofac.4.1.1\lib\net45\Autofac.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="LibGit2Sharp, Version=0.22.0.0, Culture=neutral, PublicKeyToken=7cbde695407f0333, processorArchitecture=MSIL">
+      <HintPath>..\packages\LibGit2Sharp.0.22.0\lib\net40\LibGit2Sharp.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="PresentationFramework.Aero" />
+    <Reference Include="protobuf-net, Version=2.1.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
+      <HintPath>..\packages\protobuf-net.2.1.0\lib\net451\protobuf-net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Remoting" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ValueTuple, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.ValueTuple.4.3.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Windows.Interactivity">
+      <HintPath>..\Binaries\System.Windows.Interactivity.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="ApplicationHandling\IWorkingFolderService.cs" />
+    <Compile Include="ApplicationHandling\Private\WorkingFolderService.cs" />
+    <Compile Include="ApplicationHandling\WorkingFolder.cs" />
+    <Compile Include="Common\ThemeHandling\BranchColorsOption.cs" />
+    <Compile Include="Common\ThemeHandling\Converter.cs" />
+    <Compile Include="Common\ThemeHandling\Theme.cs" />
+    <Compile Include="Common\ThemeHandling\ThemeOption.cs" />
+    <Compile Include="Common\ThemeHandling\ThemesOption.cs" />
+    <Compile Include="Common\CommitId.cs" />
+    <Compile Include="Common\CommitIds.cs" />
+    <Compile Include="Common\CommitSha.cs" />
+    <Compile Include="Common\JumpListService.cs" />
+    <Compile Include="Common\MessageDialogs\Message.cs" />
+    <Compile Include="Common\MessageDialogs\MessageDialog.xaml.cs">
+      <DependentUpon>MessageDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Common\MessageDialogs\MessageDialogViewModel.cs" />
+    <Compile Include="Common\ProgressHandling\IProgressService.cs" />
+    <Compile Include="Common\ProgressHandling\Progress.cs" />
+    <Compile Include="Common\ProgressHandling\ProgressDialog.xaml.cs">
+      <DependentUpon>ProgressDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Common\ProgressHandling\ProgressDialogViewModel.cs" />
+    <Compile Include="Common\ProgressHandling\ProgressService.cs" />
+    <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
+    <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
+    <Compile Include="Modeling\Analyzing\Private\Assemblies.cs" />
+    <Compile Include="Modeling\Analyzing\Private\ILInstruction.cs" />
+    <Compile Include="Modeling\Analyzing\Private\IlToText.cs" />
+    <Compile Include="Modeling\Analyzing\Private\MethodBodyReader.cs" />
+    <Compile Include="Modeling\Analyzing\Private\Reflection.cs" />
+    <Compile Include="Modeling\Analyzing\Private\ReflectionModel.cs" />
+    <Compile Include="Modeling\Analyzing\Private\Globals.cs" />
+    <Compile Include="Modeling\Links\ILinkSegmentService.cs" />
+    <Compile Include="Modeling\Links\ILinkService.cs" />
+    <Compile Include="Modeling\Links\LinkLineView.xaml.cs">
+      <DependentUpon>LinkLineView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modeling\Links\LinkSegment.cs" />
+    <Compile Include="Modeling\Links\LinkSegmentService.cs" />
+    <Compile Include="Modeling\Links\LinkService.cs" />
+    <Compile Include="Modeling\Links\LinkLineBounds.cs" />
+    <Compile Include="Modeling\Links\LinkGroup.cs" />
+    <Compile Include="Modeling\Nodes\IgnoreMouseWheelBehavior.cs" />
+    <Compile Include="Modeling\Nodes\INodeService.cs" />
+    <Compile Include="Modeling\Items\IItemBounds.cs" />
+    <Compile Include="Modeling\Items\ItemsCanvas.cs" />
+    <Compile Include="Modeling\Analyzing\Private\ReflectionService.cs" />
+    <Compile Include="Modeling\Nodes\MemberNodeView.xaml.cs">
+      <DependentUpon>MemberNodeView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modeling\Nodes\MemberNodeViewModel.cs" />
+    <Compile Include="Modeling\Nodes\SingleNodeView.xaml.cs">
+      <DependentUpon>SingleNodeView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modeling\Nodes\NodeName.cs" />
+    <Compile Include="Modeling\Model.cs" />
+    <Compile Include="Modeling\Analyzing\IReflectionService.cs" />
+    <Compile Include="Modeling\Links\Link.cs" />
+    <Compile Include="Modeling\Links\NodeLinks.cs" />
+    <Compile Include="Modeling\Nodes\NodeComparer.cs" />
+    <Compile Include="Modeling\Nodes\NodesView.xaml.cs">
+      <DependentUpon>NodesView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modeling\Nodes\NodesViewModel.cs" />
+    <Compile Include="Modeling\Nodes\NodeType.cs" />
+    <Compile Include="Modeling\Nodes\CompositeNodeView.xaml.cs">
+      <DependentUpon>CompositeNodeView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Modeling\Nodes\CompositeNodeViewModel.cs" />
+    <Compile Include="Modeling\Nodes\SingleNodeViewModel.cs" />
+    <Compile Include="Modeling\Serializing\DataModel.cs" />
+    <Compile Include="Modeling\ModelService.cs" />
+    <Compile Include="Modeling\IModelService.cs" />
+    <Compile Include="Modeling\Links\LinkLine.cs" />
+    <Compile Include="Modeling\Links\LinkLineViewModel.cs" />
+    <Compile Include="Modeling\ModelViewData.cs" />
+    <Compile Include="Modeling\Items\ItemViewModel.cs" />
+    <Compile Include="Modeling\Nodes\Node.cs" />
+    <Compile Include="Modeling\Items\IItem.cs" />
+    <Compile Include="MainViews\Private\MainViewCommands.cs" />
+    <Compile Include="MainViews\Private\IModelViewService.cs" />
+    <Compile Include="MainViews\Private\ModelViewService.cs" />
+    <Compile Include="Modeling\Nodes\NodeService.cs" />
+    <Compile Include="Modeling\Serializing\Data.cs" />
+    <Compile Include="Modeling\Serializing\DataSerializer.cs" />
+    <Compile Include="Modeling\Serializing\IDataSerializer.cs" />
+    <Compile Include="Utils\CollectionExtensions.cs" />
+    <Compile Include="Utils\ExceptionAsyncExtensions.cs" />
+    <Compile Include="Utils\ExceptionExtensions.cs" />
+    <Compile Include="Utils\FatalExceptionEventArgs.cs" />
+    <Compile Include="Utils\MathExtensions.cs" />
+    <Compile Include="Utils\AsyncLock.cs" />
+    <Compile Include="Utils\DependencyInjection.cs" />
+    <Compile Include="Features\FolderMonitoring\FolderMonitorService.cs" />
+    <Compile Include="MainWindowViews\IMainWindowService.cs" />
+    <Compile Include="MainWindowViews\MainWindowIpcService.cs" />
+    <Compile Include="MainWindowViews\MainWindowService.cs" />
+    <Compile Include="MainWindowViews\WindowOwner.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Common\CredentialHandler.cs" />
+    <Compile Include="ApplicationHandling\AssemblyResolver.cs" />
+    <Compile Include="Utils\StackTraceExtensions.cs" />
+    <Compile Include="Utils\StopParameter.cs" />
+    <Compile Include="Utils\Throttler.cs" />
+    <Compile Include="Utils\Txt.cs" />
+    <Compile Include="Utils\UI\CredentialsDialog.cs" />
+    <Compile Include="Utils\Disposable.cs" />
+    <Compile Include="MainViews\IMainViewCommands.cs" />
+    <Compile Include="ApplicationHandling\SettingsHandling\Settings.cs" />
+    <Compile Include="ApplicationHandling\SettingsHandling\Options.cs" />
+    <Compile Include="ApplicationHandling\SettingsHandling\WorkFolderSettings.cs" />
+    <Compile Include="Utils\Equatable.cs" />
+    <Compile Include="Utils\IpcService.cs" />
+    <Compile Include="Utils\Json.cs" />
+    <Compile Include="Utils\Serializer.cs" />
+    <Compile Include="Utils\SingleInstanceAttribute.cs" />
+    <Compile Include="Utils\UI\InputBindingsBehavior.cs" />
+    <Compile Include="Utils\UI\VirtualCanvas\ItemEventArgs.cs" />
+    <Compile Include="Utils\UI\VirtualCanvas\WindowsExtensions.cs" />
+    <Compile Include="Utils\UI\VisibleWindow.cs" />
+    <Compile Include="Utils\UI\WpfBindingTraceListener.cs" />
+    <Compile Include="Common\ThemeHandling\ThemeService.cs" />
+    <Compile Include="MainViews\MainView.xaml.cs">
+      <DependentUpon>MainView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Common\SearchFilter.xaml.cs">
+      <DependentUpon>SearchFilter.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="MainWindowViews\HamburgerButton.xaml.cs">
+      <DependentUpon>HamburgerButton.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Utils\IpcRemotingService.cs" />
+    <Compile Include="Utils\UI\BusyProgress.cs" />
+    <Compile Include="Utils\UI\HideableGridSplitter.cs" />
+    <Compile Include="Utils\Compare.cs" />
+    <Compile Include="Common\ThemeHandling\IThemeService.cs" />
+    <Compile Include="Modeling\Items\ItemsSource.cs" />
+    <Compile Include="MainViews\MainViewModel.cs" />
+    <Compile Include="Utils\IReadOnlyKeyedList.cs" />
+    <Compile Include="Utils\KeyedList.cs" />
+    <Compile Include="Common\ExceptionHandling.cs" />
+    <Compile Include="Utils\FatalExceptionsExtensions.cs" />
+    <Compile Include="ApplicationHandling\CommandLine.cs" />
+    <Compile Include="ApplicationHandling\ICommandLine.cs" />
+    <Compile Include="Utils\AsyncSemaphore.cs" />
+    <Compile Include="Utils\EnumerableExtensions.cs" />
+    <Compile Include="Utils\Error.cs" />
+    <Compile Include="ApplicationHandling\Installation\IInstaller.cs" />
+    <Compile Include="ApplicationHandling\ILatestVersionService.cs" />
+    <Compile Include="ApplicationHandling\LatestVersionService.cs" />
+    <Compile Include="ApplicationHandling\Installation\Installer.cs" />
+    <Compile Include="ApplicationHandling\SettingsHandling\ProgramPaths.cs" />
+    <Compile Include="ApplicationHandling\SettingsHandling\ProgramSettings.cs" />
+    <Compile Include="Utils\UI\PropertyToVisibilityConverter.cs" />
+    <Compile Include="Utils\CmdResult.cs" />
+    <Compile Include="Utils\R.cs" />
+    <Compile Include="Utils\RunInbackgroundTaskExtensions.cs" />
+    <Compile Include="Utils\TaskExtensions.cs" />
+    <Compile Include="Utils\TaskThrottler.cs" />
+    <Compile Include="Utils\UI\BusyIndicator.cs" />
+    <Compile Include="Utils\UI\MyWpfExtensions.cs" />
+    <Compile Include="Utils\UI\Property.cs" />
+    <Compile Include="Utils\UI\Command.cs" />
+    <Compile Include="MainWindowViews\MainWindowViewModel.cs" />
+    <Compile Include="Utils\Asserter.cs" />
+    <Compile Include="Utils\Sorter.cs" />
+    <Compile Include="Utils\Timing.cs" />
+    <Compile Include="Utils\UI\PropertySetter.cs" />
+    <Compile Include="Utils\UI\ViewModel.cs" />
+    <Compile Include="Utils\UI\WhenSetter.cs" />
+    <Compile Include="Utils\UI\VirtualCanvas\VirtualItemsSource.cs" />
+    <Compile Include="Utils\UI\VirtualCanvas\ArithmeticConverter.cs" />
+    <Compile Include="Utils\UI\VirtualCanvas\ISpatialItemsSource.cs" />
+    <Compile Include="Utils\UI\VirtualCanvas\LinkedListExtensions.cs" />
+    <Compile Include="Utils\UI\VirtualCanvas\MathExtensions.cs" />
+    <Compile Include="Utils\UI\VirtualCanvas\PriorityQuadTree.cs" />
+    <Compile Include="Utils\UI\VirtualCanvas\PriorityQueue.cs" />
+    <Compile Include="Utils\UI\VirtualCanvas\RectExtensions.cs" />
+    <Compile Include="Utils\Cmd.cs" />
+    <Compile Include="Utils\ICmd.cs" />
+    <Compile Include="Utils\Log.cs" />
+    <Compile Include="Utils\MicroDiContainer.cs" />
+    <Compile Include="Utils\UI\VirtualCanvas\VirtualPanel.cs" />
+    <Compile Include="Utils\UI\VirtualCanvas\ZoomableCanvas.cs" />
+    <Compile Include="Common\WindowControlButtons.xaml.cs">
+      <DependentUpon>WindowControlButtons.xaml</DependentUpon>
+    </Compile>
+    <Page Include="Common\MessageDialogs\MessageDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Common\ProgressHandling\ProgressDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MainViews\MainView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Common\SearchFilter.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MainWindowViews\HamburgerButton.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="MainWindowViews\MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MainWindowViews\MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Page Include="Modeling\Links\LinkLineView.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Modeling\Nodes\MemberNodeView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Modeling\Nodes\SingleNodeView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Modeling\Nodes\NodesView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Modeling\Nodes\CompositeNodeView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\ButtonStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\CheckboxStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\ColorStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\ComboBoxStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\ContextMenuStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\LabelStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\ListBoxItemControlTemplate.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\ListBoxScrollbarStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\ListBoxStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\RadioButtonStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\ToolTipStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Common\WindowControlButtons.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="Dependencies\Newtonsoft.Json.dll" />
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <Resource Include="Fonts\MaterialIcons-Regular.ttf" />
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <AppDesigner Include="Properties\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="MainWindowViews\Application.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <COMReference Include="IWshRuntimeLibrary">
+      <Guid>{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}</Guid>
+      <VersionMajor>1</VersionMajor>
+      <VersionMinor>0</VersionMinor>
+      <Lcid>0</Lcid>
+      <WrapperTool>tlbimp</WrapperTool>
+      <Isolated>False</Isolated>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Dependencies\protobuf-net.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Dependencies\LibGit2Sharp.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Dependencies\git2-785d8c4.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Dependencies\Autofac.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.6.1 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Dependencies\System.ValueTuple.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Dependencies\System.Windows.Interactivity.dll" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>mkdir "$(ProjectDir)\Dependencies" 2&gt; NUL
+copy /Y /B "$(SolutionDir)packages\Autofac.4.1.1\lib\net45\Autofac.dll" "$(ProjectDir)\Dependencies\Autofac.dll"
+copy /Y /B "$(SolutionDir)packages\System.ValueTuple.4.3.0\lib\netstandard1.0\System.ValueTuple.dll" "$(ProjectDir)\Dependencies\System.ValueTuple.dll"
+copy /Y /B "$(SolutionDir)\Binaries\System.Windows.Interactivity.dll" "$(ProjectDir)\Dependencies\System.Windows.Interactivity.dll"
+copy /Y /B "$(SolutionDir)packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll" "$(ProjectDir)\Dependencies\Newtonsoft.Json.dll"
+copy /Y /B "$(SolutionDir)packages\protobuf-net.2.1.0\lib\net451\protobuf-net.dll" "$(ProjectDir)\Dependencies\protobuf-net.dll"
+copy /Y /B "$(SolutionDir)packages\LibGit2Sharp.0.22.0\lib\net40\LibGit2Sharp.dll" "$(ProjectDir)\Dependencies\LibGit2Sharp.dll"
+copy /Y /B "$(SolutionDir)packages\LibGit2Sharp.NativeBinaries.1.0.129\libgit2\windows\x86\git2-785d8c4.dll" "$(ProjectDir)\Dependencies\git2-785d8c4.dll"</PreBuildEvent>
+  </PropertyGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\LibGit2Sharp.NativeBinaries.1.0.129\build\LibGit2Sharp.NativeBinaries.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\LibGit2Sharp.NativeBinaries.1.0.129\build\LibGit2Sharp.NativeBinaries.props'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
