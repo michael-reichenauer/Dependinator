@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using Dependinator.Utils;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
@@ -16,6 +17,7 @@ namespace Dependinator.Modeling.Nodes
 	{
 		private static readonly double ZoomSpeed = 2000.0;
 
+		private bool isTouchInProgress;
 		private Point lastMousePosition;
 		private NodesViewModel viewModel;
 		private double cumulativeDeltaX;
@@ -55,7 +57,6 @@ namespace Dependinator.Modeling.Nodes
 		{
 		}
 
-
 		private void MouseEntering(object sender, MouseEventArgs e)
 		{
 		}
@@ -66,41 +67,16 @@ namespace Dependinator.Modeling.Nodes
 		}
 
 
-		//protected override void OnMouseMove(MouseEventArgs e)
-		//{
-		//	if (isTouchMove)
-		//	{
-		//		// Touch is already moving, so this is a fake mouse event
-		//		e.Handled = true;
-		//		return;
-		//	}
-		//	if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
-		//	{
-		//		return;
-		//	}
-
-		//	Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
-
-		//	if (e.LeftButton == MouseButtonState.Pressed
-		//	    && !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
-		//	{
-		//		// Move canvas
-		//		CaptureMouse();
-		//		Vector viewOffset = viewPosition - lastMousePosition;
-		//		e.Handled = viewModel.MoveCanvas(viewOffset);
-		//	}
-		//	else
-		//	{
-		//		ReleaseMouseCapture();
-		//	}
-
-		//	lastMousePosition = viewPosition;
-		//}
-
-
 
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
+			if (isTouchInProgress)
+			{
+				// Touch is already moving, so this is a fake mouse event
+				e.Handled = true;
+				return;
+			}
+
 			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && !viewModel.IsRoot)
 			{
 				return;
@@ -142,6 +118,72 @@ namespace Dependinator.Modeling.Nodes
 			viewModel.ZoomRoot(zoom, viewPosition);
 			e.Handled = true;
 		}
+
+
+		protected override void OnTouchDown(TouchEventArgs e)
+		{
+			if (!viewModel.IsRoot)
+			{
+				return;
+			}
+
+			// Touch move is starting
+			isTouchInProgress = true;
+			CaptureMouse();
+
+			TouchPoint viewPosition = e.GetTouchPoint(ItemsListBox);
+			lastMousePosition = viewPosition.Position;
+			e.Handled = true;
+		}
+
+		protected override void OnTouchUp(TouchEventArgs e)
+		{
+			if (!viewModel.IsRoot)
+			{
+				return;
+			}
+
+			// Touch move is ending
+			ReleaseMouseCapture();
+			e.Handled = true;
+
+			isTouchInProgress = false;
+		}
+
+
+		protected override void OnTouchMove(TouchEventArgs e)
+		{
+			if (!viewModel.IsRoot)
+			{
+				return;
+			}
+
+			TouchPoint viewPosition = e.GetTouchPoint(ItemsListBox);
+			Vector offset = viewPosition.Position - lastMousePosition;
+
+			e.Handled = true;
+			viewModel.MoveCanvas(offset);
+			lastMousePosition = viewPosition.Position;
+		}
+
+
+
+
+		//protected override void OnPreviewMouseUp(MouseButtonEventArgs e)
+		//{
+		//	// Log.Debug($"Canvas offset {canvas.Offset}");
+
+		//	if (e.ChangedButton == MouseButton.Left)
+		//	{
+		//		Point viewPosition = e.GetPosition(ItemsListBox);
+
+		//		viewModel.Clicked(viewPosition);
+		//	}
+
+		//	base.OnPreviewMouseUp(e);
+		//}
+
+
 
 
 
@@ -233,61 +275,65 @@ namespace Dependinator.Modeling.Nodes
 		//		}
 		//	}
 		//}
-		private void OnManipulationBoundaryFeedback(object sender, ManipulationBoundaryFeedbackEventArgs e)
-		{
-			e.Handled = true;
-		}
+		//private void OnManipulationBoundaryFeedback(object sender, ManipulationBoundaryFeedbackEventArgs e)
+		//{
+		//	e.Handled = true;
+		//}
 
-		private void ListBox_ManipulationStarting(object sender, ManipulationStartingEventArgs e)
-		{
-			e.ManipulationContainer = this;
-			e.Handled = true;
-		}
+		//private void ListBox_ManipulationStarting(object sender, ManipulationStartingEventArgs e)
+		//{
+		//	Log.Warn("Starting");
+		//	e.ManipulationContainer = this;
+		//	e.Handled = true;
+		//}
 
-		const double DeltaX = 50, DeltaY = 50, LinearVelocityX = 0.04, MinimumZoom = 0.1, MaximumZoom = 10;
+		//const double DeltaX = 50, DeltaY = 50, LinearVelocityX = 0.04, MinimumZoom = 0.1, MaximumZoom = 10;
 
-		private void ListBox_ManipulationDelta(object sender, ManipulationDeltaEventArgs e)
-		{
-			//store values of horizontal & vertical cumulative translation
-			cumulativeDeltaX = e.CumulativeManipulation.Translation.X;
-			cumulativeDeltaY = e.CumulativeManipulation.Translation.Y;
+		//private void ListBox_ManipulationDelta(object sender, ManipulationDeltaEventArgs e)
+		//{
+		//	Log.Warn("Delta");
+		//	//store values of horizontal & vertical cumulative translation
+		//	cumulativeDeltaX = e.CumulativeManipulation.Translation.X;
+		//	cumulativeDeltaY = e.CumulativeManipulation.Translation.Y;
 
-			//store value of linear velocity into horizontal direction  
-			linearVelocity = e.Velocities.LinearVelocity.X;
+		//	//store value of linear velocity into horizontal direction  
+		//	linearVelocity = e.Velocities.LinearVelocity.X;
 
-			// Added from part 2. Scale part.
-			// get current matrix of the element.
-			Matrix borderMatrix = ((MatrixTransform)this.RenderTransform).Matrix;
+		//	// Added from part 2. Scale part.
+		//	// get current matrix of the element.
+		//	Matrix borderMatrix = ((MatrixTransform)this.RenderTransform).Matrix;
 
-			//determine if action is zoom or pinch
-			var maxScale = Math.Max(e.DeltaManipulation.Scale.X, e.DeltaManipulation.Scale.Y);
+		//	//determine if action is zoom or pinch
+		//	var maxScale = Math.Max(e.DeltaManipulation.Scale.X, e.DeltaManipulation.Scale.Y);
 
-			//check if not crossing minimum and maximum zoom limit
-			if ((maxScale < 1 && borderMatrix.M11 * maxScale > MinimumZoom) ||
-					(maxScale > 1 && borderMatrix.M11 * maxScale < MaximumZoom))
-			{
-				//scale to most recent change (delta) in X & Y 
-				borderMatrix.ScaleAt(e.DeltaManipulation.Scale.X,
-					e.DeltaManipulation.Scale.Y,
-					ActualWidth / 2,
-					ActualHeight / 2);
+		//	//check if not crossing minimum and maximum zoom limit
+		//	if ((maxScale < 1 && borderMatrix.M11 * maxScale > MinimumZoom) ||
+		//			(maxScale > 1 && borderMatrix.M11 * maxScale < MaximumZoom))
+		//	{
+		//		//scale to most recent change (delta) in X & Y 
+		//		borderMatrix.ScaleAt(e.DeltaManipulation.Scale.X,
+		//			e.DeltaManipulation.Scale.Y,
+		//			ActualWidth / 2,
+		//			ActualHeight / 2);
 
-				//render new matrix
-				RenderTransform = new MatrixTransform(borderMatrix);
-			}
-		}
+		//		//render new matrix
+		//		RenderTransform = new MatrixTransform(borderMatrix);
+		//	}
+		//}
 
-		private void ListBox_ManipulationInertiaStarting(object sender, ManipulationInertiaStartingEventArgs e)
-		{
-			e.ExpansionBehavior = new InertiaExpansionBehavior()
-			{
-				InitialVelocity = e.InitialVelocities.ExpansionVelocity,
-				DesiredDeceleration = 10.0 * 96.0 / 1000000.0
-			};
-		}
+		//private void ListBox_ManipulationInertiaStarting(object sender, ManipulationInertiaStartingEventArgs e)
+		//{
+		//	Log.Warn("InertiaStarting");
+		//	e.ExpansionBehavior = new InertiaExpansionBehavior()
+		//	{
+		//		InitialVelocity = e.InitialVelocities.ExpansionVelocity,
+		//		DesiredDeceleration = 10.0 * 96.0 / 1000000.0
+		//	};
+		//}
 
-		private void ListBox_ManipulationCompleted(object sender, ManipulationCompletedEventArgs e)
-		{
-		}
+		//private void ListBox_ManipulationCompleted(object sender, ManipulationCompletedEventArgs e)
+		//{
+		//	Log.Warn("Completed");
+		//}
 	}
 }

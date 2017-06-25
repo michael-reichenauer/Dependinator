@@ -17,18 +17,18 @@ namespace Dependinator.Modeling.Nodes
 		{
 			base.OnAttached();
 			AssociatedObject.PreviewMouseWheel += AssociatedObject_PreviewMouseWheel;
-			AssociatedObject.PreviewTouchDown += AssociatedObject_PreviewTouchDown;
-			AssociatedObject.PreviewTouchUp += AssociatedObject_PreviewTouchUp;
-			AssociatedObject.PreviewTouchMove += AssociatedObject_PreviewTouchMove;
+			//AssociatedObject.PreviewTouchDown += AssociatedObject_PreviewTouchDown;
+			//AssociatedObject.PreviewTouchUp += AssociatedObject_PreviewTouchUp;
+			//AssociatedObject.PreviewTouchMove += AssociatedObject_PreviewTouchMove;
 		}
 
 
 		protected override void OnDetaching()
 		{
 			AssociatedObject.PreviewMouseWheel -= AssociatedObject_PreviewMouseWheel;
-			AssociatedObject.PreviewTouchDown -= AssociatedObject_PreviewTouchDown;
-			AssociatedObject.PreviewTouchUp -= AssociatedObject_PreviewTouchUp;
-			AssociatedObject.PreviewTouchMove -= AssociatedObject_PreviewTouchMove;
+			//AssociatedObject.PreviewTouchDown -= AssociatedObject_PreviewTouchDown;
+			//AssociatedObject.PreviewTouchUp -= AssociatedObject_PreviewTouchUp;
+			//AssociatedObject.PreviewTouchMove -= AssociatedObject_PreviewTouchMove;
 
 			base.OnDetaching();
 		}

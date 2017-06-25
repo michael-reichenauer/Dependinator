@@ -21,13 +21,6 @@
 		IsTextSearchEnabled="False"
 		Padding="0"
 		SelectionMode="Extended"
-		IsManipulationEnabled="True"
-		ManipulationBoundaryFeedback="OnManipulationBoundaryFeedback"
-		ManipulationStarting="ListBox_ManipulationStarting" 
-		ManipulationDelta="ListBox_ManipulationDelta"
-		ManipulationCompleted="ListBox_ManipulationCompleted" 
-		ManipulationInertiaStarting="ListBox_ManipulationInertiaStarting"
-		
 		ScrollViewer.HorizontalScrollBarVisibility="Auto"
 		ScrollViewer.VerticalScrollBarVisibility="Auto">
 
