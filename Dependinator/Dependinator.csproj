@@ -169,10 +169,10 @@
     <Compile Include="ModelViewing\Links\Link.cs" />
     <Compile Include="ModelViewing\Links\NodeLinks.cs" />
     <Compile Include="ModelViewing\Nodes\NodeComparer.cs" />
-    <Compile Include="ModelViewing\Nodes\ModelView.xaml.cs">
+    <Compile Include="ModelViewing\ModelView.xaml.cs">
       <DependentUpon>ModelView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\Nodes\ModelViewModel.cs" />
+    <Compile Include="ModelViewing\ModelViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\NodeType.cs" />
     <Compile Include="ModelViewing\Nodes\CompositeNodeView.xaml.cs">
       <DependentUpon>CompositeNodeView.xaml</DependentUpon>
@@ -338,7 +338,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ModelViewing\Nodes\ModelView.xaml">
+    <Page Include="ModelViewing\ModelView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

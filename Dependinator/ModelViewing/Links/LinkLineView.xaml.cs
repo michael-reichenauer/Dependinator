@@ -2,8 +2,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Dependinator.ModelViewing.Nodes;
-using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Links
@@ -26,10 +24,10 @@ namespace Dependinator.ModelViewing.Links
 			InitializeComponent();
 		}
 
-		
+
 		private void UIElement_OnMouseDown(object sender, MouseButtonEventArgs e)
 		{
-			if (e.ClickCount == 2 )
+			if (e.ClickCount == 2)
 			{
 				ViewModel.ToggleLine();
 				e.Handled = true;
@@ -61,12 +59,12 @@ namespace Dependinator.ModelViewing.Links
 				isMouseCaptured = true;
 				capturedViewPosition = e.GetPosition(Application.Current.MainWindow);
 			}
-		
+
 			int wheelDelta = e.Delta;
 			Point viewPosition = e.GetPosition(this);
 			double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
-			
-			ViewModel.ZoomLinks(zoom, viewPosition);			
+
+			ViewModel.ZoomLinks(zoom, viewPosition);
 
 			e.Handled = true;
 		}

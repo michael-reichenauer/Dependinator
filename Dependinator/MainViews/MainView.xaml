@@ -21,7 +21,7 @@
 		
 		<!-- Model -->
 		<Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-			<nodes:ModelView x:Name="ModelView" DataContext="{Binding ModelViewModel}"/>
+			<modeling:ModelView x:Name="ModelView" DataContext="{Binding ModelViewModel}"/>
 		</Border>
 
 	</Grid>

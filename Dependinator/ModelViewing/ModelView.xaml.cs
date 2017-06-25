@@ -10,8 +10,7 @@ using System.Windows.Threading;
 using Dependinator.Utils;
 using Dependinator.Utils.UI.VirtualCanvas;
 
-
-namespace Dependinator.ModelViewing.Nodes
+namespace Dependinator.ModelViewing
 {
 	/// <summary>
 	/// Interaction logic for ModelView.xaml

@@ -1,10 +1,10 @@
 ﻿using System.Windows;
 using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.VirtualCanvas;
 
-
-namespace Dependinator.ModelViewing.Nodes
+namespace Dependinator.ModelViewing
 {
 	internal class ModelViewModel : ViewModel
 	{

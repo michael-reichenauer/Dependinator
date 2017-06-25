@@ -5,6 +5,7 @@
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:nodes="clr-namespace:Dependinator.ModelViewing.Nodes"
+	xmlns:modelViewing="clr-namespace:Dependinator.ModelViewing"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
@@ -33,7 +34,7 @@
 			Stretch="Fill" />
 
 		<!-- Child nodes -->
-		<nodes:ModelView Grid.Row="0" x:Name="ModelView" DataContext="{Binding ModelViewModel}" />
+		<modelViewing:ModelView Grid.Row="0" x:Name="ModelView" DataContext="{Binding ModelViewModel}" />
 
 		<!-- Title -->
 		<Border
