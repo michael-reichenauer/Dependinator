@@ -39,7 +39,7 @@ namespace Dependinator.Modeling.Nodes
 			
 
 			int wheelDelta = e.Delta;
-			Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
+			Point viewPosition = e.GetPosition(ModelView.ItemsListBox);
 			double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
 			if (e.OriginalSource is ListBox)
 			{

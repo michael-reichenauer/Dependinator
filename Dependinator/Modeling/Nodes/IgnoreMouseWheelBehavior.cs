@@ -110,10 +110,10 @@ namespace Dependinator.Modeling.Nodes
 		}
 
 
-		private static NodesViewModel GetDataContext(object instance)
+		private static ModelViewModel GetDataContext(object instance)
 		{
 			var element = instance as FrameworkElement;
-			return element?.DataContext as NodesViewModel;
+			return element?.DataContext as ModelViewModel;
 		}
 	}
 }

@@ -14,9 +14,9 @@ using Dependinator.Utils.UI.VirtualCanvas;
 namespace Dependinator.Modeling.Nodes
 {
 	/// <summary>
-	/// Interaction logic for NodesView.xaml
+	/// Interaction logic for ModelView.xaml
 	/// </summary>
-	public partial class NodesView : UserControl
+	public partial class ModelView : UserControl
 	{
 		private static readonly double ZoomSpeed = 2000.0;
 
@@ -28,7 +28,7 @@ namespace Dependinator.Modeling.Nodes
 		private TouchPoint lastTouchPoint2;
 		private double lastPinchLength = 0;
 
-		private NodesViewModel viewModel;
+		private ModelViewModel viewModel;
 
 		private readonly Stopwatch touchClickStopWatch = new Stopwatch();
 		private readonly DispatcherTimer longPressTimer;
@@ -36,7 +36,7 @@ namespace Dependinator.Modeling.Nodes
 		private readonly List<TouchDevice> activeTouchDevices = new List<TouchDevice>();
 
 
-		public NodesView()
+		public ModelView()
 		{
 			InitializeComponent();
 			longPressTimer = new DispatcherTimer();
@@ -48,7 +48,7 @@ namespace Dependinator.Modeling.Nodes
 
 		private void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
 		{
-			viewModel = (NodesViewModel)DataContext;
+			viewModel = (ModelViewModel)DataContext;
 			if (viewModel != null)
 			{
 				viewModel.SetCanvas((ZoomableCanvas)sender, this);
@@ -80,6 +80,33 @@ namespace Dependinator.Modeling.Nodes
 		{
 		}
 
+
+		protected override void OnMouseDown(MouseButtonEventArgs e)
+		{
+			if (e.ChangedButton == MouseButton.Left)
+			{
+				initialMousePoint = e.GetPosition(ItemsListBox);
+				lastMousePoint = initialMousePoint;
+
+			}
+
+			base.OnPreviewMouseUp(e);
+		}
+
+
+		protected override void OnMouseUp(MouseButtonEventArgs e)
+		{
+			if (e.ChangedButton == MouseButton.Left)
+			{
+				Point currentPoint = e.GetPosition(ItemsListBox);
+				if ((currentPoint - initialMousePoint).Length < 5)
+				{
+					Log.Warn("Mouse click");
+				}
+			}
+
+			base.OnPreviewMouseUp(e);
+		}
 
 
 		protected override void OnMouseMove(MouseEventArgs e)
@@ -265,32 +292,7 @@ namespace Dependinator.Modeling.Nodes
 		}
 
 
-		protected override void OnMouseDown(MouseButtonEventArgs e)
-		{
-			if (e.ChangedButton == MouseButton.Left)
-			{
-				initialMousePoint = e.GetPosition(ItemsListBox);
-
-			}
-
-			base.OnPreviewMouseUp(e);
-		}
-
-
-		protected override void OnMouseUp(MouseButtonEventArgs e)
-		{
-			if (e.ChangedButton == MouseButton.Left)
-			{
-				Point currentPoint = e.GetPosition(ItemsListBox);
-				if ((currentPoint - initialMousePoint).Length < 5)
-				{
-					Log.Warn("Mouse click");
-				}
-			}
-
-			base.OnPreviewMouseUp(e);
-		}
-
+		
 
 
 

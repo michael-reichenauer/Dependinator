@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Windows;
+﻿using System.Windows;
 using Dependinator.MainViews.Private;
 using Dependinator.Modeling.Items;
 using Dependinator.Utils.UI;
@@ -8,14 +7,14 @@ using Dependinator.Utils.UI.VirtualCanvas;
 
 namespace Dependinator.Modeling.Nodes
 {
-	internal class NodesViewModel : ViewModel
+	internal class ModelViewModel : ViewModel
 	{
 		private readonly IModelViewService modelViewService;
 		private readonly Node node;
 		private readonly ItemsCanvas itemsCanvas;
 
 
-		public NodesViewModel(IModelViewService modelViewService, Node node, ItemsCanvas itemsCanvas)
+		public ModelViewModel(IModelViewService modelViewService, Node node, ItemsCanvas itemsCanvas)
 		{
 			this.modelViewService = modelViewService;
 			this.node = node;
@@ -25,9 +24,9 @@ namespace Dependinator.Modeling.Nodes
 		public bool IsRoot => node == null;
 
 
-		public void SetCanvas(ZoomableCanvas zoomableCanvas, NodesView nodesView)
+		public void SetCanvas(ZoomableCanvas zoomableCanvas, ModelView modelView)
 		{
-			itemsCanvas.SetCanvas(zoomableCanvas, nodesView);
+			itemsCanvas.SetCanvas(zoomableCanvas, modelView);
 		}
 
 

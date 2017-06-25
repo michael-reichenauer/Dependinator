@@ -16,14 +16,14 @@ namespace Dependinator.Modeling.Nodes
 		{
 			this.node = node;
 			ItemsCanvas = itemsCanvas;
-			NodesViewModel = new NodesViewModel(modelViewService, node, ItemsCanvas);
+			ModelViewModel = new ModelViewModel(modelViewService, node, ItemsCanvas);
 		}
 
 
 		protected override Rect GetItemBounds() => node.NodeBounds;
 
 
-		public NodesViewModel NodesViewModel { get; }
+		public ModelViewModel ModelViewModel { get; }
 
 		public ItemsCanvas ItemsCanvas { get; }
 

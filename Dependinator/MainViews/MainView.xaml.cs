@@ -21,7 +21,7 @@ namespace Dependinator.MainViews
 		private async void MainView_OnLoaded(object sender, RoutedEventArgs e)
 		{
 			viewModel = (MainViewModel)DataContext;
-			NodesView.SetFocus();
+			ModelView.SetFocus();
 			await viewModel.LoadAsync();
 		}
 	}

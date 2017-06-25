@@ -44,12 +44,12 @@ namespace Dependinator.MainViews
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
 
-			NodesViewModel = new NodesViewModel(modelViewService, null, itemsCanvas);
+			ModelViewModel = new ModelViewModel(modelViewService, null, itemsCanvas);
 
 		}
 
 
-		public NodesViewModel NodesViewModel { get; }
+		public ModelViewModel ModelViewModel { get; }
 
 
 		public async Task LoadAsync()
@@ -126,7 +126,7 @@ namespace Dependinator.MainViews
 				if (width != value)
 				{
 					width = value;
-					NodesViewModel.SizeChanged();
+					ModelViewModel.SizeChanged();
 				}
 			}
 		}

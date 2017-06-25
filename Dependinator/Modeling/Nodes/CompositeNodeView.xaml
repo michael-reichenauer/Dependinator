@@ -33,7 +33,7 @@
 			Stretch="Fill" />
 
 		<!-- Child nodes -->
-		<nodes:NodesView Grid.Row="0" x:Name="NodesView" DataContext="{Binding NodesViewModel}" />
+		<nodes:ModelView Grid.Row="0" x:Name="ModelView" DataContext="{Binding ModelViewModel}" />
 
 		<!-- Title -->
 		<Border
