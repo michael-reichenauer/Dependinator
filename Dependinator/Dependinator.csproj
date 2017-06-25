@@ -132,8 +132,8 @@
     </Compile>
     <Compile Include="Common\ProgressHandling\ProgressDialogViewModel.cs" />
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
-    <Compile Include="Features\FolderMonitoring\FileEventArgs.cs" />
-    <Compile Include="Features\FolderMonitoring\IFolderMonitorService.cs" />
+    <Compile Include="Common\FolderMonitoring\FileEventArgs.cs" />
+    <Compile Include="Common\FolderMonitoring\IFolderMonitorService.cs" />
     <Compile Include="ModelViewing\Modeling\Analyzing\Private\Assemblies.cs" />
     <Compile Include="ModelViewing\Modeling\Analyzing\Private\ILInstruction.cs" />
     <Compile Include="ModelViewing\Modeling\Analyzing\Private\IlToText.cs" />
@@ -201,7 +201,7 @@
     <Compile Include="Utils\MathExtensions.cs" />
     <Compile Include="Utils\AsyncLock.cs" />
     <Compile Include="Utils\DependencyInjection.cs" />
-    <Compile Include="Features\FolderMonitoring\FolderMonitorService.cs" />
+    <Compile Include="Common\FolderMonitoring\FolderMonitorService.cs" />
     <Compile Include="MainWindowViews\IMainWindowService.cs" />
     <Compile Include="MainWindowViews\MainWindowIpcService.cs" />
     <Compile Include="MainWindowViews\MainWindowService.cs" />
@@ -469,7 +469,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Dependencies\System.Windows.Interactivity.dll" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Features\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>mkdir "$(ProjectDir)\Dependencies" 2&gt; NUL

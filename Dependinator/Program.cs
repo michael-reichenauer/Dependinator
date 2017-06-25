@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Reflection;
 using Dependinator.ApplicationHandling;
 using Dependinator.Common;
-using Dependinator.Features.FolderMonitoring;
+using Dependinator.Common.FolderMonitoring;
 using Dependinator.Utils;
 
 

@@ -44,9 +44,6 @@ namespace Dependinator.ModelViewing.Links
 			{
 				// Zooming only active when combining with Ctrl key
 				e.Handled = false;
-				Point point = e.GetPosition(Application.Current.MainWindow);
-				double zoom2 = Math.Pow(2, e.Delta / ZoomSpeed);
-				ViewModel.ZoomRoot(zoom2, point);
 				return;
 			}
 

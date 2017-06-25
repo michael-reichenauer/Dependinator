@@ -3,8 +3,7 @@ using System.IO;
 using System.Windows.Threading;
 using Dependinator.Utils;
 
-
-namespace Dependinator.Features.FolderMonitoring
+namespace Dependinator.Common.FolderMonitoring
 {
 	[SingleInstance]
 	internal class FolderMonitorService : IFolderMonitorService

@@ -144,7 +144,7 @@ namespace Dependinator.ModelViewing
 		}
 
 
-		protected override void OnMouseWheel(MouseWheelEventArgs e)
+		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
 		{
 			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
 			{
