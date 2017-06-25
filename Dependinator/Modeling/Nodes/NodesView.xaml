@@ -21,8 +21,6 @@
 		IsTextSearchEnabled="False"
 		Padding="0"
 		SelectionMode="Extended"
-		IsManipulationEnabled="True"
-		ManipulationBoundaryFeedback="OnManipulationBoundaryFeedback"
 		ScrollViewer.HorizontalScrollBarVisibility="Auto"
 		ScrollViewer.VerticalScrollBarVisibility="Auto">
 
