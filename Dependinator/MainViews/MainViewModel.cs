@@ -5,7 +5,6 @@ using System.Windows.Threading;
 using Dependinator.ModelViewing;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
-using Dependinator.MainViews.Private;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;

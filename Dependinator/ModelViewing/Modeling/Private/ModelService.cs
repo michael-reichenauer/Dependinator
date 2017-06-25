@@ -2,30 +2,31 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Dependinator.MainViews.Private;
 using Dependinator.ModelViewing.Links;
+using Dependinator.ModelViewing.Modeling.Serializing;
 using Dependinator.ModelViewing.Nodes;
-using Dependinator.ModelViewing.Serializing;
 using Dependinator.Utils;
 
-
-namespace Dependinator.ModelViewing
+namespace Dependinator.ModelViewing.Modeling.Private
 {
 	internal class ModelService : IModelService
 	{
 		private readonly Lazy<IModelViewService> modelViewService;
 		private readonly INodeService nodeService;
 		private readonly ILinkService linkService;
+		private readonly IDataSerializer dataSerializer;
 
 
 		public ModelService(
 			Lazy<IModelViewService> modelViewService, 
 			INodeService nodeService, 
-			ILinkService linkService)
+			ILinkService linkService,
+			IDataSerializer dataSerializer)
 		{
 			this.modelViewService = modelViewService;
 			this.nodeService = nodeService;
 			this.linkService = linkService;
+			this.dataSerializer = dataSerializer;
 		}
 
 
@@ -81,6 +82,13 @@ namespace Dependinator.ModelViewing
 		
 			return modelViewData;
 		}
+
+
+		public void Serialize(DataModel data, string path) => dataSerializer.Serialize(data, path);
+
+
+		public bool TryDeserialize(string path, out DataModel data) => 
+			dataSerializer.TryDeserialize(path, out data);
 
 
 		private static void AddViewData(Node node, ModelViewData modelViewData)

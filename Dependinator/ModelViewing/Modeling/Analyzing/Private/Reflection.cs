@@ -1,9 +1,7 @@
 using System;
 using System.Reflection;
-using Dependinator.ModelViewing.Serializing;
 
-
-namespace Dependinator.ModelViewing.Analyzing.Private
+namespace Dependinator.ModelViewing.Modeling.Analyzing.Private
 {
 	internal class Reflection
 	{

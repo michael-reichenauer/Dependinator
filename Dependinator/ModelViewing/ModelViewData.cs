@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
+using Dependinator.ModelViewing.Modeling.Serializing;
 using Dependinator.ModelViewing.Nodes;
-using Dependinator.ModelViewing.Serializing;
 
 
 namespace Dependinator.ModelViewing

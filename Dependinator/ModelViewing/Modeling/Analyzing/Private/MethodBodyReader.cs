@@ -4,8 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Dependinator.Utils;
 
-
-namespace Dependinator.ModelViewing.Analyzing.Private
+namespace Dependinator.ModelViewing.Modeling.Analyzing.Private
 {
 	/// <summary>
 	/// Based on:

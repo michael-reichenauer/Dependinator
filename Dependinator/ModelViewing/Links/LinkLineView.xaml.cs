@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Links
@@ -44,6 +45,10 @@ namespace Dependinator.ModelViewing.Links
 			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
 			{
 				// Zooming only active when combining with Ctrl key
+				e.Handled = false;
+				Point point = e.GetPosition(Application.Current.MainWindow);
+				double zoom2 = Math.Pow(2, e.Delta / ZoomSpeed);
+				ViewModel.ZoomRoot(zoom2, point);
 				return;
 			}
 

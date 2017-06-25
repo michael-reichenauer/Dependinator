@@ -1,9 +1,8 @@
 using System.Collections.Generic;
+using Dependinator.ModelViewing.Modeling.Serializing;
 using Dependinator.ModelViewing.Nodes;
-using Dependinator.ModelViewing.Serializing;
 
-
-namespace Dependinator.ModelViewing.Analyzing.Private
+namespace Dependinator.ModelViewing.Modeling.Analyzing.Private
 {
 	internal class ReflectionModel
 	{

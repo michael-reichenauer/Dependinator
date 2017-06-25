@@ -3,7 +3,7 @@ using System.Windows;
 using Dependinator.ModelViewing.Items;
 
 
-namespace Dependinator.MainViews.Private
+namespace Dependinator.ModelViewing
 {
 	internal interface IModelViewService
 	{

@@ -107,5 +107,11 @@ namespace Dependinator.ModelViewing.Links
 			IsMouseOver = false;
 			Notify(nameof(LineBrush), nameof(StrokeThickness));
 		}
+
+
+		public void ZoomRoot(double zoom2, Point point)
+		{
+			linkLine.Owner.RootNode.Zoom(zoom2, point);
+		}
 	}
 }

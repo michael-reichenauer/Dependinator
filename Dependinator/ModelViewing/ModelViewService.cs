@@ -3,15 +3,14 @@ using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.ApplicationHandling;
 using Dependinator.ApplicationHandling.SettingsHandling;
-using Dependinator.ModelViewing;
-using Dependinator.ModelViewing.Analyzing;
 using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Modeling;
+using Dependinator.ModelViewing.Modeling.Analyzing;
+using Dependinator.ModelViewing.Modeling.Serializing;
 using Dependinator.ModelViewing.Nodes;
-using Dependinator.ModelViewing.Serializing;
 using Dependinator.Utils;
 
-
-namespace Dependinator.MainViews.Private
+namespace Dependinator.ModelViewing
 {
 	[SingleInstance]
 	internal class ModelViewService : IModelViewService
@@ -21,21 +20,17 @@ namespace Dependinator.MainViews.Private
 		private readonly IModelService modelService;
 		
 
-		private readonly IDataSerializer dataSerializer;
-
 
 		private Model model;
 
 		public ModelViewService(
 			WorkingFolder workingFolder,
 			IReflectionService reflectionService,
-			IModelService modelService,
-			IDataSerializer dataSerializer)
+			IModelService modelService)
 		{
 			this.workingFolder = workingFolder;
 			this.reflectionService = reflectionService;
 			this.modelService = modelService;
-			this.dataSerializer = dataSerializer;
 		}
 
 
@@ -168,7 +163,7 @@ namespace Dependinator.MainViews.Private
 		private bool TryReadCachedData(out DataModel dataModel)
 		{
 			string dataFilePath = GetDataFilePath();
-			return dataSerializer.TryDeserialize(dataFilePath, out dataModel);
+			return modelService.TryDeserialize(dataFilePath, out dataModel);
 		}
 
 
@@ -187,7 +182,7 @@ namespace Dependinator.MainViews.Private
 			DataModel dataModel = modelService.ToDataModel(model);
 			string dataFilePath = GetDataFilePath();
 
-			dataSerializer.Serialize(dataModel, dataFilePath);
+			modelService.Serialize(dataModel, dataFilePath);
 
 			StoreViewSettings();
 		}

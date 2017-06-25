@@ -1,5 +1,4 @@
 ﻿using System.Windows;
-using Dependinator.MainViews.Private;
 using Dependinator.ModelViewing.Items;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.VirtualCanvas;

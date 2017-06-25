@@ -1,8 +1,6 @@
-using System;
 using System.Reflection.Emit;
 
-
-namespace Dependinator.ModelViewing.Analyzing.Private
+namespace Dependinator.ModelViewing.Modeling.Analyzing.Private
 {
 	/// <summary>
 	/// Based on:

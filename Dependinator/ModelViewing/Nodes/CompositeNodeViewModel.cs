@@ -1,7 +1,6 @@
 using System;
 using System.Windows;
 using System.Windows.Media;
-using Dependinator.MainViews.Private;
 using Dependinator.ModelViewing.Items;
 
 
