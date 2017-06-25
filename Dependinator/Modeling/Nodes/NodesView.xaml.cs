@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
-using System.Windows.Media;
 using Dependinator.Utils;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -17,12 +18,14 @@ namespace Dependinator.Modeling.Nodes
 	{
 		private static readonly double ZoomSpeed = 2000.0;
 
-		private bool isTouchInProgress;
+
 		private Point lastMousePosition;
+		private TouchPoint lastFirstTouchPoint;
+		private TouchPoint lastSecondTouchPoint;
+		private double lastLength = 0;
 		private NodesViewModel viewModel;
-		private double cumulativeDeltaX;
-		private double cumulativeDeltaY;
-		private double linearVelocity;
+
+		private List<TouchDevice> activeTouchDevices = new List<TouchDevice>();
 
 
 		public NodesView()
@@ -70,7 +73,7 @@ namespace Dependinator.Modeling.Nodes
 
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
-			if (isTouchInProgress)
+			if (activeTouchDevices.Any())
 			{
 				// Touch is already moving, so this is a fake mouse event
 				e.Handled = true;
@@ -79,6 +82,7 @@ namespace Dependinator.Modeling.Nodes
 
 			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && !viewModel.IsRoot)
 			{
+				// Root node move only active on root node
 				return;
 			}
 
@@ -127,14 +131,28 @@ namespace Dependinator.Modeling.Nodes
 				return;
 			}
 
-			// Touch move is starting
-			isTouchInProgress = true;
-			CaptureMouse();
+			if (activeTouchDevices.Count > 1)
+			{
+				Log.Warn("No support for multi-touch yet");
+				return;
+			}
 
-			TouchPoint viewPosition = e.GetTouchPoint(ItemsListBox);
-			lastMousePosition = viewPosition.Position;
+			activeTouchDevices.Add(e.TouchDevice);
+			CaptureTouch(e.TouchDevice);
+
+			if (activeTouchDevices.Count == 1)
+			{
+				lastFirstTouchPoint = e.GetTouchPoint(ItemsListBox);
+			}
+			else
+			{
+				lastSecondTouchPoint = e.GetTouchPoint(ItemsListBox);
+				lastLength = (lastSecondTouchPoint.Position - lastFirstTouchPoint.Position).Length;
+			}
+
 			e.Handled = true;
 		}
+
 
 		protected override void OnTouchUp(TouchEventArgs e)
 		{
@@ -144,10 +162,10 @@ namespace Dependinator.Modeling.Nodes
 			}
 
 			// Touch move is ending
-			ReleaseMouseCapture();
+			ReleaseTouchCapture(e.TouchDevice);
 			e.Handled = true;
 
-			isTouchInProgress = false;
+			activeTouchDevices.Remove(e.TouchDevice);
 		}
 
 
@@ -158,12 +176,46 @@ namespace Dependinator.Modeling.Nodes
 				return;
 			}
 
-			TouchPoint viewPosition = e.GetTouchPoint(ItemsListBox);
-			Vector offset = viewPosition.Position - lastMousePosition;
+			TouchPoint currentPoint = e.GetTouchPoint(ItemsListBox);
+
+			if (activeTouchDevices.Count == 1 && lastFirstTouchPoint.TouchDevice.Id == currentPoint.TouchDevice.Id)
+			{
+				// Touch move
+				Vector offset = currentPoint.Position - lastFirstTouchPoint.Position;
+
+				viewModel.MoveCanvas(offset);
+				lastFirstTouchPoint = currentPoint;
+			}
+			else if (activeTouchDevices.Count == 2)
+			{
+				// zoom or pinch			
+				if (currentPoint.TouchDevice.Id == lastFirstTouchPoint.TouchDevice.Id)
+				{
+					// Moved first finger
+					lastFirstTouchPoint = currentPoint;
+				}
+				else if (currentPoint.TouchDevice.Id == lastSecondTouchPoint.TouchDevice.Id)
+				{
+					// Moved second finger
+					lastSecondTouchPoint = currentPoint;
+				}
+				else
+				{
+					// Neither first or second finger (multi touch not yet supported
+					return;
+				}
+
+				Vector vector = lastSecondTouchPoint.Position - lastFirstTouchPoint.Position;
+
+				double currentLength = vector.Length;
+				double zoomFactor = currentLength / lastLength;
+				lastLength = currentLength;
+
+				Point viewPosition = lastFirstTouchPoint.Position + (vector / 2);
+				viewModel.ZoomRoot(zoomFactor, viewPosition);
+			}
 
 			e.Handled = true;
-			viewModel.MoveCanvas(offset);
-			lastMousePosition = viewPosition.Position;
 		}
 
 
@@ -274,66 +326,6 @@ namespace Dependinator.Modeling.Nodes
 
 		//		}
 		//	}
-		//}
-		//private void OnManipulationBoundaryFeedback(object sender, ManipulationBoundaryFeedbackEventArgs e)
-		//{
-		//	e.Handled = true;
-		//}
-
-		//private void ListBox_ManipulationStarting(object sender, ManipulationStartingEventArgs e)
-		//{
-		//	Log.Warn("Starting");
-		//	e.ManipulationContainer = this;
-		//	e.Handled = true;
-		//}
-
-		//const double DeltaX = 50, DeltaY = 50, LinearVelocityX = 0.04, MinimumZoom = 0.1, MaximumZoom = 10;
-
-		//private void ListBox_ManipulationDelta(object sender, ManipulationDeltaEventArgs e)
-		//{
-		//	Log.Warn("Delta");
-		//	//store values of horizontal & vertical cumulative translation
-		//	cumulativeDeltaX = e.CumulativeManipulation.Translation.X;
-		//	cumulativeDeltaY = e.CumulativeManipulation.Translation.Y;
-
-		//	//store value of linear velocity into horizontal direction  
-		//	linearVelocity = e.Velocities.LinearVelocity.X;
-
-		//	// Added from part 2. Scale part.
-		//	// get current matrix of the element.
-		//	Matrix borderMatrix = ((MatrixTransform)this.RenderTransform).Matrix;
-
-		//	//determine if action is zoom or pinch
-		//	var maxScale = Math.Max(e.DeltaManipulation.Scale.X, e.DeltaManipulation.Scale.Y);
-
-		//	//check if not crossing minimum and maximum zoom limit
-		//	if ((maxScale < 1 && borderMatrix.M11 * maxScale > MinimumZoom) ||
-		//			(maxScale > 1 && borderMatrix.M11 * maxScale < MaximumZoom))
-		//	{
-		//		//scale to most recent change (delta) in X & Y 
-		//		borderMatrix.ScaleAt(e.DeltaManipulation.Scale.X,
-		//			e.DeltaManipulation.Scale.Y,
-		//			ActualWidth / 2,
-		//			ActualHeight / 2);
-
-		//		//render new matrix
-		//		RenderTransform = new MatrixTransform(borderMatrix);
-		//	}
-		//}
-
-		//private void ListBox_ManipulationInertiaStarting(object sender, ManipulationInertiaStartingEventArgs e)
-		//{
-		//	Log.Warn("InertiaStarting");
-		//	e.ExpansionBehavior = new InertiaExpansionBehavior()
-		//	{
-		//		InitialVelocity = e.InitialVelocities.ExpansionVelocity,
-		//		DesiredDeceleration = 10.0 * 96.0 / 1000000.0
-		//	};
-		//}
-
-		//private void ListBox_ManipulationCompleted(object sender, ManipulationCompletedEventArgs e)
-		//{
-		//	Log.Warn("Completed");
 		//}
 	}
 }
