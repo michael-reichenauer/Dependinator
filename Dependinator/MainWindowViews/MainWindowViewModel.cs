@@ -7,7 +7,6 @@ using Dependinator.ApplicationHandling;
 using Dependinator.ApplicationHandling.SettingsHandling;
 using Dependinator.Common;
 using Dependinator.Common.MessageDialogs;
-using Dependinator.MainViews;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 using Application = System.Windows.Application;

@@ -2,7 +2,7 @@
 using UserControl = System.Windows.Controls.UserControl;
 
 
-namespace Dependinator.MainViews
+namespace Dependinator.MainWindowViews
 {
 	/// <summary>
 	/// Interaction logic for MainView.xaml
