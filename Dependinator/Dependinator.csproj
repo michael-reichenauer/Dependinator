@@ -188,7 +188,6 @@
     <Compile Include="Modeling\Items\ItemViewModel.cs" />
     <Compile Include="Modeling\Nodes\Node.cs" />
     <Compile Include="Modeling\Items\IItem.cs" />
-    <Compile Include="MainViews\Private\MainViewCommands.cs" />
     <Compile Include="MainViews\Private\IModelViewService.cs" />
     <Compile Include="MainViews\Private\ModelViewService.cs" />
     <Compile Include="Modeling\Nodes\NodeService.cs" />
@@ -216,7 +215,6 @@
     <Compile Include="Utils\Txt.cs" />
     <Compile Include="Utils\UI\CredentialsDialog.cs" />
     <Compile Include="Utils\Disposable.cs" />
-    <Compile Include="MainViews\IMainViewCommands.cs" />
     <Compile Include="ApplicationHandling\SettingsHandling\Settings.cs" />
     <Compile Include="ApplicationHandling\SettingsHandling\Options.cs" />
     <Compile Include="ApplicationHandling\SettingsHandling\WorkFolderSettings.cs" />

@@ -20,7 +20,7 @@ namespace Dependinator.Modeling.Nodes
 	{
 		private static readonly double ZoomSpeed = 2000.0;
 
-		private Point intialMousePoint;
+		private Point initialMousePoint;
 		private Point lastMousePoint;
 		
 		private TouchPoint initialTouchPoint1;
@@ -269,7 +269,7 @@ namespace Dependinator.Modeling.Nodes
 		{
 			if (e.ChangedButton == MouseButton.Left)
 			{
-				intialMousePoint = e.GetPosition(ItemsListBox);
+				initialMousePoint = e.GetPosition(ItemsListBox);
 
 			}
 
@@ -282,7 +282,7 @@ namespace Dependinator.Modeling.Nodes
 			if (e.ChangedButton == MouseButton.Left)
 			{
 				Point currentPoint = e.GetPosition(ItemsListBox);
-				if ((currentPoint - intialMousePoint).Length < 5)
+				if ((currentPoint - initialMousePoint).Length < 5)
 				{
 					Log.Warn("Mouse click");
 				}
