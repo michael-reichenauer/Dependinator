@@ -151,7 +151,7 @@
     <Compile Include="ModelViewing\Links\LinkService.cs" />
     <Compile Include="ModelViewing\Links\LinkLineBounds.cs" />
     <Compile Include="ModelViewing\Links\LinkGroup.cs" />
-    <Compile Include="ModelViewing\Nodes\IgnoreMouseWheelBehavior.cs" />
+    <Compile Include="Utils\UI\IgnoreMouseWheelBehavior.cs" />
     <Compile Include="ModelViewing\Nodes\INodeService.cs" />
     <Compile Include="ModelViewing\Items\IItemBounds.cs" />
     <Compile Include="ModelViewing\Items\ItemsCanvas.cs" />
