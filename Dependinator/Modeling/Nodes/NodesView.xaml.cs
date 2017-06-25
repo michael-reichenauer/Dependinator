@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Dependinator.Utils;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -18,22 +20,31 @@ namespace Dependinator.Modeling.Nodes
 	{
 		private static readonly double ZoomSpeed = 2000.0;
 
+		private Point intialMousePoint;
+		private Point lastMousePoint;
+		
+		private TouchPoint initialTouchPoint1;
+		private TouchPoint lastTouchPoint1;
+		private TouchPoint lastTouchPoint2;
+		private double lastPinchLength = 0;
 
-		private Point lastMousePosition;
-		private TouchPoint lastFirstTouchPoint;
-		private TouchPoint lastSecondTouchPoint;
-		private double lastLength = 0;
 		private NodesViewModel viewModel;
 
-		private List<TouchDevice> activeTouchDevices = new List<TouchDevice>();
+		private readonly Stopwatch touchClickStopWatch = new Stopwatch();
+		private readonly DispatcherTimer longPressTimer;
+
+		private readonly List<TouchDevice> activeTouchDevices = new List<TouchDevice>();
 
 
 		public NodesView()
 		{
 			InitializeComponent();
-
+			longPressTimer = new DispatcherTimer();
+			longPressTimer.Tick += OnLongPressTime;
+			longPressTimer.Interval = TimeSpan.FromMilliseconds(500);
 		}
 
+	
 
 		private void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
 		{
@@ -93,7 +104,7 @@ namespace Dependinator.Modeling.Nodes
 			{
 				// Move canvas
 				CaptureMouse();
-				Vector viewOffset = viewPosition - lastMousePosition;
+				Vector viewOffset = viewPosition - lastMousePoint;
 				e.Handled = true;
 				viewModel.MoveCanvas(viewOffset);
 			}
@@ -103,7 +114,7 @@ namespace Dependinator.Modeling.Nodes
 				ReleaseMouseCapture();
 			}
 
-			lastMousePosition = viewPosition;
+			lastMousePoint = viewPosition;
 		}
 
 
@@ -138,18 +149,26 @@ namespace Dependinator.Modeling.Nodes
 			}
 
 			activeTouchDevices.Add(e.TouchDevice);
-			CaptureTouch(e.TouchDevice);
 
 			if (activeTouchDevices.Count == 1)
 			{
-				lastFirstTouchPoint = e.GetTouchPoint(ItemsListBox);
+				// First finger touch, check if possible click or long-press or else
+				touchClickStopWatch.Restart();
+				longPressTimer.Start();
+
+				initialTouchPoint1 = e.GetTouchPoint(ItemsListBox);
+				lastTouchPoint1 = e.GetTouchPoint(ItemsListBox);
 			}
 			else
 			{
-				lastSecondTouchPoint = e.GetTouchPoint(ItemsListBox);
-				lastLength = (lastSecondTouchPoint.Position - lastFirstTouchPoint.Position).Length;
+				// Second finger touch for zoom or pinch
+				longPressTimer.Stop();
+
+				lastTouchPoint2 = e.GetTouchPoint(ItemsListBox);
+				lastPinchLength = (lastTouchPoint2.Position - lastTouchPoint1.Position).Length;
 			}
 
+			CaptureTouch(e.TouchDevice);
 			e.Handled = true;
 		}
 
@@ -160,12 +179,39 @@ namespace Dependinator.Modeling.Nodes
 			{
 				return;
 			}
+			
+			if (activeTouchDevices.Count == 1 && lastTouchPoint1.TouchDevice.Id == e.TouchDevice.Id)
+			{
+				// First finger upp, checking if distance is small enough to count as click or long-press
+				touchClickStopWatch.Stop();
+				longPressTimer.Stop();
 
-			// Touch move is ending
-			ReleaseTouchCapture(e.TouchDevice);
-			e.Handled = true;
+				TouchPoint currentPoint = e.GetTouchPoint(ItemsListBox);
+
+				if ((currentPoint.Position - initialTouchPoint1.Position).Length < 10)
+				{
+					if (touchClickStopWatch.Elapsed < TimeSpan.FromMilliseconds(200))
+					{
+						// A one finger short click
+						Log.Warn("Touch click");
+					}
+				}
+			}
 
 			activeTouchDevices.Remove(e.TouchDevice);
+			ReleaseTouchCapture(e.TouchDevice);
+			e.Handled = true;
+		}
+
+
+		private void OnLongPressTime(object sender, EventArgs e)
+		{
+			longPressTimer.Stop();
+
+			if ((lastTouchPoint1.Position - initialTouchPoint1.Position).Length < 10)
+			{
+				Log.Warn("Touch long-press");
+			}
 		}
 
 
@@ -178,26 +224,26 @@ namespace Dependinator.Modeling.Nodes
 
 			TouchPoint currentPoint = e.GetTouchPoint(ItemsListBox);
 
-			if (activeTouchDevices.Count == 1 && lastFirstTouchPoint.TouchDevice.Id == currentPoint.TouchDevice.Id)
+			if (activeTouchDevices.Count == 1 && lastTouchPoint1.TouchDevice.Id == currentPoint.TouchDevice.Id)
 			{
-				// Touch move
-				Vector offset = currentPoint.Position - lastFirstTouchPoint.Position;
+				// One finger touch move
+				Vector offset = currentPoint.Position - lastTouchPoint1.Position;
 
 				viewModel.MoveCanvas(offset);
-				lastFirstTouchPoint = currentPoint;
+				lastTouchPoint1 = currentPoint;
 			}
 			else if (activeTouchDevices.Count == 2)
 			{
-				// zoom or pinch			
-				if (currentPoint.TouchDevice.Id == lastFirstTouchPoint.TouchDevice.Id)
+				// Two finger touch zoom or pinch			
+				if (currentPoint.TouchDevice.Id == lastTouchPoint1.TouchDevice.Id)
 				{
 					// Moved first finger
-					lastFirstTouchPoint = currentPoint;
+					lastTouchPoint1 = currentPoint;
 				}
-				else if (currentPoint.TouchDevice.Id == lastSecondTouchPoint.TouchDevice.Id)
+				else if (currentPoint.TouchDevice.Id == lastTouchPoint2.TouchDevice.Id)
 				{
 					// Moved second finger
-					lastSecondTouchPoint = currentPoint;
+					lastTouchPoint2 = currentPoint;
 				}
 				else
 				{
@@ -205,13 +251,13 @@ namespace Dependinator.Modeling.Nodes
 					return;
 				}
 
-				Vector vector = lastSecondTouchPoint.Position - lastFirstTouchPoint.Position;
+				Vector vector = lastTouchPoint2.Position - lastTouchPoint1.Position;
 
 				double currentLength = vector.Length;
-				double zoomFactor = currentLength / lastLength;
-				lastLength = currentLength;
+				double zoomFactor = currentLength / lastPinchLength;
+				lastPinchLength = currentLength;
 
-				Point viewPosition = lastFirstTouchPoint.Position + (vector / 2);
+				Point viewPosition = lastTouchPoint1.Position + (vector / 2);
 				viewModel.ZoomRoot(zoomFactor, viewPosition);
 			}
 
@@ -219,21 +265,31 @@ namespace Dependinator.Modeling.Nodes
 		}
 
 
+		protected override void OnMouseDown(MouseButtonEventArgs e)
+		{
+			if (e.ChangedButton == MouseButton.Left)
+			{
+				intialMousePoint = e.GetPosition(ItemsListBox);
+
+			}
+
+			base.OnPreviewMouseUp(e);
+		}
 
 
-		//protected override void OnPreviewMouseUp(MouseButtonEventArgs e)
-		//{
-		//	// Log.Debug($"Canvas offset {canvas.Offset}");
+		protected override void OnMouseUp(MouseButtonEventArgs e)
+		{
+			if (e.ChangedButton == MouseButton.Left)
+			{
+				Point currentPoint = e.GetPosition(ItemsListBox);
+				if ((currentPoint - intialMousePoint).Length < 5)
+				{
+					Log.Warn("Mouse click");
+				}
+			}
 
-		//	if (e.ChangedButton == MouseButton.Left)
-		//	{
-		//		Point viewPosition = e.GetPosition(ItemsListBox);
-
-		//		viewModel.Clicked(viewPosition);
-		//	}
-
-		//	base.OnPreviewMouseUp(e);
-		//}
+			base.OnPreviewMouseUp(e);
+		}
 
 
 
