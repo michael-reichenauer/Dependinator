@@ -2,12 +2,12 @@ using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using Dependinator.Modeling;
+using Dependinator.ModelViewing;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.MainViews.Private;
-using Dependinator.Modeling.Items;
-using Dependinator.Modeling.Nodes;
+using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 

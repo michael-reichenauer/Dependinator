@@ -3,11 +3,11 @@ using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.ApplicationHandling;
 using Dependinator.ApplicationHandling.SettingsHandling;
-using Dependinator.Modeling;
-using Dependinator.Modeling.Analyzing;
-using Dependinator.Modeling.Items;
-using Dependinator.Modeling.Nodes;
-using Dependinator.Modeling.Serializing;
+using Dependinator.ModelViewing;
+using Dependinator.ModelViewing.Analyzing;
+using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Nodes;
+using Dependinator.ModelViewing.Serializing;
 using Dependinator.Utils;
 
 

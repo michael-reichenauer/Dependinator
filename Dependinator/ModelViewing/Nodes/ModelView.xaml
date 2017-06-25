@@ -1,0 +1,152 @@
+﻿<UserControl
+	x:Class="Dependinator.ModelViewing.Nodes.ModelView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:local="clr-namespace:Dependinator.ModelViewing"
+	xmlns:virtualCanvas="clr-namespace:Dependinator.Utils.UI.VirtualCanvas"
+	xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+	xmlns:links="clr-namespace:Dependinator.ModelViewing.Links"
+	xmlns:nodes="clr-namespace:Dependinator.ModelViewing.Nodes"
+	mc:Ignorable="d"
+	d:DesignHeight="300" d:DesignWidth="300">
+
+
+	<ListBox 
+		x:Name="ItemsListBox"
+		BorderBrush="Transparent"
+		BorderThickness="0"
+		Background="Transparent"
+		IsTextSearchEnabled="False"
+		Padding="0"
+		SelectionMode="Extended"
+		ScrollViewer.HorizontalScrollBarVisibility="Auto"
+		ScrollViewer.VerticalScrollBarVisibility="Auto">
+
+		<i:Interaction.Behaviors>
+			<nodes:IgnoreMouseWheelBehavior />
+		</i:Interaction.Behaviors>
+
+		<ListBox.ItemsPanel>
+			<ItemsPanelTemplate>
+				<virtualCanvas:ZoomableCanvas
+					Loaded="ZoomableCanvas_Loaded"
+					RealizationLimit="500"
+					RealizationRate="100"
+					RealizationPriority="Background"
+					ApplyTransform="false" />
+			</ItemsPanelTemplate>
+		</ListBox.ItemsPanel>
+
+		<ListBox.ItemContainerStyle>
+			<Style TargetType="ListBoxItem">
+
+				<!--<Setter Property="Canvas.ZIndex" Value="{Binding CanvasZIndex}" />-->
+				<Setter Property="Canvas.Top" Value="{Binding CanvasTop}" />
+				<Setter Property="Canvas.Left" Value="{Binding CanvasLeft}" />
+				<Setter Property="Width">
+					<Setter.Value>
+						<MultiBinding
+							Converter="{x:Static virtualCanvas:ArithmeticConverter.Default}"
+							ConverterParameter="*">
+							<Binding Path="CanvasWidth" />
+							<Binding
+								Path="Scale"
+								RelativeSource="{RelativeSource	AncestorType=virtualCanvas:ZoomableCanvas}" />
+						</MultiBinding>
+					</Setter.Value>
+				</Setter>
+
+				<Setter Property="Height">
+					<Setter.Value>
+						<MultiBinding
+							Converter="{x:Static virtualCanvas:ArithmeticConverter.Default}"
+							ConverterParameter="*">
+							<Binding Path="CanvasHeight" />
+							<Binding
+								Path="Scale"
+								RelativeSource="{RelativeSource	AncestorType=virtualCanvas:ZoomableCanvas}" />
+						</MultiBinding>
+					</Setter.Value>
+				</Setter>
+
+				<Setter Property="Background" Value="Transparent" />
+				<Setter Property="Padding" Value="0" />
+				<Setter Property="HorizontalContentAlignment" Value="Stretch" />
+				<Setter Property="VerticalContentAlignment" Value="Stretch" />
+				<Setter Property="IsEnabled" Value="True" />
+				<Setter Property="Focusable" Value="False" />
+				<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
+
+				<EventSetter Event="MouseDoubleClick" Handler="MouseDobleClick" />
+				<EventSetter Event="MouseUp" Handler="EventMouseUp" />
+				<EventSetter Event="MouseEnter" Handler="MouseEntering" />
+				<EventSetter Event="MouseLeave" Handler="MouseLeaving" />
+				
+
+				<!-- Style for list items (selected/hoover) -->
+				<Setter Property="Template" Value="{StaticResource ListBoxItemControlTemplate}" />
+
+				<Style.Triggers>
+
+					<!-- Node  -->
+					<!--<DataTrigger Binding="{Binding Type}" Value="NodeViewModel">
+						<Setter Property="ContentTemplate">
+							<Setter.Value>
+								<DataTemplate>
+									<local:NodeView />
+								</DataTemplate>
+							</Setter.Value>
+						</Setter>
+						<Setter Property="IsEnabled" Value="true" />
+						<Setter Property="Focusable" Value="False" />
+						<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
+					</DataTrigger>-->
+
+					<DataTrigger Binding="{Binding Type}" Value="CompositeNodeViewModel">
+						<Setter Property="ContentTemplate">
+							<Setter.Value>
+								<DataTemplate>
+									<nodes:CompositeNodeView />
+								</DataTemplate>
+							</Setter.Value>
+						</Setter>
+					</DataTrigger>
+
+					<DataTrigger Binding="{Binding Type}" Value="SingleNodeViewModel">
+						<Setter Property="ContentTemplate">
+							<Setter.Value>
+								<DataTemplate>
+									<nodes:SingleNodeView />
+								</DataTemplate>
+							</Setter.Value>
+						</Setter>
+					</DataTrigger>
+
+					<DataTrigger Binding="{Binding Type}" Value="MemberNodeViewModel">
+						<Setter Property="ContentTemplate">
+							<Setter.Value><DataTemplate><nodes:MemberNodeView/></DataTemplate></Setter.Value>
+						</Setter>
+					</DataTrigger>
+
+					<!-- Link Line -->
+					<DataTrigger Binding="{Binding Type}" Value="LinkLineViewModel">
+						<Setter Property="ContentTemplate">
+							<Setter.Value>
+								<DataTemplate >
+									<links:LinkLineView />
+								</DataTemplate>
+							</Setter.Value>
+						</Setter>
+					</DataTrigger>
+
+				</Style.Triggers>
+
+			</Style>
+
+		</ListBox.ItemContainerStyle>
+
+	</ListBox>
+
+</UserControl>
