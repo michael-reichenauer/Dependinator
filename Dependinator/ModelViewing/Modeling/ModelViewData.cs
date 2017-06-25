@@ -2,8 +2,7 @@
 using Dependinator.ModelViewing.Modeling.Serializing;
 using Dependinator.ModelViewing.Nodes;
 
-
-namespace Dependinator.ModelViewing
+namespace Dependinator.ModelViewing.Modeling
 {
 	internal class ModelViewData
 	{

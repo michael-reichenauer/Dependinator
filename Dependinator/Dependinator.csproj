@@ -164,7 +164,7 @@
       <DependentUpon>SingleNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\NodeName.cs" />
-    <Compile Include="ModelViewing\Model.cs" />
+    <Compile Include="ModelViewing\Modeling\Model.cs" />
     <Compile Include="ModelViewing\Modeling\Analyzing\IReflectionService.cs" />
     <Compile Include="ModelViewing\Links\Link.cs" />
     <Compile Include="ModelViewing\Links\NodeLinks.cs" />
@@ -184,7 +184,7 @@
     <Compile Include="ModelViewing\Modeling\IModelService.cs" />
     <Compile Include="ModelViewing\Links\LinkLine.cs" />
     <Compile Include="ModelViewing\Links\LinkLineViewModel.cs" />
-    <Compile Include="ModelViewing\ModelViewData.cs" />
+    <Compile Include="ModelViewing\Modeling\ModelViewData.cs" />
     <Compile Include="ModelViewing\Items\ItemViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\Node.cs" />
     <Compile Include="ModelViewing\Items\IItem.cs" />
@@ -469,9 +469,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Dependencies\System.Windows.Interactivity.dll" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="MainViews\Private\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>mkdir "$(ProjectDir)\Dependencies" 2&gt; NUL
