@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using Dependinator.MainViews.Private;
 using Dependinator.Modeling.Links;
 using Dependinator.Modeling.Nodes;
 using Dependinator.Modeling.Serializing;
@@ -11,12 +13,17 @@ namespace Dependinator.Modeling
 {
 	internal class ModelService : IModelService
 	{
+		private readonly Lazy<IModelViewService> modelViewService;
 		private readonly INodeService nodeService;
 		private readonly ILinkService linkService;
 
 
-		public ModelService(INodeService nodeService, ILinkService linkService)
+		public ModelService(
+			Lazy<IModelViewService> modelViewService, 
+			INodeService nodeService, 
+			ILinkService linkService)
 		{
+			this.modelViewService = modelViewService;
 			this.nodeService = nodeService;
 			this.linkService = linkService;
 		}
@@ -49,7 +56,7 @@ namespace Dependinator.Modeling
 
 		private Node CreateRootNode()
 		{
-			Node root = new Node(nodeService, linkService, null, NodeName.Root, NodeType.NameSpaceType);
+			Node root = new Node(modelViewService.Value, nodeService, linkService, null, NodeName.Root, NodeType.NameSpaceType);
 			return root;
 		}
 
@@ -239,7 +246,7 @@ namespace Dependinator.Modeling
 				parentNode = CreateNode(parentName, model, modelViewData);
 			}
 
-			Node node = new Node(nodeService, linkService,  parentNode, nodeName, null);
+			Node node = new Node(modelViewService.Value, nodeService, linkService,  parentNode, nodeName, null);
 
 			TrySetViewData(null, modelViewData, node, nodeName);
 

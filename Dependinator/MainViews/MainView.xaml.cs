@@ -1,8 +1,4 @@
-﻿using System;
-using System.Windows;
-using System.Windows.Controls.Primitives;
-using System.Windows.Input;
-using Dependinator.Utils;
+﻿using System.Windows;
 using UserControl = System.Windows.Controls.UserControl;
 
 
@@ -13,12 +9,7 @@ namespace Dependinator.MainViews
 	/// </summary>
 	public partial class MainView : UserControl
 	{
-		private static readonly double ZoomSpeed = 2000.0;
-
 		private MainViewModel viewModel;
-
-		private Point lastMousePosition;
-		private bool isTouchMove = false;
 
 
 		public MainView()
@@ -36,98 +27,50 @@ namespace Dependinator.MainViews
 
 
 
-		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
-		{
-			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
-			{
-				e.Handled = false;
-				return;
-			}
 
-			int wheelDelta = e.Delta;
-			Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
+		//protected override void OnTouchDown(TouchEventArgs e)
+		//{
+		//	// Touch move is starting
+		//	CaptureMouse();
 
-			double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
-			viewModel.Zoom(zoom, viewPosition);
-			e.Handled = true;
-		}
+		//	TouchPoint viewPosition = e.GetTouchPoint(NodesView.ItemsListBox);
+		//	lastMousePosition = viewPosition.Position;
+		//	e.Handled = true;
+		//	//isTouchMove = true;
+		//}
 
-		
-		protected override void OnPreviewMouseMove(MouseEventArgs e)
-		{
-			if (isTouchMove)
-			{
-				// Touch is already moving, so this is a fake mouse event
-				e.Handled = true;
-				return;
-			}
-			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
-			{
-				return;
-			}
+		//protected override void OnTouchUp(TouchEventArgs e)
+		//{
+		//	// Touch move is ending
+		//	ReleaseMouseCapture();
 
-			Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
-			
-			if (e.LeftButton == MouseButtonState.Pressed
-				&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
-			{
-				// Move canvas
-				CaptureMouse();
-				Vector viewOffset = viewPosition - lastMousePosition;
-				e.Handled = viewModel.MoveCanvas(viewOffset);
-			}			
-			else
-			{
-				ReleaseMouseCapture();
-			}
-
-			lastMousePosition = viewPosition;
-		}
-		
-
-		protected override void OnPreviewTouchDown(TouchEventArgs e)
-		{
-			// Touch move is starting
-			CaptureMouse();
-
-			TouchPoint viewPosition = e.GetTouchPoint(NodesView.ItemsListBox);
-			lastMousePosition = viewPosition.Position;
-			e.Handled = true;
-			isTouchMove = true;
-		}
-
-		protected override void OnPreviewTouchUp(TouchEventArgs e)
-		{
-			// Touch move is ending
-			ReleaseMouseCapture();
-
-			e.Handled = true;
-			isTouchMove = false;
-		}
+		//	e.Handled = true;
+		//	//isTouchMove = false;
+		//}
 
 
-		protected override void OnPreviewTouchMove(TouchEventArgs e)
-		{
-			TouchPoint viewPosition = e.GetTouchPoint(NodesView.ItemsListBox);
-			Vector offset = viewPosition.Position - lastMousePosition;
+		//protected override void OnTouchMove(TouchEventArgs e)
+		//{
+		//	TouchPoint viewPosition = e.GetTouchPoint(NodesView.ItemsListBox);
+		//	Vector offset = viewPosition.Position - lastMousePosition;
 
-			e.Handled = viewModel.MoveCanvas(offset);
-			lastMousePosition = viewPosition.Position;
-		}
+		//	e.Handled = viewModel.MoveCanvas(offset);
+		//	lastMousePosition = viewPosition.Position;
+		//}
 
 
-		protected override void OnPreviewMouseUp(MouseButtonEventArgs e)
-		{
-			// Log.Debug($"Canvas offset {canvas.Offset}");
+		//protected override void OnPreviewMouseUp(MouseButtonEventArgs e)
+		//{
+		//	// Log.Debug($"Canvas offset {canvas.Offset}");
 
-			if (e.ChangedButton == MouseButton.Left)
-			{
-				Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
+		//	if (e.ChangedButton == MouseButton.Left)
+		//	{
+		//		Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
 
-				viewModel.Clicked(viewPosition);
-			}
+		//		viewModel.Clicked(viewPosition);
+		//	}
 
-			base.OnPreviewMouseUp(e);
-		}
+		//	base.OnPreviewMouseUp(e);
+		//}
 	}
 }

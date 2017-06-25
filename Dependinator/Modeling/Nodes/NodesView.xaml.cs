@@ -1,7 +1,9 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
@@ -12,8 +14,13 @@ namespace Dependinator.Modeling.Nodes
 	/// </summary>
 	public partial class NodesView : UserControl
 	{
+		private static readonly double ZoomSpeed = 2000.0;
+
 		private Point lastMousePosition;
 		private NodesViewModel viewModel;
+		private double cumulativeDeltaX;
+		private double cumulativeDeltaY;
+		private double linearVelocity;
 
 
 		public NodesView()
@@ -59,12 +66,49 @@ namespace Dependinator.Modeling.Nodes
 		}
 
 
+		//protected override void OnMouseMove(MouseEventArgs e)
+		//{
+		//	if (isTouchMove)
+		//	{
+		//		// Touch is already moving, so this is a fake mouse event
+		//		e.Handled = true;
+		//		return;
+		//	}
+		//	if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+		//	{
+		//		return;
+		//	}
+
+		//	Point viewPosition = e.GetPosition(NodesView.ItemsListBox);
+
+		//	if (e.LeftButton == MouseButtonState.Pressed
+		//	    && !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
+		//	{
+		//		// Move canvas
+		//		CaptureMouse();
+		//		Vector viewOffset = viewPosition - lastMousePosition;
+		//		e.Handled = viewModel.MoveCanvas(viewOffset);
+		//	}
+		//	else
+		//	{
+		//		ReleaseMouseCapture();
+		//	}
+
+		//	lastMousePosition = viewPosition;
+		//}
+
+
+
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
+			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && !viewModel.IsRoot)
+			{
+				return;
+			}
+
 			Point viewPosition = e.GetPosition(ItemsListBox);
 
-			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
-				&& e.LeftButton == MouseButtonState.Pressed
+			if (e.LeftButton == MouseButtonState.Pressed
 				&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
 			{
 				// Move canvas
@@ -80,6 +124,23 @@ namespace Dependinator.Modeling.Nodes
 			}
 
 			lastMousePosition = viewPosition;
+		}
+
+
+		protected override void OnMouseWheel(MouseWheelEventArgs e)
+		{
+			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+			{
+				e.Handled = false;
+				return;
+			}
+
+			int wheelDelta = e.Delta;
+			Point viewPosition = e.GetPosition(ItemsListBox);
+
+			double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
+			viewModel.ZoomRoot(zoom, viewPosition);
+			e.Handled = true;
 		}
 
 
@@ -175,6 +236,58 @@ namespace Dependinator.Modeling.Nodes
 		private void OnManipulationBoundaryFeedback(object sender, ManipulationBoundaryFeedbackEventArgs e)
 		{
 			e.Handled = true;
+		}
+
+		private void ListBox_ManipulationStarting(object sender, ManipulationStartingEventArgs e)
+		{
+			e.ManipulationContainer = this;
+			e.Handled = true;
+		}
+
+		const double DeltaX = 50, DeltaY = 50, LinearVelocityX = 0.04, MinimumZoom = 0.1, MaximumZoom = 10;
+
+		private void ListBox_ManipulationDelta(object sender, ManipulationDeltaEventArgs e)
+		{
+			//store values of horizontal & vertical cumulative translation
+			cumulativeDeltaX = e.CumulativeManipulation.Translation.X;
+			cumulativeDeltaY = e.CumulativeManipulation.Translation.Y;
+
+			//store value of linear velocity into horizontal direction  
+			linearVelocity = e.Velocities.LinearVelocity.X;
+
+			// Added from part 2. Scale part.
+			// get current matrix of the element.
+			Matrix borderMatrix = ((MatrixTransform)this.RenderTransform).Matrix;
+
+			//determine if action is zoom or pinch
+			var maxScale = Math.Max(e.DeltaManipulation.Scale.X, e.DeltaManipulation.Scale.Y);
+
+			//check if not crossing minimum and maximum zoom limit
+			if ((maxScale < 1 && borderMatrix.M11 * maxScale > MinimumZoom) ||
+					(maxScale > 1 && borderMatrix.M11 * maxScale < MaximumZoom))
+			{
+				//scale to most recent change (delta) in X & Y 
+				borderMatrix.ScaleAt(e.DeltaManipulation.Scale.X,
+					e.DeltaManipulation.Scale.Y,
+					ActualWidth / 2,
+					ActualHeight / 2);
+
+				//render new matrix
+				RenderTransform = new MatrixTransform(borderMatrix);
+			}
+		}
+
+		private void ListBox_ManipulationInertiaStarting(object sender, ManipulationInertiaStartingEventArgs e)
+		{
+			e.ExpansionBehavior = new InertiaExpansionBehavior()
+			{
+				InitialVelocity = e.InitialVelocities.ExpansionVelocity,
+				DesiredDeceleration = 10.0 * 96.0 / 1000000.0
+			};
+		}
+
+		private void ListBox_ManipulationCompleted(object sender, ManipulationCompletedEventArgs e)
+		{
 		}
 	}
 }

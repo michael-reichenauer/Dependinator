@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using Dependinator.MainViews.Private;
 using Dependinator.Modeling.Items;
 using Dependinator.Modeling.Links;
 using Dependinator.Utils;
@@ -13,6 +14,7 @@ namespace Dependinator.Modeling.Nodes
 	internal class Node : Equatable<Node>, IItemBounds
 	{
 		private const int InitialScaleFactor = 7;
+		private readonly IModelViewService modelViewService;
 		private readonly INodeService nodeService;
 
 		private readonly List<Node> childNodes = new List<Node>();
@@ -28,12 +30,14 @@ namespace Dependinator.Modeling.Nodes
 		private int direction = 0;
 
 		public Node(
+			IModelViewService modelViewService,
 			INodeService nodeService,
 			ILinkService linkService,
 			Node parent,
 			NodeName name,
 			NodeType type)
 		{
+			this.modelViewService = modelViewService;
 			this.nodeService = nodeService;
 			ParentNode = parent;
 			NodeName = name;
@@ -514,7 +518,7 @@ namespace Dependinator.Modeling.Nodes
 		{
 			Stack<Node> nodes = new Stack<Node>();
 
-			nodes.Push(GetRootNode());
+			nodes.Push(RootNode);
 
 			int count = 0;
 			while (nodes.Any())
@@ -535,7 +539,7 @@ namespace Dependinator.Modeling.Nodes
 		private int CountShowingLines()
 		{
 			Stack<Node> nodes = new Stack<Node>();
-			nodes.Push(GetRootNode());
+			nodes.Push(RootNode);
 
 			int count = 0;
 			while (nodes.Any())
@@ -549,22 +553,11 @@ namespace Dependinator.Modeling.Nodes
 			return count;
 		}
 
-		private Node GetRootNode()
-		{
-			Node startNode = this;
-			while (!startNode.IsRootNode)
-			{
-				startNode = startNode.ParentNode;
-			}
-
-			return startNode;
-		}
-
 
 		private void InitNodeTree(ItemsCanvas rootCanvas)
 		{
 			itemsCanvas = rootCanvas;
-			viewModel = new CompositeNodeViewModel(this, rootCanvas);
+			viewModel = new CompositeNodeViewModel(modelViewService, this, rootCanvas);
 
 			InitNode();
 		}
@@ -618,7 +611,7 @@ namespace Dependinator.Modeling.Nodes
 				Point offset = PersistentOffset ?? new Point(0, 0);
 				itemsCanvas.Offset = offset;
 
-				viewModel = new CompositeNodeViewModel(this, itemsCanvas);
+				viewModel = new CompositeNodeViewModel(modelViewService, this, itemsCanvas);
 			}
 			else
 			{
