@@ -160,9 +160,6 @@
       <DependentUpon>MemberNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\MemberNodeViewModel.cs" />
-    <Compile Include="ModelViewing\Nodes\SingleNodeView.xaml.cs">
-      <DependentUpon>SingleNodeView.xaml</DependentUpon>
-    </Compile>
     <Compile Include="ModelViewing\Nodes\NodeName.cs" />
     <Compile Include="ModelViewing\Modeling\Model.cs" />
     <Compile Include="ModelViewing\Modeling\Analyzing\IReflectionService.cs" />
@@ -178,7 +175,6 @@
       <DependentUpon>CompositeNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\CompositeNodeViewModel.cs" />
-    <Compile Include="ModelViewing\Nodes\SingleNodeViewModel.cs" />
     <Compile Include="ModelViewing\Modeling\Serializing\DataModel.cs" />
     <Compile Include="ModelViewing\Modeling\Private\ModelService.cs" />
     <Compile Include="ModelViewing\Modeling\IModelService.cs" />
@@ -331,10 +327,6 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="ModelViewing\Nodes\MemberNodeView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="ModelViewing\Nodes\SingleNodeView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

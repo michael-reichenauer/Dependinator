@@ -101,16 +101,6 @@
 						</Setter>
 					</DataTrigger>
 
-					<!--<DataTrigger Binding="{Binding Type}" Value="SingleNodeViewModel">
-						<Setter Property="ContentTemplate">
-							<Setter.Value>
-								<DataTemplate>
-									<nodes:SingleNodeView/>
-								</DataTemplate>
-							</Setter.Value>
-						</Setter>
-					</DataTrigger>-->
-
 					<DataTrigger Binding="{Binding Type}" Value="MemberNodeViewModel">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
