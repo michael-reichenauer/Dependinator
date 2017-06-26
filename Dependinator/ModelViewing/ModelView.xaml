@@ -14,7 +14,7 @@
 	d:DesignHeight="300" d:DesignWidth="300">
 
 
-	<ListBox 
+	<ListBox
 		x:Name="ItemsListBox"
 		BorderBrush="Transparent"
 		BorderThickness="0"
@@ -33,8 +33,8 @@
 			<ItemsPanelTemplate>
 				<virtualCanvas:ZoomableCanvas
 					Loaded="ZoomableCanvas_Loaded"
-					RealizationLimit="500"
-					RealizationRate="100"
+					RealizationLimit="300"
+					RealizationRate="10"
 					RealizationPriority="Background"
 					ApplyTransform="false" />
 			</ItemsPanelTemplate>
@@ -84,50 +84,40 @@
 				<EventSetter Event="MouseUp" Handler="EventMouseUp" />
 				<EventSetter Event="MouseEnter" Handler="MouseEntering" />
 				<EventSetter Event="MouseLeave" Handler="MouseLeaving" />
-				
+
 
 				<!-- Style for list items (selected/hoover) -->
 				<Setter Property="Template" Value="{StaticResource ListBoxItemControlTemplate}" />
 
 				<Style.Triggers>
 
-					<!-- Node  -->
-					<!--<DataTrigger Binding="{Binding Type}" Value="NodeViewModel">
-						<Setter Property="ContentTemplate">
-							<Setter.Value>
-								<DataTemplate>
-									<local:NodeView />
-								</DataTemplate>
-							</Setter.Value>
-						</Setter>
-						<Setter Property="IsEnabled" Value="true" />
-						<Setter Property="Focusable" Value="False" />
-						<Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
-					</DataTrigger>-->
-
 					<DataTrigger Binding="{Binding Type}" Value="CompositeNodeViewModel">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>
-									<nodes:CompositeNodeView />
+									<nodes:CompositeNodeView/>
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>
 					</DataTrigger>
 
-					<DataTrigger Binding="{Binding Type}" Value="SingleNodeViewModel">
+					<!--<DataTrigger Binding="{Binding Type}" Value="SingleNodeViewModel">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>
-									<nodes:SingleNodeView />
+									<nodes:SingleNodeView/>
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>
-					</DataTrigger>
+					</DataTrigger>-->
 
 					<DataTrigger Binding="{Binding Type}" Value="MemberNodeViewModel">
 						<Setter Property="ContentTemplate">
-							<Setter.Value><DataTemplate><nodes:MemberNodeView/></DataTemplate></Setter.Value>
+							<Setter.Value>
+								<DataTemplate>
+									<nodes:MemberNodeView/>
+								</DataTemplate>
+							</Setter.Value>
 						</Setter>
 					</DataTrigger>
 
@@ -135,19 +125,18 @@
 					<DataTrigger Binding="{Binding Type}" Value="LinkLineViewModel">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
-								<DataTemplate >
-									<links:LinkLineView />
+								<DataTemplate>
+									<links:LinkLineView/>
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>
 					</DataTrigger>
 
 				</Style.Triggers>
-
 			</Style>
-
 		</ListBox.ItemContainerStyle>
 
 	</ListBox>
 
 </UserControl>
+
