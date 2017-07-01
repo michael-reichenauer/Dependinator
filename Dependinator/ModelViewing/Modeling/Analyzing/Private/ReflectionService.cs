@@ -28,22 +28,22 @@ namespace Dependinator.ModelViewing.Modeling.Analyzing.Private
 		}
 
 
-		public DataModel Analyze(string path)
+		public Data.Model Analyze(string path)
 		{
-			// To avoid locking files when loading them for reflection, a seperate AppDomain is created
-			// where the reflection can be done. This doman can then be unloaded
+			// To avoid locking files when loading them for reflection, a separate AppDomain is created
+			// where the reflection can be done. This domain can then be unloaded
 			AppDomain reflectionDomain = AppDomain.CreateDomain(Guid.NewGuid().ToString());
 			reflectionDomain.SetData(PathParameterName, path);
 
-			// Call the Analyze in the sepetrate domain
-			reflectionDomain.DoCallBack(AnalyseInAppDomain);
+			// Call the Analyze in the separate domain
+			reflectionDomain.DoCallBack(AnalyzeInAppDomain);
 
 			// Get the result as a json string and unload the domain.
 			string result = reflectionDomain.GetData(ResultName) as string;
 			AppDomain.Unload(reflectionDomain);
 
 			// Deserialize the json model, since result cannot be returned as object from other domain
-			if (dataSerializer.TryDeserializeJson(result, out DataModel dataModel))
+			if (dataSerializer.TryDeserializeJson(result, out Data.Model dataModel))
 			{
 				return dataModel;
 			}
@@ -52,7 +52,7 @@ namespace Dependinator.ModelViewing.Modeling.Analyzing.Private
 		}
 
 
-		private static void AnalyseInAppDomain()
+		private static void AnalyzeInAppDomain()
 		{
 			// Get the path of the file to analyze
 			string path = AppDomain.CurrentDomain.GetData(PathParameterName) as string;
@@ -61,17 +61,17 @@ namespace Dependinator.ModelViewing.Modeling.Analyzing.Private
 			DataSerializer serializer = new DataSerializer();
 
 			// Analyze the file
-			DataModel dataModel = AnalyzeAssemblyPath(path);
+			Data.Model dataModel = AnalyzeAssemblyPath(path);
 
-			// Serailize the result to make it possible to transfer to main domain
+			// Serialize the result to make it possible to transfer to main domain
 			string json = serializer.SerializeAsJson(dataModel);
 			AppDomain.CurrentDomain.SetData(ResultName, json);
 		}
 
 
-		private static DataModel AnalyzeAssemblyPath(string assemblyPath)
+		private static Data.Model AnalyzeAssemblyPath(string assemblyPath)
 		{
-			// Store current directroey, so it can be restored in the end
+			// Store current directory, so it can be restored in the end
 			string currentDirectory = Environment.CurrentDirectory;
 
 			// Handle referenced assemblies
@@ -84,7 +84,7 @@ namespace Dependinator.ModelViewing.Modeling.Analyzing.Private
 
 				ReflectionModel mode = GetAssemblyModel(assemblyPath);
 
-				DataModel dataModel = ToDataModel(mode);
+				Data.Model dataModel = ToDataModel(mode);
 				return dataModel;
 			}
 			catch (ReflectionTypeLoadException e)
@@ -115,7 +115,7 @@ namespace Dependinator.ModelViewing.Modeling.Analyzing.Private
 				Environment.CurrentDirectory = currentDirectory;
 			}
 
-			return new DataModel();
+			return new Data.Model();
 		}
 
 
@@ -145,11 +145,6 @@ namespace Dependinator.ModelViewing.Modeling.Analyzing.Private
 			{
 				string typeFullName = Reflection.GetTypeFullName(type);
 				Data.Node typeNode = model.AddNode(typeFullName, NodeType.TypeType);
-
-				if (typeFullName.Contains("TestInnerType"))
-				{
-					string tname = Reflection.GetTypeFullName(type);
-				}
 
 				AddTypeMembers(type, typeNode, model);
 
@@ -338,7 +333,7 @@ namespace Dependinator.ModelViewing.Modeling.Analyzing.Private
 
 
 		/// <summary>
-		/// Return true if type is a generic type parameter T, as in e.g. Get<T>(T value)
+		/// Return true if type is a generic type parameter T, as in e.g. Get'T'(T value)
 		/// </summary>
 		private static bool IsGenericTypeArgument(Type targetType)
 		{
@@ -362,9 +357,9 @@ namespace Dependinator.ModelViewing.Modeling.Analyzing.Private
 		}
 
 
-		private static DataModel ToDataModel(ReflectionModel reflectionModel)
+		private static Data.Model ToDataModel(ReflectionModel reflectionModel)
 		{
-			DataModel model = new DataModel
+			Data.Model model = new Data.Model
 			{
 				Nodes = reflectionModel.Nodes.Values.ToList(),
 				Links = reflectionModel.Links.Values.ToList()

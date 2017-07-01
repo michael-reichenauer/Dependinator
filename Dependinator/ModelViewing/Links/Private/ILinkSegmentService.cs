@@ -1,9 +1,7 @@
 using System.Collections.Generic;
-using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.Nodes;
 
-
-namespace Dependinator.ModelViewing.Links
+namespace Dependinator.ModelViewing.Links.Private
 {
 	internal interface ILinkSegmentService
 	{

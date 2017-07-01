@@ -5,8 +5,6 @@ using Dependinator.ApplicationHandling;
 using Dependinator.ApplicationHandling.SettingsHandling;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Modeling;
-using Dependinator.ModelViewing.Modeling.Analyzing;
-using Dependinator.ModelViewing.Modeling.Serializing;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 
@@ -16,20 +14,17 @@ namespace Dependinator.ModelViewing
 	internal class ModelViewService : IModelViewService
 	{
 		private readonly WorkingFolder workingFolder;
-		private readonly IReflectionService reflectionService;
 		private readonly IModelService modelService;
-		
 
 
-		private Model model;
+
+		private Model currentModel;
 
 		public ModelViewService(
 			WorkingFolder workingFolder,
-			IReflectionService reflectionService,
 			IModelService modelService)
 		{
 			this.workingFolder = workingFolder;
-			this.reflectionService = reflectionService;
 			this.modelService = modelService;
 		}
 
@@ -40,11 +35,11 @@ namespace Dependinator.ModelViewing
 		{
 			Timing t = new Timing();
 
-			DataModel dataModel = GetDataModel();
+			currentModel = GetDataModel();
 
-			t.Log($"Get data model {dataModel}");
+			t.Log($"Get data model {currentModel}");
 
-			model = modelService.ToModel(dataModel, null);
+			//model = modelService.ToModel(dataModel, null);
 
 			t.Log("To model");
 
@@ -55,7 +50,7 @@ namespace Dependinator.ModelViewing
 		}
 
 
-		private DataModel GetDataModel()
+		private Model GetDataModel()
 		{
 			//DataModel dataModel = new DataModel()
 			//		.AddType("Axis.Ns1")	
@@ -83,7 +78,7 @@ namespace Dependinator.ModelViewing
 			//	;
 
 
-			DataModel dataModel = GetCachedOrFreshModelData();
+			Model dataModel = GetCachedOrFreshModelData();
 
 			return dataModel;
 		}
@@ -98,12 +93,12 @@ namespace Dependinator.ModelViewing
 			StoreViewSettings();
 			t.Log("stored setting");
 
-			ModelViewData modelViewData = refreshLayout ? null : modelService.ToViewData(model);
+			ModelViewData modelViewData = refreshLayout ? null : modelService.ToViewData(currentModel);
 			t.Log("Got current model data");
 
-			model.Root.Clear();
+			currentModel.Root.Clear();
 
-			model = await RefreshElementTreeAsync(modelViewData);
+			currentModel = await RefreshElementTreeAsync(modelViewData);
 
 			t.Log("Read fresh data");
 
@@ -115,9 +110,9 @@ namespace Dependinator.ModelViewing
 		}
 
 
-		private DataModel GetCachedOrFreshModelData()
+		private Model GetCachedOrFreshModelData()
 		{
-			DataModel dataModel;
+			Model dataModel;
 			if (!TryReadCachedData(out dataModel))
 			{
 				dataModel = ReadFreshData();
@@ -131,46 +126,42 @@ namespace Dependinator.ModelViewing
 		{
 			RestoreViewSettings(rootCanvas);
 
-			Node rootNode = model.Root;
+			Node rootNode = currentModel.Root;
 
 			rootNode.Show(rootCanvas);
 		}
 
 
 		public void Zoom(double zoomFactor, Point zoomCenter) =>
-			model.Root.Zoom(zoomFactor, zoomCenter);
+			currentModel.Root.Zoom(zoomFactor, zoomCenter);
 
 
 		public void Move(Vector viewOffset)
 		{
-			model.Root.MoveItems(viewOffset);
+			currentModel.Root.MoveItems(viewOffset);
 		}
 
 
 		private async Task<Model> RefreshElementTreeAsync(ModelViewData modelViewData)
 		{
-			Model model = await Task.Run(() =>
-			{
-				DataModel dataModel = reflectionService.Analyze(workingFolder.FilePath);
-
-				return modelService.ToModel(dataModel, modelViewData);
-			});
+			Model model = await Task.Run(
+				() => modelService.Analyze(workingFolder.FilePath, modelViewData));
 
 			return model;
 		}
 
 
-		private bool TryReadCachedData(out DataModel dataModel)
+		private bool TryReadCachedData(out Model dataModel)
 		{
 			string dataFilePath = GetDataFilePath();
 			return modelService.TryDeserialize(dataFilePath, out dataModel);
 		}
 
 
-		private DataModel ReadFreshData()
+		private Model ReadFreshData()
 		{
 			Timing t = Timing.Start();
-			DataModel newModel = reflectionService.Analyze(workingFolder.FilePath);
+			Model newModel = modelService.Analyze(workingFolder.FilePath, null);
 			t.Log("Read fresh model");
 			return newModel;
 		}
@@ -178,11 +169,11 @@ namespace Dependinator.ModelViewing
 
 		public void Close()
 		{
-			model.Root.UpdateAllNodesScalesBeforeClose();
-			DataModel dataModel = modelService.ToDataModel(model);
+			currentModel.Root.UpdateAllNodesScalesBeforeClose();
+			//DataModel dataModel = modelService.ToDataModel(model);
 			string dataFilePath = GetDataFilePath();
 
-			modelService.Serialize(dataModel, dataFilePath);
+			modelService.Serialize(currentModel, dataFilePath);
 
 			StoreViewSettings();
 		}
@@ -199,9 +190,9 @@ namespace Dependinator.ModelViewing
 			Settings.EditWorkingFolderSettings(workingFolder,
 				settings =>
 				{
-					settings.Scale = model.Root.ItemsScale;
-					settings.X = model.Root.ItemsOffset.X;
-					settings.Y = model.Root.ItemsOffset.Y;
+					settings.Scale = currentModel.Root.ItemsScale;
+					settings.X = currentModel.Root.ItemsOffset.X;
+					settings.Y = currentModel.Root.ItemsOffset.Y;
 				});
 		}
 
@@ -212,5 +203,35 @@ namespace Dependinator.ModelViewing
 			rootCanvas.Scale = settings.Scale;
 			rootCanvas.Offset = new Point(settings.X, settings.Y);
 		}
+
+
+		//	internal class DataModel
+		//	{
+		//		public List<Data.Node> Nodes { get; set; } = new List<Data.Node>();
+
+		//		public List<Data.Link> Links { get; set; } = new List<Data.Link>();
+
+
+		//		public DataModel AddType(string name)
+		//		{
+		//			Nodes.Add(new Data.Node { Name = name, Type = "Type" });
+		//			return this;
+		//		}
+
+		//		public DataModel AddMember(string name)
+		//		{
+		//			Nodes.Add(new Data.Node {Name = name, Type = "Member"});
+		//			return this;
+		//		}
+
+		//		public DataModel AddLink(string source, string target)
+		//		{
+		//			Links.Add(new Data.Link { Source = source, Target = target });
+		//			return this;
+		//		}
+
+
+		//		public override string ToString() => $"{Nodes.Count} nodes, {Links.Count} links.";
+		//	}
 	}
 }

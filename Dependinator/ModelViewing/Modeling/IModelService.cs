@@ -1,17 +1,13 @@
-﻿using Dependinator.ModelViewing.Modeling.Serializing;
-
-namespace Dependinator.ModelViewing.Modeling
+﻿namespace Dependinator.ModelViewing.Modeling
 {
 	internal interface IModelService
 	{
-		Model ToModel(DataModel dataModel, ModelViewData modelViewData);
+		Model Analyze(string path, ModelViewData modelViewData);
 
-		DataModel ToDataModel(Model elementTree);
+		ModelViewData ToViewData(Model model);
 
-		ModelViewData ToViewData(Model elementTree);
+		void Serialize(Model model, string path);
 
-		void Serialize(DataModel data, string path);
-
-		bool TryDeserialize(string path, out DataModel data);
+		bool TryDeserialize(string path, out Model model);
 	}
 }

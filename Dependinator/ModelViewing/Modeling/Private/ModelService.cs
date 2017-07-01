@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using Dependinator.ModelViewing.Links;
+using Dependinator.ModelViewing.Modeling.Analyzing;
 using Dependinator.ModelViewing.Modeling.Serializing;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
@@ -14,6 +15,7 @@ namespace Dependinator.ModelViewing.Modeling.Private
 		private readonly Lazy<IModelViewService> modelViewService;
 		private readonly INodeService nodeService;
 		private readonly ILinkService linkService;
+		private readonly IReflectionService reflectionService;
 		private readonly IDataSerializer dataSerializer;
 
 
@@ -21,16 +23,58 @@ namespace Dependinator.ModelViewing.Modeling.Private
 			Lazy<IModelViewService> modelViewService, 
 			INodeService nodeService, 
 			ILinkService linkService,
+			IReflectionService reflectionService,
 			IDataSerializer dataSerializer)
 		{
 			this.modelViewService = modelViewService;
 			this.nodeService = nodeService;
 			this.linkService = linkService;
+			this.reflectionService = reflectionService;
 			this.dataSerializer = dataSerializer;
 		}
 
 
-		public Model ToModel(DataModel dataModel, ModelViewData modelViewData)
+		public Model Analyze(string path, ModelViewData modelViewData)
+		{
+			Data.Model dataModel = reflectionService.Analyze(path);
+			return ToModel(dataModel, modelViewData);
+		}
+
+
+		public ModelViewData ToViewData(Model model)
+		{
+			ModelViewData modelViewData = new ModelViewData();
+
+			AddViewData(model.Root, modelViewData);
+
+			return modelViewData;
+		}
+
+
+
+		public void Serialize(Model model, string path)
+		{
+			Data.Model dataModel = ToDataModel(model);
+	
+			dataSerializer.Serialize(dataModel, path);
+		}
+
+
+		public bool TryDeserialize(string path, out Model model)
+		{
+			if (dataSerializer.TryDeserialize(path, out Data.Model dataModel))
+			{
+				model = ToModel(dataModel, null);
+				return true;
+			}
+
+			model = null;
+			return false;
+		}
+
+
+
+		private Model ToModel(Data.Model dataModel, ModelViewData modelViewData)
 		{
 			IEnumerable<Data.Node> nodes = dataModel.Nodes ?? Enumerable.Empty<Data.Node>();
 			IEnumerable<Data.Link> links = dataModel.Links ?? Enumerable.Empty<Data.Link>();
@@ -62,9 +106,9 @@ namespace Dependinator.ModelViewing.Modeling.Private
 		}
 
 
-		public DataModel ToDataModel(Model model)
+		private Data.Model ToDataModel(Model model)
 		{
-			DataModel dataModel = new DataModel();
+			Data.Model dataModel = new Data.Model();
 
 			dataModel.Nodes = model.Root.ChildNodes
 				.Select(ToDataNode)
@@ -72,23 +116,6 @@ namespace Dependinator.ModelViewing.Modeling.Private
 
 			return dataModel;
 		}
-
-
-		public ModelViewData ToViewData(Model model)
-		{
-			ModelViewData modelViewData = new ModelViewData();
-
-			AddViewData(model.Root, modelViewData);
-		
-			return modelViewData;
-		}
-
-
-		public void Serialize(DataModel data, string path) => dataSerializer.Serialize(data, path);
-
-
-		public bool TryDeserialize(string path, out DataModel data) => 
-			dataSerializer.TryDeserialize(path, out data);
 
 
 		private static void AddViewData(Node node, ModelViewData modelViewData)

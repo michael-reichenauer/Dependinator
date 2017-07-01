@@ -141,7 +141,7 @@
     <Compile Include="ModelViewing\Modeling\Analyzing\Private\Reflection.cs" />
     <Compile Include="ModelViewing\Modeling\Analyzing\Private\ReflectionModel.cs" />
     <Compile Include="ModelViewing\Modeling\Analyzing\Private\Globals.cs" />
-    <Compile Include="ModelViewing\Links\ILinkSegmentService.cs" />
+    <Compile Include="ModelViewing\Links\Private\ILinkSegmentService.cs" />
     <Compile Include="ModelViewing\Links\ILinkService.cs" />
     <Compile Include="ModelViewing\Links\LinkLineView.xaml.cs">
       <DependentUpon>LinkLineView.xaml</DependentUpon>
@@ -175,7 +175,6 @@
       <DependentUpon>CompositeNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\CompositeNodeViewModel.cs" />
-    <Compile Include="ModelViewing\Modeling\Serializing\DataModel.cs" />
     <Compile Include="ModelViewing\Modeling\Private\ModelService.cs" />
     <Compile Include="ModelViewing\Modeling\IModelService.cs" />
     <Compile Include="ModelViewing\Links\LinkLine.cs" />

@@ -2,12 +2,12 @@
 {
 	internal interface IDataSerializer
 	{
-		void Serialize(DataModel data, string path);
+		void Serialize(Data.Model dataModel, string path);
 
-		string SerializeAsJson(DataModel data);
+		string SerializeAsJson(Data.Model dataModel);
 
-		bool TryDeserialize(string path, out DataModel data);
+		bool TryDeserialize(string path, out Data.Model dataModel);
 
-		bool TryDeserializeJson(string json, out DataModel data);
+		bool TryDeserializeJson(string json, out Data.Model dataModel);
 	}
 }

@@ -15,43 +15,40 @@ namespace Dependinator.ModelViewing.Modeling.Serializing
 		};
 
 		
-		public void Serialize(DataModel dataModel, string path)
+		public void Serialize(Data.Model dataModel, string path)
 		{
-			Data.Model model = new Data.Model {Nodes = dataModel.Nodes, Links = dataModel.Links};
-			string json = JsonConvert.SerializeObject(model, typeof(Data.Model), Settings);
+			string json = JsonConvert.SerializeObject(dataModel, typeof(Data.Model), Settings);
 
 			WriteFileText(path, json);
 		}
 
 
-		public string SerializeAsJson(DataModel dataModel)
+		public string SerializeAsJson(Data.Model dataModel)
 		{
-			Data.Model model = new Data.Model { Nodes = dataModel.Nodes, Links = dataModel.Links };
-			return JsonConvert.SerializeObject(model, typeof(Data.Model), Settings);
+			return JsonConvert.SerializeObject(dataModel, typeof(Data.Model), Settings);
 		}
 
 
-		public bool TryDeserialize(string path, out DataModel model)
+		public bool TryDeserialize(string path, out Data.Model dataModel)
 		{
 			Timing t = new Timing();
 			if (TryReadFileText(path, out string json))
 			{
 				t.Log("Read data file");
-				return TryDeserializeJson(json, out model);
+				return TryDeserializeJson(json, out dataModel);
 			}
 
-			model = null;
+			dataModel = null;
 			return false;
 		}
 
 
-		public bool TryDeserializeJson(string json, out DataModel dataModel)
+		public bool TryDeserializeJson(string json, out Data.Model dataModel)
 		{
 			try
 			{
 				Timing t = new Timing();
-				Data.Model model = JsonConvert.DeserializeObject<Data.Model>(json, Settings);
-				dataModel = new DataModel {Nodes = model.Nodes, Links = model.Links};
+				dataModel = JsonConvert.DeserializeObject<Data.Model>(json, Settings);
 				t.Log("Deserialized");
 				return true;
 			}
