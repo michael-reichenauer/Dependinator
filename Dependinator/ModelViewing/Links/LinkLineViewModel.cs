@@ -84,7 +84,17 @@ namespace Dependinator.ModelViewing.Links
 			}
 
 			int linksCount = linkLine.Links.Count;
-			tip = $"{this} {linksCount} links:" + tip;
+			tip = $"{linksCount} links:" + tip;
+
+			//if (linkLine.Source == linkLine.Target.ParentNode
+			//    || linkLine.Target == linkLine.Source.ParentNode)
+			//{
+			//	tip = $"{linksCount} links:" + tip;
+			//}
+			//else
+			//{
+			//	tip = $"{this} {linksCount} links:" + tip;
+			//}
 
 			return tip;
 		}
