@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.ApplicationHandling;
 using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Modeling;
 using Dependinator.ModelViewing.Items;
-using Dependinator.ModelViewing.Modeling;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 

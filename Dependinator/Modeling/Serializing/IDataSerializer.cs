@@ -1,4 +1,4 @@
-﻿namespace Dependinator.ModelViewing.Modeling.Serializing
+﻿namespace Dependinator.Modeling.Serializing
 {
 	internal interface IDataSerializer
 	{

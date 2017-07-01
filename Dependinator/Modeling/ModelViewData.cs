@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using Dependinator.ModelViewing.Modeling.Serializing;
+using Dependinator.Modeling.Serializing;
 using Dependinator.ModelViewing.Nodes;
 
-namespace Dependinator.ModelViewing.Modeling
+namespace Dependinator.Modeling
 {
 	internal class ModelViewData
 	{

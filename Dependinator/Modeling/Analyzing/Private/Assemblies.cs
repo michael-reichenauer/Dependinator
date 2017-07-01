@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Dependinator.Utils;
 
-namespace Dependinator.ModelViewing.Modeling.Analyzing.Private
+namespace Dependinator.Modeling.Analyzing.Private
 {
 	internal static class Assemblies
 	{

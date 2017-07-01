@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using Dependinator.Modeling.Analyzing;
+using Dependinator.Modeling.Serializing;
+using Dependinator.ModelViewing;
 using Dependinator.ModelViewing.Links;
-using Dependinator.ModelViewing.Modeling.Analyzing;
-using Dependinator.ModelViewing.Modeling.Serializing;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 
-namespace Dependinator.ModelViewing.Modeling.Private
+namespace Dependinator.Modeling.Private
 {
 	internal class ModelService : IModelService
 	{

@@ -3,7 +3,7 @@ using System.IO;
 using Dependinator.Utils;
 using Newtonsoft.Json;
 
-namespace Dependinator.ModelViewing.Modeling.Serializing
+namespace Dependinator.Modeling.Serializing
 {
 	internal class DataSerializer : IDataSerializer
 	{

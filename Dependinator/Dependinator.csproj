@@ -134,13 +134,13 @@
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
     <Compile Include="Common\FolderMonitoring\FileEventArgs.cs" />
     <Compile Include="Common\FolderMonitoring\IFolderMonitorService.cs" />
-    <Compile Include="ModelViewing\Modeling\Analyzing\Private\Assemblies.cs" />
-    <Compile Include="ModelViewing\Modeling\Analyzing\Private\ILInstruction.cs" />
-    <Compile Include="ModelViewing\Modeling\Analyzing\Private\IlToText.cs" />
-    <Compile Include="ModelViewing\Modeling\Analyzing\Private\MethodBodyReader.cs" />
-    <Compile Include="ModelViewing\Modeling\Analyzing\Private\Reflection.cs" />
-    <Compile Include="ModelViewing\Modeling\Analyzing\Private\ReflectionModel.cs" />
-    <Compile Include="ModelViewing\Modeling\Analyzing\Private\Globals.cs" />
+    <Compile Include="Modeling\Analyzing\Private\Assemblies.cs" />
+    <Compile Include="Modeling\Analyzing\Private\ILInstruction.cs" />
+    <Compile Include="Modeling\Analyzing\Private\IlToText.cs" />
+    <Compile Include="Modeling\Analyzing\Private\MethodBodyReader.cs" />
+    <Compile Include="Modeling\Analyzing\Private\Reflection.cs" />
+    <Compile Include="Modeling\Analyzing\Private\ReflectionModel.cs" />
+    <Compile Include="Modeling\Analyzing\Private\Globals.cs" />
     <Compile Include="ModelViewing\Links\Private\ILinkSegmentService.cs" />
     <Compile Include="ModelViewing\Links\ILinkService.cs" />
     <Compile Include="ModelViewing\Links\LinkLineView.xaml.cs">
@@ -155,14 +155,14 @@
     <Compile Include="ModelViewing\Nodes\INodeService.cs" />
     <Compile Include="ModelViewing\Items\IItemBounds.cs" />
     <Compile Include="ModelViewing\Items\ItemsCanvas.cs" />
-    <Compile Include="ModelViewing\Modeling\Analyzing\Private\ReflectionService.cs" />
+    <Compile Include="Modeling\Analyzing\Private\ReflectionService.cs" />
     <Compile Include="ModelViewing\Nodes\MemberNodeView.xaml.cs">
       <DependentUpon>MemberNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\MemberNodeViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\NodeName.cs" />
-    <Compile Include="ModelViewing\Modeling\Model.cs" />
-    <Compile Include="ModelViewing\Modeling\Analyzing\IReflectionService.cs" />
+    <Compile Include="Modeling\Model.cs" />
+    <Compile Include="Modeling\Analyzing\IReflectionService.cs" />
     <Compile Include="ModelViewing\Links\Link.cs" />
     <Compile Include="ModelViewing\Links\NodeLinks.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeComparer.cs" />
@@ -175,20 +175,20 @@
       <DependentUpon>CompositeNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\CompositeNodeViewModel.cs" />
-    <Compile Include="ModelViewing\Modeling\Private\ModelService.cs" />
-    <Compile Include="ModelViewing\Modeling\IModelService.cs" />
+    <Compile Include="Modeling\Private\ModelService.cs" />
+    <Compile Include="Modeling\IModelService.cs" />
     <Compile Include="ModelViewing\Links\LinkLine.cs" />
     <Compile Include="ModelViewing\Links\LinkLineViewModel.cs" />
-    <Compile Include="ModelViewing\Modeling\ModelViewData.cs" />
+    <Compile Include="Modeling\ModelViewData.cs" />
     <Compile Include="ModelViewing\Items\ItemViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\Node.cs" />
     <Compile Include="ModelViewing\Items\IItem.cs" />
     <Compile Include="ModelViewing\IModelViewService.cs" />
     <Compile Include="ModelViewing\ModelViewService.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeService.cs" />
-    <Compile Include="ModelViewing\Modeling\Serializing\Data.cs" />
-    <Compile Include="ModelViewing\Modeling\Serializing\DataSerializer.cs" />
-    <Compile Include="ModelViewing\Modeling\Serializing\IDataSerializer.cs" />
+    <Compile Include="Modeling\Serializing\Data.cs" />
+    <Compile Include="Modeling\Serializing\DataSerializer.cs" />
+    <Compile Include="Modeling\Serializing\IDataSerializer.cs" />
     <Compile Include="Utils\CollectionExtensions.cs" />
     <Compile Include="Utils\ExceptionAsyncExtensions.cs" />
     <Compile Include="Utils\ExceptionExtensions.cs" />

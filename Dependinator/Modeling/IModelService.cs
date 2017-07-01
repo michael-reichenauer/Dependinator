@@ -1,4 +1,4 @@
-﻿namespace Dependinator.ModelViewing.Modeling
+﻿namespace Dependinator.Modeling
 {
 	internal interface IModelService
 	{
