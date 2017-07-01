@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 

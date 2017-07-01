@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Links.Private;
 
 
 namespace Dependinator.ModelViewing.Links

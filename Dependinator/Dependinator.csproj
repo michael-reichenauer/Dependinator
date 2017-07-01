@@ -146,11 +146,11 @@
     <Compile Include="ModelViewing\Links\LinkLineView.xaml.cs">
       <DependentUpon>LinkLineView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\Links\LinkSegment.cs" />
-    <Compile Include="ModelViewing\Links\LinkSegmentService.cs" />
-    <Compile Include="ModelViewing\Links\LinkService.cs" />
-    <Compile Include="ModelViewing\Links\LinkLineBounds.cs" />
-    <Compile Include="ModelViewing\Links\LinkGroup.cs" />
+    <Compile Include="ModelViewing\Links\Private\LinkSegment.cs" />
+    <Compile Include="ModelViewing\Links\Private\LinkSegmentService.cs" />
+    <Compile Include="ModelViewing\Links\Private\LinkService.cs" />
+    <Compile Include="ModelViewing\Links\Private\LinkLineBounds.cs" />
+    <Compile Include="ModelViewing\Links\Private\LinkGroup.cs" />
     <Compile Include="Utils\UI\IgnoreMouseWheelBehavior.cs" />
     <Compile Include="ModelViewing\Nodes\INodeService.cs" />
     <Compile Include="ModelViewing\Items\IItemBounds.cs" />

@@ -1,8 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using System.Windows.Media;
+using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 
@@ -14,7 +13,7 @@ namespace Dependinator.ModelViewing.Links
 		private readonly ILinkService linkService;
 		private readonly List<Link> links = new List<Link>();
 		private readonly List<Link> hiddenLinks = new List<Link>();
-		
+
 
 		private Rect itemBounds;
 
@@ -64,8 +63,8 @@ namespace Dependinator.ModelViewing.Links
 		public Node Owner { get; }
 
 
-		public bool CanShowSegment() => 
-			!IsNormal 
+		public bool CanShowSegment() =>
+			!IsNormal
 			|| (Source.CanShowNode() && Target.CanShowNode());
 
 
@@ -152,7 +151,7 @@ namespace Dependinator.ModelViewing.Links
 		public Rect GetItemBounds()
 		{
 			if (!isUpdated)
-			{							
+			{
 				UpdateSegmentLine();
 				isUpdated = true;
 			}
@@ -211,7 +210,7 @@ namespace Dependinator.ModelViewing.Links
 			{
 				linkService.CloseLine(this);
 				UpdateVisibility();
-			}	
+			}
 		}
 
 

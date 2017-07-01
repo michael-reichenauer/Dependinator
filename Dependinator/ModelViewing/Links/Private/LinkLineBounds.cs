@@ -1,7 +1,6 @@
 using System.Windows;
 
-
-namespace Dependinator.ModelViewing.Links
+namespace Dependinator.ModelViewing.Links.Private
 {
 	internal class LinkLineBounds
 	{
