@@ -12,19 +12,9 @@
 
 	<Grid Background="Transparent">
 
-		<Grid.RowDefinitions>
-
-			<!-- Title -->
-			<!--<RowDefinition Height="20" />-->
-
-			<!-- Child nodes -->
-			<RowDefinition Height="*" />
-
-		</Grid.RowDefinitions>
-
-		
-
+		<!-- Node border -->
 		<Rectangle
+			Margin="3"
 			Stroke="{Binding RectangleBrush}"
 			StrokeThickness="{Binding StrokeThickness}"
 			StrokeDashArray="{Binding StrokeDash}"
@@ -33,12 +23,11 @@
 			RadiusY="{Binding CornerRadiusY}"
 			Stretch="Fill" />
 
-		<!-- Child nodes -->
+		<!-- Inner model -->
 		<modelViewing:ModelView Grid.Row="0" x:Name="ModelView" DataContext="{Binding ModelViewModel}" />
 
 		<!-- Title -->
 		<Border
-			Grid.Row="0"
 			BorderBrush="{Binding RectangleBrush}"
 			BorderThickness="0 0 0 0.3"
 			Height="20"
@@ -61,21 +50,18 @@
 					BorderThickness="1"
 					Opened="ToolTip_OnOpened" />
 			</Border.ToolTip>
-			
 		</Border>
-		
-		<!-- Scroll indicators -->
-		<!--<Border
-			Grid.Row="0"
-			Margin="4"
-			BorderThickness="{Binding ScrollDash}"
-			BorderBrush="{Binding RectangleBrush}" />-->
 
-		<Border
-			Name="ResizeBorder"
-			Grid.Row="0"
-			BorderThickness="5"
-			BorderBrush="Transparent" />
+
+		<Rectangle
+			Stroke="Transparent"
+			StrokeThickness="2"
+			Fill="{Binding RectangleBrush}"
+			Width="8" 
+			Height="8"
+			HorizontalAlignment="Left"
+			VerticalAlignment="Center"/>
+
 	</Grid>
 
 

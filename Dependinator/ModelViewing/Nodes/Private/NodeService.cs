@@ -3,8 +3,7 @@ using System.Windows;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
 
-
-namespace Dependinator.ModelViewing.Nodes
+namespace Dependinator.ModelViewing.Nodes.Private
 {
 	internal class NodeService : INodeService
 	{

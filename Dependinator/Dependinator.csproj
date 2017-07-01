@@ -165,7 +165,7 @@
     <Compile Include="ModelViewing\Modeling\Analyzing\IReflectionService.cs" />
     <Compile Include="ModelViewing\Links\Link.cs" />
     <Compile Include="ModelViewing\Links\NodeLinks.cs" />
-    <Compile Include="ModelViewing\Nodes\NodeComparer.cs" />
+    <Compile Include="ModelViewing\Nodes\Private\NodeComparer.cs" />
     <Compile Include="ModelViewing\ModelView.xaml.cs">
       <DependentUpon>ModelView.xaml</DependentUpon>
     </Compile>
@@ -186,7 +186,7 @@
     <Compile Include="ModelViewing\Items\IItem.cs" />
     <Compile Include="ModelViewing\IModelViewService.cs" />
     <Compile Include="ModelViewing\ModelViewService.cs" />
-    <Compile Include="ModelViewing\Nodes\NodeService.cs" />
+    <Compile Include="ModelViewing\Nodes\Private\NodeService.cs" />
     <Compile Include="ModelViewing\Modeling\Serializing\Data.cs" />
     <Compile Include="ModelViewing\Modeling\Serializing\DataSerializer.cs" />
     <Compile Include="ModelViewing\Modeling\Serializing\IDataSerializer.cs" />

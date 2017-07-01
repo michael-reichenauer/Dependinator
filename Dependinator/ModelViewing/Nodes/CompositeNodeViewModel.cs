@@ -59,7 +59,7 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public int FontSize => ((int)(25 * node.NodeScale)).MM(8, 15);
+		public int FontSize => ((int)(25 * node.NodeScale)).MM(8, 13);
 
 
 
