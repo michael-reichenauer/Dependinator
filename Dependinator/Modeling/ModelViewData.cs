@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Dependinator.Modeling.Serializing;
+using Dependinator.Modeling.Private.Serializing;
 using Dependinator.ModelViewing.Nodes;
 
 namespace Dependinator.Modeling

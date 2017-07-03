@@ -4,11 +4,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using Dependinator.Modeling.Serializing;
+using Dependinator.Modeling.Private.Serializing;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 
-namespace Dependinator.Modeling.Analyzing.Private
+namespace Dependinator.Modeling.Private.Analyzing.Private
 {
 	internal class ReflectionService : IReflectionService
 	{

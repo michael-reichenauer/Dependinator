@@ -1,4 +1,4 @@
-using Dependinator.Modeling.Serializing;
+using Dependinator.Modeling.Private.Serializing;
 using Dependinator.Utils;
 
 

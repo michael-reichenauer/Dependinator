@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Dependinator.Modeling.Analyzing;
-using Dependinator.Modeling.Serializing;
+using Dependinator.Modeling.Private.Analyzing;
+using Dependinator.Modeling.Private.Serializing;
 using Dependinator.ModelViewing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
