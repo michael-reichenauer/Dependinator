@@ -104,6 +104,12 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Modeling\IModelNotifications.cs" />
+    <Compile Include="Modeling\Link2.cs" />
+    <Compile Include="Modeling\LinkId.cs" />
+    <Compile Include="Modeling\Node2.cs" />
+    <Compile Include="Modeling\NodeId.cs" />
+    <Compile Include="Utils\With.cs" />
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -160,7 +166,7 @@
       <DependentUpon>MemberNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\MemberNodeViewModel.cs" />
-    <Compile Include="ModelViewing\Nodes\NodeName.cs" />
+    <Compile Include="Modeling\NodeName.cs" />
     <Compile Include="Modeling\Model.cs" />
     <Compile Include="Modeling\Analyzing\IReflectionService.cs" />
     <Compile Include="ModelViewing\Links\Link.cs" />

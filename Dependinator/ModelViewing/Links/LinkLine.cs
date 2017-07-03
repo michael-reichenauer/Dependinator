@@ -33,7 +33,7 @@ namespace Dependinator.ModelViewing.Links
 			Target = target;
 
 			ViewModel = new LinkLineViewModel(linkService, this);
-			IsEqualWhen(other => Source == other.Source && Target == other.Target, Source, Target);
+			IsEqualWhen(Source, Target);
 		}
 
 		public bool IsNormal { get; set; }

@@ -16,7 +16,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public NodeType(string type)
 		{
 			this.type = type;
-			IsEqualWhen(other => type == other.type, type);
+			IsEqualWhen(type);
 		}
 
 		public static implicit operator NodeType(string text) => new NodeType(text);

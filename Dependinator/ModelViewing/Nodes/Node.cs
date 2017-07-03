@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Media;
+using Dependinator.Modeling;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Links;
 using Dependinator.Utils;
@@ -45,7 +45,7 @@ namespace Dependinator.ModelViewing.Nodes
 			PersistentNodeColor = null;
 			Links = new NodeLinks(linkService);
 			RootNode = parent?.RootNode ?? this;
-			IsEqualWhen(other => NodeName == other.NodeName, NodeName);
+			IsEqualWhen(NodeName);
 		}
 
 
@@ -89,7 +89,7 @@ namespace Dependinator.ModelViewing.Nodes
 		private static bool IsVisibleAtScale(double scale) => scale > 0.15;
 
 		public string DebugToolTip => ItemsToolTip;
-		
+
 
 		public string ItemsToolTip =>
 			$"\nChildren: {ChildNodes.Count}, Lines: {Links.OwnedLines.Count}\n" +
@@ -547,7 +547,7 @@ namespace Dependinator.ModelViewing.Nodes
 				Node node = nodes.Pop();
 				count += node.Links.OwnedLines.Count(l => l.ViewModel.IsShowing);
 
-				node.ChildNodes.ForEach(nodes.Push);			
+				node.ChildNodes.ForEach(nodes.Push);
 			}
 
 			return count;

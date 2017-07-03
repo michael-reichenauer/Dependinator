@@ -17,7 +17,7 @@ namespace Dependinator.Common
 		public CommitSha()
 		{
 			shortSha = new Lazy<string>(() => Sha.Substring(0, 6));
-			IsEqualWhen(other => Sha == other.Sha, Sha);
+			IsEqualWhen(Sha);
 		}
 
 		public CommitSha(string commitSha)

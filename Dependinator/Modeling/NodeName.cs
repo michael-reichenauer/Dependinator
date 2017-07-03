@@ -2,8 +2,7 @@ using System;
 using System.Linq;
 using Dependinator.Utils;
 
-
-namespace Dependinator.ModelViewing.Nodes
+namespace Dependinator.Modeling
 {
 	internal class NodeName : Equatable<NodeName>
 	{
@@ -21,7 +20,7 @@ namespace Dependinator.ModelViewing.Nodes
 			this.fullName = fullName;
 			shortName = new Lazy<string>(GetShortName);
 			parentName = new Lazy<NodeName>(GetParentName);
-			IsEqualWhen(other => fullName == other.fullName, fullName);
+			IsEqualWhen(fullName);
 		}
 
 		public string ShortName => shortName.Value;
@@ -50,7 +49,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 			if (index == -1)
 			{
-				// No parent
+				// Root is parent
 				return fullName;
 			}
 
