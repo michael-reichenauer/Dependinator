@@ -1,6 +1,3 @@
-using System;
-
-
 namespace System
 {
 	internal static class Txt

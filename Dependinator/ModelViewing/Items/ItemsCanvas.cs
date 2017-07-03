@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Windows;
-using System.Windows.Media;
-using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
