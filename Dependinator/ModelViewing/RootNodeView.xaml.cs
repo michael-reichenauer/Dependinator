@@ -5,14 +5,14 @@ using UserControl = System.Windows.Controls.UserControl;
 namespace Dependinator.ModelViewing
 {
 	/// <summary>
-	/// Interaction logic for MainView.xaml
+	/// Interaction logic for RootNodeView.xaml
 	/// </summary>
-	public partial class MainView : UserControl
+	public partial class RootNodeView : UserControl
 	{
-		private MainViewModel viewModel;
+		private RootNodeViewModel viewModel;
 
 
-		public MainView()
+		public RootNodeView()
 		{
 			InitializeComponent();
 		}
@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing
 
 		private async void MainView_OnLoaded(object sender, RoutedEventArgs e)
 		{
-			viewModel = (MainViewModel)DataContext;
+			viewModel = (RootNodeViewModel)DataContext;
 			ModelView.SetFocus();
 			await viewModel.LoadAsync();
 		}
