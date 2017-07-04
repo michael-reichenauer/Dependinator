@@ -1,5 +1,5 @@
 ﻿<UserControl
-	x:Class="Dependinator.MainWindowViews.MainView"
+	x:Class="Dependinator.ModelViewing.MainView"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -11,16 +11,8 @@
 
 
 	<Grid>
-		<Grid.RowDefinitions>
-			
-			<!-- Model -->
-			<RowDefinition Height="*" />
-			
-		</Grid.RowDefinitions>
-
-		
-		<!-- Model -->
-		<Border Grid.Row="0" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+		<!-- Root Model -->
+		<Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
 			<modeling:ModelView x:Name="ModelView" DataContext="{Binding ModelViewModel}"/>
 		</Border>
 

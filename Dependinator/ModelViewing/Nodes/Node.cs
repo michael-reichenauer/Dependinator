@@ -640,23 +640,6 @@ namespace Dependinator.ModelViewing.Nodes
 			}
 		}
 
-		//public IEnumerable<Node> Ancestors2()
-		//{
-		//	return Iterate(ParentNode, n => n != null, n => n.ParentNode);
-		//}
-
-		//public IEnumerable<Node> Iterate(
-		//	Node initial, Predicate<Node> predicate, Func<Node, Node> next)
-		//{
-		//	Node current = initial;
-
-		//	while (predicate(current))
-		//	{
-		//		yield return current;
-		//		current = next(current);
-		//	}
-		//}
-
 
 		public IEnumerable<Node> AncestorsAndSelf()
 		{

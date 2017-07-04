@@ -4,12 +4,11 @@ using System.Windows;
 using System.Windows.Threading;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
-using Dependinator.ModelViewing;
 using Dependinator.ModelViewing.Items;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 
-namespace Dependinator.MainWindowViews
+namespace Dependinator.ModelViewing
 {
 	[SingleInstance]
 	internal class MainViewModel : ViewModel

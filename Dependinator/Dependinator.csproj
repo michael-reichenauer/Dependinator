@@ -230,7 +230,7 @@
     <Compile Include="Utils\UI\VisibleWindow.cs" />
     <Compile Include="Utils\UI\WpfBindingTraceListener.cs" />
     <Compile Include="Common\ThemeHandling\ThemeService.cs" />
-    <Compile Include="MainWindowViews\MainView.xaml.cs">
+    <Compile Include="ModelViewing\MainView.xaml.cs">
       <DependentUpon>MainView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Common\SearchFilter.xaml.cs">
@@ -245,7 +245,7 @@
     <Compile Include="Utils\Compare.cs" />
     <Compile Include="Common\ThemeHandling\IThemeService.cs" />
     <Compile Include="ModelViewing\Items\ItemsSource.cs" />
-    <Compile Include="MainWindowViews\MainViewModel.cs" />
+    <Compile Include="ModelViewing\MainViewModel.cs" />
     <Compile Include="Utils\IReadOnlyKeyedList.cs" />
     <Compile Include="Utils\KeyedList.cs" />
     <Compile Include="Common\ExceptionHandling.cs" />
@@ -303,7 +303,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="MainWindowViews\MainView.xaml">
+    <Page Include="ModelViewing\MainView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -468,6 +468,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Features\" />
+    <Folder Include="ModelViewing\Private\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

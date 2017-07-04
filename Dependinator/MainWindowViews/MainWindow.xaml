@@ -5,6 +5,7 @@
 	xmlns:common="clr-namespace:Dependinator.Common"
 	xmlns:mainWindowViews="clr-namespace:Dependinator.MainWindowViews"
 	xmlns:ui="clr-namespace:Dependinator.Utils.UI"
+	xmlns:modelViewing="clr-namespace:Dependinator.ModelViewing"
 	Title="{Binding Title}"	Icon="Application.ico"
 	Width="800" Height="695"
 	BorderBrush="{DynamicResource BorderBrush}" BorderThickness="3"
@@ -142,7 +143,7 @@
 		</Border>
 
 		<!-- Repository view -->
-		<mainWindowViews:MainView 
+		<modelViewing:MainView 
 			x:Name="RepositoryView"
 			Grid.Row="1"
 			DataContext="{Binding MainViewModel}"/>
