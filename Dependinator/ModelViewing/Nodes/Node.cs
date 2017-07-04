@@ -14,7 +14,7 @@ namespace Dependinator.ModelViewing.Nodes
 	internal class Node : Equatable<Node>, IItemBounds
 	{
 		private const int InitialScaleFactor = 7;
-		private readonly IRootModelService rootModelService;
+
 		private readonly ModelViewing.Private.IModelService modelService;
 		private readonly INodeService nodeService;
 
@@ -31,7 +31,6 @@ namespace Dependinator.ModelViewing.Nodes
 		private int direction = 0;
 
 		public Node(
-			IRootModelService rootModelService,
 			ModelViewing.Private.IModelService modelService,
 			INodeService nodeService,
 			ILinkService linkService,
@@ -39,7 +38,6 @@ namespace Dependinator.ModelViewing.Nodes
 			NodeName name,
 			NodeType type)
 		{
-			this.rootModelService = rootModelService;
 			this.modelService = modelService;
 			this.nodeService = nodeService;
 			ParentNode = parent;

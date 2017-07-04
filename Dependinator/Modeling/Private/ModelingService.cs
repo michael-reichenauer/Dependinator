@@ -4,7 +4,6 @@ using System.Linq;
 using System.Windows;
 using Dependinator.Modeling.Private.Analyzing;
 using Dependinator.Modeling.Private.Serializing;
-using Dependinator.ModelViewing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private;
@@ -14,7 +13,6 @@ namespace Dependinator.Modeling.Private
 {
 	internal class ModelingService : IModelingService
 	{
-		private readonly Lazy<IRootModelService> modelViewService;
 		private readonly Lazy<IModelService> modelService;
 		private readonly INodeService nodeService;
 		private readonly ILinkService linkService;
@@ -23,14 +21,12 @@ namespace Dependinator.Modeling.Private
 
 
 		public ModelingService(
-			Lazy<IRootModelService> modelViewService,
 			Lazy<IModelService> modelService,
-			INodeService nodeService, 
+			INodeService nodeService,
 			ILinkService linkService,
 			IReflectionService reflectionService,
 			IDataSerializer dataSerializer)
 		{
-			this.modelViewService = modelViewService;
 			this.modelService = modelService;
 			this.nodeService = nodeService;
 			this.linkService = linkService;
@@ -60,7 +56,7 @@ namespace Dependinator.Modeling.Private
 		public void Serialize(Model model, string path)
 		{
 			Data.Model dataModel = ToDataModel(model);
-	
+
 			dataSerializer.Serialize(dataModel, path);
 		}
 
@@ -106,7 +102,7 @@ namespace Dependinator.Modeling.Private
 
 		private Node CreateRootNode()
 		{
-			Node root = new Node(modelViewService.Value, modelService.Value, nodeService, linkService, null, NodeName.Root, NodeType.NameSpaceType);
+			Node root = new Node(modelService.Value, nodeService, linkService, null, NodeName.Root, NodeType.NameSpaceType);
 			return root;
 		}
 
@@ -140,7 +136,7 @@ namespace Dependinator.Modeling.Private
 		{
 			if (node.NodeName.ShortName == "GitMind")
 			{
-				
+
 			}
 			Data.ViewData viewData = new Data.ViewData
 			{
@@ -152,7 +148,7 @@ namespace Dependinator.Modeling.Private
 				Scale = node.ItemsScale,
 				OffsetX = node.ItemsOffset.X,
 				OffsetY = node.ItemsOffset.Y
-			};	
+			};
 
 			return viewData;
 		}
@@ -238,7 +234,7 @@ namespace Dependinator.Modeling.Private
 			List<Data.Link> links = null;
 
 			foreach (Link link in node.Links.Links)
-			{				
+			{
 				Data.Link dataLink = new Data.Link { Target = link.Target.NodeName };
 
 				if (links == null)
@@ -246,7 +242,7 @@ namespace Dependinator.Modeling.Private
 					links = new List<Data.Link>();
 				}
 
-				links.Add(dataLink);				
+				links.Add(dataLink);
 			}
 
 			return links;
@@ -286,7 +282,7 @@ namespace Dependinator.Modeling.Private
 				parentNode = CreateNode(parentName, model, modelViewData);
 			}
 
-			Node node = new Node(modelViewService.Value, modelService.Value,  nodeService, linkService,  parentNode, nodeName, null);
+			Node node = new Node(modelService.Value, nodeService, linkService, parentNode, nodeName, null);
 
 			TrySetViewData(null, modelViewData, node, nodeName);
 
@@ -310,7 +306,7 @@ namespace Dependinator.Modeling.Private
 			else
 			{
 				if (modelViewData != null
-				    && modelViewData.viewData.TryGetValue(fullName, out viewData))
+						&& modelViewData.viewData.TryGetValue(fullName, out viewData))
 				{
 					SetViewData(node, viewData);
 				}
