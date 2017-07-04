@@ -254,11 +254,6 @@ namespace Dependinator.MainWindowViews
 				SearchBox = "";
 				mainWindowService.SetRepositoryViewFocus();
 			}
-			else if (RootNodeViewModel.IsShowCommitDetails)
-			{
-				RootNodeViewModel.IsShowCommitDetails = false;
-				mainWindowService.SetRepositoryViewFocus();
-			}
 			else
 			{
 				Minimize();

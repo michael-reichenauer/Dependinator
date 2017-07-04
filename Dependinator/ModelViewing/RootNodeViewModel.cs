@@ -82,17 +82,6 @@ namespace Dependinator.ModelViewing
 
 
 
-		public void ShowCommitDetails()
-		{
-			IsShowCommitDetails = true;
-		}
-
-
-		public void ToggleCommitDetails()
-		{
-			IsShowCommitDetails = !IsShowCommitDetails;
-		}
-
 
 		public string FetchErrorText
 		{
@@ -101,18 +90,11 @@ namespace Dependinator.ModelViewing
 		}
 
 
-		public Command ToggleDetailsCommand => Command(ToggleCommitDetails);
-
 
 		public string FilterText { get; private set; } = "";
 
 
-		public bool IsShowCommitDetails
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
-
+	
 
 		public int Width
 		{
@@ -160,16 +142,6 @@ namespace Dependinator.ModelViewing
 		}
 
 
-		private void OnRepositoryUpdated()
-		{
-			Log.Debug("Update repository view model after updated Repository");
-			Timing t = new Timing();
-			using (progress.ShowBusy())
-			{
-			}
-
-			t.Log("Updated view model after updated repository");
-		}
 
 
 		public async Task ManualRefreshAsync(bool refreshLayout = false)
@@ -180,18 +152,6 @@ namespace Dependinator.ModelViewing
 			}
 		}
 
-
-		//public void MouseEnterBranch(BranchViewModel branch)
-		//{
-
-		//	//}
-		//}
-
-
-		//public void MouseLeaveBranch(BranchViewModel branch)
-		//{
-
-		//}
 
 
 		private void UpdateViewModel()
@@ -254,26 +214,6 @@ namespace Dependinator.ModelViewing
 		}
 
 
-		public void ScrollRows(int rows)
-		{
-			//int offsetY = Converters.ToY(rows);
-			//Canvas.Offset = new Point(Canvas.Offset.X, Math.Max(Canvas.Offset.Y - offsetY, 0));
-		}
-
-
-		private void ScrollTo(int rows)
-		{
-			//int offsetY = Converters.ToY(rows);
-			//Canvas.Offset = new Point(Canvas.Offset.X, Math.Max(offsetY, 0));
-		}
-
-
-		public void ShowUncommittedDetails()
-		{
-			SelectedIndex = 0;
-			ScrollTo(0);
-			IsShowCommitDetails = true;
-		}
 
 
 		public void Clicked(Point viewPosition)
