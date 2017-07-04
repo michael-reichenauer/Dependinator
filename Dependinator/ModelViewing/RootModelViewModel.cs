@@ -5,6 +5,7 @@ using System.Windows.Threading;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 
@@ -30,6 +31,7 @@ namespace Dependinator.ModelViewing
 
 		public RootModelViewModel(
 			IRootModelService rootModelService,
+			IModelService modelService,
 			IThemeService themeService,
 			IProgressService progressService)
 		{
@@ -40,8 +42,7 @@ namespace Dependinator.ModelViewing
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
 
-			ModelViewModel = new ModelViewModel(rootModelService, null, itemsCanvas);
-
+			ModelViewModel = new ModelViewModel(modelService, null, itemsCanvas);
 		}
 
 

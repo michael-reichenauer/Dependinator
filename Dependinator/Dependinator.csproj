@@ -109,6 +109,8 @@
     <Compile Include="Modeling\LinkId.cs" />
     <Compile Include="Modeling\Node2.cs" />
     <Compile Include="Modeling\NodeId.cs" />
+    <Compile Include="ModelViewing\Private\IModelService.cs" />
+    <Compile Include="ModelViewing\Private\ModelService.cs" />
     <Compile Include="Utils\With.cs" />
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -181,8 +183,8 @@
       <DependentUpon>CompositeNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\CompositeNodeViewModel.cs" />
-    <Compile Include="Modeling\Private\ModelService.cs" />
-    <Compile Include="Modeling\IModelService.cs" />
+    <Compile Include="Modeling\Private\ModelingService.cs" />
+    <Compile Include="Modeling\IModelingService.cs" />
     <Compile Include="ModelViewing\Links\LinkLine.cs" />
     <Compile Include="ModelViewing\Links\LinkLineViewModel.cs" />
     <Compile Include="Modeling\ModelViewData.cs" />

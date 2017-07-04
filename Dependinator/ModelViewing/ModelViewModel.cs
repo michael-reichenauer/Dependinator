@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.ModelViewing.Private;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -8,14 +9,14 @@ namespace Dependinator.ModelViewing
 {
 	internal class ModelViewModel : ViewModel
 	{
-		private readonly IRootModelService rootModelService;
+		private readonly IModelService modelService;
 		private readonly Node node;
 		private readonly ItemsCanvas itemsCanvas;
 
 
-		public ModelViewModel(IRootModelService rootModelService, Node node, ItemsCanvas itemsCanvas)
+		public ModelViewModel(IModelService modelService, Node node, ItemsCanvas itemsCanvas)
 		{
-			this.rootModelService = rootModelService;
+			this.modelService = modelService;
 			this.node = node;
 			this.itemsCanvas = itemsCanvas;
 		}
@@ -29,21 +30,11 @@ namespace Dependinator.ModelViewing
 		}
 
 
-		public void MoveCanvas(Vector viewOffset)
-		{
-			if (node != null)
-			{
-				node.MoveItems(viewOffset);
-			}
-			else
-			{
-				rootModelService.Move(viewOffset);
-			}
-		}
+		public void MoveCanvas(Vector viewOffset) => modelService.Move(node, viewOffset);
 
 
 		public void SizeChanged() => itemsCanvas.TriggerExtentChanged();
 
-		public void ZoomRoot(double zoom, Point viewPosition) => rootModelService.Zoom(zoom, viewPosition);
+		public void ZoomRoot(double zoom, Point viewPosition) => modelService.Zoom(zoom, viewPosition);
 	}
 }

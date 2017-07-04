@@ -1,7 +1,9 @@
 using System;
 using System.Windows;
 using System.Windows.Media;
+
 using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Private;
 
 
 namespace Dependinator.ModelViewing.Nodes
@@ -11,11 +13,11 @@ namespace Dependinator.ModelViewing.Nodes
 		private readonly Node node;
 
 
-		public CompositeNodeViewModel(IRootModelService rootModelService, Node node, ItemsCanvas itemsCanvas)
+		public CompositeNodeViewModel(IModelService modelService, Node node, ItemsCanvas itemsCanvas)
 		{
 			this.node = node;
 			ItemsCanvas = itemsCanvas;
-			ModelViewModel = new ModelViewModel(rootModelService, node, ItemsCanvas);
+			ModelViewModel = new ModelViewModel(modelService, node, ItemsCanvas);
 		}
 
 

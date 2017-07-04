@@ -1,6 +1,6 @@
 ﻿namespace Dependinator.Modeling
 {
-	internal interface IModelService
+	internal interface IModelingService
 	{
 		Model Analyze(string path, ModelViewData modelViewData);
 

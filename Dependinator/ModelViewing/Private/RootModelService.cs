@@ -15,7 +15,7 @@ namespace Dependinator.ModelViewing.Private
 	internal class RootModelService : IRootModelService
 	{
 		private readonly WorkingFolder workingFolder;
-		private readonly IModelService modelService;
+		private readonly Dependinator.Modeling.IModelingService modelingService;
 
 
 
@@ -23,10 +23,10 @@ namespace Dependinator.ModelViewing.Private
 
 		public RootModelService(
 			WorkingFolder workingFolder,
-			IModelService modelService)
+			Dependinator.Modeling.IModelingService modelingService)
 		{
 			this.workingFolder = workingFolder;
-			this.modelService = modelService;
+			this.modelingService = modelingService;
 		}
 
 
@@ -40,7 +40,7 @@ namespace Dependinator.ModelViewing.Private
 
 			t.Log($"Get data model {currentModel}");
 
-			//model = modelService.ToModel(dataModel, null);
+			//model = modelingService.ToModel(dataModel, null);
 
 			t.Log("To model");
 
@@ -94,7 +94,7 @@ namespace Dependinator.ModelViewing.Private
 			StoreViewSettings();
 			t.Log("stored setting");
 
-			ModelViewData modelViewData = refreshLayout ? null : modelService.ToViewData(currentModel);
+			ModelViewData modelViewData = refreshLayout ? null : modelingService.ToViewData(currentModel);
 			t.Log("Got current model data");
 
 			currentModel.Root.Clear();
@@ -146,7 +146,7 @@ namespace Dependinator.ModelViewing.Private
 		private async Task<Model> RefreshElementTreeAsync(ModelViewData modelViewData)
 		{
 			Model model = await Task.Run(
-				() => modelService.Analyze(workingFolder.FilePath, modelViewData));
+				() => modelingService.Analyze(workingFolder.FilePath, modelViewData));
 
 			return model;
 		}
@@ -155,14 +155,14 @@ namespace Dependinator.ModelViewing.Private
 		private bool TryReadCachedData(out Model dataModel)
 		{
 			string dataFilePath = GetDataFilePath();
-			return modelService.TryDeserialize(dataFilePath, out dataModel);
+			return modelingService.TryDeserialize(dataFilePath, out dataModel);
 		}
 
 
 		private Model ReadFreshData()
 		{
 			Timing t = Timing.Start();
-			Model newModel = modelService.Analyze(workingFolder.FilePath, null);
+			Model newModel = modelingService.Analyze(workingFolder.FilePath, null);
 			t.Log("Read fresh model");
 			return newModel;
 		}
@@ -171,10 +171,10 @@ namespace Dependinator.ModelViewing.Private
 		public void Close()
 		{
 			currentModel.Root.UpdateAllNodesScalesBeforeClose();
-			//DataModel dataModel = modelService.ToDataModel(model);
+			//DataModel dataModel = modelingService.ToDataModel(model);
 			string dataFilePath = GetDataFilePath();
 
-			modelService.Serialize(currentModel, dataFilePath);
+			modelingService.Serialize(currentModel, dataFilePath);
 
 			StoreViewSettings();
 		}

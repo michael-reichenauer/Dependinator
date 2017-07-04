@@ -15,6 +15,7 @@ namespace Dependinator.ModelViewing.Nodes
 	{
 		private const int InitialScaleFactor = 7;
 		private readonly IRootModelService rootModelService;
+		private readonly ModelViewing.Private.IModelService modelService;
 		private readonly INodeService nodeService;
 
 		private readonly List<Node> childNodes = new List<Node>();
@@ -31,6 +32,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public Node(
 			IRootModelService rootModelService,
+			ModelViewing.Private.IModelService modelService,
 			INodeService nodeService,
 			ILinkService linkService,
 			Node parent,
@@ -38,6 +40,7 @@ namespace Dependinator.ModelViewing.Nodes
 			NodeType type)
 		{
 			this.rootModelService = rootModelService;
+			this.modelService = modelService;
 			this.nodeService = nodeService;
 			ParentNode = parent;
 			NodeName = name;
@@ -557,7 +560,7 @@ namespace Dependinator.ModelViewing.Nodes
 		private void InitNodeTree(ItemsCanvas rootCanvas)
 		{
 			itemsCanvas = rootCanvas;
-			viewModel = new CompositeNodeViewModel(rootModelService, this, rootCanvas);
+			viewModel = new CompositeNodeViewModel(modelService, this, rootCanvas);
 
 			InitNode();
 		}
@@ -611,7 +614,7 @@ namespace Dependinator.ModelViewing.Nodes
 				Point offset = PersistentOffset ?? new Point(0, 0);
 				itemsCanvas.Offset = offset;
 
-				viewModel = new CompositeNodeViewModel(rootModelService, this, itemsCanvas);
+				viewModel = new CompositeNodeViewModel(modelService, this, itemsCanvas);
 			}
 			else
 			{

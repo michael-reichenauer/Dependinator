@@ -7,27 +7,31 @@ using Dependinator.Modeling.Private.Serializing;
 using Dependinator.ModelViewing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 
 namespace Dependinator.Modeling.Private
 {
-	internal class ModelService : IModelService
+	internal class ModelingService : IModelingService
 	{
 		private readonly Lazy<IRootModelService> modelViewService;
+		private readonly Lazy<IModelService> modelService;
 		private readonly INodeService nodeService;
 		private readonly ILinkService linkService;
 		private readonly IReflectionService reflectionService;
 		private readonly IDataSerializer dataSerializer;
 
 
-		public ModelService(
-			Lazy<IRootModelService> modelViewService, 
+		public ModelingService(
+			Lazy<IRootModelService> modelViewService,
+			Lazy<IModelService> modelService,
 			INodeService nodeService, 
 			ILinkService linkService,
 			IReflectionService reflectionService,
 			IDataSerializer dataSerializer)
 		{
 			this.modelViewService = modelViewService;
+			this.modelService = modelService;
 			this.nodeService = nodeService;
 			this.linkService = linkService;
 			this.reflectionService = reflectionService;
@@ -102,7 +106,7 @@ namespace Dependinator.Modeling.Private
 
 		private Node CreateRootNode()
 		{
-			Node root = new Node(modelViewService.Value, nodeService, linkService, null, NodeName.Root, NodeType.NameSpaceType);
+			Node root = new Node(modelViewService.Value, modelService.Value, nodeService, linkService, null, NodeName.Root, NodeType.NameSpaceType);
 			return root;
 		}
 
@@ -282,7 +286,7 @@ namespace Dependinator.Modeling.Private
 				parentNode = CreateNode(parentName, model, modelViewData);
 			}
 
-			Node node = new Node(modelViewService.Value, nodeService, linkService,  parentNode, nodeName, null);
+			Node node = new Node(modelViewService.Value, modelService.Value,  nodeService, linkService,  parentNode, nodeName, null);
 
 			TrySetViewData(null, modelViewData, node, nodeName);
 
