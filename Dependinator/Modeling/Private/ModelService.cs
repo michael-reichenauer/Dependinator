@@ -13,7 +13,7 @@ namespace Dependinator.Modeling.Private
 {
 	internal class ModelService : IModelService
 	{
-		private readonly Lazy<IModelViewService> modelViewService;
+		private readonly Lazy<IRootModelService> modelViewService;
 		private readonly INodeService nodeService;
 		private readonly ILinkService linkService;
 		private readonly IReflectionService reflectionService;
@@ -21,7 +21,7 @@ namespace Dependinator.Modeling.Private
 
 
 		public ModelService(
-			Lazy<IModelViewService> modelViewService, 
+			Lazy<IRootModelService> modelViewService, 
 			INodeService nodeService, 
 			ILinkService linkService,
 			IReflectionService reflectionService,

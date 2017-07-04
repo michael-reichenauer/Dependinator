@@ -11,11 +11,11 @@ namespace Dependinator.ModelViewing.Nodes
 		private readonly Node node;
 
 
-		public CompositeNodeViewModel(IModelViewService modelViewService, Node node, ItemsCanvas itemsCanvas)
+		public CompositeNodeViewModel(IRootModelService rootModelService, Node node, ItemsCanvas itemsCanvas)
 		{
 			this.node = node;
 			ItemsCanvas = itemsCanvas;
-			ModelViewModel = new ModelViewModel(modelViewService, node, ItemsCanvas);
+			ModelViewModel = new ModelViewModel(rootModelService, node, ItemsCanvas);
 		}
 
 

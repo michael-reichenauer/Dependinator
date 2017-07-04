@@ -14,7 +14,7 @@ namespace Dependinator.ModelViewing.Nodes
 	internal class Node : Equatable<Node>, IItemBounds
 	{
 		private const int InitialScaleFactor = 7;
-		private readonly IModelViewService modelViewService;
+		private readonly IRootModelService rootModelService;
 		private readonly INodeService nodeService;
 
 		private readonly List<Node> childNodes = new List<Node>();
@@ -30,14 +30,14 @@ namespace Dependinator.ModelViewing.Nodes
 		private int direction = 0;
 
 		public Node(
-			IModelViewService modelViewService,
+			IRootModelService rootModelService,
 			INodeService nodeService,
 			ILinkService linkService,
 			Node parent,
 			NodeName name,
 			NodeType type)
 		{
-			this.modelViewService = modelViewService;
+			this.rootModelService = rootModelService;
 			this.nodeService = nodeService;
 			ParentNode = parent;
 			NodeName = name;
@@ -557,7 +557,7 @@ namespace Dependinator.ModelViewing.Nodes
 		private void InitNodeTree(ItemsCanvas rootCanvas)
 		{
 			itemsCanvas = rootCanvas;
-			viewModel = new CompositeNodeViewModel(modelViewService, this, rootCanvas);
+			viewModel = new CompositeNodeViewModel(rootModelService, this, rootCanvas);
 
 			InitNode();
 		}
@@ -611,7 +611,7 @@ namespace Dependinator.ModelViewing.Nodes
 				Point offset = PersistentOffset ?? new Point(0, 0);
 				itemsCanvas.Offset = offset;
 
-				viewModel = new CompositeNodeViewModel(modelViewService, this, itemsCanvas);
+				viewModel = new CompositeNodeViewModel(rootModelService, this, itemsCanvas);
 			}
 			else
 			{

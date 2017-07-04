@@ -189,8 +189,8 @@
     <Compile Include="ModelViewing\Items\ItemViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\Node.cs" />
     <Compile Include="ModelViewing\Items\IItem.cs" />
-    <Compile Include="ModelViewing\IModelViewService.cs" />
-    <Compile Include="ModelViewing\ModelViewService.cs" />
+    <Compile Include="ModelViewing\IRootModelService.cs" />
+    <Compile Include="ModelViewing\Private\RootModelService.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeService.cs" />
     <Compile Include="Modeling\Private\Serializing\Data.cs" />
     <Compile Include="Modeling\Private\Serializing\DataSerializer.cs" />
@@ -468,7 +468,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Features\" />
-    <Folder Include="ModelViewing\Private\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

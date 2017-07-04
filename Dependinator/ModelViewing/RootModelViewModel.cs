@@ -17,7 +17,7 @@ namespace Dependinator.ModelViewing
 
 		private readonly IThemeService themeService;
 
-		private readonly IModelViewService modelViewService;
+		private readonly IRootModelService rootModelService;
 		private readonly IProgressService progress;
 
 
@@ -29,18 +29,18 @@ namespace Dependinator.ModelViewing
 
 
 		public RootModelViewModel(
-			IModelViewService modelViewService,
+			IRootModelService rootModelService,
 			IThemeService themeService,
 			IProgressService progressService)
 		{
-			this.modelViewService = modelViewService;
+			this.rootModelService = rootModelService;
 			this.themeService = themeService;
 			this.progress = progressService;
 
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
 
-			ModelViewModel = new ModelViewModel(modelViewService, null, itemsCanvas);
+			ModelViewModel = new ModelViewModel(rootModelService, null, itemsCanvas);
 
 		}
 
@@ -56,7 +56,7 @@ namespace Dependinator.ModelViewing
 
 			using (progress.ShowDialog("Loading branch view ..."))
 			{		
-				modelViewService.InitModules(itemsCanvas);
+				rootModelService.InitModules(itemsCanvas);
 
 				LoadViewModel();
 				//Zoom(-120, new Point(1, 1), false);
@@ -69,14 +69,14 @@ namespace Dependinator.ModelViewing
 
 		public void Zoom(double zoom, Point viewPosition)
 		{
-			modelViewService.Zoom(zoom, viewPosition);
+			rootModelService.Zoom(zoom, viewPosition);
 		}
 
 
 		public bool MoveCanvas(Vector viewOffset)
 		{
 			
-			modelViewService.Move(viewOffset);
+			rootModelService.Move(viewOffset);
 			return true;
 		}
 
@@ -148,7 +148,7 @@ namespace Dependinator.ModelViewing
 		{
 			using (progress.ShowDialog("Refreshing view ..."))
 			{
-				await modelViewService.Refresh(itemsCanvas, refreshLayout);
+				await rootModelService.Refresh(itemsCanvas, refreshLayout);
 			}
 		}
 
@@ -247,7 +247,7 @@ namespace Dependinator.ModelViewing
 
 		public void ClosingWindow()
 		{
-			modelViewService.Close();
+			rootModelService.Close();
 		}
 	}
 }

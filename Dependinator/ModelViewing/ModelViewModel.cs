@@ -8,14 +8,14 @@ namespace Dependinator.ModelViewing
 {
 	internal class ModelViewModel : ViewModel
 	{
-		private readonly IModelViewService modelViewService;
+		private readonly IRootModelService rootModelService;
 		private readonly Node node;
 		private readonly ItemsCanvas itemsCanvas;
 
 
-		public ModelViewModel(IModelViewService modelViewService, Node node, ItemsCanvas itemsCanvas)
+		public ModelViewModel(IRootModelService rootModelService, Node node, ItemsCanvas itemsCanvas)
 		{
-			this.modelViewService = modelViewService;
+			this.rootModelService = rootModelService;
 			this.node = node;
 			this.itemsCanvas = itemsCanvas;
 		}
@@ -37,13 +37,13 @@ namespace Dependinator.ModelViewing
 			}
 			else
 			{
-				modelViewService.Move(viewOffset);
+				rootModelService.Move(viewOffset);
 			}
 		}
 
 
 		public void SizeChanged() => itemsCanvas.TriggerExtentChanged();
 
-		public void ZoomRoot(double zoom, Point viewPosition) => modelViewService.Zoom(zoom, viewPosition);
+		public void ZoomRoot(double zoom, Point viewPosition) => rootModelService.Zoom(zoom, viewPosition);
 	}
 }

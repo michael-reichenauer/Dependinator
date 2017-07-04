@@ -5,7 +5,7 @@ using Dependinator.ModelViewing.Items;
 
 namespace Dependinator.ModelViewing
 {
-	internal interface IModelViewService
+	internal interface IRootModelService
 	{
 		void InitModules(ItemsCanvas rootCanvas);
 
