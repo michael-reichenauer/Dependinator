@@ -39,7 +39,7 @@ namespace Dependinator.MainWindowViews
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
 			MainWindowIpcService mainWindowIpcService,
-			RootNodeViewModel rootNodeViewModel)
+			RootModelViewModel rootModelViewModel)
 		{
 			this.workingFolder = workingFolder;
 			this.owner = owner;
@@ -48,7 +48,7 @@ namespace Dependinator.MainWindowViews
 			this.mainWindowService = mainWindowService;
 			this.mainWindowIpcService = mainWindowIpcService;
 
-			RootNodeViewModel = rootNodeViewModel;
+			RootModelViewModel = rootModelViewModel;
 
 			workingFolder.OnChange += (s, e) => Notify(nameof(WorkingFolder));
 			latestVersionService.OnNewVersionAvailable += (s, e) => IsNewVersionVisible = true;
@@ -88,13 +88,13 @@ namespace Dependinator.MainWindowViews
 
 		private void SetSearchBoxValue(string text)
 		{
-			RootNodeViewModel.SetFilter(text);
+			RootModelViewModel.SetFilter(text);
 		}
 
 
 		public BusyIndicator Busy => BusyIndicator();
 
-		public RootNodeViewModel RootNodeViewModel { get; }
+		public RootModelViewModel RootModelViewModel { get; }
 
 
 		public string VersionText
@@ -160,7 +160,7 @@ namespace Dependinator.MainWindowViews
 
 		public void ClosingWindow()
 		{
-			RootNodeViewModel.ClosingWindow();
+			RootModelViewModel.ClosingWindow();
 		}
 
 
@@ -176,7 +176,7 @@ namespace Dependinator.MainWindowViews
 
 			await SetWorkingFolderAsync();
 
-			await RootNodeViewModel.LoadAsync();
+			await RootModelViewModel.LoadAsync();
 		}
 
 
@@ -209,24 +209,24 @@ namespace Dependinator.MainWindowViews
 
 			Notify(nameof(Title));
 
-			//await RootNodeViewModel.LoadAsync();
+			//await RootModelViewModel.LoadAsync();
 			isLoaded = true;
 		}
 
 
 		private Task ManualRefreshAsync()
 		{
-			return RootNodeViewModel.ManualRefreshAsync();
+			return RootModelViewModel.ManualRefreshAsync();
 		}
 
 		private Task ManualRefreshLayoutAsync()
 		{
-			return RootNodeViewModel.ManualRefreshAsync(true);
+			return RootModelViewModel.ManualRefreshAsync(true);
 		}
 
 		public Task AutoRemoteCheckAsync()
 		{
-			return RootNodeViewModel.AutoRemoteCheckAsync();
+			return RootModelViewModel.AutoRemoteCheckAsync();
 		}
 
 
@@ -243,7 +243,7 @@ namespace Dependinator.MainWindowViews
 				return Task.CompletedTask;
 			}
 
-			return RootNodeViewModel.ActivateRefreshAsync();
+			return RootModelViewModel.ActivateRefreshAsync();
 		}
 
 
@@ -263,7 +263,7 @@ namespace Dependinator.MainWindowViews
 
 		public int WindowWith
 		{
-			set { RootNodeViewModel.Width = value; }
+			set { RootModelViewModel.Width = value; }
 		}
 
 

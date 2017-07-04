@@ -11,7 +11,7 @@ using Dependinator.Utils.UI;
 namespace Dependinator.ModelViewing
 {
 	[SingleInstance]
-	internal class RootNodeViewModel : ViewModel
+	internal class RootModelViewModel : ViewModel
 	{
 		private static readonly TimeSpan FilterDelay = TimeSpan.FromMilliseconds(300);
 
@@ -28,7 +28,7 @@ namespace Dependinator.ModelViewing
 		private int width = 0;
 
 
-		public RootNodeViewModel(
+		public RootModelViewModel(
 			IModelViewService modelViewService,
 			IThemeService themeService,
 			IProgressService progressService)

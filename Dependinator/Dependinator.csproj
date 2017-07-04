@@ -230,8 +230,8 @@
     <Compile Include="Utils\UI\VisibleWindow.cs" />
     <Compile Include="Utils\UI\WpfBindingTraceListener.cs" />
     <Compile Include="Common\ThemeHandling\ThemeService.cs" />
-    <Compile Include="ModelViewing\RootNodeView.xaml.cs">
-      <DependentUpon>RootNodeView.xaml</DependentUpon>
+    <Compile Include="ModelViewing\RootModelView.xaml.cs">
+      <DependentUpon>RootModelView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Common\SearchFilter.xaml.cs">
       <DependentUpon>SearchFilter.xaml</DependentUpon>
@@ -245,7 +245,7 @@
     <Compile Include="Utils\Compare.cs" />
     <Compile Include="Common\ThemeHandling\IThemeService.cs" />
     <Compile Include="ModelViewing\Items\ItemsSource.cs" />
-    <Compile Include="ModelViewing\RootNodeViewModel.cs" />
+    <Compile Include="ModelViewing\RootModelViewModel.cs" />
     <Compile Include="Utils\IReadOnlyKeyedList.cs" />
     <Compile Include="Utils\KeyedList.cs" />
     <Compile Include="Common\ExceptionHandling.cs" />
@@ -303,7 +303,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ModelViewing\RootNodeView.xaml">
+    <Page Include="ModelViewing\RootModelView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
