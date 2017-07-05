@@ -101,6 +101,17 @@
 						</Setter>
 					</DataTrigger>
 
+
+					<DataTrigger Binding="{Binding Type}" Value="TypeViewModel">
+						<Setter Property="ContentTemplate">
+							<Setter.Value>
+								<DataTemplate>
+									<nodes:TypeView/>
+								</DataTemplate>
+							</Setter.Value>
+						</Setter>
+					</DataTrigger>
+
 					<DataTrigger Binding="{Binding Type}" Value="MemberNodeViewModel">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>

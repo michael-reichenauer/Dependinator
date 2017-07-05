@@ -612,7 +612,14 @@ namespace Dependinator.ModelViewing.Nodes
 				Point offset = PersistentOffset ?? new Point(0, 0);
 				itemsCanvas.Offset = offset;
 
-				viewModel = new NamespaceViewModel(modelService, this, itemsCanvas);
+				if (NodeType == NodeType.TypeType)
+				{
+					viewModel = new TypeViewModel(modelService, this, itemsCanvas);
+				}
+				else
+				{
+					viewModel = new NamespaceViewModel(modelService, this, itemsCanvas);
+				}
 			}
 			else
 			{

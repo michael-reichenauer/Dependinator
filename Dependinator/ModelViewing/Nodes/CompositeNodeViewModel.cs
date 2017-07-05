@@ -74,19 +74,12 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public double Scale => ItemsCanvas.Scale;
 
-
-		public double StrokeThickness => 0.8;
 		public Brush RectangleBrush => node.GetNodeBrush();
 		public Brush BackgroundBrush => node.GetBackgroundNodeBrush();
 		public Brush HoverBrush => RectangleBrush;
 
 		public string Name => node.NodeName.ShortName;
 
-		public int CornerRadiusX => node.NodeType == NodeType.TypeType ? 10 : 0;
-		public int CornerRadiusY => node.NodeType == NodeType.TypeType ? 10 : 0;
-		public string StrokeDash => node.NodeType == NodeType.TypeType ? "" : "4,6";
-
-		public string ScrollDash => node.NodeType == NodeType.TypeType ? "" : "4,6";
 
 		public string ToolTip => $"{node.NodeName}{node.DebugToolTip}";
 

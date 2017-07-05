@@ -22,5 +22,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public static implicit operator NodeType(string text) => new NodeType(text);
 
 		public static implicit operator string(NodeType nodeType) => nodeType?.type;
+
+		public override string ToString() => type;
 	}
 }

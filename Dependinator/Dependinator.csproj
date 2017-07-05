@@ -110,6 +110,10 @@
     <Compile Include="Modeling\Node2.cs" />
     <Compile Include="Modeling\NodeId.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceViewModel.cs" />
+    <Compile Include="ModelViewing\Nodes\TypeView.xaml.cs">
+      <DependentUpon>TypeView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ModelViewing\Nodes\TypeViewModel.cs" />
     <Compile Include="ModelViewing\Private\IModelService.cs" />
     <Compile Include="ModelViewing\Private\ModelService.cs" />
     <Compile Include="Utils\With.cs" />
@@ -303,6 +307,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Common\ProgressHandling\ProgressDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ModelViewing\Nodes\TypeView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
