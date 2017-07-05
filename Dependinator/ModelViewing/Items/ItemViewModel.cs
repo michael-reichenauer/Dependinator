@@ -19,39 +19,16 @@ namespace Dependinator.ModelViewing.Items
 		public ViewModel ViewModel => this;
 		public object ItemState { get; set; }
 
-
 		public bool CanShow { get; private set; }
 		public bool IsShowing { get; private set; }
 
+		public void Hide() => CanShow = false;
 
-		public void Hide()
-		{
-			CanShow = false;
-		}
+		public void Show() => CanShow = true;
 
-		public void Show()
-		{
-			CanShow = true;
-		}
+		public virtual void ItemRealized() => IsShowing = true;
 
-
-		public virtual void ItemRealized()
-		{
-			//Log.Debug($"{GetType()} {this}");
-			IsShowing = true;
-		}
-
-
-		public virtual void ItemVirtualized()
-		{
-			//Log.Debug($"{GetType()} {this}");
-
-			if (this.ToString().EndsWith("Acs"))
-			{
-
-			}
-			IsShowing = false;
-		}
+		public virtual void ItemVirtualized() => IsShowing = false;
 
 		protected abstract Rect GetItemBounds();
 	}
