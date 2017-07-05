@@ -12,7 +12,8 @@
 		BorderBrush="{Binding RectangleBrush}"
 		BorderThickness="0.5"
 		Background="{Binding BackgroundBrush}"
-		CornerRadius="{Binding CornerRadius}">
+		CornerRadius="{Binding CornerRadius}"
+		MouseMove="UIElement_OnMouseMove">
 
 		<TextBlock
 			Text="{Binding Name}"

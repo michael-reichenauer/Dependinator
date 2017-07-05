@@ -1,17 +1,17 @@
 using System;
 using System.Windows;
 using System.Windows.Media;
-using Dependinator.ModelViewing.Items;
 
 
 namespace Dependinator.ModelViewing.Nodes
 {
-	internal class MemberNodeViewModel : ItemViewModel
+	internal class MemberNodeViewModel : NodeViewModel
 	{
 		private readonly Node node;
 
 
 		public MemberNodeViewModel(Node node)
+			: base(node)
 		{
 			this.node = node;
 		}
@@ -32,13 +32,5 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		public int FontSize => ((int)(15 * node.NodeScale * 1.5)).MM(8, 15);
-
-
-		public override string ToString() => node.NodeName;
-
-
-		public void MoveNode(Vector viewOffset) => node.Move(viewOffset, null, false);
-
-		public void Resize(int zoomDelta) => node.Resize(zoomDelta);
 	}
 }

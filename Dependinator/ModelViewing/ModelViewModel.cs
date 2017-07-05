@@ -36,5 +36,10 @@ namespace Dependinator.ModelViewing
 		public void SizeChanged() => itemsCanvas.TriggerExtentChanged();
 
 		public void ZoomRoot(double zoom, Point viewPosition) => modelService.Zoom(zoom, viewPosition);
+
+		public void Zoom(double zoom, Point viewPosition)
+		{
+			node.Zoom(zoom, viewPosition);
+		}
 	}
 }

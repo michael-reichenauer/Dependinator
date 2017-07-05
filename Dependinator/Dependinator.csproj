@@ -109,6 +109,7 @@
     <Compile Include="Modeling\LinkId.cs" />
     <Compile Include="Modeling\Node2.cs" />
     <Compile Include="Modeling\NodeId.cs" />
+    <Compile Include="ModelViewing\Nodes\NamespaceViewModel.cs" />
     <Compile Include="ModelViewing\Private\IModelService.cs" />
     <Compile Include="ModelViewing\Private\ModelService.cs" />
     <Compile Include="Utils\With.cs" />
@@ -179,8 +180,8 @@
     </Compile>
     <Compile Include="ModelViewing\ModelViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\NodeType.cs" />
-    <Compile Include="ModelViewing\Nodes\CompositeNodeView.xaml.cs">
-      <DependentUpon>CompositeNodeView.xaml</DependentUpon>
+    <Compile Include="ModelViewing\Nodes\NamespaceView.xaml.cs">
+      <DependentUpon>NamespaceView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\CompositeNodeViewModel.cs" />
     <Compile Include="Modeling\Private\ModelingService.cs" />
@@ -341,7 +342,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ModelViewing\Nodes\CompositeNodeView.xaml">
+    <Page Include="ModelViewing\Nodes\NamespaceView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

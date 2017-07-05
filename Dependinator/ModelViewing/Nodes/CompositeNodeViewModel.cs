@@ -1,19 +1,63 @@
 using System;
 using System.Windows;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
-
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Private;
 
 
 namespace Dependinator.ModelViewing.Nodes
 {
-	internal class CompositeNodeViewModel : ItemViewModel
+	internal class NodeViewModel : ItemViewModel
+	{
+		private Point lastMousePosition;
+		private readonly Node node;
+
+		protected NodeViewModel(Node node)
+		{
+			this.node = node;
+		}
+
+		protected override Rect GetItemBounds() => node.NodeBounds;
+
+
+		public void OnMouseMove(MouseEventArgs e)
+		{
+			Point viewPosition = e.GetPosition(Application.Current.MainWindow);
+
+			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
+					&& e.LeftButton == MouseButtonState.Pressed
+					&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
+			{
+
+				// Move node
+				(e.Source as UIElement)?.CaptureMouse();
+				Vector viewOffset = viewPosition - lastMousePosition;
+				e.Handled = true;
+
+				node.Move(viewOffset, null, false);
+			}
+			else
+			{
+				// End of move
+				(e.Source as UIElement)?.ReleaseMouseCapture();
+			}
+
+			lastMousePosition = viewPosition;
+		}
+
+		public override string ToString() => node.NodeName;
+	}
+
+
+	internal class CompositeNodeViewModel : NodeViewModel
 	{
 		private readonly Node node;
 
 
 		public CompositeNodeViewModel(IModelService modelService, Node node, ItemsCanvas itemsCanvas)
+			: base(node)
 		{
 			this.node = node;
 			ItemsCanvas = itemsCanvas;
@@ -65,9 +109,6 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 
-
-
-
 		public void UpdateScale()
 		{
 			ItemsCanvas.UpdateScale();
@@ -81,14 +122,10 @@ namespace Dependinator.ModelViewing.Nodes
 		public void ZoomResize(int wheelDelta) => node.Resize(wheelDelta);
 
 
-		public void MoveNode(Vector viewOffset, Point viewPosition2, bool isDoing) =>
-			node.Move(viewOffset, viewPosition2, isDoing);
-
 
 		public void ResizeeNode(Vector viewOffset, Point viewPosition2) => node.Resize(viewOffset, viewPosition2);
 
 
-		public override string ToString() => node.NodeName;
 
 
 		public void UpdateToolTip()

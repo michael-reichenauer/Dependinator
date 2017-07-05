@@ -558,7 +558,7 @@ namespace Dependinator.ModelViewing.Nodes
 		private void InitNodeTree(ItemsCanvas rootCanvas)
 		{
 			itemsCanvas = rootCanvas;
-			viewModel = new CompositeNodeViewModel(modelService, this, rootCanvas);
+			viewModel = new NamespaceViewModel(modelService, this, rootCanvas);
 
 			InitNode();
 		}
@@ -612,7 +612,7 @@ namespace Dependinator.ModelViewing.Nodes
 				Point offset = PersistentOffset ?? new Point(0, 0);
 				itemsCanvas.Offset = offset;
 
-				viewModel = new CompositeNodeViewModel(modelService, this, itemsCanvas);
+				viewModel = new NamespaceViewModel(modelService, this, itemsCanvas);
 			}
 			else
 			{

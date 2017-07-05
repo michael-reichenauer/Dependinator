@@ -156,7 +156,35 @@ namespace Dependinator.ModelViewing
 			Point viewPosition = e.GetPosition(ItemsListBox);
 
 			double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
+		
 			viewModel.ZoomRoot(zoom, viewPosition);
+			
+			e.Handled = true;
+		}
+
+
+
+		protected override void OnMouseWheel(MouseWheelEventArgs e)
+		{
+			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && !viewModel.IsRoot)
+			{
+				// Root node move only active on root node
+				return;
+			}
+
+			int wheelDelta = e.Delta;
+			Point viewPosition = e.GetPosition(ItemsListBox);
+
+			double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
+			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+			{
+				viewModel.Zoom(zoom, viewPosition);
+			}
+			else
+			{
+				viewModel.ZoomRoot(zoom, viewPosition);
+			}
+
 			e.Handled = true;
 		}
 

@@ -91,11 +91,11 @@
 
 				<Style.Triggers>
 
-					<DataTrigger Binding="{Binding Type}" Value="CompositeNodeViewModel">
+					<DataTrigger Binding="{Binding Type}" Value="NamespaceViewModel">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>
-									<nodes:CompositeNodeView/>
+									<nodes:NamespaceView/>
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>
