@@ -250,7 +250,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		{
 			//if (memberNode.Name.EndsWith(".Default"))
 			//{
-				
+
 			//}
 
 			MethodBody methodBody = method.GetMethodBody();
@@ -291,7 +291,6 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 			string methodName = Reflection.GetMemberFullName(method, declaringType);
 			model.AddLink(memberNode.Name, methodName);
-			Log.Debug($"Add {memberNode.Name}->{methodName}");
 
 			Type returnType = method.ReturnType;
 			AddLinkToType(memberNode, returnType, model);
@@ -308,7 +307,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			ReflectionModel model)
 		{
 			if (targetType == typeof(void)
-			  || targetType.IsGenericParameter
+				|| targetType.IsGenericParameter
 				|| IsIgnoredSystemType(targetType)
 				|| IsGenericTypeArgument(targetType))
 			{
@@ -337,9 +336,9 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		/// </summary>
 		private static bool IsGenericTypeArgument(Type targetType)
 		{
-			return 
-				targetType.FullName == null 
-				&& targetType.DeclaringType == null 
+			return
+				targetType.FullName == null
+				&& targetType.DeclaringType == null
 				&& !targetType.IsInterface;
 		}
 
