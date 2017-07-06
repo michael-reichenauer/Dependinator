@@ -7,14 +7,14 @@ using Dependinator.Utils.UI.VirtualCanvas;
 
 namespace Dependinator.ModelViewing
 {
-	internal class ModelViewModel : ViewModel
+	internal class ItemsViewModel : ViewModel
 	{
 		private readonly IModelService modelService;
 		private readonly Node node;
 		private readonly ItemsCanvas itemsCanvas;
 
 
-		public ModelViewModel(IModelService modelService, Node node, ItemsCanvas itemsCanvas)
+		public ItemsViewModel(IModelService modelService, Node node, ItemsCanvas itemsCanvas)
 		{
 			this.modelService = modelService;
 			this.node = node;
@@ -24,9 +24,9 @@ namespace Dependinator.ModelViewing
 		public bool IsRoot => node == null;
 
 
-		public void SetCanvas(ZoomableCanvas zoomableCanvas, ModelView modelView)
+		public void SetCanvas(ZoomableCanvas zoomableCanvas, ItemsView itemsView)
 		{
-			itemsCanvas.SetCanvas(zoomableCanvas, modelView);
+			itemsCanvas.SetCanvas(zoomableCanvas, itemsView);
 		}
 
 

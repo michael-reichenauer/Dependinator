@@ -45,10 +45,10 @@ namespace Dependinator.Utils.UI
 		}
 
 
-		private static ModelViewModel GetDataContext(object instance)
+		private static ItemsViewModel GetDataContext(object instance)
 		{
 			var element = instance as FrameworkElement;
-			return element?.DataContext as ModelViewModel;
+			return element?.DataContext as ItemsViewModel;
 		}
 	}
 }

@@ -13,9 +13,9 @@ using Dependinator.Utils.UI.VirtualCanvas;
 namespace Dependinator.ModelViewing
 {
 	/// <summary>
-	/// Interaction logic for ModelView.xaml
+	/// Interaction logic for ItemsView.xaml
 	/// </summary>
-	public partial class ModelView : UserControl
+	public partial class ItemsView : UserControl
 	{
 		private static readonly double ZoomSpeed = 2000.0;
 
@@ -27,7 +27,7 @@ namespace Dependinator.ModelViewing
 		private TouchPoint lastTouchPoint2;
 		private double lastPinchLength = 0;
 
-		private ModelViewModel viewModel;
+		private ItemsViewModel viewModel;
 
 		private readonly Stopwatch touchClickStopWatch = new Stopwatch();
 		private readonly DispatcherTimer longPressTimer;
@@ -35,7 +35,7 @@ namespace Dependinator.ModelViewing
 		private readonly List<TouchDevice> activeTouchDevices = new List<TouchDevice>();
 
 
-		public ModelView()
+		public ItemsView()
 		{
 			InitializeComponent();
 			longPressTimer = new DispatcherTimer();
@@ -47,7 +47,7 @@ namespace Dependinator.ModelViewing
 
 		private void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
 		{
-			viewModel = (ModelViewModel)DataContext;
+			viewModel = (ItemsViewModel)DataContext;
 			if (viewModel != null)
 			{
 				viewModel.SetCanvas((ZoomableCanvas)sender, this);

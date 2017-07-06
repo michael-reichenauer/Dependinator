@@ -42,11 +42,11 @@ namespace Dependinator.ModelViewing
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
 
-			ModelViewModel = new ModelViewModel(modelService, null, itemsCanvas);
+			ItemsViewModel = new ItemsViewModel(modelService, null, itemsCanvas);
 		}
 
 
-		public ModelViewModel ModelViewModel { get; }
+		public ItemsViewModel ItemsViewModel { get; }
 
 
 		public async Task LoadAsync()
@@ -105,7 +105,7 @@ namespace Dependinator.ModelViewing
 				if (width != value)
 				{
 					width = value;
-					ModelViewModel.SizeChanged();
+					ItemsViewModel.SizeChanged();
 				}
 			}
 		}

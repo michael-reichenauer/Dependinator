@@ -13,7 +13,7 @@
 	<Grid>
 		<!-- Root Model -->
 		<Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-			<modeling:ModelView x:Name="ModelView" DataContext="{Binding ModelViewModel}"/>
+			<modeling:ItemsView x:Name="ModelView" DataContext="{Binding ItemsViewModel}"/>
 		</Border>
 
 	</Grid>

@@ -15,12 +15,12 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			this.node = node;
 			ItemsCanvas = itemsCanvas;
-			ModelViewModel = new ModelViewModel(modelService, node, ItemsCanvas);
+			ItemsViewModel = new ItemsViewModel(modelService, node, ItemsCanvas);
 		}
 
 
 
-		public ModelViewModel ModelViewModel { get; }
+		public ItemsViewModel ItemsViewModel { get; }
 
 		public ItemsCanvas ItemsCanvas { get; }
 

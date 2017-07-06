@@ -10,7 +10,7 @@ namespace Dependinator.ModelViewing.Items
 		private readonly IItemBounds itemBounds;
 
 		private readonly ItemsSource itemsSource;
-		private ModelView view;
+		private ItemsView view;
 		//private Vector relative = new Vector(0, 0);
 
 		private ZoomableCanvas zoomableCanvas;
@@ -142,9 +142,9 @@ namespace Dependinator.ModelViewing.Items
 
 
 
-		public void SetCanvas(ZoomableCanvas canvas, ModelView modelView)
+		public void SetCanvas(ZoomableCanvas canvas, ItemsView itemsView)
 		{
-			view = modelView;
+			view = itemsView;
 
 			if (zoomableCanvas != null)
 			{

@@ -180,10 +180,10 @@
     <Compile Include="ModelViewing\Links\Link.cs" />
     <Compile Include="ModelViewing\Links\NodeLinks.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeComparer.cs" />
-    <Compile Include="ModelViewing\ModelView.xaml.cs">
-      <DependentUpon>ModelView.xaml</DependentUpon>
+    <Compile Include="ModelViewing\ItemsView.xaml.cs">
+      <DependentUpon>ItemsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\ModelViewModel.cs" />
+    <Compile Include="ModelViewing\ItemsViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\NodeType.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceView.xaml.cs">
       <DependentUpon>NamespaceView.xaml</DependentUpon>
@@ -347,7 +347,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ModelViewing\ModelView.xaml">
+    <Page Include="ModelViewing\ItemsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
