@@ -110,6 +110,7 @@
     <Compile Include="Modeling\Node2.cs" />
     <Compile Include="Modeling\NodeId.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceViewModel.cs" />
+    <Compile Include="ModelViewing\Nodes\NodeViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\TypeView.xaml.cs">
       <DependentUpon>TypeView.xaml</DependentUpon>
     </Compile>
