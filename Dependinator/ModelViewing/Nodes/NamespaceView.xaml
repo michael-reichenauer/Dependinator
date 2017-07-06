@@ -23,7 +23,7 @@
 			Stretch="Fill" />
 
 		<!-- Inner model -->
-		<modelViewing:ItemsView Grid.Row="0" x:Name="ModelView" DataContext="{Binding ItemsViewModel}" />
+		<modelViewing:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
 
 		<!-- Title -->
 		<Border

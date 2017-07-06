@@ -22,7 +22,7 @@
 			RadiusY="10"/>
 
 		<!-- Inner model -->
-		<modelViewing:ItemsView Grid.Row="0" x:Name="ModelView" DataContext="{Binding ModelViewModel}" />
+		<modelViewing:ItemsView x:Name="ItemsView" DataContext="{Binding ModelViewModel}" />
 
 		<!-- Title -->
 		<Border

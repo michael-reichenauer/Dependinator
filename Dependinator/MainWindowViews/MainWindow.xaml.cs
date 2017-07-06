@@ -62,7 +62,7 @@ namespace Dependinator.MainWindowViews
 
 		public void SetRepositoryViewFocus()
 		{
-			RepositoryView.ModelView.ItemsListBox.Focus();
+			RepositoryView.ItemsView.ItemsListBox.Focus();
 		}
 
 
