@@ -12,7 +12,7 @@ using Dependinator.Utils.UI;
 namespace Dependinator.ModelViewing
 {
 	[SingleInstance]
-	internal class RootModelViewModel : ViewModel
+	internal class ModelViewModel : ViewModel
 	{
 		private static readonly TimeSpan FilterDelay = TimeSpan.FromMilliseconds(300);
 
@@ -29,7 +29,7 @@ namespace Dependinator.ModelViewing
 		private int width = 0;
 
 
-		public RootModelViewModel(
+		public ModelViewModel(
 			IRootModelService rootModelService,
 			IModelService modelService,
 			IThemeService themeService,
