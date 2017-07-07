@@ -4,19 +4,13 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-	xmlns:modeling="clr-namespace:Dependinator.ModelViewing"
-	xmlns:nodes="clr-namespace:Dependinator.ModelViewing.Nodes"
 	xmlns:items="clr-namespace:Dependinator.ModelViewing.Private.Items"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300" Loaded="MainView_OnLoaded">
 
-
-	<Grid>
-		<!-- Root Model -->
-		<Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
-			<items:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}"/>
-		</Border>
-
-	</Grid>
+	<!-- Model -->
+	<Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+		<items:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
+	</Border>
 
 </UserControl>
