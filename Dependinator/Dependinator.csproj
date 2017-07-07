@@ -165,7 +165,7 @@
     <Compile Include="ModelViewing\Links\Private\LinkService.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkLineBounds.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkGroup.cs" />
-    <Compile Include="Utils\UI\IgnoreMouseWheelBehavior.cs" />
+    <Compile Include="ModelViewing\Private\Items\IgnoreMouseWheelBehavior.cs" />
     <Compile Include="ModelViewing\Nodes\INodeService.cs" />
     <Compile Include="ModelViewing\Private\Items\IItemBounds.cs" />
     <Compile Include="ModelViewing\Private\Items\ItemsCanvas.cs" />

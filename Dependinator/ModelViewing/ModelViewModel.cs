@@ -59,29 +59,11 @@ namespace Dependinator.ModelViewing
 			{		
 				modelViewService.InitModules(itemsCanvas);
 
-				LoadViewModel();
-				//Zoom(-120, new Point(1, 1), false);
 				t.Log("Updated view model after cached/fresh");
 			}
 
 			await Task.Yield();
 		}
-
-
-		public void Zoom(double zoom, Point viewPosition)
-		{
-			modelViewService.Zoom(zoom, viewPosition);
-		}
-
-
-		public bool MoveCanvas(Vector viewOffset)
-		{
-			
-			modelViewService.Move(viewOffset);
-			return true;
-		}
-
-
 
 
 		public string FetchErrorText
@@ -174,16 +156,7 @@ namespace Dependinator.ModelViewing
 		}
 
 
-		private void LoadViewModel()
-		{
-			Timing t = new Timing();
-
-			NotifyAll(); ;
-
-			t.Log("Updated repository view model");
-		}
-
-
+	
 
 
 		public int SelectedIndex
