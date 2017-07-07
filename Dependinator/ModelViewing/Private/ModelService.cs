@@ -5,11 +5,11 @@ namespace Dependinator.ModelViewing.Private
 {
 	internal class ModelService : IModelService
 	{
-		private readonly IRootModelService rootModelService;
+		private readonly IModelViewService modelViewService;
 
-		public ModelService(IRootModelService rootModelService)
+		public ModelService(IModelViewService modelViewService)
 		{
-			this.rootModelService = rootModelService;
+			this.modelViewService = modelViewService;
 		}
 
 		public void Move(Node node, Vector viewOffset)
@@ -20,10 +20,10 @@ namespace Dependinator.ModelViewing.Private
 			}
 			else
 			{
-				rootModelService.Move(viewOffset);
+				modelViewService.Move(viewOffset);
 			}
 		}
 
-		public void Zoom(double zoom, Point viewPosition) => rootModelService.Zoom(zoom, viewPosition);
+		public void Zoom(double zoom, Point viewPosition) => modelViewService.Zoom(zoom, viewPosition);
 	}
 }

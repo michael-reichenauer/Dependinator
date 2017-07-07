@@ -12,7 +12,7 @@ using Dependinator.Utils;
 namespace Dependinator.ModelViewing.Private
 {
 	[SingleInstance]
-	internal class RootModelService : IRootModelService
+	internal class ModelViewService : IModelViewService
 	{
 		private readonly WorkingFolder workingFolder;
 		private readonly Dependinator.Modeling.IModelingService modelingService;
@@ -21,7 +21,7 @@ namespace Dependinator.ModelViewing.Private
 
 		private Model currentModel;
 
-		public RootModelService(
+		public ModelViewService(
 			WorkingFolder workingFolder,
 			Dependinator.Modeling.IModelingService modelingService)
 		{

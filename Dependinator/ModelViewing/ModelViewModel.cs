@@ -18,7 +18,7 @@ namespace Dependinator.ModelViewing
 
 		private readonly IThemeService themeService;
 
-		private readonly IRootModelService rootModelService;
+		private readonly IModelViewService modelViewService;
 		private readonly IProgressService progress;
 
 
@@ -30,12 +30,12 @@ namespace Dependinator.ModelViewing
 
 
 		public ModelViewModel(
-			IRootModelService rootModelService,
+			IModelViewService modelViewService,
 			IModelService modelService,
 			IThemeService themeService,
 			IProgressService progressService)
 		{
-			this.rootModelService = rootModelService;
+			this.modelViewService = modelViewService;
 			this.themeService = themeService;
 			this.progress = progressService;
 
@@ -57,7 +57,7 @@ namespace Dependinator.ModelViewing
 
 			using (progress.ShowDialog("Loading branch view ..."))
 			{		
-				rootModelService.InitModules(itemsCanvas);
+				modelViewService.InitModules(itemsCanvas);
 
 				LoadViewModel();
 				//Zoom(-120, new Point(1, 1), false);
@@ -70,14 +70,14 @@ namespace Dependinator.ModelViewing
 
 		public void Zoom(double zoom, Point viewPosition)
 		{
-			rootModelService.Zoom(zoom, viewPosition);
+			modelViewService.Zoom(zoom, viewPosition);
 		}
 
 
 		public bool MoveCanvas(Vector viewOffset)
 		{
 			
-			rootModelService.Move(viewOffset);
+			modelViewService.Move(viewOffset);
 			return true;
 		}
 
@@ -149,7 +149,7 @@ namespace Dependinator.ModelViewing
 		{
 			using (progress.ShowDialog("Refreshing view ..."))
 			{
-				await rootModelService.Refresh(itemsCanvas, refreshLayout);
+				await modelViewService.Refresh(itemsCanvas, refreshLayout);
 			}
 		}
 
@@ -248,7 +248,7 @@ namespace Dependinator.ModelViewing
 
 		public void ClosingWindow()
 		{
-			rootModelService.Close();
+			modelViewService.Close();
 		}
 	}
 }

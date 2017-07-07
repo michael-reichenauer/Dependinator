@@ -197,8 +197,8 @@
     <Compile Include="ModelViewing\Items\ItemViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\Node.cs" />
     <Compile Include="ModelViewing\Items\IItem.cs" />
-    <Compile Include="ModelViewing\IRootModelService.cs" />
-    <Compile Include="ModelViewing\Private\RootModelService.cs" />
+    <Compile Include="ModelViewing\Private\IModelViewService.cs" />
+    <Compile Include="ModelViewing\Private\ModelViewService.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeService.cs" />
     <Compile Include="Modeling\Private\Serializing\Data.cs" />
     <Compile Include="Modeling\Private\Serializing\DataSerializer.cs" />
