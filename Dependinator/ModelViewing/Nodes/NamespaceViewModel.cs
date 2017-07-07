@@ -1,12 +1,12 @@
-using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Private;
+using Dependinator.ModelViewing.Private.Items;
 
 namespace Dependinator.ModelViewing.Nodes
 {
 	internal class NamespaceViewModel : CompositeNodeViewModel
 	{
-		public NamespaceViewModel(IModelService modelService, Node node, ItemsCanvas itemsCanvas)
-			: base(modelService, node, itemsCanvas)
+		public NamespaceViewModel(IItemsService itemsService, Node node, ItemsCanvas itemsCanvas)
+			: base(itemsService, node, itemsCanvas)
 		{
 		}
 	}

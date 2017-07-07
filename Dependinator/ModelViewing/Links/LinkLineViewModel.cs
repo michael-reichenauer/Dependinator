@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
-using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Links.Private;
+using Dependinator.ModelViewing.Private.Items;
 
 
 namespace Dependinator.ModelViewing.Links

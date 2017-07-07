@@ -4,8 +4,8 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.Modeling;
-using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Links;
+using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 
 
@@ -15,7 +15,7 @@ namespace Dependinator.ModelViewing.Nodes
 	{
 		private const int InitialScaleFactor = 7;
 
-		private readonly ModelViewing.Private.IModelService modelService;
+		private readonly IItemsService itemsService;
 		private readonly INodeService nodeService;
 
 		private readonly List<Node> childNodes = new List<Node>();
@@ -31,14 +31,14 @@ namespace Dependinator.ModelViewing.Nodes
 		private int direction = 0;
 
 		public Node(
-			ModelViewing.Private.IModelService modelService,
+			IItemsService itemsService,
 			INodeService nodeService,
 			ILinkService linkService,
 			Node parent,
 			NodeName name,
 			NodeType type)
 		{
-			this.modelService = modelService;
+			this.itemsService = itemsService;
 			this.nodeService = nodeService;
 			ParentNode = parent;
 			NodeName = name;
@@ -558,7 +558,7 @@ namespace Dependinator.ModelViewing.Nodes
 		private void InitNodeTree(ItemsCanvas rootCanvas)
 		{
 			itemsCanvas = rootCanvas;
-			viewModel = new NamespaceViewModel(modelService, this, rootCanvas);
+			viewModel = new NamespaceViewModel(itemsService, this, rootCanvas);
 
 			InitNode();
 		}
@@ -614,11 +614,11 @@ namespace Dependinator.ModelViewing.Nodes
 
 				if (NodeType == NodeType.TypeType)
 				{
-					viewModel = new TypeViewModel(modelService, this, itemsCanvas);
+					viewModel = new TypeViewModel(itemsService, this, itemsCanvas);
 				}
 				else
 				{
-					viewModel = new NamespaceViewModel(modelService, this, itemsCanvas);
+					viewModel = new NamespaceViewModel(itemsService, this, itemsCanvas);
 				}
 			}
 			else

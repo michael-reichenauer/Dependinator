@@ -1,7 +1,6 @@
 using System.Windows;
 
-
-namespace Dependinator.ModelViewing.Items
+namespace Dependinator.ModelViewing.Private.Items
 {
 	internal interface IItemBounds
 	{

@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Private.Items;
 
 namespace Dependinator.ModelViewing.Nodes
 {

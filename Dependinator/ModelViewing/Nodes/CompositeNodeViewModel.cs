@@ -1,6 +1,6 @@
 using System.Windows;
-using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Private;
+using Dependinator.ModelViewing.Private.Items;
 
 
 namespace Dependinator.ModelViewing.Nodes
@@ -10,12 +10,12 @@ namespace Dependinator.ModelViewing.Nodes
 		private readonly Node node;
 
 
-		public CompositeNodeViewModel(IModelService modelService, Node node, ItemsCanvas itemsCanvas)
+		public CompositeNodeViewModel(IItemsService itemsService, Node node, ItemsCanvas itemsCanvas)
 			: base(node)
 		{
 			this.node = node;
 			ItemsCanvas = itemsCanvas;
-			ItemsViewModel = new ItemsViewModel(modelService, node, ItemsCanvas);
+			ItemsViewModel = new ItemsViewModel(itemsService, node, ItemsCanvas);
 		}
 
 

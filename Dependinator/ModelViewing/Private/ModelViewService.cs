@@ -4,8 +4,8 @@ using System.Windows;
 using Dependinator.ApplicationHandling;
 using Dependinator.ApplicationHandling.SettingsHandling;
 using Dependinator.Modeling;
-using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 
 

@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 using System.Windows;
-using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Private.Items;
 
 
 namespace Dependinator.ModelViewing.Private

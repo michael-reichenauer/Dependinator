@@ -10,7 +10,7 @@ using System.Windows.Threading;
 using Dependinator.Utils;
 using Dependinator.Utils.UI.VirtualCanvas;
 
-namespace Dependinator.ModelViewing
+namespace Dependinator.ModelViewing.Private.Items
 {
 	/// <summary>
 	/// Interaction logic for ItemsView.xaml

@@ -1,13 +1,13 @@
 using System.Windows;
 using Dependinator.ModelViewing.Nodes;
 
-namespace Dependinator.ModelViewing.Private
+namespace Dependinator.ModelViewing.Private.Items
 {
-	internal class ModelService : IModelService
+	internal class ItemsService : IItemsService
 	{
 		private readonly IModelViewService modelViewService;
 
-		public ModelService(IModelViewService modelViewService)
+		public ItemsService(IModelViewService modelViewService)
 		{
 			this.modelViewService = modelViewService;
 		}

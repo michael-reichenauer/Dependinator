@@ -4,8 +4,8 @@ using System.Windows;
 using System.Windows.Threading;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
-using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Private;
+using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 
@@ -31,7 +31,7 @@ namespace Dependinator.ModelViewing
 
 		public ModelViewModel(
 			IModelViewService modelViewService,
-			IModelService modelService,
+			IItemsService itemsService,
 			IThemeService themeService,
 			IProgressService progressService)
 		{
@@ -42,7 +42,7 @@ namespace Dependinator.ModelViewing
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
 
-			ItemsViewModel = new ItemsViewModel(modelService, null, itemsCanvas);
+			ItemsViewModel = new ItemsViewModel(itemsService, null, itemsCanvas);
 		}
 
 

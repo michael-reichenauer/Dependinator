@@ -1,9 +1,9 @@
 using System.Windows;
 using Dependinator.ModelViewing.Nodes;
 
-namespace Dependinator.ModelViewing.Private
+namespace Dependinator.ModelViewing.Private.Items
 {
-	internal interface IModelService
+	internal interface IItemsService
 	{
 		void Move(Node node, Vector viewOffset);
 

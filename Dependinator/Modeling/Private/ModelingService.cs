@@ -7,13 +7,14 @@ using Dependinator.Modeling.Private.Serializing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private;
+using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 
 namespace Dependinator.Modeling.Private
 {
 	internal class ModelingService : IModelingService
 	{
-		private readonly Lazy<IModelService> modelService;
+		private readonly Lazy<IItemsService> modelService;
 		private readonly INodeService nodeService;
 		private readonly ILinkService linkService;
 		private readonly IReflectionService reflectionService;
@@ -21,7 +22,7 @@ namespace Dependinator.Modeling.Private
 
 
 		public ModelingService(
-			Lazy<IModelService> modelService,
+			Lazy<IItemsService> modelService,
 			INodeService nodeService,
 			ILinkService linkService,
 			IReflectionService reflectionService,
