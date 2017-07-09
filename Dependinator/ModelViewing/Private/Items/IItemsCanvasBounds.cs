@@ -2,7 +2,7 @@ using System.Windows;
 
 namespace Dependinator.ModelViewing.Private.Items
 {
-	internal interface IItemBounds
+	internal interface IItemsCanvasBounds
 	{
 		Rect NodeBounds { get; }
 	}

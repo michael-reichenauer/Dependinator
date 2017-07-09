@@ -21,18 +21,18 @@ namespace Dependinator.ModelViewing.Private.Items
 		}
 
 		public bool IsRoot => node == null;
-
+		public IItemsCanvas ItemsCanvas => itemsCanvas;
 
 		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
-			itemsCanvas.SetCanvas(zoomableCanvas);
+			itemsCanvas.SetZoomableCanvas(zoomableCanvas);
 		}
 
 
 		public void MoveCanvas(Vector viewOffset) => itemsService.Move(node, viewOffset);
 
 
-		public void SizeChanged() => itemsCanvas.TriggerExtentChanged();
+		public void SizeChanged() => itemsCanvas.SizeChanged();
 
 		public void ZoomRoot(double zoom, Point viewPosition) => itemsService.Zoom(zoom, viewPosition);
 

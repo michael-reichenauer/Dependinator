@@ -116,6 +116,8 @@
     </Compile>
     <Compile Include="ModelViewing\Nodes\TypeViewModel.cs" />
     <Compile Include="ModelViewing\Private\Items\IItemsService.cs" />
+    <Compile Include="ModelViewing\Private\Items\Private\IItemsCanvas.cs" />
+    <Compile Include="ModelViewing\Private\Items\Private\IItemsSourceArea.cs" />
     <Compile Include="ModelViewing\Private\Items\Private\ItemsService.cs" />
     <Compile Include="Utils\With.cs" />
     <Page Include="App.xaml">
@@ -167,7 +169,7 @@
     <Compile Include="ModelViewing\Links\Private\LinkGroup.cs" />
     <Compile Include="ModelViewing\Private\Items\Private\IgnoreMouseWheelBehavior.cs" />
     <Compile Include="ModelViewing\Nodes\INodeService.cs" />
-    <Compile Include="ModelViewing\Private\Items\IItemBounds.cs" />
+    <Compile Include="ModelViewing\Private\Items\IItemsCanvasBounds.cs" />
     <Compile Include="ModelViewing\Private\Items\Private\ItemsCanvas.cs" />
     <Compile Include="Modeling\Private\Analyzing\Private\ReflectionService.cs" />
     <Compile Include="ModelViewing\Nodes\MemberNodeView.xaml.cs">

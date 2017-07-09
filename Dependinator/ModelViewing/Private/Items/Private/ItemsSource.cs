@@ -8,7 +8,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 {
 	internal class ItemsSource : VirtualItemsSource
 	{
-		private readonly ItemsCanvas itemsCanvas;
+		private readonly IItemsSourceArea itemsSourceArea;
 		private readonly PriorityQuadTree<IItem> viewItemsTree = new PriorityQuadTree<IItem>();
 
 		private readonly Dictionary<int, IItem> viewItems = new Dictionary<int, IItem>();
@@ -20,11 +20,11 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 
 		public Rect LastViewAreaQuery { get; private set; } = EmptyExtent;
-		
 
-		public ItemsSource(ItemsCanvas itemsCanvas)
+
+		public ItemsSource(IItemsSourceArea itemsSourceArea)
 		{
-			this.itemsCanvas = itemsCanvas;
+			this.itemsSourceArea = itemsSourceArea;
 		}
 
 		public Rect TotalBounds { get; private set; } = EmptyExtent;
@@ -157,7 +157,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 				//Log.Debug($"Updated {id} count:{viewItemsTree.Count()}");
 
 				if (oldItemBounds.IntersectsWith(LastViewAreaQuery)
-				    || newItemBounds.IntersectsWith(LastViewAreaQuery))
+						|| newItemBounds.IntersectsWith(LastViewAreaQuery))
 				{
 					isTriggerItemsChanged = true;
 				}
@@ -263,7 +263,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		}
 
 
-		public void Clear()
+		public void RemoveAll()
 		{
 			viewItemsTree.Clear();
 			TriggerInvalidated();
@@ -308,26 +308,17 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		protected override IEnumerable<int> GetItemIds(Rect viewArea)
 		{
 			//Inflate is Enabled in Zoomable line 1369
-	
+
 			if (viewArea == Rect.Empty)
 			{
 				return Enumerable.Empty<int>();
 			}
 
-			
-			if (!itemsCanvas.IsRoot)
+			if (!itemsSourceArea.IsRoot)
 			{
-				Rect ancestorsViewArea = itemsCanvas.GetVisualAncestorsArea();
-
-				//if (itemsCanvas.ToString() == "Server")
-				//{
-				//	Log.Warn($"{itemsCanvas}: ViewArea {viewArea.TS()}, Parent {scaledParentViewArea.TS()}");
-				//}
+				// Adjust view area to compensate for ancestors
+				Rect ancestorsViewArea = itemsSourceArea.GetHierarchicalVisualArea();
 				viewArea.Intersect(ancestorsViewArea);
-				//if (itemsCanvas.ToString() == "Server")
-				//{
-				//	Log.Warn($"{itemsCanvas}: ViewArea {viewArea.TS()}, Parent {scaledParentViewArea.TS()}");
-				//}
 
 				if (viewArea == Rect.Empty)
 				{
@@ -335,15 +326,15 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 				}
 			}
 
-
+			// For smother panning, include an area that is a little a little larger than current view
 			viewArea.Inflate(viewArea.Width / 10, viewArea.Height / 10);
+
 			LastViewAreaQuery = viewArea;
 
 			IEnumerable<int> itemIds = viewItemsTree.GetItemsIntersecting(viewArea)
 				.Where(i => i.ItemState != null && i.CanShow)
 				.Select(i => ((ViewItem)i.ItemState).ItemId);
 
-			//Log.Debug($"Id: {id}, Count: {itemIds.Count()}");
 			return itemIds;
 		}
 
@@ -376,7 +367,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 			public int ItemId { get; }
 
-			public Rect ItemBounds { get;}
+			public Rect ItemBounds { get; }
 
 			public IItem Node { get; }
 		}
