@@ -10,8 +10,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		private readonly IItemBounds itemBounds;
 
 		private readonly ItemsSource itemsSource;
-		private ItemsView view;
-		//private Vector relative = new Vector(0, 0);
+
 
 		private ZoomableCanvas zoomableCanvas;
 		private double scale = 1.0;
@@ -135,10 +134,8 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 
 
-		public void SetCanvas(ZoomableCanvas canvas, ItemsView itemsView)
+		public void SetCanvas(ZoomableCanvas canvas)
 		{
-			view = itemsView;
-
 			if (zoomableCanvas != null)
 			{
 				// New canvas replacing previous canvas

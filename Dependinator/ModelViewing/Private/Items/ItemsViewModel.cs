@@ -23,9 +23,9 @@ namespace Dependinator.ModelViewing.Private.Items
 		public bool IsRoot => node == null;
 
 
-		public void SetCanvas(ZoomableCanvas zoomableCanvas, ItemsView itemsView)
+		public void SetCanvas(ZoomableCanvas zoomableCanvas)
 		{
-			itemsCanvas.SetCanvas(zoomableCanvas, itemsView);
+			itemsCanvas.SetCanvas(zoomableCanvas);
 		}
 
 

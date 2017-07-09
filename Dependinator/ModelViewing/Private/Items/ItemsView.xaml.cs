@@ -48,11 +48,7 @@ namespace Dependinator.ModelViewing.Private.Items
 		private void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
 		{
 			viewModel = (ItemsViewModel)DataContext;
-			if (viewModel != null)
-			{
-				viewModel.SetCanvas((ZoomableCanvas)sender, this);
-
-			}
+			viewModel?.SetCanvas((ZoomableCanvas)sender);
 		}
 
 
