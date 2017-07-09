@@ -347,82 +347,112 @@ namespace Dependinator.ModelViewing.Links.Private
 			Rect sourceBounds = source.NodeBounds;
 			Rect targetBounds = target.NodeBounds;
 
-			// We start by assuming source and target nodes are siblings, 
-			// I.e. line starts at source middle bottom and ends at target middle top
-			double x1 = sourceBounds.X + sourceBounds.Width / 2;
-			double y1 = sourceBounds.Y + sourceBounds.Height;
-			double x2 = targetBounds.X + targetBounds.Width / 2;
-			double y2 = targetBounds.Y;
-
-			if (source.ParentNode == target)
+		
+			if (source.ParentNode == target.ParentNode)
 			{
-				// The target is a parent of the source, i.e. line ends at the bottom of the target node
-				x2 = (targetBounds.Width / 2) * target.ItemsScaleFactor
-				     + target.ItemsOffset.X / target.ItemsScale;
-				y2 = (targetBounds.Height) * target.ItemsScaleFactor
-				     + (target.ItemsOffset.Y) / target.ItemsScale;
+				// Source and target nodes are siblings, 
+				// ie. line starts at source middle bottom and ends at target middle top
+				double x1 = sourceBounds.X + sourceBounds.Width / 2;
+				double y1 = sourceBounds.Y + sourceBounds.Height;
+				Point sp = new Point(x1, y1);
+
+				double x2 = targetBounds.X + targetBounds.Width / 2;
+				double y2 = targetBounds.Y;
+				Point tp = new Point(x2, y2);
+
+				return (sp, tp);
+			}
+			else if (source.ParentNode == target)
+			{
+				// The target is a parent of the source,
+				// i.e. line ends at the bottom of the target node
+				double x1 = sourceBounds.X + sourceBounds.Width / 2;
+				double y1 = sourceBounds.Y + sourceBounds.Height;
+				Point sp = new Point(x1, y1);
+
+				double x2 = targetBounds.X + targetBounds.Width / 2;
+				double y2 = targetBounds.Y + targetBounds.Height;
+				Point tp = ParentPointToChildPoint(target, new Point(x2, y2));
+
+				return (sp, tp);
 			}
 			else if (source == target.ParentNode)
 			{
-				// The target is the child of the source, i.e. line start at the top of the source
-				x1 = (sourceBounds.Width / 2) * source.ItemsScaleFactor
-				     + source.ItemsOffset.X / source.ItemsScale;
-				y1 = (source.ItemsOffset.Y) / source.ItemsScale;
+				// The target is the child of the source,
+				// i.e. line start at the top of the source
+				double x1 = sourceBounds.X + sourceBounds.Width / 2;
+				double y1 = sourceBounds.Y;
+				Point sp = ParentPointToChildPoint(source, new Point(x1, y1));
+
+				double x2 = targetBounds.X + targetBounds.Width / 2;
+				double y2 = targetBounds.Y;
+				Point tp = new Point(x2, y2);
+
+				return (sp, tp);
 			}
-			else if (source.ParentNode != target.ParentNode)
+			else
 			{
-				Point sp;
-				Point tp;
+				// The line is between nodes, which are not within same node
 				if (source == line.Owner)
 				{
-					x1 = (sourceBounds.Width / 2) * source.ItemsScaleFactor
-					     + source.ItemsOffset.X / source.ItemsScale;
-					y1 = (source.ItemsOffset.Y) / source.ItemsScale;
-					sp = new Point(x1, y1);
-					tp = GetPointInAncestorPoint(line, x2, y2, target);
+					double x1 = sourceBounds.X + sourceBounds.Width / 2;
+					double y1 = sourceBounds.Y;
+					Point sp = ParentPointToChildPoint(source, new Point(x1, y1));
+
+					double x2 = targetBounds.X + targetBounds.Width / 2;
+					double y2 = targetBounds.Y;
+					Point tp = DescendentPointToAncestorPoint(target, line.Owner, new Point(x2, y2));
+
+					return (sp, tp);
 				}
 				else if (target == line.Owner)
 				{
-					x2 = (targetBounds.Width / 2) * target.ItemsScaleFactor
-					     + target.ItemsOffset.X / target.ItemsScale;
-					y2 = (targetBounds.Height) * target.ItemsScaleFactor
-					     + (target.ItemsOffset.Y) / target.ItemsScale;
-					tp = new Point(x2, y2);
-					sp = GetPointInAncestorPoint(line, x1, y1, target);
+					double x1 = sourceBounds.X + sourceBounds.Width / 2;
+					double y1 = sourceBounds.Y + sourceBounds.Height;
+					Point sp = DescendentPointToAncestorPoint(target, line.Owner, new Point(x1, y1));
+
+					double x2 = targetBounds.X + targetBounds.Width / 2;
+					double y2 = targetBounds.Y + targetBounds.Height;
+					Point tp = ParentPointToChildPoint(target, new Point(x2, y2));
+
+					return (sp, tp);
 				}
 				else
 				{
 					// Nodes are not direct siblings, need to use the common ancestor (owner)
-					sp = GetPointInAncestorPoint(line, x1, y1, source);
-					tp = GetPointInAncestorPoint(line, x2, y2, target);
-				}
-				
-				
-				x1 = sp.X;
-				y1 = sp.Y;
-				x2 = tp.X;
-				y2 = tp.Y;
-			}
+					double x1 = sourceBounds.X + sourceBounds.Width / 2;
+					double y1 = sourceBounds.Y + sourceBounds.Height;
+					Point sp = DescendentPointToAncestorPoint(source, line.Owner, new Point(x1, y1));
 
-			return (new Point(x1, y1), new Point(x2, y2));
+					double x2 = targetBounds.X + targetBounds.Width / 2;
+					double y2 = targetBounds.Y;
+					Point tp = DescendentPointToAncestorPoint(target, line.Owner, new Point(x2, y2));
+
+					return (sp, tp);
+				}
+			}
 		}
 
 
-		private static Point GetPointInAncestorPoint(LinkLine line, double x, double y, Node node)
+		private static Point DescendentPointToAncestorPoint(Node descendent, Node ancestor, Point point)
 		{
-			Point point = new Point(x, y);
-
-			foreach (Node ancestor in node.Ancestors())
+			foreach (Node node in descendent.Ancestors())
 			{
-				if (ancestor == line.Owner)
+				if (node == ancestor)
 				{
 					break;
 				}
 
-				point = ancestor.GetChildToParentCanvasPoint(point);				
+				point = node.ChildCanvasPointToParentCanvasPoint(point);				
 			}
 			
 			return point;
+		}
+
+
+		private static Point ParentPointToChildPoint(Node parent, Point point)
+		{
+			return parent.ParentCanvasPointToChildCanvasPoint(point);
 		}
 
 

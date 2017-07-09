@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Links;
@@ -84,30 +85,38 @@ namespace Dependinator.ModelViewing.Nodes
 		public double? PersistentScale { get; set; }
 		public Point? PersistentOffset { get; set; }
 
-		public Point GetChildToParentCanvasPoint(Point childPoint) =>
-			itemsCanvas.GetChildToParentCanvasPoint(childPoint);
+		public Point ChildCanvasPointToParentCanvasPoint(Point point) =>
+			itemsCanvas.ChildCanvasPointToParentCanvasPoint(point);
+
+		public Point ParentCanvasPointToChildCanvasPoint(Point point) =>
+			itemsCanvas.ParentCanvasPointToChildCanvasPoint(point);
+
 
 		private static bool IsVisibleAtScale(double scale) => scale > 0.15;
 
 		public string DebugToolTip => ItemsToolTip;
 
+		//public Point ToDevicePoint(Point canvasPoint) => itemsCanvas.CanvasToDevicePoint(canvasPoint);
+
+		//public Point ToCanvasPoint(Point devicePoint) => itemsCanvas.DeviceToCanvasPoint(devicePoint);
 
 		public string ItemsToolTip =>
 			$"\nChildren: {ChildNodes.Count}, Lines: {Links.OwnedLines.Count}\n" +
 			$"Total Nodes: {CountShowingNodes()}, Lines: {CountShowingLines()}\n" +
-			$"Node Scale: {NodeScale:0.00}, Items Scale: {ItemsScale:0.00}, (Factor: {ItemsScaleFactor:0.00})\n";
-
-		public string ZoomToolTip =>
-			$"\n Children: {ChildNodes.Count} Shown Items: {CountShowingNodes()}\n" +
-			$"Items Scale: {ItemsScale:0.00}, Scalefactor: {ItemsScaleFactor:0.00}\n" +
-			$"Offset: {ItemsOffset.TS()}, CanvasOffset: {ItemsCanvasOffset.TS()}\n" +
-			$"Rect: {NodeBounds.TS()}\n" +
-			$"Pos in parent coord: {ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location).TS()}\n" +
-			$"Pos in child coord: {ParentNode?.itemsCanvas?.GetParentToChildCanvasPoint(ParentNode?.itemsCanvas?.GetChildToParentCanvasPoint(NodeBounds.Location) ?? new Point(0, 0)).TS()}\n" +
-			$"Pos in mainwindow coord: {itemsCanvas?.GetDevicePoint().TS()}\n" +
-			$"Visual area {itemsCanvas?.ViewArea.TS()}\n" +
-			$"Recursive viewArea {itemsCanvas?.GetVisualAncestorsArea().TS()}\n\n" +
-			$"Parent {ParentNode?.NodeName}:{ParentNode?.DebugToolTip}";
+			$"Node Scale: {NodeScale:0.00}, Items Scale: {ItemsScale:0.00}, (Factor: {ItemsScaleFactor:0.00})\n" +
+			$"Rect: {NodeBounds.TS()}, Mouse Canvas {itemsCanvas.GetMouseCanvasPoint().TS()}\n";
+	
+		//public string ZoomToolTip =>
+		//	$"\n Children: {ChildNodes.Count} Shown Items: {CountShowingNodes()}\n" +
+		//	$"Items Scale: {ItemsScale:0.00}, Scalefactor: {ItemsScaleFactor:0.00}\n" +
+		//	$"Offset: {ItemsOffset.TS()}, CanvasOffset: {ItemsCanvasOffset.TS()}\n" +
+		//	$"Rect: {NodeBounds.TS()}\n" +
+		//	$"Pos in parent coord: {ParentNode?.itemsCanvas?.ChildCanvasPointToParentCanvasPoint(NodeBounds.Location).TS()}\n" +
+		//	$"Pos in child coord: {ParentNode?.itemsCanvas?.ParentCanvasPointToChildCanvasPoint(ParentNode?.itemsCanvas?.ChildCanvasPointToParentCanvasPoint(NodeBounds.Location) ?? new Point(0, 0)).TS()}\n" +
+		//	$"Pos in mainwindow coord: {itemsCanvas?.GetDevicePoint().TS()}\n" +
+		//	$"Visual area {itemsCanvas?.ViewArea.TS()}\n" +
+		//	$"Recursive viewArea {itemsCanvas?.GetVisualAncestorsArea().TS()}\n\n" +
+		//	$"Parent {ParentNode?.NodeName}:{ParentNode?.DebugToolTip}";
 
 
 		public Node RootNode { get; }

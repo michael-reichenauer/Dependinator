@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Input;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 namespace Dependinator.ModelViewing.Private.Items
@@ -25,9 +26,9 @@ namespace Dependinator.ModelViewing.Private.Items
 		}
 
 
-		public Rect ItemBounds => itemBounds?.NodeBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
-		public ItemsCanvas ParentItemsCanvas { get; }
-
+		private Rect ItemBounds => itemBounds?.NodeBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
+		private ItemsCanvas ParentItemsCanvas { get; }
+		public bool IsRoot => ParentItemsCanvas == null;
 
 		public double ScaleFactor { get; private set; } = 1.0;
 
@@ -71,7 +72,7 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		public void UpdateScale()
 		{
-			if (ParentItemsCanvas != null)
+			if (!IsRoot)
 			{
 				double newScale = ParentItemsCanvas.Scale / ScaleFactor;
 				double zoom = newScale / Scale;
@@ -81,24 +82,17 @@ namespace Dependinator.ModelViewing.Private.Items
 		}
 
 
-		public Point GetChildToParentCanvasPoint(Point childCanvasPoint)
+		public Point ChildCanvasPointToParentCanvasPoint(Point childCanvasPoint)
 		{
-			if (ParentItemsCanvas != null)
+			if (!IsRoot)
 			{
-				// Compensate the canvas view for the nodes vew position relative nodes border 
-				//Point compensatedPoint = childCanvasPoint - relative;
-				Point compensatedPoint = childCanvasPoint;
-
 				Vector vector = (Vector)Offset / Scale;
-
-				Point childPoint = compensatedPoint - vector;
+				Point childPoint = childCanvasPoint - vector;
 
 				// Point within the parent node
-				//Point parentPoint = new Point(childPoint.X / ScaleFactor, childPoint.Y / ScaleFactor);
 				Vector parentPoint = (Vector)childPoint / ScaleFactor;
 
 				// point in parent canvas scale
-				//Point childToParentCanvasPoint = new Point(ItemBounds.X + parentPoint.X, ItemBounds.Y + parentPoint.Y);
 				Point childToParentCanvasPoint = ItemBounds.Location + parentPoint;
 				return childToParentCanvasPoint;
 			}
@@ -108,17 +102,16 @@ namespace Dependinator.ModelViewing.Private.Items
 			}
 		}
 
-		public Point GetParentToChildCanvasPoint(Point parentCanvasPoint)
+
+		public Point ParentCanvasPointToChildCanvasPoint(Point parentCanvasPoint)
 		{
-			if (ParentItemsCanvas != null && zoomableCanvas != null)
+			if (!IsRoot)
 			{
 				Point relativeParentPoint = parentCanvasPoint - (Vector)ItemBounds.Location;
 
 				// Point within the parent node
-				//Point parentChildPoint = new Point(relativeParentPoint.X * ScaleFactor, relativeParentPoint.Y * ScaleFactor);
 				Point parentChildPoint = (Point)((Vector)relativeParentPoint * ScaleFactor);
 
-				//Point compensatedPoint = parentChildPoint + relative;
 				Point compensatedPoint = parentChildPoint;
 
 				Vector vector = (Vector)Offset / Scale;
@@ -133,10 +126,11 @@ namespace Dependinator.ModelViewing.Private.Items
 			}
 		}
 
-
-		public Point GetDevicePoint()
+		
+		public Point GetMouseCanvasPoint()
 		{
-			return view.TranslatePoint(new Point(0, 0), Application.Current.MainWindow);
+			var position = Mouse.GetPosition(zoomableCanvas);
+			return zoomableCanvas.GetCanvasPoint(position);
 		}
 
 
@@ -215,10 +209,10 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		public Rect GetVisualAncestorsArea()
 		{
-			if (ParentItemsCanvas != null)
+			if (!IsRoot)
 			{
 				Rect parentArea = ParentItemsCanvas.GetVisualAncestorsArea();
-				Point p1 = GetParentToChildCanvasPoint(parentArea.Location);
+				Point p1 = ParentCanvasPointToChildCanvasPoint(parentArea.Location);
 				Size s1 = (Size)((Vector)parentArea.Size * ScaleFactor);
 				Rect scaledParentViewArea = new Rect(p1, s1);
 				Rect viewArea = GetItemsCanvasViewArea();

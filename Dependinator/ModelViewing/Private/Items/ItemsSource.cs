@@ -315,7 +315,7 @@ namespace Dependinator.ModelViewing.Private.Items
 			}
 
 			
-			if (itemsCanvas.ParentItemsCanvas != null)
+			if (!itemsCanvas.IsRoot)
 			{
 				Rect ancestorsViewArea = itemsCanvas.GetVisualAncestorsArea();
 
