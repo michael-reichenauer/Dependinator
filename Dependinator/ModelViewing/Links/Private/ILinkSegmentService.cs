@@ -15,34 +15,34 @@ namespace Dependinator.ModelViewing.Links.Private
 
 
 		LinkSegment GetZoomedInSegment(
-			IReadOnlyList<LinkSegment> replacedSegments, Link link);
+			IReadOnlyList<LinkSegment> replacedSegments, LinkOld link);
 
 
 		IReadOnlyList<LinkSegment> GetZoomedInReplacedSegments(
 			IEnumerable<LinkSegment> linkSegments,
-			Node source,
-			Node target);
+			NodeOld source,
+			NodeOld target);
 
 
 		IReadOnlyList<LinkSegment> GetZoomedOutReplacedSegments(
 			IReadOnlyList<LinkSegment> normalSegments,
 			IReadOnlyList<LinkSegment> currentSegments,
-			Node source,
-			Node target);
+			NodeOld source,
+			NodeOld target);
 
 
-		IReadOnlyList<LinkSegment> GetNormalLinkSegments(Link link);
+		IReadOnlyList<LinkSegment> GetNormalLinkSegments(LinkOld link);
 
 
 		IReadOnlyList<LinkSegment> GetZoomedInBeforeReplacedSegments(
 			IEnumerable<LinkSegment> linkSegments,
-			Node source,
-			Node target);
+			NodeOld source,
+			NodeOld target);
 
 
 		IReadOnlyList<LinkSegment> GetZoomedInAfterReplacedSegments(
 			IEnumerable<LinkSegment> linkSegments,
-			Node source,
-			Node target);
+			NodeOld source,
+			NodeOld target);
 	}
 }

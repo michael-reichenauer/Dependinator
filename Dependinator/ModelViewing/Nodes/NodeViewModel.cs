@@ -10,9 +10,9 @@ namespace Dependinator.ModelViewing.Nodes
 	internal class NodeViewModel : ItemViewModel
 	{
 		private Point lastMousePosition;
-		private readonly Node node;
+		private readonly NodeOld node;
 
-		protected NodeViewModel(Node node)
+		protected NodeViewModel(NodeOld node)
 		{
 			this.node = node;
 		}

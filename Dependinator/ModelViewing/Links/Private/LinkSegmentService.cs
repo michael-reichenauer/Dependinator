@@ -8,19 +8,19 @@ namespace Dependinator.ModelViewing.Links.Private
 	{
 
 
-		public IReadOnlyList<LinkSegment> GetNormalLinkSegments(Link link)
+		public IReadOnlyList<LinkSegment> GetNormalLinkSegments(LinkOld link)
 		{
 			List<LinkSegment> segments = new List<LinkSegment>();
 
 			// Start with first line at the start of the segmented line 
-			Node segmentSource = link.Source;
+			NodeOld segmentSource = link.Source;
 
 			// Iterate segments until line end is reached
 			while (segmentSource != link.Target)
 			{
 				// Try to assume next line target is a child node by searching if line source
 				// is a ancestor of end target node
-				Node segmentTarget = link.Target.AncestorsAndSelf()
+				NodeOld segmentTarget = link.Target.AncestorsAndSelf()
 					.FirstOrDefault(ancestor => ancestor.ParentNode == segmentSource);
 
 				if (segmentTarget == null)
@@ -37,7 +37,7 @@ namespace Dependinator.ModelViewing.Links.Private
 					segmentTarget = segmentSource.ParentNode;
 				}
 
-				Node segmentOwner = segmentSource == segmentTarget.ParentNode ? segmentSource : segmentSource.ParentNode;
+				NodeOld segmentOwner = segmentSource == segmentTarget.ParentNode ? segmentSource : segmentSource.ParentNode;
 				LinkSegment segment = new LinkSegment(segmentSource, segmentTarget, segmentOwner, link);
 
 				segments.Add(segment);
@@ -73,8 +73,8 @@ namespace Dependinator.ModelViewing.Links.Private
 			IReadOnlyList<LinkSegment> linkSegments,
 			IReadOnlyList<LinkSegment> newSegments)
 		{
-			Node source = newSegments.First().Source;
-			Node target = newSegments.Last().Target;
+			NodeOld source = newSegments.First().Source;
+			NodeOld target = newSegments.Last().Target;
 
 			// Get the segments that are before the new segment
 			IEnumerable<LinkSegment> preSegments = linkSegments
@@ -93,12 +93,12 @@ namespace Dependinator.ModelViewing.Links.Private
 
 
 		public LinkSegment GetZoomedInSegment(
-			IReadOnlyList<LinkSegment> replacedSegments, Link link)
+			IReadOnlyList<LinkSegment> replacedSegments, LinkOld link)
 		{
-			Node source = replacedSegments.First().Source;
-			Node target = replacedSegments.Last().Target;
+			NodeOld source = replacedSegments.First().Source;
+			NodeOld target = replacedSegments.Last().Target;
 
-			Node segmentOwner = source.AncestorsAndSelf()
+			NodeOld segmentOwner = source.AncestorsAndSelf()
 				.First(node => target.AncestorsAndSelf().Contains(node));
 
 			return new LinkSegment(source, target, segmentOwner, link);
@@ -108,8 +108,8 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		public IReadOnlyList<LinkSegment> GetZoomedInReplacedSegments(
 			IEnumerable<LinkSegment> linkSegments,
-			Node source,
-			Node target)
+			NodeOld source,
+			NodeOld target)
 		{
 			// Get the segments that are one before the line and one after the line
 			return linkSegments
@@ -121,8 +121,8 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		public IReadOnlyList<LinkSegment> GetZoomedInBeforeReplacedSegments(
 			IEnumerable<LinkSegment> linkSegments,
-			Node source,
-			Node target)
+			NodeOld source,
+			NodeOld target)
 		{
 			// Get the segments that are one before the line
 			return linkSegments
@@ -135,8 +135,8 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		public IReadOnlyList<LinkSegment> GetZoomedInAfterReplacedSegments(
 			IEnumerable<LinkSegment> linkSegments,
-			Node source,
-			Node target)
+			NodeOld source,
+			NodeOld target)
 		{
 			// Get the segments that are one after the line
 			return linkSegments
@@ -149,8 +149,8 @@ namespace Dependinator.ModelViewing.Links.Private
 		public IReadOnlyList<LinkSegment> GetZoomedOutReplacedSegments(
 			IReadOnlyList<LinkSegment> normalSegments,
 			IReadOnlyList<LinkSegment> currentSegments,
-			Node source,
-			Node target)
+			NodeOld source,
+			NodeOld target)
 		{
 			int index1 = normalSegments.TakeWhile(s => s.Source != source).Count();
 			int a1 = 0;
@@ -189,8 +189,8 @@ namespace Dependinator.ModelViewing.Links.Private
 		public IReadOnlyList<LinkSegment> GetZoomedOutBeforeReplacedSegments(
 			IReadOnlyList<LinkSegment> normalSegments,
 			IReadOnlyList<LinkSegment> currentSegments,
-			Node source,
-			Node target)
+			NodeOld source,
+			NodeOld target)
 		{
 			int index1 = normalSegments.TakeWhile(s => s.Source != source).Count() + 1;
 			int a1 = 0;

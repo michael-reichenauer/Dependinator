@@ -45,7 +45,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		public void SetChildrenLayout(Node parent)
+		public void SetChildrenLayout(NodeOld parent)
 		{
 			int rowLength = 6;
 
@@ -57,7 +57,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			int count = 0;
 			var children = parent.ChildNodes.OrderBy(child => child, NodeComparer.Comparer(parent));
 
-			foreach (Node childNode in children)
+			foreach (NodeOld childNode in children)
 			{
 				Size size;
 				Point location;

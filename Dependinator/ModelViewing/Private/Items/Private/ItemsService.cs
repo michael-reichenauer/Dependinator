@@ -12,7 +12,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 			this.modelViewService = modelViewService;
 		}
 
-		public void Move(Node node, Vector viewOffset)
+		public void Move(NodeOld node, Vector viewOffset)
 		{
 			if (node != null)
 			{

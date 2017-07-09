@@ -5,7 +5,7 @@ namespace Dependinator.ModelViewing.Nodes
 {
 	internal class NamespaceViewModel : CompositeNodeViewModel
 	{
-		public NamespaceViewModel(IItemsService itemsService, Node node, IItemsCanvas itemsCanvas)
+		public NamespaceViewModel(IItemsService itemsService, NodeOld node, IItemsCanvas itemsCanvas)
 			: base(itemsService, node, itemsCanvas)
 		{
 		}

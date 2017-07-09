@@ -7,10 +7,10 @@ namespace Dependinator.ModelViewing.Nodes
 {
 	internal class CompositeNodeViewModel : NodeViewModel
 	{
-		private readonly Node node;
+		private readonly NodeOld node;
 
 
-		public CompositeNodeViewModel(IItemsService itemsService, Node node, IItemsCanvas itemsCanvas)
+		public CompositeNodeViewModel(IItemsService itemsService, NodeOld node, IItemsCanvas itemsCanvas)
 			: base(node)
 		{
 			this.node = node;

@@ -5,13 +5,13 @@ namespace Dependinator.ModelViewing.Nodes.Private
 {
 	internal class NodeComparer
 	{
-		public static IComparer<Node> Comparer(Node parent)
+		public static IComparer<NodeOld> Comparer(NodeOld parent)
 		{
-			return Compare.With<Node>((n1, n2) => CompareNodes(parent, n1, n2));
+			return Compare.With<NodeOld>((n1, n2) => CompareNodes(parent, n1, n2));
 		}
 
 
-		private static int CompareNodes(Node parent, Node e1, Node e2)
+		private static int CompareNodes(NodeOld parent, NodeOld e1, NodeOld e2)
 		{
 			//Link e1ToE2 = parent.Links
 			//	.FirstOrDefault(r => r.Source == e1 && r.Target == e2);

@@ -11,11 +11,11 @@ namespace Dependinator.ModelViewing.Links
 		IReadOnlyList<LinkGroup> GetLinkGroups(LinkLine line);
 		double GetLineThickness(LinkLine linkLine);
 	
-		void AddLinkLines(Link link);
+		void AddLinkLines(LinkOld link);
 		//void ZoomInLinkLine(LinkLine linkLine);
-		void ZoomInLinkLine(LinkLine line, Node node);
+		void ZoomInLinkLine(LinkLine line, NodeOld node);
 		//void ZoomOutLinkLine(LinkLine linkLine);
-		void ZoomOutLinkLine(LinkLine line, Node node);
+		void ZoomOutLinkLine(LinkLine line, NodeOld node);
 		void CloseLine(LinkLine linkLine);
 	}
 }

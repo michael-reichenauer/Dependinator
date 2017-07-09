@@ -4,7 +4,7 @@ namespace Dependinator.ModelViewing.Links.Private
 {
 	internal class LinkSegment
 	{
-		public LinkSegment(Node source, Node target, Node owner, Link link)
+		public LinkSegment(NodeOld source, NodeOld target, NodeOld owner, LinkOld link)
 		{
 			Source = source;
 			Target = target;
@@ -13,10 +13,10 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		public Node Source { get; }
-		public Node Target { get; }
-		public Node Owner { get; }
-		public Link Link { get; }
+		public NodeOld Source { get; }
+		public NodeOld Target { get; }
+		public NodeOld Owner { get; }
+		public LinkOld Link { get; }
 
 		public override string ToString() => $"{Source}->{Target} (owner: {Owner}) ({Link})";
 	}

@@ -11,8 +11,8 @@ namespace Dependinator.ModelViewing.Links
 	internal class LinkLine : Equatable<LinkLine>
 	{
 		private readonly ILinkService linkService;
-		private readonly List<Link> links = new List<Link>();
-		private readonly List<Link> hiddenLinks = new List<Link>();
+		private readonly List<LinkOld> links = new List<LinkOld>();
+		private readonly List<LinkOld> hiddenLinks = new List<LinkOld>();
 
 
 		private Rect itemBounds;
@@ -23,9 +23,9 @@ namespace Dependinator.ModelViewing.Links
 
 		public LinkLine(
 			ILinkService linkService,
-			Node source,
-			Node target,
-			Node owner)
+			NodeOld source,
+			NodeOld target,
+			NodeOld owner)
 		{
 			this.linkService = linkService;
 			Owner = owner;
@@ -52,15 +52,15 @@ namespace Dependinator.ModelViewing.Links
 
 		public double ItemsScale => Owner.ItemsScale;
 
-		public IReadOnlyList<Link> Links => links;
-		public IReadOnlyList<Link> HiddenLinks => hiddenLinks;
+		public IReadOnlyList<LinkOld> Links => links;
+		public IReadOnlyList<LinkOld> HiddenLinks => hiddenLinks;
 
 
-		public Node Source { get; }
+		public NodeOld Source { get; }
 
-		public Node Target { get; }
+		public NodeOld Target { get; }
 
-		public Node Owner { get; }
+		public NodeOld Owner { get; }
 
 
 		public bool CanShowSegment() =>
@@ -160,13 +160,13 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
-		public bool TryAddLink(Link link)
+		public bool TryAddLink(LinkOld link)
 		{
 			hiddenLinks.Remove(link);
 			return links.TryAdd(link);
 		}
 
-		public void AddLink(Link link)
+		public void AddLink(LinkOld link)
 		{
 			//hiddenLinks.Remove(link);
 			links.Add(link);
@@ -174,7 +174,7 @@ namespace Dependinator.ModelViewing.Links
 
 
 
-		public void HideLink(Link link)
+		public void HideLink(LinkOld link)
 		{
 			if (links.Remove(link))
 			{

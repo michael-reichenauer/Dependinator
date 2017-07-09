@@ -127,7 +127,7 @@ namespace Dependinator.ModelViewing.Private
 		{
 			RestoreViewSettings(rootCanvas);
 
-			Node rootNode = currentModel.Root;
+			NodeOld rootNode = currentModel.Root;
 
 			rootNode.Show(rootCanvas);
 		}

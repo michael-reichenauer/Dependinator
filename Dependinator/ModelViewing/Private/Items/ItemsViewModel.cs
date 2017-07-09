@@ -9,9 +9,9 @@ namespace Dependinator.ModelViewing.Private.Items
 	internal class ItemsViewModel : ViewModel
 	{
 		private readonly IItemsService itemsService;
-		private readonly Node node;
+		private readonly NodeOld node;
 
-		public ItemsViewModel(IItemsService itemsService, Node node, IItemsCanvas itemsCanvas)
+		public ItemsViewModel(IItemsService itemsService, NodeOld node, IItemsCanvas itemsCanvas)
 		{
 			ItemsCanvas = itemsCanvas;
 			this.itemsService = itemsService;

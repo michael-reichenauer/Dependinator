@@ -12,14 +12,14 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.Nodes
 {
-	internal class Node : Equatable<Node>, IItemsCanvasBounds
+	internal class NodeOld : Equatable<NodeOld>, IItemsCanvasBounds
 	{
 		private const int InitialScaleFactor = 7;
 
 		private readonly IItemsService itemsService;
 		private readonly INodeService nodeService;
 
-		private readonly List<Node> childNodes = new List<Node>();
+		private readonly List<NodeOld> childNodes = new List<NodeOld>();
 
 		private IItemsCanvas itemsCanvas;
 
@@ -31,11 +31,11 @@ namespace Dependinator.ModelViewing.Nodes
 		private bool IsRootNode => ParentNode == null;
 		private int direction = 0;
 
-		public Node(
+		public NodeOld(
 			IItemsService itemsService,
 			INodeService nodeService,
 			ILinkService linkService,
-			Node parent,
+			NodeOld parent,
 			NodeName name,
 			NodeType type)
 		{
@@ -70,9 +70,9 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public double NodeScale => ParentNode?.ItemsScale ?? 1.0;
 
-		public Node ParentNode { get; }
+		public NodeOld ParentNode { get; }
 
-		public IReadOnlyList<Node> ChildNodes => childNodes;
+		public IReadOnlyList<NodeOld> ChildNodes => childNodes;
 		public double ItemsScale => itemsCanvas?.Scale ?? 1;
 		public double ItemsScaleFactor => itemsCanvas?.ScaleFactor ?? 1;
 		public Point ItemsOffset => itemsCanvas?.Offset ?? new Point();
@@ -97,7 +97,7 @@ namespace Dependinator.ModelViewing.Nodes
 		
 
 
-		public Node RootNode { get; }
+		public NodeOld RootNode { get; }
 
 
 		public bool CanShowNode() => IsVisibleAtScale(NodeScale);
@@ -329,12 +329,12 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public void UpdateAllNodesScalesBeforeClose()
 		{
-			Stack<Node> nodes = new Stack<Node>();
+			Stack<NodeOld> nodes = new Stack<NodeOld>();
 			nodes.Push(this);
 
 			while (nodes.Any())
 			{
-				Node node = nodes.Pop();
+				NodeOld node = nodes.Pop();
 
 				if (node.ChildNodes.Any())
 				{
@@ -363,7 +363,7 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public void AddChild(Node child)
+		public void AddChild(NodeOld child)
 		{
 			childNodes.Add(child);
 		}
@@ -437,7 +437,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public void UpdateNodeVisibility()
 		{
-			IEnumerable<Node> childrenToUpdate = Enumerable.Empty<Node>();
+			IEnumerable<NodeOld> childrenToUpdate = Enumerable.Empty<NodeOld>();
 
 			if (ChildNodes.Any())
 			{
@@ -489,7 +489,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private void HideAllChildren()
 		{
-			foreach (Node childNode in ChildNodes)
+			foreach (NodeOld childNode in ChildNodes)
 			{
 				if (childNode.viewModel?.CanShow ?? false)
 				{
@@ -584,9 +584,9 @@ namespace Dependinator.ModelViewing.Nodes
 			return zoomFactor < 1 && !IsVisibleAtScale(newScale);
 		}
 
-		public IEnumerable<Node> Ancestors()
+		public IEnumerable<NodeOld> Ancestors()
 		{
-			Node current = ParentNode;
+			NodeOld current = ParentNode;
 
 			while (current != null)
 			{
@@ -596,34 +596,34 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public IEnumerable<Node> AncestorsAndSelf()
+		public IEnumerable<NodeOld> AncestorsAndSelf()
 		{
 			yield return this;
 
-			foreach (Node ancestor in Ancestors())
+			foreach (NodeOld ancestor in Ancestors())
 			{
 				yield return ancestor;
 			}
 		}
 
-		public IEnumerable<Node> Descendents()
+		public IEnumerable<NodeOld> Descendents()
 		{
-			foreach (Node child in ChildNodes)
+			foreach (NodeOld child in ChildNodes)
 			{
 				yield return child;
 
-				foreach (Node descendent in child.Descendents())
+				foreach (NodeOld descendent in child.Descendents())
 				{
 					yield return descendent;
 				}
 			}
 		}
 
-		public IEnumerable<Node> DescendentsAndSelf()
+		public IEnumerable<NodeOld> DescendentsAndSelf()
 		{
 			yield return this;
 
-			foreach (Node descendent in Descendents())
+			foreach (NodeOld descendent in Descendents())
 			{
 				yield return descendent;
 			}

@@ -5,7 +5,7 @@ namespace Dependinator.ModelViewing.Links.Private
 {
 	internal class LinkGroup
 	{
-		public LinkGroup(Node source, Node target, IReadOnlyList<Link> links)
+		public LinkGroup(NodeOld source, NodeOld target, IReadOnlyList<LinkOld> links)
 		{
 			Source = source;
 			Target = target;
@@ -13,9 +13,9 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		public Node Source { get; }
-		public Node Target { get; }
-		public IReadOnlyList<Link> Links { get; }
+		public NodeOld Source { get; }
+		public NodeOld Target { get; }
+		public IReadOnlyList<LinkOld> Links { get; }
 
 		public override string ToString() => $"{Source} -> {Target} ({Links.Count})";
 	}

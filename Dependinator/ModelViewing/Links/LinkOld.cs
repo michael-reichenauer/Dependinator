@@ -7,12 +7,12 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.Links
 {
-	internal class Link : Equatable<Link>
+	internal class LinkOld : Equatable<LinkOld>
 	{
 		private readonly List<LinkLine> lines = new List<LinkLine>();
 		private IReadOnlyList<LinkSegment> currentLinkSegments;
 
-		public Link(Node source, Node target)
+		public LinkOld(NodeOld source, NodeOld target)
 		{
 			Source = source;
 			Target = target;
@@ -20,9 +20,9 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
-		public Node Source { get; }
+		public NodeOld Source { get; }
 
-		public Node Target { get; }
+		public NodeOld Target { get; }
 
 		public IReadOnlyList<LinkLine> Lines => lines;
 		public IReadOnlyList<LinkSegment> LinkSegments => currentLinkSegments;

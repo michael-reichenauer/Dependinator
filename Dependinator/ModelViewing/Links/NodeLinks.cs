@@ -8,12 +8,12 @@ namespace Dependinator.ModelViewing.Links
 	internal class NodeLinks
 	{
 		private readonly ILinkService linkService;
-		private readonly List<Link> links = new List<Link>();
+		private readonly List<LinkOld> links = new List<LinkOld>();
 		private readonly List<LinkLine> ownedLines = new List<LinkLine>();
 		private readonly List<LinkLine> referencingLines = new List<LinkLine>();
 
 
-		public IReadOnlyList<Link> Links => links;
+		public IReadOnlyList<LinkOld> Links => links;
 
 		public IReadOnlyList<LinkLine> OwnedLines => ownedLines;
 
@@ -26,13 +26,13 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
-		public void AddDirectLink(Node groupSource, Node groupTarget, IReadOnlyList<Link> groupLinks)
+		public void AddDirectLink(NodeOld groupSource, NodeOld groupTarget, IReadOnlyList<LinkOld> groupLinks)
 		{
 
 		}
 
 
-		public void Add(Link link)
+		public void Add(LinkOld link)
 		{
 			if (links.Contains(link))
 			{

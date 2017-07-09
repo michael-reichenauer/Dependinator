@@ -17,7 +17,7 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		public void AddLinkLines(Link link)
+		public void AddLinkLines(LinkOld link)
 		{
 			var linkSegments = segmentService.GetNormalLinkSegments(link);
 
@@ -53,11 +53,11 @@ namespace Dependinator.ModelViewing.Links.Private
 		//}
 
 
-		public void ZoomInLinkLine(LinkLine line, Node node)
+		public void ZoomInLinkLine(LinkLine line, NodeOld node)
 		{
-			IReadOnlyList<Link> links = line.Links.ToList();
+			IReadOnlyList<LinkOld> links = line.Links.ToList();
 
-			foreach (Link link in links)
+			foreach (LinkOld link in links)
 			{
 				IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
 
@@ -116,11 +116,11 @@ namespace Dependinator.ModelViewing.Links.Private
 		//}
 
 
-		public void ZoomOutLinkLine(LinkLine line, Node node)
+		public void ZoomOutLinkLine(LinkLine line, NodeOld node)
 		{
-			IReadOnlyList<Link> links = line.Links.ToList();
+			IReadOnlyList<LinkOld> links = line.Links.ToList();
 
-			foreach (Link link in links)
+			foreach (LinkOld link in links)
 			{
 				IReadOnlyList<LinkSegment> normalLinkSegments = segmentService.GetNormalLinkSegments(link);
 				IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
@@ -173,7 +173,7 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		private void HideLinkFromLine(LinkLine line, Link link)
+		private void HideLinkFromLine(LinkLine line, LinkOld link)
 		{
 			line.HideLink(link);
 			link.Remove(line);
@@ -342,8 +342,8 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		private static (Point source, Point target) GetLinkSegmentEndPoints(LinkLine line)
 		{
-			Node source = line.Source;
-			Node target = line.Target;
+			NodeOld source = line.Source;
+			NodeOld target = line.Target;
 			Rect sourceBounds = source.NodeBounds;
 			Rect targetBounds = target.NodeBounds;
 
@@ -434,9 +434,9 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		private static Point DescendentPointToAncestorPoint(Node descendent, Node ancestor, Point point)
+		private static Point DescendentPointToAncestorPoint(NodeOld descendent, NodeOld ancestor, Point point)
 		{
-			foreach (Node node in descendent.Ancestors())
+			foreach (NodeOld node in descendent.Ancestors())
 			{
 				if (node == ancestor)
 				{
@@ -450,7 +450,7 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		private static Point ParentPointToChildPoint(Node parent, Point point)
+		private static Point ParentPointToChildPoint(NodeOld parent, Point point)
 		{
 			return parent.ParentCanvasPointToChildCanvasPoint(point);
 		}
@@ -466,9 +466,9 @@ namespace Dependinator.ModelViewing.Links.Private
 		/// </summary>
 		public IReadOnlyList<LinkGroup> GetLinkGroups(LinkLine line)
 		{
-			Node source = line.Source;
-			Node target = line.Target;
-			IReadOnlyList<Link> links = line.Links;
+			NodeOld source = line.Source;
+			NodeOld target = line.Target;
+			IReadOnlyList<LinkOld> links = line.Links;
 
 			(int sourceLevel, int targetLevel) = GetNodeLevels(source, target);
 
@@ -482,9 +482,9 @@ namespace Dependinator.ModelViewing.Links.Private
 				var groupByTargets = groupBySource.GroupBy(link => NodeAtLevel(link.Target, targetLevel));
 				foreach (var groupByTarget in groupByTargets)
 				{
-					Node sourceNode = groupBySource.Key;
-					Node targetNode = groupByTarget.Key;
-					List<Link> groupLinks = groupByTarget.ToList();
+					NodeOld sourceNode = groupBySource.Key;
+					NodeOld targetNode = groupByTarget.Key;
+					List<LinkOld> groupLinks = groupByTarget.ToList();
 
 					LinkGroup linkGroup = new LinkGroup(sourceNode, targetNode, groupLinks);
 					linkGroups.Add(linkGroup);
@@ -495,7 +495,7 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		private static (int sourceLevel, int targetLevel) GetNodeLevels(Node source, Node target)
+		private static (int sourceLevel, int targetLevel) GetNodeLevels(NodeOld source, NodeOld target)
 		{
 			int sourceLevel = source.Ancestors().Count();
 			int targetLevel = target.Ancestors().Count();
@@ -521,11 +521,11 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		private static Node NodeAtLevel(Node node, int level)
+		private static NodeOld NodeAtLevel(NodeOld node, int level)
 		{
 			int count = 0;
-			Node current = null;
-			foreach (Node ancestor in node.AncestorsAndSelf().Reverse())
+			NodeOld current = null;
+			foreach (NodeOld ancestor in node.AncestorsAndSelf().Reverse())
 			{
 				current = ancestor;
 				if (count++ == level)

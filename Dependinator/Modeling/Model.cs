@@ -8,21 +8,21 @@ namespace Dependinator.Modeling
 {
 	internal class Model
 	{
-		private readonly Dictionary<NodeName, Node> nodes = new Dictionary<NodeName, Node>();
+		private readonly Dictionary<NodeName, NodeOld> nodes = new Dictionary<NodeName, NodeOld>();
 
 
-		public Model(Node root)
+		public Model(NodeOld root)
 		{
 			Root = root;
 			nodes[root.NodeName] = root;
 		}
 
-		public Node Root { get; }
+		public NodeOld Root { get; }
 
-		public IReadOnlyDictionary<NodeName, Node> Nodes => nodes;
+		public IReadOnlyDictionary<NodeName, NodeOld> Nodes => nodes;
 
 
-		public void AddNode(Node node)
+		public void AddNode(NodeOld node)
 		{
 			nodes[node.NodeName] = node;
 		}
