@@ -1,7 +1,7 @@
 using System.Windows;
 using Dependinator.ModelViewing.Nodes;
 
-namespace Dependinator.ModelViewing.Private.Items
+namespace Dependinator.ModelViewing.Private.Items.Private
 {
 	internal class ItemsService : IItemsService
 	{

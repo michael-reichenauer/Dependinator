@@ -1,6 +1,7 @@
 using System.Windows;
 using Dependinator.ModelViewing.Private;
 using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelViewing.Private.Items.Private;
 
 
 namespace Dependinator.ModelViewing.Nodes

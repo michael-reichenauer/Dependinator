@@ -6,6 +6,7 @@ using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Private;
 using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 

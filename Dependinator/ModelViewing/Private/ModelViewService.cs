@@ -6,6 +6,7 @@ using Dependinator.ApplicationHandling.SettingsHandling;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils;
 
 

@@ -11,6 +11,7 @@
 	xmlns:nodes="clr-namespace:Dependinator.ModelViewing.Nodes"
 	xmlns:ui="clr-namespace:Dependinator.Utils.UI"
 	xmlns:items="clr-namespace:Dependinator.ModelViewing.Private.Items"
+	xmlns:private="clr-namespace:Dependinator.ModelViewing.Private.Items.Private"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
@@ -27,7 +28,7 @@
 		ScrollViewer.VerticalScrollBarVisibility="Auto">
 
 		<i:Interaction.Behaviors>
-			<items:IgnoreMouseWheelBehavior />
+			<private:IgnoreMouseWheelBehavior />
 		</i:Interaction.Behaviors>
 
 		<ListBox.ItemsPanel>

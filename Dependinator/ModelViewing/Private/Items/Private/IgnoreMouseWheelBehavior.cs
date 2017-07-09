@@ -2,7 +2,7 @@
 using System.Windows.Input;
 using System.Windows.Interactivity;
 
-namespace Dependinator.ModelViewing.Private.Items
+namespace Dependinator.ModelViewing.Private.Items.Private
 {
 	/// <summary>
 	/// Captures and eats MouseWheel events so that a nested ListBox does not

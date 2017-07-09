@@ -7,6 +7,7 @@ using System.Windows.Media;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils;
 
 

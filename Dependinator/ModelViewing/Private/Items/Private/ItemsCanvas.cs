@@ -3,7 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using Dependinator.Utils.UI.VirtualCanvas;
 
-namespace Dependinator.ModelViewing.Private.Items
+namespace Dependinator.ModelViewing.Private.Items.Private
 {
 	internal class ItemsCanvas
 	{
