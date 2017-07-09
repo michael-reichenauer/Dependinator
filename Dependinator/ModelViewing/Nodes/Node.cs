@@ -104,7 +104,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 
-		public void Show(ItemsCanvas rootItemsCanvas)
+		public void Show(IItemsCanvas rootItemsCanvas)
 		{
 			Asserter.Requires(IsRootNode);
 
@@ -502,7 +502,7 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		private void InitNodeTree(ItemsCanvas rootCanvas)
+		private void InitNodeTree(IItemsCanvas rootCanvas)
 		{
 			itemsCanvas = rootCanvas;
 			viewModel = new NamespaceViewModel(itemsService, this, rootCanvas);

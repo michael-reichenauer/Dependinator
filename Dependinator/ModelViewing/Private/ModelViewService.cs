@@ -5,7 +5,6 @@ using Dependinator.ApplicationHandling;
 using Dependinator.ApplicationHandling.SettingsHandling;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Nodes;
-using Dependinator.ModelViewing.Private.Items;
 using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils;
 
@@ -16,7 +15,7 @@ namespace Dependinator.ModelViewing.Private
 	internal class ModelViewService : IModelViewService
 	{
 		private readonly WorkingFolder workingFolder;
-		private readonly Dependinator.Modeling.IModelingService modelingService;
+		private readonly IModelingService modelingService;
 
 
 
@@ -24,7 +23,7 @@ namespace Dependinator.ModelViewing.Private
 
 		public ModelViewService(
 			WorkingFolder workingFolder,
-			Dependinator.Modeling.IModelingService modelingService)
+			IModelingService modelingService)
 		{
 			this.workingFolder = workingFolder;
 			this.modelingService = modelingService;
@@ -33,7 +32,7 @@ namespace Dependinator.ModelViewing.Private
 
 
 
-		public void InitModules(ItemsCanvas rootCanvas)
+		public void InitModules(IItemsCanvas rootCanvas)
 		{
 			Timing t = new Timing();
 
@@ -86,7 +85,7 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		public async Task Refresh(ItemsCanvas rootCanvas, bool refreshLayout)
+		public async Task Refresh(IItemsCanvas rootCanvas, bool refreshLayout)
 		{
 			await Task.Yield();
 
@@ -124,7 +123,7 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private void ShowModel(ItemsCanvas rootCanvas)
+		private void ShowModel(IItemsCanvas rootCanvas)
 		{
 			RestoreViewSettings(rootCanvas);
 
@@ -199,7 +198,7 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private void RestoreViewSettings(ItemsCanvas rootCanvas)
+		private void RestoreViewSettings(IItemsCanvas rootCanvas)
 		{
 			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
 			rootCanvas.Scale = settings.Scale;

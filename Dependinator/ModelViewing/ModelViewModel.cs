@@ -24,7 +24,6 @@ namespace Dependinator.ModelViewing
 
 
 		private readonly DispatcherTimer filterTriggerTimer = new DispatcherTimer();
-		private readonly ItemsCanvas itemsCanvas = new ItemsCanvas();
 		private string settingFilterText = "";
 
 		private int width = 0;
@@ -43,7 +42,7 @@ namespace Dependinator.ModelViewing
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
 
-			ItemsViewModel = new ItemsViewModel(itemsService, null, itemsCanvas);
+			ItemsViewModel = new ItemsViewModel(itemsService, null, new ItemsCanvas());
 		}
 
 
@@ -58,7 +57,7 @@ namespace Dependinator.ModelViewing
 
 			using (progress.ShowDialog("Loading branch view ..."))
 			{		
-				modelViewService.InitModules(itemsCanvas);
+				modelViewService.InitModules(ItemsViewModel.ItemsCanvas);
 
 				t.Log("Updated view model after cached/fresh");
 			}
@@ -69,8 +68,8 @@ namespace Dependinator.ModelViewing
 
 		public string FetchErrorText
 		{
-			get { return Get(); }
-			set { Set(value); }
+			get => Get();
+			set => Set(value);
 		}
 
 
@@ -82,13 +81,13 @@ namespace Dependinator.ModelViewing
 
 		public int Width
 		{
-			get { return width; }
+			get => width;
 			set
 			{
 				if (width != value)
 				{
 					width = value;
-					itemsCanvas.SizeChanged();
+					ItemsViewModel.SizeChanged();
 				}
 			}
 		}
@@ -132,7 +131,7 @@ namespace Dependinator.ModelViewing
 		{
 			using (progress.ShowDialog("Refreshing view ..."))
 			{
-				await modelViewService.Refresh(itemsCanvas, refreshLayout);
+				await modelViewService.Refresh(ItemsViewModel.ItemsCanvas, refreshLayout);
 			}
 		}
 
@@ -162,15 +161,15 @@ namespace Dependinator.ModelViewing
 
 		public int SelectedIndex
 		{
-			get { return Get(); }
-			set { Set(value); }
+			get => Get();
+			set => Set(value);
 		}
 
 
 		public object SelectedItem
 		{
-			get { return Get().Value; }
-			set { Set(value); }
+			get => Get().Value;
+			set => Set(value);
 		}
 
 
@@ -186,37 +185,6 @@ namespace Dependinator.ModelViewing
 		private void FilterTrigger(object sender, EventArgs e)
 		{
 			//VirtualItemsSource.DataChanged();
-		}
-
-
-
-
-		public void Clicked(Point viewPosition)
-		{
-			//Point canvasPosition = canvasService.GetCanvasPosition(viewPosition);
-
-			//double clickX = position.X - 9;
-			//double clickY = position.Y - 5;
-
-			//int row = Converters.ToRow(clickY);
-
-			//if (row < 0 || row >= Commits.Count - 1 || clickX < 0 || clickX >= graphWidth)
-			//{
-			//	// Click is not within supported area.
-			//	return;
-			//}
-
-			//CommitViewModel commitViewModel = Commits[row];
-			//int xDotCenter = commitViewModel.X;
-			//int yDotCenter = commitViewModel.Y;
-
-			//double absx = Math.Abs(xDotCenter - clickX);
-			//double absy = Math.Abs(yDotCenter - clickY);
-
-			//if ((absx < 10) && (absy < 10))
-			//{
-			//	Clicked(commitViewModel);
-			//}
 		}
 
 
