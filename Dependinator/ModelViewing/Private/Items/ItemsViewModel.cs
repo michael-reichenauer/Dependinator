@@ -10,10 +10,10 @@ namespace Dependinator.ModelViewing.Private.Items
 	{
 		private readonly IItemsService itemsService;
 		private readonly Node node;
-		private readonly ItemsCanvas itemsCanvas;
+		private readonly IItemsCanvas itemsCanvas;
 
 
-		public ItemsViewModel(IItemsService itemsService, Node node, ItemsCanvas itemsCanvas)
+		public ItemsViewModel(IItemsService itemsService, Node node, IItemsCanvas itemsCanvas)
 		{
 			this.itemsService = itemsService;
 			this.node = node;
@@ -21,24 +21,14 @@ namespace Dependinator.ModelViewing.Private.Items
 		}
 
 		public bool IsRoot => node == null;
-		public IItemsCanvas ItemsCanvas => itemsCanvas;
 
-		public void SetCanvas(ZoomableCanvas zoomableCanvas)
-		{
+		public void SetZoomableCanvas(ZoomableCanvas zoomableCanvas) => 
 			itemsCanvas.SetZoomableCanvas(zoomableCanvas);
-		}
-
 
 		public void MoveCanvas(Vector viewOffset) => itemsService.Move(node, viewOffset);
 
-
-		public void SizeChanged() => itemsCanvas.SizeChanged();
-
 		public void ZoomRoot(double zoom, Point viewPosition) => itemsService.Zoom(zoom, viewPosition);
 
-		public void Zoom(double zoom, Point viewPosition)
-		{
-			node.Zoom(zoom, viewPosition);
-		}
+		public void Zoom(double zoom, Point viewPosition) => node.Zoom(zoom, viewPosition);
 	}
 }

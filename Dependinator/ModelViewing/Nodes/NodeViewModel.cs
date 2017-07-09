@@ -24,7 +24,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public string Name => node.NodeName.ShortName;
 
-		public string ToolTip => $"{node.NodeName}{node.DebugToolTip}";
+		public string ToolTip => $"{node.NodeName}{DebugToolTip}";
 
 
 		public void UpdateToolTip() => Notify(nameof(ToolTip));
@@ -55,6 +55,13 @@ namespace Dependinator.ModelViewing.Nodes
 
 			lastMousePosition = viewPosition;
 		}
+
+		public string DebugToolTip => "";
+		//public string ItemsToolTip =>
+		//	$"\nChildren: {ChildNodes.Count}, Lines: {Links.OwnedLines.Count}\n" +
+		//	$"Total Nodes: {CountShowingNodes()}, Lines: {CountShowingLines()}\n" +
+		//	$"Node Scale: {NodeScale:0.00}, Items Scale: {ItemsScale:0.00}, (Factor: {ItemsScaleFactor:0.00})\n" +
+		//	$"Rect: {NodeBounds.TS()}\n";
 
 		public override string ToString() => node.NodeName;
 	}

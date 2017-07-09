@@ -1,5 +1,4 @@
 using System.Windows;
-using Dependinator.ModelViewing.Private;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.ModelViewing.Private.Items.Private;
 
@@ -11,7 +10,7 @@ namespace Dependinator.ModelViewing.Nodes
 		private readonly Node node;
 
 
-		public CompositeNodeViewModel(IItemsService itemsService, Node node, ItemsCanvas itemsCanvas)
+		public CompositeNodeViewModel(IItemsService itemsService, Node node, IItemsCanvas itemsCanvas)
 			: base(node)
 		{
 			this.node = node;
@@ -23,7 +22,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public ItemsViewModel ItemsViewModel { get; }
 
-		public ItemsCanvas ItemsCanvas { get; }
+		public IItemsCanvas ItemsCanvas { get; }
 
 		public double Scale => ItemsCanvas.Scale;
 

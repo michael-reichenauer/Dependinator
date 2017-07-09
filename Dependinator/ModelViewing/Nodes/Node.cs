@@ -21,7 +21,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private readonly List<Node> childNodes = new List<Node>();
 
-		private ItemsCanvas itemsCanvas;
+		private IItemsCanvas itemsCanvas;
 
 		private Brush nodeBrush;
 
@@ -94,29 +94,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private static bool IsVisibleAtScale(double scale) => scale > 0.15;
 
-		public string DebugToolTip => ItemsToolTip;
-
-		//public Point ToDevicePoint(Point canvasPoint) => itemsCanvas.CanvasToDevicePoint(canvasPoint);
-
-		//public Point ToCanvasPoint(Point devicePoint) => itemsCanvas.DeviceToCanvasPoint(devicePoint);
-
-		public string ItemsToolTip =>
-			$"\nChildren: {ChildNodes.Count}, Lines: {Links.OwnedLines.Count}\n" +
-			$"Total Nodes: {CountShowingNodes()}, Lines: {CountShowingLines()}\n" +
-			$"Node Scale: {NodeScale:0.00}, Items Scale: {ItemsScale:0.00}, (Factor: {ItemsScaleFactor:0.00})\n" +
-			$"Rect: {NodeBounds.TS()}\n";
-
-		//public string ZoomToolTip =>
-		//	$"\n Children: {ChildNodes.Count} Shown Items: {CountShowingNodes()}\n" +
-		//	$"Items Scale: {ItemsScale:0.00}, Scalefactor: {ItemsScaleFactor:0.00}\n" +
-		//	$"Offset: {ItemsOffset.TS()}, CanvasOffset: {ItemsCanvasOffset.TS()}\n" +
-		//	$"Rect: {NodeBounds.TS()}\n" +
-		//	$"Pos in parent coord: {ParentNode?.itemsCanvas?.ChildToParentCanvasPoint(NodeBounds.Location).TS()}\n" +
-		//	$"Pos in child coord: {ParentNode?.itemsCanvas?.ParentToChildCanvasPoint(ParentNode?.itemsCanvas?.ChildToParentCanvasPoint(NodeBounds.Location) ?? new Point(0, 0)).TS()}\n" +
-		//	$"Pos in mainwindow coord: {itemsCanvas?.GetDevicePoint().TS()}\n" +
-		//	$"Visual area {itemsCanvas?.ViewArea.TS()}\n" +
-		//	$"Recursive viewArea {itemsCanvas?.GetVisualAncestorsArea().TS()}\n\n" +
-		//	$"Parent {ParentNode?.NodeName}:{ParentNode?.DebugToolTip}";
+		
 
 
 		public Node RootNode { get; }
@@ -524,46 +502,6 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		private int CountShowingNodes()
-		{
-			Stack<Node> nodes = new Stack<Node>();
-
-			nodes.Push(RootNode);
-
-			int count = 0;
-			while (nodes.Any())
-			{
-				Node node = nodes.Pop();
-				if (node.IsShowing)
-				{
-					count++;
-					node.ChildNodes.ForEach(nodes.Push);
-				}
-			}
-
-			// Skip root node, which is not shown
-			return count - 1;
-		}
-
-
-		private int CountShowingLines()
-		{
-			Stack<Node> nodes = new Stack<Node>();
-			nodes.Push(RootNode);
-
-			int count = 0;
-			while (nodes.Any())
-			{
-				Node node = nodes.Pop();
-				count += node.Links.OwnedLines.Count(l => l.ViewModel.IsShowing);
-
-				node.ChildNodes.ForEach(nodes.Push);
-			}
-
-			return count;
-		}
-
-
 		private void InitNodeTree(ItemsCanvas rootCanvas)
 		{
 			itemsCanvas = rootCanvas;
@@ -606,7 +544,7 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			if (NodeType != NodeType.MemberType)
 			{
-				itemsCanvas = new ItemsCanvas(this, ParentNode.itemsCanvas);
+				itemsCanvas = ParentNode.itemsCanvas.CreateChild(this);
 
 				double scale = PersistentScale ?? 0;
 				if (Math.Abs(scale) > 0.001)

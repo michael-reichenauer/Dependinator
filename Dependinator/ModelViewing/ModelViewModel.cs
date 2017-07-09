@@ -24,7 +24,7 @@ namespace Dependinator.ModelViewing
 
 
 		private readonly DispatcherTimer filterTriggerTimer = new DispatcherTimer();
-		private readonly ItemsCanvas itemsCanvas = new ItemsCanvas(null, null);
+		private readonly ItemsCanvas itemsCanvas = new ItemsCanvas();
 		private string settingFilterText = "";
 
 		private int width = 0;
@@ -88,7 +88,7 @@ namespace Dependinator.ModelViewing
 				if (width != value)
 				{
 					width = value;
-					ItemsViewModel.SizeChanged();
+					itemsCanvas.SizeChanged();
 				}
 			}
 		}

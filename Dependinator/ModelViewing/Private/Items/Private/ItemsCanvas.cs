@@ -9,25 +9,37 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 	{
 		private readonly IItemsCanvasBounds itemsCanvasBounds;
 		private readonly ItemsSource itemsSource;
-		private readonly IItemsCanvas parentItemsCanvas;
+		private readonly IItemsCanvas canvasParent;
 		private ZoomableCanvas zoomableCanvas;
 		private double scale = 1.0;
 		private Point offset = new Point(0, 0);
 		private Rect ItemsCanvasBounds => 
 			itemsCanvasBounds?.NodeBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
 
-
-		public ItemsCanvas(IItemsCanvasBounds itemsCanvasBounds, IItemsCanvas parentItemsCanvas)
+		public ItemsCanvas()
+			: this(null, null)
 		{
-			this.itemsCanvasBounds = itemsCanvasBounds;
-			this.parentItemsCanvas = parentItemsCanvas;
-			itemsSource = new ItemsSource(this);
+			
 		}
 
-		public bool IsRoot => parentItemsCanvas == null;
+		private ItemsCanvas(IItemsCanvasBounds itemsCanvasBounds, IItemsCanvas canvasParent)
+		{
+			this.itemsCanvasBounds = itemsCanvasBounds;
+			this.canvasParent = canvasParent;
+			itemsSource = new ItemsSource(this);
+			CanvasRoot = canvasParent?.CanvasRoot ?? this;
+		}
+
+		public IItemsCanvas CanvasRoot { get; }
+
+		public bool IsRoot => canvasParent == null;
 
 		public double ScaleFactor { get; private set; } = 1.0;
 
+		public IItemsCanvas CreateChild(IItemsCanvasBounds canvasBounds)
+		{
+			return new ItemsCanvas(canvasBounds, this);
+		}
 
 		public Point Offset
 		{
@@ -56,9 +68,9 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 					zoomableCanvas.Scale = value;
 				}
 
-				if (parentItemsCanvas != null)
+				if (canvasParent != null)
 				{
-					ScaleFactor = parentItemsCanvas.Scale / scale;
+					ScaleFactor = canvasParent.Scale / scale;
 				}
 			}
 		}
@@ -86,7 +98,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		{
 			if (!IsRoot)
 			{
-				double newScale = parentItemsCanvas.Scale / ScaleFactor;
+				double newScale = canvasParent.Scale / ScaleFactor;
 				double zoom = newScale / Scale;
 
 				Zoom(zoom, new Point(0, 0));
@@ -183,7 +195,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		{
 			if (!IsRoot)
 			{
-				Rect parentArea = parentItemsCanvas.GetHierarchicalVisualArea();
+				Rect parentArea = canvasParent.GetHierarchicalVisualArea();
 				Point p1 = ParentToChildCanvasPoint(parentArea.Location);
 				Size s1 = (Size)((Vector)parentArea.Size * ScaleFactor);
 				Rect scaledParentViewArea = new Rect(p1, s1);
@@ -203,7 +215,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 		private Rect GetItemsCanvasViewArea()
 		{
-			double parentScale = parentItemsCanvas?.Scale ?? Scale;
+			double parentScale = canvasParent?.Scale ?? Scale;
 
 			Size renderSize = (Size)((Vector)ItemsCanvasBounds.Size * parentScale);
 

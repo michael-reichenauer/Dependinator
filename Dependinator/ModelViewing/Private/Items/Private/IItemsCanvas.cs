@@ -6,6 +6,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 {
 	internal interface IItemsCanvas
 	{
+		IItemsCanvas CanvasRoot { get; }
 		double ScaleFactor { get; }
 		Point Offset { get; set; }
 		double Scale { get; set; }
@@ -24,5 +25,6 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		void SizeChanged();
 		void TriggerInvalidated();
 		Rect GetHierarchicalVisualArea();
+		IItemsCanvas CreateChild(IItemsCanvasBounds canvasBounds);
 	}
 }
