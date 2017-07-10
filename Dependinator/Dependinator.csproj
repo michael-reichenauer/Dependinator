@@ -105,9 +105,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Modeling\IModelNotifications.cs" />
-    <Compile Include="Modeling\Link2.cs" />
+    <Compile Include="Modeling\Link.cs" />
     <Compile Include="Modeling\LinkId.cs" />
-    <Compile Include="Modeling\Node2.cs" />
+    <Compile Include="ModelViewing\Private\Links.cs" />
+    <Compile Include="ModelViewing\Private\NodesEventArgs.cs" />
+    <Compile Include="ModelViewing\Private\Nodes.cs" />
+    <Compile Include="ModelViewing\Private\Model.cs" />
+    <Compile Include="Modeling\Node.cs" />
     <Compile Include="Modeling\NodeId.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\NodeViewModel.cs" />
@@ -177,7 +181,7 @@
     </Compile>
     <Compile Include="ModelViewing\Nodes\MemberNodeViewModel.cs" />
     <Compile Include="Modeling\NodeName.cs" />
-    <Compile Include="Modeling\Model.cs" />
+    <Compile Include="Modeling\ModelOld.cs" />
     <Compile Include="Modeling\Private\Analyzing\IReflectionService.cs" />
     <Compile Include="ModelViewing\Links\LinkOld.cs" />
     <Compile Include="ModelViewing\Links\NodeLinks.cs" />
@@ -195,7 +199,7 @@
     <Compile Include="Modeling\IModelingService.cs" />
     <Compile Include="ModelViewing\Links\LinkLine.cs" />
     <Compile Include="ModelViewing\Links\LinkLineViewModel.cs" />
-    <Compile Include="Modeling\ModelViewData.cs" />
+    <Compile Include="Modeling\ModelViewDataOld.cs" />
     <Compile Include="ModelViewing\Private\Items\ItemViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\NodeOld.cs" />
     <Compile Include="ModelViewing\Private\Items\IItem.cs" />

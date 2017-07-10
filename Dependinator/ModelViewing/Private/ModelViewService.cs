@@ -19,7 +19,7 @@ namespace Dependinator.ModelViewing.Private
 
 
 
-		private Model currentModel;
+		private ModelOld currentModel;
 
 		public ModelViewService(
 			WorkingFolder workingFolder,
@@ -51,7 +51,7 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private Model GetDataModel()
+		private ModelOld GetDataModel()
 		{
 			//DataModel dataModel = new DataModel()
 			//		.AddType("Axis.Ns1")	
@@ -79,7 +79,7 @@ namespace Dependinator.ModelViewing.Private
 			//	;
 
 
-			Model dataModel = GetCachedOrFreshModelData();
+			ModelOld dataModel = GetCachedOrFreshModelData();
 
 			return dataModel;
 		}
@@ -94,7 +94,7 @@ namespace Dependinator.ModelViewing.Private
 			StoreViewSettings();
 			t.Log("stored setting");
 
-			ModelViewData modelViewData = refreshLayout ? null : modelingService.ToViewData(currentModel);
+			ModelViewDataOld modelViewData = refreshLayout ? null : modelingService.ToViewData(currentModel);
 			t.Log("Got current model data");
 
 			currentModel.Root.Clear();
@@ -111,9 +111,9 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private Model GetCachedOrFreshModelData()
+		private ModelOld GetCachedOrFreshModelData()
 		{
-			Model dataModel;
+			ModelOld dataModel;
 			if (!TryReadCachedData(out dataModel))
 			{
 				dataModel = ReadFreshData();
@@ -143,26 +143,26 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private async Task<Model> RefreshElementTreeAsync(ModelViewData modelViewData)
+		private async Task<ModelOld> RefreshElementTreeAsync(ModelViewDataOld modelViewData)
 		{
-			Model model = await Task.Run(
+			ModelOld model = await Task.Run(
 				() => modelingService.Analyze(workingFolder.FilePath, modelViewData));
 
 			return model;
 		}
 
 
-		private bool TryReadCachedData(out Model dataModel)
+		private bool TryReadCachedData(out ModelOld dataModel)
 		{
 			string dataFilePath = GetDataFilePath();
 			return modelingService.TryDeserialize(dataFilePath, out dataModel);
 		}
 
 
-		private Model ReadFreshData()
+		private ModelOld ReadFreshData()
 		{
 			Timing t = Timing.Start();
-			Model newModel = modelingService.Analyze(workingFolder.FilePath, null);
+			ModelOld newModel = modelingService.Analyze(workingFolder.FilePath, null);
 			t.Log("Read fresh model");
 			return newModel;
 		}

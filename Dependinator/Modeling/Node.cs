@@ -2,9 +2,9 @@ using Dependinator.Utils;
 
 namespace Dependinator.Modeling
 {
-	internal abstract class Node2 : Equatable<Node2>
+	internal abstract class Node : Equatable<Node>
 	{
-		protected Node2(NodeId parentId, NodeName name)
+		protected Node(NodeId parentId, NodeName name)
 		{
 			Id = new NodeId(name);
 			ParentId = parentId;
@@ -26,7 +26,7 @@ namespace Dependinator.Modeling
 		{ }
 	}
 
-	internal class NamespaceNode : Node2
+	internal class NamespaceNode : Node
 	{
 		public NamespaceNode(NodeId parentId, NodeName name) 
 			: base(parentId, name)
@@ -34,7 +34,7 @@ namespace Dependinator.Modeling
 		}
 	}
 
-	internal class TypeNode : Node2
+	internal class TypeNode : Node
 	{
 		public TypeNode(NodeId parentId, NodeName name)
 			: base(parentId, name)
@@ -43,7 +43,7 @@ namespace Dependinator.Modeling
 	}
 
 
-	internal class MemberNode : Node2
+	internal class MemberNode : Node
 	{
 		public MemberNode(NodeId parentId, NodeName name)
 			: base(parentId, name)

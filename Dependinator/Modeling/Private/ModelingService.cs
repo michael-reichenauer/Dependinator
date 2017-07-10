@@ -36,16 +36,16 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		public Model Analyze(string path, ModelViewData modelViewData)
+		public ModelOld Analyze(string path, ModelViewDataOld modelViewData)
 		{
 			Data.Model dataModel = reflectionService.Analyze(path);
 			return ToModel(dataModel, modelViewData);
 		}
 
 
-		public ModelViewData ToViewData(Model model)
+		public ModelViewDataOld ToViewData(ModelOld model)
 		{
-			ModelViewData modelViewData = new ModelViewData();
+			ModelViewDataOld modelViewData = new ModelViewDataOld();
 
 			AddViewData(model.Root, modelViewData);
 
@@ -54,7 +54,7 @@ namespace Dependinator.Modeling.Private
 
 
 
-		public void Serialize(Model model, string path)
+		public void Serialize(ModelOld model, string path)
 		{
 			Data.Model dataModel = ToDataModel(model);
 
@@ -62,7 +62,7 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		public bool TryDeserialize(string path, out Model model)
+		public bool TryDeserialize(string path, out ModelOld model)
 		{
 			if (dataSerializer.TryDeserialize(path, out Data.Model dataModel))
 			{
@@ -76,13 +76,13 @@ namespace Dependinator.Modeling.Private
 
 
 
-		private Model ToModel(Data.Model dataModel, ModelViewData modelViewData)
+		private ModelOld ToModel(Data.Model dataModel, ModelViewDataOld modelViewData)
 		{
 			IEnumerable<Data.Node> nodes = dataModel.Nodes ?? Enumerable.Empty<Data.Node>();
 			IEnumerable<Data.Link> links = dataModel.Links ?? Enumerable.Empty<Data.Link>();
 
 			NodeOld root = CreateRootNode();
-			Model model = new Model(root);
+			ModelOld model = new ModelOld(root);
 
 			Timing t = Timing.Start();
 			foreach (Data.Node node in nodes)
@@ -108,7 +108,7 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		private Data.Model ToDataModel(Model model)
+		private Data.Model ToDataModel(ModelOld model)
 		{
 			Data.Model dataModel = new Data.Model();
 
@@ -120,7 +120,7 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		private static void AddViewData(NodeOld node, ModelViewData modelViewData)
+		private static void AddViewData(NodeOld node, ModelViewDataOld modelViewData)
 		{
 			Data.ViewData nodeViewData = ToViewData(node);
 
@@ -158,8 +158,8 @@ namespace Dependinator.Modeling.Private
 		private void AddNode(
 			Data.Node dataNode,
 			NodeName parentName,
-			Model model,
-			ModelViewData modelViewData)
+			ModelOld model,
+			ModelViewDataOld modelViewData)
 		{
 			NodeName fullName = string.IsNullOrEmpty(parentName)
 				? dataNode.Name
@@ -205,7 +205,7 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		private void AddLink(Data.Link dataLink, Model model, ModelViewData modelViewData)
+		private void AddLink(Data.Link dataLink, ModelOld model, ModelViewDataOld modelViewData)
 		{
 			NodeOld sourceNode = GetOrAddNode(dataLink.Source, model, modelViewData);
 			NodeOld targetNode = GetOrAddNode(dataLink.Target, model, modelViewData);
@@ -263,7 +263,7 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		private NodeOld GetOrAddNode(NodeName nodeName, Model model, ModelViewData modelViewData)
+		private NodeOld GetOrAddNode(NodeName nodeName, ModelOld model, ModelViewDataOld modelViewData)
 		{
 			if (!model.Nodes.TryGetValue(nodeName, out NodeOld node))
 			{
@@ -274,7 +274,7 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		private NodeOld CreateNode(NodeName nodeName, Model model, ModelViewData modelViewData)
+		private NodeOld CreateNode(NodeName nodeName, ModelOld model, ModelViewDataOld modelViewData)
 		{
 			NodeName parentName = nodeName.ParentName;
 
@@ -296,7 +296,7 @@ namespace Dependinator.Modeling.Private
 
 		private static void TrySetViewData(
 			Data.ViewData viewData,
-			ModelViewData modelViewData,
+			ModelViewDataOld modelViewData,
 			NodeOld node,
 			NodeName fullName)
 		{

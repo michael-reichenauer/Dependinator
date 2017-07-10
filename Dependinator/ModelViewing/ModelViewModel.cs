@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Threading;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
@@ -56,7 +55,7 @@ namespace Dependinator.ModelViewing
 			Log.Debug("Loading repository ...");
 
 			using (progress.ShowDialog("Loading branch view ..."))
-			{		
+			{
 				modelViewService.InitModules(ItemsViewModel.ItemsCanvas);
 
 				t.Log("Updated view model after cached/fresh");
@@ -77,7 +76,7 @@ namespace Dependinator.ModelViewing
 		public string FilterText { get; private set; } = "";
 
 
-	
+
 
 		public int Width
 		{
@@ -156,7 +155,7 @@ namespace Dependinator.ModelViewing
 		}
 
 
-	
+
 
 
 		public int SelectedIndex

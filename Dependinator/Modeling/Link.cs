@@ -2,9 +2,9 @@ using Dependinator.Utils;
 
 namespace Dependinator.Modeling
 {
-	internal class Link2 : Equatable<Link2>
+	internal class Link : Equatable<Link>
 	{
-		public Link2(NodeId sourceId, NodeId targetId)
+		public Link(NodeId sourceId, NodeId targetId)
 		{
 			Id = new LinkId(sourceId, targetId);
 			SourceId = sourceId;
