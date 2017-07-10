@@ -107,6 +107,10 @@
     <Compile Include="Modeling\IModelNotifications.cs" />
     <Compile Include="Modeling\Link.cs" />
     <Compile Include="Modeling\LinkId.cs" />
+    <Compile Include="Modeling\MemberNode.cs" />
+    <Compile Include="Modeling\NamespaceNode.cs" />
+    <Compile Include="Modeling\RootNode.cs" />
+    <Compile Include="Modeling\TypeNode.cs" />
     <Compile Include="ModelViewing\Private\Links.cs" />
     <Compile Include="ModelViewing\Private\NodesEventArgs.cs" />
     <Compile Include="ModelViewing\Private\Nodes.cs" />

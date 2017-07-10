@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.ApplicationHandling;
@@ -12,7 +13,7 @@ using Dependinator.Utils;
 namespace Dependinator.ModelViewing.Private
 {
 	[SingleInstance]
-	internal class ModelViewService : IModelViewService
+	internal class ModelViewService : IModelViewService, IModelNotifications
 	{
 		private readonly WorkingFolder workingFolder;
 		private readonly IModelingService modelingService;
@@ -234,5 +235,24 @@ namespace Dependinator.ModelViewing.Private
 
 		//		public override string ToString() => $"{Nodes.Count} nodes, {Links.Count} links.";
 		//	}
+
+
+		public void UpdateNodes(IReadOnlyList<Node> nodes)
+		{
+			Log.Debug($"Nodes {nodes.Count}");
+			foreach (Node node in nodes)
+			{
+				Log.Debug($"  {node.Name}");
+			}
+		}
+
+		public void UpdateLinks(IReadOnlyList<Link> links)
+		{
+			Log.Debug($"Links {links.Count}");
+			foreach (Link link in links)
+			{
+				Log.Debug($"  {link}");
+			}
+		}
 	}
 }

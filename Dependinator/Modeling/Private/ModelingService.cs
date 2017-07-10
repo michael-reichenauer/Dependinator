@@ -6,7 +6,6 @@ using Dependinator.Modeling.Private.Analyzing;
 using Dependinator.Modeling.Private.Serializing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
-using Dependinator.ModelViewing.Private;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 
@@ -111,10 +110,22 @@ namespace Dependinator.Modeling.Private
 		private Data.Model ToDataModel(ModelOld model)
 		{
 			Data.Model dataModel = new Data.Model();
+			dataModel.Nodes = new List<Data.Node>();
+			dataModel.Links = new List<Data.Link>();
 
-			dataModel.Nodes = model.Root.ChildNodes
-				.Select(ToDataNode)
-				.ToList();
+			Queue<NodeOld> nodes = new Queue<NodeOld>();
+			model.Root.ChildNodes.ForEach(nodes.Enqueue);
+
+			while (nodes.Any())
+			{
+				NodeOld node = nodes.Dequeue();
+				Data.Node dataNode = ToDataNode(node);
+				dataModel.Nodes.Add(dataNode);
+
+				node.ChildNodes.ForEach(nodes.Enqueue);
+
+				DataLinksQuery(node).ForEach(dataModel.Links.Add);
+			}
 
 			return dataModel;
 		}
@@ -135,10 +146,6 @@ namespace Dependinator.Modeling.Private
 
 		private static Data.ViewData ToViewData(NodeOld node)
 		{
-			if (node.NodeName.ShortName == "GitMind")
-			{
-
-			}
 			Data.ViewData viewData = new Data.ViewData
 			{
 				Color = node.PersistentNodeColor,
@@ -170,25 +177,6 @@ namespace Dependinator.Modeling.Private
 			node.SetType(dataNode.Type);
 
 			TrySetViewData(dataNode.ViewData, modelViewData, node, fullName);
-
-
-			if (dataNode.Nodes != null)
-			{
-				foreach (Data.Node childDataNode in dataNode.Nodes)
-				{
-					AddNode(childDataNode, fullName, model, modelViewData);
-				}
-			}
-
-			if (dataNode.Links != null)
-			{
-				foreach (Data.Link dataLink in dataNode.Links)
-				{
-					NodeOld targetNode = GetOrAddNode(dataLink.Target, model, modelViewData);
-					LinkOld link = new LinkOld(node, targetNode);
-					node.Links.Add(link);
-				}
-			}
 		}
 
 
@@ -219,10 +207,8 @@ namespace Dependinator.Modeling.Private
 		{
 			Data.Node dataNode = new Data.Node
 			{
-				Name = node.NodeName.ShortName,
+				Name = node.NodeName,
 				Type = node.NodeType,
-				Nodes = ToChildren(node.ChildNodes),
-				Links = ToDataLinks(node),
 				ViewData = ToViewData(node)
 			};
 
@@ -230,37 +216,9 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		private static List<Data.Link> ToDataLinks(NodeOld node)
-		{
-			List<Data.Link> links = null;
-
-			foreach (LinkOld link in node.Links.Links)
-			{
-				Data.Link dataLink = new Data.Link { Target = link.Target.NodeName };
-
-				if (links == null)
-				{
-					links = new List<Data.Link>();
-				}
-
-				links.Add(dataLink);
-			}
-
-			return links;
-		}
-
-
-		private List<Data.Node> ToChildren(IEnumerable<NodeOld> nodeChildren)
-		{
-			if (!nodeChildren.Any())
-			{
-				return null;
-			}
-
-			return nodeChildren
-				.Select(ToDataNode)
-				.ToList();
-		}
+		private static IEnumerable<Data.Link> DataLinksQuery(NodeOld node) => 
+			node.Links.Links
+				.Select(l => new Data.Link {Source = node.NodeName, Target = l.Target.NodeName});
 
 
 		private NodeOld GetOrAddNode(NodeName nodeName, ModelOld model, ModelViewDataOld modelViewData)
@@ -322,8 +280,5 @@ namespace Dependinator.Modeling.Private
 			node.PersistentNodeColor = viewData.Color;
 			node.PersistentOffset = new Point(viewData.OffsetX, viewData.OffsetY);
 		}
-
-
-
 	}
 }

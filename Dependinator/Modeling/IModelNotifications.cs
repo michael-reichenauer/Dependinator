@@ -6,6 +6,6 @@ namespace Dependinator.Modeling
 	{
 		void UpdateNodes(IReadOnlyList<Node> nodes);
 
-		void UpdateLinks(IReadOnlyList<Link> nodes);
+		void UpdateLinks(IReadOnlyList<Link> links);
 	}
 }

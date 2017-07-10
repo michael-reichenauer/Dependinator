@@ -8,6 +8,7 @@ namespace Dependinator.Modeling
 		{
 			Id = new NodeId(name);
 			ParentId = parentId;
+			Name = name;
 
 			IsEqualWhen(Id);
 		}
@@ -15,39 +16,8 @@ namespace Dependinator.Modeling
 
 		public NodeId Id { get; }
 		public NodeId ParentId { get; }
+		public NodeName Name { get; }
 
 		public override string ToString() => Id.ToString();
-	}
-
-	internal class RootNode : NamespaceNode
-	{
-		public RootNode()
-			: base(NodeId.Root, NodeName.Root)
-		{ }
-	}
-
-	internal class NamespaceNode : Node
-	{
-		public NamespaceNode(NodeId parentId, NodeName name) 
-			: base(parentId, name)
-		{
-		}
-	}
-
-	internal class TypeNode : Node
-	{
-		public TypeNode(NodeId parentId, NodeName name)
-			: base(parentId, name)
-		{
-		}
-	}
-
-
-	internal class MemberNode : Node
-	{
-		public MemberNode(NodeId parentId, NodeName name)
-			: base(parentId, name)
-		{
-		}
 	}
 }

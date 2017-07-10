@@ -2,38 +2,6 @@ using System.Collections.Generic;
 
 namespace Dependinator.Modeling.Private.Serializing
 {
-	////internal static class ImportData
-	////{
-	////	// A model contains a list of nodes
-	////	internal class Model
-	////	{
-	////		public List<Node> Nodes { get; set; }
-	////		public List<Link> Links { get; set; }
-	////	}
-
-	////	// A node
-	////	public class Node
-	////	{
-	////		// The name of a node with '.' separating hierarchy, e.g. like in namespaces
-	////		public string Name { get; set; }
-
-	////		// Type of node, Currently one of "NameSpace", "Type", "Member"
-	////		public string Type { get; set; }
-	////	}
-
-
-	////	// Link between two nodes
-	////	public class Link
-	////	{
-	////		// The source node name
-	////		public string Source { get; set; }
-
-	////		// The target node name of the link
-	////		public string Target { get; set; }
-	////	}
-	////}
-
-
 	internal static class Data
 	{
 		// A model contains a list of nodes
@@ -52,12 +20,6 @@ namespace Dependinator.Modeling.Private.Serializing
 			// Type of node, Currently one of "NameSpace", "Type", "Member"
 			public string Type { get; set; }
 
-			// List of child nodes (if any)
-			public List<Node> Nodes { get; set; }
-
-			// List of links (if any) 
-			public List<Link> Links { get; set; }
-
 			// Optional view data like node location and size
 			public ViewData ViewData { get; set; }
 		}
@@ -65,7 +27,7 @@ namespace Dependinator.Modeling.Private.Serializing
 		// Link between two nodes
 		public class Link
 		{
-			// The source node name (not needed if link specified outside source node)
+			// The source node name
 			public string Source { get; set; }
 
 			// The target node name of the link
