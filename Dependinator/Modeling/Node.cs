@@ -4,10 +4,10 @@ namespace Dependinator.Modeling
 {
 	internal abstract class Node : Equatable<Node>
 	{
-		protected Node(NodeId parentId, NodeName name)
+		protected Node(NodeName name)
 		{
 			Id = new NodeId(name);
-			ParentId = parentId;
+			ParentId = new NodeId(name.ParentName);
 			Name = name;
 
 			IsEqualWhen(Id);

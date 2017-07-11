@@ -28,18 +28,32 @@ namespace Dependinator.ModelViewing.Private
 		public IReadOnlyList<Node> Children(NodeId nodeId) => nodesChildren[nodeId];
 
 
-		public void Add(IReadOnlyList<Node> nodes)
+		public void Update(IReadOnlyList<Node> nodes)
 		{
-			foreach (var node in nodes)
+			Dictionary<NodeId, Node> updated = new Dictionary<NodeId, Node>();
+
+			foreach (var node in nodes.Where(n => !allNodes.ContainsKey(n.Id)))
 			{
-				Asserter.Requires(!allNodes.ContainsKey(node.Id));
 				allNodes[node.Id] = node;
+				updated[node.Id] = node;
+
+				if (!allNodes.TryGetValue(node.ParentId, out Node parent))
+				{
+					parent = new NamespaceNode(node.Name.ParentName);
+					allNodes[parent.Id] = parent;				
+				}
+
 				AddNodeToParentChildren(node);
+				updated[parent.Id] = parent;
 			}
 
 			var parentNodes = nodes
 				.Select(node => allNodes.TryGetValue(node.ParentId, out Node parent) ? parent : null)
-				.Where(node => node != null);
+				.Where(node => node != null)
+				.ToList();
+
+			//if ()
+
 
 			var updatedNodes = nodes
 				.Concat(parentNodes)
@@ -51,6 +65,7 @@ namespace Dependinator.ModelViewing.Private
 				OnNodesUpdated(new NodesEventArgs(updatedNodes));
 			}
 		}
+
 
 		public void Remove(IReadOnlyList<Node> nodes)
 		{

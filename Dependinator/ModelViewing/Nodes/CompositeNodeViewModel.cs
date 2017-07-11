@@ -5,7 +5,7 @@ using Dependinator.ModelViewing.Private.Items.Private;
 
 namespace Dependinator.ModelViewing.Nodes
 {
-	internal class CompositeNodeViewModel : NodeViewModel
+	internal class CompositeNodeViewModel : NodeOldViewModel
 	{
 		private readonly NodeOld node;
 

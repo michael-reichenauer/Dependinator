@@ -45,19 +45,18 @@ namespace Dependinator.Modeling.Private
 		private static Node ToNode(Data.Node node)
 		{
 			NodeName name = node.Name;
-			NodeId parentId = new NodeId(name.ParentName);
 
 			if (node.Type == Data.NodeType.TypeType)
 			{
-				return new NamespaceNode(parentId, name);
+				return new NamespaceNode(name);
 			}
 			else if (node.Type == Data.NodeType.MemberType)
 			{
-				return new MemberNode(parentId, name);
+				return new MemberNode(name);
 			}
 			else
 			{
-				return new NamespaceNode(parentId, name);
+				return new NamespaceNode(name);
 			}
 		}
 	}

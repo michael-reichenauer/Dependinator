@@ -16,9 +16,9 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		private void ToolTip_OnOpened(object sender, RoutedEventArgs e) =>
-			(DataContext as NodeViewModel)?.UpdateToolTip();
+			(DataContext as NodeOldViewModel)?.UpdateToolTip();
 
 		private void UIElement_OnMouseMove(object sender, MouseEventArgs e) =>
-			(DataContext as NodeViewModel)?.OnMouseMove(e);
+			(DataContext as NodeOldViewModel)?.OnMouseMove(e);
 	}
 }

@@ -1,6 +1,6 @@
 namespace Dependinator.ModelViewing.Nodes
 {
-	internal class MemberNodeViewModel : NodeViewModel
+	internal class MemberNodeViewModel : NodeOldViewModel
 	{
 		public MemberNodeViewModel(NodeOld node)
 			: base(node)
