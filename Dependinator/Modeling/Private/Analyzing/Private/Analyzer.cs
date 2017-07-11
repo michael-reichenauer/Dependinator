@@ -22,6 +22,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 		public void AnalyzeAssembly(string assemblyPath, NotificationReceiver receiver)
 		{
+			// The sender, which will send notifications to the receiver in the parent app-domain
 			NotificationSender sender = new NotificationSender(receiver);
 
 			// Store current directory, so it can be restored in the end

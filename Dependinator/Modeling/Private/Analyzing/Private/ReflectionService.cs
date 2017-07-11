@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 
 namespace Dependinator.Modeling.Private.Analyzing.Private
 {
@@ -22,7 +21,9 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			{
 				Analyzer analyzer = CreateTypeInDomain<Analyzer>(reflectionDomain);
 
-				NotificationReceiver receiver = new NotificationReceiver(modelNotifications.Value);
+				// To send notifications from sub domain, we use a receiver in this domain, which is
+				// passed to the sub-domain		
+				NotificationReceiver receiver = new NotificationReceiver(modelNotifications.Value);				
 
 				analyzer.AnalyzeAssembly(path, receiver);
 			}
