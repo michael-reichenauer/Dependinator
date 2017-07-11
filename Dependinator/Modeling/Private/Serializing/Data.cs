@@ -1,17 +1,20 @@
+using System;
 using System.Collections.Generic;
 
 namespace Dependinator.Modeling.Private.Serializing
 {
-	internal static class Data
+	public static class Data
 	{
 		// A model contains a list of nodes
-		internal class Model
+		[Serializable]
+		public class Model
 		{
 			public List<Node> Nodes { get; set; }
 			public List<Link> Links { get; set; }
 		}
 
 		// A node
+		[Serializable]
 		public class Node
 		{
 			// The name of a node with '.' separating hierarchy, e.g. like in namespaces
@@ -25,6 +28,7 @@ namespace Dependinator.Modeling.Private.Serializing
 		}
 
 		// Link between two nodes
+		[Serializable]
 		public class Link
 		{
 			// The source node name
@@ -35,6 +39,7 @@ namespace Dependinator.Modeling.Private.Serializing
 		}
 
 		// Optional view data for a node like location, size and color
+		[Serializable]
 		public class ViewData
 		{
 			public double X { get; set; }

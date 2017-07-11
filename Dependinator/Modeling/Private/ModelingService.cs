@@ -37,8 +37,8 @@ namespace Dependinator.Modeling.Private
 
 		public ModelOld Analyze(string path, ModelViewDataOld modelViewData)
 		{
-			Data.Model dataModel = reflectionService.Analyze(path);
-			return ToModel(dataModel, modelViewData);
+			reflectionService.Analyze(path);
+			return new ModelOld(CreateRootNode());
 		}
 
 

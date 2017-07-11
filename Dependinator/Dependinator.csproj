@@ -109,6 +109,8 @@
     <Compile Include="Modeling\LinkId.cs" />
     <Compile Include="Modeling\MemberNode.cs" />
     <Compile Include="Modeling\NamespaceNode.cs" />
+    <Compile Include="Modeling\Private\NotificationReceiver.cs" />
+    <Compile Include="Modeling\Private\Analyzing\Private\Analyzer.cs" />
     <Compile Include="Modeling\RootNode.cs" />
     <Compile Include="Modeling\TypeNode.cs" />
     <Compile Include="ModelViewing\Private\Links.cs" />
@@ -163,7 +165,7 @@
     <Compile Include="Modeling\Private\Analyzing\Private\IlToText.cs" />
     <Compile Include="Modeling\Private\Analyzing\Private\MethodBodyReader.cs" />
     <Compile Include="Modeling\Private\Analyzing\Private\Reflection.cs" />
-    <Compile Include="Modeling\Private\Analyzing\Private\ReflectionModel.cs" />
+    <Compile Include="Modeling\Private\NotificationSender.cs" />
     <Compile Include="Modeling\Private\Analyzing\Private\Globals.cs" />
     <Compile Include="ModelViewing\Links\Private\ILinkSegmentService.cs" />
     <Compile Include="ModelViewing\Links\ILinkService.cs" />

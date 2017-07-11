@@ -4,6 +4,6 @@ namespace Dependinator.Modeling.Private.Analyzing
 {
 	internal interface IReflectionService
 	{
-		Data.Model Analyze(string path);
+		void Analyze(string path);
 	}
 }

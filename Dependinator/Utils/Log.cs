@@ -40,7 +40,7 @@ namespace Dependinator.Utils
 		{
 			DisableErrorAndUsageReporting = new Lazy<bool>(() =>
 				Settings.Get<Options>().DisableErrorAndUsageReporting);
-		
+
 			Task.Factory.StartNew(SendBufferedLogRows, TaskCreationOptions.LongRunning)
 				.RunInBackground();
 
@@ -89,6 +89,12 @@ namespace Dependinator.Utils
 				{
 					Native.OutputDebugString(logText);
 					WriteToFile(logText);
+				}
+				catch (ThreadAbortException)
+				{
+					// The process or app-domain is closing,
+					Thread.ResetAbort();
+					return;
 				}
 				catch (Exception e) when (e.IsNotFatal())
 				{
@@ -162,8 +168,8 @@ namespace Dependinator.Utils
 			}
 
 			try
-			{		
-				SendLog(text);		
+			{
+				SendLog(text);
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
@@ -171,7 +177,7 @@ namespace Dependinator.Utils
 			}
 		}
 
-		
+
 		private static void SendLog(string text)
 		{
 			logTexts.Add(text);
@@ -194,7 +200,7 @@ namespace Dependinator.Utils
 				UdpClient.Send(bytes, bytes.Length, usageLogEndPoint);
 			}
 			catch (Exception)
-			{		
+			{
 				// Ignore failed
 			}
 		}
@@ -224,6 +230,12 @@ namespace Dependinator.Utils
 					catch (DirectoryNotFoundException)
 					{
 						// Ignore error since folder has been deleted during uninstallation
+						return;
+					}
+					catch (ThreadAbortException)
+					{
+						// Process or app-domain is closing
+						Thread.ResetAbort();
 						return;
 					}
 					catch (Exception e)
@@ -264,13 +276,13 @@ namespace Dependinator.Utils
 					{
 						SendLog("ERROR Failed to move temp to second log file: " + e);
 					}
-					
+
 				}).RunInBackground();
 			}
 			catch (Exception e)
 			{
 				SendLog("ERROR Failed to move large log file: " + e);
-			}	
+			}
 		}
 
 		private static class Native

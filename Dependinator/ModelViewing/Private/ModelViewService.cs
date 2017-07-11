@@ -1,7 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using Dependinator.ApplicationHandling;
 using Dependinator.ApplicationHandling.SettingsHandling;
 using Dependinator.Modeling;
@@ -18,7 +22,7 @@ namespace Dependinator.ModelViewing.Private
 		private readonly WorkingFolder workingFolder;
 		private readonly IModelingService modelingService;
 
-
+		private Dispatcher dispatcher;
 
 		private ModelOld currentModel;
 
@@ -35,6 +39,8 @@ namespace Dependinator.ModelViewing.Private
 
 		public void InitModules(IItemsCanvas rootCanvas)
 		{
+			dispatcher = Dispatcher.CurrentDispatcher;
+
 			Timing t = new Timing();
 
 			currentModel = GetDataModel();
@@ -100,7 +106,8 @@ namespace Dependinator.ModelViewing.Private
 
 			currentModel.Root.Clear();
 
-			currentModel = await RefreshElementTreeAsync(modelViewData);
+			await RefreshElementTreeAsync(modelViewData);
+
 
 			t.Log("Read fresh data");
 
@@ -239,19 +246,24 @@ namespace Dependinator.ModelViewing.Private
 
 		public void UpdateNodes(IReadOnlyList<Node> nodes)
 		{
-			Log.Debug($"Nodes {nodes.Count}");
-			foreach (Node node in nodes)
+			foreach (List<Node> batch in nodes.Partition(100))
 			{
-				Log.Debug($"  {node.Name}");
-			}
+				dispatcher.Invoke(DispatcherPriority.Background, (Action)(() =>
+				{
+					Log.Debug($"Nodes {batch.Count}");
+				}));
+			}		
 		}
+
 
 		public void UpdateLinks(IReadOnlyList<Link> links)
 		{
-			Log.Debug($"Links {links.Count}");
-			foreach (Link link in links)
+			foreach (List<Link> batch in links.Partition(100))
 			{
-				Log.Debug($"  {link}");
+				dispatcher.Invoke(DispatcherPriority.Background, (Action) (() =>
+				{
+					Log.Debug($"Links {batch.Count}");
+				}));
 			}
 		}
 	}
