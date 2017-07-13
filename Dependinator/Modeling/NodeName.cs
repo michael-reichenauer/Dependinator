@@ -31,7 +31,7 @@ namespace Dependinator.Modeling
 
 		public static implicit operator NodeName(string fullName) => new NodeName(fullName);
 
-		public override string ToString() => fullName;
+		public override string ToString() => this != Root ? fullName : "<root>";
 
 
 		public int GetLevelCount() => fullName.Count(c => c == '.') + 1;

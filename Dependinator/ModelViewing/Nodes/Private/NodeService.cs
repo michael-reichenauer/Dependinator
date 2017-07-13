@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
+using Dependinator.Modeling;
 
 namespace Dependinator.ModelViewing.Nodes.Private
 {
@@ -44,6 +46,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			return themeService.GetRectangleHighlighterBrush(brush);
 		}
 
+	
 
 		public void SetChildrenLayout(NodeOld parent)
 		{
@@ -76,7 +79,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 				}
 
 				Rect bounds = new Rect(location, size);
-				childNode.NodeBounds = bounds;
+				childNode.ItemBounds = bounds;
 				count++;
 			}
 		}

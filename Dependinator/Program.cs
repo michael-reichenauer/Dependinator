@@ -17,7 +17,6 @@ namespace Dependinator
 		public static void Main()
 		{
 			Log.Debug(GetStartLineText());
-
 			Program program = new Program();
 			program.Run();
 		}

@@ -55,7 +55,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public NodeType NodeType { get; private set; }
 
 		public Rect nodeBounds;
-		public Rect NodeBounds
+		public Rect ItemBounds
 		{
 			get
 			{
@@ -146,8 +146,8 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			Vector scaledOffset = viewOffset / NodeScale;
 
-			Point newLocation = NodeBounds.Location + scaledOffset;
-			Size size = NodeBounds.Size;
+			Point newLocation = ItemBounds.Location + scaledOffset;
+			Size size = ItemBounds.Size;
 
 			if (!isDoing)
 			{
@@ -167,29 +167,29 @@ namespace Dependinator.ModelViewing.Nodes
 
 					if (Math.Abs(p.X - 0) < dist || direction == 1)
 					{
-						newLocation = new Point(NodeBounds.Location.X + scaledOffset.X, NodeBounds.Location.Y);
+						newLocation = new Point(ItemBounds.Location.X + scaledOffset.X, ItemBounds.Location.Y);
 						size = new Size(size.Width - scaledOffset.X, size.Height);
 						direction = 1;
 						isMove = true;
 						move = new Vector(viewOffset.X, 0);
 					}
-					else if (Math.Abs(p.X - NodeBounds.Width) < dist || direction == 2)
+					else if (Math.Abs(p.X - ItemBounds.Width) < dist || direction == 2)
 					{
-						newLocation = NodeBounds.Location;
+						newLocation = ItemBounds.Location;
 						size = new Size(size.Width + scaledOffset.X, size.Height);
 						direction = 2;
 					}
 					else if (Math.Abs(p.Y - 0) < dist2 || direction == 3)
 					{
-						newLocation = new Point(NodeBounds.Location.X, NodeBounds.Location.Y + scaledOffset.Y);
+						newLocation = new Point(ItemBounds.Location.X, ItemBounds.Location.Y + scaledOffset.Y);
 						size = new Size(size.Width, size.Height - scaledOffset.Y);
 						direction = 3;
 						isMove = true;
 						move = new Vector(0, viewOffset.Y);
 					}
-					else if (Math.Abs(p.Y - NodeBounds.Height) < dist || direction == 4)
+					else if (Math.Abs(p.Y - ItemBounds.Height) < dist || direction == 4)
 					{
-						newLocation = NodeBounds.Location;
+						newLocation = ItemBounds.Location;
 						size = new Size(size.Width, size.Height + scaledOffset.Y);
 						direction = 4;
 					}
@@ -201,7 +201,7 @@ namespace Dependinator.ModelViewing.Nodes
 				return;
 			}
 
-			NodeBounds = new Rect(newLocation, size);
+			ItemBounds = new Rect(newLocation, size);
 
 			ParentNode.itemsCanvas.UpdateItem(viewModel);
 
@@ -227,8 +227,8 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			Vector scaledOffset = viewOffset / NodeScale;
 
-			Point newLocation = NodeBounds.Location;
-			Size size = NodeBounds.Size;
+			Point newLocation = ItemBounds.Location;
+			Size size = ItemBounds.Size;
 
 			if (viewPosition2.HasValue)
 			{
@@ -237,23 +237,23 @@ namespace Dependinator.ModelViewing.Nodes
 
 				if (Math.Abs(p.X - 0) < dist)
 				{
-					newLocation = new Point(NodeBounds.Location.X + scaledOffset.X, NodeBounds.Location.Y);
+					newLocation = new Point(ItemBounds.Location.X + scaledOffset.X, ItemBounds.Location.Y);
 					size = new Size(size.Width - scaledOffset.X, size.Height);
 				}
-				else if (Math.Abs(p.X - NodeBounds.Width) < dist)
+				else if (Math.Abs(p.X - ItemBounds.Width) < dist)
 				{
-					newLocation = NodeBounds.Location;
+					newLocation = ItemBounds.Location;
 					size = new Size(size.Width + scaledOffset.X, size.Height);
 				}
 
 				if (Math.Abs(p.Y - 0) < dist)
 				{
-					newLocation = new Point(NodeBounds.Location.X, NodeBounds.Location.Y + scaledOffset.Y);
+					newLocation = new Point(ItemBounds.Location.X, ItemBounds.Location.Y + scaledOffset.Y);
 					size = new Size(size.Width, size.Height - scaledOffset.Y);
 				}
-				else if (Math.Abs(p.Y - NodeBounds.Height) < dist)
+				else if (Math.Abs(p.Y - ItemBounds.Height) < dist)
 				{
-					newLocation = NodeBounds.Location;
+					newLocation = ItemBounds.Location;
 					size = new Size(size.Width, size.Height + scaledOffset.Y);
 				}
 			}
@@ -263,7 +263,7 @@ namespace Dependinator.ModelViewing.Nodes
 				return;
 			}
 
-			NodeBounds = new Rect(newLocation, size);
+			ItemBounds = new Rect(newLocation, size);
 
 			ParentNode.itemsCanvas.UpdateItem(viewModel);
 
@@ -300,18 +300,18 @@ namespace Dependinator.ModelViewing.Nodes
 			double delta = (double)wheelDelta / 30;
 			double scaledDelta = delta / NodeScale;
 
-			double width = NodeBounds.Size.Width + (2 * scaledDelta);
-			double height = NodeBounds.Size.Height + (2 * scaledDelta);
+			double width = ItemBounds.Size.Width + (2 * scaledDelta);
+			double height = ItemBounds.Size.Height + (2 * scaledDelta);
 
 			if (width < 40 || height < 20)
 			{
 				return;
 			}
 
-			double zoomFactor = width / NodeBounds.Size.Width;
-			Point newLocation = new Point(NodeBounds.X - scaledDelta, NodeBounds.Y);
+			double zoomFactor = width / ItemBounds.Size.Width;
+			Point newLocation = new Point(ItemBounds.X - scaledDelta, ItemBounds.Y);
 			Size newItemSize = new Size(width, height);
-			NodeBounds = new Rect(newLocation, newItemSize);
+			ItemBounds = new Rect(newLocation, newItemSize);
 
 			ParentNode.itemsCanvas.UpdateItem(viewModel);
 

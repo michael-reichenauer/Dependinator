@@ -3,7 +3,7 @@ using Dependinator.Utils.UI;
 
 namespace Dependinator.ModelViewing.Private.Items
 {
-	internal abstract class ItemViewModel : ViewModel, IItem
+	internal abstract class ItemViewModel : ViewModel, IItem, IItemsCanvasBounds
 	{
 		// UI properties
 		public string Type => this.GetType().Name;

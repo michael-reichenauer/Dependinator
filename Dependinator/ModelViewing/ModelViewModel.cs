@@ -128,7 +128,7 @@ namespace Dependinator.ModelViewing
 
 		public async Task ManualRefreshAsync(bool refreshLayout = false)
 		{
-			using (progress.ShowDialog("Refreshing view ..."))
+			using (progress.ShowBusy())
 			{
 				await modelViewService.Refresh(ItemsViewModel.ItemsCanvas, refreshLayout);
 			}

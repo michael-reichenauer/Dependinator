@@ -113,7 +113,7 @@ namespace Dependinator.ModelViewing.Private.Items
 				return;
 			}
 
-			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && !viewModel.IsRoot)
+			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && !(viewModel?.IsRoot ?? false))
 			{
 				// Root node move only active on root node
 				return;

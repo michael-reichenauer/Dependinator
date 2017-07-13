@@ -17,7 +17,7 @@ namespace Dependinator.ModelViewing.Nodes
 			this.node = node;
 		}
 
-		protected override Rect GetItemBounds() => node.NodeBounds;
+		protected override Rect GetItemBounds() => node.ItemBounds;
 
 		public Brush RectangleBrush => node.GetNodeBrush();
 		public Brush BackgroundBrush => node.GetBackgroundNodeBrush();
@@ -65,7 +65,7 @@ namespace Dependinator.ModelViewing.Nodes
 		//	$"Rect: {NodeBounds.TS()}\n";
 
 		public string ItemsToolTip =>
-			$"\nRect: {node.NodeBounds.TS()}\n";
+			$"\nRect: {node.ItemBounds.TS()}\n";
 
 
 		public override string ToString() => node.NodeName;

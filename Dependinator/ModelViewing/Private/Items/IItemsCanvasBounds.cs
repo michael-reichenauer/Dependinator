@@ -4,6 +4,6 @@ namespace Dependinator.ModelViewing.Private.Items
 {
 	internal interface IItemsCanvasBounds
 	{
-		Rect NodeBounds { get; }
+		Rect ItemBounds { get; }
 	}
 }

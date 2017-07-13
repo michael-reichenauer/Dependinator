@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -21,6 +20,8 @@ namespace Dependinator.ModelViewing.Private
 	{
 		private readonly WorkingFolder workingFolder;
 		private readonly IModelingService modelingService;
+		private readonly INodeService nodeService;
+		private readonly Model model;
 
 		private Dispatcher dispatcher;
 
@@ -28,18 +29,24 @@ namespace Dependinator.ModelViewing.Private
 
 		public ModelViewService(
 			WorkingFolder workingFolder,
-			IModelingService modelingService)
+			IModelingService modelingService,
+			INodeService nodeService,
+			Model model)
 		{
 			this.workingFolder = workingFolder;
 			this.modelingService = modelingService;
+			this.nodeService = nodeService;
+			this.model = model;
 		}
 
 
+		
 
 
 		public void InitModules(IItemsCanvas rootCanvas)
 		{
 			dispatcher = Dispatcher.CurrentDispatcher;
+			model.Nodes.SetRootCanvas(rootCanvas);
 
 			Timing t = new Timing();
 
@@ -60,32 +67,6 @@ namespace Dependinator.ModelViewing.Private
 
 		private ModelOld GetDataModel()
 		{
-			//DataModel dataModel = new DataModel()
-			//		.AddType("Axis.Ns1")	
-			//		.AddType("Other.Ns2")			
-			//		.AddLink("Axis.Ns1", "Other.Ns2")
-
-			//	;
-
-			//DataModel dataModel = new DataModel()
-			//		.AddType("Axis.Ns1")
-			//		.AddType("Axis.Ns2")
-			//		.AddType("Axis.Ns1.Class1")
-			//		.AddType("Axis.Ns1.Class2")
-			//		.AddType("Axis.Ns2.Class1")
-			//		.AddType("Axis.Ns2.NS3.Class1")
-			//		.AddType("Other.Ns1.Class1")
-			//		.AddType("Other.Ns2")
-			//		.AddType("Other.Ns3")
-			//		.AddType("Other.Ns4")
-			//		.AddType("Other.Ns5")
-			//		.AddType("Other.Ns6")
-			//		.AddLink("Axis.Ns1.Class1", "Axis.Ns1.Class2")
-			//		.AddLink("Axis.Ns1.Class1", "Axis.Ns2.Class2")
-			//		.AddLink("Axis.Ns1.Class1", "Other.Ns1.Class1")
-			//	;
-
-
 			ModelOld dataModel = GetCachedOrFreshModelData();
 
 			return dataModel;
@@ -104,14 +85,14 @@ namespace Dependinator.ModelViewing.Private
 			ModelViewDataOld modelViewData = refreshLayout ? null : modelingService.ToViewData(currentModel);
 			t.Log("Got current model data");
 
-			currentModel.Root.Clear();
+			//currentModel.Root.Clear();
 
 			await RefreshElementTreeAsync(modelViewData);
 
 
 			t.Log("Read fresh data");
 
-			ShowModel(rootCanvas);
+			//ShowModel(rootCanvas);
 
 			t.Log("Show model");
 
@@ -214,17 +195,89 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-
-
 		public void UpdateNodes(IReadOnlyList<Node> nodes)
 		{
 			foreach (List<Node> batch in nodes.Partition(100))
 			{
-				dispatcher.Invoke(DispatcherPriority.Background, (Action)(() =>
-				{
-					Log.Debug($"Nodes {batch.Count}");
-				}));
-			}		
+				dispatcher.BeginInvoke(
+					DispatcherPriority.Background,
+					(Action<List<Node>>)(batchNodes => { batchNodes.ForEach(UpdateNode); }),
+					batch);
+			}
+		}
+
+
+
+		private void UpdateNode(Node node)
+		{
+			if (model.Nodes.TryGetNode(node.Id, out Node existingNode))
+			{
+				// TODO: Check node properties as well and update if changed
+				return;
+			}
+
+			Log.Debug($"Node {node}");
+			AddAncestorsIfNeeded(node);
+
+			NodeViewModel nodeViewModel = new NodeViewModel(nodeService, node);
+			model.Nodes.AddViewModel(node.Id, nodeViewModel);
+
+			IItemsCanvas parentCanvas = GetCanvas(node.ParentId);
+			parentCanvas.AddItem(nodeViewModel);
+		}
+
+
+		private void AddAncestorsIfNeeded(Node node)
+		{
+			Node current = node;
+			while (!model.Nodes.TryGetNode(current.ParentId, out Node parent))
+			{
+				// Parent node not yet in model
+				parent = new NamespaceNode(current.Name.ParentName);
+				Log.Debug($"  Creating parent node: {parent}");
+				model.Nodes.Add(parent);
+				current = parent;
+			}
+		}
+
+
+		private IItemsCanvas GetCanvas(NodeId nodeId)
+		{
+			// First trying to get ann previously created items canvas
+			if (model.Nodes.TryGetItemsCanvas(nodeId, out IItemsCanvas itemsCanvas))
+			{
+				return itemsCanvas;
+			}
+
+			// The node does not yet have a canvas. So we need to get the parent canvas and
+			// then create a child canvas for this node. But since the parent might also not yet
+			// have a canvas, we traverse the ancestors of the node and create all the needed
+			// canvases. Lets start by getting the node and ancestors, until we find one with
+			// a canvas (at least root node will have one)
+			var ancestors = model.Nodes
+				.GetAncestorsAndSelf(nodeId)
+				.TakeWhile(ancestor => !model.Nodes.TryGetItemsCanvas(ancestor.Id, out itemsCanvas));
+
+			// Creating items canvases from the top down to the node and adding each as a child
+			foreach (Node ancestor in ancestors.Reverse())
+			{
+				Log.Debug($"    Creating canvas {ancestor} as child to {itemsCanvas}");
+				itemsCanvas = AddCompositeNode(ancestor, itemsCanvas);
+			}
+
+			return itemsCanvas;
+		}
+
+		private IItemsCanvas AddCompositeNode(Node node, IItemsCanvas parentCanvas)
+		{
+			NodeViewModel viewModel = new NodeViewModel(nodeService, node);
+			model.Nodes.AddViewModel(node.Id, viewModel);
+
+			parentCanvas.AddItem(viewModel);
+
+			IItemsCanvas itemsCanvas = parentCanvas.CreateChild(viewModel);
+			model.Nodes.AddItemsCanvas(node.Id, itemsCanvas);
+			return itemsCanvas;
 		}
 
 
@@ -232,10 +285,10 @@ namespace Dependinator.ModelViewing.Private
 		{
 			foreach (List<Link> batch in links.Partition(100))
 			{
-				dispatcher.Invoke(DispatcherPriority.Background, (Action) (() =>
-				{
-					Log.Debug($"Links {batch.Count}");
-				}));
+				dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() =>
+			 {
+				//
+			 }));
 			}
 		}
 	}

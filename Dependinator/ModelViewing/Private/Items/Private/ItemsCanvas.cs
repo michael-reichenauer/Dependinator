@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Windows;
+using Dependinator.Modeling;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
@@ -14,7 +15,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		private double scale = 1.0;
 		private Point offset = new Point(0, 0);
 		private Rect ItemsCanvasBounds => 
-			itemsCanvasBounds?.NodeBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
+			itemsCanvasBounds?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
 
 		public ItemsCanvas()
 			: this(null, null)
@@ -210,7 +211,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		}
 
 
-		public override string ToString() => itemsCanvasBounds?.ToString() ?? "<root>";
+		public override string ToString() => itemsCanvasBounds?.ToString() ?? NodeName.Root.ToString();
 
 
 		private Rect GetItemsCanvasViewArea()

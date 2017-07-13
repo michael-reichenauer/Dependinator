@@ -1,21 +1,15 @@
-using Dependinator.Modeling;
+using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.Private
 {
-	internal enum UpdateStatus
-	{
-		None,
-		Add,
-		Update
-	}
 
-
+	[SingleInstance]
 	internal class Model
 	{
 		public Nodes Nodes { get; } = new Nodes();
 
 		public Links Links { get; } = new Links();
 
-		
+
 	}
 }

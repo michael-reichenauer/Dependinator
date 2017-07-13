@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.Modeling;
@@ -9,23 +10,29 @@ namespace Dependinator.ModelViewing.Nodes
 {
 	internal class NodeViewModel : ItemViewModel
 	{
+		private readonly INodeService nodeService;
+
 		private Point lastMousePosition;
 		private readonly Node node;
 
-		protected NodeViewModel(Node node)
+		public NodeViewModel(INodeService nodeService, Node node)
 		{
+			this.nodeService = nodeService;
 			this.node = node;
 
 			NodeBounds = new Rect(200, 200, 250, 150);
 			NodeScale = 1;
+			Show();
+			RectangleBrush = nodeService.GetRandomRectangleBrush();
+			BackgroundBrush = nodeService.GetRectangleBackgroundBrush(RectangleBrush);
 		}
 
 		protected override Rect GetItemBounds() => NodeBounds;
 		public Rect NodeBounds { get; private set; }
 		public double NodeScale { get; private set; }
 
-		public Brush RectangleBrush => Brushes.Aqua;
-		public Brush BackgroundBrush => Brushes.DimGray;
+		public Brush RectangleBrush { get; }
+		public Brush BackgroundBrush { get; }
 
 		public string Name => node.Name.ShortName;
 
@@ -40,23 +47,23 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			Point viewPosition = e.GetPosition(Application.Current.MainWindow);
 
-			//if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
-			//    && e.LeftButton == MouseButtonState.Pressed
-			//    && !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
-			//{
+			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
+					&& e.LeftButton == MouseButtonState.Pressed
+					&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
+			{
 
-			//	// Move node
-			//	(e.Source as UIElement)?.CaptureMouse();
-			//	Vector viewOffset = viewPosition - lastMousePosition;
-			//	e.Handled = true;
+				// Move node
+				(e.Source as UIElement)?.CaptureMouse();
+				Vector viewOffset = viewPosition - lastMousePosition;
+				e.Handled = true;
 
-			//	node.Move(viewOffset, null, false);
-			//}
-			//else
-			//{
-			//	// End of move
-			//	(e.Source as UIElement)?.ReleaseMouseCapture();
-			//}
+				//node.Move(viewOffset, null, false);
+			}
+			else
+			{
+				// End of move
+				(e.Source as UIElement)?.ReleaseMouseCapture();
+			}
 
 			lastMousePosition = viewPosition;
 		}

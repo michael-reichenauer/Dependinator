@@ -149,10 +149,10 @@ namespace Dependinator.Modeling.Private
 			Data.ViewData viewData = new Data.ViewData
 			{
 				Color = node.PersistentNodeColor,
-				X = node.NodeBounds.X,
-				Y = node.NodeBounds.Y,
-				Width = node.NodeBounds.Width,
-				Height = node.NodeBounds.Height,
+				X = node.ItemBounds.X,
+				Y = node.ItemBounds.Y,
+				Width = node.ItemBounds.Width,
+				Height = node.ItemBounds.Height,
 				Scale = node.ItemsScale,
 				OffsetX = node.ItemsOffset.X,
 				OffsetY = node.ItemsOffset.Y

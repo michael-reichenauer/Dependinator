@@ -93,6 +93,18 @@
 
 				<Style.Triggers>
 
+					<DataTrigger Binding="{Binding Type}" Value="NodeViewModel">
+						<Setter Property="ContentTemplate">
+							<Setter.Value>
+								<DataTemplate>
+									<nodes:NodeView/>
+								</DataTemplate>
+							</Setter.Value>
+						</Setter>
+					</DataTrigger>
+
+					
+
 					<DataTrigger Binding="{Binding Type}" Value="NamespaceViewModel">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>

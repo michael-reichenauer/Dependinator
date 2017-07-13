@@ -344,8 +344,8 @@ namespace Dependinator.ModelViewing.Links.Private
 		{
 			NodeOld source = line.Source;
 			NodeOld target = line.Target;
-			Rect sourceBounds = source.NodeBounds;
-			Rect targetBounds = target.NodeBounds;
+			Rect sourceBounds = source.ItemBounds;
+			Rect targetBounds = target.ItemBounds;
 
 		
 			if (source.ParentNode == target.ParentNode)
@@ -457,7 +457,7 @@ namespace Dependinator.ModelViewing.Links.Private
 
 
 		private static bool IsNodesInitialized(LinkLine line) =>
-			line.Source.NodeBounds != Rect.Empty && line.Target.NodeBounds != Rect.Empty;
+			line.Source.ItemBounds != Rect.Empty && line.Target.ItemBounds != Rect.Empty;
 
 
 		/// <summary>

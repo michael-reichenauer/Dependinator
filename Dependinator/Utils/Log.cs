@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -56,39 +57,25 @@ namespace Dependinator.Utils
 
 		private static void SendBufferedLogRows()
 		{
-			StringBuilder batchedTexts = new StringBuilder();
+			List<string> batchedTexts = new List<string>();
 			while (!logTexts.IsCompleted)
 			{
-				bool isBatched = false;
-
 				// Wait for texts to log
+				string filePrefix = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss,fff} [{ProcessID}]";
 				string logText = logTexts.Take();
+				Native.OutputDebugString(logText);
+				batchedTexts.Add($"{filePrefix} {logText}");
 
 				// Check if there might be more buffered log texts, if so add them in batch
-				while (logTexts.TryTake(out string moreText))
+				while (logTexts.TryTake(out logText))
 				{
-					if (!isBatched)
-					{
-						isBatched = true;
-						batchedTexts.AppendLine(logText);
-						batchedTexts.AppendLine(moreText);
-					}
-					else
-					{
-						batchedTexts.AppendLine(moreText);
-					}
-				}
-
-				if (isBatched)
-				{
-					logText = batchedTexts.ToString();
-					batchedTexts = new StringBuilder();
+					Native.OutputDebugString(logText);
+					batchedTexts.Add($"{filePrefix} {logText}");
 				}
 
 				try
 				{
-					Native.OutputDebugString(logText);
-					WriteToFile(logText);
+					WriteToFile(batchedTexts);
 				}
 				catch (ThreadAbortException)
 				{
@@ -162,9 +149,11 @@ namespace Dependinator.Utils
 			filePath = filePath.Substring(prefixLength);
 			string text = $"{level} [{ProcessID}] {filePath}({lineNumber}) {memberName} - {msg}";
 
+			//Native.OutputDebugString(text);
+
 			if (level == LevelUsage || level == LevelWarn || level == LevelError)
 			{
-				SendUsage(text);
+				//SendUsage(text);
 			}
 
 			try
@@ -206,7 +195,7 @@ namespace Dependinator.Utils
 		}
 
 
-		private static void WriteToFile(string text)
+		private static void WriteToFile(IReadOnlyCollection<string> text)
 		{
 			Exception error = null;
 			lock (syncRoot)
@@ -215,8 +204,7 @@ namespace Dependinator.Utils
 				{
 					try
 					{
-						File.AppendAllText(
-							LogPath, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss,fff} [{ProcessID}] {text}{Environment.NewLine}");
+						File.AppendAllLines(LogPath, text);
 
 						long length = new FileInfo(LogPath).Length;
 

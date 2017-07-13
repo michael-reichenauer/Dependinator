@@ -14,6 +14,6 @@ namespace Dependinator.Modeling
 			IsEqualWhen(id);
 		}
 
-		public override string ToString() => id;
+		public override string ToString() => this != Root ? id : "<root>";
 	}
 }

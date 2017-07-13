@@ -83,12 +83,15 @@ namespace Dependinator.Modeling.Private
 					}
 					List<Data.Node> batch = new List<Data.Node>();
 					batch.Add(node);
+					Log.Debug($"Send {node.Name}");
 
 					while (nodes.TryTake(out node))
 					{
 						batch.Add(node);
+						Log.Debug($"Send {node.Name}");
 					}
 
+					Log.Debug($"Send {batch.Count}");
 					receiver.ReceiveNodes(batch);
 				}
 			}

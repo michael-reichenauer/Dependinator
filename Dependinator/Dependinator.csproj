@@ -113,6 +113,9 @@
     <Compile Include="Modeling\Private\Analyzing\Private\Analyzer.cs" />
     <Compile Include="Modeling\RootNode.cs" />
     <Compile Include="Modeling\TypeNode.cs" />
+    <Compile Include="ModelViewing\Nodes\NodeView.xaml.cs">
+      <DependentUpon>NodeView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ModelViewing\Nodes\NodeViewModel.cs" />
     <Compile Include="ModelViewing\Private\Links.cs" />
     <Compile Include="ModelViewing\Private\NodesEventArgs.cs" />
@@ -321,6 +324,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Common\ProgressHandling\ProgressDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ModelViewing\Nodes\NodeView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

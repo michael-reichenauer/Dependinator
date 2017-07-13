@@ -1,124 +1,96 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using Dependinator.Modeling;
-using Dependinator.Utils;
+using Dependinator.ModelViewing.Nodes;
+using Dependinator.ModelViewing.Private.Items.Private;
 
 namespace Dependinator.ModelViewing.Private
 {
 	internal class Nodes
 	{
-		private readonly Dictionary<NodeId, Node> allNodes = new Dictionary<NodeId, Node>();
+		private readonly Dictionary<NodeId, Node> nodes = new Dictionary<NodeId, Node>();
+		private readonly Dictionary<NodeId, NodeViewModel> viewModels = new Dictionary<NodeId, NodeViewModel>();
+
 
 		private readonly Dictionary<NodeId, List<Node>> nodesChildren =
 			new Dictionary<NodeId, List<Node>>();
+
+		private readonly Dictionary<NodeId, IItemsCanvas> canvases = new Dictionary<NodeId, IItemsCanvas>();
 
 
 		public Nodes()
 		{
 			Root = new RootNode();
-			allNodes[Root.Id] = Root;
+			nodes[Root.Id] = Root;
 		}
 
-		//public event EventHandler<NodesEventArgs> NodesAdded;
-		public event EventHandler<NodesEventArgs> NodesUpdated;
-		public event EventHandler<NodesEventArgs> NodesRemoved;
+		public void SetRootCanvas(IItemsCanvas rootCanvas) => canvases[Root.Id] = rootCanvas;
+
 		public Node Root { get; }
-		public Node Node(NodeId nodeId) => allNodes[nodeId];
-		public IReadOnlyList<Node> Children(NodeId nodeId) => nodesChildren[nodeId];
+		public Node Node(NodeId nodeId) => nodes[nodeId];
+		public bool TryGetNode(NodeId nodeId, out Node node) => nodes.TryGetValue(nodeId, out node);
+		public IReadOnlyList<Node> Children(NodeId nodeId) => GetChildren(nodeId);
+
+		public bool TryGetItemsCanvas(NodeId nodeId, out IItemsCanvas itemsCanvas) =>
+			canvases.TryGetValue(nodeId, out itemsCanvas);
 
 
-		public void Update(IReadOnlyList<Node> nodes)
+		public void Add(Node node)
 		{
-			Dictionary<NodeId, Node> updated = new Dictionary<NodeId, Node>();
+			nodes[node.Id] = node;
 
-			foreach (var node in nodes.Where(n => !allNodes.ContainsKey(n.Id)))
+			AddNodeToParentChildren(node);
+		}
+
+		public void AddViewModel(NodeId nodeId, NodeViewModel viewModel) =>
+			viewModels[nodeId] = viewModel;
+
+		public void AddItemsCanvas(NodeId nodeId, IItemsCanvas itemsCanvas) =>
+			canvases[nodeId] = itemsCanvas;
+
+
+		public IEnumerable<Node> GetAncestors(NodeId nodeId)
+		{
+			Node current = Node(nodeId);
+
+			do
 			{
-				allNodes[node.Id] = node;
-				updated[node.Id] = node;
-
-				if (!allNodes.TryGetValue(node.ParentId, out Node parent))
-				{
-					parent = new NamespaceNode(node.Name.ParentName);
-					allNodes[parent.Id] = parent;				
-				}
-
-				AddNodeToParentChildren(node);
-				updated[parent.Id] = parent;
-			}
-
-			var parentNodes = nodes
-				.Select(node => allNodes.TryGetValue(node.ParentId, out Node parent) ? parent : null)
-				.Where(node => node != null)
-				.ToList();
-
-			//if ()
-
-
-			var updatedNodes = nodes
-				.Concat(parentNodes)
-				.Distinct()
-				.ToList();
-
-			if (updatedNodes.Any())
-			{
-				OnNodesUpdated(new NodesEventArgs(updatedNodes));
-			}
+				current = Node(current.ParentId);
+				yield return current;
+			} while (current != Root);
 		}
 
 
-		public void Remove(IReadOnlyList<Node> nodes)
+		public IEnumerable<Node> GetAncestorsAndSelf(NodeId nodeId)
 		{
-			foreach (Node node in nodes)
+			Node current = Node(nodeId);
+			yield return current;
+
+			do
 			{
-				allNodes.Remove(node.Id);
-				nodesChildren[node.Id].Remove(node);				
-			}
-
-			var parentNodes = nodes
-				.Select(node => allNodes.TryGetValue(node.ParentId, out Node parent) ? parent : null)
-				.Where(node => node != null)
-				.ToList();
-
-			OnNodesRemoved(new NodesEventArgs(nodes));
-
-			if (parentNodes.Any())
-			{
-				OnNodesUpdated(new NodesEventArgs(parentNodes));
-			}
+				current = Node(current.ParentId);
+				yield return current;
+			} while (current != Root);
 		}
 
-
-		public void Remove(Node node)
-		{
-			Asserter.Requires(allNodes.ContainsKey(node.Id));
-
-			allNodes.Remove(node.Id);
-			nodesChildren[node.ParentId].Remove(node);
-
-			OnNodesRemoved(new NodesEventArgs(node));
-
-			if (allNodes.TryGetValue(node.ParentId, out Node parent))
-			{
-				OnNodesUpdated(new NodesEventArgs(parent));
-			}
-		}
-
-
-		protected virtual void OnNodesUpdated(NodesEventArgs e) => NodesUpdated?.Invoke(this, e);
-
-		protected virtual void OnNodesRemoved(NodesEventArgs e) => NodesRemoved?.Invoke(this, e);
 
 
 		private void AddNodeToParentChildren(Node node)
 		{
-			if (!nodesChildren.TryGetValue(node.ParentId, out List<Node> parentChildren))
-			{
-				parentChildren = new List<Node>();
-				nodesChildren[node.ParentId] = parentChildren;
-			}
+			var parentChildren = GetChildren(node.ParentId);
 
 			parentChildren.Add(node);
+		}
+
+
+		private List<Node> GetChildren(NodeId nodeId)
+		{
+			if (!nodesChildren.TryGetValue(nodeId, out List<Node> children))
+			{
+				children = new List<Node>();
+				nodesChildren[nodeId] = children;
+			}
+
+			return children;
 		}
 	}
 }
