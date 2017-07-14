@@ -1,5 +1,4 @@
 using System.Windows.Media;
-using Dependinator.Modeling;
 
 
 namespace Dependinator.ModelViewing.Nodes

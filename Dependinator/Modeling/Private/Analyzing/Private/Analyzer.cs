@@ -78,11 +78,9 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 				.Where(type => !Reflection.IsCompilerGenerated(type.Name));
 
 			// Add type nodes
-			count = 0;
 			List<(TypeInfo type, Data.Node node)> typeNodes = assemblyTypes
 				.Select(type => AddType(type, sender))
 				.ToList();
-			Log.Debug($"Count {count}");
 
 			// Add inheritance links
 			typeNodes.ForEach(typeNode => AddLinksToBaseTypes(typeNode.type, typeNode.node, sender));
@@ -91,13 +89,12 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			typeNodes.ForEach(typeNode => AddTypeMembers(typeNode.type, typeNode.node, sender));
 		}
 
-		private int count = 0;
+
 		private (TypeInfo type, Data.Node node) AddType(TypeInfo type, NotificationSender sender)
 		{
 			//Log.Debug($"Add {type.FullName}");
 			string typeFullName = Reflection.GetTypeFullName(type);
 			Data.Node typeNode = sender.SendNode(typeFullName, Data.NodeType.TypeType);
-			count++;
 			return (type, typeNode);
 		}
 

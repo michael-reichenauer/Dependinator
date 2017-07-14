@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Windows;
 using Dependinator.Utils.UI.VirtualCanvas;
 
-namespace Dependinator.ModelViewing.Private.Items.Private
+namespace Dependinator.ModelViewing.Private.Items
 {
 	internal interface IItemsCanvas
 	{
@@ -10,6 +10,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		double ScaleFactor { get; }
 		Point Offset { get; set; }
 		double Scale { get; set; }
+		double ParentScale { get; }
 		void UpdateScale();
 		Point ChildToParentCanvasPoint(Point childCanvasPoint);
 		Point ParentToChildCanvasPoint(Point parentCanvasPoint);

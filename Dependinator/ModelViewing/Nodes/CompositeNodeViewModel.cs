@@ -22,8 +22,6 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public ItemsViewModel ItemsViewModel { get; }
 
-		public IItemsCanvas ItemsCanvas { get; }
-
 		public double Scale => ItemsCanvas.Scale;
 
 

@@ -9,6 +9,7 @@ using Dependinator.ApplicationHandling;
 using Dependinator.ApplicationHandling.SettingsHandling;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.ModelViewing.Private.Items;
 using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils;
 
@@ -216,7 +217,6 @@ namespace Dependinator.ModelViewing.Private
 				return;
 			}
 
-			Log.Debug($"Node {node}");
 			AddAncestorsIfNeeded(node);
 
 			NodeViewModel nodeViewModel = new NodeViewModel(nodeService, node);
@@ -234,7 +234,6 @@ namespace Dependinator.ModelViewing.Private
 			{
 				// Parent node not yet in model
 				parent = new NamespaceNode(current.Name.ParentName);
-				Log.Debug($"  Creating parent node: {parent}");
 				model.Nodes.Add(parent);
 				current = parent;
 			}
@@ -261,7 +260,6 @@ namespace Dependinator.ModelViewing.Private
 			// Creating items canvases from the top down to the node and adding each as a child
 			foreach (Node ancestor in ancestors.Reverse())
 			{
-				Log.Debug($"    Creating canvas {ancestor} as child to {itemsCanvas}");
 				itemsCanvas = AddCompositeNode(ancestor, itemsCanvas);
 			}
 

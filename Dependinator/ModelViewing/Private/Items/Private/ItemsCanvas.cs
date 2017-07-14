@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using Dependinator.Modeling;
 using Dependinator.Utils.UI.VirtualCanvas;
@@ -95,6 +96,8 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		public void Move(Vector viewOffset) => Offset -= viewOffset;
 
 
+		public double ParentScale => IsRoot ? Scale : canvasParent.Scale;
+
 		public void UpdateScale()
 		{
 			if (!IsRoot)
@@ -171,10 +174,18 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		}
 
 
-		public void AddItem(IItem item) => itemsSource.Add(item);
+		public void AddItem(IItem item)
+		{
+			item.ItemsCanvas = this;
+			itemsSource.Add(item);
+		}
 
 
-		public void AddItems(IEnumerable<IItem> items) => itemsSource.Add(items);
+		public void AddItems(IEnumerable<IItem> items)
+		{
+			items.ForEach(item => item.ItemsCanvas = this);
+			itemsSource.Add(items);
+		}
 
 		public void RemoveItem(IItem item) => itemsSource.Remove(item);
 

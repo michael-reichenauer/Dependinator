@@ -4,6 +4,9 @@ using System.Windows;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.Modeling;
+using Dependinator.ModelViewing.Private;
+using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelViewing.Private.Items.Private;
 
 namespace Dependinator.ModelViewing.Nodes.Private
 {
@@ -12,12 +15,15 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private static readonly Size DefaultSize = new Size(200, 100);
 
 		private readonly IThemeService themeService;
+		private readonly Model model;
 
 
 		public NodeService(
-			IThemeService themeService)
+			IThemeService themeService,
+			Model model)
 		{
 			this.themeService = themeService;
+			this.model = model;
 		}
 
 
@@ -46,7 +52,8 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			return themeService.GetRectangleHighlighterBrush(brush);
 		}
 
-	
+		
+
 
 		public void SetChildrenLayout(NodeOld parent)
 		{

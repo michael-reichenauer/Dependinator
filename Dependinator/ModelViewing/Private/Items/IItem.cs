@@ -9,8 +9,10 @@ namespace Dependinator.ModelViewing.Private.Items
 		bool CanShow { get; }
 		bool IsShowing { get; }
 
+
 		ViewModel ViewModel { get; }
 		object ItemState { get; set; }
+		IItemsCanvas ItemsCanvas { get; set; }
 
 		void ItemRealized();
 		void ItemVirtualized();

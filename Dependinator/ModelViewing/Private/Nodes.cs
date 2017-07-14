@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.ModelViewing.Private.Items;
 using Dependinator.ModelViewing.Private.Items.Private;
 
 namespace Dependinator.ModelViewing.Private

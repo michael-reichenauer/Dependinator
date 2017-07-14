@@ -21,7 +21,6 @@ namespace Dependinator.ModelViewing.Nodes
 			this.node = node;
 
 			NodeBounds = new Rect(200, 200, 250, 150);
-			NodeScale = 1;
 			Show();
 			RectangleBrush = nodeService.GetRandomRectangleBrush();
 			BackgroundBrush = nodeService.GetRectangleBackgroundBrush(RectangleBrush);
@@ -29,7 +28,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		protected override Rect GetItemBounds() => NodeBounds;
 		public Rect NodeBounds { get; private set; }
-		public double NodeScale { get; private set; }
+		public double NodeScale => ItemsCanvas.ParentScale; 
 
 		public Brush RectangleBrush { get; }
 		public Brush BackgroundBrush { get; }
@@ -51,13 +50,12 @@ namespace Dependinator.ModelViewing.Nodes
 					&& e.LeftButton == MouseButtonState.Pressed
 					&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
 			{
-
 				// Move node
 				(e.Source as UIElement)?.CaptureMouse();
 				Vector viewOffset = viewPosition - lastMousePosition;
 				e.Handled = true;
 
-				//node.Move(viewOffset, null, false);
+				Move(viewOffset);
 			}
 			else
 			{
@@ -67,6 +65,21 @@ namespace Dependinator.ModelViewing.Nodes
 
 			lastMousePosition = viewPosition;
 		}
+
+
+		private void Move(Vector viewOffset)
+		{
+			Vector scaledOffset = viewOffset / NodeScale;
+
+			Point newLocation = ItemBounds.Location + scaledOffset;
+			Size size = ItemBounds.Size;
+
+			NodeBounds = new Rect(newLocation, size);
+
+			ItemsCanvas.UpdateItem(this);
+			NotifyAll();
+		}
+
 
 		public string DebugToolTip => ItemsToolTip;
 
