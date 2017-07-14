@@ -15,5 +15,7 @@ namespace Dependinator.ModelViewing.Private
 		public IEnumerable<Link> NodeLinks(NodeId nodeId) => nodeLinks[nodeId].Select(Link);
 
 		public Link Link(LinkId linkId) => links[linkId];
+
+		public bool TryGetLink(LinkId linkId, out Link link) => links.TryGetValue(linkId, out link);
 	}
 }

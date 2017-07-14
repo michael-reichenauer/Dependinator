@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
-using Dependinator.ModelViewing.Private.Items.Private;
 
 namespace Dependinator.ModelViewing.Private
 {
@@ -44,6 +43,11 @@ namespace Dependinator.ModelViewing.Private
 
 		public void AddViewModel(NodeId nodeId, NodeViewModel viewModel) =>
 			viewModels[nodeId] = viewModel;
+
+
+		public bool TryGetViewModel(NodeId nodeId, out NodeViewModel viewModel) =>
+			viewModels.TryGetValue(nodeId, out viewModel);
+
 
 		public void AddItemsCanvas(NodeId nodeId, IItemsCanvas itemsCanvas) =>
 			canvases[nodeId] = itemsCanvas;

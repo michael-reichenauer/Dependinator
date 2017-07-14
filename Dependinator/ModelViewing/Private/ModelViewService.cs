@@ -41,7 +41,7 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		
+
 
 
 		public void InitModules(IItemsCanvas rootCanvas)
@@ -266,12 +266,16 @@ namespace Dependinator.ModelViewing.Private
 			return itemsCanvas;
 		}
 
+
 		private IItemsCanvas AddCompositeNode(Node node, IItemsCanvas parentCanvas)
 		{
-			NodeViewModel viewModel = new NodeViewModel(nodeService, node);
-			model.Nodes.AddViewModel(node.Id, viewModel);
+			if (!model.Nodes.TryGetViewModel(node.Id, out NodeViewModel viewModel))
+			{
+				viewModel = new NodeViewModel(nodeService, node);
+				model.Nodes.AddViewModel(node.Id, viewModel);
 
-			parentCanvas.AddItem(viewModel);
+				parentCanvas.AddItem(viewModel);
+			}
 
 			IItemsCanvas itemsCanvas = parentCanvas.CreateChild(viewModel);
 			model.Nodes.AddItemsCanvas(node.Id, itemsCanvas);
@@ -283,11 +287,25 @@ namespace Dependinator.ModelViewing.Private
 		{
 			foreach (List<Link> batch in links.Partition(100))
 			{
-				dispatcher.BeginInvoke(DispatcherPriority.Background, (Action)(() =>
-			 {
-				//
-			 }));
+				dispatcher.BeginInvoke(
+					DispatcherPriority.Background,
+					(Action<List<Link>>)(batchLinks => { batchLinks.ForEach(UpdateLink); }),
+					batch);
 			}
+		}
+
+		private void UpdateLink(Link link)
+		{
+			if (model.Links.TryGetLink(link.Id, out Link existingLink))
+			{
+				// TODO: Check node properties as well and update if changed
+				return;
+			}
+
+			//if (!model.Nodes.TryGetNode(link.SourceId, out Node source))
+			//{
+			//	source = new 
+			//}
 		}
 	}
 }

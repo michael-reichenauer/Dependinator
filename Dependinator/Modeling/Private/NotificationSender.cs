@@ -15,6 +15,7 @@ namespace Dependinator.Modeling.Private
 		private readonly BlockingCollection<Data.Node> nodes = new BlockingCollection<Data.Node>();
 		private readonly BlockingCollection<Data.Link> links = new BlockingCollection<Data.Link>();
 
+		private readonly Dictionary<string, Data.Node> sentNodes = new Dictionary<string, Data.Node>();
 		private readonly Task nodeTask;
 		private readonly Task linkTask;
 
@@ -31,12 +32,19 @@ namespace Dependinator.Modeling.Private
 
 		public Data.Node SendNode(string nodeName, NodeType nodeType)
 		{
-			Data.Node node = new Data.Node
+			if (sentNodes.TryGetValue(nodeName, out Data.Node node))
+			{
+				// Already sent this node
+				return node;
+			}
+
+			node = new Data.Node
 			{
 				Name = nodeName,
 				Type = nodeType
 			};
 
+			sentNodes[nodeName] = node;
 			nodes.Add(node);
 
 			return node;

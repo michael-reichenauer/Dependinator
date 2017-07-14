@@ -28,7 +28,6 @@ namespace Dependinator.ModelViewing.Nodes
 
 		protected override Rect GetItemBounds() => NodeBounds;
 		public Rect NodeBounds { get; private set; }
-		public double NodeScale => ItemsCanvas.ParentScale; 
 
 		public Brush RectangleBrush { get; }
 		public Brush BackgroundBrush { get; }
@@ -39,7 +38,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public void UpdateToolTip() => Notify(nameof(ToolTip));
 
-		public int FontSize => ((int)(15 * NodeScale)).MM(8, 13);
+		public int FontSize => ((int)(15 * ItemScale)).MM(8, 13);
 
 
 		public void OnMouseMove(MouseEventArgs e)
@@ -69,7 +68,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private void Move(Vector viewOffset)
 		{
-			Vector scaledOffset = viewOffset / NodeScale;
+			Vector scaledOffset = viewOffset / ItemScale;
 
 			Point newLocation = ItemBounds.Location + scaledOffset;
 			Size size = ItemBounds.Size;

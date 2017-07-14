@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Threading;
 using Dependinator.Modeling.Private.Serializing;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 
 
@@ -90,27 +90,46 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		}
 
 
-		private (TypeInfo type, Data.Node node) AddType(TypeInfo type, NotificationSender sender)
+		private (TypeInfo type, Data.Node node) AddType(
+			TypeInfo type, NotificationSender sender)
 		{
-			//Log.Debug($"Add {type.FullName}");
+			if (type.DeclaringType != null)
+			{
+				// The type is a nested type. Make sure the parent type is sent 
+				AddDeclaringType(type.DeclaringType, sender);
+			}
+
 			string typeFullName = Reflection.GetTypeFullName(type);
 			Data.Node typeNode = sender.SendNode(typeFullName, Data.NodeType.TypeType);
 			return (type, typeNode);
 		}
 
 
-		private void AddLinksToBaseTypes(TypeInfo type, Data.Node sourceNode, NotificationSender model)
+		private static void AddDeclaringType(Type type, NotificationSender sender)
+		{
+			if (type.DeclaringType != null)
+			{
+				// The type is a nested type. Make sure the parent type is sent 
+				AddDeclaringType(type.DeclaringType, sender);
+			}
+
+			string typeFullName = Reflection.GetTypeFullName(type);
+			sender.SendNode(typeFullName, Data.NodeType.TypeType);
+		}
+
+
+		private void AddLinksToBaseTypes(TypeInfo type, Data.Node sourceNode, NotificationSender sender)
 		{
 			try
 			{
 				Type baseType = type.BaseType;
 				if (baseType != null && baseType != typeof(object))
 				{
-					AddLinkToType(sourceNode, baseType, model);
+					AddLinkToType(sourceNode, baseType, sender);
 				}
 
 				type.ImplementedInterfaces
-					.ForEach(interfaceType => AddLinkToType(sourceNode, interfaceType, model));
+					.ForEach(interfaceType => AddLinkToType(sourceNode, interfaceType, sender));
 			}
 			catch (Exception e)
 			{
@@ -124,8 +143,8 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			try
 			{
 				type.GetMembers(SupportedTypeMembersFlags)
-				.Where(member => !Reflection.IsCompilerGenerated(member.Name) && !(member is TypeInfo))
-				.ForEach(member => AddMember(member, typeNode, sender));
+					.Where(member => !Reflection.IsCompilerGenerated(member.Name) && !(member is TypeInfo))
+					.ForEach(member => AddMember(member, typeNode, sender));
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
@@ -180,23 +199,22 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		}
 
 
-
 		private void AddMethodLinks(
-			Data.Node memberNode, MethodInfo method, NotificationSender model)
+			Data.Node memberNode, MethodInfo method, NotificationSender sender)
 		{
 			Type returnType = method.ReturnType;
-			AddLinkToType(memberNode, returnType, model);
+			AddLinkToType(memberNode, returnType, sender);
 
 			method.GetParameters()
 				.Select(parameter => parameter.ParameterType)
-				.ForEach(parameterType => AddLinkToType(memberNode, parameterType, model));
+				.ForEach(parameterType => AddLinkToType(memberNode, parameterType, sender));
 
-			AddMethodBodyLinks(memberNode, method, model);
+			AddMethodBodyLinks(memberNode, method, sender);
 		}
 
 
 		private void AddMethodBodyLinks(
-			Data.Node memberNode, MethodInfo method, NotificationSender model)
+			Data.Node memberNode, MethodInfo method, NotificationSender sender)
 		{
 			MethodBody methodBody = method.GetMethodBody();
 
@@ -204,7 +222,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			{
 				methodBody.LocalVariables
 					.Select(variable => variable.LocalType)
-					.ForEach(variableType => AddLinkToType(memberNode, variableType, model));
+					.ForEach(variableType => AddLinkToType(memberNode, variableType, sender));
 
 				IReadOnlyList<ILInstruction> instructions = MethodBodyReader.Parse(method, methodBody);
 
@@ -215,7 +233,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 						MethodInfo methodCall = instruction.Operand as MethodInfo;
 						if (methodCall != null)
 						{
-							AddLinkToCallMethod(memberNode, methodCall, model);
+							AddLinkToCallMethod(memberNode, methodCall, sender);
 						}
 					}
 				}
@@ -224,7 +242,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 
 		private void AddLinkToCallMethod(
-			Data.Node memberNode, MethodInfo method, NotificationSender model)
+			Data.Node memberNode, MethodInfo method, NotificationSender sender)
 		{
 			Type declaringType = method.DeclaringType;
 
@@ -235,21 +253,23 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			}
 
 			string methodName = Reflection.GetMemberFullName(method, declaringType);
-			model.SendLink(memberNode.Name, methodName);
+
+			sender.SendNode(methodName, NodeType.MemberType);
+			sender.SendLink(memberNode.Name, methodName);
 
 			Type returnType = method.ReturnType;
-			AddLinkToType(memberNode, returnType, model);
+			AddLinkToType(memberNode, returnType, sender);
 
 			method.GetParameters()
 				.Select(parameter => parameter.ParameterType)
-				.ForEach(parameterType => AddLinkToType(memberNode, parameterType, model));
+				.ForEach(parameterType => AddLinkToType(memberNode, parameterType, sender));
 		}
 
 
 		private void AddLinkToType(
 			Data.Node sourceNode,
 			Type targetType,
-			NotificationSender model)
+			NotificationSender sender)
 		{
 			if (targetType == typeof(void)
 					|| targetType.IsGenericParameter
@@ -266,12 +286,13 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 				return;
 			}
 
-			model.SendLink(sourceNode.Name, targetNodeName);
+			sender.SendNode(targetNodeName, NodeType.TypeType);
+			sender.SendLink(sourceNode.Name, targetNodeName);
 
 			if (targetType.IsGenericType)
 			{
 				targetType.GetGenericArguments()
-					.ForEach(argType => AddLinkToType(sourceNode, argType, model));
+					.ForEach(argType => AddLinkToType(sourceNode, argType, sender));
 			}
 		}
 

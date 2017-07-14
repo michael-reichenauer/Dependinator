@@ -18,6 +18,7 @@ namespace Dependinator.ModelViewing.Private.Items
 		public ViewModel ViewModel => this;
 		public object ItemState { get; set; }
 		public IItemsCanvas ItemsCanvas { get; set; }
+		public double ItemScale => ItemsCanvas?.ParentScale ?? 1;
 
 		public bool CanShow { get; private set; }
 		public bool IsShowing { get; private set; }
