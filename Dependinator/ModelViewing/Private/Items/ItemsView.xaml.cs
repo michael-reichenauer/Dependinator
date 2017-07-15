@@ -128,7 +128,7 @@ namespace Dependinator.ModelViewing.Private.Items
 				CaptureMouse();
 				Vector viewOffset = viewPosition - lastMousePoint;
 				e.Handled = true;
-				viewModel.MoveCanvas(viewOffset);
+				viewModel?.MoveCanvas(viewOffset);
 			}
 			else
 			{

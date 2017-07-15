@@ -10,7 +10,6 @@ using Dependinator.ApplicationHandling.SettingsHandling;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
-using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils;
 
 
@@ -42,25 +41,24 @@ namespace Dependinator.ModelViewing.Private
 
 
 
-
-
 		public void InitModules(IItemsCanvas rootCanvas)
 		{
 			dispatcher = Dispatcher.CurrentDispatcher;
 			model.Nodes.SetRootCanvas(rootCanvas);
 
 			Timing t = new Timing();
+			currentModel = null;
 
-			currentModel = GetDataModel();
+			//currentModel = GetDataModel();
 
-			t.Log($"Get data model {currentModel}");
+			//t.Log($"Get data model {currentModel}");
 
-			//model = modelingService.ToModel(dataModel, null);
+			////model = modelingService.ToModel(dataModel, null);
 
-			t.Log("To model");
+			//t.Log("To model");
 
-			ShowModel(rootCanvas);
-			t.Log("Show model");
+			//ShowModel(rootCanvas);
+			//t.Log("Show model");
 
 			t.Log("Showed model");
 		}
@@ -80,14 +78,15 @@ namespace Dependinator.ModelViewing.Private
 
 			Timing t = new Timing();
 
-			StoreViewSettings();
-			t.Log("stored setting");
+			//StoreViewSettings();
+			//t.Log("stored setting");
 
-			ModelViewDataOld modelViewData = refreshLayout ? null : modelingService.ToViewData(currentModel);
-			t.Log("Got current model data");
+			//ModelViewDataOld modelViewData = refreshLayout ? null : modelingService.ToViewData(currentModel);
+			//t.Log("Got current model data");
 
-			//currentModel.Root.Clear();
+			////currentModel.Root.Clear();
 
+			ModelViewDataOld modelViewData = null;
 			await RefreshElementTreeAsync(modelViewData);
 
 
@@ -160,13 +159,13 @@ namespace Dependinator.ModelViewing.Private
 
 		public void Close()
 		{
-			currentModel.Root.UpdateAllNodesScalesBeforeClose();
-			//DataModel dataModel = modelingService.ToDataModel(model);
-			string dataFilePath = GetDataFilePath();
+			//currentModel.Root.UpdateAllNodesScalesBeforeClose();
+			////DataModel dataModel = modelingService.ToDataModel(model);
+			//string dataFilePath = GetDataFilePath();
 
-			modelingService.Serialize(currentModel, dataFilePath);
+			//modelingService.Serialize(currentModel, dataFilePath);
 
-			StoreViewSettings();
+			//StoreViewSettings();
 		}
 
 

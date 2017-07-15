@@ -32,6 +32,8 @@ namespace Dependinator.ModelViewing.Nodes
 		public Brush RectangleBrush { get; }
 		public Brush BackgroundBrush { get; }
 
+		public ItemsViewModel ItemsViewModel { get; set; }
+
 		public string Name => node.Name.ShortName;
 
 		public string ToolTip => $"{node.Name}{DebugToolTip}";

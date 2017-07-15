@@ -1,6 +1,5 @@
 ﻿using System.Windows;
 using Dependinator.ModelViewing.Nodes;
-using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.VirtualCanvas;
 
