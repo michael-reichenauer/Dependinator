@@ -54,14 +54,12 @@ namespace Dependinator.ModelViewing
 
 			Log.Debug("Loading repository ...");
 
-			using (progress.ShowDialog("Loading branch view ..."))
+			using (progress.ShowBusy())
 			{
-				modelViewService.InitModules(ItemsViewModel.ItemsCanvas);
+				await modelViewService.LoadAsync(ItemsViewModel.ItemsCanvas);
 
 				t.Log("Updated view model after cached/fresh");
 			}
-
-			await Task.Yield();
 		}
 
 

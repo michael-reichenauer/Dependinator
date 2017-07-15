@@ -7,7 +7,7 @@ namespace Dependinator.ModelViewing.Private
 {
 	internal interface IModelViewService
 	{
-		void InitModules(IItemsCanvas rootCanvas);
+		Task LoadAsync(IItemsCanvas rootCanvas);
 
 		void Zoom(double zoomFactor, Point zoomCenter);
 		void Move(Vector viewOffset);

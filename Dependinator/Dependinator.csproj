@@ -117,7 +117,9 @@
       <DependentUpon>NodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\NodeViewModel.cs" />
+    <Compile Include="ModelViewing\Private\IModelService.cs" />
     <Compile Include="ModelViewing\Private\Links.cs" />
+    <Compile Include="ModelViewing\Private\ModelService.cs" />
     <Compile Include="ModelViewing\Private\NodesEventArgs.cs" />
     <Compile Include="ModelViewing\Private\Nodes.cs" />
     <Compile Include="ModelViewing\Private\Model.cs" />
