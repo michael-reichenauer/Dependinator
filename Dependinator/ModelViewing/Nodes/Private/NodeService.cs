@@ -1,12 +1,9 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Private;
-using Dependinator.ModelViewing.Private.Items;
-using Dependinator.ModelViewing.Private.Items.Private;
 
 namespace Dependinator.ModelViewing.Nodes.Private
 {
@@ -52,8 +49,65 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			return themeService.GetRectangleHighlighterBrush(brush);
 		}
 
-		
+		public void SetLayout(NodeViewModel nodeViewModel)
+		{
+			int rowLength = 6;
 
+			int padding = 20;
+
+			double xMargin = 10;
+			double yMargin = 100;
+
+			Size size = DefaultSize;
+			var node = model.Nodes.Node(nodeViewModel.NodeId);
+
+			int count = model.Nodes.Children(node.ParentId).Count - 1;
+
+			double x = (count % rowLength) * (size.Width + padding) + xMargin;
+			double y = (count / rowLength) * (size.Height + padding) + yMargin;
+			Point location = new Point(x, y);
+
+			Rect bounds = new Rect(location, size);
+
+			nodeViewModel.NodeBounds = bounds;
+		}
+
+
+		//public void GetNodeRect(NodeId nodeId)
+		//{
+		//	int rowLength = 6;
+
+		//	int padding = 20;
+
+		//	double xMargin = 10;
+		//	double yMargin = 100;
+
+		//	int count = 0;
+		//	var children = parent.ChildNodes.OrderBy(child => child, NodeComparer.Comparer(parent));
+
+		//	foreach (NodeOld childNode in children)
+		//	{
+		//		Size size;
+		//		Point location;
+
+		//		if (childNode.PersistentNodeBounds.HasValue)
+		//		{
+		//			size = childNode.PersistentNodeBounds.Value.Size;
+		//			location = childNode.PersistentNodeBounds.Value.Location;
+		//		}
+		//		else
+		//		{
+		//			size = DefaultSize;
+		//			double x = (count % rowLength) * (size.Width + padding) + xMargin;
+		//			double y = (count / rowLength) * (size.Height + padding) + yMargin;
+		//			location = new Point(x, y);
+		//		}
+
+		//		Rect bounds = new Rect(location, size);
+		//		childNode.ItemBounds = bounds;
+		//		count++;
+		//	}
+		//}
 
 		public void SetChildrenLayout(NodeOld parent)
 		{

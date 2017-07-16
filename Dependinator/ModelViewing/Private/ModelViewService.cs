@@ -28,8 +28,7 @@ namespace Dependinator.ModelViewing.Private
 		{
 			modelService.Init(rootCanvas);
 
-			await modelService.RefreshAsync(false);
-			await Task.Yield();
+			await modelService.LoadAsync();
 		}
 
 
@@ -68,12 +67,6 @@ namespace Dependinator.ModelViewing.Private
 		//	rootNode.Show(rootCanvas);
 		//}
 
-
-		public void Zoom(double zoomFactor, Point zoomCenter) =>
-			modelService.ZoomRoot(zoomFactor, zoomCenter);
-
-
-		public void Move(Vector viewOffset) => modelService.MoveRootItems(viewOffset);
 
 
 		//private bool TryReadCachedData(out ModelOld dataModel)

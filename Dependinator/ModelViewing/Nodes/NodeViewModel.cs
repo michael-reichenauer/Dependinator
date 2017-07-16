@@ -19,15 +19,15 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			this.nodeService = nodeService;
 			this.node = node;
-
-			NodeBounds = new Rect(200, 200, 250, 150);
 			Show();
 			RectangleBrush = nodeService.GetRandomRectangleBrush();
 			BackgroundBrush = nodeService.GetRectangleBackgroundBrush(RectangleBrush);
 		}
 
+		public NodeId NodeId => node.Id;
+
 		protected override Rect GetItemBounds() => NodeBounds;
-		public Rect NodeBounds { get; private set; }
+		public Rect NodeBounds { get; set; }
 
 		public Brush RectangleBrush { get; }
 		public Brush BackgroundBrush { get; }

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Threading;
 using Dependinator.ApplicationHandling;
 using Dependinator.Modeling;
@@ -42,40 +41,18 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
+		public async Task LoadAsync()
+		{
+			await Task.Run(() => modelingService.Analyze(workingFolder.FilePath));
+		}
+
+
 		public async Task RefreshAsync(bool refreshLayout)
 		{
 
-			//StoreViewSettings();
-			//t.Log("stored setting");
-
-			//ModelViewDataOld modelViewData = refreshLayout ? null : modelingService.ToViewData(currentModel);
-			//t.Log("Got current model data");
-
-			////currentModel.Root.Clear();
-
-			ModelViewDataOld modelViewData = null;
-			await RefreshElementTreeAsync(modelViewData);
-
+			await Task.Run(() => modelingService.Analyze(workingFolder.FilePath));
 		}
 
-		public void ZoomRoot(double zoomFactor, Point zoomCenter)
-		{
-
-		}
-
-		public void MoveRootItems(Vector viewOffset)
-		{
-			
-		}
-
-
-		private async Task<ModelOld> RefreshElementTreeAsync(ModelViewDataOld modelViewData)
-		{
-			ModelOld model = await Task.Run(
-				() => modelingService.Analyze(workingFolder.FilePath, modelViewData));
-
-			return model;
-		}
 
 
 		public void UpdateNodes(IReadOnlyList<Node> nodes)
@@ -84,10 +61,7 @@ namespace Dependinator.ModelViewing.Private
 			{
 				dispatcher.BeginInvoke(
 					DispatcherPriority.Background,
-					(Action<List<Node>>)(batchNodes =>
-					{
-						batchNodes.ForEach(UpdateNode);
-					}),
+					(Action<List<Node>>)(batchNodes => { batchNodes.ForEach(UpdateNode); }),
 					batch);
 			}
 		}
@@ -114,11 +88,10 @@ namespace Dependinator.ModelViewing.Private
 
 			AddAncestorsIfNeeded(node);
 
-			NodeViewModel nodeViewModel = new NodeViewModel(nodeService, node);
-			model.Nodes.AddViewModel(node.Id, nodeViewModel);
-
 			IItemsCanvas parentCanvas = GetCanvas(node.ParentId);
-			parentCanvas.AddItem(nodeViewModel);
+
+			model.Nodes.Add(node);
+			AddNode(node, parentCanvas);
 		}
 
 
@@ -166,15 +139,23 @@ namespace Dependinator.ModelViewing.Private
 		{
 			if (!model.Nodes.TryGetViewModel(node.Id, out NodeViewModel viewModel))
 			{
-				viewModel = new NodeViewModel(nodeService, node);
-				model.Nodes.AddViewModel(node.Id, viewModel);
-
-				parentCanvas.AddItem(viewModel);
+				viewModel = AddNode(node, parentCanvas);
 			}
 
 			IItemsCanvas itemsCanvas = parentCanvas.CreateChild(viewModel);
 			model.Nodes.AddItemsCanvas(node.Id, itemsCanvas);
 			return itemsCanvas;
+		}
+
+
+		private NodeViewModel AddNode(Node node, IItemsCanvas parentCanvas)
+		{
+			NodeViewModel nodeViewModel = new NodeViewModel(nodeService, node);
+			nodeService.SetLayout(nodeViewModel);
+			model.Nodes.AddViewModel(node.Id, nodeViewModel);
+			parentCanvas.AddItem(nodeViewModel);
+
+			return nodeViewModel;
 		}
 
 

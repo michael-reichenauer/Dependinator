@@ -30,21 +30,11 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		public ModelOld Analyze(string path, ModelViewDataOld modelViewData)
+		public void Analyze(string path)
 		{
 			reflectionService.Analyze(path);
-			return new ModelOld(CreateRootNode());
 		}
 
-
-		public ModelViewDataOld ToViewData(ModelOld model)
-		{
-			ModelViewDataOld modelViewData = new ModelViewDataOld();
-
-			AddViewData(model.Root, modelViewData);
-
-			return modelViewData;
-		}
 
 
 

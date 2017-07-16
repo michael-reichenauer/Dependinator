@@ -523,7 +523,7 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			if (ChildNodes.Any())
 			{
-				nodeService.SetChildrenLayout(this);
+				//nodeService.SetChildrenLayout(this);
 
 				var childViewModels = ChildNodes.Select(childNode => childNode.CreateViewModel());
 				var lineViewModels = Links.OwnedLines.Select(segment => segment.ViewModel);

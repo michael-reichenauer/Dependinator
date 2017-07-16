@@ -2,9 +2,7 @@
 {
 	internal interface IModelingService
 	{
-		ModelOld Analyze(string path, ModelViewDataOld modelViewData);
-
-		ModelViewDataOld ToViewData(ModelOld model);
+		void Analyze(string path);
 
 		void Serialize(ModelOld model, string path);
 
