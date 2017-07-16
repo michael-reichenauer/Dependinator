@@ -29,6 +29,7 @@ namespace Dependinator.ModelViewing.Private
 			modelService.Init(rootCanvas);
 
 			await modelService.RefreshAsync(false);
+			await Task.Yield();
 		}
 
 

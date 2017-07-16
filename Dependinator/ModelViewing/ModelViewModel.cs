@@ -30,7 +30,7 @@ namespace Dependinator.ModelViewing
 
 		public ModelViewModel(
 			IModelViewService modelViewService,
-			IItemsService itemsService,
+			//IItemsService itemsService,
 			IThemeService themeService,
 			IProgressService progressService)
 		{
@@ -41,7 +41,7 @@ namespace Dependinator.ModelViewing
 			filterTriggerTimer.Tick += FilterTrigger;
 			filterTriggerTimer.Interval = FilterDelay;
 
-			ItemsViewModel = new ItemsViewModel(itemsService, null, new ItemsCanvas());
+			ItemsViewModel = new ItemsViewModel(new ItemsCanvas());
 		}
 
 

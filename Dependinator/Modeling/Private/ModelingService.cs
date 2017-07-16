@@ -1,19 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using Dependinator.Modeling.Private.Analyzing;
 using Dependinator.Modeling.Private.Serializing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
-using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 
 namespace Dependinator.Modeling.Private
 {
 	internal class ModelingService : IModelingService
 	{
-		private readonly Lazy<IItemsService> modelService;
 		private readonly INodeService nodeService;
 		private readonly ILinkService linkService;
 		private readonly IReflectionService reflectionService;
@@ -21,13 +18,11 @@ namespace Dependinator.Modeling.Private
 
 
 		public ModelingService(
-			Lazy<IItemsService> modelService,
 			INodeService nodeService,
 			ILinkService linkService,
 			IReflectionService reflectionService,
 			IDataSerializer dataSerializer)
 		{
-			this.modelService = modelService;
 			this.nodeService = nodeService;
 			this.linkService = linkService;
 			this.reflectionService = reflectionService;
@@ -102,7 +97,7 @@ namespace Dependinator.Modeling.Private
 
 		private NodeOld CreateRootNode()
 		{
-			NodeOld root = new NodeOld(modelService.Value, nodeService, linkService, null, NodeName.Root, NodeType.NameSpaceType);
+			NodeOld root = new NodeOld(nodeService, linkService, null, NodeName.Root, NodeType.NameSpaceType);
 			return root;
 		}
 
@@ -216,9 +211,9 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		private static IEnumerable<Data.Link> DataLinksQuery(NodeOld node) => 
+		private static IEnumerable<Data.Link> DataLinksQuery(NodeOld node) =>
 			node.Links.Links
-				.Select(l => new Data.Link {Source = node.NodeName, Target = l.Target.NodeName});
+				.Select(l => new Data.Link { Source = node.NodeName, Target = l.Target.NodeName });
 
 
 		private NodeOld GetOrAddNode(NodeName nodeName, ModelOld model, ModelViewDataOld modelViewData)
@@ -241,7 +236,7 @@ namespace Dependinator.Modeling.Private
 				parentNode = CreateNode(parentName, model, modelViewData);
 			}
 
-			NodeOld node = new NodeOld(modelService.Value, nodeService, linkService, parentNode, nodeName, null);
+			NodeOld node = new NodeOld(nodeService, linkService, parentNode, nodeName, null);
 
 			TrySetViewData(null, modelViewData, node, nodeName);
 

@@ -6,6 +6,7 @@ namespace Dependinator.ModelViewing.Private.Items
 {
 	internal interface IItemsCanvas
 	{
+		bool IsRoot { get; }
 		IItemsCanvas CanvasRoot { get; }
 		double ScaleFactor { get; }
 		Point Offset { get; set; }

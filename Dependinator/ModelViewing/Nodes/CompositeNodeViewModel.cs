@@ -1,60 +1,60 @@
-using System.Windows;
-using Dependinator.ModelViewing.Private.Items;
-using Dependinator.ModelViewing.Private.Items.Private;
+//using System.Windows;
+//using Dependinator.ModelViewing.Private.Items;
+//using Dependinator.ModelViewing.Private.Items.Private;
 
 
-namespace Dependinator.ModelViewing.Nodes
-{
-	internal class CompositeNodeViewModel : NodeOldViewModel
-	{
-		private readonly NodeOld node;
+//namespace Dependinator.ModelViewing.Nodes
+//{
+//	internal class CompositeNodeViewModel : NodeOldViewModel
+//	{
+//		private readonly NodeOld node;
 
 
-		public CompositeNodeViewModel(IItemsService itemsService, NodeOld node, IItemsCanvas itemsCanvas)
-			: base(node)
-		{
-			this.node = node;
-			ItemsCanvas = itemsCanvas;
-			ItemsViewModel = new ItemsViewModel(itemsService, node, ItemsCanvas);
-		}
-
-
-
-		public ItemsViewModel ItemsViewModel { get; }
-
-		public double Scale => ItemsCanvas.Scale;
+//		public CompositeNodeViewModel(IItemsService itemsService, NodeOld node, IItemsCanvas itemsCanvas)
+//			: base(node)
+//		{
+//			this.node = node;
+//			ItemsCanvas = itemsCanvas;
+//			ItemsViewModel = new ItemsViewModel(itemsService, node, ItemsCanvas);
+//		}
 
 
 
-		public override void ItemRealized()
-		{
-			base.ItemRealized();
-			node.NodeRealized();
-		}
+//		public ItemsViewModel ItemsViewModel { get; }
 
-
-		public override void ItemVirtualized()
-		{
-			node.NodeVirtualized();
-			base.ItemVirtualized();
-		}
-
-
-		public void UpdateScale()
-		{
-			ItemsCanvas.UpdateScale();
-			NotifyAll();
-		}
+//		public double Scale => ItemsCanvas.Scale;
 
 
 
-		public void Zoom(double zoomFactor, Point viewPosition) => node.Zoom(zoomFactor, viewPosition);
+//		public override void ItemRealized()
+//		{
+//			base.ItemRealized();
+//			node.NodeRealized();
+//		}
 
-		public void ZoomResize(int wheelDelta) => node.Resize(wheelDelta);
+
+//		public override void ItemVirtualized()
+//		{
+//			node.NodeVirtualized();
+//			base.ItemVirtualized();
+//		}
+
+
+//		public void UpdateScale()
+//		{
+//			ItemsCanvas.UpdateScale();
+//			NotifyAll();
+//		}
 
 
 
-		public void ResizeeNode(Vector viewOffset, Point viewPosition2) => node.Resize(viewOffset, viewPosition2);
+//		public void Zoom(double zoomFactor, Point viewPosition) => node.Zoom(zoomFactor, viewPosition);
 
-	}
-}
+//		public void ZoomResize(int wheelDelta) => node.Resize(wheelDelta);
+
+
+
+//		public void ResizeeNode(Vector viewOffset, Point viewPosition2) => node.Resize(viewOffset, viewPosition2);
+
+//	}
+//}

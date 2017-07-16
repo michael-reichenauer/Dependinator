@@ -15,8 +15,6 @@ namespace Dependinator.ModelViewing.Nodes
 	internal class NodeOld : Equatable<NodeOld>, IItemsCanvasBounds
 	{
 		private const int InitialScaleFactor = 7;
-
-		private readonly IItemsService itemsService;
 		private readonly INodeService nodeService;
 
 		private readonly List<NodeOld> childNodes = new List<NodeOld>();
@@ -32,14 +30,12 @@ namespace Dependinator.ModelViewing.Nodes
 		private int direction = 0;
 
 		public NodeOld(
-			IItemsService itemsService,
 			INodeService nodeService,
 			ILinkService linkService,
 			NodeOld parent,
 			NodeName name,
 			NodeType type)
 		{
-			this.itemsService = itemsService;
 			this.nodeService = nodeService;
 			ParentNode = parent;
 			NodeName = name;
@@ -505,7 +501,7 @@ namespace Dependinator.ModelViewing.Nodes
 		private void InitNodeTree(IItemsCanvas rootCanvas)
 		{
 			itemsCanvas = rootCanvas;
-			viewModel = new NamespaceViewModel(itemsService, this, rootCanvas);
+		//	viewModel = new NamespaceViewModel(itemsService, this, rootCanvas);
 
 			InitNode();
 		}
@@ -559,14 +555,14 @@ namespace Dependinator.ModelViewing.Nodes
 				Point offset = PersistentOffset ?? new Point(0, 0);
 				itemsCanvas.Offset = offset;
 
-				if (NodeType == NodeType.TypeType)
-				{
-					viewModel = new TypeViewModel(itemsService, this, itemsCanvas);
-				}
-				else
-				{
-					viewModel = new NamespaceViewModel(itemsService, this, itemsCanvas);
-				}
+				//if (NodeType == NodeType.TypeType)
+				//{
+				//	viewModel = new TypeViewModel(itemsService, this, itemsCanvas);
+				//}
+				//else
+				//{
+				//	viewModel = new NamespaceViewModel(itemsService, this, itemsCanvas);
+				//}
 			}
 			else
 			{

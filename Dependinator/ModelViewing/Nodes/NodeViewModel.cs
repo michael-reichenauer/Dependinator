@@ -85,8 +85,9 @@ namespace Dependinator.ModelViewing.Nodes
 		public string DebugToolTip => ItemsToolTip;
 
 
-		public string ItemsToolTip =>
-			$"\nRect: {NodeBounds.TS()}\n";
+		public string ItemsToolTip => "\n" +
+			$"Rect: {NodeBounds.TS()}\n"
+			+$"Scale {ItemScale}";
 
 
 		public override string ToString() => node.Name;
