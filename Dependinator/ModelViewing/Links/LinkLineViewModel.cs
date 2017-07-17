@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing.Links
 			this.linkLine = linkLine;
 		}
 
-		protected override Rect GetItemBounds() => linkLine.GetItemBounds();
+		protected Rect GetItemBounds() => linkLine.GetItemBounds();
 
 
 		public double X1 => linkLine.L1.X * linkLine.ItemsScale;

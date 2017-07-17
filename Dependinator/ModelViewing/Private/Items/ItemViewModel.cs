@@ -13,24 +13,23 @@ namespace Dependinator.ModelViewing.Private.Items
 		public double CanvasLeft => ItemBounds.Left;
 		public virtual double CanvasHeight => ItemBounds.Height;
 
-		public Rect ItemBounds => GetItemBounds();
+		public virtual Rect ItemBounds { get; set; }
 
 		public ViewModel ViewModel => this;
 		public object ItemState { get; set; }
 		public IItemsCanvas ItemsCanvas { get; set; }
-		public double ItemScale => ItemsCanvas?.ParentScale ?? 1;
+		public double ItemScale => ItemsCanvas.Scale;
 
-		public bool CanShow { get; private set; }
+		public virtual bool CanShow { get; } = true;
+
 		public bool IsShowing { get; private set; }
 
-		public void Hide() => CanShow = false;
+		//public void Hide() => CanShow = false;
 
-		public void Show() => CanShow = true;
+		//public void Show() => CanShow = true;
 
 		public virtual void ItemRealized() => IsShowing = true;
 
 		public virtual void ItemVirtualized() => IsShowing = false;
-
-		protected abstract Rect GetItemBounds();
 	}
 }

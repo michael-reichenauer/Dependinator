@@ -9,14 +9,17 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 {
 	internal class ItemsCanvas : IItemsCanvas, IItemsSourceArea
 	{
-		private readonly IItemsCanvasBounds itemsCanvasBounds;
+		private readonly IItemsCanvasBounds owner;
 		private readonly ItemsSource itemsSource;
 		private readonly IItemsCanvas canvasParent;
 		private ZoomableCanvas zoomableCanvas;
+		private readonly List<ItemsCanvas> canvasChildren = new List<ItemsCanvas>();
 		private double scale = 1.0;
 		private Point offset = new Point(0, 0);
 		private Rect ItemsCanvasBounds => 
-			itemsCanvasBounds?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
+			owner?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
+
+		private bool IsShowing => owner?.IsShowing ?? true;
 
 		public ItemsCanvas()
 			: this(null, null)
@@ -24,9 +27,9 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 			
 		}
 
-		private ItemsCanvas(IItemsCanvasBounds itemsCanvasBounds, IItemsCanvas canvasParent)
+		private ItemsCanvas(IItemsCanvasBounds owner, IItemsCanvas canvasParent)
 		{
-			this.itemsCanvasBounds = itemsCanvasBounds;
+			this.owner = owner;
 			this.canvasParent = canvasParent;
 			itemsSource = new ItemsSource(this);
 			CanvasRoot = canvasParent?.CanvasRoot ?? this;
@@ -34,19 +37,26 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 		public IItemsCanvas CanvasRoot { get; }
 
+		public IReadOnlyList<IItemsCanvas> CanvasChildren => canvasChildren;
+
 		public bool IsRoot => canvasParent == null;
 
 		public double ScaleFactor { get; private set; } = 1.0;
 
 		public IItemsCanvas CreateChild(IItemsCanvasBounds canvasBounds)
 		{
-			return new ItemsCanvas(canvasBounds, this);
+			ItemsCanvas child = new ItemsCanvas(canvasBounds, this);
+			canvasChildren.Add(child);
+
+			return child;
 		}
+
+		public void SetInitialScale(double initialScale) => Scale = initialScale;
 
 		public Point Offset
 		{
 			get => offset;
-			set
+			private set
 			{
 				offset = value;
 
@@ -61,7 +71,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		public double Scale
 		{
 			get => scale;
-			set
+			private set
 			{
 				scale = value;
 
@@ -81,6 +91,13 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		public void Zoom(double zoom, Point? zoomCenter = null)
 		{
 			double newScale = Scale * zoom;
+			if (!IsShowing || IsRoot && newScale < 0.15 && zoom < 1)
+			{
+				return;
+			}
+
+			
+
 			double scaleFactor = newScale / Scale;
 			Scale = newScale;
 
@@ -90,6 +107,12 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 				Vector position = (Vector)zoomCenter;
 				Offset = (Point)((Vector)(Offset + position) * scaleFactor - position);
 			}
+
+			var items = itemsSource.GetAll<ItemViewModel>();
+			itemsSource.Update(items);
+			items.ForEach(item => item.NotifyAll());
+
+			canvasChildren.ForEach(child => child.UpdateScale());
 		}
 
 
@@ -98,15 +121,13 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 		public double ParentScale => IsRoot ? Scale : canvasParent.Scale;
 
-		public void UpdateScale()
-		{
-			if (!IsRoot)
-			{
-				double newScale = canvasParent.Scale / ScaleFactor;
-				double zoom = newScale / Scale;
 
-				Zoom(zoom, new Point(0, 0));
-			}
+		private void UpdateScale()
+		{
+			double newScale = canvasParent.Scale / ScaleFactor;
+			double zoom = newScale / Scale;
+
+			Zoom(zoom, new Point(0, 0));			
 		}
 
 
@@ -174,27 +195,27 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		}
 
 
-		public void AddItem(IItem item)
+		public void AddItem(ItemViewModel item)
 		{
 			item.ItemsCanvas = this;
 			itemsSource.Add(item);
 		}
 
 
-		public void AddItems(IEnumerable<IItem> items)
+		public void AddItems(IEnumerable<ItemViewModel> items)
 		{
 			items.ForEach(item => item.ItemsCanvas = this);
 			itemsSource.Add(items);
 		}
 
-		public void RemoveItem(IItem item) => itemsSource.Remove(item);
+		public void RemoveItem(ItemViewModel item) => itemsSource.Remove(item);
 
 		public void RemoveAll() => itemsSource.RemoveAll();
 
 
-		public void UpdateItem(IItem item) => itemsSource.Update(item);
+		public void UpdateItem(ItemViewModel item) => itemsSource.Update(item);
 
-		public void UpdateItems(IEnumerable<IItem> items) => itemsSource.Update(items);
+		public void UpdateItems(IEnumerable<ItemViewModel> items) => itemsSource.Update(items);
 
 
 
@@ -222,7 +243,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		}
 
 
-		public override string ToString() => itemsCanvasBounds?.ToString() ?? NodeName.Root.ToString();
+		public override string ToString() => owner?.ToString() ?? NodeName.Root.ToString();
 
 
 		private Rect GetItemsCanvasViewArea()

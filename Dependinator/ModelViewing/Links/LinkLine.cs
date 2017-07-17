@@ -188,14 +188,14 @@ namespace Dependinator.ModelViewing.Links
 			isUpdated = false;
 			if (CanShowSegment())
 			{
-				ViewModel.Show();
+				//ViewModel.Show();
 				ViewModel.NotifyAll();
 			}
 			else
 			{
 				if (ViewModel.CanShow)
 				{
-					ViewModel.Hide();
+					//ViewModel.Hide();
 					ViewModel.NotifyAll();
 				}
 			}

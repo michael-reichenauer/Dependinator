@@ -19,15 +19,13 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			this.nodeService = nodeService;
 			this.node = node;
-			Show();
 			RectangleBrush = nodeService.GetRandomRectangleBrush();
 			BackgroundBrush = nodeService.GetRectangleBackgroundBrush(RectangleBrush);
 		}
 
-		public NodeId NodeId => node.Id;
+		public override bool CanShow => ItemScale > 0.15;
 
-		protected override Rect GetItemBounds() => NodeBounds;
-		public Rect NodeBounds { get; set; }
+		public NodeId NodeId => node.Id;
 
 		public Brush RectangleBrush { get; }
 		public Brush BackgroundBrush { get; }
@@ -75,7 +73,7 @@ namespace Dependinator.ModelViewing.Nodes
 			Point newLocation = ItemBounds.Location + scaledOffset;
 			Size size = ItemBounds.Size;
 
-			NodeBounds = new Rect(newLocation, size);
+			ItemBounds = new Rect(newLocation, size);
 
 			ItemsCanvas.UpdateItem(this);
 			NotifyAll();
@@ -86,7 +84,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		public string ItemsToolTip => "\n" +
-			$"Rect: {NodeBounds.TS()}\n"
+			$"Rect: {ItemBounds.TS()}\n"
 			+$"Scale {ItemScale}";
 
 

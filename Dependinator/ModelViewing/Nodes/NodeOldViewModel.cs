@@ -17,7 +17,7 @@ namespace Dependinator.ModelViewing.Nodes
 			this.node = node;
 		}
 
-		protected override Rect GetItemBounds() => node.ItemBounds;
+		protected Rect GetItemBounds() => node.ItemBounds;
 
 		public Brush RectangleBrush => node.GetNodeBrush();
 		public Brush BackgroundBrush => node.GetBackgroundNodeBrush();

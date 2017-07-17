@@ -6,7 +6,6 @@ using System.Windows.Media;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private.Items;
-using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils;
 
 
@@ -64,6 +63,8 @@ namespace Dependinator.ModelViewing.Nodes
 			set { nodeBounds = value; }
 		}
 
+		public bool CanShow { get; }
+
 		public double NodeScale => ParentNode?.ItemsScale ?? 1.0;
 
 		public NodeOld ParentNode { get; }
@@ -90,11 +91,12 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private static bool IsVisibleAtScale(double scale) => scale > 0.15;
 
-		
+
 
 
 		public NodeOld RootNode { get; }
 
+		bool IItemsCanvasBounds.IsShowing => throw new NotImplementedException();
 
 		public bool CanShowNode() => IsVisibleAtScale(NodeScale);
 
@@ -334,7 +336,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 				if (node.ChildNodes.Any())
 				{
-					node.itemsCanvas.UpdateScale();
+					//node.itemsCanvas.UpdateScale();
 					node.ChildNodes.ForEach(child => nodes.Push(child));
 				}
 			}
@@ -437,7 +439,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 			if (ChildNodes.Any())
 			{
-				itemsCanvas.UpdateScale();
+				//itemsCanvas.UpdateScale();
 
 				var childrenToShow = ChildNodes
 					.Where(child => !child.viewModel.CanShow && child.CanShowNode())
@@ -463,8 +465,8 @@ namespace Dependinator.ModelViewing.Nodes
 				var itemsToShow = childrenToShow.Concat(linesToShow);
 				var itemsToHide = childrenToHide.Concat(linesToHide);
 
-				itemsToShow.ForEach(item => item.Show());
-				itemsToHide.ForEach(item => item.Hide());
+				//itemsToShow.ForEach(item => item.Show());
+				//itemsToHide.ForEach(item => item.Hide());
 
 				var itemsToUpdate = itemsToHide.Concat(itemsToShow).ToList();
 
@@ -490,7 +492,7 @@ namespace Dependinator.ModelViewing.Nodes
 				if (childNode.viewModel?.CanShow ?? false)
 				{
 					childNode.HideAllChildren();
-					childNode.viewModel.Hide();
+					//	childNode.viewModel.Hide();
 				}
 			}
 
@@ -501,7 +503,7 @@ namespace Dependinator.ModelViewing.Nodes
 		private void InitNodeTree(IItemsCanvas rootCanvas)
 		{
 			itemsCanvas = rootCanvas;
-		//	viewModel = new NamespaceViewModel(itemsService, this, rootCanvas);
+			//	viewModel = new NamespaceViewModel(itemsService, this, rootCanvas);
 
 			InitNode();
 		}
@@ -542,18 +544,18 @@ namespace Dependinator.ModelViewing.Nodes
 			{
 				itemsCanvas = ParentNode.itemsCanvas.CreateChild(this);
 
-				double scale = PersistentScale ?? 0;
-				if (Math.Abs(scale) > 0.001)
-				{
-					itemsCanvas.Scale = scale;
-				}
-				else
-				{
-					itemsCanvas.Scale = ParentNode.itemsCanvas.Scale / InitialScaleFactor;
-				}
+				//double scale = PersistentScale ?? 0;
+				//if (Math.Abs(scale) > 0.001)
+				//{
+				//	itemsCanvas.Scale = scale;
+				//}
+				//else
+				//{
+				//	itemsCanvas.Scale = ParentNode.itemsCanvas.Scale / InitialScaleFactor;
+				//}
 
-				Point offset = PersistentOffset ?? new Point(0, 0);
-				itemsCanvas.Offset = offset;
+				//Point offset = PersistentOffset ?? new Point(0, 0);
+				//itemsCanvas.Offset = offset;
 
 				//if (NodeType == NodeType.TypeType)
 				//{

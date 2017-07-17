@@ -143,6 +143,8 @@ namespace Dependinator.ModelViewing.Private
 			}
 
 			IItemsCanvas itemsCanvas = parentCanvas.CreateChild(viewModel);
+			itemsCanvas.SetInitialScale(parentCanvas.Scale / 7);
+			viewModel.ItemsViewModel = new ItemsViewModel(itemsCanvas);
 			model.Nodes.AddItemsCanvas(node.Id, itemsCanvas);
 			return itemsCanvas;
 		}

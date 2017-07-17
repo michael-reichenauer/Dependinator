@@ -171,6 +171,10 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 			}
 		}
 
+		public IReadOnlyList<T> GetAll<T>()
+		{
+			return viewItemsTree.Cast<T>().ToList();
+		}
 
 
 		public void Remove(IEnumerable<IItem> virtualItems)

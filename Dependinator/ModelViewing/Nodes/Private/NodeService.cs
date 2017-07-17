@@ -2,7 +2,6 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
-using Dependinator.Modeling;
 using Dependinator.ModelViewing.Private;
 
 namespace Dependinator.ModelViewing.Nodes.Private
@@ -69,7 +68,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 			Rect bounds = new Rect(location, size);
 
-			nodeViewModel.NodeBounds = bounds;
+			nodeViewModel.ItemBounds = bounds;
 		}
 
 

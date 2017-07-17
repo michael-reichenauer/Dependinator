@@ -51,7 +51,7 @@
 		</Border>
 
 
-		<Rectangle
+		<!--<Rectangle
 			Stroke="Transparent"
 			StrokeThickness="2"
 			Fill="{Binding RectangleBrush}"
@@ -59,7 +59,7 @@
 			Height="8"
 			HorizontalAlignment="Left"
 			VerticalAlignment="Center"
-			MouseMove="UIElement_OnMouseMove" />
+			MouseMove="UIElement_OnMouseMove" />-->
 
 	</Grid>
 
