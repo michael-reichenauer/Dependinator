@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using Dependinator.Modeling;
+using Dependinator.Utils;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
@@ -104,6 +105,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 			double newScale = Scale * zoom;
 			if (!IsShowing || IsRoot && newScale < 0.15 && zoom < 1)
 			{
+				// Item not shown or reached minimum root zoom level
 				return;
 			}		
 
@@ -121,7 +123,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 			itemsSource.Update(items);
 			items.ForEach(item => item.NotifyAll());
 
-			canvasChildren.ForEach(child => child.UpdateScale());
+			ZoomChildren();
 		}
 
 
@@ -129,24 +131,23 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		{
 			Offset -= viewOffset;
 
-			UpdateShownItemsInChildNodes();
+			UpdateShownItemsInChildren();
 		}
 
-
-		private void UpdateShownItems()
+		private void ZoomChildren()
 		{
-			TriggerInvalidated();
+			canvasChildren.ForEach(child => child.UpdateScale());
 		}
 
 
-		private void UpdateShownItemsInChildNodes()
+		private void UpdateShownItemsInChildren()
 		{
 			canvasChildren
 				.Where(canvas => canvas.IsShowing)
 				.ForEach(canvas =>
 				{
-					canvas.UpdateShownItems();
-					canvas.UpdateShownItemsInChildNodes();
+					canvas.TriggerInvalidated();
+					canvas.UpdateShownItemsInChildren();
 				});
 		}
 
@@ -157,7 +158,14 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 			double newScale = ParentScale / ScaleFactor;
 			double zoom = newScale / Scale;
 
-			Zoom(zoom, new Point(0, 0));			
+			if (Math.Abs(zoom) > 0.001)
+			{
+				Zoom(zoom, new Point(0, 0));
+			}
+			else
+			{
+				Log.Warn("Zoom not needed");
+			}
 		}
 
 
