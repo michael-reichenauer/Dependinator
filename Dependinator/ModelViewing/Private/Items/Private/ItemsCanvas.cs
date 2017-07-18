@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using Dependinator.Modeling;
@@ -18,6 +19,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		private Point offset = new Point(0, 0);
 		private Rect ItemsCanvasBounds => 
 			owner?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
+		
 
 		private bool IsShowing => owner?.IsShowing ?? true;
 
@@ -35,6 +37,8 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 			CanvasRoot = canvasParent?.CanvasRoot ?? this;
 		}
 
+		public double ParentScale => IsRoot ? Scale : canvasParent.Scale;
+
 		public IItemsCanvas CanvasRoot { get; }
 
 		public IReadOnlyList<IItemsCanvas> CanvasChildren => canvasChildren;
@@ -50,6 +54,13 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 			return child;
 		}
+
+		public void ItemRealized()
+		{
+			UpdateScale();
+		}
+
+	
 
 		public void SetInitialScale(double initialScale) => Scale = initialScale;
 
@@ -94,9 +105,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 			if (!IsShowing || IsRoot && newScale < 0.15 && zoom < 1)
 			{
 				return;
-			}
-
-			
+			}		
 
 			double scaleFactor = newScale / Scale;
 			Scale = newScale;
@@ -108,7 +117,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 				Offset = (Point)((Vector)(Offset + position) * scaleFactor - position);
 			}
 
-			var items = itemsSource.GetAll<ItemViewModel>();
+			IReadOnlyList<ItemViewModel> items = itemsSource.GetAll<ItemViewModel>();
 			itemsSource.Update(items);
 			items.ForEach(item => item.NotifyAll());
 
@@ -116,15 +125,36 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		}
 
 
-		public void Move(Vector viewOffset) => Offset -= viewOffset;
+		public void Move(Vector viewOffset)
+		{
+			Offset -= viewOffset;
+
+			UpdateShownItemsInChildNodes();
+		}
 
 
-		public double ParentScale => IsRoot ? Scale : canvasParent.Scale;
+		private void UpdateShownItems()
+		{
+			TriggerInvalidated();
+		}
+
+
+		private void UpdateShownItemsInChildNodes()
+		{
+			canvasChildren
+				.Where(canvas => canvas.IsShowing)
+				.ForEach(canvas =>
+				{
+					canvas.UpdateShownItems();
+					canvas.UpdateShownItemsInChildNodes();
+				});
+		}
+
 
 
 		private void UpdateScale()
 		{
-			double newScale = canvasParent.Scale / ScaleFactor;
+			double newScale = ParentScale / ScaleFactor;
 			double zoom = newScale / Scale;
 
 			Zoom(zoom, new Point(0, 0));			
@@ -244,6 +274,23 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 
 		public override string ToString() => owner?.ToString() ?? NodeName.Root.ToString();
+
+
+		public int AllItemsCount()
+		{
+			int count = itemsSource.GetAll<IItem>().Count;
+
+			count += canvasChildren.Sum(canvas => canvas.AllItemsCount());
+			return count;
+		}
+
+		public int ShownItemsCount()
+		{
+			int count = itemsSource.GetAll<IItem>().Count(i => i.IsShowing);
+
+			count += canvasChildren.Sum(canvas => canvas.ShownItemsCount());
+			return count;
+		}
 
 
 		private Rect GetItemsCanvasViewArea()

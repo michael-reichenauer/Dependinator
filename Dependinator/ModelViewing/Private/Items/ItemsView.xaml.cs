@@ -187,7 +187,7 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		protected override void OnTouchDown(TouchEventArgs e)
 		{
-			if (!viewModel.IsRoot)
+			if (!(viewModel?.IsRoot ?? false))
 			{
 				return;
 			}

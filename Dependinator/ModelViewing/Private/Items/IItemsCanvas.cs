@@ -28,5 +28,8 @@ namespace Dependinator.ModelViewing.Private.Items
 		Rect GetHierarchicalVisualArea();
 		IItemsCanvas CreateChild(IItemsCanvasBounds canvasBounds);
 		void SetInitialScale(double scale);
+		int AllItemsCount();
+		int ShownItemsCount();
+		void ItemRealized();
 	}
 }

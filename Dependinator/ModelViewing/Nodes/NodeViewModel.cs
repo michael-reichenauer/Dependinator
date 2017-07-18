@@ -65,6 +65,11 @@ namespace Dependinator.ModelViewing.Nodes
 			lastMousePosition = viewPosition;
 		}
 
+		public override void ItemRealized()
+		{
+			base.ItemRealized();
+			ItemsCanvas.ItemRealized();
+		}
 
 		private void Move(Vector viewOffset)
 		{
@@ -84,8 +89,9 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		public string ItemsToolTip => "\n" +
-			$"Rect: {ItemBounds.TS()}\n"
-			+$"Scale {ItemScale}";
+			$"Rect: {ItemBounds.TS()}\n" + 
+			$"Scale {ItemScale}\n" +
+			$"Items: {ItemsCanvas.CanvasRoot.AllItemsCount()}, Shown {ItemsCanvas.CanvasRoot.ShownItemsCount()}";
 
 
 		public override string ToString() => node.Name;
