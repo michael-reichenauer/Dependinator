@@ -90,18 +90,6 @@
 
 				<Style.Triggers>
 
-					<!--<DataTrigger Binding="{Binding ViewName}" Value="NodeViewModel">
-						<Setter Property="ContentTemplate">
-							<Setter.Value>
-								<DataTemplate>
-									<nodes:NodeView/>
-								</DataTemplate>
-							</Setter.Value>
-						</Setter>
-					</DataTrigger>-->
-
-
-
 					<DataTrigger Binding="{Binding ViewName}" Value="NamespaceView">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
@@ -123,7 +111,7 @@
 						</Setter>
 					</DataTrigger>
 
-					<DataTrigger Binding="{Binding ViewName}" Value="MemberNodeViewModel">
+					<DataTrigger Binding="{Binding ViewName}" Value="MemberNodeView">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>

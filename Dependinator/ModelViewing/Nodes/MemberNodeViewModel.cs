@@ -1,10 +1,13 @@
+using Dependinator.Modeling;
+
 namespace Dependinator.ModelViewing.Nodes
 {
-	internal class MemberNodeViewModel : NodeOldViewModel
+	internal class MemberNodeViewModel : NodeViewModel
 	{
-		public MemberNodeViewModel(NodeOld node)
-			: base(node)
+		public MemberNodeViewModel(INodeService nodeService, Node node)
+			: base(nodeService, node)
 		{
+			ViewName = nameof(MemberNodeView);
 		}
 	}
 }

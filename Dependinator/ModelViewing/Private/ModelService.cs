@@ -173,6 +173,10 @@ namespace Dependinator.ModelViewing.Private
 			{
 				nodeViewModel = new TypeViewModel(nodeService, node);
 			}
+			else if (node is MemberNode)
+			{
+				nodeViewModel = new MemberNodeViewModel(nodeService, node);
+			}
 			else
 			{
 				nodeViewModel = new NamespaceViewModel(nodeService, node);

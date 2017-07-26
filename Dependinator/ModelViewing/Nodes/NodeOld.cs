@@ -22,7 +22,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private Brush nodeBrush;
 
-		private ItemViewModel viewModel;
+		private ItemViewModel viewModel = null;
 
 		private bool IsShowing => IsRootNode || (viewModel?.IsShowing ?? false);
 		private bool IsRootNode => ParentNode == null;
@@ -568,7 +568,7 @@ namespace Dependinator.ModelViewing.Nodes
 			}
 			else
 			{
-				viewModel = new MemberNodeViewModel(this);
+				//viewModel = new MemberNodeViewModel(this);
 			}
 
 			return viewModel;
