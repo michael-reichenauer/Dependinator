@@ -1,5 +1,4 @@
 using System.Windows;
-using Dependinator.Utils.UI;
 
 namespace Dependinator.ModelViewing.Private.Items
 {
@@ -9,8 +8,6 @@ namespace Dependinator.ModelViewing.Private.Items
 		bool CanShow { get; }
 		bool IsShowing { get; }
 
-
-		ViewModel ViewModel { get; }
 		object ItemState { get; set; }
 		IItemsCanvas ItemsCanvas { get; set; }
 

@@ -353,7 +353,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		{
 			if (viewItems.TryGetValue(virtualId, out var item))
 			{
-				return item.ViewModel;
+				return item;
 			}
 
 			return null;
