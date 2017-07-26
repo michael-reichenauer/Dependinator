@@ -9,8 +9,8 @@ namespace Dependinator.ModelViewing.Links
 {
 	internal class LinkOld : Equatable<LinkOld>
 	{
-		private readonly List<LinkLine> lines = new List<LinkLine>();
-		private IReadOnlyList<LinkSegment> currentLinkSegments;
+		private readonly List<LinkLineOld> lines = new List<LinkLineOld>();
+		private IReadOnlyList<LinkSegmentOld> currentLinkSegments;
 
 		public LinkOld(NodeOld source, NodeOld target)
 		{
@@ -24,19 +24,19 @@ namespace Dependinator.ModelViewing.Links
 
 		public NodeOld Target { get; }
 
-		public IReadOnlyList<LinkLine> Lines => lines;
-		public IReadOnlyList<LinkSegment> LinkSegments => currentLinkSegments;
+		public IReadOnlyList<LinkLineOld> Lines => lines;
+		public IReadOnlyList<LinkSegmentOld> LinkSegments => currentLinkSegments;
 
 
-		public bool TryAddLinkLine(LinkLine line) => lines.TryAdd(line);
+		public bool TryAddLinkLine(LinkLineOld line) => lines.TryAdd(line);
 
-		public bool Remove(LinkLine line) => lines.Remove(line);
+		public bool Remove(LinkLineOld line) => lines.Remove(line);
 
 
 		public override string ToString() => $"{Source} -> {Target}";
 
 
-		public void SetLinkSegments(IReadOnlyList<LinkSegment> linkSegments)
+		public void SetLinkSegments(IReadOnlyList<LinkSegmentOld> linkSegments)
 		{
 			currentLinkSegments = linkSegments;
 		}

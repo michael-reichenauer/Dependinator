@@ -5,43 +5,43 @@ namespace Dependinator.ModelViewing.Links.Private
 {
 	internal interface ILinkSegmentService
 	{
-		IReadOnlyList<LinkSegment> GetNewLinkSegments(
-			IReadOnlyList<LinkSegment> linkSegments, LinkSegment newSegment);
+		IReadOnlyList<LinkSegmentOld> GetNewLinkSegments(
+			IReadOnlyList<LinkSegmentOld> linkSegments, LinkSegmentOld newSegment);
 
 
-		IReadOnlyList<LinkSegment> GetNewLinkSegments(
-			IReadOnlyList<LinkSegment> linkSegments,
-			IReadOnlyList<LinkSegment> newSegments);
+		IReadOnlyList<LinkSegmentOld> GetNewLinkSegments(
+			IReadOnlyList<LinkSegmentOld> linkSegments,
+			IReadOnlyList<LinkSegmentOld> newSegments);
 
 
-		LinkSegment GetZoomedInSegment(
-			IReadOnlyList<LinkSegment> replacedSegments, LinkOld link);
+		LinkSegmentOld GetZoomedInSegment(
+			IReadOnlyList<LinkSegmentOld> replacedSegments, LinkOld link);
 
 
-		IReadOnlyList<LinkSegment> GetZoomedInReplacedSegments(
-			IEnumerable<LinkSegment> linkSegments,
+		IReadOnlyList<LinkSegmentOld> GetZoomedInReplacedSegments(
+			IEnumerable<LinkSegmentOld> linkSegments,
 			NodeOld source,
 			NodeOld target);
 
 
-		IReadOnlyList<LinkSegment> GetZoomedOutReplacedSegments(
-			IReadOnlyList<LinkSegment> normalSegments,
-			IReadOnlyList<LinkSegment> currentSegments,
+		IReadOnlyList<LinkSegmentOld> GetZoomedOutReplacedSegments(
+			IReadOnlyList<LinkSegmentOld> normalSegments,
+			IReadOnlyList<LinkSegmentOld> currentSegments,
 			NodeOld source,
 			NodeOld target);
 
 
-		IReadOnlyList<LinkSegment> GetNormalLinkSegments(LinkOld link);
+		IReadOnlyList<LinkSegmentOld> GetNormalLinkSegments(LinkOld link);
 
 
-		IReadOnlyList<LinkSegment> GetZoomedInBeforeReplacedSegments(
-			IEnumerable<LinkSegment> linkSegments,
+		IReadOnlyList<LinkSegmentOld> GetZoomedInBeforeReplacedSegments(
+			IEnumerable<LinkSegmentOld> linkSegments,
 			NodeOld source,
 			NodeOld target);
 
 
-		IReadOnlyList<LinkSegment> GetZoomedInAfterReplacedSegments(
-			IEnumerable<LinkSegment> linkSegments,
+		IReadOnlyList<LinkSegmentOld> GetZoomedInAfterReplacedSegments(
+			IEnumerable<LinkSegmentOld> linkSegments,
 			NodeOld source,
 			NodeOld target);
 	}

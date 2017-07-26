@@ -8,7 +8,7 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.Links
 {
-	internal class LinkLine : Equatable<LinkLine>
+	internal class LinkLineOld : Equatable<LinkLineOld>
 	{
 		private readonly ILinkService linkService;
 		private readonly List<LinkOld> links = new List<LinkOld>();
@@ -21,7 +21,7 @@ namespace Dependinator.ModelViewing.Links
 		private bool isUpdated = false;
 
 
-		public LinkLine(
+		public LinkLineOld(
 			ILinkService linkService,
 			NodeOld source,
 			NodeOld target,
@@ -77,12 +77,12 @@ namespace Dependinator.ModelViewing.Links
 			{
 				if (zoom > 1)
 				{
-					IEnumerable<LinkLine> linkLines = Source.Links.ReferencingLines
+					IEnumerable<LinkLineOld> linkLines = Source.Links.ReferencingLines
 						.Where(l => l.Source == Source)
 						.Where(l => l.links.Intersect(links.Concat(hiddenLinks)).Any())
 						.ToList();
 
-					foreach (LinkLine linkLine in linkLines)
+					foreach (LinkLineOld linkLine in linkLines)
 					{
 						if (!linkLine.IsEmpty)
 						{
@@ -93,13 +93,13 @@ namespace Dependinator.ModelViewing.Links
 				}
 				else
 				{
-					IEnumerable<LinkLine> linkLines = Source.Links.ReferencingLines
+					IEnumerable<LinkLineOld> linkLines = Source.Links.ReferencingLines
 						.Where(l => l.Source == Source)
 						.Where(l => l.links.Intersect(links.Concat(hiddenLinks)).Any())
 						.Reverse()
 						.ToList();
 
-					foreach (LinkLine linkLine in linkLines)
+					foreach (LinkLineOld linkLine in linkLines)
 					{
 						if (!linkLine.IsNormal && !linkLine.IsEmpty)
 						{
@@ -113,12 +113,12 @@ namespace Dependinator.ModelViewing.Links
 			{
 				if (zoom > 1)
 				{
-					IEnumerable<LinkLine> linkLines = Target.Links.ReferencingLines
+					IEnumerable<LinkLineOld> linkLines = Target.Links.ReferencingLines
 						.Where(l => l.Target == Target)
 						.Where(l => l.links.Intersect(links.Concat(hiddenLinks)).Any())
 						.ToList();
 
-					foreach (LinkLine linkLine in linkLines)
+					foreach (LinkLineOld linkLine in linkLines)
 					{
 						if (!linkLine.IsEmpty)
 						{
@@ -129,13 +129,13 @@ namespace Dependinator.ModelViewing.Links
 				}
 				else
 				{
-					IEnumerable<LinkLine> linkLines = Target.Links.ReferencingLines
+					IEnumerable<LinkLineOld> linkLines = Target.Links.ReferencingLines
 						.Where(l => l.Target == Target)
 						.Where(l => l.links.Intersect(links.Concat(hiddenLinks)).Any())
 						.Reverse()
 						.ToList();
 
-					foreach (LinkLine linkLine in linkLines)
+					foreach (LinkLineOld linkLine in linkLines)
 					{
 						if (!linkLine.IsNormal && !linkLine.IsEmpty)
 						{

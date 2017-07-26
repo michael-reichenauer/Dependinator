@@ -509,13 +509,13 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public void AddOwnedLineItem(LinkLine line)
+		public void AddOwnedLineItem(LinkLineOld line)
 		{
 			itemsCanvas?.AddItem(line.ViewModel);
 		}
 
 
-		public void RemoveOwnedLineItem(LinkLine line)
+		public void RemoveOwnedLineItem(LinkLineOld line)
 		{
 			itemsCanvas?.RemoveItem(line.ViewModel);
 		}

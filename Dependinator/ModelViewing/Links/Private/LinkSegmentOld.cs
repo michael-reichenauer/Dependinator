@@ -2,9 +2,9 @@ using Dependinator.ModelViewing.Nodes;
 
 namespace Dependinator.ModelViewing.Links.Private
 {
-	internal class LinkSegment
+	internal class LinkSegmentOld
 	{
-		public LinkSegment(NodeOld source, NodeOld target, NodeOld owner, LinkOld link)
+		public LinkSegmentOld(NodeOld source, NodeOld target, NodeOld owner, LinkOld link)
 		{
 			Source = source;
 			Target = target;

@@ -178,7 +178,7 @@
     <Compile Include="ModelViewing\Links\LinkLineView.xaml.cs">
       <DependentUpon>LinkLineView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\Links\Private\LinkSegment.cs" />
+    <Compile Include="ModelViewing\Links\Private\LinkSegmentOld.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkSegmentService.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkService.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkLineBounds.cs" />
@@ -209,7 +209,7 @@
     <Compile Include="ModelViewing\Nodes\CompositeNodeViewModel.cs" />
     <Compile Include="Modeling\Private\ModelingService.cs" />
     <Compile Include="Modeling\IModelingService.cs" />
-    <Compile Include="ModelViewing\Links\LinkLine.cs" />
+    <Compile Include="ModelViewing\Links\LinkLineOld.cs" />
     <Compile Include="ModelViewing\Links\LinkLineViewModel.cs" />
     <Compile Include="Modeling\ModelViewDataOld.cs" />
     <Compile Include="ModelViewing\Private\Items\ItemViewModel.cs" />

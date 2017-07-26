@@ -53,15 +53,15 @@ namespace Dependinator.ModelViewing.Links.Private
 		//}
 
 
-		public void ZoomInLinkLine(LinkLine line, NodeOld node)
+		public void ZoomInLinkLine(LinkLineOld line, NodeOld node)
 		{
 			IReadOnlyList<LinkOld> links = line.Links.ToList();
 
 			foreach (LinkOld link in links)
 			{
-				IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
+				IReadOnlyList<LinkSegmentOld> currentLinkSegments = link.LinkSegments.ToList();
 
-				IReadOnlyList<LinkSegment> zoomedSegments;
+				IReadOnlyList<LinkSegmentOld> zoomedSegments;
 				if (node == line.Target)
 				{
 					zoomedSegments = segmentService.GetZoomedInBeforeReplacedSegments(currentLinkSegments, line.Source, line.Target);
@@ -71,7 +71,7 @@ namespace Dependinator.ModelViewing.Links.Private
 					zoomedSegments = segmentService.GetZoomedInAfterReplacedSegments(currentLinkSegments, line.Source, line.Target);
 				}
 			
-				LinkSegment zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
+				LinkSegmentOld zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
 
 				var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedInSegment);
 
@@ -116,16 +116,16 @@ namespace Dependinator.ModelViewing.Links.Private
 		//}
 
 
-		public void ZoomOutLinkLine(LinkLine line, NodeOld node)
+		public void ZoomOutLinkLine(LinkLineOld line, NodeOld node)
 		{
 			IReadOnlyList<LinkOld> links = line.Links.ToList();
 
 			foreach (LinkOld link in links)
 			{
-				IReadOnlyList<LinkSegment> normalLinkSegments = segmentService.GetNormalLinkSegments(link);
-				IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
+				IReadOnlyList<LinkSegmentOld> normalLinkSegments = segmentService.GetNormalLinkSegments(link);
+				IReadOnlyList<LinkSegmentOld> currentLinkSegments = link.LinkSegments.ToList();
 
-				IReadOnlyList<LinkSegment> zoomedSegments = segmentService.GetZoomedOutReplacedSegments(normalLinkSegments, currentLinkSegments, line.Source, line.Target);
+				IReadOnlyList<LinkSegmentOld> zoomedSegments = segmentService.GetZoomedOutReplacedSegments(normalLinkSegments, currentLinkSegments, line.Source, line.Target);
 
 				if (zoomedSegments.Count > 1)
 				{
@@ -138,7 +138,7 @@ namespace Dependinator.ModelViewing.Links.Private
 						zoomedSegments = zoomedSegments.Take(zoomedSegments.Count - 1).ToList();
 					}
 
-					LinkSegment zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
+					LinkSegmentOld zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
 
 					var newSegments = segmentService.GetNewLinkSegments(normalLinkSegments, zoomedInSegment);
 
@@ -155,7 +155,7 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		public void CloseLine(LinkLine line)
+		public void CloseLine(LinkLineOld line)
 		{
 			line.Owner.RemoveOwnedLineItem(line);
 			line.Owner.Links.RemoveOwnedLine(line);
@@ -173,7 +173,7 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		private void HideLinkFromLine(LinkLine line, LinkOld link)
+		private void HideLinkFromLine(LinkLineOld line, LinkOld link)
 		{
 			line.HideLink(link);
 			link.Remove(line);
@@ -185,9 +185,9 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		private static IReadOnlyList<LinkLine> GetLines(
-			IReadOnlyList<LinkLine> linkLines, 
-			IReadOnlyList<LinkSegment> replacedSegments)
+		private static IReadOnlyList<LinkLineOld> GetLines(
+			IReadOnlyList<LinkLineOld> linkLines, 
+			IReadOnlyList<LinkSegmentOld> replacedSegments)
 		{
 			return replacedSegments
 				.Where(segment => linkLines.Any(
@@ -198,15 +198,15 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		private bool AddDirectLine(LinkSegment segment)
+		private bool AddDirectLine(LinkSegmentOld segment)
 		{
 			bool isNewAdded = false;
-			LinkLine existingLine = segment.Owner.Links.OwnedLines
+			LinkLineOld existingLine = segment.Owner.Links.OwnedLines
 				.FirstOrDefault(line => line.Source == segment.Source && line.Target == segment.Target);
 
 			if (existingLine == null)
 			{
-				existingLine = new LinkLine(this, segment.Source, segment.Target, segment.Owner);
+				existingLine = new LinkLineOld(this, segment.Source, segment.Target, segment.Owner);
 				AddLinkLine(existingLine);
 
 				segment.Owner.AddOwnedLineItem(existingLine);
@@ -227,14 +227,14 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		private void AddNormalLinkSegment(LinkSegment segment)
+		private void AddNormalLinkSegment(LinkSegmentOld segment)
 		{
-			LinkLine existingLine = segment.Owner.Links.OwnedLines
+			LinkLineOld existingLine = segment.Owner.Links.OwnedLines
 				.FirstOrDefault(line => line.Source == segment.Source && line.Target == segment.Target);
 
 			if (existingLine == null)
 			{
-				existingLine = new LinkLine(this, segment.Source, segment.Target, segment.Owner);
+				existingLine = new LinkLineOld(this, segment.Source, segment.Target, segment.Owner);
 				AddLinkLine(existingLine);
 			}
 
@@ -245,7 +245,7 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		private static void AddLinkLine(LinkLine line)
+		private static void AddLinkLine(LinkLineOld line)
 		{
 			line.Owner.Links.TryAddOwnedLine(line);
 			line.Source.Links.TryAddReferencedLine(line);
@@ -254,7 +254,7 @@ namespace Dependinator.ModelViewing.Links.Private
 
 
 
-		public double GetLineThickness(LinkLine linkLine)
+		public double GetLineThickness(LinkLineOld linkLine)
 		{
 			double scale = (linkLine.Owner.ItemsScale).MM(0.1, 0.7);
 			double thickness;
@@ -277,7 +277,7 @@ namespace Dependinator.ModelViewing.Links.Private
 			return thickness * scale;
 		}
 
-		public LinkLineBounds GetLinkLineBounds(LinkLine line)
+		public LinkLineBounds GetLinkLineBounds(LinkLineOld line)
 		{
 			if (!IsNodesInitialized(line))
 			{
@@ -340,7 +340,7 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		private static (Point source, Point target) GetLinkSegmentEndPoints(LinkLine line)
+		private static (Point source, Point target) GetLinkSegmentEndPoints(LinkLineOld line)
 		{
 			NodeOld source = line.Source;
 			NodeOld target = line.Target;
@@ -456,7 +456,7 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		private static bool IsNodesInitialized(LinkLine line) =>
+		private static bool IsNodesInitialized(LinkLineOld line) =>
 			line.Source.ItemBounds != Rect.Empty && line.Target.ItemBounds != Rect.Empty;
 
 
@@ -464,7 +464,7 @@ namespace Dependinator.ModelViewing.Links.Private
 		/// Gets the links in the line grouped first by source and then by target at the
 		/// appropriate node levels.
 		/// </summary>
-		public IReadOnlyList<LinkGroup> GetLinkGroups(LinkLine line)
+		public IReadOnlyList<LinkGroup> GetLinkGroups(LinkLineOld line)
 		{
 			NodeOld source = line.Source;
 			NodeOld target = line.Target;
