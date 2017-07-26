@@ -21,6 +21,7 @@ namespace Dependinator.ModelViewing.Nodes
 			this.node = node;
 			RectangleBrush = nodeService.GetRandomRectangleBrush();
 			BackgroundBrush = nodeService.GetRectangleBackgroundBrush(RectangleBrush);
+			ViewName = node is TypeNode ? nameof(TypeView) : nameof(NamespaceView);
 		}
 
 		public override bool CanShow => ItemScale > 0.15;
@@ -39,6 +40,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public void UpdateToolTip() => Notify(nameof(ToolTip));
 
 		public int FontSize => ((int)(15 * ItemScale)).MM(8, 13);
+
 
 
 		public void OnMouseMove(MouseEventArgs e)

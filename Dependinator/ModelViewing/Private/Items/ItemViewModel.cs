@@ -8,7 +8,18 @@ namespace Dependinator.ModelViewing.Private.Items
 		private Rect itemBounds;
 
 		// UI properties
-		public string Type => this.GetType().Name;
+
+		protected ItemViewModel()
+		{
+			ViewName = this.GetType().Name;
+		}
+
+		public string ViewName
+		{
+			get => Get();
+			set => Set(value);
+		}
+
 
 		public double ItemTop => ItemBounds.Top;
 		public double ItemLeft => ItemBounds.Left;
@@ -20,8 +31,8 @@ namespace Dependinator.ModelViewing.Private.Items
 			get => itemBounds;
 			set
 			{
-				itemBounds = value; 
-				Notify(nameof(ItemTop), nameof(ItemLeft), nameof(ItemWidth), nameof(ItemHeight));				
+				itemBounds = value;
+				Notify(nameof(ItemTop), nameof(ItemLeft), nameof(ItemWidth), nameof(ItemHeight));
 			}
 		}
 

@@ -100,7 +100,7 @@ namespace Dependinator.ModelViewing.Private
 			Node current = node;
 			while (!model.Nodes.TryGetNode(current.ParentId, out Node parent))
 			{
-				// Parent node not yet in model
+				// Parent node not yet in model, assume Namespace
 				parent = new NamespaceNode(current.Name.ParentName);
 				model.Nodes.Add(parent);
 				current = parent;

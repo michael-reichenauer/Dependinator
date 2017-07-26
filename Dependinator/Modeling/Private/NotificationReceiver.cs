@@ -48,7 +48,7 @@ namespace Dependinator.Modeling.Private
 
 			if (node.Type == Data.NodeType.TypeType)
 			{
-				return new NamespaceNode(name);
+				return new TypeNode(name);
 			}
 			else if (node.Type == Data.NodeType.MemberType)
 			{
