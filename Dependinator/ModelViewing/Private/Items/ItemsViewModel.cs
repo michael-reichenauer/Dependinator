@@ -25,5 +25,7 @@ namespace Dependinator.ModelViewing.Private.Items
 		public void Zoom(double zoom, Point viewPosition) => ItemsCanvas.Zoom(zoom, viewPosition);
 
 		public void SizeChanged() => ItemsCanvas.SizeChanged();
+
+		public void ItemRealized() => ItemsCanvas.ItemRealized();
 	}
 }

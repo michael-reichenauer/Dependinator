@@ -9,7 +9,7 @@ namespace Dependinator.ModelViewing.Private.Items
 		bool IsShowing { get; }
 
 		object ItemState { get; set; }
-		IItemsCanvas ItemsCanvas { get; set; }
+		IItemsCanvas ItemOwnerCanvas { get; set; }
 
 		void ItemRealized();
 		void ItemVirtualized();

@@ -68,7 +68,9 @@ namespace Dependinator.ModelViewing.Nodes
 		public override void ItemRealized()
 		{
 			base.ItemRealized();
-			ItemsCanvas.ItemRealized();
+
+			// If this node has an items canvas, make sure it knows it has been realized (fix zoom level)
+			ItemsViewModel?.ItemRealized();
 		}
 
 		private void Move(Vector viewOffset)
@@ -79,7 +81,7 @@ namespace Dependinator.ModelViewing.Nodes
 			Size size = ItemBounds.Size;
 
 			ItemBounds = new Rect(newLocation, size);
-			ItemsCanvas.UpdateItem(this);
+			ItemOwnerCanvas.UpdateItem(this);
 		}
 
 
@@ -89,7 +91,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public string ItemsToolTip => "\n" +
 			$"Rect: {ItemBounds.TS()}\n" + 
 			$"Scale {ItemScale}\n" +
-			$"Items: {ItemsCanvas.CanvasRoot.AllItemsCount()}, Shown {ItemsCanvas.CanvasRoot.ShownItemsCount()}";
+			$"Items: {ItemOwnerCanvas.CanvasRoot.AllItemsCount()}, Shown {ItemOwnerCanvas.CanvasRoot.ShownItemsCount()}";
 
 
 		public override string ToString() => node.Name;

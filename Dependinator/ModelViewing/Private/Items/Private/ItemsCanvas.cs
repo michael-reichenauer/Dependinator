@@ -235,14 +235,14 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 		public void AddItem(ItemViewModel item)
 		{
-			item.ItemsCanvas = this;
+			item.ItemOwnerCanvas = this;
 			itemsSource.Add(item);
 		}
 
 
 		public void AddItems(IEnumerable<ItemViewModel> items)
 		{
-			items.ForEach(item => item.ItemsCanvas = this);
+			items.ForEach(item => item.ItemOwnerCanvas = this);
 			itemsSource.Add(items);
 		}
 

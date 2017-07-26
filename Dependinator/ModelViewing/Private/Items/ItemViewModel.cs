@@ -26,16 +26,12 @@ namespace Dependinator.ModelViewing.Private.Items
 		}
 
 		public object ItemState { get; set; }
-		public IItemsCanvas ItemsCanvas { get; set; }
-		public double ItemScale => ItemsCanvas.Scale;
+		public IItemsCanvas ItemOwnerCanvas { get; set; }
+		public double ItemScale => ItemOwnerCanvas.Scale;
 
 		public virtual bool CanShow { get; } = true;
 
 		public bool IsShowing { get; private set; }
-
-		//public void Hide() => CanShow = false;
-
-		//public void Show() => CanShow = true;
 
 		public virtual void ItemRealized() => IsShowing = true;
 
