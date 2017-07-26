@@ -79,9 +79,7 @@ namespace Dependinator.ModelViewing.Nodes
 			Size size = ItemBounds.Size;
 
 			ItemBounds = new Rect(newLocation, size);
-
 			ItemsCanvas.UpdateItem(this);
-			NotifyAll();
 		}
 
 

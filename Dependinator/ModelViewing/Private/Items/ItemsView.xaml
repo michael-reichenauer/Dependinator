@@ -43,14 +43,14 @@
 			<Style TargetType="ListBoxItem">
 
 				<!--<Setter Property="Canvas.ZIndex" Value="{Binding CanvasZIndex}" />-->
-				<Setter Property="Canvas.Top" Value="{Binding CanvasTop}" />
-				<Setter Property="Canvas.Left" Value="{Binding CanvasLeft}" />
+				<Setter Property="Canvas.Top" Value="{Binding ItemTop}" />
+				<Setter Property="Canvas.Left" Value="{Binding ItemLeft}" />
 				<Setter Property="Width">
 					<Setter.Value>
 						<MultiBinding
 							Converter="{x:Static virtualCanvas:ArithmeticConverter.Default}"
 							ConverterParameter="*">
-							<Binding Path="CanvasWidth" />
+							<Binding Path="ItemWidth" />
 							<Binding
 								Path="Scale"
 								RelativeSource="{RelativeSource	AncestorType=virtualCanvas:ZoomableCanvas}" />
@@ -63,7 +63,7 @@
 						<MultiBinding
 							Converter="{x:Static virtualCanvas:ArithmeticConverter.Default}"
 							ConverterParameter="*">
-							<Binding Path="CanvasHeight" />
+							<Binding Path="ItemHeight" />
 							<Binding
 								Path="Scale"
 								RelativeSource="{RelativeSource	AncestorType=virtualCanvas:ZoomableCanvas}" />

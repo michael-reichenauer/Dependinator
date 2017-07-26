@@ -5,15 +5,25 @@ namespace Dependinator.ModelViewing.Private.Items
 {
 	internal abstract class ItemViewModel : ViewModel, IItem, IItemsCanvasBounds
 	{
+		private Rect itemBounds;
+
 		// UI properties
 		public string Type => this.GetType().Name;
 
-		public double CanvasWidth => ItemBounds.Width;
-		public double CanvasTop => ItemBounds.Top;
-		public double CanvasLeft => ItemBounds.Left;
-		public virtual double CanvasHeight => ItemBounds.Height;
+		public double ItemTop => ItemBounds.Top;
+		public double ItemLeft => ItemBounds.Left;
+		public double ItemWidth => ItemBounds.Width;
+		public double ItemHeight => ItemBounds.Height;
 
-		public virtual Rect ItemBounds { get; set; }
+		public Rect ItemBounds
+		{
+			get => itemBounds;
+			set
+			{
+				itemBounds = value; 
+				Notify(nameof(ItemTop), nameof(ItemLeft), nameof(ItemWidth), nameof(ItemHeight));				
+			}
+		}
 
 		public ViewModel ViewModel => this;
 		public object ItemState { get; set; }
