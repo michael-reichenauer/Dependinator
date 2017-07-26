@@ -8,7 +8,7 @@ using Dependinator.ModelViewing.Private.Items;
 
 namespace Dependinator.ModelViewing.Nodes
 {
-	internal class NodeViewModel : ItemViewModel
+	internal abstract class NodeViewModel : ItemViewModel
 	{
 		private readonly INodeService nodeService;
 
@@ -21,7 +21,6 @@ namespace Dependinator.ModelViewing.Nodes
 			this.node = node;
 			RectangleBrush = nodeService.GetRandomRectangleBrush();
 			BackgroundBrush = nodeService.GetRectangleBackgroundBrush(RectangleBrush);
-			ViewName = node is TypeNode ? nameof(TypeView) : nameof(NamespaceView);
 		}
 
 		public override bool CanShow => ItemScale > 0.15;
@@ -30,8 +29,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public Brush RectangleBrush { get; }
 		public Brush BackgroundBrush { get; }
-
-		public ItemsViewModel ItemsViewModel { get; set; }
+	
 
 		public string Name => node.Name.ShortName;
 
@@ -67,13 +65,7 @@ namespace Dependinator.ModelViewing.Nodes
 			lastMousePosition = viewPosition;
 		}
 
-		public override void ItemRealized()
-		{
-			base.ItemRealized();
-
-			// If this node has an items canvas, make sure it knows it has been realized (fix zoom level)
-			ItemsViewModel?.ItemRealized();
-		}
+	
 
 		private void Move(Vector viewOffset)
 		{

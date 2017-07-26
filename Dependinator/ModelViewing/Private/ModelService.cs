@@ -144,7 +144,12 @@ namespace Dependinator.ModelViewing.Private
 
 			IItemsCanvas itemsCanvas = parentCanvas.CreateChild(viewModel);
 			itemsCanvas.SetInitialScale(parentCanvas.Scale / 7);
-			viewModel.ItemsViewModel = new ItemsViewModel(itemsCanvas);
+
+			if (viewModel is CompositeNodeViewModel composite)
+			{
+				composite.ItemsViewModel = new ItemsViewModel(itemsCanvas);
+			}
+			
 			model.Nodes.AddItemsCanvas(node.Id, itemsCanvas);
 			return itemsCanvas;
 		}
@@ -152,11 +157,26 @@ namespace Dependinator.ModelViewing.Private
 
 		private NodeViewModel AddNode(Node node, IItemsCanvas parentCanvas)
 		{
-			NodeViewModel nodeViewModel = new NodeViewModel(nodeService, node);
+			NodeViewModel nodeViewModel = CreateNodeViewModel(node);
+
 			nodeService.SetLayout(nodeViewModel);
 			model.Nodes.AddViewModel(node.Id, nodeViewModel);
 			parentCanvas.AddItem(nodeViewModel);
 
+			return nodeViewModel;
+		}
+
+		private NodeViewModel CreateNodeViewModel(Node node)
+		{
+			NodeViewModel nodeViewModel;
+			if (node is TypeNode)
+			{
+				nodeViewModel = new TypeViewModel(nodeService, node);
+			}
+			else
+			{
+				nodeViewModel = new NamespaceViewModel(nodeService, node);
+			}
 			return nodeViewModel;
 		}
 

@@ -1,14 +1,14 @@
-﻿using Dependinator.ModelViewing.Private.Items;
-using Dependinator.ModelViewing.Private.Items.Private;
+﻿using Dependinator.Modeling;
 
 
 namespace Dependinator.ModelViewing.Nodes
 {
-	//internal class TypeViewModel : CompositeNodeViewModel
-	//{
-	//	public TypeViewModel(IItemsService itemsService, NodeOld node, IItemsCanvas itemsCanvas)
-	//		: base(itemsService, node, itemsCanvas)
-	//	{
-	//	}
-	//}
+	internal class TypeViewModel : CompositeNodeViewModel
+	{
+		public TypeViewModel(INodeService nodeService, Node node)
+			: base(nodeService, node)
+		{
+			ViewName = nameof(TypeView);
+		}
+	}
 }

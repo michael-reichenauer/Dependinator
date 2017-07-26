@@ -1,60 +1,26 @@
-//using System.Windows;
-//using Dependinator.ModelViewing.Private.Items;
-//using Dependinator.ModelViewing.Private.Items.Private;
+using Dependinator.Modeling;
+using Dependinator.ModelViewing.Private.Items;
 
 
-//namespace Dependinator.ModelViewing.Nodes
-//{
-//	internal class CompositeNodeViewModel : NodeOldViewModel
-//	{
-//		private readonly NodeOld node;
+namespace Dependinator.ModelViewing.Nodes
+{
+	internal abstract class CompositeNodeViewModel : NodeViewModel
+	{
+		protected CompositeNodeViewModel(INodeService nodeService, Node node)
+			: base(nodeService, node)
+		{
+		}
 
 
-//		public CompositeNodeViewModel(IItemsService itemsService, NodeOld node, IItemsCanvas itemsCanvas)
-//			: base(node)
-//		{
-//			this.node = node;
-//			ItemsCanvas = itemsCanvas;
-//			ItemsViewModel = new ItemsViewModel(itemsService, node, ItemsCanvas);
-//		}
+		public ItemsViewModel ItemsViewModel { get; set; }
 
 
+		public override void ItemRealized()
+		{
+			base.ItemRealized();
 
-//		public ItemsViewModel ItemsViewModel { get; }
-
-//		public double Scale => ItemsCanvas.Scale;
-
-
-
-//		public override void ItemRealized()
-//		{
-//			base.ItemRealized();
-//			node.NodeRealized();
-//		}
-
-
-//		public override void ItemVirtualized()
-//		{
-//			node.NodeVirtualized();
-//			base.ItemVirtualized();
-//		}
-
-
-//		public void UpdateScale()
-//		{
-//			ItemsCanvas.UpdateScale();
-//			NotifyAll();
-//		}
-
-
-
-//		public void Zoom(double zoomFactor, Point viewPosition) => node.Zoom(zoomFactor, viewPosition);
-
-//		public void ZoomResize(int wheelDelta) => node.Resize(wheelDelta);
-
-
-
-//		public void ResizeeNode(Vector viewOffset, Point viewPosition2) => node.Resize(viewOffset, viewPosition2);
-
-//	}
-//}
+			// If this node has an items canvas, make sure it knows it has been realized (fix zoom level)
+			ItemsViewModel?.ItemRealized();
+		}
+	}
+}
