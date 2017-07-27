@@ -19,18 +19,18 @@
 					X2="{Binding X2}"
 					Y2="{Binding Y2}"
 					Stroke="{Binding LineBrush}"
-					StrokeThickness="{Binding StrokeThickness}"
+					StrokeThickness="{Binding LineWidth}"
 					StrokeDashArray="{Binding StrokeDash}"
 					IsHitTestVisible="False" />
 
 				<!-- Arrow head -->
 				<Line
-					X1="{Binding X21}"
-					Y1="{Binding Y21}"
-					X2="{Binding X22}"
-					Y2="{Binding Y22}"
+					X1="{Binding ArrowX1}"
+					Y1="{Binding ArrowY1}"
+					X2="{Binding ArrowX2}"
+					Y2="{Binding ArrowY2}"
 					Stroke="{Binding LineBrush}"
-					StrokeThickness="{Binding ArrowThickness}"
+					StrokeThickness="{Binding ArrowWidth}"
 					StrokeDashArray=""
 					IsHitTestVisible="False"
 					StrokeEndLineCap="Triangle" />

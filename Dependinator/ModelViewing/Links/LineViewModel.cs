@@ -8,26 +8,23 @@ namespace Dependinator.ModelViewing.Links
 	internal class LineViewModel : ItemViewModel
 	{
 		private readonly ILinkService linkService;
-		private static readonly double NodeBorderThickness = 0.8 * 2;
+		private static readonly double NodeMargin = 0.8 * 2;
 		private static readonly double ArrowLength = 1.0;
-		private static readonly int Margin = 30;
+		private static readonly double LineMargin = 30;
 
-		private static readonly int xo1 = 110;
-		private static readonly int yo1 = 200;
-		private static readonly int xo2 = 330;
-		private static readonly int yo2 = 220;
-
-		private static readonly int xd1 = xo1 < xo2 ? 0 : 1;
-		private static readonly int yd1 = yo1 < yo2 ? 0 : 1;
-		private static readonly int xd2 = xo1 < xo2 ? 1 : 0;
-		private static readonly int yd2 = yo1 < yo2 ? 1 : 0;
-
-
-		private readonly int x = Math.Min(xo1, xo2);
-		private readonly int y = Math.Min(yo1, yo2);
-		private readonly int width = Math.Abs(xo2 - xo1);
-		private readonly int height = Math.Abs(yo2 - yo1);
-		
+		// Line and arrow variables for boundary, position and direction
+		private double x;
+		private double y;
+		private double width;
+		private double height;
+		private int xf;
+		private int yf;
+		private int xd1;
+		private int yd1;
+		private int xd2;
+		private int yd2;
+		private double arrowXd;
+		private double arrowYd;
 
 
 		public LineViewModel(
@@ -35,28 +32,27 @@ namespace Dependinator.ModelViewing.Links
 		{
 			this.linkService = linkService;
 
-			ItemBounds = new Rect(x - Margin, y - Margin, width + Margin * 2, height + Margin * 2);
+			SetLine(new Point(100, 400), new Point(30, 60));
 		}
 
-		public double X1 => (width * xd1 + Margin) * ItemScale - NodeBorderThickness;
-		public double Y1 => (height * yd1 + Margin) * ItemScale - NodeBorderThickness;
-		public double X2 => (width * xd2 + Margin) * ItemScale - NodeBorderThickness;
-		public double Y2 => (height * yd2 + Margin) * ItemScale - NodeBorderThickness;
+
+		// The line endpoints (x1,y1)->(x2,y2) within the item bounds with margins and direction
+		public double X1 => (width * xd1 + LineMargin) * ItemScale - NodeMargin;
+		public double Y1 => (height * yd1 + LineMargin) * ItemScale - NodeMargin;
+		public double X2 => (width * xd2 + LineMargin) * ItemScale - NodeMargin;
+		public double Y2 => (height * yd2 + LineMargin) * ItemScale - NodeMargin;
+
+		// The arrow line endpoint (based on the line end (x2,y2) and with size and direction
+		public double ArrowX1 => X2 - (ArrowWidth * arrowXd / 2) + (ArrowLength * 2 * arrowXd);
+		public double ArrowY1 => Y2 - (ArrowWidth * arrowYd / 2) + (ArrowLength * 2 * arrowYd);
+		public double ArrowX2 => X2 - (ArrowWidth * arrowXd / 2) + (ArrowLength * 3 * arrowXd);
+		public double ArrowY2 => Y2 - (ArrowWidth * arrowYd / 2) + (ArrowLength * 3 * arrowYd);
 
 
+		public double LineWidth => 1;
 
-		private double xfac => ((X2 - X1) / (Math.Abs(X2 - X1) + Math.Abs(Y2 - Y1))).MM(-0.9, 0.9);
-		private double yfac => ((Y2 - Y1) / (Math.Abs(Y2 - Y1) + Math.Abs(X2 - X1))).MM(-0.9, 0.9);
-
-
-		public double X21 => X2 - (ArrowThickness * xfac / 2) + (ArrowLength * 2 * xfac);
-		public double Y21 => Y2 - (ArrowThickness * yfac / 2) + (ArrowLength * 2 * yfac);
-		public double X22 => X2 - (ArrowThickness * xfac / 2) + (ArrowLength * 3 * xfac);
-		public double Y22 => Y2 - (ArrowThickness * yfac / 2) + (ArrowLength * 3 * yfac);
-
-
-		public double StrokeThickness => 1;
-		public double ArrowThickness => (10 * ItemScale).MM(4, 10);
+		// The arrow size (width) depend on the scaling
+		public double ArrowWidth => (10 * ItemScale).MM(4, 10);
 
 
 
@@ -84,6 +80,31 @@ namespace Dependinator.ModelViewing.Links
 
 		}
 
+
+		private void SetLine(Point source, Point target)
+		{
+			// Calculate the line boundaries (x, y, width, height)
+			x = Math.Min(source.X, target.X);
+			y = Math.Min(source.Y, target.Y);
+			width = Math.Abs(target.X - source.X);
+			height = Math.Abs(target.Y - source.Y);
+
+			// The items bound has some margin around the line to allow full line width and arrow to show
+			ItemBounds =
+				new Rect(x - LineMargin, y - LineMargin, width + LineMargin * 2, height + LineMargin * 2);
+
+			// Within the item bounds, the line will be drawn, and to do that we need some directions
+			xf = source.X < target.X ? 1 : -1;
+			yf = source.Y < target.Y ? 1 : -1;
+			xd1 = source.X < target.X ? 0 : 1;
+			yd1 = source.Y < target.Y ? 0 : 1;
+			xd2 = source.X < target.X ? 1 : 0;
+			yd2 = source.Y < target.Y ? 1 : 0;
+
+			// The direction of the arrow head depend on the direction of the line
+			arrowXd = (xf * width / (width + height)).MM(-0.9, 0.9);
+			arrowYd = (yf * height / (height + width)).MM(-0.9, 0.9);
+		}
 
 		private string GetToolTip()
 		{
@@ -121,14 +142,14 @@ namespace Dependinator.ModelViewing.Links
 		public void OnMouseEnter()
 		{
 			IsMouseOver = true;
-			Notify(nameof(LineBrush), nameof(StrokeThickness));
+			Notify(nameof(LineBrush), nameof(LineWidth));
 		}
 
 
 		public void OnMouseLeave()
 		{
 			IsMouseOver = false;
-			Notify(nameof(LineBrush), nameof(StrokeThickness));
+			Notify(nameof(LineBrush), nameof(LineWidth));
 		}
 	}
 }
