@@ -8,7 +8,7 @@
 	d:DesignHeight="300" d:DesignWidth="300">
 
 
-	<Grid ZIndex="0">
+	<Grid>
 		<Border
 			BorderBrush="{Binding RectangleBrush}"
 			BorderThickness="0.5"

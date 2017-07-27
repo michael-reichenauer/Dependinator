@@ -42,7 +42,7 @@
 		<ListBox.ItemContainerStyle>
 			<Style TargetType="ListBoxItem">
 
-				<!--<Setter Property="Canvas.ZIndex" Value="{Binding CanvasZIndex}" />-->
+				<Setter Property="Canvas.ZIndex" Value="{Binding ItemZIndex}" />
 				<Setter Property="Canvas.Top" Value="{Binding ItemTop}" />
 				<Setter Property="Canvas.Left" Value="{Binding ItemLeft}" />
 				<Setter Property="Width">

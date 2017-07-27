@@ -208,6 +208,7 @@ namespace Dependinator.ModelViewing.Private
 
 				model.Links.Add(link);
 				LineViewModel lineViewModel = new LineViewModel(linkService);
+				lineViewModel.ItemZIndex = -1;
 				parentCanvas.AddItem(lineViewModel);
 			}
 			//if (!model.Nodes.TryGetNode(link.SourceId, out Node source))

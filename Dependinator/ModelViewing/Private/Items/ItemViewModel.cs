@@ -20,6 +20,12 @@ namespace Dependinator.ModelViewing.Private.Items
 			set => Set(value);
 		}
 
+		public double ItemZIndex
+		{
+			get => Get();
+			set => Set(value);
+		}
+
 
 		public double ItemTop => ItemBounds.Top;
 		public double ItemLeft => ItemBounds.Left;
@@ -37,6 +43,9 @@ namespace Dependinator.ModelViewing.Private.Items
 		}
 
 		public object ItemState { get; set; }
+
+		
+
 		public IItemsCanvas ItemOwnerCanvas { get; set; }
 		public double ItemScale => ItemOwnerCanvas.Scale;
 
