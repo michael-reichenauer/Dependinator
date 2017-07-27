@@ -15,8 +15,8 @@
 		<Rectangle
 			Margin="0"
 			Stroke="{Binding RectangleBrush}"
-			StrokeThickness="0.8"
-			StrokeDashArray="4,10"
+			StrokeThickness="0.6"
+			StrokeDashArray="4,4"
 			Fill="{Binding BackgroundBrush}"
 			Stretch="Fill" />
 

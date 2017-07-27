@@ -170,6 +170,7 @@ namespace Dependinator.ModelViewing.Private
 			return nodeViewModel;
 		}
 
+
 		private NodeViewModel CreateNodeViewModel(Node node)
 		{
 			NodeViewModel nodeViewModel;
@@ -188,8 +189,6 @@ namespace Dependinator.ModelViewing.Private
 
 			return nodeViewModel;
 		}
-
-
 	
 
 		private void UpdateLink(Link link)
@@ -207,6 +206,11 @@ namespace Dependinator.ModelViewing.Private
 			model.Nodes.TryGetNode(link.TargetId, out Node targetNode);
 
 			if (sourceNode.ParentId != targetNode.ParentId)
+			{
+				return;
+			}
+
+			if (sourceNode == targetNode)
 			{
 				return;
 			}

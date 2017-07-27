@@ -9,7 +9,7 @@
 	d:DesignHeight="300" d:DesignWidth="300">
 
 	<Grid>
-		<Border BorderBrush="DimGray" BorderThickness="0.1">
+		<Border BorderBrush="Transparent" BorderThickness="0">
 			<Grid>
 
 				<!-- Line -->

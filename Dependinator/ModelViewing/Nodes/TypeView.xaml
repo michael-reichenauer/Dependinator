@@ -14,13 +14,13 @@
 
 		<!-- Node border -->
 		<Rectangle
-			Margin="3"
+			Margin="0"
 			Stroke="{Binding RectangleBrush}"
 			StrokeThickness="0.8"
 			Fill="{Binding BackgroundBrush}"
 			Stretch="Fill" 
-			RadiusX="10"
-			RadiusY="10"/>
+			RadiusX="6"
+			RadiusY="6"/>
 
 		<!-- Inner model -->
 		<items:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
