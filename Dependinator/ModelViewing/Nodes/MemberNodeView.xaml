@@ -8,28 +8,30 @@
 	d:DesignHeight="300" d:DesignWidth="300">
 
 
-	<Border
-		BorderBrush="{Binding RectangleBrush}"
-		BorderThickness="0.5"
-		Background="{Binding BackgroundBrush}"
-		CornerRadius="3"
-		MouseMove="UIElement_OnMouseMove">
+	<Grid ZIndex="0">
+		<Border
+			BorderBrush="{Binding RectangleBrush}"
+			BorderThickness="0.5"
+			Background="{Binding BackgroundBrush}"
+			CornerRadius="3"
+			MouseMove="UIElement_OnMouseMove">
 
-		<TextBlock
-			Text="{Binding Name}"
-			Foreground="{DynamicResource TextBrush}"
-			FontSize="{Binding FontSize}"
-			HorizontalAlignment="Center"
-			VerticalAlignment="Center" />
+			<TextBlock
+				Text="{Binding Name}"
+				Foreground="{DynamicResource TextBrush}"
+				FontSize="{Binding FontSize}"
+				HorizontalAlignment="Center"
+				VerticalAlignment="Center" />
 
-		<Border.ToolTip>
-			<ToolTip
-				Content="{Binding ToolTip}"
-				Placement="Mouse"
-				BorderBrush="{Binding RectangleBrush}"
-				BorderThickness="1"
-				Opened="ToolTip_OnOpened" />
-		</Border.ToolTip>
-	</Border>
-
+			<Border.ToolTip>
+				<ToolTip
+					Content="{Binding ToolTip}"
+					Placement="Mouse"
+					BorderBrush="{Binding RectangleBrush}"
+					BorderThickness="1"
+					Opened="ToolTip_OnOpened" />
+			</Border.ToolTip>
+		</Border>
+		
+	</Grid>
 </UserControl>

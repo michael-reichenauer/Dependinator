@@ -9,7 +9,6 @@ namespace Dependinator.ModelViewing.Nodes
 		Brush GetRectangleBackgroundBrush(Brush brush);
 		Brush GetBrushFromHex(string hexColor);
 		string GetHexColorFromBrush(Brush brush);
-		void SetChildrenLayout(NodeOld parent);
 		Brush GetRectangleHighlightBrush(Brush brush);
 		void SetLayout(NodeViewModel nodeViewModel);
 	}

@@ -108,40 +108,40 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		//	}
 		//}
 
-		public void SetChildrenLayout(NodeOld parent)
-		{
-			int rowLength = 6;
+		//public void SetChildrenLayout(NodeOld parent)
+		//{
+		//	int rowLength = 6;
 
-			int padding = 20;
+		//	int padding = 20;
 
-			double xMargin = 10;
-			double yMargin = 100;
+		//	double xMargin = 10;
+		//	double yMargin = 100;
 
-			int count = 0;
-			var children = parent.ChildNodes.OrderBy(child => child, NodeComparer.Comparer(parent));
+		//	int count = 0;
+		//	var children = parent.ChildNodes.OrderBy(child => child, NodeComparer.Comparer(parent));
 
-			foreach (NodeOld childNode in children)
-			{
-				Size size;
-				Point location;
+		//	foreach (NodeOld childNode in children)
+		//	{
+		//		Size size;
+		//		Point location;
 
-				if (childNode.PersistentNodeBounds.HasValue)
-				{
-					size = childNode.PersistentNodeBounds.Value.Size;
-					location = childNode.PersistentNodeBounds.Value.Location;
-				}
-				else
-				{
-					size = DefaultSize;
-					double x = (count % rowLength) * (size.Width + padding) + xMargin;
-					double y = (count / rowLength) * (size.Height + padding) + yMargin;
-					location = new Point(x, y);
-				}
+		//		if (childNode.PersistentNodeBounds.HasValue)
+		//		{
+		//			size = childNode.PersistentNodeBounds.Value.Size;
+		//			location = childNode.PersistentNodeBounds.Value.Location;
+		//		}
+		//		else
+		//		{
+		//			size = DefaultSize;
+		//			double x = (count % rowLength) * (size.Width + padding) + xMargin;
+		//			double y = (count / rowLength) * (size.Height + padding) + yMargin;
+		//			location = new Point(x, y);
+		//		}
 
-				Rect bounds = new Rect(location, size);
-				childNode.ItemBounds = bounds;
-				count++;
-			}
-		}
+		//		Rect bounds = new Rect(location, size);
+		//		childNode.ItemBounds = bounds;
+		//		count++;
+		//	}
+		//}
 	}
 }

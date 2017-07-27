@@ -9,14 +9,14 @@
 	d:DesignHeight="300" d:DesignWidth="300">
 
 
-	<Grid Background="Transparent">
+	<Grid Background="Transparent" ZIndex="0">
 
 		<!-- Node border -->
 		<Rectangle
-			Margin="3"
+			Margin="0"
 			Stroke="{Binding RectangleBrush}"
 			StrokeThickness="0.8"
-			StrokeDashArray="4,6"
+			StrokeDashArray="4,10"
 			Fill="{Binding BackgroundBrush}"
 			Stretch="Fill" />
 

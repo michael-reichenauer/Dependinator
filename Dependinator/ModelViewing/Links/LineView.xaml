@@ -1,0 +1,63 @@
+﻿<UserControl
+	x:Class="Dependinator.ModelViewing.Links.LineView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:local="clr-namespace:Dependinator.ModelViewing.Links"
+	mc:Ignorable="d"
+	d:DesignHeight="300" d:DesignWidth="300">
+
+	<Grid ZIndex="1">
+		<Border BorderBrush="DimGray" BorderThickness="0.1">
+			<Grid>
+
+				<!-- Line -->
+				<Line
+					X1="{Binding X1}"
+					Y1="{Binding Y1}"
+					X2="{Binding X2}"
+					Y2="{Binding Y2}"
+					Stroke="{Binding LineBrush}"
+					StrokeThickness="{Binding StrokeThickness}"
+					StrokeDashArray="{Binding StrokeDash}"
+					IsHitTestVisible="False" />
+
+				<!-- Arrow head -->
+				<Line
+					X1="{Binding X21}"
+					Y1="{Binding Y21}"
+					X2="{Binding X22}"
+					Y2="{Binding Y22}"
+					Stroke="{Binding LineBrush}"
+					StrokeThickness="{Binding ArrowThickness}"
+					StrokeDashArray=""
+					IsHitTestVisible="False"
+					StrokeEndLineCap="Triangle" />
+
+				<!-- Mouse over-->
+				<Line
+					X1="{Binding X1}"
+					Y1="{Binding Y1}"
+					X2="{Binding X2}"
+					Y2="{Binding Y2}"
+					Stroke="{Binding LineBackgroundBrush}"
+					StrokeThickness="10"
+					MouseDown="UIElement_OnMouseDown"
+					MouseEnter="UIElement_OnMouseEnter"
+					MouseLeave="UIElement_OnMouseLeave">
+
+					<Line.ToolTip>
+						<ToolTip
+							Content="{Binding ToolTip}"
+							Placement="Mouse"
+							BorderBrush="{Binding LineBrush}"
+							BorderThickness="1" />
+					</Line.ToolTip>
+				</Line>
+
+			</Grid>
+
+		</Border>
+	</Grid>
+</UserControl>

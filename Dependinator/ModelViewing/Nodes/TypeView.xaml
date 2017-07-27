@@ -10,7 +10,7 @@
 	d:DesignHeight="300" d:DesignWidth="300">
 
 
-	<Grid Background="Transparent">
+	<Grid Background="Transparent" ZIndex="0">
 
 		<!-- Node border -->
 		<Rectangle

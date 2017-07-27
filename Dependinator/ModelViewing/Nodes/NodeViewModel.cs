@@ -15,7 +15,7 @@ namespace Dependinator.ModelViewing.Nodes
 		private Point lastMousePosition;
 		private readonly Node node;
 
-		public NodeViewModel(INodeService nodeService, Node node)
+		protected NodeViewModel(INodeService nodeService, Node node)
 		{
 			this.nodeService = nodeService;
 			this.node = node;

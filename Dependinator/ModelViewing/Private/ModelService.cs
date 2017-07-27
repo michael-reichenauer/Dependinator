@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Threading;
 using Dependinator.ApplicationHandling;
 using Dependinator.Modeling;
+using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
@@ -16,6 +17,7 @@ namespace Dependinator.ModelViewing.Private
 	{
 		private readonly IModelingService modelingService;
 		private readonly INodeService nodeService;
+		private readonly ILinkService linkService;
 
 		private readonly Model model;
 		private readonly WorkingFolder workingFolder;
@@ -24,11 +26,13 @@ namespace Dependinator.ModelViewing.Private
 		public ModelService(
 			IModelingService modelingService,
 			INodeService nodeService,
+			ILinkService linkService,
 			Model model,
 			WorkingFolder workingFolder)
 		{
 			this.modelingService = modelingService;
 			this.nodeService = nodeService;
+			this.linkService = linkService;
 			this.model = model;
 			this.workingFolder = workingFolder;
 		}
@@ -181,9 +185,12 @@ namespace Dependinator.ModelViewing.Private
 			{
 				nodeViewModel = new NamespaceViewModel(nodeService, node);
 			}
+
 			return nodeViewModel;
 		}
 
+
+		private bool isLineAdded = false;
 
 		private void UpdateLink(Link link)
 		{
@@ -193,6 +200,16 @@ namespace Dependinator.ModelViewing.Private
 				return;
 			}
 
+			if (!isLineAdded)
+			{
+				isLineAdded = true;
+
+				IItemsCanvas parentCanvas = GetCanvas(NodeId.Root);
+
+				model.Links.Add(link);
+				LineViewModel lineViewModel = new LineViewModel(linkService);
+				parentCanvas.AddItem(lineViewModel);
+			}
 			//if (!model.Nodes.TryGetNode(link.SourceId, out Node source))
 			//{
 			//	source = new 

@@ -121,7 +121,18 @@
 						</Setter>
 					</DataTrigger>
 
+					
 					<!-- Link Line -->
+					<DataTrigger Binding="{Binding ViewName}" Value="LineViewModel">
+						<Setter Property="ContentTemplate">
+							<Setter.Value>
+								<DataTemplate>
+									<links:LineView/>
+								</DataTemplate>
+							</Setter.Value>
+						</Setter>
+					</DataTrigger>
+					
 					<DataTrigger Binding="{Binding ViewName}" Value="LinkLineViewModel">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>

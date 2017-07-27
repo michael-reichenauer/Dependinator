@@ -17,5 +17,10 @@ namespace Dependinator.ModelViewing.Private
 		public Link Link(LinkId linkId) => links[linkId];
 
 		public bool TryGetLink(LinkId linkId, out Link link) => links.TryGetValue(linkId, out link);
+
+		public void Add(Link link)
+		{
+			links[link.Id] = link;
+		}
 	}
 }
