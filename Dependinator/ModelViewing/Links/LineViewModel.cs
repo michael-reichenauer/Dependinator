@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Private.Items;
@@ -8,6 +9,8 @@ namespace Dependinator.ModelViewing.Links
 	internal class LineViewModel : ItemViewModel
 	{
 		private readonly ILinkService linkService;
+		private readonly ItemViewModel source;
+		private readonly ItemViewModel target;
 		private static readonly double NodeMargin = 0.8 * 2;
 		private static readonly double ArrowLength = 1.0;
 		private static readonly double LineMargin = 30;
@@ -28,12 +31,32 @@ namespace Dependinator.ModelViewing.Links
 
 
 		public LineViewModel(
-			ILinkService linkService)
+			ILinkService linkService,
+			ItemViewModel source,
+			ItemViewModel target)
 		{
 			this.linkService = linkService;
+			this.source = source;
+			this.target = target;
 
-			SetLine(new Point(100, 400), new Point(30, 60));
+			Point sp = source.ItemBounds.Location;
+			Point tp = target.ItemBounds.Location;
+			SetLine(sp, tp);
+
+			PropertyChangedEventManager.AddHandler(
+				source, SourceOrTargetChanged, nameof(source.ItemBounds));
+			PropertyChangedEventManager.AddHandler(
+				target, SourceOrTargetChanged, nameof(source.ItemBounds));
 		}
+
+		private void SourceOrTargetChanged(object sender, PropertyChangedEventArgs e)
+		{
+			Point sp = source.ItemBounds.Location;
+			Point tp = target.ItemBounds.Location;
+			SetLine(sp, tp);
+			NotifyAll();
+		}
+
 
 
 		// The line endpoints (x1,y1)->(x2,y2) within the item bounds with margins and direction
@@ -41,23 +64,16 @@ namespace Dependinator.ModelViewing.Links
 		public double Y1 => (height * yd1 + LineMargin) * ItemScale - NodeMargin;
 		public double X2 => (width * xd2 + LineMargin) * ItemScale - NodeMargin;
 		public double Y2 => (height * yd2 + LineMargin) * ItemScale - NodeMargin;
+		public double LineWidth => 1;
 
 		// The arrow line endpoint (based on the line end (x2,y2) and with size and direction
 		public double ArrowX1 => X2 - (ArrowWidth * arrowXd / 2) + (ArrowLength * 2 * arrowXd);
 		public double ArrowY1 => Y2 - (ArrowWidth * arrowYd / 2) + (ArrowLength * 2 * arrowYd);
 		public double ArrowX2 => X2 - (ArrowWidth * arrowXd / 2) + (ArrowLength * 3 * arrowXd);
 		public double ArrowY2 => Y2 - (ArrowWidth * arrowYd / 2) + (ArrowLength * 3 * arrowYd);
-
-
-		public double LineWidth => 1;
-
-		// The arrow size (width) depend on the scaling
 		public double ArrowWidth => (10 * ItemScale).MM(4, 10);
 
-
-
 		public Brush LineBrush => GetLineBrush();
-
 		public Brush LineBackgroundBrush => Brushes.Transparent;
 
 
@@ -130,7 +146,7 @@ namespace Dependinator.ModelViewing.Links
 			//	tip = $"{this} {linksCount} links:" + tip;
 			//}
 
-			return "Line";
+			return $"{source}->{target}";
 		}
 
 

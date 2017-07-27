@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.Modeling.Private.Serializing;
 using Dependinator.ModelViewing.Nodes;
@@ -12,22 +13,18 @@ namespace Dependinator.Modeling.Private
 	internal class NotificationSender
 	{
 		private readonly NotificationReceiver receiver;
-		private readonly BlockingCollection<Data.Node> nodes = new BlockingCollection<Data.Node>();
-		private readonly BlockingCollection<Data.Link> links = new BlockingCollection<Data.Link>();
+		private readonly BlockingCollection<object> items = new BlockingCollection<object>();
 
 		private readonly Dictionary<string, Data.Node> sentNodes = new Dictionary<string, Data.Node>();
-		private readonly Task nodeTask;
-		private readonly Task linkTask;
+		private readonly Task sendTask;
 
 
 		public NotificationSender(NotificationReceiver receiver)
 		{
 			this.receiver = receiver;
 
-			nodeTask = Task.Run(() => NodeSender());
-			linkTask = Task.Run(() => LinkSender());
+			sendTask = Task.Run(() => Sender());
 		}
-
 
 
 		public Data.Node SendNode(string nodeName, NodeType nodeType)
@@ -45,7 +42,7 @@ namespace Dependinator.Modeling.Private
 			};
 
 			sentNodes[nodeName] = node;
-			nodes.Add(node);
+			items.Add(node);
 
 			return node;
 		}
@@ -53,51 +50,56 @@ namespace Dependinator.Modeling.Private
 
 		public void SendLink(string sourceNodeName, string targetNodeName)
 		{
-			if (targetNodeName.Contains("&"))
-			{
-			}
-
 			Data.Link link = new Data.Link
 			{
 				Source = sourceNodeName,
 				Target = targetNodeName
 			};
 
-			links.Add(link);
+			items.Add(link);
 		}
 
 
 		public void Flush()
 		{
-			nodes.CompleteAdding();
-			links.CompleteAdding();
+			items.CompleteAdding();
 
 			// Wait until all notification have been sent
-			nodeTask.Wait();
-			linkTask.Wait();
+			sendTask.Wait();
 		}
 
 
-		private void NodeSender()
+		private void Sender()
 		{
 			try
 			{
-				while (!nodes.IsCompleted)
+				while (!items.IsCompleted)
 				{
-					Data.Node node;
-					if (!nodes.TryTake(out node, int.MaxValue))
+					object item;
+					if (!items.TryTake(out item, int.MaxValue))
 					{
 						return;
 					}
-					List<Data.Node> batch = new List<Data.Node>();
-					batch.Add(node);
 
-					while (nodes.TryTake(out node))
+					List<Data.Node> nodeBatch = null;
+					List<Data.Link> linkBatch = null;
+
+					AddToBatch(item, ref nodeBatch, ref linkBatch);
+
+					while (items.TryTake(out item))
 					{
-						batch.Add(node);
+						AddToBatch(item, ref nodeBatch, ref linkBatch);
 					}
 
-					receiver.ReceiveNodes(batch);
+					if (nodeBatch?.Any() ?? false)
+					{
+						receiver.ReceiveNodes(nodeBatch);
+					}
+
+					if (linkBatch?.Any() ?? false)
+					{
+						receiver.ReceiveLinks(linkBatch);
+					}
 				}
 			}
 			catch (Exception e)
@@ -107,32 +109,28 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		private void LinkSender()
+		private static void AddToBatch(
+			object item, 
+			ref List<Data.Node> nodeBatch, 
+			ref List<Data.Link> linkBatch)
 		{
-			try
+			if (item is Data.Node node)
 			{
-				while (!links.IsCompleted)
+				if (nodeBatch == null)
 				{
-					Data.Link link;
-					if (!links.TryTake(out link, int.MaxValue))
-					{
-						return;
-					}
-
-					List<Data.Link> batch = new List<Data.Link>();
-					batch.Add(link);
-
-					while (links.TryTake(out link))
-					{
-						batch.Add(link);
-					}
-
-					receiver.ReceiveLinks(batch);
+					nodeBatch = new List<Data.Node>();
 				}
+
+				nodeBatch.Add(node);
 			}
-			catch (Exception e)
+			else if (item is Data.Link link)
 			{
-				Log.Warn($"exception {e}");
+				if (linkBatch == null)
+				{
+					linkBatch = new List<Data.Link>();
+				}
+
+				linkBatch.Add(link);
 			}
 		}
 	}

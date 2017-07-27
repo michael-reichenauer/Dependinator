@@ -63,7 +63,7 @@ namespace Dependinator.ModelViewing.Private
 		{
 			foreach (List<Node> batch in nodes.Partition(100))
 			{
-				dispatcher.BeginInvoke(
+				dispatcher.Invoke(
 					DispatcherPriority.Background,
 					(Action<List<Node>>)(batchNodes => { batchNodes.ForEach(UpdateNode); }),
 					batch);
@@ -74,7 +74,7 @@ namespace Dependinator.ModelViewing.Private
 		{
 			foreach (List<Link> batch in links.Partition(100))
 			{
-				dispatcher.BeginInvoke(
+				dispatcher.Invoke(
 					DispatcherPriority.Background,
 					(Action<List<Link>>)(batchLinks => { batchLinks.ForEach(UpdateLink); }),
 					batch);
@@ -190,7 +190,7 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private bool isLineAdded = false;
+	
 
 		private void UpdateLink(Link link)
 		{
@@ -200,21 +200,25 @@ namespace Dependinator.ModelViewing.Private
 				return;
 			}
 
-			if (!isLineAdded)
+
+			model.Links.Add(link);
+
+			model.Nodes.TryGetNode(link.SourceId, out Node sourceNode);
+			model.Nodes.TryGetNode(link.TargetId, out Node targetNode);
+
+			if (sourceNode.ParentId != targetNode.ParentId)
 			{
-				isLineAdded = true;
-
-				IItemsCanvas parentCanvas = GetCanvas(NodeId.Root);
-
-				model.Links.Add(link);
-				LineViewModel lineViewModel = new LineViewModel(linkService);
-				lineViewModel.ItemZIndex = -1;
-				parentCanvas.AddItem(lineViewModel);
+				return;
 			}
-			//if (!model.Nodes.TryGetNode(link.SourceId, out Node source))
-			//{
-			//	source = new 
-			//}
-		}
+
+			IItemsCanvas parentCanvas = GetCanvas(sourceNode.ParentId);
+
+			model.Nodes.TryGetViewModel(link.SourceId, out NodeViewModel source);
+			model.Nodes.TryGetViewModel(link.TargetId, out NodeViewModel target);
+
+			LineViewModel lineViewModel = new LineViewModel(linkService, source, target);
+			lineViewModel.ItemZIndex = -1;
+			parentCanvas.AddItem(lineViewModel);
+		}	
 	}
 }
