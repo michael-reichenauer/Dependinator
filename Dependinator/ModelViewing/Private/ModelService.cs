@@ -41,7 +41,7 @@ namespace Dependinator.ModelViewing.Private
 		public void Init(IItemsCanvas rootCanvas)
 		{
 			dispatcher = Dispatcher.CurrentDispatcher;
-			model.Nodes.SetRootCanvas(rootCanvas);
+			model.Nodes.Root.ChildrenCanvas = rootCanvas;
 		}
 
 
@@ -94,7 +94,7 @@ namespace Dependinator.ModelViewing.Private
 
 			Node parentNode = GetParentNodeFor(name);
 
-			IItemsCanvas parentCanvas = GetCanvas(parentNode.Id);
+			IItemsCanvas parentCanvas = GetCanvas(parentNode);
 
 			Node node = new Node(name, new NodeType(dataNode.NodeType));
 			parentNode.AddChild(node);
@@ -125,28 +125,33 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private IItemsCanvas GetCanvas(NodeId nodeId)
+		private IItemsCanvas GetCanvas(Node node)
 		{
 			// First trying to get ann previously created items canvas
-			if (model.Nodes.TryGetItemsCanvas(nodeId, out IItemsCanvas itemsCanvas))
+			if (node.ChildrenCanvas != null)
 			{
-				return itemsCanvas;
+				return node.ChildrenCanvas;
 			}
+
 
 			// The node does not yet have a canvas. So we need to get the parent canvas and
 			// then create a child canvas for this node. But since the parent might also not yet
 			// have a canvas, we traverse the ancestors of the node and create all the needed
 			// canvases. Lets start by getting the node and ancestors, until we find one with
 			// a canvas (at least root node will have one)
-			var ancestors = model.Nodes
-				.GetAncestorsAndSelf(nodeId)
-				.TakeWhile(ancestor => !model.Nodes.TryGetItemsCanvas(ancestor.Id, out itemsCanvas));
 
-			// Creating items canvases from the top down to the node and adding each as a child
-			foreach (Node ancestor in ancestors.Reverse())
-			{
-				itemsCanvas = AddCompositeNode(ancestor, itemsCanvas);
-			}
+			IItemsCanvas parentCanvas = GetCanvas(node.Parent);
+			IItemsCanvas itemsCanvas = AddCompositeNode(node, parentCanvas);
+
+			//var ancestors = model.Nodes
+			//	.GetAncestorsAndSelf(nodeId)
+			//	.TakeWhile(ancestor => !model.Nodes.TryGetItemsCanvas(ancestor.Id, out itemsCanvas));
+
+			//// Creating items canvases from the top down to the node and adding each as a child
+			//foreach (Node ancestor in ancestors.Reverse())
+			//{
+			//	itemsCanvas = AddCompositeNode(ancestor, itemsCanvas);
+			//}
 
 			return itemsCanvas;
 		}
@@ -167,7 +172,7 @@ namespace Dependinator.ModelViewing.Private
 				composite.ItemsViewModel = new ItemsViewModel(itemsCanvas);
 			}
 
-			model.Nodes.AddItemsCanvas(node.Id, itemsCanvas);
+			node.ChildrenCanvas = itemsCanvas;
 			return itemsCanvas;
 		}
 
@@ -233,7 +238,7 @@ namespace Dependinator.ModelViewing.Private
 				return;
 			}
 
-			IItemsCanvas parentCanvas = GetCanvas(sourceNode.Parent.Id);
+			IItemsCanvas parentCanvas = GetCanvas(sourceNode.Parent);
 
 			model.Nodes.TryGetViewModel(link.SourceId, out NodeViewModel source);
 			model.Nodes.TryGetViewModel(link.TargetId, out NodeViewModel target);
