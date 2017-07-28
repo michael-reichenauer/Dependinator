@@ -41,7 +41,7 @@ namespace Dependinator.ModelViewing.Links
 			this.target = target;
 
 			SetLine();
-			TrackSourceOrTargetChanges(source, target);
+			TrackSourceOrTargetChanges();
 		}
 
 		public override bool CanShow => source.CanShow & target.CanShow;
@@ -117,7 +117,7 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
-		private void TrackSourceOrTargetChanges(ItemViewModel source, ItemViewModel target)
+		private void TrackSourceOrTargetChanges()
 		{
 			PropertyChangedEventManager.AddHandler(
 				source, SourceOrTargetChanged, nameof(source.ItemBounds));

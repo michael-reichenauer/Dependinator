@@ -13,16 +13,20 @@ namespace Dependinator.Utils.UI
 		private bool isNotifyAll = false;
 		private IEnumerable<string> targetPropertyNames;
 
-		public WhenSetter(ViewModel targetViewModel, ViewModel sourceViewModel, params string[] sourcePropertyNames)
+		public WhenSetter(
+			ViewModel targetViewModel, 
+			ViewModel sourceViewModel, 
+			params string[] sourcePropertyNames)
 		{
 			this.targetViewModel = targetViewModel;
 			this.sourcePropertyNames = sourcePropertyNames;
+
 			PropertyChangedEventManager.AddHandler(
-				sourceViewModel, PropertyChanaged, nameof(sourceViewModel.PropertyChanged));
+				sourceViewModel, PropertyChangedEventHandler, nameof(sourceViewModel.PropertyChanged));
 		}
 
 
-		private void PropertyChanaged(object sender, PropertyChangedEventArgs e)
+		private void PropertyChangedEventHandler(object sender, PropertyChangedEventArgs e)
 		{
 			if (sourcePropertyNames.Any(name => name == e.PropertyName))
 			{
