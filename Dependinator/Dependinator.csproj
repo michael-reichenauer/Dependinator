@@ -107,16 +107,13 @@
     <Compile Include="Modeling\IModelNotifications.cs" />
     <Compile Include="Modeling\Link.cs" />
     <Compile Include="Modeling\LinkId.cs" />
-    <Compile Include="Modeling\MemberNode.cs" />
-    <Compile Include="Modeling\NamespaceNode.cs" />
     <Compile Include="Modeling\Private\NotificationReceiver.cs" />
     <Compile Include="Modeling\Private\Analyzing\Private\Analyzer.cs" />
-    <Compile Include="Modeling\RootNode.cs" />
-    <Compile Include="Modeling\TypeNode.cs" />
     <Compile Include="ModelViewing\Links\LineView.xaml.cs">
       <DependentUpon>LineView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Links\LineViewModel.cs" />
+    <Compile Include="ModelViewing\Nodes\NodeType.cs" />
     <Compile Include="ModelViewing\Nodes\NodeView.xaml.cs">
       <DependentUpon>NodeView.xaml</DependentUpon>
     </Compile>
@@ -206,7 +203,7 @@
       <DependentUpon>ItemsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Private\Items\ItemsViewModel.cs" />
-    <Compile Include="ModelViewing\Nodes\NodeType.cs" />
+    <Compile Include="ModelViewing\Nodes\NodeTypeOld.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceView.xaml.cs">
       <DependentUpon>NamespaceView.xaml</DependentUpon>
     </Compile>

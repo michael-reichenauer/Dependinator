@@ -33,7 +33,7 @@ namespace Dependinator.ModelViewing.Nodes
 			ILinkService linkService,
 			NodeOld parent,
 			NodeName name,
-			NodeType type)
+			NodeTypeOld type)
 		{
 			this.nodeService = nodeService;
 			ParentNode = parent;
@@ -47,14 +47,14 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		public NodeName NodeName { get; }
-		public NodeType NodeType { get; private set; }
+		public NodeTypeOld NodeType { get; private set; }
 
 		public Rect nodeBounds;
 		public Rect ItemBounds
 		{
 			get
 			{
-				return NodeType == NodeType.MemberType
+				return NodeType == NodeTypeOld.MemberType
 			? new Rect(nodeBounds.X, nodeBounds.Y,
 					nodeBounds.Width.MM(nodeBounds.Width, 150 / NodeScale),
 					nodeBounds.Height.MM(nodeBounds.Height, 40 / NodeScale))
@@ -355,7 +355,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 
-		public void SetType(NodeType nodeType)
+		public void SetType(NodeTypeOld nodeType)
 		{
 			NodeType = nodeType;
 		}
@@ -540,7 +540,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private ItemViewModel CreateViewModel()
 		{
-			if (NodeType != NodeType.MemberType)
+			if (NodeType != NodeTypeOld.MemberType)
 			{
 				itemsCanvas = ParentNode.itemsCanvas.CreateChild(this);
 

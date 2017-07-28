@@ -254,7 +254,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 			string methodName = Reflection.GetMemberFullName(method, declaringType);
 
-			sender.SendNode(methodName, NodeType.MemberType);
+			sender.SendNode(methodName, Data.NodeType.MemberType);
 			sender.SendLink(memberNode.Name, methodName);
 
 			Type returnType = method.ReturnType;
@@ -286,7 +286,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 				return;
 			}
 
-			sender.SendNode(targetNodeName, NodeType.TypeType);
+			sender.SendNode(targetNodeName, Data.NodeType.TypeType);
 			sender.SendLink(sourceNode.Name, targetNodeName);
 
 			if (targetType.IsGenericType)

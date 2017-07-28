@@ -27,7 +27,7 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		public Data.Node SendNode(string nodeName, NodeType nodeType)
+		public Data.Node SendNode(string nodeName, string nodeType)
 		{
 			if (sentNodes.TryGetValue(nodeName, out Data.Node node))
 			{

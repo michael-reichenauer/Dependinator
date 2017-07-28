@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Threading;
 using Dependinator.ApplicationHandling;
 using Dependinator.Modeling;
+using Dependinator.Modeling.Private.Serializing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
@@ -105,7 +106,7 @@ namespace Dependinator.ModelViewing.Private
 			while (!model.Nodes.TryGetNode(current.ParentId, out Node parent))
 			{
 				// Parent node not yet in model, assume Namespace
-				parent = new NamespaceNode(current.Name.ParentName);
+				parent = new Node(current.Name.ParentName, Data.NodeType.NameSpaceType);
 				model.Nodes.Add(parent);
 				current = parent;
 			}
@@ -174,11 +175,11 @@ namespace Dependinator.ModelViewing.Private
 		private NodeViewModel CreateNodeViewModel(Node node)
 		{
 			NodeViewModel nodeViewModel;
-			if (node is TypeNode)
+			if (node.NodeType == Data.NodeType.TypeType)
 			{
 				nodeViewModel = new TypeViewModel(nodeService, node);
 			}
-			else if (node is MemberNode)
+			else if (node.NodeType == Data.NodeType.MemberType)
 			{
 				nodeViewModel = new MemberNodeViewModel(nodeService, node);
 			}

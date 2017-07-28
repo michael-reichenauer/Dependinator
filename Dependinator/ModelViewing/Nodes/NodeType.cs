@@ -1,7 +1,6 @@
 using Dependinator.Modeling.Private.Serializing;
 using Dependinator.Utils;
 
-
 namespace Dependinator.ModelViewing.Nodes
 {
 	internal class NodeType : Equatable<NodeType>
@@ -10,19 +9,17 @@ namespace Dependinator.ModelViewing.Nodes
 		public static readonly NodeType TypeType = new NodeType(Data.NodeType.TypeType);
 		public static readonly NodeType MemberType = new NodeType(Data.NodeType.MemberType);
 
-		private readonly string type;
+		private readonly string typeName;
 
 
-		public NodeType(string type)
+		public NodeType(string typeName)
 		{
-			this.type = type;
-			IsEqualWhen(type);
+			this.typeName = typeName;
+			IsEqualWhen(typeName);
 		}
 
-		public static implicit operator NodeType(string text) => new NodeType(text);
+		public string AsString() => typeName;
 
-		public static implicit operator string(NodeType nodeType) => nodeType?.type;
-
-		public override string ToString() => type;
+		public override string ToString() => typeName;
 	}
 }

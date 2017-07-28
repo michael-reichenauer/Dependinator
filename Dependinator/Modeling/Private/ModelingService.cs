@@ -87,7 +87,7 @@ namespace Dependinator.Modeling.Private
 
 		private NodeOld CreateRootNode()
 		{
-			NodeOld root = new NodeOld(nodeService, linkService, null, NodeName.Root, NodeType.NameSpaceType);
+			NodeOld root = new NodeOld(nodeService, linkService, null, NodeName.Root, NodeTypeOld.NameSpaceType);
 			return root;
 		}
 

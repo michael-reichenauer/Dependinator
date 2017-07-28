@@ -42,22 +42,6 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		private static Node ToNode(Data.Node node)
-		{
-			NodeName name = node.Name;
-
-			if (node.Type == Data.NodeType.TypeType)
-			{
-				return new TypeNode(name);
-			}
-			else if (node.Type == Data.NodeType.MemberType)
-			{
-				return new MemberNode(name);
-			}
-			else
-			{
-				return new NamespaceNode(name);
-			}
-		}
+		private static Node ToNode(Data.Node node) => new Node(node.Name, node.Type);
 	}
 }
