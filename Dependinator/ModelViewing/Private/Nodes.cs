@@ -19,7 +19,7 @@ namespace Dependinator.ModelViewing.Private
 
 		public Nodes()
 		{
-			Root = new Node(NodeName.Root, NodeType.NameSpaceType, NodeId.Root);
+			Root = new Node(NodeName.Root, NodeType.NameSpace, NodeId.Root);
 			nodes[Root.Id] = Root;
 		}
 

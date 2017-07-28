@@ -27,12 +27,13 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public NodeName ParentName => parentName.Value;
 
-		public static implicit operator string(NodeName nodeName) => nodeName?.fullName;
+		//public static implicit operator string(NodeName nodeName) => nodeName?.fullName;
 
-		public static implicit operator NodeName(string fullName) => new NodeName(fullName);
+		//public static implicit operator NodeName(string fullName) => new NodeName(fullName);
 
 		public override string ToString() => this != Root ? fullName : "<root>";
 
+		public string AsString() => fullName;
 
 		public int GetLevelCount() => fullName.Count(c => c == '.') + 1;
 
@@ -67,7 +68,7 @@ namespace Dependinator.ModelViewing.Nodes
 				return Root;
 			}
 
-			return fullName.Substring(0, index);
+			return new NodeName(fullName.Substring(0, index));
 		}
 	}
 }

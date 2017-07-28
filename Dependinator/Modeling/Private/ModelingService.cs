@@ -153,9 +153,9 @@ namespace Dependinator.Modeling.Private
 			ModelOld model,
 			ModelViewDataOld modelViewData)
 		{
-			NodeName fullName = string.IsNullOrEmpty(parentName)
-				? dataNode.Name
-				: parentName + "." + dataNode.Name;
+			NodeName fullName = string.IsNullOrEmpty(parentName.AsString())
+				? new NodeName(dataNode.Name)
+				: new NodeName(parentName + "." + dataNode.Name);
 
 			NodeOld node = GetOrAddNode(fullName, model, modelViewData);
 
@@ -180,8 +180,8 @@ namespace Dependinator.Modeling.Private
 
 		private void AddLink(Data.Link dataLink, ModelOld model, ModelViewDataOld modelViewData)
 		{
-			NodeOld sourceNode = GetOrAddNode(dataLink.Source, model, modelViewData);
-			NodeOld targetNode = GetOrAddNode(dataLink.Target, model, modelViewData);
+			NodeOld sourceNode = GetOrAddNode(new NodeName(dataLink.Source), model, modelViewData);
+			NodeOld targetNode = GetOrAddNode(new NodeName(dataLink.Target), model, modelViewData);
 
 			LinkOld link = new LinkOld(sourceNode, targetNode);
 			sourceNode.Links.Add(link);
@@ -192,7 +192,7 @@ namespace Dependinator.Modeling.Private
 		{
 			Data.Node dataNode = new Data.Node
 			{
-				Name = node.NodeName,
+				Name = node.NodeName.AsString(),
 				Type = node.NodeType,
 				ViewData = ToViewData(node)
 			};
@@ -203,7 +203,8 @@ namespace Dependinator.Modeling.Private
 
 		private static IEnumerable<Data.Link> DataLinksQuery(NodeOld node) =>
 			node.Links.Links
-				.Select(l => new Data.Link { Source = node.NodeName, Target = l.Target.NodeName });
+				.Select(l => new Data.Link
+				{ Source = node.NodeName.AsString(), Target = l.Target.NodeName.AsString() });
 
 
 		private NodeOld GetOrAddNode(NodeName nodeName, ModelOld model, ModelViewDataOld modelViewData)

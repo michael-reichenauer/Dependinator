@@ -106,13 +106,14 @@
   <ItemGroup>
     <Compile Include="Modeling\IModelNotifications.cs" />
     <Compile Include="Modeling\Link.cs" />
-    <Compile Include="Modeling\LinkId.cs" />
+    <Compile Include="ModelViewing\Links\LinkId.cs" />
     <Compile Include="Modeling\Private\NotificationReceiver.cs" />
     <Compile Include="Modeling\Private\Analyzing\Private\Analyzer.cs" />
     <Compile Include="ModelViewing\Links\LineView.xaml.cs">
       <DependentUpon>LineView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Links\LineViewModel.cs" />
+    <Compile Include="ModelViewing\Links\Link.cs" />
     <Compile Include="ModelViewing\Nodes\Node.cs" />
     <Compile Include="ModelViewing\Nodes\NodeType.cs" />
     <Compile Include="ModelViewing\Nodes\NodeView.xaml.cs">

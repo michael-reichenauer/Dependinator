@@ -367,7 +367,7 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public override string ToString() => NodeName;
+		public override string ToString() => NodeName.ToString();
 
 
 		public Brush GetNodeBrush()

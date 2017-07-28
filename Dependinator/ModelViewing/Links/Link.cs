@@ -1,13 +1,13 @@
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 
-namespace Dependinator.Modeling
+namespace Dependinator.ModelViewing.Links
 {
 	internal class Link : Equatable<Link>
 	{
-		public Link(NodeId sourceId, NodeId targetId)
+		public Link(NodeId sourceId, NodeId targetId, LinkId linkId)
 		{
-			Id = new LinkId(sourceId, targetId);
+			Id = linkId;
 			SourceId = sourceId;
 			TargetId = targetId;
 

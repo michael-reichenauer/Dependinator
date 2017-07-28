@@ -54,9 +54,9 @@ namespace Dependinator.Modeling.Private.Serializing
 
 		internal static class NodeType
 		{
-			public static string NameSpaceType = "NameSpace";
-			public static readonly string TypeType = "Type";
-			public static readonly string MemberType = "Member";
+			public static string NameSpace = "NameSpace";
+			public static readonly string Type = "Type";
+			public static readonly string Member = "Member";
 		}
 	}
 }

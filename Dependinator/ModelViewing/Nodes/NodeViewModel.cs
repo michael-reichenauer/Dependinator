@@ -3,7 +3,6 @@ using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
-using Dependinator.Modeling;
 using Dependinator.ModelViewing.Private.Items;
 
 namespace Dependinator.ModelViewing.Nodes
@@ -29,7 +28,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public Brush RectangleBrush { get; }
 		public Brush BackgroundBrush { get; }
-	
+
 
 		public string Name => node.Name.ShortName;
 
@@ -65,7 +64,7 @@ namespace Dependinator.ModelViewing.Nodes
 			lastMousePosition = viewPosition;
 		}
 
-	
+
 
 		private void Move(Vector viewOffset)
 		{
@@ -83,11 +82,11 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		public string ItemsToolTip => "\n" +
-			$"Rect: {ItemBounds.TS()}\n" + 
+			$"Rect: {ItemBounds.TS()}\n" +
 			$"Scale {ItemScale}\n" +
 			$"Items: {ItemOwnerCanvas.CanvasRoot.AllItemsCount()}, Shown {ItemOwnerCanvas.CanvasRoot.ShownItemsCount()}";
 
 
-		public override string ToString() => node.Name;
+		public override string ToString() => node.Name.ToString();
 	}
 }

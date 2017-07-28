@@ -70,13 +70,13 @@ namespace Dependinator.ModelViewing.Private
 			}
 		}
 
-		public void UpdateLinks(IReadOnlyList<Link> links)
+		public void UpdateLinks(IReadOnlyList<DataLink> links)
 		{
-			foreach (List<Link> batch in links.Partition(100))
+			foreach (List<DataLink> batch in links.Partition(100))
 			{
 				dispatcher.Invoke(
 					DispatcherPriority.Background,
-					(Action<List<Link>>)(batchLinks => { batchLinks.ForEach(UpdateLink); }),
+					(Action<List<DataLink>>)(batchLinks => { batchLinks.ForEach(UpdateLink); }),
 					batch);
 			}
 		}
@@ -84,7 +84,7 @@ namespace Dependinator.ModelViewing.Private
 
 		private void UpdateNode(DataNode dataNode)
 		{
-			NodeName name = dataNode.Name;
+			NodeName name = new NodeName(dataNode.Name);
 			NodeId nodeId = new NodeId(name);
 			if (model.Nodes.TryGetNode(nodeId, out Node existingNode))
 			{
@@ -116,7 +116,7 @@ namespace Dependinator.ModelViewing.Private
 			// The parent node not yet added, but we need the grand parent to have a parent for th parent
 			Node grandParent = GetParentNodeFor(parentName);
 
-			parent = new Node(parentName, NodeType.NameSpaceType, grandParent.Id);
+			parent = new Node(parentName, NodeType.NameSpace, grandParent.Id);
 			model.Nodes.Add(parent);
 
 			return parent;
@@ -185,11 +185,11 @@ namespace Dependinator.ModelViewing.Private
 		private NodeViewModel CreateNodeViewModel(Node node)
 		{
 			NodeViewModel nodeViewModel;
-			if (node.NodeType == NodeType.TypeType)
+			if (node.NodeType == NodeType.Type)
 			{
 				nodeViewModel = new TypeViewModel(nodeService, node);
 			}
-			else if (node.NodeType == NodeType.MemberType)
+			else if (node.NodeType == NodeType.Member)
 			{
 				nodeViewModel = new MemberNodeViewModel(nodeService, node);
 			}
@@ -202,14 +202,19 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private void UpdateLink(Link link)
+		private void UpdateLink(DataLink dataLink)
 		{
-			if (model.Links.TryGetLink(link.Id, out Link existingLink))
+			NodeId sourceId = new NodeId(new NodeName(dataLink.Source));
+			NodeId targetId = new NodeId(new NodeName(dataLink.Target));
+			LinkId linkId = new LinkId(sourceId, targetId);
+
+			if (model.Links.TryGetLink(linkId, out Link existingLink))
 			{
 				// TODO: Check node properties as well and update if changed
 				return;
 			}
 
+			Link link = new Link(sourceId, targetId, linkId);
 
 			model.Links.Add(link);
 

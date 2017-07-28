@@ -1,7 +1,7 @@
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 
-namespace Dependinator.Modeling
+namespace Dependinator.ModelViewing.Links
 {
 	internal class LinkId : Equatable<LinkId>
 	{

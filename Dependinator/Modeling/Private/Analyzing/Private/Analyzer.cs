@@ -100,7 +100,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			}
 
 			string typeFullName = Reflection.GetTypeFullName(type);
-			Data.Node typeNode = sender.SendNode(typeFullName, Data.NodeType.TypeType);
+			Data.Node typeNode = sender.SendNode(typeFullName, Data.NodeType.Type);
 			return (type, typeNode);
 		}
 
@@ -114,7 +114,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			}
 
 			string typeFullName = Reflection.GetTypeFullName(type);
-			sender.SendNode(typeFullName, Data.NodeType.TypeType);
+			sender.SendNode(typeFullName, Data.NodeType.Type);
 		}
 
 
@@ -159,7 +159,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			{
 				string memberName = Reflection.GetMemberFullName(memberInfo, typeNode.Name);
 
-				var memberNode = sender.SendNode(memberName, Data.NodeType.MemberType);
+				var memberNode = sender.SendNode(memberName, Data.NodeType.Member);
 
 				AddMemberLinks(memberNode, memberInfo, sender);
 			}
@@ -254,7 +254,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 			string methodName = Reflection.GetMemberFullName(method, declaringType);
 
-			sender.SendNode(methodName, Data.NodeType.MemberType);
+			sender.SendNode(methodName, Data.NodeType.Member);
 			sender.SendLink(memberNode.Name, methodName);
 
 			Type returnType = method.ReturnType;
@@ -286,7 +286,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 				return;
 			}
 
-			sender.SendNode(targetNodeName, Data.NodeType.TypeType);
+			sender.SendNode(targetNodeName, Data.NodeType.Type);
 			sender.SendLink(sourceNode.Name, targetNodeName);
 
 			if (targetType.IsGenericType)

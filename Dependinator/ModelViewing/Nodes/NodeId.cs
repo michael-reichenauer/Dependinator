@@ -5,16 +5,16 @@ namespace Dependinator.ModelViewing.Nodes
 {
 	internal class NodeId : Equatable<NodeId>
 	{
-		private readonly string id;
+		private readonly NodeName nodeName;
 
 		public static NodeId Root = new NodeId(NodeName.Root);
 
-		public NodeId(string id)
+		public NodeId(NodeName nodeName)
 		{
-			this.id = id;
-			IsEqualWhen(id);
+			this.nodeName = nodeName;
+			IsEqualWhen(nodeName);
 		}
 
-		public override string ToString() => this != Root ? id : "<root>";
+		public override string ToString() => this != Root ? nodeName.ToString() : "<root>";
 	}
 }

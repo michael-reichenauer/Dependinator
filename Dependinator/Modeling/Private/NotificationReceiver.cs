@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.Modeling.Private.Serializing;
-using Dependinator.ModelViewing.Nodes;
 
 
 namespace Dependinator.Modeling.Private
@@ -31,17 +30,13 @@ namespace Dependinator.Modeling.Private
 
 		public void ReceiveLinks(List<Data.Link> dataLinks)
 		{
-			List<Link> links = dataLinks.Select(ToLink).ToList();
+			List<DataLink> links = dataLinks.Select(ToLink).ToList();
 
 			modelNotifications.UpdateLinks(links);
 		}
 
 
-		private static Link ToLink(Data.Link link)
-		{
-			return new Link(new NodeId(link.Source), new NodeId(link.Target));
-		}
-
+		private static DataLink ToLink(Data.Link link) => new DataLink(link.Source, link.Target);
 
 		private static DataNode ToNode(Data.Node node) => new DataNode(node.Name, node.Type);
 	}

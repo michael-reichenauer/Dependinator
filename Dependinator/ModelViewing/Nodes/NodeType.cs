@@ -5,9 +5,9 @@ namespace Dependinator.ModelViewing.Nodes
 {
 	internal class NodeType : Equatable<NodeType>
 	{
-		public static readonly NodeType NameSpaceType = new NodeType(Data.NodeType.NameSpaceType);
-		public static readonly NodeType TypeType = new NodeType(Data.NodeType.TypeType);
-		public static readonly NodeType MemberType = new NodeType(Data.NodeType.MemberType);
+		public static readonly NodeType NameSpace = new NodeType(Data.NodeType.NameSpace);
+		public static readonly NodeType Type = new NodeType(Data.NodeType.Type);
+		public static readonly NodeType Member = new NodeType(Data.NodeType.Member);
 
 		private readonly string typeName;
 
