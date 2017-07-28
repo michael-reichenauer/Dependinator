@@ -58,12 +58,12 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			double yMargin = 100;
 
 			Size size = DefaultSize;
-			var node = model.Nodes.Node(nodeViewModel.NodeId);
+			Node node = model.Nodes.Node(nodeViewModel.NodeId);
 
-			int count = model.Nodes.Children(node.ParentId).Count - 1;
+			int siblingCount = node.Parent.Children.Count - 1;
 
-			double x = (count % rowLength) * (size.Width + padding) + xMargin;
-			double y = (count / rowLength) * (size.Height + padding) + yMargin;
+			double x = (siblingCount % rowLength) * (size.Width + padding) + xMargin;
+			double y = (siblingCount / rowLength) * (size.Height + padding) + yMargin;
 			Point location = new Point(x, y);
 
 			Rect bounds = new Rect(location, size);

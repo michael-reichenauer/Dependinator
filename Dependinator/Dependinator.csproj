@@ -104,8 +104,8 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Modeling\DataLink.cs" />
     <Compile Include="Modeling\IModelNotifications.cs" />
-    <Compile Include="Modeling\Link.cs" />
     <Compile Include="ModelViewing\Links\LinkId.cs" />
     <Compile Include="Modeling\Private\NotificationReceiver.cs" />
     <Compile Include="Modeling\Private\Analyzing\Private\Analyzer.cs" />

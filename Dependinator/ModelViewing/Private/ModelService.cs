@@ -96,9 +96,10 @@ namespace Dependinator.ModelViewing.Private
 
 			IItemsCanvas parentCanvas = GetCanvas(parentNode.Id);
 
-			Node node = new Node(name, new NodeType(dataNode.NodeType), parentNode.Id);
-
+			Node node = new Node(name, new NodeType(dataNode.NodeType));
+			parentNode.AddChild(node);
 			model.Nodes.Add(node);
+
 			AddNode(node, parentCanvas);
 		}
 
@@ -116,7 +117,8 @@ namespace Dependinator.ModelViewing.Private
 			// The parent node not yet added, but we need the grand parent to have a parent for th parent
 			Node grandParent = GetParentNodeFor(parentName);
 
-			parent = new Node(parentName, NodeType.NameSpace, grandParent.Id);
+			parent = new Node(parentName, NodeType.NameSpace);
+			grandParent.AddChild(parent);
 			model.Nodes.Add(parent);
 
 			return parent;
@@ -221,7 +223,7 @@ namespace Dependinator.ModelViewing.Private
 			model.Nodes.TryGetNode(link.SourceId, out Node sourceNode);
 			model.Nodes.TryGetNode(link.TargetId, out Node targetNode);
 
-			if (sourceNode.ParentId != targetNode.ParentId)
+			if (sourceNode.Parent != targetNode.Parent)
 			{
 				return;
 			}
@@ -231,7 +233,7 @@ namespace Dependinator.ModelViewing.Private
 				return;
 			}
 
-			IItemsCanvas parentCanvas = GetCanvas(sourceNode.ParentId);
+			IItemsCanvas parentCanvas = GetCanvas(sourceNode.Parent.Id);
 
 			model.Nodes.TryGetViewModel(link.SourceId, out NodeViewModel source);
 			model.Nodes.TryGetViewModel(link.TargetId, out NodeViewModel target);
