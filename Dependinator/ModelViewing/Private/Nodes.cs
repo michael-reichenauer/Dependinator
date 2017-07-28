@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Dependinator.Modeling;
+using Dependinator.Modeling.Private.Serializing;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
 
@@ -19,7 +20,7 @@ namespace Dependinator.ModelViewing.Private
 
 		public Nodes()
 		{
-			Root = new RootNode();
+			Root = new Node(NodeName.Root, Data.NodeType.NameSpaceType);
 			nodes[Root.Id] = Root;
 		}
 
