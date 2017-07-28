@@ -1,13 +1,14 @@
+using Dependinator.Modeling;
 using Dependinator.Utils;
 
-namespace Dependinator.Modeling
+namespace Dependinator.ModelViewing.Nodes
 {
 	internal class Node : Equatable<Node>
 	{
-		public Node(NodeName name, string nodeType)
+		public Node(NodeName name, NodeType nodeType, NodeId parentId)
 		{
 			Id = new NodeId(name);
-			ParentId = new NodeId(name.ParentName);
+			ParentId = parentId;
 			Name = name;
 			NodeType = nodeType;
 
@@ -18,7 +19,7 @@ namespace Dependinator.Modeling
 		public NodeId Id { get; }
 		public NodeId ParentId { get; }
 		public NodeName Name { get; }
-		public string NodeType { get; }
+		public NodeType NodeType { get; }
 
 		public override string ToString() => Id.ToString();
 	}

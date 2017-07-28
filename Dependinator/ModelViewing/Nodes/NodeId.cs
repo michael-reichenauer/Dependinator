@@ -1,6 +1,7 @@
+using Dependinator.Modeling;
 using Dependinator.Utils;
 
-namespace Dependinator.Modeling
+namespace Dependinator.ModelViewing.Nodes
 {
 	internal class NodeId : Equatable<NodeId>
 	{

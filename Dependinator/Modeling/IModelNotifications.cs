@@ -4,7 +4,7 @@ namespace Dependinator.Modeling
 {
 	internal interface IModelNotifications
 	{
-		void UpdateNodes(IReadOnlyList<Node> nodes);
+		void UpdateNodes(IReadOnlyList<DataNode> nodes);
 
 		void UpdateLinks(IReadOnlyList<Link> links);
 	}

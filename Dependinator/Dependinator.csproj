@@ -113,6 +113,7 @@
       <DependentUpon>LineView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Links\LineViewModel.cs" />
+    <Compile Include="ModelViewing\Nodes\Node.cs" />
     <Compile Include="ModelViewing\Nodes\NodeType.cs" />
     <Compile Include="ModelViewing\Nodes\NodeView.xaml.cs">
       <DependentUpon>NodeView.xaml</DependentUpon>
@@ -124,8 +125,8 @@
     <Compile Include="ModelViewing\Private\NodesEventArgs.cs" />
     <Compile Include="ModelViewing\Private\Nodes.cs" />
     <Compile Include="ModelViewing\Private\Model.cs" />
-    <Compile Include="Modeling\Node.cs" />
-    <Compile Include="Modeling\NodeId.cs" />
+    <Compile Include="Modeling\DataNode.cs" />
+    <Compile Include="ModelViewing\Nodes\NodeId.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\NodeOldViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\TypeView.xaml.cs">
@@ -193,7 +194,7 @@
       <DependentUpon>MemberNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\MemberNodeViewModel.cs" />
-    <Compile Include="Modeling\NodeName.cs" />
+    <Compile Include="ModelViewing\Nodes\NodeName.cs" />
     <Compile Include="Modeling\ModelOld.cs" />
     <Compile Include="Modeling\Private\Analyzing\IReflectionService.cs" />
     <Compile Include="ModelViewing\Links\LinkOld.cs" />

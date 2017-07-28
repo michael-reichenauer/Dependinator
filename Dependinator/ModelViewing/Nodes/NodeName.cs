@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using Dependinator.Utils;
 
-namespace Dependinator.Modeling
+namespace Dependinator.ModelViewing.Nodes
 {
 	internal class NodeName : Equatable<NodeName>
 	{

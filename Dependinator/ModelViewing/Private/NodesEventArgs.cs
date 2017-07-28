@@ -6,14 +6,14 @@ namespace Dependinator.ModelViewing.Private
 {
 	internal class NodesEventArgs : EventArgs
 	{
-		public IReadOnlyList<Node> Nodes { get; }
+		public IReadOnlyList<DataNode> Nodes { get; }
 
-		public NodesEventArgs(Node node)
+		public NodesEventArgs(DataNode node)
 		{
 			Nodes = new[] { node };
 		}
 
-		public NodesEventArgs(IReadOnlyList<Node> nodes)
+		public NodesEventArgs(IReadOnlyList<DataNode> nodes)
 		{
 			Nodes = nodes;
 		}

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.Modeling.Private.Serializing;
+using Dependinator.ModelViewing.Nodes;
 
 
 namespace Dependinator.Modeling.Private
@@ -22,7 +23,7 @@ namespace Dependinator.Modeling.Private
 
 		public void ReceiveNodes(List<Data.Node> dataNodes)
 		{
-			List<Node> nodes = dataNodes.Select(ToNode).ToList();
+			List<DataNode> nodes = dataNodes.Select(ToNode).ToList();
 
 			modelNotifications.UpdateNodes(nodes);
 		}
@@ -42,6 +43,6 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		private static Node ToNode(Data.Node node) => new Node(node.Name, node.Type);
+		private static DataNode ToNode(Data.Node node) => new DataNode(node.Name, node.Type);
 	}
 }

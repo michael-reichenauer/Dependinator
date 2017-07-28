@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using System.Windows.Threading;
 using Dependinator.ApplicationHandling;
 using Dependinator.Modeling;
-using Dependinator.Modeling.Private.Serializing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
@@ -60,13 +59,13 @@ namespace Dependinator.ModelViewing.Private
 
 
 
-		public void UpdateNodes(IReadOnlyList<Node> nodes)
+		public void UpdateNodes(IReadOnlyList<DataNode> nodes)
 		{
-			foreach (List<Node> batch in nodes.Partition(100))
+			foreach (List<DataNode> batch in nodes.Partition(100))
 			{
 				dispatcher.Invoke(
 					DispatcherPriority.Background,
-					(Action<List<Node>>)(batchNodes => { batchNodes.ForEach(UpdateNode); }),
+					(Action<List<DataNode>>)(batchNodes => { batchNodes.ForEach(UpdateNode); }),
 					batch);
 			}
 		}
@@ -83,33 +82,44 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private void UpdateNode(Node node)
+		private void UpdateNode(DataNode dataNode)
 		{
-			if (model.Nodes.TryGetNode(node.Id, out Node existingNode))
+			NodeName name = dataNode.Name;
+			NodeId nodeId = new NodeId(name);
+			if (model.Nodes.TryGetNode(nodeId, out Node existingNode))
 			{
 				// TODO: Check node properties as well and update if changed
 				return;
 			}
 
-			AddAncestorsIfNeeded(node);
+			Node parentNode = GetParentNodeFor(name);
 
-			IItemsCanvas parentCanvas = GetCanvas(node.ParentId);
+			IItemsCanvas parentCanvas = GetCanvas(parentNode.Id);
+
+			Node node = new Node(name, new NodeType(dataNode.NodeType), parentNode.Id);
 
 			model.Nodes.Add(node);
 			AddNode(node, parentCanvas);
 		}
 
 
-		private void AddAncestorsIfNeeded(Node node)
+		private Node GetParentNodeFor(NodeName nodeName)
 		{
-			Node current = node;
-			while (!model.Nodes.TryGetNode(current.ParentId, out Node parent))
+			NodeName parentName = nodeName.ParentName;
+			NodeId parentId = new NodeId(parentName);
+
+			if (model.Nodes.TryGetNode(parentId, out Node parent))
 			{
-				// Parent node not yet in model, assume Namespace
-				parent = new Node(current.Name.ParentName, Data.NodeType.NameSpaceType);
-				model.Nodes.Add(parent);
-				current = parent;
+				return parent;
 			}
+
+			// The parent node not yet added, but we need the grand parent to have a parent for th parent
+			Node grandParent = GetParentNodeFor(parentName);
+
+			parent = new Node(parentName, NodeType.NameSpaceType, grandParent.Id);
+			model.Nodes.Add(parent);
+
+			return parent;
 		}
 
 
@@ -154,7 +164,7 @@ namespace Dependinator.ModelViewing.Private
 			{
 				composite.ItemsViewModel = new ItemsViewModel(itemsCanvas);
 			}
-			
+
 			model.Nodes.AddItemsCanvas(node.Id, itemsCanvas);
 			return itemsCanvas;
 		}
@@ -175,11 +185,11 @@ namespace Dependinator.ModelViewing.Private
 		private NodeViewModel CreateNodeViewModel(Node node)
 		{
 			NodeViewModel nodeViewModel;
-			if (node.NodeType == Data.NodeType.TypeType)
+			if (node.NodeType == NodeType.TypeType)
 			{
 				nodeViewModel = new TypeViewModel(nodeService, node);
 			}
-			else if (node.NodeType == Data.NodeType.MemberType)
+			else if (node.NodeType == NodeType.MemberType)
 			{
 				nodeViewModel = new MemberNodeViewModel(nodeService, node);
 			}
@@ -190,7 +200,7 @@ namespace Dependinator.ModelViewing.Private
 
 			return nodeViewModel;
 		}
-	
+
 
 		private void UpdateLink(Link link)
 		{
@@ -224,6 +234,6 @@ namespace Dependinator.ModelViewing.Private
 			LineViewModel lineViewModel = new LineViewModel(linkService, source, target);
 			lineViewModel.ItemZIndex = -1;
 			parentCanvas.AddItem(lineViewModel);
-		}	
+		}
 	}
 }
