@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Dependinator.Modeling.Private.Serializing;
 using Dependinator.Utils;
@@ -43,6 +44,7 @@ namespace Dependinator.Modeling.Private
 			sentNodes[nodeName] = node;
 			items.Add(node);
 
+			//Thread.Sleep(5);
 			return node;
 		}
 
@@ -61,6 +63,7 @@ namespace Dependinator.Modeling.Private
 				Target = targetNodeName
 			};
 
+			//Thread.Sleep(5);
 			items.Add(link);
 		}
 

@@ -51,7 +51,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 		public double ScaleFactor { get; private set; } = 1.0;
 
-		public IItemsCanvas CreateChild(IItemsCanvasBounds canvasBounds)
+		public IItemsCanvas CreateChildCanvas(IItemsCanvasBounds canvasBounds)
 		{
 			ItemsCanvas child = new ItemsCanvas(canvasBounds, this);
 			child.Scale = Scale / DefaultScaleFactor;

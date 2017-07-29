@@ -542,7 +542,7 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			if (NodeType != NodeTypeOld.MemberType)
 			{
-				itemsCanvas = ParentNode.itemsCanvas.CreateChild(this);
+				itemsCanvas = ParentNode.itemsCanvas.CreateChildCanvas(this);
 
 				//double scale = PersistentScale ?? 0;
 				//if (Math.Abs(scale) > 0.001)

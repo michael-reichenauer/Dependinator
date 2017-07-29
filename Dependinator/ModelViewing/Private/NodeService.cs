@@ -21,47 +21,80 @@ namespace Dependinator.ModelViewing.Private
 		public void UpdateNode(DataNode dataNode)
 		{
 			NodeName name = new NodeName(dataNode.Name);
-			NodeId nodeId = new NodeId(name);
-			if (model.Nodes.TryGetNode(nodeId, out Node existingNode))
+
+			if (model.Nodes.TryGetNode(name, out Node existingNode))
 			{
 				// TODO: Check node properties as well and update if changed
 				return;
 			}
 
-			Node parentNode = GetParentNodeFor(name);
+			NodeName parentName = name.ParentName;
+			Node parentNode = GetNode(parentName);
 
-			IItemsCanvas parentCanvas = GetCanvas(parentNode);
-
-			Node node = new Node(name, new NodeType(dataNode.NodeType));
-			parentNode.AddChild(node);
-			model.Nodes.Add(node);
-
-			AddNode(node, parentCanvas);
+			NodeType nodeType = new NodeType(dataNode.NodeType);
+			AddNode(name, nodeType, parentNode);	
 		}
 
 
-		private Node GetParentNodeFor(NodeName nodeName)
+		private Node AddNode(NodeName name, NodeType nodeType, Node parentNode)
 		{
-			NodeName parentName = nodeName.ParentName;
-			NodeId parentId = new NodeId(parentName);
+			Node node = new Node(name, nodeType);
+			model.Nodes.Add(node);
+			parentNode.AddChild(node);
 
-			if (model.Nodes.TryGetNode(parentId, out Node parent))
+			CreateNodeViewModel(node);
+
+			AddNodeToParentCanvas(node, parentNode);
+			return node;
+		}
+
+
+		private void CreateNodeViewModel(Node node)
+		{
+			if (node.NodeType == NodeType.Member)
 			{
-				return parent;
+				node.ViewModel = new MemberNodeViewModel(nodeViewModelService, node);
+			}
+			else if (node.NodeType == NodeType.Type)
+			{
+				node.ViewModel = new TypeViewModel(nodeViewModelService, node);
+				node.ChildrenCanvas = GetChildrenCanvas(node);
+			}
+			else
+			{
+				node.ViewModel = new NamespaceViewModel(nodeViewModelService, node);
+				node.ChildrenCanvas = GetChildrenCanvas(node);
+			}
+		}
+
+
+		private void AddNodeToParentCanvas(Node node, Node parentNode)
+		{
+			nodeViewModelService.SetLayout(node.ViewModel);
+
+			IItemsCanvas parentCanvas = parentNode.ChildrenCanvas;
+
+			parentCanvas.AddItem(node.ViewModel);
+		}
+
+
+		private Node GetNode(NodeName nodeName)
+		{
+			if (model.Nodes.TryGetNode(nodeName, out Node node))
+			{
+				return node;
 			}
 
-			// The parent node not yet added, but we need the grand parent to have a parent for th parent
-			Node grandParent = GetParentNodeFor(parentName);
+			// The node not yet added. We need the parent to add the node
+			NodeName parentName = nodeName.ParentName;
+			Node parent = GetNode(parentName);
 
-			parent = new Node(parentName, NodeType.NameSpace);
-			grandParent.AddChild(parent);
-			model.Nodes.Add(parent);
-
-			return parent;
+			node = AddNode(nodeName, NodeType.NameSpace, parent);
+			return node;
 		}
 
 
-		private IItemsCanvas GetCanvas(Node node)
+		private static IItemsCanvas GetChildrenCanvas(Node node)
 		{
 			// First trying to get ann previously created items canvas
 			if (node.ChildrenCanvas != null)
@@ -70,65 +103,14 @@ namespace Dependinator.ModelViewing.Private
 			}
 
 			// The node does not yet have a canvas. So we need to get the parent canvas and
-			// then create a child canvas for this node. But since the parent might also not yet
-			// have a canvas, we traverse the ancestors of the node and create all the needed
-			// canvases.
-			IItemsCanvas parentCanvas = GetCanvas(node.Parent);
-			IItemsCanvas itemsCanvas = AddCompositeNode(node, parentCanvas);
+			// then create a child canvas for this node.
+			IItemsCanvas parentCanvas = GetChildrenCanvas(node.Parent);
 
-			return itemsCanvas;
-		}
+			// Creating the child canvas to be the children canvas of the node
+			node.ChildrenCanvas = parentCanvas.CreateChildCanvas(node.ViewModel);
+			node.ViewModel.ItemsViewModel = new ItemsViewModel(node.ChildrenCanvas);
 
-
-		private IItemsCanvas AddCompositeNode(Node node, IItemsCanvas parentCanvas)
-		{
-			NodeViewModel viewModel = node.ViewModel;
-			if (viewModel == null)
-			{
-				viewModel = AddNode(node, parentCanvas);
-			}
-
-			IItemsCanvas itemsCanvas = parentCanvas.CreateChild(viewModel);
-
-			if (viewModel is CompositeNodeViewModel composite)
-			{
-				composite.ItemsViewModel = new ItemsViewModel(itemsCanvas);
-			}
-
-			node.ChildrenCanvas = itemsCanvas;
-			return itemsCanvas;
-		}
-
-
-		private NodeViewModel AddNode(Node node, IItemsCanvas parentCanvas)
-		{
-			NodeViewModel nodeViewModel = CreateNodeViewModel(node);
-			nodeViewModelService.SetLayout(nodeViewModel);
-			node.ViewModel = nodeViewModel;
-
-			parentCanvas.AddItem(nodeViewModel);
-
-			return nodeViewModel;
-		}
-
-
-		private NodeViewModel CreateNodeViewModel(Node node)
-		{
-			NodeViewModel nodeViewModel;
-			if (node.NodeType == NodeType.Type)
-			{
-				nodeViewModel = new TypeViewModel(nodeViewModelService, node);
-			}
-			else if (node.NodeType == NodeType.Member)
-			{
-				nodeViewModel = new MemberNodeViewModel(nodeViewModelService, node);
-			}
-			else
-			{
-				nodeViewModel = new NamespaceViewModel(nodeViewModelService, node);
-			}
-
-			return nodeViewModel;
+			return node.ChildrenCanvas;
 		}
 	}
 }

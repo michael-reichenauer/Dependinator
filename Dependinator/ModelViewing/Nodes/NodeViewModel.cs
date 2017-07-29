@@ -37,6 +37,15 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public int FontSize => ((int)(15 * ItemScale)).MM(8, 13);
 
+		public ItemsViewModel ItemsViewModel { get; set; }
+
+		public override void ItemRealized()
+		{
+			base.ItemRealized();
+
+			// If this node has an items canvas, make sure it knows it has been realized (fix zoom level)
+			ItemsViewModel?.ItemRealized();
+		}
 
 
 		public void OnMouseMove(MouseEventArgs e)

@@ -3,7 +3,7 @@
 
 namespace Dependinator.ModelViewing.Nodes
 {
-	internal class TypeViewModel : CompositeNodeViewModel
+	internal class TypeViewModel : NodeViewModel
 	{
 		public TypeViewModel(INodeViewModelService nodeViewModelService, Node node)
 			: base(nodeViewModelService, node)
