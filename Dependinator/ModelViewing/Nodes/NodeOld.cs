@@ -14,7 +14,7 @@ namespace Dependinator.ModelViewing.Nodes
 	internal class NodeOld : Equatable<NodeOld>, IItemsCanvasBounds
 	{
 		private const int InitialScaleFactor = 7;
-		private readonly INodeService nodeService;
+		private readonly INodeViewModelService nodeViewModelService;
 
 		private readonly List<NodeOld> childNodes = new List<NodeOld>();
 
@@ -29,13 +29,13 @@ namespace Dependinator.ModelViewing.Nodes
 		private int direction = 0;
 
 		public NodeOld(
-			INodeService nodeService,
+			INodeViewModelService nodeViewModelService,
 			ILinkService linkService,
 			NodeOld parent,
 			NodeName name,
 			NodeTypeOld type)
 		{
-			this.nodeService = nodeService;
+			this.nodeViewModelService = nodeViewModelService;
 			ParentNode = parent;
 			NodeName = name;
 			NodeType = type;
@@ -379,12 +379,12 @@ namespace Dependinator.ModelViewing.Nodes
 
 			if (PersistentNodeColor != null)
 			{
-				nodeBrush = nodeService.GetBrushFromHex(PersistentNodeColor);
+				nodeBrush = nodeViewModelService.GetBrushFromHex(PersistentNodeColor);
 			}
 			else
 			{
-				nodeBrush = nodeService.GetRandomRectangleBrush();
-				PersistentNodeColor = nodeService.GetHexColorFromBrush(nodeBrush);
+				nodeBrush = nodeViewModelService.GetRandomRectangleBrush();
+				PersistentNodeColor = nodeViewModelService.GetHexColorFromBrush(nodeBrush);
 			}
 
 			return nodeBrush;
@@ -394,14 +394,14 @@ namespace Dependinator.ModelViewing.Nodes
 		public Brush GetBackgroundNodeBrush()
 		{
 			Brush brush = GetNodeBrush();
-			return nodeService.GetRectangleBackgroundBrush(brush);
+			return nodeViewModelService.GetRectangleBackgroundBrush(brush);
 		}
 
 
 		public Brush GetHighlightNodeBrush()
 		{
 			Brush brush = GetNodeBrush();
-			return nodeService.GetRectangleHighlightBrush(brush);
+			return nodeViewModelService.GetRectangleHighlightBrush(brush);
 		}
 
 

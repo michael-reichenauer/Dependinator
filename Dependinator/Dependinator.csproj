@@ -119,8 +119,10 @@
     <Compile Include="ModelViewing\Nodes\NodeType.cs" />
     <Compile Include="ModelViewing\Nodes\NodeViewModel.cs" />
     <Compile Include="ModelViewing\Private\IModelService.cs" />
+    <Compile Include="ModelViewing\Private\INodeService.cs" />
     <Compile Include="ModelViewing\Private\Links.cs" />
     <Compile Include="ModelViewing\Private\ModelService.cs" />
+    <Compile Include="ModelViewing\Private\NodeService.cs" />
     <Compile Include="ModelViewing\Private\NodesEventArgs.cs" />
     <Compile Include="ModelViewing\Private\Nodes.cs" />
     <Compile Include="ModelViewing\Private\Model.cs" />
@@ -186,7 +188,7 @@
     <Compile Include="ModelViewing\Links\Private\LinkLineBounds.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkGroup.cs" />
     <Compile Include="ModelViewing\Private\Items\Private\IgnoreMouseWheelBehavior.cs" />
-    <Compile Include="ModelViewing\Nodes\INodeService.cs" />
+    <Compile Include="ModelViewing\Nodes\INodeViewModelService.cs" />
     <Compile Include="ModelViewing\Private\Items\IItemsCanvasBounds.cs" />
     <Compile Include="ModelViewing\Private\Items\Private\ItemsCanvas.cs" />
     <Compile Include="Modeling\Private\Analyzing\Private\ReflectionService.cs" />
@@ -219,7 +221,7 @@
     <Compile Include="ModelViewing\Private\Items\IItem.cs" />
     <Compile Include="ModelViewing\Private\IModelViewService.cs" />
     <Compile Include="ModelViewing\Private\ModelViewService.cs" />
-    <Compile Include="ModelViewing\Nodes\Private\NodeService.cs" />
+    <Compile Include="ModelViewing\Nodes\Private\NodeViewModelService.cs" />
     <Compile Include="Modeling\Private\Serializing\Data.cs" />
     <Compile Include="Modeling\Private\Serializing\DataSerializer.cs" />
     <Compile Include="Modeling\Private\Serializing\IDataSerializer.cs" />

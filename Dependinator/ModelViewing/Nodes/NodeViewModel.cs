@@ -9,30 +9,29 @@ namespace Dependinator.ModelViewing.Nodes
 {
 	internal abstract class NodeViewModel : ItemViewModel
 	{
-		private readonly INodeService nodeService;
+		private readonly INodeViewModelService nodeViewModelService;
 
 		private Point lastMousePosition;
-		private readonly Node node;
 
-		protected NodeViewModel(INodeService nodeService, Node node)
+		protected NodeViewModel(INodeViewModelService nodeViewModelService, Node node)
 		{
-			this.nodeService = nodeService;
-			this.node = node;
-			RectangleBrush = nodeService.GetRandomRectangleBrush();
-			BackgroundBrush = nodeService.GetRectangleBackgroundBrush(RectangleBrush);
+			this.nodeViewModelService = nodeViewModelService;
+			this.Node = node;
+			RectangleBrush = nodeViewModelService.GetRandomRectangleBrush();
+			BackgroundBrush = nodeViewModelService.GetRectangleBackgroundBrush(RectangleBrush);
 		}
 
 		public override bool CanShow => ItemScale > 0.15;
 
-		public NodeId NodeId => node.Id;
+		public Node Node { get; }
 
 		public Brush RectangleBrush { get; }
 		public Brush BackgroundBrush { get; }
 
 
-		public string Name => node.Name.ShortName;
+		public string Name => Node.Name.ShortName;
 
-		public string ToolTip => $"{node.Name}{DebugToolTip}";
+		public string ToolTip => $"{Node.Name}{DebugToolTip}";
 
 		public void UpdateToolTip() => Notify(nameof(ToolTip));
 
@@ -87,6 +86,6 @@ namespace Dependinator.ModelViewing.Nodes
 			$"Items: {ItemOwnerCanvas.CanvasRoot.AllItemsCount()}, Shown {ItemOwnerCanvas.CanvasRoot.ShownItemsCount()}";
 
 
-		public override string ToString() => node.Name.ToString();
+		public override string ToString() => Node.Name.ToString();
 	}
 }

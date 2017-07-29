@@ -12,6 +12,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 {
 	internal class ItemsCanvas : IItemsCanvas, IItemsSourceArea
 	{
+		private static readonly int DefaultScaleFactor = 7;
 		private readonly IItemsCanvasBounds owner;
 		private readonly ItemsSource itemsSource;
 		private readonly IItemsCanvas canvasParent;
@@ -19,6 +20,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		private readonly List<ItemsCanvas> canvasChildren = new List<ItemsCanvas>();
 		private double scale = 1.0;
 		private Point offset = new Point(0, 0);
+
 		private Rect ItemsCanvasBounds => 
 			owner?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
 		
@@ -52,6 +54,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		public IItemsCanvas CreateChild(IItemsCanvasBounds canvasBounds)
 		{
 			ItemsCanvas child = new ItemsCanvas(canvasBounds, this);
+			child.Scale = Scale / DefaultScaleFactor;
 			canvasChildren.Add(child);
 
 			return child;
@@ -62,9 +65,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 			UpdateScale();
 		}
 
-	
 
-		public void SetInitialScale(double initialScale) => Scale = initialScale;
 
 		public Point Offset
 		{

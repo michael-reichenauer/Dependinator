@@ -4,8 +4,8 @@ namespace Dependinator.ModelViewing.Nodes
 {
 	internal class MemberNodeViewModel : NodeViewModel
 	{
-		public MemberNodeViewModel(INodeService nodeService, Node node)
-			: base(nodeService, node)
+		public MemberNodeViewModel(INodeViewModelService nodeViewModelService, Node node)
+			: base(nodeViewModelService, node)
 		{
 			ViewName = nameof(MemberNodeView);
 		}

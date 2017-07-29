@@ -6,39 +6,37 @@ namespace Dependinator.ModelViewing.Links.Private
 {
 	internal class LinkSegmentService : ILinkSegmentService
 	{
-
-
-		public IReadOnlyList<LinkSegmentOld> GetNormalLinkSegments(LinkOld link)
+		public IReadOnlyList<LinkSegment> GetLinkSegments(Link link)
 		{
-			List<LinkSegmentOld> segments = new List<LinkSegmentOld>();
+			List<LinkSegment> segments = new List<LinkSegment>();
 
 			// Start with first line at the start of the segmented line 
-			NodeOld segmentSource = link.Source;
+			Node segmentSource = link.Source;
 
 			// Iterate segments until line end is reached
 			while (segmentSource != link.Target)
 			{
 				// Try to assume next line target is a child node by searching if line source
 				// is a ancestor of end target node
-				NodeOld segmentTarget = link.Target.AncestorsAndSelf()
-					.FirstOrDefault(ancestor => ancestor.ParentNode == segmentSource);
+				Node segmentTarget = link.Target.AncestorsAndSelf()
+					.FirstOrDefault(ancestor => ancestor.Parent == segmentSource);
 
 				if (segmentTarget == null)
 				{
 					// Segment target was not a child, lets try to assume target is a sibling node
 					segmentTarget = link.Target.AncestorsAndSelf()
-						.FirstOrDefault(ancestor => ancestor.ParentNode == segmentSource.ParentNode);
+						.FirstOrDefault(ancestor => ancestor.Parent == segmentSource.Parent);
 				}
 
 				if (segmentTarget == null)
 				{
 					// Segment target was neither child nor a sibling, next line target node must
 					// be the parent node
-					segmentTarget = segmentSource.ParentNode;
+					segmentTarget = segmentSource.Parent;
 				}
 
-				NodeOld segmentOwner = segmentSource == segmentTarget.ParentNode ? segmentSource : segmentSource.ParentNode;
-				LinkSegmentOld segment = new LinkSegmentOld(segmentSource, segmentTarget, segmentOwner, link);
+				//Node segmentOwner = segmentSource == segmentTarget.Parent ? segmentSource : segmentSource.Parent;
+				LinkSegment segment = new LinkSegment(segmentSource, segmentTarget, link);
 
 				segments.Add(segment);
 
@@ -50,179 +48,179 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		public IReadOnlyList<LinkSegmentOld> GetNewLinkSegments(
-			IReadOnlyList<LinkSegmentOld> linkSegments, LinkSegmentOld newSegment)
-		{
-			// Get the segments that are before the new segment
-			IEnumerable<LinkSegmentOld> preSegments = linkSegments
-				.TakeWhile(segment => segment.Source != newSegment.Source);
+		//public IReadOnlyList<LinkSegmentOld> GetNewLinkSegments(
+		//	IReadOnlyList<LinkSegmentOld> linkSegments, LinkSegmentOld newSegment)
+		//{
+		//	// Get the segments that are before the new segment
+		//	IEnumerable<LinkSegmentOld> preSegments = linkSegments
+		//		.TakeWhile(segment => segment.Source != newSegment.Source);
 
-			// Get the segments that are after the new segments
-			IEnumerable<LinkSegmentOld> postSegments = linkSegments
-				.SkipWhile(segment => segment.Source != newSegment.Target);
+		//	// Get the segments that are after the new segments
+		//	IEnumerable<LinkSegmentOld> postSegments = linkSegments
+		//		.SkipWhile(segment => segment.Source != newSegment.Target);
 
-			return
-				preSegments
-					.Concat(new[] { newSegment })
-					.Concat(postSegments)
-					.ToList();
-		}
-
-
-		public IReadOnlyList<LinkSegmentOld> GetNewLinkSegments(
-			IReadOnlyList<LinkSegmentOld> linkSegments,
-			IReadOnlyList<LinkSegmentOld> newSegments)
-		{
-			NodeOld source = newSegments.First().Source;
-			NodeOld target = newSegments.Last().Target;
-
-			// Get the segments that are before the new segment
-			IEnumerable<LinkSegmentOld> preSegments = linkSegments
-				.TakeWhile(segment => segment.Source != source);
-
-			// Get the segments that are after the new segments
-			IEnumerable<LinkSegmentOld> postSegments = linkSegments
-				.SkipWhile(segment => segment.Source != target);
-
-			return
-				preSegments
-					.Concat(newSegments)
-					.Concat(postSegments)
-					.ToList();
-		}
+		//	return
+		//		preSegments
+		//			.Concat(new[] { newSegment })
+		//			.Concat(postSegments)
+		//			.ToList();
+		//}
 
 
-		public LinkSegmentOld GetZoomedInSegment(
-			IReadOnlyList<LinkSegmentOld> replacedSegments, LinkOld link)
-		{
-			NodeOld source = replacedSegments.First().Source;
-			NodeOld target = replacedSegments.Last().Target;
+		//public IReadOnlyList<LinkSegmentOld> GetNewLinkSegments(
+		//	IReadOnlyList<LinkSegmentOld> linkSegments,
+		//	IReadOnlyList<LinkSegmentOld> newSegments)
+		//{
+		//	NodeOld source = newSegments.First().Source;
+		//	NodeOld target = newSegments.Last().Target;
 
-			NodeOld segmentOwner = source.AncestorsAndSelf()
-				.First(node => target.AncestorsAndSelf().Contains(node));
+		//	// Get the segments that are before the new segment
+		//	IEnumerable<LinkSegmentOld> preSegments = linkSegments
+		//		.TakeWhile(segment => segment.Source != source);
 
-			return new LinkSegmentOld(source, target, segmentOwner, link);
-		}
+		//	// Get the segments that are after the new segments
+		//	IEnumerable<LinkSegmentOld> postSegments = linkSegments
+		//		.SkipWhile(segment => segment.Source != target);
+
+		//	return
+		//		preSegments
+		//			.Concat(newSegments)
+		//			.Concat(postSegments)
+		//			.ToList();
+		//}
 
 
+		//public LinkSegmentOld GetZoomedInSegment(
+		//	IReadOnlyList<LinkSegmentOld> replacedSegments, LinkOld link)
+		//{
+		//	NodeOld source = replacedSegments.First().Source;
+		//	NodeOld target = replacedSegments.Last().Target;
 
-		public IReadOnlyList<LinkSegmentOld> GetZoomedInReplacedSegments(
-			IEnumerable<LinkSegmentOld> linkSegments,
-			NodeOld source,
-			NodeOld target)
-		{
-			// Get the segments that are one before the line and one after the line
-			return linkSegments
-				.SkipWhile(segment => segment.Source != source && segment.Target != source)
-				.TakeWhile(segment =>
-					segment.Target == source || segment.Source == source || segment.Source == target)
-				.ToList();
-		}
+		//	NodeOld segmentOwner = source.AncestorsAndSelf()
+		//		.First(node => target.AncestorsAndSelf().Contains(node));
 
-		public IReadOnlyList<LinkSegmentOld> GetZoomedInBeforeReplacedSegments(
-			IEnumerable<LinkSegmentOld> linkSegments,
-			NodeOld source,
-			NodeOld target)
-		{
-			// Get the segments that are one before the line
-			return linkSegments
-				.SkipWhile(segment => segment.Source != source && segment.Target != source)
-				.TakeWhile(segment => segment.Target == source || segment.Source == source)
-				.ToList();
-		}
+		//	return new LinkSegmentOld(source, target, segmentOwner, link);
+		//}
 
 
 
-		public IReadOnlyList<LinkSegmentOld> GetZoomedInAfterReplacedSegments(
-			IEnumerable<LinkSegmentOld> linkSegments,
-			NodeOld source,
-			NodeOld target)
-		{
-			// Get the segments that are one after the line
-			return linkSegments
-				.SkipWhile(segment => segment.Source != source)
-				.TakeWhile(segment => segment.Source == source || segment.Source == target)
-				.ToList();
-		}
+		//public IReadOnlyList<LinkSegmentOld> GetZoomedInReplacedSegments(
+		//	IEnumerable<LinkSegmentOld> linkSegments,
+		//	NodeOld source,
+		//	NodeOld target)
+		//{
+		//	// Get the segments that are one before the line and one after the line
+		//	return linkSegments
+		//		.SkipWhile(segment => segment.Source != source && segment.Target != source)
+		//		.TakeWhile(segment =>
+		//			segment.Target == source || segment.Source == source || segment.Source == target)
+		//		.ToList();
+		//}
+
+		//public IReadOnlyList<LinkSegmentOld> GetZoomedInBeforeReplacedSegments(
+		//	IEnumerable<LinkSegmentOld> linkSegments,
+		//	NodeOld source,
+		//	NodeOld target)
+		//{
+		//	// Get the segments that are one before the line
+		//	return linkSegments
+		//		.SkipWhile(segment => segment.Source != source && segment.Target != source)
+		//		.TakeWhile(segment => segment.Target == source || segment.Source == source)
+		//		.ToList();
+		//}
 
 
-		public IReadOnlyList<LinkSegmentOld> GetZoomedOutReplacedSegments(
-			IReadOnlyList<LinkSegmentOld> normalSegments,
-			IReadOnlyList<LinkSegmentOld> currentSegments,
-			NodeOld source,
-			NodeOld target)
-		{
-			int index1 = normalSegments.TakeWhile(s => s.Source != source).Count();
-			int a1 = 0;
-			for (int i = index1; i > -1; i--)
-			{
-				LinkSegmentOld segment = normalSegments[i];
-				if (currentSegments.Any(s => s.Source == segment.Source))
-				{
-					a1 = i;
-					break;
-				}
-			}
 
-			int index2 = normalSegments.TakeWhile(s => s.Target != target).Count();
-			int a2 = 0;
-			for (int i = index2; i < normalSegments.Count; i++)
-			{
-				LinkSegmentOld segment = normalSegments[i];
-				if (currentSegments.Any(s => s.Target == segment.Target))
-				{
-					a2 = i;
-					break;
-				}
-			}
-
-			List<LinkSegmentOld> segments = new List<LinkSegmentOld>();
-			for (int i = a1; i <= a2; i++)
-			{
-				segments.Add(normalSegments[i]);
-			}
-
-			return segments;
-		}
+		//public IReadOnlyList<LinkSegmentOld> GetZoomedInAfterReplacedSegments(
+		//	IEnumerable<LinkSegmentOld> linkSegments,
+		//	NodeOld source,
+		//	NodeOld target)
+		//{
+		//	// Get the segments that are one after the line
+		//	return linkSegments
+		//		.SkipWhile(segment => segment.Source != source)
+		//		.TakeWhile(segment => segment.Source == source || segment.Source == target)
+		//		.ToList();
+		//}
 
 
-		public IReadOnlyList<LinkSegmentOld> GetZoomedOutBeforeReplacedSegments(
-			IReadOnlyList<LinkSegmentOld> normalSegments,
-			IReadOnlyList<LinkSegmentOld> currentSegments,
-			NodeOld source,
-			NodeOld target)
-		{
-			int index1 = normalSegments.TakeWhile(s => s.Source != source).Count() + 1;
-			int a1 = 0;
-			for (int i = index1; i > -1; i--)
-			{
-				LinkSegmentOld segment = normalSegments[i];
-				if (currentSegments.Any(s => s.Source == segment.Source))
-				{
-					a1 = i;
-					break;
-				}
-			}
+		//public IReadOnlyList<LinkSegmentOld> GetZoomedOutReplacedSegments(
+		//	IReadOnlyList<LinkSegmentOld> normalSegments,
+		//	IReadOnlyList<LinkSegmentOld> currentSegments,
+		//	NodeOld source,
+		//	NodeOld target)
+		//{
+		//	int index1 = normalSegments.TakeWhile(s => s.Source != source).Count();
+		//	int a1 = 0;
+		//	for (int i = index1; i > -1; i--)
+		//	{
+		//		LinkSegmentOld segment = normalSegments[i];
+		//		if (currentSegments.Any(s => s.Source == segment.Source))
+		//		{
+		//			a1 = i;
+		//			break;
+		//		}
+		//	}
 
-			int index2 = normalSegments.TakeWhile(s => s.Target != target).Count();
-			int a2 = 0;
-			for (int i = index2; i < normalSegments.Count; i++)
-			{
-				LinkSegmentOld segment = normalSegments[i];
-				if (currentSegments.Any(s => s.Target == segment.Target))
-				{
-					a2 = i;
-					break;
-				}
-			}
+		//	int index2 = normalSegments.TakeWhile(s => s.Target != target).Count();
+		//	int a2 = 0;
+		//	for (int i = index2; i < normalSegments.Count; i++)
+		//	{
+		//		LinkSegmentOld segment = normalSegments[i];
+		//		if (currentSegments.Any(s => s.Target == segment.Target))
+		//		{
+		//			a2 = i;
+		//			break;
+		//		}
+		//	}
 
-			List<LinkSegmentOld> segments = new List<LinkSegmentOld>();
-			for (int i = a1; i <= a2; i++)
-			{
-				segments.Add(normalSegments[i]);
-			}
+		//	List<LinkSegmentOld> segments = new List<LinkSegmentOld>();
+		//	for (int i = a1; i <= a2; i++)
+		//	{
+		//		segments.Add(normalSegments[i]);
+		//	}
 
-			return segments;
-		}
+		//	return segments;
+		//}
+
+
+		//public IReadOnlyList<LinkSegmentOld> GetZoomedOutBeforeReplacedSegments(
+		//	IReadOnlyList<LinkSegmentOld> normalSegments,
+		//	IReadOnlyList<LinkSegmentOld> currentSegments,
+		//	NodeOld source,
+		//	NodeOld target)
+		//{
+		//	int index1 = normalSegments.TakeWhile(s => s.Source != source).Count() + 1;
+		//	int a1 = 0;
+		//	for (int i = index1; i > -1; i--)
+		//	{
+		//		LinkSegmentOld segment = normalSegments[i];
+		//		if (currentSegments.Any(s => s.Source == segment.Source))
+		//		{
+		//			a1 = i;
+		//			break;
+		//		}
+		//	}
+
+		//	int index2 = normalSegments.TakeWhile(s => s.Target != target).Count();
+		//	int a2 = 0;
+		//	for (int i = index2; i < normalSegments.Count; i++)
+		//	{
+		//		LinkSegmentOld segment = normalSegments[i];
+		//		if (currentSegments.Any(s => s.Target == segment.Target))
+		//		{
+		//			a2 = i;
+		//			break;
+		//		}
+		//	}
+
+		//	List<LinkSegmentOld> segments = new List<LinkSegmentOld>();
+		//	for (int i = a1; i <= a2; i++)
+		//	{
+		//		segments.Add(normalSegments[i]);
+		//	}
+
+		//	return segments;
+		//}
 	}
 }

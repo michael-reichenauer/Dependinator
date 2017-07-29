@@ -19,10 +19,10 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		public void AddLinkLines(LinkOld link)
 		{
-			var linkSegments = segmentService.GetNormalLinkSegments(link);
+			//var linkSegments = segmentService.GetNormalLinkSegments(link);
 
-			linkSegments.ForEach(AddNormalLinkSegment);
-			link.SetLinkSegments(linkSegments);
+			//linkSegments.ForEach(AddNormalLinkSegment);
+			//link.SetLinkSegments(linkSegments);
 		}
 
 
@@ -55,39 +55,39 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		public void ZoomInLinkLine(LinkLineOld line, NodeOld node)
 		{
-			IReadOnlyList<LinkOld> links = line.Links.ToList();
+		//	IReadOnlyList<LinkOld> links = line.Links.ToList();
 
-			foreach (LinkOld link in links)
-			{
-				IReadOnlyList<LinkSegmentOld> currentLinkSegments = link.LinkSegments.ToList();
+		//	foreach (LinkOld link in links)
+		//	{
+		//		IReadOnlyList<LinkSegmentOld> currentLinkSegments = link.LinkSegments.ToList();
 
-				IReadOnlyList<LinkSegmentOld> zoomedSegments;
-				if (node == line.Target)
-				{
-					zoomedSegments = segmentService.GetZoomedInBeforeReplacedSegments(currentLinkSegments, line.Source, line.Target);
-				}
-				else
-				{
-					zoomedSegments = segmentService.GetZoomedInAfterReplacedSegments(currentLinkSegments, line.Source, line.Target);
-				}
+		//		IReadOnlyList<LinkSegmentOld> zoomedSegments;
+		//		if (node == line.Target)
+		//		{
+		//			zoomedSegments = segmentService.GetZoomedInBeforeReplacedSegments(currentLinkSegments, line.Source, line.Target);
+		//		}
+		//		else
+		//		{
+		//			zoomedSegments = segmentService.GetZoomedInAfterReplacedSegments(currentLinkSegments, line.Source, line.Target);
+		//		}
 			
-				LinkSegmentOld zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
+		//		LinkSegmentOld zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
 
-				var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedInSegment);
+		//		var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedInSegment);
 
-				var replacedLines = GetLines(link.Lines, zoomedSegments);
+		//		var replacedLines = GetLines(link.Lines, zoomedSegments);
 
-				replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
+		//		replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
 
-				link.SetLinkSegments(newSegments);
-				if (AddDirectLine(zoomedInSegment))
-				{
-					break;
-				}
-			}
+		//		link.SetLinkSegments(newSegments);
+		//		if (AddDirectLine(zoomedInSegment))
+		//		{
+		//			break;
+		//		}
+		//	}
 
-			line.Owner.RootNode.UpdateNodeVisibility();
-		}
+		//	line.Owner.RootNode.UpdateNodeVisibility();
+		//}
 
 
 
@@ -113,45 +113,45 @@ namespace Dependinator.ModelViewing.Links.Private
 		//	}
 
 		//	line.Owner.AncestorsAndSelf().Last().UpdateNodeVisibility();
-		//}
+		}
 
 
 		public void ZoomOutLinkLine(LinkLineOld line, NodeOld node)
 		{
-			IReadOnlyList<LinkOld> links = line.Links.ToList();
+			//IReadOnlyList<LinkOld> links = line.Links.ToList();
 
-			foreach (LinkOld link in links)
-			{
-				IReadOnlyList<LinkSegmentOld> normalLinkSegments = segmentService.GetNormalLinkSegments(link);
-				IReadOnlyList<LinkSegmentOld> currentLinkSegments = link.LinkSegments.ToList();
+			//foreach (LinkOld link in links)
+			//{
+			//	IReadOnlyList<LinkSegmentOld> normalLinkSegments = segmentService.GetNormalLinkSegments(link);
+			//	IReadOnlyList<LinkSegmentOld> currentLinkSegments = link.LinkSegments.ToList();
 
-				IReadOnlyList<LinkSegmentOld> zoomedSegments = segmentService.GetZoomedOutReplacedSegments(normalLinkSegments, currentLinkSegments, line.Source, line.Target);
+			//	IReadOnlyList<LinkSegmentOld> zoomedSegments = segmentService.GetZoomedOutReplacedSegments(normalLinkSegments, currentLinkSegments, line.Source, line.Target);
 
-				if (zoomedSegments.Count > 1)
-				{
-					if (node == line.Target)
-					{
-						zoomedSegments = zoomedSegments.Skip(1).ToList();
-					}
-					else
-					{
-						zoomedSegments = zoomedSegments.Take(zoomedSegments.Count - 1).ToList();
-					}
+			//	if (zoomedSegments.Count > 1)
+			//	{
+			//		if (node == line.Target)
+			//		{
+			//			zoomedSegments = zoomedSegments.Skip(1).ToList();
+			//		}
+			//		else
+			//		{
+			//			zoomedSegments = zoomedSegments.Take(zoomedSegments.Count - 1).ToList();
+			//		}
 
-					LinkSegmentOld zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
+			//		LinkSegmentOld zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
 
-					var newSegments = segmentService.GetNewLinkSegments(normalLinkSegments, zoomedInSegment);
+			//		var newSegments = segmentService.GetNewLinkSegments(normalLinkSegments, zoomedInSegment);
 
-					HideLinkFromLine(line, link);
+			//		HideLinkFromLine(line, link);
 
-					newSegments.ForEach(segment => AddDirectLine(segment));
+			//		newSegments.ForEach(segment => AddDirectLine(segment));
 
 
-					link.SetLinkSegments(newSegments);
-				}		
-			}
+			//		link.SetLinkSegments(newSegments);
+			//	}		
+			//}
 
-			line.Owner.RootNode.UpdateNodeVisibility();
+			//line.Owner.RootNode.UpdateNodeVisibility();
 		}
 
 

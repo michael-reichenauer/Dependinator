@@ -11,19 +11,19 @@ namespace Dependinator.Modeling.Private
 {
 	internal class ModelingService : IModelingService
 	{
-		private readonly INodeService nodeService;
+		private readonly INodeViewModelService nodeViewModelService;
 		private readonly ILinkService linkService;
 		private readonly IReflectionService reflectionService;
 		private readonly IDataSerializer dataSerializer;
 
 
 		public ModelingService(
-			INodeService nodeService,
+			INodeViewModelService nodeViewModelService,
 			ILinkService linkService,
 			IReflectionService reflectionService,
 			IDataSerializer dataSerializer)
 		{
-			this.nodeService = nodeService;
+			this.nodeViewModelService = nodeViewModelService;
 			this.linkService = linkService;
 			this.reflectionService = reflectionService;
 			this.dataSerializer = dataSerializer;
@@ -87,7 +87,7 @@ namespace Dependinator.Modeling.Private
 
 		private NodeOld CreateRootNode()
 		{
-			NodeOld root = new NodeOld(nodeService, linkService, null, NodeName.Root, NodeTypeOld.NameSpaceType);
+			NodeOld root = new NodeOld(nodeViewModelService, linkService, null, NodeName.Root, NodeTypeOld.NameSpaceType);
 			return root;
 		}
 
@@ -227,7 +227,7 @@ namespace Dependinator.Modeling.Private
 				parentNode = CreateNode(parentName, model, modelViewData);
 			}
 
-			NodeOld node = new NodeOld(nodeService, linkService, parentNode, nodeName, null);
+			NodeOld node = new NodeOld(nodeViewModelService, linkService, parentNode, nodeName, null);
 
 			TrySetViewData(null, modelViewData, node, nodeName);
 

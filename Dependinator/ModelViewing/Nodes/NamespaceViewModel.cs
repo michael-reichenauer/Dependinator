@@ -4,8 +4,8 @@ namespace Dependinator.ModelViewing.Nodes
 {
 	internal class NamespaceViewModel : CompositeNodeViewModel
 	{
-		public NamespaceViewModel(INodeService nodeService, Node node)
-			: base(nodeService, node)
+		public NamespaceViewModel(INodeViewModelService nodeViewModelService, Node node)
+			: base(nodeViewModelService, node)
 		{
 			ViewName = nameof(NamespaceView);
 		}

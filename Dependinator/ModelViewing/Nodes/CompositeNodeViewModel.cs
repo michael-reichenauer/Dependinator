@@ -6,8 +6,8 @@ namespace Dependinator.ModelViewing.Nodes
 {
 	internal abstract class CompositeNodeViewModel : NodeViewModel
 	{
-		protected CompositeNodeViewModel(INodeService nodeService, Node node)
-			: base(nodeService, node)
+		protected CompositeNodeViewModel(INodeViewModelService nodeViewModelService, Node node)
+			: base(nodeViewModelService, node)
 		{
 		}
 
