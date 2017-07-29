@@ -30,7 +30,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public NodeOld(
 			INodeViewModelService nodeViewModelService,
-			ILinkService linkService,
+			ILineViewModelService lineViewModelService,
 			NodeOld parent,
 			NodeName name,
 			NodeTypeOld type)
@@ -40,7 +40,7 @@ namespace Dependinator.ModelViewing.Nodes
 			NodeName = name;
 			NodeType = type;
 			PersistentNodeColor = null;
-			Links = new NodeLinks(linkService);
+			Links = new NodeLinks(lineViewModelService);
 			RootNode = parent?.RootNode ?? this;
 			IsEqualWhen(NodeName);
 		}

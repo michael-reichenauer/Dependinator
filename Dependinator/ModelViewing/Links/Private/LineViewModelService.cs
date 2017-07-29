@@ -6,12 +6,12 @@ using Dependinator.ModelViewing.Nodes;
 
 namespace Dependinator.ModelViewing.Links.Private
 {
-	internal class LinkService : ILinkService
+	internal class LineViewModelService : ILineViewModelService
 	{
 		private readonly ILinkSegmentService segmentService;
 
 
-		public LinkService(ILinkSegmentService segmentService)
+		public LineViewModelService(ILinkSegmentService segmentService)
 		{
 			this.segmentService = segmentService;
 		}

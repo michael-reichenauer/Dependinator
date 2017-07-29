@@ -10,7 +10,7 @@ namespace Dependinator.ModelViewing.Links
 {
 	internal class LinkLineOld : Equatable<LinkLineOld>
 	{
-		private readonly ILinkService linkService;
+		private readonly ILineViewModelService lineViewModelService;
 		private readonly List<LinkOld> links = new List<LinkOld>();
 		private readonly List<LinkOld> hiddenLinks = new List<LinkOld>();
 
@@ -22,17 +22,17 @@ namespace Dependinator.ModelViewing.Links
 
 
 		public LinkLineOld(
-			ILinkService linkService,
+			ILineViewModelService lineViewModelService,
 			NodeOld source,
 			NodeOld target,
 			NodeOld owner)
 		{
-			this.linkService = linkService;
+			this.lineViewModelService = lineViewModelService;
 			Owner = owner;
 			Source = source;
 			Target = target;
 
-			ViewModel = new LinkLineViewModel(linkService, this);
+			ViewModel = new LinkLineViewModel(lineViewModelService, this);
 			IsEqualWhen(Source, Target);
 		}
 
@@ -86,7 +86,7 @@ namespace Dependinator.ModelViewing.Links
 					{
 						if (!linkLine.IsEmpty)
 						{
-							linkService.ZoomInLinkLine(linkLine, Source);
+							lineViewModelService.ZoomInLinkLine(linkLine, Source);
 							break;
 						}
 					}
@@ -103,7 +103,7 @@ namespace Dependinator.ModelViewing.Links
 					{
 						if (!linkLine.IsNormal && !linkLine.IsEmpty)
 						{
-							linkService.ZoomOutLinkLine(linkLine, Source);
+							lineViewModelService.ZoomOutLinkLine(linkLine, Source);
 							break;
 						}
 					}
@@ -122,7 +122,7 @@ namespace Dependinator.ModelViewing.Links
 					{
 						if (!linkLine.IsEmpty)
 						{
-							linkService.ZoomInLinkLine(linkLine, Target);
+							lineViewModelService.ZoomInLinkLine(linkLine, Target);
 							break;
 						}
 					}
@@ -139,7 +139,7 @@ namespace Dependinator.ModelViewing.Links
 					{
 						if (!linkLine.IsNormal && !linkLine.IsEmpty)
 						{
-							linkService.ZoomOutLinkLine(linkLine, Target);
+							lineViewModelService.ZoomOutLinkLine(linkLine, Target);
 							break;
 						}
 					}
@@ -208,7 +208,7 @@ namespace Dependinator.ModelViewing.Links
 		{
 			if (!IsNormal && IsEmpty)
 			{
-				linkService.CloseLine(this);
+				lineViewModelService.CloseLine(this);
 				UpdateVisibility();
 			}
 		}
@@ -218,7 +218,7 @@ namespace Dependinator.ModelViewing.Links
 
 		private void UpdateSegmentLine()
 		{
-			LinkLineBounds lineBounds = linkService.GetLinkLineBounds(this);
+			LinkLineBounds lineBounds = lineViewModelService.GetLinkLineBounds(this);
 
 			itemBounds = lineBounds.ItemBounds;
 			L1 = lineBounds.Source;

@@ -9,14 +9,14 @@ namespace Dependinator.ModelViewing.Links
 {
 	internal class LinkLineViewModel : ItemViewModel
 	{
-		private readonly ILinkService linkService;
+		private readonly ILineViewModelService lineViewModelService;
 		private readonly LinkLineOld linkLine;
 		
 		public LinkLineViewModel(
-			ILinkService linkService,
+			ILineViewModelService lineViewModelService,
 			LinkLineOld linkLine)
 		{
-			this.linkService = linkService;
+			this.lineViewModelService = lineViewModelService;
 			this.linkLine = linkLine;
 		}
 
@@ -29,8 +29,8 @@ namespace Dependinator.ModelViewing.Links
 		public double Y2 => linkLine.L2.Y * linkLine.ItemsScale;
 		public double StrokeThickness =>
 			IsMouseOver ? 
-			linkService.GetLineThickness(linkLine) * 2: 
-			linkService.GetLineThickness(linkLine);
+			lineViewModelService.GetLineThickness(linkLine) * 2: 
+			lineViewModelService.GetLineThickness(linkLine);
 
 		
 		public Brush LineBrush => GetLineBrush();
@@ -74,7 +74,7 @@ namespace Dependinator.ModelViewing.Links
 
 		private string GetToolTip()
 		{
-			IReadOnlyList<LinkGroup> linkGroups = linkService.GetLinkGroups(linkLine);
+			IReadOnlyList<LinkGroup> linkGroups = lineViewModelService.GetLinkGroups(linkLine);
 			string tip = "";
 
 			foreach (var group in linkGroups)

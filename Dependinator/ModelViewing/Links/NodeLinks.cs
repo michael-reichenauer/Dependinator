@@ -7,7 +7,7 @@ namespace Dependinator.ModelViewing.Links
 {
 	internal class NodeLinks
 	{
-		private readonly ILinkService linkService;
+		private readonly ILineViewModelService lineViewModelService;
 		private readonly List<LinkOld> links = new List<LinkOld>();
 		private readonly List<LinkLineOld> ownedLines = new List<LinkLineOld>();
 		private readonly List<LinkLineOld> referencingLines = new List<LinkLineOld>();
@@ -20,9 +20,9 @@ namespace Dependinator.ModelViewing.Links
 		public IReadOnlyList<LinkLineOld> ReferencingLines => referencingLines;
 
 
-		public NodeLinks(ILinkService linkService)
+		public NodeLinks(ILineViewModelService lineViewModelService)
 		{
-			this.linkService = linkService;
+			this.lineViewModelService = lineViewModelService;
 		}
 
 
@@ -41,7 +41,7 @@ namespace Dependinator.ModelViewing.Links
 
 			links.Add(link);
 
-			linkService.AddLinkLines(link);
+			lineViewModelService.AddLinkLines(link);
 		}
 	
 

@@ -9,7 +9,7 @@ namespace Dependinator.ModelViewing.Links
 {
 	internal class LineViewModel : ItemViewModel
 	{
-		private readonly ILinkService linkService;
+		private readonly ILineViewModelService lineViewModelService;
 		private readonly NodeViewModel source;
 		private readonly NodeViewModel target;
 		private static readonly double NodeMargin = 0.8 * 2;
@@ -32,11 +32,11 @@ namespace Dependinator.ModelViewing.Links
 
 
 		public LineViewModel(
-			ILinkService linkService,
+			ILineViewModelService lineViewModelService,
 			NodeViewModel source,
 			NodeViewModel target)
 		{
-			this.linkService = linkService;
+			this.lineViewModelService = lineViewModelService;
 			this.source = source;
 			this.target = target;
 			ItemZIndex = -1;

@@ -18,7 +18,7 @@ namespace Dependinator.ModelViewing.Private
 		private readonly IModelingService modelingService;
 		private readonly INodeService nodeService;
 
-		private readonly ILinkService linkService;
+		private readonly ILineViewModelService lineViewModelService;
 
 		private readonly Model model;
 		private readonly WorkingFolder workingFolder;
@@ -27,14 +27,14 @@ namespace Dependinator.ModelViewing.Private
 		public ModelService(
 			IModelingService modelingService,
 			INodeService nodeService,
-			ILinkService linkService,
+			ILineViewModelService lineViewModelService,
 			Model model,
 			WorkingFolder workingFolder)
 		{
 			this.modelingService = modelingService;
 			this.nodeService = nodeService;
 
-			this.linkService = linkService;
+			this.lineViewModelService = lineViewModelService;
 			this.model = model;
 			this.workingFolder = workingFolder;
 		}
@@ -119,7 +119,7 @@ namespace Dependinator.ModelViewing.Private
 			IItemsCanvas parentCanvas = source.Parent.ChildrenCanvas;
 
 			LineViewModel lineViewModel = new LineViewModel(
-				linkService, source.ViewModel, target.ViewModel);
+				lineViewModelService, source.ViewModel, target.ViewModel);
 
 			parentCanvas.AddItem(lineViewModel);
 		}

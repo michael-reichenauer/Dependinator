@@ -5,7 +5,7 @@ using Dependinator.ModelViewing.Nodes;
 
 namespace Dependinator.ModelViewing.Links
 {
-	internal interface ILinkService
+	internal interface ILineViewModelService
 	{
 		LinkLineBounds GetLinkLineBounds(LinkLineOld line);
 		IReadOnlyList<LinkGroup> GetLinkGroups(LinkLineOld line);

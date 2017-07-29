@@ -178,13 +178,13 @@
     <Compile Include="Modeling\Private\NotificationSender.cs" />
     <Compile Include="Modeling\Private\Analyzing\Private\Globals.cs" />
     <Compile Include="ModelViewing\Links\Private\ILinkSegmentService.cs" />
-    <Compile Include="ModelViewing\Links\ILinkService.cs" />
+    <Compile Include="ModelViewing\Links\ILineViewModelService.cs" />
     <Compile Include="ModelViewing\Links\LinkLineView.xaml.cs">
       <DependentUpon>LinkLineView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Links\Private\LinkSegmentOld.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkSegmentService.cs" />
-    <Compile Include="ModelViewing\Links\Private\LinkService.cs" />
+    <Compile Include="ModelViewing\Links\Private\LineViewModelService.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkLineBounds.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkGroup.cs" />
     <Compile Include="ModelViewing\Private\Items\Private\IgnoreMouseWheelBehavior.cs" />
