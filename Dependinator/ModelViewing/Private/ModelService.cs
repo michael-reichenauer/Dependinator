@@ -6,7 +6,6 @@ using System.Windows.Threading;
 using Dependinator.ApplicationHandling;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Links;
-using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 
@@ -17,8 +16,8 @@ namespace Dependinator.ModelViewing.Private
 	{
 		private readonly IModelingService modelingService;
 		private readonly INodeService nodeService;
+		private readonly ILinkService linkService;
 
-		private readonly ILineViewModelService lineViewModelService;
 
 		private readonly Model model;
 		private readonly WorkingFolder workingFolder;
@@ -27,14 +26,14 @@ namespace Dependinator.ModelViewing.Private
 		public ModelService(
 			IModelingService modelingService,
 			INodeService nodeService,
-			ILineViewModelService lineViewModelService,
+			ILinkService linkService,
 			Model model,
 			WorkingFolder workingFolder)
 		{
 			this.modelingService = modelingService;
 			this.nodeService = nodeService;
+			this.linkService = linkService;
 
-			this.lineViewModelService = lineViewModelService;
 			this.model = model;
 			this.workingFolder = workingFolder;
 		}
@@ -85,43 +84,7 @@ namespace Dependinator.ModelViewing.Private
 
 		private void UpdateLinks(List<DataLink> batchLinks)
 		{
-			batchLinks.ForEach(UpdateLink);
-		}
-
-
-		private void UpdateLink(DataLink dataLink)
-		{
-			NodeId sourceId = new NodeId(new NodeName(dataLink.Source));
-			NodeId targetId = new NodeId(new NodeName(dataLink.Target));
-
-			Node source = model.Nodes.Node(sourceId);
-			Node target = model.Nodes.Node(targetId);
-
-			Link link = new Link(source, target);
-			if (source.Links.Contains(link))
-			{
-				// TODO: Check node properties as well and update if changed
-				return;
-			}
-
-			if (source == target)
-			{
-				// Skipping link to self
-				return;
-			}
-
-			if (source.Parent != target.Parent)
-			{
-				return;
-			}
-		
-
-			IItemsCanvas parentCanvas = source.Parent.ChildrenCanvas;
-
-			LineViewModel lineViewModel = new LineViewModel(
-				lineViewModelService, source.ViewModel, target.ViewModel);
-
-			parentCanvas.AddItem(lineViewModel);
+			batchLinks.ForEach(linkService.UpdateLink);
 		}
 
 
