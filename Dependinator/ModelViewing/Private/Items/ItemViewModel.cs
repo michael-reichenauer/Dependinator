@@ -10,17 +10,9 @@ namespace Dependinator.ModelViewing.Private.Items
 			ViewName = this.GetType().Name;
 		}
 
-		public string ViewName
-		{
-			get => Get();
-			set => Set(value);
-		}
+		public string ViewName { get => Get(); set => Set(value); }
 
-		public double ItemZIndex
-		{
-			get => Get();
-			set => Set(value);
-		}
+		public double ItemZIndex { get => Get(); set => Set(value); }
 
 
 		public double ItemTop => ItemBounds.Top;
@@ -37,7 +29,6 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		public object ItemState { get; set; }
 
-		
 
 		public IItemsCanvas ItemOwnerCanvas { get; set; }
 		public double ItemScale => ItemOwnerCanvas.Scale;

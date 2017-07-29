@@ -26,6 +26,7 @@ namespace Dependinator.MainWindowViews
 
 		// private IpcRemotingService ipcRemotingService = null;
 		private readonly WorkingFolder workingFolder;
+
 		private readonly WindowOwner owner;
 		private readonly IMessage message;
 
@@ -59,16 +60,11 @@ namespace Dependinator.MainWindowViews
 		public bool IsInFilterMode => !string.IsNullOrEmpty(SearchBox);
 
 
-		public bool IsNewVersionVisible
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
+		public bool IsNewVersionVisible { get => Get(); set => Set(value); }
 
 		public string WorkingFolder => workingFolder.Name;
 
 		public string WorkingFolderPath => workingFolder.FilePath;
-
 
 
 		public string Title => $"{workingFolder.Name} - Dependinator";
@@ -76,7 +72,7 @@ namespace Dependinator.MainWindowViews
 
 		public string SearchBox
 		{
-			get { return Get(); }
+			get => Get();
 			set
 			{
 				message.ShowInfo("Search is not yet implemented.");
@@ -261,10 +257,7 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		public int WindowWith
-		{
-			set { ModelViewModel.Width = value; }
-		}
+		public int WindowWith { set { ModelViewModel.Width = value; } }
 
 
 		private void Minimize()

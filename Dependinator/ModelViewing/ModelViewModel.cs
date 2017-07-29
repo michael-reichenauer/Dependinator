@@ -48,6 +48,15 @@ namespace Dependinator.ModelViewing
 		public ItemsViewModel ItemsViewModel { get; }
 
 
+		public string FetchErrorText { get => Get(); set => Set(value); }
+
+		public string FilterText { get; private set; } = "";
+
+		public int SelectedIndex { get => Get(); set => Set(value); }
+
+		public object SelectedItem { get => Get().Value; set => Set(value); }
+
+
 		public async Task LoadAsync()
 		{
 			Timing t = new Timing();
@@ -61,19 +70,6 @@ namespace Dependinator.ModelViewing
 				t.Log("Updated view model after cached/fresh");
 			}
 		}
-
-
-		public string FetchErrorText
-		{
-			get => Get();
-			set => Set(value);
-		}
-
-
-
-		public string FilterText { get; private set; } = "";
-
-
 
 
 		public int Width
@@ -122,8 +118,6 @@ namespace Dependinator.ModelViewing
 		}
 
 
-
-
 		public async Task ManualRefreshAsync(bool refreshLayout = false)
 		{
 			using (progress.ShowBusy())
@@ -133,14 +127,14 @@ namespace Dependinator.ModelViewing
 		}
 
 
-
 		private void UpdateViewModel()
 		{
 			Timing t = new Timing();
 
 			if (!IsInFilterMode())
 			{
-				NotifyAll(); ;
+				NotifyAll();
+				;
 
 				t.Log("Updated repository view model");
 			}
@@ -150,23 +144,6 @@ namespace Dependinator.ModelViewing
 		private bool IsInFilterMode()
 		{
 			return !string.IsNullOrEmpty(FilterText) || !string.IsNullOrEmpty(settingFilterText);
-		}
-
-
-
-
-
-		public int SelectedIndex
-		{
-			get => Get();
-			set => Set(value);
-		}
-
-
-		public object SelectedItem
-		{
-			get => Get().Value;
-			set => Set(value);
 		}
 
 
