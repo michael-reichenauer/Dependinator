@@ -135,6 +135,7 @@
     <Compile Include="ModelViewing\Private\Items\IItemsCanvas.cs" />
     <Compile Include="ModelViewing\Private\Items\Private\IItemsSourceArea.cs" />
     <Compile Include="ModelViewing\Private\Items\Private\ItemsService.cs" />
+    <Compile Include="Utils\UI\Notifyable.cs" />
     <Compile Include="Utils\With.cs" />
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>

@@ -7,7 +7,8 @@ namespace Dependinator.Utils.UI
 	internal class BusyIndicator : ViewModel
 	{
 		private readonly string propertyName;
-		private readonly ViewModel viewModel;
+		private readonly Action<string> onPropertyChanged;
+
 		private static readonly string[] indicators = { "o", "o o", "o o o", "o o o o" };
 		private static readonly TimeSpan InitialIndicatorTime = TimeSpan.FromMilliseconds(10);
 		private static readonly TimeSpan IndicatorInterval = TimeSpan.FromMilliseconds(500);
@@ -17,10 +18,10 @@ namespace Dependinator.Utils.UI
 		private int indicatorIndex;
 		private string progressText = null;
 
-		public BusyIndicator(string propertyName, ViewModel viewModel)
+		public BusyIndicator(string propertyName, Action<string> onPropertyChanged)
 		{
 			this.propertyName = propertyName;
-			this.viewModel = viewModel;
+			this.onPropertyChanged = onPropertyChanged;
 			timer.Tick += UpdateIndicator;
 		}
 
@@ -89,7 +90,7 @@ namespace Dependinator.Utils.UI
 		{
 			Text = indicatorText;
 			ProgressText = progressText;
-			viewModel.OnPropertyChanged(propertyName);
+			onPropertyChanged(propertyName);
 		}
 
 

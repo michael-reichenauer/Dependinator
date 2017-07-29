@@ -7,38 +7,22 @@ namespace Dependinator.Utils.UI
 {
 	internal class WhenSetter
 	{
-		private readonly ViewModel targetViewModel;
+		private readonly Notifyable targetNotifyable;
 		private readonly string[] sourcePropertyNames;
 
 		private bool isNotifyAll = false;
 		private IEnumerable<string> targetPropertyNames;
 
 		public WhenSetter(
-			ViewModel targetViewModel, 
-			ViewModel sourceViewModel, 
+			Notifyable targetNotifyable,
+			INotifyPropertyChanged sourceNotifyable,
 			params string[] sourcePropertyNames)
 		{
-			this.targetViewModel = targetViewModel;
+			this.targetNotifyable = targetNotifyable;
 			this.sourcePropertyNames = sourcePropertyNames;
 
 			PropertyChangedEventManager.AddHandler(
-				sourceViewModel, PropertyChangedEventHandler, nameof(sourceViewModel.PropertyChanged));
-		}
-
-
-		private void PropertyChangedEventHandler(object sender, PropertyChangedEventArgs e)
-		{
-			if (sourcePropertyNames.Any(name => name == e.PropertyName))
-			{
-				if (isNotifyAll)
-				{
-					targetViewModel.NotifyAll();
-				}
-				else
-				{
-					targetPropertyNames.ForEach(name => targetViewModel.Notify(name));
-				}
-			}
+				sourceNotifyable, PropertyChangedEventHandler, nameof(sourceNotifyable.PropertyChanged));
 		}
 
 
@@ -51,6 +35,25 @@ namespace Dependinator.Utils.UI
 		public void NotifyAll()
 		{
 			isNotifyAll = true;
+		}
+
+
+		private void PropertyChangedEventHandler(object sender, PropertyChangedEventArgs e)
+		{
+			if (!sourcePropertyNames.Any(name => name == e.PropertyName))
+			{
+				// changed property was not one of the specified source properties 
+				return;
+			}
+
+			if (isNotifyAll)
+			{
+				targetNotifyable.NotifyAll();
+			}
+			else
+			{
+				targetPropertyNames.ForEach(name => targetNotifyable.Notify(name));
+			}
 		}
 	}
 }
