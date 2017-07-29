@@ -9,7 +9,7 @@ namespace Dependinator.Modeling
 			Name = name;
 			NodeType = nodeType;
 
-			IsEqualWhen(Name);
+			IsEqualWhenSame(Name);
 		}
 
 		public string Name { get; }

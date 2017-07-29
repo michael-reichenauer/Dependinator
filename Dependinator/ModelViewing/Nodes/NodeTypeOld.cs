@@ -16,7 +16,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public NodeTypeOld(string type)
 		{
 			this.type = type;
-			IsEqualWhen(type);
+			IsEqualWhenSame(type);
 		}
 
 		public static implicit operator NodeTypeOld(string text) => new NodeTypeOld(text);

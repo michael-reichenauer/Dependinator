@@ -85,7 +85,7 @@ namespace DependinatorTest.Utils
 			public Id(string id)
 			{
 				this.id = id;
-				IsEqualWhen(id);
+				IsEqualWhenSame(id);
 			}
 		}
 

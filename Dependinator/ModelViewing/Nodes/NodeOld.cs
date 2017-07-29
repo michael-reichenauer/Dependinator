@@ -42,7 +42,7 @@ namespace Dependinator.ModelViewing.Nodes
 			PersistentNodeColor = null;
 			Links = new NodeLinks(lineViewModelService);
 			RootNode = parent?.RootNode ?? this;
-			IsEqualWhen(NodeName);
+			IsEqualWhenSame(NodeName);
 		}
 
 

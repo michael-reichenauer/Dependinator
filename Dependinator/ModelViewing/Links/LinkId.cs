@@ -13,7 +13,7 @@ namespace Dependinator.ModelViewing.Links
 		{
 			this.source = source;
 			this.target = target;
-			IsEqualWhen(source, target);
+			IsEqualWhenSame(source, target);
 		}
 
 		public override string ToString() => $"{source}->{target}";

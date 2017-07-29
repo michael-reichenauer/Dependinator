@@ -17,6 +17,64 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
+
+		public (Point source, Point target) GetLineEndPoints(Node source, Node target)
+		{
+			Rect sourceBounds = source.ViewModel.ItemBounds;
+			Rect targetBounds = target.ViewModel.ItemBounds;
+
+			if (source.Parent == target.Parent)
+			{
+				// Source and target nodes are siblings, 
+				// ie. line starts at source middle bottom and ends at target middle top
+				double x1 = sourceBounds.X + sourceBounds.Width / 2;
+				double y1 = sourceBounds.Y + sourceBounds.Height;
+				Point sp = new Point(x1, y1);
+
+				double x2 = targetBounds.X + targetBounds.Width / 2;
+				double y2 = targetBounds.Y;
+				Point tp = new Point(x2, y2);
+
+				return (sp, tp);
+			}
+			else if (source.Parent == target)
+			{
+				// The target is a parent of the source,
+				// i.e. line ends at the bottom of the target node
+				double x1 = sourceBounds.X + sourceBounds.Width / 2;
+				double y1 = sourceBounds.Y + sourceBounds.Height;
+				Point sp = new Point(x1, y1);
+
+				double x2 = targetBounds.X + targetBounds.Width / 2;
+				double y2 = targetBounds.Y + targetBounds.Height;
+				Point tp = ParentPointToChildPoint(target, new Point(x2, y2));
+
+				return (sp, tp);
+			}
+			else //if (source == target.Parent)
+			{
+				// The target is the child of the source,
+				// i.e. line start at the top of the source
+				double x1 = sourceBounds.X + sourceBounds.Width / 2;
+				double y1 = sourceBounds.Y;
+				Point sp = ParentPointToChildPoint(source, new Point(x1, y1));
+
+				double x2 = targetBounds.X + targetBounds.Width / 2;
+				double y2 = targetBounds.Y;
+				Point tp = new Point(x2, y2);
+
+				return (sp, tp);
+			}
+		}
+
+
+		private static Point ParentPointToChildPoint(Node parent, Point point)
+		{
+			return parent.ItemsCanvas.ParentToChildCanvasPoint(point);
+		}
+
+
+
 		public void AddLinkLines(LinkOld link)
 		{
 			//var linkSegments = segmentService.GetNormalLinkSegments(link);

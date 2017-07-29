@@ -19,8 +19,8 @@
 			StrokeThickness="0.8"
 			Fill="{Binding BackgroundBrush}"
 			Stretch="Fill" 
-			RadiusX="6"
-			RadiusY="6"/>
+			RadiusX="3"
+			RadiusY="3"/>
 
 		<!-- Inner model -->
 		<items:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />

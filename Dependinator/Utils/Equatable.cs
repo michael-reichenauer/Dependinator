@@ -44,7 +44,7 @@ namespace Dependinator.Utils
 		object IEquatable.__EqValue3 => eqValue3;
 
 
-		protected void IsEqualWhen(object value1)
+		protected void IsEqualWhenSame(object value1)
 		{
 			hashCode = GetHashFor(value1);
 			eqValue1 = value1;
@@ -60,7 +60,7 @@ namespace Dependinator.Utils
 			};
 		}
 
-		protected void IsEqualWhen(object value1, object value2)
+		protected void IsEqualWhenSame(object value1, object value2)
 		{
 			hashCode = GetHashFor(value1, value2);
 			eqValue1 = value1;
@@ -79,7 +79,7 @@ namespace Dependinator.Utils
 		}
 
 
-		protected void IsEqualWhen(object value1, object value2, object value3)
+		protected void IsEqualWhenSame(object value1, object value2, object value3)
 		{
 			hashCode = GetHashFor(value1, value2, value3);
 			eqValue1 = value1;

@@ -9,7 +9,7 @@ namespace Dependinator.Modeling
 			Source = source;
 			Target = target;
 
-			IsEqualWhen(Source, Target);
+			IsEqualWhenSame(Source, Target);
 		}
 
 		public string Target { get; }

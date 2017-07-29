@@ -10,6 +10,7 @@ namespace Dependinator.ModelViewing.Links
 	internal class LineViewModel : ItemViewModel
 	{
 		private readonly ILineViewModelService lineViewModelService;
+		private readonly Line line;
 		private readonly NodeViewModel source;
 		private readonly NodeViewModel target;
 		private static readonly double NodeMargin = 0.8 * 2;
@@ -33,12 +34,12 @@ namespace Dependinator.ModelViewing.Links
 
 		public LineViewModel(
 			ILineViewModelService lineViewModelService,
-			NodeViewModel source,
-			NodeViewModel target)
+			Line line)
 		{
 			this.lineViewModelService = lineViewModelService;
-			this.source = source;
-			this.target = target;
+			this.line = line;
+			source = line.Source.ViewModel;
+			target = line.Target.ViewModel;
 			ItemZIndex = -1;
 
 			SetLine();
@@ -52,7 +53,7 @@ namespace Dependinator.ModelViewing.Links
 		public double X1 => (width * xd1 + LineMargin) * ItemScale - NodeMargin;
 		public double Y1 => (height * yd1 + LineMargin) * ItemScale - NodeMargin;
 		public double X2 => (width * xd2 + LineMargin) * ItemScale - NodeMargin;
-		public double Y2 => (height * yd2 + LineMargin) * ItemScale - NodeMargin;
+		public double Y2 => (height * yd2 + LineMargin) * ItemScale - NodeMargin * 2;
 		public double LineWidth => (1 * ItemScale).MM(0.2, 2);
 
 		// The arrow line endpoint (based on the line end (x2,y2) and with size and direction
@@ -86,13 +87,7 @@ namespace Dependinator.ModelViewing.Links
 
 		private void SetLine()
 		{
-			Point sp = new Point(
-				source.ItemBounds.Location.X + source.ItemBounds.Width / 2,
-				source.ItemBounds.Location.Y + source.ItemBounds.Height);
-
-			Point tp = new Point(
-				target.ItemBounds.Location.X + target.ItemBounds.Width / 2,
-				target.ItemBounds.Y);
+			(Point sp, Point tp) = lineViewModelService.GetLineEndPoints(source.Node, target.Node);
 
 			// Calculate the line boundaries (x, y, width, height)
 			x = Math.Min(sp.X, tp.X);
@@ -158,7 +153,7 @@ namespace Dependinator.ModelViewing.Links
 			//	tip = $"{this} {linksCount} links:" + tip;
 			//}
 
-			return $"{source}->{target}";
+			return $"{source}->{target} ({line.Links.Count} links)";
 		}
 
 

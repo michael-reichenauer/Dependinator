@@ -16,7 +16,7 @@ namespace Dependinator.ModelViewing.Links
 		{
 			Source = source;
 			Target = target;
-			IsEqualWhen(Source, Target);
+			IsEqualWhenSame(Source, Target);
 		}
 
 

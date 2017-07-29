@@ -21,7 +21,7 @@ namespace Dependinator.ModelViewing.Nodes
 				Parent = this;
 			}
 
-			IsEqualWhen(Id);
+			IsEqualWhenSame(Id);
 		}
 
 
@@ -32,9 +32,11 @@ namespace Dependinator.ModelViewing.Nodes
 		public Node Root { get; private set; }
 
 		public IReadOnlyList<Node> Children => children;
-		public IItemsCanvas ChildrenCanvas { get; set; }
+		public IItemsCanvas ItemsCanvas { get; set; }
 
 		public List<Link> Links { get; } = new List<Link>();
+
+		public List<Line> Lines { get; } = new List<Line>();
 
 		public NodeType NodeType { get; }
 

@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing.Nodes
 			this.fullName = fullName;
 			shortName = new Lazy<string>(GetShortName);
 			parentName = new Lazy<NodeName>(GetParentName);
-			IsEqualWhen(fullName);
+			IsEqualWhenSame(fullName);
 		}
 
 		public string ShortName => shortName.Value;

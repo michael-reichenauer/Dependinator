@@ -15,7 +15,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public NodeType(string typeName)
 		{
 			this.typeName = typeName;
-			IsEqualWhen(typeName);
+			IsEqualWhenSame(typeName);
 		}
 
 		public string AsString() => typeName;

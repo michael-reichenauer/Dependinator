@@ -44,7 +44,6 @@ namespace Dependinator.Modeling.Private
 			sentNodes[nodeName] = node;
 			items.Add(node);
 
-			//Thread.Sleep(5);
 			return node;
 		}
 
@@ -63,7 +62,6 @@ namespace Dependinator.Modeling.Private
 				Target = targetNodeName
 			};
 
-			//Thread.Sleep(5);
 			items.Add(link);
 		}
 

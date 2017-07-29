@@ -12,7 +12,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public NodeId(NodeName nodeName)
 		{
 			this.nodeName = nodeName;
-			IsEqualWhen(nodeName);
+			IsEqualWhenSame(nodeName);
 		}
 
 		public override string ToString() => this != Root ? nodeName.ToString() : "<root>";

@@ -1,57 +1,119 @@
+using System.Collections.Generic;
+using System.Linq;
 using Dependinator.Modeling;
+using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private;
-using Dependinator.ModelViewing.Private.Items;
 
 namespace Dependinator.ModelViewing.Links
 {
 	internal class LinkService : ILinkService
 	{
+		private readonly ILinkSegmentService linkSegmentService;
 		private readonly ILineViewModelService lineViewModelService;
 		private readonly Model model;
 
+
 		public LinkService(
+			ILinkSegmentService linkSegmentService,
 			ILineViewModelService lineViewModelService,
 			Model model)
 		{
+			this.linkSegmentService = linkSegmentService;
 			this.lineViewModelService = lineViewModelService;
 			this.model = model;
 		}
 
 		public void UpdateLink(DataLink dataLink)
 		{
-			NodeId sourceId = new NodeId(new NodeName(dataLink.Source));
-			NodeId targetId = new NodeId(new NodeName(dataLink.Target));
-
-			Node source = model.Nodes.Node(sourceId);
-			Node target = model.Nodes.Node(targetId);
-
-			Link link = new Link(source, target);
-			if (source.Links.Contains(link))
+			if (dataLink.Source == dataLink.Target)
 			{
-				// TODO: Check node properties as well and update if changed
+				// Skipping link to self for now
 				return;
 			}
 
-			if (source == target)
+			Node source = GetNode(dataLink.Source);
+			Node target = GetNode(dataLink.Target);
+
+			if (LinkExists(source, target))
+
 			{
-				// Skipping link to self
+				// Already added link
 				return;
 			}
 
-			if (source.Parent != target.Parent)
-			{
-				return;
-			}
+			Link link = AddLink(source, target);
 
+			var linkSegments = linkSegmentService.GetLinkSegments(link);
 
-			IItemsCanvas parentCanvas = source.Parent.ChildrenCanvas;
-
-			LineViewModel lineViewModel = new LineViewModel(
-				lineViewModelService, source.ViewModel, target.ViewModel);
-
-			parentCanvas.AddItem(lineViewModel);
+			AddLinkSegmentLines(linkSegments, link);
 		}
 
+
+		private void AddLinkSegmentLines(IEnumerable<LinkSegment> linkSegments, Link link)
+		{
+			foreach (LinkSegment linkSegment in linkSegments)
+			{
+				Line line = TryGetLine(linkSegment);
+
+				if (line == null)
+				{
+					line = AddLine(linkSegment);
+					AddLineViewModel(line);
+				}
+
+				line.Links.Add(link);
+			}
+		}
+
+
+		private static Line AddLine(LinkSegment segment)
+		{
+			Line line = new Line(segment.Source, segment.Target);
+			line.Source.Lines.Add(line);
+			line.Target.Lines.Add(line);
+			return line;
+		}
+
+		private void AddLineViewModel(Line line)
+		{
+			LineViewModel lineViewModel = new LineViewModel(lineViewModelService, line);
+
+			Node owner = GetLineOwner(line);
+
+			owner.ItemsCanvas.AddItem(lineViewModel);
+		}
+
+
+		private static Node GetLineOwner(Line line)
+		{
+			return line.Source == line.Target.Parent ? line.Source : line.Source.Parent;
+		}
+
+
+		private static Link AddLink(Node source, Node target)
+		{
+			Link link = new Link(source, target);
+			source.Links.Add(link);
+			target.Links.Add(link);
+			return link;
+		}
+
+
+		private Node GetNode(string name)
+		{
+			NodeName nodeName = new NodeName(name);
+			Node node = model.Nodes.Node(nodeName);
+			return node;
+		}
+
+
+		private static Line TryGetLine(LinkSegment segment) =>
+			segment.Source.Lines
+			.FirstOrDefault(l => l.Source == segment.Source && l.Target == segment.Target);
+
+
+		private static bool LinkExists(Node source, Node target) =>
+			source.Links.Any(l => l.Source == source && l.Target == target);
 	}
 }

@@ -42,7 +42,7 @@ namespace Dependinator.ModelViewing.Private
 		public void Init(IItemsCanvas rootCanvas)
 		{
 			dispatcher = Dispatcher.CurrentDispatcher;
-			model.Nodes.Root.ChildrenCanvas = rootCanvas;
+			model.Nodes.Root.ItemsCanvas = rootCanvas;
 		}
 
 

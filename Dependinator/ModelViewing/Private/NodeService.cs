@@ -58,12 +58,12 @@ namespace Dependinator.ModelViewing.Private
 			else if (node.NodeType == NodeType.Type)
 			{
 				node.ViewModel = new TypeViewModel(nodeViewModelService, node);
-				node.ChildrenCanvas = GetChildrenCanvas(node);
+				node.ItemsCanvas = GetChildrenCanvas(node);
 			}
 			else
 			{
 				node.ViewModel = new NamespaceViewModel(nodeViewModelService, node);
-				node.ChildrenCanvas = GetChildrenCanvas(node);
+				node.ItemsCanvas = GetChildrenCanvas(node);
 			}
 		}
 
@@ -72,7 +72,7 @@ namespace Dependinator.ModelViewing.Private
 		{
 			nodeViewModelService.SetLayout(node.ViewModel);
 
-			IItemsCanvas parentCanvas = parentNode.ChildrenCanvas;
+			IItemsCanvas parentCanvas = parentNode.ItemsCanvas;
 
 			parentCanvas.AddItem(node.ViewModel);
 		}
@@ -97,9 +97,9 @@ namespace Dependinator.ModelViewing.Private
 		private static IItemsCanvas GetChildrenCanvas(Node node)
 		{
 			// First trying to get ann previously created items canvas
-			if (node.ChildrenCanvas != null)
+			if (node.ItemsCanvas != null)
 			{
-				return node.ChildrenCanvas;
+				return node.ItemsCanvas;
 			}
 
 			// The node does not yet have a canvas. So we need to get the parent canvas and
@@ -107,10 +107,10 @@ namespace Dependinator.ModelViewing.Private
 			IItemsCanvas parentCanvas = GetChildrenCanvas(node.Parent);
 
 			// Creating the child canvas to be the children canvas of the node
-			node.ChildrenCanvas = parentCanvas.CreateChildCanvas(node.ViewModel);
-			node.ViewModel.ItemsViewModel = new ItemsViewModel(node.ChildrenCanvas);
+			node.ItemsCanvas = parentCanvas.CreateChildCanvas(node.ViewModel);
+			node.ViewModel.ItemsViewModel = new ItemsViewModel(node.ItemsCanvas);
 
-			return node.ChildrenCanvas;
+			return node.ItemsCanvas;
 		}
 	}
 }

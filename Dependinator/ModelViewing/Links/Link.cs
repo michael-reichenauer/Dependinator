@@ -10,7 +10,7 @@ namespace Dependinator.ModelViewing.Links
 			Source = source;
 			Target = target;
 
-			IsEqualWhen(source, target);
+			IsEqualWhenSame(source, target);
 		}
 
 		public Node Target { get; }

@@ -11,9 +11,9 @@
 	<Grid>
 		<Border
 			BorderBrush="{Binding RectangleBrush}"
-			BorderThickness="0.5"
+			BorderThickness="0.6"
 			Background="{Binding BackgroundBrush}"
-			CornerRadius="10"
+			CornerRadius="30"
 			MouseMove="UIElement_OnMouseMove">
 
 			<TextBlock

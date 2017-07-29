@@ -14,7 +14,7 @@ namespace Dependinator.Common
 
 		public CommitId()
 		{
-			IsEqualWhen(Id);
+			IsEqualWhenSame(Id);
 		}
 
 

@@ -107,6 +107,7 @@
     <Compile Include="Modeling\DataLink.cs" />
     <Compile Include="Modeling\IModelNotifications.cs" />
     <Compile Include="ModelViewing\Links\ILinkService.cs" />
+    <Compile Include="ModelViewing\Links\Line.cs" />
     <Compile Include="ModelViewing\Links\LinkId.cs" />
     <Compile Include="Modeling\Private\NotificationReceiver.cs" />
     <Compile Include="Modeling\Private\Analyzing\Private\Analyzer.cs" />
@@ -116,6 +117,7 @@
     <Compile Include="ModelViewing\Links\LineViewModel.cs" />
     <Compile Include="ModelViewing\Links\Link.cs" />
     <Compile Include="ModelViewing\Links\LinkService.cs" />
+    <Compile Include="ModelViewing\Links\Private\LinkSegment.cs" />
     <Compile Include="ModelViewing\Nodes\Node.cs" />
     <Compile Include="ModelViewing\Nodes\NodeExtension.cs" />
     <Compile Include="ModelViewing\Nodes\NodeType.cs" />
