@@ -5,19 +5,17 @@ namespace Dependinator.ModelViewing.Links
 {
 	internal class Link : Equatable<Link>
 	{
-		public Link(Node source, Node target, LinkId linkId)
+		public Link(Node source, Node target)
 		{
-			Id = linkId;
 			Source = source;
 			Target = target;
 
-			IsEqualWhen(Id);
+			IsEqualWhen(source, target);
 		}
 
-		public LinkId Id { get; }
 		public Node Target { get; }
 		public Node Source { get; }
 
-		public override string ToString() => Id.ToString();
+		public override string ToString() => $"{Source}->{Target}";
 	}
 }

@@ -201,20 +201,16 @@ namespace Dependinator.ModelViewing.Private
 		{
 			NodeId sourceId = new NodeId(new NodeName(dataLink.Source));
 			NodeId targetId = new NodeId(new NodeName(dataLink.Target));
-			LinkId linkId = new LinkId(sourceId, targetId);
-
-			if (model.Links.TryGetLink(linkId, out Link existingLink))
-			{
-				// TODO: Check node properties as well and update if changed
-				return;
-			}
 
 			Node source = model.Nodes.Node(sourceId);
 			Node target = model.Nodes.Node(targetId);
 
-			Link link = new Link(source, target, linkId);
-
-			model.Links.Add(link);
+			Link link = new Link(source, target);
+			if (source.Links.Contains(link))
+			{
+				// TODO: Check node properties as well and update if changed
+				return;
+			}
 
 			if (source == target)
 			{

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 
@@ -25,14 +26,17 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		public NodeId Id { get; }
+		public NodeName Name { get; }
+
 		public Node Parent { get; private set; }
 		public Node Root { get; private set; }
-		public NodeName Name { get; }
-		public NodeType NodeType { get; }
 
 		public IReadOnlyList<Node> Children => children;
-
 		public IItemsCanvas ChildrenCanvas { get; set; }
+
+		public List<Link> Links { get; } = new List<Link>();
+
+		public NodeType NodeType { get; }
 
 		public NodeViewModel ViewModel { get; set; }
 
@@ -45,50 +49,7 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public IEnumerable<Node> Ancestors()
-		{
-			Node current = Parent;
-
-			while (current != Root)
-			{
-				yield return current;
-				current = current.Parent;
-			}
-		}
-
-
-		public IEnumerable<Node> AncestorsAndSelf()
-		{
-			yield return this;
-
-			foreach (Node ancestor in Ancestors())
-			{
-				yield return ancestor;
-			}
-		}
-
-		public IEnumerable<Node> Descendents()
-		{
-			foreach (Node child in Children)
-			{
-				yield return child;
-
-				foreach (Node descendent in child.Descendents())
-				{
-					yield return descendent;
-				}
-			}
-		}
-
-		public IEnumerable<Node> DescendentsAndSelf()
-		{
-			yield return this;
-
-			foreach (Node descendent in Descendents())
-			{
-				yield return descendent;
-			}
-		}
+	
 
 		public override string ToString() => Id.ToString();
 	}

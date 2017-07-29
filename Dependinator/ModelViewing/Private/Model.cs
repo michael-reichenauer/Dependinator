@@ -8,7 +8,7 @@ namespace Dependinator.ModelViewing.Private
 	{
 		public Nodes Nodes { get; } = new Nodes();
 
-		public Links Links { get; } = new Links();
+		//public Links Links { get; } = new Links();
 
 
 	}
