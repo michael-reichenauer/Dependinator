@@ -34,6 +34,9 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public IItemsCanvas ChildrenCanvas { get; set; }
 
+		public NodeViewModel ViewModel { get; set; }
+
+
 		public void AddChild(Node child)
 		{
 			child.Parent = this;

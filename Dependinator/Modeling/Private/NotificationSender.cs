@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.Modeling.Private.Serializing;
-using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 
 
@@ -50,6 +49,12 @@ namespace Dependinator.Modeling.Private
 
 		public void SendLink(string sourceNodeName, string targetNodeName)
 		{
+			if (sourceNodeName == targetNodeName)
+			{
+				// Skipping link to self
+				return;
+			}
+
 			Data.Link link = new Data.Link
 			{
 				Source = sourceNodeName,
@@ -110,8 +115,8 @@ namespace Dependinator.Modeling.Private
 
 
 		private static void AddToBatch(
-			object item, 
-			ref List<Data.Node> nodeBatch, 
+			object item,
+			ref List<Data.Node> nodeBatch,
 			ref List<Data.Link> linkBatch)
 		{
 			if (item is Data.Node node)

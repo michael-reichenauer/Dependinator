@@ -6,7 +6,6 @@ namespace Dependinator.ModelViewing.Private
 	internal class Nodes
 	{
 		private readonly Dictionary<NodeId, Node> nodes = new Dictionary<NodeId, Node>();
-		private readonly Dictionary<NodeId, NodeViewModel> viewModels = new Dictionary<NodeId, NodeViewModel>();
 
 
 		public Nodes()
@@ -25,12 +24,5 @@ namespace Dependinator.ModelViewing.Private
 		{
 			nodes[node.Id] = node;
 		}
-
-		public void AddViewModel(NodeId nodeId, NodeViewModel viewModel) =>
-			viewModels[nodeId] = viewModel;
-
-
-		public bool TryGetViewModel(NodeId nodeId, out NodeViewModel viewModel) =>
-			viewModels.TryGetValue(nodeId, out viewModel);
 	}
 }

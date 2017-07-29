@@ -17,6 +17,7 @@ namespace Dependinator.Utils.UI
 		private readonly Dictionary<string, ICommand> commands = new Dictionary<string, ICommand>();
 		private readonly Dictionary<string, BusyIndicator> busyIndicators =
 			new Dictionary<string, BusyIndicator>();
+		private readonly List<WhenSetter> whenSetters = new List<WhenSetter>();
 
 		private IList<string> allPropertyNames = null;
 
@@ -28,7 +29,10 @@ namespace Dependinator.Utils.UI
 
 		protected WhenSetter WhenSet(ViewModel viewModel, params string[] sourcePropertyName)
 		{
-			return new WhenSetter(this, viewModel, sourcePropertyName);
+			WhenSetter whenSetter = new WhenSetter(this, viewModel, sourcePropertyName);
+			whenSetters.Add(whenSetter);
+
+			return whenSetter;
 		}
 
 

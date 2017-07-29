@@ -132,16 +132,6 @@
 							</Setter.Value>
 						</Setter>
 					</DataTrigger>
-					
-					<DataTrigger Binding="{Binding ViewName}" Value="LinkLineViewModel">
-						<Setter Property="ContentTemplate">
-							<Setter.Value>
-								<DataTemplate>
-									<links:LinkLineView/>
-								</DataTemplate>
-							</Setter.Value>
-						</Setter>
-					</DataTrigger>
 
 				</Style.Triggers>
 			</Style>

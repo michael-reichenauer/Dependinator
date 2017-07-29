@@ -39,6 +39,7 @@ namespace Dependinator.ModelViewing.Links
 			this.linkService = linkService;
 			this.source = source;
 			this.target = target;
+			ItemZIndex = -1;
 
 			SetLine();
 			TrackSourceOrTargetChanges();
