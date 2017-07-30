@@ -17,5 +17,7 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 		public List<Link> Links { get; } = new List<Link>();
+
+		public override string ToString() => $"{Source}->{Target}";
 	}
 }

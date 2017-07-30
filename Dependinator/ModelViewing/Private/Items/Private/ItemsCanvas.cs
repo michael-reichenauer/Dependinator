@@ -5,21 +5,21 @@ using System.Windows;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
+using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
 namespace Dependinator.ModelViewing.Private.Items.Private
 {
-	internal class ItemsCanvas : IItemsCanvas, IItemsSourceArea
+	internal class ItemsCanvas : Notifyable, IItemsSourceArea
 	{
 		private static readonly int DefaultScaleFactor = 7;
 		private readonly IItemsCanvasBounds owner;
 		private readonly ItemsSource itemsSource;
-		private readonly IItemsCanvas canvasParent;
+		private readonly ItemsCanvas canvasParent;
 		private ZoomableCanvas zoomableCanvas;
 		private readonly List<ItemsCanvas> canvasChildren = new List<ItemsCanvas>();
 		private double scale = 1.0;
-		private Point offset = new Point(0, 0);
 
 		private Rect ItemsCanvasBounds => 
 			owner?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
@@ -33,7 +33,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 			
 		}
 
-		private ItemsCanvas(IItemsCanvasBounds owner, IItemsCanvas canvasParent)
+		private ItemsCanvas(IItemsCanvasBounds owner, ItemsCanvas canvasParent)
 		{
 			this.owner = owner;
 			this.canvasParent = canvasParent;
@@ -43,15 +43,15 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 		public double ParentScale => IsRoot ? Scale : canvasParent.Scale;
 
-		public IItemsCanvas CanvasRoot { get; }
+		public ItemsCanvas CanvasRoot { get; }
 
-		public IReadOnlyList<IItemsCanvas> CanvasChildren => canvasChildren;
+		public IReadOnlyList<ItemsCanvas> CanvasChildren => canvasChildren;
 
 		public bool IsRoot => canvasParent == null;
 
 		public double ScaleFactor { get; private set; } = 1.0;
 
-		public IItemsCanvas CreateChildCanvas(IItemsCanvasBounds canvasBounds)
+		public ItemsCanvas CreateChildCanvas(IItemsCanvasBounds canvasBounds)
 		{
 			ItemsCanvas child = new ItemsCanvas(canvasBounds, this);
 			child.Scale = Scale / DefaultScaleFactor;
@@ -69,10 +69,10 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 		public Point Offset
 		{
-			get => offset;
+			get => Get();
 			private set
 			{
-				offset = value;
+				Set(value);
 
 				if (zoomableCanvas != null)
 				{
@@ -231,7 +231,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 			zoomableCanvas.ItemsOwner.ItemsSource = itemsSource.VirtualItemsSource;
 
 			zoomableCanvas.Scale = scale;
-			zoomableCanvas.Offset = offset;
+			zoomableCanvas.Offset = Offset;
 		}
 
 

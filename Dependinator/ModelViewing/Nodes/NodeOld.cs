@@ -6,6 +6,7 @@ using System.Windows.Media;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils;
 
 
@@ -18,7 +19,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private readonly List<NodeOld> childNodes = new List<NodeOld>();
 
-		private IItemsCanvas itemsCanvas;
+		private ItemsCanvas itemsCanvas;
 
 		private Brush nodeBrush;
 
@@ -102,7 +103,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 
-		public void Show(IItemsCanvas rootItemsCanvas)
+		public void Show(ItemsCanvas rootItemsCanvas)
 		{
 			Asserter.Requires(IsRootNode);
 
@@ -500,7 +501,7 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		private void InitNodeTree(IItemsCanvas rootCanvas)
+		private void InitNodeTree(ItemsCanvas rootCanvas)
 		{
 			itemsCanvas = rootCanvas;
 			//	viewModel = new NamespaceViewModel(itemsService, this, rootCanvas);

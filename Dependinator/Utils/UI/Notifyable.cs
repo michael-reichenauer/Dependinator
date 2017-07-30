@@ -8,7 +8,8 @@ namespace Dependinator.Utils.UI
 	internal abstract class Notifyable : INotifyPropertyChanged
 	{
 		private readonly Dictionary<string, Property> properties = new Dictionary<string, Property>();
-		private List<WhenSetter> whenSetters;
+		private List<TargetWhenSetter> targetWhenSetters;
+		private List<SourceWhenSetter> sourceWhenSetters;
 		private IList<string> allPropertyNames = null;
 
 
@@ -36,23 +37,37 @@ namespace Dependinator.Utils.UI
 			}
 		}
 
-		protected void OnPropertyChanged(string propertyName)
+		public SourceWhenSetter WhenSet(params string[] sourcePropertyName)
 		{
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+			if (sourceWhenSetters == null)
+			{
+				sourceWhenSetters = new List<SourceWhenSetter>();
+			}
+
+			SourceWhenSetter whenSetter = new SourceWhenSetter(this, sourcePropertyName);
+			sourceWhenSetters.Add(whenSetter);
+
+			return whenSetter;
 		}
 
 
-		protected WhenSetter WhenSet(Notifyable viewModel, params string[] sourcePropertyName)
+		protected TargetWhenSetter WhenSet(Notifyable viewModel, params string[] sourcePropertyName)
 		{
-			if (whenSetters == null)
+			if (targetWhenSetters == null)
 			{
-				whenSetters = new List<WhenSetter>();
+				targetWhenSetters = new List<TargetWhenSetter>();
 			}
 
-			WhenSetter whenSetter = new WhenSetter(this, viewModel, sourcePropertyName);
-			whenSetters.Add(whenSetter);
+			TargetWhenSetter whenSetter = new TargetWhenSetter(this, viewModel, sourcePropertyName);
+			targetWhenSetters.Add(whenSetter);
 
 			return whenSetter;
+		}
+
+
+		protected void OnPropertyChanged(string propertyName)
+		{
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
 
 

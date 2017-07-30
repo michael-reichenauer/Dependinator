@@ -7,6 +7,7 @@ using Dependinator.ApplicationHandling;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.Private
@@ -39,7 +40,7 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		public void Init(IItemsCanvas rootCanvas)
+		public void Init(ItemsCanvas rootCanvas)
 		{
 			dispatcher = Dispatcher.CurrentDispatcher;
 			model.Nodes.Root.ItemsCanvas = rootCanvas;

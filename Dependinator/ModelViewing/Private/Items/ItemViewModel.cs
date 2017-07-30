@@ -1,4 +1,5 @@
 using System.Windows;
+using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils.UI;
 
 namespace Dependinator.ModelViewing.Private.Items
@@ -30,7 +31,7 @@ namespace Dependinator.ModelViewing.Private.Items
 		public object ItemState { get; set; }
 
 
-		public IItemsCanvas ItemOwnerCanvas { get; set; }
+		public ItemsCanvas ItemOwnerCanvas { get; set; }
 		public double ItemScale => ItemOwnerCanvas.Scale;
 
 		public virtual bool CanShow { get; } = true;

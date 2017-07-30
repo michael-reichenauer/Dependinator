@@ -1,4 +1,5 @@
 using System.Windows;
+using Dependinator.ModelViewing.Private.Items.Private;
 
 namespace Dependinator.ModelViewing.Private.Items
 {
@@ -9,7 +10,7 @@ namespace Dependinator.ModelViewing.Private.Items
 		bool IsShowing { get; }
 
 		object ItemState { get; set; }
-		IItemsCanvas ItemOwnerCanvas { get; set; }
+		ItemsCanvas ItemOwnerCanvas { get; set; }
 
 		void ItemRealized();
 		void ItemVirtualized();

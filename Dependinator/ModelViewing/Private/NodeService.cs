@@ -1,6 +1,7 @@
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelViewing.Private.Items.Private;
 
 namespace Dependinator.ModelViewing.Private
 {
@@ -72,7 +73,7 @@ namespace Dependinator.ModelViewing.Private
 		{
 			nodeViewModelService.SetLayout(node.ViewModel);
 
-			IItemsCanvas parentCanvas = parentNode.ItemsCanvas;
+			ItemsCanvas parentCanvas = parentNode.ItemsCanvas;
 
 			parentCanvas.AddItem(node.ViewModel);
 		}
@@ -94,7 +95,7 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private static IItemsCanvas GetChildrenCanvas(Node node)
+		private static ItemsCanvas GetChildrenCanvas(Node node)
 		{
 			// First trying to get ann previously created items canvas
 			if (node.ItemsCanvas != null)
@@ -104,7 +105,7 @@ namespace Dependinator.ModelViewing.Private
 
 			// The node does not yet have a canvas. So we need to get the parent canvas and
 			// then create a child canvas for this node.
-			IItemsCanvas parentCanvas = GetChildrenCanvas(node.Parent);
+			ItemsCanvas parentCanvas = GetChildrenCanvas(node.Parent);
 
 			// Creating the child canvas to be the children canvas of the node
 			node.ItemsCanvas = parentCanvas.CreateChildCanvas(node.ViewModel);

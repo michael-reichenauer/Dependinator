@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -6,12 +7,12 @@ namespace Dependinator.ModelViewing.Private.Items
 {
 	internal class ItemsViewModel : ViewModel
 	{
-		public ItemsViewModel(IItemsCanvas itemsCanvas)
+		public ItemsViewModel(ItemsCanvas itemsCanvas)
 		{
 			ItemsCanvas = itemsCanvas;
 		}
 
-		public IItemsCanvas ItemsCanvas { get; }
+		public ItemsCanvas ItemsCanvas { get; }
 
 		public bool IsRoot => ItemsCanvas.IsRoot;
 

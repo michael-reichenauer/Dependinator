@@ -54,7 +54,8 @@ namespace Dependinator.ModelViewing.Links
 		public double Y1 => (height * yd1 + LineMargin) * ItemScale - NodeMargin;
 		public double X2 => (width * xd2 + LineMargin) * ItemScale - NodeMargin;
 		public double Y2 => (height * yd2 + LineMargin) * ItemScale - NodeMargin * 2;
-		public double LineWidth => (1 * ItemScale).MM(0.2, 2);
+
+		public double LineWidth => GetLineLineWidth();
 
 		// The arrow line endpoint (based on the line end (x2,y2) and with size and direction
 		public double ArrowX1 => X2 - (ArrowWidth * arrowXd / 2) + (ArrowLength * 2 * arrowXd);
@@ -76,7 +77,7 @@ namespace Dependinator.ModelViewing.Links
 		public string StrokeDash => "";
 		public string ToolTip => GetToolTip();
 
-		public override string ToString() => "line";
+		public override string ToString() => $"{line}";
 
 
 		public void ToggleLine()
@@ -115,14 +116,50 @@ namespace Dependinator.ModelViewing.Links
 
 		private void TrackSourceOrTargetChanges()
 		{
-			PropertyChangedEventManager.AddHandler(
-				source, SourceOrTargetChanged, nameof(source.ItemBounds));
-			PropertyChangedEventManager.AddHandler(
-				target, SourceOrTargetChanged, nameof(source.ItemBounds));
+			WhenSet(source, nameof(source.ItemBounds))
+				.Notify(SourceOrTargetChanged);
+			WhenSet(target, nameof(target.ItemBounds))
+				.Notify(SourceOrTargetChanged);
+
+			// When canvas is moved lines anchored to parent top or bottom needs to be updated  
+			if (source.Node == target.Node.Parent)
+			{
+				WhenSet(source.Node.ItemsCanvas, nameof(source.Node.ItemsCanvas.Offset))
+					.Notify(SourceOrTargetChanged);
+			}
+
+			if (target.Node == source.Node.Parent)
+			{
+				WhenSet(target.Node.ItemsCanvas, nameof(target.Node.ItemsCanvas.Offset))
+					.Notify(SourceOrTargetChanged);
+			}
 		}
 
 
-		private void SourceOrTargetChanged(object sender, PropertyChangedEventArgs e)
+		private double GetLineLineWidth()
+		{
+			double lineWidth;
+
+			int linksCount = line.Links.Count;
+
+			if (linksCount < 5)
+			{
+				lineWidth = 1;
+			}
+			else if (linksCount < 15)
+			{
+				lineWidth = 4;
+			}
+			else
+			{
+				lineWidth = 6;
+			}
+
+			return (lineWidth * 0.7 * ItemScale).MM(0.1, 4);
+		}
+
+
+		private void SourceOrTargetChanged(string propertyName)
 		{
 			SetLine();
 			NotifyAll();
@@ -153,7 +190,7 @@ namespace Dependinator.ModelViewing.Links
 			//	tip = $"{this} {linksCount} links:" + tip;
 			//}
 
-			return $"{source}->{target} ({line.Links.Count} links)";
+			return $"{line} ({line.Links.Count} links)";
 		}
 
 

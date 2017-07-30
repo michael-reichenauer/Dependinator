@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.Nodes
@@ -32,7 +33,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public Node Root { get; private set; }
 
 		public IReadOnlyList<Node> Children => children;
-		public IItemsCanvas ItemsCanvas { get; set; }
+		public ItemsCanvas ItemsCanvas { get; set; }
 
 		public List<Link> Links { get; } = new List<Link>();
 

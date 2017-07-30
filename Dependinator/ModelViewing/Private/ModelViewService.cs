@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils;
 
 
@@ -24,7 +25,7 @@ namespace Dependinator.ModelViewing.Private
 
 
 
-		public async Task LoadAsync(IItemsCanvas rootCanvas)
+		public async Task LoadAsync(ItemsCanvas rootCanvas)
 		{
 			modelService.Init(rootCanvas);
 
@@ -40,7 +41,7 @@ namespace Dependinator.ModelViewing.Private
 		//}
 
 
-		public async Task Refresh(IItemsCanvas rootCanvas, bool refreshLayout)
+		public async Task Refresh(ItemsCanvas rootCanvas, bool refreshLayout)
 		{
 			await modelService.RefreshAsync(refreshLayout);
 		}
