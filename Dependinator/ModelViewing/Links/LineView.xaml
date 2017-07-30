@@ -10,26 +10,23 @@
 
 	<Grid>
 		<Border BorderBrush="Transparent" BorderThickness="0">
-			<Grid>
-
+			<Grid >
+				
 				<!-- Line -->
-				<Line
-					X1="{Binding X1}"
-					Y1="{Binding Y1}"
-					X2="{Binding X2}"
-					Y2="{Binding Y2}"
+				<Path 
+					Data="{Binding LineData}"
 					Stroke="{Binding LineBrush}"
 					StrokeThickness="{Binding LineWidth}"
 					StrokeDashArray="{Binding StrokeDash}"
-					IsHitTestVisible="False" >
-					<!--<Line.Effect>
+					IsHitTestVisible="False" />
+
+				<!--<Line.Effect>
 						<DropShadowEffect
 							Color="White"
 							ShadowDepth="0"
 							Direction="0"
 							BlurRadius="{Binding NeonEffect}" />
 					</Line.Effect>-->
-				</Line>
 
 				<!-- Arrow head -->
 				<Line
@@ -44,26 +41,23 @@
 					StrokeEndLineCap="Triangle" />
 
 				<!-- Mouse over-->
-				<Line
-					X1="{Binding X1}"
-					Y1="{Binding Y1}"
-					X2="{Binding X2}"
-					Y2="{Binding Y2}"
+				<Path 
+					Data="{Binding LineData}"
 					Stroke="Transparent"
 					StrokeThickness="10"
 					MouseDown="UIElement_OnMouseDown"
 					MouseEnter="UIElement_OnMouseEnter"
 					MouseLeave="UIElement_OnMouseLeave">
 
-					<Line.ToolTip>
+					<Path.ToolTip>
 						<ToolTip
 							Content="{Binding ToolTip}"
 							Placement="Mouse"
 							BorderBrush="{Binding LineBrush}"
 							BorderThickness="1" />
-					</Line.ToolTip>
-				</Line>
-
+					</Path.ToolTip>
+				</Path>
+				
 			</Grid>
 
 		</Border>

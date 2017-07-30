@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Nodes;
@@ -17,7 +16,7 @@ namespace Dependinator.ModelViewing.Links
 		private static readonly double NodeMargin = 0.8 * 2;
 		private static readonly double ArrowLength = 1.0;
 		private static readonly double LineMargin = 30;
-		private DelayDispatcher mouseOverDelay = new DelayDispatcher();
+		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
 
 		// Line and arrow variables for boundary, position and direction
 		private double x;
@@ -57,6 +56,7 @@ namespace Dependinator.ModelViewing.Links
 		public double X2 => (width * xd2 + LineMargin) * ItemScale - NodeMargin;
 		public double Y2 => (height * yd2 + LineMargin) * ItemScale - NodeMargin * 2;
 
+
 		public double LineWidth => IsMouseOver ? GetLineLineWidth() * 1.5 : GetLineLineWidth();
 
 		// The arrow line endpoint (based on the line end (x2,y2) and with size and direction
@@ -70,6 +70,7 @@ namespace Dependinator.ModelViewing.Links
 
 		public bool IsMouseOver { get; private set; }
 
+		public string LineData => Txt.I($"M {X1},{Y1} L {X2},{Y2}");
 
 		public string StrokeDash => "";
 		public string ToolTip => GetToolTip();
