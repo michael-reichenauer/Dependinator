@@ -21,7 +21,15 @@
 					Stroke="{Binding LineBrush}"
 					StrokeThickness="{Binding LineWidth}"
 					StrokeDashArray="{Binding StrokeDash}"
-					IsHitTestVisible="False" />
+					IsHitTestVisible="False" >
+					<!--<Line.Effect>
+						<DropShadowEffect
+							Color="White"
+							ShadowDepth="0"
+							Direction="0"
+							BlurRadius="{Binding NeonEffect}" />
+					</Line.Effect>-->
+				</Line>
 
 				<!-- Arrow head -->
 				<Line
@@ -41,7 +49,7 @@
 					Y1="{Binding Y1}"
 					X2="{Binding X2}"
 					Y2="{Binding Y2}"
-					Stroke="{Binding LineBackgroundBrush}"
+					Stroke="Transparent"
 					StrokeThickness="10"
 					MouseDown="UIElement_OnMouseDown"
 					MouseEnter="UIElement_OnMouseEnter"

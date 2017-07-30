@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
+using Dependinator.Utils.UI;
 
 namespace Dependinator.ModelViewing.Links
 {
@@ -16,6 +17,7 @@ namespace Dependinator.ModelViewing.Links
 		private static readonly double NodeMargin = 0.8 * 2;
 		private static readonly double ArrowLength = 1.0;
 		private static readonly double LineMargin = 30;
+		private DelayDispatcher mouseOverDelay = new DelayDispatcher();
 
 		// Line and arrow variables for boundary, position and direction
 		private double x;
@@ -55,7 +57,7 @@ namespace Dependinator.ModelViewing.Links
 		public double X2 => (width * xd2 + LineMargin) * ItemScale - NodeMargin;
 		public double Y2 => (height * yd2 + LineMargin) * ItemScale - NodeMargin * 2;
 
-		public double LineWidth => GetLineLineWidth();
+		public double LineWidth => IsMouseOver ? GetLineLineWidth() * 1.5 : GetLineLineWidth();
 
 		// The arrow line endpoint (based on the line end (x2,y2) and with size and direction
 		public double ArrowX1 => X2 - (ArrowWidth * arrowXd / 2) + (ArrowLength * 2 * arrowXd);
@@ -65,14 +67,9 @@ namespace Dependinator.ModelViewing.Links
 		public double ArrowWidth => (10 * ItemScale).MM(4, 10);
 
 		public Brush LineBrush => source.RectangleBrush;
-		public Brush LineBackgroundBrush => Brushes.Transparent;
-
 
 		public bool IsMouseOver { get; private set; }
 
-
-
-		public Brush HoverBrush => Brushes.GhostWhite;
 
 		public string StrokeDash => "";
 		public string ToolTip => GetToolTip();
@@ -201,13 +198,17 @@ namespace Dependinator.ModelViewing.Links
 
 		public void OnMouseEnter()
 		{
-			IsMouseOver = true;
-			Notify(nameof(LineBrush), nameof(LineWidth));
+			mouseOverDelay.Delay(TimeSpan.FromMilliseconds(100), _ =>
+			{
+				IsMouseOver = true;
+				Notify(nameof(LineBrush), nameof(LineWidth));
+			});
 		}
 
 
 		public void OnMouseLeave()
 		{
+			mouseOverDelay.Cancel();
 			IsMouseOver = false;
 			Notify(nameof(LineBrush), nameof(LineWidth));
 		}
