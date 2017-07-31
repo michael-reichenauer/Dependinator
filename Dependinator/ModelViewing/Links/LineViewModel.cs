@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Specialized;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Nodes;
@@ -13,25 +14,28 @@ namespace Dependinator.ModelViewing.Links
 		private readonly Line line;
 		private readonly NodeViewModel source;
 		private readonly NodeViewModel target;
-		private static readonly double NodeMargin = 0.8 * 2;
-		private static readonly double ArrowLength = 1.0;
-		private static readonly double LineMargin = 30;
+		//private static readonly double NodeMargin = 0.8 * 2;
+		//private static readonly double ArrowLength = 1.0;
+		private static readonly double LineMargin = 10;
 		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
 
 		// Line and arrow variables for boundary, position and direction
-		private double x;
-		private double y;
-		private double width;
-		private double height;
-		private int xf;
-		private int yf;
-		private int xd1;
-		private int yd1;
-		private int xd2;
-		private int yd2;
-		private double arrowXd;
-		private double arrowYd;
+		//private double x;
+		//private double y;
+		//private double width;
+		//private double height;
+		//private int xf;
+		//private int yf;
+		//private int xd1;
+		//private int yd1;
+		//private int xd2;
+		//private int yd2;
+		//private double arrowXd;
+		//private double arrowYd;
 
+
+		private Point sp;
+		private Point tp;
 
 		public LineViewModel(
 			ILineViewModelService lineViewModelService,
@@ -50,27 +54,55 @@ namespace Dependinator.ModelViewing.Links
 		public override bool CanShow => source.CanShow & target.CanShow;
 
 
-		// The line endpoints (x1,y1)->(x2,y2) within the item bounds with margins and direction
-		public double X1 => (width * xd1 + LineMargin) * ItemScale - NodeMargin;
-		public double Y1 => (height * yd1 + LineMargin) * ItemScale - NodeMargin;
-		public double X2 => (width * xd2 + LineMargin) * ItemScale - NodeMargin;
-		public double Y2 => (height * yd2 + LineMargin) * ItemScale - NodeMargin * 2;
+		//// The line endpoints (x1,y1)->(x2,y2) within the item bounds with margins and direction
+		//public double X1 => (width * xd1 + LineMargin) * ItemScale - NodeMargin;
+		//public double Y1 => (height * yd1 + LineMargin) * ItemScale - NodeMargin;
+		//public double X2 => (width * xd2 + LineMargin) * ItemScale - NodeMargin;
+		//public double Y2 => (height * yd2 + LineMargin) * ItemScale - NodeMargin * 2;
 
 
-		public double LineWidth => IsMouseOver ? GetLineLineWidth() * 1.5 : GetLineLineWidth();
+		public double LineWidth => GetLineLineWidth();
 
-		// The arrow line endpoint (based on the line end (x2,y2) and with size and direction
-		public double ArrowX1 => X2 - (ArrowWidth * arrowXd / 2) + (ArrowLength * 2 * arrowXd);
-		public double ArrowY1 => Y2 - (ArrowWidth * arrowYd / 2) + (ArrowLength * 2 * arrowYd);
-		public double ArrowX2 => X2 - (ArrowWidth * arrowXd / 2) + (ArrowLength * 3 * arrowXd);
-		public double ArrowY2 => Y2 - (ArrowWidth * arrowYd / 2) + (ArrowLength * 3 * arrowYd);
-		public double ArrowWidth => (10 * ItemScale).MM(4, 10);
+		//// The arrow line endpoint (based on the line end (x2,y2) and with size and direction
+		//public double ArrowX1 => X2 - (ArrowWidth * arrowXd / 2) + (ArrowLength * 2 * arrowXd);
+		//public double ArrowY1 => Y2 - (ArrowWidth * arrowYd / 2) + (ArrowLength * 2 * arrowYd);
+		//public double ArrowX2 => X2 - (ArrowWidth * arrowXd / 2) + (ArrowLength * 3 * arrowXd);
+		//public double ArrowY2 => Y2 - (ArrowWidth * arrowYd / 2) + (ArrowLength * 3 * arrowYd);
+		//// The direction of the arrow head depend on the direction of the line
+		//double arrowXd = (xf * width / (width + height)).MM(-0.9, 0.9);
+		//double arrowYd = (yf * height / (height + width)).MM(-0.9, 0.9);
+
+		public double ArrowWidth => GetArrowWidth();
+
+		
 
 		public Brush LineBrush => source.RectangleBrush;
 
 		public bool IsMouseOver { get; private set; }
 
-		public string LineData => Txt.I($"M {X1},{Y1} L {X2},{Y2}");
+		public string LineData => GetLineData();
+
+		public string ArrowData => GetArrowData();
+
+
+		private string GetLineData()
+		{
+			Point s = LinePoint(sp);
+			Point t = LinePoint(tp);
+			
+			return Txt.I($"M {s.X},{s.Y} L {s.X},{s.Y + 5} L {t.X},{t.Y-10} L {t.X},{t.Y - 6}");
+		}
+
+		private string GetArrowData()
+		{
+			Point t = LinePoint(tp);
+
+			return Txt.I($"M {t.X},{t.Y-6.5} L {t.X},{t.Y -4.5}");
+		}
+
+		private Point LinePoint(Point p) => 
+			new Point((p.X - ItemBounds.X)*ItemScale, (p.Y - ItemBounds.Y) * ItemScale);
+
 
 		public string StrokeDash => "";
 		public string ToolTip => GetToolTip();
@@ -86,29 +118,25 @@ namespace Dependinator.ModelViewing.Links
 
 		private void SetLine()
 		{
-			(Point sp, Point tp) = lineViewModelService.GetLineEndPoints(source.Node, target.Node);
+			if (!CanShow)
+			{
+				return;
+			}
+
+			(sp, tp) = lineViewModelService.GetLineEndPoints(source.Node, target.Node);
 
 			// Calculate the line boundaries (x, y, width, height)
-			x = Math.Min(sp.X, tp.X);
-			y = Math.Min(sp.Y, tp.Y);
-			width = Math.Abs(tp.X - sp.X);
-			height = Math.Abs(tp.Y - sp.Y);
+			double x = Math.Min(sp.X, tp.X);
+			double y = Math.Min(sp.Y, tp.Y);
+			double width = Math.Abs(tp.X - sp.X);
+			double height = Math.Abs(tp.Y - sp.Y);
 
 			// The items bound has some margin around the line to allow full line width and arrow to show
-			ItemBounds =
-				new Rect(x - LineMargin, y - LineMargin, width + LineMargin * 2, height + LineMargin * 2);
-
-			// Within the item bounds, the line will be drawn, and to do that we need some directions
-			xf = sp.X < tp.X ? 1 : -1;
-			yf = sp.Y < tp.Y ? 1 : -1;
-			xd1 = sp.X < tp.X ? 0 : 1;
-			yd1 = sp.Y < tp.Y ? 0 : 1;
-			xd2 = sp.X < tp.X ? 1 : 0;
-			yd2 = sp.Y < tp.Y ? 1 : 0;
-
-			// The direction of the arrow head depend on the direction of the line
-			arrowXd = (xf * width / (width + height)).MM(-0.9, 0.9);
-			arrowYd = (yf * height / (height + width)).MM(-0.9, 0.9);
+			ItemBounds = new Rect(
+				x - LineMargin / ItemScale, 
+				y - (LineMargin) / ItemScale, 
+				width + (LineMargin * 2) / ItemScale,
+				height + (LineMargin * 2) / ItemScale);
 		}
 
 
@@ -153,7 +181,27 @@ namespace Dependinator.ModelViewing.Links
 				lineWidth = 6;
 			}
 
-			return (lineWidth * 0.7 * ItemScale).MM(0.1, 4);
+			double lineLineWidth = (lineWidth * 0.7 * ItemScale).MM(0.1, 4);
+
+			if (IsMouseOver)
+			{
+				lineLineWidth = (lineLineWidth * 1.5).MM(0, 6);
+			}
+
+			return lineLineWidth;
+		}
+
+
+		private double GetArrowWidth()
+		{
+			double arrowWidth = (10 * ItemScale).MM(4, 15);
+
+			if (IsMouseOver)
+			{
+				arrowWidth = (arrowWidth * 1.5).MM(0, 20);
+			}
+
+			return arrowWidth;
 		}
 
 
@@ -202,7 +250,7 @@ namespace Dependinator.ModelViewing.Links
 			mouseOverDelay.Delay(TimeSpan.FromMilliseconds(100), _ =>
 			{
 				IsMouseOver = true;
-				Notify(nameof(LineBrush), nameof(LineWidth));
+				Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
 			});
 		}
 
@@ -211,7 +259,7 @@ namespace Dependinator.ModelViewing.Links
 		{
 			mouseOverDelay.Cancel();
 			IsMouseOver = false;
-			Notify(nameof(LineBrush), nameof(LineWidth));
+			Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
 		}
 	}
 }

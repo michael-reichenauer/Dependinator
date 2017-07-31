@@ -32,7 +32,7 @@ namespace Dependinator.ModelViewing.Private.Items
 
 
 		public ItemsCanvas ItemOwnerCanvas { get; set; }
-		public double ItemScale => ItemOwnerCanvas.Scale;
+		public double ItemScale => ItemOwnerCanvas?.Scale ?? 1;
 
 		public virtual bool CanShow { get; } = true;
 
