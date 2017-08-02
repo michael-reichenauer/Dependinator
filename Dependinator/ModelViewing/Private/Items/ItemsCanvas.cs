@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Dependinator.Modeling;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependinator.ModelViewing.Private.Items.Private
+namespace Dependinator.ModelViewing.Private.Items
 {
 	internal class ItemsCanvas : Notifyable, IItemsSourceArea
 	{
@@ -21,16 +21,16 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		private readonly List<ItemsCanvas> canvasChildren = new List<ItemsCanvas>();
 		private double scale = 1.0;
 
-		private Rect ItemsCanvasBounds => 
+		private Rect ItemsCanvasBounds =>
 			owner?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
-		
+
 
 		private bool IsShowing => owner?.IsShowing ?? true;
 
 		public ItemsCanvas()
 			: this(null, null)
 		{
-			
+
 		}
 
 		private ItemsCanvas(IItemsCanvasBounds owner, ItemsCanvas canvasParent)
@@ -109,7 +109,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 			{
 				// Item not shown or reached minimum root zoom level
 				return;
-			}		
+			}
 
 			double scaleFactor = newScale / Scale;
 			Scale = newScale;
@@ -171,6 +171,8 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		}
 
 
+
+
 		public Point ChildToParentCanvasPoint(Point childCanvasPoint)
 		{
 			if (!IsRoot)
@@ -190,6 +192,23 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 				return childCanvasPoint;
 			}
 		}
+
+
+		public Point RootScreenToCanvasPoint(Point rootScreenPoint)
+		{
+			if (IsRoot)
+			{
+				// Adjust for windows title and toolbar bar 
+				Point adjustedScreenPoint = rootScreenPoint - new Vector(4, 32);
+
+				return ScreenToCanvasPoint(adjustedScreenPoint);
+			}
+
+			Point parentCanvasPoint = canvasParent.RootScreenToCanvasPoint(rootScreenPoint);
+
+			return ParentToChildCanvasPoint(parentCanvasPoint);
+		}
+
 
 
 		public Point ParentToChildCanvasPoint(Point parentCanvasPoint)
@@ -326,5 +345,14 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		{
 			itemsSource.ItemVirtualized(e.VirtualId);
 		}
+
+
+		private Point CanvasToVisualPoint(Point canvasPoint) =>
+			(Point)(((Vector)canvasPoint * Scale) - (Vector)Offset);
+
+
+		private Point ScreenToCanvasPoint(Point screenPoint) =>
+			(Point)(((Vector)Offset + (Vector)screenPoint) / Scale);
+
 	}
 }

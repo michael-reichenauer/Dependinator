@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Specialized;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Nodes;
@@ -12,12 +12,15 @@ namespace Dependinator.ModelViewing.Links
 	{
 		private readonly ILineViewModelService lineViewModelService;
 		private readonly Line line;
+		private readonly Node owner;
 		private readonly NodeViewModel source;
 		private readonly NodeViewModel target;
 		//private static readonly double NodeMargin = 0.8 * 2;
 		//private static readonly double ArrowLength = 1.0;
 		private static readonly double LineMargin = 10;
 		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
+
+
 
 		// Line and arrow variables for boundary, position and direction
 		//private double x;
@@ -34,20 +37,23 @@ namespace Dependinator.ModelViewing.Links
 		//private double arrowYd;
 
 
-		private Point sp;
-		private Point tp;
 
-		public LineViewModel(
-			ILineViewModelService lineViewModelService,
-			Line line)
+		private readonly List<Point> points = new List<Point> { new Point(0, 0), new Point(0, 0) };
+		private int movingPointIndex = -1;
+
+		public LineViewModel(ILineViewModelService lineViewModelService, Line line, Node owner)
 		{
 			this.lineViewModelService = lineViewModelService;
 			this.line = line;
+			this.owner = owner;
 			source = line.Source.ViewModel;
 			target = line.Target.ViewModel;
 			ItemZIndex = -1;
 
-			SetLine();
+			UpdateLine();
+
+
+
 			TrackSourceOrTargetChanges();
 		}
 
@@ -74,7 +80,7 @@ namespace Dependinator.ModelViewing.Links
 
 		public double ArrowWidth => GetArrowWidth();
 
-		
+
 
 		public Brush LineBrush => source.RectangleBrush;
 
@@ -87,21 +93,36 @@ namespace Dependinator.ModelViewing.Links
 
 		private string GetLineData()
 		{
-			Point s = LinePoint(sp);
-			Point t = LinePoint(tp);
-			
-			return Txt.I($"M {s.X},{s.Y} L {s.X},{s.Y + 5} L {t.X},{t.Y-10} L {t.X},{t.Y - 6}");
+			Point s = LinePoint(points[0]);
+			Point t = LinePoint(points[points.Count - 1]);
+
+			return Txt.I($"M {s.X},{s.Y} {GetMiddleLineData()} L {t.X},{t.Y - 10} L {t.X},{t.Y - 6.5}");
 		}
+
+
+		private string GetMiddleLineData()
+		{
+			string lineData = "";
+
+			for (int i = 1; i < points.Count - 1; i++)
+			{
+				Point m = LinePoint(points[i]);
+				lineData += Txt.I($" L {m.X},{m.Y}");
+			}
+
+			return lineData;
+		}
+
 
 		private string GetArrowData()
 		{
-			Point t = LinePoint(tp);
+			Point t = LinePoint(points[points.Count - 1]);
 
-			return Txt.I($"M {t.X},{t.Y-6.5} L {t.X},{t.Y -4.5}");
+			return Txt.I($"M {t.X},{t.Y - 6.5} L {t.X},{t.Y - 4.5}");
 		}
 
-		private Point LinePoint(Point p) => 
-			new Point((p.X - ItemBounds.X)*ItemScale, (p.Y - ItemBounds.Y) * ItemScale);
+		private Point LinePoint(Point p) =>
+			new Point((p.X - ItemBounds.X) * ItemScale, (p.Y - ItemBounds.Y) * ItemScale);
 
 
 		public string StrokeDash => "";
@@ -116,27 +137,107 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
-		private void SetLine()
+
+
+		public void BeginMoveLinePoint(Point point)
+		{
+			Point p = owner.ItemsCanvas.RootScreenToCanvasPoint(point);
+
+			//double min = double.MaxValue;
+			int index = -1;
+
+			for (int i = 0; i < points.Count - 1; i++)
+			{
+				Point a = points[i];
+				Point b = points[i + 1];
+
+				double aB = Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y));
+				double aP = Math.Sqrt((p.X - a.X) * (p.X - a.X) + (p.Y - a.Y) * (p.Y - a.Y));
+				double pb = Math.Sqrt((b.X - p.X) * (b.X - p.X) + (b.Y - p.Y) * (b.Y - p.Y));
+
+				if (Math.Abs(aP) < 5)
+				{
+					movingPointIndex = i;
+					return;
+				}
+				else if (Math.Abs(pb) < 5)
+				{
+					movingPointIndex = i + 1;
+					return;
+				}
+
+				double length = Math.Abs(aB - (aP + pb));
+				if (length < 1)
+				{
+					index = i;
+					//	min = length;
+					break;
+				}
+			}
+
+			// The point p is on the line between point a and b
+			movingPointIndex = index + 1;
+			points.Insert(movingPointIndex, p);
+		}
+
+
+		public void EndMoveLinePoint(Point point)
+		{
+			movingPointIndex = -1;
+		}
+
+
+		public void MoveLinePoint(Point point)
+		{
+			if (movingPointIndex == -1 || movingPointIndex >= points.Count)
+			{
+				return;
+			}
+
+			points[movingPointIndex] = owner.ItemsCanvas.RootScreenToCanvasPoint(point);
+
+			UpdateBounds(points[0], points[points.Count - 1]);
+
+			NotifyAll();
+		}
+
+
+		private void UpdateLine()
 		{
 			if (!CanShow)
 			{
 				return;
 			}
 
-			(sp, tp) = lineViewModelService.GetLineEndPoints(source.Node, target.Node);
+			(Point sp, Point tp) = lineViewModelService.GetLineEndPoints(source.Node, target.Node);
+			points[0] = sp;
+			points[points.Count - 1] = tp;
 
+			UpdateBounds(sp, tp);
+		}
+
+
+		private void UpdateBounds(Point sp, Point tp)
+		{
 			// Calculate the line boundaries (x, y, width, height)
 			double x = Math.Min(sp.X, tp.X);
 			double y = Math.Min(sp.Y, tp.Y);
 			double width = Math.Abs(tp.X - sp.X);
 			double height = Math.Abs(tp.Y - sp.Y);
 
+			Rect bounds = new Rect(x, y, width, height);
+
+			for (int i = 0; i < points.Count - 1; i++)
+			{
+				bounds.Union(points[i]);
+			}
+
 			// The items bound has some margin around the line to allow full line width and arrow to show
 			ItemBounds = new Rect(
-				x - LineMargin / ItemScale, 
-				y - (LineMargin) / ItemScale, 
-				width + (LineMargin * 2) / ItemScale,
-				height + (LineMargin * 2) / ItemScale);
+				bounds.X - LineMargin / ItemScale,
+				bounds.Y - (LineMargin) / ItemScale,
+				bounds.Width + (LineMargin * 2) / ItemScale,
+				bounds.Height + (LineMargin * 2) / ItemScale);
 		}
 
 
@@ -207,7 +308,7 @@ namespace Dependinator.ModelViewing.Links
 
 		private void SourceOrTargetChanged(string propertyName)
 		{
-			SetLine();
+			UpdateLine();
 			NotifyAll();
 		}
 
@@ -261,5 +362,7 @@ namespace Dependinator.ModelViewing.Links
 			IsMouseOver = false;
 			Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
 		}
+
+
 	}
 }

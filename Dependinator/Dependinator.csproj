@@ -106,6 +106,7 @@
   <ItemGroup>
     <Compile Include="Modeling\DataLink.cs" />
     <Compile Include="Modeling\IModelNotifications.cs" />
+    <Compile Include="Utils\UI\DragUiElement.cs" />
     <Compile Include="ModelViewing\Links\ILinkService.cs" />
     <Compile Include="ModelViewing\Links\Line.cs" />
     <Compile Include="ModelViewing\Links\LinkId.cs" />
@@ -139,7 +140,6 @@
     </Compile>
     <Compile Include="ModelViewing\Nodes\TypeViewModel.cs" />
     <Compile Include="ModelViewing\Private\Items\IItemsService.cs" />
-    <Compile Include="ModelViewing\Private\Items\IItemsCanvas.cs" />
     <Compile Include="ModelViewing\Private\Items\Private\IItemsSourceArea.cs" />
     <Compile Include="ModelViewing\Private\Items\Private\ItemsService.cs" />
     <Compile Include="Utils\UI\DebounceDispatcher.cs" />
@@ -197,7 +197,7 @@
     <Compile Include="ModelViewing\Private\Items\Private\IgnoreMouseWheelBehavior.cs" />
     <Compile Include="ModelViewing\Nodes\INodeViewModelService.cs" />
     <Compile Include="ModelViewing\Private\Items\IItemsCanvasBounds.cs" />
-    <Compile Include="ModelViewing\Private\Items\Private\ItemsCanvas.cs" />
+    <Compile Include="ModelViewing\Private\Items\ItemsCanvas.cs" />
     <Compile Include="Modeling\Private\Analyzing\Private\ReflectionService.cs" />
     <Compile Include="ModelViewing\Nodes\MemberNodeView.xaml.cs">
       <DependentUpon>MemberNodeView.xaml</DependentUpon>

@@ -77,9 +77,9 @@ namespace Dependinator.ModelViewing.Links
 
 		private void AddLineViewModel(Line line)
 		{
-			LineViewModel lineViewModel = new LineViewModel(lineViewModelService, line);
-
 			Node owner = GetLineOwner(line);
+			LineViewModel lineViewModel = new LineViewModel(lineViewModelService, line, owner);
+
 
 			owner.ItemsCanvas.AddItem(lineViewModel);
 		}

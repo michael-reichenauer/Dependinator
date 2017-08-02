@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Dependinator.Utils;
+using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 namespace Dependinator.ModelViewing.Private.Items
@@ -19,9 +18,9 @@ namespace Dependinator.ModelViewing.Private.Items
 	{
 		private static readonly double ZoomSpeed = 2000.0;
 
-		private Point initialMousePoint;
-		private Point lastMousePoint;
-		
+		//private Point initialMousePoint;
+		//private Point lastMousePoint;
+
 		private TouchPoint initialTouchPoint1;
 		private TouchPoint lastTouchPoint1;
 		private TouchPoint lastTouchPoint2;
@@ -34,6 +33,8 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		private readonly List<TouchDevice> activeTouchDevices = new List<TouchDevice>();
 
+		private DragUiElement dragUiElement;
+		private DragUiElement previewDragUiElement;
 
 		public ItemsView()
 		{
@@ -41,9 +42,24 @@ namespace Dependinator.ModelViewing.Private.Items
 			longPressTimer = new DispatcherTimer();
 			longPressTimer.Tick += OnLongPressTime;
 			longPressTimer.Interval = TimeSpan.FromMilliseconds(500);
+
+			// move canvas if Ctrl key is down
+			dragUiElement = new DragUiElement(
+				this,
+				(p, o) => viewModel?.MoveCanvas(o),
+				() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control));
+
+			// Preview drag to move entire canvas for root node if no Ctrl key
+			previewDragUiElement = new DragUiElement(
+				this,
+				(p, o) => viewModel?.MoveCanvas(o),
+				() => !Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && (viewModel?.IsRoot ?? false),
+				null,
+				null,
+				true);
 		}
 
-	
+
 
 		private void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
 		{
@@ -76,69 +92,6 @@ namespace Dependinator.ModelViewing.Private.Items
 		}
 
 
-		protected override void OnMouseDown(MouseButtonEventArgs e)
-		{
-			if (e.ChangedButton == MouseButton.Left)
-			{
-				initialMousePoint = e.GetPosition(ItemsListBox);
-				lastMousePoint = initialMousePoint;
-
-			}
-
-			base.OnPreviewMouseUp(e);
-		}
-
-
-		protected override void OnMouseUp(MouseButtonEventArgs e)
-		{
-			if (e.ChangedButton == MouseButton.Left)
-			{
-				Point currentPoint = e.GetPosition(ItemsListBox);
-				if ((currentPoint - initialMousePoint).Length < 5)
-				{
-					Log.Warn("Mouse click");
-				}
-			}
-
-			base.OnPreviewMouseUp(e);
-		}
-
-
-		protected override void OnMouseMove(MouseEventArgs e)
-		{
-			if (activeTouchDevices.Any())
-			{
-				// Touch is already moving, so this is a fake mouse event
-				e.Handled = true;
-				return;
-			}
-
-			if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && !(viewModel?.IsRoot ?? false))
-			{
-				// Root node move only active on root node
-				return;
-			}
-
-			Point viewPosition = e.GetPosition(ItemsListBox);
-
-			if (e.LeftButton == MouseButtonState.Pressed
-				&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
-			{
-				// Move canvas
-				CaptureMouse();
-				Vector viewOffset = viewPosition - lastMousePoint;
-				e.Handled = true;
-				viewModel?.MoveCanvas(viewOffset);
-			}
-			else
-			{
-				// End of move
-				ReleaseMouseCapture();
-			}
-
-			lastMousePoint = viewPosition;
-		}
-
 
 		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
 		{
@@ -152,9 +105,9 @@ namespace Dependinator.ModelViewing.Private.Items
 			Point viewPosition = e.GetPosition(ItemsListBox);
 
 			double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
-		
+
 			viewModel.ZoomRoot(zoom, viewPosition);
-			
+
 			e.Handled = true;
 		}
 
@@ -229,7 +182,7 @@ namespace Dependinator.ModelViewing.Private.Items
 			{
 				return;
 			}
-			
+
 			if (activeTouchDevices.Count == 1 && lastTouchPoint1.TouchDevice.Id == e.TouchDevice.Id)
 			{
 				// First finger upp, checking if distance is small enough to count as click or long-press
