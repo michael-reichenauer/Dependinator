@@ -1,5 +1,4 @@
 using System.Windows;
-using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils.UI;
 
 namespace Dependinator.ModelViewing.Private.Items

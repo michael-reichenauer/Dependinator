@@ -19,7 +19,6 @@ namespace Dependinator.ModelViewing.Private.Items
 		private readonly ItemsCanvas canvasParent;
 		private ZoomableCanvas zoomableCanvas;
 		private readonly List<ItemsCanvas> canvasChildren = new List<ItemsCanvas>();
-		private double scale = 1.0;
 
 		private Rect ItemsCanvasBounds =>
 			owner?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
@@ -30,7 +29,7 @@ namespace Dependinator.ModelViewing.Private.Items
 		public ItemsCanvas()
 			: this(null, null)
 		{
-
+			Scale = 1;
 		}
 
 		private ItemsCanvas(IItemsCanvasBounds owner, ItemsCanvas canvasParent)
@@ -84,10 +83,10 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		public double Scale
 		{
-			get => scale;
+			get => Get();
 			private set
 			{
-				scale = value;
+				Set(value);
 
 				if (zoomableCanvas != null)
 				{
@@ -96,7 +95,7 @@ namespace Dependinator.ModelViewing.Private.Items
 
 				if (canvasParent != null)
 				{
-					ScaleFactor = canvasParent.Scale / scale;
+					ScaleFactor = canvasParent.Scale / Scale;
 				}
 			}
 		}
@@ -249,7 +248,7 @@ namespace Dependinator.ModelViewing.Private.Items
 			zoomableCanvas.ItemVirtualized += Canvas_ItemVirtualized;
 			zoomableCanvas.ItemsOwner.ItemsSource = itemsSource.VirtualItemsSource;
 
-			zoomableCanvas.Scale = scale;
+			zoomableCanvas.Scale = Scale;
 			zoomableCanvas.Offset = Offset;
 		}
 

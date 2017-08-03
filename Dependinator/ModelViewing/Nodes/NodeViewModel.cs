@@ -21,6 +21,7 @@ namespace Dependinator.ModelViewing.Nodes
 			BackgroundBrush = nodeViewModelService.GetRectangleBackgroundBrush(RectangleBrush);
 		}
 
+
 		public override bool CanShow => ItemScale > 0.15;
 
 		public Node Node { get; }

@@ -15,26 +15,13 @@ namespace Dependinator.ModelViewing.Links
 		private readonly Node owner;
 		private readonly NodeViewModel source;
 		private readonly NodeViewModel target;
-		//private static readonly double NodeMargin = 0.8 * 2;
-		//private static readonly double ArrowLength = 1.0;
+
 		private static readonly double LineMargin = 10;
 		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
 
 
 
-		// Line and arrow variables for boundary, position and direction
-		//private double x;
-		//private double y;
-		//private double width;
-		//private double height;
-		//private int xf;
-		//private int yf;
-		//private int xd1;
-		//private int yd1;
-		//private int xd2;
-		//private int yd2;
-		//private double arrowXd;
-		//private double arrowYd;
+
 
 
 
@@ -60,23 +47,8 @@ namespace Dependinator.ModelViewing.Links
 		public override bool CanShow => source.CanShow & target.CanShow;
 
 
-		//// The line endpoints (x1,y1)->(x2,y2) within the item bounds with margins and direction
-		//public double X1 => (width * xd1 + LineMargin) * ItemScale - NodeMargin;
-		//public double Y1 => (height * yd1 + LineMargin) * ItemScale - NodeMargin;
-		//public double X2 => (width * xd2 + LineMargin) * ItemScale - NodeMargin;
-		//public double Y2 => (height * yd2 + LineMargin) * ItemScale - NodeMargin * 2;
-
 
 		public double LineWidth => GetLineLineWidth();
-
-		//// The arrow line endpoint (based on the line end (x2,y2) and with size and direction
-		//public double ArrowX1 => X2 - (ArrowWidth * arrowXd / 2) + (ArrowLength * 2 * arrowXd);
-		//public double ArrowY1 => Y2 - (ArrowWidth * arrowYd / 2) + (ArrowLength * 2 * arrowYd);
-		//public double ArrowX2 => X2 - (ArrowWidth * arrowXd / 2) + (ArrowLength * 3 * arrowXd);
-		//public double ArrowY2 => Y2 - (ArrowWidth * arrowYd / 2) + (ArrowLength * 3 * arrowYd);
-		//// The direction of the arrow head depend on the direction of the line
-		//double arrowXd = (xf * width / (width + height)).MM(-0.9, 0.9);
-		//double arrowYd = (yf * height / (height + width)).MM(-0.9, 0.9);
 
 		public double ArrowWidth => GetArrowWidth();
 
@@ -155,19 +127,19 @@ namespace Dependinator.ModelViewing.Links
 				double aP = Math.Sqrt((p.X - a.X) * (p.X - a.X) + (p.Y - a.Y) * (p.Y - a.Y));
 				double pb = Math.Sqrt((b.X - p.X) * (b.X - p.X) + (b.Y - p.Y) * (b.Y - p.Y));
 
-				if (Math.Abs(aP) < 5)
+				if (Math.Abs(aP) * ItemScale < 10)
 				{
 					movingPointIndex = i;
 					return;
 				}
-				else if (Math.Abs(pb) < 5)
+				else if (Math.Abs(pb) * ItemScale < 10)
 				{
 					movingPointIndex = i + 1;
 					return;
 				}
 
-				double length = Math.Abs(aB - (aP + pb));
-				if (length < 1)
+				double length = (Math.Abs(aB - (aP + pb))) * ItemScale;
+				if (length < 5)
 				{
 					index = i;
 					//	min = length;

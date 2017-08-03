@@ -134,7 +134,6 @@
     <Compile Include="Modeling\DataNode.cs" />
     <Compile Include="ModelViewing\Nodes\NodeId.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceViewModel.cs" />
-    <Compile Include="ModelViewing\Nodes\NodeOldViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\TypeView.xaml.cs">
       <DependentUpon>TypeView.xaml</DependentUpon>
     </Compile>
