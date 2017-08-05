@@ -19,6 +19,6 @@ namespace Dependinator.ModelViewing.Links
 		void ZoomOutLinkLine(LinkLineOld line, NodeOld node);
 		void CloseLine(LinkLineOld linkLine);
 
-		(Point source, Point target) GetLineEndPoints(Node source, Node target);
+		(Point source, Point target) GetLineEndPoints(Node sourceNode, Node targetNode, Point relativeSource, Point relativeTarget);
 	}
 }

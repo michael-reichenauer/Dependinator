@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Windows;
 using Dependinator.ModelViewing.Nodes;
 
@@ -10,6 +11,8 @@ namespace Dependinator.ModelViewing.Links.Private
 	{
 		private readonly ILinkSegmentService segmentService;
 
+		private readonly Point middleBottom = new Point(0.5, 1);
+		private readonly Point middleTop = new Point(0.5, 0);
 
 		public LineViewModelService(ILinkSegmentService segmentService)
 		{
@@ -17,62 +20,134 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-
-		public (Point source, Point target) GetLineEndPoints(Node source, Node target)
+		public (Point source, Point target) GetLineEndPoints(
+			Node sourceNode, Node targetNode, Point relativeSourceNode, Point relativeTargetNode)
 		{
-			Rect sourceBounds = source.ViewModel.ItemBounds;
-			Rect targetBounds = target.ViewModel.ItemBounds;
+			Rect source = sourceNode.ViewModel.ItemBounds;
+			Rect target = targetNode.ViewModel.ItemBounds;
 
-			if (source.Parent == target.Parent)
+			Point relativeSource = GetRelativeSource(sourceNode, targetNode, relativeSourceNode);
+			Point relativeTarget = GetRelativeTarget(sourceNode, targetNode, relativeTargetNode);
+
+			Point sp = source.Location + new Vector(
+				source.Width * relativeSource.X, source.Height * relativeSource.Y);
+
+			Point tp = target.Location + new Vector(
+				target.Width * relativeTarget.X, target.Height * relativeTarget.Y);
+
+			if (sourceNode.Parent == targetNode)
 			{
-				// Source and target nodes are siblings, 
-				// ie. line starts at source middle bottom and ends at target middle top
-				double x1 = sourceBounds.X + sourceBounds.Width / 2;
-				double y1 = sourceBounds.Y + sourceBounds.Height;
-				Point sp = new Point(x1, y1);
-
-				double x2 = targetBounds.X + targetBounds.Width / 2;
-				double y2 = targetBounds.Y;
-				Point tp = new Point(x2, y2);
-
-				return (sp, tp);
+				// Need to adjust for different scales
+				tp = ParentPointToChildPoint(targetNode, tp);
 			}
-			else if (source.Parent == target)
+			else if (sourceNode == targetNode.Parent)
 			{
-				// The target is a parent of the source,
-				// i.e. line ends at the bottom of the target node
-				double x1 = sourceBounds.X + sourceBounds.Width / 2;
-				double y1 = sourceBounds.Y + sourceBounds.Height;
-				Point sp = new Point(x1, y1);
-
-				double x2 = targetBounds.X + targetBounds.Width / 2;
-				double y2 = targetBounds.Y + targetBounds.Height;
-				Point tp = ParentPointToChildPoint(target, new Point(x2, y2));
-
-				return (sp, tp);
+				// Need to adjust for different scales
+				sp = ParentPointToChildPoint(sourceNode, sp);
 			}
-			else //if (source == target.Parent)
+
+			return (sp, tp);
+		}
+
+
+		private Point GetRelativeSource(Node sourceNode, Node targetNode, Point relativePoint)
+		{
+			if (relativePoint.X >= 0)
+			{
+				// use specified source
+				return relativePoint;
+			}
+
+			if (sourceNode == targetNode.Parent)
 			{
 				// The target is the child of the source,
-				// i.e. line start at the top of the source
-				double x1 = sourceBounds.X + sourceBounds.Width / 2;
-				double y1 = sourceBounds.Y;
-				Point sp = ParentPointToChildPoint(source, new Point(x1, y1));
-
-				double x2 = targetBounds.X + targetBounds.Width / 2;
-				double y2 = targetBounds.Y;
-				Point tp = new Point(x2, y2);
-
-				return (sp, tp);
+				// i.e. line start at the top of the source and goes to target top
+				return middleTop;
 			}
+
+			// If target is sibling or parent
+			// i.e. line start at the bottom of the source and goes to target top
+			return middleBottom;
 		}
+
+
+
+		private Point GetRelativeTarget(Node sourceNode, Node targetNode, Point relativePoint)
+		{
+			if (relativePoint.X >= 0)
+			{
+				// use specified source
+				return relativePoint;
+			}
+
+			if (sourceNode.Parent == targetNode)
+			{
+				// The target is a parent of the source,
+				// i.e. line starts at source bottom and ends at the bottom of the target node
+				return middleBottom;
+			}
+
+			// If target is sibling or child
+			// i.e. line start at the bottom of the source and goes to target top
+			return middleTop;
+		}
+
+
+		//public (Point source, Point target) GetLineEndPoints2(
+		//	Node source, Node target, Rect sourceAdjust, Rect targetAdjust)
+		//{
+		//	Rect sourceBounds = source.ViewModel.ItemBounds;
+		//	Rect targetBounds = target.ViewModel.ItemBounds;
+
+		//	if (source.Parent == target.Parent)
+		//	{
+		//		// Source and target nodes are siblings, 
+		//		// ie. line starts at source middle bottom and ends at target middle top
+		//		double x1 = sourceBounds.X + sourceBounds.Width / 2;
+		//		double y1 = sourceBounds.Y + sourceBounds.Height;
+		//		Point sp = new Point(x1, y1);
+
+		//		double x2 = targetBounds.X + targetBounds.Width / 2;
+		//		double y2 = targetBounds.Y;
+		//		Point tp = new Point(x2, y2);
+
+		//		return (sp, tp);
+		//	}
+		//	else if (source.Parent == target)
+		//	{
+		//		// The target is a parent of the source,
+		//		// i.e. line ends at the bottom of the target node
+		//		double x1 = sourceBounds.X + sourceBounds.Width / 2;
+		//		double y1 = sourceBounds.Y + sourceBounds.Height;
+		//		Point sp = new Point(x1, y1);
+
+		//		double x2 = targetBounds.X + targetBounds.Width / 2;
+		//		double y2 = targetBounds.Y + targetBounds.Height;
+		//		Point tp = ParentPointToChildPoint(target, new Point(x2, y2));
+
+		//		return (sp, tp);
+		//	}
+		//	else //if (source == target.Parent)
+		//	{
+		//		// The target is the child of the source,
+		//		// i.e. line start at the top of the source
+		//		double x1 = sourceBounds.X + sourceBounds.Width / 2;
+		//		double y1 = sourceBounds.Y;
+		//		Point sp = ParentPointToChildPoint(source, new Point(x1, y1));
+
+		//		double x2 = targetBounds.X + targetBounds.Width / 2;
+		//		double y2 = targetBounds.Y;
+		//		Point tp = new Point(x2, y2);
+
+		//		return (sp, tp);
+		//	}
+		//}
 
 
 		private static Point ParentPointToChildPoint(Node parent, Point point)
 		{
 			return parent.ItemsCanvas.ParentToChildCanvasPoint(point);
 		}
-
 
 
 		public void AddLinkLines(LinkOld link)
@@ -113,64 +188,63 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		public void ZoomInLinkLine(LinkLineOld line, NodeOld node)
 		{
-		//	IReadOnlyList<LinkOld> links = line.Links.ToList();
+			//	IReadOnlyList<LinkOld> links = line.Links.ToList();
 
-		//	foreach (LinkOld link in links)
-		//	{
-		//		IReadOnlyList<LinkSegmentOld> currentLinkSegments = link.LinkSegments.ToList();
+			//	foreach (LinkOld link in links)
+			//	{
+			//		IReadOnlyList<LinkSegmentOld> currentLinkSegments = link.LinkSegments.ToList();
 
-		//		IReadOnlyList<LinkSegmentOld> zoomedSegments;
-		//		if (node == line.Target)
-		//		{
-		//			zoomedSegments = segmentService.GetZoomedInBeforeReplacedSegments(currentLinkSegments, line.Source, line.Target);
-		//		}
-		//		else
-		//		{
-		//			zoomedSegments = segmentService.GetZoomedInAfterReplacedSegments(currentLinkSegments, line.Source, line.Target);
-		//		}
-			
-		//		LinkSegmentOld zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
+			//		IReadOnlyList<LinkSegmentOld> zoomedSegments;
+			//		if (node == line.Target)
+			//		{
+			//			zoomedSegments = segmentService.GetZoomedInBeforeReplacedSegments(currentLinkSegments, line.Source, line.Target);
+			//		}
+			//		else
+			//		{
+			//			zoomedSegments = segmentService.GetZoomedInAfterReplacedSegments(currentLinkSegments, line.Source, line.Target);
+			//		}
 
-		//		var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedInSegment);
+			//		LinkSegmentOld zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
 
-		//		var replacedLines = GetLines(link.Lines, zoomedSegments);
+			//		var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedInSegment);
 
-		//		replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
+			//		var replacedLines = GetLines(link.Lines, zoomedSegments);
 
-		//		link.SetLinkSegments(newSegments);
-		//		if (AddDirectLine(zoomedInSegment))
-		//		{
-		//			break;
-		//		}
-		//	}
+			//		replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
 
-		//	line.Owner.RootNode.UpdateNodeVisibility();
-		//}
+			//		link.SetLinkSegments(newSegments);
+			//		if (AddDirectLine(zoomedInSegment))
+			//		{
+			//			break;
+			//		}
+			//	}
+
+			//	line.Owner.RootNode.UpdateNodeVisibility();
+			//}
 
 
+			//public void ZoomOutLinkLine(LinkLine line)
+			//{ 
+			//	IReadOnlyList<Link> links = line.HiddenLinks.ToList();
 
-		//public void ZoomOutLinkLine(LinkLine line)
-		//{ 
-		//	IReadOnlyList<Link> links = line.HiddenLinks.ToList();
+			//	foreach (Link link in links)
+			//	{
+			//		IReadOnlyList<LinkSegment> normalLinkSegments = segmentService.GetNormalLinkSegments(link);
+			//		IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
 
-		//	foreach (Link link in links)
-		//	{
-		//		IReadOnlyList<LinkSegment> normalLinkSegments = segmentService.GetNormalLinkSegments(link);
-		//		IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
+			//		var zoomedSegments = segmentService.GetZoomedOutReplacedSegments(normalLinkSegments, currentLinkSegments, line.Source, line.Target);
 
-		//		var zoomedSegments = segmentService.GetZoomedOutReplacedSegments(normalLinkSegments, currentLinkSegments, line.Source, line.Target);
+			//		LinkSegment zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
+			//		var replacedLines = GetLines(link.Lines, new [] { zoomedInSegment });
+			//		replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
 
-		//		LinkSegment zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
-		//		var replacedLines = GetLines(link.Lines, new [] { zoomedInSegment });
-		//		replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
+			//		zoomedSegments.ForEach(segment => AddDirectLine(segment));
 
-		//		zoomedSegments.ForEach(segment => AddDirectLine(segment));
+			//		var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedSegments);
+			//		link.SetLinkSegments(newSegments);
+			//	}
 
-		//		var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedSegments);
-		//		link.SetLinkSegments(newSegments);
-		//	}
-
-		//	line.Owner.AncestorsAndSelf().Last().UpdateNodeVisibility();
+			//	line.Owner.AncestorsAndSelf().Last().UpdateNodeVisibility();
 		}
 
 
@@ -235,7 +309,7 @@ namespace Dependinator.ModelViewing.Links.Private
 		{
 			line.HideLink(link);
 			link.Remove(line);
-			
+
 			if (!line.IsMouseOver && !line.IsNormal && !line.Links.Any())
 			{
 				CloseLine(line);
@@ -244,7 +318,7 @@ namespace Dependinator.ModelViewing.Links.Private
 
 
 		private static IReadOnlyList<LinkLineOld> GetLines(
-			IReadOnlyList<LinkLineOld> linkLines, 
+			IReadOnlyList<LinkLineOld> linkLines,
 			IReadOnlyList<LinkSegmentOld> replacedSegments)
 		{
 			return replacedSegments
@@ -311,7 +385,6 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-
 		public double GetLineThickness(LinkLineOld linkLine)
 		{
 			double scale = (linkLine.Owner.ItemsScale).MM(0.1, 0.7);
@@ -362,7 +435,7 @@ namespace Dependinator.ModelViewing.Links.Private
 			double height = Math.Abs(p2.Y - p1.Y);
 
 
-			if (p1.X <= p2.X && p1.Y <= p2.Y )
+			if (p1.X <= p2.X && p1.Y <= p2.Y)
 			{
 				return (new Point(margin, margin), new Point(width, height));
 			}
@@ -405,7 +478,7 @@ namespace Dependinator.ModelViewing.Links.Private
 			Rect sourceBounds = source.ItemBounds;
 			Rect targetBounds = target.ItemBounds;
 
-		
+
 			if (source.ParentNode == target.ParentNode)
 			{
 				// Source and target nodes are siblings, 
@@ -501,9 +574,9 @@ namespace Dependinator.ModelViewing.Links.Private
 					break;
 				}
 
-				point = node.ChildCanvasPointToParentCanvasPoint(point);				
+				point = node.ChildCanvasPointToParentCanvasPoint(point);
 			}
-			
+
 			return point;
 		}
 

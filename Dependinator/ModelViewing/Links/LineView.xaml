@@ -7,78 +7,56 @@
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
-	<Grid>
-		<Border BorderBrush="Transparent" BorderThickness="0">
-			<Grid>
-				
-				<!-- Line -->
-				<Path 				
-					Data="{Binding LineData}"
-					Stroke="{Binding LineBrush}"
-					StrokeThickness="{Binding LineWidth}"
-					StrokeDashArray="{Binding StrokeDash}"
-					StrokeLineJoin="Round"
-					IsHitTestVisible="False" />
 
-				<Path Visibility="{Binding IsMouseOver, Converter={StaticResource VC}}"			
-					Data="{Binding PointsData}"
-					Stroke="{Binding LineBrush}"
-				  StrokeLineJoin="Round"
-					StrokeThickness="6"
-					IsHitTestVisible="False" />
+	<Border BorderBrush="Transparent" BorderThickness="0">
+		<Grid>
 
-				
-				<!--<Line.Effect>
-						<DropShadowEffect
-							Color="White"
-							ShadowDepth="0"
-							Direction="0"
-							BlurRadius="{Binding NeonEffect}" />
-					</Line.Effect>-->
+			<!-- Line -->
+			<Path
+				Data="{Binding LineData}"
+				Stroke="{Binding LineBrush}"
+				StrokeThickness="{Binding LineWidth}"
+				StrokeDashArray="{Binding StrokeDash}"
+				StrokeLineJoin="Round"
+				IsHitTestVisible="False" />
 
-				<!-- Arrow head -->
 
-				<Path 				
-					Data="{Binding ArrowData}"
-					Stroke="{Binding LineBrush}"
-					StrokeThickness="{Binding ArrowWidth}"
-					IsHitTestVisible="False" 
-					StrokeEndLineCap="Triangle"/>
+			<!-- Arrow head -->
+			<Path
+				Data="{Binding ArrowData}"
+				Stroke="{Binding LineBrush}"
+				StrokeThickness="{Binding ArrowWidth}"
+				IsHitTestVisible="False"
+				StrokeEndLineCap="Triangle" />
 
-				<!--<Path 
-					Stroke="{Binding LineBrush}" 
-					Data="M 0 4 L 16 4 L 10 0 M 16 4 L 10 8" />-->
-				
-				<!--<Line
-					X1="{Binding ArrowX1}"
-					Y1="{Binding ArrowY1}"
-					X2="{Binding ArrowX2}"
-					Y2="{Binding ArrowY2}"
-					Stroke="{Binding LineBrush}"
-					StrokeThickness="{Binding ArrowWidth}"
-					StrokeDashArray=""
-					IsHitTestVisible="False"
-					StrokeEndLineCap="Triangle" />-->
+			<!-- Line controls -->
+			<Path
+				Visibility="{Binding IsMouseOver, Converter={StaticResource VC}}"
+				Data="{Binding PointsData}"
+				Stroke="{Binding LineBrush}"
+				StrokeLineJoin="Round"
+				StrokeThickness="5"
+				IsHitTestVisible="False"/>
 
-				<!-- Mouse over-->
-				<Path 
-					Data="{Binding LineData}"
-					Stroke="Transparent"
-					StrokeThickness="10"
-					MouseEnter="UIElement_OnMouseEnter"
-					MouseLeave="UIElement_OnMouseLeave">
+			<!-- Mouse over-->
+			<Path
+				Data="{Binding LineData}"
+				Stroke="Transparent"
+				StrokeThickness="10"
+				MouseEnter="UIElement_OnMouseEnter"
+				MouseLeave="UIElement_OnMouseLeave">
 
-					<Path.ToolTip>
-						<ToolTip
-							Content="{Binding ToolTip}"
-							Placement="Mouse"
-							BorderBrush="{Binding LineBrush}"
-							BorderThickness="1" />
-					</Path.ToolTip>
-				</Path>
-				
-			</Grid>
+				<Path.ToolTip>
+					<ToolTip
+						Content="{Binding ToolTip}"
+						Placement="Mouse"
+						BorderBrush="{Binding LineBrush}"
+						BorderThickness="1" />
+				</Path.ToolTip>
+			</Path>
 
-		</Border>
-	</Grid>
+		</Grid>
+
+	</Border>
+
 </UserControl>

@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
+using Dependinator.Utils;
 using Dependinator.Utils.UI;
 
 namespace Dependinator.ModelViewing.Links
@@ -12,9 +13,10 @@ namespace Dependinator.ModelViewing.Links
 	{
 		private readonly ILineViewModelService lineViewModelService;
 		private readonly Line line;
-		private readonly Node owner;
 		private readonly NodeViewModel source;
 		private readonly NodeViewModel target;
+		Point sourceAdjust = new Point(-1, -1);
+		Point targetAdjust = new Point(-1, -1);
 
 		private static readonly double LineMargin = 10;
 		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
@@ -23,11 +25,11 @@ namespace Dependinator.ModelViewing.Links
 		private readonly List<Point> points = new List<Point> { new Point(0, 0), new Point(0, 0) };
 		private int movingPointIndex = -1;
 
-		public LineViewModel(ILineViewModelService lineViewModelService, Line line, Node owner)
+
+		public LineViewModel(ILineViewModelService lineViewModelService, Line line)
 		{
 			this.lineViewModelService = lineViewModelService;
 			this.line = line;
-			this.owner = owner;
 			source = line.Source.ViewModel;
 			target = line.Target.ViewModel;
 			ItemZIndex = -1;
@@ -86,13 +88,13 @@ namespace Dependinator.ModelViewing.Links
 		private string GetPointsData()
 		{
 			string lineData = "";
-			double d = LineWidth;
+			double d = LineWidth.MM(0.5, 4);
 
 			for (int i = 0; i < points.Count; i++)
 			{
 				Point m = LinePoint(points[i]);
 				
-				lineData += Txt.I($" M {m.X - d -2.8},{m.Y - d} H {m.X + d} V {m.Y + d} H {m.X - d} V {m.Y - d}");
+				lineData += Txt.I($" M {m.X - d},{m.Y - d} H {m.X + d} V {m.Y + d} H {m.X - d} V {m.Y - d} H {m.X + d} ");
 			}
 
 			return lineData;
@@ -121,12 +123,11 @@ namespace Dependinator.ModelViewing.Links
 		{
 
 		}
-
 		
 
 		public void BeginMoveLinePoint(Point point)
 		{
-			Point p = Can ItemsCanvas.RootScreenToCanvasPoint(point);
+			Point p = ItemOwnerCanvas.RootScreenToCanvasPoint(point);
 
 			//double min = double.MaxValue;
 			int index = -1;
@@ -142,16 +143,23 @@ namespace Dependinator.ModelViewing.Links
 
 				if (Math.Abs(aP) * ItemScale < 10)
 				{
-					movingPointIndex = i;
-					return;
+					if (i != 0)
+					{
+						movingPointIndex = i;
+						return;
+					}
 				}
 				else if (Math.Abs(pb) * ItemScale < 10)
 				{
-					movingPointIndex = i + 1;
-					return;
+					// Prevent moving the target node endpoint
+					if (i + 1 != points.Count - 1)
+					{
+						movingPointIndex = i + 1;
+						return;
+					}
 				}
 
-				double length = (Math.Abs(aB - (aP + pb))) * ItemScale;
+				double length = Math.Abs(aB - (aP + pb)) * ItemScale;
 				if (length < 5)
 				{
 					index = i;
@@ -170,24 +178,94 @@ namespace Dependinator.ModelViewing.Links
 
 		public void EndMoveLinePoint(Point point)
 		{
+			if (movingPointIndex == -1 || movingPointIndex >= points.Count)
+			{
+				return;
+			}
+
+			if (movingPointIndex != 0 && movingPointIndex != points.Count - 1)
+			{
+				Point p = points[movingPointIndex];
+
+				Point a = points[movingPointIndex - 1];
+				Point b = points[movingPointIndex + 1];
+
+				double aB = Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y));
+				double aP = Math.Sqrt((p.X - a.X) * (p.X - a.X) + (p.Y - a.Y) * (p.Y - a.Y));
+				double pb = Math.Sqrt((b.X - p.X) * (b.X - p.X) + (b.Y - p.Y) * (b.Y - p.Y));
+
+				double length = Math.Abs(aB - (aP + pb));
+				if (length < 0.1)
+				{
+					points.RemoveAt(movingPointIndex);
+				}
+			}
+
+			UpdateBounds();
+			NotifyAll();
+
 			movingPointIndex = -1;
 		}
 
 
-		public void MoveLinePoint(Point point)
+		public void MoveLinePoint(Point screenPoint)
 		{
 			if (movingPointIndex == -1 || movingPointIndex >= points.Count)
 			{
 				return;
 			}
 
-			points[movingPointIndex] = owner.ItemsCanvas.RootScreenToCanvasPoint(point);
 
-			UpdateBounds(points[0], points[points.Count - 1]);
+			Point point = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
+			if (movingPointIndex == 0)
+			{
+				point = GetPointInPerimeter(source.ItemBounds, point);
+				sourceAdjust = new Point(
+					(point.X - source.ItemBounds.X) / source.ItemBounds.Width,
+					(point.Y - source.ItemBounds.Y) / source.ItemBounds.Height);
+
+			}
+			else if (movingPointIndex == points.Count - 1)
+			{
+				point = GetPointInPerimeter(target.ItemBounds, point);
+				targetAdjust = new Point(
+					(point.X - target.ItemBounds.X) / target.ItemBounds.Width,
+					(point.Y - target.ItemBounds.Y) / target.ItemBounds.Height);
+			}
+
+			points[movingPointIndex] = point;
+
+			UpdateBounds();
 			IsMouseOver = true;
 			NotifyAll();
 		}
 
+		
+		private Point GetPointInPerimeter(Rect rect, Point point)
+		{
+			double r = rect.X + rect.Width;
+			double b = rect.Y + rect.Height;
+
+			double x = point.X.MM(rect.X, r);
+			double y = point.Y.MM(rect.Y, b);
+			
+			double dl = Math.Abs(x - rect.X);
+			double dr = Math.Abs(x - r);
+			double dt= Math.Abs(y - rect.Y);
+			double db = Math.Abs(y - b);
+
+			double m = Math.Min(Math.Min(Math.Min(dl, dr), dt), db);
+
+			if (Math.Abs(m - dt) < 0.01) return new Point(x, rect.Y);
+
+			if (Math.Abs(m - db) < 0.01) return new Point(x, b);
+
+			if (Math.Abs(m - dl) < 0.01) return new Point(rect.X, y);
+
+			return new Point(r, y);
+		}
+
+	
 
 		private void UpdateLine()
 		{
@@ -196,17 +274,22 @@ namespace Dependinator.ModelViewing.Links
 				return;
 			}
 
-			(Point sp, Point tp) = lineViewModelService.GetLineEndPoints(source.Node, target.Node);
+			(Point sp, Point tp) = lineViewModelService.GetLineEndPoints(
+				source.Node, target.Node, sourceAdjust, targetAdjust);
+
 			points[0] = sp;
 			points[points.Count - 1] = tp;
 
-			UpdateBounds(sp, tp);
+			UpdateBounds();
 		}
 
 
-		private void UpdateBounds(Point sp, Point tp)
+		private void UpdateBounds()
 		{
-			// Calculate the line boundaries (x, y, width, height)
+			Point sp = points[0];
+			Point tp = points[points.Count - 1];
+
+			// Calculate the line boundaries bases on first an last point
 			double x = Math.Min(sp.X, tp.X);
 			double y = Math.Min(sp.Y, tp.Y);
 			double width = Math.Abs(tp.X - sp.X);
@@ -214,7 +297,8 @@ namespace Dependinator.ModelViewing.Links
 
 			Rect bounds = new Rect(x, y, width, height);
 
-			for (int i = 0; i < points.Count - 1; i++)
+			// Adjust boundaries for line points between first and last
+			for (int i = 1; i < points.Count - 1; i++)
 			{
 				bounds.Union(points[i]);
 			}
