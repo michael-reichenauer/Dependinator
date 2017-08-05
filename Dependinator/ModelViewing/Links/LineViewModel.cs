@@ -19,12 +19,7 @@ namespace Dependinator.ModelViewing.Links
 		private static readonly double LineMargin = 10;
 		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
 
-
-
-
-
-
-
+		
 		private readonly List<Point> points = new List<Point> { new Point(0, 0), new Point(0, 0) };
 		private int movingPointIndex = -1;
 
@@ -56,9 +51,11 @@ namespace Dependinator.ModelViewing.Links
 
 		public Brush LineBrush => source.RectangleBrush;
 
-		public bool IsMouseOver { get; private set; }
+		public bool IsMouseOver { get => Get(); private set => Set(value); }
 
 		public string LineData => GetLineData();
+
+		public string PointsData => GetPointsData();
 
 		public string ArrowData => GetArrowData();
 
@@ -86,6 +83,23 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
+		private string GetPointsData()
+		{
+			string lineData = "";
+			double d = LineWidth;
+
+			for (int i = 0; i < points.Count; i++)
+			{
+				Point m = LinePoint(points[i]);
+				
+				lineData += Txt.I($" M {m.X - d -2.8},{m.Y - d} H {m.X + d} V {m.Y + d} H {m.X - d} V {m.Y - d}");
+			}
+
+			return lineData;
+		}
+
+
+
 		private string GetArrowData()
 		{
 			Point t = LinePoint(points[points.Count - 1]);
@@ -108,12 +122,11 @@ namespace Dependinator.ModelViewing.Links
 
 		}
 
-
-
+		
 
 		public void BeginMoveLinePoint(Point point)
 		{
-			Point p = owner.ItemsCanvas.RootScreenToCanvasPoint(point);
+			Point p = Can ItemsCanvas.RootScreenToCanvasPoint(point);
 
 			//double min = double.MaxValue;
 			int index = -1;
@@ -147,6 +160,8 @@ namespace Dependinator.ModelViewing.Links
 				}
 			}
 
+			IsMouseOver = true;
+
 			// The point p is on the line between point a and b
 			movingPointIndex = index + 1;
 			points.Insert(movingPointIndex, p);
@@ -169,7 +184,7 @@ namespace Dependinator.ModelViewing.Links
 			points[movingPointIndex] = owner.ItemsCanvas.RootScreenToCanvasPoint(point);
 
 			UpdateBounds(points[0], points[points.Count - 1]);
-
+			IsMouseOver = true;
 			NotifyAll();
 		}
 

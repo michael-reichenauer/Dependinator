@@ -20,6 +20,14 @@
 					StrokeLineJoin="Round"
 					IsHitTestVisible="False" />
 
+				<Path Visibility="{Binding IsMouseOver, Converter={StaticResource VC}}"			
+					Data="{Binding PointsData}"
+					Stroke="{Binding LineBrush}"
+				  StrokeLineJoin="Round"
+					StrokeThickness="6"
+					IsHitTestVisible="False" />
+
+				
 				<!--<Line.Effect>
 						<DropShadowEffect
 							Color="White"
