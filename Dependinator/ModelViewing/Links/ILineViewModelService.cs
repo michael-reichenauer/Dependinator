@@ -8,17 +8,28 @@ namespace Dependinator.ModelViewing.Links
 {
 	internal interface ILineViewModelService
 	{
-		LinkLineBounds GetLinkLineBounds(LinkLineOld line);
-		IReadOnlyList<LinkGroup> GetLinkGroups(LinkLineOld line);
-		double GetLineThickness(LinkLineOld linkLine);
-	
-		void AddLinkLines(LinkOld link);
 		//void ZoomInLinkLine(LinkLine linkLine);
-		void ZoomInLinkLine(LinkLineOld line, NodeOld node);
 		//void ZoomOutLinkLine(LinkLine linkLine);
-		void ZoomOutLinkLine(LinkLineOld line, NodeOld node);
-		void CloseLine(LinkLineOld linkLine);
+		(Point source, Point target) GetLineEndPoints(
+			Node sourceNode, Node targetNode, Point relativeSourceNode, Point relativeTargetNode);
 
-		(Point source, Point target) GetLineEndPoints(Node sourceNode, Node targetNode, Point relativeSource, Point relativeTarget);
+		bool IsOnLineBetweenNeighbors(int index, IList<Point> points);
+		int GetMovingPointIndex(Point p, IList<Point> points, double itemScale);
+		double GetDistanceFromLine(Point a, Point b, Point p);
+		Point GetPointInPerimeter(Rect rect, Point point);
+		void AddLinkLines(LinkOld link);
+		void ZoomInLinkLine(LinkLineOld line, NodeOld node);
+		void ZoomOutLinkLine(LinkLineOld line, NodeOld node);
+		void CloseLine(LinkLineOld line);
+		double GetLineThickness(LinkLineOld linkLine);
+		LinkLineBounds GetLinkLineBounds(LinkLineOld line);
+
+		/// <summary>
+		/// Gets the links in the line grouped first by source and then by target at the
+		/// appropriate node levels.
+		/// </summary>
+		IReadOnlyList<LinkGroup> GetLinkGroups(LinkLineOld line);
+
+		Point GetClosestPointOnLineSegment(Point a, Point b, Point p);
 	}
 }

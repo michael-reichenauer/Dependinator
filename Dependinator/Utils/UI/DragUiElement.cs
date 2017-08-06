@@ -13,7 +13,7 @@ namespace Dependinator.Utils.UI
 		private readonly Action<Point> end;
 
 		private Point lastMousePoint;
-		private bool isDrag;
+		private bool IsMouseDown;
 
 
 		public DragUiElement(
@@ -56,7 +56,7 @@ namespace Dependinator.Utils.UI
 
 				lastMousePoint = viewPosition;
 				begin?.Invoke(viewPosition);
-				isDrag = true;
+				IsMouseDown = true;
 				e.Handled = true;
 			}
 
@@ -65,21 +65,22 @@ namespace Dependinator.Utils.UI
 
 		private void MouseUp(MouseButtonEventArgs e)
 		{
-			if (isDrag)
+			if (IsMouseDown)
 			{
+				IsMouseDown = false;
+				e.Handled = true;
+
 				Point viewPosition = e.GetPosition(Application.Current.MainWindow);
 
 				end?.Invoke(viewPosition);
-				uiElement.ReleaseMouseCapture();
-				isDrag = false;
-				e.Handled = true;
+				uiElement.ReleaseMouseCapture();			
 			}
 		}
 
 
 		private void MouseMove(MouseEventArgs e)
 		{
-			if (isDrag)
+			if (IsMouseDown)
 			{
 				Point viewPosition = e.GetPosition(Application.Current.MainWindow);
 				Vector viewOffset = viewPosition - lastMousePoint;

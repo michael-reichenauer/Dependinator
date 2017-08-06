@@ -15,13 +15,15 @@ namespace Dependinator.ModelViewing.Links
 		private readonly Line line;
 		private readonly NodeViewModel source;
 		private readonly NodeViewModel target;
-		Point sourceAdjust = new Point(-1, -1);
-		Point targetAdjust = new Point(-1, -1);
+		private Point sourceAdjust = new Point(-1, -1);
+		private Point targetAdjust = new Point(-1, -1);
+		private Point mouseDownPoint;
+		private bool IsMoving => movingPointIndex != -1;
 
 		private static readonly double LineMargin = 10;
 		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
 
-		
+
 		private readonly List<Point> points = new List<Point> { new Point(0, 0), new Point(0, 0) };
 		private int movingPointIndex = -1;
 
@@ -93,7 +95,7 @@ namespace Dependinator.ModelViewing.Links
 			for (int i = 0; i < points.Count; i++)
 			{
 				Point m = LinePoint(points[i]);
-				
+
 				lineData += Txt.I($" M {m.X - d},{m.Y - d} H {m.X + d} V {m.Y + d} H {m.X - d} V {m.Y - d} H {m.X + d} ");
 			}
 
@@ -123,79 +125,89 @@ namespace Dependinator.ModelViewing.Links
 		{
 
 		}
-		
 
-		public void BeginMoveLinePoint(Point point)
+
+		public void MouseDown(Point point)
 		{
-			Point p = ItemOwnerCanvas.RootScreenToCanvasPoint(point);
-
-			//double min = double.MaxValue;
-			int index = -1;
-
-			for (int i = 0; i < points.Count - 1; i++)
-			{
-				Point a = points[i];
-				Point b = points[i + 1];
-
-				double aB = Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y));
-				double aP = Math.Sqrt((p.X - a.X) * (p.X - a.X) + (p.Y - a.Y) * (p.Y - a.Y));
-				double pb = Math.Sqrt((b.X - p.X) * (b.X - p.X) + (b.Y - p.Y) * (b.Y - p.Y));
-
-				if (Math.Abs(aP) * ItemScale < 10)
-				{
-					if (i != 0)
-					{
-						movingPointIndex = i;
-						return;
-					}
-				}
-				else if (Math.Abs(pb) * ItemScale < 10)
-				{
-					// Prevent moving the target node endpoint
-					if (i + 1 != points.Count - 1)
-					{
-						movingPointIndex = i + 1;
-						return;
-					}
-				}
-
-				double length = Math.Abs(aB - (aP + pb)) * ItemScale;
-				if (length < 5)
-				{
-					index = i;
-					//	min = length;
-					break;
-				}
-			}
-
-			IsMouseOver = true;
-
-			// The point p is on the line between point a and b
-			movingPointIndex = index + 1;
-			points.Insert(movingPointIndex, p);
+			movingPointIndex = -1;
+			mouseDownPoint = ItemOwnerCanvas.RootScreenToCanvasPoint(point);	
 		}
 
 
-		public void EndMoveLinePoint(Point point)
+		public void MouseUp(Point point)
 		{
-			if (movingPointIndex == -1 || movingPointIndex >= points.Count)
+			if (IsMoving)
 			{
-				return;
+				EndMoveLinePoint();
 			}
-
-			if (movingPointIndex != 0 && movingPointIndex != points.Count - 1)
+			else
 			{
-				Point p = points[movingPointIndex];
+				Log.Debug("Mouse click");
+			}
+		}
 
+		public void MouseMove(Point screenPoint)
+		{
+			Point point = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
+
+			MoveLinePoint(point);
+		}
+
+
+		public void MoveLinePoint(Point point)
+		{
+			if (!IsMoving)
+			{
+				// First move event, lets start a move by getting the index of point to move
+				movingPointIndex = lineViewModelService.GetMovingPointIndex(
+					mouseDownPoint, points, ItemScale);
+				if (movingPointIndex == -1)
+				{
+					return;
+				}
+			}
+			
+			// NOTE: These lines are currently disabled !!!
+			if (movingPointIndex == 0)
+			{
+				point = lineViewModelService.GetPointInPerimeter(source.ItemBounds, point);
+				sourceAdjust = new Point(
+					(point.X - source.ItemBounds.X) / source.ItemBounds.Width,
+					(point.Y - source.ItemBounds.Y) / source.ItemBounds.Height);
+
+			}
+			else if (movingPointIndex == points.Count - 1)
+			{
+				point = lineViewModelService.GetPointInPerimeter(target.ItemBounds, point);
+				targetAdjust = new Point(
+					(point.X - target.ItemBounds.X) / target.ItemBounds.Width,
+					(point.Y - target.ItemBounds.Y) / target.ItemBounds.Height);
+			}
+			else
+			{
+				Point p = point;
 				Point a = points[movingPointIndex - 1];
 				Point b = points[movingPointIndex + 1];
+				if (lineViewModelService.GetDistanceFromLine(a, b, p) < 0.1)
+				{				
+					point = lineViewModelService.GetClosestPointOnLineSegment(a, b, p);
+				}
+			}
 
-				double aB = Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y));
-				double aP = Math.Sqrt((p.X - a.X) * (p.X - a.X) + (p.Y - a.Y) * (p.Y - a.Y));
-				double pb = Math.Sqrt((b.X - p.X) * (b.X - p.X) + (b.Y - p.Y) * (b.Y - p.Y));
+			points[movingPointIndex] = point;
 
-				double length = Math.Abs(aB - (aP + pb));
-				if (length < 0.1)
+			UpdateBounds();
+			IsMouseOver = true;
+			NotifyAll();
+		}
+
+
+		private void EndMoveLinePoint()
+		{
+			if (movingPointIndex != 0 && movingPointIndex != points.Count - 1)
+			{
+				// Removing the point if it is no longer needed (in the same line as neighbors points
+				if (lineViewModelService.IsOnLineBetweenNeighbors(movingPointIndex, points))
 				{
 					points.RemoveAt(movingPointIndex);
 				}
@@ -207,65 +219,8 @@ namespace Dependinator.ModelViewing.Links
 			movingPointIndex = -1;
 		}
 
-
-		public void MoveLinePoint(Point screenPoint)
-		{
-			if (movingPointIndex == -1 || movingPointIndex >= points.Count)
-			{
-				return;
-			}
-
-
-			Point point = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
-			if (movingPointIndex == 0)
-			{
-				point = GetPointInPerimeter(source.ItemBounds, point);
-				sourceAdjust = new Point(
-					(point.X - source.ItemBounds.X) / source.ItemBounds.Width,
-					(point.Y - source.ItemBounds.Y) / source.ItemBounds.Height);
-
-			}
-			else if (movingPointIndex == points.Count - 1)
-			{
-				point = GetPointInPerimeter(target.ItemBounds, point);
-				targetAdjust = new Point(
-					(point.X - target.ItemBounds.X) / target.ItemBounds.Width,
-					(point.Y - target.ItemBounds.Y) / target.ItemBounds.Height);
-			}
-
-			points[movingPointIndex] = point;
-
-			UpdateBounds();
-			IsMouseOver = true;
-			NotifyAll();
-		}
-
-		
-		private Point GetPointInPerimeter(Rect rect, Point point)
-		{
-			double r = rect.X + rect.Width;
-			double b = rect.Y + rect.Height;
-
-			double x = point.X.MM(rect.X, r);
-			double y = point.Y.MM(rect.Y, b);
-			
-			double dl = Math.Abs(x - rect.X);
-			double dr = Math.Abs(x - r);
-			double dt= Math.Abs(y - rect.Y);
-			double db = Math.Abs(y - b);
-
-			double m = Math.Min(Math.Min(Math.Min(dl, dr), dt), db);
-
-			if (Math.Abs(m - dt) < 0.01) return new Point(x, rect.Y);
-
-			if (Math.Abs(m - db) < 0.01) return new Point(x, b);
-
-			if (Math.Abs(m - dl) < 0.01) return new Point(rect.X, y);
-
-			return new Point(r, y);
-		}
-
 	
+
 
 		private void UpdateLine()
 		{
@@ -433,7 +388,5 @@ namespace Dependinator.ModelViewing.Links
 			IsMouseOver = false;
 			Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
 		}
-
-
 	}
 }
