@@ -1,6 +1,9 @@
-﻿namespace Dependinator.ModelViewing.Private.Items
+﻿using Dependinator.Utils;
+
+namespace Dependinator.ModelViewing.Private.Items
 {
-	class ItemSelectService : IItemSelectService
+	[SingleInstance]
+	internal class ItemSelectService : IItemSelectService
 	{
 	}
 }
