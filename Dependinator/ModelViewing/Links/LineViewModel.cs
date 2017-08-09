@@ -92,7 +92,7 @@ namespace Dependinator.ModelViewing.Links
 			string lineData = "";
 			double d = LineWidth.MM(0.5, 4);
 
-			for (int i = 0; i < points.Count; i++)
+			for (int i = 1; i < points.Count - 1; i++)
 			{
 				Point m = LinePoint(points[i]);
 
