@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Reflection;
 using Dependinator.ApplicationHandling;
 using Dependinator.Common;
-using Dependinator.Features.FolderMonitoring;
 using Dependinator.Utils;
 
 
@@ -17,8 +16,7 @@ namespace Dependinator
 		[STAThread]
 		public static void Main()
 		{
-			Log.Debug(GetStartlineText());
-
+			Log.Debug(GetStartLineText());
 			Program program = new Program();
 			program.Run();
 		}
@@ -57,7 +55,7 @@ namespace Dependinator
 		}
 
 
-		private static string GetStartlineText()
+		private static string GetStartLineText()
 		{
 			string version = GetProgramVersion();
 
@@ -74,18 +72,5 @@ namespace Dependinator
 			FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 			return fvi.FileVersion;
 		}
-
-
-		private class TestInnerType
-		{
-			public IFolderMonitorService MonitorService { get; }
-
-
-			public TestInnerType(IFolderMonitorService monitorService)
-			{
-				MonitorService = monitorService;
-			}
-		}
-
 	}
 }

@@ -1810,7 +1810,7 @@ namespace Dependinator.Utils.UI.VirtualCanvas
 				return Math.Max(Math.Max(
 					this.ActualViewbox.Bottom,
 					this.Extent.Bottom) - Math.Min(this.ActualViewbox.Top,
-					this.Extent.Top), 0.0) * (Scale * 0.95);
+					this.Extent.Top), 0.0) * (Scale * 0.90);
 			}
 		}
 

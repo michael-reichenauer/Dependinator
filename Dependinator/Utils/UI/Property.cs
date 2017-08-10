@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Media;
 
@@ -7,27 +8,29 @@ namespace Dependinator.Utils.UI
 	internal class Property
 	{
 		private readonly string propertyName;
-		private readonly ViewModel viewModel;
+		private readonly Action<string> onPropertyChanged;
+		private readonly Notifyable notifyable;
 
 		private object propertyValue;
 
-		public Property(string propertyName, ViewModel viewModel)
+		public Property(string propertyName, Action<string> onPropertyChanged, Notifyable notifyable)
 		{
 			this.propertyName = propertyName;
-			this.viewModel = viewModel;
+			this.onPropertyChanged = onPropertyChanged;
+			this.notifyable = notifyable;
 		}
 
 
 		internal object Value
 		{
-			get { return propertyValue; }
+			get => propertyValue;
 			set
 			{
 				if (propertyValue != value)
 				{
 					propertyValue = value;
 
-					viewModel.OnPropertyChanged(propertyName);
+					onPropertyChanged(propertyName);
 				}
 			}
 		}
@@ -37,6 +40,7 @@ namespace Dependinator.Utils.UI
 		public static implicit operator int(Property instance) => (int?)instance.Value ?? 0;
 		public static implicit operator double(Property instance) => (double?)instance.Value ?? 0;
 		public static implicit operator Rect(Property instance) => (Rect?)instance.Value ?? Rect.Empty;
+		public static implicit operator Point(Property instance) => (Point?)instance.Value ?? new Point(0,0);
 		public static implicit operator Brush(Property instance) => (Brush)instance.Value;
 
 
@@ -48,11 +52,10 @@ namespace Dependinator.Utils.UI
 				propertyValue = value;
 				isSet = true;
 
-				viewModel.OnPropertyChanged(propertyName);
-
+				onPropertyChanged(propertyName);
 			}
 
-			return new PropertySetter(isSet, viewModel);
+			return new PropertySetter(isSet, notifyable);
 		}
 	}
 

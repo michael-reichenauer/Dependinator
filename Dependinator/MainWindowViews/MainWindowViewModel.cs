@@ -7,7 +7,7 @@ using Dependinator.ApplicationHandling;
 using Dependinator.ApplicationHandling.SettingsHandling;
 using Dependinator.Common;
 using Dependinator.Common.MessageDialogs;
-using Dependinator.MainViews;
+using Dependinator.ModelViewing;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 using Application = System.Windows.Application;
@@ -26,6 +26,7 @@ namespace Dependinator.MainWindowViews
 
 		// private IpcRemotingService ipcRemotingService = null;
 		private readonly WorkingFolder workingFolder;
+
 		private readonly WindowOwner owner;
 		private readonly IMessage message;
 
@@ -39,7 +40,7 @@ namespace Dependinator.MainWindowViews
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
 			MainWindowIpcService mainWindowIpcService,
-			MainViewModel mainViewModel)
+			ModelViewModel modelViewModel)
 		{
 			this.workingFolder = workingFolder;
 			this.owner = owner;
@@ -48,7 +49,7 @@ namespace Dependinator.MainWindowViews
 			this.mainWindowService = mainWindowService;
 			this.mainWindowIpcService = mainWindowIpcService;
 
-			MainViewModel = mainViewModel;
+			ModelViewModel = modelViewModel;
 
 			workingFolder.OnChange += (s, e) => Notify(nameof(WorkingFolder));
 			latestVersionService.OnNewVersionAvailable += (s, e) => IsNewVersionVisible = true;
@@ -59,16 +60,11 @@ namespace Dependinator.MainWindowViews
 		public bool IsInFilterMode => !string.IsNullOrEmpty(SearchBox);
 
 
-		public bool IsNewVersionVisible
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
+		public bool IsNewVersionVisible { get => Get(); set => Set(value); }
 
 		public string WorkingFolder => workingFolder.Name;
 
 		public string WorkingFolderPath => workingFolder.FilePath;
-
 
 
 		public string Title => $"{workingFolder.Name} - Dependinator";
@@ -76,7 +72,7 @@ namespace Dependinator.MainWindowViews
 
 		public string SearchBox
 		{
-			get { return Get(); }
+			get => Get();
 			set
 			{
 				message.ShowInfo("Search is not yet implemented.");
@@ -88,13 +84,13 @@ namespace Dependinator.MainWindowViews
 
 		private void SetSearchBoxValue(string text)
 		{
-			MainViewModel.SetFilter(text);
+			ModelViewModel.SetFilter(text);
 		}
 
 
 		public BusyIndicator Busy => BusyIndicator();
 
-		public MainViewModel MainViewModel { get; }
+		public ModelViewModel ModelViewModel { get; }
 
 
 		public string VersionText
@@ -160,7 +156,7 @@ namespace Dependinator.MainWindowViews
 
 		public void ClosingWindow()
 		{
-			MainViewModel.ClosingWindow();
+			ModelViewModel.ClosingWindow();
 		}
 
 
@@ -176,7 +172,7 @@ namespace Dependinator.MainWindowViews
 
 			await SetWorkingFolderAsync();
 
-			await MainViewModel.LoadAsync();
+			await ModelViewModel.LoadAsync();
 		}
 
 
@@ -209,24 +205,24 @@ namespace Dependinator.MainWindowViews
 
 			Notify(nameof(Title));
 
-			//await MainViewModel.LoadAsync();
+			//await ModelViewModel.LoadAsync();
 			isLoaded = true;
 		}
 
 
 		private Task ManualRefreshAsync()
 		{
-			return MainViewModel.ManualRefreshAsync();
+			return ModelViewModel.ManualRefreshAsync();
 		}
 
 		private Task ManualRefreshLayoutAsync()
 		{
-			return MainViewModel.ManualRefreshAsync(true);
+			return ModelViewModel.ManualRefreshAsync(true);
 		}
 
 		public Task AutoRemoteCheckAsync()
 		{
-			return MainViewModel.AutoRemoteCheckAsync();
+			return ModelViewModel.AutoRemoteCheckAsync();
 		}
 
 
@@ -243,7 +239,7 @@ namespace Dependinator.MainWindowViews
 				return Task.CompletedTask;
 			}
 
-			return MainViewModel.ActivateRefreshAsync();
+			return ModelViewModel.ActivateRefreshAsync();
 		}
 
 
@@ -254,11 +250,6 @@ namespace Dependinator.MainWindowViews
 				SearchBox = "";
 				mainWindowService.SetRepositoryViewFocus();
 			}
-			else if (MainViewModel.IsShowCommitDetails)
-			{
-				MainViewModel.IsShowCommitDetails = false;
-				mainWindowService.SetRepositoryViewFocus();
-			}
 			else
 			{
 				Minimize();
@@ -266,10 +257,7 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		public int WindowWith
-		{
-			set { MainViewModel.Width = value; }
-		}
+		public int WindowWith { set { ModelViewModel.Width = value; } }
 
 
 		private void Minimize()

@@ -3,9 +3,9 @@
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:common="clr-namespace:Dependinator.Common"
-	xmlns:repositoryViews="clr-namespace:Dependinator.MainViews"
 	xmlns:mainWindowViews="clr-namespace:Dependinator.MainWindowViews"
 	xmlns:ui="clr-namespace:Dependinator.Utils.UI"
+	xmlns:modelViewing="clr-namespace:Dependinator.ModelViewing"
 	Title="{Binding Title}"	Icon="Application.ico"
 	Width="800" Height="695"
 	BorderBrush="{DynamicResource BorderBrush}" BorderThickness="3"
@@ -109,8 +109,8 @@
 						Style="{DynamicResource IconButtonStyle}"			
 						Foreground="{DynamicResource ConflictBrush}"			
 						FontWeight="Bold"
-						Visibility="{Binding MainViewModel.FetchErrorText, Converter={StaticResource VC}}"			
-						ToolTip="{Binding MainViewModel.FetchErrorText}" />
+						Visibility="{Binding ModelViewModel.FetchErrorText, Converter={StaticResource VC}}"			
+						ToolTip="{Binding ModelViewModel.FetchErrorText}" />
 					
 					<!-- Latest version button -->
 					<Button 
@@ -143,10 +143,7 @@
 		</Border>
 
 		<!-- Repository view -->
-		<repositoryViews:MainView 
-			x:Name="RepositoryView"
-			Grid.Row="1"
-			DataContext="{Binding MainViewModel}"/>
+		<modelViewing:ModelView x:Name="ModelView" Grid.Row="1" DataContext="{Binding ModelViewModel}"/>
 
 	</Grid>
 </Window>

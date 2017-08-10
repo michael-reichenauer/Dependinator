@@ -50,7 +50,7 @@ namespace Dependinator.MainWindowViews
 
 		public bool IsNewVersionAvailable
 		{
-			set { viewModel.IsNewVersionVisible = value; }
+			set => viewModel.IsNewVersionVisible = value;
 		}
 
 
@@ -62,7 +62,7 @@ namespace Dependinator.MainWindowViews
 
 		public void SetRepositoryViewFocus()
 		{
-			RepositoryView.NodesView.ItemsListBox.Focus();
+			ModelView.ItemsView.ItemsListBox.Focus();
 		}
 
 
