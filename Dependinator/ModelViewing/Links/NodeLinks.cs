@@ -7,32 +7,32 @@ namespace Dependinator.ModelViewing.Links
 {
 	internal class NodeLinks
 	{
-		private readonly ILinkService linkService;
-		private readonly List<Link> links = new List<Link>();
-		private readonly List<LinkLine> ownedLines = new List<LinkLine>();
-		private readonly List<LinkLine> referencingLines = new List<LinkLine>();
+		private readonly ILineViewModelService lineViewModelService;
+		private readonly List<LinkOld> links = new List<LinkOld>();
+		private readonly List<LinkLineOld> ownedLines = new List<LinkLineOld>();
+		private readonly List<LinkLineOld> referencingLines = new List<LinkLineOld>();
 
 
-		public IReadOnlyList<Link> Links => links;
+		public IReadOnlyList<LinkOld> Links => links;
 
-		public IReadOnlyList<LinkLine> OwnedLines => ownedLines;
+		public IReadOnlyList<LinkLineOld> OwnedLines => ownedLines;
 
-		public IReadOnlyList<LinkLine> ReferencingLines => referencingLines;
+		public IReadOnlyList<LinkLineOld> ReferencingLines => referencingLines;
 
 
-		public NodeLinks(ILinkService linkService)
+		public NodeLinks(ILineViewModelService lineViewModelService)
 		{
-			this.linkService = linkService;
+			this.lineViewModelService = lineViewModelService;
 		}
 
 
-		public void AddDirectLink(Node groupSource, Node groupTarget, IReadOnlyList<Link> groupLinks)
+		public void AddDirectLink(NodeOld groupSource, NodeOld groupTarget, IReadOnlyList<LinkOld> groupLinks)
 		{
 
 		}
 
 
-		public void Add(Link link)
+		public void Add(LinkOld link)
 		{
 			if (links.Contains(link))
 			{
@@ -41,18 +41,18 @@ namespace Dependinator.ModelViewing.Links
 
 			links.Add(link);
 
-			linkService.AddLinkLines(link);
+			lineViewModelService.AddLinkLines(link);
 		}
 	
 
-		public bool TryAddOwnedLine(LinkLine line) => ownedLines.TryAdd(line);
+		public bool TryAddOwnedLine(LinkLineOld line) => ownedLines.TryAdd(line);
 
-		public bool RemoveOwnedLine(LinkLine line) => ownedLines.Remove(line);
+		public bool RemoveOwnedLine(LinkLineOld line) => ownedLines.Remove(line);
 
-		public bool RemoveReferencedLine(LinkLine line) => referencingLines.Remove(line);
+		public bool RemoveReferencedLine(LinkLineOld line) => referencingLines.Remove(line);
 
 
-		public bool TryAddReferencedLine(LinkLine line) => referencingLines.TryAdd(line);
+		public bool TryAddReferencedLine(LinkLineOld line) => referencingLines.TryAdd(line);
 
 		public override string ToString() => $"{ownedLines.Count} links";
 	}

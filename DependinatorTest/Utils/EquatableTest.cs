@@ -2,7 +2,6 @@
 using Dependinator.Utils;
 using NUnit.Framework;
 
-
 namespace DependinatorTest.Utils
 {
 	/// <summary>
@@ -86,7 +85,7 @@ namespace DependinatorTest.Utils
 			public Id(string id)
 			{
 				this.id = id;
-				IsEqualWhen(other => id == other.id, id);
+				IsEqualWhenSame(id);
 			}
 		}
 
@@ -108,7 +107,7 @@ namespace DependinatorTest.Utils
 			public static bool operator ==(IdImpl obj1, IdImpl obj2) =>
 				Equatable.IsEqual(obj1, obj2, (o1, o2) => o1.id == o2.id);
 
-			public static bool operator !=(IdImpl obj1, IdImpl obj2) => !(obj1 == obj2);		
+			public static bool operator !=(IdImpl obj1, IdImpl obj2) => !(obj1 == obj2);
 		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -40,7 +41,7 @@ namespace Dependinator.Utils
 		{
 			DisableErrorAndUsageReporting = new Lazy<bool>(() =>
 				Settings.Get<Options>().DisableErrorAndUsageReporting);
-		
+
 			Task.Factory.StartNew(SendBufferedLogRows, TaskCreationOptions.LongRunning)
 				.RunInBackground();
 
@@ -56,39 +57,31 @@ namespace Dependinator.Utils
 
 		private static void SendBufferedLogRows()
 		{
-			StringBuilder batchedTexts = new StringBuilder();
+			List<string> batchedTexts = new List<string>();
 			while (!logTexts.IsCompleted)
 			{
-				bool isBatched = false;
-
 				// Wait for texts to log
+				string filePrefix = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss,fff} [{ProcessID}]";
 				string logText = logTexts.Take();
+				Native.OutputDebugString(logText);
+				batchedTexts.Add($"{filePrefix} {logText}");
 
 				// Check if there might be more buffered log texts, if so add them in batch
-				while (logTexts.TryTake(out string moreText))
+				while (logTexts.TryTake(out logText))
 				{
-					if (!isBatched)
-					{
-						isBatched = true;
-						batchedTexts.AppendLine(logText);
-						batchedTexts.AppendLine(moreText);
-					}
-					else
-					{
-						batchedTexts.AppendLine(moreText);
-					}
-				}
-
-				if (isBatched)
-				{
-					logText = batchedTexts.ToString();
-					batchedTexts = new StringBuilder();
+					Native.OutputDebugString(logText);
+					batchedTexts.Add($"{filePrefix} {logText}");
 				}
 
 				try
 				{
-					Native.OutputDebugString(logText);
-					WriteToFile(logText);
+					WriteToFile(batchedTexts);
+				}
+				catch (ThreadAbortException)
+				{
+					// The process or app-domain is closing,
+					Thread.ResetAbort();
+					return;
 				}
 				catch (Exception e) when (e.IsNotFatal())
 				{
@@ -156,14 +149,16 @@ namespace Dependinator.Utils
 			filePath = filePath.Substring(prefixLength);
 			string text = $"{level} [{ProcessID}] {filePath}({lineNumber}) {memberName} - {msg}";
 
+			//Native.OutputDebugString(text);
+
 			if (level == LevelUsage || level == LevelWarn || level == LevelError)
 			{
-				SendUsage(text);
+				//SendUsage(text);
 			}
 
 			try
-			{		
-				SendLog(text);		
+			{
+				SendLog(text);
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
@@ -171,7 +166,7 @@ namespace Dependinator.Utils
 			}
 		}
 
-		
+
 		private static void SendLog(string text)
 		{
 			logTexts.Add(text);
@@ -194,13 +189,13 @@ namespace Dependinator.Utils
 				UdpClient.Send(bytes, bytes.Length, usageLogEndPoint);
 			}
 			catch (Exception)
-			{		
+			{
 				// Ignore failed
 			}
 		}
 
 
-		private static void WriteToFile(string text)
+		private static void WriteToFile(IReadOnlyCollection<string> text)
 		{
 			Exception error = null;
 			lock (syncRoot)
@@ -209,8 +204,7 @@ namespace Dependinator.Utils
 				{
 					try
 					{
-						File.AppendAllText(
-							LogPath, $"{DateTime.Now:yyyy-MM-dd HH:mm:ss,fff} [{ProcessID}] {text}{Environment.NewLine}");
+						File.AppendAllLines(LogPath, text);
 
 						long length = new FileInfo(LogPath).Length;
 
@@ -224,6 +218,12 @@ namespace Dependinator.Utils
 					catch (DirectoryNotFoundException)
 					{
 						// Ignore error since folder has been deleted during uninstallation
+						return;
+					}
+					catch (ThreadAbortException)
+					{
+						// Process or app-domain is closing
+						Thread.ResetAbort();
 						return;
 					}
 					catch (Exception e)
@@ -264,13 +264,13 @@ namespace Dependinator.Utils
 					{
 						SendLog("ERROR Failed to move temp to second log file: " + e);
 					}
-					
+
 				}).RunInBackground();
 			}
 			catch (Exception e)
 			{
 				SendLog("ERROR Failed to move large log file: " + e);
-			}	
+			}
 		}
 
 		private static class Native

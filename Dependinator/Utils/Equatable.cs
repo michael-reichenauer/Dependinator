@@ -3,14 +3,24 @@ using System;
 
 namespace Dependinator.Utils
 {
+	internal interface IEquatable
+	{
+		object __EqValue1 { get; }
+		object __EqValue2 { get; }
+		object __EqValue3 { get; }
+	}
+
 	/// <summary>
 	/// Base class, which implement IEquatable'T' interface and makes it easier to prt
 	/// equality operators like "==" and "!=" and usage in Dictionary.
 	/// Just inherit from this class and call "IsEqual()" in the constructor.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	public abstract class Equatable<T> : IEquatable<T>
+	public abstract class Equatable<T> : IEquatable<T>, IEquatable
 	{
+		private object eqValue1;
+		private object eqValue2;
+		private object eqValue3;
 		private Func<T, bool> isEqualFunc;
 		private int? hashCode;
 
@@ -29,20 +39,75 @@ namespace Dependinator.Utils
 
 		*/
 
+		object IEquatable.__EqValue1 => eqValue1;
+		object IEquatable.__EqValue2 => eqValue2;
+		object IEquatable.__EqValue3 => eqValue3;
+
+
+		protected void IsEqualWhenSame(object value1)
+		{
+			hashCode = GetHashFor(value1);
+			eqValue1 = value1;
+
+			isEqualFunc = other =>
+			{
+				if (other is IEquatable otherTyped)
+				{
+					return Equals(otherTyped.__EqValue1, eqValue1);
+				}
+
+				return false;
+			};
+		}
+
+		protected void IsEqualWhenSame(object value1, object value2)
+		{
+			hashCode = GetHashFor(value1, value2);
+			eqValue1 = value1;
+			eqValue2 = value2;
+
+			isEqualFunc = other =>
+			{
+				if (other is IEquatable otherTyped)
+				{
+					return Equals(otherTyped.__EqValue1, eqValue1)
+						&& Equals(otherTyped.__EqValue2, eqValue2);
+				}
+
+				return false;
+			};
+		}
+
+
+		protected void IsEqualWhenSame(object value1, object value2, object value3)
+		{
+			hashCode = GetHashFor(value1, value2, value3);
+			eqValue1 = value1;
+			eqValue2 = value2;
+			eqValue3 = value3;
+
+			isEqualFunc = other =>
+			{
+				if (other is IEquatable otherTyped)
+				{
+					return Equals(otherTyped.__EqValue1, eqValue1)
+						&& Equals(otherTyped.__EqValue2, eqValue2)
+						&& Equals(otherTyped.__EqValue3, eqValue3);
+				}
+
+				return false;
+			};
+		}
+
+
 		protected void IsEqualWhen(
 			Func<T, bool> isEqual,
 			object getHashCodeObject,
 			params object[] getHashCodeObjects)
 		{
+			hashCode = GetHashFor(getHashCodeObject, getHashCodeObjects);
+
 			isEqualFunc = isEqual;
-
-			int code = getHashCodeObject?.GetHashCode() ?? 0;
-			foreach (object item in getHashCodeObjects)
-			{
-				code += code * 17 + item?.GetHashCode() ?? 0;
-			}
-
-			hashCode = code;
 		}
 
 
@@ -76,6 +141,18 @@ namespace Dependinator.Utils
 			Equatable.IsEqual(obj1, obj2);
 
 		public static bool operator !=(Equatable<T> obj1, Equatable<T> obj2) => !(obj1 == obj2);
+
+
+		private static int GetHashFor(object getHashCodeObject, params object[] getHashCodeObjects)
+		{
+			int code = getHashCodeObject?.GetHashCode() ?? 0;
+			foreach (object item in getHashCodeObjects)
+			{
+				code += code * 17 + item?.GetHashCode() ?? 0;
+			}
+
+			return code;
+		}
 	}
 
 

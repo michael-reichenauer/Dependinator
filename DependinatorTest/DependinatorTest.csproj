@@ -7,7 +7,7 @@
     <ProjectGuid>{24BF4E2A-398D-4328-A691-4E0C042CE417}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DependiantorTest</RootNamespace>
+    <RootNamespace>DependinatorTest</RootNamespace>
     <AssemblyName>DependinatorTest</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

@@ -7,7 +7,7 @@ namespace Dependinator.Common.ProgressHandling
 {
 	internal class ProgressDialogViewModel : ViewModel
 	{
-		private static readonly string indicators = "o o o o o o o o o o o o o o o o o o o o o o ";
+		private static readonly string Indicators = "o o o o o o o o o o o o o o o o o o o o o o ";
 		private static readonly TimeSpan InitialIndicatorTime = TimeSpan.FromMilliseconds(10);
 		private static readonly TimeSpan IndicatorInterval = TimeSpan.FromMilliseconds(500);
 
@@ -22,17 +22,9 @@ namespace Dependinator.Common.ProgressHandling
 		}
 
 
-		public string Text
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
+		public string Text { get => Get(); set => Set(value); }
 
-		public string IndicatorText
-		{
-			get { return Get(); }
-			private set { Set(value); }
-		}
+		public string IndicatorText { get => Get(); private set => Set(value); }
 
 
 		public void Start()
@@ -65,9 +57,9 @@ namespace Dependinator.Common.ProgressHandling
 		{
 			if (progressCount > 0)
 			{
-				string indicatorText = indicators;
+				string indicatorText = Indicators;
 
-				indicatorIndex = (indicatorIndex + 1) % (indicators.Length / 2);
+				indicatorIndex = (indicatorIndex + 1) % (Indicators.Length / 2);
 				IndicatorText = indicatorText.Substring(0, indicatorIndex * 2);
 				timer.Interval = IndicatorInterval;
 			}

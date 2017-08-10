@@ -1,5 +1,4 @@
-﻿
-using System.Windows;
+﻿using System.Windows;
 using Dependinator.Utils.UI;
 
 
@@ -10,70 +9,24 @@ namespace Dependinator.Common.MessageDialogs
 		public Command<Window> OkCommand => Command<Window>(SetOK);
 		public Command<Window> CancelCommand => Command<Window>(w => w.DialogResult = false);
 
-		public MessageDialogViewModel()
-		{
-		}
+		public string Title { get => Get(); set => Set(value); }
 
-		public string Title
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
+		public string Message { get => Get(); set => Set(value); }
 
-		public string Message
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
-	
+		public bool IsInfo { get => Get(); set => Set(value); }
 
-		public bool IsInfo
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
+		public bool IsQuestion { get => Get(); set => Set(value); }
 
-		public bool IsQuestion
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}	
+		public bool IsWarn { get => Get(); set => Set(value); }
 
-		public bool IsWarn
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
+		public bool IsError { get => Get(); set => Set(value); }
 
-		public bool IsError
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
+		public string OkText { get => Get(); set => Set(value); }
 
-	
+		public string CancelText { get => Get(); set => Set(value); }
 
-		public string OkText
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
+		public bool IsCancelVisible { get => Get(); set => Set(value); }
 
-		public string CancelText
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
-
-		public bool IsCancelVisible
-		{
-			get { return Get(); }
-			set { Set(value); }
-		}
-
-		private void SetOK(Window window)
-		{
-			window.DialogResult = true;
-		}
+		private void SetOK(Window window) => window.DialogResult = true;
 	}
 }

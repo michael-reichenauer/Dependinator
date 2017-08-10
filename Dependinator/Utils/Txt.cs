@@ -1,5 +1,4 @@
-using System;
-
+using System.Globalization;
 
 namespace System
 {
@@ -28,5 +27,11 @@ namespace System
 
 		public static bool StartsWithTxtIc(this string text, string value) =>
 			text.StartsWith(value, StringComparison.OrdinalIgnoreCase);
+
+
+		public static string I(FormattableString formattable)
+		{
+			return formattable.ToString(CultureInfo.InvariantCulture);
+		}
 	}
 }

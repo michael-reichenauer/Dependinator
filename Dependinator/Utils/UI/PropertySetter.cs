@@ -2,12 +2,12 @@ namespace Dependinator.Utils.UI
 {
 	internal class PropertySetter
 	{
-		private readonly ViewModel viewModel;
+		private readonly Notifyable notifyable;
 
 
-		public PropertySetter(bool isSet, ViewModel viewModel)
+		public PropertySetter(bool isSet, Notifyable notifyable)
 		{
-			this.viewModel = viewModel;
+			this.notifyable = notifyable;
 			IsSet = isSet;
 		}
 
@@ -18,7 +18,7 @@ namespace Dependinator.Utils.UI
 		{
 			if (IsSet)
 			{
-				viewModel.Notify(otherPropertyNames);
+				notifyable.Notify(otherPropertyNames);
 			}
 		}
 
@@ -26,7 +26,7 @@ namespace Dependinator.Utils.UI
 		{
 			if (IsSet)
 			{
-				viewModel.NotifyAll();
+				notifyable.NotifyAll();
 			}
 		}
 	}

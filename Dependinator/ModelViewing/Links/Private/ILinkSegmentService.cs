@@ -1,48 +1,49 @@
 using System.Collections.Generic;
-using Dependinator.ModelViewing.Nodes;
 
 namespace Dependinator.ModelViewing.Links.Private
 {
 	internal interface ILinkSegmentService
 	{
-		IReadOnlyList<LinkSegment> GetNewLinkSegments(
-			IReadOnlyList<LinkSegment> linkSegments, LinkSegment newSegment);
+		IReadOnlyList<LinkSegment> GetLinkSegments(Link link);
+
+		//IReadOnlyList<LinkSegmentOld> GetNewLinkSegments(
+		//	IReadOnlyList<LinkSegmentOld> linkSegments, LinkSegmentOld newSegment);
 
 
-		IReadOnlyList<LinkSegment> GetNewLinkSegments(
-			IReadOnlyList<LinkSegment> linkSegments,
-			IReadOnlyList<LinkSegment> newSegments);
+		//IReadOnlyList<LinkSegmentOld> GetNewLinkSegments(
+		//	IReadOnlyList<LinkSegmentOld> linkSegments,
+		//	IReadOnlyList<LinkSegmentOld> newSegments);
 
 
-		LinkSegment GetZoomedInSegment(
-			IReadOnlyList<LinkSegment> replacedSegments, Link link);
+		//LinkSegmentOld GetZoomedInSegment(
+		//	IReadOnlyList<LinkSegmentOld> replacedSegments, LinkOld link);
 
 
-		IReadOnlyList<LinkSegment> GetZoomedInReplacedSegments(
-			IEnumerable<LinkSegment> linkSegments,
-			Node source,
-			Node target);
+		//IReadOnlyList<LinkSegmentOld> GetZoomedInReplacedSegments(
+		//	IEnumerable<LinkSegmentOld> linkSegments,
+		//	NodeOld source,
+		//	NodeOld target);
 
 
-		IReadOnlyList<LinkSegment> GetZoomedOutReplacedSegments(
-			IReadOnlyList<LinkSegment> normalSegments,
-			IReadOnlyList<LinkSegment> currentSegments,
-			Node source,
-			Node target);
+		//IReadOnlyList<LinkSegmentOld> GetZoomedOutReplacedSegments(
+		//	IReadOnlyList<LinkSegmentOld> normalSegments,
+		//	IReadOnlyList<LinkSegmentOld> currentSegments,
+		//	NodeOld source,
+		//	NodeOld target);
 
 
-		IReadOnlyList<LinkSegment> GetNormalLinkSegments(Link link);
 
 
-		IReadOnlyList<LinkSegment> GetZoomedInBeforeReplacedSegments(
-			IEnumerable<LinkSegment> linkSegments,
-			Node source,
-			Node target);
+
+		//IReadOnlyList<LinkSegmentOld> GetZoomedInBeforeReplacedSegments(
+		//	IEnumerable<LinkSegmentOld> linkSegments,
+		//	NodeOld source,
+		//	NodeOld target);
 
 
-		IReadOnlyList<LinkSegment> GetZoomedInAfterReplacedSegments(
-			IEnumerable<LinkSegment> linkSegments,
-			Node source,
-			Node target);
+		//IReadOnlyList<LinkSegmentOld> GetZoomedInAfterReplacedSegments(
+		//	IEnumerable<LinkSegmentOld> linkSegments,
+		//	NodeOld source,
+		//	NodeOld target);
 	}
 }

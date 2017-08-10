@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using Dependinator.Utils;
 
-
 namespace Dependinator.ModelViewing.Nodes
 {
 	internal class NodeName : Equatable<NodeName>
@@ -21,19 +20,20 @@ namespace Dependinator.ModelViewing.Nodes
 			this.fullName = fullName;
 			shortName = new Lazy<string>(GetShortName);
 			parentName = new Lazy<NodeName>(GetParentName);
-			IsEqualWhen(other => fullName == other.fullName, fullName);
+			IsEqualWhenSame(fullName);
 		}
 
 		public string ShortName => shortName.Value;
 
 		public NodeName ParentName => parentName.Value;
 
-		public static implicit operator string(NodeName nodeName) => nodeName?.fullName;
+		//public static implicit operator string(NodeName nodeName) => nodeName?.fullName;
 
-		public static implicit operator NodeName(string fullName) => new NodeName(fullName);
+		//public static implicit operator NodeName(string fullName) => new NodeName(fullName);
 
-		public override string ToString() => fullName;
+		public override string ToString() => this != Root ? fullName : "<root>";
 
+		public string AsString() => fullName;
 
 		public int GetLevelCount() => fullName.Count(c => c == '.') + 1;
 
@@ -50,7 +50,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 			if (index == -1)
 			{
-				// No parent
+				// Root is parent
 				return fullName;
 			}
 
@@ -68,7 +68,7 @@ namespace Dependinator.ModelViewing.Nodes
 				return Root;
 			}
 
-			return fullName.Substring(0, index);
+			return new NodeName(fullName.Substring(0, index));
 		}
 	}
 }
