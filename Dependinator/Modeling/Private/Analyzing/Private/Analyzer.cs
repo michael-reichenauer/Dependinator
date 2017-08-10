@@ -4,8 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using Dependinator.ApplicationHandling;
 using Dependinator.Modeling.Private.Serializing;
-using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 
 
@@ -22,6 +22,16 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 
 		public void AnalyzeAssembly(string assemblyPath, NotificationReceiver receiver)
+		{
+			// This is a call in a new app-domain,
+			// Ensure that this app-domain can resolve dependencies 
+			AssemblyResolver.Activate();
+
+			AnalyzeAssemblyImpl(assemblyPath, receiver);
+		}
+
+
+		private void AnalyzeAssemblyImpl(string assemblyPath, NotificationReceiver receiver)
 		{
 			// The sender, which will send notifications to the receiver in the parent app-domain
 			NotificationSender sender = new NotificationSender(receiver);

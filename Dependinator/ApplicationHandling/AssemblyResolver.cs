@@ -33,6 +33,7 @@ namespace Dependinator.ApplicationHandling
 				string resolveName = args.Name.Split(',')[0];
 				string resourceName = $"{name}.Dependencies.{resolveName}.dll";
 				
+				Log.Debug($"Resolve {resolveName}");
 				if (resolveName == "LibGit2Sharp" && shouldExtractLibGit2)
 				{				
 					HandleLibGit2SharpDependency(executingAssembly, name);
