@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
+using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
@@ -341,29 +342,27 @@ namespace Dependinator.ModelViewing.Links
 
 		private string GetToolTip()
 		{
+			string tip = "";
 
-			//IReadOnlyList<LinkGroup> linkGroups = linkService.GetLinkGroups(linkLine);
-			//string tip = "";
+			IReadOnlyList<LinkGroup> linkGroups = lineViewModelService.GetLinkGroups(line);
 
-			//foreach (var group in linkGroups)
-			//{
-			//	tip += $"\n  {group.Source} -> {group.Target} ({group.Links.Count})";
-			//}
+			foreach (var group in linkGroups)
+			{
+				tip += $"\n  {group.Source} -> {group.Target} ({group.Links.Count})";
+			}
 
-			//int linksCount = linkLine.Links.Count;
-			//tip = $"{linksCount} links:" + tip;
+			int linksCount = line.Links.Count;
 
-			//if (linkLine.Source == linkLine.Target.ParentNode
-			//    || linkLine.Target == linkLine.Source.ParentNode)
-			//{
-			//	tip = $"{linksCount} links:" + tip;
-			//}
-			//else
-			//{
-			//	tip = $"{this} {linksCount} links:" + tip;
-			//}
+			if (line.Source == line.Target.Parent || line.Target == line.Source.Parent)
+			{
+				tip = $"{linksCount} links:" + tip;
+			}
+			else
+			{
+				tip = $"{this} {linksCount} links:" + tip;
+			}
 
-			return $"{line} ({line.Links.Count} links)";
+			return tip;
 		}
 
 
