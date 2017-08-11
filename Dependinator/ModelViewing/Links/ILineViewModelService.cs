@@ -28,7 +28,7 @@ namespace Dependinator.ModelViewing.Links
 		/// Gets the links in the line grouped first by source and then by target at the
 		/// appropriate node levels.
 		/// </summary>
-		IReadOnlyList<LinkGroup> GetLinkGroups(LinkLineOld line);
+		IReadOnlyList<LinkGroup> GetLinkGroups(Line line);
 
 		Point GetClosestPointOnLineSegment(Point a, Point b, Point p);
 	}

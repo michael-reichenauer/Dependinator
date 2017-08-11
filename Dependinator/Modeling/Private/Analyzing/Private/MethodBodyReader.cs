@@ -68,7 +68,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 					case OperandType.InlineType:
 						metadataToken = ReadInt32(bodyIl, ref position);
-						operand = TryRsolveInlineType(method, module, metadataToken, genericTypeArguments, genericMethodArguments);
+						operand = TryResolveInlineType(method, module, metadataToken, genericTypeArguments, genericMethodArguments);
 						break;
 
 					case OperandType.InlineI:
@@ -128,7 +128,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 						operand = ReadByte(bodyIl, ref position);
 						break;
 
-				default:
+					default:
 						Log.Warn($"Unknown operand type {code.OperandType} in {method}");
 						throw new Exception("Unknown operand type.");
 				}
@@ -139,31 +139,22 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			return instructions;
 		}
 
-		
 
-		private static object TryRsolveInlineType(
+
+		private static object TryResolveInlineType(
 			MethodBase method,
 			Module module,
 			int metadataToken,
 			Type[] genericTypeArguments,
 			Type[] genericMethodArguments)
 		{
-			try
+			if (TryResolveType(
+				module, metadataToken, genericTypeArguments, genericMethodArguments, out object token))
 			{
-				return module.ResolveType(metadataToken);
-			}
-			catch (Exception)
-			{
-				try
-				{
-					return module.ResolveType(metadataToken, genericTypeArguments, genericMethodArguments);
-				}
-				catch (Exception e)
-				{
-					Log.Warn($"Error in {method}, {e.Msg()}");
-				}
+				return token;
 			}
 
+			Log.Error($"Error in {method} for {metadataToken}");
 			return null;
 		}
 
@@ -175,24 +166,21 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			Type[] genericTypeArguments,
 			Type[] genericMethodArguments)
 		{
-			try
+			if (TryResolveType(
+				module, metadataToken, genericTypeArguments, genericMethodArguments, out object token))
 			{
-				return module.ResolveType(metadataToken);
-			}
-			catch
-			{
-				// Try generic
-				try
-				{
-					return module.ResolveType(metadataToken, genericTypeArguments, genericMethodArguments);
-				}
-				catch (Exception e)
-				{
-					Log.Warn($"Error in {method}, {e.Msg()}");
-				}
+				return token;
 			}
 
-			return null;
+			token = TryResolveInlineMethod(
+				method, module, metadataToken, genericTypeArguments, genericMethodArguments);
+
+			if (token == null)
+			{
+				Log.Error($"Error in {method.DeclaringType}.{method.Name} for {metadataToken}");
+			}
+
+			return token;
 		}
 
 
@@ -285,27 +273,103 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		}
 
 
-		// Note: !!! This function can solve problem when referencing in other modules 
-		private static object ResolveType(Module module, int metadataToken)
+
+		private static bool TryResolveType(
+			Module module,
+			int metadataToken,
+			Type[] genericTypeArguments,
+			Type[] genericMethodArguments,
+			out object type)
 		{
-			AssemblyName[] assemblyNames = module.Assembly.GetReferencedAssemblies();
-			foreach (AssemblyName assemblyName in assemblyNames)
+			if (TryResolveTypeImpl(
+				module, metadataToken, genericTypeArguments, genericMethodArguments, out type))
 			{
-				Module[] modules = Assembly.Load(assemblyName).GetModules();
-				foreach (Module referencedModule in modules)
+				return true;
+			}
+
+			////AssemblyName[] assemblyNames = module.Assembly.GetReferencedAssemblies();
+			////foreach (AssemblyName assemblyName in assemblyNames)
+			////{
+			////	if (TryLoadAssembly(assemblyName, out Assembly assembly))
+			////	{
+			////		Module[] modules = assembly.GetModules();
+			////		foreach (Module referencedModule in modules)
+			////		{
+			////			if (TryResolveTypeImpl(
+			////				referencedModule, metadataToken, genericTypeArguments, genericMethodArguments, out type))
+			////			{
+			////				Log.Warn($"Resolved {type}");
+			////				return true;
+			////			}
+			////		}
+			////	}
+			////}
+
+			return false;
+		}
+
+
+		private static bool TryLoadAssembly(AssemblyName assemblyName, out Assembly assembly)
+		{
+
+			try
+			{
+				assembly = Assembly.ReflectionOnlyLoad(assemblyName.FullName);
+				return true;
+			}
+			catch (Exception)
+			{
+				// Failed to load assembly via name, trying to load via name
+			}
+
+			try
+			{
+				string name = assemblyName.FullName.Split(',')[0];
+
+				assembly = Assembly.ReflectionOnlyLoadFrom($"{name}.dll");
+				return true;
+			}
+			catch (Exception e)
+			{
+				Log.Exception(e, $"Could not assembly via name nor file {assemblyName.FullName}");
+
+				assembly = null;
+				return false;
+			}
+
+		}
+
+
+		private static bool TryResolveTypeImpl(
+			Module module,
+			int metadataToken,
+			Type[] genericTypeArguments,
+			Type[] genericMethodArguments,
+			out object type)
+		{
+			try
+			{
+				type = module.ResolveType(metadataToken);
+				return true;
+			}
+			catch (Exception)
+			{
+				try
 				{
-					try
+					if (genericTypeArguments != null || genericMethodArguments != null)
 					{
-						return referencedModule.ResolveType(metadataToken);
+						type = module.ResolveType(metadataToken, genericTypeArguments, genericMethodArguments);
+						return true;
 					}
-					catch (Exception e)
-					{
-						Log.Warn($"Error: {e.Msg()}");
-					}
+				}
+				catch (Exception)
+				{
+					// Ignore
 				}
 			}
 
-			return null;
+			type = null;
+			return false;
 		}
 
 

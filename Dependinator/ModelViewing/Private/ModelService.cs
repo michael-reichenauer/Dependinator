@@ -14,6 +14,8 @@ namespace Dependinator.ModelViewing.Private
 	[SingleInstance]
 	internal class ModelService : IModelService, IModelNotifications
 	{
+		private static readonly int BatchSize = 1000;
+
 		private readonly IModelingService modelingService;
 		private readonly INodeService nodeService;
 		private readonly ILinkService linkService;
@@ -22,6 +24,7 @@ namespace Dependinator.ModelViewing.Private
 		private readonly Model model;
 		private readonly WorkingFolder workingFolder;
 		private Dispatcher dispatcher;
+
 
 		public ModelService(
 			IModelingService modelingService,
@@ -61,7 +64,7 @@ namespace Dependinator.ModelViewing.Private
 
 		public void UpdateNodes(IReadOnlyList<DataNode> nodes)
 		{
-			foreach (List<DataNode> batch in nodes.Partition(100))
+			foreach (List<DataNode> batch in nodes.Partition(BatchSize))
 			{
 				InvokeOnUiThread(UpdateNodes, batch);
 			}
@@ -75,7 +78,7 @@ namespace Dependinator.ModelViewing.Private
 
 		public void UpdateLinks(IReadOnlyList<DataLink> links)
 		{
-			foreach (List<DataLink> batch in links.Partition(100))
+			foreach (List<DataLink> batch in links.Partition(BatchSize))
 			{
 				InvokeOnUiThread(UpdateLinks, batch);
 			}

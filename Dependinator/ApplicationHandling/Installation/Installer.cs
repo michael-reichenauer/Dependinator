@@ -19,14 +19,20 @@ namespace Dependinator.ApplicationHandling.Installation
 		private static readonly string UninstallRegKey = "HKEY_CURRENT_USER\\" + UninstallSubKey;
 		private static readonly string subFolderContextMenuPath =
 			"Software\\Classes\\Folder\\shell\\dependinator";
+		private static readonly string subdllContextMenuPath =
+			"Software\\Classes\\.dll\\shell\\dependinator";
 		private static readonly string subDirectoryBackgroundContextMenuPath =
 			"Software\\Classes\\Directory\\Background\\shell\\dependinator";
 		private static readonly string folderContextMenuPath =
 			"HKEY_CURRENT_USER\\" + subFolderContextMenuPath;
+		private static readonly string dllContextMenuPath =
+			"HKEY_CURRENT_USER\\" + subdllContextMenuPath;
 		private static readonly string directoryContextMenuPath =
 			"HKEY_CURRENT_USER\\" + subDirectoryBackgroundContextMenuPath;
 		private static readonly string folderCommandContextMenuPath =
 			folderContextMenuPath + "\\command";
+		private static readonly string dllCommandContextMenuPath =
+			dllContextMenuPath + "\\command";
 		private static readonly string directoryCommandContextMenuPath =
 			directoryContextMenuPath + "\\command";
 		private static readonly string SetupTitle = "Dependinator - Setup";
@@ -418,6 +424,11 @@ namespace Dependinator.ApplicationHandling.Installation
 			Registry.SetValue(directoryContextMenuPath, "Icon", programFilePath);
 			Registry.SetValue(
 				directoryCommandContextMenuPath, "", "\"" + programFilePath + "\" \"/d:%V\"");
+
+			Registry.SetValue(dllContextMenuPath, "", ProgramPaths.ProgramName);
+			Registry.SetValue(dllContextMenuPath, "Icon", programFilePath);
+			Registry.SetValue(dllCommandContextMenuPath, "", "\"" + programFilePath + "\" \"/d:%1\"");
+
 		}
 
 
@@ -427,6 +438,7 @@ namespace Dependinator.ApplicationHandling.Installation
 			{
 				Registry.CurrentUser.DeleteSubKeyTree(subFolderContextMenuPath);
 				Registry.CurrentUser.DeleteSubKeyTree(subDirectoryBackgroundContextMenuPath);
+				Registry.CurrentUser.DeleteSubKeyTree(subdllContextMenuPath);
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{

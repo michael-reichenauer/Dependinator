@@ -23,7 +23,10 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		public static Assembly LoadAssembly(string path)
 		{
 			Log.Debug($"Try load {path}");
-			return Assembly.ReflectionOnlyLoadFrom(path);
+			Assembly assembly = Assembly.ReflectionOnlyLoadFrom(path);
+
+			LoadReferencedAssemblies(assembly);
+			return assembly;
 		}
 
 
@@ -69,32 +72,64 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			{
 				return null;
 			}
+			
+			if (TryGetAssemblyByName(assemblyName, out Assembly assembly))
+			{
+				// Log.Debug($"Resolve assembly by name {args.Name}");
+				return assembly;
+			}	
 
-			Assembly assembly;
-
-			string path = assemblyName.Name + ".dll";
-
-			if (File.Exists(path) && TryGetAssemblyByFile(path, out assembly))
+			if (TryGetAssemblyByFile(assemblyName, out assembly))
 			{
 				// Log.Debug($"Resolve assembly by file {assemblyName + ".dll"}");
 				return assembly;
 			}
-
-			if (TryGetAssemblyByName(assemblyName, out assembly))
-			{
-				// Log.Debug($"Resolve assembly by name {args.Name}");
-				return assembly;
-			}
-
+	
 			if (TryLoadFromResources(args, out assembly))
 			{
 				Log.Warn($"Resolve assembly from resources {args.Name}");
 				return assembly;
 			}
 
-			Log.Error($"Failed to resolve assembly {args.Name}");
+			// Try to check if the referenced assembly has been loaded with e.g. other version
+			Assembly[] assemblies = AppDomain.CurrentDomain.ReflectionOnlyGetAssemblies();
+			assembly = assemblies.FirstOrDefault(a => a.GetName().Name == assemblyName.Name);
+			if (assembly != null)
+			{
+				Log.Debug($"Resolved alternative of '{assemblyName}', using: '{assembly}'");
+				return assembly;
+			}
 
+			Log.Error($"Failed to resolve assembly {args.Name}");
 			return null;
+		}
+
+
+		private static void LoadReferencedAssemblies(Assembly assembly)
+		{
+			AssemblyName[] assemblyNames = assembly.GetReferencedAssemblies();
+			Log.Debug($"Try loading {assemblyNames.Length} referenced assemblies by {assembly}");
+			foreach (AssemblyName assemblyName in assemblyNames)
+			{
+				Log.Debug($"   Try load: {assemblyName}");
+
+				try
+				{
+					Assembly.ReflectionOnlyLoad(assemblyName.FullName);
+				}
+				catch (FileNotFoundException)
+				{
+					// Failed to load assembly via name, trying to load via name
+					try
+					{
+						Assembly.ReflectionOnlyLoadFrom($"{assemblyName.Name}.dll");
+					}
+					catch (Exception e2)
+					{
+						Log.Exception(e2, $"Could not load assembly via name nor file {assemblyName.FullName}");
+					}
+				}			
+			}
 		}
 
 
@@ -102,7 +137,6 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		{
 			try
 			{
-				Log.Debug($"Try load {assemblyName}");
 				assembly = Assembly.ReflectionOnlyLoad(assemblyName.FullName);
 				return true;
 			}
@@ -114,17 +148,24 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		}
 
 
-		private static bool TryGetAssemblyByFile(string path, out Assembly assembly)
+		private static bool TryGetAssemblyByFile(AssemblyName assemblyName, out Assembly assembly)
 		{
 			try
 			{
+				string path = assemblyName.Name + ".dll";
+				if (!File.Exists(path))
+				{
+					assembly = null;
+					return false;
+				}
+
 				Log.Debug($"Try load {path}");
 				assembly = Assembly.ReflectionOnlyLoadFrom(path);
 				return true;
 			}
 			catch (Exception e)
 			{
-				Log.Warn($"Failed to load {path}, {e.GetType()}, {e.Message}");
+				Log.Warn($"Failed to load {assemblyName.Name}.dll, {e.GetType()}, {e.Message}");
 				assembly = null;
 				return false;
 			}

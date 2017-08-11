@@ -703,11 +703,11 @@ namespace Dependinator.ModelViewing.Links.Private
 		/// Gets the links in the line grouped first by source and then by target at the
 		/// appropriate node levels.
 		/// </summary>
-		public IReadOnlyList<LinkGroup> GetLinkGroups(LinkLineOld line)
+		public IReadOnlyList<LinkGroup> GetLinkGroups(Line line)
 		{
-			NodeOld source = line.Source;
-			NodeOld target = line.Target;
-			IReadOnlyList<LinkOld> links = line.Links;
+			Node source = line.Source;
+			Node target = line.Target;
+			IReadOnlyList<Link> links = line.Links;
 
 			(int sourceLevel, int targetLevel) = GetNodeLevels(source, target);
 
@@ -721,9 +721,9 @@ namespace Dependinator.ModelViewing.Links.Private
 				var groupByTargets = groupBySource.GroupBy(link => NodeAtLevel(link.Target, targetLevel));
 				foreach (var groupByTarget in groupByTargets)
 				{
-					NodeOld sourceNode = groupBySource.Key;
-					NodeOld targetNode = groupByTarget.Key;
-					List<LinkOld> groupLinks = groupByTarget.ToList();
+					Node sourceNode = groupBySource.Key;
+					Node targetNode = groupByTarget.Key;
+					List<Link> groupLinks = groupByTarget.ToList();
 
 					LinkGroup linkGroup = new LinkGroup(sourceNode, targetNode, groupLinks);
 					linkGroups.Add(linkGroup);
@@ -734,17 +734,17 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		private static (int sourceLevel, int targetLevel) GetNodeLevels(NodeOld source, NodeOld target)
+		private static (int sourceLevel, int targetLevel) GetNodeLevels(Node source, Node target)
 		{
 			int sourceLevel = source.Ancestors().Count();
 			int targetLevel = target.Ancestors().Count();
 
-			if (source == target.ParentNode)
+			if (source == target.Parent)
 			{
 				// Source node is parent of target
 				targetLevel += 1;
 			}
-			else if (source.ParentNode == target)
+			else if (source.Parent == target)
 			{
 				// Source is child of target
 				sourceLevel += 1;
@@ -760,11 +760,11 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		private static NodeOld NodeAtLevel(NodeOld node, int level)
+		private static Node NodeAtLevel(Node node, int level)
 		{
 			int count = 0;
-			NodeOld current = null;
-			foreach (NodeOld ancestor in node.AncestorsAndSelf().Reverse())
+			Node current = null;
+			foreach (Node ancestor in node.AncestorsAndSelf().Reverse())
 			{
 				current = ancestor;
 				if (count++ == level)

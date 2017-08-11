@@ -74,16 +74,17 @@ namespace Dependinator.ModelViewing.Links
 
 		private string GetToolTip()
 		{
-			IReadOnlyList<LinkGroup> linkGroups = lineViewModelService.GetLinkGroups(linkLine);
 			string tip = "";
 
-			foreach (var group in linkGroups)
-			{
-				tip += $"\n  {group.Source} -> {group.Target} ({group.Links.Count})";
-			}
+			//IReadOnlyList<LinkGroup> linkGroups = lineViewModelService.GetLinkGroups(linkLine);
 
-			int linksCount = linkLine.Links.Count;
-			tip = $"{linksCount} links:" + tip;
+			//foreach (var group in linkGroups)
+			//{
+			//	tip += $"\n  {group.Source} -> {group.Target} ({group.Links.Count})";
+			//}
+
+			//int linksCount = linkLine.Links.Count;
+			//tip = $"{linksCount} links:" + tip;
 
 			//if (linkLine.Source == linkLine.Target.ParentNode
 			//    || linkLine.Target == linkLine.Source.ParentNode)

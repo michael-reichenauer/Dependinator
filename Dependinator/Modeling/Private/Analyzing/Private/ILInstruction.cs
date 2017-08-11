@@ -20,5 +20,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			Operand = operand;
 			Offset = offset;
 		}
+
+		public override string ToString() => IlToText.AsText(this);
 	}
 }
