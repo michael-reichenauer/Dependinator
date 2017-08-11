@@ -20,6 +20,9 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 		public override object InitializeLifetimeService() => null;
 
+		private readonly List<MethodBody> methodBodies = new List<MethodBody>();
+		private int memberCount = 0;
+
 
 		public void AnalyzeAssembly(string assemblyPath, NotificationReceiver receiver)
 		{
@@ -84,20 +87,32 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 		private void AnalyzeAssembly(Assembly assembly, NotificationSender sender)
 		{
+			Log.Debug($"Analyzing {assembly}");
+
+			Timing t = new Timing();
 			var assemblyTypes = assembly.DefinedTypes
-				.Where(type => !Reflection.IsCompilerGenerated(type.Name) 
+				.Where(type => !Reflection.IsCompilerGenerated(type.Name)
 					&& !Reflection.IsCompilerGenerated(type.DeclaringType?.Name));
 
 			// Add type nodes
 			List<(TypeInfo type, Data.Node node)> typeNodes = assemblyTypes
 				.Select(type => AddType(type, sender))
 				.ToList();
+			t.Log($"Added {typeNodes.Count} types");
 
 			// Add inheritance links
 			typeNodes.ForEach(typeNode => AddLinksToBaseTypes(typeNode.type, typeNode.node, sender));
+			t.Log("Added links to base types");
 
 			// Add type members
 			typeNodes.ForEach(typeNode => AddTypeMembers(typeNode.type, typeNode.node, sender));
+			t.Log($"Added {memberCount} members");
+
+			// Add type methods bodies
+			methodBodies.ForEach(method => AddMethodBodyLinks(method.MemberNode, method.Method, sender));
+			t.Log($"Added {methodBodies.Count} method bodies");
+
+			Log.Debug($"Added {sender.NodeCount} nodes and {sender.LinkCount} links");
 		}
 
 
@@ -171,6 +186,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 				string memberName = Reflection.GetMemberFullName(memberInfo, typeNode.Name);
 
 				var memberNode = sender.SendNode(memberName, Data.NodeType.Member);
+				memberCount++;
 
 				AddMemberLinks(memberNode, memberInfo, sender);
 			}
@@ -220,14 +236,15 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 				.Select(parameter => parameter.ParameterType)
 				.ForEach(parameterType => AddLinkToType(memberNode, parameterType, sender));
 
-			AddMethodBodyLinks(memberNode, method, sender);
+			methodBodies.Add(new MethodBody(memberNode, method));
+			//AddMethodBodyLinks(memberNode, method, sender);
 		}
 
 
 		private void AddMethodBodyLinks(
 			Data.Node memberNode, MethodInfo method, NotificationSender sender)
 		{
-			MethodBody methodBody = method.GetMethodBody();
+			System.Reflection.MethodBody methodBody = method.GetMethodBody();
 
 			if (methodBody != null)
 			{
@@ -342,6 +359,19 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			}
 
 			Log.Debug($"Current directory '{Environment.CurrentDirectory}'");
+		}
+
+
+		private class MethodBody
+		{
+			public Data.Node MemberNode { get; }
+			public MethodInfo Method { get; }
+
+			public MethodBody(Data.Node memberNode, MethodInfo method)
+			{
+				MemberNode = memberNode;
+				Method = method;
+			}
 		}
 	}
 }

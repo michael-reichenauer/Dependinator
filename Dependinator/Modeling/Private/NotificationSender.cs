@@ -16,9 +16,13 @@ namespace Dependinator.Modeling.Private
 		private readonly NotificationReceiver receiver;
 		private readonly BlockingCollection<object> items = new BlockingCollection<object>();
 
+		
 		private readonly Dictionary<string, Data.Node> sentNodes = new Dictionary<string, Data.Node>();
 		private readonly Task sendTask;
 
+		public int NodeCount => sentNodes.Count;
+
+		public int LinkCount { get; private set; }
 
 		public NotificationSender(NotificationReceiver receiver)
 		{
@@ -75,6 +79,7 @@ namespace Dependinator.Modeling.Private
 				Target = targetNodeName
 			};
 
+			LinkCount++;
 			items.Add(link);
 		}
 
