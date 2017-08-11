@@ -218,6 +218,14 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 				{
 					AddMethodLinks(sourceMemberNode, method, sender);
 				}
+				else if (member is ConstructorInfo constructor)
+				{
+					AddConstructorLinks(sourceMemberNode, constructor, sender);
+				}
+				else
+				{
+					Log.Warn($"Unknown member type {member.DeclaringType}.{member.Name}");
+				}
 			}
 			catch (Exception e)
 			{
@@ -237,12 +245,22 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 				.ForEach(parameterType => AddLinkToType(memberNode, parameterType, sender));
 
 			methodBodies.Add(new MethodBody(memberNode, method));
-			//AddMethodBodyLinks(memberNode, method, sender);
+		}
+
+
+		private void AddConstructorLinks(
+			Data.Node memberNode, ConstructorInfo method, NotificationSender sender)
+		{
+			method.GetParameters()
+				.Select(parameter => parameter.ParameterType)
+				.ForEach(parameterType => AddLinkToType(memberNode, parameterType, sender));
+
+			methodBodies.Add(new MethodBody(memberNode, method));
 		}
 
 
 		private void AddMethodBodyLinks(
-			Data.Node memberNode, MethodInfo method, NotificationSender sender)
+			Data.Node memberNode, MethodBase method, NotificationSender sender)
 		{
 			System.Reflection.MethodBody methodBody = method.GetMethodBody();
 
@@ -365,9 +383,9 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		private class MethodBody
 		{
 			public Data.Node MemberNode { get; }
-			public MethodInfo Method { get; }
+			public MethodBase Method { get; }
 
-			public MethodBody(Data.Node memberNode, MethodInfo method)
+			public MethodBody(Data.Node memberNode, MethodBase method)
 			{
 				MemberNode = memberNode;
 				Method = method;
