@@ -85,7 +85,8 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		private void AnalyzeAssembly(Assembly assembly, NotificationSender sender)
 		{
 			var assemblyTypes = assembly.DefinedTypes
-				.Where(type => !Reflection.IsCompilerGenerated(type.Name));
+				.Where(type => !Reflection.IsCompilerGenerated(type.Name) 
+					&& !Reflection.IsCompilerGenerated(type.DeclaringType?.Name));
 
 			// Add type nodes
 			List<(TypeInfo type, Data.Node node)> typeNodes = assemblyTypes
@@ -263,6 +264,10 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			}
 
 			string methodName = Reflection.GetMemberFullName(method, declaringType);
+			if (Reflection.IsCompilerGenerated(methodName))
+			{
+				return;
+			}
 
 			sender.SendNode(methodName, Data.NodeType.Member);
 			sender.SendLink(memberNode.Name, methodName);

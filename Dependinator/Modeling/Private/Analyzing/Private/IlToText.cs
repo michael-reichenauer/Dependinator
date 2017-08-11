@@ -24,7 +24,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		/// <summary>
 		/// Returns a friendly strign representation of this instruction
 		/// </summary>
-		private static string AsText(ILInstruction il)
+		public static string AsText(ILInstruction il)
 		{
 			OpCode code = il.Code;
 			int offset = il.Offset;

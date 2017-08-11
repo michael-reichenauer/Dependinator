@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Dependinator.Modeling.Private.Analyzing.Private;
 using Dependinator.Modeling.Private.Serializing;
 using Dependinator.Utils;
 
@@ -29,6 +30,11 @@ namespace Dependinator.Modeling.Private
 
 		public Data.Node SendNode(string nodeName, string nodeType)
 		{
+			if (Reflection.IsCompilerGenerated(nodeName))
+			{
+				Log.Warn($"Compiler generated node: {nodeName}");
+			}
+
 			if (sentNodes.TryGetValue(nodeName, out Data.Node node))
 			{
 				// Already sent this node
@@ -50,6 +56,13 @@ namespace Dependinator.Modeling.Private
 
 		public void SendLink(string sourceNodeName, string targetNodeName)
 		{
+			if (Reflection.IsCompilerGenerated(sourceNodeName) 
+				|| Reflection.IsCompilerGenerated(targetNodeName))
+			{
+				Log.Warn($"Compiler generated link: {sourceNodeName}->{targetNodeName}");
+			}
+
+
 			if (sourceNodeName == targetNodeName)
 			{
 				// Skipping link to self

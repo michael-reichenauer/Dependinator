@@ -6,7 +6,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 	internal class Reflection
 	{
 		// Compiler generated names seems to contain "<", while generic names use "'"
-		public static bool IsCompilerGenerated(string name) => name.Contains("<");
+		public static bool IsCompilerGenerated(string name) => name?.Contains("<") ?? false;
 
 
 		public static string GetTypeFullName(Type type)
