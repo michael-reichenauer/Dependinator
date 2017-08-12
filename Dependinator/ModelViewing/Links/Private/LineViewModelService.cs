@@ -21,6 +21,31 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
+		public void UpdateLineBounds(Line line)
+		{
+			Point sp = line.FirstPoint;
+			Point tp = line.LastPoint;
+
+			// Calculate the line boundaries bases on first an last point
+			double x = Math.Min(sp.X, tp.X);
+			double y = Math.Min(sp.Y, tp.Y);
+			double width = Math.Abs(tp.X - sp.X);
+			double height = Math.Abs(tp.Y - sp.Y);
+
+			Rect bounds = new Rect(x, y, width, height);
+
+			// Adjust boundaries for line points between first and last point
+			line.MiddlePoints().ForEach(point => bounds.Union(point));
+
+			// The items bound has some margin around the line to allow full line width and arrow to show
+			double scale = line.ViewModel.ItemScale;
+			line.ViewModel.ItemBounds = new Rect(
+				bounds.X - LineMargin / scale,
+				bounds.Y - (LineMargin) / scale,
+				bounds.Width + (LineMargin * 2) / scale,
+				bounds.Height + (LineMargin * 2) / scale);
+		}
+
 
 		public void UpdateLineEndPoints(Line line)
 		{
@@ -50,33 +75,6 @@ namespace Dependinator.ModelViewing.Links.Private
 			line.FirstPoint = sp;
 			line.LastPoint = tp;
 		}
-
-
-		public void UpdateLineBounds(Line line)
-		{
-			Point sp = line.FirstPoint;
-			Point tp = line.LastPoint;
-
-			// Calculate the line boundaries bases on first an last point
-			double x = Math.Min(sp.X, tp.X);
-			double y = Math.Min(sp.Y, tp.Y);
-			double width = Math.Abs(tp.X - sp.X);
-			double height = Math.Abs(tp.Y - sp.Y);
-
-			Rect bounds = new Rect(x, y, width, height);
-
-			// Adjust boundaries for line points between first and last
-			line.MiddlePoints().ForEach(point => bounds.Union(point));
-
-			// The items bound has some margin around the line to allow full line width and arrow to show
-			double scale = line.ViewModel.ItemScale;
-			line.ViewModel.ItemBounds = new Rect(
-				bounds.X - LineMargin / scale,
-				bounds.Y - (LineMargin) / scale,
-				bounds.Width + (LineMargin * 2) / scale,
-				bounds.Height + (LineMargin * 2) / scale);
-		}
-
 
 
 		public bool IsOnLineBetweenNeighbors(Line line, int index)
