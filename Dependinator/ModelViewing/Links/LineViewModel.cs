@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Links.Private;
@@ -40,7 +41,6 @@ namespace Dependinator.ModelViewing.Links
 			UpdateLine();
 
 
-
 			TrackSourceOrTargetChanges();
 		}
 
@@ -54,7 +54,8 @@ namespace Dependinator.ModelViewing.Links
 
 
 
-		public Brush LineBrush => source.RectangleBrush;
+		public Brush LineBrush => source.Node!= target.Node.Parent 
+			? source.RectangleBrush : target.RectangleBrush;
 
 		public bool IsMouseOver { get => Get(); private set => Set(value); }
 
@@ -346,22 +347,32 @@ namespace Dependinator.ModelViewing.Links
 
 			IReadOnlyList<LinkGroup> linkGroups = lineViewModelService.GetLinkGroups(line);
 
-			foreach (var group in linkGroups)
+			var groupBySources = linkGroups.GroupBy(link => link.Source);
+
+			foreach (var group in groupBySources)
 			{
-				tip += $"\n  {group.Source} -> {group.Target} ({group.Links.Count})";
+				tip += $"\n  {group.Key} ->";
+
+				foreach (LinkGroup linkGroup in group)
+				{
+					tip += $"\n           -> {linkGroup.Target} ({linkGroup.Links.Count})";
+				}
 			}
 
-			int linksCount = line.Links.Count;
+			//int linksCount = line.Links.Count;
 
-			if (line.Source == line.Target.Parent || line.Target == line.Source.Parent)
-			{
-				tip = $"{linksCount} links:" + tip;
-			}
-			else
-			{
-				tip = $"{this} {linksCount} links:" + tip;
-			}
+			//if (line.Source == line.Target.Parent || line.Target == line.Source.Parent)
+			//{
+			//	tip = $"{linksCount} links:" + tip;
+			//}
+			//else
+			//{
+			//	tip = $"{this} {linksCount} links:" + tip;
+			//}
 
+
+			tip = tip.Substring(1); // Skipping first "\n"
+		
 			return tip;
 		}
 
@@ -387,5 +398,7 @@ namespace Dependinator.ModelViewing.Links
 			IsMouseOver = false;
 			Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
 		}
+
+		public void UpdateToolTip() => Notify(nameof(ToolTip));
 	}
 }

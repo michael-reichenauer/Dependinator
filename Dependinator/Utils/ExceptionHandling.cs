@@ -3,27 +3,24 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using Dependinator.ApplicationHandling.SettingsHandling;
-using Dependinator.Common.MessageDialogs;
-using Dependinator.Utils;
 using Dependinator.Utils.UI;
 
 
-namespace Dependinator.Common
+namespace Dependinator.Utils
 {
 	internal static class ExceptionHandling
 	{
 		private static readonly TimeSpan MinTimeBeforeAutoRestart = TimeSpan.FromSeconds(10);
 
-		private static readonly ICmd cmd = new Cmd();
-
-
 		private static bool hasDisplayedErrorMessageBox;
 		private static bool hasFailed;
 		private static bool hasShutdown;
-		private static DateTime StartTime = DateTime.Now;
-		private static bool IsDispatcherInitialized = false;
+		private static DateTime startTime = DateTime.Now;
+		private static bool isDispatcherInitialized = false;
 
+
+		public static event EventHandler ExceptionOnStartupOccurred;
+		public static event EventHandler ExceptionOccurred;
 
 
 		public static void HandleUnhandledException()
@@ -41,7 +38,7 @@ namespace Dependinator.Common
 				e.SetObserved();
 			};
 
-			// Add event handler for fatal execptions using catch condition "when (e.IsNotFatal())"
+			// Add event handler for fatal exceptions using catch condition "when (e.IsNotFatal())"
 			FatalExceptionsExtensions.FatalExeption += (s, e) =>
 				HandleException(e.Message, e.Exception);
 		}
@@ -58,7 +55,7 @@ namespace Dependinator.Common
 
 			WpfBindingTraceListener.Register();
 
-			IsDispatcherInitialized = true;
+			isDispatcherInitialized = true;
 		}
 
 
@@ -98,7 +95,7 @@ namespace Dependinator.Common
 			string errorMessage = $"{message}:\n{e.Txt()}";
 			Log.Error(errorMessage);
 
-			if (IsDispatcherInitialized)
+			if (isDispatcherInitialized)
 			{
 				var dispatcher = GetApplicationDispatcher();
 				if (dispatcher.CheckAccess())
@@ -116,12 +113,12 @@ namespace Dependinator.Common
 				Debugger.Break();
 			}
 
-			if (DateTime.Now - StartTime >= MinTimeBeforeAutoRestart)
+			if (DateTime.Now - startTime >= MinTimeBeforeAutoRestart)
 			{
-				Restart();
+				ExceptionOccurred?.Invoke(null, EventArgs.Empty);
 			}
 
-			if (IsDispatcherInitialized)
+			if (isDispatcherInitialized)
 			{
 				Application.Current.Shutdown(0);
 			}
@@ -139,22 +136,15 @@ namespace Dependinator.Common
 				return;
 			}
 
-			if (DateTime.Now - StartTime < MinTimeBeforeAutoRestart)
+			if (DateTime.Now - startTime < MinTimeBeforeAutoRestart)
 			{
-				Message.ShowError("Sorry, but an unexpected error just occurred", "Dependinator");
-				StartTime = DateTime.Now;
+				ExceptionOnStartupOccurred?.Invoke(null, EventArgs.Empty);
+				startTime = DateTime.Now;
 			}
 
 			hasDisplayedErrorMessageBox = true;
 		}
-
-
-		private static void Restart()
-		{
-			string targetPath = ProgramPaths.GetInstallFilePath();
-			cmd.Start(targetPath, "");
-		}
-
+		
 
 		private static Dispatcher GetApplicationDispatcher() =>
 			Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;

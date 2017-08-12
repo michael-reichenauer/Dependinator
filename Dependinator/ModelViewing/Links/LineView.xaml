@@ -51,7 +51,8 @@
 						Content="{Binding ToolTip}"
 						Placement="Mouse"
 						BorderBrush="{Binding LineBrush}"
-						BorderThickness="1" />
+						BorderThickness="1" 
+						Opened="ToolTip_OnOpened"/>
 				</Path.ToolTip>
 			</Path>
 

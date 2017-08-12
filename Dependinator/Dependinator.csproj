@@ -286,7 +286,7 @@
     <Compile Include="ModelViewing\ModelViewModel.cs" />
     <Compile Include="Utils\IReadOnlyKeyedList.cs" />
     <Compile Include="Utils\KeyedList.cs" />
-    <Compile Include="Common\ExceptionHandling.cs" />
+    <Compile Include="Utils\ExceptionHandling.cs" />
     <Compile Include="Utils\FatalExceptionsExtensions.cs" />
     <Compile Include="ApplicationHandling\CommandLine.cs" />
     <Compile Include="ApplicationHandling\ICommandLine.cs" />

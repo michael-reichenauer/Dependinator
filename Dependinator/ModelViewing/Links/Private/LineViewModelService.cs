@@ -744,17 +744,17 @@ namespace Dependinator.ModelViewing.Links.Private
 				// Source node is parent of target
 				targetLevel += 1;
 			}
-			else if (source.Parent == target)
-			{
-				// Source is child of target
-				sourceLevel += 1;
-			}
-			else
-			{
-				// Siblings, dig into both source and level
-				sourceLevel += 1;
-				targetLevel += 1;
-			}
+			//else if (source.Parent == target)
+			//{
+			//	// Source is child of target
+			//	// sourceLevel += 1;
+			//}
+			//else
+			//{
+			//	// Siblings, dig into both source and level
+			//	//sourceLevel += 1;
+			//	//targetLevel += 1;
+			//}
 
 			return (sourceLevel, targetLevel);
 		}

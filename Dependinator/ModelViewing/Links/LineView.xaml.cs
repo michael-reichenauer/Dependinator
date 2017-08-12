@@ -1,4 +1,5 @@
-﻿using System.Windows.Controls;
+﻿using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using Dependinator.Utils.UI;
 
@@ -33,5 +34,7 @@ namespace Dependinator.ModelViewing.Links
 
 		private void UIElement_OnMouseLeave(object sender, MouseEventArgs e) =>
 			ViewModel?.OnMouseLeave();
+
+		private void ToolTip_OnOpened(object sender, RoutedEventArgs e) => ViewModel?.UpdateToolTip();
 	}
 }

@@ -2,7 +2,8 @@
 using System.Diagnostics;
 using System.Reflection;
 using Dependinator.ApplicationHandling;
-using Dependinator.Common;
+using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Common.MessageDialogs;
 using Dependinator.Utils;
 
 
@@ -11,6 +12,7 @@ namespace Dependinator
 	public class Program
 	{
 		private readonly DependencyInjection dependencyInjection = new DependencyInjection();
+		private static readonly ICmd Cmd = new Cmd();
 
 
 		[STAThread]
@@ -25,7 +27,7 @@ namespace Dependinator
 		private void Run()
 		{
 			// Add handler and logging for unhandled exceptions
-			ExceptionHandling.HandleUnhandledException();
+			ManageUnhandledExceptions();
 
 			// Make external assemblies that Dependinator depends on available, when needed (extracted)
 			ActivateExternalDependenciesResolver();
@@ -40,6 +42,7 @@ namespace Dependinator
 			application.Run();
 		}
 
+		
 
 		private static void ActivateExternalDependenciesResolver()
 		{
@@ -71,6 +74,22 @@ namespace Dependinator
 			Assembly assembly = Assembly.GetExecutingAssembly();
 			FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 			return fvi.FileVersion;
+		}
+
+
+		private static void ManageUnhandledExceptions()
+		{
+			ExceptionHandling.ExceptionOccurred += (s, e) => Restart();
+			ExceptionHandling.ExceptionOnStartupOccurred += (s, e) =>
+				Message.ShowError("Sorry, but an unexpected error just occurred", "Dependinator");
+			ExceptionHandling.HandleUnhandledException();
+		}
+
+
+		private static void Restart()
+		{
+			string targetPath = ProgramPaths.GetInstallFilePath();
+			Cmd.Start(targetPath, "");
 		}
 	}
 }
