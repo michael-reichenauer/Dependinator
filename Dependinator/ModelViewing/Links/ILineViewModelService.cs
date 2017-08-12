@@ -10,11 +10,9 @@ namespace Dependinator.ModelViewing.Links
 	{
 		//void ZoomInLinkLine(LinkLine linkLine);
 		//void ZoomOutLinkLine(LinkLine linkLine);
-		(Point source, Point target) GetLineEndPoints(
-			Node sourceNode, Node targetNode, Point relativeSourceNode, Point relativeTargetNode);
 
-		bool IsOnLineBetweenNeighbors(int index, IList<Point> points);
-		int GetMovingPointIndex(Point p, IList<Point> points, double itemScale);
+		bool IsOnLineBetweenNeighbors(Line points, int index);
+		int GetLinePointIndex(Line line, Point point);
 		double GetDistanceFromLine(Point a, Point b, Point p);
 		Point GetPointInPerimeter(Rect rect, Point point);
 		void AddLinkLines(LinkOld link);
@@ -31,5 +29,14 @@ namespace Dependinator.ModelViewing.Links
 		IReadOnlyList<LinkGroup> GetLinkGroups(Line line);
 
 		Point GetClosestPointOnLineSegment(Point a, Point b, Point p);
+		string GetLineToolTip(Line line);
+		double GetLineWidth(Line line);
+		string GetLineData(Line line);
+		string GetPointsData(Line line);
+		string GetArrowData(Line line);
+		void MoveLinePoint(Line line, int pointIndex, Point point);
+		void UpdateLineEndPoints(Line line);
+		void UpdateLineBounds(Line line);
+		double GetArrowWidth(Line line);
 	}
 }

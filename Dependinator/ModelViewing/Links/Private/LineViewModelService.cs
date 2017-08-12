@@ -8,6 +8,8 @@ namespace Dependinator.ModelViewing.Links.Private
 {
 	internal class LineViewModelService : ILineViewModelService
 	{
+		private static readonly double LineMargin = 10;
+
 		private readonly ILinkSegmentService segmentService;
 
 		private readonly Point middleBottom = new Point(0.5, 1);
@@ -19,50 +21,119 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		public (Point source, Point target) GetLineEndPoints(
-			Node sourceNode, Node targetNode, Point relativeSourceNode, Point relativeTargetNode)
-		{
-			Rect source = sourceNode.ViewModel.ItemBounds;
-			Rect target = targetNode.ViewModel.ItemBounds;
 
-			Point relativeSource = GetRelativeSource(sourceNode, targetNode, relativeSourceNode);
-			Point relativeTarget = GetRelativeTarget(sourceNode, targetNode, relativeTargetNode);
+		public void UpdateLineEndPoints(Line line)
+		{
+			Rect source = line.Source.ViewModel.ItemBounds;
+			Rect target = line.Target.ViewModel.ItemBounds;
+
+			Point relativeSource = GetRelativeSource(line.Source, line.Target, line.SourceAdjust);
+			Point relativeTarget = GetRelativeTarget(line.Source, line.Target, line.TargetAdjust);
 
 			Point sp = source.Location + new Vector(
-				source.Width * relativeSource.X, source.Height * relativeSource.Y);
+				           source.Width * relativeSource.X, source.Height * relativeSource.Y);
 
 			Point tp = target.Location + new Vector(
-				target.Width * relativeTarget.X, target.Height * relativeTarget.Y);
+				           target.Width * relativeTarget.X, target.Height * relativeTarget.Y);
 
-			if (sourceNode.Parent == targetNode)
+			if (line.Source.Parent == line.Target)
 			{
 				// Need to adjust for different scales
-				tp = ParentPointToChildPoint(targetNode, tp);
+				tp = ParentPointToChildPoint(line.Target, tp);
 			}
-			else if (sourceNode == targetNode.Parent)
+			else if (line.Source == line.Target.Parent)
 			{
 				// Need to adjust for different scales
-				sp = ParentPointToChildPoint(sourceNode, sp);
+				sp = ParentPointToChildPoint(line.Source, sp);
 			}
 
-			return (sp, tp);
+			line.FirstPoint = sp;
+			line.LastPoint = tp;
+		}
+
+
+		public void UpdateLineBounds(Line line)
+		{
+			Point sp = line.FirstPoint;
+			Point tp = line.LastPoint;
+
+			// Calculate the line boundaries bases on first an last point
+			double x = Math.Min(sp.X, tp.X);
+			double y = Math.Min(sp.Y, tp.Y);
+			double width = Math.Abs(tp.X - sp.X);
+			double height = Math.Abs(tp.Y - sp.Y);
+
+			Rect bounds = new Rect(x, y, width, height);
+
+			// Adjust boundaries for line points between first and last
+			line.MiddlePoints().ForEach(point => bounds.Union(point));
+
+			// The items bound has some margin around the line to allow full line width and arrow to show
+			double scale = line.ViewModel.ItemScale;
+			line.ViewModel.ItemBounds = new Rect(
+				bounds.X - LineMargin / scale,
+				bounds.Y - (LineMargin) / scale,
+				bounds.Width + (LineMargin * 2) / scale,
+				bounds.Height + (LineMargin * 2) / scale);
 		}
 
 
 
-		public bool IsOnLineBetweenNeighbors(int index, IList<Point> points)
+		public bool IsOnLineBetweenNeighbors(Line line, int index)
 		{
-			Point p = points[index];
-			Point a = points[index - 1];
-			Point b = points[index + 1];
+			Point p = line.Points[index];
+			Point a = line.Points[index - 1];
+			Point b = line.Points[index + 1];
 
 			double length = GetDistanceFromLine(a, b, p);
 			return length < 0.1;
 
 		}
 
-		public int GetMovingPointIndex(Point p, IList<Point> points, double itemScale)
+
+		public void MoveLinePoint(Line line, int pointIndex, Point newPoint)
 		{
+			// NOTE: These lines are currently disabled !!!
+			NodeViewModel source = line.Source.ViewModel;
+			NodeViewModel target = line.Target.ViewModel;
+
+			if (pointIndex == line.FirstIndex)
+			{
+				// Adjust point to be on the source node perimeter
+				newPoint = GetPointInPerimeter(source.ItemBounds, newPoint);
+				line.SourceAdjust = new Point(
+					(newPoint.X - source.ItemBounds.X) / source.ItemBounds.Width,
+					(newPoint.Y - source.ItemBounds.Y) / source.ItemBounds.Height);
+			}
+			else if (pointIndex == line.LastIndex)
+			{
+				// Adjust point to be on the target node perimeter
+				newPoint = GetPointInPerimeter(target.ItemBounds, newPoint);
+				line.TargetAdjust = new Point(
+					(newPoint.X - target.ItemBounds.X) / target.ItemBounds.Width,
+					(newPoint.Y - target.ItemBounds.Y) / target.ItemBounds.Height);
+			}
+			else
+			{
+				Point p = newPoint;
+				Point a = line.Points[pointIndex - 1];
+				Point b = line.Points[pointIndex + 1];
+				if (GetDistanceFromLine(a, b, p) < 0.1)
+				{
+					newPoint = GetClosestPointOnLineSegment(a, b, p);
+				}
+			}
+
+			line.Points[pointIndex] = newPoint;
+		}
+
+
+
+		public int GetLinePointIndex(Line line, Point p)
+		{
+			IList<Point> points = line.Points;
+			double itemScale = line.ViewModel.ItemScale;
+
 			for (int i = 0; i < points.Count - 1; i++)
 			{
 				Point a = points[i];
@@ -198,6 +269,114 @@ namespace Dependinator.ModelViewing.Links.Private
 			// If target is sibling or child
 			// i.e. line start at the bottom of the source and goes to target top
 			return middleTop;
+		}
+
+
+		public string GetLineData(Line line)
+		{
+			Point s = Scaled(line, line.FirstPoint);
+			Point t = Scaled(line, line.LastPoint);
+
+			return Txt.I($"M {s.X},{s.Y} {GetMiddleLineData(line)} L {t.X},{t.Y - 10} L {t.X},{t.Y - 6.5}");
+		}
+
+
+		private string GetMiddleLineData(Line line)
+		{
+			string lineData = "";
+
+			foreach (Point point in line.MiddlePoints())
+			{
+				Point m = Scaled(line, point);
+				lineData += Txt.I($" L {m.X},{m.Y}");
+			}
+
+			return lineData;
+		}
+
+
+		public string GetPointsData(Line line)
+		{
+			string lineData = "";
+			double d = GetLineWidth(line).MM(0.5, 4);
+
+			foreach (Point point in line.MiddlePoints())
+			{
+				Point m = Scaled(line, point);
+				lineData += Txt.I(
+					$" M {m.X - d},{m.Y - d} H {m.X + d} V {m.Y + d} H {m.X - d} V {m.Y - d} H {m.X + d} ");
+			}
+
+			return lineData;
+		}
+
+
+		public string GetArrowData(Line line)
+		{
+			Point t = Scaled(line, line.LastPoint);
+
+			return Txt.I($"M {t.X},{t.Y - 6.5} L {t.X},{t.Y - 4.5}");
+		}
+
+		private Point Scaled(Line line, Point p)
+		{
+			Rect bounds = line.ViewModel.ItemBounds;
+			double scale = line.ViewModel.ItemScale;
+			return new Point((p.X - bounds.X) * scale, (p.Y - bounds.Y) * scale);
+		}
+
+
+		public double GetLineWidth(Line line)
+		{
+			double scale = line.ViewModel.ItemScale;
+			double lineWidth;
+
+			int linksCount = line.Links.Count;
+
+			if (linksCount < 5)
+			{
+				lineWidth = 1;
+			}
+			else if (linksCount < 15)
+			{
+				lineWidth = 4;
+			}
+			else
+			{
+				lineWidth = 6;
+			}
+
+			double lineLineWidth = (lineWidth * 0.7 * scale).MM(0.1, 4);
+
+			if (line.ViewModel.IsMouseOver)
+			{
+				lineLineWidth = (lineLineWidth * 1.5).MM(0, 6);
+			}
+
+			return lineLineWidth;
+		}
+
+
+		public string GetLineToolTip(Line line)
+		{
+			string tip = "";
+
+			IReadOnlyList<LinkGroup> linkGroups = GetLinkGroups(line);
+
+			var groupBySources = linkGroups.GroupBy(link => link.Source);
+
+			foreach (var group in groupBySources)
+			{
+				tip += $"\n  {group.Key} ->";
+
+				foreach (LinkGroup linkGroup in group)
+				{
+					tip += $"\n           -> {linkGroup.Target} ({linkGroup.Links.Count})";
+				}
+			}
+
+			tip = tip.Substring(1); // Skipping first "\n"
+			return tip;
 		}
 
 
@@ -515,6 +694,20 @@ namespace Dependinator.ModelViewing.Links.Private
 
 			return thickness * scale;
 		}
+
+
+		public double GetArrowWidth(Line line)
+		{
+			double arrowWidth = (10 * line.ViewModel.ItemScale).MM(4, 15);
+
+			if (line.ViewModel.IsMouseOver)
+			{
+				arrowWidth = (arrowWidth * 1.5).MM(0, 20);
+			}
+
+			return arrowWidth;
+		}
+
 
 		public LinkLineBounds GetLinkLineBounds(LinkLineOld line)
 		{
