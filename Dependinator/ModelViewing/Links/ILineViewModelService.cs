@@ -13,8 +13,6 @@ namespace Dependinator.ModelViewing.Links
 
 		bool IsOnLineBetweenNeighbors(Line points, int index);
 		int GetLinePointIndex(Line line, Point point);
-		double GetDistanceFromLine(Point a, Point b, Point p);
-		Point GetPointInPerimeter(Rect rect, Point point);
 		void AddLinkLines(LinkOld link);
 		void ZoomInLinkLine(LinkLineOld line, NodeOld node);
 		void ZoomOutLinkLine(LinkLineOld line, NodeOld node);
@@ -28,7 +26,6 @@ namespace Dependinator.ModelViewing.Links
 		/// </summary>
 		IReadOnlyList<LinkGroup> GetLinkGroups(Line line);
 
-		Point GetClosestPointOnLineSegment(Point a, Point b, Point p);
 		string GetLineToolTip(Line line);
 		double GetLineWidth(Line line);
 		string GetLineData(Line line);

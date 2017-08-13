@@ -11,39 +11,33 @@ namespace Dependinator.ModelViewing.Links.Private
 		private static readonly double LineMargin = 10;
 
 		private readonly ILinkSegmentService segmentService;
+		private readonly IGeometry geometry;
 
 		private readonly Point middleBottom = new Point(0.5, 1);
 		private readonly Point middleTop = new Point(0.5, 0);
 
-		public LineViewModelService(ILinkSegmentService segmentService)
+		public LineViewModelService(
+			ILinkSegmentService segmentService,
+			IGeometry geometry)
 		{
 			this.segmentService = segmentService;
+			this.geometry = geometry;
 		}
 
 
 		public void UpdateLineBounds(Line line)
 		{
-			Point sp = line.FirstPoint;
-			Point tp = line.LastPoint;
-
-			// Calculate the line boundaries bases on first an last point
-			double x = Math.Min(sp.X, tp.X);
-			double y = Math.Min(sp.Y, tp.Y);
-			double width = Math.Abs(tp.X - sp.X);
-			double height = Math.Abs(tp.Y - sp.Y);
-
-			Rect bounds = new Rect(x, y, width, height);
+			Rect bounds = new Rect(line.FirstPoint, line.LastPoint);
 
 			// Adjust boundaries for line points between first and last point
 			line.MiddlePoints().ForEach(point => bounds.Union(point));
 
-			// The items bound has some margin around the line to allow full line width and arrow to show
-			double scale = line.ViewModel.ItemScale;
-			line.ViewModel.ItemBounds = new Rect(
-				bounds.X - LineMargin / scale,
-				bounds.Y - (LineMargin) / scale,
-				bounds.Width + (LineMargin * 2) / scale,
-				bounds.Height + (LineMargin * 2) / scale);
+			// The items bound needs some margin around the line to allow line width and arrow to show
+			double margin = LineMargin / line.ViewModel.ItemScale;
+			bounds.Inflate(margin, margin);
+
+			// Set the new bounds
+			line.ViewModel.ItemBounds = bounds;
 		}
 
 
@@ -52,14 +46,14 @@ namespace Dependinator.ModelViewing.Links.Private
 			Rect source = line.Source.ViewModel.ItemBounds;
 			Rect target = line.Target.ViewModel.ItemBounds;
 
-			Point relativeSource = GetRelativeSource(line.Source, line.Target, line.SourceAdjust);
-			Point relativeTarget = GetRelativeTarget(line.Source, line.Target, line.TargetAdjust);
+			Point relativeSource = GetRelativeSource(line);
+			Point relativeTarget = GetRelativeTarget(line);
 
-			Point sp = source.Location + new Vector(
-				           source.Width * relativeSource.X, source.Height * relativeSource.Y);
+			Point sp = source.Location 
+				+ new Vector(source.Width * relativeSource.X, source.Height * relativeSource.Y);
 
-			Point tp = target.Location + new Vector(
-				           target.Width * relativeTarget.X, target.Height * relativeTarget.Y);
+			Point tp = target.Location 
+				+ new Vector(target.Width * relativeTarget.X, target.Height * relativeTarget.Y);
 
 			if (line.Source.Parent == line.Target)
 			{
@@ -83,7 +77,7 @@ namespace Dependinator.ModelViewing.Links.Private
 			Point a = line.Points[index - 1];
 			Point b = line.Points[index + 1];
 
-			double length = GetDistanceFromLine(a, b, p);
+			double length = geometry.GetDistanceFromLine(a, b, p);
 			return length < 0.1;
 
 		}
@@ -98,27 +92,27 @@ namespace Dependinator.ModelViewing.Links.Private
 			if (pointIndex == line.FirstIndex)
 			{
 				// Adjust point to be on the source node perimeter
-				newPoint = GetPointInPerimeter(source.ItemBounds, newPoint);
-				line.SourceAdjust = new Point(
+				newPoint = geometry.GetPointInPerimeter(source.ItemBounds, newPoint);
+				line.RelativeSourcePoint = new Point(
 					(newPoint.X - source.ItemBounds.X) / source.ItemBounds.Width,
 					(newPoint.Y - source.ItemBounds.Y) / source.ItemBounds.Height);
 			}
 			else if (pointIndex == line.LastIndex)
 			{
 				// Adjust point to be on the target node perimeter
-				newPoint = GetPointInPerimeter(target.ItemBounds, newPoint);
-				line.TargetAdjust = new Point(
+				newPoint = geometry.GetPointInPerimeter(target.ItemBounds, newPoint);
+				line.RelativeTargetPoint = new Point(
 					(newPoint.X - target.ItemBounds.X) / target.ItemBounds.Width,
 					(newPoint.Y - target.ItemBounds.Y) / target.ItemBounds.Height);
 			}
 			else
 			{
 				Point p = newPoint;
-				Point a = line.Points[pointIndex - 1];
 				Point b = line.Points[pointIndex + 1];
-				if (GetDistanceFromLine(a, b, p) < 0.1)
+				Point a = line.Points[pointIndex - 1];
+				if (geometry.GetDistanceFromLine(a, b, p) < 0.1)
 				{
-					newPoint = GetClosestPointOnLineSegment(a, b, p);
+					newPoint = geometry.GetClosestPointOnLineSegment(a, b, p);
 				}
 			}
 
@@ -154,7 +148,7 @@ namespace Dependinator.ModelViewing.Links.Private
 					}
 				}
 
-				double length = GetDistanceFromLine(a, b, p) * itemScale;
+				double length = geometry.GetDistanceFromLine(a, b, p) * itemScale;
 				if (length < 5)
 				{
 					// The point p is on the line between point a and b
@@ -167,75 +161,17 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		public double GetDistanceFromLine(Point a, Point b, Point p)
+
+
+		private Point GetRelativeSource(Line line)
 		{
-			double aB = (b - a).Length;
-			double aP = (p - a).Length;
-			double pB = (b - p).Length;
-
-			return Math.Abs(aB - (aP + pB));
-		}
-
-
-		public Point GetPointInPerimeter(Rect rect, Point point)
-		{
-			double r = rect.X + rect.Width;
-			double b = rect.Y + rect.Height;
-
-			double x = point.X.MM(rect.X, r);
-			double y = point.Y.MM(rect.Y, b);
-
-			double dl = Math.Abs(x - rect.X);
-			double dr = Math.Abs(x - r);
-			double dt = Math.Abs(y - rect.Y);
-			double db = Math.Abs(y - b);
-
-			double m = Math.Min(Math.Min(Math.Min(dl, dr), dt), db);
-
-			if (Math.Abs(m - dt) < 0.01) return new Point(x, rect.Y);
-
-			if (Math.Abs(m - db) < 0.01) return new Point(x, b);
-
-			if (Math.Abs(m - dl) < 0.01) return new Point(rect.X, y);
-
-			return new Point(r, y);
-		}
-
-
-
-		public Point GetClosestPointOnLineSegment(Point a, Point b, Point p)
-		{
-			Vector ap = p - a;       //Vector from A to P   
-			Vector ab = b - a;       //Vector from A to B  
-
-			double magnitudeAb = ab.LengthSquared;     //Magnitude of AB vector (it's length squared) 
-			double abpProduct = ap.X * ab.X + ap.Y * ab.Y; // The dot product of a_to_p and a_to_b
-			double distance = abpProduct / magnitudeAb; //The normalized "distance" from a to your closest point  
-
-			if (distance < 0)     //Check if P projection is over vectorAB     
-			{
-				return a;
-			}
-			else if (distance > 1)
-			{
-				return b;
-			}
-			else
-			{
-				return a + ab * distance;
-			}
-		}
-
-
-		private Point GetRelativeSource(Node sourceNode, Node targetNode, Point relativePoint)
-		{
-			if (relativePoint.X >= 0)
+			if (line.RelativeSourcePoint.X >= 0)
 			{
 				// use specified source
-				return relativePoint;
+				return line.RelativeSourcePoint;
 			}
 
-			if (sourceNode == targetNode.Parent)
+			if (line.Source == line.Target.Parent)
 			{
 				// The target is the child of the source,
 				// i.e. line start at the top of the source and goes to target top
@@ -249,15 +185,15 @@ namespace Dependinator.ModelViewing.Links.Private
 
 
 
-		private Point GetRelativeTarget(Node sourceNode, Node targetNode, Point relativePoint)
+		private Point GetRelativeTarget(Line line)
 		{
-			if (relativePoint.X >= 0)
+			if (line.RelativeTargetPoint.X >= 0)
 			{
 				// use specified source
-				return relativePoint;
+				return line.RelativeTargetPoint;
 			}
 
-			if (sourceNode.Parent == targetNode)
+			if (line.Source.Parent == line.Target)
 			{
 				// The target is a parent of the source,
 				// i.e. line starts at source bottom and ends at the bottom of the target node
@@ -691,7 +627,7 @@ namespace Dependinator.ModelViewing.Links.Private
 			}
 
 			return thickness * scale;
-		}
+		}           
 
 
 		public double GetArrowWidth(Line line)
@@ -816,7 +752,7 @@ namespace Dependinator.ModelViewing.Links.Private
 
 				double x2 = targetBounds.X + targetBounds.Width / 2;
 				double y2 = targetBounds.Y;
-				Point tp = new Point(x2, y2);
+				Point tp = new Point(x2, y2);    
 
 				return (sp, tp);
 			}

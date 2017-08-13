@@ -18,9 +18,9 @@ namespace Dependinator.ModelViewing.Links
 
 		public Node Target { get; }
 
-		public Point SourceAdjust { get; set; } = new Point(-1, -1);
+		public Point RelativeSourcePoint { get; set; } = new Point(-1, -1);
 
-		public Point TargetAdjust { get; set; } = new Point(-1, -1);
+		public Point RelativeTargetPoint { get; set; } = new Point(-1, -1);
 
 		public LineViewModel ViewModel { get; set; }
 
