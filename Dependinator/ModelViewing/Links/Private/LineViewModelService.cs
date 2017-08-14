@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.Utils.UI;
 
 namespace Dependinator.ModelViewing.Links.Private
 {
@@ -11,17 +12,17 @@ namespace Dependinator.ModelViewing.Links.Private
 		private static readonly double LineMargin = 10;
 
 		private readonly ILinkSegmentService segmentService;
-		private readonly IGeometry geometry;
+		private readonly IGeometryService geometryService;
 
 		private readonly Point middleBottom = new Point(0.5, 1);
 		private readonly Point middleTop = new Point(0.5, 0);
 
 		public LineViewModelService(
 			ILinkSegmentService segmentService,
-			IGeometry geometry)
+			IGeometryService geometryService)
 		{
 			this.segmentService = segmentService;
-			this.geometry = geometry;
+			this.geometryService = geometryService;
 		}
 
 
@@ -77,7 +78,7 @@ namespace Dependinator.ModelViewing.Links.Private
 			Point a = line.Points[index - 1];
 			Point b = line.Points[index + 1];
 
-			double length = geometry.GetDistanceFromLine(a, b, p);
+			double length = geometryService.GetDistanceFromLine(a, b, p);
 			return length < 0.1;
 
 		}
@@ -92,7 +93,7 @@ namespace Dependinator.ModelViewing.Links.Private
 			if (pointIndex == line.FirstIndex)
 			{
 				// Adjust point to be on the source node perimeter
-				newPoint = geometry.GetPointInPerimeter(source.ItemBounds, newPoint);
+				newPoint = geometryService.GetPointInPerimeter(source.ItemBounds, newPoint);
 				line.RelativeSourcePoint = new Point(
 					(newPoint.X - source.ItemBounds.X) / source.ItemBounds.Width,
 					(newPoint.Y - source.ItemBounds.Y) / source.ItemBounds.Height);
@@ -100,7 +101,7 @@ namespace Dependinator.ModelViewing.Links.Private
 			else if (pointIndex == line.LastIndex)
 			{
 				// Adjust point to be on the target node perimeter
-				newPoint = geometry.GetPointInPerimeter(target.ItemBounds, newPoint);
+				newPoint = geometryService.GetPointInPerimeter(target.ItemBounds, newPoint);
 				line.RelativeTargetPoint = new Point(
 					(newPoint.X - target.ItemBounds.X) / target.ItemBounds.Width,
 					(newPoint.Y - target.ItemBounds.Y) / target.ItemBounds.Height);
@@ -110,9 +111,9 @@ namespace Dependinator.ModelViewing.Links.Private
 				Point p = newPoint;
 				Point b = line.Points[pointIndex + 1];
 				Point a = line.Points[pointIndex - 1];
-				if (geometry.GetDistanceFromLine(a, b, p) < 0.1)
+				if (geometryService.GetDistanceFromLine(a, b, p) < 0.1)
 				{
-					newPoint = geometry.GetClosestPointOnLineSegment(a, b, p);
+					newPoint = geometryService.GetClosestPointOnLineSegment(a, b, p);
 				}
 			}
 
@@ -148,7 +149,7 @@ namespace Dependinator.ModelViewing.Links.Private
 					}
 				}
 
-				double length = geometry.GetDistanceFromLine(a, b, p) * itemScale;
+				double length = geometryService.GetDistanceFromLine(a, b, p) * itemScale;
 				if (length < 5)
 				{
 					// The point p is on the line between point a and b
@@ -159,8 +160,6 @@ namespace Dependinator.ModelViewing.Links.Private
 
 			return -1;
 		}
-
-
 
 
 		private Point GetRelativeSource(Line line)
@@ -313,57 +312,7 @@ namespace Dependinator.ModelViewing.Links.Private
 			return tip;
 		}
 
-
-		//public (Point source, Point target) GetLineEndPoints2(
-		//	Node source, Node target, Rect sourceAdjust, Rect targetAdjust)
-		//{
-		//	Rect sourceBounds = source.ViewModel.ItemBounds;
-		//	Rect targetBounds = target.ViewModel.ItemBounds;
-
-		//	if (source.Parent == target.Parent)
-		//	{
-		//		// Source and target nodes are siblings, 
-		//		// ie. line starts at source middle bottom and ends at target middle top
-		//		double x1 = sourceBounds.X + sourceBounds.Width / 2;
-		//		double y1 = sourceBounds.Y + sourceBounds.Height;
-		//		Point sp = new Point(x1, y1);
-
-		//		double x2 = targetBounds.X + targetBounds.Width / 2;
-		//		double y2 = targetBounds.Y;
-		//		Point tp = new Point(x2, y2);
-
-		//		return (sp, tp);
-		//	}
-		//	else if (source.Parent == target)
-		//	{
-		//		// The target is a parent of the source,
-		//		// i.e. line ends at the bottom of the target node
-		//		double x1 = sourceBounds.X + sourceBounds.Width / 2;
-		//		double y1 = sourceBounds.Y + sourceBounds.Height;
-		//		Point sp = new Point(x1, y1);
-
-		//		double x2 = targetBounds.X + targetBounds.Width / 2;
-		//		double y2 = targetBounds.Y + targetBounds.Height;
-		//		Point tp = ParentPointToChildPoint(target, new Point(x2, y2));
-
-		//		return (sp, tp);
-		//	}
-		//	else //if (source == target.Parent)
-		//	{
-		//		// The target is the child of the source,
-		//		// i.e. line start at the top of the source
-		//		double x1 = sourceBounds.X + sourceBounds.Width / 2;
-		//		double y1 = sourceBounds.Y;
-		//		Point sp = ParentPointToChildPoint(source, new Point(x1, y1));
-
-		//		double x2 = targetBounds.X + targetBounds.Width / 2;
-		//		double y2 = targetBounds.Y;
-		//		Point tp = new Point(x2, y2);
-
-		//		return (sp, tp);
-		//	}
-		//}
-
+		
 
 		private static Point ParentPointToChildPoint(Node parent, Point point)
 		{

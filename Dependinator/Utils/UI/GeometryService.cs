@@ -1,10 +1,9 @@
 using System;
 using System.Windows;
-using Dependinator.Utils.UI;
 
-namespace Dependinator.ModelViewing.Links.Private
+namespace Dependinator.Utils.UI
 {
-	internal class Geometry : IGeometry
+	internal class GeometryService : IGeometryService
 	{
 
 		public double GetDistanceFromLine(Point a, Point b, Point p)

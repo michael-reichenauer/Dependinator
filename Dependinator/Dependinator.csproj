@@ -106,8 +106,8 @@
   <ItemGroup>
     <Compile Include="Modeling\DataLink.cs" />
     <Compile Include="Modeling\IModelNotifications.cs" />
-    <Compile Include="ModelViewing\Links\Private\Geometry.cs" />
-    <Compile Include="ModelViewing\Links\Private\IGeometry.cs" />
+    <Compile Include="Utils\UI\GeometryService.cs" />
+    <Compile Include="Utils\UI\IGeometryService.cs" />
     <Compile Include="ModelViewing\Private\Items\IItemSelectService.cs" />
     <Compile Include="ModelViewing\Private\Items\ItemSelectService.cs" />
     <Compile Include="Utils\UI\DragUiElement.cs" />
