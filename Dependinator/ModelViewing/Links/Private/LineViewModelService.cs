@@ -50,10 +50,10 @@ namespace Dependinator.ModelViewing.Links.Private
 			Point relativeSource = GetRelativeSource(line);
 			Point relativeTarget = GetRelativeTarget(line);
 
-			Point sp = source.Location 
+			Point sp = source.Location
 				+ new Vector(source.Width * relativeSource.X, source.Height * relativeSource.Y);
 
-			Point tp = target.Location 
+			Point tp = target.Location
 				+ new Vector(target.Width * relativeTarget.X, target.Height * relativeTarget.Y);
 
 			if (line.Source.Parent == line.Target)
@@ -294,25 +294,46 @@ namespace Dependinator.ModelViewing.Links.Private
 		{
 			string tip = "";
 
-			IReadOnlyList<LinkGroup> linkGroups = GetLinkGroups(line);
+			//IReadOnlyList<LinkGroup> linkGroups = GetLinkGroups2(line);
 
-			var groupBySources = linkGroups.GroupBy(link => link.Source);
-
-			foreach (var group in groupBySources)
+			int count = 0;
+			bool isLimitReached = false;
+			var groupByTargets = line.Links.GroupBy(link => link.Target);
+			int limit = 20;
+			foreach (IGrouping<Node, Link> groupByTarget in groupByTargets)
 			{
-				tip += $"\n  {group.Key} ->";
+				Node target = groupByTarget.Key;
+				string targetName = target.NodeType == NodeType.Type
+					? target.Name.Name : target.Name.ShortName;
 
-				foreach (LinkGroup linkGroup in group)
+				tip += "\n";
+				foreach (Link link in groupByTarget)
 				{
-					tip += $"\n           -> {linkGroup.Target} ({linkGroup.Links.Count})";
+					count++;
+
+					if (!isLimitReached)
+					{
+						tip += $"\n{link.Source.Name.ShortName} -> {targetName}";
+					}
+
+					if (count > limit)
+					{
+						isLimitReached = true;
+					}
 				}
+
 			}
 
-			tip = tip.Substring(1); // Skipping first "\n"
+			if (isLimitReached)
+			{
+				tip += $"\n\n{count - limit} more links ...";
+			}
+
+			tip = tip.Trim();
 			return tip;
 		}
 
-		
+
 
 		private static Point ParentPointToChildPoint(Node parent, Point point)
 		{
@@ -576,7 +597,7 @@ namespace Dependinator.ModelViewing.Links.Private
 			}
 
 			return thickness * scale;
-		}           
+		}
 
 
 		public double GetArrowWidth(Line line)
@@ -701,7 +722,7 @@ namespace Dependinator.ModelViewing.Links.Private
 
 				double x2 = targetBounds.X + targetBounds.Width / 2;
 				double y2 = targetBounds.Y;
-				Point tp = new Point(x2, y2);    
+				Point tp = new Point(x2, y2);
 
 				return (sp, tp);
 			}
@@ -773,6 +794,37 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		private static bool IsNodesInitialized(LinkLineOld line) =>
 			line.Source.ItemBounds != Rect.Empty && line.Target.ItemBounds != Rect.Empty;
+
+
+
+		/// <summary>
+		/// Gets the links in the line grouped first by source and then by target at the
+		/// appropriate node levels.
+		/// </summary>
+		public IReadOnlyList<LinkGroup> GetLinkGroups2(Line line)
+		{
+			Node source = line.Source;
+			Node target = line.Target;
+			IReadOnlyList<Link> links = line.Links;
+
+			List<LinkGroup> linkGroups = new List<LinkGroup>();
+
+			var groupByTargets = links.GroupBy(link => link.Target);
+			foreach (IGrouping<Node, Link> groupByTarget in groupByTargets)
+			{
+				var groupBySourceParents = groupByTarget.GroupBy(link => link.Source.Parent);
+
+				foreach (var groupBySourceParent in groupBySourceParents)
+				{
+					LinkGroup linkGroup = new LinkGroup(
+						groupBySourceParent.Key, groupByTarget.Key, groupBySourceParent.ToList());
+
+					linkGroups.Add(linkGroup);
+				}
+			}
+
+			return linkGroups;
+		}
 
 
 		/// <summary>

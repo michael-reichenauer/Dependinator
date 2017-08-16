@@ -11,6 +11,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public static NodeName Root = new NodeName("");
 
 		private readonly string fullName;
+		private readonly Lazy<string> name;
 		private readonly Lazy<string> shortName;
 		private readonly Lazy<NodeName> parentName;
 
@@ -18,11 +19,13 @@ namespace Dependinator.ModelViewing.Nodes
 		public NodeName(string fullName)
 		{
 			this.fullName = fullName;
+			name = new Lazy<string>(GetName);
 			shortName = new Lazy<string>(GetShortName);
 			parentName = new Lazy<NodeName>(GetParentName);
 			IsEqualWhenSame(fullName);
 		}
 
+		public string Name => name.Value;
 		public string ShortName => shortName.Value;
 
 		public NodeName ParentName => parentName.Value;
@@ -44,7 +47,7 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		private string GetShortName()
+		private string GetName()
 		{
 			int index = fullName.LastIndexOf('.');
 
@@ -56,6 +59,10 @@ namespace Dependinator.ModelViewing.Nodes
 
 			return fullName.Substring(index + 1);
 		}
+
+
+		private string GetShortName() => 
+			string.IsNullOrEmpty(ParentName.Name) ? Name : $"{ParentName.Name}.{Name}";
 
 
 		private NodeName GetParentName()

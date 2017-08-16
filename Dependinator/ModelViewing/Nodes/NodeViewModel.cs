@@ -30,7 +30,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public Brush BackgroundBrush { get; }
 
 
-		public string Name => Node.Name.ShortName;
+		public string Name => Node.Name.Name;
 
 		public string ToolTip => $"{Node.Name}{DebugToolTip}";
 

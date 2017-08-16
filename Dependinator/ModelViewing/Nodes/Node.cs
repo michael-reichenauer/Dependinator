@@ -52,8 +52,6 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-	
-
-		public override string ToString() => Id.ToString();
+		public override string ToString() => Name.ToString();
 	}
 }
