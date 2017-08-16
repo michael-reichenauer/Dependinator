@@ -1,7 +1,6 @@
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
-using Dependinator.ModelViewing.Private.Items.Private;
 
 namespace Dependinator.ModelViewing.Private
 {
@@ -23,7 +22,7 @@ namespace Dependinator.ModelViewing.Private
 		{
 			NodeName name = new NodeName(dataNode.Name);
 
-			if (model.Nodes.TryGetNode(name, out Node existingNode))
+			if (model.TryGetNode(name, out Node existingNode))
 			{
 				// TODO: Check node properties as well and update if changed
 				return;
@@ -33,14 +32,14 @@ namespace Dependinator.ModelViewing.Private
 			Node parentNode = GetNode(parentName);
 
 			NodeType nodeType = new NodeType(dataNode.NodeType);
-			AddNode(name, nodeType, parentNode);	
+			AddNode(name, nodeType, parentNode);
 		}
 
 
 		private Node AddNode(NodeName name, NodeType nodeType, Node parentNode)
 		{
 			Node node = new Node(name, nodeType);
-			model.Nodes.Add(node);
+			model.Add(node);
 			parentNode.AddChild(node);
 
 			CreateNodeViewModel(node);
@@ -81,7 +80,7 @@ namespace Dependinator.ModelViewing.Private
 
 		private Node GetNode(NodeName nodeName)
 		{
-			if (model.Nodes.TryGetNode(nodeName, out Node node))
+			if (model.TryGetNode(nodeName, out Node node))
 			{
 				return node;
 			}

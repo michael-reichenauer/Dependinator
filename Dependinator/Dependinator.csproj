@@ -132,7 +132,6 @@
     <Compile Include="ModelViewing\Private\Links.cs" />
     <Compile Include="ModelViewing\Private\ModelService.cs" />
     <Compile Include="ModelViewing\Private\NodeService.cs" />
-    <Compile Include="ModelViewing\Private\NodesEventArgs.cs" />
     <Compile Include="ModelViewing\Private\Nodes.cs" />
     <Compile Include="ModelViewing\Private\Model.cs" />
     <Compile Include="Modeling\DataNode.cs" />
@@ -147,6 +146,8 @@
     <Compile Include="ModelViewing\Private\Items\Private\ItemsService.cs" />
     <Compile Include="Utils\UI\DebounceDispatcher.cs" />
     <Compile Include="Utils\UI\DelayDispatcher.cs" />
+    <Compile Include="Utils\UI\IPropertyNotify.cs" />
+    <Compile Include="Utils\UI\IPropertySetter.cs" />
     <Compile Include="Utils\UI\Notifyable.cs" />
     <Compile Include="Utils\UI\ThrottleDispatcher.cs" />
     <Compile Include="Utils\With.cs" />
@@ -315,7 +316,6 @@
     <Compile Include="Utils\Asserter.cs" />
     <Compile Include="Utils\Sorter.cs" />
     <Compile Include="Utils\Timing.cs" />
-    <Compile Include="Utils\UI\PropertySetter.cs" />
     <Compile Include="Utils\UI\ViewModel.cs" />
     <Compile Include="Utils\UI\WhenSetter.cs" />
     <Compile Include="Utils\UI\VirtualCanvas\VirtualItemsSource.cs" />

@@ -103,7 +103,7 @@ namespace Dependinator.ModelViewing.Links
 		private Node GetNode(string name)
 		{
 			NodeName nodeName = new NodeName(name);
-			Node node = model.Nodes.Node(nodeName);
+			Node node = model.Node(nodeName);
 			return node;
 		}
 
