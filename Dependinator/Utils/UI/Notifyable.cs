@@ -56,14 +56,15 @@ namespace Dependinator.Utils.UI
 		}
 
 
-		protected TargetWhenSetter WhenSet(Notifyable viewModel, params string[] sourcePropertyName)
+		protected TargetWhenSetter WhenSet(
+			Notifyable sourceNotifyable, params string[] sourcePropertyName)
 		{
 			if (targetWhenSetters == null)
 			{
 				targetWhenSetters = new List<TargetWhenSetter>();
 			}
 
-			TargetWhenSetter whenSetter = new TargetWhenSetter(this, viewModel, sourcePropertyName);
+			TargetWhenSetter whenSetter = new TargetWhenSetter(this, sourceNotifyable, sourcePropertyName);
 			targetWhenSetters.Add(whenSetter);
 
 			return whenSetter;

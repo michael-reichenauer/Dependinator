@@ -149,6 +149,7 @@
     <Compile Include="Utils\UI\IPropertyNotify.cs" />
     <Compile Include="Utils\UI\IPropertySetter.cs" />
     <Compile Include="Utils\UI\Notifyable.cs" />
+    <Compile Include="Utils\UI\TargetWhenSetter.cs" />
     <Compile Include="Utils\UI\ThrottleDispatcher.cs" />
     <Compile Include="Utils\With.cs" />
     <Page Include="App.xaml">
@@ -317,7 +318,7 @@
     <Compile Include="Utils\Sorter.cs" />
     <Compile Include="Utils\Timing.cs" />
     <Compile Include="Utils\UI\ViewModel.cs" />
-    <Compile Include="Utils\UI\WhenSetter.cs" />
+    <Compile Include="Utils\UI\SourceWhenSetter.cs" />
     <Compile Include="Utils\UI\VirtualCanvas\VirtualItemsSource.cs" />
     <Compile Include="Utils\UI\VirtualCanvas\ArithmeticConverter.cs" />
     <Compile Include="Utils\UI\VirtualCanvas\ISpatialItemsSource.cs" />

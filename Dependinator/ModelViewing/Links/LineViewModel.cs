@@ -30,7 +30,7 @@ namespace Dependinator.ModelViewing.Links
 			TrackSourceOrTargetChanges();
 		}
 
-		public override bool CanShow => line.Source.ViewModel.CanShow & line.Target.ViewModel.CanShow;
+		public override bool CanShow => line.Source.CanShow & line.Target.CanShow;
 
 		public double LineWidth => lineViewModelService.GetLineWidth(line);
 
@@ -69,51 +69,52 @@ namespace Dependinator.ModelViewing.Links
 
 		public void MouseUp(Point screenPoint)
 		{
-			 if (currentPointIndex != -1)
+			if (currentPointIndex != -1)
 			{
-				EndMoveLinePoint(); 
-			} 
+				EndMoveLinePoint();
+			}
 			else
 			{
 				Log.Debug("Mouse click");
 			}
-		} 
-		
-		 public void MouseMove(Point screenPoint)
+		}
+
+
+		public void MouseMove(Point screenPoint)
 		{
 			Point point = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
 
 			if (currentPointIndex == -1)
 			{
 				// First move event, lets start a move by  getting the index of point to move.
-			 	// THis might create a new point if there is no existing point near the mouse down point
+				// THis might create a new point if there is no existing point near the mouse down point
 				currentPointIndex = lineViewModelService.GetLinePointIndex(line, mouseDownPoint);
 				if (currentPointIndex == -1)
 				{
 					// Point not close enough to the line
 					return;
-				 }
-			} 
-			
+				}
+			}
+
 			lineViewModelService.MoveLinePoint(line, currentPointIndex, point);
 			lineViewModelService.UpdateLineBounds(line);
 			IsMouseOver = true;
 			NotifyAll();
 		}
 
-		 
+
 		public void ZoomLinks(double zoom, Point viewPosition)
 		{
 		}
 
-		 
+
 		public void OnMouseEnter()
 		{
 			mouseOverDelay.Delay(MouseEnterDelay, _ =>
 			{
 				IsMouseOver = true;
 				Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
-			 });
+			});
 		}
 
 
@@ -131,7 +132,7 @@ namespace Dependinator.ModelViewing.Links
 		{
 			if (currentPointIndex != line.FirstIndex && currentPointIndex != line.LastIndex)
 			{
-		 		// Removing the point if it is no longer needed (in the same line as neighbors points
+				// Removing the point if it is no longer needed (in the same line as neighbors points
 				if (lineViewModelService.IsOnLineBetweenNeighbors(line, currentPointIndex))
 				{
 					line.Points.RemoveAt(currentPointIndex);
@@ -142,7 +143,7 @@ namespace Dependinator.ModelViewing.Links
 			NotifyAll();
 			currentPointIndex = -1;
 		}
-		
+
 
 		public override string ToString() => $"{line}";
 
@@ -199,4 +200,4 @@ namespace Dependinator.ModelViewing.Links
 			NotifyAll();
 		}
 	}
-} 
+}

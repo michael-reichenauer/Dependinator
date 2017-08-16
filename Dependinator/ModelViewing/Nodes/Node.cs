@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private.Items;
-using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.Nodes
@@ -42,6 +41,8 @@ namespace Dependinator.ModelViewing.Nodes
 		public NodeType NodeType { get; }
 
 		public NodeViewModel ViewModel { get; set; }
+
+		public bool CanShow => ViewModel?.CanShow ?? false;
 
 
 		public void AddChild(Node child)
