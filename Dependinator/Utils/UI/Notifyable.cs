@@ -10,10 +10,16 @@ namespace Dependinator.Utils.UI
 		private readonly Dictionary<string, Property> properties = new Dictionary<string, Property>();
 		private List<TargetWhenSetter> targetWhenSetters;
 		private List<SourceWhenSetter> sourceWhenSetters;
-		private IList<string> allPropertyNames = null;
+		private IReadOnlyList<string> allPropertyNames = null;
 
 
 		public event PropertyChangedEventHandler PropertyChanged;
+
+
+		public void Notify(string propertyNames)
+		{
+			OnPropertyChanged(propertyNames);
+		}
 
 
 		public void Notify(params string[] otherPropertyNames)
@@ -24,18 +30,17 @@ namespace Dependinator.Utils.UI
 			}
 		}
 
+
 		public void NotifyAll()
 		{
 			if (allPropertyNames == null)
 			{
-				GetAllPropertiesNames();
+				allPropertyNames = GetAllPropertiesNames();
 			}
 
-			foreach (string propertyName in allPropertyNames)
-			{
-				OnPropertyChanged(propertyName);
-			}
+			allPropertyNames.ForEach(OnPropertyChanged);
 		}
+
 
 		public SourceWhenSetter WhenSet(params string[] sourcePropertyName)
 		{
@@ -71,18 +76,7 @@ namespace Dependinator.Utils.UI
 		}
 
 
-		protected Property Get([CallerMemberName] string memberName = "")
-		{
-			if (properties.TryGetValue(memberName, out Property property))
-			{
-				return property;
-			}
-
-			property = new Property(memberName, OnPropertyChanged, this);
-			properties[memberName] = property;
-
-			return property;
-		}
+		protected Property Get([CallerMemberName] string memberName = "") => GetProperty(memberName);
 
 
 		protected T Get<T>([CallerMemberName] string memberName = "")
@@ -97,16 +91,32 @@ namespace Dependinator.Utils.UI
 		}
 
 
-		protected PropertySetter Set<T>(T value, [CallerMemberName] string memberName = "")
+		protected IPropertyNotify Set<T>(T value, [CallerMemberName] string memberName = "")
 		{
-			Property property = Get(memberName);
-			return property.Set(value);
+			Property property = GetProperty(memberName);
+			((IPropertySetter)property).Set(value);
+
+			return property;
 		}
 
 
-		private void GetAllPropertiesNames()
+		private Property GetProperty(string propertyName)
 		{
-			allPropertyNames = this.GetType()
+			if (properties.TryGetValue(propertyName, out Property property))
+			{
+				return property;
+			}
+
+			property = new Property(propertyName, this);
+			properties[propertyName] = property;
+
+			return property;
+		}
+
+
+		private IReadOnlyList<string> GetAllPropertiesNames()
+		{
+			return this.GetType()
 				.GetProperties()
 				.Where(pi => pi.GetGetMethod() != null)
 				.Select(pi => pi.Name)
