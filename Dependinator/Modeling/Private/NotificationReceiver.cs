@@ -22,7 +22,7 @@ namespace Dependinator.Modeling.Private
 
 		public void ReceiveNodes(List<Data.Node> dataNodes)
 		{
-			List<DataNode> nodes = dataNodes.Select(ToNode).ToList();
+			List<DataNode> nodes = dataNodes.Select(Convert.ToNode).ToList();
 
 			modelNotifications.UpdateNodes(nodes);
 		}
@@ -30,14 +30,9 @@ namespace Dependinator.Modeling.Private
 
 		public void ReceiveLinks(List<Data.Link> dataLinks)
 		{
-			List<DataLink> links = dataLinks.Select(ToLink).ToList();
+			List<DataLink> links = dataLinks.Select(Convert.ToLink).ToList();
 
 			modelNotifications.UpdateLinks(links);
 		}
-
-
-		private static DataLink ToLink(Data.Link link) => new DataLink(link.Source, link.Target);
-
-		private static DataNode ToNode(Data.Node node) => new DataNode(node.Name, node.Type);
 	}
 }

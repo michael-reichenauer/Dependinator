@@ -1,13 +1,11 @@
-﻿namespace Dependinator.Modeling.Private.Serializing
+﻿using System.Collections.Generic;
+
+namespace Dependinator.Modeling.Private.Serializing
 {
 	internal interface IDataSerializer
 	{
-		void Serialize(Data.Model dataModel, string path);
+		void Serialize(IEnumerable<DataNode> nodes, IEnumerable<DataLink> links, string path);
 
-		string SerializeAsJson(Data.Model dataModel);
-
-		bool TryDeserialize(string path, out Data.Model dataModel);
-
-		bool TryDeserializeJson(string json, out Data.Model dataModel);
+		bool TryDeserialize(string path);
 	}
 }

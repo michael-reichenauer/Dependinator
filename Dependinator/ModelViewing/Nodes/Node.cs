@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Windows;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
@@ -30,6 +31,8 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public Node Parent { get; private set; }
 		public Node Root { get; private set; }
+
+		public Rect Bounds { get; set; }
 
 		public IReadOnlyList<Node> Children => children;
 		public ItemsCanvas ItemsCanvas { get; set; }

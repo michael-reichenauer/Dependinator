@@ -39,7 +39,10 @@ namespace Dependinator.Utils.UI
 			isNotifyAll = true;
 		}
 
-		public void Notify(Action<string> notifyAction) => notifyPropertyAction = notifyAction;
+		public void Notify(Action<string> notifyAction)
+		{
+			notifyPropertyAction = notifyAction;
+		}
 
 
 		private void PropertyChangedEventHandler(object sender, PropertyChangedEventArgs e)

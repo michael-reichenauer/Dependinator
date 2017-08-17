@@ -341,13 +341,13 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		public void AddLinkLines(LinkOld link)
-		{
-			//var linkSegments = segmentService.GetNormalLinkSegments(link);
+		//public void AddLinkLines(LinkOld link)
+		//{
+		//	//var linkSegments = segmentService.GetNormalLinkSegments(link);
 
-			//linkSegments.ForEach(AddNormalLinkSegment);
-			//link.SetLinkSegments(linkSegments);
-		}
+		//	//linkSegments.ForEach(AddNormalLinkSegment);
+		//	//link.SetLinkSegments(linkSegments);
+		//}
 
 
 		//public void ZoomInLinkLine(LinkLine line)
@@ -377,41 +377,41 @@ namespace Dependinator.ModelViewing.Links.Private
 		//}
 
 
-		public void ZoomInLinkLine(LinkLineOld line, NodeOld node)
-		{
-			//	IReadOnlyList<LinkOld> links = line.Links.ToList();
+		//public void ZoomInLinkLine(LinkLineOld line, NodeOld node)
+		//{
+		//	//	IReadOnlyList<LinkOld> links = line.Links.ToList();
 
-			//	foreach (LinkOld link in links)
-			//	{
-			//		IReadOnlyList<LinkSegmentOld> currentLinkSegments = link.LinkSegments.ToList();
+		//	//	foreach (LinkOld link in links)
+		//	//	{
+		//	//		IReadOnlyList<LinkSegmentOld> currentLinkSegments = link.LinkSegments.ToList();
 
-			//		IReadOnlyList<LinkSegmentOld> zoomedSegments;
-			//		if (node == line.Target)
-			//		{
-			//			zoomedSegments = segmentService.GetZoomedInBeforeReplacedSegments(currentLinkSegments, line.Source, line.Target);
-			//		}
-			//		else
-			//		{
-			//			zoomedSegments = segmentService.GetZoomedInAfterReplacedSegments(currentLinkSegments, line.Source, line.Target);
-			//		}
+		//	//		IReadOnlyList<LinkSegmentOld> zoomedSegments;
+		//	//		if (node == line.Target)
+		//	//		{
+		//	//			zoomedSegments = segmentService.GetZoomedInBeforeReplacedSegments(currentLinkSegments, line.Source, line.Target);
+		//	//		}
+		//	//		else
+		//	//		{
+		//	//			zoomedSegments = segmentService.GetZoomedInAfterReplacedSegments(currentLinkSegments, line.Source, line.Target);
+		//	//		}
 
-			//		LinkSegmentOld zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
+		//	//		LinkSegmentOld zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
 
-			//		var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedInSegment);
+		//	//		var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedInSegment);
 
-			//		var replacedLines = GetLines(link.Lines, zoomedSegments);
+		//	//		var replacedLines = GetLines(link.Lines, zoomedSegments);
 
-			//		replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
+		//	//		replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
 
-			//		link.SetLinkSegments(newSegments);
-			//		if (AddDirectLine(zoomedInSegment))
-			//		{
-			//			break;
-			//		}
-			//	}
+		//	//		link.SetLinkSegments(newSegments);
+		//	//		if (AddDirectLine(zoomedInSegment))
+		//	//		{
+		//	//			break;
+		//	//		}
+		//	//	}
 
-			//	line.Owner.RootNode.UpdateNodeVisibility();
-			//}
+		//	//	line.Owner.RootNode.UpdateNodeVisibility();
+		//	//}
 
 
 			//public void ZoomOutLinkLine(LinkLine line)
@@ -436,168 +436,168 @@ namespace Dependinator.ModelViewing.Links.Private
 			//	}
 
 			//	line.Owner.AncestorsAndSelf().Last().UpdateNodeVisibility();
-		}
+		//}
 
 
-		public void ZoomOutLinkLine(LinkLineOld line, NodeOld node)
-		{
-			//IReadOnlyList<LinkOld> links = line.Links.ToList();
+		//public void ZoomOutLinkLine(LinkLineOld line, NodeOld node)
+		//{
+		//	//IReadOnlyList<LinkOld> links = line.Links.ToList();
 
-			//foreach (LinkOld link in links)
-			//{
-			//	IReadOnlyList<LinkSegmentOld> normalLinkSegments = segmentService.GetNormalLinkSegments(link);
-			//	IReadOnlyList<LinkSegmentOld> currentLinkSegments = link.LinkSegments.ToList();
+		//	//foreach (LinkOld link in links)
+		//	//{
+		//	//	IReadOnlyList<LinkSegmentOld> normalLinkSegments = segmentService.GetNormalLinkSegments(link);
+		//	//	IReadOnlyList<LinkSegmentOld> currentLinkSegments = link.LinkSegments.ToList();
 
-			//	IReadOnlyList<LinkSegmentOld> zoomedSegments = segmentService.GetZoomedOutReplacedSegments(normalLinkSegments, currentLinkSegments, line.Source, line.Target);
+		//	//	IReadOnlyList<LinkSegmentOld> zoomedSegments = segmentService.GetZoomedOutReplacedSegments(normalLinkSegments, currentLinkSegments, line.Source, line.Target);
 
-			//	if (zoomedSegments.Count > 1)
-			//	{
-			//		if (node == line.Target)
-			//		{
-			//			zoomedSegments = zoomedSegments.Skip(1).ToList();
-			//		}
-			//		else
-			//		{
-			//			zoomedSegments = zoomedSegments.Take(zoomedSegments.Count - 1).ToList();
-			//		}
+		//	//	if (zoomedSegments.Count > 1)
+		//	//	{
+		//	//		if (node == line.Target)
+		//	//		{
+		//	//			zoomedSegments = zoomedSegments.Skip(1).ToList();
+		//	//		}
+		//	//		else
+		//	//		{
+		//	//			zoomedSegments = zoomedSegments.Take(zoomedSegments.Count - 1).ToList();
+		//	//		}
 
-			//		LinkSegmentOld zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
+		//	//		LinkSegmentOld zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
 
-			//		var newSegments = segmentService.GetNewLinkSegments(normalLinkSegments, zoomedInSegment);
+		//	//		var newSegments = segmentService.GetNewLinkSegments(normalLinkSegments, zoomedInSegment);
 
-			//		HideLinkFromLine(line, link);
+		//	//		HideLinkFromLine(line, link);
 
-			//		newSegments.ForEach(segment => AddDirectLine(segment));
-
-
-			//		link.SetLinkSegments(newSegments);
-			//	}		
-			//}
-
-			//line.Owner.RootNode.UpdateNodeVisibility();
-		}
+		//	//		newSegments.ForEach(segment => AddDirectLine(segment));
 
 
-		public void CloseLine(LinkLineOld line)
-		{
-			line.Owner.RemoveOwnedLineItem(line);
-			line.Owner.Links.RemoveOwnedLine(line);
+		//	//		link.SetLinkSegments(newSegments);
+		//	//	}		
+		//	//}
 
-			line.Source.Links.RemoveReferencedLine(line);
-			line.Target.Links.RemoveReferencedLine(line);
-
-			line.Source.AncestorsAndSelf()
-				.TakeWhile(node => node != line.Owner)
-				.ForEach(node => node.Links.RemoveReferencedLine(line));
-
-			line.Target.AncestorsAndSelf()
-				.TakeWhile(node => node != line.Owner)
-				.ForEach(node => node.Links.RemoveReferencedLine(line));
-		}
+		//	//line.Owner.RootNode.UpdateNodeVisibility();
+		//}
 
 
-		private void HideLinkFromLine(LinkLineOld line, LinkOld link)
-		{
-			line.HideLink(link);
-			link.Remove(line);
+		//public void CloseLine(LinkLineOld line)
+		//{
+		//	line.Owner.RemoveOwnedLineItem(line);
+		//	line.Owner.Links.RemoveOwnedLine(line);
 
-			if (!line.IsMouseOver && !line.IsNormal && !line.Links.Any())
-			{
-				CloseLine(line);
-			}
-		}
+		//	line.Source.Links.RemoveReferencedLine(line);
+		//	line.Target.Links.RemoveReferencedLine(line);
 
+		//	line.Source.AncestorsAndSelf()
+		//		.TakeWhile(node => node != line.Owner)
+		//		.ForEach(node => node.Links.RemoveReferencedLine(line));
 
-		private static IReadOnlyList<LinkLineOld> GetLines(
-			IReadOnlyList<LinkLineOld> linkLines,
-			IReadOnlyList<LinkSegmentOld> replacedSegments)
-		{
-			return replacedSegments
-				.Where(segment => linkLines.Any(
-					line => line.Source == segment.Source && line.Target == segment.Target))
-				.Select(segment => linkLines.First(
-					line => line.Source == segment.Source && line.Target == segment.Target))
-				.ToList();
-		}
+		//	line.Target.AncestorsAndSelf()
+		//		.TakeWhile(node => node != line.Owner)
+		//		.ForEach(node => node.Links.RemoveReferencedLine(line));
+		//}
 
 
-		private bool AddDirectLine(LinkSegmentOld segment)
-		{
-			bool isNewAdded = false;
-			LinkLineOld existingLine = segment.Owner.Links.OwnedLines
-				.FirstOrDefault(line => line.Source == segment.Source && line.Target == segment.Target);
+		//private void HideLinkFromLine(LinkLineOld line, LinkOld link)
+		//{
+		//	line.HideLink(link);
+		//	link.Remove(line);
 
-			if (existingLine == null)
-			{
-				existingLine = new LinkLineOld(this, segment.Source, segment.Target, segment.Owner);
-				AddLinkLine(existingLine);
-
-				segment.Owner.AddOwnedLineItem(existingLine);
-
-				segment.Source.AncestorsAndSelf()
-					.TakeWhile(node => node != segment.Owner)
-					.ForEach(node => node.Links.TryAddReferencedLine(existingLine));
-				segment.Target.AncestorsAndSelf()
-					.TakeWhile(node => node != segment.Owner)
-					.ForEach(node => node.Links.TryAddReferencedLine(existingLine));
-				isNewAdded = true;
-			}
-
-			existingLine.TryAddLink(segment.Link);
-			segment.Link.TryAddLinkLine(existingLine);
-
-			return isNewAdded;
-		}
+		//	if (!line.IsMouseOver && !line.IsNormal && !line.Links.Any())
+		//	{
+		//		CloseLine(line);
+		//	}
+		//}
 
 
-		private void AddNormalLinkSegment(LinkSegmentOld segment)
-		{
-			LinkLineOld existingLine = segment.Owner.Links.OwnedLines
-				.FirstOrDefault(line => line.Source == segment.Source && line.Target == segment.Target);
-
-			if (existingLine == null)
-			{
-				existingLine = new LinkLineOld(this, segment.Source, segment.Target, segment.Owner);
-				AddLinkLine(existingLine);
-			}
-
-			existingLine.IsNormal = true;
-
-			existingLine.AddLink(segment.Link);
-			segment.Link.TryAddLinkLine(existingLine);
-		}
+		//private static IReadOnlyList<LinkLineOld> GetLines(
+		//	IReadOnlyList<LinkLineOld> linkLines,
+		//	IReadOnlyList<LinkSegmentOld> replacedSegments)
+		//{
+		//	return replacedSegments
+		//		.Where(segment => linkLines.Any(
+		//			line => line.Source == segment.Source && line.Target == segment.Target))
+		//		.Select(segment => linkLines.First(
+		//			line => line.Source == segment.Source && line.Target == segment.Target))
+		//		.ToList();
+		//}
 
 
-		private static void AddLinkLine(LinkLineOld line)
-		{
-			line.Owner.Links.TryAddOwnedLine(line);
-			line.Source.Links.TryAddReferencedLine(line);
-			line.Target.Links.TryAddReferencedLine(line);
-		}
+		//private bool AddDirectLine(LinkSegmentOld segment)
+		//{
+		//	bool isNewAdded = false;
+		//	LinkLineOld existingLine = segment.Owner.Links.OwnedLines
+		//		.FirstOrDefault(line => line.Source == segment.Source && line.Target == segment.Target);
+
+		//	if (existingLine == null)
+		//	{
+		//		existingLine = new LinkLineOld(this, segment.Source, segment.Target, segment.Owner);
+		//		AddLinkLine(existingLine);
+
+		//		segment.Owner.AddOwnedLineItem(existingLine);
+
+		//		segment.Source.AncestorsAndSelf()
+		//			.TakeWhile(node => node != segment.Owner)
+		//			.ForEach(node => node.Links.TryAddReferencedLine(existingLine));
+		//		segment.Target.AncestorsAndSelf()
+		//			.TakeWhile(node => node != segment.Owner)
+		//			.ForEach(node => node.Links.TryAddReferencedLine(existingLine));
+		//		isNewAdded = true;
+		//	}
+
+		//	existingLine.TryAddLink(segment.Link);
+		//	segment.Link.TryAddLinkLine(existingLine);
+
+		//	return isNewAdded;
+		//}
 
 
-		public double GetLineThickness(LinkLineOld linkLine)
-		{
-			double scale = (linkLine.Owner.ItemsScale).MM(0.1, 0.7);
-			double thickness;
+		//private void AddNormalLinkSegment(LinkSegmentOld segment)
+		//{
+		//	LinkLineOld existingLine = segment.Owner.Links.OwnedLines
+		//		.FirstOrDefault(line => line.Source == segment.Source && line.Target == segment.Target);
 
-			int linksCount = linkLine.Links.Count + linkLine.HiddenLinks.Count;
+		//	if (existingLine == null)
+		//	{
+		//		existingLine = new LinkLineOld(this, segment.Source, segment.Target, segment.Owner);
+		//		AddLinkLine(existingLine);
+		//	}
 
-			if (linksCount < 5)
-			{
-				thickness = 1;
-			}
-			else if (linksCount < 15)
-			{
-				thickness = 2;
-			}
-			else
-			{
-				thickness = 3;
-			}
+		//	existingLine.IsNormal = true;
 
-			return thickness * scale;
-		}
+		//	existingLine.AddLink(segment.Link);
+		//	segment.Link.TryAddLinkLine(existingLine);
+		//}
+
+
+		//private static void AddLinkLine(LinkLineOld line)
+		//{
+		//	line.Owner.Links.TryAddOwnedLine(line);
+		//	line.Source.Links.TryAddReferencedLine(line);
+		//	line.Target.Links.TryAddReferencedLine(line);
+		//}
+
+
+		//public double GetLineThickness(LinkLineOld linkLine)
+		//{
+		//	double scale = (linkLine.Owner.ItemsScale).MM(0.1, 0.7);
+		//	double thickness;
+
+		//	int linksCount = linkLine.Links.Count + linkLine.HiddenLinks.Count;
+
+		//	if (linksCount < 5)
+		//	{
+		//		thickness = 1;
+		//	}
+		//	else if (linksCount < 15)
+		//	{
+		//		thickness = 2;
+		//	}
+		//	else
+		//	{
+		//		thickness = 3;
+		//	}
+
+		//	return thickness * scale;
+		//}
 
 
 		public double GetArrowWidth(Line line)
@@ -613,50 +613,50 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		public LinkLineBounds GetLinkLineBounds(LinkLineOld line)
-		{
-			if (!IsNodesInitialized(line))
-			{
-				return LinkLineBounds.Empty;
-			}
+		//public LinkLineBounds GetLinkLineBounds(LinkLineOld line)
+		//{
+		//	if (!IsNodesInitialized(line))
+		//	{
+		//		return LinkLineBounds.Empty;
+		//	}
 
-			(Point p1, Point p2) = GetLinkSegmentEndPoints(line);
+		//	(Point p1, Point p2) = GetLinkSegmentEndPoints(line);
 
-			// Ensure the rect is at least big enough to contain the width of the actual line
-			double margin = 2.5 / line.ItemsScale;
+		//	// Ensure the rect is at least big enough to contain the width of the actual line
+		//	double margin = 2.5 / line.ItemsScale;
 
-			Rect lineBounds = GetLineBounds(p1, p2, margin);
+		//	Rect lineBounds = GetLineBounds(p1, p2, margin);
 
-			(Point l1, Point l2) = GetLineEndPoints(p1, p2, margin);
+		//	(Point l1, Point l2) = GetLineEndPoints(p1, p2, margin);
 
-			return new LinkLineBounds(lineBounds, l1, l2);
-		}
-
-
-		private static (Point l1, Point l2) GetLineEndPoints(Point p1, Point p2, double margin)
-		{
-			// Line drawing within the bounds
-			double width = Math.Abs(p2.X - p1.X);
-			double height = Math.Abs(p2.Y - p1.Y);
+		//	return new LinkLineBounds(lineBounds, l1, l2);
+		//}
 
 
-			if (p1.X <= p2.X && p1.Y <= p2.Y)
-			{
-				return (new Point(margin, margin), new Point(width, height));
-			}
-			else if (p1.X > p2.X && p1.Y <= p2.Y)
-			{
-				return (new Point(width, margin), new Point(margin, height));
-			}
-			else if (p1.X <= p2.X && p1.Y > p2.Y)
-			{
-				return (new Point(margin, height), new Point(width, margin));
-			}
-			else
-			{
-				return (new Point(width, height), new Point(margin, margin));
-			}
-		}
+		//private static (Point l1, Point l2) GetLineEndPoints(Point p1, Point p2, double margin)
+		//{
+		//	// Line drawing within the bounds
+		//	double width = Math.Abs(p2.X - p1.X);
+		//	double height = Math.Abs(p2.Y - p1.Y);
+
+
+		//	if (p1.X <= p2.X && p1.Y <= p2.Y)
+		//	{
+		//		return (new Point(margin, margin), new Point(width, height));
+		//	}
+		//	else if (p1.X > p2.X && p1.Y <= p2.Y)
+		//	{
+		//		return (new Point(width, margin), new Point(margin, height));
+		//	}
+		//	else if (p1.X <= p2.X && p1.Y > p2.Y)
+		//	{
+		//		return (new Point(margin, height), new Point(width, margin));
+		//	}
+		//	else
+		//	{
+		//		return (new Point(width, height), new Point(margin, margin));
+		//	}
+		//}
 
 
 		private static Rect GetLineBounds(Point p1, Point p2, double margin)
@@ -676,124 +676,124 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		private static (Point source, Point target) GetLinkSegmentEndPoints(LinkLineOld line)
-		{
-			NodeOld source = line.Source;
-			NodeOld target = line.Target;
-			Rect sourceBounds = source.ItemBounds;
-			Rect targetBounds = target.ItemBounds;
+		//private static (Point source, Point target) GetLinkSegmentEndPoints(LinkLineOld line)
+		//{
+		//	NodeOld source = line.Source;
+		//	NodeOld target = line.Target;
+		//	Rect sourceBounds = source.ItemBounds;
+		//	Rect targetBounds = target.ItemBounds;
 
 
-			if (source.ParentNode == target.ParentNode)
-			{
-				// Source and target nodes are siblings, 
-				// ie. line starts at source middle bottom and ends at target middle top
-				double x1 = sourceBounds.X + sourceBounds.Width / 2;
-				double y1 = sourceBounds.Y + sourceBounds.Height;
-				Point sp = new Point(x1, y1);
+		//	if (source.ParentNode == target.ParentNode)
+		//	{
+		//		// Source and target nodes are siblings, 
+		//		// ie. line starts at source middle bottom and ends at target middle top
+		//		double x1 = sourceBounds.X + sourceBounds.Width / 2;
+		//		double y1 = sourceBounds.Y + sourceBounds.Height;
+		//		Point sp = new Point(x1, y1);
 
-				double x2 = targetBounds.X + targetBounds.Width / 2;
-				double y2 = targetBounds.Y;
-				Point tp = new Point(x2, y2);
+		//		double x2 = targetBounds.X + targetBounds.Width / 2;
+		//		double y2 = targetBounds.Y;
+		//		Point tp = new Point(x2, y2);
 
-				return (sp, tp);
-			}
-			else if (source.ParentNode == target)
-			{
-				// The target is a parent of the source,
-				// i.e. line ends at the bottom of the target node
-				double x1 = sourceBounds.X + sourceBounds.Width / 2;
-				double y1 = sourceBounds.Y + sourceBounds.Height;
-				Point sp = new Point(x1, y1);
+		//		return (sp, tp);
+		//	}
+		//	else if (source.ParentNode == target)
+		//	{
+		//		// The target is a parent of the source,
+		//		// i.e. line ends at the bottom of the target node
+		//		double x1 = sourceBounds.X + sourceBounds.Width / 2;
+		//		double y1 = sourceBounds.Y + sourceBounds.Height;
+		//		Point sp = new Point(x1, y1);
 
-				double x2 = targetBounds.X + targetBounds.Width / 2;
-				double y2 = targetBounds.Y + targetBounds.Height;
-				Point tp = ParentPointToChildPoint(target, new Point(x2, y2));
+		//		double x2 = targetBounds.X + targetBounds.Width / 2;
+		//		double y2 = targetBounds.Y + targetBounds.Height;
+		//		Point tp = ParentPointToChildPoint(target, new Point(x2, y2));
 
-				return (sp, tp);
-			}
-			else if (source == target.ParentNode)
-			{
-				// The target is the child of the source,
-				// i.e. line start at the top of the source
-				double x1 = sourceBounds.X + sourceBounds.Width / 2;
-				double y1 = sourceBounds.Y;
-				Point sp = ParentPointToChildPoint(source, new Point(x1, y1));
+		//		return (sp, tp);
+		//	}
+		//	else if (source == target.ParentNode)
+		//	{
+		//		// The target is the child of the source,
+		//		// i.e. line start at the top of the source
+		//		double x1 = sourceBounds.X + sourceBounds.Width / 2;
+		//		double y1 = sourceBounds.Y;
+		//		Point sp = ParentPointToChildPoint(source, new Point(x1, y1));
 
-				double x2 = targetBounds.X + targetBounds.Width / 2;
-				double y2 = targetBounds.Y;
-				Point tp = new Point(x2, y2);
+		//		double x2 = targetBounds.X + targetBounds.Width / 2;
+		//		double y2 = targetBounds.Y;
+		//		Point tp = new Point(x2, y2);
 
-				return (sp, tp);
-			}
-			else
-			{
-				// The line is between nodes, which are not within same node
-				if (source == line.Owner)
-				{
-					double x1 = sourceBounds.X + sourceBounds.Width / 2;
-					double y1 = sourceBounds.Y;
-					Point sp = ParentPointToChildPoint(source, new Point(x1, y1));
+		//		return (sp, tp);
+		//	}
+		//	else
+		//	{
+		//		// The line is between nodes, which are not within same node
+		//		if (source == line.Owner)
+		//		{
+		//			double x1 = sourceBounds.X + sourceBounds.Width / 2;
+		//			double y1 = sourceBounds.Y;
+		//			Point sp = ParentPointToChildPoint(source, new Point(x1, y1));
 
-					double x2 = targetBounds.X + targetBounds.Width / 2;
-					double y2 = targetBounds.Y;
-					Point tp = DescendentPointToAncestorPoint(target, line.Owner, new Point(x2, y2));
+		//			double x2 = targetBounds.X + targetBounds.Width / 2;
+		//			double y2 = targetBounds.Y;
+		//			Point tp = DescendentPointToAncestorPoint(target, line.Owner, new Point(x2, y2));
 
-					return (sp, tp);
-				}
-				else if (target == line.Owner)
-				{
-					double x1 = sourceBounds.X + sourceBounds.Width / 2;
-					double y1 = sourceBounds.Y + sourceBounds.Height;
-					Point sp = DescendentPointToAncestorPoint(target, line.Owner, new Point(x1, y1));
+		//			return (sp, tp);
+		//		}
+		//		else if (target == line.Owner)
+		//		{
+		//			double x1 = sourceBounds.X + sourceBounds.Width / 2;
+		//			double y1 = sourceBounds.Y + sourceBounds.Height;
+		//			Point sp = DescendentPointToAncestorPoint(target, line.Owner, new Point(x1, y1));
 
-					double x2 = targetBounds.X + targetBounds.Width / 2;
-					double y2 = targetBounds.Y + targetBounds.Height;
-					Point tp = ParentPointToChildPoint(target, new Point(x2, y2));
+		//			double x2 = targetBounds.X + targetBounds.Width / 2;
+		//			double y2 = targetBounds.Y + targetBounds.Height;
+		//			Point tp = ParentPointToChildPoint(target, new Point(x2, y2));
 
-					return (sp, tp);
-				}
-				else
-				{
-					// Nodes are not direct siblings, need to use the common ancestor (owner)
-					double x1 = sourceBounds.X + sourceBounds.Width / 2;
-					double y1 = sourceBounds.Y + sourceBounds.Height;
-					Point sp = DescendentPointToAncestorPoint(source, line.Owner, new Point(x1, y1));
+		//			return (sp, tp);
+		//		}
+		//		else
+		//		{
+		//			// Nodes are not direct siblings, need to use the common ancestor (owner)
+		//			double x1 = sourceBounds.X + sourceBounds.Width / 2;
+		//			double y1 = sourceBounds.Y + sourceBounds.Height;
+		//			Point sp = DescendentPointToAncestorPoint(source, line.Owner, new Point(x1, y1));
 
-					double x2 = targetBounds.X + targetBounds.Width / 2;
-					double y2 = targetBounds.Y;
-					Point tp = DescendentPointToAncestorPoint(target, line.Owner, new Point(x2, y2));
+		//			double x2 = targetBounds.X + targetBounds.Width / 2;
+		//			double y2 = targetBounds.Y;
+		//			Point tp = DescendentPointToAncestorPoint(target, line.Owner, new Point(x2, y2));
 
-					return (sp, tp);
-				}
-			}
-		}
-
-
-		private static Point DescendentPointToAncestorPoint(NodeOld descendent, NodeOld ancestor, Point point)
-		{
-			foreach (NodeOld node in descendent.Ancestors())
-			{
-				if (node == ancestor)
-				{
-					break;
-				}
-
-				point = node.ChildCanvasPointToParentCanvasPoint(point);
-			}
-
-			return point;
-		}
+		//			return (sp, tp);
+		//		}
+		//	}
+		//}
 
 
-		private static Point ParentPointToChildPoint(NodeOld parent, Point point)
-		{
-			return parent.ParentCanvasPointToChildCanvasPoint(point);
-		}
+		//private static Point DescendentPointToAncestorPoint(NodeOld descendent, NodeOld ancestor, Point point)
+		//{
+		//	foreach (NodeOld node in descendent.Ancestors())
+		//	{
+		//		if (node == ancestor)
+		//		{
+		//			break;
+		//		}
+
+		//		point = node.ChildCanvasPointToParentCanvasPoint(point);
+		//	}
+
+		//	return point;
+		//}
 
 
-		private static bool IsNodesInitialized(LinkLineOld line) =>
-			line.Source.ItemBounds != Rect.Empty && line.Target.ItemBounds != Rect.Empty;
+		//private static Point ParentPointToChildPoint(NodeOld parent, Point point)
+		//{
+		//	return parent.ParentCanvasPointToChildCanvasPoint(point);
+		//}
+
+
+		//private static bool IsNodesInitialized(LinkLineOld line) =>
+		//	line.Source.ItemBounds != Rect.Empty && line.Target.ItemBounds != Rect.Empty;
 
 
 

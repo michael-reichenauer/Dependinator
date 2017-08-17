@@ -13,12 +13,12 @@ namespace Dependinator.ModelViewing.Links
 
 		bool IsOnLineBetweenNeighbors(Line points, int index);
 		int GetLinePointIndex(Line line, Point point);
-		void AddLinkLines(LinkOld link);
-		void ZoomInLinkLine(LinkLineOld line, NodeOld node);
-		void ZoomOutLinkLine(LinkLineOld line, NodeOld node);
-		void CloseLine(LinkLineOld line);
-		double GetLineThickness(LinkLineOld linkLine);
-		LinkLineBounds GetLinkLineBounds(LinkLineOld line);
+		//void AddLinkLines(LinkOld link);
+		//void ZoomInLinkLine(LinkLineOld line, NodeOld node);
+		//void ZoomOutLinkLine(LinkLineOld line, NodeOld node);
+		//void CloseLine(LinkLineOld line);
+		//double GetLineThickness(LinkLineOld linkLine);
+		//LinkLineBounds GetLinkLineBounds(LinkLineOld line);
 
 		/// <summary>
 		/// Gets the links in the line grouped first by source and then by target at the

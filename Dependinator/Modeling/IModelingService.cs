@@ -1,11 +1,13 @@
-﻿namespace Dependinator.Modeling
+﻿using System.Collections.Generic;
+
+namespace Dependinator.Modeling
 {
 	internal interface IModelingService
 	{
 		void Analyze(string path);
 
-		void Serialize(ModelOld model, string path);
+		void Serialize(IEnumerable<DataNode> nodes, IEnumerable<DataLink> links, string path);
 
-		bool TryDeserialize(string path, out ModelOld model);
+		bool TryDeserialize(string path);
 	}
 }

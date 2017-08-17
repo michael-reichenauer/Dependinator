@@ -20,12 +20,18 @@ namespace Dependinator.Modeling.Private.Serializing
 			// The name of a node with '.' separating hierarchy, e.g. like in namespaces
 			public string Name { get; set; }
 
-			// Type of node, Currently one of "NameSpace", "Type", "Member"
+			// Optional data like type, node location and size ...
 			public string Type { get; set; }
-
-			// Optional view data like node location and size
-			public ViewData ViewData { get; set; }
+			public double X { get; set; }
+			public double Y { get; set; }
+			public double Width { get; set; }
+			public double Height { get; set; }
+			public double Scale { get; set; }
+			public double OffsetX { get; set; }
+			public double OffsetY { get; set; }
+			public string Color { get; set; }
 		}
+
 
 		// Link between two nodes
 		[Serializable]
@@ -38,19 +44,12 @@ namespace Dependinator.Modeling.Private.Serializing
 			public string Target { get; set; }
 		}
 
-		// Optional view data for a node like location, size and color
-		[Serializable]
-		public class ViewData
-		{
-			public double X { get; set; }
-			public double Y { get; set; }
-			public double Width { get; set; }
-			public double Height { get; set; }
-			public double Scale { get; set; }
-			public double OffsetX { get; set; }
-			public double OffsetY { get; set; }
-			public string Color { get; set; }
-		}
+		//// Optional view data for a node like location, size and color
+		//[Serializable]
+		//public class NodeData
+		//{
+			
+		//}
 
 		internal static class NodeType
 		{

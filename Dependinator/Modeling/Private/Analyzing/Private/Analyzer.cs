@@ -17,12 +17,13 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			BindingFlags.Public | BindingFlags.NonPublic
 			| BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
+		private Dictionary<string, Data.Node> sentNodes;
 
 		public override object InitializeLifetimeService() => null;
 
 		private readonly List<MethodBody> methodBodies = new List<MethodBody>();
 		private int memberCount = 0;
-
+		private int linkCount = 0;
 
 		public void AnalyzeAssembly(string assemblyPath, NotificationReceiver receiver)
 		{
@@ -37,6 +38,9 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		private void AnalyzeAssemblyImpl(string assemblyPath, NotificationReceiver receiver)
 		{
 			// The sender, which will send notifications to the receiver in the parent app-domain
+			sentNodes = new Dictionary<string, Data.Node>();
+			memberCount = 0;
+			linkCount = 0;
 			NotificationSender sender = new NotificationSender(receiver);
 
 			// Store current directory, so it can be restored in the end
@@ -112,7 +116,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			methodBodies.ForEach(method => AddMethodBodyLinks(method.MemberNode, method.Method, sender));
 			t.Log($"Added {methodBodies.Count} method bodies");
 
-			Log.Debug($"Added {sender.NodeCount} nodes and {sender.LinkCount} links");
+			Log.Debug($"Added {sentNodes.Count} nodes and {linkCount} links");
 		}
 
 
@@ -126,12 +130,63 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			}
 
 			string typeFullName = Reflection.GetTypeFullName(type);
-			Data.Node typeNode = sender.SendNode(typeFullName, Data.NodeType.Type);
+			Data.Node typeNode = SendNode(typeFullName, Data.NodeType.Type, sender);
 			return (type, typeNode);
 		}
 
 
-		private static void AddDeclaringType(Type type, NotificationSender sender)
+		private Data.Node SendNode(string nodeName, string nodeType, NotificationSender sender)
+		{
+			if (Reflection.IsCompilerGenerated(nodeName))
+			{
+				Log.Warn($"Compiler generated node: {nodeName}");
+			}
+
+			if (sentNodes.TryGetValue(nodeName, out Data.Node node))
+			{
+				// Already sent this node
+				return node;
+			}
+
+			node = new Data.Node
+			{
+				Name = nodeName,
+				Type = nodeType
+			};
+
+			sentNodes[nodeName] = node;
+			sender.SendNode(node);
+			return node;
+		}
+
+
+		public void SendLink(string sourceNodeName, string targetNodeName, NotificationSender sender)
+		{
+			if (Reflection.IsCompilerGenerated(sourceNodeName)
+			    || Reflection.IsCompilerGenerated(targetNodeName))
+			{
+				Log.Warn($"Compiler generated link: {sourceNodeName}->{targetNodeName}");
+			}
+
+
+			if (sourceNodeName == targetNodeName)
+			{
+				// Skipping link to self
+				return;
+			}
+
+			Data.Link link = new Data.Link
+			{
+				Source = sourceNodeName,
+				Target = targetNodeName
+			};
+
+			linkCount++;
+			sender.SendLink(link);
+		}
+
+
+		private void AddDeclaringType(Type type, NotificationSender sender)
 		{
 			if (type.DeclaringType != null)
 			{
@@ -140,7 +195,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			}
 
 			string typeFullName = Reflection.GetTypeFullName(type);
-			sender.SendNode(typeFullName, Data.NodeType.Type);
+			SendNode(typeFullName, Data.NodeType.Type, sender);
 		}
 
 
@@ -185,7 +240,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			{
 				string memberName = Reflection.GetMemberFullName(memberInfo, typeNode.Name);
 
-				var memberNode = sender.SendNode(memberName, Data.NodeType.Member);
+				var memberNode = SendNode(memberName, Data.NodeType.Member, sender);
 				memberCount++;
 
 				AddMemberLinks(memberNode, memberInfo, sender);
@@ -304,8 +359,8 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 				return;
 			}
 
-			sender.SendNode(methodName, Data.NodeType.Member);
-			sender.SendLink(memberNode.Name, methodName);
+			SendNode(methodName, Data.NodeType.Member, sender);
+			SendLink(memberNode.Name, methodName, sender);
 
 			Type returnType = method.ReturnType;
 			AddLinkToType(memberNode, returnType, sender);
@@ -336,8 +391,8 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 				return;
 			}
 
-			sender.SendNode(targetNodeName, Data.NodeType.Type);
-			sender.SendLink(sourceNode.Name, targetNodeName);
+			SendNode(targetNodeName, Data.NodeType.Type, sender);
+			SendLink(sourceNode.Name, targetNodeName, sender);
 
 			if (targetType.IsGenericType)
 			{

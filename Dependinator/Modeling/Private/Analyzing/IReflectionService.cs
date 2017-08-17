@@ -1,6 +1,4 @@
-﻿using Dependinator.Modeling.Private.Serializing;
-
-namespace Dependinator.Modeling.Private.Analyzing
+﻿namespace Dependinator.Modeling.Private.Analyzing
 {
 	internal interface IReflectionService
 	{

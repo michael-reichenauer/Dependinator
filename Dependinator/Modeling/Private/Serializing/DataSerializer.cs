@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Dependinator.Utils;
 using Newtonsoft.Json;
 
@@ -7,6 +9,8 @@ namespace Dependinator.Modeling.Private.Serializing
 {
 	internal class DataSerializer : IDataSerializer
 	{
+		private readonly Lazy<IModelNotifications> modelNotifications;
+
 		private static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
 		{
 			Formatting = Formatting.Indented,
@@ -14,41 +18,52 @@ namespace Dependinator.Modeling.Private.Serializing
 			NullValueHandling = NullValueHandling.Ignore,
 		};
 
-		
-		public void Serialize(Data.Model dataModel, string path)
+
+		public DataSerializer(Lazy<IModelNotifications> modelNotifications)
 		{
+			this.modelNotifications = modelNotifications;
+		}
+		
+
+		public void Serialize(IEnumerable<DataNode> nodes, IEnumerable<DataLink> links, string path)
+		{
+			Data.Model dataModel = new Data.Model();
+
+			dataModel.Nodes = nodes.Select(Convert.ToDataNode).ToList();
+			dataModel.Links = links.Select(Convert.ToDataLink).ToList();
+
 			string json = JsonConvert.SerializeObject(dataModel, typeof(Data.Model), Settings);
 
 			WriteFileText(path, json);
 		}
 
 
-		public string SerializeAsJson(Data.Model dataModel)
-		{
-			return JsonConvert.SerializeObject(dataModel, typeof(Data.Model), Settings);
-		}
-
-
-		public bool TryDeserialize(string path, out Data.Model dataModel)
+		public bool TryDeserialize(string path)
 		{
 			Timing t = new Timing();
+			NotificationReceiver receiver = new NotificationReceiver(modelNotifications.Value);
+			NotificationSender sender = new NotificationSender(receiver);
+
 			if (TryReadFileText(path, out string json))
 			{
 				t.Log("Read data file");
-				return TryDeserializeJson(json, out dataModel);
+				return TryDeserializeJson(json, sender);
 			}
 
-			dataModel = null;
 			return false;
 		}
 
 
-		public bool TryDeserializeJson(string json, out Data.Model dataModel)
+		private static bool TryDeserializeJson(string json, NotificationSender sender)
 		{
 			try
 			{
 				Timing t = new Timing();
-				dataModel = JsonConvert.DeserializeObject<Data.Model>(json, Settings);
+				Data.Model dataModel = JsonConvert.DeserializeObject<Data.Model>(json, Settings);
+
+				dataModel.Nodes.ForEach(sender.SendNode);
+				dataModel.Links.ForEach(sender.SendLink);
+
 				t.Log("Deserialized");
 				return true;
 			}
@@ -57,11 +72,8 @@ namespace Dependinator.Modeling.Private.Serializing
 				Log.Error($"Failed to deserialize json data, {e}");
 			}
 
-			dataModel = null;
 			return false;
 		}
-
-
 
 
 		private static void WriteFileText(string path, string text)
