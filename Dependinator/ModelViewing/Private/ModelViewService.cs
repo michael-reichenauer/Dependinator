@@ -1,7 +1,8 @@
 ﻿using System.Threading.Tasks;
 using System.Windows;
+using Dependinator.ApplicationHandling;
+using Dependinator.ApplicationHandling.SettingsHandling;
 using Dependinator.ModelViewing.Private.Items;
-using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils;
 
 
@@ -11,16 +12,15 @@ namespace Dependinator.ModelViewing.Private
 	internal class ModelViewService : IModelViewService
 	{
 		private readonly IModelService modelService;
+		private readonly WorkingFolder workingFolder;
 
-
-
-		//private ModelOld currentModel;
 
 		public ModelViewService(
-			IModelService modelService)
+			IModelService modelService,
+			WorkingFolder workingFolder)
 		{
 			this.modelService = modelService;
-
+			this.workingFolder = workingFolder;
 		}
 
 
@@ -28,17 +28,10 @@ namespace Dependinator.ModelViewing.Private
 		public async Task LoadAsync(ItemsCanvas rootCanvas)
 		{
 			modelService.Init(rootCanvas);
+			RestoreViewSettings();
 
 			await modelService.LoadAsync();
 		}
-
-
-		//private ModelOld GetDataModel()
-		//{
-		//	ModelOld dataModel = GetCachedOrFreshModelData();
-
-		//	return dataModel;
-		//}
 
 
 		public async Task Refresh(ItemsCanvas rootCanvas, bool refreshLayout)
@@ -88,13 +81,13 @@ namespace Dependinator.ModelViewing.Private
 
 		public void Close()
 		{
+			StoreViewSettings();
+
 			//currentModel.Root.UpdateAllNodesScalesBeforeClose();
 			////DataModel dataModel = modelingService.ToDataModel(model);
 			//string dataFilePath = GetDataFilePath();
 
 			//modelingService.Serialize(currentModel, dataFilePath);
-
-			//StoreViewSettings();
 		}
 
 
@@ -104,25 +97,23 @@ namespace Dependinator.ModelViewing.Private
 		//}
 
 
-		//private void StoreViewSettings()
-		//{
-		//	Settings.EditWorkingFolderSettings(workingFolder,
-		//		settings =>
-		//		{
-		//			settings.Scale = currentModel.Root.ItemsScale;
-		//			settings.X = currentModel.Root.ItemsOffset.X;
-		//			settings.Y = currentModel.Root.ItemsOffset.Y;
-		//		});
-		//}
+		private void StoreViewSettings()
+		{
+			Settings.EditWorkingFolderSettings(workingFolder,
+				settings =>
+				{
+					settings.Scale = modelService.Root.ItemsCanvas.Scale;
+					settings.X = modelService.Root.ItemsCanvas.Offset.X;
+					settings.Y = modelService.Root.ItemsCanvas.Offset.Y;
+				});
+		}
 
 
-		//private void RestoreViewSettings(IItemsCanvas rootCanvas)
-		//{
-		//	WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
-		//	rootCanvas.Scale = settings.Scale;
-		//	rootCanvas.Offset = new Point(settings.X, settings.Y);
-		//}
-
-
+		private void RestoreViewSettings()
+		{
+			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
+			modelService.Root.ItemsCanvas.Scale = settings.Scale;
+			modelService.Root.ItemsCanvas.Offset = new Point(settings.X, settings.Y);
+		}
 	}
 }

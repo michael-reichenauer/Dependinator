@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using Dependinator.ApplicationHandling;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Links;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 
@@ -19,7 +20,6 @@ namespace Dependinator.ModelViewing.Private
 		private readonly IModelingService modelingService;
 		private readonly INodeService nodeService;
 		private readonly ILinkService linkService;
-
 
 		private readonly Model model;
 		private readonly WorkingFolder workingFolder;
@@ -42,58 +42,43 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
+		public Node Root => model.Root;
+
+
 		public void Init(ItemsCanvas rootCanvas)
 		{
 			dispatcher = Dispatcher.CurrentDispatcher;
-			model.Root.ItemsCanvas = rootCanvas;
+			Root.ItemsCanvas = rootCanvas;
 		}
 
 
 		public async Task LoadAsync()
 		{
-			await Task.Run(() => modelingService.Analyze(workingFolder.FilePath));
+			await modelingService.AnalyzeAsync(workingFolder.FilePath);
 		}
 
 
 		public async Task RefreshAsync(bool refreshLayout)
 		{
-
-			await Task.Run(() => modelingService.Analyze(workingFolder.FilePath));
+			await modelingService.AnalyzeAsync(workingFolder.FilePath);
 		}
 
 
-		public void UpdateNodes(IReadOnlyList<DataNode> nodes)
-		{
-			foreach (List<DataNode> batch in nodes.Partition(BatchSize))
-			{
-				InvokeOnUiThread(UpdateNodes, batch);
-			}
-		}
-
-		private void UpdateNodes(List<DataNode> batchNodes)
-		{
-			batchNodes.ForEach(nodeService.UpdateNode);
-		}
+		public void UpdateNodes(IReadOnlyList<DataNode> nodes) => 
+			nodes.Partition(BatchSize).ForEach(batch => InvokeOnUiThread(UpdateNodes, batch));
 
 
-		public void UpdateLinks(IReadOnlyList<DataLink> links)
-		{
-			foreach (List<DataLink> batch in links.Partition(BatchSize))
-			{
-				InvokeOnUiThread(UpdateLinks, batch);
-			}
-		}
+		public void UpdateLinks(IReadOnlyList<DataLink> links) => 
+			links.Partition(BatchSize).ForEach(batch => InvokeOnUiThread(UpdateLinks, batch));
 
 
-		private void UpdateLinks(List<DataLink> batchLinks)
-		{
-			batchLinks.ForEach(linkService.UpdateLink);
-		}
+		private void UpdateNodes(List<DataNode> nodes) => nodes.ForEach(nodeService.UpdateNode);
 
 
-		private void InvokeOnUiThread<T>(Action<T> action, T arg)
-		{
+		private void UpdateLinks(List<DataLink> links) => links.ForEach(linkService.UpdateLink);
+
+
+		private void InvokeOnUiThread<T>(Action<T> action, T arg) => 
 			dispatcher.Invoke(DispatcherPriority.Background, action, arg);
-		}
 	}
 }

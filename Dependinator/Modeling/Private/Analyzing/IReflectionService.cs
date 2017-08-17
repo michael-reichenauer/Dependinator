@@ -1,7 +1,9 @@
-﻿namespace Dependinator.Modeling.Private.Analyzing
+﻿using System.Threading.Tasks;
+
+namespace Dependinator.Modeling.Private.Analyzing
 {
 	internal interface IReflectionService
 	{
-		void Analyze(string path);
+		Task AnalyzeAsync(string path);
 	}
 }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Dependinator.Utils;
 using Newtonsoft.Json;
 
@@ -25,32 +26,41 @@ namespace Dependinator.Modeling.Private.Serializing
 		}
 		
 
-		public void Serialize(IEnumerable<DataNode> nodes, IEnumerable<DataLink> links, string path)
+		public Task SerializeAsync(
+			IReadOnlyList<DataNode> nodes, 
+			IReadOnlyList<DataLink> links, 
+			string path)
 		{
-			Data.Model dataModel = new Data.Model();
+			return Task.Run(() =>
+			{
+				Data.Model dataModel = new Data.Model();
 
-			dataModel.Nodes = nodes.Select(Convert.ToDataNode).ToList();
-			dataModel.Links = links.Select(Convert.ToDataLink).ToList();
+				dataModel.Nodes = nodes.Select(Convert.ToDataNode).ToList();
+				dataModel.Links = links.Select(Convert.ToDataLink).ToList();
 
-			string json = JsonConvert.SerializeObject(dataModel, typeof(Data.Model), Settings);
+				string json = JsonConvert.SerializeObject(dataModel, typeof(Data.Model), Settings);
 
-			WriteFileText(path, json);
+				WriteFileText(path, json);
+			});
 		}
 
 
-		public bool TryDeserialize(string path)
+		public Task<bool> TryDeserializeAsync(string path)
 		{
-			Timing t = new Timing();
-			NotificationReceiver receiver = new NotificationReceiver(modelNotifications.Value);
-			NotificationSender sender = new NotificationSender(receiver);
-
-			if (TryReadFileText(path, out string json))
+			return Task.Run(() =>
 			{
-				t.Log("Read data file");
-				return TryDeserializeJson(json, sender);
-			}
+				Timing t = new Timing();
+				NotificationReceiver receiver = new NotificationReceiver(modelNotifications.Value);
+				NotificationSender sender = new NotificationSender(receiver);
 
-			return false;
+				if (TryReadFileText(path, out string json))
+				{
+					t.Log("Read data file");
+					return TryDeserializeJson(json, sender);
+				}
+
+				return false;
+			});
 		}
 
 

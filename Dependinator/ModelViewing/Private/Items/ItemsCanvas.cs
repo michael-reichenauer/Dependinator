@@ -69,7 +69,7 @@ namespace Dependinator.ModelViewing.Private.Items
 		public Point Offset
 		{
 			get => Get();
-			private set
+			set
 			{
 				Set(value);
 
@@ -84,7 +84,7 @@ namespace Dependinator.ModelViewing.Private.Items
 		public double Scale
 		{
 			get => Get();
-			private set
+			set
 			{
 				Set(value);
 

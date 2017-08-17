@@ -1,11 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Dependinator.Modeling.Private.Serializing
 {
 	internal interface IDataSerializer
 	{
-		void Serialize(IEnumerable<DataNode> nodes, IEnumerable<DataLink> links, string path);
+		Task SerializeAsync(IReadOnlyList<DataNode> nodes, IReadOnlyList<DataLink> links, string path);
 
-		bool TryDeserialize(string path);
+		Task<bool> TryDeserializeAsync(string path);
 	}
 }

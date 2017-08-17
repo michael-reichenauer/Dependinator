@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Dependinator.Modeling.Private.Analyzing;
 using Dependinator.Modeling.Private.Serializing;
 
@@ -20,58 +21,19 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		public void Analyze(string path)
+		public Task AnalyzeAsync(string path) => reflectionService.AnalyzeAsync(path);
+
+
+		public Task SerializeAsync(
+			IReadOnlyList<DataNode> nodes, IReadOnlyList<DataLink> links, string path)
 		{
-			reflectionService.Analyze(path);
+			return dataSerializer.SerializeAsync(nodes, links, path);
 		}
 
 
-		public void Serialize(IEnumerable<DataNode> nodes, IEnumerable<DataLink> links, string path)
+		public Task<bool> TryDeserialize(string path)
 		{
-			dataSerializer.Serialize(nodes, links, path);
+			return dataSerializer.TryDeserializeAsync(path);
 		}
-
-
-		public bool TryDeserialize(string path)
-		{
-			return dataSerializer.TryDeserialize(path);
-		}
-
-
-
-
-		//private static Data.ViewData ToViewData(NodeOld node)
-		//{
-		//	Data.ViewData viewData = new Data.ViewData
-		//	{
-		//		Color = node.PersistentNodeColor,
-		//		X = node.ItemBounds.X,
-		//		Y = node.ItemBounds.Y,
-		//		Width = node.ItemBounds.Width,
-		//		Height = node.ItemBounds.Height,
-		//		Scale = node.ItemsScale,
-		//		OffsetX = node.ItemsOffset.X,
-		//		OffsetY = node.ItemsOffset.Y
-		//	};
-
-		//	return viewData;
-		//}
-
-
-
-
-		//private static Rect? ToBounds(Data.ViewData viewData)
-		//{
-		//	if (viewData == null || viewData.Width == 0)
-		//	{
-		//		return null;
-		//	}
-
-		//	return new Rect(
-		//		new Point(viewData.X, viewData.Y),
-		//		new Size(viewData.Width, viewData.Height));
-		//}
-
-
 	}
 }

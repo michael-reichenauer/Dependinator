@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace Dependinator.Modeling.Private.Analyzing.Private
 {
@@ -12,25 +13,28 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		}
 
 
-		public void Analyze(string path)
+		public Task AnalyzeAsync(string assemblyPath)
 		{
-			// To avoid locking files when loading them for reflection, a separate AppDomain is created
-			// where the reflection can be done. This domain can then be unloaded
-			AppDomain reflectionDomain = CreateAppDomain();
-			try
+			return Task.Run(() =>
 			{
-				Analyzer analyzer = CreateTypeInDomain<Analyzer>(reflectionDomain);
+				// To avoid locking files when loading them for reflection, a separate AppDomain is created
+				// where the reflection can be done. This domain can then be unloaded
+				AppDomain reflectionDomain = CreateAppDomain();
+				try
+				{
+					Analyzer analyzer = CreateTypeInDomain<Analyzer>(reflectionDomain);
 
-				// To send notifications from sub domain, we use a receiver in this domain, which is
-				// passed to the sub-domain		
-				NotificationReceiver receiver = new NotificationReceiver(modelNotifications.Value);				
+					// To send notifications from sub domain, we use a receiver in this domain, which is
+					// passed to the sub-domain		
+					NotificationReceiver receiver = new NotificationReceiver(modelNotifications.Value);
 
-				analyzer.AnalyzeAssembly(path, receiver);
-			}
-			finally
-			{
-				AppDomain.Unload(reflectionDomain);
-			}
+					analyzer.AnalyzeAssembly(assemblyPath, receiver);
+				}
+				finally
+				{
+					AppDomain.Unload(reflectionDomain);
+				}
+			});
 		}
 
 

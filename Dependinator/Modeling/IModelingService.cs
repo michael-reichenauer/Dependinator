@@ -1,13 +1,14 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Dependinator.Modeling
 {
 	internal interface IModelingService
 	{
-		void Analyze(string path);
+		Task AnalyzeAsync(string path);
 
-		void Serialize(IEnumerable<DataNode> nodes, IEnumerable<DataLink> links, string path);
+		Task SerializeAsync(IReadOnlyList<DataNode> nodes, IReadOnlyList<DataLink> links, string path);
 
-		bool TryDeserialize(string path);
+		Task<bool> TryDeserialize(string path);
 	}
 }

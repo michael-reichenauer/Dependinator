@@ -1,3 +1,4 @@
+using System.Windows;
 using Dependinator.Modeling.Private.Serializing;
 
 namespace Dependinator.Modeling.Private
@@ -6,8 +7,16 @@ namespace Dependinator.Modeling.Private
 	{
 		public static DataNode ToNode(Data.Node node)
 		{
-			return new DataNode(node.Name, node.Type);
+			return new DataNode(
+				node.Name, 
+				node.Type,
+				new Rect(node.X, node.Y, node.Width, node.Height),
+				node.Scale,
+				new Point(node.OffsetX, node.OffsetY),
+				node.Color);
 		}
+
+		
 
 		public static Data.Node ToDataNode(DataNode node)
 		{
@@ -15,6 +24,14 @@ namespace Dependinator.Modeling.Private
 			{
 				Name = node.Name,
 				Type = node.NodeType,
+				X = node.Bounds.X,
+				Y = node.Bounds.Y,
+				Width = node.Bounds.Width,
+				Height = node.Bounds.Height,
+				Scale = node.Scale,
+				OffsetX = node.Offset.X,
+				OffsetY = node.Offset.Y,
+				Color = node.Color
 			};
 		}
 

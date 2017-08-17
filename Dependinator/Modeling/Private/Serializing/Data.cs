@@ -44,12 +44,6 @@ namespace Dependinator.Modeling.Private.Serializing
 			public string Target { get; set; }
 		}
 
-		//// Optional view data for a node like location, size and color
-		//[Serializable]
-		//public class NodeData
-		//{
-			
-		//}
 
 		internal static class NodeType
 		{
