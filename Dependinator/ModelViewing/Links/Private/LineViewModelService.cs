@@ -306,7 +306,11 @@ namespace Dependinator.ModelViewing.Links.Private
 				string targetName = target.NodeType == NodeType.Type
 					? target.Name.Name : target.Name.ShortName;
 
-				tip += "\n";
+				if (!isLimitReached)
+				{
+					tip += "\n";
+				}
+				
 				foreach (Link link in groupByTarget)
 				{
 					count++;
@@ -321,7 +325,6 @@ namespace Dependinator.ModelViewing.Links.Private
 						isLimitReached = true;
 					}
 				}
-
 			}
 
 			if (isLimitReached)
