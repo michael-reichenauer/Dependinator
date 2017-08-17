@@ -17,13 +17,13 @@ if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Enterprise\MSBuild\15
 )
 
 if exist %MSBUILD% (
-  echo Using MSBuild: %MSBUILD%
-  echo.
+  rem echo Using MSBuild: %MSBUILD%
+  rem echo.
 
 
   echo Restore nuget packets ...
   rem call %MSBUILD% /nologo /t:restore /v:m Dependinator.sln
-  .\Binaries\nuget.exe restore Dependinator.sln
+  .\Binaries\nuget.exe restore -Verbosity quiet Dependinator.sln
   echo.
 
   echo Building ...
@@ -31,9 +31,8 @@ if exist %MSBUILD% (
   echo.
 
   echo Copy to Setup file ...
-  copy Dependinator\bin\Release\Dependinator.exe DependinatorSetup.exe /Y 
+  copy Dependinator\bin\Release\Dependinator.exe DependinatorSetup.exe /Y >NUL
 
-  echo Get built version...
   PowerShell -Command "& {(Get-Item DependinatorSetup.exe).VersionInfo.FILEVERSION }" > version.txt
   echo.
 
