@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -73,17 +74,24 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		public void UpdateNodes(IReadOnlyList<DataNode> nodes) =>
-			nodes.Partition(BatchSize).ForEach(batch => dispatcher.InvokeBackground(UpdateNodes, batch));
+		public void UpdateDataItems(IReadOnlyList<DataItem> items) =>
+			items.Partition(BatchSize).ForEach(batch => dispatcher.InvokeBackground(UpdateItems, batch));
 
 
-		public void UpdateLinks(IReadOnlyList<DataLink> links) =>
-			links.Partition(BatchSize).ForEach(batch => dispatcher.InvokeBackground(UpdateLinks, batch));
+		private void UpdateItems(List<DataItem> items)
+		{
+			foreach (DataItem item in items)
+			{
+				if (item.Node != null)
+				{
+					nodeService.UpdateNode(item.Node);
+				}
 
-
-		private void UpdateNodes(List<DataNode> nodes) => nodes.ForEach(nodeService.UpdateNode);
-
-
-		private void UpdateLinks(List<DataLink> links) => links.ForEach(linkService.UpdateLink);
+				if (item.Link != null)
+				{
+					linkService.UpdateLink(item.Link);
+				}
+			}
+		}
 	}
 }

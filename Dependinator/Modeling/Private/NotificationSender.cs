@@ -12,7 +12,7 @@ namespace Dependinator.Modeling.Private
 	internal class NotificationSender
 	{
 		private readonly NotificationReceiver receiver;
-		private readonly BlockingCollection<object> items = new BlockingCollection<object>();
+		private readonly BlockingCollection<Dtos.Item> items = new BlockingCollection<Dtos.Item>();
 
 		private readonly Task sendTask;
 
@@ -25,16 +25,15 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		public void SendNode(Dtos.Node node) => items.Add(node);
+		public void SendItem(Dtos.Item item) => items.Add(item);
 
-		public void SendLink(Dtos.Link link) => items.Add(link);
 
 
 		public void Flush()
 		{
 			items.CompleteAdding();
 
-			// Wait until all notification have been sent
+			// Wait until all items have been sent
 			sendTask.Wait();
 		}
 
@@ -45,30 +44,24 @@ namespace Dependinator.Modeling.Private
 			{
 				while (!items.IsCompleted)
 				{
-					object item;
+					Dtos.Item item;
 					if (!items.TryTake(out item, int.MaxValue))
 					{
 						return;
 					}
 
-					List<Dtos.Node> nodeBatch = null;
-					List<Dtos.Link> linkBatch = null;
+					List<Dtos.Item> itemBatch = null;
 
-					AddToBatch(item, ref nodeBatch, ref linkBatch);
+					AddToBatch(item, ref itemBatch);
 
 					while (items.TryTake(out item))
 					{
-						AddToBatch(item, ref nodeBatch, ref linkBatch);
+						AddToBatch(item, ref itemBatch);
 					}
 
-					if (nodeBatch?.Any() ?? false)
+					if (itemBatch?.Any() ?? false)
 					{
-						receiver.ReceiveNodes(nodeBatch);
-					}
-
-					if (linkBatch?.Any() ?? false)
-					{
-						receiver.ReceiveLinks(linkBatch);
+						receiver.ReceiveItems(itemBatch);
 					}
 				}
 			}
@@ -79,29 +72,14 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		private static void AddToBatch(
-			object item,
-			ref List<Dtos.Node> nodeBatch,
-			ref List<Dtos.Link> linkBatch)
+		private static void AddToBatch(Dtos.Item item, ref List<Dtos.Item> itemBatch)
 		{
-			if (item is Dtos.Node node)
+			if (itemBatch == null)
 			{
-				if (nodeBatch == null)
-				{
-					nodeBatch = new List<Dtos.Node>();
-				}
-
-				nodeBatch.Add(node);
+				itemBatch = new List<Dtos.Item>();
 			}
-			else if (item is Dtos.Link link)
-			{
-				if (linkBatch == null)
-				{
-					linkBatch = new List<Dtos.Link>();
-				}
 
-				linkBatch.Add(link);
-			}
+			itemBatch.Add(item);
 		}
 	}
 }

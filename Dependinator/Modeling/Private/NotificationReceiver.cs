@@ -20,19 +20,11 @@ namespace Dependinator.Modeling.Private
 		public override object InitializeLifetimeService() => null;
 
 
-		public void ReceiveNodes(List<Dtos.Node> dataNodes)
+		public void ReceiveItems(List<Dtos.Item> dtoItems)
 		{
-			List<DataNode> nodes = dataNodes.Select(Convert.ToDataNode).ToList();
+			List<DataItem> items = dtoItems.Select(Convert.ToDataItem).ToList();
 
-			modelNotifications.UpdateNodes(nodes);
-		}
-
-
-		public void ReceiveLinks(List<Dtos.Link> dataLinks)
-		{
-			List<DataLink> links = dataLinks.Select(Convert.ToDataLink).ToList();
-
-			modelNotifications.UpdateLinks(links);
+			modelNotifications.UpdateDataItems(items);
 		}
 	}
 }

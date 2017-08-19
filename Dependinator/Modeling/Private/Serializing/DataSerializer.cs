@@ -68,18 +68,7 @@ namespace Dependinator.Modeling.Private.Serializing
 				Timing t = new Timing();
 				Dtos.Model dataModel = JsonConvert.DeserializeObject<Dtos.Model>(json, Settings);
 
-				foreach (Dtos.Item item in dataModel.Items)
-				{
-					if (item.Node != null)
-					{
-						sender.SendNode(item.Node);
-					}
-
-					if (item.Link != null)
-					{
-						sender.SendLink(item.Link);
-					}
-				}
+				dataModel.Items.ForEach(sender.SendItem);
 
 				sender.Flush();
 

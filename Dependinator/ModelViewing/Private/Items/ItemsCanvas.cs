@@ -246,7 +246,7 @@ namespace Dependinator.ModelViewing.Private.Items
 			zoomableCanvas = canvas;
 			zoomableCanvas.ItemRealized += Canvas_ItemRealized;
 			zoomableCanvas.ItemVirtualized += Canvas_ItemVirtualized;
-			zoomableCanvas.ItemsOwner.ItemsSource = itemsSource.VirtualItemsSource;
+			zoomableCanvas.ItemsOwner.ItemsSource = itemsSource;
 
 			zoomableCanvas.Scale = Scale;
 			zoomableCanvas.Offset = Offset;
@@ -260,21 +260,9 @@ namespace Dependinator.ModelViewing.Private.Items
 		}
 
 
-		public void AddItems(IEnumerable<ItemViewModel> items)
-		{
-			items.ForEach(item => item.ItemOwnerCanvas = this);
-			itemsSource.Add(items);
-		}
-
 		public void RemoveItem(ItemViewModel item) => itemsSource.Remove(item);
 
-		public void RemoveAll() => itemsSource.RemoveAll();
-
-
 		public void UpdateItem(ItemViewModel item) => itemsSource.Update(item);
-
-		public void UpdateItems(IEnumerable<ItemViewModel> items) => itemsSource.Update(items);
-
 
 
 		public void SizeChanged() => itemsSource.TriggerExtentChanged();

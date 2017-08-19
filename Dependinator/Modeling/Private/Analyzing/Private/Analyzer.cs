@@ -155,7 +155,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			};
 
 			sentNodes[nodeName] = node;
-			sender.SendNode(node);
+			sender.SendItem(new Dtos.Item { Node = node });
 			return node;
 		}
 
@@ -163,7 +163,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		public void SendLink(string sourceNodeName, string targetNodeName, NotificationSender sender)
 		{
 			if (Reflection.IsCompilerGenerated(sourceNodeName)
-			    || Reflection.IsCompilerGenerated(targetNodeName))
+					|| Reflection.IsCompilerGenerated(targetNodeName))
 			{
 				Log.Warn($"Compiler generated link: {sourceNodeName}->{targetNodeName}");
 			}
@@ -182,7 +182,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			};
 
 			linkCount++;
-			sender.SendLink(link);
+			sender.SendItem(new Dtos.Item { Link = link });
 		}
 
 

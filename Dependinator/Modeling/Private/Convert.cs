@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using Dependinator.Modeling.Private.Serializing;
 
@@ -8,7 +6,7 @@ namespace Dependinator.Modeling.Private
 	internal class Convert
 	{
 		public static DataNode ToDataNode(Dtos.Node node) => new DataNode(
-			node.Name, 
+			node.Name,
 			node.Type,
 			new Rect(node.X, node.Y, node.Width, node.Height),
 			node.Scale,
@@ -46,6 +44,12 @@ namespace Dependinator.Modeling.Private
 			Node = item.Node != null ? ToDtoNode(item.Node) : null,
 			Link = item.Link != null ? ToDtoLink(item.Link) : null
 		};
+
+
+		public static DataItem ToDataItem(Dtos.Item item) =>
+			new DataItem(
+				item.Node != null ? ToDataNode(item.Node) : null,
+				item.Link != null ? ToDataLink(item.Link) : null);
 
 	}
 }
