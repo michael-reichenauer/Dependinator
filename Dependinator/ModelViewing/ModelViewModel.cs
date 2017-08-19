@@ -162,9 +162,6 @@ namespace Dependinator.ModelViewing
 		}
 
 
-		public void ClosingWindow()
-		{
-			modelViewService.Close();
-		}
+		public Task ClosingWindowAsync() => modelViewService.CloseAsync();
 	}
 }

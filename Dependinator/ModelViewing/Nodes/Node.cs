@@ -37,15 +37,18 @@ namespace Dependinator.ModelViewing.Nodes
 		public IReadOnlyList<Node> Children => children;
 		public ItemsCanvas ItemsCanvas { get; set; }
 
-		public List<Link> Links { get; } = new List<Link>();
+		public List<Link> SourceLinks { get; } = new List<Link>();
 
-		public List<Line> Lines { get; } = new List<Line>();
+		public List<Line> SourceLines { get; } = new List<Line>();
 
 		public NodeType NodeType { get; }
 
 		public NodeViewModel ViewModel { get; set; }
 
 		public bool CanShow => ViewModel?.CanShow ?? false;
+		public double Scale { get; set; }
+		public Point Offset { get; set; }
+		public string Color { get; set; }
 
 
 		public void AddChild(Node child)

@@ -154,10 +154,7 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		public void ClosingWindow()
-		{
-			ModelViewModel.ClosingWindow();
-		}
+		public Task ClosingWindowAsync() => ModelViewModel.ClosingWindowAsync();
 
 
 		private async Task OpenFileAsync()

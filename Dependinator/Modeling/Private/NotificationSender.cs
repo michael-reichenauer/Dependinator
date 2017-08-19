@@ -25,9 +25,9 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		public void SendNode(Data.Node node) => items.Add(node);
+		public void SendNode(Dtos.Node node) => items.Add(node);
 
-		public void SendLink(Data.Link link) => items.Add(link);
+		public void SendLink(Dtos.Link link) => items.Add(link);
 
 
 		public void Flush()
@@ -51,8 +51,8 @@ namespace Dependinator.Modeling.Private
 						return;
 					}
 
-					List<Data.Node> nodeBatch = null;
-					List<Data.Link> linkBatch = null;
+					List<Dtos.Node> nodeBatch = null;
+					List<Dtos.Link> linkBatch = null;
 
 					AddToBatch(item, ref nodeBatch, ref linkBatch);
 
@@ -81,23 +81,23 @@ namespace Dependinator.Modeling.Private
 
 		private static void AddToBatch(
 			object item,
-			ref List<Data.Node> nodeBatch,
-			ref List<Data.Link> linkBatch)
+			ref List<Dtos.Node> nodeBatch,
+			ref List<Dtos.Link> linkBatch)
 		{
-			if (item is Data.Node node)
+			if (item is Dtos.Node node)
 			{
 				if (nodeBatch == null)
 				{
-					nodeBatch = new List<Data.Node>();
+					nodeBatch = new List<Dtos.Node>();
 				}
 
 				nodeBatch.Add(node);
 			}
-			else if (item is Data.Link link)
+			else if (item is Dtos.Link link)
 			{
 				if (linkBatch == null)
 				{
-					linkBatch = new List<Data.Link>();
+					linkBatch = new List<Dtos.Link>();
 				}
 
 				linkBatch.Add(link);

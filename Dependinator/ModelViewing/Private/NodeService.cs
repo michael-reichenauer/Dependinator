@@ -32,20 +32,19 @@ namespace Dependinator.ModelViewing.Private
 			Node parentNode = GetNode(parentName);
 
 			NodeType nodeType = new NodeType(dataNode.NodeType);
-			AddNode(name, nodeType, parentNode);
+			Node node = new Node(name, nodeType);
+			AddNode(node, parentNode);
 		}
 
 
-		private Node AddNode(NodeName name, NodeType nodeType, Node parentNode)
-		{
-			Node node = new Node(name, nodeType);
+		private void AddNode(Node node, Node parentNode)
+		{		
 			model.Add(node);
 			parentNode.AddChild(node);
 
 			CreateNodeViewModel(node);
 
 			AddNodeToParentCanvas(node, parentNode);
-			return node;
 		}
 
 
@@ -88,8 +87,8 @@ namespace Dependinator.ModelViewing.Private
 			// The node not yet added. We need the parent to add the node
 			NodeName parentName = nodeName.ParentName;
 			Node parent = GetNode(parentName);
-
-			node = AddNode(nodeName, NodeType.NameSpace, parent);
+			node = new Node(nodeName, NodeType.NameSpace);
+			AddNode(node, parent);
 			return node;
 		}
 

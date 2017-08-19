@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -58,27 +57,33 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
+		public async Task SaveAsync(string dataFilePath)
+		{
+			IReadOnlyList<Node> nodes = model.Root.Descendents().ToList();
+
+			IReadOnlyList<DataItem> items = Convert.ToDataItems(nodes);
+
+			await modelingService.SerializeAsync(items, dataFilePath);
+		}
+
+
 		public async Task RefreshAsync(bool refreshLayout)
 		{
 			await modelingService.AnalyzeAsync(workingFolder.FilePath);
 		}
 
 
-		public void UpdateNodes(IReadOnlyList<DataNode> nodes) => 
-			nodes.Partition(BatchSize).ForEach(batch => InvokeOnUiThread(UpdateNodes, batch));
+		public void UpdateNodes(IReadOnlyList<DataNode> nodes) =>
+			nodes.Partition(BatchSize).ForEach(batch => dispatcher.InvokeBackground(UpdateNodes, batch));
 
 
-		public void UpdateLinks(IReadOnlyList<DataLink> links) => 
-			links.Partition(BatchSize).ForEach(batch => InvokeOnUiThread(UpdateLinks, batch));
+		public void UpdateLinks(IReadOnlyList<DataLink> links) =>
+			links.Partition(BatchSize).ForEach(batch => dispatcher.InvokeBackground(UpdateLinks, batch));
 
 
 		private void UpdateNodes(List<DataNode> nodes) => nodes.ForEach(nodeService.UpdateNode);
 
 
 		private void UpdateLinks(List<DataLink> links) => links.ForEach(linkService.UpdateLink);
-
-
-		private void InvokeOnUiThread<T>(Action<T> action, T arg) => 
-			dispatcher.Invoke(DispatcherPriority.Background, action, arg);
 	}
 }

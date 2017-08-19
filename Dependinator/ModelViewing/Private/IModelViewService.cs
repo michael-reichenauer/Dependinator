@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.Items;
-using Dependinator.ModelViewing.Private.Items.Private;
 
 
 namespace Dependinator.ModelViewing.Private
@@ -9,8 +8,8 @@ namespace Dependinator.ModelViewing.Private
 	{
 		Task LoadAsync(ItemsCanvas rootCanvas);
 
+		Task CloseAsync();
 
-		void Close();
 		Task Refresh(ItemsCanvas rootCanvas, bool refreshLayout);
 	}
 }

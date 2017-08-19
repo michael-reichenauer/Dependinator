@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.ApplicationHandling;
 using Dependinator.ApplicationHandling.SettingsHandling;
@@ -79,22 +80,19 @@ namespace Dependinator.ModelViewing.Private
 		//}
 
 
-		public void Close()
+		public async Task CloseAsync()
 		{
 			StoreViewSettings();
 
 			//currentModel.Root.UpdateAllNodesScalesBeforeClose();
 			////DataModel dataModel = modelingService.ToDataModel(model);
-			//string dataFilePath = GetDataFilePath();
+			string dataFilePath = GetDataFilePath();
 
-			//modelingService.Serialize(currentModel, dataFilePath);
+			await modelService.SaveAsync(dataFilePath);
 		}
 
 
-		//private string GetDataFilePath()
-		//{
-		//	return Path.Combine(workingFolder, "data.json");
-		//}
+		private string GetDataFilePath() => Path.Combine(workingFolder, "data.json");
 
 
 		private void StoreViewSettings()

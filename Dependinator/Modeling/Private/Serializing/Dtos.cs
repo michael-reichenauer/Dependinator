@@ -3,14 +3,21 @@ using System.Collections.Generic;
 
 namespace Dependinator.Modeling.Private.Serializing
 {
-	public static class Data
+	public static class Dtos
 	{
-		// A model contains a list of nodes
+		// A model contains a list of nodes, links and lines
 		[Serializable]
 		public class Model
 		{
-			public List<Node> Nodes { get; set; }
-			public List<Link> Links { get; set; }
+			public List<Item> Items { get; set; }
+		}
+
+
+		[Serializable]
+		public class Item
+		{
+			public Node Node { get; set; }
+			public Link Link { get; set; }
 		}
 
 		// A node

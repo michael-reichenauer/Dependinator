@@ -7,7 +7,7 @@ namespace Dependinator.Modeling
 	{
 		Task AnalyzeAsync(string path);
 
-		Task SerializeAsync(IReadOnlyList<DataNode> nodes, IReadOnlyList<DataLink> links, string path);
+		Task SerializeAsync(IReadOnlyList<DataItem> items, string path);
 
 		Task<bool> TryDeserialize(string path);
 	}

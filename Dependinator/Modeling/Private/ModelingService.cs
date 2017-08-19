@@ -24,10 +24,9 @@ namespace Dependinator.Modeling.Private
 		public Task AnalyzeAsync(string path) => reflectionService.AnalyzeAsync(path);
 
 
-		public Task SerializeAsync(
-			IReadOnlyList<DataNode> nodes, IReadOnlyList<DataLink> links, string path)
+		public Task SerializeAsync(IReadOnlyList<DataItem> items, string path)
 		{
-			return dataSerializer.SerializeAsync(nodes, links, path);
+			return dataSerializer.SerializeAsync(items, path);
 		}
 
 

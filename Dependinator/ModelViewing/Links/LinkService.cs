@@ -35,7 +35,7 @@ namespace Dependinator.ModelViewing.Links
 			Node source = GetNode(dataLink.Source);
 			Node target = GetNode(dataLink.Target);
 
-			if (LinkExists(source, target))
+			if (SourceLinkExists(source, target))
 
 			{
 				// Already added link
@@ -54,9 +54,7 @@ namespace Dependinator.ModelViewing.Links
 		{
 			foreach (LinkSegment linkSegment in linkSegments)
 			{
-				Line line = TryGetLine(linkSegment);
-
-				if (line == null)
+				if (!TryGetSourceLine(linkSegment, out Line line))
 				{
 					line = AddLine(linkSegment);
 					AddLineViewModel(line);
@@ -70,8 +68,7 @@ namespace Dependinator.ModelViewing.Links
 		private static Line AddLine(LinkSegment segment)
 		{
 			Line line = new Line(segment.Source, segment.Target);
-			line.Source.Lines.Add(line);
-			line.Target.Lines.Add(line);
+			line.Source.SourceLines.Add(line);
 			return line;
 		}
 
@@ -79,7 +76,6 @@ namespace Dependinator.ModelViewing.Links
 		{
 			Node owner = GetLineOwner(line);
 			LineViewModel lineViewModel = new LineViewModel(lineViewModelService, line);
-
 
 			owner.ItemsCanvas.AddItem(lineViewModel);
 		}
@@ -94,8 +90,7 @@ namespace Dependinator.ModelViewing.Links
 		private static Link AddLink(Node source, Node target)
 		{
 			Link link = new Link(source, target);
-			source.Links.Add(link);
-			target.Links.Add(link);
+			source.SourceLinks.Add(link);
 			return link;
 		}
 
@@ -108,12 +103,15 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
-		private static Line TryGetLine(LinkSegment segment) =>
-			segment.Source.Lines
-			.FirstOrDefault(l => l.Source == segment.Source && l.Target == segment.Target);
+		private static bool TryGetSourceLine(LinkSegment segment, out Line line)
+		{
+			line = segment.Source.SourceLines
+				.FirstOrDefault(l => l.Source == segment.Source && l.Target == segment.Target);
+			return line != null;
+		}
 
 
-		private static bool LinkExists(Node source, Node target) =>
-			source.Links.Any(l => l.Source == source && l.Target == target);
+		private static bool SourceLinkExists(Node source, Node target) =>
+			source.SourceLinks.Any(l => l.Source == source && l.Target == target);
 	}
 }

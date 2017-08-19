@@ -17,6 +17,7 @@ namespace Dependinator.Modeling.Private.Serializing
 			Formatting = Formatting.Indented,
 			ObjectCreationHandling = ObjectCreationHandling.Replace,
 			NullValueHandling = NullValueHandling.Ignore,
+			DefaultValueHandling = DefaultValueHandling.Ignore
 		};
 
 
@@ -26,19 +27,15 @@ namespace Dependinator.Modeling.Private.Serializing
 		}
 		
 
-		public Task SerializeAsync(
-			IReadOnlyList<DataNode> nodes, 
-			IReadOnlyList<DataLink> links, 
-			string path)
+		public Task SerializeAsync(IReadOnlyList<DataItem> items, string path)
 		{
 			return Task.Run(() =>
 			{
-				Data.Model dataModel = new Data.Model();
+				Dtos.Model dataModel = new Dtos.Model();
 
-				dataModel.Nodes = nodes.Select(Convert.ToDataNode).ToList();
-				dataModel.Links = links.Select(Convert.ToDataLink).ToList();
-
-				string json = JsonConvert.SerializeObject(dataModel, typeof(Data.Model), Settings);
+				dataModel.Items = items.Select(Convert.ToDtoItem).ToList();
+		
+				string json = JsonConvert.SerializeObject(dataModel, typeof(Dtos.Model), Settings);
 
 				WriteFileText(path, json);
 			});
@@ -69,10 +66,22 @@ namespace Dependinator.Modeling.Private.Serializing
 			try
 			{
 				Timing t = new Timing();
-				Data.Model dataModel = JsonConvert.DeserializeObject<Data.Model>(json, Settings);
+				Dtos.Model dataModel = JsonConvert.DeserializeObject<Dtos.Model>(json, Settings);
 
-				dataModel.Nodes.ForEach(sender.SendNode);
-				dataModel.Links.ForEach(sender.SendLink);
+				foreach (Dtos.Item item in dataModel.Items)
+				{
+					if (item.Node != null)
+					{
+						sender.SendNode(item.Node);
+					}
+
+					if (item.Link != null)
+					{
+						sender.SendLink(item.Link);
+					}
+				}
+
+				sender.Flush();
 
 				t.Log("Deserialized");
 				return true;

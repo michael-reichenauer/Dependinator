@@ -110,9 +110,9 @@ namespace Dependinator.MainWindowViews
 			viewModel.WindowWith = (int)sizeInfo.NewSize.Width;
 		}
 
-		private void MainWindow_OnClosing(object sender, CancelEventArgs e)
+		private async void MainWindow_OnClosing(object sender, CancelEventArgs e)
 		{
-			viewModel.ClosingWindow();
+			await viewModel.ClosingWindowAsync();
 			StoreWindowSettings();
 
 			StoreLasteUsedFolder();

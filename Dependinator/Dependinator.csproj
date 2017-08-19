@@ -104,9 +104,12 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Modeling\DataItem.cs" />
     <Compile Include="Modeling\DataLink.cs" />
     <Compile Include="Modeling\IModelNotifications.cs" />
     <Compile Include="Modeling\Private\Convert.cs" />
+    <Compile Include="ModelViewing\Private\Convert.cs" />
+    <Compile Include="Utils\UI\DispatcherExtensions.cs" />
     <Compile Include="Utils\UI\GeometryService.cs" />
     <Compile Include="Utils\UI\IGeometryService.cs" />
     <Compile Include="ModelViewing\Private\Items\IItemSelectService.cs" />
@@ -232,7 +235,7 @@
     <Compile Include="ModelViewing\Private\IModelViewService.cs" />
     <Compile Include="ModelViewing\Private\ModelViewService.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeViewModelService.cs" />
-    <Compile Include="Modeling\Private\Serializing\Data.cs" />
+    <Compile Include="Modeling\Private\Serializing\Dtos.cs" />
     <Compile Include="Modeling\Private\Serializing\DataSerializer.cs" />
     <Compile Include="Modeling\Private\Serializing\IDataSerializer.cs" />
     <Compile Include="Utils\CollectionExtensions.cs" />

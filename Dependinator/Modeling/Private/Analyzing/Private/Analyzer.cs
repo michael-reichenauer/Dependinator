@@ -17,7 +17,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			BindingFlags.Public | BindingFlags.NonPublic
 			| BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
-		private Dictionary<string, Data.Node> sentNodes;
+		private Dictionary<string, Dtos.Node> sentNodes;
 
 		public override object InitializeLifetimeService() => null;
 
@@ -38,7 +38,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		private void AnalyzeAssemblyImpl(string assemblyPath, NotificationReceiver receiver)
 		{
 			// The sender, which will send notifications to the receiver in the parent app-domain
-			sentNodes = new Dictionary<string, Data.Node>();
+			sentNodes = new Dictionary<string, Dtos.Node>();
 			memberCount = 0;
 			linkCount = 0;
 			NotificationSender sender = new NotificationSender(receiver);
@@ -99,7 +99,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 					&& !Reflection.IsCompilerGenerated(type.DeclaringType?.Name));
 
 			// Add type nodes
-			List<(TypeInfo type, Data.Node node)> typeNodes = assemblyTypes
+			List<(TypeInfo type, Dtos.Node node)> typeNodes = assemblyTypes
 				.Select(type => AddType(type, sender))
 				.ToList();
 			t.Log($"Added {typeNodes.Count} types");
@@ -120,7 +120,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		}
 
 
-		private (TypeInfo type, Data.Node node) AddType(
+		private (TypeInfo type, Dtos.Node node) AddType(
 			TypeInfo type, NotificationSender sender)
 		{
 			if (type.DeclaringType != null)
@@ -130,25 +130,25 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			}
 
 			string typeFullName = Reflection.GetTypeFullName(type);
-			Data.Node typeNode = SendNode(typeFullName, Data.NodeType.Type, sender);
+			Dtos.Node typeNode = SendNode(typeFullName, Dtos.NodeType.Type, sender);
 			return (type, typeNode);
 		}
 
 
-		private Data.Node SendNode(string nodeName, string nodeType, NotificationSender sender)
+		private Dtos.Node SendNode(string nodeName, string nodeType, NotificationSender sender)
 		{
 			if (Reflection.IsCompilerGenerated(nodeName))
 			{
 				Log.Warn($"Compiler generated node: {nodeName}");
 			}
 
-			if (sentNodes.TryGetValue(nodeName, out Data.Node node))
+			if (sentNodes.TryGetValue(nodeName, out Dtos.Node node))
 			{
 				// Already sent this node
 				return node;
 			}
 
-			node = new Data.Node
+			node = new Dtos.Node
 			{
 				Name = nodeName,
 				Type = nodeType
@@ -175,7 +175,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 				return;
 			}
 
-			Data.Link link = new Data.Link
+			Dtos.Link link = new Dtos.Link
 			{
 				Source = sourceNodeName,
 				Target = targetNodeName
@@ -195,11 +195,11 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			}
 
 			string typeFullName = Reflection.GetTypeFullName(type);
-			SendNode(typeFullName, Data.NodeType.Type, sender);
+			SendNode(typeFullName, Dtos.NodeType.Type, sender);
 		}
 
 
-		private void AddLinksToBaseTypes(TypeInfo type, Data.Node sourceNode, NotificationSender sender)
+		private void AddLinksToBaseTypes(TypeInfo type, Dtos.Node sourceNode, NotificationSender sender)
 		{
 			try
 			{
@@ -219,7 +219,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		}
 
 
-		private void AddTypeMembers(TypeInfo type, Data.Node typeNode, NotificationSender sender)
+		private void AddTypeMembers(TypeInfo type, Dtos.Node typeNode, NotificationSender sender)
 		{
 			try
 			{
@@ -234,13 +234,13 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		}
 
 
-		private void AddMember(MemberInfo memberInfo, Data.Node typeNode, NotificationSender sender)
+		private void AddMember(MemberInfo memberInfo, Dtos.Node typeNode, NotificationSender sender)
 		{
 			try
 			{
 				string memberName = Reflection.GetMemberFullName(memberInfo, typeNode.Name);
 
-				var memberNode = SendNode(memberName, Data.NodeType.Member, sender);
+				var memberNode = SendNode(memberName, Dtos.NodeType.Member, sender);
 				memberCount++;
 
 				AddMemberLinks(memberNode, memberInfo, sender);
@@ -253,7 +253,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 
 		private void AddMemberLinks(
-			Data.Node sourceMemberNode, MemberInfo member, NotificationSender sender)
+			Dtos.Node sourceMemberNode, MemberInfo member, NotificationSender sender)
 		{
 			try
 			{
@@ -290,7 +290,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 
 		private void AddMethodLinks(
-			Data.Node memberNode, MethodInfo method, NotificationSender sender)
+			Dtos.Node memberNode, MethodInfo method, NotificationSender sender)
 		{
 			Type returnType = method.ReturnType;
 			AddLinkToType(memberNode, returnType, sender);
@@ -304,7 +304,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 
 		private void AddConstructorLinks(
-			Data.Node memberNode, ConstructorInfo method, NotificationSender sender)
+			Dtos.Node memberNode, ConstructorInfo method, NotificationSender sender)
 		{
 			method.GetParameters()
 				.Select(parameter => parameter.ParameterType)
@@ -315,7 +315,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 
 		private void AddMethodBodyLinks(
-			Data.Node memberNode, MethodBase method, NotificationSender sender)
+			Dtos.Node memberNode, MethodBase method, NotificationSender sender)
 		{
 			System.Reflection.MethodBody methodBody = method.GetMethodBody();
 
@@ -343,7 +343,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 
 		private void AddLinkToCallMethod(
-			Data.Node memberNode, MethodInfo method, NotificationSender sender)
+			Dtos.Node memberNode, MethodInfo method, NotificationSender sender)
 		{
 			Type declaringType = method.DeclaringType;
 
@@ -359,7 +359,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 				return;
 			}
 
-			SendNode(methodName, Data.NodeType.Member, sender);
+			SendNode(methodName, Dtos.NodeType.Member, sender);
 			SendLink(memberNode.Name, methodName, sender);
 
 			Type returnType = method.ReturnType;
@@ -372,7 +372,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 
 		private void AddLinkToType(
-			Data.Node sourceNode,
+			Dtos.Node sourceNode,
 			Type targetType,
 			NotificationSender sender)
 		{
@@ -391,7 +391,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 				return;
 			}
 
-			SendNode(targetNodeName, Data.NodeType.Type, sender);
+			SendNode(targetNodeName, Dtos.NodeType.Type, sender);
 			SendLink(sourceNode.Name, targetNodeName, sender);
 
 			if (targetType.IsGenericType)
@@ -437,10 +437,10 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 		private class MethodBody
 		{
-			public Data.Node MemberNode { get; }
+			public Dtos.Node MemberNode { get; }
 			public MethodBase Method { get; }
 
-			public MethodBody(Data.Node memberNode, MethodBase method)
+			public MethodBody(Dtos.Node memberNode, MethodBase method)
 			{
 				MemberNode = memberNode;
 				Method = method;
