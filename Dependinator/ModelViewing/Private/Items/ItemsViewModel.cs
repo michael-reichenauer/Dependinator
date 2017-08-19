@@ -1,5 +1,4 @@
 ﻿using System.Windows;
-using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -28,5 +27,8 @@ namespace Dependinator.ModelViewing.Private.Items
 		public void SizeChanged() => ItemsCanvas.SizeChanged();
 
 		public void ItemRealized() => ItemsCanvas.ItemRealized();
+
+		public void ItemVirtualized() => ItemsCanvas.ItemVirtualized();
+
 	}
 }

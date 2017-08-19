@@ -48,6 +48,12 @@ namespace Dependinator.ModelViewing.Nodes
 			ItemsViewModel?.ItemRealized();
 		}
 
+		public override void ItemVirtualized()
+		{
+			base.ItemVirtualized();
+			ItemsViewModel?.ItemVirtualized();
+		}
+
 
 		public void OnMouseMove(MouseEventArgs e)
 		{
@@ -90,10 +96,11 @@ namespace Dependinator.ModelViewing.Nodes
 		public string DebugToolTip => ItemsToolTip;
 
 
-		public string ItemsToolTip => "\n" +
+		public string ItemsToolTip =>
+			"\n" +
 			$"Rect: {ItemBounds.TS()}\n" +
-			$"Scale {ItemScale}\n" +
-			$"Items: {ItemOwnerCanvas.CanvasRoot.AllItemsCount()}, Shown {ItemOwnerCanvas.CanvasRoot.ShownItemsCount()}";
+			$"Scale {ItemScale}\n";
+		//$"Items: {ItemOwnerCanvas.CanvasRoot.AllItemsCount()}, Shown {ItemOwnerCanvas.CanvasRoot.ShownItemsCount()}";
 
 
 		public override string ToString() => Node.Name.ToString();

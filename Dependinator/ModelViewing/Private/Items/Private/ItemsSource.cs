@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Dependinator.Utils;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 namespace Dependinator.ModelViewing.Private.Items.Private
@@ -10,15 +9,33 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 	{
 		private readonly IItemsSourceArea itemsSourceArea;
 		private readonly PriorityQuadTree<IItem> viewItemsTree = new PriorityQuadTree<IItem>();
-
 		private readonly Dictionary<int, IItem> viewItems = new Dictionary<int, IItem>();
 		private readonly Dictionary<int, IItem> removedItems = new Dictionary<int, IItem>();
 
+		//private List<IItem> addingItems;
+		//private List<IItem> updatingItems;
+		//private List<IItem> removingItems;
 
-		private int currentItemId = 0;
+		private int currentItemId = 1;
+		//private bool isShowing;
+
+		//private bool isItemsChanged;
+		//private bool isBoundsChanged;
 
 
-		public Rect LastViewAreaQuery { get; private set; } = EmptyExtent;
+		//private PriorityQuadTree<IItem> ViewItemsTree =>
+		//	viewItemsTree ?? (viewItemsTree = new PriorityQuadTree<IItem>());
+
+		//private Dictionary<int, IItem> ViewItems =>
+		//	viewItems ?? (viewItems = new Dictionary<int, IItem>());
+
+		//private Dictionary<int, IItem> RemovedItems =>
+		//	removedItems ?? (removedItems = new Dictionary<int, IItem>());
+
+		//private List<IItem> AddingItems => addingItems ?? (addingItems = new List<IItem>());
+		//private List<IItem> UpdatingItems => updatingItems ?? (updatingItems = new List<IItem>());
+		//private List<IItem> RemovingItems => removingItems ?? (removingItems = new List<IItem>());
+
 
 
 		public ItemsSource(IItemsSourceArea itemsSourceArea)
@@ -26,31 +43,65 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 			this.itemsSourceArea = itemsSourceArea;
 		}
 
+
+		public Rect LastViewAreaQuery { get; private set; } = EmptyExtent;
+
+
+
+
 		public Rect TotalBounds { get; private set; } = EmptyExtent;
 
 		protected override Rect VirtualArea => TotalBounds;
-
+		protected override IEnumerable<int> GetVirtualItemIds(Rect viewArea) => GetItemIds(viewArea);
+		protected override object GetVirtualItem(int virtualId) => GetItem(virtualId);
 
 		public bool HasItems => viewItems.Any();
 
 
 		public void Add(IItem item)
 		{
+			Add(new[] { item });
+		}
+
+
+		public void Update(IItem item)
+		{
+			Update(new[] { item });
+		}
+
+
+		public void Remove(IItem item)
+		{
+			Remove(new[] { item });
+		}
+
+
+
+		public void UpdateAndNotifyAll()
+		{
+			IReadOnlyList<ItemViewModel> items = viewItemsTree.Cast<ItemViewModel>().ToList();
+			Update(items);
+			items.ForEach(item => item.NotifyAll());
+		}
+
+
+
+		private void Add(IEnumerable<IItem> items)
+		{
 			bool isQueryItemsChanged = false;
 			Rect currentBounds = TotalBounds;
 
-			int itemId = currentItemId++;
-			item.ItemState = new ViewItem(itemId, item.ItemBounds, item);
-			viewItems[itemId] = item;
-
-			viewItemsTree.Insert(item, item.ItemBounds, 0);
-
-
-			if (item.CanShow)
+			foreach (IItem item in items)
 			{
+				int itemId = currentItemId++;
+				item.ItemState = new ViewItem(itemId, item.ItemBounds);
+				viewItems[itemId] = item;
+
+				viewItemsTree.Insert(item, item.ItemBounds, 0);
+
 				currentBounds.Union(item.ItemBounds);
 
-				if (item.ItemBounds.IntersectsWith(LastViewAreaQuery))
+				if (!isQueryItemsChanged && item.ItemBounds.IntersectsWith(LastViewAreaQuery))
 				{
 					isQueryItemsChanged = true;
 				}
@@ -69,34 +120,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		}
 
 
-		public void Update(IItem item)
-		{
-			ViewItem oldViewItem = (ViewItem)item.ItemState;
-			if (oldViewItem == null)
-			{
-				return;
-			}
-
-			Rect oldItemBounds = oldViewItem.ItemBounds;
-			viewItemsTree.Remove(item, oldItemBounds);
-
-			Rect newItemBounds = item.ItemBounds;
-			item.ItemState = new ViewItem(oldViewItem.ItemId, newItemBounds, item);
-
-			viewItemsTree.Insert(item, newItemBounds, 0);
-			//Log.Debug($"Updated {id} count:{viewItemsTree.Count()}");
-
-			ItemsBoundsChanged();
-
-			if (oldItemBounds.IntersectsWith(LastViewAreaQuery)
-				|| newItemBounds.IntersectsWith(LastViewAreaQuery))
-			{
-				TriggerItemsChanged();
-			}
-		}
-
-
-		public void Update(IEnumerable<IItem> items)
+		private void Update(IEnumerable<IItem> items)
 		{
 			bool isTriggerItemsChanged = false;
 
@@ -112,7 +136,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 				viewItemsTree.Remove(item, oldItemBounds);
 
 				Rect newItemBounds = item.ItemBounds;
-				item.ItemState = new ViewItem(oldViewItem.ItemId, newItemBounds, item);
+				item.ItemState = new ViewItem(oldViewItem.ItemId, newItemBounds);
 
 				viewItemsTree.Insert(item, newItemBounds, 0);
 				//Log.Debug($"Updated {id} count:{viewItemsTree.Count()}");
@@ -132,43 +156,48 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 			}
 		}
 
-		public IReadOnlyList<T> GetAll<T>()
+
+		private void Remove(IEnumerable<IItem> items)
 		{
-			return viewItemsTree.Cast<T>().ToList();
-		}
+			bool isQueryItemsChanged = false;
 
-
-		public void Remove(IItem item)
-		{
-			ViewItem viewItem = (ViewItem)item.ItemState;
-
-			if (viewItem == null)
+			foreach (IItem item in items)
 			{
-				return;
-			}
+				ViewItem viewItem = (ViewItem)item.ItemState;
 
-			Rect itemBounds = viewItem.ItemBounds;
-			if (viewItemsTree.Remove(item, itemBounds))
-			{
+				Rect itemBounds = viewItem.ItemBounds;
+				viewItemsTree.Remove(item, itemBounds);
 				removedItems[viewItem.ItemId] = item;
-			}
-			else
-			{
-				Log.Warn($"Failed to remove {item}");
-			}
 
+				item.ItemState = null;
 
-			item.ItemState = null;
+				if (item.CanShow)
+				{
+					if (itemBounds.IntersectsWith(LastViewAreaQuery))
+					{
+						isQueryItemsChanged = true;
+					}
+				}
+			}
 
 			ItemsBoundsChanged();
 
-			if (item.CanShow)
+			if (isQueryItemsChanged)
 			{
-				if (itemBounds.IntersectsWith(LastViewAreaQuery))
-				{
-					TriggerItemsChanged();
-				}
+				TriggerItemsChanged();
 			}
+		}
+
+
+
+		public void ItemRealized()
+		{
+			//isShowing = true;
+		}
+
+		public void ItemVirtualized()
+		{
+			//isShowing = false;
 		}
 
 
@@ -238,7 +267,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		/// <summary>
 		/// Returns range of item ids, which are visible in the area currently shown
 		/// </summary>
-		protected override IEnumerable<int> GetItemIds(Rect viewArea)
+		protected IEnumerable<int> GetItemIds(Rect viewArea)
 		{
 			//Inflate is Enabled in Zoomable line 1369
 			if (viewArea == Rect.Empty)
@@ -277,7 +306,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		/// Branches are in the branchBaseIndex->mergeBaseIndex-1 range
 		/// Merges are mergeBaseIndex-> ... range
 		/// </summary>
-		protected override object GetItem(int virtualId)
+		protected object GetItem(int virtualId)
 		{
 			if (viewItems.TryGetValue(virtualId, out var item))
 			{
@@ -290,18 +319,15 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 		private class ViewItem
 		{
-			public ViewItem(int itemId, Rect itemBounds, IItem item)
+			public ViewItem(int itemId, Rect itemBounds)
 			{
 				ItemId = itemId;
 				ItemBounds = itemBounds;
-				Node = item;
 			}
 
 			public int ItemId { get; }
 
 			public Rect ItemBounds { get; }
-
-			public IItem Node { get; }
 		}
 	}
 }

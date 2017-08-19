@@ -61,9 +61,14 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		public void ItemRealized()
 		{
+			itemsSource.ItemRealized();
 			UpdateScale();
 		}
 
+		public void ItemVirtualized()
+		{
+			itemsSource.ItemVirtualized();
+		}
 
 
 		public Point Offset
@@ -120,9 +125,9 @@ namespace Dependinator.ModelViewing.Private.Items
 				Offset = (Point)((Vector)(Offset + position) * scaleFactor - position);
 			}
 
-			IReadOnlyList<ItemViewModel> items = itemsSource.GetAll<ItemViewModel>();
-			itemsSource.Update(items);
-			items.ForEach(item => item.NotifyAll());
+			
+
+			itemsSource.UpdateAndNotifyAll();
 
 			ZoomChildren();
 		}
@@ -292,21 +297,21 @@ namespace Dependinator.ModelViewing.Private.Items
 		public override string ToString() => owner?.ToString() ?? NodeName.Root.ToString();
 
 
-		public int AllItemsCount()
-		{
-			int count = itemsSource.GetAll<IItem>().Count;
+		//public int AllItemsCount()
+		//{
+		//	int count = itemsSource.GetAll<IItem>().Count;
 
-			count += canvasChildren.Sum(canvas => canvas.AllItemsCount());
-			return count;
-		}
+		//	count += canvasChildren.Sum(canvas => canvas.AllItemsCount());
+		//	return count;
+		//}
 
-		public int ShownItemsCount()
-		{
-			int count = itemsSource.GetAll<IItem>().Count(i => i.IsShowing);
+		//public int ShownItemsCount()
+		//{
+		//	int count = itemsSource.GetAll<IItem>().Count(i => i.IsShowing);
 
-			count += canvasChildren.Sum(canvas => canvas.ShownItemsCount());
-			return count;
-		}
+		//	count += canvasChildren.Sum(canvas => canvas.ShownItemsCount());
+		//	return count;
+		//}
 
 
 		private Rect GetItemsCanvasViewArea()
