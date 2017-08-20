@@ -20,7 +20,7 @@ namespace Dependinator.ApplicationHandling.Installation
 		private static readonly string subFolderContextMenuPath =
 			"Software\\Classes\\Folder\\shell\\dependinator";
 		private static readonly string subdllContextMenuPath =
-			"Software\\Classes\\.dll\\shell\\dependinator";
+			"Software\\Classes\\*\\shell\\dependinator";
 		private static readonly string subDirectoryBackgroundContextMenuPath =
 			"Software\\Classes\\Directory\\Background\\shell\\dependinator";
 		private static readonly string folderContextMenuPath =
