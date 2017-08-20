@@ -9,15 +9,15 @@ namespace Dependinator.Modeling
 			string name,
 			string nodeType,
 			Rect bounds,
-			double scale,
-			Point offset,
+			double itemsScale,
+			Point itemsOffset,
 			string color)
 		{
 			Name = name;
 			NodeType = nodeType;
 			Bounds = bounds;
-			Scale = scale;
-			Offset = offset;
+			ItemsScale = itemsScale;
+			ItemsOffset = itemsOffset;
 			Color = color;
 
 			IsEqualWhenSame(Name);
@@ -26,8 +26,8 @@ namespace Dependinator.Modeling
 		public string Name { get; }
 		public string NodeType { get; }
 		public Rect Bounds { get; }
-		public double Scale { get; }
-		public Point Offset { get; }
+		public double ItemsScale { get; }
+		public Point ItemsOffset { get; }
 		public string Color { get; }
 
 		public override string ToString() => Name;

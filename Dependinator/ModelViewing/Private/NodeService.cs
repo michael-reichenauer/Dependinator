@@ -1,3 +1,4 @@
+using System.Windows;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
@@ -34,8 +35,8 @@ namespace Dependinator.ModelViewing.Private
 			NodeType nodeType = new NodeType(dataNode.NodeType);
 			Node node = new Node(name, nodeType);
 			node.Bounds = dataNode.Bounds;
-			node.Scale = dataNode.Scale;
-			node.Offset = dataNode.Offset;
+			node.Scale = dataNode.ItemsScale;
+			node.Offset = dataNode.ItemsOffset;
 			node.Color = dataNode.Color;
 			AddNode(node, parentNode);
 		}
@@ -112,6 +113,16 @@ namespace Dependinator.ModelViewing.Private
 			// Creating the child canvas to be the children canvas of the node
 			node.ItemsCanvas = parentCanvas.CreateChildCanvas(node.ViewModel);
 			node.ViewModel.ItemsViewModel = new ItemsViewModel(node.ItemsCanvas);
+
+			if (node.Scale != 0)
+			{
+				node.ItemsCanvas.Scale = node.Scale;
+			}
+
+			if (node.Offset != PointEx.Zero)
+			{
+				node.ItemsCanvas.Offset = node.Offset;
+			}
 
 			return node.ItemsCanvas;
 		}

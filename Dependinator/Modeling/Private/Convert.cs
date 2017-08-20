@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.Modeling.Private.Serializing;
@@ -7,15 +6,13 @@ namespace Dependinator.Modeling.Private
 {
 	internal class Convert
 	{
-		private static readonly Rect RectNone = new Rect(0, 0, 0, 0);
-		private static readonly Point PointNone = new Point(0, 0);
-
+	
 		public static DataNode ToDataNode(Dtos.Node node) => new DataNode(
 			node.Name,
 			node.Type,
-			node.Bounds != null ? Rect.Parse(node.Bounds) : RectNone,
-			node.Scale,
-			node.Offset != null ? Point.Parse(node.Offset) : PointNone,
+			node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
+			node.ItemsScale,
+			node.ItemsOffset != null ? Point.Parse(node.ItemsOffset) : PointEx.Zero,
 			node.Color);
 
 
@@ -23,9 +20,9 @@ namespace Dependinator.Modeling.Private
 		{
 			Name = node.Name,
 			Type = node.NodeType,
-			Bounds = node.Bounds != RectNone ? node.Bounds.AsString() : null,
-			Scale = node.Scale,
-			Offset = node.Offset != PointNone ? node.Offset.AsString() : null,
+			Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
+			ItemsScale = node.ItemsScale,
+			ItemsOffset = node.ItemsOffset != PointEx.Zero ? node.ItemsOffset.AsString() : null,
 			Color = node.Color
 		};
 

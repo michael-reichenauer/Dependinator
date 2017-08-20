@@ -8,7 +8,7 @@ namespace Dependinator.Utils.UI.VirtualCanvas
 {
 	public abstract class VirtualItemsSource : ISpatialItemsSource, IList
 	{
-		public static readonly Rect EmptyExtent = new Rect(0, 0, 0, 0);
+		public static readonly Rect EmptyExtent = RectEx.Zero;
 
 		public event EventHandler ExtentChanged;
 

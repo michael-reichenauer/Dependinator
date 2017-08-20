@@ -152,7 +152,9 @@
     <Compile Include="Utils\UI\IPropertyNotify.cs" />
     <Compile Include="Utils\UI\IPropertySetter.cs" />
     <Compile Include="Utils\UI\Notifyable.cs" />
+    <Compile Include="Utils\UI\PointEx.cs" />
     <Compile Include="Utils\UI\PointExtensions.cs" />
+    <Compile Include="Utils\UI\RectEx.cs" />
     <Compile Include="Utils\UI\RectExtensions.cs" />
     <Compile Include="Utils\UI\TargetWhenSetter.cs" />
     <Compile Include="Utils\UI\ThrottleDispatcher.cs" />

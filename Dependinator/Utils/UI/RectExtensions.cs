@@ -1,7 +1,7 @@
 ﻿using System.Globalization;
 
 // ReSharper disable once CheckNamespace
-namespace System.Windows.Media
+namespace System.Windows
 {
 	internal static class RectExtensions
 	{
