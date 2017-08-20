@@ -54,10 +54,9 @@ namespace Dependinator.ModelViewing.Links
 		{
 			foreach (LinkSegment linkSegment in linkSegments)
 			{
-				if (!TryGetSourceLine(linkSegment, out Line line))
+				if (!TryGetLine(linkSegment, out Line line))
 				{
-					line = AddLine(linkSegment);
-					AddLineViewModel(line);
+					line = AddLine(linkSegment);				
 				}
 
 				line.Links.Add(link);
@@ -65,10 +64,11 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
-		private static Line AddLine(LinkSegment segment)
+		private Line AddLine(LinkSegment segment)
 		{
 			Line line = new Line(segment.Source, segment.Target);
 			line.Source.SourceLines.Add(line);
+			AddLineViewModel(line);
 			return line;
 		}
 
@@ -81,10 +81,8 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
-		private static Node GetLineOwner(Line line)
-		{
-			return line.Source == line.Target.Parent ? line.Source : line.Source.Parent;
-		}
+		private static Node GetLineOwner(Line line) => 
+			line.Source == line.Target.Parent ? line.Source : line.Source.Parent;
 
 
 		private static Link AddLink(Node source, Node target)
@@ -103,7 +101,7 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
-		private static bool TryGetSourceLine(LinkSegment segment, out Line line)
+		private static bool TryGetLine(LinkSegment segment, out Line line)
 		{
 			line = segment.Source.SourceLines
 				.FirstOrDefault(l => l.Source == segment.Source && l.Target == segment.Target);

@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Threading;
+using System.Threading.Tasks;
 using Dependinator.ApplicationHandling;
 using Dependinator.Modeling.Private.Serializing;
 using Dependinator.Utils;
@@ -113,8 +116,8 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			t.Log($"Added {memberCount} members");
 
 			// Add type methods bodies
-			methodBodies.ForEach(method => AddMethodBodyLinks(method.MemberNode, method.Method, sender));
-			t.Log($"Added {methodBodies.Count} method bodies");
+			Parallel.ForEach(methodBodies, method => AddMethodBodyLinks(method, sender));		
+			t.Log("Added method bodies");
 
 			Log.Debug($"Added {sentNodes.Count} nodes and {linkCount} links");
 		}
@@ -314,18 +317,20 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 		}
 
 
-		private void AddMethodBodyLinks(
-			Dtos.Node memberNode, MethodBase method, NotificationSender sender)
+		private void AddMethodBodyLinks(MethodBody methodBody, NotificationSender sender)
 		{
-			System.Reflection.MethodBody methodBody = method.GetMethodBody();
+			Dtos.Node memberNode = methodBody.MemberNode;
+			MethodBase method = methodBody.Method;
 
-			if (methodBody != null)
+			System.Reflection.MethodBody body = method.GetMethodBody();
+
+			if (body != null)
 			{
-				methodBody.LocalVariables
+				body.LocalVariables
 					.Select(variable => variable.LocalType)
 					.ForEach(variableType => AddLinkToType(memberNode, variableType, sender));
 
-				IReadOnlyList<ILInstruction> instructions = MethodBodyReader.Parse(method, methodBody);
+				IReadOnlyList<ILInstruction> instructions = MethodBodyReader.Parse(method, body);
 
 				foreach (ILInstruction instruction in instructions)
 				{

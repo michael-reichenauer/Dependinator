@@ -85,6 +85,47 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		}
 
 
+		public void ItemRealized()
+		{
+			//isShowing = true;
+		}
+
+		public void ItemVirtualized()
+		{
+			//isShowing = false;
+		}
+
+
+		public void ItemRealized(int virtualId)
+		{
+			if (viewItems.TryGetValue(virtualId, out var item))
+			{
+				item.ItemRealized();
+			}
+		}
+
+
+		public void ItemVirtualized(int virtualId)
+		{
+			if (viewItems.TryGetValue(virtualId, out IItem item))
+			{
+				item.ItemVirtualized();
+			}
+
+			if (removedItems.ContainsKey(virtualId))
+			{
+				removedItems.Remove(virtualId);
+				viewItems.Remove(virtualId);
+			}
+		}
+
+
+		public void RemoveAll()
+		{
+			viewItemsTree.Clear();
+			TriggerInvalidated();
+		}
+
 
 		private void Add(IEnumerable<IItem> items)
 		{
@@ -190,60 +231,6 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 
 
-		public void ItemRealized()
-		{
-			//isShowing = true;
-		}
-
-		public void ItemVirtualized()
-		{
-			//isShowing = false;
-		}
-
-
-		public void ItemRealized(int virtualId)
-		{
-			if (viewItems.TryGetValue(virtualId, out var item))
-			{
-				item.ItemRealized();
-			}
-		}
-
-
-		public void ItemVirtualized(int virtualId)
-		{
-			if (viewItems.TryGetValue(virtualId, out IItem item))
-			{
-				item.ItemVirtualized();
-			}
-
-			if (removedItems.ContainsKey(virtualId))
-			{
-				removedItems.Remove(virtualId);
-				viewItems.Remove(virtualId);
-			}
-		}
-
-
-		public void RemoveAll()
-		{
-			viewItemsTree.Clear();
-			TriggerInvalidated();
-		}
-
-
-		public IEnumerable<IItem> GetItemsInArea(Rect area)
-		{
-			return viewItemsTree.GetItemsIntersecting(area).Select(i => i);
-		}
-
-
-		public IEnumerable<IItem> GetItemsInView()
-		{
-			return GetItemsInArea(LastViewAreaQuery);
-		}
-
-
 		private void ItemsBoundsChanged()
 		{
 			Rect currentBounds = EmptyExtent;
@@ -267,7 +254,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		/// <summary>
 		/// Returns range of item ids, which are visible in the area currently shown
 		/// </summary>
-		protected IEnumerable<int> GetItemIds(Rect viewArea)
+		private IEnumerable<int> GetItemIds(Rect viewArea)
 		{
 			//Inflate is Enabled in Zoomable line 1369
 			if (viewArea == Rect.Empty)
@@ -306,7 +293,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		/// Branches are in the branchBaseIndex->mergeBaseIndex-1 range
 		/// Merges are mergeBaseIndex-> ... range
 		/// </summary>
-		protected object GetItem(int virtualId)
+		private object GetItem(int virtualId)
 		{
 			if (viewItems.TryGetValue(virtualId, out var item))
 			{

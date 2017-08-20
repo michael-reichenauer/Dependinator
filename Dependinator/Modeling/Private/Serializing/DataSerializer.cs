@@ -12,107 +12,110 @@ namespace Dependinator.Modeling.Private.Serializing
 	{
 		private readonly Lazy<IModelNotifications> modelNotifications;
 
-		private static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
-		{
-			Formatting = Formatting.Indented,
-			ObjectCreationHandling = ObjectCreationHandling.Replace,
-			NullValueHandling = NullValueHandling.Ignore,
-			DefaultValueHandling = DefaultValueHandling.Ignore
-		};
-
 
 		public DataSerializer(Lazy<IModelNotifications> modelNotifications)
 		{
 			this.modelNotifications = modelNotifications;
 		}
-		
+
 
 		public Task SerializeAsync(IReadOnlyList<DataItem> items, string path)
 		{
-			return Task.Run(() =>
+			return Task.Run(() => Serialize(items, path));
+		}
+
+
+		public void Serialize(IReadOnlyList<DataItem> items, string path)
+		{
+			try
 			{
+				Timing t = new Timing();
 				Dtos.Model dataModel = new Dtos.Model();
 
 				dataModel.Items = items.Select(Convert.ToDtoItem).ToList();
-		
-				string json = JsonConvert.SerializeObject(dataModel, typeof(Dtos.Model), Settings);
 
-				WriteFileText(path, json);
-			});
+				t.Log($"Converted {dataModel.Items.Count} data items");
+
+				JsonSerializer serializer = GetJsonSerializer();
+
+				using (StreamWriter stream = new StreamWriter(path))
+				{
+					serializer.Serialize(stream, dataModel);
+				}
+
+				t.Log("Wrote data file");
+			}
+			catch (Exception e)
+			{
+				Log.Exception(e, "Failed to serialize");
+			}
 		}
+
+
+//// public IEnumerable<TResult> ReadJson<TResult>(Stream stream)
+//// {
+////    var serializer = new JsonSerializer();
+
+////    using (var reader = new StreamReader(stream))
+////    using (var jsonReader = new JsonTextReader(reader))
+////    {
+////        jsonReader.SupportMultipleContent = true;
+
+////        while (jsonReader.Read())
+////        {
+////            yield return serializer.Deserialize<TResult>(jsonReader);
+////        }
+////    }
+//// }
+
 
 
 		public Task<bool> TryDeserializeAsync(string path)
 		{
 			return Task.Run(() =>
 			{
-				Timing t = new Timing();
-				NotificationReceiver receiver = new NotificationReceiver(modelNotifications.Value);
-				NotificationSender sender = new NotificationSender(receiver);
-
-				if (TryReadFileText(path, out string json))
+				try
 				{
-					t.Log("Read data file");
-					return TryDeserializeJson(json, sender);
+					Timing t = new Timing();
+					NotificationReceiver receiver = new NotificationReceiver(modelNotifications.Value);
+					NotificationSender sender = new NotificationSender(receiver);
+
+					JsonSerializer serializer = GetJsonSerializer();
+
+					Dtos.Model dataModel;
+					using (StreamReader stream = new StreamReader(path))
+					{
+						dataModel = (Dtos.Model)serializer.Deserialize(stream, typeof(Dtos.Model));
+					}
+					t.Log("Deserialized");
+
+					dataModel.Items.ForEach(sender.SendItem);
+
+					sender.Flush();
+
+					t.Log("Sent all items");
+				}
+				catch (Exception e)
+				{
+					Log.Exception(e, "Failed to deserialize");
 				}
 
 				return false;
+
 			});
 		}
 
 
-		private static bool TryDeserializeJson(string json, NotificationSender sender)
+
+		private static JsonSerializer GetJsonSerializer()
 		{
-			try
+			return new JsonSerializer()
 			{
-				Timing t = new Timing();
-				Dtos.Model dataModel = JsonConvert.DeserializeObject<Dtos.Model>(json, Settings);
-
-				dataModel.Items.ForEach(sender.SendItem);
-
-				sender.Flush();
-
-				t.Log("Deserialized");
-				return true;
-			}
-			catch (Exception e) when (e.IsNotFatal())
-			{
-				Log.Error($"Failed to deserialize json data, {e}");
-			}
-
-			return false;
-		}
-
-
-		private static void WriteFileText(string path, string text)
-		{
-			try
-			{
-				File.WriteAllText(path, text);
-			}
-			catch (Exception e) when (e.IsNotFatal())
-			{
-				Log.Warn($"Failed to write file {path}, {e}");
-			}
-		}
-
-		private static bool TryReadFileText(string path, out string text)
-		{
-			try
-			{
-				if (File.Exists(path))
-				{
-					text = File.ReadAllText(path);
-					return true;
-				}
-			}
-			catch (Exception e) when (e.IsNotFatal())
-			{
-				Log.Warn($"Failed to read file {path}, {e}");
-			}
-
-			text = null;
-			return false;
+				Formatting = Formatting.Indented,
+				ObjectCreationHandling = ObjectCreationHandling.Replace,
+				NullValueHandling = NullValueHandling.Ignore,
+				DefaultValueHandling = DefaultValueHandling.Ignore
+			};
 		}
 	}
 }

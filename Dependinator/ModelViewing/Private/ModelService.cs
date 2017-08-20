@@ -60,11 +60,29 @@ namespace Dependinator.ModelViewing.Private
 
 		public async Task SaveAsync(string dataFilePath)
 		{
+			Timing t = Timing.Start();
 			IReadOnlyList<Node> nodes = model.Root.Descendents().ToList();
+			t.Log($"Saving {nodes} nodes");
 
 			IReadOnlyList<DataItem> items = Convert.ToDataItems(nodes);
+			t.Log($"Saving {items} items");
 
 			await modelingService.SerializeAsync(items, dataFilePath);
+			t.Log($"Saved {items} items");
+		}
+
+
+		public void Save(string dataFilePath)
+		{
+			Timing t = Timing.Start();
+			IReadOnlyList<Node> nodes = model.Root.Descendents().ToList();
+			t.Log($"Saving {nodes.Count} nodes");
+
+			IReadOnlyList<DataItem> items = Convert.ToDataItems(nodes);
+			t.Log($"Saving {items.Count} items");
+
+		 modelingService.Serialize(items, dataFilePath);
+			t.Log($"Saved {items.Count} items");
 		}
 
 

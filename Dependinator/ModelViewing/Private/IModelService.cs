@@ -13,5 +13,6 @@ namespace Dependinator.ModelViewing.Private
 
 		Task LoadAsync();
 		Task SaveAsync(string dataFilePath);
+		void Save(string dataFilePath);
 	}
 }

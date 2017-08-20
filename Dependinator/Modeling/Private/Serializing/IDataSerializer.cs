@@ -7,6 +7,8 @@ namespace Dependinator.Modeling.Private.Serializing
 	{
 		Task SerializeAsync(IReadOnlyList<DataItem> items, string path);
 
+		void Serialize(IReadOnlyList<DataItem> items, string path);
+
 		Task<bool> TryDeserializeAsync(string path);
 	}
 }

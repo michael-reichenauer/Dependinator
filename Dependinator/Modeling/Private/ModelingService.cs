@@ -24,15 +24,13 @@ namespace Dependinator.Modeling.Private
 		public Task AnalyzeAsync(string path) => reflectionService.AnalyzeAsync(path);
 
 
-		public Task SerializeAsync(IReadOnlyList<DataItem> items, string path)
-		{
-			return dataSerializer.SerializeAsync(items, path);
-		}
+		public Task SerializeAsync(IReadOnlyList<DataItem> items, string path) =>
+			dataSerializer.SerializeAsync(items, path);
+
+		public void Serialize(IReadOnlyList<DataItem> items, string path) =>
+			dataSerializer.Serialize(items, path);
 
 
-		public Task<bool> TryDeserialize(string path)
-		{
-			return dataSerializer.TryDeserializeAsync(path);
-		}
+		public Task<bool> TryDeserialize(string path) => dataSerializer.TryDeserializeAsync(path);
 	}
 }

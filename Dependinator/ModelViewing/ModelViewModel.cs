@@ -5,7 +5,6 @@ using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Private;
 using Dependinator.ModelViewing.Private.Items;
-using Dependinator.ModelViewing.Private.Items.Private;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 
@@ -30,7 +29,6 @@ namespace Dependinator.ModelViewing
 
 		public ModelViewModel(
 			IModelViewService modelViewService,
-			//IItemsService itemsService,
 			IThemeService themeService,
 			IProgressService progressService)
 		{
@@ -162,6 +160,6 @@ namespace Dependinator.ModelViewing
 		}
 
 
-		public Task ClosingWindowAsync() => modelViewService.CloseAsync();
+		public void Close() => modelViewService.Close();
 	}
 }

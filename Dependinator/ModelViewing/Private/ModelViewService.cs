@@ -80,7 +80,7 @@ namespace Dependinator.ModelViewing.Private
 		//}
 
 
-		public async Task CloseAsync()
+		public void Close()
 		{
 			StoreViewSettings();
 
@@ -88,7 +88,7 @@ namespace Dependinator.ModelViewing.Private
 			////DataModel dataModel = modelingService.ToDataModel(model);
 			string dataFilePath = GetDataFilePath();
 
-			await modelService.SaveAsync(dataFilePath);
+			modelService.Save(dataFilePath);
 		}
 
 

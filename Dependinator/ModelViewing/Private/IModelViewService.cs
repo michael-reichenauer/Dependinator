@@ -8,7 +8,7 @@ namespace Dependinator.ModelViewing.Private
 	{
 		Task LoadAsync(ItemsCanvas rootCanvas);
 
-		Task CloseAsync();
+		void Close();
 
 		Task Refresh(ItemsCanvas rootCanvas, bool refreshLayout);
 	}
