@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
+using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Private.Items;
 
 namespace Dependinator.ModelViewing.Nodes
@@ -17,7 +18,10 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			this.nodeViewModelService = nodeViewModelService;
 			this.Node = node;
-			RectangleBrush = nodeViewModelService.GetRandomRectangleBrush();
+
+			RectangleBrush = node.Color != null 
+				? Converter.BrushFromHex(node.Color)
+				: nodeViewModelService.GetRandomRectangleBrush();
 			BackgroundBrush = nodeViewModelService.GetRectangleBackgroundBrush(RectangleBrush);
 		}
 
@@ -100,6 +104,9 @@ namespace Dependinator.ModelViewing.Nodes
 			"\n" +
 			$"Rect: {ItemBounds.TS()}\n" +
 			$"Scale {ItemScale}\n";
+
+		public string Color => RectangleBrush.AsString();
+
 		//$"Items: {ItemOwnerCanvas.CanvasRoot.AllItemsCount()}, Shown {ItemOwnerCanvas.CanvasRoot.ShownItemsCount()}";
 
 

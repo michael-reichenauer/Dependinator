@@ -22,10 +22,10 @@ namespace Dependinator.ModelViewing.Private
 		private static DataNode ToDataNode(Node node) => new DataNode(
 			node.Name.AsString(),
 			node.NodeType.AsString(),
-			node.Bounds,
-			node.Scale,
-			node.Offset,
-			node.Color);
+			node.ViewModel?.ItemBounds ?? node.Bounds,
+			node.ViewModel?.ItemsViewModel?.ItemsCanvas?.Scale ?? node.Scale,
+			node.ViewModel?.ItemsViewModel?.ItemsCanvas?.Offset ?? node.Offset,
+			node.ViewModel?.Color ?? node.Color);
 
 
 		private static DataLink ToDataLink(Link link) => new DataLink(

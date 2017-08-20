@@ -101,7 +101,7 @@ namespace Dependinator.ModelViewing.Private
 
 
 		public void UpdateDataItems(IReadOnlyList<DataItem> items) =>
-			items.Partition(BatchSize).ForEach(batch => dispatcher.Invoke(UpdateItems, batch));
+			items.Partition(BatchSize).ForEach(batch => dispatcher.InvokeBackground(UpdateItems, batch));
 
 
 		private void UpdateItems(List<DataItem> items)

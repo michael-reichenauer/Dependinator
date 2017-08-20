@@ -1,7 +1,4 @@
-﻿using Dependinator.Modeling;
-
-
-namespace Dependinator.ModelViewing.Nodes
+﻿namespace Dependinator.ModelViewing.Nodes
 {
 	internal class TypeViewModel : NodeViewModel
 	{

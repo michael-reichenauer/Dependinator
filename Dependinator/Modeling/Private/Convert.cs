@@ -1,16 +1,21 @@
+using System.Globalization;
 using System.Windows;
+using System.Windows.Media;
 using Dependinator.Modeling.Private.Serializing;
 
 namespace Dependinator.Modeling.Private
 {
 	internal class Convert
 	{
+		private static readonly Rect RectNone = new Rect(0, 0, 0, 0);
+		private static readonly Point PointNone = new Point(0, 0);
+
 		public static DataNode ToDataNode(Dtos.Node node) => new DataNode(
 			node.Name,
 			node.Type,
-			new Rect(node.X, node.Y, node.Width, node.Height),
+			node.Bounds != null ? Rect.Parse(node.Bounds) : RectNone,
 			node.Scale,
-			new Point(node.OffsetX, node.OffsetY),
+			node.Offset != null ? Point.Parse(node.Offset) : PointNone,
 			node.Color);
 
 
@@ -18,13 +23,9 @@ namespace Dependinator.Modeling.Private
 		{
 			Name = node.Name,
 			Type = node.NodeType,
-			X = node.Bounds.X,
-			Y = node.Bounds.Y,
-			Width = node.Bounds.Width,
-			Height = node.Bounds.Height,
+			Bounds = node.Bounds != RectNone ? node.Bounds.AsString() : null,
 			Scale = node.Scale,
-			OffsetX = node.Offset.X,
-			OffsetY = node.Offset.Y,
+			Offset = node.Offset != PointNone ? node.Offset.AsString() : null,
 			Color = node.Color
 		};
 
@@ -46,10 +47,9 @@ namespace Dependinator.Modeling.Private
 		};
 
 
-		public static DataItem ToDataItem(Dtos.Item item) =>
-			new DataItem(
-				item.Node != null ? ToDataNode(item.Node) : null,
-				item.Link != null ? ToDataLink(item.Link) : null);
+		public static DataItem ToDataItem(Dtos.Item item) => new DataItem(
+			item.Node != null ? ToDataNode(item.Node) : null,
+			item.Link != null ? ToDataLink(item.Link) : null);
 
 	}
 }

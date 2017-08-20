@@ -33,6 +33,10 @@ namespace Dependinator.ModelViewing.Private
 
 			NodeType nodeType = new NodeType(dataNode.NodeType);
 			Node node = new Node(name, nodeType);
+			node.Bounds = dataNode.Bounds;
+			node.Scale = dataNode.Scale;
+			node.Offset = dataNode.Offset;
+			node.Color = dataNode.Color;
 			AddNode(node, parentNode);
 		}
 

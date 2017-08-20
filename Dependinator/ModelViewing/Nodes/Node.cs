@@ -1,8 +1,10 @@
 using System.Collections.Generic;
+using System.Drawing;
 using System.Windows;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
+using Point = System.Windows.Point;
 
 namespace Dependinator.ModelViewing.Nodes
 {
@@ -26,13 +28,14 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
+		public bool CanShow => ViewModel?.CanShow ?? false;
+
 		public NodeId Id { get; }
 		public NodeName Name { get; }
 
 		public Node Parent { get; private set; }
 		public Node Root { get; private set; }
 
-		public Rect Bounds { get; set; }
 
 		public IReadOnlyList<Node> Children => children;
 		public ItemsCanvas ItemsCanvas { get; set; }
@@ -45,7 +48,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public NodeViewModel ViewModel { get; set; }
 
-		public bool CanShow => ViewModel?.CanShow ?? false;
+		public Rect Bounds { get; set; }
 		public double Scale { get; set; }
 		public Point Offset { get; set; }
 		public string Color { get; set; }

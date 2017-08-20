@@ -1,13 +1,18 @@
+using System.Drawing;
+using System.Globalization;
 using System.Windows;
-using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Private;
+using Brush = System.Windows.Media.Brush;
+using Point = System.Windows.Point;
+using Size = System.Windows.Size;
 
 namespace Dependinator.ModelViewing.Nodes.Private
 {
 	internal class NodeViewModelService : INodeViewModelService
 	{
 		private static readonly Size DefaultSize = new Size(200, 100);
+		private static readonly Rect None = new Rect(0, 0, 0, 0);
 
 		private readonly IThemeService themeService;
 		private readonly Model model;
@@ -49,6 +54,12 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 		public void SetLayout(NodeViewModel nodeViewMode)
 		{
+			if (nodeViewMode.Node.Bounds != None)
+			{
+				nodeViewMode.ItemBounds = nodeViewMode.Node.Bounds;
+				return;
+			}
+
 			int rowLength = 6;
 
 			int padding = 20;

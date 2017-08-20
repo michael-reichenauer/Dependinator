@@ -29,13 +29,9 @@ namespace Dependinator.Modeling.Private.Serializing
 
 			// Optional data like type, node location and size ...
 			public string Type { get; set; }
-			public double X { get; set; }
-			public double Y { get; set; }
-			public double Width { get; set; }
-			public double Height { get; set; }
+			public string Bounds { get; set; }
 			public double Scale { get; set; }
-			public double OffsetX { get; set; }
-			public double OffsetY { get; set; }
+			public string Offset { get; set; }
 			public string Color { get; set; }
 		}
 
