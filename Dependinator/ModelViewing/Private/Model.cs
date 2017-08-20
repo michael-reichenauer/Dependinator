@@ -14,14 +14,12 @@ namespace Dependinator.ModelViewing.Private
 
 		public Model()
 		{
-			Root = new Node(NodeName.Root);
-			Root.NodeType = NodeType.NameSpace;
-
-			Add(Root);
+			AddRoot();
 		}
 
 
-		public Node Root { get; }
+
+		public Node Root { get; private set; }
 
 		public Node Node(NodeId nodeId) => nodesById[nodeId];
 		public bool TryGetNode(NodeId nodeId, out Node node) => nodesById.TryGetValue(nodeId, out node);
@@ -39,6 +37,23 @@ namespace Dependinator.ModelViewing.Private
 		{
 			nodesById.Remove(node.Id);
 			nodesByName.Remove(node.Name);
+		}
+
+		public void RemoveAll()
+		{
+			nodesById.Clear();
+			nodesByName.Clear();
+
+			AddRoot();
+		}
+
+
+		private void AddRoot()
+		{
+			Root = new Node(NodeName.Root);
+			Root.NodeType = NodeType.NameSpace;
+
+			Add(Root);
 		}
 	}
 }

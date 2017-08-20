@@ -12,6 +12,7 @@ namespace Dependinator.ModelViewing.Private
 		Node Root { get; }
 
 		Task LoadAsync();
+		void ClearAll();
 		Task SaveAsync();
 		void Save();
 	}

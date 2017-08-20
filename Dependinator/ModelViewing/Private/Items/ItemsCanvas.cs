@@ -264,6 +264,11 @@ namespace Dependinator.ModelViewing.Private.Items
 			itemsSource.Add(item);
 		}
 
+		public void RemoveAll()
+		{
+			itemsSource.RemoveAll();
+			canvasChildren.Clear();
+		}
 
 		public void RemoveItem(ItemViewModel item) => itemsSource.Remove(item);
 

@@ -70,6 +70,9 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
+		public void ClearAll() => nodeService.RemoveAll();
+
+
 		public async Task SaveAsync()
 		{
 			Timing t = Timing.Start();

@@ -28,7 +28,10 @@ namespace Dependinator.ModelViewing.Private
 
 		public async Task LoadAsync(ItemsCanvas rootCanvas)
 		{
+			modelService.ClearAll();
+
 			modelService.Init(rootCanvas);
+
 			RestoreViewSettings();
 
 			await modelService.LoadAsync();

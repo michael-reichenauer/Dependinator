@@ -86,6 +86,13 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
+		public void RemoveAll()
+		{
+			model.Root?.ItemsCanvas?.RemoveAll();
+
+			model.RemoveAll();
+		}
+
 		private void AddNode(Node node, Node parentNode)
 		{		
 			model.Add(node);
