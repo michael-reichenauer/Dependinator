@@ -12,7 +12,7 @@ namespace Dependinator.ModelViewing.Private
 		Node Root { get; }
 
 		Task LoadAsync();
-		Task SaveAsync(string dataFilePath);
-		void Save(string dataFilePath);
+		Task SaveAsync();
+		void Save();
 	}
 }

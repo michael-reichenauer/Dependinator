@@ -94,6 +94,7 @@ namespace Dependinator.Modeling.Private.Serializing
 					sender.Flush();
 
 					t.Log("Sent all items");
+					return true;
 				}
 				catch (Exception e)
 				{
@@ -101,7 +102,6 @@ namespace Dependinator.Modeling.Private.Serializing
 				}
 
 				return false;
-
 			});
 		}
 

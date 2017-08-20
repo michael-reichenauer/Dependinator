@@ -12,22 +12,11 @@ namespace Dependinator.ModelViewing.Private
 		{
 			List<DataItem> items = new List<DataItem>();
 
-			nodes.ForEach(node => items.Add(ToNodeDataItem(node)));
-			nodes.ForEach(node => items.AddRange(ToLinkDataItems(node)));
+			nodes.ForEach(node => items.Add(ToNodeItem(node)));
+			nodes.ForEach(node => items.AddRange(ToLinkItems(node)));
 
 			return items;
 		}
-
-
-		private static IEnumerable<DataItem> ToLinkDataItems(Node node) =>
-			ToDataItems(ToDataLinks(node));
-
-
-		private static DataItem ToNodeDataItem(Node node) => new DataItem(ToDataNode(node), null);
-
-
-		private static IEnumerable<DataItem> ToDataItems(IEnumerable<DataLink> dataLinks) =>
-			dataLinks.Select(dataLink => new DataItem(null, dataLink));
 
 
 		private static DataNode ToDataNode(Node node) => new DataNode(
@@ -39,11 +28,23 @@ namespace Dependinator.ModelViewing.Private
 			node.Color);
 
 
+		private static DataLink ToDataLink(Link link) => new DataLink(
+			link.Source.Name.AsString(), 
+			link.Target.Name.AsString());
+
+
+
+		private static IEnumerable<DataItem> ToLinkItems(Node node) =>
+			ToDataLinks(node).Select(ToDataItem);
+
+		private static DataItem ToDataItem(DataLink dataLink) => new DataItem(null, dataLink);
+
 		private static IEnumerable<DataLink> ToDataLinks(Node node) =>
 			node.SourceLinks.Select(ToDataLink);
 
 
-		private static DataLink ToDataLink(Link link) =>
-			new DataLink(link.Source.Name.AsString(), link.Target.Name.AsString());
+		private static DataItem ToNodeItem(Node node) => ToDataItem(node);
+
+		private static DataItem ToDataItem(Node node) => new DataItem(ToDataNode(node), null);
 	}
 }

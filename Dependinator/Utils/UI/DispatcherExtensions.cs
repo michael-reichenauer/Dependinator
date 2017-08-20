@@ -5,5 +5,8 @@ namespace System.Windows.Threading
 	{
 		public static void InvokeBackground<T>(this Dispatcher dispatcher, Action<T> action, T arg) =>
 			dispatcher.Invoke(DispatcherPriority.Background, action, arg);
+
+		public static void Invoke<T>(this Dispatcher dispatcher, Action<T> action, T arg) =>
+			dispatcher.Invoke(DispatcherPriority.Normal, action, arg);
 	}
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Threading;
@@ -54,11 +55,15 @@ namespace Dependinator.ModelViewing.Private
 
 		public async Task LoadAsync()
 		{
-			await modelingService.AnalyzeAsync(workingFolder.FilePath);
+			string dataFilePath = GetDataFilePath();
+			if (!await modelingService.TryDeserialize(dataFilePath))
+			{
+				await modelingService.AnalyzeAsync(workingFolder.FilePath);
+			}		
 		}
 
 
-		public async Task SaveAsync(string dataFilePath)
+		public async Task SaveAsync()
 		{
 			Timing t = Timing.Start();
 			IReadOnlyList<Node> nodes = model.Root.Descendents().ToList();
@@ -67,12 +72,13 @@ namespace Dependinator.ModelViewing.Private
 			IReadOnlyList<DataItem> items = Convert.ToDataItems(nodes);
 			t.Log($"Saving {items} items");
 
+			string dataFilePath = GetDataFilePath();
 			await modelingService.SerializeAsync(items, dataFilePath);
 			t.Log($"Saved {items} items");
 		}
 
 
-		public void Save(string dataFilePath)
+		public void Save()
 		{
 			Timing t = Timing.Start();
 			IReadOnlyList<Node> nodes = model.Root.Descendents().ToList();
@@ -81,7 +87,9 @@ namespace Dependinator.ModelViewing.Private
 			IReadOnlyList<DataItem> items = Convert.ToDataItems(nodes);
 			t.Log($"Saving {items.Count} items");
 
-		 modelingService.Serialize(items, dataFilePath);
+			string dataFilePath = GetDataFilePath();
+
+			modelingService.Serialize(items, dataFilePath);
 			t.Log($"Saved {items.Count} items");
 		}
 
@@ -93,7 +101,7 @@ namespace Dependinator.ModelViewing.Private
 
 
 		public void UpdateDataItems(IReadOnlyList<DataItem> items) =>
-			items.Partition(BatchSize).ForEach(batch => dispatcher.InvokeBackground(UpdateItems, batch));
+			items.Partition(BatchSize).ForEach(batch => dispatcher.Invoke(UpdateItems, batch));
 
 
 		private void UpdateItems(List<DataItem> items)
@@ -111,5 +119,7 @@ namespace Dependinator.ModelViewing.Private
 				}
 			}
 		}
+
+		private string GetDataFilePath() => Path.Combine(workingFolder, "data.json");
 	}
 }

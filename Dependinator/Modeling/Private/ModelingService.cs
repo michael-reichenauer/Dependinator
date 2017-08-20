@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Dependinator.Modeling.Private.Analyzing;
 using Dependinator.Modeling.Private.Serializing;
+
 
 namespace Dependinator.Modeling.Private
 {
@@ -21,16 +23,24 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		public Task AnalyzeAsync(string path) => reflectionService.AnalyzeAsync(path);
+		public Task AnalyzeAsync(string assemblyPath) => reflectionService.AnalyzeAsync(assemblyPath);
 
 
-		public Task SerializeAsync(IReadOnlyList<DataItem> items, string path) =>
-			dataSerializer.SerializeAsync(items, path);
+		public Task SerializeAsync(IReadOnlyList<DataItem> items, string dataFilePath) =>
+			dataSerializer.SerializeAsync(items, dataFilePath);
 
-		public void Serialize(IReadOnlyList<DataItem> items, string path) =>
-			dataSerializer.Serialize(items, path);
+		public void Serialize(IReadOnlyList<DataItem> items, string dataFilePath) =>
+			dataSerializer.Serialize(items, dataFilePath);
 
 
-		public Task<bool> TryDeserialize(string path) => dataSerializer.TryDeserializeAsync(path);
+		public async Task<bool> TryDeserialize(string dataFilePath)
+		{
+			if (!File.Exists(dataFilePath))
+			{
+				return false;
+			}
+
+			return await dataSerializer.TryDeserializeAsync(dataFilePath);
+		}
 	}
 }

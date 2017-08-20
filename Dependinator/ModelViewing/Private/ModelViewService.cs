@@ -86,13 +86,12 @@ namespace Dependinator.ModelViewing.Private
 
 			//currentModel.Root.UpdateAllNodesScalesBeforeClose();
 			////DataModel dataModel = modelingService.ToDataModel(model);
-			string dataFilePath = GetDataFilePath();
-
-			modelService.Save(dataFilePath);
+			
+			modelService.Save();
 		}
 
 
-		private string GetDataFilePath() => Path.Combine(workingFolder, "data.json");
+	
 
 
 		private void StoreViewSettings()
