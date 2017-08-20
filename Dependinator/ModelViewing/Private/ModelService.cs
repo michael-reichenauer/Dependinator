@@ -58,7 +58,10 @@ namespace Dependinator.ModelViewing.Private
 			string dataFilePath = GetDataFilePath();
 			if (!await modelingService.TryDeserialize(dataFilePath))
 			{
-				await modelingService.AnalyzeAsync(workingFolder.FilePath);
+				if (File.Exists(workingFolder.FilePath))
+				{
+					await modelingService.AnalyzeAsync(workingFolder.FilePath);
+				}
 			}		
 		}
 

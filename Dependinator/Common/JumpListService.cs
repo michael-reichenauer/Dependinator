@@ -13,6 +13,11 @@ namespace Dependinator.Common
 
 		public void Add(string path)
 		{
+			if (string.IsNullOrEmpty(path) || !File.Exists(path))
+			{
+				return;
+			}
+
 			JumpList jumpList = JumpList.GetJumpList(Application.Current) ?? new JumpList();
 
 			string name = Path.GetFileNameWithoutExtension(path) ?? path;

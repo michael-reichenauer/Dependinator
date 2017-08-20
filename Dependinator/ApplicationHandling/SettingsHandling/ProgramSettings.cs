@@ -1,3 +1,5 @@
+using System.Windows;
+
 namespace Dependinator.ApplicationHandling.SettingsHandling
 {
 	internal class ProgramSettings
@@ -6,10 +8,7 @@ namespace Dependinator.ApplicationHandling.SettingsHandling
 		public string LatestVersionInfoETag { get; set; } = "";
 		public string LatestVersionInfo { get; set; } = "";
 
-		public double Left { get; set; } = 100;
-		public double Top { get; set; } = 100;
-		public double Width { get; set; } = 800;
-		public double Height { get; set; } = 695;
+		public Rect WindowBounds { get; set; } = new Rect(100, 100, 800, 695);
 		public bool IsMaximized { get; set; } = false;
 	}
 }

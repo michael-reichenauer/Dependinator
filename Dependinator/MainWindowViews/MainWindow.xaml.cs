@@ -115,22 +115,18 @@ namespace Dependinator.MainWindowViews
 			viewModel.ClosingWindow();
 			StoreWindowSettings();
 
-			StoreLasteUsedFolder();
+			StoreLastUsedFolder();
 		}
 
 
 
 		private void StoreWindowSettings()
 		{
-			ProgramSettings settings = Settings.Get<ProgramSettings>();
-
-			settings.Top = Top;
-			settings.Left = Left;
-			settings.Height = Height;
-			settings.Width = Width;
-			settings.IsMaximized = WindowState == WindowState.Maximized;
-
-			Settings.Set(settings);
+			Settings.Edit<ProgramSettings>(s =>
+			{
+				s.WindowBounds = new Rect(Top, Left, Width, Height);
+				s.IsMaximized = WindowState == WindowState.Maximized;
+			});
 		}
 
 
@@ -139,15 +135,18 @@ namespace Dependinator.MainWindowViews
 			ProgramSettings settings = Settings.Get<ProgramSettings>();
 
 			Rectangle rect = new Rectangle(
-				(int)settings.Left, (int)settings.Top, (int)settings.Width, (int)settings.Height);
+				(int)settings.WindowBounds.X, 
+				(int)settings.WindowBounds.Y, 
+				(int)settings.WindowBounds.Width, 
+				(int)settings.WindowBounds.Height);
 
 			// check if the saved bounds are nonzero and visible on any screen
 			if (rect != Rectangle.Empty && IsVisibleOnAnyScreen(rect))
 			{
-				Top = settings.Top;
-				Left = settings.Left;
-				Height = settings.Height;
-				Width = settings.Width;
+				Top = settings.WindowBounds.X;
+				Left = settings.WindowBounds.Y;
+				Width = settings.WindowBounds.Width;
+				Height = settings.WindowBounds.Height;
 			}
 
 			WindowState = settings.IsMaximized ? WindowState.Maximized : WindowState.Normal;
@@ -168,7 +167,7 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		private void StoreLasteUsedFolder()
+		private void StoreLastUsedFolder()
 		{
 			Settings.Edit<ProgramSettings>(s => s.LastUsedWorkingFolder = workingFolder);
 		}
