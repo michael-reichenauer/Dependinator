@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Dependinator.Modeling.Private.Analyzing;
@@ -23,7 +24,8 @@ namespace Dependinator.Modeling.Private
 		}
 
 
-		public Task AnalyzeAsync(string assemblyPath) => reflectionService.AnalyzeAsync(assemblyPath);
+		public Task AnalyzeAsync(string assemblyPath, ItemsCallback itemsCallback) => 
+			reflectionService.AnalyzeAsync(assemblyPath, itemsCallback);
 
 
 		public Task SerializeAsync(IReadOnlyList<DataItem> items, string dataFilePath) =>
@@ -33,14 +35,14 @@ namespace Dependinator.Modeling.Private
 			dataSerializer.Serialize(items, dataFilePath);
 
 
-		public async Task<bool> TryDeserialize(string dataFilePath)
+		public async Task<bool> TryDeserialize(string dataFilePath, ItemsCallback itemsCallback)
 		{
 			if (!File.Exists(dataFilePath))
 			{
 				return false;
 			}
 
-			return await dataSerializer.TryDeserializeAsync(dataFilePath);
+			return await dataSerializer.TryDeserializeAsync(dataFilePath, itemsCallback);
 		}
 	}
 }

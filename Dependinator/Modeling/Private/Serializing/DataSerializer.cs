@@ -10,15 +10,6 @@ namespace Dependinator.Modeling.Private.Serializing
 {
 	internal class DataSerializer : IDataSerializer
 	{
-		private readonly Lazy<IModelNotifications> modelNotifications;
-
-
-		public DataSerializer(Lazy<IModelNotifications> modelNotifications)
-		{
-			this.modelNotifications = modelNotifications;
-		}
-
-
 		public Task SerializeAsync(IReadOnlyList<DataItem> items, string path)
 		{
 			return Task.Run(() => Serialize(items, path));
@@ -70,14 +61,14 @@ namespace Dependinator.Modeling.Private.Serializing
 
 
 
-		public Task<bool> TryDeserializeAsync(string path)
+		public Task<bool> TryDeserializeAsync(string path, ItemsCallback itemsCallback)
 		{
 			return Task.Run(() =>
 			{
 				try
 				{
 					Timing t = new Timing();
-					NotificationReceiver receiver = new NotificationReceiver(modelNotifications.Value);
+					NotificationReceiver receiver = new NotificationReceiver(itemsCallback);
 					NotificationSender sender = new NotificationSender(receiver);
 
 					JsonSerializer serializer = GetJsonSerializer();

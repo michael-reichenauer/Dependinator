@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,7 +13,7 @@ using Dependinator.Utils;
 namespace Dependinator.ModelViewing.Private
 {
 	[SingleInstance]
-	internal class ModelService : IModelService, IModelNotifications
+	internal class ModelService : IModelService
 	{
 		private static readonly int BatchSize = 1000;
 
@@ -25,6 +24,7 @@ namespace Dependinator.ModelViewing.Private
 		private readonly Model model;
 		private readonly WorkingFolder workingFolder;
 		private Dispatcher dispatcher;
+		private int currentStamp;
 
 
 		public ModelService(
@@ -56,13 +56,17 @@ namespace Dependinator.ModelViewing.Private
 		public async Task LoadAsync()
 		{
 			string dataFilePath = GetDataFilePath();
-			if (!await modelingService.TryDeserialize(dataFilePath))
+			int stamp = currentStamp++;
+
+			if (!await modelingService.TryDeserialize(
+				dataFilePath, items => UpdateDataItems(items, stamp)))
 			{
 				if (File.Exists(workingFolder.FilePath))
 				{
-					await modelingService.AnalyzeAsync(workingFolder.FilePath);
+					await modelingService.AnalyzeAsync(
+						workingFolder.FilePath, items => UpdateDataItems(items, stamp));
 				}
-			}		
+			}
 		}
 
 
@@ -99,26 +103,32 @@ namespace Dependinator.ModelViewing.Private
 
 		public async Task RefreshAsync(bool refreshLayout)
 		{
-			await modelingService.AnalyzeAsync(workingFolder.FilePath);
+			int stamp = currentStamp++;
+			await modelingService.AnalyzeAsync(
+				workingFolder.FilePath, items => UpdateDataItems(items, stamp));
+
+			nodeService.RemoveObsoleteNodesAndLinks(stamp);
 		}
 
+	
 
-		public void UpdateDataItems(IReadOnlyList<DataItem> items) =>
-			items.Partition(BatchSize).ForEach(batch => dispatcher.InvokeBackground(UpdateItems, batch));
+		public void UpdateDataItems(IReadOnlyList<DataItem> items, int stamp) =>
+			items.Partition(BatchSize)
+			.ForEach(batch => dispatcher.InvokeBackground(UpdateItems, batch, stamp));
 
 
-		private void UpdateItems(List<DataItem> items)
+		private void UpdateItems(IReadOnlyList<DataItem> items, int stamp)
 		{
 			foreach (DataItem item in items)
 			{
 				if (item.Node != null)
 				{
-					nodeService.UpdateNode(item.Node);
+					nodeService.UpdateNode(item.Node, stamp);
 				}
 
 				if (item.Link != null)
 				{
-					linkService.UpdateLink(item.Link);
+					linkService.UpdateLink(item.Link, stamp);
 				}
 			}
 		}

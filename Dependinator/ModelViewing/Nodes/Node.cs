@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Drawing;
 using System.Windows;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private.Items;
@@ -12,11 +11,10 @@ namespace Dependinator.ModelViewing.Nodes
 	{
 		private readonly List<Node> children = new List<Node>();
 
-		public Node(NodeName name, NodeType nodeType)
+		public Node(NodeName name)
 		{
 			Id = new NodeId(name);
 			Name = name;
-			NodeType = nodeType;
 
 			if (name == NodeName.Root)
 			{
@@ -29,6 +27,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		public bool CanShow => ViewModel?.CanShow ?? false;
+		public int Stamp { get; set; }
 
 		public NodeId Id { get; }
 		public NodeName Name { get; }
@@ -44,7 +43,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public List<Line> SourceLines { get; } = new List<Line>();
 
-		public NodeType NodeType { get; }
+		public NodeType NodeType { get; set; }
 
 		public NodeViewModel ViewModel { get; set; }
 
@@ -54,12 +53,16 @@ namespace Dependinator.ModelViewing.Nodes
 		public string Color { get; set; }
 
 
+
 		public void AddChild(Node child)
 		{
 			child.Parent = this;
 			child.Root = Root;
 			children.Add(child);
 		}
+
+
+		public void RemoveChild(Node child) => children.Remove(child);
 
 
 		public override string ToString() => Name.ToString();

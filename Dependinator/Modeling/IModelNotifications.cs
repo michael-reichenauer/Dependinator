@@ -2,8 +2,8 @@
 
 namespace Dependinator.Modeling
 {
-	internal interface IModelNotifications
-	{
-		void UpdateDataItems(IReadOnlyList<DataItem> items);
-	}
+	//internal interface IModelNotifications
+	//{
+	//	void UpdateDataItems(IReadOnlyList<DataItem> items);
+	//}
 }

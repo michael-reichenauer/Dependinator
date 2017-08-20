@@ -4,6 +4,6 @@ namespace Dependinator.Modeling.Private.Analyzing
 {
 	internal interface IReflectionService
 	{
-		Task AnalyzeAsync(string path);
+		Task AnalyzeAsync(string path, ItemsCallback itemsCallback);
 	}
 }

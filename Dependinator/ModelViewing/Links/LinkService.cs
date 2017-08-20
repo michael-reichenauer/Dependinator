@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.Modeling;
@@ -24,7 +25,8 @@ namespace Dependinator.ModelViewing.Links
 			this.model = model;
 		}
 
-		public void UpdateLink(DataLink dataLink)
+
+		public void UpdateLink(DataLink dataLink, int stamp)
 		{
 			if (dataLink.Source == dataLink.Target)
 			{
@@ -35,18 +37,50 @@ namespace Dependinator.ModelViewing.Links
 			Node source = GetNode(dataLink.Source);
 			Node target = GetNode(dataLink.Target);
 
-			if (SourceLinkExists(source, target))
-
+			if (TryGetLink(source, target, out Link link))
 			{
 				// Already added link
+				link.Stamp = stamp;
 				return;
 			}
 
-			Link link = AddLink(source, target);
-
+			link = AddLink(source, target);
+			link.Stamp = stamp;
 			var linkSegments = linkSegmentService.GetLinkSegments(link);
 
 			AddLinkSegmentLines(linkSegments, link);
+		}
+
+
+		public void RemoveObsoleteLinks(IReadOnlyList<Link> obsoleteLinks)
+		{
+			foreach (Link link in obsoleteLinks)
+			{
+				foreach (Line line in link.Lines)
+				{
+					line.Links.Remove(link);
+
+					if (!line.Links.Any())
+					{
+						RemoveLine(line);
+					}
+				}
+
+				RemoveLink(link);
+			}
+		}
+
+
+		private static Link AddLink(Node source, Node target)
+		{
+			Link link = new Link(source, target);
+			link.Source.SourceLinks.Add(link);
+			return link;
+		}
+
+		private void RemoveLink(Link link)
+		{
+			link.Source.SourceLinks.Remove(link);
 		}
 
 
@@ -60,6 +94,7 @@ namespace Dependinator.ModelViewing.Links
 				}
 
 				line.Links.Add(link);
+				link.Lines.Add(line);
 			}
 		}
 
@@ -72,6 +107,14 @@ namespace Dependinator.ModelViewing.Links
 			return line;
 		}
 
+
+		private void RemoveLine(Line line)
+		{
+			line.Source.SourceLines.Remove(line);
+			RemoveLineViewModel(line);
+		}
+
+
 		private void AddLineViewModel(Line line)
 		{
 			Node owner = GetLineOwner(line);
@@ -80,17 +123,15 @@ namespace Dependinator.ModelViewing.Links
 			owner.ItemsCanvas.AddItem(lineViewModel);
 		}
 
+		private void RemoveLineViewModel(Line line)
+		{
+			Node owner = GetLineOwner(line);
+			owner.ItemsCanvas.RemoveItem(line.ViewModel);
+		}
+
 
 		private static Node GetLineOwner(Line line) => 
 			line.Source == line.Target.Parent ? line.Source : line.Source.Parent;
-
-
-		private static Link AddLink(Node source, Node target)
-		{
-			Link link = new Link(source, target);
-			source.SourceLinks.Add(link);
-			return link;
-		}
 
 
 		private Node GetNode(string name)
@@ -109,7 +150,10 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
-		private static bool SourceLinkExists(Node source, Node target) =>
-			source.SourceLinks.Any(l => l.Source == source && l.Target == target);
+		private static bool TryGetLink(Node source, Node target, out Link link)
+		{
+			link = source.SourceLinks.FirstOrDefault(l => l.Source == source && l.Target == target);
+			return link != null;
+		}
 	}
 }

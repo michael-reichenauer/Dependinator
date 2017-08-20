@@ -1,9 +1,11 @@
+using System.Collections.Generic;
 using Dependinator.Modeling;
 
 namespace Dependinator.ModelViewing.Links
 {
 	internal interface ILinkService
 	{
-		void UpdateLink(DataLink dataLink);
+		void UpdateLink(DataLink dataLink, int stamp);
+		void RemoveObsoleteLinks(IReadOnlyList<Link> obsoleteLinks);
 	}
 }

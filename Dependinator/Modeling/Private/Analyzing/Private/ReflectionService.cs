@@ -5,15 +5,8 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 {
 	internal class ReflectionService : IReflectionService
 	{
-		private readonly Lazy<IModelNotifications> modelNotifications;
 
-		public ReflectionService(Lazy<IModelNotifications> modelNotifications)
-		{
-			this.modelNotifications = modelNotifications;
-		}
-
-
-		public Task AnalyzeAsync(string assemblyPath)
+		public Task AnalyzeAsync(string assemblyPath, ItemsCallback itemsCallback)
 		{
 			return Task.Run(() =>
 			{
@@ -26,7 +19,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 
 					// To send notifications from sub domain, we use a receiver in this domain, which is
 					// passed to the sub-domain		
-					NotificationReceiver receiver = new NotificationReceiver(modelNotifications.Value);
+					NotificationReceiver receiver = new NotificationReceiver(itemsCallback);
 
 					analyzer.AnalyzeAssembly(assemblyPath, receiver);
 				}

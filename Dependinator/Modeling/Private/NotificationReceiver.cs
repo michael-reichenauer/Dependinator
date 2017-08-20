@@ -8,12 +8,12 @@ namespace Dependinator.Modeling.Private
 {
 	internal class NotificationReceiver : MarshalByRefObject
 	{
-		private readonly IModelNotifications modelNotifications;
+		private readonly ItemsCallback itemsCallback;
 
 
-		public NotificationReceiver(IModelNotifications modelNotifications)
+		public NotificationReceiver(ItemsCallback itemsCallback)
 		{
-			this.modelNotifications = modelNotifications;
+			this.itemsCallback = itemsCallback;
 		}
 
 
@@ -22,9 +22,9 @@ namespace Dependinator.Modeling.Private
 
 		public void ReceiveItems(List<Dtos.Item> dtoItems)
 		{
-			List<DataItem> items = dtoItems.Select(Convert.ToDataItem).ToList();
+			IReadOnlyList<DataItem> items = dtoItems.Select(Convert.ToDataItem).ToList();
 
-			modelNotifications.UpdateDataItems(items);
+			itemsCallback(items);
 		}
 	}
 }

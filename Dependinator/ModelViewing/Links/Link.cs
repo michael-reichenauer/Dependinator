@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 
@@ -13,8 +14,10 @@ namespace Dependinator.ModelViewing.Links
 			IsEqualWhenSame(source, target);
 		}
 
+		public int Stamp { get; set; }
 		public Node Target { get; }
 		public Node Source { get; }
+		public List<Line> Lines { get; } = new List<Line>();
 
 		public override string ToString() => $"{Source}->{Target}";
 	}
