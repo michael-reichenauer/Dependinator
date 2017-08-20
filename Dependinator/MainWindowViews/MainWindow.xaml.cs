@@ -122,7 +122,7 @@ namespace Dependinator.MainWindowViews
 
 		private void StoreWindowSettings()
 		{
-			Settings.Edit<ProgramSettings>(s =>
+			Settings.EditWorkingFolderSettings(workingFolder, s =>
 			{
 				s.WindowBounds = new Rect(Top, Left, Width, Height);
 				s.IsMaximized = WindowState == WindowState.Maximized;
@@ -132,7 +132,7 @@ namespace Dependinator.MainWindowViews
 
 		private void RestoreWindowSettings()
 		{
-			ProgramSettings settings = Settings.Get<ProgramSettings>();
+			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
 
 			Rectangle rect = new Rectangle(
 				(int)settings.WindowBounds.X, 
