@@ -1,11 +1,9 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Threading;
 using System.Threading.Tasks;
 using Dependinator.ApplicationHandling;
 using Dependinator.Modeling.Private.Serializing;
@@ -116,7 +114,7 @@ namespace Dependinator.Modeling.Private.Analyzing.Private
 			t.Log($"Added {memberCount} members");
 
 			// Add type methods bodies
-			Parallel.ForEach(methodBodies, method => AddMethodBodyLinks(method, sender));		
+			Parallel.ForEach(methodBodies, method => AddMethodBodyLinks(method, sender));
 			t.Log("Added method bodies");
 
 			Log.Debug($"Added {sentNodes.Count} nodes and {linkCount} links");
