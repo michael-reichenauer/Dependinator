@@ -18,7 +18,8 @@
 			StrokeThickness="0.6"
 			StrokeDashArray="4,4"
 			Fill="{Binding BackgroundBrush}"
-			Stretch="Fill" />
+			Stretch="Fill" 
+			UseLayoutRounding="True"/>
 
 		<!-- Inner model -->
 		<items:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
@@ -30,7 +31,8 @@
 			Height="20"
 			Background="Transparent" 
 			VerticalAlignment="Top"
-			MouseMove="UIElement_OnMouseMove">
+			MouseMove="UIElement_OnMouseMove"
+			UseLayoutRounding="True">
 
 			<TextBlock
 				Height="20"
@@ -39,7 +41,8 @@
 				Foreground="{DynamicResource TextBrush}"
 				FontSize="{Binding FontSize}"
 				HorizontalAlignment="Left"
-				VerticalAlignment="Top" />
+				VerticalAlignment="Top"
+				UseLayoutRounding="True"/>
 
 			<Border.ToolTip>
 				<ToolTip

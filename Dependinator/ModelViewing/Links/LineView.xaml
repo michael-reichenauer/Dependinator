@@ -18,7 +18,8 @@
 				StrokeThickness="{Binding LineWidth}"
 				StrokeDashArray="{Binding StrokeDash}"
 				StrokeLineJoin="Round"
-				IsHitTestVisible="False" />
+				IsHitTestVisible="False" 
+				UseLayoutRounding="True"/>
 
 
 			<!-- Arrow head -->
@@ -27,7 +28,8 @@
 				Stroke="{Binding LineBrush}"
 				StrokeThickness="{Binding ArrowWidth}"
 				IsHitTestVisible="False"
-				StrokeEndLineCap="Triangle" />
+				StrokeEndLineCap="Triangle"
+				UseLayoutRounding="True"/>
 
 			<!-- Line controls -->
 			<Path

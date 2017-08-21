@@ -22,7 +22,8 @@
 		Padding="0"
 		SelectionMode="Extended"
 		ScrollViewer.HorizontalScrollBarVisibility="Auto"
-		ScrollViewer.VerticalScrollBarVisibility="Auto">
+		ScrollViewer.VerticalScrollBarVisibility="Auto"
+		UseLayoutRounding="True">
 
 		<i:Interaction.Behaviors>
 			<private:IgnoreMouseWheelBehavior />
@@ -42,6 +43,7 @@
 		<ListBox.ItemContainerStyle>
 			<Style TargetType="ListBoxItem">
 
+				<Setter Property="UseLayoutRounding" Value="True"/>
 				<Setter Property="Canvas.ZIndex" Value="{Binding ItemZIndex}" />
 				<Setter Property="Canvas.Top" Value="{Binding ItemTop}" />
 				<Setter Property="Canvas.Left" Value="{Binding ItemLeft}" />
