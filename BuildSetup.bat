@@ -5,6 +5,19 @@ echo.
 del DependinatorSetup.exe >nul 2>&1
 del version.txt >nul 2>&1
 
+if exist DependinatorSetup.exe (
+  echo.
+  echo Error: Failed to clean DependinatorSetup.exe
+  pause
+  exit
+)
+
+if exist version.txt (
+  echo.
+  echo Error: Failed to clean version.txt
+  pause
+  exit
+)
 
 if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe" (
   set MSBUILD="%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community\MSBuild\15.0\Bin\MSBuild.exe"
@@ -30,7 +43,7 @@ if exist %MSBUILD% (
   %MSBUILD% /t:rebuild /v:m /nologo /p:Configuration=Release Dependinator.sln 
   echo.
 
-  echo Copy to Setup file ...
+  echo Copy Setup file ...
   copy Dependinator\bin\Release\Dependinator.exe DependinatorSetup.exe /Y >NUL
 
   PowerShell -Command "& {(Get-Item DependinatorSetup.exe).VersionInfo.FILEVERSION }" > version.txt

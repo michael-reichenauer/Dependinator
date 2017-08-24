@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
@@ -41,6 +42,7 @@ namespace Dependinator.ModelViewing.Links
 			: line.Target.ViewModel.RectangleBrush;
 
 		public bool IsMouseOver { get => Get(); private set => Set(value); }
+		public bool IsShowPoints { get => Get(); private set => Set(value); }
 
 		public string LineData => lineViewModelService.GetLineData(line);
 
@@ -99,6 +101,7 @@ namespace Dependinator.ModelViewing.Links
 			lineViewModelService.MoveLinePoint(line, currentPointIndex, point);
 			lineViewModelService.UpdateLineBounds(line);
 			IsMouseOver = true;
+			IsShowPoints = true;
 			NotifyAll();
 		}
 
@@ -113,6 +116,7 @@ namespace Dependinator.ModelViewing.Links
 			mouseOverDelay.Delay(MouseEnterDelay, _ =>
 			{
 				IsMouseOver = true;
+				IsShowPoints = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
 				Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
 			});
 		}
@@ -122,6 +126,7 @@ namespace Dependinator.ModelViewing.Links
 		{
 			mouseOverDelay.Cancel();
 			IsMouseOver = false;
+			IsShowPoints = false;
 			Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
 		}
 

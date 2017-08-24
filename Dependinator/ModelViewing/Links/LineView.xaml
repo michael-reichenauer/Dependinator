@@ -33,7 +33,7 @@
 
 			<!-- Line controls -->
 			<Path
-				Visibility="{Binding IsMouseOver, Converter={StaticResource VC}}"
+				Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
 				Data="{Binding PointsData}"
 				Stroke="{Binding LineBrush}"
 				StrokeLineJoin="Round"
