@@ -15,11 +15,12 @@
 		<Rectangle
 			Margin="0"
 			Stroke="{Binding RectangleBrush}"
-			StrokeThickness="0.6"
+			StrokeThickness="{Binding RectangleLineWidth}"
 			StrokeDashArray="4,4"
 			Fill="{Binding BackgroundBrush}"
-			Stretch="Fill" 
-			UseLayoutRounding="True"/>
+			Stretch="Fill"
+			UseLayoutRounding="True" />
+
 
 		<!-- Inner model -->
 		<items:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
@@ -29,7 +30,7 @@
 			BorderBrush="{Binding RectangleBrush}"
 			BorderThickness="0 0 0 0.3"
 			Height="20"
-			Background="Transparent" 
+			Background="Transparent"
 			VerticalAlignment="Top"
 			MouseMove="UIElement_OnMouseMove"
 			UseLayoutRounding="True">
@@ -42,7 +43,7 @@
 				FontSize="{Binding FontSize}"
 				HorizontalAlignment="Left"
 				VerticalAlignment="Top"
-				UseLayoutRounding="True"/>
+				UseLayoutRounding="True" />
 
 			<Border.ToolTip>
 				<ToolTip
@@ -54,6 +55,74 @@
 			</Border.ToolTip>
 		</Border>
 
+	
+		<!-- Rectangle points -->
+		<Rectangle
+			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding RectangleBrush}"
+			StrokeThickness="1"
+			Fill="{Binding RectangleBrush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Left"
+			VerticalAlignment="Top"
+			UseLayoutRounding="True"
+			MouseEnter="UIElement_OnMouseEnter"
+			MouseLeave="UIElement_OnMouseLeave" />
+
+		<Rectangle
+			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding RectangleBrush}"
+			StrokeThickness="1"
+			Fill="{Binding RectangleBrush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Left"
+			VerticalAlignment="Bottom"
+			UseLayoutRounding="True"
+			MouseEnter="UIElement_OnMouseEnter"
+			MouseLeave="UIElement_OnMouseLeave" />
+
+		<Rectangle
+			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding RectangleBrush}"
+			StrokeThickness="1"
+			Fill="{Binding RectangleBrush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Right"
+			VerticalAlignment="Top"
+			UseLayoutRounding="True"
+			MouseEnter="UIElement_OnMouseEnter"
+			MouseLeave="UIElement_OnMouseLeave" />
+
+		<Rectangle
+			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding RectangleBrush}"
+			StrokeThickness="1"
+			Fill="{Binding RectangleBrush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Right"
+			VerticalAlignment="Bottom"
+			UseLayoutRounding="True"
+			MouseEnter="UIElement_OnMouseEnter"
+			MouseLeave="UIElement_OnMouseLeave" />
+
+		<!-- Mouse over-->
+		<Rectangle
+			Name="MouseOverBorder"
+			Margin="0"
+			Stroke="Transparent"
+			StrokeThickness="8"
+			Stretch="Fill"
+			UseLayoutRounding="True"
+			MouseEnter="UIElement_OnMouseEnter"
+			MouseLeave="UIElement_OnMouseLeave" />
 
 		<!--<Rectangle
 			Stroke="Transparent"

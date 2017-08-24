@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Private.Items;
+using Dependinator.Utils.UI;
 
 namespace Dependinator.ModelViewing.Nodes
 {
@@ -12,14 +13,18 @@ namespace Dependinator.ModelViewing.Nodes
 	{
 		private readonly INodeViewModelService nodeViewModelService;
 
+		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
+
 		private Point lastMousePosition;
+		private int currentPointIndex = -1;
+		private Point mouseDownPoint;
 
 		protected NodeViewModel(INodeViewModelService nodeViewModelService, Node node)
 		{
 			this.nodeViewModelService = nodeViewModelService;
 			this.Node = node;
 
-			RectangleBrush = node.Color != null 
+			RectangleBrush = node.Color != null
 				? Converter.BrushFromHex(node.Color)
 				: nodeViewModelService.GetRandomRectangleBrush();
 			BackgroundBrush = nodeViewModelService.GetRectangleBackgroundBrush(RectangleBrush);
@@ -36,11 +41,16 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public string Name => Node.Name.Name;
 
+		public double RectangleLineWidth => IsMouseOver ? 0.6 * 1.5 : 0.6;
+
 		public string ToolTip => $"{Node.Name}{DebugToolTip}";
 
 		public void UpdateToolTip() => Notify(nameof(ToolTip));
 
 		public int FontSize => ((int)(15 * ItemScale)).MM(8, 13);
+
+		public bool IsMouseOver { get => Get(); private set => Set(value); }
+		public bool IsShowPoints { get => Get(); private set => Set(value); }
 
 		public ItemsViewModel ItemsViewModel { get; set; }
 
@@ -111,5 +121,140 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		public override string ToString() => Node.Name.ToString();
+
+		public void OnMouseEnter()
+		{
+			mouseOverDelay.Delay(ModelViewModel.MouseEnterDelay, _ =>
+			{
+				IsMouseOver = true;
+				IsShowPoints = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+				Notify(nameof(RectangleLineWidth));
+			});
+		}
+
+		public void OnMouseLeave()
+		{
+			mouseOverDelay.Cancel();
+			IsMouseOver = false;
+			IsShowPoints = false;
+			Notify(nameof(RectangleLineWidth));
+		}
+
+		public void MouseDown(Point screenPoint)
+		{
+			mouseDownPoint = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
+			currentPointIndex = -1;
+		}
+
+		public void MouseMove(Point screenPoint)
+		{
+			Point point = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
+
+			if (currentPointIndex == -1)
+			{
+				// First move event, lets start a move by  getting the index of point to move.
+				// THis might create a new point if there is no existing point near the mouse down point
+				currentPointIndex = GetPointIndex(Node, mouseDownPoint);
+				if (currentPointIndex == -1)
+				{
+					// Point not close enough to the line
+					return;
+				}
+			}
+
+			MovePoint(Node, currentPointIndex, point);
+			IsMouseOver = true;
+			IsShowPoints = true;
+			NotifyAll();
+		}
+
+		private int GetPointIndex(Node node, Point point)
+		{
+			int dist = 10;
+			NodeViewModel viewModel = node.ViewModel;
+			if ((point - viewModel.ItemBounds.Location).Length < dist)
+			{
+				return 0;
+			}
+			else if ((point - new Point(
+				viewModel.ItemLeft + viewModel.ItemWidth,
+				viewModel.ItemTop)).Length < dist)
+			{
+
+				return 1;
+			}
+			else if ((point - new Point(
+				viewModel.ItemLeft + viewModel.ItemWidth,
+				viewModel.ItemTop + viewModel.ItemHeight)).Length < dist)
+			{
+
+				return 2;
+			}
+			else if ((point - new Point(
+				viewModel.ItemLeft,
+				viewModel.ItemTop + viewModel.ItemHeight)).Length < dist)
+			{
+
+				return 3;
+			}
+
+			return -1;
+		}
+
+
+
+
+		private void MovePoint(Node node, int index, Point point)
+		{
+			NodeViewModel viewModel = node.ViewModel;
+
+			Point loc = viewModel.ItemBounds.Location;
+			Size size = viewModel.ItemBounds.Size;
+
+			if (index == 0)
+			{
+				Point newLoc = new Point(point.X, point.Y);
+				viewModel.ItemBounds = new Rect(
+					newLoc,
+					new Size(
+						(loc.X - point.X) + viewModel.ItemWidth,
+						(loc.Y - point.Y) + viewModel.ItemHeight));
+			}
+
+
+			if (index == 1)
+			{
+				Point newLoc = new Point(point.X - size.Width, point.Y);
+				Vector v = newLoc - loc;
+
+				Size newSiz = new Size(size.Width, size.Height);
+
+
+				viewModel.ItemBounds = new Rect(newLoc, newSiz);
+			}
+
+			else if (index == 2)
+			{
+				viewModel.ItemBounds = new Rect(
+					viewModel.ItemBounds.Location,
+					new Size(point.X - viewModel.ItemLeft, point.Y - viewModel.ItemTop));
+			}
+			else if (index == 3)
+			{
+				Point newLoc = new Point(point.X, point.Y - size.Height);
+				Size newSiz = new Size(
+					viewModel.ItemWidth + (loc.X - newLoc.X),
+					(viewModel.ItemHeight - (loc.Y - newLoc.Y)));
+
+				viewModel.ItemBounds = new Rect(newLoc, newSiz);
+			}
+		}
+
+
+
+		public void MouseUp(Point screenPoint)
+		{
+			currentPointIndex = -1;
+		}
 	}
 }

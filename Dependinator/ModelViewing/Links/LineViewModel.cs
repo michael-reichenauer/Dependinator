@@ -10,8 +10,6 @@ namespace Dependinator.ModelViewing.Links
 {
 	internal class LineViewModel : ItemViewModel
 	{
-		private static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(100);
-
 		private readonly ILineViewModelService lineViewModelService;
 		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
 
@@ -113,7 +111,7 @@ namespace Dependinator.ModelViewing.Links
 
 		public void OnMouseEnter()
 		{
-			mouseOverDelay.Delay(MouseEnterDelay, _ =>
+			mouseOverDelay.Delay(ModelViewModel.MouseEnterDelay, _ =>
 			{
 				IsMouseOver = true;
 				IsShowPoints = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
