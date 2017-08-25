@@ -5,6 +5,7 @@
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:items="clr-namespace:Dependinator.ModelViewing.Private.Items"
+	xmlns:nodes="clr-namespace:Dependinator.ModelViewing.Nodes"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
@@ -57,61 +58,7 @@
 
 	
 		<!-- Rectangle points -->
-		<Rectangle
-			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
-			Margin="0"
-			Stroke="{Binding RectangleBrush}"
-			StrokeThickness="1"
-			Fill="{Binding RectangleBrush}"
-			Width="8"
-			Height="8"
-			HorizontalAlignment="Left"
-			VerticalAlignment="Top"
-			UseLayoutRounding="True"
-			MouseEnter="UIElement_OnMouseEnter"
-			MouseLeave="UIElement_OnMouseLeave" />
-
-		<Rectangle
-			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
-			Margin="0"
-			Stroke="{Binding RectangleBrush}"
-			StrokeThickness="1"
-			Fill="{Binding RectangleBrush}"
-			Width="8"
-			Height="8"
-			HorizontalAlignment="Left"
-			VerticalAlignment="Bottom"
-			UseLayoutRounding="True"
-			MouseEnter="UIElement_OnMouseEnter"
-			MouseLeave="UIElement_OnMouseLeave" />
-
-		<Rectangle
-			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
-			Margin="0"
-			Stroke="{Binding RectangleBrush}"
-			StrokeThickness="1"
-			Fill="{Binding RectangleBrush}"
-			Width="8"
-			Height="8"
-			HorizontalAlignment="Right"
-			VerticalAlignment="Top"
-			UseLayoutRounding="True"
-			MouseEnter="UIElement_OnMouseEnter"
-			MouseLeave="UIElement_OnMouseLeave" />
-
-		<Rectangle
-			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
-			Margin="0"
-			Stroke="{Binding RectangleBrush}"
-			StrokeThickness="1"
-			Fill="{Binding RectangleBrush}"
-			Width="8"
-			Height="8"
-			HorizontalAlignment="Right"
-			VerticalAlignment="Bottom"
-			UseLayoutRounding="True"
-			MouseEnter="UIElement_OnMouseEnter"
-			MouseLeave="UIElement_OnMouseLeave" />
+		<nodes:NodePointsView/>
 
 		<!-- Mouse over-->
 		<Rectangle

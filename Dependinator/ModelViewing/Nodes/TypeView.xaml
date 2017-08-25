@@ -6,6 +6,7 @@
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:modelViewing="clr-namespace:Dependinator.ModelViewing"
 	xmlns:items="clr-namespace:Dependinator.ModelViewing.Private.Items"
+	xmlns:nodes="clr-namespace:Dependinator.ModelViewing.Nodes"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
@@ -56,6 +57,8 @@
 			</Border.ToolTip>
 		</Border>
 
+		<!-- Rectangle points -->
+		<nodes:NodePointsView/>
 
 		<!-- Mouse over-->
 		<Rectangle

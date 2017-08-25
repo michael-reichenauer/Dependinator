@@ -96,6 +96,7 @@ namespace Dependinator.ModelViewing.Nodes
 				{
 					IsShowPoints = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
 				}
+
 				IsMouseOver = true;
 			});
 		}

@@ -108,6 +108,9 @@
     <Compile Include="Modeling\DataLink.cs" />
     <Compile Include="Modeling\IModelNotifications.cs" />
     <Compile Include="Modeling\Private\Convert.cs" />
+    <Compile Include="ModelViewing\Nodes\NodePointsView.xaml.cs">
+      <DependentUpon>NodePointsView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ModelViewing\Private\Convert.cs" />
     <Compile Include="Utils\UI\BrushExtensions.cs" />
     <Compile Include="Utils\UI\DispatcherExtensions.cs" />
@@ -346,6 +349,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ModelViewing\Links\LineView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ModelViewing\Nodes\NodePointsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

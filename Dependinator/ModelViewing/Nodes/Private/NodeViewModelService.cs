@@ -54,7 +54,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		public int GetPointIndex(Node node, Point point)
 		{
 			double scale = node.ViewModel.ItemScale;
-			double dist = 10 / scale;
+			double dist = 15 / scale;
 			NodeViewModel viewModel = node.ViewModel;
 
 			if ((point - viewModel.ItemBounds.Location).Length < dist )
