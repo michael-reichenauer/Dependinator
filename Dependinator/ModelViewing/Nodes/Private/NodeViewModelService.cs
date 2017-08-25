@@ -91,17 +91,17 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-
-
 		public void MovePoint(Node node, int index, Point point, Point previousPoint)
 		{
 			NodeViewModel viewModel = node.ViewModel;
 
 			Point location = viewModel.ItemBounds.Location;
 			Point newLocation = location;
+			double scale = viewModel.ItemScale;
 
 			Size size = viewModel.ItemBounds.Size;
 			Vector resize = new Vector(0, 0);
+			Vector offset = new Vector(0, 0);
 
 			if (index == 0)
 			{
@@ -112,13 +112,14 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			{
 				newLocation = new Point(point.X, point.Y);
 				resize = new Vector(location.X - newLocation.X, location.Y - newLocation.Y);
+				offset = new Vector((location.X - newLocation.X) * scale, (location.Y - newLocation.Y) * scale);
 			}
 			else if (index == 2)
 			{
 				newLocation = new Point(location.X, point.Y);
 				resize = new Vector((point.X - size.Width) - location.X, location.Y - newLocation.Y); ;
+				offset = new Vector(0, (location.Y - newLocation.Y) * scale);
 			}
-
 			else if (index == 3)
 			{
 				newLocation = location;
@@ -128,10 +129,12 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			{
 				newLocation = new Point(point.X, location.Y);
 				resize = new Vector(location.X - newLocation.X, (point.Y - size.Height) - location.Y);
+				offset = new Vector((location.X - newLocation.X) * scale, 0);
 			}
 
 			Size newSiz = new Size(size.Width + resize.X, size.Height + resize.Y);
 			viewModel.ItemBounds = new Rect(newLocation, newSiz);
+			viewModel.ItemsViewModel?.MoveCanvas(offset);
 		}
 
 		public void SetLayout(NodeViewModel nodeViewMode)

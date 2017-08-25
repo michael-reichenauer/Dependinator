@@ -90,19 +90,30 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public void OnMouseEnter()
 		{
-			mouseOverDelay.Delay(ModelViewModel.MouseEnterDelay, _ =>
+			mouseOverDelay.Delay(MouseEnterDelay, _ =>
 			{
+				if (ModelViewModel.IsControlling)
+				{
+					Mouse.OverrideCursor = Cursors.Hand;
+				}
+
 				if (IsResizable())
 				{
-					IsShowPoints = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+					IsShowPoints = ModelViewModel.IsControlling;
 				}
 
 				IsMouseOver = true;
 			});
 		}
 
+
+		private static TimeSpan MouseEnterDelay => ModelViewModel.IsControlling
+			? TimeSpan.FromMilliseconds(1) : ModelViewModel.MouseEnterDelay;
+
+
 		public void OnMouseLeave()
 		{
+			Mouse.OverrideCursor = null;
 			mouseOverDelay.Cancel();
 			IsShowPoints = false;
 			IsMouseOver = false;

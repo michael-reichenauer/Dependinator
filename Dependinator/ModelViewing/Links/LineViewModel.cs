@@ -100,6 +100,7 @@ namespace Dependinator.ModelViewing.Links
 			lineViewModelService.UpdateLineBounds(line);
 			IsMouseOver = true;
 			IsShowPoints = true;
+			Mouse.OverrideCursor = Cursors.Hand;
 			NotifyAll();
 		}
 
@@ -113,8 +114,13 @@ namespace Dependinator.ModelViewing.Links
 		{
 			mouseOverDelay.Delay(ModelViewModel.MouseEnterDelay, _ =>
 			{
+				if (ModelViewModel.IsControlling)
+				{
+					Mouse.OverrideCursor = Cursors.Hand;
+				}
+
 				IsMouseOver = true;
-				IsShowPoints = Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
+				IsShowPoints = ModelViewModel.IsControlling;
 				Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
 			});
 		}
@@ -122,6 +128,7 @@ namespace Dependinator.ModelViewing.Links
 
 		public void OnMouseLeave()
 		{
+			Mouse.OverrideCursor = null;
 			mouseOverDelay.Cancel();
 			IsMouseOver = false;
 			IsShowPoints = false;

@@ -66,5 +66,16 @@
 			UseLayoutRounding="True"
 			MouseEnter="UIElement_OnMouseEnter"
 			MouseLeave="UIElement_OnMouseLeave" />
+
+		<!-- Mouse over-->
+		<Rectangle
+			Name="MouseOverBorder"
+			Margin="0"
+			Stroke="Transparent"
+			StrokeThickness="10"
+			Stretch="Fill"
+			UseLayoutRounding="True"
+			MouseEnter="UIElement_OnMouseEnter"
+			MouseLeave="UIElement_OnMouseLeave" />
 	</Grid>
 </UserControl>

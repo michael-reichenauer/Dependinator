@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using System.Windows.Threading;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
@@ -14,6 +15,8 @@ namespace Dependinator.ModelViewing
 	internal class ModelViewModel : ViewModel
 	{
 		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(100);
+
+		public static bool IsControlling => Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
 
 		private static readonly TimeSpan FilterDelay = TimeSpan.FromMilliseconds(300);
 
