@@ -15,9 +15,10 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
 
-		private Point lastMousePosition;
+		//private Point lastMousePosition;
 		private int currentPointIndex = -1;
 		private Point mouseDownPoint;
+		private Point mouseMovedPoint;
 
 		protected NodeViewModel(INodeViewModelService nodeViewModelService, Node node)
 		{
@@ -69,42 +70,42 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public void OnMouseMove(MouseEventArgs e)
-		{
-			Point viewPosition = e.GetPosition(Application.Current.MainWindow);
+		//public void OnMouseMove(MouseEventArgs e)
+		//{
+		//	Point viewPosition = e.GetPosition(Application.Current.MainWindow);
 
-			if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
-					&& e.LeftButton == MouseButtonState.Pressed
-					&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
-			{
-				// Move node
-				(e.Source as UIElement)?.CaptureMouse();
-				Vector viewOffset = viewPosition - lastMousePosition;
-				e.Handled = true;
+		//	if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control)
+		//			&& e.LeftButton == MouseButtonState.Pressed
+		//			&& !(e.OriginalSource is Thumb)) // Don't block the scrollbars.
+		//	{
+		//		// Move node
+		//		(e.Source as UIElement)?.CaptureMouse();
+		//		Vector viewOffset = viewPosition - lastMousePosition;
+		//		e.Handled = true;
 
-				Move(viewOffset);
-			}
-			else
-			{
-				// End of move
-				(e.Source as UIElement)?.ReleaseMouseCapture();
-			}
+		//		Move(viewOffset);
+		//	}
+		//	else
+		//	{
+		//		// End of move
+		//		(e.Source as UIElement)?.ReleaseMouseCapture();
+		//	}
 
-			lastMousePosition = viewPosition;
-		}
+		//	lastMousePosition = viewPosition;
+		//}
 
 
 
-		private void Move(Vector viewOffset)
-		{
-			Vector scaledOffset = viewOffset / ItemScale;
+		//private void Move(Vector viewOffset)
+		//{
+		//	Vector scaledOffset = viewOffset / ItemScale;
 
-			Point newLocation = ItemBounds.Location + scaledOffset;
-			Size size = ItemBounds.Size;
+		//	Point newLocation = ItemBounds.Location + scaledOffset;
+		//	Size size = ItemBounds.Size;
 
-			ItemBounds = new Rect(newLocation, size);
-			ItemOwnerCanvas.UpdateItem(this);
-		}
+		//	ItemBounds = new Rect(newLocation, size);
+		//	ItemOwnerCanvas.UpdateItem(this);
+		//}
 
 
 		public string DebugToolTip => ItemsToolTip;
@@ -143,6 +144,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public void MouseDown(Point screenPoint)
 		{
 			mouseDownPoint = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
+			mouseMovedPoint = mouseDownPoint;
 			currentPointIndex = -1;
 		}
 
@@ -163,6 +165,7 @@ namespace Dependinator.ModelViewing.Nodes
 			}
 
 			MovePoint(Node, currentPointIndex, point);
+			mouseMovedPoint = point;
 			IsMouseOver = true;
 			IsShowPoints = true;
 			NotifyAll();
@@ -172,33 +175,36 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			int dist = 10;
 			NodeViewModel viewModel = node.ViewModel;
+
 			if ((point - viewModel.ItemBounds.Location).Length < dist)
 			{
-				return 0;
+				// Move left,top
+				return 1;
 			}
 			else if ((point - new Point(
 				viewModel.ItemLeft + viewModel.ItemWidth,
 				viewModel.ItemTop)).Length < dist)
 			{
-
-				return 1;
+				// Move right,top
+				return 2;
 			}
 			else if ((point - new Point(
 				viewModel.ItemLeft + viewModel.ItemWidth,
 				viewModel.ItemTop + viewModel.ItemHeight)).Length < dist)
 			{
-
-				return 2;
+				// Move right,bottom
+				return 3;
 			}
 			else if ((point - new Point(
 				viewModel.ItemLeft,
 				viewModel.ItemTop + viewModel.ItemHeight)).Length < dist)
 			{
-
-				return 3;
+				// Move left,bottom
+				return 4;
 			}
 
-			return -1;
+			// Move node
+			return 0;
 		}
 
 
@@ -208,51 +214,44 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			NodeViewModel viewModel = node.ViewModel;
 
-			Point loc = viewModel.ItemBounds.Location;
+			Point location = viewModel.ItemBounds.Location;
+			Point newLocation = location;
+
 			Size size = viewModel.ItemBounds.Size;
+			Vector resize = new Vector(0, 0);
 
 			if (index == 0)
 			{
-				Point newLoc = new Point(point.X, point.Y);
-				double xd = loc.X - newLoc.X;
-				double yd = loc.Y - newLoc.Y;
-
-				Size newSiz = new Size(xd + size.Width, yd + size.Height);
-				viewModel.ItemBounds = new Rect(newLoc, newSiz);
+				Vector moved = point - mouseMovedPoint;
+				newLocation = location + moved;
 			}
 			else if (index == 1)
 			{
-				Point newLoc = new Point(point.X - size.Width, point.Y);
-				double xd = loc.X - newLoc.X;
-				double yd = loc.Y - newLoc.Y;
-
-				Size newSiz = new Size(xd + size.Width, yd + size.Height);
-
-				viewModel.ItemBounds = new Rect(newLoc, newSiz);
+				newLocation = new Point(point.X, point.Y);
+				resize = new Vector(location.X - newLocation.X, location.Y - newLocation.Y);
 			}
-
 			else if (index == 2)
 			{
-				viewModel.ItemBounds = new Rect(
-					viewModel.ItemBounds.Location,
-					new Size(point.X - viewModel.ItemLeft, point.Y - viewModel.ItemTop));
+				newLocation = new Point(location.X, point.Y);
+				resize = new Vector((point.X - size.Width) - location.X, location.Y - newLocation.Y);;
 			}
+
 			else if (index == 3)
 			{
-				Point newLoc = new Point(point.X, point.Y - size.Height);
-				Size newSiz = new Size(
-					viewModel.ItemWidth + (loc.X - newLoc.X),
-					(viewModel.ItemHeight - (loc.Y - newLoc.Y)));
-
-				viewModel.ItemBounds = new Rect(newLoc, newSiz);
+				newLocation = location;
+				resize = new Vector((point.X - size.Width) - location.X, (point.Y - size.Height) - location.Y);
 			}
+			else if (index == 4)
+			{
+				newLocation = new Point(point.X, location.Y);
+				resize = new Vector(location.X - newLocation.X, (point.Y - size.Height) - location.Y);
+			}
+
+			Size newSiz = new Size(size.Width + resize.X, size.Height + resize.Y);
+			viewModel.ItemBounds = new Rect(newLocation, newSiz);
 		}
 
 
-
-		public void MouseUp(Point screenPoint)
-		{
-			currentPointIndex = -1;
-		}
+		public void MouseUp(Point screenPoint) => currentPointIndex = -1;
 	}
 }

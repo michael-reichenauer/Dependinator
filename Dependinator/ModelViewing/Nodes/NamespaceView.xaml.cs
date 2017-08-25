@@ -28,9 +28,6 @@ namespace Dependinator.ModelViewing.Nodes
 		private void ToolTip_OnOpened(object sender, RoutedEventArgs e) =>
 			ViewModel?.UpdateToolTip();
 
-		private void UIElement_OnMouseMove(object sender, MouseEventArgs e) =>
-			ViewModel?.OnMouseMove(e);
-
 		private void UIElement_OnMouseEnter(object sender, MouseEventArgs e) =>
 			ViewModel?.OnMouseEnter();
 

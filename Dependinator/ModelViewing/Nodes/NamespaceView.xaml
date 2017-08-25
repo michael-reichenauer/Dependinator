@@ -32,7 +32,6 @@
 			Height="20"
 			Background="Transparent"
 			VerticalAlignment="Top"
-			MouseMove="UIElement_OnMouseMove"
 			UseLayoutRounding="True">
 
 			<TextBlock

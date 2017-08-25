@@ -14,7 +14,6 @@
 			BorderThickness="0.6"
 			Background="{Binding BackgroundBrush}"
 			CornerRadius="30"
-			MouseMove="UIElement_OnMouseMove"
 			UseLayoutRounding="True">
 
 			<TextBlock
