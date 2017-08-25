@@ -427,7 +427,7 @@ namespace Dependinator.ApplicationHandling.Installation
 
 			Registry.SetValue(dllContextMenuPath, "", ProgramPaths.ProgramName);
 			Registry.SetValue(dllContextMenuPath, "Icon", programFilePath);
-			Registry.SetValue(dllCommandContextMenuPath, "", "\"" + programFilePath + "\" \"/d:%1\"");
+			Registry.SetValue(dllCommandContextMenuPath, "", "\"" + programFilePath + "\" \"%1\"");
 
 		}
 

@@ -49,7 +49,7 @@ if exist %MSBUILD% (
   PowerShell -Command "& {(Get-Item DependinatorSetup.exe).VersionInfo.FILEVERSION }" > version.txt
   echo.
 
-  echo DependinatorSetup.exe version:
+  echo Version:
   type version.txt 
   
 ) else (
