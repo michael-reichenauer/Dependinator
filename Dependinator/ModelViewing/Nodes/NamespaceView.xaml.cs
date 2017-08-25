@@ -9,7 +9,6 @@ namespace Dependinator.ModelViewing.Nodes
 	public partial class NamespaceView : UserControl
 	{
 		private readonly DragUiElement dragUiElement;
-
 		private NodeViewModel ViewModel => DataContext as NodeViewModel;
 
 		public NamespaceView()

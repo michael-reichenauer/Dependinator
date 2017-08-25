@@ -9,21 +9,26 @@
 
 
 	<Grid>
-		<Border
-			BorderBrush="{Binding RectangleBrush}"
-			BorderThickness="0.6"
-			Background="{Binding BackgroundBrush}"
-			CornerRadius="30"
-			UseLayoutRounding="True">
+		<!-- Node border -->
+		<Rectangle
+			Margin="0"
+			Stroke="{Binding RectangleBrush}"
+			StrokeThickness="{Binding RectangleLineWidth}"
+			Fill="{Binding BackgroundBrush}"
+			Stretch="Fill"
+			RadiusX="15"
+			RadiusY="15"
+			UseLayoutRounding="True" />
 
+		<Border>
 			<TextBlock
 				Text="{Binding Name}"
 				Foreground="{DynamicResource TextBrush}"
 				FontSize="{Binding FontSize}"
 				HorizontalAlignment="Center"
-				VerticalAlignment="Center" 
+				VerticalAlignment="Center"
 				UseLayoutRounding="True"
-				RenderOptions.ClearTypeHint="Enabled"/>
+				RenderOptions.ClearTypeHint="Enabled" />
 
 			<Border.ToolTip>
 				<ToolTip
@@ -34,6 +39,19 @@
 					Opened="ToolTip_OnOpened" />
 			</Border.ToolTip>
 		</Border>
-		
+
+
+		<!-- Mouse over-->
+		<Rectangle
+			Name="MouseOverBorder"
+			Margin="0"
+			Stroke="Transparent"
+			StrokeThickness="10"
+			Stretch="Fill"
+			UseLayoutRounding="True"
+			MouseEnter="UIElement_OnMouseEnter"
+			MouseLeave="UIElement_OnMouseLeave" />
+
+
 	</Grid>
 </UserControl>

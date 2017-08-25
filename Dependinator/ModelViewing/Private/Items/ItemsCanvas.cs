@@ -127,9 +127,15 @@ namespace Dependinator.ModelViewing.Private.Items
 
 			
 
-			itemsSource.UpdateAndNotifyAll();
+			UpdateAndNotifyAll();
 
 			ZoomChildren();
+		}
+
+
+		public void UpdateAndNotifyAll()
+		{
+			itemsSource.UpdateAndNotifyAll();
 		}
 
 

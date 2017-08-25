@@ -16,7 +16,7 @@
 		<Rectangle
 			Margin="0"
 			Stroke="{Binding RectangleBrush}"
-			StrokeThickness="0.8"
+			StrokeThickness="{Binding RectangleLineWidth}"
 			Fill="{Binding BackgroundBrush}"
 			Stretch="Fill" 
 			RadiusX="3"
@@ -57,15 +57,16 @@
 		</Border>
 
 
-		<!--<Rectangle
+		<!-- Mouse over-->
+		<Rectangle
+			Name="MouseOverBorder"
+			Margin="0"
 			Stroke="Transparent"
-			StrokeThickness="2"
-			Fill="{Binding RectangleBrush}"
-			Width="8" 
-			Height="8"
-			HorizontalAlignment="Left"
-			VerticalAlignment="Center"
-			MouseMove="UIElement_OnMouseMove"/>-->
+			StrokeThickness="10"
+			Stretch="Fill"
+			UseLayoutRounding="True"
+			MouseEnter="UIElement_OnMouseEnter"
+			MouseLeave="UIElement_OnMouseLeave" />
 
 	</Grid>
 

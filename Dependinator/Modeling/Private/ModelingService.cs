@@ -37,7 +37,7 @@ namespace Dependinator.Modeling.Private
 
 		public async Task<bool> TryDeserialize(string dataFilePath, ItemsCallback itemsCallback)
 		{
-			if (!File.Exists(dataFilePath))
+			if (File.Exists(dataFilePath))
 			{
 				return false;
 			}

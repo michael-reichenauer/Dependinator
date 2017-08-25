@@ -1,3 +1,4 @@
+using System.Windows;
 using System.Windows.Media;
 
 
@@ -12,5 +13,7 @@ namespace Dependinator.ModelViewing.Nodes
 		Brush GetRectangleHighlightBrush(Brush brush);
 		void SetLayout(NodeViewModel node);
 		void ResetLayout(NodeViewModel nodeViewMode);
+		int GetPointIndex(Node node, Point point);
+		void MovePoint(Node node, int index, Point point, Point previousPoint);
 	}
 }
