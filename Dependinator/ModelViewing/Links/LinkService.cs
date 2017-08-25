@@ -71,6 +71,23 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
+		public void ResetLayout(List<Link> links)
+		{
+			foreach (Link link in links)
+			{
+				foreach (Line line in link.Lines)
+				{
+					if (line.Points.Count != 2)
+					{
+						line.ResetPoints();
+						line.ViewModel.UpdateLine();
+						line.ViewModel.NotifyAll();
+					}
+				}
+			}
+		}
+
+
 		private static Link AddLink(Node source, Node target)
 		{
 			Link link = new Link(source, target);

@@ -23,7 +23,8 @@
 				FontSize="{Binding FontSize}"
 				HorizontalAlignment="Center"
 				VerticalAlignment="Center" 
-				UseLayoutRounding="True"/>
+				UseLayoutRounding="True"
+				RenderOptions.ClearTypeHint="Enabled"/>
 
 			<Border.ToolTip>
 				<ToolTip

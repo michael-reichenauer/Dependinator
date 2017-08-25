@@ -79,7 +79,7 @@ namespace Dependinator.ModelViewing.Private
 				{
 					List<Link> obsoleteLinks = node.SourceLinks.Where(link => link.Stamp != stamp).ToList();
 					linkService.RemoveObsoleteLinks(obsoleteLinks);
-				}				
+				}
 			}
 
 			t.Log($"{nodes.Count} nodes");
@@ -93,8 +93,27 @@ namespace Dependinator.ModelViewing.Private
 			model.RemoveAll();
 		}
 
+
+		public void ResetLayout()
+		{
+			Timing t = Timing.Start();
+			IReadOnlyList<Node> nodes = model.Root.Descendents().ToList();
+
+			foreach (Node node in nodes)
+			{
+				nodeViewModelService.ResetLayout(node.ViewModel);
+				
+				List<Link> links = node.SourceLinks;
+				linkService.ResetLayout(links);			
+			}
+
+			t.Log($"{nodes.Count} nodes");
+
+		}
+
+
 		private void AddNode(Node node, Node parentNode)
-		{		
+		{
 			model.Add(node);
 			parentNode.AddChild(node);
 
@@ -112,7 +131,7 @@ namespace Dependinator.ModelViewing.Private
 			RemoveNodeFromParentCanvas(node);
 
 			if (node.Parent?.NodeType == NodeType.NameSpace
-			    && !node.Children.Any())
+					&& !node.Children.Any())
 			{
 				// Parent namespace is empty, lets remove it
 				RemoveNode(node.Parent);

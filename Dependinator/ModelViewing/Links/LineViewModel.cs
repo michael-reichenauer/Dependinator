@@ -151,7 +151,7 @@ namespace Dependinator.ModelViewing.Links
 		public override string ToString() => $"{line}";
 
 
-		private void UpdateLine()
+		public void UpdateLine()
 		{
 			if (!CanShow)
 			{
@@ -161,6 +161,7 @@ namespace Dependinator.ModelViewing.Links
 			lineViewModelService.UpdateLineEndPoints(line);
 			lineViewModelService.UpdateLineBounds(line);
 		}
+
 
 
 		private void TrackSourceOrTargetChanges()

@@ -28,7 +28,7 @@
 		<!-- Title -->
 		<Border
 			BorderBrush="{Binding RectangleBrush}"
-			BorderThickness="0 0 0 0.3"
+			BorderThickness="0 0 0 0.5"
 			Height="20"
 			Background="Transparent"
 			VerticalAlignment="Top"
@@ -43,7 +43,8 @@
 				FontSize="{Binding FontSize}"
 				HorizontalAlignment="Left"
 				VerticalAlignment="Top"
-				UseLayoutRounding="True" />
+				SnapsToDevicePixels="True"
+				RenderOptions.ClearTypeHint="Enabled"/>
 
 			<Border.ToolTip>
 				<ToolTip

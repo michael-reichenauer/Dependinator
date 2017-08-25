@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
@@ -66,6 +67,28 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			Size size = DefaultSize;
 
 			int siblingCount = nodeViewMode.Node.Parent.Children.Count - 1;
+
+			double x = (siblingCount % rowLength) * (size.Width + padding) + xMargin;
+			double y = (siblingCount / rowLength) * (size.Height + padding) + yMargin;
+			Point location = new Point(x, y);
+
+			Rect bounds = new Rect(location, size);
+
+			nodeViewMode.ItemBounds = bounds;
+		}
+
+		public void ResetLayout(NodeViewModel nodeViewMode)
+		{
+			int rowLength = 6;
+
+			int padding = 20;
+
+			double xMargin = 10;
+			double yMargin = 100;
+
+			Size size = DefaultSize;
+
+			int siblingCount = nodeViewMode.Node.Parent.Children.IndexOf(nodeViewMode.Node);
 
 			double x = (siblingCount % rowLength) * (size.Width + padding) + xMargin;
 			double y = (siblingCount / rowLength) * (size.Height + padding) + yMargin;

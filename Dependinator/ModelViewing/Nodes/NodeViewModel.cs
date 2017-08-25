@@ -47,7 +47,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public void UpdateToolTip() => Notify(nameof(ToolTip));
 
-		public int FontSize => ((int)(15 * ItemScale)).MM(8, 13);
+		public int FontSize => ((int)(15 * ItemScale)).MM(9, 13);
 
 		public bool IsMouseOver { get => Get(); private set => Set(value); }
 		public bool IsShowPoints { get => Get(); private set => Set(value); }
@@ -168,7 +168,7 @@ namespace Dependinator.ModelViewing.Nodes
 			NotifyAll();
 		}
 
-		private int GetPointIndex(Node node, Point point)
+		private static int GetPointIndex(Node node, Point point)
 		{
 			int dist = 10;
 			NodeViewModel viewModel = node.ViewModel;
@@ -214,21 +214,19 @@ namespace Dependinator.ModelViewing.Nodes
 			if (index == 0)
 			{
 				Point newLoc = new Point(point.X, point.Y);
-				viewModel.ItemBounds = new Rect(
-					newLoc,
-					new Size(
-						(loc.X - point.X) + viewModel.ItemWidth,
-						(loc.Y - point.Y) + viewModel.ItemHeight));
+				double xd = loc.X - newLoc.X;
+				double yd = loc.Y - newLoc.Y;
+
+				Size newSiz = new Size(xd + size.Width, yd + size.Height);
+				viewModel.ItemBounds = new Rect(newLoc, newSiz);
 			}
-
-
-			if (index == 1)
+			else if (index == 1)
 			{
 				Point newLoc = new Point(point.X - size.Width, point.Y);
-				Vector v = newLoc - loc;
+				double xd = loc.X - newLoc.X;
+				double yd = loc.Y - newLoc.Y;
 
-				Size newSiz = new Size(size.Width, size.Height);
-
+				Size newSiz = new Size(xd + size.Width, yd + size.Height);
 
 				viewModel.ItemBounds = new Rect(newLoc, newSiz);
 			}

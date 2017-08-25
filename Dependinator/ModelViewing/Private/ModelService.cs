@@ -111,6 +111,11 @@ namespace Dependinator.ModelViewing.Private
 				workingFolder.FilePath, items => UpdateDataItems(items, stamp));
 
 			nodeService.RemoveObsoleteNodesAndLinks(stamp);
+
+			if (refreshLayout)
+			{
+				nodeService.ResetLayout();
+			}
 		}
 
 	

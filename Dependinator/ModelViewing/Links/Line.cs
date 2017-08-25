@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
@@ -7,6 +8,10 @@ namespace Dependinator.ModelViewing.Links
 {
 	internal class Line : Equatable<Line>
 	{
+		private static readonly List<Point> DefaultPoints =
+			new List<Point> { new Point(0, 0), new Point(0, 0) };
+
+
 		public Line(Node source, Node target)
 		{
 			Source = source;
@@ -26,7 +31,7 @@ namespace Dependinator.ModelViewing.Links
 
 		public List<Link> Links { get; } = new List<Link>();
 
-		public List<Point> Points { get; } = new List<Point> { new Point(0, 0), new Point(0, 0) };
+		public List<Point> Points { get; private set; } = DefaultPoints.ToList();
 
 		public Point FirstPoint { get => Points[FirstIndex]; set => Points[FirstIndex] = value; }
 		public Point LastPoint { get => Points[LastIndex]; set => Points[LastIndex] = value; }
@@ -42,5 +47,8 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 		public override string ToString() => $"{Source}->{Target}";
+
+
+		public void ResetPoints() => Points = DefaultPoints.ToList();
 	}
 }

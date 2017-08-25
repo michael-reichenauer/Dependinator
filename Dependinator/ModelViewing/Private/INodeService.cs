@@ -7,5 +7,6 @@ namespace Dependinator.ModelViewing.Private
 		void UpdateNode(DataNode dataNode, int id);
 		void RemoveObsoleteNodesAndLinks(int stamp);
 		void RemoveAll();
+		void ResetLayout();
 	}
 }

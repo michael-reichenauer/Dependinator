@@ -34,7 +34,8 @@
 			Background="Transparent" 
 			VerticalAlignment="Top"
 			MouseMove="UIElement_OnMouseMove"
-			UseLayoutRounding="True">
+			UseLayoutRounding="True"
+			RenderOptions.ClearTypeHint="Enabled">
 
 			<TextBlock
 				Height="20"
