@@ -144,6 +144,8 @@ namespace Dependinator
 		{
 			try
 			{
+				// Trying to contact another instance, which has a IpcRemotingService started in the 
+				// MainWindowViewModel
 				string id = MainWindowIpcService.GetId(workingFolder);
 				using (IpcRemotingService ipcRemotingService = new IpcRemotingService())
 				{

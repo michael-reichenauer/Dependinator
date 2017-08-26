@@ -24,7 +24,7 @@ namespace Dependinator.MainWindowViews
 
 		private readonly JumpListService jumpListService = new JumpListService();
 
-		// private IpcRemotingService ipcRemotingService = null;
+		private IpcRemotingService ipcRemotingService = null;
 		private readonly WorkingFolder workingFolder;
 
 		private readonly WindowOwner owner;
@@ -177,26 +177,26 @@ namespace Dependinator.MainWindowViews
 		{
 			await Task.Yield();
 
-			//if (ipcRemotingService != null)
-			//{
-			//	ipcRemotingService.Dispose();
-			//}
+			if (ipcRemotingService != null)
+			{
+				ipcRemotingService.Dispose();
+			}
 
-			//ipcRemotingService = new IpcRemotingService();
+			ipcRemotingService = new IpcRemotingService();
 
-			//string id = MainWindowIpcService.GetId(workingFolder);
-			//if (ipcRemotingService.TryCreateServer(id))
-			//{
-			//	ipcRemotingService.PublishService(mainWindowIpcService);
-			//}
-			//else
-			//{
-			//	// Another Dependinator instance for that working folder is already running, activate that.
-			//	ipcRemotingService.CallService<MainWindowIpcService>(id, service => service.Activate(null));
-			//	Application.Current.Shutdown(0);
-			//	ipcRemotingService.Dispose();
-			//	return;
-			//}
+			string id = MainWindowIpcService.GetId(workingFolder);
+			if (ipcRemotingService.TryCreateServer(id))
+			{
+				ipcRemotingService.PublishService(mainWindowIpcService);
+			}
+			else
+			{
+				// Another Dependinator instance for that working folder is already running, activate that.
+				ipcRemotingService.CallService<MainWindowIpcService>(id, service => service.Activate(null));
+				Application.Current.Shutdown(0);
+				ipcRemotingService.Dispose();
+				return;
+			}
 
 			jumpListService.Add(workingFolder.FilePath);
 
