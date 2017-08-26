@@ -36,6 +36,7 @@ namespace Dependinator
 			dependencyInjection.RegisterDependencyInjectionTypes();
 
 			// Start application
+			Settings.SetWorkingFolder(dependencyInjection.Resolve<WorkingFolder>());
 			App application = dependencyInjection.Resolve<App>();
 			ExceptionHandling.HandleDispatcherUnhandledException();  // activate after ui is started
 			application.InitializeComponent();

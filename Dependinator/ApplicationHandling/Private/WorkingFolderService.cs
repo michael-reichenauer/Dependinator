@@ -32,7 +32,7 @@ namespace Dependinator.ApplicationHandling.Private
 				if (workingFolder == null)
 				{
 					workingFolder = GetInitialWorkingFolder();
-					StoreLasteUsedFolder();
+					StoreLastedUsedFolder();
 				}
 
 				return workingFolder;
@@ -49,7 +49,7 @@ namespace Dependinator.ApplicationHandling.Private
 				if (workingFolder != rootFolder)
 				{
 					workingFolder = rootFolder;
-					StoreLasteUsedFolder();
+					StoreLastedUsedFolder();
 					OnChange?.Invoke(this, EventArgs.Empty);
 				}
 
@@ -64,7 +64,7 @@ namespace Dependinator.ApplicationHandling.Private
 
 
 
-		private void StoreLasteUsedFolder()
+		private void StoreLastedUsedFolder()
 		{
 			if (IsValid)
 			{
@@ -100,12 +100,12 @@ namespace Dependinator.ApplicationHandling.Private
 			//	folderPath = GetWorkingFolderPath(Assembly.GetEntryAssembly().Location);
 			//}
 
-			//if (!ProgramPaths.IsInstalledInstance())
-			//{
-			//	folderPath = GetWorkingFolderPath(ProgramPaths.GetCurrentInstancePath());
-			//	IsValid = folderPath.IsOk;
-			//	return folderPath.IsOk ? folderPath.Value : commandLine.FilePath;
-			//}
+			if (!ProgramPaths.IsInstalledInstance())
+			{
+				folderPath = GetWorkingFolderPath(ProgramPaths.GetCurrentInstancePath());
+				IsValid = folderPath.IsOk;
+				return folderPath.IsOk ? folderPath.Value : commandLine.FilePath;
+			}
 
 
 			folderPath = GetWorkingFolderPath("Default");
@@ -113,7 +113,7 @@ namespace Dependinator.ApplicationHandling.Private
 			IsValid = folderPath.IsOk;
 			if (folderPath.IsOk)
 			{
-				FilePath = Settings.GetWorkFolderSetting(folderPath.Value).FilePath;
+				FilePath = Settings.Get<WorkFolderSettings>().FilePath;
 				return folderPath.Value;
 			}
 
@@ -141,17 +141,17 @@ namespace Dependinator.ApplicationHandling.Private
 				return Error.From("No valid file");
 			}
 
-			string workingFolder = ProgramPaths.GetWorkingFolderPath(path);
+			string folderPath = ProgramPaths.GetWorkingFolderPath(path);
 
-			if (0 != string.Compare(path, workingFolder, StringComparison.OrdinalIgnoreCase))
+			if (0 != Txt.CompareIc(path, workingFolder))
 			{
-				Settings.EditWorkingFolderSettings(workingFolder, settings => settings.FilePath = path);
+				Settings.Edit<WorkFolderSettings>(folderPath, settings => settings.FilePath = path);
 
 				FilePath = path;
 			}
 
-			FilePath = Settings.GetWorkFolderSetting(workingFolder).FilePath;
-			return workingFolder;
+			FilePath = Settings.Get<WorkFolderSettings>(folderPath).FilePath;
+			return folderPath;
 		}
 
 

@@ -117,17 +117,17 @@ namespace Dependinator.MainWindowViews
 
 		private void StoreWindowSettings()
 		{
-			Settings.EditWorkingFolderSettings(workingFolder, s =>
+			Settings.Edit<WorkFolderSettings>(settings =>
 			{
-				s.WindowBounds = new Rect(Top, Left, Width, Height);
-				s.IsMaximized = WindowState == WindowState.Maximized;
+				settings.WindowBounds = new Rect(Top, Left, Width, Height);
+				settings.IsMaximized = WindowState == WindowState.Maximized;
 			});
 		}
 
 
 		private void RestoreWindowSettings()
 		{
-			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
+			WorkFolderSettings settings = Settings.Get<WorkFolderSettings>();
 
 			Rectangle rect = new Rectangle(
 				(int)settings.WindowBounds.X, 

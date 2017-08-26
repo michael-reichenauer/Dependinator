@@ -13,7 +13,6 @@ namespace Dependinator.Common.ThemeHandling
 	[SingleInstance]
 	internal class ThemeService : IThemeService
 	{	
-		private readonly WorkingFolder workingFolder;
 		private readonly Dictionary<string, Brush> customBranchBrushes = new Dictionary<string, Brush>();
 
 		private int currentIndex = 0;
@@ -22,7 +21,6 @@ namespace Dependinator.Common.ThemeHandling
 
 		public ThemeService(WorkingFolder workingFolder)
 		{
-			this.workingFolder = workingFolder;
 
 			Options options = Settings.Get<Options>();
 
@@ -80,9 +78,7 @@ namespace Dependinator.Common.ThemeHandling
 			Brush brush = currentTheme.brushes[newIndex];		
 			string brushHex = Converter.HexFromBrush(brush);
 
-			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
-			settings.BranchColors[name] = brushHex;
-			Settings.SetWorkFolderSetting(workingFolder, settings);
+			Settings.Edit<WorkFolderSettings>(settings => settings.BranchColors[name] = brushHex);
 
 			LoadCustomBranchColors();
 
@@ -169,7 +165,7 @@ namespace Dependinator.Common.ThemeHandling
 		private void LoadCustomBranchColors()
 		{
 			customBranchBrushes.Clear();
-			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
+			WorkFolderSettings settings = Settings.Get<WorkFolderSettings>();
 
 			foreach (var pair in settings.BranchColors)
 			{

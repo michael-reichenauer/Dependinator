@@ -4,10 +4,10 @@ namespace System
 {
 	internal static class Txt
 	{
-		public static int CompareTxt(string strA, string strB) =>
+		public static int Compare(string strA, string strB) =>
 			string.Compare(strA, strB, StringComparison.Ordinal);
 
-		public static int CompareTxtIc(string strA, string strB) =>
+		public static int CompareIc(string strA, string strB) =>
 			string.Compare(strA, strB, StringComparison.OrdinalIgnoreCase);
 
 		public static int IndexOfTxt(this string text, string value) =>

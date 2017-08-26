@@ -67,7 +67,7 @@ namespace Dependinator.ApplicationHandling.SettingsHandling
 		{
 			string runningPath = GetCurrentInstancePath();
 			string installedPath = GetInstallFilePath();
-			return 0 == Txt.CompareTxtIc(runningPath, installedPath);
+			return 0 == Txt.CompareIc(runningPath, installedPath);
 		}
 
 		public static string GetSettingPath()
@@ -250,8 +250,7 @@ namespace Dependinator.ApplicationHandling.SettingsHandling
 			string directoryName = Path.GetDirectoryName(path);
 			string workingFolders = GetWorkingFoldersRoot();
 
-			if (0 == string.Compare(directoryName, workingFolders,
-				    StringComparison.InvariantCultureIgnoreCase))
+			if (0 == Txt.CompareIc(directoryName, workingFolders))
 			{
 				// the path is already a working folder path
 				return path;

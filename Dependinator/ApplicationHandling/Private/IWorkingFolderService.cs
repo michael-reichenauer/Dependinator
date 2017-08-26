@@ -1,7 +1,6 @@
 ﻿using System;
 
-
-namespace Dependinator.ApplicationHandling
+namespace Dependinator.ApplicationHandling.Private
 {
 	internal interface IWorkingFolderService
 	{

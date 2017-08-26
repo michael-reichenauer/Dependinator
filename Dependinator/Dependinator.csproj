@@ -171,7 +171,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="ApplicationHandling\IWorkingFolderService.cs" />
+    <Compile Include="ApplicationHandling\Private\IWorkingFolderService.cs" />
     <Compile Include="ApplicationHandling\Private\WorkingFolderService.cs" />
     <Compile Include="ApplicationHandling\WorkingFolder.cs" />
     <Compile Include="Common\ThemeHandling\BranchColorsOption.cs" />

@@ -99,21 +99,19 @@ namespace Dependinator.ModelViewing.Private
 
 		private void StoreViewSettings()
 		{
-			Settings.EditWorkingFolderSettings(workingFolder,
-				settings =>
+			Settings.Edit<WorkFolderSettings>(settings =>
 				{
 					settings.Scale = modelService.Root.ItemsCanvas.Scale;
-					settings.X = modelService.Root.ItemsCanvas.Offset.X;
-					settings.Y = modelService.Root.ItemsCanvas.Offset.Y;
+					settings.Offset = modelService.Root.ItemsCanvas.Offset;
 				});
 		}
 
 
 		private void RestoreViewSettings()
 		{
-			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
+			WorkFolderSettings settings = Settings.Get<WorkFolderSettings>();
 			modelService.Root.ItemsCanvas.Scale = settings.Scale;
-			modelService.Root.ItemsCanvas.Offset = new Point(settings.X, settings.Y);
+			modelService.Root.ItemsCanvas.Offset = settings.Offset;
 		}
 	}
 }
