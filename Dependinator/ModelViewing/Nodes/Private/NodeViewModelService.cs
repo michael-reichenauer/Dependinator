@@ -132,6 +132,13 @@ namespace Dependinator.ModelViewing.Nodes.Private
 				offset = new Vector((location.X - newLocation.X) * scale, 0);
 			}
 
+			double dist = 15 / scale;
+
+			if (size.Width + resize.X < dist || size.Height + resize.Y < dist)
+			{
+				return;
+			}
+
 			Size newSiz = new Size(size.Width + resize.X, size.Height + resize.Y);
 			viewModel.ItemBounds = new Rect(newLocation, newSiz);
 			viewModel.ItemsViewModel?.MoveCanvas(offset);
