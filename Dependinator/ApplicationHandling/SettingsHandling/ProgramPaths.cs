@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using Dependinator.ApplicationHandling.Installation;
 using Dependinator.Utils;
 
 
@@ -44,8 +45,8 @@ namespace Dependinator.ApplicationHandling.SettingsHandling
 			}
 		}
 
-
-
+		public static string GetId(string workingFolder) =>
+			Installer.ProductGuid + Uri.EscapeDataString(workingFolder);
 
 
 		public static string RemoteSetupPath
@@ -62,6 +63,12 @@ namespace Dependinator.ApplicationHandling.SettingsHandling
 			}
 		}
 
+		public static bool IsInstalledInstance()
+		{
+			string runningPath = GetCurrentInstancePath();
+			string installedPath = GetInstallFilePath();
+			return 0 == Txt.CompareTxtIc(runningPath, installedPath);
+		}
 
 		public static string GetSettingPath()
 		{

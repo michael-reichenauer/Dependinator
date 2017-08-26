@@ -3,6 +3,15 @@ namespace System.Windows.Threading
 {
 	internal static class DispatcherExtensions
 	{
+		public static void BeginInvoke(
+			this Dispatcher dispatcher, Action action) =>
+				dispatcher.BeginInvoke(DispatcherPriority.Normal, action);
+
+		public static void InvokeBackground(
+			this Dispatcher dispatcher, Action action) =>
+			dispatcher.Invoke(DispatcherPriority.Background, action);
+
+
 		public static void InvokeBackground<T1>(
 			this Dispatcher dispatcher, Action<T1> action, T1 arg1) =>
 				dispatcher.Invoke(DispatcherPriority.Background, action, arg1);

@@ -18,22 +18,21 @@ namespace Dependinator.ApplicationHandling
 
 		public event EventHandler OnChange
 		{
-			add { workingFolderService.OnChange += value; }
-			remove { workingFolderService.OnChange -= value; }
+			add => workingFolderService.OnChange += value;
+			remove => workingFolderService.OnChange -= value;
 		}
-	
 
-		public string Path => workingFolderService.Path;
 
 		public string FilePath => workingFolderService.FilePath;
 
 		public bool IsValid => workingFolderService.IsValid;
 
-		public bool HasValue => Path != null;
+		public bool HasValue => workingFolderService.Path != null;
 
 		public string Name => HasValue ? System.IO.Path.GetFileNameWithoutExtension(FilePath) : null;
 
-		public static implicit operator string(WorkingFolder workingFolder) => workingFolder.Path;
+		public static implicit operator string(WorkingFolder workingFolder) => 
+			workingFolder.workingFolderService.Path;
 
 
 		public bool TrySetPath(string path)
@@ -42,6 +41,6 @@ namespace Dependinator.ApplicationHandling
 		}
 
 
-		public override string ToString() => Path;
+		public override string ToString() => workingFolderService.Path;
 	}
 }

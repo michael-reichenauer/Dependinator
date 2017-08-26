@@ -8,9 +8,7 @@ namespace Dependinator.MainWindowViews
 {
 	internal class MainWindowIpcService : IpcService
 	{
-		public static string GetId(string workingFolder) =>
-			Installer.ProductGuid + Uri.EscapeDataString(workingFolder);
-
+		
 
 		public void Activate(string[] args)
 		{

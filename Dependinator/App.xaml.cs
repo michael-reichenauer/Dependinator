@@ -46,13 +46,6 @@ namespace Dependinator
 		}
 
 
-		protected override void OnExit(ExitEventArgs e)
-		{
-			Log.Usage("Exit program");
-			base.OnExit(e);
-		}
-
-
 		protected override void OnStartup(StartupEventArgs e)
 		{
 			base.OnStartup(e);
@@ -83,6 +76,13 @@ namespace Dependinator
 
 			Log.Usage($"Start version: {GetProgramVersion()}");
 			Start();
+		}
+
+
+		protected override void OnExit(ExitEventArgs e)
+		{
+			Log.Usage("Exit program");
+			base.OnExit(e);
 		}
 
 
@@ -146,7 +146,7 @@ namespace Dependinator
 			{
 				// Trying to contact another instance, which has a IpcRemotingService started in the 
 				// MainWindowViewModel
-				string id = MainWindowIpcService.GetId(workingFolder);
+				string id = ProgramPaths.GetId(workingFolder);
 				using (IpcRemotingService ipcRemotingService = new IpcRemotingService())
 				{
 					if (!ipcRemotingService.TryCreateServer(id))

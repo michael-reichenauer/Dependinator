@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
 using Dependinator.ApplicationHandling.SettingsHandling;
 using Dependinator.Utils;
 
@@ -15,8 +14,7 @@ namespace Dependinator.ApplicationHandling.Private
 		private string workingFolder;
 
 
-		public WorkingFolderService(
-			ICommandLine commandLine)
+		public WorkingFolderService(ICommandLine commandLine)
 		{
 			this.commandLine = commandLine;
 		}
@@ -83,7 +81,7 @@ namespace Dependinator.ApplicationHandling.Private
 		// * Starting with parameters "/test"
 		private string GetInitialWorkingFolder()
 		{
-			R<string> folderPath;
+			R<string> folderPath = R<string>.NoValue;
 			if (commandLine.HasFile)
 			{
 				// Call from e.g. Windows Explorer file context menu
@@ -92,16 +90,25 @@ namespace Dependinator.ApplicationHandling.Private
 				return folderPath.IsOk ? folderPath.Value : commandLine.FilePath;
 			}
 
-			string lastUsedFolder = GetLastUsedWorkingFolder();
-			if (!string.IsNullOrWhiteSpace(lastUsedFolder))
-			{
-				folderPath = lastUsedFolder;
-			}
-			else
-			{
-				folderPath = GetWorkingFolderPath(Assembly.GetEntryAssembly().Location);
-			}
+			//string lastUsedFolder = GetLastUsedWorkingFolder();
+			//if (!string.IsNullOrWhiteSpace(lastUsedFolder))
+			//{
+			//	folderPath = lastUsedFolder;
+			//}
+			//else
+			//{
+			//	folderPath = GetWorkingFolderPath(Assembly.GetEntryAssembly().Location);
+			//}
 
+			//if (!ProgramPaths.IsInstalledInstance())
+			//{
+			//	folderPath = GetWorkingFolderPath(ProgramPaths.GetCurrentInstancePath());
+			//	IsValid = folderPath.IsOk;
+			//	return folderPath.IsOk ? folderPath.Value : commandLine.FilePath;
+			//}
+
+
+			folderPath = GetWorkingFolderPath("Default");
 
 			IsValid = folderPath.IsOk;
 			if (folderPath.IsOk)
@@ -110,7 +117,8 @@ namespace Dependinator.ApplicationHandling.Private
 				return folderPath.Value;
 			}
 
-			return GetWorkingFolderPath(Assembly.GetEntryAssembly().Location).Value;
+			IsValid = false;
+			return GetMyDocumentsPath();
 		}
 
 
@@ -118,6 +126,12 @@ namespace Dependinator.ApplicationHandling.Private
 		{
 			return Settings.Get<ProgramSettings>().LastUsedWorkingFolder;
 		}
+
+		private static string GetMyDocumentsPath()
+		{
+			return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+		}
+
 
 
 		public R<string> GetWorkingFolderPath(string path)

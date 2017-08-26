@@ -104,6 +104,8 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\MessageDialogs\IMessage.cs" />
+    <Compile Include="Common\MessageDialogs\IMessageService.cs" />
     <Compile Include="Modeling\DataItem.cs" />
     <Compile Include="Modeling\DataLink.cs" />
     <Compile Include="Modeling\IModelNotifications.cs" />

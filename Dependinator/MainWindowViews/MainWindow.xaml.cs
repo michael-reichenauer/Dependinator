@@ -60,16 +60,11 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		public void SetRepositoryViewFocus()
-		{
-			ModelView.ItemsView.ItemsListBox.Focus();
-		}
-
 
 		private async void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
 		{
 			await viewModel.FirstLoadAsync();
-			SetRepositoryViewFocus();
+
 			StartRemoteCheck();
 		}
 

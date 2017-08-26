@@ -26,12 +26,6 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		public void SetRepositoryViewFocus()
-		{
-			mainWindow.Value.SetRepositoryViewFocus();
-		}
-
-
 		public void SetMainWindowFocus()
 		{
 			mainWindow.Value.Focus();

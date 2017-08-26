@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Threading;
 using Dependinator.ApplicationHandling;
 using Dependinator.ApplicationHandling.SettingsHandling;
 using Dependinator.Common;
@@ -141,16 +142,21 @@ namespace Dependinator.MainWindowViews
 			}
 			else
 			{
-				isLoaded = false;
-
-				if (!TryOpenFile())
-				{
-					Application.Current.Shutdown(0);
-					return;
-				}
-
-				await SetWorkingFolderAsync();
+				Dispatcher.CurrentDispatcher.BeginInvoke(() => OpenFileAsync().RunInBackground());
 			}
+
+			//else
+			//{
+			//	isLoaded = false;
+
+			//	if (!TryOpenFile())
+			//	{
+			//		Application.Current.Shutdown(0);
+			//		return;
+			//	}
+
+			//	await SetWorkingFolderAsync();
+			//}
 		}
 
 
@@ -184,7 +190,7 @@ namespace Dependinator.MainWindowViews
 
 			ipcRemotingService = new IpcRemotingService();
 
-			string id = MainWindowIpcService.GetId(workingFolder);
+			string id = ProgramPaths.GetId(workingFolder);
 			if (ipcRemotingService.TryCreateServer(id))
 			{
 				ipcRemotingService.PublishService(mainWindowIpcService);
@@ -245,7 +251,6 @@ namespace Dependinator.MainWindowViews
 			if (!string.IsNullOrWhiteSpace(SearchBox))
 			{
 				SearchBox = "";
-				mainWindowService.SetRepositoryViewFocus();
 			}
 			else
 			{
@@ -350,7 +355,6 @@ namespace Dependinator.MainWindowViews
 			if (!string.IsNullOrWhiteSpace(SearchBox))
 			{
 				SearchBox = "";
-				mainWindowService.SetRepositoryViewFocus();
 			}
 		}
 

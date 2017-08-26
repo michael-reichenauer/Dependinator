@@ -37,12 +37,11 @@ namespace Dependinator
 
 			// Start application
 			App application = dependencyInjection.Resolve<App>();
-			ExceptionHandling.HandleDispatcherUnhandledException();
+			ExceptionHandling.HandleDispatcherUnhandledException();  // activate after ui is started
 			application.InitializeComponent();
 			application.Run();
 		}
 
-		
 
 		private static void ActivateExternalDependenciesResolver()
 		{
@@ -61,11 +60,9 @@ namespace Dependinator
 		private static string GetStartLineText()
 		{
 			string version = GetProgramVersion();
+			string cmd = string.Join("','", Environment.GetCommandLineArgs());
 
-			string[] args = Environment.GetCommandLineArgs();
-			string argsText = string.Join("','", args);
-
-			return $"Start version: {version}, args: '{argsText}'";
+			return $"Start version: {version}, cmd: '{cmd}'";
 		}
 
 
@@ -81,7 +78,7 @@ namespace Dependinator
 		{
 			ExceptionHandling.ExceptionOccurred += (s, e) => Restart();
 			ExceptionHandling.ExceptionOnStartupOccurred += (s, e) =>
-				Message.ShowError("Sorry, but an unexpected error just occurred", "Dependinator");
+				Message.ShowError("Sorry, but an unexpected error just occurred");
 			ExceptionHandling.HandleUnhandledException();
 		}
 
