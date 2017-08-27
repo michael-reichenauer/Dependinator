@@ -11,9 +11,9 @@ using ProtoSerializer = ProtoBuf.Serializer;
 
 namespace Dependinator.Utils
 {
-	public static class Serializer
+	public static class ProtoBufSerializer
 	{
-		static Serializer()
+		static ProtoBufSerializer()
 		{
 			RegisterDataContractTypes();
 		}
