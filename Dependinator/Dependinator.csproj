@@ -256,8 +256,8 @@
     <Compile Include="Utils\DependencyInjection.cs" />
     <Compile Include="Common\WorkFolders\Private\FolderMonitorService.cs" />
     <Compile Include="MainWindowViews\IMainWindowService.cs" />
-    <Compile Include="MainWindowViews\MainWindowIpcService.cs" />
-    <Compile Include="MainWindowViews\MainWindowService.cs" />
+    <Compile Include="MainWindowViews\Private\MainWindowIpcService.cs" />
+    <Compile Include="MainWindowViews\Private\MainWindowService.cs" />
     <Compile Include="MainWindowViews\WindowOwner.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Common\Git\CredentialHandler.cs" />

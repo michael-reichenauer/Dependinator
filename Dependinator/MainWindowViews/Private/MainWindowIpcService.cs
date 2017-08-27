@@ -1,14 +1,10 @@
-﻿using System;
-using System.Windows;
+﻿using System.Windows;
 using Dependinator.Utils;
 
-
-namespace Dependinator.MainWindowViews
+namespace Dependinator.MainWindowViews.Private
 {
 	internal class MainWindowIpcService : IpcService
 	{
-		
-
 		public void Activate(string[] args)
 		{
 			Application.Current.Dispatcher.InvokeAsync(() =>
@@ -17,7 +13,7 @@ namespace Dependinator.MainWindowViews
 				Application.Current.MainWindow.Activate();
 				Application.Current.MainWindow.WindowState = WindowState.Normal;
 
-				Log.Usage("Activated");				
+				Log.Usage("Activated");
 			});
 		}
 	}

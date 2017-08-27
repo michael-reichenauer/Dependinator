@@ -10,6 +10,7 @@ using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Common.WorkFolders;
 using Dependinator.Common.WorkFolders.Private;
+using Dependinator.MainWindowViews.Private;
 using Dependinator.ModelViewing;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;

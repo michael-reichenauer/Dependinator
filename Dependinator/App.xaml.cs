@@ -12,6 +12,7 @@ using Dependinator.Common.SettingsHandling;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.Common.WorkFolders;
 using Dependinator.MainWindowViews;
+using Dependinator.MainWindowViews.Private;
 using Dependinator.Utils;
 
 
