@@ -36,7 +36,7 @@ namespace Dependinator.Common.Private
 		private bool IsSetupFile()
 		{
 			return Path.GetFileNameWithoutExtension(
-				Assembly.GetEntryAssembly().Location).StartsWith("DependinatorSetup");
+				Assembly.GetEntryAssembly().Location).StartsWith($"{Product.Name}Setup");
 		}
 	}
 }

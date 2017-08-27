@@ -54,7 +54,7 @@ namespace Dependinator.Common.MessageDialogs
 			MessageBoxButton button,
 			MessageBoxImage image)
 		{
-			title = title ?? "Dependinator";
+			title = title ?? Product.Name;
 
 			if (Application.Current?.MainWindow == null)
 			{

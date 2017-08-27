@@ -4,7 +4,7 @@ namespace Dependinator.Common.SettingsHandling
 {
 	public class Options
 	{
-		public string comment => "Program options. You may need to restart Dependinator after editing this file.";
+		public string comment => "Program options. You may need to restart after editing this file.";
 
 		public bool DisableAutoUpdate { get; set; } = false;
 

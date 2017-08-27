@@ -106,6 +106,7 @@
   <ItemGroup>
     <Compile Include="Common\MessageDialogs\IMessage.cs" />
     <Compile Include="Common\MessageDialogs\IMessageService.cs" />
+    <Compile Include="Product.cs" />
     <Compile Include="MainWindowViews\SearchFilter.xaml.cs">
       <DependentUpon>SearchFilter.xaml</DependentUpon>
     </Compile>
@@ -121,6 +122,7 @@
       <DependentUpon>TitleView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Private\Convert.cs" />
+    <Compile Include="Utils\AssemblyResolver.cs" />
     <Compile Include="Utils\UI\BrushExtensions.cs" />
     <Compile Include="Utils\UI\DispatcherExtensions.cs" />
     <Compile Include="Utils\UI\GeometryService.cs" />
@@ -263,8 +265,6 @@
     <Compile Include="MainWindowViews\Private\MainWindowService.cs" />
     <Compile Include="MainWindowViews\WindowOwner.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="Common\Git\CredentialHandler.cs" />
-    <Compile Include="Common\AssemblyResolver.cs" />
     <Compile Include="Utils\StackTraceExtensions.cs" />
     <Compile Include="Utils\StopParameter.cs" />
     <Compile Include="Utils\Throttler.cs" />

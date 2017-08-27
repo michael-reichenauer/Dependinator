@@ -11,17 +11,18 @@ namespace Dependinator.Common.Installation.Private
 	internal class Installer : IInstaller
 	{
 		private readonly ICommandLine commandLine;
-		public static readonly string ProductGuid = "ee48e8b2-701f-4881-815f-dc7fd8139061";
+		private static readonly string ProductNameLowercase = Product.Name.ToLowerInvariant();
+
 
 		private static readonly string UninstallSubKey =
-			$"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{{{ProductGuid}}}_is1";
+			$"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{{{Product.Guid}}}_is1";
 		private static readonly string UninstallRegKey = "HKEY_CURRENT_USER\\" + UninstallSubKey;
 		private static readonly string subFolderContextMenuPath =
-			"Software\\Classes\\Folder\\shell\\dependinator";
+			$"Software\\Classes\\Folder\\shell\\{ProductNameLowercase}";
 		private static readonly string subdllContextMenuPath =
-			"Software\\Classes\\*\\shell\\dependinator";
+			$"Software\\Classes\\*\\shell\\{ProductNameLowercase}";
 		private static readonly string subDirectoryBackgroundContextMenuPath =
-			"Software\\Classes\\Directory\\Background\\shell\\dependinator";
+			$"Software\\Classes\\Directory\\Background\\shell\\{ProductNameLowercase}";
 		private static readonly string folderContextMenuPath =
 			"HKEY_CURRENT_USER\\" + subFolderContextMenuPath;
 		private static readonly string dllContextMenuPath =
@@ -34,7 +35,7 @@ namespace Dependinator.Common.Installation.Private
 			dllContextMenuPath + "\\command";
 		private static readonly string directoryCommandContextMenuPath =
 			directoryContextMenuPath + "\\command";
-		private static readonly string SetupTitle = "Dependinator - Setup";
+		private static readonly string SetupTitle = $"{Product.Name} - Setup";
 
 
 		private readonly ICmd cmd;
@@ -88,12 +89,12 @@ namespace Dependinator.Common.Installation.Private
 			Log.Usage("Install normal.");
 
 			if (!Message.ShowAskOkCancel(
-				"Welcome to the Dependinator setup.\n\n" +
+				$"Welcome to the {Product.Name} setup.\n\n" +
 				" This will:\n" +
-				" - Add a Dependinator shortcut in the Start Menu.\n" +
-				" - Add a 'Dependinator' context menu item in Windows File Explorer.\n" +
-				" - Make Dependinator command available in Command Prompt window.\n\n" +
-				"Click OK to install Dependinator or Cancel to exit Setup.",
+				$" - Add a {Product.Name} shortcut in the Start Menu.\n" +
+				$" - Add a {Product.Name} context menu item in Windows File Explorer.\n" +
+				$" - Make {Product.Name} command available in Command Prompt window.\n\n" +
+				$"Click OK to install {Product.Name} or Cancel to exit Setup.",
 				SetupTitle))
 			{
 				return;
@@ -108,7 +109,7 @@ namespace Dependinator.Common.Installation.Private
 			Log.Usage("Installed normal.");
 
 			Message.ShowInfo(
-				"Setup has finished installing Dependinator.",
+				$"Setup has finished installing {Product.Name}.",
 				SetupTitle);
 
 			StartInstalled();
@@ -128,16 +129,16 @@ namespace Dependinator.Common.Installation.Private
 			while (true)
 			{
 				bool created = false;
-				using (new Mutex(true, ProductGuid, out created))
+				using (new Mutex(true, Product.Guid, out created))
 				{
 					if (created)
 					{
 						return true;
 					}
 
-					Log.Debug("Dependinator instance is already running, needs to be closed.");
+					Log.Debug($"{Product.Name} instance is already running, needs to be closed.");
 					if (!Message.ShowAskOkCancel(
-						"Please close all instances of Dependinator before continue the installation."))
+						$"Please close all instances of {Product.Name} before continue the installation."))
 					{
 						return false;
 					}
@@ -173,7 +174,7 @@ namespace Dependinator.Common.Installation.Private
 			}
 
 			if (!Message.ShowAskOkCancel(
-				"Do you want to uninstall Dependinator?"))
+				$"Do you want to uninstall {Product.Name}?"))
 			{
 				return;
 			}
@@ -185,7 +186,7 @@ namespace Dependinator.Common.Installation.Private
 
 			UninstallSilent();
 			Log.Usage("Uninstalled normal");
-			Message.ShowInfo("Uninstallation of Dependinator is completed.");
+			Message.ShowInfo($"Uninstallation of {Product.Name} is completed.");
 		}
 
 
@@ -324,7 +325,7 @@ namespace Dependinator.Common.Installation.Private
 			IWshRuntimeLibrary.IWshShortcut shortcut = (IWshRuntimeLibrary.IWshShortcut)
 				shell.CreateShortcut(shortcutLocation);
 
-			shortcut.Description = ProgramPaths.ProgramName;
+			shortcut.Description = Product.Name;
 			shortcut.Arguments = "";
 
 			shortcut.IconLocation = pathToExe;
@@ -388,7 +389,7 @@ namespace Dependinator.Common.Installation.Private
 		{
 			string version = ProgramPaths.GetVersion(path).ToString();
 
-			Registry.SetValue(UninstallRegKey, "DisplayName", ProgramPaths.ProgramName);
+			Registry.SetValue(UninstallRegKey, "DisplayName", Product.Name);
 			Registry.SetValue(UninstallRegKey, "DisplayIcon", path);
 			Registry.SetValue(UninstallRegKey, "Publisher", "Michael Reichenauer");
 			Registry.SetValue(UninstallRegKey, "DisplayVersion", version);
@@ -415,16 +416,16 @@ namespace Dependinator.Common.Installation.Private
 		{
 			string programFilePath = ProgramPaths.GetInstallFilePath();
 
-			Registry.SetValue(folderContextMenuPath, "", ProgramPaths.ProgramName);
+			Registry.SetValue(folderContextMenuPath, "", Product.Name);
 			Registry.SetValue(folderContextMenuPath, "Icon", programFilePath);
 			Registry.SetValue(folderCommandContextMenuPath, "", "\"" + programFilePath + "\" \"/d:%1\"");
 
-			Registry.SetValue(directoryContextMenuPath, "", ProgramPaths.ProgramName);
+			Registry.SetValue(directoryContextMenuPath, "", Product.Name);
 			Registry.SetValue(directoryContextMenuPath, "Icon", programFilePath);
 			Registry.SetValue(
 				directoryCommandContextMenuPath, "", "\"" + programFilePath + "\" \"/d:%V\"");
 
-			Registry.SetValue(dllContextMenuPath, "", ProgramPaths.ProgramName);
+			Registry.SetValue(dllContextMenuPath, "", Product.Name);
 			Registry.SetValue(dllContextMenuPath, "Icon", programFilePath);
 			Registry.SetValue(dllCommandContextMenuPath, "", "\"" + programFilePath + "\" \"%1\"");
 

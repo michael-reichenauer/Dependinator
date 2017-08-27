@@ -119,7 +119,7 @@ namespace Dependinator
 		private void Start()
 		{
 			// This mutex is used by the installer (or uninstaller) to determine if instances are running
-			applicationMutex = new Mutex(true, Installer.ProductGuid);
+			applicationMutex = new Mutex(true, Product.Guid);
 
 			MainWindow = mainWindow.Value;
 			

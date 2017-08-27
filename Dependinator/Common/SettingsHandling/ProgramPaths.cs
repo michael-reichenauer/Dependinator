@@ -2,26 +2,18 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using Dependinator.Common.Installation.Private;
 using Dependinator.Utils;
 
 namespace Dependinator.Common.SettingsHandling
 {
 	internal static class ProgramPaths
 	{
-		private static readonly string remoteSetupFilePath1 =
-			@"D:\My Work\Dependinator\Dependinator\bin\Debug\Dependinator.exe";
-
-		private static readonly string remoteSetupFilePath2 =
-			@"\\storage03\n_axis_releases_sa\Dependinator\DependinatorSetup.exe";
-
 		public static readonly string TempPrefix = "_tmp_";
 
-		public static readonly string ProgramName = "Dependinator";
-		public static readonly string ProgramFileName = ProgramName + ".exe";
-		public static readonly string ProgramLogName = ProgramName + ".log";
-		public static readonly string VersionFileName = ProgramName + ".Version.txt";
-		private static readonly string ProgramShortcutFileName = ProgramName + ".lnk";
+		public static readonly string ProgramFileName = Product.Name + ".exe";
+		public static readonly string ProgramLogName = Product.Name + ".log";
+		public static readonly string VersionFileName = Product.Name + ".Version.txt";
+		private static readonly string ProgramShortcutFileName = Product.Name + ".lnk";
 		private static readonly string SettingsFileName = "settings";
 		private static readonly string LatestETagFileName = "latestetag";
 		private static readonly string LatestInfoFileName = "latestinfo";
@@ -36,7 +28,7 @@ namespace Dependinator.Common.SettingsHandling
 				string programDataPath = Environment.GetFolderPath(
 					Environment.SpecialFolder.CommonApplicationData);
 
-				string dataFolderPath = Path.Combine(programDataPath, ProgramName);
+				string dataFolderPath = Path.Combine(programDataPath, Product.Name);
 
 				EnsureFolderExists(dataFolderPath);
 
@@ -44,23 +36,10 @@ namespace Dependinator.Common.SettingsHandling
 			}
 		}
 
+
 		public static string GetId(string workingFolder) =>
-			Installer.ProductGuid + Uri.EscapeDataString(workingFolder);
+			Product.Guid + Uri.EscapeDataString(workingFolder);
 
-
-		public static string RemoteSetupPath
-		{
-			get
-			{
-				if (File.Exists(remoteSetupFilePath1))
-				{
-					return remoteSetupFilePath1;
-				}
-
-				return remoteSetupFilePath2;
-
-			}
-		}
 
 		public static bool IsInstalledInstance()
 		{
@@ -96,7 +75,7 @@ namespace Dependinator.Common.SettingsHandling
 
 
 		private static string GetWorkingFoldersRoot()
-		{		
+		{
 			string programDataFolderPath = GetProgramDataFolderPath();
 			string path = Path.Combine(programDataFolderPath, workingFoldersRoot);
 
@@ -126,7 +105,7 @@ namespace Dependinator.Common.SettingsHandling
 			string programFolderPath = Environment.GetFolderPath(
 				Environment.SpecialFolder.CommonApplicationData);
 
-			return Path.Combine(programFolderPath, ProgramName);
+			return Path.Combine(programFolderPath, Product.Name);
 		}
 
 
@@ -206,12 +185,12 @@ namespace Dependinator.Common.SettingsHandling
 					}
 
 					return GetVersion(installFilePath);
-				}				
+				}
 			}
 			catch (Exception)
 			{
 				return new Version(0, 0, 0, 0);
-			}			
+			}
 		}
 
 		public static Version GetVersion(string path)

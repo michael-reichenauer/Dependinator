@@ -124,7 +124,7 @@ namespace Dependinator.Common.Installation.Private
 
 		private static async Task<string> DownloadSetupAsync(HttpClient httpClient, LatestInfo latestInfo)
 		{
-			Asset setupFileInfo = latestInfo.assets.First(a => a.name == "DependinatorSetup.exe");
+			Asset setupFileInfo = latestInfo.assets.First(a => a.name == $"{Product.Name}Setup.exe");
 
 			string downloadUrl = setupFileInfo.browser_download_url;
 			Log.Debug($"Downloading {latestInfo.tag_name} from {downloadUrl} ...");

@@ -50,7 +50,7 @@ namespace Dependinator.Utils
 
 		private static int GetSourceFilePrefixLength([CallerFilePath] string sourceFilePath = "")
 		{
-			return sourceFilePath.IndexOf("Dependinator\\Utils\\Log.cs");
+			return sourceFilePath.IndexOfTxtIc($"{Product.Name}\\Utils\\Log.cs");
 		}
 
 
