@@ -2,7 +2,7 @@
 using Dependinator.Common.Private;
 using Dependinator.Utils;
 
-namespace Dependinator.Common
+namespace Dependinator.Common.WorkFolders
 {
 	[SingleInstance]
 	internal class WorkingFolder

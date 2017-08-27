@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using System.Windows.Threading;
 using Dependinator.Common;
 using Dependinator.Common.SettingsHandling;
+using Dependinator.Common.WorkFolders;
 using Dependinator.Utils;
 
 

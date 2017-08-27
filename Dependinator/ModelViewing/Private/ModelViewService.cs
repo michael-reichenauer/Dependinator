@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.Common;
 using Dependinator.Common.SettingsHandling;
+using Dependinator.Common.WorkFolders;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 

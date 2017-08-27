@@ -3,8 +3,7 @@ using System.Windows;
 using System.Windows.Shell;
 using Dependinator.Common.SettingsHandling;
 
-
-namespace Dependinator.Common
+namespace Dependinator.Common.WorkFolders.Private
 {
 	public class JumpListService
 	{

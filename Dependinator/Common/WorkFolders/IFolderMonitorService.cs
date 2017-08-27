@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Dependinator.Common.FolderMonitoring
+namespace Dependinator.Common.WorkFolders
 {
 	internal interface IFolderMonitorService
 	{

@@ -3,7 +3,9 @@ using System.Diagnostics;
 using System.Reflection;
 using Dependinator.Common;
 using Dependinator.Common.MessageDialogs;
+using Dependinator.Common.Private;
 using Dependinator.Common.SettingsHandling;
+using Dependinator.Common.WorkFolders;
 using Dependinator.Utils;
 
 

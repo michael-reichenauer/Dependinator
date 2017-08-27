@@ -8,6 +8,8 @@ using Dependinator.Common;
 using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.SettingsHandling;
+using Dependinator.Common.WorkFolders;
+using Dependinator.Common.WorkFolders.Private;
 using Dependinator.ModelViewing;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;

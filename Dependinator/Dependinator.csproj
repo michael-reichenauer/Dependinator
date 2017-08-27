@@ -173,7 +173,7 @@
     </Page>
     <Compile Include="Common\Private\IWorkingFolderService.cs" />
     <Compile Include="Common\Private\WorkingFolderService.cs" />
-    <Compile Include="Common\WorkingFolder.cs" />
+    <Compile Include="Common\WorkFolders\WorkingFolder.cs" />
     <Compile Include="Common\ThemeHandling\BranchColorsOption.cs" />
     <Compile Include="Common\ThemeHandling\Converter.cs" />
     <Compile Include="Common\ThemeHandling\Theme.cs" />
@@ -182,7 +182,7 @@
     <Compile Include="Common\Git\CommitId.cs" />
     <Compile Include="Common\Git\CommitIds.cs" />
     <Compile Include="Common\Git\CommitSha.cs" />
-    <Compile Include="Common\JumpListService.cs" />
+    <Compile Include="Common\WorkFolders\Private\JumpListService.cs" />
     <Compile Include="Common\MessageDialogs\Message.cs" />
     <Compile Include="Common\MessageDialogs\MessageDialog.xaml.cs">
       <DependentUpon>MessageDialog.xaml</DependentUpon>
@@ -195,8 +195,8 @@
     </Compile>
     <Compile Include="Common\ProgressHandling\ProgressDialogViewModel.cs" />
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
-    <Compile Include="Common\FolderMonitoring\FileEventArgs.cs" />
-    <Compile Include="Common\FolderMonitoring\IFolderMonitorService.cs" />
+    <Compile Include="Common\WorkFolders\FileEventArgs.cs" />
+    <Compile Include="Common\WorkFolders\IFolderMonitorService.cs" />
     <Compile Include="Modeling\Private\Analyzing\Private\Assemblies.cs" />
     <Compile Include="Modeling\Private\Analyzing\Private\ILInstruction.cs" />
     <Compile Include="Modeling\Private\Analyzing\Private\IlToText.cs" />
@@ -253,7 +253,7 @@
     <Compile Include="Utils\MathExtensions.cs" />
     <Compile Include="Utils\AsyncLock.cs" />
     <Compile Include="Utils\DependencyInjection.cs" />
-    <Compile Include="Common\FolderMonitoring\FolderMonitorService.cs" />
+    <Compile Include="Common\WorkFolders\Private\FolderMonitorService.cs" />
     <Compile Include="MainWindowViews\IMainWindowService.cs" />
     <Compile Include="MainWindowViews\MainWindowIpcService.cs" />
     <Compile Include="MainWindowViews\MainWindowService.cs" />
@@ -301,7 +301,7 @@
     <Compile Include="Utils\KeyedList.cs" />
     <Compile Include="Utils\ExceptionHandling.cs" />
     <Compile Include="Utils\FatalExceptionsExtensions.cs" />
-    <Compile Include="Common\CommandLine.cs" />
+    <Compile Include="Common\Private\CommandLine.cs" />
     <Compile Include="Common\ICommandLine.cs" />
     <Compile Include="Utils\AsyncSemaphore.cs" />
     <Compile Include="Utils\EnumerableExtensions.cs" />
@@ -529,7 +529,6 @@
     <EmbeddedResource Include="Dependencies\System.Windows.Interactivity.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="ApplicationHandling\" />
     <Folder Include="Features\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

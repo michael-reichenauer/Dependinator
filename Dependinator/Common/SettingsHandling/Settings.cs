@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using Dependinator.Common.WorkFolders;
 using Dependinator.Utils;
 
 namespace Dependinator.Common.SettingsHandling
