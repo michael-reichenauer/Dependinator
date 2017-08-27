@@ -31,7 +31,7 @@ namespace Dependinator.Common.Private
 		{
 			if (TryGetWorkingFolderPath(path, out string folder))
 			{
-				if (0 == Txt.CompareIc(workingFolder, folder))
+				if (0 != Txt.CompareIc(workingFolder, folder))
 				{
 					workingFolder = folder;
 					FilePath = path;
