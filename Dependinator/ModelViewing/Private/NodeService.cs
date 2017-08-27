@@ -82,6 +82,15 @@ namespace Dependinator.ModelViewing.Private
 				}
 			}
 
+			foreach (Node node in nodes.Reverse())
+			{
+				if (node.NodeType == NodeType.NameSpace && !node.Children.Any())
+				{
+					// Node is an empty namespace, lets remove it
+					RemoveNode(node);
+				}
+			}
+
 			t.Log($"{nodes.Count} nodes");
 		}
 
@@ -129,13 +138,6 @@ namespace Dependinator.ModelViewing.Private
 			node.Parent?.RemoveChild(node);
 
 			RemoveNodeFromParentCanvas(node);
-
-			if (node.Parent?.NodeType == NodeType.NameSpace
-					&& !node.Children.Any())
-			{
-				// Parent namespace is empty, lets remove it
-				RemoveNode(node.Parent);
-			}
 		}
 
 		private void UpdateNodeType(Node node)
