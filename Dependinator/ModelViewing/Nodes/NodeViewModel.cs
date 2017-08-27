@@ -56,7 +56,8 @@ namespace Dependinator.ModelViewing.Nodes
 			private set => Set(value).Notify(nameof(RectangleLineWidth));
 		}
 
-		public bool IsShowPoints { get => Get(); private set => Set(value); }
+		public bool IsShowPoints { get => Get(); private set => Set(value).Notify(nameof(IsShowToolTip)); }
+		public bool IsShowToolTip => !IsShowPoints;
 
 		public ItemsViewModel ItemsViewModel { get; set; }
 

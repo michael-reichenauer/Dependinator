@@ -31,6 +31,7 @@
 
 			<Border.ToolTip>
 				<ToolTip
+					Visibility="{Binding IsShowToolTip, Converter={StaticResource VC}}"
 					Content="{Binding ToolTip}"
 					Placement="Mouse"
 					BorderBrush="{Binding RectangleBrush}"

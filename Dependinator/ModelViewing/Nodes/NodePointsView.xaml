@@ -76,6 +76,17 @@
 			Stretch="Fill"
 			UseLayoutRounding="True"
 			MouseEnter="UIElement_OnMouseEnter"
-			MouseLeave="UIElement_OnMouseLeave" />
+			MouseLeave="UIElement_OnMouseLeave" >
+
+			<Rectangle.ToolTip>
+				<ToolTip
+					Visibility="{Binding IsShowToolTip, Converter={StaticResource VC}}"
+					Content="{Binding ToolTip}"
+					Placement="Mouse"
+					BorderBrush="{Binding RectangleBrush}"
+					BorderThickness="1"
+					Opened="ToolTip_OnOpened" />
+			</Rectangle.ToolTip>
+		</Rectangle>
 	</Grid>
 </UserControl>
