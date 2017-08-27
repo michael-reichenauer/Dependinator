@@ -5,8 +5,7 @@ using System.Reflection;
 using Dependinator.Common.Installation.Private;
 using Dependinator.Utils;
 
-
-namespace Dependinator.ApplicationHandling.SettingsHandling
+namespace Dependinator.Common.SettingsHandling
 {
 	internal static class ProgramPaths
 	{

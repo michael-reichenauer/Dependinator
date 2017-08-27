@@ -3,8 +3,7 @@ using System.IO;
 using System.Reflection;
 using Dependinator.Utils;
 
-
-namespace Dependinator.ApplicationHandling
+namespace Dependinator.Common
 {
 	internal class AssemblyResolver
 	{

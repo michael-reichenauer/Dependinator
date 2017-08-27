@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-
-namespace Dependinator.ApplicationHandling
+namespace Dependinator.Common.Installation
 {
 	internal interface ILatestVersionService
 	{

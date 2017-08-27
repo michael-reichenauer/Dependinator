@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading.Tasks;
-using Dependinator.ApplicationHandling;
+using Dependinator.Common;
 using Dependinator.Modeling.Private.Serializing;
 using Dependinator.Utils;
 

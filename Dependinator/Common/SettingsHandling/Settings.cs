@@ -2,8 +2,7 @@ using System;
 using System.IO;
 using Dependinator.Utils;
 
-
-namespace Dependinator.ApplicationHandling.SettingsHandling
+namespace Dependinator.Common.SettingsHandling
 {
 	internal static class Settings
 	{

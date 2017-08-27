@@ -3,8 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using Dependinator.ApplicationHandling;
-using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
 
 

@@ -1,6 +1,4 @@
-using System.Windows;
-
-namespace Dependinator.ApplicationHandling.SettingsHandling
+namespace Dependinator.Common.SettingsHandling
 {
 	internal class ProgramSettings
 	{

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
-using Dependinator.ApplicationHandling;
-using Dependinator.ApplicationHandling.SettingsHandling;
 using Dependinator.Common.MessageDialogs;
+using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
 using Microsoft.Win32;
 

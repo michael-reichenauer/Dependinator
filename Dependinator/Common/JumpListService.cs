@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Windows;
 using System.Windows.Shell;
-using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Common.SettingsHandling;
 
 
 namespace Dependinator.Common

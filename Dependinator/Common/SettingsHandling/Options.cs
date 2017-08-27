@@ -1,7 +1,6 @@
 using Dependinator.Common.ThemeHandling;
 
-
-namespace Dependinator.ApplicationHandling.SettingsHandling
+namespace Dependinator.Common.SettingsHandling
 {
 	public class Options
 	{

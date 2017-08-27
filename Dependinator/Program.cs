@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reflection;
-using Dependinator.ApplicationHandling;
-using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Common;
 using Dependinator.Common.MessageDialogs;
+using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
 
 

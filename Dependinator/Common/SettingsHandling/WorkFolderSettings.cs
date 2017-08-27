@@ -1,8 +1,7 @@
 using System.Collections.Generic;
 using System.Windows;
 
-
-namespace Dependinator.ApplicationHandling.SettingsHandling
+namespace Dependinator.Common.SettingsHandling
 {
 	public class WorkFolderSettings
 	{

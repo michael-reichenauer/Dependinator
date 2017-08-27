@@ -1,8 +1,8 @@
 ﻿using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
-using Dependinator.ApplicationHandling;
-using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Common;
+using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 

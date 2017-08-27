@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using Dependinator.ApplicationHandling;
+using Dependinator.Common;
 using Dependinator.Modeling;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
