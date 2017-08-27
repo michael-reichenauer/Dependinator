@@ -101,8 +101,8 @@ namespace Dependinator.MainWindowViews
 		{
 			get
 			{
-				Version version = ProgramPaths.GetRunningVersion();
-				DateTime buildTime = ProgramPaths.BuildTime();
+				Version version = ProgramInfo.GetRunningVersion();
+				DateTime buildTime = ProgramInfo.BuildTime();
 				string dateText = buildTime.ToString("yyyy-MM-dd\nHH:mm");
 				string text = $"Version: {version.Major}.{version.Minor}\n{dateText}";
 				return text;
@@ -193,7 +193,7 @@ namespace Dependinator.MainWindowViews
 
 			ipcRemotingService = new IpcRemotingService();
 
-			string id = ProgramPaths.GetId(workingFolder);
+			string id = ProgramInfo.GetWorkingFolderId(workingFolder);
 			if (ipcRemotingService.TryCreateServer(id))
 			{
 				ipcRemotingService.PublishService(mainWindowIpcService);
@@ -328,10 +328,10 @@ namespace Dependinator.MainWindowViews
 			try
 			{
 				Settings.EnsureExists<Options>();
-				Process process = new Process();
-				string optionsName = nameof(Options);
-				process.StartInfo.FileName = Path.Combine(ProgramPaths.DataFolderPath, $"{optionsName}.json");
-				process.Start();
+				string optionsPath = Settings.GetFilePath<Options>();
+
+				Log.Debug($"Open {optionsPath}");
+				Process.Start("notepad.exe", optionsPath);
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{

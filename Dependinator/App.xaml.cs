@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Threading;
 using System.Windows;
 using Dependinator.Common;
 using Dependinator.Common.Installation;
-using Dependinator.Common.Installation.Private;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Common.ThemeHandling;
@@ -77,7 +74,7 @@ namespace Dependinator
 				return;
 			}
 
-			Log.Usage($"Start version: {GetProgramVersion()}");
+			Log.Usage($"Start version: {AssemblyInfo.GetProgramVersion()}");
 			Start();
 		}
 
@@ -122,9 +119,9 @@ namespace Dependinator
 			applicationMutex = new Mutex(true, Product.Guid);
 
 			MainWindow = mainWindow.Value;
-			
+
 			themeService.SetThemeWpfColors();
-	
+
 
 			MainWindow.Show();
 
@@ -149,7 +146,7 @@ namespace Dependinator
 			{
 				// Trying to contact another instance, which has a IpcRemotingService started in the 
 				// MainWindowViewModel
-				string id = ProgramPaths.GetId(workingFolder);
+				string id = ProgramInfo.GetWorkingFolderId(workingFolder);
 				using (IpcRemotingService ipcRemotingService = new IpcRemotingService())
 				{
 					if (!ipcRemotingService.TryCreateServer(id))
@@ -174,8 +171,8 @@ namespace Dependinator
 		{
 			try
 			{
-				string tempFolderPath = ProgramPaths.GetTempFolderPath();
-				string searchPattern = $"{ProgramPaths.TempPrefix}*";
+				string tempFolderPath = ProgramInfo.GetTempFolderPath();
+				string searchPattern = $"{ProgramInfo.TempPrefix}*";
 				string[] tempFiles = Directory.GetFiles(tempFolderPath, searchPattern);
 				foreach (string tempFile in tempFiles)
 				{
@@ -204,11 +201,6 @@ namespace Dependinator
 		}
 
 
-		private static string GetProgramVersion()
-		{
-			Assembly assembly = Assembly.GetExecutingAssembly();
-			FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-			return fvi.FileVersion;
-		}
+
 	}
 }

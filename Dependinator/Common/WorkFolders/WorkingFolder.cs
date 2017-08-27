@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using Dependinator.Common.Private;
 using Dependinator.Utils;
 
@@ -29,7 +30,7 @@ namespace Dependinator.Common.WorkFolders
 
 		public bool HasValue => workingFolderService.Path != null;
 
-		public string Name => HasValue ? System.IO.Path.GetFileNameWithoutExtension(FilePath) : null;
+		public string Name => HasValue ? Path.GetFileNameWithoutExtension(FilePath) : null;
 
 		public static implicit operator string(WorkingFolder workingFolder) =>
 			workingFolder.workingFolderService.Path;

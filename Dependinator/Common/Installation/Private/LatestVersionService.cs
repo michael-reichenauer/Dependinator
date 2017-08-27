@@ -49,7 +49,7 @@ namespace Dependinator.Common.Installation.Private
 
 			try
 			{
-				string installedPath = ProgramPaths.GetInstallFilePath();
+				string installedPath = ProgramInfo.GetInstallFilePath();
 
 				cmd.Start(installedPath, null);
 				return true;
@@ -89,8 +89,8 @@ namespace Dependinator.Common.Installation.Private
 		{
 			Log.Debug($"Checking remote version of {latestUri} ...");
 			Version remoteVersion = await GetLatestRemoteVersionAsync();
-			Version currentVersion = ProgramPaths.GetRunningVersion();
-			Version installedVersion = ProgramPaths.GetInstalledVersion();
+			Version currentVersion = ProgramInfo.GetRunningVersion();
+			Version installedVersion = ProgramInfo.GetInstalledVersion();
 
 			LogVersion(currentVersion, installedVersion, remoteVersion);
 			return installedVersion < remoteVersion;
@@ -131,7 +131,7 @@ namespace Dependinator.Common.Installation.Private
 
 			byte[] remoteFileData = await httpClient.GetByteArrayAsync(downloadUrl);
 
-			string setupPath = ProgramPaths.GetTempFilePath() + "." + setupFileInfo.name;
+			string setupPath = ProgramInfo.GetTempFilePath() + "." + setupFileInfo.name;
 			File.WriteAllBytes(setupPath, remoteFileData);
 
 			Log.Debug($"Downloaded {latestInfo.tag_name} to {setupPath}");
@@ -267,8 +267,8 @@ namespace Dependinator.Common.Installation.Private
 
 		private static bool IsNewVersionInstalled()
 		{
-			Version currentVersion = ProgramPaths.GetRunningVersion();
-			Version installedVersion = ProgramPaths.GetInstalledVersion();
+			Version currentVersion = ProgramInfo.GetRunningVersion();
+			Version installedVersion = ProgramInfo.GetInstalledVersion();
 
 			Log.Debug($"Current version: {currentVersion} installed version: {installedVersion}");
 			return currentVersion < installedVersion;

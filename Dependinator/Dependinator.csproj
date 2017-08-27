@@ -122,6 +122,7 @@
       <DependentUpon>TitleView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Private\Convert.cs" />
+    <Compile Include="Utils\AssemblyInfo.cs" />
     <Compile Include="Utils\AssemblyResolver.cs" />
     <Compile Include="Utils\UI\BrushExtensions.cs" />
     <Compile Include="Utils\UI\DispatcherExtensions.cs" />
@@ -311,7 +312,7 @@
     <Compile Include="Common\Installation\ILatestVersionService.cs" />
     <Compile Include="Common\Installation\Private\LatestVersionService.cs" />
     <Compile Include="Common\Installation\Private\Installer.cs" />
-    <Compile Include="Common\SettingsHandling\ProgramPaths.cs" />
+    <Compile Include="Common\SettingsHandling\ProgramInfo.cs" />
     <Compile Include="Common\SettingsHandling\ProgramSettings.cs" />
     <Compile Include="Utils\UI\PropertyToVisibilityConverter.cs" />
     <Compile Include="Utils\CmdResult.cs" />

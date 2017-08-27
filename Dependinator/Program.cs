@@ -62,18 +62,10 @@ namespace Dependinator
 
 		private static string GetStartLineText()
 		{
-			string version = GetProgramVersion();
+			string version = AssemblyInfo.GetProgramVersion();
 			string cmd = string.Join("','", Environment.GetCommandLineArgs());
 
 			return $"Start version: {version}, cmd: '{cmd}'";
-		}
-
-
-		private static string GetProgramVersion()
-		{
-			Assembly assembly = Assembly.GetExecutingAssembly();
-			FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-			return fvi.FileVersion;
 		}
 
 
@@ -88,7 +80,7 @@ namespace Dependinator
 
 		private static void Restart()
 		{
-			string targetPath = ProgramPaths.GetInstallFilePath();
+			string targetPath = ProgramInfo.GetInstallFilePath();
 			Cmd.Start(targetPath, "");
 		}
 	}

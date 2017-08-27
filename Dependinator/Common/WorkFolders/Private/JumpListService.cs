@@ -27,9 +27,9 @@ namespace Dependinator.Common.WorkFolders.Private
 
 			JumpTask jumpTask = new JumpTask();
 			jumpTask.Title = title;
-			jumpTask.ApplicationPath = ProgramPaths.GetInstallFilePath();
+			jumpTask.ApplicationPath = ProgramInfo.GetInstallFilePath();
 			jumpTask.Arguments = $"\"{path}\"";
-			jumpTask.IconResourcePath = ProgramPaths.GetInstallFilePath();
+			jumpTask.IconResourcePath = ProgramInfo.GetInstallFilePath();
 			jumpTask.Description = path;
 
 			jumpList.ShowRecentCategory = true;

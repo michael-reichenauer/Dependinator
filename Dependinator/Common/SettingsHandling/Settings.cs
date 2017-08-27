@@ -88,6 +88,7 @@ namespace Dependinator.Common.SettingsHandling
 			}	
 		}
 
+
 		public static T Get<T>(string path) where T : class
 		{
 			string settingsPath = GetSettingsFilePath<T>(path);
@@ -134,6 +135,19 @@ namespace Dependinator.Common.SettingsHandling
 			if (ParentFolderExists(path))
 			{
 				WriteAs(settingsPath, settings);
+			}
+		}
+
+
+		public static string GetFilePath<T>() where T : class
+		{
+			if (typeof(T) == typeof(WorkFolderSettings))
+			{
+				return GetWorkFolderSettingsPath();
+				}
+			else
+			{
+				return GetProgramSettingsPath<T>();
 			}
 		}
 
@@ -220,22 +234,14 @@ namespace Dependinator.Common.SettingsHandling
 		}
 
 
-
-		private static string GetSettingsFilePath<T>(string folderPath)
-		{
-			return Path.Combine(folderPath, typeof(T).Name + ".json");
-		}
+		private static string GetProgramSettingsPath<T>() =>
+			GetSettingsFilePath<T>(ProgramInfo.GetProgramDataFolderPath());
 
 
-		private static string GetProgramSettingsPath<T>()
-		{
-			return Path.Combine(ProgramPaths.DataFolderPath, typeof(T).Name + ".json");
-		}
+		private static string GetWorkFolderSettingsPath() => 
+			GetSettingsFilePath<WorkFolderSettings>(workingFolder);
 
-
-		private static string GetWorkFolderSettingsPath()
-		{
-			return Path.Combine(workingFolder, typeof(WorkFolderSettings).Name + ".json");
-		}
+		private static string GetSettingsFilePath<T>(string folderPath) => 
+			Path.Combine(folderPath, typeof(T).Name + ".json");
 	}
 }

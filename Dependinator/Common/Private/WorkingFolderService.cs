@@ -99,9 +99,9 @@ namespace Dependinator.Common.Private
 			//	folderPath = GetWorkingFolderPath(Assembly.GetEntryAssembly().Location);
 			//}
 
-			if (!ProgramPaths.IsInstalledInstance())
+			if (!ProgramInfo.IsInstalledInstance())
 			{
-				folderPath = GetWorkingFolderPath(ProgramPaths.GetCurrentInstancePath());
+				folderPath = GetWorkingFolderPath(ProgramInfo.GetCurrentInstancePath());
 				IsValid = folderPath.IsOk;
 				return folderPath.IsOk ? folderPath.Value : commandLine.FilePath;
 			}
@@ -140,7 +140,7 @@ namespace Dependinator.Common.Private
 				return Error.From("No valid file");
 			}
 
-			string folderPath = ProgramPaths.GetWorkingFolderPath(path);
+			string folderPath = ProgramInfo.GetWorkingFolderPath(path);
 
 			if (0 != Txt.CompareIc(path, workingFolder))
 			{

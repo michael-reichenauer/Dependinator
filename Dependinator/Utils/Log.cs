@@ -26,7 +26,7 @@ namespace Dependinator.Utils
 
 		private static readonly object syncRoot = new object();
 
-		private static readonly string LogPath = ProgramPaths.GetLogFilePath();
+		private static readonly string LogPath = ProgramInfo.GetLogFilePath();
 		private static readonly int ProcessID = Process.GetCurrentProcess().Id;
 		private static readonly string LevelUsage = "USAGE";
 		private static readonly string LevelDebug = "DEBUG";

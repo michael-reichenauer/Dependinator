@@ -119,7 +119,7 @@ namespace Dependinator.Common.Installation.Private
 
 		private void StartInstalled()
 		{
-			string targetPath = ProgramPaths.GetInstallFilePath();
+			string targetPath = ProgramInfo.GetInstallFilePath();
 			cmd.Start(targetPath, "");
 		}
 
@@ -204,14 +204,14 @@ namespace Dependinator.Common.Installation.Private
 
 		private string CopyFileToProgramFiles()
 		{
-			string sourcePath = ProgramPaths.GetCurrentInstancePath();
-			Version sourceVersion = ProgramPaths.GetVersion(sourcePath);
+			string sourcePath = ProgramInfo.GetCurrentInstancePath();
+			Version sourceVersion = ProgramInfo.GetVersion(sourcePath);
 
-			string targetFolder = ProgramPaths.GetProgramFolderPath();
+			string targetFolder = ProgramInfo.GetProgramFolderPath();
 
 			EnsureDirectoryIsCreated(targetFolder);
 
-			string targetPath = ProgramPaths.GetInstallFilePath();
+			string targetPath = ProgramInfo.GetInstallFilePath();
 
 			try
 			{
@@ -226,7 +226,7 @@ namespace Dependinator.Common.Installation.Private
 				Log.Debug($"Failed to copy {sourcePath} to target {targetPath} {e.Message}");
 				try
 				{
-					string oldFilePath = ProgramPaths.GetTempFilePath();
+					string oldFilePath = ProgramInfo.GetTempFilePath();
 					Log.Debug($"Moving {targetPath} to {oldFilePath}");
 
 					File.Move(targetPath, oldFilePath);
@@ -249,7 +249,7 @@ namespace Dependinator.Common.Installation.Private
 		{
 			try
 			{
-				string path = ProgramPaths.GetVersionFilePath();
+				string path = ProgramInfo.GetVersionFilePath();
 				File.WriteAllText(path, sourceVersion.ToString());
 				Log.Debug($"Installed {sourceVersion}");
 			}
@@ -281,7 +281,7 @@ namespace Dependinator.Common.Installation.Private
 		private static void DeleteProgramFilesFolder()
 		{
 			Thread.Sleep(300);
-			string folderPath = ProgramPaths.GetProgramFolderPath();
+			string folderPath = ProgramInfo.GetProgramFolderPath();
 
 			for (int i = 0; i < 5; i++)
 			{
@@ -307,7 +307,7 @@ namespace Dependinator.Common.Installation.Private
 
 		private static void DeleteProgramDataFolder()
 		{
-			string programDataFolderPath = ProgramPaths.GetProgramDataFolderPath();
+			string programDataFolderPath = ProgramInfo.GetProgramDataFolderPath();
 
 			if (Directory.Exists(programDataFolderPath))
 			{
@@ -319,7 +319,7 @@ namespace Dependinator.Common.Installation.Private
 
 		private static void CreateStartMenuShortcut(string pathToExe)
 		{
-			string shortcutLocation = ProgramPaths.GetStartMenuShortcutPath();
+			string shortcutLocation = ProgramInfo.GetStartMenuShortcutPath();
 
 			IWshRuntimeLibrary.WshShell shell = new IWshRuntimeLibrary.WshShell();
 			IWshRuntimeLibrary.IWshShortcut shortcut = (IWshRuntimeLibrary.IWshShortcut)
@@ -336,7 +336,7 @@ namespace Dependinator.Common.Installation.Private
 
 		private static void DeleteStartMenuShortcut()
 		{
-			string shortcutLocation = ProgramPaths.GetStartMenuShortcutPath();
+			string shortcutLocation = ProgramInfo.GetStartMenuShortcutPath();
 			File.Delete(shortcutLocation);
 		}
 
@@ -367,7 +367,7 @@ namespace Dependinator.Common.Installation.Private
 
 		private static void DeleteInPathVariable()
 		{
-			string programFilesFolderPath = ProgramPaths.GetProgramFolderPath();
+			string programFilesFolderPath = ProgramInfo.GetProgramFolderPath();
 
 			string keyName = @"Environment\";
 			string pathsVariables = (string)Registry.CurrentUser.OpenSubKey(keyName)
@@ -387,7 +387,7 @@ namespace Dependinator.Common.Installation.Private
 
 		private static void AddUninstallSupport(string path)
 		{
-			string version = ProgramPaths.GetVersion(path).ToString();
+			string version = ProgramInfo.GetVersion(path).ToString();
 
 			Registry.SetValue(UninstallRegKey, "DisplayName", Product.Name);
 			Registry.SetValue(UninstallRegKey, "DisplayIcon", path);
@@ -414,7 +414,7 @@ namespace Dependinator.Common.Installation.Private
 
 		private static void AddFolderContextMenu()
 		{
-			string programFilePath = ProgramPaths.GetInstallFilePath();
+			string programFilePath = ProgramInfo.GetInstallFilePath();
 
 			Registry.SetValue(folderContextMenuPath, "", Product.Name);
 			Registry.SetValue(folderContextMenuPath, "Icon", programFilePath);
@@ -450,8 +450,8 @@ namespace Dependinator.Common.Installation.Private
 
 		private static bool IsInstalledInstance()
 		{
-			string folderPath = Path.GetDirectoryName(ProgramPaths.GetCurrentInstancePath());
-			string programFolderDependinator = ProgramPaths.GetProgramFolderPath();
+			string folderPath = Path.GetDirectoryName(ProgramInfo.GetCurrentInstancePath());
+			string programFolderDependinator = ProgramInfo.GetProgramFolderPath();
 
 			return folderPath == programFolderDependinator;
 		}
@@ -459,8 +459,8 @@ namespace Dependinator.Common.Installation.Private
 
 		private static string CopyFileToTemp()
 		{
-			string sourcePath = ProgramPaths.GetCurrentInstancePath();
-			string targetPath = Path.Combine(Path.GetTempPath(), ProgramPaths.ProgramFileName);
+			string sourcePath = ProgramInfo.GetCurrentInstancePath();
+			string targetPath = Path.Combine(Path.GetTempPath(), ProgramInfo.ProgramFileName);
 			File.Copy(sourcePath, targetPath, true);
 
 			return targetPath;

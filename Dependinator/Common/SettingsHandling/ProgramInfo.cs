@@ -6,38 +6,26 @@ using Dependinator.Utils;
 
 namespace Dependinator.Common.SettingsHandling
 {
-	internal static class ProgramPaths
+	internal static class ProgramInfo
 	{
 		public static readonly string TempPrefix = "_tmp_";
 
 		public static readonly string ProgramFileName = Product.Name + ".exe";
 		public static readonly string ProgramLogName = Product.Name + ".log";
 		public static readonly string VersionFileName = Product.Name + ".Version.txt";
+
 		private static readonly string ProgramShortcutFileName = Product.Name + ".lnk";
 		private static readonly string SettingsFileName = "settings";
 		private static readonly string LatestETagFileName = "latestetag";
 		private static readonly string LatestInfoFileName = "latestinfo";
 
-		private static readonly string workingFoldersRoot = "WorkingFolders";
+		private static readonly string WorkingFoldersRoot = "WorkingFolders";
 
 
-		public static string DataFolderPath
-		{
-			get
-			{
-				string programDataPath = Environment.GetFolderPath(
-					Environment.SpecialFolder.CommonApplicationData);
-
-				string dataFolderPath = Path.Combine(programDataPath, Product.Name);
-
-				EnsureFolderExists(dataFolderPath);
-
-				return dataFolderPath;
-			}
-		}
 
 
-		public static string GetId(string workingFolder) =>
+
+		public static string GetWorkingFolderId(string workingFolder) =>
 			Product.Guid + Uri.EscapeDataString(workingFolder);
 
 
@@ -77,7 +65,7 @@ namespace Dependinator.Common.SettingsHandling
 		private static string GetWorkingFoldersRoot()
 		{
 			string programDataFolderPath = GetProgramDataFolderPath();
-			string path = Path.Combine(programDataFolderPath, workingFoldersRoot);
+			string path = Path.Combine(programDataFolderPath, WorkingFoldersRoot);
 
 			EnsureFolderExists(path);
 
@@ -117,7 +105,14 @@ namespace Dependinator.Common.SettingsHandling
 
 		public static string GetProgramDataFolderPath()
 		{
-			return DataFolderPath;
+			string programDataPath = Environment.GetFolderPath(
+				Environment.SpecialFolder.CommonApplicationData);
+
+			string dataFolderPath = Path.Combine(programDataPath, Product.Name);
+
+			EnsureFolderExists(dataFolderPath);
+
+			return dataFolderPath;
 		}
 
 
