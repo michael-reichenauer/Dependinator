@@ -18,140 +18,73 @@ namespace Dependinator.Common.Private
 			this.commandLine = commandLine;
 		}
 
-
-		public bool IsValid { get; private set; }
-
-
+		
 		public event EventHandler OnChange;
-
-		public string Path
-		{
-			get
-			{
-				if (workingFolder == null)
-				{
-					workingFolder = GetInitialWorkingFolder();
-					StoreLastedUsedFolder();
-				}
-
-				return workingFolder;
-			}
-		}
 
 		public string FilePath { get; private set; }
 
 
+		public string FolderPath => workingFolder ?? (workingFolder = GetInitialWorkingFolder());
+
+
 		public bool TrySetPath(string path)
 		{
-			if (GetWorkingFolderPath(path).HasValue(out string rootFolder))
+			if (TryGetWorkingFolderPath(path, out string folder))
 			{
-				if (workingFolder != rootFolder)
+				if (0 == Txt.CompareIc(workingFolder, folder))
 				{
-					workingFolder = rootFolder;
-					StoreLastedUsedFolder();
+					workingFolder = folder;
+					FilePath = path;
 					OnChange?.Invoke(this, EventArgs.Empty);
 				}
 
-				IsValid = true;
 				return true;
 			}
-			else
-			{
-				return false;
-			}
+
+			return false;
 		}
 
 
 
-		private void StoreLastedUsedFolder()
-		{
-			if (IsValid)
-			{
-				Settings.Edit<ProgramSettings>(settings => settings.LastUsedWorkingFolder = workingFolder);
-			}
-		}
-
-
-		// Must be able to handle:
-		// * Starting app from start menu or pinned (no parameters and unknown current dir)
-		// * Starting on command line in some dir (no parameters but known dir)
-		// * Starting as right click on folder (parameter "/d:<dir>"
-		// * Starting on command line with some parameters (branch names)
-		// * Starting with parameters "/test"
 		private string GetInitialWorkingFolder()
 		{
-			R<string> folderPath = R<string>.NoValue;
-			if (commandLine.HasFile)
+			if (commandLine.HasFile && TryGetWorkingFolderPath(commandLine.FilePath, out string folder))
 			{
 				// Call from e.g. Windows Explorer file context menu
-				folderPath = GetWorkingFolderPath(commandLine.FilePath);
-				IsValid = folderPath.IsOk;
-				return folderPath.IsOk ? folderPath.Value : commandLine.FilePath;
+				workingFolder = folder;
+				FilePath = commandLine.FilePath;
+				return workingFolder;
 			}
 
-			//string lastUsedFolder = GetLastUsedWorkingFolder();
-			//if (!string.IsNullOrWhiteSpace(lastUsedFolder))
+
+			//if (!ProgramInfo.IsInstalledInstance() 
+			//	&& TryGetWorkingFolderPath(ProgramInfo.GetCurrentInstancePath(), out folder))
 			//{
-			//	folderPath = lastUsedFolder;
-			//}
-			//else
-			//{
-			//	folderPath = GetWorkingFolderPath(Assembly.GetEntryAssembly().Location);
+			//	workingFolder = folder;
+			//	FilePath = ProgramInfo.GetCurrentInstancePath();
+			//	return workingFolder;
 			//}
 
-			if (!ProgramInfo.IsInstalledInstance())
-			{
-				folderPath = GetWorkingFolderPath(ProgramInfo.GetCurrentInstancePath());
-				IsValid = folderPath.IsOk;
-				return folderPath.IsOk ? folderPath.Value : commandLine.FilePath;
-			}
 
-
-			folderPath = GetWorkingFolderPath("Default");
-
-			IsValid = folderPath.IsOk;
-			if (folderPath.IsOk)
-			{
-				FilePath = Settings.Get<WorkFolderSettings>().FilePath;
-				return folderPath.Value;
-			}
-
-			IsValid = false;
-			return GetMyDocumentsPath();
+			FilePath = null;
+			return "";
 		}
 
 
-		private static string GetLastUsedWorkingFolder()
+
+		public bool TryGetWorkingFolderPath(string filePath, out string folderPath)
 		{
-			return Settings.Get<ProgramSettings>().LastUsedWorkingFolder;
-		}
-
-		private static string GetMyDocumentsPath()
-		{
-			return Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-		}
-
-
-
-		public R<string> GetWorkingFolderPath(string path)
-		{
-			if (!IsValidPath(path))
+			if (!IsValidPath(filePath))
 			{
-				return Error.From("No valid file");
+				folderPath = null;
+				return false;
 			}
 
-			string folderPath = ProgramInfo.GetWorkingFolderPath(path);
-
-			if (0 != Txt.CompareIc(path, workingFolder))
-			{
-				Settings.Edit<WorkFolderSettings>(folderPath, settings => settings.FilePath = path);
-
-				FilePath = path;
-			}
-
-			FilePath = Settings.Get<WorkFolderSettings>(folderPath).FilePath;
-			return folderPath;
+			folderPath = ProgramInfo.GetWorkingFolderPath(filePath);
+	
+			return true;
 		}
+
 
 
 		private static bool IsValidPath(string path)

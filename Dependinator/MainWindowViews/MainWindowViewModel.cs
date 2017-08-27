@@ -101,8 +101,8 @@ namespace Dependinator.MainWindowViews
 		{
 			get
 			{
-				Version version = ProgramInfo.GetRunningVersion();
-				DateTime buildTime = ProgramInfo.BuildTime();
+				Version version = ProgramInfo.GetCurrentInstanceVersion();
+				DateTime buildTime = ProgramInfo.GetCurrentInstanceBuildTime();
 				string dateText = buildTime.ToString("yyyy-MM-dd\nHH:mm");
 				string text = $"Version: {version.Major}.{version.Minor}\n{dateText}";
 				return text;
@@ -211,7 +211,6 @@ namespace Dependinator.MainWindowViews
 
 			Notify(nameof(Title));
 
-			//await ModelViewModel.LoadAsync();
 			isLoaded = true;
 		}
 
@@ -376,7 +375,7 @@ namespace Dependinator.MainWindowViews
 				dlg.CheckFileExists = true;
 				dlg.Multiselect = false;
 				dlg.Title = "Select a .NET .dll or .exe file";
-				dlg.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+				dlg.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
 				bool? result = dlg.ShowDialog();
 

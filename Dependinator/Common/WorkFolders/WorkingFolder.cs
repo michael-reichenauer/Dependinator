@@ -10,6 +10,8 @@ namespace Dependinator.Common.WorkFolders
 	{
 		private readonly IWorkingFolderService workingFolderService;
 
+		
+		private string FolderPath => workingFolderService.FolderPath;
 
 		public WorkingFolder(IWorkingFolderService workingFolderService)
 		{
@@ -23,17 +25,15 @@ namespace Dependinator.Common.WorkFolders
 			remove => workingFolderService.OnChange -= value;
 		}
 
-
 		public string FilePath => workingFolderService.FilePath;
 
-		public bool IsValid => workingFolderService.IsValid;
+		public bool IsValid => FilePath != null && File.Exists(FilePath);
 
-		public bool HasValue => workingFolderService.Path != null;
+		public bool HasValue => FolderPath != null;
 
 		public string Name => HasValue ? Path.GetFileNameWithoutExtension(FilePath) : null;
 
-		public static implicit operator string(WorkingFolder workingFolder) =>
-			workingFolder.workingFolderService.Path;
+		public static implicit operator string(WorkingFolder workingFolder) => workingFolder.FolderPath;
 
 
 		public bool TrySetPath(string path)
@@ -42,6 +42,6 @@ namespace Dependinator.Common.WorkFolders
 		}
 
 
-		public override string ToString() => workingFolderService.Path;
+		public override string ToString() => FolderPath;
 	}
 }

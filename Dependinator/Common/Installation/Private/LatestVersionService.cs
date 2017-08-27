@@ -89,7 +89,7 @@ namespace Dependinator.Common.Installation.Private
 		{
 			Log.Debug($"Checking remote version of {latestUri} ...");
 			Version remoteVersion = await GetLatestRemoteVersionAsync();
-			Version currentVersion = ProgramInfo.GetRunningVersion();
+			Version currentVersion = ProgramInfo.GetCurrentInstanceVersion();
 			Version installedVersion = ProgramInfo.GetInstalledVersion();
 
 			LogVersion(currentVersion, installedVersion, remoteVersion);
@@ -267,7 +267,7 @@ namespace Dependinator.Common.Installation.Private
 
 		private static bool IsNewVersionInstalled()
 		{
-			Version currentVersion = ProgramInfo.GetRunningVersion();
+			Version currentVersion = ProgramInfo.GetCurrentInstanceVersion();
 			Version installedVersion = ProgramInfo.GetInstalledVersion();
 
 			Log.Debug($"Current version: {currentVersion} installed version: {installedVersion}");

@@ -15,15 +15,21 @@ namespace Dependinator.Common.SettingsHandling
 		public static readonly string VersionFileName = Product.Name + ".Version.txt";
 
 		private static readonly string ProgramShortcutFileName = Product.Name + ".lnk";
-		private static readonly string SettingsFileName = "settings";
-		private static readonly string LatestETagFileName = "latestetag";
-		private static readonly string LatestInfoFileName = "latestinfo";
-
 		private static readonly string WorkingFoldersRoot = "WorkingFolders";
 
+		
+		public static string GetCurrentInstancePath() => Assembly.GetEntryAssembly().Location;
 
 
+		public static string GetInstallFilePath() => GetFilePath(ProgramFileName);
 
+		public static string GetVersionFilePath() => GetFilePath(VersionFileName);
+
+		public static string GetLogFilePath() => GetFilePath(ProgramLogName);
+		
+		public static string GetTempFilePath() => GetFilePath($"{TempPrefix}{Guid.NewGuid()}");
+
+		public static string GetTempFolderPath() => GetProgramDataFolderPath();
 
 		public static string GetWorkingFolderId(string workingFolder) =>
 			Product.Guid + Uri.EscapeDataString(workingFolder);
@@ -36,45 +42,12 @@ namespace Dependinator.Common.SettingsHandling
 			return 0 == Txt.CompareIc(runningPath, installedPath);
 		}
 
-		public static string GetSettingPath()
-		{
-			string programDataFolderPath = GetProgramDataFolderPath();
-			return Path.Combine(programDataFolderPath, SettingsFileName);
-		}
-
-		public static string GetLatestETagPath()
-		{
-			string programDataFolderPath = GetProgramDataFolderPath();
-			return Path.Combine(programDataFolderPath, LatestETagFileName);
-		}
-
-		public static string GetLatestInfoPath()
-		{
-			string programDataFolderPath = GetProgramDataFolderPath();
-			return Path.Combine(programDataFolderPath, LatestInfoFileName);
-		}
-
-		public static string GetTempFilePath()
-		{
-			string tempName = $"{TempPrefix}{Guid.NewGuid()}";
-			string programDataFolderPath = GetProgramDataFolderPath();
-			return Path.Combine(programDataFolderPath, tempName);
-		}
-
 
 		private static string GetWorkingFoldersRoot()
 		{
-			string programDataFolderPath = GetProgramDataFolderPath();
-			string path = Path.Combine(programDataFolderPath, WorkingFoldersRoot);
-
+			string path = GetFilePath(WorkingFoldersRoot);
 			EnsureFolderExists(path);
-
 			return path;
-		}
-
-		public static string GetTempFolderPath()
-		{
-			return GetProgramDataFolderPath();
 		}
 
 
@@ -95,54 +68,32 @@ namespace Dependinator.Common.SettingsHandling
 
 			return Path.Combine(programFolderPath, Product.Name);
 		}
-
-
-		public static string GetCurrentInstancePath()
-		{
-			return Assembly.GetEntryAssembly().Location;
-		}
-
+		
 
 		public static string GetProgramDataFolderPath()
 		{
-			string programDataPath = Environment.GetFolderPath(
-				Environment.SpecialFolder.CommonApplicationData);
+			string programDataPath = GetProgramFolderPath();
 
-			string dataFolderPath = Path.Combine(programDataPath, Product.Name);
+			EnsureFolderExists(programDataPath);
 
-			EnsureFolderExists(dataFolderPath);
-
-			return dataFolderPath;
+			return programDataPath;
 		}
 
 
-		public static string GetInstallFilePath()
-		{
-			string programFilesFolderPath = GetProgramFolderPath();
-			return Path.Combine(programFilesFolderPath, ProgramFileName);
-		}
-
-		public static string GetVersionFilePath()
-		{
-			string programFilesFolderPath = GetProgramFolderPath();
-			return Path.Combine(programFilesFolderPath, VersionFileName);
-		}
-
-
-		public static DateTime BuildTime()
+		public static DateTime GetCurrentInstanceBuildTime()
 		{
 			string filePath = Assembly.GetEntryAssembly().Location;
 
-			const int c_PeHeaderOffset = 60;
-			const int c_LinkerTimestampOffset = 8;
+			const int cPeHeaderOffset = 60;
+			const int cLinkerTimestampOffset = 8;
 
 			var buffer = new byte[2048];
 
 			using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
 				stream.Read(buffer, 0, 2048);
 
-			var offset = BitConverter.ToInt32(buffer, c_PeHeaderOffset);
-			var secondsSince1970 = BitConverter.ToInt32(buffer, offset + c_LinkerTimestampOffset);
+			var offset = BitConverter.ToInt32(buffer, cPeHeaderOffset);
+			var secondsSince1970 = BitConverter.ToInt32(buffer, offset + cLinkerTimestampOffset);
 			var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
 			var linkTimeUtc = epoch.AddSeconds(secondsSince1970);
@@ -154,9 +105,9 @@ namespace Dependinator.Common.SettingsHandling
 		}
 
 
-		public static Version GetRunningVersion()
+		public static Version GetCurrentInstanceVersion()
 		{
-			AssemblyName assemblyName = Assembly.GetExecutingAssembly().GetName();
+			AssemblyName assemblyName = Assembly.GetEntryAssembly().GetName();
 			return assemblyName.Version;
 		}
 
@@ -188,6 +139,7 @@ namespace Dependinator.Common.SettingsHandling
 			}
 		}
 
+
 		public static Version GetVersion(string path)
 		{
 			if (!File.Exists(path))
@@ -211,12 +163,6 @@ namespace Dependinator.Common.SettingsHandling
 			}
 		}
 
-		public static string GetLogFilePath()
-		{
-			string folderPath = GetProgramDataFolderPath();
-			return Path.Combine(folderPath, ProgramLogName);
-		}
-
 
 		public static string GetWorkingFolderPath(string path)
 		{
@@ -235,6 +181,13 @@ namespace Dependinator.Common.SettingsHandling
 			EnsureFolderExists(workingFolderPath);
 
 			return workingFolderPath;
+		}
+
+
+		private static string GetFilePath(string fileName)
+		{
+			string programDataFolderPath = GetProgramDataFolderPath();
+			return Path.Combine(programDataFolderPath, fileName);
 		}
 
 
@@ -263,6 +216,5 @@ namespace Dependinator.Common.SettingsHandling
 				Log.Warn($"Failed to create {dataFolderPath}, {e}");
 			}
 		}
-
 	}
 }
