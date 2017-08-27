@@ -6,7 +6,7 @@ namespace Dependinator.ModelParsing.Private.DotNetReflection.Private
 	internal class ReflectionService : IReflectionService
 	{
 
-		public Task AnalyzeAsync(string assemblyPath, ItemsCallback itemsCallback)
+		public Task AnalyzeAsync(string assemblyPath, ModelItemsCallback modelItemsCallback)
 		{
 			return Task.Run(() =>
 			{
@@ -19,7 +19,7 @@ namespace Dependinator.ModelParsing.Private.DotNetReflection.Private
 
 					// To send notifications from sub domain, we use a receiver in this domain, which is
 					// passed to the sub-domain		
-					NotificationReceiver receiver = new NotificationReceiver(itemsCallback);
+					NotificationReceiver receiver = new NotificationReceiver(modelItemsCallback);
 
 					analyzer.AnalyzeAssembly(assemblyPath, receiver);
 				}

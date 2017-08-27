@@ -80,7 +80,7 @@ namespace Dependinator.ModelViewing.Private
 			IReadOnlyList<Node> nodes = model.Root.Descendents().ToList();
 			t.Log($"Saving {nodes} nodes");
 
-			IReadOnlyList<DataItem> items = Convert.ToDataItems(nodes);
+			IReadOnlyList<ModelItem> items = Convert.ToDataItems(nodes);
 			t.Log($"Saving {items} items");
 
 			string dataFilePath = GetDataFilePath();
@@ -95,7 +95,7 @@ namespace Dependinator.ModelViewing.Private
 			IReadOnlyList<Node> nodes = model.Root.Descendents().ToList();
 			t.Log($"Saving {nodes.Count} nodes");
 
-			IReadOnlyList<DataItem> items = Convert.ToDataItems(nodes);
+			IReadOnlyList<ModelItem> items = Convert.ToDataItems(nodes);
 			t.Log($"Saving {items.Count} items");
 
 			string dataFilePath = GetDataFilePath();
@@ -121,14 +121,14 @@ namespace Dependinator.ModelViewing.Private
 
 	
 
-		public void UpdateDataItems(IReadOnlyList<DataItem> items, int stamp) =>
+		public void UpdateDataItems(IReadOnlyList<ModelItem> items, int stamp) =>
 			items.Partition(BatchSize)
 			.ForEach(batch => dispatcher.InvokeBackground(UpdateItems, batch, stamp));
 
 
-		private void UpdateItems(IReadOnlyList<DataItem> items, int stamp)
+		private void UpdateItems(IReadOnlyList<ModelItem> items, int stamp)
 		{
-			foreach (DataItem item in items)
+			foreach (ModelItem item in items)
 			{
 				if (item.Node != null)
 				{

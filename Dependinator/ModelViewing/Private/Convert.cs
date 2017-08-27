@@ -8,9 +8,9 @@ namespace Dependinator.ModelViewing.Private
 {
 	internal class Convert
 	{
-		public static List<DataItem> ToDataItems(IReadOnlyList<Node> nodes)
+		public static List<ModelItem> ToDataItems(IReadOnlyList<Node> nodes)
 		{
-			List<DataItem> items = new List<DataItem>();
+			List<ModelItem> items = new List<ModelItem>();
 
 			nodes.ForEach(node => items.Add(ToNodeItem(node)));
 			nodes.ForEach(node => items.AddRange(ToLinkItems(node)));
@@ -19,7 +19,7 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private static DataNode ToDataNode(Node node) => new DataNode(
+		private static ModelNode ToDataNode(Node node) => new ModelNode(
 			node.Name.AsString(),
 			node.NodeType.AsString(),
 			node.ViewModel?.ItemBounds ?? node.Bounds,
@@ -28,23 +28,23 @@ namespace Dependinator.ModelViewing.Private
 			node.ViewModel?.Color ?? node.Color);
 
 
-		private static DataLink ToDataLink(Link link) => new DataLink(
+		private static ModelLink ToDataLink(Link link) => new ModelLink(
 			link.Source.Name.AsString(), 
 			link.Target.Name.AsString());
 
 
 
-		private static IEnumerable<DataItem> ToLinkItems(Node node) =>
+		private static IEnumerable<ModelItem> ToLinkItems(Node node) =>
 			ToDataLinks(node).Select(ToDataItem);
 
-		private static DataItem ToDataItem(DataLink dataLink) => new DataItem(null, dataLink);
+		private static ModelItem ToDataItem(ModelLink modelLink) => new ModelItem(null, modelLink);
 
-		private static IEnumerable<DataLink> ToDataLinks(Node node) =>
+		private static IEnumerable<ModelLink> ToDataLinks(Node node) =>
 			node.SourceLinks.Select(ToDataLink);
 
 
-		private static DataItem ToNodeItem(Node node) => ToDataItem(node);
+		private static ModelItem ToNodeItem(Node node) => ToDataItem(node);
 
-		private static DataItem ToDataItem(Node node) => new DataItem(ToDataNode(node), null);
+		private static ModelItem ToDataItem(Node node) => new ModelItem(ToDataNode(node), null);
 	}
 }

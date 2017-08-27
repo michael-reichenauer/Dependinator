@@ -2,9 +2,9 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelParsing
 {
-	internal class DataLink : Equatable<DataLink>
+	internal class ModelLink : Equatable<ModelLink>
 	{
-		public DataLink(string source, string target)
+		public ModelLink(string source, string target)
 		{
 			Source = source;
 			Target = target;

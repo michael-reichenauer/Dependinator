@@ -3,9 +3,9 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelParsing
 {
-	internal class DataNode : Equatable<DataNode>
+	internal class ModelNode : Equatable<ModelNode>
 	{
-		public DataNode(
+		public ModelNode(
 			string name,
 			string nodeType,
 			Rect bounds,

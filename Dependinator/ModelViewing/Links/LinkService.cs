@@ -26,16 +26,16 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
-		public void UpdateLink(DataLink dataLink, int stamp)
+		public void UpdateLink(ModelLink modelLink, int stamp)
 		{
-			if (dataLink.Source == dataLink.Target)
+			if (modelLink.Source == modelLink.Target)
 			{
 				// Skipping link to self for now
 				return;
 			}
 
-			Node source = GetNode(dataLink.Source);
-			Node target = GetNode(dataLink.Target);
+			Node source = GetNode(modelLink.Source);
+			Node target = GetNode(modelLink.Target);
 
 			if (TryGetLink(source, target, out Link link))
 			{

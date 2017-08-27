@@ -22,25 +22,25 @@ namespace Dependinator.ModelParsing.Private
 		}
 
 
-		public Task AnalyzeAsync(string assemblyPath, ItemsCallback itemsCallback) => 
-			reflectionService.AnalyzeAsync(assemblyPath, itemsCallback);
+		public Task AnalyzeAsync(string assemblyPath, ModelItemsCallback modelItemsCallback) => 
+			reflectionService.AnalyzeAsync(assemblyPath, modelItemsCallback);
 
 
-		public Task SerializeAsync(IReadOnlyList<DataItem> items, string dataFilePath) =>
+		public Task SerializeAsync(IReadOnlyList<ModelItem> items, string dataFilePath) =>
 			dataSerializer.SerializeAsync(items, dataFilePath);
 
-		public void Serialize(IReadOnlyList<DataItem> items, string dataFilePath) =>
+		public void Serialize(IReadOnlyList<ModelItem> items, string dataFilePath) =>
 			dataSerializer.Serialize(items, dataFilePath);
 
 
-		public async Task<bool> TryDeserialize(string dataFilePath, ItemsCallback itemsCallback)
+		public async Task<bool> TryDeserialize(string dataFilePath, ModelItemsCallback modelItemsCallback)
 		{
 			if (!File.Exists(dataFilePath))
 			{
 				return false;
 			}
 
-			return await dataSerializer.TryDeserializeAsync(dataFilePath, itemsCallback);
+			return await dataSerializer.TryDeserializeAsync(dataFilePath, modelItemsCallback);
 		}
 	}
 }

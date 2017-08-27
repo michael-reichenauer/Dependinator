@@ -4,6 +4,6 @@ namespace Dependinator.ModelParsing.Private.DotNetReflection
 {
 	internal interface IReflectionService
 	{
-		Task AnalyzeAsync(string path, ItemsCallback itemsCallback);
+		Task AnalyzeAsync(string path, ModelItemsCallback modelItemsCallback);
 	}
 }

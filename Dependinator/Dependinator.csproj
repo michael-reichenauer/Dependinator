@@ -106,10 +106,11 @@
   <ItemGroup>
     <Compile Include="Common\MessageDialogs\IMessage.cs" />
     <Compile Include="Common\MessageDialogs\IMessageService.cs" />
-    <Compile Include="ModelParsing\DataItem.cs" />
-    <Compile Include="ModelParsing\DataLink.cs" />
-    <Compile Include="ModelParsing\ItemsCallback.cs" />
+    <Compile Include="ModelParsing\ModelItem.cs" />
+    <Compile Include="ModelParsing\ModelLink.cs" />
+    <Compile Include="ModelParsing\ModelItemsCallback.cs" />
     <Compile Include="ModelParsing\Private\Convert.cs" />
+    <Compile Include="ModelParsing\Private\Serializing\Json.cs" />
     <Compile Include="ModelViewing\Nodes\NodePointsView.xaml.cs">
       <DependentUpon>NodePointsView.xaml</DependentUpon>
     </Compile>
@@ -145,7 +146,7 @@
     <Compile Include="ModelViewing\Private\ModelService.cs" />
     <Compile Include="ModelViewing\Private\NodeService.cs" />
     <Compile Include="ModelViewing\Private\Model.cs" />
-    <Compile Include="ModelParsing\DataNode.cs" />
+    <Compile Include="ModelParsing\ModelNode.cs" />
     <Compile Include="ModelViewing\Nodes\NodeId.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\TypeView.xaml.cs">

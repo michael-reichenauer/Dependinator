@@ -2,5 +2,5 @@
 
 namespace Dependinator.ModelParsing
 {
-	internal delegate void ItemsCallback(IReadOnlyList<DataItem> items);
+	internal delegate void ModelItemsCallback(IReadOnlyList<ModelItem> items);
 }

@@ -26,18 +26,18 @@ namespace Dependinator.ModelViewing.Private
 			this.nodeViewModelService = nodeViewModelService;
 		}
 
-		public void UpdateNode(DataNode dataNode, int stamp)
+		public void UpdateNode(ModelNode modelNode, int stamp)
 		{
-			NodeName name = new NodeName(dataNode.Name);
+			NodeName name = new NodeName(modelNode.Name);
 
 			if (model.TryGetNode(name, out Node existingNode))
 			{
 				// TODO: Check node properties as well and update if changed
 				existingNode.Stamp = stamp;
 
-				if (existingNode.NodeType.AsString() != dataNode.NodeType)
+				if (existingNode.NodeType.AsString() != modelNode.NodeType)
 				{
-					existingNode.NodeType = new NodeType(dataNode.NodeType);
+					existingNode.NodeType = new NodeType(modelNode.NodeType);
 					UpdateNodeType(existingNode);
 				}
 
@@ -50,11 +50,11 @@ namespace Dependinator.ModelViewing.Private
 			Node node = new Node(name)
 			{
 				Stamp = stamp,
-				NodeType = new NodeType(dataNode.NodeType),
-				Bounds = dataNode.Bounds,
-				Scale = dataNode.ItemsScale,
-				Offset = dataNode.ItemsOffset,
-				Color = dataNode.Color
+				NodeType = new NodeType(modelNode.NodeType),
+				Bounds = modelNode.Bounds,
+				Scale = modelNode.ItemsScale,
+				Offset = modelNode.ItemsOffset,
+				Color = modelNode.Color
 			};
 
 			AddNode(node, parentNode);

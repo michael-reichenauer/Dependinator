@@ -1,38 +1,32 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.Utils;
-using Newtonsoft.Json;
+
 
 namespace Dependinator.ModelParsing.Private.Serializing
 {
 	internal class DataSerializer : IDataSerializer
 	{
-		public Task SerializeAsync(IReadOnlyList<DataItem> items, string path)
+		public Task SerializeAsync(IReadOnlyList<ModelItem> items, string path)
 		{
 			return Task.Run(() => Serialize(items, path));
 		}
 
 
-		public void Serialize(IReadOnlyList<DataItem> items, string path)
+		public void Serialize(IReadOnlyList<ModelItem> items, string path)
 		{
 			try
 			{
 				Timing t = new Timing();
 				JsonTypes.Model dataModel = new JsonTypes.Model();
 
-				dataModel.Items = items.Select(Convert.ToDtoItem).ToList();
+				dataModel.Items = items.Select(Convert.ToJsonItem).ToList();
 
 				t.Log($"Converted {dataModel.Items.Count} data items");
 
-				JsonSerializer serializer = GetJsonSerializer();
-
-				using (StreamWriter stream = new StreamWriter(path))
-				{
-					serializer.Serialize(stream, dataModel);
-				}
+				Json.Serialize(path, dataModel);
 
 				t.Log("Wrote data file");
 			}
@@ -43,41 +37,17 @@ namespace Dependinator.ModelParsing.Private.Serializing
 		}
 
 
-//// public IEnumerable<TResult> ReadJson<TResult>(Stream stream)
-//// {
-////    var serializer = new JsonSerializer();
-
-////    using (var reader = new StreamReader(stream))
-////    using (var jsonReader = new JsonTextReader(reader))
-////    {
-////        jsonReader.SupportMultipleContent = true;
-
-////        while (jsonReader.Read())
-////        {
-////            yield return serializer.Deserialize<TResult>(jsonReader);
-////        }
-////    }
-//// }
-
-
-
-		public Task<bool> TryDeserializeAsync(string path, ItemsCallback itemsCallback)
+		public Task<bool> TryDeserializeAsync(string path, ModelItemsCallback modelItemsCallback)
 		{
 			return Task.Run(() =>
 			{
 				try
 				{
 					Timing t = new Timing();
-					NotificationReceiver receiver = new NotificationReceiver(itemsCallback);
+					NotificationReceiver receiver = new NotificationReceiver(modelItemsCallback);
 					NotificationSender sender = new NotificationSender(receiver);
 
-					JsonSerializer serializer = GetJsonSerializer();
-
-					JsonTypes.Model dataModel;
-					using (StreamReader stream = new StreamReader(path))
-					{
-						dataModel = (JsonTypes.Model)serializer.Deserialize(stream, typeof(JsonTypes.Model));
-					}
+					JsonTypes.Model dataModel = Json.Deserialize<JsonTypes.Model>(path);
 					t.Log("Deserialized");
 
 					dataModel.Items.ForEach(sender.SendItem);
@@ -94,19 +64,6 @@ namespace Dependinator.ModelParsing.Private.Serializing
 
 				return false;
 			});
-		}
-
-
-
-		private static JsonSerializer GetJsonSerializer()
-		{
-			return new JsonSerializer()
-			{
-				Formatting = Formatting.Indented,
-				ObjectCreationHandling = ObjectCreationHandling.Replace,
-				NullValueHandling = NullValueHandling.Ignore,
-				DefaultValueHandling = DefaultValueHandling.Ignore
-			};
 		}
 	}
 }

@@ -7,12 +7,12 @@ namespace Dependinator.ModelParsing.Private
 {
 	internal class NotificationReceiver : MarshalByRefObject
 	{
-		private readonly ItemsCallback itemsCallback;
+		private readonly ModelItemsCallback modelItemsCallback;
 
 
-		public NotificationReceiver(ItemsCallback itemsCallback)
+		public NotificationReceiver(ModelItemsCallback modelItemsCallback)
 		{
-			this.itemsCallback = itemsCallback;
+			this.modelItemsCallback = modelItemsCallback;
 		}
 
 
@@ -21,9 +21,9 @@ namespace Dependinator.ModelParsing.Private
 
 		public void ReceiveItems(List<JsonTypes.Item> dtoItems)
 		{
-			IReadOnlyList<DataItem> items = dtoItems.Select(Convert.ToDataItem).ToList();
+			IReadOnlyList<ModelItem> items = dtoItems.Select(Convert.ToModelItem).ToList();
 
-			itemsCallback(items);
+			modelItemsCallback(items);
 		}
 	}
 }
