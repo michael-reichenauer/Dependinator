@@ -1,14 +1,15 @@
 using System;
 using System.Collections.Generic;
 
-namespace Dependinator.ModelParsing.Private.Serializing
+namespace Dependinator.ModelParsing
 {
-	public static class Dtos
+	public static class JsonTypes
 	{
 		// A model contains a list of nodes, links and lines
 		[Serializable]
 		public class Model
 		{
+			public string FormatVersion { get; set; } = "1";
 			public List<Item> Items { get; set; }
 		}
 

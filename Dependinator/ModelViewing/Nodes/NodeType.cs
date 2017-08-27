@@ -1,3 +1,4 @@
+using Dependinator.ModelParsing;
 using Dependinator.ModelParsing.Private.Serializing;
 using Dependinator.Utils;
 
@@ -5,9 +6,9 @@ namespace Dependinator.ModelViewing.Nodes
 {
 	internal class NodeType : Equatable<NodeType>
 	{
-		public static readonly NodeType NameSpace = new NodeType(Dtos.NodeType.NameSpace);
-		public static readonly NodeType Type = new NodeType(Dtos.NodeType.Type);
-		public static readonly NodeType Member = new NodeType(Dtos.NodeType.Member);
+		public static readonly NodeType NameSpace = new NodeType(JsonTypes.NodeType.NameSpace);
+		public static readonly NodeType Type = new NodeType(JsonTypes.NodeType.Type);
+		public static readonly NodeType Member = new NodeType(JsonTypes.NodeType.Member);
 
 		private readonly string typeName;
 

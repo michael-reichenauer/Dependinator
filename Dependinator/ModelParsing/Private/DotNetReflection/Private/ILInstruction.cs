@@ -1,6 +1,6 @@
 using System.Reflection.Emit;
 
-namespace Dependinator.ModelParsing.Private.Analyzing.Private
+namespace Dependinator.ModelParsing.Private.DotNetReflection.Private
 {
 	/// <summary>
 	/// Based on:

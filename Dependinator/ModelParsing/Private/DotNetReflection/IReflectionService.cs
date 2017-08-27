@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Dependinator.ModelParsing.Private.Analyzing
+namespace Dependinator.ModelParsing.Private.DotNetReflection
 {
 	internal interface IReflectionService
 	{

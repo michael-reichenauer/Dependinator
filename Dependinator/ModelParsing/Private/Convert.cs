@@ -7,7 +7,7 @@ namespace Dependinator.ModelParsing.Private
 	internal class Convert
 	{
 	
-		public static DataNode ToDataNode(Dtos.Node node) => new DataNode(
+		public static DataNode ToDataNode(JsonTypes.Node node) => new DataNode(
 			node.Name,
 			node.Type,
 			node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
@@ -16,7 +16,7 @@ namespace Dependinator.ModelParsing.Private
 			node.Color);
 
 
-		public static Dtos.Node ToDtoNode(DataNode node) => new Dtos.Node
+		public static JsonTypes.Node ToDtoNode(DataNode node) => new JsonTypes.Node
 		{
 			Name = node.Name,
 			Type = node.NodeType,
@@ -27,24 +27,24 @@ namespace Dependinator.ModelParsing.Private
 		};
 
 
-		public static DataLink ToDataLink(Dtos.Link link) => new DataLink(link.Source, link.Target);
+		public static DataLink ToDataLink(JsonTypes.Link link) => new DataLink(link.Source, link.Target);
 
 
-		public static Dtos.Link ToDtoLink(DataLink link) => new Dtos.Link
+		public static JsonTypes.Link ToDtoLink(DataLink link) => new JsonTypes.Link
 		{
 			Source = link.Source,
 			Target = link.Target,
 		};
 
 
-		public static Dtos.Item ToDtoItem(DataItem item) => new Dtos.Item
+		public static JsonTypes.Item ToDtoItem(DataItem item) => new JsonTypes.Item
 		{
 			Node = item.Node != null ? ToDtoNode(item.Node) : null,
 			Link = item.Link != null ? ToDtoLink(item.Link) : null
 		};
 
 
-		public static DataItem ToDataItem(Dtos.Item item) => new DataItem(
+		public static DataItem ToDataItem(JsonTypes.Item item) => new DataItem(
 			item.Node != null ? ToDataNode(item.Node) : null,
 			item.Link != null ? ToDataLink(item.Link) : null);
 

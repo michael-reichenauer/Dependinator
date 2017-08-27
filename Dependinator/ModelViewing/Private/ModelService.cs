@@ -18,7 +18,7 @@ namespace Dependinator.ModelViewing.Private
 	{
 		private static readonly int BatchSize = 1000;
 
-		private readonly IModelingService modelingService;
+		private readonly IParserService parserService;
 		private readonly INodeService nodeService;
 		private readonly ILinkService linkService;
 
@@ -29,13 +29,13 @@ namespace Dependinator.ModelViewing.Private
 
 
 		public ModelService(
-			IModelingService modelingService,
+			IParserService parserService,
 			INodeService nodeService,
 			ILinkService linkService,
 			Model model,
 			WorkingFolder workingFolder)
 		{
-			this.modelingService = modelingService;
+			this.parserService = parserService;
 			this.nodeService = nodeService;
 			this.linkService = linkService;
 
@@ -59,12 +59,12 @@ namespace Dependinator.ModelViewing.Private
 			string dataFilePath = GetDataFilePath();
 			int stamp = currentStamp++;
 
-			if (!await modelingService.TryDeserialize(
+			if (!await parserService.TryDeserialize(
 				dataFilePath, items => UpdateDataItems(items, stamp)))
 			{
 				if (File.Exists(workingFolder.FilePath))
 				{
-					await modelingService.AnalyzeAsync(
+					await parserService.AnalyzeAsync(
 						workingFolder.FilePath, items => UpdateDataItems(items, stamp));
 				}
 			}
@@ -84,7 +84,7 @@ namespace Dependinator.ModelViewing.Private
 			t.Log($"Saving {items} items");
 
 			string dataFilePath = GetDataFilePath();
-			await modelingService.SerializeAsync(items, dataFilePath);
+			await parserService.SerializeAsync(items, dataFilePath);
 			t.Log($"Saved {items} items");
 		}
 
@@ -100,7 +100,7 @@ namespace Dependinator.ModelViewing.Private
 
 			string dataFilePath = GetDataFilePath();
 
-			modelingService.Serialize(items, dataFilePath);
+			parserService.Serialize(items, dataFilePath);
 			t.Log($"Saved {items.Count} items");
 		}
 
@@ -108,7 +108,7 @@ namespace Dependinator.ModelViewing.Private
 		public async Task RefreshAsync(bool refreshLayout)
 		{
 			int stamp = currentStamp++;
-			await modelingService.AnalyzeAsync(
+			await parserService.AnalyzeAsync(
 				workingFolder.FilePath, items => UpdateDataItems(items, stamp));
 
 			nodeService.RemoveObsoleteNodesAndLinks(stamp);

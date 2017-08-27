@@ -3,9 +3,7 @@ using System.Threading.Tasks;
 
 namespace Dependinator.ModelParsing
 {
-	internal delegate void ItemsCallback(IReadOnlyList<DataItem> items);
-
-	internal interface IModelingService
+	internal interface IParserService
 	{
 		Task AnalyzeAsync(string assemblyPath, ItemsCallback itemsCallback);
 

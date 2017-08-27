@@ -4,7 +4,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Dependinator.Utils;
 
-namespace Dependinator.ModelParsing.Private.Analyzing.Private
+namespace Dependinator.ModelParsing.Private.DotNetReflection.Private
 {
 	/// <summary>
 	/// Based on:

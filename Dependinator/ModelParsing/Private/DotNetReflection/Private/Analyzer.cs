@@ -9,7 +9,7 @@ using Dependinator.Common;
 using Dependinator.ModelParsing.Private.Serializing;
 using Dependinator.Utils;
 
-namespace Dependinator.ModelParsing.Private.Analyzing.Private
+namespace Dependinator.ModelParsing.Private.DotNetReflection.Private
 {
 	internal class Analyzer : MarshalByRefObject
 	{
@@ -17,7 +17,7 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 			BindingFlags.Public | BindingFlags.NonPublic
 			| BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly;
 
-		private Dictionary<string, Dtos.Node> sentNodes;
+		private Dictionary<string, JsonTypes.Node> sentNodes;
 
 		public override object InitializeLifetimeService() => null;
 
@@ -38,7 +38,7 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 		private void AnalyzeAssemblyImpl(string assemblyPath, NotificationReceiver receiver)
 		{
 			// The sender, which will send notifications to the receiver in the parent app-domain
-			sentNodes = new Dictionary<string, Dtos.Node>();
+			sentNodes = new Dictionary<string, JsonTypes.Node>();
 			memberCount = 0;
 			linkCount = 0;
 			NotificationSender sender = new NotificationSender(receiver);
@@ -99,7 +99,7 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 					&& !Reflection.IsCompilerGenerated(type.DeclaringType?.Name));
 
 			// Add type nodes
-			List<(TypeInfo type, Dtos.Node node)> typeNodes = assemblyTypes
+			List<(TypeInfo type, JsonTypes.Node node)> typeNodes = assemblyTypes
 				.Select(type => AddType(type, sender))
 				.ToList();
 			t.Log($"Added {typeNodes.Count} types");
@@ -120,7 +120,7 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 		}
 
 
-		private (TypeInfo type, Dtos.Node node) AddType(
+		private (TypeInfo type, JsonTypes.Node node) AddType(
 			TypeInfo type, NotificationSender sender)
 		{
 			if (type.DeclaringType != null)
@@ -130,32 +130,32 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 			}
 
 			string typeFullName = Reflection.GetTypeFullName(type);
-			Dtos.Node typeNode = SendNode(typeFullName, Dtos.NodeType.Type, sender);
+			JsonTypes.Node typeNode = SendNode(typeFullName, JsonTypes.NodeType.Type, sender);
 			return (type, typeNode);
 		}
 
 
-		private Dtos.Node SendNode(string nodeName, string nodeType, NotificationSender sender)
+		private JsonTypes.Node SendNode(string nodeName, string nodeType, NotificationSender sender)
 		{
 			if (Reflection.IsCompilerGenerated(nodeName))
 			{
 				Log.Warn($"Compiler generated node: {nodeName}");
 			}
 
-			if (sentNodes.TryGetValue(nodeName, out Dtos.Node node))
+			if (sentNodes.TryGetValue(nodeName, out JsonTypes.Node node))
 			{
 				// Already sent this node
 				return node;
 			}
 
-			node = new Dtos.Node
+			node = new JsonTypes.Node
 			{
 				Name = nodeName,
 				Type = nodeType
 			};
 
 			sentNodes[nodeName] = node;
-			sender.SendItem(new Dtos.Item { Node = node });
+			sender.SendItem(new JsonTypes.Item { Node = node });
 			return node;
 		}
 
@@ -175,14 +175,14 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 				return;
 			}
 
-			Dtos.Link link = new Dtos.Link
+			JsonTypes.Link link = new JsonTypes.Link
 			{
 				Source = sourceNodeName,
 				Target = targetNodeName
 			};
 
 			linkCount++;
-			sender.SendItem(new Dtos.Item { Link = link });
+			sender.SendItem(new JsonTypes.Item { Link = link });
 		}
 
 
@@ -195,11 +195,11 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 			}
 
 			string typeFullName = Reflection.GetTypeFullName(type);
-			SendNode(typeFullName, Dtos.NodeType.Type, sender);
+			SendNode(typeFullName, JsonTypes.NodeType.Type, sender);
 		}
 
 
-		private void AddLinksToBaseTypes(TypeInfo type, Dtos.Node sourceNode, NotificationSender sender)
+		private void AddLinksToBaseTypes(TypeInfo type, JsonTypes.Node sourceNode, NotificationSender sender)
 		{
 			try
 			{
@@ -219,7 +219,7 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 		}
 
 
-		private void AddTypeMembers(TypeInfo type, Dtos.Node typeNode, NotificationSender sender)
+		private void AddTypeMembers(TypeInfo type, JsonTypes.Node typeNode, NotificationSender sender)
 		{
 			try
 			{
@@ -234,13 +234,13 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 		}
 
 
-		private void AddMember(MemberInfo memberInfo, Dtos.Node typeNode, NotificationSender sender)
+		private void AddMember(MemberInfo memberInfo, JsonTypes.Node typeNode, NotificationSender sender)
 		{
 			try
 			{
 				string memberName = Reflection.GetMemberFullName(memberInfo, typeNode.Name);
 
-				var memberNode = SendNode(memberName, Dtos.NodeType.Member, sender);
+				var memberNode = SendNode(memberName, JsonTypes.NodeType.Member, sender);
 				memberCount++;
 
 				AddMemberLinks(memberNode, memberInfo, sender);
@@ -253,7 +253,7 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 
 
 		private void AddMemberLinks(
-			Dtos.Node sourceMemberNode, MemberInfo member, NotificationSender sender)
+			JsonTypes.Node sourceMemberNode, MemberInfo member, NotificationSender sender)
 		{
 			try
 			{
@@ -290,7 +290,7 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 
 
 		private void AddMethodLinks(
-			Dtos.Node memberNode, MethodInfo method, NotificationSender sender)
+			JsonTypes.Node memberNode, MethodInfo method, NotificationSender sender)
 		{
 			Type returnType = method.ReturnType;
 			AddLinkToType(memberNode, returnType, sender);
@@ -304,7 +304,7 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 
 
 		private void AddConstructorLinks(
-			Dtos.Node memberNode, ConstructorInfo method, NotificationSender sender)
+			JsonTypes.Node memberNode, ConstructorInfo method, NotificationSender sender)
 		{
 			method.GetParameters()
 				.Select(parameter => parameter.ParameterType)
@@ -316,7 +316,7 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 
 		private void AddMethodBodyLinks(MethodBody methodBody, NotificationSender sender)
 		{
-			Dtos.Node memberNode = methodBody.MemberNode;
+			JsonTypes.Node memberNode = methodBody.MemberNode;
 			MethodBase method = methodBody.Method;
 
 			System.Reflection.MethodBody body = method.GetMethodBody();
@@ -345,7 +345,7 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 
 
 		private void AddLinkToCallMethod(
-			Dtos.Node memberNode, MethodInfo method, NotificationSender sender)
+			JsonTypes.Node memberNode, MethodInfo method, NotificationSender sender)
 		{
 			Type declaringType = method.DeclaringType;
 
@@ -361,7 +361,7 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 				return;
 			}
 
-			SendNode(methodName, Dtos.NodeType.Member, sender);
+			SendNode(methodName, JsonTypes.NodeType.Member, sender);
 			SendLink(memberNode.Name, methodName, sender);
 
 			Type returnType = method.ReturnType;
@@ -374,7 +374,7 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 
 
 		private void AddLinkToType(
-			Dtos.Node sourceNode,
+			JsonTypes.Node sourceNode,
 			Type targetType,
 			NotificationSender sender)
 		{
@@ -393,7 +393,7 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 				return;
 			}
 
-			SendNode(targetNodeName, Dtos.NodeType.Type, sender);
+			SendNode(targetNodeName, JsonTypes.NodeType.Type, sender);
 			SendLink(sourceNode.Name, targetNodeName, sender);
 
 			if (targetType.IsGenericType)
@@ -439,10 +439,10 @@ namespace Dependinator.ModelParsing.Private.Analyzing.Private
 
 		private class MethodBody
 		{
-			public Dtos.Node MemberNode { get; }
+			public JsonTypes.Node MemberNode { get; }
 			public MethodBase Method { get; }
 
-			public MethodBody(Dtos.Node memberNode, MethodBase method)
+			public MethodBody(JsonTypes.Node memberNode, MethodBase method)
 			{
 				MemberNode = memberNode;
 				Method = method;

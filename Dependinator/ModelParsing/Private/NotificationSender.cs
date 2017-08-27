@@ -11,7 +11,7 @@ namespace Dependinator.ModelParsing.Private
 	internal class NotificationSender
 	{
 		private readonly NotificationReceiver receiver;
-		private readonly BlockingCollection<Dtos.Item> items = new BlockingCollection<Dtos.Item>();
+		private readonly BlockingCollection<JsonTypes.Item> items = new BlockingCollection<JsonTypes.Item>();
 
 		private readonly Task sendTask;
 
@@ -24,7 +24,7 @@ namespace Dependinator.ModelParsing.Private
 		}
 
 
-		public void SendItem(Dtos.Item item) => items.Add(item);
+		public void SendItem(JsonTypes.Item item) => items.Add(item);
 
 
 
@@ -43,13 +43,13 @@ namespace Dependinator.ModelParsing.Private
 			{
 				while (!items.IsCompleted)
 				{
-					Dtos.Item item;
+					JsonTypes.Item item;
 					if (!items.TryTake(out item, int.MaxValue))
 					{
 						return;
 					}
 
-					List<Dtos.Item> itemBatch = null;
+					List<JsonTypes.Item> itemBatch = null;
 
 					AddToBatch(item, ref itemBatch);
 
@@ -71,11 +71,11 @@ namespace Dependinator.ModelParsing.Private
 		}
 
 
-		private static void AddToBatch(Dtos.Item item, ref List<Dtos.Item> itemBatch)
+		private static void AddToBatch(JsonTypes.Item item, ref List<JsonTypes.Item> itemBatch)
 		{
 			if (itemBatch == null)
 			{
-				itemBatch = new List<Dtos.Item>();
+				itemBatch = new List<JsonTypes.Item>();
 			}
 
 			itemBatch.Add(item);

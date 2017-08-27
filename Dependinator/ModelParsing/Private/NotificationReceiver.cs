@@ -19,7 +19,7 @@ namespace Dependinator.ModelParsing.Private
 		public override object InitializeLifetimeService() => null;
 
 
-		public void ReceiveItems(List<Dtos.Item> dtoItems)
+		public void ReceiveItems(List<JsonTypes.Item> dtoItems)
 		{
 			IReadOnlyList<DataItem> items = dtoItems.Select(Convert.ToDataItem).ToList();
 

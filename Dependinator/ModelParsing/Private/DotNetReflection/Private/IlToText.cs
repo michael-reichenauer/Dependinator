@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
 
-namespace Dependinator.ModelParsing.Private.Analyzing.Private
+namespace Dependinator.ModelParsing.Private.DotNetReflection.Private
 {
 	internal static class IlToText
 	{

@@ -1,18 +1,18 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Dependinator.ModelParsing.Private.Analyzing;
+using Dependinator.ModelParsing.Private.DotNetReflection;
 using Dependinator.ModelParsing.Private.Serializing;
 
 namespace Dependinator.ModelParsing.Private
 {
-	internal class ModelingService : IModelingService
+	internal class ParserService : IParserService
 	{
 		private readonly IReflectionService reflectionService;
 		private readonly IDataSerializer dataSerializer;
 
 
-		public ModelingService(
+		public ParserService(
 			IReflectionService reflectionService,
 			IDataSerializer dataSerializer)
 		{

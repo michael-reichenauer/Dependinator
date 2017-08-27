@@ -21,7 +21,7 @@ namespace Dependinator.ModelParsing.Private.Serializing
 			try
 			{
 				Timing t = new Timing();
-				Dtos.Model dataModel = new Dtos.Model();
+				JsonTypes.Model dataModel = new JsonTypes.Model();
 
 				dataModel.Items = items.Select(Convert.ToDtoItem).ToList();
 
@@ -73,10 +73,10 @@ namespace Dependinator.ModelParsing.Private.Serializing
 
 					JsonSerializer serializer = GetJsonSerializer();
 
-					Dtos.Model dataModel;
+					JsonTypes.Model dataModel;
 					using (StreamReader stream = new StreamReader(path))
 					{
-						dataModel = (Dtos.Model)serializer.Deserialize(stream, typeof(Dtos.Model));
+						dataModel = (JsonTypes.Model)serializer.Deserialize(stream, typeof(JsonTypes.Model));
 					}
 					t.Log("Deserialized");
 
