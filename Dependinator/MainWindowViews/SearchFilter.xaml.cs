@@ -1,7 +1,6 @@
 ﻿using System.Windows.Controls;
 
-
-namespace Dependinator.Common
+namespace Dependinator.MainWindowViews
 {
 	/// <summary>
 	/// Interaction logic for SearchFilter.xaml

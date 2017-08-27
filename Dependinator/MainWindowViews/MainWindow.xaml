@@ -132,7 +132,7 @@
 				<StackPanel Grid.Column="2" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
 					
 					<!-- Search and filter box  -->
-					<common:SearchFilter x:Name="Search"/>
+					<mainWindowViews:SearchFilter x:Name="Search"/>
 
 					<!-- The 3 minimize, maximize and close window control buttons in the title bar -->
 					<common:WindowControlButtons/>

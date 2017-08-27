@@ -106,6 +106,9 @@
   <ItemGroup>
     <Compile Include="Common\MessageDialogs\IMessage.cs" />
     <Compile Include="Common\MessageDialogs\IMessageService.cs" />
+    <Compile Include="MainWindowViews\SearchFilter.xaml.cs">
+      <DependentUpon>SearchFilter.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ModelParsing\ModelItem.cs" />
     <Compile Include="ModelParsing\ModelLink.cs" />
     <Compile Include="ModelParsing\ModelItemsCallback.cs" />
@@ -285,9 +288,6 @@
     <Compile Include="ModelViewing\ModelView.xaml.cs">
       <DependentUpon>ModelView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Common\SearchFilter.xaml.cs">
-      <DependentUpon>SearchFilter.xaml</DependentUpon>
-    </Compile>
     <Compile Include="MainWindowViews\HamburgerButton.xaml.cs">
       <DependentUpon>HamburgerButton.xaml</DependentUpon>
     </Compile>
@@ -354,6 +354,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="MainWindowViews\SearchFilter.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="ModelViewing\Links\LineView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -371,10 +375,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ModelViewing\ModelView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Common\SearchFilter.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
