@@ -192,6 +192,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			Rect bounds = new Rect(location, size);
 
 			nodeViewMode.ItemBounds = bounds;
+			nodeViewMode.ItemsViewModel?.ItemsCanvas?.ResetLayout();
 		}
 	}
 }

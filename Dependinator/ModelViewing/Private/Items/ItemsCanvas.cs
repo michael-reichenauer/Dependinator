@@ -59,6 +59,15 @@ namespace Dependinator.ModelViewing.Private.Items
 			return child;
 		}
 
+		public void ResetLayout()
+		{
+			if (!IsRoot)
+			{
+				Scale = ParentScale / DefaultScaleFactor;
+				Offset = new Point(0, 0);
+			}
+		}
+
 		public void ItemRealized()
 		{
 			itemsSource.ItemRealized();
