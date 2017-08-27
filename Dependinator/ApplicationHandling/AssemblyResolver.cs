@@ -52,10 +52,9 @@ namespace Dependinator.ApplicationHandling
 						return null;
 					}
 
-					long bytestreamMaxLength = stream.Length;
-					byte[] buffer = new byte[bytestreamMaxLength];
-					stream.Read(buffer, 0, (int)bytestreamMaxLength);
-					Log.Debug($"Resolved {resolveName}");
+					byte[] buffer = new byte[stream.Length];
+					stream.Read(buffer, 0, buffer.Length);
+					// Log.Debug($"Resolved {resolveName}");
 					return Assembly.Load(buffer);
 				}
 			}
@@ -82,10 +81,9 @@ namespace Dependinator.ApplicationHandling
 						Log.Error($"Failed to read {gitResourceName}");
 						throw new InvalidOperationException("Failed to extract dll" + gitResourceName);
 					}
-
-					long bytestreamMaxLength = stream.Length;
-					byte[] buffer = new byte[bytestreamMaxLength];
-					stream.Read(buffer, 0, (int)bytestreamMaxLength);
+					
+					byte[] buffer = new byte[stream.Length];
+					stream.Read(buffer, 0, buffer.Length);
 					File.WriteAllBytes(targetPath, buffer);
 					Log.Debug($"Extracted {targetPath}");
 				}

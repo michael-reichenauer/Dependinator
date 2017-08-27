@@ -179,9 +179,9 @@
     <Compile Include="Common\ThemeHandling\Theme.cs" />
     <Compile Include="Common\ThemeHandling\ThemeOption.cs" />
     <Compile Include="Common\ThemeHandling\ThemesOption.cs" />
-    <Compile Include="Common\CommitId.cs" />
-    <Compile Include="Common\CommitIds.cs" />
-    <Compile Include="Common\CommitSha.cs" />
+    <Compile Include="Common\Git\CommitId.cs" />
+    <Compile Include="Common\Git\CommitIds.cs" />
+    <Compile Include="Common\Git\CommitSha.cs" />
     <Compile Include="Common\JumpListService.cs" />
     <Compile Include="Common\MessageDialogs\Message.cs" />
     <Compile Include="Common\MessageDialogs\MessageDialog.xaml.cs">
@@ -259,7 +259,7 @@
     <Compile Include="MainWindowViews\MainWindowService.cs" />
     <Compile Include="MainWindowViews\WindowOwner.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="Common\CredentialHandler.cs" />
+    <Compile Include="Common\Git\CredentialHandler.cs" />
     <Compile Include="ApplicationHandling\AssemblyResolver.cs" />
     <Compile Include="Utils\StackTraceExtensions.cs" />
     <Compile Include="Utils\StopParameter.cs" />
@@ -306,10 +306,10 @@
     <Compile Include="Utils\AsyncSemaphore.cs" />
     <Compile Include="Utils\EnumerableExtensions.cs" />
     <Compile Include="Utils\Error.cs" />
-    <Compile Include="ApplicationHandling\Installation\IInstaller.cs" />
+    <Compile Include="Common\Installation\IInstaller.cs" />
     <Compile Include="ApplicationHandling\ILatestVersionService.cs" />
     <Compile Include="ApplicationHandling\LatestVersionService.cs" />
-    <Compile Include="ApplicationHandling\Installation\Installer.cs" />
+    <Compile Include="Common\Installation\Private\Installer.cs" />
     <Compile Include="ApplicationHandling\SettingsHandling\ProgramPaths.cs" />
     <Compile Include="ApplicationHandling\SettingsHandling\ProgramSettings.cs" />
     <Compile Include="Utils\UI\PropertyToVisibilityConverter.cs" />

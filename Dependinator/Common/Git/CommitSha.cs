@@ -2,8 +2,7 @@
 using System.Runtime.Serialization;
 using Dependinator.Utils;
 
-
-namespace Dependinator.Common
+namespace Dependinator.Common.Git
 {
 	[DataContract]
 	public class CommitSha : Equatable<CommitSha>

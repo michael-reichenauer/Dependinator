@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows;
-using Dependinator.ApplicationHandling.Installation;
 using Dependinator.Utils;
 
 

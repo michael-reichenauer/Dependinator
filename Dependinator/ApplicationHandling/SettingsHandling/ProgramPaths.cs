@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using Dependinator.ApplicationHandling.Installation;
+using Dependinator.Common.Installation.Private;
 using Dependinator.Utils;
 
 
