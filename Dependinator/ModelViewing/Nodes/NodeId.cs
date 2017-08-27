@@ -1,4 +1,3 @@
-using Dependinator.Modeling;
 using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.Nodes

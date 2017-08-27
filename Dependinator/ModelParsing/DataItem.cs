@@ -1,4 +1,4 @@
-namespace Dependinator.Modeling
+namespace Dependinator.ModelParsing
 {
 	internal class DataItem
 	{

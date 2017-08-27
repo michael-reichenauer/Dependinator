@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Dependinator.Modeling.Private.Serializing
+namespace Dependinator.ModelParsing.Private.Serializing
 {
 	internal interface IDataSerializer
 	{

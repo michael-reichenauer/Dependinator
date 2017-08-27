@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Dependinator.Modeling.Private.Serializing
+namespace Dependinator.ModelParsing.Private.Serializing
 {
 	public static class Dtos
 	{

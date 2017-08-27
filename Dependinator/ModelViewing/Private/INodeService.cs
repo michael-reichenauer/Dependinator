@@ -1,4 +1,4 @@
-using Dependinator.Modeling;
+using Dependinator.ModelParsing;
 
 namespace Dependinator.ModelViewing.Private
 {

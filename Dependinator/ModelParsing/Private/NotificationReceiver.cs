@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dependinator.Modeling.Private.Serializing;
+using Dependinator.ModelParsing.Private.Serializing;
 
-
-namespace Dependinator.Modeling.Private
+namespace Dependinator.ModelParsing.Private
 {
 	internal class NotificationReceiver : MarshalByRefObject
 	{

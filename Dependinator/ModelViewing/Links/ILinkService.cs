@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Dependinator.Modeling;
+using Dependinator.ModelParsing;
 
 namespace Dependinator.ModelViewing.Links
 {

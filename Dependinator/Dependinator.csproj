@@ -106,10 +106,9 @@
   <ItemGroup>
     <Compile Include="Common\MessageDialogs\IMessage.cs" />
     <Compile Include="Common\MessageDialogs\IMessageService.cs" />
-    <Compile Include="Modeling\DataItem.cs" />
-    <Compile Include="Modeling\DataLink.cs" />
-    <Compile Include="Modeling\IModelNotifications.cs" />
-    <Compile Include="Modeling\Private\Convert.cs" />
+    <Compile Include="ModelParsing\DataItem.cs" />
+    <Compile Include="ModelParsing\DataLink.cs" />
+    <Compile Include="ModelParsing\Private\Convert.cs" />
     <Compile Include="ModelViewing\Nodes\NodePointsView.xaml.cs">
       <DependentUpon>NodePointsView.xaml</DependentUpon>
     </Compile>
@@ -127,8 +126,8 @@
     <Compile Include="ModelViewing\Links\ILinkService.cs" />
     <Compile Include="ModelViewing\Links\Line.cs" />
     <Compile Include="ModelViewing\Links\LinkId.cs" />
-    <Compile Include="Modeling\Private\NotificationReceiver.cs" />
-    <Compile Include="Modeling\Private\Analyzing\Private\Analyzer.cs" />
+    <Compile Include="ModelParsing\Private\NotificationReceiver.cs" />
+    <Compile Include="ModelParsing\Private\Analyzing\Private\Analyzer.cs" />
     <Compile Include="ModelViewing\Links\LineView.xaml.cs">
       <DependentUpon>LineView.xaml</DependentUpon>
     </Compile>
@@ -145,7 +144,7 @@
     <Compile Include="ModelViewing\Private\ModelService.cs" />
     <Compile Include="ModelViewing\Private\NodeService.cs" />
     <Compile Include="ModelViewing\Private\Model.cs" />
-    <Compile Include="Modeling\DataNode.cs" />
+    <Compile Include="ModelParsing\DataNode.cs" />
     <Compile Include="ModelViewing\Nodes\NodeId.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\TypeView.xaml.cs">
@@ -197,13 +196,13 @@
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
     <Compile Include="Common\WorkFolders\FileEventArgs.cs" />
     <Compile Include="Common\WorkFolders\IFolderMonitorService.cs" />
-    <Compile Include="Modeling\Private\Analyzing\Private\Assemblies.cs" />
-    <Compile Include="Modeling\Private\Analyzing\Private\ILInstruction.cs" />
-    <Compile Include="Modeling\Private\Analyzing\Private\IlToText.cs" />
-    <Compile Include="Modeling\Private\Analyzing\Private\MethodBodyReader.cs" />
-    <Compile Include="Modeling\Private\Analyzing\Private\Reflection.cs" />
-    <Compile Include="Modeling\Private\NotificationSender.cs" />
-    <Compile Include="Modeling\Private\Analyzing\Private\Globals.cs" />
+    <Compile Include="ModelParsing\Private\Analyzing\Private\Assemblies.cs" />
+    <Compile Include="ModelParsing\Private\Analyzing\Private\ILInstruction.cs" />
+    <Compile Include="ModelParsing\Private\Analyzing\Private\IlToText.cs" />
+    <Compile Include="ModelParsing\Private\Analyzing\Private\MethodBodyReader.cs" />
+    <Compile Include="ModelParsing\Private\Analyzing\Private\Reflection.cs" />
+    <Compile Include="ModelParsing\Private\NotificationSender.cs" />
+    <Compile Include="ModelParsing\Private\Analyzing\Private\Globals.cs" />
     <Compile Include="ModelViewing\Links\Private\ILinkSegmentService.cs" />
     <Compile Include="ModelViewing\Links\ILineViewModelService.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkSegmentOld.cs" />
@@ -215,13 +214,13 @@
     <Compile Include="ModelViewing\Nodes\INodeViewModelService.cs" />
     <Compile Include="ModelViewing\Private\Items\IItemsCanvasBounds.cs" />
     <Compile Include="ModelViewing\Private\Items\ItemsCanvas.cs" />
-    <Compile Include="Modeling\Private\Analyzing\Private\ReflectionService.cs" />
+    <Compile Include="ModelParsing\Private\Analyzing\Private\ReflectionService.cs" />
     <Compile Include="ModelViewing\Nodes\MemberNodeView.xaml.cs">
       <DependentUpon>MemberNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\MemberNodeViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\NodeName.cs" />
-    <Compile Include="Modeling\Private\Analyzing\IReflectionService.cs" />
+    <Compile Include="ModelParsing\Private\Analyzing\IReflectionService.cs" />
     <Compile Include="ModelViewing\Links\LinkOld.cs" />
     <Compile Include="ModelViewing\Links\NodeLinks.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeComparer.cs" />
@@ -233,8 +232,8 @@
       <DependentUpon>NamespaceView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\CompositeNodeViewModel.cs" />
-    <Compile Include="Modeling\Private\ModelingService.cs" />
-    <Compile Include="Modeling\IModelingService.cs" />
+    <Compile Include="ModelParsing\Private\ModelingService.cs" />
+    <Compile Include="ModelParsing\IModelingService.cs" />
     <Compile Include="ModelViewing\Links\LinkLineOld.cs" />
     <Compile Include="ModelViewing\Links\LinkLineViewModel.cs" />
     <Compile Include="ModelViewing\Private\Items\ItemViewModel.cs" />
@@ -243,9 +242,9 @@
     <Compile Include="ModelViewing\Private\IModelViewService.cs" />
     <Compile Include="ModelViewing\Private\ModelViewService.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeViewModelService.cs" />
-    <Compile Include="Modeling\Private\Serializing\Dtos.cs" />
-    <Compile Include="Modeling\Private\Serializing\DataSerializer.cs" />
-    <Compile Include="Modeling\Private\Serializing\IDataSerializer.cs" />
+    <Compile Include="ModelParsing\Private\Serializing\Dtos.cs" />
+    <Compile Include="ModelParsing\Private\Serializing\DataSerializer.cs" />
+    <Compile Include="ModelParsing\Private\Serializing\IDataSerializer.cs" />
     <Compile Include="Utils\CollectionExtensions.cs" />
     <Compile Include="Utils\ExceptionAsyncExtensions.cs" />
     <Compile Include="Utils\ExceptionExtensions.cs" />
@@ -528,9 +527,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Dependencies\System.Windows.Interactivity.dll" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Features\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>mkdir "$(ProjectDir)\Dependencies" 2&gt; NUL

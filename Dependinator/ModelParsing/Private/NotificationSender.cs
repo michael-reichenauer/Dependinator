@@ -3,11 +3,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Dependinator.Modeling.Private.Serializing;
+using Dependinator.ModelParsing.Private.Serializing;
 using Dependinator.Utils;
 
-
-namespace Dependinator.Modeling.Private
+namespace Dependinator.ModelParsing.Private
 {
 	internal class NotificationSender
 	{

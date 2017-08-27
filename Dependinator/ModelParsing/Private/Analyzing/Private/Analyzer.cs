@@ -6,11 +6,10 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading.Tasks;
 using Dependinator.Common;
-using Dependinator.Modeling.Private.Serializing;
+using Dependinator.ModelParsing.Private.Serializing;
 using Dependinator.Utils;
 
-
-namespace Dependinator.Modeling.Private.Analyzing.Private
+namespace Dependinator.ModelParsing.Private.Analyzing.Private
 {
 	internal class Analyzer : MarshalByRefObject
 	{

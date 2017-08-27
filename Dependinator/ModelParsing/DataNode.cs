@@ -1,7 +1,7 @@
 using System.Windows;
 using Dependinator.Utils;
 
-namespace Dependinator.Modeling
+namespace Dependinator.ModelParsing
 {
 	internal class DataNode : Equatable<DataNode>
 	{

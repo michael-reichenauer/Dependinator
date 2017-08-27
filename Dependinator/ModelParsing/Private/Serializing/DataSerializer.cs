@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Dependinator.Utils;
 using Newtonsoft.Json;
 
-namespace Dependinator.Modeling.Private.Serializing
+namespace Dependinator.ModelParsing.Private.Serializing
 {
 	internal class DataSerializer : IDataSerializer
 	{

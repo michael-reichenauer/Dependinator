@@ -1,4 +1,4 @@
-using Dependinator.Modeling.Private.Serializing;
+using Dependinator.ModelParsing.Private.Serializing;
 using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.Nodes

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace Dependinator.Modeling.Private.Analyzing.Private
+namespace Dependinator.ModelParsing.Private.Analyzing.Private
 {
 	//public enum AssemblyType
 	//{

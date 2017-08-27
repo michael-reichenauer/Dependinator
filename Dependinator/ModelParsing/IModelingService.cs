@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Dependinator.Modeling
+namespace Dependinator.ModelParsing
 {
 	internal delegate void ItemsCallback(IReadOnlyList<DataItem> items);
 

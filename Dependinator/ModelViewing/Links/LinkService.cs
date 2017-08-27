@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dependinator.Modeling;
+using Dependinator.ModelParsing;
 using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private;

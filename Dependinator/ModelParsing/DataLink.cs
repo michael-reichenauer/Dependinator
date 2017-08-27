@@ -1,6 +1,6 @@
 using Dependinator.Utils;
 
-namespace Dependinator.Modeling
+namespace Dependinator.ModelParsing
 {
 	internal class DataLink : Equatable<DataLink>
 	{

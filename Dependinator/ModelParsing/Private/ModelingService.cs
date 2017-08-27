@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Dependinator.Modeling.Private.Analyzing;
-using Dependinator.Modeling.Private.Serializing;
+using Dependinator.ModelParsing.Private.Analyzing;
+using Dependinator.ModelParsing.Private.Serializing;
 
-
-namespace Dependinator.Modeling.Private
+namespace Dependinator.ModelParsing.Private
 {
 	internal class ModelingService : IModelingService
 	{

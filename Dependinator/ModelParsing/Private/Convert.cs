@@ -1,8 +1,8 @@
 using System.Windows;
 using System.Windows.Media;
-using Dependinator.Modeling.Private.Serializing;
+using Dependinator.ModelParsing.Private.Serializing;
 
-namespace Dependinator.Modeling.Private
+namespace Dependinator.ModelParsing.Private
 {
 	internal class Convert
 	{
