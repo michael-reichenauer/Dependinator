@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Diagnostics;
-using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using Dependinator.Common;
 using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.SettingsHandling;
@@ -145,8 +143,17 @@ namespace Dependinator.MainWindowViews
 			}
 			else
 			{
-				Dispatcher.CurrentDispatcher.BeginInvoke(() => OpenFileAsync().RunInBackground());
+				//Dispatcher.CurrentDispatcher.BeginInvoke(() =>
+				//{
+				//	OpenFileDialog dialog = new OpenFileDialog(owner);
+				//	dialog.ShowDialog();
+				//});
+
 			}
+			//else
+			//{
+			//	Dispatcher.CurrentDispatcher.BeginInvoke(() => OpenFileAsync().RunInBackground());
+			//}
 
 			//else
 			//{
@@ -311,7 +318,7 @@ namespace Dependinator.MainWindowViews
 			try
 			{
 				Process process = new Process();
-				
+
 				process.StartInfo.FileName = Product.FeedbackAddress;
 				process.Start();
 			}
@@ -389,12 +396,12 @@ namespace Dependinator.MainWindowViews
 
 				if (workingFolder.TrySetPath(dlg.FileName))
 				{
-					Log.Debug($"User selected valid '{dlg.FileName}' in root '{workingFolder}'");
+					Log.Debug($"User selected valid file '{dlg.FileName}'");
 					return true;
 				}
 				else
 				{
-					Log.Debug($"User selected an invalid working folder: {dlg.FileName}");
+					Log.Debug($"User selected an invalid file: {dlg.FileName}");
 				}
 			}
 		}
