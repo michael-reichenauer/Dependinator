@@ -8,6 +8,7 @@ using Dependinator.Common.WorkFolders;
 using Dependinator.ModelParsing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.ModelViewing.Open;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 
@@ -67,6 +68,11 @@ namespace Dependinator.ModelViewing.Private
 					await parserService.AnalyzeAsync(
 						workingFolder.FilePath, items => UpdateDataItems(items, stamp));
 				}
+			}
+
+			if (!model.Root.Children.Any())
+			{
+				model.Root.ItemsCanvas.AddItem(new OpenModelViewModel());
 			}
 		}
 

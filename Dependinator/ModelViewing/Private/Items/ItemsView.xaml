@@ -9,6 +9,7 @@
 	xmlns:links="clr-namespace:Dependinator.ModelViewing.Links"
 	xmlns:nodes="clr-namespace:Dependinator.ModelViewing.Nodes"
 	xmlns:private="clr-namespace:Dependinator.ModelViewing.Private.Items.Private"
+	xmlns:open="clr-namespace:Dependinator.ModelViewing.Open"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
@@ -134,6 +135,18 @@
 							</Setter.Value>
 						</Setter>
 					</DataTrigger>
+
+
+					<DataTrigger Binding="{Binding ViewName}" Value="OpenModelViewModel">
+						<Setter Property="ContentTemplate">
+							<Setter.Value>
+								<DataTemplate>
+									<open:OpenModelView/>
+								</DataTemplate>
+							</Setter.Value>
+						</Setter>
+					</DataTrigger>
+
 
 				</Style.Triggers>
 			</Style>

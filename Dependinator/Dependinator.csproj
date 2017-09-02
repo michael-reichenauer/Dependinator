@@ -110,7 +110,10 @@
       <DependentUpon>OpenFileDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="Common\WorkFolders\Private\OpenFileDialogViewModel.cs" />
-    <Compile Include="ModelViewing\OpenModel.cs" />
+    <Compile Include="ModelViewing\Open\OpenModelView.xaml.cs">
+      <DependentUpon>OpenModelView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ModelViewing\Open\OpenModelViewModel.cs" />
     <Compile Include="Product.cs" />
     <Compile Include="MainWindowViews\SearchFilter.xaml.cs">
       <DependentUpon>SearchFilter.xaml</DependentUpon>
@@ -405,6 +408,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="ModelViewing\Nodes\MemberNodeView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ModelViewing\Open\OpenModelView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
