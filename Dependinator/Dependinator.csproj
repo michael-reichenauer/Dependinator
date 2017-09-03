@@ -192,9 +192,6 @@
     <Compile Include="Common\ThemeHandling\Theme.cs" />
     <Compile Include="Common\ThemeHandling\ThemeOption.cs" />
     <Compile Include="Common\ThemeHandling\ThemesOption.cs" />
-    <Compile Include="Common\Git\CommitId.cs" />
-    <Compile Include="Common\Git\CommitIds.cs" />
-    <Compile Include="Common\Git\CommitSha.cs" />
     <Compile Include="Common\WorkFolders\Private\JumpListService.cs" />
     <Compile Include="Common\MessageDialogs\Message.cs" />
     <Compile Include="Common\MessageDialogs\MessageDialog.xaml.cs">
