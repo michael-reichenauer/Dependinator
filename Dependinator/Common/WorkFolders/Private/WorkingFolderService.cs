@@ -3,7 +3,7 @@ using System.IO;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
 
-namespace Dependinator.Common.Private
+namespace Dependinator.Common.WorkFolders.Private
 {
 	[SingleInstance]
 	internal class WorkingFolderService : IWorkingFolderService

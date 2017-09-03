@@ -19,20 +19,14 @@ namespace Dependinator.MainWindowViews
 	[SingleInstance]
 	public partial class MainWindow : Window
 	{
-		private readonly WorkingFolder workingFolder;
-
 		private readonly DispatcherTimer remoteCheckTimer = new DispatcherTimer();
 
 		private readonly MainWindowViewModel viewModel;
 		
 
 
-		internal MainWindow(
-			WorkingFolder workingFolder,
-			Func<MainWindowViewModel> mainWindowViewModelProvider)
+		internal MainWindow(Func<MainWindowViewModel> mainWindowViewModelProvider)
 		{
-			this.workingFolder = workingFolder;
-
 			InitializeComponent();
 	
 			SetShowToolTipLonger();
@@ -110,8 +104,6 @@ namespace Dependinator.MainWindowViews
 		{
 			viewModel.ClosingWindow();
 			StoreWindowSettings();
-
-			StoreLastUsedFolder();
 		}
 
 
@@ -162,11 +154,6 @@ namespace Dependinator.MainWindowViews
 			return false;
 		}
 
-
-		private void StoreLastUsedFolder()
-		{
-			Settings.Edit<ProgramSettings>(s => s.LastUsedWorkingFolder = workingFolder);
-		}
 
 
 		private static void SetShowToolTipLonger()

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using Dependinator.Common.Private;
 using Dependinator.Utils;
 
 namespace Dependinator.Common.WorkFolders
@@ -10,7 +9,7 @@ namespace Dependinator.Common.WorkFolders
 	{
 		private readonly IWorkingFolderService workingFolderService;
 
-		
+
 		private string FolderPath => workingFolderService.FolderPath;
 
 		public WorkingFolder(IWorkingFolderService workingFolderService)

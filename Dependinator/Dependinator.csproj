@@ -106,10 +106,7 @@
   <ItemGroup>
     <Compile Include="Common\MessageDialogs\IMessage.cs" />
     <Compile Include="Common\MessageDialogs\IMessageService.cs" />
-    <Compile Include="Common\WorkFolders\Private\OpenFileDialog.xaml.cs">
-      <DependentUpon>OpenFileDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Common\WorkFolders\Private\OpenFileDialogViewModel.cs" />
+    <Compile Include="ModelViewing\Open\FileItem.cs" />
     <Compile Include="ModelViewing\Open\OpenModelView.xaml.cs">
       <DependentUpon>OpenModelView.xaml</DependentUpon>
     </Compile>
@@ -186,8 +183,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="Common\Private\IWorkingFolderService.cs" />
-    <Compile Include="Common\Private\WorkingFolderService.cs" />
+    <Compile Include="Common\WorkFolders\IWorkingFolderService.cs" />
+    <Compile Include="Common\WorkFolders\Private\WorkingFolderService.cs" />
     <Compile Include="Common\WorkFolders\WorkingFolder.cs" />
     <Compile Include="Common\ThemeHandling\BranchColorsOption.cs" />
     <Compile Include="Common\ThemeHandling\Converter.cs" />
@@ -360,10 +357,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Common\ProgressHandling\ProgressDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Common\WorkFolders\Private\OpenFileDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

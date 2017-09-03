@@ -85,22 +85,6 @@
 								FontSize="11" VerticalAlignment="Top"
 								Foreground="{DynamicResource TextLowBrush}" />
 						</Grid>
-
-						<!--<Button		
-							Style="{DynamicResource BaseButtonStyle}" HorizontalAlignment="Left"
-							FontSize="12"
-							Padding="0"
-							Margin="0,0,5,0"
-							Command="{Binding OpenFileCommand}"
-							ToolTip="{Binding ToolTip}"
-							Cursor="Hand">
-							<TextBlock
-								Text="{Binding Path=FileName}"
-								Foreground="{DynamicResource TextBrush}"
-								Background="Transparent"
-								HorizontalAlignment="Left"
-								VerticalAlignment="Center" />
-						</Button>-->
 					</DataTemplate>
 				</ItemsControl.ItemTemplate>
 			</ItemsControl>
