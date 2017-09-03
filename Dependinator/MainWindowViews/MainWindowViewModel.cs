@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.SettingsHandling;
+using Dependinator.Common.SettingsHandling.Private;
 using Dependinator.Common.WorkFolders;
 using Dependinator.Common.WorkFolders.Private;
 using Dependinator.MainWindowViews.Private;
@@ -31,6 +32,7 @@ namespace Dependinator.MainWindowViews
 
 		private readonly WindowOwner owner;
 		private readonly IMessage message;
+		private readonly ISettings settings;
 
 		private bool isLoaded = false;
 
@@ -39,6 +41,7 @@ namespace Dependinator.MainWindowViews
 			WorkingFolder workingFolder,
 			WindowOwner owner,
 			IMessage message,
+			ISettings settings,
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
 			MainWindowIpcService mainWindowIpcService,
@@ -47,6 +50,7 @@ namespace Dependinator.MainWindowViews
 			this.workingFolder = workingFolder;
 			this.owner = owner;
 			this.message = message;
+			this.settings = settings;
 			this.latestVersionService = latestVersionService;
 			this.mainWindowService = mainWindowService;
 			this.mainWindowIpcService = mainWindowIpcService;
@@ -333,8 +337,8 @@ namespace Dependinator.MainWindowViews
 		{
 			try
 			{
-				Settings.EnsureExists<Options>();
-				string optionsPath = Settings.GetFilePath<Options>();
+				settings.EnsureExists<Options>();
+				string optionsPath = settings.GetFilePath<Options>();
 
 				Log.Debug($"Open {optionsPath}");
 				Process.Start("notepad.exe", optionsPath);

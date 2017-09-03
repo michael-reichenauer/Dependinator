@@ -106,6 +106,7 @@
   <ItemGroup>
     <Compile Include="Common\MessageDialogs\IMessage.cs" />
     <Compile Include="Common\MessageDialogs\IMessageService.cs" />
+    <Compile Include="Common\SettingsHandling\ISettings.cs" />
     <Compile Include="ModelViewing\Open\FileItem.cs" />
     <Compile Include="ModelViewing\Open\OpenModelView.xaml.cs">
       <DependentUpon>OpenModelView.xaml</DependentUpon>
@@ -277,7 +278,7 @@
     <Compile Include="Utils\Txt.cs" />
     <Compile Include="Utils\UI\CredentialsDialog.cs" />
     <Compile Include="Utils\Disposable.cs" />
-    <Compile Include="Common\SettingsHandling\Settings.cs" />
+    <Compile Include="Common\SettingsHandling\Private\Settings.cs" />
     <Compile Include="Common\SettingsHandling\Options.cs" />
     <Compile Include="Common\SettingsHandling\WorkFolderSettings.cs" />
     <Compile Include="Utils\Equatable.cs" />

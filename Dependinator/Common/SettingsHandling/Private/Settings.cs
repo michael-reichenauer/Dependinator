@@ -3,19 +3,19 @@ using System.IO;
 using Dependinator.Common.WorkFolders;
 using Dependinator.Utils;
 
-namespace Dependinator.Common.SettingsHandling
+namespace Dependinator.Common.SettingsHandling.Private
 {
-	internal static class Settings
+	internal class Settings : ISettings
 	{
-		private static WorkingFolder workingFolder;
+		private readonly WorkingFolder workingFolder;
 
-		public static void SetWorkingFolder(WorkingFolder folder)
+		public Settings(WorkingFolder folder)
 		{
 			workingFolder = folder;
 		}
 
 
-		public static void EnsureExists<T>() where T : class
+		public void EnsureExists<T>() where T : class
 		{
 			// A Get will ensure that the file exists
 			T settings = Get<T>();
@@ -24,7 +24,7 @@ namespace Dependinator.Common.SettingsHandling
 
 
 
-		public static void Edit<T>(Action<T> editAction) where T : class
+		public void Edit<T>(Action<T> editAction) where T : class
 		{
 			try
 			{
@@ -48,7 +48,7 @@ namespace Dependinator.Common.SettingsHandling
 		}
 
 
-		public static void Edit<T>(string path, Action<T> editAction) where T : class
+		public void Edit<T>(string path, Action<T> editAction) where T : class
 		{
 			try
 			{
@@ -73,7 +73,7 @@ namespace Dependinator.Common.SettingsHandling
 
 
 
-		public static T Get<T>() where T:class
+		public T Get<T>() where T:class
 		{
 			if (typeof(T) == typeof(WorkFolderSettings))
 			{
@@ -89,7 +89,7 @@ namespace Dependinator.Common.SettingsHandling
 		}
 
 
-		public static T Get<T>(string path) where T : class
+		public T Get<T>(string path) where T : class
 		{
 			string settingsPath = GetSettingsFilePath<T>(path);
 
@@ -106,14 +106,14 @@ namespace Dependinator.Common.SettingsHandling
 
 
 
-		public static void Set<T>(T setting) where T : class
+		public void Set<T>(T setting) where T : class
 		{
 			string path = GetProgramSettingsPath<T>();
 			WriteAs(path, setting);
 		}
 
 
-		public static void Set(WorkFolderSettings settings)
+		public void Set(WorkFolderSettings settings)
 		{
 			string path = GetWorkFolderSettingsPath();
 
@@ -123,13 +123,13 @@ namespace Dependinator.Common.SettingsHandling
 			}
 		}
 
-		public static void Set<T>(string path, T setting) where T : class
+		public void Set<T>(string path, T setting) where T : class
 		{
 			string settingsPath = GetSettingsFilePath<T>(path);
 			WriteAs(settingsPath, setting);
 		}
 
-		public static void Set(string path, WorkFolderSettings settings)
+		public void Set(string path, WorkFolderSettings settings)
 		{
 			string settingsPath = GetSettingsFilePath<WorkFolderSettings>(path);
 			if (ParentFolderExists(path))
@@ -139,7 +139,7 @@ namespace Dependinator.Common.SettingsHandling
 		}
 
 
-		public static string GetFilePath<T>() where T : class
+		public string GetFilePath<T>() where T : class
 		{
 			if (typeof(T) == typeof(WorkFolderSettings))
 			{
@@ -238,7 +238,7 @@ namespace Dependinator.Common.SettingsHandling
 			GetSettingsFilePath<T>(ProgramInfo.GetProgramDataFolderPath());
 
 
-		private static string GetWorkFolderSettingsPath() => 
+		private string GetWorkFolderSettingsPath() => 
 			GetSettingsFilePath<WorkFolderSettings>(workingFolder);
 
 		private static string GetSettingsFilePath<T>(string folderPath) => 

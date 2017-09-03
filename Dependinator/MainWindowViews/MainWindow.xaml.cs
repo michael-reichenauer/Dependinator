@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using System.Windows.Threading;
 using Dependinator.Common;
 using Dependinator.Common.SettingsHandling;
+using Dependinator.Common.SettingsHandling.Private;
 using Dependinator.Common.WorkFolders;
 using Dependinator.Utils;
 
@@ -19,14 +20,16 @@ namespace Dependinator.MainWindowViews
 	[SingleInstance]
 	public partial class MainWindow : Window
 	{
+		private readonly ISettings settings;
 		private readonly DispatcherTimer remoteCheckTimer = new DispatcherTimer();
 
 		private readonly MainWindowViewModel viewModel;
 		
 
 
-		internal MainWindow(Func<MainWindowViewModel> mainWindowViewModelProvider)
+		internal MainWindow(ISettings settings, Func<MainWindowViewModel> mainWindowViewModelProvider)
 		{
+			this.settings = settings;
 			InitializeComponent();
 	
 			SetShowToolTipLonger();
@@ -66,7 +69,7 @@ namespace Dependinator.MainWindowViews
 
 		private void StartRemoteCheck()
 		{
-			int interval = Settings.Get<Options>().AutoRemoteCheckIntervalMin;
+			int interval = settings.Get<Options>().AutoRemoteCheckIntervalMin;
 
 			if (interval == 0)
 			{
@@ -110,34 +113,34 @@ namespace Dependinator.MainWindowViews
 
 		private void StoreWindowSettings()
 		{
-			Settings.Edit<WorkFolderSettings>(settings =>
+			settings.Edit<WorkFolderSettings>(s =>
 			{
-				settings.WindowBounds = new Rect(Top, Left, Width, Height);
-				settings.IsMaximized = WindowState == WindowState.Maximized;
+				s.WindowBounds = new Rect(Top, Left, Width, Height);
+				s.IsMaximized = WindowState == WindowState.Maximized;
 			});
 		}
 
 
 		private void RestoreWindowSettings()
 		{
-			WorkFolderSettings settings = Settings.Get<WorkFolderSettings>();
+			WorkFolderSettings s = settings.Get<WorkFolderSettings>();
 
 			Rectangle rect = new Rectangle(
-				(int)settings.WindowBounds.X, 
-				(int)settings.WindowBounds.Y, 
-				(int)settings.WindowBounds.Width, 
-				(int)settings.WindowBounds.Height);
+				(int)s.WindowBounds.X, 
+				(int)s.WindowBounds.Y, 
+				(int)s.WindowBounds.Width, 
+				(int)s.WindowBounds.Height);
 
 			// check if the saved bounds are nonzero and visible on any screen
 			if (rect != Rectangle.Empty && IsVisibleOnAnyScreen(rect))
 			{
-				Top = settings.WindowBounds.X;
-				Left = settings.WindowBounds.Y;
-				Width = settings.WindowBounds.Width;
-				Height = settings.WindowBounds.Height;
+				Top = s.WindowBounds.X;
+				Left = s.WindowBounds.Y;
+				Width = s.WindowBounds.Width;
+				Height = s.WindowBounds.Height;
 			}
 
-			WindowState = settings.IsMaximized ? WindowState.Maximized : WindowState.Normal;
+			WindowState = s.IsMaximized ? WindowState.Maximized : WindowState.Normal;
 		}
 
 

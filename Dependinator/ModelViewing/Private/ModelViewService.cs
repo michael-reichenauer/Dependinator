@@ -1,6 +1,5 @@
 ﻿using System.Threading.Tasks;
 using Dependinator.Common.SettingsHandling;
-using Dependinator.Common.WorkFolders;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 
@@ -10,16 +9,17 @@ namespace Dependinator.ModelViewing.Private
 	[SingleInstance]
 	internal class ModelViewService : IModelViewService
 	{
+		private readonly ISettings settings;
 		private readonly IModelService modelService;
-		private readonly WorkingFolder workingFolder;
+
 
 
 		public ModelViewService(
-			IModelService modelService,
-			WorkingFolder workingFolder)
+			ISettings settings,
+			IModelService modelService)
 		{
+			this.settings = settings;
 			this.modelService = modelService;
-			this.workingFolder = workingFolder;
 		}
 
 
@@ -91,25 +91,23 @@ namespace Dependinator.ModelViewing.Private
 			modelService.Save();
 		}
 
-
-
-
+		
 
 		private void StoreViewSettings()
 		{
-			Settings.Edit<WorkFolderSettings>(settings =>
+			settings.Edit<WorkFolderSettings>(s =>
 				{
-					settings.Scale = modelService.Root.ItemsCanvas.Scale;
-					settings.Offset = modelService.Root.ItemsCanvas.Offset;
+					s.Scale = modelService.Root.ItemsCanvas.Scale;
+					s.Offset = modelService.Root.ItemsCanvas.Offset;
 				});
 		}
 
 
 		private void RestoreViewSettings()
 		{
-			WorkFolderSettings settings = Settings.Get<WorkFolderSettings>();
-			modelService.Root.ItemsCanvas.Scale = settings.Scale;
-			modelService.Root.ItemsCanvas.Offset = settings.Offset;
+			WorkFolderSettings folderSettings = settings.Get<WorkFolderSettings>();
+			modelService.Root.ItemsCanvas.Scale = folderSettings.Scale;
+			modelService.Root.ItemsCanvas.Offset = folderSettings.Offset;
 		}
 	}
 }

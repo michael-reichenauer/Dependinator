@@ -3,8 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
-using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -17,12 +15,7 @@ namespace Dependinator.Utils
 	internal static class Log
 	{
 		private static readonly int MaxLogFileSize = 2000000;
-
-		private static readonly UdpClient UdpClient = new UdpClient();
 		private static readonly BlockingCollection<string> logTexts = new BlockingCollection<string>();
-
-		private static readonly IPEndPoint usageLogEndPoint =
-			new IPEndPoint(IPAddress.Parse("10.85.12.4"), 41110);
 
 		private static readonly object syncRoot = new object();
 
@@ -33,14 +26,11 @@ namespace Dependinator.Utils
 		private static readonly string LevelInfo = "INFO ";
 		private static readonly string LevelWarn = "WARN ";
 		private static readonly string LevelError = "ERROR";
-		private static readonly Lazy<bool> DisableErrorAndUsageReporting;
+
 		private static readonly int prefixLength = 0;
 
 		static Log()
 		{
-			DisableErrorAndUsageReporting = new Lazy<bool>(() =>
-				Settings.Get<Options>().DisableErrorAndUsageReporting);
-
 			Task.Factory.StartNew(SendBufferedLogRows, TaskCreationOptions.LongRunning)
 				.RunInBackground();
 
@@ -178,28 +168,6 @@ namespace Dependinator.Utils
 		private static void SendLog(string text)
 		{
 			logTexts.Add(text);
-		}
-
-
-
-		private static void SendUsage(string text)
-		{
-			if (DisableErrorAndUsageReporting.Value)
-			{
-				return;
-			}
-
-			try
-			{
-				string logRow = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss,fff} [{ProcessID}] {text}";
-
-				byte[] bytes = System.Text.Encoding.UTF8.GetBytes(logRow);
-				UdpClient.Send(bytes, bytes.Length, usageLogEndPoint);
-			}
-			catch (Exception)
-			{
-				// Ignore failed
-			}
 		}
 
 

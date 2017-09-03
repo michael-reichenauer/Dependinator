@@ -21,13 +21,15 @@ namespace Dependinator.Common.Installation.Private
 			"https://api.github.com/repos/michael-reichenauer/Dependinator/releases/latest";
 		private static readonly string UserAgent = "Dependinator";
 
+		private readonly ISettings settings;
 		private readonly ICmd cmd;
 
 		private DispatcherTimer checkTimer;
 
 
-		public LatestVersionService(ICmd cmd)
+		public LatestVersionService(ISettings settings, ICmd cmd)
 		{
+			this.settings = settings;
 			this.cmd = cmd;
 		}
 
@@ -67,7 +69,7 @@ namespace Dependinator.Common.Installation.Private
 		{
 			checkTimer.Interval = CheckInterval;
 
-			if (Settings.Get<Options>().DisableAutoUpdate)
+			if (settings.Get<Options>().DisableAutoUpdate)
 			{
 				Log.Info("DisableAutoUpdate = true");
 				return;
@@ -167,7 +169,7 @@ namespace Dependinator.Common.Installation.Private
 					return version;
 				}
 			}
-			catch (Exception e) when(e.IsNotFatal())
+			catch (Exception e) when (e.IsNotFatal())
 			{
 				Log.Warn($"Failed to get latest version {e}");
 			}
@@ -197,7 +199,7 @@ namespace Dependinator.Common.Installation.Private
 
 					if (response.StatusCode == HttpStatusCode.NotModified || response.Content == null)
 					{
-						Log.Debug("Remote latest version info same as cached info");						
+						Log.Debug("Remote latest version info same as cached info");
 						return GetCachedLatestVersionInfo();
 					}
 					else
@@ -212,7 +214,7 @@ namespace Dependinator.Common.Installation.Private
 						}
 
 						return Json.As<LatestInfo>(latestInfoText);
-					}			
+					}
 				}
 			}
 			catch (Exception e) when (e.IsNotFatal())
@@ -225,28 +227,29 @@ namespace Dependinator.Common.Installation.Private
 
 		private LatestInfo GetCachedLatestVersionInfo()
 		{
-			ProgramSettings programSettings = Settings.Get<ProgramSettings>();
+			ProgramSettings programSettings = settings.Get<ProgramSettings>();
 
 			return Json.As<LatestInfo>(programSettings.LatestVersionInfo);
 		}
 
 
-		private static string GetCachedLatestVersionInfoEtag()
+		private string GetCachedLatestVersionInfoEtag()
 		{
-			ProgramSettings programSettings = Settings.Get<ProgramSettings>();
+			ProgramSettings programSettings = settings.Get<ProgramSettings>();
 			return programSettings.LatestVersionInfoETag;
 		}
 
 
-		private static void CacheLatestVersionInfo(string eTag, string latestInfoText)
+		private void CacheLatestVersionInfo(string eTag, string latestInfoText)
 		{
 			if (string.IsNullOrEmpty(eTag)) return;
 
 			// Cache the latest version info
-			ProgramSettings programSettings = Settings.Get<ProgramSettings>();
-			programSettings.LatestVersionInfoETag = eTag;
-			programSettings.LatestVersionInfo = latestInfoText;
-			Settings.Set(programSettings);
+			settings.Edit<ProgramSettings>(s =>
+			{
+				s.LatestVersionInfoETag = eTag;
+				s.LatestVersionInfo = latestInfoText;
+			});
 		}
 
 
