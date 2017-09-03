@@ -59,6 +59,8 @@ namespace Dependinator.ModelViewing.Private.Items
 			return child;
 		}
 
+		public bool IsZoomAndMoveEnabled { get; set; } = true;
+
 		public void ResetLayout()
 		{
 			if (!IsRoot)
@@ -117,6 +119,11 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		public void Zoom(double zoom, Point? zoomCenter = null)
 		{
+			if (!IsZoomAndMoveEnabled)
+			{
+				return;
+			}
+
 			double newScale = Scale * zoom;
 			if (!IsShowing || IsRoot && newScale < 0.15 && zoom < 1)
 			{
@@ -150,6 +157,11 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		public void Move(Vector viewOffset)
 		{
+			if (!IsZoomAndMoveEnabled)
+			{
+				return;
+			}
+
 			Offset -= viewOffset;
 
 			UpdateShownItemsInChildren();

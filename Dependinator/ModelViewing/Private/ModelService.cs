@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
 using Dependinator.Common;
 using Dependinator.Common.WorkFolders;
@@ -72,7 +74,15 @@ namespace Dependinator.ModelViewing.Private
 
 			if (!model.Root.Children.Any())
 			{
+				Root.ItemsCanvas.Scale = 1;
+				Root.ItemsCanvas.Offset = new Point(0, 0);
+				Root.ItemsCanvas.IsZoomAndMoveEnabled = false;
+
 				model.Root.ItemsCanvas.AddItem(new OpenModelViewModel());
+			}
+			else
+			{
+				Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
 			}
 		}
 

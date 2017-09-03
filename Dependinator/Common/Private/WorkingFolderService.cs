@@ -57,7 +57,7 @@ namespace Dependinator.Common.Private
 			}
 
 
-			//if (!ProgramInfo.IsInstalledInstance() 
+			//if (!ProgramInfo.IsInstalledInstance()
 			//	&& TryGetWorkingFolderPath(ProgramInfo.GetCurrentInstancePath(), out folder))
 			//{
 			//	workingFolder = folder;

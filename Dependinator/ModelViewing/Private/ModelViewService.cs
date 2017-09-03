@@ -1,7 +1,4 @@
-﻿using System.IO;
-using System.Threading.Tasks;
-using System.Windows;
-using Dependinator.Common;
+﻿using System.Threading.Tasks;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Common.WorkFolders;
 using Dependinator.ModelViewing.Private.Items;
@@ -90,12 +87,12 @@ namespace Dependinator.ModelViewing.Private
 
 			//currentModel.Root.UpdateAllNodesScalesBeforeClose();
 			////DataModel dataModel = modelingService.ToDataModel(model);
-			
+
 			modelService.Save();
 		}
 
 
-	
+
 
 
 		private void StoreViewSettings()

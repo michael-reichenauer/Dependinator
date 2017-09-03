@@ -7,16 +7,162 @@
 	xmlns:local="clr-namespace:Dependinator.ModelViewing.Open"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
-	
-	<Grid>
-		<Rectangle
-			Margin="0"
-			Stroke="Gray"
-			StrokeThickness="1"
-			Fill="Transparent"
-			Stretch="Fill"
-			UseLayoutRounding="True" />
 
-	</Grid>
-	
+	<Border BorderBrush="Transparent" BorderThickness="1" Background="#100192D1">
+		<Grid>
+
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
+
+			<Grid.RowDefinitions>
+				<RowDefinition Height="50" />
+				<RowDefinition Height="*" />
+				<RowDefinition Height="Auto" />
+			</Grid.RowDefinitions>
+
+			<!-- Resent files column -->
+			<TextBlock
+				Grid.Column="0" Grid.Row="0"
+				Text="Recent"
+				FontSize="25"
+				Foreground="CornflowerBlue"
+				TextWrapping="Wrap"
+				Margin="10" />
+
+			<!-- Resent files -->
+			<ItemsControl
+				Grid.Column="0" Grid.Row="1"
+				ItemsSource="{Binding RecentFiles}">
+				<ItemsControl.ItemsPanel>
+					<ItemsPanelTemplate>
+						<StackPanel Orientation="Vertical" />
+					</ItemsPanelTemplate>
+				</ItemsControl.ItemsPanel>
+				<ItemsControl.ItemTemplate>
+					<DataTemplate>
+						<Grid
+							Margin="10,7">
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="30" />
+								<ColumnDefinition Width="*" />
+							</Grid.ColumnDefinitions>
+
+							<Grid.RowDefinitions>
+								<RowDefinition Height="Auto" />
+								<RowDefinition Height="Auto" />
+							</Grid.RowDefinitions>
+
+
+							<TextBlock
+								Grid.Column="0" Grid.Row="0"
+								Margin="3,3,0,0"
+								Style="{DynamicResource MenuIconStyle}" Text="&#xE3C5;"
+								FontSize="20" />
+
+							<TextBlock
+								Grid.Column="1" Grid.Row="0"
+								VerticalAlignment="Top">
+								<Hyperlink TextDecorations="None" Click="RecentFile_OnClick">
+									<TextBlock
+										Foreground="{DynamicResource TextBrush}" FontSize="14"
+										Text="{Binding Path=FileName}" />
+								</Hyperlink>
+								<TextBlock.ToolTip>
+									<ToolTip
+										Content="{Binding ToolTip}"
+										Placement="Mouse"
+										BorderBrush="{DynamicResource BorderBrush}"
+										BorderThickness="1" />
+								</TextBlock.ToolTip>
+							</TextBlock>
+
+
+							<TextBlock
+								Grid.Column="1" Grid.Row="1"
+								Text="{Binding Path=FilePath}"
+								FontSize="11" VerticalAlignment="Top"
+								Foreground="{DynamicResource TextLowBrush}" />
+						</Grid>
+
+						<!--<Button		
+							Style="{DynamicResource BaseButtonStyle}" HorizontalAlignment="Left"
+							FontSize="12"
+							Padding="0"
+							Margin="0,0,5,0"
+							Command="{Binding OpenFileCommand}"
+							ToolTip="{Binding ToolTip}"
+							Cursor="Hand">
+							<TextBlock
+								Text="{Binding Path=FileName}"
+								Foreground="{DynamicResource TextBrush}"
+								Background="Transparent"
+								HorizontalAlignment="Left"
+								VerticalAlignment="Center" />
+						</Button>-->
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+			</ItemsControl>
+
+
+			<!-- Open column -->
+			<TextBlock
+				Grid.Column="1" Grid.Row="0"
+				Text="Open"
+				FontSize="25"
+				Foreground="CornflowerBlue"
+				TextWrapping="Wrap"
+				Margin="10" />
+
+			<!-- Open file link -->
+			<Grid
+				Grid.Column="1" Grid.Row="1"
+				Margin="10,7">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="30" />
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
+
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*" />
+				</Grid.RowDefinitions>
+
+				<TextBlock
+					Grid.Column="0" Grid.Row="0"
+					Margin="3,3,0,0"
+					Style="{DynamicResource MenuIconStyle}" Text="&#xE89D;"
+					FontSize="20" VerticalAlignment="Top" />
+
+				<TextBlock
+					Grid.Column="1" Grid.Row="0">
+					<Hyperlink TextDecorations="None" Click="OpenFile_OnClick">
+						<TextBlock
+							Foreground="{DynamicResource TextBrush}" FontSize="14"
+							Text="Open File" />
+					</Hyperlink>
+					<TextBlock.ToolTip>
+						<ToolTip
+							Content="Open dll, exe or sln file"
+							Placement="Mouse"
+							BorderBrush="{DynamicResource BorderBrush}"
+							BorderThickness="1" />
+					</TextBlock.ToolTip>
+				</TextBlock>
+
+			</Grid>
+
+
+			<!-- Pin at taskbar hint -->
+			<TextBlock
+				Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2"
+				Text="Hint: Consider to pin Dendinator to the taskbar to get quick access to models."
+				Foreground="{DynamicResource TextLowBrush}"
+				TextWrapping="Wrap"
+				Margin="10" />
+
+		</Grid>
+
+	</Border>
+
 </UserControl>

@@ -53,12 +53,22 @@ namespace Dependinator.ModelViewing.Private.Items
 			previewDragUiElement = new DragUiElement(
 				this,
 				(p, o) => viewModel?.MoveCanvas(o),
-				() => !Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && (viewModel?.IsRoot ?? false),
-				null,
-				null,
+				IsPreviewEnabled,
+				point => { },
+				point => { },
 				true);
 		}
 
+
+		private bool IsPreviewEnabled()
+		{
+			if (!(viewModel?.ItemsCanvas?.IsZoomAndMoveEnabled ?? true))
+			{
+				return false;
+			}
+
+			return !Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && (viewModel?.IsRoot ?? false);
+		}
 
 
 		private void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
@@ -73,25 +83,7 @@ namespace Dependinator.ModelViewing.Private.Items
 			ItemsListBox.Focus();
 		}
 
-		private void MouseDobleClick(object sender, MouseButtonEventArgs e)
-		{
-		}
-
-
-		private void EventMouseUp(object sender, MouseButtonEventArgs e)
-		{
-		}
-
-		private void MouseEntering(object sender, MouseEventArgs e)
-		{
-		}
-
-
-		private void MouseLeaving(object sender, MouseEventArgs e)
-		{
-		}
-
-
+		
 
 		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
 		{
