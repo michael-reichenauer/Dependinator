@@ -113,7 +113,7 @@ namespace Dependinator.Common.SettingsHandling.Private
 		}
 
 
-		public void Set(WorkFolderSettings settings)
+		private void Set(WorkFolderSettings settings)
 		{
 			string path = GetWorkFolderSettingsPath();
 
@@ -129,7 +129,7 @@ namespace Dependinator.Common.SettingsHandling.Private
 			WriteAs(settingsPath, setting);
 		}
 
-		public void Set(string path, WorkFolderSettings settings)
+		private void Set(string path, WorkFolderSettings settings)
 		{
 			string settingsPath = GetSettingsFilePath<WorkFolderSettings>(path);
 			if (ParentFolderExists(path))
