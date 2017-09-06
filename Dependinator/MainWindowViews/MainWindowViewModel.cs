@@ -24,6 +24,7 @@ namespace Dependinator.MainWindowViews
 		private readonly ILatestVersionService latestVersionService;
 		private readonly IMainWindowService mainWindowService;
 		private readonly MainWindowIpcService mainWindowIpcService;
+		private readonly IOpenService openService;
 
 		private readonly JumpListService jumpListService = new JumpListService();
 
@@ -45,7 +46,8 @@ namespace Dependinator.MainWindowViews
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
 			MainWindowIpcService mainWindowIpcService,
-			ModelViewModel modelViewModel)
+			ModelViewModel modelViewModel,
+			IOpenService openService)
 		{
 			this.workingFolder = workingFolder;
 			this.owner = owner;
@@ -54,6 +56,7 @@ namespace Dependinator.MainWindowViews
 			this.latestVersionService = latestVersionService;
 			this.mainWindowService = mainWindowService;
 			this.mainWindowIpcService = mainWindowIpcService;
+			this.openService = openService;
 
 			ModelViewModel = modelViewModel;
 
@@ -114,7 +117,7 @@ namespace Dependinator.MainWindowViews
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
 		public Command RefreshLayoutCommand => AsyncCommand(ManualRefreshLayoutAsync);
 
-		public Command OpenFileCommand => AsyncCommand(OpenFileAsync);
+		public Command OpenFileCommand => AsyncCommand(openService.OpenFileAsync);
 
 		public Command RunLatestVersionCommand => AsyncCommand(RunLatestVersionAsync);
 
@@ -177,21 +180,7 @@ namespace Dependinator.MainWindowViews
 		public void ClosingWindow() => ModelViewModel.Close();
 
 
-		private async Task OpenFileAsync()
-		{
-			isLoaded = false;
-
-			if (!TryOpenFile())
-			{
-				isLoaded = true;
-				return;
-			}
-
-			await SetWorkingFolderAsync();
-
-			await ModelViewModel.LoadAsync();
-		}
-
+	
 
 		private async Task SetWorkingFolderAsync()
 		{
@@ -369,44 +358,6 @@ namespace Dependinator.MainWindowViews
 			if (!string.IsNullOrWhiteSpace(SearchBox))
 			{
 				SearchBox = "";
-			}
-		}
-
-
-		public bool TryOpenFile()
-		{
-			while (true)
-			{
-				// Create OpenFileDialog 
-				Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
-
-				// Set filter for file extension and default file extension 
-				dlg.DefaultExt = ".exe";
-				dlg.Filter = "Files (*.exe, *.dll)|*.exe;*.dll|.NET libs (*.dll)|*.dll|.NET Programs (*.exe)|*.exe";
-				dlg.CheckFileExists = true;
-				dlg.Multiselect = false;
-				dlg.Title = "Select a .NET .dll or .exe file";
-				dlg.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-
-				bool? result = dlg.ShowDialog();
-
-				// Get the selected file name and display in a TextBox 
-				if (result != true)
-				{
-					Log.Debug("User canceled selecting a file");
-					return false;
-				}
-
-
-				if (workingFolder.TrySetPath(dlg.FileName))
-				{
-					Log.Debug($"User selected valid file '{dlg.FileName}'");
-					return true;
-				}
-				else
-				{
-					Log.Debug($"User selected an invalid file: {dlg.FileName}");
-				}
 			}
 		}
 	}

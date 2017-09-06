@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
@@ -11,82 +12,56 @@ namespace Dependinator.ModelViewing.Private
 	{
 		private readonly ISettings settings;
 		private readonly IModelService modelService;
-
+		private readonly IProgressService progress;
 
 
 		public ModelViewService(
 			ISettings settings,
-			IModelService modelService)
+			IModelService modelService,
+			IProgressService progress)
 		{
 			this.settings = settings;
 			this.modelService = modelService;
+			this.progress = progress;
 		}
 
 
 
-		public async Task LoadAsync(ItemsCanvas rootCanvas)
+		public void Init(ItemsCanvas rootCanvas)
 		{
-			modelService.ClearAll();
-
 			modelService.Init(rootCanvas);
+		}
 
-			RestoreViewSettings();
+		
+		public async Task LoadAsync()
+		{
+			Timing t = new Timing();
 
-			await modelService.LoadAsync();
+			Log.Debug("Loading repository ...");
+
+			using (progress.ShowBusy())
+			{
+				modelService.ClearAll();
+
+				RestoreViewSettings();
+
+				await modelService.LoadAsync();
+				t.Log("Updated view model after cached/fresh");
+			}
 		}
 
 
-		public async Task Refresh(ItemsCanvas rootCanvas, bool refreshLayout)
+
+		public async Task Refresh(bool refreshLayout)
 		{
 			await modelService.RefreshAsync(refreshLayout);
 		}
 
 
-		//private ModelOld GetCachedOrFreshModelData()
-		//{
-		//	ModelOld dataModel;
-		//	if (!TryReadCachedData(out dataModel))
-		//	{
-		//		dataModel = ReadFreshData();
-		//	}
-
-		//	return dataModel;
-		//}
-
-
-		//private void ShowModel(IItemsCanvas rootCanvas)
-		//{
-		//	RestoreViewSettings(rootCanvas);
-
-		//	NodeOld rootNode = currentModel.Root;
-
-		//	rootNode.Show(rootCanvas);
-		//}
-
-
-
-		//private bool TryReadCachedData(out ModelOld dataModel)
-		//{
-		//	string dataFilePath = GetDataFilePath();
-		//	return modelingService.TryDeserialize(dataFilePath, out dataModel);
-		//}
-
-
-		//private ModelOld ReadFreshData()
-		//{
-		//	Timing t = Timing.Start();
-		//	ModelOld newModel = modelingService.Analyze(workingFolder.FilePath, null);
-		//	t.Log("Read fresh model");
-		//	return newModel;
-		//}
-
 
 		public void Close()
 		{
 			StoreViewSettings();
-
-			//currentModel.Root.UpdateAllNodesScalesBeforeClose();
-			////DataModel dataModel = modelingService.ToDataModel(model);
 
 			modelService.Save();
 		}

@@ -62,16 +62,9 @@ namespace Dependinator.ModelViewing
 
 		public async Task LoadAsync()
 		{
-			Timing t = new Timing();
+			modelViewService.Init(ItemsViewModel.ItemsCanvas);
 
-			Log.Debug("Loading repository ...");
-
-			using (progress.ShowBusy())
-			{
-				await modelViewService.LoadAsync(ItemsViewModel.ItemsCanvas);
-
-				t.Log("Updated view model after cached/fresh");
-			}
+			await modelViewService.LoadAsync();
 		}
 
 
@@ -125,7 +118,7 @@ namespace Dependinator.ModelViewing
 		{
 			using (progress.ShowBusy())
 			{
-				await modelViewService.Refresh(ItemsViewModel.ItemsCanvas, refreshLayout);
+				await modelViewService.Refresh(refreshLayout);
 			}
 		}
 
