@@ -5,10 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 using System.Windows.Threading;
-using Dependinator.Common;
 using Dependinator.Common.SettingsHandling;
-using Dependinator.Common.SettingsHandling.Private;
-using Dependinator.Common.WorkFolders;
 using Dependinator.Utils;
 
 
@@ -24,14 +21,14 @@ namespace Dependinator.MainWindowViews
 		private readonly DispatcherTimer remoteCheckTimer = new DispatcherTimer();
 
 		private readonly MainWindowViewModel viewModel;
-		
+
 
 
 		internal MainWindow(ISettings settings, Func<MainWindowViewModel> mainWindowViewModelProvider)
 		{
 			this.settings = settings;
 			InitializeComponent();
-	
+
 			SetShowToolTipLonger();
 
 			// Make sure maximize window does not cover the task bar
@@ -126,9 +123,9 @@ namespace Dependinator.MainWindowViews
 			WorkFolderSettings s = settings.Get<WorkFolderSettings>();
 
 			Rectangle rect = new Rectangle(
-				(int)s.WindowBounds.X, 
-				(int)s.WindowBounds.Y, 
-				(int)s.WindowBounds.Width, 
+				(int)s.WindowBounds.X,
+				(int)s.WindowBounds.Y,
+				(int)s.WindowBounds.Width,
 				(int)s.WindowBounds.Height);
 
 			// check if the saved bounds are nonzero and visible on any screen

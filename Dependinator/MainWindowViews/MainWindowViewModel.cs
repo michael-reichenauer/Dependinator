@@ -2,11 +2,9 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Threading;
 using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.SettingsHandling;
-using Dependinator.Common.SettingsHandling.Private;
 using Dependinator.Common.WorkFolders;
 using Dependinator.Common.WorkFolders.Private;
 using Dependinator.MainWindowViews.Private;
@@ -28,7 +26,7 @@ namespace Dependinator.MainWindowViews
 
 		private readonly JumpListService jumpListService = new JumpListService();
 
-		private IpcRemotingService ipcRemotingService = null;
+		//private IpcRemotingService ipcRemotingService = null;
 		private readonly WorkingFolder workingFolder;
 
 		private readonly WindowOwner owner;
@@ -65,6 +63,7 @@ namespace Dependinator.MainWindowViews
 			latestVersionService.StartCheckForLatestVersion();
 		}
 
+		public int WindowWith { set => ModelViewModel.Width = value; }
 
 		public bool IsInFilterMode => !string.IsNullOrEmpty(SearchBox);
 
@@ -144,9 +143,11 @@ namespace Dependinator.MainWindowViews
 
 		public async Task FirstLoadAsync()
 		{
+			await Task.Yield();
+
 			if (workingFolder.IsValid)
 			{
-				await SetWorkingFolderAsync();
+				//await SetWorkingFolderAsync();
 			}
 			else
 			{
@@ -179,62 +180,15 @@ namespace Dependinator.MainWindowViews
 
 		public void ClosingWindow() => ModelViewModel.Close();
 
+		
+		private Task ManualRefreshAsync() => ModelViewModel.ManualRefreshAsync();
 
-	
+		private Task ManualRefreshLayoutAsync() => ModelViewModel.ManualRefreshAsync(true);
 
-		private async Task SetWorkingFolderAsync()
-		{
-			await Task.Yield();
-
-			if (ipcRemotingService != null)
-			{
-				ipcRemotingService.Dispose();
-			}
-
-			ipcRemotingService = new IpcRemotingService();
-
-			string id = ProgramInfo.GetWorkingFolderId(workingFolder);
-			if (ipcRemotingService.TryCreateServer(id))
-			{
-				ipcRemotingService.PublishService(mainWindowIpcService);
-			}
-			else
-			{
-				// Another instance for that working folder is already running, activate that.
-				ipcRemotingService.CallService<MainWindowIpcService>(id, service => service.Activate(null));
-				Application.Current.Shutdown(0);
-				ipcRemotingService.Dispose();
-				return;
-			}
-
-			jumpListService.Add(workingFolder.FilePath);
-
-			Notify(nameof(Title));
-
-			isLoaded = true;
-		}
+		public Task AutoRemoteCheckAsync() => ModelViewModel.AutoRemoteCheckAsync();
 
 
-		private Task ManualRefreshAsync()
-		{
-			return ModelViewModel.ManualRefreshAsync();
-		}
-
-		private Task ManualRefreshLayoutAsync()
-		{
-			return ModelViewModel.ManualRefreshAsync(true);
-		}
-
-		public Task AutoRemoteCheckAsync()
-		{
-			return ModelViewModel.AutoRemoteCheckAsync();
-		}
-
-
-		private void Search()
-		{
-			mainWindowService.SetSearchFocus();
-		}
+		private void Search() => mainWindowService.SetSearchFocus();
 
 
 		public Task ActivateRefreshAsync()
@@ -261,16 +215,14 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		public int WindowWith { set { ModelViewModel.Width = value; } }
+		
 
 
-		private void Minimize()
-		{
+		private static void Minimize() => 
 			Application.Current.MainWindow.WindowState = WindowState.Minimized;
-		}
 
 
-		private void ToggleMaximize()
+		private static void ToggleMaximize()
 		{
 			if (Application.Current.MainWindow.WindowState == WindowState.Maximized)
 			{
@@ -283,15 +235,9 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		private void CloseWindow()
-		{
-			Application.Current.Shutdown(0);
-		}
+		private static void CloseWindow() => Application.Current.Shutdown(0);
 
-		private void Exit()
-		{
-			Application.Current.Shutdown(0);
-		}
+		private static void Exit() => Application.Current.Shutdown(0);
 
 
 		private async Task RunLatestVersionAsync()

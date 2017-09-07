@@ -3,15 +3,21 @@ using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 
+
 namespace Dependinator.Common.WorkFolders
 {
 	internal class OpenService : IOpenService
 	{
 		private readonly IModelViewService modelViewService;
+		private readonly IWorkingFolderService workingFolderService;
 
-		public OpenService(IModelViewService modelViewService)
+
+		public OpenService(
+			IModelViewService modelViewService,
+			IWorkingFolderService workingFolderService)
 		{
 			this.modelViewService = modelViewService;
+			this.workingFolderService = workingFolderService;
 		}
 
 		public async Task OpenFileAsync()
@@ -21,12 +27,10 @@ namespace Dependinator.Common.WorkFolders
 				return;
 			}
 
-			await SetWorkingFolderAsync();
+			//await SetWorkingFolderAsync();
 
 			await modelViewService.LoadAsync();
 		}
-
-
 
 
 		public bool TryOpenFile()
@@ -54,7 +58,7 @@ namespace Dependinator.Common.WorkFolders
 				}
 
 
-				if (workingFolder.TrySetPath(dlg.FileName))
+				if (workingFolderService.TrySetPath(dlg.FileName))
 				{
 					Log.Debug($"User selected valid file '{dlg.FileName}'");
 					return true;
@@ -67,5 +71,36 @@ namespace Dependinator.Common.WorkFolders
 		}
 
 
+		//private async Task SetWorkingFolderAsync()
+		//{
+		//	await Task.Yield();
+
+		//	if (ipcRemotingService != null)
+		//	{
+		//		ipcRemotingService.Dispose();
+		//	}
+
+		//	ipcRemotingService = new IpcRemotingService();
+
+		//	string id = ProgramInfo.GetWorkingFolderId(workingFolder);
+		//	if (ipcRemotingService.TryCreateServer(id))
+		//	{
+		//		ipcRemotingService.PublishService(mainWindowIpcService);
+		//	}
+		//	else
+		//	{
+		//		// Another instance for that working folder is already running, activate that.
+		//		ipcRemotingService.CallService<MainWindowIpcService>(id, service => service.Activate(null));
+		//		MediaTypeNames.Application.Current.Shutdown(0);
+		//		ipcRemotingService.Dispose();
+		//		return;
+		//	}
+
+		//	jumpListService.Add(workingFolder.FilePath);
+
+		//	Notify(nameof(Title));
+
+		//	isLoaded = true;
+		//}
 	}
 }

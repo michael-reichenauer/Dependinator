@@ -1,11 +1,9 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using Dependinator.Common;
 using Dependinator.Common.WorkFolders;
 using Dependinator.ModelParsing;
 using Dependinator.ModelViewing.Links;
@@ -72,13 +70,13 @@ namespace Dependinator.ModelViewing.Private
 				}
 			}
 
-			if (!model.Root.Children.Any())
+			if (!Root.Children.Any())
 			{
 				Root.ItemsCanvas.Scale = 1;
 				Root.ItemsCanvas.Offset = new Point(0, 0);
 				Root.ItemsCanvas.IsZoomAndMoveEnabled = false;
 
-				model.Root.ItemsCanvas.AddItem(new OpenModelViewModel());
+				Root.ItemsCanvas.AddItem(new OpenModelViewModel());
 			}
 			else
 			{
@@ -93,7 +91,7 @@ namespace Dependinator.ModelViewing.Private
 		public async Task SaveAsync()
 		{
 			Timing t = Timing.Start();
-			IReadOnlyList<Node> nodes = model.Root.Descendents().ToList();
+			IReadOnlyList<Node> nodes = Root.Descendents().ToList();
 			t.Log($"Saving {nodes} nodes");
 
 			IReadOnlyList<ModelItem> items = Convert.ToDataItems(nodes);
@@ -108,7 +106,7 @@ namespace Dependinator.ModelViewing.Private
 		public void Save()
 		{
 			Timing t = Timing.Start();
-			IReadOnlyList<Node> nodes = model.Root.Descendents().ToList();
+			IReadOnlyList<Node> nodes = Root.Descendents().ToList();
 			t.Log($"Saving {nodes.Count} nodes");
 
 			IReadOnlyList<ModelItem> items = Convert.ToDataItems(nodes);
@@ -135,7 +133,7 @@ namespace Dependinator.ModelViewing.Private
 			}
 		}
 
-	
+
 
 		public void UpdateDataItems(IReadOnlyList<ModelItem> items, int stamp) =>
 			items.Partition(BatchSize)

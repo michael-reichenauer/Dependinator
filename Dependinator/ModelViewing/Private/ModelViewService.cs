@@ -1,6 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.SettingsHandling;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 
@@ -30,6 +31,7 @@ namespace Dependinator.ModelViewing.Private
 		public void Init(ItemsCanvas rootCanvas)
 		{
 			modelService.Init(rootCanvas);
+			Node modelServiceRoot = modelService.Root;
 		}
 
 		
@@ -41,7 +43,11 @@ namespace Dependinator.ModelViewing.Private
 
 			using (progress.ShowBusy())
 			{
+				ItemsCanvas rootCanvas = modelService.Root.ItemsCanvas;
+
 				modelService.ClearAll();
+
+				modelService.Init(rootCanvas);
 
 				RestoreViewSettings();
 
@@ -81,8 +87,9 @@ namespace Dependinator.ModelViewing.Private
 		private void RestoreViewSettings()
 		{
 			WorkFolderSettings folderSettings = settings.Get<WorkFolderSettings>();
-			modelService.Root.ItemsCanvas.Scale = folderSettings.Scale;
-			modelService.Root.ItemsCanvas.Offset = folderSettings.Offset;
+			Node modelServiceRoot = modelService.Root;
+			modelServiceRoot.ItemsCanvas.Scale = folderSettings.Scale;
+			modelServiceRoot.ItemsCanvas.Offset = folderSettings.Offset;
 		}
 	}
 }
