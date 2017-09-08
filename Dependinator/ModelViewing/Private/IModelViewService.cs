@@ -6,11 +6,11 @@ namespace Dependinator.ModelViewing.Private
 {
 	internal interface IModelViewService
 	{
-		void Init(ItemsCanvas rootCanvas);
+		void SetRootCanvas(ItemsCanvas rootCanvas);
 
 		Task LoadAsync();
 
-		Task Refresh(bool refreshLayout);
+		Task RefreshAsync(bool refreshLayout);
 
 		void Close();
 	}

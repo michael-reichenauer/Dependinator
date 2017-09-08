@@ -5,11 +5,11 @@ using Dependinator.Utils;
 
 namespace Dependinator.Common.SettingsHandling.Private
 {
-	internal class Settings : ISettings
+	internal class SettingsService : ISettingsService
 	{
 		private readonly WorkingFolder workingFolder;
 
-		public Settings(WorkingFolder folder)
+		public SettingsService(WorkingFolder folder)
 		{
 			workingFolder = folder;
 		}

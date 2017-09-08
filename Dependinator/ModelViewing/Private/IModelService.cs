@@ -6,7 +6,7 @@ namespace Dependinator.ModelViewing.Private
 {
 	internal interface IModelService
 	{
-		void Init(ItemsCanvas rootCanvas);
+		void SetRootCanvas(ItemsCanvas rootCanvas);
 		Task RefreshAsync(bool refreshLayout);
 
 		Node Root { get; }

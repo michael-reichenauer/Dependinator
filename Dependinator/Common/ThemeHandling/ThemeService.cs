@@ -14,18 +14,18 @@ namespace Dependinator.Common.ThemeHandling
 	[SingleInstance]
 	internal class ThemeService : IThemeService
 	{
-		private readonly ISettings settings;
+		private readonly ISettingsService settingsService;
 		private readonly Dictionary<string, Brush> customBranchBrushes = new Dictionary<string, Brush>();
 
 		private int currentIndex = 0;
 
 		private Theme currentTheme;
 
-		public ThemeService(ISettings settings, WorkingFolder workingFolder)
+		public ThemeService(ISettingsService settingsService, WorkingFolder workingFolder)
 		{
-			this.settings = settings;
+			this.settingsService = settingsService;
 
-			settings.EnsureExists<Options>();
+			settingsService.EnsureExists<Options>();
 			
 			LoadTheme();
 
@@ -78,7 +78,7 @@ namespace Dependinator.Common.ThemeHandling
 			Brush brush = currentTheme.brushes[newIndex];		
 			string brushHex = Converter.HexFromBrush(brush);
 
-			settings.Edit<WorkFolderSettings>(s => s.BranchColors[name] = brushHex);
+			settingsService.Edit<WorkFolderSettings>(s => s.BranchColors[name] = brushHex);
 
 			LoadCustomBranchColors();
 
@@ -152,7 +152,7 @@ namespace Dependinator.Common.ThemeHandling
 		
 		private ThemeOption GetCurrentThemeOption()
 		{
-			Options options = settings.Get<Options>();
+			Options options = settingsService.Get<Options>();
 
 			ThemeOption theme = options.Themes.CustomThemes
 				.FirstOrDefault(t => t.Name == options.Themes.CurrentTheme)
@@ -165,7 +165,7 @@ namespace Dependinator.Common.ThemeHandling
 		private void LoadCustomBranchColors()
 		{
 			customBranchBrushes.Clear();
-			WorkFolderSettings folderSettings = settings.Get<WorkFolderSettings>();
+			WorkFolderSettings folderSettings = settingsService.Get<WorkFolderSettings>();
 
 			foreach (var pair in folderSettings.BranchColors)
 			{

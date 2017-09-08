@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.Common.Installation;
@@ -30,18 +29,16 @@ namespace Dependinator.MainWindowViews
 		//private IpcRemotingService ipcRemotingService = null;
 		private readonly WorkingFolder workingFolder;
 
-		private readonly WindowOwner owner;
+
 		private readonly IMessage message;
-		private readonly ISettings settings;
+
 
 		private bool isLoaded = false;
 
 
 		internal MainWindowViewModel(
 			WorkingFolder workingFolder,
-			WindowOwner owner,
 			IMessage message,
-			ISettings settings,
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
 			MainWindowIpcService mainWindowIpcService,
@@ -49,9 +46,8 @@ namespace Dependinator.MainWindowViews
 			IOpenService openService)
 		{
 			this.workingFolder = workingFolder;
-			this.owner = owner;
 			this.message = message;
-			this.settings = settings;
+
 			this.latestVersionService = latestVersionService;
 			this.mainWindowService = mainWindowService;
 			this.mainWindowIpcService = mainWindowIpcService;
@@ -86,15 +82,10 @@ namespace Dependinator.MainWindowViews
 			{
 				message.ShowInfo("Search is not yet implemented.");
 				//Set(value).Notify(nameof(IsInFilterMode));
-				//SetSearchBoxValue(value);
+				// ModelViewModel.SetFilter(value);
 			}
 		}
 
-
-		private void SetSearchBoxValue(string text)
-		{
-			ModelViewModel.SetFilter(text);
-		}
 
 
 		public BusyIndicator Busy => BusyIndicator();
@@ -121,11 +112,11 @@ namespace Dependinator.MainWindowViews
 
 		public Command RunLatestVersionCommand => AsyncCommand(RunLatestVersionAsync);
 
-		public Command FeedbackCommand => Command(Feedback);
+		public Command FeedbackCommand => Command(mainWindowService.SendFeedback);
 
-		public Command OptionsCommand => Command(OpenOptions);
+		public Command OptionsCommand => Command(mainWindowService.OpenOptions);
 
-		public Command HelpCommand => Command(OpenHelp);
+		public Command HelpCommand => Command(mainWindowService.OpenHelp);
 
 		public Command MinimizeCommand => Command(Minimize);
 
@@ -146,19 +137,19 @@ namespace Dependinator.MainWindowViews
 		{
 			await Task.Yield();
 
-			if (workingFolder.IsValid)
-			{
-				//await SetWorkingFolderAsync();
-			}
-			else
-			{
-				//Dispatcher.CurrentDispatcher.BeginInvoke(() =>
-				//{
-				//	OpenFileDialog dialog = new OpenFileDialog(owner);
-				//	dialog.ShowDialog();
-				//});
+			//if (workingFolder.IsValid)
+			//{
+			//	//await SetWorkingFolderAsync();
+			//}
+			//else
+			//{
+			//	//Dispatcher.CurrentDispatcher.BeginInvoke(() =>
+			//	//{
+			//	//	OpenFileDialog dialog = new OpenFileDialog(owner);
+			//	//	dialog.ShowDialog();
+			//	//});
 
-			}
+			//}
 			//else
 			//{
 			//	Dispatcher.CurrentDispatcher.BeginInvoke(() => OpenFileAsync().RunInBackground());
@@ -181,7 +172,6 @@ namespace Dependinator.MainWindowViews
 
 		public void ClosingWindow() => ModelViewModel.Close();
 
-		
 		private Task ManualRefreshAsync() => ModelViewModel.ManualRefreshAsync();
 
 		private Task ManualRefreshLayoutAsync() => ModelViewModel.ManualRefreshAsync(true);
@@ -213,10 +203,8 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		
 
-
-		private static void Minimize() => 
+		private static void Minimize() =>
 			Application.Current.MainWindow.WindowState = WindowState.Minimized;
 
 
@@ -250,52 +238,6 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		private void Feedback()
-		{
-			try
-			{
-				Process process = new Process();
-
-				process.StartInfo.FileName = Product.FeedbackAddress;
-				process.Start();
-			}
-			catch (Exception ex) when (ex.IsNotFatal())
-			{
-				Log.Error($"Failed to open feedback link {ex}");
-			}
-		}
-
-
-		private void OpenOptions()
-		{
-			try
-			{
-				settings.EnsureExists<Options>();
-				string optionsPath = settings.GetFilePath<Options>();
-
-				Log.Debug($"Open {optionsPath}");
-				Process.Start("notepad.exe", optionsPath);
-			}
-			catch (Exception e) when (e.IsNotFatal())
-			{
-				Log.Error($"Failed to open options {e}");
-			}
-		}
-
-
-		private void OpenHelp()
-		{
-			try
-			{
-				Process process = new Process();
-				process.StartInfo.FileName = Product.GitHubHelpAddress;
-				process.Start();
-			}
-			catch (Exception ex) when (ex.IsNotFatal())
-			{
-				Log.Error($"Failed to open help link {ex}");
-			}
-		}
 
 		private void ClearFilter()
 		{

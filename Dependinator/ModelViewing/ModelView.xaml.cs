@@ -1,5 +1,5 @@
 ﻿using System.Windows;
-using UserControl = System.Windows.Controls.UserControl;
+using System.Windows.Controls;
 
 
 namespace Dependinator.ModelViewing

@@ -11,30 +11,25 @@ namespace Dependinator.ModelViewing.Private
 	[SingleInstance]
 	internal class ModelViewService : IModelViewService
 	{
-		private readonly ISettings settings;
+		private readonly ISettingsService settingsService;
 		private readonly IModelService modelService;
 		private readonly IProgressService progress;
 
 
 		public ModelViewService(
-			ISettings settings,
+			ISettingsService settingsService,
 			IModelService modelService,
 			IProgressService progress)
 		{
-			this.settings = settings;
+			this.settingsService = settingsService;
 			this.modelService = modelService;
 			this.progress = progress;
 		}
 
 
+		public void SetRootCanvas(ItemsCanvas rootCanvas) => modelService.SetRootCanvas(rootCanvas);
 
-		public void Init(ItemsCanvas rootCanvas)
-		{
-			modelService.Init(rootCanvas);
-			Node modelServiceRoot = modelService.Root;
-		}
 
-		
 		public async Task LoadAsync()
 		{
 			Timing t = new Timing();
@@ -43,11 +38,7 @@ namespace Dependinator.ModelViewing.Private
 
 			using (progress.ShowBusy())
 			{
-				ItemsCanvas rootCanvas = modelService.Root.ItemsCanvas;
-
 				modelService.ClearAll();
-
-				modelService.Init(rootCanvas);
 
 				RestoreViewSettings();
 
@@ -57,12 +48,8 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-
-		public async Task Refresh(bool refreshLayout)
-		{
+		public async Task RefreshAsync(bool refreshLayout) =>
 			await modelService.RefreshAsync(refreshLayout);
-		}
-
 
 
 		public void Close()
@@ -72,24 +59,23 @@ namespace Dependinator.ModelViewing.Private
 			modelService.Save();
 		}
 
-		
 
 		private void StoreViewSettings()
 		{
-			settings.Edit<WorkFolderSettings>(s =>
-				{
-					s.Scale = modelService.Root.ItemsCanvas.Scale;
-					s.Offset = modelService.Root.ItemsCanvas.Offset;
-				});
+			settingsService.Edit<WorkFolderSettings>(settings =>
+			{
+				settings.Scale = modelService.Root.ItemsCanvas.Scale;
+				settings.Offset = modelService.Root.ItemsCanvas.Offset;
+			});
 		}
 
 
 		private void RestoreViewSettings()
 		{
-			WorkFolderSettings folderSettings = settings.Get<WorkFolderSettings>();
-			Node modelServiceRoot = modelService.Root;
-			modelServiceRoot.ItemsCanvas.Scale = folderSettings.Scale;
-			modelServiceRoot.ItemsCanvas.Offset = folderSettings.Offset;
+			WorkFolderSettings settings = settingsService.Get<WorkFolderSettings>();
+			Node root = modelService.Root;
+			root.ItemsCanvas.Scale = settings.Scale;
+			root.ItemsCanvas.Offset = settings.Offset;
 		}
 	}
 }

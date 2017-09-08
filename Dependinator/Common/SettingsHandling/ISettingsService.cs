@@ -2,7 +2,7 @@ using System;
 
 namespace Dependinator.Common.SettingsHandling
 {
-	internal interface ISettings
+	internal interface ISettingsService
 	{
 		void EnsureExists<T>() where T : class;
 

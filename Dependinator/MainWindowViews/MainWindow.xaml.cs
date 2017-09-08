@@ -16,14 +16,14 @@ namespace Dependinator.MainWindowViews
 	[SingleInstance]
 	public partial class MainWindow : Window
 	{
-		private readonly ISettings settings;
+		private readonly ISettingsService settingsService;
 
 		private readonly MainWindowViewModel viewModel;
 
 
-		internal MainWindow(ISettings settings, Func<MainWindowViewModel> mainWindowViewModelProvider)
+		internal MainWindow(ISettingsService settingsService, Func<MainWindowViewModel> mainWindowViewModelProvider)
 		{
-			this.settings = settings;
+			this.settingsService = settingsService;
 
 			InitializeComponent();
 			SetShowToolTipLonger();
@@ -68,7 +68,7 @@ namespace Dependinator.MainWindowViews
 
 		private void StoreWindowSettings()
 		{
-			settings.Edit<WorkFolderSettings>(s =>
+			settingsService.Edit<WorkFolderSettings>(s =>
 			{
 				s.WindowBounds = new Rect(Top, Left, Width, Height);
 				s.IsMaximized = WindowState == WindowState.Maximized;
@@ -78,7 +78,7 @@ namespace Dependinator.MainWindowViews
 
 		private void RestoreWindowSettings()
 		{
-			WorkFolderSettings s = settings.Get<WorkFolderSettings>();
+			WorkFolderSettings s = settingsService.Get<WorkFolderSettings>();
 
 			Rectangle rect = new Rectangle(
 				(int)s.WindowBounds.X,

@@ -21,15 +21,15 @@ namespace Dependinator.Common.Installation.Private
 			"https://api.github.com/repos/michael-reichenauer/Dependinator/releases/latest";
 		private static readonly string UserAgent = "Dependinator";
 
-		private readonly ISettings settings;
+		private readonly ISettingsService settingsService;
 		private readonly ICmd cmd;
 
 		private DispatcherTimer checkTimer;
 
 
-		public LatestVersionService(ISettings settings, ICmd cmd)
+		public LatestVersionService(ISettingsService settingsService, ICmd cmd)
 		{
-			this.settings = settings;
+			this.settingsService = settingsService;
 			this.cmd = cmd;
 		}
 
@@ -69,7 +69,7 @@ namespace Dependinator.Common.Installation.Private
 		{
 			checkTimer.Interval = CheckInterval;
 
-			if (settings.Get<Options>().DisableAutoUpdate)
+			if (settingsService.Get<Options>().DisableAutoUpdate)
 			{
 				Log.Info("DisableAutoUpdate = true");
 				return;
@@ -227,7 +227,7 @@ namespace Dependinator.Common.Installation.Private
 
 		private LatestInfo GetCachedLatestVersionInfo()
 		{
-			ProgramSettings programSettings = settings.Get<ProgramSettings>();
+			ProgramSettings programSettings = settingsService.Get<ProgramSettings>();
 
 			return Json.As<LatestInfo>(programSettings.LatestVersionInfo);
 		}
@@ -235,7 +235,7 @@ namespace Dependinator.Common.Installation.Private
 
 		private string GetCachedLatestVersionInfoEtag()
 		{
-			ProgramSettings programSettings = settings.Get<ProgramSettings>();
+			ProgramSettings programSettings = settingsService.Get<ProgramSettings>();
 			return programSettings.LatestVersionInfoETag;
 		}
 
@@ -245,7 +245,7 @@ namespace Dependinator.Common.Installation.Private
 			if (string.IsNullOrEmpty(eTag)) return;
 
 			// Cache the latest version info
-			settings.Edit<ProgramSettings>(s =>
+			settingsService.Edit<ProgramSettings>(s =>
 			{
 				s.LatestVersionInfoETag = eTag;
 				s.LatestVersionInfo = latestInfoText;

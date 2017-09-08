@@ -25,7 +25,7 @@ namespace Dependinator.ModelViewing.Private
 
 		private readonly Model model;
 		private readonly WorkingFolder workingFolder;
-		private Dispatcher dispatcher;
+
 		private int currentStamp;
 
 
@@ -47,12 +47,7 @@ namespace Dependinator.ModelViewing.Private
 
 		public Node Root => model.Root;
 
-
-		public void Init(ItemsCanvas rootCanvas)
-		{
-			dispatcher = Dispatcher.CurrentDispatcher;
-			Root.ItemsCanvas = rootCanvas;
-		}
+		public void SetRootCanvas(ItemsCanvas rootCanvas) => Root.ItemsCanvas = rootCanvas;
 
 
 		public async Task LoadAsync()
@@ -137,7 +132,7 @@ namespace Dependinator.ModelViewing.Private
 
 		public void UpdateDataItems(IReadOnlyList<ModelItem> items, int stamp) =>
 			items.Partition(BatchSize)
-			.ForEach(batch => dispatcher.InvokeBackground(UpdateItems, batch, stamp));
+			.ForEach(batch => Application.Current.Dispatcher.InvokeBackground(UpdateItems, batch, stamp));
 
 
 		private void UpdateItems(IReadOnlyList<ModelItem> items, int stamp)

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.Private
@@ -41,10 +42,12 @@ namespace Dependinator.ModelViewing.Private
 
 		public void RemoveAll()
 		{
+			ItemsCanvas rootCanvas = Root.ItemsCanvas;
 			nodesById.Clear();
 			nodesByName.Clear();
 
 			AddRoot();
+			Root.ItemsCanvas = rootCanvas;
 		}
 
 

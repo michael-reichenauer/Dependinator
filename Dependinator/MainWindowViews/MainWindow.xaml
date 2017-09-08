@@ -104,13 +104,13 @@
 				<StackPanel Grid.Column="1" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
 
 					<!-- Fetch error indicator -->
-					<Button 
+					<!--<Button 
 						Content="&#xE888;"
 						Style="{DynamicResource IconButtonStyle}"			
 						Foreground="{DynamicResource ConflictBrush}"			
 						FontWeight="Bold"
 						Visibility="{Binding ModelViewModel.FetchErrorText, Converter={StaticResource VC}}"			
-						ToolTip="{Binding ModelViewModel.FetchErrorText}" />
+						ToolTip="{Binding ModelViewModel.FetchErrorText}" />-->
 					
 					<!-- Latest version button -->
 					<Button 

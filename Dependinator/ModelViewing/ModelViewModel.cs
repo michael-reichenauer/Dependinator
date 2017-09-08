@@ -1,13 +1,11 @@
 using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using System.Windows.Threading;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Private;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
-using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
 
 
@@ -19,17 +17,10 @@ namespace Dependinator.ModelViewing
 		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(100);
 
 		public static bool IsControlling => Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
-
-		private static readonly TimeSpan FilterDelay = TimeSpan.FromMilliseconds(300);
-
+		
 		private readonly IThemeService themeService;
-
 		private readonly IModelViewService modelViewService;
 		private readonly IProgressService progress;
-
-
-		private readonly DispatcherTimer filterTriggerTimer = new DispatcherTimer();
-		private string settingFilterText = "";
 
 		private int width = 0;
 
@@ -43,29 +34,17 @@ namespace Dependinator.ModelViewing
 			this.themeService = themeService;
 			this.progress = progressService;
 
-			filterTriggerTimer.Tick += FilterTrigger;
-			filterTriggerTimer.Interval = FilterDelay;
+			ItemsCanvas rootCanvas = new ItemsCanvas();
+			ItemsViewModel = new ItemsViewModel(rootCanvas);
 
-			ItemsViewModel = new ItemsViewModel(new ItemsCanvas());
+			modelViewService.SetRootCanvas(rootCanvas);
 		}
-
 
 		public ItemsViewModel ItemsViewModel { get; }
 
-
-		public string FetchErrorText { get => Get(); set => Set(value); }
-
-		public string FilterText { get; private set; } = "";
-
-		public int SelectedIndex { get => Get(); set => Set(value); }
-
-		public object SelectedItem { get => Get().Value; set => Set(value); }
-
-
+		
 		public async Task LoadAsync()
 		{
-			modelViewService.Init(ItemsViewModel.ItemsCanvas);
-
 			await modelViewService.LoadAsync();
 		}
 
@@ -84,74 +63,26 @@ namespace Dependinator.ModelViewing
 		}
 
 
-		public void RefreshView()
-		{
-			UpdateViewModel();
-		}
-
-
 		public async Task ActivateRefreshAsync()
 		{
-			Log.Usage("Activate window");
-
-			Timing t = new Timing();
 			themeService.SetThemeWpfColors();
-			t.Log("SetThemeWpfColors");
 
 			using (progress.ShowBusy())
 			{
 				await Task.Yield();
 			}
-
-			t.Log("Activate refresh done");
 		}
-
-
+		
 
 		public async Task ManualRefreshAsync(bool refreshLayout = false)
 		{
 			using (progress.ShowBusy())
 			{
-				await modelViewService.Refresh(refreshLayout);
+				await modelViewService.RefreshAsync(refreshLayout);
 			}
 		}
 
-
-		private void UpdateViewModel()
-		{
-			Timing t = new Timing();
-
-			if (!IsInFilterMode())
-			{
-				NotifyAll();
-				;
-
-				t.Log("Updated repository view model");
-			}
-		}
-
-
-		private bool IsInFilterMode()
-		{
-			return !string.IsNullOrEmpty(FilterText) || !string.IsNullOrEmpty(settingFilterText);
-		}
-
-
-		public void SetFilter(string text)
-		{
-			filterTriggerTimer.Stop();
-			Log.Debug($"Filter: {text}");
-			settingFilterText = (text ?? "").Trim();
-			filterTriggerTimer.Start();
-		}
-
-
-		private void FilterTrigger(object sender, EventArgs e)
-		{
-			//VirtualItemsSource.DataChanged();
-		}
-
-
+		
 		public void Close() => modelViewService.Close();
 	}
 }
