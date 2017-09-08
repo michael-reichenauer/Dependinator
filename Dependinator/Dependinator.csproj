@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Dependinator</RootNamespace>
     <AssemblyName>Dependinator</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
@@ -78,9 +78,6 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ValueTuple, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.ValueTuple.4.3.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
-    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Interactivity">
       <HintPath>..\Binaries\System.Windows.Interactivity.dll</HintPath>
@@ -523,9 +520,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Dependencies\System.ValueTuple.dll" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Dependencies\System.Windows.Interactivity.dll" />
   </ItemGroup>
   <ItemGroup />
@@ -537,12 +531,6 @@ pushd "$(SolutionDir)packages\Autofac.*\lib\net45\"
 copy /Y /B Autofac.dll "$(ProjectDir)\Dependencies\Autofac.dll" &gt;NUL
 popd
 
-pushd "$(SolutionDir)packages\System.ValueTuple.*\lib\netstandard1.0"
-copy /Y /B System.ValueTuple.dll "$(ProjectDir)\Dependencies\System.ValueTuple.dll" &gt;NUL
-popd
-
-copy /Y /B "$(SolutionDir)\Binaries\System.Windows.Interactivity.dll" "$(ProjectDir)\Dependencies\System.Windows.Interactivity.dll" &gt;NUL
-
 pushd "$(SolutionDir)packages\Newtonsoft.Json.*\lib\net45"
 copy /Y /B Newtonsoft.Json.dll "$(ProjectDir)\Dependencies\Newtonsoft.Json.dll" &gt;NUL
 popd
@@ -550,6 +538,8 @@ popd
 pushd "$(SolutionDir)packages\protobuf-net.*\lib\net451"
 copy /Y /B protobuf-net.dll "$(ProjectDir)\Dependencies\protobuf-net.dll" &gt;NUL
 popd
+
+copy /Y /B "$(SolutionDir)\Binaries\System.Windows.Interactivity.dll" "$(ProjectDir)\Dependencies\System.Windows.Interactivity.dll" &gt;NUL
 </PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
