@@ -1434,9 +1434,9 @@ namespace Dependinator.Utils.UI.VirtualCanvas
 					nextNode = nextNode.Previous;
 
 					var index = node.Value;
-					var container = ContainerFromIndex(index);
-					if (container == null
-						|| (!container.IsMouseCaptureWithin && !container.IsKeyboardFocusWithin))
+					// var container = ContainerFromIndex(index);
+					// if (container == null)
+						// || (!container.IsMouseCaptureWithin && !container.IsKeyboardFocusWithin)) // MiR disabled
 					{
 						VirtualizeItem(index);						
 						RealizedItems.Remove(node);

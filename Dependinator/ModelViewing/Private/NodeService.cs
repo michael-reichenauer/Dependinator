@@ -61,6 +61,42 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
+
+		public void RemoveAllNodesAndLinks()
+		{
+			Timing t = Timing.Start();
+			IReadOnlyList<Node> nodes = model.Root.Descendents().ToList();
+
+			foreach (Node node in nodes)
+			{
+				if (node.NodeType != NodeType.NameSpace)
+				{
+					List<Link> obsoleteLinks = node.SourceLinks.ToList();
+					linkService.RemoveObsoleteLinks(obsoleteLinks);
+
+					RemoveNode(node);
+				}
+				else
+				{
+					List<Link> obsoleteLinks = node.SourceLinks.ToList();
+					linkService.RemoveObsoleteLinks(obsoleteLinks);
+				}
+			}
+
+			foreach (Node node in nodes.Reverse())
+			{
+				if (node.NodeType == NodeType.NameSpace && !node.Children.Any())
+				{
+					// Node is an empty namespace, lets remove it
+					RemoveNode(node);
+				}
+			}
+
+			t.Log($"{nodes.Count} nodes");
+		}
+
+
+
 		public void RemoveObsoleteNodesAndLinks(int stamp)
 		{
 			Timing t = Timing.Start();

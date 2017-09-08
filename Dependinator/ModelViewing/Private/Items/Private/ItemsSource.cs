@@ -13,30 +13,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		private readonly Dictionary<int, IItem> viewItems = new Dictionary<int, IItem>();
 		private readonly Dictionary<int, IItem> removedItems = new Dictionary<int, IItem>();
 
-		//private List<IItem> addingItems;
-		//private List<IItem> updatingItems;
-		//private List<IItem> removingItems;
-
 		private int currentItemId = 1;
-		//private bool isShowing;
-
-		//private bool isItemsChanged;
-		//private bool isBoundsChanged;
-
-
-		//private PriorityQuadTree<IItem> ViewItemsTree =>
-		//	viewItemsTree ?? (viewItemsTree = new PriorityQuadTree<IItem>());
-
-		//private Dictionary<int, IItem> ViewItems =>
-		//	viewItems ?? (viewItems = new Dictionary<int, IItem>());
-
-		//private Dictionary<int, IItem> RemovedItems =>
-		//	removedItems ?? (removedItems = new Dictionary<int, IItem>());
-
-		//private List<IItem> AddingItems => addingItems ?? (addingItems = new List<IItem>());
-		//private List<IItem> UpdatingItems => updatingItems ?? (updatingItems = new List<IItem>());
-		//private List<IItem> RemovingItems => removingItems ?? (removingItems = new List<IItem>());
-
 
 
 		public ItemsSource(IItemsSourceArea itemsSourceArea)
@@ -46,9 +23,6 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 
 		public Rect LastViewAreaQuery { get; private set; } = EmptyExtent;
-
-
-
 
 		public Rect TotalBounds { get; private set; } = EmptyExtent;
 
@@ -99,7 +73,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 		public void ItemRealized(int virtualId)
 		{
-			Log.Debug($"Realized item {virtualId}");
+			// Log.Debug($"Realized item {virtualId}");
 			if (viewItems.TryGetValue(virtualId, out var item))
 			{
 				item.ItemRealized();
@@ -109,7 +83,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 		public void ItemVirtualized(int virtualId)
 		{
-			Log.Debug($"virtualized item {virtualId}");
+			// Log.Debug($"virtualized item {virtualId}");
 
 			if (viewItems.TryGetValue(virtualId, out IItem item))
 			{
@@ -118,7 +92,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 			if (removedItems.ContainsKey(virtualId))
 			{
-				Log.Debug($"Remove item {virtualId}");
+				// Log.Debug($"Remove item {virtualId}");
 				removedItems.Remove(virtualId);
 				viewItems.Remove(virtualId);
 			}
@@ -214,7 +188,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 				Rect itemBounds = viewItem.ItemBounds;
 				viewItemsTree.Remove(item, itemBounds);
 				removedItems[viewItem.ItemId] = item;
-				Log.Debug($"Remove item {viewItem.ItemId}");
+				// Log.Debug($"Remove item {viewItem.ItemId}");
 
 				item.ItemState = null;
 
@@ -231,7 +205,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 			if (isQueryItemsChanged)
 			{
-				Log.Debug("TriggerItemsChanged");
+				// Log.Debug("TriggerItemsChanged");
 				TriggerItemsChanged();
 			}
 		}
@@ -290,7 +264,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 				.Where(i => i.ItemState != null && i.CanShow)
 				.Select(i => ((ViewItem)i.ItemState).ItemId);
 
-			Log.Debug($"Items in {itemsSourceArea}: {string.Join(", ", itemIds)}");
+			// Log.Debug($"Items in {itemsSourceArea}: {string.Join(", ", itemIds)}");
 
 			return itemIds;
 		}

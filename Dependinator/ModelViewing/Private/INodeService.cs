@@ -8,5 +8,6 @@ namespace Dependinator.ModelViewing.Private
 		void RemoveObsoleteNodesAndLinks(int stamp);
 		void RemoveAll();
 		void ResetLayout();
+		void RemoveAllNodesAndLinks();
 	}
 }

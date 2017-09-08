@@ -31,7 +31,7 @@ namespace Dependinator.ModelViewing.Private
 		private int currentStamp;
 		private bool isShowingOpenModel = false;
 
-		private OpenModelViewModel modelViewModel = null;
+		//private OpenModelViewModel modelViewModel = null;
 
 
 		public ModelService(
@@ -62,14 +62,27 @@ namespace Dependinator.ModelViewing.Private
 			string dataFilePath = GetDataFilePath();
 			int stamp = currentStamp++;
 
-			//if (!await parserService.TryDeserialize(
-			//	dataFilePath, items => UpdateDataItems(items, stamp)))
+			ClearAll();
+
+			//if (File.Exists(dataFilePath))
+			//{
+			//	if (modelViewModel != null)
+			//	{
+			//		Root.ItemsCanvas.RemoveItem(modelViewModel);
+			//		modelViewModel.NotifyAll();
+			//		modelViewModel = null;
+			//	}
+
+			//	await parserService.TryDeserialize(
+			//		dataFilePath, items => UpdateDataItems(items, stamp);
+			//}
+
+
+
+			if (File.Exists(workingFolder.FilePath))
 			{
-				if (File.Exists(workingFolder.FilePath))
-				{
-					await parserService.AnalyzeAsync(
-						workingFolder.FilePath, items => UpdateDataItems(items, stamp));
-				}
+				await parserService.AnalyzeAsync(
+					workingFolder.FilePath, items => UpdateDataItems(items, stamp));
 			}
 
 			if (!Root.Children.Any())
@@ -79,19 +92,12 @@ namespace Dependinator.ModelViewing.Private
 				Root.ItemsCanvas.Offset = new Point(0, 0);
 				Root.ItemsCanvas.IsZoomAndMoveEnabled = false;
 
-				modelViewModel = openModelViewModelProvider();
-
-				Root.ItemsCanvas.AddItem(modelViewModel);
+				Root.ItemsCanvas.AddItem(openModelViewModelProvider());
 			}
 			else
 			{
 				isShowingOpenModel = false;
-				Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
-				if (modelViewModel != null)
-				{
-					Root.ItemsCanvas.RemoveItem(modelViewModel);
-					modelViewModel = null;
-				}
+				Root.ItemsCanvas.IsZoomAndMoveEnabled = true;			
 			}
 		}
 
