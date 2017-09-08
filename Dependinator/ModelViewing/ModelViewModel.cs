@@ -8,6 +8,8 @@ using Dependinator.ModelViewing.Private;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
+using Dependinator.Utils.UI.Mvvm;
+
 
 namespace Dependinator.ModelViewing
 {
@@ -104,14 +106,6 @@ namespace Dependinator.ModelViewing
 			t.Log("Activate refresh done");
 		}
 
-
-		public async Task AutoRemoteCheckAsync()
-		{
-			Timing t = new Timing();
-			Log.Usage("Automatic remote check");
-			await Task.Yield();
-			t.Log("Auto refresh done");
-		}
 
 
 		public async Task ManualRefreshAsync(bool refreshLayout = false)

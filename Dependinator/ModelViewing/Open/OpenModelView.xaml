@@ -63,6 +63,7 @@
 
 							<TextBlock
 								Grid.Column="1" Grid.Row="0"
+								Margin="0,1,0,0"
 								VerticalAlignment="Top">
 								<Hyperlink TextDecorations="None" Click="RecentFile_OnClick">
 									<TextBlock
@@ -99,7 +100,7 @@
 				TextWrapping="Wrap"
 				Margin="10" />
 
-			<!-- Open file link -->
+			<!-- Open file with icon and link -->
 			<Grid
 				Grid.Column="1" Grid.Row="1"
 				Margin="10,7">
@@ -112,14 +113,18 @@
 					<RowDefinition Height="*" />
 				</Grid.RowDefinitions>
 
+				<!-- Open Icon -->
 				<TextBlock
 					Grid.Column="0" Grid.Row="0"
 					Margin="3,3,0,0"
 					Style="{DynamicResource MenuIconStyle}" Text="&#xE89D;"
 					FontSize="20" VerticalAlignment="Top" />
 
+				<!-- Open file link -->
 				<TextBlock
-					Grid.Column="1" Grid.Row="0">
+					Grid.Column="1" Grid.Row="0"
+					Margin="0,2,0,0"
+					VerticalAlignment="Top">
 					<Hyperlink TextDecorations="None" Click="OpenFile_OnClick">
 						<TextBlock
 							Foreground="{DynamicResource TextBrush}" FontSize="14"
@@ -127,20 +132,19 @@
 					</Hyperlink>
 					<TextBlock.ToolTip>
 						<ToolTip
-							Content="Open dll, exe or sln file"
+							Content="Open model from dll, exe or sln file"
 							Placement="Mouse"
 							BorderBrush="{DynamicResource BorderBrush}"
 							BorderThickness="1" />
 					</TextBlock.ToolTip>
 				</TextBlock>
-
 			</Grid>
 
 
-			<!-- Pin at taskbar hint -->
+			<!-- Pin at task bar hint -->
 			<TextBlock
 				Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2"
-				Text="Hint: Consider to pin Dendinator to the taskbar to get quick access to models."
+				Text="Hint: Consider to pin Dendinator to the task bar to get quick access to models."
 				Foreground="{DynamicResource TextLowBrush}"
 				TextWrapping="Wrap"
 				Margin="10" />

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 
 
-namespace Dependinator.Utils.UI
+namespace Dependinator.Utils.UI.Mvvm
 {
 	internal abstract class ViewModel : Notifyable
 	{

@@ -1,4 +1,4 @@
-namespace Dependinator.Utils.UI
+namespace Dependinator.Utils.UI.Mvvm
 {
 	internal interface IPropertySetter
 	{

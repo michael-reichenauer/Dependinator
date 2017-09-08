@@ -3,7 +3,8 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace Dependinator.Utils.UI
+
+namespace Dependinator.Utils.UI.Mvvm
 {
 	internal abstract class Notifyable : INotifyPropertyChanged
 	{

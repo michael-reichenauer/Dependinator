@@ -3,23 +3,22 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 
-namespace Dependinator.Utils.UI
+
+namespace Dependinator.Utils.UI.Mvvm
 {
-	internal class TargetWhenSetter
+	internal class SourceWhenSetter
 	{
-		private readonly Notifyable targetNotifyable;
+		private Notifyable targetNotifyable;
 		private readonly string[] sourcePropertyNames;
 
 		private Action<string> notifyPropertyAction;
 		private bool isNotifyAll = false;
 		private IEnumerable<string> targetPropertyNames;
 
-		public TargetWhenSetter(
-			Notifyable targetNotifyable,
+		public SourceWhenSetter(
 			INotifyPropertyChanged sourceNotifyable,
 			params string[] sourcePropertyNames)
 		{
-			this.targetNotifyable = targetNotifyable;
 			this.sourcePropertyNames = sourcePropertyNames;
 
 			sourcePropertyNames.ForEach(
@@ -28,11 +27,22 @@ namespace Dependinator.Utils.UI
 		}
 
 
-		public void Notify(params string[] propertyNames) => targetPropertyNames = propertyNames;
+		public void Notify(Notifyable target, params string[] propertyNames)
+		{
+			targetNotifyable = target;
+			targetPropertyNames = propertyNames;
+		}
 
-		public void NotifyAll() => isNotifyAll = true;
+		public void NotifyAll(Notifyable target)
+		{
+			targetNotifyable = target;
+			isNotifyAll = true;
+		}
 
-		public void Notify(Action<string> notifyAction) => notifyPropertyAction = notifyAction;
+		public void Notify(Action<string> notifyAction)
+		{
+			notifyPropertyAction = notifyAction;
+		}
 
 
 		private void PropertyChangedEventHandler(object sender, PropertyChangedEventArgs e)
@@ -57,4 +67,5 @@ namespace Dependinator.Utils.UI
 			}
 		}
 	}
+
 }

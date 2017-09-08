@@ -3,10 +3,9 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
-using System.Windows.Threading;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
+using Dependinator.Utils.UI;
 
 
 namespace Dependinator.MainWindowViews
@@ -18,17 +17,15 @@ namespace Dependinator.MainWindowViews
 	public partial class MainWindow : Window
 	{
 		private readonly ISettings settings;
-		private readonly DispatcherTimer remoteCheckTimer = new DispatcherTimer();
 
 		private readonly MainWindowViewModel viewModel;
-
 
 
 		internal MainWindow(ISettings settings, Func<MainWindowViewModel> mainWindowViewModelProvider)
 		{
 			this.settings = settings;
-			InitializeComponent();
 
+			InitializeComponent();
 			SetShowToolTipLonger();
 
 			// Make sure maximize window does not cover the task bar
@@ -37,61 +34,22 @@ namespace Dependinator.MainWindowViews
 			viewModel = mainWindowViewModelProvider();
 			DataContext = viewModel;
 
+			// Bring the window to the foreground and activates
 			Activate();
 
 			RestoreWindowSettings();
 		}
 
 
-		public bool IsNewVersionAvailable
-		{
-			set => viewModel.IsNewVersionVisible = value;
-		}
+		public bool IsNewVersionAvailable { set => viewModel.IsNewVersionVisible = value; }
 
+		public void SetSearchFocus() => Search.SearchBox.Focus();
 
-		public void SetSearchFocus()
-		{
-			Search.SearchBox.Focus();
-		}
+		private async void MainWindow_OnLoaded(object sender, RoutedEventArgs e) =>
+			await viewModel.LoadAsync();
 
-
-
-		private async void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
-		{
-			await viewModel.FirstLoadAsync();
-
-			StartRemoteCheck();
-		}
-
-
-		private void StartRemoteCheck()
-		{
-			int interval = settings.Get<Options>().AutoRemoteCheckIntervalMin;
-
-			if (interval == 0)
-			{
-				Log.Debug("AutoRemoteCheckIntervalMin is disabled");
-				return;
-			}
-
-			Log.Debug($"AutoRemoteCheckIntervalMin is interval {interval}");
-
-			remoteCheckTimer.Tick += RemoteCheck;
-			remoteCheckTimer.Interval = TimeSpan.FromMinutes(interval);
-			remoteCheckTimer.Start();
-		}
-
-
-		private void RemoteCheck(object sender, EventArgs e)
-		{
-			viewModel.AutoRemoteCheckAsync().RunInBackground();
-		}
-
-
-		protected override void OnActivated(EventArgs e)
-		{
+		protected override void OnActivated(EventArgs e) =>
 			viewModel.ActivateRefreshAsync().RunInBackground();
-		}
 
 
 		protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
@@ -100,12 +58,12 @@ namespace Dependinator.MainWindowViews
 			viewModel.WindowWith = (int)sizeInfo.NewSize.Width;
 		}
 
+
 		private void MainWindow_OnClosing(object sender, CancelEventArgs e)
 		{
 			viewModel.ClosingWindow();
 			StoreWindowSettings();
 		}
-
 
 
 		private void StoreWindowSettings()
@@ -129,7 +87,7 @@ namespace Dependinator.MainWindowViews
 				(int)s.WindowBounds.Height);
 
 			// check if the saved bounds are nonzero and visible on any screen
-			if (rect != Rectangle.Empty && IsVisibleOnAnyScreen(rect))
+			if (rect != Rectangle.Empty && VisibleWindow.IsVisibleOnAnyScreen(rect))
 			{
 				Top = s.WindowBounds.X;
 				Left = s.WindowBounds.Y;
@@ -141,22 +99,7 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		private bool IsVisibleOnAnyScreen(Rectangle rect)
-		{
-			foreach (Screen screen in Screen.AllScreens)
-			{
-				if (screen.WorkingArea.IntersectsWith(rect) && screen.WorkingArea.Top < rect.Top)
-				{
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-
-
-		private static void SetShowToolTipLonger()
+		public static void SetShowToolTipLonger()
 		{
 			ToolTipService.ShowDurationProperty.OverrideMetadata(
 				typeof(DependencyObject), new FrameworkPropertyMetadata(int.MaxValue));

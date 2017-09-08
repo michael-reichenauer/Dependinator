@@ -11,6 +11,7 @@ using Dependinator.MainWindowViews.Private;
 using Dependinator.ModelViewing;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
+using Dependinator.Utils.UI.Mvvm;
 using Application = System.Windows.Application;
 
 
@@ -141,7 +142,7 @@ namespace Dependinator.MainWindowViews
 		public Command SearchCommand => Command(Search);
 
 
-		public async Task FirstLoadAsync()
+		public async Task LoadAsync()
 		{
 			await Task.Yield();
 
@@ -184,9 +185,6 @@ namespace Dependinator.MainWindowViews
 		private Task ManualRefreshAsync() => ModelViewModel.ManualRefreshAsync();
 
 		private Task ManualRefreshLayoutAsync() => ModelViewModel.ManualRefreshAsync(true);
-
-		public Task AutoRemoteCheckAsync() => ModelViewModel.AutoRemoteCheckAsync();
-
 
 		private void Search() => mainWindowService.SetSearchFocus();
 

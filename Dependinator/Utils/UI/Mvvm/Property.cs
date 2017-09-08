@@ -2,7 +2,7 @@ using System.Windows;
 using System.Windows.Media;
 
 
-namespace Dependinator.Utils.UI
+namespace Dependinator.Utils.UI.Mvvm
 {
 	internal class Property : IPropertySetter, IPropertyNotify
 	{

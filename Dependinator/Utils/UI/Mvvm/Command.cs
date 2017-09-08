@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
 
-namespace Dependinator.Utils.UI
+namespace Dependinator.Utils.UI.Mvvm
 {
 	public class Command : ICommand
 	{

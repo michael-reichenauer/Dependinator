@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using Dependinator.Utils.UI;
+using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 namespace Dependinator.ModelViewing.Private.Items
