@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\packages\LibGit2Sharp.NativeBinaries.1.0.129\build\LibGit2Sharp.NativeBinaries.props" Condition="Exists('..\packages\LibGit2Sharp.NativeBinaries.1.0.129\build\LibGit2Sharp.NativeBinaries.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -63,10 +62,6 @@
   <ItemGroup>
     <Reference Include="Autofac, Version=4.1.1.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
       <HintPath>..\packages\Autofac.4.1.1\lib\net45\Autofac.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
-    <Reference Include="LibGit2Sharp, Version=0.22.0.0, Culture=neutral, PublicKeyToken=7cbde695407f0333, processorArchitecture=MSIL">
-      <HintPath>..\packages\LibGit2Sharp.0.22.0\lib\net40\LibGit2Sharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
@@ -513,12 +508,6 @@
     <EmbeddedResource Include="Dependencies\protobuf-net.dll" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Dependencies\LibGit2Sharp.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Dependencies\git2-785d8c4.dll" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Dependencies\Autofac.dll" />
   </ItemGroup>
   <ItemGroup>
@@ -543,20 +532,26 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>mkdir "$(ProjectDir)\Dependencies" 2&gt; NUL
-copy /Y /B "$(SolutionDir)packages\Autofac.4.1.1\lib\net45\Autofac.dll" "$(ProjectDir)\Dependencies\Autofac.dll" &gt;NUL
-copy /Y /B "$(SolutionDir)packages\System.ValueTuple.4.3.0\lib\netstandard1.0\System.ValueTuple.dll" "$(ProjectDir)\Dependencies\System.ValueTuple.dll" &gt;NUL
+
+pushd "$(SolutionDir)packages\Autofac.*\lib\net45\" 
+copy /Y /B Autofac.dll "$(ProjectDir)\Dependencies\Autofac.dll" &gt;NUL
+popd
+
+pushd "$(SolutionDir)packages\System.ValueTuple.*\lib\netstandard1.0"
+copy /Y /B System.ValueTuple.dll "$(ProjectDir)\Dependencies\System.ValueTuple.dll" &gt;NUL
+popd
+
 copy /Y /B "$(SolutionDir)\Binaries\System.Windows.Interactivity.dll" "$(ProjectDir)\Dependencies\System.Windows.Interactivity.dll" &gt;NUL
-copy /Y /B "$(SolutionDir)packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll" "$(ProjectDir)\Dependencies\Newtonsoft.Json.dll" &gt;NUL
-copy /Y /B "$(SolutionDir)packages\protobuf-net.2.1.0\lib\net451\protobuf-net.dll" "$(ProjectDir)\Dependencies\protobuf-net.dll" &gt;NUL
-copy /Y /B "$(SolutionDir)packages\LibGit2Sharp.0.22.0\lib\net40\LibGit2Sharp.dll" "$(ProjectDir)\Dependencies\LibGit2Sharp.dll" &gt;NUL
-copy /Y /B "$(SolutionDir)packages\LibGit2Sharp.NativeBinaries.1.0.129\libgit2\windows\x86\git2-785d8c4.dll" "$(ProjectDir)\Dependencies\git2-785d8c4.dll" &gt;NUL</PreBuildEvent>
+
+pushd "$(SolutionDir)packages\Newtonsoft.Json.*\lib\net45"
+copy /Y /B Newtonsoft.Json.dll "$(ProjectDir)\Dependencies\Newtonsoft.Json.dll" &gt;NUL
+popd
+
+pushd "$(SolutionDir)packages\protobuf-net.*\lib\net451"
+copy /Y /B protobuf-net.dll "$(ProjectDir)\Dependencies\protobuf-net.dll" &gt;NUL
+popd
+</PreBuildEvent>
   </PropertyGroup>
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\LibGit2Sharp.NativeBinaries.1.0.129\build\LibGit2Sharp.NativeBinaries.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\LibGit2Sharp.NativeBinaries.1.0.129\build\LibGit2Sharp.NativeBinaries.props'))" />
-  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

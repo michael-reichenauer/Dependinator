@@ -22,7 +22,6 @@ namespace Dependinator.Common.WorkFolders.Private
 		private readonly FileSystemWatcher workFolderWatcher = new FileSystemWatcher();
 		private readonly FileSystemWatcher refsWatcher = new FileSystemWatcher();
 
-		private LibGit2Sharp.Repository repo = null;
 
 		private readonly object syncRoot = new object();
 
@@ -75,8 +74,6 @@ namespace Dependinator.Common.WorkFolders.Private
 			statusTimer.Stop();
 			repoTimer.Stop();
 
-			repo = GetRepo(workingFolder);
-
 			workFolderWatcher.Path = workingFolder;
 			workFolderWatcher.NotifyFilter = NotifyFilters;
 			workFolderWatcher.Filter = "*.*";
@@ -96,25 +93,6 @@ namespace Dependinator.Common.WorkFolders.Private
 		}
 
 
-		private LibGit2Sharp.Repository GetRepo(string workingFolder)
-		{
-			try
-			{
-				if (repo != null)
-				{
-					repo.Dispose();
-				}
-
-				return new LibGit2Sharp.Repository(workingFolder);
-			}
-			catch (Exception e)
-			{
-				Log.Warn($"Failed to create repo to check ignored files, {e}");
-			}
-
-			return null;
-		}
-
 
 		private void WorkingFolderChange(string fullPath, string path, WatcherChangeTypes changeType)
 		{
@@ -126,10 +104,6 @@ namespace Dependinator.Common.WorkFolders.Private
 
 			if (path == null || !path.StartsWith(GitFolder))
 			{
-				if (repo != null && path != null && repo.Ignore.IsPathIgnored(path))
-				{
-					return;
-				}
 
 				if (fullPath != null && !Directory.Exists(fullPath))
 				{
