@@ -1,5 +1,5 @@
 ﻿using System;
-using Dependinator.Utils.UI;
+using System.Threading.Tasks;
 using Dependinator.Utils.UI.Mvvm;
 
 
@@ -7,9 +7,9 @@ namespace Dependinator.ModelViewing.Open
 {
 	internal class FileItem : ViewModel
 	{
-		private readonly Action<string> openFileAction;
+		private readonly Func<string, Task> openFileAction;
 
-		public FileItem(string fileName, string filePath, Action<string> openFileAction)
+		public FileItem(string fileName, string filePath, Func<string, Task> openFileAction)
 		{
 			FileName = fileName;
 			FilePath = filePath;

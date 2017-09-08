@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using Dependinator.Utils;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 namespace Dependinator.ModelViewing.Private.Items.Private
@@ -98,6 +99,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 		public void ItemRealized(int virtualId)
 		{
+			Log.Debug($"Realized item {virtualId}");
 			if (viewItems.TryGetValue(virtualId, out var item))
 			{
 				item.ItemRealized();
@@ -107,6 +109,8 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 		public void ItemVirtualized(int virtualId)
 		{
+			Log.Debug($"virtualized item {virtualId}");
+
 			if (viewItems.TryGetValue(virtualId, out IItem item))
 			{
 				item.ItemVirtualized();
@@ -114,6 +118,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 			if (removedItems.ContainsKey(virtualId))
 			{
+				Log.Debug($"Remove item {virtualId}");
 				removedItems.Remove(virtualId);
 				viewItems.Remove(virtualId);
 			}
@@ -122,8 +127,8 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 		public void RemoveAll()
 		{
-			viewItemsTree.Clear();
-			TriggerInvalidated();
+			List<IItem> allItems = viewItemsTree.ToList();
+			Remove(allItems);
 		}
 
 
@@ -209,6 +214,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 				Rect itemBounds = viewItem.ItemBounds;
 				viewItemsTree.Remove(item, itemBounds);
 				removedItems[viewItem.ItemId] = item;
+				Log.Debug($"Remove item {viewItem.ItemId}");
 
 				item.ItemState = null;
 
@@ -225,6 +231,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 			if (isQueryItemsChanged)
 			{
+				Log.Debug("TriggerItemsChanged");
 				TriggerItemsChanged();
 			}
 		}
@@ -282,6 +289,8 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 			IEnumerable<int> itemIds = viewItemsTree.GetItemsIntersecting(viewArea)
 				.Where(i => i.ItemState != null && i.CanShow)
 				.Select(i => ((ViewItem)i.ItemState).ItemId);
+
+			Log.Debug($"Items in {itemsSourceArea}: {string.Join(", ", itemIds)}");
 
 			return itemIds;
 		}

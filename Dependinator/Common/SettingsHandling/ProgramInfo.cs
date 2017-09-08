@@ -193,10 +193,10 @@ namespace Dependinator.Common.SettingsHandling
 
 		private static string EncodePath(string path)
 		{
-			string encoded = path.Replace("%", "%%");
-			encoded = encoded.Replace(":", "%;");
-			encoded = encoded.Replace("/", "%(");
-			encoded = encoded.Replace("\\", "%)");
+			string encoded = path.Replace(" ", "  ");
+			encoded = encoded.Replace(":", " ;");
+			encoded = encoded.Replace("/", " (");
+			encoded = encoded.Replace("\\", " )");
 
 			return encoded;
 		}

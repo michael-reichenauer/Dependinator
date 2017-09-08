@@ -107,8 +107,8 @@
     <Compile Include="Common\MessageDialogs\IMessage.cs" />
     <Compile Include="Common\MessageDialogs\IMessageService.cs" />
     <Compile Include="Common\SettingsHandling\ISettingsService.cs" />
-    <Compile Include="Common\WorkFolders\IOpenService.cs" />
-    <Compile Include="Common\WorkFolders\OpenService.cs" />
+    <Compile Include="Common\WorkFolders\IOpenModelService.cs" />
+    <Compile Include="Common\WorkFolders\OpenModelService.cs" />
     <Compile Include="ModelViewing\Open\FileItem.cs" />
     <Compile Include="ModelViewing\Open\OpenModelView.xaml.cs">
       <DependentUpon>OpenModelView.xaml</DependentUpon>

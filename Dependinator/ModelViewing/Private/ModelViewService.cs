@@ -38,8 +38,6 @@ namespace Dependinator.ModelViewing.Private
 
 			using (progress.ShowBusy())
 			{
-				modelService.ClearAll();
-
 				RestoreViewSettings();
 
 				await modelService.LoadAsync();

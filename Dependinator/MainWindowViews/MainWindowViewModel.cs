@@ -22,7 +22,7 @@ namespace Dependinator.MainWindowViews
 		private readonly ILatestVersionService latestVersionService;
 		private readonly IMainWindowService mainWindowService;
 		private readonly MainWindowIpcService mainWindowIpcService;
-		private readonly IOpenService openService;
+		private readonly IOpenModelService openModelService;
 
 		private readonly JumpListService jumpListService = new JumpListService();
 
@@ -43,7 +43,7 @@ namespace Dependinator.MainWindowViews
 			IMainWindowService mainWindowService,
 			MainWindowIpcService mainWindowIpcService,
 			ModelViewModel modelViewModel,
-			IOpenService openService)
+			IOpenModelService openModelService)
 		{
 			this.workingFolder = workingFolder;
 			this.message = message;
@@ -51,7 +51,7 @@ namespace Dependinator.MainWindowViews
 			this.latestVersionService = latestVersionService;
 			this.mainWindowService = mainWindowService;
 			this.mainWindowIpcService = mainWindowIpcService;
-			this.openService = openService;
+			this.openModelService = openModelService;
 
 			ModelViewModel = modelViewModel;
 
@@ -108,7 +108,7 @@ namespace Dependinator.MainWindowViews
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
 		public Command RefreshLayoutCommand => AsyncCommand(ManualRefreshLayoutAsync);
 
-		public Command OpenFileCommand => AsyncCommand(openService.OpenFileAsync);
+		public Command OpenFileCommand => AsyncCommand(openModelService.OpenFileAsync);
 
 		public Command RunLatestVersionCommand => AsyncCommand(RunLatestVersionAsync);
 

@@ -73,15 +73,16 @@ namespace Dependinator.ModelParsing.Private.DotNetReflection.Private
 				return null;
 			}
 			
+			Log.Debug($"Try to resolve {assemblyName}");
 			if (TryGetAssemblyByName(assemblyName, out Assembly assembly))
 			{
-				// Log.Debug($"Resolve assembly by name {args.Name}");
+				Log.Debug($"Resolve assembly by name {args.Name}");
 				return assembly;
 			}	
 
 			if (TryGetAssemblyByFile(assemblyName, out assembly))
 			{
-				// Log.Debug($"Resolve assembly by file {assemblyName + ".dll"}");
+				Log.Debug($"Resolve assembly by file {assemblyName + ".dll"}");
 				return assembly;
 			}
 	
@@ -117,7 +118,7 @@ namespace Dependinator.ModelParsing.Private.DotNetReflection.Private
 				{
 					Assembly.ReflectionOnlyLoad(assemblyName.FullName);
 				}
-				catch (FileNotFoundException)
+				catch (Exception e) when(e is FileNotFoundException || e is FileLoadException)
 				{
 					// Failed to load assembly via name, trying to load via name
 					try
@@ -128,7 +129,12 @@ namespace Dependinator.ModelParsing.Private.DotNetReflection.Private
 					{
 						Log.Exception(e2, $"Could not load assembly via name nor file {assemblyName.FullName}");
 					}
-				}			
+				}
+				catch (Exception e)
+				{
+					Log.Debug(e.ToString());
+					throw;
+				}
 			}
 		}
 

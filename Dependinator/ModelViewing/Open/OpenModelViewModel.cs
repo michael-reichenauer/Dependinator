@@ -1,30 +1,46 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Windows;
+using Dependinator.Common.WorkFolders;
 using Dependinator.ModelViewing.Private.Items;
 
 namespace Dependinator.ModelViewing.Open
 {
 	internal class OpenModelViewModel : ItemViewModel
 	{
-		public OpenModelViewModel()
+		private static readonly Rect DefaultOpenModelNodeBounds = new Rect(30, 30, 730, 580);
+
+		private readonly IOpenModelService openModelService;
+
+
+		public OpenModelViewModel(IOpenModelService openModelService)
 		{
-			ItemBounds = new Rect(30, 30, 730, 580);
-			RecentFiles.Add(new FileItem("Server.dll", "c:\\Work\\Server.dll", OpenRecentFile));
-			RecentFiles.Add(new FileItem("Dependiator.exe", "c:\\Work\\Dependiator.exe", OpenRecentFile));
+			this.openModelService = openModelService;
+			ItemBounds = DefaultOpenModelNodeBounds;
+
+			RecentFiles = GetRecentFiles();
 		}
 
 
-		public List<FileItem> RecentFiles { get; } = new List<FileItem>();
+		public IReadOnlyList<FileItem> RecentFiles { get; }
 
-		public void OpenFile()
+
+		public async void OpenFile() => await openModelService.OpenFileAsync();
+
+
+		private IReadOnlyList<FileItem> GetRecentFiles()
 		{
+			IReadOnlyList<string> filesPaths = openModelService.GetResentFilePaths();
 
+			var fileItems = new List<FileItem>();
+			foreach (string filePath in filesPaths)
+			{
+				string name = Path.GetFileName(filePath);
+
+				fileItems.Add(new FileItem(name, filePath, openModelService.OpenFileAsync));
+			}
+
+			return fileItems;
 		}
-
-		public void OpenRecentFile(string filePath)
-		{
-
-		}
-
 	}
 }

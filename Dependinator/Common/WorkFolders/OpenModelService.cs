@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
@@ -6,13 +7,13 @@ using Dependinator.Utils;
 
 namespace Dependinator.Common.WorkFolders
 {
-	internal class OpenService : IOpenService
+	internal class OpenModelService : IOpenModelService
 	{
 		private readonly IModelViewService modelViewService;
 		private readonly IWorkingFolderService workingFolderService;
 
 
-		public OpenService(
+		public OpenModelService(
 			IModelViewService modelViewService,
 			IWorkingFolderService workingFolderService)
 		{
@@ -30,6 +31,22 @@ namespace Dependinator.Common.WorkFolders
 			//await SetWorkingFolderAsync();
 
 			await modelViewService.LoadAsync();
+		}
+
+
+		public Task OpenFileAsync(string filePath)
+		{
+			return Task.CompletedTask;
+		}
+
+
+		public IReadOnlyList<string> GetResentFilePaths()
+		{
+			return new List<string>
+			{
+				"c:\\Work\\Server.dll",
+				"c:\\Work\\Dependiator.exe"
+			};
 		}
 
 
