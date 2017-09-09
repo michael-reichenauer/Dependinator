@@ -101,7 +101,7 @@
     <Compile Include="Common\MessageDialogs\IMessageService.cs" />
     <Compile Include="Common\SettingsHandling\ISettingsService.cs" />
     <Compile Include="Common\WorkFolders\IOpenModelService.cs" />
-    <Compile Include="Common\WorkFolders\OpenModelService.cs" />
+    <Compile Include="Common\WorkFolders\Private\OpenModelService.cs" />
     <Compile Include="ModelViewing\Open\FileItem.cs" />
     <Compile Include="ModelViewing\Open\OpenModelView.xaml.cs">
       <DependentUpon>OpenModelView.xaml</DependentUpon>
@@ -179,7 +179,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="Common\WorkFolders\IWorkingFolderService.cs" />
+    <Compile Include="Common\WorkFolders\Private\IWorkingFolderService.cs" />
     <Compile Include="Common\WorkFolders\Private\WorkingFolderService.cs" />
     <Compile Include="Common\WorkFolders\WorkingFolder.cs" />
     <Compile Include="Common\ThemeHandling\BranchColorsOption.cs" />
@@ -201,7 +201,7 @@
     <Compile Include="Common\ProgressHandling\ProgressDialogViewModel.cs" />
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
     <Compile Include="Common\WorkFolders\FileEventArgs.cs" />
-    <Compile Include="Common\WorkFolders\IFolderMonitorService.cs" />
+    <Compile Include="Common\WorkFolders\Private\IFolderMonitorService.cs" />
     <Compile Include="ModelParsing\Private\DotNetReflection\Private\Assemblies.cs" />
     <Compile Include="ModelParsing\Private\DotNetReflection\Private\ILInstruction.cs" />
     <Compile Include="ModelParsing\Private\DotNetReflection\Private\IlToText.cs" />

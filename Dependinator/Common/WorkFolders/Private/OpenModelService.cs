@@ -5,7 +5,7 @@ using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 
 
-namespace Dependinator.Common.WorkFolders
+namespace Dependinator.Common.WorkFolders.Private
 {
 	internal class OpenModelService : IOpenModelService
 	{
