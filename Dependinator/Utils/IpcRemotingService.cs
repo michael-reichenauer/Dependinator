@@ -24,14 +24,30 @@ namespace Dependinator.Utils
 			string mutexName = GetId(serverId);
 			string channelName = GetChannelName(serverId);
 
-			bool isMutexCreated;
-			channelMutex = new Mutex(true, mutexName, out isMutexCreated);
+			channelMutex = new Mutex(true, mutexName, out var isMutexCreated);
 			if (isMutexCreated)
 			{
 				CreateIpcServer(channelName);
 			}
 
 			return isMutexCreated;
+		}
+
+
+		public bool IsServerRegistered(string serverId)
+		{
+			uniqueId = serverId;
+			string mutexName = GetId(serverId);
+
+			using (new Mutex(true, mutexName, out var isMutexCreated))
+			{
+				if (isMutexCreated)
+				{
+					return false;
+				}
+			}
+
+			return true;
 		}
 
 

@@ -27,6 +27,7 @@ namespace Dependinator
 		private readonly IInstaller installer;
 		private readonly Lazy<MainWindow> mainWindow;
 		private readonly ModelMetadata modelMetadata;
+		private readonly IExistingInstanceService existingInstanceService;
 
 
 		// This mutex is used by the installer (and uninstaller) to determine if instances are running
@@ -38,13 +39,15 @@ namespace Dependinator
 			IThemeService themeService,
 			IInstaller installer,
 			Lazy<MainWindow> mainWindow,
-			ModelMetadata modelMetadata)
+			ModelMetadata modelMetadata,
+			IExistingInstanceService existingInstanceService)
 		{
 			this.commandLine = commandLine;
 			this.themeService = themeService;
 			this.installer = installer;
 			this.mainWindow = mainWindow;
 			this.modelMetadata = modelMetadata;
+			this.existingInstanceService = existingInstanceService;
 		}
 
 
@@ -68,7 +71,8 @@ namespace Dependinator
 				return;
 			}
 
-			if (IsActivatedOtherInstance())
+			if (existingInstanceService.TryActivateExistingInstance(
+				modelMetadata, Environment.GetCommandLineArgs()))
 			{
 				// Another instance for this working folder is already running and it received the
 				// command line from this instance, lets exit this instance, while other instance continuous
@@ -142,33 +146,7 @@ namespace Dependinator
 			// No commands yet
 		}
 
-		private bool IsActivatedOtherInstance()
-		{
-			try
-			{
-				// Trying to contact another instance, which has a IpcRemotingService started in the 
-				// MainWindowViewModel
-				string id = ProgramInfo.GetMetadataFolderId(modelMetadata);
-				using (IpcRemotingService ipcRemotingService = new IpcRemotingService())
-				{
-					if (!ipcRemotingService.TryCreateServer(id))
-					{
-						// Another instance for that working folder is already running, activate that.
-						var args = Environment.GetCommandLineArgs();
-						ipcRemotingService.CallService<ExistingInstanceIpcService>(id, service => service.Activate(args));
-						return true;
-					}
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Warn($"Failed to activate other instance {e}");
-			}
-
-			return false;
-		}
-
-
+	
 		private void TryDeleteTempFiles()
 		{
 			try

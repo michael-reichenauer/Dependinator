@@ -2,6 +2,7 @@
 {
 	internal interface IExistingInstanceService
 	{
-		bool TryRegisterPath(string metaDataFolderPath);
+		void RegisterPath(string metaDataFolderPath);
+		bool TryActivateExistingInstance(string metaDataFolderPath, string[] args);
 	}
 }

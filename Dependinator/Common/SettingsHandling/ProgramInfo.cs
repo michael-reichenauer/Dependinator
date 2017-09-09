@@ -32,8 +32,7 @@ namespace Dependinator.Common.SettingsHandling
 		public static string GetTempFolderPath() => GetProgramDataFolderPath();
 
 
-		public static string GetMetadataFolderId(string metadataFolderPath) =>
-			Product.Guid + Uri.EscapeDataString(metadataFolderPath);
+
 
 		public static bool IsInstalledInstance()
 		{

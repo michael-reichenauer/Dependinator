@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Windows;
 using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 
@@ -51,13 +52,18 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 			}
 
 			modelMetadataService.SetModelFilePath(modelFilePath);
+			string metadataFolderPath = modelMetadataService.MetadataFolderPath;
 
-			if (!existingInstanceService.TryRegisterPath(modelMetadataService.MetadataFolderPath))
+			if (existingInstanceService.TryActivateExistingInstance(metadataFolderPath, null))
 			{
-				Log.Debug("Other instance is showing this model has been activated.");
+				// Another instance for this working folder is already running and it received the
+				// command line from this instance, lets exit this instance, while other instance continuous
+				Application.Current.Shutdown(0);
 				return;
 			}
-			
+
+			existingInstanceService.RegisterPath(metadataFolderPath);
+				
 			await modelViewService.LoadAsync();
 
 			recentModelsService.AddModelPaths(modelFilePath);

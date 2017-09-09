@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Windows;
-using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
 
 
@@ -10,7 +8,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 	internal class ExistingInstanceService : IExistingInstanceService
 	{
 		private readonly ExistingInstanceIpcService existingInstanceIpcService;
-		private IpcRemotingService ipcRemotingService;
+		private IpcRemotingService instanceIpcRemotingService;
 
 
 		public ExistingInstanceService(ExistingInstanceIpcService existingInstanceIpcService)
@@ -19,30 +17,52 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		}
 
 
-		public bool TryRegisterPath(string metaDataFolderPath)
+		public void RegisterPath(string metaDataFolderPath)
 		{
-			ipcRemotingService?.Dispose();
+			instanceIpcRemotingService?.Dispose();
 
-			ipcRemotingService = new IpcRemotingService();
+			instanceIpcRemotingService = new IpcRemotingService();
 
-			string id = ProgramInfo.GetMetadataFolderId(metaDataFolderPath);
+			string id = GetMetadataFolderId(metaDataFolderPath);
 
-			if (ipcRemotingService.TryCreateServer(id))
+			if (!instanceIpcRemotingService.TryCreateServer(id))
 			{
-				ipcRemotingService.PublishService(existingInstanceIpcService);
-				return true;
+				throw new ApplicationException($"Failed to register rpc instance {metaDataFolderPath}");
 			}
 
-			// Another instance for that working folder is already running, activate that.
-			ExistingInstanceIpcService service = ipcRemotingService
-				.GetService<ExistingInstanceIpcService>(id);
+			instanceIpcRemotingService.PublishService(existingInstanceIpcService);
+		}
 
-			service.Activate(null);
 
-			// Trigger shutdown of this instance
-			Application.Current.Shutdown(0);
-			ipcRemotingService.Dispose();
+		public bool TryActivateExistingInstance(string metaDataFolderPath, string[] args)
+		{
+			try
+			{
+				// Trying to contact another instance, which has a registered IpcRemotingService 
+				string id = GetMetadataFolderId(metaDataFolderPath);
+				using (IpcRemotingService ipcRemotingService = new IpcRemotingService())
+				{
+					if (ipcRemotingService.IsServerRegistered(id))
+					{
+						// Another instance for that working folder is already running, activate that.
+						ExistingInstanceIpcService service = ipcRemotingService
+							.GetService<ExistingInstanceIpcService>(id);
+						service.Activate(args);
+
+						return true;
+					}
+				}
+			}
+			catch (Exception e)
+			{
+				Log.Exception(e, "Failed to activate other instance");
+			}
+
 			return false;
 		}
+
+
+		private static string GetMetadataFolderId(string metadataFolderPath) =>
+			Product.Guid + Uri.EscapeDataString(metadataFolderPath);
 	}
 }
