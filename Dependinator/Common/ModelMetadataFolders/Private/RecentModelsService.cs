@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.Common.SettingsHandling;
+using Dependinator.Utils;
 
 
 namespace Dependinator.Common.ModelMetadataFolders.Private
 {
+	[SingleInstance]
 	internal class RecentModelsService : IRecentModelsService
 	{
 		private readonly ISettingsService settingsService;
@@ -21,11 +23,14 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		}
 
 
+		public event EventHandler Changed;
+		
 		public void AddModelPaths(string modelFilePath)
 		{
 			AddToResentPathInProgramSettings(modelFilePath);
 
 			jumpListService.AddPath(modelFilePath);
+			Changed?.Invoke(this, EventArgs.Empty);
 		}
 
 

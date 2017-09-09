@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.Common.Installation;
@@ -6,6 +9,7 @@ using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing;
+using Dependinator.ModelViewing.Open;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
@@ -20,6 +24,7 @@ namespace Dependinator.MainWindowViews
 		private readonly ILatestVersionService latestVersionService;
 		private readonly IMainWindowService mainWindowService;
 		private readonly IOpenModelService openModelService;
+		private readonly IRecentModelsService recentModelsService;
 		private readonly ModelMetadata modelMetadata;
 		private readonly IMessage message;
 
@@ -31,7 +36,8 @@ namespace Dependinator.MainWindowViews
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
 			ModelViewModel modelViewModel,
-			IOpenModelService openModelService)
+			IOpenModelService openModelService,
+			IRecentModelsService recentModelsService)
 		{
 			this.modelMetadata = modelMetadata;
 			this.message = message;
@@ -39,12 +45,14 @@ namespace Dependinator.MainWindowViews
 			this.latestVersionService = latestVersionService;
 			this.mainWindowService = mainWindowService;
 			this.openModelService = openModelService;
+			this.recentModelsService = recentModelsService;
 
 			ModelViewModel = modelViewModel;
 
 			modelMetadata.OnChange += (s, e) => Notify(nameof(WorkingFolder));
 			latestVersionService.OnNewVersionAvailable += (s, e) => IsNewVersionVisible = true;
 			latestVersionService.StartCheckForLatestVersion();
+			recentModelsService.Changed += (s, e) => Notify(nameof(ResentModels), nameof(HasResent));
 		}
 
 		public int WindowWith { set => ModelViewModel.Width = value; }
@@ -91,6 +99,27 @@ namespace Dependinator.MainWindowViews
 				return text;
 			}
 		}
+
+		public IReadOnlyList<FileItem> ResentModels => GetRecentFiles();
+
+		public bool HasResent => recentModelsService.GetModelPaths().Any();
+
+
+		private IReadOnlyList<FileItem> GetRecentFiles()
+		{
+			IReadOnlyList<string> filesPaths = recentModelsService.GetModelPaths();
+
+			var fileItems = new List<FileItem>();
+			foreach (string filePath in filesPaths)
+			{
+				string name = Path.GetFileName(filePath);
+
+				fileItems.Add(new FileItem(name, filePath, openModelService.OpenModelAsync));
+			}
+
+			return fileItems;
+		}
+
 
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
 		public Command RefreshLayoutCommand => AsyncCommand(ManualRefreshLayoutAsync);

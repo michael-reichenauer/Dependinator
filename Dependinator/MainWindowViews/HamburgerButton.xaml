@@ -1,80 +1,112 @@
-﻿<UserControl x:Class="Dependinator.MainWindowViews.HamburgerButton"
-						 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-						 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-						 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-						 xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-						 xmlns:local="clr-namespace:Dependinator"
-             mc:Ignorable="d" 
-						 d:DesignHeight="300" d:DesignWidth="300">
+﻿<UserControl
+	x:Class="Dependinator.MainWindowViews.HamburgerButton"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:local="clr-namespace:Dependinator"
+	xmlns:open="clr-namespace:Dependinator.ModelViewing.Open"
+	mc:Ignorable="d"
+	d:DesignHeight="300" d:DesignWidth="300">
 
 
-		<!-- Hamburger button -->
-		<Button
-			Content="&#xE8FE;"
-			Style="{DynamicResource IconButtonStyle}"			
-			Click="HamburgerButton_OnClick"
-			ToolTip="Customize and control">
+	<!-- Hamburger button -->
+	<Button
+		Content="&#xE8FE;"
+		Style="{DynamicResource IconButtonStyle}"
+		Click="HamburgerButton_OnClick"
+		ToolTip="Customize and control">
 
-			<Button.ContextMenu>
+		<Button.ContextMenu>
 			<ContextMenu Name="HamburgerContextMenu">
 
-				<MenuItem 
+				<MenuItem
 					Header="Refresh"
 					InputGestureText="F5"
 					Command="{Binding RefreshCommand}">
 					<MenuItem.Icon>
 						<Border>
-							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE5D5;"/>
+							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE5D5;" />
 						</Border>
 					</MenuItem.Icon>
 				</MenuItem>
 
-				<MenuItem 
-					Header="Open file ..." 
+				<MenuItem
+					Header="Open Model ..."
 					Command="{Binding OpenFileCommand}">
 					<MenuItem.Icon>
 						<Border>
-							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE89D;"/>
+							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE89D;" />
 						</Border>
 					</MenuItem.Icon>
 				</MenuItem>
 
+				<MenuItem
+					Header="Resent Models"
+					IsEnabled="{Binding HasResent}"
+					ItemsSource="{Binding ResentModels}">
+					<MenuItem.Icon>
+						<Border>
+							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE89D;" />
+						</Border>
+					</MenuItem.Icon>
 
-				<Separator Background="{DynamicResource BorderBrush}"/>
+					<MenuItem.Resources>
+						<HierarchicalDataTemplate
+							DataType="{x:Type open:FileItem}"
+							ItemsSource="{Binding ResentModels}">
+							<MenuItem
+								Header="{Binding FileName}"
+								Command="{Binding OpenFileCommand}"
+								CommandParameter="{Binding FilePath}">
+								<MenuItem.ToolTip>
+									<ToolTip
+										Content="{Binding FilePath}"
+										Placement="Mouse"
+										BorderBrush="{DynamicResource BorderBrush}"
+										BorderThickness="1" />
+								</MenuItem.ToolTip>
+							</MenuItem>
+						</HierarchicalDataTemplate>
+					</MenuItem.Resources>
+				</MenuItem>
 
-				<MenuItem 
-					Header="Options ..." 
+
+				<Separator Background="{DynamicResource BorderBrush}" />
+
+				<MenuItem
+					Header="Options ..."
 					Command="{Binding OptionsCommand}">
 					<MenuItem.Icon>
 						<Border>
-							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE8B8;"/>
+							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE8B8;" />
 						</Border>
 					</MenuItem.Icon>
 				</MenuItem>
 
-				<MenuItem 
-					Header="Send feedback ..." 
+				<MenuItem
+					Header="Send feedback ..."
 					Command="{Binding FeedbackCommand}">
 					<MenuItem.Icon>
 						<Border>
-							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE0E1;"/>
+							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE0E1;" />
 						</Border>
 					</MenuItem.Icon>
 				</MenuItem>
 
-				<MenuItem 
+				<MenuItem
 					Header="View help ..."
 					InputGestureText="F1"
 					Command="{Binding HelpCommand}">
 					<MenuItem.Icon>
 						<Grid>
-							<TextBlock 
+							<TextBlock
 								Foreground="{DynamicResource TextBrush}"
 								Margin="12,0,12,0"
 								FontSize="16"
 								Text="?"
 								Padding="0"
-								FontWeight="Bold"/>
+								FontWeight="Bold" />
 						</Grid>
 					</MenuItem.Icon>
 				</MenuItem>
