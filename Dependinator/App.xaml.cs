@@ -71,8 +71,7 @@ namespace Dependinator
 				return;
 			}
 
-			if (existingInstanceService.TryActivateExistingInstance(
-				modelMetadata, Environment.GetCommandLineArgs()))
+			if (TryActivateExistingInstance())
 			{
 				// Another instance for this working folder is already running and it received the
 				// command line from this instance, lets exit this instance, while other instance continuous
@@ -89,6 +88,13 @@ namespace Dependinator
 		{
 			Log.Usage("Exit program");
 			base.OnExit(e);
+		}
+
+
+		private bool TryActivateExistingInstance()
+		{
+			return existingInstanceService.TryActivateExistingInstance(
+				modelMetadata, Environment.GetCommandLineArgs());
 		}
 
 
@@ -127,8 +133,7 @@ namespace Dependinator
 			MainWindow = mainWindow.Value;
 
 			themeService.SetThemeWpfColors();
-
-
+			
 			MainWindow.Show();
 
 			TryDeleteTempFiles();
@@ -137,6 +142,7 @@ namespace Dependinator
 
 		private bool IsCommands()
 		{
+			// No commands yet
 			return false;
 		}
 

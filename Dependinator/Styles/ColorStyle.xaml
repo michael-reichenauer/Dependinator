@@ -29,6 +29,6 @@
 
 	<SolidColorBrush x:Key="UncomittedBrush" Color="#FFDEB887" />
 
-	<FontFamily x:Key="IconFont">pack://application:,,,/Fonts/#Material Icons</FontFamily>
+	<FontFamily x:Key="IconFont">pack://application:,,,/Common/Resources/#Material Icons</FontFamily>
 	
 </ResourceDictionary>
