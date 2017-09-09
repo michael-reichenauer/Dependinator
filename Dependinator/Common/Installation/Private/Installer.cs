@@ -1,41 +1,24 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using System.Windows;
 using Dependinator.Common.Environment;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
 using Microsoft.Win32;
 
+
 namespace Dependinator.Common.Installation.Private
 {
 	internal class Installer : IInstaller
 	{
 		private readonly ICommandLine commandLine;
-		private static readonly string ProductNameLowercase = Product.Name.ToLowerInvariant();
-
 
 		private static readonly string UninstallSubKey =
 			$"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{{{Product.Guid}}}_is1";
+
 		private static readonly string UninstallRegKey = "HKEY_CURRENT_USER\\" + UninstallSubKey;
-		//private static readonly string subFolderContextMenuPath =
-		//	$"Software\\Classes\\Folder\\shell\\{ProductNameLowercase}";
-		//private static readonly string subdllContextMenuPath =
-		//	$"Software\\Classes\\*\\shell\\{ProductNameLowercase}";
-		//private static readonly string subDirectoryBackgroundContextMenuPath =
-		//	$"Software\\Classes\\Directory\\Background\\shell\\{ProductNameLowercase}";
-		//private static readonly string folderContextMenuPath =
-		//	"HKEY_CURRENT_USER\\" + subFolderContextMenuPath;
-		//private static readonly string dllContextMenuPath =
-		//	"HKEY_CURRENT_USER\\" + subdllContextMenuPath;
-		//private static readonly string directoryContextMenuPath =
-		//	"HKEY_CURRENT_USER\\" + subDirectoryBackgroundContextMenuPath;
-		//private static readonly string folderCommandContextMenuPath =
-		//	folderContextMenuPath + "\\command";
-		//private static readonly string dllCommandContextMenuPath =
-		//	dllContextMenuPath + "\\command";
-		//private static readonly string directoryCommandContextMenuPath =
-		//	directoryContextMenuPath + "\\command";
 		private static readonly string SetupTitle = $"{Product.Name} - Setup";
 
 
@@ -90,13 +73,14 @@ namespace Dependinator.Common.Installation.Private
 			Log.Usage("Install normal.");
 
 			if (!Message.ShowAskOkCancel(
+				null,
 				$"Welcome to the {Product.Name} setup.\n\n" +
-				" This will:\n" +
+				"This will:\n" +
+				$" - Copy {Product.Name} to the program data folder.\n" +
 				$" - Add a {Product.Name} shortcut in the Start Menu.\n" +
-				$" - Add a {Product.Name} context menu item in Windows File Explorer.\n" +
-				$" - Make {Product.Name} command available in Command Prompt window.\n\n" +
-				$"Click OK to install {Product.Name} or Cancel to exit Setup.",
-				SetupTitle))
+				$"\n\nClick OK to install {Product.Name} or Cancel to exit setup.",
+				SetupTitle,
+				MessageBoxImage.Information))
 			{
 				return;
 			}
@@ -115,7 +99,6 @@ namespace Dependinator.Common.Installation.Private
 
 			StartInstalled();
 		}
-
 
 
 		private void StartInstalled()
@@ -155,8 +138,7 @@ namespace Dependinator.Common.Installation.Private
 
 			AddUninstallSupport(path);
 			CreateStartMenuShortcut(path);
-			AddToPathVariable(path);
-			// AddFolderContextMenu();
+
 			Log.Usage("Installed");
 		}
 
@@ -197,11 +179,10 @@ namespace Dependinator.Common.Installation.Private
 			DeleteProgramFilesFolder();
 			DeleteProgramDataFolder();
 			DeleteStartMenuShortcut();
-			DeleteInPathVariable();
-			//DeleteFolderContextMenu();
 			DeleteUninstallSupport();
 			Log.Debug("Uninstalled");
 		}
+
 
 		private string CopyFileToProgramFiles()
 		{
@@ -317,7 +298,6 @@ namespace Dependinator.Common.Installation.Private
 		}
 
 
-
 		private static void CreateStartMenuShortcut(string pathToExe)
 		{
 			string shortcutLocation = ProgramInfo.GetStartMenuShortcutPath();
@@ -342,50 +322,6 @@ namespace Dependinator.Common.Installation.Private
 		}
 
 
-		private static void AddToPathVariable(string path)
-		{
-			string folderPath = Path.GetDirectoryName(path);
-
-			string keyName = @"Environment\";
-			string pathsVariables = (string)Registry.CurrentUser.OpenSubKey(keyName)
-				.GetValue("PATH", "", RegistryValueOptions.DoNotExpandEnvironmentNames);
-
-			pathsVariables = pathsVariables.Trim();
-
-			if (!pathsVariables.Contains(folderPath))
-			{
-				if (!string.IsNullOrEmpty(pathsVariables) && !pathsVariables.EndsWith(";"))
-				{
-					pathsVariables += ";";
-				}
-
-				pathsVariables += folderPath;
-				System.Environment.SetEnvironmentVariable(
-					"PATH", pathsVariables, EnvironmentVariableTarget.User);
-			}
-		}
-
-
-		private static void DeleteInPathVariable()
-		{
-			string programFilesFolderPath = ProgramInfo.GetProgramFolderPath();
-
-			string keyName = @"Environment\";
-			string pathsVariables = (string)Registry.CurrentUser.OpenSubKey(keyName)
-				.GetValue("PATH", "", RegistryValueOptions.DoNotExpandEnvironmentNames);
-
-			string pathPart = programFilesFolderPath;
-			if (pathsVariables.Contains(pathPart))
-			{
-				pathsVariables = pathsVariables.Replace(pathPart, "");
-				pathsVariables = pathsVariables.Replace(";;", ";");
-				pathsVariables = pathsVariables.Trim(";".ToCharArray());
-
-				Registry.SetValue("HKEY_CURRENT_USER\\" + keyName, "PATH", pathsVariables);
-			}
-		}
-
-
 		private static void AddUninstallSupport(string path)
 		{
 			string version = ProgramInfo.GetVersion(path).ToString();
@@ -399,7 +335,6 @@ namespace Dependinator.Common.Installation.Private
 		}
 
 
-
 		private static void DeleteUninstallSupport()
 		{
 			try
@@ -411,42 +346,6 @@ namespace Dependinator.Common.Installation.Private
 				Log.Warn($"Failed to delete uninstall support {e}");
 			}
 		}
-
-
-		//private static void AddFolderContextMenu()
-		//{
-		//	string programFilePath = ProgramInfo.GetInstallFilePath();
-
-		//	Registry.SetValue(folderContextMenuPath, "", Product.Name);
-		//	Registry.SetValue(folderContextMenuPath, "Icon", programFilePath);
-		//	Registry.SetValue(folderCommandContextMenuPath, "", "\"" + programFilePath + "\" \"/d:%1\"");
-
-		//	Registry.SetValue(directoryContextMenuPath, "", Product.Name);
-		//	Registry.SetValue(directoryContextMenuPath, "Icon", programFilePath);
-		//	Registry.SetValue(
-		//		directoryCommandContextMenuPath, "", "\"" + programFilePath + "\" \"/d:%V\"");
-
-		//	Registry.SetValue(dllContextMenuPath, "", Product.Name);
-		//	Registry.SetValue(dllContextMenuPath, "Icon", programFilePath);
-		//	Registry.SetValue(dllCommandContextMenuPath, "", "\"" + programFilePath + "\" \"%1\"");
-
-		//}
-
-
-		//private static void DeleteFolderContextMenu()
-		//{
-		//	try
-		//	{
-		//		Registry.CurrentUser.DeleteSubKeyTree(subFolderContextMenuPath);
-		//		Registry.CurrentUser.DeleteSubKeyTree(subDirectoryBackgroundContextMenuPath);
-		//		Registry.CurrentUser.DeleteSubKeyTree(subdllContextMenuPath);
-		//	}
-		//	catch (Exception e) when (e.IsNotFatal())
-		//	{
-		//		Log.Warn($"Failed to delete folder context menu {e}");
-		//	}
-
-		//}
 
 
 		private static bool IsInstalledInstance()

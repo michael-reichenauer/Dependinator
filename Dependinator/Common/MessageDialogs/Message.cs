@@ -17,8 +17,9 @@ namespace Dependinator.Common.MessageDialogs
 		public static bool ShowAskOkCancel(string message, string title = null) =>
 			ShowDialog(null, message, title, MessageBoxButton.OKCancel, MessageBoxImage.Question) == true;
 
-		public static bool ShowAskOkCancel(Window owner, string message, string title = null) =>
-			ShowDialog(owner, message, title, MessageBoxButton.OKCancel, MessageBoxImage.Question) == true;
+		public static bool ShowAskOkCancel(
+			Window owner, string message, string title = null, MessageBoxImage image = MessageBoxImage.Question) =>
+			ShowDialog(owner, message, title, MessageBoxButton.OKCancel, image) == true;
 
 
 		public static void ShowWarning(Window owner, string message, string title = null)

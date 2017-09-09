@@ -8,18 +8,17 @@
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
-	<Border BorderBrush="Transparent" BorderThickness="1" Background="#100192D1">
+	<Border BorderBrush="#300192D1" BorderThickness="1" Background="Transparent">
 		<Grid>
 
 			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="2*" />
 				<ColumnDefinition Width="*" />
 			</Grid.ColumnDefinitions>
 
 			<Grid.RowDefinitions>
 				<RowDefinition Height="50" />
 				<RowDefinition Height="*" />
-				<RowDefinition Height="Auto" />
 			</Grid.RowDefinitions>
 
 			<!-- Resent files column -->
@@ -139,16 +138,6 @@
 					</TextBlock.ToolTip>
 				</TextBlock>
 			</Grid>
-
-
-			<!-- Pin at task bar hint -->
-			<TextBlock
-				Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2"
-				Text="Hint: Consider to pin Dendinator to the task bar to get quick access to models."
-				Foreground="{DynamicResource TextLowBrush}"
-				TextWrapping="Wrap"
-				Margin="10" />
-
 		</Grid>
 
 	</Border>
