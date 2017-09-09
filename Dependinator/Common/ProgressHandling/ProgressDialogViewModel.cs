@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Windows.Threading;
-using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
 
 

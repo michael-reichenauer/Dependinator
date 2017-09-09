@@ -1,6 +1,3 @@
-using Dependinator.ModelViewing.Private.Items;
-
-
 namespace Dependinator.ModelViewing.Nodes
 {
 	//internal abstract class CompositeNodeViewModel : NodeViewModel

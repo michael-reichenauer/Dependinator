@@ -1,5 +1,3 @@
-using Dependinator.ModelViewing.Nodes;
-
 namespace Dependinator.ModelViewing.Links.Private
 {
 	//internal class LinkSegmentOld

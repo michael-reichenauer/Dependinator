@@ -1,8 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
-using Dependinator.ModelViewing.Nodes;
-
-
 namespace Dependinator.ModelViewing.Links
 {
 	//internal class NodeLinks

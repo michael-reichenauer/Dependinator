@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Windows;
 using Dependinator.ModelViewing.Links.Private;
-using Dependinator.ModelViewing.Nodes;
 
 
 namespace Dependinator.ModelViewing.Links

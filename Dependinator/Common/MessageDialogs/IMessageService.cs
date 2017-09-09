@@ -1,7 +1,7 @@
 ﻿using System.Media;
 using System.Windows;
 using Dependinator.MainWindowViews;
-using Dependinator.Utils.UI;
+
 
 namespace Dependinator.Common.MessageDialogs
 {

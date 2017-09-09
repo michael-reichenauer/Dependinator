@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
 using Dependinator.ModelViewing.Nodes;
 
 namespace Dependinator.ModelViewing.Links.Private

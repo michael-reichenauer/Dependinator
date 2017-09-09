@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using Dependinator.Utils;
-
 namespace Dependinator.ModelViewing.Nodes.Private
 {
 	//internal class NodeComparer
