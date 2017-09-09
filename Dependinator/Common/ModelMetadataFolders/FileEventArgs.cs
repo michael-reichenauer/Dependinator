@@ -1,6 +1,7 @@
 ﻿using System;
 
-namespace Dependinator.Common.WorkFolders
+
+namespace Dependinator.Common.ModelMetadataFolders
 {
 	public class FileEventArgs : EventArgs
 	{

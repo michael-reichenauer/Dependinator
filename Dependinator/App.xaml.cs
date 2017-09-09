@@ -3,11 +3,12 @@ using System.IO;
 using System.Threading;
 using System.Windows;
 using Dependinator.Common;
+using Dependinator.Common.Environment;
 using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
+using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Common.ThemeHandling;
-using Dependinator.Common.WorkFolders;
 using Dependinator.MainWindowViews;
 using Dependinator.MainWindowViews.Private;
 using Dependinator.Utils;
@@ -24,7 +25,7 @@ namespace Dependinator
 		private readonly IThemeService themeService;
 		private readonly IInstaller installer;
 		private readonly Lazy<MainWindow> mainWindow;
-		private readonly WorkingFolder workingFolder;
+		private readonly ModelMetadata modelMetadata;
 
 
 		// This mutex is used by the installer (and uninstaller) to determine if instances are running
@@ -36,13 +37,13 @@ namespace Dependinator
 			IThemeService themeService,
 			IInstaller installer,
 			Lazy<MainWindow> mainWindow,
-			WorkingFolder workingFolder)
+			ModelMetadata modelMetadata)
 		{
 			this.commandLine = commandLine;
 			this.themeService = themeService;
 			this.installer = installer;
 			this.mainWindow = mainWindow;
-			this.workingFolder = workingFolder;
+			this.modelMetadata = modelMetadata;
 		}
 
 
@@ -146,7 +147,7 @@ namespace Dependinator
 			{
 				// Trying to contact another instance, which has a IpcRemotingService started in the 
 				// MainWindowViewModel
-				string id = ProgramInfo.GetWorkingFolderId(workingFolder);
+				string id = ProgramInfo.GetWorkingFolderId(modelMetadata);
 				using (IpcRemotingService ipcRemotingService = new IpcRemotingService())
 				{
 					if (!ipcRemotingService.TryCreateServer(id))

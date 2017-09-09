@@ -7,9 +7,15 @@ namespace System
 		public static int Compare(string strA, string strB) =>
 			string.Compare(strA, strB, StringComparison.Ordinal);
 
-		public static int CompareIc(string strA, string strB) =>
+		public static int CompareIgnoreCase(string strA, string strB) =>
 			string.Compare(strA, strB, StringComparison.OrdinalIgnoreCase);
 
+		public static bool IsSame(this string strA, string strB) =>
+			0 == string.Compare(strA, strB, StringComparison.Ordinal);
+
+		public static bool IsSameIgnoreCase(this string strA, string strB) =>
+			0 == string.Compare(strA, strB, StringComparison.OrdinalIgnoreCase);
+		
 		public static int IndexOfTxt(this string text, string value) =>
 			text.IndexOf(value, StringComparison.Ordinal);
 

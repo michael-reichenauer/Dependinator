@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using Dependinator.Common.WorkFolders;
+using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelParsing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
@@ -26,7 +26,7 @@ namespace Dependinator.ModelViewing.Private
 		private readonly Func<OpenModelViewModel> openModelViewModelProvider;
 
 		private readonly Model model;
-		private readonly WorkingFolder workingFolder;
+		private readonly ModelMetadata modelMetadata;
 
 		private int currentStamp;
 		private bool isShowingOpenModel = false;
@@ -40,7 +40,7 @@ namespace Dependinator.ModelViewing.Private
 			ILinkService linkService,
 			Func<OpenModelViewModel> openModelViewModelProvider,
 			Model model,
-			WorkingFolder workingFolder)
+			ModelMetadata modelMetadata)
 		{
 			this.parserService = parserService;
 			this.nodeService = nodeService;
@@ -48,7 +48,7 @@ namespace Dependinator.ModelViewing.Private
 			this.openModelViewModelProvider = openModelViewModelProvider;
 
 			this.model = model;
-			this.workingFolder = workingFolder;
+			this.modelMetadata = modelMetadata;
 		}
 
 
@@ -79,10 +79,10 @@ namespace Dependinator.ModelViewing.Private
 
 
 
-			if (File.Exists(workingFolder.FilePath))
+			if (File.Exists(modelMetadata.ModelFilePath))
 			{
 				await parserService.AnalyzeAsync(
-					workingFolder.FilePath, items => UpdateDataItems(items, stamp));
+					modelMetadata.ModelFilePath, items => UpdateDataItems(items, stamp));
 			}
 
 			if (!Root.Children.Any())
@@ -147,7 +147,7 @@ namespace Dependinator.ModelViewing.Private
 		{
 			int stamp = currentStamp++;
 			await parserService.AnalyzeAsync(
-				workingFolder.FilePath, items => UpdateDataItems(items, stamp));
+				modelMetadata.ModelFilePath, items => UpdateDataItems(items, stamp));
 
 			nodeService.RemoveObsoleteNodesAndLinks(stamp);
 
@@ -180,6 +180,6 @@ namespace Dependinator.ModelViewing.Private
 			}
 		}
 
-		private string GetDataFilePath() => Path.Combine(workingFolder, "data.json");
+		private string GetDataFilePath() => Path.Combine(modelMetadata, "data.json");
 	}
 }

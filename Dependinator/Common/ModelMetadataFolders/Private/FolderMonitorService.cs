@@ -3,7 +3,8 @@ using System.IO;
 using System.Windows.Threading;
 using Dependinator.Utils;
 
-namespace Dependinator.Common.WorkFolders.Private
+
+namespace Dependinator.Common.ModelMetadataFolders.Private
 {
 	[SingleInstance]
 	internal class FolderMonitorService : IFolderMonitorService

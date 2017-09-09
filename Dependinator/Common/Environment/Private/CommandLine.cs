@@ -1,10 +1,10 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Reflection;
 using Dependinator.Utils;
 
-namespace Dependinator.Common.Private
+
+namespace Dependinator.Common.Environment.Private
 {
 	[SingleInstance]
 	internal class CommandLine : ICommandLine
@@ -14,7 +14,7 @@ namespace Dependinator.Common.Private
 
 		public CommandLine()
 		{
-			this.args = Environment.GetCommandLineArgs();
+			this.args = System.Environment.GetCommandLineArgs();
 		}
 
 

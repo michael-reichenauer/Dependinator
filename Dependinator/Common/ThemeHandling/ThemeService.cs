@@ -3,9 +3,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.SettingsHandling;
-using Dependinator.Common.SettingsHandling.Private;
-using Dependinator.Common.WorkFolders;
 using Dependinator.Utils;
 
 
@@ -21,27 +20,27 @@ namespace Dependinator.Common.ThemeHandling
 
 		private Theme currentTheme;
 
-		public ThemeService(ISettingsService settingsService, WorkingFolder workingFolder)
+		public ThemeService(ISettingsService settingsService, ModelMetadata modelMetadata)
 		{
 			this.settingsService = settingsService;
 
 			settingsService.EnsureExists<Options>();
-			
+
 			LoadTheme();
 
 			LoadCustomBranchColors();
 
-			workingFolder.OnChange += (s, e) => LoadCustomBranchColors();
+			modelMetadata.OnChange += (s, e) => LoadCustomBranchColors();
 		}
 
 
 		public Theme Theme => currentTheme;
 
 		public Brush GetBranchBrush(string name)
-		{			//if (branch.IsMultiBranch)
-			//{
-			//	return currentTheme.GetMultiBranchBrush();
-			//}
+		{     //if (branch.IsMultiBranch)
+					//{
+					//	return currentTheme.GetMultiBranchBrush();
+					//}
 
 			//if (branch.Name == BranchName.Master)
 			//{
@@ -58,7 +57,7 @@ namespace Dependinator.Common.ThemeHandling
 		}
 
 		public Brush GetBrushFromHex(string hexColor)
-		{    
+		{
 			return Converter.BrushFromHex(hexColor);
 		}
 
@@ -71,11 +70,11 @@ namespace Dependinator.Common.ThemeHandling
 		{
 			Brush currentBrush = GetBranchBrush(name);
 			int index = currentTheme.GetBrushIndex(currentBrush);
-	
+
 			// Select next brush
 			int newIndex = ((index + 1) % (currentTheme.brushes.Count - 2)) + 2;
 
-			Brush brush = currentTheme.brushes[newIndex];		
+			Brush brush = currentTheme.brushes[newIndex];
 			string brushHex = Converter.HexFromBrush(brush);
 
 			settingsService.Edit<WorkFolderSettings>(s => s.BranchColors[name] = brushHex);
@@ -90,7 +89,7 @@ namespace Dependinator.Common.ThemeHandling
 		{
 			LoadTheme();
 
-			Collection<ResourceDictionary> dictionaries = 
+			Collection<ResourceDictionary> dictionaries =
 				Application.Current.Resources.MergedDictionaries;
 
 			ResourceDictionary colors = dictionaries
@@ -124,7 +123,7 @@ namespace Dependinator.Common.ThemeHandling
 		public SolidColorBrush GetRectangleBrush()
 		{
 			int index = (currentIndex++) % Theme.brushes.Count;
-			
+
 			return Theme.brushes[index];
 		}
 
@@ -149,7 +148,7 @@ namespace Dependinator.Common.ThemeHandling
 			currentTheme = new Theme(themeOption);
 		}
 
-		
+
 		private ThemeOption GetCurrentThemeOption()
 		{
 			Options options = settingsService.Get<Options>();

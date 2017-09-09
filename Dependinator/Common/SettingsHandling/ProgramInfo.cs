@@ -39,11 +39,11 @@ namespace Dependinator.Common.SettingsHandling
 		{
 			string runningPath = GetCurrentInstancePath();
 			string installedPath = GetInstallFilePath();
-			return 0 == Txt.CompareIc(runningPath, installedPath);
+			return 0 == Txt.CompareIgnoreCase(runningPath, installedPath);
 		}
 
 
-		private static string GetWorkingFoldersRoot()
+		public static string GetModelMetadataFoldersRoot()
 		{
 			string path = GetFilePath(WorkingFoldersRoot);
 			EnsureFolderExists(path);
@@ -53,8 +53,8 @@ namespace Dependinator.Common.SettingsHandling
 
 		public static string GetStartMenuShortcutPath()
 		{
-			string commonStartMenuPath = Environment.GetFolderPath(
-				 Environment.SpecialFolder.StartMenu);
+			string commonStartMenuPath = System.Environment.GetFolderPath(
+				System.Environment.SpecialFolder.StartMenu);
 			string startMenuPath = Path.Combine(commonStartMenuPath, "Programs");
 
 			return Path.Combine(startMenuPath, ProgramShortcutFileName);
@@ -63,8 +63,8 @@ namespace Dependinator.Common.SettingsHandling
 
 		public static string GetProgramFolderPath()
 		{
-			string programFolderPath = Environment.GetFolderPath(
-				Environment.SpecialFolder.CommonApplicationData);
+			string programFolderPath = System.Environment.GetFolderPath(
+				System.Environment.SpecialFolder.CommonApplicationData);
 
 			return Path.Combine(programFolderPath, Product.Name);
 		}
@@ -164,24 +164,6 @@ namespace Dependinator.Common.SettingsHandling
 		}
 
 
-		public static string GetWorkingFolderPath(string path)
-		{
-			string directoryName = Path.GetDirectoryName(path);
-			string workingFolders = GetWorkingFoldersRoot();
-
-			if (0 == Txt.CompareIc(directoryName, workingFolders))
-			{
-				// the path is already a working folder path
-				return path;
-			}
-
-			string workingFolderName = EncodePath(path);
-
-			string workingFolderPath = Path.Combine(workingFolders, workingFolderName);
-			EnsureFolderExists(workingFolderPath);
-
-			return workingFolderPath;
-		}
 
 
 		private static string GetFilePath(string fileName)
@@ -190,16 +172,6 @@ namespace Dependinator.Common.SettingsHandling
 			return Path.Combine(programDataFolderPath, fileName);
 		}
 
-
-		private static string EncodePath(string path)
-		{
-			string encoded = path.Replace(" ", "  ");
-			encoded = encoded.Replace(":", " ;");
-			encoded = encoded.Replace("/", " (");
-			encoded = encoded.Replace("\\", " )");
-
-			return encoded;
-		}
 
 
 		private static void EnsureFolderExists(string dataFolderPath)

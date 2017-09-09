@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Windows;
-using Dependinator.Common.WorkFolders;
+using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelViewing.Private.Items;
 
 namespace Dependinator.ModelViewing.Open
@@ -25,19 +25,19 @@ namespace Dependinator.ModelViewing.Open
 		public IReadOnlyList<FileItem> RecentFiles { get; }
 
 
-		public async void OpenFile() => await openModelService.OpenFileAsync();
+		public async void OpenFile() => await openModelService.OpenModelAsync();
 
 
 		private IReadOnlyList<FileItem> GetRecentFiles()
 		{
-			IReadOnlyList<string> filesPaths = openModelService.GetResentFilePaths();
+			IReadOnlyList<string> filesPaths = openModelService.GetResentModelFilePaths();
 
 			var fileItems = new List<FileItem>();
 			foreach (string filePath in filesPaths)
 			{
 				string name = Path.GetFileName(filePath);
 
-				fileItems.Add(new FileItem(name, filePath, openModelService.OpenFileAsync));
+				fileItems.Add(new FileItem(name, filePath, openModelService.OpenModelAsync));
 			}
 
 			return fileItems;

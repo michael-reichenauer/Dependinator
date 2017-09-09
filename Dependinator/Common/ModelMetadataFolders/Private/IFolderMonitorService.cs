@@ -1,7 +1,7 @@
 ﻿using System;
 
 
-namespace Dependinator.Common.WorkFolders.Private
+namespace Dependinator.Common.ModelMetadataFolders.Private
 {
 	internal interface IFolderMonitorService
 	{

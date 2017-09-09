@@ -1,17 +1,17 @@
 using System;
 using System.IO;
-using Dependinator.Common.WorkFolders;
+using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Utils;
 
 namespace Dependinator.Common.SettingsHandling.Private
 {
 	internal class SettingsService : ISettingsService
 	{
-		private readonly WorkingFolder workingFolder;
+		private readonly ModelMetadata modelMetadata;
 
-		public SettingsService(WorkingFolder folder)
+		public SettingsService(ModelMetadata folder)
 		{
-			workingFolder = folder;
+			modelMetadata = folder;
 		}
 
 
@@ -239,7 +239,7 @@ namespace Dependinator.Common.SettingsHandling.Private
 
 
 		private string GetWorkFolderSettingsPath() => 
-			GetSettingsFilePath<WorkFolderSettings>(workingFolder);
+			GetSettingsFilePath<WorkFolderSettings>(modelMetadata);
 
 		private static string GetSettingsFilePath<T>(string folderPath) => 
 			Path.Combine(folderPath, typeof(T).Name + ".json");

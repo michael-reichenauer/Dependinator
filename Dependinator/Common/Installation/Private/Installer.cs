@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading;
+using Dependinator.Common.Environment;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
@@ -359,7 +360,7 @@ namespace Dependinator.Common.Installation.Private
 				}
 
 				pathsVariables += folderPath;
-				Environment.SetEnvironmentVariable(
+				System.Environment.SetEnvironmentVariable(
 					"PATH", pathsVariables, EnvironmentVariableTarget.User);
 			}
 		}

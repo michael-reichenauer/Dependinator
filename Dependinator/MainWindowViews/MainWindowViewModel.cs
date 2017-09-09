@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
+using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.SettingsHandling;
-using Dependinator.Common.WorkFolders;
-using Dependinator.Common.WorkFolders.Private;
 using Dependinator.MainWindowViews.Private;
 using Dependinator.ModelViewing;
 using Dependinator.Utils;
@@ -27,7 +27,7 @@ namespace Dependinator.MainWindowViews
 		private readonly JumpListService jumpListService = new JumpListService();
 
 		//private IpcRemotingService ipcRemotingService = null;
-		private readonly WorkingFolder workingFolder;
+		private readonly ModelMetadata modelMetadata;
 
 
 		private readonly IMessage message;
@@ -37,7 +37,7 @@ namespace Dependinator.MainWindowViews
 
 
 		internal MainWindowViewModel(
-			WorkingFolder workingFolder,
+			ModelMetadata modelMetadata,
 			IMessage message,
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
@@ -45,7 +45,7 @@ namespace Dependinator.MainWindowViews
 			ModelViewModel modelViewModel,
 			IOpenModelService openModelService)
 		{
-			this.workingFolder = workingFolder;
+			this.modelMetadata = modelMetadata;
 			this.message = message;
 
 			this.latestVersionService = latestVersionService;
@@ -55,7 +55,7 @@ namespace Dependinator.MainWindowViews
 
 			ModelViewModel = modelViewModel;
 
-			workingFolder.OnChange += (s, e) => Notify(nameof(WorkingFolder));
+			modelMetadata.OnChange += (s, e) => Notify(nameof(WorkingFolder));
 			latestVersionService.OnNewVersionAvailable += (s, e) => IsNewVersionVisible = true;
 			latestVersionService.StartCheckForLatestVersion();
 		}
@@ -67,12 +67,12 @@ namespace Dependinator.MainWindowViews
 
 		public bool IsNewVersionVisible { get => Get(); set => Set(value); }
 
-		public string WorkingFolder => workingFolder.Name;
+		public string WorkingFolder => modelMetadata.ModelName;
 
-		public string WorkingFolderPath => workingFolder.FilePath;
+		public string WorkingFolderPath => modelMetadata.ModelFilePath;
 
 
-		public string Title => $"{workingFolder.Name} - {Product.Name}";
+		public string Title => $"{modelMetadata.ModelName} - {Product.Name}";
 
 
 		public string SearchBox
@@ -108,7 +108,7 @@ namespace Dependinator.MainWindowViews
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
 		public Command RefreshLayoutCommand => AsyncCommand(ManualRefreshLayoutAsync);
 
-		public Command OpenFileCommand => AsyncCommand(openModelService.OpenFileAsync);
+		public Command OpenFileCommand => AsyncCommand(openModelService.OpenModelAsync);
 
 		public Command RunLatestVersionCommand => AsyncCommand(RunLatestVersionAsync);
 

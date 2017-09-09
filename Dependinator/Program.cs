@@ -1,9 +1,9 @@
 ﻿using System;
+using Dependinator.Common.Environment;
+using Dependinator.Common.Environment.Private;
 using Dependinator.Common.MessageDialogs;
-using Dependinator.Common.Private;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Common.SettingsHandling.Private;
-using Dependinator.Common.WorkFolders;
 using Dependinator.Utils;
 
 

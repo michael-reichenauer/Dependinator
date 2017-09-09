@@ -100,8 +100,10 @@
     <Compile Include="Common\MessageDialogs\IMessage.cs" />
     <Compile Include="Common\MessageDialogs\IMessageService.cs" />
     <Compile Include="Common\SettingsHandling\ISettingsService.cs" />
-    <Compile Include="Common\WorkFolders\IOpenModelService.cs" />
-    <Compile Include="Common\WorkFolders\Private\OpenModelService.cs" />
+    <Compile Include="Common\ModelMetadataFolders\IOpenModelService.cs" />
+    <Compile Include="Common\ModelMetadataFolders\Private\IOpenFileDialogService.cs" />
+    <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
+    <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="ModelViewing\Open\FileItem.cs" />
     <Compile Include="ModelViewing\Open\OpenModelView.xaml.cs">
       <DependentUpon>OpenModelView.xaml</DependentUpon>
@@ -179,15 +181,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="Common\WorkFolders\Private\IWorkingFolderService.cs" />
-    <Compile Include="Common\WorkFolders\Private\WorkingFolderService.cs" />
-    <Compile Include="Common\WorkFolders\WorkingFolder.cs" />
+    <Compile Include="Common\ModelMetadataFolders\Private\IMetadataFolderService.cs" />
+    <Compile Include="Common\ModelMetadataFolders\Private\MetadataFolderService.cs" />
+    <Compile Include="Common\ModelMetadataFolders\ModelMetadata.cs" />
     <Compile Include="Common\ThemeHandling\BranchColorsOption.cs" />
     <Compile Include="Common\ThemeHandling\Converter.cs" />
     <Compile Include="Common\ThemeHandling\Theme.cs" />
     <Compile Include="Common\ThemeHandling\ThemeOption.cs" />
     <Compile Include="Common\ThemeHandling\ThemesOption.cs" />
-    <Compile Include="Common\WorkFolders\Private\JumpListService.cs" />
+    <Compile Include="Common\ModelMetadataFolders\Private\JumpListService.cs" />
     <Compile Include="Common\MessageDialogs\Message.cs" />
     <Compile Include="Common\MessageDialogs\MessageDialog.xaml.cs">
       <DependentUpon>MessageDialog.xaml</DependentUpon>
@@ -200,8 +202,8 @@
     </Compile>
     <Compile Include="Common\ProgressHandling\ProgressDialogViewModel.cs" />
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
-    <Compile Include="Common\WorkFolders\FileEventArgs.cs" />
-    <Compile Include="Common\WorkFolders\Private\IFolderMonitorService.cs" />
+    <Compile Include="Common\ModelMetadataFolders\FileEventArgs.cs" />
+    <Compile Include="Common\ModelMetadataFolders\Private\IFolderMonitorService.cs" />
     <Compile Include="ModelParsing\Private\DotNetReflection\Private\Assemblies.cs" />
     <Compile Include="ModelParsing\Private\DotNetReflection\Private\ILInstruction.cs" />
     <Compile Include="ModelParsing\Private\DotNetReflection\Private\IlToText.cs" />
@@ -258,7 +260,7 @@
     <Compile Include="Utils\MathExtensions.cs" />
     <Compile Include="Utils\AsyncLock.cs" />
     <Compile Include="Utils\DependencyInjection.cs" />
-    <Compile Include="Common\WorkFolders\Private\FolderMonitorService.cs" />
+    <Compile Include="Common\ModelMetadataFolders\Private\FolderMonitorService.cs" />
     <Compile Include="MainWindowViews\IMainWindowService.cs" />
     <Compile Include="MainWindowViews\Private\MainWindowIpcService.cs" />
     <Compile Include="MainWindowViews\Private\MainWindowService.cs" />
@@ -301,8 +303,8 @@
     <Compile Include="Utils\KeyedList.cs" />
     <Compile Include="Utils\ExceptionHandling.cs" />
     <Compile Include="Utils\FatalExceptionsExtensions.cs" />
-    <Compile Include="Common\Private\CommandLine.cs" />
-    <Compile Include="Common\ICommandLine.cs" />
+    <Compile Include="Common\Environment\Private\CommandLine.cs" />
+    <Compile Include="Common\Environment\ICommandLine.cs" />
     <Compile Include="Utils\AsyncSemaphore.cs" />
     <Compile Include="Utils\EnumerableExtensions.cs" />
     <Compile Include="Utils\Error.cs" />
