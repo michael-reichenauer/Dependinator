@@ -72,6 +72,18 @@
 				</MenuItem>
 
 
+				<MenuItem
+					Header="Open New Window ..."
+					Command="{Binding OpenNewWindowCommand}">
+					<MenuItem.Icon>
+						<Border>
+							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE89E;" />
+						</Border>
+					</MenuItem.Icon>
+				</MenuItem>
+
+
+
 				<Separator Background="{DynamicResource BorderBrush}" />
 
 				<MenuItem

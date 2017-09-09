@@ -126,6 +126,11 @@ namespace Dependinator.MainWindowViews
 
 		public Command OpenFileCommand => AsyncCommand(openModelService.OpenModelAsync);
 
+		public Command OpenNewWindowCommand => Command(mainWindowService.OpenNewWindow);
+
+
+
+
 		public Command RunLatestVersionCommand => AsyncCommand(RunLatestVersionAsync);
 
 		public Command FeedbackCommand => Command(mainWindowService.SendFeedback);

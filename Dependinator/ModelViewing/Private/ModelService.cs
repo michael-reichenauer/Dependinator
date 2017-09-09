@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using Dependinator.Common.ModelMetadataFolders;
-using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.ModelParsing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
@@ -32,8 +31,6 @@ namespace Dependinator.ModelViewing.Private
 
 		private int currentStamp;
 		private bool isShowingOpenModel = false;
-
-		//private OpenModelViewModel modelViewModel = null;
 
 
 		public ModelService(
