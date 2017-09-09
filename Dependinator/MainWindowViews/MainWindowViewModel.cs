@@ -21,10 +21,8 @@ namespace Dependinator.MainWindowViews
 	{
 		private readonly ILatestVersionService latestVersionService;
 		private readonly IMainWindowService mainWindowService;
-		private readonly MainWindowIpcService mainWindowIpcService;
-		private readonly IOpenModelService openModelService;
 
-		private readonly JumpListService jumpListService = new JumpListService();
+		private readonly IOpenModelService openModelService;
 
 		//private IpcRemotingService ipcRemotingService = null;
 		private readonly ModelMetadata modelMetadata;
@@ -41,7 +39,6 @@ namespace Dependinator.MainWindowViews
 			IMessage message,
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
-			MainWindowIpcService mainWindowIpcService,
 			ModelViewModel modelViewModel,
 			IOpenModelService openModelService)
 		{
@@ -50,7 +47,6 @@ namespace Dependinator.MainWindowViews
 
 			this.latestVersionService = latestVersionService;
 			this.mainWindowService = mainWindowService;
-			this.mainWindowIpcService = mainWindowIpcService;
 			this.openModelService = openModelService;
 
 			ModelViewModel = modelViewModel;

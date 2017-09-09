@@ -45,6 +45,12 @@ namespace Dependinator.Utils
 		}
 
 
+		public TRemoteService GetService<TRemoteService>(string serverId)
+		{
+			return CreateClientProxy<TRemoteService>(serverId);
+		}
+
+
 		public void CallService<TRemoteService>(
 			string serverId, Action<TRemoteService> serviceAction)
 		{

@@ -7,6 +7,7 @@ using Dependinator.Common.Environment;
 using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.MainWindowViews;
@@ -147,14 +148,14 @@ namespace Dependinator
 			{
 				// Trying to contact another instance, which has a IpcRemotingService started in the 
 				// MainWindowViewModel
-				string id = ProgramInfo.GetWorkingFolderId(modelMetadata);
+				string id = ProgramInfo.GetMetadataFolderId(modelMetadata);
 				using (IpcRemotingService ipcRemotingService = new IpcRemotingService())
 				{
 					if (!ipcRemotingService.TryCreateServer(id))
 					{
 						// Another instance for that working folder is already running, activate that.
 						var args = Environment.GetCommandLineArgs();
-						ipcRemotingService.CallService<MainWindowIpcService>(id, service => service.Activate(args));
+						ipcRemotingService.CallService<ExistingInstanceIpcService>(id, service => service.Activate(args));
 						return true;
 					}
 				}

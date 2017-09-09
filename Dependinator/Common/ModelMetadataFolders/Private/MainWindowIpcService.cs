@@ -1,9 +1,10 @@
 ﻿using System.Windows;
 using Dependinator.Utils;
 
-namespace Dependinator.MainWindowViews.Private
+
+namespace Dependinator.Common.ModelMetadataFolders.Private
 {
-	internal class MainWindowIpcService : IpcService
+	internal class ExistingInstanceIpcService : IpcService
 	{
 		public void Activate(string[] args)
 		{

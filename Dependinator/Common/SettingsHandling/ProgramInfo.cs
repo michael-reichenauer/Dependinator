@@ -31,9 +31,9 @@ namespace Dependinator.Common.SettingsHandling
 
 		public static string GetTempFolderPath() => GetProgramDataFolderPath();
 
-		public static string GetWorkingFolderId(string workingFolder) =>
-			Product.Guid + Uri.EscapeDataString(workingFolder);
 
+		public static string GetMetadataFolderId(string metadataFolderPath) =>
+			Product.Guid + Uri.EscapeDataString(metadataFolderPath);
 
 		public static bool IsInstalledInstance()
 		{
