@@ -29,12 +29,14 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
 			EnsureFolderExists(metadataPath);
 
-			if (!MetadataFolderPath.IsSameIgnoreCase(metadataPath))
+			if (MetadataFolderPath.IsSameIgnoreCase(metadataPath))
 			{
-				MetadataFolderPath = metadataPath;
-				ModelFilePath = modelFilePath;
-				OnChange?.Invoke(this, EventArgs.Empty);
+				return;
 			}
+
+			MetadataFolderPath = metadataPath;
+			ModelFilePath = modelFilePath;
+			OnChange?.Invoke(this, EventArgs.Empty);
 		}
 
 		

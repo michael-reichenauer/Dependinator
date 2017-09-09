@@ -10,17 +10,21 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		private readonly IModelMetadataService modelMetadataService;
 		private readonly IModelViewService modelViewService;
 		private readonly IOpenFileDialogService openFileDialogService;
+		private readonly IRecentModelsService recentModelsService;
 
 
 		public OpenModelService(
 			IModelViewService modelViewService,
 			IModelMetadataService modelMetadataService,
-			IOpenFileDialogService openFileDialogService)
+			IOpenFileDialogService openFileDialogService,
+			IRecentModelsService recentModelsService)
 		{
 			this.modelViewService = modelViewService;
 			this.modelMetadataService = modelMetadataService;
 			this.openFileDialogService = openFileDialogService;
+			this.recentModelsService = recentModelsService;
 		}
+
 
 		public async Task OpenModelAsync()
 		{
@@ -29,26 +33,23 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 				return;
 			}
 
+			await OpenModelAsync(modelFilePath);
+		}
+
+
+		public async Task OpenModelAsync(string modelFilePath)
+		{
 			modelMetadataService.SetModelFilePath(modelFilePath);
 
 			await modelViewService.LoadAsync();
+
+			recentModelsService.AddModelPaths(modelFilePath);
 		}
 
 
-		public Task OpenModelAsync(string modelFilePath)
-		{
-			return Task.CompletedTask;
-		}
+		public IReadOnlyList<string> GetResentModelFilePaths() => 
+			recentModelsService.GetModelPaths();
 
-
-		public IReadOnlyList<string> GetResentModelFilePaths()
-		{
-			return new List<string>
-			{
-				"c:\\Work\\Server.dll",
-				"c:\\Work\\Dependiator.exe"
-			};
-		}
 
 		//private async Task SetWorkingFolderAsync()
 		//{

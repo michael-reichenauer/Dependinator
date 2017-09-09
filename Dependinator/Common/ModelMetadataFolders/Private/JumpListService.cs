@@ -6,12 +6,12 @@ using Dependinator.Common.SettingsHandling;
 
 namespace Dependinator.Common.ModelMetadataFolders.Private
 {
-	public class JumpListService
+	internal class JumpListService : IJumpListService
 	{
 		private static readonly int MaxTitleLength = 25;
 
 
-		public void Add(string path)
+		public void AddPath(string path)
 		{
 			if (string.IsNullOrEmpty(path) || !File.Exists(path))
 			{
@@ -20,23 +20,31 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
 			JumpList jumpList = JumpList.GetJumpList(Application.Current) ?? new JumpList();
 
-			string name = Path.GetFileNameWithoutExtension(path) ?? path;
-
-			string title = name.Length < MaxTitleLength
-				? name
-				: name.Substring(0, MaxTitleLength) + "...";
-
-			JumpTask jumpTask = new JumpTask();
-			jumpTask.Title = title;
-			jumpTask.ApplicationPath = ProgramInfo.GetInstallFilePath();
-			jumpTask.Arguments = $"\"{path}\"";
-			jumpTask.IconResourcePath = ProgramInfo.GetInstallFilePath();
-			jumpTask.Description = path;
+			JumpTask jumpTask = new JumpTask
+			{
+				Title = GetTitle(path),
+				ApplicationPath = ProgramInfo.GetInstallFilePath(),
+				Arguments = GetOpenModelArguments(path),
+				IconResourcePath = ProgramInfo.GetInstallFilePath(),
+				Description = path
+			};
 
 			jumpList.ShowRecentCategory = true;
-
 			JumpList.AddToRecentCategory(jumpTask);
 			JumpList.SetJumpList(Application.Current, jumpList);
 		}
+
+
+		private static string GetTitle(string path)
+		{
+			string name = Path.GetFileNameWithoutExtension(path) ?? path;
+
+			return name.Length < MaxTitleLength
+				? name
+				: name.Substring(0, MaxTitleLength) + "...";
+		}
+
+
+		private static string GetOpenModelArguments(string path) => $"\"{path}\"";
 	}
 }
