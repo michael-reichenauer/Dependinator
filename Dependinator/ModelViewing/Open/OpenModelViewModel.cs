@@ -11,11 +11,15 @@ namespace Dependinator.ModelViewing.Open
 		private static readonly Rect DefaultOpenModelNodeBounds = new Rect(30, 30, 730, 580);
 
 		private readonly IOpenModelService openModelService;
+		private readonly IRecentModelsService recentModelsService;
 
 
-		public OpenModelViewModel(IOpenModelService openModelService)
+		public OpenModelViewModel(
+			IOpenModelService openModelService,
+			IRecentModelsService recentModelsService)
 		{
 			this.openModelService = openModelService;
+			this.recentModelsService = recentModelsService;
 			ItemBounds = DefaultOpenModelNodeBounds;
 
 			RecentFiles = GetRecentFiles();
@@ -30,7 +34,7 @@ namespace Dependinator.ModelViewing.Open
 
 		private IReadOnlyList<FileItem> GetRecentFiles()
 		{
-			IReadOnlyList<string> filesPaths = openModelService.GetResentModelFilePaths();
+			IReadOnlyList<string> filesPaths = recentModelsService.GetModelPaths();
 
 			var fileItems = new List<FileItem>();
 			foreach (string filePath in filesPaths)

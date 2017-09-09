@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.ModelParsing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
@@ -23,6 +24,7 @@ namespace Dependinator.ModelViewing.Private
 		private readonly IParserService parserService;
 		private readonly INodeService nodeService;
 		private readonly ILinkService linkService;
+		private readonly IRecentModelsService recentModelsService;
 		private readonly Func<OpenModelViewModel> openModelViewModelProvider;
 
 		private readonly Model model;
@@ -40,7 +42,8 @@ namespace Dependinator.ModelViewing.Private
 			ILinkService linkService,
 			Func<OpenModelViewModel> openModelViewModelProvider,
 			Model model,
-			ModelMetadata modelMetadata)
+			ModelMetadata modelMetadata,
+			IRecentModelsService recentModelsService)
 		{
 			this.parserService = parserService;
 			this.nodeService = nodeService;
@@ -49,6 +52,7 @@ namespace Dependinator.ModelViewing.Private
 
 			this.model = model;
 			this.modelMetadata = modelMetadata;
+			this.recentModelsService = recentModelsService;
 		}
 
 
@@ -97,7 +101,8 @@ namespace Dependinator.ModelViewing.Private
 			else
 			{
 				isShowingOpenModel = false;
-				Root.ItemsCanvas.IsZoomAndMoveEnabled = true;			
+				Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
+				recentModelsService.AddModelPaths(modelMetadata.ModelFilePath);
 			}
 		}
 

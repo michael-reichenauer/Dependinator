@@ -24,8 +24,9 @@ namespace Dependinator
 		private readonly IThemeService themeService;
 		private readonly IInstaller installer;
 		private readonly Lazy<MainWindow> mainWindow;
-		private readonly ModelMetadata modelMetadata;
+		private readonly IModelMetadataService modelMetadataService;
 		private readonly IExistingInstanceService existingInstanceService;
+		private readonly IRecentModelsService recentModelsService;
 
 
 		// This mutex is used by the installer (and uninstaller) to determine if instances are running
@@ -37,15 +38,17 @@ namespace Dependinator
 			IThemeService themeService,
 			IInstaller installer,
 			Lazy<MainWindow> mainWindow,
-			ModelMetadata modelMetadata,
-			IExistingInstanceService existingInstanceService)
+			IModelMetadataService modelMetadataService,
+			IExistingInstanceService existingInstanceService,
+			IRecentModelsService recentModelsService)
 		{
 			this.commandLine = commandLine;
 			this.themeService = themeService;
 			this.installer = installer;
 			this.mainWindow = mainWindow;
-			this.modelMetadata = modelMetadata;
+			this.modelMetadataService = modelMetadataService;
 			this.existingInstanceService = existingInstanceService;
+			this.recentModelsService = recentModelsService;
 		}
 
 
@@ -58,6 +61,11 @@ namespace Dependinator
 				// An installation or uninstallation was triggered, lets end this instance
 				Application.Current.Shutdown(0);
 				return;
+			}
+
+			if (commandLine.HasFile)
+			{
+				modelMetadataService.SetModelFilePath(commandLine.FilePath);
 			}
 
 			if (IsCommands())
@@ -91,8 +99,9 @@ namespace Dependinator
 
 		private bool TryActivateExistingInstance()
 		{
+			string metadataFolderPath = modelMetadataService.MetadataFolderPath;
 			return existingInstanceService.TryActivateExistingInstance(
-				modelMetadata, Environment.GetCommandLineArgs());
+				metadataFolderPath, Environment.GetCommandLineArgs());
 		}
 
 

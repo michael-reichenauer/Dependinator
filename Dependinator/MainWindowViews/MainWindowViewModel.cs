@@ -19,17 +19,10 @@ namespace Dependinator.MainWindowViews
 	{
 		private readonly ILatestVersionService latestVersionService;
 		private readonly IMainWindowService mainWindowService;
-
 		private readonly IOpenModelService openModelService;
-
-		//private IpcRemotingService ipcRemotingService = null;
 		private readonly ModelMetadata modelMetadata;
-
-
 		private readonly IMessage message;
 
-
-		private bool isLoaded = false;
 
 
 		internal MainWindowViewModel(
@@ -175,11 +168,6 @@ namespace Dependinator.MainWindowViews
 
 		public Task ActivateRefreshAsync()
 		{
-			if (!isLoaded)
-			{
-				return Task.CompletedTask;
-			}
-
 			return ModelViewModel.ActivateRefreshAsync();
 		}
 

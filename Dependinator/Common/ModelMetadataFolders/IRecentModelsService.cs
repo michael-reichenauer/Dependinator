@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 
 
-namespace Dependinator.Common.ModelMetadataFolders.Private
+namespace Dependinator.Common.ModelMetadataFolders
 {
 	internal interface IRecentModelsService
 	{

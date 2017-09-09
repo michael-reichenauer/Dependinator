@@ -43,7 +43,7 @@ if exist %MSBUILD% (
   %MSBUILD% /t:rebuild /v:m /nologo /p:Configuration=Release Dependinator.sln 
   echo.
 
-  echo Copy Setup file ...
+  echo Create DependinatorSetup.exe ...
   copy Dependinator\bin\Release\Dependinator.exe DependinatorSetup.exe /Y >NUL
 
   PowerShell -Command "& {(Get-Item DependinatorSetup.exe).VersionInfo.FILEVERSION }" > version.txt

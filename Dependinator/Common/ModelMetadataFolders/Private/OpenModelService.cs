@@ -13,7 +13,6 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		private readonly IModelMetadataService modelMetadataService;
 		private readonly IModelViewService modelViewService;
 		private readonly IOpenFileDialogService openFileDialogService;
-		private readonly IRecentModelsService recentModelsService;
 		private readonly IExistingInstanceService existingInstanceService;
 
 
@@ -21,13 +20,11 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 			IModelViewService modelViewService,
 			IModelMetadataService modelMetadataService,
 			IOpenFileDialogService openFileDialogService,
-			IRecentModelsService recentModelsService,
 			IExistingInstanceService existingInstanceService)
 		{
 			this.modelViewService = modelViewService;
 			this.modelMetadataService = modelMetadataService;
 			this.openFileDialogService = openFileDialogService;
-			this.recentModelsService = recentModelsService;
 			this.existingInstanceService = existingInstanceService;
 		}
 
@@ -65,11 +62,6 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 			existingInstanceService.RegisterPath(metadataFolderPath);
 				
 			await modelViewService.LoadAsync();
-
-			recentModelsService.AddModelPaths(modelFilePath);
 		}
-
-
-		public IReadOnlyList<string> GetResentModelFilePaths() => recentModelsService.GetModelPaths();
 	}
 }
