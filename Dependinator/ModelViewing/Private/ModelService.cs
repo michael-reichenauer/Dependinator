@@ -68,22 +68,12 @@ namespace Dependinator.ModelViewing.Private
 
 			ClearAll();
 
-			//if (File.Exists(dataFilePath))
-			//{
-			//	if (modelViewModel != null)
-			//	{
-			//		Root.ItemsCanvas.RemoveItem(modelViewModel);
-			//		modelViewModel.NotifyAll();
-			//		modelViewModel = null;
-			//	}
-
-			//	await parserService.TryDeserialize(
-			//		dataFilePath, items => UpdateDataItems(items, stamp);
-			//}
-
-
-
-			if (File.Exists(modelMetadata.ModelFilePath))
+			if (File.Exists(dataFilePath))
+			{
+				await parserService.TryDeserialize(
+					dataFilePath, items => UpdateDataItems(items, stamp));
+			}
+			else if (File.Exists(modelMetadata.ModelFilePath))
 			{
 				await parserService.AnalyzeAsync(
 					modelMetadata.ModelFilePath, items => UpdateDataItems(items, stamp));

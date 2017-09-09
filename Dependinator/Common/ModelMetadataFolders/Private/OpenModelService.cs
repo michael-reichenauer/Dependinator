@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
+using Dependinator.MainWindowViews;
 using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 
@@ -14,18 +14,21 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		private readonly IModelViewService modelViewService;
 		private readonly IOpenFileDialogService openFileDialogService;
 		private readonly IExistingInstanceService existingInstanceService;
+		private readonly Lazy<MainWindow> mainWindow;
 
 
 		public OpenModelService(
 			IModelViewService modelViewService,
 			IModelMetadataService modelMetadataService,
 			IOpenFileDialogService openFileDialogService,
-			IExistingInstanceService existingInstanceService)
+			IExistingInstanceService existingInstanceService,
+			Lazy<MainWindow> mainWindow)
 		{
 			this.modelViewService = modelViewService;
 			this.modelMetadataService = modelMetadataService;
 			this.openFileDialogService = openFileDialogService;
 			this.existingInstanceService = existingInstanceService;
+			this.mainWindow = mainWindow;
 		}
 
 
@@ -60,7 +63,9 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 			}
 
 			existingInstanceService.RegisterPath(metadataFolderPath);
-				
+
+			mainWindow.Value.RestoreWindowSettings();
+
 			await modelViewService.LoadAsync();
 		}
 	}

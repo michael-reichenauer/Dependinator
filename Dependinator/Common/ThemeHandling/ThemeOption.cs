@@ -10,7 +10,7 @@ namespace Dependinator.Common.ThemeHandling
 		public string ForegroundColor { get; set; } = "#FFFFFFFF";
 		public string TitlebarBackgroundColor { get; set; } = "#FF0E0E0E";
 
-		public string BorderColor { get; set; } = "#FF0192D1";
+		public string BorderColor { get; set; } = "#B00192D1";
 		public string TextColor { get; set; } = "#FFD4D4D4";
 		public string TextLowColor { get; set; } = "#FFB0C4DE";
 		public string HoverColor { get; set; } = "#996495ED";
@@ -43,7 +43,7 @@ namespace Dependinator.Common.ThemeHandling
 			public string TicketBackgroundColor { get; set; } = "#00FFFFFF";
 			public string CurrentCommitIndicatorBrush { get; set; } = "#FFB0C4DE";
 		}
-	
+
 
 		public BranchColorsOption BranchColors { get; set; } = new BranchColorsOption();
 	}

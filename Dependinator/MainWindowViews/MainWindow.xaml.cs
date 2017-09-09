@@ -21,7 +21,9 @@ namespace Dependinator.MainWindowViews
 		private readonly MainWindowViewModel viewModel;
 
 
-		internal MainWindow(ISettingsService settingsService, Func<MainWindowViewModel> mainWindowViewModelProvider)
+		internal MainWindow(
+			ISettingsService settingsService, 
+			Func<MainWindowViewModel> mainWindowViewModelProvider)
 		{
 			this.settingsService = settingsService;
 
@@ -76,7 +78,7 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		private void RestoreWindowSettings()
+		public void RestoreWindowSettings()
 		{
 			WorkFolderSettings s = settingsService.Get<WorkFolderSettings>();
 
