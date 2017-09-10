@@ -1,13 +1,10 @@
 using System;
-using System.Linq;
 using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.Nodes
 {
 	internal class NodeName : Equatable<NodeName>
 	{
-		private static readonly char[] Separator = ".".ToCharArray();
-
 		public static NodeName Root = new NodeName("");
 
 		private readonly string fullName;
@@ -27,55 +24,63 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public string Name => name.Value;
 		public string ShortName => shortName.Value;
-
 		public NodeName ParentName => parentName.Value;
-
-		//public static implicit operator string(NodeName nodeName) => nodeName?.fullName;
-
-		//public static implicit operator NodeName(string fullName) => new NodeName(fullName);
 
 		public override string ToString() => this != Root ? fullName : "<root>";
 
 		public string AsString() => fullName;
 
-		public int GetLevelCount() => fullName.Count(c => c == '.') + 1;
-
-
-		public string GetLevelName(int parts)
-		{
-			return string.Join(".", fullName.Split(Separator).Take(parts));
-		}
 
 
 		private string GetName()
 		{
-			int index = fullName.LastIndexOf('.');
+			string text = fullName;
 
-			if (index == -1)
+			// Skipping parameters (if method)
+			int index = text.IndexOf('(');
+			if (index > 0)
 			{
-				// Root is parent
-				return fullName;
+				text = text.Substring(0, index);
 			}
 
-			return fullName.Substring(index + 1);
+			// Getting last name part
+			index = text.LastIndexOf('.');
+			if (index > -1)
+			{
+				text = text.Substring(index + 1);
+			}
+
+			return text;
 		}
 
 
-		private string GetShortName() => 
+		private string GetShortName() =>
 			string.IsNullOrEmpty(ParentName.Name) ? Name : $"{ParentName.Name}.{Name}";
 
 
 		private NodeName GetParentName()
 		{
-			int index = fullName.LastIndexOf('.');
+			string text = fullName;
 
-			if (index == -1)
+			// Skipping parameters (if method)
+			int index = text.IndexOf('(');
+			if (index > 0)
 			{
-				// root namespace
-				return Root;
+				text = text.Substring(0, index);
 			}
 
-			return new NodeName(fullName.Substring(0, index));
+			// Getting last name part
+			index = text.LastIndexOf('.');
+			if (index > -1)
+			{
+				text = text.Substring(0, index);
+			}
+			else
+			{
+				return Root;
+			}
+			
+			return new NodeName(text);
 		}
 	}
 }
