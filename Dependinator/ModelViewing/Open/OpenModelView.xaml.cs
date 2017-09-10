@@ -27,5 +27,11 @@ namespace Dependinator.ModelViewing.Open
 		{
 			((sender as Hyperlink)?.DataContext as FileItem)?.OpenFileCommand.Execute();
 		}
+
+
+		private void OpenExample_OnClick(object sender, RoutedEventArgs e)
+		{
+			ViewModel?.OpenExampleFile();
+		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
 using System.Windows;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelViewing.Private.Items;
@@ -45,6 +46,12 @@ namespace Dependinator.ModelViewing.Open
 			}
 
 			return fileItems;
+		}
+
+
+		public async void OpenExampleFile()
+		{
+			await openModelService.OpenModelAsync(Assembly.GetEntryAssembly().Location);
 		}
 	}
 }

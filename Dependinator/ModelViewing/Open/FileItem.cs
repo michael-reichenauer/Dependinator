@@ -18,8 +18,11 @@ namespace Dependinator.ModelViewing.Open
 
 
 		public string FilePath { get; }
+
 		public string FileName { get; }
+
 		public string ToolTip => "Show model for " + FilePath;
+
 		public Command OpenFileCommand => Command(() => openFileAction(FilePath));
 	}
 }

@@ -138,6 +138,46 @@
 					</TextBlock.ToolTip>
 				</TextBlock>
 			</Grid>
+
+			<Grid
+				Grid.Column="1" Grid.Row="1"
+				Margin="10,47">
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="30" />
+					<ColumnDefinition Width="*" />
+				</Grid.ColumnDefinitions>
+
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*" />
+				</Grid.RowDefinitions>
+
+				<!-- Open Icon -->
+				<TextBlock
+					Grid.Column="0" Grid.Row="0"
+					Margin="3,3,0,0"
+					Style="{DynamicResource MenuIconStyle}" Text="&#xE89D;"
+					FontSize="20" VerticalAlignment="Top" />
+
+				<!-- Open file link -->
+				<TextBlock
+					Grid.Column="1" Grid.Row="0"
+					Margin="0,2,0,0"
+					VerticalAlignment="Top">
+					<Hyperlink TextDecorations="None" Click="OpenExample_OnClick">
+						<TextBlock
+							Foreground="{DynamicResource TextBrush}" FontSize="14"
+							Text="Open an example model" />
+					</Hyperlink>
+					<TextBlock.ToolTip>
+						<ToolTip
+							Content="Open an example model to tryout Dependinator"
+							Placement="Mouse"
+							BorderBrush="{DynamicResource BorderBrush}"
+							BorderThickness="1" />
+					</TextBlock.ToolTip>
+				</TextBlock>
+			</Grid>
+			
 		</Grid>
 
 	</Border>
