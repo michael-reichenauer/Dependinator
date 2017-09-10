@@ -1,7 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Dependinator.ModelParsing.Private.DotNetReflection;
+//using Dependinator.ModelParsing.Private.DotNetReflection;
+using Dependinator.ModelParsing.Private.MonoCecilReflection;
 using Dependinator.ModelParsing.Private.Serializing;
 
 namespace Dependinator.ModelParsing.Private

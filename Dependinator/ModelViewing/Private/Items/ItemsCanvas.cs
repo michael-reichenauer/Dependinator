@@ -197,7 +197,7 @@ namespace Dependinator.ModelViewing.Private.Items
 			}
 			else
 			{
-				Log.Warn("Zoom not needed");
+				// Log.Warn("Zoom not needed");
 			}
 		}
 

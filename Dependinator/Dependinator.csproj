@@ -136,6 +136,10 @@
     <Compile Include="Common\ModelMetadataFolders\Private\IOpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
+    <Compile Include="ModelParsing\Private\MonoCecilReflection\IReflectionService.cs" />
+    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\Assemblies.cs" />
+    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\Reflection.cs" />
+    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\ReflectionService.cs" />
     <Compile Include="ModelViewing\Open\FileItem.cs" />
     <Compile Include="ModelViewing\Open\OpenModelView.xaml.cs">
       <DependentUpon>OpenModelView.xaml</DependentUpon>
@@ -568,6 +572,7 @@
     <EmbeddedResource Include="Dependencies\Mono.Cecil.Pdb.dll" />
     <EmbeddedResource Include="Dependencies\Mono.Cecil.Rocks.dll" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>mkdir "$(ProjectDir)\Dependencies" 2&gt; NUL

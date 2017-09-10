@@ -137,6 +137,18 @@ namespace Dependinator.Utils
 			Write(LevelError, $"{msg}\n{e}", memberName, sourceFilePath, sourceLineNumber);
 		}
 
+
+		public static void Exception(
+			Exception e,
+			StopParameter stop = default,
+			[CallerMemberName] string memberName = "",
+			[CallerFilePath] string sourceFilePath = "",
+			[CallerLineNumber] int sourceLineNumber = 0)
+		{
+			Write(LevelError, $"{e}", memberName, sourceFilePath, sourceLineNumber);
+		}
+
+
 		private static void Write(
 			string level,
 			string msg,

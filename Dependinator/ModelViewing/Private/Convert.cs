@@ -29,7 +29,7 @@ namespace Dependinator.ModelViewing.Private
 
 
 		private static ModelLink ToDataLink(Link link) => new ModelLink(
-			link.Source.Name.AsString(), 
+			link.Source.Name.AsString(),
 			link.Target.Name.AsString());
 
 

@@ -1,9 +1,9 @@
-﻿using System.Threading.Tasks;
+﻿//using System.Threading.Tasks;
 
-namespace Dependinator.ModelParsing.Private.DotNetReflection
-{
-	internal interface IReflectionService
-	{
-		Task AnalyzeAsync(string path, ModelItemsCallback modelItemsCallback);
-	}
-}
+//namespace Dependinator.ModelParsing.Private.DotNetReflection
+//{
+//	internal interface IReflectionService
+//	{
+//		Task AnalyzeAsync(string path, ModelItemsCallback modelItemsCallback);
+//	}
+//}

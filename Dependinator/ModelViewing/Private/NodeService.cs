@@ -147,9 +147,9 @@ namespace Dependinator.ModelViewing.Private
 			foreach (Node node in nodes)
 			{
 				nodeViewModelService.ResetLayout(node.ViewModel);
-				
+
 				List<Link> links = node.SourceLinks;
-				linkService.ResetLayout(links);			
+				linkService.ResetLayout(links);
 			}
 
 			t.Log($"{nodes.Count} nodes");
