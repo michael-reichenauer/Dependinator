@@ -19,7 +19,11 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			}
 
 			bool isCompilerGenerated =
-				name.Contains("__") || name.Contains("<>") || name.Contains("<Module>");
+				name.Contains("__") || 
+				name.Contains("<>") || 
+				name.Contains("<Module>") ||
+				name.Contains("<PrivateImplementationDetails>") ||
+				name.Contains("!");
 
 			if (isCompilerGenerated)
 			{
@@ -32,19 +36,14 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 		public static string GetTypeFullName(TypeReference type)
 		{
-			if (type is GenericInstanceType genericType)
+			if (type is TypeSpecification typeSpecification)
 			{
-				return GetFixedFullName(genericType.ElementType.FullName);
-			}
-
-			if (type is ByReferenceType byReferenceType)
-			{
-				if (byReferenceType.ElementType is GenericInstanceType genericType2)
+				if (typeSpecification.ElementType is GenericInstanceType typeSpecification2)
 				{
-					return GetFixedFullName(genericType2.ElementType.FullName);
+					return GetFixedFullName(typeSpecification2.ElementType.FullName);
 				}
 
-				return GetFixedFullName(byReferenceType.ElementType.FullName);
+				return GetFixedFullName(typeSpecification.ElementType.FullName);
 			}
 
 			return GetFixedFullName(type.FullName);
@@ -58,7 +57,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return GetMethodFullName(methodReference);
 			}
 
-			string memberFullName = GetMemberName(memberInfo.FullName);
+			string memberFullName = GetMemberName(memberInfo);
 
 			if (memberFullName.Contains("<") || memberFullName.Contains(">"))
 			{
@@ -75,17 +74,14 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			string name = methodReference.Name;
 			string parameters = string.Join(",", methodReference.Parameters
 				.Select(p => GetTypeFullName(p.ParameterType)));
-
-			if (name != ".ctor" && name != ".cctor")
+			
+			int index = name.LastIndexOf('.');
+			if (index > -1)
 			{
-				int index = name.LastIndexOf('.');
-				if (index > -1)
-				{
-					// Fix names with explicit interface implementation
-					name = name.Substring(index + 1);
-				}
+				// Fix names with explicit interface implementation
+				name = name.Substring(index + 1);
 			}
-
+			
 			string methodFullName = $"{typeName}.{name}({parameters})";
 			
 			if (!IsCompilerGenerated(methodFullName)
@@ -98,19 +94,20 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private static string GetMemberName(string fullName)
+		private static string GetMemberName(IMemberDefinition memberInfo)
 		{
-			int index = fullName.IndexOf(' ');
-			if (index > 0)
+			string typeName = GetTypeFullName(memberInfo.DeclaringType);
+			string name = memberInfo.Name;
+
+			string memberFullName = $"{typeName}.{name}";
+
+			if (!IsCompilerGenerated(memberFullName)
+			    && (memberFullName.Contains("<") || memberFullName.Contains(">")))
 			{
-				// Remove return value
-				fullName = fullName.Substring(index + 1);
+				Log.Warn($"Member name: {memberFullName} ");
 			}
 
-			fullName = fullName.Replace("::.", "."); // Constructor
-			fullName = fullName.Replace("::", ".");  // Method
-
-			return GetFixedFullName(fullName);
+			return memberFullName;
 		}
 
 

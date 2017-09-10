@@ -52,9 +52,8 @@
 					</MenuItem.Icon>
 
 					<MenuItem.Resources>
-						<HierarchicalDataTemplate
-							DataType="{x:Type open:FileItem}"
-							ItemsSource="{Binding ResentModels}">
+						<DataTemplate
+							DataType="{x:Type open:FileItem}">
 							<MenuItem
 								Header="{Binding FileName}"
 								Command="{Binding OpenFileCommand}"
@@ -67,7 +66,7 @@
 										BorderThickness="1" />
 								</MenuItem.ToolTip>
 							</MenuItem>
-						</HierarchicalDataTemplate>
+						</DataTemplate>
 					</MenuItem.Resources>
 				</MenuItem>
 

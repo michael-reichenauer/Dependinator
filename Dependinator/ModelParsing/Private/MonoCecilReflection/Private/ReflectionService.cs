@@ -17,7 +17,6 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		private int memberCount = 0;
 		private int linkCount = 0;
 
-
 		public Task AnalyzeAsync(string assemblyPath, ModelItemsCallback modelItemsCallback)
 		{
 			// To send notifications from sub domain, we use a receiver in this domain, which is
@@ -71,7 +70,9 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			}
 			finally
 			{
+				Timing t = Timing.Start();
 				sender.Flush();
+				t.Log("Waiting for flush");
 
 				// Restore
 				Environment.CurrentDirectory = currentDirectory;
@@ -103,6 +104,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			typeNodes.ForEach(typeNode => AddTypeMembers(typeNode.type, typeNode.node, sender));
 			t.Log($"Added {memberCount} members");
 
+			Log.Debug($"Before methods: Nodes: {sentNodes.Count}, Links: {linkCount}");
 			// Add type methods bodies
 			//Parallel.ForEach(methodBodies, method => AddMethodBodyLinks(method, sender));
 			methodBodies.ForEach(method => AddMethodBodyLinks(method, sender));
@@ -377,6 +379,11 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			sentNodes[name] = node;
 
 			//Log.Debug($"Send node: {name} {node.Type}");
+
+			if (node.Name.Contains("(") && !node.Name.Contains(")"))
+			{
+				
+			}
 
 			if (node.Name.Contains("<") || node.Name.Contains(">"))
 			{
