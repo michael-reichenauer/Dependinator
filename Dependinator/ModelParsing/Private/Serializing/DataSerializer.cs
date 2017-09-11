@@ -48,13 +48,13 @@ namespace Dependinator.ModelParsing.Private.Serializing
 					NotificationSender sender = new NotificationSender(receiver);
 
 					JsonTypes.Model dataModel = Json.Deserialize<JsonTypes.Model>(path);
-					t.Log("Deserialized");
+					t.Log($"Deserialized {dataModel.Items.Count}");
 
 					dataModel.Items.ForEach(sender.SendItem);
 
 					sender.Flush();
 
-					t.Log("Sent all items");
+					t.Log($"Sent all {dataModel.Items.Count} items");
 					return true;
 				}
 				catch (Exception e)
