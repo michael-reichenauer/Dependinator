@@ -28,7 +28,7 @@ namespace Dependinator.Utils
 
 		public bool TryTake(out T item, int timeout)
 		{
-			item = default;
+			item = default(T);
 
 			return -1 != BlockingCollection<T>.TryTakeFromAny(queues, out item, timeout);
 		}

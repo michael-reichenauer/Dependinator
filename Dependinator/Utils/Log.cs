@@ -140,7 +140,7 @@ namespace Dependinator.Utils
 
 		public static void Exception(
 			Exception e,
-			StopParameter stop = default,
+			StopParameter stop = default(StopParameter),
 			[CallerMemberName] string memberName = "",
 			[CallerFilePath] string sourceFilePath = "",
 			[CallerLineNumber] int sourceLineNumber = 0)
