@@ -18,7 +18,7 @@ namespace Dependinator.ModelParsing.Private
 
 
 		private static ModelNode ToModelNode(JsonTypes.Node node) => new ModelNode(
-			node.Name,
+			new NodeName(node.Name),
 			node.Type,
 			node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
 			node.ItemsScale,
@@ -28,7 +28,7 @@ namespace Dependinator.ModelParsing.Private
 
 		private static JsonTypes.Node ToJsonNode(ModelNode node) => new JsonTypes.Node
 		{
-			Name = node.Name,
+			Name = node.Name.FullName,
 			Type = node.NodeType,
 			Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
 			ItemsScale = node.ItemsScale,
@@ -38,14 +38,14 @@ namespace Dependinator.ModelParsing.Private
 
 
 		private static ModelLink ToModelLink(JsonTypes.Link link) => new ModelLink(
-			link.Source,
-			link.Target);
+			new NodeName(link.Source),
+			new NodeName(link.Target));
 
 
 		private static JsonTypes.Link ToJsonLink(ModelLink link) => new JsonTypes.Link
 		{
-			Source = link.Source,
-			Target = link.Target,
+			Source = link.Source.FullName,
+			Target = link.Target.FullName,
 		};
 	}
 }

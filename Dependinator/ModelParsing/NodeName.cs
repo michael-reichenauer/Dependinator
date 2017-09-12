@@ -1,13 +1,13 @@
 using System;
 using Dependinator.Utils;
 
-namespace Dependinator.ModelViewing.Nodes
+
+namespace Dependinator.ModelParsing
 {
 	internal class NodeName : Equatable<NodeName>
 	{
 		public static NodeName Root = new NodeName("");
 
-		private readonly string fullName;
 		private readonly Lazy<string> name;
 		private readonly Lazy<string> shortName;
 		private readonly Lazy<NodeName> parentName;
@@ -15,26 +15,25 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public NodeName(string fullName)
 		{
-			this.fullName = fullName;
+			this.FullName = fullName;
 			name = new Lazy<string>(GetName);
 			shortName = new Lazy<string>(GetShortName);
 			parentName = new Lazy<NodeName>(GetParentName);
 			IsEqualWhenSame(fullName);
 		}
 
+
+		public string FullName { get; }
 		public string Name => name.Value;
 		public string ShortName => shortName.Value;
 		public NodeName ParentName => parentName.Value;
 
-		public override string ToString() => this != Root ? fullName : "<root>";
-
-		public string AsString() => fullName;
-
+		public override string ToString() => this != Root ? FullName : "<root>";
 
 
 		private string GetName()
 		{
-			string text = fullName;
+			string text = FullName;
 
 			// Skipping parameters (if method)
 			int index = text.IndexOf('(');
@@ -60,7 +59,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private NodeName GetParentName()
 		{
-			string text = fullName;
+			string text = FullName;
 
 			// Skipping parameters (if method)
 			int index = text.IndexOf('(');

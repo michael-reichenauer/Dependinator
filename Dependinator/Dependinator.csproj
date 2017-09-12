@@ -267,7 +267,7 @@
       <DependentUpon>MemberNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\MemberNodeViewModel.cs" />
-    <Compile Include="ModelViewing\Nodes\NodeName.cs" />
+    <Compile Include="ModelParsing\NodeName.cs" />
     <Compile Include="ModelParsing\Private\DotNetReflection\IReflectionService.cs" />
     <Compile Include="ModelViewing\Links\LinkOld.cs" />
     <Compile Include="ModelViewing\Links\NodeLinks.cs" />

@@ -28,7 +28,7 @@ namespace Dependinator.ModelViewing.Private
 
 		public void UpdateNode(ModelNode modelNode, int stamp)
 		{
-			NodeName name = new NodeName(modelNode.Name);
+			NodeName name = modelNode.Name;
 
 			if (model.TryGetNode(name, out Node existingNode))
 			{

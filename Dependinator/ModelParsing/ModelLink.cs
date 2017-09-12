@@ -4,7 +4,7 @@ namespace Dependinator.ModelParsing
 {
 	internal class ModelLink : Equatable<ModelLink>
 	{
-		public ModelLink(string source, string target)
+		public ModelLink(NodeName source, NodeName target)
 		{
 			Source = source;
 			Target = target;
@@ -12,8 +12,8 @@ namespace Dependinator.ModelParsing
 			IsEqualWhenSame(Source, Target);
 		}
 
-		public string Target { get; }
-		public string Source { get; }
+		public NodeName Target { get; }
+		public NodeName Source { get; }
 
 		public override string ToString() => $"{Source}->{Target}";
 	}

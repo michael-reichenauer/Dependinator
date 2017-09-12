@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing.Private
 
 
 		private static ModelNode ToDataNode(Node node) => new ModelNode(
-			node.Name.AsString(),
+			node.Name,
 			node.NodeType.AsString(),
 			node.ViewModel?.ItemBounds ?? node.Bounds,
 			node.ViewModel?.ItemsViewModel?.ItemsCanvas?.Scale ?? node.Scale,
@@ -29,8 +29,8 @@ namespace Dependinator.ModelViewing.Private
 
 
 		private static ModelLink ToDataLink(Link link) => new ModelLink(
-			link.Source.Name.AsString(),
-			link.Target.Name.AsString());
+			link.Source.Name,
+			link.Target.Name);
 
 
 

@@ -150,9 +150,8 @@ namespace Dependinator.ModelViewing.Links
 			line.Source == line.Target.Parent ? line.Source : line.Source.Parent;
 
 
-		private Node GetNode(string name)
+		private Node GetNode(NodeName nodeName)
 		{
-			NodeName nodeName = new NodeName(name);
 			Node node = model.Node(nodeName);
 			return node;
 		}

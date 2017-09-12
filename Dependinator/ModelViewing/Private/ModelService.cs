@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -66,12 +67,13 @@ namespace Dependinator.ModelViewing.Private
 
 			ClearAll();
 
-			if (File.Exists(dataFilePath))
-			{
-				await ShowModelAsync(operation => parserService.TryDeserialize(
-					dataFilePath, items => UpdateDataItems(items, operation)));
-			}
-			else if (File.Exists(modelMetadata.ModelFilePath))
+			//if (File.Exists(dataFilePath))
+			//{
+			//	await ShowModelAsync(operation => parserService.TryDeserialize(
+			//		dataFilePath, items => UpdateDataItems(items, operation)));
+			//}
+			//else 
+			if (File.Exists(modelMetadata.ModelFilePath))
 			{
 				await ShowModelAsync(operation => parserService.AnalyzeAsync(
 					modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
@@ -158,7 +160,7 @@ namespace Dependinator.ModelViewing.Private
 			Task showTask = Task.Run(() => ShowModel(operation));
 
 			Task parseTask = parseFunctionAsync(operation)
-				.ContinueWith(_ => operation.BlockingQueue.CompleteAdding());
+				.ContinueWith(_ => operation.Queue.CompleteAdding());
 
 			await Task.WhenAll(showTask, parseTask);
 
@@ -171,16 +173,16 @@ namespace Dependinator.ModelViewing.Private
 		{
 			foreach (ModelItem item in items)
 			{
-				int priority = GetPriority(item);
+				int priority = GetPriority(item, operation);
 
-				operation.BlockingQueue.Enqueue(item, priority);
+				operation.Queue.Enqueue(item, priority);
 			}
 		}
 
 
 		private void ShowModel(Operation operation)
 		{
-			while (operation.BlockingQueue.TryTake(out ModelItem item, -1))
+			while (operation.Queue.TryTake(out ModelItem item, -1))
 			{
 				Application.Current.Dispatcher.InvokeBackground(() =>
 				{
@@ -188,7 +190,7 @@ namespace Dependinator.ModelViewing.Private
 
 					for (int i = 0; i < BatchSize; i++)
 					{
-						if (!operation.BlockingQueue.TryTake(out item, 0))
+						if (!operation.Queue.TryTake(out item, 0))
 						{
 							break;
 						}
@@ -211,59 +213,78 @@ namespace Dependinator.ModelViewing.Private
 			{
 				linkService.UpdateLink(item.Link, stamp);
 			}
-
 		}
 
 
-		private static int GetPriority(ModelItem item)
+		private static int GetPriority(ModelItem item, Operation operation)
 		{
 			if (item.Node != null)
 			{
-				return GetPriority(item.Node.Name);
+				return operation.GetPriority(item.Node.Name);
 			}
 			else
 			{
-				return Math.Max(GetPriority(item.Link.Source), GetPriority(item.Link.Target));
+				return Math.Max(
+					operation.GetPriority(item.Link.Source),
+					operation.GetPriority(item.Link.Target));
 			}
 		}
-
-
-		private static int GetPriority(string name)
-		{
-			int priority = 0;
-
-			foreach (char t in name)
-			{
-				if (t == '(')
-				{
-					break;
-				}
-
-				if (t == '.')
-				{
-					priority++;
-				}
-
-				if (priority >= MaxPriority - 1)
-				{
-					break;
-				}
-			}
-
-			return priority;
-		}
-
+		
 
 		private string GetDataFilePath() => Path.Combine(modelMetadata, "data.json");
 
 
 		private class Operation
 		{
-			public PriorityBlockingQueue<ModelItem> BlockingQueue { get; } = new PriorityBlockingQueue<ModelItem>(MaxPriority);
+			//private readonly ConcurrentDictionary<NodeName, int> parents = 
+			//	new ConcurrentDictionary<NodeName, int>();
+
+			public PriorityBlockingQueue<ModelItem> Queue { get; } = new PriorityBlockingQueue<ModelItem>(MaxPriority);
 
 			public int Id { get; }
 			
 			public Operation(int stamp) => Id = stamp;
+
+
+			public int GetPriority(NodeName name)
+			{
+			//	NodeName current = name;
+			//	while (current != NodeName.Root)
+			//	{
+			//		NodeName parentName = current.ParentName;
+
+			//		if (parents.ContainsKey(parentName))
+			//		{
+			//			break;
+			//		}
+
+			//		parents[parentName] = 1;
+			//		current = parentName;
+			//	}
+
+
+				int priority = 0;
+
+				foreach (char t in name.FullName)
+				{
+					if (t == '(')
+					{
+						break;
+					}
+
+					if (t == '.')
+					{
+						priority++;
+					}
+
+					if (priority >= MaxPriority - 1)
+					{
+						break;
+					}
+				}
+
+				return priority;
+			}
 		}
 	}
 }
