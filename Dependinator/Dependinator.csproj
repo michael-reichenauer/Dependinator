@@ -80,6 +80,7 @@
     <Reference Include="ICSharpCode.NRefactory.Xml, Version=5.0.0.0, Culture=neutral, PublicKeyToken=d4bfe873e7598c49, processorArchitecture=MSIL">
       <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.Xml.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Build" />
     <Reference Include="Mono.Cecil, Version=0.9.5.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>..\packages\Mono.Cecil.0.9.5.4\lib\net40\Mono.Cecil.dll</HintPath>
     </Reference>
@@ -141,8 +142,13 @@
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="ModelParsing\Private\MonoCecilReflection\IReflectionService.cs" />
     <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\Assemblies.cs" />
+    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\AssemblyAnalyzer.cs" />
     <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\Reflection.cs" />
     <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\ReflectionService.cs" />
+    <Compile Include="ModelParsing\Private\SolutionFileParsing\ProjectInSolution.cs" />
+    <Compile Include="ModelParsing\Private\SolutionFileParsing\ReflectionExtensions.cs" />
+    <Compile Include="ModelParsing\Private\SolutionFileParsing\Solution.cs" />
+    <Compile Include="ModelParsing\Private\SolutionFileParsing\SolutionParser.cs" />
     <Compile Include="ModelViewing\Open\FileItem.cs" />
     <Compile Include="ModelViewing\Open\OpenModelView.xaml.cs">
       <DependentUpon>OpenModelView.xaml</DependentUpon>

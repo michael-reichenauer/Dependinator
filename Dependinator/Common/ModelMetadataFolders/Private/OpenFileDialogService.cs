@@ -8,13 +8,13 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 {
 	internal class OpenFileDialogService : IOpenFileDialogService
 	{
-		private static readonly string OpenFileDialogTitle = "Select a .NET .dll or .exe file";
+		private static readonly string OpenFileDialogTitle = "Select a .NET .sln, .exe or .dll file";
 
-		private static readonly string[] SupportedFileExtensions = {".exe", ".dll"};
-		private static readonly string DefaultFileExtension = ".exe";
+		private static readonly string[] SupportedFileExtensions = { ".sln", ".exe", ".dll", };
+		private static readonly string DefaultFileExtension = ".sln";
 
 		private static readonly string SupportedFileTypes =
-			"Files (*.exe, *.dll)|*.exe;*.dll|.NET libs (*.dll)|*.dll|.NET Programs (*.exe)|*.exe";
+			".NET files (*.sln *.exe, *.dll)|*.sln; *.exe;*.dll|.NET solutions (*.sln)|*.sln|.NET libs (*.dll)|*.dll|.NET Programs (*.exe)|*.exe";
 
 
 		public bool TryShowOpenFileDialog(out string filePath)

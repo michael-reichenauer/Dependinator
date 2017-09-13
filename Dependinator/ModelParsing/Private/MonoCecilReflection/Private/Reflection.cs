@@ -1,14 +1,11 @@
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Dependinator.Utils;
 using Mono.Cecil;
-using Mono.Collections.Generic;
 
 
 namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 {
-	internal static class Reflection
+	internal static class Util
 	{
 		// Compiler generated names seems to contain "<", while generic names use "'"
 		public static bool IsCompilerGenerated(string name)
@@ -19,8 +16,8 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			}
 
 			bool isCompilerGenerated =
-				name.Contains("__") || 
-				name.Contains("<>") || 
+				name.Contains("__") ||
+				name.Contains("<>") ||
 				name.Contains("<Module>") ||
 				name.Contains("<PrivateImplementationDetails>") ||
 				name.Contains("!");
@@ -74,22 +71,22 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			string name = methodReference.Name;
 			string parameters = string.Join(",", methodReference.Parameters
 				.Select(p => GetTypeFullName(p.ParameterType)));
-			
+
 			int index = name.LastIndexOf('.');
 			if (index > -1)
 			{
 				// Fix names with explicit interface implementation
 				name = name.Substring(index + 1);
 			}
-			
+
 			string methodFullName = $"{typeName}.{name}({parameters})";
-			
+
 			if (!IsCompilerGenerated(methodFullName)
 				&& (methodFullName.Contains("<") || methodFullName.Contains(">")))
 			{
 				Log.Warn($"Method name: {methodFullName} ");
 			}
-			
+
 			return methodFullName;
 		}
 
@@ -102,7 +99,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			string memberFullName = $"{typeName}.{name}";
 
 			if (!IsCompilerGenerated(memberFullName)
-			    && (memberFullName.Contains("<") || memberFullName.Contains(">")))
+					&& (memberFullName.Contains("<") || memberFullName.Contains(">")))
 			{
 				Log.Warn($"Member name: {memberFullName} ");
 			}

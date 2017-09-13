@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-//using Dependinator.ModelParsing.Private.DotNetReflection;
 using Dependinator.ModelParsing.Private.MonoCecilReflection;
 using Dependinator.ModelParsing.Private.Serializing;
+
 
 namespace Dependinator.ModelParsing.Private
 {
@@ -23,12 +23,15 @@ namespace Dependinator.ModelParsing.Private
 		}
 
 
-		public Task AnalyzeAsync(string assemblyPath, ModelItemsCallback modelItemsCallback) => 
-			reflectionService.AnalyzeAsync(assemblyPath, modelItemsCallback);
+		public Task AnalyzeAsync(string filePath, ModelItemsCallback modelItemsCallback)
+		{
+			return reflectionService.AnalyzeAsync(filePath, modelItemsCallback);
+		}
 
 
 		public Task SerializeAsync(IReadOnlyList<ModelItem> items, string dataFilePath) =>
 			dataSerializer.SerializeAsync(items, dataFilePath);
+
 
 		public void Serialize(IReadOnlyList<ModelItem> items, string dataFilePath) =>
 			dataSerializer.Serialize(items, dataFilePath);

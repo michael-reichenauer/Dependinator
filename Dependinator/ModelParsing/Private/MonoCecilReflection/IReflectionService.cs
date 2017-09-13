@@ -5,6 +5,6 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection
 {
 	internal interface IReflectionService
 	{
-		Task AnalyzeAsync(string path, ModelItemsCallback modelItemsCallback);
+		Task AnalyzeAsync(string assemblyPath, ModelItemsCallback modelItemsCallback);
 	}
 }
