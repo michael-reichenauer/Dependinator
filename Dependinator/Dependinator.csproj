@@ -208,7 +208,6 @@
       <DependentUpon>TypeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\TypeViewModel.cs" />
-    <Compile Include="ModelViewing\Private\Items\IItemsService.cs" />
     <Compile Include="ModelViewing\Private\Items\Private\IItemsSourceArea.cs" />
     <Compile Include="ModelViewing\Private\Items\Private\ItemsService.cs" />
     <Compile Include="Utils\UI\DebounceDispatcher.cs" />

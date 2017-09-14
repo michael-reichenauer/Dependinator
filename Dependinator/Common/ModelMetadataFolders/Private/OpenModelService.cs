@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.MainWindowViews;
@@ -67,6 +69,15 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 			mainWindow.Value.RestoreWindowSettings();
 
 			await modelViewService.LoadAsync();
+		}
+
+
+		public async Task OpenModelAsync(IReadOnlyList<string> modelFilePaths)
+		{
+			// Currently only support one dropped file
+			string modelFilePath = modelFilePaths.First();
+
+			await OpenModelAsync(modelFilePath);
 		}
 	}
 }

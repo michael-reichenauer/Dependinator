@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 
 namespace Dependinator.Common.ModelMetadataFolders
@@ -8,5 +9,7 @@ namespace Dependinator.Common.ModelMetadataFolders
 		Task OpenModelAsync();
 
 		Task OpenModelAsync(string modelFilePath);
+
+		Task OpenModelAsync(IReadOnlyList<string> modelFilePaths);
 	}
 }

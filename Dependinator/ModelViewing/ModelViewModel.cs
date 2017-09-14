@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Private;
@@ -21,6 +23,7 @@ namespace Dependinator.ModelViewing
 		private readonly IThemeService themeService;
 		private readonly IModelViewService modelViewService;
 		private readonly IProgressService progress;
+		private readonly IOpenModelService openModelService;
 
 		private int width = 0;
 
@@ -28,11 +31,13 @@ namespace Dependinator.ModelViewing
 		public ModelViewModel(
 			IModelViewService modelViewService,
 			IThemeService themeService,
-			IProgressService progressService)
+			IProgressService progressService,
+			IOpenModelService openModelService)
 		{
 			this.modelViewService = modelViewService;
 			this.themeService = themeService;
 			this.progress = progressService;
+			this.openModelService = openModelService;
 
 			ItemsCanvas rootCanvas = new ItemsCanvas();
 			ItemsViewModel = new ItemsViewModel(rootCanvas);
@@ -84,5 +89,11 @@ namespace Dependinator.ModelViewing
 
 		
 		public void Close() => modelViewService.Close();
+
+
+		public Task LoadFilesAsync(IReadOnlyList<string> filePaths)
+		{
+			return openModelService.OpenModelAsync(filePaths);
+		}
 	}
 }

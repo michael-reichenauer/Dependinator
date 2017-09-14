@@ -9,7 +9,10 @@
 	d:DesignHeight="300" d:DesignWidth="300" Loaded="MainView_OnLoaded">
 
 	<!-- Model -->
-	<Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+	<Border
+		BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+		AllowDrop="true"
+		Drop="Dropped_Files">
 		<items:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
 	</Border>
 

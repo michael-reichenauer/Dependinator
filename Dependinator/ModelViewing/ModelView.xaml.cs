@@ -1,5 +1,7 @@
-﻿using System.Windows;
+﻿using System.Linq;
+using System.Windows;
 using System.Windows.Controls;
+using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing
@@ -23,6 +25,22 @@ namespace Dependinator.ModelViewing
 			viewModel = (ModelViewModel)DataContext;
 			ItemsView.SetFocus();
 			await viewModel.LoadAsync();
+		}
+
+
+		private async void Dropped_Files(object sender, DragEventArgs e)
+		{
+			if (!e.Data.GetDataPresent(DataFormats.FileDrop))
+			{
+				return;
+			}
+
+			string[] filePaths = (string[])e.Data.GetData(DataFormats.FileDrop);
+
+			if (filePaths?.Any() ?? false)
+			{
+				await viewModel.LoadFilesAsync(filePaths);
+			}
 		}
 	}
 }
