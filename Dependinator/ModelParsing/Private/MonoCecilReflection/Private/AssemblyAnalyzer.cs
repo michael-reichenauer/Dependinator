@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Windows;
 using Dependinator.Utils;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -11,16 +12,18 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 {
 	internal class AssemblyAnalyzer
 	{
-		private Dictionary<string, JsonTypes.Node> sentNodes;
+		private Dictionary<string, ModelNode> sentNodes;
 		private readonly List<MethodBody> methodBodies = new List<MethodBody>();
 		private int memberCount = 0;
 		private int linkCount = 0;
+		private ModelItemsCallback callback;
 
 
-		public void Analyze(string assemblyPath, NotificationSender sender)
+		public void Analyze(string assemblyPath, ModelItemsCallback modelItemsCallback)
 		{
+			callback = modelItemsCallback;
 			// The sender, which will send notifications to the receiver in the parent app-domain
-			sentNodes = new Dictionary<string, JsonTypes.Node>();
+			sentNodes = new Dictionary<string, ModelNode>();
 			memberCount = 0;
 			linkCount = 0;
 
@@ -29,7 +32,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			{
 				AssemblyDefinition assembly = AssemblyDefinition.ReadAssembly(assemblyPath);
 
-				AnalyzeAssembly(assembly, sender);
+				AnalyzeAssembly(assembly);
 			}
 
 			catch (FileLoadException e)
@@ -49,7 +52,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private void AnalyzeAssembly(AssemblyDefinition assembly, NotificationSender sender)
+		private void AnalyzeAssembly(AssemblyDefinition assembly)
 		{
 			Log.Debug($"Analyzing {assembly}");
 
@@ -60,70 +63,68 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 					!Util.IsCompilerGenerated(type.DeclaringType?.Name));
 
 			// Add type nodes
-			List<(TypeDefinition type, JsonTypes.Node node)> typeNodes = assemblyTypes
-				.Select(type => AddType(type, sender))
+			List<(TypeDefinition type, ModelNode node)> typeNodes = assemblyTypes
+				.Select(type => AddType(type))
 				.ToList();
 			t.Log($"Added {typeNodes.Count} types");
 
 			// Add inheritance links
-			typeNodes.ForEach(typeNode => AddLinksToBaseTypes(typeNode.type, typeNode.node, sender));
+			typeNodes.ForEach(typeNode => AddLinksToBaseTypes(typeNode.type, typeNode.node));
 			t.Log("Added links to base types");
 
 			// Add type members
-			typeNodes.ForEach(typeNode => AddTypeMembers(typeNode.type, typeNode.node, sender));
+			typeNodes.ForEach(typeNode => AddTypeMembers(typeNode.type, typeNode.node));
 			t.Log($"Added {memberCount} members");
 
 			Log.Debug($"Before methods: Nodes: {sentNodes.Count}, Links: {linkCount}");
 			// Add type methods bodies
 			//Parallel.ForEach(methodBodies, method => AddMethodBodyLinks(method, sender));
-			methodBodies.ForEach(method => AddMethodBodyLinks(method, sender));
+			methodBodies.ForEach(method => AddMethodBodyLinks(method));
 			t.Log($"Added method {methodBodies.Count} bodies");
 
 			Log.Debug($"Added {sentNodes.Count} nodes and {linkCount} links");
 		}
 
 
-		private (TypeDefinition type, JsonTypes.Node node) AddType(
-			TypeDefinition type, NotificationSender sender)
+		private (TypeDefinition type, ModelNode node) AddType(TypeDefinition type)
 		{
 			if (type.DeclaringType != null)
 			{
 				// The type is a nested type. Make sure the parent type is sent 
-				AddDeclaringType(type.DeclaringType, sender);
+				AddDeclaringType(type.DeclaringType);
 			}
 
 			string name = Util.GetTypeFullName(type);
-			JsonTypes.Node typeNode = SendNode(name, JsonTypes.NodeType.Type, sender);
+			ModelNode typeNode = SendNode(name, JsonTypes.NodeType.Type);
 			return (type, typeNode);
 		}
 
 
-		private void AddDeclaringType(TypeDefinition type, NotificationSender sender)
+		private void AddDeclaringType(TypeDefinition type)
 		{
 			if (type.DeclaringType != null)
 			{
 				// The type is a nested type. Make sure the parent type is sent 
-				AddDeclaringType(type.DeclaringType, sender);
+				AddDeclaringType(type.DeclaringType);
 			}
 
 			string name = Util.GetTypeFullName(type);
-			SendNode(name, JsonTypes.NodeType.Type, sender);
+			SendNode(name, JsonTypes.NodeType.Type);
 		}
 
 
-		private void AddLinksToBaseTypes(
-			TypeDefinition type, JsonTypes.Node sourceNode, NotificationSender sender)
+		private void AddLinksToBaseTypes(TypeDefinition type, ModelNode sourceNode)
 		{
 			try
 			{
 				TypeReference baseType = type.BaseType;
 				if (baseType != null && baseType.FullName != "System.Object")
 				{
-					AddLinkToType(sourceNode, baseType, sender);
+					AddLinkToType(sourceNode, baseType);
 				}
 
 				type.Interfaces
-					.ForEach(interfaceType => AddLinkToType(sourceNode, interfaceType, sender));
+					.ForEach(interfaceType => AddLinkToType(sourceNode, interfaceType));
 			}
 			catch (Exception e)
 			{
@@ -132,30 +133,29 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private void AddTypeMembers(
-			TypeDefinition type, JsonTypes.Node typeNode, NotificationSender sender)
+		private void AddTypeMembers(TypeDefinition type, ModelNode typeNode)
 		{
 			try
 			{
 				type.Fields
 					.Where(member => !Util.IsCompilerGenerated(member.Name))
-					.ForEach(member => AddMember(member, typeNode, sender));
+					.ForEach(member => AddMember(member, typeNode));
 
 				type.Events
 					.Where(member => !Util.IsCompilerGenerated(member.Name))
-					.ForEach(member => AddMember(member, typeNode, sender));
+					.ForEach(member => AddMember(member, typeNode));
 
 				type.Properties
 					.Where(member => !Util.IsCompilerGenerated(member.Name))
-					.ForEach(member => AddMember(member, typeNode, sender));
+					.ForEach(member => AddMember(member, typeNode));
 
 				type.Methods
 					.Where(member => !Util.IsCompilerGenerated(member.Name))
-					.ForEach(member => AddMember(member, typeNode, sender));
+					.ForEach(member => AddMember(member, typeNode));
 
 				type.NestedTypes
 					.Where(member => !Util.IsCompilerGenerated(member.Name))
-					.ForEach(member => AddType(member, sender));
+					.ForEach(member => AddType(member));
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
@@ -164,17 +164,16 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private void AddMember(
-			IMemberDefinition memberInfo, JsonTypes.Node parentTypeNode, NotificationSender sender)
+		private void AddMember(IMemberDefinition memberInfo, ModelNode parentTypeNode)
 		{
 			try
 			{
 				string memberName = Util.GetMemberFullName(memberInfo);
 
-				var memberNode = SendNode(memberName, JsonTypes.NodeType.Member, sender);
+				var memberNode = SendNode(memberName, JsonTypes.NodeType.Member);
 				memberCount++;
 
-				AddMemberLinks(memberNode, memberInfo, sender);
+				AddMemberLinks(memberNode, memberInfo);
 			}
 			catch (Exception e)
 			{
@@ -184,25 +183,25 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 
 		private void AddMemberLinks(
-			JsonTypes.Node sourceMemberNode, IMemberDefinition member, NotificationSender sender)
+			ModelNode sourceMemberNode, IMemberDefinition member)
 		{
 			try
 			{
 				if (member is FieldDefinition field)
 				{
-					AddLinkToType(sourceMemberNode, field.FieldType, sender);
+					AddLinkToType(sourceMemberNode, field.FieldType);
 				}
 				else if (member is PropertyDefinition property)
 				{
-					AddLinkToType(sourceMemberNode, property.PropertyType, sender);
+					AddLinkToType(sourceMemberNode, property.PropertyType);
 				}
 				else if (member is EventDefinition eventInfo)
 				{
-					AddLinkToType(sourceMemberNode, eventInfo.EventType, sender);
+					AddLinkToType(sourceMemberNode, eventInfo.EventType);
 				}
 				else if (member is MethodDefinition method)
 				{
-					AddMethodLinks(sourceMemberNode, method, sender);
+					AddMethodLinks(sourceMemberNode, method);
 				}
 				else
 				{
@@ -216,28 +215,27 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private void AddMethodLinks(
-			JsonTypes.Node memberNode, MethodDefinition method, NotificationSender sender)
+		private void AddMethodLinks(ModelNode memberNode, MethodDefinition method)
 		{
 			if (!method.IsConstructor)
 			{
 				TypeReference returnType = method.ReturnType;
-				AddLinkToType(memberNode, returnType, sender);
+				AddLinkToType(memberNode, returnType);
 			}
 
 			method.Parameters
 				.Select(parameter => parameter.ParameterType)
-				.ForEach(parameterType => AddLinkToType(memberNode, parameterType, sender));
+				.ForEach(parameterType => AddLinkToType(memberNode, parameterType));
 
 			methodBodies.Add(new MethodBody(memberNode, method));
 		}
 
 
-		private void AddMethodBodyLinks(MethodBody methodBody, NotificationSender sender)
+		private void AddMethodBodyLinks(MethodBody methodBody)
 		{
 			try
 			{
-				JsonTypes.Node memberNode = methodBody.MemberNode;
+				ModelNode memberNode = methodBody.MemberNode;
 				MethodDefinition method = methodBody.Method;
 
 				if (method.DeclaringType.IsInterface || !method.HasBody)
@@ -248,13 +246,13 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				Mono.Cecil.Cil.MethodBody body = method.Body;
 
 				body.Variables
-					.ForEach(variable => AddLinkToType(memberNode, variable.VariableType, sender));
+					.ForEach(variable => AddLinkToType(memberNode, variable.VariableType));
 
 				foreach (Instruction instruction in body.Instructions)
 				{
 					if (instruction.Operand is MethodReference methodCall)
 					{
-						AddLinkToCallMethod(memberNode, methodCall, sender);
+						AddLinkToCallMethod(memberNode, methodCall);
 					}
 				}
 			}
@@ -265,8 +263,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private void AddLinkToCallMethod(
-			JsonTypes.Node memberNode, MethodReference method, NotificationSender sender)
+		private void AddLinkToCallMethod(ModelNode memberNode, MethodReference method)
 		{
 			TypeReference declaringType = method.DeclaringType;
 
@@ -282,22 +279,19 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return;
 			}
 
-			SendNode(methodName, JsonTypes.NodeType.Member, sender);
-			SendLink(memberNode.Name, methodName, sender);
+			SendNode(methodName, JsonTypes.NodeType.Member);
+			SendLink(memberNode.Name, methodName);
 
 			TypeReference returnType = method.ReturnType;
-			AddLinkToType(memberNode, returnType, sender);
+			AddLinkToType(memberNode, returnType);
 
 			method.Parameters
 				.Select(parameter => parameter.ParameterType)
-				.ForEach(parameterType => AddLinkToType(memberNode, parameterType, sender));
+				.ForEach(parameterType => AddLinkToType(memberNode, parameterType));
 		}
 
 
-		private void AddLinkToType(
-			JsonTypes.Node sourceNode,
-			TypeReference targetType,
-			NotificationSender sender)
+		private void AddLinkToType(ModelNode sourceNode,TypeReference targetType)
 		{
 			if (targetType.FullName == "System.Void"
 			    || targetType.IsGenericParameter
@@ -315,88 +309,77 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return;
 			}
 
-			SendNode(targetNodeName, JsonTypes.NodeType.Type, sender);
-			SendLink(sourceNode.Name, targetNodeName, sender);
+			SendNode(targetNodeName, JsonTypes.NodeType.Type);
+			SendLink(sourceNode.Name, targetNodeName);
 
 			if (targetType.IsGenericInstance)
 			{
 				targetType.GenericParameters
-					.ForEach(argType => AddLinkToType(sourceNode, argType, sender));
+					.ForEach(argType => AddLinkToType(sourceNode, argType));
 			}
 		}
 
 
-		private JsonTypes.Node SendNode(string name, string nodeType, NotificationSender sender)
+		private ModelNode SendNode(string name, string nodeType)
 		{
 			if (Util.IsCompilerGenerated(name))
 			{
 				Log.Warn($"Compiler generated node: {name}");
 			}
 
-			if (sentNodes.TryGetValue(name, out JsonTypes.Node node))
+			if (sentNodes.TryGetValue(name, out ModelNode node))
 			{
 				// Already sent this node
 				return node;
 			}
 
-			node = new JsonTypes.Node
-			{
-				Name = name,
-				Type = nodeType
-			};
-
+			node = new ModelNode(new NodeName(name), nodeType, RectEx.Zero, 0, PointEx.Zero, null);
+			
 			sentNodes[name] = node;
 
 			//Log.Debug($"Send node: {name} {node.Type}");
 
-			if (node.Name.Contains("(") && !node.Name.Contains(")"))
-			{
 
+			if (name.Contains("<") || name.Contains(">"))
+			{
+				Log.Warn($"Send node: {name}      {nodeType}");
 			}
 
-			if (node.Name.Contains("<") || node.Name.Contains(">"))
-			{
-				Log.Warn($"Send node: {name}      {node.Type}");
-			}
-
-			sender.SendItem(new JsonTypes.Item { Node = node });
+			callback(new ModelItem(node, null));
 			return node;
 		}
 
 
-		public void SendLink(string sourceNodeName, string targetNodeName, NotificationSender sender)
+		public void SendLink(NodeName sourceNodeName, string targetNodeName)
 		{
-			if (Util.IsCompilerGenerated(sourceNodeName)
+			if (Util.IsCompilerGenerated(sourceNodeName.FullName)
 			    || Util.IsCompilerGenerated(targetNodeName))
 			{
 				Log.Warn($"Compiler generated link: {sourceNodeName}->{targetNodeName}");
 			}
 
-			if (sourceNodeName == targetNodeName)
+			if (sourceNodeName.FullName == targetNodeName)
 			{
 				// Skipping link to self
 				return;
 			}
 
-			if (sourceNodeName.Contains("<") || sourceNodeName.Contains(">"))
+			if (sourceNodeName.FullName.Contains("<") || sourceNodeName.FullName.Contains(">"))
 			{
 				Log.Warn($"Send link source: {sourceNodeName}");
 			}
+
 			if (targetNodeName.Contains("<") || targetNodeName.Contains(">"))
 			{
 				Log.Warn($"Send link target: {targetNodeName}");
 			}
 
-			JsonTypes.Link link = new JsonTypes.Link
-			{
-				Source = sourceNodeName,
-				Target = targetNodeName
-			};
+			ModelLink link = new ModelLink(sourceNodeName, new NodeName(targetNodeName));
 
 			linkCount++;
 
 			//Log.Debug($"Send link: {link.Source} {link.Target}");
-			sender.SendItem(new JsonTypes.Item { Link = link });
+			callback(new ModelItem(null, link));
 		}
 
 
@@ -424,11 +407,11 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 		private class MethodBody
 		{
-			public JsonTypes.Node MemberNode { get; }
+			public ModelNode MemberNode { get; }
 			public MethodDefinition Method { get; }
 
 
-			public MethodBody(JsonTypes.Node memberNode, MethodDefinition method)
+			public MethodBody(ModelNode memberNode, MethodDefinition method)
 			{
 				MemberNode = memberNode;
 				Method = method;

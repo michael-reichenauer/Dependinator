@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace Dependinator.ModelParsing
+﻿namespace Dependinator.ModelParsing
 {
-	internal delegate void ModelItemsCallback(IReadOnlyList<ModelItem> items);
+	internal delegate void ModelItemsCallback(ModelItem items);
 }

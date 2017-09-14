@@ -5,25 +5,25 @@ using System.Linq;
 
 namespace Dependinator.ModelParsing.Private
 {
-	internal class NotificationReceiver : MarshalByRefObject
-	{
-		private readonly ModelItemsCallback modelItemsCallback;
+	//internal class NotificationReceiver : MarshalByRefObject
+	//{
+	//	private readonly ModelItemsCallback modelItemsCallback;
 
 
-		public NotificationReceiver(ModelItemsCallback modelItemsCallback)
-		{
-			this.modelItemsCallback = modelItemsCallback;
-		}
+	//	public NotificationReceiver(ModelItemsCallback modelItemsCallback)
+	//	{
+	//		this.modelItemsCallback = modelItemsCallback;
+	//	}
 
 
-		public override object InitializeLifetimeService() => null;
+	//	public override object InitializeLifetimeService() => null;
 
 
-		public void ReceiveItems(List<JsonTypes.Item> dtoItems)
-		{
-			IReadOnlyList<ModelItem> items = dtoItems.Select(Convert.ToModelItem).ToList();
+	//	public void ReceiveItems(List<JsonTypes.Item> dtoItems)
+	//	{
+	//		IReadOnlyList<ModelItem> items = dtoItems.Select(Convert.ToModelItem).ToList();
 
-			modelItemsCallback(items);
-		}
-	}
+	//		modelItemsCallback(items);
+	//	}
+	//}
 }

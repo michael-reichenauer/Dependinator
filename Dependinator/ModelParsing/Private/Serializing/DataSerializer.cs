@@ -44,15 +44,13 @@ namespace Dependinator.ModelParsing.Private.Serializing
 				try
 				{
 					Timing t = new Timing();
-					NotificationReceiver receiver = new NotificationReceiver(modelItemsCallback);
-					NotificationSender sender = new NotificationSender(receiver);
+					//NotificationReceiver receiver = new NotificationReceiver(modelItemsCallback);
+					//NotificationSender sender = new NotificationSender(receiver);
 
 					JsonTypes.Model dataModel = Json.Deserialize<JsonTypes.Model>(path);
 					t.Log($"Deserialized {dataModel.Items.Count}");
 
-					dataModel.Items.ForEach(sender.SendItem);
-
-					sender.Flush();
+					dataModel.Items.ForEach(item => modelItemsCallback(Convert.ToModelItem(item)));
 
 					t.Log($"Sent all {dataModel.Items.Count} items");
 					return true;

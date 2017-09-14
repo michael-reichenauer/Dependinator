@@ -19,21 +19,14 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			IReadOnlyList<string> assemblyPaths = Get(filePath);
 
-			NotificationReceiver receiver = new NotificationReceiver(modelItemsCallback);
-			NotificationSender sender = new NotificationSender(receiver);
-
-			try
+			//NotificationReceiver receiver = new NotificationReceiver(modelItemsCallback);
+			//NotificationSender sender = new NotificationSender(receiver);
+			
+			await Task.Run(() =>
 			{
-				await Task.Run(() =>
-				{
-					Parallel.ForEach(assemblyPaths, path => AnalyzeAssembly(path, sender));
-				});
-			}
-			finally
-			{
-				sender.Flush();
-			}
-
+				Parallel.ForEach(assemblyPaths, path => AnalyzeAssembly(path, modelItemsCallback));
+			});
+			
 			t.Log($"Analyzed {filePath}");
 		}
 
@@ -60,7 +53,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private static void AnalyzeAssembly(string assemblyPath, NotificationSender sender)
+		private static void AnalyzeAssembly(string assemblyPath, ModelItemsCallback modelItemsCallback)
 		{
 			Log.Debug($"Analyze {assemblyPath} ...");
 			Timing t = Timing.Start();
@@ -69,7 +62,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			{
 				AssemblyAnalyzer analyzer = new AssemblyAnalyzer();
 
-				analyzer.Analyze(assemblyPath, sender);
+				analyzer.Analyze(assemblyPath, modelItemsCallback);
 			}
 			else
 			{

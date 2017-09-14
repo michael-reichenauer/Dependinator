@@ -169,14 +169,11 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private static void UpdateDataItems(IEnumerable<ModelItem> items, Operation operation)
+		private static void UpdateDataItems(ModelItem item, Operation operation)
 		{
-			foreach (ModelItem item in items)
-			{
-				int priority = GetPriority(item, operation);
+			int priority = GetPriority(item, operation);
 
-				operation.Queue.Enqueue(item, priority);
-			}
+			operation.Queue.Enqueue(item, priority);
 		}
 
 
