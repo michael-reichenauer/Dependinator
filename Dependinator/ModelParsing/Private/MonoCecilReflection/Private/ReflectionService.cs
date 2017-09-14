@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.ModelParsing.Private.SolutionFileParsing;
+using Dependinator.Utils;
 
 
 namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
@@ -12,9 +13,34 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 	{
 		public async Task AnalyzeAsync(string filePath, ModelItemsCallback modelItemsCallback)
 		{
-			await Task.Yield();
-
 			// filePath = @"C:\Work Files\GitMind\GitMind.sln";
+			Log.Debug($"Analyze {filePath} ...");
+			Timing t = Timing.Start();
+
+			IReadOnlyList<string> assemblyPaths = Get(filePath);
+
+			NotificationReceiver receiver = new NotificationReceiver(modelItemsCallback);
+			NotificationSender sender = new NotificationSender(receiver);
+
+			try
+			{
+				await Task.Run(() =>
+				{
+					Parallel.ForEach(assemblyPaths, path => AnalyzeAssembly(path, sender));
+				});
+			}
+			finally
+			{
+				sender.Flush();
+			}
+
+			t.Log($"Analyzed {filePath}");
+		}
+
+
+		private static IReadOnlyList<string> Get(string filePath)
+		{
+			Timing t = Timing.Start();
 
 			IReadOnlyList<string> assemblyPaths;
 
@@ -26,32 +52,31 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			}
 			else
 			{
-				assemblyPaths = new[] {filePath};
+				assemblyPaths = new[] { filePath };
 			}
 
+			t.Log($"Parsed file {filePath} for {assemblyPaths.Count} assembly paths");
+			return assemblyPaths;
+		}
 
-			NotificationReceiver receiver = new NotificationReceiver(modelItemsCallback);
-			NotificationSender sender = new NotificationSender(receiver);
 
-			try
+		private static void AnalyzeAssembly(string assemblyPath, NotificationSender sender)
+		{
+			Log.Debug($"Analyze {assemblyPath} ...");
+			Timing t = Timing.Start();
+
+			if (File.Exists(assemblyPath))
 			{
-				await Task.Run(() =>
-				{
-					Parallel.ForEach(assemblyPaths, path =>
-					{
-						if (File.Exists(path))
-						{
-							AssemblyAnalyzer analyzer = new AssemblyAnalyzer();
+				AssemblyAnalyzer analyzer = new AssemblyAnalyzer();
 
-							analyzer.Analyze(path, sender);
-						}
-					});
-				});
+				analyzer.Analyze(assemblyPath, sender);
 			}
-			finally
+			else
 			{
-				sender.Flush();
+				Log.Warn($"Assembly path does not exists {assemblyPath}");
 			}
+
+			t.Log($"Analyzed assembly {assemblyPath}");
 		}
 	}
 }
