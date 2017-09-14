@@ -21,10 +21,14 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			//NotificationReceiver receiver = new NotificationReceiver(modelItemsCallback);
 			//NotificationSender sender = new NotificationSender(receiver);
-			
+
+			int maxParallel = (int)Math.Ceiling((Environment.ProcessorCount * 0.75) * 1.0);
+			var option = new ParallelOptions {MaxDegreeOfParallelism = maxParallel };
+
+
 			await Task.Run(() =>
 			{
-				Parallel.ForEach(assemblyPaths, path => AnalyzeAssembly(path, modelItemsCallback));
+				Parallel.ForEach(assemblyPaths, option, path => AnalyzeAssembly(path, modelItemsCallback));
 			});
 			
 			t.Log($"Analyzed {filePath}");
