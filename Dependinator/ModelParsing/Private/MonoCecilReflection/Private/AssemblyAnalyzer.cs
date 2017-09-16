@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows;
 using Dependinator.Utils;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -12,21 +11,16 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 {
 	internal class AssemblyAnalyzer
 	{
-		private Dictionary<string, ModelNode> sentNodes;
+
 		private readonly List<MethodBody> methodBodies = new List<MethodBody>();
 		private int memberCount = 0;
-		private int linkCount = 0;
-		private ModelItemsCallback callback;
+		private Sender sender;
 
 
 		public void Analyze(string assemblyPath, ModelItemsCallback modelItemsCallback)
 		{
-			callback = modelItemsCallback;
-			// The sender, which will send notifications to the receiver in the parent app-domain
-			sentNodes = new Dictionary<string, ModelNode>();
+			sender = new Sender(modelItemsCallback);
 			memberCount = 0;
-			linkCount = 0;
-
 
 			try
 			{
@@ -76,13 +70,13 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			typeNodes.ForEach(typeNode => AddTypeMembers(typeNode.type, typeNode.node));
 			t.Log($"Added {memberCount} members");
 
-			Log.Debug($"Before methods: Nodes: {sentNodes.Count}, Links: {linkCount}");
+			Log.Debug($"Before methods: Nodes: {sender.NodesCount}, Links: {sender.LinkCount}");
 			// Add type methods bodies
 			//Parallel.ForEach(methodBodies, method => AddMethodBodyLinks(method, sender));
 			methodBodies.ForEach(method => AddMethodBodyLinks(method));
 			t.Log($"Added method {methodBodies.Count} bodies");
 
-			Log.Debug($"Added {sentNodes.Count} nodes and {linkCount} links");
+			Log.Debug($"Added {sender.NodesCount} nodes and {sender.LinkCount} links");
 		}
 
 
@@ -95,7 +89,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			}
 
 			string name = Util.GetTypeFullName(type);
-			ModelNode typeNode = SendNode(name, JsonTypes.NodeType.Type);
+			ModelNode typeNode = sender.SendNode(name, JsonTypes.NodeType.Type);
 			return (type, typeNode);
 		}
 
@@ -109,7 +103,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			}
 
 			string name = Util.GetTypeFullName(type);
-			SendNode(name, JsonTypes.NodeType.Type);
+			sender.SendNode(name, JsonTypes.NodeType.Type);
 		}
 
 
@@ -170,7 +164,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			{
 				string memberName = Util.GetMemberFullName(memberInfo);
 
-				var memberNode = SendNode(memberName, JsonTypes.NodeType.Member);
+				var memberNode = sender.SendNode(memberName, JsonTypes.NodeType.Member);
 				memberCount++;
 
 				AddMemberLinks(memberNode, memberInfo);
@@ -279,8 +273,8 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return;
 			}
 
-			SendNode(methodName, JsonTypes.NodeType.Member);
-			SendLink(memberNode.Name, methodName);
+			sender.SendNode(methodName, JsonTypes.NodeType.Member);
+			sender.SendLink(memberNode.Name, methodName);
 
 			TypeReference returnType = method.ReturnType;
 			AddLinkToType(memberNode, returnType);
@@ -291,13 +285,13 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private void AddLinkToType(ModelNode sourceNode,TypeReference targetType)
+		private void AddLinkToType(ModelNode sourceNode, TypeReference targetType)
 		{
 			if (targetType.FullName == "System.Void"
-			    || targetType.IsGenericParameter
-			    || IsIgnoredSystemType(targetType)
-			    || IsGenericTypeArgument(targetType)
-			    || (targetType is ByReferenceType refType && refType.ElementType.IsGenericParameter))
+					|| targetType.IsGenericParameter
+					|| IsIgnoredSystemType(targetType)
+					|| IsGenericTypeArgument(targetType)
+					|| (targetType is ByReferenceType refType && refType.ElementType.IsGenericParameter))
 			{
 				return;
 			}
@@ -309,8 +303,8 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return;
 			}
 
-			SendNode(targetNodeName, JsonTypes.NodeType.Type);
-			SendLink(sourceNode.Name, targetNodeName);
+			sender.SendNode(targetNodeName, JsonTypes.NodeType.Type);
+			sender.SendLink(sourceNode.Name, targetNodeName);
 
 			if (targetType.IsGenericInstance)
 			{
@@ -320,67 +314,6 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private ModelNode SendNode(string name, string nodeType)
-		{
-			if (Util.IsCompilerGenerated(name))
-			{
-				Log.Warn($"Compiler generated node: {name}");
-			}
-
-			if (sentNodes.TryGetValue(name, out ModelNode node))
-			{
-				// Already sent this node
-				return node;
-			}
-
-			node = new ModelNode(new NodeName(name), nodeType, RectEx.Zero, 0, PointEx.Zero, null);
-			
-			sentNodes[name] = node;
-
-			//Log.Debug($"Send node: {name} {node.Type}");
-
-
-			if (name.Contains("<") || name.Contains(">"))
-			{
-				Log.Warn($"Send node: {name}      {nodeType}");
-			}
-
-			callback(new ModelItem(node, null));
-			return node;
-		}
-
-
-		public void SendLink(NodeName sourceNodeName, string targetNodeName)
-		{
-			if (Util.IsCompilerGenerated(sourceNodeName.FullName)
-			    || Util.IsCompilerGenerated(targetNodeName))
-			{
-				Log.Warn($"Compiler generated link: {sourceNodeName}->{targetNodeName}");
-			}
-
-			if (sourceNodeName.FullName == targetNodeName)
-			{
-				// Skipping link to self
-				return;
-			}
-
-			if (sourceNodeName.FullName.Contains("<") || sourceNodeName.FullName.Contains(">"))
-			{
-				Log.Warn($"Send link source: {sourceNodeName}");
-			}
-
-			if (targetNodeName.Contains("<") || targetNodeName.Contains(">"))
-			{
-				Log.Warn($"Send link target: {targetNodeName}");
-			}
-
-			ModelLink link = new ModelLink(sourceNodeName, new NodeName(targetNodeName));
-
-			linkCount++;
-
-			//Log.Debug($"Send link: {link.Source} {link.Target}");
-			callback(new ModelItem(null, link));
-		}
 
 
 		/// <summary>
@@ -399,11 +332,11 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			return
 				targetType.Namespace != null
 				&& (targetType.Namespace.StartsWithTxt("System")
-				    || targetType.Namespace.StartsWithTxt("Microsoft"));
+						|| targetType.Namespace.StartsWithTxt("Microsoft"));
 		}
 
 
-		
+
 
 		private class MethodBody
 		{

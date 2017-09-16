@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Dependinator.Utils;
 using Mono.Cecil;
@@ -33,11 +34,21 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 		public static string GetTypeFullName(TypeReference type)
 		{
+			//if (type.Name == "TEdge[]")
+			//{
+				
+			//}
+
 			if (type is TypeSpecification typeSpecification)
 			{
-				if (typeSpecification.ElementType is GenericInstanceType typeSpecification2)
+				if (type is ArrayType && typeSpecification.ElementType is GenericParameter)
 				{
-					return GetFixedFullName(typeSpecification2.ElementType.FullName);
+					return typeof(Array).FullName;
+				}
+
+				if (typeSpecification.ElementType is GenericInstanceType genericInstance)
+				{
+					return GetFixedFullName(genericInstance.ElementType.FullName);
 				}
 
 				return GetFixedFullName(typeSpecification.ElementType.FullName);

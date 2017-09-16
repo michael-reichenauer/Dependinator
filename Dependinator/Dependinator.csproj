@@ -145,6 +145,7 @@
     <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\AssemblyAnalyzer.cs" />
     <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\Reflection.cs" />
     <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\ReflectionService.cs" />
+    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\Sender.cs" />
     <Compile Include="ModelParsing\Private\SolutionFileParsing\ProjectInSolution.cs" />
     <Compile Include="ModelParsing\Private\SolutionFileParsing\ReflectionExtensions.cs" />
     <Compile Include="ModelParsing\Private\SolutionFileParsing\Solution.cs" />
