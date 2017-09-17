@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using Dependinator.ModelParsing;
-using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items.Private;
-using Dependinator.Utils;
 using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -142,11 +140,14 @@ namespace Dependinator.ModelViewing.Private.Items
 				Offset = (Point)((Vector)(Offset + position) * scaleFactor - position);
 			}
 
-			
+
 
 			UpdateAndNotifyAll();
 
-			ZoomChildren();
+			if (owner?.CanShow ?? true)
+			{
+				ZoomChildren();
+			}
 		}
 
 
@@ -329,22 +330,32 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		public override string ToString() => owner?.ToString() ?? NodeName.Root.ToString();
 
+		public int ChildItemsCount()
+		{
+			return itemsSource.GetAllItems().Count();
+		}
 
-		//public int AllItemsCount()
-		//{
-		//	int count = itemsSource.GetAll<IItem>().Count;
+		public int ShownChildItemsCount()
+		{
+			return itemsSource.GetAllItems().Count(item => item.IsShowing);
+		}
 
-		//	count += canvasChildren.Sum(canvas => canvas.AllItemsCount());
-		//	return count;
-		//}
 
-		//public int ShownItemsCount()
-		//{
-		//	int count = itemsSource.GetAll<IItem>().Count(i => i.IsShowing);
+		public int DescendantsItemsCount()
+		{
+			int count = itemsSource.GetAllItems().Count();
 
-		//	count += canvasChildren.Sum(canvas => canvas.ShownItemsCount());
-		//	return count;
-		//}
+			count += canvasChildren.Sum(canvas => canvas.DescendantsItemsCount());
+			return count;
+		}
+
+		public int ShownDescendantsItemsCount()
+		{
+			int count = itemsSource.GetAllItems().Count(item => item.IsShowing);
+
+			count += canvasChildren.Sum(canvas => canvas.ShownDescendantsItemsCount());
+			return count;
+		}
 
 
 		private Rect GetItemsCanvasViewArea()

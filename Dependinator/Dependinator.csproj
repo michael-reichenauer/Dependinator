@@ -259,7 +259,6 @@
     <Compile Include="ModelParsing\Private\DotNetReflection\Private\Globals.cs" />
     <Compile Include="ModelViewing\Links\Private\ILinkSegmentService.cs" />
     <Compile Include="ModelViewing\Links\ILineViewModelService.cs" />
-    <Compile Include="ModelViewing\Links\Private\LinkSegmentOld.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkSegmentService.cs" />
     <Compile Include="ModelViewing\Links\Private\LineViewModelService.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkLineBounds.cs" />
@@ -275,7 +274,6 @@
     <Compile Include="ModelViewing\Nodes\MemberNodeViewModel.cs" />
     <Compile Include="ModelParsing\NodeName.cs" />
     <Compile Include="ModelParsing\Private\DotNetReflection\IReflectionService.cs" />
-    <Compile Include="ModelViewing\Links\LinkOld.cs" />
     <Compile Include="ModelViewing\Links\NodeLinks.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeComparer.cs" />
     <Compile Include="ModelViewing\Private\Items\ItemsView.xaml.cs">
@@ -288,10 +286,8 @@
     <Compile Include="ModelViewing\Nodes\CompositeNodeViewModel.cs" />
     <Compile Include="ModelParsing\Private\ParserService.cs" />
     <Compile Include="ModelParsing\IParserService.cs" />
-    <Compile Include="ModelViewing\Links\LinkLineOld.cs" />
     <Compile Include="ModelViewing\Links\LinkLineViewModel.cs" />
     <Compile Include="ModelViewing\Private\Items\ItemViewModel.cs" />
-    <Compile Include="ModelViewing\Nodes\NodeOld.cs" />
     <Compile Include="ModelViewing\Private\Items\IItem.cs" />
     <Compile Include="ModelViewing\Private\IModelViewService.cs" />
     <Compile Include="ModelViewing\Private\ModelViewService.cs" />

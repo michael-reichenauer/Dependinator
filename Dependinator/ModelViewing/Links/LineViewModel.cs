@@ -28,7 +28,9 @@ namespace Dependinator.ModelViewing.Links
 			TrackSourceOrTargetChanges();
 		}
 
-		public override bool CanShow => line.Source.CanShow & line.Target.CanShow;
+		public override bool CanShow => 
+			ItemScale > 0.20 &&  ItemScale < 40 
+			&& line.Source.CanShow & line.Target.CanShow;
 
 		public double LineWidth => lineViewModelService.GetLineWidth(line);
 

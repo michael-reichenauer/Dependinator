@@ -5,6 +5,7 @@ namespace Dependinator.ModelViewing.Private.Items
 	internal interface IItem
 	{
 		Rect ItemBounds { get; }
+		double Priority { get; }
 		bool CanShow { get; }
 		bool IsShowing { get; }
 

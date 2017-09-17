@@ -22,6 +22,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		protected NodeViewModel(INodeViewModelService nodeViewModelService, Node node)
 		{
+			Priority = 1;
 			this.nodeViewModelService = nodeViewModelService;
 			this.Node = node;
 
@@ -82,7 +83,11 @@ namespace Dependinator.ModelViewing.Nodes
 		public string ItemsToolTip =>
 			"\n" +
 			$"Rect: {ItemBounds.TS()}\n" +
-			$"Scale {ItemScale}\n";
+			$"Scale {ItemScale}, ChildrenScale: {Node.ItemsCanvas?.Scale}\n" +
+			$"Items: {Node.ItemsCanvas?.ShownChildItemsCount()} ({Node.ItemsCanvas?.ChildItemsCount()})\n" +
+			$"ShownDescendantsItems {Node.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.ItemsCanvas?.DescendantsItemsCount()})\n" +
+			$"ParentItems {Node.Parent.ItemsCanvas.ShownChildItemsCount()} ({Node.Parent.ItemsCanvas.ChildItemsCount()})\n" +
+			$"RootShownDescendantsItems {Node.Root.ItemsCanvas.ShownDescendantsItemsCount()} ({Node.Root.ItemsCanvas.DescendantsItemsCount()})";
 
 		public string Color => RectangleBrush.AsString();
 

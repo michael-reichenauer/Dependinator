@@ -38,15 +38,15 @@ namespace Dependinator.MainWindowViews
 			get
 			{
 				var source = PresentationSource.FromVisual(Window) as System.Windows.Interop.HwndSource;
-				System.Windows.Forms.IWin32Window win = new OldWindow(source.Handle);
+				System.Windows.Forms.IWin32Window win = new Win32WindowHandle(source.Handle);
 				return win;
 			}
 		}
 
-		private class OldWindow : System.Windows.Forms.IWin32Window
+		private class Win32WindowHandle : System.Windows.Forms.IWin32Window
 		{
 			private readonly IntPtr _handle;
-			public OldWindow(IntPtr handle)
+			public Win32WindowHandle(IntPtr handle)
 			{
 				_handle = handle;
 			}

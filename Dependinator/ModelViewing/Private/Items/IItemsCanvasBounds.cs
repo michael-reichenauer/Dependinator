@@ -7,5 +7,7 @@ namespace Dependinator.ModelViewing.Private.Items
 		Rect ItemBounds { get; }
 
 		bool IsShowing { get; }
+
+		bool CanShow { get; }
 	}
 }

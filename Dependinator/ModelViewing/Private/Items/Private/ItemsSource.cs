@@ -104,6 +104,8 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 			Remove(allItems);
 		}
 
+		public IEnumerable<IItem> GetAllItems() => viewItemsTree;
+
 
 		private void Add(IEnumerable<IItem> items)
 		{
@@ -116,7 +118,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 				item.ItemState = new ViewItem(itemId, item.ItemBounds);
 				viewItems[itemId] = item;
 
-				viewItemsTree.Insert(item, item.ItemBounds, 0);
+				viewItemsTree.Insert(item, item.ItemBounds, item.Priority);
 
 				currentBounds.Union(item.ItemBounds);
 
@@ -157,7 +159,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 				Rect newItemBounds = item.ItemBounds;
 				item.ItemState = new ViewItem(oldViewItem.ItemId, newItemBounds);
 
-				viewItemsTree.Insert(item, newItemBounds, 0);
+				viewItemsTree.Insert(item, newItemBounds, item.Priority);
 				//Log.Debug($"Updated {id} count:{viewItemsTree.Count()}");
 
 				if (oldItemBounds.IntersectsWith(LastViewAreaQuery)

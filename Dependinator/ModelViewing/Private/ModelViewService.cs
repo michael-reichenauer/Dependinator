@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using System.Windows;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing.Nodes;
@@ -74,6 +75,9 @@ namespace Dependinator.ModelViewing.Private
 			Node root = modelService.Root;
 			root.ItemsCanvas.Scale = settings.Scale;
 			root.ItemsCanvas.Offset = settings.Offset;
+
+			root.ItemsCanvas.Scale = 1;
+			root.ItemsCanvas.Offset = new Point(0, 0);
 		}
 	}
 }

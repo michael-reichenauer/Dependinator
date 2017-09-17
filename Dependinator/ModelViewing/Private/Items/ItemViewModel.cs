@@ -16,10 +16,13 @@ namespace Dependinator.ModelViewing.Private.Items
 		public double ItemZIndex { get => Get(); set => Set(value); }
 
 
+		public double Priority { get; set; }
+
 		public double ItemTop => ItemBounds.Top;
 		public double ItemLeft => ItemBounds.Left;
 		public double ItemWidth => ItemBounds.Width;
 		public double ItemHeight => ItemBounds.Height;
+
 
 		public Rect ItemBounds
 		{
