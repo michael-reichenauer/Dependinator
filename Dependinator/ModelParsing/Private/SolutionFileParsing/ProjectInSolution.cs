@@ -10,9 +10,12 @@ namespace Dependinator.ModelParsing.Private.SolutionFileParsing
 	/// </summary>
 	internal class ProjectInSolution
 	{
+		private readonly string uniqueProjectName;
+
 		public string ProjectName { get; }
 		public string ProjectType { get; }
 		public string RelativePath { get; }
+		public string UniqueProjectName => uniqueProjectName;
 
 		public bool IsSolutionFolder => ProjectType.IsSameIgnoreCase("SolutionFolder");
 
@@ -20,6 +23,7 @@ namespace Dependinator.ModelParsing.Private.SolutionFileParsing
 		public ProjectInSolution(object instance)
 		{
 			// Microsoft.Build.Construction.ProjectInSolution
+			uniqueProjectName = instance.GetField<string>(nameof(uniqueProjectName));
 			ProjectName = instance.GetProperty<string>(nameof(ProjectName));
 			ProjectType = instance.GetProperty<object>(nameof(ProjectType)).ToString();
 			RelativePath = instance.GetProperty<string>(nameof(RelativePath));

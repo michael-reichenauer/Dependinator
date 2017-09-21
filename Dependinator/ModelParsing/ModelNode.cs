@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Windows;
 using Dependinator.Utils;
 
@@ -11,7 +12,8 @@ namespace Dependinator.ModelParsing
 			Rect bounds,
 			double itemsScale,
 			Point itemsOffset,
-			string color)
+			string color,
+			string rootGroup)
 		{
 			Name = name;
 			NodeType = nodeType;
@@ -19,6 +21,7 @@ namespace Dependinator.ModelParsing
 			ItemsScale = itemsScale;
 			ItemsOffset = itemsOffset;
 			Color = color;
+			RootGroup = rootGroup;
 
 			IsEqualWhenSame(Name);
 		}
@@ -29,6 +32,7 @@ namespace Dependinator.ModelParsing
 		public double ItemsScale { get; }
 		public Point ItemsOffset { get; }
 		public string Color { get; }
+		public string RootGroup { get; }
 
 		public override string ToString() => Name.ToString();
 	}

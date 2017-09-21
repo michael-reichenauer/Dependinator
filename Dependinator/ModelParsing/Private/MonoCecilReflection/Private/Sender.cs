@@ -7,8 +7,10 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 {
 	internal class Sender
 	{
+
 		private readonly ModelItemsCallback callback;
-		private Dictionary<string, ModelNode> sentNodes = new Dictionary<string, ModelNode>();
+
+		private readonly Dictionary<string, ModelNode> sentNodes = new Dictionary<string, ModelNode>();
 
 
 		public int NodesCount => sentNodes.Count;
@@ -21,7 +23,19 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		public ModelNode SendNode(string name, string nodeType)
+		public ModelNode SendDefinedNode(string name, string nodeType, string rootGroup)
+		{
+			return SendNode(name, nodeType, rootGroup);
+		}
+
+
+		//public ModelNode SendReferencedNode(string name, string nodeType)
+		//{
+		//	return SendNode(name, nodeType, null);
+		//}
+
+
+		private ModelNode SendNode(string name, string nodeType, string rootGroup)
 		{
 			if (Util.IsCompilerGenerated(name))
 			{
@@ -34,7 +48,13 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return node;
 			}
 
-			node = new ModelNode(new NodeName(name), nodeType, RectEx.Zero, 0, PointEx.Zero, null);
+
+			NodeName nodeName = new NodeName(name);
+			if (nodeName.Name == "IApplicationSettingsService")
+			{
+				
+			}
+			node = new ModelNode(nodeName, nodeType, RectEx.Zero, 0, PointEx.Zero, null, rootGroup);
 
 			sentNodes[name] = node;
 

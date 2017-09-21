@@ -10,51 +10,25 @@ namespace Dependinator.ModelParsing.Private.SolutionFileParsing
 	/// </summary>
 	internal class Solution
 	{
-		private readonly string solutionFilePath;
-		private readonly string solutionDirectory;
-		private readonly IReadOnlyList<ProjectInSolution> projects;
-
-
 		public Solution(string solutionFilePath)
 		{
-			this.solutionFilePath = solutionFilePath;
+			this.SolutionFilePath = solutionFilePath;
 
-			projects = GetProjects();
-			solutionDirectory = Path.GetDirectoryName(solutionFilePath);
+			Projects = GetProjects();
+			SolutionDirectory = Path.GetDirectoryName(solutionFilePath);
 		}
+
+
+		public string SolutionFilePath { get; }
+
+		public IReadOnlyList<ProjectInSolution> Projects { get; }
+
+		public string SolutionDirectory { get; }
 
 
 		public IEnumerable<string> GetProjectFilePath()
 		{
-			return projects.Select(project => Path.Combine(solutionDirectory, project.RelativePath));
-		}
-
-
-		public IEnumerable<string> GetProjectOutputPaths(string configuration)
-		{
-			return projects.Select(project => OutputPath(project, configuration));
-		}
-
-
-		private string OutputPath(
-			ProjectInSolution project, 
-			string configuration)
-		{
-			string pathWithoutExtension = Path.Combine(
-				solutionDirectory, 
-				Path.GetDirectoryName(project.RelativePath), 
-				"bin", 
-				configuration,
-				$"{project.ProjectName}");
-
-			if (File.Exists($"{pathWithoutExtension}.exe"))
-			{
-				return $"{pathWithoutExtension}.exe";
-			}
-			else
-			{
-				return $"{pathWithoutExtension}.dll";
-			}
+			return Projects.Select(project => Path.Combine(SolutionDirectory, project.RelativePath));
 		}
 
 
@@ -62,13 +36,15 @@ namespace Dependinator.ModelParsing.Private.SolutionFileParsing
 		{
 			SolutionParser solutionParser = new SolutionParser();
 
-			using (StreamReader streamReader = new StreamReader(solutionFilePath))
+			using (StreamReader streamReader = new StreamReader(SolutionFilePath))
 			{
 				solutionParser.SolutionReader = streamReader;
 				solutionParser.ParseSolution();
 			}
 
-			return solutionParser.Projects.Where(p => !p.IsSolutionFolder).ToList();
+			IReadOnlyList<ProjectInSolution> solutionParserProjects = solutionParser.Projects;
+
+			return solutionParserProjects.Where(p => !p.IsSolutionFolder).ToList();
 		}
 	}
 }

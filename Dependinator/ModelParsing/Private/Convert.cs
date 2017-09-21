@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 
@@ -23,7 +25,8 @@ namespace Dependinator.ModelParsing.Private
 			node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
 			node.ItemsScale,
 			node.ItemsOffset != null ? Point.Parse(node.ItemsOffset) : PointEx.Zero,
-			node.Color);
+			node.Color,
+			node.Group);
 
 
 		private static JsonTypes.Node ToJsonNode(ModelNode node) => new JsonTypes.Node
@@ -33,7 +36,8 @@ namespace Dependinator.ModelParsing.Private
 			Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
 			ItemsScale = node.ItemsScale,
 			ItemsOffset = node.ItemsOffset != PointEx.Zero ? node.ItemsOffset.AsString() : null,
-			Color = node.Color
+			Color = node.Color,
+			Group = node.RootGroup
 		};
 
 

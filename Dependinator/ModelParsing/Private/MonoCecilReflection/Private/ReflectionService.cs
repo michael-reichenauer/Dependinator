@@ -17,7 +17,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			Log.Debug($"Analyze {filePath} ...");
 			Timing t = Timing.Start();
 
-			IReadOnlyList<string> assemblyPaths = Get(filePath);
+			IReadOnlyList<AssemblyInfo> infos = Get(filePath);
 
 			//NotificationReceiver receiver = new NotificationReceiver(modelItemsCallback);
 			//NotificationSender sender = new NotificationSender(receiver);
@@ -28,28 +28,33 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			await Task.Run(() =>
 			{
-				Parallel.ForEach(assemblyPaths, option, path => AnalyzeAssembly(path, modelItemsCallback));
+				//Parallel.ForEach(infos, option, info => AnalyzeAssembly(
+				//	info.AssemblyPath, info.RootGroup, modelItemsCallback));
+
+				infos.ForEach(info => AnalyzeAssembly(
+					info.AssemblyPath, info.RootGroup, modelItemsCallback));
+
 			});
 			
 			t.Log($"Analyzed {filePath}");
 		}
 
 
-		private static IReadOnlyList<string> Get(string filePath)
+		private static IReadOnlyList<AssemblyInfo> Get(string filePath)
 		{
 			Timing t = Timing.Start();
 
-			IReadOnlyList<string> assemblyPaths;
+			IReadOnlyList<AssemblyInfo> assemblyPaths;
 
 			if (Path.GetExtension(filePath).IsSameIgnoreCase(".sln"))
 			{
 				Solution solution = new Solution(filePath);
 
-				assemblyPaths = solution.GetProjectOutputPaths("Debug").ToList();
+				assemblyPaths = GetAssemblyInfos(solution);
 			}
 			else
 			{
-				assemblyPaths = new[] { filePath };
+				assemblyPaths = new[] { new AssemblyInfo(filePath, null) };
 			}
 
 			t.Log($"Parsed file {filePath} for {assemblyPaths.Count} assembly paths");
@@ -57,7 +62,10 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private static void AnalyzeAssembly(string assemblyPath, ModelItemsCallback modelItemsCallback)
+		private static void AnalyzeAssembly(
+			string assemblyPath, 
+			string rootGroup, 
+			ModelItemsCallback modelItemsCallback)
 		{
 			Log.Debug($"Analyze {assemblyPath} ...");
 			Timing t = Timing.Start();
@@ -66,7 +74,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			{
 				AssemblyAnalyzer analyzer = new AssemblyAnalyzer();
 
-				analyzer.Analyze(assemblyPath, modelItemsCallback);
+				analyzer.Analyze(assemblyPath, rootGroup, modelItemsCallback);
 			}
 			else
 			{
@@ -74,6 +82,67 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			}
 
 			t.Log($"Analyzed assembly {assemblyPath}");
+		}
+
+
+		private static IReadOnlyList<AssemblyInfo> GetAssemblyInfos(Solution solution)
+		{
+			IReadOnlyList<ProjectInSolution> projects = solution.Projects;
+
+			return projects.Select(project => GetAssemblyInfo(solution, project)).ToList();
+		}
+
+
+		private static AssemblyInfo GetAssemblyInfo(Solution solution, ProjectInSolution project)
+		{
+			string outputPath = GetOutputPath(solution, project);
+
+			string solutionName = Path.GetFileName(solution.SolutionDirectory);
+			string projectName = project.UniqueProjectName.Replace("\\", ".");
+			string rootGroup = $"{solutionName}.{projectName}";
+
+			return new AssemblyInfo(outputPath, rootGroup);
+		}
+
+
+		private static string GetOutputPath(Solution solution, ProjectInSolution project)
+		{
+			string projectDirectory = Path.GetDirectoryName(project.RelativePath);
+
+			string pathWithoutExtension = Path.Combine(
+				solution.SolutionDirectory,
+				projectDirectory,
+				"bin",
+				"Debug",
+				$"{project.ProjectName}");
+
+			if (File.Exists($"{pathWithoutExtension}.exe"))
+			{
+				return $"{pathWithoutExtension}.exe";
+			}
+			else
+			{
+				return $"{pathWithoutExtension}.dll";
+			}
+		}
+
+
+
+		private class AssemblyInfo
+		{
+			public string AssemblyPath { get; }
+
+			public string RootGroup { get; }
+
+
+			public AssemblyInfo(string assemblyPath, string rootGroup)
+			{
+				AssemblyPath = assemblyPath;
+				RootGroup = rootGroup;
+			}
+
+
+			public override string ToString() => AssemblyPath;
 		}
 	}
 }

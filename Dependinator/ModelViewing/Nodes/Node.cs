@@ -32,6 +32,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public NodeId Id { get; }
 		public NodeName Name { get; }
+		public string Group { get; set; }
 
 		public Node Parent { get; private set; }
 		public Node Root { get; private set; }

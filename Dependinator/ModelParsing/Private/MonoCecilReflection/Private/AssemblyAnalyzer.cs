@@ -11,14 +11,17 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 {
 	internal class AssemblyAnalyzer
 	{
-
 		private readonly List<MethodBody> methodBodies = new List<MethodBody>();
 		private int memberCount = 0;
 		private Sender sender;
+		private string rootGroup;
 
-
-		public void Analyze(string assemblyPath, ModelItemsCallback modelItemsCallback)
+		public void Analyze(
+			string assemblyPath, 
+			string assemblyRootGroup,
+			ModelItemsCallback modelItemsCallback)
 		{
+			rootGroup = assemblyRootGroup;
 			sender = new Sender(modelItemsCallback);
 			memberCount = 0;
 
@@ -58,7 +61,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			// Add type nodes
 			List<(TypeDefinition type, ModelNode node)> typeNodes = assemblyTypes
-				.Select(type => AddType(type))
+				.SelectMany(type => GetAssemblyTypes(type))
 				.ToList();
 			t.Log($"Added {typeNodes.Count} types");
 
@@ -80,30 +83,23 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private (TypeDefinition type, ModelNode node) AddType(TypeDefinition type)
+		private IEnumerable<(TypeDefinition type, ModelNode node)> GetAssemblyTypes(
+			TypeDefinition type)
 		{
-			if (type.DeclaringType != null)
-			{
-				// The type is a nested type. Make sure the parent type is sent 
-				AddDeclaringType(type.DeclaringType);
-			}
-
 			string name = Util.GetTypeFullName(type);
-			ModelNode typeNode = sender.SendNode(name, JsonTypes.NodeType.Type);
-			return (type, typeNode);
-		}
+			ModelNode typeNode = sender.SendDefinedNode(name, JsonTypes.NodeType.Type, rootGroup);
 
+			yield return (type, typeNode);
 
-		private void AddDeclaringType(TypeDefinition type)
-		{
-			if (type.DeclaringType != null)
+			// Iterate all nested types as well
+			foreach (var nestedType in type.NestedTypes
+				.Where(member => !Util.IsCompilerGenerated(member.Name)))
 			{
-				// The type is a nested type. Make sure the parent type is sent 
-				AddDeclaringType(type.DeclaringType);
+				foreach (var types in GetAssemblyTypes(nestedType))
+				{
+					yield return types;
+				}
 			}
-
-			string name = Util.GetTypeFullName(type);
-			sender.SendNode(name, JsonTypes.NodeType.Type);
 		}
 
 
@@ -146,10 +142,6 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				type.Methods
 					.Where(member => !Util.IsCompilerGenerated(member.Name))
 					.ForEach(member => AddMember(member, typeNode));
-
-				type.NestedTypes
-					.Where(member => !Util.IsCompilerGenerated(member.Name))
-					.ForEach(member => AddType(member));
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
@@ -164,7 +156,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			{
 				string memberName = Util.GetMemberFullName(memberInfo);
 
-				var memberNode = sender.SendNode(memberName, JsonTypes.NodeType.Member);
+				var memberNode = sender.SendDefinedNode(memberName, JsonTypes.NodeType.Member, rootGroup);
 				memberCount++;
 
 				AddMemberLinks(memberNode, memberInfo);
@@ -273,7 +265,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return;
 			}
 
-			sender.SendNode(methodName, JsonTypes.NodeType.Member);
+			//sender.SendReferencedNode(methodName, JsonTypes.NodeType.Member);
 			sender.SendLink(memberNode.Name, methodName);
 
 			TypeReference returnType = method.ReturnType;
@@ -303,7 +295,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return;
 			}
 
-			sender.SendNode(targetNodeName, JsonTypes.NodeType.Type);
+			//sender.SendReferencedNode(targetNodeName, JsonTypes.NodeType.Type);
 			sender.SendLink(sourceNode.Name, targetNodeName);
 
 			if (targetType.IsGenericInstance)

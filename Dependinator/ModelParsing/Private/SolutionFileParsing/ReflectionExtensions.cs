@@ -55,6 +55,14 @@ namespace Dependinator.ModelParsing.Private.SolutionFileParsing
 			return (T)value;
 		}
 
+		public static T GetField<T>(this object instance, string name)
+		{
+			FieldInfo field = GetField(instance, name);
+
+			object value = field.GetValue(instance);
+
+			return (T)value;
+		}
 
 		public static void SetProperty(this object instance, string name, object value)
 		{
@@ -76,6 +84,12 @@ namespace Dependinator.ModelParsing.Private.SolutionFileParsing
 		{
 			return instance.GetType()
 				.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Instance);
+		}
+
+		private static FieldInfo GetField(object instance, string name)
+		{
+			return instance.GetType()
+				.GetField(name, BindingFlags.NonPublic | BindingFlags.Instance);
 		}
 	}
 }

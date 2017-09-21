@@ -33,8 +33,18 @@ namespace Dependinator.ModelViewing.Links
 				return;
 			}
 
-			Node source = GetNode(modelLink.Source);
-			Node target = GetNode(modelLink.Target);
+			if (!model.TryGetNode(modelLink.Source, out Node source))
+			{
+				// Fix ########################
+				return;
+			}
+
+			if (!model.TryGetNode(modelLink.Target, out Node target))
+			{
+				// Fix ########################
+				return;
+			}
+
 
 			if (TryGetLink(source, target, out Link link))
 			{
@@ -150,11 +160,15 @@ namespace Dependinator.ModelViewing.Links
 			line.Source == line.Target.Parent ? line.Source : line.Source.Parent;
 
 
-		private Node GetNode(NodeName nodeName)
-		{
-			Node node = model.Node(nodeName);
-			return node;
-		}
+		//private bool TryGetNode(NodeName nodeName, out Node node)
+		//{
+		//	if (model.TryGetNode(nodeName, out node))
+		//	{
+		//		return true;
+		//	}
+
+		//	return node;
+		//}
 
 
 		private static bool TryGetLine(LinkSegment segment, out Line line)

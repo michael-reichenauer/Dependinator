@@ -29,25 +29,28 @@ namespace Dependinator.ModelViewing.Private
 		public void UpdateNode(ModelNode modelNode, int stamp)
 		{
 			NodeName name = modelNode.Name;
-
+			
 			if (model.TryGetNode(name, out Node existingNode))
 			{
 				// TODO: Check node properties as well and update if changed
 				existingNode.Stamp = stamp;
 
-				if (existingNode.NodeType.AsString() != modelNode.NodeType)
+				if (existingNode.NodeType != NodeType.Referenced)
 				{
-					existingNode.NodeType = new NodeType(modelNode.NodeType);
-					UpdateNodeType(existingNode);
-				}
+					if (existingNode.NodeType.AsString() != modelNode.NodeType)
+					{
+						existingNode.NodeType = new NodeType(modelNode.NodeType);
+						UpdateNodeType(existingNode);
+					}
 
-				return;
+					return;
+				}
 			}
 
 			NodeName parentName = name.ParentName;
-			Node parentNode = GetNode(parentName);
+			Node parentNode = GetNode(parentName, modelNode.RootGroup);
 
-			Node node = new Node(name)
+			Node node = existingNode ?? new Node(name)
 			{
 				Stamp = stamp,
 				NodeType = new NodeType(modelNode.NodeType),
@@ -153,7 +156,6 @@ namespace Dependinator.ModelViewing.Private
 			}
 
 			t.Log($"{nodes.Count} nodes");
-
 		}
 
 
@@ -219,7 +221,7 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private Node GetNode(NodeName nodeName)
+		private Node GetNode(NodeName nodeName, string rootGroup)
 		{
 			if (model.TryGetNode(nodeName, out Node node))
 			{
@@ -228,11 +230,25 @@ namespace Dependinator.ModelViewing.Private
 
 			// The node not yet added. We need the parent to add the node
 			NodeName parentName = nodeName.ParentName;
-			Node parent = GetNode(parentName);
-			node = new Node(nodeName);
-			node.NodeType = NodeType.NameSpace;
-			AddNode(node, parent);
-			return node;
+
+			if (rootGroup != null && parentName == NodeName.Root)
+			{
+				parentName = new NodeName(rootGroup).ParentName;
+
+				Node parent = GetNode(parentName, null);
+				node = new Node(nodeName);
+				node.NodeType = NodeType.NameSpace;
+				AddNode(node, parent);
+				return node;
+			}
+			else
+			{
+				Node parent = GetNode(parentName, rootGroup);
+				node = new Node(nodeName);
+				node.NodeType = NodeType.NameSpace;
+				AddNode(node, parent);
+				return node;
+			}
 		}
 
 
