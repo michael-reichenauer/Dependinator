@@ -98,9 +98,21 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			string outputPath = GetOutputPath(solution, project);
 
 			string solutionName = Path.GetFileName(solution.SolutionDirectory);
-			string projectName = project.UniqueProjectName.Replace("\\", ".");
-			string rootGroup = $"{solutionName}.{projectName}";
+			string projectName = project.UniqueProjectName;
 
+			string rootGroup = solutionName;
+
+			int index = projectName.LastIndexOf("\\", StringComparison.Ordinal);
+			if (index > -1)
+			{
+				projectName = projectName.Substring(0, index);
+				rootGroup = $"{solutionName}.{projectName}";
+			}
+
+			rootGroup = rootGroup.Replace("\\", ".");
+			rootGroup = rootGroup.Replace("_", ".");
+
+			Log.Debug($"{projectName} in root group {rootGroup} was {project.UniqueProjectName}");
 			return new AssemblyInfo(outputPath, rootGroup);
 		}
 

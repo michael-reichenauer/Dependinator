@@ -26,7 +26,7 @@ namespace Dependinator.ModelViewing.Private
 			node.ViewModel?.ItemsViewModel?.ItemsCanvas?.Scale ?? node.Scale,
 			node.ViewModel?.ItemsViewModel?.ItemsCanvas?.Offset ?? node.Offset,
 			node.ViewModel?.Color ?? node.Color,
-			node.Group);
+			node.RootGroup);
 
 
 		private static ModelLink ToDataLink(Link link) => new ModelLink(

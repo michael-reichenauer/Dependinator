@@ -844,7 +844,7 @@ namespace Dependinator.ModelViewing.Links.Private
 
 			List<LinkGroup> linkGroups = new List<LinkGroup>();
 
-			// Group links by grouping them based on node at source level
+			// RootGroup links by grouping them based on node at source level
 			var groupBySources = links.GroupBy(link => NodeAtLevel(link.Source, sourceLevel));
 			foreach (var groupBySource in groupBySources)
 			{

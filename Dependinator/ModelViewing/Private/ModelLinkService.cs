@@ -1,20 +1,22 @@
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelParsing;
+using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.Nodes;
-using Dependinator.ModelViewing.Private;
+using Dependinator.Utils;
 
-namespace Dependinator.ModelViewing.Links
+
+namespace Dependinator.ModelViewing.Private
 {
-	internal class LinkService : ILinkService
+	internal class ModelLinkService : IModelLinkService
 	{
 		private readonly ILinkSegmentService linkSegmentService;
 		private readonly ILineViewModelService lineViewModelService;
 		private readonly Model model;
 
 
-		public LinkService(
+		public ModelLinkService(
 			ILinkSegmentService linkSegmentService,
 			ILineViewModelService lineViewModelService,
 			Model model)
@@ -35,13 +37,13 @@ namespace Dependinator.ModelViewing.Links
 
 			if (!model.TryGetNode(modelLink.Source, out Node source))
 			{
-				// Fix ########################
+				Log.Warn($"Could not find source node {modelLink.Source}");
 				return;
 			}
 
 			if (!model.TryGetNode(modelLink.Target, out Node target))
 			{
-				// Fix ########################
+				Log.Warn($"Could not find source node {modelLink.Target}");
 				return;
 			}
 

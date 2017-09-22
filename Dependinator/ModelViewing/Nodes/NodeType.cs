@@ -8,7 +8,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public static readonly NodeType NameSpace = new NodeType(JsonTypes.NodeType.NameSpace);
 		public static readonly NodeType Type = new NodeType(JsonTypes.NodeType.Type);
 		public static readonly NodeType Member = new NodeType(JsonTypes.NodeType.Member);
-		public static readonly NodeType Referenced = new NodeType("Referenced");
+		//public static readonly NodeType Referenced = new NodeType("Referenced");
 
 		private readonly string typeName;
 

@@ -265,7 +265,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return;
 			}
 
-			//sender.SendReferencedNode(methodName, JsonTypes.NodeType.Member);
+			sender.SendReferencedNode(methodName, JsonTypes.NodeType.Member);
 			sender.SendLink(memberNode.Name, methodName);
 
 			TypeReference returnType = method.ReturnType;
@@ -295,7 +295,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return;
 			}
 
-			//sender.SendReferencedNode(targetNodeName, JsonTypes.NodeType.Type);
+			sender.SendReferencedNode(targetNodeName, JsonTypes.NodeType.Type);
 			sender.SendLink(sourceNode.Name, targetNodeName);
 
 			if (targetType.IsGenericInstance)

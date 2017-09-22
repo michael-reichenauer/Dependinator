@@ -9,60 +9,62 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.Private
 {
-	internal class NodeService : INodeService
+	internal class ModelNodeService : IModelNodeService
 	{
 		private readonly INodeViewModelService nodeViewModelService;
-		private readonly ILinkService linkService;
+		private readonly IModelLinkService modelLinkService;
 		private readonly Model model;
 
 
-		public NodeService(
+		public ModelNodeService(
 			Model model,
-			ILinkService linkService,
+			IModelLinkService modelLinkService,
 			INodeViewModelService nodeViewModelService)
 		{
 			this.model = model;
-			this.linkService = linkService;
+			this.modelLinkService = modelLinkService;
 			this.nodeViewModelService = nodeViewModelService;
 		}
 
 		public void UpdateNode(ModelNode modelNode, int stamp)
 		{
 			NodeName name = modelNode.Name;
-			
+
 			if (model.TryGetNode(name, out Node existingNode))
 			{
 				// TODO: Check node properties as well and update if changed
 				existingNode.Stamp = stamp;
-
-				if (existingNode.NodeType != NodeType.Referenced)
+				
+				MoveNodeIfNeeded(existingNode, modelNode.RootGroup);
+				
+				if (existingNode.NodeType.AsString() != modelNode.NodeType)
 				{
-					if (existingNode.NodeType.AsString() != modelNode.NodeType)
-					{
-						existingNode.NodeType = new NodeType(modelNode.NodeType);
-						UpdateNodeType(existingNode);
-					}
-
-					return;
+					existingNode.NodeType = new NodeType(modelNode.NodeType);
+					UpdateNodeType(existingNode);
 				}
+
+				return;
 			}
 
 			NodeName parentName = name.ParentName;
 			Node parentNode = GetNode(parentName, modelNode.RootGroup);
 
-			Node node = existingNode ?? new Node(name)
+			Node node = new Node(name)
 			{
 				Stamp = stamp,
 				NodeType = new NodeType(modelNode.NodeType),
 				Bounds = modelNode.Bounds,
 				Scale = modelNode.ItemsScale,
 				Offset = modelNode.ItemsOffset,
-				Color = modelNode.Color
+				Color = modelNode.Color,
+				RootGroup = modelNode.RootGroup
 			};
 
 			AddNode(node, parentNode);
 		}
 
+
+	
 
 
 		public void RemoveAllNodesAndLinks()
@@ -75,14 +77,14 @@ namespace Dependinator.ModelViewing.Private
 				if (node.NodeType != NodeType.NameSpace)
 				{
 					List<Link> obsoleteLinks = node.SourceLinks.ToList();
-					linkService.RemoveObsoleteLinks(obsoleteLinks);
+					modelLinkService.RemoveObsoleteLinks(obsoleteLinks);
 
 					RemoveNode(node);
 				}
 				else
 				{
 					List<Link> obsoleteLinks = node.SourceLinks.ToList();
-					linkService.RemoveObsoleteLinks(obsoleteLinks);
+					modelLinkService.RemoveObsoleteLinks(obsoleteLinks);
 				}
 			}
 
@@ -110,14 +112,14 @@ namespace Dependinator.ModelViewing.Private
 				if (node.Stamp != stamp && node.NodeType != NodeType.NameSpace)
 				{
 					List<Link> obsoleteLinks = node.SourceLinks.ToList();
-					linkService.RemoveObsoleteLinks(obsoleteLinks);
+					modelLinkService.RemoveObsoleteLinks(obsoleteLinks);
 
 					RemoveNode(node);
 				}
 				else
 				{
 					List<Link> obsoleteLinks = node.SourceLinks.Where(link => link.Stamp != stamp).ToList();
-					linkService.RemoveObsoleteLinks(obsoleteLinks);
+					modelLinkService.RemoveObsoleteLinks(obsoleteLinks);
 				}
 			}
 
@@ -152,7 +154,7 @@ namespace Dependinator.ModelViewing.Private
 				nodeViewModelService.ResetLayout(node.ViewModel);
 
 				List<Link> links = node.SourceLinks;
-				linkService.ResetLayout(links);
+				modelLinkService.ResetLayout(links);
 			}
 
 			t.Log($"{nodes.Count} nodes");
@@ -215,7 +217,7 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private void RemoveNodeFromParentCanvas(Node node)
+		private static void RemoveNodeFromParentCanvas(Node node)
 		{
 			node.Parent?.ItemsCanvas?.RemoveItem(node.ViewModel);
 		}
@@ -233,11 +235,12 @@ namespace Dependinator.ModelViewing.Private
 
 			if (rootGroup != null && parentName == NodeName.Root)
 			{
-				parentName = new NodeName(rootGroup).ParentName;
+				parentName = new NodeName(rootGroup);
 
 				Node parent = GetNode(parentName, null);
 				node = new Node(nodeName);
 				node.NodeType = NodeType.NameSpace;
+				node.RootGroup = rootGroup;
 				AddNode(node, parent);
 				return node;
 			}
@@ -246,11 +249,39 @@ namespace Dependinator.ModelViewing.Private
 				Node parent = GetNode(parentName, rootGroup);
 				node = new Node(nodeName);
 				node.NodeType = NodeType.NameSpace;
+				node.RootGroup = rootGroup;
 				AddNode(node, parent);
 				return node;
 			}
 		}
 
+
+		private void MoveNodeIfNeeded(Node node, string rootGroup)
+		{
+			if (rootGroup == null || node.Name == NodeName.Root || node.RootGroup != null)
+			{
+				return;
+			}
+			
+			if (node.Parent.Name != NodeName.Root && node.Parent.RootGroup == null)
+			{
+				// Parent needs to be moved
+				//Log.Warn($"Node {node} needs to move parent {node.Parent}");
+				MoveNodeIfNeeded(node.Parent, rootGroup);
+				node.RootGroup = rootGroup;
+			}
+			else if (node.Parent.Name == NodeName.Root)
+			{
+				// This node needs to be moved
+				NodeName parentName = new NodeName(rootGroup);
+				Node parent = GetNode(parentName, rootGroup);
+				RemoveNode(node);
+
+				//Log.Warn($"Moving {node} from parent {node.Parent} to {parent}");
+				node.RootGroup = rootGroup;
+				AddNode(node, parent);
+			}
+		}
 
 		private static ItemsCanvas GetChildrenCanvas(Node node)
 		{

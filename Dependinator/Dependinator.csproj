@@ -181,7 +181,7 @@
     <Compile Include="ModelViewing\Private\Items\IItemSelectService.cs" />
     <Compile Include="ModelViewing\Private\Items\ItemSelectService.cs" />
     <Compile Include="Utils\UI\DragUiElement.cs" />
-    <Compile Include="ModelViewing\Links\ILinkService.cs" />
+    <Compile Include="ModelViewing\Private\IModelLinkService.cs" />
     <Compile Include="ModelViewing\Links\Line.cs" />
     <Compile Include="ModelViewing\Links\LinkId.cs" />
     <Compile Include="ModelParsing\Private\NotificationReceiver.cs" />
@@ -191,16 +191,16 @@
     </Compile>
     <Compile Include="ModelViewing\Links\LineViewModel.cs" />
     <Compile Include="ModelViewing\Links\Link.cs" />
-    <Compile Include="ModelViewing\Links\LinkService.cs" />
+    <Compile Include="ModelViewing\Private\ModelLinkService.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkSegment.cs" />
     <Compile Include="ModelViewing\Nodes\Node.cs" />
     <Compile Include="ModelViewing\Nodes\NodeExtension.cs" />
     <Compile Include="ModelViewing\Nodes\NodeType.cs" />
     <Compile Include="ModelViewing\Nodes\NodeViewModel.cs" />
     <Compile Include="ModelViewing\Private\IModelService.cs" />
-    <Compile Include="ModelViewing\Private\INodeService.cs" />
+    <Compile Include="ModelViewing\Private\IModelNodeService.cs" />
     <Compile Include="ModelViewing\Private\ModelService.cs" />
-    <Compile Include="ModelViewing\Private\NodeService.cs" />
+    <Compile Include="ModelViewing\Private\ModelNodeService.cs" />
     <Compile Include="ModelViewing\Private\Model.cs" />
     <Compile Include="ModelParsing\ModelNode.cs" />
     <Compile Include="ModelViewing\Nodes\NodeId.cs" />

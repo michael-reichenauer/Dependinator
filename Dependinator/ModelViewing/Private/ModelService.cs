@@ -24,8 +24,8 @@ namespace Dependinator.ModelViewing.Private
 		private static readonly int BatchSize = 1000;
 
 		private readonly IParserService parserService;
-		private readonly INodeService nodeService;
-		private readonly ILinkService linkService;
+		private readonly IModelNodeService modelNodeService;
+		private readonly IModelLinkService modelLinkService;
 		private readonly IRecentModelsService recentModelsService;
 		private readonly Func<OpenModelViewModel> openModelViewModelProvider;
 
@@ -38,16 +38,16 @@ namespace Dependinator.ModelViewing.Private
 
 		public ModelService(
 			IParserService parserService,
-			INodeService nodeService,
-			ILinkService linkService,
+			IModelNodeService modelNodeService,
+			IModelLinkService modelLinkService,
 			Func<OpenModelViewModel> openModelViewModelProvider,
 			Model model,
 			ModelMetadata modelMetadata,
 			IRecentModelsService recentModelsService)
 		{
 			this.parserService = parserService;
-			this.nodeService = nodeService;
-			this.linkService = linkService;
+			this.modelNodeService = modelNodeService;
+			this.modelLinkService = modelLinkService;
 			this.openModelViewModelProvider = openModelViewModelProvider;
 
 			this.model = model;
@@ -97,7 +97,7 @@ namespace Dependinator.ModelViewing.Private
 		}
 		
 
-		public void ClearAll() => nodeService.RemoveAll();
+		public void ClearAll() => modelNodeService.RemoveAll();
 
 
 		public async Task SaveAsync()
@@ -142,11 +142,11 @@ namespace Dependinator.ModelViewing.Private
 			int operationId = await ShowModelAsync(operation => parserService.AnalyzeAsync(
 				modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
 
-			nodeService.RemoveObsoleteNodesAndLinks(operationId);
+			modelNodeService.RemoveObsoleteNodesAndLinks(operationId);
 
 			if (refreshLayout)
 			{
-				nodeService.ResetLayout();
+				modelNodeService.ResetLayout();
 			}
 		}
 
@@ -203,12 +203,12 @@ namespace Dependinator.ModelViewing.Private
 		{
 			if (item.Node != null)
 			{
-				nodeService.UpdateNode(item.Node, stamp);
+				modelNodeService.UpdateNode(item.Node, stamp);
 			}
 
 			if (item.Link != null)
 			{
-				linkService.UpdateLink(item.Link, stamp);
+				modelLinkService.UpdateLink(item.Link, stamp);
 			}
 		}
 

@@ -29,10 +29,10 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		//public ModelNode SendReferencedNode(string name, string nodeType)
-		//{
-		//	return SendNode(name, nodeType, null);
-		//}
+		public ModelNode SendReferencedNode(string name, string nodeType)
+		{
+			return SendNode(name, nodeType, null);
+		}
 
 
 		private ModelNode SendNode(string name, string nodeType, string rootGroup)
