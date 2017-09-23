@@ -25,6 +25,7 @@ namespace Dependinator.ModelViewing.Private.Items
 
 
 		private bool IsShowing => owner?.IsShowing ?? true;
+		private bool CanShow => owner?.CanShow ?? true;
 
 
 		// The root canvas
@@ -148,7 +149,7 @@ namespace Dependinator.ModelViewing.Private.Items
 			}
 
 			double newScale = Scale * zoom;
-			if (!IsShowing || IsRoot && newScale < 0.15 && zoom < 1)
+			if (!IsShowing || !CanShow || IsRoot && newScale < 0.15 && zoom < 1)
 			{
 				// Item not shown or reached minimum root zoom level
 				return;
