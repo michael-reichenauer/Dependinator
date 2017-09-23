@@ -13,14 +13,10 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 	{
 		public async Task AnalyzeAsync(string filePath, ModelItemsCallback modelItemsCallback)
 		{
-			// filePath = @"C:\Work Files\GitMind\GitMind.sln";
 			Log.Debug($"Analyze {filePath} ...");
 			Timing t = Timing.Start();
 
 			IReadOnlyList<AssemblyInfo> infos = Get(filePath);
-
-			//NotificationReceiver receiver = new NotificationReceiver(modelItemsCallback);
-			//NotificationSender sender = new NotificationSender(receiver);
 
 			int maxParallel = (int)Math.Ceiling((Environment.ProcessorCount * 0.75) * 1.0);
 			var option = new ParallelOptions {MaxDegreeOfParallelism = maxParallel };
@@ -28,11 +24,11 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			await Task.Run(() =>
 			{
-				//Parallel.ForEach(infos, option, info => AnalyzeAssembly(
-				//	info.AssemblyPath, info.RootGroup, modelItemsCallback));
-
-				infos.ForEach(info => AnalyzeAssembly(
+				Parallel.ForEach(infos, option, info => AnalyzeAssembly(
 					info.AssemblyPath, info.RootGroup, modelItemsCallback));
+
+				//infos.ForEach(info => AnalyzeAssembly(
+				//	info.AssemblyPath, info.RootGroup, modelItemsCallback));
 
 			});
 			

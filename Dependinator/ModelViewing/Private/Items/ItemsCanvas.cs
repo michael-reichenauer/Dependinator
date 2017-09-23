@@ -12,12 +12,13 @@ namespace Dependinator.ModelViewing.Private.Items
 {
 	internal class ItemsCanvas : Notifyable, IItemsSourceArea
 	{
-		private static readonly int DefaultScaleFactor = 7;
+		private static readonly double DefaultScaleFactor = 7.0;
 		private readonly IItemsCanvasBounds owner;
 		private readonly ItemsSource itemsSource;
-		private readonly ItemsCanvas canvasParent;
-		private ZoomableCanvas zoomableCanvas;
 		private readonly List<ItemsCanvas> canvasChildren = new List<ItemsCanvas>();
+
+		private ItemsCanvas canvasParent;
+		private ZoomableCanvas zoomableCanvas;
 
 		private Rect ItemsCanvasBounds =>
 			owner?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
@@ -25,38 +26,60 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		private bool IsShowing => owner?.IsShowing ?? true;
 
+
+		// The root canvas
 		public ItemsCanvas()
-			: this(null, null)
+			: this(null)
 		{
+			CanvasRoot = this;
 			Scale = 1;
+			ScaleFactor = 1;
 		}
 
-		private ItemsCanvas(IItemsCanvasBounds owner, ItemsCanvas canvasParent)
+		public ItemsCanvas(IItemsCanvasBounds owner)
 		{
 			this.owner = owner;
-			this.canvasParent = canvasParent;
 			itemsSource = new ItemsSource(this);
-			CanvasRoot = canvasParent?.CanvasRoot ?? this;
+			Scale = 1 / DefaultScaleFactor;
 		}
 
-		public double ParentScale => IsRoot ? Scale : canvasParent.Scale;
+		public double ParentScale => IsRoot ? Scale : canvasParent.ParentScale / canvasParent.ScaleFactor;
 
-		public ItemsCanvas CanvasRoot { get; }
+		public ItemsCanvas CanvasRoot { get; private set; }
 
 		public IReadOnlyList<ItemsCanvas> CanvasChildren => canvasChildren;
 
 		public bool IsRoot => canvasParent == null;
 
-		public double ScaleFactor { get; private set; } = 1.0;
+		public double ScaleFactor { get; private set; } = DefaultScaleFactor;
 
-		public ItemsCanvas CreateChildCanvas(IItemsCanvasBounds canvasBounds)
+
+		//public ItemsCanvas AddNewChildCanvas(IItemsCanvasBounds canvasBounds)
+		//{
+		//	ItemsCanvas childCanvas = new ItemsCanvas(canvasBounds, this);
+		//	childCanvas.Scale = Scale / DefaultScaleFactor;
+		//	canvasChildren.Add(childCanvas);
+
+		//	return childCanvas;
+		//}
+
+
+		public void AddChildCanvas(ItemsCanvas childCanvas)
 		{
-			ItemsCanvas child = new ItemsCanvas(canvasBounds, this);
-			child.Scale = Scale / DefaultScaleFactor;
-			canvasChildren.Add(child);
+			childCanvas.canvasParent = this;
+			childCanvas.CanvasRoot = CanvasRoot;
 
-			return child;
+			childCanvas.Scale = Scale / childCanvas.ScaleFactor;
+			canvasChildren.Add(childCanvas);
 		}
+
+
+		public void RemoveChildCanvas(ItemsCanvas childCanvas)
+		{
+			childCanvas.canvasParent = null;
+			canvasChildren.Remove(childCanvas);
+		}
+
 
 		public bool IsZoomAndMoveEnabled { get; set; } = true;
 
@@ -74,6 +97,7 @@ namespace Dependinator.ModelViewing.Private.Items
 			itemsSource.ItemRealized();
 			UpdateScale();
 		}
+
 
 		public void ItemVirtualized()
 		{
@@ -103,14 +127,14 @@ namespace Dependinator.ModelViewing.Private.Items
 			{
 				Set(value);
 
-				if (zoomableCanvas != null)
-				{
-					zoomableCanvas.Scale = value;
-				}
-
 				if (canvasParent != null)
 				{
 					ScaleFactor = canvasParent.Scale / Scale;
+				}
+
+				if (zoomableCanvas != null)
+				{
+					zoomableCanvas.Scale = value;
 				}
 			}
 		}
@@ -130,24 +154,20 @@ namespace Dependinator.ModelViewing.Private.Items
 				return;
 			}
 
-			double scaleFactor = newScale / Scale;
+			double zoomFactor = newScale / Scale;
 			Scale = newScale;
 
 			// Adjust the offset to make the point at the center of zoom area stay still (if provided)
 			if (zoomCenter.HasValue)
 			{
 				Vector position = (Vector)zoomCenter;
-				Offset = (Point)((Vector)(Offset + position) * scaleFactor - position);
+				Offset = (Point)((Vector)(Offset + position) * zoomFactor - position);
 			}
-
-
+			
 
 			UpdateAndNotifyAll();
-
-			if (owner?.CanShow ?? true)
-			{
-				ZoomChildren();
-			}
+			
+			ZoomChildren();		
 		}
 
 
@@ -185,8 +205,7 @@ namespace Dependinator.ModelViewing.Private.Items
 					canvas.UpdateShownItemsInChildren();
 				});
 		}
-
-
+		
 
 		private void UpdateScale()
 		{
@@ -197,14 +216,9 @@ namespace Dependinator.ModelViewing.Private.Items
 			{
 				Zoom(zoom, new Point(0, 0));
 			}
-			else
-			{
-				// Log.Warn("Zoom not needed");
-			}
 		}
 
-
-
+		
 
 		public Point ChildToParentCanvasPoint(Point childCanvasPoint)
 		{

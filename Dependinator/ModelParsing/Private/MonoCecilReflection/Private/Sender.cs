@@ -54,6 +54,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			{
 				
 			}
+			//rootGroup = null;
 			node = new ModelNode(nodeName, nodeType, RectEx.Zero, 0, PointEx.Zero, null, rootGroup);
 
 			sentNodes[name] = node;

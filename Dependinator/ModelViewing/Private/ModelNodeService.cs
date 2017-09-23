@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -177,7 +178,35 @@ namespace Dependinator.ModelViewing.Private
 			model.Remove(node);
 			node.Parent?.RemoveChild(node);
 
+			if (node.ItemsCanvas != null)
+			{
+				node.Parent?.ItemsCanvas.RemoveChildCanvas(node.ItemsCanvas);
+				
+			}
+
 			RemoveNodeFromParentCanvas(node);
+		}
+
+
+		private void MoveNode(Node node, Node parentNode)
+		{
+			node.Parent?.RemoveChild(node);
+
+			if (node.ItemsCanvas != null)
+			{
+				node.Parent?.ItemsCanvas.RemoveChildCanvas(node.ItemsCanvas);
+			}
+
+			RemoveNodeFromParentCanvas(node);
+
+			parentNode.AddChild(node);
+			ItemsCanvas parentCanvas = GetChildrenCanvas(parentNode);
+			if (node.ItemsCanvas != null)
+			{
+				parentCanvas.AddChildCanvas(node.ItemsCanvas);
+			}
+
+			parentCanvas.AddItem(node.ViewModel);
 		}
 
 		private void UpdateNodeType(Node node)
@@ -275,13 +304,13 @@ namespace Dependinator.ModelViewing.Private
 				// This node needs to be moved
 				NodeName parentName = new NodeName(rootGroup);
 				Node parent = GetNode(parentName, rootGroup);
-				RemoveNode(node);
+				MoveNode(node, parent);
 
 				//Log.Warn($"Moving {node} from parent {node.Parent} to {parent}");
 				node.RootGroup = rootGroup;
-				AddNode(node, parent);
 			}
 		}
+
 
 		private static ItemsCanvas GetChildrenCanvas(Node node)
 		{
@@ -296,10 +325,11 @@ namespace Dependinator.ModelViewing.Private
 			ItemsCanvas parentCanvas = GetChildrenCanvas(node.Parent);
 
 			// Creating the child canvas to be the children canvas of the node
-			node.ItemsCanvas = parentCanvas.CreateChildCanvas(node.ViewModel);
+			node.ItemsCanvas = new ItemsCanvas(node.ViewModel);
+			parentCanvas.AddChildCanvas(node.ItemsCanvas);
 			node.ViewModel.ItemsViewModel = new ItemsViewModel(node.ItemsCanvas);
 
-			if (node.Scale != 0)
+			if (Math.Abs(node.Scale) > 0.0000001)
 			{
 				node.ItemsCanvas.Scale = node.Scale;
 			}
