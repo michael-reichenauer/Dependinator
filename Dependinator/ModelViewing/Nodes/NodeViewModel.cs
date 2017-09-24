@@ -158,9 +158,9 @@ namespace Dependinator.ModelViewing.Nodes
 				IsShowPoints = true;
 			}
 
-			Node.ItemsCanvas?.UpdateAndNotifyAll();
+			//Node.ItemsCanvas?.UpdateAndNotifyAll();
 
-			NotifyAll();
+			//NotifyAll();
 		}
 
 
