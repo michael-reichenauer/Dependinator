@@ -76,8 +76,8 @@ namespace Dependinator.ModelViewing.Private
 			root.ItemsCanvas.Scale = settings.Scale;
 			root.ItemsCanvas.Offset = settings.Offset;
 
-			root.ItemsCanvas.Scale = 1;
-			root.ItemsCanvas.Offset = new Point(0, 0);
+			//root.ItemsCanvas.Scale = 1;
+			//root.ItemsCanvas.Offset = new Point(0, 0);
 		}
 	}
 }

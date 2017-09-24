@@ -2,7 +2,6 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
-using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 
@@ -12,6 +11,10 @@ namespace Dependinator.ModelViewing.Nodes.Private
 	internal class NodeViewModelService : INodeViewModelService
 	{
 		private static readonly Size DefaultSize = new Size(200, 100);
+		private static readonly int rowLength = 4;
+		private static readonly int padding = 100;
+		private static readonly double xMargin = 150;
+		private static readonly double yMargin = 110;
 
 		private readonly IThemeService themeService;
 		private readonly IModelLinkService modelLinkService;
@@ -41,12 +44,12 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		public void FirstShowNode(Node node)
 		{
 			node.SourceLines
-				.Where(line => line.ViewModel != null)
-				.ForEach(line => modelLinkService.InitLine(line));
+				.Where(line => line.ViewModel == null)
+				.ForEach(line => modelLinkService.AddLineViewModel(line));
 
 			node.TargetLines
-				.Where(line => line.ViewModel != null)
-				.ForEach(line => modelLinkService.InitLine(line));
+				.Where(line => line.ViewModel == null)
+				.ForEach(line => modelLinkService.AddLineViewModel(line));
 		}
 
 
@@ -82,14 +85,14 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			double dist = 15 / scale;
 			NodeViewModel viewModel = node.ViewModel;
 
-			if ((point - viewModel.ItemBounds.Location).Length < dist )
+			if ((point - viewModel.ItemBounds.Location).Length < dist)
 			{
 				// Move left,top
 				return 1;
 			}
 			else if ((point - new Point(
 				viewModel.ItemLeft + viewModel.ItemWidth,
-				viewModel.ItemTop)).Length < dist )
+				viewModel.ItemTop)).Length < dist)
 			{
 				// Move right,top
 				return 2;
@@ -177,44 +180,27 @@ namespace Dependinator.ModelViewing.Nodes.Private
 				return;
 			}
 
-			int rowLength = 6;
-
-			int padding = 20;
-
-			double xMargin = 10;
-			double yMargin = 100;
-
-			Size size = DefaultSize;
-
 			int siblingCount = nodeViewMode.Node.Parent.Children.Count - 1;
 
-			double x = (siblingCount % rowLength) * (size.Width + padding) + xMargin;
-			double y = (siblingCount / rowLength) * (size.Height + padding) + yMargin;
+			double x = (siblingCount % rowLength) * (DefaultSize.Width + padding) + xMargin;
+			double y = (siblingCount / rowLength) * (DefaultSize.Height + padding) + yMargin;
 			Point location = new Point(x, y);
 
-			Rect bounds = new Rect(location, size);
+			Rect bounds = new Rect(location, DefaultSize);
 
 			nodeViewMode.ItemBounds = bounds;
 		}
 
+
 		public void ResetLayout(NodeViewModel nodeViewMode)
 		{
-			int rowLength = 6;
-
-			int padding = 20;
-
-			double xMargin = 10;
-			double yMargin = 100;
-
-			Size size = DefaultSize;
-
 			int siblingCount = nodeViewMode.Node.Parent.Children.IndexOf(nodeViewMode.Node);
 
-			double x = (siblingCount % rowLength) * (size.Width + padding) + xMargin;
-			double y = (siblingCount / rowLength) * (size.Height + padding) + yMargin;
+			double x = (siblingCount % rowLength) * (DefaultSize.Width + padding) + xMargin;
+			double y = (siblingCount / rowLength) * (DefaultSize.Height + padding) + yMargin;
 			Point location = new Point(x, y);
 
-			Rect bounds = new Rect(location, size);
+			Rect bounds = new Rect(location, DefaultSize);
 
 			nodeViewMode.ItemBounds = bounds;
 			nodeViewMode.ItemsViewModel?.ItemsCanvas?.ResetLayout();

@@ -123,7 +123,12 @@ namespace Dependinator.ModelViewing.Private
 			Line line = new Line(segment.Source, segment.Target);
 			line.Source.SourceLines.Add(line);
 			line.Target.TargetLines.Add(line);
-			AddLineViewModel(line);
+
+			if (line.Source.IsShowing && line.Target.IsShowing)
+			{
+				AddLineViewModel(line);
+			}
+
 			return line;
 		}
 
@@ -135,29 +140,16 @@ namespace Dependinator.ModelViewing.Private
 			RemoveLineViewModel(line);
 		}
 
-		
+	
 
-		public void InitLine(Line line)
-		{
-			//Node owner = GetLineOwner(line);
-
-			//LineViewModel lineViewModel = new LineViewModel(lineViewModelService, line);
-
-			//owner.ItemsCanvas.AddItem(lineViewModel);
-		}
-
-
-		private void AddLineViewModel(Line line)
+		public void AddLineViewModel(Line line)
 		{
 			Node owner = GetLineOwner(line);
+			LineViewModel lineViewModel = new LineViewModel(lineViewModelService, line);
 
-			//if (line.Source.IsShowing || line.Target.IsShowing) 
-			{
-				LineViewModel lineViewModel = new LineViewModel(lineViewModelService, line);
-
-				owner.ItemsCanvas.AddItem(lineViewModel);
-			}
+			owner.ItemsCanvas.AddItem(lineViewModel);
 		}
+
 
 		private void RemoveLineViewModel(Line line)
 		{

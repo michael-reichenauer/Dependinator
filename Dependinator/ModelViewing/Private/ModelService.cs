@@ -245,21 +245,6 @@ namespace Dependinator.ModelViewing.Private
 
 			public int GetPriority(NodeName name)
 			{
-			//	NodeName current = name;
-			//	while (current != NodeName.Root)
-			//	{
-			//		NodeName parentName = current.ParentName;
-
-			//		if (parents.ContainsKey(parentName))
-			//		{
-			//			break;
-			//		}
-
-			//		parents[parentName] = 1;
-			//		current = parentName;
-			//	}
-
-
 				int priority = 0;
 
 				foreach (char t in name.FullName)

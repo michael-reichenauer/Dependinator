@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Private.Items;
+using Dependinator.Utils;
 using Dependinator.Utils.UI;
 
 namespace Dependinator.ModelViewing.Nodes
@@ -70,6 +71,7 @@ namespace Dependinator.ModelViewing.Nodes
 			if (isFirstShow)
 			{
 				isFirstShow = false;
+				
 				nodeViewModelService.FirstShowNode(Node);
 			}
 		}

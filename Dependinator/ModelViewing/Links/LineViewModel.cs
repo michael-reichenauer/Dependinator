@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -161,47 +162,62 @@ namespace Dependinator.ModelViewing.Links
 
 		public void UpdateLine()
 		{
-			if (!CanShow)
+			try
 			{
-				return;
-			}
+				if (!CanShow)
+				{
+					return;
+				}
 
-			lineViewModelService.UpdateLineEndPoints(line);
-			lineViewModelService.UpdateLineBounds(line);
+				lineViewModelService.UpdateLineEndPoints(line);
+				lineViewModelService.UpdateLineBounds(line);
+			}
+			catch (Exception e)
+			{
+				Log.Exception(e);
+			}
+		
 		}
 
 
 
 		private void TrackSourceOrTargetChanges()
 		{
-			if (line.Source == line.Target.Parent)
+			try
 			{
-				// Source node is parent of target, need to update line when source canvas is moved
-				WhenSet(line.Source.ItemsCanvas, nameof(line.Source.ItemsCanvas.Offset))
-					.Notify(SourceOrTargetChanged);
+				if (line.Source == line.Target.Parent)
+				{
+					// Source node is parent of target, need to update line when source canvas is moved
+					WhenSet(line.Source.ItemsCanvas, nameof(line.Source.ItemsCanvas.Offset))
+						.Notify(SourceOrTargetChanged);
 
-				// Update line when target node is moved
-				WhenSet(line.Target.ViewModel, nameof(line.Target.ViewModel.ItemBounds))
-					.Notify(SourceOrTargetChanged);
+					// Update line when target node is moved
+					WhenSet(line.Target.ViewModel, nameof(line.Target.ViewModel.ItemBounds))
+						.Notify(SourceOrTargetChanged);
 
+				}
+				else if (line.Source.Parent == line.Target)
+				{
+					// Source node is child of target node, update line when target canvas is moved
+					WhenSet(line.Target.ItemsCanvas, nameof(line.Target.ItemsCanvas.Offset))
+						.Notify(SourceOrTargetChanged);
+
+					// Update line when source node is moved
+					WhenSet(line.Source.ViewModel, nameof(line.Source.ViewModel.ItemBounds))
+						.Notify(SourceOrTargetChanged);
+				}
+				else
+				{
+					// Source and targets are siblings. update line when either node is moved
+					WhenSet(line.Source.ViewModel, nameof(line.Source.ViewModel.ItemBounds))
+						.Notify(SourceOrTargetChanged);
+					WhenSet(line.Target.ViewModel, nameof(line.Target.ViewModel.ItemBounds))
+						.Notify(SourceOrTargetChanged);
+				}
 			}
-			else if (line.Source.Parent == line.Target)
+			catch (Exception e)
 			{
-				// Source node is child of target node, update line when target canvas is moved
-				WhenSet(line.Target.ItemsCanvas, nameof(line.Target.ItemsCanvas.Offset))
-					.Notify(SourceOrTargetChanged);
-
-				// Update line when source node is moved
-				WhenSet(line.Source.ViewModel, nameof(line.Source.ViewModel.ItemBounds))
-					.Notify(SourceOrTargetChanged);
-			}
-			else
-			{
-				// Source and targets are siblings. update line when either node is moved
-				WhenSet(line.Source.ViewModel, nameof(line.Source.ViewModel.ItemBounds))
-					.Notify(SourceOrTargetChanged);
-				WhenSet(line.Target.ViewModel, nameof(line.Target.ViewModel.ItemBounds))
-					.Notify(SourceOrTargetChanged);
+				Log.Exception(e);
 			}
 		}
 
