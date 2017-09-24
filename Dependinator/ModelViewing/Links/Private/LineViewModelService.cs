@@ -616,6 +616,8 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
+
+
 		//public LinkLineBounds GetLinkLineBounds(LinkLineOld line)
 		//{
 		//	if (!IsNodesInitialized(line))

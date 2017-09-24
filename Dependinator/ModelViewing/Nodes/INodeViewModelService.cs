@@ -7,7 +7,7 @@ namespace Dependinator.ModelViewing.Nodes
 	internal interface INodeViewModelService
 	{
 		Brush GetRandomRectangleBrush();
-		Brush GetRectangleBackgroundBrush(Brush brush);
+		Brush GetBackgroundBrush(Brush brush);
 		Brush GetBrushFromHex(string hexColor);
 		string GetHexColorFromBrush(Brush brush);
 		Brush GetRectangleHighlightBrush(Brush brush);
@@ -15,5 +15,7 @@ namespace Dependinator.ModelViewing.Nodes
 		void ResetLayout(NodeViewModel nodeViewMode);
 		int GetPointIndex(Node node, Point point);
 		void MovePoint(Node node, int index, Point point, Point previousPoint);
+		Brush GetNodeBrush(Node node);
+		void FirstShowNode(Node node);
 	}
 }

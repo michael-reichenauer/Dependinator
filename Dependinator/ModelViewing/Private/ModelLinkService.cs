@@ -35,19 +35,9 @@ namespace Dependinator.ModelViewing.Private
 				return;
 			}
 
-			if (!model.TryGetNode(modelLink.Source, out Node source))
-			{
-				Log.Warn($"Could not find source node {modelLink.Source}");
-				return;
-			}
-
-			if (!model.TryGetNode(modelLink.Target, out Node target))
-			{
-				Log.Warn($"Could not find source node {modelLink.Target}");
-				return;
-			}
-
-
+			Node source = model.Node(modelLink.Source);
+			Node target = model.Node(modelLink.Target);
+		
 			if (TryGetLink(source, target, out Link link))
 			{
 				// Already added link
@@ -99,6 +89,7 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
+
 		private static Link AddLink(Node source, Node target)
 		{
 			Link link = new Link(source, target);
@@ -131,6 +122,7 @@ namespace Dependinator.ModelViewing.Private
 		{
 			Line line = new Line(segment.Source, segment.Target);
 			line.Source.SourceLines.Add(line);
+			line.Target.TargetLines.Add(line);
 			AddLineViewModel(line);
 			return line;
 		}
@@ -139,22 +131,41 @@ namespace Dependinator.ModelViewing.Private
 		private void RemoveLine(Line line)
 		{
 			line.Source.SourceLines.Remove(line);
+			line.Target.TargetLines.Remove(line);
 			RemoveLineViewModel(line);
+		}
+
+		
+
+		public void InitLine(Line line)
+		{
+			//Node owner = GetLineOwner(line);
+
+			//LineViewModel lineViewModel = new LineViewModel(lineViewModelService, line);
+
+			//owner.ItemsCanvas.AddItem(lineViewModel);
 		}
 
 
 		private void AddLineViewModel(Line line)
 		{
 			Node owner = GetLineOwner(line);
-			LineViewModel lineViewModel = new LineViewModel(lineViewModelService, line);
 
-			owner.ItemsCanvas.AddItem(lineViewModel);
+			//if (line.Source.IsShowing || line.Target.IsShowing) 
+			{
+				LineViewModel lineViewModel = new LineViewModel(lineViewModelService, line);
+
+				owner.ItemsCanvas.AddItem(lineViewModel);
+			}
 		}
 
 		private void RemoveLineViewModel(Line line)
 		{
-			Node owner = GetLineOwner(line);
-			owner.ItemsCanvas.RemoveItem(line.ViewModel);
+			if (line.ViewModel != null)
+			{
+				Node owner = GetLineOwner(line);
+				owner.ItemsCanvas.RemoveItem(line.ViewModel);
+			}
 		}
 
 

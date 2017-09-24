@@ -28,6 +28,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		public bool CanShow => ViewModel?.CanShow ?? false;
+		public bool IsShowing => ViewModel?.IsShowing ?? false;
 		public int Stamp { get; set; }
 
 		public NodeId Id { get; }
@@ -44,6 +45,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public List<Link> SourceLinks { get; } = new List<Link>();
 
 		public List<Line> SourceLines { get; } = new List<Line>();
+		public List<Line> TargetLines { get; } = new List<Line>();
 
 		public NodeType NodeType { get; set; }
 

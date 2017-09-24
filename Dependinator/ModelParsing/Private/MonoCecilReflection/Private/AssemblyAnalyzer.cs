@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Dependinator.Utils;
 using Mono.Cecil;
@@ -30,6 +31,12 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			try
 			{
+				if (!File.Exists(assemblyPath))
+				{
+					Log.Warn($"File {assemblyPath} does not exists");
+					return;
+				}
+
 				assembly = AssemblyDefinition.ReadAssembly(assemblyPath);
 				Log.Debug($"Analyzing {assembly}");
 			}

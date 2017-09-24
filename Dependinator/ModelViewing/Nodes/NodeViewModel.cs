@@ -2,7 +2,6 @@ using System;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils.UI;
 
@@ -14,6 +13,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
 
+		private bool isFirstShow = true;
 		private int currentPointIndex = -1;
 		private Point mouseDownPoint;
 		private Point mouseMovedPoint;
@@ -26,10 +26,8 @@ namespace Dependinator.ModelViewing.Nodes
 			this.nodeViewModelService = nodeViewModelService;
 			this.Node = node;
 
-			RectangleBrush = node.Color != null
-				? Converter.BrushFromHex(node.Color)
-				: nodeViewModelService.GetRandomRectangleBrush();
-			BackgroundBrush = nodeViewModelService.GetRectangleBackgroundBrush(RectangleBrush);
+			RectangleBrush = nodeViewModelService.GetNodeBrush(node);
+			BackgroundBrush = nodeViewModelService.GetBackgroundBrush(RectangleBrush);
 		}
 
 
@@ -68,7 +66,14 @@ namespace Dependinator.ModelViewing.Nodes
 
 			// If this node has an items canvas, make sure it knows it has been realized (fix zoom level)
 			ItemsViewModel?.ItemRealized();
+
+			if (isFirstShow)
+			{
+				isFirstShow = false;
+				nodeViewModelService.FirstShowNode(Node);
+			}
 		}
+
 
 		public override void ItemVirtualized()
 		{
@@ -77,17 +82,6 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public string DebugToolTip => ItemsToolTip;
-
-
-		public string ItemsToolTip =>
-			"\n" +
-			$"Rect: {ItemBounds.TS()}\n" +
-			$"Scale {ItemScale}, ChildrenScale: {Node.ItemsCanvas?.Scale}\n" +
-			$"Items: {Node.ItemsCanvas?.ShownChildItemsCount()} ({Node.ItemsCanvas?.ChildItemsCount()})\n" +
-			$"ShownDescendantsItems {Node.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.ItemsCanvas?.DescendantsItemsCount()})\n" +
-			$"ParentItems {Node.Parent.ItemsCanvas.ShownChildItemsCount()} ({Node.Parent.ItemsCanvas.ChildItemsCount()})\n" +
-			$"RootShownDescendantsItems {Node.Root.ItemsCanvas.ShownDescendantsItemsCount()} ({Node.Root.ItemsCanvas.DescendantsItemsCount()})";
 
 		public string Color => RectangleBrush.AsString();
 
@@ -179,5 +173,18 @@ namespace Dependinator.ModelViewing.Nodes
 		public void MouseUp(Point screenPoint) => currentPointIndex = -1;
 
 		public override string ToString() => Node.Name.ToString();
+
+
+		private string DebugToolTip => ItemsToolTip;
+
+		private string ItemsToolTip =>
+			"\n" +
+			$"Rect: {ItemBounds.TS()}\n" +
+			$"Scale {ItemScale}, ChildrenScale: {Node.ItemsCanvas?.Scale}\n" +
+			$"Items: {Node.ItemsCanvas?.ShownChildItemsCount()} ({Node.ItemsCanvas?.ChildItemsCount()})\n" +
+			$"ShownDescendantsItems {Node.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.ItemsCanvas?.DescendantsItemsCount()})\n" +
+			$"ParentItems {Node.Parent.ItemsCanvas.ShownChildItemsCount()} ({Node.Parent.ItemsCanvas.ChildItemsCount()})\n" +
+			$"RootShownDescendantsItems {Node.Root.ItemsCanvas.ShownDescendantsItemsCount()} ({Node.Root.ItemsCanvas.DescendantsItemsCount()})";
+
 	}
 }

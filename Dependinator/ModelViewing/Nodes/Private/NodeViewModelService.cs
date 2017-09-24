@@ -2,6 +2,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
+using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 
@@ -13,15 +14,39 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private static readonly Size DefaultSize = new Size(200, 100);
 
 		private readonly IThemeService themeService;
+		private readonly IModelLinkService modelLinkService;
 		private readonly Model model;
 
 
 		public NodeViewModelService(
 			IThemeService themeService,
+			IModelLinkService modelLinkService,
 			Model model)
 		{
 			this.themeService = themeService;
+			this.modelLinkService = modelLinkService;
 			this.model = model;
+		}
+
+
+
+		public Brush GetNodeBrush(Node node)
+		{
+			return node.Color != null
+				? Converter.BrushFromHex(node.Color)
+				: GetRandomRectangleBrush();
+		}
+
+
+		public void FirstShowNode(Node node)
+		{
+			node.SourceLines
+				.Where(line => line.ViewModel != null)
+				.ForEach(line => modelLinkService.InitLine(line));
+
+			node.TargetLines
+				.Where(line => line.ViewModel != null)
+				.ForEach(line => modelLinkService.InitLine(line));
 		}
 
 
@@ -40,7 +65,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			return themeService.GetHexColorFromBrush(brush);
 		}
 
-		public Brush GetRectangleBackgroundBrush(Brush brush)
+		public Brush GetBackgroundBrush(Brush brush)
 		{
 			return themeService.GetRectangleBackgroundBrush(brush);
 		}
