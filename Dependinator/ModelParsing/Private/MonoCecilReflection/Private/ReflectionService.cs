@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.ModelParsing.Private.SolutionFileParsing;
 using Dependinator.Utils;
@@ -16,100 +15,82 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			Log.Debug($"Analyze {filePath} ...");
 			Timing t = Timing.Start();
 
-			IReadOnlyList<AssemblyInfo> infos = Get(filePath);
+			IReadOnlyList<AssemblyAnalyzer> analyzers = GetAnalyzers(filePath, modelItemsCallback);
 
 			int maxParallel = (int)Math.Ceiling((Environment.ProcessorCount * 0.75) * 1.0);
-			var option = new ParallelOptions {MaxDegreeOfParallelism = maxParallel };
+			var option = new ParallelOptions { MaxDegreeOfParallelism = maxParallel };
 
 
 			await Task.Run(() =>
 			{
-				Parallel.ForEach(infos, option, info => AnalyzeAssembly(
-					info.AssemblyPath, info.RootGroup, modelItemsCallback));
+				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeTypes());
+
+				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeMembers());
 
 				//infos.ForEach(info => AnalyzeAssembly(
 				//	info.AssemblyPath, info.RootGroup, modelItemsCallback));
-
 			});
-			
+
 			t.Log($"Analyzed {filePath}");
 		}
 
 
-		private static IReadOnlyList<AssemblyInfo> Get(string filePath)
+		private static IReadOnlyList<AssemblyAnalyzer> GetAnalyzers(
+			string filePath, ModelItemsCallback modelItemsCallback)
 		{
 			Timing t = Timing.Start();
 
-			IReadOnlyList<AssemblyInfo> assemblyPaths;
+			IReadOnlyList<AssemblyAnalyzer> analyzers;
 
 			if (Path.GetExtension(filePath).IsSameIgnoreCase(".sln"))
 			{
 				Solution solution = new Solution(filePath);
 
-				assemblyPaths = GetAssemblyInfos(solution);
+				analyzers = GetAnalyzers(solution, modelItemsCallback);
 			}
 			else
 			{
-				assemblyPaths = new[] { new AssemblyInfo(filePath, null) };
+				analyzers = new[] { new AssemblyAnalyzer(filePath, null, modelItemsCallback) };
 			}
 
-			t.Log($"Parsed file {filePath} for {assemblyPaths.Count} assembly paths");
-			return assemblyPaths;
+			t.Log($"Parsed file {filePath} for {analyzers.Count} assembly paths");
+			return analyzers;
 		}
 
 
-		private static void AnalyzeAssembly(
-			string assemblyPath, 
-			string rootGroup, 
-			ModelItemsCallback modelItemsCallback)
-		{
-			Log.Debug($"Analyze {assemblyPath} ...");
-			Timing t = Timing.Start();
 
-			if (File.Exists(assemblyPath))
-			{
-				AssemblyAnalyzer analyzer = new AssemblyAnalyzer();
-
-				analyzer.Analyze(assemblyPath, rootGroup, modelItemsCallback);
-			}
-			else
-			{
-				Log.Warn($"Assembly path does not exists {assemblyPath}");
-			}
-
-			t.Log($"Analyzed assembly {assemblyPath}");
-		}
-
-
-		private static IReadOnlyList<AssemblyInfo> GetAssemblyInfos(Solution solution)
+		private static IReadOnlyList<AssemblyAnalyzer> GetAnalyzers(
+			Solution solution, ModelItemsCallback modelItemsCallback)
 		{
 			IReadOnlyList<ProjectInSolution> projects = solution.Projects;
 
-			return projects.Select(project => GetAssemblyInfo(solution, project)).ToList();
-		}
+			List<AssemblyAnalyzer> analyzers = new List<AssemblyAnalyzer>();
 
-
-		private static AssemblyInfo GetAssemblyInfo(Solution solution, ProjectInSolution project)
-		{
-			string outputPath = GetOutputPath(solution, project);
-
-			string solutionName = Path.GetFileName(solution.SolutionDirectory);
-			string projectName = project.UniqueProjectName;
-
-			string rootGroup = solutionName;
-
-			int index = projectName.LastIndexOf("\\", StringComparison.Ordinal);
-			if (index > -1)
+			foreach (ProjectInSolution project in projects)
 			{
-				projectName = projectName.Substring(0, index);
-				rootGroup = $"{solutionName}.{projectName}";
+				string outputPath = GetOutputPath(solution, project);
+
+
+				string solutionName = Path.GetFileName(solution.SolutionDirectory);
+				string projectName = project.UniqueProjectName;
+
+				string rootGroup = solutionName;
+
+				int index = projectName.LastIndexOf("\\", StringComparison.Ordinal);
+				if (index > -1)
+				{
+					projectName = projectName.Substring(0, index);
+					rootGroup = $"{solutionName}.{projectName}";
+				}
+
+				rootGroup = rootGroup.Replace("\\", ".");
+				rootGroup = rootGroup.Replace("_", ".");
+
+				Log.Debug($"{projectName} in root group {rootGroup} was {project.UniqueProjectName}");
+				analyzers.Add(new AssemblyAnalyzer(outputPath, rootGroup, modelItemsCallback));
 			}
 
-			rootGroup = rootGroup.Replace("\\", ".");
-			rootGroup = rootGroup.Replace("_", ".");
-
-			Log.Debug($"{projectName} in root group {rootGroup} was {project.UniqueProjectName}");
-			return new AssemblyInfo(outputPath, rootGroup);
+			return analyzers;
 		}
 
 
@@ -132,25 +113,6 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			{
 				return $"{pathWithoutExtension}.dll";
 			}
-		}
-
-
-
-		private class AssemblyInfo
-		{
-			public string AssemblyPath { get; }
-
-			public string RootGroup { get; }
-
-
-			public AssemblyInfo(string assemblyPath, string rootGroup)
-			{
-				AssemblyPath = assemblyPath;
-				RootGroup = rootGroup;
-			}
-
-
-			public override string ToString() => AssemblyPath;
 		}
 	}
 }

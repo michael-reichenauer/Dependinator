@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Dependinator.Utils;
 using Mono.Cecil;
@@ -13,11 +12,15 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 	{
 		private readonly List<MethodBody> methodBodies = new List<MethodBody>();
 		private int memberCount = 0;
-		private Sender sender;
-		private string rootGroup;
+		private readonly Sender sender;
+		private readonly string rootGroup;
 
-		public void Analyze(
-			string assemblyPath, 
+		private readonly AssemblyDefinition assembly;
+		private List<(TypeDefinition type, ModelNode node)> typeNodes;
+
+
+		public AssemblyAnalyzer(
+			string assemblyPath,
 			string assemblyRootGroup,
 			ModelItemsCallback modelItemsCallback)
 		{
@@ -27,43 +30,47 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			try
 			{
-				AssemblyDefinition assembly = AssemblyDefinition.ReadAssembly(assemblyPath);
-
-				AnalyzeAssembly(assembly);
+				assembly = AssemblyDefinition.ReadAssembly(assemblyPath);
+				Log.Debug($"Analyzing {assembly}");
 			}
-
-			catch (FileLoadException e)
+			catch (Exception e)
 			{
-				string message =
-					$"Failed to load '{assemblyPath}'\n" +
-					$"Could not locate referenced assembly:\n" +
-					$"   {Assemblies.ToAssemblyName(e.Message)}";
-
-				Log.Warn($"{message}\n {e}");
-			}
-			catch (Exception e) // when (e.IsNotFatal())
-			{
-				Log.Exception(e, $"Failed to get types from {assemblyPath}");
-				throw;
+				Log.Exception(e, $"Failed to load '{assemblyPath}'");
 			}
 		}
 
 
-		private void AnalyzeAssembly(AssemblyDefinition assembly)
+		public void AnalyzeTypes()
 		{
-			Log.Debug($"Analyzing {assembly}");
+			if (assembly == null)
+			{
+				return;
+			}
 
 			Timing t = new Timing();
-			var assemblyTypes = assembly.MainModule.Types
+
+			IEnumerable<TypeDefinition> assemblyTypes = assembly.MainModule.Types
 				.Where(type =>
 					!Util.IsCompilerGenerated(type.Name) &&
 					!Util.IsCompilerGenerated(type.DeclaringType?.Name));
 
 			// Add type nodes
-			List<(TypeDefinition type, ModelNode node)> typeNodes = assemblyTypes
-				.SelectMany(type => GetAssemblyTypes(type))
-				.ToList();
+			typeNodes = assemblyTypes
+			 .SelectMany(type => GetAssemblyTypes(type))
+			 .ToList();
+
 			t.Log($"Added {typeNodes.Count} types");
+		}
+
+
+		public void AnalyzeMembers()
+		{
+			if (assembly == null)
+			{
+				return;
+			}
+
+			Timing t = new Timing();
 
 			// Add inheritance links
 			typeNodes.ForEach(typeNode => AddLinksToBaseTypes(typeNode.type, typeNode.node));
@@ -81,6 +88,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			Log.Debug($"Added {sender.NodesCount} nodes and {sender.LinkCount} links");
 		}
+
 
 
 		private IEnumerable<(TypeDefinition type, ModelNode node)> GetAssemblyTypes(

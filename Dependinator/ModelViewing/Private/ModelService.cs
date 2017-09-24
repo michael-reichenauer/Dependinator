@@ -206,10 +206,10 @@ namespace Dependinator.ModelViewing.Private
 				modelNodeService.UpdateNode(item.Node, stamp);
 			}
 
-			//if (item.Link != null)
-			//{
-			//	modelLinkService.UpdateLink(item.Link, stamp);
-			//}
+			if (item.Link != null)
+			{
+				modelLinkService.UpdateLink(item.Link, stamp);
+			}
 		}
 
 
