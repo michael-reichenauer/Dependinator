@@ -12,14 +12,24 @@ namespace Dependinator.ModelViewing.Private
 		{
 			List<ModelItem> items = new List<ModelItem>();
 
-			nodes.ForEach(node => items.Add(ToNodeItem(node)));
-			nodes.ForEach(node => items.AddRange(ToLinkItems(node)));
+			nodes.ForEach(node => items.Add(ToModelItem(node)));
+			nodes.ForEach(node => items.AddRange(ToModelItems(node.SourceLinks)));
 
 			return items;
 		}
 
 
-		private static ModelNode ToDataNode(Node node) => new ModelNode(
+		private static ModelItem ToModelItem(Node node) => 
+			new ModelItem(ToModelNode(node), null);
+
+
+		private static IEnumerable<ModelItem> ToModelItems(IEnumerable<Link> sourceLinks) =>
+			sourceLinks
+			.Select(ToModelLink)
+			.Select(modelLink => new ModelItem(null, modelLink));
+
+
+		private static ModelNode ToModelNode(Node node) => new ModelNode(
 			node.Name,
 			node.NodeType.AsString(),
 			node.ViewModel?.ItemBounds ?? node.Bounds,
@@ -29,23 +39,8 @@ namespace Dependinator.ModelViewing.Private
 			node.RootGroup);
 
 
-		private static ModelLink ToDataLink(Link link) => new ModelLink(
+		private static ModelLink ToModelLink(Link link) => new ModelLink(
 			link.Source.Name,
 			link.Target.Name);
-
-
-
-		private static IEnumerable<ModelItem> ToLinkItems(Node node) =>
-			ToDataLinks(node).Select(ToDataItem);
-
-		private static ModelItem ToDataItem(ModelLink modelLink) => new ModelItem(null, modelLink);
-
-		private static IEnumerable<ModelLink> ToDataLinks(Node node) =>
-			node.SourceLinks.Select(ToDataLink);
-
-
-		private static ModelItem ToNodeItem(Node node) => ToDataItem(node);
-
-		private static ModelItem ToDataItem(Node node) => new ModelItem(ToDataNode(node), null);
 	}
 }

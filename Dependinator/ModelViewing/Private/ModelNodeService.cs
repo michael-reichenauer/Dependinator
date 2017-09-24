@@ -295,7 +295,6 @@ namespace Dependinator.ModelViewing.Private
 			if (node.Parent.Name != NodeName.Root && node.Parent.RootGroup == null)
 			{
 				// Parent needs to be moved
-				//Log.Warn($"Node {node} needs to move parent {node.Parent}");
 				MoveNodeIfNeeded(node.Parent, rootGroup);
 				node.RootGroup = rootGroup;
 			}
@@ -306,7 +305,6 @@ namespace Dependinator.ModelViewing.Private
 				Node parent = GetNode(parentName, rootGroup);
 				MoveNode(node, parent);
 
-				//Log.Warn($"Moving {node} from parent {node.Parent} to {parent}");
 				node.RootGroup = rootGroup;
 			}
 		}

@@ -14,18 +14,20 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		{
 			Log.Debug($"Analyze {filePath} ...");
 			Timing t = Timing.Start();
+			
+			int maxParallel = Math.Max(Environment.ProcessorCount - 1, 1);  // Leave room for UI thread
+			var option = new ParallelOptions { MaxDegreeOfParallelism = maxParallel };
+			Log.Debug($"Parallelism: {maxParallel}");
 
 			IReadOnlyList<AssemblyAnalyzer> analyzers = GetAnalyzers(filePath, modelItemsCallback);
-
-			int maxParallel = (int)Math.Ceiling((Environment.ProcessorCount * 0.75) * 1.0);
-			var option = new ParallelOptions { MaxDegreeOfParallelism = maxParallel };
-
+			t.Log("Loaded assemblies");
 
 			await Task.Run(() =>
 			{
 				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeTypes());
-
+				t.Log("Analyzed types");
 				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeMembers());
+				t.Log("Analyzed members and links");
 
 				//infos.ForEach(info => AnalyzeAssembly(
 				//	info.AssemblyPath, info.RootGroup, modelItemsCallback));
@@ -86,7 +88,6 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				rootGroup = rootGroup.Replace("\\", ".");
 				rootGroup = rootGroup.Replace("_", ".");
 
-				Log.Debug($"{projectName} in root group {rootGroup} was {project.UniqueProjectName}");
 				analyzers.Add(new AssemblyAnalyzer(outputPath, rootGroup, modelItemsCallback));
 			}
 

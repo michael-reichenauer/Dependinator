@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,7 +7,6 @@ using System.Windows;
 using System.Windows.Threading;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelParsing;
-using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Open;
 using Dependinator.ModelViewing.Private.Items;
@@ -95,7 +93,7 @@ namespace Dependinator.ModelViewing.Private
 				recentModelsService.AddModelPaths(modelMetadata.ModelFilePath);
 			}
 		}
-		
+
 
 		public void ClearAll() => modelNodeService.RemoveAll();
 
@@ -150,7 +148,7 @@ namespace Dependinator.ModelViewing.Private
 			}
 		}
 
-		
+
 		private async Task<int> ShowModelAsync(Func<Operation, Task> parseFunctionAsync)
 		{
 			Operation operation = new Operation(currentId++);
@@ -226,7 +224,7 @@ namespace Dependinator.ModelViewing.Private
 					operation.GetPriority(item.Link.Target));
 			}
 		}
-		
+
 
 		private string GetDataFilePath() => Path.Combine(modelMetadata, "data.json");
 
@@ -239,7 +237,7 @@ namespace Dependinator.ModelViewing.Private
 			public PriorityBlockingQueue<ModelItem> Queue { get; } = new PriorityBlockingQueue<ModelItem>(MaxPriority);
 
 			public int Id { get; }
-			
+
 			public Operation(int stamp) => Id = stamp;
 
 

@@ -38,7 +38,6 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				}
 
 				assembly = AssemblyDefinition.ReadAssembly(assemblyPath);
-				Log.Debug($"Analyzing {assembly}");
 			}
 			catch (Exception e)
 			{
@@ -54,8 +53,6 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return;
 			}
 
-			Timing t = new Timing();
-
 			IEnumerable<TypeDefinition> assemblyTypes = assembly.MainModule.Types
 				.Where(type =>
 					!Util.IsCompilerGenerated(type.Name) &&
@@ -65,8 +62,6 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			typeNodes = assemblyTypes
 			 .SelectMany(type => GetAssemblyTypes(type))
 			 .ToList();
-
-			t.Log($"Added {typeNodes.Count} types");
 		}
 
 
@@ -79,21 +74,11 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			Timing t = new Timing();
 
-			// Add inheritance links
 			typeNodes.ForEach(typeNode => AddLinksToBaseTypes(typeNode.type, typeNode.node));
-			t.Log("Added links to base types");
-
-			// Add type members
 			typeNodes.ForEach(typeNode => AddTypeMembers(typeNode.type, typeNode.node));
-			t.Log($"Added {memberCount} members");
-
-			Log.Debug($"Before methods: Nodes: {sender.NodesCount}, Links: {sender.LinkCount}");
-			// Add type methods bodies
-			//Parallel.ForEach(methodBodies, method => AddMethodBodyLinks(method, sender));
 			methodBodies.ForEach(method => AddMethodBodyLinks(method));
-			t.Log($"Added method {methodBodies.Count} bodies");
 
-			Log.Debug($"Added {sender.NodesCount} nodes and {sender.LinkCount} links");
+			t.Log($"Added {sender.NodesCount} nodes and {sender.LinkCount} links in {assembly.Name.Name}");
 		}
 
 

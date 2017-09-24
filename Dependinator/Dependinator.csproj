@@ -184,7 +184,6 @@
     <Compile Include="ModelViewing\Private\IModelLinkService.cs" />
     <Compile Include="ModelViewing\Links\Line.cs" />
     <Compile Include="ModelViewing\Links\LinkId.cs" />
-    <Compile Include="ModelParsing\Private\NotificationReceiver.cs" />
     <Compile Include="ModelParsing\Private\DotNetReflection\Private\Analyzer.cs" />
     <Compile Include="ModelViewing\Links\LineView.xaml.cs">
       <DependentUpon>LineView.xaml</DependentUpon>
@@ -255,7 +254,6 @@
     <Compile Include="ModelParsing\Private\DotNetReflection\Private\IlToText.cs" />
     <Compile Include="ModelParsing\Private\DotNetReflection\Private\MethodBodyReader.cs" />
     <Compile Include="ModelParsing\Private\DotNetReflection\Private\Reflection.cs" />
-    <Compile Include="ModelParsing\Private\NotificationSender.cs" />
     <Compile Include="ModelParsing\Private\DotNetReflection\Private\Globals.cs" />
     <Compile Include="ModelViewing\Links\Private\ILinkSegmentService.cs" />
     <Compile Include="ModelViewing\Links\ILineViewModelService.cs" />

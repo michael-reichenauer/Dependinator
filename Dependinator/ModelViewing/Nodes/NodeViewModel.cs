@@ -1,9 +1,9 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Private.Items;
-using Dependinator.Utils;
 using Dependinator.Utils.UI;
 
 namespace Dependinator.ModelViewing.Nodes
@@ -71,7 +71,7 @@ namespace Dependinator.ModelViewing.Nodes
 			if (isFirstShow)
 			{
 				isFirstShow = false;
-				
+
 				nodeViewModelService.FirstShowNode(Node);
 			}
 		}
@@ -186,7 +186,16 @@ namespace Dependinator.ModelViewing.Nodes
 			$"Items: {Node.ItemsCanvas?.ShownChildItemsCount()} ({Node.ItemsCanvas?.ChildItemsCount()})\n" +
 			$"ShownDescendantsItems {Node.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.ItemsCanvas?.DescendantsItemsCount()})\n" +
 			$"ParentItems {Node.Parent.ItemsCanvas.ShownChildItemsCount()} ({Node.Parent.ItemsCanvas.ChildItemsCount()})\n" +
-			$"RootShownDescendantsItems {Node.Root.ItemsCanvas.ShownDescendantsItemsCount()} ({Node.Root.ItemsCanvas.DescendantsItemsCount()})";
+			$"RootShownDescendantsItems {Node.Root.ItemsCanvas.ShownDescendantsItemsCount()} ({Node.Root.ItemsCanvas.DescendantsItemsCount()})\n" +
+			$"Nodes: {NodesCount}, Namespaces: {NamespacesCount}, Types: {TypesCount}, Members: {MembersCount}\n" +
+			$"Links: {LinksCount}, Lines: {LinesCount}";
+
+		private int NodesCount => Node.Root.Descendents().Count();
+		private int TypesCount => Node.Root.Descendents().Count(node => node.NodeType == NodeType.Type);
+		private int NamespacesCount => Node.Root.Descendents().Count(node => node.NodeType == NodeType.NameSpace);
+		private int MembersCount => Node.Root.Descendents().Count(node => node.NodeType == NodeType.Member);
+		private int LinksCount => Node.Root.Descendents().SelectMany(node => node.SourceLinks).Count();
+		private int LinesCount => Node.Root.Descendents().SelectMany(node => node.SourceLines).Count();
 
 	}
 }
