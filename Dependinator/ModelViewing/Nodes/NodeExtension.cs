@@ -39,6 +39,7 @@ namespace Dependinator.ModelViewing.Nodes
 			}
 		}
 
+
 		public static IEnumerable<Node> DescendentsAndSelf(this Node node)
 		{
 			yield return node;
@@ -46,6 +47,27 @@ namespace Dependinator.ModelViewing.Nodes
 			foreach (Node descendent in node.Descendents())
 			{
 				yield return descendent;
+			}
+		}
+
+
+		public static IEnumerable<Node> DescendentsBreadth(this Node node)
+		{
+			yield return node;
+
+			var last = node;
+			foreach (var descendent in DescendentsBreadth(node))
+			{
+				foreach (var child in descendent.Children)
+				{
+					yield return child;
+					last = child;
+				}
+
+				if (last.Equals(descendent))
+				{
+					yield break;
+				}
 			}
 		}
 	}
