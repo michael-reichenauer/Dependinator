@@ -12,7 +12,7 @@ namespace Dependinator.ModelViewing.Private.Items
 {
 	internal class ItemsCanvas : Notifyable, IItemsSourceArea
 	{
-		private static readonly double DefaultScaleFactor = 7.0;
+		private static readonly double DefaultScaleFactor = 1.0 / 7.0;
 		private readonly IItemsCanvasBounds owner;
 		private readonly ItemsSource itemsSource;
 		private readonly List<ItemsCanvas> canvasChildren = new List<ItemsCanvas>();
@@ -41,10 +41,10 @@ namespace Dependinator.ModelViewing.Private.Items
 		{
 			this.owner = owner;
 			itemsSource = new ItemsSource(this);
-			Scale = 1 / DefaultScaleFactor;
+			Scale = 1 * DefaultScaleFactor;
 		}
 
-		public double ParentScale => IsRoot ? Scale : canvasParent.ParentScale / canvasParent.ScaleFactor;
+		public double ParentScale => IsRoot ? Scale : canvasParent.ParentScale * canvasParent.ScaleFactor;
 
 		public ItemsCanvas CanvasRoot { get; private set; }
 
@@ -70,7 +70,7 @@ namespace Dependinator.ModelViewing.Private.Items
 			childCanvas.canvasParent = this;
 			childCanvas.CanvasRoot = CanvasRoot;
 
-			childCanvas.Scale = Scale / childCanvas.ScaleFactor;
+			childCanvas.Scale = Scale * childCanvas.ScaleFactor;
 			canvasChildren.Add(childCanvas);
 		}
 
@@ -130,7 +130,7 @@ namespace Dependinator.ModelViewing.Private.Items
 
 				if (canvasParent != null)
 				{
-					ScaleFactor = canvasParent.Scale / Scale;
+					ScaleFactor = Scale / canvasParent.Scale;
 				}
 
 				if (zoomableCanvas != null)
@@ -210,7 +210,7 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		private void UpdateScale()
 		{
-			double newScale = ParentScale / ScaleFactor;
+			double newScale = ParentScale * ScaleFactor;
 			double zoom = newScale / Scale;
 
 			if (Math.Abs(zoom) > 0.001)
@@ -229,7 +229,7 @@ namespace Dependinator.ModelViewing.Private.Items
 				Point childPoint = childCanvasPoint - vector;
 
 				// Point within the parent node
-				Vector parentPoint = (Vector)childPoint / ScaleFactor;
+				Vector parentPoint = (Vector)childPoint * ScaleFactor;
 
 				// point in parent canvas scale
 				Point childToParentCanvasPoint = ItemsCanvasBounds.Location + parentPoint;
@@ -266,7 +266,7 @@ namespace Dependinator.ModelViewing.Private.Items
 				Point relativeParentPoint = parentCanvasPoint - (Vector)ItemsCanvasBounds.Location;
 
 				// Point within the parent node
-				Point parentChildPoint = (Point)((Vector)relativeParentPoint * ScaleFactor);
+				Point parentChildPoint = (Point)((Vector)relativeParentPoint / ScaleFactor);
 
 				Point compensatedPoint = parentChildPoint;
 
@@ -330,7 +330,7 @@ namespace Dependinator.ModelViewing.Private.Items
 			{
 				Rect parentArea = canvasParent.GetHierarchicalVisualArea();
 				Point p1 = ParentToChildCanvasPoint(parentArea.Location);
-				Size s1 = (Size)((Vector)parentArea.Size * ScaleFactor);
+				Size s1 = (Size)((Vector)parentArea.Size / ScaleFactor);
 				Rect scaledParentViewArea = new Rect(p1, s1);
 				Rect viewArea = GetItemsCanvasViewArea();
 				viewArea.Intersect(scaledParentViewArea);
