@@ -48,7 +48,7 @@ namespace Dependinator.ModelViewing.Private
 			}
 
 			NodeName parentName = name.ParentName;
-			Node parentNode = GetNode(parentName, modelNode.RootGroup);
+			Node parentNode = GetParentNode(parentName, modelNode.RootGroup);
 
 			Node node = new Node(name)
 			{
@@ -252,36 +252,41 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private Node GetNode(NodeName nodeName, string rootGroup)
+		private Node GetParentNode(NodeName parentName, string rootGroup)
 		{
-			if (model.TryGetNode(nodeName, out Node node))
-			{
-				return node;
-			}
+			Node parent;
 
-			// The node not yet added. We need the parent to add the node
-			NodeName parentName = nodeName.ParentName;
-
-			if (rootGroup != null && parentName == NodeName.Root)
+			if (parentName == NodeName.Root && rootGroup != null)
 			{
 				parentName = new NodeName(rootGroup);
+				return GetParentNode(parentName, null);
+			}
 
-				Node parent = GetNode(parentName, null);
-				node = new Node(nodeName);
-				node.NodeType = NodeType.NameSpace;
-				node.RootGroup = rootGroup;
-				AddNode(node, parent);
-				return node;
+			if (model.TryGetNode(parentName, out parent))
+			{
+				return parent;
+			}
+
+			// The parent not yet added. We need the grandparent to add parent
+			NodeName grandParentName = parentName.ParentName;
+			Node grandParent;
+
+			if (grandParentName == NodeName.Root && rootGroup != null)
+			{
+				grandParentName = new NodeName(rootGroup);
+				grandParent = GetParentNode(grandParentName, null);
 			}
 			else
 			{
-				Node parent = GetNode(parentName, rootGroup);
-				node = new Node(nodeName);
-				node.NodeType = NodeType.NameSpace;
-				node.RootGroup = rootGroup;
-				AddNode(node, parent);
-				return node;
+				grandParent = GetParentNode(grandParentName, rootGroup);
 			}
+
+			parent = new Node(parentName);
+			parent.NodeType = NodeType.NameSpace;
+			parent.RootGroup = rootGroup;
+
+			AddNode(parent, grandParent);
+			return parent;
 		}
 
 
@@ -302,7 +307,7 @@ namespace Dependinator.ModelViewing.Private
 			{
 				// This node needs to be moved
 				NodeName parentName = new NodeName(rootGroup);
-				Node parent = GetNode(parentName, rootGroup);
+				Node parent = GetParentNode(parentName, null);
 				MoveNode(node, parent);
 
 				node.RootGroup = rootGroup;

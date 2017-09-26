@@ -16,6 +16,10 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			Id = new NodeId(name);
 			Name = name;
+			if (Name.FullName == "AcmAcs")
+			{
+				
+			}
 
 			if (name == NodeName.Root)
 			{

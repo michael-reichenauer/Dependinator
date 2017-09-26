@@ -29,7 +29,8 @@ namespace Dependinator.ModelViewing.Private
 			.Select(modelLink => new ModelItem(null, modelLink));
 
 
-		private static ModelNode ToModelNode(Node node) => new ModelNode(
+		private static ModelNode ToModelNode(Node node) => 
+			new ModelNode(
 			node.Name,
 			node.NodeType.AsString(),
 			node.ViewModel?.ItemBounds ?? node.Bounds,
