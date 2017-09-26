@@ -55,7 +55,7 @@ namespace Dependinator.ModelViewing.Private
 				Stamp = stamp,
 				NodeType = new NodeType(modelNode.NodeType),
 				Bounds = modelNode.Bounds,
-				Scale = modelNode.ItemsScale,
+				ScaleFactor = modelNode.ItemsScaleFactor,
 				Offset = modelNode.ItemsOffset,
 				Color = modelNode.Color,
 				RootGroup = modelNode.RootGroup
@@ -332,9 +332,9 @@ namespace Dependinator.ModelViewing.Private
 			parentCanvas.AddChildCanvas(node.ItemsCanvas);
 			node.ViewModel.ItemsViewModel = new ItemsViewModel(node.ItemsCanvas);
 
-			if (Math.Abs(node.Scale) > 0.0000001)
+			if (Math.Abs(node.ScaleFactor) > 0.0000001)
 			{
-				node.ItemsCanvas.Scale = node.Scale;
+				node.ItemsCanvas.Scale = node.ScaleFactor * node.Parent.ItemsCanvas.Scale;
 			}
 
 			if (node.Offset != PointEx.Zero)

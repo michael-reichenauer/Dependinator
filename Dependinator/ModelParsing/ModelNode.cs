@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Windows;
 using Dependinator.Utils;
 
@@ -10,7 +9,7 @@ namespace Dependinator.ModelParsing
 			NodeName name,
 			string nodeType,
 			Rect bounds,
-			double itemsScale,
+			double itemsScaleFactor,
 			Point itemsOffset,
 			string color,
 			string rootGroup)
@@ -18,7 +17,7 @@ namespace Dependinator.ModelParsing
 			Name = name;
 			NodeType = nodeType;
 			Bounds = bounds;
-			ItemsScale = itemsScale;
+			ItemsScaleFactor = itemsScaleFactor;
 			ItemsOffset = itemsOffset;
 			Color = color;
 			RootGroup = rootGroup;
@@ -29,7 +28,7 @@ namespace Dependinator.ModelParsing
 		public NodeName Name { get; }
 		public string NodeType { get; }
 		public Rect Bounds { get; }
-		public double ItemsScale { get; }
+		public double ItemsScaleFactor { get; }
 		public Point ItemsOffset { get; }
 		public string Color { get; }
 		public string RootGroup { get; }

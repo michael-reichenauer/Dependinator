@@ -33,7 +33,7 @@ namespace Dependinator.ModelParsing
 			public string Type { get; set; }
 			public string Bounds { get; set; }
 			public string Color { get; set; }
-			public double ItemsScale { get; set; }
+			public double ItemsScaleFactor { get; set; }
 			public string ItemsOffset { get; set; }
 		}
 

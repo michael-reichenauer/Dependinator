@@ -88,7 +88,7 @@ namespace Dependinator.ModelViewing.Private.Items
 		{
 			if (!IsRoot)
 			{
-				Scale = ParentScale / DefaultScaleFactor;
+				Scale = ParentScale * DefaultScaleFactor;
 				Offset = new Point(0, 0);
 			}
 		}

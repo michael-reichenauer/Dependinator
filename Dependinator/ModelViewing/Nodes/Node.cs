@@ -56,7 +56,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public NodeViewModel ViewModel { get; set; }
 
 		public Rect Bounds { get; set; }
-		public double Scale { get; set; }
+		public double ScaleFactor { get; set; }
 		public Point Offset { get; set; }
 		public string Color { get; set; }
 

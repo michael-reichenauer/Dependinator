@@ -34,7 +34,7 @@ namespace Dependinator.ModelViewing.Private
 			node.Name,
 			node.NodeType.AsString(),
 			node.ViewModel?.ItemBounds ?? node.Bounds,
-			node.ViewModel?.ItemsViewModel?.ItemsCanvas?.Scale ?? node.Scale,
+			node.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.ScaleFactor,
 			node.ViewModel?.ItemsViewModel?.ItemsCanvas?.Offset ?? node.Offset,
 			node.ViewModel?.Color ?? node.Color,
 			node.RootGroup);

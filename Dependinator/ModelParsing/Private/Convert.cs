@@ -21,7 +21,7 @@ namespace Dependinator.ModelParsing.Private
 			new NodeName(node.Name),
 			node.Type,
 			node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
-			node.ItemsScale,
+			node.ItemsScaleFactor,
 			node.ItemsOffset != null ? Point.Parse(node.ItemsOffset) : PointEx.Zero,
 			node.Color,
 			node.RootGroup);
@@ -32,7 +32,7 @@ namespace Dependinator.ModelParsing.Private
 			Name = node.Name.FullName,
 			Type = node.NodeType,
 			Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
-			ItemsScale = node.ItemsScale,
+			ItemsScaleFactor = node.ItemsScaleFactor,
 			ItemsOffset = node.ItemsOffset != PointEx.Zero ? node.ItemsOffset.AsString() : null,
 			Color = node.Color,
 			RootGroup = node.RootGroup
