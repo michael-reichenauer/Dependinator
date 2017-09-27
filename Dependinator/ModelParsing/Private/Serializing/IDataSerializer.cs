@@ -10,5 +10,6 @@ namespace Dependinator.ModelParsing.Private.Serializing
 		void Serialize(IReadOnlyList<ModelItem> items, string path);
 
 		Task<bool> TryDeserializeAsync(string path, ModelItemsCallback modelItemsCallback);
+		Task<bool> TryDeserializeAsStreamAsync(string path, ModelItemsCallback modelItemsCallback);
 	}
 }

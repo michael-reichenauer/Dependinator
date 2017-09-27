@@ -44,7 +44,7 @@ namespace Dependinator.ModelParsing.Private
 				return false;
 			}
 
-			return await dataSerializer.TryDeserializeAsync(dataFilePath, modelItemsCallback);
+			return await dataSerializer.TryDeserializeAsStreamAsync(dataFilePath, modelItemsCallback);
 		}
 	}
 }

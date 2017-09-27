@@ -107,7 +107,7 @@ namespace Dependinator.ModelViewing.Private
 			}
 
 			Timing t = Timing.Start();
-			IReadOnlyList<Node> nodes = Root.DescendentsBreadth().ToList();
+			IReadOnlyList<Node> nodes = Root.Descendents2().ToList();
 			t.Log($"Saving {nodes} nodes");
 
 			IReadOnlyList<ModelItem> items = Convert.ToDataItems(nodes);
@@ -121,8 +121,15 @@ namespace Dependinator.ModelViewing.Private
 
 		public void Save()
 		{
+			
+			if (isShowingOpenModel)
+			{
+				// Nothing to save
+				return;
+			}
+
 			Timing t = Timing.Start();
-			IReadOnlyList<Node> nodes = Root.DescendentsBreadth().ToList();
+			IReadOnlyList<Node> nodes = Root.Descendents2().ToList();
 			t.Log($"Saving {nodes.Count} nodes");
 
 			IReadOnlyList<ModelItem> items = Convert.ToDataItems(nodes);

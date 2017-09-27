@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using System.Linq;
+
 
 namespace Dependinator.ModelViewing.Nodes
 {
@@ -51,24 +53,40 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public static IEnumerable<Node> DescendentsBreadth(this Node node)
+		public static IEnumerable<Node> Descendents2(this Node node)
 		{
-			yield return node;
+			Queue<Node> queue = new Queue<Node>();
 
-			var last = node;
-			foreach (var descendent in DescendentsBreadth(node))
+			node.Children.ForEach(queue.Enqueue);
+
+			while (queue.Any())
 			{
-				foreach (var child in descendent.Children)
-				{
-					yield return child;
-					last = child;
-				}
+				node = queue.Dequeue();
+				yield return node;
 
-				if (last.Equals(descendent))
-				{
-					yield break;
-				}
+				node.Children.ForEach(queue.Enqueue);
 			}
 		}
+
+
+		//public static IEnumerable<Node> DescendentsBreadth(this Node node)
+		//{
+		//	yield return node;
+
+		//	var last = node;
+		//	foreach (var descendent in DescendentsBreadth(node))
+		//	{
+		//		foreach (var child in descendent.Children)
+		//		{
+		//			yield return child;
+		//			last = child;
+		//		}
+
+		//		if (last.Equals(descendent))
+		//		{
+		//			yield break;
+		//		}
+		//	}
+		//}
 	}
 }

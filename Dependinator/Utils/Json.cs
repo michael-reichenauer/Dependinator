@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 
@@ -14,7 +15,7 @@ namespace Dependinator.Utils
 		};
 
 		// Used for serializing data and ignores null and default values
-		private static readonly JsonSerializer Serializer = new JsonSerializer
+		public static readonly JsonSerializer Serializer = new JsonSerializer
 		{
 			Formatting = Formatting.Indented,
 			ObjectCreationHandling = ObjectCreationHandling.Replace,
@@ -44,22 +45,8 @@ namespace Dependinator.Utils
 			}
 		}
 
-		
 
-		//// public IEnumerable<TResult> ReadJson<TResult>(Stream stream)
-		//// {
-		////    var serializer = new JsonSerializer();
 
-		////    using (var reader = new StreamReader(stream))
-		////    using (var jsonReader = new JsonTextReader(reader))
-		////    {
-		////        jsonReader.SupportMultipleContent = true;
-
-		////        while (jsonReader.Read())
-		////        {
-		////            yield return serializer.Deserialize<TResult>(jsonReader);
-		////        }
-		////    }
-		//// }
+	
 	}
 }

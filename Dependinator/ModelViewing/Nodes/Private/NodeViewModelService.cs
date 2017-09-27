@@ -180,15 +180,23 @@ namespace Dependinator.ModelViewing.Nodes.Private
 				return;
 			}
 
-			int siblingCount = nodeViewMode.Node.Parent.Children.Count - 1;
+			int index = nodeViewMode.Node.Parent.Children.Count - 1;
+			while (true)
+			{
+				int siblingCount = index++;
 
-			double x = (siblingCount % rowLength) * (DefaultSize.Width + padding) + xMargin;
-			double y = (siblingCount / rowLength) * (DefaultSize.Height + padding) + yMargin;
-			Point location = new Point(x, y);
+				double x = (siblingCount % rowLength) * (DefaultSize.Width + padding) + xMargin;
+				double y = (siblingCount / rowLength) * (DefaultSize.Height + padding) + yMargin;
+				Point location = new Point(x, y);
 
-			Rect bounds = new Rect(location, DefaultSize);
+				Rect bounds = new Rect(location, DefaultSize);
 
-			nodeViewMode.ItemBounds = bounds;
+				if (!nodeViewMode.Node.Parent.Children.Any(child => child.ViewModel.ItemBounds.IntersectsWith(bounds)))
+				{
+					nodeViewMode.ItemBounds = bounds;
+					return;
+				}
+			}
 		}
 
 

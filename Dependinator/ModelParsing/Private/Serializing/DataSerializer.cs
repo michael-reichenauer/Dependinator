@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.Utils;
+using Newtonsoft.Json;
 
 
 namespace Dependinator.ModelParsing.Private.Serializing
@@ -44,8 +46,6 @@ namespace Dependinator.ModelParsing.Private.Serializing
 				try
 				{
 					Timing t = new Timing();
-					//NotificationReceiver receiver = new NotificationReceiver(modelItemsCallback);
-					//NotificationSender sender = new NotificationSender(receiver);
 
 					JsonTypes.Model dataModel = Json.Deserialize<JsonTypes.Model>(path);
 					t.Log($"Deserialized {dataModel.Items.Count}");
@@ -53,6 +53,53 @@ namespace Dependinator.ModelParsing.Private.Serializing
 					dataModel.Items.ForEach(item => modelItemsCallback(Convert.ToModelItem(item)));
 
 					t.Log($"Sent all {dataModel.Items.Count} items");
+					return true;
+				}
+				catch (Exception e)
+				{
+					Log.Exception(e, "Failed to deserialize");
+				}
+
+				return false;
+			});
+		}
+
+
+		public Task<bool> TryDeserializeAsStreamAsync(
+			string path, ModelItemsCallback modelItemsCallback)
+		{
+			return Task.Run(() =>
+			{
+				try
+				{
+					Timing t = new Timing();
+
+					JsonSerializer serializer = Json.Serializer;
+					using (FileStream s = File.Open(path, FileMode.Open))
+					using (StreamReader sr = new StreamReader(s))
+					using (JsonReader reader = new JsonTextReader(sr))
+					{
+						while (reader.Read())
+						{
+							if (reader.TokenType == JsonToken.StartArray)
+							{
+								break;
+							}
+						}
+
+						while (reader.Read())
+						{
+							// deserialize only when there's "{" character in the stream
+							if (reader.TokenType == JsonToken.StartObject)
+							{
+								JsonTypes.Item  jsonItem = serializer.Deserialize<JsonTypes.Item>(reader);
+								ModelItem modelItem = Convert.ToModelItem(jsonItem);
+								modelItemsCallback(modelItem);
+							}
+						}
+					}
+					
+					t.Log($"Sent all items");
 					return true;
 				}
 				catch (Exception e)
