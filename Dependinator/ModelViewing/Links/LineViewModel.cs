@@ -52,8 +52,10 @@ namespace Dependinator.ModelViewing.Links
 
 		public string StrokeDash => "";
 
-		public string ToolTip => lineViewModelService.GetLineToolTip(line);
+		public string ToolTip { get => Get(); private set => Set(value); }
+	
 
+		public void UpdateToolTip() => ToolTip = lineViewModelService.GetLineToolTip(line);
 
 
 		public void ToggleLine()
@@ -136,8 +138,6 @@ namespace Dependinator.ModelViewing.Links
 			IsShowPoints = false;
 			Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
 		}
-
-		public void UpdateToolTip() => Notify(nameof(ToolTip));
 
 
 		private void EndMoveLinePoint()
