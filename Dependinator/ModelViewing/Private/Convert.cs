@@ -12,21 +12,25 @@ namespace Dependinator.ModelViewing.Private
 		{
 			List<IModelItem> items = new List<IModelItem>();
 
-			nodes.ForEach(node => items.Add(ToModelItem(node)));
-			nodes.ForEach(node => items.AddRange(ToModelItems(node.SourceLinks)));
+			nodes.ForEach(node => items.Add(ToModelNode(node)));
+			nodes.ForEach(node => items.AddRange(ToModelLines(node.SourceLines)));
+			nodes.ForEach(node => items.AddRange(ToModelLinks(node.SourceLinks)));
 
 			return items;
 		}
 
 
-		private static IModelItem ToModelItem(Node node) => ToModelNode(node);
+		private static IEnumerable<ModelLine> ToModelLines(IEnumerable<Line> lines) =>
+			lines.Select(line => new ModelLine(
+				line.Source.Name,
+				line.Target.Name));
 
 
-		private static IEnumerable<IModelItem> ToModelItems(IEnumerable<Link> sourceLinks) =>
-			sourceLinks
-			.Select(ToModelLink)
-			.Select(modelLink => modelLink);
-
+		private static IEnumerable<ModelLink> ToModelLinks(IEnumerable<Link> links) =>
+			links.Select(link => new ModelLink(
+				link.Source.Name,
+				link.Target.Name));
+		
 
 		private static ModelNode ToModelNode(Node node) => 
 			new ModelNode(
@@ -37,10 +41,5 @@ namespace Dependinator.ModelViewing.Private
 			node.ViewModel?.ItemsViewModel?.ItemsCanvas?.Offset ?? node.Offset,
 			node.ViewModel?.Color ?? node.Color,
 			node.RootGroup);
-
-
-		private static ModelLink ToModelLink(Link link) => new ModelLink(
-			link.Source.Name,
-			link.Target.Name);
 	}
 }

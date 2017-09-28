@@ -140,6 +140,7 @@
     <Compile Include="Common\ModelMetadataFolders\Private\IOpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
+    <Compile Include="ModelParsing\ModelLine.cs" />
     <Compile Include="ModelParsing\Private\MonoCecilReflection\IReflectionService.cs" />
     <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\Assemblies.cs" />
     <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\AssemblyAnalyzer.cs" />

@@ -19,6 +19,8 @@ namespace Dependinator.ModelViewing.Links
 			IsEqualWhenSame(Source, Target);
 		}
 
+		public int Stamp { get; set; }
+
 		public Node Source { get; }
 
 		public Node Target { get; }

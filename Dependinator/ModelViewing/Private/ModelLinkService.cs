@@ -4,7 +4,6 @@ using Dependinator.ModelParsing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.Nodes;
-using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Private
@@ -37,7 +36,7 @@ namespace Dependinator.ModelViewing.Private
 
 			Node source = model.Node(modelLink.Source);
 			Node target = model.Node(modelLink.Target);
-		
+
 			if (TryGetLink(source, target, out Link link))
 			{
 				// Already added link
@@ -50,6 +49,22 @@ namespace Dependinator.ModelViewing.Private
 			var linkSegments = linkSegmentService.GetLinkSegments(link);
 
 			AddLinkSegmentLines(linkSegments, link);
+		}
+
+
+		public void UpdateLine(ModelLine modelLine, int stamp)
+		{
+			Node source = model.Node(modelLine.Source);
+			Node target = model.Node(modelLine.Target);
+
+			if (TryGetLine(source, target, out Line line))
+			{
+				// Already added link
+				line.Stamp = stamp;
+				return;
+			}
+
+			AddLine(source, target);
 		}
 
 
@@ -109,7 +124,7 @@ namespace Dependinator.ModelViewing.Private
 			{
 				if (!TryGetLine(linkSegment, out Line line))
 				{
-					line = AddLine(linkSegment);				
+					line = AddLine(linkSegment.Source, linkSegment.Target);
 				}
 
 				line.Links.Add(link);
@@ -118,9 +133,9 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private Line AddLine(LinkSegment segment)
+		private Line AddLine(Node source, Node target)
 		{
-			Line line = new Line(segment.Source, segment.Target);
+			Line line = new Line(source, target);
 			line.Source.SourceLines.Add(line);
 			line.Target.TargetLines.Add(line);
 
@@ -140,7 +155,7 @@ namespace Dependinator.ModelViewing.Private
 			RemoveLineViewModel(line);
 		}
 
-	
+
 
 		public void AddLineViewModel(Line line)
 		{
@@ -161,7 +176,7 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private static Node GetLineOwner(Line line) => 
+		private static Node GetLineOwner(Line line) =>
 			line.Source == line.Target.Parent ? line.Source : line.Source.Parent;
 
 
@@ -189,5 +204,13 @@ namespace Dependinator.ModelViewing.Private
 			link = source.SourceLinks.FirstOrDefault(l => l.Source == source && l.Target == target);
 			return link != null;
 		}
+
+
+		private static bool TryGetLine(Node source, Node target, out Line line)
+		{
+			line = source.SourceLines.FirstOrDefault(l => l.Source == source && l.Target == target);
+			return line != null;
+		}
+
 	}
 }

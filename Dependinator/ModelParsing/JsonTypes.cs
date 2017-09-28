@@ -19,7 +19,9 @@ namespace Dependinator.ModelParsing
 		{
 			public Node Node { get; set; }
 			public Link Link { get; set; }
+			public Line Line { get; set; }
 		}
+
 
 		// A node
 		[Serializable]
@@ -45,9 +47,10 @@ namespace Dependinator.ModelParsing
 			// The source node name
 			public string Source { get; set; }
 
-			// The target node name of the link
+			// The target node name
 			public string Target { get; set; }
 		}
+
 
 		// Line between two nodes (with list of links)
 		[Serializable]
@@ -56,7 +59,7 @@ namespace Dependinator.ModelParsing
 			// The source node name
 			public string Source { get; set; }
 
-			// The target node name of the link
+			// The target node name
 			public string Target { get; set; }
 		}
 

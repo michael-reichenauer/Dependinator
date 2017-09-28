@@ -1,6 +1,6 @@
+using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using Dependinator.Utils;
 
 
 namespace Dependinator.ModelParsing.Private
@@ -17,10 +17,13 @@ namespace Dependinator.ModelParsing.Private
 			{
 				return ToModelLink(item.Link);
 			}
+			else if (item.Line != null)
+			{
+				return ToModelLine(item.Line);
+			}
 
 			return null;
 		}
-
 
 
 
@@ -28,19 +31,21 @@ namespace Dependinator.ModelParsing.Private
 		{
 			if (item is ModelNode modelNode)
 			{
-				return new JsonTypes.Item {Node = ToJsonNode(modelNode)};
+				return new JsonTypes.Item { Node = ToJsonNode(modelNode) };
 			}
 			else if (item is ModelLink modelLink)
 			{
 				return new JsonTypes.Item { Link = ToJsonLink(modelLink) };
 			}
+			else if (item is ModelLine modelLine)
+			{
+				return new JsonTypes.Item { Line = ToJsonLine(modelLine) };
+			}
 
 
 			return null;
-
-			//Node = item.Node != null ? ToJsonNode(item.Node) : null,
-			//Link = item.Link != null ? ToJsonLink(item.Link) : null
 		}
+
 
 
 		private static ModelNode ToModelNode(JsonTypes.Node node) => new ModelNode(
@@ -74,6 +79,19 @@ namespace Dependinator.ModelParsing.Private
 		{
 			Source = link.Source.FullName,
 			Target = link.Target.FullName,
+		};
+
+
+
+		private static IModelItem ToModelLine(JsonTypes.Line line) => new ModelLine(
+			new NodeName(line.Source),
+			new NodeName(line.Target));
+
+
+		private static JsonTypes.Line ToJsonLine(ModelLine line) => new JsonTypes.Line
+		{
+			Source = line.Source.FullName,
+			Target = line.Target.FullName,
 		};
 	}
 }

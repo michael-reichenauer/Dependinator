@@ -211,6 +211,11 @@ namespace Dependinator.ModelViewing.Private
 				modelNodeService.UpdateNode(modelNode, stamp);
 			}
 
+			if (item is ModelLine modelLine)
+			{
+				modelLinkService.UpdateLine(modelLine, stamp);
+			}
+
 			if (item is ModelLink modelLink)
 			{
 				modelLinkService.UpdateLink(modelLink, stamp);
@@ -223,6 +228,12 @@ namespace Dependinator.ModelViewing.Private
 			if (item is ModelNode modelNode)
 			{
 				return operation.GetPriority(modelNode.Name);
+			}
+			else if (item is ModelLine modelLine)
+			{
+				return Math.Max(
+					operation.GetPriority(modelLine.Source),
+					operation.GetPriority(modelLine.Target));
 			}
 			else if (item is ModelLink modelLink)
 			{
