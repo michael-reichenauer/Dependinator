@@ -2,7 +2,7 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelParsing
 {
-	internal class ModelLink : Equatable<ModelLink>
+	internal class ModelLink : Equatable<ModelLink>, IModelItem
 	{
 		public ModelLink(NodeName source, NodeName target)
 		{

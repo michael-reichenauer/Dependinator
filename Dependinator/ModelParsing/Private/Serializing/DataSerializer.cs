@@ -11,13 +11,13 @@ namespace Dependinator.ModelParsing.Private.Serializing
 {
 	internal class DataSerializer : IDataSerializer
 	{
-		public Task SerializeAsync(IReadOnlyList<ModelItem> items, string path)
+		public Task SerializeAsync(IReadOnlyList<IModelItem> items, string path)
 		{
 			return Task.Run(() => Serialize(items, path));
 		}
 
 
-		public void Serialize(IReadOnlyList<ModelItem> items, string path)
+		public void Serialize(IReadOnlyList<IModelItem> items, string path)
 		{
 			try
 			{
@@ -93,7 +93,7 @@ namespace Dependinator.ModelParsing.Private.Serializing
 							if (reader.TokenType == JsonToken.StartObject)
 							{
 								JsonTypes.Item  jsonItem = serializer.Deserialize<JsonTypes.Item>(reader);
-								ModelItem modelItem = Convert.ToModelItem(jsonItem);
+								IModelItem modelItem = Convert.ToModelItem(jsonItem);
 								modelItemsCallback(modelItem);
 							}
 						}

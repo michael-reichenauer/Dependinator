@@ -49,6 +49,17 @@ namespace Dependinator.ModelParsing
 			public string Target { get; set; }
 		}
 
+		// Line between two nodes (with list of links)
+		[Serializable]
+		public class Line
+		{
+			// The source node name
+			public string Source { get; set; }
+
+			// The target node name of the link
+			public string Target { get; set; }
+		}
+
 
 		internal static class NodeType
 		{

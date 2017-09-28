@@ -29,11 +29,11 @@ namespace Dependinator.ModelParsing.Private
 		}
 
 
-		public Task SerializeAsync(IReadOnlyList<ModelItem> items, string dataFilePath) =>
+		public Task SerializeAsync(IReadOnlyList<IModelItem> items, string dataFilePath) =>
 			dataSerializer.SerializeAsync(items, dataFilePath);
 
 
-		public void Serialize(IReadOnlyList<ModelItem> items, string dataFilePath) =>
+		public void Serialize(IReadOnlyList<IModelItem> items, string dataFilePath) =>
 			dataSerializer.Serialize(items, dataFilePath);
 
 

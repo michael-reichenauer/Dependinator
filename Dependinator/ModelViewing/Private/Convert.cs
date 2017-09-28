@@ -8,9 +8,9 @@ namespace Dependinator.ModelViewing.Private
 {
 	internal class Convert
 	{
-		public static List<ModelItem> ToDataItems(IReadOnlyList<Node> nodes)
+		public static List<IModelItem> ToDataItems(IReadOnlyList<Node> nodes)
 		{
-			List<ModelItem> items = new List<ModelItem>();
+			List<IModelItem> items = new List<IModelItem>();
 
 			nodes.ForEach(node => items.Add(ToModelItem(node)));
 			nodes.ForEach(node => items.AddRange(ToModelItems(node.SourceLinks)));
@@ -19,14 +19,13 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private static ModelItem ToModelItem(Node node) => 
-			new ModelItem(ToModelNode(node), null);
+		private static IModelItem ToModelItem(Node node) => ToModelNode(node);
 
 
-		private static IEnumerable<ModelItem> ToModelItems(IEnumerable<Link> sourceLinks) =>
+		private static IEnumerable<IModelItem> ToModelItems(IEnumerable<Link> sourceLinks) =>
 			sourceLinks
 			.Select(ToModelLink)
-			.Select(modelLink => new ModelItem(null, modelLink));
+			.Select(modelLink => modelLink);
 
 
 		private static ModelNode ToModelNode(Node node) => 

@@ -164,7 +164,6 @@
     <Compile Include="ModelParsing\ModelLink.cs" />
     <Compile Include="ModelParsing\ModelItemsCallback.cs" />
     <Compile Include="ModelParsing\Private\Convert.cs" />
-    <Compile Include="ModelParsing\Private\Serializing\Json.cs" />
     <Compile Include="ModelViewing\Nodes\NodePointsView.xaml.cs">
       <DependentUpon>NodePointsView.xaml</DependentUpon>
     </Compile>

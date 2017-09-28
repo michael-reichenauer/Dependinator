@@ -110,7 +110,7 @@ namespace Dependinator.ModelViewing.Private
 			IReadOnlyList<Node> nodes = Root.Descendents2().ToList();
 			t.Log($"Saving {nodes} nodes");
 
-			IReadOnlyList<ModelItem> items = Convert.ToDataItems(nodes);
+			IReadOnlyList<IModelItem> items = Convert.ToDataItems(nodes);
 			t.Log($"Saving {items} items");
 
 			string dataFilePath = GetDataFilePath();
@@ -121,7 +121,7 @@ namespace Dependinator.ModelViewing.Private
 
 		public void Save()
 		{
-			
+
 			if (isShowingOpenModel)
 			{
 				// Nothing to save
@@ -132,7 +132,7 @@ namespace Dependinator.ModelViewing.Private
 			IReadOnlyList<Node> nodes = Root.Descendents2().ToList();
 			t.Log($"Saving {nodes.Count} nodes");
 
-			IReadOnlyList<ModelItem> items = Convert.ToDataItems(nodes);
+			IReadOnlyList<IModelItem> items = Convert.ToDataItems(nodes);
 			t.Log($"Saving {items.Count} items");
 
 			string dataFilePath = GetDataFilePath();
@@ -174,7 +174,7 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private static void UpdateDataItems(ModelItem item, Operation operation)
+		private static void UpdateDataItems(IModelItem item, Operation operation)
 		{
 			int priority = GetPriority(item, operation);
 
@@ -184,7 +184,7 @@ namespace Dependinator.ModelViewing.Private
 
 		private void ShowModel(Operation operation)
 		{
-			while (operation.Queue.TryTake(out ModelItem item, -1))
+			while (operation.Queue.TryTake(out IModelItem item, -1))
 			{
 				Application.Current.Dispatcher.InvokeBackground(() =>
 				{
@@ -204,32 +204,34 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private void UpdateItem(ModelItem item, int stamp)
+		private void UpdateItem(IModelItem item, int stamp)
 		{
-			if (item.Node != null)
+			if (item is ModelNode modelNode)
 			{
-				modelNodeService.UpdateNode(item.Node, stamp);
+				modelNodeService.UpdateNode(modelNode, stamp);
 			}
 
-			if (item.Link != null)
+			if (item is ModelLink modelLink)
 			{
-				modelLinkService.UpdateLink(item.Link, stamp);
+				modelLinkService.UpdateLink(modelLink, stamp);
 			}
 		}
 
 
-		private static int GetPriority(ModelItem item, Operation operation)
+		private static int GetPriority(IModelItem item, Operation operation)
 		{
-			if (item.Node != null)
+			if (item is ModelNode modelNode)
 			{
-				return operation.GetPriority(item.Node.Name);
+				return operation.GetPriority(modelNode.Name);
 			}
-			else
+			else if (item is ModelLink modelLink)
 			{
 				return Math.Max(
-					operation.GetPriority(item.Link.Source),
-					operation.GetPriority(item.Link.Target));
+					operation.GetPriority(modelLink.Source),
+					operation.GetPriority(modelLink.Target));
 			}
+
+			return MaxPriority - 1;
 		}
 
 
@@ -241,7 +243,8 @@ namespace Dependinator.ModelViewing.Private
 			//private readonly ConcurrentDictionary<NodeName, int> parents = 
 			//	new ConcurrentDictionary<NodeName, int>();
 
-			public PriorityBlockingQueue<ModelItem> Queue { get; } = new PriorityBlockingQueue<ModelItem>(MaxPriority);
+			public PriorityBlockingQueue<IModelItem> Queue { get; } =
+				new PriorityBlockingQueue<IModelItem>(MaxPriority);
 
 			public int Id { get; }
 

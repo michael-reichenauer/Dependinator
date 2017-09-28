@@ -7,9 +7,9 @@ namespace Dependinator.ModelParsing
 	{
 		Task AnalyzeAsync(string assemblyPath, ModelItemsCallback modelItemsCallback);
 
-		Task SerializeAsync(IReadOnlyList<ModelItem> items, string path);
+		Task SerializeAsync(IReadOnlyList<IModelItem> items, string path);
 
-		void Serialize(IReadOnlyList<ModelItem> items, string path);
+		void Serialize(IReadOnlyList<IModelItem> items, string path);
 
 		Task<bool> TryDeserialize(string path, ModelItemsCallback modelItemsCallback);
 	}

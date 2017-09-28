@@ -71,7 +71,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				Log.Warn($"Send node: {name}      {nodeType}");
 			}
 
-			callback(new ModelItem(node, null));
+			callback(node);
 			return node;
 		}
 
@@ -105,7 +105,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			LinkCount++;
 
 			//Log.Debug($"Send link: {link.Source} {link.Target}");
-			callback(new ModelItem(null, link));
+			callback(link);
 		}
 	}
 }

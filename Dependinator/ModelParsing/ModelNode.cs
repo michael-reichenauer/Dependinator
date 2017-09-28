@@ -3,7 +3,7 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelParsing
 {
-	internal class ModelNode : Equatable<ModelNode>
+	internal class ModelNode : Equatable<ModelNode>, IModelItem
 	{
 		public ModelNode(
 			NodeName name,

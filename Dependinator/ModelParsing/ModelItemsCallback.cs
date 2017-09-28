@@ -1,4 +1,4 @@
 ﻿namespace Dependinator.ModelParsing
 {
-	internal delegate void ModelItemsCallback(ModelItem items);
+	internal delegate void ModelItemsCallback(IModelItem items);
 }

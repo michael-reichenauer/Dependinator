@@ -1,20 +1,46 @@
 using System.Windows;
 using System.Windows.Media;
+using Dependinator.Utils;
+
 
 namespace Dependinator.ModelParsing.Private
 {
 	internal class Convert
 	{
-		public static ModelItem ToModelItem(JsonTypes.Item item) => new ModelItem(
-			item.Node != null ? ToModelNode(item.Node) : null,
-			item.Link != null ? ToModelLink(item.Link) : null);
-
-
-		public static JsonTypes.Item ToJsonItem(ModelItem item) => new JsonTypes.Item
+		public static IModelItem ToModelItem(JsonTypes.Item item)
 		{
-			Node = item.Node != null ? ToJsonNode(item.Node) : null,
-			Link = item.Link != null ? ToJsonLink(item.Link) : null
-		};
+			if (item.Node != null)
+			{
+				return ToModelNode(item.Node);
+			}
+			else if (item.Link != null)
+			{
+				return ToModelLink(item.Link);
+			}
+
+			return null;
+		}
+
+
+
+
+		public static JsonTypes.Item ToJsonItem(IModelItem item)
+		{
+			if (item is ModelNode modelNode)
+			{
+				return new JsonTypes.Item {Node = ToJsonNode(modelNode)};
+			}
+			else if (item is ModelLink modelLink)
+			{
+				return new JsonTypes.Item { Link = ToJsonLink(modelLink) };
+			}
+
+
+			return null;
+
+			//Node = item.Node != null ? ToJsonNode(item.Node) : null,
+			//Link = item.Link != null ? ToJsonLink(item.Link) : null
+		}
 
 
 		private static ModelNode ToModelNode(JsonTypes.Node node) => new ModelNode(
