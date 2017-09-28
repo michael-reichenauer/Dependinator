@@ -19,6 +19,8 @@ namespace Dependinator.ModelViewing.Links
 			IsEqualWhenSame(Source, Target);
 		}
 
+		public bool IsShowing => ViewModel?.IsShowing ?? false;
+
 		public int Stamp { get; set; }
 
 		public Node Source { get; }

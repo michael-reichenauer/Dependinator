@@ -90,9 +90,23 @@ namespace Dependinator.ModelViewing.Private
 			{
 				isShowingOpenModel = false;
 				Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
+				UpdateLines(Root);
 				recentModelsService.AddModelPaths(modelMetadata.ModelFilePath);
 			}
 		}
+
+
+		private static void UpdateLines(Node node)
+		{
+			node.SourceLines
+				.Where(line => line.IsShowing)
+				.ForEach(line => line.ViewModel.NotifyAll());
+
+			node.Children
+				.Where(child => child.IsShowing)
+				.ForEach(UpdateLines);
+		}
+
 
 
 		public void ClearAll() => modelNodeService.RemoveAll();
@@ -107,7 +121,7 @@ namespace Dependinator.ModelViewing.Private
 			}
 
 			Timing t = Timing.Start();
-			IReadOnlyList<Node> nodes = Root.Descendents2().ToList();
+			IReadOnlyList<Node> nodes = Root.DescendentsBreadth().ToList();
 			t.Log($"Saving {nodes} nodes");
 
 			IReadOnlyList<IModelItem> items = Convert.ToDataItems(nodes);
@@ -129,7 +143,7 @@ namespace Dependinator.ModelViewing.Private
 			}
 
 			Timing t = Timing.Start();
-			IReadOnlyList<Node> nodes = Root.Descendents2().ToList();
+			IReadOnlyList<Node> nodes = Root.DescendentsBreadth().ToList();
 			t.Log($"Saving {nodes.Count} nodes");
 
 			IReadOnlyList<IModelItem> items = Convert.ToDataItems(nodes);

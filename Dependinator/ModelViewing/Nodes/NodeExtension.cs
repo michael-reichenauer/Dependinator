@@ -53,7 +53,7 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public static IEnumerable<Node> Descendents2(this Node node)
+		public static IEnumerable<Node> DescendentsBreadth(this Node node)
 		{
 			Queue<Node> queue = new Queue<Node>();
 
