@@ -33,6 +33,8 @@ namespace Dependinator.ModelViewing.Links
 
 		public LineViewModel ViewModel { get; set; }
 
+		public int LinkCount { get; set; }
+
 		public List<Link> Links { get; } = new List<Link>();
 
 		public List<Point> Points { get; private set; } = DefaultPoints.ToList();

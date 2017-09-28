@@ -64,7 +64,7 @@ namespace Dependinator.ModelViewing.Private
 				return;
 			}
 
-			AddLine(source, target);
+			AddLine(source, target, modelLine.LinkCount);
 		}
 
 
@@ -124,7 +124,7 @@ namespace Dependinator.ModelViewing.Private
 			{
 				if (!TryGetLine(linkSegment, out Line line))
 				{
-					line = AddLine(linkSegment.Source, linkSegment.Target);
+					line = AddLine(linkSegment.Source, linkSegment.Target, 0);
 				}
 
 				line.Links.Add(link);
@@ -133,11 +133,12 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private Line AddLine(Node source, Node target)
+		private Line AddLine(Node source, Node target, int linkCount)
 		{
 			Line line = new Line(source, target);
 			line.Source.SourceLines.Add(line);
 			line.Target.TargetLines.Add(line);
+			line.LinkCount = linkCount;
 
 			if (line.Source.IsShowing && line.Target.IsShowing)
 			{

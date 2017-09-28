@@ -10,6 +10,7 @@ namespace Dependinator.ModelViewing.Links
 {
 	internal class LineViewModel : ItemViewModel
 	{
+		
 		private readonly ILineViewModelService lineViewModelService;
 		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
 
@@ -29,6 +30,7 @@ namespace Dependinator.ModelViewing.Links
 			TrackSourceOrTargetChanges();
 		}
 
+	
 		public override bool CanShow => 
 			ItemScale > 0.20 &&  ItemScale < 40 
 			&& line.Source.CanShow & line.Target.CanShow;

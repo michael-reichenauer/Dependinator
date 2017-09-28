@@ -85,13 +85,15 @@ namespace Dependinator.ModelParsing.Private
 
 		private static IModelItem ToModelLine(JsonTypes.Line line) => new ModelLine(
 			new NodeName(line.Source),
-			new NodeName(line.Target));
+			new NodeName(line.Target),
+			line.LinkCount);
 
 
 		private static JsonTypes.Line ToJsonLine(ModelLine line) => new JsonTypes.Line
 		{
 			Source = line.Source.FullName,
 			Target = line.Target.FullName,
+			LinkCount = line.LinkCount
 		};
 	}
 }

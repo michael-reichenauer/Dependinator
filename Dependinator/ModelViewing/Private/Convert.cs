@@ -23,7 +23,8 @@ namespace Dependinator.ModelViewing.Private
 		private static IEnumerable<ModelLine> ToModelLines(IEnumerable<Line> lines) =>
 			lines.Select(line => new ModelLine(
 				line.Source.Name,
-				line.Target.Name));
+				line.Target.Name,
+				line.Links.Count));
 
 
 		private static IEnumerable<ModelLink> ToModelLinks(IEnumerable<Link> links) =>
