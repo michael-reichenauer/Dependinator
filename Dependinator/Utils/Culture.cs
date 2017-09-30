@@ -8,7 +8,7 @@ namespace Dependinator.Utils
 	{
 		public static void Initialize()
 		{
-			LogCultures();
+			// LogCultures();
 
 			Log.Debug("Setting default culture");
 			CultureInfo originalCurrentCulture = CultureInfo.CurrentCulture;
@@ -16,8 +16,12 @@ namespace Dependinator.Utils
 			//Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
 			//CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("en-US");
 
-			Thread.CurrentThread.CurrentCulture = CultureInfo.InvariantCulture;
-			CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+			CultureInfo threadCulture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
+			DateTimeFormatInfo dateTimeFormat = (DateTimeFormatInfo)CultureInfo.GetCultureInfo("sv-SE").DateTimeFormat.Clone();
+			threadCulture.DateTimeFormat = dateTimeFormat;
+
+			Thread.CurrentThread.CurrentCulture = threadCulture;
+			CultureInfo.DefaultThreadCurrentCulture = threadCulture;
 
 			// Set the UI culture to en.US, with some adjustments
 			var chosenLanguageCulture = CultureInfo.GetCultureInfo("en-US");
@@ -37,7 +41,7 @@ namespace Dependinator.Utils
 			Thread.CurrentThread.CurrentUICulture = culture;
 			CultureInfo.DefaultThreadCurrentUICulture = culture;
 
-			LogCultures();
+			//LogCultures();
 		}
 
 

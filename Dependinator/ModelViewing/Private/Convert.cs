@@ -22,20 +22,20 @@ namespace Dependinator.ModelViewing.Private
 
 		private static IEnumerable<ModelLine> ToModelLines(IEnumerable<Line> lines) =>
 			lines.Select(line => new ModelLine(
-				line.Source.Name.FullName,
-				line.Target.Name.FullName,
+				line.Source.Name.AsString(),
+				line.Target.Name.AsString(),
 				line.Links.Count));
 
 
 		private static IEnumerable<ModelLink> ToModelLinks(IEnumerable<Link> links) =>
 			links.Select(link => new ModelLink(
-				link.Source.Name.FullName,
-				link.Target.Name.FullName));
+				link.Source.Name.AsString(),
+				link.Target.Name.AsString()));
 		
 
 		private static ModelNode ToModelNode(Node node) => 
 			new ModelNode(
-			node.Name.FullName,
+			node.Name.AsString(),
 			node.NodeType.AsString(),
 			node.ViewModel?.ItemBounds ?? node.Bounds,
 			node.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.ScaleFactor,

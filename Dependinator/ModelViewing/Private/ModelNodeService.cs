@@ -29,7 +29,7 @@ namespace Dependinator.ModelViewing.Private
 
 		public void UpdateNode(ModelNode modelNode, int stamp)
 		{
-			NodeName name = new NodeName(modelNode.Name);
+			NodeName name = NodeName.From(modelNode.Name);
 
 			if (model.TryGetNode(name, out Node existingNode))
 			{
@@ -258,7 +258,7 @@ namespace Dependinator.ModelViewing.Private
 
 			if (parentName == NodeName.Root && rootGroup != null)
 			{
-				parentName = new NodeName(rootGroup);
+				parentName = NodeName.From(rootGroup);
 				return GetParentNode(parentName, null);
 			}
 
@@ -273,7 +273,7 @@ namespace Dependinator.ModelViewing.Private
 
 			if (grandParentName == NodeName.Root && rootGroup != null)
 			{
-				grandParentName = new NodeName(rootGroup);
+				grandParentName = NodeName.From(rootGroup);
 				grandParent = GetParentNode(grandParentName, null);
 			}
 			else
@@ -306,7 +306,7 @@ namespace Dependinator.ModelViewing.Private
 			else if (node.Parent.Name == NodeName.Root)
 			{
 				// This node needs to be moved
-				NodeName parentName = new NodeName(rootGroup);
+				NodeName parentName = NodeName.From(rootGroup);
 				Node parent = GetParentNode(parentName, null);
 				MoveNode(node, parent);
 

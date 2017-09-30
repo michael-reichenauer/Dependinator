@@ -6,7 +6,7 @@ namespace Dependinator.ModelViewing.Nodes
 {
 	internal interface INodeViewModelService
 	{
-		Brush GetRandomRectangleBrush();
+		Brush GetRandomRectangleBrush(string nodeName);
 		Brush GetBackgroundBrush(Brush brush);
 		Brush GetBrushFromHex(string hexColor);
 		string GetHexColorFromBrush(Brush brush);

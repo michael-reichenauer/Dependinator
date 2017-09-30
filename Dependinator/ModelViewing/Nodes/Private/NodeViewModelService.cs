@@ -37,7 +37,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		{
 			return node.Color != null
 				? Converter.BrushFromHex(node.Color)
-				: GetRandomRectangleBrush();
+				: GetRandomRectangleBrush(node.Name.Name);
 		}
 
 
@@ -53,9 +53,9 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		public Brush GetRandomRectangleBrush()
+		public Brush GetRandomRectangleBrush(string nodeName)
 		{
-			return themeService.GetRectangleBrush();
+			return themeService.GetRectangleBrush(nodeName);
 		}
 
 		public Brush GetBrushFromHex(string hexColor)

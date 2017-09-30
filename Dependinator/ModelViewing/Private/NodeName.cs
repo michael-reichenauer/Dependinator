@@ -1,39 +1,64 @@
 using System;
+using System.Collections.Generic;
 using Dependinator.Utils;
 
 
-namespace Dependinator.ModelParsing
+namespace Dependinator.ModelViewing.Private
 {
 	internal class NodeName : Equatable<NodeName>
 	{
-		public static NodeName Root = new NodeName("");
+		private static readonly Dictionary<string, NodeName> Names = new Dictionary<string, NodeName>();
+		public static NodeName Root = From("");
 
+		public static int count = 0;
+
+		private readonly string fullName;
 		private readonly Lazy<string> name;
 		private readonly Lazy<string> shortName;
 		private readonly Lazy<NodeName> parentName;
 
 
-		public NodeName(string fullName)
+		private NodeName(string fullName)
 		{
-			this.FullName = fullName;
+			this.fullName = fullName;
 			name = new Lazy<string>(GetName);
 			shortName = new Lazy<string>(GetShortName);
 			parentName = new Lazy<NodeName>(GetParentName);
 			IsEqualWhenSame(fullName);
 		}
 
+		public static NodeName From(string fullName)
+		{
+			//return new NodeName(fullName);
+			if (!Names.TryGetValue(fullName, out NodeName name))
+			{
+				name = new NodeName(fullName);
+				Names[fullName] = name;
+			}
+			else
+			{
+				count++;
+			}
 
-		public string FullName { get; }
+			return name;
+		}
+
+
+		
 		public string Name => name.Value;
 		public string ShortName => shortName.Value;
 		public NodeName ParentName => parentName.Value;
 
-		public override string ToString() => this != Root ? FullName : "<root>";
+		public string AsString() => fullName;
+
+
+
+		public override string ToString() => this != Root ? fullName : "<root>";
 
 
 		private string GetName()
 		{
-			string text = FullName;
+			string text = fullName;
 
 			// Skipping parameters (if method)
 			int index = text.IndexOf('(');
@@ -59,7 +84,7 @@ namespace Dependinator.ModelParsing
 
 		private NodeName GetParentName()
 		{
-			string text = FullName;
+			string text = fullName;
 
 			// Skipping parameters (if method)
 			int index = text.IndexOf('(');
@@ -79,7 +104,7 @@ namespace Dependinator.ModelParsing
 				return Root;
 			}
 			
-			return new NodeName(text);
+			return From(text);
 		}
 	}
 }

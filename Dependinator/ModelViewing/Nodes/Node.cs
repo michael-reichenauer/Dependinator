@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Windows;
-using Dependinator.ModelParsing;
 using Dependinator.ModelViewing.Links;
+using Dependinator.ModelViewing.Private;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 using Point = System.Windows.Point;
@@ -16,10 +16,6 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			Id = new NodeId(name);
 			Name = name;
-			if (Name.FullName == "AcmAcs")
-			{
-				
-			}
 
 			if (name == NodeName.Root)
 			{

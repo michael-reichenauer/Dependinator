@@ -65,7 +65,7 @@ namespace Dependinator.ModelViewing.Private
 
 		public async Task LoadAsync()
 		{
-			Log.Debug($"Metadata model: {modelMetadata.ModelFilePath}");
+			Log.Debug($"Metadata model: {modelMetadata.ModelFilePath} {DateTime.Now}");
 			string dataFilePath = GetDataFilePath();
 
 			ClearAll();
@@ -76,8 +76,7 @@ namespace Dependinator.ModelViewing.Private
 				await ShowModelAsync(operation => parserService.TryDeserialize(
 					dataFilePath, items => UpdateDataItems(items, operation)));
 			}
-			else
-			if (File.Exists(modelMetadata.ModelFilePath))
+			else if (File.Exists(modelMetadata.ModelFilePath))
 			{
 				await ShowModelAsync(operation => parserService.AnalyzeAsync(
 					modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
@@ -110,6 +109,8 @@ namespace Dependinator.ModelViewing.Private
 				UpdateLines(Root);
 				recentModelsService.AddModelPaths(modelMetadata.ModelFilePath);
 			}
+
+			GC.Collect();
 		}
 
 
@@ -173,17 +174,28 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		public async Task RefreshAsync(bool refreshLayout)
+		public async Task RefreshAsync(bool isClean)
 		{
+			if (isClean)
+			{
+				string dataFilePath = GetDataFilePath();
+
+				if (File.Exists(dataFilePath))
+				{
+					File.Delete(dataFilePath);
+				}
+
+				await LoadAsync();
+				return;
+			}
+			
+
 			int operationId = await ShowModelAsync(operation => parserService.AnalyzeAsync(
 				modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
 
 			modelNodeService.RemoveObsoleteNodesAndLinks(operationId);
 
-			if (refreshLayout)
-			{
-				modelNodeService.ResetLayout();
-			}
+			GC.Collect();
 		}
 
 

@@ -1,4 +1,5 @@
 using Dependinator.ModelParsing;
+using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.Nodes

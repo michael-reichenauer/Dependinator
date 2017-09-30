@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -15,8 +16,6 @@ namespace Dependinator.Common.ThemeHandling
 	{
 		private readonly ISettingsService settingsService;
 		private readonly Dictionary<string, Brush> customBranchBrushes = new Dictionary<string, Brush>();
-
-		private int currentIndex = 0;
 
 		private Theme currentTheme;
 
@@ -120,10 +119,10 @@ namespace Dependinator.Common.ThemeHandling
 		}
 
 
-		public SolidColorBrush GetRectangleBrush()
+		public SolidColorBrush GetRectangleBrush(string nodeName)
 		{
-			int index = (currentIndex++) % Theme.brushes.Count;
-
+			int code = Math.Abs(nodeName?.GetHashCode() ?? 0);
+			int index = code % Theme.brushes.Count;
 			return Theme.brushes[index];
 		}
 
