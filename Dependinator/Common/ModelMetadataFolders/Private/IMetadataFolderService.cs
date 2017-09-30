@@ -10,7 +10,9 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		string ModelFilePath { get; }
 
 		string MetadataFolderPath { get; }
-		
+		bool IsDefault { get; }
+
 		void SetModelFilePath(string path);
+		void SetDefault();
 	}
 }

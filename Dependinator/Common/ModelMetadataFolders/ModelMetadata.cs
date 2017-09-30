@@ -30,6 +30,7 @@ namespace Dependinator.Common.ModelMetadataFolders
 		public string ModelFilePath => modelMetadataService.ModelFilePath;
 
 		public bool IsValid => ModelFilePath != null && File.Exists(ModelFilePath);
+		public bool IsDefault => modelMetadataService.IsDefault;
 
 		public bool HasValue => FolderPath != null;
 
@@ -39,5 +40,9 @@ namespace Dependinator.Common.ModelMetadataFolders
 		
 
 		public override string ToString() => FolderPath;
+
+
+		public void SetDefault() => modelMetadataService.SetDefault();
+
 	}
 }

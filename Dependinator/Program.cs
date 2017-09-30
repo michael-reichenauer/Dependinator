@@ -16,6 +16,7 @@ namespace Dependinator
 		[STAThread]
 		public static void Main()
 		{
+			Culture.Initialize();
 			Log.Debug(GetStartLineText());
 			Program program = new Program();
 			program.Run();

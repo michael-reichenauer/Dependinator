@@ -156,6 +156,7 @@
       <DependentUpon>OpenModelView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Open\OpenModelViewModel.cs" />
+    <Compile Include="Utils\Culture.cs" />
     <Compile Include="Utils\PriorityBlockingQueue.cs" />
     <Compile Include="Product.cs" />
     <Compile Include="MainWindowViews\SearchFilter.xaml.cs">

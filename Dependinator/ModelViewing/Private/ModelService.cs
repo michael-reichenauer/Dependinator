@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelParsing;
 using Dependinator.ModelViewing.Nodes;
@@ -25,6 +26,7 @@ namespace Dependinator.ModelViewing.Private
 		private readonly IModelNodeService modelNodeService;
 		private readonly IModelLinkService modelLinkService;
 		private readonly IRecentModelsService recentModelsService;
+		private readonly IMessage message;
 		private readonly Func<OpenModelViewModel> openModelViewModelProvider;
 
 		private readonly Model model;
@@ -41,7 +43,8 @@ namespace Dependinator.ModelViewing.Private
 			Func<OpenModelViewModel> openModelViewModelProvider,
 			Model model,
 			ModelMetadata modelMetadata,
-			IRecentModelsService recentModelsService)
+			IRecentModelsService recentModelsService,
+			IMessage message)
 		{
 			this.parserService = parserService;
 			this.modelNodeService = modelNodeService;
@@ -51,6 +54,7 @@ namespace Dependinator.ModelViewing.Private
 			this.model = model;
 			this.modelMetadata = modelMetadata;
 			this.recentModelsService = recentModelsService;
+			this.message = message;
 		}
 
 
@@ -81,7 +85,18 @@ namespace Dependinator.ModelViewing.Private
 
 			if (!Root.Children.Any())
 			{
+				if (!modelMetadata.IsDefault)
+				{
+					message.ShowWarning($"Could not load model from:\n{modelMetadata.ModelFilePath}");
+				}
+
+				if (File.Exists(dataFilePath))
+				{
+					File.Delete(dataFilePath);
+				}
+
 				isShowingOpenModel = true;
+				modelMetadata.SetDefault();
 				Root.ItemsCanvas.Scale = 1;
 				Root.ItemsCanvas.Offset = new Point(0, 0);
 				Root.ItemsCanvas.IsZoomAndMoveEnabled = false;

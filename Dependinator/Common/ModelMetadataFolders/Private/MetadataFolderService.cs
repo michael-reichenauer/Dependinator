@@ -9,15 +9,18 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 	[SingleInstance]
 	internal class ModelMetadataService : IModelMetadataService
 	{
+		private readonly string defaultPath;
 		public event EventHandler OnChange;
 
 		public string ModelFilePath { get; private set; }
 		
 		public string MetadataFolderPath { get; private set; }
 
+		public bool IsDefault { get; private set; }
+
 		public ModelMetadataService()
 		{
-			string defaultPath = Path.Combine(ProgramInfo.GetProgramFolderPath(), "Default");
+			defaultPath = Path.Combine(ProgramInfo.GetProgramFolderPath(), "Default");
 
 			SetModelFilePath(defaultPath);
 		}
@@ -34,12 +37,17 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 				return;
 			}
 
+			IsDefault = defaultPath.IsSameIgnoreCase(modelFilePath);
+
 			MetadataFolderPath = metadataPath;
 			ModelFilePath = modelFilePath;
 			OnChange?.Invoke(this, EventArgs.Empty);
 		}
 
-		
+
+		public void SetDefault() => SetModelFilePath(defaultPath);
+
+
 		public static string GetMetadataFolderPath(string modelFilePath)
 		{
 			string metadataFolderName = CreateMetadataFolderName(modelFilePath);
