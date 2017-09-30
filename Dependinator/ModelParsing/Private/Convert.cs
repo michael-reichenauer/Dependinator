@@ -49,7 +49,7 @@ namespace Dependinator.ModelParsing.Private
 
 
 		private static ModelNode ToModelNode(JsonTypes.Node node) => new ModelNode(
-			new NodeName(node.Name),
+			node.Name,
 			node.Type,
 			node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
 			node.ItemsScaleFactor,
@@ -60,7 +60,7 @@ namespace Dependinator.ModelParsing.Private
 
 		private static JsonTypes.Node ToJsonNode(ModelNode node) => new JsonTypes.Node
 		{
-			Name = node.Name.FullName,
+			Name = node.Name,
 			Type = node.NodeType,
 			Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
 			ItemsScaleFactor = node.ItemsScaleFactor,
@@ -71,28 +71,28 @@ namespace Dependinator.ModelParsing.Private
 
 
 		private static ModelLink ToModelLink(JsonTypes.Link link) => new ModelLink(
-			new NodeName(link.Source),
-			new NodeName(link.Target));
+			link.Source,
+			link.Target);
 
 
 		private static JsonTypes.Link ToJsonLink(ModelLink link) => new JsonTypes.Link
 		{
-			Source = link.Source.FullName,
-			Target = link.Target.FullName,
+			Source = link.Source,
+			Target = link.Target,
 		};
 
 
 
 		private static IModelItem ToModelLine(JsonTypes.Line line) => new ModelLine(
-			new NodeName(line.Source),
-			new NodeName(line.Target),
+			line.Source,
+			line.Target,
 			line.LinkCount);
 
 
 		private static JsonTypes.Line ToJsonLine(ModelLine line) => new JsonTypes.Line
 		{
-			Source = line.Source.FullName,
-			Target = line.Target.FullName,
+			Source = line.Source,
+			Target = line.Target,
 			LinkCount = line.LinkCount
 		};
 	}

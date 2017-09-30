@@ -48,14 +48,8 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return node;
 			}
 
-
-			NodeName nodeName = new NodeName(name);
-			if (nodeName.Name == "IApplicationSettingsService")
-			{
-				
-			}
 			//rootGroup = null;
-			node = new ModelNode(nodeName, nodeType, RectEx.Zero, 0, PointEx.Zero, null, rootGroup);
+			node = new ModelNode(name, nodeType, RectEx.Zero, 0, PointEx.Zero, null, rootGroup);
 
 			sentNodes[name] = node;
 
@@ -76,21 +70,21 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		public void SendLink(NodeName sourceNodeName, string targetNodeName)
+		public void SendLink(string sourceNodeName, string targetNodeName)
 		{
-			if (Util.IsCompilerGenerated(sourceNodeName.FullName)
+			if (Util.IsCompilerGenerated(sourceNodeName)
 			    || Util.IsCompilerGenerated(targetNodeName))
 			{
 				Log.Warn($"Compiler generated link: {sourceNodeName}->{targetNodeName}");
 			}
 
-			if (sourceNodeName.FullName == targetNodeName)
+			if (sourceNodeName == targetNodeName)
 			{
 				// Skipping link to self
 				return;
 			}
 
-			if (sourceNodeName.FullName.Contains("<") || sourceNodeName.FullName.Contains(">"))
+			if (sourceNodeName.Contains("<") || sourceNodeName.Contains(">"))
 			{
 				Log.Warn($"Send link source: {sourceNodeName}");
 			}
@@ -100,7 +94,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				Log.Warn($"Send link target: {targetNodeName}");
 			}
 
-			ModelLink link = new ModelLink(sourceNodeName, new NodeName(targetNodeName));
+			ModelLink link = new ModelLink(sourceNodeName, targetNodeName);
 
 			LinkCount++;
 

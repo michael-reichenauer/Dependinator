@@ -6,7 +6,7 @@ namespace Dependinator.ModelParsing
 	internal class ModelNode : Equatable<ModelNode>, IModelItem
 	{
 		public ModelNode(
-			NodeName name,
+			string name,
 			string nodeType,
 			Rect bounds,
 			double itemsScaleFactor,
@@ -25,7 +25,7 @@ namespace Dependinator.ModelParsing
 			IsEqualWhenSame(Name);
 		}
 
-		public NodeName Name { get; }
+		public string Name { get; }
 		public string NodeType { get; }
 		public Rect Bounds { get; }
 		public double ItemsScaleFactor { get; }

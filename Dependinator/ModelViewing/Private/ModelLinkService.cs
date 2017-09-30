@@ -34,8 +34,8 @@ namespace Dependinator.ModelViewing.Private
 				return;
 			}
 
-			Node source = model.Node(modelLink.Source);
-			Node target = model.Node(modelLink.Target);
+			Node source = model.Node(new NodeName(modelLink.Source));
+			Node target = model.Node(new NodeName(modelLink.Target));
 
 			if (TryGetLink(source, target, out Link link))
 			{
@@ -54,8 +54,8 @@ namespace Dependinator.ModelViewing.Private
 
 		public void UpdateLine(ModelLine modelLine, int stamp)
 		{
-			Node source = model.Node(modelLine.Source);
-			Node target = model.Node(modelLine.Target);
+			Node source = model.Node(new NodeName(modelLine.Source));
+			Node target = model.Node(new NodeName(modelLine.Target));
 
 			if (TryGetLine(source, target, out Line line))
 			{

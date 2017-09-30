@@ -298,11 +298,11 @@ namespace Dependinator.ModelViewing.Private
 			public Operation(int stamp) => Id = stamp;
 
 
-			public int GetPriority(NodeName name)
+			public int GetPriority(string name)
 			{
 				int priority = 0;
 
-				foreach (char t in name.FullName)
+				foreach (char t in name)
 				{
 					if (t == '(')
 					{

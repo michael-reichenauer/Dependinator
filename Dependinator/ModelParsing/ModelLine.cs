@@ -5,7 +5,7 @@ namespace Dependinator.ModelParsing
 {
 	internal class ModelLine : Equatable<ModelLine>, IModelItem
 	{
-		public ModelLine(NodeName source, NodeName target, int linkCount)
+		public ModelLine(string source, string target, int linkCount)
 		{
 			Source = source;
 			Target = target;
@@ -15,8 +15,8 @@ namespace Dependinator.ModelParsing
 		}
 
 
-		public NodeName Source { get; }
-		public NodeName Target { get; }
+		public string Source { get; }
+		public string Target { get; }
 		public int LinkCount { get; }
 
 		public override string ToString() => $"{Source}->{Target}";
