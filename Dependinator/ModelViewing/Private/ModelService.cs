@@ -61,9 +61,11 @@ namespace Dependinator.ModelViewing.Private
 
 		public async Task LoadAsync()
 		{
+			Log.Debug($"Metadata model: {modelMetadata.ModelFilePath}");
 			string dataFilePath = GetDataFilePath();
 
 			ClearAll();
+			Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
 
 			if (File.Exists(dataFilePath))
 			{
@@ -260,7 +262,12 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private string GetDataFilePath() => Path.Combine(modelMetadata, "data.json");
+		private string GetDataFilePath()
+		{
+			string dataJson = $"{Path.GetFileName(modelMetadata.ModelFilePath)}.dn.json";
+			string dataFilePath = Path.Combine(modelMetadata, dataJson);
+			return dataFilePath;
+		}
 
 
 		private class Operation
