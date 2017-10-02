@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using Dependinator.ModelParsing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.Nodes;
+using Mono.Cecil;
 
 
 namespace Dependinator.ModelViewing.Private
@@ -64,8 +66,8 @@ namespace Dependinator.ModelViewing.Private
 				return;
 			}
 
-			line = AddLine(source, target, modelLine.LinkCount);
-			line.Points.InsertRange(1, modelLine.Points);
+			AddLine(source, target, modelLine.LinkCount, modelLine.Points);
+
 		}
 
 
@@ -125,7 +127,7 @@ namespace Dependinator.ModelViewing.Private
 			{
 				if (!TryGetLine(linkSegment, out Line line))
 				{
-					line = AddLine(linkSegment.Source, linkSegment.Target, 0);
+					line = AddLine(linkSegment.Source, linkSegment.Target, 0, null);
 				}
 
 				line.Links.Add(link);
@@ -134,9 +136,15 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private Line AddLine(Node source, Node target, int linkCount)
+		private Line AddLine(Node source, Node target, int linkCount, IReadOnlyList<Point> points)
 		{
 			Line line = new Line(source, target);
+
+			if (points != null)
+			{
+				line.Points.InsertRange(1, points);
+			}
+
 			line.Source.SourceLines.Add(line);
 			line.Target.TargetLines.Add(line);
 			line.LinkCount = linkCount;
