@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
@@ -86,6 +87,7 @@ namespace Dependinator.ModelParsing.Private
 		private static IModelItem ToModelLine(JsonTypes.Line line) => new ModelLine(
 			line.Source,
 			line.Target,
+			ToLinePoints(line.Points),
 			line.LinkCount);
 
 
@@ -93,7 +95,30 @@ namespace Dependinator.ModelParsing.Private
 		{
 			Source = line.Source,
 			Target = line.Target,
+			Points = ToJsonPoints(line.Points),
 			LinkCount = line.LinkCount
 		};
+
+
+		private static IReadOnlyList<Point> ToLinePoints(IEnumerable<string> linePoints)
+		{
+			if (linePoints == null)
+			{
+				return new List<Point>();
+			}
+
+			return linePoints.Select(Point.Parse).ToList();
+		}
+
+
+		private static List<string> ToJsonPoints(IEnumerable<Point> points)
+		{
+			if (!points.Any())
+			{
+				return null;
+			}
+
+			return points.Select(point => point.AsString()).ToList();
+		}
 	}
 }

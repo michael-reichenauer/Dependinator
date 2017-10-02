@@ -64,7 +64,8 @@ namespace Dependinator.ModelViewing.Private
 				return;
 			}
 
-			AddLine(source, target, modelLine.LinkCount);
+			line = AddLine(source, target, modelLine.LinkCount);
+			line.Points.InsertRange(1, modelLine.Points);
 		}
 
 

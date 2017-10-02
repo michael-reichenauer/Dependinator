@@ -62,6 +62,8 @@ namespace Dependinator.ModelParsing
 			// The target node name
 			public string Target { get; set; }
 
+			public List<string> Points { get; set; }
+
 			public int LinkCount { get; set; }
 		}
 
