@@ -23,19 +23,19 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		public ModelNode SendDefinedNode(string name, string nodeType, string rootGroup)
+		public ModelNode SendDefinedNode(string name, string nodeType, string rootGroup, string group)
 		{
-			return SendNode(name, nodeType, rootGroup);
+			return SendNode(name, nodeType, rootGroup, group);
 		}
 
 
 		public ModelNode SendReferencedNode(string name, string nodeType)
 		{
-			return SendNode(name, nodeType, null);
+			return SendNode(name, nodeType, null, null);
 		}
 
 
-		private ModelNode SendNode(string name, string nodeType, string rootGroup)
+		private ModelNode SendNode(string name, string nodeType, string rootGroup, string group)
 		{
 			if (Util.IsCompilerGenerated(name))
 			{
@@ -49,16 +49,11 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			}
 
 			//rootGroup = null;
-			node = new ModelNode(name, nodeType, RectEx.Zero, 0, PointEx.Zero, null, rootGroup);
+			node = new ModelNode(name, nodeType, RectEx.Zero, 0, PointEx.Zero, null, rootGroup, group);
 
 			sentNodes[name] = node;
 
 			//Log.Debug($"Send node: {name} {node.Type}");
-
-			if (name == "TEdge")
-			{
-				
-			}
 
 			if (name.Contains("<") || name.Contains(">"))
 			{

@@ -12,7 +12,6 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 	internal class AssemblyAnalyzer
 	{
 		private readonly List<MethodBody> methodBodies = new List<MethodBody>();
-		private int memberCount = 0;
 		private readonly Sender sender;
 		private readonly string rootGroup;
 
@@ -27,7 +26,6 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		{
 			rootGroup = assemblyRootGroup;
 			sender = new Sender(modelItemsCallback);
-			memberCount = 0;
 
 			try
 			{
@@ -87,7 +85,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			TypeDefinition type)
 		{
 			string name = Util.GetTypeFullName(type);
-			ModelNode typeNode = sender.SendDefinedNode(name, JsonTypes.NodeType.Type, rootGroup);
+			ModelNode typeNode = sender.SendDefinedNode(name, JsonTypes.NodeType.Type, rootGroup, null);
 
 			yield return (type, typeNode);
 
@@ -129,19 +127,29 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			{
 				type.Fields
 					.Where(member => !Util.IsCompilerGenerated(member.Name))
-					.ForEach(member => AddMember(member, typeNode));
+					.ForEach(member => AddMember(
+						member, typeNode, member.Attributes.HasFlag(FieldAttributes.Private)));
 
 				type.Events
 					.Where(member => !Util.IsCompilerGenerated(member.Name))
-					.ForEach(member => AddMember(member, typeNode));
+					.ForEach(member => AddMember(
+						member, 
+						typeNode, 
+						(member.AddMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true) &&
+					  (member.RemoveMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)));
 
 				type.Properties
 					.Where(member => !Util.IsCompilerGenerated(member.Name))
-					.ForEach(member => AddMember(member, typeNode));
+					.ForEach(member => AddMember(
+						member, 
+						typeNode,
+						(member.GetMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true) &&
+						(member.SetMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)));
 
 				type.Methods
 					.Where(member => !Util.IsCompilerGenerated(member.Name))
-					.ForEach(member => AddMember(member, typeNode));
+					.ForEach(member => AddMember(
+						member, typeNode, member.Attributes.HasFlag(MethodAttributes.Private)));
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
@@ -150,14 +158,14 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private void AddMember(IMemberDefinition memberInfo, ModelNode parentTypeNode)
+		private void AddMember(IMemberDefinition memberInfo, ModelNode parentTypeNode, bool isPrivate)
 		{
 			try
 			{
 				string memberName = Util.GetMemberFullName(memberInfo);
-
-				var memberNode = sender.SendDefinedNode(memberName, JsonTypes.NodeType.Member, rootGroup);
-				memberCount++;
+				string group = isPrivate ? "Private" : null;
+				var memberNode = sender.SendDefinedNode(
+					memberName, JsonTypes.NodeType.Member, rootGroup, group);
 
 				AddMemberLinks(memberNode, memberInfo);
 			}

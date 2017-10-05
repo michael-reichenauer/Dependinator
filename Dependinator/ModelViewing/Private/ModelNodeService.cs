@@ -27,29 +27,28 @@ namespace Dependinator.ModelViewing.Private
 			this.nodeViewModelService = nodeViewModelService;
 		}
 
+
 		public void UpdateNode(ModelNode modelNode, int stamp)
 		{
 			NodeName name = NodeName.From(modelNode.Name);
 
 			if (model.TryGetNode(name, out Node existingNode))
 			{
-				// TODO: Check node properties as well and update if changed
 				existingNode.Stamp = stamp;
-				
-				MoveNodeIfNeeded(existingNode, modelNode.RootGroup);
-				
-				if (existingNode.NodeType.AsString() != modelNode.NodeType)
-				{
-					existingNode.NodeType = new NodeType(modelNode.NodeType);
-					UpdateNodeType(existingNode);
-				}
 
+				// MoveNodeIfNeeded(existingNode, modelNode.RootGroup);
+				UpdateNodeIfNeeded(modelNode, existingNode);
 				return;
 			}
 
-			NodeName parentName = name.ParentName;
-			Node parentNode = GetParentNode(parentName, modelNode.RootGroup);
+			Node parentNode = GetParentNode2(name, modelNode);
 
+			AddNode(name, modelNode, parentNode, stamp);
+		}
+
+
+		private void AddNode(NodeName name, ModelNode modelNode, Node parentNode, int stamp)
+		{
 			Node node = new Node(name)
 			{
 				Stamp = stamp,
@@ -65,7 +64,18 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-	
+
+
+		private void UpdateNodeIfNeeded(ModelNode modelNode, Node existingNode)
+		{
+			// TODO: Check node properties as well and update if changed
+			if (existingNode.NodeType.AsString() != modelNode.NodeType)
+			{
+				existingNode.NodeType = new NodeType(modelNode.NodeType);
+
+				UpdateNodeType(existingNode);
+			}
+		}
 
 
 		public void RemoveAllNodesAndLinks()
@@ -181,33 +191,33 @@ namespace Dependinator.ModelViewing.Private
 			if (node.ItemsCanvas != null)
 			{
 				node.Parent?.ItemsCanvas.RemoveChildCanvas(node.ItemsCanvas);
-				
+
 			}
 
 			RemoveNodeFromParentCanvas(node);
 		}
 
 
-		private void MoveNode(Node node, Node parentNode)
-		{
-			node.Parent?.RemoveChild(node);
+		//private void MoveNode(Node node, Node parentNode)
+		//{
+		//	node.Parent?.RemoveChild(node);
 
-			if (node.ItemsCanvas != null)
-			{
-				node.Parent?.ItemsCanvas.RemoveChildCanvas(node.ItemsCanvas);
-			}
+		//	if (node.ItemsCanvas != null)
+		//	{
+		//		node.Parent?.ItemsCanvas.RemoveChildCanvas(node.ItemsCanvas);
+		//	}
 
-			RemoveNodeFromParentCanvas(node);
+		//	RemoveNodeFromParentCanvas(node);
 
-			parentNode.AddChild(node);
-			ItemsCanvas parentCanvas = GetChildrenCanvas(parentNode);
-			if (node.ItemsCanvas != null)
-			{
-				parentCanvas.AddChildCanvas(node.ItemsCanvas);
-			}
+		//	parentNode.AddChild(node);
+		//	ItemsCanvas parentCanvas = GetChildrenCanvas(parentNode);
+		//	if (node.ItemsCanvas != null)
+		//	{
+		//		parentCanvas.AddChildCanvas(node.ItemsCanvas);
+		//	}
 
-			parentCanvas.AddItem(node.ViewModel);
-		}
+		//	parentCanvas.AddItem(node.ViewModel);
+		//}
 
 		private void UpdateNodeType(Node node)
 		{
@@ -252,67 +262,138 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private Node GetParentNode(NodeName parentName, string rootGroup)
+		//private Node GetParentNode(NodeName name, ModelNode modelNode)
+		//{
+		//	NodeName parentName = GetParentName(name, modelNode);
+
+		//	return GetParentNode(parentName);
+		//}
+
+
+		private Node GetParentNode2(NodeName name, ModelNode modelNode)
 		{
-			Node parent;
+			NodeName parentName = GetParentName2(name, modelNode);
 
-			if (parentName == NodeName.Root && rootGroup != null)
-			{
-				parentName = NodeName.From(rootGroup);
-				return GetParentNode(parentName, null);
-			}
-
-			if (model.TryGetNode(parentName, out parent))
+			if (model.TryGetNode(parentName, out Node parent))
 			{
 				return parent;
 			}
 
-			// The parent not yet added. We need the grandparent to add parent
-			NodeName grandParentName = parentName.ParentName;
-			Node grandParent;
-
-			if (grandParentName == NodeName.Root && rootGroup != null)
-			{
-				grandParentName = NodeName.From(rootGroup);
-				grandParent = GetParentNode(grandParentName, null);
-			}
-			else
-			{
-				grandParent = GetParentNode(grandParentName, rootGroup);
-			}
+			Node grandParent = GetParentNode3(parentName, modelNode.RootGroup);
 
 			parent = new Node(parentName);
 			parent.NodeType = NodeType.NameSpace;
-			parent.RootGroup = rootGroup;
-
 			AddNode(parent, grandParent);
 			return parent;
 		}
 
 
-		private void MoveNodeIfNeeded(Node node, string rootGroup)
+		private Node GetParentNode3(NodeName parentName, string rootGroup)
 		{
-			if (rootGroup == null || node.Name == NodeName.Root || node.RootGroup != null)
+			if (parentName == NodeName.Root && rootGroup != null)
 			{
-				return;
+				parentName = NodeName.From($"${rootGroup.Replace(".", ".$")}");
+				return GetParentNode3(parentName, null);
 			}
-			
-			if (node.Parent.Name != NodeName.Root && node.Parent.RootGroup == null)
-			{
-				// Parent needs to be moved
-				MoveNodeIfNeeded(node.Parent, rootGroup);
-				node.RootGroup = rootGroup;
-			}
-			else if (node.Parent.Name == NodeName.Root)
-			{
-				// This node needs to be moved
-				NodeName parentName = NodeName.From(rootGroup);
-				Node parent = GetParentNode(parentName, null);
-				MoveNode(node, parent);
 
-				node.RootGroup = rootGroup;
+			if (model.TryGetNode(parentName, out Node parent))
+			{
+				return parent;
 			}
+
+			NodeName grandParentName = parentName.ParentName;
+			Node grandParent = GetParentNode3(grandParentName, rootGroup);
+
+			parent = new Node(parentName);
+			parent.NodeType = NodeType.NameSpace;
+			AddNode(parent, grandParent);
+			return parent;
 		}
+
+
+		//private Node GetParentNode(NodeName parentName)
+		//{
+		//	if (model.TryGetNode(parentName, out Node parent))
+		//	{
+		//		return parent;
+		//	}
+
+		//	// The parent not yet added. We need the grandparent to add parent
+		//	Node grandParent = GetParentNode(parentName.ParentName);
+
+		//	parent = new Node(parentName);
+		//	parent.NodeType = NodeType.NameSpace;
+		//	AddNode(parent, grandParent);
+		//	return parent;
+		//}
+
+
+		private static NodeName GetParentName2(NodeName name, ModelNode modelNode)
+		{
+			if (modelNode.Group != null)
+			{
+				return NodeName.From($"{name.ParentName}.${modelNode.Group}");
+			}
+
+			return name.ParentName;
+		}
+
+
+		//private static NodeName GetParentName(NodeName name, ModelNode modelNode)
+		//{
+		//	try
+		//	{
+		//		string rootGroup = modelNode.RootGroup;
+		//		if (rootGroup != null)
+		//		{
+		//			rootGroup = $"${rootGroup.Replace(".", ".$")}";
+		//		}
+
+		//		string group = modelNode.Group;
+		//		if (group != null)
+		//		{
+		//			rootGroup = $"${group.Replace(".", ".$")}";
+		//		}
+
+		//		string fullName = $"{rootGroup}.{name.ParentName}.{group}.{modelNode.Name}";
+		//		fullName = fullName.Replace("..", ".");
+
+		//		NodeName parentName = NodeName.From(fullName).ParentName;
+		//		return parentName;
+		//	}
+		//	catch (Exception e)
+		//	{
+		//		Console.WriteLine(e);
+		//		throw;
+		//	}
+		//}
+
+
+		//private void MoveNodeIfNeeded(Node node, ModelNode modelNode)
+		//{
+		//	string rootGroup = modelNode.RootGroup;
+
+		//	if (rootGroup == null || node.Name == NodeName.Root || node.RootGroup != null)
+		//	{
+		//		return;
+		//	}
+
+		//	if (node.Parent.Name != NodeName.Root && node.Parent.RootGroup == null)
+		//	{
+		//		// Parent needs to be moved
+		//		MoveNodeIfNeeded(node.Parent, rootGroup);
+		//		node.RootGroup = rootGroup;
+		//	}
+		//	else if (node.Parent.Name == NodeName.Root)
+		//	{
+		//		// This node needs to be moved
+		//		NodeName parentName = NodeName.From(rootGroup);
+		//		Node parent = GetParentNode(parentName, null);
+		//		MoveNode(node, parent);
+
+		//		node.RootGroup = rootGroup;
+		//	}
+		//}
 
 
 		private static ItemsCanvas GetChildrenCanvas(Node node)

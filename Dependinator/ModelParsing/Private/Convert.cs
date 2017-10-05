@@ -25,29 +25,23 @@ namespace Dependinator.ModelParsing.Private
 
 			return null;
 		}
-
-
+		
 
 		public static JsonTypes.Item ToJsonItem(IModelItem item)
 		{
-			if (item is ModelNode modelNode)
+			switch (item)
 			{
-				return new JsonTypes.Item { Node = ToJsonNode(modelNode) };
+				case ModelNode modelNode:
+					return new JsonTypes.Item { Node = ToJsonNode(modelNode) };
+				case ModelLink modelLink:
+					return new JsonTypes.Item { Link = ToJsonLink(modelLink) };
+				case ModelLine modelLine:
+					return new JsonTypes.Item { Line = ToJsonLine(modelLine) };
 			}
-			else if (item is ModelLink modelLink)
-			{
-				return new JsonTypes.Item { Link = ToJsonLink(modelLink) };
-			}
-			else if (item is ModelLine modelLine)
-			{
-				return new JsonTypes.Item { Line = ToJsonLine(modelLine) };
-			}
-
-
+			
 			return null;
 		}
-
-
+		
 
 		private static ModelNode ToModelNode(JsonTypes.Node node) => new ModelNode(
 			node.Name,
@@ -56,7 +50,8 @@ namespace Dependinator.ModelParsing.Private
 			node.ItemsScaleFactor,
 			node.ItemsOffset != null ? Point.Parse(node.ItemsOffset) : PointEx.Zero,
 			node.Color,
-			node.RootGroup);
+			node.RootGroup,
+			node.Group);
 
 
 		private static JsonTypes.Node ToJsonNode(ModelNode node) => new JsonTypes.Node
@@ -67,7 +62,8 @@ namespace Dependinator.ModelParsing.Private
 			ItemsScaleFactor = node.ItemsScaleFactor,
 			ItemsOffset = node.ItemsOffset != PointEx.Zero ? node.ItemsOffset.AsString() : null,
 			Color = node.Color,
-			RootGroup = node.RootGroup
+			RootGroup = node.RootGroup,
+			Group = node.Group
 		};
 
 
