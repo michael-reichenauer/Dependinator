@@ -5,7 +5,6 @@ using Dependinator.ModelParsing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.Nodes;
-using Mono.Cecil;
 
 
 namespace Dependinator.ModelViewing.Private

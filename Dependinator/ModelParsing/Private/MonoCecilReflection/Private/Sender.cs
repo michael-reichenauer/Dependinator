@@ -23,9 +23,15 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		public ModelNode SendDefinedNode(string name, string nodeType, string rootGroup, string group)
+		public ModelNode SendDefinedNodex(string name, string nodeType, string rootGroup, string group)
 		{
 			return SendNode(name, nodeType, rootGroup, group);
+		}
+
+
+		public ModelNode SendDefinedNode(string name, string nodeType, string group)
+		{
+			return SendNode(name, nodeType, null, group);
 		}
 
 
@@ -37,7 +43,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 		private ModelNode SendNode(string name, string nodeType, string rootGroup, string group)
 		{
-			if (Util.IsCompilerGenerated(name))
+			if (Name.IsCompilerGenerated(name))
 			{
 				Log.Warn($"Compiler generated node: {name}");
 			}
@@ -50,6 +56,11 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			//rootGroup = null;
 			node = new ModelNode(name, nodeType, RectEx.Zero, 0, PointEx.Zero, null, rootGroup, group);
+
+			if (name.Contains("CA.CA."))
+			{
+				
+			}
 
 			sentNodes[name] = node;
 
@@ -67,8 +78,8 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 		public void SendLink(string sourceNodeName, string targetNodeName)
 		{
-			if (Util.IsCompilerGenerated(sourceNodeName)
-			    || Util.IsCompilerGenerated(targetNodeName))
+			if (Name.IsCompilerGenerated(sourceNodeName)
+			    || Name.IsCompilerGenerated(targetNodeName))
 			{
 				Log.Warn($"Compiler generated link: {sourceNodeName}->{targetNodeName}");
 			}

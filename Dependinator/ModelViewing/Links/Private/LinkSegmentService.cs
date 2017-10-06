@@ -16,14 +16,14 @@ namespace Dependinator.ModelViewing.Links.Private
 			// Iterate segments until line end is reached
 			while (segmentSource != link.Target)
 			{
-				// Try to assume next line target is a child node by searching if line source
+				// Try to assume next line target is a child or descendent node by searching if line source
 				// is a ancestor of end target node
 				Node segmentTarget = link.Target.AncestorsAndSelf()
 					.FirstOrDefault(ancestor => ancestor.Parent == segmentSource);
 
 				if (segmentTarget == null)
 				{
-					// Segment target was not a child, lets try to assume target is a sibling node
+					// Segment target was not a descendent, lets try to assume target is a sibling node
 					segmentTarget = link.Target.AncestorsAndSelf()
 						.FirstOrDefault(ancestor => ancestor.Parent == segmentSource.Parent);
 				}

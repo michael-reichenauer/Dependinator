@@ -16,9 +16,9 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		private readonly string rootGroup;
 
 		private readonly AssemblyDefinition assembly;
-		private List<(TypeDefinition type, ModelNode node)> typeNodes;
+		private List<TypeInfo> typeInfos;
 
-
+		
 		public AssemblyAnalyzer(
 			string assemblyPath,
 			string assemblyRootGroup,
@@ -51,15 +51,12 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return;
 			}
 
-			IEnumerable<TypeDefinition> assemblyTypes = assembly.MainModule.Types
-				.Where(type =>
-					!Util.IsCompilerGenerated(type.Name) &&
-					!Util.IsCompilerGenerated(type.DeclaringType?.Name));
+			IEnumerable<TypeDefinition> assemblyTypes = GetAssemblyTypes();
 
-			// Add type nodes
-			typeNodes = assemblyTypes
-			 .SelectMany(type => GetAssemblyTypes(type))
-			 .ToList();
+			AddRootNameSpace();
+
+			// Add assembly type nodes (including inner type types)
+			typeInfos = assemblyTypes.SelectMany(AddTypes).ToList();
 		}
 
 
@@ -72,28 +69,43 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			Timing t = new Timing();
 
-			typeNodes.ForEach(typeNode => AddLinksToBaseTypes(typeNode.type, typeNode.node));
-			typeNodes.ForEach(typeNode => AddTypeMembers(typeNode.type, typeNode.node));
-			methodBodies.ForEach(method => AddMethodBodyLinks(method));
+			typeInfos.ForEach(AddLinksToBaseTypes);
+			typeInfos.ForEach(AddTypeMembers);
+			methodBodies.ForEach(AddMethodBodyLinks);
 
 			t.Log($"Added {sender.NodesCount} nodes and {sender.LinkCount} links in {assembly.Name.Name}");
 		}
 
 
-
-		private IEnumerable<(TypeDefinition type, ModelNode node)> GetAssemblyTypes(
-			TypeDefinition type)
+		private void AddRootNameSpace()
 		{
-			string name = Util.GetTypeFullName(type);
-			ModelNode typeNode = sender.SendDefinedNode(name, JsonTypes.NodeType.Type, rootGroup, null);
+			string moduleName = Name.GetAssemblyName(assembly);
 
-			yield return (type, typeNode);
+			sender.SendDefinedNodex(moduleName, JsonTypes.NodeType.NameSpace, rootGroup, null);
+		}
+
+
+		private IEnumerable<TypeDefinition> GetAssemblyTypes()
+		{
+			return assembly.MainModule.Types
+				.Where(type =>
+					!Name.IsCompilerGenerated(type.Name) &&
+					!Name.IsCompilerGenerated(type.DeclaringType?.Name));
+		}
+
+
+		private IEnumerable<TypeInfo> AddTypes(TypeDefinition type)
+		{
+			string name = Name.GetTypeFullName(type);
+			ModelNode typeNode = sender.SendDefinedNode(name, JsonTypes.NodeType.Type, null);
+
+			yield return new TypeInfo(type, typeNode);
 
 			// Iterate all nested types as well
 			foreach (var nestedType in type.NestedTypes
-				.Where(member => !Util.IsCompilerGenerated(member.Name)))
+				.Where(member => !Name.IsCompilerGenerated(member.Name)))
 			{
-				foreach (var types in GetAssemblyTypes(nestedType))
+				foreach (var types in AddTypes(nestedType))
 				{
 					yield return types;
 				}
@@ -101,8 +113,11 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private void AddLinksToBaseTypes(TypeDefinition type, ModelNode sourceNode)
+		private void AddLinksToBaseTypes(TypeInfo typeInfo)
 		{
+			TypeDefinition type = typeInfo.Type;
+			ModelNode sourceNode = typeInfo.Node;
+
 			try
 			{
 				TypeReference baseType = type.BaseType;
@@ -121,17 +136,20 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private void AddTypeMembers(TypeDefinition type, ModelNode typeNode)
+		private void AddTypeMembers(TypeInfo typeInfo)
 		{
+			TypeDefinition type = typeInfo.Type;
+			ModelNode typeNode = typeInfo.Node;
+
 			try
 			{
 				type.Fields
-					.Where(member => !Util.IsCompilerGenerated(member.Name))
+					.Where(member => !Name.IsCompilerGenerated(member.Name))
 					.ForEach(member => AddMember(
 						member, typeNode, member.Attributes.HasFlag(FieldAttributes.Private)));
 
 				type.Events
-					.Where(member => !Util.IsCompilerGenerated(member.Name))
+					.Where(member => !Name.IsCompilerGenerated(member.Name))
 					.ForEach(member => AddMember(
 						member, 
 						typeNode, 
@@ -139,7 +157,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 					  (member.RemoveMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)));
 
 				type.Properties
-					.Where(member => !Util.IsCompilerGenerated(member.Name))
+					.Where(member => !Name.IsCompilerGenerated(member.Name))
 					.ForEach(member => AddMember(
 						member, 
 						typeNode,
@@ -147,7 +165,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 						(member.SetMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true)));
 
 				type.Methods
-					.Where(member => !Util.IsCompilerGenerated(member.Name))
+					.Where(member => !Name.IsCompilerGenerated(member.Name))
 					.ForEach(member => AddMember(
 						member, typeNode, member.Attributes.HasFlag(MethodAttributes.Private)));
 			}
@@ -162,10 +180,10 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		{
 			try
 			{
-				string memberName = Util.GetMemberFullName(memberInfo);
-				string group = isPrivate ? "Private" : null;
+				string memberName = Name.GetMemberFullName(memberInfo);
+				string group = isPrivate ? "$Private" : null;
 				var memberNode = sender.SendDefinedNode(
-					memberName, JsonTypes.NodeType.Member, rootGroup, group);
+					memberName, JsonTypes.NodeType.Member, group);
 
 				AddMemberLinks(memberNode, memberInfo);
 			}
@@ -267,8 +285,8 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return;
 			}
 
-			string methodName = Util.GetMethodFullName(method);
-			if (Util.IsCompilerGenerated(methodName))
+			string methodName = Name.GetMethodFullName(method);
+			if (Name.IsCompilerGenerated(methodName))
 			{
 				return;
 			}
@@ -296,9 +314,9 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return;
 			}
 
-			string targetNodeName = Util.GetTypeFullName(targetType);
+			string targetNodeName = Name.GetTypeFullName(targetType);
 
-			if (Util.IsCompilerGenerated(targetNodeName))
+			if (Name.IsCompilerGenerated(targetNodeName))
 			{
 				return;
 			}
@@ -314,10 +332,8 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-
-
 		/// <summary>
-		/// Return true if type is a generic type parameter T, as in e.g. Get'T'(T value)
+		/// Return true if type is a generic type parameter T, as in e.g. Get/T/ (T value)
 		/// </summary>
 		private static bool IsGenericTypeArgument(TypeReference targetType)
 		{
@@ -329,13 +345,38 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 		private static bool IsIgnoredSystemType(TypeReference targetType)
 		{
+			if (targetType.Namespace.Contains("System."))
+			{
+				
+			}
+
 			return
-				targetType.Namespace != null
-				&& (targetType.Namespace.StartsWithTxt("System")
-						|| targetType.Namespace.StartsWithTxt("Microsoft"));
+				targetType.Scope.Name == "mscorlib" ||
+				targetType.Scope.Name == "PresentationFramework" ||
+				targetType.Scope.Name == "PresentationCore" ||
+				targetType.Scope.Name == "WindowsBase" ||
+				targetType.Scope.Name == "System" ||
+				targetType.Scope.Name.StartsWithTxt("Microsoft.") ||
+				targetType.Scope.Name.StartsWithTxt("System.");
+
+			//return
+			//	targetType.Namespace != null
+			//	&& (targetType.Namespace.StartsWithTxt("System")
+			//			|| targetType.Namespace.StartsWithTxt("Microsoft"));
 		}
 
 
+		private class TypeInfo
+		{
+			public TypeDefinition Type { get; }
+			public ModelNode Node { get; }
+
+			public TypeInfo(TypeDefinition type, ModelNode node)
+			{
+				Type = type;
+				Node = node;
+			}
+		}
 
 
 		private class MethodBody
