@@ -316,7 +316,8 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			string targetNodeName = Name.GetTypeFullName(targetType);
 
-			if (Name.IsCompilerGenerated(targetNodeName))
+			if (Name.IsCompilerGenerated(targetNodeName) || 
+				targetNodeName.StartsWithTxt("mscorlib."))
 			{
 				return;
 			}

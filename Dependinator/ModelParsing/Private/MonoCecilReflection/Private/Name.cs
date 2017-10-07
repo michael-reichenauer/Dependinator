@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Linq;
 using Mono.Cecil;
 
@@ -31,10 +30,10 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			return isCompilerGenerated;
 		}
 
-		
+
 		public static string GetAssemblyName(AssemblyDefinition assembly)
 		{
-			return assembly.Name.Name.Replace(".", "_");
+			return GetModuleName(assembly.Name.Name);
 		}
 
 
@@ -79,7 +78,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			string typeName = GetTypeFullName(methodInfo.DeclaringType);
 			string methodName = GetMethodName(methodInfo);
 			string parameters = GetParametersText(methodInfo);
-			
+
 			string methodFullName = $"{typeName}.{methodName}({parameters})";
 			return methodFullName;
 		}
@@ -122,7 +121,20 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 		private static string GetModuleName(TypeReference typeInfo)
 		{
-			return GetAssemblyName(typeInfo.Module.Assembly);
+			if (typeInfo.Scope is ModuleDefinition moduleDefinition)
+			{
+				// A defined type
+				return GetAssemblyName(moduleDefinition.Assembly);
+			}
+
+			// A referenced type
+			return GetModuleName(typeInfo.Scope.Name);
+		}
+
+
+		private static string GetModuleName(string name)
+		{
+			return $"?{name.Replace(".", ".?")}";
 		}
 	}
 }

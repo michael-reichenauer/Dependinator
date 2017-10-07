@@ -57,7 +57,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			//rootGroup = null;
 			node = new ModelNode(name, nodeType, RectEx.Zero, 0, PointEx.Zero, null, rootGroup, group);
 
-			if (name.Contains("CA.CA."))
+			if (name.Contains("?Axis_Themes"))
 			{
 				
 			}
