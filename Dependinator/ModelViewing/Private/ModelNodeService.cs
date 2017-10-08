@@ -269,11 +269,31 @@ namespace Dependinator.ModelViewing.Private
 			while (true)
 			{
 				parentName = ancestorNames.Peek().ParentName;
+
 				if (model.TryGetNode(parentName, out parent))
 				{
 					break;
 				}
 
+				if (parentName != NodeName.Root && parentName.ParentName == NodeName.Root)
+				{
+					string name = parentName.AsString();
+					if (name.StartsWithTxt("?"))
+					{
+						int index = name.IndexOfTxt("*");
+						if (index > 0)
+						{
+							string groupName = name.Substring(0, index);
+							parentName = NodeName.From($"{groupName}.{name}");
+						}
+					}
+					
+					if (model.TryGetNode(parentName, out parent))
+					{
+						break;
+					}
+				}
+				
 				ancestorNames.Push(parentName);
 			}
 			
@@ -318,6 +338,43 @@ namespace Dependinator.ModelViewing.Private
 			NodeName parentName = nodeName.ParentName;
 			string group = modelNode.Group;
 
+			//if (nodeName.AsString().StartsWithTxt("?Axis*"))
+			//{
+			//	if (group == null)
+			//	{
+			//		if (parentName == NodeName.Root)
+			//		{
+			//			return NodeName.From("?Axis");
+			//		}
+			//		else
+			//		{
+			//			return NodeName.From($"?Axis.{parentName.AsString()}");
+			//		}
+			//	}
+			//	else
+			//	{
+			//		if (parentName == NodeName.Root)
+			//		{
+			//			return NodeName.From($"{group}.?Axis");
+			//		}
+			//		else
+			//		{
+			//			return NodeName.From($"{parentName.AsString()}.{group}");
+			//		}
+			//	}
+			//}
+
+			if (nodeName.Name.StartsWithTxt("?"))
+			{
+				int index = nodeName.Name.IndexOfTxt(".");
+				if (index > 0)
+				{
+					string groupName = nodeName.Name.Substring(0, index);
+					group = group == null ? groupName : $"{group}.{groupName}";
+				}
+			}
+
+
 			if (group == null)
 			{
 				return parentName;
@@ -330,7 +387,7 @@ namespace Dependinator.ModelViewing.Private
 				}
 				else
 				{
-					return NodeName.From($"{parentName}.{group}");
+					return NodeName.From($"{parentName.AsString()}.{group}");
 				}
 			}
 		}

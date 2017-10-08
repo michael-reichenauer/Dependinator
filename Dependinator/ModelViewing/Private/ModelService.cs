@@ -255,15 +255,15 @@ namespace Dependinator.ModelViewing.Private
 				modelNodeService.UpdateNode(modelNode, stamp);
 			}
 
-			//if (item is ModelLine modelLine)
-			//{
-			//	modelLinkService.UpdateLine(modelLine, stamp);
-			//}
+			if (item is ModelLine modelLine)
+			{
+				modelLinkService.UpdateLine(modelLine, stamp);
+			}
 
-			//if (item is ModelLink modelLink)
-			//{
-			//	modelLinkService.UpdateLink(modelLink, stamp);
-			//}
+			if (item is ModelLink modelLink)
+			{
+				modelLinkService.UpdateLink(modelLink, stamp);
+			}
 		}
 
 

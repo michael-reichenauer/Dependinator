@@ -72,8 +72,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			foreach (ProjectInSolution project in projects)
 			{
 				string outputPath = GetOutputPath(solution, project);
-
-
+				
 				string solutionName = Path.GetFileName(solution.SolutionDirectory);
 				string projectName = project.UniqueProjectName;
 
