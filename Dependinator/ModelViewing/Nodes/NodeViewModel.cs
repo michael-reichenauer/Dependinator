@@ -40,7 +40,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public Brush BackgroundBrush { get; }
 
 
-		public string Name => Node.Name.Name;
+		public string Name => Node.Name.DisplayName;
 
 		public double RectangleLineWidth => IsMouseOver ? 0.6 * 1.5 : 0.6;
 
