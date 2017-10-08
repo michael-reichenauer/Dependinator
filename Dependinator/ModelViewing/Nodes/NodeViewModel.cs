@@ -44,7 +44,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public double RectangleLineWidth => IsMouseOver ? 0.6 * 1.5 : 0.6;
 
-		public string ToolTip { get => Get(); set => Set(value); } 
+		public string ToolTip { get => Get(); set => Set(value); }
 
 		public void UpdateToolTip() => ToolTip = $"{Node.Name}{DebugToolTip}";
 
