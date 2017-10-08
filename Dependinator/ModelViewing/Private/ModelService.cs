@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing.Private
 	internal class ModelService : IModelService
 	{
 		private static readonly int MaxPriority = 10;
-		private static readonly int BatchSize = 1000;
+		private static readonly int BatchSize = 500;
 
 		private readonly IParserService parserService;
 		private readonly IModelNodeService modelNodeService;

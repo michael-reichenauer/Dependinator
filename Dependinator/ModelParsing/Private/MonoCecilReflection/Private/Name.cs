@@ -134,7 +134,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 		private static string GetModuleName(string name)
 		{
-			return $"?{name.Replace(".", ".?")}";
+			return $"?{name.Replace(".", "*")}";
 		}
 	}
 }

@@ -12,7 +12,6 @@ namespace Dependinator.ModelParsing
 			double itemsScaleFactor,
 			Point itemsOffset,
 			string color,
-			string rootGroup,
 			string group)
 		{
 			Name = name;
@@ -21,7 +20,6 @@ namespace Dependinator.ModelParsing
 			ItemsScaleFactor = itemsScaleFactor;
 			ItemsOffset = itemsOffset;
 			Color = color;
-			RootGroup = rootGroup;
 			Group = group;
 
 			IsEqualWhenSame(Name);
@@ -33,7 +31,6 @@ namespace Dependinator.ModelParsing
 		public double ItemsScaleFactor { get; }
 		public Point ItemsOffset { get; }
 		public string Color { get; }
-		public string RootGroup { get; }
 		public string Group { get; }
 
 		public override string ToString() => Name;

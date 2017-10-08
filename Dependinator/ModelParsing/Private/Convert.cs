@@ -50,7 +50,6 @@ namespace Dependinator.ModelParsing.Private
 			node.ItemsScaleFactor,
 			node.ItemsOffset != null ? Point.Parse(node.ItemsOffset) : PointEx.Zero,
 			node.Color,
-			node.RootGroup,
 			node.Group);
 
 
@@ -62,7 +61,6 @@ namespace Dependinator.ModelParsing.Private
 			ItemsScaleFactor = node.ItemsScaleFactor,
 			ItemsOffset = node.ItemsOffset != PointEx.Zero ? node.ItemsOffset.AsString() : null,
 			Color = node.Color,
-			RootGroup = node.RootGroup,
 			Group = node.Group
 		};
 

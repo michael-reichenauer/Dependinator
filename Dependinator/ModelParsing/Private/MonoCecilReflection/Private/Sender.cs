@@ -23,25 +23,25 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		public ModelNode SendDefinedNodex(string name, string nodeType, string rootGroup, string group)
+		public ModelNode SendDefinedNodex(string name, string nodeType, string group)
 		{
-			return SendNode(name, nodeType, rootGroup, group);
+			return SendNode(name, nodeType, group);
 		}
 
 
 		public ModelNode SendDefinedNode(string name, string nodeType, string group)
 		{
-			return SendNode(name, nodeType, null, group);
+			return SendNode(name, nodeType, group);
 		}
 
 
 		public ModelNode SendReferencedNode(string name, string nodeType)
 		{
-			return SendNode(name, nodeType, null, null);
+			return SendNode(name, nodeType, null);
 		}
 
 
-		private ModelNode SendNode(string name, string nodeType, string rootGroup, string group)
+		private ModelNode SendNode(string name, string nodeType, string group)
 		{
 			if (Name.IsCompilerGenerated(name))
 			{
@@ -55,7 +55,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			}
 
 			//rootGroup = null;
-			node = new ModelNode(name, nodeType, RectEx.Zero, 0, PointEx.Zero, null, rootGroup, group);
+			node = new ModelNode(name, nodeType, RectEx.Zero, 0, PointEx.Zero, null, group);
 
 			if (name.Contains("?Axis_Themes"))
 			{

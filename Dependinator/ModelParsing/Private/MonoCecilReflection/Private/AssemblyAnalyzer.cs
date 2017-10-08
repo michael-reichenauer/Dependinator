@@ -16,7 +16,8 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		private readonly string rootGroup;
 
 		private readonly AssemblyDefinition assembly;
-		private List<TypeInfo> typeInfos;
+		private List<TypeInfo> typeInfos = null;
+		private List<Link> links = new List<Link>();
 
 		
 		public AssemblyAnalyzer(
@@ -72,8 +73,29 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			typeInfos.ForEach(AddLinksToBaseTypes);
 			typeInfos.ForEach(AddTypeMembers);
 			methodBodies.ForEach(AddMethodBodyLinks);
+			t.Log($"Added {sender.NodesCount} nodes in {assembly.Name.Name}");
+		}
 
-			t.Log($"Added {sender.NodesCount} nodes and {sender.LinkCount} links in {assembly.Name.Name}");
+
+		public void AnalyzeLinks()
+		{
+			if (assembly == null)
+			{
+				return;
+			}
+
+			Timing t = new Timing();
+
+			links.ForEach(AddLink);
+
+			t.Log($"Added {sender.LinkCount} links in {assembly.Name.Name}");
+		}
+
+
+		private void AddLink(Link link)
+		{
+			sender.SendReferencedNode(link.TargetName, link.TargetType);
+			sender.SendLink(link.SourceName, link.TargetName);
 		}
 
 
@@ -81,7 +103,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		{
 			string moduleName = Name.GetAssemblyName(assembly);
 
-			sender.SendDefinedNodex(moduleName, JsonTypes.NodeType.NameSpace, rootGroup, null);
+			sender.SendDefinedNodex(moduleName, JsonTypes.NodeType.NameSpace, rootGroup);
 		}
 
 
@@ -182,8 +204,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			{
 				string memberName = Name.GetMemberFullName(memberInfo);
 				string group = isPrivate ? "$Private" : null;
-				var memberNode = sender.SendDefinedNode(
-					memberName, JsonTypes.NodeType.Member, group);
+				var memberNode = sender.SendDefinedNode(memberName, JsonTypes.NodeType.Member, group);
 
 				AddMemberLinks(memberNode, memberInfo);
 			}
@@ -291,8 +312,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return;
 			}
 
-			sender.SendReferencedNode(methodName, JsonTypes.NodeType.Member);
-			sender.SendLink(memberNode.Name, methodName);
+			links.Add(new Link(memberNode.Name, methodName, JsonTypes.NodeType.Member));
 
 			TypeReference returnType = method.ReturnType;
 			AddLinkToType(memberNode, returnType);
@@ -322,8 +342,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return;
 			}
 
-			sender.SendReferencedNode(targetNodeName, JsonTypes.NodeType.Type);
-			sender.SendLink(sourceNode.Name, targetNodeName);
+			links.Add(new Link(sourceNode.Name, targetNodeName, JsonTypes.NodeType.Type));
 
 			if (targetType.IsGenericInstance)
 			{
@@ -379,6 +398,21 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			}
 		}
 
+
+		private class Link
+		{
+			public string SourceName { get; }
+			public string TargetName { get; }
+			public string TargetType { get; }
+
+
+			public Link(string sourceName, string targetName, string targetType)
+			{
+				SourceName = sourceName;
+				TargetName = targetName;
+				TargetType = targetType;
+			}
+		}
 
 		private class MethodBody
 		{

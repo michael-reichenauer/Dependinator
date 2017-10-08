@@ -28,7 +28,9 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeTypes());
 				t.Log("Analyzed types");
 				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeMembers());
-				t.Log("Analyzed members and links");
+				t.Log("Analyzed members");
+				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeLinks());
+				t.Log("Analyzed links");
 			});
 
 			t.Log($"Analyzed {filePath}");
@@ -50,7 +52,8 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			}
 			else
 			{
-				analyzers = new[] { new AssemblyAnalyzer(filePath, null, modelItemsCallback) };
+				string rootGroup = Path.GetFileNameWithoutExtension(filePath);
+				analyzers = new[] { new AssemblyAnalyzer(filePath, rootGroup, modelItemsCallback) };
 			}
 
 			t.Log($"Parsed file {filePath} for {analyzers.Count} assembly paths");
@@ -80,7 +83,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				if (index > -1)
 				{
 					projectName = projectName.Substring(0, index);
-					rootGroup = $"{solutionName}.{projectName}";
+					rootGroup = $"{rootGroup}.{projectName}";
 				}
 
 				rootGroup = rootGroup.Replace("\\", ".");

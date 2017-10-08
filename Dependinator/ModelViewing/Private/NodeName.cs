@@ -74,6 +74,8 @@ namespace Dependinator.ModelViewing.Private
 				text = text.Substring(index + 1);
 			}
 
+			text = text.Replace("*", ".");
+
 			return text;
 		}
 
@@ -107,4 +109,104 @@ namespace Dependinator.ModelViewing.Private
 			return From(text);
 		}
 	}
+
+	internal class NodePath : Equatable<NodePath>
+	{
+		private static readonly Dictionary<string, NodePath> Names = new Dictionary<string, NodePath>();
+		public static NodePath Root = From("");
+
+
+		public static int count = 0;
+
+		private readonly string fullName;
+		private readonly Lazy<string> name;
+		private readonly Lazy<NodePath> parentName;
+
+
+		private NodePath(string fullName)
+		{
+			this.fullName = fullName;
+			name = new Lazy<string>(GetName);
+
+			parentName = new Lazy<NodePath>(GetParentName);
+			IsEqualWhenSame(fullName);
+		}
+
+		public static NodePath From(string fullName)
+		{
+			//return new NodeName(fullName);
+			if (!Names.TryGetValue(fullName, out NodePath name))
+			{
+				name = new NodePath(fullName);
+				Names[fullName] = name;
+			}
+			else
+			{
+				count++;
+			}
+
+			return name;
+		}
+
+
+
+		public string Name => name.Value;
+
+		public NodePath ParentName => parentName.Value;
+
+
+		public override string ToString() => this != Root ? fullName : "<root>";
+
+
+		private string GetName()
+		{
+			string text = fullName;
+
+			// Skipping parameters (if method)
+			int index = text.IndexOf('(');
+			if (index > 0)
+			{
+				text = text.Substring(0, index);
+			}
+
+			// Getting last name part
+			index = text.LastIndexOf('.');
+			if (index > -1)
+			{
+				text = text.Substring(index + 1);
+			}
+
+			text = text.Replace("*", ".");
+
+			return text;
+		}
+
+
+
+		private NodePath GetParentName()
+		{
+			string text = fullName;
+
+			// Skipping parameters (if method)
+			int index = text.IndexOf('(');
+			if (index > 0)
+			{
+				text = text.Substring(0, index);
+			}
+
+			// Getting last name part
+			index = text.LastIndexOf('.');
+			if (index > -1)
+			{
+				text = text.Substring(0, index);
+			}
+			else
+			{
+				return Root;
+			}
+
+			return From(text);
+		}
+	}
+
 }

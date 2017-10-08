@@ -42,7 +42,6 @@ namespace Dependinator.ModelViewing.Private
 			node.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.ScaleFactor,
 			node.ViewModel?.ItemsViewModel?.ItemsCanvas?.Offset ?? node.Offset,
 			node.ViewModel?.Color ?? node.Color,
-			node.RootGroup,
-			null);
+			node.Group);
 	}
 }
