@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Dependinator.ModelParsing;
 using Dependinator.ModelViewing.Private.Items.Private;
+using Dependinator.Utils;
 using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -19,6 +19,7 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		private ItemsCanvas canvasParent;
 		private ZoomableCanvas zoomableCanvas;
+		//private static readonly int MaxZoomScale = 20_0000000;
 
 		private Rect ItemsCanvasBounds =>
 			owner?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
@@ -53,16 +54,6 @@ namespace Dependinator.ModelViewing.Private.Items
 		public bool IsRoot => canvasParent == null;
 
 		public double ScaleFactor { get; private set; } = DefaultScaleFactor;
-
-
-		//public ItemsCanvas AddNewChildCanvas(IItemsCanvasBounds canvasBounds)
-		//{
-		//	ItemsCanvas childCanvas = new ItemsCanvas(canvasBounds, this);
-		//	childCanvas.Scale = Scale / DefaultScaleFactor;
-		//	canvasChildren.Add(childCanvas);
-
-		//	return childCanvas;
-		//}
 
 
 		public void AddChildCanvas(ItemsCanvas childCanvas)
@@ -141,7 +132,19 @@ namespace Dependinator.ModelViewing.Private.Items
 		}
 
 
-		public void Zoom(double zoom, Point? zoomCenter = null)
+		public void ZoomRootNode(double zoom, Point? zoomCenter = null)
+		{
+			CanvasRoot.ZoomImpl(zoom, zoomCenter);
+		}
+
+
+		public void ZoomNode(double zoom, Point? zoomCenter = null)
+		{
+			ZoomImpl(zoom, zoomCenter);
+		}
+
+
+		private void ZoomImpl(double zoom, Point? zoomCenter = null)
 		{
 			if (!IsZoomAndMoveEnabled)
 			{
@@ -164,11 +167,11 @@ namespace Dependinator.ModelViewing.Private.Items
 				Vector position = (Vector)zoomCenter;
 				Offset = (Point)((Vector)(Offset + position) * zoomFactor - position);
 			}
-			
+
 
 			UpdateAndNotifyAll();
-			
-			ZoomChildren();		
+
+			canvasChildren.ForEach(child => child.UpdateScaleWitPos());
 		}
 
 
@@ -190,11 +193,6 @@ namespace Dependinator.ModelViewing.Private.Items
 			UpdateShownItemsInChildren();
 		}
 
-		private void ZoomChildren()
-		{
-			canvasChildren.ForEach(child => child.UpdateScale());
-		}
-
 
 		private void UpdateShownItemsInChildren()
 		{
@@ -206,7 +204,21 @@ namespace Dependinator.ModelViewing.Private.Items
 					canvas.UpdateShownItemsInChildren();
 				});
 		}
-		
+
+
+		private void UpdateScaleWitPos()
+		{
+			double newScale = ParentScale * ScaleFactor;
+			double zoom = newScale / Scale;
+
+			if (Math.Abs(zoom) > 0.001)
+			{
+				Point center = new Point(1, 1);
+
+				ZoomImpl(zoom, null);
+			}
+		}
+
 
 		private void UpdateScale()
 		{
@@ -215,11 +227,11 @@ namespace Dependinator.ModelViewing.Private.Items
 
 			if (Math.Abs(zoom) > 0.001)
 			{
-				Zoom(zoom, new Point(0, 0));
+				ZoomImpl(zoom, null);
 			}
 		}
 
-		
+
 
 		public Point ChildToParentCanvasPoint(Point childCanvasPoint)
 		{

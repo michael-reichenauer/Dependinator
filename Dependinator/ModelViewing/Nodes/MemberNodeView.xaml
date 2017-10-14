@@ -11,7 +11,7 @@
 
 	<Grid>
 		<!-- Node border -->
-		<Rectangle
+		<Rectangle Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"
 			Margin="0"
 			Stroke="{Binding RectangleBrush}"
 			StrokeThickness="{Binding RectangleLineWidth}"
@@ -21,10 +21,10 @@
 			RadiusY="15"
 			UseLayoutRounding="True" />
 
-		<nodes:TitleView/>
+		<nodes:TitleView Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"/>
 
 		<!-- Rectangle points -->
-		<nodes:NodePointsView/>
+		<nodes:NodePointsView Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"/>
 
 	</Grid>
 </UserControl>

@@ -29,6 +29,11 @@ namespace Dependinator.ModelViewing.Private
 
 		public void UpdateNode(ModelNode modelNode, int stamp)
 		{
+			//if (!modelNode.Name.Contains("AcsMutex") && modelNode.Group != ("$AcmAcs.$Server"))
+			//{
+			//	return;
+			//}
+
 			NodeName name = NodeName.From(modelNode.Name);
 
 			if (model.TryGetNode(name, out Node existingNode))

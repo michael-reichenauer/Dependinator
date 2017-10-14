@@ -39,10 +39,11 @@ namespace Dependinator.ModelViewing.Nodes
 		public Brush RectangleBrush { get; }
 		public Brush BackgroundBrush { get; }
 
+		public bool IsShowNode => ItemScale < 100;
 
 		public string Name => Node.Name.DisplayName;
 
-		public double RectangleLineWidth => IsMouseOver ? 0.6 * 1.5 : 0.6;
+		public double RectangleLineWidth => IsShowPoints ? 0.6 * 3 : IsMouseOver ? 0.6 * 1.5 : 0.6;
 
 		public string ToolTip { get => Get(); set => Set(value); }
 
@@ -183,6 +184,8 @@ namespace Dependinator.ModelViewing.Nodes
 			"\n" +
 			$"Rect: {ItemBounds.TS()}\n" +
 			$"Scale {ItemScale}, ChildrenScale: {Node.ItemsCanvas?.Scale}\n" +
+			$"Root Scale {Node.Root.ItemsCanvas.Scale}\n" +
+			$"Level {Node.Ancestors().Count()}\n" +
 			$"Items: {Node.ItemsCanvas?.ShownChildItemsCount()} ({Node.ItemsCanvas?.ChildItemsCount()})\n" +
 			$"ShownDescendantsItems {Node.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.ItemsCanvas?.DescendantsItemsCount()})\n" +
 			$"ParentItems {Node.Parent.ItemsCanvas.ShownChildItemsCount()} ({Node.Parent.ItemsCanvas.ChildItemsCount()})\n" +

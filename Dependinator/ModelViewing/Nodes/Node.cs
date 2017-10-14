@@ -28,6 +28,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		public bool CanShow => ViewModel?.CanShow ?? false;
+		public bool IsShowNode => ViewModel?.IsShowNode ?? false;
 		public bool IsShowing => ViewModel?.IsShowing ?? false;
 		public int Stamp { get; set; }
 

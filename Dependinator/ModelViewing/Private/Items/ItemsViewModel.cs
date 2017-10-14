@@ -21,9 +21,9 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		public void MoveCanvas(Vector viewOffset) => ItemsCanvas.Move(viewOffset);
 
-		public void ZoomRoot(double zoom, Point viewPosition) => ItemsCanvas.CanvasRoot.Zoom(zoom, viewPosition);
+		public void ZoomRoot(double zoom, Point viewPosition) => ItemsCanvas.ZoomRootNode(zoom, viewPosition);
 
-		public void Zoom(double zoom, Point viewPosition) => ItemsCanvas.Zoom(zoom, viewPosition);
+		public void Zoom(double zoom, Point viewPosition) => ItemsCanvas.ZoomNode(zoom, viewPosition);
 
 		public void SizeChanged() => ItemsCanvas.SizeChanged();
 

@@ -19,11 +19,11 @@ namespace Dependinator.ModelViewing.Nodes
 			InitializeComponent();
 
 			dragUiElement = new DragUiElement(
-			MouseOverBorder,
-			(p, o) => ViewModel?.MouseMove(p),
-			() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
-			p => ViewModel?.MouseDown(p),
-			p => ViewModel?.MouseUp(p));
+				MouseOverBorder,
+				(p, o) => ViewModel?.MouseMove(p),
+				() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
+				p => ViewModel?.MouseDown(p),
+				p => ViewModel?.MouseUp(p));
 		}
 
 		private void UIElement_OnMouseEnter(object sender, MouseEventArgs e) =>

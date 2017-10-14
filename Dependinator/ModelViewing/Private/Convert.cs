@@ -36,12 +36,12 @@ namespace Dependinator.ModelViewing.Private
 
 		private static ModelNode ToModelNode(Node node) => 
 			new ModelNode(
-			node.Name.AsString(),
-			node.NodeType.AsString(),
-			node.ViewModel?.ItemBounds ?? node.Bounds,
-			node.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.ScaleFactor,
-			node.ViewModel?.ItemsViewModel?.ItemsCanvas?.Offset ?? node.Offset,
-			node.ViewModel?.Color ?? node.Color,
-			node.Group);
+				node.Name.AsString(),
+				node.NodeType.AsString(),
+				node.ViewModel?.ItemBounds ?? node.Bounds,
+				node.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.ScaleFactor,
+				node.ViewModel?.ItemsViewModel?.ItemsCanvas?.Offset ?? node.Offset,
+				node.ViewModel?.Color ?? node.Color,
+				node.Group);
 	}
 }

@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing.Private
 	internal class ModelService : IModelService
 	{
 		private static readonly int MaxPriority = 10;
-		private static readonly int BatchSize = 500;
+		private static readonly int BatchSize = 100;
 
 		private readonly IParserService parserService;
 		private readonly IModelNodeService modelNodeService;
@@ -76,7 +76,7 @@ namespace Dependinator.ModelViewing.Private
 			//	await ShowModelAsync(operation => parserService.TryDeserialize(
 			//		dataFilePath, items => UpdateDataItems(items, operation)));
 			//}
-			//else 
+			//else
 			if (File.Exists(modelMetadata.ModelFilePath))
 			{
 				await ShowModelAsync(operation => parserService.AnalyzeAsync(
