@@ -95,6 +95,11 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				methodName = methodName.Substring(index + 1);
 			}
 
+			if (methodName.StartsWithTxt("get_") || methodName.StartsWithTxt("set_"))
+			{
+				methodName = methodName.Substring(4);
+			}
+			
 			return methodName;
 		}
 

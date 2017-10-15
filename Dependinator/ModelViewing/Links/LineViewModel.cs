@@ -32,8 +32,7 @@ namespace Dependinator.ModelViewing.Links
 
 		public override bool CanShow => 
 			ItemScale > 0.20 &&  ItemScale < 40 
-			&& line.Source.CanShow && line.Target.CanShow
-			&& line.Source.IsShowNode && line.Target.IsShowNode;
+			&& line.Source.CanShow && line.Target.CanShow;
 
 		public double LineWidth => lineViewModelService.GetLineWidth(line);
 

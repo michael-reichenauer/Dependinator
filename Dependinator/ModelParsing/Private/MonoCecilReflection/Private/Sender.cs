@@ -51,7 +51,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			//rootGroup = null;
 			node = new ModelNode(name, parent, nodeType, RectEx.Zero, 0, PointEx.Zero, null);
 
-			if (name.Contains("?Axis_Themes"))
+			if (name.Contains(".get_") || name.Contains(".set_"))
 			{
 				
 			}
