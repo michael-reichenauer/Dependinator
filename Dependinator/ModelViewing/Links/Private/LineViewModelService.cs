@@ -304,7 +304,7 @@ namespace Dependinator.ModelViewing.Links.Private
 			{
 				Node target = groupByTarget.Key;
 				string targetName = target.NodeType == NodeType.Type
-					? target.Name.Name : target.Name.ShortName;
+					? target.Name.DisplayName : target.Name.ShortName;
 
 				if (!isLimitReached)
 				{

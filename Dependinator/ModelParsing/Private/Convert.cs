@@ -45,23 +45,23 @@ namespace Dependinator.ModelParsing.Private
 
 		private static ModelNode ToModelNode(JsonTypes.Node node) => new ModelNode(
 			node.Name,
+			node.Parent,
 			node.Type,
 			node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
 			node.ItemsScaleFactor,
 			node.ItemsOffset != null ? Point.Parse(node.ItemsOffset) : PointEx.Zero,
-			node.Color,
-			node.Group);
+			node.Color);
 
 
 		private static JsonTypes.Node ToJsonNode(ModelNode node) => new JsonTypes.Node
 		{
 			Name = node.Name,
+			Parent = node.Parent,
 			Type = node.NodeType,
 			Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
 			ItemsScaleFactor = node.ItemsScaleFactor,
 			ItemsOffset = node.ItemsOffset != PointEx.Zero ? node.ItemsOffset.AsString() : null,
 			Color = node.Color,
-			Group = node.Group
 		};
 
 

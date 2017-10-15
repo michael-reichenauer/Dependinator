@@ -31,7 +31,7 @@ namespace Dependinator.ModelParsing
 			public string Name { get; set; }
 
 			// Optional data like type, node location and size ...
-			public string Group { get; set; }
+			public string Parent { get; set; }
 			public string Type { get; set; }
 			public string Bounds { get; set; }
 			public string Color { get; set; }

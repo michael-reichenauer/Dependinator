@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -101,9 +102,19 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 		private void AddRootNameSpace()
 		{
+			string parent = rootGroup;
 			string moduleName = Name.GetAssemblyName(assembly);
 
-			sender.SendDefinedNodex(moduleName, JsonTypes.NodeType.NameSpace, rootGroup);
+			int index = moduleName.IndexOfTxt("*");
+			if (index > 0)
+			{
+				string groupName = moduleName.Substring(0, index);
+				parent = parent == null ? groupName : $"{parent}.{groupName}";
+			}
+
+			parent = parent != null ? $"${parent?.Replace(".", ".$")}" : null;
+
+			sender.SendDefinedNode(moduleName, parent, JsonTypes.NodeType.NameSpace);
 		}
 
 
@@ -119,7 +130,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		private IEnumerable<TypeInfo> AddTypes(TypeDefinition type)
 		{
 			string name = Name.GetTypeFullName(type);
-			ModelNode typeNode = sender.SendDefinedNode(name, JsonTypes.NodeType.Type, null);
+			ModelNode typeNode = sender.SendDefinedNode(name, null, JsonTypes.NodeType.Type);
 
 			yield return new TypeInfo(type, typeNode);
 
@@ -203,8 +214,8 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			try
 			{
 				string memberName = Name.GetMemberFullName(memberInfo);
-				string group = isPrivate ? "$Private" : null;
-				var memberNode = sender.SendDefinedNode(memberName, JsonTypes.NodeType.Member, group);
+				string parent = isPrivate ? $"{NodeName.From(memberName).ParentName.FullName}.$Private" : null;
+				var memberNode = sender.SendDefinedNode(memberName, parent, JsonTypes.NodeType.Member);
 
 				AddMemberLinks(memberNode, memberInfo);
 			}

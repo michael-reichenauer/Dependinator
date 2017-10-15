@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Dependinator.Utils;
 
 
@@ -10,24 +11,30 @@ namespace Dependinator.ModelViewing.Private
 		private static readonly Dictionary<string, NodeName> Names = new Dictionary<string, NodeName>();
 		public static NodeName Root = From("");
 
-		public static int count = 0;
-
-		private readonly string fullName;
-		private readonly Lazy<string> name;
 		private readonly Lazy<string> displayName;
+		private readonly Lazy<string> displayFullName;
 		private readonly Lazy<string> shortName;
-		private readonly Lazy<NodeName> parentName;
 
 
 		private NodeName(string fullName)
 		{
-			this.fullName = fullName;
-			name = new Lazy<string>(GetName);
+			this.FullName = fullName;
+			SetName();
+
 			displayName = new Lazy<string>(GetDisplayName);
+			displayFullName = new Lazy<string>(GetDisplayFullName);
 			shortName = new Lazy<string>(GetShortName);
-			parentName = new Lazy<NodeName>(GetParentName);
+
 			IsEqualWhenSame(fullName);
 		}
+
+
+		public string FullName { get; }
+		private string Name { get; set; }
+		public NodeName ParentName { get; private set; }
+		public string DisplayName => displayName.Value;
+		public string DisplayFullName => displayFullName.Value;
+		public string ShortName => shortName.Value;
 
 
 		public static NodeName From(string fullName)
@@ -38,180 +45,63 @@ namespace Dependinator.ModelViewing.Private
 				name = new NodeName(fullName);
 				Names[fullName] = name;
 			}
-			else
-			{
-				count++;
-			}
 
 			return name;
 		}
 
 
-		public string Name => name.Value;
-		public string DisplayName => displayName.Value;
-		public string ShortName => shortName.Value;
-		public NodeName ParentName => parentName.Value;
-
-		public string AsString() => fullName;
+		public override string ToString() => this != Root ? FullName : "<root>";
 
 
-		public override string ToString() => this != Root ? fullName : "<root>";
-
-
-		private string GetName()
+		private void SetName()
 		{
-			string text = fullName;
-
-			// Skipping parameters (if method)
-			int index = text.IndexOf('(');
-			if (index > 0)
-			{
-				text = text.Substring(0, index);
-			}
-
-			// Getting last name part
-			index = text.LastIndexOf('.');
+			// Split full name in name and parent name,
+			int index = FullName.LastIndexOf('.');
 			if (index > -1)
 			{
-				text = text.Substring(index + 1);
+				Name = FullName.Substring(index + 1);
+				ParentName = From(FullName.Substring(0, index));
 			}
-
-			text = text.Replace("*", ".");
-
-			return text;
+			else
+			{
+				Name = FullName;
+				ParentName = Root;
+			}
 		}
 
 
-		private string GetDisplayName() => Name.Replace("?", "").Replace("$", "");
+		private string GetDisplayName()
+		{
+			string name = Name;
+			int index = Name.IndexOf('(');
+			if (index > -1)
+			{
+				name = Name.Substring(0, index);
+			}
+
+			return name.Replace("*", ".").Replace("$", "").Replace("?", "");
+		}
+		
+
+		private string GetDisplayFullName()
+		{
+			string[] parts = FullName.Split(".".ToCharArray());
+
+			string name = string.Join(".", parts
+				.Where(part => !part.StartsWithTxt("$") && !part.StartsWithTxt("?")));
+
+			name = name.Replace("*", ".").Replace("#", ".").Replace("?", "");
+
+			if (string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(DisplayName))
+			{
+				name = DisplayName;
+			}
+
+			return name;
+		}
 
 
 		private string GetShortName() =>
-			string.IsNullOrEmpty(ParentName.Name) ? Name : $"{ParentName.Name}.{Name}";
-
-
-		private NodeName GetParentName()
-		{
-			string text = fullName;
-
-			// Skipping parameters (if method)
-			int index = text.IndexOf('(');
-			if (index > 0)
-			{
-				text = text.Substring(0, index);
-			}
-
-			// Getting last name part
-			index = text.LastIndexOf('.');
-			if (index > -1)
-			{
-				text = text.Substring(0, index);
-			}
-			else
-			{
-				return Root;
-			}
-			
-			return From(text);
-		}
+			ParentName == Root ? DisplayName : $"{ParentName.DisplayName}.{DisplayName}";
 	}
-
-	internal class NodePath : Equatable<NodePath>
-	{
-		private static readonly Dictionary<string, NodePath> Names = new Dictionary<string, NodePath>();
-		public static NodePath Root = From("");
-
-
-		public static int count = 0;
-
-		private readonly string fullName;
-		private readonly Lazy<string> name;
-		private readonly Lazy<NodePath> parentName;
-
-
-		private NodePath(string fullName)
-		{
-			this.fullName = fullName;
-			name = new Lazy<string>(GetName);
-
-			parentName = new Lazy<NodePath>(GetParentName);
-			IsEqualWhenSame(fullName);
-		}
-
-		public static NodePath From(string fullName)
-		{
-			//return new NodeName(fullName);
-			if (!Names.TryGetValue(fullName, out NodePath name))
-			{
-				name = new NodePath(fullName);
-				Names[fullName] = name;
-			}
-			else
-			{
-				count++;
-			}
-
-			return name;
-		}
-
-
-
-		public string Name => name.Value;
-
-		public NodePath ParentName => parentName.Value;
-
-
-		public override string ToString() => this != Root ? fullName : "<root>";
-
-
-		private string GetName()
-		{
-			string text = fullName;
-
-			// Skipping parameters (if method)
-			int index = text.IndexOf('(');
-			if (index > 0)
-			{
-				text = text.Substring(0, index);
-			}
-
-			// Getting last name part
-			index = text.LastIndexOf('.');
-			if (index > -1)
-			{
-				text = text.Substring(index + 1);
-			}
-
-			text = text.Replace("*", ".");
-
-			return text;
-		}
-
-
-
-		private NodePath GetParentName()
-		{
-			string text = fullName;
-
-			// Skipping parameters (if method)
-			int index = text.IndexOf('(');
-			if (index > 0)
-			{
-				text = text.Substring(0, index);
-			}
-
-			// Getting last name part
-			index = text.LastIndexOf('.');
-			if (index > -1)
-			{
-				text = text.Substring(0, index);
-			}
-			else
-			{
-				return Root;
-			}
-
-			return From(text);
-		}
-	}
-
 }

@@ -71,12 +71,12 @@ namespace Dependinator.ModelViewing.Private
 			ClearAll();
 			Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
 
-			//if (File.Exists(dataFilePath))
-			//{
-			//	await ShowModelAsync(operation => parserService.TryDeserialize(
-			//		dataFilePath, items => UpdateDataItems(items, operation)));
-			//}
-			//else
+			if (File.Exists(dataFilePath))
+			{
+				await ShowModelAsync(operation => parserService.TryDeserialize(
+					dataFilePath, items => UpdateDataItems(items, operation)));
+			}
+			else
 			if (File.Exists(modelMetadata.ModelFilePath))
 			{
 				await ShowModelAsync(operation => parserService.AnalyzeAsync(
@@ -300,9 +300,6 @@ namespace Dependinator.ModelViewing.Private
 
 		private class Operation
 		{
-			//private readonly ConcurrentDictionary<NodeName, int> parents = 
-			//	new ConcurrentDictionary<NodeName, int>();
-
 			public PriorityBlockingQueue<IModelItem> Queue { get; } =
 				new PriorityBlockingQueue<IModelItem>(MaxPriority);
 

@@ -29,11 +29,6 @@ namespace Dependinator.ModelViewing.Private
 
 		public void UpdateNode(ModelNode modelNode, int stamp)
 		{
-			//if (!modelNode.Name.Contains("AcsMutex") && modelNode.Group != ("$AcmAcs.$Server"))
-			//{
-			//	return;
-			//}
-
 			NodeName name = NodeName.From(modelNode.Name);
 
 			if (model.TryGetNode(name, out Node existingNode))
@@ -68,7 +63,6 @@ namespace Dependinator.ModelViewing.Private
 				ScaleFactor = modelNode.ItemsScaleFactor,
 				Offset = modelNode.ItemsOffset,
 				Color = modelNode.Color,
-				Group = modelNode.Group
 			};
 
 			AddNode(node, parentNode);
@@ -245,11 +239,19 @@ namespace Dependinator.ModelViewing.Private
 
 		private void AddNodeToParentCanvas(Node node, Node parentNode)
 		{
-			nodeViewModelService.SetLayout(node.ViewModel);
+			try
+			{
+				nodeViewModelService.SetLayout(node.ViewModel);
 
-			ItemsCanvas parentCanvas = parentNode.ItemsCanvas;
+				ItemsCanvas parentCanvas = parentNode.ItemsCanvas;
 
-			parentCanvas.AddItem(node.ViewModel);
+				parentCanvas.AddItem(node.ViewModel);
+			}
+			catch (Exception e)
+			{
+				Log.Exception(e, $"Failed adding {node} to parent {parentNode}");
+				throw;
+			}
 		}
 
 
@@ -273,32 +275,25 @@ namespace Dependinator.ModelViewing.Private
 
 			while (true)
 			{
-				parentName = ancestorNames.Peek().ParentName;
+				NodeName name = ancestorNames.Peek();
+				parentName = name.ParentName;
+
+				if (parentName == NodeName.Root && !name.FullName.StartsWithTxt("$"))
+				{
+					// Group external assemblies if assembly name consists of parts 
+					int index = name.FullName.IndexOfTxt("*");
+					if (index > 0)
+					{
+						string groupName = name.FullName.Substring(0, index);
+						parentName = NodeName.From($"${groupName}");
+					}
+				}
 
 				if (model.TryGetNode(parentName, out parent))
 				{
 					break;
 				}
 
-				if (parentName != NodeName.Root && parentName.ParentName == NodeName.Root)
-				{
-					string name = parentName.AsString();
-					if (name.StartsWithTxt("?"))
-					{
-						int index = name.IndexOfTxt("*");
-						if (index > 0)
-						{
-							string groupName = name.Substring(0, index);
-							parentName = NodeName.From($"{groupName}.{name}");
-						}
-					}
-					
-					if (model.TryGetNode(parentName, out parent))
-					{
-						break;
-					}
-				}
-				
 				ancestorNames.Push(parentName);
 			}
 			
@@ -318,245 +313,13 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		//private Node GetParentNode(NodeName parentName)
-		//{
-		//	if (model.TryGetNode(parentName, out var parent))
-		//	{
-		//		return parent;
-		//	}
-
-		//	// The parent not yet added. We need the grandparent to add parent
-		//	NodeName grandParentName = parentName.ParentName;
-		//	Node grandParent = GetParentNode(grandParentName, rootGroup);
-
-		//	parent = new Node(parentName);
-		//	parent.NodeType = NodeType.NameSpace;
-		//	parent.RootGroup = rootGroup;
-
-		//	AddNode(parent, grandParent);
-		//	return parent;
-		//}
-
-
 		private static NodeName GetParentName(NodeName nodeName, ModelNode modelNode)
 		{
-			NodeName parentName = nodeName.ParentName;
-			string group = modelNode.Group;
+			NodeName parentName = modelNode.Parent != null ? NodeName.From(modelNode.Parent) : nodeName.ParentName;
 
-			//if (nodeName.AsString().StartsWithTxt("?Axis*"))
-			//{
-			//	if (group == null)
-			//	{
-			//		if (parentName == NodeName.Root)
-			//		{
-			//			return NodeName.From("?Axis");
-			//		}
-			//		else
-			//		{
-			//			return NodeName.From($"?Axis.{parentName.AsString()}");
-			//		}
-			//	}
-			//	else
-			//	{
-			//		if (parentName == NodeName.Root)
-			//		{
-			//			return NodeName.From($"{group}.?Axis");
-			//		}
-			//		else
-			//		{
-			//			return NodeName.From($"{parentName.AsString()}.{group}");
-			//		}
-			//	}
-			//}
-
-			if (nodeName.Name.StartsWithTxt("?"))
-			{
-				int index = nodeName.Name.IndexOfTxt(".");
-				if (index > 0)
-				{
-					string groupName = nodeName.Name.Substring(0, index);
-					group = group == null ? groupName : $"{group}.{groupName}";
-				}
-			}
-
-
-			if (group == null)
-			{
-				return parentName;
-			}
-			else
-			{
-				if (parentName == NodeName.Root)
-				{
-					return NodeName.From(group);
-				}
-				else
-				{
-					return NodeName.From($"{parentName.AsString()}.{group}");
-				}
-			}
+			return parentName;
 		}
 		
-
-
-
-
-		//private Node GetParentNode_org(NodeName parentName, string rootGroup)
-		//{
-		//	if (parentName == NodeName.Root && rootGroup != null)
-		//	{
-		//		NodeName name = NodeName.From(rootGroup);
-
-		//		return GetRootGroupNode(name);
-		//	}
-
-		//	if (model.TryGetNode(parentName, out var parent))
-		//	{
-		//		return parent;
-		//	}
-
-		//	// The parent not yet added. We need the grandparent to add parent
-		//	NodeName grandParentName = parentName.ParentName;
-		//	Node grandParent = GetParentNode(grandParentName, rootGroup);
-			
-		//	parent = new Node(parentName);
-		//	parent.NodeType = NodeType.NameSpace;
-		//	parent.RootGroup = rootGroup;
-
-		//	AddNode(parent, grandParent);
-		//	return parent;
-		//}
-
-		
-
-		//private Node GetRootGroupNode_org(NodeName nodeName)
-		//{
-		//	if (model.TryGetNode(nodeName, out Node node))
-		//	{
-		//		return node;
-		//	}
-
-		//	NodeName parentName = nodeName.ParentName;
-		//	Node parent = GetRootGroupNode(parentName);
-
-		//	node = new Node(nodeName);
-		//	node.NodeType = NodeType.NameSpace;
-
-		//	AddNode(node, parent);
-		//	return node;
-		//}
-
-
-		//private Node GetParentNode_Org(NodeName parentName, string rootGroup)
-		//{
-		//	Node parent;
-
-		//	if (parentName == NodeName.Root && rootGroup != null)
-		//	{
-		//		parentName = NodeName.From(rootGroup);
-		//		return GetParentNode(parentName, null);
-		//	}
-
-		//	if (model.TryGetNode(parentName, out parent))
-		//	{
-
-		//		return parent;
-		//	}
-
-		//	// The parent not yet added. We need the grandparent to add parent
-		//	NodeName grandParentName = parentName.ParentName;
-		//	Node grandParent;
-
-		//	if (grandParentName == NodeName.Root && rootGroup != null)
-		//	{
-		//		grandParentName = NodeName.From(rootGroup);
-		//		grandParent = GetParentNode(grandParentName, null);
-		//	}
-		//	else
-		//	{
-		//		grandParent = GetParentNode(grandParentName, rootGroup);
-		//	}
-
-		//	parent = new Node(parentName);
-		//	parent.NodeType = NodeType.NameSpace;
-		//	parent.RootGroup = rootGroup;
-
-		//	AddNode(parent, grandParent);
-		//	return parent;
-		//}
-
-
-
-		//private Node GetParentNode2(NodeName nodeName, ModelNode modelNode)
-		//{
-		//	NodeName parentName = GetParentName(nodeName, modelNode);
-
-		//	string rootGroup = modelNode.RootGroup;
-
-		//	if (parentName == NodeName.Root && rootGroup != null)
-		//	{
-		//		parentName = NodeName.From(rootGroup);
-		//		return GetParentNode(parentName, null);
-		//	}
-
-		//	if (model.TryGetNode(parentName, out Node parent))
-		//	{
-		//		return parent;
-		//	}
-
-		//	// The parent not yet added. We need the grandparent to add parent
-		//	NodeName grandParentName = parentName.ParentName;
-		//	Node grandParent;
-
-		//	if (grandParentName == NodeName.Root && rootGroup != null)
-		//	{
-		//		grandParentName = NodeName.From(rootGroup);
-		//		grandParent = GetParentNode(grandParentName, null);
-		//	}
-		//	else
-		//	{
-		//		grandParent = GetParentNode(grandParentName, rootGroup);
-		//	}
-
-		//	parent = new Node(parentName);
-		//	parent.NodeType = NodeType.NameSpace;
-		//	parent.RootGroup = rootGroup;
-
-		//	AddNode(parent, grandParent);
-		//	return parent;
-		//}
-
-
-		//private static NodeName GetParentName(NodeName nodeName, ModelNode modelNode)
-		//{
-		//	return nodeName.ParentName;
-		//}
-
-
-		//private void MoveNodeIfNeeded(Node node, string rootGroup)
-		//{
-		//	if (rootGroup == null || node.Name == NodeName.Root || node.RootGroup != null)
-		//	{
-		//		return;
-		//	}
-
-		//	if (node.Parent.Name != NodeName.Root && node.Parent.RootGroup == null)
-		//	{
-		//		// Parent needs to be moved
-		//		MoveNodeIfNeeded(node.Parent, rootGroup);
-		//		node.RootGroup = rootGroup;
-		//	}
-		//	else if (node.Parent.Name == NodeName.Root)
-		//	{
-		//		// This node needs to be moved
-		//		NodeName parentName = NodeName.From(rootGroup);
-		//		Node parent = GetParentNode(parentName, null);
-		//		MoveNode(node, parent);
-
-		//		node.RootGroup = rootGroup;
-		//	}
-		//}
-
 
 		private static ItemsCanvas GetChildrenCanvas(Node node)
 		{

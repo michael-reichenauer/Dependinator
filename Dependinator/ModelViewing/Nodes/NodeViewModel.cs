@@ -47,7 +47,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public string ToolTip { get => Get(); set => Set(value); }
 
-		public void UpdateToolTip() => ToolTip = $"{Node.Name}{DebugToolTip}";
+		public void UpdateToolTip() => ToolTip = $"{Node.Name.DisplayFullName}{DebugToolTip}";
 
 		public int FontSize => ((int)(15 * ItemScale)).MM(9, 13);
 

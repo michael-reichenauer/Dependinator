@@ -114,8 +114,11 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 		private static string GetParametersText(MethodReference methodInfo)
 		{
-			return string.Join(",", methodInfo.Parameters
+			string parametersText = string.Join(",", methodInfo.Parameters
 				.Select(p => GetTypeFullName(p.ParameterType)));
+			parametersText = parametersText.Replace(".", "#");
+
+			return parametersText;
 		}
 
 
