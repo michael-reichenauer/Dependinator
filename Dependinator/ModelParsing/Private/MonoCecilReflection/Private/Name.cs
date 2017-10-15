@@ -77,9 +77,15 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		{
 			string typeName = GetTypeFullName(methodInfo.DeclaringType);
 			string methodName = GetMethodName(methodInfo);
-			string parameters = GetParametersText(methodInfo);
+			string parameters = $"({GetParametersText(methodInfo)})";
 
-			string methodFullName = $"{typeName}.{methodName}({parameters})";
+			if (methodName.StartsWithTxt("get_") || methodName.StartsWithTxt("set_"))
+			{
+				methodName = methodName.Substring(4);
+				parameters = "";
+			}
+
+			string methodFullName = $"{typeName}.{methodName}{parameters}";
 			return methodFullName;
 		}
 
@@ -95,11 +101,6 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				methodName = methodName.Substring(index + 1);
 			}
 
-			if (methodName.StartsWithTxt("get_") || methodName.StartsWithTxt("set_"))
-			{
-				methodName = methodName.Substring(4);
-			}
-			
 			return methodName;
 		}
 

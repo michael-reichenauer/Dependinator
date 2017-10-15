@@ -130,7 +130,10 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		private IEnumerable<TypeInfo> AddTypes(TypeDefinition type)
 		{
 			string name = Name.GetTypeFullName(type);
-			ModelNode typeNode = sender.SendDefinedNode(name, null, JsonTypes.NodeType.Type);
+			bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
+			string parent = isPrivate ? $"{NodeName.From(name).ParentName.FullName}.$Private" : null;
+
+			ModelNode typeNode = sender.SendDefinedNode(name, parent, JsonTypes.NodeType.Type);
 
 			yield return new TypeInfo(type, typeNode);
 
@@ -297,6 +300,10 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 					if (instruction.Operand is MethodReference methodCall)
 					{
 						AddLinkToCallMethod(memberNode, methodCall);
+					}
+					else if (instruction.Operand is FieldDefinition field)
+					{
+						AddLinkToType(memberNode, field.FieldType);
 					}
 				}
 			}
