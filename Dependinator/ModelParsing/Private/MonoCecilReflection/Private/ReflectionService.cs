@@ -52,7 +52,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			}
 			else
 			{
-				string rootGroup = Path.GetFileNameWithoutExtension(filePath);
+				string rootGroup = Path.GetFileName(filePath).Replace(".", "*");
 				analyzers = new[] { new AssemblyAnalyzer(filePath, rootGroup, modelItemsCallback) };
 			}
 
@@ -69,11 +69,12 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			List<AssemblyAnalyzer> analyzers = new List<AssemblyAnalyzer>();
 
+			string solutionName = Path.GetFileName(solution.SolutionFilePath).Replace(".", "*");
+
 			foreach (ProjectInSolution project in projects)
 			{
 				string outputPath = GetOutputPath(solution, project);
 				
-				string solutionName = Path.GetFileName(solution.SolutionDirectory);
 				string projectName = project.UniqueProjectName;
 
 				string rootGroup = solutionName;
@@ -81,13 +82,12 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				int index = projectName.LastIndexOf("\\", StringComparison.Ordinal);
 				if (index > -1)
 				{
-					projectName = projectName.Substring(0, index);
-					rootGroup = $"{rootGroup}.{projectName}";
+					string solutionFolder= projectName.Substring(0, index);
+					rootGroup = $"{rootGroup}.{solutionFolder}";
 				}
 
 				rootGroup = rootGroup.Replace("\\", ".");
 				rootGroup = rootGroup.Replace("_", ".");
-				rootGroup = $"{rootGroup.Replace(".", ".")}";
 
 				analyzers.Add(new AssemblyAnalyzer(outputPath, rootGroup, modelItemsCallback));
 			}
