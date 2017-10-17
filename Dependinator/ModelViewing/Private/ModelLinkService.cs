@@ -148,7 +148,8 @@ namespace Dependinator.ModelViewing.Private
 			line.Target.TargetLines.Add(line);
 			line.LinkCount = linkCount;
 
-			if (line.Source.IsShowing && line.Target.IsShowing)
+			Node owner = GetLineOwner(line);
+			if (owner.IsShowing || line.Source.IsShowing || line.Target.IsShowing)
 			{
 				AddLineViewModel(line);
 			}
