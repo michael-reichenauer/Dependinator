@@ -213,7 +213,7 @@ namespace Dependinator.ModelViewing.Private.Items
 
 			if (Math.Abs(zoom) > 0.001)
 			{
-				Point center = new Point(1, 1);
+				//Point center = new Point(1, 1);
 
 				ZoomImpl(zoom, null);
 			}
