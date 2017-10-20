@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Windows;
 using Dependinator.Utils;
 
 
@@ -7,62 +6,43 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 {
 	internal class Sender
 	{
-
 		private readonly ModelItemsCallback callback;
 
 		private readonly Dictionary<string, ModelNode> sentNodes = new Dictionary<string, ModelNode>();
 
-
 		public int NodesCount => sentNodes.Count;
-		public int LinkCount { get; private set; } = 0;
+		public int LinkCount { get; private set; }
 
 
 		public Sender(ModelItemsCallback modelItemsCallback)
 		{
-			this.callback = modelItemsCallback;
+			callback = modelItemsCallback;
 		}
 
 
-		public ModelNode SendDefinedNode(string name, string parent, string nodeType)
+		public ModelNode SendNode(string nodeName, string parentName, string nodeType)
 		{
-			return SendNodeImp(name, parent, nodeType);
-		}
-
-
-		public ModelNode SendReferencedNode(string name, string nodeType)
-		{
-			return SendNodeImp(name, null, nodeType);
-		}
-
-
-		private ModelNode SendNodeImp(string name, string parent, string nodeType)
-		{
-			if (Name.IsCompilerGenerated(name))
+			if (Name.IsCompilerGenerated(nodeName))
 			{
-				Log.Warn($"Compiler generated node: {name}");
+				Log.Warn($"Compiler generated node: {nodeName}");
 			}
 
-			if (sentNodes.TryGetValue(name, out ModelNode node))
+			if (sentNodes.TryGetValue(nodeName, out ModelNode node))
 			{
 				// Already sent this node
 				return node;
 			}
 
 			//rootGroup = null;
-			node = new ModelNode(name, parent, nodeType, RectEx.Zero, 0, PointEx.Zero, null);
+			node = new ModelNode(nodeName, parentName, nodeType);
 
-			if (name.Contains(".get_") || name.Contains(".set_"))
-			{
-				
-			}
-
-			sentNodes[name] = node;
+			sentNodes[nodeName] = node;
 
 			//Log.Debug($"Send node: {name} {node.Type}");
 
-			if (name.Contains("<") || name.Contains(">"))
+			if (nodeName.Contains("<") || nodeName.Contains(">"))
 			{
-				Log.Warn($"Send node: {name}      {nodeType}");
+				Log.Warn($"Send node: {nodeName}      {nodeType}");
 			}
 
 			callback(node);
@@ -70,10 +50,10 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		public void SendLink(string sourceNodeName, string targetNodeName)
+		public void SendLink(string sourceNodeName, string targetNodeName, string targetType)
 		{
 			if (Name.IsCompilerGenerated(sourceNodeName)
-			    || Name.IsCompilerGenerated(targetNodeName))
+					|| Name.IsCompilerGenerated(targetNodeName))
 			{
 				Log.Warn($"Compiler generated link: {sourceNodeName}->{targetNodeName}");
 			}
@@ -94,7 +74,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				Log.Warn($"Send link target: {targetNodeName}");
 			}
 
-			ModelLink link = new ModelLink(sourceNodeName, targetNodeName);
+			ModelLink link = new ModelLink(sourceNodeName, targetNodeName, targetType);
 
 			LinkCount++;
 

@@ -18,7 +18,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 		private readonly AssemblyDefinition assembly;
 		private List<TypeInfo> typeInfos = null;
-		private List<Link> links = new List<Link>();
+		private List<Reference> links = new List<Reference>();
 
 		
 		public AssemblyAnalyzer(
@@ -93,10 +93,9 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private void AddLink(Link link)
+		private void AddLink(Reference reference)
 		{
-			sender.SendReferencedNode(link.TargetName, link.TargetType);
-			sender.SendLink(link.SourceName, link.TargetName);
+			sender.SendLink(reference.SourceName, reference.TargetName, reference.TargetType);
 		}
 
 
@@ -114,7 +113,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			parent = parent != null ? $"${parent?.Replace(".", ".$")}" : null;
 
-			sender.SendDefinedNode(moduleName, parent, JsonTypes.NodeType.NameSpace);
+			sender.SendNode(moduleName, parent, JsonTypes.NodeType.NameSpace);
 		}
 
 
@@ -133,7 +132,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
 			string parent = isPrivate ? $"{NodeName.From(name).ParentName.FullName}.$Private" : null;
 
-			ModelNode typeNode = sender.SendDefinedNode(name, parent, JsonTypes.NodeType.Type);
+			ModelNode typeNode = sender.SendNode(name, parent, JsonTypes.NodeType.Type);
 
 			yield return new TypeInfo(type, typeNode);
 
@@ -218,7 +217,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			{
 				string memberName = Name.GetMemberFullName(memberInfo);
 				string parent = isPrivate ? $"{NodeName.From(memberName).ParentName.FullName}.$Private" : null;
-				var memberNode = sender.SendDefinedNode(memberName, parent, JsonTypes.NodeType.Member);
+				var memberNode = sender.SendNode(memberName, parent, JsonTypes.NodeType.Member);
 
 				AddMemberLinks(memberNode, memberInfo);
 			}
@@ -330,7 +329,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return;
 			}
 
-			links.Add(new Link(memberNode.Name, methodName, JsonTypes.NodeType.Member));
+			links.Add(new Reference(memberNode.Name, methodName, JsonTypes.NodeType.Member));
 
 			TypeReference returnType = method.ReturnType;
 			AddLinkToType(memberNode, returnType);
@@ -360,7 +359,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return;
 			}
 
-			links.Add(new Link(sourceNode.Name, targetNodeName, JsonTypes.NodeType.Type));
+			links.Add(new Reference(sourceNode.Name, targetNodeName, JsonTypes.NodeType.Type));
 
 			if (targetType.IsGenericInstance)
 			{
@@ -417,14 +416,14 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private class Link
+		private class Reference
 		{
 			public string SourceName { get; }
 			public string TargetName { get; }
 			public string TargetType { get; }
 
 
-			public Link(string sourceName, string targetName, string targetType)
+			public Reference(string sourceName, string targetName, string targetType)
 			{
 				SourceName = sourceName;
 				TargetName = targetName;

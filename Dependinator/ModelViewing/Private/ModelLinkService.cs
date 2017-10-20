@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -13,16 +14,19 @@ namespace Dependinator.ModelViewing.Private
 	{
 		private readonly ILinkSegmentService linkSegmentService;
 		private readonly ILineViewModelService lineViewModelService;
+		private readonly Lazy<IModelNodeService> modelNodeService;
 		private readonly Model model;
 
 
 		public ModelLinkService(
 			ILinkSegmentService linkSegmentService,
 			ILineViewModelService lineViewModelService,
+			Lazy<IModelNodeService> modelNodeService,
 			Model model)
 		{
 			this.linkSegmentService = linkSegmentService;
 			this.lineViewModelService = lineViewModelService;
+			this.modelNodeService = modelNodeService;
 			this.model = model;
 		}
 
@@ -36,7 +40,17 @@ namespace Dependinator.ModelViewing.Private
 			}
 
 			Node source = model.Node(NodeName.From(modelLink.Source));
-			Node target = model.Node(NodeName.From(modelLink.Target));
+
+			NodeName targetName = NodeName.From(modelLink.Target);
+			if (!model.TryGetNode(targetName, out Node target))
+			{
+				// Target node not yet added, adding it.
+				ModelNode targetModelNode = new ModelNode(modelLink.Target, null, modelLink.TargetType);
+				modelNodeService.Value.UpdateNode(targetModelNode, stamp);
+
+				// Getting the newly added node
+				target = model.Node(targetName);
+			}
 
 			if (TryGetLink(source, target, out Link link))
 			{
