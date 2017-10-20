@@ -20,7 +20,7 @@
 			StrokeDashArray="4,4"
 			Fill="{Binding BackgroundBrush}"
 			Stretch="Fill"
-			UseLayoutRounding="True" />
+/>
 
 
 		<!-- Inner model -->

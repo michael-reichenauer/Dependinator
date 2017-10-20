@@ -18,8 +18,7 @@
 			Fill="{Binding BackgroundBrush}"
 			Stretch="Fill"
 			RadiusX="15"
-			RadiusY="15"
-			UseLayoutRounding="True" />
+			RadiusY="15" />
 
 		<nodes:TitleView Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"/>
 

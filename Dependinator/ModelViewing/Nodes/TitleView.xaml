@@ -11,12 +11,11 @@
 	<Grid >
 		<!-- Title -->
 		<Border
-			BorderBrush="{Binding RectangleBrush}"
+			BorderBrush="{Binding TitleBorderBrush}"
 			BorderThickness="0 0 0 0.3"
 			Height="20"
 			Background="Transparent" 
 			VerticalAlignment="Top"
-			UseLayoutRounding="True"
 			RenderOptions.ClearTypeHint="Enabled">
 
 			<TextBlock
@@ -27,7 +26,8 @@
 				FontSize="{Binding FontSize}"
 				HorizontalAlignment="Left"
 				VerticalAlignment="Top" 
-				UseLayoutRounding="True"/>
+				UseLayoutRounding="True"
+				RenderOptions.ClearTypeHint="Enabled"/>
 
 			<Border.ToolTip>
 				<ToolTip

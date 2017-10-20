@@ -37,6 +37,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public Node Node { get; }
 
 		public Brush RectangleBrush { get; }
+		public Brush TitleBorderBrush => Node.NodeType == NodeType.Type ? RectangleBrush : null;
 		public Brush BackgroundBrush { get; }
 
 		public bool IsShowNode => ItemScale < 100;

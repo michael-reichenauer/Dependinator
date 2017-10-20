@@ -31,7 +31,7 @@ namespace Dependinator.ModelViewing.Links
 
 
 		public override bool CanShow => 
-			ItemScale > 0.20 &&  ItemScale < 40 
+			ItemScale > 0.15 &&  ItemScale < 40 
 			&& line.Source.CanShow && line.Target.CanShow;
 
 		public double LineWidth => lineViewModelService.GetLineWidth(line);
