@@ -16,7 +16,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			Timing t = Timing.Start();
 			
 			int maxParallel = Math.Max(Environment.ProcessorCount - 1, 1);  // Leave room for UI thread
-			maxParallel = 1;
+			// maxParallel = 1;
 			var option = new ParallelOptions { MaxDegreeOfParallelism = maxParallel };
 			Log.Debug($"Parallelism: {maxParallel}");
 

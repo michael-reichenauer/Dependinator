@@ -8,7 +8,6 @@ namespace Dependinator.ModelViewing.Nodes
 		public static readonly NodeType NameSpace = new NodeType(JsonTypes.NodeType.NameSpace);
 		public static readonly NodeType Type = new NodeType(JsonTypes.NodeType.Type);
 		public static readonly NodeType Member = new NodeType(JsonTypes.NodeType.Member);
-		//public static readonly NodeType Referenced = new NodeType("Referenced");
 
 		private readonly string typeName;
 
@@ -18,6 +17,9 @@ namespace Dependinator.ModelViewing.Nodes
 			this.typeName = typeName;
 			IsEqualWhenSame(typeName);
 		}
+
+
+		public bool IsSame(string nodeTypeText) => nodeTypeText == typeName;
 
 		public string AsString() => typeName;
 

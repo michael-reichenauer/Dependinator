@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Dependinator.Utils;
 
@@ -8,7 +7,7 @@ namespace Dependinator.ModelViewing.Private
 {
 	internal class NodeName : Equatable<NodeName>
 	{
-		private static readonly Dictionary<string, NodeName> Names = new Dictionary<string, NodeName>();
+		// private static readonly Dictionary<string, NodeName> Names = new Dictionary<string, NodeName>();
 		public static NodeName Root = From("");
 
 		private readonly Lazy<string> displayName;
@@ -39,16 +38,24 @@ namespace Dependinator.ModelViewing.Private
 
 		public static NodeName From(string fullName)
 		{
-			//return new NodeName(fullName);
-			if (!Names.TryGetValue(fullName, out NodeName name))
-			{
-				name = new NodeName(fullName);
-				Names[fullName] = name;
-			}
+			return new NodeName(fullName);
 
-			return name;
+			//if (!Names.TryGetValue(fullName, out NodeName name))
+			//{
+			//	name = new NodeName(fullName);
+			//	Names[fullName] = name;
+			//}
+
+			//if (name.FullName != fullName)
+			//{
+			//	Log.Warn($"'{name.FullName}' != '{fullName}");
+			//}
+
+			//return name;
 		}
 
+
+		public bool IsSame(string nameText) => nameText == FullName;
 
 		public override string ToString() => this != Root ? FullName : "<root>";
 
@@ -81,7 +88,7 @@ namespace Dependinator.ModelViewing.Private
 
 			return name.Replace("*", ".").Replace("$", "").Replace("?", "");
 		}
-		
+
 
 		private string GetDisplayFullName()
 		{
