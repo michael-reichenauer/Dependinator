@@ -32,7 +32,7 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public override bool CanShow => ItemScale > 0.15;
+		public override bool CanShow => ItemScale > 0.20;
 
 		public Node Node { get; }
 
