@@ -12,7 +12,7 @@
 		<!-- Title -->
 		<Border
 			BorderBrush="{Binding TitleBorderBrush}"
-			BorderThickness="0 0 0 0.3"
+			BorderThickness="0 0 0 0.4"
 			Height="20"
 			Background="Transparent" 
 			VerticalAlignment="Top"
