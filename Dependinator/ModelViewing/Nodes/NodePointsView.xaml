@@ -21,7 +21,6 @@
 			Height="8"
 			HorizontalAlignment="Left"
 			VerticalAlignment="Top"
-			UseLayoutRounding="True"
 			MouseEnter="UIElement_OnMouseEnter"
 			MouseLeave="UIElement_OnMouseLeave" />
 
@@ -35,7 +34,6 @@
 			Height="8"
 			HorizontalAlignment="Left"
 			VerticalAlignment="Bottom"
-			UseLayoutRounding="True"
 			MouseEnter="UIElement_OnMouseEnter"
 			MouseLeave="UIElement_OnMouseLeave" />
 
@@ -49,7 +47,6 @@
 			Height="8"
 			HorizontalAlignment="Right"
 			VerticalAlignment="Top"
-			UseLayoutRounding="True"
 			MouseEnter="UIElement_OnMouseEnter"
 			MouseLeave="UIElement_OnMouseLeave" />
 
@@ -63,7 +60,6 @@
 			Height="8"
 			HorizontalAlignment="Right"
 			VerticalAlignment="Bottom"
-			UseLayoutRounding="True"
 			MouseEnter="UIElement_OnMouseEnter"
 			MouseLeave="UIElement_OnMouseLeave" />
 
@@ -74,7 +70,6 @@
 			Stroke="Transparent"
 			StrokeThickness="10"
 			Stretch="Fill"
-			UseLayoutRounding="True"
 			MouseEnter="UIElement_OnMouseEnter"
 			MouseLeave="UIElement_OnMouseLeave" >
 

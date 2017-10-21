@@ -21,8 +21,7 @@
 			Fill="{Binding BackgroundBrush}"
 			Stretch="Fill" 
 			RadiusX="3"
-			RadiusY="3"
-			UseLayoutRounding="True"/>
+			RadiusY="3"/>
 
 		
 		<!-- Inner model -->

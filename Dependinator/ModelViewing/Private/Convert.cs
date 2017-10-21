@@ -31,7 +31,8 @@ namespace Dependinator.ModelViewing.Private
 		private static IEnumerable<ModelLink> ToModelLinks(IEnumerable<Link> links) =>
 			links.Select(link => new ModelLink(
 				link.Source.Name.FullName,
-				link.Target.Name.FullName));
+				link.Target.Name.FullName,
+				null));
 		
 
 		private static ModelNode ToModelNode(Node node) => 

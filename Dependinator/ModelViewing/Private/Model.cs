@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Dependinator.ModelParsing;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
@@ -10,8 +9,7 @@ namespace Dependinator.ModelViewing.Private
 	[SingleInstance]
 	internal class Model
 	{
-		private readonly Dictionary<NodeId, Node> nodesById = new Dictionary<NodeId, Node>();
-		private readonly Dictionary<NodeName, Node> nodesByName = new Dictionary<NodeName, Node>();
+		private readonly Dictionary<NodeName, Node> nodes = new Dictionary<NodeName, Node>();
 
 
 		public Model()
@@ -20,32 +18,21 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-
 		public Node Root { get; private set; }
 
-		public Node Node(NodeId nodeId) => nodesById[nodeId];
-		public bool TryGetNode(NodeId nodeId, out Node node) => nodesById.TryGetValue(nodeId, out node);
+		public Node Node(NodeName name) => nodes[name];
 
-		public Node Node(NodeName name) => nodesByName[name];
-		public bool TryGetNode(NodeName name, out Node node) => nodesByName.TryGetValue(name, out node);
+		public bool TryGetNode(NodeName name, out Node node) => nodes.TryGetValue(name, out node);
 
-		public void Add(Node node)
-		{
-			nodesById[node.Id] = node;
-			nodesByName[node.Name] = node;
-		}
+		public void Add(Node node) => nodes[node.Name] = node;
 
-		public void Remove(Node node)
-		{
-			nodesById.Remove(node.Id);
-			nodesByName.Remove(node.Name);
-		}
+		public void Remove(Node node) => nodes.Remove(node.Name);
+
 
 		public void RemoveAll()
 		{
 			ItemsCanvas rootCanvas = Root.ItemsCanvas;
-			nodesById.Clear();
-			nodesByName.Clear();
+			nodes.Clear();
 
 			AddRoot();
 			Root.ItemsCanvas = rootCanvas;

@@ -27,26 +27,33 @@ namespace Dependinator.ModelViewing.Private
 			this.nodeViewModelService = nodeViewModelService;
 		}
 
+
 		public void UpdateNode(ModelNode modelNode, int stamp)
 		{
 			NodeName name = NodeName.From(modelNode.Name);
 
 			if (model.TryGetNode(name, out Node existingNode))
 			{
-				// TODO: Check node properties as well and update if changed
-				existingNode.Stamp = stamp;
-
-				//MoveNodeIfNeeded(existingNode, modelNode.RootGroup);
-
-				if (existingNode.NodeType.AsString() != modelNode.NodeType)
-				{
-					existingNode.NodeType = new NodeType(modelNode.NodeType);
-					UpdateNodeType(existingNode);
-				}
-
+				UpdateNode(existingNode, modelNode, stamp);
 				return;
 			}
-			
+
+			AddNode(modelNode, stamp, name);
+		}
+
+
+		private void UpdateNode(Node node, ModelNode modelNode, int stamp)
+		{
+			node.Stamp = stamp;
+
+			MoveNodeIfNeeded(node, modelNode);
+
+			UpdateNodeTypeIfNeeded(node, modelNode);
+		}
+
+
+		private void AddNode(ModelNode modelNode, int stamp, NodeName name)
+		{
 			Node parentNode = GetParentNode(name, modelNode);
 
 			AddNode(name, modelNode, parentNode, stamp);
@@ -68,6 +75,17 @@ namespace Dependinator.ModelViewing.Private
 			AddNode(node, parentNode);
 		}
 
+
+		private void AddNode(Node node, Node parentNode)
+		{
+			model.Add(node);
+			parentNode.AddChild(node);
+
+			CreateNodeViewModel(node);
+
+			AddNodeToParentCanvas(node, parentNode);
+		}
+		
 
 		public void RemoveAllNodesAndLinks()
 		{
@@ -163,15 +181,6 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private void AddNode(Node node, Node parentNode)
-		{
-			model.Add(node);
-			parentNode.AddChild(node);
-
-			CreateNodeViewModel(node);
-
-			AddNodeToParentCanvas(node, parentNode);
-		}
 
 
 		private void RemoveNode(Node node)
@@ -189,32 +198,48 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		//private void MoveNode(Node node, Node parentNode)
-		//{
-		//	node.Parent?.RemoveChild(node);
-
-		//	if (node.ItemsCanvas != null)
-		//	{
-		//		node.Parent?.ItemsCanvas.RemoveChildCanvas(node.ItemsCanvas);
-		//	}
-
-		//	RemoveNodeFromParentCanvas(node);
-
-		//	parentNode.AddChild(node);
-		//	ItemsCanvas parentCanvas = GetChildrenCanvas(parentNode);
-		//	if (node.ItemsCanvas != null)
-		//	{
-		//		parentCanvas.AddChildCanvas(node.ItemsCanvas);
-		//	}
-
-		//	parentCanvas.AddItem(node.ViewModel);
-		//}
-
-		private void UpdateNodeType(Node node)
+		private void MoveNodeIfNeeded(Node node, ModelNode modelNode)
 		{
-			RemoveNodeFromParentCanvas(node);
-			CreateNodeViewModel(node);
-			AddNodeToParentCanvas(node, node.Parent);
+			if (modelNode.Parent == null || node.Parent.Name.IsSame(modelNode.Parent))
+			{
+				// No need to move node
+				return;
+			}
+
+			Log.Warn($"Node '{node}' needs to be moved from '{node.Parent}' to {modelNode.Parent}");
+
+
+			//	node.Parent?.RemoveChild(node);
+
+			//	if (node.ItemsCanvas != null)
+			//	{
+			//		node.Parent?.ItemsCanvas.RemoveChildCanvas(node.ItemsCanvas);
+			//	}
+
+			//RemoveNodeFromParentCanvas(node);
+
+			//	parentNode.AddChild(node);
+			//	ItemsCanvas parentCanvas = GetChildrenCanvas(parentNode);
+			//	if (node.ItemsCanvas != null)
+			//	{
+			//		parentCanvas.AddChildCanvas(node.ItemsCanvas);
+			//	}
+
+			//	parentCanvas.AddItem(node.ViewModel);
+		}
+
+
+
+		private void UpdateNodeTypeIfNeeded(Node node, ModelNode modelNode)
+		{
+			if (!node.NodeType.IsSame(modelNode.NodeType))
+			{
+				node.NodeType = new NodeType(modelNode.NodeType);
+
+				RemoveNodeFromParentCanvas(node);
+				CreateNodeViewModel(node);
+				AddNodeToParentCanvas(node, node.Parent);
+			}
 		}
 
 
@@ -296,19 +321,19 @@ namespace Dependinator.ModelViewing.Private
 
 				ancestorNames.Push(parentName);
 			}
-			
+
 			while (ancestorNames.Any())
 			{
 				Node grandParent = parent;
 
 				parentName = ancestorNames.Pop();
-				
+
 				parent = new Node(parentName);
 				parent.NodeType = NodeType.NameSpace;
 
 				AddNode(parent, grandParent);
 			}
-			
+
 			return parent;
 		}
 
@@ -319,7 +344,7 @@ namespace Dependinator.ModelViewing.Private
 
 			return parentName;
 		}
-		
+
 
 		private static ItemsCanvas GetChildrenCanvas(Node node)
 		{

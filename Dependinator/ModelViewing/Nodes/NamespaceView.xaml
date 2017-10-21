@@ -17,10 +17,10 @@
 			Margin="0"
 			Stroke="{Binding RectangleBrush}"
 			StrokeThickness="{Binding RectangleLineWidth}"
-			StrokeDashArray="4,4"
+			StrokeDashArray="2,6"
 			Fill="{Binding BackgroundBrush}"
 			Stretch="Fill"
-			UseLayoutRounding="True" />
+/>
 
 
 		<!-- Inner model -->

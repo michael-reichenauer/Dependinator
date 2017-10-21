@@ -8,6 +8,14 @@ namespace Dependinator.ModelParsing
 		public ModelNode(
 			string name,
 			string parent,
+			string nodeType)
+			: this(name, parent, nodeType, RectEx.Zero, 0, PointEx.Zero, null)
+		{
+		}
+
+		public ModelNode(
+			string name,
+			string parent,
 			string nodeType,
 			Rect bounds,
 			double itemsScaleFactor,

@@ -67,7 +67,8 @@ namespace Dependinator.ModelParsing.Private
 
 		private static ModelLink ToModelLink(JsonTypes.Link link) => new ModelLink(
 			link.Source,
-			link.Target);
+			link.Target,
+			null);
 
 
 		private static JsonTypes.Link ToJsonLink(ModelLink link) => new JsonTypes.Link

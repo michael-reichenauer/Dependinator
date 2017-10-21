@@ -32,11 +32,12 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public override bool CanShow => ItemScale > 0.15;
+		public override bool CanShow => ItemScale > 0.20;
 
 		public Node Node { get; }
 
 		public Brush RectangleBrush { get; }
+		public Brush TitleBorderBrush => Node.NodeType == NodeType.Type ? RectangleBrush : null;
 		public Brush BackgroundBrush { get; }
 
 		public bool IsShowNode => ItemScale < 100;
