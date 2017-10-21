@@ -6,6 +6,7 @@ using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Collections.Generic;
 
 
 namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
@@ -52,13 +53,68 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			{
 				return;
 			}
+			
+			AddModule();
 
-			IEnumerable<TypeDefinition> assemblyTypes = GetAssemblyTypes();
+			AddModuleTypes();
 
-			AddRootNameSpace();
+			AddModuleReferences();
+		}
+
+
+		private void AddModule()
+		{
+			string parent = rootGroup;
+			string moduleName = Name.GetAssemblyName(assembly);
+
+			int index = moduleName.IndexOfTxt("*");
+			if (index > 0)
+			{
+				string groupName = moduleName.Substring(0, index);
+				parent = parent == null ? groupName : $"{parent}.{groupName}";
+			}
+
+			parent = parent != null ? $"${parent?.Replace(".", ".$")}" : null;
+
+			sender.SendDefinedNode(moduleName, parent, JsonTypes.NodeType.NameSpace);
+		}
+
+
+		private void AddModuleTypes()
+		{
+			IEnumerable<TypeDefinition> assemblyTypes = assembly.MainModule.Types
+				.Where(type =>
+					!Name.IsCompilerGenerated(type.Name) &&
+					!Name.IsCompilerGenerated(type.DeclaringType?.Name));
 
 			// Add assembly type nodes (including inner type types)
 			typeInfos = assemblyTypes.SelectMany(AddTypes).ToList();
+		}
+
+
+		private void AddModuleReferences()
+		{
+			string moduleName = Name.GetAssemblyName(assembly);
+
+			var references = assembly.MainModule.AssemblyReferences;
+
+			foreach (AssemblyNameReference reference in references)
+			{
+				string parent = null;
+				string referenceName = Name.GetModuleName(reference.Name);
+
+				int index = referenceName.IndexOfTxt("*");
+				if (index > 0)
+				{
+					parent = referenceName.Substring(0, index);
+				}
+
+				parent = parent != null ? $"${parent?.Replace(".", ".$")}" : null;
+
+				sender.SendDefinedNode(referenceName, parent, JsonTypes.NodeType.NameSpace);
+
+				links.Add(new Link(moduleName, referenceName, JsonTypes.NodeType.NameSpace));
+			}
 		}
 
 
@@ -97,33 +153,6 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		{
 			sender.SendReferencedNode(link.TargetName, link.TargetType);
 			sender.SendLink(link.SourceName, link.TargetName);
-		}
-
-
-		private void AddRootNameSpace()
-		{
-			string parent = rootGroup;
-			string moduleName = Name.GetAssemblyName(assembly);
-
-			int index = moduleName.IndexOfTxt("*");
-			if (index > 0)
-			{
-				string groupName = moduleName.Substring(0, index);
-				parent = parent == null ? groupName : $"{parent}.{groupName}";
-			}
-
-			parent = parent != null ? $"${parent?.Replace(".", ".$")}" : null;
-
-			sender.SendDefinedNode(moduleName, parent, JsonTypes.NodeType.NameSpace);
-		}
-
-
-		private IEnumerable<TypeDefinition> GetAssemblyTypes()
-		{
-			return assembly.MainModule.Types
-				.Where(type =>
-					!Name.IsCompilerGenerated(type.Name) &&
-					!Name.IsCompilerGenerated(type.DeclaringType?.Name));
 		}
 
 

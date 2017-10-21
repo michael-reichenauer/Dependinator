@@ -37,6 +37,12 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
+		public static string GetModuleName(string name)
+		{
+			return $"?{name.Replace(".", "*")}";
+		}
+
+
 		public static string GetTypeFullName(TypeReference type)
 		{
 			if (type is TypeSpecification typeSpecification)
@@ -138,12 +144,6 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			// A referenced type
 			return GetModuleName(typeInfo.Scope.Name);
-		}
-
-
-		private static string GetModuleName(string name)
-		{
-			return $"?{name.Replace(".", "*")}";
 		}
 	}
 }
