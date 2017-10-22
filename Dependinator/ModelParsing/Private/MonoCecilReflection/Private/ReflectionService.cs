@@ -27,8 +27,11 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			{
 				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeTypes());
 				t.Log("Analyzed types");
+				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeModuleReferences());
+				t.Log("Analyzed module references");
 				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeMembers());
 				t.Log("Analyzed members");
+			
 				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeLinks());
 				t.Log("Analyzed links");
 			});

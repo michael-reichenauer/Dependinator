@@ -56,8 +56,48 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			AddModule();
 
 			AddModuleTypes();
+		}
+
+
+		public void AnalyzeModuleReferences()
+		{
+			if (assembly == null)
+			{
+				return;
+			}
 
 			AddModuleReferences();
+		}
+
+
+		public void AnalyzeMembers()
+		{
+			if (assembly == null)
+			{
+				return;
+			}
+
+			Timing t = new Timing();
+
+			typeInfos.ForEach(AddLinksToBaseTypes);
+			typeInfos.ForEach(AddTypeMembers);
+			methodBodies.ForEach(AddMethodBodyLinks);
+			//t.Log($"Added {sender.NodesCount} nodes in {assembly.Name.Name}");
+		}
+
+
+		public void AnalyzeLinks()
+		{
+			if (assembly == null)
+			{
+				return;
+			}
+
+			Timing t = new Timing();
+
+			links.ForEach(AddLink);
+
+			//t.Log($"Added {sender.LinkCount} links in {assembly.Name.Name}");
 		}
 
 
@@ -70,7 +110,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			int index = moduleName.IndexOfTxt("*");
 			if (index > 0)
 			{
-				string groupName = moduleName.Substring(0, index);
+				string groupName = moduleName.Substring(1, index - 1);
 				parent = parent == null ? groupName : $"{parent}.{groupName}";
 			}
 
@@ -96,7 +136,8 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		{
 			string moduleName = Name.GetAssemblyName(assembly);
 
-			var references = assembly.MainModule.AssemblyReferences;
+			var references = assembly.MainModule.AssemblyReferences.
+				Where(reference => !IsSystemIgnoredModuleName(reference.Name));
 
 			foreach (AssemblyNameReference reference in references)
 			{
@@ -106,7 +147,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				int index = referenceName.IndexOfTxt("*");
 				if (index > 0)
 				{
-					parent = referenceName.Substring(0, index);
+					parent = referenceName.Substring(1, index - 1);
 				}
 
 				parent = parent != null ? $"${parent?.Replace(".", ".$")}" : null;
@@ -116,37 +157,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				links.Add(new Reference(moduleName, referenceName, JsonTypes.NodeType.NameSpace));
 			}
 		}
-
-
-		public void AnalyzeMembers()
-		{
-			if (assembly == null)
-			{
-				return;
-			}
-
-			Timing t = new Timing();
-
-			typeInfos.ForEach(AddLinksToBaseTypes);
-			typeInfos.ForEach(AddTypeMembers);
-			methodBodies.ForEach(AddMethodBodyLinks);
-			t.Log($"Added {sender.NodesCount} nodes in {assembly.Name.Name}");
-		}
-
-
-		public void AnalyzeLinks()
-		{
-			if (assembly == null)
-			{
-				return;
-			}
-
-			Timing t = new Timing();
-
-			links.ForEach(AddLink);
-
-			t.Log($"Added {sender.LinkCount} links in {assembly.Name.Name}");
-		}
+		
 
 
 		private void AddLink(Reference reference)
@@ -412,24 +423,25 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 		private static bool IsIgnoredSystemType(TypeReference targetType)
 		{
-			if (targetType.Namespace.Contains("System."))
-			{
-
-			}
-
-			return
-				targetType.Scope.Name == "mscorlib" ||
-				targetType.Scope.Name == "PresentationFramework" ||
-				targetType.Scope.Name == "PresentationCore" ||
-				targetType.Scope.Name == "WindowsBase" ||
-				targetType.Scope.Name == "System" ||
-				targetType.Scope.Name.StartsWithTxt("Microsoft.") ||
-				targetType.Scope.Name.StartsWithTxt("System.");
+			return IsSystemIgnoredModuleName(targetType.Scope.Name);
 
 			//return
 			//	targetType.Namespace != null
 			//	&& (targetType.Namespace.StartsWithTxt("System")
 			//			|| targetType.Namespace.StartsWithTxt("Microsoft"));
+		}
+
+
+		private static bool IsSystemIgnoredModuleName(string moduleName)
+		{
+			return
+				moduleName == "mscorlib" ||
+				moduleName == "PresentationFramework" ||
+				moduleName == "PresentationCore" ||
+				moduleName == "WindowsBase" ||
+				moduleName == "System" ||
+				moduleName.StartsWithTxt("Microsoft.") ||
+				moduleName.StartsWithTxt("System.");
 		}
 
 

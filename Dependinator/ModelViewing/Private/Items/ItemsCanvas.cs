@@ -152,7 +152,7 @@ namespace Dependinator.ModelViewing.Private.Items
 			}
 
 			double newScale = Scale * zoom;
-			if (!IsShowing || !CanShow || IsRoot && newScale < 0.15 && zoom < 1)
+			if (!IsShowing || !CanShow || IsRoot && newScale < 0.20 && zoom < 1)
 			{
 				// Item not shown or reached minimum root zoom level
 				return;
