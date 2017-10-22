@@ -65,7 +65,7 @@ namespace Dependinator.ModelViewing.Private
 
 			foreach (Node node in nodes.Reverse())
 			{
-				if (node.NodeType == NodeType.NameSpace && !node.Children.Any())
+				if (node.Stamp != stamp && node.NodeType == NodeType.NameSpace && !node.Children.Any())
 				{
 					// Node is an empty namespace, lets remove it
 					RemoveNode(node);
@@ -289,13 +289,11 @@ namespace Dependinator.ModelViewing.Private
 
 			if (Math.Abs(node.ScaleFactor) > 0.0000001)
 			{
-				Log.Warn("Reusing scale");
 				node.ItemsCanvas.SetScaleFactor(node.ScaleFactor);
 			}
 
 			if (node.Offset != PointEx.Zero)
 			{
-				Log.Warn("Reusing offset");
 				node.ItemsCanvas.Offset = node.Offset;
 			}
 

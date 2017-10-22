@@ -99,9 +99,17 @@ namespace Dependinator.ModelViewing.Private
 
 			name = name.Replace("*", ".").Replace("#", ".").Replace("?", "");
 
-			if (string.IsNullOrEmpty(name) && !string.IsNullOrEmpty(DisplayName))
+			if (string.IsNullOrEmpty(name))
 			{
-				name = DisplayName;
+				name = FullName.Replace("*", ".").Replace("#", ".").Replace("?", "").Replace("$", "");
+				if (parts[parts.Length - 1].StartsWith("$"))
+				{
+					name += " folder";
+				}
+				else if (parts[parts.Length - 1].StartsWith("?"))
+				{
+					name += " module";
+				}
 			}
 
 			return name;

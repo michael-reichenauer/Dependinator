@@ -6,6 +6,7 @@ using Dependinator.ModelParsing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Private
@@ -51,6 +52,8 @@ namespace Dependinator.ModelViewing.Private
 				// Getting the newly added node
 				target = model.Node(targetName);
 			}
+
+			target.Stamp = stamp;
 
 			if (TryGetLink(source, target, out Link link))
 			{
