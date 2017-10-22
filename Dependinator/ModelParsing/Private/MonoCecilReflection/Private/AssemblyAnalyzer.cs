@@ -12,7 +12,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 {
 	internal class AssemblyAnalyzer
 	{
-		private readonly List<MethodBody> methodBodies = new List<MethodBody>();
+		private readonly List<MethodBodyNode> methodBodyNodes = new List<MethodBodyNode>();
 		private readonly Sender sender;
 		private readonly string rootGroup;
 
@@ -81,7 +81,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			typeInfos.ForEach(AddLinksToBaseTypes);
 			typeInfos.ForEach(AddTypeMembers);
-			methodBodies.ForEach(AddMethodBodyLinks);
+			methodBodyNodes.ForEach(AddMethodBodyLinks);
 			//t.Log($"Added {sender.NodesCount} nodes in {assembly.Name.Name}");
 		}
 
@@ -314,16 +314,16 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				.Select(parameter => parameter.ParameterType)
 				.ForEach(parameterType => AddLinkToType(memberNode, parameterType));
 
-			methodBodies.Add(new MethodBody(memberNode, method));
+			methodBodyNodes.Add(new MethodBodyNode(memberNode, method));
 		}
 
 
-		private void AddMethodBodyLinks(MethodBody methodBody)
+		private void AddMethodBodyLinks(MethodBodyNode methodBodyNode)
 		{
 			try
 			{
-				ModelNode memberNode = methodBody.MemberNode;
-				MethodDefinition method = methodBody.Method;
+				ModelNode memberNode = methodBodyNode.MemberNode;
+				MethodDefinition method = methodBodyNode.Method;
 
 				if (method.DeclaringType.IsInterface || !method.HasBody)
 				{
@@ -344,6 +344,8 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 					else if (instruction.Operand is FieldDefinition field)
 					{
 						AddLinkToType(memberNode, field.FieldType);
+
+						AddLinkToMember(memberNode, field);
 					}
 				}
 			}
@@ -410,6 +412,28 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
+		private void AddLinkToMember(ModelNode sourceNode, IMemberDefinition memberInfo)
+		{
+			if (IsIgnoredSystemType(memberInfo.DeclaringType)
+				|| IsGenericTypeArgument(memberInfo.DeclaringType))
+			{
+				return;
+			}
+
+			string targetNodeName = Name.GetMemberFullName(memberInfo);
+
+			if (Name.IsCompilerGenerated(targetNodeName) ||
+			    targetNodeName.StartsWithTxt("mscorlib."))
+			{
+				return;
+			}
+
+			links.Add(new Reference(sourceNode.Name, targetNodeName, JsonTypes.NodeType.Member));
+		}
+
+
+
+
 		/// <summary>
 		/// Return true if type is a generic type parameter T, as in e.g. Get/T/ (T value)
 		/// </summary>
@@ -473,13 +497,13 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			}
 		}
 
-		private class MethodBody
+		private class MethodBodyNode
 		{
 			public ModelNode MemberNode { get; }
 			public MethodDefinition Method { get; }
 
 
-			public MethodBody(ModelNode memberNode, MethodDefinition method)
+			public MethodBodyNode(ModelNode memberNode, MethodDefinition method)
 			{
 				MemberNode = memberNode;
 				Method = method;
