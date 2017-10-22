@@ -184,7 +184,6 @@
     <Compile Include="ModelViewing\Private\IModelLinkService.cs" />
     <Compile Include="ModelViewing\Links\Line.cs" />
     <Compile Include="ModelViewing\Links\LinkId.cs" />
-    <Compile Include="ModelParsing\Private\DotNetReflection\Private\Analyzer.cs" />
     <Compile Include="ModelViewing\Links\LineView.xaml.cs">
       <DependentUpon>LineView.xaml</DependentUpon>
     </Compile>
@@ -249,12 +248,6 @@
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
     <Compile Include="Common\ModelMetadataFolders\FileEventArgs.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\IFolderMonitorService.cs" />
-    <Compile Include="ModelParsing\Private\DotNetReflection\Private\Assemblies.cs" />
-    <Compile Include="ModelParsing\Private\DotNetReflection\Private\ILInstruction.cs" />
-    <Compile Include="ModelParsing\Private\DotNetReflection\Private\IlToText.cs" />
-    <Compile Include="ModelParsing\Private\DotNetReflection\Private\MethodBodyReader.cs" />
-    <Compile Include="ModelParsing\Private\DotNetReflection\Private\Reflection.cs" />
-    <Compile Include="ModelParsing\Private\DotNetReflection\Private\Globals.cs" />
     <Compile Include="ModelViewing\Links\Private\ILinkSegmentService.cs" />
     <Compile Include="ModelViewing\Links\ILineViewModelService.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkSegmentService.cs" />
@@ -265,13 +258,11 @@
     <Compile Include="ModelViewing\Nodes\INodeViewModelService.cs" />
     <Compile Include="ModelViewing\Private\Items\IItemsCanvasBounds.cs" />
     <Compile Include="ModelViewing\Private\Items\ItemsCanvas.cs" />
-    <Compile Include="ModelParsing\Private\DotNetReflection\Private\ReflectionService.cs" />
     <Compile Include="ModelViewing\Nodes\MemberNodeView.xaml.cs">
       <DependentUpon>MemberNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\MemberNodeViewModel.cs" />
     <Compile Include="ModelViewing\Private\NodeName.cs" />
-    <Compile Include="ModelParsing\Private\DotNetReflection\IReflectionService.cs" />
     <Compile Include="ModelViewing\Links\NodeLinks.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeComparer.cs" />
     <Compile Include="ModelViewing\Private\Items\ItemsView.xaml.cs">
