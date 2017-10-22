@@ -290,7 +290,7 @@ namespace Dependinator.ModelViewing.Private
 			if (Math.Abs(node.ScaleFactor) > 0.0000001)
 			{
 				Log.Warn("Reusing scale");
-				node.ItemsCanvas.Scale = node.ScaleFactor * node.Parent.ItemsCanvas.Scale;
+				node.ItemsCanvas.SetScaleFactor(node.ScaleFactor);
 			}
 
 			if (node.Offset != PointEx.Zero)
