@@ -31,18 +31,33 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		// The root canvas
 		public ItemsCanvas()
-			: this(null)
+			: this(null, null)
 		{
-			CanvasRoot = this;
-			Scale = 1;
-			ScaleFactor = 1;
 		}
 
-		public ItemsCanvas(IItemsCanvasBounds owner)
+		public ItemsCanvas(IItemsCanvasBounds owner, ItemsCanvas canvasParent)
 		{
 			this.owner = owner;
 			itemsSource = new ItemsSource(this);
-			Scale = 1 * DefaultScaleFactor;
+
+			if (canvasParent == null)
+			{
+				// Creating root node canvas
+				this.canvasParent = null;
+				CanvasRoot = this;
+				ScaleFactor = 1;
+				Scale = 1;
+			}
+			else
+			{
+				// Creating child node canvas
+				this.canvasParent = canvasParent;
+				CanvasRoot = canvasParent.CanvasRoot;
+				ScaleFactor = DefaultScaleFactor;
+				Scale = ParentScale * ScaleFactor;
+
+				canvasParent.canvasChildren.Add(this);
+			}
 		}
 
 		public double ParentScale => IsRoot ? Scale : canvasParent.ParentScale * canvasParent.ScaleFactor;
@@ -55,15 +70,6 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		public double ScaleFactor { get; private set; } = DefaultScaleFactor;
 
-
-		public void AddChildCanvas(ItemsCanvas childCanvas)
-		{
-			childCanvas.canvasParent = this;
-			childCanvas.CanvasRoot = CanvasRoot;
-
-			childCanvas.Scale = Scale * childCanvas.ScaleFactor;
-			canvasChildren.Add(childCanvas);
-		}
 
 
 		public void RemoveChildCanvas(ItemsCanvas childCanvas)

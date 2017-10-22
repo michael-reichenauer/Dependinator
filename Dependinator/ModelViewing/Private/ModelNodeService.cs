@@ -175,6 +175,8 @@ namespace Dependinator.ModelViewing.Private
 		{
 			if (!node.NodeType.IsSame(modelNode.NodeType))
 			{
+				Log.Warn($"Node type has changed from {node} to {modelNode.NodeType}");
+
 				node.NodeType = new NodeType(modelNode.NodeType);
 
 				RemoveNodeFromParentCanvas(node);
@@ -282,17 +284,18 @@ namespace Dependinator.ModelViewing.Private
 			ItemsCanvas parentCanvas = GetItemsCanvas(node.Parent);
 
 			// Creating the child canvas to be the children canvas of the node
-			node.ItemsCanvas = new ItemsCanvas(node.ViewModel);
-			parentCanvas.AddChildCanvas(node.ItemsCanvas);
+			node.ItemsCanvas = new ItemsCanvas(node.ViewModel, parentCanvas);
 			node.ViewModel.ItemsViewModel = new ItemsViewModel(node.ItemsCanvas);
 
 			if (Math.Abs(node.ScaleFactor) > 0.0000001)
 			{
+				Log.Warn("Reusing scale");
 				node.ItemsCanvas.Scale = node.ScaleFactor * node.Parent.ItemsCanvas.Scale;
 			}
 
 			if (node.Offset != PointEx.Zero)
 			{
+				Log.Warn("Reusing offset");
 				node.ItemsCanvas.Offset = node.Offset;
 			}
 
