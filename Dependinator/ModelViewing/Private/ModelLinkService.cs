@@ -154,7 +154,8 @@ namespace Dependinator.ModelViewing.Private
 
 		private Line AddLine(Node source, Node target, int linkCount, IReadOnlyList<Point> points)
 		{
-			Line line = new Line(source, target);
+			Node owner = GetLineOwner(source, target);
+			Line line = new Line(source, target, owner);
 
 			if (points != null)
 			{
@@ -165,7 +166,7 @@ namespace Dependinator.ModelViewing.Private
 			line.Target.TargetLines.Add(line);
 			line.LinkCount = linkCount;
 
-			Node owner = GetLineOwner(line);
+			
 			if (owner.IsShowing || line.Source.IsShowing || line.Target.IsShowing)
 			{
 				AddLineViewModel(line);
@@ -186,10 +187,9 @@ namespace Dependinator.ModelViewing.Private
 
 		public void AddLineViewModel(Line line)
 		{
-			Node owner = GetLineOwner(line);
 			LineViewModel lineViewModel = new LineViewModel(lineViewModelService, line);
 
-			owner.ItemsCanvas.AddItem(lineViewModel);
+			line.Owner.ItemsCanvas.AddItem(lineViewModel);
 		}
 
 
@@ -197,14 +197,13 @@ namespace Dependinator.ModelViewing.Private
 		{
 			if (line.ViewModel != null)
 			{
-				Node owner = GetLineOwner(line);
-				owner.ItemsCanvas.RemoveItem(line.ViewModel);
+				line.Owner.ItemsCanvas.RemoveItem(line.ViewModel);
 			}
 		}
 
 
-		private static Node GetLineOwner(Line line) =>
-			line.Source == line.Target.Parent ? line.Source : line.Source.Parent;
+		private static Node GetLineOwner(Node source, Node target) =>
+			source == target.Parent ? source : source.Parent;
 
 
 		//private bool TryGetNode(NodeName nodeName, out Node node)

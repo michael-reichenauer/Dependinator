@@ -38,6 +38,8 @@
 					BorderThickness="1"
 					Opened="ToolTip_OnOpened" />
 			</Border.ToolTip>
+
+
 		</Border>
 	</Grid>
 </UserControl>

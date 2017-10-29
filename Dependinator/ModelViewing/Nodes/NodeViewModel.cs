@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils.UI;
+
 
 namespace Dependinator.ModelViewing.Nodes
 {
@@ -14,12 +18,15 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
 
+		private readonly Lazy<ObservableCollection<LinkItem>> incomingLinks;
+		private readonly Lazy<ObservableCollection<LinkItem>> outgoingLinks;
+
+
 		private bool isFirstShow = true;
 		private int currentPointIndex = -1;
 		private Point mouseDownPoint;
 		private Point mouseMovedPoint;
-		//private static readonly double MinControlScale = 0.5;
-
+		
 
 		protected NodeViewModel(INodeViewModelService nodeViewModelService, Node node)
 		{
@@ -29,6 +36,9 @@ namespace Dependinator.ModelViewing.Nodes
 
 			RectangleBrush = nodeViewModelService.GetNodeBrush(node);
 			BackgroundBrush = nodeViewModelService.GetBackgroundBrush(RectangleBrush);
+
+			incomingLinks = new Lazy<ObservableCollection<LinkItem>>(GetIncomingLinkItems);
+			outgoingLinks = new Lazy<ObservableCollection<LinkItem>>(GetOutgoingLinkItems);
 		}
 
 
@@ -48,7 +58,21 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public string ToolTip { get => Get(); set => Set(value); }
 
-		public void UpdateToolTip() => ToolTip = $"{Node.Name.DisplayFullName}{DebugToolTip}";
+		public void UpdateToolTip() => ToolTip =
+			$"{Node.Name.DisplayFullName}"+
+			$"\nLinks: Incoming: {IncomingLinksCount}, Outgoing: {OutgoingLinksCount}" + 
+			$"{DebugToolTip}";
+
+
+		public int IncomingLinksCount => Node.TargetLines
+			.Where(line => line.Owner != Node)
+			.SelectMany(line => line.Links)
+			.Count();
+
+		public int OutgoingLinksCount => Node.SourceLines
+			.Where(line => line.Owner != Node)
+			.SelectMany(line => line.Links)
+			.Count();
 
 		public int FontSize => ((int)(15 * ItemScale)).MM(9, 13);
 
@@ -62,6 +86,11 @@ namespace Dependinator.ModelViewing.Nodes
 		public bool IsShowToolTip => !IsShowPoints;
 
 		public ItemsViewModel ItemsViewModel { get; set; }
+
+		public ObservableCollection<LinkItem> IncomingLinks => incomingLinks.Value;
+
+		public ObservableCollection<LinkItem> OutgoingLinks => outgoingLinks.Value;
+
 
 		public override void ItemRealized()
 		{
@@ -177,6 +206,29 @@ namespace Dependinator.ModelViewing.Nodes
 		public void MouseUp(Point screenPoint) => currentPointIndex = -1;
 
 		public override string ToString() => Node.Name.ToString();
+
+
+		private ObservableCollection<LinkItem> GetIncomingLinkItems()
+		{
+			IEnumerable<Link> links = Node.TargetLines
+				.Where(line => line.Owner != Node)
+				.SelectMany(line => line.Links)
+				.DistinctBy(link => link.Source);
+
+			IEnumerable<LinkItem> items = nodeViewModelService.GetLinkItems(links, link => link.Source, 1);
+			return new ObservableCollection<LinkItem>(items);
+		}
+
+		private ObservableCollection<LinkItem> GetOutgoingLinkItems()
+		{
+			IEnumerable<Link> links = Node.SourceLines
+				.Where(line => line.Owner != Node)
+				.SelectMany(line => line.Links)
+				.DistinctBy(link => link.Target);
+
+			IEnumerable<LinkItem> items = nodeViewModelService.GetLinkItems(links, link => link.Target, 1);
+			return new ObservableCollection<LinkItem>(items);
+		}
 
 
 		private string DebugToolTip => ItemsToolTip;

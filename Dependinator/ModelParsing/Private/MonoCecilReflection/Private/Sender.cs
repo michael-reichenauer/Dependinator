@@ -33,7 +33,6 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				return node;
 			}
 
-			//rootGroup = null;
 			node = new ModelNode(nodeName, parentName, nodeType);
 
 			sentNodes[nodeName] = node;

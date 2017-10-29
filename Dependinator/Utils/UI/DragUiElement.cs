@@ -50,14 +50,17 @@ namespace Dependinator.Utils.UI
 		{
 			if (predicate?.Invoke() ?? true)
 			{
-				uiElement.CaptureMouse();
+				if (e.LeftButton == MouseButtonState.Pressed)
+				{
+					uiElement.CaptureMouse();
 
-				Point viewPosition = e.GetPosition(Application.Current.MainWindow);
+					Point viewPosition = e.GetPosition(Application.Current.MainWindow);
 
-				lastMousePoint = viewPosition;
-				begin?.Invoke(viewPosition);
-				IsMouseDown = true;
-				e.Handled = true;
+					lastMousePoint = viewPosition;
+					begin?.Invoke(viewPosition);
+					IsMouseDown = true;
+					e.Handled = true;
+				}
 			}
 
 		}

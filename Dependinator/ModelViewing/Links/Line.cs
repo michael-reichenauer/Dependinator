@@ -12,10 +12,11 @@ namespace Dependinator.ModelViewing.Links
 			new List<Point> { new Point(0, 0), new Point(0, 0) };
 
 
-		public Line(Node source, Node target)
+		public Line(Node source, Node target, Node owner)
 		{
 			Source = source;
 			Target = target;
+			Owner = owner;
 			IsEqualWhenSame(Source, Target);
 		}
 
@@ -26,6 +27,8 @@ namespace Dependinator.ModelViewing.Links
 		public Node Source { get; }
 
 		public Node Target { get; }
+
+		public Node Owner { get; }
 
 		public Point RelativeSourcePoint { get; set; } = new Point(-1, -1);
 
