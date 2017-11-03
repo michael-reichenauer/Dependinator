@@ -10,7 +10,7 @@ using Mono.Cecil.Cil;
 
 namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 {
-	internal class AssemblyAnalyzer
+	internal class AssemblyParser
 	{
 		private readonly List<MethodBodyNode> methodBodyNodes = new List<MethodBodyNode>();
 		private readonly Sender sender;
@@ -21,7 +21,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		private List<Reference> links = new List<Reference>();
 
 
-		public AssemblyAnalyzer(
+		public AssemblyParser(
 			string assemblyPath,
 			string assemblyRootGroup,
 			ModelItemsCallback modelItemsCallback)

@@ -1,7 +1,7 @@
 using System;
 
 
-namespace Dependinator.ModelParsing.Private.SolutionFileParsing
+namespace Dependinator.ModelParsing.Private.SolutionFileParsing.Private
 {
 	/// <summary>
 	/// Wraps the Microsoft.Build.Construction.ProjectInSolution type,
@@ -22,7 +22,6 @@ namespace Dependinator.ModelParsing.Private.SolutionFileParsing
 
 		public ProjectInSolution(object instance)
 		{
-			// Microsoft.Build.Construction.ProjectInSolution
 			uniqueProjectName = instance.GetField<string>(nameof(uniqueProjectName));
 			ProjectName = instance.GetProperty<string>(nameof(ProjectName));
 			ProjectType = instance.GetProperty<object>(nameof(ProjectType)).ToString();

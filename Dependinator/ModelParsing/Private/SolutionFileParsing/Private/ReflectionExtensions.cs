@@ -2,8 +2,11 @@ using System;
 using System.Reflection;
 
 
-namespace Dependinator.ModelParsing.Private.SolutionFileParsing
+namespace Dependinator.ModelParsing.Private.SolutionFileParsing.Private
 {
+	/// <summary>
+	/// Method used to extract information from internal Microsoft classes using reflection
+	/// </summary>
 	internal static class Reflection
 	{
 

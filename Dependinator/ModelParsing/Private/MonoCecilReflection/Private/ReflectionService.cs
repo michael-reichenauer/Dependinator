@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
-using Dependinator.ModelParsing.Private.SolutionFileParsing;
 using Dependinator.Utils;
 
 
@@ -10,19 +8,26 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 {
 	internal class ReflectionService : IReflectionService
 	{
-		public async Task AnalyzeAsync(string filePath, ModelItemsCallback modelItemsCallback)
+		private readonly IParserFactoryService parserFactoryService;
+
+
+		public ReflectionService(IParserFactoryService parserFactoryService)
+		{
+			this.parserFactoryService = parserFactoryService;
+		}
+
+
+		public async Task ParseAsync(string filePath, ModelItemsCallback modelItemsCallback)
 		{
 			Log.Debug($"Analyze {filePath} ...");
 			Timing t = Timing.Start();
-			
-			int maxParallel = Math.Max(Environment.ProcessorCount - 1, 1);  // Leave room for UI thread
-			// maxParallel = 1;
-			var option = new ParallelOptions { MaxDegreeOfParallelism = maxParallel };
-			Log.Debug($"Parallelism: {maxParallel}");
 
-			IReadOnlyList<AssemblyAnalyzer> analyzers = GetAnalyzers(filePath, modelItemsCallback);
-			t.Log("Loaded assemblies");
+			IReadOnlyList<AssemblyParser> analyzers = parserFactoryService.CreateParsers(
+				filePath, modelItemsCallback);
 
+			t.Log("Created analyzers");
+
+			ParallelOptions option = GetParallelOptions();
 			await Task.Run(() =>
 			{
 				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeTypes());
@@ -31,7 +36,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				t.Log("Analyzed module references");
 				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeMembers());
 				t.Log("Analyzed members");
-			
+
 				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeLinks());
 				t.Log("Analyzed links");
 			});
@@ -40,84 +45,14 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private static IReadOnlyList<AssemblyAnalyzer> GetAnalyzers(
-			string filePath, ModelItemsCallback modelItemsCallback)
+		private static ParallelOptions GetParallelOptions()
 		{
-			Timing t = Timing.Start();
+			int maxParallel = Math.Max(Environment.ProcessorCount - 1, 1); // Leave room for UI thread
 
-			IReadOnlyList<AssemblyAnalyzer> analyzers;
-
-			if (Path.GetExtension(filePath).IsSameIgnoreCase(".sln"))
-			{
-				Solution solution = new Solution(filePath);
-
-				analyzers = GetAnalyzers(solution, modelItemsCallback);
-			}
-			else
-			{
-				string rootGroup = Path.GetFileName(filePath).Replace(".", "*");
-				analyzers = new[] { new AssemblyAnalyzer(filePath, rootGroup, modelItemsCallback) };
-			}
-
-			t.Log($"Parsed file {filePath} for {analyzers.Count} assembly paths");
-			return analyzers;
-		}
-
-
-
-		private static IReadOnlyList<AssemblyAnalyzer> GetAnalyzers(
-			Solution solution, ModelItemsCallback modelItemsCallback)
-		{
-			IReadOnlyList<ProjectInSolution> projects = solution.Projects;
-
-			List<AssemblyAnalyzer> analyzers = new List<AssemblyAnalyzer>();
-
-			string solutionName = Path.GetFileName(solution.SolutionFilePath).Replace(".", "*");
-
-			foreach (ProjectInSolution project in projects)
-			{
-				string outputPath = GetOutputPath(solution, project);
-				
-				string projectName = project.UniqueProjectName;
-
-				string rootGroup = solutionName;
-
-				int index = projectName.LastIndexOf("\\", StringComparison.Ordinal);
-				if (index > -1)
-				{
-					string solutionFolder= projectName.Substring(0, index);
-					rootGroup = $"{rootGroup}.{solutionFolder}";
-				}
-
-				rootGroup = rootGroup.Replace("\\", ".");
-				rootGroup = rootGroup.Replace("_", ".");
-
-				analyzers.Add(new AssemblyAnalyzer(outputPath, rootGroup, modelItemsCallback));
-			}
-
-			return analyzers;
-		}
-
-
-		private static string GetOutputPath(Solution solution, ProjectInSolution project)
-		{
-			string projectDirectory = Path.GetDirectoryName(project.RelativePath);
-
-			string pathWithoutExtension = Path.Combine(
-				solution.SolutionDirectory,
-				projectDirectory,
-				"bin",
-				"Debug",
-				$"{project.ProjectName}");
-
-			if (File.Exists($"{pathWithoutExtension}.exe"))
-			{
-				return $"{pathWithoutExtension}.exe";
-			}
-			else
-			{
-				return $"{pathWithoutExtension}.dll";
-			}
+			// maxParallel = 1;
+			var option = new ParallelOptions {MaxDegreeOfParallelism = maxParallel};
+			Log.Debug($"Parallelism: {maxParallel}");
+			return option;
 		}
 	}
 }

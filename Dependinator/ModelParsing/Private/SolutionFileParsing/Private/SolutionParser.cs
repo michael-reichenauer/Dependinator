@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 
 
-namespace Dependinator.ModelParsing.Private.SolutionFileParsing
+namespace Dependinator.ModelParsing.Private.SolutionFileParsing.Private
 {
 	/// <summary>
 	/// This class parses solution files ".sln" files. It wraps the internal

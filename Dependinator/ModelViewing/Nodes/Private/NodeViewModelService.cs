@@ -259,7 +259,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			{
 				bool isChanged = false;
 
-				foreach (LinkItem linkItem in linkItems.Where(item => item.Link == null).ToList())
+				foreach (LinkItem linkItem in linkItems.Where(item => item.SubLinkItems.Any()).ToList())
 				{
 					int count = linkItem.SubLinkItems.Count();
 					margin -= (count - 1);
