@@ -23,7 +23,7 @@ namespace Dependinator.ModelParsing.Private
 		}
 
 
-		public Task AnalyzeAsync(string filePath, ModelItemsCallback modelItemsCallback)
+		public Task ParseAsync(string filePath, ModelItemsCallback modelItemsCallback)
 		{
 			return reflectionService.ParseAsync(filePath, modelItemsCallback);
 		}

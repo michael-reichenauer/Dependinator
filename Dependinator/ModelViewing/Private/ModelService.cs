@@ -79,7 +79,7 @@ namespace Dependinator.ModelViewing.Private
 			//else
 			if (File.Exists(modelMetadata.ModelFilePath))
 			{
-				await ShowModelAsync(operation => parserService.AnalyzeAsync(
+				await ShowModelAsync(operation => parserService.ParseAsync(
 					modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
 			}
 
@@ -191,7 +191,7 @@ namespace Dependinator.ModelViewing.Private
 			}
 
 
-			int operationId = await ShowModelAsync(operation => parserService.AnalyzeAsync(
+			int operationId = await ShowModelAsync(operation => parserService.ParseAsync(
 				modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
 
 			modelNodeService.RemoveObsoleteNodesAndLinks(operationId);

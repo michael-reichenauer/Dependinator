@@ -4,23 +4,22 @@ using System.Linq;
 using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 using Mono.Cecil;
-using Mono.Cecil.Cil;
 
 
 namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 {
 	internal class MemberParser
 	{
-		private readonly List<MethodBodyNode> methodBodyNodes = new List<MethodBodyNode>();
-
 		private readonly LinkHandler linkHandler;
 		private readonly Sender sender;
+		private readonly MethodParser methodParser;
 
 
 		public MemberParser(LinkHandler linkHandler, Sender sender)
 		{
 			this.linkHandler = linkHandler;
 			this.sender = sender;
+			methodParser = new MethodParser(linkHandler);
 		}
 
 
@@ -28,7 +27,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		{
 			typeInfos.ForEach(AddTypeMembers);
 
-			methodBodyNodes.ForEach(AddMethodBodyLinks);
+			methodParser.AddAllMethodBodyLinks();
 		}
 
 
@@ -77,7 +76,8 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			try
 			{
 				string memberName = Name.GetMemberFullName(memberInfo);
-				string parent = isPrivate ? $"{NodeName.From(memberName).ParentName.FullName}.$Private" : null;
+				string parent = isPrivate
+					? $"{NodeName.From(memberName).ParentName.FullName}.$Private" : null;
 				var memberNode = sender.SendNode(memberName, parent, JsonTypes.NodeType.Member);
 
 				AddMemberLinks(memberNode, memberInfo);
@@ -89,117 +89,33 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private void AddMemberLinks(
-			ModelNode sourceMemberNode, IMemberDefinition member)
+		private void AddMemberLinks(ModelNode sourceMemberNode, IMemberDefinition member)
 		{
 			try
 			{
-				if (member is FieldDefinition field)
+				switch (member)
 				{
-					linkHandler.AddLinkToType(sourceMemberNode, field.FieldType);
-				}
-				else if (member is PropertyDefinition property)
-				{
-					linkHandler.AddLinkToType(sourceMemberNode, property.PropertyType);
-				}
-				else if (member is EventDefinition eventInfo)
-				{
-					linkHandler.AddLinkToType(sourceMemberNode, eventInfo.EventType);
-				}
-				else if (member is MethodDefinition method)
-				{
-					AddMethodLinks(sourceMemberNode, method);
-				}
-				else
-				{
-					Log.Warn($"Unknown member type {member.DeclaringType}.{member.Name}");
+					case FieldDefinition field:
+						linkHandler.AddLinkToType(sourceMemberNode, field.FieldType);
+						break;
+					case PropertyDefinition property:
+						linkHandler.AddLinkToType(sourceMemberNode, property.PropertyType);
+						break;
+					case EventDefinition eventInfo:
+						linkHandler.AddLinkToType(sourceMemberNode, eventInfo.EventType);
+						break;
+					case MethodDefinition method:
+						methodParser.AddMethodLinks(sourceMemberNode, method);
+						break;
+					default:
+						Log.Warn($"Unknown member type {member.DeclaringType}.{member.Name}");
+						break;
 				}
 			}
 			catch (Exception e)
 			{
 				Log.Warn($"Failed to links for member {member} in {sourceMemberNode.Name}, {e}");
 			}
-		}
-
-
-		private void AddMethodLinks(ModelNode memberNode, MethodDefinition method)
-		{
-			if (!method.IsConstructor)
-			{
-				TypeReference returnType = method.ReturnType;
-				linkHandler.AddLinkToType(memberNode, returnType);
-			}
-
-			method.Parameters
-				.Select(parameter => parameter.ParameterType)
-				.ForEach(parameterType => linkHandler.AddLinkToType(memberNode, parameterType));
-
-			methodBodyNodes.Add(new MethodBodyNode(memberNode, method));
-		}
-
-
-		private void AddMethodBodyLinks(MethodBodyNode methodBodyNode)
-		{
-			try
-			{
-				ModelNode memberNode = methodBodyNode.MemberNode;
-				MethodDefinition method = methodBodyNode.Method;
-
-				if (method.DeclaringType.IsInterface || !method.HasBody)
-				{
-					return;
-				}
-
-				Mono.Cecil.Cil.MethodBody body = method.Body;
-
-				body.Variables
-					.ForEach(variable => linkHandler.AddLinkToType(memberNode, variable.VariableType));
-
-				foreach (Instruction instruction in body.Instructions)
-				{
-					if (instruction.Operand is MethodReference methodCall)
-					{
-						AddLinkToCallMethod(memberNode, methodCall);
-					}
-					else if (instruction.Operand is FieldDefinition field)
-					{
-						linkHandler.AddLinkToType(memberNode, field.FieldType);
-
-						linkHandler.AddLinkToMember(memberNode, field);
-					}
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Exception(e);
-			}
-		}
-
-
-		private void AddLinkToCallMethod(ModelNode memberNode, MethodReference method)
-		{
-			TypeReference declaringType = method.DeclaringType;
-
-			if (IgnoredTypes.IsIgnoredSystemType(declaringType))
-			{
-				// Ignore "System" and "Microsoft" namespaces for now
-				return;
-			}
-
-			string methodName = Name.GetMethodFullName(method);
-			if (Name.IsCompilerGenerated(methodName))
-			{
-				return;
-			}
-
-			linkHandler.AddLinkToReference(new Reference(memberNode.Name, methodName, JsonTypes.NodeType.Member));
-
-			TypeReference returnType = method.ReturnType;
-			linkHandler.AddLinkToType(memberNode, returnType);
-
-			method.Parameters
-				.Select(parameter => parameter.ParameterType)
-				.ForEach(parameterType => linkHandler.AddLinkToType(memberNode, parameterType));
 		}
 	}
 }

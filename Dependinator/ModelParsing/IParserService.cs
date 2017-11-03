@@ -5,7 +5,7 @@ namespace Dependinator.ModelParsing
 {
 	internal interface IParserService
 	{
-		Task AnalyzeAsync(string assemblyPath, ModelItemsCallback modelItemsCallback);
+		Task ParseAsync(string assemblyPath, ModelItemsCallback modelItemsCallback);
 
 		Task SerializeAsync(IReadOnlyList<IModelItem> items, string path);
 
