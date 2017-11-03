@@ -30,14 +30,14 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			ParallelOptions option = GetParallelOptions();
 			await Task.Run(() =>
 			{
-				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeTypes());
+				Parallel.ForEach(analyzers, option, analyzer => analyzer.ParseTypes());
 				t.Log("Analyzed types");
-				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeModuleReferences());
+				Parallel.ForEach(analyzers, option, analyzer => analyzer.ParseAssemblyModuleReferences());
 				t.Log("Analyzed module references");
-				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeMembers());
+				Parallel.ForEach(analyzers, option, analyzer => analyzer.ParseTypeMembers());
 				t.Log("Analyzed members");
 
-				Parallel.ForEach(analyzers, option, analyzer => analyzer.AnalyzeLinks());
+				Parallel.ForEach(analyzers, option, analyzer => analyzer.ParseLinks());
 				t.Log("Analyzed links");
 			});
 
