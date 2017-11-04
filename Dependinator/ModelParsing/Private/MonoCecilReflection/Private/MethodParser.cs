@@ -12,6 +12,9 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 	{
 		private readonly List<MethodBodyNode> methodBodyNodes = new List<MethodBodyNode>();
 
+		private readonly Dictionary<string, TypeDefinition> asyncStates =
+			new Dictionary<string, TypeDefinition>();
+
 
 		private readonly LinkHandler linkHandler;
 
@@ -19,6 +22,12 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		public MethodParser(LinkHandler linkHandler)
 		{
 			this.linkHandler = linkHandler;
+		}
+
+
+		public void AddAsyncStateType(TypeInfo typeInfo)
+		{
+			asyncStates[typeInfo.Type.FullName] = typeInfo.Type;
 		}
 
 
@@ -48,9 +57,6 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		{
 			try
 			{
-				if (methodBodyNode.MemberNode.Name.Contains("MainAsync"))
-				{ }
-
 				ModelNode memberNode = methodBodyNode.MemberNode;
 				MethodDefinition method = methodBodyNode.Method;
 
@@ -68,7 +74,10 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				{
 					if (instruction.Operand is MethodReference methodCall)
 					{
-						AddLinkToCallMethod(memberNode, methodCall);
+						if (!AddLinkToCallMethod(memberNode, methodCall))
+						{
+							TryAddAsyncLinks(methodCall, memberNode);
+						}
 					}
 					else if (instruction.Operand is FieldDefinition field)
 					{
@@ -85,20 +94,55 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		private void AddLinkToCallMethod(ModelNode memberNode, MethodReference method)
+		private void TryAddAsyncLinks(MethodReference methodCall, ModelNode memberNode)
+		{
+			if (!(methodCall is MethodDefinition methodDefinition) ||
+					!methodDefinition.IsConstructor ||
+					!methodDefinition.IsSpecialName)
+			{
+				// Not an async state create call
+				return;
+			}
+
+			string asyncTypeName = methodDefinition.DeclaringType.FullName;
+
+			if (asyncStates.TryGetValue(asyncTypeName, out TypeDefinition asyncType))
+			{
+				// There is a async state type with this name
+				AddAsyncStateLinks(memberNode, asyncType);
+			}
+		}
+
+
+		private void AddAsyncStateLinks(ModelNode memberNode, TypeDefinition asyncType)
+		{
+			// Try to get the "MovNext methid with contaisn the actual "async/await" code
+			MethodDefinition moveNextMethod = asyncType.Methods
+				.FirstOrDefault(method => method.Name == "MoveNext");
+
+			if (moveNextMethod != null)
+			{
+				MethodBodyNode methodBodyNode = new MethodBodyNode(memberNode, moveNextMethod);
+
+				AddMethodBodyLinks(methodBodyNode);
+			}
+		}
+
+
+		private bool AddLinkToCallMethod(ModelNode memberNode, MethodReference method)
 		{
 			TypeReference declaringType = method.DeclaringType;
 
 			if (IgnoredTypes.IsIgnoredSystemType(declaringType))
 			{
 				// Ignore "System" and "Microsoft" namespaces for now
-				return;
+				return false;
 			}
 
 			string methodName = Name.GetMethodFullName(method);
 			if (Name.IsCompilerGenerated(methodName))
 			{
-				return;
+				return false;
 			}
 
 			linkHandler.AddLinkToReference(new Reference(memberNode.Name, methodName, JsonTypes.NodeType.Member));
@@ -109,6 +153,8 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			method.Parameters
 				.Select(parameter => parameter.ParameterType)
 				.ForEach(parameterType => linkHandler.AddLinkToType(memberNode, parameterType));
+
+			return true;
 		}
 	}
 }

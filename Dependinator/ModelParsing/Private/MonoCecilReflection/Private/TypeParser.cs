@@ -23,17 +23,35 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 		public IEnumerable<TypeInfo> AddTypes(TypeDefinition type)
 		{
-			string name = Name.GetTypeFullName(type);
-			bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
-			string parent = isPrivate ? $"{NodeName.From(name).ParentName.FullName}.$Private" : null;
+			bool isCompilerGenerated = Name.IsCompilerGenerated(type.Name);
+			bool isAsyncStateType = false;
+			ModelNode typeNode = null;
 
-			ModelNode typeNode = sender.SendNode(name, parent, JsonTypes.NodeType.Type);
+			if (isCompilerGenerated)
+			{
+				// Check if the type is a async state machine type
+				isAsyncStateType = type.Interfaces.Any(it => it.Name == "IAsyncStateMachine");
 
-			yield return new TypeInfo(type, typeNode);
+				if (!isAsyncStateType)
+				{
+					// Some internal compiler generated type, which is ignored for now
+					yield break;
+				}
+			}
+			else
+			{
+				string name = Name.GetTypeFullName(type);
+				bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
+				string parent = isPrivate ? $"{NodeName.From(name).ParentName.FullName}.$Private" : null;
+
+				typeNode = new ModelNode(name, parent, JsonTypes.NodeType.Type);
+				sender.SendNode(typeNode);
+			}
+
+			yield return new TypeInfo(type, typeNode, isAsyncStateType);
 
 			// Iterate all nested types as well
-			foreach (var nestedType in type.NestedTypes
-				.Where(member => !Name.IsCompilerGenerated(member.Name)))
+			foreach (var nestedType in type.NestedTypes)
 			{
 				foreach (var types in AddTypes(nestedType))
 				{
@@ -51,6 +69,12 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 		private void AddLinksToBaseTypes(TypeInfo typeInfo)
 		{
+			if (typeInfo.IsAsyncStateType)
+			{
+				// Internal async/await helper type,
+				return;
+			}
+
 			TypeDefinition type = typeInfo.Type;
 			ModelNode sourceNode = typeInfo.Node;
 

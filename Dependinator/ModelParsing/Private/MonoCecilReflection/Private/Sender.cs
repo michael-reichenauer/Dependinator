@@ -20,32 +20,30 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		}
 
 
-		public ModelNode SendNode(string nodeName, string parentName, string nodeType)
+		public void SendNode(ModelNode node)
 		{
-			if (Name.IsCompilerGenerated(nodeName))
+			if (Name.IsCompilerGenerated(node.Name))
 			{
-				Log.Warn($"Compiler generated node: {nodeName}");
+				Log.Warn($"Compiler generated node: {node.Name}");
 			}
 
-			if (sentNodes.TryGetValue(nodeName, out ModelNode node))
+			if (sentNodes.ContainsKey(node.Name))
 			{
 				// Already sent this node
-				return node;
+				return;
 			}
 
-			node = new ModelNode(nodeName, parentName, nodeType);
 
-			sentNodes[nodeName] = node;
+			sentNodes[node.Name] = node;
 
 			//Log.Debug($"Send node: {name} {node.Type}");
 
-			if (nodeName.Contains("<") || nodeName.Contains(">"))
+			if (node.Name.Contains("<") || node.Name.Contains(">"))
 			{
-				Log.Warn($"Send node: {nodeName}      {nodeType}");
+				Log.Warn($"Send node: {node.Name}      {node.NodeType}");
 			}
 
 			callback(node);
-			return node;
 		}
 
 

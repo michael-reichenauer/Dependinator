@@ -36,6 +36,12 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			TypeDefinition type = typeInfo.Type;
 			ModelNode typeNode = typeInfo.Node;
 
+			if (typeInfo.IsAsyncStateType)
+			{
+				methodParser.AddAsyncStateType(typeInfo);
+				return;
+			}
+
 			try
 			{
 				type.Fields
@@ -78,13 +84,15 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 				string memberName = Name.GetMemberFullName(memberInfo);
 				string parent = isPrivate
 					? $"{NodeName.From(memberName).ParentName.FullName}.$Private" : null;
-				var memberNode = sender.SendNode(memberName, parent, JsonTypes.NodeType.Member);
+
+				ModelNode memberNode = new ModelNode(memberName, parent, JsonTypes.NodeType.Member);
+				sender.SendNode(memberNode);
 
 				AddMemberLinks(memberNode, memberInfo);
 			}
 			catch (Exception e)
 			{
-				Log.Warn($"Failed to add member {memberInfo} in {parentTypeNode.Name}, {e}");
+				Log.Warn($"Failed to add member {memberInfo} in {parentTypeNode?.Name}, {e}");
 			}
 		}
 

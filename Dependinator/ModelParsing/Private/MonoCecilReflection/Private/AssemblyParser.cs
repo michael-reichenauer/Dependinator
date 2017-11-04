@@ -11,7 +11,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 	internal class AssemblyParser
 	{
 		private readonly string assemblyPath;
-		private List<TypeInfo> typeInfos = null;
+		private List<TypeInfo> typeInfos = new List<TypeInfo>();
 		
 		private readonly LinkHandler linkHandler;
 		private readonly ModuleParser moduleParser;
@@ -41,7 +41,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			{
 				if (!File.Exists(assemblyPath))
 				{
-					Log.Warn($"File {assemblyPath} does not exists");
+					Log.Warn($"File '{assemblyPath}' does not exists");
 					return;
 				}
 

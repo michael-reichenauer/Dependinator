@@ -61,11 +61,14 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			{
 				string outputPath = project.GetOutputPath();
 
-				string projectName = project.ProjectFullName;
+				if (outputPath != null)
+				{
+					string projectName = project.ProjectFullName;
 
-				string rootGroup = GetRootGroup(solutionName, projectName);
+					string rootGroup = GetRootGroup(solutionName, projectName);
 
-				analyzers.Add(new AssemblyParser(outputPath, rootGroup, modelItemsCallback));
+					analyzers.Add(new AssemblyParser(outputPath, rootGroup, modelItemsCallback));
+				}
 			}
 
 			return analyzers;

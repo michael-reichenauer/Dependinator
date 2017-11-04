@@ -39,12 +39,18 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			parent = parent != null ? $"${parent?.Replace(".", ".$")}" : null;
 
-			sender.SendNode(moduleName, parent, JsonTypes.NodeType.NameSpace);
+			ModelNode moduleNode = new ModelNode(moduleName, parent, JsonTypes.NodeType.NameSpace);
+			sender.SendNode(moduleNode);
 		}
 
 
 		public void AddModuleLinks()
 		{
+			if (assembly == null)
+			{
+				return;
+			}
+
 			string moduleName = Name.GetAssemblyName(assembly);
 
 			var references = assembly.MainModule.AssemblyReferences.
@@ -63,7 +69,8 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 				parent = parent != null ? $"${parent?.Replace(".", ".$")}" : null;
 
-				sender.SendNode(referenceName, parent, JsonTypes.NodeType.NameSpace);
+				ModelNode referenceNode = new ModelNode(referenceName, parent, JsonTypes.NodeType.NameSpace);
+				sender.SendNode(referenceNode);
 
 				linkHandler.AddLinkToReference(
 					new Reference(moduleName, referenceName, JsonTypes.NodeType.NameSpace));

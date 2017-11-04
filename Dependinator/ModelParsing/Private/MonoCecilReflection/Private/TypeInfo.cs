@@ -7,11 +7,14 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 	{
 		public TypeDefinition Type { get; }
 		public ModelNode Node { get; }
+		public bool IsAsyncStateType { get; }
 
-		public TypeInfo(TypeDefinition type, ModelNode node)
+
+		public TypeInfo(TypeDefinition type, ModelNode node, bool isAsyncStateType)
 		{
 			Type = type;
 			Node = node;
+			IsAsyncStateType = isAsyncStateType;
 		}
 	}
 }
