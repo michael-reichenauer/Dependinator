@@ -42,7 +42,7 @@ namespace Dependinator.ModelViewing.Open
 			{
 				string name = Path.GetFileName(filePath);
 
-				fileItems.Add(new FileItem(name, filePath, openModelService.OpenModelAsync));
+				fileItems.Add(new FileItem(name, filePath, openModelService.OpenOtherModelAsync));
 			}
 
 			return fileItems;
@@ -51,7 +51,7 @@ namespace Dependinator.ModelViewing.Open
 
 		public async void OpenExampleFile()
 		{
-			await openModelService.OpenModelAsync(Assembly.GetEntryAssembly().Location);
+			await openModelService.OpenOtherModelAsync(Assembly.GetEntryAssembly().Location);
 		}
 	}
 }

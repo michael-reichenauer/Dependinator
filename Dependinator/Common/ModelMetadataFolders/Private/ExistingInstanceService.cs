@@ -35,6 +35,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 					throw new ApplicationException($"Failed to register rpc instance {metaDataFolderPath}");
 				}
 
+				Log.Debug($"$Register {id}");
 				instanceIpcRemotingService.PublishService(existingInstanceIpcService);
 			}
 			catch (Exception e)

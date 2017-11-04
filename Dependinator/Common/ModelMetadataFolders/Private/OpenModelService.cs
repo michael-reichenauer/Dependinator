@@ -41,11 +41,11 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 				return;
 			}
 
-			await OpenModelAsync(modelFilePath);
+			await TryModelAsync(modelFilePath);
 		}
 
 
-		public async Task OpenModelAsync(string modelFilePath)
+		public async Task TryModelAsync(string modelFilePath)
 		{
 			if (modelMetadataService.ModelFilePath.IsSameIgnoreCase(modelFilePath))
 			{
@@ -53,6 +53,12 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 				return;
 			}
 
+			await OpenOtherModelAsync(modelFilePath);
+		}
+
+
+		public async Task OpenOtherModelAsync(string modelFilePath)
+		{
 			modelMetadataService.SetModelFilePath(modelFilePath);
 			string metadataFolderPath = modelMetadataService.MetadataFolderPath;
 
@@ -72,12 +78,14 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		}
 
 
+
+
 		public async Task OpenModelAsync(IReadOnlyList<string> modelFilePaths)
 		{
 			// Currently only support one dropped file
 			string modelFilePath = modelFilePaths.First();
 
-			await OpenModelAsync(modelFilePath);
+			await OpenOtherModelAsync(modelFilePath);
 		}
 	}
 }

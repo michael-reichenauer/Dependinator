@@ -8,7 +8,10 @@ namespace Dependinator.Common.ModelMetadataFolders
 	{
 		Task OpenModelAsync();
 
-		Task OpenModelAsync(string modelFilePath);
+		Task OpenOtherModelAsync(string modelFilePath);
+
+		Task TryModelAsync(string modelFilePath);
+
 
 		Task OpenModelAsync(IReadOnlyList<string> modelFilePaths);
 	}

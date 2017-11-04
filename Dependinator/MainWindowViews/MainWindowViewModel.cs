@@ -114,7 +114,7 @@ namespace Dependinator.MainWindowViews
 			{
 				string name = Path.GetFileName(filePath);
 
-				fileItems.Add(new FileItem(name, filePath, openModelService.OpenModelAsync));
+				fileItems.Add(new FileItem(name, filePath, openModelService.TryModelAsync));
 			}
 
 			return fileItems;

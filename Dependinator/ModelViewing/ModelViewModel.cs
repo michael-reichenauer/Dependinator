@@ -24,6 +24,7 @@ namespace Dependinator.ModelViewing
 		private readonly IModelViewService modelViewService;
 		private readonly IProgressService progress;
 		private readonly IOpenModelService openModelService;
+		private readonly ModelMetadata modelMetadata;
 
 		private int width = 0;
 
@@ -32,12 +33,14 @@ namespace Dependinator.ModelViewing
 			IModelViewService modelViewService,
 			IThemeService themeService,
 			IProgressService progressService,
-			IOpenModelService openModelService)
+			IOpenModelService openModelService,
+			ModelMetadata modelMetadata)
 		{
 			this.modelViewService = modelViewService;
 			this.themeService = themeService;
 			this.progress = progressService;
 			this.openModelService = openModelService;
+			this.modelMetadata = modelMetadata;
 
 			ItemsCanvas rootCanvas = new ItemsCanvas();
 			ItemsViewModel = new ItemsViewModel(rootCanvas);
@@ -50,7 +53,8 @@ namespace Dependinator.ModelViewing
 		
 		public async Task LoadAsync()
 		{
-			await modelViewService.LoadAsync();
+			await openModelService.OpenOtherModelAsync(modelMetadata.ModelFilePath);
+			//await modelViewService.LoadAsync();
 		}
 
 
