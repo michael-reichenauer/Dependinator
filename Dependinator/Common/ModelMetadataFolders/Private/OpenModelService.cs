@@ -85,7 +85,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 			// Currently only support one dropped file
 			string modelFilePath = modelFilePaths.First();
 
-			await OpenOtherModelAsync(modelFilePath);
+			await TryModelAsync(modelFilePath);
 		}
 	}
 }
