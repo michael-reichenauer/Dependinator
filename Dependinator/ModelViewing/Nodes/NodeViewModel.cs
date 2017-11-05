@@ -59,7 +59,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public string ToolTip { get => Get(); set => Set(value); }
 
 		public void UpdateToolTip() => ToolTip =
-			$"{Node.Name.DisplayFullName}"+
+			$"{Node.Name.DisplayFullNameWithType}"+
 			$"\nLinks: Incoming: {IncomingLinksCount}, Outgoing: {OutgoingLinksCount}" + 
 			$"{DebugToolTip}";
 

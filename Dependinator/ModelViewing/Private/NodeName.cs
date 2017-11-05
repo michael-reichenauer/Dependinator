@@ -10,30 +10,30 @@ namespace Dependinator.ModelViewing.Private
 		// private static readonly Dictionary<string, NodeName> Names = new Dictionary<string, NodeName>();
 		public static NodeName Root = From("");
 
-		private readonly Lazy<string> displayName;
-		private readonly Lazy<string> displayFullName;
-		private readonly Lazy<string> shortName;
+		private readonly Lazy<NodeName> parentName;
+		private readonly Lazy<DisplayParts> displayParts;
 
 
 		private NodeName(string fullName)
 		{
 			this.FullName = fullName;
-			SetName();
 
-			displayName = new Lazy<string>(GetDisplayName);
-			displayFullName = new Lazy<string>(GetDisplayFullName);
-			shortName = new Lazy<string>(GetShortName);
+			parentName = new Lazy<NodeName>(GetParentName);
+			displayParts = new Lazy<DisplayParts>(GetDisplayParts);
 
 			IsEqualWhenSame(fullName);
 		}
 
 
 		public string FullName { get; }
-		private string Name { get; set; }
-		public NodeName ParentName { get; private set; }
-		public string DisplayName => displayName.Value;
-		public string DisplayFullName => displayFullName.Value;
-		public string ShortName => shortName.Value;
+		public NodeName ParentName => parentName.Value;
+
+
+		public string DisplayName => displayParts.Value.Name;
+
+		public string DisplayFullName => displayParts.Value.FullName;
+
+		public string DisplayFullNameWithType => displayParts.Value.FullNameWithType; 
 
 
 		public static NodeName From(string fullName)
@@ -60,63 +60,117 @@ namespace Dependinator.ModelViewing.Private
 		public override string ToString() => this != Root ? FullName : "<root>";
 
 
-		private void SetName()
+		private NodeName GetParentName()
 		{
 			// Split full name in name and parent name,
 			int index = FullName.LastIndexOf('.');
+
+			return index > -1 ? From(FullName.Substring(0, index)) : Root;
+		}
+
+
+		private DisplayParts GetDisplayParts()
+		{
+			string name = null;
+
+			string[] parts = FullName.Split(".".ToCharArray());
+			
+			string namePart = parts[parts.Length - 1];
+			int index = namePart.IndexOf('(');
 			if (index > -1)
 			{
-				Name = FullName.Substring(index + 1);
-				ParentName = From(FullName.Substring(0, index));
+				name = namePart.Substring(0, index);
 			}
 			else
 			{
-				Name = FullName;
-				ParentName = Root;
-			}
-		}
-
-
-		private string GetDisplayName()
-		{
-			string name = Name;
-			int index = Name.IndexOf('(');
-			if (index > -1)
-			{
-				name = Name.Substring(0, index);
+				name = namePart;
 			}
 
-			return name.Replace("*", ".").Replace("$", "").Replace("?", "");
-		}
+			name = ToNiceText(name);
 
 
-		private string GetDisplayFullName()
-		{
-			string[] parts = FullName.Split(".".ToCharArray());
+			string fullNameWithType;
 
-			string name = string.Join(".", parts
+			string fullName = string.Join(".", parts
 				.Where(part => !part.StartsWithTxt("$") && !part.StartsWithTxt("?")));
-
-			name = name.Replace("*", ".").Replace("#", ".").Replace("?", "");
-
-			if (string.IsNullOrEmpty(name))
+			
+			if (string.IsNullOrEmpty(fullName))
 			{
-				name = FullName.Replace("*", ".").Replace("#", ".").Replace("?", "").Replace("$", "");
+				fullName = ToNiceText(FullName);
+
+				fullNameWithType = fullName;
 				if (parts[parts.Length - 1].StartsWith("$"))
 				{
-					name += " folder";
+					fullNameWithType = fullName + " folder";
 				}
 				else if (parts[parts.Length - 1].StartsWith("?"))
 				{
-					name += " module";
+					fullNameWithType = fullName + " module";
 				}
 			}
+			else
+			{
+				fullName = ToNiceText(fullName);
+				fullName = ToNiceParameters(fullName);
 
-			return name;
+				fullNameWithType = fullName;
+			}
+			
+
+			return new DisplayParts(name, fullName, fullNameWithType);
 		}
 
 
-		private string GetShortName() =>
-			ParentName == Root ? DisplayName : $"{ParentName.DisplayName}.{DisplayName}";
+		private static string ToNiceParameters(string fullName)
+		{
+			int index1 = fullName.IndexOf('(');
+			int index2 = fullName.IndexOf(')');
+
+			if (index1 > -1 && index2 > index1)
+			{
+				string parameters = fullName.Substring(index1, index2 - index1);
+				string[] parametersParts = parameters.Split(",".ToCharArray());
+
+				// Simplify parameter types to just get last part of each type
+				parameters = string.Join(",", parametersParts
+					.Select(part => part.Split(".".ToCharArray()).Last()));
+
+				fullName = $"{fullName.Substring(0, index1)}({parameters})";
+			}
+
+			return fullName;
+		}
+
+
+		private string ToNiceText(string name)
+		{
+			return name.Replace("*", ".")
+				.Replace("#", ".")
+				.Replace("?", "")
+				.Replace("$", "")
+				.Replace("`1", "<T>")
+				.Replace("`2", "<T,T>")
+				.Replace("`3", "<T,T,T>")
+				.Replace("`4", "<T,T,T,T>")
+				.Replace("`5", "<T,T,T,T,T>")
+				.Replace("op_Equality", "==")
+				.Replace("op_Inequality", "!=");
+		}
+
+
+		private class DisplayParts
+		{
+			public string Name { get; }
+			public string FullName { get; }
+			public string FullNameWithType { get; }
+
+
+			public DisplayParts(string name, string fullName, string fullNameWithType)
+			{
+				Name = name;
+				FullName = fullName;
+				FullNameWithType = fullNameWithType;
+			}
+		}
 	}
 }
