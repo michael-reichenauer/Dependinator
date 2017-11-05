@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items.Private;
-using Dependinator.Utils;
 using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -76,7 +73,7 @@ namespace Dependinator.ModelViewing.Private.Items
 		public Point Offset
 		{
 			get => Get();
-			set
+			private set
 			{
 				Set(value);
 
@@ -189,21 +186,6 @@ namespace Dependinator.ModelViewing.Private.Items
 				return;
 			}
 
-			//Vector scaledViewOffset = viewOffset / Scale;
-
-			//IEnumerable<ItemViewModel> nodes = itemsSource.GetAllItems()
-			//	.Where(item => item is NodeViewModel)
-			//	.Cast<ItemViewModel>();
-
-			//nodes.ForEach(item =>
-			//{
-			//	Point location = item.ItemBounds.Location;
-			//	location = location + scaledViewOffset;
-			//	item.ItemBounds = new Rect(location, item.ItemBounds.Size);
-			//});
-
-			//itemsSource.Update(nodes);
-
 			Offset -= viewOffset;
 			UpdateShownItemsInChildren();
 		}
@@ -230,8 +212,7 @@ namespace Dependinator.ModelViewing.Private.Items
 				return;
 			}
 
-			//Point zoomCenter = 
-			SetZoomableCanvasScale(null);
+			SetZoomableCanvasScale(new Point(0, 0));
 
 			UpdateAndNotifyAll();
 
@@ -239,52 +220,16 @@ namespace Dependinator.ModelViewing.Private.Items
 		}
 
 
-		private void SetZoomableCanvasScale(Point? zoomCenter)
+		private void SetZoomableCanvasScale(Point zoomCenter)
 		{
 			if (zoomableCanvas != null)
 			{
-				double oldScale = zoomableCanvas.Scale;
-				if (!zoomCenter.HasValue)
-				{
-					if (!(Math.Abs(zoomableCanvas.Offset.X) < 0.01
-						&& Math.Abs(zoomableCanvas.Offset.Y) < 0.01))
-					{
-						//Log.Warn($"{zoomableCanvas.Offset} for {owner}");
+				double zoomFactor = Scale / zoomableCanvas.Scale; 
 
-						//zoomCenter = new Point(
-						//	(-zoomableCanvas.Offset.X),
-						//	(-zoomableCanvas.Offset.Y));
+				// Adjust the offset to make the point at the center of zoom area stay still
+				Vector position = (Vector)zoomCenter;
+				Offset = (Point)((Vector)(Offset + position) * zoomFactor - position);
 
-						zoomCenter = new Point(0, 0);
-					}
-					//oomCenter = new Point(100, 50);
-				}
-
-				if (zoomCenter.HasValue)
-				{
-					double zoomFactor = Scale / oldScale; // ????? Same as zoom ?????
-
-					// Adjust the offset to make the point at the center of zoom area stay still
-					Vector position = (Vector)zoomCenter;
-					Offset = (Point)((Vector)(Offset + position) * zoomFactor - position);
-
-					//Vector viewOffset = (Vector)zoomCenter.Value;
-					//Vector scaledViewOffset = viewOffset;
-
-					//IEnumerable<ItemViewModel> nodes = itemsSource.GetAllItems()
-					//	.Where(item => item is NodeViewModel)
-					//	.Cast<ItemViewModel>();
-
-					//nodes.ForEach(item =>
-					//{
-					//	Point location = item.ItemBounds.Location;
-					//	location = location + scaledViewOffset;
-					//	item.ItemBounds = new Rect(location, item.ItemBounds.Size);
-					//});
-
-				}
-
-				//Log.Debug($"Scale {zoomableCanvas.Scale}->{Scale} for {owner}");
 				zoomableCanvas.Scale = Scale;
 			}
 		}
