@@ -71,7 +71,7 @@ namespace Dependinator.ModelViewing.Private
 					RemoveNode(node);
 				}
 			}
-
+			
 			t.Log($"{nodes.Count} nodes");
 		}
 

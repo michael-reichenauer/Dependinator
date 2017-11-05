@@ -13,7 +13,7 @@ namespace Dependinator
 	{
 		private readonly DependencyInjection dependencyInjection = new DependencyInjection();
 		private static readonly ICmd Cmd = new Cmd();
-		private static readonly string LogFileName = "Some/filePath";
+
 
 		[STAThread]
 		public static void Main()
@@ -38,7 +38,7 @@ namespace Dependinator
 
 			// Start application
 			App application = dependencyInjection.Resolve<App>();
-			ExceptionHandling.HandleDispatcherUnhandledException();  // activate after ui is started
+			ExceptionHandling.HandleDispatcherUnhandledException(); // activate after ui is started
 			application.InitializeComponent();
 			application.Run();
 		}
@@ -82,75 +82,80 @@ namespace Dependinator
 			Cmd.Start(targetPath, "");
 		}
 
-		public static async Task MainAsync()
-		{
-			try
-			{
-				Logx.Setup(LogFileName);
 
-				Log.Info("Starting AXIS Connect Camera Station Agent");
+		// private static readonly string LogFileName = "Some/filePath";
 
-				DependencyInjectionx dependencyInjection = new DependencyInjectionx();
 
-				using (ILifetimeScope scope = dependencyInjection.BeginLifetimeScope())
-				{
-					IAgentService agentService = scope.Resolve<IAgentService>();
+//		public static async Task MainAsync()
+//		{
+//			try
+//			{
+//				Logx.Setup(LogFileName);
 
-					await agentService.StartAgentAsync(CancellationToken.None);
+//				Log.Info("Starting AXIS Connect Camera Station Agent");
 
-					await agentService.StartAgentAsync2(CancellationToken.None);
-				}
-			}
-#pragma warning disable AX1011 // Catch all exceptions to be able to log them
-			catch (Exception e)
-			{
-				Logx.Fatal($"Acs agent failed: {e}");
-				throw;
-			}
-#pragma warning restore AX1011
-		}
+//				DependencyInjectionx dependencyInjection = new DependencyInjectionx();
+
+//				using (ILifetimeScope scope = dependencyInjection.BeginLifetimeScope())
+//				{
+//					IAgentService agentService = scope.Resolve<IAgentService>();
+
+//					await agentService.StartAgentAsync(CancellationToken.None);
+
+//					await agentService.StartAgentAsync2(CancellationToken.None);
+//				}
+//			}
+//#pragma warning disable AX1011 // Catch all exceptions to be able to log them
+//			catch (Exception e)
+//			{
+//				Logx.Fatal($"Acs agent failed: {e}");
+//				throw;
+//			}
+//#pragma warning restore AX1011
+//		}
 
 	}
 
-	internal interface IAgentService
-	{
-		Task StartAgentAsync(CancellationToken ct);
-		Task StartAgentAsync2(CancellationToken none);
-	}
+
+	//internal interface IAgentService
+	//{
+	//	Task StartAgentAsync(CancellationToken ct);
+	//	Task StartAgentAsync2(CancellationToken none);
+	//}
 
 
-	internal interface ILifetimeScope : IDisposable
-	{
-		T Resolve<T>();
-	}
+	//internal interface ILifetimeScope : IDisposable
+	//{
+	//	T Resolve<T>();
+	//}
 
 
-	internal class DependencyInjectionx
-	{
-		public ILifetimeScope BeginLifetimeScope()
-		{
-			throw new NotImplementedException();
-		}
-	}
+	//internal class DependencyInjectionx
+	//{
+	//	public ILifetimeScope BeginLifetimeScope()
+	//	{
+	//		throw new NotImplementedException();
+	//	}
+	//}
 
 
-	internal class Logx
-	{
-		public static void Setup(string logFileName)
-		{
-			throw new NotImplementedException();
-		}
+	//internal class Logx
+	//{
+	//	public static void Setup(string logFileName)
+	//	{
+	//		throw new NotImplementedException();
+	//	}
 
 
-		public static void Info(string message)
-		{
-			throw new NotImplementedException();
-		}
+	//	public static void Info(string message)
+	//	{
+	//		throw new NotImplementedException();
+	//	}
 
 
-		public static void Fatal(string message)
-		{
-			throw new NotImplementedException();
-		}
-	}
+	//	public static void Fatal(string message)
+	//	{
+	//		throw new NotImplementedException();
+	//	}
+	//}
 }

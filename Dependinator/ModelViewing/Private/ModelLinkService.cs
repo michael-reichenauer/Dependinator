@@ -34,56 +34,71 @@ namespace Dependinator.ModelViewing.Private
 
 		public void UpdateLink(ModelLink modelLink, int stamp)
 		{
-			if (modelLink.Source == modelLink.Target)
+			try
 			{
-				// Skipping link to self for now
-				return;
-			}
+				if (modelLink.Source == modelLink.Target)
+				{
+					// Skipping link to self for now
+					return;
+				}
 
-			Node source = model.Node(NodeName.From(modelLink.Source));
+				Node source = model.Node(NodeName.From(modelLink.Source));
 
-			NodeName targetName = NodeName.From(modelLink.Target);
-			if (!model.TryGetNode(targetName, out Node target))
-			{
-				// Target node not yet added, adding it.
-				ModelNode targetModelNode = new ModelNode(modelLink.Target, null, modelLink.TargetType);
-				modelNodeService.Value.UpdateNode(targetModelNode, stamp);
+				NodeName targetName = NodeName.From(modelLink.Target);
+				if (!model.TryGetNode(targetName, out Node target))
+				{
+					// Target node not yet added, adding it.
+					ModelNode targetModelNode = new ModelNode(modelLink.Target, null, modelLink.TargetType);
+					modelNodeService.Value.UpdateNode(targetModelNode, stamp);
 
-				// Getting the newly added node
-				target = model.Node(targetName);
-			}
+					// Getting the newly added node
+					target = model.Node(targetName);
+				}
 
-			target.Stamp = stamp;
+				target.Stamp = stamp;
 
-			if (TryGetLink(source, target, out Link link))
-			{
-				// Already added link
+				if (TryGetLink(source, target, out Link link))
+				{
+					// Already added link
+					link.Stamp = stamp;
+					return;
+				}
+
+				link = AddLink(source, target);
 				link.Stamp = stamp;
-				return;
+				var linkSegments = linkSegmentService.GetLinkSegments(link);
+
+				AddLinkSegmentLines(linkSegments, link);
 			}
-
-			link = AddLink(source, target);
-			link.Stamp = stamp;
-			var linkSegments = linkSegmentService.GetLinkSegments(link);
-
-			AddLinkSegmentLines(linkSegments, link);
+			catch (Exception e)
+			{
+				Log.Exception(e, $"Failed to update link {modelLink}");
+				throw;
+			}
 		}
 
 
 		public void UpdateLine(ModelLine modelLine, int stamp)
 		{
-			Node source = model.Node(NodeName.From(modelLine.Source));
-			Node target = model.Node(NodeName.From(modelLine.Target));
-
-			if (TryGetLine(source, target, out Line line))
+			try
 			{
-				// Already added link
-				line.Stamp = stamp;
-				return;
+				Node source = model.Node(NodeName.From(modelLine.Source));
+				Node target = model.Node(NodeName.From(modelLine.Target));
+
+				if (TryGetLine(source, target, out Line line))
+				{
+					// Already added link
+					line.Stamp = stamp;
+					return;
+				}
+
+				AddLine(source, target, modelLine.LinkCount, modelLine.Points);
 			}
-
-			AddLine(source, target, modelLine.LinkCount, modelLine.Points);
-
+			catch (Exception e)
+			{
+				Log.Exception(e, $"Failed to update link {modelLine}");
+				throw;
+			}
 		}
 
 
@@ -178,6 +193,7 @@ namespace Dependinator.ModelViewing.Private
 
 		private void RemoveLine(Line line)
 		{
+			Log.Warn($"Remove {line}");
 			line.Source.SourceLines.Remove(line);
 			line.Target.TargetLines.Remove(line);
 			RemoveLineViewModel(line);
