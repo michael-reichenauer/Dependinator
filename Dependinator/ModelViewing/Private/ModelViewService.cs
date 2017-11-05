@@ -73,11 +73,12 @@ namespace Dependinator.ModelViewing.Private
 		{
 			WorkFolderSettings settings = settingsService.Get<WorkFolderSettings>();
 			Node root = modelService.Root;
-			//root.ItemsCanvas.SetRootScale(settings.Scale);
-			//root.ItemsCanvas.SetOffset(settings.Offset);
 
-			root.ItemsCanvas.SetRootScale(1);
-			root.ItemsCanvas.SetOffset(new Point(0, 0));
+			root.ItemsCanvas.SetRootScale(settings.Scale);
+			root.ItemsCanvas.SetOffset(settings.Offset);
+
+			//root.ItemsCanvas.SetRootScale(1);
+			//root.ItemsCanvas.SetOffset(new Point(0, 0));
 		}
 	}
 }
