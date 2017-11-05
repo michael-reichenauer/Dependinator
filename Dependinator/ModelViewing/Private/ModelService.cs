@@ -98,7 +98,7 @@ namespace Dependinator.ModelViewing.Private
 				isShowingOpenModel = true;
 				modelMetadata.SetDefault();
 				Root.ItemsCanvas.SetRootScale(1);
-				Root.ItemsCanvas.Offset = new Point(0, 0);
+				Root.ItemsCanvas.SetOffset(new Point(0, 0));
 				Root.ItemsCanvas.IsZoomAndMoveEnabled = false;
 
 				Root.ItemsCanvas.AddItem(openModelViewModelProvider());

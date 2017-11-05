@@ -177,7 +177,6 @@ namespace Dependinator.ModelViewing.Links
 			{
 				Log.Exception(e);
 			}
-		
 		}
 
 

@@ -141,7 +141,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 		}
 
 
-		private void Update(IEnumerable<IItem> items)
+		public void Update(IEnumerable<IItem> items)
 		{
 			bool isTriggerItemsChanged = false;
 

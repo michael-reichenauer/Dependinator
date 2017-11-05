@@ -341,7 +341,7 @@
     <Compile Include="Utils\UI\HideableGridSplitter.cs" />
     <Compile Include="Utils\Compare.cs" />
     <Compile Include="Common\ThemeHandling\IThemeService.cs" />
-    <Compile Include="ModelViewing\Private\Items\Private\ItemsSource.cs" />
+    <Compile Include="ModelViewing\Private\Items\ItemsSource.cs" />
     <Compile Include="ModelViewing\ModelViewModel.cs" />
     <Compile Include="Utils\IReadOnlyKeyedList.cs" />
     <Compile Include="Utils\KeyedList.cs" />

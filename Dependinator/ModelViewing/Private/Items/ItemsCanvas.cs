@@ -1,7 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items.Private;
+using Dependinator.Utils;
 using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -85,6 +88,12 @@ namespace Dependinator.ModelViewing.Private.Items
 		}
 
 
+		public void SetOffset(Point offsetPoint)
+		{
+			Offset = offsetPoint;
+		}
+
+
 
 		public void SetRootScale(double scale) => rootScale = scale;
 
@@ -147,7 +156,7 @@ namespace Dependinator.ModelViewing.Private.Items
 				return;
 			}
 
-			double zoomFactor = newScale / oldScale;   // ????? Same as zoom ?????
+
 
 			if (IsRoot)
 			{
@@ -158,14 +167,7 @@ namespace Dependinator.ModelViewing.Private.Items
 				ScaleFactor = newScale / parentCanvas.Scale;
 			}
 
-			// Adjust the offset to make the point at the center of zoom area stay still
-			Vector position = (Vector)zoomCenter;
-			Offset = (Point)((Vector)(Offset + position) * zoomFactor - position);
-
-			if (zoomableCanvas != null)
-			{
-				zoomableCanvas.Scale = newScale;
-			}
+			SetZoomableCanvasScale(zoomCenter);
 
 			UpdateAndNotifyAll();
 
@@ -187,8 +189,22 @@ namespace Dependinator.ModelViewing.Private.Items
 				return;
 			}
 
-			Offset -= viewOffset;
+			//Vector scaledViewOffset = viewOffset / Scale;
 
+			//IEnumerable<ItemViewModel> nodes = itemsSource.GetAllItems()
+			//	.Where(item => item is NodeViewModel)
+			//	.Cast<ItemViewModel>();
+
+			//nodes.ForEach(item =>
+			//{
+			//	Point location = item.ItemBounds.Location;
+			//	location = location + scaledViewOffset;
+			//	item.ItemBounds = new Rect(location, item.ItemBounds.Size);
+			//});
+
+			//itemsSource.Update(nodes);
+
+			Offset -= viewOffset;
 			UpdateShownItemsInChildren();
 		}
 
@@ -214,16 +230,64 @@ namespace Dependinator.ModelViewing.Private.Items
 				return;
 			}
 
-			if (zoomableCanvas != null)
-			{
-				zoomableCanvas.Scale = Scale;
-			}
+			//Point zoomCenter = 
+			SetZoomableCanvasScale(null);
 
 			UpdateAndNotifyAll();
 
 			canvasChildren.ForEach(child => child.UpdateScale());
 		}
 
+
+		private void SetZoomableCanvasScale(Point? zoomCenter)
+		{
+			if (zoomableCanvas != null)
+			{
+				double oldScale = zoomableCanvas.Scale;
+				if (!zoomCenter.HasValue)
+				{
+					if (!(Math.Abs(zoomableCanvas.Offset.X) < 0.01
+						&& Math.Abs(zoomableCanvas.Offset.Y) < 0.01))
+					{
+						//Log.Warn($"{zoomableCanvas.Offset} for {owner}");
+
+						//zoomCenter = new Point(
+						//	(-zoomableCanvas.Offset.X),
+						//	(-zoomableCanvas.Offset.Y));
+
+						zoomCenter = new Point(0, 0);
+					}
+					//oomCenter = new Point(100, 50);
+				}
+
+				if (zoomCenter.HasValue)
+				{
+					double zoomFactor = Scale / oldScale; // ????? Same as zoom ?????
+
+					// Adjust the offset to make the point at the center of zoom area stay still
+					Vector position = (Vector)zoomCenter;
+					Offset = (Point)((Vector)(Offset + position) * zoomFactor - position);
+
+					//Vector viewOffset = (Vector)zoomCenter.Value;
+					//Vector scaledViewOffset = viewOffset;
+
+					//IEnumerable<ItemViewModel> nodes = itemsSource.GetAllItems()
+					//	.Where(item => item is NodeViewModel)
+					//	.Cast<ItemViewModel>();
+
+					//nodes.ForEach(item =>
+					//{
+					//	Point location = item.ItemBounds.Location;
+					//	location = location + scaledViewOffset;
+					//	item.ItemBounds = new Rect(location, item.ItemBounds.Size);
+					//});
+
+				}
+
+				//Log.Debug($"Scale {zoomableCanvas.Scale}->{Scale} for {owner}");
+				zoomableCanvas.Scale = Scale;
+			}
+		}
 
 
 		public Point ChildToParentCanvasPoint(Point childCanvasPoint)

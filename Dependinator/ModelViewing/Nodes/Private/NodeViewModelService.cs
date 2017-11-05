@@ -177,6 +177,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			Size newSiz = new Size(size.Width + resize.X, size.Height + resize.Y);
 			viewModel.ItemBounds = new Rect(newLocation, newSiz);
 			viewModel.ItemsViewModel?.MoveCanvas(offset);
+			viewModel.ItemOwnerCanvas.UpdateItem(viewModel);
 		}
 
 		public void SetLayout(NodeViewModel nodeViewMode)

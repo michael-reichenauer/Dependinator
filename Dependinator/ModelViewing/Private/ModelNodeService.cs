@@ -294,7 +294,7 @@ namespace Dependinator.ModelViewing.Private
 
 			if (node.Offset != PointEx.Zero)
 			{
-				node.ItemsCanvas.Offset = node.Offset;
+				node.ItemsCanvas.SetOffset(node.Offset);
 			}
 
 			return node.ItemsCanvas;
