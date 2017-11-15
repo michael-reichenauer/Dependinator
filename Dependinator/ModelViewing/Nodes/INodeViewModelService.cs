@@ -23,6 +23,6 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		IEnumerable<LinkItem> GetLinkItems(
-			IEnumerable<Link> links, Func<Link, Node> endPoint, int level);
+			IEnumerable<Line> links, Func<Line, Node> lineEndPoint, Func<Link, Node> endPoint);
 	}
 }

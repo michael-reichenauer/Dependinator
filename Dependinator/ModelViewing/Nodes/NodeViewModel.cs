@@ -59,15 +59,21 @@ namespace Dependinator.ModelViewing.Nodes
 		public string ToolTip { get => Get(); set => Set(value); }
 
 		public void UpdateToolTip() => ToolTip =
-			$"{Node.Name.DisplayFullNameWithType}"+
+			$"{Node.Name.DisplayFullNameWithType}" +
+			$"\nLines: Incoming: {IncomingLinesCount}, Outgoing: {OutgoingLinesCount}" +
 			$"\nLinks: Incoming: {IncomingLinksCount}, Outgoing: {OutgoingLinksCount}" + 
 			$"{DebugToolTip}";
+
+		public int IncomingLinesCount => Node.TargetLines.Count(line => line.Owner != Node);
 
 
 		public int IncomingLinksCount => Node.TargetLines
 			.Where(line => line.Owner != Node)
 			.SelectMany(line => line.Links)
 			.Count();
+
+		public int OutgoingLinesCount => Node.SourceLines.Count(line => line.Owner != Node);
+
 
 		public int OutgoingLinksCount => Node.SourceLines
 			.Where(line => line.Owner != Node)
@@ -210,23 +216,22 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private ObservableCollection<LinkItem> GetIncomingLinkItems()
 		{
-			IEnumerable<Link> links = Node.TargetLines
-				.Where(line => line.Owner != Node)
-				.SelectMany(line => line.Links)
-				.DistinctBy(link => link.Source);
+			IEnumerable<Line> lines = Node.TargetLines
+				.Where(line => line.Owner != Node);
 
-			IEnumerable<LinkItem> items = nodeViewModelService.GetLinkItems(links, link => link.Source, 1);
+			IEnumerable<LinkItem> items = nodeViewModelService.GetLinkItems(
+				lines, line => line.Source, link => link.Source);
+
 			return new ObservableCollection<LinkItem>(items);
 		}
 
 		private ObservableCollection<LinkItem> GetOutgoingLinkItems()
 		{
-			IEnumerable<Link> links = Node.SourceLines
-				.Where(line => line.Owner != Node)
-				.SelectMany(line => line.Links)
-				.DistinctBy(link => link.Target);
+			IEnumerable<Line> lines = Node.SourceLines
+				.Where(line => line.Owner != Node);
 
-			IEnumerable<LinkItem> items = nodeViewModelService.GetLinkItems(links, link => link.Target, 1);
+			IEnumerable<LinkItem> items = nodeViewModelService.GetLinkItems(
+				lines, line => line.Target, link => link.Target);
 			return new ObservableCollection<LinkItem>(items);
 		}
 

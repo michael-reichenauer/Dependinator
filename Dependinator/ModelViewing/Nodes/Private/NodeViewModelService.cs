@@ -224,6 +224,23 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 
 		public IEnumerable<LinkItem> GetLinkItems(
+			IEnumerable<Line> lines, Func<Line, Node> lineEndPoint, Func<Link, Node> linkEndPoint)
+		{
+
+			return lines
+				.Select(line => new LinkItem(
+					null, 
+					lineEndPoint(line).Name.DisplayName, 
+					GetLinkItems(line.Links, linkEndPoint, 1)));
+
+			//IEnumerable<Link> links = lines
+			//	.SelectMany(line => line.Links)
+			//	.DistinctBy(endPoint);
+
+			//return GetLinkItems(links, endPoint, 1);
+		}
+
+		public IEnumerable<LinkItem> GetLinkItems(
 			IEnumerable<Link> links, Func<Link, Node> endPoint, int level)
 		{
 			if (!links.Any())
