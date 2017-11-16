@@ -226,19 +226,19 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		public IEnumerable<LinkItem> GetLinkItems(
 			IEnumerable<Line> lines, Func<Line, Node> lineEndPoint, Func<Link, Node> linkEndPoint)
 		{
+			Log.Debug($"Get items ...");
+			
+			List<LinkItem> lineItems = new List<LinkItem>();
+			foreach (Line line in lines)
+			{
+				IEnumerable<Link> lineLinks = line.Links.DistinctBy(linkEndPoint);
+				IEnumerable<LinkItem> linkItems = GetLinkItems(lineLinks, linkEndPoint, 1);
+				lineItems.Add(new LinkItem(null, lineEndPoint(line).Name.DisplayName, linkItems));
+			}
 
-			return lines
-				.Select(line => new LinkItem(
-					null, 
-					lineEndPoint(line).Name.DisplayName, 
-					GetLinkItems(line.Links, linkEndPoint, 1)));
-
-			//IEnumerable<Link> links = lines
-			//	.SelectMany(line => line.Links)
-			//	.DistinctBy(endPoint);
-
-			//return GetLinkItems(links, endPoint, 1);
+			return lineItems;
 		}
+
 
 		public IEnumerable<LinkItem> GetLinkItems(
 			IEnumerable<Link> links, Func<Link, Node> endPoint, int level)
@@ -280,6 +280,12 @@ namespace Dependinator.ModelViewing.Nodes.Private
 				foreach (LinkItem linkItem in linkItems.Where(item => item.SubLinkItems.Any()).ToList())
 				{
 					int count = linkItem.SubLinkItems.Count();
+
+					if (count > 4)
+					{
+						continue;
+					}
+
 					margin -= (count - 1);
 
 					if (margin >= 0)
