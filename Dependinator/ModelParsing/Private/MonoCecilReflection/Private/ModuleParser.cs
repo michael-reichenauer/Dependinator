@@ -58,16 +58,16 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 
 			foreach (AssemblyNameReference reference in references)
 			{
-				string parent = null;
+				string parent = "References";
 				string referenceName = Name.GetModuleName(reference.Name);
 
 				int index = referenceName.IndexOfTxt("*");
 				if (index > 0)
 				{
-					parent = referenceName.Substring(1, index - 1);
+					parent = $"References.{referenceName.Substring(1, index - 1)}";
 				}
 
-				parent = parent != null ? $"${parent?.Replace(".", ".$")}" : null;
+				parent =  $"${parent?.Replace(".", ".$")}";
 
 				ModelNode referenceNode = new ModelNode(referenceName, parent, JsonTypes.NodeType.NameSpace);
 				sender.SendNode(referenceNode);
