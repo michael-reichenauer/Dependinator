@@ -220,7 +220,8 @@ namespace Dependinator.ModelViewing.Private
 
 		private static void UpdateDataItems(IModelItem item, Operation operation)
 		{
-			int priority = GetPriority(item, operation);
+			//int priority = GetPriority(item, operation);
+			int priority = 0;
 
 			operation.Queue.Enqueue(item, priority);
 		}
@@ -267,27 +268,27 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private static int GetPriority(IModelItem item, Operation operation)
-		{
-			if (item is ModelNode modelNode)
-			{
-				return operation.GetPriority(modelNode.Name);
-			}
-			else if (item is ModelLine modelLine)
-			{
-				return Math.Max(
-					operation.GetPriority(modelLine.Source),
-					operation.GetPriority(modelLine.Target));
-			}
-			else if (item is ModelLink modelLink)
-			{
-				return Math.Max(
-					operation.GetPriority(modelLink.Source),
-					operation.GetPriority(modelLink.Target));
-			}
+		//private static int GetPriority(IModelItem item, Operation operation)
+		//{
+		//	if (item is ModelNode modelNode)
+		//	{
+		//		return operation.GetPriority(modelNode.Name);
+		//	}
+		//	else if (item is ModelLine modelLine)
+		//	{
+		//		return Math.Max(
+		//			operation.GetPriority(modelLine.Source),
+		//			operation.GetPriority(modelLine.Target));
+		//	}
+		//	else if (item is ModelLink modelLink)
+		//	{
+		//		return Math.Max(
+		//			operation.GetPriority(modelLink.Source),
+		//			operation.GetPriority(modelLink.Target));
+		//	}
 
-			return MaxPriority - 1;
-		}
+		//	return MaxPriority - 1;
+		//}
 
 
 		private string GetDataFilePath()
@@ -308,30 +309,32 @@ namespace Dependinator.ModelViewing.Private
 			public Operation(int stamp) => Id = stamp;
 
 
-			public int GetPriority(string name)
-			{
-				int priority = 0;
+			//public int GetPriority(string name)
+			//{
+			//	int priority = 0;
 
-				foreach (char t in name)
-				{
-					if (t == '(')
-					{
-						break;
-					}
+			//	return priority;
 
-					if (t == '.')
-					{
-						priority++;
-					}
+			//	//foreach (char t in name)
+			//	//{
+			//	//	if (t == '(')
+			//	//	{
+			//	//		break;
+			//	//	}
 
-					if (priority >= MaxPriority - 1)
-					{
-						break;
-					}
-				}
+			//	//	if (t == '.')
+			//	//	{
+			//	//		priority++;
+			//	//	}
 
-				return priority;
-			}
+			//	//	if (priority >= MaxPriority - 1)
+			//	//	{
+			//	//		break;
+			//	//	}
+			//	//}
+
+			//	//return priority;
+			//}
 		}
 	}
 }
