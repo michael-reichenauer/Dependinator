@@ -55,7 +55,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public double ScaleFactor { get; set; }
 		public Point Offset { get; set; }
 		public string Color { get; set; }
-
+		public bool IsRoot => this == Root;
 
 
 		public void AddChild(Node child)

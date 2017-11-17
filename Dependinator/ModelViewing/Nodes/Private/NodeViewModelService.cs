@@ -15,11 +15,23 @@ namespace Dependinator.ModelViewing.Nodes.Private
 	{
 		private static readonly string MoreText = "...";
 		private static readonly int LinksMenuLimit = 35;
+
 		private static readonly Size DefaultSize = new Size(200, 100);
-		private static readonly int rowLength = 4;
-		private static readonly int padding = 100;
-		private static readonly double xMargin = 150;
-		private static readonly double yMargin = 110;
+		//private static readonly int RowLength = 4;
+		//private static readonly int Padding = 100;
+		private static readonly double XMargin = 150;
+		private static readonly double YMargin = 110;
+
+		private Layout rootLayout = new Layout(0, new Size(1, 1), 1, 100, 1);
+
+		private readonly Layout[] layouts =
+		{
+			new Layout(4, new Size(2.5, 2.5), 2, 100, 1),
+			new Layout(9, new Size(1.5, 1.5), 3, 100, 1),
+			new Layout(int.MaxValue, new Size(1, 1), 4, 100, 1),
+		};
+		
+
 		private static readonly IEnumerable<LinkItem> EmptySubLinks = Enumerable.Empty<LinkItem>();
 
 
@@ -188,38 +200,203 @@ namespace Dependinator.ModelViewing.Nodes.Private
 				return;
 			}
 
-			int index = nodeViewMode.Node.Parent.Children.Count - 1;
-			while (true)
+
+			Node parentNode = nodeViewMode.Node.Parent;
+			int i = 0;
+			int count = parentNode.Children.Count;
+
+			Layout layout = parentNode.IsRoot ? rootLayout : layouts.First(l => count <= l.Count);
+
+
+			foreach (Node childNode in parentNode.Children)
 			{
-				int siblingCount = index++;
+				int index = i++;
 
-				double x = (siblingCount % rowLength) * (DefaultSize.Width + padding) + xMargin;
-				double y = (siblingCount / rowLength) * (DefaultSize.Height + padding) + yMargin;
-				Point location = new Point(x, y);
-
-				Rect bounds = new Rect(location, DefaultSize);
-
-				if (!nodeViewMode.Node.Parent.Children.Any(child => child.ViewModel.ItemBounds.IntersectsWith(bounds)))
+				while (true)
 				{
-					nodeViewMode.ItemBounds = bounds;
-					return;
+					int siblingIndex = index++;
+
+					Size parentSize = parentNode.IsRoot ? DefaultSize : parentNode.ViewModel.ItemBounds.Size;
+
+					double scaleFactor = parentNode.ItemsCanvas.ScaleFactor;
+
+					Size size = new Size(
+						layout.Size.Width * parentSize.Width ,
+						layout.Size.Height * parentSize.Height );
+
+					double x = (siblingIndex % layout.RowLength) * (size.Width + layout.Padding) + XMargin;
+					double y = (siblingIndex / layout.RowLength) * (size.Height + layout.Padding) + YMargin;
+					Point location = new Point(x, y);
+
+					Rect newBounds = new Rect(location, size);
+
+					Rect currentBounds = childNode.ViewModel.ItemBounds;
+
+					if (Math.Abs(newBounds.X - currentBounds.X) < 0.0001
+						&& Math.Abs(newBounds.Y - currentBounds.Y) < 0.001
+						&& Math.Abs(newBounds.Width - currentBounds.Width) < 0.001
+						&& Math.Abs(newBounds.Height - currentBounds.Height) < 0.001)
+					{
+						break;
+					}
+
+					if (!parentNode.Children
+						.Any(child => childNode != child && child.ViewModel.ItemBounds.IntersectsWith(newBounds)))
+					{
+						childNode.ViewModel.ItemBounds = newBounds;
+						break;
+					}
 				}
 			}
+
+
+			//if (IsParentShowing(nodeViewMode))
+			//{
+			//	Log.Warn($"Showing {nodeViewMode.Node.Parent} when adding {nodeViewMode.Node} ");
+			//}
+			//else
+			//{
+			//	Log.Debug($"Not shown {nodeViewMode.Node.Parent} when adding {nodeViewMode.Node} ");
+			//}
+
+
+			//Node parentNode = nodeViewMode.Node.Parent;
+			//int i = 0;
+			//int count = parentNode.Children.Count;
+
+			//Layout layout = parentNode.IsRoot ? rootLayout : layouts.First(l => count <= l.Count);
+
+
+			//foreach (Node childNode in parentNode.Children)
+			//{
+			//	int index = i++;
+
+			//	while (true)
+			//	{
+			//		int siblingIndex = index++;
+
+			//		Size parentSize = parentNode.IsRoot ? DefaultSize : parentNode.ViewModel.ItemBounds.Size;
+
+			//		double scaleFactor = parentNode.ItemsCanvas.ScaleFactor;
+
+			//		Size size = DefaultSize;
+
+			//		double x = (siblingIndex % layout.RowLength) * (size.Width + layout.Padding) + XMargin;
+			//		double y = (siblingIndex / layout.RowLength) * (size.Height + layout.Padding) + YMargin;
+			//		Point location = new Point(x, y);
+
+			//		Rect newBounds = new Rect(location, size);
+
+			//		Rect currentBounds = childNode.ViewModel.ItemBounds;
+
+			//		//if (parentNode.ItemsCanvas.ScaleFactor != layout.ScaleFactor)
+
+			//		if (Math.Abs(newBounds.X - currentBounds.X) < 0.0001
+			//			&& Math.Abs(newBounds.Y - currentBounds.Y) < 0.001
+			//			&& Math.Abs(newBounds.Width - currentBounds.Width) < 0.001
+			//			&& Math.Abs(newBounds.Height - currentBounds.Height) < 0.001)
+			//		{
+			//			break;
+			//		}
+
+			//		if (!parentNode.Children
+			//			.Any(child => childNode != child && child.ViewModel.ItemBounds.IntersectsWith(newBounds)))
+			//		{
+			//			childNode.ViewModel.ItemBounds = newBounds;
+			//			break;
+			//		}
+			//	}
+			//}
+
+
+			//Node parentNode = nodeViewMode.Node.Parent;
+			//int i = 0;
+			//int count = parentNode.Children.Count;
+
+			//Layout layout = parentNode.IsRoot ? rootLayout : layouts.First(l => count <= l.Count);
+
+
+			//foreach (Node childNode in parentNode.Children)
+			//{
+			//	int index = i++;
+
+			//	while (true)
+			//	{
+			//		int siblingIndex = index++;
+
+			//		Size parentSize = parentNode.IsRoot ? DefaultSize : parentNode.ViewModel.ItemBounds.Size;
+
+			//		double scaleFactor = parentNode.ItemsCanvas.ScaleFactor;
+
+			//		Size size = new Size(
+			//			layout.Size.Width * parentSize.Width * scaleFactor,
+			//			layout.Size.Height * parentSize.Height * scaleFactor);
+
+			//		double x = (siblingIndex % layout.RowLength) * (size.Width + layout.Padding) + XMargin;
+			//		double y = (siblingIndex / layout.RowLength) * (size.Height + layout.Padding) + YMargin;
+			//		Point location = new Point(x, y);
+
+			//		Rect newBounds = new Rect(location, size);
+
+			//		Rect currentBounds = childNode.ViewModel.ItemBounds;
+
+			//		if (Math.Abs(newBounds.X - currentBounds.X) < 0.0001 
+			//			&& Math.Abs(newBounds.Y - currentBounds.Y) < 0.001
+			//			&& Math.Abs(newBounds.Width - currentBounds.Width) < 0.001
+			//			&& Math.Abs(newBounds.Height - currentBounds.Height) < 0.001)
+			//		{
+			//			break;
+			//		}
+
+			//		if (!parentNode.Children
+			//			.Any(child => childNode != child && child.ViewModel.ItemBounds.IntersectsWith(newBounds)))
+			//		{
+			//			childNode.ViewModel.ItemBounds = newBounds;
+			//			break;
+			//		}
+			//	}
+			//}
+
+
+			//int index = nodeViewMode.Node.Parent.Children.Count - 1;
+			//while (true)
+			//{
+			//	int siblingCount = index++;
+
+			//	double x = (siblingCount % rowLength) * (DefaultSize.Width + padding) + xMargin;
+			//	double y = (siblingCount / rowLength) * (DefaultSize.Height + padding) + yMargin;
+			//	Point location = new Point(x, y);
+
+			//	Rect bounds = new Rect(location, DefaultSize);
+
+			//	if (!nodeViewMode.Node.Parent.Children.Any(child => child.ViewModel.ItemBounds.IntersectsWith(bounds)))
+			//	{
+			//		nodeViewMode.ItemBounds = bounds;
+			//		return;
+			//	}
+			//}
+		}
+
+
+		private static bool IsParentShowing(NodeViewModel nodeViewMode)
+		{
+			return nodeViewMode.Node.IsRoot 
+				|| nodeViewMode.Node.Parent.ViewModel.IsShowing;
 		}
 
 
 		public void ResetLayout(NodeViewModel nodeViewMode)
 		{
-			int siblingCount = nodeViewMode.Node.Parent.Children.IndexOf(nodeViewMode.Node);
+			//int siblingCount = nodeViewMode.Node.Parent.Children.IndexOf(nodeViewMode.Node);
 
-			double x = (siblingCount % rowLength) * (DefaultSize.Width + padding) + xMargin;
-			double y = (siblingCount / rowLength) * (DefaultSize.Height + padding) + yMargin;
-			Point location = new Point(x, y);
+			//double x = (siblingCount % RowLength) * (DefaultSize.Width + Padding) + XMargin;
+			//double y = (siblingCount / RowLength) * (DefaultSize.Height + Padding) + YMargin;
+			//Point location = new Point(x, y);
 
-			Rect bounds = new Rect(location, DefaultSize);
+			//Rect bounds = new Rect(location, DefaultSize);
 
-			nodeViewMode.ItemBounds = bounds;
-			nodeViewMode.ItemsViewModel?.ItemsCanvas?.ResetLayout();
+			//nodeViewMode.ItemBounds = bounds;
+			//nodeViewMode.ItemsViewModel?.ItemsCanvas?.ResetLayout();
 		}
 
 
@@ -343,6 +520,25 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		{
 			string[] parts = node.Name.FullName.Split(".".ToCharArray());
 			return string.Join(".", parts.Take(level));
+		}
+
+		private class Layout
+		{
+			public int Count { get; }
+			public Size Size { get; }
+			public int RowLength { get; }
+			public int Padding { get; }
+			public double ScaleFactor { get; }
+
+
+			public Layout(int count, Size size, int rowLength, int padding, double scaleFactor)
+			{
+				Count = count;
+				Size = size;
+				RowLength = rowLength;
+				Padding = padding;
+				ScaleFactor = scaleFactor;
+			}
 		}
 	}
 }

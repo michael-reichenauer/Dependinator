@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private.Items;
+using Dependinator.Utils;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -43,7 +44,7 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public override bool CanShow => ItemScale > 0.20;
+		public override bool CanShow => ItemScale * ItemWidth > 40;
 
 		public Node Node { get; }
 
@@ -85,7 +86,7 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			get
 			{
-				int f = ((int)(20 * ItemScale)).MM(9, 13);
+				int f = ((int)(10 * ItemScale)).MM(9, 13);
 				if (f == 10)
 				{
 					// Some recomend skipping fontsize 10
