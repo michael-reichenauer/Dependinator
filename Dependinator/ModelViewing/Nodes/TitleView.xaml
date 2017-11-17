@@ -16,7 +16,7 @@
 			Height="20"
 			Background="Transparent" 
 			VerticalAlignment="Top"
-			RenderOptions.ClearTypeHint="Enabled">
+>
 
 			<TextBlock
 				Height="20"
@@ -27,7 +27,9 @@
 				HorizontalAlignment="Left"
 				VerticalAlignment="Top" 
 				UseLayoutRounding="True"
-				RenderOptions.ClearTypeHint="Enabled"/>
+				FontFamily="Segoe UI"
+				TextOptions.TextFormattingMode="Ideal"
+/>
 
 			<Border.ToolTip>
 				<ToolTip

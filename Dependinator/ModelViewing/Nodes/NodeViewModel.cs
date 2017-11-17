@@ -8,6 +8,7 @@ using System.Windows.Media;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils.UI;
+using Dependinator.Utils.UI.VirtualCanvas;
 
 
 namespace Dependinator.ModelViewing.Nodes
@@ -80,7 +81,20 @@ namespace Dependinator.ModelViewing.Nodes
 			.SelectMany(line => line.Links)
 			.Count();
 
-		public int FontSize => ((int)(15 * ItemScale)).MM(9, 13);
+		public int FontSize
+		{
+			get
+			{
+				int f = ((int)(20 * ItemScale)).MM(9, 13);
+				if (f == 10)
+				{
+					// Some recomend skipping fontsize 10
+					f = 9;
+				}
+
+				return f;
+			}
+		}
 
 		public bool IsMouseOver
 		{
