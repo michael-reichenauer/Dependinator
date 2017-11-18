@@ -3,19 +3,11 @@ using System.Windows;
 using Dependinator.Utils;
 
 
-namespace Dependinator.MainWindowViews
+namespace Dependinator.Common
 {
 	[SingleInstance]
 	internal class WindowOwner
 	{
-		private readonly Lazy<MainWindow> mainWindow;
-
-
-		public WindowOwner(Lazy<MainWindow> mainWindow)
-		{
-			this.mainWindow = mainWindow;
-		}
-
 		public static implicit operator Window(WindowOwner owner) => owner.Window;
 
 
@@ -23,9 +15,9 @@ namespace Dependinator.MainWindowViews
 		{
 			get
 			{
-				if (Application.Current?.MainWindow is MainWindow)
+				if (Application.Current?.MainWindow is IMainWindow)
 				{
-					return mainWindow.Value;
+					return Application.Current?.MainWindow;
 				}
 
 				return null;

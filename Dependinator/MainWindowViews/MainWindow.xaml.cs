@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
+using Dependinator.Common;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
@@ -14,7 +15,7 @@ namespace Dependinator.MainWindowViews
 	/// Interaction logic for MainWindow.xaml
 	/// </summary>
 	[SingleInstance]
-	public partial class MainWindow : Window
+	public partial class MainWindow : Window, IMainWindow
 	{
 		private readonly ISettingsService settingsService;
 

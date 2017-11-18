@@ -128,6 +128,7 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common\IMainWindow.cs" />
     <Compile Include="Common\MessageDialogs\IMessage.cs" />
     <Compile Include="Common\MessageDialogs\IMessageService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\ExistingInstanceService.cs" />
@@ -313,7 +314,7 @@
     <Compile Include="MainWindowViews\IMainWindowService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\MainWindowIpcService.cs" />
     <Compile Include="MainWindowViews\Private\MainWindowService.cs" />
-    <Compile Include="MainWindowViews\WindowOwner.cs" />
+    <Compile Include="Common\WindowOwner.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Utils\StackTraceExtensions.cs" />
     <Compile Include="Utils\StopParameter.cs" />
