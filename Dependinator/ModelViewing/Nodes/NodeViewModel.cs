@@ -64,8 +64,8 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public void UpdateToolTip() => ToolTip =
 			$"{Node.Name.DisplayFullNameWithType}" +
-			$"\nLines: {IncomingLinesCount} -> {OutgoingLinesCount}" +
-			$"\nLinks: {IncomingLinksCount} -> {OutgoingLinksCount}" + 
+			$"\nLines; In: {IncomingLinesCount}, Out: {OutgoingLinesCount}" +
+			$"\nLinks; In: {IncomingLinksCount}, Out: {OutgoingLinksCount}" + 
 			$"{DebugToolTip}";
 
 		public int IncomingLinesCount => Node.TargetLines.Count(line => line.Owner != Node);

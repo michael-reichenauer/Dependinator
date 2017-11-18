@@ -280,7 +280,7 @@
       <DependentUpon>MemberNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\MemberNodeViewModel.cs" />
-    <Compile Include="ModelViewing\Private\NodeName.cs" />
+    <Compile Include="Common\NodeName.cs" />
     <Compile Include="ModelViewing\Links\NodeLinks.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeComparer.cs" />
     <Compile Include="ModelViewing\Private\Items\ItemsView.xaml.cs">

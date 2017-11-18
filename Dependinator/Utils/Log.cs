@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Dependinator.Common.SettingsHandling;
 
 
 namespace Dependinator.Utils
@@ -19,7 +18,6 @@ namespace Dependinator.Utils
 
 		private static readonly object syncRoot = new object();
 
-		private static readonly string LogPath = ProgramInfo.GetLogFilePath();
 		private static readonly int ProcessID = Process.GetCurrentProcess().Id;
 		private static readonly string LevelUsage = "USAGE";
 		private static readonly string LevelDebug = "DEBUG";
@@ -27,20 +25,22 @@ namespace Dependinator.Utils
 		private static readonly string LevelWarn = "WARN ";
 		private static readonly string LevelError = "ERROR";
 
-		private static readonly int prefixLength = 0;
+		private static int prefixLength = 0;
+		private static string LogPath = null;
+
 
 		static Log()
 		{
 			Task.Factory.StartNew(SendBufferedLogRows, TaskCreationOptions.LongRunning)
 				.RunInBackground();
-
-			prefixLength = GetSourceFilePrefixLength();
 		}
 
 
-		private static int GetSourceFilePrefixLength([CallerFilePath] string sourceFilePath = "")
+		public static void Init(string logFilePath, [CallerFilePath] string sourceFilePath = "")
 		{
-			return sourceFilePath.IndexOfTxtIc($"{Product.Name}\\Utils\\Log.cs");
+			LogPath = logFilePath;
+			string rootPath = Path.GetDirectoryName(Path.GetDirectoryName(sourceFilePath));
+			prefixLength = rootPath.Length + 1;
 		}
 
 
@@ -185,6 +185,11 @@ namespace Dependinator.Utils
 
 		private static void WriteToFile(IReadOnlyCollection<string> text)
 		{
+			if (LogPath == null)
+			{
+				return;
+			}
+
 			Exception error = null;
 			lock (syncRoot)
 			{

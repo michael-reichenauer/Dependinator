@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using Dependinator.Common;
 using Dependinator.ModelParsing;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Links.Private;
@@ -193,7 +194,6 @@ namespace Dependinator.ModelViewing.Private
 
 		private void RemoveLine(Line line)
 		{
-			Log.Warn($"Remove {line}");
 			line.Source.SourceLines.Remove(line);
 			line.Target.TargetLines.Remove(line);
 			RemoveLineViewModel(line);

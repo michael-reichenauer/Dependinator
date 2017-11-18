@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Dependinator.Common;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private;
 
@@ -79,9 +80,7 @@ namespace Dependinator.ModelViewing.Links.Private
 
 			ReduceHierarchy(linkItems);
 
-			linkItems.Sort(LinkItemComparer());
-
-			return linkItems;
+			return linkItems.OrderBy(item => item, LinkItemComparer());
 		}
 
 
@@ -92,9 +91,13 @@ namespace Dependinator.ModelViewing.Links.Private
 
 
 		private static int CompareLinkItems(LinkItem i1, LinkItem i2)
-			=> i1.Text == MoreText 
-			? 1 
-			: i2.Text == MoreText ? -1 : i1.Text.CompareTo(i2.Text);
+			=> i1.Text == MoreText && i2.Text == MoreText 
+				? 0 
+				: i1.Text == MoreText 
+					? 1 
+					: i2.Text == MoreText 
+						? -1 
+						: i1.Text.CompareTo(i2.Text);
 
 
 		private static void ReduceHierarchy(ICollection<LinkItem> linkItems)

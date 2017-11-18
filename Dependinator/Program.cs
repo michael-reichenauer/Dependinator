@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Dependinator.Common.Environment.Private;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.SettingsHandling;
@@ -19,6 +17,7 @@ namespace Dependinator
 		public static void Main()
 		{
 			Culture.Initialize();
+			Log.Init(ProgramInfo.GetLogFilePath());
 			Log.Debug(GetStartLineText());
 			Program program = new Program();
 			program.Run();
@@ -86,33 +85,33 @@ namespace Dependinator
 		// private static readonly string LogFileName = "Some/filePath";
 
 
-//		public static async Task MainAsync()
-//		{
-//			try
-//			{
-//				Logx.Setup(LogFileName);
+		//		public static async Task MainAsync()
+		//		{
+		//			try
+		//			{
+		//				Logx.Setup(LogFileName);
 
-//				Log.Info("Starting AXIS Connect Camera Station Agent");
+		//				Log.Info("Starting AXIS Connect Camera Station Agent");
 
-//				DependencyInjectionx dependencyInjection = new DependencyInjectionx();
+		//				DependencyInjectionx dependencyInjection = new DependencyInjectionx();
 
-//				using (ILifetimeScope scope = dependencyInjection.BeginLifetimeScope())
-//				{
-//					IAgentService agentService = scope.Resolve<IAgentService>();
+		//				using (ILifetimeScope scope = dependencyInjection.BeginLifetimeScope())
+		//				{
+		//					IAgentService agentService = scope.Resolve<IAgentService>();
 
-//					await agentService.StartAgentAsync(CancellationToken.None);
+		//					await agentService.StartAgentAsync(CancellationToken.None);
 
-//					await agentService.StartAgentAsync2(CancellationToken.None);
-//				}
-//			}
-//#pragma warning disable AX1011 // Catch all exceptions to be able to log them
-//			catch (Exception e)
-//			{
-//				Logx.Fatal($"Acs agent failed: {e}");
-//				throw;
-//			}
-//#pragma warning restore AX1011
-//		}
+		//					await agentService.StartAgentAsync2(CancellationToken.None);
+		//				}
+		//			}
+		//#pragma warning disable AX1011 // Catch all exceptions to be able to log them
+		//			catch (Exception e)
+		//			{
+		//				Logx.Fatal($"Acs agent failed: {e}");
+		//				throw;
+		//			}
+		//#pragma warning restore AX1011
+		//		}
 
 	}
 

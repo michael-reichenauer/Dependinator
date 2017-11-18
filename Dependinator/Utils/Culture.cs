@@ -8,9 +8,6 @@ namespace Dependinator.Utils
 	{
 		public static void Initialize()
 		{
-			// LogCultures();
-
-			Log.Debug("Setting default culture");
 			CultureInfo originalCurrentCulture = CultureInfo.CurrentCulture;
 			
 			//Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
@@ -40,27 +37,25 @@ namespace Dependinator.Utils
 
 			Thread.CurrentThread.CurrentUICulture = culture;
 			CultureInfo.DefaultThreadCurrentUICulture = culture;
-
-			//LogCultures();
 		}
 
 
-		private static void LogCultures()
-		{
-			Log.Info($"CultureInfo: ");
-			Log.Info($"  .DefaultThreadCurrentCulture: {CultureInfo.DefaultThreadCurrentCulture}");
-			Log.Info($"  .DefaultThreadCurrentUICulture: {CultureInfo.DefaultThreadCurrentUICulture}");
-			Log.Info($"  .InstalledUICulture: {CultureInfo.InstalledUICulture}");
-			string shortDatePattern = CultureInfo.InstalledUICulture.DateTimeFormat.ShortDatePattern;
-			Log.Info($"  .InstalledUICulture.DateTimeFormat.ShortDatePattern: {shortDatePattern}");
+		//private static void LogCultures()
+		//{
+		//	Log.Info($"CultureInfo: ");
+		//	Log.Info($"  .DefaultThreadCurrentCulture: {CultureInfo.DefaultThreadCurrentCulture}");
+		//	Log.Info($"  .DefaultThreadCurrentUICulture: {CultureInfo.DefaultThreadCurrentUICulture}");
+		//	Log.Info($"  .InstalledUICulture: {CultureInfo.InstalledUICulture}");
+		//	string shortDatePattern = CultureInfo.InstalledUICulture.DateTimeFormat.ShortDatePattern;
+		//	Log.Info($"  .InstalledUICulture.DateTimeFormat.ShortDatePattern: {shortDatePattern}");
 
-			Log.Info($"Thread.CurrentThread");
-			Log.Info($"  .CurrentCulture: {Thread.CurrentThread.CurrentCulture}");
-			shortDatePattern = Thread.CurrentThread.CurrentCulture.DateTimeFormat.ShortDatePattern;
-			Log.Info($"  .CurrentCulture.DateTimeFormat.ShortDatePattern: {shortDatePattern}");
-			Log.Info($"  .CurrentUICulture: {Thread.CurrentThread.CurrentUICulture}");
-			string datePattern = Thread.CurrentThread.CurrentUICulture.DateTimeFormat.ShortDatePattern;
-			Log.Info($"  .CurrentUICulture.DateTimeFormat.ShortDatePattern: {datePattern}");
-		}
+		//	Log.Info($"Thread.CurrentThread");
+		//	Log.Info($"  .CurrentCulture: {Thread.CurrentThread.CurrentCulture}");
+		//	shortDatePattern = Thread.CurrentThread.CurrentCulture.DateTimeFormat.ShortDatePattern;
+		//	Log.Info($"  .CurrentCulture.DateTimeFormat.ShortDatePattern: {shortDatePattern}");
+		//	Log.Info($"  .CurrentUICulture: {Thread.CurrentThread.CurrentUICulture}");
+		//	string datePattern = Thread.CurrentThread.CurrentUICulture.DateTimeFormat.ShortDatePattern;
+		//	Log.Info($"  .CurrentUICulture.DateTimeFormat.ShortDatePattern: {datePattern}");
+		//}
 	}
 }

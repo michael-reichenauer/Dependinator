@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Windows;
+using Dependinator.Common;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private;
 using Dependinator.ModelViewing.Private.Items;

@@ -3,7 +3,7 @@ using System.Linq;
 using Dependinator.Utils;
 
 
-namespace Dependinator.ModelViewing.Private
+namespace Dependinator.Common
 {
 	internal class NodeName : Equatable<NodeName>
 	{
@@ -165,6 +165,7 @@ namespace Dependinator.ModelViewing.Private
 				.Replace("#", ".")
 				.Replace("?", "")
 				.Replace("$", "")
+				.Replace("%", "")
 				.Replace("`1", "<T>")
 				.Replace("`2", "<T,T>")
 				.Replace("`3", "<T,T,T>")
