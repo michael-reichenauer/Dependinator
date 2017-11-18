@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using Dependinator.MainWindowViews;
-using Dependinator.ModelViewing.Private;
+//using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 
 
@@ -13,20 +12,20 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 	internal class OpenModelService : IOpenModelService
 	{
 		private readonly IModelMetadataService modelMetadataService;
-		private readonly IModelViewService modelViewService;
+		private readonly ILoadModelService loadModelService;
 		private readonly IOpenFileDialogService openFileDialogService;
 		private readonly IExistingInstanceService existingInstanceService;
-		private readonly Lazy<MainWindow> mainWindow;
+		private readonly Lazy<IMainWindow> mainWindow;
 
 
 		public OpenModelService(
-			IModelViewService modelViewService,
+			ILoadModelService loadModelService,
 			IModelMetadataService modelMetadataService,
 			IOpenFileDialogService openFileDialogService,
 			IExistingInstanceService existingInstanceService,
-			Lazy<MainWindow> mainWindow)
+			Lazy<IMainWindow> mainWindow)
 		{
-			this.modelViewService = modelViewService;
+			this.loadModelService = loadModelService;
 			this.modelMetadataService = modelMetadataService;
 			this.openFileDialogService = openFileDialogService;
 			this.existingInstanceService = existingInstanceService;
@@ -74,7 +73,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
 			mainWindow.Value.RestoreWindowSettings();
 
-			await modelViewService.LoadAsync();
+			await loadModelService.LoadAsync();
 		}
 
 

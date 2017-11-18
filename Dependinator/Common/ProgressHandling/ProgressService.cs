@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Dependinator.MainWindowViews;
 using Dependinator.Utils;
 
 
@@ -10,12 +9,12 @@ namespace Dependinator.Common.ProgressHandling
 	internal class ProgressService : IProgressService
 	{
 		private readonly WindowOwner owner;
-		private readonly Lazy<MainWindowViewModel> mainWindowViewModel;
+		private readonly Lazy<IBusyIndicatorProvider> mainWindowViewModel;
 		private Progress currentProgress = null;
 
 		public ProgressService(
 			WindowOwner owner,
-			Lazy<MainWindowViewModel> mainWindowViewModel)
+			Lazy<IBusyIndicatorProvider> mainWindowViewModel)
 		{
 			this.owner = owner;
 			this.mainWindowViewModel = mainWindowViewModel;
@@ -56,7 +55,7 @@ namespace Dependinator.Common.ProgressHandling
 				timing.Log($"Progress status: {text}");
 				progressDialog = new ProgressDialog(owner, text, closeTask.Task);
 			}
-	
+
 
 			public override void Dispose()
 			{

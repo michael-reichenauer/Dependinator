@@ -7,6 +7,7 @@ using System.Windows;
 using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing;
 using Dependinator.ModelViewing.Open;
@@ -19,7 +20,7 @@ using Application = System.Windows.Application;
 namespace Dependinator.MainWindowViews
 {
 	[SingleInstance]
-	internal class MainWindowViewModel : ViewModel
+	internal class MainWindowViewModel : ViewModel, IBusyIndicatorProvider
 	{
 		private readonly ILatestVersionService latestVersionService;
 		private readonly IMainWindowService mainWindowService;

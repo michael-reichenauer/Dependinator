@@ -135,7 +135,9 @@
     <Compile Include="Common\ModelMetadataFolders\Private\IExistingInstanceService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\IJumpListService.cs" />
     <Compile Include="Common\ModelMetadataFolders\IRecentModelsService.cs" />
+    <Compile Include="Common\ModelMetadataFolders\Private\ILoadModelService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\RecentModelsService.cs" />
+    <Compile Include="Common\ProgressHandling\IBusyIndicatorProvider.cs" />
     <Compile Include="Common\SettingsHandling\ISettingsService.cs" />
     <Compile Include="Common\ModelMetadataFolders\IOpenModelService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\IOpenFileDialogService.cs" />

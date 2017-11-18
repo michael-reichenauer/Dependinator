@@ -1,4 +1,5 @@
 ﻿using System.Threading.Tasks;
+using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing.Nodes;
@@ -9,7 +10,7 @@ using Dependinator.Utils;
 namespace Dependinator.ModelViewing.Private
 {
 	[SingleInstance]
-	internal class ModelViewService : IModelViewService
+	internal class ModelViewService : IModelViewService, ILoadModelService
 	{
 		private readonly ISettingsService settingsService;
 		private readonly IModelService modelService;
