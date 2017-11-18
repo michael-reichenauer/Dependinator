@@ -50,7 +50,10 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			SetScale(layout, parent);
 
 			int index = 0;
-			foreach (Node child in parent.Children)
+			IReadOnlyList<Node> sortedChildren = parent.Children;
+			//	.OrderBy(child => child, NodeComparer.Comparer(parent)).ToList();
+
+			foreach (Node child in sortedChildren)
 			{
 				Rect bounds = GetBounds(index++, layout);
 
@@ -71,7 +74,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			
 			while (true)
 			{
-				Rect bounds = GetBounds(index, layout);
+				Rect bounds = GetBounds(index++, layout);
 
 				if (!IsIntersecting(bounds, parent.Children))
 				{

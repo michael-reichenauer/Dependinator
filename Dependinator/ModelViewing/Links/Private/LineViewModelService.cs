@@ -290,55 +290,7 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		public string GetLineToolTip(Line line)
-		{
-			return 
-				$"{line.Source.Name.DisplayFullName} -> {line.Target.Name.DisplayFullName}, {line.Links.Count} links";
-
-			//string tip = "";
-
-			//IReadOnlyList<LinkGroup> linkGroups = GetLinkGroups2(line);
-
-			//int count = 0;
-			//bool isLimitReached = false;
-			//var groupByTargets = line.Links.GroupBy(link => link.Target);
-			//int limit = 20;
-			//foreach (IGrouping<Node, Link> groupByTarget in groupByTargets)
-			//{
-			//	Node target = groupByTarget.Key;
-			//	string targetName = target.NodeType == NodeType.Type
-			//		? target.Name.DisplayName : target.Name.ShortName;
-
-			//	if (!isLimitReached)
-			//	{
-			//		tip += "\n";
-			//	}
-
-			//	foreach (Link link in groupByTarget)
-			//	{
-			//		count++;
-
-			//		if (!isLimitReached)
-			//		{
-			//			tip += $"\n{link.Source.Name.ShortName} -> {targetName}";
-			//		}
-
-			//		if (count > limit)
-			//		{
-			//			isLimitReached = true;
-			//		}
-			//	}
-			//}
-
-			//if (isLimitReached)
-			//{
-			//	tip += $"\n\n{count - limit} more links ...";
-			//}
-
-			//tip = tip.Trim();
-			//return tip;
-		}
-
+		public string GetLineToolTip(Line line) => $"{line.Links.Count} links";
 
 
 		private static Point ParentPointToChildPoint(Node parent, Point point)

@@ -21,7 +21,7 @@ namespace Dependinator.ModelViewing.Nodes
 		void FirstShowNode(Node node);
 
 
-		IEnumerable<LinkItem> GetLinkItems(
-			IEnumerable<Line> links, Func<Line, Node> lineEndPoint, Func<Link, Node> endPoint);
+		IEnumerable<LinkItem> GetIncomingLinkItems(Node node);
+		IEnumerable<LinkItem> GetOutgoingLinkItems(Node node);
 	}
 }

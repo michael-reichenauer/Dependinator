@@ -13,23 +13,19 @@ namespace Dependinator.ModelViewing.Nodes.Private
 {
 	internal class NodeViewModelService : INodeViewModelService
 	{
-		private static readonly string MoreText = "...";
-		private static readonly int LinksMenuLimit = 35;
-
-		private static readonly IEnumerable<LinkItem> EmptySubLinks = Enumerable.Empty<LinkItem>();
-
-
 		private readonly IThemeService themeService;
 		private readonly IModelLinkService modelLinkService;
-
+		private readonly ILinkMenuItemService linkMenuItemService;
 
 
 		public NodeViewModelService(
 			IThemeService themeService,
-			IModelLinkService modelLinkService)
+			IModelLinkService modelLinkService,
+			ILinkMenuItemService linkMenuItemService)
 		{
 			this.themeService = themeService;
 			this.modelLinkService = modelLinkService;
+			this.linkMenuItemService = linkMenuItemService;
 		}
 
 
@@ -53,6 +49,27 @@ namespace Dependinator.ModelViewing.Nodes.Private
 				.ForEach(line => modelLinkService.AddLineViewModel(line));
 		}
 
+
+
+		public IEnumerable<LinkItem> GetIncomingLinkItems(Node node)
+		{
+			IEnumerable<Line> lines = node.TargetLines
+				.Where(line => line.Owner != node);
+
+			IEnumerable<LinkItem> items = linkMenuItemService.GetTargetLinkItems(lines);
+			return items;
+		}
+
+
+		public IEnumerable<LinkItem> GetOutgoingLinkItems(Node node)
+		{
+			IEnumerable<Line> lines = node.SourceLines
+				.Where(line => line.Owner != node);
+
+			IEnumerable<LinkItem> items = linkMenuItemService.GetSourceLinkItems(lines);
+			return items;
+		}
+		
 
 		public Brush GetRandomRectangleBrush(string nodeName)
 		{
@@ -175,126 +192,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		public IEnumerable<LinkItem> GetLinkItems(
-			IEnumerable<Line> lines, Func<Line, Node> lineEndPoint, Func<Link, Node> linkEndPoint)
-		{
-			Log.Debug($"Get items ...");
-
-			List<LinkItem> lineItems = new List<LinkItem>();
-			foreach (Line line in lines)
-			{
-				IEnumerable<Link> lineLinks = line.Links.DistinctBy(linkEndPoint);
-				IEnumerable<LinkItem> linkItems = GetLinkItems(lineLinks, linkEndPoint, 1);
-				lineItems.Add(new LinkItem(null, lineEndPoint(line).Name.DisplayName, linkItems));
-			}
-
-			return lineItems;
-		}
 
 
-		public IEnumerable<LinkItem> GetLinkItems(
-			IEnumerable<Link> links, Func<Link, Node> endPoint, int level)
-		{
-			if (!links.Any())
-			{
-				return new List<LinkItem>();
-			}
-			else if (links.Count() < LinksMenuLimit)
-			{
-				return links.Select(link => new LinkItem(
-					link, endPoint(link).Name.DisplayFullName, EmptySubLinks));
-			}
-
-			var groups = links
-				.GroupBy(link => GetGroupKey(endPoint(link), level))
-				.OrderBy(group => group.Key);
-
-			List<LinkItem> linkItems = GetLinksGroupsItems(groups, endPoint, level);
-
-			ReduceHierarchy(linkItems);
-
-			linkItems.Sort(Comparer<LinkItem>.Create(
-				(i1, i2) => i1.Text == MoreText
-				? 1 : i2.Text == MoreText ? -1 : i1.Text.CompareTo(i2.Text)));
-
-			return linkItems;
-		}
-
-
-		private static void ReduceHierarchy(ICollection<LinkItem> linkItems)
-		{
-			int margin = Math.Max(LinksMenuLimit - linkItems.Count, 0);
-
-			while (margin >= 0)
-			{
-				bool isChanged = false;
-
-				foreach (LinkItem linkItem in linkItems.Where(item => item.SubLinkItems.Any()).ToList())
-				{
-					int count = linkItem.SubLinkItems.Count();
-
-					if (count > 4)
-					{
-						continue;
-					}
-
-					margin -= (count - 1);
-
-					if (margin >= 0)
-					{
-						linkItems.Remove(linkItem);
-						linkItem.SubLinkItems.ForEach(linkItems.Add);
-						isChanged = true;
-					}
-				}
-
-				if (!isChanged)
-				{
-					break;
-				}
-			}
-		}
-
-
-		private List<LinkItem> GetLinksGroupsItems(
-			IEnumerable<IGrouping<string, Link>> linksGroups, Func<Link, Node> endPoint, int level)
-		{
-			var linkItems = linksGroups
-				.Take(LinksMenuLimit)
-				.Select(group => GetLinkItem(group, endPoint, level));
-
-			if (linksGroups.Count() > LinksMenuLimit)
-			{
-				List<LinkItem> moreLinks = GetLinksGroupsItems(linksGroups.Skip(LinksMenuLimit), endPoint, level);
-
-				linkItems = linkItems.Concat(new[] { new LinkItem(null, MoreText, moreLinks) });
-			}
-
-			return linkItems.ToList();
-		}
-
-
-		private LinkItem GetLinkItem(
-			IGrouping<string, Link> linksGroup, Func<Link, Node> endPoint, int level)
-		{
-			IEnumerable<LinkItem> subLinks = GetLinkItems(linksGroup, endPoint, level + 1);
-
-			LinkItem item = new LinkItem(null, GetGroupText(linksGroup.Key), subLinks);
-
-			return item;
-		}
-
-
-		private static string GetGroupText(string key)
-		{
-			return key.Replace("$", "").Replace("?", "").Replace("*", ".");
-		}
-
-
-		string GetGroupKey(Node node, int level)
-		{
-			string[] parts = node.Name.FullName.Split(".".ToCharArray());
-			return string.Join(".", parts.Take(level));
-		}
 	}
 }

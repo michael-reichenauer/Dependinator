@@ -64,8 +64,8 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public void UpdateToolTip() => ToolTip =
 			$"{Node.Name.DisplayFullNameWithType}" +
-			$"\nLines: Incoming: {IncomingLinesCount}, Outgoing: {OutgoingLinesCount}" +
-			$"\nLinks: Incoming: {IncomingLinksCount}, Outgoing: {OutgoingLinksCount}" + 
+			$"\nLines: {IncomingLinesCount} -> {OutgoingLinesCount}" +
+			$"\nLinks: {IncomingLinksCount} -> {OutgoingLinksCount}" + 
 			$"{DebugToolTip}";
 
 		public int IncomingLinesCount => Node.TargetLines.Count(line => line.Owner != Node);
@@ -89,11 +89,11 @@ namespace Dependinator.ModelViewing.Nodes
 			get
 			{
 				int f = ((int)(10 * ItemScale)).MM(9, 13);
-				if (f == 10)
-				{
-					// Some recomend skipping fontsize 10
-					f = 9;
-				}
+				//if (f == 10)
+				//{
+				//	// Some recomend skipping fontsize 10
+				//	f = 9;
+				//}
 
 				return f;
 			}
@@ -233,29 +233,23 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private ObservableCollection<LinkItem> GetIncomingLinkItems()
 		{
-			IEnumerable<Line> lines = Node.TargetLines
-				.Where(line => line.Owner != Node);
-
-			IEnumerable<LinkItem> items = nodeViewModelService.GetLinkItems(
-				lines, line => line.Source, link => link.Source);
-
+			IEnumerable<LinkItem> items = nodeViewModelService.GetIncomingLinkItems(Node);
 			return new ObservableCollection<LinkItem>(items);
 		}
+
+
 
 		private ObservableCollection<LinkItem> GetOutgoingLinkItems()
 		{
-			IEnumerable<Line> lines = Node.SourceLines
-				.Where(line => line.Owner != Node);
-
-			IEnumerable<LinkItem> items = nodeViewModelService.GetLinkItems(
-				lines, line => line.Target, link => link.Target);
+			IEnumerable<LinkItem> items = nodeViewModelService.GetOutgoingLinkItems(Node);
 			return new ObservableCollection<LinkItem>(items);
 		}
 
+		
 
 		private string DebugToolTip => ItemsToolTip;
 
-		private string ItemsToolTip =>
+		private string ItemsToolTip => !Keyboard.Modifiers.HasFlag(ModifierKeys.Control) ? "" :
 			"\n" +
 			$"Rect: {ItemBounds.TS()}\n" +
 			$"Scale {ItemScale}, ChildrenScale: {Node.ItemsCanvas?.Scale}\n" +
