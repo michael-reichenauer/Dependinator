@@ -163,7 +163,7 @@
     <Compile Include="ModelParsing\Private\SolutionFileParsing\Solution.cs" />
     <Compile Include="ModelParsing\Private\SolutionFileParsing\Private\SolutionParser.cs" />
     <Compile Include="ModelViewing\Nodes\INodeLayoutService.cs" />
-    <Compile Include="ModelViewing\Nodes\LinkItem.cs" />
+    <Compile Include="ModelViewing\Links\LinkItem.cs" />
     <Compile Include="ModelViewing\Links\ILinkMenuItemService.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkMenuItemService.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeLayoutService.cs" />

@@ -56,8 +56,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			IEnumerable<Line> lines = node.TargetLines
 				.Where(line => line.Owner != node);
 
-			IEnumerable<LinkItem> items = linkMenuItemService.GetTargetLinkItems(lines);
-			return items;
+			return linkMenuItemService.GetSourceLinkItems(lines);
 		}
 
 
@@ -66,8 +65,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			IEnumerable<Line> lines = node.SourceLines
 				.Where(line => line.Owner != node);
 
-			IEnumerable<LinkItem> items = linkMenuItemService.GetSourceLinkItems(lines);
-			return items;
+			return linkMenuItemService.GetTargetLinkItems(lines);
 		}
 		
 

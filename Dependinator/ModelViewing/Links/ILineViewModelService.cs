@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Windows;
 using Dependinator.ModelViewing.Links.Private;
+using Dependinator.ModelViewing.Nodes;
 
 
 namespace Dependinator.ModelViewing.Links
@@ -34,5 +35,7 @@ namespace Dependinator.ModelViewing.Links
 		void UpdateLineEndPoints(Line line);
 		void UpdateLineBounds(Line line);
 		double GetArrowWidth(Line line);
+		IEnumerable<LinkItem> GetSourceLinkItems(Line line);
+		IEnumerable<LinkItem> GetTargetLinkItems(Line line);
 	}
 }

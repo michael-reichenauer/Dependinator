@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Dependinator.ModelViewing.Links;
 using Dependinator.Utils.UI.Mvvm;
 
 
-namespace Dependinator.ModelViewing.Nodes
+namespace Dependinator.ModelViewing.Links
 {
 	internal class LinkItem : ViewModel
 	{

@@ -33,6 +33,8 @@ namespace Dependinator.ModelViewing.Private
 
 		public string DisplayFullName => displayParts.Value.FullName;
 
+		public string DisplayFullNoParametersName => displayParts.Value.FullNameNoParameters;
+
 		public string DisplayFullNameWithType => displayParts.Value.FullNameWithType; 
 
 
@@ -93,10 +95,12 @@ namespace Dependinator.ModelViewing.Private
 
 			string fullName = string.Join(".", parts
 				.Where(part => !part.StartsWithTxt("$") && !part.StartsWithTxt("?")));
-			
+			string fullNameNoParameters = fullName;
+
 			if (string.IsNullOrEmpty(fullName))
 			{
 				fullName = ToNiceText(FullName);
+				fullNameNoParameters = fullName;
 
 				fullNameWithType = fullName;
 				if (parts[parts.Length - 1].StartsWith("$"))
@@ -112,12 +116,25 @@ namespace Dependinator.ModelViewing.Private
 			{
 				fullName = ToNiceText(fullName);
 				fullName = ToNiceParameters(fullName);
-
+				fullNameNoParameters = ToNoParameters(fullName);
 				fullNameWithType = fullName;
 			}
 			
+			return new DisplayParts(name, fullName, fullNameNoParameters, fullNameWithType);
+		}
 
-			return new DisplayParts(name, fullName, fullNameWithType);
+
+		private string ToNoParameters(string fullName)
+		{
+			int index1 = fullName.IndexOf('(');
+			int index2 = fullName.IndexOf(')');
+
+			if (index1 > -1 && index2 > index1)
+			{
+				fullName = $"{fullName.Substring(0, index1)}()";
+			}
+
+			return fullName;
 		}
 
 
@@ -142,7 +159,7 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		private string ToNiceText(string name)
+		public static string ToNiceText(string name)
 		{
 			return name.Replace("*", ".")
 				.Replace("#", ".")
@@ -162,13 +179,19 @@ namespace Dependinator.ModelViewing.Private
 		{
 			public string Name { get; }
 			public string FullName { get; }
+			public string FullNameNoParameters { get; }
 			public string FullNameWithType { get; }
 
 
-			public DisplayParts(string name, string fullName, string fullNameWithType)
+			public DisplayParts(
+				string name, 
+				string fullName,
+				string fullNameNoParameters,
+				string fullNameWithType)
 			{
 				Name = name;
 				FullName = fullName;
+				FullNameNoParameters = fullNameNoParameters;
 				FullNameWithType = fullNameWithType;
 			}
 		}

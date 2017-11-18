@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.ModelViewing.Private;
 
 
 namespace Dependinator.ModelViewing.Links.Private
@@ -14,41 +15,51 @@ namespace Dependinator.ModelViewing.Links.Private
 		private static readonly IEnumerable<LinkItem> EmptySubLinks = Enumerable.Empty<LinkItem>();
 
 
-		public IEnumerable<LinkItem> GetTargetLinkItems(IEnumerable<Line> lines)
+		public IEnumerable<LinkItem> GetSourceLinkItems(Line line)
 		{
-			IEnumerable<LinkItem> items = GetLinkItems(
-				lines, line => line.Source, link => link.Source);
+			return GetLineLinkItems(line, link => link.Source);
+		}
 
-			return items;
+
+		public IEnumerable<LinkItem> GetTargetLinkItems(Line line)
+		{
+			return GetLineLinkItems(line, link => link.Target);
 		}
 
 
 		public IEnumerable<LinkItem> GetSourceLinkItems(IEnumerable<Line> lines)
-		{
-			IEnumerable<LinkItem> items = GetLinkItems(
-				lines, line => line.Target, link => link.Target);
-			return items;
-		}
+			=> GetLinesLinkItems(lines, line => line.Source, link => link.Source);
 
 
+		public IEnumerable<LinkItem> GetTargetLinkItems(IEnumerable<Line> lines)
+			=> GetLinesLinkItems(lines, line => line.Target, link => link.Target);
 
-		private IEnumerable<LinkItem> GetLinkItems(
+
+		private IEnumerable<LinkItem> GetLinesLinkItems(
 			IEnumerable<Line> lines, Func<Line, Node> lineEndPoint, Func<Link, Node> linkEndPoint)
 		{
 			List<LinkItem> lineItems = new List<LinkItem>();
 			foreach (Line line in lines)
 			{
-				IEnumerable<Link> lineLinks = line.Links.DistinctBy(linkEndPoint);
-				IEnumerable<LinkItem> linkItems = GetLinkItems(lineLinks, linkEndPoint, 1);
-				lineItems.Add(new LinkItem(null, lineEndPoint(line).Name.DisplayName, linkItems));
+				IEnumerable<LinkItem> linkItems = GetLineLinkItems(line, linkEndPoint);
+				LinkItem linkItem = new LinkItem(null, lineEndPoint(line).Name.DisplayName, linkItems);
+
+				lineItems.Add(linkItem);
 			}
 
 			return lineItems;
 		}
 
 
+		private IEnumerable<LinkItem> GetLineLinkItems(Line line, Func<Link, Node> linkEndPoint)
+		{
+			IEnumerable<Link> lineLinks = line.Links.DistinctBy(linkEndPoint);
+			return GetLinkItems(lineLinks, linkEndPoint, 1);
+		}
+
+
 		private IEnumerable<LinkItem> GetLinkItems(
-			IEnumerable<Link> links, Func<Link, Node> endPoint, int level)
+			IEnumerable<Link> links, Func<Link, Node> linkEndPoint, int level)
 		{
 			if (!links.Any())
 			{
@@ -57,23 +68,33 @@ namespace Dependinator.ModelViewing.Links.Private
 			else if (links.Count() < LinksMenuLimit)
 			{
 				return links.Select(link => new LinkItem(
-					link, endPoint(link).Name.DisplayFullName, EmptySubLinks));
+					link, GetLinkText(linkEndPoint(link)), EmptySubLinks));
 			}
 
 			var groups = links
-				.GroupBy(link => GetGroupKey(endPoint(link), level))
+				.GroupBy(link => GetGroupKey(linkEndPoint(link), level))
 				.OrderBy(group => group.Key);
 
-			List<LinkItem> linkItems = GetLinksGroupsItems(groups, endPoint, level);
+			List<LinkItem> linkItems = GetLinksGroupsItems(groups, linkEndPoint, level);
 
 			ReduceHierarchy(linkItems);
 
-			linkItems.Sort(Comparer<LinkItem>.Create(
-				(i1, i2) => i1.Text == MoreText
-					? 1 : i2.Text == MoreText ? -1 : i1.Text.CompareTo(i2.Text)));
+			linkItems.Sort(LinkItemComparer());
 
 			return linkItems;
 		}
+
+
+		private static Comparer<LinkItem> LinkItemComparer()
+		{
+			return Comparer<LinkItem>.Create(CompareLinkItems);
+		}
+
+
+		private static int CompareLinkItems(LinkItem i1, LinkItem i2)
+			=> i1.Text == MoreText 
+			? 1 
+			: i2.Text == MoreText ? -1 : i1.Text.CompareTo(i2.Text);
 
 
 		private static void ReduceHierarchy(ICollection<LinkItem> linkItems)
@@ -142,9 +163,18 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		private static string GetGroupText(string key)
 		{
-			return key.Replace("$", "").Replace("?", "").Replace("*", ".");
+			string[] parts = key.Split(".".ToCharArray());
+			string fullName = string.Join(".", parts
+				.Where(part => !part.StartsWithTxt("$") && !part.StartsWithTxt("?")));
+
+			return NodeName.ToNiceText(fullName);
 		}
 
+
+		private static string GetLinkText(Node node)
+		{
+			return node.Name.DisplayFullNoParametersName;
+		}
 
 		string GetGroupKey(Node node, int level)
 		{

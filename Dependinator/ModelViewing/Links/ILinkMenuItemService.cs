@@ -1,13 +1,16 @@
 using System.Collections.Generic;
-using Dependinator.ModelViewing.Nodes;
 
 
 namespace Dependinator.ModelViewing.Links
 {
 	internal interface ILinkMenuItemService
 	{
-		IEnumerable<LinkItem> GetTargetLinkItems(IEnumerable<Line> lines);
+		IEnumerable<LinkItem> GetSourceLinkItems(Line line);
+
+		IEnumerable<LinkItem> GetTargetLinkItems(Line line);
 
 		IEnumerable<LinkItem> GetSourceLinkItems(IEnumerable<Line> lines);
+
+		IEnumerable<LinkItem> GetTargetLinkItems(IEnumerable<Line> lines);
 	}
 }

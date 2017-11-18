@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
@@ -12,6 +15,8 @@ namespace Dependinator.ModelViewing.Links
 	{
 		private readonly ILineViewModelService lineViewModelService;
 		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
+		private readonly Lazy<ObservableCollection<LinkItem>> sourceLinks;
+		private readonly Lazy<ObservableCollection<LinkItem>> targetLinks;
 
 		private readonly Line line;
 		private Point mouseDownPoint;
@@ -27,6 +32,9 @@ namespace Dependinator.ModelViewing.Links
 
 			UpdateLine();
 			TrackSourceOrTargetChanges();
+
+			sourceLinks = new Lazy<ObservableCollection<LinkItem>>(GetSourceLinkItems);
+			targetLinks = new Lazy<ObservableCollection<LinkItem>>(GetTargetLinkItems);
 		}
 
 
@@ -58,12 +66,31 @@ namespace Dependinator.ModelViewing.Links
 
 		public void UpdateToolTip() => ToolTip = lineViewModelService.GetLineToolTip(line);
 
+		public ObservableCollection<LinkItem> SourceLinks => sourceLinks.Value;
+
+		public ObservableCollection<LinkItem> TargetLinks => targetLinks.Value;
+
 
 		public void ToggleLine()
 		{
 
 		}
 
+
+
+		private ObservableCollection<LinkItem> GetSourceLinkItems()
+		{
+			IEnumerable<LinkItem> items = lineViewModelService.GetSourceLinkItems(line);
+			return new ObservableCollection<LinkItem>(items);
+		}
+
+
+
+		private ObservableCollection<LinkItem> GetTargetLinkItems()
+		{
+			IEnumerable<LinkItem> items = lineViewModelService.GetTargetLinkItems(line);
+			return new ObservableCollection<LinkItem>(items);
+		}
 
 		public void MouseDown(Point screenPoint)
 		{

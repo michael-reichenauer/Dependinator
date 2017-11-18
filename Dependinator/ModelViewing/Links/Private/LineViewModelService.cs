@@ -13,16 +13,34 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		private readonly ILinkSegmentService segmentService;
 		private readonly IGeometryService geometryService;
+		private readonly ILinkMenuItemService linkMenuItemService;
 
 		private readonly Point middleBottom = new Point(0.5, 1);
 		private readonly Point middleTop = new Point(0.5, 0);
 
 		public LineViewModelService(
 			ILinkSegmentService segmentService,
-			IGeometryService geometryService)
+			IGeometryService geometryService,
+			ILinkMenuItemService linkMenuItemService)
 		{
 			this.segmentService = segmentService;
 			this.geometryService = geometryService;
+			this.linkMenuItemService = linkMenuItemService;
+		}
+
+
+
+		public IEnumerable<LinkItem> GetSourceLinkItems(Line line)
+		{
+			IEnumerable<LinkItem> items = linkMenuItemService.GetSourceLinkItems(line);
+			return items;
+		}
+
+
+		public IEnumerable<LinkItem> GetTargetLinkItems(Line line)
+		{
+			IEnumerable<LinkItem> items = linkMenuItemService.GetTargetLinkItems(line);
+			return items;
 		}
 
 
@@ -290,7 +308,9 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		public string GetLineToolTip(Line line) => $"{line.Links.Count} links";
+		public string GetLineToolTip(Line line)
+			//=> $"{line.Links.Count} links";
+			=> $"{line.Source.Name.DisplayFullName} -> {line.Target.Name.DisplayFullName}, {line.Links.Count} links";
 
 
 		private static Point ParentPointToChildPoint(Node parent, Point point)
@@ -372,28 +392,28 @@ namespace Dependinator.ModelViewing.Links.Private
 		//	//}
 
 
-			//public void ZoomOutLinkLine(LinkLine line)
-			//{ 
-			//	IReadOnlyList<Link> links = line.HiddenLinks.ToList();
+		//public void ZoomOutLinkLine(LinkLine line)
+		//{ 
+		//	IReadOnlyList<Link> links = line.HiddenLinks.ToList();
 
-			//	foreach (Link link in links)
-			//	{
-			//		IReadOnlyList<LinkSegment> normalLinkSegments = segmentService.GetNormalLinkSegments(link);
-			//		IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
+		//	foreach (Link link in links)
+		//	{
+		//		IReadOnlyList<LinkSegment> normalLinkSegments = segmentService.GetNormalLinkSegments(link);
+		//		IReadOnlyList<LinkSegment> currentLinkSegments = link.LinkSegments.ToList();
 
-			//		var zoomedSegments = segmentService.GetZoomedOutReplacedSegments(normalLinkSegments, currentLinkSegments, line.Source, line.Target);
+		//		var zoomedSegments = segmentService.GetZoomedOutReplacedSegments(normalLinkSegments, currentLinkSegments, line.Source, line.Target);
 
-			//		LinkSegment zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
-			//		var replacedLines = GetLines(link.Lines, new [] { zoomedInSegment });
-			//		replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
+		//		LinkSegment zoomedInSegment = segmentService.GetZoomedInSegment(zoomedSegments, link);
+		//		var replacedLines = GetLines(link.Lines, new [] { zoomedInSegment });
+		//		replacedLines.ForEach(replacedLine => HideLinkFromLine(replacedLine, link));
 
-			//		zoomedSegments.ForEach(segment => AddDirectLine(segment));
+		//		zoomedSegments.ForEach(segment => AddDirectLine(segment));
 
-			//		var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedSegments);
-			//		link.SetLinkSegments(newSegments);
-			//	}
+		//		var newSegments = segmentService.GetNewLinkSegments(currentLinkSegments, zoomedSegments);
+		//		link.SetLinkSegments(newSegments);
+		//	}
 
-			//	line.Owner.AncestorsAndSelf().Last().UpdateNodeVisibility();
+		//	line.Owner.AncestorsAndSelf().Last().UpdateNodeVisibility();
 		//}
 
 
@@ -569,7 +589,6 @@ namespace Dependinator.ModelViewing.Links.Private
 
 			return arrowWidth;
 		}
-
 
 
 
