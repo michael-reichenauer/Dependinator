@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Dependinator.ModelParsing.Private.SolutionFileParsing;
 using Dependinator.Utils;
 
@@ -51,7 +52,7 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 		{
 			Solution solution = new Solution(filePath);
 
-			IReadOnlyList<Project> projects = solution.Projects;
+			IReadOnlyList<Project> projects = GetSolutionProjects(solution);
 
 			List<AssemblyParser> analyzers = new List<AssemblyParser>();
 
@@ -72,6 +73,40 @@ namespace Dependinator.ModelParsing.Private.MonoCecilReflection.Private
 			}
 
 			return analyzers;
+		}
+
+
+		private static IReadOnlyList<Project> GetSolutionProjects(Solution solution)
+		{
+			List<Project> projects = new List<Project>();
+
+			foreach (Project project in solution.Projects)
+			{
+				if (IsTestProject(solution, project))
+				{
+					continue;
+				}
+
+				projects.Add(project);
+			}
+
+			return projects;
+		}
+
+
+		private static bool IsTestProject(Solution solution, Project project)
+		{
+			if (project.ProjectName.EndsWith("Test"))
+			{
+				string name = project.ProjectName.Substring(0, project.ProjectName.Length - 4);
+
+				if (solution.Projects.Any(p => p.ProjectName == name))
+				{
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 
