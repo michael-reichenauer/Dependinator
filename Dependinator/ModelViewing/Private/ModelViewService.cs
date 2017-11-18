@@ -1,5 +1,4 @@
 ﻿using System.Threading.Tasks;
-using System.Windows;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing.Nodes;

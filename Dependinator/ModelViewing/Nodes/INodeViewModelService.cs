@@ -14,8 +14,7 @@ namespace Dependinator.ModelViewing.Nodes
 		Brush GetBrushFromHex(string hexColor);
 		string GetHexColorFromBrush(Brush brush);
 		Brush GetRectangleHighlightBrush(Brush brush);
-		void SetLayout(NodeViewModel node);
-		void ResetLayout(NodeViewModel nodeViewMode);
+
 		int GetPointIndex(Node node, Point point);
 		void MovePoint(Node node, int index, Point point, Point previousPoint);
 		Brush GetNodeBrush(Node node);

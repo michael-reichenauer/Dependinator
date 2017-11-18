@@ -109,6 +109,7 @@ namespace Dependinator.ModelViewing.Private
 				Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
 				UpdateLines(Root);
 				recentModelsService.AddModelPaths(modelMetadata.ModelFilePath);
+				modelNodeService.SetLayoutDone();
 			}
 
 			GC.Collect();
@@ -195,7 +196,7 @@ namespace Dependinator.ModelViewing.Private
 				modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
 
 			modelNodeService.RemoveObsoleteNodesAndLinks(operationId);
-
+			modelNodeService.SetLayoutDone();
 			GC.Collect();
 		}
 
@@ -212,6 +213,7 @@ namespace Dependinator.ModelViewing.Private
 				.ContinueWith(_ => operation.Queue.CompleteAdding());
 
 			await Task.WhenAll(showTask, parseTask);
+
 
 			t.Log("Shown all");
 			return operation.Id;

@@ -13,6 +13,7 @@ namespace Dependinator.ModelViewing.Private
 	internal class ModelNodeService : IModelNodeService
 	{
 		private readonly INodeViewModelService nodeViewModelService;
+		private readonly INodeLayoutService layoutService;
 		private readonly IModelLinkService modelLinkService;
 		private readonly Model model;
 
@@ -20,11 +21,13 @@ namespace Dependinator.ModelViewing.Private
 		public ModelNodeService(
 			Model model,
 			IModelLinkService modelLinkService,
-			INodeViewModelService nodeViewModelService)
+			INodeViewModelService nodeViewModelService,
+			INodeLayoutService layoutService)
 		{
 			this.model = model;
 			this.modelLinkService = modelLinkService;
 			this.nodeViewModelService = nodeViewModelService;
+			this.layoutService = layoutService;
 		}
 
 
@@ -75,6 +78,11 @@ namespace Dependinator.ModelViewing.Private
 			t.Log($"{nodes.Count} nodes");
 		}
 
+
+		public void SetLayoutDone()
+		{
+			model.Root.Descendents().ForEach(node => node.IsLayoutCompleted = true);
+		}
 
 
 		public void RemoveAll()
@@ -209,7 +217,7 @@ namespace Dependinator.ModelViewing.Private
 		{
 			try
 			{
-				nodeViewModelService.SetLayout(node.ViewModel);
+				layoutService.SetLayout(node.ViewModel);
 
 				ItemsCanvas parentCanvas = parentNode.ItemsCanvas;
 
