@@ -170,6 +170,11 @@ namespace Dependinator.ModelViewing.Links.Private
 			string fullName = string.Join(".", parts
 				.Where(part => !part.StartsWithTxt("$") && !part.StartsWithTxt("?")));
 
+			if (string.IsNullOrEmpty(fullName))
+			{
+				fullName = key;
+			}
+
 			return NodeName.ToNiceText(fullName);
 		}
 
