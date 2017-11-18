@@ -10,7 +10,7 @@ namespace Dependinator.ModelViewing.Private.Items
 {
 	internal class ItemsCanvas : Notifyable, IItemsSourceArea
 	{
-		private static readonly double DefaultScaleFactor = 1.0 / 7.0;
+		public static readonly double DefaultScaleFactor = 1.0 / 7.0;
 		private readonly IItemsCanvasBounds owner;
 		private readonly ItemsSource itemsSource;
 		private readonly List<ItemsCanvas> canvasChildren = new List<ItemsCanvas>();
@@ -204,7 +204,7 @@ namespace Dependinator.ModelViewing.Private.Items
 
 
 
-		private void UpdateScale()
+		public void UpdateScale()
 		{
 			if (!IsShowing || !CanShow)
 			{

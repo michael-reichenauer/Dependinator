@@ -6,6 +6,7 @@ using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private;
+using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 
 
@@ -19,18 +20,19 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private static readonly Size DefaultSize = new Size(200, 100);
 		//private static readonly int RowLength = 4;
 		//private static readonly int Padding = 100;
-		private static readonly double XMargin = 150;
-		private static readonly double YMargin = 110;
+		//private static readonly double XMargin = 150;
+		//private static readonly double YMargin = 110;
 
-		private Layout rootLayout = new Layout(0, new Size(1, 1), 1, 100, 1);
+	//	private Layout rootLayout = new Layout(0, 1, 100, 2, 150, 110);
 
 		private readonly Layout[] layouts =
 		{
-			new Layout(4, new Size(2.5, 2.5), 2, 100, 1),
-			new Layout(9, new Size(1.5, 1.5), 3, 100, 1),
-			new Layout(int.MaxValue, new Size(1, 1), 4, 100, 1),
+			new Layout(1, 1, 50, 5, 40, 20),
+			new Layout(2, 1, 50, 2, 100, 50),
+			new Layout(4, 2, 50, 2, 100, 50),
+			new Layout(int.MaxValue, 4, 100, 1, 150, 120),
 		};
-		
+
 
 		private static readonly IEnumerable<LinkItem> EmptySubLinks = Enumerable.Empty<LinkItem>();
 
@@ -205,7 +207,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			int i = 0;
 			int count = parentNode.Children.Count;
 
-			Layout layout = parentNode.IsRoot ? rootLayout : layouts.First(l => count <= l.Count);
+			Layout layout = layouts.First(l => count <= l.Count);
 
 
 			foreach (Node childNode in parentNode.Children)
@@ -218,17 +220,32 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 					Size parentSize = parentNode.IsRoot ? DefaultSize : parentNode.ViewModel.ItemBounds.Size;
 
-					double scaleFactor = parentNode.ItemsCanvas.ScaleFactor;
 
-					Size size = new Size(
-						layout.Size.Width * parentSize.Width ,
-						layout.Size.Height * parentSize.Height );
+					double scaleFactor = layout.ScaleFactor * ItemsCanvas.DefaultScaleFactor;
 
-					double x = (siblingIndex % layout.RowLength) * (size.Width + layout.Padding) + XMargin;
-					double y = (siblingIndex / layout.RowLength) * (size.Height + layout.Padding) + YMargin;
+
+					int rowLength = layout.RowLength;
+					int padding = layout.Padding;
+					double xMargin = layout.XMargin;
+					double yMargin = layout.YMargin;
+					Size layoutSize = layout.Size;
+
+					if (!scaleFactor.Same(parentNode.ItemsCanvas.ScaleFactor))
+					{
+						parentNode.ItemsCanvas.ScaleFactor = scaleFactor;
+						parentNode.ItemsCanvas.UpdateScale();
+					}
+
+					Size newSize = DefaultSize;
+					//Size newSize = new Size(
+					//	layoutSize.Width * parentSize.Width,
+					//	layoutSize.Height * parentSize.Height);
+
+					double x = (siblingIndex % rowLength) * (newSize.Width + padding) + xMargin;
+					double y = (siblingIndex / rowLength) * (newSize.Height + padding) + yMargin;
 					Point location = new Point(x, y);
 
-					Rect newBounds = new Rect(location, size);
+					Rect newBounds = new Rect(location, newSize);
 
 					Rect currentBounds = childNode.ViewModel.ItemBounds;
 
@@ -380,7 +397,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 		private static bool IsParentShowing(NodeViewModel nodeViewMode)
 		{
-			return nodeViewMode.Node.IsRoot 
+			return nodeViewMode.Node.IsRoot
 				|| nodeViewMode.Node.Parent.ViewModel.IsShowing;
 		}
 
@@ -404,7 +421,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			IEnumerable<Line> lines, Func<Line, Node> lineEndPoint, Func<Link, Node> linkEndPoint)
 		{
 			Log.Debug($"Get items ...");
-			
+
 			List<LinkItem> lineItems = new List<LinkItem>();
 			foreach (Line line in lines)
 			{
@@ -529,15 +546,24 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			public int RowLength { get; }
 			public int Padding { get; }
 			public double ScaleFactor { get; }
+			public double XMargin { get; }
+			public double YMargin { get; }
 
 
-			public Layout(int count, Size size, int rowLength, int padding, double scaleFactor)
+			public Layout(
+				int count,
+				int rowLength,
+				int padding,
+				double scaleFactor,
+				double xMargin,
+				double yMargin)
 			{
 				Count = count;
-				Size = size;
 				RowLength = rowLength;
 				Padding = padding;
 				ScaleFactor = scaleFactor;
+				XMargin = xMargin;
+				YMargin = yMargin;
 			}
 		}
 	}

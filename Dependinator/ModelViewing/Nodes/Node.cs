@@ -37,7 +37,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public Node Parent { get; private set; }
 		public Node Root { get; private set; }
-
+		public bool CanShowChildren => IsRoot || ViewModel.CanShowChildren;
 
 		public IReadOnlyList<Node> Children => children;
 		public ItemsCanvas ItemsCanvas { get; set; }

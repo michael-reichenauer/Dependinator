@@ -44,7 +44,9 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public override bool CanShow => ItemScale * ItemWidth > 40;
+		public override bool CanShow => ItemScale * ItemWidth > 20 && Node.Parent.CanShowChildren;
+
+		public bool CanShowChildren => ItemScale * ItemWidth > 40 * 7;
 
 		public Node Node { get; }
 
