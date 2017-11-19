@@ -1,12 +1,15 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelHandling.Core;
 using Dependinator.ModelHandling.Private;
 using Dependinator.ModelViewing.Links;
 using Dependinator.Utils;
+using Dependinator.Utils.UI;
 
 
 namespace Dependinator.ModelViewing.Nodes.Private
@@ -16,16 +19,19 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private readonly IThemeService themeService;
 		private readonly IModelLinkService modelService;
 		private readonly ILinkMenuItemService linkMenuItemService;
+		private readonly IGeometryService geometryService;
 
 
 		public NodeViewModelService(
 			IThemeService themeService,
 			IModelLinkService modelService,
-			ILinkMenuItemService linkMenuItemService)
+			ILinkMenuItemService linkMenuItemService,
+			IGeometryService geometryService)
 		{
 			this.themeService = themeService;
 			this.modelService = modelService;
 			this.linkMenuItemService = linkMenuItemService;
+			this.geometryService = geometryService;
 		}
 
 
@@ -97,40 +103,74 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 		public int GetPointIndex(Node node, Point point)
 		{
+			// Sometimes the point is a little bit off, lets adjust the point to be on the border
+			Point pointInPerimeter = geometryService.GetPointInPerimeter(node.Bounds, point);
+
+			Vector vector = point - pointInPerimeter;
+			//Log.Debug($"Dist {vector.Length}, vector: {vector.TS()}");
+
+			point = pointInPerimeter;
+
 			double scale = node.ViewModel.ItemScale;
-			double dist = 15 / scale;
+			double dist = Math.Max(40 / scale, 40);
 			NodeViewModel viewModel = node.ViewModel;
 
-			if ((point - viewModel.ItemBounds.Location).Length < dist)
+			double ltf = (point - viewModel.ItemBounds.Location).Length;
+			double ltr = (point - new Point(
+				viewModel.ItemLeft + viewModel.ItemWidth, viewModel.ItemTop)).Length;
+
+			double lbr = (point - new Point(
+				viewModel.ItemLeft + viewModel.ItemWidth,
+				viewModel.ItemTop + viewModel.ItemHeight)).Length;
+			double lbl = (point - new Point(
+				viewModel.ItemLeft, viewModel.ItemTop + viewModel.ItemHeight)).Length;
+
+			
+			//Log.Debug($"{ltf},{ltr}, {lbr},{lbl}");
+			int index = 0;
+			double minDist = double.MaxValue;
+
+			if (ltf < minDist)
 			{
 				// Move left,top
-				return 1;
+				index = 1;
+				minDist = ltf;
+				Mouse.OverrideCursor = Cursors.SizeNWSE;
 			}
-			else if ((point - new Point(
-				viewModel.ItemLeft + viewModel.ItemWidth,
-				viewModel.ItemTop)).Length < dist)
+
+			if (ltr < minDist)
 			{
 				// Move right,top
-				return 2;
+				index = 2;
+				minDist = ltr;
+				Mouse.OverrideCursor = Cursors.SizeNESW;
 			}
-			else if ((point - new Point(
-				viewModel.ItemLeft + viewModel.ItemWidth,
-				viewModel.ItemTop + viewModel.ItemHeight)).Length < dist)
+
+			if (lbr < minDist)
 			{
 				// Move right,bottom
-				return 3;
+				index = 3;
+				minDist = lbr;
+				Mouse.OverrideCursor = Cursors.SizeNWSE;
 			}
-			else if ((point - new Point(
-				viewModel.ItemLeft,
-				viewModel.ItemTop + viewModel.ItemHeight)).Length < dist)
+		
+			if (lbl < minDist)
 			{
 				// Move left,bottom
-				return 4;
+				index = 4;
+				minDist = lbl;
+				Mouse.OverrideCursor = Cursors.SizeNESW;
+			}
+			
+			// Log.Warn("Move node");
+
+			if (minDist < 100)
+			{
+				return index;
 			}
 
-			Log.Debug("Move node");
-
 			// Move node
+			Mouse.OverrideCursor = Cursors.Hand;
 			return 0;
 		}
 

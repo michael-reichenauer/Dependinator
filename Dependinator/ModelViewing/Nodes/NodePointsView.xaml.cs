@@ -20,14 +20,14 @@ namespace Dependinator.ModelViewing.Nodes
 
 			dragUiElement = new DragUiElement(
 				MouseOverBorder,
-				(p, o) => ViewModel?.MouseMove(p),
+				(p, o) => ViewModel?.MouseMove(p, false),
 				() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
 				p => ViewModel?.MouseDown(p),
 				p => ViewModel?.MouseUp(p));
 		}
 
 		private void UIElement_OnMouseEnter(object sender, MouseEventArgs e) =>
-			ViewModel?.OnMouseEnter();
+			ViewModel?.OnMouseEnter(false);
 
 		private void UIElement_OnMouseLeave(object sender, MouseEventArgs e) =>
 			ViewModel?.OnMouseLeave();

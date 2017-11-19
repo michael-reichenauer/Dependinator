@@ -158,13 +158,19 @@ namespace Dependinator.ModelViewing.Nodes
 		//$"Items: {ItemOwnerCanvas.CanvasRoot.AllItemsCount()}, Shown {ItemOwnerCanvas.CanvasRoot.ShownItemsCount()}";
 
 
-		public void OnMouseEnter()
+		public void OnMouseEnter(bool isTitle)
 		{
 			mouseOverDelay.Delay(MouseEnterDelay, _ =>
 			{
 				if (ModelViewModel.IsControlling)
 				{
 					Mouse.OverrideCursor = Cursors.Hand;
+					if (!isTitle)
+					{
+						Point screenPoint = Mouse.GetPosition(Application.Current.MainWindow);
+						Point point = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
+						nodeViewModelService.GetPointIndex(Node, point);
+					}
 				}
 
 				if (IsResizable())
@@ -198,7 +204,7 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public void MouseMove(Point screenPoint)
+		public void MouseMove(Point screenPoint, bool isTitle)
 		{
 			Point point = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
 
@@ -206,7 +212,8 @@ namespace Dependinator.ModelViewing.Nodes
 			{
 				// First move event, lets start a move by  getting the index of point to move.
 				// THis might create a new point if there is no existing point near the mouse down point
-				currentPointIndex = nodeViewModelService.GetPointIndex(Node, mouseDownPoint);
+				currentPointIndex = isTitle ? 0 :
+					nodeViewModelService.GetPointIndex(Node, mouseDownPoint);
 				if (currentPointIndex == -1)
 				{
 					// Point not close enough to the line

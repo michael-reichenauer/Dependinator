@@ -69,7 +69,7 @@
 			Name="MouseOverBorder"
 			Margin="0"
 			Stroke="Transparent"
-			StrokeThickness="10"
+			StrokeThickness="5"
 			Stretch="Fill"
 			MouseEnter="UIElement_OnMouseEnter"
 			MouseLeave="UIElement_OnMouseLeave">
@@ -138,8 +138,9 @@
 						Command="{Binding HideNodeCommand}">
 						<MenuItem.Icon>
 							<Border>
-								<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE882;"
-													 Foreground="Gray"/>
+								<TextBlock 
+									Style="{DynamicResource MenuIconStyle}" Text="&#xE882;"
+									Foreground="Gray"/>
 							</Border>
 						</MenuItem.Icon>
 					</MenuItem>

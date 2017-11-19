@@ -5,7 +5,6 @@ using System.Windows.Input;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
-using Dependinator.ModelHandling.Private;
 using Dependinator.ModelHandling.Private.Items;
 using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
@@ -18,6 +17,7 @@ namespace Dependinator.ModelViewing
 	internal class ModelViewModel : ViewModel
 	{
 		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(100);
+		public static readonly TimeSpan MouseExitDelay = TimeSpan.FromMilliseconds(10);
 
 		public static bool IsControlling => Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
 
