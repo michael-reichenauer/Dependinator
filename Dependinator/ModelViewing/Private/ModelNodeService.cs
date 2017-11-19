@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using Dependinator.Common;
-using Dependinator.ModelParsing;
+using Dependinator.ModelHandling;
+using Dependinator.ModelHandling.Core;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
@@ -125,7 +126,7 @@ namespace Dependinator.ModelViewing.Private
 			Node node = new Node(name)
 			{
 				Stamp = stamp,
-				NodeType = new NodeType(modelNode.NodeType),
+				NodeType = modelNode.NodeType,
 				Bounds = modelNode.Bounds,
 				ScaleFactor = modelNode.ItemsScaleFactor,
 				Offset = modelNode.ItemsOffset,
@@ -199,11 +200,11 @@ namespace Dependinator.ModelViewing.Private
 
 		private void UpdateNodeTypeIfNeeded(Node node, ModelNode modelNode)
 		{
-			if (!node.NodeType.IsSame(modelNode.NodeType))
+			if (node.NodeType != modelNode.NodeType)
 			{
 				Log.Warn($"Node type has changed from {node} to {modelNode.NodeType}");
 
-				node.NodeType = new NodeType(modelNode.NodeType);
+				node.NodeType = modelNode.NodeType;
 
 				RemoveNodeFromParentCanvas(node);
 				CreateNodeViewModel(node);

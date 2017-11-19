@@ -1,5 +1,6 @@
 using System.Collections.Generic;
-using Dependinator.ModelParsing;
+using Dependinator.ModelHandling;
+using Dependinator.ModelHandling.Core;
 using Dependinator.ModelViewing.Links;
 
 

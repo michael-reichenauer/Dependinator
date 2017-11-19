@@ -143,28 +143,32 @@
     <Compile Include="Common\ModelMetadataFolders\Private\IOpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
-    <Compile Include="ModelParsing\ModelLine.cs" />
-    <Compile Include="ModelParsing\Private\MonoCecilReflection\IReflectionService.cs" />
-    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\IgnoredTypes.cs" />
-    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\LinkHandler.cs" />
-    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\MemberParser.cs" />
-    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\MethodBodyNode.cs" />
-    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\MethodParser.cs" />
-    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\ModuleParser.cs" />
-    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\ParserFactoryService.cs" />
-    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\AssemblyParser.cs" />
-    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\IParserFactoryService.cs" />
-    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\Name.cs" />
-    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\Reference.cs" />
-    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\ReflectionService.cs" />
-    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\Sender.cs" />
-    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\TypeInfo.cs" />
-    <Compile Include="ModelParsing\Private\MonoCecilReflection\Private\TypeParser.cs" />
-    <Compile Include="ModelParsing\Private\SolutionFileParsing\Project.cs" />
-    <Compile Include="ModelParsing\Private\SolutionFileParsing\Private\ProjectInSolution.cs" />
-    <Compile Include="ModelParsing\Private\SolutionFileParsing\Private\ReflectionExtensions.cs" />
-    <Compile Include="ModelParsing\Private\SolutionFileParsing\Solution.cs" />
-    <Compile Include="ModelParsing\Private\SolutionFileParsing\Private\SolutionParser.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\DataFileParsing\JsonTypes.cs" />
+    <Compile Include="ModelHandling\ModelPersistence\IPersistenceService.cs" />
+    <Compile Include="ModelHandling\Core\ModelLine.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\MonoCecilReflection\IReflectionService.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\MonoCecilReflection\Private\IgnoredTypes.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\MonoCecilReflection\Private\LinkHandler.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\MonoCecilReflection\Private\MemberParser.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\MonoCecilReflection\Private\MethodBodyNode.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\MonoCecilReflection\Private\MethodParser.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\MonoCecilReflection\Private\ModuleParser.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\MonoCecilReflection\Private\ParserFactoryService.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\MonoCecilReflection\Private\AssemblyParser.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\MonoCecilReflection\Private\IParserFactoryService.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\MonoCecilReflection\Private\Name.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\MonoCecilReflection\Private\Reference.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\MonoCecilReflection\Private\ReflectionService.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\MonoCecilReflection\Private\Sender.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\MonoCecilReflection\Private\TypeInfo.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\MonoCecilReflection\Private\TypeParser.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\SolutionFileParsing\Project.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\SolutionFileParsing\Private\ProjectInSolution.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\SolutionFileParsing\Private\ReflectionExtensions.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\SolutionFileParsing\Solution.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\SolutionFileParsing\Private\SolutionParser.cs" />
+    <Compile Include="ModelHandling\ModelPersistence\Private\Serializing\JsonTypes.cs" />
+    <Compile Include="ModelHandling\ModelPersistence\Private\PersistenceService.cs" />
     <Compile Include="ModelViewing\Nodes\INodeLayoutService.cs" />
     <Compile Include="ModelViewing\Links\LinkItem.cs" />
     <Compile Include="ModelViewing\Links\ILinkMenuItemService.cs" />
@@ -183,10 +187,10 @@
     <Compile Include="MainWindowViews\SearchFilter.xaml.cs">
       <DependentUpon>SearchFilter.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelParsing\ModelItem.cs" />
-    <Compile Include="ModelParsing\ModelLink.cs" />
-    <Compile Include="ModelParsing\ModelItemsCallback.cs" />
-    <Compile Include="ModelParsing\Private\Convert.cs" />
+    <Compile Include="ModelHandling\Core\ModelItem.cs" />
+    <Compile Include="ModelHandling\Core\ModelLink.cs" />
+    <Compile Include="ModelHandling\Core\ModelItemsCallback.cs" />
+    <Compile Include="ModelHandling\ModelPersistence\Private\Serializing\Convert.cs" />
     <Compile Include="ModelViewing\Nodes\NodePointsView.xaml.cs">
       <DependentUpon>NodePointsView.xaml</DependentUpon>
     </Compile>
@@ -222,7 +226,7 @@
     <Compile Include="ModelViewing\Private\ModelService.cs" />
     <Compile Include="ModelViewing\Private\ModelNodeService.cs" />
     <Compile Include="ModelViewing\Private\Model.cs" />
-    <Compile Include="ModelParsing\ModelNode.cs" />
+    <Compile Include="ModelHandling\Core\ModelNode.cs" />
     <Compile Include="ModelViewing\Nodes\NodeId.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\TypeView.xaml.cs">
@@ -295,17 +299,16 @@
       <DependentUpon>NamespaceView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\CompositeNodeViewModel.cs" />
-    <Compile Include="ModelParsing\Private\ParserService.cs" />
-    <Compile Include="ModelParsing\IParserService.cs" />
+    <Compile Include="ModelHandling\ModelParsing\Private\ParserService.cs" />
+    <Compile Include="ModelHandling\ModelParsing\IParserService.cs" />
     <Compile Include="ModelViewing\Links\LinkLineViewModel.cs" />
     <Compile Include="ModelViewing\Private\Items\ItemViewModel.cs" />
     <Compile Include="ModelViewing\Private\Items\IItem.cs" />
     <Compile Include="ModelViewing\Private\IModelViewService.cs" />
     <Compile Include="ModelViewing\Private\ModelViewService.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeViewModelService.cs" />
-    <Compile Include="ModelParsing\JsonTypes.cs" />
-    <Compile Include="ModelParsing\Private\Serializing\DataSerializer.cs" />
-    <Compile Include="ModelParsing\Private\Serializing\IDataSerializer.cs" />
+    <Compile Include="ModelHandling\ModelPersistence\Private\Serializing\DataSerializer.cs" />
+    <Compile Include="ModelHandling\ModelPersistence\Private\Serializing\IDataSerializer.cs" />
     <Compile Include="Utils\CollectionExtensions.cs" />
     <Compile Include="Utils\ExceptionAsyncExtensions.cs" />
     <Compile Include="Utils\ExceptionExtensions.cs" />
@@ -592,6 +595,7 @@
   <ItemGroup>
     <EmbeddedResource Include="Dependencies\System.ValueTuple.dll" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>mkdir "$(ProjectDir)\Dependencies" 2&gt; NUL

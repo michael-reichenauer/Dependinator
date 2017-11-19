@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using Dependinator.ModelParsing;
+using Dependinator.ModelHandling.Core;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
 
@@ -32,14 +32,14 @@ namespace Dependinator.ModelViewing.Private
 			links.Select(link => new ModelLink(
 				link.Source.Name.FullName,
 				link.Target.Name.FullName,
-				null));
-		
+				link.Target.NodeType));
 
-		private static ModelNode ToModelNode(Node node) => 
+
+		private static ModelNode ToModelNode(Node node) =>
 			new ModelNode(
 				node.Name.FullName,
 				node.Parent.Name.FullName,
-				node.NodeType.AsString(),
+				node.NodeType,
 				node.ViewModel?.ItemBounds ?? node.Bounds,
 				node.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.ScaleFactor,
 				node.ViewModel?.ItemsViewModel?.ItemsCanvas?.Offset ?? node.Offset,

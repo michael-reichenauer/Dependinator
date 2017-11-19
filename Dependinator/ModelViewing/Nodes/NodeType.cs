@@ -1,28 +1,30 @@
-using Dependinator.ModelParsing;
+using Dependinator.ModelHandling.ModelParsing;
+using Dependinator.ModelHandling.ModelPersistence;
+using Dependinator.ModelHandling.ModelPersistence.Private.Serializing;
 using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.Nodes
 {
-	internal class NodeType : Equatable<NodeType>
-	{
-		public static readonly NodeType NameSpace = new NodeType(JsonTypes.NodeType.NameSpace);
-		public static readonly NodeType Type = new NodeType(JsonTypes.NodeType.Type);
-		public static readonly NodeType Member = new NodeType(JsonTypes.NodeType.Member);
+	//internal class NodeType : Equatable<NodeType>
+	//{
+	//	public static readonly NodeType NameSpace = new NodeType(JsonTypes.NodeType.NameSpace);
+	//	public static readonly NodeType Type = new NodeType(JsonTypes.NodeType.Type);
+	//	public static readonly NodeType Member = new NodeType(JsonTypes.NodeType.Member);
 
-		private readonly string typeName;
-
-
-		public NodeType(string typeName)
-		{
-			this.typeName = typeName;
-			IsEqualWhenSame(typeName);
-		}
+	//	private readonly string typeName;
 
 
-		public bool IsSame(string nodeTypeText) => nodeTypeText == typeName;
+	//	public NodeType(string typeName)
+	//	{
+	//		this.typeName = typeName;
+	//		IsEqualWhenSame(typeName);
+	//	}
 
-		public string AsString() => typeName;
 
-		public override string ToString() => typeName;
-	}
+	//	public bool IsSame(string nodeTypeText) => nodeTypeText == typeName;
+
+	//	public string AsString() => typeName;
+
+	//	public override string ToString() => typeName;
+	//}
 }

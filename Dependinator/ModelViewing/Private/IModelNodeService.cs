@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Dependinator.Common;
-using Dependinator.ModelParsing;
+using Dependinator.ModelHandling;
+using Dependinator.ModelHandling.Core;
 
 
 namespace Dependinator.ModelViewing.Private

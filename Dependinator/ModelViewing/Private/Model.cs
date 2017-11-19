@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Dependinator.Common;
+using Dependinator.ModelHandling.Core;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;

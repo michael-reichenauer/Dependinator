@@ -8,7 +8,10 @@ using System.Windows.Threading;
 using Dependinator.Common;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
-using Dependinator.ModelParsing;
+using Dependinator.ModelHandling;
+using Dependinator.ModelHandling.Core;
+using Dependinator.ModelHandling.ModelParsing;
+using Dependinator.ModelHandling.ModelPersistence;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Open;
 using Dependinator.ModelViewing.Private.Items;
@@ -24,6 +27,7 @@ namespace Dependinator.ModelViewing.Private
 		private static readonly int BatchSize = 100;
 
 		private readonly IParserService parserService;
+		private readonly IPersistenceService persistenceService;
 		private readonly IModelNodeService modelNodeService;
 		private readonly IModelLinkService modelLinkService;
 		private readonly IRecentModelsService recentModelsService;
@@ -39,6 +43,7 @@ namespace Dependinator.ModelViewing.Private
 
 		public ModelService(
 			IParserService parserService,
+			IPersistenceService persistenceService,
 			IModelNodeService modelNodeService,
 			IModelLinkService modelLinkService,
 			Func<OpenModelViewModel> openModelViewModelProvider,
@@ -48,6 +53,7 @@ namespace Dependinator.ModelViewing.Private
 			IMessage message)
 		{
 			this.parserService = parserService;
+			this.persistenceService = persistenceService;
 			this.modelNodeService = modelNodeService;
 			this.modelLinkService = modelLinkService;
 			this.openModelViewModelProvider = openModelViewModelProvider;
@@ -74,7 +80,7 @@ namespace Dependinator.ModelViewing.Private
 
 			if (File.Exists(dataFilePath))
 			{
-				await ShowModelAsync(operation => parserService.TryDeserialize(
+				await ShowModelAsync(operation => persistenceService.TryDeserialize(
 					dataFilePath, items => UpdateDataItems(items, operation)));
 			}
 			else
@@ -161,7 +167,7 @@ namespace Dependinator.ModelViewing.Private
 			t.Log($"Saving {items} items");
 
 			string dataFilePath = GetDataFilePath();
-			await parserService.SerializeAsync(items, dataFilePath);
+			await persistenceService.SerializeAsync(items, dataFilePath);
 			t.Log($"Saved {items} items");
 		}
 
@@ -184,7 +190,7 @@ namespace Dependinator.ModelViewing.Private
 
 			string dataFilePath = GetDataFilePath();
 
-			parserService.Serialize(items, dataFilePath);
+			persistenceService.Serialize(items, dataFilePath);
 			t.Log($"Saved {items.Count} items");
 		}
 
