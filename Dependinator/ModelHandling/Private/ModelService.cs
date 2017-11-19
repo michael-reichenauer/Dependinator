@@ -37,7 +37,7 @@ namespace Dependinator.ModelHandling.Private
 
 		private int currentId;
 		private bool isShowingOpenModel = false;
-
+		private bool isWorking = false;
 
 		public ModelService(
 			IParserService parserService,
@@ -73,6 +73,7 @@ namespace Dependinator.ModelHandling.Private
 
 		public async Task LoadAsync()
 		{
+			isWorking = true;
 			Log.Debug($"Metadata model: {modelMetadata.ModelFilePath} {DateTime.Now}");
 			string dataFilePath = GetDataFilePath();
 
@@ -121,6 +122,7 @@ namespace Dependinator.ModelHandling.Private
 			}
 
 			GC.Collect();
+			isWorking = false;
 		}
 
 
@@ -154,6 +156,11 @@ namespace Dependinator.ModelHandling.Private
 
 		public async Task SaveAsync()
 		{
+			if (isWorking)
+			{
+				return;
+			}
+
 			if (isShowingOpenModel)
 			{
 				// Nothing to save
@@ -175,6 +182,10 @@ namespace Dependinator.ModelHandling.Private
 
 		public void Save()
 		{
+			if (isWorking)
+			{
+				return;
+			}
 
 			if (isShowingOpenModel)
 			{
@@ -211,13 +222,14 @@ namespace Dependinator.ModelHandling.Private
 				return;
 			}
 
-
+			isWorking = true;
 			int operationId = await ShowModelAsync(operation => parserService.ParseAsync(
 				modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
 
 			modelNodeService.RemoveObsoleteNodesAndLinks(operationId);
 			modelNodeService.SetLayoutDone();
 			GC.Collect();
+			isWorking = false;
 		}
 
 
