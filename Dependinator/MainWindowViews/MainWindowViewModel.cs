@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Dependinator.Common;
 using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
@@ -11,6 +12,7 @@ using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing;
 using Dependinator.ModelViewing.Open;
+using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
@@ -26,6 +28,7 @@ namespace Dependinator.MainWindowViews
 		private readonly IMainWindowService mainWindowService;
 		private readonly IOpenModelService openModelService;
 		private readonly IRecentModelsService recentModelsService;
+		private readonly IModelViewService modelViewService;
 		private readonly ModelMetadata modelMetadata;
 		private readonly IMessage message;
 
@@ -38,7 +41,8 @@ namespace Dependinator.MainWindowViews
 			IMainWindowService mainWindowService,
 			ModelViewModel modelViewModel,
 			IOpenModelService openModelService,
-			IRecentModelsService recentModelsService)
+			IRecentModelsService recentModelsService,
+			IModelViewService modelViewService)
 		{
 			this.modelMetadata = modelMetadata;
 			this.message = message;
@@ -47,6 +51,7 @@ namespace Dependinator.MainWindowViews
 			this.mainWindowService = mainWindowService;
 			this.openModelService = openModelService;
 			this.recentModelsService = recentModelsService;
+			this.modelViewService = modelViewService;
 
 			ModelViewModel = modelViewModel;
 
@@ -103,14 +108,27 @@ namespace Dependinator.MainWindowViews
 
 		public IReadOnlyList<FileItem> ResentModels => GetRecentFiles();
 
+		public IReadOnlyList<HiddenNodeItem> HiddenNodes => GetHiddenNodes();
+
+
+
+		private IReadOnlyList<HiddenNodeItem> GetHiddenNodes()
+		{
+			return modelViewService.GetHiddenNodeNames()
+				.Select(name => new HiddenNodeItem(name, modelViewService.ShowHiddenNode))
+				.ToList();
+		}
+
+
 		public bool HasResent => recentModelsService.GetModelPaths().Any();
+		public bool HasHiddenNodes => modelViewService.GetHiddenNodeNames().Any();
 
 
 		private IReadOnlyList<FileItem> GetRecentFiles()
 		{
 			IReadOnlyList<string> filesPaths = recentModelsService.GetModelPaths();
 
-			var fileItems = new List<FileItem>();
+			List<FileItem> fileItems = new List<FileItem>();
 			foreach (string filePath in filesPaths)
 			{
 				string name = Path.GetFileName(filePath);
@@ -153,6 +171,7 @@ namespace Dependinator.MainWindowViews
 		public Command ClearFilterCommand => Command(ClearFilter);
 
 		public Command SearchCommand => Command(Search);
+
 
 
 		public async Task LoadAsync()

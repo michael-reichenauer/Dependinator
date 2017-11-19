@@ -43,6 +43,7 @@ namespace Dependinator.ModelViewing.Private
 				node.ViewModel?.ItemBounds ?? node.Bounds,
 				node.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.ScaleFactor,
 				node.ViewModel?.ItemsViewModel?.ItemsCanvas?.Offset ?? node.Offset,
-				node.ViewModel?.Color ?? node.Color);
+				node.ViewModel?.Color ?? node.Color,
+				node.IsHidden ? Node.Hidden : null);
 	}
 }

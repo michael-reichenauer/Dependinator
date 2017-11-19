@@ -171,6 +171,7 @@
     <Compile Include="ModelViewing\Links\Private\LinkMenuItemService.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeLayoutService.cs" />
     <Compile Include="ModelViewing\Open\FileItem.cs" />
+    <Compile Include="ModelViewing\Open\HiddenNodeItem.cs" />
     <Compile Include="ModelViewing\Open\OpenModelView.xaml.cs">
       <DependentUpon>OpenModelView.xaml</DependentUpon>
     </Compile>

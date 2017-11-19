@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Windows;
 using Dependinator.Common;
 using Dependinator.ModelViewing.Links;
-using Dependinator.ModelViewing.Private;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 using Point = System.Windows.Point;
@@ -11,6 +10,8 @@ namespace Dependinator.ModelViewing.Nodes
 {
 	internal class Node : Equatable<Node>
 	{
+		public static readonly string Hidden = "hidden";
+
 		private readonly List<Node> children = new List<Node>();
 
 		public Node(NodeName name)
@@ -58,6 +59,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public Point Offset { get; set; }
 		public string Color { get; set; }
 		public bool IsRoot => this == Root;
+		public bool IsHidden { get; set; }
 
 
 		public void AddChild(Node child)
@@ -72,5 +74,12 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		public override string ToString() => Name.ToString();
+
+
+		public void ShowHiddenNode()
+		{
+			IsHidden = false;
+			Parent.ItemsCanvas?.UpdateAndNotifyAll();
+		}
 	}
 }

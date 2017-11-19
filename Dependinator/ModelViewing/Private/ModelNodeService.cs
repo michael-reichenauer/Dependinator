@@ -94,6 +94,22 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
+		public IReadOnlyList<NodeName> GetHiddenNodeNames()
+			=> model.Root.Descendents()
+				.Where(node => node.IsHidden)
+				.Select(node => node.Name)
+				.ToList();
+
+
+		public void ShowHiddenNode(NodeName nodeName)
+		{
+			if (model.TryGetNode(nodeName, out Node node))
+			{
+				node?.ShowHiddenNode();
+			}
+		}
+
+
 		private void UpdateNode(Node node, ModelNode modelNode, int stamp)
 		{
 			node.Stamp = stamp;
@@ -114,6 +130,7 @@ namespace Dependinator.ModelViewing.Private
 				ScaleFactor = modelNode.ItemsScaleFactor,
 				Offset = modelNode.ItemsOffset,
 				Color = modelNode.Color,
+				IsHidden = modelNode.ShowState == Node.Hidden
 			};
 
 			Node parentNode = GetParentNode(name, modelNode);

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using Dependinator.Common;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelParsing;
@@ -113,6 +114,18 @@ namespace Dependinator.ModelViewing.Private
 			}
 
 			GC.Collect();
+		}
+
+
+		public IReadOnlyList<NodeName> GetHiddenNodeNames()
+		{
+			return modelNodeService.GetHiddenNodeNames();
+		}
+
+
+		public void ShowHiddenNode(NodeName nodeName)
+		{
+			modelNodeService.ShowHiddenNode(nodeName);
 		}
 
 

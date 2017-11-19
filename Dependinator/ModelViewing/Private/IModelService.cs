@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Dependinator.Common;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Private.Items;
 
@@ -12,8 +14,10 @@ namespace Dependinator.ModelViewing.Private
 		Node Root { get; }
 
 		Task LoadAsync();
+		void ShowHiddenNode(NodeName nodeName);
 		void ClearAll();
 		Task SaveAsync();
 		void Save();
+		IReadOnlyList<NodeName> GetHiddenNodeNames();
 	}
 }

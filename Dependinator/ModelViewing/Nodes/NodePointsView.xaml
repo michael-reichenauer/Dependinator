@@ -132,6 +132,19 @@
 						</MenuItem.Resources>
 					</MenuItem>
 
+					<Separator Background="{DynamicResource BorderBrush}" />
+					<MenuItem
+						Header="Hide Node"
+						Command="{Binding HideNodeCommand}">
+						<MenuItem.Icon>
+							<Border>
+								<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE882;"
+													 Foreground="Gray"/>
+							</Border>
+						</MenuItem.Icon>
+					</MenuItem>
+
+
 				</ContextMenu>
 			</Rectangle.ContextMenu>
 

@@ -9,7 +9,7 @@ namespace Dependinator.ModelParsing
 			string name,
 			string parent,
 			string nodeType)
-			: this(name, parent, nodeType, RectEx.Zero, 0, PointEx.Zero, null)
+			: this(name, parent, nodeType, RectEx.Zero, 0, PointEx.Zero, null, null)
 		{
 		}
 
@@ -20,7 +20,8 @@ namespace Dependinator.ModelParsing
 			Rect bounds,
 			double itemsScaleFactor,
 			Point itemsOffset,
-			string color)
+			string color,
+			string showState)
 		{
 			Name = name;
 			Parent = parent;
@@ -29,6 +30,7 @@ namespace Dependinator.ModelParsing
 			ItemsScaleFactor = itemsScaleFactor;
 			ItemsOffset = itemsOffset;
 			Color = color;
+			ShowState = showState;
 
 			IsEqualWhenSame(Name);
 		}
@@ -40,6 +42,7 @@ namespace Dependinator.ModelParsing
 		public double ItemsScaleFactor { get; }
 		public Point ItemsOffset { get; }
 		public string Color { get; }
+		public string ShowState { get; }
 
 		public override string ToString() => Name;
 	}

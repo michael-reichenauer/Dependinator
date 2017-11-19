@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Dependinator.Common;
 using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.SettingsHandling;
@@ -49,6 +51,10 @@ namespace Dependinator.ModelViewing.Private
 
 		public async Task RefreshAsync(bool refreshLayout) =>
 			await modelService.RefreshAsync(refreshLayout);
+
+		public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelService.GetHiddenNodeNames();
+
+		public void ShowHiddenNode(NodeName nodeName) => modelService.ShowHiddenNode(nodeName);
 
 
 		public void Close()

@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using Dependinator.Common;
 using Dependinator.ModelParsing;
+
 
 namespace Dependinator.ModelViewing.Private
 {
@@ -8,5 +11,7 @@ namespace Dependinator.ModelViewing.Private
 		void RemoveObsoleteNodesAndLinks(int stamp);
 		void SetLayoutDone();
 		void RemoveAll();
+		void ShowHiddenNode(NodeName nodeName);
+		IReadOnlyList<NodeName> GetHiddenNodeNames();
 	}
 }

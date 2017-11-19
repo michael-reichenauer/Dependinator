@@ -50,7 +50,8 @@ namespace Dependinator.ModelParsing.Private
 			node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
 			node.ItemsScaleFactor,
 			node.ItemsOffset != null ? Point.Parse(node.ItemsOffset) : PointEx.Zero,
-			node.Color);
+			node.Color,
+			node.ShowState);
 
 
 		private static JsonTypes.Node ToJsonNode(ModelNode node) => new JsonTypes.Node
@@ -62,6 +63,7 @@ namespace Dependinator.ModelParsing.Private
 			ItemsScaleFactor = node.ItemsScaleFactor,
 			ItemsOffset = node.ItemsOffset != PointEx.Zero ? node.ItemsOffset.AsString() : null,
 			Color = node.Color,
+			ShowState = node.ShowState,
 		};
 
 

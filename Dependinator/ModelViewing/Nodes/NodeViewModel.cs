@@ -9,6 +9,7 @@ using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
+using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
@@ -44,7 +45,8 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public override bool CanShow => ItemScale * ItemWidth > 20 && Node.Parent.CanShowChildren;
+		public override bool CanShow => !Node.IsHidden
+			&& (ItemScale * ItemWidth > 20 && Node.Parent.CanShowChildren);
 
 		public bool CanShowChildren => ItemScale * ItemWidth > 40 * 7;
 
@@ -69,6 +71,10 @@ namespace Dependinator.ModelViewing.Nodes
 			$"{DebugToolTip}";
 
 		public int IncomingLinesCount => Node.TargetLines.Count(line => line.Owner != Node);
+
+		public Command HideNodeCommand => Command(HideNode);
+
+
 
 
 		public int IncomingLinksCount => Node.TargetLines
@@ -113,6 +119,14 @@ namespace Dependinator.ModelViewing.Nodes
 		public ObservableCollection<LinkItem> IncomingLinks => incomingLinks.Value;
 
 		public ObservableCollection<LinkItem> OutgoingLinks => outgoingLinks.Value;
+
+
+
+		private void HideNode()
+		{
+			Node.IsHidden = true;
+			Node.Parent.ItemsCanvas.UpdateAndNotifyAll();
+		}
 
 
 		public override void ItemRealized()
