@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
+using Dependinator.ModelHandling;
+using Dependinator.ModelHandling.Core;
 using Dependinator.ModelViewing.Links;
 
 

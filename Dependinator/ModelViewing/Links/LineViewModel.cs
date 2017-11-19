@@ -4,8 +4,9 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using Dependinator.ModelViewing.Nodes;
-using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelHandling;
+using Dependinator.ModelHandling.Core;
+using Dependinator.ModelHandling.Private.Items;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 
@@ -38,8 +39,8 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
-		public override bool CanShow => 
-			ItemScale < 40 
+		public override bool CanShow =>
+			ItemScale < 40
 			&& line.Source.CanShow && line.Target.CanShow;
 
 		public double LineWidth => lineViewModelService.GetLineWidth(line);
@@ -62,7 +63,7 @@ namespace Dependinator.ModelViewing.Links
 		public string StrokeDash => "";
 
 		public string ToolTip { get => Get(); private set => Set(value); }
-	
+
 
 		public void UpdateToolTip() => ToolTip = lineViewModelService.GetLineToolTip(line);
 

@@ -5,13 +5,12 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using Dependinator.ModelHandling;
 using Dependinator.ModelHandling.Core;
+using Dependinator.ModelHandling.Private.Items;
 using Dependinator.ModelViewing.Links;
-using Dependinator.ModelViewing.Private.Items;
-using Dependinator.Utils;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
-using Dependinator.Utils.UI.VirtualCanvas;
 
 
 namespace Dependinator.ModelViewing.Nodes
@@ -30,7 +29,7 @@ namespace Dependinator.ModelViewing.Nodes
 		private int currentPointIndex = -1;
 		private Point mouseDownPoint;
 		private Point mouseMovedPoint;
-		
+
 
 		protected NodeViewModel(INodeViewModelService nodeViewModelService, Node node)
 		{
@@ -68,7 +67,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public void UpdateToolTip() => ToolTip =
 			$"{Node.Name.DisplayFullNameWithType}" +
 			$"\nLines; In: {IncomingLinesCount}, Out: {OutgoingLinesCount}" +
-			$"\nLinks; In: {IncomingLinksCount}, Out: {OutgoingLinksCount}" + 
+			$"\nLinks; In: {IncomingLinksCount}, Out: {OutgoingLinksCount}" +
 			$"{DebugToolTip}";
 
 		public int IncomingLinesCount => Node.TargetLines.Count(line => line.Owner != Node);
@@ -260,7 +259,7 @@ namespace Dependinator.ModelViewing.Nodes
 			return new ObservableCollection<LinkItem>(items);
 		}
 
-		
+
 
 		private string DebugToolTip => ItemsToolTip;
 

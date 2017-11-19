@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelHandling;
+using Dependinator.ModelHandling.Core;
+using Dependinator.ModelHandling.Private.Items;
 
 
 namespace Dependinator.ModelViewing.Nodes.Private
@@ -71,7 +73,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			SetScale(layout, parent);
 
 			int index = 0;
-			
+
 			while (true)
 			{
 				Rect bounds = GetBounds(index++, layout);

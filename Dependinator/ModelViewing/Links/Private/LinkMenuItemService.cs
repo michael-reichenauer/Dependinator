@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.Common;
+using Dependinator.ModelHandling;
+using Dependinator.ModelHandling.Core;
 using Dependinator.ModelViewing.Nodes;
-using Dependinator.ModelViewing.Private;
 
 
 namespace Dependinator.ModelViewing.Links.Private
@@ -91,12 +92,12 @@ namespace Dependinator.ModelViewing.Links.Private
 
 
 		private static int CompareLinkItems(LinkItem i1, LinkItem i2)
-			=> i1.Text == MoreText && i2.Text == MoreText 
-				? 0 
-				: i1.Text == MoreText 
-					? 1 
-					: i2.Text == MoreText 
-						? -1 
+			=> i1.Text == MoreText && i2.Text == MoreText
+				? 0
+				: i1.Text == MoreText
+					? 1
+					: i2.Text == MoreText
+						? -1
 						: i1.Text.CompareTo(i2.Text);
 
 

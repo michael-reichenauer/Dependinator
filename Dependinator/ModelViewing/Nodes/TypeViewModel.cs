@@ -1,4 +1,8 @@
-﻿namespace Dependinator.ModelViewing.Nodes
+﻿using Dependinator.ModelHandling;
+using Dependinator.ModelHandling.Core;
+
+
+namespace Dependinator.ModelViewing.Nodes
 {
 	internal class TypeViewModel : NodeViewModel
 	{

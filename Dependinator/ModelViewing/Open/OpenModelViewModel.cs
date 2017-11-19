@@ -3,7 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows;
 using Dependinator.Common.ModelMetadataFolders;
-using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelHandling.Private.Items;
 
 namespace Dependinator.ModelViewing.Open
 {

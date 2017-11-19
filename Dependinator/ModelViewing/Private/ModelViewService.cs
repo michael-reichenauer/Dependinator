@@ -4,8 +4,9 @@ using Dependinator.Common;
 using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.SettingsHandling;
-using Dependinator.ModelViewing.Nodes;
-using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelHandling;
+using Dependinator.ModelHandling.Core;
+using Dependinator.ModelHandling.Private.Items;
 using Dependinator.Utils;
 
 

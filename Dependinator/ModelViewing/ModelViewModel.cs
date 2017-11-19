@@ -5,8 +5,9 @@ using System.Windows.Input;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
+using Dependinator.ModelHandling.Private;
+using Dependinator.ModelHandling.Private.Items;
 using Dependinator.ModelViewing.Private;
-using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils;
 using Dependinator.Utils.UI.Mvvm;
 
@@ -19,7 +20,7 @@ namespace Dependinator.ModelViewing
 		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(100);
 
 		public static bool IsControlling => Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
-		
+
 		private readonly IThemeService themeService;
 		private readonly IModelViewService modelViewService;
 		private readonly IProgressService progress;
@@ -50,7 +51,7 @@ namespace Dependinator.ModelViewing
 
 		public ItemsViewModel ItemsViewModel { get; }
 
-		
+
 		public async Task LoadAsync()
 		{
 			await openModelService.OpenOtherModelAsync(modelMetadata.ModelFilePath);
@@ -81,7 +82,7 @@ namespace Dependinator.ModelViewing
 				await Task.Yield();
 			}
 		}
-		
+
 
 		public async Task ManualRefreshAsync(bool refreshLayout = false)
 		{
@@ -91,7 +92,7 @@ namespace Dependinator.ModelViewing
 			}
 		}
 
-		
+
 		public void Close() => modelViewService.Close();
 
 

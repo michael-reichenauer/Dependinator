@@ -1,11 +1,11 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
+using Dependinator.ModelHandling.Core;
+using Dependinator.ModelHandling.Private;
 using Dependinator.ModelViewing.Links;
-using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 
 
@@ -14,17 +14,17 @@ namespace Dependinator.ModelViewing.Nodes.Private
 	internal class NodeViewModelService : INodeViewModelService
 	{
 		private readonly IThemeService themeService;
-		private readonly IModelLinkService modelLinkService;
+		private readonly IModelLinkService modelService;
 		private readonly ILinkMenuItemService linkMenuItemService;
 
 
 		public NodeViewModelService(
 			IThemeService themeService,
-			IModelLinkService modelLinkService,
+			IModelLinkService modelService,
 			ILinkMenuItemService linkMenuItemService)
 		{
 			this.themeService = themeService;
-			this.modelLinkService = modelLinkService;
+			this.modelService = modelService;
 			this.linkMenuItemService = linkMenuItemService;
 		}
 
@@ -42,11 +42,11 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		{
 			node.SourceLines
 				.Where(line => line.ViewModel == null)
-				.ForEach(line => modelLinkService.AddLineViewModel(line));
+				.ForEach(line => modelService.AddLineViewModel(line));
 
 			node.TargetLines
 				.Where(line => line.ViewModel == null)
-				.ForEach(line => modelLinkService.AddLineViewModel(line));
+				.ForEach(line => modelService.AddLineViewModel(line));
 		}
 
 
@@ -67,7 +67,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 			return linkMenuItemService.GetTargetLinkItems(lines);
 		}
-		
+
 
 		public Brush GetRandomRectangleBrush(string nodeName)
 		{

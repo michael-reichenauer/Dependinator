@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using Dependinator.ModelHandling.Core;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.UI;
 
@@ -11,7 +12,6 @@ namespace Dependinator.ModelViewing.Links.Private
 	{
 		private static readonly double LineMargin = 10;
 
-		private readonly ILinkSegmentService segmentService;
 		private readonly IGeometryService geometryService;
 		private readonly ILinkMenuItemService linkMenuItemService;
 
@@ -19,11 +19,9 @@ namespace Dependinator.ModelViewing.Links.Private
 		private readonly Point middleTop = new Point(0.5, 0);
 
 		public LineViewModelService(
-			ILinkSegmentService segmentService,
 			IGeometryService geometryService,
 			ILinkMenuItemService linkMenuItemService)
 		{
-			this.segmentService = segmentService;
 			this.geometryService = geometryService;
 			this.linkMenuItemService = linkMenuItemService;
 		}

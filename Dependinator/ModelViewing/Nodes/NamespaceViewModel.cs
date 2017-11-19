@@ -1,3 +1,7 @@
+using Dependinator.ModelHandling;
+using Dependinator.ModelHandling.Core;
+
+
 namespace Dependinator.ModelViewing.Nodes
 {
 	internal class NamespaceViewModel : NodeViewModel
