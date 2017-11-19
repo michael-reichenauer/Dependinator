@@ -37,7 +37,8 @@
 				Stroke="{Binding LineBrush}"
 				StrokeLineJoin="Round"
 				StrokeThickness="5"
-				IsHitTestVisible="False"/>
+				MouseEnter="UIElement_OnMouseEnter"
+				MouseLeave="UIElement_OnMouseLeave"/>
 
 			<!-- Mouse over-->
 			<Path

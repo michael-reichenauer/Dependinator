@@ -300,7 +300,6 @@
     <Compile Include="ModelViewing\Nodes\CompositeNodeViewModel.cs" />
     <Compile Include="ModelHandling\ModelParsing\Private\ParserService.cs" />
     <Compile Include="ModelHandling\ModelParsing\IParserService.cs" />
-    <Compile Include="ModelViewing\Links\LinkLineViewModel.cs" />
     <Compile Include="ModelHandling\Private\Items\ItemViewModel.cs" />
     <Compile Include="ModelHandling\Private\Items\IItem.cs" />
     <Compile Include="ModelViewing\Private\IModelViewService.cs" />

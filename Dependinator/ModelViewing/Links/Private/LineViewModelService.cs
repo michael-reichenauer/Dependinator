@@ -138,43 +138,74 @@ namespace Dependinator.ModelViewing.Links.Private
 
 
 
-		public int GetLinePointIndex(Line line, Point p)
+		public int GetLinePointIndex(Line line, Point point)
 		{
 			IList<Point> points = line.Points;
 			double itemScale = line.ViewModel.ItemScale;
 
+			// The point is sometimes a bit "off" the line so find the closet point on the line
+			Point pointOnLine = GetClosetPointOnlIne(point, points, itemScale);
+			point = pointOnLine;
+
 			for (int i = 0; i < points.Count - 1; i++)
 			{
-				Point a = points[i];
-				Point b = points[i + 1];
+				Point segmentStartPoint = points[i];
+				Point segmentEndPoint = points[i + 1];
 
-				if ((p - a).Length * itemScale < 10)
+				if ((point - segmentStartPoint).Length * itemScale < 10)
 				{
-					// The point is close to a (skipping first point)
+					// The point is close to segment start point (skipping first point)
 					if (i != 0)
 					{
 						return i;
 					}
 				}
-				else if ((p - b).Length * itemScale < 10)
+				else if ((point - segmentEndPoint).Length * itemScale < 10)
 				{
-					// The point is close to b (skipping last point)
+					// The point is close to segment end point (skipping last point)
 					if (i + 1 != points.Count - 1)
 					{
 						return i + 1;
 					}
 				}
 
-				double length = geometryService.GetDistanceFromLine(a, b, p) * itemScale;
-				if (length < 5)
+				double distance = geometryService.GetDistanceFromLine(
+					segmentStartPoint, segmentEndPoint, point) * itemScale;
+
+				if (distance < 5)
 				{
-					// The point p is on the line between point a and b
-					points.Insert(i + 1, p);
+					// The point is on the segment
+					points.Insert(i + 1, point);
 					return i + 1;
 				}
 			}
 
 			return -1;
+		}
+
+
+		private Point GetClosetPointOnlIne(Point p, IList<Point> points, double itemScale)
+		{
+			double minDistance = double.MaxValue;
+			Point pointOnLine = new Point(0, 0);
+
+			// Iterate the segments to find the segment closest to the point and on that segment, the 
+			// closest point
+			for (int i = 0; i < points.Count - 1; i++)
+			{
+				Point a = points[i];
+				Point b = points[i + 1];
+
+				double distanceToSegment = geometryService.GetDistanceFromLine(a, b, p) * itemScale;
+
+				if (distanceToSegment < minDistance)
+				{
+					minDistance = distanceToSegment;
+					pointOnLine = geometryService.GetClosestPointOnLineSegment(a, b, p);
+				}
+			}
+
+			return pointOnLine;
 		}
 
 
@@ -247,7 +278,7 @@ namespace Dependinator.ModelViewing.Links.Private
 		public string GetPointsData(Line line)
 		{
 			string lineData = "";
-			double d = GetLineWidth(line).MM(0.5, 4);
+			double d = GetLineWidth(line).MM(2, 4);
 
 			foreach (Point point in line.MiddlePoints())
 			{

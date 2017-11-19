@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using Dependinator.ModelHandling;
 using Dependinator.ModelHandling.Core;
-using Dependinator.ModelViewing.Nodes;
 
 namespace Dependinator.ModelViewing.Links.Private
 {
