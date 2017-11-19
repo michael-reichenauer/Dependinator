@@ -143,6 +143,7 @@
     <Compile Include="Common\ModelMetadataFolders\Private\IOpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
+    <Compile Include="ModelHandling\Core\LinkType.cs" />
     <Compile Include="ModelHandling\ModelParsing\Private\DataFileParsing\JsonTypes.cs" />
     <Compile Include="ModelHandling\ModelPersistence\IPersistenceService.cs" />
     <Compile Include="ModelHandling\Core\ModelLine.cs" />

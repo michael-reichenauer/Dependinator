@@ -4,15 +4,6 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelHandling.Core
 {
-	internal enum NodeType
-	{
-		None,
-		NameSpace,
-		Type,
-		Member,
-	}
-
-
 	internal class ModelNode : Equatable<ModelNode>, IModelItem
 	{
 		public ModelNode(
