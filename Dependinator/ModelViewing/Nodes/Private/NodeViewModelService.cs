@@ -216,21 +216,20 @@ namespace Dependinator.ModelViewing.Nodes.Private
 				offset = new Vector((location.X - newLocation.X) * scale, 0);
 			}
 
-			double dist = 15 / scale;
+			double dist = 50;
 
-			if (size.Width + resize.X < dist || size.Height + resize.Y < dist)
+			double width = size.Width + resize.X;
+			double height = size.Height + resize.Y;
+
+			if (width < dist || height < dist)
 			{
 				return;
 			}
 
-			Size newSiz = new Size(size.Width + resize.X, size.Height + resize.Y);
+			Size newSiz = new Size(width, height);
 			viewModel.ItemBounds = new Rect(newLocation, newSiz);
 			viewModel.ItemsViewModel?.MoveCanvas(offset);
 			viewModel.ItemOwnerCanvas.UpdateItem(viewModel);
 		}
-
-
-
-
 	}
 }
