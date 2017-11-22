@@ -87,10 +87,10 @@ namespace Dependinator.Utils.UI.VirtualCanvas
 		/// <summary>
 		/// Gets or sets whether to automatically apply a <see cref="ScaleTransform"/> to the canvas.
 		/// </summary>
-		/// <value><c>true</c> or <c>false</c>.  The default is <see cref="true"/>.</value>
+		/// <value><c>true</c> or <c>false</c>.  The default is true.</value>
 		/// <remarks>
 		/// The value of this dependency property is <c>true</c> by default, meaning that the 
-		/// <see cref="RenderTransform"/> property will contain a <see cref="Transform"/> that scales
+		/// RenderTransform/> property will contain a <see cref="Transform"/> that scales
 		/// the canvas and its children automatically.
 		/// This property can be set to <c>false</c> prevent the automatic transform.  This means that
 		/// children are responsible for changing their appearance when the <see cref="Scale"/> property
@@ -760,7 +760,7 @@ namespace Dependinator.Utils.UI.VirtualCanvas
 
 		/// <summary>
 		/// Gets or sets the maximum number of elements that will be instantiated on the canvas when 
-		/// <see cref="IsVirtualizing"/> is set to <see cref="true"/>.
+		/// <see cref="IsVirtualizing"/> is set to true/>.
 		/// </summary>
 		/// <value>An <see cref="Int32"/> between <c>0</c> and <see cref="Int32.MaxValue"/>.  
 		/// The default is <see cref="Int32.MaxValue"/>.</value>
@@ -822,7 +822,7 @@ namespace Dependinator.Utils.UI.VirtualCanvas
 		/// <summary>
 		/// Gets or sets the maximum number of elements that will be realized or virtualized at one time 
 		/// before yielding control back to the dispatcher when <see cref="IsVirtualizing"/> is set to 
-		/// <see cref="true"/>.
+		/// true/>.
 		/// </summary>
 		/// <value>An <see cref="Int32"/> between <c>0</c> and <see cref="Int32.MaxValue"/>.  The 
 		/// default is <see cref="Int32.MaxValue"/>.</value>
@@ -1544,7 +1544,7 @@ namespace Dependinator.Utils.UI.VirtualCanvas
 		/// <summary>
 		/// Offsets the child elements of a <see cref="ZoomableCanvas"/> by applying a transform if
 		///  <see cref="ApplyTransform"/> is <c>true</c>, or by calling 
-		/// <see cref="FrameworkElement.InvalidateArrange"/> otherwise.
+		/// FrameworkElement.InvalidateArrange/> otherwise.
 		/// </summary>
 		/// <param name="offset">The new offset of the canvas.</param>
 		protected virtual void OffsetOverride(Point offset)
