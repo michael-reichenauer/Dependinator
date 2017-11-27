@@ -86,9 +86,9 @@
 
 			<!-- context menu -->
 			<Rectangle.ContextMenu>
-				<ContextMenu >
-					
-					<MenuItem 
+				<ContextMenu>
+
+					<MenuItem
 						Header="Incoming links"
 						ItemsSource="{Binding IncomingLinks}">
 						<MenuItem.Icon>
@@ -99,18 +99,18 @@
 
 						</MenuItem.Icon>
 						<MenuItem.Resources>
-							<HierarchicalDataTemplate 
+							<HierarchicalDataTemplate
 								DataType="{x:Type links:LinkItem}"
 								ItemsSource="{Binding SubItems}">
 								<MenuItem
-									Header="{Binding Text}" 
+									Header="{Binding Text}"
 									Command="{Binding LinkCommand}"
-									CommandParameter="{Binding Link}"/>
+									CommandParameter="{Binding Link}" />
 							</HierarchicalDataTemplate>
 						</MenuItem.Resources>
 					</MenuItem>
 
-					<MenuItem 
+					<MenuItem
 						Header="Outgoing links"
 						ItemsSource="{Binding OutgoingLinks}">
 						<MenuItem.Icon>
@@ -121,13 +121,13 @@
 
 						</MenuItem.Icon>
 						<MenuItem.Resources>
-							<HierarchicalDataTemplate 
+							<HierarchicalDataTemplate
 								DataType="{x:Type links:LinkItem}"
 								ItemsSource="{Binding SubItems}">
 								<MenuItem
-									Header="{Binding Text}" 
+									Header="{Binding Text}"
 									Command="{Binding LinkCommand}"
-									CommandParameter="{Binding Link}"/>
+									CommandParameter="{Binding Link}" />
 							</HierarchicalDataTemplate>
 						</MenuItem.Resources>
 					</MenuItem>
@@ -138,9 +138,9 @@
 						Command="{Binding HideNodeCommand}">
 						<MenuItem.Icon>
 							<Border>
-								<TextBlock 
+								<TextBlock
 									Style="{DynamicResource MenuIconStyle}" Text="&#xE882;"
-									Foreground="Gray"/>
+									Foreground="Gray" />
 							</Border>
 						</MenuItem.Icon>
 					</MenuItem>

@@ -5,13 +5,15 @@
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:local="clr-namespace:Dependinator.ModelViewing.Nodes"
+	xmlns:links="clr-namespace:Dependinator.ModelViewing.Links"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 	
 	<Grid >
 		<!-- Title -->
 		<Border
-			Name="TitleBorder"
+			Visibility="{Binding IsHorizontal, Converter={StaticResource VC}}"
+			Name="TitleBorderHorizontal"
 			BorderBrush="{Binding TitleBorderBrush}"
 			BorderThickness="0 0 0 0.4"
 			Height="20"
@@ -31,8 +33,7 @@
 				VerticalAlignment="Top" 
 				UseLayoutRounding="True"
 				FontFamily="Segoe UI"
-				TextOptions.TextFormattingMode="Ideal"
-/>
+				TextOptions.TextFormattingMode="Ideal"/>
 
 			<Border.ToolTip>
 				<ToolTip
@@ -43,8 +44,110 @@
 					BorderThickness="1"
 					Opened="ToolTip_OnOpened" />
 			</Border.ToolTip>
-
-
 		</Border>
-	</Grid>
+
+		<!-- Title -->
+		<Border
+			Visibility="{Binding IsVertical, Converter={StaticResource VC}}"
+			Name="TitleBorderVertical"
+			BorderBrush="{Binding TitleBorderBrush}"
+			BorderThickness="0"
+
+			Width="20"
+			Background="Transparent"
+			VerticalAlignment="Stretch"
+			HorizontalAlignment="Left"
+			MouseEnter="UIElement_OnMouseEnter"
+			MouseLeave="UIElement_OnMouseLeave">
+
+			<TextBlock
+				Margin="2,10"
+				Text="{Binding Name}"
+				Foreground="{DynamicResource TextBrush}"
+				FontSize="{Binding FontSize}"
+				HorizontalAlignment="Left"
+				VerticalAlignment="Stretch"
+				UseLayoutRounding="True"
+				FontFamily="Segoe UI"
+				TextOptions.TextFormattingMode="Ideal">
+				<TextBlock.LayoutTransform>
+					<RotateTransform Angle="90" />
+				</TextBlock.LayoutTransform>
+			</TextBlock>
+
+			<Border.ToolTip>
+				<ToolTip
+					Visibility="{Binding IsShowToolTip, Converter={StaticResource VC}}"
+					Content="{Binding ToolTip}"
+					Placement="Mouse"
+					BorderBrush="{Binding RectangleBrush}"
+					BorderThickness="1"
+					Opened="ToolTip_OnOpened" />
+			</Border.ToolTip>
+		</Border>
+
+		<Grid.ContextMenu>
+			<ContextMenu>
+
+				<MenuItem
+						Header="Incoming links"
+						ItemsSource="{Binding IncomingLinks}">
+					<MenuItem.Icon>
+						<Grid Margin="0">
+							<TextBlock Text="&#xE0B5;" Style="{DynamicResource MenuIconStyle}" Padding="2,0,0,0" />
+							<!--<TextBlock Text="&#xE3C0;" Style="{DynamicResource MenuIconStyle}" Margin="4,4" Padding="0" Background="Transparent" />-->
+						</Grid>
+
+					</MenuItem.Icon>
+					<MenuItem.Resources>
+						<HierarchicalDataTemplate
+								DataType="{x:Type links:LinkItem}"
+								ItemsSource="{Binding SubItems}">
+							<MenuItem
+									Header="{Binding Text}"
+									Command="{Binding LinkCommand}"
+									CommandParameter="{Binding Link}" />
+						</HierarchicalDataTemplate>
+					</MenuItem.Resources>
+				</MenuItem>
+
+				<MenuItem
+						Header="Outgoing links"
+						ItemsSource="{Binding OutgoingLinks}">
+					<MenuItem.Icon>
+						<Grid Margin="0">
+							<TextBlock Text="&#xE0B2;" Style="{DynamicResource MenuIconStyle}" Padding="2,0,0,0" />
+							<!--<TextBlock Text="&#xE25A;" Style="{DynamicResource MenuIconStyle}" Margin="4,0" Padding="0" Background="Transparent" Foreground="{DynamicResource LocalAheadBrush}"/>-->
+						</Grid>
+
+					</MenuItem.Icon>
+					<MenuItem.Resources>
+						<HierarchicalDataTemplate
+								DataType="{x:Type links:LinkItem}"
+								ItemsSource="{Binding SubItems}">
+							<MenuItem
+									Header="{Binding Text}"
+									Command="{Binding LinkCommand}"
+									CommandParameter="{Binding Link}" />
+						</HierarchicalDataTemplate>
+					</MenuItem.Resources>
+				</MenuItem>
+
+				<Separator Background="{DynamicResource BorderBrush}" />
+				<MenuItem
+						Header="Hide Node"
+						Command="{Binding HideNodeCommand}">
+					<MenuItem.Icon>
+						<Border>
+							<TextBlock
+									Style="{DynamicResource MenuIconStyle}" Text="&#xE882;"
+									Foreground="Gray" />
+						</Border>
+					</MenuItem.Icon>
+				</MenuItem>
+
+
+			</ContextMenu>
+		</Grid.ContextMenu>
+		</Grid>
 </UserControl>

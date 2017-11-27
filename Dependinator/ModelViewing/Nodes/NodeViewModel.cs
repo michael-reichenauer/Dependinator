@@ -5,7 +5,6 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using Dependinator.ModelHandling;
 using Dependinator.ModelHandling.Core;
 using Dependinator.ModelHandling.Private.Items;
 using Dependinator.ModelViewing.Links;
@@ -51,6 +50,9 @@ namespace Dependinator.ModelViewing.Nodes
 		public bool CanShowChildren => ItemScale * ItemWidth > 40 * 7;
 
 		public Node Node { get; }
+
+		public bool IsHorizontal => !IsVertical;
+		public bool IsVertical => (ItemWidth * 1.5 < ItemHeight) && ItemWidth * ItemScale < 80;
 
 		public Brush RectangleBrush { get; }
 		public Brush TitleBorderBrush => Node.NodeType == NodeType.Type ? RectangleBrush : null;
