@@ -82,7 +82,7 @@ namespace Dependinator.ModelViewing.Private
 			Node root = modelService.Root;
 
 			root.ItemsCanvas.SetRootScale(settings.Scale);
-			root.ItemsCanvas.SetOffset(settings.Offset);
+			root.ItemsCanvas.SetMoveOffset(settings.Offset);
 
 			//root.ItemsCanvas.SetRootScale(1);
 			//root.ItemsCanvas.SetOffset(new Point(0, 0));

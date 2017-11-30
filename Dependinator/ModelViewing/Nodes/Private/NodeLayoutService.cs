@@ -94,7 +94,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 			if (!scaleFactor.Same(parentNode.ItemsCanvas.ScaleFactor))
 			{
-				parentNode.ItemsCanvas.ScaleFactor = scaleFactor;
+				parentNode.ItemsCanvas.SetScaleFactor(scaleFactor);
 				parentNode.ItemsCanvas.UpdateScale();
 			}
 		}

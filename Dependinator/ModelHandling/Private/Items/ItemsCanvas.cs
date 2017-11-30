@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using Dependinator.Common;
@@ -65,17 +66,23 @@ namespace Dependinator.ModelHandling.Private.Items
 		public IReadOnlyList<ItemsCanvas> CanvasChildren => canvasChildren;
 
 
-		public double ScaleFactor { get; set; }
+		public double ScaleFactor { get; private set; }
 
 
 		public double Scale => parentCanvas?.Scale * ScaleFactor ?? rootScale;
 
+		public Point MoveOffset { get; private set; }
 
 		public Point Offset
 		{
 			get => Get();
 			private set
 			{
+				if (!IsRoot && (value.X > 2000 || value.X < -2000 || value.Y > 2000 || value.Y < -2000))
+				{
+					//Debugger.Break();
+				}
+
 				Set(value);
 
 				if (zoomableCanvas != null)
@@ -86,11 +93,17 @@ namespace Dependinator.ModelHandling.Private.Items
 		}
 
 
-		public void SetOffset(Point offsetPoint)
+		//public void SetOffset(Point offsetPoint)
+		//{
+		//	Offset = offsetPoint;
+		//}
+
+
+		public void SetMoveOffset(Point offsetPoint)
 		{
+			MoveOffset = offsetPoint;
 			Offset = offsetPoint;
 		}
-
 
 
 		public void SetRootScale(double scale) => rootScale = scale;
@@ -187,6 +200,7 @@ namespace Dependinator.ModelHandling.Private.Items
 				return;
 			}
 
+			MoveOffset -= new Vector(viewOffset.X, viewOffset.Y);
 			Offset -= viewOffset;
 			UpdateShownItemsInChildren();
 		}
@@ -229,6 +243,7 @@ namespace Dependinator.ModelHandling.Private.Items
 
 				// Adjust the offset to make the point at the center of zoom area stay still
 				Vector position = (Vector)zoomCenter;
+
 				Offset = (Point)((Vector)(Offset + position) * zoomFactor - position);
 
 				zoomableCanvas.Scale = Scale;

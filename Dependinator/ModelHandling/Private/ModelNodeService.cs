@@ -321,7 +321,7 @@ namespace Dependinator.ModelHandling.Private
 
 			if (node.Offset != PointEx.Zero)
 			{
-				node.ItemsCanvas.SetOffset(node.Offset);
+				node.ItemsCanvas.SetMoveOffset(node.Offset);
 			}
 
 			return node.ItemsCanvas;
