@@ -48,6 +48,19 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 				string parent = isPrivate ? $"{NodeName.From(name).ParentName.FullName}.$Private" : null;
 				string description = xmlDockParser.GetDescription(name);
 
+				if (type.Name == "NamespaceDoc")
+				{
+					if (!string.IsNullOrEmpty(description))
+					{
+						name = Name.GetTypeNamespaceFullName(type);
+						typeNode = new ModelNode(name, parent, NodeType.NameSpace, description);
+						sender.SendNode(typeNode);
+					}
+
+					yield break;
+				}
+
+
 				typeNode = new ModelNode(name, parent, NodeType.Type, description);
 				sender.SendNode(typeNode);
 			}

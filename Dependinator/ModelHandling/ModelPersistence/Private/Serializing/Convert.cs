@@ -61,6 +61,7 @@ namespace Dependinator.ModelHandling.ModelPersistence.Private.Serializing
 			Name = node.Name,
 			Parent = node.Parent,
 			Type = ToNodeTypeText(node.NodeType),
+			Description = node.Description,
 			Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
 			ItemsScaleFactor = node.ItemsScaleFactor,
 			ItemsOffset = node.ItemsOffset != PointEx.Zero ? node.ItemsOffset.AsString() : null,

@@ -68,6 +68,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public void UpdateToolTip() => ToolTip =
 			$"{Node.Name.DisplayFullNameWithType}" +
+			$"\n{Node.Description}" +
 			$"\nLines; In: {IncomingLinesCount}, Out: {OutgoingLinesCount}" +
 			$"\nLinks; In: {IncomingLinksCount}, Out: {OutgoingLinksCount}" +
 			$"{DebugToolTip}";
@@ -76,9 +77,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public Command HideNodeCommand => Command(HideNode);
 
-
-
-
+		
 		public int IncomingLinksCount => Node.TargetLines
 			.Where(line => line.Owner != Node)
 			.SelectMany(line => line.Links)

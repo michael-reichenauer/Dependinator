@@ -5,7 +5,6 @@ using System.Windows;
 using Dependinator.Common;
 using Dependinator.ModelHandling.Core;
 using Dependinator.ModelHandling.Private.Items;
-using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 
@@ -76,7 +75,7 @@ namespace Dependinator.ModelHandling.Private
 					RemoveNode(node);
 				}
 			}
-			
+
 			t.Log($"{nodes.Count} nodes");
 		}
 
@@ -117,6 +116,8 @@ namespace Dependinator.ModelHandling.Private
 
 			// MoveNodeIfNeeded(node, modelNode);
 
+			UpdateDescriptionIfNeeded(node, modelNode);
+
 			UpdateNodeTypeIfNeeded(node, modelNode);
 		}
 
@@ -127,6 +128,7 @@ namespace Dependinator.ModelHandling.Private
 			{
 				Stamp = stamp,
 				NodeType = modelNode.NodeType,
+				Description = modelNode.Description,
 				Bounds = modelNode.Bounds,
 				ScaleFactor = modelNode.ItemsScaleFactor,
 				Offset = modelNode.ItemsOffset,
@@ -164,6 +166,9 @@ namespace Dependinator.ModelHandling.Private
 
 			RemoveNodeFromParentCanvas(node);
 		}
+
+
+
 
 
 		//private void MoveNodeIfNeeded(Node node, ModelNode modelNode)
@@ -212,6 +217,16 @@ namespace Dependinator.ModelHandling.Private
 			}
 		}
 
+		private static void UpdateDescriptionIfNeeded(Node node, ModelNode modelNode)
+		{
+			if (!string.IsNullOrEmpty(modelNode.Description)
+				&& node.Description != modelNode.Description)
+			{
+				Log.Warn($"Node description has changed '{node.Description}' to '{modelNode.Description}'");
+
+				node.Description = modelNode.Description;
+			}
+		}
 
 		private void CreateNodeViewModel(Node node)
 		{

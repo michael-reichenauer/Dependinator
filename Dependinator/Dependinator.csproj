@@ -184,6 +184,7 @@
       <DependentUpon>OpenModelView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Open\OpenModelViewModel.cs" />
+    <Compile Include="Common\NamespaceDoc.cs" />
     <Compile Include="Utils\Culture.cs" />
     <Compile Include="Utils\DoubleExtensions.cs" />
     <Compile Include="Utils\PriorityBlockingQueue.cs" />

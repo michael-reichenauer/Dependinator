@@ -63,6 +63,13 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 			return GetTypeName(type);
 		}
 
+		public static string GetTypeNamespaceFullName(TypeDefinition type)
+		{
+			string module = GetModuleName(type);
+			string nameSpace = type.Namespace;
+			return $"{module}.{nameSpace}";
+		}
+
 
 		public static string GetMemberFullName(IMemberDefinition memberInfo)
 		{
