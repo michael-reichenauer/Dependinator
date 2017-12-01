@@ -18,6 +18,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 		private readonly ModuleParser moduleParser;
 		private readonly TypeParser typeParser;
 		private readonly MemberParser memberParser;
+		private readonly XmlDocParser xmlDockParser;
 
 
 		public AssemblyParser(
@@ -29,9 +30,10 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 
 			Sender sender = new Sender(itemsCallback);
 
+			xmlDockParser = new XmlDocParser(assemblyPath);
 			linkHandler = new LinkHandler(sender);
 			moduleParser = new ModuleParser(assemblyRootGroup, linkHandler, sender);
-			typeParser = new TypeParser(linkHandler, sender);
+			typeParser = new TypeParser(linkHandler, xmlDockParser, sender);
 			memberParser = new MemberParser(linkHandler, sender);
 		}
 
@@ -72,7 +74,6 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 			typeParser.AddTypesLinks(typeInfos);
 			memberParser.AddTypesMembers(typeInfos);
 			
-
 			//t.Log($"Added {sender.NodesCount} nodes in {assembly.Name.Name}");
 		}
 

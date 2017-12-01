@@ -60,6 +60,7 @@ namespace Dependinator.ModelHandling.Core
 		public string Color { get; set; }
 		public bool IsRoot => this == Root;
 		public bool IsHidden { get; set; }
+		public string Description { get; set; }
 
 
 		public void AddChild(Node child)

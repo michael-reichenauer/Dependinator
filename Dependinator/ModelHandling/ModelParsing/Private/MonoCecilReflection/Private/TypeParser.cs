@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Dependinator.Common;
 using Dependinator.ModelHandling.Core;
-using Dependinator.ModelHandling.ModelPersistence;
-using Dependinator.ModelHandling.ModelPersistence.Private.Serializing;
 using Dependinator.Utils;
 using Mono.Cecil;
 
@@ -15,12 +13,14 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 	{
 		private readonly Sender sender;
 		private readonly LinkHandler linkHandler;
+		private readonly XmlDocParser xmlDockParser;
 
 
-		public TypeParser(LinkHandler linkHandler, Sender sender)
+		public TypeParser(LinkHandler linkHandler, XmlDocParser xmlDockParser, Sender sender)
 		{
 			this.sender = sender;
 			this.linkHandler = linkHandler;
+			this.xmlDockParser = xmlDockParser;
 		}
 
 
@@ -46,8 +46,9 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 				string name = Name.GetTypeFullName(type);
 				bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
 				string parent = isPrivate ? $"{NodeName.From(name).ParentName.FullName}.$Private" : null;
+				string description = xmlDockParser.GetDescription(name);
 
-				typeNode = new ModelNode(name, parent, NodeType.Type);
+				typeNode = new ModelNode(name, parent, NodeType.Type, description);
 				sender.SendNode(typeNode);
 			}
 

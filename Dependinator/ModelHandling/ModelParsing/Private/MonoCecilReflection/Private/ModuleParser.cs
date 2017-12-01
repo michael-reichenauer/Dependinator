@@ -42,7 +42,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 
 			parent = parent != null ? $"${parent?.Replace(".", ".$")}" : null;
 
-			ModelNode moduleNode = new ModelNode(moduleName, parent, NodeType.NameSpace);
+			ModelNode moduleNode = new ModelNode(moduleName, parent, NodeType.NameSpace, null);
 			sender.SendNode(moduleNode);
 		}
 
@@ -72,7 +72,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 
 				parent =  $"${parent?.Replace(".", ".$")}";
 
-				ModelNode referenceNode = new ModelNode(referenceName, parent, NodeType.NameSpace);
+				ModelNode referenceNode = new ModelNode(referenceName, parent, NodeType.NameSpace, null);
 				sender.SendNode(referenceNode);
 
 				linkHandler.AddLinkToReference(

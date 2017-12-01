@@ -47,7 +47,8 @@ namespace Dependinator.ModelHandling.Private
 				if (!model.TryGetNode(targetName, out Node target))
 				{
 					// Target node not yet added, adding it.
-					ModelNode targetModelNode = new ModelNode(modelLink.Target, null, modelLink.TargetType);
+					ModelNode targetModelNode = new ModelNode(
+						modelLink.Target, null, modelLink.TargetType, null);
 					modelNodeService.Value.UpdateNode(targetModelNode, stamp);
 
 					// Getting the newly added node

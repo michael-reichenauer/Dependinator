@@ -87,7 +87,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 				string parent = isPrivate
 					? $"{NodeName.From(memberName).ParentName.FullName}.$Private" : null;
 
-				ModelNode memberNode = new ModelNode(memberName, parent, NodeType.Member);
+				ModelNode memberNode = new ModelNode(memberName, parent, NodeType.Member, null);
 				sender.SendNode(memberNode);
 
 				AddMemberLinks(memberNode, memberInfo);

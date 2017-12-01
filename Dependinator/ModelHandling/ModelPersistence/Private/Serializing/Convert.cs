@@ -48,6 +48,7 @@ namespace Dependinator.ModelHandling.ModelPersistence.Private.Serializing
 			node.Name,
 			node.Parent,
 			FromNodeTypeText(node.Type),
+			node.Description,
 			node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
 			node.ItemsScaleFactor,
 			node.ItemsOffset != null ? Point.Parse(node.ItemsOffset) : PointEx.Zero,

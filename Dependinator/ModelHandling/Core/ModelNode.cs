@@ -9,8 +9,9 @@ namespace Dependinator.ModelHandling.Core
 		public ModelNode(
 			string name,
 			string parent,
-			NodeType nodeType)
-			: this(name, parent, nodeType, RectEx.Zero, 0, PointEx.Zero, null, null)
+			NodeType nodeType,
+			string description)
+			: this(name, parent, nodeType, description, RectEx.Zero, 0, PointEx.Zero, null, null)
 		{
 		}
 
@@ -18,6 +19,7 @@ namespace Dependinator.ModelHandling.Core
 			string name,
 			string parent,
 			NodeType nodeType,
+			string description,
 			Rect bounds,
 			double itemsScaleFactor,
 			Point itemsOffset,
@@ -27,6 +29,7 @@ namespace Dependinator.ModelHandling.Core
 			Name = name;
 			Parent = parent;
 			NodeType = nodeType;
+			Description = description;
 			Bounds = bounds;
 			ItemsScaleFactor = itemsScaleFactor;
 			ItemsOffset = itemsOffset;
@@ -39,6 +42,7 @@ namespace Dependinator.ModelHandling.Core
 		public string Name { get; }
 		public string Parent { get; }
 		public NodeType NodeType { get; }
+		public string Description { get; }
 		public Rect Bounds { get; }
 		public double ItemsScaleFactor { get; }
 		public Point ItemsOffset { get; }
