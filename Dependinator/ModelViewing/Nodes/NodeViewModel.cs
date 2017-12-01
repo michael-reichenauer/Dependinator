@@ -60,6 +60,10 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public bool IsShowNode => ItemScale < 100;
 
+		public bool IsShowItems => CanShowChildren;
+
+		public bool IsShowDescription => !CanShowChildren;
+
 		public string Name => Node.Name.DisplayName;
 
 		public double RectangleLineWidth => IsShowPoints ? 0.6 * 3 : IsMouseOver ? 0.6 * 1.5 : 0.6;

@@ -24,7 +24,9 @@
 
 
 		<!-- Inner model -->
-		<items1:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
+		<items1:ItemsView
+			Visibility="{Binding IsShowItems, Converter={StaticResource VC}}"
+			x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
 
 		<nodes:TitleView Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"/>
 
