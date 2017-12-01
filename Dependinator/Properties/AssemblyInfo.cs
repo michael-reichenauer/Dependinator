@@ -8,11 +8,11 @@ using System.Windows;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Dependiantor")]
-[assembly: AssemblyDescription("Dependinator")]
+[assembly: AssemblyDescription("Visualizes dependencies in programs.")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Michael Reichenauer")]
 [assembly: AssemblyProduct("Dependinator")]
-[assembly: AssemblyCopyright("Copyright © Michael Reichenauer 2016")]
+[assembly: AssemblyCopyright("Copyright © Michael Reichenauer 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

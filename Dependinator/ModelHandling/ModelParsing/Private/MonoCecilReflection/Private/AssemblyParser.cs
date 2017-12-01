@@ -63,7 +63,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 
 		public void ParseAssemblyModuleReferences()
 		{
-			moduleParser.AddModuleLinks();
+			moduleParser.AddModuleReferences();
 		}
 
 

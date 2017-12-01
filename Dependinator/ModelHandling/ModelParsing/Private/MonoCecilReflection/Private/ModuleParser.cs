@@ -1,9 +1,11 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using Dependinator.ModelHandling.Core;
 using Dependinator.ModelHandling.ModelPersistence;
 using Dependinator.ModelHandling.ModelPersistence.Private.Serializing;
 using Mono.Cecil;
+using Mono.Collections.Generic;
 
 
 namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Private
@@ -42,12 +44,28 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 
 			parent = parent != null ? $"${parent?.Replace(".", ".$")}" : null;
 
-			ModelNode moduleNode = new ModelNode(moduleName, parent, NodeType.NameSpace, null);
+			string description = GetDescription();
+			ModelNode moduleNode = new ModelNode(moduleName, parent, NodeType.NameSpace, description);
 			sender.SendNode(moduleNode);
 		}
 
 
-		public void AddModuleLinks()
+		private string GetDescription()
+		{
+			Collection<CustomAttribute> attributes = assembly.CustomAttributes;
+
+			CustomAttribute descriptionAttribute = attributes.FirstOrDefault(attribute =>
+				attribute.AttributeType.FullName == typeof(AssemblyDescriptionAttribute).FullName);
+
+			CustomAttributeArgument? argument = descriptionAttribute?.ConstructorArguments
+				.FirstOrDefault();
+
+			string description = argument?.Value as string;
+			return description;
+		}
+
+
+		public void AddModuleReferences()
 		{
 			if (assembly == null)
 			{
