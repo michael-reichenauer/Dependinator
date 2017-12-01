@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using Dependinator.Common;
@@ -71,7 +70,7 @@ namespace Dependinator.ModelHandling.Private.Items
 
 		public double Scale => parentCanvas?.Scale * ScaleFactor ?? rootScale;
 
-		public Point MoveOffset { get; private set; }
+		public Point MoveOffset => Offset;
 
 		public Point Offset
 		{
@@ -101,7 +100,7 @@ namespace Dependinator.ModelHandling.Private.Items
 
 		public void SetMoveOffset(Point offsetPoint)
 		{
-			MoveOffset = offsetPoint;
+			//MoveOffset = offsetPoint;
 			Offset = offsetPoint;
 		}
 
@@ -200,7 +199,7 @@ namespace Dependinator.ModelHandling.Private.Items
 				return;
 			}
 
-			MoveOffset -= new Vector(viewOffset.X, viewOffset.Y);
+			//MoveOffset -= new Vector(viewOffset.X * Scale, viewOffset.Y * Scale);
 			Offset -= viewOffset;
 			UpdateShownItemsInChildren();
 		}
@@ -239,7 +238,7 @@ namespace Dependinator.ModelHandling.Private.Items
 		{
 			if (zoomableCanvas != null)
 			{
-				double zoomFactor = Scale / zoomableCanvas.Scale; 
+				double zoomFactor = Scale / zoomableCanvas.Scale;
 
 				// Adjust the offset to make the point at the center of zoom area stay still
 				Vector position = (Vector)zoomCenter;
