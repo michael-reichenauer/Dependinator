@@ -23,6 +23,11 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 
 		public void SendNode(ModelNode node)
 		{
+			//if (node.Name.Contains("IWshRuntime"))
+			//{
+				
+			//}
+
 			if (Name.IsCompilerGenerated(node.Name))
 			{
 				Log.Warn($"Compiler generated node: {node.Name}");

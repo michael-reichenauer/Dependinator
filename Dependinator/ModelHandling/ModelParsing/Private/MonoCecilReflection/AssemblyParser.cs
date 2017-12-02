@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Dependinator.ModelHandling.Core;
+using Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Private;
 using Dependinator.Utils;
 using Mono.Cecil;
 
 
-namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Private
+namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection
 {
 	internal class AssemblyParser
 	{
@@ -18,7 +19,6 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 		private readonly ModuleParser moduleParser;
 		private readonly TypeParser typeParser;
 		private readonly MemberParser memberParser;
-		private readonly XmlDocParser xmlDockParser;
 
 
 		public AssemblyParser(
@@ -30,7 +30,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 
 			Sender sender = new Sender(itemsCallback);
 
-			xmlDockParser = new XmlDocParser(assemblyPath);
+			XmlDocParser xmlDockParser = new XmlDocParser(assemblyPath);
 			linkHandler = new LinkHandler(sender);
 			moduleParser = new ModuleParser(assemblyRootGroup, linkHandler, sender);
 			typeParser = new TypeParser(linkHandler, xmlDockParser, sender);
@@ -69,22 +69,14 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 
 		public void ParseTypeMembers()
 		{
-			Timing t = new Timing();
-
 			typeParser.AddTypesLinks(typeInfos);
 			memberParser.AddTypesMembers(typeInfos);
-			
-			//t.Log($"Added {sender.NodesCount} nodes in {assembly.Name.Name}");
 		}
 
 		
 		public void ParseLinks()
 		{
-			Timing t = new Timing();
-
 			linkHandler.SendAllLinks();
-
-			//t.Log($"Added {sender.LinkCount} links in {assembly.Name.Name}");
 		}
 
 

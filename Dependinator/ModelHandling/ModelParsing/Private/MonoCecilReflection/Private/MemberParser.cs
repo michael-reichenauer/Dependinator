@@ -36,10 +36,6 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 
 		private void AddTypeMembers(TypeInfo typeInfo)
 		{
-			if (typeInfo.Type.Name.Contains("AsyncSemaphore"))
-			{
-				
-			}
 			TypeDefinition type = typeInfo.Type;
 			ModelNode typeNode = typeInfo.Node;
 

@@ -16,6 +16,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 			}
 
 			bool isCompilerGenerated =
+				name == "GeneratedInternalTypeHelper" ||
 				name.Contains("__") ||
 				name.Contains("<>") ||
 				name.Contains("<Module>") ||
