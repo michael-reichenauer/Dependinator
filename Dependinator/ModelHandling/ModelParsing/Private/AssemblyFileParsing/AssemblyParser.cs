@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Dependinator.ModelHandling.Core;
-using Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Private;
+using Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Private;
 using Dependinator.Utils;
 using Mono.Cecil;
 
 
-namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection
+namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing
 {
 	internal class AssemblyParser
 	{

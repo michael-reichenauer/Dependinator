@@ -7,7 +7,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 
-namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Private
+namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Private
 {
 	internal class MethodParser
 	{

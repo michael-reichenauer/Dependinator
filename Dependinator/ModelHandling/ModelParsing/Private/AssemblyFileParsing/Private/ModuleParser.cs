@@ -6,7 +6,7 @@ using Mono.Cecil;
 using Mono.Collections.Generic;
 
 
-namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Private
+namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Private
 {
 	internal class ModuleParser
 	{

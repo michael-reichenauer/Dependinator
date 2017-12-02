@@ -3,7 +3,7 @@ using Dependinator.ModelHandling.Core;
 using Dependinator.Utils;
 
 
-namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Private
+namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Private
 {
 	internal class Sender
 	{

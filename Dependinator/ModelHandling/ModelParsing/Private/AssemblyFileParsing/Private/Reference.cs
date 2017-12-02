@@ -1,7 +1,7 @@
 using Dependinator.ModelHandling.Core;
 
 
-namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Private
+namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Private
 {
 	internal class Reference
 	{

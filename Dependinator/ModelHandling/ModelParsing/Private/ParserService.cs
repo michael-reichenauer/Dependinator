@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.ModelHandling.Core;
-using Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection;
+using Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing;
 using Dependinator.ModelHandling.ModelParsing.Private.SolutionFileParsing;
 using Dependinator.Utils;
 

@@ -3,7 +3,7 @@ using System.Linq;
 using Mono.Cecil;
 
 
-namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Private
+namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Private
 {
 	internal static class Name
 	{

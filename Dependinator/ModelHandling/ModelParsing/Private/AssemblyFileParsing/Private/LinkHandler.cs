@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelHandling.Core;
-//using Dependinator.ModelHandling.ModelPersistence.Private.Serializing;
 using Mono.Cecil;
+//using Dependinator.ModelHandling.ModelPersistence.Private.Serializing;
 
 
-namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Private
+namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Private
 {
 	internal class LinkHandler
 	{

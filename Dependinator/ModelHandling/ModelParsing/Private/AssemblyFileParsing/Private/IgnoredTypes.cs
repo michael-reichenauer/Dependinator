@@ -2,7 +2,7 @@ using System;
 using Mono.Cecil;
 
 
-namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Private
+namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Private
 {
 	internal class IgnoredTypes
 	{
