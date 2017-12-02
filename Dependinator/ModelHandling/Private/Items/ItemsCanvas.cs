@@ -71,42 +71,6 @@ namespace Dependinator.ModelHandling.Private.Items
 
 		public double Scale => parentCanvas?.Scale * ScaleFactor ?? rootScale;
 
-		//public Point MoveOffset => Offset;
-
-
-		private Point Offset { get; } = new Point(0, 0);
-
-		//public Point Offset
-		//{
-		//	get => Get();
-		//	private set
-		//	{
-		//		if (!IsRoot && (value.X > 2000 || value.X < -2000 || value.Y > 2000 || value.Y < -2000))
-		//		{
-		//			//Debugger.Break();
-		//		}
-
-		//		Set(value);
-
-		//		if (zoomableCanvas != null)
-		//		{
-		//			zoomableCanvas.Offset = value;
-		//		}
-		//	}
-		//}
-
-
-		//public void SetOffset(Point offsetPoint)
-		//{
-		//	Offset = offsetPoint;
-		//}
-
-
-		//public void SetMoveOffset(Point offsetPoint)
-		//{
-		//	//MoveOffset = offsetPoint;
-		//	Offset = offsetPoint;
-		//}
 
 
 		public void SetRootScale(double scale) => rootScale = scale;
@@ -203,18 +167,20 @@ namespace Dependinator.ModelHandling.Private.Items
 				return;
 			}
 
-			//MoveOffset -= new Vector(viewOffset.X * Scale, viewOffset.Y * Scale);
-			//Offset -= viewOffset;
-
 			Vector moveOffset = new Vector(viewOffset.X / Scale, viewOffset.Y / Scale);
-			foreach (var item in itemsSource.GetAllItems().Where(i => i is NodeViewModel).Cast<ItemViewModel>())
+
+			foreach (NodeViewModel nodeViewModel in GetNodeItems())
 			{
-				Point location = item.ItemBounds.Location + moveOffset;
-				item.ItemBounds = new Rect(location, item.ItemBounds.Size);
+				Point newLocation = nodeViewModel.ItemBounds.Location + moveOffset;
+				nodeViewModel.ItemBounds = new Rect(newLocation, nodeViewModel.ItemBounds.Size);
 			}
 
 			UpdateShownItemsInChildren();
 		}
+
+
+		private IEnumerable<NodeViewModel> GetNodeItems() => itemsSource.GetAllItems()
+			.Where(i => i is NodeViewModel).Cast<NodeViewModel>();
 
 
 		private void UpdateShownItemsInChildren()
@@ -256,8 +222,8 @@ namespace Dependinator.ModelHandling.Private.Items
 					double zoomFactor = Scale / zoomableCanvas.Scale;
 					Vector position = (Vector)zoomCenter;
 
-					Point offset = (Point)((Vector)(Offset + position) * zoomFactor - position);
-					Move(Offset - offset);
+					Vector moveOffset = position * zoomFactor - position;
+					Move(-moveOffset);
 				}
 
 				zoomableCanvas.Scale = Scale;
@@ -269,11 +235,8 @@ namespace Dependinator.ModelHandling.Private.Items
 		{
 			if (!IsRoot)
 			{
-				Vector vector = (Vector)Offset / Scale;
-				Point childPoint = childCanvasPoint - vector;
-
 				// Point within the parent node
-				Vector parentPoint = (Vector)childPoint * ScaleFactor;
+				Vector parentPoint = (Vector)childCanvasPoint * ScaleFactor;
 
 				// point in parent canvas scale
 				Point childToParentCanvasPoint = ItemsCanvasBounds.Location + parentPoint;
@@ -313,10 +276,7 @@ namespace Dependinator.ModelHandling.Private.Items
 				Point parentChildPoint = (Point)((Vector)relativeParentPoint / ScaleFactor);
 
 				Point compensatedPoint = parentChildPoint;
-
-				Vector vector = (Vector)Offset / Scale;
-
-				Point childPoint = compensatedPoint + vector;
+				Point childPoint = compensatedPoint ;
 
 				return childPoint;
 			}
@@ -342,7 +302,6 @@ namespace Dependinator.ModelHandling.Private.Items
 			zoomableCanvas.ItemsOwner.ItemsSource = itemsSource;
 
 			zoomableCanvas.Scale = Scale;
-			zoomableCanvas.Offset = Offset;
 		}
 
 
@@ -425,7 +384,7 @@ namespace Dependinator.ModelHandling.Private.Items
 			Size renderSize = (Size)((Vector)ItemsCanvasBounds.Size * parentScale);
 
 			Rect value = new Rect(
-				Offset.X / scale, Offset.Y / scale, renderSize.Width / scale, renderSize.Height / scale);
+				0 / scale, 0 / scale, renderSize.Width / scale, renderSize.Height / scale);
 
 			return value;
 		}
@@ -444,10 +403,10 @@ namespace Dependinator.ModelHandling.Private.Items
 
 
 		private Point CanvasToVisualPoint(Point canvasPoint) =>
-			(Point)(((Vector)canvasPoint * Scale) - (Vector)Offset);
+			(Point)(((Vector)canvasPoint * Scale));
 
 
 		private Point ScreenToCanvasPoint(Point screenPoint) =>
-			(Point)(((Vector)Offset + (Vector)screenPoint) / Scale);
+			(Point)(((Vector)screenPoint) / Scale);
 	}
 }
