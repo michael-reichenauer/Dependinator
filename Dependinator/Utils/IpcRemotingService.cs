@@ -6,6 +6,7 @@ using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Ipc;
 using System.Runtime.Serialization.Formatters;
 using System.Threading;
+using Microsoft.Build.Logging;
 
 
 namespace Dependinator.Utils
@@ -24,14 +25,35 @@ namespace Dependinator.Utils
 			string mutexName = GetId(serverId);
 			string channelName = GetChannelName(serverId);
 
-			bool isMutexCreated;
-			channelMutex = new Mutex(true, mutexName, out isMutexCreated);
+			channelMutex = new Mutex(true, mutexName, out var isMutexCreated);
 			if (isMutexCreated)
 			{
 				CreateIpcServer(channelName);
 			}
 
+			Log.Debug($"Created {mutexName} = {isMutexCreated}");
 			return isMutexCreated;
+		}
+
+
+		public bool IsServerRegistered(string serverId)
+		{
+			uniqueId = serverId;
+			string mutexName = GetId(serverId);
+
+			Log.Debug($"Try {mutexName}");
+			
+			using (new Mutex(true, mutexName, out var isMutexCreated))
+			{
+				if (isMutexCreated)
+				{
+					return false;
+				}
+			}
+
+			Log.Debug($"Server {mutexName} exist");
+
+			return true;
 		}
 
 
@@ -42,6 +64,12 @@ namespace Dependinator.Utils
 			// Publish the ipc service receiving the data
 			string ipcServiceName = uniqueId + ipcService.GetType().FullName;
 			RemotingServices.Marshal(ipcService, ipcServiceName);
+		}
+
+
+		public TRemoteService GetService<TRemoteService>(string serverId)
+		{
+			return CreateClientProxy<TRemoteService>(serverId);
 		}
 
 

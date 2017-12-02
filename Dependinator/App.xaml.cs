@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using System.Threading;
 using System.Windows;
-using Dependinator.ApplicationHandling;
-using Dependinator.ApplicationHandling.Installation;
-using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Common.Environment;
+using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
+using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.ModelMetadataFolders.Private;
+using Dependinator.Common.SettingsHandling;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.MainWindowViews;
 using Dependinator.Utils;
@@ -24,7 +24,9 @@ namespace Dependinator
 		private readonly IThemeService themeService;
 		private readonly IInstaller installer;
 		private readonly Lazy<MainWindow> mainWindow;
-		private readonly WorkingFolder workingFolder;
+		private readonly IModelMetadataService modelMetadataService;
+		private readonly IExistingInstanceService existingInstanceService;
+		private readonly IRecentModelsService recentModelsService;
 
 
 		// This mutex is used by the installer (and uninstaller) to determine if instances are running
@@ -36,20 +38,17 @@ namespace Dependinator
 			IThemeService themeService,
 			IInstaller installer,
 			Lazy<MainWindow> mainWindow,
-			WorkingFolder workingFolder)
+			IModelMetadataService modelMetadataService,
+			IExistingInstanceService existingInstanceService,
+			IRecentModelsService recentModelsService)
 		{
 			this.commandLine = commandLine;
 			this.themeService = themeService;
 			this.installer = installer;
 			this.mainWindow = mainWindow;
-			this.workingFolder = workingFolder;
-		}
-
-
-		protected override void OnExit(ExitEventArgs e)
-		{
-			Log.Usage("Exit program");
-			base.OnExit(e);
+			this.modelMetadataService = modelMetadataService;
+			this.existingInstanceService = existingInstanceService;
+			this.recentModelsService = recentModelsService;
 		}
 
 
@@ -64,6 +63,11 @@ namespace Dependinator
 				return;
 			}
 
+			if (commandLine.HasFile)
+			{
+				modelMetadataService.SetModelFilePath(commandLine.FilePath);
+			}
+
 			if (IsCommands())
 			{
 				// Command line contains some command like diff 
@@ -73,7 +77,7 @@ namespace Dependinator
 				return;
 			}
 
-			if (IsActivatedOtherInstance())
+			if (TryActivateExistingInstance())
 			{
 				// Another instance for this working folder is already running and it received the
 				// command line from this instance, lets exit this instance, while other instance continuous
@@ -81,8 +85,23 @@ namespace Dependinator
 				return;
 			}
 
-			Log.Usage($"Start version: {GetProgramVersion()}");
+			Log.Usage($"Start version: {AssemblyInfo.GetProgramVersion()}");
 			Start();
+		}
+
+
+		protected override void OnExit(ExitEventArgs e)
+		{
+			Log.Usage("Exit program");
+			base.OnExit(e);
+		}
+
+
+		private bool TryActivateExistingInstance()
+		{
+			string metadataFolderPath = modelMetadataService.MetadataFolderPath;
+			return existingInstanceService.TryActivateExistingInstance(
+				metadataFolderPath, Environment.GetCommandLineArgs());
 		}
 
 
@@ -116,13 +135,12 @@ namespace Dependinator
 		private void Start()
 		{
 			// This mutex is used by the installer (or uninstaller) to determine if instances are running
-			applicationMutex = new Mutex(true, Installer.ProductGuid);
+			applicationMutex = new Mutex(true, Product.Guid);
 
 			MainWindow = mainWindow.Value;
-			
-			themeService.SetThemeWpfColors();
-	
 
+			themeService.SetThemeWpfColors();
+			
 			MainWindow.Show();
 
 			TryDeleteTempFiles();
@@ -131,6 +149,7 @@ namespace Dependinator
 
 		private bool IsCommands()
 		{
+			// No commands yet
 			return false;
 		}
 
@@ -140,37 +159,13 @@ namespace Dependinator
 			// No commands yet
 		}
 
-		private bool IsActivatedOtherInstance()
-		{
-			try
-			{
-				string id = MainWindowIpcService.GetId(workingFolder);
-				using (IpcRemotingService ipcRemotingService = new IpcRemotingService())
-				{
-					if (!ipcRemotingService.TryCreateServer(id))
-					{
-						// Another instance for that working folder is already running, activate that.
-						var args = Environment.GetCommandLineArgs();
-						ipcRemotingService.CallService<MainWindowIpcService>(id, service => service.Activate(args));
-						return true;
-					}
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Warn($"Failed to activate other instance {e}");
-			}
-
-			return false;
-		}
-
-
+	
 		private void TryDeleteTempFiles()
 		{
 			try
 			{
-				string tempFolderPath = ProgramPaths.GetTempFolderPath();
-				string searchPattern = $"{ProgramPaths.TempPrefix}*";
+				string tempFolderPath = ProgramInfo.GetTempFolderPath();
+				string searchPattern = $"{ProgramInfo.TempPrefix}*";
 				string[] tempFiles = Directory.GetFiles(tempFolderPath, searchPattern);
 				foreach (string tempFile in tempFiles)
 				{
@@ -199,11 +194,6 @@ namespace Dependinator
 		}
 
 
-		private static string GetProgramVersion()
-		{
-			Assembly assembly = Assembly.GetExecutingAssembly();
-			FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-			return fvi.FileVersion;
-		}
+
 	}
 }

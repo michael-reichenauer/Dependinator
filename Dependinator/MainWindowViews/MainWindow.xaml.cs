@@ -3,11 +3,10 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Forms;
-using System.Windows.Threading;
-using Dependinator.ApplicationHandling;
-using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Common;
+using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
+using Dependinator.Utils.UI;
 
 
 namespace Dependinator.MainWindowViews
@@ -16,24 +15,20 @@ namespace Dependinator.MainWindowViews
 	/// Interaction logic for MainWindow.xaml
 	/// </summary>
 	[SingleInstance]
-	public partial class MainWindow : Window
+	public partial class MainWindow : Window, IMainWindow
 	{
-		private readonly WorkingFolder workingFolder;
-
-		private readonly DispatcherTimer remoteCheckTimer = new DispatcherTimer();
+		private readonly ISettingsService settingsService;
 
 		private readonly MainWindowViewModel viewModel;
-		
 
 
 		internal MainWindow(
-			WorkingFolder workingFolder,
+			ISettingsService settingsService, 
 			Func<MainWindowViewModel> mainWindowViewModelProvider)
 		{
-			this.workingFolder = workingFolder;
+			this.settingsService = settingsService;
 
 			InitializeComponent();
-	
 			SetShowToolTipLonger();
 
 			// Make sure maximize window does not cover the task bar
@@ -42,66 +37,22 @@ namespace Dependinator.MainWindowViews
 			viewModel = mainWindowViewModelProvider();
 			DataContext = viewModel;
 
+			// Bring the window to the foreground and activates
 			Activate();
 
 			RestoreWindowSettings();
 		}
 
 
-		public bool IsNewVersionAvailable
-		{
-			set => viewModel.IsNewVersionVisible = value;
-		}
+		public bool IsNewVersionAvailable { set => viewModel.IsNewVersionVisible = value; }
 
+		public void SetSearchFocus() => Search.SearchBox.Focus();
 
-		public void SetSearchFocus()
-		{
-			Search.SearchBox.Focus();
-		}
+		private async void MainWindow_OnLoaded(object sender, RoutedEventArgs e) =>
+			await viewModel.LoadAsync();
 
-
-		public void SetRepositoryViewFocus()
-		{
-			ModelView.ItemsView.ItemsListBox.Focus();
-		}
-
-
-		private async void MainWindow_OnLoaded(object sender, RoutedEventArgs e)
-		{
-			await viewModel.FirstLoadAsync();
-			SetRepositoryViewFocus();
-			StartRemoteCheck();
-		}
-
-
-		private void StartRemoteCheck()
-		{
-			int interval = Settings.Get<Options>().AutoRemoteCheckIntervalMin;
-
-			if (interval == 0)
-			{
-				Log.Debug("AutoRemoteCheckIntervalMin is disabled");
-				return;
-			}
-
-			Log.Debug($"AutoRemoteCheckIntervalMin is interval {interval}");
-
-			remoteCheckTimer.Tick += RemoteCheck;
-			remoteCheckTimer.Interval = TimeSpan.FromMinutes(interval);
-			remoteCheckTimer.Start();
-		}
-
-
-		private void RemoteCheck(object sender, EventArgs e)
-		{
-			viewModel.AutoRemoteCheckAsync().RunInBackground();
-		}
-
-
-		protected override void OnActivated(EventArgs e)
-		{
+		protected override void OnActivated(EventArgs e) =>
 			viewModel.ActivateRefreshAsync().RunInBackground();
-		}
 
 
 		protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
@@ -110,71 +61,48 @@ namespace Dependinator.MainWindowViews
 			viewModel.WindowWith = (int)sizeInfo.NewSize.Width;
 		}
 
+
 		private void MainWindow_OnClosing(object sender, CancelEventArgs e)
 		{
 			viewModel.ClosingWindow();
 			StoreWindowSettings();
-
-			StoreLasteUsedFolder();
 		}
-
 
 
 		private void StoreWindowSettings()
 		{
-			ProgramSettings settings = Settings.Get<ProgramSettings>();
-
-			settings.Top = Top;
-			settings.Left = Left;
-			settings.Height = Height;
-			settings.Width = Width;
-			settings.IsMaximized = WindowState == WindowState.Maximized;
-
-			Settings.Set(settings);
+			settingsService.Edit<WorkFolderSettings>(s =>
+			{
+				s.WindowBounds = new Rect(Top, Left, Width, Height);
+				s.IsMaximized = WindowState == WindowState.Maximized;
+			});
 		}
 
 
-		private void RestoreWindowSettings()
+		public void RestoreWindowSettings()
 		{
-			ProgramSettings settings = Settings.Get<ProgramSettings>();
+			WorkFolderSettings s = settingsService.Get<WorkFolderSettings>();
 
 			Rectangle rect = new Rectangle(
-				(int)settings.Left, (int)settings.Top, (int)settings.Width, (int)settings.Height);
+				(int)s.WindowBounds.X,
+				(int)s.WindowBounds.Y,
+				(int)s.WindowBounds.Width,
+				(int)s.WindowBounds.Height);
 
 			// check if the saved bounds are nonzero and visible on any screen
-			if (rect != Rectangle.Empty && IsVisibleOnAnyScreen(rect))
+			if (rect != Rectangle.Empty && VisibleWindow.IsVisibleOnAnyScreen(rect))
 			{
-				Top = settings.Top;
-				Left = settings.Left;
-				Height = settings.Height;
-				Width = settings.Width;
+				Top = s.WindowBounds.X;
+				Left = s.WindowBounds.Y;
+				Width = s.WindowBounds.Width;
+				Height = s.WindowBounds.Height;
 			}
 
-			WindowState = settings.IsMaximized ? WindowState.Maximized : WindowState.Normal;
+			WindowState = s.IsMaximized ? WindowState.Maximized : WindowState.Normal;
 		}
 
 
-		private bool IsVisibleOnAnyScreen(Rectangle rect)
-		{
-			foreach (Screen screen in Screen.AllScreens)
-			{
-				if (screen.WorkingArea.IntersectsWith(rect) && screen.WorkingArea.Top < rect.Top)
-				{
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-
-		private void StoreLasteUsedFolder()
-		{
-			Settings.Edit<ProgramSettings>(s => s.LastUsedWorkingFolder = workingFolder);
-		}
-
-
-		private static void SetShowToolTipLonger()
+		public static void SetShowToolTipLonger()
 		{
 			ToolTipService.ShowDurationProperty.OverrideMetadata(
 				typeof(DependencyObject), new FrameworkPropertyMetadata(int.MaxValue));

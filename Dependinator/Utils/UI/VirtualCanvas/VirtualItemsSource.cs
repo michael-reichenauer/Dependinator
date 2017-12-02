@@ -8,7 +8,7 @@ namespace Dependinator.Utils.UI.VirtualCanvas
 {
 	public abstract class VirtualItemsSource : ISpatialItemsSource, IList
 	{
-		public static readonly Rect EmptyExtent = new Rect(0, 0, 0, 0);
+		public static readonly Rect EmptyExtent = RectEx.Zero;
 
 		public event EventHandler ExtentChanged;
 
@@ -16,11 +16,11 @@ namespace Dependinator.Utils.UI.VirtualCanvas
 
 		public Rect Extent => VirtualArea;
 
-		public IEnumerable<int> Query(Rect viewArea) => GetItemIds(viewArea);
+		public IEnumerable<int> Query(Rect viewArea) => GetVirtualItemIds(viewArea);
 
 		public object this[int id]
 		{
-			get { return GetItem(id); }
+			get { return GetVirtualItem(id); }
 			set { }
 		}
 
@@ -32,12 +32,12 @@ namespace Dependinator.Utils.UI.VirtualCanvas
 		/// <summary>
 		/// Returns range of item ids, which are visible in the view area currently shown
 		/// </summary>
-		protected abstract IEnumerable<int> GetItemIds(Rect viewArea);
+		protected abstract IEnumerable<int> GetVirtualItemIds(Rect viewArea);
 
 		/// <summary>
 		/// Returns the item corresponding to the specified id.
 		/// </summary>
-		protected abstract object GetItem(int id);
+		protected abstract object GetVirtualItem(int id);
 
 
 		public void TriggerExtentChanged()

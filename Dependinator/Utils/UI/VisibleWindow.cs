@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Drawing;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using System.Windows.Interop;
 
 
@@ -8,6 +10,20 @@ namespace Dependinator.Utils.UI
 {
 	public class VisibleWindow
 	{
+		public static bool IsVisibleOnAnyScreen(Rectangle rect)
+		{
+			foreach (Screen screen in Screen.AllScreens)
+			{
+				if (screen.WorkingArea.IntersectsWith(rect) && screen.WorkingArea.Top < rect.Top)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+
 		public static bool IsVisible(System.Windows.Window window)
 		{
 			WindowInteropHelper nativeWindow = new WindowInteropHelper(window);
@@ -23,7 +39,7 @@ namespace Dependinator.Utils.UI
 					int x = (int)(window.Left + (j * xStep));
 					int y = (int)(window.Top + (i * yStep));
 
-					System.Drawing.Point testPoint = new System.Drawing.Point(x, y);
+					Point testPoint = new Point(x, y);
 					if (nativeWindow.Handle != WindowFromPoint(testPoint))
 					{
 						return false;

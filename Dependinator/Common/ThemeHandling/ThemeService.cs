@@ -1,10 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using Dependinator.ApplicationHandling;
-using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
 
 
@@ -12,38 +13,33 @@ namespace Dependinator.Common.ThemeHandling
 {
 	[SingleInstance]
 	internal class ThemeService : IThemeService
-	{	
-		private readonly WorkingFolder workingFolder;
+	{
+		private readonly ISettingsService settingsService;
 		private readonly Dictionary<string, Brush> customBranchBrushes = new Dictionary<string, Brush>();
-
-		private int currentIndex = 0;
 
 		private Theme currentTheme;
 
-		public ThemeService(WorkingFolder workingFolder)
+		public ThemeService(ISettingsService settingsService, ModelMetadata modelMetadata)
 		{
-			this.workingFolder = workingFolder;
+			this.settingsService = settingsService;
 
-			Options options = Settings.Get<Options>();
-
-			// Setting options to ensure that readonly options like DefaultTheme is written correctly
-			Settings.Set(options);
+			settingsService.EnsureExists<Options>();
 
 			LoadTheme();
 
 			LoadCustomBranchColors();
 
-			workingFolder.OnChange += (s, e) => LoadCustomBranchColors();
+			modelMetadata.OnChange += (s, e) => LoadCustomBranchColors();
 		}
 
 
 		public Theme Theme => currentTheme;
 
 		public Brush GetBranchBrush(string name)
-		{			//if (branch.IsMultiBranch)
-			//{
-			//	return currentTheme.GetMultiBranchBrush();
-			//}
+		{     //if (branch.IsMultiBranch)
+					//{
+					//	return currentTheme.GetMultiBranchBrush();
+					//}
 
 			//if (branch.Name == BranchName.Master)
 			//{
@@ -60,7 +56,7 @@ namespace Dependinator.Common.ThemeHandling
 		}
 
 		public Brush GetBrushFromHex(string hexColor)
-		{    
+		{
 			return Converter.BrushFromHex(hexColor);
 		}
 
@@ -73,16 +69,14 @@ namespace Dependinator.Common.ThemeHandling
 		{
 			Brush currentBrush = GetBranchBrush(name);
 			int index = currentTheme.GetBrushIndex(currentBrush);
-	
+
 			// Select next brush
 			int newIndex = ((index + 1) % (currentTheme.brushes.Count - 2)) + 2;
 
-			Brush brush = currentTheme.brushes[newIndex];		
+			Brush brush = currentTheme.brushes[newIndex];
 			string brushHex = Converter.HexFromBrush(brush);
 
-			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
-			settings.BranchColors[name] = brushHex;
-			Settings.SetWorkFolderSetting(workingFolder, settings);
+			settingsService.Edit<WorkFolderSettings>(s => s.BranchColors[name] = brushHex);
 
 			LoadCustomBranchColors();
 
@@ -94,7 +88,7 @@ namespace Dependinator.Common.ThemeHandling
 		{
 			LoadTheme();
 
-			Collection<ResourceDictionary> dictionaries = 
+			Collection<ResourceDictionary> dictionaries =
 				Application.Current.Resources.MergedDictionaries;
 
 			ResourceDictionary colors = dictionaries
@@ -125,10 +119,10 @@ namespace Dependinator.Common.ThemeHandling
 		}
 
 
-		public SolidColorBrush GetRectangleBrush()
+		public SolidColorBrush GetRectangleBrush(string nodeName)
 		{
-			int index = (currentIndex++) % Theme.brushes.Count;
-			
+			int code = Math.Abs(nodeName?.GetHashCode() ?? 0);
+			int index = code % Theme.brushes.Count;
 			return Theme.brushes[index];
 		}
 
@@ -153,10 +147,10 @@ namespace Dependinator.Common.ThemeHandling
 			currentTheme = new Theme(themeOption);
 		}
 
-		
-		private static ThemeOption GetCurrentThemeOption()
+
+		private ThemeOption GetCurrentThemeOption()
 		{
-			Options options = Settings.Get<Options>();
+			Options options = settingsService.Get<Options>();
 
 			ThemeOption theme = options.Themes.CustomThemes
 				.FirstOrDefault(t => t.Name == options.Themes.CurrentTheme)
@@ -169,9 +163,9 @@ namespace Dependinator.Common.ThemeHandling
 		private void LoadCustomBranchColors()
 		{
 			customBranchBrushes.Clear();
-			WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
+			WorkFolderSettings folderSettings = settingsService.Get<WorkFolderSettings>();
 
-			foreach (var pair in settings.BranchColors)
+			foreach (var pair in folderSettings.BranchColors)
 			{
 				Brush brush = currentTheme.brushes.FirstOrDefault(b => Converter.HexFromBrush(b) == pair.Value);
 				if (brush != null)

@@ -5,7 +5,7 @@ namespace System.Linq
 {
 	public static class CollectionExtensions
 	{
-		public static bool TryAdd<T>(this ICollection<T> collection,T item)
+		public static bool TryAdd<T>(this ICollection<T> collection, T item)
 		{
 			if (!collection.Contains(item))
 			{

@@ -13,7 +13,7 @@ namespace Dependinator.Common.ThemeHandling
 
 		void SetThemeWpfColors();
 
-		SolidColorBrush GetRectangleBrush();
+		SolidColorBrush GetRectangleBrush(string nodeName);
 		Brush GetRectangleBackgroundBrush(Brush brush);
 		string GetHexColorFromBrush(Brush brush);
 		Brush GetBrushFromHex(string hexColor);

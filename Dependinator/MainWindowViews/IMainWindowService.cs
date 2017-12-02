@@ -3,11 +3,11 @@
 	public interface IMainWindowService
 	{
 		bool IsNewVersionAvailable { set; }
-
 		void SetSearchFocus();
-
-		void SetRepositoryViewFocus();
-
 		void SetMainWindowFocus();
+		void SendFeedback();
+		void OpenOptions();
+		void OpenHelp();
+		void OpenNewWindow();
 	}
 }

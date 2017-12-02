@@ -1,128 +1,91 @@
-﻿using System.Threading.Tasks;
-using System.Windows;
-using Dependinator.ModelViewing.Private.Items;
-using Dependinator.ModelViewing.Private.Items.Private;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+using Dependinator.Common;
+using Dependinator.Common.ModelMetadataFolders.Private;
+using Dependinator.Common.ProgressHandling;
+using Dependinator.Common.SettingsHandling;
+using Dependinator.ModelHandling;
+using Dependinator.ModelHandling.Core;
+using Dependinator.ModelHandling.Private.Items;
 using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Private
 {
 	[SingleInstance]
-	internal class ModelViewService : IModelViewService
+	internal class ModelViewService : IModelViewService, ILoadModelService
 	{
+		private readonly ISettingsService settingsService;
 		private readonly IModelService modelService;
+		private readonly IProgressService progress;
 
-
-
-		//private ModelOld currentModel;
 
 		public ModelViewService(
-			IModelService modelService)
+			ISettingsService settingsService,
+			IModelService modelService,
+			IProgressService progress)
 		{
+			this.settingsService = settingsService;
 			this.modelService = modelService;
-
+			this.progress = progress;
 		}
 
 
+		public void SetRootCanvas(ItemsCanvas rootCanvas) => modelService.SetRootCanvas(rootCanvas);
 
-		public async Task LoadAsync(ItemsCanvas rootCanvas)
+
+		public async Task LoadAsync()
 		{
-			modelService.Init(rootCanvas);
+			Timing t = new Timing();
 
-			await modelService.LoadAsync();
+			Log.Debug("Loading repository ...");
+
+			using (progress.ShowBusy())
+			{
+				RestoreViewSettings();
+
+				await modelService.LoadAsync();
+				t.Log("Updated view model after cached/fresh");
+			}
 		}
 
 
-		//private ModelOld GetDataModel()
-		//{
-		//	ModelOld dataModel = GetCachedOrFreshModelData();
-
-		//	return dataModel;
-		//}
-
-
-		public async Task Refresh(ItemsCanvas rootCanvas, bool refreshLayout)
-		{
+		public async Task RefreshAsync(bool refreshLayout) =>
 			await modelService.RefreshAsync(refreshLayout);
-		}
 
+		public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelService.GetHiddenNodeNames();
 
-		//private ModelOld GetCachedOrFreshModelData()
-		//{
-		//	ModelOld dataModel;
-		//	if (!TryReadCachedData(out dataModel))
-		//	{
-		//		dataModel = ReadFreshData();
-		//	}
-
-		//	return dataModel;
-		//}
-
-
-		//private void ShowModel(IItemsCanvas rootCanvas)
-		//{
-		//	RestoreViewSettings(rootCanvas);
-
-		//	NodeOld rootNode = currentModel.Root;
-
-		//	rootNode.Show(rootCanvas);
-		//}
-
-
-
-		//private bool TryReadCachedData(out ModelOld dataModel)
-		//{
-		//	string dataFilePath = GetDataFilePath();
-		//	return modelingService.TryDeserialize(dataFilePath, out dataModel);
-		//}
-
-
-		//private ModelOld ReadFreshData()
-		//{
-		//	Timing t = Timing.Start();
-		//	ModelOld newModel = modelingService.Analyze(workingFolder.FilePath, null);
-		//	t.Log("Read fresh model");
-		//	return newModel;
-		//}
+		public void ShowHiddenNode(NodeName nodeName) => modelService.ShowHiddenNode(nodeName);
 
 
 		public void Close()
 		{
-			//currentModel.Root.UpdateAllNodesScalesBeforeClose();
-			////DataModel dataModel = modelingService.ToDataModel(model);
-			//string dataFilePath = GetDataFilePath();
+			StoreViewSettings();
 
-			//modelingService.Serialize(currentModel, dataFilePath);
-
-			//StoreViewSettings();
+			modelService.Save();
 		}
 
 
-		//private string GetDataFilePath()
-		//{
-		//	return Path.Combine(workingFolder, "data.json");
-		//}
+		private void StoreViewSettings()
+		{
+			settingsService.Edit<WorkFolderSettings>(settings =>
+			{
+				settings.Scale = modelService.Root.ItemsCanvas.Scale;
+				//settings.Offset = modelService.Root.ItemsCanvas.Offset;
+			});
+		}
 
 
-		//private void StoreViewSettings()
-		//{
-		//	Settings.EditWorkingFolderSettings(workingFolder,
-		//		settings =>
-		//		{
-		//			settings.Scale = currentModel.Root.ItemsScale;
-		//			settings.X = currentModel.Root.ItemsOffset.X;
-		//			settings.Y = currentModel.Root.ItemsOffset.Y;
-		//		});
-		//}
+		private void RestoreViewSettings()
+		{
+			WorkFolderSettings settings = settingsService.Get<WorkFolderSettings>();
+			Node root = modelService.Root;
 
+			root.ItemsCanvas.SetRootScale(settings.Scale);
+			//root.ItemsCanvas.SetOffset(settings.Offset);
 
-		//private void RestoreViewSettings(IItemsCanvas rootCanvas)
-		//{
-		//	WorkFolderSettings settings = Settings.GetWorkFolderSetting(workingFolder);
-		//	rootCanvas.Scale = settings.Scale;
-		//	rootCanvas.Offset = new Point(settings.X, settings.Y);
-		//}
-
-
+			//root.ItemsCanvas.SetRootScale(1);
+			//root.ItemsCanvas.SetOffset(new Point(0, 0));
+		}
 	}
 }

@@ -4,6 +4,7 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:local="clr-namespace:Dependinator.ModelViewing.Links"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
@@ -27,16 +28,17 @@
 				Stroke="{Binding LineBrush}"
 				StrokeThickness="{Binding ArrowWidth}"
 				IsHitTestVisible="False"
-				StrokeEndLineCap="Triangle" />
+				StrokeEndLineCap="Triangle"/>
 
 			<!-- Line controls -->
 			<Path
-				Visibility="{Binding IsMouseOver, Converter={StaticResource VC}}"
+				Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
 				Data="{Binding PointsData}"
 				Stroke="{Binding LineBrush}"
 				StrokeLineJoin="Round"
 				StrokeThickness="5"
-				IsHitTestVisible="False"/>
+				MouseEnter="UIElement_OnMouseEnter"
+				MouseLeave="UIElement_OnMouseLeave"/>
 
 			<!-- Mouse over-->
 			<Path
@@ -54,6 +56,55 @@
 						BorderThickness="1" 
 						Opened="ToolTip_OnOpened"/>
 				</Path.ToolTip>
+
+				<Path.ContextMenu>
+					<ContextMenu >
+
+						<MenuItem 
+							Header="Source nodes"
+							ItemsSource="{Binding SourceLinks}">
+							<!--<MenuItem.Icon>
+								<Grid Margin="0">
+									<TextBlock Text="&#xE0B5;" Style="{DynamicResource MenuIconStyle}" Padding="2,0,0,0" />
+									--><!--<TextBlock Text="&#xE3C0;" Style="{DynamicResource MenuIconStyle}" Margin="4,4" Padding="0" Background="Transparent" />--><!--
+								</Grid>
+							</MenuItem.Icon>-->
+							<MenuItem.Resources>
+								<HierarchicalDataTemplate 
+									DataType="{x:Type local:LinkItem}"
+									ItemsSource="{Binding SubItems}">
+									<MenuItem
+										Header="{Binding Text}" 
+										Command="{Binding LinkCommand}"
+										CommandParameter="{Binding Link}"/>
+								</HierarchicalDataTemplate>
+							</MenuItem.Resources>
+						</MenuItem>
+
+						<MenuItem 
+							Header="Target nodes"
+							ItemsSource="{Binding TargetLinks}">
+							<!--<MenuItem.Icon>
+								<Grid Margin="0">
+									<TextBlock Text="&#xE0B2;" Style="{DynamicResource MenuIconStyle}" Padding="2,0,0,0" />
+									--><!--<TextBlock Text="&#xE25A;" Style="{DynamicResource MenuIconStyle}" Margin="4,0" Padding="0" Background="Transparent" Foreground="{DynamicResource LocalAheadBrush}"/>--><!--
+								</Grid>
+							</MenuItem.Icon>-->
+							<MenuItem.Resources>
+								<HierarchicalDataTemplate 
+									DataType="{x:Type local:LinkItem}"
+									ItemsSource="{Binding SubItems}">
+									<MenuItem
+										Header="{Binding Text}" 
+										Command="{Binding LinkCommand}"
+										CommandParameter="{Binding Link}"/>
+								</HierarchicalDataTemplate>
+							</MenuItem.Resources>
+						</MenuItem>
+
+					</ContextMenu>
+				</Path.ContextMenu>
+
 			</Path>
 
 		</Grid>

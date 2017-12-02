@@ -3,6 +3,7 @@ using System.Collections;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
+using Dependinator.Utils.UI.Mvvm;
 
 
 namespace Dependinator.Utils.UI

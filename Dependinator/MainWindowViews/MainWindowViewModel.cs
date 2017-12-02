@@ -1,73 +1,79 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using Dependinator.ApplicationHandling;
-using Dependinator.ApplicationHandling.SettingsHandling;
-using Dependinator.Common;
+using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
+using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.ProgressHandling;
+using Dependinator.Common.SettingsHandling;
+using Dependinator.ModelHandling.Private;
 using Dependinator.ModelViewing;
+using Dependinator.ModelViewing.Open;
+using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
+using Dependinator.Utils.UI.Mvvm;
 using Application = System.Windows.Application;
 
 
 namespace Dependinator.MainWindowViews
 {
 	[SingleInstance]
-	internal class MainWindowViewModel : ViewModel
+	internal class MainWindowViewModel : ViewModel, IBusyIndicatorProvider
 	{
 		private readonly ILatestVersionService latestVersionService;
 		private readonly IMainWindowService mainWindowService;
-		private readonly MainWindowIpcService mainWindowIpcService;
-
-		private readonly JumpListService jumpListService = new JumpListService();
-
-		// private IpcRemotingService ipcRemotingService = null;
-		private readonly WorkingFolder workingFolder;
-
-		private readonly WindowOwner owner;
+		private readonly IOpenModelService openModelService;
+		private readonly IRecentModelsService recentModelsService;
+		private readonly IModelViewService modelViewService;
+		private readonly ModelMetadata modelMetadata;
 		private readonly IMessage message;
 
-		private bool isLoaded = false;
 
 
 		internal MainWindowViewModel(
-			WorkingFolder workingFolder,
-			WindowOwner owner,
+			ModelMetadata modelMetadata,
 			IMessage message,
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
-			MainWindowIpcService mainWindowIpcService,
-			ModelViewModel modelViewModel)
+			ModelViewModel modelViewModel,
+			IOpenModelService openModelService,
+			IRecentModelsService recentModelsService,
+			IModelViewService modelViewService)
 		{
-			this.workingFolder = workingFolder;
-			this.owner = owner;
+			this.modelMetadata = modelMetadata;
 			this.message = message;
+
 			this.latestVersionService = latestVersionService;
 			this.mainWindowService = mainWindowService;
-			this.mainWindowIpcService = mainWindowIpcService;
+			this.openModelService = openModelService;
+			this.recentModelsService = recentModelsService;
+			this.modelViewService = modelViewService;
 
 			ModelViewModel = modelViewModel;
 
-			workingFolder.OnChange += (s, e) => Notify(nameof(WorkingFolder));
+			modelMetadata.OnChange += (s, e) => Notify(nameof(WorkingFolder));
 			latestVersionService.OnNewVersionAvailable += (s, e) => IsNewVersionVisible = true;
 			latestVersionService.StartCheckForLatestVersion();
+			recentModelsService.Changed += (s, e) => Notify(nameof(ResentModels), nameof(HasResent));
 		}
 
+		public int WindowWith { set => ModelViewModel.Width = value; }
 
 		public bool IsInFilterMode => !string.IsNullOrEmpty(SearchBox);
 
 
 		public bool IsNewVersionVisible { get => Get(); set => Set(value); }
 
-		public string WorkingFolder => workingFolder.Name;
+		public string WorkingFolder => modelMetadata.ModelName;
 
-		public string WorkingFolderPath => workingFolder.FilePath;
+		public string WorkingFolderPath => modelMetadata.ModelFilePath;
 
 
-		public string Title => $"{workingFolder.Name} - Dependinator";
+		public string Title => $"{modelMetadata.ModelName} - {Product.Name}";
 
 
 		public string SearchBox
@@ -77,15 +83,10 @@ namespace Dependinator.MainWindowViews
 			{
 				message.ShowInfo("Search is not yet implemented.");
 				//Set(value).Notify(nameof(IsInFilterMode));
-				//SetSearchBoxValue(value);
+				// ModelViewModel.SetFilter(value);
 			}
 		}
 
-
-		private void SetSearchBoxValue(string text)
-		{
-			ModelViewModel.SetFilter(text);
-		}
 
 
 		public BusyIndicator Busy => BusyIndicator();
@@ -97,26 +98,65 @@ namespace Dependinator.MainWindowViews
 		{
 			get
 			{
-				Version version = ProgramPaths.GetRunningVersion();
-				DateTime buildTime = ProgramPaths.BuildTime();
+				Version version = ProgramInfo.GetCurrentInstanceVersion();
+				DateTime buildTime = ProgramInfo.GetCurrentInstanceBuildTime();
 				string dateText = buildTime.ToString("yyyy-MM-dd\nHH:mm");
 				string text = $"Version: {version.Major}.{version.Minor}\n{dateText}";
 				return text;
 			}
 		}
 
+		public IReadOnlyList<FileItem> ResentModels => GetRecentFiles();
+
+		public IReadOnlyList<HiddenNodeItem> HiddenNodes => GetHiddenNodes();
+
+
+
+		private IReadOnlyList<HiddenNodeItem> GetHiddenNodes()
+		{
+			return modelViewService.GetHiddenNodeNames()
+				.Select(name => new HiddenNodeItem(name, modelViewService.ShowHiddenNode))
+				.ToList();
+		}
+
+
+		public bool HasResent => recentModelsService.GetModelPaths().Any();
+		public bool HasHiddenNodes => modelViewService.GetHiddenNodeNames().Any();
+
+
+		private IReadOnlyList<FileItem> GetRecentFiles()
+		{
+			IReadOnlyList<string> filesPaths = recentModelsService.GetModelPaths();
+
+			List<FileItem> fileItems = new List<FileItem>();
+			foreach (string filePath in filesPaths)
+			{
+				string name = Path.GetFileName(filePath);
+
+				fileItems.Add(new FileItem(name, filePath, openModelService.TryModelAsync));
+			}
+
+			return fileItems;
+		}
+
+
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
 		public Command RefreshLayoutCommand => AsyncCommand(ManualRefreshLayoutAsync);
 
-		public Command OpenFileCommand => AsyncCommand(OpenFileAsync);
+		public Command OpenFileCommand => AsyncCommand(openModelService.OpenModelAsync);
+
+		public Command OpenNewWindowCommand => Command(mainWindowService.OpenNewWindow);
+
+
+
 
 		public Command RunLatestVersionCommand => AsyncCommand(RunLatestVersionAsync);
 
-		public Command FeedbackCommand => Command(Feedback);
+		public Command FeedbackCommand => Command(mainWindowService.SendFeedback);
 
-		public Command OptionsCommand => Command(OpenOptions);
+		public Command OptionsCommand => Command(mainWindowService.OpenOptions);
 
-		public Command HelpCommand => Command(OpenHelp);
+		public Command HelpCommand => Command(mainWindowService.OpenHelp);
 
 		public Command MinimizeCommand => Command(Minimize);
 
@@ -133,112 +173,55 @@ namespace Dependinator.MainWindowViews
 		public Command SearchCommand => Command(Search);
 
 
-		public async Task FirstLoadAsync()
-		{
-			if (workingFolder.IsValid)
-			{
-				await SetWorkingFolderAsync();
-			}
-			else
-			{
-				isLoaded = false;
 
-				if (!TryOpenFile())
-				{
-					Application.Current.Shutdown(0);
-					return;
-				}
-
-				await SetWorkingFolderAsync();
-			}
-		}
-
-
-		public void ClosingWindow()
-		{
-			ModelViewModel.ClosingWindow();
-		}
-
-
-		private async Task OpenFileAsync()
-		{
-			isLoaded = false;
-
-			if (!TryOpenFile())
-			{
-				isLoaded = true;
-				return;
-			}
-
-			await SetWorkingFolderAsync();
-
-			await ModelViewModel.LoadAsync();
-		}
-
-
-		private async Task SetWorkingFolderAsync()
+		public async Task LoadAsync()
 		{
 			await Task.Yield();
 
-			//if (ipcRemotingService != null)
+			//if (workingFolder.IsValid)
 			//{
-			//	ipcRemotingService.Dispose();
-			//}
-
-			//ipcRemotingService = new IpcRemotingService();
-
-			//string id = MainWindowIpcService.GetId(workingFolder);
-			//if (ipcRemotingService.TryCreateServer(id))
-			//{
-			//	ipcRemotingService.PublishService(mainWindowIpcService);
+			//	//await SetWorkingFolderAsync();
 			//}
 			//else
 			//{
-			//	// Another Dependinator instance for that working folder is already running, activate that.
-			//	ipcRemotingService.CallService<MainWindowIpcService>(id, service => service.Activate(null));
-			//	Application.Current.Shutdown(0);
-			//	ipcRemotingService.Dispose();
-			//	return;
+			//	//Dispatcher.CurrentDispatcher.BeginInvoke(() =>
+			//	//{
+			//	//	OpenFileDialog dialog = new OpenFileDialog(owner);
+			//	//	dialog.ShowDialog();
+			//	//});
+
+			//}
+			//else
+			//{
+			//	Dispatcher.CurrentDispatcher.BeginInvoke(() => OpenFileAsync().RunInBackground());
 			//}
 
-			jumpListService.Add(workingFolder.FilePath);
+			//else
+			//{
+			//	isLoaded = false;
 
-			Notify(nameof(Title));
+			//	if (!TryOpenFile())
+			//	{
+			//		Application.Current.Shutdown(0);
+			//		return;
+			//	}
 
-			//await ModelViewModel.LoadAsync();
-			isLoaded = true;
+			//	await SetWorkingFolderAsync();
+			//}
 		}
 
 
-		private Task ManualRefreshAsync()
-		{
-			return ModelViewModel.ManualRefreshAsync();
-		}
+		public void ClosingWindow() => ModelViewModel.Close();
 
-		private Task ManualRefreshLayoutAsync()
-		{
-			return ModelViewModel.ManualRefreshAsync(true);
-		}
+		private Task ManualRefreshAsync() => ModelViewModel.ManualRefreshAsync();
 
-		public Task AutoRemoteCheckAsync()
-		{
-			return ModelViewModel.AutoRemoteCheckAsync();
-		}
+		private Task ManualRefreshLayoutAsync() => ModelViewModel.ManualRefreshAsync(true);
 
-
-		private void Search()
-		{
-			mainWindowService.SetSearchFocus();
-		}
+		private void Search() => mainWindowService.SetSearchFocus();
 
 
 		public Task ActivateRefreshAsync()
 		{
-			if (!isLoaded)
-			{
-				return Task.CompletedTask;
-			}
-
 			return ModelViewModel.ActivateRefreshAsync();
 		}
 
@@ -248,7 +231,6 @@ namespace Dependinator.MainWindowViews
 			if (!string.IsNullOrWhiteSpace(SearchBox))
 			{
 				SearchBox = "";
-				mainWindowService.SetRepositoryViewFocus();
 			}
 			else
 			{
@@ -257,16 +239,12 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		public int WindowWith { set { ModelViewModel.Width = value; } }
 
-
-		private void Minimize()
-		{
+		private static void Minimize() =>
 			Application.Current.MainWindow.WindowState = WindowState.Minimized;
-		}
 
 
-		private void ToggleMaximize()
+		private static void ToggleMaximize()
 		{
 			if (Application.Current.MainWindow.WindowState == WindowState.Maximized)
 			{
@@ -279,15 +257,9 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		private void CloseWindow()
-		{
-			Application.Current.Shutdown(0);
-		}
+		private static void CloseWindow() => Application.Current.Shutdown(0);
 
-		private void Exit()
-		{
-			Application.Current.Shutdown(0);
-		}
+		private static void Exit() => Application.Current.Shutdown(0);
 
 
 		private async Task RunLatestVersionAsync()
@@ -302,96 +274,12 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		private void Feedback()
-		{
-			try
-			{
-				Process process = new Process();
-				process.StartInfo.FileName = "mailto:michael.reichenauer@gmail.com&subject=Dependinator Feedback";
-				process.Start();
-			}
-			catch (Exception ex) when (ex.IsNotFatal())
-			{
-				Log.Error($"Failed to open feedback link {ex}");
-			}
-		}
-
-
-		private void OpenOptions()
-		{
-			try
-			{
-				Settings.EnsureExists<Options>();
-				Process process = new Process();
-				string optionsName = nameof(Options);
-				process.StartInfo.FileName = Path.Combine(ProgramPaths.DataFolderPath, $"{optionsName}.json");
-				process.Start();
-			}
-			catch (Exception e) when (e.IsNotFatal())
-			{
-				Log.Error($"Failed to open options {e}");
-			}
-		}
-
-
-		private void OpenHelp()
-		{
-			try
-			{
-				Process process = new Process();
-				process.StartInfo.FileName = "https://github.com/michael-reichenauer/Dependinator/wiki/Help";
-				process.Start();
-			}
-			catch (Exception ex) when (ex.IsNotFatal())
-			{
-				Log.Error($"Failed to open help link {ex}");
-			}
-		}
 
 		private void ClearFilter()
 		{
 			if (!string.IsNullOrWhiteSpace(SearchBox))
 			{
 				SearchBox = "";
-				mainWindowService.SetRepositoryViewFocus();
-			}
-		}
-
-
-		public bool TryOpenFile()
-		{
-			while (true)
-			{
-				// Create OpenFileDialog 
-				Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
-
-				// Set filter for file extension and default file extension 
-				dlg.DefaultExt = ".exe";
-				dlg.Filter = "Files (*.exe, *.dll)|*.exe;*.dll|.NET libs (*.dll)|*.dll|.NET Programs (*.exe)|*.exe";
-				dlg.CheckFileExists = true;
-				dlg.Multiselect = false;
-				dlg.Title = "Select a .NET .dll or .exe file";
-				dlg.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-
-				bool? result = dlg.ShowDialog();
-
-				// Get the selected file name and display in a TextBox 
-				if (result != true)
-				{
-					Log.Debug("User canceled selecting a file");
-					return false;
-				}
-
-
-				if (workingFolder.TrySetPath(dlg.FileName))
-				{
-					Log.Debug($"User selected valid '{dlg.FileName}' in root '{workingFolder}'");
-					return true;
-				}
-				else
-				{
-					Log.Debug($"User selected an invalid working folder: {dlg.FileName}");
-				}
 			}
 		}
 	}

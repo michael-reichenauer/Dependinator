@@ -19,8 +19,8 @@
 
 
 				<!-- Horizontal scrollbar height -->
-				<Setter Property="FrameworkElement.Height" Value="2" />
-				<Setter Property="FrameworkElement.MinHeight" Value="2" />
+				<Setter Property="FrameworkElement.Height" Value="4" />
+				<Setter Property="FrameworkElement.MinHeight" Value="4" />
 
 				
 				<Setter Property="Panel.Background" Value ="Transparent"/>
@@ -112,7 +112,7 @@
 														<Setter.Value>
 															<ControlTemplate TargetType="Thumb">
 																<Rectangle
-																	Fill="Gray"
+																	Fill="#77999999"
 																	Width="{TemplateBinding FrameworkElement.Width}"
 																	Height="{TemplateBinding FrameworkElement.Height}" />
 															</ControlTemplate>
@@ -222,8 +222,8 @@
 
 
 		<!-- Vertical Scrollbar width -->
-		<Setter Property="FrameworkElement.Width" Value="2" />
-		<Setter Property="FrameworkElement.MinWidth" Value="2" />
+		<Setter Property="FrameworkElement.Width" Value="4" />
+		<Setter Property="FrameworkElement.MinWidth" Value="4" />
 
 
 		<Setter Property="Control.Template">
@@ -319,7 +319,7 @@
 												<Setter.Value>
 													<ControlTemplate TargetType="Thumb">
 														<Rectangle
-															Fill="Gray"
+															Fill="#77999999"
 															Width="{TemplateBinding FrameworkElement.Width}"
 															Height="{TemplateBinding FrameworkElement.Height}" />
 													</ControlTemplate>

@@ -1,0 +1,24 @@
+using System.Collections.Generic;
+using Dependinator.Utils;
+
+
+namespace Dependinator.ModelHandling.Core
+{
+	internal class Link : Equatable<Link>
+	{
+		public Link(Node source, Node target)
+		{
+			Source = source;
+			Target = target;
+
+			IsEqualWhenSame(source, target);
+		}
+
+		public int Stamp { get; set; }
+		public Node Target { get; }
+		public Node Source { get; }
+		public List<Line> Lines { get; } = new List<Line>();
+
+		public override string ToString() => $"{Source}->{Target}";
+	}
+}

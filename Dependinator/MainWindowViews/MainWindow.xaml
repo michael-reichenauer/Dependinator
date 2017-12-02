@@ -7,7 +7,7 @@
 	xmlns:ui="clr-namespace:Dependinator.Utils.UI"
 	xmlns:modelViewing="clr-namespace:Dependinator.ModelViewing"
 	Title="{Binding Title}"	Icon="Application.ico"
-	Width="800" Height="695"
+	Width="800" Height="700"
 	BorderBrush="{DynamicResource BorderBrush}" BorderThickness="3"
 	WindowStyle="None" AllowsTransparency="True"
 	Loaded="MainWindow_OnLoaded"
@@ -104,13 +104,13 @@
 				<StackPanel Grid.Column="1" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
 
 					<!-- Fetch error indicator -->
-					<Button 
+					<!--<Button 
 						Content="&#xE888;"
 						Style="{DynamicResource IconButtonStyle}"			
 						Foreground="{DynamicResource ConflictBrush}"			
 						FontWeight="Bold"
 						Visibility="{Binding ModelViewModel.FetchErrorText, Converter={StaticResource VC}}"			
-						ToolTip="{Binding ModelViewModel.FetchErrorText}" />
+						ToolTip="{Binding ModelViewModel.FetchErrorText}" />-->
 					
 					<!-- Latest version button -->
 					<Button 
@@ -132,7 +132,7 @@
 				<StackPanel Grid.Column="2" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
 					
 					<!-- Search and filter box  -->
-					<common:SearchFilter x:Name="Search"/>
+					<mainWindowViews:SearchFilter x:Name="Search"/>
 
 					<!-- The 3 minimize, maximize and close window control buttons in the title bar -->
 					<common:WindowControlButtons/>

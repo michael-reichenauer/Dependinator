@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Windows;
+using Dependinator.ModelHandling;
+using Dependinator.ModelHandling.Core;
 using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.Nodes;
 
@@ -13,14 +15,12 @@ namespace Dependinator.ModelViewing.Links
 
 		bool IsOnLineBetweenNeighbors(Line points, int index);
 		int GetLinePointIndex(Line line, Point point);
-		double GetDistanceFromLine(Point a, Point b, Point p);
-		Point GetPointInPerimeter(Rect rect, Point point);
-		void AddLinkLines(LinkOld link);
-		void ZoomInLinkLine(LinkLineOld line, NodeOld node);
-		void ZoomOutLinkLine(LinkLineOld line, NodeOld node);
-		void CloseLine(LinkLineOld line);
-		double GetLineThickness(LinkLineOld linkLine);
-		LinkLineBounds GetLinkLineBounds(LinkLineOld line);
+		//void AddLinkLines(LinkOld link);
+		//void ZoomInLinkLine(LinkLineOld line, NodeOld node);
+		//void ZoomOutLinkLine(LinkLineOld line, NodeOld node);
+		//void CloseLine(LinkLineOld line);
+		//double GetLineThickness(LinkLineOld linkLine);
+		//LinkLineBounds GetLinkLineBounds(LinkLineOld line);
 
 		/// <summary>
 		/// Gets the links in the line grouped first by source and then by target at the
@@ -28,7 +28,6 @@ namespace Dependinator.ModelViewing.Links
 		/// </summary>
 		IReadOnlyList<LinkGroup> GetLinkGroups(Line line);
 
-		Point GetClosestPointOnLineSegment(Point a, Point b, Point p);
 		string GetLineToolTip(Line line);
 		double GetLineWidth(Line line);
 		string GetLineData(Line line);
@@ -38,5 +37,7 @@ namespace Dependinator.ModelViewing.Links
 		void UpdateLineEndPoints(Line line);
 		void UpdateLineBounds(Line line);
 		double GetArrowWidth(Line line);
+		IEnumerable<LinkItem> GetSourceLinkItems(Line line);
+		IEnumerable<LinkItem> GetTargetLinkItems(Line line);
 	}
 }

@@ -1,14 +1,15 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Reflection;
-using Dependinator.ApplicationHandling;
-using Dependinator.ApplicationHandling.SettingsHandling;
+using Dependinator.Common.Environment.Private;
 using Dependinator.Common.MessageDialogs;
+using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
 
 
 namespace Dependinator
 {
+	/// <summary>
+	/// Contains the Main method and is the entry point of the program.
+	/// </summary>
 	public class Program
 	{
 		private readonly DependencyInjection dependencyInjection = new DependencyInjection();
@@ -18,6 +19,8 @@ namespace Dependinator
 		[STAThread]
 		public static void Main()
 		{
+			Culture.Initialize();
+			Log.Init(ProgramInfo.GetLogFilePath());
 			Log.Debug(GetStartLineText());
 			Program program = new Program();
 			program.Run();
@@ -37,12 +40,11 @@ namespace Dependinator
 
 			// Start application
 			App application = dependencyInjection.Resolve<App>();
-			ExceptionHandling.HandleDispatcherUnhandledException();
+			ExceptionHandling.HandleDispatcherUnhandledException(); // activate after ui is started
 			application.InitializeComponent();
 			application.Run();
 		}
 
-		
 
 		private static void ActivateExternalDependenciesResolver()
 		{
@@ -60,20 +62,10 @@ namespace Dependinator
 
 		private static string GetStartLineText()
 		{
-			string version = GetProgramVersion();
+			string version = AssemblyInfo.GetProgramVersion();
+			string cmd = string.Join("','", Environment.GetCommandLineArgs());
 
-			string[] args = Environment.GetCommandLineArgs();
-			string argsText = string.Join("','", args);
-
-			return $"Start version: {version}, args: '{argsText}'";
-		}
-
-
-		private static string GetProgramVersion()
-		{
-			Assembly assembly = Assembly.GetExecutingAssembly();
-			FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-			return fvi.FileVersion;
+			return $"Start version: {version}, cmd: '{cmd}'";
 		}
 
 
@@ -81,15 +73,91 @@ namespace Dependinator
 		{
 			ExceptionHandling.ExceptionOccurred += (s, e) => Restart();
 			ExceptionHandling.ExceptionOnStartupOccurred += (s, e) =>
-				Message.ShowError("Sorry, but an unexpected error just occurred", "Dependinator");
+				Message.ShowError("Sorry, but an unexpected error just occurred");
 			ExceptionHandling.HandleUnhandledException();
 		}
 
 
 		private static void Restart()
 		{
-			string targetPath = ProgramPaths.GetInstallFilePath();
+			string targetPath = ProgramInfo.GetInstallFilePath();
 			Cmd.Start(targetPath, "");
 		}
+
+
+		// private static readonly string LogFileName = "Some/filePath";
+
+
+		//		public static async Task MainAsync()
+		//		{
+		//			try
+		//			{
+		//				Logx.Setup(LogFileName);
+
+		//				Log.Info("Starting AXIS Connect Camera Station Agent");
+
+		//				DependencyInjectionx dependencyInjection = new DependencyInjectionx();
+
+		//				using (ILifetimeScope scope = dependencyInjection.BeginLifetimeScope())
+		//				{
+		//					IAgentService agentService = scope.Resolve<IAgentService>();
+
+		//					await agentService.StartAgentAsync(CancellationToken.None);
+
+		//					await agentService.StartAgentAsync2(CancellationToken.None);
+		//				}
+		//			}
+		//#pragma warning disable AX1011 // Catch all exceptions to be able to log them
+		//			catch (Exception e)
+		//			{
+		//				Logx.Fatal($"Acs agent failed: {e}");
+		//				throw;
+		//			}
+		//#pragma warning restore AX1011
+		//		}
+
 	}
+
+
+	//internal interface IAgentService
+	//{
+	//	Task StartAgentAsync(CancellationToken ct);
+	//	Task StartAgentAsync2(CancellationToken none);
+	//}
+
+
+	//internal interface ILifetimeScope : IDisposable
+	//{
+	//	T Resolve<T>();
+	//}
+
+
+	//internal class DependencyInjectionx
+	//{
+	//	public ILifetimeScope BeginLifetimeScope()
+	//	{
+	//		throw new NotImplementedException();
+	//	}
+	//}
+
+
+	//internal class Logx
+	//{
+	//	public static void Setup(string logFileName)
+	//	{
+	//		throw new NotImplementedException();
+	//	}
+
+
+	//	public static void Info(string message)
+	//	{
+	//		throw new NotImplementedException();
+	//	}
+
+
+	//	public static void Fatal(string message)
+	//	{
+	//		throw new NotImplementedException();
+	//	}
+	//}
 }

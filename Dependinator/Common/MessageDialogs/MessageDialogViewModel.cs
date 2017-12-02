@@ -1,5 +1,5 @@
 ﻿using System.Windows;
-using Dependinator.Utils.UI;
+using Dependinator.Utils.UI.Mvvm;
 
 
 namespace Dependinator.Common.MessageDialogs

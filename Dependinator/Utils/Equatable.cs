@@ -117,7 +117,7 @@ namespace Dependinator.Utils
 			{
 				throw new InvalidOperationException(
 					$"To support Equals() or == for {GetType()},\n" +
-					$"you need to call IsEqualWhen(), e.g. in the constructor");
+					"you need to call IsEqualWhenSame(), e.g. in the constructor");
 			}
 
 			return (other != null) && isEqualFunc(other);
@@ -129,7 +129,7 @@ namespace Dependinator.Utils
 			{
 				throw new InvalidOperationException(
 					$"To support GetHashCode() for {GetType()}, for use in e.g. a Dictionary,\n" +
-					$"you need to call IsEqualWhen(), e.g. in the constructor");
+					"you need to call IsEqualWhenSame(), e.g. in the constructor");
 			}
 
 			return hashCode.Value;

@@ -20,7 +20,7 @@
 
 	<!-- Menu item Icons text style -->
 	<Style x:Key="MenuIconStyle" TargetType="{x:Type TextBlock}">
-		<Setter Property="FontFamily" Value="pack://application:,,,/Fonts/#Material Icons"/>
+		<Setter Property="FontFamily" Value="{StaticResource IconFont}"/>
 		<Setter Property="FontSize" Value="18"/>
 		<Setter Property="Foreground" Value="{DynamicResource TextBrush}"/>
 		<Setter Property="Background" Value="{DynamicResource BackgroundBrush}"/>

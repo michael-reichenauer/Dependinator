@@ -1,7 +1,11 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
-using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelHandling.Core;
+using Dependinator.ModelHandling.Private.Items;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 
@@ -9,10 +13,10 @@ namespace Dependinator.ModelViewing.Links
 {
 	internal class LineViewModel : ItemViewModel
 	{
-		private static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(100);
-
 		private readonly ILineViewModelService lineViewModelService;
 		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
+		private readonly Lazy<ObservableCollection<LinkItem>> sourceLinks;
+		private readonly Lazy<ObservableCollection<LinkItem>> targetLinks;
 
 		private readonly Line line;
 		private Point mouseDownPoint;
@@ -28,9 +32,15 @@ namespace Dependinator.ModelViewing.Links
 
 			UpdateLine();
 			TrackSourceOrTargetChanges();
+
+			sourceLinks = new Lazy<ObservableCollection<LinkItem>>(GetSourceLinkItems);
+			targetLinks = new Lazy<ObservableCollection<LinkItem>>(GetTargetLinkItems);
 		}
 
-		public override bool CanShow => line.Source.ViewModel.CanShow & line.Target.ViewModel.CanShow;
+
+		public override bool CanShow =>
+			ItemScale < 40
+			&& line.Source.CanShow && line.Target.CanShow;
 
 		public double LineWidth => lineViewModelService.GetLineWidth(line);
 
@@ -41,6 +51,7 @@ namespace Dependinator.ModelViewing.Links
 			: line.Target.ViewModel.RectangleBrush;
 
 		public bool IsMouseOver { get => Get(); private set => Set(value); }
+		public bool IsShowPoints { get => Get(); private set => Set(value); }
 
 		public string LineData => lineViewModelService.GetLineData(line);
 
@@ -50,8 +61,14 @@ namespace Dependinator.ModelViewing.Links
 
 		public string StrokeDash => "";
 
-		public string ToolTip => lineViewModelService.GetLineToolTip(line);
+		public string ToolTip { get => Get(); private set => Set(value); }
 
+
+		public void UpdateToolTip() => ToolTip = lineViewModelService.GetLineToolTip(line);
+
+		public ObservableCollection<LinkItem> SourceLinks => sourceLinks.Value;
+
+		public ObservableCollection<LinkItem> TargetLinks => targetLinks.Value;
 
 
 		public void ToggleLine()
@@ -60,10 +77,27 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
+
+		private ObservableCollection<LinkItem> GetSourceLinkItems()
+		{
+			IEnumerable<LinkItem> items = lineViewModelService.GetSourceLinkItems(line);
+			return new ObservableCollection<LinkItem>(items);
+		}
+
+
+
+		private ObservableCollection<LinkItem> GetTargetLinkItems()
+		{
+			IEnumerable<LinkItem> items = lineViewModelService.GetTargetLinkItems(line);
+			return new ObservableCollection<LinkItem>(items);
+		}
+
 		public void MouseDown(Point screenPoint)
 		{
 			mouseDownPoint = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
 			currentPointIndex = -1;
+			IsMouseOver = true;
+			IsShowPoints = true;
 		}
 
 
@@ -86,7 +120,7 @@ namespace Dependinator.ModelViewing.Links
 
 			if (currentPointIndex == -1)
 			{
-				// First move event, lets start a move by getting the index of point to move.
+				// First move event, lets start a move by  getting the index of point to move.
 				// THis might create a new point if there is no existing point near the mouse down point
 				currentPointIndex = lineViewModelService.GetLinePointIndex(line, mouseDownPoint);
 				if (currentPointIndex == -1)
@@ -99,6 +133,8 @@ namespace Dependinator.ModelViewing.Links
 			lineViewModelService.MoveLinePoint(line, currentPointIndex, point);
 			lineViewModelService.UpdateLineBounds(line);
 			IsMouseOver = true;
+			IsShowPoints = true;
+			Mouse.OverrideCursor = Cursors.Hand;
 			NotifyAll();
 		}
 
@@ -110,9 +146,15 @@ namespace Dependinator.ModelViewing.Links
 
 		public void OnMouseEnter()
 		{
-			mouseOverDelay.Delay(MouseEnterDelay, _ =>
+			mouseOverDelay.Delay(ModelViewModel.MouseEnterDelay, _ =>
 			{
+				if (ModelViewModel.IsControlling)
+				{
+					Mouse.OverrideCursor = Cursors.Hand;
+				}
+
 				IsMouseOver = true;
+				IsShowPoints = ModelViewModel.IsControlling;
 				Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
 			});
 		}
@@ -120,12 +162,12 @@ namespace Dependinator.ModelViewing.Links
 
 		public void OnMouseLeave()
 		{
+			Mouse.OverrideCursor = null;
 			mouseOverDelay.Cancel();
 			IsMouseOver = false;
+			IsShowPoints = false;
 			Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
 		}
-
-		public void UpdateToolTip() => Notify(nameof(ToolTip));
 
 
 		private void EndMoveLinePoint()
@@ -148,48 +190,63 @@ namespace Dependinator.ModelViewing.Links
 		public override string ToString() => $"{line}";
 
 
-		private void UpdateLine()
+		public void UpdateLine()
 		{
-			if (!CanShow)
+			try
 			{
-				return;
-			}
+				if (!CanShow)
+				{
+					return;
+				}
 
-			lineViewModelService.UpdateLineEndPoints(line);
-			lineViewModelService.UpdateLineBounds(line);
+				lineViewModelService.UpdateLineEndPoints(line);
+				lineViewModelService.UpdateLineBounds(line);
+			}
+			catch (Exception e)
+			{
+				Log.Exception(e);
+			}
 		}
+
 
 
 		private void TrackSourceOrTargetChanges()
 		{
-			if (line.Source == line.Target.Parent)
+			try
 			{
-				// Source node is parent of target, need to update line when source canvas is moved
-				WhenSet(line.Source.ItemsCanvas, nameof(line.Source.ItemsCanvas.Offset))
-					.Notify(SourceOrTargetChanged);
+				if (line.Source == line.Target.Parent)
+				{
+					// Source node is parent of target, need to update line when source canvas is moved
+					//WhenSet(line.Source.ItemsCanvas, nameof(line.Source.ItemsCanvas.Offset))
+					//	.Notify(SourceOrTargetChanged);
 
-				// Update line when target node is moved
-				WhenSet(line.Target.ViewModel, nameof(line.Target.ViewModel.ItemBounds))
-					.Notify(SourceOrTargetChanged);
+					// Update line when target node is moved
+					WhenSet(line.Target.ViewModel, nameof(line.Target.ViewModel.ItemBounds))
+						.Notify(SourceOrTargetChanged);
 
+				}
+				else if (line.Source.Parent == line.Target)
+				{
+					// Source node is child of target node, update line when target canvas is moved
+					//WhenSet(line.Target.ItemsCanvas, nameof(line.Target.ItemsCanvas.Offset))
+					//	.Notify(SourceOrTargetChanged);
+
+					// Update line when source node is moved
+					WhenSet(line.Source.ViewModel, nameof(line.Source.ViewModel.ItemBounds))
+						.Notify(SourceOrTargetChanged);
+				}
+				else
+				{
+					// Source and targets are siblings. update line when either node is moved
+					WhenSet(line.Source.ViewModel, nameof(line.Source.ViewModel.ItemBounds))
+						.Notify(SourceOrTargetChanged);
+					WhenSet(line.Target.ViewModel, nameof(line.Target.ViewModel.ItemBounds))
+						.Notify(SourceOrTargetChanged);
+				}
 			}
-			else if (line.Source.Parent == line.Target)
+			catch (Exception e)
 			{
-				// Source node is child of target node, update line when target canvas is moved
-				WhenSet(line.Target.ItemsCanvas, nameof(line.Target.ItemsCanvas.Offset))
-					.Notify(SourceOrTargetChanged);
-
-				// Update line when source node is moved
-				WhenSet(line.Source.ViewModel, nameof(line.Source.ViewModel.ItemBounds))
-					.Notify(SourceOrTargetChanged);
-			}
-			else
-			{
-				// Source and targets are siblings. update line when either node is moved
-				WhenSet(line.Source.ViewModel, nameof(line.Source.ViewModel.ItemBounds))
-					.Notify(SourceOrTargetChanged);
-				WhenSet(line.Target.ViewModel, nameof(line.Target.ViewModel.ItemBounds))
-					.Notify(SourceOrTargetChanged);
+				Log.Exception(e);
 			}
 		}
 

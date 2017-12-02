@@ -4,8 +4,8 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-	xmlns:modelViewing="clr-namespace:Dependinator.ModelViewing"
-	xmlns:items="clr-namespace:Dependinator.ModelViewing.Private.Items"
+	xmlns:nodes="clr-namespace:Dependinator.ModelViewing.Nodes"
+	xmlns:items1="clr-namespace:Dependinator.ModelHandling.Private.Items"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
@@ -13,59 +13,27 @@
 	<Grid Background="Transparent">
 
 		<!-- Node border -->
-		<Rectangle
+		<Rectangle Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"
 			Margin="0"
 			Stroke="{Binding RectangleBrush}"
-			StrokeThickness="0.8"
+			StrokeThickness="{Binding RectangleLineWidth}"
 			Fill="{Binding BackgroundBrush}"
 			Stretch="Fill" 
 			RadiusX="3"
 			RadiusY="3"/>
 
-		<!-- Inner model -->
-		<items:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
 
-		<!-- Title -->
-		<Border
-			BorderBrush="{Binding RectangleBrush}"
-			BorderThickness="0 0 0 0.3"
-			Height="20"
-			Background="Transparent" 
-			VerticalAlignment="Top"
-			MouseMove="UIElement_OnMouseMove">
+		<nodes:DescriptionView Visibility="{Binding IsShowDescription, Converter={StaticResource VC}}"/>
 
-			<TextBlock
-				Height="20"
-				Margin="10,2"
-				Text="{Binding Name}"
-				Foreground="{DynamicResource TextBrush}"
-				FontSize="{Binding FontSize}"
-				HorizontalAlignment="Left"
-				VerticalAlignment="Top" />
+		<Grid Visibility="{Binding IsShowItems, Converter={StaticResource VC}}">
+			<items1:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
+		</Grid>
 
-			<Border.ToolTip>
-				<ToolTip
-					Content="{Binding ToolTip}"
-					Placement="Mouse"
-					BorderBrush="{Binding RectangleBrush}"
-					BorderThickness="1"
-					Opened="ToolTip_OnOpened" />
-			</Border.ToolTip>
-		</Border>
+		<nodes:TitleView Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"/>
 
-
-		<!--<Rectangle
-			Stroke="Transparent"
-			StrokeThickness="2"
-			Fill="{Binding RectangleBrush}"
-			Width="8" 
-			Height="8"
-			HorizontalAlignment="Left"
-			VerticalAlignment="Center"
-			MouseMove="UIElement_OnMouseMove"/>-->
+		<!-- Rectangle points -->
+		<nodes:NodePointsView Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"/>
 
 	</Grid>
-
-
 
 </UserControl>

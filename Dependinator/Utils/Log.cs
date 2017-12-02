@@ -3,14 +3,10 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Net;
-using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Dependinator.ApplicationHandling.SettingsHandling;
 
 
 namespace Dependinator.Utils
@@ -18,40 +14,33 @@ namespace Dependinator.Utils
 	internal static class Log
 	{
 		private static readonly int MaxLogFileSize = 2000000;
-
-		private static readonly UdpClient UdpClient = new UdpClient();
 		private static readonly BlockingCollection<string> logTexts = new BlockingCollection<string>();
-
-		private static readonly IPEndPoint usageLogEndPoint =
-			new IPEndPoint(IPAddress.Parse("10.85.12.4"), 41110);
 
 		private static readonly object syncRoot = new object();
 
-		private static readonly string LogPath = ProgramPaths.GetLogFilePath();
 		private static readonly int ProcessID = Process.GetCurrentProcess().Id;
 		private static readonly string LevelUsage = "USAGE";
 		private static readonly string LevelDebug = "DEBUG";
 		private static readonly string LevelInfo = "INFO ";
 		private static readonly string LevelWarn = "WARN ";
 		private static readonly string LevelError = "ERROR";
-		private static readonly Lazy<bool> DisableErrorAndUsageReporting;
-		private static readonly int prefixLength = 0;
+
+		private static int prefixLength = 0;
+		private static string LogPath = null;
+
 
 		static Log()
 		{
-			DisableErrorAndUsageReporting = new Lazy<bool>(() =>
-				Settings.Get<Options>().DisableErrorAndUsageReporting);
-
 			Task.Factory.StartNew(SendBufferedLogRows, TaskCreationOptions.LongRunning)
 				.RunInBackground();
-
-			prefixLength = GetSourceFilePrefixLength();
 		}
 
 
-		private static int GetSourceFilePrefixLength([CallerFilePath] string sourceFilePath = "")
+		public static void Init(string logFilePath, [CallerFilePath] string sourceFilePath = "")
 		{
-			return sourceFilePath.IndexOf("Dependinator\\Utils\\Log.cs");
+			LogPath = logFilePath;
+			string rootPath = Path.GetDirectoryName(Path.GetDirectoryName(sourceFilePath));
+			prefixLength = rootPath.Length + 1;
 		}
 
 
@@ -148,6 +137,18 @@ namespace Dependinator.Utils
 			Write(LevelError, $"{msg}\n{e}", memberName, sourceFilePath, sourceLineNumber);
 		}
 
+
+		public static void Exception(
+			Exception e,
+			StopParameter stop = default(StopParameter),
+			[CallerMemberName] string memberName = "",
+			[CallerFilePath] string sourceFilePath = "",
+			[CallerLineNumber] int sourceLineNumber = 0)
+		{
+			Write(LevelError, $"{e}", memberName, sourceFilePath, sourceLineNumber);
+		}
+
+
 		private static void Write(
 			string level,
 			string msg,
@@ -182,30 +183,13 @@ namespace Dependinator.Utils
 		}
 
 
-
-		private static void SendUsage(string text)
+		private static void WriteToFile(IReadOnlyCollection<string> text)
 		{
-			if (DisableErrorAndUsageReporting.Value)
+			if (LogPath == null)
 			{
 				return;
 			}
 
-			try
-			{
-				string logRow = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss,fff} [{ProcessID}] {text}";
-
-				byte[] bytes = System.Text.Encoding.UTF8.GetBytes(logRow);
-				UdpClient.Send(bytes, bytes.Length, usageLogEndPoint);
-			}
-			catch (Exception)
-			{
-				// Ignore failed
-			}
-		}
-
-
-		private static void WriteToFile(IReadOnlyCollection<string> text)
-		{
 			Exception error = null;
 			lock (syncRoot)
 			{
