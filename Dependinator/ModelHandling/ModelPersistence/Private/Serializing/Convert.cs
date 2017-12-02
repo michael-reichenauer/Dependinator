@@ -51,7 +51,6 @@ namespace Dependinator.ModelHandling.ModelPersistence.Private.Serializing
 			node.Description,
 			node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
 			node.ItemsScaleFactor,
-			//node.ItemsOffset != null ? Point.Parse(node.ItemsOffset) : PointEx.Zero,
 			node.Color,
 			node.ShowState);
 
@@ -64,7 +63,6 @@ namespace Dependinator.ModelHandling.ModelPersistence.Private.Serializing
 			Description = node.Description,
 			Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
 			ItemsScaleFactor = node.ItemsScaleFactor,
-			ItemsOffset = node.ItemsOffset != PointEx.Zero ? node.ItemsOffset.AsString() : null,
 			Color = node.Color,
 			ShowState = node.ShowState,
 		};

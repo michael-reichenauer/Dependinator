@@ -38,7 +38,6 @@ namespace Dependinator.ModelHandling.ModelPersistence.Private.Serializing
 			public string Bounds { get; set; }
 			public string Color { get; set; }
 			public double ItemsScaleFactor { get; set; }
-			public string ItemsOffset { get; set; }
 			public string ShowState { get; set; }
 		}
 

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
 using Dependinator.Common;
 using Dependinator.ModelHandling.Core;
 using Dependinator.ModelHandling.Private.Items;
@@ -131,7 +130,6 @@ namespace Dependinator.ModelHandling.Private
 				Description = modelNode.Description,
 				Bounds = modelNode.Bounds,
 				ScaleFactor = modelNode.ItemsScaleFactor,
-				Offset = modelNode.ItemsOffset,
 				Color = modelNode.Color,
 				IsHidden = modelNode.ShowState == Node.Hidden
 			};

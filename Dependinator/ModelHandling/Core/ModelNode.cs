@@ -22,7 +22,6 @@ namespace Dependinator.ModelHandling.Core
 			string description,
 			Rect bounds,
 			double itemsScaleFactor,
-		//	Point itemsOffset,
 			string color,
 			string showState)
 		{
@@ -32,7 +31,6 @@ namespace Dependinator.ModelHandling.Core
 			Description = description;
 			Bounds = bounds;
 			ItemsScaleFactor = itemsScaleFactor;
-		//	ItemsOffset = itemsOffset;
 			Color = color;
 			ShowState = showState;
 
@@ -45,7 +43,6 @@ namespace Dependinator.ModelHandling.Core
 		public string Description { get; }
 		public Rect Bounds { get; }
 		public double ItemsScaleFactor { get; }
-		public Point ItemsOffset { get; }
 		public string Color { get; }
 		public string ShowState { get; }
 
