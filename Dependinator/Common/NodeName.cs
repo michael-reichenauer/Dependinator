@@ -143,9 +143,9 @@ namespace Dependinator.Common
 			int index1 = fullName.IndexOf('(');
 			int index2 = fullName.IndexOf(')');
 
-			if (index1 > -1 && index2 > index1)
+			if (index1 > -1 && index2 > (index1 + 1))
 			{
-				string parameters = fullName.Substring(index1, index2 - index1);
+				string parameters = fullName.Substring(index1 + 1, (index2 - index1) - 1);
 				string[] parametersParts = parameters.Split(",".ToCharArray());
 
 				// Simplify parameter types to just get last part of each type

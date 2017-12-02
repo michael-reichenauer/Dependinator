@@ -47,7 +47,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public override bool CanShow => !Node.IsHidden
 			&& (ItemScale * ItemWidth > 20 && Node.Parent.CanShowChildren);
 
-		public bool CanShowChildren => ItemScale * ItemWidth > 50 * 7;
+		public bool CanShowChildren => ItemScale * ItemWidth > 50 * 7 && Node.Children.Any();
 
 		public Node Node { get; }
 
@@ -62,7 +62,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public bool IsShowItems => CanShowChildren;
 
-		public bool IsShowDescription => !CanShowChildren;
+		public bool IsShowDescription => !string.IsNullOrEmpty(Description) && !CanShowChildren;
 
 		public string Name => Node.Name.DisplayName;
 

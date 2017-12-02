@@ -98,8 +98,15 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 				parameters = "";
 			}
 
-			string methodFullName = $"{typeName}.{methodName}{parameters}";
-			return methodFullName;
+			if (!methodInfo.HasGenericParameters)
+			{
+				return $"{typeName}.{methodName}{parameters}";
+			}
+			else
+			{
+				string genericParameters = $"`{methodInfo.GenericParameters.Count}";
+				return $"{typeName}.{methodName}{genericParameters}{parameters}";
+			}
 		}
 
 
@@ -134,10 +141,27 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 		private static string GetParametersText(MethodReference methodInfo)
 		{
 			string parametersText = string.Join(",", methodInfo.Parameters
-				.Select(p => GetTypeFullName(p.ParameterType)));
+				.Select(p => GetParameterTypeName(p)));
 			parametersText = parametersText.Replace(".", "#");
 
 			return parametersText;
+		}
+
+
+		private static string GetParameterTypeName(ParameterDefinition p)
+		{
+			string fullName = GetTypeFullName(p.ParameterType);
+
+			if (fullName.StartsWith("?"))
+			{
+				int index = fullName.IndexOf('.');
+				if (index > -1)
+				{
+					fullName = fullName.Substring(index + 1);
+				}
+			}
+
+			return fullName;
 		}
 
 

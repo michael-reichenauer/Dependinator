@@ -74,7 +74,21 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 			string summary)
 		{
 			// Trim type marker "M:" and "T:" in member name.
-			memberName = memberName.Substring(2);
+			memberName = memberName.Substring(2)
+				.Replace("``", "`");
+
+			int index1 = memberName.IndexOf('(');
+			int index2 = memberName.IndexOf(')');
+
+			if (index1 > -1 && index2 > (index1 + 1))
+			{
+				string parameters = memberName
+					.Substring(index1 + 1, (index2 - index1) - 1)
+					.Replace(".", "#");
+
+				memberName = $"{memberName.Substring(0, index1)}({parameters})";
+			}
+
 			string fullName = memberName;
 
 			if (!string.IsNullOrEmpty(assemblyName))
@@ -99,7 +113,9 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 					.Replace("</summary>", "")
 					.Replace("<see cref=\"T:", "")
 					.Replace("<see cref=\"M:", "")
-					.Replace("\"/>", ".")
+					.Replace("<see cref=\"P:", "")
+					.Replace("<see cref=\"F:", "")
+					.Replace("<see cref=\"F:", "")
 					.Replace("\" />", "");
 
 				summary = string.Join("\n", summary.Split("\n".ToCharArray()).Select(line => line.Trim()));

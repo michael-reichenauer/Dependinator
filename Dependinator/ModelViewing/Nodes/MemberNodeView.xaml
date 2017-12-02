@@ -21,6 +21,8 @@
 			RadiusY="15" />
 
 		<nodes:TitleView Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"/>
+		
+		<nodes:DescriptionView Visibility="{Binding IsShowDescription, Converter={StaticResource VC}}"/>
 
 		<!-- Rectangle points -->
 		<nodes:NodePointsView Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"/>

@@ -34,7 +34,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 			linkHandler = new LinkHandler(sender);
 			moduleParser = new ModuleParser(assemblyRootGroup, linkHandler, sender);
 			typeParser = new TypeParser(linkHandler, xmlDockParser, sender);
-			memberParser = new MemberParser(linkHandler, sender);
+			memberParser = new MemberParser(linkHandler, xmlDockParser, sender);
 		}
 
 

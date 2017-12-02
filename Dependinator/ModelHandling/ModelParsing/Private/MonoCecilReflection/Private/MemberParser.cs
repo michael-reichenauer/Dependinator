@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Dependinator.Common;
 using Dependinator.ModelHandling.Core;
-//using Dependinator.ModelHandling.ModelPersistence.Private.Serializing;
 using Dependinator.Utils;
 using Mono.Cecil;
 
@@ -13,13 +12,15 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 	internal class MemberParser
 	{
 		private readonly LinkHandler linkHandler;
+		private readonly XmlDocParser xmlDocParser;
 		private readonly Sender sender;
 		private readonly MethodParser methodParser;
 
 
-		public MemberParser(LinkHandler linkHandler, Sender sender)
+		public MemberParser(LinkHandler linkHandler, XmlDocParser xmlDocParser, Sender sender)
 		{
 			this.linkHandler = linkHandler;
+			this.xmlDocParser = xmlDocParser;
 			this.sender = sender;
 			methodParser = new MethodParser(linkHandler);
 		}
@@ -35,6 +36,10 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 
 		private void AddTypeMembers(TypeInfo typeInfo)
 		{
+			if (typeInfo.Type.Name.Contains("AsyncSemaphore"))
+			{
+				
+			}
 			TypeDefinition type = typeInfo.Type;
 			ModelNode typeNode = typeInfo.Node;
 
@@ -87,7 +92,9 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 				string parent = isPrivate
 					? $"{NodeName.From(memberName).ParentName.FullName}.$Private" : null;
 
-				ModelNode memberNode = new ModelNode(memberName, parent, NodeType.Member, null);
+				string description = xmlDocParser.GetDescription(memberName);
+
+				ModelNode memberNode = new ModelNode(memberName, parent, NodeType.Member, description);
 				sender.SendNode(memberNode);
 
 				AddMemberLinks(memberNode, memberInfo);

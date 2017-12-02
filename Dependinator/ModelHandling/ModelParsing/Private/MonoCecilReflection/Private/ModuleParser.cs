@@ -2,8 +2,6 @@ using System;
 using System.Linq;
 using System.Reflection;
 using Dependinator.ModelHandling.Core;
-using Dependinator.ModelHandling.ModelPersistence;
-using Dependinator.ModelHandling.ModelPersistence.Private.Serializing;
 using Mono.Cecil;
 using Mono.Collections.Generic;
 
@@ -88,7 +86,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 					parent = $"References.{referenceName.Substring(1, index - 1)}";
 				}
 
-				parent =  $"${parent?.Replace(".", ".$")}";
+				parent = $"${parent?.Replace(".", ".$")}";
 
 				ModelNode referenceNode = new ModelNode(referenceName, parent, NodeType.NameSpace, null);
 				sender.SendNode(referenceNode);
