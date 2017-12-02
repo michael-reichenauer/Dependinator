@@ -334,10 +334,10 @@ namespace Dependinator.ModelHandling.Private
 				node.ItemsCanvas.SetScaleFactor(node.ScaleFactor);
 			}
 
-			if (node.Offset != PointEx.Zero)
-			{
-				node.ItemsCanvas.SetMoveOffset(node.Offset);
-			}
+			//if (node.Offset != PointEx.Zero)
+			//{
+			//	node.ItemsCanvas.SetMoveOffset(node.Offset);
+			//}
 
 			return node.ItemsCanvas;
 		}

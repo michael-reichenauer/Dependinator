@@ -280,7 +280,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private string ItemsToolTip => //!Keyboard.Modifiers.HasFlag(ModifierKeys.Control) ? "" :
 			"\n" +
-			$"Rect: {ItemBounds.TS()}, offset: {Node.ItemsCanvas?.Offset.TS()}, MoveOffset: {Node.ItemsCanvas?.MoveOffset.TS()}\n" +
+			$"Rect: {ItemBounds.TS()}\n" +
 			$"Scale {ItemScale.TS()}, ChildrenScale: {Node.ItemsCanvas?.Scale.TS()}\n" +
 			$"Root Scale {Node.Root.ItemsCanvas.Scale}\n" +
 			$"Level {Node.Ancestors().Count()}\n" +

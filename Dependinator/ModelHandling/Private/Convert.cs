@@ -44,7 +44,7 @@ namespace Dependinator.ModelHandling.Private
 				node.Description,
 				node.ViewModel?.ItemBounds ?? node.Bounds,
 				node.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.ScaleFactor,
-				node.ViewModel?.ItemsViewModel?.ItemsCanvas?.MoveOffset ?? node.Offset,
+				//node.ViewModel?.ItemsViewModel?.ItemsCanvas?.MoveOffset ?? node.Offset,
 				node.ViewModel?.Color ?? node.Color,
 				node.IsHidden ? Node.Hidden : null);
 	}

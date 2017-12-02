@@ -11,7 +11,7 @@ namespace Dependinator.ModelHandling.Core
 			string parent,
 			NodeType nodeType,
 			string description)
-			: this(name, parent, nodeType, description, RectEx.Zero, 0, PointEx.Zero, null, null)
+			: this(name, parent, nodeType, description, RectEx.Zero, 0, null, null)
 		{
 		}
 
@@ -22,7 +22,7 @@ namespace Dependinator.ModelHandling.Core
 			string description,
 			Rect bounds,
 			double itemsScaleFactor,
-			Point itemsOffset,
+		//	Point itemsOffset,
 			string color,
 			string showState)
 		{
@@ -32,7 +32,7 @@ namespace Dependinator.ModelHandling.Core
 			Description = description;
 			Bounds = bounds;
 			ItemsScaleFactor = itemsScaleFactor;
-			ItemsOffset = itemsOffset;
+		//	ItemsOffset = itemsOffset;
 			Color = color;
 			ShowState = showState;
 

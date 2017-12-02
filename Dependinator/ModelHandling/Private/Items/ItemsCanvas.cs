@@ -3,6 +3,7 @@ using System.Linq;
 using System.Windows;
 using Dependinator.Common;
 using Dependinator.ModelHandling.Private.Items.Private;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -70,26 +71,29 @@ namespace Dependinator.ModelHandling.Private.Items
 
 		public double Scale => parentCanvas?.Scale * ScaleFactor ?? rootScale;
 
-		public Point MoveOffset => Offset;
+		//public Point MoveOffset => Offset;
 
-		public Point Offset
-		{
-			get => Get();
-			private set
-			{
-				if (!IsRoot && (value.X > 2000 || value.X < -2000 || value.Y > 2000 || value.Y < -2000))
-				{
-					//Debugger.Break();
-				}
 
-				Set(value);
+		private Point Offset { get; } = new Point(0, 0);
 
-				if (zoomableCanvas != null)
-				{
-					zoomableCanvas.Offset = value;
-				}
-			}
-		}
+		//public Point Offset
+		//{
+		//	get => Get();
+		//	private set
+		//	{
+		//		if (!IsRoot && (value.X > 2000 || value.X < -2000 || value.Y > 2000 || value.Y < -2000))
+		//		{
+		//			//Debugger.Break();
+		//		}
+
+		//		Set(value);
+
+		//		if (zoomableCanvas != null)
+		//		{
+		//			zoomableCanvas.Offset = value;
+		//		}
+		//	}
+		//}
 
 
 		//public void SetOffset(Point offsetPoint)
@@ -98,11 +102,11 @@ namespace Dependinator.ModelHandling.Private.Items
 		//}
 
 
-		public void SetMoveOffset(Point offsetPoint)
-		{
-			//MoveOffset = offsetPoint;
-			Offset = offsetPoint;
-		}
+		//public void SetMoveOffset(Point offsetPoint)
+		//{
+		//	//MoveOffset = offsetPoint;
+		//	Offset = offsetPoint;
+		//}
 
 
 		public void SetRootScale(double scale) => rootScale = scale;
@@ -118,19 +122,19 @@ namespace Dependinator.ModelHandling.Private.Items
 
 
 
-		public void ResetLayout()
-		{
-			if (IsRoot)
-			{
-				ScaleFactor = 1;
-				Offset = new Point(0, 0);
-			}
-			else
-			{
-				ScaleFactor = DefaultScaleFactor;
-				Offset = new Point(0, 0);
-			}
-		}
+		//public void ResetLayout()
+		//{
+		//	if (IsRoot)
+		//	{
+		//		ScaleFactor = 1;
+		//		Offset = new Point(0, 0);
+		//	}
+		//	else
+		//	{
+		//		ScaleFactor = DefaultScaleFactor;
+		//		Offset = new Point(0, 0);
+		//	}
+		//}
 
 		public void ItemRealized()
 		{
@@ -200,7 +204,15 @@ namespace Dependinator.ModelHandling.Private.Items
 			}
 
 			//MoveOffset -= new Vector(viewOffset.X * Scale, viewOffset.Y * Scale);
-			Offset -= viewOffset;
+			//Offset -= viewOffset;
+
+			Vector moveOffset = new Vector(viewOffset.X / Scale, viewOffset.Y / Scale);
+			foreach (var item in itemsSource.GetAllItems().Where(i => i is NodeViewModel).Cast<ItemViewModel>())
+			{
+				Point location = item.ItemBounds.Location + moveOffset;
+				item.ItemBounds = new Rect(location, item.ItemBounds.Size);
+			}
+
 			UpdateShownItemsInChildren();
 		}
 
@@ -226,7 +238,7 @@ namespace Dependinator.ModelHandling.Private.Items
 				return;
 			}
 
-			SetZoomableCanvasScale(new Point(0, 0));
+			SetZoomableCanvasScale(null);
 
 			UpdateAndNotifyAll();
 
@@ -234,16 +246,19 @@ namespace Dependinator.ModelHandling.Private.Items
 		}
 
 
-		private void SetZoomableCanvasScale(Point zoomCenter)
+		private void SetZoomableCanvasScale(Point? zoomCenter)
 		{
 			if (zoomableCanvas != null)
 			{
-				double zoomFactor = Scale / zoomableCanvas.Scale;
+				if (zoomCenter.HasValue)
+				{
+					// Adjust the offset to make the point at the center of zoom area stay still
+					double zoomFactor = Scale / zoomableCanvas.Scale;
+					Vector position = (Vector)zoomCenter;
 
-				// Adjust the offset to make the point at the center of zoom area stay still
-				Vector position = (Vector)zoomCenter;
-
-				Offset = (Point)((Vector)(Offset + position) * zoomFactor - position);
+					Point offset = (Point)((Vector)(Offset + position) * zoomFactor - position);
+					Move(Offset - offset);
+				}
 
 				zoomableCanvas.Scale = Scale;
 			}
