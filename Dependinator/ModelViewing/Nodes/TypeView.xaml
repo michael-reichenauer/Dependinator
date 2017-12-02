@@ -23,8 +23,11 @@
 			RadiusY="3"/>
 
 
-		<!-- Inner model -->
-		<items1:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
+		<nodes:DescriptionView Visibility="{Binding IsShowDescription, Converter={StaticResource VC}}"/>
+
+		<Grid Visibility="{Binding IsShowItems, Converter={StaticResource VC}}">
+			<items1:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
+		</Grid>
 
 		<nodes:TitleView Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"/>
 

@@ -19,14 +19,16 @@
 			StrokeThickness="{Binding RectangleLineWidth}"
 			StrokeDashArray="2,6"
 			Fill="{Binding BackgroundBrush}"
-			Stretch="Fill"
-/>
+			Stretch="Fill" />
 
+		<nodes:DescriptionView Visibility="{Binding IsShowDescription, Converter={StaticResource VC}}"/>
+		
+		<Grid Visibility="{Binding IsShowItems, Converter={StaticResource VC}}">
+			<items1:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
+		</Grid>
 
 		<!-- Inner model -->
-		<items1:ItemsView
-			Visibility="{Binding IsShowItems, Converter={StaticResource VC}}"
-			x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
+	
 
 		<nodes:TitleView Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"/>
 

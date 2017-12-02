@@ -47,7 +47,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public override bool CanShow => !Node.IsHidden
 			&& (ItemScale * ItemWidth > 20 && Node.Parent.CanShowChildren);
 
-		public bool CanShowChildren => ItemScale * ItemWidth > 40 * 7;
+		public bool CanShowChildren => ItemScale * ItemWidth > 50 * 7;
 
 		public Node Node { get; }
 
@@ -109,6 +109,9 @@ namespace Dependinator.ModelViewing.Nodes
 				return f;
 			}
 		}
+
+		public int DescriptionFontSize => ((int)(10 * ItemScale)).MM(9, 11);
+		public string Description => Node.Description;
 
 		public bool IsMouseOver
 		{

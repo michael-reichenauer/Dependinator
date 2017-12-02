@@ -88,7 +88,22 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.MonoCecilReflection.Pr
 
 		private static string GetSummary(XElement member)
 		{
-			string summary = member.Descendants("summary").FirstOrDefault()?.Value;
+			XElement node = member.Descendants("summary").FirstOrDefault();
+			
+			string summary = node?.ToString();
+
+			if (!string.IsNullOrEmpty(summary))
+			{
+				summary = summary
+					.Replace("<summary>", "")
+					.Replace("</summary>", "")
+					.Replace("<see cref=\"T:", "")
+					.Replace("<see cref=\"M:", "")
+					.Replace("\"/>", ".")
+					.Replace("\" />", "");
+
+				summary = string.Join("\n", summary.Split("\n".ToCharArray()).Select(line => line.Trim()));
+			}
 
 			return summary?.Trim();
 		}

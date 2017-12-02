@@ -7,6 +7,9 @@ using Dependinator.Utils;
 
 namespace Dependinator
 {
+	/// <summary>
+	/// Contains the Main method and is the entry point of the program.
+	/// </summary>
 	public class Program
 	{
 		private readonly DependencyInjection dependencyInjection = new DependencyInjection();
