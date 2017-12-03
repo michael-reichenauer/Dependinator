@@ -175,6 +175,8 @@ namespace Dependinator.ModelHandling.Private.Items
 				nodeViewModel.ItemBounds = new Rect(newLocation, nodeViewModel.ItemBounds.Size);
 			}
 
+			TriggerInvalidated();
+			UpdateAndNotifyAll();
 			UpdateShownItemsInChildren();
 		}
 
