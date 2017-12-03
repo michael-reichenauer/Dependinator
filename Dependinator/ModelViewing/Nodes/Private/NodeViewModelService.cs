@@ -129,7 +129,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			
 			//Log.Debug($"{ltf},{ltr}, {lbr},{lbl}");
 			int index = 0;
-			double minDist = 50;
+			double minDist = double.MaxValue;
 
 			if (ltf < minDist)
 			{

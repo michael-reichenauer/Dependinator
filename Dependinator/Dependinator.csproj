@@ -309,7 +309,6 @@
     <Compile Include="ModelViewing\Nodes\NamespaceView.xaml.cs">
       <DependentUpon>NamespaceView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\Nodes\CompositeNodeViewModel.cs" />
     <Compile Include="ModelHandling\ModelParsing\Private\ParserService.cs" />
     <Compile Include="ModelHandling\ModelParsing\IParserService.cs" />
     <Compile Include="ModelHandling\Private\Items\ItemViewModel.cs" />
