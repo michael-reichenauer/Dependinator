@@ -4,7 +4,7 @@ using Dependinator.Common;
 using Dependinator.ModelHandling.Private.Items;
 
 
-namespace Dependinator.ModelViewing.Private
+namespace Dependinator.ModelViewing
 {
 	internal interface IModelViewService
 	{

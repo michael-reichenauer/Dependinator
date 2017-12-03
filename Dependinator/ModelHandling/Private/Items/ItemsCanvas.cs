@@ -113,6 +113,12 @@ namespace Dependinator.ModelHandling.Private.Items
 		}
 
 
+		public void UpdateAll()
+		{
+			ZoomRootNode(1, new Point(0, 0));
+		}
+
+
 		public void ZoomRootNode(double zoom, Point zoomCenter)
 		{
 			RootCanvas.ZoomNode(zoom, zoomCenter);
@@ -278,7 +284,7 @@ namespace Dependinator.ModelHandling.Private.Items
 				Point parentChildPoint = (Point)((Vector)relativeParentPoint / ScaleFactor);
 
 				Point compensatedPoint = parentChildPoint;
-				Point childPoint = compensatedPoint ;
+				Point childPoint = compensatedPoint;
 
 				return childPoint;
 			}

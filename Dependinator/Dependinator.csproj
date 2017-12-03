@@ -314,7 +314,7 @@
     <Compile Include="ModelHandling\ModelParsing\IParserService.cs" />
     <Compile Include="ModelHandling\Private\Items\ItemViewModel.cs" />
     <Compile Include="ModelHandling\Private\Items\IItem.cs" />
-    <Compile Include="ModelViewing\Private\IModelViewService.cs" />
+    <Compile Include="ModelViewing\IModelViewService.cs" />
     <Compile Include="ModelViewing\Private\ModelViewService.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeViewModelService.cs" />
     <Compile Include="ModelHandling\ModelPersistence\Private\Serializing\DataSerializer.cs" />

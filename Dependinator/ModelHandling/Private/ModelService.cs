@@ -119,6 +119,8 @@ namespace Dependinator.ModelHandling.Private
 				UpdateLines(Root);
 				recentModelsService.AddModelPaths(modelMetadata.ModelFilePath);
 				modelNodeService.SetLayoutDone();
+
+				Root.ItemsCanvas.UpdateAll();
 			}
 
 			GC.Collect();
@@ -244,7 +246,7 @@ namespace Dependinator.ModelHandling.Private
 			Task parseTask = parseFunctionAsync(operation)
 				.ContinueWith(_ =>
 				{
-					
+
 
 					operation.Queue.CompleteAdding();
 				});
@@ -282,7 +284,7 @@ namespace Dependinator.ModelHandling.Private
 					}
 				});
 			}
-			
+
 
 			PriorityBlockingQueue<IModelItem> queue = new PriorityBlockingQueue<IModelItem>(MaxPriority);
 
@@ -331,7 +333,7 @@ namespace Dependinator.ModelHandling.Private
 		}
 
 
-		
+
 
 		private string GetDataFilePath()
 		{
