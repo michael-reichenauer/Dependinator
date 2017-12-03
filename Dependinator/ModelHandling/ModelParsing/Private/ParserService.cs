@@ -28,7 +28,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private
 				Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseTypes());
 				Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseAssemblyModuleReferences());
 				Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseTypeMembers());
-				Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseLinks());
+				//Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseLinks());
 			});
 
 			t.Log($"Analyzed {filePath}");

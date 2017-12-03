@@ -74,10 +74,10 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing
 		}
 
 		
-		public void ParseLinks()
-		{
-			linkHandler.SendAllLinks();
-		}
+		//public void ParseLinks()
+		//{
+		//	linkHandler.SendAllLinks();
+		//}
 
 
 		private void AddAssemblyTypes(AssemblyDefinition assembly)

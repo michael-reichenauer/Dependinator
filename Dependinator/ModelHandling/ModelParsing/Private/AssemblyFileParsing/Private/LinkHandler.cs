@@ -11,7 +11,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 	internal class LinkHandler
 	{
 		private readonly Sender sender;
-		private readonly List<Reference> links = new List<Reference>();
+		//private readonly List<Reference> links = new List<Reference>();
 
 
 		public LinkHandler(Sender sender)
@@ -20,15 +20,15 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 		}
 
 
-		public void SendAllLinks()
-		{
-			links.ForEach(SendReference);
-		}
+		//public void SendAllLinks()
+		//{
+		//	links.ForEach(SendReference);
+		//}
 
 
 		public void AddLinkToReference(Reference reference)
 		{
-			links.Add(reference);
+			SendReference(reference);
 		}
 
 
@@ -46,7 +46,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 				return;
 			}
 
-			links.Add(new Reference(sourceNode.Name, targetNodeName, NodeType.Type));
+			SendReference(new Reference(sourceNode.Name, targetNodeName, NodeType.Type));
 
 			if (targetType.IsGenericInstance)
 			{
@@ -70,7 +70,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 				return;
 			}
 
-			links.Add(new Reference(sourceNode.Name, targetNodeName, NodeType.Member));
+			SendReference(new Reference(sourceNode.Name, targetNodeName, NodeType.Member));
 		}
 
 
