@@ -80,12 +80,12 @@ namespace Dependinator.ModelHandling.Private
 			ClearAll();
 			Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
 
-			//if (File.Exists(dataFilePath))
-			//{
-			//	await ShowModelAsync(operation => persistenceService.TryDeserialize(
-			//		dataFilePath, items => UpdateDataItems(items, operation)));
-			//}
-			//else
+			if (File.Exists(dataFilePath))
+			{
+				await ShowModelAsync(operation => persistenceService.TryDeserialize(
+					dataFilePath, items => UpdateDataItems(items, operation)));
+			}
+			else
 			if (File.Exists(modelMetadata.ModelFilePath))
 			{
 				await ShowModelAsync(operation => parserService.ParseAsync(
