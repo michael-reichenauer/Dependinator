@@ -296,6 +296,8 @@ namespace Dependinator.ModelHandling.Private
 			{
 				Application.Current.Dispatcher.InvokeBackground(() =>
 				{
+					UpdateItem(item, operation.Id);
+
 					for (int i = 0; i < BatchSize; i++)
 					{
 						if (!queue.TryTake(out item, 0))
@@ -307,11 +309,6 @@ namespace Dependinator.ModelHandling.Private
 					}
 				});
 			}
-
-			Application.Current.Dispatcher.InvokeBackground(() =>
-			{
-				model.RemoveAllQueuedNodes();
-			});
 		}
 
 

@@ -86,12 +86,6 @@ namespace Dependinator.ModelHandling.Private
 		}
 
 
-		public void RemoveAllQueuedNodes()
-		{
-			Log.Warn($"Removing {queuedNodes.Count} nodes !!!!!!, Why is that needed????");
-			queuedNodes.Clear();
-		}
-
 
 		public bool TryGetQueuedLinesAndLinks(
 			NodeName targetName,

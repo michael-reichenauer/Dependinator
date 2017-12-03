@@ -196,8 +196,6 @@ namespace Dependinator.ModelHandling.Private
 			if (!string.IsNullOrEmpty(modelNode.Description)
 				&& node.Description != modelNode.Description)
 			{
-				Log.Warn($"Node description has changed '{node.Description}' to '{modelNode.Description}'");
-
 				node.Description = modelNode.Description;
 			}
 		}
