@@ -176,7 +176,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		public void MovePoint(Node node, int index, Point point, Point previousPoint)
+		public bool MovePoint(Node node, int index, Point point, Point previousPoint)
 		{
 			NodeViewModel viewModel = node.ViewModel;
 
@@ -224,14 +224,25 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 			if (width < dist || height < dist)
 			{
-				return;
+				return false;
 			}
 
+			//newLocation = new Point(newLocation.X.Rnd(5), newLocation.Y.Rnd(5));
 			Size newSiz = new Size(width, height);
+
+			if (newLocation.Same(viewModel.ItemBounds.Location)
+					&& newSiz.Same(viewModel.ItemBounds.Size))
+			{
+				return false;
+			}
+
+
 			viewModel.ItemBounds = new Rect(newLocation, newSiz);
 			viewModel.NotifyAll();
 			viewModel.ItemsViewModel?.MoveCanvas(offset);
 			viewModel.ItemOwnerCanvas.UpdateItem(viewModel);
+
+			return true;
 		}
 	}
 }

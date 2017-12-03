@@ -128,7 +128,7 @@ namespace Dependinator.ModelHandling.Private.Items
 
 			double oldScale = Scale;
 			double newScale = oldScale * zoom;
-			if (!IsShowing || !CanShow || IsRoot && newScale < 0.20 && zoom < 1)
+			if (!IsShowing || !CanShow || IsRoot && newScale < 0.40 && zoom < 1)
 			{
 				// Item not shown or reached minimum root zoom level
 				return;

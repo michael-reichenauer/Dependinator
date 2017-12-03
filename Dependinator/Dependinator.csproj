@@ -188,8 +188,10 @@
     </Compile>
     <Compile Include="ModelViewing\Open\OpenModelViewModel.cs" />
     <Compile Include="Common\NamespaceDoc.cs" />
+    <Compile Include="NamespaceDoc.cs" />
+    <Compile Include="Utils\Config.cs" />
     <Compile Include="Utils\Culture.cs" />
-    <Compile Include="Utils\DoubleExtensions.cs" />
+    <Compile Include="Utils\System\DoubleExtensions.cs" />
     <Compile Include="Utils\NamespaceDoc.cs" />
     <Compile Include="Utils\PriorityBlockingQueue.cs" />
     <Compile Include="Product.cs" />
@@ -254,6 +256,7 @@
     <Compile Include="Utils\UI\RectEx.cs" />
     <Compile Include="Utils\UI\RectExtensions.cs" />
     <Compile Include="Utils\UI\Mvvm\TargetWhenSetter.cs" />
+    <Compile Include="Utils\UI\SizeExtensions.cs" />
     <Compile Include="Utils\UI\ThrottleDispatcher.cs" />
     <Compile Include="Utils\With.cs" />
     <Page Include="App.xaml">

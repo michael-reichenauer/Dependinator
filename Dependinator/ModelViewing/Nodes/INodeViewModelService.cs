@@ -18,7 +18,7 @@ namespace Dependinator.ModelViewing.Nodes
 		Brush GetRectangleHighlightBrush(Brush brush);
 
 		int GetPointIndex(Node node, Point point);
-		void MovePoint(Node node, int index, Point point, Point previousPoint);
+		bool MovePoint(Node node, int index, Point point, Point previousPoint);
 		Brush GetNodeBrush(Node node);
 		void FirstShowNode(Node node);
 

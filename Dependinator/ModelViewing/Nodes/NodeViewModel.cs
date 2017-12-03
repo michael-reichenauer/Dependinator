@@ -8,6 +8,7 @@ using System.Windows.Media;
 using Dependinator.ModelHandling.Core;
 using Dependinator.ModelHandling.Private.Items;
 using Dependinator.ModelViewing.Links;
+using Dependinator.Utils;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
 
@@ -235,8 +236,11 @@ namespace Dependinator.ModelViewing.Nodes
 				}
 			}
 
-			nodeViewModelService.MovePoint(Node, currentPointIndex, point, mouseMovedPoint);
-			mouseMovedPoint = point;
+			if (nodeViewModelService.MovePoint(Node, currentPointIndex, point, mouseMovedPoint))
+			{
+				mouseMovedPoint = point;
+			}
+
 			IsMouseOver = true;
 			if (IsResizable())
 			{
@@ -278,7 +282,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private string DebugToolTip => ItemsToolTip;
 
-		private string ItemsToolTip => //!Keyboard.Modifiers.HasFlag(ModifierKeys.Control) ? "" :
+		private string ItemsToolTip => !Config.IsDebug ? "" :
 			"\n" +
 			$"Rect: {ItemBounds.TS()}\n" +
 			$"Scale {ItemScale.TS()}, ChildrenScale: {Node.ItemsCanvas?.Scale.TS()}\n" +
