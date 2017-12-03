@@ -12,7 +12,6 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 		private readonly Dictionary<string, ModelNode> sentNodes = new Dictionary<string, ModelNode>();
 
 		public int NodesCount => sentNodes.Count;
-		public int LinkCount { get; private set; }
 
 
 		public Sender(ModelItemsCallback modelItemsCallback)
@@ -23,14 +22,9 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 
 		public void SendNode(ModelNode node)
 		{
-			//if (node.Name.Contains("IWshRuntime"))
-			//{
-				
-			//}
-
-			if (Name.IsCompilerGenerated(node.Name))
+			if (node.Name.Contains("RuntimeTypeModel"))
 			{
-				Log.Warn($"Compiler generated node: {node.Name}");
+
 			}
 
 			if (sentNodes.ContainsKey(node.Name))
@@ -41,8 +35,6 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 
 
 			sentNodes[node.Name] = node;
-
-			//Log.Debug($"Send node: {name} {node.Type}");
 
 			if (node.Name.Contains("<") || node.Name.Contains(">"))
 			{
@@ -55,33 +47,8 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 
 		public void SendLink(string sourceNodeName, string targetNodeName, NodeType targetType)
 		{
-			if (Name.IsCompilerGenerated(sourceNodeName)
-					|| Name.IsCompilerGenerated(targetNodeName))
-			{
-				Log.Warn($"Compiler generated link: {sourceNodeName}->{targetNodeName}");
-			}
-
-			if (sourceNodeName == targetNodeName)
-			{
-				// Skipping link to self
-				return;
-			}
-
-			if (sourceNodeName.Contains("<") || sourceNodeName.Contains(">"))
-			{
-				Log.Warn($"Send link source: {sourceNodeName}");
-			}
-
-			if (targetNodeName.Contains("<") || targetNodeName.Contains(">"))
-			{
-				Log.Warn($"Send link target: {targetNodeName}");
-			}
-
 			ModelLink link = new ModelLink(sourceNodeName, targetNodeName, targetType);
 
-			LinkCount++;
-
-			//Log.Debug($"Send link: {link.Source} {link.Target}");
 			callback(link);
 		}
 	}

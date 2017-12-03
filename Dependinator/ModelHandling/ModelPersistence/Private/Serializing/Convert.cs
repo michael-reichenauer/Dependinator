@@ -103,13 +103,14 @@ namespace Dependinator.ModelHandling.ModelPersistence.Private.Serializing
 		private static ModelLink ToModelLink(JsonTypes.Link link) => new ModelLink(
 			link.Source,
 			link.Target,
-			NodeType.None);
+			FromNodeTypeText(link.TargetType));
 
 
 		private static JsonTypes.Link ToJsonLink(ModelLink link) => new JsonTypes.Link
 		{
 			Source = link.Source,
 			Target = link.Target,
+			TargetType = ToNodeTypeText(link.TargetType),
 		};
 
 
@@ -117,6 +118,7 @@ namespace Dependinator.ModelHandling.ModelPersistence.Private.Serializing
 		private static IModelItem ToModelLine(JsonTypes.Line line) => new ModelLine(
 			line.Source,
 			line.Target,
+			FromNodeTypeText(line.TargetType),
 			ToLinePoints(line.Points),
 			line.LinkCount);
 
@@ -125,6 +127,7 @@ namespace Dependinator.ModelHandling.ModelPersistence.Private.Serializing
 		{
 			Source = line.Source,
 			Target = line.Target,
+			TargetType = ToNodeTypeText(line.TargetType),
 			Points = ToJsonPoints(line.Points),
 			LinkCount = line.LinkCount
 		};

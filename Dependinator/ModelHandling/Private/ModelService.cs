@@ -80,12 +80,12 @@ namespace Dependinator.ModelHandling.Private
 			ClearAll();
 			Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
 
-			if (File.Exists(dataFilePath))
-			{
-				await ShowModelAsync(operation => persistenceService.TryDeserialize(
-					dataFilePath, items => UpdateDataItems(items, operation)));
-			}
-			else
+			//if (File.Exists(dataFilePath))
+			//{
+			//	await ShowModelAsync(operation => persistenceService.TryDeserialize(
+			//		dataFilePath, items => UpdateDataItems(items, operation)));
+			//}
+			//else
 			if (File.Exists(modelMetadata.ModelFilePath))
 			{
 				await ShowModelAsync(operation => parserService.ParseAsync(
@@ -242,7 +242,12 @@ namespace Dependinator.ModelHandling.Private
 			Task showTask = Task.Run(() => ShowModel(operation));
 
 			Task parseTask = parseFunctionAsync(operation)
-				.ContinueWith(_ => operation.Queue.CompleteAdding());
+				.ContinueWith(_ =>
+				{
+					
+
+					operation.Queue.CompleteAdding();
+				});
 
 			await Task.WhenAll(showTask, parseTask);
 
@@ -254,10 +259,7 @@ namespace Dependinator.ModelHandling.Private
 
 		private static void UpdateDataItems(IModelItem item, Operation operation)
 		{
-			//int priority = GetPriority(item, operation);
-			int priority = 0;
-
-			operation.Queue.Enqueue(item, priority);
+			operation.Queue.Enqueue(item, 0);
 		}
 
 
@@ -280,6 +282,36 @@ namespace Dependinator.ModelHandling.Private
 					}
 				});
 			}
+			
+
+			PriorityBlockingQueue<IModelItem> queue = new PriorityBlockingQueue<IModelItem>(MaxPriority);
+
+			Application.Current.Dispatcher.InvokeBackground(() =>
+			{
+				model.GetAllQueuedNodes().ForEach(node => queue.Enqueue(node, 0));
+				queue.CompleteAdding();
+			});
+
+			while (queue.TryTake(out IModelItem item, -1))
+			{
+				Application.Current.Dispatcher.InvokeBackground(() =>
+				{
+					for (int i = 0; i < BatchSize; i++)
+					{
+						if (!queue.TryTake(out item, 0))
+						{
+							break;
+						}
+
+						UpdateItem(item, operation.Id);
+					}
+				});
+			}
+
+			Application.Current.Dispatcher.InvokeBackground(() =>
+			{
+				model.RemoveAllQueuedNodes();
+			});
 		}
 
 
@@ -302,28 +334,7 @@ namespace Dependinator.ModelHandling.Private
 		}
 
 
-		//private static int GetPriority(IModelItem item, Operation operation)
-		//{
-		//	if (item is ModelNode modelNode)
-		//	{
-		//		return operation.GetPriority(modelNode.Name);
-		//	}
-		//	else if (item is ModelLine modelLine)
-		//	{
-		//		return Math.Max(
-		//			operation.GetPriority(modelLine.Source),
-		//			operation.GetPriority(modelLine.Target));
-		//	}
-		//	else if (item is ModelLink modelLink)
-		//	{
-		//		return Math.Max(
-		//			operation.GetPriority(modelLink.Source),
-		//			operation.GetPriority(modelLink.Target));
-		//	}
-
-		//	return MaxPriority - 1;
-		//}
-
+		
 
 		private string GetDataFilePath()
 		{
@@ -341,34 +352,6 @@ namespace Dependinator.ModelHandling.Private
 			public int Id { get; }
 
 			public Operation(int stamp) => Id = stamp;
-
-
-			//public int GetPriority(string name)
-			//{
-			//	int priority = 0;
-
-			//	return priority;
-
-			//	//foreach (char t in name)
-			//	//{
-			//	//	if (t == '(')
-			//	//	{
-			//	//		break;
-			//	//	}
-
-			//	//	if (t == '.')
-			//	//	{
-			//	//		priority++;
-			//	//	}
-
-			//	//	if (priority >= MaxPriority - 1)
-			//	//	{
-			//	//		break;
-			//	//	}
-			//	//}
-
-			//	//return priority;
-			//}
 		}
 	}
 }

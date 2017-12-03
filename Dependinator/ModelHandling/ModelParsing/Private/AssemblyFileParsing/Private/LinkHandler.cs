@@ -90,6 +90,12 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 
 		private void SendReference(Reference reference)
 		{
+			if (reference.SourceName == reference.TargetName)
+			{
+				// Skipping link to self
+				return;
+			}
+
 			sender.SendLink(reference.SourceName, reference.TargetName, reference.TargetType);
 		}
 

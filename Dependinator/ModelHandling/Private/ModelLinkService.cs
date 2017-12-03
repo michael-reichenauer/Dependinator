@@ -35,25 +35,24 @@ namespace Dependinator.ModelHandling.Private
 		{
 			try
 			{
-				if (modelLink.Source == modelLink.Target)
+				Node source = model.Node(NodeName.From(modelLink.Source));
+
+				if (!TryGetTarget(modelLink, out Node target))
 				{
-					// Skipping link to self for now
 					return;
 				}
 
-				Node source = model.Node(NodeName.From(modelLink.Source));
+				//NodeName targetName = NodeName.From(modelLink.Target);
+				//if (!model.TryGetNode(targetName, out Node target))
+				//{
+				//	// Target node not yet added, adding it.
+				//	ModelNode targetModelNode = new ModelNode(
+				//		modelLink.Target, null, modelLink.TargetType, null);
+				//	modelNodeService.Value.UpdateNode(targetModelNode, stamp);
 
-				NodeName targetName = NodeName.From(modelLink.Target);
-				if (!model.TryGetNode(targetName, out Node target))
-				{
-					// Target node not yet added, adding it.
-					ModelNode targetModelNode = new ModelNode(
-						modelLink.Target, null, modelLink.TargetType, null);
-					modelNodeService.Value.UpdateNode(targetModelNode, stamp);
-
-					// Getting the newly added node
-					target = model.Node(targetName);
-				}
+				//	// Getting the newly added node
+				//	target = model.Node(targetName);
+				//}
 
 				target.Stamp = stamp;
 
@@ -83,7 +82,13 @@ namespace Dependinator.ModelHandling.Private
 			try
 			{
 				Node source = model.Node(NodeName.From(modelLine.Source));
-				Node target = model.Node(NodeName.From(modelLine.Target));
+
+				if (!TryGetTarget(modelLine, out Node target))
+				{
+					return;
+				}
+
+				//Node target = model.Node(NodeName.From(modelLine.Target));
 
 				if (TryGetLine(source, target, out Line line))
 				{
@@ -99,6 +104,31 @@ namespace Dependinator.ModelHandling.Private
 				Log.Exception(e, $"Failed to update link {modelLine}");
 				throw;
 			}
+		}
+
+
+		private bool TryGetTarget(ModelLink modelLink, out Node target)
+		{
+			NodeName targetName = NodeName.From(modelLink.Target);
+			if (!model.TryGetNode(targetName, out target))
+			{
+				model.QueueModelLink(targetName, modelLink);
+				return false;
+			}
+
+			return true;
+		}
+
+		private bool TryGetTarget(ModelLine modelLine, out Node target)
+		{
+			NodeName targetName = NodeName.From(modelLine.Target);
+			if (!model.TryGetNode(targetName, out target))
+			{
+				model.QueueModelLine(targetName, modelLine);
+				return false;
+			}
+
+			return true;
 		}
 
 

@@ -148,6 +148,16 @@ namespace Dependinator.ModelHandling.Private
 			CreateNodeViewModel(node);
 
 			AddNodeToParentCanvas(node, parentNode);
+
+			if (model.TryGetQueuedLinesAndLinks(
+				node.Name, 
+				out IReadOnlyList<ModelLine> lines,
+				out IReadOnlyList<ModelLink> links))
+			{
+				lines.ForEach(line => modelLinkService.UpdateLine(line, node.Stamp));
+				links.ForEach(link => modelLinkService.UpdateLink(link, node.Stamp));
+				model.RemovedQueuedNode(node.Name);
+			}
 		}
 
 
@@ -167,45 +177,11 @@ namespace Dependinator.ModelHandling.Private
 
 
 
-
-
-		//private void MoveNodeIfNeeded(Node node, ModelNode modelNode)
-		//{
-		//	//if (modelNode.Parent == null || node.Parent.Name.IsSame(modelNode.Parent))
-		//	//{
-		//	//	// No need to move node
-		//	//	return;
-		//	//}
-
-		//	//Log.Warn($"Node '{node}' needs to be moved from '{node.Parent}' to {modelNode.Parent}");
-
-
-		//	//	node.Parent?.RemoveChild(node);
-
-		//	//	if (node.ItemsCanvas != null)
-		//	//	{
-		//	//		node.Parent?.ItemsCanvas.RemoveChildCanvas(node.ItemsCanvas);
-		//	//	}
-
-		//	//RemoveNodeFromParentCanvas(node);
-
-		//	//	parentNode.AddChild(node);
-		//	//	ItemsCanvas parentCanvas = GetChildrenCanvas(parentNode);
-		//	//	if (node.ItemsCanvas != null)
-		//	//	{
-		//	//		parentCanvas.AddChildCanvas(node.ItemsCanvas);
-		//	//	}
-
-		//	//	parentCanvas.AddItem(node.ViewModel);
-		//}
-
-
-
 		private void UpdateNodeTypeIfNeeded(Node node, ModelNode modelNode)
 		{
 			if (node.NodeType != modelNode.NodeType)
 			{
-				Log.Warn($"Node type has changed from {node} to {modelNode.NodeType}");
+				Log.Warn($"Node type has changed for {node} to {modelNode.NodeType}");
 
 				node.NodeType = modelNode.NodeType;
 
@@ -278,12 +254,13 @@ namespace Dependinator.ModelHandling.Private
 				return parent;
 			}
 
-			Node parentNode = GetParentNode(parentName);
+			NodeType nodeType = modelNode.NodeType == NodeType.Member ? NodeType.Type : NodeType.NameSpace;
+			Node parentNode = GetParentNode(parentName, nodeType);
 			return parentNode;
 		}
 
 
-		private Node GetParentNode(NodeName parentName)
+		private Node GetParentNode(NodeName parentName, NodeType nodeType)
 		{
 			if (model.TryGetNode(parentName, out Node parent))
 			{
@@ -292,10 +269,10 @@ namespace Dependinator.ModelHandling.Private
 
 			NodeName grandParentName = parentName.ParentName;
 
-			Node grandParent = GetParentNode(grandParentName);
+			Node grandParent = GetParentNode(grandParentName, NodeType.NameSpace);
 
 			parent = new Node(parentName);
-			parent.NodeType = NodeType.NameSpace;
+			parent.NodeType = nodeType;
 
 			AddNode(parent, grandParent);
 			return parent;

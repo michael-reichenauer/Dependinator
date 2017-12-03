@@ -9,12 +9,14 @@ namespace Dependinator.ModelHandling.Core
 	{
 		public ModelLine(
 			string source, 
-			string target, 
+			string target,
+			NodeType targetType,
 			IReadOnlyList<Point> points, 
 			int linkCount)
 		{
 			Source = source;
 			Target = target;
+			TargetType = targetType;
 			Points = points;
 			LinkCount = linkCount;
 
@@ -24,6 +26,7 @@ namespace Dependinator.ModelHandling.Core
 
 		public string Source { get; }
 		public string Target { get; }
+		public NodeType TargetType { get; }
 		public IReadOnlyList<Point> Points { get; }
 		public int LinkCount { get; }
 

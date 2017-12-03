@@ -25,6 +25,7 @@ namespace Dependinator.ModelHandling.Private
 			lines.Select(line => new ModelLine(
 				line.Source.Name.FullName,
 				line.Target.Name.FullName,
+				line.Target.NodeType,
 				line.MiddlePoints().ToList(),
 				line.Links.Count));
 

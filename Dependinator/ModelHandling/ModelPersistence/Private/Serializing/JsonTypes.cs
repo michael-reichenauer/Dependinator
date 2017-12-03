@@ -51,6 +51,8 @@ namespace Dependinator.ModelHandling.ModelPersistence.Private.Serializing
 
 			// The target node name
 			public string Target { get; set; }
+
+			public string TargetType { get; set; }
 		}
 
 
@@ -63,6 +65,8 @@ namespace Dependinator.ModelHandling.ModelPersistence.Private.Serializing
 
 			// The target node name
 			public string Target { get; set; }
+
+			public string TargetType { get; set; }
 
 			public List<string> Points { get; set; }
 

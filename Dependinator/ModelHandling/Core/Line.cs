@@ -17,6 +17,7 @@ namespace Dependinator.ModelHandling.Core
 		{
 			Source = source;
 			Target = target;
+
 			Owner = owner;
 			IsEqualWhenSame(Source, Target);
 		}
