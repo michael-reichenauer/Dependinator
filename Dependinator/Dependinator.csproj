@@ -145,6 +145,7 @@
     <Compile Include="Common\ModelMetadataFolders\Private\IOpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
+    <Compile Include="MainWindowViews\NamespaceDoc.cs" />
     <Compile Include="ModelHandling\Core\LinkType.cs" />
     <Compile Include="ModelHandling\ModelParsing\Private\DataFileParsing\JsonTypes.cs" />
     <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\Private\XmlDocParser.cs" />
@@ -167,8 +168,11 @@
     <Compile Include="ModelHandling\ModelParsing\Private\SolutionFileParsing\Private\ReflectionExtensions.cs" />
     <Compile Include="ModelHandling\ModelParsing\Private\SolutionFileParsing\Solution.cs" />
     <Compile Include="ModelHandling\ModelParsing\Private\SolutionFileParsing\Private\SolutionParser.cs" />
+    <Compile Include="ModelHandling\ModelPersistence\NamespaceDoc.cs" />
     <Compile Include="ModelHandling\ModelPersistence\Private\Serializing\JsonTypes.cs" />
     <Compile Include="ModelHandling\ModelPersistence\Private\PersistenceService.cs" />
+    <Compile Include="ModelHandling\NamespaceDoc.cs" />
+    <Compile Include="ModelViewing\NamespaceDoc.cs" />
     <Compile Include="ModelViewing\Nodes\DescriptionView.xaml.cs">
       <DependentUpon>DescriptionView.xaml</DependentUpon>
     </Compile>
@@ -186,6 +190,7 @@
     <Compile Include="Common\NamespaceDoc.cs" />
     <Compile Include="Utils\Culture.cs" />
     <Compile Include="Utils\DoubleExtensions.cs" />
+    <Compile Include="Utils\NamespaceDoc.cs" />
     <Compile Include="Utils\PriorityBlockingQueue.cs" />
     <Compile Include="Product.cs" />
     <Compile Include="MainWindowViews\SearchFilter.xaml.cs">
@@ -204,6 +209,7 @@
     <Compile Include="ModelHandling\Private\Convert.cs" />
     <Compile Include="Utils\AssemblyInfo.cs" />
     <Compile Include="Utils\AssemblyResolver.cs" />
+    <Compile Include="Utils\System\NamespaceDoc.cs" />
     <Compile Include="Utils\UI\BrushExtensions.cs" />
     <Compile Include="Utils\UI\DispatcherExtensions.cs" />
     <Compile Include="Utils\UI\GeometryService.cs" />
@@ -310,9 +316,9 @@
     <Compile Include="ModelViewing\Nodes\Private\NodeViewModelService.cs" />
     <Compile Include="ModelHandling\ModelPersistence\Private\Serializing\DataSerializer.cs" />
     <Compile Include="ModelHandling\ModelPersistence\Private\Serializing\IDataSerializer.cs" />
-    <Compile Include="Utils\CollectionExtensions.cs" />
+    <Compile Include="Utils\System\CollectionExtensions.cs" />
     <Compile Include="Utils\ExceptionAsyncExtensions.cs" />
-    <Compile Include="Utils\ExceptionExtensions.cs" />
+    <Compile Include="Utils\System\ExceptionExtensions.cs" />
     <Compile Include="Utils\FatalExceptionEventArgs.cs" />
     <Compile Include="Utils\MathExtensions.cs" />
     <Compile Include="Utils\AsyncLock.cs" />
@@ -363,7 +369,7 @@
     <Compile Include="Common\Environment\Private\CommandLine.cs" />
     <Compile Include="Common\Environment\ICommandLine.cs" />
     <Compile Include="Utils\AsyncSemaphore.cs" />
-    <Compile Include="Utils\EnumerableExtensions.cs" />
+    <Compile Include="Utils\System\EnumerableExtensions.cs" />
     <Compile Include="Utils\Error.cs" />
     <Compile Include="Common\Installation\IInstaller.cs" />
     <Compile Include="Common\Installation\ILatestVersionService.cs" />
