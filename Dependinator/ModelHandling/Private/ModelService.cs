@@ -119,8 +119,6 @@ namespace Dependinator.ModelHandling.Private
 				UpdateLines(Root);
 				recentModelsService.AddModelPaths(modelMetadata.ModelFilePath);
 				modelNodeService.SetLayoutDone();
-
-				Root.ItemsCanvas.UpdateAll();
 			}
 
 			GC.Collect();
@@ -242,14 +240,10 @@ namespace Dependinator.ModelHandling.Private
 			Timing t = Timing.Start();
 
 			Task showTask = Task.Run(() => ShowModel(operation));
+			Root.ItemsCanvas.UpdateAll();
 
 			Task parseTask = parseFunctionAsync(operation)
-				.ContinueWith(_ =>
-				{
-
-
-					operation.Queue.CompleteAdding();
-				});
+				.ContinueWith(_ => operation.Queue.CompleteAdding());
 
 			await Task.WhenAll(showTask, parseTask);
 
