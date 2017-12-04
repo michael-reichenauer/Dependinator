@@ -32,7 +32,7 @@
 				HorizontalAlignment="Left"
 				VerticalAlignment="Top" 
 				UseLayoutRounding="True"
-				FontFamily="Segoe UI"
+				FontFamily="Calibri"
 				TextOptions.TextFormattingMode="Ideal"/>
 
 			<Border.ToolTip>
