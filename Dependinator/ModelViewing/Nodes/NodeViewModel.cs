@@ -19,14 +19,21 @@ namespace Dependinator.ModelViewing.Nodes
 	{
 		private readonly INodeViewModelService nodeViewModelService;
 
-		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
+		private readonly DelayDispatcher delayDispatcher = new DelayDispatcher();
 
 		private readonly Lazy<ObservableCollection<LinkItem>> incomingLinks;
 		private readonly Lazy<ObservableCollection<LinkItem>> outgoingLinks;
 
+		private static TimeSpan MouseEnterDelay => ModelViewModel.IsControlling
+			? TimeSpan.FromMilliseconds(1) : ModelViewModel.MouseEnterDelay;
+
+		private static TimeSpan MouseExitDelay => TimeSpan.FromMilliseconds(10);
+
+
 
 		private bool isFirstShow = true;
 		private int currentPointIndex = -1;
+		private int pointIndex = -1;
 		private Point mouseDownPoint;
 		private Point mouseMovedPoint;
 
@@ -169,7 +176,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public void OnMouseEnter(bool isTitle)
 		{
-			mouseOverDelay.Delay(MouseEnterDelay, _ =>
+			delayDispatcher.Delay(MouseEnterDelay, _ =>
 			{
 				if (ModelViewModel.IsControlling)
 				{
@@ -192,16 +199,55 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		private static TimeSpan MouseEnterDelay => ModelViewModel.IsControlling
-			? TimeSpan.FromMilliseconds(1) : ModelViewModel.MouseEnterDelay;
-
-
 		public void OnMouseLeave()
 		{
-			Mouse.OverrideCursor = null;
-			mouseOverDelay.Cancel();
+			if (!IsShowPoints)
+			{
+				Mouse.OverrideCursor = null;
+				delayDispatcher.Cancel();
+				IsShowPoints = false;
+				IsMouseOver = false;
+				pointIndex = -1;
+			}
+			else
+			{
+				delayDispatcher.Delay(MouseExitDelay, _ =>
+				{
+					if (pointIndex == -1)
+					{
+						IsShowPoints = false;
+						OnMouseLeave();
+					}
+				});
+			}
+		}
+
+		public void OnMouseEnterPoint(int index)
+		{
+			pointIndex = index;
+			switch (index)
+			{
+				case 1:
+					Mouse.OverrideCursor = Cursors.SizeNWSE;
+					break;
+				case 2:
+					Mouse.OverrideCursor = Cursors.SizeNESW;
+					break;
+				case 3:
+					Mouse.OverrideCursor = Cursors.SizeNWSE;
+					break;
+				case 4:
+					Mouse.OverrideCursor = Cursors.SizeNESW;
+					break;
+			}
+		}
+
+
+		public void OnMouseLeavePoint(int index)
+		{
+			pointIndex = -1;
 			IsShowPoints = false;
-			IsMouseOver = false;
+			OnMouseLeave();
 		}
 
 
@@ -209,7 +255,15 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			mouseDownPoint = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
 			mouseMovedPoint = mouseDownPoint;
-			currentPointIndex = -1;
+
+			if (pointIndex == -1)
+			{
+				currentPointIndex = -1;
+			}
+			else
+			{
+				currentPointIndex = pointIndex;
+			}
 		}
 
 
@@ -301,6 +355,5 @@ namespace Dependinator.ModelViewing.Nodes
 		private int MembersCount => Node.Root.Descendents().Count(node => node.NodeType == NodeType.Member);
 		private int LinksCount => Node.Root.Descendents().SelectMany(node => node.SourceLinks).Count();
 		private int LinesCount => Node.Root.Descendents().SelectMany(node => node.SourceLines).Count();
-
 	}
 }

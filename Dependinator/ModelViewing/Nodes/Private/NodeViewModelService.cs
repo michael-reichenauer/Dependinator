@@ -128,47 +128,47 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 			
 			//Log.Debug($"{ltf},{ltr}, {lbr},{lbl}");
-			int index = 0;
-			double minDist = double.MaxValue;
+			//int index = 0;
+			//double minDist = double.MaxValue;
 
-			if (ltf < minDist)
-			{
-				// Move left,top
-				index = 1;
-				minDist = ltf;
-				Mouse.OverrideCursor = Cursors.SizeNWSE;
-			}
+			//if (ltf < minDist)
+			//{
+			//	// Move left,top
+			//	index = 1;
+			//	minDist = ltf;
+			//	Mouse.OverrideCursor = Cursors.SizeNWSE;
+			//}
 
-			if (ltr < minDist)
-			{
-				// Move right,top
-				index = 2;
-				minDist = ltr;
-				Mouse.OverrideCursor = Cursors.SizeNESW;
-			}
+			//if (ltr < minDist)
+			//{
+			//	// Move right,top
+			//	index = 2;
+			//	minDist = ltr;
+			//	Mouse.OverrideCursor = Cursors.SizeNESW;
+			//}
 
-			if (lbr < minDist)
-			{
-				// Move right,bottom
-				index = 3;
-				minDist = lbr;
-				Mouse.OverrideCursor = Cursors.SizeNWSE;
-			}
+			//if (lbr < minDist)
+			//{
+			//	// Move right,bottom
+			//	index = 3;
+			//	minDist = lbr;
+			//	Mouse.OverrideCursor = Cursors.SizeNWSE;
+			//}
 		
-			if (lbl < minDist)
-			{
-				// Move left,bottom
-				index = 4;
-				minDist = lbl;
-				Mouse.OverrideCursor = Cursors.SizeNESW;
-			}
+			//if (lbl < minDist)
+			//{
+			//	// Move left,bottom
+			//	index = 4;
+			//	minDist = lbl;
+			//	Mouse.OverrideCursor = Cursors.SizeNESW;
+			//}
 			
-			// Log.Warn("Move node");
+			//// Log.Warn("Move node");
 
-			if (minDist < 100)
-			{
-				return index;
-			}
+			//if (minDist < 100)
+			//{
+			//	return index;
+			//}
 
 			// Move node
 			Mouse.OverrideCursor = Cursors.Hand;

@@ -11,58 +11,7 @@
 
 
 	<Grid>
-
-		<Rectangle
-			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
-			Margin="0"
-			Stroke="{Binding RectangleBrush}"
-			StrokeThickness="1"
-			Fill="{Binding RectangleBrush}"
-			Width="8"
-			Height="8"
-			HorizontalAlignment="Left"
-			VerticalAlignment="Top"
-			MouseEnter="UIElement_OnMouseEnter"
-			MouseLeave="UIElement_OnMouseLeave" />
-
-		<Rectangle
-			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
-			Margin="0"
-			Stroke="{Binding RectangleBrush}"
-			StrokeThickness="1"
-			Fill="{Binding RectangleBrush}"
-			Width="8"
-			Height="8"
-			HorizontalAlignment="Left"
-			VerticalAlignment="Bottom"
-			MouseEnter="UIElement_OnMouseEnter"
-			MouseLeave="UIElement_OnMouseLeave" />
-
-		<Rectangle
-			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
-			Margin="0"
-			Stroke="{Binding RectangleBrush}"
-			StrokeThickness="1"
-			Fill="{Binding RectangleBrush}"
-			Width="8"
-			Height="8"
-			HorizontalAlignment="Right"
-			VerticalAlignment="Top"
-			MouseEnter="UIElement_OnMouseEnter"
-			MouseLeave="UIElement_OnMouseLeave" />
-
-		<Rectangle
-			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
-			Margin="0"
-			Stroke="{Binding RectangleBrush}"
-			StrokeThickness="1"
-			Fill="{Binding RectangleBrush}"
-			Width="8"
-			Height="8"
-			HorizontalAlignment="Right"
-			VerticalAlignment="Bottom"
-			MouseEnter="UIElement_OnMouseEnter"
-			MouseLeave="UIElement_OnMouseLeave" />
+	
 
 		<!-- Mouse over-->
 		<Rectangle
@@ -145,11 +94,65 @@
 						</MenuItem.Icon>
 					</MenuItem>
 
-
 				</ContextMenu>
 			</Rectangle.ContextMenu>
-
-
 		</Rectangle>
+
+		<Rectangle
+			Name="PointLeftTop"
+			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding RectangleBrush}"
+			StrokeThickness="1"
+			Fill="{Binding RectangleBrush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Left"
+			VerticalAlignment="Top"
+			MouseEnter="UIElement_OnMouseEnterLeftTop"
+			MouseLeave="UIElement_OnMouseLeaveLeftTop" />
+
+		<Rectangle
+			Name="PointLeftBottom"
+			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding RectangleBrush}"
+			StrokeThickness="1"
+			Fill="{Binding RectangleBrush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Left"
+			VerticalAlignment="Bottom"
+			MouseEnter="UIElement_OnMouseEnterLeftBottom"
+			MouseLeave="UIElement_OnMouseLeaveLeftBottom" />
+
+		<Rectangle
+			Name="PointRightTop"
+			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding RectangleBrush}"
+			StrokeThickness="1"
+			Fill="{Binding RectangleBrush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Right"
+			VerticalAlignment="Top"
+			MouseEnter="UIElement_OnMouseEnterRightTop"
+			MouseLeave="UIElement_OnMouseLeaveRightTop" />
+
+		<Rectangle
+			Name="PointRightBottom"
+			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding RectangleBrush}"
+			StrokeThickness="1"
+			Fill="{Binding RectangleBrush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Right"
+			VerticalAlignment="Bottom"
+			MouseEnter="UIElement_OnMouseEnterRightBottom"
+			MouseLeave="UIElement_OnMouseLeaveRightBottom" />
+		
 	</Grid>
 </UserControl>
