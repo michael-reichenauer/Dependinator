@@ -85,21 +85,6 @@ namespace Dependinator.ModelHandling.Private.Items
 		}
 
 
-
-		//public void ResetLayout()
-		//{
-		//	if (IsRoot)
-		//	{
-		//		ScaleFactor = 1;
-		//		Offset = new Point(0, 0);
-		//	}
-		//	else
-		//	{
-		//		ScaleFactor = DefaultScaleFactor;
-		//		Offset = new Point(0, 0);
-		//	}
-		//}
-
 		public void ItemRealized()
 		{
 			itemsSource.ItemRealized();
@@ -175,11 +160,13 @@ namespace Dependinator.ModelHandling.Private.Items
 
 			Vector moveOffset = new Vector(viewOffset.X / Scale, viewOffset.Y / Scale);
 
-			foreach (NodeViewModel nodeViewModel in GetNodeItems())
-			{
-				Point newLocation = nodeViewModel.ItemBounds.Location + moveOffset;
-				nodeViewModel.ItemBounds = new Rect(newLocation, nodeViewModel.ItemBounds.Size);
-			}
+			itemsSource.GetAllItems().ToList().ForEach(item => item.MoveItem(moveOffset));
+
+			//foreach (NodeViewModel nodeViewModel in GetNodeItems())
+			//{
+			//	Point newLocation = nodeViewModel.ItemBounds.Location + moveOffset;
+			//	nodeViewModel.ItemBounds = new Rect(newLocation, nodeViewModel.ItemBounds.Size);
+			//}
 
 			TriggerInvalidated();
 			UpdateAndNotifyAll();
@@ -187,8 +174,8 @@ namespace Dependinator.ModelHandling.Private.Items
 		}
 
 
-		private IEnumerable<NodeViewModel> GetNodeItems() => itemsSource.GetAllItems()
-			.Where(i => i is NodeViewModel).Cast<NodeViewModel>();
+		//private IEnumerable<NodeViewModel> GetNodeItems() => itemsSource.GetAllItems()
+		//	.Where(i => i is NodeViewModel).Cast<NodeViewModel>();
 
 
 		private void UpdateShownItemsInChildren()

@@ -34,6 +34,7 @@ namespace Dependinator.ModelHandling.Private.Items
 		public object ItemState { get; set; }
 
 
+
 		public ItemsCanvas ItemOwnerCanvas { get; set; }
 		public double ItemScale => ItemOwnerCanvas?.Scale ?? 1;
 
@@ -44,5 +45,10 @@ namespace Dependinator.ModelHandling.Private.Items
 		public virtual void ItemRealized() => IsShowing = true;
 
 		public virtual void ItemVirtualized() => IsShowing = false;
+
+
+		public virtual void MoveItem(Vector moveOffset)
+		{
+		}
 	}
 }

@@ -15,5 +15,6 @@ namespace Dependinator.ModelHandling.Private.Items
 
 		void ItemRealized();
 		void ItemVirtualized();
+		void MoveItem(Vector moveOffset);
 	}
 }

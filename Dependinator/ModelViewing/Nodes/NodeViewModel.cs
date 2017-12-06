@@ -98,6 +98,13 @@ namespace Dependinator.ModelViewing.Nodes
 		public int OutgoingLinesCount => Node.SourceLines.Count(line => line.Owner != Node);
 
 
+		public override void MoveItem(Vector moveOffset)
+		{
+			Point newLocation = ItemBounds.Location + moveOffset;
+			ItemBounds = new Rect(newLocation, ItemBounds.Size);
+		}
+
+
 		public int OutgoingLinksCount => Node.SourceLines
 			.Where(line => line.Owner != Node)
 			.SelectMany(line => line.Links)

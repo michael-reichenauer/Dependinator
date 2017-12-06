@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -76,6 +77,14 @@ namespace Dependinator.ModelViewing.Links
 
 		}
 
+
+		public override void MoveItem(Vector moveOffset)
+		{
+			for (int i = 1; i < line.Points.Count - 1; i++)
+			{
+				line.Points[i] = line.Points[i] + moveOffset;
+			}
+		}
 
 
 		private ObservableCollection<LinkItem> GetSourceLinkItems()

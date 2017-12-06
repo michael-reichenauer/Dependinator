@@ -1,4 +1,5 @@
-﻿using Dependinator.ModelHandling;
+﻿using System.Windows;
+using Dependinator.ModelHandling;
 using Dependinator.ModelHandling.Core;
 
 
