@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.Common;
-using Dependinator.ModelHandling;
 using Dependinator.ModelHandling.Core;
-using Dependinator.ModelViewing.Nodes;
 
 
 namespace Dependinator.ModelViewing.Links.Private
@@ -30,27 +28,75 @@ namespace Dependinator.ModelViewing.Links.Private
 
 
 		public IEnumerable<LinkItem> GetSourceLinkItems(IEnumerable<Line> lines)
-			=> GetLinesLinkItems(lines, line => line.Source, link => link.Source);
-
-
-		public IEnumerable<LinkItem> GetTargetLinkItems(IEnumerable<Line> lines)
-			=> GetLinesLinkItems(lines, line => line.Target, link => link.Target);
-
-
-		private IEnumerable<LinkItem> GetLinesLinkItems(
-			IEnumerable<Line> lines, Func<Line, Node> lineEndPoint, Func<Link, Node> linkEndPoint)
 		{
+			Func<Line, Node> lineEndPoint = line => line.Source;
+			Func<Link, Node> linkEndPoint = link => link.Source;
+
 			List<LinkItem> lineItems = new List<LinkItem>();
 			foreach (Line line in lines)
 			{
 				IEnumerable<LinkItem> linkItems = GetLineLinkItems(line, linkEndPoint);
-				LinkItem linkItem = new LinkItem(null, lineEndPoint(line).Name.DisplayName, linkItems);
 
-				lineItems.Add(linkItem);
+				if (line.Source != line.Target.Parent)
+				{
+					string displayName = lineEndPoint(line).Name.DisplayName;
+					LinkItem linkItem = new LinkItem(null, displayName, linkItems);
+
+					lineItems.Add(linkItem);
+				}
+				else
+				{
+					lineItems.AddRange(linkItems);
+				}
 			}
 
 			return lineItems;
 		}
+
+
+		public IEnumerable<LinkItem> GetTargetLinkItems(IEnumerable<Line> lines)
+		{
+			Func<Line, Node> lineEndPoint = line => line.Target;
+			Func<Link, Node> linkEndPoint = link => link.Target;
+
+			List<LinkItem> lineItems = new List<LinkItem>();
+
+			foreach (Line line in lines)
+			{
+				IEnumerable<LinkItem> linkItems = GetLineLinkItems(line, linkEndPoint);
+				if (line.Source.Parent != line.Target)
+				{
+					string displayName = lineEndPoint(line).Name.DisplayName;
+					LinkItem linkItem = new LinkItem(null, displayName, linkItems);
+
+					lineItems.Add(linkItem);
+				}
+				else
+				{
+					lineItems.AddRange(linkItems);
+				}
+
+			}
+
+			return lineItems;
+		}
+
+
+		//private IEnumerable<LinkItem> GetLinesLinkItems(
+		//	IEnumerable<Line> lines, Func<Line, Node> lineEndPoint, Func<Link, Node> linkEndPoint)
+		//{
+		//	List<LinkItem> lineItems = new List<LinkItem>();
+		//	foreach (Line line in lines)
+		//	{
+		//		IEnumerable<LinkItem> linkItems = GetLineLinkItems(line, linkEndPoint);
+		//		string displayName = lineEndPoint(line).Name.DisplayName;
+		//		LinkItem linkItem = new LinkItem(null, displayName, linkItems);
+
+		//		lineItems.Add(linkItem);
+		//	}
+
+		//	return lineItems;
+		//}
 
 
 		private IEnumerable<LinkItem> GetLineLinkItems(Line line, Func<Link, Node> linkEndPoint)
