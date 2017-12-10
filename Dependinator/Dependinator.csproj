@@ -159,8 +159,6 @@
     <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\Private\ModuleParser.cs" />
     <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\AssemblyParser.cs" />
     <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\Private\Name.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\Private\Reference.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\Private\Sender.cs" />
     <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\Private\TypeInfo.cs" />
     <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\Private\TypeParser.cs" />
     <Compile Include="ModelHandling\ModelParsing\Private\SolutionFileParsing\Project.cs" />

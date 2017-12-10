@@ -14,8 +14,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing
 	{
 		private readonly string assemblyPath;
 		private List<TypeInfo> typeInfos = new List<TypeInfo>();
-		
-		private readonly LinkHandler linkHandler;
+
 		private readonly ModuleParser moduleParser;
 		private readonly TypeParser typeParser;
 		private readonly MemberParser memberParser;
@@ -28,13 +27,12 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing
 		{
 			this.assemblyPath = assemblyPath;
 
-			Sender sender = new Sender(itemsCallback);
-
 			XmlDocParser xmlDockParser = new XmlDocParser(assemblyPath);
-			linkHandler = new LinkHandler(sender);
-			moduleParser = new ModuleParser(assemblyRootGroup, linkHandler, sender);
-			typeParser = new TypeParser(linkHandler, xmlDockParser, sender);
-			memberParser = new MemberParser(linkHandler, xmlDockParser, sender);
+			LinkHandler linkHandler = new LinkHandler(itemsCallback);
+
+			moduleParser = new ModuleParser(assemblyRootGroup, linkHandler, itemsCallback);
+			typeParser = new TypeParser(linkHandler, xmlDockParser, itemsCallback);
+			memberParser = new MemberParser(linkHandler, xmlDockParser, itemsCallback);
 		}
 
 
@@ -52,7 +50,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing
 
 				moduleParser.AddModule(assembly);
 
-				AddAssemblyTypes(assembly);
+				ParseTypes(assembly);
 			}
 			catch (Exception e)
 			{
@@ -61,11 +59,6 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing
 		}
 
 
-		public void ParseAssemblyModuleReferences()
-		{
-			moduleParser.AddModuleReferences();
-		}
-
 
 		public void ParseTypeMembers()
 		{
@@ -73,14 +66,9 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing
 			memberParser.AddTypesMembers(typeInfos);
 		}
 
-		
-		//public void ParseLinks()
-		//{
-		//	linkHandler.SendAllLinks();
-		//}
 
 
-		private void AddAssemblyTypes(AssemblyDefinition assembly)
+		private void ParseTypes(AssemblyDefinition assembly)
 		{
 			IEnumerable<TypeDefinition> assemblyTypes = assembly.MainModule.Types
 				.Where(type =>

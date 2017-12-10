@@ -21,14 +21,11 @@ namespace Dependinator.ModelHandling.ModelParsing.Private
 			IReadOnlyList<AssemblyParser> assemblyParsers = GetAssemblyParsers(
 				filePath, modelItemsCallback);
 
-			t.Log("Created assembly parsers");
 			ParallelOptions option = GetParallelOptions();
 			await Task.Run(() =>
 			{
 				Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseTypes());
-				Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseAssemblyModuleReferences());
 				Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseTypeMembers());
-				//Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseLinks());
 			});
 
 			t.Log($"Analyzed {filePath}");

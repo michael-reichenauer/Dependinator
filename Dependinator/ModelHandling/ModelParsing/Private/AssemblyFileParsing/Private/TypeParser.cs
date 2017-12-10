@@ -11,16 +11,19 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 {
 	internal class TypeParser
 	{
-		private readonly Sender sender;
 		private readonly LinkHandler linkHandler;
 		private readonly XmlDocParser xmlDockParser;
+		private readonly ModelItemsCallback itemsCallback;
 
 
-		public TypeParser(LinkHandler linkHandler, XmlDocParser xmlDockParser, Sender sender)
+		public TypeParser(
+			LinkHandler linkHandler, 
+			XmlDocParser xmlDockParser, 
+			ModelItemsCallback itemsCallback)
 		{
-			this.sender = sender;
 			this.linkHandler = linkHandler;
 			this.xmlDockParser = xmlDockParser;
+			this.itemsCallback = itemsCallback;
 		}
 
 
@@ -54,7 +57,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 					{
 						name = Name.GetTypeNamespaceFullName(type);
 						typeNode = new ModelNode(name, parent, NodeType.NameSpace, description);
-						sender.SendNode(typeNode);
+						itemsCallback(typeNode);
 					}
 
 					yield break;
@@ -62,7 +65,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 
 
 				typeNode = new ModelNode(name, parent, NodeType.Type, description);
-				sender.SendNode(typeNode);
+				itemsCallback(typeNode);
 			}
 
 			yield return new TypeInfo(type, typeNode, isAsyncStateType);

@@ -13,15 +13,19 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 	{
 		private readonly LinkHandler linkHandler;
 		private readonly XmlDocParser xmlDocParser;
-		private readonly Sender sender;
+		private readonly ModelItemsCallback itemsCallback;
 		private readonly MethodParser methodParser;
+		private readonly Dictionary<string, ModelNode> sentNodes = new Dictionary<string, ModelNode>();
 
 
-		public MemberParser(LinkHandler linkHandler, XmlDocParser xmlDocParser, Sender sender)
+		public MemberParser(
+			LinkHandler linkHandler, 
+			XmlDocParser xmlDocParser,
+			ModelItemsCallback itemsCallback)
 		{
 			this.linkHandler = linkHandler;
 			this.xmlDocParser = xmlDocParser;
-			this.sender = sender;
+			this.itemsCallback = itemsCallback;
 			methodParser = new MethodParser(linkHandler);
 		}
 
@@ -91,7 +95,13 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 				string description = xmlDocParser.GetDescription(memberName);
 
 				ModelNode memberNode = new ModelNode(memberName, parent, NodeType.Member, description);
-				sender.SendNode(memberNode);
+
+				if (!sentNodes.ContainsKey(memberNode.Name))
+				{
+					// Already sent this node name (properties get/set, events (add/remove)
+					sentNodes[memberNode.Name] = memberNode;
+					itemsCallback(memberNode);
+				}
 
 				AddMemberLinks(memberNode, memberInfo);
 			}

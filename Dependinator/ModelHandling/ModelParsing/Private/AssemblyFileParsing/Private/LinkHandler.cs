@@ -1,35 +1,24 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelHandling.Core;
 using Mono.Cecil;
-//using Dependinator.ModelHandling.ModelPersistence.Private.Serializing;
+
 
 
 namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Private
 {
 	internal class LinkHandler
 	{
-		private readonly Sender sender;
-		//private readonly List<Reference> links = new List<Reference>();
+		private readonly ModelItemsCallback itemsCallback;
 
 
-		public LinkHandler(Sender sender)
+		public LinkHandler(ModelItemsCallback itemsCallback)
 		{
-			this.sender = sender;
+			this.itemsCallback = itemsCallback;
 		}
 
 
-		//public void SendAllLinks()
-		//{
-		//	links.ForEach(SendReference);
-		//}
-
-
-		public void AddLinkToReference(Reference reference)
-		{
-			SendReference(reference);
-		}
+		public void AddLink(ModelLink link) => SendLink(link);
 
 
 		public void AddLinkToType(ModelNode sourceNode, TypeReference targetType)
@@ -46,7 +35,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 				return;
 			}
 
-			SendReference(new Reference(sourceNode.Name, targetNodeName, NodeType.Type));
+			SendLink(new ModelLink(sourceNode.Name, targetNodeName, NodeType.Type));
 
 			if (targetType.IsGenericInstance)
 			{
@@ -70,7 +59,19 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 				return;
 			}
 
-			SendReference(new Reference(sourceNode.Name, targetNodeName, NodeType.Member));
+			SendLink(new ModelLink(sourceNode.Name, targetNodeName, NodeType.Member));
+		}
+
+
+		private void SendLink(ModelLink link)
+		{
+			if (link.Source == link.Target)
+			{
+				// Skipping link to self
+				return;
+			}
+
+			itemsCallback(link);
 		}
 
 
@@ -85,18 +86,6 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 		{
 			return Name.IsCompilerGenerated(targetNodeName) ||
 						 targetNodeName.StartsWithTxt("mscorlib.");
-		}
-
-
-		private void SendReference(Reference reference)
-		{
-			if (reference.SourceName == reference.TargetName)
-			{
-				// Skipping link to self
-				return;
-			}
-
-			sender.SendLink(reference.SourceName, reference.TargetName, reference.TargetType);
 		}
 
 

@@ -12,17 +12,17 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 	{
 		private readonly string rootGroup;
 		private readonly LinkHandler linkHandler;
-		private readonly Sender sender;
+		private readonly ModelItemsCallback itemsCallback;
 		private AssemblyDefinition assembly;
 
 		public ModuleParser(
 			string rootGroup,
 			LinkHandler linkHandler,
-			Sender sender)
+			ModelItemsCallback itemsCallback)
 		{
 			this.rootGroup = rootGroup;
 			this.linkHandler = linkHandler;
-			this.sender = sender;
+			this.itemsCallback = itemsCallback;
 		}
 
 
@@ -44,7 +44,9 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 
 			string description = GetDescription();
 			ModelNode moduleNode = new ModelNode(moduleName, parent, NodeType.NameSpace, description);
-			sender.SendNode(moduleNode);
+			itemsCallback(moduleNode);
+
+			AddModuleReferences();
 		}
 
 
@@ -65,11 +67,6 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 
 		public void AddModuleReferences()
 		{
-			if (assembly == null)
-			{
-				return;
-			}
-
 			string moduleName = Name.GetAssemblyName(assembly);
 
 			var references = assembly.MainModule.AssemblyReferences.
@@ -89,10 +86,10 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 				parent = $"${parent?.Replace(".", ".$")}";
 
 				ModelNode referenceNode = new ModelNode(referenceName, parent, NodeType.NameSpace, null);
-				sender.SendNode(referenceNode);
+				itemsCallback(referenceNode);
 
-				linkHandler.AddLinkToReference(
-					new Reference(moduleName, referenceName, NodeType.NameSpace));
+				linkHandler.AddLink(
+					new ModelLink(moduleName, referenceName, NodeType.NameSpace));
 			}
 		}
 	}

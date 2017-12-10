@@ -141,7 +141,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 				return;
 			}
 
-			linkHandler.AddLinkToReference(new Reference(memberNode.Name, methodName, NodeType.Member));
+			linkHandler.AddLink(new ModelLink(memberNode.Name, methodName, NodeType.Member));
 
 			TypeReference returnType = method.ReturnType;
 			linkHandler.AddLinkToType(memberNode, returnType);
