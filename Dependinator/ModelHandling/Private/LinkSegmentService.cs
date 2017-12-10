@@ -17,28 +17,21 @@ namespace Dependinator.ModelHandling.Private
 			// Iterate segments until line end is reached
 			while (segmentSource != link.Target)
 			{
-				// Try to assume next line target is a child or descendent node by searching if line source
-				// is a ancestor of end target node
+				// Start by trying if next line segment target is a sibling, child or descendent node by 
+				// searching if line segment source is a ancestor of end target node
 				Node segmentTarget = link.Target.AncestorsAndSelf()
-					.FirstOrDefault(ancestor => ancestor.Parent == segmentSource);
+					.FirstOrDefault(targetAncestor =>
+						targetAncestor.Parent == segmentSource.Parent ||
+						targetAncestor.Parent == segmentSource);
 
 				if (segmentTarget == null)
 				{
-					// Segment target was not a descendent, lets try to assume target is a sibling node
-					segmentTarget = link.Target.AncestorsAndSelf()
-						.FirstOrDefault(ancestor => ancestor.Parent == segmentSource.Parent);
-				}
-
-				if (segmentTarget == null)
-				{
-					// Segment target was neither child nor a sibling, next line target node must
+					// Segment target was neither sibling or child nor a child, next line target node must
 					// be the parent node
 					segmentTarget = segmentSource.Parent;
 				}
 
-				//Node segmentOwner = segmentSource == segmentTarget.Parent ? segmentSource : segmentSource.Parent;
 				LinkSegment segment = new LinkSegment(segmentSource, segmentTarget, link);
-
 				segments.Add(segment);
 
 				// Go to next line in the line segments 
@@ -47,7 +40,6 @@ namespace Dependinator.ModelHandling.Private
 
 			return segments;
 		}
-
 
 
 

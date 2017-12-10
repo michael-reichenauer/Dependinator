@@ -42,17 +42,6 @@ namespace Dependinator.ModelHandling.Private
 					return;
 				}
 
-				//NodeName targetName = NodeName.From(modelLink.Target);
-				//if (!model.TryGetNode(targetName, out Node target))
-				//{
-				//	// Target node not yet added, adding it.
-				//	ModelNode targetModelNode = new ModelNode(
-				//		modelLink.Target, null, modelLink.TargetType, null);
-				//	modelNodeService.Value.UpdateNode(targetModelNode, stamp);
-
-				//	// Getting the newly added node
-				//	target = model.Node(targetName);
-				//}
 
 				target.Stamp = stamp;
 
