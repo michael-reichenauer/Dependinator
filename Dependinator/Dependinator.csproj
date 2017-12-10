@@ -147,27 +147,27 @@
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
     <Compile Include="ModelHandling\Core\LinkType.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\DataFileParsing\JsonTypes.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\Private\XmlDocParser.cs" />
-    <Compile Include="ModelHandling\ModelPersistence\IPersistenceService.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\DataFileParsing\JsonTypes.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\XmlDocParser.cs" />
+    <Compile Include="ModelHandling\Private\ModelPersistence\IPersistenceService.cs" />
     <Compile Include="ModelHandling\Core\ModelLine.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\Private\IgnoredTypes.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\Private\LinkHandler.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\Private\MemberParser.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\Private\MethodParser.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\Private\ModuleParser.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\AssemblyParser.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\Private\Name.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\Private\TypeInfo.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\AssemblyFileParsing\Private\TypeParser.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\SolutionFileParsing\Project.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\SolutionFileParsing\Private\ProjectInSolution.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\SolutionFileParsing\Private\ReflectionExtensions.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\SolutionFileParsing\Solution.cs" />
-    <Compile Include="ModelHandling\ModelParsing\Private\SolutionFileParsing\Private\SolutionParser.cs" />
-    <Compile Include="ModelHandling\ModelPersistence\NamespaceDoc.cs" />
-    <Compile Include="ModelHandling\ModelPersistence\Private\Serializing\JsonTypes.cs" />
-    <Compile Include="ModelHandling\ModelPersistence\Private\PersistenceService.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\IgnoredTypes.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\LinkHandler.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\MemberParser.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\MethodParser.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\ModuleParser.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\AssemblyParser.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\Name.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\TypeInfo.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\TypeParser.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\SolutionFileParsing\Project.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\SolutionFileParsing\Private\ProjectInSolution.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\SolutionFileParsing\Private\ReflectionExtensions.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\SolutionFileParsing\Solution.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\SolutionFileParsing\Private\SolutionParser.cs" />
+    <Compile Include="ModelHandling\Private\ModelPersistence\NamespaceDoc.cs" />
+    <Compile Include="ModelHandling\Private\ModelPersistence\Private\Serializing\JsonTypes.cs" />
+    <Compile Include="ModelHandling\Private\ModelPersistence\Private\PersistenceService.cs" />
     <Compile Include="ModelHandling\NamespaceDoc.cs" />
     <Compile Include="ModelViewing\NamespaceDoc.cs" />
     <Compile Include="ModelViewing\Nodes\DescriptionView.xaml.cs">
@@ -198,7 +198,7 @@
     <Compile Include="ModelHandling\Core\ModelItem.cs" />
     <Compile Include="ModelHandling\Core\ModelLink.cs" />
     <Compile Include="ModelHandling\Core\ModelItemsCallback.cs" />
-    <Compile Include="ModelHandling\ModelPersistence\Private\Serializing\Convert.cs" />
+    <Compile Include="ModelHandling\Private\ModelPersistence\Private\Serializing\Convert.cs" />
     <Compile Include="ModelViewing\Nodes\NodePointsView.xaml.cs">
       <DependentUpon>NodePointsView.xaml</DependentUpon>
     </Compile>
@@ -218,7 +218,6 @@
     <Compile Include="Utils\UI\DragUiElement.cs" />
     <Compile Include="ModelHandling\Private\IModelLinkService.cs" />
     <Compile Include="ModelHandling\Core\Line.cs" />
-    <Compile Include="ModelHandling\Core\LinkId.cs" />
     <Compile Include="ModelViewing\Links\LineView.xaml.cs">
       <DependentUpon>LineView.xaml</DependentUpon>
     </Compile>
@@ -227,7 +226,6 @@
     <Compile Include="ModelHandling\Private\ModelLinkService.cs" />
     <Compile Include="ModelHandling\Private\LinkSegment.cs" />
     <Compile Include="ModelHandling\Core\Node.cs" />
-    <Compile Include="ModelHandling\Core\NodeExtension.cs" />
     <Compile Include="ModelViewing\Nodes\NodeViewModel.cs" />
     <Compile Include="ModelHandling\IModelService.cs" />
     <Compile Include="ModelHandling\Private\IModelNodeService.cs" />
@@ -235,7 +233,6 @@
     <Compile Include="ModelHandling\Private\ModelNodeService.cs" />
     <Compile Include="ModelHandling\Private\Model.cs" />
     <Compile Include="ModelHandling\Core\ModelNode.cs" />
-    <Compile Include="ModelHandling\Core\NodeId.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\TypeView.xaml.cs">
       <DependentUpon>TypeView.xaml</DependentUpon>
@@ -306,15 +303,15 @@
     <Compile Include="ModelViewing\Nodes\NamespaceView.xaml.cs">
       <DependentUpon>NamespaceView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelHandling\ModelParsing\Private\ParserService.cs" />
-    <Compile Include="ModelHandling\ModelParsing\IParserService.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\Private\ParserService.cs" />
+    <Compile Include="ModelHandling\Private\ModelParsing\IParserService.cs" />
     <Compile Include="ModelHandling\Private\Items\ItemViewModel.cs" />
     <Compile Include="ModelHandling\Private\Items\IItem.cs" />
     <Compile Include="ModelViewing\IModelViewService.cs" />
     <Compile Include="ModelViewing\Private\ModelViewService.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeViewModelService.cs" />
-    <Compile Include="ModelHandling\ModelPersistence\Private\Serializing\DataSerializer.cs" />
-    <Compile Include="ModelHandling\ModelPersistence\Private\Serializing\IDataSerializer.cs" />
+    <Compile Include="ModelHandling\Private\ModelPersistence\Private\Serializing\DataSerializer.cs" />
+    <Compile Include="ModelHandling\Private\ModelPersistence\Private\Serializing\IDataSerializer.cs" />
     <Compile Include="Utils\System\CollectionExtensions.cs" />
     <Compile Include="Utils\ExceptionAsyncExtensions.cs" />
     <Compile Include="Utils\System\ExceptionExtensions.cs" />

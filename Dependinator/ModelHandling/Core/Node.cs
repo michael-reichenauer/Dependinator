@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
@@ -18,7 +17,6 @@ namespace Dependinator.ModelHandling.Core
 
 		public Node(NodeName name)
 		{
-			Id = new NodeId(name);
 			Name = name;
 
 			if (name == NodeName.Root)
@@ -27,7 +25,7 @@ namespace Dependinator.ModelHandling.Core
 				Parent = this;
 			}
 
-			IsEqualWhenSame(Id);
+			IsEqualWhenSame(Name);
 		}
 
 
@@ -36,7 +34,6 @@ namespace Dependinator.ModelHandling.Core
 		public bool IsShowing => ViewModel?.IsShowing ?? false;
 		public int Stamp { get; set; }
 
-		public NodeId Id { get; }
 		public NodeName Name { get; }
 
 		public Node Parent { get; private set; }
@@ -83,6 +80,68 @@ namespace Dependinator.ModelHandling.Core
 		{
 			IsHidden = false;
 			Parent.ItemsCanvas?.UpdateAndNotifyAll();
+		}
+
+		public IEnumerable<Node> Ancestors()
+		{
+			Node current = this;
+
+			while (current != Root)
+			{
+				yield return current;
+				current = current.Parent;
+			}
+		}
+
+
+		public IEnumerable<Node> AncestorsAndSelf()
+		{
+			yield return this;
+
+			foreach (Node ancestor in Ancestors())
+			{
+				yield return ancestor;
+			}
+		}
+
+		public IEnumerable<Node> Descendents()
+		{
+			foreach (Node child in Children)
+			{
+				yield return child;
+
+				foreach (Node descendent in child.Descendents())
+				{
+					yield return descendent;
+				}
+			}
+		}
+
+
+		public IEnumerable<Node> DescendentsAndSelf()
+		{
+			yield return this;
+
+			foreach (Node descendent in Descendents())
+			{
+				yield return descendent;
+			}
+		}
+
+
+		public IEnumerable<Node> DescendentsBreadth()
+		{
+			Queue<Node> queue = new Queue<Node>();
+
+			Children.ForEach(queue.Enqueue);
+
+			while (queue.Any())
+			{
+				Node node = queue.Dequeue();
+				yield return node;
+
+				node.Children.ForEach(queue.Enqueue);
+			}
 		}
 	}
 }

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -9,7 +8,6 @@ using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelHandling.Core;
 using Dependinator.ModelHandling.Private;
 using Dependinator.ModelViewing.Links;
-using Dependinator.Utils;
 using Dependinator.Utils.UI;
 
 
@@ -18,19 +16,19 @@ namespace Dependinator.ModelViewing.Nodes.Private
 	internal class NodeViewModelService : INodeViewModelService
 	{
 		private readonly IThemeService themeService;
-		private readonly IModelLinkService modelService;
+		private readonly IModelLinkService modelLinkService;
 		private readonly ILinkMenuItemService linkMenuItemService;
 		private readonly IGeometryService geometryService;
 
 
 		public NodeViewModelService(
 			IThemeService themeService,
-			IModelLinkService modelService,
+			IModelLinkService modelLinkService,
 			ILinkMenuItemService linkMenuItemService,
 			IGeometryService geometryService)
 		{
 			this.themeService = themeService;
-			this.modelService = modelService;
+			this.modelLinkService = modelLinkService;
 			this.linkMenuItemService = linkMenuItemService;
 			this.geometryService = geometryService;
 		}
@@ -49,11 +47,11 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		{
 			node.SourceLines
 				.Where(line => line.ViewModel == null)
-				.ForEach(line => modelService.AddLineViewModel(line));
+				.ForEach(line => modelLinkService.AddLineViewModel(line));
 
 			node.TargetLines
 				.Where(line => line.ViewModel == null)
-				.ForEach(line => modelService.AddLineViewModel(line));
+				.ForEach(line => modelLinkService.AddLineViewModel(line));
 		}
 
 
@@ -126,7 +124,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			double lbl = (point - new Point(
 				viewModel.ItemLeft, viewModel.ItemTop + viewModel.ItemHeight)).Length;
 
-			
+
 			//Log.Debug($"{ltf},{ltr}, {lbr},{lbl}");
 			//int index = 0;
 			//double minDist = double.MaxValue;
@@ -154,7 +152,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			//	minDist = lbr;
 			//	Mouse.OverrideCursor = Cursors.SizeNWSE;
 			//}
-		
+
 			//if (lbl < minDist)
 			//{
 			//	// Move left,bottom
@@ -162,7 +160,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			//	minDist = lbl;
 			//	Mouse.OverrideCursor = Cursors.SizeNESW;
 			//}
-			
+
 			//// Log.Warn("Move node");
 
 			//if (minDist < 100)

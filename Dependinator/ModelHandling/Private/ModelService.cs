@@ -9,9 +9,9 @@ using Dependinator.Common;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelHandling.Core;
-using Dependinator.ModelHandling.ModelParsing;
-using Dependinator.ModelHandling.ModelPersistence;
 using Dependinator.ModelHandling.Private.Items;
+using Dependinator.ModelHandling.Private.ModelParsing;
+using Dependinator.ModelHandling.Private.ModelPersistence;
 using Dependinator.ModelViewing.Open;
 using Dependinator.Utils;
 
