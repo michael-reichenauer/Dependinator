@@ -75,7 +75,10 @@ namespace Dependinator.ModelViewing.Links.Private
 			if (line.Source.Parent == line.Target)
 			{
 				// Need to adjust for different scales
-				tp = ParentPointToChildPoint(line.Target, tp);
+				Vector vector = line.ViewModel.ItemScale > 1
+					? new Vector(0, 8 / line.ViewModel.ItemScale) : new Vector(0, 8);
+
+				tp = ParentPointToChildPoint(line.Target, tp) - vector;
 			}
 			else if (line.Source == line.Target.Parent)
 			{
@@ -609,7 +612,7 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		public double GetArrowWidth(Line line)
 		{
-			double arrowWidth = (10 * line.ViewModel.ItemScale).MM(4, 15);
+			double arrowWidth = (10 * line.ViewModel.ItemScale).MM(6, 15);
 
 			if (line.ViewModel.IsMouseOver)
 			{
