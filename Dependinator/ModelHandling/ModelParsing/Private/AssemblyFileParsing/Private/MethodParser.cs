@@ -150,5 +150,20 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 				.Select(parameter => parameter.ParameterType)
 				.ForEach(parameterType => linkHandler.AddLinkToType(memberNode, parameterType));
 		}
+
+
+		private class MethodBodyNode
+		{
+			public ModelNode MemberNode { get; }
+			public MethodDefinition Method { get; }
+			public bool IsMoveNext { get; }
+
+			public MethodBodyNode(ModelNode memberNode, MethodDefinition method, bool isMoveNext)
+			{
+				MemberNode = memberNode;
+				Method = method;
+				IsMoveNext = isMoveNext;
+			}
+		}
 	}
 }

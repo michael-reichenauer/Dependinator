@@ -59,7 +59,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private
 
 
 		private static IReadOnlyList<AssemblyParser> GetSolutionFileAnalyzers(
-			string filePath, ModelItemsCallback modelItemsCallback)
+			string filePath, ModelItemsCallback itemsCallback)
 		{
 			Solution solution = new Solution(filePath);
 
@@ -68,6 +68,10 @@ namespace Dependinator.ModelHandling.ModelParsing.Private
 			List<AssemblyParser> assemblyParsers = new List<AssemblyParser>();
 
 			string solutionName = GetName(solution.SolutionFilePath);
+
+			string description = solution.SolutionFilePath;
+			ModelNode node = new ModelNode($"${solutionName}", null, NodeType.NameSpace, description);
+			itemsCallback(node);
 
 			foreach (Project project in projects)
 			{
@@ -79,7 +83,7 @@ namespace Dependinator.ModelHandling.ModelParsing.Private
 					string rootGroup = GetRootGroup(solutionName, projectName);
 
 					AssemblyParser assemblyParser = new AssemblyParser(
-						outputPath, rootGroup, modelItemsCallback);
+						outputPath, rootGroup, itemsCallback);
 
 					assemblyParsers.Add(assemblyParser);
 				}
@@ -90,10 +94,10 @@ namespace Dependinator.ModelHandling.ModelParsing.Private
 
 
 		private static IReadOnlyList<AssemblyParser> GetAssemblyFileAnalyzers(
-			string filePath, ModelItemsCallback modelItemsCallback)
+			string filePath, ModelItemsCallback itemsCallback)
 		{
 			string rootGroup = GetName(filePath);
-			return new[] { new AssemblyParser(filePath, rootGroup, modelItemsCallback) };
+			return new[] { new AssemblyParser(filePath, rootGroup, itemsCallback) };
 		}
 
 

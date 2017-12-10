@@ -72,6 +72,14 @@ namespace Dependinator.ModelHandling.ModelParsing.Private.AssemblyFileParsing.Pr
 			var references = assembly.MainModule.AssemblyReferences.
 				Where(reference => !IgnoredTypes.IsSystemIgnoredModuleName(reference.Name));
 
+			if (references.Any())
+			{
+				string description = "Referenced assemblies and NuGet packages.";
+				ModelNode node = new ModelNode("$References", null, NodeType.NameSpace, description);
+				itemsCallback(node);
+			}
+
+
 			foreach (AssemblyNameReference reference in references)
 			{
 				string parent = "References";
