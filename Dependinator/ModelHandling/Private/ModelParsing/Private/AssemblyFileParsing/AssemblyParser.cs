@@ -18,7 +18,7 @@ namespace Dependinator.ModelHandling.Private.ModelParsing.Private.AssemblyFilePa
 		private readonly ModuleParser moduleParser;
 		private readonly TypeParser typeParser;
 		private readonly MemberParser memberParser;
-
+		private AssemblyDefinition assembly;
 
 		public AssemblyParser(
 			string assemblyPath,
@@ -36,7 +36,7 @@ namespace Dependinator.ModelHandling.Private.ModelParsing.Private.AssemblyFilePa
 		}
 
 
-		public void ParseTypes()
+		public void ParseModule()
 		{
 			try
 			{
@@ -46,11 +46,9 @@ namespace Dependinator.ModelHandling.Private.ModelParsing.Private.AssemblyFilePa
 					return;
 				}
 
-				AssemblyDefinition assembly = AssemblyDefinition.ReadAssembly(assemblyPath);
+				assembly = AssemblyDefinition.ReadAssembly(assemblyPath);
 
 				moduleParser.AddModule(assembly);
-
-				ParseTypes(assembly);
 			}
 			catch (Exception e)
 			{
@@ -58,6 +56,27 @@ namespace Dependinator.ModelHandling.Private.ModelParsing.Private.AssemblyFilePa
 			}
 		}
 
+
+		public void ParseTypes()
+		{
+			if (assembly == null)
+			{
+				return;
+			}
+
+			ParseTypes(assembly);
+		}
+
+
+		public void ParseModuleReferences()
+		{
+			if (assembly == null)
+			{
+				return;
+			}
+
+			moduleParser.AddModuleReferences();
+		}
 
 
 		public void ParseTypeMembers()

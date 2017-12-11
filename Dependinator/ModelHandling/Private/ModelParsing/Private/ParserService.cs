@@ -24,6 +24,8 @@ namespace Dependinator.ModelHandling.Private.ModelParsing.Private
 			ParallelOptions option = GetParallelOptions();
 			await Task.Run(() =>
 			{
+				Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseModule());
+				Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseModuleReferences());
 				Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseTypes());
 				Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseTypeMembers());
 			});
@@ -69,9 +71,9 @@ namespace Dependinator.ModelHandling.Private.ModelParsing.Private
 
 			string solutionName = GetName(solution.SolutionFilePath);
 
-			string description = solution.SolutionFilePath;
-			ModelNode node = new ModelNode($"${solutionName}", null, NodeType.NameSpace, description);
-			itemsCallback(node);
+			//string description = solution.SolutionFilePath;
+			//ModelNode node = new ModelNode($"${solutionName}", null, NodeType.NameSpace, description);
+			//itemsCallback(node);
 
 			foreach (Project project in projects)
 			{

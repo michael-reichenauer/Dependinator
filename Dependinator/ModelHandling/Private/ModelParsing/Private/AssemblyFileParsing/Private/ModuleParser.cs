@@ -45,8 +45,6 @@ namespace Dependinator.ModelHandling.Private.ModelParsing.Private.AssemblyFilePa
 			string description = GetDescription();
 			ModelNode moduleNode = new ModelNode(moduleName, parent, NodeType.NameSpace, description);
 			itemsCallback(moduleNode);
-
-			AddModuleReferences();
 		}
 
 
@@ -72,12 +70,12 @@ namespace Dependinator.ModelHandling.Private.ModelParsing.Private.AssemblyFilePa
 			var references = assembly.MainModule.AssemblyReferences.
 				Where(reference => !IgnoredTypes.IsSystemIgnoredModuleName(reference.Name));
 
-			if (references.Any())
-			{
-				string description = "Referenced assemblies and NuGet packages.";
-				ModelNode node = new ModelNode("$References", null, NodeType.NameSpace, description);
-				itemsCallback(node);
-			}
+			//if (references.Any())
+			//{
+			//	string description = "Referenced assemblies and NuGet packages.";
+			//	ModelNode node = new ModelNode("$References", null, NodeType.NameSpace, description);
+			//	itemsCallback(node);
+			//}
 
 
 			foreach (AssemblyNameReference reference in references)
