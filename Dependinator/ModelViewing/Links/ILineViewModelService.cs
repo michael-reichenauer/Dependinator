@@ -14,7 +14,7 @@ namespace Dependinator.ModelViewing.Links
 		//void ZoomOutLinkLine(LinkLine linkLine);
 
 		bool IsOnLineBetweenNeighbors(Line points, int index);
-		int GetLinePointIndex(Line line, Point point);
+		int GetLinePointIndex(Line line, Point point, bool isPointMove);
 		//void AddLinkLines(LinkOld link);
 		//void ZoomInLinkLine(LinkLineOld line, NodeOld node);
 		//void ZoomOutLinkLine(LinkLineOld line, NodeOld node);

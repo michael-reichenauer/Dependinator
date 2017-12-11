@@ -30,16 +30,6 @@
 				IsHitTestVisible="False"
 				StrokeEndLineCap="Triangle"/>
 
-			<!-- Line controls -->
-			<Path
-				Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
-				Data="{Binding PointsData}"
-				Stroke="{Binding LineBrush}"
-				StrokeLineJoin="Round"
-				StrokeThickness="5"
-				MouseEnter="UIElement_OnMouseEnter"
-				MouseLeave="UIElement_OnMouseLeave"/>
-
 			<!-- Mouse over-->
 			<Path
 				Data="{Binding LineData}"
@@ -106,6 +96,19 @@
 				</Path.ContextMenu>
 
 			</Path>
+
+
+			<!-- Line controls -->
+			<Path
+				Name="LinePoints"
+				Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+				Data="{Binding PointsData}"
+				Stroke="{Binding LineBrush}"
+				StrokeLineJoin="Round"
+				StrokeThickness="5"
+				MouseEnter="UIElement_OnMouseEnterPoint"
+				MouseLeave="UIElement_OnMouseLeavePoint"/>
+
 
 		</Grid>
 

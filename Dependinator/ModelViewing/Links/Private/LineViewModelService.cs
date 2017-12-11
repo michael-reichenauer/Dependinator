@@ -127,9 +127,9 @@ namespace Dependinator.ModelViewing.Links.Private
 			}
 			else
 			{
-				Point p = newPoint;
-				Point b = line.Points[pointIndex + 1];
 				Point a = line.Points[pointIndex - 1];
+				Point b = line.Points[pointIndex + 1];
+				Point p = newPoint;
 				if (geometryService.GetDistanceFromLine(a, b, p) < 0.1)
 				{
 					newPoint = geometryService.GetClosestPointOnLineSegment(a, b, p);
@@ -141,7 +141,7 @@ namespace Dependinator.ModelViewing.Links.Private
 
 
 
-		public int GetLinePointIndex(Line line, Point point)
+		public int GetLinePointIndex(Line line, Point point, bool isPointMove)
 		{
 			IList<Point> points = line.Points;
 			double itemScale = line.ViewModel.ItemScale;
@@ -150,36 +150,40 @@ namespace Dependinator.ModelViewing.Links.Private
 			Point pointOnLine = GetClosetPointOnlIne(point, points, itemScale);
 			point = pointOnLine;
 
-			for (int i = 0; i < points.Count - 1; i++)
-			{
-				Point segmentStartPoint = points[i];
-				Point segmentEndPoint = points[i + 1];
 
-				if ((point - segmentStartPoint).Length * itemScale < 10)
+			if (isPointMove && points.Count > 2)
+			{
+				int index = -1;
+				double dist = double.MaxValue;
+
+				for (int i = 1; i < points.Count - 1; i++)
 				{
-					// The point is close to segment start point (skipping first point)
-					if (i != 0)
+					double currentDist = (point - points[i]).Length;
+					if (currentDist < dist)
 					{
-						return i;
+						index = i;
+						dist = currentDist;
 					}
 				}
-				else if ((point - segmentEndPoint).Length * itemScale < 10)
+
+				return index;
+			}
+			else
+			{
+				for (int i = 0; i < points.Count - 1; i++)
 				{
-					// The point is close to segment end point (skipping last point)
-					if (i + 1 != points.Count - 1)
+					Point segmentStartPoint = points[i];
+					Point segmentEndPoint = points[i + 1];
+
+					double distance = geometryService.GetDistanceFromLine(
+						                  segmentStartPoint, segmentEndPoint, point) * itemScale;
+
+					if (distance < 5)
 					{
+						// The point is on the segment
+						points.Insert(i + 1, point);
 						return i + 1;
 					}
-				}
-
-				double distance = geometryService.GetDistanceFromLine(
-					segmentStartPoint, segmentEndPoint, point) * itemScale;
-
-				if (distance < 5)
-				{
-					// The point is on the segment
-					points.Insert(i + 1, point);
-					return i + 1;
 				}
 			}
 

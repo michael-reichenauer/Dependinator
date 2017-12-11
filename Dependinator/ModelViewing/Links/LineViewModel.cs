@@ -15,9 +15,10 @@ namespace Dependinator.ModelViewing.Links
 	internal class LineViewModel : ItemViewModel
 	{
 		private readonly ILineViewModelService lineViewModelService;
-		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
+		private readonly DelayDispatcher delayDispatcher = new DelayDispatcher();
 		private readonly Lazy<ObservableCollection<LinkItem>> sourceLinks;
 		private readonly Lazy<ObservableCollection<LinkItem>> targetLinks;
+		private static TimeSpan MouseExitDelay => TimeSpan.FromMilliseconds(10);
 
 		private readonly Line line;
 		private Point mouseDownPoint;
@@ -101,8 +102,9 @@ namespace Dependinator.ModelViewing.Links
 			return new ObservableCollection<LinkItem>(items);
 		}
 
-		public void MouseDown(Point screenPoint)
+		public void MouseDown(Point screenPoint, bool isPoint)
 		{
+			isPointMove = isPoint;
 			mouseDownPoint = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
 			currentPointIndex = -1;
 			IsMouseOver = true;
@@ -131,7 +133,8 @@ namespace Dependinator.ModelViewing.Links
 			{
 				// First move event, lets start a move by  getting the index of point to move.
 				// THis might create a new point if there is no existing point near the mouse down point
-				currentPointIndex = lineViewModelService.GetLinePointIndex(line, mouseDownPoint);
+				currentPointIndex = lineViewModelService.GetLinePointIndex(
+					line, mouseDownPoint, isPointMove);
 				if (currentPointIndex == -1)
 				{
 					// Point not close enough to the line
@@ -153,29 +156,67 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
-		public void OnMouseEnter()
-		{
-			mouseOverDelay.Delay(ModelViewModel.MouseEnterDelay, _ =>
-			{
-				if (ModelViewModel.IsControlling)
-				{
-					Mouse.OverrideCursor = Cursors.Hand;
-				}
+		private bool isPointMove = false;
 
+
+		public void OnMouseEnter(bool isPoint)
+		{
+			isPointMove = isPoint;
+
+			if (isPoint)
+			{
+				Mouse.OverrideCursor = Cursors.SizeAll;
 				IsMouseOver = true;
-				IsShowPoints = ModelViewModel.IsControlling;
+				IsShowPoints = true;
 				Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
-			});
+			}
+			else
+			{
+				delayDispatcher.Delay(ModelViewModel.MouseEnterDelay, _ =>
+				{
+					if (ModelViewModel.IsControlling)
+					{
+						Mouse.OverrideCursor = Cursors.Hand;
+					}
+
+					IsMouseOver = true;
+					IsShowPoints = ModelViewModel.IsControlling;
+					Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
+				});
+			}
 		}
 
 
-		public void OnMouseLeave()
+		public void OnMouseLeave(bool isPoint)
 		{
-			Mouse.OverrideCursor = null;
-			mouseOverDelay.Cancel();
-			IsMouseOver = false;
-			IsShowPoints = false;
-			Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
+			if (!IsShowPoints)
+			{
+				Mouse.OverrideCursor = null;
+				delayDispatcher.Cancel();
+				IsMouseOver = false;
+				IsShowPoints = false;
+				isPointMove = false;
+				Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
+			}
+			else
+			{
+				if (isPoint)
+				{
+					IsShowPoints = false;
+					OnMouseLeave(false);
+				}
+				else
+				{
+					delayDispatcher.Delay(MouseExitDelay, _ =>
+					{
+						if (!isPointMove)
+						{
+							IsShowPoints = false;
+							OnMouseLeave(false);
+						}
+					});
+				}
+			}
 		}
 
 
