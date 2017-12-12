@@ -9,37 +9,204 @@ namespace Dependinator.ModelHandling.Private
 	{
 		public IReadOnlyList<LinkSegment> GetLinkSegments(Link link)
 		{
-			List<LinkSegment> segments = new List<LinkSegment>();
-
-			// Start with first line at the start of the segmented line 
-			Node segmentSource = link.Source;
-
-			// Iterate segments until line end is reached
-			while (segmentSource != link.Target)
+			if (link.Source.Parent == link.Target.Parent ||
+			    link.Source == link.Target.Parent ||
+			    link.Source.Parent == link.Target)
 			{
-				// Start by trying if next line segment target is a sibling, child or descendent node by 
-				// searching if line segment source is a ancestor of end target node
-				Node segmentTarget = link.Target.AncestorsAndSelf()
-					.FirstOrDefault(targetAncestor =>
-						targetAncestor.Parent == segmentSource.Parent ||
-						targetAncestor.Parent == segmentSource);
-
-				if (segmentTarget == null)
-				{
-					// Segment target was neither sibling or child nor a child, next line target node must
-					// be the parent node
-					segmentTarget = segmentSource.Parent;
-				}
-
-				LinkSegment segment = new LinkSegment(segmentSource, segmentTarget, link);
-				segments.Add(segment);
-
-				// Go to next line in the line segments 
-				segmentSource = segmentTarget;
+				// Sibling, parent or child link
+				return new[] { new LinkSegment(link.Source, link.Target, link) };
 			}
+
+			List<LinkSegment> segments = new List<LinkSegment>();
+			List<Node> sourceAncestors2 = SourceAncestorsAndSel(link).Reverse().ToList();
+			List<Node> targetAncestors = TargetAncestorsAndSelf(link).Reverse().ToList();
+			
+			for (int i = 0; i < sourceAncestors2.Count; i++)
+			{
+				if (sourceAncestors2[i] != targetAncestors[i])
+				{
+					// Cousins (nodes within siblings)
+					Node segmentSource = link.Source;
+
+					for (int j = sourceAncestors2.Count - 2; j >= i; j--)
+					{
+						Node segmentTarget = sourceAncestors2[j];
+						segments.Add(new LinkSegment(segmentSource, segmentTarget, link));
+						segmentSource = segmentTarget;
+					}
+
+					for (int j = i; j < targetAncestors.Count; j++)
+					{
+						Node segmentTarget = targetAncestors[j];
+						segments.Add(new LinkSegment(segmentSource, segmentTarget, link));
+						segmentSource = segmentTarget;
+					}
+
+					break;
+				}
+				else if (link.Source == targetAncestors[i])
+				{
+					// Source is a direct ancestor of th target
+					Node segmentSource = link.Source;
+
+					for (int j = i + 1; j < targetAncestors.Count; j++)
+					{
+						Node segmentTarget = targetAncestors[j];
+						segments.Add(new LinkSegment(segmentSource, segmentTarget, link));
+						segmentSource = segmentTarget;
+					}
+
+					break;
+				}
+				else if (link.Target == sourceAncestors2[i])
+				{
+					// Source is a direct ancestor of the source
+					Node segmentSource = link.Source;
+
+					for (int j = sourceAncestors2.Count - 2; j >= i ; j--)
+					{
+						Node segmentTarget = sourceAncestors2[j];
+						segments.Add(new LinkSegment(segmentSource, segmentTarget, link));
+						segmentSource = segmentTarget;
+					}
+
+					break;
+				}
+			}
+
 
 			return segments;
 		}
+
+
+		//public IReadOnlyList<LinkSegment> GetLinkSegments(Link link)
+		//{
+		//	if (link.Source.Parent == link.Target.Parent)
+		//	{
+		//		return new[] { new LinkSegment(link.Source, link.Target, link) };
+		//	}
+		//	else if (link.Source == link.Target.Parent)
+		//	{
+		//		return new[] { new LinkSegment(link.Source, link.Target, link) };
+		//	}
+		//	else if (link.Source.Parent == link.Target)
+		//	{
+		//		return new[] { new LinkSegment(link.Source, link.Target, link) };
+		//	}
+
+
+		//	List<LinkSegment> segments = new List<LinkSegment>();
+		//	IEnumerable<Node> sourceAncestors = SourceAncestorsAndSel(link);
+		//	List<Node> sourceAncestors2 = SourceAncestorsAndSel(link).Reverse().ToList();
+		//	List<Node> targetAncestors = TargetAncestorsAndSelf(link).Reverse().ToList();
+
+
+
+		//	// Start with first line at the start of the segmented line 
+		//	Node segmentSource = link.Source;
+		//	foreach (Node sourceAncestor in sourceAncestors)
+		//	{
+		//		for (int i = 0; i < targetAncestors.Count; i++)
+		//		{
+		//			Node targetAncestor = targetAncestors[i];
+		//			if (segmentSource != link.Source)
+		//			{
+		//				if (sourceAncestor == targetAncestor)
+		//				{
+		//					for (int j = i + 1; j < targetAncestors.Count; j++)
+		//					{
+		//						targetAncestor = targetAncestors[j];
+		//						segments.Add(new LinkSegment(segmentSource, targetAncestor, link));
+		//						segmentSource = targetAncestor;
+		//					}
+
+		//					return segments;
+		//				}
+		//			}
+		//			else
+		//			{
+		//				if (sourceAncestor == targetAncestors[i])
+		//				{
+		//					for (int j = i; j + 1 < targetAncestors.Count; j++)
+		//					{
+		//						targetAncestor = targetAncestors[j];
+		//						segments.Add(new LinkSegment(segmentSource, targetAncestor, link));
+		//						segmentSource = targetAncestor;
+		//					}
+
+		//					return segments;
+		//				}
+		//			}
+		//		}
+
+		//		if (segmentSource != sourceAncestor)
+		//		{
+		//			segments.Add(new LinkSegment(segmentSource, sourceAncestor, link));
+		//		}
+
+		//		segmentSource = sourceAncestor;
+		//	}
+
+		//	return segments;
+		//}
+
+
+		private static IEnumerable<Node> SourceAncestorsAndSel(Link link)
+		{
+			foreach (Node node in link.Source.AncestorsAndSelf())
+			{
+				yield return node;
+			}
+
+			yield return link.Source.Root;
+		}
+
+
+		private static IEnumerable<Node> TargetAncestorsAndSelf(Link link)
+		{
+			foreach (var node in link.Target.AncestorsAndSelf())
+			{
+				yield return node;
+			}
+
+			yield return link.Target.Root;
+		}
+
+
+		//	public IReadOnlyList<LinkSegment> GetLinkSegments(Link link)
+		//{
+		//	List<LinkSegment> segments = new List<LinkSegment>();
+
+		//	// Start with first line at the start of the segmented line 
+		//	Node segmentSource = link.Source;
+
+		//	// Iterate segments until line end is reached
+		//	while (segmentSource != link.Target)
+		//	{
+		//		// Start by trying if next line segment target is a sibling, child or descendent node by 
+		//		// searching if line segment source is a ancestor of end target node
+		//		Node segmentTarget = link.Target.AncestorsAndSelf()
+		//			.FirstOrDefault(targetAncestor =>
+		//				targetAncestor.Parent == segmentSource.Parent ||
+		//				targetAncestor.Parent == segmentSource);
+
+		//		if (segmentTarget == null)
+		//		{
+		//			// Segment target was neither sibling or child nor a child, next line target node must
+		//			// be the parent node
+		//			segmentTarget = segmentSource.Parent;
+		//		}
+
+		//		LinkSegment segment = new LinkSegment(segmentSource, segmentTarget, link);
+		//		segments.Add(segment);
+
+		//		// Go to next line in the line segments 
+		//		segmentSource = segmentTarget;
+		//	}
+
+		//	return segments;
+		//}
+
 
 
 

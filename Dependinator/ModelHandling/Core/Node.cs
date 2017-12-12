@@ -84,7 +84,7 @@ namespace Dependinator.ModelHandling.Core
 
 		public IEnumerable<Node> Ancestors()
 		{
-			Node current = this;
+			Node current = Parent;
 
 			while (current != Root)
 			{
