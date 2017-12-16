@@ -11,6 +11,7 @@ using Dependinator.ModelViewing.Links;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
+using Mono.CSharp;
 
 
 namespace Dependinator.ModelViewing.Nodes
@@ -347,6 +348,9 @@ namespace Dependinator.ModelViewing.Nodes
 			"\n" +
 			$"Rect: {ItemBounds.TS()}\n" +
 			$"Scale {ItemScale.TS()}, ChildrenScale: {Node.ItemsCanvas?.Scale.TS()}\n" +
+			//$"C Point {Node.ItemsCanvas.CanvasPointToScreenPoint(new Point(0, 0)).TS()}\n" +
+			//$"R Point {Node.ItemsCanvas.CanvasPointToScreenPoint2(new Point(0, 0)).TS()}\n" +
+			//$"M Point {Mouse.GetPosition(Node.Root.ItemsCanvas.ZoomableCanvas).TS()}\n" +
 			$"Root Scale {Node.Root.ItemsCanvas.Scale}\n" +
 			$"Level {Node.Ancestors().Count()}\n" +
 			$"Items: {Node.ItemsCanvas?.ShownChildItemsCount()} ({Node.ItemsCanvas?.ChildItemsCount()})\n" +

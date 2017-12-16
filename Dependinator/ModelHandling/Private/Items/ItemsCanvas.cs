@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
 using Dependinator.Common;
 using Dependinator.ModelHandling.Private.Items.Private;
 using Dependinator.ModelViewing.Nodes;
@@ -20,6 +21,7 @@ namespace Dependinator.ModelHandling.Private.Items
 		private ItemsCanvas parentCanvas;
 		private ZoomableCanvas zoomableCanvas;
 
+		public ZoomableCanvas ZoomableCanvas => zoomableCanvas;
 
 		private Rect ItemsCanvasBounds =>
 			owner?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
@@ -226,6 +228,26 @@ namespace Dependinator.ModelHandling.Private.Items
 		}
 
 
+		public void Test()
+		{
+			//if (ParentItemsCanvas != null)
+			//{
+			//	// Get the position of the nodes items view relative the nodes border
+			//	UIElement innerBorder = VisualTreeHelper.GetParent(view) as UIElement;
+			//	UIElement grid = VisualTreeHelper.GetParent(innerBorder) as UIElement;
+			//	UIElement nodesBorder = VisualTreeHelper.GetParent(grid) as UIElement;
+
+			//	relative = (Vector)view.TranslatePoint(new Point(0, 0), nodesBorder);
+			//}
+
+			UIElement innerBorder = VisualTreeHelper.GetParent(zoomableCanvas) as UIElement;
+			UIElement grid = VisualTreeHelper.GetParent(innerBorder) as UIElement;
+			UIElement nodesBorder = VisualTreeHelper.GetParent(grid) as UIElement;
+
+			//	relative = (Vector)view.TranslatePoint(new Point(0, 0), nodesBorder);
+
+		}
+
 		public Point ChildToParentCanvasPoint(Point childCanvasPoint)
 		{
 			if (!IsRoot)
@@ -259,6 +281,39 @@ namespace Dependinator.ModelHandling.Private.Items
 			return ParentToChildCanvasPoint(parentCanvasPoint);
 		}
 
+
+		public Point CanvasPointToScreenPoint(Point canvasPoint)
+		{
+			if (IsRoot)
+			{
+				// Adjust for windows title and toolbar bar 
+				Point adjustedScreenPoint = canvasPoint + new Vector(4, 32);
+
+				return adjustedScreenPoint;
+			}
+
+			Point parentCanvasPoint = parentCanvas.ChildToParentCanvasPoint(canvasPoint);
+			Point screenPoint = parentCanvas.CanvasPointToScreenPoint(parentCanvasPoint);
+
+			return screenPoint;
+		}
+
+
+		public Point CanvasPointToScreenPoint2(Point canvasPoint)
+		{
+			//UIElement itemsPresenter = VisualTreeHelper.GetParent(zoomableCanvas) as UIElement;
+			//UIElement scroll = VisualTreeHelper.GetParent(itemsPresenter) as UIElement;
+			//UIElement grid = VisualTreeHelper.GetParent(scroll) as UIElement;
+			//UIElement scrollView = VisualTreeHelper.GetParent(grid) as UIElement;
+			//UIElement border = VisualTreeHelper.GetParent(scrollView) as UIElement;
+			//UIElement ListBox = VisualTreeHelper.GetParent(border) as UIElement;
+			//UIElement content = VisualTreeHelper.GetParent(ListBox) as UIElement;
+			//UIElement border2 = VisualTreeHelper.GetParent(content) as UIElement;
+			//UIElement itemsView = VisualTreeHelper.GetParent(border2) as UIElement;
+
+
+			return zoomableCanvas.TranslatePoint(canvasPoint, RootCanvas.zoomableCanvas);
+		}
 
 
 		public Point ParentToChildCanvasPoint(Point parentCanvasPoint)
