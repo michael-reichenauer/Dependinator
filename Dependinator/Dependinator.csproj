@@ -148,29 +148,29 @@
     <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
-    <Compile Include="ModelHandling\Core\LinkType.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\DataFileParsing\JsonTypes.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\XmlDocParser.cs" />
-    <Compile Include="ModelHandling\Private\ModelPersistence\IPersistenceService.cs" />
-    <Compile Include="ModelHandling\Core\ModelLine.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\IgnoredTypes.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\LinkHandler.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\MemberParser.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\MethodParser.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\ModuleParser.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\AssemblyParser.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\Name.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\TypeInfo.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\TypeParser.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\SolutionFileParsing\Project.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\SolutionFileParsing\Private\ProjectInSolution.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\SolutionFileParsing\Private\ReflectionExtensions.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\SolutionFileParsing\Solution.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\SolutionFileParsing\Private\SolutionParser.cs" />
-    <Compile Include="ModelHandling\Private\ModelPersistence\NamespaceDoc.cs" />
-    <Compile Include="ModelHandling\Private\ModelPersistence\Private\Serializing\JsonTypes.cs" />
-    <Compile Include="ModelHandling\Private\ModelPersistence\Private\PersistenceService.cs" />
-    <Compile Include="ModelHandling\NamespaceDoc.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Core\LinkType.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\DataFileParsing\JsonTypes.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\XmlDocParser.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\IPersistenceService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Core\ModelLine.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\IgnoredTypes.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\LinkHandler.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\MemberParser.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\MethodParser.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\ModuleParser.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\AssemblyParser.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\Name.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\TypeInfo.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\TypeParser.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\SolutionFileParsing\Project.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\SolutionFileParsing\Private\ProjectInSolution.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\SolutionFileParsing\Private\ReflectionExtensions.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\SolutionFileParsing\Solution.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\SolutionFileParsing\Private\SolutionParser.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\NamespaceDoc.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\Private\Serializing\JsonTypes.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\Private\PersistenceService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\NamespaceDoc.cs" />
     <Compile Include="ModelViewing\NamespaceDoc.cs" />
     <Compile Include="ModelViewing\Nodes\DescriptionView.xaml.cs">
       <DependentUpon>DescriptionView.xaml</DependentUpon>
@@ -197,17 +197,17 @@
     <Compile Include="MainWindowViews\SearchFilter.xaml.cs">
       <DependentUpon>SearchFilter.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelHandling\Core\ModelItem.cs" />
-    <Compile Include="ModelHandling\Core\ModelLink.cs" />
-    <Compile Include="ModelHandling\Core\ModelItemsCallback.cs" />
-    <Compile Include="ModelHandling\Private\ModelPersistence\Private\Serializing\Convert.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Core\ModelItem.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Core\ModelLink.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Core\ModelItemsCallback.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\Private\Serializing\Convert.cs" />
     <Compile Include="ModelViewing\Nodes\NodePointsView.xaml.cs">
       <DependentUpon>NodePointsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\TitleView.xaml.cs">
       <DependentUpon>TitleView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelHandling\Private\Convert.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\Convert.cs" />
     <Compile Include="Utils\AssemblyInfo.cs" />
     <Compile Include="Utils\AssemblyResolver.cs" />
     <Compile Include="Utils\System\NamespaceDoc.cs" />
@@ -215,33 +215,33 @@
     <Compile Include="Utils\UI\DispatcherExtensions.cs" />
     <Compile Include="Utils\UI\GeometryService.cs" />
     <Compile Include="Utils\UI\IGeometryService.cs" />
-    <Compile Include="ModelHandling\Private\Items\IItemSelectService.cs" />
-    <Compile Include="ModelHandling\Private\Items\ItemSelectService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\Items\IItemSelectService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\Items\ItemSelectService.cs" />
     <Compile Include="Utils\UI\DragUiElement.cs" />
-    <Compile Include="ModelHandling\Private\IModelLinkService.cs" />
-    <Compile Include="ModelHandling\Core\Line.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\IModelLinkService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Core\Line.cs" />
     <Compile Include="ModelViewing\Links\LineView.xaml.cs">
       <DependentUpon>LineView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Links\LineViewModel.cs" />
-    <Compile Include="ModelHandling\Core\Link.cs" />
-    <Compile Include="ModelHandling\Private\ModelLinkService.cs" />
-    <Compile Include="ModelHandling\Private\LinkSegment.cs" />
-    <Compile Include="ModelHandling\Core\Node.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Core\Link.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelLinkService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\LinkSegment.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Core\Node.cs" />
     <Compile Include="ModelViewing\Nodes\NodeViewModel.cs" />
-    <Compile Include="ModelHandling\IModelService.cs" />
-    <Compile Include="ModelHandling\Private\IModelNodeService.cs" />
-    <Compile Include="ModelHandling\Private\ModelService.cs" />
-    <Compile Include="ModelHandling\Private\ModelNodeService.cs" />
-    <Compile Include="ModelHandling\Private\Model.cs" />
-    <Compile Include="ModelHandling\Core\ModelNode.cs" />
+    <Compile Include="ModelViewing\ModelHandling\IModelService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\IModelNodeService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelNodeService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\Model.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Core\ModelNode.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\TypeView.xaml.cs">
       <DependentUpon>TypeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\TypeViewModel.cs" />
-    <Compile Include="ModelHandling\Private\Items\Private\IItemsSourceArea.cs" />
-    <Compile Include="ModelHandling\Private\Items\Private\ItemsService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\Items\Private\IItemsSourceArea.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\Items\Private\ItemsService.cs" />
     <Compile Include="Utils\UI\DebounceDispatcher.cs" />
     <Compile Include="Utils\UI\DelayDispatcher.cs" />
     <Compile Include="Utils\UI\Mvvm\IPropertyNotify.cs" />
@@ -282,38 +282,38 @@
     <Compile Include="Common\ProgressHandling\ProgressService.cs" />
     <Compile Include="Common\ModelMetadataFolders\FileEventArgs.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\IFolderMonitorService.cs" />
-    <Compile Include="ModelHandling\Private\ILinkSegmentService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ILinkSegmentService.cs" />
     <Compile Include="ModelViewing\Links\ILineViewModelService.cs" />
-    <Compile Include="ModelHandling\Private\LinkSegmentService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\LinkSegmentService.cs" />
     <Compile Include="ModelViewing\Links\Private\LineViewModelService.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkLineBounds.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkGroup.cs" />
-    <Compile Include="ModelHandling\Private\Items\Private\IgnoreMouseWheelBehavior.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\Items\Private\IgnoreMouseWheelBehavior.cs" />
     <Compile Include="ModelViewing\Nodes\INodeViewModelService.cs" />
-    <Compile Include="ModelHandling\Private\Items\IItemsCanvasBounds.cs" />
-    <Compile Include="ModelHandling\Private\Items\ItemsCanvas.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\Items\IItemsCanvasBounds.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\Items\ItemsCanvas.cs" />
     <Compile Include="ModelViewing\Nodes\MemberNodeView.xaml.cs">
       <DependentUpon>MemberNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\MemberNodeViewModel.cs" />
     <Compile Include="Common\NodeName.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeComparer.cs" />
-    <Compile Include="ModelHandling\Private\Items\ItemsView.xaml.cs">
+    <Compile Include="ModelViewing\ModelHandling\Private\Items\ItemsView.xaml.cs">
       <DependentUpon>ItemsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelHandling\Private\Items\ItemsViewModel.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\Items\ItemsViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceView.xaml.cs">
       <DependentUpon>NamespaceView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelHandling\Private\ModelParsing\Private\ParserService.cs" />
-    <Compile Include="ModelHandling\Private\ModelParsing\IParserService.cs" />
-    <Compile Include="ModelHandling\Private\Items\ItemViewModel.cs" />
-    <Compile Include="ModelHandling\Private\Items\IItem.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\ParserService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\IParserService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\Items\ItemViewModel.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\Items\IItem.cs" />
     <Compile Include="ModelViewing\IModelViewService.cs" />
     <Compile Include="ModelViewing\Private\ModelViewService.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeViewModelService.cs" />
-    <Compile Include="ModelHandling\Private\ModelPersistence\Private\Serializing\DataSerializer.cs" />
-    <Compile Include="ModelHandling\Private\ModelPersistence\Private\Serializing\IDataSerializer.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\Private\Serializing\DataSerializer.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\Private\Serializing\IDataSerializer.cs" />
     <Compile Include="Utils\System\CollectionExtensions.cs" />
     <Compile Include="Utils\ExceptionAsyncExtensions.cs" />
     <Compile Include="Utils\System\ExceptionExtensions.cs" />
@@ -358,7 +358,7 @@
     <Compile Include="Utils\UI\HideableGridSplitter.cs" />
     <Compile Include="Utils\Compare.cs" />
     <Compile Include="Common\ThemeHandling\IThemeService.cs" />
-    <Compile Include="ModelHandling\Private\Items\ItemsSource.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\Items\ItemsSource.cs" />
     <Compile Include="ModelViewing\ModelViewModel.cs" />
     <Compile Include="Utils\IReadOnlyKeyedList.cs" />
     <Compile Include="Utils\KeyedList.cs" />
@@ -468,7 +468,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ModelHandling\Private\Items\ItemsView.xaml">
+    <Page Include="ModelViewing\ModelHandling\Private\Items\ItemsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

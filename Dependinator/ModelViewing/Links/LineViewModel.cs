@@ -1,12 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using Dependinator.ModelHandling.Core;
-using Dependinator.ModelHandling.Private.Items;
+using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.ModelHandling.Private.Items;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 

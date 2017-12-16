@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dependinator.Common;
-using Dependinator.ModelHandling.Private.Items;
+using Dependinator.ModelViewing.ModelHandling.Private.Items;
 
 
 namespace Dependinator.ModelViewing

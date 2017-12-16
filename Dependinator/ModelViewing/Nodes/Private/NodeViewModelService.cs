@@ -5,9 +5,9 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
-using Dependinator.ModelHandling.Core;
-using Dependinator.ModelHandling.Private;
 using Dependinator.ModelViewing.Links;
+using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.ModelHandling.Private;
 using Dependinator.Utils.UI;
 
 
