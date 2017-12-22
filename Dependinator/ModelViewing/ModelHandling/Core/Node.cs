@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using Dependinator.Common;
 using Dependinator.ModelViewing.ModelHandling.Private.Items;
@@ -82,66 +81,5 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 			Parent.ItemsCanvas?.UpdateAndNotifyAll();
 		}
 
-		public IEnumerable<Node> Ancestors()
-		{
-			Node current = Parent;
-
-			while (current != Root)
-			{
-				yield return current;
-				current = current.Parent;
-			}
-		}
-
-
-		public IEnumerable<Node> AncestorsAndSelf()
-		{
-			yield return this;
-
-			foreach (Node ancestor in Ancestors())
-			{
-				yield return ancestor;
-			}
-		}
-
-		public IEnumerable<Node> Descendents()
-		{
-			foreach (Node child in Children)
-			{
-				yield return child;
-
-				foreach (Node descendent in child.Descendents())
-				{
-					yield return descendent;
-				}
-			}
-		}
-
-
-		public IEnumerable<Node> DescendentsAndSelf()
-		{
-			yield return this;
-
-			foreach (Node descendent in Descendents())
-			{
-				yield return descendent;
-			}
-		}
-
-
-		public IEnumerable<Node> DescendentsBreadth()
-		{
-			Queue<Node> queue = new Queue<Node>();
-
-			Children.ForEach(queue.Enqueue);
-
-			while (queue.Any())
-			{
-				Node node = queue.Dequeue();
-				yield return node;
-
-				node.Children.ForEach(queue.Enqueue);
-			}
-		}
 	}
 }

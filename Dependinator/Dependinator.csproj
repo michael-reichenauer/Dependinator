@@ -149,6 +149,7 @@
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\LinkType.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Core\NodeTraversalExtensions.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\DataFileParsing\JsonTypes.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\XmlDocParser.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\IPersistenceService.cs" />
