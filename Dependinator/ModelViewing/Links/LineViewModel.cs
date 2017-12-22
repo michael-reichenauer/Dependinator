@@ -41,15 +41,15 @@ namespace Dependinator.ModelViewing.Links
 
 		public override bool CanShow =>
 			ItemScale < 40
-			&& line.Source.CanShow && line.Target.CanShow;
+			&& line.Source.View.CanShow && line.Target.View.CanShow;
 
 		public double LineWidth => lineViewModelService.GetLineWidth(line);
 
 		public double ArrowWidth => lineViewModelService.GetArrowWidth(line);
 
 		public Brush LineBrush => line.Source != line.Target.Parent
-			? line.Source.ViewModel.RectangleBrush
-			: line.Target.ViewModel.RectangleBrush;
+			? line.Source.View.ViewModel.RectangleBrush
+			: line.Target.View.ViewModel.RectangleBrush;
 
 		public bool IsMouseOver { get => Get(); private set => Set(value); }
 		public bool IsShowPoints { get => Get(); private set => Set(value); }
@@ -287,9 +287,9 @@ namespace Dependinator.ModelViewing.Links
 				//else
 				{
 					// Source and targets are siblings. update line when either node is moved
-					WhenSet(line.Source.ViewModel, nameof(line.Source.ViewModel.ItemBounds))
+					WhenSet(line.Source.View.ViewModel, nameof(line.Source.View.ViewModel.ItemBounds))
 						.Notify(SourceOrTargetChanged);
-					WhenSet(line.Target.ViewModel, nameof(line.Target.ViewModel.ItemBounds))
+					WhenSet(line.Target.View.ViewModel, nameof(line.Target.View.ViewModel.ItemBounds))
 						.Notify(SourceOrTargetChanged);
 				}
 			}

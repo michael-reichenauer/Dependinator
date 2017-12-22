@@ -25,13 +25,13 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 		public void SetLayout(NodeViewModel nodeViewMode)
 		{
-			if (!nodeViewMode.Node.Bounds.Same(RectEx.Zero))
+			if (!nodeViewMode.Node.View.Bounds.Same(RectEx.Zero))
 			{
-				nodeViewMode.ItemBounds = nodeViewMode.Node.Bounds;
+				nodeViewMode.ItemBounds = nodeViewMode.Node.View.Bounds;
 				return;
 			}
 
-			if (nodeViewMode.Node.Parent.IsLayoutCompleted)
+			if (nodeViewMode.Node.Parent.View.IsLayoutCompleted)
 			{
 				AdjustLayout(nodeViewMode);
 			}
@@ -58,7 +58,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			{
 				Rect bounds = GetBounds(index++, layout);
 
-				child.ViewModel.ItemBounds = bounds;
+				child.View.ViewModel.ItemBounds = bounds;
 			}
 		}
 
@@ -91,17 +91,17 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		{
 			double scaleFactor = layout.ScaleFactor;
 
-			if (!scaleFactor.Same(parentNode.ItemsCanvas.ScaleFactor))
+			if (!scaleFactor.Same(parentNode.View.ItemsCanvas.ScaleFactor))
 			{
-				parentNode.ItemsCanvas.SetScaleFactor(scaleFactor);
-				parentNode.ItemsCanvas.UpdateScale();
+				parentNode.View.ItemsCanvas.SetScaleFactor(scaleFactor);
+				parentNode.View.ItemsCanvas.UpdateScale();
 			}
 		}
 
 
 		private static bool IsIntersecting(Rect bounds, IEnumerable<Node> children)
 		{
-			return children.Any(child => child.ViewModel.ItemBounds.IntersectsWith(bounds));
+			return children.Any(child => child.View.ViewModel.ItemBounds.IntersectsWith(bounds));
 		}
 
 
@@ -134,7 +134,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private static bool IsParentShowing(NodeViewModel nodeViewMode)
 		{
 			return nodeViewMode.Node.IsRoot
-				|| nodeViewMode.Node.Parent.ViewModel.IsShowing;
+				|| nodeViewMode.Node.Parent.View.ViewModel.IsShowing;
 		}
 
 

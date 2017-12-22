@@ -65,7 +65,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public Node Root => model.Root;
 
-		public void SetRootCanvas(ItemsCanvas rootCanvas) => Root.ItemsCanvas = rootCanvas;
+		public void SetRootCanvas(ItemsCanvas rootCanvas) => Root.View.ItemsCanvas = rootCanvas;
 
 
 		public void AddLineViewModel(Line line) => modelLinkService.AddLineViewModel(line);
@@ -78,7 +78,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			string dataFilePath = GetDataFilePath();
 
 			ClearAll();
-			Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
+			Root.View.ItemsCanvas.IsZoomAndMoveEnabled = true;
 
 			if (File.Exists(dataFilePath))
 			{
@@ -106,16 +106,16 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 				isShowingOpenModel = true;
 				modelMetadata.SetDefault();
-				Root.ItemsCanvas.SetRootScale(1);
+				Root.View.ItemsCanvas.SetRootScale(1);
 				//Root.ItemsCanvas.SetMoveOffset(new Point(0, 0));
-				Root.ItemsCanvas.IsZoomAndMoveEnabled = false;
+				Root.View.ItemsCanvas.IsZoomAndMoveEnabled = false;
 
-				Root.ItemsCanvas.AddItem(openModelViewModelProvider());
+				Root.View.ItemsCanvas.AddItem(openModelViewModelProvider());
 			}
 			else
 			{
 				isShowingOpenModel = false;
-				Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
+				Root.View.ItemsCanvas.IsZoomAndMoveEnabled = true;
 				UpdateLines(Root);
 				recentModelsService.AddModelPaths(modelMetadata.ModelFilePath);
 				modelNodeService.SetLayoutDone();
@@ -145,7 +145,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				.ForEach(line => line.ViewModel.NotifyAll());
 
 			node.Children
-				.Where(child => child.IsShowing)
+				.Where(child => child.View.IsShowing)
 				.ForEach(UpdateLines);
 		}
 
@@ -240,7 +240,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			Timing t = Timing.Start();
 
 			Task showTask = Task.Run(() => ShowModel(operation));
-			Root.ItemsCanvas.UpdateAll();
+			Root.View.ItemsCanvas.UpdateAll();
 
 			Task parseTask = parseFunctionAsync(operation)
 				.ContinueWith(_ => operation.Queue.CompleteAdding());

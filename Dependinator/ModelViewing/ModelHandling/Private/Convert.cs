@@ -35,10 +35,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				node.Parent.Name.FullName,
 				node.NodeType,
 				node.Description,
-				node.ViewModel?.ItemBounds ?? node.Bounds,
-				node.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.ScaleFactor,
-				node.ViewModel?.Color ?? node.Color,
-				node.IsHidden ? Node.Hidden : null);
+				node.View.ViewModel?.ItemBounds ?? node.View.Bounds,
+				node.View.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.View.ScaleFactor,
+				node.View.ViewModel?.Color ?? node.View.Color,
+				node.View.IsHidden ? Node.Hidden : null);
 
 
 		private static IEnumerable<ModelLine> ToModelLines(IEnumerable<Line> lines) =>

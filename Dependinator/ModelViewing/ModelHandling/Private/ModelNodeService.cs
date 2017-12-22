@@ -81,13 +81,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public void SetLayoutDone()
 		{
-			model.Root.Descendents().ForEach(node => node.IsLayoutCompleted = true);
+			model.Root.Descendents().ForEach(node => node.View.IsLayoutCompleted = true);
 		}
 
 
 		public void RemoveAll()
 		{
-			model.Root?.ItemsCanvas?.RemoveAll();
+			model.Root?.View.ItemsCanvas?.RemoveAll();
 
 			model.RemoveAll();
 		}
@@ -95,7 +95,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public IReadOnlyList<NodeName> GetHiddenNodeNames()
 			=> model.Root.Descendents()
-				.Where(node => node.IsHidden)
+				.Where(node => node.View.IsHidden)
 				.Select(node => node.Name)
 				.ToList();
 
@@ -104,7 +104,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			if (model.TryGetNode(nodeName, out Node node))
 			{
-				node?.ShowHiddenNode();
+				node?.View.ShowHiddenNode();
 			}
 		}
 
@@ -128,11 +128,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				Stamp = stamp,
 				NodeType = modelNode.NodeType,
 				Description = modelNode.Description,
-				Bounds = modelNode.Bounds,
-				ScaleFactor = modelNode.ItemsScaleFactor,
-				Color = modelNode.Color,
-				IsHidden = modelNode.ShowState == Node.Hidden
+			
 			};
+
+			node.View.Bounds = modelNode.Bounds;
+			node.View.ScaleFactor = modelNode.ItemsScaleFactor;
+			node.View.Color = modelNode.Color;
+			node.View.IsHidden = modelNode.ShowState == Node.Hidden;
 
 			Node parentNode = GetParentNode(name, modelNode);
 
@@ -166,9 +168,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			model.Remove(node);
 			node.Parent?.RemoveChild(node);
 
-			if (node.ItemsCanvas != null)
+			if (node.View.ItemsCanvas != null)
 			{
-				node.Parent?.ItemsCanvas.RemoveChildCanvas(node.ItemsCanvas);
+				node.Parent?.View.ItemsCanvas.RemoveChildCanvas(node.View.ItemsCanvas);
 
 			}
 
@@ -204,17 +206,17 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			if (node.NodeType == NodeType.Member)
 			{
-				node.ViewModel = new MemberNodeViewModel(nodeViewModelService, node);
+				node.View.ViewModel = new MemberNodeViewModel(nodeViewModelService, node);
 			}
 			else if (node.NodeType == NodeType.Type)
 			{
-				node.ViewModel = new TypeViewModel(nodeViewModelService, node);
-				node.ItemsCanvas = GetItemsCanvas(node);
+				node.View.ViewModel = new TypeViewModel(nodeViewModelService, node);
+				node.View.ItemsCanvas = GetItemsCanvas(node);
 			}
 			else
 			{
-				node.ViewModel = new NamespaceViewModel(nodeViewModelService, node);
-				node.ItemsCanvas = GetItemsCanvas(node);
+				node.View.ViewModel = new NamespaceViewModel(nodeViewModelService, node);
+				node.View.ItemsCanvas = GetItemsCanvas(node);
 			}
 		}
 
@@ -223,11 +225,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			try
 			{
-				layoutService.SetLayout(node.ViewModel);
+				layoutService.SetLayout(node.View.ViewModel);
 
-				ItemsCanvas parentCanvas = parentNode.ItemsCanvas;
+				ItemsCanvas parentCanvas = parentNode.View.ItemsCanvas;
 
-				parentCanvas.AddItem(node.ViewModel);
+				parentCanvas.AddItem(node.View.ViewModel);
 			}
 			catch (Exception e)
 			{
@@ -239,7 +241,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private static void RemoveNodeFromParentCanvas(Node node)
 		{
-			node.Parent?.ItemsCanvas?.RemoveItem(node.ViewModel);
+			node.Parent?.View.ItemsCanvas?.RemoveItem(node.View.ViewModel);
 		}
 
 
@@ -289,9 +291,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private static ItemsCanvas GetItemsCanvas(Node node)
 		{
 			// First try get existing items canvas
-			if (node.ItemsCanvas != null)
+			if (node.View.ItemsCanvas != null)
 			{
-				return node.ItemsCanvas;
+				return node.View.ItemsCanvas;
 			}
 
 			// The node does not yet have a canvas. So we need to get the parent canvas and
@@ -299,12 +301,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			ItemsCanvas parentCanvas = GetItemsCanvas(node.Parent);
 
 			// Creating the child canvas to be the children canvas of the node
-			node.ItemsCanvas = new ItemsCanvas(node.ViewModel, parentCanvas);
-			node.ViewModel.ItemsViewModel = new ItemsViewModel(node.ItemsCanvas);
+			node.View.ItemsCanvas = new ItemsCanvas(node.View.ViewModel, parentCanvas);
+			node.View.ViewModel.ItemsViewModel = new ItemsViewModel(node.View.ItemsCanvas);
 
-			if (Math.Abs(node.ScaleFactor) > 0.0000001)
+			if (Math.Abs(node.View.ScaleFactor) > 0.0000001)
 			{
-				node.ItemsCanvas.SetScaleFactor(node.ScaleFactor);
+				node.View.ItemsCanvas.SetScaleFactor(node.View.ScaleFactor);
 			}
 
 			//if (node.Offset != PointEx.Zero)
@@ -312,7 +314,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			//	node.ItemsCanvas.SetMoveOffset(node.Offset);
 			//}
 
-			return node.ItemsCanvas;
+			return node.View.ItemsCanvas;
 		}
 	}
 }

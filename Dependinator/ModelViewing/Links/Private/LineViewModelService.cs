@@ -60,8 +60,8 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		public void UpdateLineEndPoints(Line line)
 		{
-			Rect source = line.Source.ViewModel.ItemBounds;
-			Rect target = line.Target.ViewModel.ItemBounds;
+			Rect source = line.Source.View.ViewModel.ItemBounds;
+			Rect target = line.Target.View.ViewModel.ItemBounds;
 
 			Point relativeSource = GetRelativeSource(line);
 			Point relativeTarget = GetRelativeTarget(line);
@@ -106,8 +106,8 @@ namespace Dependinator.ModelViewing.Links.Private
 		public void MoveLinePoint(Line line, int pointIndex, Point newPoint)
 		{
 			// NOTE: These lines are currently disabled !!!
-			NodeViewModel source = line.Source.ViewModel;
-			NodeViewModel target = line.Target.ViewModel;
+			NodeViewModel source = line.Source.View.ViewModel;
+			NodeViewModel target = line.Target.View.ViewModel;
 
 			if (pointIndex == line.FirstIndex)
 			{
@@ -351,7 +351,7 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		private static Point ParentPointToChildPoint(Node parent, Point point)
 		{
-			return parent.ItemsCanvas.ParentToChildCanvasPoint(point);
+			return parent.View.ItemsCanvas.ParentToChildCanvasPoint(point);
 		}
 
 

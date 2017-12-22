@@ -52,8 +52,8 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public override bool CanShow => !Node.IsHidden
-			&& (ItemScale * ItemWidth > 20 && Node.Parent.CanShowChildren);
+		public override bool CanShow => !Node.View.IsHidden
+			&& (ItemScale * ItemWidth > 20 && Node.Parent.View.CanShowChildren);
 
 		public bool CanShowChildren => ItemScale * ItemWidth > 50 * 7;
 
@@ -147,8 +147,8 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private void HideNode()
 		{
-			Node.IsHidden = true;
-			Node.Parent.ItemsCanvas.UpdateAndNotifyAll();
+			Node.View.IsHidden = true;
+			Node.Parent.View.ItemsCanvas.UpdateAndNotifyAll();
 		}
 
 
@@ -346,16 +346,16 @@ namespace Dependinator.ModelViewing.Nodes
 		private string ItemsToolTip => !Config.IsDebug ? "" :
 			"\n" +
 			$"Rect: {ItemBounds.TS()}\n" +
-			$"Scale {ItemScale.TS()}, ChildrenScale: {Node.ItemsCanvas?.Scale.TS()}\n" +
+			$"Scale {ItemScale.TS()}, ChildrenScale: {Node.View.ItemsCanvas?.Scale.TS()}\n" +
 			//$"C Point {Node.ItemsCanvas.CanvasPointToScreenPoint(new Point(0, 0)).TS()}\n" +
 			//$"R Point {Node.ItemsCanvas.CanvasPointToScreenPoint2(new Point(0, 0)).TS()}\n" +
 			//$"M Point {Mouse.GetPosition(Node.Root.ItemsCanvas.ZoomableCanvas).TS()}\n" +
-			$"Root Scale {Node.Root.ItemsCanvas.Scale}\n" +
+			$"Root Scale {Node.Root.View.ItemsCanvas.Scale}\n" +
 			$"Level {Node.Ancestors().Count()}\n" +
-			$"Items: {Node.ItemsCanvas?.ShownChildItemsCount()} ({Node.ItemsCanvas?.ChildItemsCount()})\n" +
-			$"ShownDescendantsItems {Node.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.ItemsCanvas?.DescendantsItemsCount()})\n" +
-			$"ParentItems {Node.Parent.ItemsCanvas.ShownChildItemsCount()} ({Node.Parent.ItemsCanvas.ChildItemsCount()})\n" +
-			$"RootShownDescendantsItems {Node.Root.ItemsCanvas.ShownDescendantsItemsCount()} ({Node.Root.ItemsCanvas.DescendantsItemsCount()})\n" +
+			$"Items: {Node.View.ItemsCanvas?.ShownChildItemsCount()} ({Node.View.ItemsCanvas?.ChildItemsCount()})\n" +
+			$"ShownDescendantsItems {Node.View.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.View.ItemsCanvas?.DescendantsItemsCount()})\n" +
+			$"ParentItems {Node.Parent.View.ItemsCanvas.ShownChildItemsCount()} ({Node.Parent.View.ItemsCanvas.ChildItemsCount()})\n" +
+			$"RootShownDescendantsItems {Node.Root.View.ItemsCanvas.ShownDescendantsItemsCount()} ({Node.Root.View.ItemsCanvas.DescendantsItemsCount()})\n" +
 			$"Nodes: {NodesCount}, Namespaces: {NamespacesCount}, Types: {TypesCount}, Members: {MembersCount}\n" +
 			$"Links: {LinksCount}, Lines: {LinesCount}";
 

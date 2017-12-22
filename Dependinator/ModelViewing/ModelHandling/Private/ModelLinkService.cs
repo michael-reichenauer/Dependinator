@@ -201,7 +201,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			line.LinkCount = linkCount;
 
 
-			if (owner.IsShowing || line.Source.IsShowing || line.Target.IsShowing)
+			if (owner.View.IsShowing || line.Source.View.IsShowing || line.Target.View.IsShowing)
 			{
 				AddLineViewModel(line);
 			}
@@ -223,7 +223,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			LineViewModel lineViewModel = new LineViewModel(lineViewModelService, line);
 
-			line.Owner.ItemsCanvas.AddItem(lineViewModel);
+			line.Owner.View.ItemsCanvas.AddItem(lineViewModel);
 		}
 
 
@@ -231,7 +231,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			if (line.ViewModel != null)
 			{
-				line.Owner.ItemsCanvas.RemoveItem(line.ViewModel);
+				line.Owner.View.ItemsCanvas.RemoveItem(line.ViewModel);
 			}
 		}
 

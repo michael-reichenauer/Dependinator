@@ -37,8 +37,8 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 		public Brush GetNodeBrush(Node node)
 		{
-			return node.Color != null
-				? Converter.BrushFromHex(node.Color)
+			return node.View.Color != null
+				? Converter.BrushFromHex(node.View.Color)
 				: GetRandomRectangleBrush(node.Name.DisplayName);
 		}
 
@@ -103,16 +103,16 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		public int GetPointIndex(Node node, Point point)
 		{
 			// Sometimes the point is a little bit off, lets adjust the point to be on the border
-			Point pointInPerimeter = geometryService.GetPointInPerimeter(node.Bounds, point);
+			Point pointInPerimeter = geometryService.GetPointInPerimeter(node.View.Bounds, point);
 
 			Vector vector = point - pointInPerimeter;
 			//Log.Debug($"Dist {vector.Length}, vector: {vector.TS()}");
 
 			point = pointInPerimeter;
 
-			double scale = node.ViewModel.ItemScale;
+			double scale = node.View.ViewModel.ItemScale;
 			double dist = Math.Max(40 / scale, 40);
-			NodeViewModel viewModel = node.ViewModel;
+			NodeViewModel viewModel = node.View.ViewModel;
 
 			double ltf = (point - viewModel.ItemBounds.Location).Length;
 			double ltr = (point - new Point(
@@ -176,7 +176,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 		public bool MovePoint(Node node, int index, Point point, Point previousPoint)
 		{
-			NodeViewModel viewModel = node.ViewModel;
+			NodeViewModel viewModel = node.View.ViewModel;
 
 			Point location = viewModel.ItemBounds.Location;
 			Point newLocation = location;

@@ -150,6 +150,7 @@
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\LinkType.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\NodeTraversalExtensions.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Core\NodeViewData.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\DataFileParsing\JsonTypes.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\XmlDocParser.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\IPersistenceService.cs" />
@@ -198,7 +199,7 @@
     <Compile Include="MainWindowViews\SearchFilter.xaml.cs">
       <DependentUpon>SearchFilter.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\ModelHandling\Core\ModelItem.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Core\IModelItem.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\ModelLink.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\ModelItemsCallback.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\Private\Serializing\Convert.cs" />
