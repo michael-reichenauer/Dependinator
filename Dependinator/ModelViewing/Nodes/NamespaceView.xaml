@@ -5,7 +5,7 @@
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:nodes="clr-namespace:Dependinator.ModelViewing.Nodes"
-	xmlns:items="clr-namespace:Dependinator.ModelViewing.ModelHandling.Private.Items"
+	xmlns:items1="clr-namespace:Dependinator.ModelViewing.Items"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
@@ -24,7 +24,7 @@
 		<nodes:DescriptionView Visibility="{Binding IsShowDescription, Converter={StaticResource VC}}"/>
 		
 		<Grid Visibility="{Binding IsShowItems, Converter={StaticResource VC}}">
-			<items:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
+			<items1:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
 		</Grid>
 
 		<!-- Inner model -->

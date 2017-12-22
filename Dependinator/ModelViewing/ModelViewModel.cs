@@ -5,7 +5,7 @@ using System.Windows.Input;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
-using Dependinator.ModelViewing.ModelHandling.Private.Items;
+using Dependinator.ModelViewing.Items;
 using Dependinator.Utils;
 using Dependinator.Utils.UI.Mvvm;
 

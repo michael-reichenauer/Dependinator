@@ -2,7 +2,7 @@ using System.Windows;
 using Dependinator.Utils.UI.Mvvm;
 
 
-namespace Dependinator.ModelViewing.ModelHandling.Private.Items
+namespace Dependinator.ModelViewing.Items
 {
 	internal abstract class ItemViewModel : ViewModel, IItem, IItemsCanvasBounds
 	{

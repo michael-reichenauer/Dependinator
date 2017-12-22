@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.ModelViewing.ModelHandling.Private.Items;
 
 
 namespace Dependinator.ModelViewing.Nodes.Private

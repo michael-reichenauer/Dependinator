@@ -218,8 +218,8 @@
     <Compile Include="Utils\UI\DispatcherExtensions.cs" />
     <Compile Include="Utils\UI\GeometryService.cs" />
     <Compile Include="Utils\UI\IGeometryService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\Items\IItemSelectService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\Items\ItemSelectService.cs" />
+    <Compile Include="ModelViewing\Items\IItemSelectService.cs" />
+    <Compile Include="ModelViewing\Items\ItemSelectService.cs" />
     <Compile Include="Utils\UI\DragUiElement.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\IModelLinkService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\Line.cs" />
@@ -243,8 +243,8 @@
       <DependentUpon>TypeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\TypeViewModel.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\Items\Private\IItemsSourceArea.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\Items\Private\ItemsService.cs" />
+    <Compile Include="ModelViewing\Items\Private\IItemsSourceArea.cs" />
+    <Compile Include="ModelViewing\Items\Private\ItemsService.cs" />
     <Compile Include="Utils\UI\DebounceDispatcher.cs" />
     <Compile Include="Utils\UI\DelayDispatcher.cs" />
     <Compile Include="Utils\UI\Mvvm\IPropertyNotify.cs" />
@@ -291,27 +291,27 @@
     <Compile Include="ModelViewing\Links\Private\LineViewModelService.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkLineBounds.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkGroup.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\Items\Private\IgnoreMouseWheelBehavior.cs" />
+    <Compile Include="ModelViewing\Items\Private\IgnoreMouseWheelBehavior.cs" />
     <Compile Include="ModelViewing\Nodes\INodeViewModelService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\Items\IItemsCanvasBounds.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\Items\ItemsCanvas.cs" />
+    <Compile Include="ModelViewing\Items\IItemsCanvasBounds.cs" />
+    <Compile Include="ModelViewing\Items\ItemsCanvas.cs" />
     <Compile Include="ModelViewing\Nodes\MemberNodeView.xaml.cs">
       <DependentUpon>MemberNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\MemberNodeViewModel.cs" />
     <Compile Include="Common\NodeName.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeComparer.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\Items\ItemsView.xaml.cs">
+    <Compile Include="ModelViewing\Items\ItemsView.xaml.cs">
       <DependentUpon>ItemsView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\ModelHandling\Private\Items\ItemsViewModel.cs" />
+    <Compile Include="ModelViewing\Items\ItemsViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceView.xaml.cs">
       <DependentUpon>NamespaceView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\ParserService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\IParserService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\Items\ItemViewModel.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\Items\IItem.cs" />
+    <Compile Include="ModelViewing\Items\ItemViewModel.cs" />
+    <Compile Include="ModelViewing\Items\IItem.cs" />
     <Compile Include="ModelViewing\IModelViewService.cs" />
     <Compile Include="ModelViewing\Private\ModelViewService.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeViewModelService.cs" />
@@ -361,7 +361,7 @@
     <Compile Include="Utils\UI\HideableGridSplitter.cs" />
     <Compile Include="Utils\Compare.cs" />
     <Compile Include="Common\ThemeHandling\IThemeService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\Items\ItemsSource.cs" />
+    <Compile Include="ModelViewing\Items\ItemsSource.cs" />
     <Compile Include="ModelViewing\ModelViewModel.cs" />
     <Compile Include="Utils\IReadOnlyKeyedList.cs" />
     <Compile Include="Utils\KeyedList.cs" />
@@ -471,7 +471,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ModelViewing\ModelHandling\Private\Items\ItemsView.xaml">
+    <Page Include="ModelViewing\Items\ItemsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

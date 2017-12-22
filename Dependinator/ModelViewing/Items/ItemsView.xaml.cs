@@ -10,7 +10,7 @@ using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependinator.ModelViewing.ModelHandling.Private.Items
+namespace Dependinator.ModelViewing.Items
 {
 	/// <summary>
 	/// Interaction logic for ItemsView.xaml

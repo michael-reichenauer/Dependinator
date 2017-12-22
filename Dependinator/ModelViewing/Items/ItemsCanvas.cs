@@ -3,12 +3,12 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.Common;
-using Dependinator.ModelViewing.ModelHandling.Private.Items.Private;
+using Dependinator.ModelViewing.Items.Private;
 using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependinator.ModelViewing.ModelHandling.Private.Items
+namespace Dependinator.ModelViewing.Items
 {
 	internal class ItemsCanvas : Notifyable, IItemsSourceArea
 	{

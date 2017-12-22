@@ -1,5 +1,5 @@
 ﻿<UserControl
-	x:Class="Dependinator.ModelViewing.ModelHandling.Private.Items.ItemsView"
+	x:Class="Dependinator.ModelViewing.Items.ItemsView"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -9,7 +9,7 @@
 	xmlns:links="clr-namespace:Dependinator.ModelViewing.Links"
 	xmlns:nodes="clr-namespace:Dependinator.ModelViewing.Nodes"
 	xmlns:open="clr-namespace:Dependinator.ModelViewing.Open"
-	xmlns:private="clr-namespace:Dependinator.ModelViewing.ModelHandling.Private.Items.Private"
+	xmlns:private="clr-namespace:Dependinator.ModelViewing.Items.Private"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
@@ -43,7 +43,7 @@
 		<ListBox.ItemContainerStyle>
 			<Style TargetType="ListBoxItem">
 
-			
+
 				<Setter Property="Canvas.ZIndex" Value="{Binding ItemZIndex}" />
 				<Setter Property="Canvas.Top" Value="{Binding ItemTop}" />
 				<Setter Property="Canvas.Left" Value="{Binding ItemLeft}" />
@@ -90,7 +90,7 @@
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>
-									<nodes:NamespaceView/>
+									<nodes:NamespaceView />
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>
@@ -101,7 +101,7 @@
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>
-									<nodes:TypeView/>
+									<nodes:TypeView />
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>
@@ -110,20 +110,20 @@
 					<DataTrigger Binding="{Binding ViewName}" Value="MemberNodeView">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
-								<DataTemplate >
-									<nodes:MemberNodeView/>
+								<DataTemplate>
+									<nodes:MemberNodeView />
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>
 					</DataTrigger>
 
-					
+
 					<!-- Link Line -->
 					<DataTrigger Binding="{Binding ViewName}" Value="LineViewModel">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>
-									<links:LineView/>
+									<links:LineView />
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>
@@ -134,7 +134,7 @@
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>
-									<open:OpenModelView/>
+									<open:OpenModelView />
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>
@@ -148,4 +148,3 @@
 	</ListBox>
 
 </UserControl>
-

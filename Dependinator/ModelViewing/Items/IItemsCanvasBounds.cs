@@ -1,7 +1,7 @@
 using System.Windows;
 
 
-namespace Dependinator.ModelViewing.ModelHandling.Private.Items
+namespace Dependinator.ModelViewing.Items
 {
 	internal interface IItemsCanvasBounds
 	{

@@ -4,8 +4,8 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.ModelViewing.ModelHandling.Private.Items;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 
