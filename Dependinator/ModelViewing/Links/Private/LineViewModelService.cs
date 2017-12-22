@@ -44,17 +44,17 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		public void UpdateLineBounds(Line line)
 		{
-			Rect bounds = new Rect(line.FirstPoint, line.LastPoint);
+			Rect bounds = new Rect(line.View.FirstPoint, line.View.LastPoint);
 
 			// Adjust boundaries for line points between first and last point
-			line.MiddlePoints().ForEach(point => bounds.Union(point));
+			line.View.MiddlePoints().ForEach(point => bounds.Union(point));
 
 			// The items bound needs some margin around the line to allow line width and arrow to show
-			double margin = LineMargin / line.ViewModel.ItemScale;
+			double margin = LineMargin / line.View.ViewModel.ItemScale;
 			bounds.Inflate(margin, margin);
 
 			// Set the new bounds
-			line.ViewModel.ItemBounds = bounds;
+			line.View.ViewModel.ItemBounds = bounds;
 		}
 
 
@@ -75,8 +75,8 @@ namespace Dependinator.ModelViewing.Links.Private
 			if (line.Source.Parent == line.Target)
 			{
 				// Need to adjust for different scales
-				Vector vector = line.ViewModel.ItemScale > 1
-					? new Vector(0, 8 / line.ViewModel.ItemScale) : new Vector(0, 8);
+				Vector vector = line.View.ViewModel.ItemScale > 1
+					? new Vector(0, 8 / line.View.ViewModel.ItemScale) : new Vector(0, 8);
 
 				tp = ParentPointToChildPoint(line.Target, tp) - vector;
 			}
@@ -86,16 +86,16 @@ namespace Dependinator.ModelViewing.Links.Private
 				sp = ParentPointToChildPoint(line.Source, sp);
 			}
 
-			line.FirstPoint = sp;
-			line.LastPoint = tp;
+			line.View.FirstPoint = sp;
+			line.View.LastPoint = tp;
 		}
 
 
 		public bool IsOnLineBetweenNeighbors(Line line, int index)
 		{
-			Point p = line.Points[index];
-			Point a = line.Points[index - 1];
-			Point b = line.Points[index + 1];
+			Point p = line.View.Points[index];
+			Point a = line.View.Points[index - 1];
+			Point b = line.View.Points[index + 1];
 
 			double length = geometryService.GetDistanceFromLine(a, b, p);
 			return length < 0.1;
@@ -109,26 +109,26 @@ namespace Dependinator.ModelViewing.Links.Private
 			NodeViewModel source = line.Source.View.ViewModel;
 			NodeViewModel target = line.Target.View.ViewModel;
 
-			if (pointIndex == line.FirstIndex)
+			if (pointIndex == line.View.FirstIndex)
 			{
 				// Adjust point to be on the source node perimeter
 				newPoint = geometryService.GetPointInPerimeter(source.ItemBounds, newPoint);
-				line.RelativeSourcePoint = new Point(
+				line.View.RelativeSourcePoint = new Point(
 					(newPoint.X - source.ItemBounds.X) / source.ItemBounds.Width,
 					(newPoint.Y - source.ItemBounds.Y) / source.ItemBounds.Height);
 			}
-			else if (pointIndex == line.LastIndex)
+			else if (pointIndex == line.View.LastIndex)
 			{
 				// Adjust point to be on the target node perimeter
 				newPoint = geometryService.GetPointInPerimeter(target.ItemBounds, newPoint);
-				line.RelativeTargetPoint = new Point(
+				line.View.RelativeTargetPoint = new Point(
 					(newPoint.X - target.ItemBounds.X) / target.ItemBounds.Width,
 					(newPoint.Y - target.ItemBounds.Y) / target.ItemBounds.Height);
 			}
 			else
 			{
-				Point a = line.Points[pointIndex - 1];
-				Point b = line.Points[pointIndex + 1];
+				Point a = line.View.Points[pointIndex - 1];
+				Point b = line.View.Points[pointIndex + 1];
 				Point p = newPoint;
 				if (geometryService.GetDistanceFromLine(a, b, p) < 0.1)
 				{
@@ -136,15 +136,15 @@ namespace Dependinator.ModelViewing.Links.Private
 				}
 			}
 
-			line.Points[pointIndex] = newPoint;
+			line.View.Points[pointIndex] = newPoint;
 		}
 
 
 
 		public int GetLinePointIndex(Line line, Point point, bool isPointMove)
 		{
-			IList<Point> points = line.Points;
-			double itemScale = line.ViewModel.ItemScale;
+			IList<Point> points = line.View.Points;
+			double itemScale = line.View.ViewModel.ItemScale;
 
 			// The point is sometimes a bit "off" the line so find the closet point on the line
 			Point pointOnLine = GetClosetPointOnlIne(point, points, itemScale);
@@ -218,10 +218,10 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		private Point GetRelativeSource(Line line)
 		{
-			if (line.RelativeSourcePoint.X >= 0)
+			if (line.View.RelativeSourcePoint.X >= 0)
 			{
 				// use specified source
-				return line.RelativeSourcePoint;
+				return line.View.RelativeSourcePoint;
 			}
 
 			if (line.Source == line.Target.Parent)
@@ -240,10 +240,10 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		private Point GetRelativeTarget(Line line)
 		{
-			if (line.RelativeTargetPoint.X >= 0)
+			if (line.View.RelativeTargetPoint.X >= 0)
 			{
 				// use specified source
-				return line.RelativeTargetPoint;
+				return line.View.RelativeTargetPoint;
 			}
 
 			if (line.Source.Parent == line.Target)
@@ -261,8 +261,8 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		public string GetLineData(Line line)
 		{
-			Point s = Scaled(line, line.FirstPoint);
-			Point t = Scaled(line, line.LastPoint);
+			Point s = Scaled(line, line.View.FirstPoint);
+			Point t = Scaled(line, line.View.LastPoint);
 
 			return Txt.I($"M {s.X},{s.Y} {GetMiddleLineData(line)} L {t.X},{t.Y - 10} L {t.X},{t.Y - 6.5}");
 		}
@@ -272,7 +272,7 @@ namespace Dependinator.ModelViewing.Links.Private
 		{
 			string lineData = "";
 
-			foreach (Point point in line.MiddlePoints())
+			foreach (Point point in line.View.MiddlePoints())
 			{
 				Point m = Scaled(line, point);
 				lineData += Txt.I($" L {m.X},{m.Y}");
@@ -287,7 +287,7 @@ namespace Dependinator.ModelViewing.Links.Private
 			string lineData = "";
 			double d = GetLineWidth(line).MM(2, 4);
 
-			foreach (Point point in line.MiddlePoints())
+			foreach (Point point in line.View.MiddlePoints())
 			{
 				Point m = Scaled(line, point);
 				lineData += Txt.I(
@@ -300,22 +300,22 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		public string GetArrowData(Line line)
 		{
-			Point t = Scaled(line, line.LastPoint);
+			Point t = Scaled(line, line.View.LastPoint);
 
 			return Txt.I($"M {t.X},{t.Y - 6.5} L {t.X},{t.Y - 4.5}");
 		}
 
 		private Point Scaled(Line line, Point p)
 		{
-			Rect bounds = line.ViewModel.ItemBounds;
-			double scale = line.ViewModel.ItemScale;
+			Rect bounds = line.View.ViewModel.ItemBounds;
+			double scale = line.View.ViewModel.ItemScale;
 			return new Point((p.X - bounds.X) * scale, (p.Y - bounds.Y) * scale);
 		}
 
 
 		public double GetLineWidth(Line line)
 		{
-			double scale = line.ViewModel.ItemScale;
+			double scale = line.View.ViewModel.ItemScale;
 			double lineWidth;
 
 			int linksCount = line.Links.Any() ? line.Links.Count : line.LinkCount;
@@ -335,7 +335,7 @@ namespace Dependinator.ModelViewing.Links.Private
 
 			double lineLineWidth = (lineWidth * 0.7 * scale).MM(0.1, 4);
 
-			if (line.ViewModel.IsMouseOver)
+			if (line.View.ViewModel.IsMouseOver)
 			{
 				lineLineWidth = (lineLineWidth * 1.5).MM(0, 6);
 			}
@@ -616,9 +616,9 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		public double GetArrowWidth(Line line)
 		{
-			double arrowWidth = (10 * line.ViewModel.ItemScale).MM(6, 15);
+			double arrowWidth = (10 * line.View.ViewModel.ItemScale).MM(6, 15);
 
-			if (line.ViewModel.IsMouseOver)
+			if (line.View.ViewModel.IsMouseOver)
 			{
 				arrowWidth = (arrowWidth * 1.5).MM(0, 20);
 			}

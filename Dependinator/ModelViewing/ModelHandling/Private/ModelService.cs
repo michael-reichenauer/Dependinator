@@ -141,8 +141,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private static void UpdateLines(Node node)
 		{
 			node.SourceLines
-				.Where(line => line.IsShowing)
-				.ForEach(line => line.ViewModel.NotifyAll());
+				.Where(line => line.View.IsShowing)
+				.ForEach(line => line.View.ViewModel.NotifyAll());
 
 			node.Children
 				.Where(child => child.View.IsShowing)

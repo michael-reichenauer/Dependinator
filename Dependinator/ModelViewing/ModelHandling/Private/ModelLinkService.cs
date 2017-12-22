@@ -146,11 +146,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			{
 				foreach (Line line in link.Lines)
 				{
-					if (line.Points.Count != 2)
+					if (line.View.Points.Count != 2)
 					{
-						line.ResetPoints();
-						line.ViewModel.UpdateLine();
-						line.ViewModel.NotifyAll();
+						line.View.ResetPoints();
+						line.View.ViewModel.UpdateLine();
+						line.View.ViewModel.NotifyAll();
 					}
 				}
 			}
@@ -193,7 +193,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			if (points != null)
 			{
-				line.Points.InsertRange(1, points);
+				line.View.Points.InsertRange(1, points);
 			}
 
 			line.Source.SourceLines.Add(line);
@@ -229,9 +229,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private void RemoveLineViewModel(Line line)
 		{
-			if (line.ViewModel != null)
+			if (line.View.ViewModel != null)
 			{
-				line.Owner.View.ItemsCanvas.RemoveItem(line.ViewModel);
+				line.Owner.View.ItemsCanvas.RemoveItem(line.View.ViewModel);
 			}
 		}
 

@@ -46,11 +46,11 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		public void FirstShowNode(Node node)
 		{
 			node.SourceLines
-				.Where(line => line.ViewModel == null)
+				.Where(line => line.View.ViewModel == null)
 				.ForEach(line => modelLinkService.AddLineViewModel(line));
 
 			node.TargetLines
-				.Where(line => line.ViewModel == null)
+				.Where(line => line.View.ViewModel == null)
 				.ForEach(line => modelLinkService.AddLineViewModel(line));
 		}
 

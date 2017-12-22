@@ -28,7 +28,7 @@ namespace Dependinator.ModelViewing.Links
 		{
 			this.lineViewModelService = lineViewModelService;
 			this.line = line;
-			line.ViewModel = this;
+			line.View.ViewModel = this;
 			ItemZIndex = -1;
 
 			UpdateLine();
@@ -80,9 +80,9 @@ namespace Dependinator.ModelViewing.Links
 
 		public override void MoveItem(Vector moveOffset)
 		{
-			for (int i = 1; i < line.Points.Count - 1; i++)
+			for (int i = 1; i < line.View.Points.Count - 1; i++)
 			{
-				line.Points[i] = line.Points[i] + moveOffset;
+				line.View.Points[i] = line.View.Points[i] + moveOffset;
 			}
 		}
 
@@ -221,12 +221,12 @@ namespace Dependinator.ModelViewing.Links
 
 		private void EndMoveLinePoint()
 		{
-			if (currentPointIndex != line.FirstIndex && currentPointIndex != line.LastIndex)
+			if (currentPointIndex != line.View.FirstIndex && currentPointIndex != line.View.LastIndex)
 			{
 				// Removing the point if it is no longer needed (in the same line as neighbors points
 				if (lineViewModelService.IsOnLineBetweenNeighbors(line, currentPointIndex))
 				{
-					line.Points.RemoveAt(currentPointIndex);
+					line.View.Points.RemoveAt(currentPointIndex);
 				}
 			}
 

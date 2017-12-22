@@ -46,7 +46,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				line.Source.Name.FullName,
 				line.Target.Name.FullName,
 				line.Target.NodeType,
-				line.MiddlePoints().ToList(),
+				line.View.MiddlePoints().ToList(),
 				line.Links.Count));
 
 
