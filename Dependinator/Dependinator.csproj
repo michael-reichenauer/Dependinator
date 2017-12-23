@@ -148,6 +148,7 @@
     <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
+    <Compile Include="ModelViewing\Nodes\NodePointsView2Model.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\LineViewData.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\LinkType.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\NodeTraversalExtensions.cs" />
@@ -182,7 +183,12 @@
     <Compile Include="ModelViewing\Links\LinkItem.cs" />
     <Compile Include="ModelViewing\Links\ILinkMenuItemService.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkMenuItemService.cs" />
+    <Compile Include="ModelViewing\Nodes\NodePointsView2.xaml.cs">
+      <DependentUpon>NodePointsView2.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ModelViewing\Nodes\Private\INodeSelectionService.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeLayoutService.cs" />
+    <Compile Include="ModelViewing\Nodes\Private\NodeSelectionService.cs" />
     <Compile Include="ModelViewing\Open\FileItem.cs" />
     <Compile Include="ModelViewing\Open\HiddenNodeItem.cs" />
     <Compile Include="ModelViewing\Open\OpenModelView.xaml.cs">
@@ -247,6 +253,7 @@
     <Compile Include="ModelViewing\Items\Private\ItemsService.cs" />
     <Compile Include="Utils\UI\DebounceDispatcher.cs" />
     <Compile Include="Utils\UI\DelayDispatcher.cs" />
+    <Compile Include="Utils\UI\MouseClicked.cs" />
     <Compile Include="Utils\UI\Mvvm\IPropertyNotify.cs" />
     <Compile Include="Utils\UI\Mvvm\IPropertySetter.cs" />
     <Compile Include="Utils\UI\Mvvm\Notifyable.cs" />
@@ -430,6 +437,10 @@
     <Page Include="ModelViewing\Nodes\DescriptionView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ModelViewing\Nodes\NodePointsView2.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </Page>
     <Page Include="ModelViewing\Nodes\NodePointsView.xaml">
       <SubType>Designer</SubType>

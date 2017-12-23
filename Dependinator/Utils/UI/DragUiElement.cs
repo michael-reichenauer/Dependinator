@@ -2,9 +2,10 @@ using System;
 using System.Windows;
 using System.Windows.Input;
 
+
 namespace Dependinator.Utils.UI
 {
-	internal class DragUiElement
+	internal class DragUiElement2
 	{
 		private readonly UIElement uiElement;
 		private readonly Func<bool> predicate;
@@ -16,11 +17,11 @@ namespace Dependinator.Utils.UI
 		private bool IsMouseDown;
 
 
-		public DragUiElement(
-			UIElement uiElement, 
-			Action<Point, Vector> move, 
-			Func<bool> predicate = null, 
-			Action<Point> begin = null, 
+		public DragUiElement2(
+			UIElement uiElement,
+			Action<Point, Vector> move,
+			Func<bool> predicate = null,
+			Action<Point> begin = null,
 			Action<Point> end = null,
 			bool isPreview = false)
 		{
@@ -37,7 +38,7 @@ namespace Dependinator.Utils.UI
 				uiElement.MouseUp += (s, e) => MouseUp(e);
 				uiElement.MouseMove += (s, e) => MouseMove(e);
 			}
-			
+
 
 			this.predicate = predicate;
 			this.begin = begin;
@@ -76,7 +77,7 @@ namespace Dependinator.Utils.UI
 				Point viewPosition = e.GetPosition(Application.Current.MainWindow);
 
 				end?.Invoke(viewPosition);
-				uiElement.ReleaseMouseCapture();			
+				uiElement.ReleaseMouseCapture();
 			}
 		}
 
@@ -96,3 +97,4 @@ namespace Dependinator.Utils.UI
 		}
 	}
 }
+	

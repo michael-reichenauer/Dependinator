@@ -10,8 +10,8 @@ namespace Dependinator.ModelViewing.Links
 	/// </summary>
 	public partial class LineView : UserControl
 	{
-		private readonly DragUiElement dragUiElement;
-		private readonly DragUiElement dragUiElementPoints;
+	//	private readonly DragUiElement dragUiElement;
+	//	private readonly DragUiElement dragUiElementPoints;
 
 
 		private LineViewModel ViewModel => DataContext as LineViewModel;
@@ -21,19 +21,19 @@ namespace Dependinator.ModelViewing.Links
 		{
 			InitializeComponent();
 
-			dragUiElement = new DragUiElement(
-				this,
-				(p, o) => ViewModel?.MouseMove(p),
-				() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
-				p => ViewModel?.MouseDown(p, false),
-				p => ViewModel?.MouseUp(p));
+			//dragUiElement = new DragUiElement(
+			//	this,
+			//	(p, o) => ViewModel?.MouseMove(p),
+			//	() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
+			//	p => ViewModel?.MouseDown(p, false),
+			//	p => ViewModel?.MouseUp(p));
 
-			dragUiElementPoints = new DragUiElement(
-				LinePoints,
-				(p, o) => ViewModel?.MouseMove(p),
-				() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
-				p => ViewModel?.MouseDown(p, true),
-				p => ViewModel?.MouseUp(p));
+			//dragUiElementPoints = new DragUiElement(
+			//	LinePoints,
+			//	(p, o) => ViewModel?.MouseMove(p),
+			//	() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
+			//	p => ViewModel?.MouseDown(p, true),
+			//	p => ViewModel?.MouseUp(p));
 		}
 
 

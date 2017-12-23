@@ -13,7 +13,8 @@
 	<Grid Background="Transparent">
 
 		<!-- Node border -->
-		<Rectangle Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"
+		<Rectangle
+			Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"
 			Margin="0"
 			Stroke="{Binding RectangleBrush}"
 			StrokeThickness="{Binding RectangleLineWidth}"
@@ -21,19 +22,29 @@
 			Fill="{Binding BackgroundBrush}"
 			Stretch="Fill" />
 
-		<nodes:DescriptionView Visibility="{Binding IsShowDescription, Converter={StaticResource VC}}"/>
-		
+		<nodes:DescriptionView Visibility="{Binding IsShowDescription, Converter={StaticResource VC}}" />
+
 		<Grid Visibility="{Binding IsShowItems, Converter={StaticResource VC}}">
 			<items1:ItemsView x:Name="ItemsView" DataContext="{Binding ItemsViewModel}" />
 		</Grid>
 
 		<!-- Inner model -->
-	
 
-		<nodes:TitleView Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"/>
+
+		<nodes:TitleView Visibility="{Binding IsShowNode, Converter={StaticResource VC}}" />
 
 		<!-- Rectangle points -->
-		<nodes:NodePointsView Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"/>
+		<nodes:NodePointsView Visibility="{Binding IsShowNode, Converter={StaticResource VC}}" />
+
+
+		<!--<Rectangle
+			Name="ClickArea"
+			Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="Gray"
+			StrokeThickness="5"
+			Fill="Transparent"
+			Stretch="Fill" />-->
 
 	</Grid>
 

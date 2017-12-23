@@ -152,6 +152,11 @@ namespace Dependinator.ModelViewing.Items
 		}
 
 
+		public void MoveRootNode(Vector viewOffset)
+		{
+			RootCanvas.Move(viewOffset);
+		}
+
 		public void Move(Vector viewOffset)
 		{
 			if (!IsZoomAndMoveEnabled)

@@ -11,27 +11,27 @@ namespace Dependinator.ModelViewing.Nodes
 	/// </summary>
 	public partial class TitleView : UserControl
 	{
-		private readonly DragUiElement dragUiElementHorizontal;
-		private readonly DragUiElement dragUiElementVertical;
+		//private readonly DragUiElement dragUiElementHorizontal;
+		//private readonly DragUiElement dragUiElementVertical;
 		private NodeViewModel ViewModel => DataContext as NodeViewModel;
 
 		public TitleView()
 		{
 			InitializeComponent();
 
-			dragUiElementHorizontal = new DragUiElement(
-				TitleBorderHorizontal,
-				(p, o) => ViewModel?.MouseMove(p, true),
-				() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
-				p => ViewModel?.MouseDown(p),
-				p => ViewModel?.MouseUp(p));
+			//dragUiElementHorizontal = new DragUiElement(
+			//	TitleBorderHorizontal,
+			//	(p, o) => ViewModel?.MouseMove(p, true),
+			//	() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
+			//	p => ViewModel?.MouseDown(p),
+			//	p => ViewModel?.MouseUp(p));
 
-			dragUiElementVertical = new DragUiElement(
-				TitleBorderHorizontal,
-				(p, o) => ViewModel?.MouseMove(p, true),
-				() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
-				p => ViewModel?.MouseDown(p),
-				p => ViewModel?.MouseUp(p));
+			//dragUiElementVertical = new DragUiElement(
+			//	TitleBorderHorizontal,
+			//	(p, o) => ViewModel?.MouseMove(p, true),
+			//	() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
+			//	p => ViewModel?.MouseDown(p),
+			//	p => ViewModel?.MouseUp(p));
 		}
 
 

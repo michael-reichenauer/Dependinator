@@ -19,18 +19,21 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private readonly IModelLinkService modelLinkService;
 		private readonly ILinkMenuItemService linkMenuItemService;
 		private readonly IGeometryService geometryService;
+		private readonly INodeSelectionService nodeSelectionService;
 
 
 		public NodeViewModelService(
 			IThemeService themeService,
 			IModelLinkService modelLinkService,
 			ILinkMenuItemService linkMenuItemService,
-			IGeometryService geometryService)
+			IGeometryService geometryService,
+			INodeSelectionService nodeSelectionService)
 		{
 			this.themeService = themeService;
 			this.modelLinkService = modelLinkService;
 			this.linkMenuItemService = linkMenuItemService;
 			this.geometryService = geometryService;
+			this.nodeSelectionService = nodeSelectionService;
 		}
 
 
@@ -71,6 +74,13 @@ namespace Dependinator.ModelViewing.Nodes.Private
 				.Where(line => line.Owner != node);
 
 			return linkMenuItemService.GetTargetLinkItems(lines);
+		}
+
+
+		public void MouseClicked(NodeViewModel nodeViewModel)
+		{
+			nodeSelectionService.Clicked(nodeViewModel.Node);
+
 		}
 
 

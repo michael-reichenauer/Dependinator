@@ -23,5 +23,6 @@ namespace Dependinator.ModelViewing.Nodes
 
 		IEnumerable<LinkItem> GetIncomingLinkItems(Node node);
 		IEnumerable<LinkItem> GetOutgoingLinkItems(Node node);
+		void MouseClicked(NodeViewModel nodeViewModel);
 	}
 }

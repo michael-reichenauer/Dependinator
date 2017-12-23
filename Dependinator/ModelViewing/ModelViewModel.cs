@@ -43,7 +43,7 @@ namespace Dependinator.ModelViewing
 			this.modelMetadata = modelMetadata;
 
 			ItemsCanvas rootCanvas = new ItemsCanvas();
-			ItemsViewModel = new ItemsViewModel(rootCanvas);
+			ItemsViewModel = new ItemsViewModel(rootCanvas, null);
 
 			modelViewService.SetRootCanvas(rootCanvas);
 		}

@@ -98,6 +98,11 @@ namespace Dependinator.ModelViewing.Nodes
 		public int OutgoingLinesCount => Node.SourceLines.Count(line => line.Owner != Node);
 
 
+		public void MouseClicked(MouseButtonEventArgs mouseButtonEventArgs)
+		{
+			nodeViewModelService.MouseClicked(this);
+		}
+
 		public override void MoveItem(Vector moveOffset)
 		{
 			Point newLocation = ItemBounds.Location + moveOffset;
@@ -190,6 +195,9 @@ namespace Dependinator.ModelViewing.Nodes
 					Mouse.OverrideCursor = Cursors.Hand;
 					if (!isTitle)
 					{
+						//NodePointsView2Model view2Model = new NodePointsView2Model(this);
+						//Node.Parent.View.ItemsCanvas.AddItem(view2Model);
+
 						Point screenPoint = Mouse.GetPosition(Application.Current.MainWindow);
 						Point point = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
 						nodeViewModelService.GetPointIndex(Node, point);

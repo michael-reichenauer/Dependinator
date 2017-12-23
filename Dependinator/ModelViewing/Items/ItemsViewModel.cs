@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -7,8 +8,12 @@ namespace Dependinator.ModelViewing.Items
 {
 	internal class ItemsViewModel : ViewModel
 	{
-		public ItemsViewModel(ItemsCanvas itemsCanvas)
+		private readonly Node node;
+
+
+		public ItemsViewModel(ItemsCanvas itemsCanvas, Node node)
 		{
+			this.node = node;
 			ItemsCanvas = itemsCanvas;
 		}
 
@@ -21,6 +26,7 @@ namespace Dependinator.ModelViewing.Items
 			ItemsCanvas.SetZoomableCanvas(zoomableCanvas);
 
 		public void MoveCanvas(Vector viewOffset) => ItemsCanvas.Move(viewOffset);
+		public void MoveRootCanvas(Vector viewOffset) => ItemsCanvas.MoveRootNode(viewOffset);
 
 		public void ZoomRoot(double zoom, Point viewPosition) => ItemsCanvas.ZoomRootNode(zoom, viewPosition);
 
@@ -32,5 +38,17 @@ namespace Dependinator.ModelViewing.Items
 
 		public void ItemVirtualized() => ItemsCanvas.ItemVirtualized();
 
+
+		public void MoveItems(Vector viewOffset)
+		{
+			if (node?.IsSelected ?? true)
+			{
+				MoveCanvas(viewOffset);
+			}
+			else
+			{
+				MoveRootCanvas(viewOffset);
+			}
+		}
 	}
 }
