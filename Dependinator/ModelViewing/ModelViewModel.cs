@@ -99,5 +99,11 @@ namespace Dependinator.ModelViewing
 		{
 			return openModelService.OpenModelAsync(filePaths);
 		}
+
+
+		public void MouseClicked(MouseButtonEventArgs mouseButtonEventArgs)
+		{
+			modelViewService.Clicked();
+		}
 	}
 }

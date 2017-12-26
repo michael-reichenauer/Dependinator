@@ -4,82 +4,93 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+	xmlns:private="clr-namespace:Dependinator.ModelViewing.Items.Private"
 
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
 
 	<Grid>
-	
 
-		<!-- Mouse over-->
 		<Rectangle
-			Name="MouseOverBorder"
-			Margin="0"
-			Stroke="BlueViolet"
-			StrokeThickness="5"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
+			Name="ControlCenter"
+			Margin="{Binding CenterMargin}"
+			Stroke="Transparent"
+			Fill="Transparent"
+			StrokeThickness="1"
 			Stretch="Fill"
-			MouseEnter="UIElement_OnMouseEnter"
-			MouseLeave="UIElement_OnMouseLeave">
-
-	
+			Cursor="Hand"
+			MouseMove="Control_OnMouseMove">
 		</Rectangle>
 
-		<!--<Rectangle
-			Name="PointLeftTop"
-			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
-			Margin="0"
-			Stroke="{Binding RectangleBrush}"
+		<Rectangle
+			Visibility="{Binding IsShowBorder, Converter={StaticResource VC}}"
+			Name="ControlBorder"
+			Margin="{Binding CenterMargin}"
+			Stroke="{Binding Brush}"
 			StrokeThickness="1"
-			Fill="{Binding RectangleBrush}"
+			Stretch="Fill">
+		</Rectangle>
+		
+
+
+		<Rectangle
+			Name="ControlLeftTop"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding Brush}"
+			StrokeThickness="1"
+			Fill="{Binding Brush}"
 			Width="8"
 			Height="8"
 			HorizontalAlignment="Left"
 			VerticalAlignment="Top"
-			MouseEnter="UIElement_OnMouseEnterLeftTop"
-			MouseLeave="UIElement_OnMouseLeaveLeftTop" />
+			Cursor="SizeNWSE"
+			MouseMove="Control_OnMouseMove"/>
 
 		<Rectangle
-			Name="PointLeftBottom"
-			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+			Name="ControlLeftBottom"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
 			Margin="0"
-			Stroke="{Binding RectangleBrush}"
+			Stroke="{Binding Brush}"
 			StrokeThickness="1"
-			Fill="{Binding RectangleBrush}"
+			Fill="{Binding Brush}"
 			Width="8"
 			Height="8"
 			HorizontalAlignment="Left"
-			VerticalAlignment="Bottom"
-			MouseEnter="UIElement_OnMouseEnterLeftBottom"
-			MouseLeave="UIElement_OnMouseLeaveLeftBottom" />
+			VerticalAlignment="Bottom" 
+			Cursor="SizeNESW"
+			MouseMove="Control_OnMouseMove"/>
 
 		<Rectangle
-			Name="PointRightTop"
-			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+			Name="ControlRightTop"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
 			Margin="0"
-			Stroke="{Binding RectangleBrush}"
+			Stroke="{Binding Brush}"
 			StrokeThickness="1"
-			Fill="{Binding RectangleBrush}"
+			Fill="{Binding Brush}"
 			Width="8"
 			Height="8"
 			HorizontalAlignment="Right"
-			VerticalAlignment="Top"
-			MouseEnter="UIElement_OnMouseEnterRightTop"
-			MouseLeave="UIElement_OnMouseLeaveRightTop" />
+			VerticalAlignment="Top" 
+			Cursor="SizeNESW"
+			MouseMove="Control_OnMouseMove"/>
 
 		<Rectangle
-			Name="PointRightBottom"
-			Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+			Name="ControlRightBottom"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
 			Margin="0"
-			Stroke="{Binding RectangleBrush}"
+			Stroke="{Binding Brush}"
 			StrokeThickness="1"
-			Fill="{Binding RectangleBrush}"
+			Fill="{Binding Brush}"
 			Width="8"
 			Height="8"
 			HorizontalAlignment="Right"
 			VerticalAlignment="Bottom"
-			MouseEnter="UIElement_OnMouseEnterRightBottom"
-			MouseLeave="UIElement_OnMouseLeaveRightBottom" />-->
+			Cursor="SizeNWSE"
+			MouseMove="Control_OnMouseMove"/>
 		
 	</Grid>
 </UserControl>

@@ -74,6 +74,30 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public string Name => Node.Name.DisplayName;
 
+		private NodePointsView2Model view2Model;
+
+		public bool IsSelected
+		{
+			get => view2Model != null;
+			set
+			{
+				if (value)
+				{
+					view2Model = new NodePointsView2Model(this);
+					Node.Parent.View.ItemsCanvas.AddItem(view2Model);
+				}
+				else
+				{
+					if (view2Model != null)
+					{
+						Node.Parent.View.ItemsCanvas.RemoveItem(view2Model);
+						view2Model = null;
+					}
+					
+				}
+			}
+		}
+
 		public double RectangleLineWidth => IsShowPoints ? 0.6 * 3 : IsMouseOver ? 0.6 * 1.5 : 0.6;
 
 		public string ToolTip { get => Get(); set => Set(value); }
@@ -98,10 +122,11 @@ namespace Dependinator.ModelViewing.Nodes
 		public int OutgoingLinesCount => Node.SourceLines.Count(line => line.Owner != Node);
 
 
-		public void MouseClicked(MouseButtonEventArgs mouseButtonEventArgs)
+		public void MouseClicked(MouseButtonEventArgs e)
 		{
 			nodeViewModelService.MouseClicked(this);
 		}
+
 
 		public override void MoveItem(Vector moveOffset)
 		{
@@ -195,8 +220,7 @@ namespace Dependinator.ModelViewing.Nodes
 					Mouse.OverrideCursor = Cursors.Hand;
 					if (!isTitle)
 					{
-						//NodePointsView2Model view2Model = new NodePointsView2Model(this);
-						//Node.Parent.View.ItemsCanvas.AddItem(view2Model);
+						
 
 						Point screenPoint = Mouse.GetPosition(Application.Current.MainWindow);
 						Point point = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
@@ -320,6 +344,8 @@ namespace Dependinator.ModelViewing.Nodes
 
 			//NotifyAll();
 		}
+
+
 
 
 		private bool IsResizable()

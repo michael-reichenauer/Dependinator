@@ -5,6 +5,6 @@ namespace Dependinator.ModelViewing.Nodes.Private
 {
 	internal interface INodeSelectionService
 	{
-		void Clicked(Node node);
+		void Clicked(NodeViewModel node);
 	}
 }

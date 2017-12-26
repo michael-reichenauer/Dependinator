@@ -8,30 +8,42 @@ namespace Dependinator.ModelViewing.Nodes.Private
 	[SingleInstance]
 	internal class NodeSelectionService : INodeSelectionService
 	{
-		public void Clicked(Node clickedNode)
-		{
-			if (SelectedNode == null)
-			{
-				SelectedNode = clickedNode.Root;
-			}
+		private NodeViewModel selectedNode;
 
-			if (clickedNode == SelectedNode)
+		public void Clicked(NodeViewModel clickedNode)
+		{
+			if (selectedNode == null && clickedNode != null)
 			{
+				// No node was selected and now clicked node is selected
+				selectedNode = clickedNode;
+				selectedNode.IsSelected = true;
 				return;
 			}
 
-			if (SelectedNode.Ancestors().Any(ancestor => clickedNode == ancestor))
+			if (clickedNode == selectedNode)
 			{
-				// Deselect all nodes (as if root was clicked)
-				clickedNode = clickedNode.Root;
+				if (selectedNode != null)
+				{
+					selectedNode.IsSelected = false;
+					selectedNode = null;
+				}
+
+				return;
 			}
 
-			SelectedNode.IsSelected = false;
-			SelectedNode = clickedNode;
-			SelectedNode.IsSelected = true;
+			if (clickedNode == null ||
+				selectedNode.Node.Ancestors().Any(ancestor => clickedNode == ancestor.View.ViewModel))
+			{
+				// Deselect all nodes (root was clicked or some ancestor)
+				selectedNode.IsSelected = false;
+				selectedNode = null;
+				return;
+			}
+
+			// Switch selected node
+			selectedNode.IsSelected = false;
+			selectedNode = clickedNode;
+			selectedNode.IsSelected = true;
 		}
-
-
-		public Node SelectedNode { get; private set; }
 	}
 }

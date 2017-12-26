@@ -302,7 +302,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			// Creating the child canvas to be the children canvas of the node
 			node.View.ItemsCanvas = new ItemsCanvas(node.View.ViewModel, parentCanvas);
-			node.View.ViewModel.ItemsViewModel = new ItemsViewModel(node.View.ItemsCanvas, node);
+			node.View.ViewModel.ItemsViewModel = new ItemsViewModel(
+				node.View.ItemsCanvas, node.View.ViewModel);
 
 			if (Math.Abs(node.View.ScaleFactor) > 0.0000001)
 			{

@@ -18,5 +18,6 @@ namespace Dependinator.ModelViewing
 
 		void Close();
 		IReadOnlyList<NodeName> GetHiddenNodeNames();
+		void Clicked();
 	}
 }

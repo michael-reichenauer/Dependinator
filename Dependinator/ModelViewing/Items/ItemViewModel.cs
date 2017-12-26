@@ -18,10 +18,10 @@ namespace Dependinator.ModelViewing.Items
 
 		public double Priority { get; set; }
 
-		public double ItemTop => ItemBounds.Top;
-		public double ItemLeft => ItemBounds.Left;
-		public double ItemWidth => ItemBounds.Width;
-		public double ItemHeight => ItemBounds.Height;
+		public virtual double ItemTop => ItemBounds.Top;
+		public virtual double ItemLeft => ItemBounds.Left;
+		public virtual double ItemWidth => ItemBounds.Width;
+		public virtual double ItemHeight => ItemBounds.Height;
 
 
 		public Rect ItemBounds

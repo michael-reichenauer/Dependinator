@@ -148,6 +148,7 @@
     <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
+    <Compile Include="ModelViewing\Nodes\NodeControlPoint.cs" />
     <Compile Include="ModelViewing\Nodes\NodePointsView2Model.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\LineViewData.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\LinkType.cs" />

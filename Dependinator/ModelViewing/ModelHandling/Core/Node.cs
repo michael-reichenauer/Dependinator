@@ -39,7 +39,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		public bool IsRoot => this == Root;
 
 		public NodeViewData View { get; private set; }
-		public bool IsSelected { get; set; }
 
 
 		public void AddChild(Node child)

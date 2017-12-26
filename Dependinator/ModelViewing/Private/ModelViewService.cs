@@ -7,6 +7,7 @@ using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.Nodes.Private;
 using Dependinator.Utils;
 
 
@@ -17,16 +18,19 @@ namespace Dependinator.ModelViewing.Private
 	{
 		private readonly ISettingsService settingsService;
 		private readonly IModelService modelService;
+		private readonly INodeSelectionService nodeSelectionService;
 		private readonly IProgressService progress;
 
 
 		public ModelViewService(
 			ISettingsService settingsService,
 			IModelService modelService,
+			INodeSelectionService nodeSelectionService,
 			IProgressService progress)
 		{
 			this.settingsService = settingsService;
 			this.modelService = modelService;
+			this.nodeSelectionService = nodeSelectionService;
 			this.progress = progress;
 		}
 
@@ -54,6 +58,11 @@ namespace Dependinator.ModelViewing.Private
 			await modelService.RefreshAsync(refreshLayout);
 
 		public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelService.GetHiddenNodeNames();
+		public void Clicked()
+		{
+			nodeSelectionService.Clicked(null);
+		}
+
 
 		public void ShowHiddenNode(NodeName nodeName) => modelService.ShowHiddenNode(nodeName);
 

@@ -1,5 +1,5 @@
 ﻿using System.Windows;
-using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -8,10 +8,10 @@ namespace Dependinator.ModelViewing.Items
 {
 	internal class ItemsViewModel : ViewModel
 	{
-		private readonly Node node;
+		private readonly NodeViewModel node;
 
 
-		public ItemsViewModel(ItemsCanvas itemsCanvas, Node node)
+		public ItemsViewModel(ItemsCanvas itemsCanvas, NodeViewModel node)
 		{
 			this.node = node;
 			ItemsCanvas = itemsCanvas;
