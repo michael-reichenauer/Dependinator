@@ -51,26 +51,8 @@ namespace Dependinator.ModelViewing.Nodes
 		public bool IsShowBorder { get => Get(); set => Set(value); }
 
 
-		public void MouseDown(Point point)
-		{
-		}
-
-
-		public void MouseUp(Point point)
-		{
-		}
-
-
-
-
 
 		public void Move(NodeControl control, Vector viewOffset)
-		{
-			MoveNode(control, viewOffset);
-		}
-
-
-		public void MoveNode(NodeControl control, Vector viewOffset)
 		{
 			Vector offset = new Vector(viewOffset.X / ItemScale, viewOffset.Y / ItemScale);
 
@@ -144,6 +126,13 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			IsShowControls = false;
 			IsShowBorder = true;
+			nodeViewModel.IsInnerSelected = true;
+		}
+
+
+		public void ZoomRoot(double zoom, Point viewPosition)
+		{
+			nodeViewModel.ZoomRoot(zoom, viewPosition);
 		}
 	}
 }

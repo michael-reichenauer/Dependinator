@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Input;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
@@ -50,5 +51,8 @@ namespace Dependinator.ModelViewing.Items
 				MoveRootCanvas(viewOffset);
 			}
 		}
+
+
+		public bool IsSelected => node?.IsInnerSelected ?? true;
 	}
 }

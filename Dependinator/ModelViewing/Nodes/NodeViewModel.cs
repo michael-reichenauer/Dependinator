@@ -95,8 +95,13 @@ namespace Dependinator.ModelViewing.Nodes
 					}
 					
 				}
+
+				IsInnerSelected = false;
 			}
 		}
+
+		public bool IsInnerSelected { get => Get(); set => Set(value); }
+
 
 		public double RectangleLineWidth => IsShowPoints ? 0.6 * 3 : IsMouseOver ? 0.6 * 1.5 : 0.6;
 
@@ -399,5 +404,11 @@ namespace Dependinator.ModelViewing.Nodes
 		private int MembersCount => Node.Root.Descendents().Count(node => node.NodeType == NodeType.Member);
 		private int LinksCount => Node.Root.Descendents().SelectMany(node => node.SourceLinks).Count();
 		private int LinesCount => Node.Root.Descendents().SelectMany(node => node.SourceLines).Count();
+
+
+		public void ZoomRoot(double zoom, Point viewPosition)
+		{
+			Node.View.ItemsCanvas?.ZoomRootNode(zoom, viewPosition);
+		}
 	}
 }

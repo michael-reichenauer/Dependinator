@@ -11,52 +11,13 @@ namespace Dependinator.ModelViewing.Nodes
 	/// </summary>
 	public partial class NodePointsView : UserControl
 	{
-		//private readonly DragUiElement dragUiElement;
-		//private readonly DragUiElement leftTop;
-		//private readonly DragUiElement leftBottom;
-		//private readonly DragUiElement rightTop;
-		//private readonly DragUiElement rightBottom;
 		private NodeViewModel ViewModel => DataContext as NodeViewModel;
 
 		public NodePointsView()
 		{
 			InitializeComponent();
-
-			//dragUiElement = new DragUiElement(
-			//	MouseOverBorder,
-			//	(p, o) => ViewModel?.MouseMove(p, false),
-			//	() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
-			//	p => ViewModel?.MouseDown(p),
-			//	p => ViewModel?.MouseUp(p));
-
-			//leftTop = new DragUiElement(
-			//	PointLeftTop,
-			//	(p, o) => ViewModel?.MouseMove(p, false),
-			//	() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
-			//	p => ViewModel?.MouseDown(p),
-			//	p => ViewModel?.MouseUp(p));
-
-			//leftBottom = new DragUiElement(
-			//	PointLeftBottom,
-			//	(p, o) => ViewModel?.MouseMove(p, false),
-			//	() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
-			//	p => ViewModel?.MouseDown(p),
-			//	p => ViewModel?.MouseUp(p));
-
-			//rightTop = new DragUiElement(
-			//	PointRightTop,
-			//	(p, o) => ViewModel?.MouseMove(p, false),
-			//	() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
-			//	p => ViewModel?.MouseDown(p),
-			//	p => ViewModel?.MouseUp(p));
-
-			//rightBottom = new DragUiElement(
-			//	PointRightBottom,
-			//	(p, o) => ViewModel?.MouseMove(p, false),
-			//	() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
-			//	p => ViewModel?.MouseDown(p),
-			//	p => ViewModel?.MouseUp(p));
 		}
+
 
 		private void UIElement_OnMouseEnter(object sender, MouseEventArgs e) =>
 			ViewModel?.OnMouseEnter(false);
