@@ -7,5 +7,9 @@
 		LeftBottom,
 		RightTop,
 		RightBottom,
+		Top,
+		Left,
+		Right,
+		Bottom,
 	}
 }

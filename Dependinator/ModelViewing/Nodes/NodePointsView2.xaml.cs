@@ -31,6 +31,11 @@ namespace Dependinator.ModelViewing.Nodes
 				{ControlLeftBottom.Name, NodeControl.LeftBottom},
 				{ControlRightTop.Name, NodeControl.RightTop},
 				{ControlRightBottom.Name, NodeControl.RightBottom},
+
+				{ControlTop.Name, NodeControl.Top},
+				{ControlLeft.Name, NodeControl.Left},
+				{ControlRight.Name, NodeControl.Right},
+				{ControlBottom.Name, NodeControl.Bottom},
 			};
 		}
 

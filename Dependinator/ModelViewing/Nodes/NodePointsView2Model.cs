@@ -108,6 +108,26 @@ namespace Dependinator.ModelViewing.Nodes
 					newSize = new Size(size.Width + offset.X, size.Height + offset.Y);
 					newCanvasMove = new Vector(0, 0);
 					break;
+				case NodeControl.Top:
+					newLocation = location + new Vector(0, offset.Y);
+					newSize = new Size(size.Width, size.Height - offset.Y);
+					newCanvasMove = new Vector(0, -offset.Y * ItemScale);
+					break;
+				case NodeControl.Left:
+					newLocation = location + new Vector(offset.X, 0);
+					newSize = new Size(size.Width - offset.X, size.Height);
+					newCanvasMove = new Vector(-offset.X * ItemScale, 0);
+					break;
+				case NodeControl.Right:
+					newLocation = location + new Vector(0, 0);
+					newSize = new Size(size.Width + offset.X, size.Height);
+					newCanvasMove = new Vector(0, 0);
+					break;
+				case NodeControl.Bottom:
+					newLocation = location;
+					newSize = new Size(size.Width, size.Height + offset.Y);
+					newCanvasMove = new Vector(0, 0);
+					break;
 				default:
 					throw new ArgumentOutOfRangeException(nameof(control), control, null);
 			}

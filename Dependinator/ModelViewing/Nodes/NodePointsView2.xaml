@@ -91,6 +91,63 @@
 			VerticalAlignment="Bottom"
 			Cursor="SizeNWSE"
 			MouseMove="Control_OnMouseMove"/>
-		
+
+		<Rectangle
+			Name="ControlTop"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding Brush}"
+			StrokeThickness="1"
+			Fill="{Binding Brush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Center"
+			VerticalAlignment="Top"
+			Cursor="SizeNS"
+			MouseMove="Control_OnMouseMove"/>
+
+		<Rectangle
+			Name="ControlLeft"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding Brush}"
+			StrokeThickness="1"
+			Fill="{Binding Brush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Left"
+			VerticalAlignment="Center" 
+			Cursor="SizeWE"
+			MouseMove="Control_OnMouseMove"/>
+
+		<Rectangle
+			Name="ControlRight"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding Brush}"
+			StrokeThickness="1"
+			Fill="{Binding Brush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Right"
+			VerticalAlignment="Center"
+			Cursor="SizeWE"
+			MouseMove="Control_OnMouseMove"/>
+
+		<Rectangle
+			Name="ControlBottom"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding Brush}"
+			StrokeThickness="1"
+			Fill="{Binding Brush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Center"
+			VerticalAlignment="Bottom"
+			Cursor="SizeNS"
+			MouseMove="Control_OnMouseMove"/>
+
+
 	</Grid>
 </UserControl>
