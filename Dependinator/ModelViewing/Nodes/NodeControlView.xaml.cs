@@ -17,6 +17,7 @@ namespace Dependinator.ModelViewing.Nodes
 		private NodePointsView2Model ViewModel => DataContext as NodePointsView2Model;
 		private readonly Dictionary<string, NodeControl> points;
 		private MouseClicked mouseClicked;
+		private MouseClicked mouseClickedEdit;
 		private Point? lastMousePoint;
 
 
@@ -25,6 +26,8 @@ namespace Dependinator.ModelViewing.Nodes
 			InitializeComponent();
 
 			mouseClicked = new MouseClicked(ControlCenter, Clicked);
+			mouseClickedEdit = new MouseClicked(EditNode, ClickedEdit);
+
 			points = new Dictionary<string, NodeControl>
 			{
 				{ControlCenter.Name, NodeControl.Center},
@@ -42,6 +45,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		private void Clicked(MouseButtonEventArgs e) => ViewModel.Clicked(e);
+		private void ClickedEdit(MouseButtonEventArgs e) => ViewModel.ClickedEditNode(e);
 
 		protected override void OnMouseWheel(MouseWheelEventArgs e)
 		{
@@ -56,12 +60,12 @@ namespace Dependinator.ModelViewing.Nodes
 			if (Mouse.LeftButton == MouseButtonState.Pressed)
 			{
 				rectangle.CaptureMouse();
+
 				if (lastMousePoint.HasValue)
 				{
 					Vector viewOffset = viewPosition - lastMousePoint.Value;
 
-					NodeControl control = points[rectangle.Name];
-					ViewModel?.Move(control, viewOffset);
+					Move(rectangle, viewOffset);
 				}
 
 				lastMousePoint = viewPosition;
@@ -73,6 +77,13 @@ namespace Dependinator.ModelViewing.Nodes
 				rectangle.ReleaseMouseCapture();
 				lastMousePoint = null;
 			}
+		}
+
+
+		private void Move(Rectangle rectangle, Vector viewOffset)
+		{
+			NodeControl control = points[rectangle.Name];
+			ViewModel?.Move(control, viewOffset);
 		}
 	}
 }

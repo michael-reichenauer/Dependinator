@@ -22,8 +22,7 @@
 			StrokeThickness="1"
 			Stretch="Fill"
 			Cursor="Hand"
-			MouseMove="Control_OnMouseMove">
-		</Rectangle>
+			MouseMove="Control_OnMouseMove" />
 
 		<Rectangle
 			Visibility="{Binding IsShowBorder, Converter={StaticResource VC}}"
@@ -31,9 +30,7 @@
 			Margin="{Binding CenterMargin}"
 			Stroke="{Binding Brush}"
 			StrokeThickness="1"
-			Stretch="Fill">
-		</Rectangle>
-		
+			Stretch="Fill" />
 
 
 		<Rectangle
@@ -48,7 +45,7 @@
 			HorizontalAlignment="Left"
 			VerticalAlignment="Top"
 			Cursor="SizeNWSE"
-			MouseMove="Control_OnMouseMove"/>
+			MouseMove="Control_OnMouseMove" />
 
 		<Rectangle
 			Name="ControlLeftBottom"
@@ -60,9 +57,9 @@
 			Width="8"
 			Height="8"
 			HorizontalAlignment="Left"
-			VerticalAlignment="Bottom" 
+			VerticalAlignment="Bottom"
 			Cursor="SizeNESW"
-			MouseMove="Control_OnMouseMove"/>
+			MouseMove="Control_OnMouseMove" />
 
 		<Rectangle
 			Name="ControlRightTop"
@@ -74,9 +71,9 @@
 			Width="8"
 			Height="8"
 			HorizontalAlignment="Right"
-			VerticalAlignment="Top" 
+			VerticalAlignment="Top"
 			Cursor="SizeNESW"
-			MouseMove="Control_OnMouseMove"/>
+			MouseMove="Control_OnMouseMove" />
 
 		<Rectangle
 			Name="ControlRightBottom"
@@ -90,7 +87,7 @@
 			HorizontalAlignment="Right"
 			VerticalAlignment="Bottom"
 			Cursor="SizeNWSE"
-			MouseMove="Control_OnMouseMove"/>
+			MouseMove="Control_OnMouseMove" />
 
 		<Rectangle
 			Name="ControlTop"
@@ -104,7 +101,7 @@
 			HorizontalAlignment="Center"
 			VerticalAlignment="Top"
 			Cursor="SizeNS"
-			MouseMove="Control_OnMouseMove"/>
+			MouseMove="Control_OnMouseMove" />
 
 		<Rectangle
 			Name="ControlLeft"
@@ -116,9 +113,9 @@
 			Width="8"
 			Height="8"
 			HorizontalAlignment="Left"
-			VerticalAlignment="Center" 
+			VerticalAlignment="Center"
 			Cursor="SizeWE"
-			MouseMove="Control_OnMouseMove"/>
+			MouseMove="Control_OnMouseMove" />
 
 		<Rectangle
 			Name="ControlRight"
@@ -132,7 +129,7 @@
 			HorizontalAlignment="Right"
 			VerticalAlignment="Center"
 			Cursor="SizeWE"
-			MouseMove="Control_OnMouseMove"/>
+			MouseMove="Control_OnMouseMove" />
 
 		<Rectangle
 			Name="ControlBottom"
@@ -146,8 +143,29 @@
 			HorizontalAlignment="Center"
 			VerticalAlignment="Bottom"
 			Cursor="SizeNS"
-			MouseMove="Control_OnMouseMove"/>
+			MouseMove="Control_OnMouseMove" />
 
+		<TextBlock
+			Name="EditNode"
+			Visibility="{Binding CanShowEditNode, Converter={StaticResource VC}}"
+			Margin="20"
+			Style="{DynamicResource MenuIconStyle}"
+			Text="&#xE22F;"
+			FontSize="25"
+			Foreground="{Binding Brush}"
+			HorizontalAlignment="Right"
+			VerticalAlignment="Top"
+			UseLayoutRounding="True"
+			TextOptions.TextFormattingMode="Ideal">
+
+			<TextBlock.ToolTip>
+				<ToolTip
+					Content="Toggle edit mode for content of this node"
+					Placement="Mouse"
+					BorderBrush="{DynamicResource BorderBrush}"
+					BorderThickness="1" />
+			</TextBlock.ToolTip>
+		</TextBlock>
 
 	</Grid>
 </UserControl>

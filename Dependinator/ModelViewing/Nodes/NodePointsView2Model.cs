@@ -50,19 +50,58 @@ namespace Dependinator.ModelViewing.Nodes
 		public bool IsShowControls { get => Get(); set => Set(value); }
 		public bool IsShowBorder { get => Get(); set => Set(value); }
 
+		public bool CanShowEditNode => nodeViewModel.CanShowChildren;
+
+
+		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) => 
+			nodeViewModel.OnMouseWheel(uiElement, e);
+
+
+		public void ClickedEditNode(MouseButtonEventArgs e)
+		{
+			if (!IsShowBorder)
+			{
+				IsShowControls = false;
+				IsShowBorder = true;
+				nodeViewModel.IsInnerSelected = true;
+			}
+			else
+			{
+				IsShowControls = true;
+				IsShowBorder = false;
+				nodeViewModel.IsInnerSelected = false;
+			}
+		}
+
+
+		public void Clicked(MouseButtonEventArgs e)
+		{
+			nodeViewModel.MouseClickedUnselect(e);
+		}
 
 
 		public void Move(NodeControl control, Vector viewOffset)
 		{
 			Vector offset = new Vector(viewOffset.X / ItemScale, viewOffset.Y / ItemScale);
+			
+			Point newLocation = GetMoveData(control, offset, out Size newSize, out Vector newCanvasMove);
 
+			nodeViewModel.ItemBounds = new Rect(newLocation, newSize);
+			nodeViewModel.NotifyAll();
+			nodeViewModel.ItemsViewModel?.MoveCanvas(newCanvasMove);
+			ItemOwnerCanvas.UpdateItem(nodeViewModel);
+		}
+
+
+		private Point GetMoveData(
+			NodeControl control,
+			Vector offset, 
+			out Size newSize,
+			out Vector newCanvasMove)
+		{
 			Point location = nodeViewModel.ItemBounds.Location;
 			Size size = nodeViewModel.ItemBounds.Size;
-
 			Point newLocation;
-			Size newSize;
-			Vector newCanvasMove;
-
 			switch (control)
 			{
 				case NodeControl.Center:
@@ -114,31 +153,7 @@ namespace Dependinator.ModelViewing.Nodes
 					throw new ArgumentOutOfRangeException(nameof(control), control, null);
 			}
 
-
-			nodeViewModel.ItemBounds = new Rect(newLocation, newSize);
-			nodeViewModel.NotifyAll();
-			nodeViewModel.ItemsViewModel?.MoveCanvas(newCanvasMove);
-			ItemOwnerCanvas.UpdateItem(nodeViewModel);
-		}
-
-
-		public void Clicked(MouseButtonEventArgs e)
-		{
-			IsShowControls = false;
-			IsShowBorder = true;
-			nodeViewModel.IsInnerSelected = true;
-		}
-
-
-		//public void ZoomRoot(double zoom, Point viewPosition)
-		//{
-		//	nodeViewModel.ZoomRoot(zoom, viewPosition);
-		//}
-
-
-		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e)
-		{
-			nodeViewModel.OnMouseWheel(uiElement, e);
+			return newLocation;
 		}
 	}
 }
