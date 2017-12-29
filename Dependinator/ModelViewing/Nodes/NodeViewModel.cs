@@ -60,7 +60,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public string Name => Node.Name.DisplayName;
 
-		private NodePointsView2Model view2Model;
+		private NodeControlViewModel view2Model;
 
 		public bool IsSelected
 		{
@@ -69,7 +69,7 @@ namespace Dependinator.ModelViewing.Nodes
 			{
 				if (value)
 				{
-					view2Model = new NodePointsView2Model(this);
+					view2Model = new NodeControlViewModel(this);
 					Node.Parent.View.ItemsCanvas.AddItem(view2Model);
 				}
 				else

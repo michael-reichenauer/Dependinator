@@ -116,13 +116,22 @@ namespace Dependinator.ModelViewing.Items
 
 			foreach (IItem item in items)
 			{
+				if (viewItemsTree.Any())
+				{
+					currentBounds.Union(item.ItemBounds);
+				}
+				else
+				{
+					currentBounds = item.ItemBounds;
+				}
+
 				int itemId = currentItemId++;
 				item.ItemState = new ViewItem(itemId, item.ItemBounds);
 				viewItems[itemId] = item;
 
 				viewItemsTree.Insert(item, item.ItemBounds, item.Priority);
 
-				currentBounds.Union(item.ItemBounds);
+			
 
 				if (!isQueryItemsChanged && item.ItemBounds.IntersectsWith(LastViewAreaQuery))
 				{
@@ -218,12 +227,21 @@ namespace Dependinator.ModelViewing.Items
 		private void ItemsBoundsChanged()
 		{
 			Rect currentBounds = EmptyExtent;
+			bool isFirst = true;
 
-			foreach (IItem virtualItem in viewItems.Values)
+			foreach (IItem virtualItem in viewItemsTree)
 			{
 				if (virtualItem.CanShow)
 				{
-					currentBounds.Union(virtualItem.ItemBounds);
+					if (isFirst)
+					{
+						currentBounds = virtualItem.ItemBounds;
+						isFirst = false;
+					}
+					else
+					{
+						currentBounds.Union(virtualItem.ItemBounds);
+					}
 				}
 			}
 

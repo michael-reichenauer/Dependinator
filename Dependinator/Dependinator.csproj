@@ -149,7 +149,7 @@
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControl.cs" />
-    <Compile Include="ModelViewing\Nodes\NodePointsView2Model.cs" />
+    <Compile Include="ModelViewing\Nodes\NodeControlViewModel.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\LineViewData.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\LinkType.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\NodeTraversalExtensions.cs" />

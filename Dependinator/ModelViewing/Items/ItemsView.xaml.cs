@@ -46,6 +46,8 @@ namespace Dependinator.ModelViewing.Items
 
 			if (Mouse.LeftButton == MouseButtonState.Pressed)
 			{
+				CaptureMouse();
+
 				if (lastMousePoint.HasValue)
 				{
 					Vector viewOffset = viewPosition - lastMousePoint.Value;
@@ -58,6 +60,7 @@ namespace Dependinator.ModelViewing.Items
 			}
 			else
 			{
+				ReleaseMouseCapture();
 				lastMousePoint = null;
 			}
 		}

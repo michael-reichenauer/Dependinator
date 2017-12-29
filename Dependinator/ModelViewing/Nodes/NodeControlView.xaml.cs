@@ -10,11 +10,11 @@ using Dependinator.Utils.UI;
 namespace Dependinator.ModelViewing.Nodes
 {
 	/// <summary>
-	/// Interaction logic for NodePointsView.xaml
+	/// Interaction logic for NodeControlView.xaml
 	/// </summary>
 	public partial class NodeControlView : UserControl
 	{
-		private NodePointsView2Model ViewModel => DataContext as NodePointsView2Model;
+		private NodeControlViewModel ViewModel => DataContext as NodeControlViewModel;
 		private readonly Dictionary<string, NodeControl> points;
 		private MouseClicked mouseClicked;
 		private MouseClicked mouseClickedEdit;
@@ -47,10 +47,8 @@ namespace Dependinator.ModelViewing.Nodes
 		private void Clicked(MouseButtonEventArgs e) => ViewModel.Clicked(e);
 		private void ClickedEdit(MouseButtonEventArgs e) => ViewModel.ClickedEditNode(e);
 
-		protected override void OnMouseWheel(MouseWheelEventArgs e)
-		{
-			ViewModel.OnMouseWheel(this, e);
-		}
+		protected override void OnMouseWheel(MouseWheelEventArgs e) => ViewModel.OnMouseWheel(this, e);
+
 
 		private void Control_OnMouseMove(object sender, MouseEventArgs e)
 		{

@@ -118,7 +118,7 @@
 						</Setter>
 					</DataTrigger>
 
-					<DataTrigger Binding="{Binding ViewName}" Value="NodePointsView2Model">
+					<DataTrigger Binding="{Binding ViewName}" Value="NodeControlViewModel">
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>

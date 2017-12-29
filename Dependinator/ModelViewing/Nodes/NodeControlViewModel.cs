@@ -8,7 +8,7 @@ using Dependinator.ModelViewing.Items;
 
 namespace Dependinator.ModelViewing.Nodes
 {
-	internal class NodePointsView2Model : ItemViewModel
+	internal class NodeControlViewModel : ItemViewModel
 	{
 		private static readonly int MarginPoints = 10;
 		private static readonly SolidColorBrush ControlBrush = Converter.BrushFromHex("#FFB0C4DE");
@@ -16,7 +16,7 @@ namespace Dependinator.ModelViewing.Nodes
 		private readonly NodeViewModel nodeViewModel;
 
 
-		public NodePointsView2Model(NodeViewModel nodeViewModel)
+		public NodeControlViewModel(NodeViewModel nodeViewModel)
 		{
 			this.nodeViewModel = nodeViewModel;
 
@@ -86,7 +86,22 @@ namespace Dependinator.ModelViewing.Nodes
 			
 			Point newLocation = GetMoveData(control, offset, out Size newSize, out Vector newCanvasMove);
 
-			nodeViewModel.ItemBounds = new Rect(newLocation, newSize);
+			if (newSize.Width < 50 || newSize.Height < 50)
+			{
+				// Node to small
+				return;
+			}
+
+			Rect newBounds = new Rect(newLocation, newSize);
+
+			if (!nodeViewModel.ItemOwnerCanvas.IsNodeInViewBox(newBounds))
+			{
+				// Node (if moved) would not bew withing visibale view
+				return;
+			}
+
+			nodeViewModel.ItemBounds = newBounds;
+			
 			nodeViewModel.NotifyAll();
 			nodeViewModel.ItemsViewModel?.MoveCanvas(newCanvasMove);
 			ItemOwnerCanvas.UpdateItem(nodeViewModel);
@@ -101,6 +116,7 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			Point location = nodeViewModel.ItemBounds.Location;
 			Size size = nodeViewModel.ItemBounds.Size;
+
 			Point newLocation;
 			switch (control)
 			{

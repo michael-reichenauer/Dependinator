@@ -33,8 +33,8 @@ namespace Dependinator.ModelViewing.Items
 			ItemsCanvas.SetZoomableCanvas(zoomableCanvas);
 
 
-		public void MoveCanvas(Vector viewOffset) => ItemsCanvas.Move(viewOffset);
-		public void MoveRootCanvas(Vector viewOffset) => ItemsCanvas.MoveRootNode(viewOffset);
+		public void MoveCanvas(Vector viewOffset) => ItemsCanvas.MoveCanvas(viewOffset);
+		public void MoveRootCanvas(Vector viewOffset) => ItemsCanvas.MoveRootCanvas(viewOffset);
 
 		public void ZoomRoot(double zoom, Point viewPosition) => ItemsCanvas.ZoomRootNode(zoom, viewPosition);
 

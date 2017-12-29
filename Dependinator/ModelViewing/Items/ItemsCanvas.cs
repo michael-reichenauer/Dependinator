@@ -6,6 +6,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.Common;
 using Dependinator.ModelViewing.Items.Private;
+using Dependinator.ModelViewing.Nodes;
+using Dependinator.Utils;
 using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -173,12 +175,21 @@ namespace Dependinator.ModelViewing.Items
 		}
 
 
-		public void MoveRootNode(Vector viewOffset)
+		public void MoveRootCanvas(Vector viewOffset)
 		{
-			RootCanvas.Move(viewOffset);
+			RootCanvas.MoveCanvas(viewOffset);
 		}
 
-		public void Move(Vector viewOffset)
+
+		public bool IsNodeInViewBox(Rect bounds)
+		{
+			Rect viewbox = GetViewBox();
+
+			return viewbox.IntersectsWith(bounds);
+		}
+
+
+		public void MoveCanvas(Vector viewOffset)
 		{
 			if (!IsZoomAndMoveEnabled)
 			{
@@ -187,22 +198,61 @@ namespace Dependinator.ModelViewing.Items
 
 			Vector moveOffset = new Vector(viewOffset.X / Scale, viewOffset.Y / Scale);
 
-			itemsSource.GetAllItems().ToList().ForEach(item => item.MoveItem(moveOffset));
+			Rect viewbox = GetViewBox();
 
-			//foreach (NodeViewModel nodeViewModel in GetNodeItems())
-			//{
-			//	Point newLocation = nodeViewModel.ItemBounds.Location + moveOffset;
-			//	nodeViewModel.ItemBounds = new Rect(newLocation, nodeViewModel.ItemBounds.Size);
-			//}
+			if (!IsAnyNodesWithinView(viewbox, moveOffset))
+			{
+				// No node (if moved) would be withing visibale view
+				return;
+			}
+			
+			itemsSource.GetAllItems().ForEach(item => item.MoveItem(moveOffset));
 
-			TriggerInvalidated();
 			UpdateAndNotifyAll();
+			TriggerInvalidated();
 			UpdateShownItemsInChildren();
 		}
 
 
-		//private IEnumerable<NodeViewModel> GetNodeItems() => itemsSource.GetAllItems()
-		//	.Where(i => i is NodeViewModel).Cast<NodeViewModel>();
+		private Rect GetViewBox()
+		{
+			Rect viewbox = zoomableCanvas.ActualViewbox;
+			viewbox.Inflate(-30 / Scale, -30 / Scale);
+			return viewbox;
+		}
+
+
+		private bool IsAnyNodesWithinView(Rect viewbox, Vector moveOffset)
+		{
+			IEnumerable<IItem> nodes = itemsSource.GetAllItems().Where(i => i is NodeViewModel );
+			foreach (IItem node in nodes)
+			{
+				if (node.CanShow)
+				{
+					if (IsNodeInViewBox(node, viewbox, moveOffset))
+					{
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+
+		private static bool IsNodeInViewBox(IItem node, Rect viewbox, Vector moveOffset)
+		{
+			Point location = node.ItemBounds.Location;
+			Size size = node.ItemBounds.Size;
+
+			Rect newBounds = new Rect(location + moveOffset, size);
+			if (viewbox.IntersectsWith(newBounds))
+			{
+				return true;
+			}
+
+			return false;
+		}
 
 
 		private void UpdateShownItemsInChildren()
@@ -245,7 +295,7 @@ namespace Dependinator.ModelViewing.Items
 					Vector position = (Vector)zoomCenter;
 
 					Vector moveOffset = position * zoomFactor - position;
-					Move(-moveOffset);
+					MoveCanvas(-moveOffset);
 				}
 
 				zoomableCanvas.Scale = Scale;
