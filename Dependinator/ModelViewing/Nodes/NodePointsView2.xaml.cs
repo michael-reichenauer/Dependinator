@@ -17,7 +17,7 @@ namespace Dependinator.ModelViewing.Nodes
 		private NodePointsView2Model ViewModel => DataContext as NodePointsView2Model;
 		private readonly Dictionary<string, NodeControl> points;
 		private MouseClicked mouseClicked;
-		private Point lastMousePoint;
+		private Point? lastMousePoint;
 
 
 		public NodePointsView2()
@@ -64,19 +64,23 @@ namespace Dependinator.ModelViewing.Nodes
 			if (Mouse.LeftButton == MouseButtonState.Pressed)
 			{
 				rectangle.CaptureMouse();
-				Vector viewOffset = viewPosition - lastMousePoint;
-				
-				NodeControl control = points[rectangle.Name];
-				ViewModel?.Move(control, viewOffset);
+				if (lastMousePoint.HasValue)
+				{
+					Vector viewOffset = viewPosition - lastMousePoint.Value;
+
+					NodeControl control = points[rectangle.Name];
+					ViewModel?.Move(control, viewOffset);
+				}
+
+				lastMousePoint = viewPosition;
 
 				e.Handled = true;
 			}
 			else
 			{
 				rectangle.ReleaseMouseCapture();
+				lastMousePoint = null;
 			}
-
-			lastMousePoint = viewPosition;
 		}
 	}
 }

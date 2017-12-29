@@ -211,9 +211,6 @@
     <Compile Include="ModelViewing\ModelHandling\Core\ModelLink.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\ModelItemsCallback.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\Private\Serializing\Convert.cs" />
-    <Compile Include="ModelViewing\Nodes\NodePointsView.xaml.cs">
-      <DependentUpon>NodePointsView.xaml</DependentUpon>
-    </Compile>
     <Compile Include="ModelViewing\Nodes\TitleView.xaml.cs">
       <DependentUpon>TitleView.xaml</DependentUpon>
     </Compile>
@@ -442,10 +439,6 @@
     <Page Include="ModelViewing\Nodes\NodePointsView2.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-    </Page>
-    <Page Include="ModelViewing\Nodes\NodePointsView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ModelViewing\Nodes\TitleView.xaml">
       <SubType>Designer</SubType>

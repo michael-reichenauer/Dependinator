@@ -19,23 +19,16 @@ namespace Dependinator.ModelViewing.Nodes
 	{
 		private readonly INodeViewModelService nodeViewModelService;
 
-		private readonly DelayDispatcher delayDispatcher = new DelayDispatcher();
 
 		private readonly Lazy<ObservableCollection<LinkItem>> incomingLinks;
 		private readonly Lazy<ObservableCollection<LinkItem>> outgoingLinks;
 
-		private static TimeSpan MouseEnterDelay => ModelViewModel.IsControlling
-			? TimeSpan.FromMilliseconds(1) : ModelViewModel.MouseEnterDelay;
-
-		private static TimeSpan MouseExitDelay => TimeSpan.FromMilliseconds(10);
-
-
 
 		private bool isFirstShow = true;
-		private int currentPointIndex = -1;
-		private int pointIndex = -1;
-		private Point mouseDownPoint;
-		private Point mouseMovedPoint;
+		//private int currentPointIndex = -1;
+
+		//private Point mouseDownPoint;
+		//private Point mouseMovedPoint;
 
 
 		protected NodeViewModel(INodeViewModelService nodeViewModelService, Node node)
@@ -216,150 +209,150 @@ namespace Dependinator.ModelViewing.Nodes
 		//$"Items: {ItemOwnerCanvas.CanvasRoot.AllItemsCount()}, Shown {ItemOwnerCanvas.CanvasRoot.ShownItemsCount()}";
 
 
-		public void OnMouseEnter(bool isTitle)
-		{
-			delayDispatcher.Delay(MouseEnterDelay, _ =>
-			{
-				if (ModelViewModel.IsControlling)
-				{
-					Mouse.OverrideCursor = Cursors.Hand;
-					if (!isTitle)
-					{
+		//public void OnMouseEnter(bool isTitle)
+		//{
+		//	delayDispatcher.Delay(MouseEnterDelay, _ =>
+		//	{
+		//		if (ModelViewModel.IsControlling)
+		//		{
+		//			Mouse.OverrideCursor = Cursors.Hand;
+		//			if (!isTitle)
+		//			{
 						
 
-						Point screenPoint = Mouse.GetPosition(Application.Current.MainWindow);
-						Point point = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
-						nodeViewModelService.GetPointIndex(Node, point);
-					}
-				}
+		//				Point screenPoint = Mouse.GetPosition(Application.Current.MainWindow);
+		//				Point point = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
+		//				nodeViewModelService.GetPointIndex(Node, point);
+		//			}
+		//		}
 
-				if (IsResizable())
-				{
-					IsShowPoints = ModelViewModel.IsControlling;
-				}
+		//		if (IsResizable())
+		//		{
+		//			IsShowPoints = ModelViewModel.IsControlling;
+		//		}
 
-				IsMouseOver = true;
-			});
-		}
-
-
-		public void OnMouseLeave()
-		{
-			if (!IsShowPoints)
-			{
-				Mouse.OverrideCursor = null;
-				delayDispatcher.Cancel();
-				IsShowPoints = false;
-				IsMouseOver = false;
-				pointIndex = -1;
-			}
-			else
-			{
-				delayDispatcher.Delay(MouseExitDelay, _ =>
-				{
-					if (pointIndex == -1)
-					{
-						IsShowPoints = false;
-						OnMouseLeave();
-					}
-				});
-			}
-		}
-
-		public void OnMouseEnterPoint(int index)
-		{
-			pointIndex = index;
-			switch (index)
-			{
-				case 1:
-					Mouse.OverrideCursor = Cursors.SizeNWSE;
-					break;
-				case 2:
-					Mouse.OverrideCursor = Cursors.SizeNESW;
-					break;
-				case 3:
-					Mouse.OverrideCursor = Cursors.SizeNWSE;
-					break;
-				case 4:
-					Mouse.OverrideCursor = Cursors.SizeNESW;
-					break;
-			}
-		}
+		//		IsMouseOver = true;
+		//	});
+		//}
 
 
-		public void OnMouseLeavePoint(int index)
-		{
-			pointIndex = -1;
-			IsShowPoints = false;
-			OnMouseLeave();
-		}
+		//public void OnMouseLeave()
+		//{
+		//	if (!IsShowPoints)
+		//	{
+		//		Mouse.OverrideCursor = null;
+		//		delayDispatcher.Cancel();
+		//		IsShowPoints = false;
+		//		IsMouseOver = false;
+		//		pointIndex = -1;
+		//	}
+		//	else
+		//	{
+		//		delayDispatcher.Delay(MouseExitDelay, _ =>
+		//		{
+		//			if (pointIndex == -1)
+		//			{
+		//				IsShowPoints = false;
+		//				OnMouseLeave();
+		//			}
+		//		});
+		//	}
+		//}
+
+		//public void OnMouseEnterPoint(int index)
+		//{
+		//	pointIndex = index;
+		//	switch (index)
+		//	{
+		//		case 1:
+		//			Mouse.OverrideCursor = Cursors.SizeNWSE;
+		//			break;
+		//		case 2:
+		//			Mouse.OverrideCursor = Cursors.SizeNESW;
+		//			break;
+		//		case 3:
+		//			Mouse.OverrideCursor = Cursors.SizeNWSE;
+		//			break;
+		//		case 4:
+		//			Mouse.OverrideCursor = Cursors.SizeNESW;
+		//			break;
+		//	}
+		//}
 
 
-		public void MouseDown(Point screenPoint)
-		{
-			mouseDownPoint = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
-			mouseMovedPoint = mouseDownPoint;
-
-			if (pointIndex == -1)
-			{
-				currentPointIndex = -1;
-			}
-			else
-			{
-				currentPointIndex = pointIndex;
-			}
-		}
+		//public void OnMouseLeavePoint(int index)
+		//{
+		//	pointIndex = -1;
+		//	IsShowPoints = false;
+		//	OnMouseLeave();
+		//}
 
 
-		public void MouseMove(Point screenPoint, bool isTitle)
-		{
-			Point point = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
+		//public void MouseDown(Point screenPoint)
+		//{
+		//	mouseDownPoint = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
+		//	mouseMovedPoint = mouseDownPoint;
 
-			if (currentPointIndex == -1)
-			{
-				// First move event, lets start a move by  getting the index of point to move.
-				// THis might create a new point if there is no existing point near the mouse down point
-				currentPointIndex = isTitle ? 0 :
-					nodeViewModelService.GetPointIndex(Node, mouseDownPoint);
-				if (currentPointIndex == -1)
-				{
-					// Point not close enough to the line
-					return;
-				}
-
-				if (!IsResizable())
-				{
-					// Only support move if scale is small
-					currentPointIndex = 0;
-				}
-			}
-
-			if (nodeViewModelService.MovePoint(Node, currentPointIndex, point, mouseMovedPoint))
-			{
-				mouseMovedPoint = point;
-			}
-
-			IsMouseOver = true;
-			if (IsResizable())
-			{
-				IsShowPoints = true;
-			}
-
-			//Node.ItemsCanvas?.UpdateAndNotifyAll();
-
-			//NotifyAll();
-		}
+		//	if (pointIndex == -1)
+		//	{
+		//		currentPointIndex = -1;
+		//	}
+		//	else
+		//	{
+		//		currentPointIndex = pointIndex;
+		//	}
+		//}
 
 
+		//public void MouseMove(Point screenPoint, bool isTitle)
+		//{
+		//	Point point = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
+
+		//	if (currentPointIndex == -1)
+		//	{
+		//		// First move event, lets start a move by  getting the index of point to move.
+		//		// THis might create a new point if there is no existing point near the mouse down point
+		//		currentPointIndex = isTitle ? 0 :
+		//			nodeViewModelService.GetPointIndex(Node, mouseDownPoint);
+		//		if (currentPointIndex == -1)
+		//		{
+		//			// Point not close enough to the line
+		//			return;
+		//		}
+
+		//		if (!IsResizable())
+		//		{
+		//			// Only support move if scale is small
+		//			currentPointIndex = 0;
+		//		}
+		//	}
+
+		//	if (nodeViewModelService.MovePoint(Node, currentPointIndex, point, mouseMovedPoint))
+		//	{
+		//		mouseMovedPoint = point;
+		//	}
+
+		//	IsMouseOver = true;
+		//	if (IsResizable())
+		//	{
+		//		IsShowPoints = true;
+		//	}
+
+		//	//Node.ItemsCanvas?.UpdateAndNotifyAll();
+
+		//	//NotifyAll();
+		//}
 
 
-		private bool IsResizable()
-		{
-			return ItemWidth * ItemScale > 70 || ItemHeight * ItemScale > 70;
-		}
 
 
-		public void MouseUp(Point screenPoint) => currentPointIndex = -1;
+		//private bool IsResizable()
+		//{
+		//	return ItemWidth * ItemScale > 70 || ItemHeight * ItemScale > 70;
+		//}
+
+
+		//public void MouseUp(Point screenPoint) => currentPointIndex = -1;
 
 		public override string ToString() => Node.Name.ToString();
 

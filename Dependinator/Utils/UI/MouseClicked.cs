@@ -23,19 +23,25 @@ namespace Dependinator.Utils.UI
 
 		private void MouseDown(MouseButtonEventArgs e)
 		{
-			clickedStopwatch.Restart();
-			mouseDownPoint = e.GetPosition(Application.Current.MainWindow);
+			if (e.ChangedButton == MouseButton.Left)
+			{
+				clickedStopwatch.Restart();
+				mouseDownPoint = e.GetPosition(Application.Current.MainWindow);
+			}
 		}
 
 
 		private void MouseUp(MouseButtonEventArgs e)
 		{
-			if (e.ClickCount == 1)
+			if (e.ChangedButton == MouseButton.Left)
 			{
-				if ((mouseDownPoint - e.GetPosition(Application.Current.MainWindow)).Length < 5 &&
-				    clickedStopwatch.ElapsedMilliseconds < 200)
+				if (e.ClickCount == 1)
 				{
-					onMouseClicked(e);
+					if ((mouseDownPoint - e.GetPosition(Application.Current.MainWindow)).Length < 5 &&
+					    clickedStopwatch.ElapsedMilliseconds < 200)
+					{
+						onMouseClicked(e);
+					}
 				}
 			}
 		}

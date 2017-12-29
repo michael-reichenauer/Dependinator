@@ -18,10 +18,7 @@
 			BorderThickness="0 0 0 0.4"
 			Height="20"
 			Background="Transparent" 
-			VerticalAlignment="Top"
-			MouseEnter="UIElement_OnMouseEnter"
-			MouseLeave="UIElement_OnMouseLeave"
->
+			VerticalAlignment="Top">
 
 			<TextBlock
 				Height="20"
@@ -56,9 +53,7 @@
 			Width="20"
 			Background="Transparent"
 			VerticalAlignment="Stretch"
-			HorizontalAlignment="Left"
-			MouseEnter="UIElement_OnMouseEnter"
-			MouseLeave="UIElement_OnMouseLeave">
+			HorizontalAlignment="Left">
 
 			<TextBlock
 				Margin="2,10"

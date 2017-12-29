@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing.Items
 		//private static readonly double ZoomSpeed = 2000.0;
 
 		//private Point initialMousePoint;
-		private Point lastMousePoint;
+		private Point? lastMousePoint;
 
 		private TouchPoint initialTouchPoint1;
 		private TouchPoint lastTouchPoint1;
@@ -68,15 +68,23 @@ namespace Dependinator.ModelViewing.Items
 
 			if (Mouse.LeftButton == MouseButtonState.Pressed)
 			{
-				Vector viewOffset = viewPosition - lastMousePoint;
+				if (lastMousePoint.HasValue)
+				{
+					Vector viewOffset = viewPosition - lastMousePoint.Value;
 
-				viewModel?.MoveItems(viewOffset);
-				//move?.Invoke(viewPosition, viewOffset);
-				
+					viewModel?.MoveItems(viewOffset);
+					//move?.Invoke(viewPosition, viewOffset);
+				}
+
+				lastMousePoint = viewPosition;
 				e.Handled = true;
 			}
+			else
+			{
+				lastMousePoint = null;
+			}
 
-			lastMousePoint = viewPosition;
+			
 		}
 
 
