@@ -130,9 +130,15 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public void ZoomRoot(double zoom, Point viewPosition)
+		//public void ZoomRoot(double zoom, Point viewPosition)
+		//{
+		//	nodeViewModel.ZoomRoot(zoom, viewPosition);
+		//}
+
+
+		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e)
 		{
-			nodeViewModel.ZoomRoot(zoom, viewPosition);
+			nodeViewModel.OnMouseWheel(uiElement, e);
 		}
 	}
 }

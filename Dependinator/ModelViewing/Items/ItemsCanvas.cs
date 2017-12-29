@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.Common;
 using Dependinator.ModelViewing.Items.Private;
@@ -72,6 +74,25 @@ namespace Dependinator.ModelViewing.Items
 
 		public double Scale => parentCanvas?.Scale * ScaleFactor ?? rootScale;
 
+
+		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e, bool isSelected)
+		{
+			int wheelDelta = e.Delta;
+			double zoom = Math.Pow(2, wheelDelta / 2000.0);
+
+			if (isSelected)
+			{
+				Point viewPosition = e.GetPosition(uiElement);
+				ZoomNode(zoom, viewPosition);
+			}
+			else
+			{
+				Point viewPosition = e.GetPosition(Application.Current.MainWindow);
+				ZoomRootNode(zoom, viewPosition);
+			}
+			
+			e.Handled = true;
+		}
 
 
 		public void SetRootScale(double scale) => rootScale = scale;

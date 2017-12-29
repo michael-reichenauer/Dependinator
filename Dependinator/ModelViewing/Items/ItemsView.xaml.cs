@@ -17,7 +17,7 @@ namespace Dependinator.ModelViewing.Items
 	/// </summary>
 	public partial class ItemsView : UserControl
 	{
-		private static readonly double ZoomSpeed = 2000.0;
+		//private static readonly double ZoomSpeed = 2000.0;
 
 		//private Point initialMousePoint;
 		private Point lastMousePoint;
@@ -127,30 +127,30 @@ namespace Dependinator.ModelViewing.Items
 
 		protected override void OnMouseWheel(MouseWheelEventArgs e)
 		{
-			//if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && !viewModel.IsRoot)
-			//{
-			//	// Root node move only active on root node
-			//	return;
-			//}
+		//	//if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && !viewModel.IsRoot)
+		//	//{
+		//	//	// Root node move only active on root node
+		//	//	return;
+		//	//}
 
-			int wheelDelta = e.Delta;
+		//	int wheelDelta = e.Delta;
 
-			double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
+		//	double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
 			
-			//viewModel.ZoomItems(zoom, viewPosition);
+		//	//viewModel.ZoomItems(zoom, viewPosition);
 
-			if (viewModel.IsSelected)
-			{
-				Point viewPosition = e.GetPosition(ItemsListBox);
-				viewModel.Zoom(zoom, viewPosition);
-			}
-			else
-			{
-				Point viewPosition = e.GetPosition(Application.Current.MainWindow);
-				viewModel.ZoomRoot(zoom, viewPosition);
-			}
+		//	if (viewModel.IsSelected)
+		//	{
+		//		Point viewPosition = e.GetPosition(ItemsListBox);
+		//		viewModel.Zoom(zoom, viewPosition);
+		//	}
+		//	else
+		//	{
+		//		Point viewPosition = e.GetPosition(Application.Current.MainWindow);
+		//		viewModel.ZoomRoot(zoom, viewPosition);
+		//	}
 
-			e.Handled = true;
+		//	e.Handled = true;
 		}
 
 

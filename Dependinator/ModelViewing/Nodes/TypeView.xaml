@@ -31,9 +31,6 @@
 
 		<nodes:TitleView Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"/>
 
-		<!-- Rectangle points -->
-		<nodes:NodePointsView Visibility="{Binding IsShowNode, Converter={StaticResource VC}}"/>
-
 	</Grid>
 
 </UserControl>

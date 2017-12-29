@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.UI;
 
@@ -45,5 +46,8 @@ namespace Dependinator.ModelViewing
 				await ViewModel.LoadFilesAsync(filePaths);
 			}
 		}
+
+		protected override void OnMouseWheel(MouseWheelEventArgs e) => ViewModel.OnMouseWheel(this, e);
+
 	}
 }

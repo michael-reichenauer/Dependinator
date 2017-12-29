@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Input;
 using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
@@ -37,5 +38,6 @@ namespace Dependinator.ModelViewing.Links
 		double GetArrowWidth(Line line);
 		IEnumerable<LinkItem> GetSourceLinkItems(Line line);
 		IEnumerable<LinkItem> GetTargetLinkItems(Line line);
+		void OnMouseWheel(LineViewModel lineViewModel, UIElement uiElement, MouseWheelEventArgs e);
 	}
 }

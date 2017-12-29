@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
 using Dependinator.Common;
 using Dependinator.ModelViewing.Items;
 
@@ -19,5 +21,6 @@ namespace Dependinator.ModelViewing
 		void Close();
 		IReadOnlyList<NodeName> GetHiddenNodeNames();
 		void Clicked();
+		void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e);
 	}
 }

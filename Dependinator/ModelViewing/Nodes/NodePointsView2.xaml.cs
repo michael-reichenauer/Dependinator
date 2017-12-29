@@ -14,9 +14,6 @@ namespace Dependinator.ModelViewing.Nodes
 	/// </summary>
 	public partial class NodePointsView2 : UserControl
 	{
-		private static readonly double ZoomSpeed = 2000.0;
-
-
 		private NodePointsView2Model ViewModel => DataContext as NodePointsView2Model;
 		private readonly Dictionary<string, NodeControl> points;
 		private MouseClicked mouseClicked;
@@ -48,13 +45,15 @@ namespace Dependinator.ModelViewing.Nodes
 
 		protected override void OnMouseWheel(MouseWheelEventArgs e)
 		{
-			int wheelDelta = e.Delta;
-			double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
+			ViewModel.OnMouseWheel(this, e);
 
-			Point viewPosition = e.GetPosition(Application.Current.MainWindow);
-			ViewModel.ZoomRoot(zoom, viewPosition);
+			//int wheelDelta = e.Delta;
+			//double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
 
-			e.Handled = true;
+			//Point viewPosition = e.GetPosition(Application.Current.MainWindow);
+			//ViewModel.ZoomRoot(zoom, viewPosition);
+
+			//e.Handled = true;
 		}
 
 		private void Control_OnMouseMove(object sender, MouseEventArgs e)

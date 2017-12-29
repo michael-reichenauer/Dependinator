@@ -9,6 +9,7 @@ using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 
+
 namespace Dependinator.ModelViewing.Links
 {
 	internal class LineViewModel : ItemViewModel
@@ -19,7 +20,6 @@ namespace Dependinator.ModelViewing.Links
 		private readonly Lazy<ObservableCollection<LinkItem>> targetLinks;
 		private static TimeSpan MouseExitDelay => TimeSpan.FromMilliseconds(10);
 
-		private readonly Line line;
 		private Point mouseDownPoint;
 		private int currentPointIndex = -1;
 
@@ -27,7 +27,7 @@ namespace Dependinator.ModelViewing.Links
 		public LineViewModel(ILineViewModelService lineViewModelService, Line line)
 		{
 			this.lineViewModelService = lineViewModelService;
-			this.line = line;
+			this.Line = line;
 			line.View.ViewModel = this;
 			ItemZIndex = -1;
 
@@ -39,33 +39,35 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
+		public Line Line { get; }
+
 		public override bool CanShow =>
 			ItemScale < 40
-			&& line.Source.View.CanShow && line.Target.View.CanShow;
+			&& Line.Source.View.CanShow && Line.Target.View.CanShow;
 
-		public double LineWidth => lineViewModelService.GetLineWidth(line);
+		public double LineWidth => lineViewModelService.GetLineWidth(Line);
 
-		public double ArrowWidth => lineViewModelService.GetArrowWidth(line);
+		public double ArrowWidth => lineViewModelService.GetArrowWidth(Line);
 
-		public Brush LineBrush => line.Source != line.Target.Parent
-			? line.Source.View.ViewModel.RectangleBrush
-			: line.Target.View.ViewModel.RectangleBrush;
+		public Brush LineBrush => Line.Source != Line.Target.Parent
+			? Line.Source.View.ViewModel.RectangleBrush
+			: Line.Target.View.ViewModel.RectangleBrush;
 
 		public bool IsMouseOver { get => Get(); private set => Set(value); }
 		public bool IsShowPoints { get => Get(); private set => Set(value); }
 
-		public string LineData => lineViewModelService.GetLineData(line);
+		public string LineData => lineViewModelService.GetLineData(Line);
 
-		public string PointsData => lineViewModelService.GetPointsData(line);
+		public string PointsData => lineViewModelService.GetPointsData(Line);
 
-		public string ArrowData => lineViewModelService.GetArrowData(line);
+		public string ArrowData => lineViewModelService.GetArrowData(Line);
 
 		public string StrokeDash => "";
 
 		public string ToolTip { get => Get(); private set => Set(value); }
 
 
-		public void UpdateToolTip() => ToolTip = lineViewModelService.GetLineToolTip(line);
+		public void UpdateToolTip() => ToolTip = lineViewModelService.GetLineToolTip(Line);
 
 		public ObservableCollection<LinkItem> SourceLinks => sourceLinks.Value;
 
@@ -80,16 +82,16 @@ namespace Dependinator.ModelViewing.Links
 
 		public override void MoveItem(Vector moveOffset)
 		{
-			for (int i = 1; i < line.View.Points.Count - 1; i++)
+			for (int i = 1; i < Line.View.Points.Count - 1; i++)
 			{
-				line.View.Points[i] = line.View.Points[i] + moveOffset;
+				Line.View.Points[i] = Line.View.Points[i] + moveOffset;
 			}
 		}
 
 
 		private ObservableCollection<LinkItem> GetSourceLinkItems()
 		{
-			IEnumerable<LinkItem> items = lineViewModelService.GetSourceLinkItems(line);
+			IEnumerable<LinkItem> items = lineViewModelService.GetSourceLinkItems(Line);
 			return new ObservableCollection<LinkItem>(items);
 		}
 
@@ -97,9 +99,10 @@ namespace Dependinator.ModelViewing.Links
 
 		private ObservableCollection<LinkItem> GetTargetLinkItems()
 		{
-			IEnumerable<LinkItem> items = lineViewModelService.GetTargetLinkItems(line);
+			IEnumerable<LinkItem> items = lineViewModelService.GetTargetLinkItems(Line);
 			return new ObservableCollection<LinkItem>(items);
 		}
+
 
 		public void MouseDown(Point screenPoint, bool isPoint)
 		{
@@ -133,7 +136,7 @@ namespace Dependinator.ModelViewing.Links
 				// First move event, lets start a move by  getting the index of point to move.
 				// THis might create a new point if there is no existing point near the mouse down point
 				currentPointIndex = lineViewModelService.GetLinePointIndex(
-					line, mouseDownPoint, isPointMove);
+					Line, mouseDownPoint, isPointMove);
 				if (currentPointIndex == -1)
 				{
 					// Point not close enough to the line
@@ -141,8 +144,8 @@ namespace Dependinator.ModelViewing.Links
 				}
 			}
 
-			lineViewModelService.MoveLinePoint(line, currentPointIndex, point);
-			lineViewModelService.UpdateLineBounds(line);
+			lineViewModelService.MoveLinePoint(Line, currentPointIndex, point);
+			lineViewModelService.UpdateLineBounds(Line);
 			IsMouseOver = true;
 			IsShowPoints = true;
 			Mouse.OverrideCursor = Cursors.Hand;
@@ -221,22 +224,22 @@ namespace Dependinator.ModelViewing.Links
 
 		private void EndMoveLinePoint()
 		{
-			if (currentPointIndex != line.View.FirstIndex && currentPointIndex != line.View.LastIndex)
+			if (currentPointIndex != Line.View.FirstIndex && currentPointIndex != Line.View.LastIndex)
 			{
 				// Removing the point if it is no longer needed (in the same line as neighbors points
-				if (lineViewModelService.IsOnLineBetweenNeighbors(line, currentPointIndex))
+				if (lineViewModelService.IsOnLineBetweenNeighbors(Line, currentPointIndex))
 				{
-					line.View.Points.RemoveAt(currentPointIndex);
+					Line.View.Points.RemoveAt(currentPointIndex);
 				}
 			}
 
-			lineViewModelService.UpdateLineBounds(line);
+			lineViewModelService.UpdateLineBounds(Line);
 			NotifyAll();
 			currentPointIndex = -1;
 		}
 
 
-		public override string ToString() => $"{line}";
+		public override string ToString() => $"{Line}";
 
 
 		public void UpdateLine()
@@ -248,8 +251,8 @@ namespace Dependinator.ModelViewing.Links
 					return;
 				}
 
-				lineViewModelService.UpdateLineEndPoints(line);
-				lineViewModelService.UpdateLineBounds(line);
+				lineViewModelService.UpdateLineEndPoints(Line);
+				lineViewModelService.UpdateLineBounds(Line);
 			}
 			catch (Exception e)
 			{
@@ -287,9 +290,9 @@ namespace Dependinator.ModelViewing.Links
 				//else
 				{
 					// Source and targets are siblings. update line when either node is moved
-					WhenSet(line.Source.View.ViewModel, nameof(line.Source.View.ViewModel.ItemBounds))
+					WhenSet(Line.Source.View.ViewModel, nameof(Line.Source.View.ViewModel.ItemBounds))
 						.Notify(SourceOrTargetChanged);
-					WhenSet(line.Target.View.ViewModel, nameof(line.Target.View.ViewModel.ItemBounds))
+					WhenSet(Line.Target.View.ViewModel, nameof(Line.Target.View.ViewModel.ItemBounds))
 						.Notify(SourceOrTargetChanged);
 				}
 			}
@@ -304,6 +307,12 @@ namespace Dependinator.ModelViewing.Links
 		{
 			UpdateLine();
 			NotifyAll();
+		}
+
+
+		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e)
+		{
+			lineViewModelService.OnMouseWheel(this, uiElement, e);
 		}
 	}
 }

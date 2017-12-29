@@ -51,7 +51,7 @@ namespace Dependinator.ModelViewing.Links
 		private void UIElement_OnMouseLeavePoint(object sender, MouseEventArgs e) =>
 			ViewModel?.OnMouseLeave(true);
 
-
+		protected override void OnMouseWheel(MouseWheelEventArgs e) => ViewModel.OnMouseWheel(this, e);
 
 		private void ToolTip_OnOpened(object sender, RoutedEventArgs e) => ViewModel?.UpdateToolTip();
 	}

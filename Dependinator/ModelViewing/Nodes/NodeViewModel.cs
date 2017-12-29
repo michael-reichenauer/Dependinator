@@ -406,9 +406,7 @@ namespace Dependinator.ModelViewing.Nodes
 		private int LinesCount => Node.Root.Descendents().SelectMany(node => node.SourceLines).Count();
 
 
-		public void ZoomRoot(double zoom, Point viewPosition)
-		{
-			Node.View.ItemsCanvas?.ZoomRootNode(zoom, viewPosition);
-		}
+		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) =>
+			nodeViewModelService.OnMouseWheel(this, uiElement, e);
 	}
 }

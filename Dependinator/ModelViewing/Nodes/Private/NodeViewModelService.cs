@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
+using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Links;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private;
@@ -80,6 +81,17 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		public void MouseClicked(NodeViewModel nodeViewModel)
 		{
 			nodeSelectionService.Clicked(nodeViewModel);
+		}
+
+
+		public void OnMouseWheel(
+			NodeViewModel nodeViewModel, 
+			UIElement uiElement, 
+			MouseWheelEventArgs e)
+		{
+			ItemsCanvas itemsCanvas = nodeViewModel.ItemsViewModel?.ItemsCanvas ?? nodeViewModel.Node.Root.View.ItemsCanvas;
+
+			itemsCanvas.OnMouseWheel(uiElement, e, nodeViewModel.IsInnerSelected);
 		}
 
 

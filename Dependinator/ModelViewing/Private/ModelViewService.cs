@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
 using Dependinator.Common;
 using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.ProgressHandling;
@@ -21,6 +23,7 @@ namespace Dependinator.ModelViewing.Private
 		private readonly INodeSelectionService nodeSelectionService;
 		private readonly IProgressService progress;
 
+		private ItemsCanvas rootNodeCanvas;
 
 		public ModelViewService(
 			ISettingsService settingsService,
@@ -35,7 +38,11 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		public void SetRootCanvas(ItemsCanvas rootCanvas) => modelService.SetRootCanvas(rootCanvas);
+		public void SetRootCanvas(ItemsCanvas rootCanvas)
+		{
+			this.rootNodeCanvas = rootCanvas;
+			modelService.SetRootCanvas(rootCanvas);
+		}
 
 
 		public async Task LoadAsync()
@@ -61,6 +68,12 @@ namespace Dependinator.ModelViewing.Private
 		public void Clicked()
 		{
 			nodeSelectionService.Clicked(null);
+		}
+
+
+		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e)
+		{
+			rootNodeCanvas?.OnMouseWheel(uiElement, e, false);
 		}
 
 

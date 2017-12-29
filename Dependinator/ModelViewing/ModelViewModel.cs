@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ProgressHandling;
@@ -104,6 +105,12 @@ namespace Dependinator.ModelViewing
 		public void MouseClicked(MouseButtonEventArgs mouseButtonEventArgs)
 		{
 			modelViewService.Clicked();
+		}
+
+
+		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e)
+		{
+			modelViewService.OnMouseWheel(uiElement, e);
 		}
 	}
 }

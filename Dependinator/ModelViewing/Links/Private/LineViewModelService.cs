@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Input;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.UI;
@@ -39,6 +40,20 @@ namespace Dependinator.ModelViewing.Links.Private
 		{
 			IEnumerable<LinkItem> items = linkMenuItemService.GetTargetLinkItems(line);
 			return items;
+		}
+
+
+		public void OnMouseWheel(LineViewModel lineViewModel, UIElement uiElement, MouseWheelEventArgs e)
+		{
+			if (lineViewModel.Line.Owner.View.ViewModel != null)
+			{
+				lineViewModel.Line.Owner.View.ViewModel.OnMouseWheel(uiElement, e);
+			}
+			else
+			{
+				lineViewModel.Line.Owner.Root.View.ItemsCanvas.OnMouseWheel(uiElement, e, false);
+			}
+			
 		}
 
 
