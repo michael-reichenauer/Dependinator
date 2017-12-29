@@ -6,7 +6,6 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Dependinator.Utils;
-using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
@@ -17,9 +16,6 @@ namespace Dependinator.ModelViewing.Items
 	/// </summary>
 	public partial class ItemsView : UserControl
 	{
-		//private static readonly double ZoomSpeed = 2000.0;
-
-		//private Point initialMousePoint;
 		private Point? lastMousePoint;
 
 		private TouchPoint initialTouchPoint1;
@@ -34,8 +30,6 @@ namespace Dependinator.ModelViewing.Items
 
 		private readonly List<TouchDevice> activeTouchDevices = new List<TouchDevice>();
 
-		//private DragUiElement dragUiElement;
-		//private DragUiElement previewDragUiElement;
 
 		public ItemsView()
 		{
@@ -43,27 +37,11 @@ namespace Dependinator.ModelViewing.Items
 			longPressTimer = new DispatcherTimer();
 			longPressTimer.Tick += OnLongPressTime;
 			longPressTimer.Interval = TimeSpan.FromMilliseconds(500);
-
-			//// move canvas if Ctrl key is down
-			//dragUiElement = new DragUiElement(
-			//	this,
-			//	(p, o) => viewModel?.MoveRootCanvas(o),
-			//	() => true);
-
-			//// Preview drag to move entire canvas for root node if no Ctrl key
-			//previewDragUiElement = new DragUiElement(
-			//	this,
-			//	(p, o) => viewModel?.MoveCanvas(o),
-			//	IsPreviewEnabled,
-			//	point => { },
-			//	point => { },
-			//	true);
 		}
 
 
 		protected override void OnMouseMove(MouseEventArgs e)
 		{
-			//base.OnMouseMove(e);
 			Point viewPosition = e.GetPosition(Application.Current.MainWindow);
 
 			if (Mouse.LeftButton == MouseButtonState.Pressed)
@@ -73,7 +51,6 @@ namespace Dependinator.ModelViewing.Items
 					Vector viewOffset = viewPosition - lastMousePoint.Value;
 
 					viewModel?.MoveItems(viewOffset);
-					//move?.Invoke(viewPosition, viewOffset);
 				}
 
 				lastMousePoint = viewPosition;
@@ -83,19 +60,6 @@ namespace Dependinator.ModelViewing.Items
 			{
 				lastMousePoint = null;
 			}
-
-			
-		}
-
-
-		private bool IsPreviewEnabled()
-		{
-			if (!(viewModel?.ItemsCanvas?.IsZoomAndMoveEnabled ?? true))
-			{
-				return false;
-			}
-
-			return !Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && (viewModel?.IsRoot ?? false);
 		}
 
 
@@ -111,55 +75,16 @@ namespace Dependinator.ModelViewing.Items
 			ItemsListBox.Focus();
 		}
 
-		
-
-		//protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
-		//{
-		//	if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
-		//	{
-		//		e.Handled = false;
-		//		return;
-		//	}
-
-		//	int wheelDelta = e.Delta;
-		//	Point viewPosition = e.GetPosition(ItemsListBox);
-
-		//	double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
-
-		//	viewModel.ZoomRoot(zoom, viewPosition);
-
-		//	e.Handled = true;
-		//}
 
 
-
-		protected override void OnMouseWheel(MouseWheelEventArgs e)
+		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
 		{
-		//	//if (!Keyboard.Modifiers.HasFlag(ModifierKeys.Control) && !viewModel.IsRoot)
-		//	//{
-		//	//	// Root node move only active on root node
-		//	//	return;
-		//	//}
-
-		//	int wheelDelta = e.Delta;
-
-		//	double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
-			
-		//	//viewModel.ZoomItems(zoom, viewPosition);
-
-		//	if (viewModel.IsSelected)
-		//	{
-		//		Point viewPosition = e.GetPosition(ItemsListBox);
-		//		viewModel.Zoom(zoom, viewPosition);
-		//	}
-		//	else
-		//	{
-		//		Point viewPosition = e.GetPosition(Application.Current.MainWindow);
-		//		viewModel.ZoomRoot(zoom, viewPosition);
-		//	}
-
-		//	e.Handled = true;
+			if (viewModel.IsRootSelected)
+			{
+				viewModel.ItemsCanvas.OnMouseWheel(this, e, false);
+			}
 		}
+
 
 
 		protected override void OnTouchDown(TouchEventArgs e)

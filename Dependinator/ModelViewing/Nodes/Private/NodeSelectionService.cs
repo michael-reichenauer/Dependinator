@@ -10,6 +10,9 @@ namespace Dependinator.ModelViewing.Nodes.Private
 	{
 		private NodeViewModel selectedNode;
 
+		public bool IsRootSelected => selectedNode == null;
+
+
 		public void Clicked(NodeViewModel clickedNode)
 		{
 			if (selectedNode == null && clickedNode != null)

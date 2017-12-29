@@ -5,6 +5,7 @@ using Dependinator.Common;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.ModelViewing.Nodes.Private;
 using Dependinator.Utils;
 
 
@@ -14,6 +15,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	{
 		private readonly INodeViewModelService nodeViewModelService;
 		private readonly INodeLayoutService layoutService;
+		private readonly INodeSelectionService nodeSelectionService;
 		private readonly IModelLinkService modelLinkService;
 		private readonly Model model;
 
@@ -22,12 +24,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			Model model,
 			IModelLinkService modelLinkService,
 			INodeViewModelService nodeViewModelService,
-			INodeLayoutService layoutService)
+			INodeLayoutService layoutService,
+			INodeSelectionService nodeSelectionService)
 		{
 			this.model = model;
 			this.modelLinkService = modelLinkService;
 			this.nodeViewModelService = nodeViewModelService;
 			this.layoutService = layoutService;
+			this.nodeSelectionService = nodeSelectionService;
 		}
 
 
@@ -288,7 +292,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		private static ItemsCanvas GetItemsCanvas(Node node)
+		private ItemsCanvas GetItemsCanvas(Node node)
 		{
 			// First try get existing items canvas
 			if (node.View.ItemsCanvas != null)
@@ -303,7 +307,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			// Creating the child canvas to be the children canvas of the node
 			node.View.ItemsCanvas = new ItemsCanvas(node.View.ViewModel, parentCanvas);
 			node.View.ViewModel.ItemsViewModel = new ItemsViewModel(
-				node.View.ItemsCanvas, node.View.ViewModel);
+				nodeSelectionService, node.View.ItemsCanvas, node.View.ViewModel);
 
 			if (Math.Abs(node.View.ScaleFactor) > 0.0000001)
 			{

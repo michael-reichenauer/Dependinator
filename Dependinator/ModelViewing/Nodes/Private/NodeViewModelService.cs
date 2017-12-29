@@ -95,6 +95,8 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
+		public bool IsRootSelected => nodeSelectionService.IsRootSelected;
+
 		public Brush GetRandomRectangleBrush(string nodeName)
 		{
 			return themeService.GetRectangleBrush(nodeName);

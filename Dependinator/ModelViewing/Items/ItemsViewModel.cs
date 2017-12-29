@@ -1,6 +1,6 @@
 ﻿using System.Windows;
-using System.Windows.Input;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.ModelViewing.Nodes.Private;
 using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -9,11 +9,16 @@ namespace Dependinator.ModelViewing.Items
 {
 	internal class ItemsViewModel : ViewModel
 	{
+		private readonly INodeSelectionService nodeSelectionService;
 		private readonly NodeViewModel node;
 
 
-		public ItemsViewModel(ItemsCanvas itemsCanvas, NodeViewModel node)
+		public ItemsViewModel(
+			INodeSelectionService nodeSelectionService,
+			ItemsCanvas itemsCanvas,
+			NodeViewModel node)
 		{
+			this.nodeSelectionService = nodeSelectionService;
 			this.node = node;
 			ItemsCanvas = itemsCanvas;
 		}
@@ -23,8 +28,10 @@ namespace Dependinator.ModelViewing.Items
 
 		public bool IsRoot => ItemsCanvas.IsRoot;
 
+
 		public void SetZoomableCanvas(ZoomableCanvas zoomableCanvas) =>
 			ItemsCanvas.SetZoomableCanvas(zoomableCanvas);
+
 
 		public void MoveCanvas(Vector viewOffset) => ItemsCanvas.Move(viewOffset);
 		public void MoveRootCanvas(Vector viewOffset) => ItemsCanvas.MoveRootNode(viewOffset);
@@ -54,5 +61,6 @@ namespace Dependinator.ModelViewing.Items
 
 
 		public bool IsSelected => node?.IsInnerSelected ?? true;
+		public bool IsRootSelected => nodeSelectionService.IsRootSelected;
 	}
 }

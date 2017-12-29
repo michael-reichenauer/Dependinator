@@ -87,7 +87,7 @@ namespace Dependinator.ModelViewing.Items
 			}
 			else
 			{
-				Point viewPosition = e.GetPosition(Application.Current.MainWindow);
+				Point viewPosition = e.GetPosition(RootCanvas.ZoomableCanvas);
 				ZoomRootNode(zoom, viewPosition);
 			}
 			

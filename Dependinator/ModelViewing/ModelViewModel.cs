@@ -7,6 +7,7 @@ using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Nodes.Private;
 using Dependinator.Utils;
 using Dependinator.Utils.UI.Mvvm;
 
@@ -35,6 +36,7 @@ namespace Dependinator.ModelViewing
 			IThemeService themeService,
 			IProgressService progressService,
 			IOpenModelService openModelService,
+			INodeSelectionService nodeSelectionService,
 			ModelMetadata modelMetadata)
 		{
 			this.modelViewService = modelViewService;
@@ -44,7 +46,7 @@ namespace Dependinator.ModelViewing
 			this.modelMetadata = modelMetadata;
 
 			ItemsCanvas rootCanvas = new ItemsCanvas();
-			ItemsViewModel = new ItemsViewModel(rootCanvas, null);
+			ItemsViewModel = new ItemsViewModel(nodeSelectionService, rootCanvas, null);
 
 			modelViewService.SetRootCanvas(rootCanvas);
 		}
