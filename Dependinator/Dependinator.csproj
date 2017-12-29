@@ -148,7 +148,7 @@
     <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
-    <Compile Include="ModelViewing\Nodes\NodeControlPoint.cs" />
+    <Compile Include="ModelViewing\Nodes\NodeControl.cs" />
     <Compile Include="ModelViewing\Nodes\NodePointsView2Model.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\LineViewData.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\LinkType.cs" />
@@ -184,8 +184,8 @@
     <Compile Include="ModelViewing\Links\LinkItem.cs" />
     <Compile Include="ModelViewing\Links\ILinkMenuItemService.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkMenuItemService.cs" />
-    <Compile Include="ModelViewing\Nodes\NodePointsView2.xaml.cs">
-      <DependentUpon>NodePointsView2.xaml</DependentUpon>
+    <Compile Include="ModelViewing\Nodes\NodeControlView.xaml.cs">
+      <DependentUpon>NodeControlView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\Private\INodeSelectionService.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeLayoutService.cs" />
@@ -436,7 +436,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ModelViewing\Nodes\NodePointsView2.xaml">
+    <Page Include="ModelViewing\Nodes\NodeControlView.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

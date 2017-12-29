@@ -122,7 +122,7 @@
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>
-									<nodes:NodePointsView2 />
+									<nodes:NodeControlView />
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>

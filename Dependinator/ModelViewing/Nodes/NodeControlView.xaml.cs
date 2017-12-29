@@ -12,7 +12,7 @@ namespace Dependinator.ModelViewing.Nodes
 	/// <summary>
 	/// Interaction logic for NodePointsView.xaml
 	/// </summary>
-	public partial class NodePointsView2 : UserControl
+	public partial class NodeControlView : UserControl
 	{
 		private NodePointsView2Model ViewModel => DataContext as NodePointsView2Model;
 		private readonly Dictionary<string, NodeControl> points;
@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing.Nodes
 		private Point? lastMousePoint;
 
 
-		public NodePointsView2()
+		public NodeControlView()
 		{
 			InitializeComponent();
 
@@ -46,14 +46,6 @@ namespace Dependinator.ModelViewing.Nodes
 		protected override void OnMouseWheel(MouseWheelEventArgs e)
 		{
 			ViewModel.OnMouseWheel(this, e);
-
-			//int wheelDelta = e.Delta;
-			//double zoom = Math.Pow(2, wheelDelta / ZoomSpeed);
-
-			//Point viewPosition = e.GetPosition(Application.Current.MainWindow);
-			//ViewModel.ZoomRoot(zoom, viewPosition);
-
-			//e.Handled = true;
 		}
 
 		private void Control_OnMouseMove(object sender, MouseEventArgs e)
