@@ -6,6 +6,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Dependinator.Utils;
+using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
@@ -16,8 +17,6 @@ namespace Dependinator.ModelViewing.Items
 	/// </summary>
 	public partial class ItemsView : UserControl
 	{
-		private Point? lastMousePoint;
-
 		private TouchPoint initialTouchPoint1;
 		private TouchPoint lastTouchPoint1;
 		private TouchPoint lastTouchPoint2;
@@ -40,30 +39,8 @@ namespace Dependinator.ModelViewing.Items
 		}
 
 
-		protected override void OnMouseMove(MouseEventArgs e)
-		{
-			Point viewPosition = e.GetPosition(Application.Current.MainWindow);
-
-			if (Mouse.LeftButton == MouseButtonState.Pressed)
-			{
-				CaptureMouse();
-
-				if (lastMousePoint.HasValue)
-				{
-					Vector viewOffset = viewPosition - lastMousePoint.Value;
-
-					viewModel?.MoveItems(viewOffset);
-				}
-
-				lastMousePoint = viewPosition;
-				e.Handled = true;
-			}
-			else
-			{
-				ReleaseMouseCapture();
-				lastMousePoint = null;
-			}
-		}
+		protected override void OnMouseMove(MouseEventArgs e) =>
+			MouseHelper.OnLeftButtonMove(this, e, (s, offset) => viewModel?.MoveItems(offset));
 
 
 		private void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)

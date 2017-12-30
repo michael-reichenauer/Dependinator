@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -18,7 +17,6 @@ namespace Dependinator.ModelViewing.Nodes
 		private readonly Dictionary<string, NodeControl> points;
 		private MouseClicked mouseClicked;
 		private MouseClicked mouseClickedEdit;
-		private Point? lastMousePoint;
 
 
 		public NodeControlView()
@@ -47,41 +45,19 @@ namespace Dependinator.ModelViewing.Nodes
 		private void Clicked(MouseButtonEventArgs e) => ViewModel.Clicked(e);
 		private void ClickedEdit(MouseButtonEventArgs e) => ViewModel.ClickedEditNode(e);
 
-		protected override void OnMouseWheel(MouseWheelEventArgs e) => ViewModel.OnMouseWheel(this, e);
+		protected override void OnMouseWheel(MouseWheelEventArgs e) => 
+			ViewModel.OnMouseWheel(this, e);
 
 
-		private void Control_OnMouseMove(object sender, MouseEventArgs e)
+		private void Control_OnMouseMove(object sender, MouseEventArgs e) =>
+			MouseHelper.OnLeftButtonMove((UIElement)sender, e, Move);
+
+
+		private void Move(UIElement element, Vector offset)
 		{
-			Point viewPosition = e.GetPosition(Application.Current.MainWindow);
-			Rectangle rectangle = (Rectangle)sender;
-
-			if (Mouse.LeftButton == MouseButtonState.Pressed)
-			{
-				rectangle.CaptureMouse();
-
-				if (lastMousePoint.HasValue)
-				{
-					Vector viewOffset = viewPosition - lastMousePoint.Value;
-
-					Move(rectangle, viewOffset);
-				}
-
-				lastMousePoint = viewPosition;
-
-				e.Handled = true;
-			}
-			else
-			{
-				rectangle.ReleaseMouseCapture();
-				lastMousePoint = null;
-			}
-		}
-
-
-		private void Move(Rectangle rectangle, Vector viewOffset)
-		{
+			Rectangle rectangle = (Rectangle)element;
 			NodeControl control = points[rectangle.Name];
-			ViewModel?.Move(control, viewOffset);
+			ViewModel?.Move(control, offset);
 		}
 	}
 }

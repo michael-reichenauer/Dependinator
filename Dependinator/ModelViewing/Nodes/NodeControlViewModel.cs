@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -50,7 +51,8 @@ namespace Dependinator.ModelViewing.Nodes
 		public bool IsShowControls { get => Get(); set => Set(value); }
 		public bool IsShowBorder { get => Get(); set => Set(value); }
 
-		public bool CanShowEditNode => nodeViewModel.CanShowChildren;
+		public bool CanShowEditNode =>
+			nodeViewModel.Node.Children.Any() && nodeViewModel.CanShowChildren;
 
 
 		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) => 
