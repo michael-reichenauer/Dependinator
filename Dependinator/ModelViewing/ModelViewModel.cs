@@ -36,7 +36,6 @@ namespace Dependinator.ModelViewing
 			IThemeService themeService,
 			IProgressService progressService,
 			IOpenModelService openModelService,
-			INodeSelectionService nodeSelectionService,
 			ModelMetadata modelMetadata)
 		{
 			this.modelViewService = modelViewService;
@@ -46,7 +45,7 @@ namespace Dependinator.ModelViewing
 			this.modelMetadata = modelMetadata;
 
 			ItemsCanvas rootCanvas = new ItemsCanvas();
-			ItemsViewModel = new ItemsViewModel(nodeSelectionService, rootCanvas, null);
+			ItemsViewModel = new ItemsViewModel(rootCanvas, null);
 
 			modelViewService.SetRootCanvas(rootCanvas);
 		}

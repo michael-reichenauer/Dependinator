@@ -9,16 +9,13 @@ namespace Dependinator.ModelViewing.Items
 {
 	internal class ItemsViewModel : ViewModel
 	{
-		private readonly INodeSelectionService nodeSelectionService;
 		private readonly NodeViewModel node;
 
 
 		public ItemsViewModel(
-			INodeSelectionService nodeSelectionService,
 			ItemsCanvas itemsCanvas,
 			NodeViewModel node)
 		{
-			this.nodeSelectionService = nodeSelectionService;
 			this.node = node;
 			ItemsCanvas = itemsCanvas;
 		}
@@ -61,6 +58,5 @@ namespace Dependinator.ModelViewing.Items
 
 
 		public bool IsSelected => node?.IsInnerSelected ?? true;
-		public bool IsRootSelected => nodeSelectionService.IsRootSelected;
 	}
 }

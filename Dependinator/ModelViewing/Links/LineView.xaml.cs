@@ -10,17 +10,17 @@ namespace Dependinator.ModelViewing.Links
 	/// </summary>
 	public partial class LineView : UserControl
 	{
-	//	private readonly DragUiElement dragUiElement;
-	//	private readonly DragUiElement dragUiElementPoints;
+		//private readonly DragUiElement dragUiElement;
+		//private readonly DragUiElement dragUiElementPoints;
 
 
 		private LineViewModel ViewModel => DataContext as LineViewModel;
-
+		private MouseClicked mouseClicked;
 
 		public LineView()
 		{
 			InitializeComponent();
-
+			mouseClicked = new MouseClicked(this, Clicked);
 			//dragUiElement = new DragUiElement(
 			//	this,
 			//	(p, o) => ViewModel?.MouseMove(p),
@@ -34,8 +34,15 @@ namespace Dependinator.ModelViewing.Links
 			//	() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
 			//	p => ViewModel?.MouseDown(p, true),
 			//	p => ViewModel?.MouseUp(p));
+
+
 		}
 
+
+		private void Clicked(MouseButtonEventArgs obj)
+		{
+			throw new System.NotImplementedException();
+		}
 
 
 		private void UIElement_OnMouseEnter(object sender, MouseEventArgs e) =>

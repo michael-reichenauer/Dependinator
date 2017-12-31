@@ -42,14 +42,11 @@ namespace Dependinator.ModelViewing.Nodes
 		public double Margin => MarginPoints / ItemScale;
 		public double CenterMargin => MarginPoints;
 
-		public override void MoveItem(Vector moveOffset)
-		{
-			Point newLocation = ItemBounds.Location + moveOffset;
-			ItemBounds = new Rect(newLocation, ItemBounds.Size);
-		}
-
 		public bool IsShowControls { get => Get(); set => Set(value); }
+
+
 		public bool IsShowBorder { get => Get(); set => Set(value); }
+
 
 		public bool CanShowEditNode =>
 			nodeViewModel.Node.Children.Any() && nodeViewModel.CanShowChildren;
@@ -59,26 +56,26 @@ namespace Dependinator.ModelViewing.Nodes
 			nodeViewModel.OnMouseWheel(uiElement, e);
 
 
+		public void Clicked(MouseButtonEventArgs e) => nodeViewModel.MouseClickedUnselect(e);
+
+
 		public void ClickedEditNode(MouseButtonEventArgs e)
 		{
 			if (!IsShowBorder)
 			{
-				IsShowControls = false;
-				IsShowBorder = true;
-				nodeViewModel.IsInnerSelected = true;
+				EnableEditNodeContents();
 			}
 			else
 			{
-				IsShowControls = true;
-				IsShowBorder = false;
-				nodeViewModel.IsInnerSelected = false;
+				DeselectNode();
 			}
 		}
 
 
-		public void Clicked(MouseButtonEventArgs e)
+		public override void MoveItem(Vector moveOffset)
 		{
-			nodeViewModel.MouseClickedUnselect(e);
+			Point newLocation = ItemBounds.Location + moveOffset;
+			ItemBounds = new Rect(newLocation, ItemBounds.Size);
 		}
 
 
@@ -172,6 +169,30 @@ namespace Dependinator.ModelViewing.Nodes
 			}
 
 			return newLocation;
+		}
+
+		private void DeselectNode()
+		{
+			IsShowControls = true;
+			IsShowBorder = false;
+			nodeViewModel.IsInnerSelected = false;
+
+			if (nodeViewModel.ItemsViewModel?.ItemsCanvas != null)
+			{
+				nodeViewModel.ItemsViewModel.ItemsCanvas.IsFocused = false;
+			}
+		}
+
+
+		private void EnableEditNodeContents()
+		{
+			IsShowControls = false;
+			IsShowBorder = true;
+			nodeViewModel.IsInnerSelected = true;
+			if (nodeViewModel.ItemsViewModel?.ItemsCanvas != null)
+			{
+				nodeViewModel.ItemsViewModel.ItemsCanvas.IsFocused = true;
+			}
 		}
 	}
 }

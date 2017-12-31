@@ -3,9 +3,8 @@
 
 namespace Dependinator.ModelViewing.Nodes.Private
 {
-	internal interface INodeSelectionService
+	internal interface IItemSelectionService
 	{
-		bool IsRootSelected { get; }
 		void Clicked(NodeViewModel node);
 	}
 }

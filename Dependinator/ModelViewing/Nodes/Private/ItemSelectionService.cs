@@ -6,15 +6,19 @@ using Dependinator.Utils;
 namespace Dependinator.ModelViewing.Nodes.Private
 {
 	[SingleInstance]
-	internal class NodeSelectionService : INodeSelectionService
+	internal class ItemSelectionService : IItemSelectionService
 	{
 		private NodeViewModel selectedNode;
-
-		public bool IsRootSelected => selectedNode == null;
 
 
 		public void Clicked(NodeViewModel clickedNode)
 		{
+			if (clickedNode == selectedNode)
+			{
+				// User clicked om selected node
+				return;
+			}
+			
 			if (selectedNode == null && clickedNode != null)
 			{
 				// No node was selected and now clicked node is selected
@@ -23,19 +27,15 @@ namespace Dependinator.ModelViewing.Nodes.Private
 				return;
 			}
 
-			if (clickedNode == selectedNode)
+			if (selectedNode != null && clickedNode == null)
 			{
-				if (selectedNode != null)
-				{
-					selectedNode.IsSelected = false;
-					selectedNode = null;
-				}
-
+				// User clicked on root node (deselect)
+				selectedNode.IsSelected = false;
+				selectedNode = null;
 				return;
 			}
 
-			if (clickedNode == null ||
-				selectedNode.Node.Ancestors().Any(ancestor => clickedNode == ancestor.View.ViewModel))
+			if (selectedNode.Node.Ancestors().Any(ancestor => clickedNode == ancestor.View.ViewModel))
 			{
 				// Deselect all nodes (root was clicked or some ancestor)
 				selectedNode.IsSelected = false;

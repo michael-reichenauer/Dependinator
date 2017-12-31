@@ -28,17 +28,20 @@ namespace Dependinator.ModelViewing.Items
 
 		private Rect ItemsCanvasBounds =>
 			owner?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
+		private bool isFocused;
 
 
 		private bool IsShowing => owner?.IsShowing ?? true;
 		private bool CanShow => owner?.CanShow ?? true;
 
+		
 
 		// The root canvas
 		public ItemsCanvas()
 			: this(null, null)
 		{
 		}
+
 
 		public ItemsCanvas(IItemsCanvasBounds owner, ItemsCanvas parentCanvas)
 		{
@@ -52,6 +55,7 @@ namespace Dependinator.ModelViewing.Items
 				// Creating root node canvas
 				rootScale = 1;
 				ScaleFactor = 1;
+				isFocused = true;
 			}
 			else
 			{
@@ -59,6 +63,19 @@ namespace Dependinator.ModelViewing.Items
 				ScaleFactor = DefaultScaleFactor;
 
 				parentCanvas.canvasChildren.Add(this);
+			}
+		}
+
+
+		public bool IsFocused
+		{
+			get => isFocused;
+			set
+			{
+				isFocused = value;
+
+				// Root canvas is focused if no other canvas is focused
+				RootCanvas.isFocused = isFocused ? IsRoot : !IsRoot;
 			}
 		}
 
@@ -75,6 +92,7 @@ namespace Dependinator.ModelViewing.Items
 
 
 		public double Scale => parentCanvas?.Scale * ScaleFactor ?? rootScale;
+
 
 
 		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e, bool isSelected)

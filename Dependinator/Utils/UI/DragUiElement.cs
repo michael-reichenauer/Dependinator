@@ -5,7 +5,7 @@ using System.Windows.Input;
 
 namespace Dependinator.Utils.UI
 {
-	internal class DragUiElement2
+	internal class DragUiElement
 	{
 		private readonly UIElement uiElement;
 		private readonly Func<bool> predicate;
@@ -17,7 +17,7 @@ namespace Dependinator.Utils.UI
 		private bool IsMouseDown;
 
 
-		public DragUiElement2(
+		public DragUiElement(
 			UIElement uiElement,
 			Action<Point, Vector> move,
 			Func<bool> predicate = null,

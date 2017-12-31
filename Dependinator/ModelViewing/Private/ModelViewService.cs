@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing.Private
 	{
 		private readonly ISettingsService settingsService;
 		private readonly IModelService modelService;
-		private readonly INodeSelectionService nodeSelectionService;
+		private readonly IItemSelectionService itemSelectionService;
 		private readonly IProgressService progress;
 
 		private ItemsCanvas rootNodeCanvas;
@@ -28,12 +28,12 @@ namespace Dependinator.ModelViewing.Private
 		public ModelViewService(
 			ISettingsService settingsService,
 			IModelService modelService,
-			INodeSelectionService nodeSelectionService,
+			IItemSelectionService itemSelectionService,
 			IProgressService progress)
 		{
 			this.settingsService = settingsService;
 			this.modelService = modelService;
-			this.nodeSelectionService = nodeSelectionService;
+			this.itemSelectionService = itemSelectionService;
 			this.progress = progress;
 		}
 
@@ -67,7 +67,7 @@ namespace Dependinator.ModelViewing.Private
 		public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelService.GetHiddenNodeNames();
 		public void Clicked()
 		{
-			nodeSelectionService.Clicked(null);
+			itemSelectionService.Clicked(null);
 		}
 
 

@@ -103,7 +103,7 @@
 				Name="LinePoints"
 				Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
 				Data="{Binding PointsData}"
-				Stroke="{Binding LineBrush}"
+				Stroke="#FFB0C4DE"
 				StrokeLineJoin="Round"
 				StrokeThickness="5"
 				MouseEnter="UIElement_OnMouseEnterPoint"

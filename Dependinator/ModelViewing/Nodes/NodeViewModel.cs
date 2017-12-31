@@ -83,6 +83,10 @@ namespace Dependinator.ModelViewing.Nodes
 				}
 
 				IsInnerSelected = false;
+				if (ItemsViewModel?.ItemsCanvas != null)
+				{
+					ItemsViewModel.ItemsCanvas.IsFocused = false;
+				}
 			}
 		}
 
@@ -240,7 +244,7 @@ namespace Dependinator.ModelViewing.Nodes
 		private int MembersCount => Node.Root.Descendents().Count(node => node.NodeType == NodeType.Member);
 		private int LinksCount => Node.Root.Descendents().SelectMany(node => node.SourceLinks).Count();
 		private int LinesCount => Node.Root.Descendents().SelectMany(node => node.SourceLines).Count();
-		public bool IsRootSelected => nodeViewModelService.IsRootSelected;
+
 
 
 		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) =>

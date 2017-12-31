@@ -188,9 +188,9 @@
     <Compile Include="ModelViewing\Nodes\NodeControlView.xaml.cs">
       <DependentUpon>NodeControlView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\Nodes\Private\INodeSelectionService.cs" />
+    <Compile Include="ModelViewing\Nodes\Private\IItemSelectionService.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeLayoutService.cs" />
-    <Compile Include="ModelViewing\Nodes\Private\NodeSelectionService.cs" />
+    <Compile Include="ModelViewing\Nodes\Private\ItemSelectionService.cs" />
     <Compile Include="ModelViewing\Open\FileItem.cs" />
     <Compile Include="ModelViewing\Open\HiddenNodeItem.cs" />
     <Compile Include="ModelViewing\Open\OpenModelView.xaml.cs">
@@ -223,8 +223,6 @@
     <Compile Include="Utils\UI\DispatcherExtensions.cs" />
     <Compile Include="Utils\UI\GeometryService.cs" />
     <Compile Include="Utils\UI\IGeometryService.cs" />
-    <Compile Include="ModelViewing\Items\IItemSelectService.cs" />
-    <Compile Include="ModelViewing\Items\ItemSelectService.cs" />
     <Compile Include="Utils\UI\DragUiElement.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\IModelLinkService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\Line.cs" />

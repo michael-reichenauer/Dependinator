@@ -59,9 +59,9 @@ namespace Dependinator.ModelViewing.Items
 
 		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
 		{
-			if (viewModel.IsRootSelected)
+			if (viewModel.ItemsCanvas.IsFocused)
 			{
-				viewModel.ItemsCanvas.OnMouseWheel(this, e, false);
+				viewModel.ItemsCanvas.OnMouseWheel(this, e, true);
 			}
 		}
 

@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private readonly IModelLinkService modelLinkService;
 		private readonly ILinkMenuItemService linkMenuItemService;
 		private readonly IGeometryService geometryService;
-		private readonly INodeSelectionService nodeSelectionService;
+		private readonly IItemSelectionService itemSelectionService;
 
 
 		public NodeViewModelService(
@@ -28,13 +28,13 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			IModelLinkService modelLinkService,
 			ILinkMenuItemService linkMenuItemService,
 			IGeometryService geometryService,
-			INodeSelectionService nodeSelectionService)
+			IItemSelectionService itemSelectionService)
 		{
 			this.themeService = themeService;
 			this.modelLinkService = modelLinkService;
 			this.linkMenuItemService = linkMenuItemService;
 			this.geometryService = geometryService;
-			this.nodeSelectionService = nodeSelectionService;
+			this.itemSelectionService = itemSelectionService;
 		}
 
 
@@ -80,7 +80,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 		public void MouseClicked(NodeViewModel nodeViewModel)
 		{
-			nodeSelectionService.Clicked(nodeViewModel);
+			itemSelectionService.Clicked(nodeViewModel);
 		}
 
 
@@ -94,8 +94,6 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			itemsCanvas.OnMouseWheel(uiElement, e, nodeViewModel.IsInnerSelected);
 		}
 
-
-		public bool IsRootSelected => nodeSelectionService.IsRootSelected;
 
 		public Brush GetRandomRectangleBrush(string nodeName)
 		{
