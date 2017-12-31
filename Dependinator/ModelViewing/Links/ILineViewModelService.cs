@@ -39,5 +39,6 @@ namespace Dependinator.ModelViewing.Links
 		IEnumerable<LinkItem> GetSourceLinkItems(Line line);
 		IEnumerable<LinkItem> GetTargetLinkItems(Line line);
 		void OnMouseWheel(LineViewModel lineViewModel, UIElement uiElement, MouseWheelEventArgs e);
+		string GetEndPointsData(Line line);
 	}
 }

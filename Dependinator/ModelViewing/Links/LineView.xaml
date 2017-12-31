@@ -53,12 +53,6 @@
 						<MenuItem 
 							Header="Source nodes"
 							ItemsSource="{Binding SourceLinks}">
-							<!--<MenuItem.Icon>
-								<Grid Margin="0">
-									<TextBlock Text="&#xE0B5;" Style="{DynamicResource MenuIconStyle}" Padding="2,0,0,0" />
-									--><!--<TextBlock Text="&#xE3C0;" Style="{DynamicResource MenuIconStyle}" Margin="4,4" Padding="0" Background="Transparent" />--><!--
-								</Grid>
-							</MenuItem.Icon>-->
 							<MenuItem.Resources>
 								<HierarchicalDataTemplate 
 									DataType="{x:Type local:LinkItem}"
@@ -74,12 +68,6 @@
 						<MenuItem 
 							Header="Target nodes"
 							ItemsSource="{Binding TargetLinks}">
-							<!--<MenuItem.Icon>
-								<Grid Margin="0">
-									<TextBlock Text="&#xE0B2;" Style="{DynamicResource MenuIconStyle}" Padding="2,0,0,0" />
-									--><!--<TextBlock Text="&#xE25A;" Style="{DynamicResource MenuIconStyle}" Margin="4,0" Padding="0" Background="Transparent" Foreground="{DynamicResource LocalAheadBrush}"/>--><!--
-								</Grid>
-							</MenuItem.Icon>-->
 							<MenuItem.Resources>
 								<HierarchicalDataTemplate 
 									DataType="{x:Type local:LinkItem}"
@@ -100,15 +88,67 @@
 
 			<!-- Line controls -->
 			<Path
+				Name="LineControl"
+				Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+				Data="{Binding LineData}"
+				Stroke="Transparent"
+				StrokeThickness="10"
+				Cursor="Hand">
+
+				<Path.ContextMenu>
+					<ContextMenu >
+
+						<MenuItem 
+							Header="Source nodes"
+							ItemsSource="{Binding SourceLinks}">
+							<MenuItem.Resources>
+								<HierarchicalDataTemplate 
+									DataType="{x:Type local:LinkItem}"
+									ItemsSource="{Binding SubItems}">
+									<MenuItem
+										Header="{Binding Text}" 
+										Command="{Binding LinkCommand}"
+										CommandParameter="{Binding Link}"/>
+								</HierarchicalDataTemplate>
+							</MenuItem.Resources>
+						</MenuItem>
+
+						<MenuItem 
+							Header="Target nodes"
+							ItemsSource="{Binding TargetLinks}">
+							<MenuItem.Resources>
+								<HierarchicalDataTemplate 
+									DataType="{x:Type local:LinkItem}"
+									ItemsSource="{Binding SubItems}">
+									<MenuItem
+										Header="{Binding Text}" 
+										Command="{Binding LinkCommand}"
+										CommandParameter="{Binding Link}"/>
+								</HierarchicalDataTemplate>
+							</MenuItem.Resources>
+						</MenuItem>
+
+					</ContextMenu>
+				</Path.ContextMenu>
+
+			</Path>
+
+
+			<Path
+				Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+				Data="{Binding EndPointsData}"
+				Stroke="#FFB0C4DE"
+				StrokeLineJoin="Round"
+				StrokeThickness="5"/>
+
+			<Path
 				Name="LinePoints"
 				Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
 				Data="{Binding PointsData}"
 				Stroke="#FFB0C4DE"
-				StrokeLineJoin="Round"
+				StrokeLineJoin="Miter"
 				StrokeThickness="5"
-				MouseEnter="UIElement_OnMouseEnterPoint"
-				MouseLeave="UIElement_OnMouseLeavePoint"/>
-
+				Cursor="SizeAll"/>
 
 		</Grid>
 

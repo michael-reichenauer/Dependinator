@@ -53,7 +53,7 @@ namespace Dependinator.ModelViewing.Links.Private
 			{
 				lineViewModel.Line.Owner.Root.View.ItemsCanvas.OnMouseWheel(uiElement, e, false);
 			}
-			
+
 		}
 
 
@@ -191,7 +191,7 @@ namespace Dependinator.ModelViewing.Links.Private
 					Point segmentEndPoint = points[i + 1];
 
 					double distance = geometryService.GetDistanceFromLine(
-						                  segmentStartPoint, segmentEndPoint, point) * itemScale;
+															segmentStartPoint, segmentEndPoint, point) * itemScale;
 
 					if (distance < 5)
 					{
@@ -300,9 +300,25 @@ namespace Dependinator.ModelViewing.Links.Private
 		public string GetPointsData(Line line)
 		{
 			string lineData = "";
-			double d = GetLineWidth(line).MM(2, 4);
+			double d = 2;
 
 			foreach (Point point in line.View.MiddlePoints())
+			{
+				Point m = Scaled(line, point);
+				lineData += Txt.I(
+					$" M {m.X - d},{m.Y - d} H {m.X + d} V {m.Y + d} H {m.X - d} V {m.Y - d} H {m.X + d} ");
+			}
+
+			return lineData;
+		}
+
+
+		public string GetEndPointsData(Line line)
+		{
+			string lineData = "";
+			double d = 2;
+
+			foreach (Point point in new[] { line.View.FirstPoint, line.View.LastPoint })
 			{
 				Point m = Scaled(line, point);
 				lineData += Txt.I(

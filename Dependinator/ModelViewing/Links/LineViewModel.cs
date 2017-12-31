@@ -59,6 +59,7 @@ namespace Dependinator.ModelViewing.Links
 		public string LineData => lineViewModelService.GetLineData(Line);
 
 		public string PointsData => lineViewModelService.GetPointsData(Line);
+		public string EndPointsData => lineViewModelService.GetEndPointsData(Line);
 
 		public string ArrowData => lineViewModelService.GetArrowData(Line);
 
@@ -101,6 +102,12 @@ namespace Dependinator.ModelViewing.Links
 		{
 			IEnumerable<LinkItem> items = lineViewModelService.GetTargetLinkItems(Line);
 			return new ObservableCollection<LinkItem>(items);
+		}
+
+
+		public void Clicked()
+		{
+			IsShowPoints = !IsShowPoints;
 		}
 
 
@@ -148,7 +155,6 @@ namespace Dependinator.ModelViewing.Links
 			lineViewModelService.UpdateLineBounds(Line);
 			IsMouseOver = true;
 			IsShowPoints = true;
-			Mouse.OverrideCursor = Cursors.Hand;
 			NotifyAll();
 		}
 
@@ -161,65 +167,55 @@ namespace Dependinator.ModelViewing.Links
 		private bool isPointMove = false;
 
 
-		public void OnMouseEnter(bool isPoint)
+		public void OnMouseEnter()
 		{
-			isPointMove = isPoint;
+			isPointMove = false;
 
-			if (isPoint)
+			delayDispatcher.Delay(ModelViewModel.MouseEnterDelay, _ =>
 			{
-				Mouse.OverrideCursor = Cursors.SizeAll;
 				IsMouseOver = true;
-				IsShowPoints = true;
 				Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
-			}
-			else
-			{
-				delayDispatcher.Delay(ModelViewModel.MouseEnterDelay, _ =>
-				{
-					if (ModelViewModel.IsControlling)
-					{
-						Mouse.OverrideCursor = Cursors.Hand;
-					}
-
-					IsMouseOver = true;
-					IsShowPoints = ModelViewModel.IsControlling;
-					Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
-				});
-			}
+			});
 		}
 
 
-		public void OnMouseLeave(bool isPoint)
+		public void OnMouseLeave()
 		{
 			if (!IsShowPoints)
 			{
-				Mouse.OverrideCursor = null;
 				delayDispatcher.Cancel();
 				IsMouseOver = false;
 				IsShowPoints = false;
 				isPointMove = false;
 				Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
 			}
-			else
-			{
-				if (isPoint)
-				{
-					IsShowPoints = false;
-					OnMouseLeave(false);
-				}
-				else
-				{
-					delayDispatcher.Delay(MouseExitDelay, _ =>
-					{
-						if (!isPointMove)
-						{
-							IsShowPoints = false;
-							OnMouseLeave(false);
-						}
-					});
-				}
-			}
 		}
+
+
+		public void OnMouseEnterPoint()
+		{
+			//Mouse.OverrideCursor = Cursors.SizeAll;
+		}
+
+
+		public void OnMouseLeavePoint()
+		{
+			//if (!IsShowPoints)
+			//{
+			//Mouse.OverrideCursor = null;
+			//	delayDispatcher.Cancel();
+			//	IsMouseOver = false;
+			//	IsShowPoints = false;
+			//	isPointMove = false;
+			//	Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
+			//}
+			//else
+			//{
+			//	IsShowPoints = false;
+			//	OnMouseLeave();
+			//}
+		}
+
 
 
 		private void EndMoveLinePoint()

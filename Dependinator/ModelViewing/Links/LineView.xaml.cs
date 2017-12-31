@@ -10,53 +10,42 @@ namespace Dependinator.ModelViewing.Links
 	/// </summary>
 	public partial class LineView : UserControl
 	{
-		//private readonly DragUiElement dragUiElement;
-		//private readonly DragUiElement dragUiElementPoints;
-
+		private MouseClicked lineClicked;
+		private readonly DragUiElement dragLine;
+		private readonly DragUiElement dragLineControlPoints;
 
 		private LineViewModel ViewModel => DataContext as LineViewModel;
-		private MouseClicked mouseClicked;
+
 
 		public LineView()
 		{
 			InitializeComponent();
-			mouseClicked = new MouseClicked(this, Clicked);
-			//dragUiElement = new DragUiElement(
-			//	this,
-			//	(p, o) => ViewModel?.MouseMove(p),
-			//	() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
-			//	p => ViewModel?.MouseDown(p, false),
-			//	p => ViewModel?.MouseUp(p));
 
-			//dragUiElementPoints = new DragUiElement(
-			//	LinePoints,
-			//	(p, o) => ViewModel?.MouseMove(p),
-			//	() => Keyboard.Modifiers.HasFlag(ModifierKeys.Control),
-			//	p => ViewModel?.MouseDown(p, true),
-			//	p => ViewModel?.MouseUp(p));
+			lineClicked = new MouseClicked(this, Clicked);
 
+			dragLine = new DragUiElement(
+				LineControl,
+				(p, o) => ViewModel?.MouseMove(p),
+				p => ViewModel?.MouseDown(p, false),
+				p => ViewModel?.MouseUp(p));
 
+			dragLineControlPoints = new DragUiElement(
+				LinePoints,
+				(p, o) => ViewModel?.MouseMove(p),
+				p => ViewModel?.MouseDown(p, true),
+				p => ViewModel?.MouseUp(p));
 		}
 
 
-		private void Clicked(MouseButtonEventArgs obj)
-		{
-			throw new System.NotImplementedException();
-		}
+		private void Clicked(MouseButtonEventArgs e) => ViewModel?.Clicked();
 
 
 		private void UIElement_OnMouseEnter(object sender, MouseEventArgs e) =>
-			ViewModel?.OnMouseEnter(false);
+			ViewModel?.OnMouseEnter();
 
 		private void UIElement_OnMouseLeave(object sender, MouseEventArgs e) =>
-			ViewModel?.OnMouseLeave(false);
+			ViewModel?.OnMouseLeave();
 
-
-		private void UIElement_OnMouseEnterPoint(object sender, MouseEventArgs e) =>
-			ViewModel?.OnMouseEnter(true);
-
-		private void UIElement_OnMouseLeavePoint(object sender, MouseEventArgs e) =>
-			ViewModel?.OnMouseLeave(true);
 
 		protected override void OnMouseWheel(MouseWheelEventArgs e) => ViewModel.OnMouseWheel(this, e);
 
