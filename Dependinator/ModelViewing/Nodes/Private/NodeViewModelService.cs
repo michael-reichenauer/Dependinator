@@ -115,6 +115,12 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			return themeService.GetRectangleBackgroundBrush(brush);
 		}
 
+		public Brush GetSelectedBrush(Brush brush)
+		{
+			return themeService.GetRectangleSelectedBackgroundBrush(brush);
+		}
+
+
 		public Brush GetRectangleHighlightBrush(Brush brush)
 		{
 			return themeService.GetRectangleHighlighterBrush(brush);

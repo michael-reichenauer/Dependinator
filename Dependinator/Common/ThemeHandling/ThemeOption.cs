@@ -6,7 +6,7 @@ namespace Dependinator.Common.ThemeHandling
 
 		public string Name { get; set; } = "Custom_1";
 
-		public string BackgroundColor { get; set; } = "#FF0E0E0E";
+		public string BackgroundColor { get; set; } = "#FF050505";
 		public string ForegroundColor { get; set; } = "#FFFFFFFF";
 		public string TitlebarBackgroundColor { get; set; } = "#FF0E0E0E";
 

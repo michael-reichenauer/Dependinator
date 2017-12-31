@@ -22,6 +22,8 @@ namespace Dependinator.ModelViewing.Nodes
 		private readonly Lazy<ObservableCollection<LinkItem>> outgoingLinks;
 
 		private bool isFirstShow = true;
+		private readonly Brush backgroundBrush;
+		private readonly Brush selectedBrush;
 
 
 		protected NodeViewModel(INodeViewModelService nodeViewModelService, Node node)
@@ -31,7 +33,9 @@ namespace Dependinator.ModelViewing.Nodes
 			this.Node = node;
 
 			RectangleBrush = nodeViewModelService.GetNodeBrush(node);
-			BackgroundBrush = nodeViewModelService.GetBackgroundBrush(RectangleBrush);
+			backgroundBrush = nodeViewModelService.GetBackgroundBrush(RectangleBrush);
+			selectedBrush = nodeViewModelService.GetSelectedBrush(RectangleBrush);
+
 
 			incomingLinks = new Lazy<ObservableCollection<LinkItem>>(GetIncomingLinkItems);
 			outgoingLinks = new Lazy<ObservableCollection<LinkItem>>(GetOutgoingLinkItems);
@@ -50,7 +54,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public Brush RectangleBrush { get; }
 		public Brush TitleBorderBrush => Node.NodeType == NodeType.Type ? RectangleBrush : null;
-		public Brush BackgroundBrush { get; }
+		public Brush BackgroundBrush => IsSelected ? selectedBrush : backgroundBrush;
 
 		public bool IsShowNode => ItemScale < 100;
 
@@ -79,9 +83,9 @@ namespace Dependinator.ModelViewing.Nodes
 						Node.Parent.View.ItemsCanvas.RemoveItem(view2Model);
 						view2Model = null;
 					}
-
 				}
 
+				Notify(nameof(BackgroundBrush));
 				IsInnerSelected = false;
 				if (ItemsViewModel?.ItemsCanvas != null)
 				{

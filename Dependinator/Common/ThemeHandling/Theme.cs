@@ -46,6 +46,7 @@ namespace Dependinator.Common.ThemeHandling
 
 		public readonly List<SolidColorBrush> brushes = new List<SolidColorBrush>();
 		public readonly List<Brush> darkBrushes = new List<Brush>();
+		public readonly List<Brush> selectedBrushes = new List<Brush>();
 		public readonly List<Brush> lighterBrushes = new List<Brush>();
 		public readonly List<Brush> lighterLighterBrushes = new List<Brush>();
 
@@ -114,6 +115,14 @@ namespace Dependinator.Common.ThemeHandling
 			return darkBrushes[index];
 		}
 
+		public Brush GetSelectedBrush(Brush brush)
+		{
+			int index = GetBrushIndex(brush);
+
+			return selectedBrushes[index];
+		}
+
+
 
 		public Brush GetBrush(string name)
 		{
@@ -164,6 +173,7 @@ namespace Dependinator.Common.ThemeHandling
 
 				brushes.Add(brush);
 				darkBrushes.Add(darkerBrush);
+				selectedBrushes.Add(SelectedBrush((SolidColorBrush)TextLowBrush));
 				lighterBrushes.Add(lighterBrush);
 				lighterLighterBrushes.Add(lighterLighterBrush);
 			}
@@ -173,7 +183,15 @@ namespace Dependinator.Common.ThemeHandling
 		private SolidColorBrush DarkBrush(SolidColorBrush brush)
 		{
 			SolidColorBrush darkerBrush = new SolidColorBrush(brush.Color);
-			darkerBrush.Color = Converter.InterpolateColors(brush.Color, BackgroundBrush.Color, 0.97f);
+			darkerBrush.Color = Converter.InterpolateColors(brush.Color, BackgroundBrush.Color, 0.96f);
+			return darkerBrush;
+		}
+
+
+		private SolidColorBrush SelectedBrush(SolidColorBrush brush)
+		{
+			SolidColorBrush darkerBrush = new SolidColorBrush(brush.Color);
+			darkerBrush.Color = Converter.InterpolateColors(brush.Color, BackgroundBrush.Color, 0.95f);
 			return darkerBrush;
 		}
 

@@ -132,6 +132,11 @@ namespace Dependinator.Common.ThemeHandling
 			return Theme.GetDarkerBrush(brush);
 		}
 
+		public Brush GetRectangleSelectedBackgroundBrush(Brush brush)
+		{
+			return Theme.GetSelectedBrush(brush);
+		}
+
 
 		public Brush GetRectangleHighlighterBrush(Brush brush)
 		{
