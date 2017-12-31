@@ -122,10 +122,6 @@ namespace Dependinator.ModelViewing.Nodes
 			nodeViewModelService.MouseClicked(this);
 		}
 
-		public void MouseClickedUnselect(MouseButtonEventArgs e)
-		{
-			nodeViewModelService.MouseClicked(null);
-		}
 
 		public override void MoveItem(Vector moveOffset)
 		{

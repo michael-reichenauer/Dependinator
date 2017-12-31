@@ -89,7 +89,7 @@
 			<!-- Line controls -->
 			<Path
 				Name="LineControl"
-				Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+				Visibility="{Binding IsSelected, Converter={StaticResource VC}}"
 				Data="{Binding LineData}"
 				Stroke="Transparent"
 				StrokeThickness="10"
@@ -135,7 +135,7 @@
 
 
 			<Path
-				Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+				Visibility="{Binding IsSelected, Converter={StaticResource VC}}"
 				Data="{Binding EndPointsData}"
 				Stroke="#FFB0C4DE"
 				StrokeLineJoin="Round"
@@ -143,7 +143,7 @@
 
 			<Path
 				Name="LinePoints"
-				Visibility="{Binding IsShowPoints, Converter={StaticResource VC}}"
+				Visibility="{Binding IsSelected, Converter={StaticResource VC}}"
 				Data="{Binding PointsData}"
 				Stroke="#FFB0C4DE"
 				StrokeLineJoin="Miter"

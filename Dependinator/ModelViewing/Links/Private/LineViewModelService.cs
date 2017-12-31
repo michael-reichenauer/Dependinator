@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Input;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.ModelViewing.Nodes.Private;
 using Dependinator.Utils.UI;
 
 namespace Dependinator.ModelViewing.Links.Private
@@ -15,16 +16,19 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		private readonly IGeometryService geometryService;
 		private readonly ILinkMenuItemService linkMenuItemService;
+		private readonly IItemSelectionService itemSelectionService;
 
 		private readonly Point middleBottom = new Point(0.5, 1);
 		private readonly Point middleTop = new Point(0.5, 0);
 
 		public LineViewModelService(
 			IGeometryService geometryService,
-			ILinkMenuItemService linkMenuItemService)
+			ILinkMenuItemService linkMenuItemService,
+			IItemSelectionService itemSelectionService)
 		{
 			this.geometryService = geometryService;
 			this.linkMenuItemService = linkMenuItemService;
+			this.itemSelectionService = itemSelectionService;
 		}
 
 
@@ -326,6 +330,12 @@ namespace Dependinator.ModelViewing.Links.Private
 			}
 
 			return lineData;
+		}
+
+
+		public void Clicked(LineViewModel lineViewModel)
+		{
+			itemSelectionService.Clicked(lineViewModel);
 		}
 
 

@@ -56,7 +56,7 @@ namespace Dependinator.ModelViewing.Nodes
 			nodeViewModel.OnMouseWheel(uiElement, e);
 
 
-		public void Clicked(MouseButtonEventArgs e) => nodeViewModel.MouseClickedUnselect(e);
+		public void Clicked(MouseButtonEventArgs e) => nodeViewModel.MouseClicked(e);
 
 
 		public void ClickedEditNode(MouseButtonEventArgs e)

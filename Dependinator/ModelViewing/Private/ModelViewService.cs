@@ -65,9 +65,10 @@ namespace Dependinator.ModelViewing.Private
 			await modelService.RefreshAsync(refreshLayout);
 
 		public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelService.GetHiddenNodeNames();
+
 		public void Clicked()
 		{
-			itemSelectionService.Clicked(null);
+			itemSelectionService.Clicked();
 		}
 
 

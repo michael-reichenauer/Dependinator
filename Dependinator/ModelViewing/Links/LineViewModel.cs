@@ -54,7 +54,7 @@ namespace Dependinator.ModelViewing.Links
 			: Line.Target.View.ViewModel.RectangleBrush;
 
 		public bool IsMouseOver { get => Get(); private set => Set(value); }
-		public bool IsShowPoints { get => Get(); private set => Set(value); }
+		public bool IsSelected { get => Get(); set => Set(value); }
 
 		public string LineData => lineViewModelService.GetLineData(Line);
 
@@ -107,7 +107,7 @@ namespace Dependinator.ModelViewing.Links
 
 		public void Clicked()
 		{
-			IsShowPoints = !IsShowPoints;
+			lineViewModelService.Clicked(this);
 		}
 
 
@@ -116,8 +116,6 @@ namespace Dependinator.ModelViewing.Links
 			isPointMove = isPoint;
 			mouseDownPoint = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
 			currentPointIndex = -1;
-			IsMouseOver = true;
-			IsShowPoints = true;
 		}
 
 
@@ -154,7 +152,6 @@ namespace Dependinator.ModelViewing.Links
 			lineViewModelService.MoveLinePoint(Line, currentPointIndex, point);
 			lineViewModelService.UpdateLineBounds(Line);
 			IsMouseOver = true;
-			IsShowPoints = true;
 			NotifyAll();
 		}
 
@@ -181,40 +178,15 @@ namespace Dependinator.ModelViewing.Links
 
 		public void OnMouseLeave()
 		{
-			if (!IsShowPoints)
+			if (!IsSelected)
 			{
 				delayDispatcher.Cancel();
 				IsMouseOver = false;
-				IsShowPoints = false;
 				isPointMove = false;
 				Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
 			}
 		}
 
-
-		public void OnMouseEnterPoint()
-		{
-			//Mouse.OverrideCursor = Cursors.SizeAll;
-		}
-
-
-		public void OnMouseLeavePoint()
-		{
-			//if (!IsShowPoints)
-			//{
-			//Mouse.OverrideCursor = null;
-			//	delayDispatcher.Cancel();
-			//	IsMouseOver = false;
-			//	IsShowPoints = false;
-			//	isPointMove = false;
-			//	Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
-			//}
-			//else
-			//{
-			//	IsShowPoints = false;
-			//	OnMouseLeave();
-			//}
-		}
 
 
 
@@ -260,42 +232,11 @@ namespace Dependinator.ModelViewing.Links
 
 		private void TrackSourceOrTargetChanges()
 		{
-			try
-			{
-				//if (line.Source == line.Target.Parent)
-				//{
-				//	// Source node is parent of target, need to update line when source canvas is moved
-				//	//WhenSet(line.Source.ItemsCanvas, nameof(line.Source.ItemsCanvas.Offset))
-				//	//	.Notify(SourceOrTargetChanged);
-
-				//	// Update line when target node is moved
-				//	WhenSet(line.Target.ViewModel, nameof(line.Target.ViewModel.ItemBounds))
-				//		.Notify(SourceOrTargetChanged);
-
-				//}
-				//else if (line.Source.Parent == line.Target)
-				//{
-				//	// Source node is child of target node, update line when target canvas is moved
-				//	//WhenSet(line.Target.ItemsCanvas, nameof(line.Target.ItemsCanvas.Offset))
-				//	//	.Notify(SourceOrTargetChanged);
-
-				//	// Update line when source node is moved
-				//	WhenSet(line.Source.ViewModel, nameof(line.Source.ViewModel.ItemBounds))
-				//		.Notify(SourceOrTargetChanged);
-				//}
-				//else
-				{
-					// Source and targets are siblings. update line when either node is moved
-					WhenSet(Line.Source.View.ViewModel, nameof(Line.Source.View.ViewModel.ItemBounds))
-						.Notify(SourceOrTargetChanged);
-					WhenSet(Line.Target.View.ViewModel, nameof(Line.Target.View.ViewModel.ItemBounds))
-						.Notify(SourceOrTargetChanged);
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Exception(e);
-			}
+			// Source and targets are siblings. update line when either node is moved
+			WhenSet(Line.Source.View.ViewModel, nameof(Line.Source.View.ViewModel.ItemBounds))
+				.Notify(SourceOrTargetChanged);
+			WhenSet(Line.Target.View.ViewModel, nameof(Line.Target.View.ViewModel.ItemBounds))
+				.Notify(SourceOrTargetChanged);
 		}
 
 
