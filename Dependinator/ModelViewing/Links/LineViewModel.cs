@@ -18,7 +18,6 @@ namespace Dependinator.ModelViewing.Links
 		private readonly DelayDispatcher delayDispatcher = new DelayDispatcher();
 		private readonly Lazy<ObservableCollection<LinkItem>> sourceLinks;
 		private readonly Lazy<ObservableCollection<LinkItem>> targetLinks;
-		private static TimeSpan MouseExitDelay => TimeSpan.FromMilliseconds(10);
 
 		private Point mouseDownPoint;
 		private int currentPointIndex = -1;
@@ -38,7 +37,7 @@ namespace Dependinator.ModelViewing.Links
 			targetLinks = new Lazy<ObservableCollection<LinkItem>>(GetTargetLinkItems);
 		}
 
-
+		
 		public Line Line { get; }
 
 		public override bool CanShow =>
@@ -54,7 +53,11 @@ namespace Dependinator.ModelViewing.Links
 			: Line.Target.View.ViewModel.RectangleBrush;
 
 		public bool IsMouseOver { get => Get(); private set => Set(value); }
-		public bool IsSelected { get => Get(); set => Set(value); }
+		public bool IsSelected
+		{
+			get => Get();
+			set => Set(value).Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
+		}
 
 		public string LineData => lineViewModelService.GetLineData(Line);
 
