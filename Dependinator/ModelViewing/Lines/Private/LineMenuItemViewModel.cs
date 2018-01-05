@@ -6,7 +6,7 @@ using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils.UI.Mvvm;
 
 
-namespace Dependinator.ModelViewing.Links.Private
+namespace Dependinator.ModelViewing.Lines.Private
 {
 	internal class LineMenuItemViewModel : ViewModel
 	{

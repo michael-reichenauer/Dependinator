@@ -5,7 +5,7 @@ using Dependinator.Common;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
-namespace Dependinator.ModelViewing.Links.Private
+namespace Dependinator.ModelViewing.Lines.Private
 {
 	internal class LineMenuItemService : ILineMenuItemService
 	{

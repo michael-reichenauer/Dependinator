@@ -6,10 +6,10 @@
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:virtualCanvas="clr-namespace:Dependinator.Utils.UI.VirtualCanvas"
 	xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-	xmlns:links="clr-namespace:Dependinator.ModelViewing.Links"
 	xmlns:nodes="clr-namespace:Dependinator.ModelViewing.Nodes"
 	xmlns:open="clr-namespace:Dependinator.ModelViewing.Open"
 	xmlns:private="clr-namespace:Dependinator.ModelViewing.Items.Private"
+	xmlns:lines="clr-namespace:Dependinator.ModelViewing.Lines"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
@@ -133,7 +133,7 @@
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>
-									<links:LineView />
+									<lines:LineView />
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>

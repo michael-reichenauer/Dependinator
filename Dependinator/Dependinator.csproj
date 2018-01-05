@@ -149,9 +149,9 @@
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
     <Compile Include="ModelViewing\Items\ISelectableItem.cs" />
-    <Compile Include="ModelViewing\Links\Private\ILineControlService.cs" />
-    <Compile Include="ModelViewing\Links\Private\LineControl.cs" />
-    <Compile Include="ModelViewing\Links\Private\LineControlService.cs" />
+    <Compile Include="ModelViewing\Lines\Private\ILineControlService.cs" />
+    <Compile Include="ModelViewing\Lines\Private\LineControl.cs" />
+    <Compile Include="ModelViewing\Lines\Private\LineControlService.cs" />
     <Compile Include="Utils\UI\MouseHelper.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControl.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControlViewModel.cs" />
@@ -186,9 +186,9 @@
       <DependentUpon>DescriptionView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\INodeLayoutService.cs" />
-    <Compile Include="ModelViewing\Links\Private\LineMenuItemViewModel.cs" />
-    <Compile Include="ModelViewing\Links\Private\ILineMenuItemService.cs" />
-    <Compile Include="ModelViewing\Links\Private\LineMenuItemService.cs" />
+    <Compile Include="ModelViewing\Lines\Private\LineMenuItemViewModel.cs" />
+    <Compile Include="ModelViewing\Lines\Private\ILineMenuItemService.cs" />
+    <Compile Include="ModelViewing\Lines\Private\LineMenuItemService.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControlView.xaml.cs">
       <DependentUpon>NodeControlView.xaml</DependentUpon>
     </Compile>
@@ -230,10 +230,10 @@
     <Compile Include="Utils\UI\DragUiElement.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\IModelLinkService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\Line.cs" />
-    <Compile Include="ModelViewing\Links\LineView.xaml.cs">
+    <Compile Include="ModelViewing\Lines\LineView.xaml.cs">
       <DependentUpon>LineView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\Links\LineViewModel.cs" />
+    <Compile Include="ModelViewing\Lines\LineViewModel.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\Link.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelLinkService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\LinkSegment.cs" />
@@ -294,11 +294,11 @@
     <Compile Include="Common\ModelMetadataFolders\FileEventArgs.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\IFolderMonitorService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ILinkSegmentService.cs" />
-    <Compile Include="ModelViewing\Links\Private\ILineViewModelService.cs" />
+    <Compile Include="ModelViewing\Lines\Private\ILineViewModelService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\LinkSegmentService.cs" />
-    <Compile Include="ModelViewing\Links\Private\LineViewModelService.cs" />
-    <Compile Include="ModelViewing\Links\Private\LinkLineBounds.cs" />
-    <Compile Include="ModelViewing\Links\Private\LinkGroup.cs" />
+    <Compile Include="ModelViewing\Lines\Private\LineViewModelService.cs" />
+    <Compile Include="ModelViewing\Lines\Private\LinkLineBounds.cs" />
+    <Compile Include="ModelViewing\Lines\Private\LinkGroup.cs" />
     <Compile Include="ModelViewing\Items\Private\IgnoreMouseWheelBehavior.cs" />
     <Compile Include="ModelViewing\Nodes\INodeViewModelService.cs" />
     <Compile Include="ModelViewing\Items\IItemsCanvasBounds.cs" />
@@ -431,7 +431,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="ModelViewing\Links\LineView.xaml">
+    <Page Include="ModelViewing\Lines\LineView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

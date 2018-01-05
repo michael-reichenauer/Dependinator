@@ -3,7 +3,8 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using Dependinator.Utils.UI;
 
-namespace Dependinator.ModelViewing.Links
+
+namespace Dependinator.ModelViewing.Lines
 {
 	/// <summary>
 	/// Interaction logic for LineView.xaml

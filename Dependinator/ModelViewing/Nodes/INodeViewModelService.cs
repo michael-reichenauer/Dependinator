@@ -2,8 +2,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using Dependinator.ModelViewing.Links;
-using Dependinator.ModelViewing.Links.Private;
+using Dependinator.ModelViewing.Lines.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 

@@ -5,9 +5,9 @@ using System.Windows;
 using System.Windows.Input;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.ModelViewing.Nodes.Private;
 
-namespace Dependinator.ModelViewing.Links.Private
+
+namespace Dependinator.ModelViewing.Lines.Private
 {
 	internal class LineViewModelService : ILineViewModelService
 	{

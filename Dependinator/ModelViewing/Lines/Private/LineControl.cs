@@ -4,7 +4,7 @@ using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 
 
-namespace Dependinator.ModelViewing.Links.Private
+namespace Dependinator.ModelViewing.Lines.Private
 {
 	internal class LineControl
 	{

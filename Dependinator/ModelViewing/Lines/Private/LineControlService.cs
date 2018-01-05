@@ -6,7 +6,7 @@ using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.UI;
 
 
-namespace Dependinator.ModelViewing.Links.Private
+namespace Dependinator.ModelViewing.Lines.Private
 {
 	internal class LineControlService : ILineControlService
 	{
