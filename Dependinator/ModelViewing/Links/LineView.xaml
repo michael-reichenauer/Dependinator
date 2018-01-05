@@ -148,7 +148,19 @@
 				Stroke="#FFB0C4DE"
 				StrokeLineJoin="Miter"
 				StrokeThickness="5"
-				Cursor="SizeAll"/>
+				Cursor="SizeAll">
+				<Path.ContextMenu>
+					<ContextMenu >
+
+						<MenuItem
+							Header="Remove Point"
+							Command="{Binding RemovePointCommand}">
+						</MenuItem>
+
+					</ContextMenu>
+				</Path.ContextMenu>
+
+			</Path>
 
 		</Grid>
 

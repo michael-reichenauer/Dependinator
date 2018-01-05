@@ -41,5 +41,6 @@ namespace Dependinator.ModelViewing.Links
 		void OnMouseWheel(LineViewModel lineViewModel, UIElement uiElement, MouseWheelEventArgs e);
 		string GetEndPointsData(Line line);
 		void Clicked(LineViewModel lineViewModel);
+		void RemovePoint(Line line);
 	}
 }

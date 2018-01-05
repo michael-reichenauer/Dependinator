@@ -8,6 +8,7 @@ using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
+using Dependinator.Utils.UI.Mvvm;
 
 
 namespace Dependinator.ModelViewing.Links
@@ -76,6 +77,8 @@ namespace Dependinator.ModelViewing.Links
 		public ObservableCollection<LinkItem> SourceLinks => sourceLinks.Value;
 
 		public ObservableCollection<LinkItem> TargetLinks => targetLinks.Value;
+
+		public Command RemovePointCommand => Command(() => lineViewModelService.RemovePoint(Line));
 
 
 		public void ToggleLine()
@@ -152,6 +155,7 @@ namespace Dependinator.ModelViewing.Links
 				}
 			}
 
+			Mouse.OverrideCursor = Cursors.SizeAll;
 			lineViewModelService.MoveLinePoint(Line, currentPointIndex, point);
 			lineViewModelService.UpdateLineBounds(Line);
 			IsMouseOver = true;
@@ -204,6 +208,7 @@ namespace Dependinator.ModelViewing.Links
 				}
 			}
 
+			Mouse.OverrideCursor = null;
 			lineViewModelService.UpdateLineBounds(Line);
 			NotifyAll();
 			currentPointIndex = -1;

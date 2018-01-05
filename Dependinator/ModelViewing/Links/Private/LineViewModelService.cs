@@ -158,6 +158,20 @@ namespace Dependinator.ModelViewing.Links.Private
 			line.View.Points[pointIndex] = newPoint;
 		}
 
+		public void RemovePoint(Line line)
+		{
+			int index = GetLinePointIndex(line, Mouse.GetPosition(Application.Current.MainWindow), true);
+
+			List<Point> viewPoints = line.View.Points;
+
+			if (index > 0 && index < viewPoints.Count - 1)
+			{
+				viewPoints.RemoveAt(index);
+
+				UpdateLineBounds(line);
+				line.View.ViewModel.NotifyAll();
+			}
+		}
 
 
 		public int GetLinePointIndex(Line line, Point point, bool isPointMove)
@@ -337,6 +351,8 @@ namespace Dependinator.ModelViewing.Links.Private
 		{
 			itemSelectionService.Clicked(lineViewModel);
 		}
+
+
 
 
 		public string GetArrowData(Line line)
