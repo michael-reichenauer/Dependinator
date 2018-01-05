@@ -20,17 +20,13 @@ namespace Dependinator.ModelViewing.Lines
 		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> sourceLinks;
 		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> targetLinks;
 
-		
-		public LineViewModel(
-			ILineViewModelService lineViewModelService,
-			ILineControlService lineControlService,
-			Line line)
+
+		public LineViewModel(ILineViewModelService lineViewModelService, Line line)
 		{
 			this.lineViewModelService = lineViewModelService;
-
 			this.Line = line;
 			line.View.ViewModel = this;
-			LineControl = new LineControl(lineControlService, line);
+			LineControl = lineViewModelService.GetLineControl(line);
 			ItemZIndex = -1;
 
 			UpdateLine();
@@ -39,6 +35,7 @@ namespace Dependinator.ModelViewing.Lines
 			sourceLinks = new Lazy<ObservableCollection<LineMenuItemViewModel>>(GetSourceLinkItems);
 			targetLinks = new Lazy<ObservableCollection<LineMenuItemViewModel>>(GetTargetLinkItems);
 		}
+
 
 
 		public LineControl LineControl;

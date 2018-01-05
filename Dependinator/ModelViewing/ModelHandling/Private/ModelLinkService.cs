@@ -222,7 +222,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public void AddLineViewModel(Line line)
 		{
-			LineViewModel lineViewModel = new LineViewModel(lineViewModelService, lineControlService, line);
+			LineViewModel lineViewModel = new LineViewModel(lineViewModelService, line);
 
 			line.Owner.View.ItemsCanvas.AddItem(lineViewModel);
 		}

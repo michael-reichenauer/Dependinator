@@ -297,7 +297,6 @@
     <Compile Include="ModelViewing\Lines\Private\ILineViewModelService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\LinkSegmentService.cs" />
     <Compile Include="ModelViewing\Lines\Private\LineViewModelService.cs" />
-    <Compile Include="ModelViewing\Lines\Private\LinkLineBounds.cs" />
     <Compile Include="ModelViewing\Lines\Private\LinkGroup.cs" />
     <Compile Include="ModelViewing\Items\Private\IgnoreMouseWheelBehavior.cs" />
     <Compile Include="ModelViewing\Nodes\INodeViewModelService.cs" />

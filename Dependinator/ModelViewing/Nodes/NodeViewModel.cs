@@ -63,6 +63,8 @@ namespace Dependinator.ModelViewing.Nodes
 		public bool IsShowItems => CanShowChildren;
 
 		public bool IsShowDescription => !string.IsNullOrEmpty(Description) && !CanShowChildren;
+		public bool IsShowToolTip => true;
+
 
 		public string Name => Node.Name.DisplayName;
 

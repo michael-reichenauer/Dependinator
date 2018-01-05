@@ -8,7 +8,6 @@ namespace Dependinator.ModelViewing.Lines.Private
 {
 	internal interface ILineViewModelService
 	{
-		string GetLineToolTip(Line line);
 		double GetLineWidth(Line line);
 		string GetLineData(Line line);
 		string GetPointsData(Line line);
@@ -21,5 +20,6 @@ namespace Dependinator.ModelViewing.Lines.Private
 		void Clicked(LineViewModel lineViewModel);
 		void UpdateLineBounds(Line line);
 		void UpdateLineEndPoints(Line line);
+		LineControl GetLineControl(Line line);
 	}
 }

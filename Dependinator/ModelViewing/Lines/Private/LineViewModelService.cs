@@ -16,31 +16,27 @@ namespace Dependinator.ModelViewing.Lines.Private
 		private static readonly double LineMargin = 10;
 
 		private readonly ILineMenuItemService lineMenuItemService;
+		private readonly ILineControlService lineControlService;
 		private readonly IItemSelectionService itemSelectionService;
 
 
 		public LineViewModelService(
 			ILineMenuItemService lineMenuItemService,
+			ILineControlService lineControlService,
 			IItemSelectionService itemSelectionService)
 		{
 			this.lineMenuItemService = lineMenuItemService;
+			this.lineControlService = lineControlService;
 			this.itemSelectionService = itemSelectionService;
 		}
 
 
 
-		public IEnumerable<LineMenuItemViewModel> GetSourceLinkItems(Line line)
-		{
-			IEnumerable<LineMenuItemViewModel> items = lineMenuItemService.GetSourceLinkItems(line);
-			return items;
-		}
-
-
-		public IEnumerable<LineMenuItemViewModel> GetTargetLinkItems(Line line)
-		{
-			IEnumerable<LineMenuItemViewModel> items = lineMenuItemService.GetTargetLinkItems(line);
-			return items;
-		}
+		public IEnumerable<LineMenuItemViewModel> GetSourceLinkItems(Line line) =>
+			lineMenuItemService.GetSourceLinkItems(line);
+		
+		public IEnumerable<LineMenuItemViewModel> GetTargetLinkItems(Line line) =>
+			lineMenuItemService.GetTargetLinkItems(line);
 
 
 		public void OnMouseWheel(LineViewModel lineViewModel, UIElement uiElement, MouseWheelEventArgs e)
@@ -53,8 +49,10 @@ namespace Dependinator.ModelViewing.Lines.Private
 			{
 				lineViewModel.Line.Owner.Root.View.ItemsCanvas.OnMouseWheel(uiElement, e, false);
 			}
-
 		}
+
+		public LineControl GetLineControl(Line line) => new LineControl(lineControlService, line);
+
 
 		public void UpdateLineEndPoints(Line line)
 		{
@@ -216,10 +214,67 @@ namespace Dependinator.ModelViewing.Lines.Private
 		}
 
 
-		public string GetLineToolTip(Line line)
-			//=> $"{line.Links.Count} links";
-			=> $"{line.Source.Name.DisplayFullName} -> {line.Target.Name.DisplayFullName}, {line.Links.Count} links";
+		public double GetArrowWidth(Line line)
+		{
+			double arrowWidth = (10 * line.View.ViewModel.ItemScale).MM(6, 15);
 
+			if (line.View.ViewModel.IsMouseOver)
+			{
+				arrowWidth = (arrowWidth * 1.5).MM(0, 20);
+			}
+
+			return arrowWidth;
+		}
+
+
+
+		private Point GetRelativeSource(Line line)
+		{
+			if (line.View.RelativeSourcePoint.X >= 0)
+			{
+				// use specified source
+				return line.View.RelativeSourcePoint;
+			}
+
+			if (line.Source == line.Target.Parent)
+			{
+				// The target is the child of the source,
+				// i.e. line start at the top of the source and goes to target top
+				return MiddleTop;
+			}
+
+			// If target is sibling or parent
+			// i.e. line start at the bottom of the source and goes to target top
+			return MiddleBottom;
+		}
+
+
+
+		private Point GetRelativeTarget(Line line)
+		{
+			if (line.View.RelativeTargetPoint.X >= 0)
+			{
+				// use specified source
+				return line.View.RelativeTargetPoint;
+			}
+
+			if (line.Source.Parent == line.Target)
+			{
+				// The target is a parent of the source,
+				// i.e. line starts at source bottom and ends at the bottom of the target node
+				return MiddleBottom;
+			}
+
+			// If target is sibling or child
+			// i.e. line start at the bottom of the source and goes to target top
+			return MiddleTop;
+		}
+
+
+		private static Point ParentPointToChildPoint(Node parent, Point point)
+		{
+			return parent.View.ItemsCanvas.ParentToChildCanvasPoint(point);
+		}
 
 
 		//public void AddLinkLines(LinkOld link)
@@ -481,17 +536,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 		//}
 
 
-		public double GetArrowWidth(Line line)
-		{
-			double arrowWidth = (10 * line.View.ViewModel.ItemScale).MM(6, 15);
 
-			if (line.View.ViewModel.IsMouseOver)
-			{
-				arrowWidth = (arrowWidth * 1.5).MM(0, 20);
-			}
-
-			return arrowWidth;
-		}
 
 
 
@@ -542,70 +587,22 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 
 
-		private Point GetRelativeSource(Line line)
-		{
-			if (line.View.RelativeSourcePoint.X >= 0)
-			{
-				// use specified source
-				return line.View.RelativeSourcePoint;
-			}
 
-			if (line.Source == line.Target.Parent)
-			{
-				// The target is the child of the source,
-				// i.e. line start at the top of the source and goes to target top
-				return MiddleTop;
-			}
+		//private static Rect GetLineBounds(Point p1, Point p2, double margin)
+		//{
+		//	// Line bounds:
+		//	double x = Math.Min(p1.X, p2.X);
+		//	double y = Math.Min(p1.Y, p2.Y);
+		//	double width = Math.Abs(p2.X - p1.X);
+		//	double height = Math.Abs(p2.Y - p1.Y);
 
-			// If target is sibling or parent
-			// i.e. line start at the bottom of the source and goes to target top
-			return MiddleBottom;
-		}
+		//	x = x - margin;
+		//	y = y - margin;
+		//	width = width + margin * 2;
+		//	height = height + margin * 2;
 
-
-
-		private Point GetRelativeTarget(Line line)
-		{
-			if (line.View.RelativeTargetPoint.X >= 0)
-			{
-				// use specified source
-				return line.View.RelativeTargetPoint;
-			}
-
-			if (line.Source.Parent == line.Target)
-			{
-				// The target is a parent of the source,
-				// i.e. line starts at source bottom and ends at the bottom of the target node
-				return MiddleBottom;
-			}
-
-			// If target is sibling or child
-			// i.e. line start at the bottom of the source and goes to target top
-			return MiddleTop;
-		}
-
-
-		private static Point ParentPointToChildPoint(Node parent, Point point)
-		{
-			return parent.View.ItemsCanvas.ParentToChildCanvasPoint(point);
-		}
-
-
-		private static Rect GetLineBounds(Point p1, Point p2, double margin)
-		{
-			// Line bounds:
-			double x = Math.Min(p1.X, p2.X);
-			double y = Math.Min(p1.Y, p2.Y);
-			double width = Math.Abs(p2.X - p1.X);
-			double height = Math.Abs(p2.Y - p1.Y);
-
-			x = x - margin;
-			y = y - margin;
-			width = width + margin * 2;
-			height = height + margin * 2;
-
-			return new Rect(x, y, width, height);
-		}
+		//	return new Rect(x, y, width, height);
+		//}
 
 
 		//private static (Point source, Point target) GetLinkSegmentEndPoints(LinkLineOld line)
@@ -729,111 +726,111 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 
 
-		/// <summary>
-		/// Gets the links in the line grouped first by source and then by target at the
-		/// appropriate node levels.
-		/// </summary>
-		public IReadOnlyList<LinkGroup> GetLinkGroups2(Line line)
-		{
-			Node source = line.Source;
-			Node target = line.Target;
-			IReadOnlyList<Link> links = line.Links;
+		///// <summary>
+		///// Gets the links in the line grouped first by source and then by target at the
+		///// appropriate node levels.
+		///// </summary>
+		//public IReadOnlyList<LinkGroup> GetLinkGroups2(Line line)
+		//{
+		//	Node source = line.Source;
+		//	Node target = line.Target;
+		//	IReadOnlyList<Link> links = line.Links;
 
-			List<LinkGroup> linkGroups = new List<LinkGroup>();
+		//	List<LinkGroup> linkGroups = new List<LinkGroup>();
 
-			var groupByTargets = links.GroupBy(link => link.Target);
-			foreach (IGrouping<Node, Link> groupByTarget in groupByTargets)
-			{
-				var groupBySourceParents = groupByTarget.GroupBy(link => link.Source.Parent);
+		//	var groupByTargets = links.GroupBy(link => link.Target);
+		//	foreach (IGrouping<Node, Link> groupByTarget in groupByTargets)
+		//	{
+		//		var groupBySourceParents = groupByTarget.GroupBy(link => link.Source.Parent);
 
-				foreach (var groupBySourceParent in groupBySourceParents)
-				{
-					LinkGroup linkGroup = new LinkGroup(
-						groupBySourceParent.Key, groupByTarget.Key, groupBySourceParent.ToList());
+		//		foreach (var groupBySourceParent in groupBySourceParents)
+		//		{
+		//			LinkGroup linkGroup = new LinkGroup(
+		//				groupBySourceParent.Key, groupByTarget.Key, groupBySourceParent.ToList());
 
-					linkGroups.Add(linkGroup);
-				}
-			}
+		//			linkGroups.Add(linkGroup);
+		//		}
+		//	}
 
-			return linkGroups;
-		}
-
-
-		/// <summary>
-		/// Gets the links in the line grouped first by source and then by target at the
-		/// appropriate node levels.
-		/// </summary>
-		public IReadOnlyList<LinkGroup> GetLinkGroups(Line line)
-		{
-			Node source = line.Source;
-			Node target = line.Target;
-			IReadOnlyList<Link> links = line.Links;
-
-			(int sourceLevel, int targetLevel) = GetNodeLevels(source, target);
-
-			List<LinkGroup> linkGroups = new List<LinkGroup>();
-
-			// RootGroup links by grouping them based on node at source level
-			var groupBySources = links.GroupBy(link => NodeAtLevel(link.Source, sourceLevel));
-			foreach (var groupBySource in groupBySources)
-			{
-				// Sub-group these links by grouping them based on node at target level
-				var groupByTargets = groupBySource.GroupBy(link => NodeAtLevel(link.Target, targetLevel));
-				foreach (var groupByTarget in groupByTargets)
-				{
-					Node sourceNode = groupBySource.Key;
-					Node targetNode = groupByTarget.Key;
-					List<Link> groupLinks = groupByTarget.ToList();
-
-					LinkGroup linkGroup = new LinkGroup(sourceNode, targetNode, groupLinks);
-					linkGroups.Add(linkGroup);
-				}
-			}
-
-			return linkGroups;
-		}
+		//	return linkGroups;
+		//}
 
 
-		private static (int sourceLevel, int targetLevel) GetNodeLevels(Node source, Node target)
-		{
-			int sourceLevel = source.Ancestors().Count();
-			int targetLevel = target.Ancestors().Count();
+		///// <summary>
+		///// Gets the links in the line grouped first by source and then by target at the
+		///// appropriate node levels.
+		///// </summary>
+		//public IReadOnlyList<LinkGroup> GetLinkGroups(Line line)
+		//{
+		//	Node source = line.Source;
+		//	Node target = line.Target;
+		//	IReadOnlyList<Link> links = line.Links;
 
-			if (source == target.Parent)
-			{
-				// Source node is parent of target
-				targetLevel += 1;
-			}
-			//else if (source.Parent == target)
-			//{
-			//	// Source is child of target
-			//	// sourceLevel += 1;
-			//}
-			//else
-			//{
-			//	// Siblings, dig into both source and level
-			//	//sourceLevel += 1;
-			//	//targetLevel += 1;
-			//}
+		//	(int sourceLevel, int targetLevel) = GetNodeLevels(source, target);
 
-			return (sourceLevel, targetLevel);
-		}
+		//	List<LinkGroup> linkGroups = new List<LinkGroup>();
+
+		//	// RootGroup links by grouping them based on node at source level
+		//	var groupBySources = links.GroupBy(link => NodeAtLevel(link.Source, sourceLevel));
+		//	foreach (var groupBySource in groupBySources)
+		//	{
+		//		// Sub-group these links by grouping them based on node at target level
+		//		var groupByTargets = groupBySource.GroupBy(link => NodeAtLevel(link.Target, targetLevel));
+		//		foreach (var groupByTarget in groupByTargets)
+		//		{
+		//			Node sourceNode = groupBySource.Key;
+		//			Node targetNode = groupByTarget.Key;
+		//			List<Link> groupLinks = groupByTarget.ToList();
+
+		//			LinkGroup linkGroup = new LinkGroup(sourceNode, targetNode, groupLinks);
+		//			linkGroups.Add(linkGroup);
+		//		}
+		//	}
+
+		//	return linkGroups;
+		//}
 
 
-		private static Node NodeAtLevel(Node node, int level)
-		{
-			int count = 0;
-			Node current = null;
-			foreach (Node ancestor in node.AncestorsAndSelf().Reverse())
-			{
-				current = ancestor;
-				if (count++ == level)
-				{
-					break;
-				}
-			}
+		//private static (int sourceLevel, int targetLevel) GetNodeLevels(Node source, Node target)
+		//{
+		//	int sourceLevel = source.Ancestors().Count();
+		//	int targetLevel = target.Ancestors().Count();
 
-			return current;
-		}
+		//	if (source == target.Parent)
+		//	{
+		//		// Source node is parent of target
+		//		targetLevel += 1;
+		//	}
+		//	//else if (source.Parent == target)
+		//	//{
+		//	//	// Source is child of target
+		//	//	// sourceLevel += 1;
+		//	//}
+		//	//else
+		//	//{
+		//	//	// Siblings, dig into both source and level
+		//	//	//sourceLevel += 1;
+		//	//	//targetLevel += 1;
+		//	//}
+
+		//	return (sourceLevel, targetLevel);
+		//}
+
+
+		//private static Node NodeAtLevel(Node node, int level)
+		//{
+		//	int count = 0;
+		//	Node current = null;
+		//	foreach (Node ancestor in node.AncestorsAndSelf().Reverse())
+		//	{
+		//		current = ancestor;
+		//		if (count++ == level)
+		//		{
+		//			break;
+		//		}
+		//	}
+
+		//	return current;
+		//}
 	}
 }

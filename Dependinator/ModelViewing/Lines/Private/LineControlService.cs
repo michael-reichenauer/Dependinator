@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
@@ -10,11 +11,12 @@ namespace Dependinator.ModelViewing.Lines.Private
 {
 	internal class LineControlService : ILineControlService
 	{
-		private readonly ILineViewModelService lineViewModelService;
+		private readonly Lazy<ILineViewModelService> lineViewModelService;
 		private readonly IGeometryService geometryService;
 
 
-		public LineControlService(ILineViewModelService lineViewModelService,
+		public LineControlService(
+			Lazy<ILineViewModelService> lineViewModelService,
 			IGeometryService geometryService)
 		{
 			this.lineViewModelService = lineViewModelService;
@@ -83,7 +85,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 			{
 				viewPoints.RemoveAt(index);
 
-				lineViewModelService.UpdateLineBounds(line);
+				lineViewModelService.Value.UpdateLineBounds(line);
 				line.View.ViewModel.NotifyAll();
 			}
 		}
@@ -141,7 +143,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 		public void UpdateLineBounds(Line line)
 		{
-			lineViewModelService.UpdateLineBounds(line);
+			lineViewModelService.Value.UpdateLineBounds(line);
 		}
 
 
