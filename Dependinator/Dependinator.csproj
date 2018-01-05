@@ -148,7 +148,7 @@
     <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
-    <Compile Include="ModelViewing\Links\ILineControlService.cs" />
+    <Compile Include="ModelViewing\Links\Private\ILineControlService.cs" />
     <Compile Include="ModelViewing\Links\Private\LineControl.cs" />
     <Compile Include="ModelViewing\Links\Private\LineControlService.cs" />
     <Compile Include="Utils\UI\MouseHelper.cs" />
@@ -185,9 +185,9 @@
       <DependentUpon>DescriptionView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\INodeLayoutService.cs" />
-    <Compile Include="ModelViewing\Links\LinkItem.cs" />
-    <Compile Include="ModelViewing\Links\ILinkMenuItemService.cs" />
-    <Compile Include="ModelViewing\Links\Private\LinkMenuItemService.cs" />
+    <Compile Include="ModelViewing\Links\Private\LineMenuItemViewModel.cs" />
+    <Compile Include="ModelViewing\Links\Private\ILineMenuItemService.cs" />
+    <Compile Include="ModelViewing\Links\Private\LineMenuItemService.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControlView.xaml.cs">
       <DependentUpon>NodeControlView.xaml</DependentUpon>
     </Compile>
@@ -293,7 +293,7 @@
     <Compile Include="Common\ModelMetadataFolders\FileEventArgs.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\IFolderMonitorService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ILinkSegmentService.cs" />
-    <Compile Include="ModelViewing\Links\ILineViewModelService.cs" />
+    <Compile Include="ModelViewing\Links\Private\ILineViewModelService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\LinkSegmentService.cs" />
     <Compile Include="ModelViewing\Links\Private\LineViewModelService.cs" />
     <Compile Include="ModelViewing\Links\Private\LinkLineBounds.cs" />

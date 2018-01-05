@@ -2,7 +2,7 @@ using System.Windows;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
-namespace Dependinator.ModelViewing.Links
+namespace Dependinator.ModelViewing.Links.Private
 {
 	internal interface ILineControlService
 	{

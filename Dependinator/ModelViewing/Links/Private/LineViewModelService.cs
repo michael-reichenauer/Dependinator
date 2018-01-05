@@ -14,30 +14,30 @@ namespace Dependinator.ModelViewing.Links.Private
 		private static readonly Point MiddleTop = new Point(0.5, 0);
 		private static readonly double LineMargin = 10;
 
-		private readonly ILinkMenuItemService linkMenuItemService;
+		private readonly ILineMenuItemService lineMenuItemService;
 		private readonly IItemSelectionService itemSelectionService;
 
 
 		public LineViewModelService(
-			ILinkMenuItemService linkMenuItemService,
+			ILineMenuItemService lineMenuItemService,
 			IItemSelectionService itemSelectionService)
 		{
-			this.linkMenuItemService = linkMenuItemService;
+			this.lineMenuItemService = lineMenuItemService;
 			this.itemSelectionService = itemSelectionService;
 		}
 
 
 
-		public IEnumerable<LinkItem> GetSourceLinkItems(Line line)
+		public IEnumerable<LineMenuItemViewModel> GetSourceLinkItems(Line line)
 		{
-			IEnumerable<LinkItem> items = linkMenuItemService.GetSourceLinkItems(line);
+			IEnumerable<LineMenuItemViewModel> items = lineMenuItemService.GetSourceLinkItems(line);
 			return items;
 		}
 
 
-		public IEnumerable<LinkItem> GetTargetLinkItems(Line line)
+		public IEnumerable<LineMenuItemViewModel> GetTargetLinkItems(Line line)
 		{
-			IEnumerable<LinkItem> items = linkMenuItemService.GetTargetLinkItems(line);
+			IEnumerable<LineMenuItemViewModel> items = lineMenuItemService.GetTargetLinkItems(line);
 			return items;
 		}
 

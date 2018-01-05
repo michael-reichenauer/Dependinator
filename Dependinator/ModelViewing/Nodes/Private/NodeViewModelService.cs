@@ -7,6 +7,7 @@ using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Links;
+using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private;
 using Dependinator.Utils.UI;
@@ -18,7 +19,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 	{
 		private readonly IThemeService themeService;
 		private readonly IModelLinkService modelLinkService;
-		private readonly ILinkMenuItemService linkMenuItemService;
+		private readonly ILineMenuItemService lineMenuItemService;
 		private readonly IGeometryService geometryService;
 		private readonly IItemSelectionService itemSelectionService;
 
@@ -26,13 +27,13 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		public NodeViewModelService(
 			IThemeService themeService,
 			IModelLinkService modelLinkService,
-			ILinkMenuItemService linkMenuItemService,
+			ILineMenuItemService lineMenuItemService,
 			IGeometryService geometryService,
 			IItemSelectionService itemSelectionService)
 		{
 			this.themeService = themeService;
 			this.modelLinkService = modelLinkService;
-			this.linkMenuItemService = linkMenuItemService;
+			this.lineMenuItemService = lineMenuItemService;
 			this.geometryService = geometryService;
 			this.itemSelectionService = itemSelectionService;
 		}
@@ -60,21 +61,21 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 
 
-		public IEnumerable<LinkItem> GetIncomingLinkItems(Node node)
+		public IEnumerable<LineMenuItemViewModel> GetIncomingLinkItems(Node node)
 		{
 			IEnumerable<Line> lines = node.TargetLines
 				.Where(line => line.Owner != node);
 
-			return linkMenuItemService.GetSourceLinkItems(lines);
+			return lineMenuItemService.GetSourceLinkItems(lines);
 		}
 
 
-		public IEnumerable<LinkItem> GetOutgoingLinkItems(Node node)
+		public IEnumerable<LineMenuItemViewModel> GetOutgoingLinkItems(Node node)
 		{
 			IEnumerable<Line> lines = node.SourceLines
 				.Where(line => line.Owner != node);
 
-			return linkMenuItemService.GetTargetLinkItems(lines);
+			return lineMenuItemService.GetTargetLinkItems(lines);
 		}
 
 

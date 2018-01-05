@@ -6,6 +6,7 @@
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:local="clr-namespace:Dependinator.ModelViewing.Nodes"
 	xmlns:links="clr-namespace:Dependinator.ModelViewing.Links"
+	xmlns:private="clr-namespace:Dependinator.ModelViewing.Links.Private"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 	
@@ -96,7 +97,7 @@
 					</MenuItem.Icon>
 					<MenuItem.Resources>
 						<HierarchicalDataTemplate
-								DataType="{x:Type links:LinkItem}"
+								DataType="{x:Type private:LineMenuItemViewModel}"
 								ItemsSource="{Binding SubItems}">
 							<MenuItem
 									Header="{Binding Text}"
@@ -118,7 +119,7 @@
 					</MenuItem.Icon>
 					<MenuItem.Resources>
 						<HierarchicalDataTemplate
-								DataType="{x:Type links:LinkItem}"
+								DataType="{x:Type private:LineMenuItemViewModel}"
 								ItemsSource="{Binding SubItems}">
 							<MenuItem
 									Header="{Binding Text}"

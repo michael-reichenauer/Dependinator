@@ -7,7 +7,6 @@ using System.Windows.Media;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.Utils;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
 
@@ -18,12 +17,10 @@ namespace Dependinator.ModelViewing.Links
 	{
 		private readonly ILineViewModelService lineViewModelService;
 		private readonly DelayDispatcher delayDispatcher = new DelayDispatcher();
-		private readonly Lazy<ObservableCollection<LinkItem>> sourceLinks;
-		private readonly Lazy<ObservableCollection<LinkItem>> targetLinks;
+		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> sourceLinks;
+		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> targetLinks;
 
-	
-
-
+		
 		public LineViewModel(
 			ILineViewModelService lineViewModelService,
 			ILineControlService lineControlService,
@@ -39,8 +36,8 @@ namespace Dependinator.ModelViewing.Links
 			UpdateLine();
 			TrackSourceOrTargetChanges();
 
-			sourceLinks = new Lazy<ObservableCollection<LinkItem>>(GetSourceLinkItems);
-			targetLinks = new Lazy<ObservableCollection<LinkItem>>(GetTargetLinkItems);
+			sourceLinks = new Lazy<ObservableCollection<LineMenuItemViewModel>>(GetSourceLinkItems);
+			targetLinks = new Lazy<ObservableCollection<LineMenuItemViewModel>>(GetTargetLinkItems);
 		}
 
 
@@ -61,6 +58,7 @@ namespace Dependinator.ModelViewing.Links
 			: Line.Target.View.ViewModel.RectangleBrush;
 
 		public bool IsMouseOver { get => Get(); private set => Set(value); }
+
 		public bool IsSelected
 		{
 			get => Get();
@@ -79,37 +77,34 @@ namespace Dependinator.ModelViewing.Links
 		public string ToolTip { get => Get(); private set => Set(value); }
 
 
-		public void UpdateToolTip() => ToolTip = lineViewModelService.GetLineToolTip(Line);
+		public ObservableCollection<LineMenuItemViewModel> SourceLinks => sourceLinks.Value;
 
-		public ObservableCollection<LinkItem> SourceLinks => sourceLinks.Value;
 
-		public ObservableCollection<LinkItem> TargetLinks => targetLinks.Value;
+		public ObservableCollection<LineMenuItemViewModel> TargetLinks => targetLinks.Value;
+
 
 		public Command RemovePointCommand => Command(LineControl.RemovePoint);
-
-
-		public void ToggleLine()
-		{
-
-		}
 
 
 		public override void MoveItem(Vector moveOffset) => LineControl.MovePoints(moveOffset);
 
 
+		public void UpdateToolTip() =>
+			ToolTip = $"{Line.Source.Name.DisplayFullName} -> {Line.Target.Name.DisplayFullName}, {Line.Links.Count} links";
 
-		private ObservableCollection<LinkItem> GetSourceLinkItems()
+
+		private ObservableCollection<LineMenuItemViewModel> GetSourceLinkItems()
 		{
-			IEnumerable<LinkItem> items = lineViewModelService.GetSourceLinkItems(Line);
-			return new ObservableCollection<LinkItem>(items);
+			IEnumerable<LineMenuItemViewModel> items = lineViewModelService.GetSourceLinkItems(Line);
+			return new ObservableCollection<LineMenuItemViewModel>(items);
 		}
 
 
 
-		private ObservableCollection<LinkItem> GetTargetLinkItems()
+		private ObservableCollection<LineMenuItemViewModel> GetTargetLinkItems()
 		{
-			IEnumerable<LinkItem> items = lineViewModelService.GetTargetLinkItems(Line);
-			return new ObservableCollection<LinkItem>(items);
+			IEnumerable<LineMenuItemViewModel> items = lineViewModelService.GetTargetLinkItems(Line);
+			return new ObservableCollection<LineMenuItemViewModel>(items);
 		}
 
 
@@ -117,9 +112,6 @@ namespace Dependinator.ModelViewing.Links
 		{
 			lineViewModelService.Clicked(this);
 		}
-
-
-
 
 
 		public void OnMouseEnter()
@@ -143,30 +135,23 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
-
-
-
-		public override string ToString() => $"{Line}";
+		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) =>
+			lineViewModelService.OnMouseWheel(this, uiElement, e);
 
 
 		public void UpdateLine()
 		{
-			try
+			if (!CanShow)
 			{
-				if (!CanShow)
-				{
-					return;
-				}
+				return;
+			}
 
-				lineViewModelService.UpdateLineEndPoints(Line);
-				lineViewModelService.UpdateLineBounds(Line);
-			}
-			catch (Exception e)
-			{
-				Log.Exception(e);
-			}
+			lineViewModelService.UpdateLineEndPoints(Line);
+			lineViewModelService.UpdateLineBounds(Line);
 		}
 
+
+		public override string ToString() => $"{Line}";
 
 
 		private void TrackSourceOrTargetChanges()
@@ -183,12 +168,6 @@ namespace Dependinator.ModelViewing.Links
 		{
 			UpdateLine();
 			NotifyAll();
-		}
-
-
-		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e)
-		{
-			lineViewModelService.OnMouseWheel(this, uiElement, e);
 		}
 	}
 }

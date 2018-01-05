@@ -7,6 +7,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Links;
+using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 using Dependinator.Utils.UI.Mvvm;
@@ -18,8 +19,8 @@ namespace Dependinator.ModelViewing.Nodes
 	{
 		private readonly INodeViewModelService nodeViewModelService;
 
-		private readonly Lazy<ObservableCollection<LinkItem>> incomingLinks;
-		private readonly Lazy<ObservableCollection<LinkItem>> outgoingLinks;
+		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> incomingLinks;
+		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> outgoingLinks;
 
 		private bool isFirstShow = true;
 		private readonly Brush backgroundBrush;
@@ -37,8 +38,8 @@ namespace Dependinator.ModelViewing.Nodes
 			selectedBrush = nodeViewModelService.GetSelectedBrush(RectangleBrush);
 
 
-			incomingLinks = new Lazy<ObservableCollection<LinkItem>>(GetIncomingLinkItems);
-			outgoingLinks = new Lazy<ObservableCollection<LinkItem>>(GetOutgoingLinkItems);
+			incomingLinks = new Lazy<ObservableCollection<LineMenuItemViewModel>>(GetIncomingLinkItems);
+			outgoingLinks = new Lazy<ObservableCollection<LineMenuItemViewModel>>(GetOutgoingLinkItems);
 		}
 
 
@@ -160,9 +161,9 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public ItemsViewModel ItemsViewModel { get; set; }
 
-		public ObservableCollection<LinkItem> IncomingLinks => incomingLinks.Value;
+		public ObservableCollection<LineMenuItemViewModel> IncomingLinks => incomingLinks.Value;
 
-		public ObservableCollection<LinkItem> OutgoingLinks => outgoingLinks.Value;
+		public ObservableCollection<LineMenuItemViewModel> OutgoingLinks => outgoingLinks.Value;
 
 
 
@@ -204,18 +205,18 @@ namespace Dependinator.ModelViewing.Nodes
 		public override string ToString() => Node.Name.ToString();
 
 
-		private ObservableCollection<LinkItem> GetIncomingLinkItems()
+		private ObservableCollection<LineMenuItemViewModel> GetIncomingLinkItems()
 		{
-			IEnumerable<LinkItem> items = nodeViewModelService.GetIncomingLinkItems(Node);
-			return new ObservableCollection<LinkItem>(items);
+			IEnumerable<LineMenuItemViewModel> items = nodeViewModelService.GetIncomingLinkItems(Node);
+			return new ObservableCollection<LineMenuItemViewModel>(items);
 		}
 
 
 
-		private ObservableCollection<LinkItem> GetOutgoingLinkItems()
+		private ObservableCollection<LineMenuItemViewModel> GetOutgoingLinkItems()
 		{
-			IEnumerable<LinkItem> items = nodeViewModelService.GetOutgoingLinkItems(Node);
-			return new ObservableCollection<LinkItem>(items);
+			IEnumerable<LineMenuItemViewModel> items = nodeViewModelService.GetOutgoingLinkItems(Node);
+			return new ObservableCollection<LineMenuItemViewModel>(items);
 		}
 
 

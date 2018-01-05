@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Links;
+using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
@@ -22,8 +23,8 @@ namespace Dependinator.ModelViewing.Nodes
 		void FirstShowNode(Node node);
 
 
-		IEnumerable<LinkItem> GetIncomingLinkItems(Node node);
-		IEnumerable<LinkItem> GetOutgoingLinkItems(Node node);
+		IEnumerable<LineMenuItemViewModel> GetIncomingLinkItems(Node node);
+		IEnumerable<LineMenuItemViewModel> GetOutgoingLinkItems(Node node);
 		void MouseClicked(NodeViewModel nodeViewModel);
 		void OnMouseWheel(NodeViewModel nodeViewModel, UIElement uiElement, MouseWheelEventArgs e);
 		Brush GetSelectedBrush(Brush brush);
