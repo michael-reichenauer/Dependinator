@@ -66,16 +66,11 @@ namespace Dependinator.ModelViewing.Private
 
 		public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelService.GetHiddenNodeNames();
 
-		public void Clicked()
-		{
-			itemSelectionService.Clicked();
-		}
+		public void Clicked() => itemSelectionService.Deselect();
 
 
-		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e)
-		{
+		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) => 
 			rootNodeCanvas?.OnMouseWheel(uiElement, e, false);
-		}
 
 
 		public void ShowHiddenNode(NodeName nodeName) => modelService.ShowHiddenNode(nodeName);
@@ -94,7 +89,6 @@ namespace Dependinator.ModelViewing.Private
 			settingsService.Edit<WorkFolderSettings>(settings =>
 			{
 				settings.Scale = modelService.Root.View.ItemsCanvas.Scale;
-				//settings.Offset = modelService.Root.ItemsCanvas.Offset;
 			});
 		}
 
@@ -105,10 +99,8 @@ namespace Dependinator.ModelViewing.Private
 			Node root = modelService.Root;
 
 			root.View.ItemsCanvas.SetRootScale(settings.Scale);
-			//root.ItemsCanvas.SetOffset(settings.Offset);
 
 			//root.ItemsCanvas.SetRootScale(1);
-			//root.ItemsCanvas.SetOffset(new Point(0, 0));
 		}
 	}
 }

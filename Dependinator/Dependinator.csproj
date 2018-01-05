@@ -148,6 +148,7 @@
     <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
+    <Compile Include="ModelViewing\Items\ISelectableItem.cs" />
     <Compile Include="ModelViewing\Links\Private\ILineControlService.cs" />
     <Compile Include="ModelViewing\Links\Private\LineControl.cs" />
     <Compile Include="ModelViewing\Links\Private\LineControlService.cs" />
@@ -191,9 +192,9 @@
     <Compile Include="ModelViewing\Nodes\NodeControlView.xaml.cs">
       <DependentUpon>NodeControlView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\Nodes\Private\IItemSelectionService.cs" />
+    <Compile Include="ModelViewing\Items\IItemSelectionService.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeLayoutService.cs" />
-    <Compile Include="ModelViewing\Nodes\Private\ItemSelectionService.cs" />
+    <Compile Include="ModelViewing\Items\Private\ItemSelectionService.cs" />
     <Compile Include="ModelViewing\Open\FileItem.cs" />
     <Compile Include="ModelViewing\Open\HiddenNodeItem.cs" />
     <Compile Include="ModelViewing\Open\OpenModelView.xaml.cs">

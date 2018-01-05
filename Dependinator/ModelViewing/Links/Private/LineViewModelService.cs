@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.Nodes.Private;
 
@@ -163,7 +164,7 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		public void Clicked(LineViewModel lineViewModel)
 		{
-			itemSelectionService.Clicked(lineViewModel);
+			itemSelectionService.Select(lineViewModel);
 		}
 
 

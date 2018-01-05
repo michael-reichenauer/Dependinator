@@ -81,7 +81,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 		public void MouseClicked(NodeViewModel nodeViewModel)
 		{
-			itemSelectionService.Clicked(nodeViewModel);
+			itemSelectionService.Select(nodeViewModel);
 		}
 
 

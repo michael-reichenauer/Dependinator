@@ -5,15 +5,17 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Items.Private;
 using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.Nodes.Private;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
 
 
 namespace Dependinator.ModelViewing.Links
 {
-	internal class LineViewModel : ItemViewModel
+	internal class LineViewModel : ItemViewModel, ISelectableItem
 	{
 		private readonly ILineViewModelService lineViewModelService;
 		private readonly DelayDispatcher delayDispatcher = new DelayDispatcher();
