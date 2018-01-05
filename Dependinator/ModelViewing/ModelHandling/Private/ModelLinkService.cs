@@ -14,19 +14,19 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	{
 		private readonly ILinkSegmentService linkSegmentService;
 		private readonly ILineViewModelService lineViewModelService;
-		private readonly Lazy<IModelNodeService> modelNodeService;
+		private readonly ILineControlService lineControlService;
 		private readonly Model model;
 
 
 		public ModelLinkService(
 			ILinkSegmentService linkSegmentService,
 			ILineViewModelService lineViewModelService,
-			Lazy<IModelNodeService> modelNodeService,
+			ILineControlService lineControlService,
 			Model model)
 		{
 			this.linkSegmentService = linkSegmentService;
 			this.lineViewModelService = lineViewModelService;
-			this.modelNodeService = modelNodeService;
+			this.lineControlService = lineControlService;
 			this.model = model;
 		}
 
@@ -221,7 +221,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public void AddLineViewModel(Line line)
 		{
-			LineViewModel lineViewModel = new LineViewModel(lineViewModelService, line);
+			LineViewModel lineViewModel = new LineViewModel(lineViewModelService, lineControlService, line);
 
 			line.Owner.View.ItemsCanvas.AddItem(lineViewModel);
 		}
@@ -238,17 +238,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private static Node GetLineOwner(Node source, Node target) =>
 			source == target.Parent ? source : source.Parent;
-
-
-		//private bool TryGetNode(NodeName nodeName, out Node node)
-		//{
-		//	if (model.TryGetNode(nodeName, out node))
-		//	{
-		//		return true;
-		//	}
-
-		//	return node;
-		//}
 
 
 		private static bool TryGetLine(LinkSegment segment, out Line line)

@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Links.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
@@ -20,15 +21,19 @@ namespace Dependinator.ModelViewing.Links
 		private readonly Lazy<ObservableCollection<LinkItem>> sourceLinks;
 		private readonly Lazy<ObservableCollection<LinkItem>> targetLinks;
 
-		private Point mouseDownPoint;
-		private int currentPointIndex = -1;
+	
 
 
-		public LineViewModel(ILineViewModelService lineViewModelService, Line line)
+		public LineViewModel(
+			ILineViewModelService lineViewModelService,
+			ILineControlService lineControlService,
+			Line line)
 		{
 			this.lineViewModelService = lineViewModelService;
+
 			this.Line = line;
 			line.View.ViewModel = this;
+			LineControl = new LineControl(lineControlService, line);
 			ItemZIndex = -1;
 
 			UpdateLine();
@@ -38,7 +43,9 @@ namespace Dependinator.ModelViewing.Links
 			targetLinks = new Lazy<ObservableCollection<LinkItem>>(GetTargetLinkItems);
 		}
 
-		
+
+		public LineControl LineControl;
+
 		public Line Line { get; }
 
 		public override bool CanShow =>
@@ -78,7 +85,7 @@ namespace Dependinator.ModelViewing.Links
 
 		public ObservableCollection<LinkItem> TargetLinks => targetLinks.Value;
 
-		public Command RemovePointCommand => Command(() => lineViewModelService.RemovePoint(Line));
+		public Command RemovePointCommand => Command(LineControl.RemovePoint);
 
 
 		public void ToggleLine()
@@ -87,13 +94,8 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
-		public override void MoveItem(Vector moveOffset)
-		{
-			for (int i = 1; i < Line.View.Points.Count - 1; i++)
-			{
-				Line.View.Points[i] = Line.View.Points[i] + moveOffset;
-			}
-		}
+		public override void MoveItem(Vector moveOffset) => LineControl.MovePoints(moveOffset);
+
 
 
 		private ObservableCollection<LinkItem> GetSourceLinkItems()
@@ -117,64 +119,11 @@ namespace Dependinator.ModelViewing.Links
 		}
 
 
-		public void MouseDown(Point screenPoint, bool isPoint)
-		{
-			isPointMove = isPoint;
-			mouseDownPoint = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
-			currentPointIndex = -1;
-		}
 
-
-		public void MouseUp(Point screenPoint)
-		{
-			if (currentPointIndex != -1)
-			{
-				EndMoveLinePoint();
-			}
-			else
-			{
-				Log.Debug("Mouse click");
-			}
-		}
-
-
-		public void MouseMove(Point screenPoint)
-		{
-			Point point = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
-
-			if (currentPointIndex == -1)
-			{
-				// First move event, lets start a move by  getting the index of point to move.
-				// THis might create a new point if there is no existing point near the mouse down point
-				currentPointIndex = lineViewModelService.GetLinePointIndex(
-					Line, mouseDownPoint, isPointMove);
-				if (currentPointIndex == -1)
-				{
-					// Point not close enough to the line
-					return;
-				}
-			}
-
-			Mouse.OverrideCursor = Cursors.SizeAll;
-			lineViewModelService.MoveLinePoint(Line, currentPointIndex, point);
-			lineViewModelService.UpdateLineBounds(Line);
-			IsMouseOver = true;
-			NotifyAll();
-		}
-
-
-		public void ZoomLinks(double zoom, Point viewPosition)
-		{
-		}
-
-
-		private bool isPointMove = false;
 
 
 		public void OnMouseEnter()
 		{
-			isPointMove = false;
-
 			delayDispatcher.Delay(ModelViewModel.MouseEnterDelay, _ =>
 			{
 				IsMouseOver = true;
@@ -189,30 +138,12 @@ namespace Dependinator.ModelViewing.Links
 			{
 				delayDispatcher.Cancel();
 				IsMouseOver = false;
-				isPointMove = false;
 				Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));
 			}
 		}
 
 
 
-
-		private void EndMoveLinePoint()
-		{
-			if (currentPointIndex != Line.View.FirstIndex && currentPointIndex != Line.View.LastIndex)
-			{
-				// Removing the point if it is no longer needed (in the same line as neighbors points
-				if (lineViewModelService.IsOnLineBetweenNeighbors(Line, currentPointIndex))
-				{
-					Line.View.Points.RemoveAt(currentPointIndex);
-				}
-			}
-
-			Mouse.OverrideCursor = null;
-			lineViewModelService.UpdateLineBounds(Line);
-			NotifyAll();
-			currentPointIndex = -1;
-		}
 
 
 		public override string ToString() => $"{Line}";

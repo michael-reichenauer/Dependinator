@@ -4,29 +4,24 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Nodes.Private;
-using Dependinator.Utils.UI;
 
 namespace Dependinator.ModelViewing.Links.Private
 {
 	internal class LineViewModelService : ILineViewModelService
 	{
+		private static readonly Point MiddleBottom = new Point(0.5, 1);
+		private static readonly Point MiddleTop = new Point(0.5, 0);
 		private static readonly double LineMargin = 10;
 
-		private readonly IGeometryService geometryService;
 		private readonly ILinkMenuItemService linkMenuItemService;
 		private readonly IItemSelectionService itemSelectionService;
 
-		private readonly Point middleBottom = new Point(0.5, 1);
-		private readonly Point middleTop = new Point(0.5, 0);
 
 		public LineViewModelService(
-			IGeometryService geometryService,
 			ILinkMenuItemService linkMenuItemService,
 			IItemSelectionService itemSelectionService)
 		{
-			this.geometryService = geometryService;
 			this.linkMenuItemService = linkMenuItemService;
 			this.itemSelectionService = itemSelectionService;
 		}
@@ -60,23 +55,6 @@ namespace Dependinator.ModelViewing.Links.Private
 
 		}
 
-
-		public void UpdateLineBounds(Line line)
-		{
-			Rect bounds = new Rect(line.View.FirstPoint, line.View.LastPoint);
-
-			// Adjust boundaries for line points between first and last point
-			line.View.MiddlePoints().ForEach(point => bounds.Union(point));
-
-			// The items bound needs some margin around the line to allow line width and arrow to show
-			double margin = LineMargin / line.View.ViewModel.ItemScale;
-			bounds.Inflate(margin, margin);
-
-			// Set the new bounds
-			line.View.ViewModel.ItemBounds = bounds;
-		}
-
-
 		public void UpdateLineEndPoints(Line line)
 		{
 			Rect source = line.Source.View.ViewModel.ItemBounds;
@@ -86,10 +64,10 @@ namespace Dependinator.ModelViewing.Links.Private
 			Point relativeTarget = GetRelativeTarget(line);
 
 			Point sp = source.Location
-				+ new Vector(source.Width * relativeSource.X, source.Height * relativeSource.Y);
+			           + new Vector(source.Width * relativeSource.X, source.Height * relativeSource.Y);
 
 			Point tp = target.Location
-				+ new Vector(target.Width * relativeTarget.X, target.Height * relativeTarget.Y);
+			           + new Vector(target.Width * relativeTarget.X, target.Height * relativeTarget.Y);
 
 			if (line.Source.Parent == line.Target)
 			{
@@ -110,186 +88,22 @@ namespace Dependinator.ModelViewing.Links.Private
 		}
 
 
-		public bool IsOnLineBetweenNeighbors(Line line, int index)
+		public void UpdateLineBounds(Line line)
 		{
-			Point p = line.View.Points[index];
-			Point a = line.View.Points[index - 1];
-			Point b = line.View.Points[index + 1];
+			Rect bounds = new Rect(line.View.FirstPoint, line.View.LastPoint);
 
-			double length = geometryService.GetDistanceFromLine(a, b, p);
-			return length < 0.1;
+			// Adjust boundaries for line points between first and last point
+			line.View.MiddlePoints().ForEach(point => bounds.Union(point));
 
+			// The items bound needs some margin around the line to allow line width and arrow to show
+			double margin = LineMargin / line.View.ViewModel.ItemScale;
+			bounds.Inflate(margin, margin);
+
+			// Set the new bounds
+			line.View.ViewModel.ItemBounds = bounds;
 		}
 
 
-		public void MoveLinePoint(Line line, int pointIndex, Point newPoint)
-		{
-			// NOTE: These lines are currently disabled !!!
-			NodeViewModel source = line.Source.View.ViewModel;
-			NodeViewModel target = line.Target.View.ViewModel;
-
-			if (pointIndex == line.View.FirstIndex)
-			{
-				// Adjust point to be on the source node perimeter
-				newPoint = geometryService.GetPointInPerimeter(source.ItemBounds, newPoint);
-				line.View.RelativeSourcePoint = new Point(
-					(newPoint.X - source.ItemBounds.X) / source.ItemBounds.Width,
-					(newPoint.Y - source.ItemBounds.Y) / source.ItemBounds.Height);
-			}
-			else if (pointIndex == line.View.LastIndex)
-			{
-				// Adjust point to be on the target node perimeter
-				newPoint = geometryService.GetPointInPerimeter(target.ItemBounds, newPoint);
-				line.View.RelativeTargetPoint = new Point(
-					(newPoint.X - target.ItemBounds.X) / target.ItemBounds.Width,
-					(newPoint.Y - target.ItemBounds.Y) / target.ItemBounds.Height);
-			}
-			else
-			{
-				Point a = line.View.Points[pointIndex - 1];
-				Point b = line.View.Points[pointIndex + 1];
-				Point p = newPoint;
-				if (geometryService.GetDistanceFromLine(a, b, p) < 0.1)
-				{
-					newPoint = geometryService.GetClosestPointOnLineSegment(a, b, p);
-				}
-			}
-
-			line.View.Points[pointIndex] = newPoint;
-		}
-
-		public void RemovePoint(Line line)
-		{
-			int index = GetLinePointIndex(line, Mouse.GetPosition(Application.Current.MainWindow), true);
-
-			List<Point> viewPoints = line.View.Points;
-
-			if (index > 0 && index < viewPoints.Count - 1)
-			{
-				viewPoints.RemoveAt(index);
-
-				UpdateLineBounds(line);
-				line.View.ViewModel.NotifyAll();
-			}
-		}
-
-
-		public int GetLinePointIndex(Line line, Point point, bool isPointMove)
-		{
-			IList<Point> points = line.View.Points;
-			double itemScale = line.View.ViewModel.ItemScale;
-
-			// The point is sometimes a bit "off" the line so find the closet point on the line
-			Point pointOnLine = GetClosetPointOnlIne(point, points, itemScale);
-			point = pointOnLine;
-
-
-			if (isPointMove && points.Count > 2)
-			{
-				int index = -1;
-				double dist = double.MaxValue;
-
-				for (int i = 1; i < points.Count - 1; i++)
-				{
-					double currentDist = (point - points[i]).Length;
-					if (currentDist < dist)
-					{
-						index = i;
-						dist = currentDist;
-					}
-				}
-
-				return index;
-			}
-			else
-			{
-				for (int i = 0; i < points.Count - 1; i++)
-				{
-					Point segmentStartPoint = points[i];
-					Point segmentEndPoint = points[i + 1];
-
-					double distance = geometryService.GetDistanceFromLine(
-															segmentStartPoint, segmentEndPoint, point) * itemScale;
-
-					if (distance < 5)
-					{
-						// The point is on the segment
-						points.Insert(i + 1, point);
-						return i + 1;
-					}
-				}
-			}
-
-			return -1;
-		}
-
-
-		private Point GetClosetPointOnlIne(Point p, IList<Point> points, double itemScale)
-		{
-			double minDistance = double.MaxValue;
-			Point pointOnLine = new Point(0, 0);
-
-			// Iterate the segments to find the segment closest to the point and on that segment, the 
-			// closest point
-			for (int i = 0; i < points.Count - 1; i++)
-			{
-				Point a = points[i];
-				Point b = points[i + 1];
-
-				double distanceToSegment = geometryService.GetDistanceFromLine(a, b, p) * itemScale;
-
-				if (distanceToSegment < minDistance)
-				{
-					minDistance = distanceToSegment;
-					pointOnLine = geometryService.GetClosestPointOnLineSegment(a, b, p);
-				}
-			}
-
-			return pointOnLine;
-		}
-
-
-		private Point GetRelativeSource(Line line)
-		{
-			if (line.View.RelativeSourcePoint.X >= 0)
-			{
-				// use specified source
-				return line.View.RelativeSourcePoint;
-			}
-
-			if (line.Source == line.Target.Parent)
-			{
-				// The target is the child of the source,
-				// i.e. line start at the top of the source and goes to target top
-				return middleTop;
-			}
-
-			// If target is sibling or parent
-			// i.e. line start at the bottom of the source and goes to target top
-			return middleBottom;
-		}
-
-
-
-		private Point GetRelativeTarget(Line line)
-		{
-			if (line.View.RelativeTargetPoint.X >= 0)
-			{
-				// use specified source
-				return line.View.RelativeTargetPoint;
-			}
-
-			if (line.Source.Parent == line.Target)
-			{
-				// The target is a parent of the source,
-				// i.e. line starts at source bottom and ends at the bottom of the target node
-				return middleBottom;
-			}
-
-			// If target is sibling or child
-			// i.e. line start at the bottom of the source and goes to target top
-			return middleTop;
-		}
 
 
 		public string GetLineData(Line line)
@@ -405,11 +219,6 @@ namespace Dependinator.ModelViewing.Links.Private
 			//=> $"{line.Links.Count} links";
 			=> $"{line.Source.Name.DisplayFullName} -> {line.Target.Name.DisplayFullName}, {line.Links.Count} links";
 
-
-		private static Point ParentPointToChildPoint(Node parent, Point point)
-		{
-			return parent.View.ItemsCanvas.ParentToChildCanvasPoint(point);
-		}
 
 
 		//public void AddLinkLines(LinkOld link)
@@ -729,6 +538,56 @@ namespace Dependinator.ModelViewing.Links.Private
 		//		return (new Point(width, height), new Point(margin, margin));
 		//	}
 		//}
+
+
+
+		private Point GetRelativeSource(Line line)
+		{
+			if (line.View.RelativeSourcePoint.X >= 0)
+			{
+				// use specified source
+				return line.View.RelativeSourcePoint;
+			}
+
+			if (line.Source == line.Target.Parent)
+			{
+				// The target is the child of the source,
+				// i.e. line start at the top of the source and goes to target top
+				return MiddleTop;
+			}
+
+			// If target is sibling or parent
+			// i.e. line start at the bottom of the source and goes to target top
+			return MiddleBottom;
+		}
+
+
+
+		private Point GetRelativeTarget(Line line)
+		{
+			if (line.View.RelativeTargetPoint.X >= 0)
+			{
+				// use specified source
+				return line.View.RelativeTargetPoint;
+			}
+
+			if (line.Source.Parent == line.Target)
+			{
+				// The target is a parent of the source,
+				// i.e. line starts at source bottom and ends at the bottom of the target node
+				return MiddleBottom;
+			}
+
+			// If target is sibling or child
+			// i.e. line start at the bottom of the source and goes to target top
+			return MiddleTop;
+		}
+
+
+		private static Point ParentPointToChildPoint(Node parent, Point point)
+		{
+			return parent.View.ItemsCanvas.ParentToChildCanvasPoint(point);
+		}
 
 
 		private static Rect GetLineBounds(Point p1, Point p2, double margin)

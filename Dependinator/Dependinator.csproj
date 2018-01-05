@@ -148,6 +148,9 @@
     <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
+    <Compile Include="ModelViewing\Links\ILineControlService.cs" />
+    <Compile Include="ModelViewing\Links\Private\LineControl.cs" />
+    <Compile Include="ModelViewing\Links\Private\LineControlService.cs" />
     <Compile Include="Utils\UI\MouseHelper.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControl.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControlViewModel.cs" />

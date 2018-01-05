@@ -25,15 +25,15 @@ namespace Dependinator.ModelViewing.Links
 
 			dragLine = new DragUiElement(
 				LineControl,
-				(p, o) => ViewModel?.MouseMove(p),
-				p => ViewModel?.MouseDown(p, false),
-				p => ViewModel?.MouseUp(p));
+				(p, o) => ViewModel?.LineControl.MouseMove(p, false),
+				p => ViewModel?.LineControl.MouseDown(p),
+				p => ViewModel?.LineControl.MouseUp(p));
 
 			dragLineControlPoints = new DragUiElement(
 				LinePoints,
-				(p, o) => ViewModel?.MouseMove(p),
-				p => ViewModel?.MouseDown(p, true),
-				p => ViewModel?.MouseUp(p));
+				(p, o) => ViewModel?.LineControl.MouseMove(p, true),
+				p => ViewModel?.LineControl.MouseDown(p),
+				p => ViewModel?.LineControl.MouseUp(p));
 		}
 
 
