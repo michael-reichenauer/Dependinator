@@ -21,5 +21,6 @@ namespace Dependinator.ModelViewing.Lines.Private
 		void UpdateLineBounds(Line line);
 		void UpdateLineEndPoints(Line line);
 		LineControl GetLineControl(Line line);
+		void Toggle(Line line);
 	}
 }

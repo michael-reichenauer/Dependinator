@@ -162,6 +162,29 @@
 
 			</Path>
 
+			<TextBlock
+				Name="ToggleLine"
+				Visibility="{Binding IsSelected, Converter={StaticResource VC}}"
+				Margin="20"
+				Style="{DynamicResource MenuIconStyle}"
+				Text="&#xE22F;"
+				FontSize="20"
+				Foreground="{StaticResource TextLowBrush}"
+				HorizontalAlignment="Center"
+				VerticalAlignment="Center"
+				UseLayoutRounding="True"
+				TextOptions.TextFormattingMode="Ideal">
+
+				<TextBlock.ToolTip>
+					<ToolTip
+						Content="Toggle Line"
+						Placement="Mouse"
+						BorderBrush="{DynamicResource BorderBrush}"
+						BorderThickness="1" />
+				</TextBlock.ToolTip>
+			</TextBlock>
+
+
 		</Grid>
 
 	</Border>
