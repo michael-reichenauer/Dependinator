@@ -34,7 +34,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 		public IEnumerable<LineMenuItemViewModel> GetSourceLinkItems(Line line) =>
 			lineMenuItemService.GetSourceLinkItems(line);
-		
+
 		public IEnumerable<LineMenuItemViewModel> GetTargetLinkItems(Line line) =>
 			lineMenuItemService.GetTargetLinkItems(line);
 
@@ -63,13 +63,14 @@ namespace Dependinator.ModelViewing.Lines.Private
 			Point relativeTarget = GetRelativeTarget(line);
 
 			Point sp = source.Location
-			           + new Vector(source.Width * relativeSource.X, source.Height * relativeSource.Y);
+								 + new Vector(source.Width * relativeSource.X, source.Height * relativeSource.Y);
 
 			Point tp = target.Location
-			           + new Vector(target.Width * relativeTarget.X, target.Height * relativeTarget.Y);
-
+								 + new Vector(target.Width * relativeTarget.X, target.Height * relativeTarget.Y);
+			
 			if (line.Source.Parent == line.Target)
 			{
+				// From child to parent node
 				// Need to adjust for different scales
 				Vector vector = line.View.ViewModel.ItemScale > 1
 					? new Vector(0, 8 / line.View.ViewModel.ItemScale) : new Vector(0, 8);
@@ -78,8 +79,20 @@ namespace Dependinator.ModelViewing.Lines.Private
 			}
 			else if (line.Source == line.Target.Parent)
 			{
+				// From parent to child node
 				// Need to adjust for different scales
 				sp = ParentPointToChildPoint(line.Source, sp);
+
+				Vector vector = line.View.ViewModel.ItemScale > 1
+					? new Vector(0, 7 / line.View.ViewModel.ItemScale) : new Vector(0, 7);
+				tp = tp - vector;
+			}
+			else
+			{
+				// Siblings
+				Vector vector = line.View.ViewModel.ItemScale > 1
+					? new Vector(0, 7 / line.View.ViewModel.ItemScale) : new Vector(0, 7);
+				tp = tp - vector;
 			}
 
 			line.View.FirstPoint = sp;
