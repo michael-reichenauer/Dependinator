@@ -1,6 +1,8 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Input;
+using Dependinator.Utils.UI;
 
 
 namespace Dependinator.ModelViewing.Open
@@ -12,26 +14,33 @@ namespace Dependinator.ModelViewing.Open
 	{
 		private OpenModelViewModel ViewModel => DataContext as OpenModelViewModel;
 
+		//private MouseClicked mouseClicked;
+
+
 		public OpenModelView()
 		{
 			InitializeComponent();
+
+			//mouseClicked = new MouseClicked(this, Clicked);
 		}
 
 
-		private void OpenFile_OnClick(object sender, RoutedEventArgs e)
+		private void RecentFile_OnClick(object sender, MouseButtonEventArgs e)
+		{
+			((sender as FrameworkElement)?.DataContext as FileItem)?.OpenFileCommand.Execute();
+			}
+
+
+		private void OpenFile_OnClick(object sender, MouseButtonEventArgs e)
 		{
 			ViewModel?.OpenFile();
 		}
 
-		private void RecentFile_OnClick(object sender, RoutedEventArgs e)
-		{
-			((sender as Hyperlink)?.DataContext as FileItem)?.OpenFileCommand.Execute();
-		}
 
-
-		private void OpenExample_OnClick(object sender, RoutedEventArgs e)
+		private void OpenExample_OnClick(object sender, MouseButtonEventArgs e)
 		{
 			ViewModel?.OpenExampleFile();
 		}
 	}
 }
+
