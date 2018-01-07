@@ -12,6 +12,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 		private static readonly Point MiddleTop = new Point(0.5, 0);
 		private static readonly double LineMargin = 10;
 
+
 		public void UpdateLineEndPoints(Line line)
 		{
 			Rect source = line.Source.View.ViewModel.ItemBounds;

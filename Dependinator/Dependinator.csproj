@@ -157,7 +157,10 @@
     <Compile Include="ModelViewing\Lines\Private\LineDataService.cs" />
     <Compile Include="ModelViewing\Lines\Private\LineZoomService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\IModelLineService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\INodeService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelLineService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\NodeService.cs" />
     <Compile Include="Utils\UI\MouseHelper.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControl.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControlViewModel.cs" />
@@ -249,7 +252,7 @@
     <Compile Include="ModelViewing\ModelHandling\Private\IModelNodeService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelHandlingService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelNodeService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\Model.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\IModelService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\ModelNode.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\TypeView.xaml.cs">

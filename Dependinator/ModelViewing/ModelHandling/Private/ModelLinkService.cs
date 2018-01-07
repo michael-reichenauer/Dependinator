@@ -11,15 +11,15 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	internal class ModelLinkService : IModelLinkService
 	{
 		private readonly IModelLineService modelLineService;
-		private readonly Model model;
+		private readonly IModelService modelService;
 
 
 		public ModelLinkService(
 			IModelLineService modelLineService,
-			Model model)
+			IModelService modelService)
 		{
 			this.modelLineService = modelLineService;
-			this.model = model;
+			this.modelService = modelService;
 		}
 
 
@@ -27,7 +27,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			try
 			{
-				Node source = model.Node(NodeName.From(modelLink.Source));
+				Node source = modelService.GetNode(NodeName.From(modelLink.Source));
 
 				if (!TryGetTarget(modelLink, out Node target))
 				{
@@ -55,21 +55,21 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				throw;
 			}
 		}
-		
+
 
 		private bool TryGetTarget(ModelLink modelLink, out Node target)
 		{
 			NodeName targetName = NodeName.From(modelLink.Target);
-			if (!model.TryGetNode(targetName, out target))
+			if (!modelService.TryGetNode(targetName, out target))
 			{
-				model.QueueModelLink(targetName, modelLink);
+				modelService.QueueModelLink(targetName, modelLink);
 				return false;
 			}
 
 			return true;
 		}
 
-	
+
 
 		public void RemoveObsoleteLinks(IReadOnlyList<Link> obsoleteLinks)
 		{
@@ -106,7 +106,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			}
 		}
 
-		
+
 		private static Link AddLink(Node source, Node target)
 		{
 			Link link = new Link(source, target);
@@ -119,8 +119,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			link.Source.SourceLinks.Remove(link);
 		}
-		
-	
+
+
 		private static bool TryGetLink(Node source, Node target, out Link link)
 		{
 			link = source.SourceLinks.FirstOrDefault(l => l.Source == source && l.Target == target);

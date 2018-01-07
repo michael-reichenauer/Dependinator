@@ -33,7 +33,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private readonly IMessage message;
 		private readonly Func<OpenModelViewModel> openModelViewModelProvider;
 
-		private readonly Model model;
+		private readonly IModelService modelService;
 		private readonly ModelMetadata modelMetadata;
 
 		private int currentId;
@@ -47,7 +47,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			IModelLinkService modelLinkService,
 			IModelLineService modelLineService,
 			Func<OpenModelViewModel> openModelViewModelProvider,
-			Model model,
+			IModelService modelService,
 			ModelMetadata modelMetadata,
 			IRecentModelsService recentModelsService,
 			IMessage message)
@@ -59,14 +59,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			this.modelLineService = modelLineService;
 			this.openModelViewModelProvider = openModelViewModelProvider;
 
-			this.model = model;
+			this.modelService = modelService;
 			this.modelMetadata = modelMetadata;
 			this.recentModelsService = recentModelsService;
 			this.message = message;
 		}
 
 
-		public Node Root => model.Root;
+		public Node Root => modelService.Root;
 
 		public void SetRootCanvas(ItemsCanvas rootCanvas) => Root.View.ItemsCanvas = rootCanvas;
 
@@ -263,7 +263,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			Application.Current.Dispatcher.InvokeBackground(() =>
 			{
-				model.GetAllQueuedNodes().ForEach(node => queue.Enqueue(node, 0));
+				modelService.GetAllQueuedNodes().ForEach(node => queue.Enqueue(node, 0));
 				queue.CompleteAdding();
 			});
 
