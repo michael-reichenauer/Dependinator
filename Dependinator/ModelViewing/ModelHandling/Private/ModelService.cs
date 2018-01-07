@@ -28,6 +28,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private readonly IPersistenceService persistenceService;
 		private readonly IModelNodeService modelNodeService;
 		private readonly IModelLinkService modelLinkService;
+		private readonly IModelLineService modelLineService;
 		private readonly IRecentModelsService recentModelsService;
 		private readonly IMessage message;
 		private readonly Func<OpenModelViewModel> openModelViewModelProvider;
@@ -44,6 +45,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			IPersistenceService persistenceService,
 			IModelNodeService modelNodeService,
 			IModelLinkService modelLinkService,
+			IModelLineService modelLineService,
 			Func<OpenModelViewModel> openModelViewModelProvider,
 			Model model,
 			ModelMetadata modelMetadata,
@@ -54,6 +56,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			this.persistenceService = persistenceService;
 			this.modelNodeService = modelNodeService;
 			this.modelLinkService = modelLinkService;
+			this.modelLineService = modelLineService;
 			this.openModelViewModelProvider = openModelViewModelProvider;
 
 			this.model = model;
@@ -68,7 +71,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		public void SetRootCanvas(ItemsCanvas rootCanvas) => Root.View.ItemsCanvas = rootCanvas;
 
 
-		public void AddLineViewModel(Line line) => modelLinkService.AddLineViewModel(line);
+		public void AddLineViewModel(Line line) => modelLineService.AddLineViewModel(line);
 
 
 		public async Task LoadAsync()
@@ -317,7 +320,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			if (item is ModelLine modelLine)
 			{
-				modelLinkService.UpdateLine(modelLine, stamp);
+				modelLineService.UpdateLine(modelLine, stamp);
 			}
 
 			if (item is ModelLink modelLink)

@@ -15,17 +15,20 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private readonly INodeViewModelService nodeViewModelService;
 		private readonly INodeLayoutService layoutService;
 		private readonly IModelLinkService modelLinkService;
+		private readonly IModelLineService modelLineService;
 		private readonly Model model;
 
 
 		public ModelNodeService(
 			Model model,
 			IModelLinkService modelLinkService,
+			IModelLineService modelLineService,
 			INodeViewModelService nodeViewModelService,
 			INodeLayoutService layoutService)
 		{
 			this.model = model;
 			this.modelLinkService = modelLinkService;
+			this.modelLineService = modelLineService;
 			this.nodeViewModelService = nodeViewModelService;
 			this.layoutService = layoutService;
 		}
@@ -156,7 +159,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				out IReadOnlyList<ModelLine> lines,
 				out IReadOnlyList<ModelLink> links))
 			{
-				lines.ForEach(line => modelLinkService.UpdateLine(line, node.Stamp));
+				lines.ForEach(line => modelLineService.UpdateLine(line, node.Stamp));
 				links.ForEach(link => modelLinkService.UpdateLink(link, node.Stamp));
 				model.RemovedQueuedNode(node.Name);
 			}

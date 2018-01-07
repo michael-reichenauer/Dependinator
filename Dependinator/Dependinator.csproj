@@ -156,6 +156,8 @@
     <Compile Include="ModelViewing\Lines\Private\LineControlService.cs" />
     <Compile Include="ModelViewing\Lines\Private\LineService.cs" />
     <Compile Include="ModelViewing\Lines\Private\LineZoomService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\IModelLineService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelLineService.cs" />
     <Compile Include="Utils\UI\MouseHelper.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControl.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControlViewModel.cs" />

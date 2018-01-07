@@ -15,13 +15,10 @@ namespace Dependinator.ModelViewing.Nodes
 		Brush GetBrushFromHex(string hexColor);
 		string GetHexColorFromBrush(Brush brush);
 		Brush GetRectangleHighlightBrush(Brush brush);
-
-		int GetPointIndex(Node node, Point point);
-		bool MovePoint(Node node, int index, Point point, Point previousPoint);
+		
 		Brush GetNodeBrush(Node node);
 		void FirstShowNode(Node node);
-
-
+		
 		IEnumerable<LineMenuItemViewModel> GetIncomingLinkItems(Node node);
 		IEnumerable<LineMenuItemViewModel> GetOutgoingLinkItems(Node node);
 		void MouseClicked(NodeViewModel nodeViewModel);
