@@ -15,19 +15,16 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	{
 		private readonly ILinkSegmentService linkSegmentService;
 		private readonly ILineViewModelService lineViewModelService;
-		private readonly ILineControlService lineControlService;
 		private readonly Model model;
 
 
 		public ModelLinkService(
 			ILinkSegmentService linkSegmentService,
 			ILineViewModelService lineViewModelService,
-			ILineControlService lineControlService,
 			Model model)
 		{
 			this.linkSegmentService = linkSegmentService;
 			this.lineViewModelService = lineViewModelService;
-			this.lineControlService = lineControlService;
 			this.model = model;
 		}
 
@@ -56,7 +53,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				link = AddLink(source, target);
 				link.Stamp = stamp;
 				var linkSegments = linkSegmentService.GetLinkSegments(link);
-
+				link.LinkSegments = linkSegments;
 				AddLinkSegmentLines(linkSegments, link);
 			}
 			catch (Exception e)

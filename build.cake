@@ -1,5 +1,6 @@
 #tool nuget:?package=NUnit.ConsoleRunner&version=3.4.0
 #addin nuget:?package=Cake.VersionReader
+
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
 //////////////////////////////////////////////////////////////////////
@@ -7,14 +8,17 @@
 var target = Argument("target", "Default");
 var configuration = Argument("configuration", "Release");
 
+
 //////////////////////////////////////////////////////////////////////
 // PREPARATION
 //////////////////////////////////////////////////////////////////////
 
-// Define directories.
-var buildDir = Directory("./Dependinator/bin") + Directory(configuration);
-var outputPath = File("Dependinator/bin/Release/Dependinator.exe");
-var setupPath = File("DependinatorSetup.exe");
+// Define paths.
+var name = "Dependinator";
+
+var solutionPath = $"./{name}.sln";
+var outputPath = $"{name}/bin/{configuration}/{name}.exe";
+var setupPath = $"{name}Setup.exe";
 
 
 //////////////////////////////////////////////////////////////////////
@@ -24,7 +28,8 @@ var setupPath = File("DependinatorSetup.exe");
 Task("Clean")
     .Does(() =>
 {
-    CleanDirectory(buildDir);
+    CleanDirectories($"./**/obj/{configuration}");
+    CleanDirectories($"./**/bin/{configuration}");
 
     if (FileExists(setupPath))
     { 
@@ -37,7 +42,7 @@ Task("Restore-NuGet-Packages")
     .IsDependentOn("Clean")
     .Does(() =>
 {
-    NuGetRestore("./Dependinator.sln", new NuGetRestoreSettings {
+    NuGetRestore(solutionPath, new NuGetRestoreSettings {
        Verbosity = NuGetVerbosity.Quiet 
     });
 });
@@ -50,7 +55,7 @@ Task("Build")
     if(IsRunningOnWindows())
     {
       // Use MSBuild
-      MSBuild("./Dependinator.sln", new MSBuildSettings {
+      MSBuild(solutionPath, new MSBuildSettings {
         Configuration = configuration,
         Verbosity = Verbosity.Minimal,   
         ArgumentCustomization = args => args.Append("/nologo") 
@@ -59,7 +64,7 @@ Task("Build")
     else
     {
       // Use XBuild
-      XBuild("./Dependinator.sln", settings =>
+      XBuild(solutionPath, settings =>
         settings.SetConfiguration(configuration));
     }
 });
@@ -85,18 +90,17 @@ Task("Run-Unit-Tests")
     .IsDependentOn("Build")
     .Does(() =>
 {
-    NUnit3("./**/bin/" + configuration + "/*Test.dll", new NUnit3Settings {
+    NUnit3($"./**/bin/{configuration}/*Test.dll", new NUnit3Settings {
         NoResults = true,
         NoHeader = true,
         });
 });
 
-//////////////////////////////////////////////////////////////////////
-// TASK TARGETS
-//////////////////////////////////////////////////////////////////////
 
 Task("Default")
     .IsDependentOn("Run-Unit-Tests");
+
+
 
 //////////////////////////////////////////////////////////////////////
 // EXECUTION

@@ -82,76 +82,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		//public IReadOnlyList<LinkSegment> GetLinkSegments(Link link)
-		//{
-		//	if (link.Source.Parent == link.Target.Parent)
-		//	{
-		//		return new[] { new LinkSegment(link.Source, link.Target, link) };
-		//	}
-		//	else if (link.Source == link.Target.Parent)
-		//	{
-		//		return new[] { new LinkSegment(link.Source, link.Target, link) };
-		//	}
-		//	else if (link.Source.Parent == link.Target)
-		//	{
-		//		return new[] { new LinkSegment(link.Source, link.Target, link) };
-		//	}
 
-
-		//	List<LinkSegment> segments = new List<LinkSegment>();
-		//	IEnumerable<Node> sourceAncestors = SourceAncestorsAndSel(link);
-		//	List<Node> sourceAncestors2 = SourceAncestorsAndSel(link).Reverse().ToList();
-		//	List<Node> targetAncestors = TargetAncestorsAndSelf(link).Reverse().ToList();
-
-
-
-		//	// Start with first line at the start of the segmented line 
-		//	Node segmentSource = link.Source;
-		//	foreach (Node sourceAncestor in sourceAncestors)
-		//	{
-		//		for (int i = 0; i < targetAncestors.Count; i++)
-		//		{
-		//			Node targetAncestor = targetAncestors[i];
-		//			if (segmentSource != link.Source)
-		//			{
-		//				if (sourceAncestor == targetAncestor)
-		//				{
-		//					for (int j = i + 1; j < targetAncestors.Count; j++)
-		//					{
-		//						targetAncestor = targetAncestors[j];
-		//						segments.Add(new LinkSegment(segmentSource, targetAncestor, link));
-		//						segmentSource = targetAncestor;
-		//					}
-
-		//					return segments;
-		//				}
-		//			}
-		//			else
-		//			{
-		//				if (sourceAncestor == targetAncestors[i])
-		//				{
-		//					for (int j = i; j + 1 < targetAncestors.Count; j++)
-		//					{
-		//						targetAncestor = targetAncestors[j];
-		//						segments.Add(new LinkSegment(segmentSource, targetAncestor, link));
-		//						segmentSource = targetAncestor;
-		//					}
-
-		//					return segments;
-		//				}
-		//			}
-		//		}
-
-		//		if (segmentSource != sourceAncestor)
-		//		{
-		//			segments.Add(new LinkSegment(segmentSource, sourceAncestor, link));
-		//		}
-
-		//		segmentSource = sourceAncestor;
-		//	}
-
-		//	return segments;
-		//}
 
 
 		private static IEnumerable<Node> SourceAncestorsAndSel(Link link)
@@ -269,10 +200,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 
 
-		//public IReadOnlyList<LinkSegmentOld> GetZoomedInReplacedSegments(
-		//	IEnumerable<LinkSegmentOld> linkSegments,
-		//	NodeOld source,
-		//	NodeOld target)
+		//public IReadOnlyList<LinkSegment> GetZoomedInReplacedSegments(
+		//	IEnumerable<LinkSegment> linkSegments,
+		//	Node source,
+		//	Node target)
 		//{
 		//	// Get the segments that are one before the line and one after the line
 		//	return linkSegments
