@@ -12,7 +12,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 		private readonly ILineMenuItemService lineMenuItemService;
 		private readonly ILineControlService lineControlService;
 		private readonly ILineZoomService lineZoomService;
-		private readonly ILineService lineService;
+		private readonly ILineDataService lineDataService;
 		private readonly IItemSelectionService itemSelectionService;
 
 
@@ -21,38 +21,38 @@ namespace Dependinator.ModelViewing.Lines.Private
 			ILineMenuItemService lineMenuItemService,
 			ILineControlService lineControlService,
 			ILineZoomService lineZoomService,
-			ILineService lineService,
+			ILineDataService lineDataService,
 			IItemSelectionService itemSelectionService)
 		{
 			this.lineMenuItemService = lineMenuItemService;
 			this.lineControlService = lineControlService;
 			this.lineZoomService = lineZoomService;
-			this.lineService = lineService;
+			this.lineDataService = lineDataService;
 			this.itemSelectionService = itemSelectionService;
 
 		}
 
 
-		public void UpdateLineBounds(Line line) => lineService.UpdateLineBounds(line);
+		public void UpdateLineBounds(Line line) => lineDataService.UpdateLineBounds(line);
 
-		public double GetLineWidth(Line line) => lineService.GetLineWidth(line);
-
-
-		public string GetLineData(Line line) => lineService.GetLineData(line);
-
-		public string GetPointsData(Line line) => lineService.GetPointsData(line);
+		public double GetLineWidth(Line line) => lineDataService.GetLineWidth(line);
 
 
-		public string GetArrowData(Line line) => lineService.GetArrowData(line);
+		public string GetLineData(Line line) => lineDataService.GetLineData(line);
+
+		public string GetPointsData(Line line) => lineDataService.GetPointsData(line);
 
 
-		public double GetArrowWidth(Line line) => lineService.GetArrowWidth(line);
+		public string GetArrowData(Line line) => lineDataService.GetArrowData(line);
 
 
-		public string GetEndPointsData(Line line) => lineService.GetEndPointsData(line);
+		public double GetArrowWidth(Line line) => lineDataService.GetArrowWidth(line);
 
 
-		public void UpdateLineEndPoints(Line line) => lineService.UpdateLineEndPoints(line);
+		public string GetEndPointsData(Line line) => lineDataService.GetEndPointsData(line);
+
+
+		public void UpdateLineEndPoints(Line line) => lineDataService.UpdateLineEndPoints(line);
 
 
 		public LineControl GetLineControl(Line line) => new LineControl(lineControlService, line);

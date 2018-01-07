@@ -19,7 +19,7 @@ namespace Dependinator.ModelViewing.Private
 	internal class ModelViewService : IModelViewService, ILoadModelService
 	{
 		private readonly ISettingsService settingsService;
-		private readonly IModelService modelService;
+		private readonly IModelHandlingService modelHandlingService;
 		private readonly IItemSelectionService itemSelectionService;
 		private readonly IProgressService progress;
 
@@ -27,12 +27,12 @@ namespace Dependinator.ModelViewing.Private
 
 		public ModelViewService(
 			ISettingsService settingsService,
-			IModelService modelService,
+			IModelHandlingService modelHandlingService,
 			IItemSelectionService itemSelectionService,
 			IProgressService progress)
 		{
 			this.settingsService = settingsService;
-			this.modelService = modelService;
+			this.modelHandlingService = modelHandlingService;
 			this.itemSelectionService = itemSelectionService;
 			this.progress = progress;
 		}
@@ -41,7 +41,7 @@ namespace Dependinator.ModelViewing.Private
 		public void SetRootCanvas(ItemsCanvas rootCanvas)
 		{
 			this.rootNodeCanvas = rootCanvas;
-			modelService.SetRootCanvas(rootCanvas);
+			modelHandlingService.SetRootCanvas(rootCanvas);
 		}
 
 
@@ -55,16 +55,16 @@ namespace Dependinator.ModelViewing.Private
 			{
 				RestoreViewSettings();
 
-				await modelService.LoadAsync();
+				await modelHandlingService.LoadAsync();
 				t.Log("Updated view model after cached/fresh");
 			}
 		}
 
 
 		public async Task RefreshAsync(bool refreshLayout) =>
-			await modelService.RefreshAsync(refreshLayout);
+			await modelHandlingService.RefreshAsync(refreshLayout);
 
-		public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelService.GetHiddenNodeNames();
+		public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelHandlingService.GetHiddenNodeNames();
 
 		public void Clicked() => itemSelectionService.Deselect();
 
@@ -73,14 +73,14 @@ namespace Dependinator.ModelViewing.Private
 			rootNodeCanvas?.OnMouseWheel(uiElement, e, false);
 
 
-		public void ShowHiddenNode(NodeName nodeName) => modelService.ShowHiddenNode(nodeName);
+		public void ShowHiddenNode(NodeName nodeName) => modelHandlingService.ShowHiddenNode(nodeName);
 
 
 		public void Close()
 		{
 			StoreViewSettings();
 
-			modelService.Save();
+			modelHandlingService.Save();
 		}
 
 
@@ -88,7 +88,7 @@ namespace Dependinator.ModelViewing.Private
 		{
 			settingsService.Edit<WorkFolderSettings>(settings =>
 			{
-				settings.Scale = modelService.Root.View.ItemsCanvas.Scale;
+				settings.Scale = modelHandlingService.Root.View.ItemsCanvas.Scale;
 			});
 		}
 
@@ -96,7 +96,7 @@ namespace Dependinator.ModelViewing.Private
 		private void RestoreViewSettings()
 		{
 			WorkFolderSettings settings = settingsService.Get<WorkFolderSettings>();
-			Node root = modelService.Root;
+			Node root = modelHandlingService.Root;
 
 			root.View.ItemsCanvas.SetRootScale(settings.Scale);
 

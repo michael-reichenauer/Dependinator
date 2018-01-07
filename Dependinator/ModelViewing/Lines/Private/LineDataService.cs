@@ -6,11 +6,12 @@ using Dependinator.ModelViewing.ModelHandling.Core;
 
 namespace Dependinator.ModelViewing.Lines.Private
 {
-	internal class LineService : ILineService
+	internal class LineDataService : ILineDataService
 	{
 		private static readonly Point MiddleBottom = new Point(0.5, 1);
 		private static readonly Point MiddleTop = new Point(0.5, 0);
 		private static readonly double LineMargin = 10;
+
 
 		public void UpdateLineEndPoints(Line line)
 		{

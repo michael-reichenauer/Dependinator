@@ -7,7 +7,7 @@ using Dependinator.ModelViewing.ModelHandling.Core;
 
 namespace Dependinator.ModelViewing.ModelHandling
 {
-	internal interface IModelService
+	internal interface IModelHandlingService
 	{
 		void SetRootCanvas(ItemsCanvas rootCanvas);
 		Task RefreshAsync(bool refreshLayout);
@@ -19,7 +19,6 @@ namespace Dependinator.ModelViewing.ModelHandling
 		Task LoadAsync();
 		void ShowHiddenNode(NodeName nodeName);
 		void ClearAll();
-		Task SaveAsync();
 		void Save();
 		IReadOnlyList<NodeName> GetHiddenNodeNames();
 	}

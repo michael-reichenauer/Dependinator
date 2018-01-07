@@ -15,17 +15,17 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	{
 		private readonly ILinkSegmentService linkSegmentService;
 		private readonly ILineViewModelService lineViewModelService;
-		private readonly Model model;
+		private readonly IModelService modelService;
 
 
 		public ModelLineService(
 			ILinkSegmentService linkSegmentService,
 			ILineViewModelService lineViewModelService,
-			Model model)
+			IModelService modelService)
 		{
 			this.linkSegmentService = linkSegmentService;
 			this.lineViewModelService = lineViewModelService;
-			this.model = model;
+			this.modelService = modelService;
 		}
 
 
@@ -34,7 +34,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			try
 			{
-				Node source = model.Node(NodeName.From(modelLine.Source));
+				Node source = modelService.GetNode(NodeName.From(modelLine.Source));
 
 				if (!TryGetTarget(modelLine, out Node target))
 				{
@@ -153,9 +153,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private bool TryGetTarget(ModelLine modelLine, out Node target)
 		{
 			NodeName targetName = NodeName.From(modelLine.Target);
-			if (!model.TryGetNode(targetName, out target))
+			if (!modelService.TryGetNode(targetName, out target))
 			{
-				model.QueueModelLine(targetName, modelLine);
+				modelService.QueueModelLine(targetName, modelLine);
 				return false;
 			}
 
