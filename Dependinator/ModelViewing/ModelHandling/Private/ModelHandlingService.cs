@@ -19,7 +19,7 @@ using Dependinator.Utils;
 namespace Dependinator.ModelViewing.ModelHandling.Private
 {
 	[SingleInstance]
-	internal class ModelService : IModelService
+	internal class ModelHandlingService : IModelHandlingService
 	{
 		private static readonly int MaxPriority = 10;
 		private static readonly int BatchSize = 100;
@@ -40,7 +40,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private bool isShowingOpenModel = false;
 		private bool isWorking = false;
 
-		public ModelService(
+		public ModelHandlingService(
 			IParserService parserService,
 			IPersistenceService persistenceService,
 			IModelNodeService modelNodeService,

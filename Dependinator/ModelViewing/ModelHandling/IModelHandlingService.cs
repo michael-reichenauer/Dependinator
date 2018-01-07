@@ -7,7 +7,7 @@ using Dependinator.ModelViewing.ModelHandling.Core;
 
 namespace Dependinator.ModelViewing.ModelHandling
 {
-	internal interface IModelService
+	internal interface IModelHandlingService
 	{
 		void SetRootCanvas(ItemsCanvas rootCanvas);
 		Task RefreshAsync(bool refreshLayout);

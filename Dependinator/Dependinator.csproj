@@ -245,9 +245,9 @@
     <Compile Include="ModelViewing\ModelHandling\Private\LinkSegment.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\Node.cs" />
     <Compile Include="ModelViewing\Nodes\NodeViewModel.cs" />
-    <Compile Include="ModelViewing\ModelHandling\IModelService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\IModelHandlingService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\IModelNodeService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\ModelService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelHandlingService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelNodeService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\Model.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\ModelNode.cs" />
