@@ -157,30 +157,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		public void ClearAll() => modelNodeService.RemoveAll();
 
 
-		public async Task SaveAsync()
-		{
-			if (isWorking)
-			{
-				return;
-			}
-
-			if (isShowingOpenModel)
-			{
-				// Nothing to save
-				return;
-			}
-
-			Timing t = Timing.Start();
-			IReadOnlyList<Node> nodes = Root.DescendentsBreadth().ToList();
-			t.Log($"Saving {nodes} nodes");
-
-			IReadOnlyList<IModelItem> items = Convert.ToDataItems(nodes);
-			t.Log($"Saving {items} items");
-
-			string dataFilePath = GetDataFilePath();
-			await persistenceService.SerializeAsync(items, dataFilePath);
-			t.Log($"Saved {items} items");
-		}
 
 
 		public void Save()

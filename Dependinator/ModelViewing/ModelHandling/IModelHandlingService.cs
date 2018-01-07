@@ -19,7 +19,6 @@ namespace Dependinator.ModelViewing.ModelHandling
 		Task LoadAsync();
 		void ShowHiddenNode(NodeName nodeName);
 		void ClearAll();
-		Task SaveAsync();
 		void Save();
 		IReadOnlyList<NodeName> GetHiddenNodeNames();
 	}
