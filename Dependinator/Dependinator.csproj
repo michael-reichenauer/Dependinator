@@ -150,11 +150,11 @@
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
     <Compile Include="ModelViewing\Items\ISelectableItem.cs" />
     <Compile Include="ModelViewing\Lines\Private\ILineControlService.cs" />
-    <Compile Include="ModelViewing\Lines\Private\ILineService.cs" />
+    <Compile Include="ModelViewing\Lines\Private\ILineDataService.cs" />
     <Compile Include="ModelViewing\Lines\Private\ILineZoomService.cs" />
     <Compile Include="ModelViewing\Lines\Private\LineControl.cs" />
     <Compile Include="ModelViewing\Lines\Private\LineControlService.cs" />
-    <Compile Include="ModelViewing\Lines\Private\LineService.cs" />
+    <Compile Include="ModelViewing\Lines\Private\LineDataService.cs" />
     <Compile Include="ModelViewing\Lines\Private\LineZoomService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\IModelLineService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelLineService.cs" />

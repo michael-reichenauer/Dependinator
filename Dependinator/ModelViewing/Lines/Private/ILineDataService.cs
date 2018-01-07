@@ -3,7 +3,7 @@ using Dependinator.ModelViewing.ModelHandling.Core;
 
 namespace Dependinator.ModelViewing.Lines.Private
 {
-	internal interface ILineService
+	internal interface ILineDataService
 	{
 		void UpdateLineEndPoints(Line line);
 		void UpdateLineBounds(Line line);
