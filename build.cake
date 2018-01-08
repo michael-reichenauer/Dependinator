@@ -77,7 +77,7 @@ Task("Build-Setup")
     Information("\n");
 
     CopyFile(outputPath, setupPath);
-    var version =  GetFullVersionNumber(setupPath);
+    var version = GetFullVersionNumber(setupPath);
   
     Information("Created: {0}", setupPath);
     Information("v{0}", version); 
