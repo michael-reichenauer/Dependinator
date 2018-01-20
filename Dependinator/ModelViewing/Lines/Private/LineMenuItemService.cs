@@ -29,57 +29,71 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 		public IEnumerable<LineMenuItemViewModel> GetSourceLinkItems(IEnumerable<Line> lines)
 		{
-			Func<Line, Node> lineEndPoint = line => line.Source;
-			Func<Link, Node> linkEndPoint = link => link.Source;
-
-			List<LineMenuItemViewModel> lineItems = new List<LineMenuItemViewModel>();
-			foreach (Line line in lines)
-			{
-				IEnumerable<LineMenuItemViewModel> linkItems = GetLineLinkItems(line, linkEndPoint);
-
-				if (line.Source != line.Target.Parent)
-				{
-					string displayName = lineEndPoint(line).Name.DisplayName;
-					LineMenuItemViewModel lineMenuItemViewModel = new LineMenuItemViewModel(null, displayName, linkItems);
-
-					lineItems.Add(lineMenuItemViewModel);
-				}
-				else
-				{
-					lineItems.AddRange(linkItems);
-				}
-			}
-
-			return lineItems;
+			return GetLinkItems(lines, line => line.Source, link => link.Source);
 		}
 
 
 		public IEnumerable<LineMenuItemViewModel> GetTargetLinkItems(IEnumerable<Line> lines)
 		{
-			Func<Line, Node> lineEndPoint = line => line.Target;
-			Func<Link, Node> linkEndPoint = link => link.Target;
+			return GetLinkItems(lines, line => line.Target, link => link.Target);
+		}
 
+
+		public IEnumerable<LineMenuItemViewModel> GetLinkItems(
+			IEnumerable<Line> lines,
+			Func<Line, Node> lineEndPoint,
+			Func<Link, Node> linkEndPoint)
+		{
 			List<LineMenuItemViewModel> lineItems = new List<LineMenuItemViewModel>();
 
 			foreach (Line line in lines)
 			{
 				IEnumerable<LineMenuItemViewModel> linkItems = GetLineLinkItems(line, linkEndPoint);
-				if (line.Source.Parent != line.Target)
-				{
-					string displayName = lineEndPoint(line).Name.DisplayName;
-					LineMenuItemViewModel lineMenuItemViewModel = new LineMenuItemViewModel(null, displayName, linkItems);
 
-					lineItems.Add(lineMenuItemViewModel);
-				}
-				else
+				if (line.IsToChild)
 				{
 					lineItems.AddRange(linkItems);
 				}
+				else
+				{
+					// Line to parent or sibling
+					string nodeName = lineEndPoint(line).Name.DisplayName;
+					LineMenuItemViewModel lineMenuItemViewModel = new LineMenuItemViewModel(null, nodeName, linkItems);
 
+					lineItems.Add(lineMenuItemViewModel);
+				}
 			}
 
 			return lineItems;
 		}
+
+
+		//public IEnumerable<LineMenuItemViewModel> GetTargetLinkItems(IEnumerable<Line> lines)
+		//{
+		//	Func<Line, Node> lineEndPoint = line => line.Target;
+		//	Func<Link, Node> linkEndPoint = link => link.Target;
+
+		//	List<LineMenuItemViewModel> lineItems = new List<LineMenuItemViewModel>();
+
+		//	foreach (Line line in lines)
+		//	{
+		//		IEnumerable<LineMenuItemViewModel> linkItems = GetLineLinkItems(line, linkEndPoint);
+		//		if (line.Source.Parent != line.Target)
+		//		{
+		//			string displayName = lineEndPoint(line).Name.DisplayName;
+		//			LineMenuItemViewModel lineMenuItemViewModel = new LineMenuItemViewModel(null, displayName, linkItems);
+
+		//			lineItems.Add(lineMenuItemViewModel);
+		//		}
+		//		else
+		//		{
+		//			lineItems.AddRange(linkItems);
+		//		}
+
+		//	}
+
+		//	return lineItems;
+		//}
 
 
 		//private IEnumerable<LinkItem> GetLinesLinkItems(
@@ -99,9 +113,11 @@ namespace Dependinator.ModelViewing.Lines.Private
 		//}
 
 
-		private IEnumerable<LineMenuItemViewModel> GetLineLinkItems(Line line, Func<Link, Node> linkEndPoint)
+		private IEnumerable<LineMenuItemViewModel> GetLineLinkItems(
+			Line line, Func<Link, Node> linkEndPoint)
 		{
 			IEnumerable<Link> lineLinks = line.Links.DistinctBy(linkEndPoint);
+
 			return GetLinkItems(lineLinks, linkEndPoint, 1);
 		}
 
@@ -125,7 +141,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 			List<LineMenuItemViewModel> linkItems = GetLinksGroupsItems(groups, linkEndPoint, level);
 
-			ReduceHierarchy(linkItems);
+			//ReduceHierarchy(linkItems);
 
 			return linkItems.OrderBy(item => item, LinkItemComparer());
 		}

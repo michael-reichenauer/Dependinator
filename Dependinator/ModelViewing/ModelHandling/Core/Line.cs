@@ -31,6 +31,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		public int LinkCount { get; set; }
 
 		public List<Link> Links { get; } = new List<Link>();
+		public bool IsToChild => Source == Target.Parent;
+		public bool IsToParent => Source.Parent == Target;
+		public bool IsToSibling => Source.Parent == Target.Parent;
 
 		public override string ToString() => $"{Source}->{Target}";
 
