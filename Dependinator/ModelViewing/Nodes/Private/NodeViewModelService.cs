@@ -108,7 +108,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 		public Brush GetBackgroundBrush(Brush brush)
 		{
-			return themeService.GetRectangleBackgroundBrush(brush);
+			return themeService.BackgroundBrush();
 		}
 
 		public Brush GetSelectedBrush(Brush brush)

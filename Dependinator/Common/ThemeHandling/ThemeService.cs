@@ -138,6 +138,12 @@ namespace Dependinator.Common.ThemeHandling
 		}
 
 
+		public Brush BackgroundBrush()
+		{
+			return Theme.BackgroundBrush;
+		}
+
+
 		public Brush GetRectangleHighlighterBrush(Brush brush)
 		{
 			return Theme.GetLighterLighterBrush(brush);
