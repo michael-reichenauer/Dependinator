@@ -3,7 +3,7 @@ using Dependinator.ModelViewing.ModelHandling.Core;
 
 namespace Dependinator.ModelViewing.ModelHandling.Private
 {
-	internal class LinkSegment
+	internal class LinkSegment : IEdge
 	{
 		public LinkSegment(Node source, Node target, Link link)
 		{

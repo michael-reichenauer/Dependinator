@@ -156,6 +156,8 @@
     <Compile Include="ModelViewing\Lines\Private\LineControlService.cs" />
     <Compile Include="ModelViewing\Lines\Private\LineDataService.cs" />
     <Compile Include="ModelViewing\Lines\Private\LineZoomService.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Core\Edge.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Core\IEdge.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\IModelLineService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\INodeService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelLineService.cs" />

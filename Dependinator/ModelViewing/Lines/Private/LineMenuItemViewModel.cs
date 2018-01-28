@@ -12,9 +12,9 @@ namespace Dependinator.ModelViewing.Lines.Private
 	{
 		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> subItems;
 
-		public LineMenuItemViewModel(Link link, string text, IEnumerable<LineMenuItemViewModel> subLinkItems)
+		public LineMenuItemViewModel(IEdge edge, string text, IEnumerable<LineMenuItemViewModel> subLinkItems)
 		{
-			Link = link;
+			Edge = edge;
 			Text = text;
 			SubLinkItems = subLinkItems;
 			subItems = new Lazy<ObservableCollection<LineMenuItemViewModel>>(() => 
@@ -22,7 +22,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 		}
 
 
-		public Link Link { get => Get<Link>(); set => Set(value); }
+		public IEdge Edge { get => Get<IEdge>(); set => Set(value); }
 
 		public string Text { get => Get(); set => Set(value); }
 
@@ -30,7 +30,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 		public ObservableCollection<LineMenuItemViewModel> SubItems => subItems.Value;
 
-		public Command<Link> LinkCommand { get; }
+		public Command LinkCommand => Command(() => { });
 
 		public override string ToString() => $"{Text} ({SubLinkItems.Count()})";
 	}

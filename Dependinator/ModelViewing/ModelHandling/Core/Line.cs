@@ -4,7 +4,7 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.ModelHandling.Core
 {
-	internal class Line : Equatable<Line>
+	internal class Line : Equatable<Line>, IEdge
 	{
 		private List<Link> hiddenLinks = new List<Link>();
 

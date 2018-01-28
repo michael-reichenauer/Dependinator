@@ -29,26 +29,25 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 		public IEnumerable<LineMenuItemViewModel> GetSourceLinkItems(IEnumerable<Line> lines)
 		{
-			return GetLinkItems(lines, line => line.Source, link => link.Source);
+			return GetLinkItems(lines, line => line.Source);
 		}
 
 
 		public IEnumerable<LineMenuItemViewModel> GetTargetLinkItems(IEnumerable<Line> lines)
 		{
-			return GetLinkItems(lines, line => line.Target, link => link.Target);
+			return GetLinkItems(lines, line => line.Target);
 		}
 
 
 		public IEnumerable<LineMenuItemViewModel> GetLinkItems(
 			IEnumerable<Line> lines,
-			Func<Line, Node> lineEndPoint,
-			Func<Link, Node> linkEndPoint)
+			Func<IEdge, Node> endPoint)
 		{
 			List<LineMenuItemViewModel> lineItems = new List<LineMenuItemViewModel>();
 
 			foreach (Line line in lines)
 			{
-				IEnumerable<LineMenuItemViewModel> linkItems = GetLineLinkItems(line, linkEndPoint);
+				IEnumerable<LineMenuItemViewModel> linkItems = GetLineLinkItems(line, endPoint);
 
 				if (line.IsToChild)
 				{
@@ -57,7 +56,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 				else
 				{
 					// Line to parent or sibling
-					string nodeName = lineEndPoint(line).Name.DisplayName;
+					string nodeName = endPoint(line).Name.DisplayName;
 					LineMenuItemViewModel lineMenuItemViewModel = new LineMenuItemViewModel(null, nodeName, linkItems);
 
 					lineItems.Add(lineMenuItemViewModel);
@@ -114,16 +113,16 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 
 		private IEnumerable<LineMenuItemViewModel> GetLineLinkItems(
-			Line line, Func<Link, Node> linkEndPoint)
+			Line line, Func<IEdge, Node> endPoint)
 		{
-			IEnumerable<Link> lineLinks = line.Links.DistinctBy(linkEndPoint);
+			IEnumerable<Link> lineLinks = line.Links.DistinctBy(link => endPoint(link));
 
-			return GetLinkItems(lineLinks, linkEndPoint, 1);
+			return GetLinkItems(lineLinks, endPoint, 1);
 		}
 
 
 		private IEnumerable<LineMenuItemViewModel> GetLinkItems(
-			IEnumerable<Link> links, Func<Link, Node> linkEndPoint, int level)
+			IEnumerable<Link> links, Func<IEdge, Node> endPoint, int level)
 		{
 			if (!links.Any())
 			{
@@ -132,14 +131,14 @@ namespace Dependinator.ModelViewing.Lines.Private
 			else if (links.Count() < LinksMenuLimit)
 			{
 				return links.Select(link => new LineMenuItemViewModel(
-					link, GetLinkText(linkEndPoint(link)), EmptySubLinks));
+					link, GetLinkText(endPoint(link)), EmptySubLinks));
 			}
 
 			var groups = links
-				.GroupBy(link => GetGroupKey(linkEndPoint(link), level))
+				.GroupBy(link => GetGroupKey(endPoint(link), level))
 				.OrderBy(group => group.Key);
 
-			List<LineMenuItemViewModel> linkItems = GetLinksGroupsItems(groups, linkEndPoint, level);
+			List<LineMenuItemViewModel> linkItems = GetLinksGroupsItems(groups, endPoint, level);
 
 			//ReduceHierarchy(linkItems);
 
@@ -199,7 +198,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 
 		private List<LineMenuItemViewModel> GetLinksGroupsItems(
-			IEnumerable<IGrouping<string, Link>> linksGroups, Func<Link, Node> endPoint, int level)
+			IEnumerable<IGrouping<string, Link>> linksGroups, Func<IEdge, Node> endPoint, int level)
 		{
 			var linkItems = linksGroups
 				.Take(LinksMenuLimit)
@@ -217,7 +216,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 
 		private LineMenuItemViewModel GetLinkItem(
-			IGrouping<string, Link> linksGroup, Func<Link, Node> endPoint, int level)
+			IGrouping<string, Link> linksGroup, Func<IEdge, Node> endPoint, int level)
 		{
 			IEnumerable<LineMenuItemViewModel> subLinks = GetLinkItems(linksGroup, endPoint, level + 1);
 

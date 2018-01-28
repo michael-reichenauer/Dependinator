@@ -5,7 +5,7 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.ModelHandling.Core
 {
-	internal class Link : Equatable<Link>
+	internal class Link : Equatable<Link>, IEdge
 	{
 		public Link(Node source, Node target)
 		{

@@ -191,7 +191,7 @@ namespace Dependinator.Common.ThemeHandling
 		private SolidColorBrush SelectedBrush(SolidColorBrush brush)
 		{
 			SolidColorBrush darkerBrush = new SolidColorBrush(brush.Color);
-			darkerBrush.Color = Converter.InterpolateColors(brush.Color, BackgroundBrush.Color, 0.95f);
+			darkerBrush.Color = Converter.InterpolateColors(brush.Color, BackgroundBrush.Color, 0.92f);
 			return darkerBrush;
 		}
 
