@@ -117,7 +117,119 @@ namespace Dependinator.ModelViewing.Lines.Private
 		{
 			IEnumerable<Link> lineLinks = line.Links.DistinctBy(link => endPoint(link));
 
-			return GetLinkItems(lineLinks, endPoint, 1);
+			return GetLinkItems2(lineLinks, endPoint);
+		}
+
+
+		private IEnumerable<LineMenuItemViewModel> GetLinkItems2(
+			IEnumerable<Link> links, Func<IEdge, Node> endPoint)
+		{
+			Dictionary<NodeName, MenuItem> items = new Dictionary<NodeName, MenuItem>();
+
+			foreach (Link link in links)
+			{
+				Node node = endPoint(link);
+
+				if (!items.TryGetValue(node.Name, out MenuItem item))
+				{
+					MenuItem parentItem = GetParentMenuItem(items, node.Parent);
+
+					item = new MenuItem(node);
+					items[node.Name] = item;
+
+					parentItem.Items.Add(item);
+				}
+
+				item.Link = link;
+			}
+
+			MenuItem rootItem = items[NodeName.Root];
+			IEnumerable<MenuItem> compressedItems = CompressSubItems(rootItem);
+
+			return ToLineMenuItemViewModels(compressedItems);
+		}
+
+
+		private static IEnumerable<LineMenuItemViewModel> ToLineMenuItemViewModels(
+			IEnumerable<MenuItem> compressedItems)
+		{
+			return compressedItems
+				.Select(item => new LineMenuItemViewModel(
+					item.Link, item.Node.Name.DisplayFullNoParametersName, ToLineMenuItemViewModels(item.Items)));
+		}
+
+
+		private IEnumerable<MenuItem> CompressSubItems(MenuItem item)
+		{
+			foreach (var subItem in item.Items)
+			{
+				if (subItem.Items.Any())
+				{
+					if (subItem.Items.Count > 1)
+					{
+						// 2 or more sub items, should not be compressed
+						yield return subItem;
+					}
+					else
+					{
+						// 1 sub item which might be compressed
+						IEnumerable<MenuItem> subItems = CompressSubItems(subItem);
+
+						if (subItem.Link != null)
+						{
+							// Item has a link so we need it and its compressed subitems
+							MenuItem newItem = new MenuItem(subItem.Node) { Link = subItem.Link };
+							newItem.Items.AddRange(subItems);
+							yield return newItem;
+						}
+						else
+						{
+							// Skip this item and use its compressed subitems
+							foreach (MenuItem subSubItem in subItems)
+							{
+								yield return subSubItem;
+							}
+						}
+					}
+				}
+				else if (subItem.Link != null)
+				{
+					// a leaf item with link, but no sub items
+					yield return subItem;
+				}
+			}
+		}
+
+
+
+		private MenuItem GetParentMenuItem(IDictionary<NodeName, MenuItem> items, Node parent)
+		{
+			if (items.TryGetValue(parent.Name, out MenuItem parantItem))
+			{
+				return parantItem;
+			}
+
+			parantItem = new MenuItem(parent);
+
+			if (!parent.IsRoot)
+			{
+				MenuItem grandParentIItem = GetParentMenuItem(items, parent.Parent);
+				grandParentIItem.Items.Add(parantItem);
+			}
+
+			items[parent.Name] = parantItem;
+			return parantItem;
+		}
+
+
+		private class MenuItem
+		{
+			public MenuItem(Node node) => Node = node;
+
+			public Node Node { get; }
+			public Link Link { get; set; }
+			public List<MenuItem> Items { get; } = new List<MenuItem>();
+			public override string ToString() => $"{Node}";
 		}
 
 
