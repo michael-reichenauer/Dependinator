@@ -268,13 +268,13 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 
 		private static int CompareLinkItems(ReferenceItemViewModel i1, ReferenceItemViewModel i2)
-			=> i1.Name == MoreText && i2.Name == MoreText
+			=> i1.Text == MoreText && i2.Text == MoreText
 				? 0
-				: i1.Name == MoreText
+				: i1.Text == MoreText
 					? 1
-					: i2.Name == MoreText
+					: i2.Text == MoreText
 						? -1
-						: i1.Name.CompareTo(i2.Name);
+						: i1.Text.CompareTo(i2.Text);
 
 
 		private static void ReduceHierarchy(ICollection<ReferenceItemViewModel> linkItems)
@@ -285,9 +285,9 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 			{
 				bool isChanged = false;
 
-				foreach (ReferenceItemViewModel linkItem in linkItems.Where(item => item.Items.Any()).ToList())
+				foreach (ReferenceItemViewModel linkItem in linkItems.Where(item => item.SubItems.Any()).ToList())
 				{
-					int count = linkItem.Items.Count();
+					int count = linkItem.SubItems.Count();
 
 					if (count > 4)
 					{
@@ -299,7 +299,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 					if (margin >= 0)
 					{
 						linkItems.Remove(linkItem);
-						linkItem.Items.ForEach(linkItems.Add);
+						linkItem.SubItems.ForEach(linkItems.Add);
 						isChanged = true;
 					}
 				}

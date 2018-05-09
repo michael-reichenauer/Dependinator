@@ -9,21 +9,21 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 	internal class ReferenceItemViewModel : ViewModel
 	{
 		public ReferenceItemViewModel(
-			IEdge edge, string name, IEnumerable<ReferenceItemViewModel> subItems)
+			IEdge edge, string text, IEnumerable<ReferenceItemViewModel> subItems)
 		{
-			Items = new ObservableCollection<ReferenceItemViewModel>(subItems);
+			SubItems = new ObservableCollection<ReferenceItemViewModel>(subItems);
 
 			Edge = edge;
-			Name = name;
+			Text = text;
 		}
 
 
 		public IEdge Edge { get; }
-		public string Name { get=> Get(); set => Set(value); }
+		public string Text { get=> Get(); set => Set(value); }
 		public bool IsSelected { get => Get(); set => Set(value); }
 		public bool IsExpanded { get => Get(); set => Set(value); }
 
 
-		public ObservableCollection<ReferenceItemViewModel> Items { get; }
+		public ObservableCollection<ReferenceItemViewModel> SubItems { get; }
 	}
 }

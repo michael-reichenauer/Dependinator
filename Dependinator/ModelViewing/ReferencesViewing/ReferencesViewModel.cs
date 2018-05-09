@@ -37,7 +37,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 				lines);
 
 
-			ReferenceItems = new ObservableCollection<ReferenceItemViewModel>(referenceItems);
+			Items = new ObservableCollection<ReferenceItemViewModel>(referenceItems);
 			//referenceItemViewModel.IsSelected = true;
 
 			WindowTitle = $"-> {node.Name.DisplayName}";
@@ -51,7 +51,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		public string Title { get => Get(); set => Set(value); }
 
 
-		public ObservableCollection<ReferenceItemViewModel> ReferenceItems { get; }
+		public ObservableCollection<ReferenceItemViewModel> Items { get; }
 
 
 		private void InitItems(Node node)
