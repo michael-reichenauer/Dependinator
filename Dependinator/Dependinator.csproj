@@ -41,7 +41,7 @@
     <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <WarningLevel>0</WarningLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <LangVersion>7.1</LangVersion>
     <DocumentationFile>bin\Debug\Dependinator.xml</DocumentationFile>
@@ -148,6 +148,13 @@
     <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
+    <Compile Include="ModelViewing\ReferencesViewing\IReferenceItemService.cs" />
+    <Compile Include="ModelViewing\ReferencesViewing\ReferenceItemViewModel.cs" />
+    <Compile Include="ModelViewing\ReferencesViewing\ReferenceItemService.cs" />
+    <Compile Include="ModelViewing\ReferencesViewing\ReferencesDialog.xaml.cs">
+      <DependentUpon>ReferencesDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ModelViewing\ReferencesViewing\ReferencesViewModel.cs" />
     <Compile Include="ModelViewing\Items\ISelectableItem.cs" />
     <Compile Include="ModelViewing\Lines\Private\ILineControlService.cs" />
     <Compile Include="ModelViewing\Lines\Private\ILineDataService.cs" />
@@ -441,6 +448,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="ModelViewing\ReferencesViewing\ReferencesDialog.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="ModelViewing\Lines\LineView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -542,6 +553,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Common\WindowControlButtons.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Styles\TreeViewStyle.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

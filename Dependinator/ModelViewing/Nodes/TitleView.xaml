@@ -128,6 +128,19 @@
 				</MenuItem>
 
 				<Separator Background="{DynamicResource BorderBrush}" />
+
+				<MenuItem
+					Header="Dependencies"
+					Command="{Binding ShowDependenciesCommand}">
+					<MenuItem.Icon>
+						<Border>
+							<TextBlock
+								Style="{DynamicResource MenuIconStyle}" Text="&#xE915;" />
+						</Border>
+					</MenuItem.Icon>
+				</MenuItem>
+
+
 				<MenuItem
 						Header="Hide Node"
 						Command="{Binding HideNodeCommand}">

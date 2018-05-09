@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using Dependinator.Common.MessageDialogs;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Items.Private;
 using Dependinator.ModelViewing.Lines.Private;
@@ -28,7 +30,9 @@ namespace Dependinator.ModelViewing.Nodes
 		private readonly Brush selectedBrush;
 
 
-		protected NodeViewModel(INodeViewModelService nodeViewModelService, Node node)
+		protected NodeViewModel(
+			INodeViewModelService nodeViewModelService,
+			Node node)
 		{
 			Priority = 1;
 			this.nodeViewModelService = nodeViewModelService;
@@ -115,6 +119,14 @@ namespace Dependinator.ModelViewing.Nodes
 		public int IncomingLinesCount => Node.TargetLines.Count(line => line.Owner != Node);
 
 		public Command HideNodeCommand => Command(HideNode);
+		public Command ShowDependenciesCommand => Command(ShowDependencies);
+
+
+		private void ShowDependencies()
+		{
+			nodeViewModelService.ShowDependencies(this);
+
+		}
 
 
 		public int IncomingLinksCount => Node.TargetLines

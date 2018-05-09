@@ -4,11 +4,14 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using Dependinator.Common;
+using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Lines.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private;
+using Dependinator.ModelViewing.ReferencesViewing;
 
 
 namespace Dependinator.ModelViewing.Nodes.Private
@@ -19,18 +22,25 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private readonly IModelLineService modelLineService;
 		private readonly ILineMenuItemService lineMenuItemService;
 		private readonly IItemSelectionService itemSelectionService;
+		private readonly IReferenceItemService referenceItemService;
+		private readonly WindowOwner owner;
+
 
 
 		public NodeViewModelService(
 			IThemeService themeService,
 			IModelLineService modelLineService,
 			ILineMenuItemService lineMenuItemService,
-			IItemSelectionService itemSelectionService)
+			IItemSelectionService itemSelectionService,
+			IReferenceItemService referenceItemService,
+			WindowOwner owner)
 		{
 			this.themeService = themeService;
 			this.modelLineService = modelLineService;
 			this.lineMenuItemService = lineMenuItemService;
 			this.itemSelectionService = itemSelectionService;
+			this.referenceItemService = referenceItemService;
+			this.owner = owner;
 		}
 
 
@@ -114,6 +124,14 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		public Brush GetSelectedBrush(Brush brush)
 		{
 			return themeService.GetRectangleSelectedBackgroundBrush(brush);
+		}
+
+
+		public void ShowDependencies(NodeViewModel nodeViewModel)
+		{
+			ReferencesDialog referencesDialog = new ReferencesDialog(
+				referenceItemService, owner, nodeViewModel.Node);
+			referencesDialog.ShowDialog();
 		}
 
 

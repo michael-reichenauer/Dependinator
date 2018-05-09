@@ -21,6 +21,7 @@
 				<ResourceDictionary Source="Styles\RadioButtonStyle.xaml"/>
 				<ResourceDictionary Source="Styles\ComboBoxStyle.xaml"/>
 				<ResourceDictionary Source="Styles\CheckboxStyle.xaml"/>
+				<ResourceDictionary Source="Styles\TreeViewStyle.xaml"/>
 
 				<ResourceDictionary Source="Styles\ListBoxItemControlTemplate.xaml"/>
 

@@ -24,10 +24,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 			ParallelOptions option = GetParallelOptions();
 			await Task.Run(() =>
 			{
-				Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseModule());
-				Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseModuleReferences());
-				Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseTypes());
-				Parallel.ForEach(assemblyParsers, option, analyzer => analyzer.ParseTypeMembers());
+				Parallel.ForEach(assemblyParsers, option, parser => parser.ParseModule());
+				Parallel.ForEach(assemblyParsers, option, parser => parser.ParseModuleReferences());
+				Parallel.ForEach(assemblyParsers, option, parser => parser.ParseTypes());
+				Parallel.ForEach(assemblyParsers, option, parser => parser.ParseTypeMembers());
 			});
 
 			t.Log($"Analyzed {filePath}");
