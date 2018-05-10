@@ -26,69 +26,83 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		}
 
 
-		public IEnumerable<ReferenceItem> GetSourceLinkItems(Line line) => 
-			GetLineReferenceItems(line, true);
+		//public IEnumerable<ReferenceItem> GetSourceLinkItems(Line line, Node baseNode) =>
+		//	GetLineReferenceItems(line, true, baseNode, null);
 
 
-		public IEnumerable<ReferenceItem> GetTargetLinkItems(Line line) => 
-			GetLineReferenceItems(line, false);
+		//public IEnumerable<ReferenceItem> GetTargetLinkItems(Line line, Node baseNode) =>
+		//	GetLineReferenceItems(line, false, baseNode, null);
 
 
-		public IEnumerable<ReferenceItem> GetIncomingReferences(Node node)
+		//public IEnumerable<ReferenceItem> GetIncomingReferences(Node baseNode, ReferenceOptions options)
+		//{
+		//	IEnumerable<Line> lines = baseNode.TargetLines
+		//		.Where(line => line.Owner != baseNode);
+
+		//	return lines.SelectMany(line => GetLineReferenceItems(line, baseNode, options));
+		//}
+
+
+		public IEnumerable<ReferenceItem> GetReferences(Node baseNode, ReferenceOptions options)
 		{
-			IEnumerable<Line> lines = node.TargetLines
-				.Where(line => line.Owner != node);
+			IEnumerable<Line> lines = 
+				(options.IsIncoming ? baseNode.TargetLines : baseNode.SourceLines)
+				.Where(line => line.Owner != baseNode);
 
-			return lines.SelectMany(line1 => GetLineReferenceItems(line1, true));
-		}
-
-
-		public IEnumerable<ReferenceItem> GetOutgoingReferences(Node node)
-		{
-			IEnumerable<Line> lines = node.SourceLines
-				.Where(line => line.Owner != node);
-
-			return lines.SelectMany(line1 => GetLineReferenceItems(line1, false));
+			return lines.SelectMany(line => GetLineReferenceItems(line, baseNode, options));
 		}
 
 
 		private IEnumerable<ReferenceItem> GetLineReferenceItems(
-			Line line, bool isIncoming)
+			Line line, Node baseNode, ReferenceOptions options)
 		{
-			IEnumerable<Link> lineLinks = line.Links.DistinctBy(link => EndPoint(link, isIncoming));
+			IEnumerable<Link> lineLinks = line.Links
+				.DistinctBy(link => EndPoint(link, options))
+				.Where(link => IsIncluded(link, options));
 
-			var referenceItems = GetReferenceItems(lineLinks, isIncoming);
+			var referenceItems = GetReferenceItems(lineLinks, baseNode, options);
 
 			return referenceItems;
 		}
 
 
-		private IEnumerable<ReferenceItem> GetReferenceItems(IEnumerable<Link> links, bool isIncoming)
+		private static bool IsIncluded(IEdge link, ReferenceOptions options) => 
+			options.FilterNode == null || 
+			EndPoint(link, options).AncestorsAndSelf().Contains(options.FilterNode);
+
+
+		private IEnumerable<ReferenceItem> GetReferenceItems(
+			IEnumerable<Link> links, Node baseNode, ReferenceOptions options)
 		{
-			var items = CreateReferenceHierarchy(links, isIncoming);
+			var items = CreateReferenceHierarchy(links, baseNode, options);
+
+			if (!items.Any())
+			{
+				return Enumerable.Empty<ReferenceItem>();
+			}
 
 			ReferenceItem rootItem = items[NodeName.Root];
 
-			List<ReferenceItem> referenceItems = ReduceHierarchy(rootItem, isIncoming).ToList();
+			List<ReferenceItem> referenceItems = ReduceHierarchy(rootItem, baseNode, options).ToList();
 
 			return referenceItems;
 		}
 
 
 		private Dictionary<NodeName, ReferenceItem> CreateReferenceHierarchy(
-			IEnumerable<Link> links, bool isIncoming)
+			IEnumerable<Link> links, Node baseNode, ReferenceOptions options)
 		{
 			Dictionary<NodeName, ReferenceItem> items = new Dictionary<NodeName, ReferenceItem>();
 
 			foreach (Link link in links)
 			{
-				Node node = EndPoint(link, isIncoming);
+				Node node = EndPoint(link, options);
 
 				if (!items.TryGetValue(node.Name, out ReferenceItem item))
 				{
-					ReferenceItem parentItem = GetParentItem(items, node.Parent, isIncoming);
+					ReferenceItem parentItem = GetParentItem(items, node.Parent, baseNode, options);
 
-					item = new ReferenceItem(this, node, isIncoming);
+					item = new ReferenceItem(this, node, options.IsIncoming, baseNode);
 					parentItem.AddChild(item);
 
 					items[node.Name] = item;
@@ -102,18 +116,21 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 
 		private ReferenceItem GetParentItem(
-			IDictionary<NodeName, ReferenceItem> items, Node parentNode, bool isIncoming)
+			IDictionary<NodeName, ReferenceItem> items,
+			Node parentNode,
+			Node baseNode,
+			ReferenceOptions options)
 		{
 			if (items.TryGetValue(parentNode.Name, out ReferenceItem parentItem))
 			{
 				return parentItem;
 			}
 
-			parentItem = new ReferenceItem(this, parentNode, isIncoming);
+			parentItem = new ReferenceItem(this, parentNode, options.IsIncoming, baseNode);
 
 			if (!parentNode.IsRoot)
 			{
-				ReferenceItem grandParentItem = GetParentItem(items, parentNode.Parent, isIncoming);
+				ReferenceItem grandParentItem = GetParentItem(items, parentNode.Parent, baseNode, options);
 				grandParentItem.AddChild(parentItem);
 			}
 
@@ -126,13 +143,14 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		/// Many nodes, just contain one child, lets reduce the hierarchy by replace such
 		/// parents with their children 
 		/// </summary>
-		private IEnumerable<ReferenceItem> ReduceHierarchy(ReferenceItem item, bool isIncoming)
+		private IEnumerable<ReferenceItem> ReduceHierarchy(
+			ReferenceItem item, Node baseNode, ReferenceOptions options)
 		{
-			foreach (var subItem in item.Items)
+			foreach (var subItem in item.SubItems)
 			{
-				if (subItem.Items.Any())
+				if (subItem.SubItems.Any())
 				{
-					if (subItem.Items.Count > 1)
+					if (subItem.SubItems.Count > 1)
 					{
 						// 2 or more sub items, should not be reduced
 						yield return subItem;
@@ -140,12 +158,12 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 					else
 					{
 						// 1 sub item which might be reduced
-						IEnumerable<ReferenceItem> subItems = ReduceHierarchy(subItem, isIncoming);
+						IEnumerable<ReferenceItem> subItems = ReduceHierarchy(subItem, baseNode, options);
 
 						if (subItem.Link != null)
 						{
 							// Item has a link so we need it and its compressed sub-items
-							ReferenceItem newItem = new ReferenceItem(this, subItem.Node, isIncoming)
+							ReferenceItem newItem = new ReferenceItem(this, subItem.Node, options.IsIncoming, baseNode)
 							{
 								Link = subItem.Link
 							};
@@ -172,7 +190,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		}
 
 
-		private Node EndPoint(IEdge edge, bool isIncoming) =>
-			isIncoming ? edge.Source : edge.Target;
+		private static Node EndPoint(IEdge edge, ReferenceOptions options ) =>
+			options.IsIncoming ? edge.Source : edge.Target;
 	}
 }

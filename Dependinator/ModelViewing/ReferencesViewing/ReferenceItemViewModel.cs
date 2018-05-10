@@ -24,8 +24,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		{
 			this.item = item;
 
-			SubItems = new ObservableCollection<ReferenceItemViewModel>(
-				item.Items.Select(i => new ReferenceItemViewModel(i)));
+			SubItems = ToSubItems(item.SubItems);
 
 			Text = GetText();
 			TextBrush = item.ItemTextBrush();
@@ -46,9 +45,12 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		public string Text { get => Get(); set => Set(value); }
 		public Brush TextBrush { get => Get<Brush>(); set => Set(value); }
 		public ObservableCollection<ReferenceItemViewModel> SubItems { get; }
-
 		public bool IsShowIncomingButton => IsShowButtons && !item.IsIncoming;
 		public bool IsShowOutgoingButton => IsShowButtons && item.IsIncoming;
+
+		public bool IsIncoming => item.IsIncoming;
+		public string ToolTip => item.Node.Name.DisplayFullNameWithType;
+
 		public bool IsShowButtons
 		{
 			get => Get(); set => Set(value)
@@ -57,16 +59,50 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		public bool IsSelected { get => Get(); set => Set(value); }
 		public bool IsExpanded { get => Get(); set => Set(value); }
-		public Command ToggleCommand => Command(() => Show(!isHidden));
-		public Command IncomingCommand => Command(() => { });
-		public Command OutgoingCommand => Command(() => { });
+		public Command ToggleVisibilityCommand => Command(ToggleVisibility);
+		public Command IncomingCommand => Command(() => ToggleSubReferences(!item.IsIncoming));
+		public Command OutgoingCommand => Command(() => ToggleSubReferences(!item.IsIncoming));
 
 
-		private void Show(bool isHide)
+		private void ToggleVisibility()
+		{
+			SetVisibility(!isHidden);
+
+			if (IsExpanded)
+			{
+				IsExpanded = false;
+			}
+		}
+
+
+		private void ToggleSubReferences(bool isIncoming)
+		{
+			IEnumerable<ReferenceItem> references = item.GetReferences(isIncoming);
+
+			int index = 0;
+			references.ForEach(i =>
+			{
+				item.AddChild(i);
+				SubItems.Insert(index++, new ReferenceItemViewModel(i));
+			});
+
+			IsExpanded = true;
+		}
+
+
+		private static ObservableCollection<ReferenceItemViewModel> ToSubItems(
+			IEnumerable<ReferenceItem> subItems)
+		{
+			return new ObservableCollection<ReferenceItemViewModel>(
+				subItems.Select(i => new ReferenceItemViewModel(i)));
+		}
+
+
+		private void SetVisibility(bool isHide)
 		{
 			isHidden = isHide;
 			TextBrush = isHidden ? item.ItemTextHiddenBrush() : item.ItemTextBrush();
-			SubItems.ForEach(s => s.Show(isHide));
+			SubItems.ForEach(s => s.SetVisibility(isHide));
 		}
 
 

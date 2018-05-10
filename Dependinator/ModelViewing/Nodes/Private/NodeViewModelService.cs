@@ -127,24 +127,35 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		public void ShowIncoming(NodeViewModel nodeViewModel)
+		//public void ShowIncoming(NodeViewModel nodeViewModel)
+		//{
+		//	Node node = nodeViewModel.Node;
+		//	var referenceItems = referenceItemService.GetReferences(node, new ReferenceOptions(true));
+
+		//	ReferencesDialog referencesDialog = new ReferencesDialog(
+		//		owner, node, referenceItems, true);
+		//	referencesDialog.ShowDialog();
+		//}
+
+
+		//public void ShowOutgoing(NodeViewModel nodeViewModel)
+		//{
+		//	Node node = nodeViewModel.Node;
+		//	var referenceItems = referenceItemService.GetReferences(node, new ReferenceOptions(false));
+
+		//	ReferencesDialog referencesDialog = new ReferencesDialog(
+		//		owner, node, referenceItems, false);
+		//	referencesDialog.ShowDialog();
+		//}
+
+
+		public void ShowReferences(NodeViewModel nodeViewModel, bool isIncoming)
 		{
 			Node node = nodeViewModel.Node;
-			var referenceItems = referenceItemService.GetIncomingReferences(node);
+			var referenceItems = referenceItemService.GetReferences(node, new ReferenceOptions(isIncoming));
 
 			ReferencesDialog referencesDialog = new ReferencesDialog(
-				owner, node, referenceItems, true);
-			referencesDialog.ShowDialog();
-		}
-
-
-		public void ShowOutgoing(NodeViewModel nodeViewModel)
-		{
-			Node node = nodeViewModel.Node;
-			var referenceItems = referenceItemService.GetOutgoingReferences(node);
-
-			ReferencesDialog referencesDialog = new ReferencesDialog(
-				owner, node, referenceItems, false);
+				owner, node, referenceItems, isIncoming);
 			referencesDialog.ShowDialog();
 		}
 

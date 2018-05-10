@@ -8,31 +8,37 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 {
 	internal class ReferenceItem
 	{
-		private readonly IReferenceItemService referenceItemService;
-
-
-		public ReferenceItem(IReferenceItemService referenceItemService, Node node, bool isIncoming)
+		public ReferenceItem(
+			IReferenceItemService referenceItemService,
+			Node node,
+			bool isIncoming,
+			Node baseNode)
 		{
-			this.referenceItemService = referenceItemService;
+			this.ItemService = referenceItemService;
 			Node = node;
 			IsIncoming = isIncoming;
+			BaseNode = baseNode;
 		}
 
 
 		public Node Node { get; }
 		public bool IsIncoming { get; }
+		public Node BaseNode { get; }
 		public Link Link { get; set; }
-		public List<ReferenceItem> Items { get; } = new List<ReferenceItem>();
+		public List<ReferenceItem> SubItems { get; } = new List<ReferenceItem>();
 		public ReferenceItem Parent { get; private set; }
 
-		public Brush ItemTextBrush() => referenceItemService.ItemTextBrush();
-		public Brush ItemTextHiddenBrush() => referenceItemService.ItemTextHiddenBrush();
+		public Brush ItemTextBrush() => ItemService.ItemTextBrush();
+		public Brush ItemTextHiddenBrush() => ItemService.ItemTextHiddenBrush();
+
+
+		public IReferenceItemService ItemService { get; }
 
 
 		public void AddChild(ReferenceItem child)
 		{
 			child.Parent = this;
-			Items.Add(child);
+			SubItems.Add(child);
 		}
 
 
@@ -40,5 +46,11 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 
 		public override string ToString() => $"{Node}";
+
+
+		public IEnumerable<ReferenceItem> GetReferences(bool isIncoming)
+		{
+			return ItemService.GetReferences(Node, new ReferenceOptions(isIncoming, BaseNode));
+		}
 	}
 }

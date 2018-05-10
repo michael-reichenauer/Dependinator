@@ -155,6 +155,7 @@
     </Compile>
     <Compile Include="ModelViewing\ReferencesViewing\ReferenceItemViewModel.cs" />
     <Compile Include="ModelViewing\ReferencesViewing\ReferenceItemService.cs" />
+    <Compile Include="ModelViewing\ReferencesViewing\ReferenceOptions.cs" />
     <Compile Include="ModelViewing\ReferencesViewing\ReferencesDialog.xaml.cs">
       <DependentUpon>ReferencesDialog.xaml</DependentUpon>
     </Compile>

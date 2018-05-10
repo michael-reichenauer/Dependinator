@@ -16,7 +16,8 @@
 			Orientation="Horizontal">
 			<TextBlock
 				Text="{Binding Text}"
-				Foreground="{Binding TextBrush}" />
+				Foreground="{Binding TextBrush}" 
+				ToolTip="{Binding ToolTip}" />
 
 			<Button
 				Visibility="{Binding IsShowButtons, Converter={StaticResource VC}}"
@@ -24,7 +25,7 @@
 				Content="&#xe3a5;"
 				FontSize="11"
 				Style="{DynamicResource IconButtonStyle}"
-				Command="{Binding ToggleCommand}"
+				Command="{Binding ToggleVisibilityCommand}"
 				ToolTip="Toggle visibility" />
 
 			<Button
