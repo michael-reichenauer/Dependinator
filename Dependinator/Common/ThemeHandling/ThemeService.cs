@@ -127,28 +127,21 @@ namespace Dependinator.Common.ThemeHandling
 		}
 
 
-		public Brush GetRectangleBackgroundBrush(Brush brush)
-		{
-			return Theme.GetDarkerBrush(brush);
-		}
+		public Brush GetRectangleBackgroundBrush(Brush brush) => Theme.GetDarkerBrush(brush);
 
-		public Brush GetRectangleSelectedBackgroundBrush(Brush brush)
-		{
-			return Theme.GetSelectedBrush(brush);
-		}
+		public Brush GetRectangleSelectedBackgroundBrush(Brush brush) => Theme.GetSelectedBrush(brush);
 
 
-		public Brush BackgroundBrush()
-		{
-			return Theme.BackgroundBrush;
-		}
+		public Brush BackgroundBrush() => Theme.BackgroundBrush;
 
 
-		public Brush GetRectangleHighlighterBrush(Brush brush)
-		{
-			return Theme.GetLighterLighterBrush(brush);
-		}
+		public Brush GetTextBrush() => Theme.TextBrush;
 
+
+		public Brush GetTextDimBrush() => Theme.DimBrush;
+
+
+		public Brush GetRectangleHighlighterBrush(Brush brush) => Theme.GetLighterLighterBrush(brush);
 
 
 		private void LoadTheme()

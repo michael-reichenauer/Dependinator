@@ -96,7 +96,17 @@
 				Grid.Row="0"
 				ItemsSource="{Binding Items}"
 				Background="{DynamicResource BackgroundBrush}"
-				BorderBrush="{DynamicResource BorderBrush}">
+				BorderBrush="{DynamicResource BorderBrush}"
+				ItemContainerStyle="{StaticResource LibraryTreeViewItemStyle}">
+
+				<TreeView.Resources>
+					<SolidColorBrush
+						x:Key="{x:Static SystemColors.HighlightBrushKey}"
+						Color="Transparent" />
+					<SolidColorBrush
+						x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
+						Color="Transparent" />
+				</TreeView.Resources>
 
 				<TreeView.ItemTemplate>
 					<HierarchicalDataTemplate
@@ -104,19 +114,24 @@
 						ItemsSource="{Binding SubItems}"
 						ItemContainerStyle="{StaticResource LibraryTreeViewItemStyle}">
 						<StackPanel
-						
+							MouseEnter="UIElement_OnMouseEnter"
+							MouseLeave="UIElement_OnMouseLeave"
+
 							Orientation="Horizontal">
 							<TextBlock
 								Text="{Binding Text}"
-								Foreground="{DynamicResource TextBrush}" />
+								Foreground="{Binding TextBrush}" />
 							<Button
-								Visibility="{Binding IsSelected, Converter={StaticResource VC}}"
+								Visibility="{Binding IsShowButton, Converter={StaticResource VC}}"
 								Padding="5,3,0,0"
 								Content="&#xe3a5;"
 								FontSize="11"
 								Style="{DynamicResource IconButtonStyle}"
-								Command="{Binding CopyIdCommand}"
-								ToolTip="Toggle " />
+								Command="{Binding ToggleCommand}"
+								ToolTip="Toggle" />
+							<TextBlock
+								Text="            "
+								Foreground="{Binding TextBrush}" />
 						</StackPanel>
 					</HierarchicalDataTemplate>
 				</TreeView.ItemTemplate>

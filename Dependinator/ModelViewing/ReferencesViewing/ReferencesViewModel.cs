@@ -30,17 +30,15 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 			//IEnumerable<ReferenceItemViewModel> referenceItems = referenceItemService.GetSourceLinkItems(
 			//	lines);
 
-			IEnumerable<Line> lines = node.SourceLines
-				.Where(line => line.Owner != node);
+		
 
-			IEnumerable<ReferenceItemViewModel> referenceItems = referenceItemService.GetTargetLinkItems(
-				lines);
+			var referenceItems = referenceItemService.GetOutgoingReferences(node);
 
 
 			Items = new ObservableCollection<ReferenceItemViewModel>(referenceItems);
 			//referenceItemViewModel.IsSelected = true;
 
-			WindowTitle = $"-> {node.Name.DisplayName}";
+			WindowTitle = $"<- {node.Name.DisplayName}";
 			Title = $"Incoming: {node.Name.DisplayFullName}";
 		}
 
@@ -53,32 +51,6 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		public ObservableCollection<ReferenceItemViewModel> Items { get; }
 
-
-		private void InitItems(Node node)
-		{
-			throw new System.NotImplementedException();
-		}
-
-
-		//private ObservableCollection<ReferenceItemViewModel> InitItems(
-		//	Node node, out ReferenceItemViewModel referenceItemViewModel)
-		//{
-		//	referenceItemViewModel = null;
-		//	ObservableCollection<ReferenceItemViewModel> items = ReferenceItems;
-
-		//	if (!node.IsRoot)
-		//	{
-		//		items = InitItems(node.Parent, out ReferenceItemViewModel parent);
-
-		//		referenceItemViewModel = new ReferenceItemViewModel(node.Name.DisplayName);
-		//		items.Add(referenceItemViewModel);
-		//		//referenceItemViewModel.IsExpanded = true;
-
-		//		items = referenceItemViewModel.Items;
-		//	}
-
-		//	return items;
-		//}
 
 
 		private void SetOK(Window window) => window.DialogResult = true;

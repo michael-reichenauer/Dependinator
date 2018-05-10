@@ -1,7 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.ReferencesViewing
@@ -21,6 +23,21 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 			viewModel = new ReferencesViewModel(referenceItemService, node);
 			DataContext = viewModel;
+		}
+
+
+		private void UIElement_OnMouseEnter(object sender, MouseEventArgs e)
+		{
+			ReferenceItemViewModel vm = (sender as FrameworkElement)?.DataContext as ReferenceItemViewModel;
+			vm?.OnMouseEnter();
+		}
+
+
+		private void UIElement_OnMouseLeave(object sender, MouseEventArgs e)
+		{
+
+			ReferenceItemViewModel vm = (sender as FrameworkElement)?.DataContext as ReferenceItemViewModel;
+			vm?.OnMouseLeave();
 		}
 	}
 }

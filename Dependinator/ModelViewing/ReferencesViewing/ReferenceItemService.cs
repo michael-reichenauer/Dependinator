@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Media;
 using Dependinator.Common;
+using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Lines.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
@@ -10,12 +12,24 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 {
 	internal class ReferenceItemService : IReferenceItemService
 	{
-		private static readonly string MoreText = "...";
-		private static readonly int LinksMenuLimit = 35;
+		private readonly IThemeService themeService;
+		//private static readonly string MoreText = "...";
+		//private static readonly int LinksMenuLimit = 35;
 
-		private static readonly IEnumerable<ReferenceItemViewModel> EmptySubLinks =
-			Enumerable.Empty<ReferenceItemViewModel>();
+		//private static readonly IEnumerable<ReferenceItemViewModel> EmptySubLinks =
+		//	Enumerable.Empty<ReferenceItemViewModel>();
 
+
+
+		public Brush ItemTextBrush() => themeService.GetTextBrush();
+
+		public Brush ItemTextHiddenBrush() => themeService.GetTextDimBrush();
+
+
+		public ReferenceItemService(IThemeService themeService)
+		{
+			this.themeService = themeService;
+		}
 
 		public IEnumerable<ReferenceItemViewModel> GetSourceLinkItems(Line line)
 		{
@@ -31,17 +45,20 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		public IEnumerable<ReferenceItemViewModel> GetSourceLinkItems(IEnumerable<Line> lines)
 		{
-			return GetLinkItems(lines, line => line.Source);
+			return ReferenceItemViewModelItems(lines, line => line.Source);
 		}
 
 
-		public IEnumerable<ReferenceItemViewModel> GetTargetLinkItems(IEnumerable<Line> lines)
+		public IEnumerable<ReferenceItemViewModel> GetOutgoingReferences(Node node)
 		{
-			return GetLinkItems(lines, line => line.Target);
+			IEnumerable<Line> lines = node.SourceLines
+				.Where(line => line.Owner != node);
+
+			return ReferenceItemViewModelItems(lines, line => line.Target);
 		}
 
 
-		public IEnumerable<ReferenceItemViewModel> GetLinkItems(
+		private IEnumerable<ReferenceItemViewModel> ReferenceItemViewModelItems(
 			IEnumerable<Line> lines,
 			Func<IEdge, Node> endPoint)
 		{
@@ -51,68 +68,11 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 			{
 				IEnumerable<ReferenceItemViewModel> linkItems = GetLineLinkItems(line, endPoint);
 
-				//if (line.IsToChild)
-				{
-					lineItems.AddRange(linkItems);
-				}
-				//else
-				//{
-				//	// Line to parent or sibling
-				//	string nodeName = endPoint(line).Name.DisplayName;
-				//	ReferenceItemViewModel lineMenuItemViewModel = new ReferenceItemViewModel(
-				//		null, nodeName, linkItems);
-
-				//	lineItems.Add(lineMenuItemViewModel);
-				//}
+				lineItems.AddRange(linkItems);
 			}
 
 			return lineItems;
 		}
-
-
-		//public IEnumerable<LineMenuItemViewModel> GetTargetLinkItems(IEnumerable<Line> lines)
-		//{
-		//	Func<Line, Node> lineEndPoint = line => line.Target;
-		//	Func<Link, Node> linkEndPoint = link => link.Target;
-
-		//	List<LineMenuItemViewModel> lineItems = new List<LineMenuItemViewModel>();
-
-		//	foreach (Line line in lines)
-		//	{
-		//		IEnumerable<LineMenuItemViewModel> linkItems = GetLineLinkItems(line, linkEndPoint);
-		//		if (line.Source.Parent != line.Target)
-		//		{
-		//			string displayName = lineEndPoint(line).Name.DisplayName;
-		//			LineMenuItemViewModel lineMenuItemViewModel = new LineMenuItemViewModel(null, displayName, linkItems);
-
-		//			lineItems.Add(lineMenuItemViewModel);
-		//		}
-		//		else
-		//		{
-		//			lineItems.AddRange(linkItems);
-		//		}
-
-		//	}
-
-		//	return lineItems;
-		//}
-
-
-		//private IEnumerable<LinkItem> GetLinesLinkItems(
-		//	IEnumerable<Line> lines, Func<Line, Node> lineEndPoint, Func<Link, Node> linkEndPoint)
-		//{
-		//	List<LinkItem> lineItems = new List<LinkItem>();
-		//	foreach (Line line in lines)
-		//	{
-		//		IEnumerable<LinkItem> linkItems = GetLineLinkItems(line, linkEndPoint);
-		//		string displayName = lineEndPoint(line).Name.DisplayName;
-		//		LinkItem linkItem = new LinkItem(null, displayName, linkItems);
-
-		//		lineItems.Add(linkItem);
-		//	}
-
-		//	return lineItems;
-		//}
 
 
 		private IEnumerable<ReferenceItemViewModel> GetLineLinkItems(
@@ -120,24 +80,27 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		{
 			IEnumerable<Link> lineLinks = line.Links.DistinctBy(link => endPoint(link));
 
-			return GetLinkItems2(lineLinks, endPoint);
+			var referenceItems = GetReferenceItemItems(lineLinks, endPoint);
+
+			return ToReferenceItemViewModels(referenceItems);
 		}
 
 
-		private IEnumerable<ReferenceItemViewModel> GetLinkItems2(
-			IEnumerable<Link> links, Func<IEdge, Node> endPoint)
+		private IEnumerable<ReferenceItem> GetReferenceItemItems(
+			IEnumerable<Link> links,
+			Func<IEdge, Node> endPoint)
 		{
-			Dictionary<NodeName, MenuItem> items = new Dictionary<NodeName, MenuItem>();
+			Dictionary<NodeName, ReferenceItem> items = new Dictionary<NodeName, ReferenceItem>();
 
 			foreach (Link link in links)
 			{
 				Node node = endPoint(link);
 
-				if (!items.TryGetValue(node.Name, out MenuItem item))
+				if (!items.TryGetValue(node.Name, out ReferenceItem item))
 				{
-					MenuItem parentItem = GetParentMenuItem(items, node.Parent);
+					ReferenceItem parentItem = GetParentMenuItem(items, node.Parent);
 
-					item = new MenuItem(node);
+					item = new ReferenceItem(node);
 					items[node.Name] = item;
 
 					parentItem.Items.Add(item);
@@ -146,23 +109,56 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 				item.Link = link;
 			}
 
-			MenuItem rootItem = items[NodeName.Root];
-			IEnumerable<MenuItem> compressedItems = CompressSubItems(rootItem);
+			ReferenceItem rootItem = items[NodeName.Root];
+			List<ReferenceItem> compressedItems = CompressSubItems(rootItem).ToList();
+			CompressNames(null, compressedItems);
 
-			return ToLineMenuItemViewModels(compressedItems);
+			return compressedItems;
 		}
 
 
-		private static IEnumerable<ReferenceItemViewModel> ToLineMenuItemViewModels(
-			IEnumerable<MenuItem> compressedItems)
+		private void CompressNames(
+			string parentName, List<ReferenceItem> itemsList)
 		{
-			return compressedItems
-				.Select(item => new ReferenceItemViewModel(
-					item.Link, item.Node.Name.DisplayFullNoParametersName, ToLineMenuItemViewModels(item.Items)));
+			foreach (ReferenceItem item in itemsList)
+			{
+				string fullName = item.Node.Name.DisplayFullNoParametersName;
+				if (parentName != null && fullName.StartsWith(parentName) && fullName.Length > parentName.Length + 1)
+				{
+					item.Text = fullName.Substring(parentName.Length + 1);
+				}
+				else
+				{
+					item.Text = fullName;
+				}
+
+				CompressNames(fullName, item.Items);
+			}
 		}
 
 
-		private IEnumerable<MenuItem> CompressSubItems(MenuItem item)
+		private static ReferenceItem GetParentMenuItem(
+			IDictionary<NodeName, ReferenceItem> items, Node parent)
+		{
+			if (items.TryGetValue(parent.Name, out ReferenceItem parentItem))
+			{
+				return parentItem;
+			}
+
+			parentItem = new ReferenceItem(parent);
+
+			if (!parent.IsRoot)
+			{
+				ReferenceItem grandParentItem = GetParentMenuItem(items, parent.Parent);
+				grandParentItem.Items.Add(parentItem);
+			}
+
+			items[parent.Name] = parentItem;
+			return parentItem;
+		}
+
+
+		private IEnumerable<ReferenceItem> CompressSubItems(ReferenceItem item)
 		{
 			foreach (var subItem in item.Items)
 			{
@@ -176,19 +172,24 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 					else
 					{
 						// 1 sub item which might be compressed
-						IEnumerable<MenuItem> subItems = CompressSubItems(subItem);
+						IEnumerable<ReferenceItem> subItems = CompressSubItems(subItem);
 
 						if (subItem.Link != null)
 						{
-							// Item has a link so we need it and its compressed subitems
-							MenuItem newItem = new MenuItem(subItem.Node) { Link = subItem.Link };
+							// Item has a link so we need it and its compressed sub-items
+							ReferenceItem newItem = new ReferenceItem(subItem.Node)
+							{
+								Link = subItem.Link
+
+							};
+
 							newItem.Items.AddRange(subItems);
 							yield return newItem;
 						}
 						else
 						{
-							// Skip this item and use its compressed subitems
-							foreach (MenuItem subSubItem in subItems)
+							// Skip this item and use its compressed sub-items
+							foreach (ReferenceItem subSubItem in subItems)
 							{
 								yield return subSubItem;
 							}
@@ -204,167 +205,133 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		}
 
 
-
-		private MenuItem GetParentMenuItem(IDictionary<NodeName, MenuItem> items, Node parent)
+		private IEnumerable<ReferenceItemViewModel> ToReferenceItemViewModels(
+			IEnumerable<ReferenceItem> compressedItems)
 		{
-			if (items.TryGetValue(parent.Name, out MenuItem parentItem))
-			{
-				return parentItem;
-			}
-
-			parentItem = new MenuItem(parent);
-
-			if (!parent.IsRoot)
-			{
-				MenuItem grandParentIItem = GetParentMenuItem(items, parent.Parent);
-				grandParentIItem.Items.Add(parentItem);
-			}
-
-			items[parent.Name] = parentItem;
-			return parentItem;
+			return compressedItems
+				.Select(item => new ReferenceItemViewModel(
+					this, item.Link, item.Text, ToReferenceItemViewModels(item.Items)));
 		}
 
 
-		private class MenuItem
+		private class ReferenceItem
 		{
-			public MenuItem(Node node) => Node = node;
+			public ReferenceItem(Node node) => Node = node;
+
+			public string Text { get; set; }
 
 			public Node Node { get; }
 			public Link Link { get; set; }
-			public List<MenuItem> Items { get; } = new List<MenuItem>();
+			public List<ReferenceItem> Items { get; } = new List<ReferenceItem>();
 			public override string ToString() => $"{Node}";
 		}
 
 
-		private IEnumerable<ReferenceItemViewModel> GetLinkItems(
-			IEnumerable<Link> links, Func<IEdge, Node> endPoint, int level)
-		{
-			if (!links.Any())
-			{
-				return new List<ReferenceItemViewModel>();
-			}
-			else if (links.Count() < LinksMenuLimit)
-			{
-				return links.Select(link => new ReferenceItemViewModel(
-					link, GetLinkText(endPoint(link)), EmptySubLinks));
-			}
+		//private IEnumerable<ReferenceItemViewModel> GetLinkItems(
+		//	IEnumerable<Link> links, Func<IEdge, Node> endPoint, int level)
+		//{
+		//	return links.Select(link => new ReferenceItemViewModel(
+		//		this, link, GetNodeText(endPoint(link)), EmptySubLinks));
 
-			var groups = links
-				.GroupBy(link => GetGroupKey(endPoint(link), level))
-				.OrderBy(group => group.Key);
+		//	//if (!links.Any())
+		//	//{
+		//	//	return new List<ReferenceItemViewModel>();
+		//	//}
+		//	//else if (links.Count() < LinksMenuLimit)
+		//	//{
+		//	//	return links.Select(link => new ReferenceItemViewModel(
+		//	//		this, link, GetNodeText(endPoint(link)), EmptySubLinks));
+		//	//}
 
-			List<ReferenceItemViewModel> linkItems = GetLinksGroupsItems(groups, endPoint, level);
+		//	//var groups = links
+		//	//	.GroupBy(link => GetGroupKey(endPoint(link), level))
+		//	//	.OrderBy(group => group.Key);
 
-			//ReduceHierarchy(linkItems);
+		//	//List<ReferenceItemViewModel> linkItems = GetLinksGroupsItems(groups, endPoint, level);
 
-			return linkItems.OrderBy(item => item, LinkItemComparer());
-		}
+		//	////ReduceHierarchy(linkItems);
 
-
-		private static Comparer<ReferenceItemViewModel> LinkItemComparer()
-		{
-			return Comparer<ReferenceItemViewModel>.Create(CompareLinkItems);
-		}
+		//	//return linkItems.OrderBy(item => item, LinkItemComparer());
+		//}
 
 
-		private static int CompareLinkItems(ReferenceItemViewModel i1, ReferenceItemViewModel i2)
-			=> i1.Text == MoreText && i2.Text == MoreText
-				? 0
-				: i1.Text == MoreText
-					? 1
-					: i2.Text == MoreText
-						? -1
-						: i1.Text.CompareTo(i2.Text);
+		//private static string GetNodeText(Node node) => node.Name.DisplayFullNoParametersName;
+
+		//private static Comparer<ReferenceItemViewModel> LinkItemComparer()
+		//{
+		//	return Comparer<ReferenceItemViewModel>.Create(CompareLinkItems);
+		//}
+
+		//private static int CompareLinkItems(ReferenceItemViewModel i1, ReferenceItemViewModel i2)
+		//	=> i1.Text.CompareTo(i2.Text);
 
 
-		private static void ReduceHierarchy(ICollection<ReferenceItemViewModel> linkItems)
-		{
-			int margin = Math.Max(LinksMenuLimit - linkItems.Count, 0);
-
-			while (margin >= 0)
-			{
-				bool isChanged = false;
-
-				foreach (ReferenceItemViewModel linkItem in linkItems.Where(item => item.SubItems.Any()).ToList())
-				{
-					int count = linkItem.SubItems.Count();
-
-					if (count > 4)
-					{
-						continue;
-					}
-
-					margin -= (count - 1);
-
-					if (margin >= 0)
-					{
-						linkItems.Remove(linkItem);
-						linkItem.SubItems.ForEach(linkItems.Add);
-						isChanged = true;
-					}
-				}
-
-				if (!isChanged)
-				{
-					break;
-				}
-			}
-		}
+		//private static int CompareLinkItems(ReferenceItemViewModel i1, ReferenceItemViewModel i2)
+		//	=> i1.Text == MoreText && i2.Text == MoreText
+		//		? 0
+		//		: i1.Text == MoreText
+		//			? 1
+		//			: i2.Text == MoreText
+		//				? -1
+		//				: i1.Text.CompareTo(i2.Text);
 
 
-		private List<ReferenceItemViewModel> GetLinksGroupsItems(
-			IEnumerable<IGrouping<string, Link>> linksGroups, Func<IEdge, Node> endPoint, int level)
-		{
-			var linkItems = linksGroups
-				.Take(LinksMenuLimit)
-				.Select(group => GetLinkItem(group, endPoint, level));
-
-			if (linksGroups.Count() > LinksMenuLimit)
-			{
-				List<ReferenceItemViewModel> moreLinks = GetLinksGroupsItems(linksGroups.Skip(LinksMenuLimit), endPoint, level);
-
-				linkItems = linkItems.Concat(new[] { new ReferenceItemViewModel(null, MoreText, moreLinks) });
-			}
-
-			return linkItems.ToList();
-		}
 
 
-		private ReferenceItemViewModel GetLinkItem(
-			IGrouping<string, Link> linksGroup, Func<IEdge, Node> endPoint, int level)
-		{
-			IEnumerable<ReferenceItemViewModel> subLinks = GetLinkItems(linksGroup, endPoint, level + 1);
+		//private List<ReferenceItemViewModel> GetLinksGroupsItems(
+		//	IEnumerable<IGrouping<string, Link>> linksGroups, Func<IEdge, Node> endPoint, int level)
+		//{
+		//	var linkItems = linksGroups
+		//		.Take(LinksMenuLimit)
+		//		.Select(group => GetLinkItem(group, endPoint, level));
 
-			ReferenceItemViewModel itemViewModel = new ReferenceItemViewModel(null, GetGroupText(linksGroup.Key), subLinks);
+		//	if (linksGroups.Count() > LinksMenuLimit)
+		//	{
+		//		List<ReferenceItemViewModel> moreLinks = GetLinksGroupsItems(linksGroups.Skip(LinksMenuLimit), endPoint, level);
 
-			return itemViewModel;
-		}
+		//		linkItems = linkItems.Concat(new[] { new ReferenceItemViewModel(this, null, MoreText, moreLinks) });
+		//	}
 
-
-		private static string GetGroupText(string key)
-		{
-			string[] parts = key.Split(".".ToCharArray());
-			string fullName = string.Join(".", parts
-				.Where(part => !part.StartsWithTxt("$") && !part.StartsWithTxt("?")));
-
-			if (string.IsNullOrEmpty(fullName))
-			{
-				fullName = key;
-			}
-
-			return NodeName.ToNiceText(fullName);
-		}
+		//	return linkItems.ToList();
+		//}
 
 
-		private static string GetLinkText(Node node)
-		{
-			return node.Name.DisplayFullNoParametersName;
-		}
+		//private ReferenceItemViewModel GetLinkItem(
+		//	IGrouping<string, Link> linksGroup, Func<IEdge, Node> endPoint, int level)
+		//{
+		//	IEnumerable<ReferenceItemViewModel> subLinks = GetLinkItems(linksGroup, endPoint, level + 1);
 
-		string GetGroupKey(Node node, int level)
-		{
-			string[] parts = node.Name.FullName.Split(".".ToCharArray());
-			return string.Join(".", parts.Take(level));
-		}
+		//	ReferenceItemViewModel itemViewModel = new ReferenceItemViewModel(this, null, GetGroupText(linksGroup.Key), subLinks);
+
+		//	return itemViewModel;
+		//}
+
+
+		//private static string GetGroupText(string key)
+		//{
+		//	string[] parts = key.Split(".".ToCharArray());
+		//	string fullName = string.Join(".", parts
+		//		.Where(part => !part.StartsWithTxt("$") && !part.StartsWithTxt("?")));
+
+		//	if (string.IsNullOrEmpty(fullName))
+		//	{
+		//		fullName = key;
+		//	}
+
+		//	return NodeName.ToNiceText(fullName);
+		//}
+
+
+
+
+
+		//private static string GetGroupKey(Node node, int level)
+		//{
+		//	string[] parts = node.Name.FullName.Split(".".ToCharArray());
+		//	return string.Join(".", parts.Take(level));
+		//}
+
+
+
 	}
 }
