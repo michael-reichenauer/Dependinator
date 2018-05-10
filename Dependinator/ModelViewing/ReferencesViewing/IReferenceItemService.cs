@@ -9,10 +9,10 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 {
 	internal interface IReferenceItemService
 	{
-		IEnumerable<ReferenceItemViewModel> GetSourceLinkItems(Line line);
-		IEnumerable<ReferenceItemViewModel> GetTargetLinkItems(Line line);
-		IEnumerable<ReferenceItemViewModel> GetSourceLinkItems(IEnumerable<Line> lines);
-		IEnumerable<ReferenceItemViewModel> GetOutgoingReferences(Node node);
+		IEnumerable<ReferenceItem> GetSourceLinkItems(Line line);
+		IEnumerable<ReferenceItem> GetTargetLinkItems(Line line);
+		IEnumerable<ReferenceItem> GetIncomingReferences(Node node);
+		IEnumerable<ReferenceItem> GetOutgoingReferences(Node node);
 
 
 

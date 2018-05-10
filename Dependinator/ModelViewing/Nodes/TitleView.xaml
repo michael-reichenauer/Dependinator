@@ -82,64 +82,30 @@
 
 		<Grid.ContextMenu>
 			<ContextMenu>
-
+		
 				<MenuItem
-						Header="Incoming links"
-						ItemsSource="{Binding IncomingLinks}">
-					<MenuItem.Icon>
-						<Grid Margin="0">
-							<TextBlock Text="&#xE0B5;" Style="{DynamicResource MenuIconStyle}" Padding="2,0,0,0" />
-							<!--<TextBlock Text="&#xE3C0;" Style="{DynamicResource MenuIconStyle}" Margin="4,4" Padding="0" Background="Transparent" />-->
-						</Grid>
-
-					</MenuItem.Icon>
-					<MenuItem.Resources>
-						<HierarchicalDataTemplate
-								DataType="{x:Type private:LineMenuItemViewModel}"
-								ItemsSource="{Binding SubItems}">
-							<MenuItem
-									Header="{Binding Text}"
-									Command="{Binding LinkCommand}"
-									CommandParameter="{Binding Link}" />
-						</HierarchicalDataTemplate>
-					</MenuItem.Resources>
-				</MenuItem>
-
-				<MenuItem
-						Header="Outgoing links"
-						ItemsSource="{Binding OutgoingLinks}">
-					<MenuItem.Icon>
-						<Grid Margin="0">
-							<TextBlock Text="&#xE0B2;" Style="{DynamicResource MenuIconStyle}" Padding="2,0,0,0" />
-							<!--<TextBlock Text="&#xE25A;" Style="{DynamicResource MenuIconStyle}" Margin="4,0" Padding="0" Background="Transparent" Foreground="{DynamicResource LocalAheadBrush}"/>-->
-						</Grid>
-
-					</MenuItem.Icon>
-					<MenuItem.Resources>
-						<HierarchicalDataTemplate
-								DataType="{x:Type private:LineMenuItemViewModel}"
-								ItemsSource="{Binding SubItems}">
-							<MenuItem
-									Header="{Binding Text}"
-									Command="{Binding LinkCommand}"
-									CommandParameter="{Binding Link}" />
-						</HierarchicalDataTemplate>
-					</MenuItem.Resources>
-				</MenuItem>
-
-				<Separator Background="{DynamicResource BorderBrush}" />
-
-				<MenuItem
-					Header="Dependencies"
-					Command="{Binding ShowDependenciesCommand}">
+					Header="Incoming References ..."
+					Command="{Binding ShowIncomingCommand}">
 					<MenuItem.Icon>
 						<Border>
 							<TextBlock
-								Style="{DynamicResource MenuIconStyle}" Text="&#xE915;" />
+								Style="{DynamicResource MenuIconStyle}" Text="&#xE0B5;" />
 						</Border>
 					</MenuItem.Icon>
 				</MenuItem>
 
+				<MenuItem
+					Header="Outgoing References ..."
+					Command="{Binding ShowOutgoingCommand}">
+					<MenuItem.Icon>
+						<Border>
+							<TextBlock
+								Style="{DynamicResource MenuIconStyle}" Text="&#xE0B2;" />
+						</Border>
+					</MenuItem.Icon>
+				</MenuItem>
+
+				<Separator Background="{DynamicResource BorderBrush}" />
 
 				<MenuItem
 						Header="Hide Node"

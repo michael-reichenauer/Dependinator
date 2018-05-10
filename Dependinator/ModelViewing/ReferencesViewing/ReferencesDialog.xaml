@@ -62,6 +62,14 @@
 					HorizontalAlignment="Left"
 					Orientation="Horizontal">
 
+					<TextBlock 
+						Visibility="{Binding IsIncoming, Converter={StaticResource VC}}"
+						Text="&#xE0B5;"  Style="{DynamicResource MenuIconStyle}" />
+
+					<TextBlock 
+						Visibility="{Binding IsOutgoing, Converter={StaticResource VC}}"
+						Text="&#xE0B2;" Style="{DynamicResource MenuIconStyle}" />
+
 					<TextBlock
 						Text="{Binding Title}"
 						Foreground="{DynamicResource TextBrush}"
@@ -113,26 +121,7 @@
 						DataType="{x:Type referencesViewing:ReferenceItemViewModel}"
 						ItemsSource="{Binding SubItems}"
 						ItemContainerStyle="{StaticResource LibraryTreeViewItemStyle}">
-						<StackPanel
-							MouseEnter="UIElement_OnMouseEnter"
-							MouseLeave="UIElement_OnMouseLeave"
-
-							Orientation="Horizontal">
-							<TextBlock
-								Text="{Binding Text}"
-								Foreground="{Binding TextBrush}" />
-							<Button
-								Visibility="{Binding IsShowButton, Converter={StaticResource VC}}"
-								Padding="5,3,0,0"
-								Content="&#xe3a5;"
-								FontSize="11"
-								Style="{DynamicResource IconButtonStyle}"
-								Command="{Binding ToggleCommand}"
-								ToolTip="Toggle" />
-							<TextBlock
-								Text="            "
-								Foreground="{Binding TextBrush}" />
-						</StackPanel>
+						<referencesViewing:ReferenceItemView/>
 					</HierarchicalDataTemplate>
 				</TreeView.ItemTemplate>
 

@@ -10,36 +10,21 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 {
 	internal class ReferencesViewModel : ViewModel
 	{
-		private readonly IReferenceItemService referenceItemService;
-
 
 		public Command<Window> OkCommand => Command<Window>(SetOK);
 
 		public Command<Window> CancelCommand => Command<Window>(w => w.DialogResult = false);
 
 
-		public ReferencesViewModel(
-			IReferenceItemService referenceItemService,
-			Node node)
+		public ReferencesViewModel(Node node,
+			IEnumerable<ReferenceItem> referenceItems, bool isIncoming)
 		{
-			this.referenceItemService = referenceItemService;
+			Items = new ObservableCollection<ReferenceItemViewModel>(
+				referenceItems.Select(item => new ReferenceItemViewModel(item)));
 
-			//IEnumerable<Line> lines = node.TargetLines
-			//	.Where(line => line.Owner != node);
-
-			//IEnumerable<ReferenceItemViewModel> referenceItems = referenceItemService.GetSourceLinkItems(
-			//	lines);
-
-		
-
-			var referenceItems = referenceItemService.GetOutgoingReferences(node);
-
-
-			Items = new ObservableCollection<ReferenceItemViewModel>(referenceItems);
-			//referenceItemViewModel.IsSelected = true;
-
-			WindowTitle = $"<- {node.Name.DisplayName}";
-			Title = $"Incoming: {node.Name.DisplayFullName}";
+			IsIncoming = isIncoming;
+			IsOutgoing = !isIncoming;
+			SetTitle(node, isIncoming);
 		}
 
 
@@ -47,12 +32,28 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 
 		public string Title { get => Get(); set => Set(value); }
+		public bool IsIncoming { get => Get(); set => Set(value); }
+		public bool IsOutgoing{ get => Get(); set => Set(value); }
 
 
 		public ObservableCollection<ReferenceItemViewModel> Items { get; }
 
 
-
 		private void SetOK(Window window) => window.DialogResult = true;
+
+
+		private void SetTitle(Node node, bool isIncoming)
+		{
+			if (isIncoming)
+			{
+				WindowTitle = $"-> {node.Name.DisplayName}";
+				Title = $"Incoming references: {node.Name.DisplayFullName}";
+			}
+			else
+			{
+				WindowTitle = $"<- {node.Name.DisplayName}";
+				Title = $"Outgoing references: {node.Name.DisplayFullName}";
+			}
+		}
 	}
 }

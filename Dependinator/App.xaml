@@ -9,6 +9,7 @@
 		<ResourceDictionary>
 
 			<ui:PropertyToVisibilityConverter x:Key="VC"/>
+			<ui:PropertyToVisibilityInvertConverter x:Key="NVC"/>
 			
 			<ResourceDictionary.MergedDictionaries>
 				<ResourceDictionary Source="Styles/ColorStyle.xaml"/>

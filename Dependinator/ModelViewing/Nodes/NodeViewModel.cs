@@ -119,14 +119,8 @@ namespace Dependinator.ModelViewing.Nodes
 		public int IncomingLinesCount => Node.TargetLines.Count(line => line.Owner != Node);
 
 		public Command HideNodeCommand => Command(HideNode);
-		public Command ShowDependenciesCommand => Command(ShowDependencies);
-
-
-		private void ShowDependencies()
-		{
-			nodeViewModelService.ShowDependencies(this);
-
-		}
+		public Command ShowIncomingCommand => Command(() => nodeViewModelService.ShowIncoming(this));
+		public Command ShowOutgoingCommand => Command(() => nodeViewModelService.ShowOutgoing(this));
 
 
 		public int IncomingLinksCount => Node.TargetLines

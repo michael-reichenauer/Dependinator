@@ -149,6 +149,10 @@
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
     <Compile Include="ModelViewing\ReferencesViewing\IReferenceItemService.cs" />
+    <Compile Include="ModelViewing\ReferencesViewing\ReferenceItem.cs" />
+    <Compile Include="ModelViewing\ReferencesViewing\ReferenceItemView.xaml.cs">
+      <DependentUpon>ReferenceItemView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ModelViewing\ReferencesViewing\ReferenceItemViewModel.cs" />
     <Compile Include="ModelViewing\ReferencesViewing\ReferenceItemService.cs" />
     <Compile Include="ModelViewing\ReferencesViewing\ReferencesDialog.xaml.cs">
@@ -447,6 +451,10 @@
     <Page Include="MainWindowViews\SearchFilter.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="ModelViewing\ReferencesViewing\ReferenceItemView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ModelViewing\ReferencesViewing\ReferencesDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
