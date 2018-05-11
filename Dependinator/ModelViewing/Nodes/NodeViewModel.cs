@@ -2,52 +2,56 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using Dependinator.ModelHandling.Core;
-using Dependinator.ModelHandling.Private.Items;
-using Dependinator.ModelViewing.Links;
-using Dependinator.Utils.UI;
+using Dependinator.Common.MessageDialogs;
+using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Items.Private;
+using Dependinator.ModelViewing.Lines.Private;
+using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.Nodes.Private;
+using Dependinator.Utils;
 using Dependinator.Utils.UI.Mvvm;
 
 
 namespace Dependinator.ModelViewing.Nodes
 {
-	internal abstract class NodeViewModel : ItemViewModel
+	internal abstract class NodeViewModel : ItemViewModel, ISelectableItem
 	{
 		private readonly INodeViewModelService nodeViewModelService;
 
-		private readonly DelayDispatcher mouseOverDelay = new DelayDispatcher();
-
-		private readonly Lazy<ObservableCollection<LinkItem>> incomingLinks;
-		private readonly Lazy<ObservableCollection<LinkItem>> outgoingLinks;
-
+		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> incomingLinks;
+		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> outgoingLinks;
 
 		private bool isFirstShow = true;
-		private int currentPointIndex = -1;
-		private Point mouseDownPoint;
-		private Point mouseMovedPoint;
+		private readonly Brush backgroundBrush;
+		private readonly Brush selectedBrush;
 
 
-		protected NodeViewModel(INodeViewModelService nodeViewModelService, Node node)
+		protected NodeViewModel(
+			INodeViewModelService nodeViewModelService,
+			Node node)
 		{
 			Priority = 1;
 			this.nodeViewModelService = nodeViewModelService;
 			this.Node = node;
 
 			RectangleBrush = nodeViewModelService.GetNodeBrush(node);
-			BackgroundBrush = nodeViewModelService.GetBackgroundBrush(RectangleBrush);
+			backgroundBrush = nodeViewModelService.GetBackgroundBrush(RectangleBrush);
+			selectedBrush = nodeViewModelService.GetSelectedBrush(RectangleBrush);
 
-			incomingLinks = new Lazy<ObservableCollection<LinkItem>>(GetIncomingLinkItems);
-			outgoingLinks = new Lazy<ObservableCollection<LinkItem>>(GetOutgoingLinkItems);
+
+			incomingLinks = new Lazy<ObservableCollection<LineMenuItemViewModel>>(GetIncomingLinkItems);
+			outgoingLinks = new Lazy<ObservableCollection<LineMenuItemViewModel>>(GetOutgoingLinkItems);
 		}
 
 
-		public override bool CanShow => !Node.IsHidden
-			&& (ItemScale * ItemWidth > 20 && Node.Parent.CanShowChildren);
+		public override bool CanShow => !Node.View.IsHidden
+			&& (ItemScale * ItemWidth > 20 && Node.Parent.View.CanShowChildren);
 
-		public bool CanShowChildren => ItemScale * ItemWidth > 50 * 7 && Node.Children.Any();
+		public bool CanShowChildren => ItemScale * ItemWidth > 50 * 7;
 
 		public Node Node { get; }
 
@@ -56,17 +60,52 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public Brush RectangleBrush { get; }
 		public Brush TitleBorderBrush => Node.NodeType == NodeType.Type ? RectangleBrush : null;
-		public Brush BackgroundBrush { get; }
+		public Brush BackgroundBrush => IsSelected ? selectedBrush : backgroundBrush;
 
 		public bool IsShowNode => ItemScale < 100;
 
 		public bool IsShowItems => CanShowChildren;
 
 		public bool IsShowDescription => !string.IsNullOrEmpty(Description) && !CanShowChildren;
+		public bool IsShowToolTip => true;
+
 
 		public string Name => Node.Name.DisplayName;
 
-		public double RectangleLineWidth => IsShowPoints ? 0.6 * 3 : IsMouseOver ? 0.6 * 1.5 : 0.6;
+		private NodeControlViewModel view2Model;
+
+		public bool IsSelected
+		{
+			get => view2Model != null;
+			set
+			{
+				if (value)
+				{
+					view2Model = new NodeControlViewModel(this);
+					Node.Parent.View.ItemsCanvas.AddItem(view2Model);
+				}
+				else
+				{
+					if (view2Model != null)
+					{
+						Node.Parent.View.ItemsCanvas.RemoveItem(view2Model);
+						view2Model = null;
+					}
+				}
+
+				Notify(nameof(BackgroundBrush));
+				IsInnerSelected = false;
+				if (ItemsViewModel?.ItemsCanvas != null)
+				{
+					ItemsViewModel.ItemsCanvas.IsFocused = false;
+				}
+			}
+		}
+
+		public bool IsInnerSelected { get => Get(); set => Set(value); }
+
+
+		public double RectangleLineWidth => 1;
 
 		public string ToolTip { get => Get(); set => Set(value); }
 
@@ -80,14 +119,29 @@ namespace Dependinator.ModelViewing.Nodes
 		public int IncomingLinesCount => Node.TargetLines.Count(line => line.Owner != Node);
 
 		public Command HideNodeCommand => Command(HideNode);
+		public Command ShowIncomingCommand => Command(() => nodeViewModelService.ShowReferences(this, true));
+		public Command ShowOutgoingCommand => Command(() => nodeViewModelService.ShowReferences(this, false));
 
-		
+
 		public int IncomingLinksCount => Node.TargetLines
 			.Where(line => line.Owner != Node)
 			.SelectMany(line => line.Links)
 			.Count();
 
 		public int OutgoingLinesCount => Node.SourceLines.Count(line => line.Owner != Node);
+
+
+		public void MouseClicked(MouseButtonEventArgs e)
+		{
+			nodeViewModelService.MouseClicked(this);
+		}
+
+
+		public override void MoveItem(Vector moveOffset)
+		{
+			Point newLocation = ItemBounds.Location + moveOffset;
+			ItemBounds = new Rect(newLocation, ItemBounds.Size);
+		}
 
 
 		public int OutgoingLinksCount => Node.SourceLines
@@ -113,27 +167,19 @@ namespace Dependinator.ModelViewing.Nodes
 		public int DescriptionFontSize => ((int)(10 * ItemScale)).MM(9, 11);
 		public string Description => Node.Description;
 
-		public bool IsMouseOver
-		{
-			get => Get();
-			private set => Set(value).Notify(nameof(RectangleLineWidth));
-		}
-
-		public bool IsShowPoints { get => Get(); private set => Set(value).Notify(nameof(IsShowToolTip)); }
-		public bool IsShowToolTip => !IsShowPoints;
 
 		public ItemsViewModel ItemsViewModel { get; set; }
 
-		public ObservableCollection<LinkItem> IncomingLinks => incomingLinks.Value;
+		public ObservableCollection<LineMenuItemViewModel> IncomingLinks => incomingLinks.Value;
 
-		public ObservableCollection<LinkItem> OutgoingLinks => outgoingLinks.Value;
+		public ObservableCollection<LineMenuItemViewModel> OutgoingLinks => outgoingLinks.Value;
 
 
 
 		private void HideNode()
 		{
-			Node.IsHidden = true;
-			Node.Parent.ItemsCanvas.UpdateAndNotifyAll();
+			Node.View.IsHidden = true;
+			Node.Parent.View.ItemsCanvas.UpdateAndNotifyAll();
 		}
 
 
@@ -163,131 +209,42 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public string Color => RectangleBrush.AsString();
 
-		//$"Items: {ItemOwnerCanvas.CanvasRoot.AllItemsCount()}, Shown {ItemOwnerCanvas.CanvasRoot.ShownItemsCount()}";
 
-
-		public void OnMouseEnter(bool isTitle)
-		{
-			mouseOverDelay.Delay(MouseEnterDelay, _ =>
-			{
-				if (ModelViewModel.IsControlling)
-				{
-					Mouse.OverrideCursor = Cursors.Hand;
-					if (!isTitle)
-					{
-						Point screenPoint = Mouse.GetPosition(Application.Current.MainWindow);
-						Point point = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
-						nodeViewModelService.GetPointIndex(Node, point);
-					}
-				}
-
-				if (IsResizable())
-				{
-					IsShowPoints = ModelViewModel.IsControlling;
-				}
-
-				IsMouseOver = true;
-			});
-		}
-
-
-		private static TimeSpan MouseEnterDelay => ModelViewModel.IsControlling
-			? TimeSpan.FromMilliseconds(1) : ModelViewModel.MouseEnterDelay;
-
-
-		public void OnMouseLeave()
-		{
-			Mouse.OverrideCursor = null;
-			mouseOverDelay.Cancel();
-			IsShowPoints = false;
-			IsMouseOver = false;
-		}
-
-
-		public void MouseDown(Point screenPoint)
-		{
-			mouseDownPoint = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
-			mouseMovedPoint = mouseDownPoint;
-			currentPointIndex = -1;
-		}
-
-
-		public void MouseMove(Point screenPoint, bool isTitle)
-		{
-			Point point = ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
-
-			if (currentPointIndex == -1)
-			{
-				// First move event, lets start a move by  getting the index of point to move.
-				// THis might create a new point if there is no existing point near the mouse down point
-				currentPointIndex = isTitle ? 0 :
-					nodeViewModelService.GetPointIndex(Node, mouseDownPoint);
-				if (currentPointIndex == -1)
-				{
-					// Point not close enough to the line
-					return;
-				}
-
-				if (!IsResizable())
-				{
-					// Only support move if scale is small
-					currentPointIndex = 0;
-				}
-			}
-
-			nodeViewModelService.MovePoint(Node, currentPointIndex, point, mouseMovedPoint);
-			mouseMovedPoint = point;
-			IsMouseOver = true;
-			if (IsResizable())
-			{
-				IsShowPoints = true;
-			}
-
-			//Node.ItemsCanvas?.UpdateAndNotifyAll();
-
-			//NotifyAll();
-		}
-
-
-		private bool IsResizable()
-		{
-			return ItemWidth * ItemScale > 70 || ItemHeight * ItemScale > 70;
-		}
-
-
-		public void MouseUp(Point screenPoint) => currentPointIndex = -1;
 
 		public override string ToString() => Node.Name.ToString();
 
 
-		private ObservableCollection<LinkItem> GetIncomingLinkItems()
+		private ObservableCollection<LineMenuItemViewModel> GetIncomingLinkItems()
 		{
-			IEnumerable<LinkItem> items = nodeViewModelService.GetIncomingLinkItems(Node);
-			return new ObservableCollection<LinkItem>(items);
+			IEnumerable<LineMenuItemViewModel> items = nodeViewModelService.GetIncomingLinkItems(Node);
+			return new ObservableCollection<LineMenuItemViewModel>(items);
 		}
 
 
 
-		private ObservableCollection<LinkItem> GetOutgoingLinkItems()
+		private ObservableCollection<LineMenuItemViewModel> GetOutgoingLinkItems()
 		{
-			IEnumerable<LinkItem> items = nodeViewModelService.GetOutgoingLinkItems(Node);
-			return new ObservableCollection<LinkItem>(items);
+			IEnumerable<LineMenuItemViewModel> items = nodeViewModelService.GetOutgoingLinkItems(Node);
+			return new ObservableCollection<LineMenuItemViewModel>(items);
 		}
 
 
 
-		private string DebugToolTip => ItemsToolTip;
+		private string DebugToolTip => ""; //ItemsToolTip;
 
-		private string ItemsToolTip => //!Keyboard.Modifiers.HasFlag(ModifierKeys.Control) ? "" :
+		private string ItemsToolTip => !Config.IsDebug ? "" :
 			"\n" +
 			$"Rect: {ItemBounds.TS()}\n" +
-			$"Scale {ItemScale.TS()}, ChildrenScale: {Node.ItemsCanvas?.Scale.TS()}\n" +
-			$"Root Scale {Node.Root.ItemsCanvas.Scale}\n" +
+			$"Scale {ItemScale.TS()}, ChildrenScale: {Node.View.ItemsCanvas?.Scale.TS()}\n" +
+			//$"C Point {Node.ItemsCanvas.CanvasPointToScreenPoint(new Point(0, 0)).TS()}\n" +
+			//$"R Point {Node.ItemsCanvas.CanvasPointToScreenPoint2(new Point(0, 0)).TS()}\n" +
+			//$"M Point {Mouse.GetPosition(Node.Root.ItemsCanvas.ZoomableCanvas).TS()}\n" +
+			$"Root Scale {Node.Root.View.ItemsCanvas.Scale}\n" +
 			$"Level {Node.Ancestors().Count()}\n" +
-			$"Items: {Node.ItemsCanvas?.ShownChildItemsCount()} ({Node.ItemsCanvas?.ChildItemsCount()})\n" +
-			$"ShownDescendantsItems {Node.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.ItemsCanvas?.DescendantsItemsCount()})\n" +
-			$"ParentItems {Node.Parent.ItemsCanvas.ShownChildItemsCount()} ({Node.Parent.ItemsCanvas.ChildItemsCount()})\n" +
-			$"RootShownDescendantsItems {Node.Root.ItemsCanvas.ShownDescendantsItemsCount()} ({Node.Root.ItemsCanvas.DescendantsItemsCount()})\n" +
+			$"Items: {Node.View.ItemsCanvas?.ShownChildItemsCount()} ({Node.View.ItemsCanvas?.ChildItemsCount()})\n" +
+			$"ShownDescendantsItems {Node.View.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.View.ItemsCanvas?.DescendantsItemsCount()})\n" +
+			$"ParentItems {Node.Parent.View.ItemsCanvas.ShownChildItemsCount()} ({Node.Parent.View.ItemsCanvas.ChildItemsCount()})\n" +
+			$"RootShownDescendantsItems {Node.Root.View.ItemsCanvas.ShownDescendantsItemsCount()} ({Node.Root.View.ItemsCanvas.DescendantsItemsCount()})\n" +
 			$"Nodes: {NodesCount}, Namespaces: {NamespacesCount}, Types: {TypesCount}, Members: {MembersCount}\n" +
 			$"Links: {LinksCount}, Lines: {LinesCount}";
 
@@ -298,5 +255,9 @@ namespace Dependinator.ModelViewing.Nodes
 		private int LinksCount => Node.Root.Descendents().SelectMany(node => node.SourceLinks).Count();
 		private int LinesCount => Node.Root.Descendents().SelectMany(node => node.SourceLines).Count();
 
+
+
+		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) =>
+			nodeViewModelService.OnMouseWheel(this, uiElement, e);
 	}
 }

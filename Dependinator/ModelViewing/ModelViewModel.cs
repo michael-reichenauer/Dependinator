@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
-using Dependinator.ModelHandling.Private.Items;
-using Dependinator.ModelViewing.Private;
+using Dependinator.ModelViewing.Items;
 using Dependinator.Utils;
 using Dependinator.Utils.UI.Mvvm;
 
@@ -44,7 +44,7 @@ namespace Dependinator.ModelViewing
 			this.modelMetadata = modelMetadata;
 
 			ItemsCanvas rootCanvas = new ItemsCanvas();
-			ItemsViewModel = new ItemsViewModel(rootCanvas);
+			ItemsViewModel = new ItemsViewModel(rootCanvas, null);
 
 			modelViewService.SetRootCanvas(rootCanvas);
 		}
@@ -99,6 +99,18 @@ namespace Dependinator.ModelViewing
 		public Task LoadFilesAsync(IReadOnlyList<string> filePaths)
 		{
 			return openModelService.OpenModelAsync(filePaths);
+		}
+
+
+		public void MouseClicked(MouseButtonEventArgs mouseButtonEventArgs)
+		{
+			modelViewService.Clicked();
+		}
+
+
+		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e)
+		{
+			modelViewService.OnMouseWheel(uiElement, e);
 		}
 	}
 }

@@ -4,7 +4,7 @@ using NUnit.Framework;
 
 namespace DependinatorTest.Utils
 {
-	[TestFixture]
+	[TestFixture, Explicit]
 	public class ProcessTest
 	{
 		[Test]
@@ -15,7 +15,7 @@ namespace DependinatorTest.Utils
 			CmdResult result = cmd.Run("git", "version");
 			Assert.AreEqual(0, result.ExitCode);
 
-			Assert.That(result.Output, Is.StringStarting("git version 2."));
+			Assert.That(result.Output, Does.StartWith("git version 2."));
 		}
 	}
 }

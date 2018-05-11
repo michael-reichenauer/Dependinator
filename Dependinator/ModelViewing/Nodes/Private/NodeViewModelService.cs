@@ -1,16 +1,17 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using Dependinator.Common;
+using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ThemeHandling;
-using Dependinator.ModelHandling.Core;
-using Dependinator.ModelHandling.Private;
-using Dependinator.ModelViewing.Links;
-using Dependinator.Utils;
-using Dependinator.Utils.UI;
+using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Lines.Private;
+using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.ModelHandling.Private;
+using Dependinator.ModelViewing.ReferencesViewing;
 
 
 namespace Dependinator.ModelViewing.Nodes.Private
@@ -18,29 +19,36 @@ namespace Dependinator.ModelViewing.Nodes.Private
 	internal class NodeViewModelService : INodeViewModelService
 	{
 		private readonly IThemeService themeService;
-		private readonly IModelLinkService modelService;
-		private readonly ILinkMenuItemService linkMenuItemService;
-		private readonly IGeometryService geometryService;
+		private readonly IModelLineService modelLineService;
+		private readonly ILineMenuItemService lineMenuItemService;
+		private readonly IItemSelectionService itemSelectionService;
+		private readonly IReferenceItemService referenceItemService;
+		private readonly WindowOwner owner;
+
 
 
 		public NodeViewModelService(
 			IThemeService themeService,
-			IModelLinkService modelService,
-			ILinkMenuItemService linkMenuItemService,
-			IGeometryService geometryService)
+			IModelLineService modelLineService,
+			ILineMenuItemService lineMenuItemService,
+			IItemSelectionService itemSelectionService,
+			IReferenceItemService referenceItemService,
+			WindowOwner owner)
 		{
 			this.themeService = themeService;
-			this.modelService = modelService;
-			this.linkMenuItemService = linkMenuItemService;
-			this.geometryService = geometryService;
+			this.modelLineService = modelLineService;
+			this.lineMenuItemService = lineMenuItemService;
+			this.itemSelectionService = itemSelectionService;
+			this.referenceItemService = referenceItemService;
+			this.owner = owner;
 		}
 
 
 
 		public Brush GetNodeBrush(Node node)
 		{
-			return node.Color != null
-				? Converter.BrushFromHex(node.Color)
+			return node.View.Color != null
+				? Converter.BrushFromHex(node.View.Color)
 				: GetRandomRectangleBrush(node.Name.DisplayName);
 		}
 
@@ -48,31 +56,48 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		public void FirstShowNode(Node node)
 		{
 			node.SourceLines
-				.Where(line => line.ViewModel == null)
-				.ForEach(line => modelService.AddLineViewModel(line));
+				.Where(line => line.View.ViewModel == null)
+				.ForEach(line => modelLineService.AddLineViewModel(line));
 
 			node.TargetLines
-				.Where(line => line.ViewModel == null)
-				.ForEach(line => modelService.AddLineViewModel(line));
+				.Where(line => line.View.ViewModel == null)
+				.ForEach(line => modelLineService.AddLineViewModel(line));
 		}
 
 
 
-		public IEnumerable<LinkItem> GetIncomingLinkItems(Node node)
+		public IEnumerable<LineMenuItemViewModel> GetIncomingLinkItems(Node node)
 		{
 			IEnumerable<Line> lines = node.TargetLines
 				.Where(line => line.Owner != node);
 
-			return linkMenuItemService.GetSourceLinkItems(lines);
+			return lineMenuItemService.GetSourceLinkItems(lines);
 		}
 
 
-		public IEnumerable<LinkItem> GetOutgoingLinkItems(Node node)
+		public IEnumerable<LineMenuItemViewModel> GetOutgoingLinkItems(Node node)
 		{
 			IEnumerable<Line> lines = node.SourceLines
 				.Where(line => line.Owner != node);
 
-			return linkMenuItemService.GetTargetLinkItems(lines);
+			return lineMenuItemService.GetTargetLinkItems(lines);
+		}
+
+
+		public void MouseClicked(NodeViewModel nodeViewModel)
+		{
+			itemSelectionService.Select(nodeViewModel);
+		}
+
+
+		public void OnMouseWheel(
+			NodeViewModel nodeViewModel, 
+			UIElement uiElement, 
+			MouseWheelEventArgs e)
+		{
+			ItemsCanvas itemsCanvas = nodeViewModel.ItemsViewModel?.ItemsCanvas ?? nodeViewModel.Node.Root.View.ItemsCanvas;
+
+			itemsCanvas.OnMouseWheel(uiElement, e, nodeViewModel.IsInnerSelected);
 		}
 
 
@@ -93,145 +118,51 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 		public Brush GetBackgroundBrush(Brush brush)
 		{
-			return themeService.GetRectangleBackgroundBrush(brush);
+			return themeService.BackgroundBrush();
 		}
+
+		public Brush GetSelectedBrush(Brush brush)
+		{
+			return themeService.GetRectangleSelectedBackgroundBrush(brush);
+		}
+
+
+		//public void ShowIncoming(NodeViewModel nodeViewModel)
+		//{
+		//	Node node = nodeViewModel.Node;
+		//	var referenceItems = referenceItemService.GetReferences(node, new ReferenceOptions(true));
+
+		//	ReferencesDialog referencesDialog = new ReferencesDialog(
+		//		owner, node, referenceItems, true);
+		//	referencesDialog.ShowDialog();
+		//}
+
+
+		//public void ShowOutgoing(NodeViewModel nodeViewModel)
+		//{
+		//	Node node = nodeViewModel.Node;
+		//	var referenceItems = referenceItemService.GetReferences(node, new ReferenceOptions(false));
+
+		//	ReferencesDialog referencesDialog = new ReferencesDialog(
+		//		owner, node, referenceItems, false);
+		//	referencesDialog.ShowDialog();
+		//}
+
+
+		public void ShowReferences(NodeViewModel nodeViewModel, bool isIncoming)
+		{
+			Node node = nodeViewModel.Node;
+			var referenceItems = referenceItemService.GetReferences(node, new ReferenceOptions(isIncoming));
+
+			ReferencesDialog referencesDialog = new ReferencesDialog(
+				owner, node, referenceItems, isIncoming);
+			referencesDialog.ShowDialog();
+		}
+
 
 		public Brush GetRectangleHighlightBrush(Brush brush)
 		{
 			return themeService.GetRectangleHighlighterBrush(brush);
-		}
-
-
-		public int GetPointIndex(Node node, Point point)
-		{
-			// Sometimes the point is a little bit off, lets adjust the point to be on the border
-			Point pointInPerimeter = geometryService.GetPointInPerimeter(node.Bounds, point);
-
-			Vector vector = point - pointInPerimeter;
-			//Log.Debug($"Dist {vector.Length}, vector: {vector.TS()}");
-
-			point = pointInPerimeter;
-
-			double scale = node.ViewModel.ItemScale;
-			double dist = Math.Max(40 / scale, 40);
-			NodeViewModel viewModel = node.ViewModel;
-
-			double ltf = (point - viewModel.ItemBounds.Location).Length;
-			double ltr = (point - new Point(
-				viewModel.ItemLeft + viewModel.ItemWidth, viewModel.ItemTop)).Length;
-
-			double lbr = (point - new Point(
-				viewModel.ItemLeft + viewModel.ItemWidth,
-				viewModel.ItemTop + viewModel.ItemHeight)).Length;
-			double lbl = (point - new Point(
-				viewModel.ItemLeft, viewModel.ItemTop + viewModel.ItemHeight)).Length;
-
-			
-			//Log.Debug($"{ltf},{ltr}, {lbr},{lbl}");
-			int index = 0;
-			double minDist = double.MaxValue;
-
-			if (ltf < minDist)
-			{
-				// Move left,top
-				index = 1;
-				minDist = ltf;
-				Mouse.OverrideCursor = Cursors.SizeNWSE;
-			}
-
-			if (ltr < minDist)
-			{
-				// Move right,top
-				index = 2;
-				minDist = ltr;
-				Mouse.OverrideCursor = Cursors.SizeNESW;
-			}
-
-			if (lbr < minDist)
-			{
-				// Move right,bottom
-				index = 3;
-				minDist = lbr;
-				Mouse.OverrideCursor = Cursors.SizeNWSE;
-			}
-		
-			if (lbl < minDist)
-			{
-				// Move left,bottom
-				index = 4;
-				minDist = lbl;
-				Mouse.OverrideCursor = Cursors.SizeNESW;
-			}
-			
-			// Log.Warn("Move node");
-
-			if (minDist < 100)
-			{
-				return index;
-			}
-
-			// Move node
-			Mouse.OverrideCursor = Cursors.Hand;
-			return 0;
-		}
-
-
-		public void MovePoint(Node node, int index, Point point, Point previousPoint)
-		{
-			NodeViewModel viewModel = node.ViewModel;
-
-			Point location = viewModel.ItemBounds.Location;
-			Point newLocation = location;
-			double scale = viewModel.ItemScale;
-
-			Size size = viewModel.ItemBounds.Size;
-			Vector resize = new Vector(0, 0);
-			Vector offset = new Vector(0, 0);
-
-			if (index == 0)
-			{
-				Vector moved = point - previousPoint;
-				newLocation = location + moved;
-			}
-			else if (index == 1)
-			{
-				newLocation = new Point(point.X, point.Y);
-				resize = new Vector(location.X - newLocation.X, location.Y - newLocation.Y);
-				offset = new Vector((location.X - newLocation.X) * scale, (location.Y - newLocation.Y) * scale);
-			}
-			else if (index == 2)
-			{
-				newLocation = new Point(location.X, point.Y);
-				resize = new Vector((point.X - size.Width) - location.X, location.Y - newLocation.Y); ;
-				offset = new Vector(0, (location.Y - newLocation.Y) * scale);
-			}
-			else if (index == 3)
-			{
-				newLocation = location;
-				resize = new Vector((point.X - size.Width) - location.X, (point.Y - size.Height) - location.Y);
-			}
-			else if (index == 4)
-			{
-				newLocation = new Point(point.X, location.Y);
-				resize = new Vector(location.X - newLocation.X, (point.Y - size.Height) - location.Y);
-				offset = new Vector((location.X - newLocation.X) * scale, 0);
-			}
-
-			double dist = 50;
-
-			double width = size.Width + resize.X;
-			double height = size.Height + resize.Y;
-
-			if (width < dist || height < dist)
-			{
-				return;
-			}
-
-			Size newSiz = new Size(width, height);
-			viewModel.ItemBounds = new Rect(newLocation, newSiz);
-			viewModel.NotifyAll();
-			viewModel.ItemsViewModel?.MoveCanvas(offset);
-			viewModel.ItemOwnerCanvas.UpdateItem(viewModel);
 		}
 	}
 }

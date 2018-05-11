@@ -1,7 +1,9 @@
 ﻿using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using Dependinator.Utils;
+using System.Windows.Input;
+using Dependinator.ModelViewing.Nodes;
+using Dependinator.Utils.UI;
 
 
 namespace Dependinator.ModelViewing
@@ -11,20 +13,22 @@ namespace Dependinator.ModelViewing
 	/// </summary>
 	public partial class ModelView : UserControl
 	{
-		private ModelViewModel viewModel;
+
+		private ModelViewModel ViewModel => DataContext as ModelViewModel;
+		private MouseClicked mouseClicked;
 
 
 		public ModelView()
 		{
 			InitializeComponent();
+			mouseClicked = new MouseClicked(this, e => ViewModel?.MouseClicked(e));
 		}
 
 
 		private async void MainView_OnLoaded(object sender, RoutedEventArgs e)
 		{
-			viewModel = (ModelViewModel)DataContext;
 			ItemsView.SetFocus();
-			await viewModel.LoadAsync();
+			await ViewModel.LoadAsync();
 		}
 
 
@@ -39,8 +43,11 @@ namespace Dependinator.ModelViewing
 
 			if (filePaths?.Any() ?? false)
 			{
-				await viewModel.LoadFilesAsync(filePaths);
+				await ViewModel.LoadFilesAsync(filePaths);
 			}
 		}
+
+		protected override void OnMouseWheel(MouseWheelEventArgs e) => ViewModel.OnMouseWheel(this, e);
+
 	}
 }

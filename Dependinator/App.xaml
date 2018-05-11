@@ -9,6 +9,7 @@
 		<ResourceDictionary>
 
 			<ui:PropertyToVisibilityConverter x:Key="VC"/>
+			<ui:PropertyToVisibilityInvertConverter x:Key="NVC"/>
 			
 			<ResourceDictionary.MergedDictionaries>
 				<ResourceDictionary Source="Styles/ColorStyle.xaml"/>
@@ -21,6 +22,7 @@
 				<ResourceDictionary Source="Styles\RadioButtonStyle.xaml"/>
 				<ResourceDictionary Source="Styles\ComboBoxStyle.xaml"/>
 				<ResourceDictionary Source="Styles\CheckboxStyle.xaml"/>
+				<ResourceDictionary Source="Styles\TreeViewStyle.xaml"/>
 
 				<ResourceDictionary Source="Styles\ListBoxItemControlTemplate.xaml"/>
 

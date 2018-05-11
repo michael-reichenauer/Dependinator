@@ -1,5 +1,4 @@
-﻿using Dependinator.ModelHandling;
-using Dependinator.ModelHandling.Core;
+﻿using Dependinator.ModelViewing.ModelHandling.Core;
 
 
 namespace Dependinator.ModelViewing.Nodes

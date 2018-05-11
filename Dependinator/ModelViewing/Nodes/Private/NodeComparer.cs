@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using Dependinator.ModelHandling;
-using Dependinator.ModelHandling.Core;
-using Dependinator.ModelViewing.Links;
+using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 
 

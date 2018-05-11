@@ -1,10 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
-using Dependinator.ModelHandling;
-using Dependinator.ModelHandling.Core;
-using Dependinator.ModelViewing.Links;
+using Dependinator.ModelViewing.Lines.Private;
+using Dependinator.ModelViewing.ModelHandling.Core;
 
 
 namespace Dependinator.ModelViewing.Nodes
@@ -16,14 +15,15 @@ namespace Dependinator.ModelViewing.Nodes
 		Brush GetBrushFromHex(string hexColor);
 		string GetHexColorFromBrush(Brush brush);
 		Brush GetRectangleHighlightBrush(Brush brush);
-
-		int GetPointIndex(Node node, Point point);
-		void MovePoint(Node node, int index, Point point, Point previousPoint);
+		
 		Brush GetNodeBrush(Node node);
 		void FirstShowNode(Node node);
-
-
-		IEnumerable<LinkItem> GetIncomingLinkItems(Node node);
-		IEnumerable<LinkItem> GetOutgoingLinkItems(Node node);
+		
+		IEnumerable<LineMenuItemViewModel> GetIncomingLinkItems(Node node);
+		IEnumerable<LineMenuItemViewModel> GetOutgoingLinkItems(Node node);
+		void MouseClicked(NodeViewModel nodeViewModel);
+		void OnMouseWheel(NodeViewModel nodeViewModel, UIElement uiElement, MouseWheelEventArgs e);
+		Brush GetSelectedBrush(Brush brush);
+		void ShowReferences(NodeViewModel nodeViewModel, bool isIncoming);
 	}
 }

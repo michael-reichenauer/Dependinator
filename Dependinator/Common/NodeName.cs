@@ -105,11 +105,11 @@ namespace Dependinator.Common
 				fullNameWithType = fullName;
 				if (parts[parts.Length - 1].StartsWith("$"))
 				{
-					fullNameWithType = fullName + " folder";
+					fullNameWithType = fullName;
 				}
 				else if (parts[parts.Length - 1].StartsWith("?"))
 				{
-					fullNameWithType = fullName + " module";
+					fullNameWithType = fullName;
 				}
 			}
 			else

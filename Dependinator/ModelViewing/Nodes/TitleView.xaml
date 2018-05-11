@@ -4,8 +4,7 @@
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-	xmlns:local="clr-namespace:Dependinator.ModelViewing.Nodes"
-	xmlns:links="clr-namespace:Dependinator.ModelViewing.Links"
+	xmlns:private="clr-namespace:Dependinator.ModelViewing.Lines.Private"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 	
@@ -18,10 +17,7 @@
 			BorderThickness="0 0 0 0.4"
 			Height="20"
 			Background="Transparent" 
-			VerticalAlignment="Top"
-			MouseEnter="UIElement_OnMouseEnter"
-			MouseLeave="UIElement_OnMouseLeave"
->
+			VerticalAlignment="Top">
 
 			<TextBlock
 				Height="20"
@@ -32,7 +28,7 @@
 				HorizontalAlignment="Left"
 				VerticalAlignment="Top" 
 				UseLayoutRounding="True"
-				FontFamily="Segoe UI"
+				FontFamily="Calibri"
 				TextOptions.TextFormattingMode="Ideal"/>
 
 			<Border.ToolTip>
@@ -56,9 +52,7 @@
 			Width="20"
 			Background="Transparent"
 			VerticalAlignment="Stretch"
-			HorizontalAlignment="Left"
-			MouseEnter="UIElement_OnMouseEnter"
-			MouseLeave="UIElement_OnMouseLeave">
+			HorizontalAlignment="Left">
 
 			<TextBlock
 				Margin="2,10"
@@ -88,52 +82,31 @@
 
 		<Grid.ContextMenu>
 			<ContextMenu>
-
+		
 				<MenuItem
-						Header="Incoming links"
-						ItemsSource="{Binding IncomingLinks}">
+					Header="Outgoing References ..."
+					Command="{Binding ShowOutgoingCommand}">
 					<MenuItem.Icon>
-						<Grid Margin="0">
-							<TextBlock Text="&#xE0B5;" Style="{DynamicResource MenuIconStyle}" Padding="2,0,0,0" />
-							<!--<TextBlock Text="&#xE3C0;" Style="{DynamicResource MenuIconStyle}" Margin="4,4" Padding="0" Background="Transparent" />-->
-						</Grid>
-
+						<Border>
+							<TextBlock
+								Style="{DynamicResource MenuIconStyle}" Text="&#xE0B5;" />
+						</Border>
 					</MenuItem.Icon>
-					<MenuItem.Resources>
-						<HierarchicalDataTemplate
-								DataType="{x:Type links:LinkItem}"
-								ItemsSource="{Binding SubItems}">
-							<MenuItem
-									Header="{Binding Text}"
-									Command="{Binding LinkCommand}"
-									CommandParameter="{Binding Link}" />
-						</HierarchicalDataTemplate>
-					</MenuItem.Resources>
 				</MenuItem>
 
 				<MenuItem
-						Header="Outgoing links"
-						ItemsSource="{Binding OutgoingLinks}">
+					Header="Incoming References ..."
+					Command="{Binding ShowIncomingCommand}">
 					<MenuItem.Icon>
-						<Grid Margin="0">
-							<TextBlock Text="&#xE0B2;" Style="{DynamicResource MenuIconStyle}" Padding="2,0,0,0" />
-							<!--<TextBlock Text="&#xE25A;" Style="{DynamicResource MenuIconStyle}" Margin="4,0" Padding="0" Background="Transparent" Foreground="{DynamicResource LocalAheadBrush}"/>-->
-						</Grid>
-
+						<Border>
+							<TextBlock
+								Style="{DynamicResource MenuIconStyle}" Text="&#xe258;" />
+						</Border>
 					</MenuItem.Icon>
-					<MenuItem.Resources>
-						<HierarchicalDataTemplate
-								DataType="{x:Type links:LinkItem}"
-								ItemsSource="{Binding SubItems}">
-							<MenuItem
-									Header="{Binding Text}"
-									Command="{Binding LinkCommand}"
-									CommandParameter="{Binding Link}" />
-						</HierarchicalDataTemplate>
-					</MenuItem.Resources>
 				</MenuItem>
 
 				<Separator Background="{DynamicResource BorderBrush}" />
+
 				<MenuItem
 						Header="Hide Node"
 						Command="{Binding HideNodeCommand}">

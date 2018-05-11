@@ -1,0 +1,66 @@
+﻿<UserControl
+	x:Class="Dependinator.ModelViewing.ReferencesViewing.ReferenceItemView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:local="clr-namespace:Dependinator.ModelViewing.ReferencesViewing"
+	mc:Ignorable="d"
+	d:DesignHeight="450" d:DesignWidth="800">
+
+	<Grid >
+		<StackPanel
+			MouseEnter="UIElement_OnMouseEnter"
+			MouseLeave="UIElement_OnMouseLeave"
+
+			Orientation="Horizontal">
+
+			<!-- Icons before text -->
+			<TextBlock 
+				Visibility="{Binding IsIncomingIcon, Converter={StaticResource VC}}"
+				Text="&#xe258;" Style="{DynamicResource MenuIconStyle}" 
+				FontSize="11" Foreground="{Binding TextBrush}"/>
+			<TextBlock 
+				Visibility="{Binding IsOutgoingIcon, Converter={StaticResource VC}}"
+				Text="&#xE0B2;" Style="{DynamicResource MenuIconStyle}" 
+				FontSize="11" Foreground="{Binding TextBrush}"/>
+
+			<!-- Text -->
+			<TextBlock
+				Text="{Binding Text}"
+				FontStyle="{Binding TextStyle}"
+				Foreground="{Binding TextBrush}" 
+				ToolTip="{Binding ToolTip}" />
+
+			<!-- Toolbar Buttons -->
+			<Button
+				Visibility="{Binding IsShowButtons, Converter={StaticResource VC}}"
+				Padding="5,3,0,0"
+				Content="&#xe3a5;"
+				FontSize="11"
+				Style="{DynamicResource IconButtonStyle}"
+				Command="{Binding ToggleVisibilityCommand}"
+				ToolTip="Toggle dim visibility" />
+			<Button
+				Visibility="{Binding IsShowIncomingButton, Converter={StaticResource VC}}"
+				Padding="5,3,0,0"
+				Content="&#xe258;"
+				FontSize="11"
+				Style="{DynamicResource IconButtonStyle}"
+				Command="{Binding IncomingCommand}"
+				ToolTip="{Binding IncomingButtonToolTip}" />
+			<Button
+				Visibility="{Binding IsShowOutgoingButton, Converter={StaticResource VC}}"
+				Padding="5,3,0,0"
+				Content="&#xE0B2;"
+				FontSize="11"
+				Style="{DynamicResource IconButtonStyle}"
+				Command="{Binding OutgoingCommand}"
+				ToolTip="{Binding OutgoingButtonToolTip}"  />
+
+			<!-- End margin for mouse over -->
+			<TextBlock Text="           " Visibility="{Binding IsShowButtons, Converter={StaticResource NVC}}"/>
+		
+			</StackPanel>
+	</Grid>
+</UserControl>

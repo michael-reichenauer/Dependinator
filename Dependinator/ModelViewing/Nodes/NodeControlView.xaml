@@ -1,0 +1,171 @@
+﻿<UserControl
+	x:Class="Dependinator.ModelViewing.Nodes.NodeControlView"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+	xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
+	xmlns:private="clr-namespace:Dependinator.ModelViewing.Items.Private"
+
+	mc:Ignorable="d"
+	d:DesignHeight="300" d:DesignWidth="300">
+
+
+	<Grid>
+
+		<Rectangle
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
+			Name="ControlCenter"
+			Margin="{Binding CenterMargin}"
+			Stroke="Transparent"
+			Fill="Transparent"
+			StrokeThickness="1"
+			Stretch="Fill"
+			Cursor="Hand"
+			MouseMove="Control_OnMouseMove" />
+
+		<Rectangle
+			Visibility="{Binding IsShowBorder, Converter={StaticResource VC}}"
+			Name="ControlBorder"
+			Margin="{Binding CenterMargin}"
+			Stroke="{Binding Brush}"
+			StrokeThickness="1"
+			Stretch="Fill" />
+
+
+		<Rectangle
+			Name="ControlLeftTop"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding Brush}"
+			StrokeThickness="1"
+			Fill="{Binding Brush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Left"
+			VerticalAlignment="Top"
+			Cursor="SizeNWSE"
+			MouseMove="Control_OnMouseMove" />
+
+		<Rectangle
+			Name="ControlLeftBottom"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding Brush}"
+			StrokeThickness="1"
+			Fill="{Binding Brush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Left"
+			VerticalAlignment="Bottom"
+			Cursor="SizeNESW"
+			MouseMove="Control_OnMouseMove" />
+
+		<Rectangle
+			Name="ControlRightTop"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding Brush}"
+			StrokeThickness="1"
+			Fill="{Binding Brush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Right"
+			VerticalAlignment="Top"
+			Cursor="SizeNESW"
+			MouseMove="Control_OnMouseMove" />
+
+		<Rectangle
+			Name="ControlRightBottom"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding Brush}"
+			StrokeThickness="1"
+			Fill="{Binding Brush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Right"
+			VerticalAlignment="Bottom"
+			Cursor="SizeNWSE"
+			MouseMove="Control_OnMouseMove" />
+
+		<Rectangle
+			Name="ControlTop"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding Brush}"
+			StrokeThickness="1"
+			Fill="{Binding Brush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Center"
+			VerticalAlignment="Top"
+			Cursor="SizeNS"
+			MouseMove="Control_OnMouseMove" />
+
+		<Rectangle
+			Name="ControlLeft"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding Brush}"
+			StrokeThickness="1"
+			Fill="{Binding Brush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Left"
+			VerticalAlignment="Center"
+			Cursor="SizeWE"
+			MouseMove="Control_OnMouseMove" />
+
+		<Rectangle
+			Name="ControlRight"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding Brush}"
+			StrokeThickness="1"
+			Fill="{Binding Brush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Right"
+			VerticalAlignment="Center"
+			Cursor="SizeWE"
+			MouseMove="Control_OnMouseMove" />
+
+		<Rectangle
+			Name="ControlBottom"
+			Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
+			Margin="0"
+			Stroke="{Binding Brush}"
+			StrokeThickness="1"
+			Fill="{Binding Brush}"
+			Width="8"
+			Height="8"
+			HorizontalAlignment="Center"
+			VerticalAlignment="Bottom"
+			Cursor="SizeNS"
+			MouseMove="Control_OnMouseMove" />
+
+		<TextBlock
+			Name="EditNode"
+			Visibility="{Binding CanShowEditNode, Converter={StaticResource VC}}"
+			Margin="20"
+			Style="{DynamicResource MenuIconStyle}"
+			Text="&#xE22F;"
+			FontSize="25"
+			Foreground="{Binding Brush}"
+			HorizontalAlignment="Right"
+			VerticalAlignment="Top"
+			UseLayoutRounding="True"
+			TextOptions.TextFormattingMode="Ideal">
+
+			<TextBlock.ToolTip>
+				<ToolTip
+					Content="Toggle edit mode for content of this node"
+					Placement="Mouse"
+					BorderBrush="{DynamicResource BorderBrush}"
+					BorderThickness="1" />
+			</TextBlock.ToolTip>
+		</TextBlock>
+
+	</Grid>
+</UserControl>

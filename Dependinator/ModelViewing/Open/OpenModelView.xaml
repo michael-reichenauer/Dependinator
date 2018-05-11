@@ -63,12 +63,11 @@
 							<TextBlock
 								Grid.Column="1" Grid.Row="0"
 								Margin="0,1,0,0"
-								VerticalAlignment="Top">
-								<Hyperlink TextDecorations="None" Click="RecentFile_OnClick">
-									<TextBlock
-										Foreground="{DynamicResource TextBrush}" FontSize="14"
-										Text="{Binding Path=FileName}" />
-								</Hyperlink>
+								VerticalAlignment="Top"
+								Foreground="{DynamicResource TextBrush}" FontSize="14"
+								Text="{Binding Path=FileName}" MouseUp="RecentFile_OnClick"
+								Cursor="Hand">
+				
 								<TextBlock.ToolTip>
 									<ToolTip
 										Content="{Binding ToolTip}"
@@ -123,12 +122,12 @@
 				<TextBlock
 					Grid.Column="1" Grid.Row="0"
 					Margin="0,2,0,0"
-					VerticalAlignment="Top">
-					<Hyperlink TextDecorations="None" Click="OpenFile_OnClick">
-						<TextBlock
-							Foreground="{DynamicResource TextBrush}" FontSize="14"
-							Text="Open File" />
-					</Hyperlink>
+					VerticalAlignment="Top"
+					MouseUp="OpenFile_OnClick"
+					Foreground="{DynamicResource TextBrush}" FontSize="14"
+					Text="Open File"
+					Cursor="Hand">
+
 					<TextBlock.ToolTip>
 						<ToolTip
 							Content="Open model from dll, exe or sln file"
@@ -162,12 +161,12 @@
 				<TextBlock
 					Grid.Column="1" Grid.Row="0"
 					Margin="0,2,0,0"
-					VerticalAlignment="Top">
-					<Hyperlink TextDecorations="None" Click="OpenExample_OnClick">
-						<TextBlock
-							Foreground="{DynamicResource TextBrush}" FontSize="14"
-							Text="Open an example model" />
-					</Hyperlink>
+					VerticalAlignment="Top"
+					MouseUp="OpenExample_OnClick"
+					Foreground="{DynamicResource TextBrush}" FontSize="14"
+					Text="Open an example model" 
+					Cursor="Hand">
+
 					<TextBlock.ToolTip>
 						<ToolTip
 							Content="Open an example model to tryout Dependinator"

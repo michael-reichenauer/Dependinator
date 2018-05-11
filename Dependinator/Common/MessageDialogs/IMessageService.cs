@@ -1,6 +1,5 @@
 ﻿using System.Media;
 using System.Windows;
-using Dependinator.MainWindowViews;
 
 
 namespace Dependinator.Common.MessageDialogs

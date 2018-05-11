@@ -2,97 +2,69 @@ using System;
 using System.Windows;
 using System.Windows.Input;
 
+
 namespace Dependinator.Utils.UI
 {
 	internal class DragUiElement
 	{
 		private readonly UIElement uiElement;
-		private readonly Func<bool> predicate;
 		private readonly Action<Point> begin;
 		private readonly Action<Point, Vector> move;
 		private readonly Action<Point> end;
 
-		private Point lastMousePoint;
-		private bool IsMouseDown;
+		private Point? lastMousePoint;
 
 
 		public DragUiElement(
-			UIElement uiElement, 
-			Action<Point, Vector> move, 
-			Func<bool> predicate = null, 
-			Action<Point> begin = null, 
-			Action<Point> end = null,
-			bool isPreview = false)
+			UIElement uiElement,
+			Action<Point, Vector> move,
+			Action<Point> begin = null,
+			Action<Point> end = null)
 		{
 			this.uiElement = uiElement;
-			if (isPreview)
-			{
-				uiElement.PreviewMouseDown += (s, e) => MouseDown(e);
-				uiElement.PreviewMouseUp += (s, e) => MouseUp(e);
-				uiElement.PreviewMouseMove += (s, e) => MouseMove(e);
-			}
-			else
-			{
-				uiElement.MouseDown += (s, e) => MouseDown(e);
-				uiElement.MouseUp += (s, e) => MouseUp(e);
-				uiElement.MouseMove += (s, e) => MouseMove(e);
-			}
+		
+			uiElement.MouseMove += (s, e) => MouseMove(e);
 			
-
-			this.predicate = predicate;
 			this.begin = begin;
 			this.move = move;
 			this.end = end;
 		}
 
 
-		private void MouseDown(MouseButtonEventArgs e)
+		public void MouseMove(MouseEventArgs e)
 		{
-			if (predicate?.Invoke() ?? true)
+			Point viewPosition = e.GetPosition(Application.Current.MainWindow);
+
+			if (Mouse.LeftButton == MouseButtonState.Pressed)
 			{
-				if (e.LeftButton == MouseButtonState.Pressed)
+				uiElement.CaptureMouse();
+
+				if (!lastMousePoint.HasValue)
 				{
-					uiElement.CaptureMouse();
-
-					Point viewPosition = e.GetPosition(Application.Current.MainWindow);
-
-					lastMousePoint = viewPosition;
 					begin?.Invoke(viewPosition);
-					IsMouseDown = true;
-					e.Handled = true;
 				}
-			}
+				else
+				{
+					Vector viewOffset = viewPosition - lastMousePoint.Value;
 
-		}
-
-
-		private void MouseUp(MouseButtonEventArgs e)
-		{
-			if (IsMouseDown)
-			{
-				IsMouseDown = false;
-				e.Handled = true;
-
-				Point viewPosition = e.GetPosition(Application.Current.MainWindow);
-
-				end?.Invoke(viewPosition);
-				uiElement.ReleaseMouseCapture();			
-			}
-		}
-
-
-		private void MouseMove(MouseEventArgs e)
-		{
-			if (IsMouseDown)
-			{
-				Point viewPosition = e.GetPosition(Application.Current.MainWindow);
-				Vector viewOffset = viewPosition - lastMousePoint;
-
-				move?.Invoke(viewPosition, viewOffset);
+					move(viewPosition, viewOffset);
+				}
 
 				lastMousePoint = viewPosition;
+
 				e.Handled = true;
+			}
+			else
+			{
+				uiElement.ReleaseMouseCapture();
+
+				if (lastMousePoint.HasValue)
+				{
+					end?.Invoke(viewPosition);
+					lastMousePoint = null;
+				}
 			}
 		}
 	}
 }
+	
