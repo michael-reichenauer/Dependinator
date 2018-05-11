@@ -10,38 +10,21 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 {
 	internal class ReferencesViewModel : ViewModel
 	{
-		private readonly IReferenceItemService referenceItemService;
-
 
 		public Command<Window> OkCommand => Command<Window>(SetOK);
 
 		public Command<Window> CancelCommand => Command<Window>(w => w.DialogResult = false);
 
 
-		public ReferencesViewModel(
-			IReferenceItemService referenceItemService,
-			Node node)
+		public ReferencesViewModel(Node node,
+			IEnumerable<ReferenceItem> referenceItems, bool isIncoming)
 		{
-			this.referenceItemService = referenceItemService;
+			Items = new ObservableCollection<ReferenceItemViewModel>(
+				referenceItems.Select(item => new ReferenceItemViewModel(item)));
 
-			//IEnumerable<Line> lines = node.TargetLines
-			//	.Where(line => line.Owner != node);
-
-			//IEnumerable<ReferenceItemViewModel> referenceItems = referenceItemService.GetSourceLinkItems(
-			//	lines);
-
-			IEnumerable<Line> lines = node.SourceLines
-				.Where(line => line.Owner != node);
-
-			IEnumerable<ReferenceItemViewModel> referenceItems = referenceItemService.GetTargetLinkItems(
-				lines);
-
-
-			ReferenceItems = new ObservableCollection<ReferenceItemViewModel>(referenceItems);
-			//referenceItemViewModel.IsSelected = true;
-
-			WindowTitle = $"-> {node.Name.DisplayName}";
-			Title = $"Incoming: {node.Name.DisplayFullName}";
+			IsIncoming = isIncoming;
+			IsOutgoing = !isIncoming;
+			SetTitle(node, isIncoming);
 		}
 
 
@@ -49,38 +32,28 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 
 		public string Title { get => Get(); set => Set(value); }
+		public bool IsIncoming { get => Get(); set => Set(value); }
+		public bool IsOutgoing{ get => Get(); set => Set(value); }
 
 
-		public ObservableCollection<ReferenceItemViewModel> ReferenceItems { get; }
-
-
-		private void InitItems(Node node)
-		{
-			throw new System.NotImplementedException();
-		}
-
-
-		//private ObservableCollection<ReferenceItemViewModel> InitItems(
-		//	Node node, out ReferenceItemViewModel referenceItemViewModel)
-		//{
-		//	referenceItemViewModel = null;
-		//	ObservableCollection<ReferenceItemViewModel> items = ReferenceItems;
-
-		//	if (!node.IsRoot)
-		//	{
-		//		items = InitItems(node.Parent, out ReferenceItemViewModel parent);
-
-		//		referenceItemViewModel = new ReferenceItemViewModel(node.Name.DisplayName);
-		//		items.Add(referenceItemViewModel);
-		//		//referenceItemViewModel.IsExpanded = true;
-
-		//		items = referenceItemViewModel.Items;
-		//	}
-
-		//	return items;
-		//}
+		public ObservableCollection<ReferenceItemViewModel> Items { get; }
 
 
 		private void SetOK(Window window) => window.DialogResult = true;
+
+
+		private void SetTitle(Node node, bool isIncoming)
+		{
+			if (isIncoming)
+			{
+				WindowTitle = $"->| {node.Name.DisplayName}";
+				Title = $"{node.Name.DisplayFullNoParametersName} Incoming References from:";
+			}
+			else
+			{
+				WindowTitle = $"<-| {node.Name.DisplayName}";
+				Title = $"{node.Name.DisplayFullNoParametersName} Outgoing References to:";
+			}
+		}
 	}
 }

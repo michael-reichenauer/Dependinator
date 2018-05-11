@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Globalization;
+using System.Runtime.Remoting.Messaging;
 using System.Windows;
 using System.Windows.Data;
 using Dependinator.Utils.UI.Mvvm;
@@ -77,6 +78,33 @@ namespace Dependinator.Utils.UI
 			{
 				return false;
 			}
+		}
+	}
+
+
+	/// <summary>
+	/// Convert between boolean and visibility
+	/// </summary>
+	[Localizability(LocalizationCategory.NeverLocalize)]
+	public sealed class PropertyToVisibilityInvertConverter : IValueConverter
+	{
+		readonly PropertyToVisibilityConverter converter = new PropertyToVisibilityConverter();
+
+		/// <summary> 
+		/// Convert bool or Nullable&lt;bool&gt; to Visibility
+		/// </summary> 
+		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			Visibility visibility = (Visibility)converter.Convert(value, targetType, parameter, culture); 
+			return visibility == Visibility.Visible ? Visibility.Collapsed : Visibility.Visible;
+		}
+
+		/// <summary>
+		/// Convert Visibility to boolean 
+		/// </summary>
+		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+		{
+			return !((bool)converter.ConvertBack(value, targetType, parameter, culture));
 		}
 	}
 }

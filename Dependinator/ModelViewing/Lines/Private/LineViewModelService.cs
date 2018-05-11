@@ -1,8 +1,10 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
+using Dependinator.Common;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.ReferencesViewing;
 
 
 namespace Dependinator.ModelViewing.Lines.Private
@@ -14,7 +16,9 @@ namespace Dependinator.ModelViewing.Lines.Private
 		private readonly ILineZoomService lineZoomService;
 		private readonly ILineDataService lineDataService;
 		private readonly IItemSelectionService itemSelectionService;
+		private readonly IReferenceItemService referenceItemService;
 
+		private readonly WindowOwner owner;
 
 
 		public LineViewModelService(
@@ -22,14 +26,17 @@ namespace Dependinator.ModelViewing.Lines.Private
 			ILineControlService lineControlService,
 			ILineZoomService lineZoomService,
 			ILineDataService lineDataService,
-			IItemSelectionService itemSelectionService)
+			IItemSelectionService itemSelectionService,
+			IReferenceItemService referenceItemService,
+			WindowOwner owner)
 		{
 			this.lineMenuItemService = lineMenuItemService;
 			this.lineControlService = lineControlService;
 			this.lineZoomService = lineZoomService;
 			this.lineDataService = lineDataService;
 			this.itemSelectionService = itemSelectionService;
-
+			this.referenceItemService = referenceItemService;
+			this.owner = owner;
 		}
 
 
@@ -88,7 +95,17 @@ namespace Dependinator.ModelViewing.Lines.Private
 		}
 
 
+		public void ShowReferences(LineViewModel lineViewModel, bool isIncoming)
+		{
+			Line line = lineViewModel.Line;
+			var referenceItems = referenceItemService.GetReferences(line, new ReferenceOptions(isIncoming));
 
+			Node node = isIncoming ? line.Target : line.Source;
+			ReferencesDialog referencesDialog = new ReferencesDialog(
+				owner, node, referenceItems, isIncoming);
+			referencesDialog.ShowDialog();
+
+		}
 
 
 		//public void AddLinkLines(LinkOld link)

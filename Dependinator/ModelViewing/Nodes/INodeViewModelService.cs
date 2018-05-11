@@ -24,6 +24,6 @@ namespace Dependinator.ModelViewing.Nodes
 		void MouseClicked(NodeViewModel nodeViewModel);
 		void OnMouseWheel(NodeViewModel nodeViewModel, UIElement uiElement, MouseWheelEventArgs e);
 		Brush GetSelectedBrush(Brush brush);
-		void ShowDependencies(NodeViewModel nodeViewModel);
+		void ShowReferences(NodeViewModel nodeViewModel, bool isIncoming);
 	}
 }

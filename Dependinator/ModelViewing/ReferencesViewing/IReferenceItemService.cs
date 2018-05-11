@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Windows.Media;
 using Dependinator.ModelViewing.Lines.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
@@ -8,14 +9,11 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 {
 	internal interface IReferenceItemService
 	{
-		IEnumerable<ReferenceItemViewModel> GetSourceLinkItems(Line line);
-		IEnumerable<ReferenceItemViewModel> GetTargetLinkItems(Line line);
-		IEnumerable<ReferenceItemViewModel> GetSourceLinkItems(IEnumerable<Line> lines);
-		IEnumerable<ReferenceItemViewModel> GetTargetLinkItems(IEnumerable<Line> lines);
+		IEnumerable<ReferenceItem> GetReferences(Node node, ReferenceOptions options);
+		IEnumerable<ReferenceItem> GetReferences(Line line, ReferenceOptions options);
 
-
-		IEnumerable<ReferenceItemViewModel> GetLinkItems(
-			IEnumerable<Line> lines,
-			Func<IEdge, Node> endPoint);
+		Brush ItemTextBrush();
+		Brush ItemTextHiddenBrush();
+		Brush ItemTextLowBrush();
 	}
 }

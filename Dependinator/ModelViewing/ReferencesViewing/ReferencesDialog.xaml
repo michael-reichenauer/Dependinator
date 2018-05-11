@@ -62,6 +62,30 @@
 					HorizontalAlignment="Left"
 					Orientation="Horizontal">
 
+					<TextBlock 
+						Visibility="{Binding IsIncoming, Converter={StaticResource VC}}"
+						Text="&#xe258;" Style="{DynamicResource MenuIconStyle}" />
+
+					<!--<Grid Visibility="{Binding IsIncoming, Converter={StaticResource NVC}}">
+						<TextBlock 
+							Text="&#xe15b;" Style="{DynamicResource MenuIconStyle}" Background="Transparent">
+							<TextBlock.RenderTransform>
+								<TranslateTransform  X="-2" Y="-6" />
+							</TextBlock.RenderTransform>
+						</TextBlock>
+						<TextBlock 
+							Text="&#xe8e4;" Style="{DynamicResource MenuIconStyle}"
+							Margin="4,0" Background="Transparent">
+							<TextBlock.RenderTransform>
+								<RotateTransform Angle="90" CenterX="9" CenterY="9"/>
+							</TextBlock.RenderTransform>
+						</TextBlock>
+					</Grid>-->
+
+					<TextBlock 
+						Visibility="{Binding IsOutgoing, Converter={StaticResource VC}}"
+						Text="&#xE0B5;" Style="{DynamicResource MenuIconStyle}" />
+
 					<TextBlock
 						Text="{Binding Title}"
 						Foreground="{DynamicResource TextBrush}"
@@ -94,19 +118,29 @@
 
 			<TreeView
 				Grid.Row="0"
-				ItemsSource="{Binding ReferenceItems}"
+				ItemsSource="{Binding Items}"
 				Background="{DynamicResource BackgroundBrush}"
-				BorderBrush="{DynamicResource BorderBrush}">
+				BorderBrush="{DynamicResource BorderBrush}"
+				ItemContainerStyle="{StaticResource LibraryTreeViewItemStyle}">
+
+				<TreeView.Resources>
+					<SolidColorBrush
+						x:Key="{x:Static SystemColors.HighlightBrushKey}"
+						Color="Transparent" />
+					<SolidColorBrush
+						x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
+						Color="Transparent" />
+				</TreeView.Resources>
+
 				<TreeView.ItemTemplate>
 					<HierarchicalDataTemplate
 						DataType="{x:Type referencesViewing:ReferenceItemViewModel}"
-						ItemsSource="{Binding Items}"
+						ItemsSource="{Binding SubItems}"
 						ItemContainerStyle="{StaticResource LibraryTreeViewItemStyle}">
-						<TextBlock
-							Text="{Binding Name}"
-							Foreground="{DynamicResource TextBrush}" />
+						<referencesViewing:ReferenceItemView/>
 					</HierarchicalDataTemplate>
 				</TreeView.ItemTemplate>
+
 			</TreeView>
 
 

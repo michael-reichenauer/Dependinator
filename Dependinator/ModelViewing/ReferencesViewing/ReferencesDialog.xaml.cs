@@ -1,25 +1,26 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.ReferencesViewing
 {
 	/// <summary>
-	/// Interaction logic for CrateBranchDialog.xaml
+	/// Interaction logic for ReferencesDialog.xaml
 	/// </summary>
 	public partial class ReferencesDialog : Window
 	{
-		private readonly ReferencesViewModel viewModel;
-
-
-		internal ReferencesDialog(IReferenceItemService referenceItemService, Window owner, Node node)
+		internal ReferencesDialog(
+			Window owner, Node node, IEnumerable<ReferenceItem> referenceItems, bool isIncoming)
 		{
 			Owner = owner;
 			InitializeComponent();
 
-			viewModel = new ReferencesViewModel(referenceItemService, node);
-			DataContext = viewModel;
+			DataContext = new ReferencesViewModel(node, referenceItems, isIncoming);
 		}
 	}
 }

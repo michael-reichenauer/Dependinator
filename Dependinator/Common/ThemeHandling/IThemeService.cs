@@ -20,5 +20,8 @@ namespace Dependinator.Common.ThemeHandling
 		Brush GetRectangleHighlighterBrush(Brush brush);
 		Brush GetRectangleSelectedBackgroundBrush(Brush brush);
 		Brush BackgroundBrush();
+		Brush GetTextBrush();
+		Brush GetTextDimBrush();
+		Brush GetTextLowBrush();
 	}
 }

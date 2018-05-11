@@ -82,6 +82,9 @@ namespace Dependinator.ModelViewing.Lines
 
 		public Command RemovePointCommand => Command(LineControl.RemovePoint);
 
+		public Command ShowIncomingCommand => Command(() => lineViewModelService.ShowReferences(this, true));
+		public Command ShowOutgoingCommand => Command(() => lineViewModelService.ShowReferences(this, false));
+
 
 		public override void MoveItem(Vector moveOffset) => LineControl.MovePoints(moveOffset);
 

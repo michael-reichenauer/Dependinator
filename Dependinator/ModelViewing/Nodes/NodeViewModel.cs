@@ -119,14 +119,8 @@ namespace Dependinator.ModelViewing.Nodes
 		public int IncomingLinesCount => Node.TargetLines.Count(line => line.Owner != Node);
 
 		public Command HideNodeCommand => Command(HideNode);
-		public Command ShowDependenciesCommand => Command(ShowDependencies);
-
-
-		private void ShowDependencies()
-		{
-			nodeViewModelService.ShowDependencies(this);
-
-		}
+		public Command ShowIncomingCommand => Command(() => nodeViewModelService.ShowReferences(this, true));
+		public Command ShowOutgoingCommand => Command(() => nodeViewModelService.ShowReferences(this, false));
 
 
 		public int IncomingLinksCount => Node.TargetLines
@@ -236,7 +230,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 
-		private string DebugToolTip => ItemsToolTip;
+		private string DebugToolTip => ""; //ItemsToolTip;
 
 		private string ItemsToolTip => !Config.IsDebug ? "" :
 			"\n" +

@@ -50,7 +50,7 @@
 				<Path.ContextMenu>
 					<ContextMenu >
 
-						<MenuItem 
+						<!--<MenuItem 
 							Header="Source nodes"
 							ItemsSource="{Binding SourceLinks}">
 							<MenuItem.Resources>
@@ -78,7 +78,28 @@
 										CommandParameter="{Binding Link}"/>
 								</HierarchicalDataTemplate>
 							</MenuItem.Resources>
+						</MenuItem>-->
+
+						<MenuItem
+							Header="Outgoing References ..."
+							Command="{Binding ShowOutgoingCommand}">
+							<MenuItem.Icon>
+								<Border>
+									<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE0B5;" />
+								</Border>
+							</MenuItem.Icon>
 						</MenuItem>
+
+						<MenuItem
+							Header="Incoming References ..."
+							Command="{Binding ShowIncomingCommand}">
+							<MenuItem.Icon>
+								<Border>
+									<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xe258;" />
+								</Border>
+							</MenuItem.Icon>
+						</MenuItem>
+				
 
 					</ContextMenu>
 				</Path.ContextMenu>
