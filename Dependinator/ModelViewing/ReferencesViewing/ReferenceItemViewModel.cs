@@ -28,34 +28,23 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 			SubItems = ToSubItems(item.SubItems);
 
-			Text = GetText();
 			TextBrush = item.ItemTextBrush();
 			TextStyle = item.IsSubReference ? FontStyles.Italic : FontStyles.Normal;
 		}
 
 
-		private string GetText()
-		{
-			if (item.Parent != null && item.Parent.Node == item.Node.Parent)
-			{
-				return item.Node.Name.DisplayName;
-			}
 
-			return item.Node.Name.DisplayFullName;
-		}
-
-
-		public string Text { get => Get(); set => Set(value); }
+		public string Text => item.Text;
 		public Brush TextBrush { get => Get<Brush>(); set => Set(value); }
 		public FontStyle TextStyle { get => Get<FontStyle>(); set => Set(value); }
 		public ObservableCollection<ReferenceItemViewModel> SubItems { get; }
 		public bool IsShowIncomingButton => IsShowButtons && !item.IsIncoming;
 		public bool IsShowOutgoingButton => IsShowButtons && item.IsIncoming;
-		public bool IsIncomingIcon => item.IsIncoming && item.IsSubReference;
-		public bool IsOutgoingIcon => !item.IsIncoming && item.IsSubReference;
+		public bool IsIncomingIcon => item.IsIncoming && item.IsTitle;
+		public bool IsOutgoingIcon => !item.IsIncoming && item.IsTitle;
 
 		public bool IsIncoming => item.IsIncoming;
-		public string ToolTip => item.Node.Name.DisplayFullNameWithType;
+		public string ToolTip => item.ToolTip;
 
 		public bool IsShowButtons
 		{
@@ -87,15 +76,17 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 			if (isSubReferences)
 			{
+				ReferenceItem newItem = new ReferenceItem(
+					item.ItemService, null, isIncoming, null, true, SubTitleText(isIncoming));
+				item.AddChild(newItem);
+
 				IEnumerable<ReferenceItem> subReferences = item.GetSubReferences(isIncoming);
+				newItem.AddChildren(subReferences);
 
-				int index = 0;
-				subReferences.ForEach(i =>
-				{
-					item.AddChild(i);
-					SubItems.Insert(index++, new ReferenceItemViewModel(i));
-				});
+				ReferenceItemViewModel newItemViewModel = new ReferenceItemViewModel(newItem);
+				newItemViewModel.IsExpanded = true;
 
+				SubItems.Insert(0, newItemViewModel);
 				IsExpanded = true;
 			}
 			else
@@ -104,6 +95,10 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 				subReferences.ForEach(i => SubItems.Remove(i));
 			}
 		}
+
+
+		private static string SubTitleText(bool isIncoming) => 
+			isIncoming ? "References from:" : "References to:";
 
 
 		private static ObservableCollection<ReferenceItemViewModel> ToSubItems(

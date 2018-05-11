@@ -8,13 +8,18 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 {
 	internal class ReferenceItem
 	{
+		private readonly string text;
+
+
 		public ReferenceItem(
 			IReferenceItemService referenceItemService,
 			Node node,
 			bool isIncoming,
 			Node baseNode,
-			bool isSubReference)
+			bool isSubReference,
+			string text = null)
 		{
+			this.text = text;
 			this.ItemService = referenceItemService;
 			Node = node;
 			IsIncoming = isIncoming;
@@ -23,6 +28,8 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		}
 
 
+		public string Text => text ?? GetText();
+		public bool IsTitle => text != null;
 		public Node Node { get; }
 		public bool IsIncoming { get; }
 		public Node BaseNode { get; }
@@ -37,6 +44,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 
 		public IReferenceItemService ItemService { get; }
+		public string ToolTip => text ?? Node.Name.DisplayFullNameWithType;
 
 
 		public void AddChild(ReferenceItem child)
@@ -49,12 +57,22 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		public void AddChildren(IEnumerable<ReferenceItem> child) => child.ForEach(AddChild);
 
 
-		public override string ToString() => $"{Node}";
+		public override string ToString() => $"{Text}";
 
 
 		public IEnumerable<ReferenceItem> GetSubReferences(bool isIncoming)
 		{
 			return ItemService.GetReferences(Node, new ReferenceOptions(isIncoming, BaseNode, true));
+		}
+
+		private string GetText()
+		{
+			if (Parent != null && Parent.Node == Node.Parent)
+			{
+				return Node.Name.DisplayName;
+			}
+
+			return Node.Name.DisplayFullName;
 		}
 	}
 }

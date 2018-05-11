@@ -15,23 +15,24 @@
 
 			Orientation="Horizontal">
 
-
+			<!-- Icons before text -->
 			<TextBlock 
 				Visibility="{Binding IsIncomingIcon, Converter={StaticResource VC}}"
 				Text="&#xe258;" Style="{DynamicResource MenuIconStyle}" 
 				FontSize="11" Foreground="{Binding TextBrush}"/>
-
 			<TextBlock 
 				Visibility="{Binding IsOutgoingIcon, Converter={StaticResource VC}}"
 				Text="&#xE0B2;" Style="{DynamicResource MenuIconStyle}" 
 				FontSize="11" Foreground="{Binding TextBrush}"/>
 
+			<!-- Text -->
 			<TextBlock
 				Text="{Binding Text}"
 				FontStyle="{Binding TextStyle}"
 				Foreground="{Binding TextBrush}" 
 				ToolTip="{Binding ToolTip}" />
 
+			<!-- Toolbar Buttons -->
 			<Button
 				Visibility="{Binding IsShowButtons, Converter={StaticResource VC}}"
 				Padding="5,3,0,0"
@@ -40,7 +41,6 @@
 				Style="{DynamicResource IconButtonStyle}"
 				Command="{Binding ToggleVisibilityCommand}"
 				ToolTip="Toggle visibility" />
-
 			<Button
 				Visibility="{Binding IsShowIncomingButton, Converter={StaticResource VC}}"
 				Padding="5,3,0,0"
@@ -49,7 +49,6 @@
 				Style="{DynamicResource IconButtonStyle}"
 				Command="{Binding IncomingCommand}"
 				ToolTip="Toggle show incoming references" />
-
 			<Button
 				Visibility="{Binding IsShowOutgoingButton, Converter={StaticResource VC}}"
 				Padding="5,3,0,0"
@@ -59,9 +58,9 @@
 				Command="{Binding OutgoingCommand}"
 				ToolTip="Toggle show outgoing references" />
 
-			<TextBlock 
-				Text="           "
-				Visibility="{Binding IsShowButtons, Converter={StaticResource NVC}}"/>
-		</StackPanel>
+			<!-- End margin for mouse over -->
+			<TextBlock Text="           " Visibility="{Binding IsShowButtons, Converter={StaticResource NVC}}"/>
+		
+			</StackPanel>
 	</Grid>
 </UserControl>
