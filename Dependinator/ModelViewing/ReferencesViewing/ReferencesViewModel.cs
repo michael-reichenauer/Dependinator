@@ -46,13 +46,13 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		{
 			if (isIncoming)
 			{
-				WindowTitle = $"-> {node.Name.DisplayName}";
-				Title = $"Incoming references: {node.Name.DisplayFullName}";
+				WindowTitle = $"->| {node.Name.DisplayName}";
+				Title = $"{node.Name.DisplayFullNoParametersName} incoming references";
 			}
 			else
 			{
-				WindowTitle = $"<- {node.Name.DisplayName}";
-				Title = $"Outgoing references: {node.Name.DisplayFullName}";
+				WindowTitle = $"<-| {node.Name.DisplayName}";
+				Title = $"{node.Name.DisplayFullNoParametersName} outgoing references";
 			}
 		}
 	}

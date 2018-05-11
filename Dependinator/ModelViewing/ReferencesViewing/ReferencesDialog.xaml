@@ -64,11 +64,27 @@
 
 					<TextBlock 
 						Visibility="{Binding IsIncoming, Converter={StaticResource VC}}"
-						Text="&#xE0B5;"  Style="{DynamicResource MenuIconStyle}" />
+						Text="&#xe258;" Style="{DynamicResource MenuIconStyle}" />
+
+					<!--<Grid Visibility="{Binding IsIncoming, Converter={StaticResource NVC}}">
+						<TextBlock 
+							Text="&#xe15b;" Style="{DynamicResource MenuIconStyle}" Background="Transparent">
+							<TextBlock.RenderTransform>
+								<TranslateTransform  X="-2" Y="-6" />
+							</TextBlock.RenderTransform>
+						</TextBlock>
+						<TextBlock 
+							Text="&#xe8e4;" Style="{DynamicResource MenuIconStyle}"
+							Margin="4,0" Background="Transparent">
+							<TextBlock.RenderTransform>
+								<RotateTransform Angle="90" CenterX="9" CenterY="9"/>
+							</TextBlock.RenderTransform>
+						</TextBlock>
+					</Grid>-->
 
 					<TextBlock 
 						Visibility="{Binding IsOutgoing, Converter={StaticResource VC}}"
-						Text="&#xE0B2;" Style="{DynamicResource MenuIconStyle}" />
+						Text="&#xE0B5;" Style="{DynamicResource MenuIconStyle}" />
 
 					<TextBlock
 						Text="{Binding Title}"

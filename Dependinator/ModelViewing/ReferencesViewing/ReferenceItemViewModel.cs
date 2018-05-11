@@ -51,6 +51,8 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		public ObservableCollection<ReferenceItemViewModel> SubItems { get; }
 		public bool IsShowIncomingButton => IsShowButtons && !item.IsIncoming;
 		public bool IsShowOutgoingButton => IsShowButtons && item.IsIncoming;
+		public bool IsIncomingIcon => item.IsIncoming && item.IsSubReference;
+		public bool IsOutgoingIcon => !item.IsIncoming && item.IsSubReference;
 
 		public bool IsIncoming => item.IsIncoming;
 		public string ToolTip => item.Node.Name.DisplayFullNameWithType;
