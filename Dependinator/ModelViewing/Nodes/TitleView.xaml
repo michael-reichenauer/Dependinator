@@ -84,8 +84,8 @@
 			<ContextMenu>
 		
 				<MenuItem
-					Header="Incoming References ..."
-					Command="{Binding ShowIncomingCommand}">
+					Header="Outgoing References ..."
+					Command="{Binding ShowOutgoingCommand}">
 					<MenuItem.Icon>
 						<Border>
 							<TextBlock
@@ -95,12 +95,12 @@
 				</MenuItem>
 
 				<MenuItem
-					Header="Outgoing References ..."
-					Command="{Binding ShowOutgoingCommand}">
+					Header="Incoming References ..."
+					Command="{Binding ShowIncomingCommand}">
 					<MenuItem.Icon>
 						<Border>
 							<TextBlock
-								Style="{DynamicResource MenuIconStyle}" Text="&#xE0B2;" />
+								Style="{DynamicResource MenuIconStyle}" Text="&#xe258;" />
 						</Border>
 					</MenuItem.Icon>
 				</MenuItem>

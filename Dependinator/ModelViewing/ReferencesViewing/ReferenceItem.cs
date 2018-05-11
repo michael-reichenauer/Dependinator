@@ -72,7 +72,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 				return Node.Name.DisplayName;
 			}
 
-			return Node.Name.DisplayFullName;
+			return Node.Name.DisplayFullNoParametersName;
 		}
 	}
 }

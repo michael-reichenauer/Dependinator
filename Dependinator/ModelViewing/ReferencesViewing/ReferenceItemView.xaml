@@ -40,7 +40,7 @@
 				FontSize="11"
 				Style="{DynamicResource IconButtonStyle}"
 				Command="{Binding ToggleVisibilityCommand}"
-				ToolTip="Toggle visibility" />
+				ToolTip="Toggle dim visibility" />
 			<Button
 				Visibility="{Binding IsShowIncomingButton, Converter={StaticResource VC}}"
 				Padding="5,3,0,0"
@@ -48,7 +48,7 @@
 				FontSize="11"
 				Style="{DynamicResource IconButtonStyle}"
 				Command="{Binding IncomingCommand}"
-				ToolTip="Toggle show incoming references" />
+				ToolTip="{Binding IncomingButtonToolTip}" />
 			<Button
 				Visibility="{Binding IsShowOutgoingButton, Converter={StaticResource VC}}"
 				Padding="5,3,0,0"
@@ -56,7 +56,7 @@
 				FontSize="11"
 				Style="{DynamicResource IconButtonStyle}"
 				Command="{Binding OutgoingCommand}"
-				ToolTip="Toggle show outgoing references" />
+				ToolTip="{Binding OutgoingButtonToolTip}"  />
 
 			<!-- End margin for mouse over -->
 			<TextBlock Text="           " Visibility="{Binding IsShowButtons, Converter={StaticResource NVC}}"/>

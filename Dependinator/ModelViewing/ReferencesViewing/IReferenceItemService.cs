@@ -9,10 +9,8 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 {
 	internal interface IReferenceItemService
 	{
-		//IEnumerable<ReferenceItem> GetSourceLinkItems(Line line, Node baseNode);
-		//IEnumerable<ReferenceItem> GetTargetLinkItems(Line line, Node baseNode);
-		IEnumerable<ReferenceItem> GetReferences(Node node, ReferenceOptions option);
-		//IEnumerable<ReferenceItem> GetOutgoingReferences(Node node, ReferenceOptions option);
+		IEnumerable<ReferenceItem> GetReferences(Node node, ReferenceOptions options);
+		IEnumerable<ReferenceItem> GetReferences(Line line, ReferenceOptions options);
 
 		Brush ItemTextBrush();
 		Brush ItemTextHiddenBrush();

@@ -45,6 +45,10 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		public bool IsIncoming => item.IsIncoming;
 		public string ToolTip => item.ToolTip;
+		public string IncomingButtonToolTip =>
+			$"Toggle show references from {item.BaseNode.Name.DisplayFullNoParametersName}";
+		public string OutgoingButtonToolTip => 
+			$"Toggle show references to {item.BaseNode.Name.DisplayFullNoParametersName}";
 
 		public bool IsShowButtons
 		{

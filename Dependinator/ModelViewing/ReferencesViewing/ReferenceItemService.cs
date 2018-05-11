@@ -15,6 +15,8 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		private readonly IThemeService themeService;
 
 
+	
+
 		public Brush ItemTextBrush() => themeService.GetTextBrush();
 		public Brush ItemTextLowBrush() => themeService.GetTextLowBrush();
 
@@ -42,6 +44,13 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		//	return lines.SelectMany(line => GetLineReferenceItems(line, baseNode, options));
 		//}
+
+		public IEnumerable<ReferenceItem> GetReferences(Line line, ReferenceOptions options)
+		{
+			Node baseNode = options.IsIncoming ? line.Target : line.Source;
+			return GetLineReferenceItems(line, baseNode, options);
+		}
+
 
 
 		public IEnumerable<ReferenceItem> GetReferences(Node baseNode, ReferenceOptions options)
