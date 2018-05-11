@@ -36,7 +36,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		public bool IsSubReference { get; }
 		public Link Link { get; set; }
 		public List<ReferenceItem> SubItems { get; } = new List<ReferenceItem>();
-		public ReferenceItem Parent { get; private set; }
+		public ReferenceItem Parent { get; set; }
 
 		public Brush ItemTextBrush() => IsSubReference ? 
 			ItemService.ItemTextLowBrush() :  ItemService.ItemTextBrush();

@@ -94,7 +94,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 			ReferenceItem rootItem = items[NodeName.Root];
 
 			List<ReferenceItem> referenceItems = ReduceHierarchy(rootItem, baseNode, options).ToList();
-
+			referenceItems.ForEach(item => item.Parent = null);
 			return referenceItems;
 		}
 
