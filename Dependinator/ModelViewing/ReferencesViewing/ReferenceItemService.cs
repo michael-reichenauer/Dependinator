@@ -16,6 +16,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 
 		public Brush ItemTextBrush() => themeService.GetTextBrush();
+		public Brush ItemTextLowBrush() => themeService.GetTextLowBrush();
 
 		public Brush ItemTextHiddenBrush() => themeService.GetTextDimBrush();
 
@@ -102,7 +103,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 				{
 					ReferenceItem parentItem = GetParentItem(items, node.Parent, baseNode, options);
 
-					item = new ReferenceItem(this, node, options.IsIncoming, baseNode);
+					item = new ReferenceItem(this, node, options.IsIncoming, baseNode, options.IsSubReference);
 					parentItem.AddChild(item);
 
 					items[node.Name] = item;
@@ -126,7 +127,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 				return parentItem;
 			}
 
-			parentItem = new ReferenceItem(this, parentNode, options.IsIncoming, baseNode);
+			parentItem = new ReferenceItem(this, parentNode, options.IsIncoming, baseNode, options.IsSubReference);
 
 			if (!parentNode.IsRoot)
 			{
@@ -163,7 +164,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 						if (subItem.Link != null)
 						{
 							// Item has a link so we need it and its compressed sub-items
-							ReferenceItem newItem = new ReferenceItem(this, subItem.Node, options.IsIncoming, baseNode)
+							ReferenceItem newItem = new ReferenceItem(this, subItem.Node, options.IsIncoming, baseNode, options.IsSubReference)
 							{
 								Link = subItem.Link
 							};

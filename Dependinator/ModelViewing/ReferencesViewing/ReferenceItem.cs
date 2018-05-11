@@ -12,23 +12,27 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 			IReferenceItemService referenceItemService,
 			Node node,
 			bool isIncoming,
-			Node baseNode)
+			Node baseNode,
+			bool isSubReference)
 		{
 			this.ItemService = referenceItemService;
 			Node = node;
 			IsIncoming = isIncoming;
 			BaseNode = baseNode;
+			IsSubReference = isSubReference;
 		}
 
 
 		public Node Node { get; }
 		public bool IsIncoming { get; }
 		public Node BaseNode { get; }
+		public bool IsSubReference { get; }
 		public Link Link { get; set; }
 		public List<ReferenceItem> SubItems { get; } = new List<ReferenceItem>();
 		public ReferenceItem Parent { get; private set; }
 
-		public Brush ItemTextBrush() => ItemService.ItemTextBrush();
+		public Brush ItemTextBrush() => IsSubReference ? 
+			ItemService.ItemTextLowBrush() :  ItemService.ItemTextBrush();
 		public Brush ItemTextHiddenBrush() => ItemService.ItemTextHiddenBrush();
 
 
@@ -48,9 +52,9 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		public override string ToString() => $"{Node}";
 
 
-		public IEnumerable<ReferenceItem> GetReferences(bool isIncoming)
+		public IEnumerable<ReferenceItem> GetSubReferences(bool isIncoming)
 		{
-			return ItemService.GetReferences(Node, new ReferenceOptions(isIncoming, BaseNode));
+			return ItemService.GetReferences(Node, new ReferenceOptions(isIncoming, BaseNode, true));
 		}
 	}
 }

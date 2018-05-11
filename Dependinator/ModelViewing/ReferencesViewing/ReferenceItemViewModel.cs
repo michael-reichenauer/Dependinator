@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows;
 using System.Windows.Media;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils.UI;
@@ -18,6 +19,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		private readonly DelayDispatcher delayDispatcher = new DelayDispatcher();
 		private bool isHidden = false;
+		private bool isSubReferences = false;
 
 
 		public ReferenceItemViewModel(ReferenceItem item)
@@ -28,6 +30,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 			Text = GetText();
 			TextBrush = item.ItemTextBrush();
+			TextStyle = item.IsSubReference ? FontStyles.Italic : FontStyles.Normal;
 		}
 
 
@@ -44,6 +47,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		public string Text { get => Get(); set => Set(value); }
 		public Brush TextBrush { get => Get<Brush>(); set => Set(value); }
+		public FontStyle TextStyle { get => Get<FontStyle>(); set => Set(value); }
 		public ObservableCollection<ReferenceItemViewModel> SubItems { get; }
 		public bool IsShowIncomingButton => IsShowButtons && !item.IsIncoming;
 		public bool IsShowOutgoingButton => IsShowButtons && item.IsIncoming;
@@ -53,7 +57,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		public bool IsShowButtons
 		{
-			get => Get(); set => Set(value)
+			get => Get(); set => Set(value && !item.IsSubReference)
 				.Notify(nameof(IsShowIncomingButton), nameof(IsShowOutgoingButton));
 		}
 
@@ -68,7 +72,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		{
 			SetVisibility(!isHidden);
 
-			if (IsExpanded)
+			if (isHidden)
 			{
 				IsExpanded = false;
 			}
@@ -77,16 +81,26 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		private void ToggleSubReferences(bool isIncoming)
 		{
-			IEnumerable<ReferenceItem> references = item.GetReferences(isIncoming);
+			isSubReferences = !isSubReferences;
 
-			int index = 0;
-			references.ForEach(i =>
+			if (isSubReferences)
 			{
-				item.AddChild(i);
-				SubItems.Insert(index++, new ReferenceItemViewModel(i));
-			});
+				IEnumerable<ReferenceItem> subReferences = item.GetSubReferences(isIncoming);
 
-			IsExpanded = true;
+				int index = 0;
+				subReferences.ForEach(i =>
+				{
+					item.AddChild(i);
+					SubItems.Insert(index++, new ReferenceItemViewModel(i));
+				});
+
+				IsExpanded = true;
+			}
+			else
+			{
+				var subReferences = SubItems.Where(i => i.item.IsSubReference).ToList();
+				subReferences.ForEach(i => SubItems.Remove(i));
+			}
 		}
 
 

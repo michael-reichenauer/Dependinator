@@ -16,6 +16,7 @@
 			Orientation="Horizontal">
 			<TextBlock
 				Text="{Binding Text}"
+				FontStyle="{Binding TextStyle}"
 				Foreground="{Binding TextBrush}" 
 				ToolTip="{Binding ToolTip}" />
 
