@@ -101,7 +101,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		/// <summary>
 		/// Return true if type is a generic type parameter T, as in e.g. Get/T/ (T value)
 		/// </summary>
-		private static bool IsGenericTypeArgument(TypeReference targetType)
+		private static bool IsGenericTypeArgument(MemberReference targetType)
 		{
 			return
 				targetType.FullName == null

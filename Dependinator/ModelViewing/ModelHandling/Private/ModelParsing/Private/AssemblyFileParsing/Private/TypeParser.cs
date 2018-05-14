@@ -36,7 +36,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			if (isCompilerGenerated)
 			{
 				// Check if the type is a async state machine type
-				isAsyncStateType = type.Interfaces.Any(it => it.Name == "IAsyncStateMachine");
+				isAsyncStateType = type.Interfaces.Any(it => it.InterfaceType.Name == "IAsyncStateMachine");
 
 				if (!isAsyncStateType)
 				{
@@ -107,7 +107,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				}
 
 				type.Interfaces
-					.ForEach(interfaceType => linkHandler.AddLinkToType(sourceNode, interfaceType));
+					.ForEach(interfaceType => linkHandler.AddLinkToType(sourceNode, interfaceType.InterfaceType));
 			}
 			catch (Exception e)
 			{
