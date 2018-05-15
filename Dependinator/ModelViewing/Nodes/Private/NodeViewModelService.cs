@@ -7,6 +7,7 @@ using System.Windows.Media;
 using Dependinator.Common;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ThemeHandling;
+using Dependinator.ModelViewing.DecompilationViewing;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Lines.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
@@ -157,6 +158,14 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			ReferencesDialog referencesDialog = new ReferencesDialog(
 				owner, node, referenceItems, isIncoming);
 			referencesDialog.ShowDialog();
+		}
+
+
+		public void ShowDecompiled(NodeViewModel nodeViewModel)
+		{
+			
+			CodeDialog dialog = new CodeDialog(owner, nodeViewModel.Node);
+			dialog.ShowDialog();
 		}
 
 

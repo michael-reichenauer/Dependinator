@@ -107,6 +107,19 @@
 
 				<Separator Background="{DynamicResource BorderBrush}" />
 
+
+				<MenuItem
+					Header="Show Decompiled Code ..."
+					Command="{Binding ShowDecompiledCommand}">
+					<MenuItem.Icon>
+						<Border>
+							<TextBlock
+								Style="{DynamicResource MenuIconStyle}" Text="&#xe236;" />
+						</Border>
+					</MenuItem.Icon>
+				</MenuItem>
+
+
 				<MenuItem
 						Header="Hide Node"
 						Command="{Binding HideNodeCommand}">

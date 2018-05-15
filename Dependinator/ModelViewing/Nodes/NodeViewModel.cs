@@ -121,6 +121,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public Command HideNodeCommand => Command(HideNode);
 		public Command ShowIncomingCommand => Command(() => nodeViewModelService.ShowReferences(this, true));
 		public Command ShowOutgoingCommand => Command(() => nodeViewModelService.ShowReferences(this, false));
+		public Command ShowDecompiledCommand => Command(() => nodeViewModelService.ShowDecompiled(this));
 
 
 		public int IncomingLinksCount => Node.TargetLines
