@@ -75,7 +75,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			return queuedNodes.Values
 				.DistinctBy(item => item.Name)
-				.Select(item => new ModelNode(item.Name.FullName, null, item.NodeType, null))
+				.Select(item => new ModelNode(item.Name.FullName, null, item.NodeType, null, null))
 				.ToList();
 		}
 

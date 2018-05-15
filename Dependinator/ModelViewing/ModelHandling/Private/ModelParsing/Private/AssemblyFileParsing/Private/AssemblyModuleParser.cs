@@ -43,7 +43,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			parent = parent != null ? $"${parent?.Replace(".", ".$")}" : null;
 
 			string description = GetDescription();
-			ModelNode moduleNode = new ModelNode(moduleName, parent, NodeType.NameSpace, description);
+			ModelNode moduleNode = new ModelNode(moduleName, parent, NodeType.NameSpace, description, null);
 			itemsCallback(moduleNode);
 		}
 
@@ -83,7 +83,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 				parent = $"${parent?.Replace(".", ".$")}";
 
-				ModelNode referenceNode = new ModelNode(referenceName, parent, NodeType.NameSpace, null);
+				ModelNode referenceNode = new ModelNode(referenceName, parent, NodeType.NameSpace, null, null);
 				itemsCallback(referenceNode);
 
 				linkHandler.AddLink(

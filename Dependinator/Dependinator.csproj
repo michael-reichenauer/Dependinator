@@ -154,6 +154,7 @@
     <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\Decompiler.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\WorkParser.cs" />
     <Compile Include="ModelViewing\ReferencesViewing\IReferenceItemService.cs" />
     <Compile Include="ModelViewing\ReferencesViewing\ReferenceItem.cs" />
@@ -661,6 +662,9 @@
     <EmbeddedResource Include="Dependencies\System.Collections.Immutable.dll">
       <Generator>Embedded Resource</Generator>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ModelViewing\DecompilationViewing\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

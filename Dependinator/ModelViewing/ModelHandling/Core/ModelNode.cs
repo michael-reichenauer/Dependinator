@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using Dependinator.Utils;
 
@@ -10,8 +11,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 			string name,
 			string parent,
 			NodeType nodeType,
-			string description)
-			: this(name, parent, nodeType, description, RectEx.Zero, 0, null, null)
+			string description,
+			Lazy<string> codeText)
+			: this(name, parent, nodeType, description, codeText, RectEx.Zero, 0, null, null)
 		{
 		}
 
@@ -20,6 +22,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 			string parent,
 			NodeType nodeType,
 			string description,
+			Lazy<string> codeText,
 			Rect bounds,
 			double itemsScaleFactor,
 			string color,
@@ -29,6 +32,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 			Parent = parent;
 			NodeType = nodeType;
 			Description = description;
+			CodeText = codeText;
 			Bounds = bounds;
 			ItemsScaleFactor = itemsScaleFactor;
 			Color = color;
@@ -41,6 +45,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		public string Parent { get; }
 		public NodeType NodeType { get; }
 		public string Description { get; }
+		public Lazy<string> CodeText { get; }
 		public Rect Bounds { get; }
 		public double ItemsScaleFactor { get; }
 		public string Color { get; }

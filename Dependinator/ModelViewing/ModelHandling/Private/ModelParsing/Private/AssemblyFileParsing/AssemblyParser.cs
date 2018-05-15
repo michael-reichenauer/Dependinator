@@ -14,6 +14,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 	{
 		private readonly string assemblyPath;
 		private List<TypeInfo> typeInfos = new List<TypeInfo>();
+		private readonly Decompiler decompiler = new Decompiler();
 
 		private readonly AssemblyModuleParser assemblyModuleParser;
 		private readonly TypeParser typeParser;
@@ -32,8 +33,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			LinkHandler linkHandler = new LinkHandler(itemsCallback);
 
 			assemblyModuleParser = new AssemblyModuleParser(assemblyRootGroup, linkHandler, itemsCallback);
-			typeParser = new TypeParser(linkHandler, xmlDockParser, itemsCallback);
-			memberParser = new MemberParser(linkHandler, xmlDockParser, itemsCallback);
+			typeParser = new TypeParser(linkHandler, xmlDockParser, decompiler, itemsCallback);
+			memberParser = new MemberParser(linkHandler, xmlDockParser, decompiler, itemsCallback);
 		}
 
 
@@ -47,7 +48,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 					return;
 				}
 
-				assembly = AssemblyDefinition.ReadAssembly(assemblyPath);
+				var resolver = new MyDefaultAssemblyResolver();
+				ReaderParameters parameters = new ReaderParameters
+				{
+					AssemblyResolver = resolver,
+				};
+
+				assembly = AssemblyDefinition.ReadAssembly(assemblyPath, parameters);
 
 				assemblyModuleParser.AddModule(assembly);
 			}
@@ -95,5 +102,28 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			.Where(type =>
 				!Name.IsCompilerGenerated(type.Name) &&
 				!Name.IsCompilerGenerated(type.DeclaringType?.Name));
+	}
+}
+
+public class MyDefaultAssemblyResolver : DefaultAssemblyResolver
+{
+	public override AssemblyDefinition Resolve(AssemblyNameReference name)
+	{
+		try
+		{
+			return base.Resolve(name);
+		}
+		catch { }
+		return null;
+	}
+
+	public override AssemblyDefinition Resolve(AssemblyNameReference name, ReaderParameters parameters)
+	{
+		try
+		{
+			return base.Resolve(name, parameters);
+		}
+		catch { }
+		return null;
 	}
 }

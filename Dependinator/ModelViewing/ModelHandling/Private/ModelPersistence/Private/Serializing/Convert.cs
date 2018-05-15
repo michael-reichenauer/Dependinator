@@ -49,6 +49,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 			node.Parent,
 			FromNodeTypeText(node.Type),
 			node.Description,
+			null,
 			node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
 			node.ItemsScaleFactor,
 			node.Color,

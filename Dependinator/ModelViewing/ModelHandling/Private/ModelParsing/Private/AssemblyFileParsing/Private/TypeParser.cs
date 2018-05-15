@@ -4,6 +4,8 @@ using System.Linq;
 using Dependinator.Common;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
+using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.CSharp;
 using Mono.Cecil;
 
 
@@ -13,16 +15,20 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 	{
 		private readonly LinkHandler linkHandler;
 		private readonly XmlDocParser xmlDockParser;
+		private readonly Decompiler decompiler;
 		private readonly ModelItemsCallback itemsCallback;
 
+	
 
 		public TypeParser(
 			LinkHandler linkHandler, 
-			XmlDocParser xmlDockParser, 
+			XmlDocParser xmlDockParser,
+			Decompiler decompiler,
 			ModelItemsCallback itemsCallback)
 		{
 			this.linkHandler = linkHandler;
 			this.xmlDockParser = xmlDockParser;
+			this.decompiler = decompiler;
 			this.itemsCallback = itemsCallback;
 		}
 
@@ -58,21 +64,15 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
 				string parent = isPrivate ? $"{NodeName.From(name).ParentName.FullName}.$private" : null;
 				string description = xmlDockParser.GetDescription(name);
-
-				if (type.Name == "NamespaceDoc")
+				
+				if (IsNameSpaceDocType(type, description, parent))
 				{
-					if (!string.IsNullOrEmpty(description))
-					{
-						name = Name.GetTypeNamespaceFullName(type);
-						typeNode = new ModelNode(name, parent, NodeType.NameSpace, description);
-						itemsCallback(typeNode);
-					}
-
+					// Type was a namespace doc type, extract it and move to next type
 					yield break;
 				}
 
-
-				typeNode = new ModelNode(name, parent, NodeType.Type, description);
+				Lazy<string> codeText = decompiler.LazyDecompile(type);
+				typeNode = new ModelNode(name, parent, NodeType.Type, description, codeText);
 				itemsCallback(typeNode);
 			}
 
@@ -87,6 +87,26 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 					yield return types;
 				}
 			}
+		}
+
+
+
+
+		private bool IsNameSpaceDocType(TypeDefinition type, string description, string parent)
+		{
+			if (type.Name.IsSameIgnoreCase("NamespaceDoc"))
+			{
+				if (!string.IsNullOrEmpty(description))
+				{
+					string name = Name.GetTypeNamespaceFullName(type);
+					ModelNode node = new ModelNode(name, parent, NodeType.NameSpace, description, null);
+					itemsCallback(node);
+				}
+
+				return true;
+			}
+
+			return false;
 		}
 
 

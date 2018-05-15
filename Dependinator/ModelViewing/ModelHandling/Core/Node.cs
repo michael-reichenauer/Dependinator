@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Dependinator.Common;
 using Dependinator.Utils;
@@ -25,7 +26,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		public NodeName Name { get; }
 		public NodeType NodeType { get; set; }
 		public string Description { get; set; }
-		
+		public Lazy<string> CodeText { get; set; }
+
 		public Node Root { get; private set; }
 		public Node Parent { get; private set; }
 		public IReadOnlyList<Node> Children => children;

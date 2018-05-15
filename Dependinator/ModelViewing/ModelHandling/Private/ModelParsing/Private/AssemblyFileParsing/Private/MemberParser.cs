@@ -13,6 +13,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 	{
 		private readonly LinkHandler linkHandler;
 		private readonly XmlDocParser xmlDocParser;
+		private readonly Decompiler decompiler;
 		private readonly ModelItemsCallback itemsCallback;
 		private readonly MethodParser methodParser;
 		private readonly Dictionary<string, ModelNode> sentNodes = new Dictionary<string, ModelNode>();
@@ -21,10 +22,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		public MemberParser(
 			LinkHandler linkHandler, 
 			XmlDocParser xmlDocParser,
+			Decompiler decompiler,
 			ModelItemsCallback itemsCallback)
 		{
 			this.linkHandler = linkHandler;
 			this.xmlDocParser = xmlDocParser;
+			this.decompiler = decompiler;
 			this.itemsCallback = itemsCallback;
 			methodParser = new MethodParser(linkHandler);
 		}
@@ -94,7 +97,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 				string description = xmlDocParser.GetDescription(memberName);
 
-				ModelNode memberNode = new ModelNode(memberName, parent, NodeType.Member, description);
+				Lazy<string> codeText = decompiler.LazyDecompile(memberInfo);
+
+				ModelNode memberNode = new ModelNode(memberName, parent, NodeType.Member, description, codeText);
 
 				if (!sentNodes.ContainsKey(memberNode.Name))
 				{
