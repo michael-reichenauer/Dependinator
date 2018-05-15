@@ -18,49 +18,29 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 			Log.Debug($"Parse {filePath} ...");
 			Timing t = Timing.Start();
 
-			IReadOnlyList<AssemblyParser> assemblyParsers = GetAssemblyParsers(
-				filePath, modelItemsCallback);
+			var workItemParser = GetWorkParser(filePath, modelItemsCallback);
 
-			ParallelOptions option = GetParallelOptions();
-			await Task.Run(() =>
-			{
-				Parallel.ForEach(assemblyParsers, option, parser => parser.ParseModule());
-				Parallel.ForEach(assemblyParsers, option, parser => parser.ParseModuleReferences());
-				Parallel.ForEach(assemblyParsers, option, parser => parser.ParseTypes());
-				Parallel.ForEach(assemblyParsers, option, parser => parser.ParseTypeMembers());
-			});
+			await workItemParser.ParseAsync();
 
-			t.Log($"Analyzed {filePath}");
+			t.Log($"Parsed {filePath}");
 		}
 
 
-
-		private static ParallelOptions GetParallelOptions()
-		{
-			int maxParallel = Math.Max(Environment.ProcessorCount - 1, 1); // Leave room for UI thread
-
-			// maxParallel = 1;
-			var option = new ParallelOptions { MaxDegreeOfParallelism = maxParallel };
-			Log.Debug($"Parallelism: {maxParallel}");
-			return option;
-		}
-
-
-		public IReadOnlyList<AssemblyParser> GetAssemblyParsers(
+		private static WorkParser GetWorkParser(
 			string filePath, ModelItemsCallback modelItemsCallback)
 		{
-			if (IsSolutionFile(filePath))
-			{
-				return GetSolutionFileAnalyzers(filePath, modelItemsCallback);
-			}
-			else
-			{
-				return GetAssemblyFileAnalyzers(filePath, modelItemsCallback);
-			}
+			IReadOnlyList<AssemblyParser> assemblyParsers = IsSolutionFile(filePath)
+				? GetSolutionAssemblyParsers(filePath, modelItemsCallback)
+				: GetAssemblyParser(filePath, modelItemsCallback);
+
+			string name = GetName(filePath);
+			WorkParser workParser = new WorkParser(name, filePath, assemblyParsers);
+
+			return workParser;
 		}
 
 
-		private static IReadOnlyList<AssemblyParser> GetSolutionFileAnalyzers(
+		private static IReadOnlyList<AssemblyParser> GetSolutionAssemblyParsers(
 			string filePath, ModelItemsCallback itemsCallback)
 		{
 			Solution solution = new Solution(filePath);
@@ -70,10 +50,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 			List<AssemblyParser> assemblyParsers = new List<AssemblyParser>();
 
 			string solutionName = GetName(solution.SolutionFilePath);
-
-			//string description = solution.SolutionFilePath;
-			//ModelNode node = new ModelNode($"${solutionName}", null, NodeType.NameSpace, description);
-			//itemsCallback(node);
 
 			foreach (Project project in projects)
 			{
@@ -95,7 +71,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 		}
 
 
-		private static IReadOnlyList<AssemblyParser> GetAssemblyFileAnalyzers(
+		private static IReadOnlyList<AssemblyParser> GetAssemblyParser(
 			string filePath, ModelItemsCallback itemsCallback)
 		{
 			string rootGroup = GetName(filePath);
@@ -103,7 +79,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 		}
 
 
-	
+
 		private static IReadOnlyList<Project> GetSolutionProjects(Solution solution) => 
 			solution.Projects.Where(project => !IsTestProject(solution, project)).ToList();
 
@@ -141,15 +117,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 		}
 
 
-		private static string GetName(string filePath)
-		{
-			return Path.GetFileName(filePath).Replace(".", "*");
-		}
-		
+		private static string GetName(string filePath) => Path.GetFileName(filePath).Replace(".", "*");
 
-		private static bool IsSolutionFile(string filePath)
-		{
-			return Path.GetExtension(filePath).IsSameIgnoreCase(".sln");
-		}
+
+		private static bool IsSolutionFile(string filePath) => 
+			Path.GetExtension(filePath).IsSameIgnoreCase(".sln");
+
 	}
 }

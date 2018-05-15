@@ -7,7 +7,6 @@ namespace Dependinator.Common
 {
 	internal class NodeName : Equatable<NodeName>
 	{
-		// private static readonly Dictionary<string, NodeName> Names = new Dictionary<string, NodeName>();
 		public static NodeName Root = From("");
 
 		private readonly Lazy<NodeName> parentName;
@@ -41,19 +40,6 @@ namespace Dependinator.Common
 		public static NodeName From(string fullName)
 		{
 			return new NodeName(fullName);
-
-			//if (!Names.TryGetValue(fullName, out NodeName name))
-			//{
-			//	name = new NodeName(fullName);
-			//	Names[fullName] = name;
-			//}
-
-			//if (name.FullName != fullName)
-			//{
-			//	Log.Warn($"'{name.FullName}' != '{fullName}");
-			//}
-
-			//return name;
 		}
 
 

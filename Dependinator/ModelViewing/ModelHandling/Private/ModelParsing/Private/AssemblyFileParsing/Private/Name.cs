@@ -40,7 +40,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 		public static string GetModuleName(string name)
 		{
-			return $"?{name.Replace(".", "*")}";
+			return $"{name.Replace(".", "*")}";
 		}
 
 
@@ -151,18 +151,15 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 		private static string GetParameterTypeName(ParameterDefinition p)
 		{
-			string fullName = GetTypeFullName(p.ParameterType);
+			string typeName = GetTypeFullName(p.ParameterType);
 
-			if (fullName.StartsWith("?"))
+			int index = typeName.IndexOf('.');
+			if (index > -1)
 			{
-				int index = fullName.IndexOf('.');
-				if (index > -1)
-				{
-					fullName = fullName.Substring(index + 1);
-				}
+				typeName = typeName.Substring(index + 1);
 			}
 
-			return fullName;
+			return typeName;
 		}
 
 

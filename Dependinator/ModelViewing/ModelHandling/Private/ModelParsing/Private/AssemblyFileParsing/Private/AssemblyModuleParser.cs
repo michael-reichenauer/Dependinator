@@ -8,14 +8,14 @@ using Mono.Collections.Generic;
 
 namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.AssemblyFileParsing.Private
 {
-	internal class ModuleParser
+	internal class AssemblyModuleParser
 	{
 		private readonly string rootGroup;
 		private readonly LinkHandler linkHandler;
 		private readonly ModelItemsCallback itemsCallback;
 		private AssemblyDefinition assembly;
 
-		public ModuleParser(
+		public AssemblyModuleParser(
 			string rootGroup,
 			LinkHandler linkHandler,
 			ModelItemsCallback itemsCallback)
@@ -69,14 +69,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 			var references = assembly.MainModule.AssemblyReferences.
 				Where(reference => !IgnoredTypes.IsSystemIgnoredModuleName(reference.Name));
-
-			//if (references.Any())
-			//{
-			//	string description = "Referenced assemblies and NuGet packages.";
-			//	ModelNode node = new ModelNode("$References", null, NodeType.NameSpace, description);
-			//	itemsCallback(node);
-			//}
-
 
 			foreach (AssemblyNameReference reference in references)
 			{

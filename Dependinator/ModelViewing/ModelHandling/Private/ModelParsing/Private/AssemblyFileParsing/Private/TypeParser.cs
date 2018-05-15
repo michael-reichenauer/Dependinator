@@ -27,7 +27,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		}
 
 
-		public IEnumerable<TypeInfo> AddTypes(TypeDefinition type)
+		public IEnumerable<TypeInfo> AddType(TypeDefinition type)
 		{
 			bool isCompilerGenerated = Name.IsCompilerGenerated(type.Name);
 			bool isAsyncStateType = false;
@@ -38,14 +38,22 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				// Check if the type is a async state machine type
 				isAsyncStateType = type.Interfaces.Any(it => it.InterfaceType.Name == "IAsyncStateMachine");
 
+				// AsyncStateTypes are only partially included. The state types are not included as nodes,
+				// but are parsed to extract internal types and references. 
 				if (!isAsyncStateType)
 				{
-					// Some internal compiler generated type, which is ignored for now
+					// Some other internal compiler generated type, which is ignored for now
+					// Log.Warn($"Exclude compiler type {type.Name}");
 					yield break;
 				}
 			}
 			else
 			{
+				if (string.IsNullOrEmpty(type.Namespace))
+				{
+
+				}
+
 				string name = Name.GetTypeFullName(type);
 				bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
 				string parent = isPrivate ? $"{NodeName.From(name).ParentName.FullName}.$Private" : null;
@@ -73,7 +81,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			// Iterate all nested types as well
 			foreach (var nestedType in type.NestedTypes)
 			{
-				foreach (var types in AddTypes(nestedType))
+				// Adding a type could result in multiple types
+				foreach (var types in AddType(nestedType))
 				{
 					yield return types;
 				}
