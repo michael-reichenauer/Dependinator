@@ -72,6 +72,9 @@
     <Reference Include="Humanizer, Version=2.2.0.0, Culture=neutral, PublicKeyToken=979442b78dfc278e, processorArchitecture=MSIL">
       <HintPath>..\packages\Humanizer.Core.2.2.0\lib\netstandard1.0\Humanizer.dll</HintPath>
     </Reference>
+    <Reference Include="ICSharpCode.AvalonEdit, Version=5.0.3.0, Culture=neutral, PublicKeyToken=9cc39be672370310, processorArchitecture=MSIL">
+      <HintPath>..\packages\AvalonEdit.5.0.4\lib\Net40\ICSharpCode.AvalonEdit.dll</HintPath>
+    </Reference>
     <Reference Include="ICSharpCode.Decompiler, Version=3.1.0.3652, Culture=neutral, PublicKeyToken=d4bfe873e7598c49, processorArchitecture=MSIL">
       <HintPath>..\packages\ICSharpCode.Decompiler.3.1.0.3652\lib\net46\ICSharpCode.Decompiler.dll</HintPath>
     </Reference>
@@ -671,7 +674,9 @@
       <Generator>Embedded Resource</Generator>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <EmbeddedResource Include="Dependencies\ICSharpCode.AvalonEdit.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>mkdir "$(ProjectDir)\Dependencies" 2&gt; NUL
@@ -717,6 +722,10 @@ popd
 
 pushd "$(SolutionDir)packages\System.Collections.Immutable.*\lib\portable-net45+win8+wp8+wpa81"
 copy /Y /B System.Collections.Immutable.dll "$(ProjectDir)\Dependencies\System.Collections.Immutable.dll" &gt;NUL
+popd
+
+pushd "$(SolutionDir)packages\AvalonEdit.*\lib\Net40"
+copy /Y /B ICSharpCode.AvalonEdit.dll "$(ProjectDir)\Dependencies\ICSharpCode.AvalonEdit.dll" &gt;NUL
 popd
 
 copy /Y /B "$(SolutionDir)\Binaries\System.Windows.Interactivity.dll" "$(ProjectDir)\Dependencies\System.Windows.Interactivity.dll" &gt;NUL

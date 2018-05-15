@@ -17,7 +17,7 @@ namespace Dependinator.ModelViewing.DecompilationViewing
 
 		public CodeViewModel(Node node)
 		{
-			Title = $"{node.Name.DisplayName}";
+			Title = $"{node.Name.DisplayFullName}";
 		}
 
 
