@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
 
@@ -141,8 +142,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 		private static string GetParametersText(MethodReference methodInfo)
 		{
-			string parametersText = string.Join(",", methodInfo.Parameters
-				.Select(p => GetParameterTypeName(p)));
+			var parameterTypesTexts = methodInfo.Parameters.Select(GetParameterTypeName);
+			string parametersText = string.Join(",", parameterTypesTexts);
 			parametersText = parametersText.Replace(".", "#");
 
 			return parametersText;

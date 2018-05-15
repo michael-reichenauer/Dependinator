@@ -56,7 +56,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 				string name = Name.GetTypeFullName(type);
 				bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
-				string parent = isPrivate ? $"{NodeName.From(name).ParentName.FullName}.$Private" : null;
+				string parent = isPrivate ? $"{NodeName.From(name).ParentName.FullName}.$private" : null;
 				string description = xmlDockParser.GetDescription(name);
 
 				if (type.Name == "NamespaceDoc")

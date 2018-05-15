@@ -90,7 +90,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			{
 				string memberName = Name.GetMemberFullName(memberInfo);
 				string parent = isPrivate
-					? $"{NodeName.From(memberName).ParentName.FullName}.$Private" : null;
+					? $"{NodeName.From(memberName).ParentName.FullName}.$private" : null;
 
 				string description = xmlDocParser.GetDescription(memberName);
 
