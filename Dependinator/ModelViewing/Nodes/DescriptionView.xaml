@@ -8,7 +8,14 @@
 	d:DesignHeight="300" d:DesignWidth="300">
 
 	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<!-- Dialog contents -->
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
+
 		<TextBlock
+			Grid.Row="0"
 			Margin="10,25,10,10"
 			Text="{Binding Description}"
 			Foreground="{DynamicResource TextLowBrush}"
@@ -20,6 +27,19 @@
 			UseLayoutRounding="True"
 			FontFamily="Calibri"
 			TextOptions.TextFormattingMode="Ideal" />
+
+		<!--<Grid Grid.Row="1">
+			<Button
+
+				VerticalAlignment="Top"
+
+				Padding="3"
+				Content="&#xe236;"
+				FontSize="{Binding FontSize}"
+				Style="{DynamicResource IconButtonStyle}"
+				Command="{Binding ShowCodeCommand}"
+				ToolTip="Show decompiled code" />
+		</Grid>-->
 
 		<Grid.ToolTip>
 			<ToolTip
