@@ -1,11 +1,9 @@
-using System.Collections.ObjectModel;
 using System.Windows;
 using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.ModelViewing.ReferencesViewing;
 using Dependinator.Utils.UI.Mvvm;
 
 
-namespace Dependinator.ModelViewing.DecompilationViewing
+namespace Dependinator.ModelViewing.CodeViewing
 {
 	internal class CodeViewModel : ViewModel
 	{

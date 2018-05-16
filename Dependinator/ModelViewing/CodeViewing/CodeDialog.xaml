@@ -1,13 +1,13 @@
 ﻿<Window
-	x:Class="Dependinator.ModelViewing.DecompilationViewing.CodeDialog"
+	x:Class="Dependinator.ModelViewing.CodeViewing.CodeDialog"
 	Name="CodeDialogWindow"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:referencesViewing="clr-namespace:Dependinator.ModelViewing.ReferencesViewing"
-	xmlns:decompilationViewing="clr-namespace:Dependinator.ModelViewing.DecompilationViewing"
 	xmlns:avalonedit="http://icsharpcode.net/sharpdevelop/avalonedit"
+	xmlns:codeViewing="clr-namespace:Dependinator.ModelViewing.CodeViewing"
 	mc:Ignorable="d"
 	Title="{Binding Title}" Width="755" Height="610" ResizeMode="CanResize"
 	Background="{DynamicResource BackgroundBrush}"
@@ -18,7 +18,7 @@
 	<!-- Enable "normal" windows behavior with drag and resize,
 	this does require WindowChrome.IsHitTestVisibleInChrome="True" in controls below -->
 	<Window.Resources>
-		<Style TargetType="{x:Type decompilationViewing:CodeDialog}">
+		<Style TargetType="{x:Type codeViewing:CodeDialog}">
 			<Setter Property="WindowChrome.WindowChrome">
 				<Setter.Value>
 					<WindowChrome />

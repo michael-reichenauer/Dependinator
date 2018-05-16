@@ -157,10 +157,10 @@
     <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
     <Compile Include="MainWindowViews\NamespaceDoc.cs" />
-    <Compile Include="ModelViewing\DecompilationViewing\CodeDialog.xaml.cs">
+    <Compile Include="ModelViewing\CodeViewing\CodeDialog.xaml.cs">
       <DependentUpon>CodeDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\DecompilationViewing\CodeViewModel.cs" />
+    <Compile Include="ModelViewing\CodeViewing\CodeViewModel.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\Decompiler.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\WorkParser.cs" />
     <Compile Include="ModelViewing\ReferencesViewing\IReferenceItemService.cs" />
@@ -468,7 +468,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="ModelViewing\DecompilationViewing\CodeDialog.xaml">
+    <Page Include="ModelViewing\CodeViewing\CodeDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

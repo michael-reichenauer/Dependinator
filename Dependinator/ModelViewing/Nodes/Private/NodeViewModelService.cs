@@ -7,7 +7,7 @@ using System.Windows.Media;
 using Dependinator.Common;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ThemeHandling;
-using Dependinator.ModelViewing.DecompilationViewing;
+using Dependinator.ModelViewing.CodeViewing;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Lines.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
