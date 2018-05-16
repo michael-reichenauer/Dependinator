@@ -74,5 +74,8 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 			return Node.Name.DisplayFullNoParametersName;
 		}
+
+
+		public void ShowCode() => ItemService.ShowCode(Node);
 	}
 }

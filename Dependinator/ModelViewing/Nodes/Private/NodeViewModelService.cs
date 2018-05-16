@@ -128,28 +128,6 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		//public void ShowIncoming(NodeViewModel nodeViewModel)
-		//{
-		//	Node node = nodeViewModel.Node;
-		//	var referenceItems = referenceItemService.GetReferences(node, new ReferenceOptions(true));
-
-		//	ReferencesDialog referencesDialog = new ReferencesDialog(
-		//		owner, node, referenceItems, true);
-		//	referencesDialog.ShowDialog();
-		//}
-
-
-		//public void ShowOutgoing(NodeViewModel nodeViewModel)
-		//{
-		//	Node node = nodeViewModel.Node;
-		//	var referenceItems = referenceItemService.GetReferences(node, new ReferenceOptions(false));
-
-		//	ReferencesDialog referencesDialog = new ReferencesDialog(
-		//		owner, node, referenceItems, false);
-		//	referencesDialog.ShowDialog();
-		//}
-
-
 		public void ShowReferences(NodeViewModel nodeViewModel, bool isIncoming)
 		{
 			Node node = nodeViewModel.Node;
@@ -163,7 +141,6 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 		public void ShowDecompiled(NodeViewModel nodeViewModel)
 		{
-			
 			CodeDialog dialog = new CodeDialog(owner, nodeViewModel.Node);
 			dialog.ShowDialog();
 		}

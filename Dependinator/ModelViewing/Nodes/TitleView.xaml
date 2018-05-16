@@ -110,6 +110,7 @@
 
 				<MenuItem
 					Header="Show Decompiled Code ..."
+					Visibility="{Binding HasCode, Converter={StaticResource VC}}"
 					Command="{Binding ShowDecompiledCommand}">
 					<MenuItem.Icon>
 						<Border>

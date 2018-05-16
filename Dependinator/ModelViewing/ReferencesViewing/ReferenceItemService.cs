@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows.Media;
 using Dependinator.Common;
 using Dependinator.Common.ThemeHandling;
+using Dependinator.ModelViewing.CodeViewing;
 using Dependinator.ModelViewing.Lines.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
@@ -13,20 +14,31 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 	internal class ReferenceItemService : IReferenceItemService
 	{
 		private readonly IThemeService themeService;
+		private readonly WindowOwner owner;
 
 
-	
-
-		public Brush ItemTextBrush() => themeService.GetTextBrush();
-		public Brush ItemTextLowBrush() => themeService.GetTextLowBrush();
-
-		public Brush ItemTextHiddenBrush() => themeService.GetTextDimBrush();
-
-
-		public ReferenceItemService(IThemeService themeService)
+		public ReferenceItemService(
+			IThemeService themeService,
+			WindowOwner owner)
 		{
 			this.themeService = themeService;
+			this.owner = owner;
 		}
+
+
+		public Brush ItemTextBrush() => themeService.GetTextBrush();
+
+		public Brush ItemTextLowBrush() => themeService.GetTextLowBrush();
+
+
+		public void ShowCode(Node node)
+		{
+			CodeDialog codeDialog = new CodeDialog(owner, node);
+			codeDialog.ShowDialog();
+		}
+
+
+		public Brush ItemTextHiddenBrush() => themeService.GetTextDimBrush();
 
 
 		//public IEnumerable<ReferenceItem> GetSourceLinkItems(Line line, Node baseNode) =>

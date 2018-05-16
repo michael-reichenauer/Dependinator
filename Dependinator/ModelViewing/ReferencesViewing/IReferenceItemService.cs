@@ -15,5 +15,6 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		Brush ItemTextBrush();
 		Brush ItemTextHiddenBrush();
 		Brush ItemTextLowBrush();
+		void ShowCode(Node node);
 	}
 }

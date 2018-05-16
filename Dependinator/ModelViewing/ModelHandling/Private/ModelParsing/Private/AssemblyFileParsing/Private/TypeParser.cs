@@ -65,7 +65,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				string parent = isPrivate ? $"{NodeName.From(name).ParentName.FullName}.$private" : null;
 				string description = xmlDockParser.GetDescription(name);
 				
-				if (IsNameSpaceDocType(type, description, parent))
+				if (IsNameSpaceDocType(type, description))
 				{
 					// Type was a namespace doc type, extract it and move to next type
 					yield break;
@@ -91,15 +91,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 
 
-
-		private bool IsNameSpaceDocType(TypeDefinition type, string description, string parent)
+		private bool IsNameSpaceDocType(TypeDefinition type, string description)
 		{
 			if (type.Name.IsSameIgnoreCase("NamespaceDoc"))
 			{
 				if (!string.IsNullOrEmpty(description))
 				{
 					string name = Name.GetTypeNamespaceFullName(type);
-					ModelNode node = new ModelNode(name, parent, NodeType.NameSpace, description, null);
+					ModelNode node = new ModelNode(name, null, NodeType.NameSpace, description, null);
 					itemsCallback(node);
 				}
 

@@ -80,7 +80,7 @@ namespace Dependinator.Common
 			string fullNameWithType;
 
 			string fullName = string.Join(".", parts
-				.Where(part => !part.StartsWithTxt("$") && !part.StartsWithTxt("?")));
+				.Where(part =>  !part.StartsWithTxt("?")));
 			string fullNameNoParameters = fullName;
 
 			if (string.IsNullOrEmpty(fullName))

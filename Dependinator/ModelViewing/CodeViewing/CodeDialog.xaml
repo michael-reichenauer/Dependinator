@@ -62,20 +62,17 @@
 			BorderBrush="{DynamicResource BorderBrush}"
 			BorderThickness="2" Background="{DynamicResource TitlebarBackgroundBrush}">
 			<Grid>
-				<StackPanel
-					HorizontalAlignment="Left"
-					Orientation="Horizontal">
+				<StackPanel HorizontalAlignment="Left" Orientation="Horizontal">
 
+					<!-- icon -->
 					<TextBlock Text="&#xe236;" Style="{DynamicResource MenuIconStyle}" />
 
-					<TextBlock
-						Text="{Binding Title}"
-						Foreground="{DynamicResource TextBrush}"
-						Margin="5, 5" />
+					<!-- Title -->
+					<TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextBrush}" Margin="5, 5" />
 
 				</StackPanel>
 
-				<!-- Close Button -->
+				<!-- Close window Button -->
 				<Button
 					HorizontalAlignment="Right" WindowChrome.IsHitTestVisibleInChrome="True"
 					Style="{DynamicResource IconButtonStyle}"
@@ -88,62 +85,29 @@
 		</Border>
 
 
-		<!-- Dialog contents -->
-		<Grid Grid.Row="1">
-			<Grid.RowDefinitions>
-				<!-- Tree view -->
-				<RowDefinition Height="*" />
+		<!-- Code view -->
+		<Border
+			BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Grid.Row="1">
+			<Canvas x:Name="canvas">
+				<avalonedit:TextEditor
+					Grid.Row="0"
+					Name="CodeView"
+					FontFamily="Consolas"
+					FontSize="10pt"
+					SyntaxHighlighting="C#"
+					HorizontalAlignment="Center"
+					HorizontalScrollBarVisibility="Visible"
+					VerticalScrollBarVisibility="Visible"
+					IsReadOnly="True"
+					Padding="10"
+					Text=""
+					Height="{Binding ElementName=canvas, Path=ActualHeight}"
+					Width="{Binding ElementName=canvas, Path=ActualWidth}"
+					Background="Black"
+					Foreground="{DynamicResource TextBrush}" />
+			</Canvas>
+		</Border>
 
-				<!-- OK and Cancel buttons -->
-				<RowDefinition Height="Auto" />
-			</Grid.RowDefinitions>
-
-			<Border
-				BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Grid.Row="0">
-				<Canvas x:Name="canvas">
-					<avalonedit:TextEditor
-						Grid.Row="0"
-						Name="CodeView"
-						FontFamily="Consolas"
-						FontSize="10pt"
-						SyntaxHighlighting="C#"
-						HorizontalAlignment="Center"
-						HorizontalScrollBarVisibility="Visible"
-						VerticalScrollBarVisibility="Visible"
-						IsReadOnly="True"
-						Padding="10"
-						Text=""
-						Height="{Binding ElementName=canvas, Path=ActualHeight}"
-						Width="{Binding ElementName=canvas, Path=ActualWidth}"
-						Background="Black"
-						Foreground="{DynamicResource TextBrush}" />
-				</Canvas>
-			</Border>
-
-			<!-- OK and Cancel buttons --><!--
-			<StackPanel
-				Grid.Row="3" Orientation="Horizontal"
-				HorizontalAlignment="Center"
-				Margin="0,10">
-
-				<Border
-					BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-					Margin="5">
-					<Button
-						Content="Close"
-						Style="{DynamicResource BaseButtonStyle}"
-						KeyboardNavigation.TabIndex="2"
-						Width="60"
-						Margin="1"
-						Padding="3"
-						FontSize="12"
-						Foreground="{DynamicResource TextBrush}"
-						Command="{Binding CancelCommand}"
-						CommandParameter="{Binding ElementName=CodeDialogWindow}" />
-				</Border>
-
-			</StackPanel>-->
-		</Grid>
 
 	</Grid>
 
