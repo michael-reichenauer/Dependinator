@@ -7,8 +7,8 @@
 	xmlns:private="clr-namespace:Dependinator.ModelViewing.Lines.Private"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
-	
-	<Grid >
+
+	<Grid>
 		<!-- Title -->
 		<Border
 			Visibility="{Binding IsHorizontal, Converter={StaticResource VC}}"
@@ -16,20 +16,35 @@
 			BorderBrush="{Binding TitleBorderBrush}"
 			BorderThickness="0 0 0 0.4"
 			Height="20"
-			Background="Transparent" 
-			VerticalAlignment="Top">
+			Background="Transparent"
+			VerticalAlignment="Top"
+			MouseEnter="TitleBorderHorizontal_OnMouseEnter"
+			MouseLeave="TitleBorderHorizontal_OnMouseLeave">
 
-			<TextBlock
-				Height="20"
-				Margin="10,2"
-				Text="{Binding Name}"
-				Foreground="{DynamicResource TextBrush}"
-				FontSize="{Binding FontSize}"
-				HorizontalAlignment="Left"
-				VerticalAlignment="Top" 
-				UseLayoutRounding="True"
-				FontFamily="Calibri"
-				TextOptions.TextFormattingMode="Ideal"/>
+			<StackPanel Orientation="Horizontal">
+				<TextBlock
+					Height="20"
+					Margin="10,2"
+					Text="{Binding Name}"
+					Foreground="{DynamicResource TextBrush}"
+					FontSize="{Binding FontSize}"
+					HorizontalAlignment="Left"
+					VerticalAlignment="Top"
+					UseLayoutRounding="True"
+					FontFamily="Calibri"
+					TextOptions.TextFormattingMode="Ideal" />
+
+				<Button 
+					VerticalAlignment="Top"
+					Visibility="{Binding IsShowCodeButton, Converter={StaticResource VC}}"
+					Padding="3"
+					Content="&#xe236;"
+					FontSize="{Binding FontSize}"
+					Style="{DynamicResource IconButtonStyle}"
+					Command="{Binding ShowCodeCommand}"
+					ToolTip="Show decompiled code" />
+
+			</StackPanel>
 
 			<Border.ToolTip>
 				<ToolTip
@@ -82,7 +97,7 @@
 
 		<Grid.ContextMenu>
 			<ContextMenu>
-		
+
 				<MenuItem
 					Header="Outgoing References ..."
 					Command="{Binding ShowOutgoingCommand}">
@@ -122,13 +137,13 @@
 
 
 				<MenuItem
-						Header="Hide Node"
-						Command="{Binding HideNodeCommand}">
+					Header="Hide Node"
+					Command="{Binding HideNodeCommand}">
 					<MenuItem.Icon>
 						<Border>
 							<TextBlock
-									Style="{DynamicResource MenuIconStyle}" Text="&#xE882;"
-									Foreground="Gray" />
+								Style="{DynamicResource MenuIconStyle}" Text="&#xE882;"
+								Foreground="Gray" />
 						</Border>
 					</MenuItem.Icon>
 				</MenuItem>
@@ -136,5 +151,5 @@
 
 			</ContextMenu>
 		</Grid.ContextMenu>
-		</Grid>
+	</Grid>
 </UserControl>

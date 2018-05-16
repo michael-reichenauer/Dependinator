@@ -74,6 +74,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			string summary)
 		{
 			// Trim type marker "M:" and "T:" in member name.
+			bool isMethod = memberName?.StartsWith("M:") ?? false;
 			memberName = memberName.Substring(2)
 				.Replace("``", "`");
 
@@ -88,12 +89,16 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 				memberName = $"{memberName.Substring(0, index1)}({parameters})";
 			}
+			else if (isMethod)
+			{
+				memberName = memberName + "()";
+			}
 
 			string fullName = memberName;
 
 			if (!string.IsNullOrEmpty(assemblyName))
 			{
-				fullName = $"?{assemblyName}.{memberName}";
+				fullName = $"{assemblyName}.{memberName}";
 			}
 
 			items.Add(fullName, summary);
@@ -103,7 +108,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		private static string GetSummary(XElement member)
 		{
 			XElement node = member.Descendants("summary").FirstOrDefault();
-			
+
 			string summary = node?.ToString();
 
 			if (!string.IsNullOrEmpty(summary))

@@ -13,6 +13,7 @@ using Dependinator.ModelViewing.Lines.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.Nodes.Private;
 using Dependinator.Utils;
+using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
 
 
@@ -24,6 +25,8 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> incomingLinks;
 		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> outgoingLinks;
+		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(300);
+		private readonly DelayDispatcher delayDispatcher = new DelayDispatcher();
 
 		private bool isFirstShow = true;
 		private readonly Brush backgroundBrush;
@@ -61,7 +64,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public Brush RectangleBrush { get; }
 		public Brush TitleBorderBrush => Node.NodeType == NodeType.Type ? RectangleBrush : null;
 		public Brush BackgroundBrush => IsSelected ? selectedBrush : backgroundBrush;
-
+		public bool IsShowCodeButton { get => Get(); set => Set(value); }
 		public bool IsShowNode => ItemScale < 100;
 
 		public bool IsShowItems => CanShowChildren;
@@ -69,7 +72,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public bool IsShowDescription => !string.IsNullOrEmpty(Description) && !CanShowChildren;
 		public bool IsShowToolTip => true;
 		public bool HasCode => Node.CodeText != null;
-
+		public Command ShowCodeCommand => Command(() => nodeViewModelService.ShowCode(Node));
 
 		public string Name => Node.Name.DisplayName;
 
@@ -212,6 +215,18 @@ namespace Dependinator.ModelViewing.Nodes
 		public string Color => RectangleBrush.AsString();
 
 
+		public void MouseEnterTitle()
+		{
+			delayDispatcher.Delay(MouseEnterDelay, _ => { IsShowCodeButton = Node.CodeText != null; });
+		}
+
+
+		public void MouseExitTitle()
+		{
+			delayDispatcher.Cancel();
+			IsShowCodeButton = false;
+		}
+
 
 		public override string ToString() => Node.Name.ToString();
 
@@ -261,5 +276,8 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) =>
 			nodeViewModelService.OnMouseWheel(this, uiElement, e);
+
+
+	
 	}
 }

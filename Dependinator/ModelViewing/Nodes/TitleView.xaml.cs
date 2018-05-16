@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 
 
 namespace Dependinator.ModelViewing.Nodes
@@ -20,5 +21,17 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private void ToolTip_OnOpened(object sender, RoutedEventArgs e) =>
 			ViewModel?.UpdateToolTip();
+
+
+		private void TitleBorderHorizontal_OnMouseEnter(object sender, MouseEventArgs e)
+		{
+			ViewModel?.MouseEnterTitle();
+		}
+
+
+		private void TitleBorderHorizontal_OnMouseLeave(object sender, MouseEventArgs e)
+		{
+			ViewModel?.MouseExitTitle();
+		}
 	}
 }

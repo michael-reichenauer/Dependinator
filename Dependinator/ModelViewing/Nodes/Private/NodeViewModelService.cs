@@ -146,6 +146,13 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
+		public void ShowCode(Node node)
+		{
+			CodeDialog codeDialog = new CodeDialog(owner, node);
+			codeDialog.ShowDialog();
+		}
+
+
 		public Brush GetRectangleHighlightBrush(Brush brush)
 		{
 			return themeService.GetRectangleHighlighterBrush(brush);

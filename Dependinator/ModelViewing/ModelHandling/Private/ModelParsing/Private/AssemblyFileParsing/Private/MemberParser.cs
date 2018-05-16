@@ -95,7 +95,15 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				string parent = isPrivate
 					? $"{NodeName.From(memberName).ParentName.FullName}.$private" : null;
 
+				if (memberName.EndsWith("Run()"))
+				{
+
+				}
 				string description = xmlDocParser.GetDescription(memberName);
+				if (!string.IsNullOrEmpty(description))
+				{
+
+				}
 
 				Lazy<string> codeText = decompiler.LazyDecompile(memberInfo);
 

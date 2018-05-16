@@ -37,6 +37,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		public string Text => item.Text;
 		public Brush TextBrush { get => Get<Brush>(); set => Set(value); }
+		
 		public FontStyle TextStyle { get => Get<FontStyle>(); set => Set(value); }
 		public ObservableCollection<ReferenceItemViewModel> SubItems { get; }
 		public bool IsShowIncomingButton => IsShowButtons && !item.IsIncoming && !item.IsSubReference;
@@ -140,7 +141,5 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 			delayDispatcher.Cancel();
 			IsShowButtons = false;
 		}
-
-
 	}
 }
