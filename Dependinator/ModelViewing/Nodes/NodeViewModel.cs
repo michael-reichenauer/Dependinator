@@ -69,7 +69,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public bool IsShowItems => CanShowChildren;
 
-		public bool IsShowDescription => !string.IsNullOrEmpty(Description) && !CanShowChildren;
+		public bool IsShowDescription => (!CanShowChildren || !Node.Children.Any());
 		public bool IsShowToolTip => true;
 		public bool HasCode => Node.CodeText != null;
 		public Command ShowCodeCommand => Command(() => nodeViewModelService.ShowCode(Node));
@@ -77,6 +77,28 @@ namespace Dependinator.ModelViewing.Nodes
 		public string Name => Node.Name.DisplayName;
 
 		private NodeControlViewModel view2Model;
+
+
+		public bool IsInnerSelected { get => Get(); set => Set(value); }
+
+
+		public double RectangleLineWidth => 1;
+
+		public string ToolTip { get => Get(); set => Set(value); }
+		public int IncomingLinesCount => Node.TargetLines.Count(line => line.Owner != Node);
+
+		public Command HideNodeCommand => Command(HideNode);
+		public Command ShowIncomingCommand => Command(() => nodeViewModelService.ShowReferences(this, true));
+		public Command ShowOutgoingCommand => Command(() => nodeViewModelService.ShowReferences(this, false));
+
+		public int FontSize => ((int)(10 * ItemScale)).MM(9, 13);
+
+		public int CodeButtonSize => ((int)(15 * ItemScale)).MM(20, 60);
+
+		public int DescriptionFontSize => ((int)(10 * ItemScale)).MM(9, 11);
+		public string Description => Node.Description;
+		public bool IsShowCode => Node.CodeText != null && ItemScale > 1.3;
+
 
 		public bool IsSelected
 		{
@@ -106,12 +128,6 @@ namespace Dependinator.ModelViewing.Nodes
 			}
 		}
 
-		public bool IsInnerSelected { get => Get(); set => Set(value); }
-
-
-		public double RectangleLineWidth => 1;
-
-		public string ToolTip { get => Get(); set => Set(value); }
 
 		public void UpdateToolTip() => ToolTip =
 			$"{Node.Name.DisplayFullNameWithType}" +
@@ -119,13 +135,6 @@ namespace Dependinator.ModelViewing.Nodes
 			$"\nLines; In: {IncomingLinesCount}, Out: {OutgoingLinesCount}" +
 			$"\nLinks; In: {IncomingLinksCount}, Out: {OutgoingLinksCount}" +
 			$"{DebugToolTip}";
-
-		public int IncomingLinesCount => Node.TargetLines.Count(line => line.Owner != Node);
-
-		public Command HideNodeCommand => Command(HideNode);
-		public Command ShowIncomingCommand => Command(() => nodeViewModelService.ShowReferences(this, true));
-		public Command ShowOutgoingCommand => Command(() => nodeViewModelService.ShowReferences(this, false));
-		public Command ShowDecompiledCommand => Command(() => nodeViewModelService.ShowCode(Node));
 
 
 		public int IncomingLinksCount => Node.TargetLines
@@ -153,24 +162,6 @@ namespace Dependinator.ModelViewing.Nodes
 			.Where(line => line.Owner != Node)
 			.SelectMany(line => line.Links)
 			.Count();
-
-		public int FontSize
-		{
-			get
-			{
-				int f = ((int)(10 * ItemScale)).MM(9, 13);
-				//if (f == 10)
-				//{
-				//	// Some recomend skipping fontsize 10
-				//	f = 9;
-				//}
-
-				return f;
-			}
-		}
-
-		public int DescriptionFontSize => ((int)(10 * ItemScale)).MM(9, 11);
-		public string Description => Node.Description;
 
 
 		public ItemsViewModel ItemsViewModel { get; set; }
@@ -247,7 +238,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 
-		private string DebugToolTip => ""; //ItemsToolTip;
+		private string DebugToolTip => "" + ItemsToolTip;
 
 		private string ItemsToolTip => !Config.IsDebug ? "" :
 			"\n" +
