@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
 using Dependinator.ModelViewing.ModelHandling.Core;
@@ -23,7 +24,14 @@ namespace Dependinator.ModelViewing.CodeViewing
 
 			SetSyntaxHighlighting();
 
-			CodeView.Text = node.CodeText?.Value;
+			SetCodeText(node);
+		}
+
+
+		private async void SetCodeText(Node node)
+		{
+			CodeView.Text = "Getting code ...";
+			CodeView.Text = await Task.Run(() => node.CodeText?.Value);
 		}
 
 

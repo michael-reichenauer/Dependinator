@@ -12,11 +12,11 @@
 		<StackPanel Orientation="Horizontal"  HorizontalAlignment="Center" VerticalAlignment="Center">
 			
 			<Button
-				Visibility="{Binding IsShowCode, Converter={StaticResource VC}}"
+				Visibility="{Binding IsShowCodeIcon, Converter={StaticResource VC}}"
 				Padding="3"
 				Content="&#xe236;"
 				Foreground="{DynamicResource TextLowBrush}"
-				FontSize="{Binding CodeButtonSize}"
+				FontSize="{Binding CodeIconSize}"
 				Style="{DynamicResource IconButtonStyle}"
 				Command="{Binding ShowCodeCommand}"
 				ToolTip="Show decompiled code" />

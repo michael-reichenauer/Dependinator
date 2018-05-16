@@ -93,11 +93,11 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public int FontSize => ((int)(10 * ItemScale)).MM(9, 13);
 
-		public int CodeButtonSize => ((int)(15 * ItemScale)).MM(20, 60);
+		public int CodeIconSize => ((int)(15 * ItemScale)).MM(15, 60);
 
 		public int DescriptionFontSize => ((int)(10 * ItemScale)).MM(9, 11);
 		public string Description => Node.Description;
-		public bool IsShowCode => Node.CodeText != null && ItemScale > 1.3;
+		public bool IsShowCodeIcon => Node.CodeText != null && ItemScale > 1.3;
 
 
 		public bool IsSelected
