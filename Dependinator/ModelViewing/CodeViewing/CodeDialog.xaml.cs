@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Reflection;
 using System.Windows;
 using System.Xml;
 using Dependinator.ModelViewing.ModelHandling.Core;
@@ -20,15 +21,22 @@ namespace Dependinator.ModelViewing.CodeViewing
 
 			DataContext = new CodeViewModel(node);
 
-			string path = @"C:\Work Files\CodeViewer\CodeViewer\Custom-CSharp-Mode.xshd";
+			SetSyntaxHighlighting();
 
-			using (Stream stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read))
+			CodeView.Text = node.CodeText?.Value;
+		}
+
+
+		private void SetSyntaxHighlighting()
+		{
+			Assembly executingAssembly = Assembly.GetExecutingAssembly();
+			string resourceName = $"{Product.Name}.Common.Resources.CSharp-Mode.xshd";
+
+			using (Stream stream = executingAssembly.GetManifestResourceStream(resourceName))
 			using (XmlTextReader reader = new XmlTextReader(stream))
 			{
 				CodeView.SyntaxHighlighting = HighlightingLoader.Load(reader, HighlightingManager.Instance);
 			}
-
-			CodeView.Text = node.CodeText?.Value;
 		}
 	}
 }

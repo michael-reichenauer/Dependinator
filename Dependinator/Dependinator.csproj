@@ -609,6 +609,7 @@
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <Resource Include="Common\Resources\MaterialIcons-Regular.ttf" />
+    <EmbeddedResource Include="Common\Resources\CSharp-Mode.xshd" />
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
