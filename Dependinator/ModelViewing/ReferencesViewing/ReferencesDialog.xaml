@@ -66,22 +66,6 @@
 						Visibility="{Binding IsIncoming, Converter={StaticResource VC}}"
 						Text="&#xe258;" Style="{DynamicResource MenuIconStyle}" />
 
-					<!--<Grid Visibility="{Binding IsIncoming, Converter={StaticResource NVC}}">
-						<TextBlock 
-							Text="&#xe15b;" Style="{DynamicResource MenuIconStyle}" Background="Transparent">
-							<TextBlock.RenderTransform>
-								<TranslateTransform  X="-2" Y="-6" />
-							</TextBlock.RenderTransform>
-						</TextBlock>
-						<TextBlock 
-							Text="&#xe8e4;" Style="{DynamicResource MenuIconStyle}"
-							Margin="4,0" Background="Transparent">
-							<TextBlock.RenderTransform>
-								<RotateTransform Angle="90" CenterX="9" CenterY="9"/>
-							</TextBlock.RenderTransform>
-						</TextBlock>
-					</Grid>-->
-
 					<TextBlock 
 						Visibility="{Binding IsOutgoing, Converter={StaticResource VC}}"
 						Text="&#xE0B5;" Style="{DynamicResource MenuIconStyle}" />
@@ -142,31 +126,6 @@
 				</TreeView.ItemTemplate>
 
 			</TreeView>
-
-
-			<!-- OK and Cancel buttons -->
-			<StackPanel
-				Grid.Row="3" Orientation="Horizontal"
-				HorizontalAlignment="Center"
-				Margin="0,10">
-
-				<Border
-					BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-					Margin="5">
-					<Button
-						Content="Close"
-						Style="{DynamicResource BaseButtonStyle}"
-						KeyboardNavigation.TabIndex="2"
-						Width="60"
-						Margin="1"
-						Padding="3"
-						FontSize="12"
-						Foreground="{DynamicResource TextBrush}"
-						Command="{Binding CancelCommand}"
-						CommandParameter="{Binding ElementName=ReferencesDialogWindow}" />
-				</Border>
-
-			</StackPanel>
 		</Grid>
 
 	</Grid>

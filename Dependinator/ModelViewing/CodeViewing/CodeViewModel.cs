@@ -7,10 +7,7 @@ namespace Dependinator.ModelViewing.CodeViewing
 {
 	internal class CodeViewModel : ViewModel
 	{
-
-		public Command<Window> OkCommand => Command<Window>(SetOK);
-
-		public Command<Window> CancelCommand => Command<Window>(w => w.DialogResult = false);
+		public Command<Window> CancelCommand => Command<Window>(w => w.Close());
 
 
 		public CodeViewModel(Node node)
@@ -19,11 +16,6 @@ namespace Dependinator.ModelViewing.CodeViewing
 		}
 
 
-
 		public string Title { get => Get(); set => Set(value); }
-
-		
-		private void SetOK(Window window) => window.DialogResult = true;
-
 	}
 }

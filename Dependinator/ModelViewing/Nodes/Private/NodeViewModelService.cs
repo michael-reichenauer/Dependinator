@@ -135,21 +135,14 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 			ReferencesDialog referencesDialog = new ReferencesDialog(
 				owner, node, referenceItems, isIncoming);
-			referencesDialog.ShowDialog();
-		}
-
-
-		public void ShowDecompiled(NodeViewModel nodeViewModel)
-		{
-			CodeDialog dialog = new CodeDialog(owner, nodeViewModel.Node);
-			dialog.ShowDialog();
+			referencesDialog.Show();
 		}
 
 
 		public void ShowCode(Node node)
 		{
 			CodeDialog codeDialog = new CodeDialog(owner, node);
-			codeDialog.ShowDialog();
+			codeDialog.Show();
 		}
 
 

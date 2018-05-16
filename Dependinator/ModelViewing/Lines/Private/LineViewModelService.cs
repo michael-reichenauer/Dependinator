@@ -103,7 +103,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 			Node node = isIncoming ? line.Target : line.Source;
 			ReferencesDialog referencesDialog = new ReferencesDialog(
 				owner, node, referenceItems, isIncoming);
-			referencesDialog.ShowDialog();
+			referencesDialog.Show();
 
 		}
 

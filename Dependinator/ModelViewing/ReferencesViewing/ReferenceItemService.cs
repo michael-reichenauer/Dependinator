@@ -34,7 +34,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		public void ShowCode(Node node)
 		{
 			CodeDialog codeDialog = new CodeDialog(owner, node);
-			codeDialog.ShowDialog();
+			codeDialog.Show();
 		}
 
 
