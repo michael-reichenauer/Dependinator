@@ -66,9 +66,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 					return;
 				}
 
-				if (memberNode.Name.Contains("MainAsync"))
-				{ }
-
 				MethodBody body = method.Body;
 
 				body.Variables.ForEach(variable => AddLinkToMethodVariable(memberNode, variable, methodBodyNode.IsMoveNext));
