@@ -384,7 +384,7 @@
 
 					<ControlTemplate.Triggers>
 						<Trigger Property="UIElement.IsEnabled">
-							<Setter Property="Panel.Background" TargetName="Bg" Value="Red" />
+							<Setter Property="Panel.Background" TargetName="Bg" Value="Transparent" />
 							<Trigger.Value>
 								<s:Boolean>False</s:Boolean>
 							</Trigger.Value>

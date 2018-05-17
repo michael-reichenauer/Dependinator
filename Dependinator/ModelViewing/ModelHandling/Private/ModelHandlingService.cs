@@ -71,9 +71,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		public void SetRootCanvas(ItemsCanvas rootCanvas) => Root.View.ItemsCanvas = rootCanvas;
 
 
-		public void AddLineViewModel(Line line) => modelLineService.AddLineViewModel(line);
-
-
 		public async Task LoadAsync()
 		{
 			isWorking = true;
@@ -289,19 +286,19 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private void UpdateItem(IModelItem item, int stamp)
 		{
-			if (item is ModelNode modelNode)
+			switch (item)
 			{
-				modelNodeService.UpdateNode(modelNode, stamp);
-			}
-
-			if (item is ModelLine modelLine)
-			{
-				modelLineService.UpdateLine(modelLine, stamp);
-			}
-
-			if (item is ModelLink modelLink)
-			{
-				modelLinkService.UpdateLink(modelLink, stamp);
+				case ModelLine line:
+					modelLineService.UpdateLine(line, stamp);
+					break;
+				case ModelLink link:
+					modelLinkService.UpdateLink(link, stamp);
+					break;
+				case ModelNode node:
+					modelNodeService.UpdateNode(node, stamp);
+					break;
+				default:
+					throw Asserter.FailFast($"Unknown item type {item}");
 			}
 		}
 

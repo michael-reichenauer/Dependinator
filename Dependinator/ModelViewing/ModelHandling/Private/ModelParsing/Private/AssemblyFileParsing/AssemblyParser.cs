@@ -14,11 +14,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 	{
 		private readonly string assemblyPath;
 		private List<TypeInfo> typeInfos = new List<TypeInfo>();
+		private readonly Decompiler decompiler = new Decompiler();
 
-		private readonly ModuleParser moduleParser;
+		private readonly AssemblyModuleParser assemblyModuleParser;
 		private readonly TypeParser typeParser;
 		private readonly MemberParser memberParser;
 		private AssemblyDefinition assembly;
+
 
 		public AssemblyParser(
 			string assemblyPath,
@@ -30,9 +32,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			XmlDocParser xmlDockParser = new XmlDocParser(assemblyPath);
 			LinkHandler linkHandler = new LinkHandler(itemsCallback);
 
-			moduleParser = new ModuleParser(assemblyRootGroup, linkHandler, itemsCallback);
-			typeParser = new TypeParser(linkHandler, xmlDockParser, itemsCallback);
-			memberParser = new MemberParser(linkHandler, xmlDockParser, itemsCallback);
+			assemblyModuleParser = new AssemblyModuleParser(assemblyRootGroup, linkHandler, itemsCallback);
+			typeParser = new TypeParser(linkHandler, xmlDockParser, decompiler, itemsCallback);
+			memberParser = new MemberParser(linkHandler, xmlDockParser, decompiler, itemsCallback);
 		}
 
 
@@ -46,25 +48,20 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 					return;
 				}
 
-				assembly = AssemblyDefinition.ReadAssembly(assemblyPath);
+				var resolver = new MyDefaultAssemblyResolver();
+				ReaderParameters parameters = new ReaderParameters
+				{
+					AssemblyResolver = resolver,
+				};
 
-				moduleParser.AddModule(assembly);
+				assembly = AssemblyDefinition.ReadAssembly(assemblyPath, parameters);
+
+				assemblyModuleParser.AddModule(assembly);
 			}
 			catch (Exception e)
 			{
 				Log.Exception(e, $"Failed to load '{assemblyPath}'");
 			}
-		}
-
-
-		public void ParseTypes()
-		{
-			if (assembly == null)
-			{
-				return;
-			}
-
-			ParseTypes(assembly);
 		}
 
 
@@ -75,7 +72,21 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				return;
 			}
 
-			moduleParser.AddModuleReferences();
+			assemblyModuleParser.AddModuleReferences();
+		}
+
+
+		public void ParseTypes()
+		{
+			if (assembly == null)
+			{
+				return;
+			}
+
+			IEnumerable<TypeDefinition> assemblyTypes = GetAssemblyTypes();
+
+			// Add assembly type nodes (including inner type types)
+			typeInfos = assemblyTypes.SelectMany(typeParser.AddType).ToList();
 		}
 
 
@@ -86,16 +97,33 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		}
 
 
+		private IEnumerable<TypeDefinition> GetAssemblyTypes() => 
+			assembly.MainModule.Types
+			.Where(type =>
+				!Name.IsCompilerGenerated(type.Name) &&
+				!Name.IsCompilerGenerated(type.DeclaringType?.Name));
+	}
+}
 
-		private void ParseTypes(AssemblyDefinition assembly)
+public class MyDefaultAssemblyResolver : DefaultAssemblyResolver
+{
+	public override AssemblyDefinition Resolve(AssemblyNameReference name)
+	{
+		try
 		{
-			IEnumerable<TypeDefinition> assemblyTypes = assembly.MainModule.Types
-				.Where(type =>
-					!Name.IsCompilerGenerated(type.Name) &&
-					!Name.IsCompilerGenerated(type.DeclaringType?.Name));
-
-			// Add assembly type nodes (including inner type types)
-			typeInfos = assemblyTypes.SelectMany(typeParser.AddTypes).ToList();
+			return base.Resolve(name);
 		}
+		catch { }
+		return null;
+	}
+
+	public override AssemblyDefinition Resolve(AssemblyNameReference name, ReaderParameters parameters)
+	{
+		try
+		{
+			return base.Resolve(name, parameters);
+		}
+		catch { }
+		return null;
 	}
 }

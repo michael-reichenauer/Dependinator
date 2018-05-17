@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using Dependinator.ModelViewing.CodeViewing;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
@@ -36,10 +37,13 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		public string Text => item.Text;
 		public Brush TextBrush { get => Get<Brush>(); set => Set(value); }
+		
 		public FontStyle TextStyle { get => Get<FontStyle>(); set => Set(value); }
 		public ObservableCollection<ReferenceItemViewModel> SubItems { get; }
-		public bool IsShowIncomingButton => IsShowButtons && !item.IsIncoming;
-		public bool IsShowOutgoingButton => IsShowButtons && item.IsIncoming;
+		public bool IsShowIncomingButton => IsShowButtons && !item.IsIncoming && !item.IsSubReference;
+		public bool IsShowOutgoingButton => IsShowButtons && item.IsIncoming && !item.IsSubReference;
+		public bool IsShowCodeButton => IsShowButtons && item.Node.CodeText != null;
+		public bool IsShowVisibilityButton => IsShowButtons && !item.IsSubReference;
 		public bool IsIncomingIcon => item.IsIncoming && item.IsTitle;
 		public bool IsOutgoingIcon => !item.IsIncoming && item.IsTitle;
 
@@ -52,8 +56,12 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		public bool IsShowButtons
 		{
-			get => Get(); set => Set(value && !item.IsSubReference)
-				.Notify(nameof(IsShowIncomingButton), nameof(IsShowOutgoingButton));
+			get => Get(); set => Set(value)
+				.Notify(
+					nameof(IsShowIncomingButton),
+					nameof(IsShowOutgoingButton), 
+					nameof(IsShowCodeButton),
+					nameof(IsShowVisibilityButton));
 		}
 
 		public bool IsSelected { get => Get(); set => Set(value); }
@@ -61,6 +69,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		public Command ToggleVisibilityCommand => Command(ToggleVisibility);
 		public Command IncomingCommand => Command(() => ToggleSubReferences(!item.IsIncoming));
 		public Command OutgoingCommand => Command(() => ToggleSubReferences(!item.IsIncoming));
+		public Command ShowCodeCommand => Command(() => item.ShowCode());
 
 
 		private void ToggleVisibility()
@@ -132,7 +141,5 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 			delayDispatcher.Cancel();
 			IsShowButtons = false;
 		}
-
-
 	}
 }

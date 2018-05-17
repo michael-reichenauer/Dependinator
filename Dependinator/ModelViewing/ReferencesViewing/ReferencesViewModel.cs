@@ -10,10 +10,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 {
 	internal class ReferencesViewModel : ViewModel
 	{
-
-		public Command<Window> OkCommand => Command<Window>(SetOK);
-
-		public Command<Window> CancelCommand => Command<Window>(w => w.DialogResult = false);
+		public Command<Window> CancelCommand => Command<Window>(w => w.Close());
 
 
 		public ReferencesViewModel(Node node,
@@ -37,9 +34,6 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 
 		public ObservableCollection<ReferenceItemViewModel> Items { get; }
-
-
-		private void SetOK(Window window) => window.DialogResult = true;
 
 
 		private void SetTitle(Node node, bool isIncoming)

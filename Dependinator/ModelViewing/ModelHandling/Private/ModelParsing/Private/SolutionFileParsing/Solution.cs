@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,20 +12,21 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.S
 	/// </summary>
 	internal class Solution
 	{
+		private Lazy<IReadOnlyList<Project>> projects;
 		public Solution(string solutionFilePath)
 		{
 			this.SolutionFilePath = solutionFilePath;
 			SolutionDirectory = Path.GetDirectoryName(solutionFilePath);
 
-			Projects = GetProjects();
+			projects = new Lazy<IReadOnlyList<Project>>(GetProjects);
 		}
 
 
 		public string SolutionFilePath { get; }
 
-		public IReadOnlyList<Project> Projects { get; }
-
 		public string SolutionDirectory { get; }
+
+		public IReadOnlyList<Project> Projects => projects.Value;
 
 
 

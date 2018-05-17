@@ -4,6 +4,8 @@ using System.Linq;
 using Dependinator.Common;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
+using ICSharpCode.Decompiler;
+using ICSharpCode.Decompiler.CSharp;
 using Mono.Cecil;
 
 
@@ -13,21 +15,25 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 	{
 		private readonly LinkHandler linkHandler;
 		private readonly XmlDocParser xmlDockParser;
+		private readonly Decompiler decompiler;
 		private readonly ModelItemsCallback itemsCallback;
 
+	
 
 		public TypeParser(
 			LinkHandler linkHandler, 
-			XmlDocParser xmlDockParser, 
+			XmlDocParser xmlDockParser,
+			Decompiler decompiler,
 			ModelItemsCallback itemsCallback)
 		{
 			this.linkHandler = linkHandler;
 			this.xmlDockParser = xmlDockParser;
+			this.decompiler = decompiler;
 			this.itemsCallback = itemsCallback;
 		}
 
 
-		public IEnumerable<TypeInfo> AddTypes(TypeDefinition type)
+		public IEnumerable<TypeInfo> AddType(TypeDefinition type)
 		{
 			bool isCompilerGenerated = Name.IsCompilerGenerated(type.Name);
 			bool isAsyncStateType = false;
@@ -36,35 +42,37 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			if (isCompilerGenerated)
 			{
 				// Check if the type is a async state machine type
-				isAsyncStateType = type.Interfaces.Any(it => it.Name == "IAsyncStateMachine");
+				isAsyncStateType = type.Interfaces.Any(it => it.InterfaceType.Name == "IAsyncStateMachine");
 
+				// AsyncStateTypes are only partially included. The state types are not included as nodes,
+				// but are parsed to extract internal types and references. 
 				if (!isAsyncStateType)
 				{
-					// Some internal compiler generated type, which is ignored for now
+					// Some other internal compiler generated type, which is ignored for now
+					// Log.Warn($"Exclude compiler type {type.Name}");
 					yield break;
 				}
 			}
 			else
 			{
+				if (string.IsNullOrEmpty(type.Namespace))
+				{
+
+				}
+
 				string name = Name.GetTypeFullName(type);
 				bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
-				string parent = isPrivate ? $"{NodeName.From(name).ParentName.FullName}.$Private" : null;
+				string parent = isPrivate ? $"{NodeName.From(name).ParentName.FullName}.$private" : null;
 				string description = xmlDockParser.GetDescription(name);
-
-				if (type.Name == "NamespaceDoc")
+				
+				if (IsNameSpaceDocType(type, description))
 				{
-					if (!string.IsNullOrEmpty(description))
-					{
-						name = Name.GetTypeNamespaceFullName(type);
-						typeNode = new ModelNode(name, parent, NodeType.NameSpace, description);
-						itemsCallback(typeNode);
-					}
-
+					// Type was a namespace doc type, extract it and move to next type
 					yield break;
 				}
 
-
-				typeNode = new ModelNode(name, parent, NodeType.Type, description);
+				Lazy<string> codeText = decompiler.LazyDecompile(type);
+				typeNode = new ModelNode(name, parent, NodeType.Type, description, codeText);
 				itemsCallback(typeNode);
 			}
 
@@ -73,11 +81,31 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			// Iterate all nested types as well
 			foreach (var nestedType in type.NestedTypes)
 			{
-				foreach (var types in AddTypes(nestedType))
+				// Adding a type could result in multiple types
+				foreach (var types in AddType(nestedType))
 				{
 					yield return types;
 				}
 			}
+		}
+
+
+
+		private bool IsNameSpaceDocType(TypeDefinition type, string description)
+		{
+			if (type.Name.IsSameIgnoreCase("NamespaceDoc"))
+			{
+				if (!string.IsNullOrEmpty(description))
+				{
+					string name = Name.GetTypeNamespaceFullName(type);
+					ModelNode node = new ModelNode(name, null, NodeType.NameSpace, description, null);
+					itemsCallback(node);
+				}
+
+				return true;
+			}
+
+			return false;
 		}
 
 
@@ -107,7 +135,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				}
 
 				type.Interfaces
-					.ForEach(interfaceType => linkHandler.AddLinkToType(sourceNode, interfaceType));
+					.ForEach(interfaceType => linkHandler.AddLinkToType(sourceNode, interfaceType.InterfaceType));
 			}
 			catch (Exception e)
 			{

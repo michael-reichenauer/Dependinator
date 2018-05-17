@@ -95,7 +95,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			node.Stamp = stamp;
 
-			UpdateDescriptionIfNeeded(node, modelNode);
+			UpdateData(node, modelNode);
 
 			nodeService.UpdateNodeTypeIfNeeded(node, modelNode.NodeType);
 		}
@@ -108,6 +108,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				Stamp = stamp,
 				NodeType = modelNode.NodeType,
 				Description = modelNode.Description,
+				CodeText = modelNode.CodeText,
 			};
 
 			node.View.Bounds = modelNode.Bounds;
@@ -120,14 +121,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			nodeService.AddNode(node, parentNode);
 		}
 
-		
-		private static void UpdateDescriptionIfNeeded(Node node, ModelNode modelNode)
+
+		private static void UpdateData(Node node, ModelNode modelNode)
 		{
-			if (!string.IsNullOrEmpty(modelNode.Description)
-					&& node.Description != modelNode.Description)
-			{
-				node.Description = modelNode.Description;
-			}
+			node.Description = modelNode.Description;
+			node.CodeText = modelNode.CodeText;
 		}
 
 
@@ -137,7 +135,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			return nodeService.GetParentNode(parentName, modelNode.NodeType);
 		}
-		
+
 
 
 		private static NodeName GetParentName(NodeName nodeName, ModelNode modelNode)

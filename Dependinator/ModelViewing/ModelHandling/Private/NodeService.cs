@@ -107,7 +107,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				return parent;
 			}
 
-			NodeType parentNodeType = childNodeType == NodeType.Member ? NodeType.Type : NodeType.NameSpace;
+			NodeType parentNodeType = GetParentNodeType(parentName, childNodeType);
 
 			NodeName grandParentName = parentName.ParentName;
 			Node grandParent = GetParentNode(grandParentName, parentNodeType);
@@ -118,6 +118,17 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			AddNode(parent, grandParent);
 			return parent;
+		}
+
+
+		private static NodeType GetParentNodeType(NodeName parentName, NodeType childNodeType)
+		{
+			if (parentName?.FullName.EndsWith(".$private") ?? false)
+			{
+				return NodeType.NameSpace;
+			}
+
+			return childNodeType == NodeType.Member ? NodeType.Type : NodeType.NameSpace;
 		}
 
 
