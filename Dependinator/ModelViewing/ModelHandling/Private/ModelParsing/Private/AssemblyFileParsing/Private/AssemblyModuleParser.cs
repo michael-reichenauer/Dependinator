@@ -73,7 +73,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			foreach (AssemblyNameReference reference in references)
 			{
 				string parent = "References";
-				string referenceName = Name.GetModuleName(reference.Name);
+				string referenceName = Name.GetModuleName(reference);
 
 				int index = referenceName.IndexOfTxt("*");
 				if (index > 0)

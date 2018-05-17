@@ -6,6 +6,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing
 {
 	internal interface IParserService
 	{
-		Task ParseAsync(string assemblyPath, ModelItemsCallback modelItemsCallback);
+		Task ParseAsync(string filePath, ModelItemsCallback modelItemsCallback);
 	}
 }

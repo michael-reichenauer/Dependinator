@@ -25,7 +25,7 @@ namespace Dependinator.ModelViewing
 		}
 
 
-		private async void MainView_OnLoaded(object sender, RoutedEventArgs e)
+		private async void ModelView_OnLoaded(object sender, RoutedEventArgs e)
 		{
 			ItemsView.SetFocus();
 			await ViewModel.LoadAsync();

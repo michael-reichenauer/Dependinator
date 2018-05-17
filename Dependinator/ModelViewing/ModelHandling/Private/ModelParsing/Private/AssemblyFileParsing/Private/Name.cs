@@ -33,16 +33,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		}
 
 
-		public static string GetAssemblyName(AssemblyDefinition assembly)
-		{
-			return GetModuleName(assembly.Name.Name);
-		}
+		public static string GetAssemblyName(AssemblyDefinition assembly) => 
+			GetAdjustedName(assembly.Name.Name);
 
 
-		public static string GetModuleName(string name)
-		{
-			return $"{name.Replace(".", "*")}";
-		}
+		public static string GetModuleName(AssemblyNameReference reference) => 
+			GetAdjustedName(reference.Name);
 
 
 		public static string GetTypeFullName(TypeReference type)
@@ -173,7 +169,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			}
 
 			// A referenced type
-			return GetModuleName(typeInfo.Scope.Name);
+			return GetAdjustedName(typeInfo.Scope.Name);
+		}
+
+
+
+		private static string GetAdjustedName(string name)
+		{
+			return $"{name.Replace(".", "*")}";
 		}
 	}
 }

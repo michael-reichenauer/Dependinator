@@ -12,8 +12,6 @@ namespace Dependinator.ModelViewing
 	{
 		void SetRootCanvas(ItemsCanvas rootCanvas);
 
-		Task LoadAsync();
-
 		Task RefreshAsync(bool refreshLayout);
 
 		void ShowHiddenNode(NodeName nodeName);

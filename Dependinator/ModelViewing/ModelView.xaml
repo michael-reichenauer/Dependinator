@@ -6,7 +6,7 @@
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:items="clr-namespace:Dependinator.ModelViewing.Items"
 	mc:Ignorable="d"
-	d:DesignHeight="300" d:DesignWidth="300" Loaded="MainView_OnLoaded">
+	d:DesignHeight="300" d:DesignWidth="300" Loaded="ModelView_OnLoaded">
 
 	<!-- Model -->
 	<Border

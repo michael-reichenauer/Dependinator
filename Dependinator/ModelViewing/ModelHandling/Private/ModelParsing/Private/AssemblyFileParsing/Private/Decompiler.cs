@@ -26,6 +26,32 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		}
 
 
+		public Lazy<string> LazyDecompile(string name)
+		{
+			return new Lazy<string>(() => GetDecompiledText(name));
+		}
+
+
+
+		private string GetDecompiledText(string name)
+		{
+			try
+			{
+				//CSharpDecompiler decompiler = GetDecompiler(type.Module);
+
+				//string text = decompiler.DecompileTypesAsString(new[] { type }).Replace("\t", "  ");
+
+				//return text;
+				return null;
+			}
+			catch (Exception e)
+			{
+				Log.Error($"Failed to decompile {name}, {e.Message}");
+				return $"Error: Failed to decompile {name},\n{e.Message}";
+			}
+		}
+
+
 		private string GetDecompiledText(TypeDefinition type)
 		{
 			try

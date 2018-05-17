@@ -84,6 +84,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			{
 				await ShowModelAsync(operation => persistenceService.TryDeserialize(
 					dataFilePath, items => UpdateDataItems(items, operation)));
+				await RefreshAsync(false);
 			}
 			else
 			if (File.Exists(modelMetadata.ModelFilePath))
@@ -126,6 +127,32 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
+		public async Task RefreshAsync(bool isClean)
+		{
+			if (isClean)
+			{
+				string dataFilePath = GetDataFilePath();
+
+				if (File.Exists(dataFilePath))
+				{
+					File.Delete(dataFilePath);
+				}
+
+				await LoadAsync();
+				return;
+			}
+
+			isWorking = true;
+			int operationId = await ShowModelAsync(operation => parserService.ParseAsync(
+				modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
+
+			modelNodeService.RemoveObsoleteNodesAndLinks(operationId);
+			modelNodeService.SetLayoutDone();
+			GC.Collect();
+			isWorking = false;
+		}
+
+
 		public IReadOnlyList<NodeName> GetHiddenNodeNames()
 		{
 			return modelNodeService.GetHiddenNodeNames();
@@ -150,10 +177,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-
 		public void ClearAll() => modelNodeService.RemoveAll();
-
-
 
 
 		public void Save()
@@ -180,32 +204,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			persistenceService.Serialize(items, dataFilePath);
 			t.Log($"Saved {items.Count} items");
-		}
-
-
-		public async Task RefreshAsync(bool isClean)
-		{
-			if (isClean)
-			{
-				string dataFilePath = GetDataFilePath();
-
-				if (File.Exists(dataFilePath))
-				{
-					File.Delete(dataFilePath);
-				}
-
-				await LoadAsync();
-				return;
-			}
-
-			isWorking = true;
-			int operationId = await ShowModelAsync(operation => parserService.ParseAsync(
-				modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
-
-			modelNodeService.RemoveObsoleteNodesAndLinks(operationId);
-			modelNodeService.SetLayoutDone();
-			GC.Collect();
-			isWorking = false;
 		}
 
 
