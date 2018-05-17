@@ -1,8 +1,14 @@
-﻿namespace Dependinator.ModelViewing.Items
+﻿using Dependinator.ModelViewing.Lines;
+using Dependinator.ModelViewing.Nodes;
+
+
+namespace Dependinator.ModelViewing.Items
 {
 	internal interface IItemSelectionService
 	{
-		void Select(ISelectableItem item);
+		void Select(NodeViewModel item);
+
+		void Select(LineViewModel clickedItem);
 
 		void Deselect();
 	}

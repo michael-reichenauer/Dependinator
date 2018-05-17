@@ -85,15 +85,13 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		public void MouseClicked(NodeViewModel nodeViewModel)
-		{
+		public void MouseClicked(NodeViewModel nodeViewModel) => 
 			itemSelectionService.Select(nodeViewModel);
-		}
 
 
 		public void OnMouseWheel(
-			NodeViewModel nodeViewModel, 
-			UIElement uiElement, 
+			NodeViewModel nodeViewModel,
+			UIElement uiElement,
 			MouseWheelEventArgs e)
 		{
 			ItemsCanvas itemsCanvas = nodeViewModel.ItemsViewModel?.ItemsCanvas ?? nodeViewModel.Node.Root.View.ItemsCanvas;

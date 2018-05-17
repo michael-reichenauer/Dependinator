@@ -24,7 +24,7 @@ namespace Dependinator.ModelViewing.Lines
 			InitializeComponent();
 
 			lineClicked = new MouseClicked(this, Clicked);
-			toggleClicked = new MouseClicked(ToggleLine, ClickToggleLine);
+			//toggleClicked = new MouseClicked(ToggleLine, ClickToggleLine);
 
 			dragLine = new DragUiElement(
 				LineControl,
