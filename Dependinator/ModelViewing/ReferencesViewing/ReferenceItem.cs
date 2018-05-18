@@ -62,7 +62,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		public IEnumerable<ReferenceItem> GetSubReferences(bool isIncoming)
 		{
-			return ItemService.GetReferences(Node, new ReferenceOptions(isIncoming, BaseNode, true));
+			return ItemService.GetReferences(Node, new ReferenceOptions(false, isIncoming, BaseNode, true));
 		}
 
 		private string GetText()

@@ -6,7 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:referencesViewing="clr-namespace:Dependinator.ModelViewing.ReferencesViewing"
         mc:Ignorable="d"
-        Title="{Binding WindowTitle}" Width="600" Height="500" ResizeMode="CanResize"
+        Title="Dependency Explorer" Width="750" Height="500" ResizeMode="CanResize"
         Background="{DynamicResource BackgroundBrush}"
         WindowStyle="None" AllowsTransparency="True"
         BorderBrush="{DynamicResource BorderBrush}" BorderThickness="3"
@@ -49,12 +49,21 @@
 			<!-- Title and tool bar -->
 			<RowDefinition Height="Auto" />
 			<!-- Dialog contents -->
+			<RowDefinition Height="Auto" />
 			<RowDefinition Height="*" />
 		</Grid.RowDefinitions>
 
+		<Grid.ColumnDefinitions>
+			<!--Left side -->
+			<ColumnDefinition Width="*" />
+			<ColumnDefinition Width="Auto" />
+			<!-- Dialog contents -->
+			<ColumnDefinition Width="*" />
+		</Grid.ColumnDefinitions>
+
 		<!-- Title and tool bar -->
 		<Border
-			Grid.Row="0"
+			Grid.Row="0" Grid.ColumnSpan="3"
 			BorderBrush="{DynamicResource BorderBrush}"
 			BorderThickness="2" Background="{DynamicResource TitlebarBackgroundBrush}">
 			<Grid>
@@ -62,18 +71,9 @@
 					HorizontalAlignment="Left"
 					Orientation="Horizontal">
 
-					<TextBlock 
-						Visibility="{Binding IsIncoming, Converter={StaticResource VC}}"
-						Text="&#xe258;" Style="{DynamicResource MenuIconStyle}" />
+					<TextBlock Text="&#xe31c;" Style="{DynamicResource MenuIconStyle}" />
 
-					<TextBlock 
-						Visibility="{Binding IsOutgoing, Converter={StaticResource VC}}"
-						Text="&#xE0B5;" Style="{DynamicResource MenuIconStyle}" />
-
-					<TextBlock
-						Text="{Binding Title}"
-						Foreground="{DynamicResource TextBrush}"
-						Margin="10, 5" />
+					<TextBlock Text="Dependency Explorer" Foreground="{DynamicResource TextBrush}" Margin="10, 5" />
 
 				</StackPanel>
 
@@ -90,43 +90,93 @@
 		</Border>
 
 
-		<!-- Dialog contents -->
-		<Grid Grid.Row="1">
-			<Grid.RowDefinitions>
-				<!-- Tree view -->
-				<RowDefinition Height="*" />
+		<TextBlock
+			Grid.Row="1" Grid.Column="0"
+			FontSize="16"
+			HorizontalAlignment="Right"
+			VerticalAlignment="Center"
+			Margin="10,5"
+			Text="{Binding SourceNode}" Foreground="{DynamicResource TextBrush}" />
 
-				<!-- OK and Cancel buttons -->
-				<RowDefinition Height="Auto" />
-			</Grid.RowDefinitions>
+		<TextBlock
+			Grid.Row="1" Grid.Column="1"
+			FontSize="40"
+			Text="&#xe8e4;" Style="{DynamicResource MenuIconStyle}" />
 
-			<TreeView
-				Grid.Row="0"
-				ItemsSource="{Binding Items}"
-				Background="{DynamicResource BackgroundBrush}"
-				BorderBrush="{DynamicResource BorderBrush}"
-				ItemContainerStyle="{StaticResource LibraryTreeViewItemStyle}">
+		<TextBlock
+			Margin="10,5"
+			FontSize="16"
+			HorizontalAlignment="Left"
+			VerticalAlignment="Center"
+			Grid.Row="1" Grid.Column="2"
+			Text="{Binding TargetNode}" Foreground="{DynamicResource TextBrush}" />
 
-				<TreeView.Resources>
-					<SolidColorBrush
-						x:Key="{x:Static SystemColors.HighlightBrushKey}"
-						Color="Transparent" />
-					<SolidColorBrush
-						x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
-						Color="Transparent" />
-				</TreeView.Resources>
+		<Grid Grid.Row="2" Grid.ColumnSpan="3">
 
-				<TreeView.ItemTemplate>
-					<HierarchicalDataTemplate
-						DataType="{x:Type referencesViewing:ReferenceItemViewModel}"
-						ItemsSource="{Binding SubItems}"
-						ItemContainerStyle="{StaticResource LibraryTreeViewItemStyle}">
-						<referencesViewing:ReferenceItemView/>
-					</HierarchicalDataTemplate>
-				</TreeView.ItemTemplate>
 
-			</TreeView>
-		</Grid>
+		<Grid.ColumnDefinitions>
+			<!--Left side -->
+				<ColumnDefinition Width="*" />
+				<!-- Dialog contents -->
+			<ColumnDefinition Width="*" />
+		</Grid.ColumnDefinitions>
+			<!-- Source -->
 
+		<TreeView
+			Grid.Column="0"
+			ItemsSource="{Binding SourceItems}"
+			Background="{DynamicResource BackgroundBrush}"
+			BorderBrush="{DynamicResource BorderBrush}"
+			ItemContainerStyle="{StaticResource LibraryTreeViewItemStyle}">
+
+			<TreeView.Resources>
+				<SolidColorBrush
+					x:Key="{x:Static SystemColors.HighlightBrushKey}"
+					Color="Transparent" />
+				<SolidColorBrush
+					x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
+					Color="Transparent" />
+			</TreeView.Resources>
+
+			<TreeView.ItemTemplate>
+				<HierarchicalDataTemplate
+					DataType="{x:Type referencesViewing:ReferenceItemViewModel}"
+					ItemsSource="{Binding SubItems}"
+					ItemContainerStyle="{StaticResource LibraryTreeViewItemStyle}">
+					<referencesViewing:ReferenceItemView />
+				</HierarchicalDataTemplate>
+			</TreeView.ItemTemplate>
+
+		</TreeView>
+
+
+		<!-- Target -->
+		<TreeView
+			Grid.Column="1"
+			ItemsSource="{Binding TargetItems}"
+			Background="{DynamicResource BackgroundBrush}"
+			BorderBrush="{DynamicResource BorderBrush}"
+			ItemContainerStyle="{StaticResource LibraryTreeViewItemStyle}">
+
+			<TreeView.Resources>
+				<SolidColorBrush
+					x:Key="{x:Static SystemColors.HighlightBrushKey}"
+					Color="Transparent" />
+				<SolidColorBrush
+					x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
+					Color="Transparent" />
+			</TreeView.Resources>
+
+			<TreeView.ItemTemplate>
+				<HierarchicalDataTemplate
+					DataType="{x:Type referencesViewing:ReferenceItemViewModel}"
+					ItemsSource="{Binding SubItems}"
+					ItemContainerStyle="{StaticResource LibraryTreeViewItemStyle}">
+					<referencesViewing:ReferenceItemView />
+				</HierarchicalDataTemplate>
+			</TreeView.ItemTemplate>
+
+		</TreeView>
+	</Grid>
 	</Grid>
 </Window>

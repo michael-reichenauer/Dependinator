@@ -15,12 +15,16 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 	public partial class ReferencesDialog : Window
 	{
 		internal ReferencesDialog(
-			Window owner, Node node, IEnumerable<ReferenceItem> referenceItems, bool isIncoming)
+			IReferenceItemService referenceItemService, 
+			Window owner, 
+			Node node, 
+			Line line,
+			bool isIncoming)
 		{
 			Owner = owner;
 			InitializeComponent();
 
-			DataContext = new ReferencesViewModel(node, referenceItems, isIncoming);
+			DataContext = new ReferencesViewModel(referenceItemService, node, line, isIncoming);
 		}
 	}
 }

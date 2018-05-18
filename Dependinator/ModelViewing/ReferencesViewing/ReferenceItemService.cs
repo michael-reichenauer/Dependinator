@@ -26,6 +26,16 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		}
 
 
+		public IEnumerable<ReferenceItem> GetNodes(Node baseNode, ReferenceOptions options)
+		{
+			IEnumerable<Line> lines =
+				(options.IsIncoming ? baseNode.TargetLines : baseNode.SourceLines)
+				.Where(line => line.Owner != baseNode);
+
+			return lines.SelectMany(line => GetLineReferenceItems(line, baseNode, options));
+		}
+
+
 		public Brush ItemTextBrush() => themeService.GetTextBrush();
 
 		public Brush ItemTextLowBrush() => themeService.GetTextLowBrush();
@@ -41,21 +51,6 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		public Brush ItemTextHiddenBrush() => themeService.GetTextDimBrush();
 
 
-		//public IEnumerable<ReferenceItem> GetSourceLinkItems(Line line, Node baseNode) =>
-		//	GetLineReferenceItems(line, true, baseNode, null);
-
-
-		//public IEnumerable<ReferenceItem> GetTargetLinkItems(Line line, Node baseNode) =>
-		//	GetLineReferenceItems(line, false, baseNode, null);
-
-
-		//public IEnumerable<ReferenceItem> GetIncomingReferences(Node baseNode, ReferenceOptions options)
-		//{
-		//	IEnumerable<Line> lines = baseNode.TargetLines
-		//		.Where(line => line.Owner != baseNode);
-
-		//	return lines.SelectMany(line => GetLineReferenceItems(line, baseNode, options));
-		//}
 
 		public IEnumerable<ReferenceItem> GetReferences(Line line, ReferenceOptions options)
 		{
@@ -67,7 +62,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		public IEnumerable<ReferenceItem> GetReferences(Node baseNode, ReferenceOptions options)
 		{
-			IEnumerable<Line> lines = 
+			IEnumerable<Line> lines =
 				(options.IsIncoming ? baseNode.TargetLines : baseNode.SourceLines)
 				.Where(line => line.Owner != baseNode);
 
@@ -88,8 +83,8 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		}
 
 
-		private static bool IsIncluded(IEdge link, ReferenceOptions options) => 
-			options.FilterNode == null || 
+		private static bool IsIncluded(IEdge link, ReferenceOptions options) =>
+			options.FilterNode == null ||
 			EndPoint(link, options).AncestorsAndSelf().Contains(options.FilterNode);
 
 
@@ -212,7 +207,10 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		}
 
 
-		private static Node EndPoint(IEdge edge, ReferenceOptions options ) =>
-			options.IsIncoming ? edge.Source : edge.Target;
+		private static Node EndPoint(IEdge edge, ReferenceOptions options)
+		{
+			bool isIncoming = options.IsNodes ? !options.IsIncoming : options.IsIncoming;
+			return isIncoming ? edge.Source : edge.Target;
+		}
 	}
 }

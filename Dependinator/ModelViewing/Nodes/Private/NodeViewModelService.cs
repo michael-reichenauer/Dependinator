@@ -129,10 +129,9 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		public void ShowReferences(NodeViewModel nodeViewModel, bool isIncoming)
 		{
 			Node node = nodeViewModel.Node;
-			var referenceItems = referenceItemService.GetReferences(node, new ReferenceOptions(isIncoming));
 
 			ReferencesDialog referencesDialog = new ReferencesDialog(
-				owner, node, referenceItems, isIncoming);
+				referenceItemService, owner, node, null, isIncoming);
 			referencesDialog.Show();
 		}
 
