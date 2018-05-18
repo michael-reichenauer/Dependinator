@@ -78,7 +78,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				int index = referenceName.IndexOfTxt("*");
 				if (index > 0)
 				{
-					parent = $"References.{referenceName.Substring(1, index - 1)}";
+					parent = $"References.{referenceName.Substring(0,index)}";
 				}
 
 				parent = $"${parent?.Replace(".", ".$")}";
