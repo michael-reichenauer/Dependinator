@@ -96,15 +96,13 @@ namespace Dependinator.ModelViewing.Lines.Private
 		}
 
 
-		public void ShowReferences(LineViewModel lineViewModel, bool isIncoming)
+		public void ShowReferences(LineViewModel lineViewModel)
 		{
 			Line line = lineViewModel.Line;
 
-			Node node = isIncoming ? line.Target : line.Source;
 			ReferencesDialog referencesDialog = new ReferencesDialog(
-				referenceItemService, owner, node, line, isIncoming);
+				referenceItemService, owner, line.Source, line);
 			referencesDialog.Show();
-
 		}
 	}
 }

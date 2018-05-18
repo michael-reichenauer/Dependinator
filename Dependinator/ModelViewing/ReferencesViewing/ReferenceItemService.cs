@@ -26,16 +26,6 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		}
 
 
-		public IEnumerable<ReferenceItem> GetNodes(Node baseNode, ReferenceOptions options)
-		{
-			IEnumerable<Line> lines =
-				(options.IsIncoming ? baseNode.TargetLines : baseNode.SourceLines)
-				.Where(line => line.Owner != baseNode);
-
-			return lines.SelectMany(line => GetLineReferenceItems(line, baseNode, options));
-		}
-
-
 		public Brush ItemTextBrush() => themeService.GetTextBrush();
 
 		public Brush ItemTextLowBrush() => themeService.GetTextLowBrush();
@@ -55,7 +45,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		public IEnumerable<ReferenceItem> GetReferences(Line line, ReferenceOptions options)
 		{
 			Node baseNode = options.IsIncoming ? line.Target : line.Source;
-			return GetLineReferenceItems(line, baseNode, options);
+			return GetLineReferenceItems(new[] { line }, baseNode, options);
 		}
 
 
@@ -66,14 +56,15 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 				(options.IsIncoming ? baseNode.TargetLines : baseNode.SourceLines)
 				.Where(line => line.Owner != baseNode);
 
-			return lines.SelectMany(line => GetLineReferenceItems(line, baseNode, options));
+			return GetLineReferenceItems(lines, baseNode, options);
 		}
 
 
 		private IEnumerable<ReferenceItem> GetLineReferenceItems(
-			Line line, Node baseNode, ReferenceOptions options)
+			IEnumerable<Line> lines, Node baseNode, ReferenceOptions options)
 		{
-			IEnumerable<Link> lineLinks = line.Links
+			IEnumerable<Link> lineLinks =
+				lines.SelectMany(line => line.Links)
 				.DistinctBy(link => EndPoint(link, options))
 				.Where(link => IsIncluded(link, options));
 

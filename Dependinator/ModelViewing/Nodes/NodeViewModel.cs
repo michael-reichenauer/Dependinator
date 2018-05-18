@@ -88,8 +88,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public int IncomingLinesCount => Node.TargetLines.Count(line => line.Owner != Node);
 
 		public Command HideNodeCommand => Command(HideNode);
-		public Command ShowIncomingCommand => Command(() => nodeViewModelService.ShowReferences(this, true));
-		public Command ShowOutgoingCommand => Command(() => nodeViewModelService.ShowReferences(this, false));
+		public Command ShowDependenciesCommand => Command(() => nodeViewModelService.ShowReferences(this));
 
 		public int FontSize => ((int)(10 * ItemScale)).MM(9, 13);
 

@@ -18,13 +18,12 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 			IReferenceItemService referenceItemService, 
 			Window owner, 
 			Node node, 
-			Line line,
-			bool isIncoming)
+			Line line)
 		{
 			Owner = owner;
 			InitializeComponent();
 
-			DataContext = new ReferencesViewModel(referenceItemService, node, line, isIncoming);
+			DataContext = new ReferencesViewModel(referenceItemService, node, line);
 		}
 	}
 }

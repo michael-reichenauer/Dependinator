@@ -11,7 +11,6 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 	{
 		IEnumerable<ReferenceItem> GetReferences(Node node, ReferenceOptions options);
 		IEnumerable<ReferenceItem> GetReferences(Line line, ReferenceOptions options);
-		IEnumerable<ReferenceItem> GetNodes(Node node, ReferenceOptions options);
 
 		Brush ItemTextBrush();
 		Brush ItemTextHiddenBrush();

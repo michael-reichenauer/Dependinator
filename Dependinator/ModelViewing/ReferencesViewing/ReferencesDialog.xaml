@@ -75,6 +75,14 @@
 
 					<TextBlock Text="Dependency Explorer" Foreground="{DynamicResource TextBrush}" Margin="10, 5" />
 
+					<Button
+						Visibility="{Binding IsShowSwitchButton, Converter={StaticResource VC}}"
+						WindowChrome.IsHitTestVisibleInChrome="True"
+						Style="{DynamicResource IconButtonStyle}"
+						Content="&#xe8d4;"
+						Command="{Binding SwitchSidesCommand}"
+						ToolTip="Switch sides" />
+
 				</StackPanel>
 
 				<!-- Close Button -->
