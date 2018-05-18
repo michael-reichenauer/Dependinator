@@ -130,8 +130,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		{
 			Node node = nodeViewModel.Node;
 
-			ReferencesDialog referencesDialog = new ReferencesDialog(
-				referenceItemService, owner, node, null);
+			ReferencesDialog referencesDialog = new ReferencesDialog(referenceItemService, owner, node);
 			referencesDialog.Show();
 		}
 

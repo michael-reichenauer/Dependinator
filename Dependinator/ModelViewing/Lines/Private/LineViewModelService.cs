@@ -100,8 +100,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 		{
 			Line line = lineViewModel.Line;
 
-			ReferencesDialog referencesDialog = new ReferencesDialog(
-				referenceItemService, owner, line.Source, line);
+			ReferencesDialog referencesDialog = new ReferencesDialog(referenceItemService, owner, line);
 			referencesDialog.Show();
 		}
 	}
