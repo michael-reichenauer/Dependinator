@@ -61,10 +61,6 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 
 
-		//IEnumerable<Line> lines =
-		//	(options.IsOutgoing ? baseNode.SourceLines : baseNode.TargetLines)
-		//	.Where(line => line.Owner != baseNode);
-
 		public IEnumerable<ReferenceItem> GetReferences2(ReferenceOptions2 options)
 		{
 			IEnumerable<Link> links =
@@ -82,9 +78,6 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 			ReferenceItem rootItem = items[NodeName.Root];
 
 			return rootItem.SubItems;
-			//List<ReferenceItem> referenceItems = ReduceHierarchy2(rootItem, options).ToList();
-			//referenceItems.ForEach(item => item.Parent = null);
-			//return referenceItems;
 		}
 
 

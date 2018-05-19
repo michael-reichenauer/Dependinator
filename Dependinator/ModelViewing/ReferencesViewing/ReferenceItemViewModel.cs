@@ -52,16 +52,9 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		public bool IsShowOutgoingButton => IsShowButtons && Item.IsIncoming && !Item.IsSubReference;
 		public bool IsShowCodeButton => IsShowButtons && Item.Node.CodeText != null;
 		public bool IsShowVisibilityButton => IsShowButtons && !Item.IsSubReference;
-		//public bool IsIncomingIcon => item.IsIncoming && item.IsTitle;
-		//public bool IsOutgoingIcon => !item.IsIncoming && item.IsTitle;
 
-		//public bool IsIncoming => item.IsIncoming;
 		public string ToolTip => Item.ToolTip;
-		public string IncomingButtonToolTip =>
-			$"Toggle show references from within {Item.BaseNode?.Name.DisplayFullNoParametersName}";
-		public string OutgoingButtonToolTip =>
-			$"Toggle show references to within {Item.BaseNode?.Name.DisplayFullNoParametersName}";
-
+		
 		public bool IsShowButtons
 		{
 			get => Get(); set => Set(value)
@@ -85,8 +78,6 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		public bool IsExpanded { get => Get(); set => Set(value); }
 		public Command ToggleVisibilityCommand => Command(ToggleVisibility);
-		public Command IncomingCommand => Command(() => ToggleSubReferences(!Item.IsIncoming));
-		public Command OutgoingCommand => Command(() => ToggleSubReferences(!Item.IsIncoming));
 		public Command ShowCodeCommand => Command(() => Item.ShowCode());
 		public Command ToggleCollapseCommand => Command(() => SetExpand(!IsExpanded));
 		public Command FilterCommand => Command(() => referencesViewModel.FilterOn(Item, isSource));
@@ -109,37 +100,6 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 			}
 		}
 
-
-		private void ToggleSubReferences(bool isIncoming)
-		{
-			isSubReferences = !isSubReferences;
-
-			if (isSubReferences)
-			{
-				ReferenceItem newItem = new ReferenceItem(
-					Item.ItemService, null, isIncoming, null, true, SubTitleText(isIncoming));
-				Item.AddChild(newItem);
-
-				IEnumerable<ReferenceItem> subReferences = Item.GetSubReferences(isIncoming);
-				newItem.AddChildren(subReferences);
-
-				ReferenceItemViewModel newItemViewModel = new ReferenceItemViewModel(
-					newItem, referencesViewModel, isSource);
-				newItemViewModel.IsExpanded = true;
-
-				SubItems.Insert(0, newItemViewModel);
-				IsExpanded = true;
-			}
-			else
-			{
-				var subReferences = SubItems.Where(i => i.Item.IsSubReference).ToList();
-				subReferences.ForEach(i => SubItems.Remove(i));
-			}
-		}
-
-
-		private static string SubTitleText(bool isIncoming) =>
-			isIncoming ? "References from:" : "References to:";
 
 
 		private ObservableCollection<ReferenceItemViewModel> ToSubItems(

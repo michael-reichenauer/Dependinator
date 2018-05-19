@@ -9,7 +9,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 {
 	internal interface IReferenceItemService
 	{
-		IEnumerable<ReferenceItem> GetReferences(Node node, ReferenceOptions options);
+		//IEnumerable<ReferenceItem> GetReferences(Node node, ReferenceOptions options);
 		IEnumerable<ReferenceItem> GetReferences(Line line, ReferenceOptions options);
 
 		Brush ItemTextBrush();

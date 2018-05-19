@@ -42,6 +42,15 @@
 				Command="{Binding ShowCodeCommand}"
 				ToolTip="Show decompiled code" />
 
+			<!--<Button
+			  Visibility="{Binding IsShowVisibilityButton, Converter={StaticResource VC}}" 				Padding="5,3,0,0"
+				Content="&#xe3a5;"
+ 				FontSize="11"
+ 				Style="{DynamicResource IconButtonStyle}"
+ 				Command="{Binding ToggleVisibilityCommand}"
+				ToolTip="Toggle dim visibility" />-->
+			
+
 			<!-- End margin for mouse over -->
 			<TextBlock Text="           " Visibility="{Binding IsShowButtons, Converter={StaticResource NVC}}"/>
 		

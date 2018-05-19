@@ -60,11 +60,6 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		public override string ToString() => $"{Text}";
 
 
-		public IEnumerable<ReferenceItem> GetSubReferences(bool isIncoming)
-		{
-			return ItemService.GetReferences(Node, new ReferenceOptions(false, isIncoming, BaseNode, true));
-		}
-
 		private string GetText()
 		{
 			if (Parent != null && Parent.Node == Node.Parent)
