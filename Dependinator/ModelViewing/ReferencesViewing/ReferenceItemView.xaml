@@ -16,31 +16,39 @@
 			Orientation="Horizontal">
 
 			<!-- Icons before text -->
-			<TextBlock 
+			<!--<TextBlock 
 				Visibility="{Binding IsIncomingIcon, Converter={StaticResource VC}}"
 				Text="&#xe258;" Style="{DynamicResource MenuIconStyle}" 
 				FontSize="11" Foreground="{Binding TextBrush}"/>
 			<TextBlock 
 				Visibility="{Binding IsOutgoingIcon, Converter={StaticResource VC}}"
 				Text="&#xE0B2;" Style="{DynamicResource MenuIconStyle}" 
-				FontSize="11" Foreground="{Binding TextBrush}"/>
+				FontSize="11" Foreground="{Binding TextBrush}"/>-->
 
 			<!-- Text -->
-			<TextBlock
+			<!--<TextBlock
 				Text="{Binding Text}"
 				FontStyle="{Binding TextStyle}"
 				Foreground="{Binding TextBrush}" 
-				ToolTip="{Binding ToolTip}" />
+				ToolTip="{Binding ToolTip}" />-->
+			<Button
+				Content="{Binding Text}"
+				Style="{DynamicResource BaseButtonStyle}"
+				Foreground="{Binding TextBrush}" 
+				FontSize="11"
+				Command="{Binding FilterCommand}"
+				ToolTip="Filter other side" />
 
 			<!-- Toolbar Buttons -->
 			<Button
 				Visibility="{Binding IsShowVisibilityButton, Converter={StaticResource VC}}"
 				Padding="5,3,0,0"
-				Content="&#xe3a5;"
+				Content="&#xe3dc;"
 				FontSize="11"
 				Style="{DynamicResource IconButtonStyle}"
-				Command="{Binding ToggleVisibilityCommand}"
-				ToolTip="Toggle dim visibility" />
+				Command="{Binding ToggleCollapseCommand}"
+				ToolTip="Toggle expand/collapse all child nodes" />
+
 			<Button
 				Visibility="{Binding IsShowCodeButton, Converter={StaticResource VC}}"
 				Padding="5,3,0,0"
@@ -49,6 +57,16 @@
 				Style="{DynamicResource IconButtonStyle}"
 				Command="{Binding ShowCodeCommand}"
 				ToolTip="Show decompiled code" />
+
+			<!--<Button
+				Visibility="{Binding IsShowVisibilityButton, Converter={StaticResource VC}}"
+				Padding="5,3,0,0"
+				Content="&#xe3a5;"
+				FontSize="11"
+				Style="{DynamicResource IconButtonStyle}"
+				Command="{Binding ToggleVisibilityCommand}"
+				ToolTip="Toggle dim visibility" />
+		
 			<Button
 				Visibility="{Binding IsShowIncomingButton, Converter={StaticResource VC}}"
 				Padding="5,3,0,0"
@@ -64,7 +82,7 @@
 				FontSize="11"
 				Style="{DynamicResource IconButtonStyle}"
 				Command="{Binding OutgoingCommand}"
-				ToolTip="{Binding OutgoingButtonToolTip}"  />
+				ToolTip="{Binding OutgoingButtonToolTip}"  />-->
 
 			<!-- End margin for mouse over -->
 			<TextBlock Text="           " Visibility="{Binding IsShowButtons, Converter={StaticResource NVC}}"/>

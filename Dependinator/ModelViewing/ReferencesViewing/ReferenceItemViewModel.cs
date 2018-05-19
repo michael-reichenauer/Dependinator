@@ -14,7 +14,9 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 {
 	internal class ReferenceItemViewModel : ViewModel
 	{
-		private readonly ReferenceItem item;
+		
+		private readonly ReferencesViewModel referencesViewModel;
+		private readonly bool isSource;
 		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(300);
 
 
@@ -23,9 +25,14 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		private bool isSubReferences = false;
 
 
-		public ReferenceItemViewModel(ReferenceItem item)
+		public ReferenceItemViewModel(
+			ReferenceItem item,
+			ReferencesViewModel referencesViewModel,
+			bool isSource)
 		{
-			this.item = item;
+			this.Item = item;
+			this.referencesViewModel = referencesViewModel;
+			this.isSource = isSource;
 
 			SubItems = ToSubItems(item.SubItems);
 
@@ -34,42 +41,62 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		}
 
 
+		public ReferenceItem Item { get; }
 
-		public string Text => item.Text;
+		public string Text => Item.Text;
 		public Brush TextBrush { get => Get<Brush>(); set => Set(value); }
-		
+
 		public FontStyle TextStyle { get => Get<FontStyle>(); set => Set(value); }
 		public ObservableCollection<ReferenceItemViewModel> SubItems { get; }
-		public bool IsShowIncomingButton => IsShowButtons && !item.IsIncoming && !item.IsSubReference;
-		public bool IsShowOutgoingButton => IsShowButtons && item.IsIncoming && !item.IsSubReference;
-		public bool IsShowCodeButton => IsShowButtons && item.Node.CodeText != null;
-		public bool IsShowVisibilityButton => IsShowButtons && !item.IsSubReference;
-		public bool IsIncomingIcon => item.IsIncoming && item.IsTitle;
-		public bool IsOutgoingIcon => !item.IsIncoming && item.IsTitle;
+		public bool IsShowIncomingButton => IsShowButtons && !Item.IsIncoming && !Item.IsSubReference;
+		public bool IsShowOutgoingButton => IsShowButtons && Item.IsIncoming && !Item.IsSubReference;
+		public bool IsShowCodeButton => IsShowButtons && Item.Node.CodeText != null;
+		public bool IsShowVisibilityButton => IsShowButtons && !Item.IsSubReference;
+		//public bool IsIncomingIcon => item.IsIncoming && item.IsTitle;
+		//public bool IsOutgoingIcon => !item.IsIncoming && item.IsTitle;
 
-		public bool IsIncoming => item.IsIncoming;
-		public string ToolTip => item.ToolTip;
+		//public bool IsIncoming => item.IsIncoming;
+		public string ToolTip => Item.ToolTip;
 		public string IncomingButtonToolTip =>
-			$"Toggle show references from within {item.BaseNode?.Name.DisplayFullNoParametersName}";
-		public string OutgoingButtonToolTip => 
-			$"Toggle show references to within {item.BaseNode?.Name.DisplayFullNoParametersName}";
+			$"Toggle show references from within {Item.BaseNode?.Name.DisplayFullNoParametersName}";
+		public string OutgoingButtonToolTip =>
+			$"Toggle show references to within {Item.BaseNode?.Name.DisplayFullNoParametersName}";
 
 		public bool IsShowButtons
 		{
 			get => Get(); set => Set(value)
 				.Notify(
 					nameof(IsShowIncomingButton),
-					nameof(IsShowOutgoingButton), 
+					nameof(IsShowOutgoingButton),
 					nameof(IsShowCodeButton),
 					nameof(IsShowVisibilityButton));
 		}
 
-		public bool IsSelected { get => Get(); set => Set(value); }
+
+
+
+		private bool isDisableCallFilter = false;
+
+		public bool IsSelected
+		{
+			get => Get();
+			set => Set(value);
+		}
+
 		public bool IsExpanded { get => Get(); set => Set(value); }
 		public Command ToggleVisibilityCommand => Command(ToggleVisibility);
-		public Command IncomingCommand => Command(() => ToggleSubReferences(!item.IsIncoming));
-		public Command OutgoingCommand => Command(() => ToggleSubReferences(!item.IsIncoming));
-		public Command ShowCodeCommand => Command(() => item.ShowCode());
+		public Command IncomingCommand => Command(() => ToggleSubReferences(!Item.IsIncoming));
+		public Command OutgoingCommand => Command(() => ToggleSubReferences(!Item.IsIncoming));
+		public Command ShowCodeCommand => Command(() => Item.ShowCode());
+		public Command ToggleCollapseCommand => Command(() => SetExpand(!IsExpanded));
+		public Command FilterCommand => Command(() => referencesViewModel.FilterOn(Item, isSource));
+
+
+		private void SetExpand(bool isExpand)
+		{
+			IsExpanded = isExpand;
+			SubItems.ForEach(i => i.SetExpand(isExpand));
+		}
 
 
 		private void ToggleVisibility()
@@ -90,13 +117,14 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 			if (isSubReferences)
 			{
 				ReferenceItem newItem = new ReferenceItem(
-					item.ItemService, null, isIncoming, null, true, SubTitleText(isIncoming));
-				item.AddChild(newItem);
+					Item.ItemService, null, isIncoming, null, true, SubTitleText(isIncoming));
+				Item.AddChild(newItem);
 
-				IEnumerable<ReferenceItem> subReferences = item.GetSubReferences(isIncoming);
+				IEnumerable<ReferenceItem> subReferences = Item.GetSubReferences(isIncoming);
 				newItem.AddChildren(subReferences);
 
-				ReferenceItemViewModel newItemViewModel = new ReferenceItemViewModel(newItem);
+				ReferenceItemViewModel newItemViewModel = new ReferenceItemViewModel(
+					newItem, referencesViewModel, isSource);
 				newItemViewModel.IsExpanded = true;
 
 				SubItems.Insert(0, newItemViewModel);
@@ -104,28 +132,28 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 			}
 			else
 			{
-				var subReferences = SubItems.Where(i => i.item.IsSubReference).ToList();
+				var subReferences = SubItems.Where(i => i.Item.IsSubReference).ToList();
 				subReferences.ForEach(i => SubItems.Remove(i));
 			}
 		}
 
 
-		private static string SubTitleText(bool isIncoming) => 
+		private static string SubTitleText(bool isIncoming) =>
 			isIncoming ? "References from:" : "References to:";
 
 
-		private static ObservableCollection<ReferenceItemViewModel> ToSubItems(
+		private ObservableCollection<ReferenceItemViewModel> ToSubItems(
 			IEnumerable<ReferenceItem> subItems)
 		{
 			return new ObservableCollection<ReferenceItemViewModel>(
-				subItems.Select(i => new ReferenceItemViewModel(i)));
+				subItems.Select(i => new ReferenceItemViewModel(i, referencesViewModel, isSource)));
 		}
 
 
 		private void SetVisibility(bool isHide)
 		{
 			isHidden = isHide;
-			TextBrush = isHidden ? item.ItemTextHiddenBrush() : item.ItemTextBrush();
+			TextBrush = isHidden ? Item.ItemTextHiddenBrush() : Item.ItemTextBrush();
 			SubItems.ForEach(s => s.SetVisibility(isHide));
 		}
 
