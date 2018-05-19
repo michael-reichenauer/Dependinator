@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils.UI.Mvvm;
-using Mono.CSharp.Linq;
 
 
 namespace Dependinator.ModelViewing.ReferencesViewing
@@ -28,8 +27,8 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 			this.node = node;
 			this.line = line;
 
-			SetSourceAndTarget();
-		}
+			SetItems();
+	}
 
 		public string SourceNode { get => Get(); set => Set(value); }
 
@@ -44,14 +43,6 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		public ObservableCollection<ReferenceItemViewModel> TargetItems { get; } =
 			new ObservableCollection<ReferenceItemViewModel>();
-
-
-
-		private void SetSourceAndTarget()
-		{
-			SetSourceTarget();
-			SetItems();
-		}
 
 
 
@@ -75,8 +66,8 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 				(isOutgoing ? node.SourceLines : node.TargetLines)
 				.Where(line => line.Owner != node);
 
-			var nodeItems = await Task.Run(() => referenceItemService.GetReferences2(
-				new ReferenceOptions2(lines, true, node, null)));
+			var nodeItems = await Task.Run(() => referenceItemService.GetReferences(
+				lines, new ReferenceOptions(isOutgoing, null, null)));
 
 			if (isOutgoing)
 			{
@@ -86,17 +77,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 					.ForEach(item => SourceItems.Add(item));
 
 				SelectNode(node, SourceItems);
-
-				//if (SourceItems.Any())
-				//{
-				//	//SourceItems.First().IsExpanded = true;
-
-				//	//FilterOn(nodeItems.First(), isOutgoing);
-				//	SelectNode(node, SourceItems);
-				//	//SourceItems.First().IsSelected = true;
-				//}
 			}
-
 			else
 			{
 				TargetItems.Clear();
@@ -104,13 +85,22 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 					.Select(item => new ReferenceItemViewModel(item, this, false))
 					.ForEach(item => TargetItems.Add(item));
 
-				if (TargetItems.Any())
-				{
-					TargetItems.First().IsExpanded = true;
-					FilterOn(nodeItems.First(), isOutgoing);
-					//TargetItems.First().IsSelected = true;
-				}
+				SelectNode(node, TargetItems);
 			}
+		}
+
+
+		private async void SetLineItems()
+		{
+			var nodeItems = await Task.Run(() => referenceItemService.GetReferences(
+				new[] { line }, new ReferenceOptions(isOutgoing, null, null)));
+
+			SourceItems.Clear();
+			nodeItems
+				.Select(item => new ReferenceItemViewModel(item, this, true))
+				.ForEach(item => SourceItems.Add(item));
+
+			SelectNode(line.Source, SourceItems);
 		}
 
 
@@ -121,9 +111,9 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 				if (node1.AncestorsAndSelf().Contains(viewModel.Item.Node))
 				{
 					viewModel.IsExpanded = true;
-					SelectNode(node, viewModel.SubItems);
+					SelectNode(node1, viewModel.SubItems);
 
-					if (viewModel.Item.Node == node)
+					if (viewModel.Item.Node == node1)
 					{
 						viewModel.IsSelected = true;
 						FilterOn(viewModel.Item, isOutgoing);
@@ -135,79 +125,37 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		}
 
 
-		private void SelectFirst(IEnumerable<ReferenceItemViewModel> items)
+		private static void ExpandFirst(IEnumerable<ReferenceItemViewModel> items)
 		{
-			if (items.Count() > 1)
+			if (items.Count() == 1)
 			{
-				return;
-			}
-
-			foreach (var viewModel in items)
-			{
-				if (viewModel.SubItems.Count < 2)
-				{
-					viewModel.IsExpanded = true;
-					SelectFirst(viewModel.SubItems);
-					break;
-				}
+				var viewModel = items.First();
+				viewModel.IsExpanded = true;
+				ExpandFirst(viewModel.SubItems);
 			}
 		}
 
-
-		private async void SetLineItems()
-		{
-			var nodeItems = await Task.Run(() => referenceItemService.GetReferences(
-				line, new ReferenceOptions(true, !isOutgoing)));
-
-			SourceItems.Clear();
-			nodeItems
-				.Select(item => new ReferenceItemViewModel(item, this, true))
-				.ForEach(item => SourceItems.Add(item));
-
-			if (SourceItems.Any())
-			{
-				SourceItems.First().IsExpanded = true;
-				FilterOn(nodeItems.First(), isOutgoing);
-				//SourceItems.First().IsSelected = true;
-			}
-		}
-
-
-
-		private void SetSourceTarget()
-		{
-			if (isOutgoing)
-			{
-				SourceNode = line == null ? node.Name.DisplayFullName : line.Source.Name.DisplayFullName;
-				TargetNode = line == null ? "*" : line.Target.Name.DisplayFullName;
-			}
-			else
-			{
-				SourceNode = line == null ? "*" : line.Target.Name.DisplayFullName;
-				TargetNode = line == null ? node.Name.DisplayFullName : line.Source.Name.DisplayFullName;
-			}
-		}
-
-
+		
 
 		private void SwitchSides()
 		{
 			isOutgoing = !isOutgoing;
 
-			SetSourceAndTarget();
+			SetItems();
 		}
 
 
 		public async void FilterOn(ReferenceItem referenceItem, bool isSource)
 		{
-			IEnumerable<Line> lines =
-				(isOutgoing ? node.SourceLines : node.TargetLines)
-				.Where(line => line.Owner != node);
+			IEnumerable<Line> lines = line == null
+				? (isOutgoing ? node.SourceLines : node.TargetLines)
+					.Where(line => line.Owner != node)
+				: new[] { line };
 
 			if (isSource)
 			{
-				var referenceItems = await Task.Run(() => referenceItemService.GetReferences2(
-					new ReferenceOptions2(lines, false, referenceItem.Node, null)));
+				var referenceItems = await Task.Run(() => referenceItemService.GetReferences(
+					lines, new ReferenceOptions(false, referenceItem.Node, null)));
 
 				if (isOutgoing)
 				{
@@ -216,8 +164,8 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 						.Select(item => new ReferenceItemViewModel(item, this, false))
 						.ForEach(item => TargetItems.Add(item));
 					SourceNode = referenceItem.Node.Name.DisplayFullName;
-					TargetNode = "*";
-					SelectFirst(TargetItems);
+					TargetNode = line == null ? "*" : line.Target.Name.DisplayFullName;
+					ExpandFirst(TargetItems);
 				}
 				else
 				{
@@ -231,8 +179,8 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 			}
 			else
 			{
-				var nodeItems = await Task.Run(() => referenceItemService.GetReferences2(
-					new ReferenceOptions2(lines, true, node, referenceItem.Node)));
+				var nodeItems = await Task.Run(() => referenceItemService.GetReferences(
+					lines, new ReferenceOptions(true, node, referenceItem.Node)));
 
 				if (isOutgoing)
 				{
@@ -243,13 +191,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 					SourceNode = node.Name.DisplayFullName;
 					TargetNode = referenceItem.Node.Name.DisplayFullName;
 
-					//if (SourceItems.Any())
-					//{
-					//	SourceItems.First().IsExpanded = true;
-					//	//SourceItems.First().SetIsSelected();
-					//}
-
-					SelectFirst(SourceItems);
+					ExpandFirst(SourceItems);
 				}
 				else
 				{
@@ -259,11 +201,6 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 						.ForEach(item => TargetItems.Add(item));
 					SourceNode = referenceItem.Node.Name.DisplayFullName;
 					TargetNode = node.Name.DisplayFullName;
-					//if (TargetItems.Any())
-					//{
-					//	TargetItems.First().IsExpanded = true;
-					//	//TargetItems.First().SetIsSelected();
-					//}
 				}
 			}
 		}

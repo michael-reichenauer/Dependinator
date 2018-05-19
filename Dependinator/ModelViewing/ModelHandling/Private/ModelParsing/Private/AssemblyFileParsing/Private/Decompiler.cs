@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using Dependinator.Utils;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;

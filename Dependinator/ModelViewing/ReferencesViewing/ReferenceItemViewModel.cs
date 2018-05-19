@@ -4,8 +4,6 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
-using Dependinator.ModelViewing.CodeViewing;
-using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
 
@@ -80,7 +78,14 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		public Command ToggleVisibilityCommand => Command(ToggleVisibility);
 		public Command ShowCodeCommand => Command(() => Item.ShowCode());
 		public Command ToggleCollapseCommand => Command(() => SetExpand(!IsExpanded));
-		public Command FilterCommand => Command(() => referencesViewModel.FilterOn(Item, isSource));
+		public Command FilterCommand => Command(() => Filter());
+
+
+		private void Filter()
+		{
+			IsSelected = true;
+			referencesViewModel.FilterOn(Item, isSource);
+		}
 
 
 		private void SetExpand(bool isExpand)

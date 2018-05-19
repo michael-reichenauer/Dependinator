@@ -1,7 +1,6 @@
 ﻿using System.Windows.Controls;
 using System.Windows.Input;
 using Dependinator.Utils.UI;
-using Dependinator.Utils.UI.Mvvm;
 
 
 namespace Dependinator.ModelViewing.Nodes

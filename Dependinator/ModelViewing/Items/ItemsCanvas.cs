@@ -7,7 +7,6 @@ using System.Windows.Media;
 using Dependinator.Common;
 using Dependinator.ModelViewing.Items.Private;
 using Dependinator.ModelViewing.Nodes;
-using Dependinator.Utils;
 using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 

@@ -1,11 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.Common;
-using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.CodeViewing;
 using Dependinator.ModelViewing.Items;

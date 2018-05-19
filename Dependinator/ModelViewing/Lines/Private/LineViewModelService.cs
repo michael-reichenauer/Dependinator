@@ -4,7 +4,6 @@ using System.Windows.Input;
 using Dependinator.Common;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.ReferencesViewing;
 
 
