@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Windows;
 using System.Windows.Media;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
@@ -12,12 +11,10 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 {
 	internal class ReferenceItemViewModel : ViewModel
 	{
-		
 		private readonly ReferencesViewModel referencesViewModel;
-		private readonly bool isSource;
+		private readonly bool isSourceItem;
 		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(300);
-
-
+		
 		private readonly DelayDispatcher delayDispatcher = new DelayDispatcher();
 		private bool isHidden = false;
 		private bool isSubReferences = false;
@@ -26,16 +23,15 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		public ReferenceItemViewModel(
 			ReferenceItem item,
 			ReferencesViewModel referencesViewModel,
-			bool isSource)
+			bool isSourceItem)
 		{
 			this.Item = item;
 			this.referencesViewModel = referencesViewModel;
-			this.isSource = isSource;
+			this.isSourceItem = isSourceItem;
 
 			SubItems = ToSubItems(item.SubItems);
 
 			TextBrush = item.ItemTextBrush();
-			TextStyle = item.IsSubReference ? FontStyles.Italic : FontStyles.Normal;
 		}
 
 
@@ -44,36 +40,19 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		public string Text => Item.Text;
 		public Brush TextBrush { get => Get<Brush>(); set => Set(value); }
 
-		public FontStyle TextStyle { get => Get<FontStyle>(); set => Set(value); }
 		public ObservableCollection<ReferenceItemViewModel> SubItems { get; }
-		public bool IsShowIncomingButton => IsShowButtons && !Item.IsIncoming && !Item.IsSubReference;
-		public bool IsShowOutgoingButton => IsShowButtons && Item.IsIncoming && !Item.IsSubReference;
 		public bool IsShowCodeButton => IsShowButtons && Item.Node.CodeText != null;
-		public bool IsShowVisibilityButton => IsShowButtons && !Item.IsSubReference;
+		public bool IsShowVisibilityButton => IsShowButtons;
 
 		public string ToolTip => Item.ToolTip;
-		
+
 		public bool IsShowButtons
 		{
-			get => Get(); set => Set(value)
-				.Notify(
-					nameof(IsShowIncomingButton),
-					nameof(IsShowOutgoingButton),
-					nameof(IsShowCodeButton),
-					nameof(IsShowVisibilityButton));
-		}
-
-
-
-
-		private bool isDisableCallFilter = false;
-
-		public bool IsSelected
-		{
 			get => Get();
-			set => Set(value);
+			set => Set(value).Notify(nameof(IsShowCodeButton), nameof(IsShowVisibilityButton));
 		}
 
+		public bool IsSelected { get => Get(); set => Set(value); }
 		public bool IsExpanded { get => Get(); set => Set(value); }
 		public Command ToggleVisibilityCommand => Command(ToggleVisibility);
 		public Command ShowCodeCommand => Command(() => Item.ShowCode());
@@ -84,7 +63,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		private void Filter()
 		{
 			IsSelected = true;
-			referencesViewModel.FilterOn(Item, isSource);
+			referencesViewModel.FilterOn(Item, isSourceItem);
 		}
 
 
@@ -106,12 +85,11 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		}
 
 
-
 		private ObservableCollection<ReferenceItemViewModel> ToSubItems(
 			IEnumerable<ReferenceItem> subItems)
 		{
 			return new ObservableCollection<ReferenceItemViewModel>(
-				subItems.Select(i => new ReferenceItemViewModel(i, referencesViewModel, isSource)));
+				subItems.Select(i => new ReferenceItemViewModel(i, referencesViewModel, isSourceItem)));
 		}
 
 

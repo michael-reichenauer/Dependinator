@@ -12,31 +12,27 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 	internal class ReferencesViewModel : ViewModel
 	{
 		private readonly IReferenceItemService referenceItemService;
-		private readonly Node node;
-		private readonly Line line;
-		private bool isOutgoing = true;
-		public Command<Window> CancelCommand => Command<Window>(w => w.Close());
 
 
-		public ReferencesViewModel(
-			IReferenceItemService referenceItemService,
-			Node node,
-			Line line)
+		private Node sourceNode;
+		private Node targetNode;
+		private IEnumerable<Line> lines;
+
+
+		public ReferencesViewModel(IReferenceItemService referenceItemService, Node node, Line line)
 		{
 			this.referenceItemService = referenceItemService;
-			this.node = node;
-			this.line = line;
 
-			SetItems();
-	}
+			InitializeAsync(node, line);
+		}
 
-		public string SourceNode { get => Get(); set => Set(value); }
 
-		public string TargetNode { get => Get(); set => Set(value); }
+		public string SourceText { get => Get(); set => Set(value); }
 
-		public bool IsShowSwitchButton => line == null;
+		public string TargetText { get => Get(); set => Set(value); }
 
-		public Command SwitchSidesCommand => Command(SwitchSides);
+		public Command<Window> CancelCommand => Command<Window>(w => w.Close());
+		public Command SwitchSidesCommand => AsyncCommand(SwitchSidesAsync);
 
 		public ObservableCollection<ReferenceItemViewModel> SourceItems { get; } =
 			new ObservableCollection<ReferenceItemViewModel>();
@@ -45,78 +41,126 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 			new ObservableCollection<ReferenceItemViewModel>();
 
 
-
-		private async void SetItems()
+		private async void InitializeAsync(Node node, Line line)
 		{
 			if (line == null)
 			{
-				SetNodeItems();
+				sourceNode = node;
+				targetNode = node.Root;
+				lines = sourceNode.SourceLines.Concat(targetNode.TargetLines);
 			}
 			else
 			{
-				SetLineItems();
+				sourceNode = line.Source;
+				targetNode = line.Target;
+				lines = new List<Line> { line };
 			}
+
+			await SetSourceAndTargetItemsAsync();
 		}
 
 
-
-		private async void SetNodeItems()
+		private async Task SwitchSidesAsync()
 		{
-			IEnumerable<Line> lines =
-				(isOutgoing ? node.SourceLines : node.TargetLines)
-				.Where(line => line.Owner != node);
+			Node node = sourceNode;
+			sourceNode = targetNode;
+			targetNode = node;
+			lines = sourceNode.SourceLines.Concat(targetNode.TargetLines); 
 
-			var nodeItems = await Task.Run(() => referenceItemService.GetReferences(
-				lines, new ReferenceOptions(isOutgoing, null, null)));
+			await SetSourceAndTargetItemsAsync();
+		}
 
-			if (isOutgoing)
+
+		private async Task SetSourceAndTargetItemsAsync()
+		{
+			await SetDependencyItemsAsync(true);
+			await SetDependencyItemsAsync(false);
+
+			SetTexts();
+			SelectNode(sourceNode, SourceItems);
+			SelectNode(targetNode, TargetItems);
+		}
+
+
+		public async void FilterOn(ReferenceItem referenceItem, bool isSourceSide)
+		{
+			bool isAncestor = false;
+
+			if (isSourceSide)
 			{
-				SourceItems.Clear();
-				nodeItems
-					.Select(item => new ReferenceItemViewModel(item, this, true))
-					.ForEach(item => SourceItems.Add(item));
-
-				SelectNode(node, SourceItems);
+				isAncestor = sourceNode.Ancestors().Contains(referenceItem.Node);
+				sourceNode = referenceItem.Node;
+				targetNode = targetNode;
 			}
 			else
 			{
-				TargetItems.Clear();
-				nodeItems
-					.Select(item => new ReferenceItemViewModel(item, this, false))
-					.ForEach(item => TargetItems.Add(item));
+				isAncestor = targetNode.Ancestors().Contains(referenceItem.Node);
+				sourceNode = sourceNode;
+				targetNode = referenceItem.Node;
+			}
 
-				SelectNode(node, TargetItems);
+			lines = sourceNode.SourceLines.Concat(targetNode.TargetLines);
+
+			await SetDependencyItemsAsync(!isSourceSide);
+			if (isAncestor)
+			{
+				await SetDependencyItemsAsync(isSourceSide);
+			}
+
+			SetTexts();
+			if (isSourceSide)
+			{
+				SelectNode(targetNode, TargetItems);
+				if (isAncestor)
+				{
+					SelectNode(sourceNode, SourceItems);
+				}
+			}
+			else
+			{
+				SelectNode(sourceNode, SourceItems);
+				if (isAncestor)
+				{
+					SelectNode(targetNode, TargetItems);
+				}
 			}
 		}
 
 
-		private async void SetLineItems()
+		private async Task SetDependencyItemsAsync(bool isSourceSide)
 		{
-			var nodeItems = await Task.Run(() => referenceItemService.GetReferences(
-				new[] { line }, new ReferenceOptions(isOutgoing, null, null)));
+			var dependencyItems = await referenceItemService.GetReferencesAsync(
+				lines, isSourceSide, sourceNode, targetNode);
 
-			SourceItems.Clear();
-			nodeItems
-				.Select(item => new ReferenceItemViewModel(item, this, true))
-				.ForEach(item => SourceItems.Add(item));
+			var items = isSourceSide ? SourceItems : TargetItems;
 
-			SelectNode(line.Source, SourceItems);
+			items.Clear();
+			dependencyItems
+				.Select(item => new ReferenceItemViewModel(item, this, isSourceSide))
+				.ForEach(item => items.Add(item));
 		}
 
 
-		private void SelectNode(Node node1, IEnumerable<ReferenceItemViewModel> items)
+		private void SetTexts()
+		{
+			SourceText = sourceNode.IsRoot ? "all nodes" : sourceNode.Name.DisplayFullName;
+			TargetText = targetNode.IsRoot ? "all nodes" : targetNode.Name.DisplayFullName;
+		}
+
+
+		private void SelectNode(Node node, IEnumerable<ReferenceItemViewModel> items)
 		{
 			foreach (var viewModel in items)
 			{
-				if (node1.AncestorsAndSelf().Contains(viewModel.Item.Node))
+				if (viewModel.Item.Node.IsRoot || node.AncestorsAndSelf().Contains(viewModel.Item.Node))
 				{
 					viewModel.IsExpanded = true;
-					SelectNode(node1, viewModel.SubItems);
+					SelectNode(node, viewModel.SubItems);
 
-					if (viewModel.Item.Node == node1)
+					if (viewModel.Item.Node == node)
 					{
 						viewModel.IsSelected = true;
-						FilterOn(viewModel.Item, isOutgoing);
+						ExpandFirst(viewModel.SubItems);
 					}
 
 					break;
@@ -127,81 +171,11 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		private static void ExpandFirst(IEnumerable<ReferenceItemViewModel> items)
 		{
-			if (items.Count() == 1)
+			while (items.Count() == 1)
 			{
 				var viewModel = items.First();
 				viewModel.IsExpanded = true;
-				ExpandFirst(viewModel.SubItems);
-			}
-		}
-
-		
-
-		private void SwitchSides()
-		{
-			isOutgoing = !isOutgoing;
-
-			SetItems();
-		}
-
-
-		public async void FilterOn(ReferenceItem referenceItem, bool isSource)
-		{
-			IEnumerable<Line> lines = line == null
-				? (isOutgoing ? node.SourceLines : node.TargetLines)
-					.Where(line => line.Owner != node)
-				: new[] { line };
-
-			if (isSource)
-			{
-				var referenceItems = await Task.Run(() => referenceItemService.GetReferences(
-					lines, new ReferenceOptions(false, referenceItem.Node, null)));
-
-				if (isOutgoing)
-				{
-					TargetItems.Clear();
-					referenceItems
-						.Select(item => new ReferenceItemViewModel(item, this, false))
-						.ForEach(item => TargetItems.Add(item));
-					SourceNode = referenceItem.Node.Name.DisplayFullName;
-					TargetNode = line == null ? "*" : line.Target.Name.DisplayFullName;
-					ExpandFirst(TargetItems);
-				}
-				else
-				{
-					SourceItems.Clear();
-					referenceItems
-						.Select(item => new ReferenceItemViewModel(item, this, true))
-						.ForEach(item => SourceItems.Add(item));
-					SourceNode = "*";
-					TargetNode = referenceItem.Node.Name.DisplayFullName;
-				}
-			}
-			else
-			{
-				var nodeItems = await Task.Run(() => referenceItemService.GetReferences(
-					lines, new ReferenceOptions(true, node, referenceItem.Node)));
-
-				if (isOutgoing)
-				{
-					SourceItems.Clear();
-					nodeItems
-						.Select(item => new ReferenceItemViewModel(item, this, true))
-						.ForEach(item => SourceItems.Add(item));
-					SourceNode = node.Name.DisplayFullName;
-					TargetNode = referenceItem.Node.Name.DisplayFullName;
-
-					ExpandFirst(SourceItems);
-				}
-				else
-				{
-					TargetItems.Clear();
-					nodeItems
-						.Select(item => new ReferenceItemViewModel(item, this, false))
-						.ForEach(item => TargetItems.Add(item));
-					SourceNode = referenceItem.Node.Name.DisplayFullName;
-					TargetNode = node.Name.DisplayFullName;
-				}
+				items = viewModel.SubItems;
 			}
 		}
 	}

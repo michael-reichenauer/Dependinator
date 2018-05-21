@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Media;
 using Dependinator.Common;
 using Dependinator.Common.ThemeHandling;
@@ -26,8 +27,6 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		public Brush ItemTextBrush() => themeService.GetTextBrush();
 
-		public Brush ItemTextLowBrush() => themeService.GetTextLowBrush();
-
 
 		public void ShowCode(Node node)
 		{
@@ -40,30 +39,37 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 
 
-		public IEnumerable<ReferenceItem> GetReferences(
-			IEnumerable<Line> lines, ReferenceOptions options)
+		public async Task<IReadOnlyList<ReferenceItem>> GetReferencesAsync(
+			IEnumerable<Line> lines, 
+			bool isSource,
+			Node sourceFilter,
+			Node targetFilter)
 		{
-			IEnumerable<Link> links = lines
-				.SelectMany(line => line.Links)
-				.Where(link => IsIncluded(link, options));
-
-			var items = CreateReferenceHierarchy(links, options);
-
-			if (!items.Any())
+			return await Task.Run(() =>
 			{
-				return Enumerable.Empty<ReferenceItem>();
-			}
+				ReferenceOptions options = new ReferenceOptions(isSource, sourceFilter, targetFilter);
+				IEnumerable<Link> links = lines
+					.SelectMany(line => line.Links)
+					.Where(link => IsIncluded(link, options));
 
-			ReferenceItem rootItem = items[NodeName.Root];
+				var items = CreateReferenceHierarchy(links, options);
 
-			return rootItem.SubItems;
+				if (!items.Any())
+				{
+					return Enumerable.Empty<ReferenceItem>().ToList();
+				}
+
+				ReferenceItem rootItem = items[NodeName.Root];
+
+				return new List<ReferenceItem> { rootItem };
+			});
 		}
 
 
 
 		private static bool IsIncluded(IEdge link, ReferenceOptions options) =>
-			(options.SourceFilter == null || link.Source.AncestorsAndSelf().Contains(options.SourceFilter)) &&
-			(options.TargetFilter == null || link.Target.AncestorsAndSelf().Contains(options.TargetFilter));
+			(options.SourceFilter.IsRoot || link.Source.AncestorsAndSelf().Contains(options.SourceFilter)) &&
+			(options.TargetFilter.IsRoot || link.Target.AncestorsAndSelf().Contains(options.TargetFilter));
 
 
 
@@ -72,15 +78,17 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 		{
 			Dictionary<NodeName, ReferenceItem> items = new Dictionary<NodeName, ReferenceItem>();
 
+			items[NodeName.Root] = new ReferenceItem(this, options.SourceFilter.Root);
+
 			foreach (Link link in links)
 			{
 				Node node = EndPoint(link, options.IsSource);
 
 				if (!items.TryGetValue(node.Name, out ReferenceItem item))
 				{
-					ReferenceItem parentItem = GetParentItem(items, node.Parent, options);
+					ReferenceItem parentItem = GetParentItem(items, node.Parent);
 
-					item = new ReferenceItem(this, node, false, null, false);
+					item = new ReferenceItem(this, node);
 					parentItem.AddChild(item);
 
 					items[node.Name] = item;
@@ -95,19 +103,18 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		private ReferenceItem GetParentItem(
 			IDictionary<NodeName, ReferenceItem> items,
-			Node parentNode,
-			ReferenceOptions options)
+			Node parentNode)
 		{
 			if (items.TryGetValue(parentNode.Name, out ReferenceItem parentItem))
 			{
 				return parentItem;
 			}
 
-			parentItem = new ReferenceItem(this, parentNode, false, null, false);
+			parentItem = new ReferenceItem(this, parentNode);
 
 			if (!parentNode.IsRoot)
 			{
-				ReferenceItem grandParentItem = GetParentItem(items, parentNode.Parent, options);
+				ReferenceItem grandParentItem = GetParentItem(items, parentNode.Parent);
 				grandParentItem.AddChild(parentItem);
 			}
 
@@ -118,7 +125,7 @@ namespace Dependinator.ModelViewing.ReferencesViewing
 
 		private static Node EndPoint(IEdge edge, bool isSource)
 		{
-			return isSource ?  edge.Source : edge.Target;
+			return isSource ? edge.Source : edge.Target;
 		}
 	}
 }

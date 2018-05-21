@@ -76,7 +76,6 @@
 					<TextBlock Text="Dependency Explorer" Foreground="{DynamicResource TextBrush}" Margin="10, 5" />
 
 					<Button
-						Visibility="{Binding IsShowSwitchButton, Converter={StaticResource VC}}"
 						WindowChrome.IsHitTestVisibleInChrome="True"
 						Style="{DynamicResource IconButtonStyle}"
 						Content="&#xe8d4;"
@@ -104,7 +103,8 @@
 			HorizontalAlignment="Right"
 			VerticalAlignment="Center"
 			Margin="10,5"
-			Text="{Binding SourceNode}" Foreground="{DynamicResource TextBrush}" />
+			Text="{Binding SourceText}" 
+			Foreground="{DynamicResource TextBrush}" />
 
 		<TextBlock
 			Grid.Row="1" Grid.Column="1"
@@ -117,10 +117,11 @@
 			HorizontalAlignment="Left"
 			VerticalAlignment="Center"
 			Grid.Row="1" Grid.Column="2"
-			Text="{Binding TargetNode}" Foreground="{DynamicResource TextBrush}" />
+			Text="{Binding TargetText}" 
+			Foreground="{DynamicResource TextBrush}" />
 
-		<Grid Grid.Row="2" Grid.ColumnSpan="3">
 
+		<Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3">
 
 		<Grid.ColumnDefinitions>
 			<!--Left side -->
