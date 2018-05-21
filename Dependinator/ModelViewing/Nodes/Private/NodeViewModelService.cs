@@ -21,7 +21,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private readonly IModelLineService modelLineService;
 		private readonly ILineMenuItemService lineMenuItemService;
 		private readonly IItemSelectionService itemSelectionService;
-		private readonly IReferenceItemService referenceItemService;
+		private readonly IDependenciesService dependenciesService;
 		private readonly WindowOwner owner;
 
 
@@ -31,14 +31,14 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			IModelLineService modelLineService,
 			ILineMenuItemService lineMenuItemService,
 			IItemSelectionService itemSelectionService,
-			IReferenceItemService referenceItemService,
+			IDependenciesService dependenciesService,
 			WindowOwner owner)
 		{
 			this.themeService = themeService;
 			this.modelLineService = modelLineService;
 			this.lineMenuItemService = lineMenuItemService;
 			this.itemSelectionService = itemSelectionService;
-			this.referenceItemService = referenceItemService;
+			this.dependenciesService = dependenciesService;
 			this.owner = owner;
 		}
 
@@ -128,7 +128,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		{
 			Node node = nodeViewModel.Node;
 
-			ReferencesDialog referencesDialog = new ReferencesDialog(referenceItemService, owner, node);
+			ReferencesDialog referencesDialog = new ReferencesDialog(dependenciesService, owner, node);
 			referencesDialog.Show();
 		}
 

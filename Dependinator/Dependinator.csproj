@@ -161,15 +161,16 @@
       <DependentUpon>CodeDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\CodeViewing\CodeViewModel.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\IItemCommands.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\Decompiler.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\WorkParser.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\IReferenceItemService.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\ReferenceItem.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\IDependenciesService.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\DependencyItem.cs" />
     <Compile Include="ModelViewing\DependencyExploring\ReferenceItemView.xaml.cs">
       <DependentUpon>ReferenceItemView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\DependencyExploring\ReferenceItemViewModel.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\ReferenceItemService.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\DependenciesService.cs" />
     <Compile Include="ModelViewing\DependencyExploring\ReferenceOptions.cs" />
     <Compile Include="ModelViewing\DependencyExploring\ReferencesDialog.xaml.cs">
       <DependentUpon>ReferencesDialog.xaml</DependentUpon>

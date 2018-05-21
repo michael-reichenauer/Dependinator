@@ -3,15 +3,17 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Dependinator.ModelViewing.CodeViewing;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils.UI.Mvvm;
 
 
 namespace Dependinator.ModelViewing.DependencyExploring
 {
-	internal class ReferencesViewModel : ViewModel
+	internal class ReferencesViewModel : ViewModel, IItemCommands
 	{
-		private readonly IReferenceItemService referenceItemService;
+		private readonly IDependenciesService dependenciesService;
+		private readonly Window owner;
 
 
 		private Node sourceNode;
@@ -19,9 +21,14 @@ namespace Dependinator.ModelViewing.DependencyExploring
 		private IEnumerable<Line> lines;
 
 
-		public ReferencesViewModel(IReferenceItemService referenceItemService, Node node, Line line)
+		public ReferencesViewModel(
+			IDependenciesService dependenciesService, 
+			Window owner,
+			Node node, 
+			Line line)
 		{
-			this.referenceItemService = referenceItemService;
+			this.dependenciesService = dependenciesService;
+			this.owner = owner;
 
 			InitializeAsync(node, line);
 		}
@@ -82,21 +89,28 @@ namespace Dependinator.ModelViewing.DependencyExploring
 		}
 
 
-		public async void FilterOn(ReferenceItem referenceItem, bool isSourceSide)
+		public void ShowCode(Node node)
+		{
+			CodeDialog codeDialog = new CodeDialog(owner, node);
+			codeDialog.Show();
+		}
+
+
+		public async void FilterOn(DependencyItem dependencyItem, bool isSourceSide)
 		{
 			bool isAncestor = false;
 
 			if (isSourceSide)
 			{
-				isAncestor = sourceNode.Ancestors().Contains(referenceItem.Node);
-				sourceNode = referenceItem.Node;
+				isAncestor = sourceNode.Ancestors().Contains(dependencyItem.Node);
+				sourceNode = dependencyItem.Node;
 				targetNode = targetNode;
 			}
 			else
 			{
-				isAncestor = targetNode.Ancestors().Contains(referenceItem.Node);
+				isAncestor = targetNode.Ancestors().Contains(dependencyItem.Node);
 				sourceNode = sourceNode;
-				targetNode = referenceItem.Node;
+				targetNode = dependencyItem.Node;
 			}
 
 			lines = sourceNode.SourceLines.Concat(targetNode.TargetLines);
@@ -129,7 +143,7 @@ namespace Dependinator.ModelViewing.DependencyExploring
 
 		private async Task SetDependencyItemsAsync(bool isSourceSide)
 		{
-			var dependencyItems = await referenceItemService.GetReferencesAsync(
+			var dependencyItems = await dependenciesService.GetReferencesAsync(
 				lines, isSourceSide, sourceNode, targetNode);
 
 			var items = isSourceSide ? SourceItems : TargetItems;

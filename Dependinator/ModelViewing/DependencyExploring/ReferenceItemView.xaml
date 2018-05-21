@@ -7,7 +7,7 @@
 	mc:Ignorable="d"
 	d:DesignHeight="450" d:DesignWidth="800">
 
-	<Grid >
+	<Grid>
 		<StackPanel
 			MouseEnter="UIElement_OnMouseEnter"
 			MouseLeave="UIElement_OnMouseLeave"
@@ -17,10 +17,19 @@
 			<Button
 				Content="{Binding Text}"
 				Style="{DynamicResource BaseButtonStyle}"
-				Foreground="{Binding TextBrush}" 
+				Foreground="{DynamicResource TextBrush}"
 				FontSize="11"
-				Command="{Binding FilterCommand}"
-				ToolTip="Filter other side" />
+				Command="{Binding FilterCommand}">
+				<Button.ToolTip>
+					<ToolTip
+						Content="{Binding ToolTip}"
+						Placement="Mouse"
+						BorderBrush="{DynamicResource BorderBrush}"
+						BorderThickness="1"
+						Opened="ToolTip_OnOpened" />
+				</Button.ToolTip>
+
+			</Button>
 
 			<!-- Toolbar Buttons -->
 			<Button
@@ -48,11 +57,11 @@
  				Style="{DynamicResource IconButtonStyle}"
  				Command="{Binding ToggleVisibilityCommand}"
 				ToolTip="Toggle dim visibility" />-->
-			
+
 
 			<!-- End margin for mouse over -->
-			<TextBlock Text="           " Visibility="{Binding IsShowButtons, Converter={StaticResource NVC}}"/>
-		
-			</StackPanel>
+			<TextBlock Text="           " Visibility="{Binding IsShowButtons, Converter={StaticResource NVC}}" />
+
+		</StackPanel>
 	</Grid>
 </UserControl>

@@ -16,7 +16,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 		private readonly ILineZoomService lineZoomService;
 		private readonly ILineDataService lineDataService;
 		private readonly IItemSelectionService itemSelectionService;
-		private readonly IReferenceItemService referenceItemService;
+		private readonly IDependenciesService dependenciesService;
 
 		private readonly WindowOwner owner;
 
@@ -27,7 +27,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 			ILineZoomService lineZoomService,
 			ILineDataService lineDataService,
 			IItemSelectionService itemSelectionService,
-			IReferenceItemService referenceItemService,
+			IDependenciesService dependenciesService,
 			WindowOwner owner)
 		{
 			this.lineMenuItemService = lineMenuItemService;
@@ -35,7 +35,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 			this.lineZoomService = lineZoomService;
 			this.lineDataService = lineDataService;
 			this.itemSelectionService = itemSelectionService;
-			this.referenceItemService = referenceItemService;
+			this.dependenciesService = dependenciesService;
 			this.owner = owner;
 		}
 
@@ -99,7 +99,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 		{
 			Line line = lineViewModel.Line;
 
-			ReferencesDialog referencesDialog = new ReferencesDialog(referenceItemService, owner, line);
+			ReferencesDialog referencesDialog = new ReferencesDialog(dependenciesService, owner, line);
 			referencesDialog.Show();
 		}
 	}

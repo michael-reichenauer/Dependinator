@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Windows.Media;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
 
@@ -11,7 +10,8 @@ namespace Dependinator.ModelViewing.DependencyExploring
 {
 	internal class ReferenceItemViewModel : ViewModel
 	{
-		private readonly ReferencesViewModel referencesViewModel;
+
+		private readonly IItemCommands itemCommands;
 		private readonly bool isSourceItem;
 		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(300);
 		
@@ -21,30 +21,28 @@ namespace Dependinator.ModelViewing.DependencyExploring
 
 
 		public ReferenceItemViewModel(
-			ReferenceItem item,
-			ReferencesViewModel referencesViewModel,
+			DependencyItem item,
+			IItemCommands itemCommands,
 			bool isSourceItem)
 		{
 			this.Item = item;
-			this.referencesViewModel = referencesViewModel;
+			this.itemCommands = itemCommands;
 			this.isSourceItem = isSourceItem;
 
 			SubItems = ToSubItems(item.SubItems);
-
-			TextBrush = item.ItemTextBrush();
 		}
 
 
-		public ReferenceItem Item { get; }
+		public DependencyItem Item { get; }
 
-		public string Text => Item.Text;
-		public Brush TextBrush { get => Get<Brush>(); set => Set(value); }
+		public string Text => Item.Node.IsRoot ? "all nodes" : Item.Node.Name.DisplayName;
 
 		public ObservableCollection<ReferenceItemViewModel> SubItems { get; }
 		public bool IsShowCodeButton => IsShowButtons && Item.Node.CodeText != null;
 		public bool IsShowVisibilityButton => IsShowButtons;
 
-		public string ToolTip => Item.ToolTip;
+		public string ToolTip { get => Get(); set => Set(value); }
+
 
 		public bool IsShowButtons
 		{
@@ -54,8 +52,8 @@ namespace Dependinator.ModelViewing.DependencyExploring
 
 		public bool IsSelected { get => Get(); set => Set(value); }
 		public bool IsExpanded { get => Get(); set => Set(value); }
-		public Command ToggleVisibilityCommand => Command(ToggleVisibility);
-		public Command ShowCodeCommand => Command(() => Item.ShowCode());
+		//public Command ToggleVisibilityCommand => Command(ToggleVisibility);
+		public Command ShowCodeCommand => Command(() => itemCommands.ShowCode(Item.Node));
 		public Command ToggleCollapseCommand => Command(() => SetExpand(!IsExpanded));
 		public Command FilterCommand => Command(() => Filter());
 
@@ -63,7 +61,7 @@ namespace Dependinator.ModelViewing.DependencyExploring
 		private void Filter()
 		{
 			IsSelected = true;
-			referencesViewModel.FilterOn(Item, isSourceItem);
+			itemCommands.FilterOn(Item, isSourceItem);
 		}
 
 
@@ -74,31 +72,32 @@ namespace Dependinator.ModelViewing.DependencyExploring
 		}
 
 
-		private void ToggleVisibility()
-		{
-			SetVisibility(!isHidden);
-
-			if (isHidden)
-			{
-				IsExpanded = false;
-			}
-		}
-
-
 		private ObservableCollection<ReferenceItemViewModel> ToSubItems(
-			IEnumerable<ReferenceItem> subItems)
+			IEnumerable<DependencyItem> subItems)
 		{
 			return new ObservableCollection<ReferenceItemViewModel>(
-				subItems.Select(i => new ReferenceItemViewModel(i, referencesViewModel, isSourceItem)));
+				subItems.Select(i => new ReferenceItemViewModel(i, itemCommands, isSourceItem)));
 		}
 
 
-		private void SetVisibility(bool isHide)
-		{
-			isHidden = isHide;
-			TextBrush = isHidden ? Item.ItemTextHiddenBrush() : Item.ItemTextBrush();
-			SubItems.ForEach(s => s.SetVisibility(isHide));
-		}
+		//private void ToggleVisibility()
+		//{
+		//	SetVisibility(!isHidden);
+
+		//	if (isHidden)
+		//	{
+		//		IsExpanded = false;
+		//	}
+		//}
+
+
+
+		//private void SetVisibility(bool isHide)
+		//{
+		//	isHidden = isHide;
+		//	TextBrush = isHidden ? Item.ItemTextHiddenBrush() : Item.ItemTextBrush();
+		//	SubItems.ForEach(s => s.SetVisibility(isHide));
+		//}
 
 
 		public void OnMouseEnter()
@@ -111,6 +110,13 @@ namespace Dependinator.ModelViewing.DependencyExploring
 		{
 			delayDispatcher.Cancel();
 			IsShowButtons = false;
+		}
+
+
+		public void UpdateToolTip()
+		{
+			string filter = isSourceItem ? "to target" : "from source";
+			ToolTip = $"{Item.Node.Name.DisplayFullName}\nClick to filter dependencies {filter}";
 		}
 	}
 }

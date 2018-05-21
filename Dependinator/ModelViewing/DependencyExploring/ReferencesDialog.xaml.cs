@@ -9,18 +9,18 @@ namespace Dependinator.ModelViewing.DependencyExploring
 	/// </summary>
 	public partial class ReferencesDialog : Window
 	{
-		internal ReferencesDialog(IReferenceItemService referenceItemService, Window owner, Node node)
-		: this(referenceItemService, owner, node, null)
+		internal ReferencesDialog(IDependenciesService dependenciesService, Window owner, Node node)
+		: this(dependenciesService, owner, node, null)
 		{
 		}
 
-		internal ReferencesDialog(IReferenceItemService referenceItemService, Window owner, Line line)
-			: this(referenceItemService, owner, null, line)
+		internal ReferencesDialog(IDependenciesService dependenciesService, Window owner, Line line)
+			: this(dependenciesService, owner, null, line)
 		{
 		}
 
 		private ReferencesDialog(
-			IReferenceItemService referenceItemService,
+			IDependenciesService dependenciesService,
 			Window owner,
 			Node node,
 			Line line)
@@ -28,7 +28,7 @@ namespace Dependinator.ModelViewing.DependencyExploring
 			Owner = owner;
 			InitializeComponent();
 
-			DataContext = new ReferencesViewModel(referenceItemService, node, line);
+			DataContext = new ReferencesViewModel(dependenciesService, owner, node, line);
 		}
 	}
 }

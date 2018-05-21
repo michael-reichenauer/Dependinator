@@ -1,22 +1,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Media;
 using Dependinator.Common;
 using Dependinator.Common.ThemeHandling;
-using Dependinator.ModelViewing.CodeViewing;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
 namespace Dependinator.ModelViewing.DependencyExploring
 {
-	internal class ReferenceItemService : IReferenceItemService
+	internal class DependenciesService : IDependenciesService
 	{
 		private readonly IThemeService themeService;
 		private readonly WindowOwner owner;
 
 
-		public ReferenceItemService(
+		public DependenciesService(
 			IThemeService themeService,
 			WindowOwner owner)
 		{
@@ -25,21 +23,7 @@ namespace Dependinator.ModelViewing.DependencyExploring
 		}
 
 
-		public Brush ItemTextBrush() => themeService.GetTextBrush();
-
-
-		public void ShowCode(Node node)
-		{
-			CodeDialog codeDialog = new CodeDialog(owner, node);
-			codeDialog.Show();
-		}
-
-
-		public Brush ItemTextHiddenBrush() => themeService.GetTextDimBrush();
-
-
-
-		public async Task<IReadOnlyList<ReferenceItem>> GetReferencesAsync(
+		public async Task<IReadOnlyList<DependencyItem>> GetReferencesAsync(
 			IEnumerable<Line> lines, 
 			bool isSource,
 			Node sourceFilter,
@@ -56,12 +40,12 @@ namespace Dependinator.ModelViewing.DependencyExploring
 
 				if (!items.Any())
 				{
-					return Enumerable.Empty<ReferenceItem>().ToList();
+					return Enumerable.Empty<DependencyItem>().ToList();
 				}
 
-				ReferenceItem rootItem = items[NodeName.Root];
+				DependencyItem rootItem = items[NodeName.Root];
 
-				return new List<ReferenceItem> { rootItem };
+				return new List<DependencyItem> { rootItem };
 			});
 		}
 
@@ -73,48 +57,46 @@ namespace Dependinator.ModelViewing.DependencyExploring
 
 
 
-		private Dictionary<NodeName, ReferenceItem> CreateReferenceHierarchy(
+		private Dictionary<NodeName, DependencyItem> CreateReferenceHierarchy(
 			IEnumerable<Link> links, ReferenceOptions options)
 		{
-			Dictionary<NodeName, ReferenceItem> items = new Dictionary<NodeName, ReferenceItem>();
+			Dictionary<NodeName, DependencyItem> items = new Dictionary<NodeName, DependencyItem>();
 
-			items[NodeName.Root] = new ReferenceItem(this, options.SourceFilter.Root);
+			items[NodeName.Root] = new DependencyItem(options.SourceFilter.Root);
 
 			foreach (Link link in links)
 			{
 				Node node = EndPoint(link, options.IsSource);
 
-				if (!items.TryGetValue(node.Name, out ReferenceItem item))
+				if (!items.TryGetValue(node.Name, out DependencyItem item))
 				{
-					ReferenceItem parentItem = GetParentItem(items, node.Parent);
+					DependencyItem parentItem = GetParentItem(items, node.Parent);
 
-					item = new ReferenceItem(this, node);
+					item = new DependencyItem(node);
 					parentItem.AddChild(item);
 
 					items[node.Name] = item;
 				}
-
-				item.Link = link;
 			}
 
 			return items;
 		}
 
 
-		private ReferenceItem GetParentItem(
-			IDictionary<NodeName, ReferenceItem> items,
+		private DependencyItem GetParentItem(
+			IDictionary<NodeName, DependencyItem> items,
 			Node parentNode)
 		{
-			if (items.TryGetValue(parentNode.Name, out ReferenceItem parentItem))
+			if (items.TryGetValue(parentNode.Name, out DependencyItem parentItem))
 			{
 				return parentItem;
 			}
 
-			parentItem = new ReferenceItem(this, parentNode);
+			parentItem = new DependencyItem(parentNode);
 
 			if (!parentNode.IsRoot)
 			{
-				ReferenceItem grandParentItem = GetParentItem(items, parentNode.Parent);
+				DependencyItem grandParentItem = GetParentItem(items, parentNode.Parent);
 				grandParentItem.AddChild(parentItem);
 			}
 
