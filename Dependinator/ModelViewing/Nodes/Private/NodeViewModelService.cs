@@ -128,8 +128,8 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		{
 			Node node = nodeViewModel.Node;
 
-			ReferencesDialog referencesDialog = new ReferencesDialog(dependenciesService, owner, node);
-			referencesDialog.Show();
+			DependencyExplorerWindow dependencyExplorerWindow = new DependencyExplorerWindow(dependenciesService, owner, node);
+			dependencyExplorerWindow.Show();
 		}
 
 

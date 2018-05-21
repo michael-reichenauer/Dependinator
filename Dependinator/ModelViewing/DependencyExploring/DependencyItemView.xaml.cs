@@ -6,13 +6,13 @@ using System.Windows.Input;
 namespace Dependinator.ModelViewing.DependencyExploring
 {
 	/// <summary>
-	/// Interaction logic for ReferenceItemView.xaml
+	/// Interaction logic for DependencyItemView.xaml
 	/// </summary>
-	public partial class ReferenceItemView : UserControl
+	public partial class DependencyItemView : UserControl
 	{
-		private ReferenceItemViewModel ViewModel => DataContext as ReferenceItemViewModel;
+		private DependencyItemViewModel ViewModel => DataContext as DependencyItemViewModel;
 
-		public ReferenceItemView()
+		public DependencyItemView()
 		{
 			InitializeComponent();
 		}

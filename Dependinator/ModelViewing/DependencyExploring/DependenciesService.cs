@@ -109,5 +109,24 @@ namespace Dependinator.ModelViewing.DependencyExploring
 		{
 			return isSource ? edge.Source : edge.Target;
 		}
+
+
+		private class ReferenceOptions
+		{
+			public bool IsSource { get; }
+			public Node SourceFilter { get; }
+			public Node TargetFilter { get; }
+
+
+			public ReferenceOptions(
+				bool isSource,
+				Node sourceFilter,
+				Node targetFilter)
+			{
+				IsSource = isSource;
+				SourceFilter = sourceFilter;
+				TargetFilter = targetFilter;
+			}
+		}
 	}
 }

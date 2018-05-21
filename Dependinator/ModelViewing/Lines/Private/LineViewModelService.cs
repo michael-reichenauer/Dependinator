@@ -99,8 +99,8 @@ namespace Dependinator.ModelViewing.Lines.Private
 		{
 			Line line = lineViewModel.Line;
 
-			ReferencesDialog referencesDialog = new ReferencesDialog(dependenciesService, owner, line);
-			referencesDialog.Show();
+			DependencyExplorerWindow dependencyExplorerWindow = new DependencyExplorerWindow(dependenciesService, owner, line);
+			dependencyExplorerWindow.Show();
 		}
 	}
 }

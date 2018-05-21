@@ -166,16 +166,15 @@
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\WorkParser.cs" />
     <Compile Include="ModelViewing\DependencyExploring\IDependenciesService.cs" />
     <Compile Include="ModelViewing\DependencyExploring\DependencyItem.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\ReferenceItemView.xaml.cs">
-      <DependentUpon>ReferenceItemView.xaml</DependentUpon>
+    <Compile Include="ModelViewing\DependencyExploring\DependencyItemView.xaml.cs">
+      <DependentUpon>DependencyItemView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\DependencyExploring\ReferenceItemViewModel.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\DependencyItemViewModel.cs" />
     <Compile Include="ModelViewing\DependencyExploring\DependenciesService.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\ReferenceOptions.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\ReferencesDialog.xaml.cs">
-      <DependentUpon>ReferencesDialog.xaml</DependentUpon>
+    <Compile Include="ModelViewing\DependencyExploring\DependencyExplorerWindow.xaml.cs">
+      <DependentUpon>DependencyExplorerWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\DependencyExploring\ReferencesViewModel.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\DependencyExplorerWindowViewModel.cs" />
     <Compile Include="ModelViewing\Items\ISelectableItem.cs" />
     <Compile Include="ModelViewing\Lines\Private\ILineControlService.cs" />
     <Compile Include="ModelViewing\Lines\Private\ILineDataService.cs" />
@@ -473,11 +472,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="ModelViewing\DependencyExploring\ReferenceItemView.xaml">
+    <Page Include="ModelViewing\DependencyExploring\DependencyItemView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ModelViewing\DependencyExploring\ReferencesDialog.xaml">
+    <Page Include="ModelViewing\DependencyExploring\DependencyExplorerWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

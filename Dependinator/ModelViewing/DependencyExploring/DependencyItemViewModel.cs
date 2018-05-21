@@ -8,7 +8,7 @@ using Dependinator.Utils.UI.Mvvm;
 
 namespace Dependinator.ModelViewing.DependencyExploring
 {
-	internal class ReferenceItemViewModel : ViewModel
+	internal class DependencyItemViewModel : ViewModel
 	{
 
 		private readonly IItemCommands itemCommands;
@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing.DependencyExploring
 		private bool isSubReferences = false;
 
 
-		public ReferenceItemViewModel(
+		public DependencyItemViewModel(
 			DependencyItem item,
 			IItemCommands itemCommands,
 			bool isSourceItem)
@@ -37,7 +37,7 @@ namespace Dependinator.ModelViewing.DependencyExploring
 
 		public string Text => Item.Node.IsRoot ? "all nodes" : Item.Node.Name.DisplayName;
 
-		public ObservableCollection<ReferenceItemViewModel> SubItems { get; }
+		public ObservableCollection<DependencyItemViewModel> SubItems { get; }
 		public bool IsShowCodeButton => IsShowButtons && Item.Node.CodeText != null;
 		public bool IsShowVisibilityButton => IsShowButtons;
 
@@ -72,11 +72,11 @@ namespace Dependinator.ModelViewing.DependencyExploring
 		}
 
 
-		private ObservableCollection<ReferenceItemViewModel> ToSubItems(
+		private ObservableCollection<DependencyItemViewModel> ToSubItems(
 			IEnumerable<DependencyItem> subItems)
 		{
-			return new ObservableCollection<ReferenceItemViewModel>(
-				subItems.Select(i => new ReferenceItemViewModel(i, itemCommands, isSourceItem)));
+			return new ObservableCollection<DependencyItemViewModel>(
+				subItems.Select(i => new DependencyItemViewModel(i, itemCommands, isSourceItem)));
 		}
 
 

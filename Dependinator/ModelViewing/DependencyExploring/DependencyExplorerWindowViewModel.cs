@@ -10,7 +10,7 @@ using Dependinator.Utils.UI.Mvvm;
 
 namespace Dependinator.ModelViewing.DependencyExploring
 {
-	internal class ReferencesViewModel : ViewModel, IItemCommands
+	internal class DependencyExplorerWindowViewModel : ViewModel, IItemCommands
 	{
 		private readonly IDependenciesService dependenciesService;
 		private readonly Window owner;
@@ -21,7 +21,7 @@ namespace Dependinator.ModelViewing.DependencyExploring
 		private IEnumerable<Line> lines;
 
 
-		public ReferencesViewModel(
+		public DependencyExplorerWindowViewModel(
 			IDependenciesService dependenciesService, 
 			Window owner,
 			Node node, 
@@ -41,11 +41,11 @@ namespace Dependinator.ModelViewing.DependencyExploring
 		public Command<Window> CancelCommand => Command<Window>(w => w.Close());
 		public Command SwitchSidesCommand => AsyncCommand(SwitchSidesAsync);
 
-		public ObservableCollection<ReferenceItemViewModel> SourceItems { get; } =
-			new ObservableCollection<ReferenceItemViewModel>();
+		public ObservableCollection<DependencyItemViewModel> SourceItems { get; } =
+			new ObservableCollection<DependencyItemViewModel>();
 
-		public ObservableCollection<ReferenceItemViewModel> TargetItems { get; } =
-			new ObservableCollection<ReferenceItemViewModel>();
+		public ObservableCollection<DependencyItemViewModel> TargetItems { get; } =
+			new ObservableCollection<DependencyItemViewModel>();
 
 
 		private async void InitializeAsync(Node node, Line line)
@@ -150,7 +150,7 @@ namespace Dependinator.ModelViewing.DependencyExploring
 
 			items.Clear();
 			dependencyItems
-				.Select(item => new ReferenceItemViewModel(item, this, isSourceSide))
+				.Select(item => new DependencyItemViewModel(item, this, isSourceSide))
 				.ForEach(item => items.Add(item));
 		}
 
@@ -162,7 +162,7 @@ namespace Dependinator.ModelViewing.DependencyExploring
 		}
 
 
-		private void SelectNode(Node node, IEnumerable<ReferenceItemViewModel> items)
+		private void SelectNode(Node node, IEnumerable<DependencyItemViewModel> items)
 		{
 			foreach (var viewModel in items)
 			{
@@ -183,7 +183,7 @@ namespace Dependinator.ModelViewing.DependencyExploring
 		}
 
 
-		private static void ExpandFirst(IEnumerable<ReferenceItemViewModel> items)
+		private static void ExpandFirst(IEnumerable<DependencyItemViewModel> items)
 		{
 			while (items.Count() == 1)
 			{
