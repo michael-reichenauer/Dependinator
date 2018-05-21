@@ -54,8 +54,8 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		public bool IsExpanded { get => Get(); set => Set(value); }
 		//public Command ToggleVisibilityCommand => Command(ToggleVisibility);
 		public Command ShowCodeCommand => Command(() => itemCommands.ShowCode(Item.Node));
-		public Command ToggleCollapseCommand => Command(() => SetExpand(!IsExpanded));
-		public Command FilterCommand => Command(() => Filter());
+		public Command ToggleCollapseCommand => Command(SetExpand);
+		public Command FilterCommand => Command(Filter);
 
 
 		private void Filter()
@@ -63,6 +63,9 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			IsSelected = true;
 			itemCommands.FilterOn(Item, isSourceItem);
 		}
+
+
+		private void SetExpand() => SetExpand(!IsExpanded);
 
 
 		private void SetExpand(bool isExpand)
