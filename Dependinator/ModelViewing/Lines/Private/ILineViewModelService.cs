@@ -22,6 +22,6 @@ namespace Dependinator.ModelViewing.Lines.Private
 		void UpdateLineEndPoints(Line line);
 		LineControl GetLineControl(Line line);
 		void Toggle(Line line);
-		void ShowReferences(LineViewModel lineViewModel, bool isIncoming);
+		void ShowReferences(LineViewModel lineViewModel);
 	}
 }

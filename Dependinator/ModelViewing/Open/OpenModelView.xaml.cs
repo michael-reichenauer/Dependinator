@@ -1,8 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Input;
-using Dependinator.Utils.UI;
 
 
 namespace Dependinator.ModelViewing.Open

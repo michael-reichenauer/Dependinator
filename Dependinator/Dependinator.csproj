@@ -161,20 +161,20 @@
       <DependentUpon>CodeDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\CodeViewing\CodeViewModel.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\Private\IItemCommands.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\Decompiler.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\WorkParser.cs" />
-    <Compile Include="ModelViewing\ReferencesViewing\IReferenceItemService.cs" />
-    <Compile Include="ModelViewing\ReferencesViewing\ReferenceItem.cs" />
-    <Compile Include="ModelViewing\ReferencesViewing\ReferenceItemView.xaml.cs">
-      <DependentUpon>ReferenceItemView.xaml</DependentUpon>
+    <Compile Include="ModelViewing\DependencyExploring\Private\IDependenciesService.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyItem.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyItemView.xaml.cs">
+      <DependentUpon>DependencyItemView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\ReferencesViewing\ReferenceItemViewModel.cs" />
-    <Compile Include="ModelViewing\ReferencesViewing\ReferenceItemService.cs" />
-    <Compile Include="ModelViewing\ReferencesViewing\ReferenceOptions.cs" />
-    <Compile Include="ModelViewing\ReferencesViewing\ReferencesDialog.xaml.cs">
-      <DependentUpon>ReferencesDialog.xaml</DependentUpon>
+    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyItemViewModel.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\Private\DependenciesService.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\DependencyExplorerWindow.xaml.cs">
+      <DependentUpon>DependencyExplorerWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\ReferencesViewing\ReferencesViewModel.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyExplorerWindowViewModel.cs" />
     <Compile Include="ModelViewing\Items\ISelectableItem.cs" />
     <Compile Include="ModelViewing\Lines\Private\ILineControlService.cs" />
     <Compile Include="ModelViewing\Lines\Private\ILineDataService.cs" />
@@ -472,11 +472,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="ModelViewing\ReferencesViewing\ReferenceItemView.xaml">
+    <Page Include="ModelViewing\DependencyExploring\Private\DependencyItemView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ModelViewing\ReferencesViewing\ReferencesDialog.xaml">
+    <Page Include="ModelViewing\DependencyExploring\DependencyExplorerWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

@@ -4,8 +4,6 @@ using System.Linq;
 using Dependinator.Common;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
-using ICSharpCode.Decompiler;
-using ICSharpCode.Decompiler.CSharp;
 using Mono.Cecil;
 
 

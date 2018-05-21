@@ -6,12 +6,9 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using Dependinator.Common.MessageDialogs;
 using Dependinator.ModelViewing.Items;
-using Dependinator.ModelViewing.Items.Private;
 using Dependinator.ModelViewing.Lines.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.ModelViewing.Nodes.Private;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
@@ -88,8 +85,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public int IncomingLinesCount => Node.TargetLines.Count(line => line.Owner != Node);
 
 		public Command HideNodeCommand => Command(HideNode);
-		public Command ShowIncomingCommand => Command(() => nodeViewModelService.ShowReferences(this, true));
-		public Command ShowOutgoingCommand => Command(() => nodeViewModelService.ShowReferences(this, false));
+		public Command ShowDependenciesCommand => Command(() => nodeViewModelService.ShowReferences(this));
 
 		public int FontSize => ((int)(10 * ItemScale)).MM(9, 13);
 

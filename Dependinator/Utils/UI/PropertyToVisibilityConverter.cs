@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Globalization;
-using System.Runtime.Remoting.Messaging;
 using System.Windows;
 using System.Windows.Data;
 using Dependinator.Utils.UI.Mvvm;

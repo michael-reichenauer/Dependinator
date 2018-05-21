@@ -1,18 +1,17 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.Common;
-using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.CodeViewing;
+using Dependinator.ModelViewing.DependencyExploring;
+using Dependinator.ModelViewing.DependencyExploring.Private;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Lines.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private;
-using Dependinator.ModelViewing.ReferencesViewing;
 
 
 namespace Dependinator.ModelViewing.Nodes.Private
@@ -23,7 +22,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private readonly IModelLineService modelLineService;
 		private readonly ILineMenuItemService lineMenuItemService;
 		private readonly IItemSelectionService itemSelectionService;
-		private readonly IReferenceItemService referenceItemService;
+		private readonly IDependenciesService dependenciesService;
 		private readonly WindowOwner owner;
 
 
@@ -33,14 +32,14 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			IModelLineService modelLineService,
 			ILineMenuItemService lineMenuItemService,
 			IItemSelectionService itemSelectionService,
-			IReferenceItemService referenceItemService,
+			IDependenciesService dependenciesService,
 			WindowOwner owner)
 		{
 			this.themeService = themeService;
 			this.modelLineService = modelLineService;
 			this.lineMenuItemService = lineMenuItemService;
 			this.itemSelectionService = itemSelectionService;
-			this.referenceItemService = referenceItemService;
+			this.dependenciesService = dependenciesService;
 			this.owner = owner;
 		}
 
@@ -126,14 +125,12 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		public void ShowReferences(NodeViewModel nodeViewModel, bool isIncoming)
+		public void ShowReferences(NodeViewModel nodeViewModel)
 		{
 			Node node = nodeViewModel.Node;
-			var referenceItems = referenceItemService.GetReferences(node, new ReferenceOptions(isIncoming));
 
-			ReferencesDialog referencesDialog = new ReferencesDialog(
-				owner, node, referenceItems, isIncoming);
-			referencesDialog.Show();
+			DependencyExplorerWindow dependencyExplorerWindow = new DependencyExplorerWindow(dependenciesService, owner, node);
+			dependencyExplorerWindow.Show();
 		}
 
 
