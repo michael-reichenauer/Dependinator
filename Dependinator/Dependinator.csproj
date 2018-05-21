@@ -162,6 +162,7 @@
     </Compile>
     <Compile Include="ModelViewing\CodeViewing\CodeViewModel.cs" />
     <Compile Include="ModelViewing\DependencyExploring\Private\IItemCommands.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\AssemblyResolver.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\Decompiler.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\WorkParser.cs" />
     <Compile Include="ModelViewing\DependencyExploring\Private\IDependenciesService.cs" />

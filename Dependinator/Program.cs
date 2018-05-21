@@ -48,14 +48,14 @@ namespace Dependinator
 
 		private static void ActivateExternalDependenciesResolver()
 		{
-			AssemblyResolver.Activate();
+			Utils.AssemblyResolver.Activate();
 			CommandLine commandLine = new CommandLine();
 
 			if (commandLine.IsInstall || commandLine.IsUninstall)
 			{
 				// LibGit2 requires native git2.dll, which should not be extracted during install/uninstall
 				// Since that would create a dll next to the setup file.
-				AssemblyResolver.DoNotExtractLibGit2();
+				Utils.AssemblyResolver.DoNotExtractLibGit2();
 			}
 		}
 

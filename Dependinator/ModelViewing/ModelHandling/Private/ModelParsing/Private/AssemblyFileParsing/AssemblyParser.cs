@@ -48,7 +48,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 					return;
 				}
 
-				var resolver = new MyDefaultAssemblyResolver();
+				var resolver = new AssemblyResolver();
 				ReaderParameters parameters = new ReaderParameters
 				{
 					AssemblyResolver = resolver,
@@ -102,28 +102,5 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			.Where(type =>
 				!Name.IsCompilerGenerated(type.Name) &&
 				!Name.IsCompilerGenerated(type.DeclaringType?.Name));
-	}
-}
-
-public class MyDefaultAssemblyResolver : DefaultAssemblyResolver
-{
-	public override AssemblyDefinition Resolve(AssemblyNameReference name)
-	{
-		try
-		{
-			return base.Resolve(name);
-		}
-		catch { }
-		return null;
-	}
-
-	public override AssemblyDefinition Resolve(AssemblyNameReference name, ReaderParameters parameters)
-	{
-		try
-		{
-			return base.Resolve(name, parameters);
-		}
-		catch { }
-		return null;
 	}
 }
