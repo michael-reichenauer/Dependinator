@@ -7,7 +7,7 @@ using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
 
 
-namespace Dependinator.ModelViewing.ReferencesViewing
+namespace Dependinator.ModelViewing.DependencyExploring
 {
 	internal class ReferenceItemViewModel : ViewModel
 	{

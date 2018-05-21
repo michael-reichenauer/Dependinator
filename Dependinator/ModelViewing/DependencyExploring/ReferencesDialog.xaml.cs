@@ -2,7 +2,7 @@
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
-namespace Dependinator.ModelViewing.ReferencesViewing
+namespace Dependinator.ModelViewing.DependencyExploring
 {
 	/// <summary>
 	/// Interaction logic for ReferencesDialog.xaml

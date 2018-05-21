@@ -2,7 +2,7 @@
 using System.Windows.Input;
 
 
-namespace Dependinator.ModelViewing.ReferencesViewing
+namespace Dependinator.ModelViewing.DependencyExploring
 {
 	/// <summary>
 	/// Interaction logic for ReferenceItemView.xaml

@@ -8,7 +8,7 @@ using Dependinator.ModelViewing.CodeViewing;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
-namespace Dependinator.ModelViewing.ReferencesViewing
+namespace Dependinator.ModelViewing.DependencyExploring
 {
 	internal class ReferenceItemService : IReferenceItemService
 	{

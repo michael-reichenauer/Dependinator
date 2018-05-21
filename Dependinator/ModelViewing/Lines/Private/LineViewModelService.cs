@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
 using Dependinator.Common;
+using Dependinator.ModelViewing.DependencyExploring;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.ModelViewing.ReferencesViewing;
 
 
 namespace Dependinator.ModelViewing.Lines.Private

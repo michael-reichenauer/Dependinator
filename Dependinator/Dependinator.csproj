@@ -163,18 +163,18 @@
     <Compile Include="ModelViewing\CodeViewing\CodeViewModel.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\Decompiler.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\WorkParser.cs" />
-    <Compile Include="ModelViewing\ReferencesViewing\IReferenceItemService.cs" />
-    <Compile Include="ModelViewing\ReferencesViewing\ReferenceItem.cs" />
-    <Compile Include="ModelViewing\ReferencesViewing\ReferenceItemView.xaml.cs">
+    <Compile Include="ModelViewing\DependencyExploring\IReferenceItemService.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\ReferenceItem.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\ReferenceItemView.xaml.cs">
       <DependentUpon>ReferenceItemView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\ReferencesViewing\ReferenceItemViewModel.cs" />
-    <Compile Include="ModelViewing\ReferencesViewing\ReferenceItemService.cs" />
-    <Compile Include="ModelViewing\ReferencesViewing\ReferenceOptions.cs" />
-    <Compile Include="ModelViewing\ReferencesViewing\ReferencesDialog.xaml.cs">
+    <Compile Include="ModelViewing\DependencyExploring\ReferenceItemViewModel.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\ReferenceItemService.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\ReferenceOptions.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\ReferencesDialog.xaml.cs">
       <DependentUpon>ReferencesDialog.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\ReferencesViewing\ReferencesViewModel.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\ReferencesViewModel.cs" />
     <Compile Include="ModelViewing\Items\ISelectableItem.cs" />
     <Compile Include="ModelViewing\Lines\Private\ILineControlService.cs" />
     <Compile Include="ModelViewing\Lines\Private\ILineDataService.cs" />
@@ -472,11 +472,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="ModelViewing\ReferencesViewing\ReferenceItemView.xaml">
+    <Page Include="ModelViewing\DependencyExploring\ReferenceItemView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ModelViewing\ReferencesViewing\ReferencesDialog.xaml">
+    <Page Include="ModelViewing\DependencyExploring\ReferencesDialog.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
