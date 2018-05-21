@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
-namespace Dependinator.ModelViewing.DependencyExploring
+namespace Dependinator.ModelViewing.DependencyExploring.Private
 {
 	internal interface IDependenciesService
 	{

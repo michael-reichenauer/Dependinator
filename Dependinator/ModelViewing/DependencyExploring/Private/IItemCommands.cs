@@ -1,7 +1,7 @@
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
-namespace Dependinator.ModelViewing.DependencyExploring
+namespace Dependinator.ModelViewing.DependencyExploring.Private
 {
 	internal interface IItemCommands
 	{

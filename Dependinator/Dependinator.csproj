@@ -161,20 +161,20 @@
       <DependentUpon>CodeDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\CodeViewing\CodeViewModel.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\IItemCommands.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\Private\IItemCommands.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\Decompiler.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\WorkParser.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\IDependenciesService.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\DependencyItem.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\DependencyItemView.xaml.cs">
+    <Compile Include="ModelViewing\DependencyExploring\Private\IDependenciesService.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyItem.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyItemView.xaml.cs">
       <DependentUpon>DependencyItemView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\DependencyExploring\DependencyItemViewModel.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\DependenciesService.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyItemViewModel.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\Private\DependenciesService.cs" />
     <Compile Include="ModelViewing\DependencyExploring\DependencyExplorerWindow.xaml.cs">
       <DependentUpon>DependencyExplorerWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\DependencyExploring\DependencyExplorerWindowViewModel.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyExplorerWindowViewModel.cs" />
     <Compile Include="ModelViewing\Items\ISelectableItem.cs" />
     <Compile Include="ModelViewing\Lines\Private\ILineControlService.cs" />
     <Compile Include="ModelViewing\Lines\Private\ILineDataService.cs" />
@@ -472,7 +472,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="ModelViewing\DependencyExploring\DependencyItemView.xaml">
+    <Page Include="ModelViewing\DependencyExploring\Private\DependencyItemView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

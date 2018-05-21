@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Input;
 using Dependinator.Common;
 using Dependinator.ModelViewing.DependencyExploring;
+using Dependinator.ModelViewing.DependencyExploring.Private;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 

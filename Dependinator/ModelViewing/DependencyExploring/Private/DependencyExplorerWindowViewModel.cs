@@ -8,7 +8,7 @@ using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils.UI.Mvvm;
 
 
-namespace Dependinator.ModelViewing.DependencyExploring
+namespace Dependinator.ModelViewing.DependencyExploring.Private
 {
 	internal class DependencyExplorerWindowViewModel : ViewModel, IItemCommands
 	{

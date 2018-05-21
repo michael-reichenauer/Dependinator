@@ -5,6 +5,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:referencesViewing="clr-namespace:Dependinator.ModelViewing.DependencyExploring"
+        xmlns:private="clr-namespace:Dependinator.ModelViewing.DependencyExploring.Private"
         mc:Ignorable="d"
         Title="Dependency Explorer" Width="750" Height="500" ResizeMode="CanResize"
         Background="{DynamicResource BackgroundBrush}"
@@ -149,10 +150,10 @@
 
 			<TreeView.ItemTemplate>
 				<HierarchicalDataTemplate
-					DataType="{x:Type referencesViewing:DependencyItemViewModel}"
+					DataType="{x:Type private:DependencyItemViewModel}"
 					ItemsSource="{Binding SubItems}"
 					ItemContainerStyle="{StaticResource LibraryTreeViewItemStyle}">
-					<referencesViewing:DependencyItemView />
+					<private:DependencyItemView />
 				</HierarchicalDataTemplate>
 			</TreeView.ItemTemplate>
 
@@ -178,10 +179,10 @@
 
 			<TreeView.ItemTemplate>
 				<HierarchicalDataTemplate
-					DataType="{x:Type referencesViewing:DependencyItemViewModel}"
+					DataType="{x:Type private:DependencyItemViewModel}"
 					ItemsSource="{Binding SubItems}"
 					ItemContainerStyle="{StaticResource LibraryTreeViewItemStyle}">
-					<referencesViewing:DependencyItemView />
+					<private:DependencyItemView />
 				</HierarchicalDataTemplate>
 			</TreeView.ItemTemplate>
 

@@ -6,7 +6,7 @@ using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
-namespace Dependinator.ModelViewing.DependencyExploring
+namespace Dependinator.ModelViewing.DependencyExploring.Private
 {
 	internal class DependenciesService : IDependenciesService
 	{

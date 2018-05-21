@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using Dependinator.ModelViewing.DependencyExploring.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 

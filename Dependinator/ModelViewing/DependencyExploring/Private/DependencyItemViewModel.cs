@@ -6,7 +6,7 @@ using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
 
 
-namespace Dependinator.ModelViewing.DependencyExploring
+namespace Dependinator.ModelViewing.DependencyExploring.Private
 {
 	internal class DependencyItemViewModel : ViewModel
 	{

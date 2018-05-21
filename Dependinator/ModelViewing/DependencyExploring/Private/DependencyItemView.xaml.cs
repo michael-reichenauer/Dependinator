@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 
 
-namespace Dependinator.ModelViewing.DependencyExploring
+namespace Dependinator.ModelViewing.DependencyExploring.Private
 {
 	/// <summary>
 	/// Interaction logic for DependencyItemView.xaml
