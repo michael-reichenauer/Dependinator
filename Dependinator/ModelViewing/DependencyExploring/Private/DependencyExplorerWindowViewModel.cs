@@ -104,12 +104,10 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			{
 				isAncestor = sourceNode.Ancestors().Contains(dependencyItem.Node);
 				sourceNode = dependencyItem.Node;
-				targetNode = targetNode;
 			}
 			else
 			{
 				isAncestor = targetNode.Ancestors().Contains(dependencyItem.Node);
-				sourceNode = sourceNode;
 				targetNode = dependencyItem.Node;
 			}
 

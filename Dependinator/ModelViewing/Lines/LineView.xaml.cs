@@ -12,7 +12,7 @@ namespace Dependinator.ModelViewing.Lines
 	public partial class LineView : UserControl
 	{
 		private MouseClicked lineClicked;
-		private MouseClicked toggleClicked;
+		// private MouseClicked toggleClicked;
 		private readonly DragUiElement dragLine;
 		private readonly DragUiElement dragLineControlPoints;
 

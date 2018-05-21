@@ -10,14 +10,11 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 {
 	internal class DependencyItemViewModel : ViewModel
 	{
-
 		private readonly IItemCommands itemCommands;
 		private readonly bool isSourceItem;
 		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(300);
 		
 		private readonly DelayDispatcher delayDispatcher = new DelayDispatcher();
-		private bool isHidden = false;
-		private bool isSubReferences = false;
 
 
 		public DependencyItemViewModel(
