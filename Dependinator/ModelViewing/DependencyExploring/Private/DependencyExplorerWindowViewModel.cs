@@ -58,8 +58,9 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			}
 			else
 			{
-				sourceNode = line.Source;
-				targetNode = line.Target;
+				// For lines to/from parent, use root 
+				sourceNode = line.Source == line.Target.Parent ? line.Source.Root : line.Source;
+				targetNode = line.Target == line.Source.Parent ? line.Target.Root : line.Target;
 				lines = new List<Line> { line };
 			}
 
