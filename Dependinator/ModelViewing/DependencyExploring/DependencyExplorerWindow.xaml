@@ -105,12 +105,14 @@
 			VerticalAlignment="Center"
 			Margin="10,5"
 			Text="{Binding SourceText}" 
-			Foreground="{DynamicResource TextBrush}" />
+			Foreground="{DynamicResource TextBrush}" 
+			ToolTip="{Binding SourceTargetToolTip}"/>
 
 		<TextBlock
 			Grid.Row="1" Grid.Column="1"
 			FontSize="40"
-			Text="&#xe8e4;" Style="{DynamicResource MenuIconStyle}" />
+			Text="&#xe8e4;" Style="{DynamicResource MenuIconStyle}" 
+			ToolTip="{Binding SourceTargetToolTip}"/>
 
 		<TextBlock
 			Margin="10,5"
@@ -119,7 +121,8 @@
 			VerticalAlignment="Center"
 			Grid.Row="1" Grid.Column="2"
 			Text="{Binding TargetText}" 
-			Foreground="{DynamicResource TextBrush}" />
+			Foreground="{DynamicResource TextBrush}" 
+			ToolTip="{Binding SourceTargetToolTip}"/>
 
 
 		<Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3">

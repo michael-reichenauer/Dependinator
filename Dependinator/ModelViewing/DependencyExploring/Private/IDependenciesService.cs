@@ -7,7 +7,14 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 {
 	internal interface IDependenciesService
 	{
-		Task<IReadOnlyList<DependencyItem>> GetReferencesAsync(
+		Task<IReadOnlyList<DependencyItem>> GetDependencyItemsAsync(
+			IEnumerable<Line> lines,
+			bool isSource,
+			Node sourceFilter,
+			Node targetFilter);
+
+
+		Task<int> GetDependencyCountAsync(
 			IEnumerable<Line> lines,
 			bool isSource,
 			Node sourceFilter,

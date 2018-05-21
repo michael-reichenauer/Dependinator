@@ -23,7 +23,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		}
 
 
-		public async Task<IReadOnlyList<DependencyItem>> GetReferencesAsync(
+		public async Task<IReadOnlyList<DependencyItem>> GetDependencyItemsAsync(
 			IEnumerable<Line> lines, 
 			bool isSource,
 			Node sourceFilter,
@@ -49,6 +49,24 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			});
 		}
 
+
+		public async Task<int> GetDependencyCountAsync(
+			IEnumerable<Line> lines,
+			bool isSource,
+			Node sourceFilter,
+			Node targetFilter)
+		{
+			return await Task.Run(() =>
+			{
+				ReferenceOptions options = new ReferenceOptions(isSource, sourceFilter, targetFilter);
+
+				IEnumerable<Link> links = lines
+					.SelectMany(line => line.Links)
+					.Where(link => IsIncluded(link, options));
+
+				return links.Count();
+			});
+		}
 
 
 		private static bool IsIncluded(IEdge link, ReferenceOptions options) =>

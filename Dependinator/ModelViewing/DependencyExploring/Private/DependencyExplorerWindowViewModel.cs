@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.ModelViewing.CodeViewing;
@@ -37,6 +38,8 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		public string SourceText { get => Get(); set => Set(value); }
 
 		public string TargetText { get => Get(); set => Set(value); }
+		public string SourceTargetToolTip { get => Get(); set => Set(value); }
+		
 
 		public Command<Window> CancelCommand => Command<Window>(w => w.Close());
 		public Command SwitchSidesCommand => AsyncCommand(SwitchSidesAsync);
@@ -84,7 +87,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			await SetDependencyItemsAsync(true);
 			await SetDependencyItemsAsync(false);
 
-			SetTexts();
+			await SetTextsAsync();
 			SelectNode(sourceNode, SourceItems);
 			SelectNode(targetNode, TargetItems);
 		}
@@ -120,7 +123,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				await SetDependencyItemsAsync(isSourceSide);
 			}
 
-			SetTexts();
+			await SetTextsAsync();
 			if (isSourceSide)
 			{
 				SelectNode(targetNode, TargetItems);
@@ -142,7 +145,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 		private async Task SetDependencyItemsAsync(bool isSourceSide)
 		{
-			var dependencyItems = await dependenciesService.GetReferencesAsync(
+			var dependencyItems = await dependenciesService.GetDependencyItemsAsync(
 				lines, isSourceSide, sourceNode, targetNode);
 
 			var items = isSourceSide ? SourceItems : TargetItems;
@@ -154,10 +157,14 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		}
 
 
-		private void SetTexts()
+		private async Task SetTextsAsync()
 		{
+			await Task.Yield();
 			SourceText = sourceNode.IsRoot ? "all nodes" : sourceNode.Name.DisplayFullName;
 			TargetText = targetNode.IsRoot ? "all nodes" : targetNode.Name.DisplayFullName;
+			// int count = await dependenciesService.GetDependencyCountAsync(lines, true, sourceNode, targetNode);
+	//		int targetCount = await dependenciesService.GetDependencyCountAsync(lines, false, sourceNode, targetNode);
+			// SourceTargetToolTip = $"{count} Dependencies";
 		}
 
 
