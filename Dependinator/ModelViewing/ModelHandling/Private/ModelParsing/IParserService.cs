@@ -14,7 +14,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing
 
 	internal class NoAssembliesException : Exception
 	{
-		public NoAssembliesException() : base("No assemblies found for specifies file.")
+		public NoAssembliesException(string msg) : base(msg)
+		{
+		}
+	}
+
+	internal class MissingAssembliesException : Exception
+	{
+		public MissingAssembliesException(string msg) : base(msg)
 		{
 		}
 	}

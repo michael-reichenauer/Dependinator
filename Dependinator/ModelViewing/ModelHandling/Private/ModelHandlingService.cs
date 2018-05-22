@@ -8,6 +8,7 @@ using System.Windows.Threading;
 using Dependinator.Common;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private.ModelParsing;
@@ -31,6 +32,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private readonly IModelLineService modelLineService;
 		private readonly IRecentModelsService recentModelsService;
 		private readonly IMessage message;
+		private readonly ICmd cmd;
 		private readonly Func<OpenModelViewModel> openModelViewModelProvider;
 
 		private readonly IModelService modelService;
@@ -50,7 +52,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			IModelService modelService,
 			ModelMetadata modelMetadata,
 			IRecentModelsService recentModelsService,
-			IMessage message)
+			IMessage message,
+			ICmd cmd)
 		{
 			this.parserService = parserService;
 			this.persistenceService = persistenceService;
@@ -63,6 +66,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			this.modelMetadata = modelMetadata;
 			this.recentModelsService = recentModelsService;
 			this.message = message;
+			this.cmd = cmd;
 		}
 
 
@@ -82,24 +86,36 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			if (File.Exists(dataFilePath))
 			{
-				await ShowModelAsync(operation => persistenceService.TryDeserialize(
+				R result = await ShowModelAsync(operation => persistenceService.TryDeserialize(
 					dataFilePath, items => UpdateDataItems(items, operation)));
+				if (result.IsFaulted)
+				{
+					message.ShowWarning(result.Message);
+					string targetPath = ProgramInfo.GetInstallFilePath();
+					cmd.Start(targetPath, "");
+					Application.Current.Shutdown(0);
+					return;
+				}
+
 				await RefreshAsync(false);
 			}
 			else
 			if (File.Exists(modelMetadata.ModelFilePath))
 			{
-				await ShowModelAsync(operation => parserService.ParseAsync(
+				R result = await ShowModelAsync(operation => parserService.ParseAsync(
 					modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
+				if (result.IsFaulted)
+				{
+					message.ShowWarning(result.Message);
+					string targetPath = ProgramInfo.GetInstallFilePath();
+					cmd.Start(targetPath, "");
+					Application.Current.Shutdown(0);
+					return;
+				}
 			}
 
 			if (!Root.Children.Any())
 			{
-				if (!modelMetadata.IsDefault)
-				{
-					message.ShowWarning($"Could not load model from:\n{modelMetadata.ModelFilePath}");
-				}
-
 				if (File.Exists(dataFilePath))
 				{
 					File.Delete(dataFilePath);
@@ -108,8 +124,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				isShowingOpenModel = true;
 				modelMetadata.SetDefault();
 				Root.View.ItemsCanvas.SetRootScale(1);
-				//Root.ItemsCanvas.SetMoveOffset(new Point(0, 0));
-				Root.View.ItemsCanvas.IsZoomAndMoveEnabled = false;
+				//Root.View.ItemsCanvas.ZoomRootNode(1, new Point(0, 0));
+				Root.View.ItemsCanvas.UpdateAndNotifyAll();
 
 				Root.View.ItemsCanvas.AddItem(openModelViewModelProvider());
 			}
@@ -143,10 +159,19 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			}
 
 			isWorking = true;
-			int operationId = await ShowModelAsync(operation => parserService.ParseAsync(
+			R<int> operationId = await ShowModelAsync(operation => parserService.ParseAsync(
 				modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
 
-			modelNodeService.RemoveObsoleteNodesAndLinks(operationId);
+			if (operationId.IsFaulted)
+			{
+				message.ShowWarning(operationId.Message);
+				modelNodeService.SetLayoutDone();
+				GC.Collect();
+				isWorking = false;
+				return;
+			}
+
+			modelNodeService.RemoveObsoleteNodesAndLinks(operationId.Value);
 			modelNodeService.SetLayoutDone();
 			GC.Collect();
 			isWorking = false;
@@ -207,7 +232,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		private async Task<int> ShowModelAsync(Func<Operation, Task> parseFunctionAsync)
+		private async Task<R<int>> ShowModelAsync(Func<Operation, Task<R>> parseFunctionAsync)
 		{
 			Operation operation = new Operation(currentId++);
 
@@ -216,11 +241,16 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			Task showTask = Task.Run(() => ShowModel(operation));
 			Root.View.ItemsCanvas.UpdateAll();
 
-			Task parseTask = parseFunctionAsync(operation)
-				.ContinueWith(_ => operation.Queue.CompleteAdding());
+			Task<R> parseTask = parseFunctionAsync(operation);
 
-			await Task.WhenAll(showTask, parseTask);
+			Task completeTask = parseTask.ContinueWith(_ => operation.Queue.CompleteAdding());
 
+			await Task.WhenAll(showTask, parseTask, completeTask);
+
+			if (parseTask.Result.IsFaulted)
+			{
+				return parseTask.Result.Error;
+			}
 
 			t.Log("Shown all");
 			return operation.Id;

@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Private.Serializing;
+using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Private
@@ -22,11 +23,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 			dataSerializer.Serialize(items, dataFilePath);
 
 
-		public async Task<bool> TryDeserialize(string dataFilePath, ModelItemsCallback modelItemsCallback)
+		public async Task<R> TryDeserialize(string dataFilePath, ModelItemsCallback modelItemsCallback)
 		{
 			if (!File.Exists(dataFilePath))
 			{
-				return false;
+				return Error.From(new MissingDataFileException($"No data file at {dataFilePath}"));
 			}
 
 			return await dataSerializer.TryDeserializeAsStreamAsync(dataFilePath, modelItemsCallback);

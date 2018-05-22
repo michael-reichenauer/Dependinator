@@ -19,6 +19,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 			Timing t = Timing.Start();
 
 			var workItemParser = GetWorkParser(filePath, modelItemsCallback);
+			if (workItemParser.IsFaulted)
+			{
+				return workItemParser;
+			}
 
 			await workItemParser.Value.ParseAsync();
 
@@ -30,23 +34,29 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 		private static R<WorkParser> GetWorkParser(
 			string filePath, ModelItemsCallback modelItemsCallback)
 		{
-			IReadOnlyList<AssemblyParser> assemblyParsers = IsSolutionFile(filePath)
+			R<IReadOnlyList<AssemblyParser>> assemblyParsers = IsSolutionFile(filePath)
 				? GetSolutionAssemblyParsers(filePath, modelItemsCallback)
 				: GetAssemblyParser(filePath, modelItemsCallback);
 
-			if (!assemblyParsers.Any())
+			if (assemblyParsers.IsFaulted)
 			{
-				return Error.From(new NoAssembliesException());
+				return  assemblyParsers.Error;
+			}
+
+			if (!assemblyParsers.Value.Any())
+			{
+				return Error.From(new NoAssembliesException(
+					$"Failed to parse:\n {filePath}\nNo Debug assemblies found."));
 			}
 
 			string name = GetName(filePath);
-			WorkParser workParser = new WorkParser(name, filePath, assemblyParsers);
+			WorkParser workParser = new WorkParser(name, filePath, assemblyParsers.Value);
 
 			return workParser;
 		}
 
 
-		private static IReadOnlyList<AssemblyParser> GetSolutionAssemblyParsers(
+		private static R<IReadOnlyList<AssemblyParser>> GetSolutionAssemblyParsers(
 			string filePath, ModelItemsCallback itemsCallback)
 		{
 			Solution solution = new Solution(filePath);
@@ -73,7 +83,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 				}
 				else
 				{
-					Log.Warn($"Project {project}, has no output file");
+					return Error.From(new MissingAssembliesException(
+						$"Failed to parse:\n {filePath}\nProject\n{project}\nhas no Debug assembly."));
 				}
 			}
 
@@ -81,9 +92,15 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 		}
 
 
-		private static IReadOnlyList<AssemblyParser> GetAssemblyParser(
+		private static R<IReadOnlyList<AssemblyParser>> GetAssemblyParser(
 			string filePath, ModelItemsCallback itemsCallback)
 		{
+			if (!File.Exists(filePath))
+			{
+				return Error.From(new MissingAssembliesException(
+					$"Failed to parse {filePath}\nNo assembly found"));
+			}
+
 			string rootGroup = GetName(filePath);
 			return new[] { new AssemblyParser(filePath, rootGroup, itemsCallback) };
 		}

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Private.Serializing
@@ -11,6 +12,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 
 		void Serialize(IReadOnlyList<IModelItem> items, string path);
 
-		Task<bool> TryDeserializeAsStreamAsync(string path, ModelItemsCallback modelItemsCallback);
+		Task<R> TryDeserializeAsStreamAsync(string path, ModelItemsCallback modelItemsCallback);
 	}
 }
