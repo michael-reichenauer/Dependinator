@@ -41,7 +41,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.S
 		public string GetOutputPath()
 		{
 			// Searching for assembly in the output folders.
-			string binariesDir = Path.Combine(ProjectDirectory, "bin");
+			string binariesDir = Path.Combine(ProjectDirectory, "bin", "Debug");
 			if (!Directory.Exists(binariesDir))
 			{
 				return null;
@@ -68,5 +68,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.S
 
 		private static bool HasExtension(string path, string extension) =>
 			Path.GetExtension(path).IsSameIgnoreCase(extension);
+
+
+		public override string ToString() => ProjectFilePath;
 	}
 }

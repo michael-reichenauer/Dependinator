@@ -13,25 +13,31 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 {
 	internal class ParserService : IParserService
 	{
-		public async Task ParseAsync(string filePath, ModelItemsCallback modelItemsCallback)
+		public async Task<R> ParseAsync(string filePath, ModelItemsCallback modelItemsCallback)
 		{
 			Log.Debug($"Parse {filePath} ...");
 			Timing t = Timing.Start();
 
 			var workItemParser = GetWorkParser(filePath, modelItemsCallback);
 
-			await workItemParser.ParseAsync();
+			await workItemParser.Value.ParseAsync();
 
 			t.Log($"Parsed {filePath}");
+			return R.Ok;
 		}
 
 
-		private static WorkParser GetWorkParser(
+		private static R<WorkParser> GetWorkParser(
 			string filePath, ModelItemsCallback modelItemsCallback)
 		{
 			IReadOnlyList<AssemblyParser> assemblyParsers = IsSolutionFile(filePath)
 				? GetSolutionAssemblyParsers(filePath, modelItemsCallback)
 				: GetAssemblyParser(filePath, modelItemsCallback);
+
+			if (!assemblyParsers.Any())
+			{
+				return Error.From(new NoAssembliesException());
+			}
 
 			string name = GetName(filePath);
 			WorkParser workParser = new WorkParser(name, filePath, assemblyParsers);
@@ -64,6 +70,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 						outputPath, rootGroup, itemsCallback);
 
 					assemblyParsers.Add(assemblyParser);
+				}
+				else
+				{
+					Log.Warn($"Project {project}, has no output file");
 				}
 			}
 
