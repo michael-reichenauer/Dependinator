@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using Dependinator.ModelViewing.Items.Private;
+using Dependinator.Utils;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
@@ -193,7 +194,7 @@ namespace Dependinator.ModelViewing.Items
 		{
 			bool isQueryItemsChanged = false;
 
-			foreach (IItem item in items)
+			foreach (IItem item in items.Where(i => i!= null))
 			{
 				ViewItem viewItem = (ViewItem)item.ItemState;
 

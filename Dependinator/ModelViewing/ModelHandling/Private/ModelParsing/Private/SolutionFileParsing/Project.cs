@@ -42,6 +42,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.S
 		{
 			// Searching for assembly in the output folders.
 			string binariesDir = Path.Combine(ProjectDirectory, "bin");
+			if (!Directory.Exists(binariesDir))
+			{
+				return null;
+			}
 
 			// Get all ".dll" or ".exe" assemblies of the project name. Could be several configurations 
 			// have been built. Order them latest built first
