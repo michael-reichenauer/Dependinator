@@ -10,7 +10,7 @@ using Mono.Cecil;
 
 namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.AssemblyFileParsing
 {
-	internal class AssemblyParser
+	internal class AssemblyParser : IDisposable
 	{
 		private readonly string assemblyPath;
 		private List<TypeInfo> typeInfos = new List<TypeInfo>();
@@ -20,6 +20,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		private readonly TypeParser typeParser;
 		private readonly MemberParser memberParser;
 		private AssemblyDefinition assembly;
+		private AssemblyResolver resolver;
 
 
 		public AssemblyParser(
@@ -33,8 +34,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			LinkHandler linkHandler = new LinkHandler(itemsCallback);
 
 			assemblyModuleParser = new AssemblyModuleParser(assemblyRootGroup, linkHandler, itemsCallback);
-			typeParser = new TypeParser(linkHandler, xmlDockParser, decompiler, itemsCallback);
-			memberParser = new MemberParser(linkHandler, xmlDockParser, decompiler, itemsCallback);
+			typeParser = new TypeParser(linkHandler, xmlDockParser, decompiler, assemblyPath, itemsCallback);
+			memberParser = new MemberParser(linkHandler, xmlDockParser, decompiler, assemblyPath, itemsCallback );
 		}
 
 
@@ -48,7 +49,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 					return;
 				}
 
-				var resolver = new AssemblyResolver();
+				resolver = new AssemblyResolver();
 				ReaderParameters parameters = new ReaderParameters
 				{
 					AssemblyResolver = resolver,
@@ -94,6 +95,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		{
 			typeParser.AddTypesLinks(typeInfos);
 			memberParser.AddTypesMembers(typeInfos);
+		}
+
+
+		public void Dispose()
+		{
+			assembly?.Dispose();
 		}
 
 

@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Windows;
 using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing.Items;
+using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Open
@@ -52,7 +55,36 @@ namespace Dependinator.ModelViewing.Open
 
 		public async void OpenExampleFile()
 		{
-			await openModelService.TryModelAsync(Assembly.GetEntryAssembly().Location);
+			string dataFolderPath = ProgramInfo.GetProgramDataFolderPath();
+			string exampleFolderPath = Path.Combine(dataFolderPath, "Example");
+			string examplePath = Path.Combine(exampleFolderPath, "Example.exe");
+			if (!Directory.Exists(exampleFolderPath))
+			{
+				Directory.CreateDirectory(exampleFolderPath);
+			}
+
+			try
+			{
+				if (File.Exists(examplePath))
+				{
+					File.Delete(examplePath);
+				}
+
+				if (File.Exists(ProgramInfo.GetInstallFilePath()))
+				{
+					File.Copy(ProgramInfo.GetInstallFilePath(), examplePath);
+				}
+				else
+				{
+					File.Copy(Assembly.GetEntryAssembly().Location, examplePath);
+				}
+			}
+			catch (Exception e)
+			{
+				Log.Exception(e, "Failed to copy example file");
+			}
+
+			await openModelService.TryModelAsync(examplePath);
 		}
 	}
 }

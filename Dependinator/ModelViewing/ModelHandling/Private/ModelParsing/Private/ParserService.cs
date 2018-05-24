@@ -18,14 +18,17 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 			Log.Debug($"Parse {filePath} ...");
 			Timing t = Timing.Start();
 
-			var workItemParser = GetWorkParser(filePath, modelItemsCallback);
+			R<WorkParser> workItemParser = GetWorkParser(filePath, modelItemsCallback);
 			if (workItemParser.IsFaulted)
 			{
 				return workItemParser;
 			}
 
-			await workItemParser.Value.ParseAsync();
-
+			using (workItemParser.Value)
+			{
+				await workItemParser.Value.ParseAsync();
+			}
+			
 			t.Log($"Parsed {filePath}");
 			return R.Ok;
 		}
