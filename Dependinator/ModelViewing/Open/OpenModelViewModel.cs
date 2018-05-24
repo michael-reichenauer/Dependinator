@@ -31,7 +31,7 @@ namespace Dependinator.ModelViewing.Open
 		public IReadOnlyList<FileItem> RecentFiles { get; }
 
 
-		public async void OpenFile() => await openModelService.OpenModelAsync();
+		public async void OpenFile() => await openModelService.OpenOtherModelAsync();
 
 
 		private IReadOnlyList<FileItem> GetRecentFiles()
@@ -43,7 +43,7 @@ namespace Dependinator.ModelViewing.Open
 			{
 				string name = Path.GetFileName(filePath);
 
-				fileItems.Add(new FileItem(name, filePath, openModelService.OpenOtherModelAsync));
+				fileItems.Add(new FileItem(name, filePath, openModelService.TryModelAsync));
 			}
 
 			return fileItems;
@@ -52,7 +52,7 @@ namespace Dependinator.ModelViewing.Open
 
 		public async void OpenExampleFile()
 		{
-			await openModelService.OpenOtherModelAsync(Assembly.GetEntryAssembly().Location);
+			await openModelService.TryModelAsync(Assembly.GetEntryAssembly().Location);
 		}
 	}
 }

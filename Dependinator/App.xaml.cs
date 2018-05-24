@@ -26,7 +26,6 @@ namespace Dependinator
 		private readonly Lazy<MainWindow> mainWindow;
 		private readonly IModelMetadataService modelMetadataService;
 		private readonly IExistingInstanceService existingInstanceService;
-		private readonly IRecentModelsService recentModelsService;
 
 
 		// This mutex is used by the installer (and uninstaller) to determine if instances are running
@@ -39,8 +38,7 @@ namespace Dependinator
 			IInstaller installer,
 			Lazy<MainWindow> mainWindow,
 			IModelMetadataService modelMetadataService,
-			IExistingInstanceService existingInstanceService,
-			IRecentModelsService recentModelsService)
+			IExistingInstanceService existingInstanceService)
 		{
 			this.commandLine = commandLine;
 			this.themeService = themeService;
@@ -48,7 +46,6 @@ namespace Dependinator
 			this.mainWindow = mainWindow;
 			this.modelMetadataService = modelMetadataService;
 			this.existingInstanceService = existingInstanceService;
-			this.recentModelsService = recentModelsService;
 		}
 
 
@@ -77,12 +74,24 @@ namespace Dependinator
 				return;
 			}
 
-			if (TryActivateExistingInstance())
+			if (commandLine.IsRunInstalled)
 			{
-				// Another instance for this working folder is already running and it received the
-				// command line from this instance, lets exit this instance, while other instance continuous
-				Application.Current.Shutdown(0);
-				return;
+				if (!existingInstanceService.WaitForOtherInstance())
+				{
+					// Another instance for this working folder is still running and did not close
+					Application.Current.Shutdown(0);
+					return;
+				}
+			}
+			else
+			{
+				if (TryActivateExistingInstance())
+				{
+					// Another instance for this working folder is already running and it received the
+					// command line from this instance, lets exit this instance, while other instance continuous
+					Application.Current.Shutdown(0);
+					return;
+				}
 			}
 
 			Log.Usage($"Start version: {AssemblyInfo.GetProgramVersion()}");
@@ -159,7 +168,7 @@ namespace Dependinator
 			// No commands yet
 		}
 
-	
+
 		private void TryDeleteTempFiles()
 		{
 			try
@@ -192,8 +201,5 @@ namespace Dependinator
 			// Window used as a temp main window, when handling commands (i.e. no "real" main windows)
 			return new MessageDialog(null, "", "", MessageBoxButton.OK, MessageBoxImage.Information);
 		}
-
-
-
 	}
 }

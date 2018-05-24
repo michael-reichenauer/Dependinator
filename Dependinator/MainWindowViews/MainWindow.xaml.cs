@@ -85,13 +85,7 @@ namespace Dependinator.MainWindowViews
 
 		public void RestoreWindowSettings()
 		{
-			if (folder.IsDefault)
-			{
-				ResizeMode = ResizeMode.NoResize;
-				return;
-			}
-
-			ResizeMode = ResizeMode.CanResize;
+			ResizeMode = folder.IsDefault ? ResizeMode.NoResize: ResizeMode.CanResize;
 			WorkFolderSettings s = settingsService.Get<WorkFolderSettings>();
 
 			Rectangle rect = new Rectangle(

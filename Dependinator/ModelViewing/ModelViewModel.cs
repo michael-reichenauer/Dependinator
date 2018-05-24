@@ -54,7 +54,7 @@ namespace Dependinator.ModelViewing
 
 		public async Task LoadAsync()
 		{
-			await openModelService.OpenOtherModelAsync(modelMetadata.ModelFilePath);
+			await openModelService.OpenCurrentModelAsync();
 			//await modelViewService.LoadAsync();
 		}
 

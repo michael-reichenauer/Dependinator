@@ -141,7 +141,7 @@ namespace Dependinator.MainWindowViews
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
 		public Command RefreshLayoutCommand => AsyncCommand(ManualRefreshLayoutAsync);
 
-		public Command OpenFileCommand => AsyncCommand(openModelService.OpenModelAsync);
+		public Command OpenFileCommand => AsyncCommand(openModelService.OpenOtherModelAsync);
 
 		public Command OpenNewWindowCommand => Command(mainWindowService.OpenNewWindow);
 

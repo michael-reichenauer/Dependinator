@@ -6,12 +6,11 @@ namespace Dependinator.Common.ModelMetadataFolders
 {
 	public interface IOpenModelService
 	{
-		Task OpenModelAsync();
+		Task OpenOtherModelAsync();
 
-		Task OpenOtherModelAsync(string modelFilePath);
+		Task OpenCurrentModelAsync();
 
 		Task TryModelAsync(string modelFilePath);
-
 
 		Task OpenModelAsync(IReadOnlyList<string> modelFilePaths);
 	}

@@ -75,6 +75,6 @@ namespace Dependinator.Utils
 		}
 
 		
-		public override string ToString() => $"Timing: {DiffMs}ms ({ElapsedMs}ms)";		
+		public override string ToString() => $"Timing: {DiffMs}ms ({ElapsedMs}ms)";
 	}
 }
