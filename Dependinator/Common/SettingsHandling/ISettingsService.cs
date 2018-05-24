@@ -2,6 +2,9 @@ using System;
 
 namespace Dependinator.Common.SettingsHandling
 {
+	/// <summary>
+	/// Handles program and model settings.
+	/// </summary>
 	internal interface ISettingsService
 	{
 		void EnsureExists<T>() where T : class;
@@ -9,7 +12,7 @@ namespace Dependinator.Common.SettingsHandling
 		void Edit<T>(Action<T> editAction) where T : class;
 		void Edit<T>(string path, Action<T> editAction) where T : class;
 
-		T Get<T>() where T:class;
+		T Get<T>() where T : class;
 		T Get<T>(string path) where T : class;
 
 		void Set<T>(T setting) where T : class;

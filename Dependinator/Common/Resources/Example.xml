@@ -30,6 +30,11 @@
             InitializeComponent
             </summary>
         </member>
+        <member name="T:Dependinator.Common.SettingsHandling.ISettingsService">
+            <summary>
+            Handles program and model settings.
+            </summary>
+        </member>
         <member name="T:Dependinator.Common.NamespaceDoc">
             <summary>
             Contains common functionality for the application.
