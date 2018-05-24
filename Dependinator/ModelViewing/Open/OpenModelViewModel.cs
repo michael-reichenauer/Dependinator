@@ -58,6 +58,7 @@ namespace Dependinator.ModelViewing.Open
 			string dataFolderPath = ProgramInfo.GetProgramDataFolderPath();
 			string exampleFolderPath = Path.Combine(dataFolderPath, "Example");
 			string examplePath = Path.Combine(exampleFolderPath, "Example.exe");
+			string exampleXmlPath = Path.Combine(exampleFolderPath, "Example.xml");
 			if (!Directory.Exists(exampleFolderPath))
 			{
 				Directory.CreateDirectory(exampleFolderPath);
@@ -77,6 +78,15 @@ namespace Dependinator.ModelViewing.Open
 				else
 				{
 					File.Copy(Assembly.GetEntryAssembly().Location, examplePath);
+				}
+
+				Assembly executingAssembly = Assembly.GetExecutingAssembly();
+				string resourceName = $"{Product.Name}.Common.Resources.Example.xml";
+				using (Stream stream = executingAssembly.GetManifestResourceStream(resourceName))
+				{
+					StreamReader sr = new StreamReader(stream);
+					string text = sr.ReadToEnd();
+					File.WriteAllText(exampleXmlPath, text);
 				}
 			}
 			catch (Exception e)
