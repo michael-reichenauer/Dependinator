@@ -8,7 +8,5 @@ namespace Dependinator.Common.Installation
 		event EventHandler OnNewVersionAvailable;
 
 		void StartCheckForLatestVersion();
-
-		Task<bool> StartLatestInstalledVersionAsync();
 	}
 }

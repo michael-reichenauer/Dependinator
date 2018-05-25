@@ -5,15 +5,21 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Threading;
+using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
+using Microsoft.Win32;
+
 
 namespace Dependinator.Common.Installation.Private
 {
 	[SingleInstance]
 	internal class LatestVersionService : ILatestVersionService
 	{
+		private static readonly TimeSpan IdleTimeBeforeRestarting = TimeSpan.FromMinutes(30);
 		private static readonly TimeSpan FirstCheckTime = TimeSpan.FromSeconds(1);
 		private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(3);
 
@@ -23,14 +29,23 @@ namespace Dependinator.Common.Installation.Private
 
 		private readonly ISettingsService settingsService;
 		private readonly ICmd cmd;
+		private readonly IStartInstanceService startInstanceService;
+		private readonly ModelMetadata modelMetadata;
 
 		private DispatcherTimer checkTimer;
+		private DispatcherTimer idleTimer;
 
 
-		public LatestVersionService(ISettingsService settingsService, ICmd cmd)
+		public LatestVersionService(
+			ICmd cmd,
+			IStartInstanceService startInstanceService,
+			ISettingsService settingsService,
+			ModelMetadata modelMetadata)
 		{
-			this.settingsService = settingsService;
 			this.cmd = cmd;
+			this.startInstanceService = startInstanceService;
+			this.settingsService = settingsService;
+			this.modelMetadata = modelMetadata;
 		}
 
 
@@ -42,26 +57,12 @@ namespace Dependinator.Common.Installation.Private
 			checkTimer.Tick += CheckLatestVersionAsync;
 			checkTimer.Interval = FirstCheckTime;
 			checkTimer.Start();
-		}
 
+			idleTimer = new DispatcherTimer();
+			idleTimer.Tick += CheckIdleBeforeRestart;
+			idleTimer.Interval = TimeSpan.FromMinutes(1);
 
-		public async Task<bool> StartLatestInstalledVersionAsync()
-		{
-			await Task.Yield();
-
-			try
-			{
-				string installedPath = ProgramInfo.GetInstallFilePath();
-
-				cmd.Start(installedPath, null);
-				return true;
-			}
-			catch (Exception e) when (e.IsNotFatal())
-			{
-				Log.Error($"Failed to install new version {e}");
-			}
-
-			return false;
+			SystemEvents.PowerModeChanged += OnPowerModeChange;
 		}
 
 
@@ -106,6 +107,11 @@ namespace Dependinator.Common.Installation.Private
 				Log.Debug($"Downloading remote setup {latestUri} ...");
 
 				LatestInfo latestInfo = GetCachedLatestVersionInfo();
+				if (latestInfo == null)
+				{
+					// No installed version.
+					return false;
+				}
 
 				using (HttpClient httpClient = GetHttpClient())
 				{
@@ -264,6 +270,59 @@ namespace Dependinator.Common.Installation.Private
 			if (IsNewVersionInstalled())
 			{
 				OnNewVersionAvailable?.Invoke(this, EventArgs.Empty);
+
+				if (!idleTimer.IsEnabled)
+				{
+					Log.Debug($"Waiting for idle {IdleTimeBeforeRestarting} before restarting newer version ...");
+					idleTimer.Start();
+				}
+			}
+			else
+			{
+				if (idleTimer.IsEnabled)
+				{
+					Log.Debug("No longer newer version installed, canceling idle wait for restart");
+					idleTimer.Stop();
+				}
+			}
+		}
+
+
+		private void OnPowerModeChange(object sender, PowerModeChangedEventArgs e)
+		{
+			Log.Info($"Power mode {e.Mode}");
+
+			if (e.Mode == PowerModes.Resume)
+			{
+				if (IsNewVersionInstalled())
+				{
+					Log.Info("Newer version is installed, restart ...");
+					if (startInstanceService.StartInstance(modelMetadata.ModelFilePath))
+					{
+						// Newer version is started, close this instance
+						Application.Current.Shutdown(0);
+					}
+				}
+			}
+		}
+
+
+		void CheckIdleBeforeRestart(object sender, EventArgs e)
+		{
+			TimeSpan idleTime = SystemIdle.GetLastInputIdleTimeSpan();
+			if (idleTime > IdleTimeBeforeRestarting)
+			{
+				// Track.Info($"Idle time {idleTime}, trigger restart if newer is installed");
+				idleTimer.Stop();
+
+				if (IsNewVersionInstalled())
+				{
+					if (startInstanceService.StartInstance(modelMetadata.ModelFilePath))
+					{
+						// Newer version is started, close this instance
+						Application.Current.Shutdown(0);
+					}
+				}
 			}
 		}
 

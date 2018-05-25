@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Reflection;
 
+
 namespace Dependinator.Utils
 {
 	internal static class AssemblyInfo

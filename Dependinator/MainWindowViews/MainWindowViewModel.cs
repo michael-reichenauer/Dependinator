@@ -27,6 +27,7 @@ namespace Dependinator.MainWindowViews
 		private readonly IOpenModelService openModelService;
 		private readonly IRecentModelsService recentModelsService;
 		private readonly IModelMetadataService modelMetadataService;
+		private readonly IStartInstanceService startInstanceService;
 		private readonly IModelViewService modelViewService;
 		private readonly ModelMetadata modelMetadata;
 		private readonly IMessage message;
@@ -42,6 +43,7 @@ namespace Dependinator.MainWindowViews
 			IOpenModelService openModelService,
 			IRecentModelsService recentModelsService,
 			IModelMetadataService modelMetadataService,
+			IStartInstanceService startInstanceService,
 			IModelViewService modelViewService)
 		{
 			this.modelMetadata = modelMetadata;
@@ -52,6 +54,7 @@ namespace Dependinator.MainWindowViews
 			this.openModelService = openModelService;
 			this.recentModelsService = recentModelsService;
 			this.modelMetadataService = modelMetadataService;
+			this.startInstanceService = startInstanceService;
 			this.modelViewService = modelViewService;
 
 			ModelViewModel = modelViewModel;
@@ -219,9 +222,11 @@ namespace Dependinator.MainWindowViews
 
 		private async Task RunLatestVersionAsync()
 		{
-			bool IsStarting = await latestVersionService.StartLatestInstalledVersionAsync();
+			await Task.Yield();
 
-			if (IsStarting)
+			bool isStarting = startInstanceService.StartInstance(modelMetadataService.ModelFilePath);
+
+			if (isStarting)
 			{
 				// Newer version is started, close this instance
 				Application.Current.Shutdown(0);
