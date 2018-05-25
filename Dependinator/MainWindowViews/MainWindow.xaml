@@ -123,16 +123,24 @@
 						ToolTip="New version of Dependinator is available, click to reload ..." />
 
 					<!-- Hamburger button -->
-					<mainWindowViews:HamburgerButton/>
+					<mainWindowViews:HamburgerButton
+						Visibility="{Binding IsModel, Converter={StaticResource VC}}"
+						/>
 
 				</StackPanel>
 
 
 				<!-- Right part, search field and mini, max and close buttons -->
-				<StackPanel Grid.Column="2" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+				<StackPanel 
+					Grid.Column="2"
+					Orientation="Horizontal"
+					WindowChrome.IsHitTestVisibleInChrome="True"
+					HorizontalAlignment="Right">
 					
 					<!-- Search and filter box  -->
-					<mainWindowViews:SearchFilter x:Name="Search"/>
+					<mainWindowViews:SearchFilter
+						Visibility="{Binding IsModel, Converter={StaticResource VC}}"
+						x:Name="Search"/>
 
 					<!-- The 3 minimize, maximize and close window control buttons in the title bar -->
 					<common:WindowControlButtons/>

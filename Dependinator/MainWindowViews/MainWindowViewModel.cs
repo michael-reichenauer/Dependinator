@@ -7,6 +7,7 @@ using System.Windows;
 using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing;
@@ -26,6 +27,7 @@ namespace Dependinator.MainWindowViews
 		private readonly IMainWindowService mainWindowService;
 		private readonly IOpenModelService openModelService;
 		private readonly IRecentModelsService recentModelsService;
+		private readonly IModelMetadataService modelMetadataService;
 		private readonly IModelViewService modelViewService;
 		private readonly ModelMetadata modelMetadata;
 		private readonly IMessage message;
@@ -40,6 +42,7 @@ namespace Dependinator.MainWindowViews
 			ModelViewModel modelViewModel,
 			IOpenModelService openModelService,
 			IRecentModelsService recentModelsService,
+			IModelMetadataService modelMetadataService,
 			IModelViewService modelViewService)
 		{
 			this.modelMetadata = modelMetadata;
@@ -49,6 +52,7 @@ namespace Dependinator.MainWindowViews
 			this.mainWindowService = mainWindowService;
 			this.openModelService = openModelService;
 			this.recentModelsService = recentModelsService;
+			this.modelMetadataService = modelMetadataService;
 			this.modelViewService = modelViewService;
 
 			ModelViewModel = modelViewModel;
@@ -71,6 +75,12 @@ namespace Dependinator.MainWindowViews
 
 
 		public string Title => $"{modelMetadata.ModelName} - {Product.Name}";
+
+
+		public bool IsModel => !modelMetadataService.IsDefault;
+		public bool ShowMinimizeButton => !modelMetadataService.IsDefault;
+		public bool ShowMaximizeButton => !modelMetadataService.IsDefault;
+
 
 
 		public string SearchBox

@@ -18,14 +18,16 @@
 			Content="&#xE15B;" 
 			Padding="4,4,4,0" 
 			ToolTip="Minimize (Escape)"
-			Command="{Binding MinimizeCommand}"/>
+			Command="{Binding MinimizeCommand}"
+			Visibility="{Binding ShowMinimizeButton, Converter={StaticResource VC}}"/>
 
 		<!-- Maximize button-->
 		<Button 
 			Style="{DynamicResource IconButtonStyle}" 
 			FontSize="14" Content="&#xE3C1;" 
 			ToolTip="Maximize"
-			Command="{Binding ToggleMaximizeCommand}"/>
+			Command="{Binding ToggleMaximizeCommand}"
+			Visibility="{Binding ShowMaximizeButton, Converter={StaticResource VC}}"/>
 
 		<!-- Close Button -->
 		<Button 
