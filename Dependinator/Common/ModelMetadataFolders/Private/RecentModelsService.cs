@@ -42,6 +42,20 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		}
 
 
+		public void RemoveModelPath(string modelFilePath)
+		{
+			List<string> resentPaths = settingsService.Get<ProgramSettings>().ResentModelPaths.ToList();
+			int index = resentPaths.FindIndex(path => path.IsSameIgnoreCase(modelFilePath));
+
+			if (index != -1)
+			{
+				resentPaths.RemoveAt(index);
+			}
+
+			settingsService.Edit<ProgramSettings>(s => { s.ResentModelPaths = resentPaths; });
+		}
+
+
 		private void AddToResentPathInProgramSettings(string modelFilePath)
 		{
 			ProgramSettings settings = settingsService.Get<ProgramSettings>();

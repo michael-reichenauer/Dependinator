@@ -164,37 +164,6 @@ namespace Dependinator.MainWindowViews
 		public async Task LoadAsync()
 		{
 			await Task.Yield();
-
-			//if (workingFolder.IsValid)
-			//{
-			//	//await SetWorkingFolderAsync();
-			//}
-			//else
-			//{
-			//	//Dispatcher.CurrentDispatcher.BeginInvoke(() =>
-			//	//{
-			//	//	OpenFileDialog dialog = new OpenFileDialog(owner);
-			//	//	dialog.ShowDialog();
-			//	//});
-
-			//}
-			//else
-			//{
-			//	Dispatcher.CurrentDispatcher.BeginInvoke(() => OpenFileAsync().RunInBackground());
-			//}
-
-			//else
-			//{
-			//	isLoaded = false;
-
-			//	if (!TryOpenFile())
-			//	{
-			//		Application.Current.Shutdown(0);
-			//		return;
-			//	}
-
-			//	await SetWorkingFolderAsync();
-			//}
 		}
 
 

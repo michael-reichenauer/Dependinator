@@ -114,6 +114,16 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				}
 			}
 
+			if (!modelMetadata.IsDefault && !File.Exists(dataFilePath) && !File.Exists(modelMetadata.ModelFilePath))
+			{
+				message.ShowWarning($"Model not found:\n{modelMetadata.ModelFilePath}");
+				recentModelsService.RemoveModelPath(modelMetadata.ModelFilePath);
+				string targetPath = ProgramInfo.GetInstallFilePath();
+				cmd.Start(targetPath, "");
+				Application.Current.Shutdown(0);
+				return;
+			}
+
 			if (!Root.Children.Any())
 			{
 				if (File.Exists(dataFilePath))
@@ -165,6 +175,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			if (operationId.IsFaulted)
 			{
 				message.ShowWarning(operationId.Message);
+
+				if (!File.Exists(modelMetadata.ModelFilePath))
+				{
+					recentModelsService.RemoveModelPath(modelMetadata.ModelFilePath);
+				}
+
 				modelNodeService.SetLayoutDone();
 				GC.Collect();
 				isWorking = false;

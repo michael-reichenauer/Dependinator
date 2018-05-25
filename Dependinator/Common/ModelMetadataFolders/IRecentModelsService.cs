@@ -11,5 +11,6 @@ namespace Dependinator.Common.ModelMetadataFolders
 		void AddModelPaths(string modelFilePath);
 
 		IReadOnlyList<string> GetModelPaths();
+		void RemoveModelPath(string modelFilePath);
 	}
 }

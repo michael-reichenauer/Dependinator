@@ -52,11 +52,7 @@ namespace Dependinator.ModelViewing
 		public ItemsViewModel ItemsViewModel { get; }
 
 
-		public async Task LoadAsync()
-		{
-			await openModelService.OpenCurrentModelAsync();
-			//await modelViewService.LoadAsync();
-		}
+		public async Task LoadAsync() => await openModelService.OpenCurrentModelAsync();
 
 
 		public int Width
