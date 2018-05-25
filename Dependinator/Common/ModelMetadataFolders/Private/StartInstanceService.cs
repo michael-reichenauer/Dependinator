@@ -21,6 +21,15 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 			return StartProcess(targetPath, arguments);
 		}
 
+		public bool OpenOrStartDefaultInstance()
+		{
+			string targetPath = ProgramInfo.GetInstallFilePath();
+
+			Log.Info($"Restarting: {targetPath}");
+
+			return StartProcess(targetPath, null);
+		}
+
 
 		public bool OpenOrStartInstance(string modelFilePath)
 		{

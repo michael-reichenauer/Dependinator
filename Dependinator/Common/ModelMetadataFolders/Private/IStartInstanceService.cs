@@ -5,5 +5,6 @@
 		bool StartInstance(string modelFilePath);
 
 		bool OpenOrStartInstance(string modelFilePath);
+		bool OpenOrStartDefaultInstance();
 	}
 }

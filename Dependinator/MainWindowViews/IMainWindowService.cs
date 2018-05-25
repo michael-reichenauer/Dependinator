@@ -8,6 +8,5 @@
 		void SendFeedback();
 		void OpenOptions();
 		void OpenHelp();
-		void OpenNewWindow();
 	}
 }

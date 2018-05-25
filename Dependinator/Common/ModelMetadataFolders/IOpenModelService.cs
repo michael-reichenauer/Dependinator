@@ -13,5 +13,6 @@ namespace Dependinator.Common.ModelMetadataFolders
 		Task TryModelAsync(string modelFilePath);
 
 		Task OpenModelAsync(IReadOnlyList<string> modelFilePaths);
+		void ShowOpenModelDialog();
 	}
 }

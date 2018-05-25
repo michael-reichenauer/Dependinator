@@ -83,48 +83,6 @@
 					</MenuItem.Icon>
 				</MenuItem>
 
-				<MenuItem
-					Header="Resent Models"
-					IsEnabled="{Binding HasResent}"
-					ItemsSource="{Binding ResentModels}">
-					<MenuItem.Icon>
-						<Border>
-							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE89D;" />
-						</Border>
-					</MenuItem.Icon>
-
-					<MenuItem.Resources>
-						<DataTemplate
-							DataType="{x:Type open:FileItem}">
-							<MenuItem
-								Header="{Binding FileName}"
-								Command="{Binding OpenFileCommand}"
-								CommandParameter="{Binding FilePath}">
-								<MenuItem.ToolTip>
-									<ToolTip
-										Content="{Binding FilePath}"
-										Placement="Mouse"
-										BorderBrush="{DynamicResource BorderBrush}"
-										BorderThickness="1" />
-								</MenuItem.ToolTip>
-							</MenuItem>
-						</DataTemplate>
-					</MenuItem.Resources>
-				</MenuItem>
-
-
-				<MenuItem
-					Header="Open New Window ..."
-					Command="{Binding OpenNewWindowCommand}">
-					<MenuItem.Icon>
-						<Border>
-							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE89E;" />
-						</Border>
-					</MenuItem.Icon>
-				</MenuItem>
-
-
-
 				<Separator Background="{DynamicResource BorderBrush}" />
 
 				<MenuItem

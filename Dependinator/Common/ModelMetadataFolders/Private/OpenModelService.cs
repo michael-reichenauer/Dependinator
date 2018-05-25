@@ -35,6 +35,10 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		}
 
 
+
+		public void ShowOpenModelDialog() => startInstanceService.OpenOrStartDefaultInstance();
+
+
 		public async Task OpenOtherModelAsync()
 		{
 			if (!openFileDialogService.TryShowOpenFileDialog(out string modelFilePath))
@@ -67,8 +71,12 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 				startInstanceService.StartInstance(modelFilePath);
 			}
 
-			await Task.Delay(500);
-			Application.Current.Shutdown(0);
+			if (modelMetadataService.IsDefault)
+			{
+				// The open model dialog can be closed after opening other model
+				await Task.Delay(500);
+				Application.Current.Shutdown(0);
+			}
 		}
 
 
