@@ -37,6 +37,16 @@ namespace Dependinator.ModelViewing.Open
 		public async void OpenFile() => await openModelService.OpenOtherModelAsync();
 
 
+		public async void OpenExampleFile()
+		{
+			string dataFolderPath = ProgramInfo.GetProgramDataFolderPath();
+	
+			string examplePath = Path.Combine(dataFolderPath, "Example", "Example.exe");
+
+			await openModelService.TryModelAsync(examplePath);
+		}
+
+
 		private IReadOnlyList<FileItem> GetRecentFiles()
 		{
 			IReadOnlyList<string> filesPaths = recentModelsService.GetModelPaths();
@@ -50,51 +60,6 @@ namespace Dependinator.ModelViewing.Open
 			}
 
 			return fileItems;
-		}
-
-
-		public async void OpenExampleFile()
-		{
-			string dataFolderPath = ProgramInfo.GetProgramDataFolderPath();
-			string exampleFolderPath = Path.Combine(dataFolderPath, "Example");
-			string examplePath = Path.Combine(exampleFolderPath, "Example.exe");
-			string exampleXmlPath = Path.Combine(exampleFolderPath, "Example.xml");
-			if (!Directory.Exists(exampleFolderPath))
-			{
-				Directory.CreateDirectory(exampleFolderPath);
-			}
-
-			try
-			{
-				if (File.Exists(examplePath))
-				{
-					File.Delete(examplePath);
-				}
-
-				if (File.Exists(ProgramInfo.GetInstallFilePath()))
-				{
-					File.Copy(ProgramInfo.GetInstallFilePath(), examplePath);
-				}
-				else
-				{
-					File.Copy(Assembly.GetEntryAssembly().Location, examplePath);
-				}
-
-				Assembly executingAssembly = Assembly.GetExecutingAssembly();
-				string resourceName = $"{Product.Name}.Common.Resources.Example.xml";
-				using (Stream stream = executingAssembly.GetManifestResourceStream(resourceName))
-				{
-					StreamReader sr = new StreamReader(stream);
-					string text = sr.ReadToEnd();
-					File.WriteAllText(exampleXmlPath, text);
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Exception(e, "Failed to copy example file");
-			}
-
-			await openModelService.TryModelAsync(examplePath);
 		}
 	}
 }
