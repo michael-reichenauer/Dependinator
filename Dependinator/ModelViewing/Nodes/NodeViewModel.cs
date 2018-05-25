@@ -126,10 +126,8 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		public void UpdateToolTip() => ToolTip =
-			$"{Node.Name.DisplayFullNameWithType}" +
-			$"\n{Node.Description}" +
-			$"\nLines; In: {IncomingLinesCount}, Out: {OutgoingLinesCount}" +
-			$"\nLinks; In: {IncomingLinksCount}, Out: {OutgoingLinksCount}" +
+			$"{Node.Name.DisplayFullName}" +
+			(string.IsNullOrWhiteSpace(Node.Description) ? "" : $"\n{Node.Description}") +
 			$"{DebugToolTip}";
 
 
@@ -238,6 +236,8 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private string ItemsToolTip => !Config.IsDebug ? "" :
 			"\n" +
+			$"\nLines; In: {IncomingLinesCount}, Out: {OutgoingLinesCount}" +
+			$"\nLinks; In: {IncomingLinksCount}, Out: {OutgoingLinksCount}" +
 			$"Rect: {ItemBounds.TS()}\n" +
 			$"Scale {ItemScale.TS()}, ChildrenScale: {Node.View.ItemsCanvas?.Scale.TS()}\n" +
 			//$"C Point {Node.ItemsCanvas.CanvasPointToScreenPoint(new Point(0, 0)).TS()}\n" +

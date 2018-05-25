@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
+using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.AssemblyFileParsing;
 using Dependinator.Utils;
 
@@ -12,21 +14,32 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 		private readonly string name;
 		private readonly string filePath;
 		private readonly IReadOnlyList<AssemblyParser> assemblyParsers;
+		private readonly bool isSolutionFile;
+		private readonly ModelItemsCallback itemsCallback;
 
 
-		public WorkParser(
-			string name, 
+		public WorkParser(string name,
 			string filePath,
-			IReadOnlyList<AssemblyParser> assemblyParsers)
+			IReadOnlyList<AssemblyParser> assemblyParsers, 
+			bool isSolutionFile,
+			ModelItemsCallback itemsCallback)
 		{
 			this.name = name;
 			this.filePath = filePath;
 			this.assemblyParsers = assemblyParsers;
+			this.isSolutionFile = isSolutionFile;
+			this.itemsCallback = itemsCallback;
 		}
 
 
 		public async Task ParseAsync()
 		{
+			string moduleName = "$" + Path.GetFileName(filePath).Replace(".", "*");
+			string description = isSolutionFile ? "Solution file" : "Assembly file";
+			ModelNode moduleNode = new ModelNode(moduleName, null, NodeType.NameSpace, description, null);
+			itemsCallback(moduleNode);
+
+
 			await ParseAssembliesAsync(assemblyParsers);
 		}
 

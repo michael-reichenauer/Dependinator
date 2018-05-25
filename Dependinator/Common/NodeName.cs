@@ -34,8 +34,6 @@ namespace Dependinator.Common
 
 		public string DisplayFullNoParametersName => displayParts.Value.FullNameNoParameters;
 
-		public string DisplayFullNameWithType => displayParts.Value.FullNameWithType; 
-
 
 		public static NodeName From(string fullName)
 		{
@@ -77,9 +75,8 @@ namespace Dependinator.Common
 			name = ToNiceText(name);
 
 
-			string fullNameWithType;
-
-			string fullName = string.Join(".", parts
+			var subParts = FullName.StartsWith("$") ? parts : parts.Skip(1);
+			string fullName = string.Join(".", subParts
 				.Where(part =>  !part.StartsWithTxt("?")));
 			string fullNameNoParameters = fullName;
 
@@ -87,26 +84,15 @@ namespace Dependinator.Common
 			{
 				fullName = ToNiceText(FullName);
 				fullNameNoParameters = fullName;
-
-				fullNameWithType = fullName;
-				if (parts[parts.Length - 1].StartsWith("$"))
-				{
-					fullNameWithType = fullName;
-				}
-				else if (parts[parts.Length - 1].StartsWith("?"))
-				{
-					fullNameWithType = fullName;
-				}
 			}
 			else
 			{
 				fullName = ToNiceText(fullName);
 				fullName = ToNiceParameters(fullName);
 				fullNameNoParameters = ToNoParameters(fullName);
-				fullNameWithType = fullName;
 			}
 			
-			return new DisplayParts(name, fullName, fullNameNoParameters, fullNameWithType);
+			return new DisplayParts(name, fullName, fullNameNoParameters);
 		}
 
 
@@ -167,19 +153,16 @@ namespace Dependinator.Common
 			public string Name { get; }
 			public string FullName { get; }
 			public string FullNameNoParameters { get; }
-			public string FullNameWithType { get; }
 
 
 			public DisplayParts(
 				string name, 
 				string fullName,
-				string fullNameNoParameters,
-				string fullNameWithType)
+				string fullNameNoParameters)
 			{
 				Name = name;
 				FullName = fullName;
 				FullNameNoParameters = fullNameNoParameters;
-				FullNameWithType = fullNameWithType;
 			}
 		}
 	}

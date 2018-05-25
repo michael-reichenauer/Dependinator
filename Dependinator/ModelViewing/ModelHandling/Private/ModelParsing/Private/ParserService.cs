@@ -37,7 +37,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 		private static R<WorkParser> GetWorkParser(
 			string filePath, ModelItemsCallback modelItemsCallback)
 		{
-			R<IReadOnlyList<AssemblyParser>> assemblyParsers = IsSolutionFile(filePath)
+			bool isSolutionFile = IsSolutionFile(filePath);
+			R<IReadOnlyList<AssemblyParser>> assemblyParsers = isSolutionFile
 				? GetSolutionAssemblyParsers(filePath, modelItemsCallback)
 				: GetAssemblyParser(filePath, modelItemsCallback);
 
@@ -53,7 +54,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 			}
 
 			string name = GetName(filePath);
-			WorkParser workParser = new WorkParser(name, filePath, assemblyParsers.Value);
+			WorkParser workParser = new WorkParser(
+				name, filePath, assemblyParsers.Value, isSolutionFile, modelItemsCallback);
 
 			return workParser;
 		}

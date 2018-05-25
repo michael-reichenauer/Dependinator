@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Dependinator.ModelViewing.ModelHandling.Core;
@@ -10,6 +11,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 {
 	internal class AssemblyModuleParser
 	{
+
 		private readonly string rootGroup;
 		private readonly LinkHandler linkHandler;
 		private readonly ModelItemsCallback itemsCallback;
@@ -58,7 +60,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			CustomAttributeArgument? argument = descriptionAttribute?.ConstructorArguments
 				.FirstOrDefault();
 
-			string description = argument?.Value as string;
+			string assemblyDescription = argument?.Value as string;
+
+			string description = $"Assembly: {assemblyDescription}";
+	
 			return description;
 		}
 
@@ -69,6 +74,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 			var references = assembly.MainModule.AssemblyReferences.
 				Where(reference => !IgnoredTypes.IsSystemIgnoredModuleName(reference.Name));
+
+			if (references.Any())
+			{
+				string description = "External references";
+				ModelNode referencesNode = new ModelNode("$References", null, NodeType.NameSpace, description, null);
+				itemsCallback(referencesNode);
+			}
 
 			foreach (AssemblyNameReference reference in references)
 			{
@@ -83,7 +95,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 				parent = $"${parent?.Replace(".", ".$")}";
 
-				ModelNode referenceNode = new ModelNode(referenceName, parent, NodeType.NameSpace, null, null);
+				string description = "Assembly";
+				ModelNode referenceNode = new ModelNode(referenceName, parent, NodeType.NameSpace, description, null);
 				itemsCallback(referenceNode);
 
 				linkHandler.AddLink(
