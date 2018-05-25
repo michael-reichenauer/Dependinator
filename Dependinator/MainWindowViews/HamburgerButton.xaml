@@ -31,7 +31,7 @@
 					</MenuItem.Icon>
 				</MenuItem>
 
-				<Separator Background="{DynamicResource BorderBrush}" />
+				<!--<Separator Background="{DynamicResource BorderBrush}" />-->
 				
 				<!--<MenuItem
 					Header="Show Hidden Nodes"
@@ -71,8 +71,7 @@
 					</MenuItem.Resources>
 				</MenuItem>
 
-				<Separator Background="{DynamicResource BorderBrush}" />
-				
+
 				<MenuItem
 					Header="Open Model ..."
 					Command="{Binding OpenFileCommand}">
@@ -82,8 +81,6 @@
 						</Border>
 					</MenuItem.Icon>
 				</MenuItem>
-
-				<Separator Background="{DynamicResource BorderBrush}" />
 
 				<MenuItem
 					Header="Options ..."
