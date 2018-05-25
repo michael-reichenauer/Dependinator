@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Windows;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing.Items;
-using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Open

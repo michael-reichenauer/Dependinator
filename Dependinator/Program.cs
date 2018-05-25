@@ -1,5 +1,4 @@
 ﻿using System;
-using Dependinator.Common.Environment.Private;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
@@ -33,7 +32,7 @@ namespace Dependinator
 			ManageUnhandledExceptions();
 
 			// Make external assemblies that Dependinator depends on available, when needed (extracted)
-			ActivateExternalDependenciesResolver();
+			AssemblyResolver.Activate();
 
 			// Activate dependency injection support
 			dependencyInjection.RegisterDependencyInjectionTypes();
@@ -43,20 +42,6 @@ namespace Dependinator
 			ExceptionHandling.HandleDispatcherUnhandledException(); // activate after ui is started
 			application.InitializeComponent();
 			application.Run();
-		}
-
-
-		private static void ActivateExternalDependenciesResolver()
-		{
-			Utils.AssemblyResolver.Activate();
-			CommandLine commandLine = new CommandLine();
-
-			if (commandLine.IsInstall || commandLine.IsUninstall)
-			{
-				// LibGit2 requires native git2.dll, which should not be extracted during install/uninstall
-				// Since that would create a dll next to the setup file.
-				Utils.AssemblyResolver.DoNotExtractLibGit2();
-			}
 		}
 
 

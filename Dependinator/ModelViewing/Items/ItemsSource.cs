@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using Dependinator.ModelViewing.Items.Private;
-using Dependinator.Utils;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
