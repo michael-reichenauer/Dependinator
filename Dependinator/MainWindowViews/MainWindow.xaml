@@ -7,7 +7,7 @@
 	xmlns:ui="clr-namespace:Dependinator.Utils.UI"
 	xmlns:modelViewing="clr-namespace:Dependinator.ModelViewing"
 	Title="{Binding Title}"	Icon="Application.ico"
-	Width="800" Height="680"
+	Width="900" Height="700"
 	BorderBrush="{DynamicResource BorderBrush}" BorderThickness="3"
 	WindowStyle="None" AllowsTransparency="True"
 	Loaded="MainWindow_OnLoaded"

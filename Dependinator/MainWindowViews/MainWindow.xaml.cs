@@ -103,6 +103,12 @@ namespace Dependinator.MainWindowViews
 				Height = s.WindowBounds.Height;
 			}
 
+			if (folder.IsDefault)
+			{
+				Width = 800;
+				Height = 680;
+			}
+
 			WindowState = s.IsMaximized ? WindowState.Maximized : WindowState.Normal;
 		}
 
