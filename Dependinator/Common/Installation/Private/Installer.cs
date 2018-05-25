@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Windows;
 using Dependinator.Common.Environment;
@@ -138,11 +139,13 @@ namespace Dependinator.Common.Installation.Private
 
 			AddUninstallSupport(path);
 			CreateStartMenuShortcut(path);
+			ExtractExampleModel();
 
 			Log.Usage("Installed");
 		}
 
 
+		
 		private void UninstallNormal()
 		{
 			Log.Usage("Uninstall normal");
@@ -364,6 +367,49 @@ namespace Dependinator.Common.Installation.Private
 			File.Copy(sourcePath, targetPath, true);
 
 			return targetPath;
+		}
+
+		private void ExtractExampleModel()
+		{
+			string dataFolderPath = ProgramInfo.GetProgramDataFolderPath();
+			string exampleFolderPath = Path.Combine(dataFolderPath, "Example");
+			string examplePath = Path.Combine(exampleFolderPath, "Example.exe");
+			string exampleXmlPath = Path.Combine(exampleFolderPath, "Example.xml");
+
+			if (!Directory.Exists(exampleFolderPath))
+			{
+				Directory.CreateDirectory(exampleFolderPath);
+			}
+
+			try
+			{
+				if (File.Exists(examplePath))
+				{
+					File.Delete(examplePath);
+				}
+
+				if (File.Exists(ProgramInfo.GetInstallFilePath()))
+				{
+					File.Copy(ProgramInfo.GetInstallFilePath(), examplePath);
+				}
+				else
+				{
+					File.Copy(Assembly.GetEntryAssembly().Location, examplePath);
+				}
+
+				Assembly executingAssembly = Assembly.GetExecutingAssembly();
+				string resourceName = $"{Product.Name}.Common.Resources.Example.xml";
+				using (Stream stream = executingAssembly.GetManifestResourceStream(resourceName))
+				{
+					StreamReader sr = new StreamReader(stream);
+					string text = sr.ReadToEnd();
+					File.WriteAllText(exampleXmlPath, text);
+				}
+			}
+			catch (Exception e)
+			{
+				Log.Exception(e, "Failed to copy example model");
+			}
 		}
 	}
 }

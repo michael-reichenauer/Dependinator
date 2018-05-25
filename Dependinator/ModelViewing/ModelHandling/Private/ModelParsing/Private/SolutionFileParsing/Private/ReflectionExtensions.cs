@@ -86,13 +86,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.S
 		private static PropertyInfo GetProperty(object instance, string name)
 		{
 			return instance.GetType()
-				.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Instance);
+				.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 		}
 
 		private static FieldInfo GetField(object instance, string name)
 		{
 			return instance.GetType()
-				.GetField(name, BindingFlags.NonPublic | BindingFlags.Instance);
+				.GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
 		}
 	}
 }

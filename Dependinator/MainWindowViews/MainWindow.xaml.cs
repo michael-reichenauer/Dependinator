@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Windows;
 using System.Windows.Controls;
 using Dependinator.Common;
+using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
@@ -18,15 +19,18 @@ namespace Dependinator.MainWindowViews
 	public partial class MainWindow : Window, IMainWindow
 	{
 		private readonly ISettingsService settingsService;
+		private readonly ModelMetadata folder;
 
 		private readonly MainWindowViewModel viewModel;
 
 
 		internal MainWindow(
 			ISettingsService settingsService, 
-			Func<MainWindowViewModel> mainWindowViewModelProvider)
+			Func<MainWindowViewModel> mainWindowViewModelProvider,
+			ModelMetadata folder)
 		{
 			this.settingsService = settingsService;
+			this.folder = folder;
 
 			InitializeComponent();
 			SetShowToolTipLonger();
@@ -81,6 +85,7 @@ namespace Dependinator.MainWindowViews
 
 		public void RestoreWindowSettings()
 		{
+			ResizeMode = folder.IsDefault ? ResizeMode.NoResize: ResizeMode.CanResize;
 			WorkFolderSettings s = settingsService.Get<WorkFolderSettings>();
 
 			Rectangle rect = new Rectangle(
@@ -96,6 +101,12 @@ namespace Dependinator.MainWindowViews
 				Left = s.WindowBounds.Y;
 				Width = s.WindowBounds.Width;
 				Height = s.WindowBounds.Height;
+			}
+
+			if (folder.IsDefault)
+			{
+				Width = 800;
+				Height = 680;
 			}
 
 			WindowState = s.IsMaximized ? WindowState.Maximized : WindowState.Normal;

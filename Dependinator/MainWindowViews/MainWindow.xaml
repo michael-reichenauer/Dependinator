@@ -7,12 +7,12 @@
 	xmlns:ui="clr-namespace:Dependinator.Utils.UI"
 	xmlns:modelViewing="clr-namespace:Dependinator.ModelViewing"
 	Title="{Binding Title}"	Icon="Application.ico"
-	Width="800" Height="700"
+	Width="900" Height="700"
 	BorderBrush="{DynamicResource BorderBrush}" BorderThickness="3"
 	WindowStyle="None" AllowsTransparency="True"
 	Loaded="MainWindow_OnLoaded"
 	ui:InputBindingsBehavior.TakesInputBindingPrecedence="True" 
-	Closing="MainWindow_OnClosing">
+	Closing="MainWindow_OnClosing" >
 
 
 	<!-- Enable "normal" windows behavior with drag and resize,
@@ -123,16 +123,24 @@
 						ToolTip="New version of Dependinator is available, click to reload ..." />
 
 					<!-- Hamburger button -->
-					<mainWindowViews:HamburgerButton/>
+					<mainWindowViews:HamburgerButton
+						Visibility="{Binding IsModel, Converter={StaticResource VC}}"
+						/>
 
 				</StackPanel>
 
 
 				<!-- Right part, search field and mini, max and close buttons -->
-				<StackPanel Grid.Column="2" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+				<StackPanel 
+					Grid.Column="2"
+					Orientation="Horizontal"
+					WindowChrome.IsHitTestVisibleInChrome="True"
+					HorizontalAlignment="Right">
 					
 					<!-- Search and filter box  -->
-					<mainWindowViews:SearchFilter x:Name="Search"/>
+					<mainWindowViews:SearchFilter
+						Visibility="{Binding IsModel, Converter={StaticResource VC}}"
+						x:Name="Search"/>
 
 					<!-- The 3 minimize, maximize and close window control buttons in the title bar -->
 					<common:WindowControlButtons/>

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-//using Dependinator.ModelViewing.Private;
 using Dependinator.Utils;
 
 
@@ -15,6 +14,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		private readonly ILoadModelService loadModelService;
 		private readonly IOpenFileDialogService openFileDialogService;
 		private readonly IExistingInstanceService existingInstanceService;
+		private readonly IStartInstanceService startInstanceService;
 		private readonly Lazy<IMainWindow> mainWindow;
 
 
@@ -23,17 +23,23 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 			IModelMetadataService modelMetadataService,
 			IOpenFileDialogService openFileDialogService,
 			IExistingInstanceService existingInstanceService,
+			IStartInstanceService startInstanceService,
 			Lazy<IMainWindow> mainWindow)
 		{
 			this.loadModelService = loadModelService;
 			this.modelMetadataService = modelMetadataService;
 			this.openFileDialogService = openFileDialogService;
 			this.existingInstanceService = existingInstanceService;
+			this.startInstanceService = startInstanceService;
 			this.mainWindow = mainWindow;
 		}
 
 
-		public async Task OpenModelAsync()
+
+		public void ShowOpenModelDialog() => startInstanceService.OpenOrStartDefaultInstance();
+
+
+		public async Task OpenOtherModelAsync()
 		{
 			if (!openFileDialogService.TryShowOpenFileDialog(out string modelFilePath))
 			{
@@ -56,9 +62,26 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		}
 
 
-		public async Task OpenOtherModelAsync(string modelFilePath)
+		private async Task OpenOtherModelAsync(string modelFilePath)
 		{
-			modelMetadataService.SetModelFilePath(modelFilePath);
+			string metadataFolderPath = modelMetadataService.GetMetadataFolderPath(modelFilePath);
+
+			if (!existingInstanceService.TryActivateExistingInstance(metadataFolderPath, null))
+			{
+				startInstanceService.StartInstance(modelFilePath);
+			}
+
+			if (modelMetadataService.IsDefault)
+			{
+				// The open model dialog can be closed after opening other model
+				await Task.Delay(500);
+				Application.Current.Shutdown(0);
+			}
+		}
+
+
+		public async Task OpenCurrentModelAsync()
+		{
 			string metadataFolderPath = modelMetadataService.MetadataFolderPath;
 
 			if (existingInstanceService.TryActivateExistingInstance(metadataFolderPath, null))
@@ -71,12 +94,8 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
 			existingInstanceService.RegisterPath(metadataFolderPath);
 
-			mainWindow.Value.RestoreWindowSettings();
-
 			await loadModelService.LoadAsync();
 		}
-
-
 
 
 		public async Task OpenModelAsync(IReadOnlyList<string> modelFilePaths)

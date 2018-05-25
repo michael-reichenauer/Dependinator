@@ -27,6 +27,11 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		
 		public void AddModelPaths(string modelFilePath)
 		{
+			if (!System.IO.File.Exists(modelFilePath))
+			{
+				return;
+			}
+
 			AddToResentPathInProgramSettings(modelFilePath);
 
 			jumpListService.AddPath(modelFilePath);
@@ -38,7 +43,21 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		{
 			ProgramSettings settings = settingsService.Get<ProgramSettings>();
 
-			return settings.ResentModelPaths.ToList();
+			return settings.ResentModelPaths.Where(System.IO.File.Exists).ToList();
+		}
+
+
+		public void RemoveModelPath(string modelFilePath)
+		{
+			List<string> resentPaths = settingsService.Get<ProgramSettings>().ResentModelPaths.ToList();
+			int index = resentPaths.FindIndex(path => path.IsSameIgnoreCase(modelFilePath));
+
+			if (index != -1)
+			{
+				resentPaths.RemoveAt(index);
+			}
+
+			settingsService.Edit<ProgramSettings>(s => { s.ResentModelPaths = resentPaths; });
 		}
 
 
@@ -46,7 +65,8 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		{
 			ProgramSettings settings = settingsService.Get<ProgramSettings>();
 
-			List<string> resentPaths = settings.ResentModelPaths;
+			List<string> resentPaths = settings.ResentModelPaths
+				.Where(System.IO.File.Exists).ToList();
 			int index = resentPaths.FindIndex(path => path.IsSameIgnoreCase(modelFilePath));
 
 			if (index != -1)

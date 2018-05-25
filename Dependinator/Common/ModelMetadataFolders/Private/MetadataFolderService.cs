@@ -48,7 +48,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		public void SetDefault() => SetModelFilePath(defaultPath);
 
 
-		public static string GetMetadataFolderPath(string modelFilePath)
+		public string GetMetadataFolderPath(string modelFilePath)
 		{
 			string metadataFolderName = CreateMetadataFolderName(modelFilePath);
 

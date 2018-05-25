@@ -74,18 +74,5 @@ namespace Dependinator.MainWindowViews.Private
 				Log.Error($"Failed to open help link {ex}");
 			}
 		}
-
-
-		public void OpenNewWindow()
-		{
-			try
-			{
-				Process.Start(ProgramInfo.GetInstallFilePath());
-			}
-			catch (Exception ex) when (ex.IsNotFatal())
-			{
-				Log.Error($"Failed to open help link {ex}");
-			}
-		}
 	}
 }

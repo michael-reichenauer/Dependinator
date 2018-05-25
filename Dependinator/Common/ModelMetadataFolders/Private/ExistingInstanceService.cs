@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using Dependinator.Utils;
 
 
@@ -10,12 +11,16 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 	[SingleInstance]
 	internal class ExistingInstanceService : IExistingInstanceService
 	{
+		private readonly IModelMetadataService modelMetadataService;
 		private readonly ExistingInstanceIpcService existingInstanceIpcService;
 		private IpcRemotingService instanceIpcRemotingService;
 
 
-		public ExistingInstanceService(ExistingInstanceIpcService existingInstanceIpcService)
+		public ExistingInstanceService(
+			IModelMetadataService modelMetadataService,
+			ExistingInstanceIpcService existingInstanceIpcService)
 		{
+			this.modelMetadataService = modelMetadataService;
 			this.existingInstanceIpcService = existingInstanceIpcService;
 		}
 
@@ -74,6 +79,38 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		}
 
 
+		public bool WaitForOtherInstance()
+		{
+			Timing t = Timing.Start();
+			while (t.Elapsed < TimeSpan.FromSeconds(20))
+			{
+				try
+				{
+					string id = GetMetadataFolderId(modelMetadataService.MetadataFolderPath);
+					using (IpcRemotingService ipcRemotingService = new IpcRemotingService())
+					{
+						if (ipcRemotingService.TryCreateServer(id))
+						{
+							Log.Debug("Other instance has closed");
+							return true;
+						}
+
+					}
+				}
+				catch (Exception e)
+				{
+					Log.Exception(e, "Failed to check if other instance is running");
+				}
+
+				Thread.Sleep(100);
+			}
+
+			Log.Error("Failed to wait for other instance");
+			return false;
+		}
+
+
+
 		private static string GetMetadataFolderId(string metadataFolderPath)
 		{
 			string name = Product.Guid + Uri.EscapeDataString(metadataFolderPath);
@@ -88,7 +125,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 			SHA256Managed shaService = new SHA256Managed();
 			StringBuilder hashText = new StringBuilder();
 
-			byte[] textBytes = Encoding.UTF8.GetBytes(text);
+			byte[] textBytes = Encoding.UTF8.GetBytes(text.ToLower());
 
 			byte[] shaHash = shaService.ComputeHash(textBytes, 0, textBytes.Length);
 

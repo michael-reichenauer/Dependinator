@@ -14,6 +14,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		private readonly LinkHandler linkHandler;
 		private readonly XmlDocParser xmlDockParser;
 		private readonly Decompiler decompiler;
+		private readonly string assemblyPath;
 		private readonly ModelItemsCallback itemsCallback;
 
 	
@@ -22,11 +23,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			LinkHandler linkHandler, 
 			XmlDocParser xmlDockParser,
 			Decompiler decompiler,
+			string assemblyPath,
 			ModelItemsCallback itemsCallback)
 		{
 			this.linkHandler = linkHandler;
 			this.xmlDockParser = xmlDockParser;
 			this.decompiler = decompiler;
+			this.assemblyPath = assemblyPath;
 			this.itemsCallback = itemsCallback;
 		}
 
@@ -69,7 +72,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 					yield break;
 				}
 
-				Lazy<string> codeText = decompiler.LazyDecompile(type);
+				Lazy<string> codeText = decompiler.LazyDecompile(type, assemblyPath);
 				typeNode = new ModelNode(name, parent, NodeType.Type, description, codeText);
 				itemsCallback(typeNode);
 			}

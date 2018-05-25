@@ -41,7 +41,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 
 
 
-		public Task<bool> TryDeserializeAsStreamAsync(
+		public Task<R> TryDeserializeAsStreamAsync(
 			string path, ModelItemsCallback modelItemsCallback)
 		{
 			return Task.Run(() =>
@@ -76,14 +76,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 					}
 
 					t.Log($"Sent all items");
-					return true;
+					return R.Ok;
 				}
 				catch (Exception e)
 				{
-					Log.Exception(e, "Failed to deserialize");
+					return new InvalidDataFileException($"Failed to parse:{path},\n{e.Message}");
 				}
-
-				return false;
 			});
 		}
 	}

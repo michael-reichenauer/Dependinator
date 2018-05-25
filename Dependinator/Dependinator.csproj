@@ -149,7 +149,9 @@
     <Compile Include="Common\ModelMetadataFolders\Private\IJumpListService.cs" />
     <Compile Include="Common\ModelMetadataFolders\IRecentModelsService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\ILoadModelService.cs" />
+    <Compile Include="Common\ModelMetadataFolders\Private\IStartInstanceService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\RecentModelsService.cs" />
+    <Compile Include="Common\ModelMetadataFolders\Private\StartInstanceService.cs" />
     <Compile Include="Common\ProgressHandling\IBusyIndicatorProvider.cs" />
     <Compile Include="Common\SettingsHandling\ISettingsService.cs" />
     <Compile Include="Common\ModelMetadataFolders\IOpenModelService.cs" />
@@ -679,6 +681,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Dependencies\ICSharpCode.AvalonEdit.dll" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Common\Resources\Example.xml" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>mkdir "$(ProjectDir)\Dependencies" 2&gt; NUL
@@ -731,7 +736,11 @@ copy /Y /B ICSharpCode.AvalonEdit.dll "$(ProjectDir)\Dependencies\ICSharpCode.Av
 popd
 
 copy /Y /B "$(SolutionDir)\Binaries\System.Windows.Interactivity.dll" "$(ProjectDir)\Dependencies\System.Windows.Interactivity.dll" &gt;NUL
+
 </PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>copy /Y /B "$(TargetDir)$(TargetName).xml" "$(ProjectDir)Common\Resources\Example.xml"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

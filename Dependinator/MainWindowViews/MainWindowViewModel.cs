@@ -7,6 +7,7 @@ using System.Windows;
 using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing;
@@ -26,6 +27,7 @@ namespace Dependinator.MainWindowViews
 		private readonly IMainWindowService mainWindowService;
 		private readonly IOpenModelService openModelService;
 		private readonly IRecentModelsService recentModelsService;
+		private readonly IModelMetadataService modelMetadataService;
 		private readonly IModelViewService modelViewService;
 		private readonly ModelMetadata modelMetadata;
 		private readonly IMessage message;
@@ -40,6 +42,7 @@ namespace Dependinator.MainWindowViews
 			ModelViewModel modelViewModel,
 			IOpenModelService openModelService,
 			IRecentModelsService recentModelsService,
+			IModelMetadataService modelMetadataService,
 			IModelViewService modelViewService)
 		{
 			this.modelMetadata = modelMetadata;
@@ -49,6 +52,7 @@ namespace Dependinator.MainWindowViews
 			this.mainWindowService = mainWindowService;
 			this.openModelService = openModelService;
 			this.recentModelsService = recentModelsService;
+			this.modelMetadataService = modelMetadataService;
 			this.modelViewService = modelViewService;
 
 			ModelViewModel = modelViewModel;
@@ -56,7 +60,6 @@ namespace Dependinator.MainWindowViews
 			modelMetadata.OnChange += (s, e) => Notify(nameof(WorkingFolder));
 			latestVersionService.OnNewVersionAvailable += (s, e) => IsNewVersionVisible = true;
 			latestVersionService.StartCheckForLatestVersion();
-			recentModelsService.Changed += (s, e) => Notify(nameof(ResentModels), nameof(HasResent));
 		}
 
 		public int WindowWith { set => ModelViewModel.Width = value; }
@@ -72,6 +75,12 @@ namespace Dependinator.MainWindowViews
 
 
 		public string Title => $"{modelMetadata.ModelName} - {Product.Name}";
+
+
+		public bool IsModel => !modelMetadataService.IsDefault;
+		public bool ShowMinimizeButton => !modelMetadataService.IsDefault;
+		public bool ShowMaximizeButton => !modelMetadataService.IsDefault;
+
 
 
 		public string SearchBox
@@ -104,7 +113,6 @@ namespace Dependinator.MainWindowViews
 			}
 		}
 
-		public IReadOnlyList<FileItem> ResentModels => GetRecentFiles();
 
 		public IReadOnlyList<HiddenNodeItem> HiddenNodes => GetHiddenNodes();
 
@@ -122,29 +130,10 @@ namespace Dependinator.MainWindowViews
 		public bool HasHiddenNodes => modelViewService.GetHiddenNodeNames().Any();
 
 
-		private IReadOnlyList<FileItem> GetRecentFiles()
-		{
-			IReadOnlyList<string> filesPaths = recentModelsService.GetModelPaths();
-
-			List<FileItem> fileItems = new List<FileItem>();
-			foreach (string filePath in filesPaths)
-			{
-				string name = Path.GetFileName(filePath);
-
-				fileItems.Add(new FileItem(name, filePath, openModelService.TryModelAsync));
-			}
-
-			return fileItems;
-		}
-
-
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
 		public Command RefreshLayoutCommand => AsyncCommand(ManualRefreshLayoutAsync);
 
-		public Command OpenFileCommand => AsyncCommand(openModelService.OpenModelAsync);
-
-		public Command OpenNewWindowCommand => Command(mainWindowService.OpenNewWindow);
-
+		public Command OpenFileCommand => Command(openModelService.ShowOpenModelDialog);
 
 
 
@@ -175,37 +164,6 @@ namespace Dependinator.MainWindowViews
 		public async Task LoadAsync()
 		{
 			await Task.Yield();
-
-			//if (workingFolder.IsValid)
-			//{
-			//	//await SetWorkingFolderAsync();
-			//}
-			//else
-			//{
-			//	//Dispatcher.CurrentDispatcher.BeginInvoke(() =>
-			//	//{
-			//	//	OpenFileDialog dialog = new OpenFileDialog(owner);
-			//	//	dialog.ShowDialog();
-			//	//});
-
-			//}
-			//else
-			//{
-			//	Dispatcher.CurrentDispatcher.BeginInvoke(() => OpenFileAsync().RunInBackground());
-			//}
-
-			//else
-			//{
-			//	isLoaded = false;
-
-			//	if (!TryOpenFile())
-			//	{
-			//		Application.Current.Shutdown(0);
-			//		return;
-			//	}
-
-			//	await SetWorkingFolderAsync();
-			//}
 		}
 
 

@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Windows;
 using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing.Items;
+using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Open
@@ -31,7 +34,17 @@ namespace Dependinator.ModelViewing.Open
 		public IReadOnlyList<FileItem> RecentFiles { get; }
 
 
-		public async void OpenFile() => await openModelService.OpenModelAsync();
+		public async void OpenFile() => await openModelService.OpenOtherModelAsync();
+
+
+		public async void OpenExampleFile()
+		{
+			string dataFolderPath = ProgramInfo.GetProgramDataFolderPath();
+	
+			string examplePath = Path.Combine(dataFolderPath, "Example", "Example.exe");
+
+			await openModelService.TryModelAsync(examplePath);
+		}
 
 
 		private IReadOnlyList<FileItem> GetRecentFiles()
@@ -43,16 +56,10 @@ namespace Dependinator.ModelViewing.Open
 			{
 				string name = Path.GetFileName(filePath);
 
-				fileItems.Add(new FileItem(name, filePath, openModelService.OpenOtherModelAsync));
+				fileItems.Add(new FileItem(name, filePath, openModelService.TryModelAsync));
 			}
 
 			return fileItems;
-		}
-
-
-		public async void OpenExampleFile()
-		{
-			await openModelService.OpenOtherModelAsync(Assembly.GetEntryAssembly().Location);
 		}
 	}
 }

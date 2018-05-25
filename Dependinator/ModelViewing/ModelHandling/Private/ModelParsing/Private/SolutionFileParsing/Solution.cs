@@ -43,9 +43,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.S
 			IReadOnlyList<ProjectInSolution> solutionParserProjects = solutionParser.Projects;
 
 			return solutionParserProjects
-				.Where(p => !p.IsSolutionFolder)
+				.Where(p => !p.IsSolutionFolder && p.IsIncludedDebug)
 				.Select(p => new Project(p, SolutionDirectory))
 				.ToList();
 		}
+
+
+		public override string ToString() => SolutionFilePath;
 	}
 }

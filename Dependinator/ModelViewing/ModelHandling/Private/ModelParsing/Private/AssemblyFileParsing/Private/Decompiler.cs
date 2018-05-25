@@ -14,14 +14,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			new ConcurrentDictionary<ModuleDefinition, CSharpDecompiler>();
 
 
-		public Lazy<string> LazyDecompile(TypeDefinition type)
+		public Lazy<string> LazyDecompile(TypeDefinition type, string assemblyPath)
 		{
-			return new Lazy<string>(() => GetDecompiledText(type));
+			return new Lazy<string>(() => GetDecompiledText(type, assemblyPath));
 		}
 
-		public Lazy<string> LazyDecompile(IMemberDefinition member)
+		public Lazy<string> LazyDecompile(IMemberDefinition member, string assemblyPath)
 		{
-			return new Lazy<string>(() => GetDecompiledText(member));
+			return new Lazy<string>(() => GetDecompiledText(member, assemblyPath));
 		}
 
 
@@ -51,15 +51,28 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		}
 
 
-		private string GetDecompiledText(TypeDefinition type)
+		private string GetDecompiledText(TypeDefinition type, string assemblyPath)
 		{
 			try
 			{
-				CSharpDecompiler decompiler = GetDecompiler(type.Module);
+				AssemblyResolver resolver = new AssemblyResolver();
+				{
+					ReaderParameters parameters = new ReaderParameters
+					{
+						AssemblyResolver = resolver,
+					};
 
-				string text = decompiler.DecompileTypesAsString(new[] { type }).Replace("\t", "  ");
+					using (AssemblyDefinition assembly = AssemblyDefinition.ReadAssembly(assemblyPath, parameters))
+					{
+						ModuleDefinition moduleDefinition = assembly.MainModule;
 
-				return text;
+						CSharpDecompiler decompiler = new CSharpDecompiler(moduleDefinition, new DecompilerSettings(LanguageVersion.Latest));
+
+						string text = decompiler.DecompileTypesAsString(new[] {type}).Replace("\t", "  ");
+
+						return text;
+					}
+				}
 			}
 			catch (Exception e)
 			{
@@ -69,15 +82,27 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		}
 
 
-		private string GetDecompiledText(IMemberDefinition member)
+		private string GetDecompiledText(IMemberDefinition member, string assemblyPath)
 		{
 			try
 			{
-				CSharpDecompiler decompiler = GetDecompiler(member.DeclaringType.Module);
+				AssemblyResolver resolver = new AssemblyResolver();
+				{
+					ReaderParameters parameters = new ReaderParameters
+					{
+						AssemblyResolver = resolver,
+					};
 
-				string text = decompiler.DecompileAsString(member).Replace("\t", "  ");
+					using (AssemblyDefinition assembly = AssemblyDefinition.ReadAssembly(assemblyPath, parameters))
+					{
+						ModuleDefinition moduleDefinition = assembly.MainModule;
+						CSharpDecompiler decompiler = GetDecompiler(moduleDefinition);
 
-				return text;
+						string text = decompiler.DecompileAsString(member).Replace("\t", "  ");
+
+						return text;
+					}
+				}
 			}
 			catch (Exception e)
 			{
@@ -87,9 +112,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		}
 
 
-		private CSharpDecompiler GetDecompiler(ModuleDefinition module) =>
-			decompilers.GetOrAdd(
+		private CSharpDecompiler GetDecompiler(ModuleDefinition module)
+		{
+			return decompilers.GetOrAdd(
 				module,
 				key => new CSharpDecompiler(key, new DecompilerSettings(LanguageVersion.Latest)));
+		}
 	}
 }

@@ -4,5 +4,6 @@
 	{
 		void RegisterPath(string metaDataFolderPath);
 		bool TryActivateExistingInstance(string metaDataFolderPath, string[] args);
+		bool WaitForOtherInstance();
 	}
 }

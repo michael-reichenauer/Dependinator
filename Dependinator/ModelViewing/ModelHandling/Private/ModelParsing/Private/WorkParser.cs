@@ -7,7 +7,7 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 {
-	internal class WorkParser
+	internal class WorkParser : IDisposable
 	{
 		private readonly string name;
 		private readonly string filePath;
@@ -52,6 +52,15 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 			var option = new ParallelOptions { MaxDegreeOfParallelism = maxParallel };
 			Log.Debug($"Parallelism: {maxParallel}");
 			return option;
+		}
+
+
+		public void Dispose()
+		{
+			foreach (AssemblyParser parser in assemblyParsers)
+			{
+				parser.Dispose();
+			}
 		}
 	}
 }
