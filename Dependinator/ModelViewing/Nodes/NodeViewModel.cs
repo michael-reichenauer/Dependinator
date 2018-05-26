@@ -69,7 +69,11 @@ namespace Dependinator.ModelViewing.Nodes
 		public bool IsShowDescription => (!CanShowChildren || !Node.Children.Any());
 		public bool IsShowToolTip => true;
 		public bool HasCode => Node.CodeText != null;
-		public Command ShowCodeCommand => Command(() => nodeViewModelService.ShowCode(Node));
+		public Command ShowCodeCommand => Command(() => ShowCode());
+
+
+		public void ShowCode() => nodeViewModelService.ShowCode(Node);
+
 
 		public string Name => Node.Name.DisplayName;
 
@@ -95,6 +99,20 @@ namespace Dependinator.ModelViewing.Nodes
 		public string Description => Node.Description;
 		public bool IsShowCodeIcon => Node.CodeText != null && ItemScale > 1.3;
 
+
+
+
+		public void IncreaseNode()
+		{
+		//ItemBounds = ItemBounds  
+		}
+
+
+
+		public void DecreaseNode()
+		{
+
+		}
 
 		public bool IsSelected
 		{
@@ -166,10 +184,17 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 
-		private void HideNode()
+		public void HideNode()
 		{
-			Node.View.IsHidden = true;
-			Node.Parent.View.ItemsCanvas.UpdateAndNotifyAll();
+			if (!Node.View.IsHidden)
+			{
+				Node.View.IsHidden = true;
+				Node.Parent.View.ItemsCanvas.UpdateAndNotifyAll();
+			}
+			else
+			{
+				Node.View.ShowHiddenNode();
+			}
 		}
 
 
@@ -264,7 +289,5 @@ namespace Dependinator.ModelViewing.Nodes
 		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) =>
 			nodeViewModelService.OnMouseWheel(this, uiElement, e);
 
-
-	
 	}
 }

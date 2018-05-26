@@ -5,13 +5,15 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Items;
+using Dependinator.Utils.UI.Mvvm;
 
 
 namespace Dependinator.ModelViewing.Nodes
 {
 	internal class NodeControlViewModel : ItemViewModel
 	{
-		private static readonly int MarginPoints = 10;
+		private static readonly int MarginPoints = 50;
+		private static readonly double MinSize = 40.0;
 		private static readonly SolidColorBrush ControlBrush = Converter.BrushFromHex("#FFB0C4DE");
 
 		private readonly NodeViewModel nodeViewModel;
@@ -47,19 +49,56 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public bool IsShowBorder { get => Get(); set => Set(value); }
 
+		public string EditModeToolTop => "Toggle edit mode to\nzoom and pan node canvas";
+		public string HideToolTop => "Hide node\n(Use application menu to show node)";
+
 
 		public bool CanShowEditNode =>
 			nodeViewModel.Node.Children.Any() && nodeViewModel.CanShowChildren;
 
 
-		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) => 
+		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) =>
 			nodeViewModel.OnMouseWheel(uiElement, e);
 
 
 		public void Clicked(MouseButtonEventArgs e) => nodeViewModel.MouseClicked(e);
 
+		public Command IncreaseCommand => Command(() => ResizeNode(1.3));
+		public Command DecreaseCommand => Command(() => ResizeNode(1 / 1.3));
 
-		public void ClickedEditNode(MouseButtonEventArgs e)
+
+		private void ResizeNode(double i)
+		{
+			Point location = nodeViewModel.ItemBounds.Location;
+			Size size = nodeViewModel.ItemBounds.Size;
+
+			Size newSize = new Size(size.Width * i, size.Height * i);
+			if (newSize.Width < MinSize || newSize.Height < MinSize)
+			{
+				// Node to small
+				return;
+			}
+
+			Point newLocation = new Point(location.X - (newSize.Width - size.Width) / 2, location.Y - (newSize.Height - size.Height) / 2);
+			Rect newBounds = new Rect(newLocation, newSize);
+
+			nodeViewModel.ItemBounds = newBounds;
+
+			nodeViewModel.NotifyAll();
+			//Vector newCanvasMove = (location - newLocation) * ItemScale;
+			//nodeViewModel.ItemsViewModel?.MoveCanvas(newCanvasMove);
+			ItemOwnerCanvas.UpdateItem(nodeViewModel);
+
+			nodeViewModel.ItemsViewModel.Zoom(i, new Point(0, 0));
+		}
+
+
+		public Command HideNodeCommand => Command(nodeViewModel.HideNode);
+		public Command ToggleEditModeCommand => Command(ToggleEditNode);
+		public Command ShowCodeCommand => Command(nodeViewModel.ShowCode);
+
+
+		public void ToggleEditNode()
 		{
 			if (!IsShowBorder)
 			{
@@ -82,10 +121,10 @@ namespace Dependinator.ModelViewing.Nodes
 		public void Move(NodeControl control, Vector viewOffset)
 		{
 			Vector offset = new Vector(viewOffset.X / ItemScale, viewOffset.Y / ItemScale);
-			
+
 			Point newLocation = GetMoveData(control, offset, out Size newSize, out Vector newCanvasMove);
 
-			if (newSize.Width < 50 || newSize.Height < 50)
+			if (newSize.Width < MinSize || newSize.Height < MinSize)
 			{
 				// Node to small
 				return;
@@ -100,7 +139,7 @@ namespace Dependinator.ModelViewing.Nodes
 			}
 
 			nodeViewModel.ItemBounds = newBounds;
-			
+
 			nodeViewModel.NotifyAll();
 			nodeViewModel.ItemsViewModel?.MoveCanvas(newCanvasMove);
 			ItemOwnerCanvas.UpdateItem(nodeViewModel);
@@ -109,7 +148,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private Point GetMoveData(
 			NodeControl control,
-			Vector offset, 
+			Vector offset,
 			out Size newSize,
 			out Vector newCanvasMove)
 		{

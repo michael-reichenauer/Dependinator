@@ -16,7 +16,6 @@ namespace Dependinator.ModelViewing.Nodes
 		private NodeControlViewModel ViewModel => DataContext as NodeControlViewModel;
 		private readonly Dictionary<string, NodeControl> points;
 		private MouseClicked mouseClicked;
-		private MouseClicked mouseClickedEdit;
 
 
 		public NodeControlView()
@@ -24,7 +23,6 @@ namespace Dependinator.ModelViewing.Nodes
 			InitializeComponent();
 
 			mouseClicked = new MouseClicked(ControlCenter, Clicked);
-			mouseClickedEdit = new MouseClicked(EditNode, ClickedEdit);
 
 			points = new Dictionary<string, NodeControl>
 			{
@@ -43,7 +41,6 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		private void Clicked(MouseButtonEventArgs e) => ViewModel.Clicked(e);
-		private void ClickedEdit(MouseButtonEventArgs e) => ViewModel.ClickedEditNode(e);
 
 		protected override void OnMouseWheel(MouseWheelEventArgs e) => 
 			ViewModel.OnMouseWheel(this, e);
