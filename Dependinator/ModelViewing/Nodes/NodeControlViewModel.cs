@@ -67,6 +67,12 @@ namespace Dependinator.ModelViewing.Nodes
 		public Command IncreaseCommand => Command(() => ResizeNode(1.3));
 		public Command DecreaseCommand => Command(() => ResizeNode(1 / 1.3));
 
+		public Command HideNodeCommand => Command(nodeViewModel.HideNode);
+		public Command ToggleEditModeCommand => Command(ToggleEditNode);
+		public Command ShowDependenciesCommand => Command(nodeViewModel.ShowDependencies);
+		public Command ShowCodeCommand => Command(nodeViewModel.ShowCode);
+
+
 
 		private void ResizeNode(double i)
 		{
@@ -94,9 +100,6 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public Command HideNodeCommand => Command(nodeViewModel.HideNode);
-		public Command ToggleEditModeCommand => Command(ToggleEditNode);
-		public Command ShowCodeCommand => Command(nodeViewModel.ShowCode);
 
 
 		public void ToggleEditNode()

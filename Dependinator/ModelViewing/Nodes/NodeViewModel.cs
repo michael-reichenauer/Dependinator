@@ -89,7 +89,8 @@ namespace Dependinator.ModelViewing.Nodes
 		public int IncomingLinesCount => Node.TargetLines.Count(line => line.Owner != Node);
 
 		public Command HideNodeCommand => Command(HideNode);
-		public Command ShowDependenciesCommand => Command(() => nodeViewModelService.ShowReferences(this));
+		public Command ShowDependenciesCommand => Command(ShowDependencies);
+
 
 		public int FontSize => ((int)(10 * ItemScale)).MM(9, 13);
 
@@ -100,19 +101,10 @@ namespace Dependinator.ModelViewing.Nodes
 		public bool IsShowCodeIcon => Node.CodeText != null && ItemScale > 1.3;
 
 
-
-
-		public void IncreaseNode()
-		{
-		//ItemBounds = ItemBounds  
-		}
+		public void ShowDependencies() => nodeViewModelService.ShowReferences(this);
 
 
 
-		public void DecreaseNode()
-		{
-
-		}
 
 		public bool IsSelected
 		{

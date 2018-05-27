@@ -54,9 +54,18 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		{
 			if (line == null)
 			{
-				sourceNode = node;
-				targetNode = node.Root;
-				lines = sourceNode.SourceLines.Concat(targetNode.TargetLines);
+				if (node.SourceLines.Any(l => l.Owner != node))
+				{
+					sourceNode = node;
+					targetNode = node.Root;
+					lines = sourceNode.SourceLines;
+				}
+				else
+				{
+					sourceNode = node.Root;
+					targetNode = node;
+					lines = targetNode.TargetLines;
+				}
 			}
 			else
 			{

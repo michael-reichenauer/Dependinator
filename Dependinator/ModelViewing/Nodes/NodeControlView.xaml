@@ -177,7 +177,7 @@
 						<Button
 							VerticalAlignment="Center"
 							HorizontalAlignment="Left"
-							Padding="5"
+							Padding="3"
 							Content="&#xe3bc;"
 							FontSize="15"
 							Style="{DynamicResource IconButtonStyle}"
@@ -198,7 +198,8 @@
 							VerticalAlignment="Center"
 							HorizontalAlignment="Left"
 							Content="&#xe236;"
-							FontSize="20"
+							FontSize="16"
+							Padding="2"
 							Style="{DynamicResource IconButtonStyle}"
 							Command="{Binding ShowCodeCommand}"
 							ToolTip="Show decompiled code" />
@@ -214,7 +215,7 @@
 							VerticalAlignment="Center"
 							HorizontalAlignment="Left"
 							Content="&#xE882;"
-							FontSize="20"
+							FontSize="18"
 							Style="{DynamicResource IconButtonStyle}"
 							Command="{Binding HideNodeCommand}"
 							ToolTip="{Binding HideToolTop}" />
@@ -225,7 +226,7 @@
 							VerticalAlignment="Center"
 							HorizontalAlignment="Left"
 							Content="&#xE22F;"
-							FontSize="20"
+							FontSize="18"
 							Style="{DynamicResource IconButtonStyle}"
 							Command="{Binding ToggleEditModeCommand}"
 							ToolTip="{Binding EditModeToolTop}" />
