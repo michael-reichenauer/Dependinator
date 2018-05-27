@@ -60,8 +60,13 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		public async Task RefreshAsync(bool refreshLayout) =>
+		public async Task RefreshAsync(bool refreshLayout)
+		{
 			await modelHandlingService.RefreshAsync(refreshLayout);
+			Node root = modelHandlingService.Root;
+			root.View.ItemsCanvas.SetRootScale(2);
+		}
+
 
 		public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelHandlingService.GetHiddenNodeNames();
 
