@@ -77,12 +77,29 @@
 								</TextBlock.ToolTip>
 							</TextBlock>
 
-
 							<TextBlock
+								Grid.Column="1" Grid.Row="1"
+								FontSize="11"
+								Foreground="{DynamicResource TextLowBrush}"
+								Text="{Binding Path=FilePath}" 
+								MouseUp="RecentFile_OnClick"
+								Cursor="Hand">
+
+								<TextBlock.ToolTip>
+									<ToolTip
+										Content="{Binding ToolTip}"
+										Placement="Mouse"
+										BorderBrush="{DynamicResource BorderBrush}"
+										BorderThickness="1" />
+								</TextBlock.ToolTip>
+							</TextBlock>
+
+
+							<!--<TextBlock
 								Grid.Column="1" Grid.Row="1"
 								Text="{Binding Path=FilePath}"
 								FontSize="11" VerticalAlignment="Top"
-								Foreground="{DynamicResource TextLowBrush}" />
+								Foreground="{DynamicResource TextLowBrush}" />-->
 						</Grid>
 					</DataTemplate>
 				</ItemsControl.ItemTemplate>
