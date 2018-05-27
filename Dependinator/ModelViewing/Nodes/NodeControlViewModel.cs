@@ -39,6 +39,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public override double ItemHeight => ItemBounds.Height + 2 * Margin;
 
 		public override bool CanShow => true;
+		public bool HasCode => nodeViewModel.HasCode;
 
 		public Brush Brush => ControlBrush;
 		public double Margin => MarginPoints / ItemScale;

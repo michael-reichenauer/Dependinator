@@ -34,7 +34,7 @@
 					FontFamily="Calibri"
 					TextOptions.TextFormattingMode="Ideal" />
 
-				<Button 
+				<!--<Button 
 					VerticalAlignment="Top"
 					Visibility="{Binding IsShowCodeButton, Converter={StaticResource VC}}"
 					Padding="3"
@@ -42,7 +42,7 @@
 					FontSize="{Binding FontSize}"
 					Style="{DynamicResource IconButtonStyle}"
 					Command="{Binding ShowCodeCommand}"
-					ToolTip="Show decompiled code" />
+					ToolTip="Show decompiled code" />-->
 
 			</StackPanel>
 
