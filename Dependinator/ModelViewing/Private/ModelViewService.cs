@@ -62,9 +62,13 @@ namespace Dependinator.ModelViewing.Private
 
 		public async Task RefreshAsync(bool refreshLayout)
 		{
+			if (refreshLayout)
+			{
+				Node root = modelHandlingService.Root;
+				root.View.ItemsCanvas.SetRootScale(2);
+			}
+
 			await modelHandlingService.RefreshAsync(refreshLayout);
-			Node root = modelHandlingService.Root;
-			root.View.ItemsCanvas.SetRootScale(2);
 		}
 
 
@@ -103,8 +107,6 @@ namespace Dependinator.ModelViewing.Private
 			Node root = modelHandlingService.Root;
 
 			root.View.ItemsCanvas.SetRootScale(settings.Scale);
-
-			//root.ItemsCanvas.SetRootScale(1);
 		}
 	}
 }
