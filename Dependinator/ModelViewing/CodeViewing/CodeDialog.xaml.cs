@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
-using Dependinator.ModelViewing.ModelHandling.Core;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 
@@ -15,23 +14,23 @@ namespace Dependinator.ModelViewing.CodeViewing
 	/// </summary>
 	public partial class CodeDialog : Window
 	{
-		internal CodeDialog(Window owner, Node node)
+		internal CodeDialog(Window owner, string title, Task<string> codeTask)
 		{
 			Owner = owner;
 			InitializeComponent();
 
-			DataContext = new CodeViewModel(node);
+			DataContext = new CodeViewModel(title);
 
 			SetSyntaxHighlighting();
 
-			SetCodeText(node);
+			SetCodeText(codeTask);
 		}
 
 
-		private async void SetCodeText(Node node)
+		private async void SetCodeText(Task<string> codeTask)
 		{
 			CodeView.Text = "Getting code ...";
-			CodeView.Text = await Task.Run(() => node.CodeText?.Value);
+			CodeView.Text = await codeTask;
 		}
 
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Dependinator.Common;
 using Dependinator.Utils;
 
@@ -41,6 +42,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		public bool IsRoot => this == Root;
 
 		public NodeViewData View { get; private set; }
+
+		public Task<string> GetCodeAsync() => Task.Run(() => CodeText?.Value);
 
 
 		public void AddChild(Node child)
