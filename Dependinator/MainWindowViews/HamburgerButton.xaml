@@ -31,17 +31,18 @@
 					</MenuItem.Icon>
 				</MenuItem>
 
-				<!--<Separator Background="{DynamicResource BorderBrush}" />-->
-				
-				<!--<MenuItem
-					Header="Show Hidden Nodes"
-					Command="{Binding ShowHiddenNodesCommand}">
+				<Separator Background="{DynamicResource BorderBrush}" />
+
+				<MenuItem
+					Header="Hide Selected Node"
+					IsEnabled="{Binding IsSelectedNode}"
+					Command="{Binding HideNodeCommand}">
 					<MenuItem.Icon>
 						<Border>
-							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE883;" />
+							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE882;" />
 						</Border>
 					</MenuItem.Icon>
-				</MenuItem>-->
+				</MenuItem>
 
 				<MenuItem
 					Header="Show Hidden Nodes"
@@ -71,6 +72,7 @@
 					</MenuItem.Resources>
 				</MenuItem>
 
+				<Separator Background="{DynamicResource BorderBrush}" />
 
 				<MenuItem
 					Header="Open Model ..."

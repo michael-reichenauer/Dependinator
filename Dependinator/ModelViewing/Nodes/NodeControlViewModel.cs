@@ -13,7 +13,7 @@ namespace Dependinator.ModelViewing.Nodes
 	internal class NodeControlViewModel : ItemViewModel
 	{
 		private static readonly int MarginPoints = 50;
-		private static readonly double MinSize = 40.0;
+		private static readonly double MinSize = 30.0;
 		private static readonly SolidColorBrush ControlBrush = Converter.BrushFromHex("#FFB0C4DE");
 
 		private readonly NodeViewModel nodeViewModel;
@@ -67,7 +67,6 @@ namespace Dependinator.ModelViewing.Nodes
 		public Command IncreaseCommand => Command(() => ResizeNode(1.3));
 		public Command DecreaseCommand => Command(() => ResizeNode(1 / 1.3));
 
-		public Command HideNodeCommand => Command(nodeViewModel.HideNode);
 		public Command ToggleEditModeCommand => Command(ToggleEditNode);
 		public Command ShowDependenciesCommand => Command(nodeViewModel.ShowDependencies);
 		public Command ShowCodeCommand => Command(nodeViewModel.ShowCode);

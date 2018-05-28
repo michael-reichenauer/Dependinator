@@ -71,7 +71,8 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 		private static bool IsIncluded(IEdge link, ReferenceOptions options) =>
 			(options.SourceFilter.IsRoot || link.Source.AncestorsAndSelf().Contains(options.SourceFilter)) &&
-			(options.TargetFilter.IsRoot || link.Target.AncestorsAndSelf().Contains(options.TargetFilter));
+			(options.TargetFilter.IsRoot || link.Target.AncestorsAndSelf().Contains(options.TargetFilter)) &&
+			!link.Target.AncestorsAndSelf().Any(n => n.View.IsHidden);
 
 
 
