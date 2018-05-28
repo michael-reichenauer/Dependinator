@@ -14,7 +14,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		private static readonly string DefaultFileExtension = ".sln";
 
 		private static readonly string SupportedFileTypes =
-			".NET files (*.sln *.exe, *.dll)|*.sln; *.exe;*.dll|.NET solutions (*.sln)|*.sln|.NET libs (*.dll)|*.dll|.NET Programs (*.exe)|*.exe";
+			".NET files (*.sln *.exe, *.dll)|*.sln; *.exe;*.dll";
 
 
 		public bool TryShowOpenFileDialog(out string filePath)
@@ -30,7 +30,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 					Filter = SupportedFileTypes,
 					CheckFileExists = true,
 					Multiselect = false,
-					InitialDirectory = GetIntialFolder()
+					InitialDirectory = GetInitialFolder()
 				};
 
 				bool? result = openFileDialog.ShowDialog();
@@ -54,7 +54,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		}
 
 
-		private static string GetIntialFolder()
+		private static string GetInitialFolder()
 		{
 			return System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments);
 		}

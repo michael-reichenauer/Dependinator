@@ -66,16 +66,7 @@
 								VerticalAlignment="Top"
 								Foreground="{DynamicResource TextBrush}" FontSize="14"
 								Text="{Binding Path=FileName}" MouseUp="RecentFile_OnClick"
-								Cursor="Hand">
-				
-								<TextBlock.ToolTip>
-									<ToolTip
-										Content="{Binding ToolTip}"
-										Placement="Mouse"
-										BorderBrush="{DynamicResource BorderBrush}"
-										BorderThickness="1" />
-								</TextBlock.ToolTip>
-							</TextBlock>
+								Cursor="Hand"/>
 
 							<TextBlock
 								Grid.Column="1" Grid.Row="1"
@@ -83,23 +74,16 @@
 								Foreground="{DynamicResource TextLowBrush}"
 								Text="{Binding Path=FilePath}" 
 								MouseUp="RecentFile_OnClick"
-								Cursor="Hand">
+								Cursor="Hand"/>
 
-								<TextBlock.ToolTip>
-									<ToolTip
-										Content="{Binding ToolTip}"
-										Placement="Mouse"
-										BorderBrush="{DynamicResource BorderBrush}"
-										BorderThickness="1" />
-								</TextBlock.ToolTip>
-							</TextBlock>
-
-
-							<!--<TextBlock
-								Grid.Column="1" Grid.Row="1"
-								Text="{Binding Path=FilePath}"
-								FontSize="11" VerticalAlignment="Top"
-								Foreground="{DynamicResource TextLowBrush}" />-->
+							<Grid.ToolTip>
+								<ToolTip
+									Content="{Binding ToolTip}"
+									Placement="Mouse"
+									BorderBrush="{DynamicResource BorderBrush}"
+									BorderThickness="1" />
+							</Grid.ToolTip>
+						
 						</Grid>
 					</DataTemplate>
 				</ItemsControl.ItemTemplate>
@@ -125,7 +109,8 @@
 				</Grid.ColumnDefinitions>
 
 				<Grid.RowDefinitions>
-					<RowDefinition Height="*" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
 				</Grid.RowDefinitions>
 
 				<!-- Open Icon -->
@@ -143,28 +128,37 @@
 					MouseUp="OpenFile_OnClick"
 					Foreground="{DynamicResource TextBrush}" FontSize="14"
 					Text="Open File"
-					Cursor="Hand">
+					Cursor="Hand"/>
 
-					<TextBlock.ToolTip>
-						<ToolTip
-							Content="Open model from dll, exe or sln file"
-							Placement="Mouse"
-							BorderBrush="{DynamicResource BorderBrush}"
-							BorderThickness="1" />
-					</TextBlock.ToolTip>
-				</TextBlock>
+
+				<TextBlock
+					Grid.Column="1" Grid.Row="1"
+					FontSize="11"
+					Foreground="{DynamicResource TextLowBrush}"
+					Text=".sln, .exe and .dll files" 
+					MouseUp="OpenFile_OnClick"
+					Cursor="Hand"/>
+
+				<Grid.ToolTip>
+					<ToolTip
+						Content="Open model from .NET .sln, .exe or .dll file"
+						Placement="Mouse"
+						BorderBrush="{DynamicResource BorderBrush}"
+						BorderThickness="1" />
+				</Grid.ToolTip>
 			</Grid>
 
 			<Grid
 				Grid.Column="1" Grid.Row="1"
-				Margin="10,47">
+				Margin="10,57">
 				<Grid.ColumnDefinitions>
 					<ColumnDefinition Width="30" />
 					<ColumnDefinition Width="*" />
 				</Grid.ColumnDefinitions>
 
 				<Grid.RowDefinitions>
-					<RowDefinition Height="*" />
+					<RowDefinition Height="Auto" />
+					<RowDefinition Height="Auto" />
 				</Grid.RowDefinitions>
 
 				<!-- Open Icon -->
@@ -181,17 +175,24 @@
 					VerticalAlignment="Top"
 					MouseUp="OpenExample_OnClick"
 					Foreground="{DynamicResource TextBrush}" FontSize="14"
-					Text="Open an example model" 
-					Cursor="Hand">
+					Text="Open example model" 
+					Cursor="Hand"/>
 
-					<TextBlock.ToolTip>
-						<ToolTip
-							Content="Open an example model to tryout Dependinator"
-							Placement="Mouse"
-							BorderBrush="{DynamicResource BorderBrush}"
-							BorderThickness="1" />
-					</TextBlock.ToolTip>
-				</TextBlock>
+				<TextBlock
+					Grid.Column="1" Grid.Row="1"
+					FontSize="11"
+					Foreground="{DynamicResource TextLowBrush}"
+					Text="Try an example model" 
+					MouseUp="OpenExample_OnClick"
+					Cursor="Hand"/>
+
+				<Grid.ToolTip>
+					<ToolTip
+						Content="Open example model to try Dependinator"
+						Placement="Mouse"
+						BorderBrush="{DynamicResource BorderBrush}"
+						BorderThickness="1" />
+				</Grid.ToolTip>
 			</Grid>
 			
 		</Grid>
