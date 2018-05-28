@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
@@ -14,7 +15,7 @@ namespace Dependinator.ModelViewing.CodeViewing
 	/// </summary>
 	public partial class CodeDialog : Window
 	{
-		internal CodeDialog(Window owner, string title, Task<string> codeTask)
+		internal CodeDialog(Window owner, string title, Lazy<string> codeText)
 		{
 			Owner = owner;
 			InitializeComponent();
@@ -23,14 +24,14 @@ namespace Dependinator.ModelViewing.CodeViewing
 
 			SetSyntaxHighlighting();
 
-			SetCodeText(codeTask);
+			SetCodeText(codeText);
 		}
 
 
-		private async void SetCodeText(Task<string> codeTask)
+		private async void SetCodeText(Lazy<string> codeText)
 		{
 			CodeView.Text = "Getting code ...";
-			CodeView.Text = await codeTask;
+			CodeView.Text = await Task.Run(() => codeText.Value);
 		}
 
 

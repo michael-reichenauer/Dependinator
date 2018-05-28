@@ -136,7 +136,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 		public void ShowCode(Node node)
 		{
-			CodeDialog codeDialog = new CodeDialog(owner, node.Name.DisplayFullName, node.GetCodeAsync());
+			CodeDialog codeDialog = new CodeDialog(owner, node.Name.DisplayFullName, node.CodeText);
 			codeDialog.Show();
 		}
 

@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
+using Dependinator.Common;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
 
@@ -32,10 +34,10 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 		public DependencyItem Item { get; }
 
-		public string Text => Item.Node.IsRoot ? "all nodes" : Item.Node.Name.DisplayName;
+		public string Text => Item.NodeName == NodeName.Root ? "all nodes" : Item.NodeName.DisplayName;
 
 		public ObservableCollection<DependencyItemViewModel> SubItems { get; }
-		public bool IsShowCodeButton => IsShowButtons && Item.Node.CodeText != null;
+		public bool IsShowCodeButton => IsShowButtons && Item.CodeText != null;
 		public bool IsShowVisibilityButton => IsShowButtons;
 
 		public string ToolTip { get => Get(); set => Set(value); }
@@ -50,7 +52,8 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		public bool IsSelected { get => Get(); set => Set(value); }
 		public bool IsExpanded { get => Get(); set => Set(value); }
 		//public Command ToggleVisibilityCommand => Command(ToggleVisibility);
-		public Command ShowCodeCommand => Command(() => itemCommands.ShowCode(Item.Node));
+		public Command ShowCodeCommand => Command(() => itemCommands.ShowCode(
+			Item.NodeName.DisplayFullName, Item.CodeText));
 		public Command ToggleCollapseCommand => Command(SetExpand);
 		public Command FilterCommand => Command(Filter);
 
@@ -116,7 +119,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		public void UpdateToolTip()
 		{
 			string filter = isSourceItem ? "to target" : "from source";
-			ToolTip = $"{Item.Node.Name.DisplayFullName}\nClick to filter dependencies {filter}";
+			ToolTip = $"{Item.NodeName.DisplayFullName}\nClick to filter dependencies {filter}";
 		}
 	}
 }

@@ -43,7 +43,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 
 		public NodeViewData View { get; private set; }
 
-		public Task<string> GetCodeAsync() => Task.Run(() => CodeText?.Value);
+		//public Task<string> GetCodeAsync() => Task.Run(() => CodeText?.Value);
 
 
 		public void AddChild(Node child)

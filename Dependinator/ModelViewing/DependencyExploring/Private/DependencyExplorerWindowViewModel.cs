@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Dependinator.Common;
 using Dependinator.ModelViewing.CodeViewing;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils.UI.Mvvm;
@@ -16,9 +18,9 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		private readonly Window owner;
 
 
-		private Node sourceNode;
-		private Node targetNode;
-		private IEnumerable<Line> lines;
+		private NodeName sourceNodeName;
+		private NodeName targetNodeName;
+		//private IEnumerable<Line> lines;
 
 
 		public DependencyExplorerWindowViewModel(
@@ -52,6 +54,10 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 		private async void InitializeAsync(Node node, Line line)
 		{
+			Node sourceNode;
+			Node targetNode;
+			IReadOnlyList<Line> lines;
+
 			if (line == null)
 			{
 				if (node.SourceLines.Any(l => l.Owner != node))
@@ -75,25 +81,34 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				lines = new List<Line> { line };
 			}
 
-			await SetSourceAndTargetItemsAsync();
+			await SetSourceAndTargetItemsAsync(sourceNode, targetNode, lines);
 		}
 
 
 		private async Task SwitchSidesAsync()
 		{
-			Node node = sourceNode;
-			sourceNode = targetNode;
-			targetNode = node;
-			lines = sourceNode.SourceLines.Concat(targetNode.TargetLines); 
+			NodeName nodeName = sourceNodeName;
+			sourceNodeName = targetNodeName;
+			targetNodeName = nodeName;
 
-			await SetSourceAndTargetItemsAsync();
+			if (dependenciesService.TryGetNode(sourceNodeName, out Node sourceNode) &&
+			    dependenciesService.TryGetNode(targetNodeName, out Node targetNode))
+			{
+				IReadOnlyList<Line> lines = sourceNode.SourceLines.Concat(targetNode.TargetLines).ToList();
+
+				await SetSourceAndTargetItemsAsync(sourceNode, targetNode, lines);
+			}
 		}
 
 
-		private async Task SetSourceAndTargetItemsAsync()
+		private async Task SetSourceAndTargetItemsAsync(
+			Node sourceNode, Node targetNode, IReadOnlyList<Line> lines)
 		{
-			await SetDependencyItemsAsync(true);
-			await SetDependencyItemsAsync(false);
+			sourceNodeName = sourceNode.Name;
+			targetNodeName = targetNode.Name;
+
+			await SetDependencyItemsAsync(sourceNode, targetNode, lines, true);
+			await SetDependencyItemsAsync(sourceNode, targetNode, lines, false);
 
 			await SetTextsAsync();
 			SelectNode(sourceNode, SourceItems);
@@ -101,9 +116,9 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		}
 
 
-		public void ShowCode(Node node)
+		public void ShowCode(string title, Lazy<string> codeText)
 		{
-			CodeDialog codeDialog = new CodeDialog(owner, node.Name.DisplayFullName, node.GetCodeAsync());
+			CodeDialog codeDialog = new CodeDialog(owner, title, codeText);
 			codeDialog.Show();
 		}
 
@@ -112,23 +127,32 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		{
 			bool isAncestor = false;
 
+
+			if (!(dependenciesService.TryGetNode(sourceNodeName, out Node sourceNode) &&
+			    dependenciesService.TryGetNode(targetNodeName, out Node targetNode) &&
+					dependenciesService.TryGetNode(dependencyItem.NodeName, out Node itemNode)))
+			{
+				return;
+			}
+
 			if (isSourceSide)
 			{
-				isAncestor = sourceNode.Ancestors().Contains(dependencyItem.Node);
-				sourceNode = dependencyItem.Node;
+
+				isAncestor = sourceNode.Ancestors().Contains(itemNode);
+				sourceNode = itemNode;
 			}
 			else
 			{
-				isAncestor = targetNode.Ancestors().Contains(dependencyItem.Node);
-				targetNode = dependencyItem.Node;
+				isAncestor = targetNode.Ancestors().Contains(itemNode);
+				targetNode = itemNode;
 			}
 
-			lines = sourceNode.SourceLines.Concat(targetNode.TargetLines);
+			IReadOnlyList<Line> lines = sourceNode.SourceLines.Concat(targetNode.TargetLines).ToList();
 
-			await SetDependencyItemsAsync(!isSourceSide);
+			await SetDependencyItemsAsync(sourceNode, targetNode, lines,!isSourceSide);
 			if (isAncestor)
 			{
-				await SetDependencyItemsAsync(isSourceSide);
+				await SetDependencyItemsAsync(sourceNode, targetNode, lines, isSourceSide);
 			}
 
 			await SetTextsAsync();
@@ -151,7 +175,8 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		}
 
 
-		private async Task SetDependencyItemsAsync(bool isSourceSide)
+		private async Task SetDependencyItemsAsync(
+			Node sourceNode, Node targetNode, IReadOnlyList<Line> lines, bool isSourceSide)
 		{
 			var dependencyItems = await dependenciesService.GetDependencyItemsAsync(
 				lines, isSourceSide, sourceNode, targetNode);
@@ -168,24 +193,22 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		private async Task SetTextsAsync()
 		{
 			await Task.Yield();
-			SourceText = sourceNode.IsRoot ? "all nodes" : sourceNode.Name.DisplayFullName;
-			TargetText = targetNode.IsRoot ? "all nodes" : targetNode.Name.DisplayFullName;
-			// int count = await dependenciesService.GetDependencyCountAsync(lines, true, sourceNode, targetNode);
-	//		int targetCount = await dependenciesService.GetDependencyCountAsync(lines, false, sourceNode, targetNode);
-			// SourceTargetToolTip = $"{count} Dependencies";
+			SourceText = sourceNodeName == NodeName.Root ? "all nodes" : sourceNodeName.DisplayFullName;
+			TargetText = targetNodeName == NodeName.Root ? "all nodes" : targetNodeName.DisplayFullName;
 		}
 
 
-		private void SelectNode(Node node, IEnumerable<DependencyItemViewModel> items)
+		private static void SelectNode(Node node, IEnumerable<DependencyItemViewModel> items)
 		{
 			foreach (var viewModel in items)
 			{
-				if (viewModel.Item.Node.IsRoot || node.AncestorsAndSelf().Contains(viewModel.Item.Node))
+				if (viewModel.Item.NodeName == NodeName.Root || 
+				    node.AncestorsAndSelf().Any(n => n.Name == viewModel.Item.NodeName))
 				{
 					viewModel.IsExpanded = true;
 					SelectNode(node, viewModel.SubItems);
 
-					if (viewModel.Item.Node == node)
+					if (viewModel.Item.NodeName == node.Name)
 					{
 						viewModel.IsSelected = true;
 						ExpandFirst(viewModel.SubItems);

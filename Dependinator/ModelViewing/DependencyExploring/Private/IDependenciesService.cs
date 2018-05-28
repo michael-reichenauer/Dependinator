@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Dependinator.Common;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
@@ -19,5 +20,8 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			bool isSource,
 			Node sourceFilter,
 			Node targetFilter);
+
+
+		bool TryGetNode(NodeName nodeName, out Node node);
 	}
 }
