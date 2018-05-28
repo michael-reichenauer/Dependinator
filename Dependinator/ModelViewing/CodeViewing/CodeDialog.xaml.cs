@@ -37,7 +37,8 @@ namespace Dependinator.ModelViewing.CodeViewing
 		private void SetSyntaxHighlighting()
 		{
 			Assembly executingAssembly = Assembly.GetExecutingAssembly();
-			string resourceName = $"{Product.Name}.Common.Resources.CSharp-Mode.xshd";
+			string name = executingAssembly.FullName.Split(',')[0];
+			string resourceName = $"{name}.Common.Resources.CSharp-Mode.xshd";
 
 			using (Stream stream = executingAssembly.GetManifestResourceStream(resourceName))
 			using (XmlTextReader reader = new XmlTextReader(stream))
