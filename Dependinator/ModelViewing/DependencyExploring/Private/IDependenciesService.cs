@@ -23,5 +23,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 
 		bool TryGetNode(NodeName nodeName, out Node node);
+
+		Task RefreshModelAsync();
 	}
 }

@@ -43,6 +43,7 @@
 			Key="Escape"
 			Command="{Binding CancelCommand}"
 			CommandParameter="{Binding ElementName=ReferencesDialogWindow}" />
+		<KeyBinding Key="F5" Command="{Binding RefreshCommand}" />
 	</Window.InputBindings>
 
 	<Grid>
@@ -82,6 +83,13 @@
 						Content="&#xe8d4;"
 						Command="{Binding SwitchSidesCommand}"
 						ToolTip="Switch sides" />
+
+					<Button
+						WindowChrome.IsHitTestVisibleInChrome="True"
+						Style="{DynamicResource IconButtonStyle}"
+						Content="&#xE5D5;"
+						Command="{Binding RefreshCommand}"
+						ToolTip="Refresh model data (F5)" />
 
 				</StackPanel>
 

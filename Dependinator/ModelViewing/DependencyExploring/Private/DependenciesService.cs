@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -13,16 +14,20 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 	{
 		private readonly IThemeService themeService;
 		private readonly IModelService modelService;
+		private readonly Lazy<IModelViewModel> modelViewModel;
+
 		private readonly WindowOwner owner;
 
 
 		public DependenciesService(
 			IThemeService themeService,
 			IModelService modelService,
+			Lazy<IModelViewModel> modelViewModel,
 			WindowOwner owner)
 		{
 			this.themeService = themeService;
 			this.modelService = modelService;
+			this.modelViewModel = modelViewModel;
 			this.owner = owner;
 		}
 
@@ -75,6 +80,9 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 		public bool TryGetNode(NodeName nodeName, out Node node) => 
 			modelService.TryGetNode(nodeName, out node);
+
+
+		public Task RefreshModelAsync() => modelViewModel.Value.ManualRefreshAsync(false);
 
 
 		private static bool IsIncluded(IEdge link, ReferenceOptions options) =>

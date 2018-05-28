@@ -45,6 +45,11 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		public Command<Window> CancelCommand => Command<Window>(w => w.Close());
 		public Command SwitchSidesCommand => AsyncCommand(SwitchSidesAsync);
 
+		public Command RefreshCommand => AsyncCommand(RefreshAsync);
+
+
+	
+
 		public ObservableCollection<DependencyItemViewModel> SourceItems { get; } =
 			new ObservableCollection<DependencyItemViewModel>();
 
@@ -188,6 +193,24 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				.Select(item => new DependencyItemViewModel(item, this, isSourceSide))
 				.ForEach(item => items.Add(item));
 		}
+
+
+		private async Task RefreshAsync()
+		{
+			SourceItems.Clear();
+			TargetItems.Clear();
+
+			await dependenciesService.RefreshModelAsync();
+
+			if (dependenciesService.TryGetNode(sourceNodeName, out Node sourceNode) &&
+			    dependenciesService.TryGetNode(targetNodeName, out Node targetNode))
+			{
+				IReadOnlyList<Line> lines = sourceNode.SourceLines.Concat(targetNode.TargetLines).ToList();
+
+				await SetSourceAndTargetItemsAsync(sourceNode, targetNode, lines);
+			}
+		}
+
 
 
 		private async Task SetTextsAsync()
