@@ -690,6 +690,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Common\Resources\Example.xml" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Dependencies\Microsoft.ApplicationInsights.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>mkdir "$(ProjectDir)\Dependencies" 2&gt; NUL
@@ -702,6 +705,9 @@ pushd "$(SolutionDir)packages\Newtonsoft.Json.*\lib\net45"
 copy /Y /B Newtonsoft.Json.dll "$(ProjectDir)\Dependencies\Newtonsoft.Json.dll" &gt;NUL
 popd
 
+pushd "$(SolutionDir)packages\Microsoft.ApplicationInsights.*\lib\net46"
+copy /Y /B Microsoft.ApplicationInsights.dll "$(ProjectDir)\Dependencies\Microsoft.ApplicationInsights.dll" &gt;NUL
+popd
 
 pushd "$(SolutionDir)packages\System.ValueTuple.*\lib\net461"
 copy /Y /B System.ValueTuple.dll "$(ProjectDir)\Dependencies\System.ValueTuple.dll" &gt;NUL

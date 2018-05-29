@@ -49,9 +49,10 @@ namespace Dependinator.Utils.Applications
 			Tc.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
 			Tc.Context.Component.Version = GetProgramVersion();
 			Log.Info($"Enabled usage and error reporting for: {Tc.Context.User.Id}, Production: {isProduction}");
-			var builder = TelemetryConfiguration.Active.TelemetryProcessorChainBuilder;
-			builder.Use((next) => new TelemetryTracer(next));
-			builder.Build();
+			
+			//var builder = TelemetryConfiguration.Active.TelemetryProcessorChainBuilder;
+			//builder.Use((next) => new TelemetryTracer(next));
+			//builder.Build();
 		}
 
 
