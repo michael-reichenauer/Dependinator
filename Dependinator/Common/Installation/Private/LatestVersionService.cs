@@ -142,7 +142,7 @@ namespace Dependinator.Common.Installation.Private
 			Timing t = Timing.Start();
 			httpClient.ProgressChanged += (totalFileSize, totalBytesDownloaded, progressPercentage) =>
 			{
-				Log.Info($"Downloading git {progressPercentage}% (time: {t.Elapsed}) ...");
+				Log.Info($"Downloading {latestInfo.tag_name} {progressPercentage}% (time: {t.Elapsed}) ...");
 			};
 
 			string setupPath = ProgramInfo.GetTempFilePath() + "." + setupFileInfo.name;
