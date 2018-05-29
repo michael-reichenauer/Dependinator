@@ -2920,6 +2920,11 @@
             dependency injection.
             </summary>
         </member>
+        <member name="T:Dependinator.Utils.ExceptionHandling">
+            <summary>
+            Handles unhandled exceptions top ensure they are logged and program is restarted or shut down
+            </summary>
+        </member>
         <member name="T:Dependinator.Utils.AsyncSemaphore">
             <summary>
             An asynchronous semaphore. Can be used for throttling or handling concurrent access to a

@@ -1,5 +1,7 @@
 ﻿using System;
 using Dependinator.Common.MessageDialogs;
+using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
 
@@ -12,7 +14,6 @@ namespace Dependinator
 	public class Program
 	{
 		private readonly DependencyInjection dependencyInjection = new DependencyInjection();
-		private static readonly ICmd Cmd = new Cmd();
 
 
 		[STAThread]
@@ -54,19 +55,21 @@ namespace Dependinator
 		}
 
 
-		private static void ManageUnhandledExceptions()
+		private void ManageUnhandledExceptions()
 		{
 			ExceptionHandling.ExceptionOccurred += (s, e) => Restart();
 			ExceptionHandling.ExceptionOnStartupOccurred += (s, e) =>
 				Message.ShowError("Sorry, but an unexpected error just occurred");
+
 			ExceptionHandling.HandleUnhandledException();
 		}
 
 
-		private static void Restart()
+		private void Restart()
 		{
-			string targetPath = ProgramInfo.GetInstallFilePath();
-			Cmd.Start(targetPath, "");
+			ModelMetadata modelMetadata = dependencyInjection.Resolve<ModelMetadata>();
+			StartInstanceService startInstanceService = new StartInstanceService();
+			startInstanceService.StartInstance(modelMetadata.ModelFilePath);
 		}
 	}
 }

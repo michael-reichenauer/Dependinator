@@ -197,6 +197,7 @@
     <Compile Include="ModelViewing\ModelHandling\Private\ModelService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\NodeService.cs" />
     <Compile Include="Utils\Applications\Track.cs" />
+    <Compile Include="Utils\AsserterEventArgs.cs" />
     <Compile Include="Utils\Net\HttpClientDownloadWithProgress.cs" />
     <Compile Include="Utils\SystemIdle.cs" />
     <Compile Include="Utils\UI\MouseHelper.cs" />

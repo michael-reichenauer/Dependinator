@@ -3,11 +3,15 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+using Dependinator.Common.MessageDialogs;
 using Dependinator.Utils.UI;
 
 
 namespace Dependinator.Utils
 {
+	/// <summary>
+	/// Handles unhandled exceptions top ensure they are logged and program is restarted or shut down
+	/// </summary>
 	internal static class ExceptionHandling
 	{
 		private static readonly TimeSpan MinTimeBeforeAutoRestart = TimeSpan.FromSeconds(10);
@@ -15,7 +19,7 @@ namespace Dependinator.Utils
 		private static bool hasDisplayedErrorMessageBox;
 		private static bool hasFailed;
 		private static bool hasShutdown;
-		private static DateTime startTime = DateTime.Now;
+		private static DateTime StartTime = DateTime.Now;
 		private static bool isDispatcherInitialized = false;
 
 
@@ -27,9 +31,7 @@ namespace Dependinator.Utils
 		{
 			// Add the event handler for handling non-UI thread exceptions to the event. 
 			AppDomain.CurrentDomain.UnhandledException += (s, e) =>
-			{
 				HandleException("app domain exception", e.ExceptionObject as Exception);
-			};
 
 			// Log exceptions that hasn't been handled when a Task is finalized.
 			TaskScheduler.UnobservedTaskException += (s, e) =>
@@ -41,6 +43,9 @@ namespace Dependinator.Utils
 			// Add event handler for fatal exceptions using catch condition "when (e.IsNotFatal())"
 			FatalExceptionsExtensions.FatalExeption += (s, e) =>
 				HandleException(e.Message, e.Exception);
+
+			// Add handler for asserts
+			Asserter.AssertOccurred += (s, e) => HandleException("Assert failed", e.Exception);
 		}
 
 
@@ -87,13 +92,13 @@ namespace Dependinator.Utils
 		{
 			if (hasShutdown)
 			{
+				// Shutdown already in progress
 				return;
 			}
 
 			hasShutdown = true;
 
-			string errorMessage = $"{message}:\n{e.Txt()}";
-			Log.Error(errorMessage);
+			Log.Exception(e, message);
 
 			if (isDispatcherInitialized)
 			{
@@ -113,7 +118,7 @@ namespace Dependinator.Utils
 				Debugger.Break();
 			}
 
-			if (DateTime.Now - startTime >= MinTimeBeforeAutoRestart)
+			if (DateTime.Now - StartTime >= MinTimeBeforeAutoRestart)
 			{
 				ExceptionOccurred?.Invoke(null, EventArgs.Empty);
 			}
@@ -136,15 +141,16 @@ namespace Dependinator.Utils
 				return;
 			}
 
-			if (DateTime.Now - startTime < MinTimeBeforeAutoRestart)
+			if (DateTime.Now - StartTime < MinTimeBeforeAutoRestart)
 			{
+				Message.ShowError("Sorry, but an unexpected error just occurred", "Dependinator");
 				ExceptionOnStartupOccurred?.Invoke(null, EventArgs.Empty);
-				startTime = DateTime.Now;
+				StartTime = DateTime.Now;
 			}
 
 			hasDisplayedErrorMessageBox = true;
 		}
-		
+
 
 		private static Dispatcher GetApplicationDispatcher() =>
 			Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
