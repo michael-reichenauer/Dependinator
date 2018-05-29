@@ -10,6 +10,7 @@ using Dependinator.Common.SettingsHandling;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.MainWindowViews;
 using Dependinator.Utils;
+using Dependinator.Utils.Applications;
 
 
 namespace Dependinator
@@ -94,6 +95,7 @@ namespace Dependinator
 			}
 
 			Log.Usage($"Start version: {AssemblyInfo.GetProgramVersion()}");
+			Track.StartProgram();
 			Start();
 		}
 
@@ -101,6 +103,7 @@ namespace Dependinator
 		protected override void OnExit(ExitEventArgs e)
 		{
 			Log.Usage("Exit program");
+			Track.ExitProgram();
 			base.OnExit(e);
 		}
 
