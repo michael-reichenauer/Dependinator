@@ -11,6 +11,7 @@ using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
+using Dependinator.Utils.Net;
 using Microsoft.Win32;
 
 
@@ -104,7 +105,7 @@ namespace Dependinator.Common.Installation.Private
 		{
 			try
 			{
-				Log.Debug($"Downloading remote setup {latestUri} ...");
+				Log.Info($"Downloading remote setup {latestUri} ...");
 
 				LatestInfo latestInfo = GetCachedLatestVersionInfo();
 				if (latestInfo == null)
@@ -113,7 +114,7 @@ namespace Dependinator.Common.Installation.Private
 					return false;
 				}
 
-				using (HttpClient httpClient = GetHttpClient())
+				using (HttpClientDownloadWithProgress httpClient = GetDownloadHttpClient())
 				{
 					string setupPath = await DownloadSetupAsync(httpClient, latestInfo);
 
@@ -130,19 +131,24 @@ namespace Dependinator.Common.Installation.Private
 		}
 
 
-		private static async Task<string> DownloadSetupAsync(HttpClient httpClient, LatestInfo latestInfo)
+		private static async Task<string> DownloadSetupAsync(
+			HttpClientDownloadWithProgress httpClient, LatestInfo latestInfo)
 		{
 			Asset setupFileInfo = latestInfo.assets.First(a => a.name == $"{Product.Name}Setup.exe");
 
 			string downloadUrl = setupFileInfo.browser_download_url;
-			Log.Debug($"Downloading {latestInfo.tag_name} from {downloadUrl} ...");
+			Log.Info($"Downloading {latestInfo.tag_name} from {downloadUrl} ...");
 
-			byte[] remoteFileData = await httpClient.GetByteArrayAsync(downloadUrl);
+			Timing t = Timing.Start();
+			httpClient.ProgressChanged += (totalFileSize, totalBytesDownloaded, progressPercentage) =>
+			{
+				Log.Info($"Downloading git {progressPercentage}% (time: {t.Elapsed}) ...");
+			};
 
 			string setupPath = ProgramInfo.GetTempFilePath() + "." + setupFileInfo.name;
-			File.WriteAllBytes(setupPath, remoteFileData);
+			await httpClient.StartDownloadAsync(downloadUrl, setupPath);
 
-			Log.Debug($"Downloaded {latestInfo.tag_name} to {setupPath}");
+			Log.Info($"Downloaded {latestInfo.tag_name} to {setupPath}");
 			return setupPath;
 		}
 
@@ -188,8 +194,10 @@ namespace Dependinator.Common.Installation.Private
 		{
 			try
 			{
-				using (HttpClient httpClient = GetHttpClient())
+				using (HttpClient httpClient = new HttpClient())
 				{
+					httpClient.DefaultRequestHeaders.Add("user-agent", UserAgent);
+
 					// Try get cached information about latest remote version
 					string eTag = GetCachedLatestVersionInfoEtag();
 
@@ -337,11 +345,15 @@ namespace Dependinator.Common.Installation.Private
 		}
 
 
-		private static HttpClient GetHttpClient()
+		private static HttpClientDownloadWithProgress GetDownloadHttpClient()
 		{
-			HttpClient httpClient = new HttpClient();
-			httpClient.DefaultRequestHeaders.Add("user-agent", UserAgent);
-			return httpClient;
+			HttpClientDownloadWithProgress client = new HttpClientDownloadWithProgress();
+			client.NetworkActivityTimeout = TimeSpan.FromSeconds(30);
+			client.HttpClient.Timeout = TimeSpan.FromSeconds(60 * 5);
+
+			client.HttpClient.DefaultRequestHeaders.Add("user-agent", UserAgent);
+
+			return client;
 		}
 
 
