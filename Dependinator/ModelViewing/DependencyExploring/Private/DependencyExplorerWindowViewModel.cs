@@ -131,8 +131,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		public async void FilterOn(DependencyItem dependencyItem, bool isSourceSide)
 		{
 			bool isAncestor = false;
-
-
+			
 			if (!(dependenciesService.TryGetNode(sourceNodeName, out Node sourceNode) &&
 			    dependenciesService.TryGetNode(targetNodeName, out Node targetNode) &&
 					dependenciesService.TryGetNode(dependencyItem.NodeName, out Node itemNode)))
@@ -183,6 +182,9 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		private async Task SetDependencyItemsAsync(
 			Node sourceNode, Node targetNode, IReadOnlyList<Line> lines, bool isSourceSide)
 		{
+			sourceNodeName = sourceNode.Name;
+			targetNodeName = targetNode.Name;
+
 			var dependencyItems = await dependenciesService.GetDependencyItemsAsync(
 				lines, isSourceSide, sourceNode, targetNode);
 
