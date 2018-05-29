@@ -370,8 +370,39 @@ namespace Dependinator.ModelViewing.Items
 
 			Point parentCanvasPoint = parentCanvas.RootScreenToCanvasPoint(rootScreenPoint);
 
-			return ParentToChildCanvasPoint(parentCanvasPoint);
+			Point parentToChildCanvasPoint = ParentToChildCanvasPoint(parentCanvasPoint);
+
+			Point pointToScreen = zoomableCanvas.PointToScreen(rootScreenPoint);
+			Point pointFromScreen = zoomableCanvas.PointFromScreen(rootScreenPoint);
+			Point canvasPoint = zoomableCanvas.GetCanvasPoint(rootScreenPoint);
+			Point visualPoint = zoomableCanvas.GetVisualPoint(canvasPoint);
+			Point canvasPoint2 = zoomableCanvas.GetCanvasPoint(visualPoint);
+
+			Point p = (Point) ((Vector) canvasPoint / Scale);
+
+			return parentToChildCanvasPoint;
 		}
+
+
+		public Point MouseToCanvasPoint()
+		{
+			Point rootScreenPoint = Mouse.GetPosition(zoomableCanvas);
+
+			Point canvasPoint = zoomableCanvas.GetCanvasPoint(rootScreenPoint);
+
+			return new Point(canvasPoint.X, canvasPoint.Y);
+		}
+
+
+		public Point RootScreenToCanvasPoint2(MouseEventArgs e)
+		{
+			Point rootScreenPoint = e.GetPosition(zoomableCanvas);
+
+			Point canvasPoint = zoomableCanvas.GetCanvasPoint(rootScreenPoint);
+
+			return new Point(canvasPoint.X, canvasPoint.Y);
+		}
+
 
 
 		public Point CanvasPointToScreenPoint(Point canvasPoint)

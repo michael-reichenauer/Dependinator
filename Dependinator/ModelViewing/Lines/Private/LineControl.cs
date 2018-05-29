@@ -32,14 +32,14 @@ namespace Dependinator.ModelViewing.Lines.Private
 			}
 		}
 
-		public void MouseDown(Point screenPoint)
+		public void MouseDown(MouseEventArgs e)
 		{
-			mouseDownPoint = line.View.ViewModel.ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
+			mouseDownPoint = line.View.ViewModel.ItemOwnerCanvas.RootScreenToCanvasPoint2(e);
 			currentPointIndex = -1;
 		}
 
 
-		public void MouseUp(Point screenPoint)
+		public void MouseUp(MouseEventArgs e)
 		{
 			if (currentPointIndex != -1)
 			{
@@ -52,9 +52,9 @@ namespace Dependinator.ModelViewing.Lines.Private
 		}
 
 
-		public void MouseMove(Point screenPoint, bool isPointMove)
+		public void MouseMove(bool isPointMove, MouseEventArgs e)
 		{
-			Point point = line.View.ViewModel.ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
+			Point point = line.View.ViewModel.ItemOwnerCanvas.RootScreenToCanvasPoint2(e);
 
 			if (currentPointIndex == -1)
 			{

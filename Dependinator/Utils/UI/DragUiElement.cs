@@ -8,18 +8,18 @@ namespace Dependinator.Utils.UI
 	internal class DragUiElement
 	{
 		private readonly UIElement uiElement;
-		private readonly Action<Point> begin;
-		private readonly Action<Point, Vector> move;
-		private readonly Action<Point> end;
+		private readonly Action<MouseEventArgs> begin;
+		private readonly Action<Vector, MouseEventArgs> move;
+		private readonly Action<MouseEventArgs> end;
 
 		private Point? lastMousePoint;
 
 
 		public DragUiElement(
 			UIElement uiElement,
-			Action<Point, Vector> move,
-			Action<Point> begin = null,
-			Action<Point> end = null)
+			Action<Vector, MouseEventArgs> move,
+			Action<MouseEventArgs> begin = null,
+			Action<MouseEventArgs> end = null)
 		{
 			this.uiElement = uiElement;
 		
@@ -41,13 +41,13 @@ namespace Dependinator.Utils.UI
 
 				if (!lastMousePoint.HasValue)
 				{
-					begin?.Invoke(viewPosition);
+					begin?.Invoke(e);
 				}
 				else
 				{
 					Vector viewOffset = viewPosition - lastMousePoint.Value;
 
-					move(viewPosition, viewOffset);
+					move(viewOffset, e);
 				}
 
 				lastMousePoint = viewPosition;
@@ -60,7 +60,7 @@ namespace Dependinator.Utils.UI
 
 				if (lastMousePoint.HasValue)
 				{
-					end?.Invoke(viewPosition);
+					end?.Invoke(e);
 					lastMousePoint = null;
 				}
 			}

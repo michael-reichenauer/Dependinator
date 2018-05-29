@@ -75,8 +75,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 		public void RemovePoint(Line line)
 		{
-			Point screenPoint = Mouse.GetPosition(Application.Current.MainWindow);
-			Point canvasPoint = line.View.ViewModel.ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
+			Point canvasPoint = line.View.ViewModel.ItemOwnerCanvas.MouseToCanvasPoint();
 			int index = GetLinePointIndex(line, canvasPoint, true);
 
 			List<Point> viewPoints = line.View.Points;
