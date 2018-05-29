@@ -11,5 +11,7 @@ namespace Dependinator.ModelViewing.Items
 		void Select(LineViewModel clickedItem);
 
 		void Deselect();
+		bool IsNodeSelected { get; }
+		ISelectableItem SelectedItem { get; }
 	}
 }

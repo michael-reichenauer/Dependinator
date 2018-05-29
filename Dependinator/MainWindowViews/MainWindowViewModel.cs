@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -10,6 +11,8 @@ using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing;
+using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Open;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
@@ -22,12 +25,12 @@ namespace Dependinator.MainWindowViews
 	[SingleInstance]
 	internal class MainWindowViewModel : ViewModel, IBusyIndicatorProvider
 	{
-		private readonly ILatestVersionService latestVersionService;
 		private readonly IMainWindowService mainWindowService;
 		private readonly IOpenModelService openModelService;
 		private readonly IRecentModelsService recentModelsService;
 		private readonly IModelMetadataService modelMetadataService;
 		private readonly IStartInstanceService startInstanceService;
+		private readonly IItemSelectionService itemSelectionService;
 		private readonly IModelViewService modelViewService;
 		private readonly ModelMetadata modelMetadata;
 		private readonly IMessage message;
@@ -44,17 +47,18 @@ namespace Dependinator.MainWindowViews
 			IRecentModelsService recentModelsService,
 			IModelMetadataService modelMetadataService,
 			IStartInstanceService startInstanceService,
+			IItemSelectionService itemSelectionService,
 			IModelViewService modelViewService)
 		{
 			this.modelMetadata = modelMetadata;
 			this.message = message;
 
-			this.latestVersionService = latestVersionService;
 			this.mainWindowService = mainWindowService;
 			this.openModelService = openModelService;
 			this.recentModelsService = recentModelsService;
 			this.modelMetadataService = modelMetadataService;
 			this.startInstanceService = startInstanceService;
+			this.itemSelectionService = itemSelectionService;
 			this.modelViewService = modelViewService;
 
 			ModelViewModel = modelViewModel;
@@ -131,12 +135,13 @@ namespace Dependinator.MainWindowViews
 		public bool HasResent => recentModelsService.GetModelPaths().Any();
 		public bool HasHiddenNodes => modelViewService.GetHiddenNodeNames().Any();
 
+		public bool IsSelectedNode => itemSelectionService.IsNodeSelected;
 
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
 		public Command RefreshLayoutCommand => AsyncCommand(ManualRefreshLayoutAsync);
 
 		public Command OpenFileCommand => Command(openModelService.ShowOpenModelDialog);
-
+		public Command HideNodeCommand => Command(HideNode);
 
 
 		public Command RunLatestVersionCommand => AsyncCommand(RunLatestVersionAsync);
@@ -196,6 +201,16 @@ namespace Dependinator.MainWindowViews
 			}
 		}
 
+
+
+		private void HideNode()
+		{
+			if (itemSelectionService.SelectedItem is NodeViewModel nodeViewModel)
+			{
+				nodeViewModel.HideNode();
+				itemSelectionService.Deselect();
+			}
+		}
 
 
 		private static void Minimize() =>

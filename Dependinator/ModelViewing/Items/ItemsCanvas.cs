@@ -379,7 +379,7 @@ namespace Dependinator.ModelViewing.Items
 			if (IsRoot)
 			{
 				// Adjust for windows title and toolbar bar 
-				Point adjustedScreenPoint = canvasPoint + new Vector(4, 32);
+				Point adjustedScreenPoint = canvasPoint;// + new Vector(4, 32);
 
 				return adjustedScreenPoint;
 			}
@@ -415,12 +415,9 @@ namespace Dependinator.ModelViewing.Items
 				Point relativeParentPoint = parentCanvasPoint - (Vector)ItemsCanvasBounds.Location;
 
 				// Point within the parent node
-				Point parentChildPoint = (Point)((Vector)relativeParentPoint / ScaleFactor);
+				Point compensatedPoint = (Point)((Vector)relativeParentPoint / ScaleFactor);
 
-				Point compensatedPoint = parentChildPoint;
-				Point childPoint = compensatedPoint;
-
-				return childPoint;
+				return compensatedPoint;
 			}
 			else
 			{

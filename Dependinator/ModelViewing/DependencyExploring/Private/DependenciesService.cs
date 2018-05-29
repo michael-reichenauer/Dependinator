@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.Common;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.ModelHandling.Private;
 
 
 namespace Dependinator.ModelViewing.DependencyExploring.Private
@@ -11,14 +13,21 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 	internal class DependenciesService : IDependenciesService
 	{
 		private readonly IThemeService themeService;
+		private readonly IModelService modelService;
+		private readonly Lazy<IModelViewModel> modelViewModel;
+
 		private readonly WindowOwner owner;
 
 
 		public DependenciesService(
 			IThemeService themeService,
+			IModelService modelService,
+			Lazy<IModelViewModel> modelViewModel,
 			WindowOwner owner)
 		{
 			this.themeService = themeService;
+			this.modelService = modelService;
+			this.modelViewModel = modelViewModel;
 			this.owner = owner;
 		}
 
@@ -69,9 +78,17 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		}
 
 
+		public bool TryGetNode(NodeName nodeName, out Node node) => 
+			modelService.TryGetNode(nodeName, out node);
+
+
+		public Task RefreshModelAsync() => modelViewModel.Value.ManualRefreshAsync(false);
+
+
 		private static bool IsIncluded(IEdge link, ReferenceOptions options) =>
 			(options.SourceFilter.IsRoot || link.Source.AncestorsAndSelf().Contains(options.SourceFilter)) &&
-			(options.TargetFilter.IsRoot || link.Target.AncestorsAndSelf().Contains(options.TargetFilter));
+			(options.TargetFilter.IsRoot || link.Target.AncestorsAndSelf().Contains(options.TargetFilter)) &&
+			!link.Target.AncestorsAndSelf().Any(n => n.View.IsHidden);
 
 
 
@@ -80,7 +97,8 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		{
 			Dictionary<NodeName, DependencyItem> items = new Dictionary<NodeName, DependencyItem>();
 
-			items[NodeName.Root] = new DependencyItem(options.SourceFilter.Root);
+			items[NodeName.Root] = new DependencyItem(
+				options.SourceFilter.Root.Name, options.SourceFilter.Root.CodeText);
 
 			foreach (Link link in links)
 			{
@@ -90,7 +108,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				{
 					DependencyItem parentItem = GetParentItem(items, node.Parent);
 
-					item = new DependencyItem(node);
+					item = new DependencyItem(node.Name, node.CodeText);
 					parentItem.AddChild(item);
 
 					items[node.Name] = item;
@@ -110,7 +128,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				return parentItem;
 			}
 
-			parentItem = new DependencyItem(parentNode);
+			parentItem = new DependencyItem(parentNode.Name, parentNode.CodeText);
 
 			if (!parentNode.IsRoot)
 			{

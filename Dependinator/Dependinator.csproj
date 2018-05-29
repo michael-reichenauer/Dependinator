@@ -193,6 +193,7 @@
     <Compile Include="ModelViewing\ModelHandling\Private\ModelLineService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\NodeService.cs" />
+    <Compile Include="Utils\Net\HttpClientDownloadWithProgress.cs" />
     <Compile Include="Utils\SystemIdle.cs" />
     <Compile Include="Utils\UI\MouseHelper.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControl.cs" />

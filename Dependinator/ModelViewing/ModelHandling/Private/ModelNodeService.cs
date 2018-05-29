@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Dependinator.Common;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.ModelHandling.Private
@@ -41,11 +42,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			foreach (Node node in nodes)
 			{
-				if (node.Stamp != stamp && node.NodeType != NodeType.NameSpace)
+				if (node.Stamp != stamp && node.NodeType != NodeType.NameSpace && node.Descendents().All(n => n.Stamp != stamp))
 				{
 					List<Link> obsoleteLinks = node.SourceLinks.ToList();
 					modelLinkService.RemoveObsoleteLinks(obsoleteLinks);
-
 					nodeService.RemoveNode(node);
 				}
 				else

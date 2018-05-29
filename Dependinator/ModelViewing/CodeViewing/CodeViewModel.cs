@@ -1,5 +1,4 @@
 using System.Windows;
-using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils.UI.Mvvm;
 
 
@@ -10,9 +9,9 @@ namespace Dependinator.ModelViewing.CodeViewing
 		public Command<Window> CancelCommand => Command<Window>(w => w.Close());
 
 
-		public CodeViewModel(Node node)
+		public CodeViewModel(string title)
 		{
-			Title = $"{node.Name.DisplayFullName}";
+			Title = $"{title}";
 		}
 
 

@@ -11,8 +11,8 @@
 	<Color name="ReferenceTypeKeywords" foreground="CornflowerBlue" exampleText="object o;" />
 	<Color name="MethodCall" foreground="#FFD4D4D4" exampleText="o.ToString();"/>
 	<Color name="NumberLiteral" foreground="#FFD4D4D4" exampleText="3.1415f"/>
-	<Color name="ThisOrBaseReference" exampleText="this.Do(); base.Do();"/>
-	<Color name="NullOrValueKeywords" exampleText="if (value == null)"/>
+	<Color name="ThisOrBaseReference" foreground="CornflowerBlue" exampleText="this.Do(); base.Do();"/>
+	<Color name="NullOrValueKeywords" foreground="CornflowerBlue" exampleText="if (value == null)"/>
 	<Color name="Keywords" foreground="CornflowerBlue" exampleText="if (a) {} else {}"/>
 	<Color name="GotoKeywords" foreground="CornflowerBlue" exampleText="continue; return null;"/>
 	<Color name="ContextKeywords" foreground="CornflowerBlue" exampleText="var a = from x in y select z;"/>
@@ -169,6 +169,7 @@
 		<Keywords color="ContextKeywords">
 			<Word>yield</Word>
 			<Word>partial</Word>
+		  <Word>this</Word>
 			<Word>global</Word>
 			<Word>where</Word>
 			<Word>select</Word>
@@ -242,6 +243,7 @@
 			<Word>params</Word>
 			<Word>ref</Word>
 			<Word>out</Word>
+		  <Word>this</Word>
 		</Keywords>
 		
 		<Keywords color="Modifiers">
@@ -255,6 +257,7 @@
 			<Word>static</Word>
 			<Word>virtual</Word>
 			<Word>volatile</Word>
+		  <Word>this</Word>
 			<Word>async</Word>
 		</Keywords>
 		

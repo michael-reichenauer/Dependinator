@@ -10,24 +10,26 @@ namespace Dependinator.ModelViewing.Items.Private
 	[SingleInstance]
 	internal class ItemSelectionService : IItemSelectionService
 	{
-		private ISelectableItem selectedItem;
+		public ISelectableItem SelectedItem { get; private set; }
+
+		public bool IsNodeSelected => SelectedItem is NodeViewModel;
 
 
 		public void Deselect()
 		{
-			if (selectedItem == null)
+			if (SelectedItem == null)
 			{
 				return;
 			}
 
-			selectedItem.IsSelected = false;
-			selectedItem = null;
+			SelectedItem.IsSelected = false;
+			SelectedItem = null;
 		}
 
 
 		public void Select(LineViewModel clickedLine)
 		{
-			if (clickedLine == selectedItem)
+			if (clickedLine == SelectedItem)
 			{
 				// User clicked om selected line
 				Deselect();
@@ -36,31 +38,31 @@ namespace Dependinator.ModelViewing.Items.Private
 
 			Deselect();
 
-			selectedItem = clickedLine;
-			selectedItem.IsSelected = true;
+			SelectedItem = clickedLine;
+			SelectedItem.IsSelected = true;
 		}
 
 
 
 		public void Select(NodeViewModel clickedNode)
 		{
-			if (clickedNode == selectedItem)
+			if (clickedNode == SelectedItem)
 			{
 				// User clicked om selected node
 				Deselect();
 				return;
 			}
 
-			if (selectedItem is LineViewModel selectedLine &&
-				 selectedLine.Line.Owner.AncestorsAndSelf().Any(ancestor => clickedNode == ancestor.View.ViewModel))
+			if (SelectedItem is LineViewModel selectedLine &&
+			    selectedLine.Line.Owner.AncestorsAndSelf().Any(ancestor => clickedNode == ancestor.View.ViewModel))
 			{
 				// Ancestor or root was clicked, just deselect line
 				Deselect();
 				return;
 			}
 
-			if (selectedItem is NodeViewModel selectedNode &&
-					selectedNode.Node.Ancestors().Any(ancestor => clickedNode == ancestor.View.ViewModel))
+			if (SelectedItem is NodeViewModel selectedNode &&
+			    selectedNode.Node.Ancestors().Any(ancestor => clickedNode == ancestor.View.ViewModel))
 			{
 				// Ancestor or root was clicked, just deselect node
 				Deselect();
@@ -75,8 +77,8 @@ namespace Dependinator.ModelViewing.Items.Private
 				return;
 			}
 
-			selectedItem = clickedNode;
-			selectedItem.IsSelected = true;
+			SelectedItem = clickedNode;
+			SelectedItem.IsSelected = true;
 		}
 	}
 }
