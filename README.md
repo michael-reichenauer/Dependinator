@@ -1,3 +1,3 @@
-# Dependiator
+# Dependinator
 Visualize, navigate and mange dependencies.
 

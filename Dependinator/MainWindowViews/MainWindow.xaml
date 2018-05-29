@@ -1,0 +1,157 @@
+﻿<Window 
+	x:Class="Dependinator.MainWindowViews.MainWindow"
+	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+	xmlns:common="clr-namespace:Dependinator.Common"
+	xmlns:mainWindowViews="clr-namespace:Dependinator.MainWindowViews"
+	xmlns:ui="clr-namespace:Dependinator.Utils.UI"
+	xmlns:modelViewing="clr-namespace:Dependinator.ModelViewing"
+	Title="{Binding Title}"	Icon="Application.ico"
+	Width="900" Height="700"
+	BorderBrush="{DynamicResource BorderBrush}" BorderThickness="3"
+	WindowStyle="None" AllowsTransparency="True"
+	Loaded="MainWindow_OnLoaded"
+	ui:InputBindingsBehavior.TakesInputBindingPrecedence="True" 
+	Closing="MainWindow_OnClosing" >
+
+
+	<!-- Enable "normal" windows behavior with drag and resize,
+	this does require WindowChrome.IsHitTestVisibleInChrome="True" in controls below. -->
+	<Window.Resources>
+		<Style TargetType="{x:Type mainWindowViews:MainWindow}">
+			<Setter Property="WindowChrome.WindowChrome">
+				<Setter.Value>
+					<WindowChrome />
+				</Setter.Value>
+			</Setter>
+		</Style>
+	</Window.Resources>
+
+
+	<Window.InputBindings>
+		<KeyBinding Key="Escape" Command="{Binding EscapeCommand}" />
+		<KeyBinding Key="Escape" Modifiers="Shift" Command="{Binding ExitCommand}" />
+		<KeyBinding Key="F4" Modifiers="Alt" Command="{Binding ExitCommand}" />
+		<KeyBinding Key="Q" Modifiers="Ctrl" Command="{Binding ExitCommand}" />
+		<KeyBinding Key="F1" Command="{Binding HelpCommand}" />
+		<KeyBinding Key="F5" Command="{Binding RefreshCommand}" />
+		<KeyBinding Key="F5" Modifiers="Shift" Command="{Binding RefreshLayoutCommand}" />
+		<KeyBinding Modifiers="Control" Key="F" Command="{Binding SearchCommand}" />
+
+	</Window.InputBindings>
+
+
+	<!-- Main window -->
+	<Grid Background="{DynamicResource BackgroundBrush}">
+		<Grid.RowDefinitions>
+			<!-- Title and tool bar -->
+			<RowDefinition Height="Auto" />
+			<!-- Repository view -->
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
+
+		<!--Title and tool bar -->
+		<Border	Grid.Row="0" BorderThickness="1" 
+						BorderBrush="{DynamicResource BorderBrush}" Background="{DynamicResource TitlebarBackgroundBrush}">
+			<Grid >
+				<Grid.ColumnDefinitions>
+					<!-- Left part, with icon, working folder, status indicators -->
+					<ColumnDefinition Width="*"/>
+					<!-- Middle part, mostly empty, which makes widow drag-able, on the right the Hamburger button -->
+					<ColumnDefinition Width="Auto"/>
+					<!-- Right part, search field and mini, max and close buttons -->
+					<ColumnDefinition Width="258"/>
+				</Grid.ColumnDefinitions>
+
+				<!-- Left part of title bar, with icon, working folder, status indicators -->
+				<StackPanel Grid.Column="0" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+					
+					<!-- Application icon -->
+					<Image 
+						Source="Application.ico" Width="15" Height="15" Margin="5,0" 
+						ToolTip="{Binding VersionText}"/>
+
+					<!-- Working folder -->
+					<Button 	
+						Style="{DynamicResource BaseButtonStyle}"
+						FontSize="12"
+						Foreground="{DynamicResource TextBrush}"
+						Margin="2,0,10,0">
+						<Button.ToolTip>
+							<ToolTip
+								BorderThickness="2"
+								BorderBrush="{DynamicResource BorderBrush}">
+								<StackPanel Orientation="Horizontal">
+									<TextBlock Text="{Binding WorkingFolderPath}" Foreground="{DynamicResource TextBrush}"/>
+								</StackPanel>
+							</ToolTip>
+						</Button.ToolTip>
+						<StackPanel Orientation="Horizontal">
+							<TextBlock Text="{Binding WorkingFolder}"/>
+						</StackPanel>
+					</Button>
+
+					
+					<!-- Busy Indicator  -->
+					<StackPanel Orientation="Horizontal">
+						<Label Content="{Binding Busy.ProgressText}" Foreground="{DynamicResource TextBrush}" Margin="10,0,0,0" FontSize="12"/>
+						<Label Content="{Binding Busy.Text}" Foreground="{DynamicResource BusyBrush}" Margin="0,0,10,0" FontSize="10"/>
+					</StackPanel>
+				</StackPanel>
+
+
+				<!-- Middle part, mostly empty, which makes widow drag-able, on the right the Hamburger button -->
+				<StackPanel Grid.Column="1" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+
+					<!-- Fetch error indicator -->
+					<!--<Button 
+						Content="&#xE888;"
+						Style="{DynamicResource IconButtonStyle}"			
+						Foreground="{DynamicResource ConflictBrush}"			
+						FontWeight="Bold"
+						Visibility="{Binding ModelViewModel.FetchErrorText, Converter={StaticResource VC}}"			
+						ToolTip="{Binding ModelViewModel.FetchErrorText}" />-->
+					
+					<!-- Latest version button -->
+					<Button 
+						Content="&#xE863;"
+						Style="{DynamicResource IconButtonStyle}"			
+						Foreground="Green"			
+						FontWeight="Bold"
+						Visibility="{Binding IsNewVersionVisible, Converter={StaticResource VC}}"			
+						Command="{Binding RunLatestVersionCommand}"
+						ToolTip="New version of Dependinator is available, click to reload ..." />
+
+					<!-- Hamburger button -->
+					<mainWindowViews:HamburgerButton
+						Visibility="{Binding IsModel, Converter={StaticResource VC}}"
+						/>
+
+				</StackPanel>
+
+
+				<!-- Right part, search field and mini, max and close buttons -->
+				<StackPanel 
+					Grid.Column="2"
+					Orientation="Horizontal"
+					WindowChrome.IsHitTestVisibleInChrome="True"
+					HorizontalAlignment="Right">
+					
+					<!-- Search and filter box  -->
+					<mainWindowViews:SearchFilter
+						Visibility="{Binding IsModel, Converter={StaticResource VC}}"
+						x:Name="Search"/>
+
+					<!-- The 3 minimize, maximize and close window control buttons in the title bar -->
+					<common:WindowControlButtons/>
+
+				</StackPanel>
+				
+			</Grid>
+		</Border>
+
+		<!-- Repository view -->
+		<modelViewing:ModelView x:Name="ModelView" Grid.Row="1" DataContext="{Binding ModelViewModel}"/>
+
+	</Grid>
+</Window>
