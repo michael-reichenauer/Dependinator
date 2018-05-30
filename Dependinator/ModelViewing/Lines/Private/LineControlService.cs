@@ -71,7 +71,6 @@ namespace Dependinator.ModelViewing.Lines.Private
 				else
 				{
 					double roundTo = scale < 10 ? 5 : 1;
-					Log.Debug($"Scale {scale}, round to {roundTo}");
 					newPoint = newPoint.Rnd(roundTo);
 				}
 			}

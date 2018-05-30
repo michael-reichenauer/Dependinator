@@ -193,7 +193,7 @@ namespace Dependinator.ModelViewing.Items
 		{
 			bool isQueryItemsChanged = false;
 
-			foreach (IItem item in items.Where(i => i!= null))
+			foreach (IItem item in items.Where(i => i!= null && i.ItemState != null))
 			{
 				ViewItem viewItem = (ViewItem)item.ItemState;
 

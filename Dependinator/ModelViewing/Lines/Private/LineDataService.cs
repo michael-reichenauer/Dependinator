@@ -55,8 +55,8 @@ namespace Dependinator.ModelViewing.Lines.Private
 				tp = tp - vector;
 			}
 
-			line.View.FirstPoint = sp.Rnd(5);
-			line.View.LastPoint = tp.Rnd(5);
+			line.View.FirstPoint = sp;
+			line.View.LastPoint = tp;
 		}
 
 
@@ -217,11 +217,11 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 		private Point GetRelativeTarget(Line line)
 		{
-			if (line.View.RelativeTargetPoint.X >= 0)
-			{
-				// use specified source
-				return line.View.RelativeTargetPoint;
-			}
+			//if (line.View.RelativeTargetPoint.X >= 0)
+			//{
+			//	// use specified source
+			//	return line.View.RelativeTargetPoint;
+			//}
 
 			if (line.Source.Parent == line.Target)
 			{
