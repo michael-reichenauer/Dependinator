@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
@@ -54,8 +55,8 @@ namespace Dependinator.ModelViewing.Lines.Private
 				tp = tp - vector;
 			}
 
-			line.View.FirstPoint = sp;
-			line.View.LastPoint = tp;
+			line.View.FirstPoint = sp.Rnd(5);
+			line.View.LastPoint = tp.Rnd(5);
 		}
 
 

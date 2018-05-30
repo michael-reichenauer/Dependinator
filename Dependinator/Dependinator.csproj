@@ -313,6 +313,7 @@
     <Compile Include="Utils\UI\Mvvm\TargetWhenSetter.cs" />
     <Compile Include="Utils\UI\SizeExtensions.cs" />
     <Compile Include="Utils\UI\ThrottleDispatcher.cs" />
+    <Compile Include="Utils\UI\VectorExtensions.cs" />
     <Compile Include="Utils\With.cs" />
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>

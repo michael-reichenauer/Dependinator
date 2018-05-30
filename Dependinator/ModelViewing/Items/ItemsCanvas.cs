@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using Dependinator.Common;
 using Dependinator.ModelViewing.Items.Private;
 using Dependinator.ModelViewing.Nodes;
@@ -40,6 +41,8 @@ namespace Dependinator.ModelViewing.Items
 		{
 		}
 
+
+		public ItemsCanvas ParentCanvas => parentCanvas;
 
 		public ItemsCanvas(IItemsCanvasBounds owner, ItemsCanvas parentCanvas)
 		{
@@ -211,6 +214,7 @@ namespace Dependinator.ModelViewing.Items
 			}
 
 			Vector moveOffset = new Vector(viewOffset.X / Scale, viewOffset.Y / Scale);
+		//	moveOffset = moveOffset.Rnd(5)
 
 			Rect viewBox = GetViewBox();
 
@@ -335,7 +339,7 @@ namespace Dependinator.ModelViewing.Items
 
 
 
-		private Point CanvasToScreenPoint(Point canvasPoint)
+		public Point CanvasToScreenPoint(Point canvasPoint)
 		{
 			try
 			{
@@ -353,7 +357,7 @@ namespace Dependinator.ModelViewing.Items
 		}
 
 
-		private Point ScreenToCanvasPoint(Point screenPoint)
+		public Point ScreenToCanvasPoint(Point screenPoint)
 		{
 			try
 			{

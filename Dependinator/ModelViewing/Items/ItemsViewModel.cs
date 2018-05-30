@@ -43,7 +43,7 @@ namespace Dependinator.ModelViewing.Items
 		public void ItemVirtualized() => ItemsCanvas.ItemVirtualized();
 
 
-		public void MoveItems(Vector viewOffset)
+		public void MoveItems(Vector viewOffset, Point p1, Point p2)
 		{
 			if (node?.IsSelected ?? true)
 			{

@@ -70,7 +70,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 			}
 
 			Mouse.OverrideCursor = Cursors.SizeAll;
-			double lineScale = line.Owner.View.ViewModel.ItemScale;
+			double lineScale = line.View.ViewModel.ItemParentScale;
 			lineControlService.MoveLinePoint(line, currentPointIndex, point, lineScale);
 			lineControlService.UpdateLineBounds(line);
 			line.View.ViewModel.NotifyAll();

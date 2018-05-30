@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Media;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
@@ -71,8 +72,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 				{
 					double roundTo = scale < 10 ? 5 : 1;
 					Log.Debug($"Scale {scale}, round to {roundTo}");
-					newPoint = new Point(
-						newPoint.X.RoundToNearest(roundTo), newPoint.Y.RoundToNearest(roundTo));
+					newPoint = newPoint.Rnd(roundTo);
 				}
 			}
 

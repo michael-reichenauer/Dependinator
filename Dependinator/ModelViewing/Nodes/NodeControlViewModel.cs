@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Items;
+using Dependinator.Utils;
 using Dependinator.Utils.UI.Mvvm;
 
 
@@ -121,11 +122,25 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public void Move(NodeControl control, Vector viewOffset)
+		public void Move(NodeControl control, Vector viewOffset, Point sp1, Point sp2)
 		{
-			Vector offset = new Vector(viewOffset.X / ItemScale, viewOffset.Y / ItemScale);
+			//Vector offset = new Vector(viewOffset.X / ItemScale, viewOffset.Y / ItemScale);
+
+			Point cp1 = nodeViewModel.ItemOwnerCanvas.ScreenToCanvasPoint(sp1);
+			Point cp2 = nodeViewModel.ItemOwnerCanvas.ScreenToCanvasPoint(sp2);
+
+			Log.Debug($"Move1 {(cp2-cp1).Length}");
+
+			double roundTo = nodeViewModel.ItemParentScale < 10 ? 5 : 1;
+			cp1 = cp1.Rnd(roundTo);
+			cp2 = cp2.Rnd(roundTo);
+
+			Vector offset = cp2 - cp1;
+			Log.Debug($"Move2 {(cp2 - cp1).Length}");
 
 			Point newLocation = GetMoveData(control, offset, out Size newSize, out Vector newCanvasMove);
+
+		
 
 			if (newSize.Width < MinSize || newSize.Height < MinSize)
 			{
@@ -137,7 +152,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 			if (!nodeViewModel.ItemOwnerCanvas.IsNodeInViewBox(newBounds))
 			{
-				// Node (if moved) would not bew withing visibale view
+				// Node (if moved) would not bew withing visible view
 				return;
 			}
 
@@ -163,7 +178,6 @@ namespace Dependinator.ModelViewing.Nodes
 			{
 				case NodeControl.Center:
 					newLocation = location + offset;
-					newLocation = new Point((int)newLocation.X, (int)newLocation.Y);
 					newSize = size;
 					newCanvasMove = new Vector(0, 0);
 					break;

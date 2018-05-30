@@ -40,7 +40,7 @@ namespace Dependinator.ModelViewing.Items
 
 
 		protected override void OnMouseMove(MouseEventArgs e) =>
-			MouseHelper.OnLeftButtonMove(this, e, (s, offset) => viewModel?.MoveItems(offset));
+			MouseHelper.OnLeftButtonMove(this, e, (s, offset, p1, p2) => viewModel?.MoveItems(offset, p1, p2));
 
 
 		private void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
