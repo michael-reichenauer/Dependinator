@@ -24,7 +24,7 @@ namespace Dependinator.Utils.UI
 			this.uiElement = uiElement;
 		
 			uiElement.MouseMove += (s, e) => MouseMove(e);
-			
+			uiElement.MouseUp += (s, e) => MouseUp(e);
 			this.begin = begin;
 			this.move = move;
 			this.end = end;
@@ -63,6 +63,18 @@ namespace Dependinator.Utils.UI
 					end?.Invoke(e);
 					lastMousePoint = null;
 				}
+			}
+		}
+
+
+		private void MouseUp(MouseButtonEventArgs e)
+		{
+			uiElement.ReleaseMouseCapture();
+
+			if (lastMousePoint.HasValue)
+			{
+				end?.Invoke(e);
+				lastMousePoint = null;
 			}
 		}
 	}

@@ -163,6 +163,7 @@ namespace Dependinator.ModelViewing.Nodes
 			{
 				case NodeControl.Center:
 					newLocation = location + offset;
+					newLocation = new Point((int)newLocation.X, (int)newLocation.Y);
 					newSize = size;
 					newCanvasMove = new Vector(0, 0);
 					break;

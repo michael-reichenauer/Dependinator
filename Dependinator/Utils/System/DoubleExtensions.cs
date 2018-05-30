@@ -2,7 +2,7 @@
 namespace System
 {
 	/// <summary>
-	/// 'double' type convieniense extensions.
+	/// 'double' type convenience extensions.
 	/// </summary>
 	internal static class DoubleExtensions
 	{
@@ -12,6 +12,22 @@ namespace System
 		public static double Rnd(this double i, double round)
 		{
 			return Math.Round(i / round) * round;
+		}
+
+
+		public static double RoundToNearest(this double amount, double roundTo)
+		{
+			double excessAmount = amount % roundTo;
+			if (excessAmount < (roundTo / 2))
+			{
+				amount -= excessAmount;
+			}
+			else
+			{
+				amount += (roundTo - excessAmount);
+			}
+
+			return amount;
 		}
 
 	}

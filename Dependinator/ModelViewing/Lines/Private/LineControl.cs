@@ -43,7 +43,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 		{
 			if (currentPointIndex != -1)
 			{
-				EndMoveLinePoint();
+				EndMoveLinePoint(e);
 			}
 			else
 			{
@@ -70,14 +70,14 @@ namespace Dependinator.ModelViewing.Lines.Private
 			}
 
 			Mouse.OverrideCursor = Cursors.SizeAll;
-			lineControlService.MoveLinePoint(line, currentPointIndex, point);
+			double lineScale = line.Owner.View.ViewModel.ItemScale;
+			lineControlService.MoveLinePoint(line, currentPointIndex, point, lineScale);
 			lineControlService.UpdateLineBounds(line);
 			line.View.ViewModel.NotifyAll();
 		}
 
 
-
-		private void EndMoveLinePoint()
+		private void EndMoveLinePoint(MouseEventArgs e)
 		{
 			if (currentPointIndex != line.View.FirstIndex && currentPointIndex != line.View.LastIndex)
 			{

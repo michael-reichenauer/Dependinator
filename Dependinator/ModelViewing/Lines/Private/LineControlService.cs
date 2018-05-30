@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Windows;
-using System.Windows.Input;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.Utils;
 using Dependinator.Utils.UI;
 
 
@@ -23,7 +23,6 @@ namespace Dependinator.ModelViewing.Lines.Private
 			this.geometryService = geometryService;
 		}
 
-		
 
 		public bool IsOnLineBetweenNeighbors(Line line, int index)
 		{
@@ -37,7 +36,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 		}
 
 
-		public void MoveLinePoint(Line line, int pointIndex, Point newPoint)
+		public void MoveLinePoint(Line line, int pointIndex, Point newPoint, double scale)
 		{
 			// NOTE: These lines are currently disabled !!!
 			NodeViewModel source = line.Source.View.ViewModel;
@@ -64,14 +63,22 @@ namespace Dependinator.ModelViewing.Lines.Private
 				Point a = line.View.Points[pointIndex - 1];
 				Point b = line.View.Points[pointIndex + 1];
 				Point p = newPoint;
-				if (geometryService.GetDistanceFromLine(a, b, p) < 0.1)
+				if (geometryService.GetDistanceFromLine(a, b, p) < 0.2)
 				{
 					newPoint = geometryService.GetClosestPointOnLineSegment(a, b, p);
+				}
+				else
+				{
+					double roundTo = scale < 10 ? 5 : 1;
+					Log.Debug($"Scale {scale}, round to {roundTo}");
+					newPoint = new Point(
+						newPoint.X.RoundToNearest(roundTo), newPoint.Y.RoundToNearest(roundTo));
 				}
 			}
 
 			line.View.Points[pointIndex] = newPoint;
 		}
+
 
 		public void RemovePoint(Line line)
 		{

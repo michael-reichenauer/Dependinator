@@ -3023,7 +3023,7 @@
         </member>
         <member name="T:System.DoubleExtensions">
             <summary>
-            'double' type convieniense extensions.
+            'double' type convenience extensions.
             </summary>
         </member>
         <member name="T:System.NamespaceDoc">
