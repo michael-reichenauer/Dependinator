@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media;
 using Dependinator.Common;
 using Dependinator.ModelViewing.Items.Private;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.Utils;
 using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -23,7 +23,6 @@ namespace Dependinator.ModelViewing.Items
 		private ItemsCanvas parentCanvas;
 		private ZoomableCanvas zoomableCanvas;
 
-		public ZoomableCanvas ZoomableCanvas => zoomableCanvas;
 
 		private Rect ItemsCanvasBounds =>
 			owner?.ItemBounds ?? zoomableCanvas?.ActualViewbox ?? Rect.Empty;
@@ -33,7 +32,7 @@ namespace Dependinator.ModelViewing.Items
 		private bool IsShowing => owner?.IsShowing ?? true;
 		private bool CanShow => owner?.CanShow ?? true;
 
-		
+
 
 		// The root canvas
 		public ItemsCanvas()
@@ -84,8 +83,6 @@ namespace Dependinator.ModelViewing.Items
 		public bool IsRoot => parentCanvas == null;
 		private double rootScale;
 
-		public IReadOnlyList<ItemsCanvas> CanvasChildren => canvasChildren;
-
 
 		public double ScaleFactor { get; private set; }
 
@@ -106,10 +103,10 @@ namespace Dependinator.ModelViewing.Items
 			}
 			else
 			{
-				Point viewPosition = e.GetPosition(RootCanvas.ZoomableCanvas);
+				Point viewPosition = e.GetPosition(RootCanvas.zoomableCanvas);
 				ZoomRootNode(zoom, viewPosition);
 			}
-			
+
 			e.Handled = true;
 		}
 
@@ -200,9 +197,9 @@ namespace Dependinator.ModelViewing.Items
 
 		public bool IsNodeInViewBox(Rect bounds)
 		{
-			Rect viewbox = GetViewBox();
+			Rect viewBox = GetViewBox();
 
-			return viewbox.IntersectsWith(bounds);
+			return viewBox.IntersectsWith(bounds);
 		}
 
 
@@ -215,14 +212,14 @@ namespace Dependinator.ModelViewing.Items
 
 			Vector moveOffset = new Vector(viewOffset.X / Scale, viewOffset.Y / Scale);
 
-			Rect viewbox = GetViewBox();
+			Rect viewBox = GetViewBox();
 
-			if (!IsAnyNodesWithinView(viewbox, moveOffset))
+			if (!IsAnyNodesWithinView(viewBox, moveOffset))
 			{
-				// No node (if moved) would be withing visibale view
+				// No node (if moved) would be withing visible view
 				return;
 			}
-			
+
 			itemsSource.GetAllItems().ForEach(item => item.MoveItem(moveOffset));
 
 			UpdateAndNotifyAll();
@@ -233,20 +230,20 @@ namespace Dependinator.ModelViewing.Items
 
 		private Rect GetViewBox()
 		{
-			Rect viewbox = zoomableCanvas.ActualViewbox;
-			viewbox.Inflate(-30 / Scale, -30 / Scale);
-			return viewbox;
+			Rect viewBox = zoomableCanvas.ActualViewbox;
+			viewBox.Inflate(-30 / Scale, -30 / Scale);
+			return viewBox;
 		}
 
 
-		private bool IsAnyNodesWithinView(Rect viewbox, Vector moveOffset)
+		private bool IsAnyNodesWithinView(Rect viewBox, Vector moveOffset)
 		{
-			IEnumerable<IItem> nodes = itemsSource.GetAllItems().Where(i => i is NodeViewModel );
+			IEnumerable<IItem> nodes = itemsSource.GetAllItems().Where(i => i is NodeViewModel);
 			foreach (IItem node in nodes)
 			{
 				if (node.CanShow)
 				{
-					if (IsNodeInViewBox(node, viewbox, moveOffset))
+					if (IsNodeInViewBox(node, viewBox, moveOffset))
 					{
 						return true;
 					}
@@ -320,123 +317,59 @@ namespace Dependinator.ModelViewing.Items
 		}
 
 
-		public void Test()
-		{
-			//if (ParentItemsCanvas != null)
-			//{
-			//	// Get the position of the nodes items view relative the nodes border
-			//	UIElement innerBorder = VisualTreeHelper.GetParent(view) as UIElement;
-			//	UIElement grid = VisualTreeHelper.GetParent(innerBorder) as UIElement;
-			//	UIElement nodesBorder = VisualTreeHelper.GetParent(grid) as UIElement;
-
-			//	relative = (Vector)view.TranslatePoint(new Point(0, 0), nodesBorder);
-			//}
-
-			UIElement innerBorder = VisualTreeHelper.GetParent(zoomableCanvas) as UIElement;
-			UIElement grid = VisualTreeHelper.GetParent(innerBorder) as UIElement;
-			UIElement nodesBorder = VisualTreeHelper.GetParent(grid) as UIElement;
-
-			//	relative = (Vector)view.TranslatePoint(new Point(0, 0), nodesBorder);
-
-		}
-
-		public Point ChildToParentCanvasPoint(Point childCanvasPoint)
-		{
-			if (!IsRoot)
-			{
-				// Point within the parent node
-				Vector parentPoint = (Vector)childCanvasPoint * ScaleFactor;
-
-				// point in parent canvas scale
-				Point childToParentCanvasPoint = ItemsCanvasBounds.Location + parentPoint;
-				return childToParentCanvasPoint;
-			}
-			else
-			{
-				return childCanvasPoint;
-			}
-		}
-
-
-		public Point RootScreenToCanvasPoint(Point rootScreenPoint)
-		{
-			if (IsRoot)
-			{
-				// Adjust for windows title and toolbar bar 
-				Point adjustedScreenPoint = rootScreenPoint - new Vector(4, 32);
-
-				return ScreenToCanvasPoint(adjustedScreenPoint);
-			}
-
-			Point parentCanvasPoint = parentCanvas.RootScreenToCanvasPoint(rootScreenPoint);
-
-			Point parentToChildCanvasPoint = ParentToChildCanvasPoint(parentCanvasPoint);
-
-			Point pointToScreen = zoomableCanvas.PointToScreen(rootScreenPoint);
-			Point pointFromScreen = zoomableCanvas.PointFromScreen(rootScreenPoint);
-			Point canvasPoint = zoomableCanvas.GetCanvasPoint(rootScreenPoint);
-			Point visualPoint = zoomableCanvas.GetVisualPoint(canvasPoint);
-			Point canvasPoint2 = zoomableCanvas.GetCanvasPoint(visualPoint);
-
-			Point p = (Point) ((Vector) canvasPoint / Scale);
-
-			return parentToChildCanvasPoint;
-		}
-
 
 		public Point MouseToCanvasPoint()
 		{
-			Point rootScreenPoint = Mouse.GetPosition(zoomableCanvas);
+			Point screenPoint = Mouse.GetPosition(zoomableCanvas);
 
-			Point canvasPoint = zoomableCanvas.GetCanvasPoint(rootScreenPoint);
-
-			return new Point(canvasPoint.X, canvasPoint.Y);
+			return zoomableCanvas.GetCanvasPoint(screenPoint);
 		}
 
 
-		public Point RootScreenToCanvasPoint2(MouseEventArgs e)
+		public Point MouseEventToCanvasPoint(MouseEventArgs e)
 		{
-			Point rootScreenPoint = e.GetPosition(zoomableCanvas);
+			Point screenPoint = e.GetPosition(zoomableCanvas);
 
-			Point canvasPoint = zoomableCanvas.GetCanvasPoint(rootScreenPoint);
-
-			return new Point(canvasPoint.X, canvasPoint.Y);
+			return zoomableCanvas.GetCanvasPoint(screenPoint);
 		}
 
 
 
-		public Point CanvasPointToScreenPoint(Point canvasPoint)
+		private Point CanvasToScreenPoint(Point canvasPoint)
 		{
-			if (IsRoot)
+			try
 			{
-				// Adjust for windows title and toolbar bar 
-				Point adjustedScreenPoint = canvasPoint;// + new Vector(4, 32);
+				Point localScreenPoint = zoomableCanvas.GetVisualPoint(canvasPoint);
 
-				return adjustedScreenPoint;
+				Point screenPoint = zoomableCanvas.PointToScreen(localScreenPoint);
+
+				return screenPoint;
 			}
-
-			Point parentCanvasPoint = parentCanvas.ChildToParentCanvasPoint(canvasPoint);
-			Point screenPoint = parentCanvas.CanvasPointToScreenPoint(parentCanvasPoint);
-
-			return screenPoint;
+			catch (Exception e)
+			{
+				Log.Exception(e, $"Node {this}");
+				throw;
+			}
 		}
 
 
-		public Point CanvasPointToScreenPoint2(Point canvasPoint)
+		private Point ScreenToCanvasPoint(Point screenPoint)
 		{
-			//UIElement itemsPresenter = VisualTreeHelper.GetParent(zoomableCanvas) as UIElement;
-			//UIElement scroll = VisualTreeHelper.GetParent(itemsPresenter) as UIElement;
-			//UIElement grid = VisualTreeHelper.GetParent(scroll) as UIElement;
-			//UIElement scrollView = VisualTreeHelper.GetParent(grid) as UIElement;
-			//UIElement border = VisualTreeHelper.GetParent(scrollView) as UIElement;
-			//UIElement ListBox = VisualTreeHelper.GetParent(border) as UIElement;
-			//UIElement content = VisualTreeHelper.GetParent(ListBox) as UIElement;
-			//UIElement border2 = VisualTreeHelper.GetParent(content) as UIElement;
-			//UIElement itemsView = VisualTreeHelper.GetParent(border2) as UIElement;
+			try
+			{
+				Point localScreenPoint = zoomableCanvas.PointFromScreen(screenPoint);
 
+				Point canvasPoint = zoomableCanvas.GetCanvasPoint(localScreenPoint);
 
-			return zoomableCanvas.TranslatePoint(canvasPoint, RootCanvas.zoomableCanvas);
+				return canvasPoint;
+			}
+			catch (Exception e)
+			{
+				Log.Exception(e, $"Node {this}");
+				throw;
+			}
 		}
+
 
 
 		public Point ParentToChildCanvasPoint(Point parentCanvasPoint)
@@ -455,6 +388,14 @@ namespace Dependinator.ModelViewing.Items
 				return parentCanvasPoint;
 			}
 		}
+		
+
+		private Point ParentToChildCanvasPoint2(Point parentCanvasPoint)
+		{
+			Point parentScreenPoint = parentCanvas.CanvasToScreenPoint(parentCanvasPoint);
+			return ScreenToCanvasPoint(parentScreenPoint);
+		}
+
 
 
 		public void SetZoomableCanvas(ZoomableCanvas canvas)
@@ -467,6 +408,7 @@ namespace Dependinator.ModelViewing.Items
 			}
 
 			zoomableCanvas = canvas;
+			zoomableCanvas.IsDisableOffsetChange = true;
 			zoomableCanvas.ItemRealized += Canvas_ItemRealized;
 			zoomableCanvas.ItemVirtualized += Canvas_ItemVirtualized;
 			zoomableCanvas.ItemsOwner.ItemsSource = itemsSource;
@@ -501,10 +443,22 @@ namespace Dependinator.ModelViewing.Items
 		{
 			if (!IsRoot)
 			{
+				if (null == PresentationSource.FromVisual(zoomableCanvas))
+				{
+					// This canvas is not showing
+					return Rect.Empty;
+				}
+
 				Rect parentArea = parentCanvas.GetHierarchicalVisualArea();
-				Point p1 = ParentToChildCanvasPoint(parentArea.Location);
+
+				Point parentCanvasPoint = parentArea.Location;
+
+				Point p1 = ParentToChildCanvasPoint2(parentCanvasPoint);
+
+				Point p2 = ParentToChildCanvasPoint(parentArea.Location);
 				Size s1 = (Size)((Vector)parentArea.Size / ScaleFactor);
 				Rect scaledParentViewArea = new Rect(p1, s1);
+
 				Rect viewArea = GetItemsCanvasViewArea();
 				viewArea.Intersect(scaledParentViewArea);
 				return viewArea;
@@ -514,6 +468,8 @@ namespace Dependinator.ModelViewing.Items
 				return GetItemsCanvasViewArea();
 			}
 		}
+
+
 
 
 		public override string ToString() => owner?.ToString() ?? NodeName.Root.ToString();
@@ -572,11 +528,112 @@ namespace Dependinator.ModelViewing.Items
 		}
 
 
-		private Point CanvasToVisualPoint(Point canvasPoint) =>
-			(Point)(((Vector)canvasPoint * Scale));
+		//private Point CanvasToVisualPoint(Point canvasPoint) =>
+		//	(Point)(((Vector)canvasPoint * Scale));
 
 
-		private Point ScreenToCanvasPoint(Point screenPoint) =>
-			(Point)(((Vector)screenPoint) / Scale);
+		//private Point ScreenToCanvasPoint(Point screenPoint) =>
+		//	(Point)(((Vector)screenPoint) / Scale);
+
+
+
+
+		//public Point CanvasPointToScreenPoint(Point canvasPoint)
+		//{
+		//	if (IsRoot)
+		//	{
+		//		// Adjust for windows title and toolbar bar 
+		//		Point adjustedScreenPoint = canvasPoint;// + new Vector(4, 32);
+
+		//		return adjustedScreenPoint;
+		//	}
+
+		//	Point parentCanvasPoint = parentCanvas.ChildToParentCanvasPoint(canvasPoint);
+		//	Point screenPoint = parentCanvas.CanvasPointToScreenPoint(parentCanvasPoint);
+
+		//	return screenPoint;
+		//}
+
+
+		//public Point CanvasPointToScreenPoint2(Point canvasPoint)
+		//{
+		//	//UIElement itemsPresenter = VisualTreeHelper.GetParent(zoomableCanvas) as UIElement;
+		//	//UIElement scroll = VisualTreeHelper.GetParent(itemsPresenter) as UIElement;
+		//	//UIElement grid = VisualTreeHelper.GetParent(scroll) as UIElement;
+		//	//UIElement scrollView = VisualTreeHelper.GetParent(grid) as UIElement;
+		//	//UIElement border = VisualTreeHelper.GetParent(scrollView) as UIElement;
+		//	//UIElement ListBox = VisualTreeHelper.GetParent(border) as UIElement;
+		//	//UIElement content = VisualTreeHelper.GetParent(ListBox) as UIElement;
+		//	//UIElement border2 = VisualTreeHelper.GetParent(content) as UIElement;
+		//	//UIElement itemsView = VisualTreeHelper.GetParent(border2) as UIElement;
+
+
+		//	return zoomableCanvas.TranslatePoint(canvasPoint, RootCanvas.zoomableCanvas);
+		//}
+
+
+
+		//public void Test()
+		//{
+		//	//if (ParentItemsCanvas != null)
+		//	//{
+		//	//	// Get the position of the nodes items view relative the nodes border
+		//	//	UIElement innerBorder = VisualTreeHelper.GetParent(view) as UIElement;
+		//	//	UIElement grid = VisualTreeHelper.GetParent(innerBorder) as UIElement;
+		//	//	UIElement nodesBorder = VisualTreeHelper.GetParent(grid) as UIElement;
+
+		//	//	relative = (Vector)view.TranslatePoint(new Point(0, 0), nodesBorder);
+		//	//}
+
+		//	UIElement innerBorder = VisualTreeHelper.GetParent(zoomableCanvas) as UIElement;
+		//	UIElement grid = VisualTreeHelper.GetParent(innerBorder) as UIElement;
+		//	UIElement nodesBorder = VisualTreeHelper.GetParent(grid) as UIElement;
+
+		//	//	relative = (Vector)view.TranslatePoint(new Point(0, 0), nodesBorder);
+
+		//}
+
+		//public Point ChildToParentCanvasPoint(Point childCanvasPoint)
+		//{
+		//	if (!IsRoot)
+		//	{
+		//		// Point within the parent node
+		//		Vector parentPoint = (Vector)childCanvasPoint * ScaleFactor;
+
+		//		// point in parent canvas scale
+		//		Point childToParentCanvasPoint = ItemsCanvasBounds.Location + parentPoint;
+		//		return childToParentCanvasPoint;
+		//	}
+		//	else
+		//	{
+		//		return childCanvasPoint;
+		//	}
+		//}
+
+
+		//public Point RootScreenToCanvasPoint(Point rootScreenPoint)
+		//{
+		//	if (IsRoot)
+		//	{
+		//		// Adjust for windows title and toolbar bar 
+		//		Point adjustedScreenPoint = rootScreenPoint - new Vector(4, 32);
+
+		//		return ScreenToCanvasPoint(adjustedScreenPoint);
+		//	}
+
+		//	Point parentCanvasPoint = parentCanvas.RootScreenToCanvasPoint(rootScreenPoint);
+
+		//	Point parentToChildCanvasPoint = ParentToChildCanvasPoint(parentCanvasPoint);
+
+		//	Point pointToScreen = zoomableCanvas.PointToScreen(rootScreenPoint);
+		//	Point pointFromScreen = zoomableCanvas.PointFromScreen(rootScreenPoint);
+		//	Point canvasPoint = zoomableCanvas.GetCanvasPoint(rootScreenPoint);
+		//	Point visualPoint = zoomableCanvas.GetVisualPoint(canvasPoint);
+		//	Point canvasPoint2 = zoomableCanvas.GetCanvasPoint(visualPoint);
+
+		//	Point p = (Point) ((Vector) canvasPoint / Scale);
+
+		//	return parentToChildCanvasPoint;
+		//}
 	}
 }

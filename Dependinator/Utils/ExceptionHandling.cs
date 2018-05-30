@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using Dependinator.Common.MessageDialogs;
 using Dependinator.Utils.UI;
 
 
@@ -143,7 +142,6 @@ namespace Dependinator.Utils
 
 			if (DateTime.Now - StartTime < MinTimeBeforeAutoRestart)
 			{
-				Message.ShowError("Sorry, but an unexpected error just occurred", "Dependinator");
 				ExceptionOnStartupOccurred?.Invoke(null, EventArgs.Empty);
 				StartTime = DateTime.Now;
 			}

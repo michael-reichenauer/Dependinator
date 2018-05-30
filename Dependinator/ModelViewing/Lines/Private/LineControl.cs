@@ -34,7 +34,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 		public void MouseDown(MouseEventArgs e)
 		{
-			mouseDownPoint = line.View.ViewModel.ItemOwnerCanvas.RootScreenToCanvasPoint2(e);
+			mouseDownPoint = line.View.ViewModel.ItemOwnerCanvas.MouseEventToCanvasPoint(e);
 			currentPointIndex = -1;
 		}
 
@@ -54,7 +54,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 		public void MouseMove(bool isPointMove, MouseEventArgs e)
 		{
-			Point point = line.View.ViewModel.ItemOwnerCanvas.RootScreenToCanvasPoint2(e);
+			Point point = line.View.ViewModel.ItemOwnerCanvas.MouseEventToCanvasPoint(e);
 
 			if (currentPointIndex == -1)
 			{
