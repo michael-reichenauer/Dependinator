@@ -23,7 +23,6 @@ AppUpdatesURL={#AppURL}
 AppCopyright= {#AppPublisher}
 DefaultDirName={commonappdata}\{#AppName}
 DisableDirPage=yes
-DefaultGroupName={#AppName}
 DisableProgramGroupPage=yes
 OutputDir=..
 OutputBaseFilename=DependinatorSetup
@@ -39,18 +38,23 @@ AppMutex=ee48e8b2-701f-4881-815f-dc7fd8139061
 PrivilegesRequired=lowest
 RestartIfNeededByRun=False
 MinVersion=0,6.1
+UsePreviousGroup=False
+AppendDefaultGroupName=False
+DefaultGroupName={#AppName}
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checkedonce
 
 [Files]
-Source: "..\Dependinator\bin\Release\Dependinator.exe"; DestDir: "{app}"; DestName:"{#AppTmpSetupName}"; Flags: ignoreversion
+Source: "..\Dependinator\bin\Release\Dependinator.exe"; DestDir: "{app}"; Flags: ignoreversion  Source: "..\Dependinator\bin\Release\Dependinator.exe"; DestDir: "{app}"; DestName:"{#AppTmpSetupName}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
-Name: "{group}\{cm:UninstallProgram,{#AppName}}"; Filename: "{uninstallexe}"
+Name: "{userstartmenu}\{#AppName}"; Filename: "{app}\{#AppExeName}"     
+Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
 Filename: "{app}\{#AppTmpSetupName}"; Parameters: "/install /silent"; 

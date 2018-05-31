@@ -137,15 +137,15 @@ namespace Dependinator.Common.Installation.Private
 			Log.Usage("Installing ...");
 			string path = CopyFileToProgramFiles();
 
-			AddUninstallSupport(path);
-			CreateStartMenuShortcut(path);
+			// AddUninstallSupport(path);
+			//CreateStartMenuShortcut(path);
 			ExtractExampleModel();
 
 			Log.Usage("Installed");
 		}
 
 
-		
+
 		private void UninstallNormal()
 		{
 			Log.Usage("Uninstall normal");
@@ -179,10 +179,10 @@ namespace Dependinator.Common.Installation.Private
 		private void UninstallSilent()
 		{
 			Log.Debug("Uninstalling...");
-			DeleteProgramFilesFolder();
-			DeleteProgramDataFolder();
-			DeleteStartMenuShortcut();
-			DeleteUninstallSupport();
+			//DeleteProgramFilesFolder();
+			//DeleteProgramDataFolder();
+			// DeleteStartMenuShortcut();
+			//DeleteUninstallSupport();
 			Log.Debug("Uninstalled");
 		}
 
