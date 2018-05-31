@@ -1,4 +1,5 @@
 #tool nuget:?package=NUnit.ConsoleRunner&version=3.4.0
+#tool nuget:?package=Tools.InnoSetup&version=5.5.9
 #addin nuget:?package=Cake.VersionReader
 
 //////////////////////////////////////////////////////////////////////
@@ -76,9 +77,14 @@ Task("Build-Setup")
 {
     Information("\n");
 
-    CopyFile(outputPath, setupPath);
-    var version = GetFullVersionNumber(setupPath);
-  
+	InnoSetup("./Setup/Dependinator.iss", new InnoSetupSettings {
+		QuietMode = InnoSetupQuietMode.QuietWithProgress,
+		//Defines = new Dictionary<string, string> { {"name", "value"}}
+    });
+	
+    // CopyFile(outputPath, setupPath);
+    var version = GetFullVersionNumber(outputPath);
+
     Information("Created: {0}", setupPath);
     Information("v{0}", version); 
 
