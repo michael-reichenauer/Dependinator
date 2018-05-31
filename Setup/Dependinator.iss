@@ -8,7 +8,6 @@
 #define AppExeName "Dependinator.exe"
 #define AppTmpSetupName "_tmp_SetupDependinator.exe"
 
-
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
@@ -41,6 +40,7 @@ RestartIfNeededByRun=False
 MinVersion=0,6.1
 UsePreviousGroup=False
 AppendDefaultGroupName=False
+DisableReadyMemo=True
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
