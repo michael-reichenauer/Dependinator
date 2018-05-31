@@ -78,7 +78,7 @@ namespace Dependinator.ModelViewing.Nodes
 			Point location = nodeViewModel.ItemBounds.Location;
 			Size size = nodeViewModel.ItemBounds.Size;
 
-			Size newSize = new Size(size.Width * i, size.Height * i);
+			Size newSize = new Size((size.Width * i).RoundToNearest(5), (size.Height * i).RoundToNearest(5));
 			if (newSize.Width < MinSize || newSize.Height < MinSize)
 			{
 				// Node to small
@@ -86,6 +86,7 @@ namespace Dependinator.ModelViewing.Nodes
 			}
 
 			Point newLocation = new Point(location.X - (newSize.Width - size.Width) / 2, location.Y - (newSize.Height - size.Height) / 2);
+			newLocation = newLocation.Rnd(5);
 			Rect newBounds = new Rect(newLocation, newSize);
 
 			nodeViewModel.ItemBounds = newBounds;
