@@ -20,6 +20,7 @@ namespace Dependinator.Common.Installation.Private
 	[SingleInstance]
 	internal class LatestVersionService : ILatestVersionService
 	{
+		private static readonly TimeSpan IdleTimerInterval = TimeSpan.FromMinutes(1);
 		private static readonly TimeSpan IdleTimeBeforeRestarting = TimeSpan.FromMinutes(30);
 		private static readonly TimeSpan FirstCheckTime = TimeSpan.FromSeconds(1);
 		private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(3);
@@ -35,7 +36,8 @@ namespace Dependinator.Common.Installation.Private
 
 		private DispatcherTimer checkTimer;
 		private DispatcherTimer idleTimer;
-
+		private DateTime lastIdleCheck = DateTime.MaxValue;
+		
 
 		public LatestVersionService(
 			ICmd cmd,
@@ -54,6 +56,7 @@ namespace Dependinator.Common.Installation.Private
 
 		public void StartCheckForLatestVersion()
 		{
+			Log.Info("Start checking for latest version ...");
 			checkTimer = new DispatcherTimer();
 			checkTimer.Tick += CheckLatestVersionAsync;
 			checkTimer.Interval = FirstCheckTime;
@@ -61,7 +64,7 @@ namespace Dependinator.Common.Installation.Private
 
 			idleTimer = new DispatcherTimer();
 			idleTimer.Tick += CheckIdleBeforeRestart;
-			idleTimer.Interval = TimeSpan.FromMinutes(1);
+			idleTimer.Interval = IdleTimerInterval;
 
 			SystemEvents.PowerModeChanged += OnPowerModeChange;
 		}
@@ -282,6 +285,7 @@ namespace Dependinator.Common.Installation.Private
 				if (!idleTimer.IsEnabled)
 				{
 					Log.Debug($"Waiting for idle {IdleTimeBeforeRestarting} before restarting newer version ...");
+					lastIdleCheck = DateTime.UtcNow;
 					idleTimer.Start();
 				}
 			}
@@ -317,12 +321,21 @@ namespace Dependinator.Common.Installation.Private
 
 		void CheckIdleBeforeRestart(object sender, EventArgs e)
 		{
-			TimeSpan idleTime = SystemIdle.GetLastInputIdleTimeSpan();
-			if (idleTime > IdleTimeBeforeRestarting)
-			{
-				// Track.Info($"Idle time {idleTime}, trigger restart if newer is installed");
-				idleTimer.Stop();
+			TimeSpan timeSinceCheck = DateTime.UtcNow - lastIdleCheck;
+			bool wasSleeping = false;
 
+			if (timeSinceCheck > (IdleTimerInterval + TimeSpan.FromMinutes(1)))
+			{
+				// The timer did not tick within the expected timeout, thus computer was probably sleeping. 
+				Log.Info($"Idle timer timeout, was: {timeSinceCheck}");
+				wasSleeping = true;
+			}
+
+			lastIdleCheck = DateTime.UtcNow;
+
+			TimeSpan idleTime = SystemIdle.GetLastInputIdleTimeSpan();
+			if (wasSleeping || idleTime > IdleTimeBeforeRestarting)
+			{
 				if (IsNewVersionInstalled())
 				{
 					if (startInstanceService.StartInstance(modelMetadata.ModelFilePath))

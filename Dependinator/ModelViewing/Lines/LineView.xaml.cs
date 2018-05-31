@@ -28,15 +28,15 @@ namespace Dependinator.ModelViewing.Lines
 
 			dragLine = new DragUiElement(
 				LineControl,
-				(p, o) => ViewModel?.LineControl.MouseMove(p, false),
-				p => ViewModel?.LineControl.MouseDown(p),
-				p => ViewModel?.LineControl.MouseUp(p));
+				(o, e) => ViewModel?.LineControl.MouseMove(false, e),
+				e => ViewModel?.LineControl.MouseDown(e),
+				e => ViewModel?.LineControl.MouseUp(e));
 
 			dragLineControlPoints = new DragUiElement(
 				LinePoints,
-				(p, o) => ViewModel?.LineControl.MouseMove(p, true),
-				p => ViewModel?.LineControl.MouseDown(p),
-				p => ViewModel?.LineControl.MouseUp(p));
+				(o, e) => ViewModel?.LineControl.MouseMove(true, e),
+				e => ViewModel?.LineControl.MouseDown(e),
+				e => ViewModel?.LineControl.MouseUp(e));
 		}
 
 

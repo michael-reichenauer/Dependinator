@@ -78,7 +78,7 @@ namespace Dependinator.ModelViewing.Nodes
 			Point location = nodeViewModel.ItemBounds.Location;
 			Size size = nodeViewModel.ItemBounds.Size;
 
-			Size newSize = new Size(size.Width * i, size.Height * i);
+			Size newSize = new Size((size.Width * i).RoundToNearest(5), (size.Height * i).RoundToNearest(5));
 			if (newSize.Width < MinSize || newSize.Height < MinSize)
 			{
 				// Node to small
@@ -86,6 +86,7 @@ namespace Dependinator.ModelViewing.Nodes
 			}
 
 			Point newLocation = new Point(location.X - (newSize.Width - size.Width) / 2, location.Y - (newSize.Height - size.Height) / 2);
+			newLocation = newLocation.Rnd(5);
 			Rect newBounds = new Rect(newLocation, newSize);
 
 			nodeViewModel.ItemBounds = newBounds;
@@ -121,10 +122,13 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public void Move(NodeControl control, Vector viewOffset)
+		public void Move(NodeControl control, Vector viewOffset, Point sp1, Point sp2)
 		{
-			Vector offset = new Vector(viewOffset.X / ItemScale, viewOffset.Y / ItemScale);
+			double roundTo = nodeViewModel.ItemParentScale < 10 ? 5 : 1;
+			Point cp1 = nodeViewModel.ItemOwnerCanvas.ScreenToCanvasPoint(sp1).Rnd(roundTo);
+			Point cp2 = nodeViewModel.ItemOwnerCanvas.ScreenToCanvasPoint(sp2).Rnd(roundTo);
 
+			Vector offset = cp2 - cp1;
 			Point newLocation = GetMoveData(control, offset, out Size newSize, out Vector newCanvasMove);
 
 			if (newSize.Width < MinSize || newSize.Height < MinSize)
@@ -137,7 +141,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 			if (!nodeViewModel.ItemOwnerCanvas.IsNodeInViewBox(newBounds))
 			{
-				// Node (if moved) would not bew withing visibale view
+				// Node (if moved) would not bew withing visible view
 				return;
 			}
 

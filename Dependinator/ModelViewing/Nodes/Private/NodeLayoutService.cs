@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
@@ -126,7 +127,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 			Point location = new Point(x, y);
 
-			Rect newBounds = new Rect(location, size);
+			Rect newBounds = new Rect(location.Rnd(5), size);
 			return newBounds;
 		}
 

@@ -37,6 +37,7 @@ namespace Dependinator.Utils.UI.VirtualCanvas
 		public event EventHandler<ItemEventArgs> ItemVirtualized;
 
 		public event EventHandler<ItemEventArgs> ItemRealized;
+		public bool IsDisableOffsetChange { get; set; }
 
 
 		/// <summary>
@@ -553,7 +554,15 @@ namespace Dependinator.Utils.UI.VirtualCanvas
 		public Point Offset
 		{
 			get { return (Point)GetValue(OffsetProperty); }
-			set { SetValue(OffsetProperty, value); }
+			set
+			{
+				if (IsDisableOffsetChange)
+				{
+					return;
+				}
+
+				SetValue(OffsetProperty, value);
+			}
 		}
 
 		#endregion

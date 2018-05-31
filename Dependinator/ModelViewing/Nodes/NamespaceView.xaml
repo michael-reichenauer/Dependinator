@@ -18,7 +18,7 @@
 			Margin="0"
 			Stroke="{Binding RectangleBrush}"
 			StrokeThickness="{Binding RectangleLineWidth}"
-			StrokeDashArray="2,6"
+			StrokeDashArray="2,4"
 			Fill="{Binding BackgroundBrush}"
 			Stretch="Fill" />
 

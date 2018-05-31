@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Dependinator.Utils.Applications;
 
 
 namespace Dependinator.Utils
@@ -134,6 +135,7 @@ namespace Dependinator.Utils
 			[CallerFilePath] string sourceFilePath = "",
 			[CallerLineNumber] int sourceLineNumber = 0)
 		{
+			Track.Exception(e, msg);
 			Write(LevelError, $"{msg}\n{e}", memberName, sourceFilePath, sourceLineNumber);
 		}
 
@@ -145,6 +147,7 @@ namespace Dependinator.Utils
 			[CallerFilePath] string sourceFilePath = "",
 			[CallerLineNumber] int sourceLineNumber = 0)
 		{
+			Track.Exception(e, "");
 			Write(LevelError, $"{e}", memberName, sourceFilePath, sourceLineNumber);
 		}
 

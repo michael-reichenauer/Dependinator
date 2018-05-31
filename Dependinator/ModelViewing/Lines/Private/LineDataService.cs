@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
@@ -216,11 +217,11 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 		private Point GetRelativeTarget(Line line)
 		{
-			if (line.View.RelativeTargetPoint.X >= 0)
-			{
-				// use specified source
-				return line.View.RelativeTargetPoint;
-			}
+			//if (line.View.RelativeTargetPoint.X >= 0)
+			//{
+			//	// use specified source
+			//	return line.View.RelativeTargetPoint;
+			//}
 
 			if (line.Source.Parent == line.Target)
 			{

@@ -50,11 +50,11 @@ namespace Dependinator.ModelViewing.Nodes
 			MouseHelper.OnLeftButtonMove((UIElement)sender, e, Move);
 
 
-		private void Move(UIElement element, Vector offset)
+		private void Move(UIElement element, Vector offset, Point p1, Point p2)
 		{
 			Rectangle rectangle = (Rectangle)element;
 			NodeControl control = points[rectangle.Name];
-			ViewModel?.Move(control, offset);
+			ViewModel?.Move(control, offset, p1, p2);
 		}
 	}
 }
