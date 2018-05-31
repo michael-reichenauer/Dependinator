@@ -19,21 +19,27 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
+AppCopyright= {#MyAppPublisher}
 DefaultDirName=C:\ProgramData\{#MyAppName}
 DisableDirPage=yes
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 OutputDir=..
 OutputBaseFilename=DependinatorSetup
-SetupIconFile=..\Dependinator\MainWindowViews\Application.ico
+SetupIconFile=..\Dependinator\MainWindowViews\Application.ico     
+UninstallDisplayIcon={app}\Dependinator.exe
 Compression=lzma
 SolidCompression=yes
+AllowCancelDuringInstall=false
+DisableWelcomePage=False
+WizardImageFile=C:\Work Files\Dependinator\Setup\WizModernImage-IS.bmp
+WizardSmallImageFile=C:\Work Files\Dependinator\Setup\WizModernSmallImage-IS.bmp
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checkedonce
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 [Files]
