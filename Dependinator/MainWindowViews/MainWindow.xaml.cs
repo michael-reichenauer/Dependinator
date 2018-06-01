@@ -77,7 +77,7 @@ namespace Dependinator.MainWindowViews
 		{
 			settingsService.Edit<WorkFolderSettings>(s =>
 			{
-				s.WindowBounds = new Rect(Top, Left, Width, Height);
+				s.MainWindowBounds = new Rect(Left, Top, Width, Height);
 				s.IsMaximized = WindowState == WindowState.Maximized;
 			});
 		}
@@ -89,18 +89,18 @@ namespace Dependinator.MainWindowViews
 			WorkFolderSettings s = settingsService.Get<WorkFolderSettings>();
 
 			Rectangle rect = new Rectangle(
-				(int)s.WindowBounds.X,
-				(int)s.WindowBounds.Y,
-				(int)s.WindowBounds.Width,
-				(int)s.WindowBounds.Height);
+				(int)s.MainWindowBounds.X,
+				(int)s.MainWindowBounds.Y,
+				(int)s.MainWindowBounds.Width,
+				(int)s.MainWindowBounds.Height);
 
 			// check if the saved bounds are nonzero and visible on any screen
 			if (rect != Rectangle.Empty && VisibleWindow.IsVisibleOnAnyScreen(rect))
 			{
-				Top = s.WindowBounds.X;
-				Left = s.WindowBounds.Y;
-				Width = s.WindowBounds.Width;
-				Height = s.WindowBounds.Height;
+				Left = s.MainWindowBounds.X;
+				Top = s.MainWindowBounds.Y;
+				Width = s.MainWindowBounds.Width;
+				Height = s.MainWindowBounds.Height;
 			}
 
 			if (folder.IsDefault)

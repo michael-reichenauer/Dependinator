@@ -37,6 +37,7 @@ namespace Dependinator.ModelViewing.Items
 
 		public ItemsCanvas ItemOwnerCanvas { get; set; }
 		public double ItemScale => ItemOwnerCanvas?.Scale ?? 1;
+		public double ItemParentScale => ItemOwnerCanvas?.ParentCanvas?.Scale ?? ItemScale;
 
 		public virtual bool CanShow { get; } = true;
 

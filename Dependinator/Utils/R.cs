@@ -81,7 +81,7 @@ namespace Dependinator.Utils
 					return storedValue;
 				}
 
-				throw Asserter.FailFast(Error);
+				throw Asserter.FailFast(Error.Message);
 			}
 		}
 

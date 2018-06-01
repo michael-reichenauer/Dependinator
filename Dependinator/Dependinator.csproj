@@ -90,6 +90,9 @@
     <Reference Include="ICSharpCode.NRefactory.Xml, Version=5.0.0.0, Culture=neutral, PublicKeyToken=d4bfe873e7598c49, processorArchitecture=MSIL">
       <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.Xml.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.ApplicationInsights, Version=2.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.ApplicationInsights.2.3.0\lib\net46\Microsoft.ApplicationInsights.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Build" />
     <Reference Include="Mono.Cecil, Version=0.10.0.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
       <HintPath>..\packages\Mono.Cecil.0.10.0\lib\net40\Mono.Cecil.dll</HintPath>
@@ -193,6 +196,8 @@
     <Compile Include="ModelViewing\ModelHandling\Private\ModelLineService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\NodeService.cs" />
+    <Compile Include="Utils\Applications\Track.cs" />
+    <Compile Include="Utils\AsserterEventArgs.cs" />
     <Compile Include="Utils\Net\HttpClientDownloadWithProgress.cs" />
     <Compile Include="Utils\SystemIdle.cs" />
     <Compile Include="Utils\UI\MouseHelper.cs" />
@@ -308,6 +313,7 @@
     <Compile Include="Utils\UI\Mvvm\TargetWhenSetter.cs" />
     <Compile Include="Utils\UI\SizeExtensions.cs" />
     <Compile Include="Utils\UI\ThrottleDispatcher.cs" />
+    <Compile Include="Utils\UI\VectorExtensions.cs" />
     <Compile Include="Utils\With.cs" />
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -686,6 +692,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Common\Resources\Example.xml" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Dependencies\Microsoft.ApplicationInsights.dll" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>mkdir "$(ProjectDir)\Dependencies" 2&gt; NUL
@@ -698,6 +707,9 @@ pushd "$(SolutionDir)packages\Newtonsoft.Json.*\lib\net45"
 copy /Y /B Newtonsoft.Json.dll "$(ProjectDir)\Dependencies\Newtonsoft.Json.dll" &gt;NUL
 popd
 
+pushd "$(SolutionDir)packages\Microsoft.ApplicationInsights.*\lib\net46"
+copy /Y /B Microsoft.ApplicationInsights.dll "$(ProjectDir)\Dependencies\Microsoft.ApplicationInsights.dll" &gt;NUL
+popd
 
 pushd "$(SolutionDir)packages\System.ValueTuple.*\lib\net461"
 copy /Y /B System.ValueTuple.dll "$(ProjectDir)\Dependencies\System.ValueTuple.dll" &gt;NUL

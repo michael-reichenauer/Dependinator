@@ -12,9 +12,12 @@ namespace Dependinator.Utils.UI
 		public static void OnLeftButtonMove(
 			UIElement element, 
 			MouseEventArgs e, 
-			Action<UIElement, Vector> moveAction)
+			Action<UIElement, Vector, Point, Point> moveAction)
 		{
-			Point viewPosition = e.GetPosition(Application.Current.MainWindow);
+			Point viewPosition = e.GetPosition(element);
+			viewPosition = element.PointToScreen(viewPosition);
+
+			viewPosition = new Point(viewPosition.X, viewPosition.Y);
 
 			if (Mouse.LeftButton == MouseButtonState.Pressed)
 			{
@@ -24,7 +27,7 @@ namespace Dependinator.Utils.UI
 				{
 					Vector viewOffset = viewPosition - lastMousePoint.Value;
 
-					moveAction(element, viewOffset);
+					moveAction(element, viewOffset, lastMousePoint.Value, viewPosition);
 				}
 
 				lastMousePoint = viewPosition;

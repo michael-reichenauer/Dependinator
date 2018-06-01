@@ -32,18 +32,18 @@ namespace Dependinator.ModelViewing.Lines.Private
 			}
 		}
 
-		public void MouseDown(Point screenPoint)
+		public void MouseDown(MouseEventArgs e)
 		{
-			mouseDownPoint = line.View.ViewModel.ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
+			mouseDownPoint = line.View.ViewModel.ItemOwnerCanvas.MouseEventToCanvasPoint(e);
 			currentPointIndex = -1;
 		}
 
 
-		public void MouseUp(Point screenPoint)
+		public void MouseUp(MouseEventArgs e)
 		{
 			if (currentPointIndex != -1)
 			{
-				EndMoveLinePoint();
+				EndMoveLinePoint(e);
 			}
 			else
 			{
@@ -52,9 +52,9 @@ namespace Dependinator.ModelViewing.Lines.Private
 		}
 
 
-		public void MouseMove(Point screenPoint, bool isPointMove)
+		public void MouseMove(bool isPointMove, MouseEventArgs e)
 		{
-			Point point = line.View.ViewModel.ItemOwnerCanvas.RootScreenToCanvasPoint(screenPoint);
+			Point point = line.View.ViewModel.ItemOwnerCanvas.MouseEventToCanvasPoint(e);
 
 			if (currentPointIndex == -1)
 			{
@@ -70,14 +70,14 @@ namespace Dependinator.ModelViewing.Lines.Private
 			}
 
 			Mouse.OverrideCursor = Cursors.SizeAll;
-			lineControlService.MoveLinePoint(line, currentPointIndex, point);
+			double lineScale = line.View.ViewModel.ItemParentScale;
+			lineControlService.MoveLinePoint(line, currentPointIndex, point, lineScale);
 			lineControlService.UpdateLineBounds(line);
 			line.View.ViewModel.NotifyAll();
 		}
 
 
-
-		private void EndMoveLinePoint()
+		private void EndMoveLinePoint(MouseEventArgs e)
 		{
 			if (currentPointIndex != line.View.FirstIndex && currentPointIndex != line.View.LastIndex)
 			{
