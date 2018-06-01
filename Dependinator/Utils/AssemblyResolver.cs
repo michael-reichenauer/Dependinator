@@ -7,43 +7,39 @@ namespace Dependinator.Utils
 {
 	internal class AssemblyResolver
 	{
+		private static string assembliesPath;
 		public static void Activate()
 		{
 			AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
+			string location = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			assembliesPath = Path.Combine(location, AssemblyInfo.GetProgramVersion());
 		}
 
-	
+
 		private static Assembly ResolveAssembly(object sender, ResolveEventArgs args)
 		{
+			string resolveName = null;
 			try
 			{
-				Assembly executingAssembly = Assembly.GetExecutingAssembly();
-				string name = executingAssembly.FullName.Split(',')[0];
-				string resolveName = args.Name.Split(',')[0];
-				string resourceName = $"{name}.Dependencies.{resolveName}.dll";
+				resolveName = args.Name.Split(',')[0];
 
-				// Load the requested assembly from the resources
-				using (Stream stream = executingAssembly.GetManifestResourceStream(resourceName))
+				string path = Path.Combine(assembliesPath, $"{resolveName}.dll");
+				if (!File.Exists(path))
 				{
-					if (stream == null)
+					if (!resolveName.EndsWith(".resources"))
 					{
-						if (!resolveName.EndsWith(".resources"))
-						{
-							Log.Warn($"Failed to resolve assembly {resolveName}");
-						}
-
-						return null;
+						Log.Warn($"Failed to resolve assembly {resolveName} from {assembliesPath}");
 					}
 
-					byte[] buffer = new byte[stream.Length];
-					stream.Read(buffer, 0, buffer.Length);
-					// Log.Debug($"Resolved {resolveName}");
-					return Assembly.Load(buffer);
+					return null;
 				}
+
+				byte[] buffer = File.ReadAllBytes(path);
+				return Assembly.Load(buffer);
 			}
 			catch (Exception e)
 			{
-				Log.Error($"Failed to load, {e}");
+				Log.Error($"Failed to load {resolveName} from {assembliesPath}, {e}");
 				throw;
 			}
 		}

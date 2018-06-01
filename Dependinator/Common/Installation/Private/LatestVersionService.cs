@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -37,7 +36,7 @@ namespace Dependinator.Common.Installation.Private
 		private DispatcherTimer checkTimer;
 		private DispatcherTimer idleTimer;
 		private DateTime lastIdleCheck = DateTime.MaxValue;
-		
+
 
 		public LatestVersionService(
 			ICmd cmd,
@@ -158,7 +157,7 @@ namespace Dependinator.Common.Installation.Private
 
 		private void InstallDownloadedSetup(string setupPath)
 		{
-			cmd.Start(setupPath, "/install /silent");
+			cmd.Start(setupPath, "/verysilent");
 		}
 
 

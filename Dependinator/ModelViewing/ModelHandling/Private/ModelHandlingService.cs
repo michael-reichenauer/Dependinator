@@ -134,6 +134,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				isShowingOpenModel = true;
 				modelMetadata.SetDefault();
 				Root.View.ItemsCanvas.SetRootScale(1);
+				Root.View.ItemsCanvas.IsZoomAndMoveEnabled = false;
 				//Root.View.ItemsCanvas.ZoomRootNode(1, new Point(0, 0));
 				Root.View.ItemsCanvas.UpdateAndNotifyAll();
 

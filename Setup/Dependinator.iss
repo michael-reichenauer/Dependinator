@@ -62,6 +62,7 @@ Source: "..\Dependinator\bin\Release\*"; DestDir: "{app}\{#ProductVersion}"; Fla
 ; Copy example files as well 
 Source: "..\Dependinator\bin\Release\*"; DestDir: "{app}\Example"; Flags: ignoreversion
 Source: "..\Dependinator\bin\Release\Dependinator.exe"; DestDir: "{app}\Example";  DestName:"Example.exe"; Flags: ignoreversion
+Source: "..\Dependinator\bin\Release\Dependinator.xml"; DestDir: "{app}\Example";  DestName:"Example.xml"; Flags: ignoreversion
 
 ; Copy main exe to support adding shortcut icon
 Source: "..\Dependinator\bin\Release\Dependinator.exe"; DestDir: "{app}"; Flags: ignoreversion  

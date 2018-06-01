@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		private readonly TypeParser typeParser;
 		private readonly MemberParser memberParser;
 		private AssemblyDefinition assembly;
-		private AssemblyResolver resolver;
+		private ParsingAssemblyResolver resolver;
 
 
 		public AssemblyParser(
@@ -49,7 +49,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 					return;
 				}
 
-				resolver = new AssemblyResolver();
+				resolver = new ParsingAssemblyResolver();
 				ReaderParameters parameters = new ReaderParameters
 				{
 					AssemblyResolver = resolver,
