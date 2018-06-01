@@ -1,13 +1,11 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
 using System.Threading;
 using System.Windows;
 using Dependinator.Common.Environment;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
-using Microsoft.Win32;
 
 
 namespace Dependinator.Common.Installation.Private
@@ -16,10 +14,10 @@ namespace Dependinator.Common.Installation.Private
 	{
 		private readonly ICommandLine commandLine;
 
-		private static readonly string UninstallSubKey =
-			$"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{{{Product.Guid}}}_is1";
+		//private static readonly string UninstallSubKey =
+		//	$"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{{{Product.Guid}}}_is1";
 
-		private static readonly string UninstallRegKey = "HKEY_CURRENT_USER\\" + UninstallSubKey;
+		//private static readonly string UninstallRegKey = "HKEY_CURRENT_USER\\" + UninstallSubKey;
 		private static readonly string SetupTitle = $"{Product.Name} - Setup";
 
 
@@ -139,7 +137,7 @@ namespace Dependinator.Common.Installation.Private
 
 			// AddUninstallSupport(path);
 			//CreateStartMenuShortcut(path);
-			ExtractExampleModel();
+			//ExtractExampleModel();
 
 			Log.Usage("Installed");
 		}
@@ -263,92 +261,92 @@ namespace Dependinator.Common.Installation.Private
 		}
 
 
-		private static void DeleteProgramFilesFolder()
-		{
-			Thread.Sleep(300);
-			string folderPath = ProgramInfo.GetProgramFolderPath();
+		//private static void DeleteProgramFilesFolder()
+		//{
+		//	Thread.Sleep(300);
+		//	string folderPath = ProgramInfo.GetProgramFolderPath();
 
-			for (int i = 0; i < 5; i++)
-			{
-				try
-				{
-					if (Directory.Exists(folderPath))
-					{
-						Directory.Delete(folderPath, true);
-					}
-					else
-					{
-						return;
-					}
-				}
-				catch (Exception e) when (e.IsNotFatal())
-				{
-					Log.Debug($"Failed to delete {folderPath}");
-					Thread.Sleep(1000);
-				}
-			}
-		}
-
-
-		private static void DeleteProgramDataFolder()
-		{
-			string programDataFolderPath = ProgramInfo.GetProgramDataFolderPath();
-
-			if (Directory.Exists(programDataFolderPath))
-			{
-				Directory.Delete(programDataFolderPath, true);
-			}
-		}
+		//	for (int i = 0; i < 5; i++)
+		//	{
+		//		try
+		//		{
+		//			if (Directory.Exists(folderPath))
+		//			{
+		//				Directory.Delete(folderPath, true);
+		//			}
+		//			else
+		//			{
+		//				return;
+		//			}
+		//		}
+		//		catch (Exception e) when (e.IsNotFatal())
+		//		{
+		//			Log.Debug($"Failed to delete {folderPath}");
+		//			Thread.Sleep(1000);
+		//		}
+		//	}
+		//}
 
 
-		private static void CreateStartMenuShortcut(string pathToExe)
-		{
-			string shortcutLocation = ProgramInfo.GetStartMenuShortcutPath();
+		//private static void DeleteProgramDataFolder()
+		//{
+		//	string programDataFolderPath = ProgramInfo.GetProgramDataFolderPath();
 
-			IWshRuntimeLibrary.WshShell shell = new IWshRuntimeLibrary.WshShell();
-			IWshRuntimeLibrary.IWshShortcut shortcut = (IWshRuntimeLibrary.IWshShortcut)
-				shell.CreateShortcut(shortcutLocation);
-
-			shortcut.Description = Product.Name;
-			shortcut.Arguments = "";
-
-			shortcut.IconLocation = pathToExe;
-			shortcut.TargetPath = pathToExe;
-			shortcut.Save();
-		}
+		//	if (Directory.Exists(programDataFolderPath))
+		//	{
+		//		Directory.Delete(programDataFolderPath, true);
+		//	}
+		//}
 
 
-		private static void DeleteStartMenuShortcut()
-		{
-			string shortcutLocation = ProgramInfo.GetStartMenuShortcutPath();
-			File.Delete(shortcutLocation);
-		}
+		//private static void CreateStartMenuShortcut(string pathToExe)
+		//{
+		//	string shortcutLocation = ProgramInfo.GetStartMenuShortcutPath();
+
+		//	IWshRuntimeLibrary.WshShell shell = new IWshRuntimeLibrary.WshShell();
+		//	IWshRuntimeLibrary.IWshShortcut shortcut = (IWshRuntimeLibrary.IWshShortcut)
+		//		shell.CreateShortcut(shortcutLocation);
+
+		//	shortcut.Description = Product.Name;
+		//	shortcut.Arguments = "";
+
+		//	shortcut.IconLocation = pathToExe;
+		//	shortcut.TargetPath = pathToExe;
+		//	shortcut.Save();
+		//}
 
 
-		private static void AddUninstallSupport(string path)
-		{
-			string version = ProgramInfo.GetVersion(path).ToString();
-
-			Registry.SetValue(UninstallRegKey, "DisplayName", Product.Name);
-			Registry.SetValue(UninstallRegKey, "DisplayIcon", path);
-			Registry.SetValue(UninstallRegKey, "Publisher", "Michael Reichenauer");
-			Registry.SetValue(UninstallRegKey, "DisplayVersion", version);
-			Registry.SetValue(UninstallRegKey, "UninstallString", path + " /uninstall");
-			Registry.SetValue(UninstallRegKey, "EstimatedSize", 1000);
-		}
+		//private static void DeleteStartMenuShortcut()
+		//{
+		//	string shortcutLocation = ProgramInfo.GetStartMenuShortcutPath();
+		//	File.Delete(shortcutLocation);
+		//}
 
 
-		private static void DeleteUninstallSupport()
-		{
-			try
-			{
-				Registry.CurrentUser.DeleteSubKeyTree(UninstallSubKey);
-			}
-			catch (Exception e) when (e.IsNotFatal())
-			{
-				Log.Warn($"Failed to delete uninstall support {e}");
-			}
-		}
+		//private static void AddUninstallSupport(string path)
+		//{
+		//	string version = ProgramInfo.GetVersion(path).ToString();
+
+		//	Registry.SetValue(UninstallRegKey, "DisplayName", Product.Name);
+		//	Registry.SetValue(UninstallRegKey, "DisplayIcon", path);
+		//	Registry.SetValue(UninstallRegKey, "Publisher", "Michael Reichenauer");
+		//	Registry.SetValue(UninstallRegKey, "DisplayVersion", version);
+		//	Registry.SetValue(UninstallRegKey, "UninstallString", path + " /uninstall");
+		//	Registry.SetValue(UninstallRegKey, "EstimatedSize", 1000);
+		//}
+
+
+		//private static void DeleteUninstallSupport()
+		//{
+		//	try
+		//	{
+		//		Registry.CurrentUser.DeleteSubKeyTree(UninstallSubKey);
+		//	}
+		//	catch (Exception e) when (e.IsNotFatal())
+		//	{
+		//		Log.Warn($"Failed to delete uninstall support {e}");
+		//	}
+		//}
 
 
 		private static bool IsInstalledInstance()
@@ -369,47 +367,47 @@ namespace Dependinator.Common.Installation.Private
 			return targetPath;
 		}
 
-		private void ExtractExampleModel()
-		{
-			string dataFolderPath = ProgramInfo.GetProgramDataFolderPath();
-			string exampleFolderPath = Path.Combine(dataFolderPath, "Example");
-			string examplePath = Path.Combine(exampleFolderPath, "Example.exe");
-			string exampleXmlPath = Path.Combine(exampleFolderPath, "Example.xml");
+		//private void ExtractExampleModel()
+		//{
+		//	string dataFolderPath = ProgramInfo.GetProgramDataFolderPath();
+		//	string exampleFolderPath = Path.Combine(dataFolderPath, "Example");
+		//	string examplePath = Path.Combine(exampleFolderPath, "Example.exe");
+		//	string exampleXmlPath = Path.Combine(exampleFolderPath, "Example.xml");
 
-			if (!Directory.Exists(exampleFolderPath))
-			{
-				Directory.CreateDirectory(exampleFolderPath);
-			}
+		//	if (!Directory.Exists(exampleFolderPath))
+		//	{
+		//		Directory.CreateDirectory(exampleFolderPath);
+		//	}
 
-			try
-			{
-				if (File.Exists(examplePath))
-				{
-					File.Delete(examplePath);
-				}
+		//	try
+		//	{
+		//		if (File.Exists(examplePath))
+		//		{
+		//			File.Delete(examplePath);
+		//		}
 
-				if (File.Exists(ProgramInfo.GetInstallFilePath()))
-				{
-					File.Copy(ProgramInfo.GetInstallFilePath(), examplePath);
-				}
-				else
-				{
-					File.Copy(Assembly.GetEntryAssembly().Location, examplePath);
-				}
+		//		if (File.Exists(ProgramInfo.GetInstallFilePath()))
+		//		{
+		//			File.Copy(ProgramInfo.GetInstallFilePath(), examplePath);
+		//		}
+		//		else
+		//		{
+		//			File.Copy(Assembly.GetEntryAssembly().Location, examplePath);
+		//		}
 
-				Assembly executingAssembly = Assembly.GetExecutingAssembly();
-				string resourceName = $"{Product.Name}.Common.Resources.Example.xml";
-				using (Stream stream = executingAssembly.GetManifestResourceStream(resourceName))
-				{
-					StreamReader sr = new StreamReader(stream);
-					string text = sr.ReadToEnd();
-					File.WriteAllText(exampleXmlPath, text);
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Exception(e, "Failed to copy example model");
-			}
-		}
+		//		Assembly executingAssembly = Assembly.GetExecutingAssembly();
+		//		string resourceName = $"{Product.Name}.Common.Resources.Example.xml";
+		//		using (Stream stream = executingAssembly.GetManifestResourceStream(resourceName))
+		//		{
+		//			StreamReader sr = new StreamReader(stream);
+		//			string text = sr.ReadToEnd();
+		//			File.WriteAllText(exampleXmlPath, text);
+		//		}
+		//	}
+		//	catch (Exception e)
+		//	{
+		//		Log.Exception(e, "Failed to copy example model");
+		//	}
+		//}
 	}
 }

@@ -76,14 +76,18 @@ Task("Build-Setup")
     .Does(() =>
 {
     Information("\n");
+	
+	// CopyFile(outputPath, setupPath);
+    var version = GetFullVersionNumber(outputPath);
 
 	InnoSetup("./Setup/Dependinator.iss", new InnoSetupSettings {
 		QuietMode = InnoSetupQuietMode.QuietWithProgress,
-		//Defines = new Dictionary<string, string> { {"name", "value"}}
+		Defines = new Dictionary<string, string> { 
+			{"AppVersion", ""},
+			{"ProductVersion", version},
+		}
     });
 	
-    // CopyFile(outputPath, setupPath);
-    var version = GetFullVersionNumber(outputPath);
 
     Information("Created: {0}", setupPath);
     Information("v{0}", version); 
