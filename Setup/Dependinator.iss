@@ -19,7 +19,6 @@
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{ee48e8b2-701f-4881-815f-dc7fd8139061}
-AppMutex=ee48e8b2-701f-4881-815f-dc7fd8139061
 AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
@@ -65,15 +64,15 @@ Source: "..\Dependinator\bin\Release\Dependinator.exe"; DestDir: "{app}\Example"
 Source: "..\Dependinator\bin\Release\Dependinator.xml"; DestDir: "{app}\Example";  DestName:"Example.xml"; Flags: ignoreversion
 
 ; Copy main exe to support adding shortcut icon
-Source: "..\Dependinator\bin\Release\Dependinator.exe"; DestDir: "{app}"; Flags: ignoreversion  
+;Source: "..\Dependinator\bin\Release\Dependinator.exe"; DestDir: "{app}"; Flags: ignoreversion  
 
 [Icons]
 Name: "{userstartmenu}\{#AppName}"; Filename: "{app}\{#AppExeName}"     
 Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#AppExeName}"; Parameters: "/install /silent"; 
-Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#ProductVersion}\{#AppExeName}"; Parameters: "/install /silent"; 
+Filename: "{app}\{#ProductVersion}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"

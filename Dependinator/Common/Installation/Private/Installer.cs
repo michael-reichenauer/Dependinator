@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using Dependinator.Common.Environment;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
@@ -40,7 +41,8 @@ namespace Dependinator.Common.Installation.Private
 		private void InstallSilent()
 		{
 			Log.Usage("Installing ...");
-			string path = CopyFileToProgramFiles();
+			CreateMainExeShortcut();
+			CleanOldInstallations();
 
 			Log.Usage("Installed");
 		}
@@ -53,8 +55,9 @@ namespace Dependinator.Common.Installation.Private
 		}
 
 
-		private string CopyFileToProgramFiles()
+		private void CreateMainExeShortcut()
 		{
+			Log.Debug("Create main exe shortcut");
 			string sourcePath = ProgramInfo.GetCurrentInstancePath();
 			Version sourceVersion = ProgramInfo.GetVersion(sourcePath);
 
@@ -91,8 +94,6 @@ namespace Dependinator.Common.Installation.Private
 					throw;
 				}
 			}
-
-			return targetPath;
 		}
 
 
@@ -125,6 +126,42 @@ namespace Dependinator.Common.Installation.Private
 			if (!Directory.Exists(targetFolder))
 			{
 				Directory.CreateDirectory(targetFolder);
+			}
+		}
+
+
+		private void CleanOldInstallations()
+		{
+			Log.Debug("Try to clean old versions if needed");
+			string basePath = ProgramInfo.GetProgramDataFolderPath();
+
+			// Get old installed versions, but leave the 3 newest)
+			var oldVersions = Directory
+				.GetDirectories(basePath)
+				.Select(path => Path.GetFileName(path))
+				.Where(name => Version.TryParse(name, out _))
+				.Select(name => Version.Parse(name))
+				.OrderByDescending(version => version)
+				.Skip(3);
+
+			foreach (Version version in oldVersions)
+			{
+				string path = Path.Combine(basePath, version.ToString());
+				DeleteOldVersion(path);
+			}
+		}
+
+
+		private void DeleteOldVersion(string path)
+		{
+			try
+			{
+				Log.Debug($"Try to delete {path}");
+				Directory.Delete(path, true);
+			}
+			catch (Exception e)
+			{
+				Log.Warn($"Failed to delete {path}, {e.Message}");
 			}
 		}
 	}
