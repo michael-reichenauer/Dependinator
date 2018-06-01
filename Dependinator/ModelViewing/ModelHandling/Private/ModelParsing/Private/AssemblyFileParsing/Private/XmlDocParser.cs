@@ -101,8 +101,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				fullName = $"{assemblyName}.{memberName}";
 			}
 
-			items.Add(fullName, summary);
+			items[fullName] = summary;
 		}
+
 
 
 		private static string GetSummary(XElement member)
