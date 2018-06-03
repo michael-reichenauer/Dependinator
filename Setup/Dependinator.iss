@@ -63,9 +63,6 @@ Source: "..\Dependinator\bin\Release\*"; DestDir: "{app}\Example"; Flags: ignore
 Source: "..\Dependinator\bin\Release\Dependinator.exe"; DestDir: "{app}\Example";  DestName:"Example.exe"; Flags: ignoreversion
 Source: "..\Dependinator\bin\Release\Dependinator.xml"; DestDir: "{app}\Example";  DestName:"Example.xml"; Flags: ignoreversion
 
-; Copy main exe to support adding shortcut icon
-;Source: "..\Dependinator\bin\Release\Dependinator.exe"; DestDir: "{app}"; Flags: ignoreversion  
-
 [Icons]
 Name: "{userstartmenu}\{#AppName}"; Filename: "{app}\{#AppExeName}"     
 Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon

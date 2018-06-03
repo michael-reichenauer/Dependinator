@@ -21,6 +21,8 @@ var solutionPath = $"./{name}.sln";
 var outputPath = $"{name}/bin/{configuration}/{name}.exe";
 var setupPath = $"{name}Setup.exe";
 
+string signPassword = "";
+
 
 //////////////////////////////////////////////////////////////////////
 // TASKS
@@ -71,13 +73,10 @@ Task("Build")
 });
 
 
-Task("Build-Setup")
+Task("Build-Setup-File")
     .IsDependentOn("Build")
     .Does(() =>
 {
-    Information("\n");
-	
-	// CopyFile(outputPath, setupPath);
     var version = GetFullVersionNumber(outputPath);
 
 	InnoSetup("./Setup/Dependinator.iss", new InnoSetupSettings {
@@ -88,11 +87,78 @@ Task("Build-Setup")
 		}
     });
 	
+});
 
-    Information("Created: {0}", setupPath);
+
+Task("Build-Setup")
+    .IsDependentOn("Clean")
+	.IsDependentOn("Prompt-Sign-Password")
+    .IsDependentOn("Build-Setup-File")
+    .Does(() =>
+{
+	// Sign setup file
+	var file = new FilePath(setupPath);
+    Sign(file, new SignToolSignSettings {
+            TimeStampUri = new Uri("http://timestamp.digicert.com"),
+            CertPath = @"C:\Users\micha\OneDrive\CodeSigning\SignCert.pfx",
+            Password = signPassword
+    });
+	
+	var version = GetFullVersionNumber(outputPath);
+
+    Information("\nCreated: {0}", setupPath);
     Information("v{0}", version); 
 
     Information("\n\n");  
+})
+.OnError(exception =>
+{
+	RunTarget("Clean");
+	throw exception;
+});;
+
+
+Task("Build-Unsigned-Setup")
+    .IsDependentOn("Build-Setup-File")
+    .Does(() =>
+{
+	Warning("\nSetup file is not signed !!!");
+	Error("----------------------------\n\n");
+});
+
+
+Task("Prompt-Sign-Password")
+    .Does(() =>
+{
+	if(Environment.UserInteractive)
+	{
+		Console.WriteLine("Enter password for signing setup file:");
+		signPassword = "";
+		ConsoleKeyInfo key;
+		do
+		{
+			key = Console.ReadKey(true);
+			if (key.Key != ConsoleKey.Backspace && key.Key != ConsoleKey.Enter)
+			{
+				signPassword += key.KeyChar;
+				Console.Write("*");
+			}
+			else
+			{
+				if (key.Key == ConsoleKey.Backspace && signPassword.Length > 0)
+				{
+					signPassword = signPassword.Substring(0, (signPassword.Length - 1));
+					Console.Write("\b \b");
+				}
+			}
+		}
+		while (key.Key != ConsoleKey.Enter);
+
+		if (string.IsNullOrWhiteSpace(signPassword))
+		{
+			throw new Exception("Invalid sign password");
+		}
+	}
 });
 
 
