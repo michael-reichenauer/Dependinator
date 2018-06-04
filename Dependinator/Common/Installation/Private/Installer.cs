@@ -133,7 +133,7 @@ namespace Dependinator.Common.Installation.Private
 		private void CleanOldInstallations()
 		{
 			Log.Debug("Try to clean old versions if needed");
-			string basePath = ProgramInfo.GetEnsuredDataFolderPath();
+			string basePath = ProgramInfo.GetInstallFolderPath();
 
 			// Get old installed versions, but leave the 3 newest)
 			var oldVersions = Directory

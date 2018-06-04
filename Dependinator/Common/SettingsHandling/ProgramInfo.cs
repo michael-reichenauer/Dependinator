@@ -33,8 +33,7 @@ namespace Dependinator.Common.SettingsHandling
 
 		public static string GetInstallFolderPath()
 		{
-			string programFolderPath = System.Environment.GetFolderPath(
-				System.Environment.SpecialFolder.CommonApplicationData);
+			string programFolderPath = System.Environment.ExpandEnvironmentVariables("%ProgramW6432%"); 
 
 			return Path.Combine(programFolderPath, Program.Name);
 		}

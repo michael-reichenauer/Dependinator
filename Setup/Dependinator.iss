@@ -27,7 +27,7 @@ AppPublisherURL={#AppURL}
 AppSupportURL={#AppURL}
 AppUpdatesURL={#AppURL}
 AppCopyright= {#AppPublisher}
-DefaultDirName={commonappdata}\{#AppName}
+DefaultDirName={pf64}\{#AppName}
 DisableDirPage=yes
 DisableProgramGroupPage=yes
 OutputDir=..
@@ -41,18 +41,13 @@ AllowCancelDuringInstall=false
 DisableWelcomePage=False
 WizardImageFile=WizModernImage-IS.bmp
 WizardSmallImageFile=WizModernSmallImage-IS.bmp
-PrivilegesRequired=lowest
 RestartIfNeededByRun=False
 MinVersion=0,6.1
 UsePreviousGroup=False
+UsePreviousAppDir= False
 AppendDefaultGroupName=False
 DisableReadyMemo=True
 
-[Languages]
-Name: "english"; MessagesFile: "compiler:Default.isl"
-
-[Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checkedonce
 
 [Files]
 ; Copy all release output files to version folder
@@ -63,13 +58,28 @@ Source: "..\Dependinator\bin\Release\*"; DestDir: "{app}\Example"; Flags: ignore
 Source: "..\Dependinator\bin\Release\Dependinator.exe"; DestDir: "{app}\Example";  DestName:"Example.exe"; Flags: ignoreversion
 Source: "..\Dependinator\bin\Release\Dependinator.xml"; DestDir: "{app}\Example";  DestName:"Example.xml"; Flags: ignoreversion
 
+[Languages]
+Name: "english"; MessagesFile: "compiler:Default.isl"
+
+[Tasks]
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checkedonce
+
+[Dirs]
+Name: {commonappdata}\{#AppName}; Permissions: users-modify; Flags: uninsalwaysuninstall
+
 [Icons]
 Name: "{userstartmenu}\{#AppName}"; Filename: "{app}\{#AppExeName}"     
 Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
+; Run install helper tasks
 Filename: "{app}\{#ProductVersion}\{#AppExeName}"; Parameters: "/install /silent"; 
-Filename: "{app}\{#ProductVersion}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+
+; Start program (unless silent or unchecked)
+Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [UninstallDelete]
+; Delete application program files and program data folders
 Type: filesandordirs; Name: "{app}"
+Type: filesandordirs; Name: "{commonappdata}\{#AppName}"
+

@@ -47,9 +47,9 @@ namespace Dependinator.Utils
 
 		private static void SendBufferedLogRows()
 		{
-			List<string> batchedTexts = new List<string>();
 			while (!logTexts.IsCompleted)
 			{
+				List<string> batchedTexts = new List<string>();
 				// Wait for texts to log
 				string filePrefix = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss,fff} [{ProcessID}]";
 				string logText = logTexts.Take();
@@ -65,7 +65,7 @@ namespace Dependinator.Utils
 
 				try
 				{
-					WriteToFile(batchedTexts);
+					WriteToFile(string.Join("\n", batchedTexts) + "\n");
 				}
 				catch (ThreadAbortException)
 				{
@@ -186,7 +186,7 @@ namespace Dependinator.Utils
 		}
 
 
-		private static void WriteToFile(IReadOnlyCollection<string> text)
+		private static void WriteToFile(string text)
 		{
 			if (LogPath == null)
 			{
@@ -200,14 +200,9 @@ namespace Dependinator.Utils
 				{
 					try
 					{
-						File.AppendAllLines(LogPath, text);
+						File.AppendAllText(LogPath, text);
 
-						long length = new FileInfo(LogPath).Length;
-
-						if (length > MaxLogFileSize)
-						{
-							MoveLargeLogFile();
-						}
+						MoveIfLogToLarge();
 
 						return;
 					}
@@ -233,6 +228,24 @@ namespace Dependinator.Utils
 			if (error != null)
 			{
 				throw error;
+			}
+		}
+
+
+		private static void MoveIfLogToLarge()
+		{
+			try
+			{
+				long length = new FileInfo(LogPath).Length;
+
+				if (length > MaxLogFileSize)
+				{
+					MoveLargeLogFile();
+				}
+			}
+			catch (Exception)
+			{
+				// Ignore large file for now
 			}
 		}
 
