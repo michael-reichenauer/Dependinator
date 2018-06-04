@@ -256,7 +256,6 @@
     <Compile Include="Utils\System\DoubleExtensions.cs" />
     <Compile Include="Utils\NamespaceDoc.cs" />
     <Compile Include="Utils\PriorityBlockingQueue.cs" />
-    <Compile Include="Product.cs" />
     <Compile Include="MainWindowViews\SearchFilter.xaml.cs">
       <DependentUpon>SearchFilter.xaml</DependentUpon>
     </Compile>
@@ -268,7 +267,7 @@
       <DependentUpon>TitleView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\ModelHandling\Private\Convert.cs" />
-    <Compile Include="Utils\AssemblyInfo.cs" />
+    <Compile Include="Utils\AssemblyExtensions.cs" />
     <Compile Include="Utils\AssemblyResolver.cs" />
     <Compile Include="Utils\System\NamespaceDoc.cs" />
     <Compile Include="Utils\UI\BrushExtensions.cs" />
@@ -659,8 +658,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>
-
-</PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PostBuildEvent>

@@ -80,7 +80,7 @@ namespace Dependinator.MainWindowViews
 		public string WorkingFolderPath => modelMetadata.ModelFilePath;
 
 
-		public string Title => $"{modelMetadata.ModelName} - {Product.Name}";
+		public string Title => $"{modelMetadata.ModelName} - {Program.Name}";
 
 
 		public bool IsModel => !modelMetadataService.IsDefault;
@@ -111,8 +111,8 @@ namespace Dependinator.MainWindowViews
 		{
 			get
 			{
-				Version version = ProgramInfo.GetCurrentInstanceVersion();
-				DateTime buildTime = ProgramInfo.GetCurrentInstanceBuildTime();
+				Version version = Version.Parse(Program.Version);
+				DateTime buildTime = ProgramInfo.GetBuildTime();
 				string dateText = buildTime.ToString("yyyy-MM-dd\nHH:mm");
 				string text = $"Version: {version.Major}.{version.Minor}\n{dateText}";
 				return text;

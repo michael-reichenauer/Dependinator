@@ -8,11 +8,13 @@ namespace Dependinator.Utils
 	internal class AssemblyResolver
 	{
 		private static string assembliesPath;
-		public static void Activate()
+
+
+		public static void Activate(Assembly assembly)
 		{
 			AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
-			string location = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-			assembliesPath = Path.Combine(location, AssemblyInfo.GetProgramVersion());
+			string location = Path.GetDirectoryName(assembly.Location);
+			assembliesPath = Path.Combine(location, assembly.GetFileVersion());
 		}
 
 

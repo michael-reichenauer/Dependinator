@@ -95,7 +95,7 @@ namespace Dependinator.Common.Installation.Private
 		{
 			Log.Debug($"Checking remote version of {latestUri} ...");
 			Version remoteVersion = await GetLatestRemoteVersionAsync();
-			Version currentVersion = ProgramInfo.GetCurrentInstanceVersion();
+			Version currentVersion = Version.Parse(Program.Version);
 			Version installedVersion = ProgramInfo.GetInstalledVersion();
 
 			LogVersion(currentVersion, installedVersion, remoteVersion);
@@ -136,7 +136,7 @@ namespace Dependinator.Common.Installation.Private
 		private static async Task<string> DownloadSetupAsync(
 			HttpClientDownloadWithProgress httpClient, LatestInfo latestInfo)
 		{
-			Asset setupFileInfo = latestInfo.assets.First(a => a.name == $"{Product.Name}Setup.exe");
+			Asset setupFileInfo = latestInfo.assets.First(a => a.name == $"{Program.Name}Setup.exe");
 
 			string downloadUrl = setupFileInfo.browser_download_url;
 			Log.Info($"Downloading {latestInfo.tag_name} from {downloadUrl} ...");
@@ -349,7 +349,7 @@ namespace Dependinator.Common.Installation.Private
 
 		private static bool IsNewVersionInstalled()
 		{
-			Version currentVersion = ProgramInfo.GetCurrentInstanceVersion();
+			Version currentVersion = Version.Parse(Program.Version);
 			Version installedVersion = ProgramInfo.GetInstalledVersion();
 
 			Log.Debug($"Current version: {currentVersion} installed version: {installedVersion}");

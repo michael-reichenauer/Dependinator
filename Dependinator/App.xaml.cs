@@ -94,7 +94,7 @@ namespace Dependinator
 				}
 			}
 
-			Log.Usage($"Start version: {AssemblyInfo.GetProgramVersion()}");
+			Log.Usage($"Start version: {Program.Version}");
 			Track.StartProgram();
 			Start();
 		}
@@ -146,15 +146,15 @@ namespace Dependinator
 		private void Start()
 		{
 			// This mutex is used by the installer (or uninstaller) to determine if instances are running
-			applicationMutex = new Mutex(true, Product.Guid);
+			applicationMutex = new Mutex(true, Program.Guid);
 
 			MainWindow = mainWindow.Value;
 
 			themeService.SetThemeWpfColors();
-			
+
 			MainWindow.Show();
 
-			TryDeleteTempFiles();
+			ProgramInfo.TryDeleteTempFiles();
 		}
 
 
@@ -171,32 +171,7 @@ namespace Dependinator
 		}
 
 
-		private void TryDeleteTempFiles()
-		{
-			try
-			{
-				string tempFolderPath = ProgramInfo.GetTempFolderPath();
-				string searchPattern = $"{ProgramInfo.TempPrefix}*";
-				string[] tempFiles = Directory.GetFiles(tempFolderPath, searchPattern);
-				foreach (string tempFile in tempFiles)
-				{
-					try
-					{
-						Log.Debug($"Deleting temp file {tempFile}");
-						File.Delete(tempFile);
-					}
-					catch (Exception e)
-					{
-						Log.Debug($"Failed to delete temp file {tempFile}, {e.Message}. Deleting at reboot");
-					}
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Warn($"Failed to delete temp files {e}");
-			}
-		}
-
+		
 
 		private static MessageDialog CreateTempMainWindow()
 		{

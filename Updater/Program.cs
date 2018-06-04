@@ -53,19 +53,17 @@ namespace Updater
 
 		private static void TryUpdate()
 		{
-			string setupPath = Path.Combine(
-				Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData),
-				ProgramName,
-				SetupExeName);
+			string programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+			string setupPath = Path.Combine(programData, ProgramName, SetupExeName);
 
 			if (File.Exists(setupPath) && IsSignatureValid(setupPath))
 			{
 				Process.Start(setupPath, "/VERYSILENT")?.WaitForExit(10000 * 60);
 			}
 
-			DeleteFile(setupPath);
+			MarkFileAsDone(setupPath);
 		}
-		
+
 
 		private static bool IsSignatureValid(string setupPath)
 		{
@@ -85,7 +83,7 @@ namespace Updater
 		private static string GetTaskConfigPath()
 		{
 			DateTime now = DateTime.Now;
-			string location = Assembly.GetExecutingAssembly().Location;
+			string location = typeof(Program).Assembly.Location;
 
 			string date = now.ToString("s");
 			string startBoundary = new DateTime(now.Year, now.Month, now.Day, 1, 10, 0).ToString("s");
@@ -106,11 +104,11 @@ namespace Updater
 
 		private static string GetTaskConfigTemplate()
 		{
-			Assembly executingAssembly = Assembly.GetExecutingAssembly();
-			string name = executingAssembly.FullName.Split(',')[0];
+			Assembly programAssembly = typeof(Program).Assembly;
+			string name = programAssembly.FullName.Split(',')[0];
 			string resourceName = $"{name}.Updater.xml";
 
-			using (Stream stream = executingAssembly.GetManifestResourceStream(resourceName))
+			using (Stream stream = programAssembly.GetManifestResourceStream(resourceName))
 			using (StreamReader reader = new StreamReader(stream))
 			{
 				return reader.ReadToEnd();
@@ -118,7 +116,7 @@ namespace Updater
 		}
 
 
-		private static void DeleteFile(string setupPath)
+		private static void MarkFileAsDone(string setupPath)
 		{
 			for (int i = 0; i < 10; i++)
 			{

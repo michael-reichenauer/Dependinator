@@ -4,11 +4,10 @@ using System.Reflection;
 
 namespace Dependinator.Utils
 {
-	internal static class AssemblyInfo
+	internal static class AssemblyExtensions
 	{
-		public static string GetProgramVersion()
+		public static string GetFileVersion(this Assembly assembly)
 		{
-			Assembly assembly = Assembly.GetEntryAssembly();
 			FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
 			return fvi.FileVersion;
 		}

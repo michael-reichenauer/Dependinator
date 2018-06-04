@@ -36,7 +36,7 @@ namespace Dependinator.ModelViewing.Open
 
 		public async void OpenExampleFile()
 		{
-			string dataFolderPath = ProgramInfo.GetProgramDataFolderPath();
+			string dataFolderPath = ProgramInfo.GetEnsuredDataFolderPath();
 
 			string examplePath = Path.Combine(dataFolderPath, "Example", "Example.exe");
 

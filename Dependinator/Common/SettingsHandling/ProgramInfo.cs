@@ -1,77 +1,57 @@
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using Dependinator.Utils;
 
 namespace Dependinator.Common.SettingsHandling
 {
 	internal static class ProgramInfo
 	{
-		public static readonly string TempPrefix = "_tmp_";
-
-		public static readonly string ProgramFileName = Product.Name + ".exe";
-		public static readonly string ProgramLogName = Product.Name + ".log";
-		public static readonly string VersionFileName = Product.Name + ".Version.txt";
-
-		private static readonly string ProgramShortcutFileName = Product.Name + ".lnk";
-		private static readonly string WorkingFoldersRoot = "WorkingFolders";
-
-		
-		public static string GetCurrentInstancePath() => Assembly.GetEntryAssembly().Location;
+		public static readonly string ProgramFileName = Program.Name + ".exe";
+		public static readonly string ProgramLogName = Program.Name + ".log";
+		public static readonly string VersionFileName = Program.Name + ".Version.txt";
 
 
-		public static string GetInstallFilePath() => GetFilePath(ProgramFileName);
+		public static string GetInstallFilePath() => GetInstallFolderSubPath(ProgramFileName);
 
-		public static string GetVersionFilePath() => GetFilePath(VersionFileName);
+		public static string GetInstallVersionFilePath() => GetInstallFolderSubPath(VersionFileName);
 
-		public static string GetLogFilePath() => GetFilePath(ProgramLogName);
-		
-		public static string GetTempFilePath() => GetFilePath($"{TempPrefix}{Guid.NewGuid()}");
+		public static Version GetInstalledVersion() => GetInstalledInstanceVersion();
 
-		public static string GetTempFolderPath() => GetProgramDataFolderPath();
+		public static bool IsInstalledInstance() => Program.Location.IsSameIgnoreCase(GetInstallFilePath());
 
+		public static DateTime GetBuildTime() => GetBuildTime(Program.Location);
 
+		public static string GetLogFilePath() => GetDataFolderSubPath(ProgramLogName);
 
+		public static string GetTempFolderPath() => EnsureFolderExists(GetDataFolderSubPath("Temp"));
 
-		public static bool IsInstalledInstance()
-		{
-			string runningPath = GetCurrentInstancePath();
-			string installedPath = GetInstallFilePath();
-			return 0 == Txt.CompareIgnoreCase(runningPath, installedPath);
-		}
+		public static string GetTempFilePath() => Path.Combine(GetTempFolderPath(), Guid.NewGuid().ToString());
+
+		public static string GetModelMetadataFoldersRoot() => EnsureFolderExists(GetDataFolderSubPath("WorkingFolders"));
 
 
-		public static string GetModelMetadataFoldersRoot()
-		{
-			string path = GetFilePath(WorkingFoldersRoot);
-			EnsureFolderExists(path);
-			return path;
-		}
-
-
-		public static string GetStartMenuShortcutPath()
-		{
-			string commonStartMenuPath = System.Environment.GetFolderPath(
-				System.Environment.SpecialFolder.StartMenu);
-			string startMenuPath = Path.Combine(commonStartMenuPath, "Programs");
-
-			return Path.Combine(startMenuPath, ProgramShortcutFileName);
-		}
-
-
-		public static string GetProgramFolderPath()
+		public static string GetInstallFolderPath()
 		{
 			string programFolderPath = System.Environment.GetFolderPath(
 				System.Environment.SpecialFolder.CommonApplicationData);
 
-			return Path.Combine(programFolderPath, Product.Name);
+			return Path.Combine(programFolderPath, Program.Name);
 		}
-		
 
-		public static string GetProgramDataFolderPath()
+
+		public static string GetDataFolderPath()
 		{
-			string programDataPath = GetProgramFolderPath();
+			string programFolderPath = System.Environment.GetFolderPath(
+				System.Environment.SpecialFolder.CommonApplicationData);
+
+			return Path.Combine(programFolderPath, Program.Name);
+		}
+
+
+		public static string GetEnsuredDataFolderPath()
+		{
+			string programDataPath = GetDataFolderPath();
 
 			EnsureFolderExists(programDataPath);
 
@@ -79,45 +59,13 @@ namespace Dependinator.Common.SettingsHandling
 		}
 
 
-		public static DateTime GetCurrentInstanceBuildTime()
-		{
-			string filePath = Assembly.GetEntryAssembly().Location;
-
-			const int cPeHeaderOffset = 60;
-			const int cLinkerTimestampOffset = 8;
-
-			var buffer = new byte[2048];
-
-			using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
-				stream.Read(buffer, 0, 2048);
-
-			var offset = BitConverter.ToInt32(buffer, cPeHeaderOffset);
-			var secondsSince1970 = BitConverter.ToInt32(buffer, offset + cLinkerTimestampOffset);
-			var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-
-			var linkTimeUtc = epoch.AddSeconds(secondsSince1970);
-
-			var tz = TimeZoneInfo.Local;
-			var localTime = TimeZoneInfo.ConvertTimeFromUtc(linkTimeUtc, tz);
-
-			return localTime;
-		}
-
-
-		public static Version GetCurrentInstanceVersion()
-		{
-			AssemblyName assemblyName = Assembly.GetEntryAssembly().GetName();
-			return assemblyName.Version;
-		}
-
-
-		public static Version GetInstalledVersion()
+		private static Version GetInstalledInstanceVersion()
 		{
 			try
 			{
-				if (File.Exists(GetVersionFilePath()))
+				if (File.Exists(GetInstallVersionFilePath()))
 				{
-					string versionText = File.ReadAllText(GetVersionFilePath());
+					string versionText = File.ReadAllText(GetInstallVersionFilePath());
 					return Version.Parse(versionText);
 				}
 				else
@@ -139,7 +87,7 @@ namespace Dependinator.Common.SettingsHandling
 		}
 
 
-		public static Version GetVersion(string path)
+		private static Version GetVersion(string path)
 		{
 			if (!File.Exists(path))
 			{
@@ -163,29 +111,79 @@ namespace Dependinator.Common.SettingsHandling
 		}
 
 
-
-
-		private static string GetFilePath(string fileName)
-		{
-			string programDataFolderPath = GetProgramDataFolderPath();
-			return Path.Combine(programDataFolderPath, fileName);
-		}
-
-
-
-		private static void EnsureFolderExists(string dataFolderPath)
+		public static void TryDeleteTempFiles()
 		{
 			try
 			{
-				if (!Directory.Exists(dataFolderPath))
+				string tempFolderPath = GetTempFolderPath();
+				string[] tempFiles = Directory.GetFiles(tempFolderPath);
+				foreach (string tempFile in tempFiles)
 				{
-					Directory.CreateDirectory(dataFolderPath);
+					try
+					{
+						Log.Debug($"Deleting temp file {tempFile}");
+						File.Delete(tempFile);
+					}
+					catch (Exception e)
+					{
+						Log.Debug($"Failed to delete temp file {tempFile}, {e.Message}. Deleting at reboot");
+					}
 				}
 			}
 			catch (Exception e)
 			{
-				Log.Warn($"Failed to create {dataFolderPath}, {e}");
+				Log.Warn($"Failed to delete temp files {e}");
 			}
+		}
+
+
+
+		private static string GetDataFolderSubPath(string name) =>
+			Path.Combine(GetEnsuredDataFolderPath(), name);
+
+
+		private static string GetInstallFolderSubPath(string name) =>
+			Path.Combine(GetInstallFolderPath(), name);
+
+
+		private static string EnsureFolderExists(string folderPath)
+		{
+			try
+			{
+				if (!Directory.Exists(folderPath))
+				{
+					Directory.CreateDirectory(folderPath);
+				}
+			}
+			catch (Exception e)
+			{
+				Log.Exception(e, $"Failed to create {folderPath}");
+			}
+
+			return folderPath;
+		}
+
+
+		private static DateTime GetBuildTime(string filePath)
+		{
+			const int cPeHeaderOffset = 60;
+			const int cLinkerTimestampOffset = 8;
+
+			var buffer = new byte[2048];
+
+			using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+				stream.Read(buffer, 0, 2048);
+
+			var offset = BitConverter.ToInt32(buffer, cPeHeaderOffset);
+			var secondsSince1970 = BitConverter.ToInt32(buffer, offset + cLinkerTimestampOffset);
+			var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+			var linkTimeUtc = epoch.AddSeconds(secondsSince1970);
+
+			var tz = TimeZoneInfo.Local;
+			var localTime = TimeZoneInfo.ConvertTimeFromUtc(linkTimeUtc, tz);
+
+			return localTime;
 		}
 	}
 }

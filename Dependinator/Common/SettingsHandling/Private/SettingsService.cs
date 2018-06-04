@@ -235,7 +235,7 @@ namespace Dependinator.Common.SettingsHandling.Private
 
 
 		private static string GetProgramSettingsPath<T>() =>
-			GetSettingsFilePath<T>(ProgramInfo.GetProgramDataFolderPath());
+			GetSettingsFilePath<T>(ProgramInfo.GetEnsuredDataFolderPath());
 
 
 		private string GetWorkFolderSettingsPath() => 

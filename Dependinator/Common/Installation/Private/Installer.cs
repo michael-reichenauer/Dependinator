@@ -58,10 +58,10 @@ namespace Dependinator.Common.Installation.Private
 		private void CreateMainExeShortcut()
 		{
 			Log.Debug("Create main exe shortcut");
-			string sourcePath = ProgramInfo.GetCurrentInstancePath();
-			Version sourceVersion = ProgramInfo.GetVersion(sourcePath);
+			string sourcePath = Program.Location;
+			Version sourceVersion = Version.Parse(Program.Version);
 
-			string targetFolder = ProgramInfo.GetProgramFolderPath();
+			string targetFolder = ProgramInfo.GetDataFolderPath();
 
 			EnsureDirectoryIsCreated(targetFolder);
 
@@ -101,7 +101,7 @@ namespace Dependinator.Common.Installation.Private
 		{
 			try
 			{
-				string path = ProgramInfo.GetVersionFilePath();
+				string path = ProgramInfo.GetInstallVersionFilePath();
 				File.WriteAllText(path, sourceVersion.ToString());
 				Log.Debug($"Installed {sourceVersion}");
 			}
@@ -133,7 +133,7 @@ namespace Dependinator.Common.Installation.Private
 		private void CleanOldInstallations()
 		{
 			Log.Debug("Try to clean old versions if needed");
-			string basePath = ProgramInfo.GetProgramDataFolderPath();
+			string basePath = ProgramInfo.GetEnsuredDataFolderPath();
 
 			// Get old installed versions, but leave the 3 newest)
 			var oldVersions = Directory
