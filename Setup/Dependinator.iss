@@ -73,10 +73,15 @@ Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desk
 
 [Run]
 ; Run install helper tasks
-Filename: "{app}\{#ProductVersion}\{#AppExeName}"; Parameters: "/install /silent"; 
+Filename: "{app}\{#ProductVersion}\{#AppExeName}"; Parameters: "/install /silent"; Flags: runhidden runminimized
+Filename: "{app}\{#ProductVersion}\Updater.exe"; Parameters: "/register"; Flags: runhidden runminimized
 
 ; Start program (unless silent or unchecked)
-Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExeName}"; Flags: nowait postinstall skipifsilent; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"
+
+[UninstallRun]
+; Delete update task (regardless of version)
+Filename: "schtasks"; Parameters: "/Delete /F /TN ""{#AppName} Updater"""; Flags: runhidden runminimized
 
 [UninstallDelete]
 ; Delete application program files and program data folders

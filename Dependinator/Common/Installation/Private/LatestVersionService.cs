@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -20,31 +21,26 @@ namespace Dependinator.Common.Installation.Private
 	internal class LatestVersionService : ILatestVersionService
 	{
 		private static readonly TimeSpan IdleTimerInterval = TimeSpan.FromMinutes(1);
-		private static readonly TimeSpan IdleTimeBeforeRestarting = TimeSpan.FromMinutes(30);
-		private static readonly TimeSpan FirstCheckTime = TimeSpan.FromSeconds(1);
-		private static readonly TimeSpan CheckInterval = TimeSpan.FromHours(3);
+		private static readonly TimeSpan IdleTimeBeforeRestarting = TimeSpan.FromMinutes(10);
 
 		private static readonly string latestUri =
 			"https://api.github.com/repos/michael-reichenauer/Dependinator/releases/latest";
 		private static readonly string UserAgent = "Dependinator";
 
 		private readonly ISettingsService settingsService;
-		private readonly ICmd cmd;
+
 		private readonly IStartInstanceService startInstanceService;
 		private readonly ModelMetadata modelMetadata;
 
-		private DispatcherTimer checkTimer;
 		private DispatcherTimer idleTimer;
 		private DateTime lastIdleCheck = DateTime.MaxValue;
 
 
 		public LatestVersionService(
-			ICmd cmd,
 			IStartInstanceService startInstanceService,
 			ISettingsService settingsService,
 			ModelMetadata modelMetadata)
 		{
-			this.cmd = cmd;
 			this.startInstanceService = startInstanceService;
 			this.settingsService = settingsService;
 			this.modelMetadata = modelMetadata;
@@ -55,39 +51,27 @@ namespace Dependinator.Common.Installation.Private
 
 		public void StartCheckForLatestVersion()
 		{
-			Log.Info("Start checking for latest version ...");
-			checkTimer = new DispatcherTimer();
-			checkTimer.Tick += CheckLatestVersionAsync;
-			checkTimer.Interval = FirstCheckTime;
-			checkTimer.Start();
-
 			idleTimer = new DispatcherTimer();
 			idleTimer.Tick += CheckIdleBeforeRestart;
 			idleTimer.Interval = IdleTimerInterval;
+			idleTimer.Start();
 
 			SystemEvents.PowerModeChanged += OnPowerModeChange;
 		}
 
 
-		private async void CheckLatestVersionAsync(object sender, EventArgs e)
+		public async Task CheckLatestVersionAsync()
 		{
-			checkTimer.Interval = CheckInterval;
-
+			Log.Debug($"Checking for updates ...");
 			if (settingsService.Get<Options>().DisableAutoUpdate)
 			{
-				Log.Info("DisableAutoUpdate = true");
 				return;
 			}
 
 			if (await IsNewRemoteVersionAvailableAsync())
 			{
-				await InstallLatestVersionAsync();
-
-				// The actual installation (copy of files) is done by another, allow some time for that
-				await Task.Delay(TimeSpan.FromSeconds(5));
+				await DownloadLatestVersionAsync();
 			}
-
-			NotifyIfNewVersionIsAvailable();
 		}
 
 
@@ -98,12 +82,15 @@ namespace Dependinator.Common.Installation.Private
 			Version currentVersion = Version.Parse(Program.Version);
 			Version installedVersion = ProgramInfo.GetInstalledVersion();
 
-			LogVersion(currentVersion, installedVersion, remoteVersion);
-			return installedVersion < remoteVersion;
+			Version setupVersion = ProgramInfo.GetSetupVersion();
+
+			LogVersion(currentVersion, installedVersion, remoteVersion, setupVersion);
+
+			return installedVersion < remoteVersion && setupVersion < remoteVersion;
 		}
 
 
-		private async Task<bool> InstallLatestVersionAsync()
+		private async Task<bool> DownloadLatestVersionAsync()
 		{
 			try
 			{
@@ -118,9 +105,8 @@ namespace Dependinator.Common.Installation.Private
 
 				using (HttpClientDownloadWithProgress httpClient = GetDownloadHttpClient())
 				{
-					string setupPath = await DownloadSetupAsync(httpClient, latestInfo);
+					await DownloadSetupAsync(httpClient, latestInfo);
 
-					InstallDownloadedSetup(setupPath);
 					return true;
 				}
 			}
@@ -147,18 +133,19 @@ namespace Dependinator.Common.Installation.Private
 				Log.Info($"Downloading {latestInfo.tag_name} {progressPercentage}% (time: {t.Elapsed}) ...");
 			};
 
-			string setupPath = ProgramInfo.GetTempFilePath() + "." + setupFileInfo.name;
+			string setupPath = ProgramInfo.GetSetupFilePath();
+
+			if (File.Exists(setupPath))
+			{
+				File.Delete(setupPath);
+			}
+
 			await httpClient.StartDownloadAsync(downloadUrl, setupPath);
 
 			Log.Info($"Downloaded {latestInfo.tag_name} to {setupPath}");
 			return setupPath;
 		}
 
-
-		private void InstallDownloadedSetup(string setupPath)
-		{
-			cmd.Start(setupPath, "/verysilent");
-		}
 
 
 		private async Task<Version> GetLatestRemoteVersionAsync()
@@ -269,9 +256,10 @@ namespace Dependinator.Common.Installation.Private
 		}
 
 
-		private static void LogVersion(Version current, Version installed, Version remote)
+		private static void LogVersion(Version current, Version installed, Version remote, Version setup)
 		{
-			Log.Usage($"Version current: {current}, installed: {installed} remote: {remote}");
+			Log.Usage(
+				$"Version current: {current}, installed: {installed}, remote: {remote}, setup {setup}");
 		}
 
 
@@ -280,21 +268,6 @@ namespace Dependinator.Common.Installation.Private
 			if (IsNewVersionInstalled())
 			{
 				OnNewVersionAvailable?.Invoke(this, EventArgs.Empty);
-
-				if (!idleTimer.IsEnabled)
-				{
-					Log.Debug($"Waiting for idle {IdleTimeBeforeRestarting} before restarting newer version ...");
-					lastIdleCheck = DateTime.UtcNow;
-					idleTimer.Start();
-				}
-			}
-			else
-			{
-				if (idleTimer.IsEnabled)
-				{
-					Log.Debug("No longer newer version installed, canceling idle wait for restart");
-					idleTimer.Stop();
-				}
 			}
 		}
 

@@ -26,6 +26,7 @@ namespace Dependinator
 		private readonly Lazy<MainWindow> mainWindow;
 		private readonly IModelMetadataService modelMetadataService;
 		private readonly IExistingInstanceService existingInstanceService;
+		private readonly ILatestVersionService latestVersionService;
 
 
 		// This mutex is used by the installer (and uninstaller) to determine if instances are running
@@ -38,7 +39,8 @@ namespace Dependinator
 			IInstaller installer,
 			Lazy<MainWindow> mainWindow,
 			IModelMetadataService modelMetadataService,
-			IExistingInstanceService existingInstanceService)
+			IExistingInstanceService existingInstanceService,
+			ILatestVersionService latestVersionService)
 		{
 			this.commandLine = commandLine;
 			this.themeService = themeService;
@@ -46,16 +48,24 @@ namespace Dependinator
 			this.mainWindow = mainWindow;
 			this.modelMetadataService = modelMetadataService;
 			this.existingInstanceService = existingInstanceService;
+			this.latestVersionService = latestVersionService;
 		}
 
 
-		protected override void OnStartup(StartupEventArgs e)
+		protected override async void OnStartup(StartupEventArgs e)
 		{
 			base.OnStartup(e);
 
 			if (IsInstallOrUninstall())
 			{
 				// An installation or uninstallation was triggered, lets end this instance
+				Application.Current.Shutdown(0);
+				return;
+			}
+
+			if (commandLine.IsCheckUpdate)
+			{
+				await latestVersionService.CheckLatestVersionAsync();
 				Application.Current.Shutdown(0);
 				return;
 			}

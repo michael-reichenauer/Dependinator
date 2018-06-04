@@ -24,6 +24,8 @@ namespace Dependinator.Common.Environment.Private
 
 		public bool IsUninstall => args.Contains("/uninstall");
 
+		public bool IsCheckUpdate => args.Contains("/checkupdate");
+
 		public bool IsRunInstalled => args.Contains("/run");
 
 		public bool IsTest => args.Contains("/test");

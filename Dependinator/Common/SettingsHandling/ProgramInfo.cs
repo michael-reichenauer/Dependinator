@@ -9,6 +9,7 @@ namespace Dependinator.Common.SettingsHandling
 	{
 		public static readonly string ProgramFileName = Program.Name + ".exe";
 		public static readonly string ProgramLogName = Program.Name + ".log";
+		public static readonly string SetupName = Program.Name + "Setup.exe";
 		public static readonly string VersionFileName = Program.Name + ".Version.txt";
 
 
@@ -29,6 +30,11 @@ namespace Dependinator.Common.SettingsHandling
 		public static string GetTempFilePath() => Path.Combine(GetTempFolderPath(), Guid.NewGuid().ToString());
 
 		public static string GetModelMetadataFoldersRoot() => EnsureFolderExists(GetDataFolderSubPath("WorkingFolders"));
+
+
+		public static string GetSetupFilePath() => GetDataFolderSubPath(SetupName);
+		public static Version GetSetupVersion() => GetSetupInstanceVersion();
+
 
 
 		public static string GetInstallFolderPath()
@@ -56,6 +62,29 @@ namespace Dependinator.Common.SettingsHandling
 
 			return programDataPath;
 		}
+
+
+
+		private static Version GetSetupInstanceVersion()
+		{
+			try
+			{
+				if (File.Exists(GetSetupFilePath()))
+				{
+					string versionText = File.ReadAllText(GetSetupFilePath());
+					return Version.Parse(versionText);
+				}
+				else
+				{
+					return new Version(0, 0, 0, 0);
+				}
+			}
+			catch (Exception)
+			{
+				return new Version(0, 0, 0, 0);
+			}
+		}
+
 
 
 		private static Version GetInstalledInstanceVersion()
