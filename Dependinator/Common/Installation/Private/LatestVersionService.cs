@@ -62,7 +62,6 @@ namespace Dependinator.Common.Installation.Private
 
 		public async Task CheckLatestVersionAsync()
 		{
-			Log.Debug($"Checking for updates ...");
 			if (settingsService.Get<Options>().DisableAutoUpdate)
 			{
 				return;
@@ -77,7 +76,6 @@ namespace Dependinator.Common.Installation.Private
 
 		private async Task<bool> IsNewRemoteVersionAvailableAsync()
 		{
-			Log.Debug($"Checking remote version of {latestUri} ...");
 			Version remoteVersion = await GetLatestRemoteVersionAsync();
 			Version currentVersion = Version.Parse(Program.Version);
 			Version installedVersion = ProgramInfo.GetInstalledVersion();
@@ -157,15 +155,6 @@ namespace Dependinator.Common.Installation.Private
 				if (latestInfo.IsOk && latestInfo.Value.tag_name != null)
 				{
 					Version version = Version.Parse(latestInfo.Value.tag_name.Substring(1));
-					Log.Debug($"Remote version: {version}");
-
-					if (latestInfo.Value.assets != null)
-					{
-						foreach (var asset in latestInfo.Value.assets)
-						{
-							Log.Debug($"Name: {asset.name}, Count: {asset.download_count}");
-						}
-					}
 
 					return version;
 				}
@@ -202,7 +191,6 @@ namespace Dependinator.Common.Installation.Private
 
 					if (response.StatusCode == HttpStatusCode.NotModified || response.Content == null)
 					{
-						Log.Debug("Remote latest version info same as cached info");
 						return GetCachedLatestVersionInfo();
 					}
 					else

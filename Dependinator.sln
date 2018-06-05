@@ -12,7 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Updater", "Updater\Updater.csproj", "{13FB363A-93B4-4BC2-9E57-3150D02F383D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Updater", "Updater\Updater.csproj", "{DDA719F9-89CE-4C47-8306-FD845C45E649}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -28,10 +28,10 @@ Global
 		{24BF4E2A-398D-4328-A691-4E0C042CE417}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{24BF4E2A-398D-4328-A691-4E0C042CE417}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{24BF4E2A-398D-4328-A691-4E0C042CE417}.Release|Any CPU.Build.0 = Release|Any CPU
-		{13FB363A-93B4-4BC2-9E57-3150D02F383D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{13FB363A-93B4-4BC2-9E57-3150D02F383D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{13FB363A-93B4-4BC2-9E57-3150D02F383D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{13FB363A-93B4-4BC2-9E57-3150D02F383D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DDA719F9-89CE-4C47-8306-FD845C45E649}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DDA719F9-89CE-4C47-8306-FD845C45E649}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DDA719F9-89CE-4C47-8306-FD845C45E649}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DDA719F9-89CE-4C47-8306-FD845C45E649}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
