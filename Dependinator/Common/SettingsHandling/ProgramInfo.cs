@@ -71,8 +71,7 @@ namespace Dependinator.Common.SettingsHandling
 			{
 				if (File.Exists(GetSetupFilePath()))
 				{
-					string versionText = File.ReadAllText(GetSetupFilePath());
-					return Version.Parse(versionText);
+					return GetVersion(GetSetupFilePath());
 				}
 				else
 				{

@@ -52,6 +52,7 @@ DisableReadyMemo=True
 [Files]
 ; Copy all release output files to version folder
 Source: "..\Dependinator\bin\Release\*"; DestDir: "{app}\{#ProductVersion}"; Flags: ignoreversion
+Source: "..\Updater\bin\Release\*"; DestDir: "{app}\{#ProductVersion}"; Flags: ignoreversion
 
 ; Copy example files as well 
 Source: "..\Dependinator\bin\Release\*"; DestDir: "{app}\Example"; Flags: ignoreversion
@@ -74,14 +75,17 @@ Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desk
 [Run]
 ; Run install helper tasks
 Filename: "{app}\{#ProductVersion}\{#AppExeName}"; Parameters: "/install /silent"; Flags: runhidden runminimized
+
+; Run to register updater tasks
 Filename: "{app}\{#ProductVersion}\Updater.exe"; Parameters: "/register"; Flags: runhidden runminimized
 
 ; Start program (unless silent or unchecked)
 Filename: "{app}\{#AppExeName}"; Flags: nowait postinstall skipifsilent; Description: "{cm:LaunchProgram,{#StringChange(AppName, '&', '&&')}}"
 
 [UninstallRun]
-; Delete update task (regardless of version)
-Filename: "schtasks"; Parameters: "/Delete /F /TN ""{#AppName} Updater"""; Flags: runhidden runminimized
+; Delete update and renew tasks (regardless of version)
+Filename: "schtasks"; Parameters: "/Delete /F /TN ""{#AppName} Update"""; Flags: runhidden runminimized
+Filename: "schtasks"; Parameters: "/Delete /F /TN ""{#AppName} Renew"""; Flags: runhidden runminimized
 
 [UninstallDelete]
 ; Delete application program files and program data folders

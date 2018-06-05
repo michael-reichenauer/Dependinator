@@ -51,5 +51,8 @@
   <ItemGroup>
     <EmbeddedResource Include="Updater.xml" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Renewer.xml" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

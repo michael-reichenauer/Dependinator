@@ -655,12 +655,6 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Updater\Updater.csproj">
-      <Project>{13fb363a-93b4-4bc2-9e57-3150d02f383d}</Project>
-      <Name>Updater</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>
