@@ -36,9 +36,9 @@ namespace Dependinator.ModelViewing.Open
 
 		public async void OpenExampleFile()
 		{
-			string dataFolderPath = ProgramInfo.GetProgramDataFolderPath();
-	
-			string examplePath = Path.Combine(dataFolderPath, "Example", "Example.exe");
+			string installFolderPath = ProgramInfo.GetInstallFolderPath();
+
+			string examplePath = Path.Combine(installFolderPath, "Example", "Example.exe");
 
 			await openModelService.TryModelAsync(examplePath);
 		}

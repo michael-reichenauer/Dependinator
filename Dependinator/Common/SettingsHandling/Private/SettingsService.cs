@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Utils;
+using Dependinator.Utils.Serialization;
+
 
 namespace Dependinator.Common.SettingsHandling.Private
 {
@@ -43,7 +45,7 @@ namespace Dependinator.Common.SettingsHandling.Private
 			}
 			catch (Exception e)
 			{
-				Log.Warn($"Error editing the settings {e}");
+				Log.Exception(e, "Error editing the settings");
 			}
 		}
 
@@ -67,7 +69,7 @@ namespace Dependinator.Common.SettingsHandling.Private
 			}
 			catch (Exception e)
 			{
-				Log.Warn($"Error editing the settings {e}");
+				Log.Exception(e, "Error editing the settings");
 			}
 		}
 
@@ -214,7 +216,7 @@ namespace Dependinator.Common.SettingsHandling.Private
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
-				Log.Warn($"Failed to read file {path}, {e}");
+				Log.Exception(e, $"Failed to read file {path}");
 			}
 
 			return null;
@@ -229,13 +231,13 @@ namespace Dependinator.Common.SettingsHandling.Private
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
-				Log.Warn($"Failed to write file {path}, {e}");
+				Log.Exception(e, $"Failed to write file {path}");
 			}
 		}
 
 
 		private static string GetProgramSettingsPath<T>() =>
-			GetSettingsFilePath<T>(ProgramInfo.GetProgramDataFolderPath());
+			GetSettingsFilePath<T>(ProgramInfo.GetEnsuredDataFolderPath());
 
 
 		private string GetWorkFolderSettingsPath() => 

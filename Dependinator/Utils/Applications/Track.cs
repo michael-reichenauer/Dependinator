@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
 using Dependinator.Common.SettingsHandling;
+using Dependinator.Utils.Serialization;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
 using Microsoft.ApplicationInsights.DataContracts;
@@ -44,12 +44,12 @@ namespace Dependinator.Utils.Applications
 			Tc.Context.User.Id = GetTrackId();
 			SetInternalNodeName();
 			Tc.Context.Cloud.RoleInstance = Tc.Context.User.Id;
-			Tc.Context.User.UserAgent = $"{Product.Name}/{ProgramInfo.GetCurrentInstanceVersion()}";
+			Tc.Context.User.UserAgent = $"{Program.Name}/{Program.Version}";
 			Tc.Context.Session.Id = Guid.NewGuid().ToString();
 			Tc.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
-			Tc.Context.Component.Version = GetProgramVersion();
+			Tc.Context.Component.Version = Program.Version;
 			Log.Info($"Enabled usage and error reporting for: {Tc.Context.User.Id}, Production: {isProduction}");
-			
+
 			//var builder = TelemetryConfiguration.Active.TelemetryProcessorChainBuilder;
 			//builder.Use((next) => new TelemetryTracer(next));
 			//builder.Build();
@@ -172,7 +172,7 @@ namespace Dependinator.Utils.Applications
 		private static string GetInstrumentationKey(out bool isProduction)
 		{
 			isProduction = false;
-			string currentInstancePath = ProgramInfo.GetCurrentInstancePath();
+			string currentInstancePath = Program.Location;
 
 			if (currentInstancePath == null)
 			{
@@ -180,8 +180,7 @@ namespace Dependinator.Utils.Applications
 				return null;
 			}
 
-			if (currentInstancePath != null &&
-				(currentInstancePath.IsSameIgnoreCase(ProgramInfo.GetProgramFolderPath()) || IsSetupFile()))
+			if (currentInstancePath != null && (ProgramInfo.IsInstalledInstance() || IsSetupFile()))
 			{
 				isProduction = true;
 				return "ca57cc9a-3b51-4de4-ba52-1d2429407e83";
@@ -193,7 +192,7 @@ namespace Dependinator.Utils.Applications
 
 		private static bool IsSetupFile()
 		{
-			return Path.GetFileNameWithoutExtension(ProgramInfo.GetCurrentInstancePath())
+			return Path.GetFileNameWithoutExtension(Program.Location)
 				.IsSameIgnoreCase("DependinatorSetup");
 		}
 
@@ -233,14 +232,6 @@ namespace Dependinator.Utils.Applications
 		}
 
 
-		private static string GetProgramVersion()
-		{
-			Assembly assembly = Assembly.GetExecutingAssembly();
-			FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
-			return fvi.FileVersion;
-		}
-
-
 		private static void SetInternalNodeName()
 		{
 			PropertyInfo internalProperty = typeof(TelemetryContext).GetProperty("Internal",
@@ -273,7 +264,7 @@ namespace Dependinator.Utils.Applications
 				object obj = Json.As<object>(text);
 				string indentedText = Json.AsJson(obj);
 
-				Log.Warn($"Telemetry: {item.GetType().Name}\n{indentedText}");
+				Log.Debug($"Telemetry: {item.GetType().Name}\n{indentedText}");
 				next.Process(item);
 			}
 		}

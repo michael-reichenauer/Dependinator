@@ -20,7 +20,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
 		public ModelMetadataService()
 		{
-			defaultPath = Path.Combine(ProgramInfo.GetProgramFolderPath(), "Default");
+			defaultPath = Path.Combine(ProgramInfo.GetEnsuredDataFolderPath(), "Default");
 
 			SetModelFilePath(defaultPath);
 		}

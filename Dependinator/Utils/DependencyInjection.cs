@@ -20,7 +20,7 @@ namespace Dependinator.Utils
 		}
 
 
-		public void RegisterDependencyInjectionTypes()
+		public void RegisterDependencyInjectionTypes(Assembly assembly)
 		{
 			try
 			{
@@ -31,10 +31,8 @@ namespace Dependinator.Utils
 					type => type.GetConstructors(
 						BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance));
 
-				Assembly executingAssembly = Assembly.GetExecutingAssembly();
-
 				// Register single instance types
-				builder.RegisterAssemblyTypes(executingAssembly)
+				builder.RegisterAssemblyTypes(assembly)
 					.Where(IsSingleInstance)
 					.FindConstructorsWith(constructorFinder)
 					.AsSelf()
@@ -43,7 +41,7 @@ namespace Dependinator.Utils
 					.OwnedByLifetimeScope();
 
 				// Register non single instance types
-				builder.RegisterAssemblyTypes(executingAssembly)
+				builder.RegisterAssemblyTypes(assembly)
 					.Where(t => !IsSingleInstance(t))
 					.FindConstructorsWith(constructorFinder)
 					.AsSelf()
@@ -54,7 +52,8 @@ namespace Dependinator.Utils
 			}
 			catch (Exception e)
 			{
-				Log.Warn($"Failed to register types {e}");
+				Log.Error($"Failed to register types {e}");
+				Asserter.FailFast(e);
 				throw;
 			}
 		}

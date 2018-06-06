@@ -1,7 +1,7 @@
 ﻿using System;
 
 
-namespace Dependinator.Utils
+namespace Dependinator.Utils.Net
 {
 	/// <summary>
 	/// The IPC Remoting service base class. 

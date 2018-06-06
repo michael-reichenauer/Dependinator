@@ -9,15 +9,10 @@ using ProtoBuf.Meta;
 using ProtoSerializer = ProtoBuf.Serializer;
 
 
-namespace Dependinator.Utils
+namespace Dependinator.Utils.Serialization
 {
 	public static class ProtoBufSerializer
 	{
-		static ProtoBufSerializer()
-		{
-			RegisterDataContractTypes();
-		}
-
 		public static void Serialize(FileStream file, object data)
 		{
 			ProtoSerializer.Serialize(file, data);
@@ -36,14 +31,14 @@ namespace Dependinator.Utils
 		}
 
 
-		private static void RegisterDataContractTypes()
+		public static void RegisterDataContractTypes(Assembly assembly)
 		{
 			// Get all types with [DataContract] attribute
-			var dataContractTypes = Assembly.GetExecutingAssembly()
+			var dataContractTypes = assembly
 				.GetTypes()
 				.Where(HasDataContractAttribute);
 
-			// Register data comntract types
+			// Register data contract types
 			dataContractTypes.ForEach(RegisterType);
 		}
 

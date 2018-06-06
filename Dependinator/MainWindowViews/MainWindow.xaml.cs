@@ -7,6 +7,7 @@ using Dependinator.Common;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
+using Dependinator.Utils.Threading;
 using Dependinator.Utils.UI;
 
 
