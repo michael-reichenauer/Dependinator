@@ -167,7 +167,7 @@
     </Compile>
     <Compile Include="ModelViewing\CodeViewing\CodeViewModel.cs" />
     <Compile Include="ModelViewing\DependencyExploring\Private\IItemCommands.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\AssemblyResolver.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\ParsingAssemblyResolver.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\Decompiler.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\WorkParser.cs" />
     <Compile Include="ModelViewing\DependencyExploring\Private\IDependenciesService.cs" />
@@ -256,7 +256,6 @@
     <Compile Include="Utils\System\DoubleExtensions.cs" />
     <Compile Include="Utils\NamespaceDoc.cs" />
     <Compile Include="Utils\PriorityBlockingQueue.cs" />
-    <Compile Include="Product.cs" />
     <Compile Include="MainWindowViews\SearchFilter.xaml.cs">
       <DependentUpon>SearchFilter.xaml</DependentUpon>
     </Compile>
@@ -268,7 +267,7 @@
       <DependentUpon>TitleView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\ModelHandling\Private\Convert.cs" />
-    <Compile Include="Utils\AssemblyInfo.cs" />
+    <Compile Include="Utils\AssemblyExtensions.cs" />
     <Compile Include="Utils\AssemblyResolver.cs" />
     <Compile Include="Utils\System\NamespaceDoc.cs" />
     <Compile Include="Utils\UI\BrushExtensions.cs" />
@@ -614,7 +613,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <EmbeddedResource Include="Dependencies\Newtonsoft.Json.dll" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -646,12 +644,6 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Dependencies\protobuf-net.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Dependencies\Autofac.dll" />
-  </ItemGroup>
-  <ItemGroup>
     <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
       <Visible>False</Visible>
       <ProductName>Microsoft .NET Framework 4.6.1 %28x86 and x64%29</ProductName>
@@ -663,98 +655,14 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Dependencies\System.Windows.Interactivity.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Dependencies\ICSharpCode.Decompiler.dll" />
-    <EmbeddedResource Include="Dependencies\ICSharpCode.NRefactory.Cecil.dll" />
-    <EmbeddedResource Include="Dependencies\ICSharpCode.NRefactory.CSharp.dll" />
-    <EmbeddedResource Include="Dependencies\ICSharpCode.NRefactory.dll" />
-    <EmbeddedResource Include="Dependencies\ICSharpCode.NRefactory.Xml.dll" />
-    <EmbeddedResource Include="Dependencies\Mono.Cecil.dll" />
-    <EmbeddedResource Include="Dependencies\Mono.Cecil.Mdb.dll" />
-    <EmbeddedResource Include="Dependencies\Mono.Cecil.Pdb.dll" />
-    <EmbeddedResource Include="Dependencies\Mono.Cecil.Rocks.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Dependencies\System.ValueTuple.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Dependencies\Humanizer.dll" />
-    <EmbeddedResource Include="Dependencies\System.Collections.Immutable.dll">
-      <Generator>Embedded Resource</Generator>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Dependencies\ICSharpCode.AvalonEdit.dll" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Common\Resources\Example.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Dependencies\Microsoft.ApplicationInsights.dll" />
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>mkdir "$(ProjectDir)\Dependencies" 2&gt; NUL
-
-pushd "$(SolutionDir)packages\Autofac.*\lib\net45\" 
-copy /Y /B Autofac.dll "$(ProjectDir)\Dependencies\Autofac.dll" &gt;NUL
-popd
-
-pushd "$(SolutionDir)packages\Newtonsoft.Json.*\lib\net45"
-copy /Y /B Newtonsoft.Json.dll "$(ProjectDir)\Dependencies\Newtonsoft.Json.dll" &gt;NUL
-popd
-
-pushd "$(SolutionDir)packages\Microsoft.ApplicationInsights.*\lib\net46"
-copy /Y /B Microsoft.ApplicationInsights.dll "$(ProjectDir)\Dependencies\Microsoft.ApplicationInsights.dll" &gt;NUL
-popd
-
-pushd "$(SolutionDir)packages\System.ValueTuple.*\lib\net461"
-copy /Y /B System.ValueTuple.dll "$(ProjectDir)\Dependencies\System.ValueTuple.dll" &gt;NUL
-popd
-
-pushd "$(SolutionDir)packages\protobuf-net.*\lib\net451"
-copy /Y /B protobuf-net.dll "$(ProjectDir)\Dependencies\protobuf-net.dll" &gt;NUL
-popd
-
-pushd "$(SolutionDir)packages\Mono.Cecil.*\lib\net40"
-copy /Y /B Mono.Cecil.dll "$(ProjectDir)\Dependencies\Mono.Cecil.dll" &gt;NUL
-copy /Y /B Mono.Cecil.Mdb.dll "$(ProjectDir)\Dependencies\Mono.Cecil.Mdb.dll" &gt;NUL
-copy /Y /B Mono.Cecil.Pdb.dll "$(ProjectDir)\Dependencies\Mono.Cecil.Pdb.dll" &gt;NUL
-copy /Y /B Mono.Cecil.Rocks.dll "$(ProjectDir)\Dependencies\Mono.Cecil.Rocks.dll" &gt;NUL
-popd
-
-pushd "$(SolutionDir)packages\ICSharpCode.Decompiler.*\lib\net46"
-copy /Y /B ICSharpCode.Decompiler.dll "$(ProjectDir)\Dependencies\ICSharpCode.Decompiler.dll" &gt;NUL
-popd
-
-pushd "$(SolutionDir)packages\ICSharpCode.NRefactory.*\lib\net40"
-copy /Y /B ICSharpCode.NRefactory.Cecil.dll "$(ProjectDir)\Dependencies\ICSharpCode.NRefactory.Cecil.dll" &gt;NUL
-copy /Y /B ICSharpCode.NRefactory.CSharp.dll "$(ProjectDir)\Dependencies\ICSharpCode.NRefactory.CSharp.dll" &gt;NUL
-copy /Y /B ICSharpCode.NRefactory.dll "$(ProjectDir)\Dependencies\ICSharpCode.NRefactory.dll" &gt;NUL
-copy /Y /B ICSharpCode.NRefactory.Xml.dll "$(ProjectDir)\Dependencies\ICSharpCode.NRefactory.Xml.dll" &gt;NUL
-popd
-
-pushd "$(SolutionDir)packages\Humanizer.Core.*\lib\netstandard1.0"
-copy /Y /B Humanizer.dll "$(ProjectDir)\Dependencies\Humanizer.dll" &gt;NUL
-popd
-
-pushd "$(SolutionDir)packages\System.Collections.Immutable.*\lib\portable-net45+win8+wp8+wpa81"
-copy /Y /B System.Collections.Immutable.dll "$(ProjectDir)\Dependencies\System.Collections.Immutable.dll" &gt;NUL
-popd
-
-pushd "$(SolutionDir)packages\AvalonEdit.*\lib\Net40"
-copy /Y /B ICSharpCode.AvalonEdit.dll "$(ProjectDir)\Dependencies\ICSharpCode.AvalonEdit.dll" &gt;NUL
-popd
-
-copy /Y /B "$(SolutionDir)\Binaries\System.Windows.Interactivity.dll" "$(ProjectDir)\Dependencies\System.Windows.Interactivity.dll" &gt;NUL
-
-</PreBuildEvent>
+    <PreBuildEvent>
+    </PreBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>copy /Y /B "$(TargetDir)$(TargetName).xml" "$(ProjectDir)Common\Resources\Example.xml"</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
