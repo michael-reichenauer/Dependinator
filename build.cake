@@ -20,6 +20,8 @@ var name = "Dependinator";
 var solutionPath = $"./{name}.sln";
 var outputPath = $"{name}/bin/{configuration}/{name}.exe";
 var setupPath = $"{name}Setup.exe";
+var uninstallerPath = $"Setup/Sign/Uninstaller.exe";
+var signedUninstallerPath = $"Setup/Sign/uninst-5.5.9 (u)-44666f8110.e32";
 
 string signPassword = "";
 
@@ -37,6 +39,11 @@ Task("Clean")
     if (FileExists(setupPath))
     { 
         DeleteFile(setupPath);
+    }
+	
+	if (FileExists(signedUninstallerPath))
+    { 
+        DeleteFile(signedUninstallerPath);
     }
 });
 
@@ -78,21 +85,46 @@ Task("Build-Setup-File")
     .Does(() =>
 {
     var version = GetFullVersionNumber(outputPath);
+	string isSigning = string.IsNullOrWhiteSpace(signPassword) ? "False" : "True";
 
 	InnoSetup("./Setup/Dependinator.iss", new InnoSetupSettings {
 		QuietMode = InnoSetupQuietMode.QuietWithProgress,
 		Defines = new Dictionary<string, string> { 
 			{"AppVersion", ""},
 			{"ProductVersion", version},
+			{"IsSigning", isSigning},
 		}
     });
 	
 });
 
 
+Task("Sign-Uninstaller")
+    .IsDependentOn("Clean")
+	.IsDependentOn("Prompt-Sign-Password")
+    .Does(() =>
+{
+	CopyFile(uninstallerPath, signedUninstallerPath);
+	
+	// Sign setup file
+	var file = new FilePath(signedUninstallerPath);
+    Sign(file, new SignToolSignSettings {
+            TimeStampUri = new Uri("http://timestamp.digicert.com"),
+            CertPath = @"C:\Users\micha\OneDrive\CodeSigning\SignCert.pfx",
+            Password = signPassword
+    });	
+})
+.OnError(exception =>
+{
+	RunTarget("Clean");
+	throw exception;
+});;
+
+
 Task("Build-Setup")
     .IsDependentOn("Clean")
 	.IsDependentOn("Prompt-Sign-Password")
+	.IsDependentOn("Sign-Uninstaller")
     .IsDependentOn("Build-Setup-File")
     .Does(() =>
 {

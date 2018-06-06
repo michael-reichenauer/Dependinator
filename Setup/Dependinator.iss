@@ -9,6 +9,10 @@
 	#define ProductVersion = "0.0.0.0"
 #endif
 
+#ifndef IsSigning
+	#define IsSigning = "False"
+#endif
+
 #define AppName "Dependinator"
 #define AppPublisher "Michael Reichenauer"
 #define AppURL "https://github.com/michael-reichenauer/Dependinator"
@@ -47,7 +51,10 @@ UsePreviousGroup=False
 UsePreviousAppDir= False
 AppendDefaultGroupName=False
 DisableReadyMemo=True
-
+#if (IsSigning == 'True')
+SignedUninstaller=yes
+SignedUninstallerDir=Sign
+#endif
 
 [Files]
 ; Copy all release output files to version folder
