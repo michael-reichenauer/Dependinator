@@ -55,7 +55,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		{
 			try
 			{
-				AssemblyResolver resolver = new AssemblyResolver();
+				ParsingAssemblyResolver resolver = new ParsingAssemblyResolver();
 				{
 					ReaderParameters parameters = new ReaderParameters
 					{
@@ -86,7 +86,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		{
 			try
 			{
-				AssemblyResolver resolver = new AssemblyResolver();
+				ParsingAssemblyResolver resolver = new ParsingAssemblyResolver();
 				{
 					ReaderParameters parameters = new ReaderParameters
 					{

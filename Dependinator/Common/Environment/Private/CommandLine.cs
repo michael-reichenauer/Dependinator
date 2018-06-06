@@ -24,6 +24,8 @@ namespace Dependinator.Common.Environment.Private
 
 		public bool IsUninstall => args.Contains("/uninstall");
 
+		public bool IsCheckUpdate => args.Contains("/checkupdate");
+
 		public bool IsRunInstalled => args.Contains("/run");
 
 		public bool IsTest => args.Contains("/test");
@@ -33,10 +35,7 @@ namespace Dependinator.Common.Environment.Private
 		public string FilePath => args.Skip(1).FirstOrDefault(a => !a.StartsWith("/"));
 
 
-		private bool IsSetupFile()
-		{
-			return Path.GetFileNameWithoutExtension(
-				Assembly.GetEntryAssembly().Location).StartsWith($"{Product.Name}Setup");
-		}
+		private bool IsSetupFile() => 
+			Path.GetFileNameWithoutExtension(Program.Location).StartsWith($"{Program.Name}Setup");
 	}
 }

@@ -26,6 +26,7 @@ namespace Dependinator
 		private readonly Lazy<MainWindow> mainWindow;
 		private readonly IModelMetadataService modelMetadataService;
 		private readonly IExistingInstanceService existingInstanceService;
+		private readonly ILatestVersionService latestVersionService;
 
 
 		// This mutex is used by the installer (and uninstaller) to determine if instances are running
@@ -38,7 +39,8 @@ namespace Dependinator
 			IInstaller installer,
 			Lazy<MainWindow> mainWindow,
 			IModelMetadataService modelMetadataService,
-			IExistingInstanceService existingInstanceService)
+			IExistingInstanceService existingInstanceService,
+			ILatestVersionService latestVersionService)
 		{
 			this.commandLine = commandLine;
 			this.themeService = themeService;
@@ -46,16 +48,24 @@ namespace Dependinator
 			this.mainWindow = mainWindow;
 			this.modelMetadataService = modelMetadataService;
 			this.existingInstanceService = existingInstanceService;
+			this.latestVersionService = latestVersionService;
 		}
 
 
-		protected override void OnStartup(StartupEventArgs e)
+		protected override async void OnStartup(StartupEventArgs e)
 		{
 			base.OnStartup(e);
 
 			if (IsInstallOrUninstall())
 			{
 				// An installation or uninstallation was triggered, lets end this instance
+				Application.Current.Shutdown(0);
+				return;
+			}
+
+			if (commandLine.IsCheckUpdate)
+			{
+				await latestVersionService.CheckLatestVersionAsync();
 				Application.Current.Shutdown(0);
 				return;
 			}
@@ -94,7 +104,7 @@ namespace Dependinator
 				}
 			}
 
-			Log.Usage($"Start version: {AssemblyInfo.GetProgramVersion()}");
+			Log.Usage($"Start version: {Program.Version}");
 			Track.StartProgram();
 			Start();
 		}
@@ -146,15 +156,15 @@ namespace Dependinator
 		private void Start()
 		{
 			// This mutex is used by the installer (or uninstaller) to determine if instances are running
-			applicationMutex = new Mutex(true, Product.Guid);
+			applicationMutex = new Mutex(true, Program.Guid);
 
 			MainWindow = mainWindow.Value;
 
 			themeService.SetThemeWpfColors();
-			
+
 			MainWindow.Show();
 
-			TryDeleteTempFiles();
+			ProgramInfo.TryDeleteTempFiles();
 		}
 
 
@@ -171,32 +181,7 @@ namespace Dependinator
 		}
 
 
-		private void TryDeleteTempFiles()
-		{
-			try
-			{
-				string tempFolderPath = ProgramInfo.GetTempFolderPath();
-				string searchPattern = $"{ProgramInfo.TempPrefix}*";
-				string[] tempFiles = Directory.GetFiles(tempFolderPath, searchPattern);
-				foreach (string tempFile in tempFiles)
-				{
-					try
-					{
-						Log.Debug($"Deleting temp file {tempFile}");
-						File.Delete(tempFile);
-					}
-					catch (Exception e)
-					{
-						Log.Debug($"Failed to delete temp file {tempFile}, {e.Message}. Deleting at reboot");
-					}
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Warn($"Failed to delete temp files {e}");
-			}
-		}
-
+		
 
 		private static MessageDialog CreateTempMainWindow()
 		{

@@ -5,7 +5,7 @@ using Mono.Cecil;
 
 namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.AssemblyFileParsing
 {
-	internal class AssemblyResolver : DefaultAssemblyResolver
+	internal class ParsingAssemblyResolver : DefaultAssemblyResolver
 	{
 		public override AssemblyDefinition Resolve(AssemblyNameReference name)
 		{
@@ -31,7 +31,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			{
 				Log.Warn($"Failed to resolve {name}, {e.Message}");
 			}
-
 
 			return null;
 		}
