@@ -61,10 +61,6 @@ namespace Dependinator.Common.Installation.Private
 			string sourcePath = Program.Location;
 			Version sourceVersion = Version.Parse(Program.Version);
 
-			string targetFolder = ProgramInfo.GetDataFolderPath();
-
-			EnsureDirectoryIsCreated(targetFolder);
-
 			string targetPath = ProgramInfo.GetInstallFilePath();
 
 			try
