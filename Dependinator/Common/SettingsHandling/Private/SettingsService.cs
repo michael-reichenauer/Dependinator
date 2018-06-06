@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Utils;
+using Dependinator.Utils.Serialization;
+
 
 namespace Dependinator.Common.SettingsHandling.Private
 {

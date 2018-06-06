@@ -7,6 +7,7 @@ using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.AssemblyFileParsing;
 using Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.SolutionFileParsing;
 using Dependinator.Utils;
+using Dependinator.Utils.Threading;
 
 
 namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private

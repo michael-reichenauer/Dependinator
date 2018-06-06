@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 
 
-namespace Dependinator.Utils
+namespace Dependinator.Utils.Threading
 {
 	public class Throttler
 	{
