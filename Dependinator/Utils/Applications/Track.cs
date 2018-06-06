@@ -263,7 +263,7 @@ namespace Dependinator.Utils.Applications
 				object obj = Json.As<object>(text);
 				string indentedText = Json.AsJson(obj);
 
-				Log.Warn($"Telemetry: {item.GetType().Name}\n{indentedText}");
+				Log.Debug($"Telemetry: {item.GetType().Name}\n{indentedText}");
 				next.Process(item);
 			}
 		}

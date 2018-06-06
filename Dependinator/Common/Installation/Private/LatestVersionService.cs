@@ -211,7 +211,7 @@ namespace Dependinator.Common.Installation.Private
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
-				Log.Warn($"Failed to download latest setup: {e}");
+				Log.Exception(e, "Failed to download latest setup");
 				return e;
 			}
 		}

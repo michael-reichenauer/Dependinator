@@ -140,7 +140,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			}
 			catch (Exception e)
 			{
-				Log.Warn($"Failed to add base type for {type} in {sourceNode.Name}, {e}");
+				Log.Exception(e, $"Failed to add base type for {type} in {sourceNode.Name}");
 			}
 		}
 	}

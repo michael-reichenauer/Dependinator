@@ -52,7 +52,8 @@ namespace Dependinator.Utils
 			}
 			catch (Exception e)
 			{
-				Log.Warn($"Failed to register types {e}");
+				Log.Error($"Failed to register types {e}");
+				Asserter.FailFast(e);
 				throw;
 			}
 		}

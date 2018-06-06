@@ -85,7 +85,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
-				Log.Warn($"Failed to type members for {type}, {e}");
+				Log.Exception(e, $"Failed to parse type members for {type}");
 			}
 		}
 
@@ -114,7 +114,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			}
 			catch (Exception e)
 			{
-				Log.Warn($"Failed to add member {memberInfo} in {parentTypeNode?.Name}, {e}");
+				Log.Exception(e, $"Failed to add member {memberInfo} in {parentTypeNode?.Name}");
 			}
 		}
 
@@ -144,7 +144,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			}
 			catch (Exception e)
 			{
-				Log.Warn($"Failed to links for member {member} in {sourceMemberNode.Name}, {e}");
+				Log.Exception(e, $"Failed to links for member {member} in {sourceMemberNode.Name}");
 			}
 		}
 	}

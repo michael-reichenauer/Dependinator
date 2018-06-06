@@ -107,7 +107,7 @@ namespace Dependinator.Common.Installation.Private
 			}
 			catch (Exception e)
 			{
-				Log.Warn($"Failed to write version {e}");
+				Log.Exception(e, "Failed to write version");
 			}
 		}
 
@@ -161,7 +161,7 @@ namespace Dependinator.Common.Installation.Private
 			}
 			catch (Exception e)
 			{
-				Log.Warn($"Failed to delete {path}, {e.Message}");
+				Log.Exception(e, $"Failed to delete {path}");
 			}
 		}
 	}

@@ -60,7 +60,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			}
 			catch (Exception e) when (e.IsNotFatal())
 			{
-				Log.Warn($"Failed to parse xml docs for {assemblyPath}");
+				Log.Exception(e, $"Failed to parse xml docs for {assemblyPath}");
 			}
 
 			return items;
