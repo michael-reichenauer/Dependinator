@@ -373,10 +373,10 @@
     <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\Private\Serializing\DataSerializer.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\Private\Serializing\IDataSerializer.cs" />
     <Compile Include="Utils\System\CollectionExtensions.cs" />
-    <Compile Include="Utils\ExceptionAsyncExtensions.cs" />
+    <Compile Include="Utils\System\ExceptionAsyncExtensions.cs" />
     <Compile Include="Utils\System\ExceptionExtensions.cs" />
     <Compile Include="Utils\FatalExceptionEventArgs.cs" />
-    <Compile Include="Utils\MathExtensions.cs" />
+    <Compile Include="Utils\System\MathExtensions.cs" />
     <Compile Include="Utils\AsyncLock.cs" />
     <Compile Include="Utils\DependencyInjection.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\FolderMonitorService.cs" />
@@ -387,7 +387,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Utils\StackTraceExtensions.cs" />
     <Compile Include="Utils\StopParameter.cs" />
-    <Compile Include="Utils\Throttler.cs" />
+    <Compile Include="Utils\Threading\Throttler.cs" />
     <Compile Include="Utils\Txt.cs" />
     <Compile Include="Utils\UI\CredentialsDialog.cs" />
     <Compile Include="Utils\Disposable.cs" />
@@ -395,9 +395,9 @@
     <Compile Include="Common\SettingsHandling\Options.cs" />
     <Compile Include="Common\SettingsHandling\WorkFolderSettings.cs" />
     <Compile Include="Utils\Equatable.cs" />
-    <Compile Include="Utils\IpcService.cs" />
-    <Compile Include="Utils\Json.cs" />
-    <Compile Include="Utils\ProtoBufSerializer.cs" />
+    <Compile Include="Utils\Net\IpcService.cs" />
+    <Compile Include="Utils\Serialization\Json.cs" />
+    <Compile Include="Utils\Serialization\ProtoBufSerializer.cs" />
     <Compile Include="Utils\SingleInstanceAttribute.cs" />
     <Compile Include="Utils\UI\InputBindingsBehavior.cs" />
     <Compile Include="Utils\UI\VirtualCanvas\ItemEventArgs.cs" />
@@ -411,7 +411,7 @@
     <Compile Include="MainWindowViews\HamburgerButton.xaml.cs">
       <DependentUpon>HamburgerButton.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Utils\IpcRemotingService.cs" />
+    <Compile Include="Utils\Net\IpcRemotingService.cs" />
     <Compile Include="Utils\UI\BusyProgress.cs" />
     <Compile Include="Utils\UI\HideableGridSplitter.cs" />
     <Compile Include="Utils\Compare.cs" />
@@ -436,9 +436,9 @@
     <Compile Include="Utils\UI\PropertyToVisibilityConverter.cs" />
     <Compile Include="Utils\CmdResult.cs" />
     <Compile Include="Utils\R.cs" />
-    <Compile Include="Utils\RunInbackgroundTaskExtensions.cs" />
-    <Compile Include="Utils\TaskExtensions.cs" />
-    <Compile Include="Utils\TaskThrottler.cs" />
+    <Compile Include="Utils\Threading\RunInbackgroundTaskExtensions.cs" />
+    <Compile Include="Utils\Threading\TaskExtensions.cs" />
+    <Compile Include="Utils\Threading\TaskThrottler.cs" />
     <Compile Include="Utils\UI\BusyIndicator.cs" />
     <Compile Include="Utils\UI\WpfExtensions.cs" />
     <Compile Include="Utils\UI\Mvvm\Property.cs" />
@@ -446,7 +446,7 @@
     <Compile Include="MainWindowViews\MainWindowViewModel.cs" />
     <Compile Include="Utils\Asserter.cs" />
     <Compile Include="Utils\Sorter.cs" />
-    <Compile Include="Utils\Timing.cs" />
+    <Compile Include="Utils\Threading\Timing.cs" />
     <Compile Include="Utils\UI\Mvvm\ViewModel.cs" />
     <Compile Include="Utils\UI\Mvvm\SourceWhenSetter.cs" />
     <Compile Include="Utils\UI\VirtualCanvas\VirtualItemsSource.cs" />

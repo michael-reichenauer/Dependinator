@@ -4,6 +4,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using Dependinator.Utils;
+using Dependinator.Utils.Net;
+using Dependinator.Utils.Threading;
 
 
 namespace Dependinator.Common.ModelMetadataFolders.Private

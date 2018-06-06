@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using Dependinator.Utils;
+using Dependinator.Utils.Net;
 
 
 namespace Dependinator.Common.ModelMetadataFolders.Private
