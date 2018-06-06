@@ -11,7 +11,7 @@ namespace Updater
 {
 	class Program
 	{
-		private static readonly string ValidCertificateHash = "237579EEA9F05A4F8CA7C4ADA4AAD620660AB3AF";
+		private static readonly string ValidCertificateHash = "1CCB2B742FF45D6A3A4E42D34FD8497CE5212EF0";
 
 		private static readonly string ProgramName = "Dependinator";
 		private static readonly string SetupExeName = $"{ProgramName}Setup.exe";
