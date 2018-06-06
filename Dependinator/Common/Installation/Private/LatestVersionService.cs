@@ -70,6 +70,7 @@ namespace Dependinator.Common.Installation.Private
 			if (await IsNewRemoteVersionAvailableAsync())
 			{
 				await DownloadLatestVersionAsync();
+				await IsNewRemoteVersionAvailableAsync();
 			}
 		}
 

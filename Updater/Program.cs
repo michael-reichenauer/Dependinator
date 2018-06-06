@@ -43,12 +43,12 @@ namespace Updater
 		{
 			// Register TryUpdate task running as normal user, which will
 			// check for new updates and download new installer if available
-			string updateConfigPath = GetTaskConfigPath("Updater");
+			string updateConfigPath = GetTaskConfigPath("Updater", 1, 10);
 			string updateArgs = $@"/Create /tn ""{UpdateTaskName}"" /F /XML ""{updateConfigPath}""";
 			Process.Start("schtasks", updateArgs)?.WaitForExit(5000);
 
 			// Register TryRenew task, which will run downloaded installer as SYSTEM user (admin rights)
-			string renewConfigPath = GetTaskConfigPath("Renewer");
+			string renewConfigPath = GetTaskConfigPath("Renewer", 1, 20);
 			string renewArgs = $@"/Create /tn ""{RenewTaskName}"" /F /XML ""{renewConfigPath}""";
 			Process.Start("schtasks", renewArgs)?.WaitForExit(5000);
 		}
@@ -57,7 +57,7 @@ namespace Updater
 		private static void TryUpdate()
 		{
 			// Get path to Dependinator.exe
-			string programFolder= Path.GetDirectoryName(typeof(Program).Assembly.Location);
+			string programFolder = Path.GetDirectoryName(typeof(Program).Assembly.Location);
 			string dependinatorPath = Path.Combine(programFolder, $"{ProgramName}.exe");
 
 			// Run Dependinator.exe to check for and download new new installer filer
@@ -100,13 +100,14 @@ namespace Updater
 		}
 
 
-		private static string GetTaskConfigPath(string configName)
+		private static string GetTaskConfigPath(string configName, int startHour, int startMinute)
 		{
 			DateTime now = DateTime.Now;
 			string location = typeof(Program).Assembly.Location;
 
 			string date = now.ToString("s");
-			string startBoundary = new DateTime(now.Year, now.Month, now.Day, 1, 10, 0).ToString("s");
+			string startBoundary = new DateTime(now.Year, now.Month, now.Day, startHour, startMinute, 0)
+				.ToString("s");
 			string command = location;
 
 			string templateText = GetTaskConfigTemplate(configName);
