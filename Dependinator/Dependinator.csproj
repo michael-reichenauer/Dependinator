@@ -353,7 +353,7 @@
       <DependentUpon>MemberNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\MemberNodeViewModel.cs" />
-    <Compile Include="Common\NodeName.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Core\NodeName.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeComparer.cs" />
     <Compile Include="ModelViewing\Items\ItemsView.xaml.cs">
       <DependentUpon>ItemsView.xaml</DependentUpon>
