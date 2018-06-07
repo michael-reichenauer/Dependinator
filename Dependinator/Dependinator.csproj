@@ -196,7 +196,7 @@
     <Compile Include="ModelViewing\ModelHandling\Private\ModelLineService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\NodeService.cs" />
-    <Compile Include="Utils\Applications\Track.cs" />
+    <Compile Include="Utils\Track.cs" />
     <Compile Include="Utils\AsserterEventArgs.cs" />
     <Compile Include="Utils\Net\HttpClientDownloadWithProgress.cs" />
     <Compile Include="Utils\OsSystem\SystemIdle.cs" />
@@ -251,7 +251,7 @@
     <Compile Include="ModelViewing\Open\OpenModelViewModel.cs" />
     <Compile Include="Common\NamespaceDoc.cs" />
     <Compile Include="NamespaceDoc.cs" />
-    <Compile Include="Utils\Config.cs" />
+    <Compile Include="Utils\BuildConfig.cs" />
     <Compile Include="Utils\Culture.cs" />
     <Compile Include="Utils\System\DoubleExtensions.cs" />
     <Compile Include="Utils\NamespaceDoc.cs" />

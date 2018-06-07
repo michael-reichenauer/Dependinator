@@ -1,6 +1,6 @@
 ﻿namespace Dependinator.Utils
 {
-	internal static class Config
+	internal static class BuildConfig
 	{
 		public static bool IsDebug
 		{

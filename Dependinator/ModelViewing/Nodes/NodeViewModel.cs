@@ -251,7 +251,8 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private string DebugToolTip => "" + ItemsToolTip;
 
-		private string ItemsToolTip => !Config.IsDebug ? "" :
+
+		private string ItemsToolTip => !BuildConfig.IsDebug ? "" :
 			"\n" +
 			$"\nLines; In: {IncomingLinesCount}, Out: {OutgoingLinesCount}" +
 			$"\nLinks; In: {IncomingLinksCount}, Out: {OutgoingLinksCount}" +

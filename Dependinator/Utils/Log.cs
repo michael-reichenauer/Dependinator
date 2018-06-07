@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Dependinator.Utils.Applications;
 using Dependinator.Utils.OsSystem;
 
 
@@ -143,7 +142,7 @@ namespace Dependinator.Utils
 
 		public static void Exception(
 			Exception e,
-			StopParameter stop = default(StopParameter),
+			DelimiterParameter stop = default(DelimiterParameter),
 			[CallerMemberName] string memberName = "",
 			[CallerFilePath] string sourceFilePath = "",
 			[CallerLineNumber] int sourceLineNumber = 0)
@@ -287,6 +286,10 @@ namespace Dependinator.Utils
 		{
 			[DllImport("kernel32.dll", CharSet = CharSet.Auto)]
 			public static extern void OutputDebugString(string message);
+		}
+
+		public struct DelimiterParameter
+		{
 		}
 	}
 }

@@ -9,7 +9,6 @@ using Dependinator.Common.SettingsHandling;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.MainWindowViews;
 using Dependinator.Utils;
-using Dependinator.Utils.Applications;
 
 
 namespace Dependinator

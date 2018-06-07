@@ -13,8 +13,7 @@ using Microsoft.ApplicationInsights.Extensibility.Implementation;
 using Microsoft.Win32;
 
 
-
-namespace Dependinator.Utils.Applications
+namespace Dependinator.Utils
 {
 	public static class Track
 	{

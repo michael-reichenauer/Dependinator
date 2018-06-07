@@ -53,7 +53,7 @@ namespace Dependinator.Utils.Threading
 
 		public void Log(
 			string message,
-			StopParameter stopParameter = default(StopParameter),
+			DelimiterParameter delimiterParameter = default(DelimiterParameter),
 			[CallerMemberName] string memberName = "",
 			[CallerFilePath] string sourceFilePath = "",
 			[CallerLineNumber] int sourceLineNumber = 0)
@@ -65,7 +65,7 @@ namespace Dependinator.Utils.Threading
 		}
 
 		public void Log(
-			StopParameter stopParameter = default(StopParameter),
+			DelimiterParameter delimiterParameter = default(DelimiterParameter),
 			[CallerMemberName] string memberName = "",
 			[CallerFilePath] string sourceFilePath = "",
 			[CallerLineNumber] int sourceLineNumber = 0)
@@ -77,5 +77,9 @@ namespace Dependinator.Utils.Threading
 
 		
 		public override string ToString() => $"Timing: {DiffMs}ms ({ElapsedMs}ms)";
+
+		public struct DelimiterParameter
+		{
+		}
 	}
 }
