@@ -38,6 +38,7 @@ namespace Dependinator
 		public static void Main()
 		{
 			Culture.Initialize();
+			Track.Enable(Name, Version, ProgramInfo.IsInstalledInstance() || ProgramInfo.IsSetupFile());
 			Log.Init(ProgramInfo.GetLogFilePath());
 			Log.Debug(GetStartLineText());
 			Program program = new Program();

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils.Serialization;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.Channel;
@@ -19,19 +18,16 @@ namespace Dependinator.Utils
 	{
 		private static readonly string TrackIdFileName = "F9735C34-4DAB-4660-AE0D-D103B9DBAA87";
 
-		private static readonly TelemetryClient Tc;
+		private static TelemetryClient Tc;
 		private static bool isStarted = false;
 
 
-		static Track()
+		public static void Enable(
+			string programName,
+			string programVersion,
+			bool isProduction)
 		{
-			//if (Settings.Get<Options>().DisableErrorAndUsageReporting)
-			//{
-			//	Log.Info("Disabled usage and error reporting");
-			//	return;
-			//}
-
-			string instrumentationKey = GetInstrumentationKey(out bool isProduction);
+			string instrumentationKey = GetInstrumentationKey(isProduction);
 			if (instrumentationKey == null)
 			{
 				return;
@@ -43,10 +39,10 @@ namespace Dependinator.Utils
 			Tc.Context.User.Id = GetTrackId();
 			SetInternalNodeName();
 			Tc.Context.Cloud.RoleInstance = Tc.Context.User.Id;
-			Tc.Context.User.UserAgent = $"{Program.Name}/{Program.Version}";
+			Tc.Context.User.UserAgent = $"{programName}/{programVersion}";
 			Tc.Context.Session.Id = Guid.NewGuid().ToString();
 			Tc.Context.Device.OperatingSystem = Environment.OSVersion.ToString();
-			Tc.Context.Component.Version = Program.Version;
+			Tc.Context.Component.Version = programVersion;
 			Log.Info($"Enabled usage and error reporting for: {Tc.Context.User.Id}, Production: {isProduction}");
 
 			//var builder = TelemetryConfiguration.Active.TelemetryProcessorChainBuilder;
@@ -168,20 +164,10 @@ namespace Dependinator.Utils
 		}
 
 
-		private static string GetInstrumentationKey(out bool isProduction)
+		private static string GetInstrumentationKey(bool isProduction)
 		{
-			isProduction = false;
-			string currentInstancePath = Program.Location;
-
-			if (currentInstancePath == null)
+			if (isProduction)
 			{
-				Log.Debug("Running in test functions, disabled Tracking");
-				return null;
-			}
-
-			if (currentInstancePath != null && (ProgramInfo.IsInstalledInstance() || IsSetupFile()))
-			{
-				isProduction = true;
 				return "ca57cc9a-3b51-4de4-ba52-1d2429407e83";
 			}
 
@@ -189,11 +175,7 @@ namespace Dependinator.Utils
 		}
 
 
-		private static bool IsSetupFile()
-		{
-			return Path.GetFileNameWithoutExtension(Program.Location)
-				.IsSameIgnoreCase("DependinatorSetup");
-		}
+	
 
 
 		private static string GetTrackId()

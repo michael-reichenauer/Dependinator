@@ -22,6 +22,8 @@ namespace Dependinator.Common.SettingsHandling
 
 		public static bool IsInstalledInstance() => Program.Location.IsSameIgnoreCase(GetInstallFilePath());
 
+		public static bool IsSetupFile() => Path.GetFileName(Program.Location).IsSameIgnoreCase(SetupName);
+
 		public static DateTime GetBuildTime() => GetBuildTime(Program.Location);
 
 		public static string GetLogFilePath() => GetDataFolderSubPath(ProgramLogName);
