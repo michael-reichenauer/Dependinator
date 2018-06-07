@@ -116,7 +116,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
 		private static string GetMetadataFolderId(string metadataFolderPath)
 		{
-			string name = Program.Guid + Uri.EscapeDataString(metadataFolderPath);
+			string name = ProgramInfo.Guid + Uri.EscapeDataString(metadataFolderPath);
 
 			string id = AsSha2Text(name);
 			return id;

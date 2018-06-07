@@ -102,7 +102,7 @@ namespace Dependinator
 				}
 			}
 
-			Log.Usage($"Start version: {Program.Version}");
+			Log.Usage($"Start version: {ProgramInfo.Version}");
 			Track.StartProgram();
 			Start();
 		}
@@ -154,7 +154,7 @@ namespace Dependinator
 		private void Start()
 		{
 			// This mutex is used by the installer (or uninstaller) to determine if instances are running
-			applicationMutex = new Mutex(true, Program.Guid);
+			applicationMutex = new Mutex(true, ProgramInfo.Guid);
 
 			MainWindow = mainWindow.Value;
 

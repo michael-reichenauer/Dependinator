@@ -429,7 +429,7 @@
     <Compile Include="Common\Installation\ILatestVersionService.cs" />
     <Compile Include="Common\Installation\Private\LatestVersionService.cs" />
     <Compile Include="Common\Installation\Private\Installer.cs" />
-    <Compile Include="Common\SettingsHandling\ProgramInfo.cs" />
+    <Compile Include="ProgramInfo.cs" />
     <Compile Include="Common\SettingsHandling\ProgramSettings.cs" />
     <Compile Include="Utils\UI\PropertyToVisibilityConverter.cs" />
     <Compile Include="Utils\OsSystem\CmdResult.cs" />

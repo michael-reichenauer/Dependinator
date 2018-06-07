@@ -35,6 +35,6 @@ namespace Dependinator.Common.Environment.Private
 
 
 		private bool IsSetupFile() => 
-			Path.GetFileNameWithoutExtension(Program.Location).StartsWith($"{Program.Name}Setup");
+			Path.GetFileNameWithoutExtension(ProgramInfo.Location).StartsWith($"{ProgramInfo.Name}Setup");
 	}
 }

@@ -1,17 +1,32 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using Dependinator.Utils;
+using Dependinator.Utils.OsSystem;
 
 
-namespace Dependinator.Common.SettingsHandling
+namespace Dependinator
 {
 	internal static class ProgramInfo
 	{
-		public static readonly string ProgramFileName = Program.Name + ".exe";
-		public static readonly string ProgramLogName = Program.Name + ".log";
-		public static readonly string SetupName = Program.Name + "Setup.exe";
-		public static readonly string VersionFileName = Program.Name + ".Version.txt";
+
+		public static readonly string Name = "Dependinator";
+		public static readonly string Guid = "ee48e8b2-701f-4881-815f-dc7fd8139061";
+		public static readonly Assembly Assembly = typeof(Program).Assembly;
+		public static readonly string Version = Assembly.GetFileVersion();
+		public static readonly string Location = Assembly.Location;
+
+		public static readonly string FeedbackAddress =
+			$"mailto:michael.reichenauer@gmail.com&subject={Name} Feedback";
+
+		public static readonly string GitHubHelpAddress =
+			$"https://github.com/michael-reichenauer/{Name}/wiki/Help";
+
+		public static readonly string ProgramFileName = Name + ".exe";
+		public static readonly string ProgramLogName = Name + ".log";
+		public static readonly string SetupName = Name + "Setup.exe";
+		public static readonly string VersionFileName = Name + ".Version.txt";
 
 
 		public static string GetInstallFilePath() => GetInstallFolderSubPath(ProgramFileName);
@@ -20,17 +35,17 @@ namespace Dependinator.Common.SettingsHandling
 
 		public static Version GetInstalledVersion() => GetInstalledInstanceVersion();
 
-		public static bool IsInstalledInstance() => Program.Location.IsSameIgnoreCase(GetInstallFilePath());
+		public static bool IsInstalledInstance() => Location.IsSameIgnoreCase(GetInstallFilePath());
 
-		public static bool IsSetupFile() => Path.GetFileName(Program.Location).IsSameIgnoreCase(SetupName);
+		public static bool IsSetupFile() => Path.GetFileName(Location).IsSameIgnoreCase(SetupName);
 
-		public static DateTime GetBuildTime() => GetBuildTime(Program.Location);
+		public static DateTime GetBuildTime() => GetBuildTime(Location);
 
 		public static string GetLogFilePath() => GetDataFolderSubPath(ProgramLogName);
 
 		public static string GetTempFolderPath() => EnsureFolderExists(GetDataFolderSubPath("Temp"));
 
-		public static string GetTempFilePath() => Path.Combine(GetTempFolderPath(), Guid.NewGuid().ToString());
+		public static string GetTempFilePath() => Path.Combine(GetTempFolderPath(), System.Guid.NewGuid().ToString());
 
 		public static string GetModelMetadataFoldersRoot() => EnsureFolderExists(GetDataFolderSubPath("WorkingFolders"));
 
@@ -44,7 +59,7 @@ namespace Dependinator.Common.SettingsHandling
 		{
 			string programFolderPath = System.Environment.ExpandEnvironmentVariables("%ProgramW6432%"); 
 
-			return Path.Combine(programFolderPath, Program.Name);
+			return Path.Combine(programFolderPath, Name);
 		}
 
 
@@ -53,7 +68,7 @@ namespace Dependinator.Common.SettingsHandling
 			string programFolderPath = System.Environment.GetFolderPath(
 				System.Environment.SpecialFolder.CommonApplicationData);
 
-			return Path.Combine(programFolderPath, Program.Name);
+			return Path.Combine(programFolderPath, Name);
 		}
 
 
@@ -96,7 +111,7 @@ namespace Dependinator.Common.SettingsHandling
 				if (File.Exists(GetInstallVersionFilePath()))
 				{
 					string versionText = File.ReadAllText(GetInstallVersionFilePath());
-					return Version.Parse(versionText);
+					return System.Version.Parse(versionText);
 				}
 				else
 				{
@@ -129,7 +144,7 @@ namespace Dependinator.Common.SettingsHandling
 			{
 				FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(path);
 				string versionText = fvi.ProductVersion;
-				Version version = Version.Parse(versionText);
+				Version version = System.Version.Parse(versionText);
 
 				return version;
 			}
