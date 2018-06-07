@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
+using Dependinator.Utils.ErrorHandling;
 using Dependinator.Utils.Serialization;
 using Dependinator.Utils.Threading;
 using Newtonsoft.Json;

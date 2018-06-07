@@ -1,4 +1,4 @@
-﻿using Dependinator.Utils;
+﻿using Dependinator.Utils.OsSystem;
 using NUnit.Framework;
 
 

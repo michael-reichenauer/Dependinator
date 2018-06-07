@@ -2,7 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 
 
-namespace Dependinator.Utils
+namespace Dependinator.Utils.Collections
 {
 	public class KeyedList<TKey, TValue> : 
 		KeyedCollection<TKey, TValue>,

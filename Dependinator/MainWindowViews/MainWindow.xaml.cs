@@ -1,13 +1,13 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Dependinator.Common;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.SettingsHandling;
-using Dependinator.Utils;
-using Dependinator.Utils.Threading;
+using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI;
 
 
@@ -26,7 +26,7 @@ namespace Dependinator.MainWindowViews
 
 
 		internal MainWindow(
-			ISettingsService settingsService, 
+			ISettingsService settingsService,
 			Func<MainWindowViewModel> mainWindowViewModelProvider,
 			ModelMetadata folder)
 		{
@@ -86,7 +86,7 @@ namespace Dependinator.MainWindowViews
 
 		public void RestoreWindowSettings()
 		{
-			ResizeMode = folder.IsDefault ? ResizeMode.NoResize: ResizeMode.CanResize;
+			ResizeMode = folder.IsDefault ? ResizeMode.NoResize : ResizeMode.CanResize;
 			WorkFolderSettings s = settingsService.Get<WorkFolderSettings>();
 
 			Rectangle rect = new Rectangle(

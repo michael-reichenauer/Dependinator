@@ -1,7 +1,10 @@
-﻿namespace System.Threading.Tasks
+﻿// ReSharper disable once CheckNamespace
+namespace System.Threading.Tasks
 {
-	public static class TaskExtensions
+	internal static class TaskExExtensions
 	{
+		public static event EventHandler<FatalExceptionEventArgs> FatalException;
+
 		/// <summary>
 		/// Provides a workaround for async functions that have no built-in cancellation support.
 		/// This functions should only be used as a last resort. It does not cancel the original, call
@@ -39,6 +42,20 @@
 			}
 
 			await task;
+		}
+
+		public static void RunInBackground(this Task task)
+		{
+			task.ContinueWith(
+				LogFailedTask,
+				TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnFaulted);
+		}
+
+
+		private static void LogFailedTask(Task task)
+		{
+			FatalException?.Invoke(null, new FatalExceptionEventArgs(
+				"RunInBackground task failed", task.Exception));
 		}
 	}
 }

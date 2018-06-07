@@ -6,6 +6,7 @@ using System.Security;
 using System.Text;
 
 
+// ReSharper disable once CheckNamespace
 namespace System.Diagnostics
 {
 	/// <summary>
@@ -22,7 +23,7 @@ namespace System.Diagnostics
 		/// Produces an async-friendly readable representation of the stack trace.
 		/// </summary>
 		/// <remarks>
-		/// The async-friendly formatting is archieved by:
+		/// The async-friendly formatting is achieved by:
 		/// * Skipping all awaiter frames (all methods in types implementing <see cref="IAsyncStateMachine"/>).
 		/// * Inferring the original method name from the async state machine class (<see cref="IAsyncStateMachine"/>)
 		///   and removing the "MoveNext" - currently only for C#.

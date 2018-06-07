@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using Dependinator.Common.ModelMetadataFolders.Private;
-using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 
 
 namespace Dependinator.Common.ModelMetadataFolders

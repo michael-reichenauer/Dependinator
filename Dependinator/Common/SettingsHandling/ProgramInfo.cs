@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using Dependinator.Utils;
 
+
 namespace Dependinator.Common.SettingsHandling
 {
 	internal static class ProgramInfo

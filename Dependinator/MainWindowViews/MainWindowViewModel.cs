@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -14,7 +13,7 @@ using Dependinator.ModelViewing;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Open;
-using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
 using Application = System.Windows.Application;

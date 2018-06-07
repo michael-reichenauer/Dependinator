@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Dependinator.Common;
 using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.ModelHandling.Private

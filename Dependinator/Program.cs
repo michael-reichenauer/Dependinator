@@ -5,6 +5,9 @@ using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
+using Dependinator.Utils.ErrorHandling;
+using Dependinator.Utils.OsSystem;
 
 
 namespace Dependinator
@@ -51,7 +54,7 @@ namespace Dependinator
 			AssemblyResolver.Activate(Assembly);
 
 			// Activate dependency injection support
-			dependencyInjection.RegisterDependencyInjectionTypes(Assembly);
+			dependencyInjection.RegisterTypes(Assembly);
 
 			// Start application
 			App application = dependencyInjection.Resolve<App>();

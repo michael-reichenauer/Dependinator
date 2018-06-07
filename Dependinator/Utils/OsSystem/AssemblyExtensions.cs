@@ -2,7 +2,7 @@
 using System.Reflection;
 
 
-namespace Dependinator.Utils
+namespace Dependinator.Utils.OsSystem
 {
 	internal static class AssemblyExtensions
 	{

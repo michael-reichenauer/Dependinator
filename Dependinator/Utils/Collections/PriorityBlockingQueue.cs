@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 
 
-namespace Dependinator.Utils
+namespace Dependinator.Utils.Collections
 {
 	public class PriorityBlockingQueue<T>
 	{

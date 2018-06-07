@@ -199,7 +199,7 @@
     <Compile Include="Utils\Applications\Track.cs" />
     <Compile Include="Utils\AsserterEventArgs.cs" />
     <Compile Include="Utils\Net\HttpClientDownloadWithProgress.cs" />
-    <Compile Include="Utils\SystemIdle.cs" />
+    <Compile Include="Utils\OsSystem\SystemIdle.cs" />
     <Compile Include="Utils\UI\MouseHelper.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControl.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControlViewModel.cs" />
@@ -255,7 +255,7 @@
     <Compile Include="Utils\Culture.cs" />
     <Compile Include="Utils\System\DoubleExtensions.cs" />
     <Compile Include="Utils\NamespaceDoc.cs" />
-    <Compile Include="Utils\PriorityBlockingQueue.cs" />
+    <Compile Include="Utils\Collections\PriorityBlockingQueue.cs" />
     <Compile Include="MainWindowViews\SearchFilter.xaml.cs">
       <DependentUpon>SearchFilter.xaml</DependentUpon>
     </Compile>
@@ -267,8 +267,8 @@
       <DependentUpon>TitleView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\ModelHandling\Private\Convert.cs" />
-    <Compile Include="Utils\AssemblyExtensions.cs" />
-    <Compile Include="Utils\AssemblyResolver.cs" />
+    <Compile Include="Utils\OsSystem\AssemblyExtensions.cs" />
+    <Compile Include="Utils\Dependencies\AssemblyResolver.cs" />
     <Compile Include="Utils\System\NamespaceDoc.cs" />
     <Compile Include="Utils\UI\BrushExtensions.cs" />
     <Compile Include="Utils\UI\DispatcherExtensions.cs" />
@@ -313,7 +313,6 @@
     <Compile Include="Utils\UI\SizeExtensions.cs" />
     <Compile Include="Utils\UI\ThrottleDispatcher.cs" />
     <Compile Include="Utils\UI\VectorExtensions.cs" />
-    <Compile Include="Utils\With.cs" />
     <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -375,22 +374,21 @@
     <Compile Include="Utils\System\CollectionExtensions.cs" />
     <Compile Include="Utils\System\ExceptionAsyncExtensions.cs" />
     <Compile Include="Utils\System\ExceptionExtensions.cs" />
-    <Compile Include="Utils\FatalExceptionEventArgs.cs" />
+    <Compile Include="Utils\ErrorHandling\FatalExceptionEventArgs.cs" />
     <Compile Include="Utils\System\MathExtensions.cs" />
-    <Compile Include="Utils\AsyncLock.cs" />
-    <Compile Include="Utils\DependencyInjection.cs" />
+    <Compile Include="Utils\Threading\AsyncLock.cs" />
+    <Compile Include="Utils\Dependencies\DependencyInjection.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\FolderMonitorService.cs" />
     <Compile Include="MainWindowViews\IMainWindowService.cs" />
     <Compile Include="Common\ModelMetadataFolders\Private\MainWindowIpcService.cs" />
     <Compile Include="MainWindowViews\Private\MainWindowService.cs" />
     <Compile Include="Common\WindowOwner.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="Utils\StackTraceExtensions.cs" />
-    <Compile Include="Utils\StopParameter.cs" />
+    <Compile Include="Utils\ErrorHandling\StackTraceExtensions.cs" />
+    <Compile Include="Utils\OsSystem\StopParameter.cs" />
     <Compile Include="Utils\Threading\Throttler.cs" />
     <Compile Include="Utils\Txt.cs" />
     <Compile Include="Utils\UI\CredentialsDialog.cs" />
-    <Compile Include="Utils\Disposable.cs" />
     <Compile Include="Common\SettingsHandling\Private\SettingsService.cs" />
     <Compile Include="Common\SettingsHandling\Options.cs" />
     <Compile Include="Common\SettingsHandling\WorkFolderSettings.cs" />
@@ -398,7 +396,7 @@
     <Compile Include="Utils\Net\IpcService.cs" />
     <Compile Include="Utils\Serialization\Json.cs" />
     <Compile Include="Utils\Serialization\ProtoBufSerializer.cs" />
-    <Compile Include="Utils\SingleInstanceAttribute.cs" />
+    <Compile Include="Utils\Dependencies\SingleInstanceAttribute.cs" />
     <Compile Include="Utils\UI\InputBindingsBehavior.cs" />
     <Compile Include="Utils\UI\VirtualCanvas\ItemEventArgs.cs" />
     <Compile Include="Utils\UI\VirtualCanvas\WindowsExtensions.cs" />
@@ -418,15 +416,15 @@
     <Compile Include="Common\ThemeHandling\IThemeService.cs" />
     <Compile Include="ModelViewing\Items\ItemsSource.cs" />
     <Compile Include="ModelViewing\ModelViewModel.cs" />
-    <Compile Include="Utils\IReadOnlyKeyedList.cs" />
-    <Compile Include="Utils\KeyedList.cs" />
-    <Compile Include="Utils\ExceptionHandling.cs" />
-    <Compile Include="Utils\FatalExceptionsExtensions.cs" />
+    <Compile Include="Utils\Collections\IReadOnlyKeyedList.cs" />
+    <Compile Include="Utils\Collections\KeyedList.cs" />
+    <Compile Include="Utils\ErrorHandling\ExceptionHandling.cs" />
+    <Compile Include="Utils\ErrorHandling\FatalExceptionsExtensions.cs" />
     <Compile Include="Common\Environment\Private\CommandLine.cs" />
     <Compile Include="Common\Environment\ICommandLine.cs" />
-    <Compile Include="Utils\AsyncSemaphore.cs" />
+    <Compile Include="Utils\Threading\AsyncSemaphore.cs" />
     <Compile Include="Utils\System\EnumerableExtensions.cs" />
-    <Compile Include="Utils\Error.cs" />
+    <Compile Include="Utils\ErrorHandling\Error.cs" />
     <Compile Include="Common\Installation\IInstaller.cs" />
     <Compile Include="Common\Installation\ILatestVersionService.cs" />
     <Compile Include="Common\Installation\Private\LatestVersionService.cs" />
@@ -434,10 +432,9 @@
     <Compile Include="Common\SettingsHandling\ProgramInfo.cs" />
     <Compile Include="Common\SettingsHandling\ProgramSettings.cs" />
     <Compile Include="Utils\UI\PropertyToVisibilityConverter.cs" />
-    <Compile Include="Utils\CmdResult.cs" />
-    <Compile Include="Utils\R.cs" />
-    <Compile Include="Utils\Threading\RunInbackgroundTaskExtensions.cs" />
-    <Compile Include="Utils\Threading\TaskExtensions.cs" />
+    <Compile Include="Utils\OsSystem\CmdResult.cs" />
+    <Compile Include="Utils\ErrorHandling\R.cs" />
+    <Compile Include="Utils\Threading\TaskExExtensions.cs" />
     <Compile Include="Utils\Threading\TaskThrottler.cs" />
     <Compile Include="Utils\UI\BusyIndicator.cs" />
     <Compile Include="Utils\UI\WpfExtensions.cs" />
@@ -445,7 +442,7 @@
     <Compile Include="Utils\UI\Mvvm\Command.cs" />
     <Compile Include="MainWindowViews\MainWindowViewModel.cs" />
     <Compile Include="Utils\Asserter.cs" />
-    <Compile Include="Utils\Sorter.cs" />
+    <Compile Include="Utils\Collections\Sorter.cs" />
     <Compile Include="Utils\Threading\Timing.cs" />
     <Compile Include="Utils\UI\Mvvm\ViewModel.cs" />
     <Compile Include="Utils\UI\Mvvm\SourceWhenSetter.cs" />
@@ -457,10 +454,10 @@
     <Compile Include="Utils\UI\VirtualCanvas\PriorityQuadTree.cs" />
     <Compile Include="Utils\UI\VirtualCanvas\PriorityQueue.cs" />
     <Compile Include="Utils\UI\VirtualCanvas\RectExtensions.cs" />
-    <Compile Include="Utils\Cmd.cs" />
-    <Compile Include="Utils\ICmd.cs" />
+    <Compile Include="Utils\OsSystem\Cmd.cs" />
+    <Compile Include="Utils\OsSystem\ICmd.cs" />
     <Compile Include="Utils\Log.cs" />
-    <Compile Include="Utils\MicroDiContainer.cs" />
+    <Compile Include="Utils\Dependencies\MicroDiContainer.cs" />
     <Compile Include="Utils\UI\VirtualCanvas\VirtualPanel.cs" />
     <Compile Include="Utils\UI\VirtualCanvas\ZoomableCanvas.cs" />
     <Compile Include="Common\WindowControlButtons.xaml.cs">
@@ -655,6 +652,7 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>

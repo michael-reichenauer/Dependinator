@@ -1,9 +1,10 @@
 using System;
 using System.IO;
 using System.Reflection;
+using Dependinator.Utils.OsSystem;
 
 
-namespace Dependinator.Utils
+namespace Dependinator.Utils.Dependencies
 {
 	internal class AssemblyResolver
 	{

@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Dependinator.Utils.Applications;
-using Dependinator.Utils.Threading;
+using Dependinator.Utils.OsSystem;
 
 
 namespace Dependinator.Utils

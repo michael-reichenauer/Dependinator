@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 
+// ReSharper disable once CheckNamespace
 namespace System
 {
 	internal static class FatalExceptionsExtensions
@@ -43,7 +44,7 @@ namespace System
 		};
 
 
-		public static event EventHandler<FatalExceptionEventArgs> FatalExeption;
+		public static event EventHandler<FatalExceptionEventArgs> FatalException;
 
 
 		public static bool IsNotFatal(this Exception e)
@@ -56,7 +57,7 @@ namespace System
 				StackTrace stackTrace = new StackTrace(1, true);
 				string stackTraceText = stackTrace.ToString();
 				string message = $"Exception type is fatal: {exceptionType}, {e}\n at \n{stackTraceText}";
-				FatalExeption?.Invoke(null, new FatalExceptionEventArgs(message, exception));
+				FatalException?.Invoke(null, new FatalExceptionEventArgs(message, exception));
 				return false;
 			}
 

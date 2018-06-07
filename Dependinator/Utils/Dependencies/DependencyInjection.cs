@@ -5,7 +5,7 @@ using Autofac;
 using Autofac.Core.Activators.Reflection;
 
 
-namespace Dependinator.Utils
+namespace Dependinator.Utils.Dependencies
 {
 	internal class DependencyInjection
 	{
@@ -20,7 +20,7 @@ namespace Dependinator.Utils
 		}
 
 
-		public void RegisterDependencyInjectionTypes(Assembly assembly)
+		public void RegisterTypes(Assembly assembly)
 		{
 			try
 			{

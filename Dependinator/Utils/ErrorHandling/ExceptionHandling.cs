@@ -6,7 +6,7 @@ using System.Windows.Threading;
 using Dependinator.Utils.UI;
 
 
-namespace Dependinator.Utils
+namespace Dependinator.Utils.ErrorHandling
 {
 	/// <summary>
 	/// Handles unhandled exceptions top ensure they are logged and program is restarted or shut down
@@ -40,11 +40,13 @@ namespace Dependinator.Utils
 			};
 
 			// Add event handler for fatal exceptions using catch condition "when (e.IsNotFatal())"
-			FatalExceptionsExtensions.FatalExeption += (s, e) =>
+			FatalExceptionsExtensions.FatalException += (s, e) =>
 				HandleException(e.Message, e.Exception);
 
 			// Add handler for asserts
 			Asserter.AssertOccurred += (s, e) => HandleException("Assert failed", e.Exception);
+
+			TaskExExtensions.FatalException += (s, e) => HandleException(e.Message, e.Exception);
 		}
 
 

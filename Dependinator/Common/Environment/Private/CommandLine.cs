@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
-using System.Reflection;
-using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 
 
 namespace Dependinator.Common.Environment.Private

@@ -2,7 +2,7 @@
 using System.Runtime.InteropServices;
 
 
-namespace Dependinator.Utils
+namespace Dependinator.Utils.OsSystem
 {
 	public class SystemIdle
 	{

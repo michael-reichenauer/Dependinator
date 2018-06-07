@@ -1,4 +1,4 @@
-﻿namespace Dependinator.Utils
+﻿namespace Dependinator.Utils.OsSystem
 {
 	public interface ICmd
 	{

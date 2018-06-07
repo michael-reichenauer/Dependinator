@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 
 
-namespace Dependinator.Utils
+namespace Dependinator.Utils.Collections
 {
 	internal static class Sorter
 	{

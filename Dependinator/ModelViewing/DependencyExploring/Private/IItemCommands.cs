@@ -1,6 +1,4 @@
 using System;
-using System.Threading.Tasks;
-using Dependinator.Common;
 
 
 namespace Dependinator.ModelViewing.DependencyExploring.Private

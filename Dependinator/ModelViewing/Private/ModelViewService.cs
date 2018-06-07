@@ -10,6 +10,7 @@ using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.Threading;
 
 

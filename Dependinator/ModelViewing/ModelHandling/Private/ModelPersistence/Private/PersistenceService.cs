@@ -3,7 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Private.Serializing;
-using Dependinator.Utils;
+using Dependinator.Utils.ErrorHandling;
 
 
 namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Private

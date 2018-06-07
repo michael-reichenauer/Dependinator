@@ -1,7 +1,7 @@
 using System;
 
 
-namespace Dependinator.Utils
+namespace Dependinator.Utils.ErrorHandling
 {
 	public class R
 	{

@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.Net;
 using Dependinator.Utils.Threading;
 
