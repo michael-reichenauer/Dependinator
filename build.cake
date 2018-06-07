@@ -137,9 +137,11 @@ Task("Build-Setup")
     });
 	
 	var version = GetFullVersionNumber(outputPath);
+    Version v = Version.Parse(version);
+    string shortVersion = string.Format("{0}.{1}", v.Major, v.Minor);
 
-    Information("\nCreated: {0}", setupPath);
     Information("v{0}", version); 
+    Information("Version {0} alpha", shortVersion); 
 
     Information("\n\n");  
 })
@@ -185,6 +187,7 @@ Task("Prompt-Sign-Password")
 			}
 		}
 		while (key.Key != ConsoleKey.Enter);
+        Information(" ");
 
 		if (string.IsNullOrWhiteSpace(signPassword))
 		{
