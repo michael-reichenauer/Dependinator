@@ -20,6 +20,9 @@ namespace Dependinator
 		[STAThread]
 		public static void Main()
 		{
+			// Make external assemblies that Dependinator depends on available, when needed (extracted)
+			AssemblyResolver.Activate(ProgramInfo.Assembly);
+
 			Culture.Initialize();
 			Track.Enable(
 				ProgramInfo.Name,
@@ -36,9 +39,6 @@ namespace Dependinator
 		{
 			// Add handler and logging for unhandled exceptions
 			ManageUnhandledExceptions();
-
-			// Make external assemblies that Dependinator depends on available, when needed (extracted)
-			AssemblyResolver.Activate(ProgramInfo.Assembly);
 
 			// Activate dependency injection support
 			dependencyInjection.RegisterTypes(ProgramInfo.Assembly);
