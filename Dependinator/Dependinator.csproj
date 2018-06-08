@@ -166,6 +166,10 @@
       <DependentUpon>CodeDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\CodeViewing\CodeViewModel.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\IDependencyExplorerService.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyExplorerService.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyWindowService.cs" />
+    <Compile Include="ModelViewing\DependencyExploring\Private\IDependencyWindowService.cs" />
     <Compile Include="ModelViewing\DependencyExploring\Private\IItemCommands.cs" />
     <Compile Include="ModelViewing\IModelNotifications2.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\ParsingAssemblyResolver.cs" />
@@ -178,7 +182,7 @@
     </Compile>
     <Compile Include="ModelViewing\DependencyExploring\Private\DependencyItemViewModel.cs" />
     <Compile Include="ModelViewing\DependencyExploring\Private\DependenciesService.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\DependencyExplorerWindow.xaml.cs">
+    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyExplorerWindow.xaml.cs">
       <DependentUpon>DependencyExplorerWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\DependencyExploring\Private\DependencyExplorerWindowViewModel.cs" />
@@ -484,7 +488,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ModelViewing\DependencyExploring\DependencyExplorerWindow.xaml">
+    <Page Include="ModelViewing\DependencyExploring\Private\DependencyExplorerWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>

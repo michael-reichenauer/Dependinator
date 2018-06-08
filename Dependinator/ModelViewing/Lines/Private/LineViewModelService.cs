@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
-using Dependinator.Common;
 using Dependinator.ModelViewing.DependencyExploring;
-using Dependinator.ModelViewing.DependencyExploring.Private;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
@@ -17,9 +15,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 		private readonly ILineZoomService lineZoomService;
 		private readonly ILineDataService lineDataService;
 		private readonly IItemSelectionService itemSelectionService;
-		private readonly IDependenciesService dependenciesService;
-
-		private readonly WindowOwner owner;
+		private readonly IDependencyExplorerService dependencyExplorerService;
 
 
 		public LineViewModelService(
@@ -28,16 +24,14 @@ namespace Dependinator.ModelViewing.Lines.Private
 			ILineZoomService lineZoomService,
 			ILineDataService lineDataService,
 			IItemSelectionService itemSelectionService,
-			IDependenciesService dependenciesService,
-			WindowOwner owner)
+			IDependencyExplorerService dependencyExplorerService)
 		{
 			this.lineMenuItemService = lineMenuItemService;
 			this.lineControlService = lineControlService;
 			this.lineZoomService = lineZoomService;
 			this.lineDataService = lineDataService;
 			this.itemSelectionService = itemSelectionService;
-			this.dependenciesService = dependenciesService;
-			this.owner = owner;
+			this.dependencyExplorerService = dependencyExplorerService;
 		}
 
 
@@ -90,18 +84,10 @@ namespace Dependinator.ModelViewing.Lines.Private
 		}
 
 
-		public void Toggle(Line line)
-		{
-			lineZoomService.ZoomInLinkLine(line);
-		}
+		public void Toggle(Line line) => lineZoomService.ZoomInLinkLine(line);
 
 
-		public void ShowReferences(LineViewModel lineViewModel)
-		{
-			Line line = lineViewModel.Line;
-
-			DependencyExplorerWindow dependencyExplorerWindow = new DependencyExplorerWindow(dependenciesService, owner, line);
-			dependencyExplorerWindow.Show();
-		}
+		public void ShowReferences(LineViewModel lineViewModel) =>
+			dependencyExplorerService.ShowWindow(lineViewModel.Line);
 	}
 }
