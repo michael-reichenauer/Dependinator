@@ -15,7 +15,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			Owner = owner;
 			InitializeComponent();
 
-			DataContext = new DependencyExplorerWindowViewModel(dependencyWindowService, owner, node, line);
+			DataContext = new DependencyExplorerWindowViewModel(dependencyWindowService, node, line);
 		}
 	}
 }

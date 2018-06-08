@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
@@ -7,11 +6,16 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 {
 	internal interface IDependencyWindowService
 	{
-		bool TryGetNode(NodeName nodeName, out Node node);
-		Task RefreshModelAsync();
-		Task<IReadOnlyList<DependencyItem>> GetDependencyItemsAsync(IReadOnlyList<Line> lines, bool isSourceSide,
-			Node sourceNode, Node targetNode);
+		void Initialize(DependencyExplorerWindowViewModel viewModel, Node node, Line line);
 
+		Task SwitchSidesAsync(DependencyExplorerWindowViewModel viewModel);
+
+		Task RefreshAsync(DependencyExplorerWindowViewModel viewModel);
+
+		void FilterOn(
+			DependencyExplorerWindowViewModel viewModel,
+			DependencyItem dependencyItem,
+			bool isSourceSide);
 
 		void ShowCode(NodeName nodeName);
 	}
