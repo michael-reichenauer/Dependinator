@@ -14,7 +14,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 	{
 		private readonly IThemeService themeService;
 		private readonly IModelService modelService;
-		private readonly Lazy<IModelViewModel> modelViewModel;
+		private readonly Lazy<IModelNotifications2> modelViewModel;
 
 		private readonly WindowOwner owner;
 
@@ -22,7 +22,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		public DependenciesService(
 			IThemeService themeService,
 			IModelService modelService,
-			Lazy<IModelViewModel> modelViewModel,
+			Lazy<IModelNotifications2> modelViewModel,
 			WindowOwner owner)
 		{
 			this.themeService = themeService;
