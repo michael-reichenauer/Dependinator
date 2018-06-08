@@ -249,11 +249,13 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		private async Task SetTextsAsync(DependencyExplorerWindowViewModel viewModel)
 		{
 			await Task.Yield();
-			viewModel.SourceText = viewModel.sourceNodeName == NodeName.Root
-				? "all nodes" : viewModel.sourceNodeName.DisplayFullName;
-			viewModel.TargetText = viewModel.targetNodeName == NodeName.Root
-				? "all nodes" : viewModel.targetNodeName.DisplayFullName;
+			viewModel.SourceText = ToNodeText(viewModel.sourceNodeName);
+			viewModel.TargetText = ToNodeText(viewModel.targetNodeName);
 		}
+
+
+		private static string ToNodeText(NodeName nodeName) => 
+			nodeName == NodeName.Root ? "all nodes" : nodeName.DisplayFullName;
 
 
 		private static void SelectNode(Node node, IEnumerable<DependencyItemViewModel> items)

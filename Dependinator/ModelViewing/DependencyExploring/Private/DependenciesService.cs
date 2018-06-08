@@ -1,17 +1,13 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.ModelViewing.ModelHandling.Private;
 
 
 namespace Dependinator.ModelViewing.DependencyExploring.Private
 {
 	internal class DependenciesService : IDependenciesService
 	{
-
-
 		public async Task<IReadOnlyList<DependencyItem>> GetDependencyItemsAsync(
 			IEnumerable<Line> lines,
 			bool isSource,
@@ -27,15 +23,32 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 				var items = CreateReferenceHierarchy(links, options);
 
-				if (!items.Any())
-				{
-					return Enumerable.Empty<DependencyItem>().ToList();
-				}
-
 				DependencyItem rootItem = items[NodeName.Root];
+
+				AddMainNodeIfNeeded(rootItem, options);
 
 				return new List<DependencyItem> { rootItem };
 			});
+		}
+
+
+		private void AddMainNodeIfNeeded(DependencyItem rootItem, ReferenceOptions options)
+		{
+			Node mainNode = options.IsSource ? options.SourceFilter : options.TargetFilter;
+
+			if (rootItem.SubItems.Any() || mainNode.IsRoot)
+			{
+				return;
+			}
+
+			DependencyItem current = rootItem;
+
+			foreach (Node node in mainNode.AncestorsAndSelf().Reverse())
+			{
+				DependencyItem subItem = new DependencyItem(node.Name, node.CodeText != null);
+				current.AddChild(subItem);
+				current = subItem;
+			}
 		}
 
 

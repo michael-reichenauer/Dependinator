@@ -33,7 +33,8 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 		public DependencyItem Item { get; }
 
-		public string Text => Item.NodeName == NodeName.Root ? "all nodes" : Item.NodeName.DisplayName;
+		public string Text => Item.NodeName == NodeName.Root && SubItems.Any()
+			? "all nodes" : Item.NodeName == NodeName.Root ? "<no dependencies>" : Item.NodeName.DisplayName;
 
 		public ObservableCollection<DependencyItemViewModel> SubItems { get; }
 		public bool IsShowCodeButton => IsShowButtons && Item.HasCode;
@@ -44,7 +45,15 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 		public bool IsShowButtons
 		{
-			get => Get();
+			get
+			{
+				if (Item.NodeName == NodeName.Root && !SubItems.Any())
+				{
+					return false;
+				}
+
+				return Get();
+			}
 			set => Set(value).Notify(nameof(IsShowCodeButton), nameof(IsShowVisibilityButton));
 		}
 
