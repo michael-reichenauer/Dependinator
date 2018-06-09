@@ -10,9 +10,6 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 	{
 		private readonly IDependencyWindowService dependencyWindowService;
 
-		public NodeName sourceNodeName;
-		public NodeName targetNodeName;
-
 
 		public DependencyExplorerWindowViewModel(
 			IDependencyWindowService dependencyWindowService,
@@ -24,6 +21,9 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			dependencyWindowService.Initialize(this, node, line);
 		}
 
+		public NodeName SourceNodeName { get; set; }
+
+		public NodeName TargetNodeName { get; set; }
 
 		public string SourceText { get => Get(); set => Set(value); }
 
@@ -32,6 +32,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 
 		public Command<Window> CancelCommand => Command<Window>(w => w.Close());
+
 		public Command SwitchSidesCommand => AsyncCommand(() => dependencyWindowService.SwitchSidesAsync(this));
 
 		public Command RefreshCommand => AsyncCommand(() => dependencyWindowService.RefreshAsync(this));

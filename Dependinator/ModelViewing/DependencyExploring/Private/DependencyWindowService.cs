@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.Common;
+using Dependinator.Common.MessageDialogs;
 using Dependinator.ModelViewing.CodeViewing;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private;
@@ -15,6 +16,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		private readonly IDependenciesService dependenciesService;
 		private readonly IModelService modelService;
 		private readonly Lazy<IModelNotifications> modelNotifications;
+		private readonly IMessage message;
 		private readonly WindowOwner owner;
 
 
@@ -22,11 +24,13 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			IDependenciesService dependenciesService,
 			IModelService modelService,
 			Lazy<IModelNotifications> modelNotifications,
+			IMessage message,
 			WindowOwner owner)
 		{
 			this.dependenciesService = dependenciesService;
 			this.modelService = modelService;
 			this.modelNotifications = modelNotifications;
+			this.message = message;
 			this.owner = owner;
 		}
 
@@ -40,7 +44,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			}
 			else
 			{
-				// Node does no longer exists ????
+				message.ShowInfo($"The node no longer exists in the model:\n{nodeName.DisplayFullName}");
 			}
 		}
 
@@ -60,9 +64,9 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 		public async Task SwitchSidesAsync(DependencyExplorerWindowViewModel viewModel)
 		{
-			NodeName nodeName = viewModel.sourceNodeName;
-			viewModel.sourceNodeName = viewModel.targetNodeName;
-			viewModel.targetNodeName = nodeName;
+			NodeName nodeName = viewModel.SourceNodeName;
+			viewModel.SourceNodeName = viewModel.TargetNodeName;
+			viewModel.TargetNodeName = nodeName;
 
 			await SetSidesAsync(viewModel);
 		}
@@ -75,16 +79,31 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			await SetSidesAsync(viewModel);
 		}
 
+
 		public async void FilterOn(
 			DependencyExplorerWindowViewModel viewModel,
 			DependencyItem dependencyItem,
 			bool isSourceSide)
 		{
-			if (!(TryGetNode(viewModel.sourceNodeName, out Node sourceNode) &&
-			      TryGetNode(viewModel.targetNodeName, out Node targetNode) &&
-			      TryGetNode(dependencyItem.NodeName, out Node itemNode)))
+			if (!TryGetNode(viewModel.SourceNodeName, out Node sourceNode))
 			{
-				// source and/or target no longer exists ?????
+				message.ShowInfo(
+					$"The source node no longer exists in the model:\n{viewModel.SourceNodeName.DisplayFullName}");
+				return;
+			}
+
+			if (!TryGetNode(viewModel.TargetNodeName, out Node targetNode))
+			{
+				message.ShowInfo(
+					$"The target node no longer exists in the model:\n{viewModel.TargetNodeName.DisplayFullName}");
+				return;
+			}
+
+			if (TryGetNode(dependencyItem.NodeName, out Node itemNode))
+			{
+				message.ShowInfo(
+					$"The clicked node no longer exists in the model:\n{dependencyItem.NodeName.DisplayFullName}");
+
 				return;
 			}
 
@@ -130,21 +149,29 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		}
 
 
-	
+
 
 		private async Task SetSidesAsync(DependencyExplorerWindowViewModel viewModel)
 		{
-			if (TryGetNode(viewModel.sourceNodeName, out Node sourceNode) &&
-					TryGetNode(viewModel.targetNodeName, out Node targetNode))
+			if (!TryGetNode(viewModel.SourceNodeName, out Node sourceNode))
 			{
-				IReadOnlyList<Line> lines = sourceNode.SourceLines.Concat(targetNode.TargetLines).ToList();
+				message.ShowInfo(
+					$"The source node no longer exists in the model:\n{viewModel.SourceNodeName.DisplayFullName}");
+				return;
+			}
 
-				await SetSourceAndTargetItemsAsync(viewModel, sourceNode, targetNode, lines);
-			}
-			else
+			if (!TryGetNode(viewModel.TargetNodeName, out Node targetNode))
 			{
-				// source and/or target no longer exists ?????
+				message.ShowInfo(
+					$"The target node no longer exists in the model:\n{viewModel.TargetNodeName.DisplayFullName}");
+
+				return;
 			}
+
+
+			IReadOnlyList<Line> lines = sourceNode.SourceLines.Concat(targetNode.TargetLines).ToList();
+
+			await SetSourceAndTargetItemsAsync(viewModel, sourceNode, targetNode, lines);
 		}
 
 
@@ -155,8 +182,8 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			Node targetNode,
 			IReadOnlyList<Line> lines)
 		{
-			viewModel.sourceNodeName = sourceNode.Name;
-			viewModel.targetNodeName = targetNode.Name;
+			viewModel.SourceNodeName = sourceNode.Name;
+			viewModel.TargetNodeName = targetNode.Name;
 
 			await SetDependencyItemsAsync(viewModel, sourceNode, targetNode, lines, true);
 			await SetDependencyItemsAsync(viewModel, sourceNode, targetNode, lines, false);
@@ -167,7 +194,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		}
 
 
-	
+
 
 
 		private async Task FilterOn(
@@ -225,8 +252,8 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			IReadOnlyList<Line> lines,
 			bool isSourceSide)
 		{
-			viewModel.sourceNodeName = sourceNode.Name;
-			viewModel.targetNodeName = targetNode.Name;
+			viewModel.SourceNodeName = sourceNode.Name;
+			viewModel.TargetNodeName = targetNode.Name;
 
 			var dependencyItems = await GetDependencyItemsAsync(
 				lines, isSourceSide, sourceNode, targetNode);
@@ -249,12 +276,12 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		private async Task SetTextsAsync(DependencyExplorerWindowViewModel viewModel)
 		{
 			await Task.Yield();
-			viewModel.SourceText = ToNodeText(viewModel.sourceNodeName);
-			viewModel.TargetText = ToNodeText(viewModel.targetNodeName);
+			viewModel.SourceText = ToNodeText(viewModel.SourceNodeName);
+			viewModel.TargetText = ToNodeText(viewModel.TargetNodeName);
 		}
 
 
-		private static string ToNodeText(NodeName nodeName) => 
+		private static string ToNodeText(NodeName nodeName) =>
 			nodeName == NodeName.Root ? "all nodes" : nodeName.DisplayFullName;
 
 
