@@ -26,5 +26,6 @@ namespace Dependinator.ModelViewing.Nodes
 		Brush GetSelectedBrush(Brush brush);
 		void ShowReferences(NodeViewModel nodeViewModel);
 		void ShowCode(Node node);
+		void RearrangeLayout(NodeViewModel node);
 	}
 }
