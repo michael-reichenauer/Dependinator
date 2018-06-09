@@ -2,6 +2,7 @@
 using System.IO;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 
 
 namespace Dependinator.Common.ModelMetadataFolders.Private

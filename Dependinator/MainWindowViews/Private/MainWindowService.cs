@@ -34,7 +34,7 @@ namespace Dependinator.MainWindowViews.Private
 			{
 				Process process = new Process();
 
-				process.StartInfo.FileName = Program.FeedbackAddress;
+				process.StartInfo.FileName = ProgramInfo.FeedbackAddress;
 				process.Start();
 			}
 			catch (Exception ex) when (ex.IsNotFatal())
@@ -66,7 +66,7 @@ namespace Dependinator.MainWindowViews.Private
 			try
 			{
 				Process process = new Process();
-				process.StartInfo.FileName = Program.GitHubHelpAddress;
+				process.StartInfo.FileName = ProgramInfo.GitHubHelpAddress;
 				process.Start();
 			}
 			catch (Exception ex) when (ex.IsNotFatal())

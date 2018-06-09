@@ -70,7 +70,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 			Layout layout = GetLayout(parent);
 
-			SetScale(layout, parent);
+			//SetScale(layout, parent);
 
 			int index = 0;
 

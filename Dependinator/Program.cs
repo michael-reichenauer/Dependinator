@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Reflection;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ModelMetadataFolders.Private;
-using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
+using Dependinator.Utils.ErrorHandling;
 
 
 namespace Dependinator
@@ -17,24 +17,17 @@ namespace Dependinator
 		private readonly DependencyInjection dependencyInjection = new DependencyInjection();
 
 
-		public static readonly string Name = "Dependinator";
-		public static readonly string Guid = "ee48e8b2-701f-4881-815f-dc7fd8139061";
-		public static readonly Assembly Assembly = typeof(Program).Assembly;
-		public static readonly string Version = Assembly.GetFileVersion();
-		public static readonly string Location = Assembly.Location;
-
-		public static readonly string FeedbackAddress =
-			$"mailto:michael.reichenauer@gmail.com&subject={Name} Feedback";
-
-		public static readonly string GitHubHelpAddress =
-			$"https://github.com/michael-reichenauer/{Name}/wiki/Help";
-
-
-
 		[STAThread]
 		public static void Main()
 		{
+			// Make external assemblies that Dependinator depends on available, when needed (extracted)
+			AssemblyResolver.Activate(ProgramInfo.Assembly);
+
 			Culture.Initialize();
+			Track.Enable(
+				ProgramInfo.Name,
+				ProgramInfo.Version,
+				ProgramInfo.IsInstalledInstance() || ProgramInfo.IsSetupFile());
 			Log.Init(ProgramInfo.GetLogFilePath());
 			Log.Debug(GetStartLineText());
 			Program program = new Program();
@@ -47,11 +40,8 @@ namespace Dependinator
 			// Add handler and logging for unhandled exceptions
 			ManageUnhandledExceptions();
 
-			// Make external assemblies that Dependinator depends on available, when needed (extracted)
-			AssemblyResolver.Activate(Assembly);
-
 			// Activate dependency injection support
-			dependencyInjection.RegisterDependencyInjectionTypes(Assembly);
+			dependencyInjection.RegisterTypes(ProgramInfo.Assembly);
 
 			// Start application
 			App application = dependencyInjection.Resolve<App>();
@@ -65,7 +55,7 @@ namespace Dependinator
 		{
 			string cmd = string.Join("','", Environment.GetCommandLineArgs());
 
-			return $"Start version: {Version}, cmd: '{cmd}'";
+			return $"Start version: {ProgramInfo.Version}, cmd: '{cmd}'";
 		}
 
 

@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.Net;
 using Dependinator.Utils.Threading;
 
@@ -115,7 +116,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
 		private static string GetMetadataFolderId(string metadataFolderPath)
 		{
-			string name = Program.Guid + Uri.EscapeDataString(metadataFolderPath);
+			string name = ProgramInfo.Guid + Uri.EscapeDataString(metadataFolderPath);
 
 			string id = AsSha2Text(name);
 			return id;

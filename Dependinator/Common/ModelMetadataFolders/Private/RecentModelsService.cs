@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.Common.SettingsHandling;
-using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 
 
 namespace Dependinator.Common.ModelMetadataFolders.Private

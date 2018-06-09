@@ -37,7 +37,7 @@ namespace Dependinator.ModelViewing.CodeViewing
 
 		private void SetSyntaxHighlighting()
 		{
-			Assembly programAssembly = Program.Assembly;
+			Assembly programAssembly = ProgramInfo.Assembly;
 			string name = programAssembly.FullName.Split(',')[0];
 			string resourceName = $"{name}.Common.Resources.CSharp-Mode.xshd";
 

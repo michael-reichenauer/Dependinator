@@ -251,12 +251,14 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private string DebugToolTip => "" + ItemsToolTip;
 
-		private string ItemsToolTip => !Config.IsDebug ? "" :
+
+		private string ItemsToolTip => !BuildConfig.IsDebug ? "" :
 			"\n" +
 			$"\nLines; In: {IncomingLinesCount}, Out: {OutgoingLinesCount}" +
-			$"\nLinks; In: {IncomingLinksCount}, Out: {OutgoingLinksCount}" +
+			$"\nLinks; In: {IncomingLinksCount}, Out: {OutgoingLinksCount}\n" +
 			$"Rect: {ItemBounds.TS()}\n" +
 			$"Scale {ItemScale.TS()}, ChildrenScale: {Node.View.ItemsCanvas?.Scale.TS()}\n" +
+			$"ScaleFactor: {Node.View.ScaleFactor}, {Node.View.ViewModel.ItemsViewModel.ItemsCanvas.ScaleFactor}\n" +
 			//$"C Point {Node.ItemsCanvas.CanvasPointToScreenPoint(new Point(0, 0)).TS()}\n" +
 			//$"R Point {Node.ItemsCanvas.CanvasPointToScreenPoint2(new Point(0, 0)).TS()}\n" +
 			//$"M Point {Mouse.GetPosition(Node.Root.ItemsCanvas.ZoomableCanvas).TS()}\n" +

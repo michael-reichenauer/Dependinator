@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using System.Linq;
-using System.Reflection;
-using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 
 
 namespace Dependinator.Common.Environment.Private
@@ -36,6 +35,6 @@ namespace Dependinator.Common.Environment.Private
 
 
 		private bool IsSetupFile() => 
-			Path.GetFileNameWithoutExtension(Program.Location).StartsWith($"{Program.Name}Setup");
+			Path.GetFileNameWithoutExtension(ProgramInfo.Location).StartsWith($"{ProgramInfo.Name}Setup");
 	}
 }

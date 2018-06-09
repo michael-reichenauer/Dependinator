@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using Dependinator.Common;
 using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.ModelHandling.Core;
 
 
 namespace Dependinator.ModelViewing

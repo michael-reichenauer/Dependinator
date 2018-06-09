@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Windows;
-using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 
 
 namespace Dependinator.Common
