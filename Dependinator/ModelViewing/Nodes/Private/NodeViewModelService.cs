@@ -22,6 +22,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private readonly IModelLineService modelLineService;
 		private readonly ILineMenuItemService lineMenuItemService;
 		private readonly IItemSelectionService itemSelectionService;
+		private readonly INodeLayoutService nodeLayoutService;
 		private readonly IDependencyExplorerService dependencyExplorerService;
 		private readonly WindowOwner owner;
 
@@ -32,13 +33,16 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			IModelLineService modelLineService,
 			ILineMenuItemService lineMenuItemService,
 			IItemSelectionService itemSelectionService,
+			INodeLayoutService nodeLayoutService,
 			IDependencyExplorerService dependencyExplorerService,
+
 			WindowOwner owner)
 		{
 			this.themeService = themeService;
 			this.modelLineService = modelLineService;
 			this.lineMenuItemService = lineMenuItemService;
 			this.itemSelectionService = itemSelectionService;
+			this.nodeLayoutService = nodeLayoutService;
 			this.dependencyExplorerService = dependencyExplorerService;
 			this.owner = owner;
 		}
@@ -134,6 +138,10 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			CodeDialog codeDialog = new CodeDialog(owner, node.Name.DisplayFullName, node.CodeText);
 			codeDialog.Show();
 		}
+
+
+		public void RearrangeLayout(NodeViewModel nodeViewModel) => 
+			nodeLayoutService.ResetLayout(nodeViewModel.Node);
 
 
 		public Brush GetRectangleHighlightBrush(Brush brush)

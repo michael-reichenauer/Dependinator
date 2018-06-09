@@ -154,16 +154,37 @@
 				Background="{DynamicResource BackgroundBrush}">
 
 				<Grid>
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*" />
-						<ColumnDefinition Width="Auto" />
-					</Grid.ColumnDefinitions>
+					<StackPanel
+						Orientation="Horizontal"
+						HorizontalAlignment="Right"
+						VerticalAlignment="Top">
+
+						<Button
+							VerticalAlignment="Center"
+							HorizontalAlignment="Left"
+							Content="&#xe0bc;"
+							FontSize="16"
+							Padding="2"
+							Style="{DynamicResource IconButtonStyle}"
+							Command="{Binding RearrangeLayoutCommand}"
+							ToolTip="Rearrange layout of inner nodes" />
+
+						<Button
+							Visibility="{Binding CanShowEditNode, Converter={StaticResource VC}}"
+							VerticalAlignment="Center"
+							HorizontalAlignment="Left"
+							Content="&#xE22F;"
+							FontSize="18"
+							Style="{DynamicResource IconButtonStyle}"
+							Command="{Binding ToggleEditModeCommand}"
+							ToolTip="{Binding EditModeToolTop}" />
+					</StackPanel>
 
 					<StackPanel
-						Grid.Column="0"
 						Orientation="Horizontal"
 						HorizontalAlignment="Left"
-						VerticalAlignment="Top">
+						VerticalAlignment="Top"
+						Background="{DynamicResource BackgroundBrush}">
 
 						<Button
 							VerticalAlignment="Center"
@@ -205,22 +226,7 @@
 							ToolTip="Show decompiled code" />
 					</StackPanel>
 
-					<StackPanel
-						Grid.Column="1"
-						Orientation="Horizontal"
-						HorizontalAlignment="Left"
-						VerticalAlignment="Top">
-
-						<Button
-							Visibility="{Binding CanShowEditNode, Converter={StaticResource VC}}"
-							VerticalAlignment="Center"
-							HorizontalAlignment="Left"
-							Content="&#xE22F;"
-							FontSize="18"
-							Style="{DynamicResource IconButtonStyle}"
-							Command="{Binding ToggleEditModeCommand}"
-							ToolTip="{Binding EditModeToolTop}" />
-					</StackPanel>
+					
 				</Grid>
 
 			</Border>

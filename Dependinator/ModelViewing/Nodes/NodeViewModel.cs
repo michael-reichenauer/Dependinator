@@ -213,6 +213,8 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
+		public void RearrangeLayout() => nodeViewModelService.RearrangeLayout(this);
+
 
 		public string Color => RectangleBrush.AsString();
 
@@ -282,6 +284,5 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) =>
 			nodeViewModelService.OnMouseWheel(this, uiElement, e);
-
 	}
 }
