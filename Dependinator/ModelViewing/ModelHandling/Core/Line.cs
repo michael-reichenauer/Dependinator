@@ -38,7 +38,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 
 		public override string ToString() => $"{Source}->{Target}";
 
-		public bool IsHidden => Links.All(link => link.IsHidden);
+		public bool IsHidden => Links.Any() && Links.All(link => link.IsHidden);
+		public int VisibleLinksCount => Links.Count(link => !link.IsHidden);
 
 
 		public void HideLink(Link link)

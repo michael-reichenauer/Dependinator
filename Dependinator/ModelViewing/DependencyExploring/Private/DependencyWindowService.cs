@@ -37,15 +37,14 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 		public void ShowCode(NodeName nodeName)
 		{
-			if (TryGetNode(nodeName, out Node node))
-			{
-				CodeDialog codeDialog = new CodeDialog(owner, nodeName.DisplayFullName, node.CodeText);
-				codeDialog.Show();
-			}
-			else
+			if (!TryGetNode(nodeName, out Node node))
 			{
 				message.ShowInfo($"The node no longer exists in the model:\n{nodeName.DisplayFullName}");
+				return;
 			}
+			
+			CodeDialog codeDialog = new CodeDialog(owner, nodeName.DisplayFullName, node.CodeText);
+			codeDialog.Show();
 		}
 
 
@@ -99,7 +98,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				return;
 			}
 
-			if (TryGetNode(dependencyItem.NodeName, out Node itemNode))
+			if (!TryGetNode(dependencyItem.NodeName, out Node itemNode))
 			{
 				message.ShowInfo(
 					$"The clicked node no longer exists in the model:\n{dependencyItem.NodeName.DisplayFullName}");
