@@ -261,13 +261,15 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			Timing t = Timing.Start();
 
 			Task showTask = Task.Run(() => ShowModel(operation));
-			Root.View.ItemsCanvas.UpdateAll();
+			
 
 			Task<R> parseTask = parseFunctionAsync(operation);
 
 			Task completeTask = parseTask.ContinueWith(_ => operation.Queue.CompleteAdding());
 
 			await Task.WhenAll(showTask, parseTask, completeTask);
+
+			Root.View.ItemsCanvas.UpdateAll();
 
 			if (parseTask.Result.IsFaulted)
 			{

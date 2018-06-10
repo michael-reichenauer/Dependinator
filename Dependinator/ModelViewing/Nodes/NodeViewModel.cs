@@ -180,13 +180,16 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			if (!Node.View.IsHidden)
 			{
-				Node.View.IsHidden = true;
+				HideNode(Node);
+				
 				Node.Parent.View.ItemsCanvas.UpdateAndNotifyAll();
+				Node.Root.View.ItemsCanvas.UpdateAll();
 			}
-			else
-			{
-				Node.View.ShowHiddenNode();
-			}
+		}
+
+		private void HideNode(Node node)
+		{
+			node.DescendentsAndSelf().ForEach(n => n.View.IsHidden = true);
 		}
 
 
