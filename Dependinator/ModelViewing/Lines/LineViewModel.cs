@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -42,9 +43,10 @@ namespace Dependinator.ModelViewing.Lines
 
 		public Line Line { get; }
 
-		public override bool CanShow =>
+		public override bool CanShow => 
 			ItemScale < 40
-			&& Line.Source.View.CanShow && Line.Target.View.CanShow;
+		  && Line.Source.View.CanShow && Line.Target.View.CanShow
+		  && !Line.IsHidden;
 
 		public double LineWidth => lineViewModelService.GetLineWidth(Line);
 
