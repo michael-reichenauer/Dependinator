@@ -77,8 +77,7 @@ namespace GitMindTest.AutoMocking
 
 
 		/// <summary>
-		/// Register the specified Mock and mocked instance to overide already 
-		/// registered type.
+		/// Register the specified Mock and mocked instance to override already registered type.
 		/// </summary>
 		public AutoMock RegisterMock<T>()
 			where T : class
