@@ -4,7 +4,6 @@ using System.Windows;
 using System.Windows.Media;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.Nodes;
-using Dependinator.Utils;
 using Dependinator.Utils.UI;
 
 

@@ -1,13 +1,12 @@
-using System;
-using System.Threading.Tasks;
-using Dependinator.Common;
+using Dependinator.ModelViewing.ModelHandling.Core;
 
 
 namespace Dependinator.ModelViewing.DependencyExploring.Private
 {
 	internal interface IItemCommands
 	{
-		void ShowCode(string title, Lazy<string> codeText);
+		void ShowCode(NodeName nodeName);
+
 		void FilterOn(DependencyItem item, bool isSourceItem);
 	}
 }

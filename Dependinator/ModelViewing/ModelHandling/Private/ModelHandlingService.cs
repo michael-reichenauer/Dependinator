@@ -15,6 +15,10 @@ using Dependinator.ModelViewing.ModelHandling.Private.ModelParsing;
 using Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence;
 using Dependinator.ModelViewing.Open;
 using Dependinator.Utils;
+using Dependinator.Utils.Collections;
+using Dependinator.Utils.Dependencies;
+using Dependinator.Utils.ErrorHandling;
+using Dependinator.Utils.OsSystem;
 using Dependinator.Utils.Threading;
 
 
@@ -257,13 +261,15 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			Timing t = Timing.Start();
 
 			Task showTask = Task.Run(() => ShowModel(operation));
-			Root.View.ItemsCanvas.UpdateAll();
+			
 
 			Task<R> parseTask = parseFunctionAsync(operation);
 
 			Task completeTask = parseTask.ContinueWith(_ => operation.Queue.CompleteAdding());
 
 			await Task.WhenAll(showTask, parseTask, completeTask);
+
+			Root.View.ItemsCanvas.UpdateAll();
 
 			if (parseTask.Result.IsFaulted)
 			{

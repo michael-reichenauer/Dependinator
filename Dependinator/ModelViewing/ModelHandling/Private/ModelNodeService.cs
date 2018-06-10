@@ -1,8 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.Common;
 using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.ModelHandling.Private
@@ -77,7 +77,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public IReadOnlyList<NodeName> GetHiddenNodeNames()
 			=> nodeService.AllNodes
-				.Where(node => node.View.IsHidden)
+				.Where(node => node.View.IsHidden && !node.Parent.View.IsHidden)
 				.Select(node => node.Name)
 				.ToList();
 
@@ -86,8 +86,16 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			if (nodeService.TryGetNode(nodeName, out Node node))
 			{
-				node?.View.ShowHiddenNode();
+				ShowHiddenNode(node);
+				node.Parent.View.ItemsCanvas?.UpdateAndNotifyAll();
+				node.Root.View.ItemsCanvas.UpdateAll();
 			}
+		}
+
+
+		private void ShowHiddenNode(Node node)
+		{
+			node.DescendentsAndSelf().ForEach(n => n.View.IsHidden = false);
 		}
 
 

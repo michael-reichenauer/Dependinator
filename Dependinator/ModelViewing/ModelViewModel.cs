@@ -7,20 +7,14 @@ using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Items;
-using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI.Mvvm;
 
 
 namespace Dependinator.ModelViewing
 {
-	internal interface IModelViewModel
-	{
-		Task ManualRefreshAsync(bool refreshLayout = false);
-	}
-
-
 	[SingleInstance]
-	internal class ModelViewModel : ViewModel, IModelViewModel
+	internal class ModelViewModel : ViewModel, IModelNotifications
 	{
 		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(100);
 		public static readonly TimeSpan MouseExitDelay = TimeSpan.FromMilliseconds(10);

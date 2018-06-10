@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Dependinator.Utils;
 
 
@@ -36,6 +37,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		public bool IsToSibling => Source.Parent == Target.Parent;
 
 		public override string ToString() => $"{Source}->{Target}";
+
+		public bool IsHidden => Links.Any() && Links.All(link => link.IsHidden);
+		public int VisibleLinksCount => Links.Count(link => !link.IsHidden);
 
 
 		public void HideLink(Link link)

@@ -43,12 +43,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 
 		private static IEnumerable<ModelLine> ToModelLines(IEnumerable<Line> lines) =>
-			lines.Select(line => new ModelLine(
-				line.Source.Name.FullName,
-				line.Target.Name.FullName,
-				line.Target.NodeType,
-				line.View.MiddlePoints().ToList(),
-				line.Links.Count));
+			lines
+				.Where(line => !line.IsHidden)
+				.Select(line => new ModelLine(
+					line.Source.Name.FullName,
+					line.Target.Name.FullName,
+					line.Target.NodeType,
+					line.View.MiddlePoints().ToList(),
+					line.VisibleLinksCount));
 
 
 		private static IEnumerable<ModelLink> ToModelLinks(IEnumerable<Link> links) =>

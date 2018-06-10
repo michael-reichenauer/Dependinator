@@ -38,21 +38,20 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			}
 			else
 			{
-				ResetLayout(nodeViewMode);
+				Node parent = nodeViewMode.Node.Parent;
+				ResetLayout(parent);
 			}
 		}
 
 
-		private void ResetLayout(NodeViewModel nodeViewMode)
+		public void ResetLayout(Node node)
 		{
-			Node parent = nodeViewMode.Node.Parent;
+			Layout layout = GetLayout(node);
 
-			Layout layout = GetLayout(parent);
-
-			SetScale(layout, parent);
+			SetScale(layout, node);
 
 			int index = 0;
-			IReadOnlyList<Node> sortedChildren = parent.Children;
+			IReadOnlyList<Node> sortedChildren = node.Children;
 			//	.OrderBy(child => child, NodeComparer.Comparer(parent)).ToList();
 
 			foreach (Node child in sortedChildren)
@@ -70,7 +69,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 			Layout layout = GetLayout(parent);
 
-			SetScale(layout, parent);
+			//SetScale(layout, parent);
 
 			int index = 0;
 

@@ -58,8 +58,8 @@ namespace Dependinator.Common.Installation.Private
 		private void CreateMainExeShortcut()
 		{
 			Log.Debug("Create main exe shortcut");
-			string sourcePath = Program.Location;
-			Version sourceVersion = Version.Parse(Program.Version);
+			string sourcePath = ProgramInfo.Location;
+			Version sourceVersion = Version.Parse(ProgramInfo.Version);
 
 			string targetPath = ProgramInfo.GetInstallFilePath();
 

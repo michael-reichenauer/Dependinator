@@ -1,39 +1,15 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Dependinator.Common;
-using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.ModelViewing.ModelHandling.Private;
 
 
 namespace Dependinator.ModelViewing.DependencyExploring.Private
 {
 	internal class DependenciesService : IDependenciesService
 	{
-		private readonly IThemeService themeService;
-		private readonly IModelService modelService;
-		private readonly Lazy<IModelViewModel> modelViewModel;
-
-		private readonly WindowOwner owner;
-
-
-		public DependenciesService(
-			IThemeService themeService,
-			IModelService modelService,
-			Lazy<IModelViewModel> modelViewModel,
-			WindowOwner owner)
-		{
-			this.themeService = themeService;
-			this.modelService = modelService;
-			this.modelViewModel = modelViewModel;
-			this.owner = owner;
-		}
-
-
 		public async Task<IReadOnlyList<DependencyItem>> GetDependencyItemsAsync(
-			IEnumerable<Line> lines, 
+			IEnumerable<Line> lines,
 			bool isSource,
 			Node sourceFilter,
 			Node targetFilter)
@@ -47,42 +23,33 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 				var items = CreateReferenceHierarchy(links, options);
 
-				if (!items.Any())
-				{
-					return Enumerable.Empty<DependencyItem>().ToList();
-				}
-
 				DependencyItem rootItem = items[NodeName.Root];
+
+				AddMainNodeIfNeeded(rootItem, options);
 
 				return new List<DependencyItem> { rootItem };
 			});
 		}
 
 
-		public async Task<int> GetDependencyCountAsync(
-			IEnumerable<Line> lines,
-			bool isSource,
-			Node sourceFilter,
-			Node targetFilter)
+		private void AddMainNodeIfNeeded(DependencyItem rootItem, ReferenceOptions options)
 		{
-			return await Task.Run(() =>
+			Node mainNode = options.IsSource ? options.SourceFilter : options.TargetFilter;
+
+			if (rootItem.SubItems.Any() || mainNode.IsRoot)
 			{
-				ReferenceOptions options = new ReferenceOptions(isSource, sourceFilter, targetFilter);
+				return;
+			}
 
-				IEnumerable<Link> links = lines
-					.SelectMany(line => line.Links)
-					.Where(link => IsIncluded(link, options));
+			DependencyItem current = rootItem;
 
-				return links.Count();
-			});
+			foreach (Node node in mainNode.AncestorsAndSelf().Reverse())
+			{
+				DependencyItem subItem = new DependencyItem(node.Name, node.CodeText != null);
+				current.AddChild(subItem);
+				current = subItem;
+			}
 		}
-
-
-		public bool TryGetNode(NodeName nodeName, out Node node) => 
-			modelService.TryGetNode(nodeName, out node);
-
-
-		public Task RefreshModelAsync() => modelViewModel.Value.ManualRefreshAsync(false);
 
 
 		private static bool IsIncluded(IEdge link, ReferenceOptions options) =>
@@ -98,7 +65,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			Dictionary<NodeName, DependencyItem> items = new Dictionary<NodeName, DependencyItem>();
 
 			items[NodeName.Root] = new DependencyItem(
-				options.SourceFilter.Root.Name, options.SourceFilter.Root.CodeText);
+				options.SourceFilter.Root.Name, options.SourceFilter.Root.CodeText != null);
 
 			foreach (Link link in links)
 			{
@@ -108,7 +75,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				{
 					DependencyItem parentItem = GetParentItem(items, node.Parent);
 
-					item = new DependencyItem(node.Name, node.CodeText);
+					item = new DependencyItem(node.Name, node.CodeText != null);
 					parentItem.AddChild(item);
 
 					items[node.Name] = item;
@@ -128,7 +95,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				return parentItem;
 			}
 
-			parentItem = new DependencyItem(parentNode.Name, parentNode.CodeText);
+			parentItem = new DependencyItem(parentNode.Name, parentNode.CodeText != null);
 
 			if (!parentNode.IsRoot)
 			{

@@ -1,20 +1,20 @@
 using System;
 using System.Collections.Generic;
-using Dependinator.Common;
+using Dependinator.ModelViewing.ModelHandling.Core;
 
 
 namespace Dependinator.ModelViewing.DependencyExploring.Private
 {
 	internal class DependencyItem
 	{
-		public DependencyItem(NodeName nodeName, Lazy<string> codeText)
+		public DependencyItem(NodeName nodeName, bool hasCode)
 		{
 			NodeName = nodeName;
-			CodeText = codeText;
+			HasCode = hasCode;
 		}
 
 		public NodeName NodeName { get; }
-		public Lazy<string> CodeText { get; }
+		public bool HasCode { get; }
 
 		public List<DependencyItem> SubItems { get; } = new List<DependencyItem>();
 		public DependencyItem Parent { get; set; }

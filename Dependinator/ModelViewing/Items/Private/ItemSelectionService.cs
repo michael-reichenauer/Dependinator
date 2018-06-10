@@ -2,7 +2,7 @@
 using Dependinator.ModelViewing.Lines;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.Nodes;
-using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 
 
 namespace Dependinator.ModelViewing.Items.Private

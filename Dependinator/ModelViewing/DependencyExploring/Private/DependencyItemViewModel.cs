@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Threading.Tasks;
-using Dependinator.Common;
+using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
 
@@ -15,7 +14,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		private readonly IItemCommands itemCommands;
 		private readonly bool isSourceItem;
 		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(300);
-		
+
 		private readonly DelayDispatcher delayDispatcher = new DelayDispatcher();
 
 
@@ -34,10 +33,11 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 		public DependencyItem Item { get; }
 
-		public string Text => Item.NodeName == NodeName.Root ? "all nodes" : Item.NodeName.DisplayName;
+		public string Text => Item.NodeName == NodeName.Root && SubItems.Any()
+			? "all nodes" : Item.NodeName == NodeName.Root ? "<no dependencies>" : Item.NodeName.DisplayName;
 
 		public ObservableCollection<DependencyItemViewModel> SubItems { get; }
-		public bool IsShowCodeButton => IsShowButtons && Item.CodeText != null;
+		public bool IsShowCodeButton => IsShowButtons && Item.HasCode;
 		public bool IsShowVisibilityButton => IsShowButtons;
 
 		public string ToolTip { get => Get(); set => Set(value); }
@@ -45,15 +45,22 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 		public bool IsShowButtons
 		{
-			get => Get();
+			get
+			{
+				if (Item.NodeName == NodeName.Root && !SubItems.Any())
+				{
+					return false;
+				}
+
+				return Get();
+			}
 			set => Set(value).Notify(nameof(IsShowCodeButton), nameof(IsShowVisibilityButton));
 		}
 
 		public bool IsSelected { get => Get(); set => Set(value); }
 		public bool IsExpanded { get => Get(); set => Set(value); }
-		//public Command ToggleVisibilityCommand => Command(ToggleVisibility);
-		public Command ShowCodeCommand => Command(() => itemCommands.ShowCode(
-			Item.NodeName.DisplayFullName, Item.CodeText));
+
+		public Command ShowCodeCommand => Command(() => itemCommands.ShowCode(Item.NodeName));
 		public Command ToggleCollapseCommand => Command(SetExpand);
 		public Command FilterCommand => Command(Filter);
 
@@ -82,25 +89,6 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				subItems.Select(i => new DependencyItemViewModel(i, itemCommands, isSourceItem)));
 		}
 
-
-		//private void ToggleVisibility()
-		//{
-		//	SetVisibility(!isHidden);
-
-		//	if (isHidden)
-		//	{
-		//		IsExpanded = false;
-		//	}
-		//}
-
-
-
-		//private void SetVisibility(bool isHide)
-		//{
-		//	isHidden = isHide;
-		//	TextBrush = isHidden ? Item.ItemTextHiddenBrush() : Item.ItemTextBrush();
-		//	SubItems.ForEach(s => s.SetVisibility(isHide));
-		//}
 
 
 		public void OnMouseEnter()

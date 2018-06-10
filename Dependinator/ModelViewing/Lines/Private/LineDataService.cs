@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Windows;
-using System.Windows.Media;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 

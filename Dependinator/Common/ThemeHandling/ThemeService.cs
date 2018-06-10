@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Media;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.SettingsHandling;
-using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 
 
 namespace Dependinator.Common.ThemeHandling

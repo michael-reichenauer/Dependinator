@@ -11,7 +11,10 @@ using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
+using Dependinator.Utils.ErrorHandling;
 using Dependinator.Utils.Net;
+using Dependinator.Utils.OsSystem;
 using Dependinator.Utils.Serialization;
 using Dependinator.Utils.Threading;
 using Microsoft.Win32;
@@ -80,7 +83,7 @@ namespace Dependinator.Common.Installation.Private
 		private async Task<bool> IsNewRemoteVersionAvailableAsync()
 		{
 			Version remoteVersion = await GetLatestRemoteVersionAsync();
-			Version currentVersion = Version.Parse(Program.Version);
+			Version currentVersion = Version.Parse(ProgramInfo.Version);
 			Version installedVersion = ProgramInfo.GetInstalledVersion();
 
 			Version setupVersion = ProgramInfo.GetSetupVersion();
@@ -123,7 +126,7 @@ namespace Dependinator.Common.Installation.Private
 		private static async Task<string> DownloadSetupAsync(
 			HttpClientDownloadWithProgress httpClient, LatestInfo latestInfo)
 		{
-			Asset setupFileInfo = latestInfo.assets.First(a => a.name == $"{Program.Name}Setup.exe");
+			Asset setupFileInfo = latestInfo.assets.First(a => a.name == $"{ProgramInfo.Name}Setup.exe");
 
 			string downloadUrl = setupFileInfo.browser_download_url;
 			Log.Info($"Downloading {latestInfo.tag_name} from {downloadUrl} ...");
@@ -313,7 +316,7 @@ namespace Dependinator.Common.Installation.Private
 
 		private static bool IsNewVersionInstalled()
 		{
-			Version currentVersion = Version.Parse(Program.Version);
+			Version currentVersion = Version.Parse(ProgramInfo.Version);
 			Version installedVersion = ProgramInfo.GetInstalledVersion();
 
 			Log.Debug($"Current version: {currentVersion} installed version: {installedVersion}");

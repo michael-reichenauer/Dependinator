@@ -3,7 +3,7 @@ using System.Linq;
 using Dependinator.Common;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 
 
 namespace Dependinator.ModelViewing.ModelHandling.Private

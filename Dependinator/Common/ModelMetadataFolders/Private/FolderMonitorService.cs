@@ -2,6 +2,7 @@
 using System.IO;
 using System.Windows.Threading;
 using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 
 
 namespace Dependinator.Common.ModelMetadataFolders.Private

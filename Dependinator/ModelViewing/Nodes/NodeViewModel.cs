@@ -180,13 +180,16 @@ namespace Dependinator.ModelViewing.Nodes
 		{
 			if (!Node.View.IsHidden)
 			{
-				Node.View.IsHidden = true;
+				HideNode(Node);
+				
 				Node.Parent.View.ItemsCanvas.UpdateAndNotifyAll();
+				Node.Root.View.ItemsCanvas.UpdateAll();
 			}
-			else
-			{
-				Node.View.ShowHiddenNode();
-			}
+		}
+
+		private void HideNode(Node node)
+		{
+			node.DescendentsAndSelf().ForEach(n => n.View.IsHidden = true);
 		}
 
 
@@ -212,6 +215,8 @@ namespace Dependinator.ModelViewing.Nodes
 			ItemsViewModel?.ItemVirtualized();
 		}
 
+
+		public void RearrangeLayout() => nodeViewModelService.RearrangeLayout(this);
 
 
 		public string Color => RectangleBrush.AsString();
@@ -251,12 +256,14 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private string DebugToolTip => "" + ItemsToolTip;
 
-		private string ItemsToolTip => !Config.IsDebug ? "" :
+
+		private string ItemsToolTip => !BuildConfig.IsDebug ? "" :
 			"\n" +
 			$"\nLines; In: {IncomingLinesCount}, Out: {OutgoingLinesCount}" +
-			$"\nLinks; In: {IncomingLinksCount}, Out: {OutgoingLinksCount}" +
+			$"\nLinks; In: {IncomingLinksCount}, Out: {OutgoingLinksCount}\n" +
 			$"Rect: {ItemBounds.TS()}\n" +
 			$"Scale {ItemScale.TS()}, ChildrenScale: {Node.View.ItemsCanvas?.Scale.TS()}\n" +
+			$"ScaleFactor: {Node.View.ScaleFactor}, {Node.View.ViewModel.ItemsViewModel.ItemsCanvas.ScaleFactor}\n" +
 			//$"C Point {Node.ItemsCanvas.CanvasPointToScreenPoint(new Point(0, 0)).TS()}\n" +
 			//$"R Point {Node.ItemsCanvas.CanvasPointToScreenPoint2(new Point(0, 0)).TS()}\n" +
 			//$"M Point {Mouse.GetPosition(Node.Root.ItemsCanvas.ZoomableCanvas).TS()}\n" +
@@ -280,6 +287,5 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) =>
 			nodeViewModelService.OnMouseWheel(this, uiElement, e);
-
 	}
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -14,7 +13,7 @@ using Dependinator.ModelViewing;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Open;
-using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
 using Application = System.Windows.Application;
@@ -80,7 +79,7 @@ namespace Dependinator.MainWindowViews
 		public string WorkingFolderPath => modelMetadata.ModelFilePath;
 
 
-		public string Title => $"{modelMetadata.ModelName} - {Program.Name}";
+		public string Title => $"{modelMetadata.ModelName} - {ProgramInfo.Name}";
 
 
 		public bool IsModel => !modelMetadataService.IsDefault;
@@ -111,7 +110,7 @@ namespace Dependinator.MainWindowViews
 		{
 			get
 			{
-				Version version = Version.Parse(Program.Version);
+				Version version = Version.Parse(ProgramInfo.Version);
 				DateTime buildTime = ProgramInfo.GetBuildTime();
 				string dateText = buildTime.ToString("yyyy-MM-dd\nHH:mm");
 				string text = $"Version: {version.Major}.{version.Minor}\n{dateText}";
