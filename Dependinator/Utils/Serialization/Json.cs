@@ -43,9 +43,5 @@ namespace Dependinator.Utils.Serialization
 				return (T)Serializer.Deserialize(stream, typeof(T));
 			}
 		}
-
-
-
-	
 	}
 }

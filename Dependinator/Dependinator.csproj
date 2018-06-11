@@ -68,6 +68,15 @@
     <Reference Include="Autofac, Version=4.8.1.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
       <HintPath>..\packages\Autofac.4.8.1\lib\net45\Autofac.dll</HintPath>
     </Reference>
+    <Reference Include="Esent.Collections, Version=1.9.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Database.Collections.Generic.1.9.4\lib\net40\Esent.Collections.dll</HintPath>
+    </Reference>
+    <Reference Include="Esent.Interop, Version=1.9.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\ManagedEsent.1.9.4\lib\net40\Esent.Interop.dll</HintPath>
+    </Reference>
+    <Reference Include="Esent.Isam, Version=1.9.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Database.Isam.1.9.4\lib\net40\Esent.Isam.dll</HintPath>
+    </Reference>
     <Reference Include="Humanizer, Version=2.2.0.0, Culture=neutral, PublicKeyToken=979442b78dfc278e, processorArchitecture=MSIL">
       <HintPath>..\packages\Humanizer.Core.2.2.0\lib\netstandard1.0\Humanizer.dll</HintPath>
     </Reference>
@@ -200,6 +209,8 @@
     <Compile Include="ModelViewing\ModelHandling\Private\ModelLineService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\NodeService.cs" />
+    <Compile Include="Utils\Serialization\Store.cs" />
+    <Compile Include="Utils\System\ByteArrayExtensions.cs" />
     <Compile Include="Utils\Track.cs" />
     <Compile Include="Utils\AsserterEventArgs.cs" />
     <Compile Include="Utils\Net\HttpClientDownloadWithProgress.cs" />
