@@ -1,13 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Items;
-using Dependinator.ModelViewing.Lines.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
@@ -20,8 +17,6 @@ namespace Dependinator.ModelViewing.Nodes
 	{
 		private readonly INodeViewModelService nodeViewModelService;
 
-		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> incomingLinks;
-		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> outgoingLinks;
 		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(300);
 		private readonly DelayDispatcher delayDispatcher = new DelayDispatcher();
 
@@ -41,10 +36,6 @@ namespace Dependinator.ModelViewing.Nodes
 			RectangleBrush = nodeViewModelService.GetNodeBrush(node);
 			backgroundBrush = nodeViewModelService.GetBackgroundBrush(RectangleBrush);
 			selectedBrush = nodeViewModelService.GetSelectedBrush(RectangleBrush);
-
-
-			incomingLinks = new Lazy<ObservableCollection<LineMenuItemViewModel>>(GetIncomingLinkItems);
-			outgoingLinks = new Lazy<ObservableCollection<LineMenuItemViewModel>>(GetOutgoingLinkItems);
 		}
 
 
@@ -170,10 +161,6 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public ItemsViewModel ItemsViewModel { get; set; }
 
-		public ObservableCollection<LineMenuItemViewModel> IncomingLinks => incomingLinks.Value;
-
-		public ObservableCollection<LineMenuItemViewModel> OutgoingLinks => outgoingLinks.Value;
-
 
 
 		public void HideNode()
@@ -181,7 +168,7 @@ namespace Dependinator.ModelViewing.Nodes
 			if (!Node.View.IsHidden)
 			{
 				HideNode(Node);
-				
+
 				Node.Parent.View.ItemsCanvas.UpdateAndNotifyAll();
 				Node.Root.View.ItemsCanvas.UpdateAll();
 			}
@@ -236,21 +223,6 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		public override string ToString() => Node.Name.ToString();
-
-
-		private ObservableCollection<LineMenuItemViewModel> GetIncomingLinkItems()
-		{
-			IEnumerable<LineMenuItemViewModel> items = nodeViewModelService.GetIncomingLinkItems(Node);
-			return new ObservableCollection<LineMenuItemViewModel>(items);
-		}
-
-
-
-		private ObservableCollection<LineMenuItemViewModel> GetOutgoingLinkItems()
-		{
-			IEnumerable<LineMenuItemViewModel> items = nodeViewModelService.GetOutgoingLinkItems(Node);
-			return new ObservableCollection<LineMenuItemViewModel>(items);
-		}
 
 
 

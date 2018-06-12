@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -7,9 +6,7 @@ using Dependinator.Common;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.CodeViewing;
 using Dependinator.ModelViewing.DependencyExploring;
-using Dependinator.ModelViewing.DependencyExploring.Private;
 using Dependinator.ModelViewing.Items;
-using Dependinator.ModelViewing.Lines.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private;
 
@@ -20,7 +17,6 @@ namespace Dependinator.ModelViewing.Nodes.Private
 	{
 		private readonly IThemeService themeService;
 		private readonly IModelLineService modelLineService;
-		private readonly ILineMenuItemService lineMenuItemService;
 		private readonly IItemSelectionService itemSelectionService;
 		private readonly INodeLayoutService nodeLayoutService;
 		private readonly IDependencyExplorerService dependencyExplorerService;
@@ -31,7 +27,6 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		public NodeViewModelService(
 			IThemeService themeService,
 			IModelLineService modelLineService,
-			ILineMenuItemService lineMenuItemService,
 			IItemSelectionService itemSelectionService,
 			INodeLayoutService nodeLayoutService,
 			IDependencyExplorerService dependencyExplorerService,
@@ -40,7 +35,6 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		{
 			this.themeService = themeService;
 			this.modelLineService = modelLineService;
-			this.lineMenuItemService = lineMenuItemService;
 			this.itemSelectionService = itemSelectionService;
 			this.nodeLayoutService = nodeLayoutService;
 			this.dependencyExplorerService = dependencyExplorerService;
@@ -69,26 +63,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-
-		public IEnumerable<LineMenuItemViewModel> GetIncomingLinkItems(Node node)
-		{
-			IEnumerable<Line> lines = node.TargetLines
-				.Where(line => line.Owner != node);
-
-			return lineMenuItemService.GetSourceLinkItems(lines);
-		}
-
-
-		public IEnumerable<LineMenuItemViewModel> GetOutgoingLinkItems(Node node)
-		{
-			IEnumerable<Line> lines = node.SourceLines
-				.Where(line => line.Owner != node);
-
-			return lineMenuItemService.GetTargetLinkItems(lines);
-		}
-
-
-		public void MouseClicked(NodeViewModel nodeViewModel) => 
+		public void MouseClicked(NodeViewModel nodeViewModel) =>
 			itemSelectionService.Select(nodeViewModel);
 
 
@@ -129,7 +104,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		public void ShowReferences(NodeViewModel nodeViewModel) => 
+		public void ShowReferences(NodeViewModel nodeViewModel) =>
 			dependencyExplorerService.ShowWindow(nodeViewModel.Node);
 
 
@@ -140,13 +115,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		public void RearrangeLayout(NodeViewModel nodeViewModel) => 
+		public void RearrangeLayout(NodeViewModel nodeViewModel) =>
 			nodeLayoutService.ResetLayout(nodeViewModel.Node);
-
-
-		public Brush GetRectangleHighlightBrush(Brush brush)
-		{
-			return themeService.GetRectangleHighlighterBrush(brush);
-		}
 	}
 }

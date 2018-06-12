@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -18,8 +14,6 @@ namespace Dependinator.ModelViewing.Lines
 	{
 		private readonly ILineViewModelService lineViewModelService;
 		private readonly DelayDispatcher delayDispatcher = new DelayDispatcher();
-		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> sourceLinks;
-		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> targetLinks;
 
 
 		public LineViewModel(ILineViewModelService lineViewModelService, Line line)
@@ -32,9 +26,6 @@ namespace Dependinator.ModelViewing.Lines
 
 			UpdateLine();
 			TrackSourceOrTargetChanges();
-
-			sourceLinks = new Lazy<ObservableCollection<LineMenuItemViewModel>>(GetSourceLinkItems);
-			targetLinks = new Lazy<ObservableCollection<LineMenuItemViewModel>>(GetTargetLinkItems);
 		}
 
 
@@ -43,10 +34,10 @@ namespace Dependinator.ModelViewing.Lines
 
 		public Line Line { get; }
 
-		public override bool CanShow => 
+		public override bool CanShow =>
 			ItemScale < 40
-		  && Line.Source.View.CanShow && Line.Target.View.CanShow
-		  && !Line.IsHidden;
+			&& Line.Source.View.CanShow && Line.Target.View.CanShow
+			&& !Line.IsHidden;
 
 		public double LineWidth => lineViewModelService.GetLineWidth(Line);
 
@@ -76,11 +67,6 @@ namespace Dependinator.ModelViewing.Lines
 		public string ToolTip { get => Get(); private set => Set(value); }
 
 
-		public ObservableCollection<LineMenuItemViewModel> SourceLinks => sourceLinks.Value;
-
-
-		public ObservableCollection<LineMenuItemViewModel> TargetLinks => targetLinks.Value;
-
 
 		public Command RemovePointCommand => Command(LineControl.RemovePoint);
 
@@ -88,7 +74,6 @@ namespace Dependinator.ModelViewing.Lines
 
 
 		public override void MoveItem(Vector moveOffset) => LineControl.MovePoints(moveOffset);
-
 
 
 		public void Toggle()
@@ -101,20 +86,6 @@ namespace Dependinator.ModelViewing.Lines
 		public void UpdateToolTip() =>
 			ToolTip = $"{Line.Source.Name.DisplayFullName} -> {Line.Target.Name.DisplayFullName}\n{Line.Links.Count} links";
 
-
-		private ObservableCollection<LineMenuItemViewModel> GetSourceLinkItems()
-		{
-			IEnumerable<LineMenuItemViewModel> items = lineViewModelService.GetSourceLinkItems(Line);
-			return new ObservableCollection<LineMenuItemViewModel>(items);
-		}
-
-
-
-		private ObservableCollection<LineMenuItemViewModel> GetTargetLinkItems()
-		{
-			IEnumerable<LineMenuItemViewModel> items = lineViewModelService.GetTargetLinkItems(Line);
-			return new ObservableCollection<LineMenuItemViewModel>(items);
-		}
 
 
 		public void Clicked()

@@ -249,9 +249,6 @@
       <DependentUpon>DescriptionView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\INodeLayoutService.cs" />
-    <Compile Include="ModelViewing\Lines\Private\LineMenuItemViewModel.cs" />
-    <Compile Include="ModelViewing\Lines\Private\ILineMenuItemService.cs" />
-    <Compile Include="ModelViewing\Lines\Private\LineMenuItemService.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControlView.xaml.cs">
       <DependentUpon>NodeControlView.xaml</DependentUpon>
     </Compile>
