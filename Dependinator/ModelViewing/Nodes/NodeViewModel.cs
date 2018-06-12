@@ -77,7 +77,6 @@ namespace Dependinator.ModelViewing.Nodes
 		public double RectangleLineWidth => 1;
 
 		public string ToolTip { get => Get(); set => Set(value); }
-		public int IncomingLinesCount => Node.TargetLines.Count(line => line.Owner != Node);
 
 		public Command HideNodeCommand => Command(HideNode);
 		public Command ShowDependenciesCommand => Command(ShowDependencies);
@@ -132,13 +131,6 @@ namespace Dependinator.ModelViewing.Nodes
 			$"{DebugToolTip}";
 
 
-		public int IncomingLinksCount => Node.TargetLines
-			.Where(line => line.Owner != Node)
-			.SelectMany(line => line.Links)
-			.Count();
-
-		public int OutgoingLinesCount => Node.SourceLines.Count(line => line.Owner != Node);
-
 
 		public void MouseClicked(MouseButtonEventArgs e)
 		{
@@ -151,12 +143,6 @@ namespace Dependinator.ModelViewing.Nodes
 			Point newLocation = ItemBounds.Location + moveOffset;
 			ItemBounds = new Rect(newLocation, ItemBounds.Size);
 		}
-
-
-		public int OutgoingLinksCount => Node.SourceLines
-			.Where(line => line.Owner != Node)
-			.SelectMany(line => line.Links)
-			.Count();
 
 
 		public ItemsViewModel ItemsViewModel { get; set; }
@@ -231,8 +217,6 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private string ItemsToolTip => !BuildConfig.IsDebug ? "" :
 			"\n" +
-			$"\nLines; In: {IncomingLinesCount}, Out: {OutgoingLinesCount}" +
-			$"\nLinks; In: {IncomingLinksCount}, Out: {OutgoingLinksCount}\n" +
 			$"Rect: {ItemBounds.TS()}\n" +
 			$"Scale {ItemScale.TS()}, ChildrenScale: {Node.View.ItemsCanvas?.Scale.TS()}\n" +
 			$"ScaleFactor: {Node.View.ScaleFactor}, {Node.View.ViewModel.ItemsViewModel.ItemsCanvas.ScaleFactor}\n" +

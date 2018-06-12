@@ -79,7 +79,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				{
 					line.Links.Remove(link);
 
-					if (!line.Links.Any())
+					if (line.LinkCount2 == 0)
 					{
 						modelLineService.RemoveLine(line);
 					}
