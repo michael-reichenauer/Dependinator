@@ -8,7 +8,6 @@ using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.ProgressHandling;
-using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Nodes;

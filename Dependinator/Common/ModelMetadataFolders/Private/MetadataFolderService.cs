@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
 
