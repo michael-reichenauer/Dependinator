@@ -62,7 +62,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		public void AddLinkLines(Link link)
 		{
 			IReadOnlyList<LinkSegment> linkSegments = linkSegmentService.GetLinkSegments(link);
-			link.LinkSegments = linkSegments;
 			AddLinkSegmentLines(linkSegments, link);
 		}
 
@@ -100,8 +99,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private Line AddLine(Node source, Node target, int linkCount, IReadOnlyList<Point> points)
 		{
-			Node owner = GetLineOwner(source, target);
-			Line line = new Line(source, target, owner);
+			Line line = new Line(source, target);
 
 			if (points != null)
 			{
@@ -113,7 +111,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			line.LinkCount = linkCount;
 
 
-			if (owner.View.IsShowing || line.Source.View.IsShowing || line.Target.View.IsShowing)
+			if (line.Owner.View.IsShowing || line.Source.View.IsShowing || line.Target.View.IsShowing)
 			{
 				AddLineViewModel(line);
 			}
@@ -131,8 +129,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		private static Node GetLineOwner(Node source, Node target) =>
-			source == target.Parent ? source : source.Parent;
+		//private static Node GetLineOwner(Node source, Node target) =>
+		//	source == target.Parent ? source : source.Parent;
 
 
 		private static bool TryGetLine(LinkSegment segment, out Line line)

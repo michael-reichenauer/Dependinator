@@ -7,11 +7,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 {
 	internal class Line : Equatable<Line>, IEdge
 	{
-		public Line(Node source, Node target, Node owner)
+		public Line(Node source, Node target)
 		{
 			Source = source;
 			Target = target;
-			Owner = owner;
 			View = new LineViewData();
 
 			IsEqualWhenSame(Source, Target);
@@ -22,7 +21,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 
 		public Node Source { get; }
 		public Node Target { get; }
-		public Node Owner { get; }
+		public Node Owner => Source == Target.Parent ? Source : Source.Parent;
 
 		public LineViewData View { get; }
 
