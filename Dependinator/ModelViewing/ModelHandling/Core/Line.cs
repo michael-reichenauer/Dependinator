@@ -7,8 +7,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 {
 	internal class Line : Equatable<Line>, IEdge
 	{
-		private List<Link> hiddenLinks = new List<Link>();
-
 		public Line(Node source, Node target, Node owner)
 		{
 			Source = source;
@@ -41,14 +39,5 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 
 		public bool IsHidden => Links.Any() && Links.All(link => link.IsHidden);
 		public int VisibleLinksCount => Links.Count(link => !link.IsHidden);
-
-
-		public void HideLink(Link link)
-		{
-			if (Links.Remove(link))
-			{
-				hiddenLinks.Add(link);
-			}
-		}
 	}
 }
