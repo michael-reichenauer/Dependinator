@@ -15,7 +15,7 @@ namespace DependinatorTest.Utils
 	{
 		private readonly string dbDir = Path.Combine(Path.GetTempPath(), "StoreTest");
 
-		private readonly SHA1 hash = SHA1.Create();
+		private readonly SHA256 hash = SHA256.Create();
 
 
 		[Test]
@@ -31,7 +31,7 @@ namespace DependinatorTest.Utils
 			{
 				string guid = Guid.NewGuid().ToString();
 				string data = guid + Guid.NewGuid() + Guid.NewGuid();
-				string key = ToKey(data);
+				string key = ToKey2(data);
 				items.Add(new KeyValuePair<string, string>(key, data));
 			}
 			t.Log($"Created {count} values");
@@ -58,6 +58,15 @@ namespace DependinatorTest.Utils
 			byte[] dataBytes = Encoding.UTF8.GetBytes(value);
 			byte[] hashBytes = hash.ComputeHash(dataBytes);
 			return hashBytes.ToHex();
+		}
+
+		private string ToKey2(string value)
+		{
+			byte[] dataBytes = Encoding.UTF8.GetBytes(value);
+			byte[] hashBytes = hash.ComputeHash(dataBytes);
+			string base64String = Convert.ToBase64String(hashBytes, 0, 16);
+
+			return base64String.Substring(0, 22);
 		}
 
 
