@@ -30,6 +30,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 
 	
 		public int LinkCount { get; set; }
+		public int LinkCount2 => Links.Any() ? Links.Count : LinkCount;
 
 		public List<Link> Links { get; } = new List<Link>();
 		public bool IsToChild => Source == Target.Parent;

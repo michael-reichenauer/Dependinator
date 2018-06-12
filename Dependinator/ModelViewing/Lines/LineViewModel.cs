@@ -76,13 +76,6 @@ namespace Dependinator.ModelViewing.Lines
 		public override void MoveItem(Vector moveOffset) => LineControl.MovePoints(moveOffset);
 
 
-		public void Toggle()
-		{
-			lineViewModelService.Toggle(Line);
-		}
-
-
-
 		public void UpdateToolTip() =>
 			ToolTip = $"{Line.Source.Name.DisplayFullName} -> {Line.Target.Name.DisplayFullName}\n{Line.Links.Count} links";
 

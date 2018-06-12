@@ -197,11 +197,9 @@
     <Compile Include="ModelViewing\Items\ISelectableItem.cs" />
     <Compile Include="ModelViewing\Lines\Private\ILineControlService.cs" />
     <Compile Include="ModelViewing\Lines\Private\ILineDataService.cs" />
-    <Compile Include="ModelViewing\Lines\Private\ILineZoomService.cs" />
     <Compile Include="ModelViewing\Lines\Private\LineControl.cs" />
     <Compile Include="ModelViewing\Lines\Private\LineControlService.cs" />
     <Compile Include="ModelViewing\Lines\Private\LineDataService.cs" />
-    <Compile Include="ModelViewing\Lines\Private\LineZoomService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\Edge.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\IEdge.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\IModelLineService.cs" />

@@ -10,7 +10,6 @@ namespace Dependinator.ModelViewing.Lines.Private
 	internal class LineViewModelService : ILineViewModelService
 	{
 		private readonly ILineControlService lineControlService;
-		private readonly ILineZoomService lineZoomService;
 		private readonly ILineDataService lineDataService;
 		private readonly IItemSelectionService itemSelectionService;
 		private readonly IDependencyExplorerService dependencyExplorerService;
@@ -18,13 +17,11 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 		public LineViewModelService(
 			ILineControlService lineControlService,
-			ILineZoomService lineZoomService,
 			ILineDataService lineDataService,
 			IItemSelectionService itemSelectionService,
 			IDependencyExplorerService dependencyExplorerService)
 		{
 			this.lineControlService = lineControlService;
-			this.lineZoomService = lineZoomService;
 			this.lineDataService = lineDataService;
 			this.itemSelectionService = itemSelectionService;
 			this.dependencyExplorerService = dependencyExplorerService;
@@ -70,9 +67,6 @@ namespace Dependinator.ModelViewing.Lines.Private
 				lineViewModel.Line.Owner.Root.View.ItemsCanvas.OnMouseWheel(uiElement, e, false);
 			}
 		}
-
-
-		public void Toggle(Line line) => lineZoomService.ZoomInLinkLine(line);
 
 
 		public void ShowReferences(LineViewModel lineViewModel) =>
