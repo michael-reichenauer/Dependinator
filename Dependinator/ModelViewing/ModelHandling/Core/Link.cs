@@ -24,7 +24,5 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		public override string ToString() => $"{Source}->{Target}";
 
 		public bool IsHidden => Source.View.IsHidden || Target.View.IsHidden;
-
-		public void Remove(Line line) => Lines.Remove(line);
 	}
 }

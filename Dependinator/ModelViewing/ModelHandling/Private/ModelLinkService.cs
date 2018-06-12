@@ -90,22 +90,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		public void ResetLayout(List<Link> links)
-		{
-			foreach (Link link in links)
-			{
-				foreach (Line line in link.Lines)
-				{
-					if (line.View.Points.Count != 2)
-					{
-						line.View.ResetPoints();
-						line.View.ViewModel.UpdateLine();
-						line.View.ViewModel.NotifyAll();
-					}
-				}
-			}
-		}
-
 
 		private static Link AddLink(Node source, Node target)
 		{
