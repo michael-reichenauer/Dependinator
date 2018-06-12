@@ -115,26 +115,22 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		{
 			Node sourceNode;
 			Node targetNode;
-			IReadOnlyList<Line> lines;
 
 			// By default assume node is source if there are source lines (or node is no target) 
 			if (node.SourceLines.Any(l => l.Owner != node) || !node.TargetLines.Any())
 			{
 				sourceNode = node;
 				targetNode = node.Root;
-				lines = sourceNode.SourceLines;
 			}
 			else
 			{
 				// Node has no source lines so node as target
 				sourceNode = node.Root;
 				targetNode = node;
-				lines = targetNode.TargetLines;
 			}
 
-			await SetSourceAndTargetItemsAsync(viewModel, sourceNode, targetNode, lines);
+			await SetSourceAndTargetItemsAsync(viewModel, sourceNode, targetNode);
 		}
-
 
 
 		private async void InitializeFromLineAsync(DependencyExplorerWindowViewModel viewModel, Line line)
@@ -142,12 +138,9 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			// For lines to/from parent, use root 
 			Node sourceNode = line.Source == line.Target.Parent ? line.Source.Root : line.Source;
 			Node targetNode = line.Target == line.Source.Parent ? line.Target.Root : line.Target;
-			IReadOnlyList<Line> lines = new List<Line> { line };
 
-			await SetSourceAndTargetItemsAsync(viewModel, sourceNode, targetNode, lines);
+			await SetSourceAndTargetItemsAsync(viewModel, sourceNode, targetNode);
 		}
-
-
 
 
 		private async Task SetSidesAsync(DependencyExplorerWindowViewModel viewModel)
@@ -167,33 +160,25 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				return;
 			}
 
-
-			IReadOnlyList<Line> lines = sourceNode.SourceLines.Concat(targetNode.TargetLines).ToList();
-
-			await SetSourceAndTargetItemsAsync(viewModel, sourceNode, targetNode, lines);
+			await SetSourceAndTargetItemsAsync(viewModel, sourceNode, targetNode);
 		}
-
 
 
 		private async Task SetSourceAndTargetItemsAsync(
 			DependencyExplorerWindowViewModel viewModel,
 			Node sourceNode,
-			Node targetNode,
-			IReadOnlyList<Line> lines)
+			Node targetNode)
 		{
 			viewModel.SourceNodeName = sourceNode.Name;
 			viewModel.TargetNodeName = targetNode.Name;
 
-			await SetDependencyItemsAsync(viewModel, sourceNode, targetNode, lines, true);
-			await SetDependencyItemsAsync(viewModel, sourceNode, targetNode, lines, false);
+			await SetDependencyItemsAsync(viewModel, sourceNode, targetNode, true);
+			await SetDependencyItemsAsync(viewModel, sourceNode, targetNode, false);
 
 			await SetTextsAsync(viewModel);
 			SelectNode(sourceNode, viewModel.SourceItems);
 			SelectNode(targetNode, viewModel.TargetItems);
 		}
-
-
-
 
 
 		private async Task FilterOn(
@@ -216,12 +201,10 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				targetNode = itemNode;
 			}
 
-			IReadOnlyList<Line> lines = sourceNode.SourceLines.Concat(targetNode.TargetLines).ToList();
-
-			await SetDependencyItemsAsync(viewModel, sourceNode, targetNode, lines, !isSourceSide);
+			await SetDependencyItemsAsync(viewModel, sourceNode, targetNode, !isSourceSide);
 			if (isAncestor)
 			{
-				await SetDependencyItemsAsync(viewModel, sourceNode, targetNode, lines, isSourceSide);
+				await SetDependencyItemsAsync(viewModel, sourceNode, targetNode, isSourceSide);
 			}
 
 			await SetTextsAsync(viewModel);
@@ -248,14 +231,12 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			DependencyExplorerWindowViewModel viewModel,
 			Node sourceNode,
 			Node targetNode,
-			IReadOnlyList<Line> lines,
 			bool isSourceSide)
 		{
 			viewModel.SourceNodeName = sourceNode.Name;
 			viewModel.TargetNodeName = targetNode.Name;
 
-			var dependencyItems = await GetDependencyItemsAsync(
-				lines, isSourceSide, sourceNode, targetNode);
+			var dependencyItems = await GetDependencyItemsAsync(isSourceSide, sourceNode, targetNode);
 
 			var items = isSourceSide ? viewModel.SourceItems : viewModel.TargetItems;
 
@@ -268,8 +249,8 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 
 		private Task<IReadOnlyList<DependencyItem>> GetDependencyItemsAsync(
-			IReadOnlyList<Line> lines, bool isSourceSide, Node sourceNode, Node targetNode) =>
-			dependenciesService.GetDependencyItemsAsync(lines, isSourceSide, sourceNode, targetNode);
+			bool isSourceSide, Node sourceNode, Node targetNode) =>
+			dependenciesService.GetDependencyItemsAsync(isSourceSide, sourceNode, targetNode);
 
 
 		private async Task SetTextsAsync(DependencyExplorerWindowViewModel viewModel)

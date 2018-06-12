@@ -9,7 +9,6 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 	internal class DependenciesService : IDependenciesService
 	{
 		public async Task<IReadOnlyList<DependencyItem>> GetDependencyItemsAsync(
-			IEnumerable<Line> lines,
 			bool isSource,
 			Node sourceFilter,
 			Node targetFilter)
@@ -17,9 +16,8 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			return await Task.Run(() =>
 			{
 				ReferenceOptions options = new ReferenceOptions(isSource, sourceFilter, targetFilter);
-				IEnumerable<Link> links = lines
-					.SelectMany(line => line.Links)
-					.Where(link => IsIncluded(link, options));
+
+				IEnumerable<Link> links = GetLinks(options);
 
 				var items = CreateReferenceHierarchy(links, options);
 
@@ -29,6 +27,34 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 				return new List<DependencyItem> { rootItem };
 			});
+		}
+
+
+		//private static IEnumerable<Link> GetLinks(IEnumerable<Line> lines, ReferenceOptions options)
+		//{
+		//	return lines
+		//		.SelectMany(line => line.Links)
+		//		.Where(link => IsIncluded(link, options));
+		//}
+
+
+		private static IEnumerable<Link> GetLinks(ReferenceOptions options)
+		{
+			if (options.IsSource)
+			{
+				return options.SourceFilter
+					.DescendentsAndSelf()
+					.SelectMany(node => node.SourceLinks)
+					.Where(link => IsIncluded(link, options));
+			}
+			else
+			{
+				// Since we do not have "targetLinks", we need check all links in the model from root
+				return options.TargetFilter.Root
+					.DescendentsAndSelf()
+					.SelectMany(node => node.SourceLinks)
+					.Where(link => IsIncluded(link, options));
+			}
 		}
 
 

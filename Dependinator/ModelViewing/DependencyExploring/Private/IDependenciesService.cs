@@ -7,9 +7,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 {
 	internal interface IDependenciesService
 	{
-		Task<IReadOnlyList<DependencyItem>> GetDependencyItemsAsync(
-			IEnumerable<Line> lines,
-			bool isSource,
+		Task<IReadOnlyList<DependencyItem>> GetDependencyItemsAsync(bool isSource,
 			Node sourceFilter,
 			Node targetFilter);
 	}
