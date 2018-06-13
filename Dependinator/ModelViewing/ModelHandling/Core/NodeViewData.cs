@@ -31,13 +31,5 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		public bool CanShow => ViewModel?.CanShow ?? false;
 		public bool IsShowNode => ViewModel?.IsShowNode ?? false;
 		public bool IsShowing => ViewModel?.IsShowing ?? false;
-
-
-		//public void ShowHiddenNode()
-		//{
-		//	IsHidden = false;
-		//	node.Parent.View.ItemsCanvas?.UpdateAndNotifyAll();
-		//}
-
 	}
 }

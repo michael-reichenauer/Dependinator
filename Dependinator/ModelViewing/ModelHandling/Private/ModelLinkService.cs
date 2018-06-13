@@ -46,7 +46,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				link = AddLink(source, target);
 				link.Stamp = stamp;
 
-				modelLineService.AddLinkLines(link);
+				if (!modelLink.IsAdded)
+				{
+					modelLineService.AddLinkLines(link);
+				}
 			}
 			catch (Exception e)
 			{
@@ -74,15 +77,16 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			foreach (Link link in obsoleteLinks)
 			{
-				foreach (Line line in link.Lines)
-				{
-					line.Links.Remove(link);
+				Log.Warn($"Need to clean up obsolete lines !!!!!");
+				//foreach (Line line in link.Lines)
+				//{
+				//	line.Links.Remove(link);
 
-					if (line.LinkCount2 == 0)
-					{
-						modelLineService.RemoveLine(line);
-					}
-				}
+				//	if (line.LinkCount2 == 0)
+				//	{
+				//		modelLineService.RemoveLine(line);
+				//	}
+				//}
 
 				RemoveLink(link);
 			}

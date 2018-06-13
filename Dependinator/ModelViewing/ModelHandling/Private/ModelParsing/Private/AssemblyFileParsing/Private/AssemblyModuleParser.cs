@@ -98,8 +98,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				ModelNode referenceNode = new ModelNode(referenceName, parent, NodeType.NameSpace, description, null);
 				itemsCallback(referenceNode);
 
-				linkHandler.AddLink(
-					new ModelLink(moduleName, referenceName, NodeType.NameSpace));
+				linkHandler.AddLink(new ModelLink(moduleName, referenceName, NodeType.NameSpace));
 			}
 		}
 	}

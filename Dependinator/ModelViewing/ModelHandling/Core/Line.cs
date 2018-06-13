@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using Dependinator.Utils;
 
 
@@ -15,7 +13,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 
 			IsEqualWhenSame(Source, Target);
 		}
-		
+
 
 		public int Stamp { get; set; }
 
@@ -25,18 +23,18 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 
 		public LineViewData View { get; }
 
-	
-		public int LinkCount { get; set; }
-		public int LinkCount2 => Links.Any() ? Links.Count : LinkCount;
 
-		public List<Link> Links { get; } = new List<Link>();
+		public int LinkCount { get; set; }
+		public int LinkCount2 => LinkCount; // Links.Any() ? Links.Count : LinkCount;
+
+		//public List<Link> Links { get; } = new List<Link>();
 		public bool IsToChild => Source == Target.Parent;
 		public bool IsToParent => Source.Parent == Target;
 		public bool IsToSibling => Source.Parent == Target.Parent;
 
 		public override string ToString() => $"{Source}->{Target}";
 
-		public bool IsHidden => Links.Any() && Links.All(link => link.IsHidden);
-		public int VisibleLinksCount => Links.Count(link => !link.IsHidden);
+		public bool IsHidden => false; // Links.Any() && Links.All(link => link.IsHidden);
+		public int VisibleLinksCount => LinkCount; // Links.Count(link => !link.IsHidden);
 	}
 }

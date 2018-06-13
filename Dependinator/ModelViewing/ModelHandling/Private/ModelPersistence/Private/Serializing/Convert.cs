@@ -104,7 +104,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 		private static ModelLink ToModelLink(JsonTypes.Link link) => new ModelLink(
 			link.Source,
 			link.Target,
-			FromNodeTypeText(link.TargetType));
+			FromNodeTypeText(link.TargetType),
+			true);
 
 
 		private static JsonTypes.Link ToJsonLink(ModelLink link) => new JsonTypes.Link

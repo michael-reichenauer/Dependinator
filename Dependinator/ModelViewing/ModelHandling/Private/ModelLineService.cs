@@ -62,7 +62,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		public void AddLinkLines(Link link)
 		{
 			IEnumerable<LinkSegment> linkSegments = linkSegmentService.GetLinkSegments(link);
-			AddLinkSegmentLines(linkSegments, link);
+			AddLinkSegmentLines(linkSegments);
 		}
 
 
@@ -82,7 +82,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		private void AddLinkSegmentLines(IEnumerable<LinkSegment> linkSegments, Link link)
+		private void AddLinkSegmentLines(IEnumerable<LinkSegment> linkSegments)
 		{
 			foreach (LinkSegment linkSegment in linkSegments)
 			{
@@ -91,8 +91,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					line = AddLine(linkSegment.Source, linkSegment.Target, 0, null);
 				}
 
-				line.Links.Add(link);
-				link.Lines.Add(line);
+				line.LinkCount++;
 			}
 		}
 

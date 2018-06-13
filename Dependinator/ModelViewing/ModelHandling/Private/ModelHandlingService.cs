@@ -14,7 +14,6 @@ using Dependinator.ModelViewing.ModelHandling.Private.ModelParsing;
 using Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence;
 using Dependinator.ModelViewing.Open;
 using Dependinator.Utils;
-using Dependinator.Utils.Collections;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.ErrorHandling;
 using Dependinator.Utils.OsSystem;
@@ -26,7 +25,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	[SingleInstance]
 	internal class ModelHandlingService : IModelHandlingService
 	{
-		private static readonly int MaxPriority = 10;
 		private static readonly int BatchSize = 100;
 
 		private readonly IParserService parserService;
@@ -101,7 +99,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					return;
 				}
 
-				await RefreshAsync(false);
+				//await RefreshAsync(false);
 			}
 			else
 			if (File.Exists(modelMetadata.ModelFilePath))
@@ -260,7 +258,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			Timing t = Timing.Start();
 
 			Task showTask = Task.Run(() => ShowModel(operation));
-			
+
 
 			Task<R> parseTask = parseFunctionAsync(operation);
 
@@ -307,7 +305,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			}
 
 
-			BlockingCollection<IModelItem> queue = new BlockingCollection<IModelItem>(MaxPriority);
+			BlockingCollection<IModelItem> queue = new BlockingCollection<IModelItem>();
 
 			Application.Current.Dispatcher.InvokeBackground(() =>
 			{
@@ -367,7 +365,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private class Operation
 		{
 			public BlockingCollection<IModelItem> Queue { get; } =
-				new BlockingCollection<IModelItem>(MaxPriority);
+				new BlockingCollection<IModelItem>();
 
 			public int Id { get; }
 

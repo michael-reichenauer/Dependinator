@@ -180,6 +180,7 @@
     <Compile Include="ModelViewing\DependencyExploring\Private\IDependencyWindowService.cs" />
     <Compile Include="ModelViewing\DependencyExploring\Private\IItemCommands.cs" />
     <Compile Include="ModelViewing\IModelNotifications2.cs" />
+    <Compile Include="ModelViewing\ModelHandling\Core\NodeId.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\ParsingAssemblyResolver.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\Decompiler.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\WorkParser.cs" />
