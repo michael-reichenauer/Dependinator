@@ -6,6 +6,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 {
 	internal interface ILinkSegmentService
 	{
-		IReadOnlyList<LinkSegment> GetLinkSegments(Link link);
+		IEnumerable<LinkSegment> GetLinkSegments(Link link);
 	}
 }

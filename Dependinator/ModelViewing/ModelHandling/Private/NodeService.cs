@@ -37,7 +37,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public bool TryGetNode(NodeName name, out Node node) => modelService.TryGetNode(name, out node);
 
-		public IEnumerable<Node>AllNodes => modelService.AllNodes;
+		public IEnumerable<Node> AllNodes => modelService.AllNodes;
 
 
 		public void AddNode(Node node, Node parentNode)

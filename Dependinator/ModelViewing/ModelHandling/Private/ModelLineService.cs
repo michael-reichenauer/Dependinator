@@ -61,7 +61,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public void AddLinkLines(Link link)
 		{
-			IReadOnlyList<LinkSegment> linkSegments = linkSegmentService.GetLinkSegments(link);
+			IEnumerable<LinkSegment> linkSegments = linkSegmentService.GetLinkSegments(link);
 			AddLinkSegmentLines(linkSegments, link);
 		}
 

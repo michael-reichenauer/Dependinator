@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -239,7 +240,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			}
 
 			Timing t = Timing.Start();
-			IReadOnlyList<Node> nodes = Root.DescendentsBreadth().ToList();
+			IReadOnlyList<Node> nodes = Root.Descendents().ToList();
 			t.Log($"Saving {nodes.Count} nodes");
 
 			IReadOnlyList<IModelItem> items = Convert.ToDataItems(nodes);
@@ -281,7 +282,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private static void UpdateDataItems(IModelItem item, Operation operation)
 		{
-			operation.Queue.Enqueue(item, 0);
+			operation.Queue.Add(item);
 		}
 
 
@@ -306,11 +307,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			}
 
 
-			PriorityBlockingQueue<IModelItem> queue = new PriorityBlockingQueue<IModelItem>(MaxPriority);
+			BlockingCollection<IModelItem> queue = new BlockingCollection<IModelItem>(MaxPriority);
 
 			Application.Current.Dispatcher.InvokeBackground(() =>
 			{
-				modelService.GetAllQueuedNodes().ForEach(node => queue.Enqueue(node, 0));
+				modelService.GetAllQueuedNodes().ForEach(node => queue.Add(node));
 				queue.CompleteAdding();
 			});
 
@@ -365,8 +366,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private class Operation
 		{
-			public PriorityBlockingQueue<IModelItem> Queue { get; } =
-				new PriorityBlockingQueue<IModelItem>(MaxPriority);
+			public BlockingCollection<IModelItem> Queue { get; } =
+				new BlockingCollection<IModelItem>(MaxPriority);
 
 			public int Id { get; }
 

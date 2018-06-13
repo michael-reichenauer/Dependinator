@@ -7,20 +7,21 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 {
 	internal class LinkSegmentService : ILinkSegmentService
 	{
-		public IReadOnlyList<LinkSegment> GetLinkSegments(Link link)
+		public IEnumerable<LinkSegment> GetLinkSegments(Link link)
 		{
 			if (link.Source.Parent == link.Target.Parent ||
-			    link.Source == link.Target.Parent ||
-			    link.Source.Parent == link.Target)
+					link.Source == link.Target.Parent ||
+					link.Source.Parent == link.Target)
 			{
 				// Sibling, parent or child link
-				return new[] { new LinkSegment(link.Source, link.Target) };
+				yield return new LinkSegment(link.Source, link.Target);
+				yield break;
 			}
 
-			List<LinkSegment> segments = new List<LinkSegment>();
-			List<Node> sourceAncestors = SourceAncestorsAndSel(link).Reverse().ToList();
-			List<Node> targetAncestors = TargetAncestorsAndSelf(link).Reverse().ToList();
-			
+			// Skipping root in both ancestors
+			List<Node> sourceAncestors = link.Source.AncestorsAndSelf().Reverse().Skip(1).ToList();
+			List<Node> targetAncestors = link.Target.AncestorsAndSelf().Reverse().Skip(1).ToList();
+
 			for (int i = 0; i < sourceAncestors.Count; i++)
 			{
 				if (sourceAncestors[i] != targetAncestors[i])
@@ -32,7 +33,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					for (int j = sourceAncestors.Count - 2; j >= i; j--)
 					{
 						Node segmentTarget = sourceAncestors[j];
-						segments.Add(new LinkSegment(segmentSource, segmentTarget));
+						yield return new LinkSegment(segmentSource, segmentTarget);
 						segmentSource = segmentTarget;
 					}
 
@@ -40,7 +41,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					for (int j = i; j < targetAncestors.Count; j++)
 					{
 						Node segmentTarget = targetAncestors[j];
-						segments.Add(new LinkSegment(segmentSource, segmentTarget));
+						yield return new LinkSegment(segmentSource, segmentTarget);
 						segmentSource = segmentTarget;
 					}
 
@@ -55,7 +56,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					for (int j = i + 1; j < targetAncestors.Count; j++)
 					{
 						Node segmentTarget = targetAncestors[j];
-						segments.Add(new LinkSegment(segmentSource, segmentTarget));
+						yield return new LinkSegment(segmentSource, segmentTarget);
 						segmentSource = segmentTarget;
 					}
 
@@ -67,41 +68,16 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					Node segmentSource = link.Source;
 
 					// From source going upp to target
-					for (int j = sourceAncestors.Count - 2; j >= i ; j--)
+					for (int j = sourceAncestors.Count - 2; j >= i; j--)
 					{
 						Node segmentTarget = sourceAncestors[j];
-						segments.Add(new LinkSegment(segmentSource, segmentTarget));
+						yield return new LinkSegment(segmentSource, segmentTarget);
 						segmentSource = segmentTarget;
 					}
 
 					break;
 				}
 			}
-
-			return segments;
 		}
-
-
-		private static IEnumerable<Node> SourceAncestorsAndSel(Link link)
-		{
-			foreach (Node node in link.Source.AncestorsAndSelf())
-			{
-				yield return node;
-			}
-
-			yield return link.Source.Root;
-		}
-
-
-		private static IEnumerable<Node> TargetAncestorsAndSelf(Link link)
-		{
-			foreach (var node in link.Target.AncestorsAndSelf())
-			{
-				yield return node;
-			}
-
-			yield return link.Target.Root;
-		}
-
 	}
 }

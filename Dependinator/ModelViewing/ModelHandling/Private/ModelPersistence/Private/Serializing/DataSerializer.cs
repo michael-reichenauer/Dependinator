@@ -52,6 +52,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 				try
 				{
 					Timing t = new Timing();
+					int itemCount = 0;
 
 					JsonSerializer serializer = Json.Serializer;
 					using (FileStream s = File.Open(path, FileMode.Open))
@@ -65,7 +66,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 								break;
 							}
 						}
-
+						
 						while (reader.Read())
 						{
 							// deserialize only when there's "{" character in the stream
@@ -74,11 +75,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 								JsonTypes.Item jsonItem = serializer.Deserialize<JsonTypes.Item>(reader);
 								IModelItem modelItem = Convert.ToModelItem(jsonItem);
 								modelItemsCallback(modelItem);
+								itemCount++;
 							}
 						}
 					}
 
-					t.Log($"Sent all items");
+					t.Log($"Sent all {itemCount} items");
 					return R.Ok;
 				}
 				catch (Exception e)

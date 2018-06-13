@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.Utils;
+using Dependinator.Utils.Threading;
 
 
 namespace Dependinator.ModelViewing.ModelHandling.Private
@@ -8,15 +10,18 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	internal class ModelNodeService : IModelNodeService
 	{
 		private readonly IModelLinkService modelLinkService;
+		private readonly ILinkSegmentService linkSegmentService;
 		private readonly INodeService nodeService;
 
 
 		public ModelNodeService(
 			INodeService nodeService,
-			IModelLinkService modelLinkService)
+			IModelLinkService modelLinkService,
+			ILinkSegmentService linkSegmentService)
 		{
 			this.nodeService = nodeService;
 			this.modelLinkService = modelLinkService;
+			this.linkSegmentService = linkSegmentService;
 		}
 
 
@@ -37,6 +42,29 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		public void RemoveObsoleteNodesAndLinks(int stamp)
 		{
 			IReadOnlyList<Node> nodes = nodeService.AllNodes.ToList();
+			Log.Warn("Testing ----------------");
+
+			nodeService.TryGetNode(NodeName.Root, out Node root);
+
+			Timing t = Timing.Start();
+
+			int count = root.Descendents().Count();
+			t.Log($"Nodes ref = {count}");
+
+			count = Descendents2(root.Name).Count();
+			t.Log($"Nodes dict = {count}");
+
+			int linkCount = Descendents2(root.Name).SelectMany(n => n.SourceLinks).Count();
+			t.Log($"Links {linkCount}");
+
+			int lineCount = Descendents2(root.Name).SelectMany(n => n.SourceLines).Count();
+			t.Log($"Lines {lineCount}");
+
+			int segmentCount = Descendents2(root.Name)
+				.SelectMany(n => n.SourceLinks)
+				.SelectMany(l => linkSegmentService.GetLinkSegments(l))
+				.Count();
+			t.Log($"segments {segmentCount}");
 
 			foreach (Node node in nodes)
 			{
@@ -61,6 +89,30 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					nodeService.RemoveNode(node);
 				}
 			}
+		}
+
+
+		private IEnumerable<Node> Descendents2(NodeName nodeName)
+		{
+			Queue<Node> queue = new Queue<Node>();
+
+			Node node = GetNode(nodeName);
+			node.Children.Select(c => GetNode(c.Name)).ForEach(queue.Enqueue);
+
+			while (queue.Any())
+			{
+				Node descendent = queue.Dequeue();
+				yield return descendent;
+
+				descendent.Children.Select(c => GetNode(c.Name)).ForEach(queue.Enqueue);
+			}
+		}
+
+
+		private Node GetNode(NodeName nodeName)
+		{
+			nodeService.TryGetNode(nodeName, out Node node);
+			return node;
 		}
 
 

@@ -30,14 +30,6 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		}
 
 
-		//private static IEnumerable<Link> GetLinks(IEnumerable<Line> lines, ReferenceOptions options)
-		//{
-		//	return lines
-		//		.SelectMany(line => line.Links)
-		//		.Where(link => IsIncluded(link, options));
-		//}
-
-
 		private static IEnumerable<Link> GetLinks(ReferenceOptions options)
 		{
 			if (options.IsSource)
