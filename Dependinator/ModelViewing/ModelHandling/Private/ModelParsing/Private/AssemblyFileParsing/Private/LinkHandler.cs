@@ -67,7 +67,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		}
 
 
-
 		private void SendLink(NodeId sourceId, string targetName, NodeType targetType)
 		{
 			if (!sentTargetNodes.TryGetValue(targetName, out ModelNode targetNode))

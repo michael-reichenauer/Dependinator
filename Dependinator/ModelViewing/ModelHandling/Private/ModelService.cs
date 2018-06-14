@@ -79,13 +79,19 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		public void QueueNode(ModelNode modelNode)
+		public void QueueNode(ModelNode node)
 		{
-			QueuedNode queuedNode = GetQueuedNode(modelNode.NodeId);
+			QueuedNode queuedNode = GetQueuedNode(node.NodeId);
 			
 			if (queuedNode.ModelNode == null)
 			{
-				queuedNode.ModelNode = modelNode;
+				queuedNode.ModelNode = new ModelNode(
+					node.NodeId, 
+					node.Name, 
+					node.Parent, 
+					node.NodeType,
+					node.Description, 
+					node.CodeText);
 			}
 		}
 
