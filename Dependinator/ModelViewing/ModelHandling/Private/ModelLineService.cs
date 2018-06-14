@@ -33,7 +33,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			try
 			{
-				Node source = modelService.GetNode(NodeName.From(modelLine.Source));
+				Node source = modelService.GetNode(modelLine.SourceId);
 
 				if (!TryGetTarget(modelLine, out Node target))
 				{
@@ -148,10 +148,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private bool TryGetTarget(ModelLine modelLine, out Node target)
 		{
-			NodeName targetName = NodeName.From(modelLine.Target);
-			if (!modelService.TryGetNode(targetName, out target))
+			NodeId targetId = modelLine.TargetId;
+			if (!modelService.TryGetNode(targetId, out target))
 			{
-				modelService.QueueModelLine(targetName, modelLine);
+				modelService.QueueModelLine(targetId, modelLine);
 				return false;
 			}
 

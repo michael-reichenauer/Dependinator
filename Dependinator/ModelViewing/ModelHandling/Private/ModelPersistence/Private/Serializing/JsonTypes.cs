@@ -6,11 +6,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 {
 	public static class JsonTypes
 	{
+		public static string Version = "2";
+
 		// A model contains a list of nodes, links and lines
 		[Serializable]
 		public class Model
 		{
-			public string FormatVersion { get; set; } = "1";
+			public string FormatVersion { get; set; } = Version;
 			public List<Item> Items { get; set; }
 		}
 
@@ -29,6 +31,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 		public class Node
 		{
 			// The name of a node with '.' separating hierarchy, e.g. like in namespaces
+			public string Id { get; set; }
 			public string Name { get; set; }
 
 			// Optional data like type, node location and size ...
@@ -47,12 +50,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 		public class Link
 		{
 			// The source node name
-			public string Source { get; set; }
+			public string SourceId { get; set; }
 
 			// The target node name
-			public string Target { get; set; }
-
-			public string TargetType { get; set; }
+			public string TargetId { get; set; }
 		}
 
 
@@ -61,12 +62,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 		public class Line
 		{
 			// The source node name
-			public string Source { get; set; }
+			public string SourceId { get; set; }
 
 			// The target node name
-			public string Target { get; set; }
-
-			public string TargetType { get; set; }
+			public string TargetId { get; set; }
 
 			public List<string> Points { get; set; }
 

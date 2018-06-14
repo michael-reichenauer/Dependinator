@@ -31,7 +31,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private static ModelNode ToModelNode(Node node) =>
 			new ModelNode(
-				node.Name.FullName,
+				node.Id,
+				node.Name,
 				node.Parent.Name.FullName,
 				node.NodeType,
 				node.Description,
@@ -46,17 +47,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			lines
 				.Where(line => !line.IsHidden)
 				.Select(line => new ModelLine(
-					line.Source.Name.FullName,
-					line.Target.Name.FullName,
-					line.Target.NodeType,
+					line.Source.Id,
+					line.Target.Id,
 					line.View.MiddlePoints().ToList(),
 					line.VisibleLinksCount));
 
 
 		private static IEnumerable<ModelLink> ToModelLinks(IEnumerable<Link> links) =>
-			links.Select(link => new ModelLink(
-				link.Source.Name.FullName,
-				link.Target.Name.FullName,
-				link.Target.NodeType));
+			links.Select(link => new ModelLink(link.Source.Id, link.Target.Id));
 	}
 }

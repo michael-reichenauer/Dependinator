@@ -44,7 +44,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			parent = parent != null ? $"${parent?.Replace(".", ".$")}" : null;
 
 			string description = GetDescription();
-			ModelNode moduleNode = new ModelNode(moduleName, parent, NodeType.NameSpace, description, null);
+			NodeName nodeName = NodeName.From(moduleName);
+			NodeId nodeId = new NodeId(nodeName);
+			ModelNode moduleNode = new ModelNode(nodeId, nodeName, parent, NodeType.NameSpace, description, null);
 			itemsCallback(moduleNode);
 		}
 
@@ -70,6 +72,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		public void AddModuleReferences()
 		{
 			string moduleName = Name.GetAssemblyName(assembly);
+			NodeName moduleNodeName = NodeName.From(moduleName);
+			NodeId moduleId = new NodeId(moduleNodeName);
 
 			var references = assembly.MainModule.AssemblyReferences.
 				Where(reference => !IgnoredTypes.IsSystemIgnoredModuleName(reference.Name));
@@ -77,7 +81,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			if (references.Any())
 			{
 				string description = "External references";
-				ModelNode referencesNode = new ModelNode("$References", null, NodeType.NameSpace, description, null);
+				NodeName nodeName = NodeName.From("$References");
+				NodeId nodeId = new NodeId(nodeName);
+				ModelNode referencesNode = new ModelNode(nodeId, nodeName, null, NodeType.NameSpace, description, null);
 				itemsCallback(referencesNode);
 			}
 
@@ -95,10 +101,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				parent = $"${parent?.Replace(".", ".$")}";
 
 				string description = "Assembly";
-				ModelNode referenceNode = new ModelNode(referenceName, parent, NodeType.NameSpace, description, null);
+				NodeName referenceNodeName = NodeName.From(referenceName);
+				NodeId referenceId = new NodeId(referenceNodeName);
+				ModelNode referenceNode = new ModelNode(referenceId, referenceNodeName, parent, NodeType.NameSpace, description, null);
 				itemsCallback(referenceNode);
 
-				linkHandler.AddLink(new ModelLink(moduleName, referenceName, NodeType.NameSpace));
+				linkHandler.AddLink(moduleId, referenceName, NodeType.NameSpace);
 			}
 		}
 	}

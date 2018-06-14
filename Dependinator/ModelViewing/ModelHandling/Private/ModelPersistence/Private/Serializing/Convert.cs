@@ -26,7 +26,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 
 			return null;
 		}
-		
+
 
 		public static JsonTypes.Item ToJsonItem(IModelItem item)
 		{
@@ -39,13 +39,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 				case ModelLine modelLine:
 					return new JsonTypes.Item { Line = ToJsonLine(modelLine) };
 			}
-			
+
 			return null;
 		}
-		
+
 
 		private static ModelNode ToModelNode(JsonTypes.Node node) => new ModelNode(
-			node.Name,
+			NodeId.From(node.Id),
+			NodeName.From(node.Name),
 			node.Parent,
 			FromNodeTypeText(node.Type),
 			node.Description,
@@ -58,7 +59,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 
 		private static JsonTypes.Node ToJsonNode(ModelNode node) => new JsonTypes.Node
 		{
-			Name = node.Name,
+			Id = node.NodeId.AsString(),
+			Name = node.Name.FullName,
 			Parent = node.Parent,
 			Type = ToNodeTypeText(node.NodeType),
 			Description = node.Description,
@@ -91,7 +93,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 			{
 				case NodeType.NameSpace:
 					return JsonTypes.NodeType.NameSpace;
-				case NodeType.Type :
+				case NodeType.Type:
 					return JsonTypes.NodeType.Type;
 				case NodeType.Member:
 					return JsonTypes.NodeType.Member;
@@ -102,34 +104,30 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 
 
 		private static ModelLink ToModelLink(JsonTypes.Link link) => new ModelLink(
-			link.Source,
-			link.Target,
-			FromNodeTypeText(link.TargetType),
+			NodeId.From(link.SourceId),
+			NodeId.From(link.TargetId),
 			true);
 
 
 		private static JsonTypes.Link ToJsonLink(ModelLink link) => new JsonTypes.Link
 		{
-			Source = link.Source,
-			Target = link.Target,
-			TargetType = ToNodeTypeText(link.TargetType),
+			SourceId = link.SourceId.AsString(),
+			TargetId = link.TargetId.AsString(),
 		};
 
 
 
 		private static IModelItem ToModelLine(JsonTypes.Line line) => new ModelLine(
-			line.Source,
-			line.Target,
-			FromNodeTypeText(line.TargetType),
+			NodeId.From(line.SourceId),
+			NodeId.From(line.TargetId),
 			ToLinePoints(line.Points),
 			line.LinkCount);
 
 
 		private static JsonTypes.Line ToJsonLine(ModelLine line) => new JsonTypes.Line
 		{
-			Source = line.Source,
-			Target = line.Target,
-			TargetType = ToNodeTypeText(line.TargetType),
+			SourceId = line.SourceId.AsString(),
+			TargetId = line.TargetId.AsString(),
 			Points = ToJsonPoints(line.Points),
 			LinkCount = line.LinkCount
 		};

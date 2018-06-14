@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Mono.Cecil;
@@ -10,6 +11,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 	{
 		private readonly ModelItemsCallback itemsCallback;
 
+		private readonly Dictionary<string, ModelNode> sentTargetNodes = new Dictionary<string, ModelNode>();
 
 		public LinkHandler(ModelItemsCallback itemsCallback)
 		{
@@ -17,7 +19,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		}
 
 
-		public void AddLink(ModelLink link) => SendLink(link);
+		public void AddLink(NodeId sourceId, string targetName, NodeType targetType)
+		{
+			SendLink(sourceId, targetName, targetType);
+		}
 
 
 		public void AddLinkToType(ModelNode sourceNode, TypeReference targetType)
@@ -34,7 +39,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				return;
 			}
 
-			SendLink(new ModelLink(sourceNode.Name, targetNodeName, NodeType.Type));
+			SendLink(sourceNode.NodeId, targetNodeName, NodeType.Type);
 
 			if (targetType.IsGenericInstance)
 			{
@@ -58,19 +63,32 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				return;
 			}
 
-			SendLink(new ModelLink(sourceNode.Name, targetNodeName, NodeType.Member));
+			SendLink(sourceNode.NodeId, targetNodeName, NodeType.Member);
 		}
 
 
-		private void SendLink(ModelLink link)
+
+		private void SendLink(NodeId sourceId, string targetName, NodeType targetType)
 		{
-			if (link.Source == link.Target)
+			if (!sentTargetNodes.TryGetValue(targetName, out ModelNode targetNode))
+			{
+				NodeName targetNodeName = NodeName.From(targetName);
+				NodeId targetId = new NodeId(targetNodeName);
+				
+				targetNode = new ModelNode(targetId, targetNodeName, null, targetType, null, null, true);
+				sentTargetNodes[targetName] = targetNode;
+			}
+
+			if (sourceId == targetNode.NodeId)
 			{
 				// Skipping link to self
 				return;
 			}
+			
+			ModelLink modelLink = new ModelLink(sourceId, targetNode.NodeId);
 
-			itemsCallback(link);
+			itemsCallback(targetNode);
+			itemsCallback(modelLink);
 		}
 
 
@@ -99,7 +117,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 
 		/// <summary>
-		/// Return true if type is a generic type parameter T, as in e.g. Get/T/ (T value)
+		/// Return true if type is a generic type parameter T, as in e.g. Get'T'(T value)
 		/// </summary>
 		private static bool IsGenericTypeArgument(MemberReference targetType)
 		{

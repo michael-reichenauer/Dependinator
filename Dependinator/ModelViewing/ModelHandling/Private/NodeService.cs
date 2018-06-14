@@ -35,7 +35,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public Node Root => modelService.Root;
 
-		public bool TryGetNode(NodeName name, out Node node) => modelService.TryGetNode(name, out node);
+		public bool TryGetNode(NodeId nodeId, out Node node) => modelService.TryGetNode(nodeId, out node);
+
+		public void QueueNode(ModelNode modelNode) => modelService.QueueNode(modelNode);
 
 		public IEnumerable<Node> AllNodes => modelService.AllNodes;
 
@@ -50,13 +52,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			AddNodeToParentCanvas(node, parentNode);
 
 			if (modelService.TryGetQueuedLinesAndLinks(
-				node.Name,
+				node.Id,
 				out IReadOnlyList<ModelLine> lines,
 				out IReadOnlyList<ModelLink> links))
 			{
 				lines.ForEach(line => modelLineService.UpdateLine(line, node.Stamp));
 				links.ForEach(link => modelLinkService.UpdateLink(link, node.Stamp));
-				modelService.RemovedQueuedNode(node.Name);
+				modelService.RemovedQueuedNode(node.Id);
 			}
 		}
 
@@ -76,13 +78,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-
 		public void RemoveAll()
 		{
 			Root?.View.ItemsCanvas?.RemoveAll();
 
 			modelService.RemoveAll();
 		}
+
 
 		public void UpdateNodeTypeIfNeeded(Node node, NodeType nodeType)
 		{
@@ -101,7 +103,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public Node GetParentNode(NodeName parentName, NodeType childNodeType)
 		{
-			if (modelService.TryGetNode(parentName, out Node parent))
+			if (modelService.TryGetNode(new NodeId(parentName), out Node parent))
 			{
 				return parent;
 			}

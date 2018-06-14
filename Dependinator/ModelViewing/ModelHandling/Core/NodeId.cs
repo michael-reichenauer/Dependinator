@@ -23,7 +23,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 			this.id = id;
 			IsEqualWhenSame(id);
 		}
-		
+
+
+		public static NodeId Root { get; } = new NodeId(NodeName.Root);
+
 
 		public string AsString() => id;
 

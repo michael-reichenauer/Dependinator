@@ -36,7 +36,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 		{
 			string moduleName = "$" + Path.GetFileName(filePath).Replace(".", "*");
 			string description = isSolutionFile ? "Solution file" : "Assembly file";
-			ModelNode moduleNode = new ModelNode(moduleName, null, NodeType.NameSpace, description, null);
+			NodeName nodeName = NodeName.From(moduleName);
+			NodeId nodeId = new NodeId(nodeName);
+			ModelNode moduleNode = new ModelNode(nodeId, nodeName, null, NodeType.NameSpace, description, null);
 			itemsCallback(moduleNode);
 
 

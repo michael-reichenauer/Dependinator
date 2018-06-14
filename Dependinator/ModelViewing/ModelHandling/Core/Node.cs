@@ -14,6 +14,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		public Node(NodeName name)
 		{
 			Name = name;
+			Id = new NodeId(name);
 
 			Init(name);
 			IsEqualWhenSame(Name);
@@ -23,6 +24,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		public int Stamp { get; set; }
 
 		public NodeName Name { get; }
+		public NodeId Id { get; }
 		public NodeType NodeType { get; set; }
 		public string Description { get; set; }
 		public Lazy<string> CodeText { get; set; }

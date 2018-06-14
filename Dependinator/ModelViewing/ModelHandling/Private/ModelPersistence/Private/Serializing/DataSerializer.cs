@@ -59,6 +59,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 					using (StreamReader sr = new StreamReader(s))
 					using (JsonReader reader = new JsonTextReader(sr))
 					{
+						if (!IsValidVersion(reader))
+						{
+							return Error.From(new NotSupportedException("Unexpected format version in data file"));
+						}
+
 						while (reader.Read())
 						{
 							if (reader.TokenType == JsonToken.StartArray)
@@ -66,7 +71,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 								break;
 							}
 						}
-						
+
 						while (reader.Read())
 						{
 							// deserialize only when there's "{" character in the stream
@@ -88,6 +93,26 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 					return new InvalidDataFileException($"Failed to parse:{path},\n{e.Message}");
 				}
 			});
+		}
+
+
+		private bool IsValidVersion(JsonReader reader)
+		{
+			// Look for first property "FormatVersion" and verify that the expected version is found
+			if (reader.Read() && reader.TokenType == JsonToken.StartObject)
+			{
+				if (reader.Read() && reader.TokenType == JsonToken.PropertyName &&
+						(string)reader.Value == "FormatVersion")
+				{
+					if (reader.Read() && reader.TokenType == JsonToken.String)
+					{
+						string versionText = (string)reader.Value;
+						return versionText == JsonTypes.Version;
+					}
+				}
+			}
+
+			return false;
 		}
 	}
 }

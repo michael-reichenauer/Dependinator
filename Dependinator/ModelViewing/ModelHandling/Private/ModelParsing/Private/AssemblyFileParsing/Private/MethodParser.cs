@@ -138,7 +138,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				return;
 			}
 
-			linkHandler.AddLink(new ModelLink(memberNode.Name, methodName, NodeType.Member));
+			linkHandler.AddLink(memberNode.NodeId, methodName, NodeType.Member);
 
 			TypeReference returnType = method.ReturnType;
 			linkHandler.AddLinkToType(memberNode, returnType);

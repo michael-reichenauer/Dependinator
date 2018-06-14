@@ -26,7 +26,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			try
 			{
-				Node source = modelService.GetNode(NodeName.From(modelLink.Source));
+				Node source = modelService.GetNode(modelLink.SourceId);
 
 				if (!TryGetTarget(modelLink, out Node target))
 				{
@@ -61,10 +61,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private bool TryGetTarget(ModelLink modelLink, out Node target)
 		{
-			NodeName targetName = NodeName.From(modelLink.Target);
-			if (!modelService.TryGetNode(targetName, out target))
+			NodeId targetId = modelLink.TargetId;
+			if (!modelService.TryGetNode(targetId, out target))
 			{
-				modelService.QueueModelLink(targetName, modelLink);
+				modelService.QueueModelLink(targetId, modelLink);
 				return false;
 			}
 

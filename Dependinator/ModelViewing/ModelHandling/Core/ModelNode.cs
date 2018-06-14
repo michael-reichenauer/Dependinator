@@ -8,17 +8,19 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 	internal class ModelNode : Equatable<ModelNode>, IModelItem
 	{
 		public ModelNode(
-			string name,
+			NodeId nodeId,
+			NodeName name,
 			string parent,
 			NodeType nodeType,
 			string description,
-			Lazy<string> codeText)
-			: this(name, parent, nodeType, description, codeText, RectEx.Zero, 0, null, null)
+			Lazy<string> codeText,
+			bool isReferenced = false)
+			: this(nodeId, name, parent, nodeType, description, codeText, RectEx.Zero, 0, null, null, isReferenced)
 		{
 		}
 
-		public ModelNode(
-			string name,
+		public ModelNode(NodeId nodeId,
+			NodeName name,
 			string parent,
 			NodeType nodeType,
 			string description,
@@ -26,11 +28,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 			Rect bounds,
 			double itemsScaleFactor,
 			string color,
-			string showState)
+			string showState,
+			bool isReferenced = false)
 		{
+			NodeId = nodeId;
 			Name = name;
 			Parent = parent;
 			NodeType = nodeType;
+			IsReferenced = isReferenced;
 			Description = description;
 			CodeText = codeText;
 			Bounds = bounds;
@@ -41,9 +46,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 			IsEqualWhenSame(Name);
 		}
 
-		public string Name { get; }
+
+		public NodeId NodeId { get; }
+		public NodeName Name { get; }
 		public string Parent { get; }
 		public NodeType NodeType { get; }
+		public bool IsReferenced { get; }
 		public string Description { get; }
 		public Lazy<string> CodeText { get; }
 		public Rect Bounds { get; }
@@ -51,6 +59,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		public string Color { get; }
 		public string ShowState { get; }
 
-		public override string ToString() => Name;
+		public override string ToString() => Name.FullName;
 	}
 }

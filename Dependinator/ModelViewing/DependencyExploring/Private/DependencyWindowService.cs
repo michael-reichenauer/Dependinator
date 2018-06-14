@@ -43,7 +43,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				return;
 			}
 			
-			CodeDialog codeDialog = new CodeDialog(owner, nodeName.DisplayFullName, node.CodeText);
+			CodeDialog codeDialog = new CodeDialog(owner, node.Name.DisplayFullName, node.CodeText);
 			codeDialog.Show();
 		}
 
@@ -300,7 +300,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 
 		private bool TryGetNode(NodeName nodeName, out Node node) =>
-			modelService.TryGetNode(nodeName, out node);
+			modelService.TryGetNode(new NodeId(nodeName), out node);
 
 
 		private Task RefreshModelAsync() => modelNotifications.Value.ManualRefreshAsync(false);

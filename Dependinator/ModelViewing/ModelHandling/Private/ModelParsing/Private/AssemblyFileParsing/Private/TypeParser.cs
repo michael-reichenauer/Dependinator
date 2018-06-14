@@ -72,7 +72,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				}
 
 				Lazy<string> codeText = decompiler.LazyDecompile(type, assemblyPath);
-				typeNode = new ModelNode(name, parent, NodeType.Type, description, codeText);
+				NodeName nodeName = NodeName.From(name);
+				NodeId nodeId = new NodeId(nodeName);
+				typeNode = new ModelNode(nodeId, nodeName, parent, NodeType.Type, description, codeText);
 				itemsCallback(typeNode);
 			}
 
@@ -98,7 +100,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				if (!string.IsNullOrEmpty(description))
 				{
 					string name = Name.GetTypeNamespaceFullName(type);
-					ModelNode node = new ModelNode(name, null, NodeType.NameSpace, description, null);
+					NodeName nodeName = NodeName.From(name);
+					NodeId nodeId = new NodeId(nodeName);
+					ModelNode node = new ModelNode(nodeId, nodeName, null, NodeType.NameSpace, description, null);
 					itemsCallback(node);
 				}
 

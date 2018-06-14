@@ -10,9 +10,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	[SingleInstance]
 	internal class ModelService : IModelService
 	{
-		private readonly Dictionary<NodeName, Node> nodes = new Dictionary<NodeName, Node>();
+		private readonly Dictionary<NodeId, Node> nodes = new Dictionary<NodeId, Node>();
 
-		private readonly Dictionary<NodeName, QueuedNode> queuedNodes = new Dictionary<NodeName, QueuedNode>();
+		private readonly Dictionary<NodeId, QueuedNode> queuedNodes = new Dictionary<NodeId, QueuedNode>();
 
 
 		public ModelService()
@@ -25,14 +25,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public IEnumerable<Node> AllNodes => nodes.Values;
 
-		public Node GetNode(NodeName name) => nodes[name];
+		public Node GetNode(NodeId name) => nodes[name];
 
-		public bool TryGetNode(NodeName name, out Node node) => nodes.TryGetValue(name, out node);
+		public bool TryGetNode(NodeId name, out Node node) => nodes.TryGetValue(name, out node);
 
 
-		public void Add(Node node) => nodes[node.Name] = node;
+		public void Add(Node node) => nodes[node.Id] = node;
 
-		public void Remove(Node node) => nodes.Remove(node.Name);
+		public void Remove(Node node) => nodes.Remove(node.Id);
 
 
 		public void RemoveAll()
@@ -54,17 +54,17 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		public void QueueModelLink(NodeName nodeName, ModelLink modelLink)
+		public void QueueModelLink(NodeId nodeId, ModelLink modelLink)
 		{
-			QueuedNode queuedNode = GetQueuedNode(nodeName, modelLink.TargetType);
+			QueuedNode queuedNode = GetQueuedNode(nodeId);
 
 			queuedNode.Links.Add(modelLink);
 		}
 
 
-		public void QueueModelLine(NodeName nodeName, ModelLine modelLine)
+		public void QueueModelLine(NodeId nodeId, ModelLine modelLine)
 		{
-			QueuedNode queuedNode = GetQueuedNode(nodeName, modelLine.TargetType);
+			QueuedNode queuedNode = GetQueuedNode(nodeId);
 
 			queuedNode.Lines.Add(modelLine);
 		}
@@ -72,19 +72,30 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public IReadOnlyList<ModelNode> GetAllQueuedNodes()
 		{
-			return queuedNodes.Values
-				.DistinctBy(item => item.Name)
-				.Select(item => new ModelNode(item.Name.FullName, null, item.NodeType, null, null))
+			return queuedNodes
+				.Where(pair => pair.Value.ModelNode != null)
+				.Select(pair =>pair.Value.ModelNode)
 				.ToList();
 		}
 
 
+		public void QueueNode(ModelNode modelNode)
+		{
+			QueuedNode queuedNode = GetQueuedNode(modelNode.NodeId);
+			
+			if (queuedNode.ModelNode == null)
+			{
+				queuedNode.ModelNode = modelNode;
+			}
+		}
+
+
 		public bool TryGetQueuedLinesAndLinks(
-			NodeName targetName,
+			NodeId targetId,
 			out IReadOnlyList<ModelLine> lines,
 			out IReadOnlyList<ModelLink> links)
 		{
-			if (!queuedNodes.TryGetValue(targetName, out QueuedNode item))
+			if (!queuedNodes.TryGetValue(targetId, out QueuedNode item))
 			{
 				lines = null;
 				links = null;
@@ -97,15 +108,15 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		public void RemovedQueuedNode(NodeName targetName) => queuedNodes.Remove(targetName);
+		public void RemovedQueuedNode(NodeId nodeId) => queuedNodes.Remove(nodeId);
 
 
-		private QueuedNode GetQueuedNode(NodeName nodeName, NodeType nodeType)
+		private QueuedNode GetQueuedNode(NodeId nodeId)
 		{
-			if (!queuedNodes.TryGetValue(nodeName, out QueuedNode queuedNode))
+			if (!queuedNodes.TryGetValue(nodeId, out QueuedNode queuedNode))
 			{
-				queuedNode = new QueuedNode(nodeName, nodeType);
-				queuedNodes[nodeName] = queuedNode;
+				queuedNode = new QueuedNode(nodeId);
+				queuedNodes[nodeId] = queuedNode;
 			}
 
 			return queuedNode;
@@ -114,15 +125,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private class QueuedNode
 		{
-			public QueuedNode(NodeName name, NodeType nodeType)
+			public QueuedNode(NodeId nodeId)
 			{
-				Name = name;
-				NodeType = nodeType;
+				NodeId = nodeId;
 			}
 
 
-			public NodeName Name { get; }
-			public NodeType NodeType { get; }
+			public NodeId NodeId { get; }
+			public ModelNode ModelNode { get; set; }
 			public List<ModelLine> Lines { get; } = new List<ModelLine>();
 			public List<ModelLink> Links { get; } = new List<ModelLink>();
 		}

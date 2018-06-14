@@ -90,6 +90,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			{
 				R result = await ShowModelAsync(operation => persistenceService.TryDeserialize(
 					dataFilePath, items => UpdateDataItems(items, operation)));
+				if (result.Error.Exception is NotSupportedException)
+				{
+					File.Delete(dataFilePath);
+					await LoadAsync();
+					return;
+				}
+
 				if (result.IsFaulted)
 				{
 					message.ShowWarning(result.Message);
@@ -309,7 +316,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			Application.Current.Dispatcher.InvokeBackground(() =>
 			{
-				modelService.GetAllQueuedNodes().ForEach(node => queue.Add(node));
+				IReadOnlyList<ModelNode> allQueuedNodes = modelService.GetAllQueuedNodes();
+				allQueuedNodes.ForEach(node => queue.Add(node));
 				queue.CompleteAdding();
 			});
 

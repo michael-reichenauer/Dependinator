@@ -8,28 +8,25 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 	internal class ModelLine : Equatable<ModelLine>, IModelItem
 	{
 		public ModelLine(
-			string source, 
-			string target,
-			NodeType targetType,
+			NodeId sourceId,
+			NodeId targetId,
 			IReadOnlyList<Point> points, 
 			int linkCount)
 		{
-			Source = source;
-			Target = target;
-			TargetType = targetType;
+			SourceId = sourceId;
+			TargetId = targetId;
 			Points = points;
 			LinkCount = linkCount;
 
-			IsEqualWhenSame(Source, Target);
+			IsEqualWhenSame(SourceId, TargetId);
 		}
 
 
-		public string Source { get; }
-		public string Target { get; }
-		public NodeType TargetType { get; }
+		public NodeId SourceId { get; }
+		public NodeId TargetId { get; }
 		public IReadOnlyList<Point> Points { get; }
 		public int LinkCount { get; }
 
-		public override string ToString() => $"{Source}->{Target}";
+		public override string ToString() => $"{SourceId}->{TargetId}";
 	}
 }

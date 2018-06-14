@@ -27,15 +27,19 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public void UpdateNode(ModelNode modelNode, int stamp)
 		{
-			NodeName name = NodeName.From(modelNode.Name);
+			if (modelNode.IsReferenced)
+			{
+				nodeService.QueueNode(modelNode);
+				return;
+			}
 
-			if (nodeService.TryGetNode(name, out Node node))
+			if (nodeService.TryGetNode(modelNode.NodeId, out Node node))
 			{
 				UpdateNode(node, modelNode, stamp);
 				return;
 			}
 
-			AddNodeToModel(name, modelNode, stamp);
+			AddNodeToModel(modelNode.Name, modelNode, stamp);
 		}
 
 
@@ -44,27 +48,27 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			IReadOnlyList<Node> nodes = nodeService.AllNodes.ToList();
 			Log.Warn("Testing ----------------");
 
-			nodeService.TryGetNode(NodeName.Root, out Node root);
+			nodeService.TryGetNode(NodeId.Root, out Node root);
 
 			Timing t = Timing.Start();
 
-			int count = root.Descendents().Count();
-			t.Log($"Nodes ref = {count}");
+			//int count = root.Descendents().Count();
+			//t.Log($"Nodes ref = {count}");
 
-			count = Descendents2(root.Name).Count();
-			t.Log($"Nodes dict = {count}");
+			//count = Descendents2(root.Name).Count();
+			//t.Log($"Nodes dict = {count}");
 
-			int linkCount = Descendents2(root.Name).SelectMany(n => n.SourceLinks).Count();
-			t.Log($"Links {linkCount}");
+			//int linkCount = Descendents2(root.Name).SelectMany(n => n.SourceLinks).Count();
+			//t.Log($"Links {linkCount}");
 
-			int lineCount = Descendents2(root.Name).SelectMany(n => n.SourceLines).Count();
-			t.Log($"Lines {lineCount}");
+			//int lineCount = Descendents2(root.Name).SelectMany(n => n.SourceLines).Count();
+			//t.Log($"Lines {lineCount}");
 
-			int segmentCount = Descendents2(root.Name)
-				.SelectMany(n => n.SourceLinks)
-				.SelectMany(l => linkSegmentService.GetLinkSegments(l))
-				.Count();
-			t.Log($"segments {segmentCount}");
+			//int segmentCount = Descendents2(root.Name)
+			//	.SelectMany(n => n.SourceLinks)
+			//	.SelectMany(l => linkSegmentService.GetLinkSegments(l))
+			//	.Count();
+			//t.Log($"segments {segmentCount}");
 
 			foreach (Node node in nodes)
 			{
@@ -92,28 +96,28 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		private IEnumerable<Node> Descendents2(NodeName nodeName)
-		{
-			Queue<Node> queue = new Queue<Node>();
+		//private IEnumerable<Node> Descendents2(NodeName nodeName)
+		//{
+		//	Queue<Node> queue = new Queue<Node>();
 
-			Node node = GetNode(nodeName);
-			node.Children.Select(c => GetNode(c.Name)).ForEach(queue.Enqueue);
+		//	Node node = GetNode(nodeName);
+		//	node.Children.Select(c => GetNode(c.Name)).ForEach(queue.Enqueue);
 
-			while (queue.Any())
-			{
-				Node descendent = queue.Dequeue();
-				yield return descendent;
+		//	while (queue.Any())
+		//	{
+		//		Node descendent = queue.Dequeue();
+		//		yield return descendent;
 
-				descendent.Children.Select(c => GetNode(c.Name)).ForEach(queue.Enqueue);
-			}
-		}
+		//		descendent.Children.Select(c => GetNode(c.Name)).ForEach(queue.Enqueue);
+		//	}
+		//}
 
 
-		private Node GetNode(NodeName nodeName)
-		{
-			nodeService.TryGetNode(nodeName, out Node node);
-			return node;
-		}
+		//private Node GetNode(NodeName nodeName)
+		//{
+		//	nodeService.TryGetNode(nodeName, out Node node);
+		//	return node;
+		//}
 
 
 		public void SetLayoutDone()
@@ -134,7 +138,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public void ShowHiddenNode(NodeName nodeName)
 		{
-			if (nodeService.TryGetNode(nodeName, out Node node))
+			if (nodeService.TryGetNode(new NodeId(nodeName), out Node node))
 			{
 				ShowHiddenNode(node);
 				node.Parent.View.ItemsCanvas?.UpdateAndNotifyAll();
