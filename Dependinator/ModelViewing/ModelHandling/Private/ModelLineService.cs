@@ -40,8 +40,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					return;
 				}
 
-				//Node target = model.Node(NodeName.From(modelLine.Target));
-
 				if (TryGetLine(source, target, out Line line))
 				{
 					// Already added link
@@ -57,6 +55,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				throw;
 			}
 		}
+
+		public IEnumerable<LinkSegment> GetLinkSegments(Link link) => 
+			linkSegmentService.GetLinkSegments(link);
 
 
 		public void AddLinkLines(Link link)

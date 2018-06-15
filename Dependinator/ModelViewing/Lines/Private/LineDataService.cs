@@ -152,7 +152,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 			double scale = line.View.ViewModel.ItemScale;
 			double lineWidth;
 
-			int linksCount = line.LinkCount2;
+			int linksCount = line.LinkCount;
 
 			if (linksCount < 5)
 			{

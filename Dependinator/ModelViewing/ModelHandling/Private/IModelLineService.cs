@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
@@ -9,5 +10,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		void AddLinkLines(Link link);
 		void RemoveLine(Line line);
 		void AddLineViewModel(Line line);
+		IEnumerable<LinkSegment> GetLinkSegments(Link link);
 	}
 }

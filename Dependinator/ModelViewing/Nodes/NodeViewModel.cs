@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(300);
 		private readonly DelayDispatcher delayDispatcher = new DelayDispatcher();
 
-		private bool isFirstShow = true;
+
 		private readonly Brush backgroundBrush;
 		private readonly Brush selectedBrush;
 
@@ -38,6 +38,7 @@ namespace Dependinator.ModelViewing.Nodes
 			selectedBrush = nodeViewModelService.GetSelectedBrush(RectangleBrush);
 		}
 
+		public bool IsFirstShow { get; set; } = true;
 
 		public override bool CanShow => !Node.View.IsHidden
 			&& (ItemScale * ItemWidth > 20 && Node.Parent.View.CanShowChildren);
@@ -149,21 +150,8 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 
-		public void HideNode()
-		{
-			if (!Node.View.IsHidden)
-			{
-				HideNode(Node);
+		public void HideNode() => nodeViewModelService.HideNode(Node);
 
-				Node.Parent.View.ItemsCanvas.UpdateAndNotifyAll();
-				Node.Root.View.ItemsCanvas.UpdateAll();
-			}
-		}
-
-		private void HideNode(Node node)
-		{
-			node.DescendentsAndSelf().ForEach(n => n.View.IsHidden = true);
-		}
 
 
 		public override void ItemRealized()
@@ -173,9 +161,9 @@ namespace Dependinator.ModelViewing.Nodes
 			// If this node has an items canvas, make sure it knows it has been realized (fix zoom level)
 			ItemsViewModel?.ItemRealized();
 
-			if (isFirstShow)
+			if (IsFirstShow)
 			{
-				isFirstShow = false;
+				IsFirstShow = false;
 
 				nodeViewModelService.FirstShowNode(Node);
 			}

@@ -15,6 +15,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 {
 	internal class NodeViewModelService : INodeViewModelService
 	{
+		private readonly IModelNodeService modelNodeService;
 		private readonly IThemeService themeService;
 		private readonly IModelLineService modelLineService;
 		private readonly IItemSelectionService itemSelectionService;
@@ -25,14 +26,15 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 
 		public NodeViewModelService(
+			IModelNodeService modelNodeService,
 			IThemeService themeService,
 			IModelLineService modelLineService,
 			IItemSelectionService itemSelectionService,
 			INodeLayoutService nodeLayoutService,
 			IDependencyExplorerService dependencyExplorerService,
-
 			WindowOwner owner)
 		{
+			this.modelNodeService = modelNodeService;
 			this.themeService = themeService;
 			this.modelLineService = modelLineService;
 			this.itemSelectionService = itemSelectionService;
@@ -41,6 +43,20 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			this.owner = owner;
 		}
 
+
+
+		public void HideNode(Node node)
+		{
+			if (node.View.IsHidden)
+			{
+				return;
+			}
+
+			modelNodeService.HideNode(node);
+
+			node.Parent.View.ItemsCanvas.UpdateAndNotifyAll();
+			node.Root.View.ItemsCanvas.UpdateAll();
+		}
 
 
 		public Brush GetNodeBrush(Node node)

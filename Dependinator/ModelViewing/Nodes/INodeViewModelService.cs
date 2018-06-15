@@ -19,5 +19,6 @@ namespace Dependinator.ModelViewing.Nodes
 		void ShowReferences(NodeViewModel nodeViewModel);
 		void ShowCode(Node node);
 		void RearrangeLayout(NodeViewModel node);
+		void HideNode(Node node);
 	}
 }

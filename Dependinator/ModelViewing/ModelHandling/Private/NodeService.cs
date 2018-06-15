@@ -15,7 +15,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private readonly IModelLineService modelLineService;
 		private readonly IModelLinkService modelLinkService;
 		private readonly INodeLayoutService layoutService;
-		private readonly INodeViewModelService nodeViewModelService;
+		private readonly Lazy<INodeViewModelService> nodeViewModelService;
 
 
 		public NodeService(
@@ -23,7 +23,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			IModelLineService modelLineService,
 			IModelLinkService modelLinkService,
 			INodeLayoutService layoutService,
-			INodeViewModelService nodeViewModelService)
+			Lazy<INodeViewModelService> nodeViewModelService)
 		{
 			this.modelService = modelService;
 			this.modelLineService = modelLineService;
@@ -155,16 +155,16 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			if (node.NodeType == NodeType.Member)
 			{
-				node.View.ViewModel = new MemberNodeViewModel(nodeViewModelService, node);
+				node.View.ViewModel = new MemberNodeViewModel(nodeViewModelService.Value, node);
 			}
 			else if (node.NodeType == NodeType.Type)
 			{
-				node.View.ViewModel = new TypeViewModel(nodeViewModelService, node);
+				node.View.ViewModel = new TypeViewModel(nodeViewModelService.Value, node);
 				node.View.ItemsCanvas = GetItemsCanvas(node);
 			}
 			else
 			{
-				node.View.ViewModel = new NamespaceViewModel(nodeViewModelService, node);
+				node.View.ViewModel = new NamespaceViewModel(nodeViewModelService.Value, node);
 				node.View.ItemsCanvas = GetItemsCanvas(node);
 			}
 		}

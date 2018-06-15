@@ -1,8 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.Utils;
-using Dependinator.Utils.Threading;
 
 
 namespace Dependinator.ModelViewing.ModelHandling.Private
@@ -10,18 +8,15 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	internal class ModelNodeService : IModelNodeService
 	{
 		private readonly IModelLinkService modelLinkService;
-		private readonly ILinkSegmentService linkSegmentService;
 		private readonly INodeService nodeService;
 
 
 		public ModelNodeService(
 			INodeService nodeService,
-			IModelLinkService modelLinkService,
-			ILinkSegmentService linkSegmentService)
+			IModelLinkService modelLinkService)
 		{
 			this.nodeService = nodeService;
 			this.modelLinkService = modelLinkService;
-			this.linkSegmentService = linkSegmentService;
 		}
 
 
@@ -46,29 +41,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		public void RemoveObsoleteNodesAndLinks(int stamp)
 		{
 			IReadOnlyList<Node> nodes = nodeService.AllNodes.ToList();
-			Log.Warn("Testing ----------------");
-
-			nodeService.TryGetNode(NodeId.Root, out Node root);
-
-			Timing t = Timing.Start();
-
-			//int count = root.Descendents().Count();
-			//t.Log($"Nodes ref = {count}");
-
-			//count = Descendents2(root.Name).Count();
-			//t.Log($"Nodes dict = {count}");
-
-			//int linkCount = Descendents2(root.Name).SelectMany(n => n.SourceLinks).Count();
-			//t.Log($"Links {linkCount}");
-
-			//int lineCount = Descendents2(root.Name).SelectMany(n => n.SourceLines).Count();
-			//t.Log($"Lines {lineCount}");
-
-			//int segmentCount = Descendents2(root.Name)
-			//	.SelectMany(n => n.SourceLinks)
-			//	.SelectMany(l => linkSegmentService.GetLinkSegments(l))
-			//	.Count();
-			//t.Log($"segments {segmentCount}");
 
 			foreach (Node node in nodes)
 			{
@@ -96,37 +68,24 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		//private IEnumerable<Node> Descendents2(NodeName nodeName)
-		//{
-		//	Queue<Node> queue = new Queue<Node>();
-
-		//	Node node = GetNode(nodeName);
-		//	node.Children.Select(c => GetNode(c.Name)).ForEach(queue.Enqueue);
-
-		//	while (queue.Any())
-		//	{
-		//		Node descendent = queue.Dequeue();
-		//		yield return descendent;
-
-		//		descendent.Children.Select(c => GetNode(c.Name)).ForEach(queue.Enqueue);
-		//	}
-		//}
-
-
-		//private Node GetNode(NodeName nodeName)
-		//{
-		//	nodeService.TryGetNode(nodeName, out Node node);
-		//	return node;
-		//}
-
-
 		public void SetLayoutDone()
 		{
 			nodeService.AllNodes.ForEach(node => node.View.IsLayoutCompleted = true);
 		}
 
-
 		public void RemoveAll() => nodeService.RemoveAll();
+
+
+		public void HideNode(Node node)
+		{
+			node.DescendentsAndSelf().ForEach(n =>
+			{
+				n.View.IsHidden = true;
+				n.View.ViewModel.IsFirstShow = true;
+			});
+
+			node.Root.Descendents().SelectMany(n => n.SourceLinks).ForEach(HideIfNeeded);
+		}
 
 
 		public IReadOnlyList<NodeName> GetHiddenNodeNames()
@@ -140,6 +99,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			if (nodeService.TryGetNode(new NodeId(nodeName), out Node node))
 			{
+				if (!node.View.IsHidden)
+				{
+					return;
+				}
+
 				ShowHiddenNode(node);
 				node.Parent.View.ItemsCanvas?.UpdateAndNotifyAll();
 				node.Root.View.ItemsCanvas.UpdateAll();
@@ -150,6 +114,25 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private void ShowHiddenNode(Node node)
 		{
 			node.DescendentsAndSelf().ForEach(n => n.View.IsHidden = false);
+			node.Root.Descendents().SelectMany(n => n.SourceLinks).ForEach(ShowIfNeeded);
+		}
+
+
+		private void ShowIfNeeded(Link link)
+		{
+			if (!link.Source.View.IsHidden && !link.Target.View.IsHidden)
+			{
+				modelLinkService.Show(link);
+			}
+		}
+
+
+		private void HideIfNeeded(Link link)
+		{
+			if (link.Source.View.IsHidden || link.Target.View.IsHidden)
+			{
+				modelLinkService.Hide(link);
+			}
 		}
 
 

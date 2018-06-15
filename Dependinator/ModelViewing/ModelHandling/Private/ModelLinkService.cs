@@ -33,7 +33,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					return;
 				}
 
-
 				target.Stamp = stamp;
 
 				if (TryGetLink(source, target, out Link link))
@@ -48,7 +47,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 				if (!modelLink.IsAdded)
 				{
-					modelLineService.AddLinkLines(link);
+					AddLinkToLines(link);
 				}
 			}
 			catch (Exception e)
@@ -72,32 +71,58 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-
 		public void RemoveObsoleteLinks(IReadOnlyList<Link> obsoleteLinks)
 		{
 			foreach (Link link in obsoleteLinks)
 			{
-				Log.Warn($"Need to clean up obsolete lines !!!!!");
-				//foreach (Line line in link.Lines)
-				//{
-				//	line.Links.Remove(link);
-
-				//	if (line.LinkCount2 == 0)
-				//	{
-				//		modelLineService.RemoveLine(line);
-				//	}
-				//}
+				RemoveLinkFromLines(link);
 
 				RemoveLink(link);
 			}
 		}
 
 
+		public void Hide(Link link) => RemoveLinkFromLines(link);
+
+
+		public void Show(Link link) => AddLinkToLines(link);
+
+
+		private void AddLinkToLines(Link link)
+		{
+			if (!link.Source.View.IsHidden && !link.Target.View.IsHidden)
+			{
+				modelLineService.AddLinkLines(link);
+			}
+		}
+
+
+		private void RemoveLinkFromLines(Link link)
+		{
+			foreach (LinkSegment segment in modelLineService.GetLinkSegments(link))
+			{
+				Line line = segment.Source.SourceLines.FirstOrDefault(
+					l => l.Source == segment.Source && l.Target == segment.Target);
+
+				if (line != null)
+				{
+					line.LinkCount--;
+
+					if (line.LinkCount <= 0)
+					{
+						modelLineService.RemoveLine(line);
+					}
+				}
+			}
+		}
+
 
 		private static Link AddLink(Node source, Node target)
 		{
 			Link link = new Link(source, target);
 			link.Source.SourceLinks.Add(link);
+			link.Target.TargetLinks.Add(link);
+
 			return link;
 		}
 
@@ -105,6 +130,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private void RemoveLink(Link link)
 		{
 			link.Source.SourceLinks.Remove(link);
+			link.Target.TargetLinks.Remove(link);
 		}
 
 

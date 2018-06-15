@@ -8,5 +8,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	{
 		void UpdateLink(ModelLink modelLink, int stamp);
 		void RemoveObsoleteLinks(IReadOnlyList<Link> obsoleteLinks);
+		void Hide(Link link);
+		void Show(Link link);
 	}
 }

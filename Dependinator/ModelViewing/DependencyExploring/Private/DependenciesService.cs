@@ -41,10 +41,9 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			}
 			else
 			{
-				// Since we do not have "targetLinks", we need check all links in the model from root
-				return options.TargetFilter.Root
+				return options.TargetFilter
 					.DescendentsAndSelf()
-					.SelectMany(node => node.SourceLinks)
+					.SelectMany(node => node.TargetLinks)
 					.Where(link => IsIncluded(link, options));
 			}
 		}

@@ -35,6 +35,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 
 
 		public List<Link> SourceLinks { get; } = new List<Link>();
+		public List<Link> TargetLinks { get; } = new List<Link>();
 
 		public List<Line> SourceLines { get; } = new List<Line>();
 		public List<Line> TargetLines { get; } = new List<Line>();

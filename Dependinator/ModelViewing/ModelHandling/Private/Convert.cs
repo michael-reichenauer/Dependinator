@@ -50,7 +50,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					line.Source.Id,
 					line.Target.Id,
 					line.View.MiddlePoints().ToList(),
-					line.VisibleLinksCount));
+					line.LinkCount));
 
 
 		private static IEnumerable<ModelLink> ToModelLinks(IEnumerable<Link> links) =>

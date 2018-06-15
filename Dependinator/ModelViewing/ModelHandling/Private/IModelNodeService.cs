@@ -12,5 +12,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		void RemoveAll();
 		void ShowHiddenNode(NodeName nodeName);
 		IReadOnlyList<NodeName> GetHiddenNodeNames();
+		void HideNode(Node node);
 	}
 }
