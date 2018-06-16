@@ -21,15 +21,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 
 		public Rect Bounds { get; set; }
 		public double ScaleFactor { get; set; }
-		public Point Offset { get; set; }
 		public string Color { get; set; }
 		public bool IsHidden { get; set; }
 
 
 		public bool IsLayoutCompleted { get; set; }
-		public bool CanShowChildren => node.IsRoot || ViewModel.CanShowChildren;
+		public bool CanShowChildren => node.IsRoot || (ViewModel?.CanShowChildren ?? false);
 		public bool CanShow => ViewModel?.CanShow ?? false;
-		public bool IsShowNode => ViewModel?.IsShowNode ?? false;
 		public bool IsShowing => ViewModel?.IsShowing ?? false;
 	}
 }

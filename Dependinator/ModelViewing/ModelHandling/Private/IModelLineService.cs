@@ -11,5 +11,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		void RemoveLine(Line line);
 		void AddLineViewModel(Line line);
 		IEnumerable<LinkSegment> GetLinkSegments(Link link);
+		void UpdateLines(Node node);
 	}
 }

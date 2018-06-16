@@ -54,8 +54,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 			modelNodeService.HideNode(node);
 
-			node.Parent.View.ItemsCanvas.UpdateAndNotifyAll();
-			node.Root.View.ItemsCanvas.UpdateAll();
+	
 		}
 
 

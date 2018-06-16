@@ -8,18 +8,18 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 	internal class ModelNode : Equatable<ModelNode>, IModelItem
 	{
 		public ModelNode(
-			NodeId nodeId,
+			NodeId id,
 			NodeName name,
 			string parent,
 			NodeType nodeType,
 			string description,
 			Lazy<string> codeText,
 			bool isReferenced = false)
-			: this(nodeId, name, parent, nodeType, description, codeText, RectEx.Zero, 0, null, null, isReferenced)
+			: this(id, name, parent, nodeType, description, codeText, RectEx.Zero, 0, null, null, isReferenced)
 		{
 		}
 
-		public ModelNode(NodeId nodeId,
+		public ModelNode(NodeId id,
 			NodeName name,
 			string parent,
 			NodeType nodeType,
@@ -31,7 +31,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 			string showState,
 			bool isReferenced = false)
 		{
-			NodeId = nodeId;
+			Id = id;
 			Name = name;
 			Parent = parent;
 			NodeType = nodeType;
@@ -47,7 +47,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		}
 
 
-		public NodeId NodeId { get; }
+		public NodeId Id { get; }
 		public NodeName Name { get; }
 		public string Parent { get; }
 		public NodeType NodeType { get; }

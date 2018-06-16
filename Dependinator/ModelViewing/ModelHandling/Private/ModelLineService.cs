@@ -56,6 +56,47 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			}
 		}
 
+
+
+		public void UpdateLines(Node node)
+		{
+			node.Root.Descendents().SelectMany(n => n.SourceLines).ForEach(line => line.LinkCount = 0);
+
+			node.Root.Descendents().SelectMany(n => n.SourceLinks).ForEach(link => ShowLinkIfNeeded(link));
+
+			node.Root.Descendents().SelectMany(n => n.SourceLines).ToList().ForEach(line => RemoveLineIfNoLinks(line));
+		}
+
+
+		private void RemoveLineIfNoLinks(Line line)
+		{
+			if (line.LinkCount <= 0)
+			{
+				RemoveLine(line);
+			}
+		}
+
+
+		private void ShowLinkIfNeeded(Link link)
+		{
+			if (!link.Source.View.IsHidden && !link.Target.View.IsHidden)
+			{
+				AddLinkToLines(link);
+			}
+		}
+
+		private void AddLinkToLines(Link link)
+		{
+			if (!link.Source.View.IsHidden && !link.Target.View.IsHidden)
+			{
+				AddLinkLines(link);
+			}
+		}
+
+
+
+
+
 		public IEnumerable<LinkSegment> GetLinkSegments(Link link) => 
 			linkSegmentService.GetLinkSegments(link);
 

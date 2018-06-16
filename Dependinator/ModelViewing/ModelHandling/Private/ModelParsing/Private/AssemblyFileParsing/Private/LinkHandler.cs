@@ -39,7 +39,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				return;
 			}
 
-			SendLink(sourceNode.NodeId, targetNodeName, NodeType.Type);
+			SendLink(sourceNode.Id, targetNodeName, NodeType.Type);
 
 			if (targetType.IsGenericInstance)
 			{
@@ -63,7 +63,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				return;
 			}
 
-			SendLink(sourceNode.NodeId, targetNodeName, NodeType.Member);
+			SendLink(sourceNode.Id, targetNodeName, NodeType.Member);
 		}
 
 
@@ -78,13 +78,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				sentTargetNodes[targetName] = targetNode;
 			}
 
-			if (sourceId == targetNode.NodeId)
+			if (sourceId == targetNode.Id)
 			{
 				// Skipping link to self
 				return;
 			}
 			
-			ModelLink modelLink = new ModelLink(sourceId, targetNode.NodeId);
+			ModelLink modelLink = new ModelLink(sourceId, targetNode.Id);
 
 			itemsCallback(targetNode);
 			itemsCallback(modelLink);

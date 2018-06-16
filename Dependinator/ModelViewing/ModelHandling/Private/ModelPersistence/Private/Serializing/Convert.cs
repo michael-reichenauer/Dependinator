@@ -59,7 +59,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 
 		private static JsonTypes.Node ToJsonNode(ModelNode node) => new JsonTypes.Node
 		{
-			Id = node.NodeId.AsString(),
+			Id = node.Id.AsString(),
 			Name = node.Name.FullName,
 			Parent = node.Parent,
 			Type = ToNodeTypeText(node.NodeType),

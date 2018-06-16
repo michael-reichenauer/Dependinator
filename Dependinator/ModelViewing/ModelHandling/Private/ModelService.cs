@@ -47,7 +47,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private void AddRoot()
 		{
-			Root = new Node(NodeName.Root);
+			Root = new Node(NodeId.Root, NodeName.Root);
 			Root.NodeType = NodeType.NameSpace;
 
 			Add(Root);
@@ -81,12 +81,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public void QueueNode(ModelNode node)
 		{
-			QueuedNode queuedNode = GetQueuedNode(node.NodeId);
+			QueuedNode queuedNode = GetQueuedNode(node.Id);
 			
 			if (queuedNode.ModelNode == null)
 			{
 				queuedNode.ModelNode = new ModelNode(
-					node.NodeId, 
+					node.Id, 
 					node.Name, 
 					node.Parent, 
 					node.NodeType,

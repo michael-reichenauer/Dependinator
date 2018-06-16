@@ -103,10 +103,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				NodeId nodeId = new NodeId(nodeName);
 				ModelNode memberNode = new ModelNode(nodeId, nodeName, parent, NodeType.Member, description, codeText);
 
-				if (!sentNodes.ContainsKey(memberNode.NodeId))
+				if (!sentNodes.ContainsKey(memberNode.Id))
 				{
 					// Not yet sent this node name (properties get/set, events (add/remove) appear twice
-					sentNodes[memberNode.NodeId] = memberNode;
+					sentNodes[memberNode.Id] = memberNode;
 					itemsCallback(memberNode);
 				}
 

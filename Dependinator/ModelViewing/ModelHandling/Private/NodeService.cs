@@ -114,7 +114,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			Node grandParent = GetParentNode(grandParentName, parentNodeType);
 
 
-			parent = new Node(parentName);
+			parent = new Node(new NodeId(parentName), parentName);
 			parent.NodeType = parentNodeType;
 
 			AddNode(parent, grandParent);
