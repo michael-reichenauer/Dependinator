@@ -10,8 +10,6 @@ using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelDataHandling;
-using Dependinator.ModelViewing.ModelDataHandling.Private.ModelParsing;
-using Dependinator.ModelViewing.ModelDataHandling.Private.ModelPersistence;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.Open;
 using Dependinator.Utils;
@@ -28,8 +26,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	{
 		private static readonly int BatchSize = 100;
 
-		private readonly IParserService parserService;
-		private readonly IPersistenceService persistenceService;
+		private readonly IDataService dataService;
 		private readonly IModelNodeService modelNodeService;
 		private readonly IModelLinkService modelLinkService;
 		private readonly IModelLineService modelLineService;
@@ -46,8 +43,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private bool isWorking = false;
 
 		public ModelHandlingService(
-			IParserService parserService,
-			IPersistenceService persistenceService,
+			IDataService dataService,
 			IModelNodeService modelNodeService,
 			IModelLinkService modelLinkService,
 			IModelLineService modelLineService,
@@ -58,8 +54,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			IMessage message,
 			ICmd cmd)
 		{
-			this.parserService = parserService;
-			this.persistenceService = persistenceService;
+			this.dataService = dataService;
 			this.modelNodeService = modelNodeService;
 			this.modelLinkService = modelLinkService;
 			this.modelLineService = modelLineService;
@@ -89,7 +84,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			if (File.Exists(dataFilePath))
 			{
-				R result = await ShowModelAsync(operation => persistenceService.TryDeserialize(
+				R result = await ShowModelAsync(operation => dataService.TryDeserialize(
 					dataFilePath, items => UpdateDataItems(items, operation)));
 				if (result.Error.Exception is NotSupportedException)
 				{
@@ -112,7 +107,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			else
 			if (File.Exists(modelMetadata.ModelFilePath))
 			{
-				R result = await ShowModelAsync(operation => parserService.ParseAsync(
+				R result = await ShowModelAsync(operation => dataService.ParseAsync(
 					modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
 				if (result.IsFaulted)
 				{
@@ -180,7 +175,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			}
 
 			isWorking = true;
-			R<int> operationId = await ShowModelAsync(operation => parserService.ParseAsync(
+			R<int> operationId = await ShowModelAsync(operation => dataService.ParseAsync(
 				modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
 
 			if (operationId.IsFaulted)
@@ -254,7 +249,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			string dataFilePath = GetDataFilePath();
 
-			persistenceService.Serialize(items, dataFilePath);
+			dataService.Serialize(items, dataFilePath);
 			t.Log($"Saved {items.Count} items");
 		}
 
