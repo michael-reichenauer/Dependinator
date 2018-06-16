@@ -8,7 +8,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 	internal interface IDependenciesService
 	{
 		Task<IReadOnlyList<DependencyItem>> GetDependencyItemsAsync(bool isSource,
-			Node sourceFilter,
-			Node targetFilter);
+			Node sourceNode,
+			Node targetNode);
 	}
 }

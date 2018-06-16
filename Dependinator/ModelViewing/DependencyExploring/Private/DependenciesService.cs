@@ -10,12 +10,12 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 	{
 		public async Task<IReadOnlyList<DependencyItem>> GetDependencyItemsAsync(
 			bool isSource,
-			Node sourceFilter,
-			Node targetFilter)
+			Node sourceNode,
+			Node targetNode)
 		{
 			return await Task.Run(() =>
 			{
-				ReferenceOptions options = new ReferenceOptions(isSource, sourceFilter, targetFilter);
+				Options options = new Options(isSource, sourceNode, targetNode);
 
 				IEnumerable<Link> links = GetLinks(options);
 
@@ -30,18 +30,18 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		}
 
 
-		private static IEnumerable<Link> GetLinks(ReferenceOptions options)
+		private static IEnumerable<Link> GetLinks(Options options)
 		{
 			if (options.IsSource)
 			{
-				return options.SourceFilter
+				return options.SourceNode
 					.DescendentsAndSelf()
 					.SelectMany(node => node.SourceLinks)
 					.Where(link => IsIncluded(link, options));
 			}
 			else
 			{
-				return options.TargetFilter
+				return options.TargetNode
 					.DescendentsAndSelf()
 					.SelectMany(node => node.TargetLinks)
 					.Where(link => IsIncluded(link, options));
@@ -49,9 +49,9 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		}
 
 
-		private void AddMainNodeIfNeeded(DependencyItem rootItem, ReferenceOptions options)
+		private void AddMainNodeIfNeeded(DependencyItem rootItem, Options options)
 		{
-			Node mainNode = options.IsSource ? options.SourceFilter : options.TargetFilter;
+			Node mainNode = options.IsSource ? options.SourceNode : options.TargetNode;
 
 			if (rootItem.SubItems.Any() || mainNode.IsRoot)
 			{
@@ -69,20 +69,20 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		}
 
 
-		private static bool IsIncluded(IEdge link, ReferenceOptions options) =>
-			(options.SourceFilter.IsRoot || link.Source.AncestorsAndSelf().Contains(options.SourceFilter)) &&
-			(options.TargetFilter.IsRoot || link.Target.AncestorsAndSelf().Contains(options.TargetFilter)) &&
-			!link.Target.AncestorsAndSelf().Any(n => n.View.IsHidden);
+		private static bool IsIncluded(IEdge link, Options options) =>
+			!link.Target.View.IsHidden &&
+			(options.SourceNode.IsRoot || link.Source.AncestorsAndSelf().Contains(options.SourceNode)) &&
+			(options.TargetNode.IsRoot || link.Target.AncestorsAndSelf().Contains(options.TargetNode));
 
 
 
 		private Dictionary<NodeName, DependencyItem> CreateReferenceHierarchy(
-			IEnumerable<Link> links, ReferenceOptions options)
+			IEnumerable<Link> links, Options options)
 		{
 			Dictionary<NodeName, DependencyItem> items = new Dictionary<NodeName, DependencyItem>();
 
 			items[NodeName.Root] = new DependencyItem(
-				options.SourceFilter.Root.Name, options.SourceFilter.Root.CodeText != null);
+				options.SourceNode.Root.Name, options.SourceNode.Root.CodeText != null);
 
 			foreach (Link link in links)
 			{
@@ -131,21 +131,21 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		}
 
 
-		private class ReferenceOptions
+		private class Options
 		{
 			public bool IsSource { get; }
-			public Node SourceFilter { get; }
-			public Node TargetFilter { get; }
+			public Node SourceNode { get; }
+			public Node TargetNode { get; }
 
 
-			public ReferenceOptions(
+			public Options(
 				bool isSource,
-				Node sourceFilter,
-				Node targetFilter)
+				Node sourceNode,
+				Node targetNode)
 			{
 				IsSource = isSource;
-				SourceFilter = sourceFilter;
-				TargetFilter = targetFilter;
+				SourceNode = sourceNode;
+				TargetNode = targetNode;
 			}
 		}
 	}
