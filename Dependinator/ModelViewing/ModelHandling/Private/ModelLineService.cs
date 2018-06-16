@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
+using Dependinator.ModelViewing.DataHandling;
 using Dependinator.ModelViewing.Lines;
 using Dependinator.ModelViewing.Lines.Private;
-using Dependinator.ModelViewing.ModelDataHandling;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 
