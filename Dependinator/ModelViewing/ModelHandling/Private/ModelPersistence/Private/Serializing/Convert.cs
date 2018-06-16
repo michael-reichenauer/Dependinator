@@ -10,7 +10,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 {
 	internal class Convert
 	{
-		public static IModelItem ToModelItem(JsonTypes.Item item)
+		public static IDataItem ToModelItem(JsonTypes.Item item)
 		{
 			if (item.Node != null)
 			{
@@ -29,15 +29,15 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 		}
 
 
-		public static JsonTypes.Item ToJsonItem(IModelItem item)
+		public static JsonTypes.Item ToJsonItem(IDataItem item)
 		{
 			switch (item)
 			{
-				case ModelNode modelNode:
+				case DataNode modelNode:
 					return new JsonTypes.Item { Node = ToJsonNode(modelNode) };
-				case ModelLink modelLink:
+				case DataLink modelLink:
 					return new JsonTypes.Item { Link = ToJsonLink(modelLink) };
-				case ModelLine modelLine:
+				case DataLine modelLine:
 					return new JsonTypes.Item { Line = ToJsonLine(modelLine) };
 			}
 
@@ -45,7 +45,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 		}
 
 
-		private static ModelNode ToModelNode(JsonTypes.Node node) => new ModelNode(
+		private static DataNode ToModelNode(JsonTypes.Node node) => new DataNode(
 			NodeId.From(node.Id),
 			NodeName.From(node.Name),
 			node.Parent,
@@ -58,7 +58,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 			node.ShowState);
 
 
-		private static JsonTypes.Node ToJsonNode(ModelNode node) => new JsonTypes.Node
+		private static JsonTypes.Node ToJsonNode(DataNode node) => new JsonTypes.Node
 		{
 			Id = node.Id.AsString(),
 			Name = node.Name.FullName,
@@ -104,13 +104,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 		}
 
 
-		private static ModelLink ToModelLink(JsonTypes.Link link) => new ModelLink(
+		private static DataLink ToModelLink(JsonTypes.Link link) => new DataLink(
 			NodeId.From(link.SourceId),
 			NodeId.From(link.TargetId),
 			true);
 
 
-		private static JsonTypes.Link ToJsonLink(ModelLink link) => new JsonTypes.Link
+		private static JsonTypes.Link ToJsonLink(DataLink link) => new JsonTypes.Link
 		{
 			SourceId = link.SourceId.AsString(),
 			TargetId = link.TargetId.AsString(),
@@ -118,14 +118,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 
 
 
-		private static IModelItem ToModelLine(JsonTypes.Line line) => new ModelLine(
+		private static IDataItem ToModelLine(JsonTypes.Line line) => new DataLine(
 			NodeId.From(line.SourceId),
 			NodeId.From(line.TargetId),
 			ToLinePoints(line.Points),
 			line.LinkCount);
 
 
-		private static JsonTypes.Line ToJsonLine(ModelLine line) => new JsonTypes.Line
+		private static JsonTypes.Line ToJsonLine(DataLine line) => new JsonTypes.Line
 		{
 			SourceId = line.SourceId.AsString(),
 			TargetId = line.TargetId.AsString(),

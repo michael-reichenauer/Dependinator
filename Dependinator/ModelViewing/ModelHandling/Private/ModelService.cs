@@ -55,38 +55,38 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		public void QueueModelLink(NodeId nodeId, ModelLink modelLink)
+		public void QueueModelLink(NodeId nodeId, DataLink dataLink)
 		{
 			QueuedNode queuedNode = GetQueuedNode(nodeId);
 
-			queuedNode.Links.Add(modelLink);
+			queuedNode.Links.Add(dataLink);
 		}
 
 
-		public void QueueModelLine(NodeId nodeId, ModelLine modelLine)
+		public void QueueModelLine(NodeId nodeId, DataLine dataLine)
 		{
 			QueuedNode queuedNode = GetQueuedNode(nodeId);
 
-			queuedNode.Lines.Add(modelLine);
+			queuedNode.Lines.Add(dataLine);
 		}
 
 
-		public IReadOnlyList<ModelNode> GetAllQueuedNodes()
+		public IReadOnlyList<DataNode> GetAllQueuedNodes()
 		{
 			return queuedNodes
-				.Where(pair => pair.Value.ModelNode != null)
-				.Select(pair =>pair.Value.ModelNode)
+				.Where(pair => pair.Value.DataNode != null)
+				.Select(pair =>pair.Value.DataNode)
 				.ToList();
 		}
 
 
-		public void QueueNode(ModelNode node)
+		public void QueueNode(DataNode node)
 		{
 			QueuedNode queuedNode = GetQueuedNode(node.Id);
 			
-			if (queuedNode.ModelNode == null)
+			if (queuedNode.DataNode == null)
 			{
-				queuedNode.ModelNode = new ModelNode(
+				queuedNode.DataNode = new DataNode(
 					node.Id, 
 					node.Name, 
 					node.Parent, 
@@ -99,8 +99,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public bool TryGetQueuedLinesAndLinks(
 			NodeId targetId,
-			out IReadOnlyList<ModelLine> lines,
-			out IReadOnlyList<ModelLink> links)
+			out IReadOnlyList<DataLine> lines,
+			out IReadOnlyList<DataLink> links)
 		{
 			if (!queuedNodes.TryGetValue(targetId, out QueuedNode item))
 			{
@@ -139,9 +139,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 
 			public NodeId NodeId { get; }
-			public ModelNode ModelNode { get; set; }
-			public List<ModelLine> Lines { get; } = new List<ModelLine>();
-			public List<ModelLink> Links { get; } = new List<ModelLink>();
+			public DataNode DataNode { get; set; }
+			public List<DataLine> Lines { get; } = new List<DataLine>();
+			public List<DataLink> Links { get; } = new List<DataLink>();
 		}
 	}
 }

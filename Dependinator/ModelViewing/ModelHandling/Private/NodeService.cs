@@ -38,7 +38,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public bool TryGetNode(NodeId nodeId, out Node node) => modelService.TryGetNode(nodeId, out node);
 
-		public void QueueNode(ModelNode modelNode) => modelService.QueueNode(modelNode);
+		public void QueueNode(DataNode dataNode) => modelService.QueueNode(dataNode);
 
 		public IEnumerable<Node> AllNodes => modelService.AllNodes;
 
@@ -54,8 +54,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			if (modelService.TryGetQueuedLinesAndLinks(
 				node.Id,
-				out IReadOnlyList<ModelLine> lines,
-				out IReadOnlyList<ModelLink> links))
+				out IReadOnlyList<DataLine> lines,
+				out IReadOnlyList<DataLink> links))
 			{
 				lines.ForEach(line => modelLineService.UpdateLine(line, node.Stamp));
 				links.ForEach(link => modelLinkService.UpdateLink(link, node.Stamp));

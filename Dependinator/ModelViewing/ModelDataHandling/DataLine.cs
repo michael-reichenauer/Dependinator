@@ -6,9 +6,9 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.ModelDataHandling
 {
-	internal class ModelLine : Equatable<ModelLine>, IModelItem
+	internal class DataLine : Equatable<DataLine>, IDataItem
 	{
-		public ModelLine(
+		public DataLine(
 			NodeId sourceId,
 			NodeId targetId,
 			IReadOnlyList<Point> points, 

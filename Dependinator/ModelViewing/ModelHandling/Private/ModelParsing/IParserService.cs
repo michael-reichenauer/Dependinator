@@ -9,7 +9,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing
 {
 	internal interface IParserService
 	{
-		Task<R> ParseAsync(string filePath, ModelItemsCallback modelItemsCallback);
+		Task<R> ParseAsync(string filePath, DataItemsCallback dataItemsCallback);
 	}
 
 

@@ -7,7 +7,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 {
 	internal interface IModelLinkService
 	{
-		void UpdateLink(ModelLink modelLink, int stamp);
+		void UpdateLink(DataLink dataLink, int stamp);
 		void RemoveObsoleteLinks(IReadOnlyList<Link> obsoleteLinks);
 		void Hide(Link link);
 		void Show(Link link);

@@ -23,13 +23,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		public void UpdateLink(ModelLink modelLink, int stamp)
+		public void UpdateLink(DataLink dataLink, int stamp)
 		{
 			try
 			{
-				Node source = modelService.GetNode(modelLink.SourceId);
+				Node source = modelService.GetNode(dataLink.SourceId);
 
-				if (!TryGetTarget(modelLink, out Node target))
+				if (!TryGetTarget(dataLink, out Node target))
 				{
 					return;
 				}
@@ -46,25 +46,25 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				link = AddLink(source, target);
 				link.Stamp = stamp;
 
-				if (!modelLink.IsAdded)
+				if (!dataLink.IsAdded)
 				{
 					AddLinkToLines(link);
 				}
 			}
 			catch (Exception e)
 			{
-				Log.Exception(e, $"Failed to update link {modelLink}");
+				Log.Exception(e, $"Failed to update link {dataLink}");
 				throw;
 			}
 		}
 
 
-		private bool TryGetTarget(ModelLink modelLink, out Node target)
+		private bool TryGetTarget(DataLink dataLink, out Node target)
 		{
-			NodeId targetId = modelLink.TargetId;
+			NodeId targetId = dataLink.TargetId;
 			if (!modelService.TryGetNode(targetId, out target))
 			{
-				modelService.QueueModelLink(targetId, modelLink);
+				modelService.QueueModelLink(targetId, dataLink);
 				return false;
 			}
 

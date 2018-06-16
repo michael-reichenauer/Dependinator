@@ -24,21 +24,21 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		public void UpdateNode(ModelNode modelNode, int stamp)
+		public void UpdateNode(DataNode dataNode, int stamp)
 		{
-			if (modelNode.IsReferenced)
+			if (dataNode.IsReferenced)
 			{
-				nodeService.QueueNode(modelNode);
+				nodeService.QueueNode(dataNode);
 				return;
 			}
 
-			if (nodeService.TryGetNode(modelNode.Id, out Node node))
+			if (nodeService.TryGetNode(dataNode.Id, out Node node))
 			{
-				UpdateNode(node, modelNode, stamp);
+				UpdateNode(node, dataNode, stamp);
 				return;
 			}
 
-			AddNodeToModel(modelNode, stamp);
+			AddNodeToModel(dataNode, stamp);
 		}
 
 
@@ -128,57 +128,57 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 
 
-		private void UpdateNode(Node node, ModelNode modelNode, int stamp)
+		private void UpdateNode(Node node, DataNode dataNode, int stamp)
 		{
 			node.Stamp = stamp;
 
-			UpdateData(node, modelNode);
+			UpdateData(node, dataNode);
 
-			nodeService.UpdateNodeTypeIfNeeded(node, modelNode.NodeType);
+			nodeService.UpdateNodeTypeIfNeeded(node, dataNode.NodeType);
 		}
 
 
-		private void AddNodeToModel(ModelNode modelNode, int stamp)
+		private void AddNodeToModel(DataNode dataNode, int stamp)
 		{
-			Node node = new Node(modelNode.Id, modelNode.Name)
+			Node node = new Node(dataNode.Id, dataNode.Name)
 			{
 				Stamp = stamp,
-				NodeType = modelNode.NodeType,
-				Description = modelNode.Description,
-				CodeText = modelNode.CodeText,
+				NodeType = dataNode.NodeType,
+				Description = dataNode.Description,
+				CodeText = dataNode.CodeText,
 			};
 
-			node.View.Bounds = modelNode.Bounds;
-			node.View.ScaleFactor = modelNode.ItemsScaleFactor;
-			node.View.Color = modelNode.Color;
-			node.View.IsHidden = modelNode.ShowState == Node.Hidden;
+			node.View.Bounds = dataNode.Bounds;
+			node.View.ScaleFactor = dataNode.ItemsScaleFactor;
+			node.View.Color = dataNode.Color;
+			node.View.IsHidden = dataNode.ShowState == Node.Hidden;
 
-			Node parentNode = GetParentNode(modelNode.Name, modelNode);
+			Node parentNode = GetParentNode(dataNode.Name, dataNode);
 
 			nodeService.AddNode(node, parentNode);
 		}
 
 
-		private static void UpdateData(Node node, ModelNode modelNode)
+		private static void UpdateData(Node node, DataNode dataNode)
 		{
-			node.Description = modelNode.Description;
-			node.CodeText = modelNode.CodeText;
+			node.Description = dataNode.Description;
+			node.CodeText = dataNode.CodeText;
 		}
 
 
-		private Node GetParentNode(NodeName nodeName, ModelNode modelNode)
+		private Node GetParentNode(NodeName nodeName, DataNode dataNode)
 		{
-			NodeName parentName = GetParentName(nodeName, modelNode);
+			NodeName parentName = GetParentName(nodeName, dataNode);
 
-			return nodeService.GetParentNode(parentName, modelNode.NodeType);
+			return nodeService.GetParentNode(parentName, dataNode.NodeType);
 		}
 
 
 
-		private static NodeName GetParentName(NodeName nodeName, ModelNode modelNode)
+		private static NodeName GetParentName(NodeName nodeName, DataNode dataNode)
 		{
-			NodeName parentName = modelNode.Parent != null
-				? NodeName.From(modelNode.Parent)
+			NodeName parentName = dataNode.Parent != null
+				? NodeName.From(dataNode.Parent)
 				: nodeName.ParentName;
 
 			return parentName;

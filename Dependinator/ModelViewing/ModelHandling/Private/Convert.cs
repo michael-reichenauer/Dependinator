@@ -8,9 +8,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 {
 	internal class Convert
 	{
-		public static List<IModelItem> ToDataItems(IReadOnlyList<Node> nodes)
+		public static List<IDataItem> ToDataItems(IReadOnlyList<Node> nodes)
 		{
-			List<IModelItem> items = new List<IModelItem>();
+			List<IDataItem> items = new List<IDataItem>();
 
 			nodes.ForEach(node => items.AddRange(ToModelNodeItems(node)));
 			nodes.ForEach(node => items.AddRange(ToModelLinks(node.SourceLinks)));
@@ -19,19 +19,19 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		private static IEnumerable<IModelItem> ToModelNodeItems(Node node)
+		private static IEnumerable<IDataItem> ToModelNodeItems(Node node)
 		{
 			yield return ToModelNode(node);
 
-			foreach (ModelLine modelLine in ToModelLines(node.SourceLines))
+			foreach (DataLine modelLine in ToModelLines(node.SourceLines))
 			{
 				yield return modelLine;
 			}
 		}
 
 
-		private static ModelNode ToModelNode(Node node) =>
-			new ModelNode(
+		private static DataNode ToModelNode(Node node) =>
+			new DataNode(
 				node.Id,
 				node.Name,
 				node.Parent.Name.FullName,
@@ -44,17 +44,17 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				node.View.IsHidden ? Node.Hidden : null);
 
 
-		private static IEnumerable<ModelLine> ToModelLines(IEnumerable<Line> lines) =>
+		private static IEnumerable<DataLine> ToModelLines(IEnumerable<Line> lines) =>
 			lines
 				.Where(line => !line.IsHidden)
-				.Select(line => new ModelLine(
+				.Select(line => new DataLine(
 					line.Source.Id,
 					line.Target.Id,
 					line.View.MiddlePoints().ToList(),
 					line.LinkCount));
 
 
-		private static IEnumerable<ModelLink> ToModelLinks(IEnumerable<Link> links) =>
-			links.Select(link => new ModelLink(link.Source.Id, link.Target.Id));
+		private static IEnumerable<DataLink> ToModelLinks(IEnumerable<Link> links) =>
+			links.Select(link => new DataLink(link.Source.Id, link.Target.Id));
 	}
 }

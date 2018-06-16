@@ -20,18 +20,18 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 		}
 
 
-		public void Serialize(IReadOnlyList<IModelItem> items, string dataFilePath) =>
+		public void Serialize(IReadOnlyList<IDataItem> items, string dataFilePath) =>
 			dataSerializer.Serialize(items, dataFilePath);
 
 
-		public async Task<R> TryDeserialize(string dataFilePath, ModelItemsCallback modelItemsCallback)
+		public async Task<R> TryDeserialize(string dataFilePath, DataItemsCallback dataItemsCallback)
 		{
 			if (!File.Exists(dataFilePath))
 			{
 				return Error.From(new MissingDataFileException($"No data file at {dataFilePath}"));
 			}
 
-			return await dataSerializer.TryDeserializeAsStreamAsync(dataFilePath, modelItemsCallback);
+			return await dataSerializer.TryDeserializeAsStreamAsync(dataFilePath, dataItemsCallback);
 		}
 	}
 }

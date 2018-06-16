@@ -16,14 +16,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 		private readonly string filePath;
 		private readonly IReadOnlyList<AssemblyParser> assemblyParsers;
 		private readonly bool isSolutionFile;
-		private readonly ModelItemsCallback itemsCallback;
+		private readonly DataItemsCallback itemsCallback;
 
 
 		public WorkParser(string name,
 			string filePath,
 			IReadOnlyList<AssemblyParser> assemblyParsers, 
 			bool isSolutionFile,
-			ModelItemsCallback itemsCallback)
+			DataItemsCallback itemsCallback)
 		{
 			this.name = name;
 			this.filePath = filePath;
@@ -39,7 +39,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 			string description = isSolutionFile ? "Solution file" : "Assembly file";
 			NodeName nodeName = NodeName.From(moduleName);
 			NodeId nodeId = new NodeId(nodeName);
-			ModelNode moduleNode = new ModelNode(nodeId, nodeName, null, NodeType.NameSpace, description, null);
+			DataNode moduleNode = new DataNode(nodeId, nodeName, null, NodeType.NameSpace, description, null);
 			itemsCallback(moduleNode);
 
 

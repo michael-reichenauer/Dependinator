@@ -4,9 +4,9 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.ModelDataHandling
 {
-	internal class ModelLink : Equatable<ModelLink>, IModelItem
+	internal class DataLink : Equatable<DataLink>, IDataItem
 	{
-		public ModelLink(
+		public DataLink(
 			NodeId sourceId, 
 			NodeId targetId, 
 			bool isAdded = false)

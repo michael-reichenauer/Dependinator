@@ -8,11 +8,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 	internal class TypeInfo
 	{
 		public TypeDefinition Type { get; }
-		public ModelNode Node { get; }
+		public DataNode Node { get; }
 		public bool IsAsyncStateType { get; }
 
 
-		public TypeInfo(TypeDefinition type, ModelNode node, bool isAsyncStateType)
+		public TypeInfo(TypeDefinition type, DataNode node, bool isAsyncStateType)
 		{
 			Type = type;
 			Node = node;

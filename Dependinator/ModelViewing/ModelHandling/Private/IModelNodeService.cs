@@ -7,7 +7,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 {
 	internal interface IModelNodeService
 	{
-		void UpdateNode(ModelNode modelNode, int id);
+		void UpdateNode(DataNode dataNode, int id);
 		void RemoveObsoleteNodesAndLinks(int stamp);
 		void SetLayoutDone();
 		void RemoveAll();

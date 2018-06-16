@@ -15,9 +15,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		private readonly XmlDocParser xmlDocParser;
 		private readonly Decompiler decompiler;
 		private readonly string assemblyPath;
-		private readonly ModelItemsCallback itemsCallback;
+		private readonly DataItemsCallback itemsCallback;
 		private readonly MethodParser methodParser;
-		private readonly Dictionary<NodeId, ModelNode> sentNodes = new Dictionary<NodeId, ModelNode>();
+		private readonly Dictionary<NodeId, DataNode> sentNodes = new Dictionary<NodeId, DataNode>();
 
 
 		public MemberParser(
@@ -25,7 +25,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			XmlDocParser xmlDocParser,
 			Decompiler decompiler,
 			string assemblyPath,
-			ModelItemsCallback itemsCallback)
+			DataItemsCallback itemsCallback)
 		{
 			this.linkHandler = linkHandler;
 			this.xmlDocParser = xmlDocParser;
@@ -47,7 +47,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		private void AddTypeMembers(TypeInfo typeInfo)
 		{
 			TypeDefinition type = typeInfo.Type;
-			ModelNode typeNode = typeInfo.Node;
+			DataNode typeNode = typeInfo.Node;
 
 			if (typeInfo.IsAsyncStateType)
 			{
@@ -90,7 +90,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		}
 
 
-		private void AddMember(IMemberDefinition memberInfo, ModelNode parentTypeNode, bool isPrivate)
+		private void AddMember(IMemberDefinition memberInfo, DataNode parentTypeNode, bool isPrivate)
 		{
 			try
 			{
@@ -102,7 +102,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				Lazy<string> codeText = decompiler.LazyDecompile(memberInfo, assemblyPath);
 				NodeName nodeName = NodeName.From(memberName);
 				NodeId nodeId = new NodeId(nodeName);
-				ModelNode memberNode = new ModelNode(nodeId, nodeName, parent, NodeType.Member, description, codeText);
+				DataNode memberNode = new DataNode(nodeId, nodeName, parent, NodeType.Member, description, codeText);
 
 				if (!sentNodes.ContainsKey(memberNode.Id))
 				{
@@ -120,7 +120,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		}
 
 
-		private void AddMemberLinks(ModelNode sourceMemberNode, IMemberDefinition member)
+		private void AddMemberLinks(DataNode sourceMemberNode, IMemberDefinition member)
 		{
 			try
 			{

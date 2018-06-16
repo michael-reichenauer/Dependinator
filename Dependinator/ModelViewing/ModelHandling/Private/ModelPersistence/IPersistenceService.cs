@@ -10,9 +10,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence
 {
 	internal interface IPersistenceService
 	{
-		void Serialize(IReadOnlyList<IModelItem> items, string path);
+		void Serialize(IReadOnlyList<IDataItem> items, string path);
 
-		Task<R> TryDeserialize(string path, ModelItemsCallback modelItemsCallback);
+		Task<R> TryDeserialize(string path, DataItemsCallback dataItemsCallback);
 	}
 
 

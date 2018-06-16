@@ -6,9 +6,9 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.ModelDataHandling
 {
-	internal class ModelNode : Equatable<ModelNode>, IModelItem
+	internal class DataNode : Equatable<DataNode>, IDataItem
 	{
-		public ModelNode(
+		public DataNode(
 			NodeId id,
 			NodeName name,
 			string parent,
@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing.ModelDataHandling
 		{
 		}
 
-		public ModelNode(NodeId id,
+		public DataNode(NodeId id,
 			NodeName name,
 			string parent,
 			NodeType nodeType,

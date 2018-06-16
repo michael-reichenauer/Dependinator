@@ -33,7 +33,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		}
 
 
-		public void AddMethodLinks(ModelNode memberNode, MethodDefinition method)
+		public void AddMethodLinks(DataNode memberNode, MethodDefinition method)
 		{
 			if (!method.IsConstructor)
 			{
@@ -59,7 +59,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		{
 			try
 			{
-				ModelNode memberNode = methodBodyNode.MemberNode;
+				DataNode memberNode = methodBodyNode.MemberNode;
 				MethodDefinition method = methodBodyNode.Method;
 
 				if (method.DeclaringType.IsInterface || !method.HasBody)
@@ -93,7 +93,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 
 		private void AddLinkToMethodVariable(
-			ModelNode memberNode, VariableDefinition variable, bool isMoveNext)
+			DataNode memberNode, VariableDefinition variable, bool isMoveNext)
 		{
 			if (!isMoveNext &&
 				variable.VariableType.IsNested &&
@@ -108,7 +108,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 
 
-		private void AddAsyncStateLinks(ModelNode memberNode, TypeDefinition asyncType)
+		private void AddAsyncStateLinks(DataNode memberNode, TypeDefinition asyncType)
 		{
 			// Try to get the "MovNext method with contains the actual "async/await" code
 			MethodDefinition moveNextMethod = asyncType.Methods
@@ -123,7 +123,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		}
 
 
-		private void AddLinkToCallMethod(ModelNode memberNode, MethodReference method)
+		private void AddLinkToCallMethod(DataNode memberNode, MethodReference method)
 		{
 			TypeReference declaringType = method.DeclaringType;
 
@@ -152,11 +152,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 		private class MethodBodyNode
 		{
-			public ModelNode MemberNode { get; }
+			public DataNode MemberNode { get; }
 			public MethodDefinition Method { get; }
 			public bool IsMoveNext { get; }
 
-			public MethodBodyNode(ModelNode memberNode, MethodDefinition method, bool isMoveNext)
+			public MethodBodyNode(DataNode memberNode, MethodDefinition method, bool isMoveNext)
 			{
 				MemberNode = memberNode;
 				Method = method;

@@ -30,13 +30,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 
 
-		public void UpdateLine(ModelLine modelLine, int stamp)
+		public void UpdateLine(DataLine dataLine, int stamp)
 		{
 			try
 			{
-				Node source = modelService.GetNode(modelLine.SourceId);
+				Node source = modelService.GetNode(dataLine.SourceId);
 
-				if (!TryGetTarget(modelLine, out Node target))
+				if (!TryGetTarget(dataLine, out Node target))
 				{
 					return;
 				}
@@ -48,11 +48,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					return;
 				}
 
-				AddLine(source, target, modelLine.LinkCount, modelLine.Points);
+				AddLine(source, target, dataLine.LinkCount, dataLine.Points);
 			}
 			catch (Exception e)
 			{
-				Log.Exception(e, $"Failed to update link {modelLine}");
+				Log.Exception(e, $"Failed to update link {dataLine}");
 				throw;
 			}
 		}
@@ -189,12 +189,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			return line != null;
 		}
 
-		private bool TryGetTarget(ModelLine modelLine, out Node target)
+		private bool TryGetTarget(DataLine dataLine, out Node target)
 		{
-			NodeId targetId = modelLine.TargetId;
+			NodeId targetId = dataLine.TargetId;
 			if (!modelService.TryGetNode(targetId, out target))
 			{
-				modelService.QueueModelLine(targetId, modelLine);
+				modelService.QueueModelLine(targetId, dataLine);
 				return false;
 			}
 

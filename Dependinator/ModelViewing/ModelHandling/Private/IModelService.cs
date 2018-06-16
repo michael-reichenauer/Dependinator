@@ -18,12 +18,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		void RemoveAll();
 		void Remove(Node node);
 
-		void QueueModelLink(NodeId targetId, ModelLink modelLink);
-		void QueueModelLine(NodeId targetId, ModelLine modelLine);
-		bool TryGetQueuedLinesAndLinks(NodeId nodeName, out IReadOnlyList<ModelLine> readOnlyList, out IReadOnlyList<ModelLink> modelLinks);
+		void QueueModelLink(NodeId targetId, DataLink dataLink);
+		void QueueModelLine(NodeId targetId, DataLine dataLine);
+		bool TryGetQueuedLinesAndLinks(NodeId nodeName, out IReadOnlyList<DataLine> readOnlyList, out IReadOnlyList<DataLink> modelLinks);
 		void RemovedQueuedNode(NodeId nodeId);
-		IReadOnlyList<ModelNode> GetAllQueuedNodes();
-		void QueueNode(ModelNode modelNode);
+		IReadOnlyList<DataNode> GetAllQueuedNodes();
+		void QueueNode(DataNode dataNode);
 	}
 }
 

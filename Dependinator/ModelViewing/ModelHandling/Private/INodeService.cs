@@ -23,6 +23,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		void RemoveNode(Node node);
 
 		void RemoveAll();
-		void QueueNode(ModelNode modelNode);
+		void QueueNode(DataNode dataNode);
 	}
 }

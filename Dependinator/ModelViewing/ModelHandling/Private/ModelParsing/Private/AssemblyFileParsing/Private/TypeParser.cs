@@ -15,7 +15,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		private readonly XmlDocParser xmlDockParser;
 		private readonly Decompiler decompiler;
 		private readonly string assemblyPath;
-		private readonly ModelItemsCallback itemsCallback;
+		private readonly DataItemsCallback itemsCallback;
 
 	
 
@@ -24,7 +24,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			XmlDocParser xmlDockParser,
 			Decompiler decompiler,
 			string assemblyPath,
-			ModelItemsCallback itemsCallback)
+			DataItemsCallback itemsCallback)
 		{
 			this.linkHandler = linkHandler;
 			this.xmlDockParser = xmlDockParser;
@@ -38,7 +38,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		{
 			bool isCompilerGenerated = Name.IsCompilerGenerated(type.Name);
 			bool isAsyncStateType = false;
-			ModelNode typeNode = null;
+			DataNode typeNode = null;
 
 			if (isCompilerGenerated)
 			{
@@ -75,7 +75,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				Lazy<string> codeText = decompiler.LazyDecompile(type, assemblyPath);
 				NodeName nodeName = NodeName.From(name);
 				NodeId nodeId = new NodeId(nodeName);
-				typeNode = new ModelNode(nodeId, nodeName, parent, NodeType.Type, description, codeText);
+				typeNode = new DataNode(nodeId, nodeName, parent, NodeType.Type, description, codeText);
 				itemsCallback(typeNode);
 			}
 
@@ -103,7 +103,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 					string name = Name.GetTypeNamespaceFullName(type);
 					NodeName nodeName = NodeName.From(name);
 					NodeId nodeId = new NodeId(nodeName);
-					ModelNode node = new ModelNode(nodeId, nodeName, null, NodeType.NameSpace, description, null);
+					DataNode node = new DataNode(nodeId, nodeName, null, NodeType.NameSpace, description, null);
 					itemsCallback(node);
 				}
 
@@ -129,7 +129,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			}
 
 			TypeDefinition type = typeInfo.Type;
-			ModelNode sourceNode = typeInfo.Node;
+			DataNode sourceNode = typeInfo.Node;
 
 			try
 			{

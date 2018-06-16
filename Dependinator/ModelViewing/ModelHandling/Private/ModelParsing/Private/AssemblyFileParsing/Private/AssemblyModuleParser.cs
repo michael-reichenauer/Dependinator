@@ -14,13 +14,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 		private readonly string rootGroup;
 		private readonly LinkHandler linkHandler;
-		private readonly ModelItemsCallback itemsCallback;
+		private readonly DataItemsCallback itemsCallback;
 		private AssemblyDefinition assembly;
 
 		public AssemblyModuleParser(
 			string rootGroup,
 			LinkHandler linkHandler,
-			ModelItemsCallback itemsCallback)
+			DataItemsCallback itemsCallback)
 		{
 			this.rootGroup = rootGroup;
 			this.linkHandler = linkHandler;
@@ -47,7 +47,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 			string description = GetDescription();
 			NodeName nodeName = NodeName.From(moduleName);
 			NodeId nodeId = new NodeId(nodeName);
-			ModelNode moduleNode = new ModelNode(nodeId, nodeName, parent, NodeType.NameSpace, description, null);
+			DataNode moduleNode = new DataNode(nodeId, nodeName, parent, NodeType.NameSpace, description, null);
 			itemsCallback(moduleNode);
 		}
 
@@ -84,7 +84,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				string description = "External references";
 				NodeName nodeName = NodeName.From("$References");
 				NodeId nodeId = new NodeId(nodeName);
-				ModelNode referencesNode = new ModelNode(nodeId, nodeName, null, NodeType.NameSpace, description, null);
+				DataNode referencesNode = new DataNode(nodeId, nodeName, null, NodeType.NameSpace, description, null);
 				itemsCallback(referencesNode);
 			}
 
@@ -104,7 +104,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				string description = "Assembly";
 				NodeName referenceNodeName = NodeName.From(referenceName);
 				NodeId referenceId = new NodeId(referenceNodeName);
-				ModelNode referenceNode = new ModelNode(referenceId, referenceNodeName, parent, NodeType.NameSpace, description, null);
+				DataNode referenceNode = new DataNode(referenceId, referenceNodeName, parent, NodeType.NameSpace, description, null);
 				itemsCallback(referenceNode);
 
 				linkHandler.AddLink(moduleId, referenceName, NodeType.NameSpace);

@@ -27,7 +27,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		public AssemblyParser(
 			string assemblyPath,
 			string assemblyRootGroup,
-			ModelItemsCallback itemsCallback)
+			DataItemsCallback itemsCallback)
 		{
 			this.assemblyPath = assemblyPath;
 

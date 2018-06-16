@@ -16,12 +16,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 {
 	internal class ParserService : IParserService
 	{
-		public async Task<R> ParseAsync(string filePath, ModelItemsCallback modelItemsCallback)
+		public async Task<R> ParseAsync(string filePath, DataItemsCallback dataItemsCallback)
 		{
 			Log.Debug($"Parse {filePath} ...");
 			Timing t = Timing.Start();
 
-			R<WorkParser> workItemParser = GetWorkParser(filePath, modelItemsCallback);
+			R<WorkParser> workItemParser = GetWorkParser(filePath, dataItemsCallback);
 			if (workItemParser.IsFaulted)
 			{
 				return workItemParser;
@@ -38,12 +38,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 
 
 		private static R<WorkParser> GetWorkParser(
-			string filePath, ModelItemsCallback modelItemsCallback)
+			string filePath, DataItemsCallback dataItemsCallback)
 		{
 			bool isSolutionFile = IsSolutionFile(filePath);
 			R<IReadOnlyList<AssemblyParser>> assemblyParsers = isSolutionFile
-				? GetSolutionAssemblyParsers(filePath, modelItemsCallback)
-				: GetAssemblyParser(filePath, modelItemsCallback);
+				? GetSolutionAssemblyParsers(filePath, dataItemsCallback)
+				: GetAssemblyParser(filePath, dataItemsCallback);
 
 			if (assemblyParsers.IsFaulted)
 			{
@@ -58,14 +58,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 
 			string name = GetName(filePath);
 			WorkParser workParser = new WorkParser(
-				name, filePath, assemblyParsers.Value, isSolutionFile, modelItemsCallback);
+				name, filePath, assemblyParsers.Value, isSolutionFile, dataItemsCallback);
 
 			return workParser;
 		}
 
 
 		private static R<IReadOnlyList<AssemblyParser>> GetSolutionAssemblyParsers(
-			string filePath, ModelItemsCallback itemsCallback)
+			string filePath, DataItemsCallback itemsCallback)
 		{
 			Solution solution = new Solution(filePath);
 
@@ -101,7 +101,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private
 
 
 		private static R<IReadOnlyList<AssemblyParser>> GetAssemblyParser(
-			string filePath, ModelItemsCallback itemsCallback)
+			string filePath, DataItemsCallback itemsCallback)
 		{
 			if (!File.Exists(filePath))
 			{

@@ -249,7 +249,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			IReadOnlyList<Node> nodes = Root.Descendents().ToList();
 			t.Log($"Saving {nodes.Count} nodes");
 
-			IReadOnlyList<IModelItem> items = Convert.ToDataItems(nodes);
+			IReadOnlyList<IDataItem> items = Convert.ToDataItems(nodes);
 			t.Log($"Saving {items.Count} items");
 
 			string dataFilePath = GetDataFilePath();
@@ -286,7 +286,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		private static void UpdateDataItems(IModelItem item, Operation operation)
+		private static void UpdateDataItems(IDataItem item, Operation operation)
 		{
 			operation.Queue.Add(item);
 		}
@@ -294,7 +294,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private void ShowModel(Operation operation)
 		{
-			while (operation.Queue.TryTake(out IModelItem item, -1))
+			while (operation.Queue.TryTake(out IDataItem item, -1))
 			{
 				Application.Current.Dispatcher.InvokeBackground(() =>
 				{
@@ -313,16 +313,16 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			}
 
 
-			BlockingCollection<IModelItem> queue = new BlockingCollection<IModelItem>();
+			BlockingCollection<IDataItem> queue = new BlockingCollection<IDataItem>();
 
 			Application.Current.Dispatcher.InvokeBackground(() =>
 			{
-				IReadOnlyList<ModelNode> allQueuedNodes = modelService.GetAllQueuedNodes();
+				IReadOnlyList<DataNode> allQueuedNodes = modelService.GetAllQueuedNodes();
 				allQueuedNodes.ForEach(node => queue.Add(node));
 				queue.CompleteAdding();
 			});
 
-			while (queue.TryTake(out IModelItem item, -1))
+			while (queue.TryTake(out IDataItem item, -1))
 			{
 				Application.Current.Dispatcher.InvokeBackground(() =>
 				{
@@ -342,17 +342,17 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		private void UpdateItem(IModelItem item, int stamp)
+		private void UpdateItem(IDataItem item, int stamp)
 		{
 			switch (item)
 			{
-				case ModelLine line:
+				case DataLine line:
 					modelLineService.UpdateLine(line, stamp);
 					break;
-				case ModelLink link:
+				case DataLink link:
 					modelLinkService.UpdateLink(link, stamp);
 					break;
-				case ModelNode node:
+				case DataNode node:
 					modelNodeService.UpdateNode(node, stamp);
 					break;
 				default:
@@ -373,8 +373,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private class Operation
 		{
-			public BlockingCollection<IModelItem> Queue { get; } =
-				new BlockingCollection<IModelItem>();
+			public BlockingCollection<IDataItem> Queue { get; } =
+				new BlockingCollection<IDataItem>();
 
 			public int Id { get; }
 

@@ -16,13 +16,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 {
 	internal class DataSerializer : IDataSerializer
 	{
-		public Task SerializeAsync(IReadOnlyList<IModelItem> items, string path)
+		public Task SerializeAsync(IReadOnlyList<IDataItem> items, string path)
 		{
 			return Task.Run(() => Serialize(items, path));
 		}
 
 
-		public void Serialize(IReadOnlyList<IModelItem> items, string path)
+		public void Serialize(IReadOnlyList<IDataItem> items, string path)
 		{
 			try
 			{
@@ -46,7 +46,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 
 
 		public Task<R> TryDeserializeAsStreamAsync(
-			string path, ModelItemsCallback modelItemsCallback)
+			string path, DataItemsCallback dataItemsCallback)
 		{
 			return Task.Run(() =>
 			{
@@ -79,8 +79,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 							if (reader.TokenType == JsonToken.StartObject)
 							{
 								JsonTypes.Item jsonItem = serializer.Deserialize<JsonTypes.Item>(reader);
-								IModelItem modelItem = Convert.ToModelItem(jsonItem);
-								modelItemsCallback(modelItem);
+								IDataItem modelItem = Convert.ToModelItem(jsonItem);
+								dataItemsCallback(modelItem);
 								itemCount++;
 							}
 						}

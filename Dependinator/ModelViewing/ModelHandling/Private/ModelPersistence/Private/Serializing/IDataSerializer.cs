@@ -9,10 +9,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence.Priva
 {
 	internal interface IDataSerializer
 	{
-		Task SerializeAsync(IReadOnlyList<IModelItem> items, string path);
+		Task SerializeAsync(IReadOnlyList<IDataItem> items, string path);
 
-		void Serialize(IReadOnlyList<IModelItem> items, string path);
+		void Serialize(IReadOnlyList<IDataItem> items, string path);
 
-		Task<R> TryDeserializeAsStreamAsync(string path, ModelItemsCallback modelItemsCallback);
+		Task<R> TryDeserializeAsStreamAsync(string path, DataItemsCallback dataItemsCallback);
 	}
 }

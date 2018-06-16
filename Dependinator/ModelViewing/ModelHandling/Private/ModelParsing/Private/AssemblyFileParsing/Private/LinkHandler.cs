@@ -10,11 +10,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 {
 	internal class LinkHandler
 	{
-		private readonly ModelItemsCallback itemsCallback;
+		private readonly DataItemsCallback itemsCallback;
 
-		private readonly Dictionary<string, ModelNode> sentTargetNodes = new Dictionary<string, ModelNode>();
+		private readonly Dictionary<string, DataNode> sentTargetNodes = new Dictionary<string, DataNode>();
 
-		public LinkHandler(ModelItemsCallback itemsCallback)
+		public LinkHandler(DataItemsCallback itemsCallback)
 		{
 			this.itemsCallback = itemsCallback;
 		}
@@ -26,7 +26,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		}
 
 
-		public void AddLinkToType(ModelNode sourceNode, TypeReference targetType)
+		public void AddLinkToType(DataNode sourceNode, TypeReference targetType)
 		{
 			if (IsIgnoredReference(targetType))
 			{
@@ -50,7 +50,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 		}
 
 
-		public void AddLinkToMember(ModelNode sourceNode, IMemberDefinition memberInfo)
+		public void AddLinkToMember(DataNode sourceNode, IMemberDefinition memberInfo)
 		{
 			if (IsIgnoredTargetMember(memberInfo))
 			{
@@ -70,12 +70,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 
 		private void SendLink(NodeId sourceId, string targetName, NodeType targetType)
 		{
-			if (!sentTargetNodes.TryGetValue(targetName, out ModelNode targetNode))
+			if (!sentTargetNodes.TryGetValue(targetName, out DataNode targetNode))
 			{
 				NodeName targetNodeName = NodeName.From(targetName);
 				NodeId targetId = new NodeId(targetNodeName);
 				
-				targetNode = new ModelNode(targetId, targetNodeName, null, targetType, null, null, true);
+				targetNode = new DataNode(targetId, targetNodeName, null, targetType, null, null, true);
 				sentTargetNodes[targetName] = targetNode;
 			}
 
@@ -85,10 +85,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.A
 				return;
 			}
 			
-			ModelLink modelLink = new ModelLink(sourceId, targetNode.Id);
+			DataLink dataLink = new DataLink(sourceId, targetNode.Id);
 
 			itemsCallback(targetNode);
-			itemsCallback(modelLink);
+			itemsCallback(dataLink);
 		}
 
 

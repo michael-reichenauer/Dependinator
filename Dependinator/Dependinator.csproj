@@ -225,7 +225,7 @@
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\DataFileParsing\JsonTypes.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\XmlDocParser.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\IPersistenceService.cs" />
-    <Compile Include="ModelViewing\ModelDataHandling\ModelLine.cs" />
+    <Compile Include="ModelViewing\ModelDataHandling\DataLine.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\IgnoredTypes.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\LinkHandler.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\MemberParser.cs" />
@@ -271,9 +271,9 @@
     <Compile Include="MainWindowViews\SearchFilter.xaml.cs">
       <DependentUpon>SearchFilter.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\ModelHandling\Core\IModelItem.cs" />
-    <Compile Include="ModelViewing\ModelDataHandling\ModelLink.cs" />
-    <Compile Include="ModelViewing\ModelDataHandling\ModelItemsCallback.cs" />
+    <Compile Include="ModelViewing\ModelDataHandling\IDataItem.cs" />
+    <Compile Include="ModelViewing\ModelDataHandling\DataLink.cs" />
+    <Compile Include="ModelViewing\ModelDataHandling\DataItemsCallback.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\Private\Serializing\Convert.cs" />
     <Compile Include="ModelViewing\Nodes\TitleView.xaml.cs">
       <DependentUpon>TitleView.xaml</DependentUpon>
@@ -303,7 +303,7 @@
     <Compile Include="ModelViewing\ModelHandling\Private\ModelHandlingService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelNodeService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\IModelService.cs" />
-    <Compile Include="ModelViewing\ModelDataHandling\ModelNode.cs" />
+    <Compile Include="ModelViewing\ModelDataHandling\DataNode.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\TypeView.xaml.cs">
       <DependentUpon>TypeView.xaml</DependentUpon>
