@@ -180,6 +180,8 @@
     <Compile Include="ModelViewing\DependencyExploring\Private\IDependencyWindowService.cs" />
     <Compile Include="ModelViewing\DependencyExploring\Private\IItemCommands.cs" />
     <Compile Include="ModelViewing\IModelNotifications2.cs" />
+    <Compile Include="ModelViewing\ModelDataHandling\IModelDataService.cs" />
+    <Compile Include="ModelViewing\ModelDataHandling\Private\ModelDataService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\NodeId.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\ParsingAssemblyResolver.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\Decompiler.cs" />
@@ -223,7 +225,7 @@
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\DataFileParsing\JsonTypes.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\XmlDocParser.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\IPersistenceService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Core\ModelLine.cs" />
+    <Compile Include="ModelViewing\ModelDataHandling\ModelLine.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\IgnoredTypes.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\LinkHandler.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelParsing\Private\AssemblyFileParsing\Private\MemberParser.cs" />
@@ -270,7 +272,7 @@
       <DependentUpon>SearchFilter.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\ModelHandling\Core\IModelItem.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Core\ModelLink.cs" />
+    <Compile Include="ModelViewing\ModelDataHandling\ModelLink.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\ModelItemsCallback.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\Private\Serializing\Convert.cs" />
     <Compile Include="ModelViewing\Nodes\TitleView.xaml.cs">
@@ -301,7 +303,7 @@
     <Compile Include="ModelViewing\ModelHandling\Private\ModelHandlingService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelNodeService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\IModelService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Core\ModelNode.cs" />
+    <Compile Include="ModelViewing\ModelDataHandling\ModelNode.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\TypeView.xaml.cs">
       <DependentUpon>TypeView.xaml</DependentUpon>
