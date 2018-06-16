@@ -4,6 +4,7 @@ using System.Linq;
 using System.Windows;
 using Dependinator.ModelViewing.Lines;
 using Dependinator.ModelViewing.Lines.Private;
+using Dependinator.ModelViewing.ModelDataHandling;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 

@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using System.Windows;
+using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 
 
-namespace Dependinator.ModelViewing.ModelHandling.Core
+namespace Dependinator.ModelViewing.ModelDataHandling
 {
 	internal class ModelLine : Equatable<ModelLine>, IModelItem
 	{

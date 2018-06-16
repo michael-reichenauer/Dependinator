@@ -9,6 +9,7 @@ using System.Windows.Threading;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.ModelDataHandling;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private.ModelParsing;
 using Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence;

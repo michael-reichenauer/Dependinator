@@ -273,7 +273,7 @@
     </Compile>
     <Compile Include="ModelViewing\ModelHandling\Core\IModelItem.cs" />
     <Compile Include="ModelViewing\ModelDataHandling\ModelLink.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Core\ModelItemsCallback.cs" />
+    <Compile Include="ModelViewing\ModelDataHandling\ModelItemsCallback.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelPersistence\Private\Serializing\Convert.cs" />
     <Compile Include="ModelViewing\Nodes\TitleView.xaml.cs">
       <DependentUpon>TitleView.xaml</DependentUpon>

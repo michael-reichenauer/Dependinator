@@ -1,3 +1,4 @@
+using Dependinator.ModelViewing.ModelDataHandling;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Mono.Cecil;
 

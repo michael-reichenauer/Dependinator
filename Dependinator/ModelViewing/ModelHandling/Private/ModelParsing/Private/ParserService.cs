@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Dependinator.ModelViewing.ModelDataHandling;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.AssemblyFileParsing;
 using Dependinator.ModelViewing.ModelHandling.Private.ModelParsing.Private.SolutionFileParsing;
