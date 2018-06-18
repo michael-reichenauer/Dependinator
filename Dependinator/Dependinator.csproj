@@ -179,7 +179,7 @@
     <Compile Include="ModelViewing\DependencyExploring\Private\DependencyWindowService.cs" />
     <Compile Include="ModelViewing\DependencyExploring\Private\IDependencyWindowService.cs" />
     <Compile Include="ModelViewing\DependencyExploring\Private\IItemCommands.cs" />
-    <Compile Include="ModelViewing\IModelNotifications2.cs" />
+    <Compile Include="ModelViewing\IModelNotifications.cs" />
     <Compile Include="ModelViewing\DataHandling\IDataService.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\DataService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\NodeId.cs" />

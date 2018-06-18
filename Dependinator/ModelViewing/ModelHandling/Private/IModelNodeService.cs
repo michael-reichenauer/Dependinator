@@ -10,7 +10,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		void UpdateNode(DataNode dataNode, int id);
 		void RemoveObsoleteNodesAndLinks(int stamp);
 		void SetLayoutDone();
-		void RemoveAll();
 		void ShowHiddenNode(NodeName nodeName);
 		IReadOnlyList<NodeName> GetHiddenNodeNames();
 		void HideNode(Node node);

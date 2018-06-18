@@ -77,8 +77,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			nodeService.AllNodes.ForEach(node => node.View.IsLayoutCompleted = true);
 		}
 
-		public void RemoveAll() => nodeService.RemoveAll();
-
 
 		public IReadOnlyList<NodeName> GetHiddenNodeNames()
 			=> nodeService.AllNodes

@@ -79,14 +79,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		public void RemoveAll()
-		{
-			Root?.View.ItemsCanvas?.RemoveAll();
-
-			modelService.RemoveAll();
-		}
-
-
 		public void UpdateNodeTypeIfNeeded(Node node, NodeType nodeType)
 		{
 			if (node.NodeType != nodeType)

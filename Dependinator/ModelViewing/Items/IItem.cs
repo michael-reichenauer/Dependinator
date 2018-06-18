@@ -11,7 +11,6 @@ namespace Dependinator.ModelViewing.Items
 		bool IsShowing { get; }
 
 		object ItemState { get; set; }
-		ItemsCanvas ItemOwnerCanvas { get; set; }
 
 		void ItemRealized();
 		void ItemVirtualized();

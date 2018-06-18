@@ -15,6 +15,8 @@ namespace Dependinator.ModelViewing.Items
 		private readonly Dictionary<int, IItem> removedItems = new Dictionary<int, IItem>();
 
 		private int currentItemId = 1;
+		private Rect lastViewAreaQuery = EmptyExtent;
+		private Rect totalBounds = EmptyExtent;
 
 
 		public ItemsSource(IItemsSourceArea itemsSourceArea)
@@ -22,16 +24,10 @@ namespace Dependinator.ModelViewing.Items
 			this.itemsSourceArea = itemsSourceArea;
 		}
 
-
-		public Rect LastViewAreaQuery { get; private set; } = EmptyExtent;
-
-		public Rect TotalBounds { get; private set; } = EmptyExtent;
-
-		protected override Rect VirtualArea => TotalBounds;
+		// VirtualItemsSource overrides
+		protected override Rect VirtualArea => totalBounds;
 		protected override IEnumerable<int> GetVirtualItemIds(Rect viewArea) => GetItemIds(viewArea);
 		protected override object GetVirtualItem(int virtualId) => GetItem(virtualId);
-
-		public bool HasItems => viewItems.Any();
 
 
 		public void Add(IItem item)
@@ -61,20 +57,8 @@ namespace Dependinator.ModelViewing.Items
 		}
 
 
-		public void ItemRealized()
-		{
-			//isShowing = true;
-		}
-
-		public void ItemVirtualized()
-		{
-			//isShowing = false;
-		}
-
-
 		public void ItemRealized(int virtualId)
 		{
-			// Log.Debug($"Realized item {virtualId}");
 			if (viewItems.TryGetValue(virtualId, out var item))
 			{
 				item.ItemRealized();
@@ -84,8 +68,6 @@ namespace Dependinator.ModelViewing.Items
 
 		public void ItemVirtualized(int virtualId)
 		{
-			// Log.Debug($"virtualized item {virtualId}");
-
 			if (viewItems.TryGetValue(virtualId, out IItem item))
 			{
 				item.ItemVirtualized();
@@ -93,18 +75,12 @@ namespace Dependinator.ModelViewing.Items
 
 			if (removedItems.ContainsKey(virtualId))
 			{
-				// Log.Debug($"Remove item {virtualId}");
+				// Since remove does not immediately remove items, they are removed when virtualized
 				removedItems.Remove(virtualId);
 				viewItems.Remove(virtualId);
 			}
 		}
 
-
-		public void RemoveAll()
-		{
-			List<IItem> allItems = viewItemsTree.ToList();
-			Remove(allItems);
-		}
 
 		public IEnumerable<IItem> GetAllItems() => viewItemsTree;
 
@@ -112,7 +88,7 @@ namespace Dependinator.ModelViewing.Items
 		private void Add(IEnumerable<IItem> items)
 		{
 			bool isQueryItemsChanged = false;
-			Rect currentBounds = TotalBounds;
+			Rect currentBounds = totalBounds;
 
 			foreach (IItem item in items)
 			{
@@ -133,15 +109,15 @@ namespace Dependinator.ModelViewing.Items
 
 			
 
-				if (!isQueryItemsChanged && item.ItemBounds.IntersectsWith(LastViewAreaQuery))
+				if (!isQueryItemsChanged && item.ItemBounds.IntersectsWith(lastViewAreaQuery))
 				{
 					isQueryItemsChanged = true;
 				}
 			}
 
-			if (currentBounds != TotalBounds)
+			if (currentBounds != totalBounds)
 			{
-				TotalBounds = currentBounds;
+				totalBounds = currentBounds;
 				TriggerExtentChanged();
 			}
 
@@ -173,8 +149,8 @@ namespace Dependinator.ModelViewing.Items
 				viewItemsTree.Insert(item, newItemBounds, item.Priority);
 				//Log.Debug($"Updated {id} count:{viewItemsTree.Count()}");
 
-				if (oldItemBounds.IntersectsWith(LastViewAreaQuery)
-						|| newItemBounds.IntersectsWith(LastViewAreaQuery))
+				if (oldItemBounds.IntersectsWith(lastViewAreaQuery)
+						|| newItemBounds.IntersectsWith(lastViewAreaQuery))
 				{
 					isTriggerItemsChanged = true;
 				}
@@ -206,7 +182,7 @@ namespace Dependinator.ModelViewing.Items
 
 				if (item.CanShow)
 				{
-					if (itemBounds.IntersectsWith(LastViewAreaQuery))
+					if (itemBounds.IntersectsWith(lastViewAreaQuery))
 					{
 						isQueryItemsChanged = true;
 					}
@@ -245,9 +221,9 @@ namespace Dependinator.ModelViewing.Items
 				}
 			}
 
-			if (currentBounds != TotalBounds)
+			if (currentBounds != totalBounds)
 			{
-				TotalBounds = currentBounds;
+				totalBounds = currentBounds;
 				TriggerExtentChanged();
 			}
 		}
@@ -279,7 +255,7 @@ namespace Dependinator.ModelViewing.Items
 			// For smother panning, include an area that is a little a little larger than current view
 			viewArea.Inflate(viewArea.Width / 10, viewArea.Height / 10);
 
-			LastViewAreaQuery = viewArea;
+			lastViewAreaQuery = viewArea;
 
 			IEnumerable<int> itemIds = viewItemsTree.GetItemsIntersecting(viewArea)
 				.Where(i => i.ItemState != null && i.CanShow)

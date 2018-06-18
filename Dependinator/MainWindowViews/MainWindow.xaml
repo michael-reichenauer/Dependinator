@@ -103,15 +103,6 @@
 				<!-- Middle part, mostly empty, which makes widow drag-able, on the right the Hamburger button -->
 				<StackPanel Grid.Column="1" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
 
-					<!-- Fetch error indicator -->
-					<!--<Button 
-						Content="&#xE888;"
-						Style="{DynamicResource IconButtonStyle}"			
-						Foreground="{DynamicResource ConflictBrush}"			
-						FontWeight="Bold"
-						Visibility="{Binding ModelViewModel.FetchErrorText, Converter={StaticResource VC}}"			
-						ToolTip="{Binding ModelViewModel.FetchErrorText}" />-->
-					
 					<!-- Latest version button -->
 					<Button 
 						Content="&#xE863;"
@@ -150,7 +141,7 @@
 			</Grid>
 		</Border>
 
-		<!-- Repository view -->
+		<!-- Model view -->
 		<modelViewing:ModelView x:Name="ModelView" Grid.Row="1" DataContext="{Binding ModelViewModel}"/>
 
 	</Grid>

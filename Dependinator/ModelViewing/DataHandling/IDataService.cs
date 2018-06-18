@@ -7,8 +7,10 @@ namespace Dependinator.ModelViewing.DataHandling
 {
 	internal interface IDataService
 	{
-		Task<R> TryDeserialize(string path, DataItemsCallback dataItemsCallback);
+		Task<R> TryReadSavedDataAsync(string dataFilePath, DataItemsCallback dataItemsCallback);
+
+		void SaveData(IReadOnlyList<IDataItem> items, string dataFilePath);
+
 		Task<R> ParseAsync(string filePath, DataItemsCallback dataItemsCallback);
-		void Serialize(IReadOnlyList<IDataItem> items, string path);
 	}
 }

@@ -79,13 +79,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			Log.Debug($"Metadata model: {modelMetadata.ModelFilePath} {DateTime.Now}");
 			string dataFilePath = GetDataFilePath();
 
-			ClearAll();
 			Root.View.ItemsCanvas.IsZoomAndMoveEnabled = true;
 
 			if (File.Exists(dataFilePath))
 			{
-				R result = await ShowModelAsync(operation => dataService.TryDeserialize(
-					dataFilePath, items => UpdateDataItems(items, operation)));
+				R result = await TryShowSavedModelAsync(dataFilePath);
 				if (result.Error.Exception is NotSupportedException)
 				{
 					File.Delete(dataFilePath);
@@ -107,8 +105,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			else
 			if (File.Exists(modelMetadata.ModelFilePath))
 			{
-				R result = await ShowModelAsync(operation => dataService.ParseAsync(
-					modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
+				R result = await ShowParsedModelAsync();
 				if (result.IsFaulted)
 				{
 					message.ShowWarning(result.Message);
@@ -140,7 +137,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				modelMetadata.SetDefault();
 				Root.View.ItemsCanvas.SetRootScale(1);
 				Root.View.ItemsCanvas.IsZoomAndMoveEnabled = false;
-				//Root.View.ItemsCanvas.ZoomRootNode(1, new Point(0, 0));
 				Root.View.ItemsCanvas.UpdateAndNotifyAll();
 
 				Root.View.ItemsCanvas.AddItem(openModelViewModelProvider());
@@ -175,8 +171,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			}
 
 			isWorking = true;
-			R<int> operationId = await ShowModelAsync(operation => dataService.ParseAsync(
-				modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
+			R<int> operationId = await ShowParsedModelAsync();
 
 			if (operationId.IsFaulted)
 			{
@@ -212,6 +207,21 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
+
+		private Task<R<int>> ShowParsedModelAsync()
+		{
+			return ShowModelAsync(operation => dataService.ParseAsync(
+				modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
+		}
+
+
+		private Task<R<int>> TryShowSavedModelAsync(string dataFilePath)
+		{
+			return ShowModelAsync(operation => dataService.TryReadSavedDataAsync(
+				dataFilePath, items => UpdateDataItems(items, operation)));
+		}
+
+
 		private static void UpdateLines(Node node)
 		{
 			node.SourceLines
@@ -222,9 +232,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				.Where(child => child.View.IsShowing)
 				.ForEach(UpdateLines);
 		}
-
-
-		public void ClearAll() => modelNodeService.RemoveAll();
 
 
 		public void Save()
@@ -249,7 +256,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			string dataFilePath = GetDataFilePath();
 
-			dataService.Serialize(items, dataFilePath);
+			dataService.SaveData(items, dataFilePath);
 			t.Log($"Saved {items.Count} items");
 		}
 
