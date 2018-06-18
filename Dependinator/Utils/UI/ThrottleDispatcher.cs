@@ -15,7 +15,7 @@ namespace Dependinator.Utils.UI
 	public class ThrottleDispatcher
 	{
 		private DispatcherTimer timer;
-		private DateTime timerStarted { get; set; } = DateTime.UtcNow.AddYears(-1);
+		private DateTime TimerStarted { get; set; } = DateTime.UtcNow.AddYears(-1);
 
 
 		/// <summary>
@@ -28,26 +28,26 @@ namespace Dependinator.Utils.UI
 		/// <param name="interval">Timeout in Milliseconds</param>
 		/// <param name="action">Action<object> to fire when debounced event fires</object></param>
 		/// <param name="param">optional parameter</param>
-		/// <param name="priority">optional priorty for the dispatcher</param>
-		/// <param name="disp">optional dispatcher. If not passed or null CurrentDispatcher is used.</param>
+		/// <param name="priority">optional priority for the dispatcher</param>
+		/// <param name="dispatcher">optional dispatcher. If not passed or null CurrentDispatcher is used.</param>
 		public void Throttle(int interval, Action<object> action,
 			object param = null,
 			DispatcherPriority priority = DispatcherPriority.ApplicationIdle,
-			Dispatcher disp = null)
+			Dispatcher dispatcher = null)
 		{
 			// kill pending timer and pending ticks
 			timer?.Stop();
 			timer = null;
 
-			if (disp == null)
-				disp = Dispatcher.CurrentDispatcher;
+			if (dispatcher == null)
+				dispatcher = Dispatcher.CurrentDispatcher;
 
 			var curTime = DateTime.UtcNow;
 
 			// if timeout is not up yet - adjust timeout to fire 
 			// with potentially new Action parameters           
-			if (curTime.Subtract(timerStarted).TotalMilliseconds < interval)
-				interval -= (int)curTime.Subtract(timerStarted).TotalMilliseconds;
+			if (curTime.Subtract(TimerStarted).TotalMilliseconds < interval)
+				interval -= (int)curTime.Subtract(TimerStarted).TotalMilliseconds;
 
 			timer = new DispatcherTimer(TimeSpan.FromMilliseconds(interval), priority, (s, e) =>
 			{
@@ -57,10 +57,10 @@ namespace Dependinator.Utils.UI
 				timer?.Stop();
 				timer = null;
 				action.Invoke(param);
-			}, disp);
+			}, dispatcher);
 
 			timer.Start();
-			timerStarted = curTime;
+			TimerStarted = curTime;
 		}
 	}
 }

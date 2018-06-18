@@ -185,7 +185,9 @@ namespace Dependinator.ModelViewing.Items
 
 		public void UpdateAndNotifyAll()
 		{
-			itemsSource.UpdateAndNotifyAll();
+			IReadOnlyList<ItemViewModel> items = itemsSource.GetAllItems().Cast<ItemViewModel>().ToList();
+			itemsSource.Update(items);
+			items.ForEach(item => item.NotifyAll());
 		}
 
 
