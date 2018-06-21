@@ -182,6 +182,7 @@
     <Compile Include="ModelViewing\IModelNotifications.cs" />
     <Compile Include="ModelViewing\DataHandling\IDataService.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\DataService.cs" />
+    <Compile Include="ModelViewing\Items\VisualAreaHandler.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\NodeId.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\ParsingAssemblyResolver.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\Private\Decompiler.cs" />
@@ -309,7 +310,6 @@
       <DependentUpon>TypeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\TypeViewModel.cs" />
-    <Compile Include="ModelViewing\Items\Private\IItemsSourceArea.cs" />
     <Compile Include="ModelViewing\Items\Private\ItemsService.cs" />
     <Compile Include="Utils\UI\DebounceDispatcher.cs" />
     <Compile Include="Utils\UI\DelayDispatcher.cs" />
@@ -359,7 +359,7 @@
     <Compile Include="ModelViewing\Lines\Private\LinkGroup.cs" />
     <Compile Include="ModelViewing\Items\Private\IgnoreMouseWheelBehavior.cs" />
     <Compile Include="ModelViewing\Nodes\INodeViewModelService.cs" />
-    <Compile Include="ModelViewing\Items\IItemsCanvasBounds.cs" />
+    <Compile Include="ModelViewing\Items\IItemsCanvasOwner.cs" />
     <Compile Include="ModelViewing\Items\ItemsCanvas.cs" />
     <Compile Include="ModelViewing\Nodes\MemberNodeView.xaml.cs">
       <DependentUpon>MemberNodeView.xaml</DependentUpon>
@@ -426,7 +426,7 @@
     <Compile Include="Utils\UI\HideableGridSplitter.cs" />
     <Compile Include="Utils\Compare.cs" />
     <Compile Include="Common\ThemeHandling\IThemeService.cs" />
-    <Compile Include="ModelViewing\Items\ItemsSource.cs" />
+    <Compile Include="ModelViewing\Items\Private\ItemsSource.cs" />
     <Compile Include="ModelViewing\ModelViewModel.cs" />
     <Compile Include="Utils\Collections\IReadOnlyKeyedList.cs" />
     <Compile Include="Utils\Collections\KeyedList.cs" />

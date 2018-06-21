@@ -1,19 +1,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Dependinator.ModelViewing.Items.Private;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependinator.ModelViewing.Items
+namespace Dependinator.ModelViewing.Items.Private
 {
 	internal class ItemsSource : VirtualItemsSource
 	{
 		private static readonly int ItemsChangedInterval = 300;
 		private static readonly int ExtentChangedInterval = 300;
 
-		private readonly IItemsSourceArea itemsSourceArea;
+		private readonly VisualAreaHandler visualAreaHandler;
 		private readonly PriorityQuadTree<IItem> viewItemsTree = new PriorityQuadTree<IItem>();
 		private readonly Dictionary<int, IItem> viewItems = new Dictionary<int, IItem>();
 		private readonly Dictionary<int, IItem> removedItems = new Dictionary<int, IItem>();
@@ -25,9 +24,9 @@ namespace Dependinator.ModelViewing.Items
 		private Rect totalBounds = EmptyExtent;
 
 
-		public ItemsSource(IItemsSourceArea itemsSourceArea)
+		public ItemsSource(VisualAreaHandler visualAreaHandler)
 		{
-			this.itemsSourceArea = itemsSourceArea;
+			this.visualAreaHandler = visualAreaHandler;
 		}
 
 		// VirtualItemsSource overrides
@@ -230,25 +229,15 @@ namespace Dependinator.ModelViewing.Items
 		/// </summary>
 		private IEnumerable<int> GetItemIds(Rect viewArea)
 		{
-			//Inflate is Enabled in Zoomable line 1369
+			viewArea = visualAreaHandler.GetVisualArea(viewArea);
+
 			if (viewArea == Rect.Empty)
 			{
 				return Enumerable.Empty<int>();
 			}
 
-			if (!itemsSourceArea.IsRoot)
-			{
-				// Adjust view area to compensate for ancestors
-				Rect ancestorsViewArea = itemsSourceArea.GetHierarchicalVisualArea();
-				viewArea.Intersect(ancestorsViewArea);
-
-				if (viewArea == Rect.Empty)
-				{
-					return Enumerable.Empty<int>();
-				}
-			}
-
 			// For smother panning, include an area that is a little a little larger than current view
+			// Inflate was Enabled in ZoomableCanvas line 1378
 			viewArea.Inflate(viewArea.Width / 10, viewArea.Height / 10);
 
 			lastViewAreaQuery = viewArea;

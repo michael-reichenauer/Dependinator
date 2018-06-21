@@ -79,7 +79,7 @@ namespace Dependinator.ModelViewing.Private
 
 
 		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) => 
-			rootNodeCanvas?.OnMouseWheel(uiElement, e, false);
+			rootNodeCanvas?.RootCanvas.ZoomNode(e);
 
 
 		public void ShowHiddenNode(NodeName nodeName) => modelHandlingService.ShowHiddenNode(nodeName);

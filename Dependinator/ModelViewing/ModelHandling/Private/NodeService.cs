@@ -180,7 +180,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			if (Math.Abs(node.View.ScaleFactor) > 0.0000001)
 			{
-				node.View.ItemsCanvas.SetScaleFactor(node.View.ScaleFactor);
+				node.View.ItemsCanvas.ScaleFactor = node.View.ScaleFactor;
 			}
 
 			//if (node.Offset != PointEx.Zero)

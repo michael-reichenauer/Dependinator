@@ -89,7 +89,14 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		{
 			ItemsCanvas itemsCanvas = nodeViewModel.ItemsViewModel?.ItemsCanvas ?? nodeViewModel.Node.Root.View.ItemsCanvas;
 
-			itemsCanvas.OnMouseWheel(uiElement, e, nodeViewModel.IsInnerSelected);
+			if (nodeViewModel.IsInnerSelected)
+			{
+				itemsCanvas.ZoomNode(e);
+			}
+			else
+			{
+				itemsCanvas.RootCanvas.ZoomNode(e);
+			}
 		}
 
 

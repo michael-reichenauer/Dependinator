@@ -3,7 +3,7 @@ using System.Windows;
 
 namespace Dependinator.ModelViewing.Items
 {
-	internal interface IItemsCanvasBounds
+	internal interface IItemsCanvasOwner
 	{
 		Rect ItemBounds { get; }
 

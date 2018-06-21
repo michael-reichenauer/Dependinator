@@ -64,7 +64,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 			}
 			else
 			{
-				lineViewModel.Line.Owner.Root.View.ItemsCanvas.OnMouseWheel(uiElement, e, false);
+				lineViewModel.Line.Owner.Root.View.ItemsCanvas.ZoomNode(e);
 			}
 		}
 

@@ -29,33 +29,27 @@ namespace Dependinator.ModelViewing.Items
 			ItemsCanvas.SetZoomableCanvas(zoomableCanvas);
 
 
-		public void MoveCanvas(Vector viewOffset) => ItemsCanvas.MoveCanvas(viewOffset);
-		public void MoveRootCanvas(Vector viewOffset) => ItemsCanvas.MoveRootCanvas(viewOffset);
-
-		public void ZoomRoot(double zoom, Point viewPosition) => ItemsCanvas.ZoomRootNode(zoom, viewPosition);
+		public void MoveCanvas(Vector viewOffset) => ItemsCanvas.MoveAllItems(viewOffset);
 
 		public void Zoom(double zoom, Point viewPosition) => ItemsCanvas.ZoomNode(zoom, viewPosition);
 
 		public void SizeChanged() => ItemsCanvas.SizeChanged();
 
-		public void ItemRealized() => ItemsCanvas.ItemRealized();
+		public void ItemRealized() => ItemsCanvas.CanvasRealized();
 
-		public void ItemVirtualized() => ItemsCanvas.ItemVirtualized();
+		public void ItemVirtualized() => ItemsCanvas.CanvasVirtualized();
 
 
-		public void MoveItems(Vector viewOffset, Point p1, Point p2)
+		public void MoveAllItems(Point p1, Point p2)
 		{
 			if (node?.IsSelected ?? true)
 			{
-				MoveCanvas(viewOffset);
+				ItemsCanvas.MoveAllItems(p1, p2);
 			}
 			else
 			{
-				MoveRootCanvas(viewOffset);
+				ItemsCanvas.RootCanvas.MoveAllItems(p1, p2);
 			}
 		}
-
-
-		public bool IsSelected => node?.IsInnerSelected ?? true;
 	}
 }
