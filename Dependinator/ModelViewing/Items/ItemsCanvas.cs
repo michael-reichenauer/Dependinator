@@ -94,16 +94,16 @@ namespace Dependinator.ModelViewing.Items
 		public void SetRootScale(double scale) => RootCanvas.rootScale = scale;
 
 
-		public void AddItem(ItemViewModel item)
+		public void AddItem(IItem item)
 		{
 			item.ItemOwnerCanvas = this;
 			itemsSource.Add(item);
 		}
 
 
-		public void RemoveItem(ItemViewModel item) => itemsSource.Remove(item);
+		public void RemoveItem(IItem item) => itemsSource.Remove(item);
 
-		public void UpdateItem(ItemViewModel item) => itemsSource.Update(item);
+		public void UpdateItem(IItem item) => itemsSource.Update(item);
 
 
 		public void SizeChanged() => itemsSource.TriggerExtentChanged();
