@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Dependinator.ModelViewing.DataHandling;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
@@ -13,5 +14,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		void ShowHiddenNode(NodeName nodeName);
 		IReadOnlyList<NodeName> GetHiddenNodeNames();
 		void HideNode(Node node);
+		void RemoveAll();
 	}
 }

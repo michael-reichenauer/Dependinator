@@ -5,6 +5,8 @@ using System.Threading.Tasks;
 using Dependinator.Common;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.ModelViewing.CodeViewing;
+using Dependinator.ModelViewing.DataHandling;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private;
 

@@ -1,10 +1,9 @@
 using System.Collections.Generic;
 using System.Windows;
-using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 
 
-namespace Dependinator.ModelViewing.DataHandling
+namespace Dependinator.ModelViewing.DataHandling.Dtos
 {
 	internal class DataLine : Equatable<DataLine>, IDataItem
 	{

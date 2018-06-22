@@ -183,7 +183,7 @@
     <Compile Include="ModelViewing\DataHandling\IDataService.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\DataService.cs" />
     <Compile Include="ModelViewing\Items\VisualAreaHandler.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Core\NodeId.cs" />
+    <Compile Include="ModelViewing\DataHandling\Dtos\NodeId.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\ParsingAssemblyResolver.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\Private\Decompiler.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\WorkParser.cs" />
@@ -220,13 +220,13 @@
     <Compile Include="ModelViewing\Nodes\NodeControl.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControlViewModel.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\LineViewData.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Core\LinkType.cs" />
+    <Compile Include="ModelViewing\DataHandling\Dtos\NodeType.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\NodeTraversalExtensions.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\NodeViewData.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\DataFileParsing\JsonTypes.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\Private\XmlDocParser.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\Persistence\IPersistenceService.cs" />
-    <Compile Include="ModelViewing\DataHandling\DataLine.cs" />
+    <Compile Include="ModelViewing\DataHandling\Dtos\DataLine.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\Private\IgnoredTypes.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\Private\LinkHandler.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\Private\MemberParser.cs" />
@@ -272,8 +272,8 @@
     <Compile Include="MainWindowViews\SearchFilter.xaml.cs">
       <DependentUpon>SearchFilter.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ModelViewing\DataHandling\IDataItem.cs" />
-    <Compile Include="ModelViewing\DataHandling\DataLink.cs" />
+    <Compile Include="ModelViewing\DataHandling\Dtos\IDataItem.cs" />
+    <Compile Include="ModelViewing\DataHandling\Dtos\DataLink.cs" />
     <Compile Include="ModelViewing\DataHandling\DataItemsCallback.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\Persistence\Private\Serializing\Convert.cs" />
     <Compile Include="ModelViewing\Nodes\TitleView.xaml.cs">
@@ -304,7 +304,7 @@
     <Compile Include="ModelViewing\ModelHandling\Private\ModelHandlingService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelNodeService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\IModelService.cs" />
-    <Compile Include="ModelViewing\DataHandling\DataNode.cs" />
+    <Compile Include="ModelViewing\DataHandling\Dtos\DataNode.cs" />
     <Compile Include="ModelViewing\Nodes\NamespaceViewModel.cs" />
     <Compile Include="ModelViewing\Nodes\TypeView.xaml.cs">
       <DependentUpon>TypeView.xaml</DependentUpon>
@@ -365,7 +365,7 @@
       <DependentUpon>MemberNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\MemberNodeViewModel.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Core\NodeName.cs" />
+    <Compile Include="ModelViewing\DataHandling\Dtos\NodeName.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeComparer.cs" />
     <Compile Include="ModelViewing\Items\ItemsView.xaml.cs">
       <DependentUpon>ItemsView.xaml</DependentUpon>

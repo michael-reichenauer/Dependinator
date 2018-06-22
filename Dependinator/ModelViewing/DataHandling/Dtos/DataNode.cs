@@ -1,10 +1,9 @@
 using System;
 using System.Windows;
-using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 
 
-namespace Dependinator.ModelViewing.DataHandling
+namespace Dependinator.ModelViewing.DataHandling.Dtos
 {
 	internal class DataNode : Equatable<DataNode>, IDataItem
 	{
@@ -20,7 +19,8 @@ namespace Dependinator.ModelViewing.DataHandling
 		{
 		}
 
-		public DataNode(NodeId id,
+		public DataNode(
+			NodeId id,
 			NodeName name,
 			string parent,
 			NodeType nodeType,

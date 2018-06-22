@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.DataHandling;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
@@ -103,6 +104,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			node.Parent.View.ItemsCanvas.UpdateAndNotifyAll();
 			node.Root.View.ItemsCanvas.UpdateAll();
 		}
+
+
+		public void RemoveAll() => nodeService.RemoveAll();
 
 
 

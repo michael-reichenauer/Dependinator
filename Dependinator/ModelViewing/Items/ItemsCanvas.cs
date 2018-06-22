@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using Dependinator.ModelViewing.DataHandling;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.Nodes;
@@ -102,6 +104,14 @@ namespace Dependinator.ModelViewing.Items
 
 
 		public void RemoveItem(IItem item) => itemsSource.Remove(item);
+
+
+		public void RemoveAll()
+		{
+			itemsSource.RemoveAll();
+			canvasChildren.Clear();
+		}
+
 
 		public void UpdateItem(IItem item) => itemsSource.Update(item);
 

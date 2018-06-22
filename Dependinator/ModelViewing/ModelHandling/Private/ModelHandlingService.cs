@@ -9,6 +9,7 @@ using System.Windows.Threading;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelViewing.DataHandling;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.Open;
@@ -166,6 +167,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					File.Delete(dataFilePath);
 				}
 
+				modelNodeService.RemoveAll();
 				await LoadAsync();
 				return;
 			}
@@ -259,6 +261,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			dataService.SaveData(items, dataFilePath);
 			t.Log($"Saved {items.Count} items");
 		}
+
 
 
 		private async Task<R<int>> ShowModelAsync(Func<Operation, Task<R>> parseFunctionAsync)

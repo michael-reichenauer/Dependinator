@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.AssemblyParsing;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;

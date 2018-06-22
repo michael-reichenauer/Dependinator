@@ -1,8 +1,7 @@
-using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 
 
-namespace Dependinator.ModelViewing.DataHandling
+namespace Dependinator.ModelViewing.DataHandling.Dtos
 {
 	internal class DataLink : Equatable<DataLink>, IDataItem
 	{

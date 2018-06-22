@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Dependinator.ModelViewing.DataHandling;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
@@ -23,5 +24,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		void RemoveNode(Node node);
 
 		void QueueNode(DataNode dataNode);
+		void RemoveAll();
 	}
 }

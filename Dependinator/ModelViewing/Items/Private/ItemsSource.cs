@@ -56,6 +56,14 @@ namespace Dependinator.ModelViewing.Items.Private
 		}
 
 
+
+		public void RemoveAll()
+		{
+			List<IItem> allItems = viewItemsTree.ToList();
+			Remove(allItems);
+		}
+
+
 		private void Add(IEnumerable<IItem> items)
 		{
 			bool isQueryItemsChanged = false;

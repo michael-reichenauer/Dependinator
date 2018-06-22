@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Windows;
+using Dependinator.ModelViewing.DataHandling;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils.UI.Mvvm;
 

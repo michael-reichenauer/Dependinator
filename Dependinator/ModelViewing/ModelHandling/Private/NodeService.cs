@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.DataHandling;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.Nodes;
@@ -39,6 +40,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		public bool TryGetNode(NodeId nodeId, out Node node) => modelService.TryGetNode(nodeId, out node);
 
 		public void QueueNode(DataNode dataNode) => modelService.QueueNode(dataNode);
+		public void RemoveAll()
+		{
+			Root?.View.ItemsCanvas?.RemoveAll();
+
+			modelService.RemoveAll();
+		}
+
 
 		public IEnumerable<Node> AllNodes => modelService.AllNodes;
 

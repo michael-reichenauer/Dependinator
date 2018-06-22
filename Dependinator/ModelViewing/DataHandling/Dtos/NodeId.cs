@@ -4,7 +4,7 @@ using System.Text;
 using Dependinator.Utils;
 
 
-namespace Dependinator.ModelViewing.ModelHandling.Core
+namespace Dependinator.ModelViewing.DataHandling.Dtos
 {
 	internal class NodeId : Equatable<NodeId>
 	{

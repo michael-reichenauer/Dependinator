@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Mono.Cecil;
 using Mono.Collections.Generic;
