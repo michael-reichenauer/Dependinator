@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using Dependinator.Utils;
 using Mono.Cecil;
 
 
@@ -35,8 +34,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 
 		public static string GetModuleName(AssemblyDefinition assembly)
 		{
-			Log.Debug($"assembly: {assembly.FullName}");
-
+			// Log.Debug($"assembly: {assembly.FullName}");
 
 			return GetModuleNameImpl(assembly);
 		}
@@ -44,7 +42,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 
 		public static string GetModuleName(AssemblyNameReference reference)
 		{
-			Log.Debug($"reference assembly: {reference.FullName}");
+			// Log.Debug($"reference assembly: {reference.FullName}");
 
 			return GetModuleNameImpl(reference);
 		}
@@ -52,7 +50,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 
 		public static string GetTypeFullName(TypeReference type)
 		{
-			Log.Debug($"type: {type.FullName}");
+			// Log.Debug($"type: {type.FullName}");
 
 			return GetTypeFullNameImpl(type);
 		}
@@ -60,7 +58,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 
 		public static string GetTypeNamespaceFullName(TypeDefinition type)
 		{
-			Log.Debug($"typenamespace: {type.FullName}");
+			// Log.Debug($"typenamespace: {type.FullName}");
 
 			return GetTypeNamespaceFullNameImpl(type);
 		}
@@ -68,16 +66,18 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 
 		public static string GetMemberFullName(IMemberDefinition memberInfo)
 		{
-			Log.Debug($"Member: {memberInfo.FullName}");
+			string fullName = GetMemberFullNameImpl(memberInfo);
+			// Log.Debug($"Member: {memberInfo.FullName} => {fullName}");
 
-			return GetMemberFullNameImpl(memberInfo);
+			return fullName;
 		}
 
 
 		public static string GetMethodFullName(MethodReference methodInfo)
 		{
-			Log.Debug($"Method: {methodInfo.FullName}");
-			return GetMethodFullNameImpl(methodInfo);
+			string fullName = GetMethodFullNameImpl(methodInfo);
+			// Log.Debug($"Method: {methodInfo.FullName} => {fullName}");
+			return fullName;
 		}
 
 
@@ -89,14 +89,13 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 
 
 		private static string GetModuleNameImpl(AssemblyNameReference reference)
-		{ 
+		{
 			return GetAdjustedName(reference.Name);
 		}
 
 
 		private static string GetTypeFullNameImpl(TypeReference type)
 		{
-
 			if (type is TypeSpecification typeSpecification)
 			{
 				if (type is ArrayType && typeSpecification.ElementType is GenericParameter)
@@ -141,6 +140,11 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 
 		private static string GetMethodFullNameImpl(MethodReference methodInfo)
 		{
+			if (methodInfo is GenericInstanceMethod genericInstanceMethod)
+			{
+				return GetMethodFullNameImpl(genericInstanceMethod);
+			}
+
 			string typeName = GetTypeFullNameImpl(methodInfo.DeclaringType);
 			string methodName = GetMethodName(methodInfo);
 			string parameters = $"({GetParametersText(methodInfo)})";
@@ -158,6 +162,31 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			else
 			{
 				string genericParameters = $"`{methodInfo.GenericParameters.Count}";
+				return $"{typeName}.{methodName}{genericParameters}{parameters}";
+			}
+		}
+
+
+
+		private static string GetMethodFullNameImpl(GenericInstanceMethod methodInfo)
+		{
+			string typeName = GetTypeFullNameImpl(methodInfo.DeclaringType);
+			string methodName = GetMethodName(methodInfo);
+			string parameters = $"({GetParametersText(methodInfo)})";
+
+			if (methodName.StartsWithTxt("get_") || methodName.StartsWithTxt("set_"))
+			{
+				methodName = methodName.Substring(4);
+				parameters = "";
+			}
+
+			if (!methodInfo.GenericArguments.Any())
+			{
+				return $"{typeName}.{methodName}{parameters}";
+			}
+			else
+			{
+				string genericParameters = $"`{methodInfo.GenericArguments.Count}";
 				return $"{typeName}.{methodName}{genericParameters}{parameters}";
 			}
 		}
