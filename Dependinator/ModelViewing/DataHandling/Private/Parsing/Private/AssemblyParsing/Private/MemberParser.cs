@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.DataHandling.Dtos;
-using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 using Mono.Cecil;
 
@@ -13,24 +12,19 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 	{
 		private readonly LinkHandler linkHandler;
 		private readonly XmlDocParser xmlDocParser;
-		private readonly Decompiler decompiler;
-		private readonly string assemblyPath;
 		private readonly DataItemsCallback itemsCallback;
 		private readonly MethodParser methodParser;
 		private readonly Dictionary<NodeId, DataNode> sentNodes = new Dictionary<NodeId, DataNode>();
 
 
 		public MemberParser(
-			LinkHandler linkHandler, 
+			LinkHandler linkHandler,
 			XmlDocParser xmlDocParser,
-			Decompiler decompiler,
-			string assemblyPath,
 			DataItemsCallback itemsCallback)
 		{
 			this.linkHandler = linkHandler;
 			this.xmlDocParser = xmlDocParser;
-			this.decompiler = decompiler;
-			this.assemblyPath = assemblyPath;
+
 			this.itemsCallback = itemsCallback;
 			methodParser = new MethodParser(linkHandler);
 		}
@@ -99,10 +93,10 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 					? $"{NodeName.From(memberName).ParentName.FullName}.$private" : null;
 				string description = xmlDocParser.GetDescription(memberName);
 
-				Lazy<string> codeText = decompiler.LazyDecompile(memberInfo, assemblyPath);
+
 				NodeName nodeName = NodeName.From(memberName);
 				NodeId nodeId = new NodeId(nodeName);
-				DataNode memberNode = new DataNode(nodeId, nodeName, parent, NodeType.Member, description, codeText);
+				DataNode memberNode = new DataNode(nodeId, nodeName, parent, NodeType.Member, description);
 
 				if (!sentNodes.ContainsKey(memberNode.Id))
 				{

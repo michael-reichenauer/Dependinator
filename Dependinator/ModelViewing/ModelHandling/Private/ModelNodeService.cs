@@ -27,18 +27,22 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public void UpdateNode(DataNode dataNode, int stamp)
 		{
+			if (nodeService.TryGetNode(dataNode.Id, out Node node))
+			{
+				if (node.Stamp != stamp)
+				{
+					UpdateNode(node, dataNode, stamp);
+				}
+
+				return;
+			}
+
 			if (dataNode.IsReferenced)
 			{
 				nodeService.QueueNode(dataNode);
 				return;
 			}
-
-			if (nodeService.TryGetNode(dataNode.Id, out Node node))
-			{
-				UpdateNode(node, dataNode, stamp);
-				return;
-			}
-
+			
 			AddNodeToModel(dataNode, stamp);
 		}
 
@@ -147,7 +151,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				Stamp = stamp,
 				NodeType = dataNode.NodeType,
 				Description = dataNode.Description,
-				CodeText = dataNode.CodeText,
 			};
 
 			node.View.Bounds = dataNode.Bounds;
@@ -164,7 +167,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private static void UpdateData(Node node, DataNode dataNode)
 		{
 			node.Description = dataNode.Description;
-			node.CodeText = dataNode.CodeText;
 		}
 
 

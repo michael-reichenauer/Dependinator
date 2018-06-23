@@ -92,8 +92,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					node.Name, 
 					node.Parent, 
 					node.NodeType,
-					node.Description, 
-					node.CodeText);
+					node.Description);
 			}
 		}
 

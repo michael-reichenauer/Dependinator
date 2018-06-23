@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.Common;
 using Dependinator.Common.MessageDialogs;
+using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelViewing.CodeViewing;
 using Dependinator.ModelViewing.DataHandling;
 using Dependinator.ModelViewing.DataHandling.Dtos;
@@ -18,7 +19,9 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		private readonly IDependenciesService dependenciesService;
 		private readonly IModelService modelService;
 		private readonly Lazy<IModelNotifications> modelNotifications;
+		private readonly IDataDetailsService dataDetailsService;
 		private readonly IMessage message;
+		private readonly ModelMetadata metadata;
 		private readonly WindowOwner owner;
 
 
@@ -26,13 +29,17 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			IDependenciesService dependenciesService,
 			IModelService modelService,
 			Lazy<IModelNotifications> modelNotifications,
+			IDataDetailsService dataDetailsService,
 			IMessage message,
+			ModelMetadata metadata,
 			WindowOwner owner)
 		{
 			this.dependenciesService = dependenciesService;
 			this.modelService = modelService;
 			this.modelNotifications = modelNotifications;
+			this.dataDetailsService = dataDetailsService;
 			this.message = message;
+			this.metadata = metadata;
 			this.owner = owner;
 		}
 
@@ -41,11 +48,12 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		{
 			if (!TryGetNode(nodeName, out Node node))
 			{
-				message.ShowInfo($"The node no longer exists in the model:\n{nodeName.DisplayFullName}");
+				message.ShowInfo($"The node no longer exists in the model:\n{nodeName.DisplayLongName}");
 				return;
 			}
-			
-			CodeDialog codeDialog = new CodeDialog(owner, node.Name.DisplayFullName, node.CodeText);
+
+			var codeTask = dataDetailsService.GetCode(metadata.ModelFilePath, node.Name);
+			CodeDialog codeDialog = new CodeDialog(owner, message, node.Name.DisplayLongName, codeTask);
 			codeDialog.Show();
 		}
 
@@ -89,21 +97,21 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			if (!TryGetNode(viewModel.SourceNodeName, out Node sourceNode))
 			{
 				message.ShowInfo(
-					$"The source node no longer exists in the model:\n{viewModel.SourceNodeName.DisplayFullName}");
+					$"The source node no longer exists in the model:\n{viewModel.SourceNodeName.DisplayLongName}");
 				return;
 			}
 
 			if (!TryGetNode(viewModel.TargetNodeName, out Node targetNode))
 			{
 				message.ShowInfo(
-					$"The target node no longer exists in the model:\n{viewModel.TargetNodeName.DisplayFullName}");
+					$"The target node no longer exists in the model:\n{viewModel.TargetNodeName.DisplayLongName}");
 				return;
 			}
 
 			if (!TryGetNode(dependencyItem.NodeName, out Node itemNode))
 			{
 				message.ShowInfo(
-					$"The clicked node no longer exists in the model:\n{dependencyItem.NodeName.DisplayFullName}");
+					$"The clicked node no longer exists in the model:\n{dependencyItem.NodeName.DisplayLongName}");
 
 				return;
 			}
@@ -150,14 +158,14 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			if (!TryGetNode(viewModel.SourceNodeName, out Node sourceNode))
 			{
 				message.ShowInfo(
-					$"The source node no longer exists in the model:\n{viewModel.SourceNodeName.DisplayFullName}");
+					$"The source node no longer exists in the model:\n{viewModel.SourceNodeName.DisplayLongName}");
 				return;
 			}
 
 			if (!TryGetNode(viewModel.TargetNodeName, out Node targetNode))
 			{
 				message.ShowInfo(
-					$"The target node no longer exists in the model:\n{viewModel.TargetNodeName.DisplayFullName}");
+					$"The target node no longer exists in the model:\n{viewModel.TargetNodeName.DisplayLongName}");
 
 				return;
 			}
@@ -264,7 +272,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 
 		private static string ToNodeText(NodeName nodeName) =>
-			nodeName == NodeName.Root ? "all nodes" : nodeName.DisplayFullName;
+			nodeName == NodeName.Root ? "all nodes" : nodeName.DisplayLongName;
 
 
 		private static void SelectNode(Node node, IEnumerable<DependencyItemViewModel> items)

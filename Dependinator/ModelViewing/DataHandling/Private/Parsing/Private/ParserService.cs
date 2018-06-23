@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.AssemblyParsing;
 using Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.SolutionFileParsing;
 using Dependinator.Utils;
@@ -32,6 +33,21 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private
 			
 			t.Log($"Parsed {filePath}");
 			return R.Ok;
+		}
+
+
+		public async Task<R<string>> GetCodeAsync(string filePath, NodeName nodeName)
+		{
+			R<WorkParser> workItemParser = GetWorkParser(filePath, null);
+			if (workItemParser.IsFaulted)
+			{
+				return workItemParser.Error;
+			}
+
+			using (workItemParser.Value)
+			{
+				return await workItemParser.Value.GetCodeAsync(nodeName);
+			}
 		}
 
 

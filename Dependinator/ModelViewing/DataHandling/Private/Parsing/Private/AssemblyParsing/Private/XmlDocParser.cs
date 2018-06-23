@@ -23,6 +23,9 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 
 		public string GetDescription(string nodeName)
 		{
+			// Adjust for inner types using '/' as separators
+			nodeName = nodeName.Replace("/", ".");
+
 			if (descriptions.Value.TryGetValue(nodeName, out string description))
 			{
 				return description;

@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Reflection;
 using Dependinator.ModelViewing.DataHandling.Dtos;
-using Dependinator.ModelViewing.ModelHandling.Core;
 using Mono.Cecil;
 using Mono.Collections.Generic;
 
@@ -11,7 +10,6 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 {
 	internal class AssemblyModuleParser
 	{
-
 		private readonly string rootGroup;
 		private readonly LinkHandler linkHandler;
 		private readonly DataItemsCallback itemsCallback;
@@ -33,7 +31,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			assembly = assemblyDefinition;
 
 			string parent = rootGroup;
-			string moduleName = Name.GetAssemblyName(assembly);
+			string moduleName = Name.GetModuleName(assembly);
 
 			int index = moduleName.IndexOfTxt("*");
 			if (index > 0)
@@ -47,7 +45,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			string description = GetDescription();
 			NodeName nodeName = NodeName.From(moduleName);
 			NodeId nodeId = new NodeId(nodeName);
-			DataNode moduleNode = new DataNode(nodeId, nodeName, parent, NodeType.NameSpace, description, null);
+			DataNode moduleNode = new DataNode(nodeId, nodeName, parent, NodeType.NameSpace, description);
 			itemsCallback(moduleNode);
 		}
 
@@ -72,7 +70,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 
 		public void AddModuleReferences()
 		{
-			string moduleName = Name.GetAssemblyName(assembly);
+			string moduleName = Name.GetModuleName(assembly);
 			NodeName moduleNodeName = NodeName.From(moduleName);
 			NodeId moduleId = new NodeId(moduleNodeName);
 
@@ -84,7 +82,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				string description = "External references";
 				NodeName nodeName = NodeName.From("$References");
 				NodeId nodeId = new NodeId(nodeName);
-				DataNode referencesNode = new DataNode(nodeId, nodeName, null, NodeType.NameSpace, description, null);
+				DataNode referencesNode = new DataNode(nodeId, nodeName, null, NodeType.NameSpace, description);
 				itemsCallback(referencesNode);
 			}
 
@@ -96,7 +94,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				int index = referenceName.IndexOfTxt("*");
 				if (index > 0)
 				{
-					parent = $"References.{referenceName.Substring(0,index)}";
+					parent = $"References.{referenceName.Substring(0, index)}";
 				}
 
 				parent = $"${parent?.Replace(".", ".$")}";
@@ -104,7 +102,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				string description = "Assembly";
 				NodeName referenceNodeName = NodeName.From(referenceName);
 				NodeId referenceId = new NodeId(referenceNodeName);
-				DataNode referenceNode = new DataNode(referenceId, referenceNodeName, parent, NodeType.NameSpace, description, null);
+				DataNode referenceNode = new DataNode(referenceId, referenceNodeName, parent, NodeType.NameSpace, description);
 				itemsCallback(referenceNode);
 
 				linkHandler.AddLink(moduleId, referenceName, NodeType.NameSpace);

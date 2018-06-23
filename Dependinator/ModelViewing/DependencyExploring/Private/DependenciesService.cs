@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Dependinator.ModelViewing.DataHandling;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
@@ -64,7 +63,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 			foreach (Node node in mainNode.AncestorsAndSelf().Reverse())
 			{
-				DependencyItem subItem = new DependencyItem(node.Name, node.CodeText != null);
+				DependencyItem subItem = new DependencyItem(node.Name, node.HasCode);
 				current.AddChild(subItem);
 				current = subItem;
 			}
@@ -83,8 +82,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		{
 			Dictionary<NodeName, DependencyItem> items = new Dictionary<NodeName, DependencyItem>();
 
-			items[NodeName.Root] = new DependencyItem(
-				options.SourceNode.Root.Name, options.SourceNode.Root.CodeText != null);
+			items[NodeName.Root] = new DependencyItem(options.SourceNode.Root.Name, false);
 
 			foreach (Link link in links)
 			{
@@ -94,7 +92,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				{
 					DependencyItem parentItem = GetParentItem(items, node.Parent);
 
-					item = new DependencyItem(node.Name, node.CodeText != null);
+					item = new DependencyItem(node.Name, node.HasCode);
 					parentItem.AddChild(item);
 
 					items[node.Name] = item;
@@ -114,7 +112,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				return parentItem;
 			}
 
-			parentItem = new DependencyItem(parentNode.Name, parentNode.CodeText != null);
+			parentItem = new DependencyItem(parentNode.Name, parentNode.HasCode);
 
 			if (!parentNode.IsRoot)
 			{

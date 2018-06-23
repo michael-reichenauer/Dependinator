@@ -36,7 +36,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		public DependencyItem Item { get; }
 
 		public string Text => Item.NodeName == NodeName.Root && SubItems.Any()
-			? "all nodes" : Item.NodeName == NodeName.Root ? "<no dependencies>" : Item.NodeName.DisplayName;
+			? "all nodes" : Item.NodeName == NodeName.Root ? "<no dependencies>" : Item.NodeName.DisplayShortName;
 
 		public ObservableCollection<DependencyItemViewModel> SubItems { get; }
 		public bool IsShowCodeButton => IsShowButtons && Item.HasCode;
@@ -109,7 +109,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		public void UpdateToolTip()
 		{
 			string filter = isSourceItem ? "to target" : "from source";
-			ToolTip = $"{Item.NodeName.DisplayFullName}\nClick to filter dependencies {filter}";
+			ToolTip = $"{Item.NodeName.DisplayLongName}\nClick to filter dependencies {filter}";
 		}
 	}
 }

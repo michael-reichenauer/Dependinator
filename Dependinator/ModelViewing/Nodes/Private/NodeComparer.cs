@@ -21,7 +21,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 				return 0;
 			}
 
-			if (parent.Name.DisplayName == "Dependinator")
+			if (parent.Name.DisplayShortName == "Dependinator")
 			{
 				
 			}

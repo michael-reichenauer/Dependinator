@@ -13,9 +13,8 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 			string parent,
 			NodeType nodeType,
 			string description,
-			Lazy<string> codeText,
 			bool isReferenced = false)
-			: this(id, name, parent, nodeType, description, codeText, RectEx.Zero, 0, null, null, isReferenced)
+			: this(id, name, parent, nodeType, description, RectEx.Zero, 0, null, null, isReferenced)
 		{
 		}
 
@@ -25,7 +24,6 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 			string parent,
 			NodeType nodeType,
 			string description,
-			Lazy<string> codeText,
 			Rect bounds,
 			double itemsScaleFactor,
 			string color,
@@ -38,7 +36,6 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 			NodeType = nodeType;
 			IsReferenced = isReferenced;
 			Description = description;
-			CodeText = codeText;
 			Bounds = bounds;
 			ItemsScaleFactor = itemsScaleFactor;
 			Color = color;
@@ -54,7 +51,6 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 		public NodeType NodeType { get; }
 		public bool IsReferenced { get; }
 		public string Description { get; }
-		public Lazy<string> CodeText { get; }
 		public Rect Bounds { get; }
 		public double ItemsScaleFactor { get; }
 		public string Color { get; }

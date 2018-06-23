@@ -1,6 +1,7 @@
-﻿using System;
-using System.Collections.Concurrent;
-using Dependinator.Utils;
+﻿using System.Collections.Concurrent;
+using System.Linq;
+using Dependinator.ModelViewing.DataHandling.Dtos;
+using Dependinator.Utils.ErrorHandling;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
 using Mono.Cecil;
@@ -8,107 +9,114 @@ using Mono.Cecil;
 
 namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.AssemblyParsing.Private
 {
-	public class Decompiler
+	internal class Decompiler
 	{
 		private readonly ConcurrentDictionary<ModuleDefinition, CSharpDecompiler> decompilers =
 			new ConcurrentDictionary<ModuleDefinition, CSharpDecompiler>();
 
 
-		public Lazy<string> LazyDecompile(TypeDefinition type, string assemblyPath)
+		public R<string> GetCodeAsync(ModuleDefinition moduleDefinition, NodeName nodeName)
 		{
-			return new Lazy<string>(() => GetDecompiledText(type, assemblyPath));
-		}
+			string fullName = nodeName.FullName;
 
-		public Lazy<string> LazyDecompile(IMemberDefinition member, string assemblyPath)
-		{
-			return new Lazy<string>(() => GetDecompiledText(member, assemblyPath));
-		}
+			// The type starts after the module name, which is after the first '.'
+			int typeIndex = fullName.IndexOf(".");
 
-
-		public Lazy<string> LazyDecompile(string name)
-		{
-			return new Lazy<string>(() => GetDecompiledText(name));
-		}
-
-
-
-		private string GetDecompiledText(string name)
-		{
-			try
+			if (typeIndex > -1)
 			{
-				//CSharpDecompiler decompiler = GetDecompiler(type.Module);
+				string typeName = fullName.Substring(typeIndex + 1);
 
-				//string text = decompiler.DecompileTypesAsString(new[] { type }).Replace("\t", "  ");
+				TypeDefinition typeDefinition = moduleDefinition.GetType(typeName);
 
-				//return text;
-				return null;
-			}
-			catch (Exception e)
-			{
-				Log.Error($"Failed to decompile {name}, {e.Message}");
-				return $"Error: Failed to decompile {name},\n{e.Message}";
-			}
-		}
-
-
-		private string GetDecompiledText(TypeDefinition type, string assemblyPath)
-		{
-			try
-			{
-				ParsingAssemblyResolver resolver = new ParsingAssemblyResolver();
+				if (typeDefinition != null)
 				{
-					ReaderParameters parameters = new ReaderParameters
+					// Found the specified type
+					return GetDecompiledText(moduleDefinition, typeDefinition);
+				}
+
+				// Was no type, so it is a member of a type.
+				int memberIndex = typeName.LastIndexOf('.');
+				if (memberIndex > -1)
+				{
+					// Getting the type name after removing the member name part
+					typeName = typeName.Substring(0, memberIndex);
+
+					typeDefinition = moduleDefinition.GetType(typeName);
+
+					if (typeDefinition != null
+							&& TryGetMemberCode(moduleDefinition, typeDefinition, fullName, out string code))
 					{
-						AssemblyResolver = resolver,
-					};
-
-					using (AssemblyDefinition assembly = AssemblyDefinition.ReadAssembly(assemblyPath, parameters))
-					{
-						ModuleDefinition moduleDefinition = assembly.MainModule;
-
-						CSharpDecompiler decompiler = new CSharpDecompiler(moduleDefinition, new DecompilerSettings(LanguageVersion.Latest));
-
-						string text = decompiler.DecompileTypesAsString(new[] {type}).Replace("\t", "  ");
-
-						return text;
+						return code;
 					}
 				}
 			}
-			catch (Exception e)
-			{
-				Log.Error($"Failed to decompile {type}, {e.Message}");
-				return $"Error: Failed to decompile {type},\n{e.Message}";
-			}
+
+			return Error.From($"Failed to locate code for:\n{nodeName}");
 		}
 
 
-		private string GetDecompiledText(IMemberDefinition member, string assemblyPath)
+		private bool TryGetMemberCode(
+			ModuleDefinition moduleDefinition,
+			TypeDefinition typeDefinition,
+			string fullName,
+			out string code)
 		{
-			try
+			if (TryGetMethod(typeDefinition, fullName, out MethodDefinition method))
 			{
-				ParsingAssemblyResolver resolver = new ParsingAssemblyResolver();
-				{
-					ReaderParameters parameters = new ReaderParameters
-					{
-						AssemblyResolver = resolver,
-					};
-
-					using (AssemblyDefinition assembly = AssemblyDefinition.ReadAssembly(assemblyPath, parameters))
-					{
-						ModuleDefinition moduleDefinition = assembly.MainModule;
-						CSharpDecompiler decompiler = GetDecompiler(moduleDefinition);
-
-						string text = decompiler.DecompileAsString(member).Replace("\t", "  ");
-
-						return text;
-					}
-				}
+				code = GetDecompiledText(moduleDefinition, method);
+				return true;
 			}
-			catch (Exception e)
+			else if (TryGetProperty(typeDefinition, fullName, out PropertyDefinition property))
 			{
-				Log.Error($"Failed to decompile {member}, {e.Message}");
-				return $"Error: Failed to decompile {member},\n{e.Message}";
+				code = GetDecompiledText(moduleDefinition, property);
+				return true;
 			}
+			else if (TryGetField(typeDefinition, fullName, out FieldDefinition field))
+			{
+				code = GetDecompiledText(moduleDefinition, field);
+				return true;
+			}
+
+			code = null;
+			return false;
+		}
+
+
+		private static bool TryGetMethod(
+			TypeDefinition type, string fullName, out MethodDefinition method)
+		{
+			method = type.Methods.FirstOrDefault(m => Name.GetMethodFullName(m) == fullName);
+			return method != null;
+		}
+
+		private static bool TryGetProperty(
+			TypeDefinition type, string fullName, out PropertyDefinition property)
+		{
+			property = type.Properties.FirstOrDefault(m => Name.GetMemberFullName(m) == fullName);
+			return property != null;
+		}
+
+		private static bool TryGetField(
+			TypeDefinition type, string fullName, out FieldDefinition field)
+		{
+			field = type.Fields.FirstOrDefault(m => Name.GetMemberFullName(m) == fullName);
+			return field != null;
+		}
+
+
+		public string GetDecompiledText(ModuleDefinition moduleDefinition, TypeDefinition type)
+		{
+			CSharpDecompiler decompiler = GetDecompiler(moduleDefinition);
+
+			return decompiler.DecompileTypesAsString(new[] { type }).Replace("\t", "  ");
+		}
+
+
+		public string GetDecompiledText(ModuleDefinition moduleDefinition, IMemberDefinition member)
+		{
+			CSharpDecompiler decompiler = GetDecompiler(moduleDefinition);
+
+			return decompiler.DecompileAsString(member).Replace("\t", "  ");
 		}
 
 

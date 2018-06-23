@@ -8,6 +8,7 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 	internal class NodeName : Equatable<NodeName>
 	{
 		public static NodeName Root = From("");
+		private static readonly char[] PartsSeparators = "./".ToCharArray();
 
 		private readonly Lazy<NodeName> parentName;
 		private readonly Lazy<DisplayParts> displayParts;
@@ -28,11 +29,9 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 		public NodeName ParentName => parentName.Value;
 
 
-		public string DisplayName => displayParts.Value.Name;
+		public string DisplayShortName => displayParts.Value.ShortName;
 
-		public string DisplayFullName => displayParts.Value.FullName;
-
-		public string DisplayFullNoParametersName => displayParts.Value.FullNameNoParameters;
+		public string DisplayLongName => displayParts.Value.LongName;
 
 
 		public static NodeName From(string fullName)
@@ -49,7 +48,7 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 		private NodeName GetParentName()
 		{
 			// Split full name in name and parent name,
-			int index = FullName.LastIndexOf('.');
+			int index = FullName.LastIndexOfAny(PartsSeparators);
 
 			return index > -1 ? From(FullName.Substring(0, index)) : Root;
 		}
@@ -59,8 +58,8 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 		{
 			string name = null;
 
-			string[] parts = FullName.Split(".".ToCharArray());
-			
+			string[] parts = FullName.Split(PartsSeparators);
+
 			string namePart = parts[parts.Length - 1];
 			int index = namePart.IndexOf('(');
 			if (index > -1)
@@ -77,37 +76,22 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 
 			var subParts = FullName.StartsWith("$") ? parts : parts.Skip(1);
 			string fullName = string.Join(".", subParts
-				.Where(part =>  !part.StartsWithTxt("?")));
-			string fullNameNoParameters = fullName;
+				.Where(part => !part.StartsWithTxt("?")));
 
 			if (string.IsNullOrEmpty(fullName))
 			{
 				fullName = ToNiceText(FullName);
-				fullNameNoParameters = fullName;
 			}
 			else
 			{
 				fullName = ToNiceText(fullName);
 				fullName = ToNiceParameters(fullName);
-				fullNameNoParameters = ToNoParameters(fullName);
 			}
-			
-			return new DisplayParts(name, fullName, fullNameNoParameters);
+
+			return new DisplayParts { ShortName = name, LongName = fullName };
 		}
 
 
-		private string ToNoParameters(string fullName)
-		{
-			int index1 = fullName.IndexOf('(');
-			int index2 = fullName.IndexOf(')');
-
-			if (index1 > -1 && index2 > index1)
-			{
-				fullName = $"{fullName.Substring(0, index1)}()";
-			}
-
-			return fullName;
-		}
 
 
 		private static string ToNiceParameters(string fullName)
@@ -131,13 +115,14 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 		}
 
 
-		public static string ToNiceText(string name)
+		private static string ToNiceText(string name)
 		{
 			return name.Replace("*", ".")
 				.Replace("#", ".")
 				.Replace("?", "")
 				.Replace("$", "")
 				.Replace("%", "")
+				.Replace("/", ".")
 				.Replace("`1", "<T>")
 				.Replace("`2", "<T,T>")
 				.Replace("`3", "<T,T,T>")
@@ -150,20 +135,8 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 
 		private class DisplayParts
 		{
-			public string Name { get; }
-			public string FullName { get; }
-			public string FullNameNoParameters { get; }
-
-
-			public DisplayParts(
-				string name, 
-				string fullName,
-				string fullNameNoParameters)
-			{
-				Name = name;
-				FullName = fullName;
-				FullNameNoParameters = fullNameNoParameters;
-			}
+			public string ShortName { get; set; }
+			public string LongName { get; set; }
 		}
 	}
 }

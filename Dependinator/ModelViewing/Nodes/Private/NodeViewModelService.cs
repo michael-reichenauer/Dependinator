@@ -6,6 +6,7 @@ using Dependinator.Common;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.CodeViewing;
 using Dependinator.ModelViewing.DependencyExploring;
+using Dependinator.ModelViewing.DependencyExploring.Private;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private;
@@ -21,6 +22,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private readonly IItemSelectionService itemSelectionService;
 		private readonly INodeLayoutService nodeLayoutService;
 		private readonly IDependencyExplorerService dependencyExplorerService;
+		private readonly IDependencyWindowService dependencyWindowService;
 		private readonly WindowOwner owner;
 
 
@@ -32,6 +34,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			IItemSelectionService itemSelectionService,
 			INodeLayoutService nodeLayoutService,
 			IDependencyExplorerService dependencyExplorerService,
+			IDependencyWindowService dependencyWindowService,
 			WindowOwner owner)
 		{
 			this.modelNodeService = modelNodeService;
@@ -40,6 +43,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			this.itemSelectionService = itemSelectionService;
 			this.nodeLayoutService = nodeLayoutService;
 			this.dependencyExplorerService = dependencyExplorerService;
+			this.dependencyWindowService = dependencyWindowService;
 			this.owner = owner;
 		}
 
@@ -62,7 +66,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		{
 			return node.View.Color != null
 				? Converter.BrushFromHex(node.View.Color)
-				: GetRandomRectangleBrush(node.Name.DisplayName);
+				: GetRandomRectangleBrush(node.Name.DisplayShortName);
 		}
 
 
@@ -130,11 +134,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			dependencyExplorerService.ShowWindow(nodeViewModel.Node);
 
 
-		public void ShowCode(Node node)
-		{
-			CodeDialog codeDialog = new CodeDialog(owner, node.Name.DisplayFullName, node.CodeText);
-			codeDialog.Show();
-		}
+		public void ShowCode(Node node) => dependencyWindowService.ShowCode(node.Name);
 
 
 		public void RearrangeLayout(NodeViewModel nodeViewModel) =>

@@ -38,7 +38,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				node.Parent.Name.FullName,
 				node.NodeType,
 				node.Description,
-				null,
 				node.View.ViewModel?.ItemBounds ?? node.View.Bounds,
 				node.View.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.View.ScaleFactor,
 				node.View.ViewModel?.Color ?? node.View.Color,

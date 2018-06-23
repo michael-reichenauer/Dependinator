@@ -62,14 +62,14 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public bool IsShowDescription => (!CanShowChildren || !Node.Children.Any());
 		public bool IsShowToolTip => true;
-		public bool HasCode => Node.CodeText != null;
+		public bool HasCode => Node.NodeType == NodeType.Type || Node.NodeType == NodeType.Member;
 		public Command ShowCodeCommand => Command(() => ShowCode());
 
 
 		public void ShowCode() => nodeViewModelService.ShowCode(Node);
 
 
-		public string Name => Node.Name.DisplayName;
+		public string Name => Node.Name.DisplayShortName;
 
 		private NodeControlViewModel view2Model;
 
@@ -91,7 +91,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public int DescriptionFontSize => ((int)(10 * ItemScale)).MM(9, 11);
 		public string Description => Node.Description;
-		public bool IsShowCodeIcon => Node.CodeText != null && ItemScale > 1.3;
+		public bool IsShowCodeIcon => HasCode && ItemScale > 1.3;
 
 
 		public void ShowDependencies() => nodeViewModelService.ShowReferences(this);
@@ -129,7 +129,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		public void UpdateToolTip() => ToolTip =
-			$"{Node.Name.DisplayFullName}" +
+			$"{Node.Name.DisplayLongName}" +
 			(string.IsNullOrWhiteSpace(Node.Description) ? "" : $"\n{Node.Description}") +
 			$"{DebugToolTip}";
 
@@ -187,7 +187,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public void MouseEnterTitle()
 		{
-			delayDispatcher.Delay(MouseEnterDelay, _ => { IsShowCodeButton = Node.CodeText != null; });
+			delayDispatcher.Delay(MouseEnterDelay, _ => { IsShowCodeButton = HasCode; });
 		}
 
 
@@ -206,19 +206,19 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		private string ItemsToolTip => !BuildConfig.IsDebug ? "" :
-			"\n" +
+			$"\n " +
 			$"Rect: {ItemBounds.TS()}\n" +
 			$"Scale {ItemScale.TS()}, ChildrenScale: {Node.View.ItemsCanvas?.Scale.TS()}\n" +
-			$"ScaleFactor: {Node.View.ScaleFactor}, {Node.View.ViewModel.ItemsViewModel.ItemsCanvas.ScaleFactor}\n" +
+			$"ScaleFactor: {Node.View.ScaleFactor}, {Node.View.ViewModel.ItemsViewModel?.ItemsCanvas?.ScaleFactor}\n" +
 			//$"C Point {Node.ItemsCanvas.CanvasPointToScreenPoint(new Point(0, 0)).TS()}\n" +
 			//$"R Point {Node.ItemsCanvas.CanvasPointToScreenPoint2(new Point(0, 0)).TS()}\n" +
 			//$"M Point {Mouse.GetPosition(Node.Root.ItemsCanvas.ZoomableCanvas).TS()}\n" +
-			$"Root Scale {Node.Root.View.ItemsCanvas.Scale}\n" +
+			$"Root Scale {Node.Root.View.ItemsCanvas?.Scale}\n" +
 			$"Level {Node.Ancestors().Count()}\n" +
 			$"Items: {Node.View.ItemsCanvas?.ShownChildItemsCount()} ({Node.View.ItemsCanvas?.ChildItemsCount()})\n" +
 			$"ShownDescendantsItems {Node.View.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.View.ItemsCanvas?.DescendantsItemsCount()})\n" +
-			$"ParentItems {Node.Parent.View.ItemsCanvas.ShownChildItemsCount()} ({Node.Parent.View.ItemsCanvas.ChildItemsCount()})\n" +
-			$"RootShownDescendantsItems {Node.Root.View.ItemsCanvas.ShownDescendantsItemsCount()} ({Node.Root.View.ItemsCanvas.DescendantsItemsCount()})\n" +
+			$"ParentItems {Node.Parent.View.ItemsCanvas?.ShownChildItemsCount()} ({Node.Parent.View.ItemsCanvas?.ChildItemsCount()})\n" +
+			$"RootShownDescendantsItems {Node.Root.View.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.Root.View.ItemsCanvas?.DescendantsItemsCount()})\n" +
 			$"Nodes: {NodesCount}, Namespaces: {NamespacesCount}, Types: {TypesCount}, Members: {MembersCount}\n" +
 			$"Links: {LinksCount}, Lines: {LinesCount}";
 

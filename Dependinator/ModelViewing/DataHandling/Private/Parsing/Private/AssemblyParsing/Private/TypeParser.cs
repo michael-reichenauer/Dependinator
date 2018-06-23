@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.DataHandling.Dtos;
-using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 using Mono.Cecil;
 
@@ -13,28 +12,22 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 	{
 		private readonly LinkHandler linkHandler;
 		private readonly XmlDocParser xmlDockParser;
-		private readonly Decompiler decompiler;
-		private readonly string assemblyPath;
 		private readonly DataItemsCallback itemsCallback;
 
-	
 
 		public TypeParser(
-			LinkHandler linkHandler, 
+			LinkHandler linkHandler,
 			XmlDocParser xmlDockParser,
-			Decompiler decompiler,
-			string assemblyPath,
 			DataItemsCallback itemsCallback)
 		{
 			this.linkHandler = linkHandler;
 			this.xmlDockParser = xmlDockParser;
-			this.decompiler = decompiler;
-			this.assemblyPath = assemblyPath;
+
 			this.itemsCallback = itemsCallback;
 		}
 
 
-		public IEnumerable<TypeInfo> AddType(TypeDefinition type)
+		public IEnumerable<TypeInfo> AddType(AssemblyDefinition assembly, TypeDefinition type)
 		{
 			bool isCompilerGenerated = Name.IsCompilerGenerated(type.Name);
 			bool isAsyncStateType = false;
@@ -56,26 +49,20 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			}
 			else
 			{
-				if (string.IsNullOrEmpty(type.Namespace))
-				{
-
-				}
-
 				string name = Name.GetTypeFullName(type);
 				bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
 				string parent = isPrivate ? $"{NodeName.From(name).ParentName.FullName}.$private" : null;
 				string description = xmlDockParser.GetDescription(name);
-				
+
 				if (IsNameSpaceDocType(type, description))
 				{
 					// Type was a namespace doc type, extract it and move to next type
 					yield break;
 				}
 
-				Lazy<string> codeText = decompiler.LazyDecompile(type, assemblyPath);
 				NodeName nodeName = NodeName.From(name);
 				NodeId nodeId = new NodeId(nodeName);
-				typeNode = new DataNode(nodeId, nodeName, parent, NodeType.Type, description, codeText);
+				typeNode = new DataNode(nodeId, nodeName, parent, NodeType.Type, description);
 				itemsCallback(typeNode);
 			}
 
@@ -85,7 +72,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			foreach (var nestedType in type.NestedTypes)
 			{
 				// Adding a type could result in multiple types
-				foreach (var types in AddType(nestedType))
+				foreach (var types in AddType(assembly, nestedType))
 				{
 					yield return types;
 				}
@@ -103,7 +90,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 					string name = Name.GetTypeNamespaceFullName(type);
 					NodeName nodeName = NodeName.From(name);
 					NodeId nodeId = new NodeId(nodeName);
-					DataNode node = new DataNode(nodeId, nodeName, null, NodeType.NameSpace, description, null);
+					DataNode node = new DataNode(nodeId, nodeName, null, NodeType.NameSpace, description);
 					itemsCallback(node);
 				}
 

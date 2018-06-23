@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Dependinator.Utils;
 using Mono.Cecil;
 
 
@@ -32,16 +33,70 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
-		public static string GetAssemblyName(AssemblyDefinition assembly) => 
-			GetAdjustedName(assembly.Name.Name);
+		public static string GetModuleName(AssemblyDefinition assembly)
+		{
+			Log.Debug($"assembly: {assembly.FullName}");
 
 
-		public static string GetModuleName(AssemblyNameReference reference) => 
-			GetAdjustedName(reference.Name);
+			return GetModuleNameImpl(assembly);
+		}
+
+
+		public static string GetModuleName(AssemblyNameReference reference)
+		{
+			Log.Debug($"reference assembly: {reference.FullName}");
+
+			return GetModuleNameImpl(reference);
+		}
 
 
 		public static string GetTypeFullName(TypeReference type)
 		{
+			Log.Debug($"type: {type.FullName}");
+
+			return GetTypeFullNameImpl(type);
+		}
+
+
+		public static string GetTypeNamespaceFullName(TypeDefinition type)
+		{
+			Log.Debug($"typenamespace: {type.FullName}");
+
+			return GetTypeNamespaceFullNameImpl(type);
+		}
+
+
+		public static string GetMemberFullName(IMemberDefinition memberInfo)
+		{
+			Log.Debug($"Member: {memberInfo.FullName}");
+
+			return GetMemberFullNameImpl(memberInfo);
+		}
+
+
+		public static string GetMethodFullName(MethodReference methodInfo)
+		{
+			Log.Debug($"Method: {methodInfo.FullName}");
+			return GetMethodFullNameImpl(methodInfo);
+		}
+
+
+
+		private static string GetModuleNameImpl(AssemblyDefinition assembly)
+		{
+			return GetAdjustedName(assembly.Name.Name);
+		}
+
+
+		private static string GetModuleNameImpl(AssemblyNameReference reference)
+		{ 
+			return GetAdjustedName(reference.Name);
+		}
+
+
+		private static string GetTypeFullNameImpl(TypeReference type)
+		{
+
 			if (type is TypeSpecification typeSpecification)
 			{
 				if (type is ArrayType && typeSpecification.ElementType is GenericParameter)
@@ -60,7 +115,8 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			return GetTypeName(type);
 		}
 
-		public static string GetTypeNamespaceFullName(TypeDefinition type)
+
+		private static string GetTypeNamespaceFullNameImpl(TypeDefinition type)
 		{
 			string module = GetModuleName(type);
 			string nameSpace = type.Namespace;
@@ -68,14 +124,14 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
-		public static string GetMemberFullName(IMemberDefinition memberInfo)
+		private static string GetMemberFullNameImpl(IMemberDefinition memberInfo)
 		{
 			if (memberInfo is MethodReference methodReference)
 			{
-				return GetMethodFullName(methodReference);
+				return GetMethodFullNameImpl(methodReference);
 			}
 
-			string typeName = GetTypeFullName(memberInfo.DeclaringType);
+			string typeName = GetTypeFullNameImpl(memberInfo.DeclaringType);
 			string memberName = memberInfo.Name;
 
 			string memberFullName = $"{typeName}.{memberName}";
@@ -83,9 +139,9 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
-		public static string GetMethodFullName(MethodReference methodInfo)
+		private static string GetMethodFullNameImpl(MethodReference methodInfo)
 		{
-			string typeName = GetTypeFullName(methodInfo.DeclaringType);
+			string typeName = GetTypeFullNameImpl(methodInfo.DeclaringType);
 			string methodName = GetMethodName(methodInfo);
 			string parameters = $"({GetParametersText(methodInfo)})";
 
@@ -107,6 +163,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
+
 		private static string GetMethodName(MethodReference methodInfo)
 		{
 			string methodName = methodInfo.Name;
@@ -125,8 +182,8 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		private static string GetTypeName(TypeReference typeInfo)
 		{
 			string name = typeInfo.FullName;
-			string fixedName = name.Replace("/", "."); // Nested types
-			fixedName = fixedName.Replace("&", "");    // Reference parameter types
+			//string fixedName = name.Replace("/", "."); // Nested types
+			string fixedName = name.Replace("&", "");    // Reference parameter types
 
 			string module = GetModuleName(typeInfo);
 			string typeFullName = $"{module}.{fixedName}";
@@ -147,7 +204,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 
 		private static string GetParameterTypeName(ParameterDefinition p)
 		{
-			string typeName = GetTypeFullName(p.ParameterType);
+			string typeName = GetTypeFullNameImpl(p.ParameterType);
 
 			int index = typeName.IndexOf('.');
 			if (index > -1)
@@ -164,7 +221,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			if (typeInfo.Scope is ModuleDefinition moduleDefinition)
 			{
 				// A defined type
-				return GetAssemblyName(moduleDefinition.Assembly);
+				return GetModuleNameImpl(moduleDefinition.Assembly);
 			}
 
 			// A referenced type

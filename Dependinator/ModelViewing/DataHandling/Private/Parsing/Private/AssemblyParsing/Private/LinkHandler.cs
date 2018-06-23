@@ -75,7 +75,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				NodeName targetNodeName = NodeName.From(targetName);
 				NodeId targetId = new NodeId(targetNodeName);
 				
-				targetNode = new DataNode(targetId, targetNodeName, null, targetType, null, null, true);
+				targetNode = new DataNode(targetId, targetNodeName, null, targetType, null, true);
 				sentTargetNodes[targetName] = targetNode;
 			}
 

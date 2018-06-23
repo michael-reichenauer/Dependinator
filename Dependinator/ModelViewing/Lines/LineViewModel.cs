@@ -77,7 +77,7 @@ namespace Dependinator.ModelViewing.Lines
 
 
 		public void UpdateToolTip() =>
-			ToolTip = $"{Line.Source.Name.DisplayFullName} -> {Line.Target.Name.DisplayFullName}\n{Line.LinkCount} links";
+			ToolTip = $"{Line.Source.Name.DisplayLongName} -> {Line.Target.Name.DisplayLongName}\n{Line.LinkCount} links";
 
 
 

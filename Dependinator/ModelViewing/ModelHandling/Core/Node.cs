@@ -29,7 +29,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		public NodeName Name { get; }
 		public NodeType NodeType { get; set; }
 		public string Description { get; set; }
-		public Lazy<string> CodeText { get; set; }
+		//public Lazy<string> CodeText { get; set; }
 
 		public Node Root { get; private set; }
 		public Node Parent { get; private set; }
@@ -45,6 +45,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		public bool IsRoot => Id == NodeId.Root;
 
 		public NodeViewData View { get; private set; }
+		public bool HasCode => NodeType == NodeType.Type || NodeType == NodeType.Member;
+
 
 		public void AddChild(Node child)
 		{
