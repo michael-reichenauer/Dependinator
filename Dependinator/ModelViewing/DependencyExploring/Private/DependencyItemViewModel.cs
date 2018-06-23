@@ -2,9 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using Dependinator.ModelViewing.DataHandling;
 using Dependinator.ModelViewing.DataHandling.Dtos;
-using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
 

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using Dependinator.ModelViewing.DataHandling;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
@@ -76,7 +75,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			return queuedNodes
 				.Where(pair => pair.Value.DataNode != null)
-				.Select(pair =>pair.Value.DataNode)
+				.Select(pair => pair.Value.DataNode)
 				.ToList();
 		}
 
@@ -84,13 +83,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		public void QueueNode(DataNode node)
 		{
 			QueuedNode queuedNode = GetQueuedNode(node.Id);
-			
+
 			if (queuedNode.DataNode == null)
 			{
 				queuedNode.DataNode = new DataNode(
-					node.Id, 
-					node.Name, 
-					node.Parent, 
+					node.Id,
+					node.Name,
+					node.Parent,
 					node.NodeType,
 					node.Description);
 			}
