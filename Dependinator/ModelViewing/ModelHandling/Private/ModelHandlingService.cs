@@ -272,7 +272,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			Task showTask = Task.Run(() => ShowModel(operation));
 
-
 			Task<R> parseTask = parseFunctionAsync(operation);
 
 			Task completeTask = parseTask.ContinueWith(_ => operation.Queue.CompleteAdding());
@@ -317,7 +316,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				});
 			}
 
-
 			BlockingCollection<IDataItem> queue = new BlockingCollection<IDataItem>();
 
 			Application.Current.Dispatcher.InvokeBackground(() =>
@@ -326,6 +324,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				allQueuedNodes.ForEach(node => queue.Add(node));
 				queue.CompleteAdding();
 			});
+
 
 			while (queue.TryTake(out IDataItem item, -1))
 			{

@@ -36,6 +36,11 @@ namespace Dependinator.Utils.Serialization
 			}
 		}
 
+		public static void Serialize(StreamWriter stream, object dataModel)
+		{
+			Serializer.Serialize(stream, dataModel);
+		}
+
 		public static T Deserialize<T>(string path)
 		{
 			using (StreamReader stream = new StreamReader(path))
