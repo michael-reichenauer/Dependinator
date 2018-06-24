@@ -10,10 +10,17 @@ namespace Dependinator.Utils.UI
 		private static Point? lastMousePoint;
 
 		public static void OnLeftButtonMove(
-			UIElement element, 
-			MouseEventArgs e, 
+			UIElement element,
+			MouseEventArgs e,
 			Action<UIElement, Vector, Point, Point> moveAction)
 		{
+			PresentationSource presentationSource = PresentationSource.FromVisual(element);
+			if (presentationSource == null)
+			{
+				// No longer visible
+				return;
+			}
+
 			Point viewPosition = e.GetPosition(element);
 			viewPosition = element.PointToScreen(viewPosition);
 

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
-using Dependinator.Common;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Lines;
 using Dependinator.ModelViewing.Lines.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
@@ -30,18 +30,16 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 
 
-		public void UpdateLine(ModelLine modelLine, int stamp)
+		public void UpdateLine(DataLine dataLine, int stamp)
 		{
 			try
 			{
-				Node source = modelService.GetNode(NodeName.From(modelLine.Source));
+				Node source = modelService.GetNode(dataLine.SourceId);
 
-				if (!TryGetTarget(modelLine, out Node target))
+				if (!TryGetTarget(dataLine, out Node target))
 				{
 					return;
 				}
-
-				//Node target = model.Node(NodeName.From(modelLine.Target));
 
 				if (TryGetLine(source, target, out Line line))
 				{
@@ -50,21 +48,64 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					return;
 				}
 
-				AddLine(source, target, modelLine.LinkCount, modelLine.Points);
+				AddLine(source, target, dataLine.LinkCount, dataLine.Points);
 			}
 			catch (Exception e)
 			{
-				Log.Exception(e, $"Failed to update link {modelLine}");
+				Log.Exception(e, $"Failed to update link {dataLine}");
 				throw;
 			}
 		}
 
 
+
+		public void UpdateLines(Node node)
+		{
+			node.Root.Descendents().SelectMany(n => n.SourceLines).ForEach(line => line.LinkCount = 0);
+
+			node.Root.Descendents().SelectMany(n => n.SourceLinks).ForEach(link => ShowLinkIfNeeded(link));
+
+			node.Root.Descendents().SelectMany(n => n.SourceLines).ToList().ForEach(line => RemoveLineIfNoLinks(line));
+		}
+
+
+		private void RemoveLineIfNoLinks(Line line)
+		{
+			if (line.LinkCount <= 0)
+			{
+				RemoveLine(line);
+			}
+		}
+
+
+		private void ShowLinkIfNeeded(Link link)
+		{
+			if (!link.Source.View.IsHidden && !link.Target.View.IsHidden)
+			{
+				AddLinkToLines(link);
+			}
+		}
+
+		private void AddLinkToLines(Link link)
+		{
+			if (!link.Source.View.IsHidden && !link.Target.View.IsHidden)
+			{
+				AddLinkLines(link);
+			}
+		}
+
+
+
+
+
+		public IEnumerable<LinkSegment> GetLinkSegments(Link link) => 
+			linkSegmentService.GetLinkSegments(link);
+
+
 		public void AddLinkLines(Link link)
 		{
-			IReadOnlyList<LinkSegment> linkSegments = linkSegmentService.GetLinkSegments(link);
-			link.LinkSegments = linkSegments;
-			AddLinkSegmentLines(linkSegments, link);
+			IEnumerable<LinkSegment> linkSegments = linkSegmentService.GetLinkSegments(link);
+			AddLinkSegmentLines(linkSegments);
 		}
 
 
@@ -84,7 +125,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		private void AddLinkSegmentLines(IEnumerable<LinkSegment> linkSegments, Link link)
+		private void AddLinkSegmentLines(IEnumerable<LinkSegment> linkSegments)
 		{
 			foreach (LinkSegment linkSegment in linkSegments)
 			{
@@ -93,16 +134,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					line = AddLine(linkSegment.Source, linkSegment.Target, 0, null);
 				}
 
-				line.Links.Add(link);
-				link.Lines.Add(line);
+				line.LinkCount++;
 			}
 		}
 
 
 		private Line AddLine(Node source, Node target, int linkCount, IReadOnlyList<Point> points)
 		{
-			Node owner = GetLineOwner(source, target);
-			Line line = new Line(source, target, owner);
+			Line line = new Line(source, target);
 
 			if (points != null)
 			{
@@ -114,7 +153,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			line.LinkCount = linkCount;
 
 
-			if (owner.View.IsShowing || line.Source.View.IsShowing || line.Target.View.IsShowing)
+			if (line.Owner.View.IsShowing || line.Source.View.IsShowing || line.Target.View.IsShowing)
 			{
 				AddLineViewModel(line);
 			}
@@ -132,8 +171,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		private static Node GetLineOwner(Node source, Node target) =>
-			source == target.Parent ? source : source.Parent;
+		//private static Node GetLineOwner(Node source, Node target) =>
+		//	source == target.Parent ? source : source.Parent;
 
 
 		private static bool TryGetLine(LinkSegment segment, out Line line)
@@ -150,12 +189,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			return line != null;
 		}
 
-		private bool TryGetTarget(ModelLine modelLine, out Node target)
+		private bool TryGetTarget(DataLine dataLine, out Node target)
 		{
-			NodeName targetName = NodeName.From(modelLine.Target);
-			if (!modelService.TryGetNode(targetName, out target))
+			NodeId targetId = dataLine.TargetId;
+			if (!modelService.TryGetNode(targetId, out target))
 			{
-				modelService.QueueModelLine(targetName, modelLine);
+				modelService.QueueModelLine(targetId, dataLine);
 				return false;
 			}
 

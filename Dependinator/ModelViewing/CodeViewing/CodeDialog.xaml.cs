@@ -1,9 +1,10 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
+using Dependinator.Common.MessageDialogs;
+using Dependinator.Utils.ErrorHandling;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 
@@ -15,8 +16,12 @@ namespace Dependinator.ModelViewing.CodeViewing
 	/// </summary>
 	public partial class CodeDialog : Window
 	{
-		internal CodeDialog(Window owner, string title, Lazy<string> codeText)
+		private readonly IMessage message;
+
+
+		internal CodeDialog(Window owner, IMessage message, string title, Task<R<string>> codeTask)
 		{
+			this.message = message;
 			Owner = owner;
 			InitializeComponent();
 
@@ -24,14 +29,24 @@ namespace Dependinator.ModelViewing.CodeViewing
 
 			SetSyntaxHighlighting();
 
-			SetCodeText(codeText);
+			SetCodeText(codeTask);
 		}
 
 
-		private async void SetCodeText(Lazy<string> codeText)
+		private async void SetCodeText(Task<R<string>> codeTask)
 		{
 			CodeView.Text = "Getting code ...";
-			CodeView.Text = await Task.Run(() => codeText.Value);
+
+			R<string> codeResult = await codeTask;
+
+			if (codeResult.IsFaulted)
+			{
+				message.ShowWarning(codeResult.Message);
+				Close();
+				return;
+			}
+
+			CodeView.Text = codeResult.Value;
 		}
 
 

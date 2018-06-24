@@ -4,7 +4,7 @@ using Dependinator.Utils.UI.Mvvm;
 
 namespace Dependinator.ModelViewing.Items
 {
-	internal abstract class ItemViewModel : ViewModel, IItem, IItemsCanvasBounds
+	internal abstract class ItemViewModel : ViewModel, IItem, IItemsCanvasOwner
 	{
 		protected ItemViewModel()
 		{

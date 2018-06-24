@@ -1,6 +1,5 @@
-using System;
 using System.Collections.Generic;
-using Dependinator.Common;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.Utils;
 
 
@@ -12,21 +11,23 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 
 		private readonly List<Node> children = new List<Node>();
 
-		public Node(NodeName name)
+		public Node(NodeId id, NodeName name)
 		{
+			Id = id;
 			Name = name;
 
-			Init(name);
-			IsEqualWhenSame(Name);
+			Init();
+			IsEqualWhenSame(Id);
 		}
 		
 
 		public int Stamp { get; set; }
 
+		public NodeId Id { get; }
 		public NodeName Name { get; }
 		public NodeType NodeType { get; set; }
 		public string Description { get; set; }
-		public Lazy<string> CodeText { get; set; }
+		//public Lazy<string> CodeText { get; set; }
 
 		public Node Root { get; private set; }
 		public Node Parent { get; private set; }
@@ -34,15 +35,15 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 
 
 		public List<Link> SourceLinks { get; } = new List<Link>();
+		public List<Link> TargetLinks { get; } = new List<Link>();
 
 		public List<Line> SourceLines { get; } = new List<Line>();
 		public List<Line> TargetLines { get; } = new List<Line>();
 
-		public bool IsRoot => this == Root;
+		public bool IsRoot => Id == NodeId.Root;
 
 		public NodeViewData View { get; private set; }
-
-		//public Task<string> GetCodeAsync() => Task.Run(() => CodeText?.Value);
+		public bool HasCode => NodeType == NodeType.Type || NodeType == NodeType.Member;
 
 
 		public void AddChild(Node child)
@@ -59,9 +60,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		public override string ToString() => Name.ToString();
 
 
-		private void Init(NodeName name)
+		private void Init()
 		{
-			if (name == NodeName.Root)
+			if (IsRoot)
 			{
 				Root = this;
 				Parent = this;

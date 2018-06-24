@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Dependinator.Common;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
@@ -13,7 +13,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		void AddNode(Node node, Node parentNode);
 
-		bool TryGetNode(NodeName name, out Node node);
+		bool TryGetNode(NodeId nodeId, out Node node);
 
 
 		void UpdateNodeTypeIfNeeded(Node node, NodeType nodeType);
@@ -22,6 +22,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		void RemoveNode(Node node);
 
+		void QueueNode(DataNode dataNode);
 		void RemoveAll();
 	}
 }

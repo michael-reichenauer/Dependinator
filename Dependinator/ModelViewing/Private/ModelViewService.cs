@@ -2,10 +2,10 @@
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using Dependinator.Common;
 using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.SettingsHandling;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling;
 using Dependinator.ModelViewing.ModelHandling.Core;
@@ -80,7 +80,7 @@ namespace Dependinator.ModelViewing.Private
 
 
 		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) => 
-			rootNodeCanvas?.OnMouseWheel(uiElement, e, false);
+			rootNodeCanvas?.RootCanvas.ZoomNode(e);
 
 
 		public void ShowHiddenNode(NodeName nodeName) => modelHandlingService.ShowHiddenNode(nodeName);

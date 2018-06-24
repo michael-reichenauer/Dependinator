@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using Dependinator.ModelViewing.ModelHandling.Private;
 using Dependinator.Utils;
 
 
@@ -18,13 +16,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		public int Stamp { get; set; }
 		public Node Target { get; }
 		public Node Source { get; }
-		public List<Line> Lines { get; } = new List<Line>();
-		public IReadOnlyList<LinkSegment> LinkSegments { get; set; }
-
-		public override string ToString() => $"{Source}->{Target}";
 
 		public bool IsHidden => Source.View.IsHidden || Target.View.IsHidden;
 
-		public void Remove(Line line) => Lines.Remove(line);
+		public override string ToString() => $"{Source}->{Target}";
 	}
 }

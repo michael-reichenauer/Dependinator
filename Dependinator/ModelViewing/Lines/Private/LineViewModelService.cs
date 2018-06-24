@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Input;
 using Dependinator.ModelViewing.DependencyExploring;
@@ -10,25 +9,19 @@ namespace Dependinator.ModelViewing.Lines.Private
 {
 	internal class LineViewModelService : ILineViewModelService
 	{
-		private readonly ILineMenuItemService lineMenuItemService;
 		private readonly ILineControlService lineControlService;
-		private readonly ILineZoomService lineZoomService;
 		private readonly ILineDataService lineDataService;
 		private readonly IItemSelectionService itemSelectionService;
 		private readonly IDependencyExplorerService dependencyExplorerService;
 
 
 		public LineViewModelService(
-			ILineMenuItemService lineMenuItemService,
 			ILineControlService lineControlService,
-			ILineZoomService lineZoomService,
 			ILineDataService lineDataService,
 			IItemSelectionService itemSelectionService,
 			IDependencyExplorerService dependencyExplorerService)
 		{
-			this.lineMenuItemService = lineMenuItemService;
 			this.lineControlService = lineControlService;
-			this.lineZoomService = lineZoomService;
 			this.lineDataService = lineDataService;
 			this.itemSelectionService = itemSelectionService;
 			this.dependencyExplorerService = dependencyExplorerService;
@@ -60,14 +53,6 @@ namespace Dependinator.ModelViewing.Lines.Private
 		public LineControl GetLineControl(Line line) => new LineControl(lineControlService, line);
 
 
-		public IEnumerable<LineMenuItemViewModel> GetTargetLinkItems(Line line) =>
-			lineMenuItemService.GetTargetLinkItems(line);
-
-
-		public IEnumerable<LineMenuItemViewModel> GetSourceLinkItems(Line line) =>
-			lineMenuItemService.GetSourceLinkItems(line);
-
-
 		public void Clicked(LineViewModel lineViewModel) => itemSelectionService.Select(lineViewModel);
 
 
@@ -79,12 +64,9 @@ namespace Dependinator.ModelViewing.Lines.Private
 			}
 			else
 			{
-				lineViewModel.Line.Owner.Root.View.ItemsCanvas.OnMouseWheel(uiElement, e, false);
+				lineViewModel.Line.Owner.Root.View.ItemsCanvas.ZoomNode(e);
 			}
 		}
-
-
-		public void Toggle(Line line) => lineZoomService.ZoomInLinkLine(line);
 
 
 		public void ShowReferences(LineViewModel lineViewModel) =>

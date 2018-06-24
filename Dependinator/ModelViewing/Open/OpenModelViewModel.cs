@@ -2,7 +2,6 @@
 using System.IO;
 using System.Windows;
 using Dependinator.Common.ModelMetadataFolders;
-using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing.Items;
 
 

@@ -21,7 +21,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 				return 0;
 			}
 
-			if (parent.Name.DisplayName == "Dependinator")
+			if (parent.Name.DisplayShortName == "Dependinator")
 			{
 				
 			}
@@ -29,8 +29,8 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			Line e1ToE2 = e1.SourceLines.FirstOrDefault(r => r.Target == e2);
 			Line e2ToE1 = e2.SourceLines.FirstOrDefault(r => r.Target == e1);
 
-			int e1ToE2Count = e1ToE2?.Links.Count ?? 0;
-			int e2ToE1Count = e2ToE1?.Links.Count ?? 0;
+			int e1ToE2Count = e1ToE2?.LinkCount ?? 0;
+			int e2ToE1Count = e2ToE1?.LinkCount ?? 0;
 
 			if (e1ToE2Count > e2ToE1Count)
 			{
@@ -44,8 +44,8 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			Line parentToE1 = parent.SourceLines.FirstOrDefault(r => r.Target == e1);
 			Line parentToE2 = parent.SourceLines.FirstOrDefault(r => r.Target == e2);
 
-			int parentToE1Count = parentToE1?.Links.Count ?? 0;
-			int parentToE2Count = parentToE2?.Links.Count ?? 0;
+			int parentToE1Count = parentToE1?.LinkCount ?? 0;
+			int parentToE2Count = parentToE2?.LinkCount ?? 0;
 
 			if (parentToE1Count > parentToE2Count)
 			{
@@ -59,8 +59,8 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			Line e1ToParent = e1.SourceLines.FirstOrDefault(r => r.Target == parent);
 			Line e2ToParent = e2.SourceLines.FirstOrDefault(r => r.Target == parent);
 
-			int e1ToParentCount = e1ToParent?.Links.Count ?? 0;
-			int e2ToParentCount = e2ToParent?.Links.Count ?? 0;
+			int e1ToParentCount = e1ToParent?.LinkCount ?? 0;
+			int e2ToParentCount = e2ToParent?.LinkCount ?? 0;
 
 			if (e1ToParentCount > e2ToParentCount)
 			{

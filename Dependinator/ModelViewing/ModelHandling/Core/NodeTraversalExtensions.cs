@@ -15,6 +15,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 				yield return current;
 				current = current.Parent;
 			}
+
+			yield return node.Root;
 		}
 
 
@@ -28,32 +30,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 			}
 		}
 
+
 		public static IEnumerable<Node> Descendents(this Node node)
-		{
-			foreach (Node child in node.Children)
-			{
-				yield return child;
-
-				foreach (Node descendent in child.Descendents())
-				{
-					yield return descendent;
-				}
-			}
-		}
-
-
-		public static IEnumerable<Node> DescendentsAndSelf(this Node node)
-		{
-			yield return node;
-
-			foreach (Node descendent in node.Descendents())
-			{
-				yield return descendent;
-			}
-		}
-
-
-		public static IEnumerable<Node> DescendentsBreadth(this Node node)
 		{
 			Queue<Node> queue = new Queue<Node>();
 
@@ -65,6 +43,17 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 				yield return descendent;
 
 				descendent.Children.ForEach(queue.Enqueue);
+			}
+		}
+
+
+		public static IEnumerable<Node> DescendentsAndSelf(this Node node)
+		{
+			yield return node;
+
+			foreach (Node descendent in node.Descendents())
+			{
+				yield return descendent;
 			}
 		}
 	}

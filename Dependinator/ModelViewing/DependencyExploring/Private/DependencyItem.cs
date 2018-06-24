@@ -1,6 +1,5 @@
-using System;
 using System.Collections.Generic;
-using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 
 
 namespace Dependinator.ModelViewing.DependencyExploring.Private

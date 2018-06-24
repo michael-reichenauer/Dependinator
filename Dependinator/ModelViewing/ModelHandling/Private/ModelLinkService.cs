@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dependinator.Common;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 
@@ -23,17 +23,16 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		public void UpdateLink(ModelLink modelLink, int stamp)
+		public void UpdateLink(DataLink dataLink, int stamp)
 		{
 			try
 			{
-				Node source = modelService.GetNode(NodeName.From(modelLink.Source));
+				Node source = modelService.GetNode(dataLink.SourceId);
 
-				if (!TryGetTarget(modelLink, out Node target))
+				if (!TryGetTarget(dataLink, out Node target))
 				{
 					return;
 				}
-
 
 				target.Stamp = stamp;
 
@@ -47,22 +46,25 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				link = AddLink(source, target);
 				link.Stamp = stamp;
 
-				modelLineService.AddLinkLines(link);
+				if (!dataLink.IsAdded)
+				{
+					AddLinkToLines(link);
+				}
 			}
 			catch (Exception e)
 			{
-				Log.Exception(e, $"Failed to update link {modelLink}");
+				Log.Exception(e, $"Failed to update link {dataLink}");
 				throw;
 			}
 		}
 
 
-		private bool TryGetTarget(ModelLink modelLink, out Node target)
+		private bool TryGetTarget(DataLink dataLink, out Node target)
 		{
-			NodeName targetName = NodeName.From(modelLink.Target);
-			if (!modelService.TryGetNode(targetName, out target))
+			NodeId targetId = dataLink.TargetId;
+			if (!modelService.TryGetNode(targetId, out target))
 			{
-				modelService.QueueModelLink(targetName, modelLink);
+				modelService.QueueModelLink(targetId, dataLink);
 				return false;
 			}
 
@@ -70,37 +72,46 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-
 		public void RemoveObsoleteLinks(IReadOnlyList<Link> obsoleteLinks)
 		{
 			foreach (Link link in obsoleteLinks)
 			{
-				foreach (Line line in link.Lines)
-				{
-					line.Links.Remove(link);
-
-					if (!line.Links.Any())
-					{
-						modelLineService.RemoveLine(line);
-					}
-				}
+				RemoveLinkFromLines(link);
 
 				RemoveLink(link);
 			}
 		}
 
 
-		public void ResetLayout(List<Link> links)
+		public void Hide(Link link) => RemoveLinkFromLines(link);
+
+
+		public void Show(Link link) => AddLinkToLines(link);
+
+
+		private void AddLinkToLines(Link link)
 		{
-			foreach (Link link in links)
+			if (!link.Source.View.IsHidden && !link.Target.View.IsHidden)
 			{
-				foreach (Line line in link.Lines)
+				modelLineService.AddLinkLines(link);
+			}
+		}
+
+
+		private void RemoveLinkFromLines(Link link)
+		{
+			foreach (LinkSegment segment in modelLineService.GetLinkSegments(link))
+			{
+				Line line = segment.Source.SourceLines.FirstOrDefault(
+					l => l.Source == segment.Source && l.Target == segment.Target);
+
+				if (line != null)
 				{
-					if (line.View.Points.Count != 2)
+					line.LinkCount--;
+
+					if (line.LinkCount <= 0)
 					{
-						line.View.ResetPoints();
-						line.View.ViewModel.UpdateLine();
-						line.View.ViewModel.NotifyAll();
+						modelLineService.RemoveLine(line);
 					}
 				}
 			}
@@ -111,6 +122,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			Link link = new Link(source, target);
 			link.Source.SourceLinks.Add(link);
+			link.Target.TargetLinks.Add(link);
+
 			return link;
 		}
 
@@ -118,6 +131,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private void RemoveLink(Link link)
 		{
 			link.Source.SourceLinks.Remove(link);
+			link.Target.TargetLinks.Remove(link);
 		}
 
 

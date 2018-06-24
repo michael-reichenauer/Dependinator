@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using Dependinator.Common.Environment;
-using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils;
 
 

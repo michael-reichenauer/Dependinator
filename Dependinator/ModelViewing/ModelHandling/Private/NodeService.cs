@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dependinator.Common;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.Nodes;
@@ -16,7 +16,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private readonly IModelLineService modelLineService;
 		private readonly IModelLinkService modelLinkService;
 		private readonly INodeLayoutService layoutService;
-		private readonly INodeViewModelService nodeViewModelService;
+		private readonly Lazy<INodeViewModelService> nodeViewModelService;
 
 
 		public NodeService(
@@ -24,7 +24,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			IModelLineService modelLineService,
 			IModelLinkService modelLinkService,
 			INodeLayoutService layoutService,
-			INodeViewModelService nodeViewModelService)
+			Lazy<INodeViewModelService> nodeViewModelService)
 		{
 			this.modelService = modelService;
 			this.modelLineService = modelLineService;
@@ -36,9 +36,18 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public Node Root => modelService.Root;
 
-		public bool TryGetNode(NodeName name, out Node node) => modelService.TryGetNode(name, out node);
+		public bool TryGetNode(NodeId nodeId, out Node node) => modelService.TryGetNode(nodeId, out node);
 
-		public IEnumerable<Node>AllNodes => modelService.AllNodes;
+		public void QueueNode(DataNode dataNode) => modelService.QueueNode(dataNode);
+		public void RemoveAll()
+		{
+			Root?.View.ItemsCanvas?.RemoveAll();
+
+			modelService.RemoveAll();
+		}
+
+
+		public IEnumerable<Node> AllNodes => modelService.AllNodes;
 
 
 		public void AddNode(Node node, Node parentNode)
@@ -51,13 +60,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			AddNodeToParentCanvas(node, parentNode);
 
 			if (modelService.TryGetQueuedLinesAndLinks(
-				node.Name,
-				out IReadOnlyList<ModelLine> lines,
-				out IReadOnlyList<ModelLink> links))
+				node.Id,
+				out IReadOnlyList<DataLine> lines,
+				out IReadOnlyList<DataLink> links))
 			{
 				lines.ForEach(line => modelLineService.UpdateLine(line, node.Stamp));
 				links.ForEach(link => modelLinkService.UpdateLink(link, node.Stamp));
-				modelService.RemovedQueuedNode(node.Name);
+				modelService.RemovedQueuedNode(node.Id);
 			}
 		}
 
@@ -77,14 +86,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-
-		public void RemoveAll()
-		{
-			Root?.View.ItemsCanvas?.RemoveAll();
-
-			modelService.RemoveAll();
-		}
-
 		public void UpdateNodeTypeIfNeeded(Node node, NodeType nodeType)
 		{
 			if (node.NodeType != nodeType)
@@ -102,7 +103,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public Node GetParentNode(NodeName parentName, NodeType childNodeType)
 		{
-			if (modelService.TryGetNode(parentName, out Node parent))
+			if (modelService.TryGetNode(new NodeId(parentName), out Node parent))
 			{
 				return parent;
 			}
@@ -113,7 +114,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			Node grandParent = GetParentNode(grandParentName, parentNodeType);
 
 
-			parent = new Node(parentName);
+			parent = new Node(new NodeId(parentName), parentName);
 			parent.NodeType = parentNodeType;
 
 			AddNode(parent, grandParent);
@@ -154,16 +155,16 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			if (node.NodeType == NodeType.Member)
 			{
-				node.View.ViewModel = new MemberNodeViewModel(nodeViewModelService, node);
+				node.View.ViewModel = new MemberNodeViewModel(nodeViewModelService.Value, node);
 			}
 			else if (node.NodeType == NodeType.Type)
 			{
-				node.View.ViewModel = new TypeViewModel(nodeViewModelService, node);
+				node.View.ViewModel = new TypeViewModel(nodeViewModelService.Value, node);
 				node.View.ItemsCanvas = GetItemsCanvas(node);
 			}
 			else
 			{
-				node.View.ViewModel = new NamespaceViewModel(nodeViewModelService, node);
+				node.View.ViewModel = new NamespaceViewModel(nodeViewModelService.Value, node);
 				node.View.ItemsCanvas = GetItemsCanvas(node);
 			}
 		}
@@ -186,7 +187,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			if (Math.Abs(node.View.ScaleFactor) > 0.0000001)
 			{
-				node.View.ItemsCanvas.SetScaleFactor(node.View.ScaleFactor);
+				node.View.ItemsCanvas.ScaleFactor = node.View.ScaleFactor;
 			}
 
 			//if (node.Offset != PointEx.Zero)

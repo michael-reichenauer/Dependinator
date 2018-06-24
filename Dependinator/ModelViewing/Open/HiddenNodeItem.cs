@@ -1,6 +1,5 @@
 ﻿using System;
-using Dependinator.Common;
-using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.Utils.UI.Mvvm;
 
 
@@ -18,9 +17,9 @@ namespace Dependinator.ModelViewing.Open
 		}
 
 
-		public string Name => nodeName.DisplayFullNoParametersName;
+		public string Name => nodeName.DisplayLongName;
 
-		public string ToolTip => "Show hidden node " + nodeName.DisplayFullName;
+		public string ToolTip => "Show hidden node " + nodeName.DisplayLongName;
 
 		public Command ShowNodeCommand => Command(() => showNodeAction(nodeName));
 	}

@@ -1,7 +1,6 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dependinator.Common;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
@@ -10,29 +9,40 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	internal class ModelNodeService : IModelNodeService
 	{
 		private readonly IModelLinkService modelLinkService;
+		private readonly IModelLineService modelLineService;
 		private readonly INodeService nodeService;
 
 
 		public ModelNodeService(
 			INodeService nodeService,
-			IModelLinkService modelLinkService)
+			IModelLinkService modelLinkService,
+			IModelLineService modelLineService)
 		{
 			this.nodeService = nodeService;
 			this.modelLinkService = modelLinkService;
+			this.modelLineService = modelLineService;
 		}
 
 
-		public void UpdateNode(ModelNode modelNode, int stamp)
+		public void UpdateNode(DataNode dataNode, int stamp)
 		{
-			NodeName name = NodeName.From(modelNode.Name);
-
-			if (nodeService.TryGetNode(name, out Node node))
+			if (nodeService.TryGetNode(dataNode.Id, out Node node))
 			{
-				UpdateNode(node, modelNode, stamp);
+				if (node.Stamp != stamp)
+				{
+					UpdateNode(node, dataNode, stamp);
+				}
+
 				return;
 			}
 
-			AddNodeToModel(name, modelNode, stamp);
+			if (dataNode.IsReferenced)
+			{
+				nodeService.QueueNode(dataNode);
+				return;
+			}
+			
+			AddNodeToModel(dataNode, stamp);
 		}
 
 
@@ -72,9 +82,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		public void RemoveAll() => nodeService.RemoveAll();
-
-
 		public IReadOnlyList<NodeName> GetHiddenNodeNames()
 			=> nodeService.AllNodes
 				.Where(node => node.View.IsHidden && !node.Parent.View.IsHidden)
@@ -82,74 +89,99 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				.ToList();
 
 
+		public void HideNode(Node node)
+		{
+			if (node.View.IsHidden)
+			{
+				return;
+			}
+
+			node.DescendentsAndSelf().ForEach(n =>
+			{
+				n.View.IsHidden = true;
+				n.View.ViewModel.IsFirstShow = true;
+			});
+
+			modelLineService.UpdateLines(node);
+
+			node.Parent.View.ItemsCanvas.UpdateAndNotifyAll();
+			node.Root.View.ItemsCanvas.UpdateAll();
+		}
+
+
+		public void RemoveAll() => nodeService.RemoveAll();
+
+
+
 		public void ShowHiddenNode(NodeName nodeName)
 		{
-			if (nodeService.TryGetNode(nodeName, out Node node))
+			if (nodeService.TryGetNode(new NodeId(nodeName), out Node node))
 			{
-				ShowHiddenNode(node);
+				if (!node.View.IsHidden)
+				{
+					return;
+				}
+
+				node.DescendentsAndSelf().ForEach(n => n.View.IsHidden = false);
+
+				modelLineService.UpdateLines(node);
+
 				node.Parent.View.ItemsCanvas?.UpdateAndNotifyAll();
 				node.Root.View.ItemsCanvas.UpdateAll();
 			}
 		}
 
 
-		private void ShowHiddenNode(Node node)
-		{
-			node.DescendentsAndSelf().ForEach(n => n.View.IsHidden = false);
-		}
 
-
-		private void UpdateNode(Node node, ModelNode modelNode, int stamp)
+		private void UpdateNode(Node node, DataNode dataNode, int stamp)
 		{
 			node.Stamp = stamp;
 
-			UpdateData(node, modelNode);
+			UpdateData(node, dataNode);
 
-			nodeService.UpdateNodeTypeIfNeeded(node, modelNode.NodeType);
+			nodeService.UpdateNodeTypeIfNeeded(node, dataNode.NodeType);
 		}
 
 
-		private void AddNodeToModel(NodeName name, ModelNode modelNode, int stamp)
+		private void AddNodeToModel(DataNode dataNode, int stamp)
 		{
-			Node node = new Node(name)
+			Node node = new Node(dataNode.Id, dataNode.Name)
 			{
 				Stamp = stamp,
-				NodeType = modelNode.NodeType,
-				Description = modelNode.Description,
-				CodeText = modelNode.CodeText,
+				NodeType = dataNode.NodeType,
+				Description = dataNode.Description,
 			};
 
-			node.View.Bounds = modelNode.Bounds;
-			node.View.ScaleFactor = modelNode.ItemsScaleFactor;
-			node.View.Color = modelNode.Color;
-			node.View.IsHidden = modelNode.ShowState == Node.Hidden;
+			node.View.Bounds = dataNode.Bounds;
+			node.View.ScaleFactor = dataNode.ItemsScaleFactor;
+			node.View.Color = dataNode.Color;
+			node.View.IsHidden = dataNode.ShowState == Node.Hidden;
 
-			Node parentNode = GetParentNode(name, modelNode);
+			Node parentNode = GetParentNode(dataNode.Name, dataNode);
 
 			nodeService.AddNode(node, parentNode);
 		}
 
 
-		private static void UpdateData(Node node, ModelNode modelNode)
+		private static void UpdateData(Node node, DataNode dataNode)
 		{
-			node.Description = modelNode.Description;
-			node.CodeText = modelNode.CodeText;
+			node.Description = dataNode.Description;
 		}
 
 
-		private Node GetParentNode(NodeName nodeName, ModelNode modelNode)
+		private Node GetParentNode(NodeName nodeName, DataNode dataNode)
 		{
-			NodeName parentName = GetParentName(nodeName, modelNode);
+			NodeName parentName = GetParentName(nodeName, dataNode);
 
-			return nodeService.GetParentNode(parentName, modelNode.NodeType);
+			return nodeService.GetParentNode(parentName, dataNode.NodeType);
 		}
 
 
 
-		private static NodeName GetParentName(NodeName nodeName, ModelNode modelNode)
+		private static NodeName GetParentName(NodeName nodeName, DataNode dataNode)
 		{
-			NodeName parentName = modelNode.Parent != null
-				? NodeName.From(modelNode.Parent)
+			NodeName parentName = dataNode.Parent != null
+				? NodeName.From(dataNode.Parent)
 				: nodeName.ParentName;
 
 			return parentName;

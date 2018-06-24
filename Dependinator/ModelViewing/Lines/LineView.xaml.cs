@@ -12,7 +12,6 @@ namespace Dependinator.ModelViewing.Lines
 	public partial class LineView : UserControl
 	{
 		private MouseClicked lineClicked;
-		// private MouseClicked toggleClicked;
 		private readonly DragUiElement dragLine;
 		private readonly DragUiElement dragLineControlPoints;
 
@@ -41,7 +40,6 @@ namespace Dependinator.ModelViewing.Lines
 
 
 		private void Clicked(MouseButtonEventArgs e) => ViewModel?.Clicked();
-		private void ClickToggleLine(MouseButtonEventArgs e) => ViewModel?.Toggle();
 
 
 		private void UIElement_OnMouseEnter(object sender, MouseEventArgs e) =>

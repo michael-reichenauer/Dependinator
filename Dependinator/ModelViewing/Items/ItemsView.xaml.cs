@@ -40,7 +40,7 @@ namespace Dependinator.ModelViewing.Items
 
 
 		protected override void OnMouseMove(MouseEventArgs e) =>
-			MouseHelper.OnLeftButtonMove(this, e, (s, offset, p1, p2) => viewModel?.MoveItems(offset, p1, p2));
+			MouseHelper.OnLeftButtonMove(this, e, (s, offset, p1, p2) => viewModel?.MoveAllItems(p1, p2));
 
 
 		private void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
@@ -61,7 +61,7 @@ namespace Dependinator.ModelViewing.Items
 		{
 			if (viewModel.ItemsCanvas.IsFocused)
 			{
-				viewModel.ItemsCanvas.OnMouseWheel(this, e, true);
+				viewModel.ItemsCanvas.ZoomNode(e);
 			}
 		}
 
@@ -149,49 +149,49 @@ namespace Dependinator.ModelViewing.Items
 
 		protected override void OnTouchMove(TouchEventArgs e)
 		{
-			if (!viewModel.IsRoot)
-			{
-				return;
-			}
+			//if (!viewModel.IsRoot)
+			//{
+			//	return;
+			//}
 
-			TouchPoint currentPoint = e.GetTouchPoint(ItemsListBox);
+			//TouchPoint currentPoint = e.GetTouchPoint(ItemsListBox);
 
-			if (activeTouchDevices.Count == 1 && lastTouchPoint1.TouchDevice.Id == currentPoint.TouchDevice.Id)
-			{
-				// One finger touch move
-				Vector offset = currentPoint.Position - lastTouchPoint1.Position;
+			//if (activeTouchDevices.Count == 1 && lastTouchPoint1.TouchDevice.Id == currentPoint.TouchDevice.Id)
+			//{
+			//	// One finger touch move
+			//	Vector offset = currentPoint.Position - lastTouchPoint1.Position;
 
-				viewModel.MoveCanvas(offset);
-				lastTouchPoint1 = currentPoint;
-			}
-			else if (activeTouchDevices.Count == 2)
-			{
-				// Two finger touch zoom or pinch			
-				if (currentPoint.TouchDevice.Id == lastTouchPoint1.TouchDevice.Id)
-				{
-					// Moved first finger
-					lastTouchPoint1 = currentPoint;
-				}
-				else if (currentPoint.TouchDevice.Id == lastTouchPoint2.TouchDevice.Id)
-				{
-					// Moved second finger
-					lastTouchPoint2 = currentPoint;
-				}
-				else
-				{
-					// Neither first or second finger (multi touch not yet supported
-					return;
-				}
+			//	viewModel.MoveCanvas(offset);
+			//	lastTouchPoint1 = currentPoint;
+			//}
+			//else if (activeTouchDevices.Count == 2)
+			//{
+			//	// Two finger touch zoom or pinch			
+			//	if (currentPoint.TouchDevice.Id == lastTouchPoint1.TouchDevice.Id)
+			//	{
+			//		// Moved first finger
+			//		lastTouchPoint1 = currentPoint;
+			//	}
+			//	else if (currentPoint.TouchDevice.Id == lastTouchPoint2.TouchDevice.Id)
+			//	{
+			//		// Moved second finger
+			//		lastTouchPoint2 = currentPoint;
+			//	}
+			//	else
+			//	{
+			//		// Neither first or second finger (multi touch not yet supported
+			//		return;
+			//	}
 
-				Vector vector = lastTouchPoint2.Position - lastTouchPoint1.Position;
+			//	Vector vector = lastTouchPoint2.Position - lastTouchPoint1.Position;
 
-				double currentLength = vector.Length;
-				double zoomFactor = currentLength / lastPinchLength;
-				lastPinchLength = currentLength;
+			//	double currentLength = vector.Length;
+			//	double zoomFactor = currentLength / lastPinchLength;
+			//	lastPinchLength = currentLength;
 
-				Point viewPosition = lastTouchPoint1.Position + (vector / 2);
-				viewModel.ZoomRoot(zoomFactor, viewPosition);
-			}
+			//	Point viewPosition = lastTouchPoint1.Position + (vector / 2);
+			//	//viewModel.ZoomRoot(zoomFactor, viewPosition);
+			//}
 
 			e.Handled = true;
 		}

@@ -69,6 +69,6 @@ namespace Dependinator.Utils.UI
 			// kill pending timer and pending ticks
 			timer?.Stop();
 			timer = null;
-		}
+		}		
 	}
 }

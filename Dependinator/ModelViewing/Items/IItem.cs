@@ -9,9 +9,9 @@ namespace Dependinator.ModelViewing.Items
 		double Priority { get; }
 		bool CanShow { get; }
 		bool IsShowing { get; }
+		ItemsCanvas ItemOwnerCanvas { get; set; }
 
 		object ItemState { get; set; }
-		ItemsCanvas ItemOwnerCanvas { get; set; }
 
 		void ItemRealized();
 		void ItemVirtualized();

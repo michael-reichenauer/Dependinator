@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using Dependinator.Common;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils.Dependencies;
@@ -11,9 +11,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	[SingleInstance]
 	internal class ModelService : IModelService
 	{
-		private readonly Dictionary<NodeName, Node> nodes = new Dictionary<NodeName, Node>();
+		private readonly Dictionary<NodeId, Node> nodes = new Dictionary<NodeId, Node>();
 
-		private readonly Dictionary<NodeName, QueuedNode> queuedNodes = new Dictionary<NodeName, QueuedNode>();
+		private readonly Dictionary<NodeId, QueuedNode> queuedNodes = new Dictionary<NodeId, QueuedNode>();
 
 
 		public ModelService()
@@ -26,14 +26,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public IEnumerable<Node> AllNodes => nodes.Values;
 
-		public Node GetNode(NodeName name) => nodes[name];
+		public Node GetNode(NodeId name) => nodes[name];
 
-		public bool TryGetNode(NodeName name, out Node node) => nodes.TryGetValue(name, out node);
+		public bool TryGetNode(NodeId name, out Node node) => nodes.TryGetValue(name, out node);
 
 
-		public void Add(Node node) => nodes[node.Name] = node;
+		public void Add(Node node) => nodes[node.Id] = node;
 
-		public void Remove(Node node) => nodes.Remove(node.Name);
+		public void Remove(Node node) => nodes.Remove(node.Id);
 
 
 		public void RemoveAll()
@@ -48,44 +48,60 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private void AddRoot()
 		{
-			Root = new Node(NodeName.Root);
+			Root = new Node(NodeId.Root, NodeName.Root);
 			Root.NodeType = NodeType.NameSpace;
 
 			Add(Root);
 		}
 
 
-		public void QueueModelLink(NodeName nodeName, ModelLink modelLink)
+		public void QueueModelLink(NodeId nodeId, DataLink dataLink)
 		{
-			QueuedNode queuedNode = GetQueuedNode(nodeName, modelLink.TargetType);
+			QueuedNode queuedNode = GetQueuedNode(nodeId);
 
-			queuedNode.Links.Add(modelLink);
+			queuedNode.Links.Add(dataLink);
 		}
 
 
-		public void QueueModelLine(NodeName nodeName, ModelLine modelLine)
+		public void QueueModelLine(NodeId nodeId, DataLine dataLine)
 		{
-			QueuedNode queuedNode = GetQueuedNode(nodeName, modelLine.TargetType);
+			QueuedNode queuedNode = GetQueuedNode(nodeId);
 
-			queuedNode.Lines.Add(modelLine);
+			queuedNode.Lines.Add(dataLine);
 		}
 
 
-		public IReadOnlyList<ModelNode> GetAllQueuedNodes()
+		public IReadOnlyList<DataNode> GetAllQueuedNodes()
 		{
-			return queuedNodes.Values
-				.DistinctBy(item => item.Name)
-				.Select(item => new ModelNode(item.Name.FullName, null, item.NodeType, null, null))
+			return queuedNodes
+				.Where(pair => pair.Value.DataNode != null)
+				.Select(pair => pair.Value.DataNode)
 				.ToList();
 		}
 
 
-		public bool TryGetQueuedLinesAndLinks(
-			NodeName targetName,
-			out IReadOnlyList<ModelLine> lines,
-			out IReadOnlyList<ModelLink> links)
+		public void QueueNode(DataNode node)
 		{
-			if (!queuedNodes.TryGetValue(targetName, out QueuedNode item))
+			QueuedNode queuedNode = GetQueuedNode(node.Id);
+
+			if (queuedNode.DataNode == null)
+			{
+				queuedNode.DataNode = new DataNode(
+					node.Id,
+					node.Name,
+					node.Parent,
+					node.NodeType,
+					node.Description);
+			}
+		}
+
+
+		public bool TryGetQueuedLinesAndLinks(
+			NodeId targetId,
+			out IReadOnlyList<DataLine> lines,
+			out IReadOnlyList<DataLink> links)
+		{
+			if (!queuedNodes.TryGetValue(targetId, out QueuedNode item))
 			{
 				lines = null;
 				links = null;
@@ -98,15 +114,15 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		public void RemovedQueuedNode(NodeName targetName) => queuedNodes.Remove(targetName);
+		public void RemovedQueuedNode(NodeId nodeId) => queuedNodes.Remove(nodeId);
 
 
-		private QueuedNode GetQueuedNode(NodeName nodeName, NodeType nodeType)
+		private QueuedNode GetQueuedNode(NodeId nodeId)
 		{
-			if (!queuedNodes.TryGetValue(nodeName, out QueuedNode queuedNode))
+			if (!queuedNodes.TryGetValue(nodeId, out QueuedNode queuedNode))
 			{
-				queuedNode = new QueuedNode(nodeName, nodeType);
-				queuedNodes[nodeName] = queuedNode;
+				queuedNode = new QueuedNode(nodeId);
+				queuedNodes[nodeId] = queuedNode;
 			}
 
 			return queuedNode;
@@ -115,17 +131,16 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private class QueuedNode
 		{
-			public QueuedNode(NodeName name, NodeType nodeType)
+			public QueuedNode(NodeId nodeId)
 			{
-				Name = name;
-				NodeType = nodeType;
+				NodeId = nodeId;
 			}
 
 
-			public NodeName Name { get; }
-			public NodeType NodeType { get; }
-			public List<ModelLine> Lines { get; } = new List<ModelLine>();
-			public List<ModelLink> Links { get; } = new List<ModelLink>();
+			public NodeId NodeId { get; }
+			public DataNode DataNode { get; set; }
+			public List<DataLine> Lines { get; } = new List<DataLine>();
+			public List<DataLink> Links { get; } = new List<DataLink>();
 		}
 	}
 }

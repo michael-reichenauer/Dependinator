@@ -1,13 +1,11 @@
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
-using Dependinator.ModelViewing.Lines.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;
@@ -20,12 +18,10 @@ namespace Dependinator.ModelViewing.Nodes
 	{
 		private readonly INodeViewModelService nodeViewModelService;
 
-		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> incomingLinks;
-		private readonly Lazy<ObservableCollection<LineMenuItemViewModel>> outgoingLinks;
 		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(300);
 		private readonly DelayDispatcher delayDispatcher = new DelayDispatcher();
 
-		private bool isFirstShow = true;
+
 		private readonly Brush backgroundBrush;
 		private readonly Brush selectedBrush;
 
@@ -41,12 +37,9 @@ namespace Dependinator.ModelViewing.Nodes
 			RectangleBrush = nodeViewModelService.GetNodeBrush(node);
 			backgroundBrush = nodeViewModelService.GetBackgroundBrush(RectangleBrush);
 			selectedBrush = nodeViewModelService.GetSelectedBrush(RectangleBrush);
-
-
-			incomingLinks = new Lazy<ObservableCollection<LineMenuItemViewModel>>(GetIncomingLinkItems);
-			outgoingLinks = new Lazy<ObservableCollection<LineMenuItemViewModel>>(GetOutgoingLinkItems);
 		}
 
+		public bool IsFirstShow { get; set; } = true;
 
 		public override bool CanShow => !Node.View.IsHidden
 			&& (ItemScale * ItemWidth > 20 && Node.Parent.View.CanShowChildren);
@@ -68,14 +61,14 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public bool IsShowDescription => (!CanShowChildren || !Node.Children.Any());
 		public bool IsShowToolTip => true;
-		public bool HasCode => Node.CodeText != null;
+		public bool HasCode => Node.NodeType == NodeType.Type || Node.NodeType == NodeType.Member;
 		public Command ShowCodeCommand => Command(() => ShowCode());
 
 
 		public void ShowCode() => nodeViewModelService.ShowCode(Node);
 
 
-		public string Name => Node.Name.DisplayName;
+		public string Name => Node.Name.DisplayShortName;
 
 		private NodeControlViewModel view2Model;
 
@@ -86,7 +79,6 @@ namespace Dependinator.ModelViewing.Nodes
 		public double RectangleLineWidth => 1;
 
 		public string ToolTip { get => Get(); set => Set(value); }
-		public int IncomingLinesCount => Node.TargetLines.Count(line => line.Owner != Node);
 
 		public Command HideNodeCommand => Command(HideNode);
 		public Command ShowDependenciesCommand => Command(ShowDependencies);
@@ -98,7 +90,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public int DescriptionFontSize => ((int)(10 * ItemScale)).MM(9, 11);
 		public string Description => Node.Description;
-		public bool IsShowCodeIcon => Node.CodeText != null && ItemScale > 1.3;
+		public bool IsShowCodeIcon => HasCode && ItemScale > 1.3;
 
 
 		public void ShowDependencies() => nodeViewModelService.ShowReferences(this);
@@ -136,17 +128,10 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		public void UpdateToolTip() => ToolTip =
-			$"{Node.Name.DisplayFullName}" +
+			$"{Node.Name.DisplayLongName}" +
 			(string.IsNullOrWhiteSpace(Node.Description) ? "" : $"\n{Node.Description}") +
 			$"{DebugToolTip}";
 
-
-		public int IncomingLinksCount => Node.TargetLines
-			.Where(line => line.Owner != Node)
-			.SelectMany(line => line.Links)
-			.Count();
-
-		public int OutgoingLinesCount => Node.SourceLines.Count(line => line.Owner != Node);
 
 
 		public void MouseClicked(MouseButtonEventArgs e)
@@ -162,35 +147,12 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public int OutgoingLinksCount => Node.SourceLines
-			.Where(line => line.Owner != Node)
-			.SelectMany(line => line.Links)
-			.Count();
-
-
 		public ItemsViewModel ItemsViewModel { get; set; }
 
-		public ObservableCollection<LineMenuItemViewModel> IncomingLinks => incomingLinks.Value;
-
-		public ObservableCollection<LineMenuItemViewModel> OutgoingLinks => outgoingLinks.Value;
 
 
+		public void HideNode() => nodeViewModelService.HideNode(Node);
 
-		public void HideNode()
-		{
-			if (!Node.View.IsHidden)
-			{
-				HideNode(Node);
-				
-				Node.Parent.View.ItemsCanvas.UpdateAndNotifyAll();
-				Node.Root.View.ItemsCanvas.UpdateAll();
-			}
-		}
-
-		private void HideNode(Node node)
-		{
-			node.DescendentsAndSelf().ForEach(n => n.View.IsHidden = true);
-		}
 
 
 		public override void ItemRealized()
@@ -200,9 +162,9 @@ namespace Dependinator.ModelViewing.Nodes
 			// If this node has an items canvas, make sure it knows it has been realized (fix zoom level)
 			ItemsViewModel?.ItemRealized();
 
-			if (isFirstShow)
+			if (IsFirstShow)
 			{
-				isFirstShow = false;
+				IsFirstShow = false;
 
 				nodeViewModelService.FirstShowNode(Node);
 			}
@@ -224,7 +186,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public void MouseEnterTitle()
 		{
-			delayDispatcher.Delay(MouseEnterDelay, _ => { IsShowCodeButton = Node.CodeText != null; });
+			delayDispatcher.Delay(MouseEnterDelay, _ => { IsShowCodeButton = HasCode; });
 		}
 
 
@@ -238,41 +200,24 @@ namespace Dependinator.ModelViewing.Nodes
 		public override string ToString() => Node.Name.ToString();
 
 
-		private ObservableCollection<LineMenuItemViewModel> GetIncomingLinkItems()
-		{
-			IEnumerable<LineMenuItemViewModel> items = nodeViewModelService.GetIncomingLinkItems(Node);
-			return new ObservableCollection<LineMenuItemViewModel>(items);
-		}
-
-
-
-		private ObservableCollection<LineMenuItemViewModel> GetOutgoingLinkItems()
-		{
-			IEnumerable<LineMenuItemViewModel> items = nodeViewModelService.GetOutgoingLinkItems(Node);
-			return new ObservableCollection<LineMenuItemViewModel>(items);
-		}
-
-
 
 		private string DebugToolTip => "" + ItemsToolTip;
 
 
 		private string ItemsToolTip => !BuildConfig.IsDebug ? "" :
-			"\n" +
-			$"\nLines; In: {IncomingLinesCount}, Out: {OutgoingLinesCount}" +
-			$"\nLinks; In: {IncomingLinksCount}, Out: {OutgoingLinksCount}\n" +
+			$"\n " +
 			$"Rect: {ItemBounds.TS()}\n" +
 			$"Scale {ItemScale.TS()}, ChildrenScale: {Node.View.ItemsCanvas?.Scale.TS()}\n" +
-			$"ScaleFactor: {Node.View.ScaleFactor}, {Node.View.ViewModel.ItemsViewModel.ItemsCanvas.ScaleFactor}\n" +
+			$"ScaleFactor: {Node.View.ScaleFactor}, {Node.View.ViewModel.ItemsViewModel?.ItemsCanvas?.ScaleFactor}\n" +
 			//$"C Point {Node.ItemsCanvas.CanvasPointToScreenPoint(new Point(0, 0)).TS()}\n" +
 			//$"R Point {Node.ItemsCanvas.CanvasPointToScreenPoint2(new Point(0, 0)).TS()}\n" +
 			//$"M Point {Mouse.GetPosition(Node.Root.ItemsCanvas.ZoomableCanvas).TS()}\n" +
-			$"Root Scale {Node.Root.View.ItemsCanvas.Scale}\n" +
+			$"Root Scale {Node.Root.View.ItemsCanvas?.Scale}\n" +
 			$"Level {Node.Ancestors().Count()}\n" +
 			$"Items: {Node.View.ItemsCanvas?.ShownChildItemsCount()} ({Node.View.ItemsCanvas?.ChildItemsCount()})\n" +
 			$"ShownDescendantsItems {Node.View.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.View.ItemsCanvas?.DescendantsItemsCount()})\n" +
-			$"ParentItems {Node.Parent.View.ItemsCanvas.ShownChildItemsCount()} ({Node.Parent.View.ItemsCanvas.ChildItemsCount()})\n" +
-			$"RootShownDescendantsItems {Node.Root.View.ItemsCanvas.ShownDescendantsItemsCount()} ({Node.Root.View.ItemsCanvas.DescendantsItemsCount()})\n" +
+			$"ParentItems {Node.Parent.View.ItemsCanvas?.ShownChildItemsCount()} ({Node.Parent.View.ItemsCanvas?.ChildItemsCount()})\n" +
+			$"RootShownDescendantsItems {Node.Root.View.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.Root.View.ItemsCanvas?.DescendantsItemsCount()})\n" +
 			$"Nodes: {NodesCount}, Namespaces: {NamespacesCount}, Types: {TypesCount}, Members: {MembersCount}\n" +
 			$"Links: {LinksCount}, Lines: {LinesCount}";
 

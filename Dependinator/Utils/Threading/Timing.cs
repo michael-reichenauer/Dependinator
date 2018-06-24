@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Dependinator.Utils.OsSystem;
 
 
 namespace Dependinator.Utils.Threading

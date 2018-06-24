@@ -1,21 +1,19 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
-using Dependinator.Common;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
-using Dependinator.Common.SettingsHandling;
+using Dependinator.ModelViewing.DataHandling;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.ModelViewing.ModelHandling.Private.ModelParsing;
-using Dependinator.ModelViewing.ModelHandling.Private.ModelPersistence;
 using Dependinator.ModelViewing.Open;
 using Dependinator.Utils;
-using Dependinator.Utils.Collections;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.ErrorHandling;
 using Dependinator.Utils.OsSystem;
@@ -27,11 +25,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	[SingleInstance]
 	internal class ModelHandlingService : IModelHandlingService
 	{
-		private static readonly int MaxPriority = 10;
 		private static readonly int BatchSize = 100;
 
-		private readonly IParserService parserService;
-		private readonly IPersistenceService persistenceService;
+		private readonly IDataService dataService;
 		private readonly IModelNodeService modelNodeService;
 		private readonly IModelLinkService modelLinkService;
 		private readonly IModelLineService modelLineService;
@@ -48,8 +44,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private bool isWorking = false;
 
 		public ModelHandlingService(
-			IParserService parserService,
-			IPersistenceService persistenceService,
+			IDataService dataService,
 			IModelNodeService modelNodeService,
 			IModelLinkService modelLinkService,
 			IModelLineService modelLineService,
@@ -60,8 +55,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			IMessage message,
 			ICmd cmd)
 		{
-			this.parserService = parserService;
-			this.persistenceService = persistenceService;
+			this.dataService = dataService;
 			this.modelNodeService = modelNodeService;
 			this.modelLinkService = modelLinkService;
 			this.modelLineService = modelLineService;
@@ -86,13 +80,18 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			Log.Debug($"Metadata model: {modelMetadata.ModelFilePath} {DateTime.Now}");
 			string dataFilePath = GetDataFilePath();
 
-			ClearAll();
 			Root.View.ItemsCanvas.IsZoomAndMoveEnabled = true;
 
 			if (File.Exists(dataFilePath))
 			{
-				R result = await ShowModelAsync(operation => persistenceService.TryDeserialize(
-					dataFilePath, items => UpdateDataItems(items, operation)));
+				R result = await TryShowSavedModelAsync(dataFilePath);
+				if (result.Error.Exception is NotSupportedException)
+				{
+					File.Delete(dataFilePath);
+					await LoadAsync();
+					return;
+				}
+
 				if (result.IsFaulted)
 				{
 					message.ShowWarning(result.Message);
@@ -102,13 +101,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					return;
 				}
 
-				await RefreshAsync(false);
+				//await RefreshAsync(false);
 			}
 			else
 			if (File.Exists(modelMetadata.ModelFilePath))
 			{
-				R result = await ShowModelAsync(operation => parserService.ParseAsync(
-					modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
+				R result = await ShowParsedModelAsync();
 				if (result.IsFaulted)
 				{
 					message.ShowWarning(result.Message);
@@ -140,7 +138,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				modelMetadata.SetDefault();
 				Root.View.ItemsCanvas.SetRootScale(1);
 				Root.View.ItemsCanvas.IsZoomAndMoveEnabled = false;
-				//Root.View.ItemsCanvas.ZoomRootNode(1, new Point(0, 0));
 				Root.View.ItemsCanvas.UpdateAndNotifyAll();
 
 				Root.View.ItemsCanvas.AddItem(openModelViewModelProvider());
@@ -170,13 +167,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					File.Delete(dataFilePath);
 				}
 
+				modelNodeService.RemoveAll();
 				await LoadAsync();
 				return;
 			}
 
 			isWorking = true;
-			R<int> operationId = await ShowModelAsync(operation => parserService.ParseAsync(
-				modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
+			R<int> operationId = await ShowParsedModelAsync();
 
 			if (operationId.IsFaulted)
 			{
@@ -212,6 +209,21 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
+
+		private Task<R<int>> ShowParsedModelAsync()
+		{
+			return ShowModelAsync(operation => dataService.ParseAsync(
+				modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
+		}
+
+
+		private Task<R<int>> TryShowSavedModelAsync(string dataFilePath)
+		{
+			return ShowModelAsync(operation => dataService.TryReadSavedDataAsync(
+				dataFilePath, items => UpdateDataItems(items, operation)));
+		}
+
+
 		private static void UpdateLines(Node node)
 		{
 			node.SourceLines
@@ -222,9 +234,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				.Where(child => child.View.IsShowing)
 				.ForEach(UpdateLines);
 		}
-
-
-		public void ClearAll() => modelNodeService.RemoveAll();
 
 
 		public void Save()
@@ -241,17 +250,18 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			}
 
 			Timing t = Timing.Start();
-			IReadOnlyList<Node> nodes = Root.DescendentsBreadth().ToList();
+			IReadOnlyList<Node> nodes = Root.Descendents().ToList();
 			t.Log($"Saving {nodes.Count} nodes");
 
-			IReadOnlyList<IModelItem> items = Convert.ToDataItems(nodes);
+			IReadOnlyList<IDataItem> items = Convert.ToDataItems(nodes);
 			t.Log($"Saving {items.Count} items");
 
 			string dataFilePath = GetDataFilePath();
 
-			persistenceService.Serialize(items, dataFilePath);
+			dataService.SaveData(items, dataFilePath);
 			t.Log($"Saved {items.Count} items");
 		}
+
 
 
 		private async Task<R<int>> ShowModelAsync(Func<Operation, Task<R>> parseFunctionAsync)
@@ -261,7 +271,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			Timing t = Timing.Start();
 
 			Task showTask = Task.Run(() => ShowModel(operation));
-			
 
 			Task<R> parseTask = parseFunctionAsync(operation);
 
@@ -281,15 +290,15 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		private static void UpdateDataItems(IModelItem item, Operation operation)
+		private static void UpdateDataItems(IDataItem item, Operation operation)
 		{
-			operation.Queue.Enqueue(item, 0);
+			operation.Queue.Add(item);
 		}
 
 
 		private void ShowModel(Operation operation)
 		{
-			while (operation.Queue.TryTake(out IModelItem item, -1))
+			while (operation.Queue.TryTake(out IDataItem item, -1))
 			{
 				Application.Current.Dispatcher.InvokeBackground(() =>
 				{
@@ -307,16 +316,17 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				});
 			}
 
-
-			PriorityBlockingQueue<IModelItem> queue = new PriorityBlockingQueue<IModelItem>(MaxPriority);
+			BlockingCollection<IDataItem> queue = new BlockingCollection<IDataItem>();
 
 			Application.Current.Dispatcher.InvokeBackground(() =>
 			{
-				modelService.GetAllQueuedNodes().ForEach(node => queue.Enqueue(node, 0));
+				IReadOnlyList<DataNode> allQueuedNodes = modelService.GetAllQueuedNodes();
+				allQueuedNodes.ForEach(node => queue.Add(node));
 				queue.CompleteAdding();
 			});
 
-			while (queue.TryTake(out IModelItem item, -1))
+
+			while (queue.TryTake(out IDataItem item, -1))
 			{
 				Application.Current.Dispatcher.InvokeBackground(() =>
 				{
@@ -336,17 +346,17 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		private void UpdateItem(IModelItem item, int stamp)
+		private void UpdateItem(IDataItem item, int stamp)
 		{
 			switch (item)
 			{
-				case ModelLine line:
+				case DataLine line:
 					modelLineService.UpdateLine(line, stamp);
 					break;
-				case ModelLink link:
+				case DataLink link:
 					modelLinkService.UpdateLink(link, stamp);
 					break;
-				case ModelNode node:
+				case DataNode node:
 					modelNodeService.UpdateNode(node, stamp);
 					break;
 				default:
@@ -367,8 +377,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private class Operation
 		{
-			public PriorityBlockingQueue<IModelItem> Queue { get; } =
-				new PriorityBlockingQueue<IModelItem>(MaxPriority);
+			public BlockingCollection<IDataItem> Queue { get; } =
+				new BlockingCollection<IDataItem>();
 
 			public int Id { get; }
 
