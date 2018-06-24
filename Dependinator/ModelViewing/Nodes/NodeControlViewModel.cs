@@ -53,9 +53,11 @@ namespace Dependinator.ModelViewing.Nodes
 		public string EditModeToolTop => "Toggle edit mode to\nzoom and pan node canvas";
 		public string HideToolTop => "Hide node\n(Use application menu to show node)";
 
-
+		public bool IsHidden => nodeViewModel.IsHidden;
 		public bool CanShowEditNode =>
-			nodeViewModel.Node.Children.Any() && nodeViewModel.CanShowChildren;
+			!nodeViewModel.IsHidden &&
+			nodeViewModel.Node.Children.Any() && 
+			nodeViewModel.CanShowChildren;
 
 
 		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) =>
@@ -66,6 +68,10 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public Command IncreaseCommand => Command(() => ResizeNode(1.3));
 		public Command DecreaseCommand => Command(() => ResizeNode(1 / 1.3));
+
+		public Command HideNodeCommand => Command(() => nodeViewModel.HideNode());
+		public Command ShowNodeCommand => Command(() => nodeViewModel.ShowNode());
+
 
 		public Command ToggleEditModeCommand => Command(ToggleEditNode);
 		public Command ShowDependenciesCommand => Command(nodeViewModel.ShowDependencies);

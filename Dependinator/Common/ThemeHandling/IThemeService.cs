@@ -23,5 +23,6 @@ namespace Dependinator.Common.ThemeHandling
 		Brush GetTextBrush();
 		Brush GetTextDimBrush();
 		Brush GetTextLowBrush();
+		Brush GetDimBrush();
 	}
 }

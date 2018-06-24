@@ -24,6 +24,7 @@
 		</StackPanel>
 
 		<TextBlock
+			Visibility="{Binding IsHidden, Converter={StaticResource NVC}}"
 			Margin="10,25,10,0"
 			Text="{Binding Description}"
 			Foreground="{DynamicResource TextLowBrush}"

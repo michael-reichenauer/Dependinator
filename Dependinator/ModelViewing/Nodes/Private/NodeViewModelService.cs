@@ -56,9 +56,20 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			}
 
 			modelNodeService.HideNode(node);
-
-	
 		}
+
+		public void ShowNode(Node node)
+		{
+			if (!node.View.IsHidden)
+			{
+				return;
+			}
+
+			modelNodeService.ShowHiddenNode(node.Name);
+		}
+
+		public Brush GetDimBrush() => themeService.GetDimBrush();
+		public Brush GetTitleBrush() => themeService.GetTextBrush();
 
 
 		public Brush GetNodeBrush(Node node)

@@ -20,5 +20,8 @@ namespace Dependinator.ModelViewing.Nodes
 		void ShowCode(Node node);
 		void RearrangeLayout(NodeViewModel node);
 		void HideNode(Node node);
+		Brush GetDimBrush();
+		Brush GetTitleBrush();
+		void ShowNode(Node node);
 	}
 }

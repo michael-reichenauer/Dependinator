@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -24,6 +23,9 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private readonly Brush backgroundBrush;
 		private readonly Brush selectedBrush;
+		private readonly Brush rectangleBrush;
+		private readonly Brush dimBrush;
+		private readonly Brush titleBrush;
 
 
 		protected NodeViewModel(
@@ -34,15 +36,27 @@ namespace Dependinator.ModelViewing.Nodes
 			this.nodeViewModelService = nodeViewModelService;
 			this.Node = node;
 
-			RectangleBrush = nodeViewModelService.GetNodeBrush(node);
-			backgroundBrush = nodeViewModelService.GetBackgroundBrush(RectangleBrush);
-			selectedBrush = nodeViewModelService.GetSelectedBrush(RectangleBrush);
+			rectangleBrush = nodeViewModelService.GetNodeBrush(node);
+			dimBrush = nodeViewModelService.GetDimBrush();
+			titleBrush = nodeViewModelService.GetTitleBrush();
+			backgroundBrush = nodeViewModelService.GetBackgroundBrush(rectangleBrush);
+			selectedBrush = nodeViewModelService.GetSelectedBrush(rectangleBrush);
 		}
 
 		public bool IsFirstShow { get; set; } = true;
 
-		public override bool CanShow => !Node.View.IsHidden
-			&& (ItemScale * ItemWidth > 20 && Node.Parent.View.CanShowChildren);
+		public override bool CanShow
+		{
+			get
+			{
+				if (Node.View.IsHidden && Node.Parent.View.IsHidden)
+				{
+					return false;
+				}
+
+				return (ItemScale * ItemWidth > 20 && Node.Parent.View.CanShowChildren);
+			}
+		}
 
 		public bool CanShowChildren => ItemScale * ItemWidth > 50 * 7;
 
@@ -51,14 +65,15 @@ namespace Dependinator.ModelViewing.Nodes
 		public bool IsHorizontal => !IsVertical;
 		public bool IsVertical => (ItemWidth * 1.5 < ItemHeight) && ItemWidth * ItemScale < 80;
 
-		public Brush RectangleBrush { get; }
+		public Brush TitleBrush => Node.View.IsHidden ? dimBrush : titleBrush;
+		public Brush RectangleBrush => Node.View.IsHidden ? dimBrush : rectangleBrush;
 		public Brush TitleBorderBrush => Node.NodeType == NodeType.Type ? RectangleBrush : null;
 		public Brush BackgroundBrush => IsSelected ? selectedBrush : backgroundBrush;
+
 		public bool IsShowCodeButton { get => Get(); set => Set(value); }
+		public bool IsHidden => Node.View.IsHidden;
 		public bool IsShowNode => ItemScale < 100;
-
 		public bool IsShowItems => CanShowChildren;
-
 		public bool IsShowDescription => (!CanShowChildren || !Node.Children.Any());
 		public bool IsShowToolTip => true;
 		public bool HasCode => Node.NodeType == NodeType.Type || Node.NodeType == NodeType.Member;
@@ -90,7 +105,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public int DescriptionFontSize => ((int)(10 * ItemScale)).MM(9, 11);
 		public string Description => Node.Description;
-		public bool IsShowCodeIcon => HasCode && ItemScale > 1.3;
+		public bool IsShowCodeIcon => HasCode && ItemScale > 1.3 && !IsHidden;
 
 
 		public void ShowDependencies() => nodeViewModelService.ShowReferences(this);
@@ -153,6 +168,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public void HideNode() => nodeViewModelService.HideNode(Node);
 
+		public void ShowNode() => nodeViewModelService.ShowNode(Node);
 
 
 		public override void ItemRealized()
@@ -181,7 +197,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public void RearrangeLayout() => nodeViewModelService.RearrangeLayout(this);
 
 
-		public string Color => RectangleBrush.AsString();
+		public string Color => rectangleBrush.AsString();
 
 
 		public void MouseEnterTitle()
@@ -205,7 +221,8 @@ namespace Dependinator.ModelViewing.Nodes
 
 
 		private string ItemsToolTip => !BuildConfig.IsDebug ? "" :
-			$"\n " +
+			$"\n\n" +
+			$"FullName: {Node.Name.FullName}\n" +
 			$"Rect: {ItemBounds.TS()}\n" +
 			$"Scale {ItemScale.TS()}, ChildrenScale: {Node.View.ItemsCanvas?.Scale.TS()}\n" +
 			$"ScaleFactor: {Node.View.ScaleFactor}, {Node.View.ViewModel.ItemsViewModel?.ItemsCanvas?.ScaleFactor}\n" +

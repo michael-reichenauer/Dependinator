@@ -135,6 +135,9 @@ namespace Dependinator.Common.ThemeHandling
 		public Brush BackgroundBrush() => Theme.BackgroundBrush;
 		public Brush GetTextBrush() => Theme.TextBrush;
 		public Brush GetTextLowBrush() => Theme.TextLowBrush;
+		public Brush GetDimBrush() => Theme.DimBrush;
+
+
 		public Brush GetTextDimBrush() => Theme.DimBrush;
 
 

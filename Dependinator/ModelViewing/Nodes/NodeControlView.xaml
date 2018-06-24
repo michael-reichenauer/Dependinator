@@ -160,6 +160,7 @@
 						VerticalAlignment="Top">
 
 						<Button
+							Visibility="{Binding IsHidden, Converter={StaticResource NVC}}"
 							VerticalAlignment="Center"
 							HorizontalAlignment="Left"
 							Content="&#xe0bc;"
@@ -178,6 +179,24 @@
 							Style="{DynamicResource IconButtonStyle}"
 							Command="{Binding ToggleEditModeCommand}"
 							ToolTip="{Binding EditModeToolTop}" />
+
+						<Button
+							Visibility="{Binding IsHidden, Converter={StaticResource NVC}}"
+							VerticalAlignment="Center"
+							HorizontalAlignment="Left"
+							Content="&#xE882;"
+							Style="{DynamicResource IconButtonStyle}"
+							Command="{Binding HideNodeCommand}"
+							ToolTip="Dim node and hides dependencies" />
+
+						<Button
+							Visibility="{Binding IsHidden, Converter={StaticResource VC}}"
+							VerticalAlignment="Center"
+							HorizontalAlignment="Left"
+							Content="&#xE883;"
+							Style="{DynamicResource IconButtonStyle}"
+							Command="{Binding ShowNodeCommand}"
+							ToolTip="Show node and the dependencies" />
 					</StackPanel>
 
 					<StackPanel
@@ -206,6 +225,7 @@
 							ToolTip="Decrease node size" />
 
 						<Button
+							Visibility="{Binding IsHidden, Converter={StaticResource NVC}}"
 							VerticalAlignment="Center"
 							HorizontalAlignment="Left"
 							Content="&#xe31c;"
