@@ -30,7 +30,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private
 			{
 				await workItemParser.Value.ParseAsync();
 			}
-			
+
 			t.Log($"Parsed {filePath}");
 			return R.Ok;
 		}
@@ -51,6 +51,41 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private
 		}
 
 
+		public IReadOnlyList<string> GetDataFilePaths(string filePath)
+		{
+			if (IsSolutionFile(filePath))
+			{
+				Solution solution = new Solution(filePath);
+
+				return GetSolutionProjects(solution)
+					.Select(project => project.GetOutputPath())
+					.Where(path => path != null)
+					.ToList();
+			}
+			else
+			{
+				return new[] { filePath };
+			}
+		}
+
+
+		public IReadOnlyList<string> GetBuildPaths(string filePath)
+		{
+			if (IsSolutionFile(filePath))
+			{
+				Solution solution = new Solution(filePath);
+
+				return GetSolutionProjects(solution)
+					.SelectMany(project => project.GetWorkPaths())
+					.ToList();
+			}
+			else
+			{
+				return new string[0];
+			}
+		}
+
+
 		private static R<WorkParser> GetWorkParser(
 			string filePath, DataItemsCallback dataItemsCallback)
 		{
@@ -61,7 +96,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private
 
 			if (assemblyParsers.IsFaulted)
 			{
-				return  assemblyParsers.Error;
+				return assemblyParsers.Error;
 			}
 
 			if (!assemblyParsers.Value.Any())
@@ -128,7 +163,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private
 
 
 
-		private static IReadOnlyList<Project> GetSolutionProjects(Solution solution) => 
+		private static IReadOnlyList<Project> GetSolutionProjects(Solution solution) =>
 			solution.Projects.Where(project => !IsTestProject(solution, project)).ToList();
 
 
@@ -168,7 +203,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private
 		private static string GetName(string filePath) => Path.GetFileName(filePath).Replace(".", "*");
 
 
-		private static bool IsSolutionFile(string filePath) => 
+		private static bool IsSolutionFile(string filePath) =>
 			Path.GetExtension(filePath).IsSameIgnoreCase(".sln");
 
 	}

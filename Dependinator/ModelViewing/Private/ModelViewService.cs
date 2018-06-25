@@ -90,7 +90,7 @@ namespace Dependinator.ModelViewing.Private
 		{
 			StoreViewSettings();
 
-			modelHandlingService.Save();
+			modelHandlingService.Close();
 		}
 
 

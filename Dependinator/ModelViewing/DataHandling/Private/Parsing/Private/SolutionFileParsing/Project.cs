@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.SolutionFileParsing.Private;
@@ -36,6 +37,15 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Solutio
 
 		public string ProjectDirectory => Path.Combine(solutionDirectory, RelativeProjectDirectory);
 
+
+		public IReadOnlyList<string> GetWorkPaths()
+		{
+			return new[]
+			{
+				Path.Combine(ProjectDirectory, "bin", "Debug"),
+				Path.Combine(ProjectDirectory, "obj", "Debug"),
+			};
+		}
 
 
 		public string GetOutputPath()

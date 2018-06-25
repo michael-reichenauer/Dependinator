@@ -17,6 +17,8 @@ namespace Dependinator.Utils.UI
 	{
 		private DispatcherTimer timer;
 
+		public bool IsTriggered => timer?.IsEnabled ?? false;
+
 		/// <summary>
 		/// Debounce an event by resetting the event timeout every time the event is 
 		/// fired. The behavior is that the Action passed is fired only after events
@@ -34,7 +36,7 @@ namespace Dependinator.Utils.UI
 		/// <param name="param">optional parameter</param>
 		/// <param name="priority">optional priorty for the dispatcher</param>
 		/// <param name="disp">optional dispatcher. If not passed or null CurrentDispatcher is used.</param>        
-		public void Debounce(int interval, Action<object> action,
+		public void Debounce(TimeSpan interval, Action<object> action,
 			object param = null,
 			DispatcherPriority priority = DispatcherPriority.ApplicationIdle,
 			Dispatcher disp = null)
@@ -44,15 +46,19 @@ namespace Dependinator.Utils.UI
 			timer = null;
 
 			if (disp == null)
+			{
 				disp = Dispatcher.CurrentDispatcher;
+			}
 
 			// timer is recreated for each event and effectively
 			// resets the timeout. Action only fires after timeout has fully
 			// elapsed without other events firing in between
-			timer = new DispatcherTimer(TimeSpan.FromMilliseconds(interval), priority, (s, e) =>
+			timer = new DispatcherTimer(interval, priority, (s, e) =>
 			{
 				if (timer == null)
+				{
 					return;
+				}
 
 				timer?.Stop();
 				timer = null;
@@ -60,6 +66,13 @@ namespace Dependinator.Utils.UI
 			}, disp);
 
 			timer.Start();
+		}
+
+
+		public void Stop()
+		{
+			timer?.Stop();
+			timer = null;
 		}
 	}
 }

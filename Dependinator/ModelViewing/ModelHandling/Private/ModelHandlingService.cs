@@ -28,6 +28,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private static readonly int BatchSize = 100;
 
 		private readonly IDataService dataService;
+		private readonly IDataMonitorService dataMonitorService;
 		private readonly IModelNodeService modelNodeService;
 		private readonly IModelLinkService modelLinkService;
 		private readonly IModelLineService modelLineService;
@@ -45,6 +46,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public ModelHandlingService(
 			IDataService dataService,
+			IDataMonitorService dataMonitorService,
 			IModelNodeService modelNodeService,
 			IModelLinkService modelLinkService,
 			IModelLineService modelLineService,
@@ -56,6 +58,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			ICmd cmd)
 		{
 			this.dataService = dataService;
+			this.dataMonitorService = dataMonitorService;
 			this.modelNodeService = modelNodeService;
 			this.modelLinkService = modelLinkService;
 			this.modelLineService = modelLineService;
@@ -66,6 +69,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			this.recentModelsService = recentModelsService;
 			this.message = message;
 			this.cmd = cmd;
+
+			dataMonitorService.ChangedOccurred += ChangedFiles;
 		}
 
 
@@ -100,8 +105,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					Application.Current.Shutdown(0);
 					return;
 				}
-
-				//await RefreshAsync(false);
 			}
 			else
 			if (File.Exists(modelMetadata.ModelFilePath))
@@ -153,6 +156,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			GC.Collect();
 			isWorking = false;
+
+			dataMonitorService.Start(modelMetadata.ModelFilePath);
 		}
 
 
@@ -210,6 +215,16 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 
 
+		private async void ChangedFiles(object sender, EventArgs e)
+		{
+			if (!isWorking)
+			{
+				await RefreshAsync(false);
+			}
+		}
+
+
+
 		private Task<R<int>> ShowParsedModelAsync()
 		{
 			return ShowModelAsync(operation => dataService.ParseAsync(
@@ -236,8 +251,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		public void Save()
+		public void Close()
 		{
+			dataMonitorService.Stop();
 			if (isWorking)
 			{
 				return;

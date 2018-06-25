@@ -21,6 +21,6 @@ namespace Dependinator.ModelViewing.ModelHandling
 
 		IReadOnlyList<NodeName> GetHiddenNodeNames();
 
-		void Save();
+		void Close();
 	}
 }
