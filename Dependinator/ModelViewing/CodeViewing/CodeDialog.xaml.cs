@@ -1,9 +1,14 @@
-﻿using System.IO;
+﻿using System;
+using System.ComponentModel;
+using System.IO;
 using System.Reflection;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
+using Dependinator.Common;
 using Dependinator.Common.MessageDialogs;
+using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.ModelViewing.DataHandling;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.Utils.ErrorHandling;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
@@ -16,28 +21,55 @@ namespace Dependinator.ModelViewing.CodeViewing
 	/// </summary>
 	public partial class CodeDialog : Window
 	{
+		private readonly IDataDetailsService dataDetailsService;
+		private readonly Lazy<IModelNotifications> modelNotifications;
 		private readonly IMessage message;
+		private readonly ModelMetadata modelMetadata;
+		private readonly NodeName nodeName;
 
 
-		internal CodeDialog(Window owner, IMessage message, string title, Task<R<string>> codeTask)
+		internal CodeDialog(
+			IDataDetailsService dataDetailsService,
+			Lazy<IModelNotifications> modelNotifications,
+			IMessage message,
+			ModelMetadata modelMetadata,
+			WindowOwner owner,
+			NodeName nodeName)
 		{
+			this.dataDetailsService = dataDetailsService;
+			this.modelNotifications = modelNotifications;
 			this.message = message;
+			this.modelMetadata = modelMetadata;
+			this.nodeName = nodeName;
 			Owner = owner;
 			InitializeComponent();
 
-			DataContext = new CodeViewModel(title);
+			DataContext = new CodeViewModel(nodeName.DisplayLongName);
 
 			SetSyntaxHighlighting();
 
-			SetCodeText(codeTask);
+			SetCodeText();
+
+			modelNotifications.Value.ModelUpdated += OnModelUpdated;
 		}
 
 
-		private async void SetCodeText(Task<R<string>> codeTask)
+		protected override void OnClosing(CancelEventArgs e)
+		{
+			modelNotifications.Value.ModelUpdated -= OnModelUpdated;
+
+			base.OnClosing(e);
+		}
+
+
+		private void OnModelUpdated(object sender, EventArgs e) => SetCodeText();
+
+
+		private async void SetCodeText()
 		{
 			CodeView.Text = "Getting code ...";
 
-			R<string> codeResult = await codeTask;
+			R<string> codeResult = await dataDetailsService.GetCode(modelMetadata.ModelFilePath, nodeName);
 
 			if (codeResult.IsFaulted)
 			{

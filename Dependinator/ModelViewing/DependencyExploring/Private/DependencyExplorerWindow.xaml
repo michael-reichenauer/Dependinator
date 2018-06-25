@@ -84,12 +84,12 @@
 						Command="{Binding SwitchSidesCommand}"
 						ToolTip="Switch sides" />
 
-					<Button
+					<!--<Button
 						WindowChrome.IsHitTestVisibleInChrome="True"
 						Style="{DynamicResource IconButtonStyle}"
 						Content="&#xE5D5;"
 						Command="{Binding RefreshCommand}"
-						ToolTip="Refresh model data (F5)" />
+						ToolTip="Refresh model data (F5)" />-->
 
 				</StackPanel>
 

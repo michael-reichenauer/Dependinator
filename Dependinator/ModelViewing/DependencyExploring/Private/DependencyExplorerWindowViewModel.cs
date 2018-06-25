@@ -50,5 +50,8 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 		public void FilterOn(DependencyItem item, bool isSourceItem) =>
 			dependencyWindowService.FilterOn(this, item, isSourceItem);
+
+
+		public void ModelChanged() => dependencyWindowService.Refresh(this);
 	}
 }

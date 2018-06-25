@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using System;
+using System.ComponentModel;
+using System.Windows;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
@@ -9,13 +11,33 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 	/// </summary>
 	public partial class DependencyExplorerWindow : Window
 	{
+		private readonly IModelNotifications modelNotifications;
+		private DependencyExplorerWindowViewModel viewModel;
+
 		internal DependencyExplorerWindow(
-			IDependencyWindowService dependencyWindowService, Window owner, Node node, Line line)
+			IDependencyWindowService dependencyWindowService,
+			IModelNotifications modelNotifications,
+			Window owner, 
+			Node node, 
+			Line line)
 		{
+			this.modelNotifications = modelNotifications;
 			Owner = owner;
 			InitializeComponent();
 
-			DataContext = new DependencyExplorerWindowViewModel(dependencyWindowService, node, line);
+			viewModel = new DependencyExplorerWindowViewModel(dependencyWindowService, node, line);
+			DataContext = viewModel;
+			modelNotifications.ModelUpdated += OnModelChanged;
+		}
+
+
+		private void OnModelChanged(object sender, EventArgs e) => viewModel.ModelChanged();
+
+
+		protected override void OnClosing(CancelEventArgs e)
+		{
+			modelNotifications.ModelUpdated -= OnModelChanged;
+			base.OnClosing(e);
 		}
 	}
 }

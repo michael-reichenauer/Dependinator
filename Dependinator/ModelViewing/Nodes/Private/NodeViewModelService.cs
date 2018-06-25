@@ -1,11 +1,13 @@
+using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.Common;
 using Dependinator.Common.ThemeHandling;
+using Dependinator.ModelViewing.CodeViewing;
+using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.DependencyExploring;
-using Dependinator.ModelViewing.DependencyExploring.Private;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private;
@@ -21,8 +23,8 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private readonly IItemSelectionService itemSelectionService;
 		private readonly INodeLayoutService nodeLayoutService;
 		private readonly IDependencyExplorerService dependencyExplorerService;
-		private readonly IDependencyWindowService dependencyWindowService;
-		private readonly WindowOwner owner;
+		private readonly Func<NodeName, CodeDialog> codeDialogProvider;
+
 
 
 
@@ -33,8 +35,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			IItemSelectionService itemSelectionService,
 			INodeLayoutService nodeLayoutService,
 			IDependencyExplorerService dependencyExplorerService,
-			IDependencyWindowService dependencyWindowService,
-			WindowOwner owner)
+			Func<NodeName, CodeDialog> codeDialogProvider)
 		{
 			this.modelNodeService = modelNodeService;
 			this.themeService = themeService;
@@ -42,8 +43,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			this.itemSelectionService = itemSelectionService;
 			this.nodeLayoutService = nodeLayoutService;
 			this.dependencyExplorerService = dependencyExplorerService;
-			this.dependencyWindowService = dependencyWindowService;
-			this.owner = owner;
+			this.codeDialogProvider = codeDialogProvider;
 		}
 
 
@@ -144,7 +144,11 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			dependencyExplorerService.ShowWindow(nodeViewModel.Node);
 
 
-		public void ShowCode(Node node) => dependencyWindowService.ShowCode(node.Name);
+		public void ShowCode(Node node)
+		{
+			CodeDialog codeDialog = codeDialogProvider(node.Name);
+			codeDialog.Show();
+		}
 
 
 		public void RearrangeLayout(NodeViewModel nodeViewModel) =>

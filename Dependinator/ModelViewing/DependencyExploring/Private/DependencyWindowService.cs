@@ -2,11 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Dependinator.Common;
 using Dependinator.Common.MessageDialogs;
-using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelViewing.CodeViewing;
-using Dependinator.ModelViewing.DataHandling;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private;
@@ -19,41 +16,29 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		private readonly IDependenciesService dependenciesService;
 		private readonly IModelService modelService;
 		private readonly Lazy<IModelNotifications> modelNotifications;
-		private readonly IDataDetailsService dataDetailsService;
 		private readonly IMessage message;
-		private readonly ModelMetadata metadata;
-		private readonly WindowOwner owner;
+		private readonly Func<NodeName, CodeDialog> codeDialogProvider;
+
 
 
 		public DependencyWindowService(
 			IDependenciesService dependenciesService,
 			IModelService modelService,
 			Lazy<IModelNotifications> modelNotifications,
-			IDataDetailsService dataDetailsService,
 			IMessage message,
-			ModelMetadata metadata,
-			WindowOwner owner)
+			Func<NodeName, CodeDialog> codeDialogProvider)
 		{
 			this.dependenciesService = dependenciesService;
 			this.modelService = modelService;
 			this.modelNotifications = modelNotifications;
-			this.dataDetailsService = dataDetailsService;
 			this.message = message;
-			this.metadata = metadata;
-			this.owner = owner;
+			this.codeDialogProvider = codeDialogProvider;
 		}
 
 
 		public void ShowCode(NodeName nodeName)
 		{
-			if (!TryGetNode(nodeName, out Node node))
-			{
-				message.ShowInfo($"The node no longer exists in the model:\n{nodeName.DisplayLongName}");
-				return;
-			}
-
-			var codeTask = dataDetailsService.GetCode(metadata.ModelFilePath, node.Name);
-			CodeDialog codeDialog = new CodeDialog(owner, message, node.Name.DisplayLongName, codeTask);
+			CodeDialog codeDialog = codeDialogProvider(nodeName);
 			codeDialog.Show();
 		}
 
@@ -84,8 +69,6 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		public async Task RefreshAsync(DependencyExplorerWindowViewModel viewModel)
 		{
 			await RefreshModelAsync();
-
-			await SetSidesAsync(viewModel);
 		}
 
 
@@ -117,6 +100,15 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			}
 
 			await FilterOn(viewModel, sourceNode, targetNode, itemNode, isSourceSide);
+		}
+
+
+		public async Task Refresh(DependencyExplorerWindowViewModel viewModel)
+		{
+			Node sourceNode = GetNodeOrParent(viewModel.SourceNodeName);
+			Node targetNode = GetNodeOrParent(viewModel.TargetNodeName);
+
+			await SetSourceAndTargetItemsAsync(viewModel, sourceNode, targetNode);
 		}
 
 
@@ -311,6 +303,20 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 		private bool TryGetNode(NodeName nodeName, out Node node) =>
 			modelService.TryGetNode(new NodeId(nodeName), out node);
+
+
+		private Node GetNodeOrParent(NodeName nodeName)
+		{
+			while (true)
+			{
+				if (modelService.TryGetNode(new NodeId(nodeName), out Node node))
+				{
+					return node;
+				}
+
+				nodeName = nodeName.ParentName;
+			}
+		}
 
 
 		private Task RefreshModelAsync() => modelNotifications.Value.ManualRefreshAsync(false);

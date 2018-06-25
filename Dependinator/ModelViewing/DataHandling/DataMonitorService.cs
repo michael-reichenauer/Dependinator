@@ -77,18 +77,19 @@ namespace Dependinator.ModelViewing.DataHandling
 
 			if (monitoredFiles.Any(file => file.IsSameIgnoreCase(fullPath)) && File.Exists(fullPath))
 			{
+				// Log.Debug($"Monitored file {fullPath}, {e.ChangeType}, {changeDebounce.IsTriggered}");
 				changeDebounce.Debounce(
 					TimeSpan.FromSeconds(10), Trigger, null, DispatcherPriority.ApplicationIdle, dispatcher);
 				return;
 			}
 
-			if (monitoredWorkFolders.Any(folder => fullPath.StartsWith(folder)))
+			if (monitoredWorkFolders.Any(folder => fullPath.StartsWithIc(folder)))
 			{
 				if (changeDebounce.IsTriggered)
 				{
 					// Log.Debug($"Work item {fullPath}, {e.ChangeType}");
 					changeDebounce.Debounce(
-						TimeSpan.FromSeconds(5), Trigger, null, DispatcherPriority.ApplicationIdle, dispatcher);
+						TimeSpan.FromSeconds(5), Trigger, null, DispatcherPriority.ApplicationIdle, dispatcher);			
 					return;
 				}
 			}

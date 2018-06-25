@@ -19,5 +19,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			bool isSourceSide);
 
 		void ShowCode(NodeName nodeName);
+
+		Task Refresh(DependencyExplorerWindowViewModel viewModel);
 	}
 }

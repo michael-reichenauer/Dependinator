@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Dependinator.Common.ModelMetadataFolders.Private;
-using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
@@ -22,20 +21,18 @@ namespace Dependinator.ModelViewing.Private
 		private readonly ISettingsService settingsService;
 		private readonly IModelHandlingService modelHandlingService;
 		private readonly IItemSelectionService itemSelectionService;
-		private readonly IProgressService progress;
+
 
 		private ItemsCanvas rootNodeCanvas;
 
 		public ModelViewService(
 			ISettingsService settingsService,
 			IModelHandlingService modelHandlingService,
-			IItemSelectionService itemSelectionService,
-			IProgressService progress)
+			IItemSelectionService itemSelectionService)
 		{
 			this.settingsService = settingsService;
 			this.modelHandlingService = modelHandlingService;
 			this.itemSelectionService = itemSelectionService;
-			this.progress = progress;
 		}
 
 
@@ -52,24 +49,15 @@ namespace Dependinator.ModelViewing.Private
 
 			Log.Debug("Loading repository ...");
 
-			using (progress.ShowBusy())
-			{
-				RestoreViewSettings();
+			RestoreViewSettings();
 
-				await modelHandlingService.LoadAsync();
-				t.Log("Updated view model after cached/fresh");
-			}
+			await modelHandlingService.LoadAsync();
+			t.Log("Updated view model after cached/fresh");
 		}
 
 
 		public async Task RefreshAsync(bool refreshLayout)
 		{
-			if (refreshLayout)
-			{
-				Node root = modelHandlingService.Root;
-				root.View.ItemsCanvas.SetRootScale(2);
-			}
-
 			await modelHandlingService.RefreshAsync(refreshLayout);
 		}
 
@@ -79,7 +67,7 @@ namespace Dependinator.ModelViewing.Private
 		public void Clicked() => itemSelectionService.Deselect();
 
 
-		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) => 
+		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) =>
 			rootNodeCanvas?.RootCanvas.ZoomNode(e);
 
 

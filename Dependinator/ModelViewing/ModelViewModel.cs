@@ -14,18 +14,15 @@ using Dependinator.Utils.UI.Mvvm;
 namespace Dependinator.ModelViewing
 {
 	[SingleInstance]
-	internal class ModelViewModel : ViewModel, IModelNotifications
+	internal class ModelViewModel : ViewModel
 	{
 		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(100);
-		public static readonly TimeSpan MouseExitDelay = TimeSpan.FromMilliseconds(10);
-
-		public static bool IsControlling => Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
 
 		private readonly IThemeService themeService;
 		private readonly IModelViewService modelViewService;
 		private readonly IProgressService progress;
 		private readonly IOpenModelService openModelService;
-		private readonly ModelMetadata modelMetadata;
+
 
 		private int width = 0;
 
@@ -34,14 +31,12 @@ namespace Dependinator.ModelViewing
 			IModelViewService modelViewService,
 			IThemeService themeService,
 			IProgressService progressService,
-			IOpenModelService openModelService,
-			ModelMetadata modelMetadata)
+			IOpenModelService openModelService)
 		{
 			this.modelViewService = modelViewService;
 			this.themeService = themeService;
 			this.progress = progressService;
 			this.openModelService = openModelService;
-			this.modelMetadata = modelMetadata;
 
 			ItemsCanvas rootCanvas = new ItemsCanvas();
 			ItemsViewModel = new ItemsViewModel(rootCanvas, null);
@@ -73,10 +68,7 @@ namespace Dependinator.ModelViewing
 		{
 			themeService.SetThemeWpfColors();
 
-			using (progress.ShowBusy())
-			{
-				await Task.Yield();
-			}
+			await Task.Yield();
 		}
 
 

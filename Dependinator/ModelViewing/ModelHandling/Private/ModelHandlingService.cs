@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Threading;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.ProgressHandling;
 using Dependinator.ModelViewing.DataHandling;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
@@ -23,7 +24,7 @@ using Dependinator.Utils.Threading;
 namespace Dependinator.ModelViewing.ModelHandling.Private
 {
 	[SingleInstance]
-	internal class ModelHandlingService : IModelHandlingService
+	internal class ModelHandlingService : IModelHandlingService, IModelNotifications
 	{
 		private static readonly int BatchSize = 100;
 
@@ -34,6 +35,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private readonly IModelLineService modelLineService;
 		private readonly IRecentModelsService recentModelsService;
 		private readonly IMessage message;
+		private readonly IProgressService progress;
 		private readonly ICmd cmd;
 		private readonly Func<OpenModelViewModel> openModelViewModelProvider;
 
@@ -55,6 +57,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			ModelMetadata modelMetadata,
 			IRecentModelsService recentModelsService,
 			IMessage message,
+			IProgressService progress,
 			ICmd cmd)
 		{
 			this.dataService = dataService;
@@ -68,137 +71,157 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			this.modelMetadata = modelMetadata;
 			this.recentModelsService = recentModelsService;
 			this.message = message;
+			this.progress = progress;
 			this.cmd = cmd;
 
 			dataMonitorService.ChangedOccurred += ChangedFiles;
 		}
 
 
+		public event EventHandler ModelUpdated;
+
 		public Node Root => modelService.Root;
 
 		public void SetRootCanvas(ItemsCanvas rootCanvas) => Root.View.ItemsCanvas = rootCanvas;
 
 
+		public Task ManualRefreshAsync(bool refreshLayout = false) => RefreshAsync(refreshLayout);
+
+
 		public async Task LoadAsync()
 		{
-			isWorking = true;
-			Log.Debug($"Metadata model: {modelMetadata.ModelFilePath} {DateTime.Now}");
-			string dataFilePath = GetDataFilePath();
-
-			Root.View.ItemsCanvas.IsZoomAndMoveEnabled = true;
-
-			if (File.Exists(dataFilePath))
+			using (progress.ShowBusy())
 			{
-				R result = await TryShowSavedModelAsync(dataFilePath);
-				if (result.Error.Exception is NotSupportedException)
-				{
-					File.Delete(dataFilePath);
-					await LoadAsync();
-					return;
-				}
+				isWorking = true;
+				Log.Debug($"Metadata model: {modelMetadata.ModelFilePath} {DateTime.Now}");
+				string dataFilePath = GetDataFilePath();
 
-				if (result.IsFaulted)
-				{
-					message.ShowWarning(result.Message);
-					string targetPath = ProgramInfo.GetInstallFilePath();
-					cmd.Start(targetPath, "");
-					Application.Current.Shutdown(0);
-					return;
-				}
-			}
-			else
-			if (File.Exists(modelMetadata.ModelFilePath))
-			{
-				R result = await ShowParsedModelAsync();
-				if (result.IsFaulted)
-				{
-					message.ShowWarning(result.Message);
-					string targetPath = ProgramInfo.GetInstallFilePath();
-					cmd.Start(targetPath, "");
-					Application.Current.Shutdown(0);
-					return;
-				}
-			}
+				Root.View.ItemsCanvas.IsZoomAndMoveEnabled = true;
 
-			if (!modelMetadata.IsDefault && !File.Exists(dataFilePath) && !File.Exists(modelMetadata.ModelFilePath))
-			{
-				message.ShowWarning($"Model not found:\n{modelMetadata.ModelFilePath}");
-				recentModelsService.RemoveModelPath(modelMetadata.ModelFilePath);
-				string targetPath = ProgramInfo.GetInstallFilePath();
-				cmd.Start(targetPath, "");
-				Application.Current.Shutdown(0);
-				return;
-			}
-
-			if (!Root.Children.Any())
-			{
 				if (File.Exists(dataFilePath))
 				{
-					File.Delete(dataFilePath);
+					R result = await TryShowSavedModelAsync(dataFilePath);
+					if (result.Error.Exception is NotSupportedException)
+					{
+						File.Delete(dataFilePath);
+						await LoadAsync();
+						return;
+					}
+
+					if (result.IsFaulted)
+					{
+						message.ShowWarning(result.Message);
+						string targetPath = ProgramInfo.GetInstallFilePath();
+						cmd.Start(targetPath, "");
+						Application.Current.Shutdown(0);
+						return;
+					}
+				}
+				else if (File.Exists(modelMetadata.ModelFilePath))
+				{
+					R result = await ShowParsedModelAsync();
+					if (result.IsFaulted)
+					{
+						message.ShowWarning(result.Message);
+						string targetPath = ProgramInfo.GetInstallFilePath();
+						cmd.Start(targetPath, "");
+						Application.Current.Shutdown(0);
+						return;
+					}
 				}
 
-				isShowingOpenModel = true;
-				modelMetadata.SetDefault();
-				Root.View.ItemsCanvas.SetRootScale(1);
-				Root.View.ItemsCanvas.IsZoomAndMoveEnabled = false;
-				Root.View.ItemsCanvas.UpdateAndNotifyAll();
+				if (!modelMetadata.IsDefault && !File.Exists(dataFilePath) && !File.Exists(modelMetadata.ModelFilePath))
+				{
+					message.ShowWarning($"Model not found:\n{modelMetadata.ModelFilePath}");
+					recentModelsService.RemoveModelPath(modelMetadata.ModelFilePath);
+					string targetPath = ProgramInfo.GetInstallFilePath();
+					cmd.Start(targetPath, "");
+					Application.Current.Shutdown(0);
+					return;
+				}
 
-				Root.View.ItemsCanvas.AddItem(openModelViewModelProvider());
+				if (!Root.Children.Any())
+				{
+					if (File.Exists(dataFilePath))
+					{
+						File.Delete(dataFilePath);
+					}
+
+					isShowingOpenModel = true;
+					modelMetadata.SetDefault();
+					Root.View.ItemsCanvas.SetRootScale(1);
+					Root.View.ItemsCanvas.IsZoomAndMoveEnabled = false;
+					Root.View.ItemsCanvas.UpdateAndNotifyAll();
+
+					Root.View.ItemsCanvas.AddItem(openModelViewModelProvider());
+				}
+				else
+				{
+					isShowingOpenModel = false;
+					Root.View.ItemsCanvas.IsZoomAndMoveEnabled = true;
+					UpdateLines(Root);
+					recentModelsService.AddModelPaths(modelMetadata.ModelFilePath);
+					modelNodeService.SetLayoutDone();
+				}
+
+				GC.Collect();
+				isWorking = false;
+
+				dataMonitorService.Start(modelMetadata.ModelFilePath);
 			}
-			else
-			{
-				isShowingOpenModel = false;
-				Root.View.ItemsCanvas.IsZoomAndMoveEnabled = true;
-				UpdateLines(Root);
-				recentModelsService.AddModelPaths(modelMetadata.ModelFilePath);
-				modelNodeService.SetLayoutDone();
-			}
-
-			GC.Collect();
-			isWorking = false;
-
-			dataMonitorService.Start(modelMetadata.ModelFilePath);
 		}
 
 
 		public async Task RefreshAsync(bool isClean)
 		{
-			if (isClean)
+			if (isWorking)
 			{
-				string dataFilePath = GetDataFilePath();
-
-				if (File.Exists(dataFilePath))
-				{
-					File.Delete(dataFilePath);
-				}
-
-				modelNodeService.RemoveAll();
-				await LoadAsync();
 				return;
 			}
 
-			isWorking = true;
-			R<int> operationId = await ShowParsedModelAsync();
-
-			if (operationId.IsFaulted)
+			using (progress.ShowBusy())
 			{
-				message.ShowWarning(operationId.Message);
-
-				if (!File.Exists(modelMetadata.ModelFilePath))
+				if (isClean)
 				{
-					recentModelsService.RemoveModelPath(modelMetadata.ModelFilePath);
+					string dataFilePath = GetDataFilePath();
+
+					if (File.Exists(dataFilePath))
+					{
+						File.Delete(dataFilePath);
+					}
+
+					Root.View.ItemsCanvas.SetRootScale(2);
+
+					modelNodeService.RemoveAll();
+					await LoadAsync();
+					return;
 				}
 
+				isWorking = true;
+				R<int> operationId = await ShowParsedModelAsync();
+
+				if (operationId.IsFaulted)
+				{
+					message.ShowWarning(operationId.Message);
+
+					if (!File.Exists(modelMetadata.ModelFilePath))
+					{
+						recentModelsService.RemoveModelPath(modelMetadata.ModelFilePath);
+					}
+
+					modelNodeService.SetLayoutDone();
+					GC.Collect();
+					isWorking = false;
+					return;
+				}
+
+				modelNodeService.RemoveObsoleteNodesAndLinks(operationId.Value);
 				modelNodeService.SetLayoutDone();
 				GC.Collect();
 				isWorking = false;
-				return;
 			}
 
-			modelNodeService.RemoveObsoleteNodesAndLinks(operationId.Value);
-			modelNodeService.SetLayoutDone();
-			GC.Collect();
-			isWorking = false;
+			ModelUpdated?.Invoke(this, EventArgs.Empty);
 		}
 
 
