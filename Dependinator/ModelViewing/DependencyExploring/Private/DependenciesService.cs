@@ -78,17 +78,11 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				return false;
 			}
 
-
 			return
-				(link.Source.AncestorsAndSelf().Contains(options.SourceNode) ) &&
+				(link.Source.AncestorsAndSelf().Contains(options.SourceNode) &&
+				 (options.SourceNode2 == null || !link.Source.AncestorsAndSelf().Contains(options.SourceNode2))) &&
 				(link.Target.AncestorsAndSelf().Contains(options.TargetNode) &&
-				 !link.Target.AncestorsAndSelf().Contains(options.SourceNode));
-
-
-
-			//return !link.Target.View.IsHidden &&
-			//       (options.SourceNode.IsRoot || link.Source.AncestorsAndSelf().Contains(options.SourceNode)) &&
-			//       (options.TargetNode.IsRoot || link.Target.AncestorsAndSelf().Contains(options.TargetNode));
+					(options.TargetNode2 == null || !link.Target.AncestorsAndSelf().Contains(options.TargetNode2)));
 		}
 
 
@@ -151,6 +145,8 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			public bool IsSource { get; }
 			public Node SourceNode { get; }
 			public Node TargetNode { get; }
+			public Node SourceNode2 { get; }
+			public Node TargetNode2 { get; }
 
 			public Options(
 				bool isSource,
@@ -158,13 +154,17 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				Node targetNode)
 			{
 				IsSource = isSource;
-				SourceNode = sourceNode;
-				TargetNode = targetNode;
+
+				SourceNode = sourceNode == targetNode.Parent ? sourceNode.Root : sourceNode;
+				SourceNode2 = sourceNode == targetNode.Parent
+					? targetNode.Parent
+					: targetNode.Ancestors().Contains(sourceNode) ? targetNode :null;
+
+				TargetNode = targetNode == sourceNode.Parent ? targetNode.Root : targetNode;
+				TargetNode2 = targetNode == sourceNode.Parent 
+					? sourceNode.Parent 
+					: targetNode.Ancestors().Contains(sourceNode) ? null : sourceNode;
 			}
-
-
-
-
 		}
 	}
 }

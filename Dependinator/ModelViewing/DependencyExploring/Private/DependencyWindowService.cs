@@ -138,8 +138,8 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		private async void InitializeFromLineAsync(DependencyExplorerWindowViewModel viewModel, Line line)
 		{
 			// For lines to/from parent, use root 
-			Node sourceNode = line.Source == line.Target.Parent ? line.Source.Root : line.Source;
-			Node targetNode = line.Target == line.Source.Parent ? line.Target.Root : line.Target;
+			Node sourceNode = line.Source;
+			Node targetNode = line.Target;
 
 			await SetSourceAndTargetItemsAsync(viewModel, sourceNode, targetNode);
 		}
@@ -177,7 +177,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			await SetDependencyItemsAsync(viewModel, sourceNode, targetNode, true);
 			await SetDependencyItemsAsync(viewModel, sourceNode, targetNode, false);
 
-			await SetTextsAsync(viewModel);
+			await SetTextsAsync(viewModel, sourceNode, targetNode);
 			SelectNode(sourceNode, viewModel.SourceItems);
 			SelectNode(targetNode, viewModel.TargetItems);
 		}
@@ -209,7 +209,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				await SetDependencyItemsAsync(viewModel, sourceNode, targetNode, isSourceSide);
 			}
 
-			await SetTextsAsync(viewModel);
+			await SetTextsAsync(viewModel, sourceNode, targetNode);
 			if (isSourceSide)
 			{
 				SelectNode(targetNode, viewModel.TargetItems);
@@ -255,11 +255,16 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			dependenciesService.GetDependencyItemsAsync(isSourceSide, sourceNode, targetNode);
 
 
-		private async Task SetTextsAsync(DependencyExplorerWindowViewModel viewModel)
+		private async Task SetTextsAsync(
+			DependencyExplorerWindowViewModel viewModel,
+			Node sourceNode,
+			Node targetNode)
 		{
 			await Task.Yield();
-			viewModel.SourceText = ToNodeText(viewModel.SourceNodeName);
-			viewModel.TargetText = ToNodeText(viewModel.TargetNodeName);
+			NodeName sourceName = sourceNode == targetNode.Parent ? NodeName.Root : viewModel.SourceNodeName;
+			NodeName targetName = targetNode == sourceNode.Parent ? NodeName.Root : viewModel.TargetNodeName;
+			viewModel.SourceText = ToNodeText(sourceName);
+			viewModel.TargetText = ToNodeText(targetName);
 		}
 
 
