@@ -3,11 +3,10 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using Dependinator.Common;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.CodeViewing;
 using Dependinator.ModelViewing.DataHandling.Dtos;
-using Dependinator.ModelViewing.DependencyExploring;
+using Dependinator.ModelViewing.DependencyExploring.Private;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private;
@@ -22,10 +21,8 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private readonly IModelLineService modelLineService;
 		private readonly IItemSelectionService itemSelectionService;
 		private readonly INodeLayoutService nodeLayoutService;
-		private readonly IDependencyExplorerService dependencyExplorerService;
+		private readonly Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider;
 		private readonly Func<NodeName, CodeDialog> codeDialogProvider;
-
-
 
 
 		public NodeViewModelService(
@@ -34,7 +31,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			IModelLineService modelLineService,
 			IItemSelectionService itemSelectionService,
 			INodeLayoutService nodeLayoutService,
-			IDependencyExplorerService dependencyExplorerService,
+			Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider,
 			Func<NodeName, CodeDialog> codeDialogProvider)
 		{
 			this.modelNodeService = modelNodeService;
@@ -42,7 +39,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			this.modelLineService = modelLineService;
 			this.itemSelectionService = itemSelectionService;
 			this.nodeLayoutService = nodeLayoutService;
-			this.dependencyExplorerService = dependencyExplorerService;
+			this.dependencyExplorerWindowProvider = dependencyExplorerWindowProvider;
 			this.codeDialogProvider = codeDialogProvider;
 		}
 
@@ -140,8 +137,11 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		public void ShowReferences(NodeViewModel nodeViewModel) =>
-			dependencyExplorerService.ShowWindow(nodeViewModel.Node);
+		public void ShowReferences(NodeViewModel nodeViewModel)
+		{
+			DependencyExplorerWindow window = dependencyExplorerWindowProvider(nodeViewModel.Node, null);
+			window.Show();
+		}
 
 
 		public void ShowCode(Node node)

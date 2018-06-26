@@ -1,6 +1,7 @@
+using System;
 using System.Windows;
 using System.Windows.Input;
-using Dependinator.ModelViewing.DependencyExploring;
+using Dependinator.ModelViewing.DependencyExploring.Private;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
@@ -12,19 +13,19 @@ namespace Dependinator.ModelViewing.Lines.Private
 		private readonly ILineControlService lineControlService;
 		private readonly ILineDataService lineDataService;
 		private readonly IItemSelectionService itemSelectionService;
-		private readonly IDependencyExplorerService dependencyExplorerService;
+		private readonly Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider;
 
 
 		public LineViewModelService(
 			ILineControlService lineControlService,
 			ILineDataService lineDataService,
 			IItemSelectionService itemSelectionService,
-			IDependencyExplorerService dependencyExplorerService)
+			Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider)
 		{
 			this.lineControlService = lineControlService;
 			this.lineDataService = lineDataService;
 			this.itemSelectionService = itemSelectionService;
-			this.dependencyExplorerService = dependencyExplorerService;
+			this.dependencyExplorerWindowProvider = dependencyExplorerWindowProvider;
 		}
 
 
@@ -69,7 +70,10 @@ namespace Dependinator.ModelViewing.Lines.Private
 		}
 
 
-		public void ShowReferences(LineViewModel lineViewModel) =>
-			dependencyExplorerService.ShowWindow(lineViewModel.Line);
+		public void ShowReferences(LineViewModel lineViewModel)
+		{
+			DependencyExplorerWindow window = dependencyExplorerWindowProvider(null, lineViewModel.Line);
+			window.Show();
+		}
 	}
 }
