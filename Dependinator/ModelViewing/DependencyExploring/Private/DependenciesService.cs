@@ -70,11 +70,26 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		}
 
 
-		private static bool IsIncluded(IEdge link, Options options) =>
-			!link.Target.View.IsHidden &&
-			(options.SourceNode.IsRoot || link.Source.AncestorsAndSelf().Contains(options.SourceNode)) &&
-			(options.TargetNode.IsRoot || link.Target.AncestorsAndSelf().Contains(options.TargetNode));
+		private static bool IsIncluded(IEdge link, Options options)
+		{
+			if (link.Source.View.IsHidden || link.Target.View.IsHidden)
+			{
+				// Always exclude hidden nodes links
+				return false;
+			}
 
+
+			return
+				(link.Source.AncestorsAndSelf().Contains(options.SourceNode) ) &&
+				(link.Target.AncestorsAndSelf().Contains(options.TargetNode) &&
+				 !link.Target.AncestorsAndSelf().Contains(options.SourceNode));
+
+
+
+			//return !link.Target.View.IsHidden &&
+			//       (options.SourceNode.IsRoot || link.Source.AncestorsAndSelf().Contains(options.SourceNode)) &&
+			//       (options.TargetNode.IsRoot || link.Target.AncestorsAndSelf().Contains(options.TargetNode));
+		}
 
 
 		private Dictionary<NodeName, DependencyItem> CreateReferenceHierarchy(
@@ -137,7 +152,6 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			public Node SourceNode { get; }
 			public Node TargetNode { get; }
 
-
 			public Options(
 				bool isSource,
 				Node sourceNode,
@@ -147,6 +161,10 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 				SourceNode = sourceNode;
 				TargetNode = targetNode;
 			}
+
+
+
+
 		}
 	}
 }
