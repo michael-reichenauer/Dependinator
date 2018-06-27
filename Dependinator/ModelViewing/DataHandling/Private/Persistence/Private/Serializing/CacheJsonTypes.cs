@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Serializing
 {
-	public static class JsonTypes
+	public static class CacheJsonTypes
 	{
 		public static string Version = "2";
 

@@ -3,13 +3,14 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.ModelViewing.DataHandling.Dtos;
+using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Serializing
 {
 	internal class Convert
 	{
-		public static IDataItem ToModelItem(JsonTypes.Item item)
+		public static IDataItem ToModelItem(CacheJsonTypes.Item item)
 		{
 			if (item.Node != null)
 			{
@@ -28,23 +29,35 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 		}
 
 
-		public static JsonTypes.Item ToJsonItem(IDataItem item)
+		public static CacheJsonTypes.Item ToCacheJsonItem(IDataItem item)
 		{
 			switch (item)
 			{
 				case DataNode modelNode:
-					return new JsonTypes.Item { Node = ToJsonNode(modelNode) };
+					return new CacheJsonTypes.Item { Node = ToCacheJsonNode(modelNode) };
 				case DataLink modelLink:
-					return new JsonTypes.Item { Link = ToJsonLink(modelLink) };
+					return new CacheJsonTypes.Item { Link = ToJsonLink(modelLink) };
 				case DataLine modelLine:
-					return new JsonTypes.Item { Line = ToJsonLine(modelLine) };
+					return new CacheJsonTypes.Item { Line = ToCacheJsonLine(modelLine) };
+				default:
+					throw Asserter.FailFast($"Unsupported item {item?.GetType()}");
+			}
+		}
+
+		public static SaveJsonTypes.Item ToSaveJsonItem(IDataItem item)
+		{
+			switch (item)
+			{
+				case DataNode modelNode:
+					return new SaveJsonTypes.Item { Node = ToSaveJsonNode(modelNode) };
 			}
 
 			return null;
 		}
 
 
-		private static DataNode ToModelNode(JsonTypes.Node node) => new DataNode(
+
+		private static DataNode ToModelNode(CacheJsonTypes.Node node) => new DataNode(
 			NodeId.From(node.Id),
 			NodeName.From(node.Name),
 			node.Parent,
@@ -56,7 +69,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 			node.ShowState);
 
 
-		private static JsonTypes.Node ToJsonNode(DataNode node) => new JsonTypes.Node
+		private static CacheJsonTypes.Node ToCacheJsonNode(DataNode node) => new CacheJsonTypes.Node
 		{
 			Id = node.Id.AsString(),
 			Name = node.Name.FullName,
@@ -69,16 +82,25 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 			ShowState = node.ShowState,
 		};
 
+		private static SaveJsonTypes.Node ToSaveJsonNode(DataNode node) => new SaveJsonTypes.Node
+		{
+			Id = node.Id.AsString(),
+			Bounds= node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
+			Scale = node.ItemsScaleFactor,
+			Color = node.Color,
+			State = node.ShowState,
+		};
+
 
 		private static NodeType FromNodeTypeText(string nodeType)
 		{
 			switch (nodeType)
 			{
-				case JsonTypes.NodeType.NameSpace:
+				case CacheJsonTypes.NodeType.NameSpace:
 					return NodeType.NameSpace;
-				case JsonTypes.NodeType.Type:
+				case CacheJsonTypes.NodeType.Type:
 					return NodeType.Type;
-				case JsonTypes.NodeType.Member:
+				case CacheJsonTypes.NodeType.Member:
 					return NodeType.Member;
 				default:
 					return NodeType.None;
@@ -91,24 +113,24 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 			switch (nodeNodeType)
 			{
 				case NodeType.NameSpace:
-					return JsonTypes.NodeType.NameSpace;
+					return CacheJsonTypes.NodeType.NameSpace;
 				case NodeType.Type:
-					return JsonTypes.NodeType.Type;
+					return CacheJsonTypes.NodeType.Type;
 				case NodeType.Member:
-					return JsonTypes.NodeType.Member;
+					return CacheJsonTypes.NodeType.Member;
 				default:
 					return null;
 			}
 		}
 
 
-		private static DataLink ToModelLink(JsonTypes.Link link) => new DataLink(
+		private static DataLink ToModelLink(CacheJsonTypes.Link link) => new DataLink(
 			NodeId.From(link.SourceId),
 			NodeId.From(link.TargetId),
 			true);
 
 
-		private static JsonTypes.Link ToJsonLink(DataLink link) => new JsonTypes.Link
+		private static CacheJsonTypes.Link ToJsonLink(DataLink link) => new CacheJsonTypes.Link
 		{
 			SourceId = link.SourceId.AsString(),
 			TargetId = link.TargetId.AsString(),
@@ -116,14 +138,14 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 
 
 
-		private static IDataItem ToModelLine(JsonTypes.Line line) => new DataLine(
+		private static IDataItem ToModelLine(CacheJsonTypes.Line line) => new DataLine(
 			NodeId.From(line.SourceId),
 			NodeId.From(line.TargetId),
 			ToLinePoints(line.Points),
 			line.LinkCount);
 
 
-		private static JsonTypes.Line ToJsonLine(DataLine line) => new JsonTypes.Line
+		private static CacheJsonTypes.Line ToCacheJsonLine(DataLine line) => new CacheJsonTypes.Line
 		{
 			SourceId = line.SourceId.AsString(),
 			TargetId = line.TargetId.AsString(),

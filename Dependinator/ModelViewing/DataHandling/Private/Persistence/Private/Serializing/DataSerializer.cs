@@ -26,15 +26,22 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 			try
 			{
 				Timing t = new Timing();
-				JsonTypes.Model dataModel = new JsonTypes.Model();
+				CacheJsonTypes.Model dataModel = new CacheJsonTypes.Model();
 
-				dataModel.Items = items.Select(Convert.ToJsonItem).ToList();
+				dataModel.Items = items.Select(Convert.ToCacheJsonItem).ToList();
 
 				t.Log($"Converted {dataModel.Items.Count} data items");
 
 				Json.Serialize(path, dataModel);
 
 				t.Log("Wrote data file");
+
+				//SaveJsonTypes.Model saveModel = new SaveJsonTypes.Model();
+				//saveModel.Items = items.Select(Convert.ToSaveJsonItem).Where(item => item != null).ToList();
+				//t.Log($"Converted {saveModel.Items.Count} data items");
+				//Json.Serialize(path + ".save.json", saveModel);
+				//t.Log("Wrote save file");
+
 			}
 			catch (Exception e)
 			{
@@ -77,7 +84,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 							// deserialize only when there's "{" character in the stream
 							if (reader.TokenType == JsonToken.StartObject)
 							{
-								JsonTypes.Item jsonItem = serializer.Deserialize<JsonTypes.Item>(reader);
+								CacheJsonTypes.Item jsonItem = serializer.Deserialize<CacheJsonTypes.Item>(reader);
 								IDataItem modelItem = Convert.ToModelItem(jsonItem);
 								dataItemsCallback(modelItem);
 								itemCount++;
@@ -107,7 +114,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 					if (reader.Read() && reader.TokenType == JsonToken.String)
 					{
 						string versionText = (string)reader.Value;
-						return versionText == JsonTypes.Version;
+						return versionText == CacheJsonTypes.Version;
 					}
 				}
 			}

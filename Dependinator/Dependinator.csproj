@@ -178,6 +178,7 @@
     <Compile Include="ModelViewing\DataHandling\IDataMonitorService.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\DataDetailsService.cs" />
     <Compile Include="ModelViewing\DataHandling\IDataDetailsService.cs" />
+    <Compile Include="ModelViewing\DataHandling\Private\Persistence\Private\Serializing\SaveJsonTypes.cs" />
     <Compile Include="ModelViewing\DependencyExploring\IDependencyExplorerService.cs" />
     <Compile Include="ModelViewing\DependencyExploring\Private\DependencyExplorerService.cs" />
     <Compile Include="ModelViewing\DependencyExploring\Private\DependencyWindowService.cs" />
@@ -246,7 +247,7 @@
     <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\SolutionFileParsing\Solution.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\SolutionFileParsing\Private\SolutionParser.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\Persistence\NamespaceDoc.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Persistence\Private\Serializing\JsonTypes.cs" />
+    <Compile Include="ModelViewing\DataHandling\Private\Persistence\Private\Serializing\CacheJsonTypes.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\Persistence\Private\PersistenceService.cs" />
     <Compile Include="ModelViewing\ModelHandling\NamespaceDoc.cs" />
     <Compile Include="ModelViewing\NamespaceDoc.cs" />
