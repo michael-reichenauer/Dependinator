@@ -146,12 +146,26 @@ namespace Dependinator.ModelViewing.Items
 		}
 
 
+
+		public void ZoomWindowCenter(double zoom)
+		{
+			
+
+			//Log.Debug($"{zoom},   {viewPosition}");
+			ZoomNode(zoom, new Point(ZoomableCanvas.ActualWidth/2, ZoomableCanvas.ActualHeight/2));
+
+		}
+
+
+
 		public void ZoomNode(double zoom, Point? zoomCenter)
 		{
 			if (!IsZoomAndMoveEnabled)
 			{
 				return;
 			}
+
+			Log.Debug($"{zoom},   {zoomCenter}");
 
 			double oldScale = Scale;
 			double newScale = oldScale * zoom;
@@ -314,40 +328,40 @@ namespace Dependinator.ModelViewing.Items
 		}
 
 
-		//public Point ChildToParentCanvasPoint(Point childCanvasPoint)
-		//{
-		//	if (!IsRoot)
-		//	{
-		//		// Point within the parent node
-		//		Vector parentPoint = (Vector)childCanvasPoint * ScaleFactor;
+		public Point ChildToParentCanvasPoint(Point childCanvasPoint)
+		{
+			if (!IsRoot)
+			{
+				// Point within the parent node
+				Vector parentPoint = (Vector)childCanvasPoint * ScaleFactor;
 
-		//		// point in parent canvas scale
-		//		Point childToParentCanvasPoint = ItemsCanvasBounds.Location + parentPoint;
-		//		return childToParentCanvasPoint;
-		//	}
-		//	else
-		//	{
-		//		return childCanvasPoint;
-		//	}
-		//}
+				// point in parent canvas scale
+				Point childToParentCanvasPoint = ItemsCanvasBounds.Location + parentPoint;
+				return childToParentCanvasPoint;
+			}
+			else
+			{
+				return childCanvasPoint;
+			}
+		}
 
 
-		//public Point ChildToRootCanvasPoint(Point childCanvasPoint)
-		//{
-		//	if (!IsRoot)
-		//	{
-		//		// Point within the parent node
-		//		Vector parentPoint = (Vector)childCanvasPoint * ScaleFactor;
+		public Point CanvasToScreenPoint2(Point childCanvasPoint)
+		{
+			if (!IsRoot)
+			{
+				// Point within the parent node
+				Vector parentPoint = (Vector)childCanvasPoint * ScaleFactor;
 
-		//		// point in parent canvas scale
-		//		Point childToParentCanvasPoint = ItemsCanvasBounds.Location + parentPoint;
-		//		return childToParentCanvasPoint;
-		//	}
-		//	else
-		//	{
-		//		return childCanvasPoint;
-		//	}
-		//}
+				// point in parent canvas scale
+				Point childToParentCanvasPoint = ItemsCanvasBounds.Location + parentPoint;
+				return ParentCanvas.CanvasToScreenPoint2(childToParentCanvasPoint) + new Vector(3, 3);
+			}
+			else
+			{
+				return CanvasToScreenPoint(childCanvasPoint);
+			}
+		}
 
 
 
