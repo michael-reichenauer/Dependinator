@@ -5,6 +5,7 @@ using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private;
+using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Nodes.Private
@@ -73,11 +74,18 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 		private static void CalculateNextStep(StepsOperation operation)
 		{
+			Point targetScreenPoint = GetTargetScreenPoint(operation);
+			Vector vector = operation.rootScreenCenter - targetScreenPoint;
+			Log.Debug($"Dist {vector.Length}");
+
 			if (!operation.IsZoomInPhase)
 			{
 				double rootScale = operation.TargetNode.Root.View.ItemsCanvas.Scale;
-				if (rootScale > ScaleAim)
+				double itemScale = operation.TargetNode.View.ViewModel.ItemScale;
+				Log.Debug($"{rootScale.TS()} {itemScale.TS()}");
+				if (rootScale > ScaleAim && (itemScale > ScaleAim || vector.Length > 1000))
 				{
+					Log.Debug($"Zoom out, {rootScale.TS()} {itemScale.TS()}, {vector.Length.TS()} ");
 					operation.Zoom = Math.Max(0.90, ScaleAim / rootScale);
 					return;
 				}
@@ -87,15 +95,13 @@ namespace Dependinator.ModelViewing.Nodes.Private
 				}
 			}
 
-
-			Point targetScreenPoint = GetTargetScreenPoint(operation);
-
-			Vector vector = operation.rootScreenCenter - targetScreenPoint;
-
+			
 			if (vector.Length > MoveSteps)
 			{
 				vector = vector * (MoveSteps / vector.Length);
 			}
+
+			Log.Debug($"Move {vector.Length}");
 
 			operation.Zoom = 1;
 			operation.ScreenPoint = operation.rootScreenCenter - vector;
