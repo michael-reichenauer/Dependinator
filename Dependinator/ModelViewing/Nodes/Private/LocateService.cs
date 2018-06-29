@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
 using Dependinator.ModelViewing.DataHandling.Dtos;
@@ -16,7 +14,8 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private readonly IModelService modelService;
 
 		private static readonly TimeSpan StepInterval = TimeSpan.FromMilliseconds(5);
-		private static readonly int MoveSteps = 10;
+		private static readonly int MoveSteps = 20;
+		private static readonly double ScaleAim = 2.0;
 
 
 		public LocateService(IModelService modelService)
@@ -30,6 +29,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			if (modelService.TryGetNode(nodeId, out Node node))
 			{
 				StepsOperation operation = new StepsOperation();
+				operation.TargetNode = node;
 
 				operation.rootCanvas = node.Root.View.ItemsCanvas;
 
@@ -38,18 +38,10 @@ namespace Dependinator.ModelViewing.Nodes.Private
 					rootArea.Left + rootArea.Width / 2,
 					rootArea.Top + rootArea.Height / 2);
 				operation.rootScreenCenter = operation.rootCanvas.CanvasToScreenPoint(rootCenter);
-				operation.zoomCenter = new Point(rootArea.Width / 2, rootArea.Height);
-
-		
-
-				operation.nodes = node.AncestorsAndSelf()
-					.Where(n => !n.IsRoot).Reverse()
-					.ToList();
-				operation.TargetNode = operation.nodes.First();
 
 				operation.Timer = new DispatcherTimer(
 					StepInterval,
-					DispatcherPriority.Normal,
+					DispatcherPriority.Render,
 					(s, e) => DoStep(operation),
 					Dispatcher.CurrentDispatcher);
 
@@ -81,37 +73,24 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 		private static void CalculateNextStep(StepsOperation operation)
 		{
-			Node targetNode = operation.TargetNode;
-			double itemScale = targetNode.View.ViewModel.ItemScale;
-
-			double rootScale = targetNode.Root.View.ItemsCanvas.Scale;
-			if (targetNode.Parent.IsRoot && rootScale > 2)
+			if (!operation.IsZoomInPhase)
 			{
-				operation.Zoom = Math.Max(0.90, 2 / rootScale);
-				//Log.Debug($"Zoom out {operation.Zoom.TS()}");
-				return;
+				double rootScale = operation.TargetNode.Root.View.ItemsCanvas.Scale;
+				if (rootScale > ScaleAim)
+				{
+					operation.Zoom = Math.Max(0.90, ScaleAim / rootScale);
+					return;
+				}
+				else
+				{
+					operation.IsZoomInPhase = true;
+				}
 			}
 
 
-			Rect ancestorArea = targetNode.View.ViewModel.ItemBounds;
-			Point ancestorCenter = new Point(
-				ancestorArea.Left + ancestorArea.Width / 2,
-				ancestorArea.Top + ancestorArea.Height / 2);
-			Point ancestorScreenCenter2 = targetNode.View.ViewModel.ItemOwnerCanvas.CanvasToScreenPoint2(ancestorCenter);
+			Point targetScreenPoint = GetTargetScreenPoint(operation);
 
-			Rect ancestorArea2 = operation.nodes.Last().View.ViewModel.ItemBounds;
-			Point ancestorCenter2 = new Point(
-				ancestorArea2.Left + ancestorArea2.Width / 2,
-				ancestorArea2.Top + ancestorArea2.Height / 2);
-			Point t = operation.nodes.Last().View.ViewModel.ItemOwnerCanvas.CanvasToScreenPoint2(ancestorCenter2);
-
-
-
-
-			//Log.Debug($"{targetNode}:{ancestorScreenCenter2.TS()}, {t.TS()}");
-
-			Point screenPoint = t;
-			Vector vector = operation.rootScreenCenter - screenPoint;
+			Vector vector = operation.rootScreenCenter - targetScreenPoint;
 
 			if (vector.Length > MoveSteps)
 			{
@@ -123,42 +102,44 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 			if (Math.Abs(vector.Length) < 0.001)
 			{
-				if (Math.Abs(itemScale - 2) > 0.1 && itemScale < 2)
+				double itemScale = operation.TargetNode.View.ViewModel.ItemScale;
+
+				if (Math.Abs(itemScale - ScaleAim) < 0.1)
 				{
-					operation.Zoom = Math.Min(1.10, 2 / itemScale);
+					operation.IsDone = true;
 					return;
 				}
 
-				operation.index++;
-
-				if (operation.index < operation.nodes.Count)
+				if (itemScale < ScaleAim)
 				{
-					operation.TargetNode = operation.nodes[operation.index];
-				}
-				else
-				{
-					operation.IsDone = true;
+					operation.Zoom = Math.Min(1.08, ScaleAim / itemScale);
 					return;
 				}
 			}
 		}
 
 
+		private static Point GetTargetScreenPoint(StepsOperation operation)
+		{
+			Rect targetArea = operation.TargetNode.View.ViewModel.ItemBounds;
+			Point targetCenter = new Point(
+				targetArea.Left + targetArea.Width / 2,
+				targetArea.Top + targetArea.Height / 2);
+			Point targetScreenPoint = operation.TargetNode.View.ViewModel.ItemOwnerCanvas.CanvasToScreenPoint2(targetCenter);
+			return targetScreenPoint;
+		}
 
 
 		private class StepsOperation
 		{
-			public IReadOnlyList<Node> nodes { get; set; }
 			public Node TargetNode { get; set; }
 			public Point rootScreenCenter;
 			public ItemsCanvas rootCanvas;
-			public Point zoomCenter;
-			public int index { get; set; }
 			public DispatcherTimer Timer { get; set; }
 			public Point ScreenPoint { get; set; }
 			public double Zoom { get; set; }
 			public bool IsDone { get; set; }
-
+			public bool IsZoomInPhase { get; set; }
 		}
 
 	}

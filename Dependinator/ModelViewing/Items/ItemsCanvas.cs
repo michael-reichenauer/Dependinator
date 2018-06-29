@@ -16,6 +16,7 @@ namespace Dependinator.ModelViewing.Items
 	internal class ItemsCanvas : Notifyable
 	{
 		public static readonly double DefaultScaleFactor = 1.0 / 7.0;
+		private static readonly Vector ChildOffset = new Vector(3, 3);
 
 		private readonly IItemsCanvasOwner owner;
 		private readonly ItemsSource itemsSource;
@@ -149,23 +150,16 @@ namespace Dependinator.ModelViewing.Items
 
 		public void ZoomWindowCenter(double zoom)
 		{
-			
-
-			//Log.Debug($"{zoom},   {viewPosition}");
 			ZoomNode(zoom, new Point(ZoomableCanvas.ActualWidth/2, ZoomableCanvas.ActualHeight/2));
-
 		}
 
-
-
+		
 		public void ZoomNode(double zoom, Point? zoomCenter)
 		{
 			if (!IsZoomAndMoveEnabled)
 			{
 				return;
 			}
-
-			Log.Debug($"{zoom},   {zoomCenter}");
 
 			double oldScale = Scale;
 			double newScale = oldScale * zoom;
@@ -355,7 +349,8 @@ namespace Dependinator.ModelViewing.Items
 
 				// point in parent canvas scale
 				Point childToParentCanvasPoint = ItemsCanvasBounds.Location + parentPoint;
-				return ParentCanvas.CanvasToScreenPoint2(childToParentCanvasPoint) + new Vector(3, 3);
+				
+				return ParentCanvas.CanvasToScreenPoint2(childToParentCanvasPoint) + ChildOffset;
 			}
 			else
 			{
