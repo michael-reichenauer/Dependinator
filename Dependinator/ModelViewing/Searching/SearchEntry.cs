@@ -5,7 +5,9 @@ namespace Dependinator.ModelViewing.Searching
 {
 	internal class SearchEntry
 	{
-		public string Name { get; set; }
+		public string Name { get; }
+		public NodeId NodeId { get; }
+
 
 		public SearchEntry(string name, NodeId nodeId)
 		{
@@ -17,6 +19,7 @@ namespace Dependinator.ModelViewing.Searching
 			}
 
 			Name = name;
+			NodeId = nodeId;
 		}
 
 

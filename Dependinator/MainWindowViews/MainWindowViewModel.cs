@@ -33,6 +33,7 @@ namespace Dependinator.MainWindowViews
 		private readonly IItemSelectionService itemSelectionService;
 		private readonly IModelViewService modelViewService;
 		private readonly ISearchService searchService;
+		private readonly ILocateService locateService;
 		private readonly ModelMetadata modelMetadata;
 
 
@@ -47,7 +48,8 @@ namespace Dependinator.MainWindowViews
 			IStartInstanceService startInstanceService,
 			IItemSelectionService itemSelectionService,
 			IModelViewService modelViewService,
-			ISearchService searchService)
+			ISearchService searchService,
+			ILocateService locateService)
 		{
 			this.modelMetadata = modelMetadata;
 
@@ -59,6 +61,7 @@ namespace Dependinator.MainWindowViews
 			this.itemSelectionService = itemSelectionService;
 			this.modelViewService = modelViewService;
 			this.searchService = searchService;
+			this.locateService = locateService;
 
 			ModelViewModel = modelViewModel;
 
@@ -90,6 +93,7 @@ namespace Dependinator.MainWindowViews
 
 		public ObservableCollection<SearchEntry> SearchItems { get; }
 
+		public bool IsSearchDropDown { get => Get(); set => Set(value); }
 		public string SearchText
 		{
 			get => Get();
@@ -134,11 +138,12 @@ namespace Dependinator.MainWindowViews
 			set
 			{
 				Set(value);
-				if (value == null)
+				if (value == null || value.NodeId == null)
 				{
 					return;
 				}
-				Log.Debug($"Value {value}");
+
+				locateService.TryLocateNode(value.NodeId);
 			}
 		}
 

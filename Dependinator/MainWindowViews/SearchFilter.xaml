@@ -28,6 +28,8 @@
 			<ComboBox
 				Name="Search"
 				BorderBrush="Transparent"
+				IsDropDownOpen="{Binding IsSearchDropDown}"
+
 				IsEditable="True"
 				Margin="3,0"
 				Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
