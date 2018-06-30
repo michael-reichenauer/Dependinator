@@ -99,23 +99,24 @@ namespace Dependinator.MainWindowViews
 			get => Get();
 			set
 			{
-
-
 				Set(value);
 				
 				if (string.IsNullOrEmpty(value))
 				{
+					Set("");
 					ClearSelectionItems();
 					return;
 				}
 
 				if (value == SelectedSearchItem?.Name)
 				{
-					ClearSelectionItems();
 					Set("");
+					ClearSelectionItems();
 					return;
 				}
 
+				IsSearchDropDown = true;
+				Set(value);
 				var items = searchService.Search(value).Take(21).OrderBy(i => i.Name).ToList();
 				SearchItems.Clear();
 				items.Take(20).ForEach(item => SearchItems.Add(item));
