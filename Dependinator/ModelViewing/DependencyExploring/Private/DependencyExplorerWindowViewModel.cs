@@ -47,6 +47,10 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 
 		public void ShowCode(NodeName nodeName) => dependencyWindowService.ShowCode(nodeName);
+		public void Locate(NodeName nodeName) => dependencyWindowService.Locate(nodeName);
+		
+		public void ShowDependencies(NodeName nodeName) => dependencyWindowService.ShowDependencies(nodeName);
+
 
 		public void FilterOn(DependencyItem item, bool isSourceItem) =>
 			dependencyWindowService.FilterOn(this, item, isSourceItem);

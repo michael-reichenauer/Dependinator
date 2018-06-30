@@ -21,5 +21,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		void ShowCode(NodeName nodeName);
 
 		Task Refresh(DependencyExplorerWindowViewModel viewModel);
+		void Locate(NodeName nodeName);
+		void ShowDependencies(NodeName nodeName);
 	}
 }
