@@ -143,7 +143,7 @@ namespace Dependinator.MainWindowViews
 					return;
 				}
 
-				locateService.TryLocateNode(value.NodeId);
+				locateService.StartMoveToNode(value.NodeId);
 			}
 		}
 

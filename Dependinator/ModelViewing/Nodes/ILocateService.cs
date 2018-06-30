@@ -6,6 +6,6 @@ namespace Dependinator.ModelViewing.Nodes
 {
 	internal interface ILocateService
 	{
-		void TryLocateNode(NodeId nodeId);
+		void StartMoveToNode(NodeId nodeId);
 	}
 }

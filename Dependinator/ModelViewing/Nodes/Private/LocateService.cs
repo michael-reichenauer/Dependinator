@@ -5,7 +5,6 @@ using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private;
-using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Nodes.Private
@@ -19,7 +18,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private static readonly double ScaleAim = 2.0;
 		private static readonly int MaxDistanceForZoomOut = 1000;
 		private static readonly double ZoomOutFactor = 0.85;
-		private static readonly double ZoomInFactor = 1.10;
+		private static readonly double ZoomInFactor = 1.15;
 
 
 		public LocateService(IModelService modelService)
@@ -28,19 +27,20 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		public void TryLocateNode(NodeId nodeId)
+		public void StartMoveToNode(NodeId nodeId)
 		{
 			if (modelService.TryGetNode(nodeId, out Node node))
 			{
-				StepsOperation operation = new StepsOperation(
+				Operation operation = new Operation(
 					node,
 					node.Root.View.ItemsCanvas,
-					GetRootScreenCenter(node));
+					GetRootScreenCenter(node.Root));
 
+				// Starting a move in several small steps on the UI threads
 				operation.Timer = new DispatcherTimer(
 					StepInterval,
 					DispatcherPriority.Normal,
-					(s, e) => DoStep(operation),
+					(s, e) => DoZoomAndMoveSteps(operation),
 					Dispatcher.CurrentDispatcher);
 
 				operation.Timer.Start();
@@ -48,106 +48,120 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		private static void DoStep(StepsOperation operation)
+		private static void DoZoomAndMoveSteps(Operation operation)
 		{
-			StepType stepType = CalculateNextStep(operation);
+			double targetScale = operation.TargetNode.View.ViewModel.ItemScale;
+			Vector targetVector = GetTargetVector(operation);
 
-			if (stepType == StepType.ZoomOut || stepType == StepType.ZoomIn)
+			if (IsZoomingOut(operation, targetScale, targetVector, out double zoom))
 			{
-				operation.RootCanvas.ZoomWindowCenter(operation.Zoom);
+				ZoomCanvas(operation, zoom);
 			}
-			else if (stepType == StepType.Move)
+			else if (IsMovingCanvas(targetVector, out Vector moveVector))
 			{
-				operation.RootCanvas.MoveAllItems(operation.ScreenPoint, operation.RootScreenCenter);
+				MoveCanvas(operation, moveVector);
 			}
-			else 
+			else if (IsZoomingIn(targetScale, out zoom))
 			{
+				ZoomCanvas(operation, zoom);
+			}
+			else
+			{
+				// Reached target, stopping operation
 				operation.Timer?.Stop();
 			}
 		}
 
 
-		private static StepType CalculateNextStep(StepsOperation operation)
+		private static Vector GetTargetVector(Operation operation)
 		{
-			Point targetScreenPoint = GetTargetScreenPoint(operation);
+			Point targetScreenPoint = GetCurrentTargetScreenPoint(operation);
 			Vector vector = operation.RootScreenCenter - targetScreenPoint;
-
-			if (IsZoomingOut(operation))
-			{
-				return StepType.ZoomOut;
-			}
-
-			if (operation.IsZoomOutPhase)
-			{
-				double rootScale = operation.TargetNode.Root.View.ItemsCanvas.Scale;
-				double itemScale = operation.TargetNode.View.ViewModel.ItemScale;
-
-				if (rootScale > ScaleAim && (itemScale > ScaleAim - 0.5 || vector.Length > MaxDistanceForZoomOut))
-				{
-					operation.Zoom = Math.Max(ZoomOutFactor, ScaleAim / rootScale);
-					return StepType.ZoomOut;
-				}
-				else
-				{
-					operation.IsZoomOutPhase = false;
-				}
-			}
-
-			if (vector.Length > MoveSteps)
-			{
-				vector = vector * (MoveSteps / vector.Length);
-			}
-
-
-			if (Math.Abs(vector.Length) < 0.001)
-			{
-				double itemScale = operation.TargetNode.View.ViewModel.ItemScale;
-
-				if (Math.Abs(itemScale - ScaleAim) < 0.1)
-				{
-					return StepType.Done;
-				}
-
-				if (itemScale < ScaleAim)
-				{
-					operation.Zoom = Math.Min(ZoomInFactor, ScaleAim / itemScale);
-					return StepType.ZoomIn;
-				}
-			}
-
-			operation.ScreenPoint = operation.RootScreenCenter - vector;
-			return StepType.Move;
+			return vector;
 		}
 
 
-		private static bool IsZoomingOut(StepsOperation operation)
+		private static bool IsZoomingOut(
+			Operation operation, double itemScale, Vector targetVector, out double zoom)
 		{
-			if (operation.IsZoomOutPhase)
+			if (!operation.IsZoomOutPhase)
 			{
-				Point targetScreenPoint = GetTargetScreenPoint(operation);
-				Vector vector = operation.RootScreenCenter - targetScreenPoint;
-				double rootScale = operation.TargetNode.Root.View.ItemsCanvas.Scale;
-				double itemScale = operation.TargetNode.View.ViewModel.ItemScale;
+				// Only zooming out when starting operation
+				zoom = 0;
+				return false;
+			}	
 
-				if (rootScale > ScaleAim  - 0.5
-				    && (itemScale > ScaleAim - 0.5 || vector.Length > MaxDistanceForZoomOut))
-				{
-					operation.Zoom = Math.Max(ZoomOutFactor, ScaleAim / rootScale);
-					return true;
-				}
-				else
-				{
-					operation.IsZoomOutPhase = false;
-				}
+			double rootScale = operation.TargetNode.Root.View.ItemsCanvas.Scale;
+
+			// Zooming out until we reach root level or zoomed enough the to see the
+			// target node at target level and withing close distance
+			if (rootScale > ScaleAim - 0.5
+					&& (itemScale > ScaleAim - 0.5 || targetVector.Length > MaxDistanceForZoomOut))
+			{
+				zoom = Math.Max(ZoomOutFactor, ScaleAim / rootScale);
+				return true;
 			}
-
-			return false;
+			else
+			{
+				// Reached highest needed zoom out level, now starts the move and zoom in phase  
+				operation.IsZoomOutPhase = false;
+				zoom = 0;
+				return false;
+			}
 		}
 
 
-		private static Point GetRootScreenCenter(Node node)
+		private static bool IsMovingCanvas(Vector targetVector, out Vector moveVector)
 		{
-			ItemsCanvas rootCanvas = node.Root.View.ItemsCanvas;
+			moveVector = targetVector;
+
+			if (Math.Abs(targetVector.Length) < 0.001)
+			{
+				// Reached target node close enough
+				return false;
+			}
+
+			if (targetVector.Length > MoveSteps)
+			{
+				// Shorten the move vector, to move in several small steps
+				moveVector = targetVector * (MoveSteps / targetVector.Length);
+			}	
+
+			return true;
+		}
+
+
+		private static bool IsZoomingIn(double itemScale, out double zoom)
+		{
+			if (!(Math.Abs(itemScale - ScaleAim) >= 0.1) || !(itemScale < ScaleAim))
+			{
+				// Reached target zoom in level
+				zoom = 0;
+				return false;
+			}
+
+			zoom = Math.Min(ZoomInFactor, ScaleAim / itemScale);
+			return true;
+		}
+
+
+		private static void MoveCanvas(Operation operation, Vector vector)
+		{
+			Point screenPoint = operation.RootScreenCenter - vector;
+			operation.RootCanvas.MoveAllItems(screenPoint, operation.RootScreenCenter);
+		}
+
+
+		private static void ZoomCanvas(Operation operation, double zoom)
+		{
+			operation.RootCanvas.ZoomWindowCenter(zoom);
+		}
+
+
+		private static Point GetRootScreenCenter(Node rootNode)
+		{
+			// Returns the center of the root screen
+			ItemsCanvas rootCanvas = rootNode.View.ItemsCanvas;
 			Rect rootArea = rootCanvas.ItemsCanvasBounds;
 			Point rootCenter = new Point(
 				rootArea.Left + rootArea.Width / 2,
@@ -157,25 +171,18 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		private static Point GetTargetScreenPoint(StepsOperation operation)
+		private static Point GetCurrentTargetScreenPoint(Operation operation)
 		{
+			// Returns the center screen point of the target node
 			Rect targetArea = operation.TargetNode.View.ViewModel.ItemBounds;
 			Point targetCenter = new Point(
-				targetArea.Left + targetArea.Width / 2,
-				targetArea.Top + targetArea.Height / 2);
-			Point targetScreenPoint = operation.TargetNode.View.ViewModel.ItemOwnerCanvas.CanvasToScreenPoint2(targetCenter);
-			return targetScreenPoint;
+				targetArea.Left + targetArea.Width / 2,targetArea.Top + targetArea.Height / 2);
+			return operation.TargetNode.View.ViewModel.ItemOwnerCanvas.CanvasToScreenPoint2(targetCenter);
 		}
 
-		private enum StepType
-		{
-			Done,
-			ZoomOut,
-			Move,
-			ZoomIn,
-		}
 
-		private class StepsOperation
+		// Contains the data needed for a zoom/move operation in progress
+		private class Operation
 		{
 			public Node TargetNode { get; }
 			public Point RootScreenCenter { get; }
@@ -183,11 +190,9 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 			public bool IsZoomOutPhase { get; set; } = true;
 			public DispatcherTimer Timer { get; set; }
-			public Point ScreenPoint { get; set; }
-			public double Zoom { get; set; }
 
 
-			public StepsOperation(
+			public Operation(
 				Node targetNode,
 				ItemsCanvas rootCanvas,
 				Point rootScreenCenter)
