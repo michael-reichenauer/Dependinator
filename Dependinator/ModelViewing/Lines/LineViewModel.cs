@@ -35,7 +35,7 @@ namespace Dependinator.ModelViewing.Lines
 		public Line Line { get; }
 
 		public override bool CanShow =>
-			ItemScale < 40
+			ItemScale < 10
 			&& Line.Source.View.CanShow && Line.Target.View.CanShow
 			&& !Line.IsHidden;
 

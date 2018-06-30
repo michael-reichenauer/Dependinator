@@ -73,14 +73,6 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		private static Vector GetTargetVector(Operation operation)
-		{
-			Point targetScreenPoint = GetCurrentTargetScreenPoint(operation);
-			Vector vector = operation.RootScreenCenter - targetScreenPoint;
-			return vector;
-		}
-
-
 		private static bool IsZoomingOut(
 			Operation operation, double itemScale, Vector targetVector, out double zoom)
 		{
@@ -142,6 +134,14 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 			zoom = Math.Min(ZoomInFactor, ScaleAim / itemScale);
 			return true;
+		}
+
+
+		private static Vector GetTargetVector(Operation operation)
+		{
+			Point targetScreenPoint = GetCurrentTargetScreenPoint(operation);
+			Vector vector = operation.RootScreenCenter - targetScreenPoint;
+			return vector;
 		}
 
 

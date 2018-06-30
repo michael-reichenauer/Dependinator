@@ -72,7 +72,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public bool IsShowCodeButton { get => Get(); set => Set(value); }
 		public bool IsHidden => Node.View.IsHidden;
-		public bool IsShowNode => ItemScale < 100;
+		public bool IsShowNode => ItemScale < 70;
 		public bool IsShowItems => CanShowChildren;
 		public bool IsShowDescription => (!CanShowChildren || !Node.Children.Any());
 		public bool IsShowToolTip => true;
