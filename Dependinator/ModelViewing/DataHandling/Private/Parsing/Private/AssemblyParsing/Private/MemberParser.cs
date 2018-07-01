@@ -15,7 +15,8 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		private readonly XmlDocParser xmlDocParser;
 		private readonly DataItemsCallback itemsCallback;
 		private readonly MethodParser methodParser;
-		private readonly Dictionary<NodeId, DataNode> sentNodes = new Dictionary<NodeId, DataNode>();
+		private readonly Dictionary<DataNodeName, DataNode> sentNodes = 
+			new Dictionary<DataNodeName, DataNode>();
 
 
 		public MemberParser(
@@ -95,14 +96,18 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				string description = xmlDocParser.GetDescription(memberName);
 
 
-				NodeName nodeName = NodeName.From(memberName);
-				NodeId nodeId = new NodeId(nodeName);
-				DataNode memberNode = new DataNode(nodeId, nodeName, parent, NodeType.Member, description);
+				DataNodeName nodeName = new DataNodeName(memberName);
+				DataNode memberNode = new DataNode(
+					nodeName,
+					parent != null ? new DataNodeName(parent) : null, 
+					DataNodeType.Member, 
+						false)
+				{ Description = description };
 
-				if (!sentNodes.ContainsKey(memberNode.Id))
+				if (!sentNodes.ContainsKey(memberNode.Name))
 				{
 					// Not yet sent this node name (properties get/set, events (add/remove) appear twice
-					sentNodes[memberNode.Id] = memberNode;
+					sentNodes[memberNode.Name] = memberNode;
 					itemsCallback(memberNode);
 				}
 

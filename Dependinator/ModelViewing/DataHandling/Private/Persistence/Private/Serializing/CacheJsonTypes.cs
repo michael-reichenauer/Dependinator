@@ -6,7 +6,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 {
 	public static class CacheJsonTypes
 	{
-		public static string Version = "2";
+		public static string Version = "3";
 
 		// A model contains a list of nodes, links and lines
 		[Serializable]
@@ -31,7 +31,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 		public class Node
 		{
 			// The name of a node with '.' separating hierarchy, e.g. like in namespaces
-			public string Id { get; set; }
+			//public string Id { get; set; }
 			public string Name { get; set; }
 
 			// Optional data like type, node location and size ...
@@ -50,10 +50,10 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 		public class Link
 		{
 			// The source node name
-			public string SourceId { get; set; }
+			public string Source { get; set; }
 
 			// The target node name
-			public string TargetId { get; set; }
+			public string Target { get; set; }
 		}
 
 
@@ -62,10 +62,10 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 		public class Line
 		{
 			// The source node name
-			public string SourceId { get; set; }
+			public string Source { get; set; }
 
 			// The target node name
-			public string TargetId { get; set; }
+			public string Target { get; set; }
 
 			public List<string> Points { get; set; }
 

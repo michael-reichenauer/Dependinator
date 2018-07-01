@@ -14,7 +14,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		void AddNode(Node node, Node parentNode);
 
-		bool TryGetNode(NodeId nodeId, out Node node);
+		bool TryGetNode(NodeName nodeName, out Node node);
 
 
 		void UpdateNodeTypeIfNeeded(Node node, NodeType nodeType);

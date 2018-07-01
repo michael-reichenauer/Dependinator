@@ -1,60 +1,76 @@
 using System.Windows;
-using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.DataHandling.Dtos
 {
+	internal class DataNodeName : Equatable<DataNodeName>
+	{
+		public DataNodeName(string fullName)
+		{
+			if (fullName == null)
+			{
+
+			}
+			this.FullName = fullName;
+
+			IsEqualWhenSame(fullName);
+		}
+
+
+		public string FullName { get; }
+
+		public static DataNodeName From(string fullName)
+		{
+			return new DataNodeName(fullName);
+		}
+
+		public override string ToString() => FullName;
+	}
+
+
+	internal enum DataNodeType
+	{
+		None,
+		Solution,
+		Project,
+		Dll,
+		Exe,
+		NameSpace,
+		Type,
+		Member,
+	}
+
+
+
 	internal class DataNode : Equatable<DataNode>, IDataItem
 	{
 		public DataNode(
-			NodeId id,
-			NodeName name,
-			string parent,
-			NodeType nodeType,
-			string description,
-			bool isReferenced = false)
-			: this(id, name, parent, nodeType, description, RectEx.Zero, 0, null, null, isReferenced)
+			DataNodeName name,
+			DataNodeName parent,
+			DataNodeType nodeType,
+			bool isReferenced)
 		{
-		}
-
-		public DataNode(
-			NodeId id,
-			NodeName name,
-			string parent,
-			NodeType nodeType,
-			string description,
-			Rect bounds,
-			double itemsScaleFactor,
-			string color,
-			string showState,
-			bool isReferenced = false)
-		{
-			Id = id;
 			Name = name;
 			Parent = parent;
 			NodeType = nodeType;
 			IsReferenced = isReferenced;
-			Description = description;
-			Bounds = bounds;
-			ItemsScaleFactor = itemsScaleFactor;
-			Color = color;
-			ShowState = showState;
 
 			IsEqualWhenSame(Name);
 		}
 
 
-		public NodeId Id { get; }
-		public NodeName Name { get; }
-		public string Parent { get; }
-		public NodeType NodeType { get; }
+		public DataNodeName Name { get; }
+		public DataNodeName Parent { get; }
+		public DataNodeType NodeType { get; }
 		public bool IsReferenced { get; }
-		public string Description { get; }
-		public Rect Bounds { get; }
-		public double ItemsScaleFactor { get; }
-		public string Color { get; }
-		public string ShowState { get; }
+
+		// Node properties
+		public string Description { get; set; }
+		public Rect Bounds { get; set; } = RectEx.Zero;
+		public double ItemsScaleFactor { get; set; }
+		public string Color { get; set; }
+		public string ShowState { get; set; }
 
 		public override string ToString() => Name.FullName;
 	}

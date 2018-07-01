@@ -38,9 +38,9 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private
 		{
 			string moduleName = "$" + Path.GetFileName(filePath).Replace(".", "*");
 			string description = isSolutionFile ? "Solution file" : "Assembly file";
-			NodeName nodeName = NodeName.From(moduleName);
-			NodeId nodeId = new NodeId(nodeName);
-			DataNode moduleNode = new DataNode(nodeId, nodeName, null, NodeType.NameSpace, description);
+			DataNodeName nodeName = new DataNodeName(moduleName);
+			DataNode moduleNode = new DataNode(nodeName, null, DataNodeType.NameSpace, false)
+			{ Description = description };
 			itemsCallback(moduleNode);
 
 

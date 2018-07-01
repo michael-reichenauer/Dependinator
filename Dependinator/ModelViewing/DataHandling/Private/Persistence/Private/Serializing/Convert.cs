@@ -59,22 +59,23 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 
 
 		private static DataNode ToModelNode(CacheJsonTypes.Node node) => new DataNode(
-			NodeId.From(node.Id),
-			NodeName.From(node.Name),
-			node.Parent,
+			new DataNodeName(node.Name),
+			node.Parent != null ? new DataNodeName(node.Parent) : null,
 			FromNodeTypeText(node.Type),
-			node.Description,
-			node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
-			node.ItemsScaleFactor,
-			node.Color,
-			node.ShowState);
+			false)
+			{
+				Description = node.Description,
+				Bounds = node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
+				ItemsScaleFactor = node.ItemsScaleFactor,
+				Color = node.Color,
+				ShowState = node.ShowState
+			};
 
 
 		private static CacheJsonTypes.Node ToCacheJsonNode(DataNode node) => new CacheJsonTypes.Node
 		{
-			Id = node.Id.AsString(),
 			Name = node.Name.FullName,
-			Parent = node.Parent,
+			Parent = node.Parent.FullName,
 			Type = ToNodeTypeText(node.NodeType),
 			Description = node.Description,
 			Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
@@ -85,39 +86,38 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 
 		private static SaveJsonTypes.Node ToSaveJsonNode(DataNode node) => new SaveJsonTypes.Node
 		{
-			Id = node.Id.AsString(),
-			Bounds= node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
+			Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
 			Scale = node.ItemsScaleFactor,
 			Color = node.Color,
 			State = node.ShowState,
 		};
 
 
-		private static NodeType FromNodeTypeText(string nodeType)
+		private static DataNodeType FromNodeTypeText(string nodeType)
 		{
 			switch (nodeType)
 			{
 				case CacheJsonTypes.NodeType.NameSpace:
-					return NodeType.NameSpace;
+					return DataNodeType.NameSpace;
 				case CacheJsonTypes.NodeType.Type:
-					return NodeType.Type;
+					return DataNodeType.Type;
 				case CacheJsonTypes.NodeType.Member:
-					return NodeType.Member;
+					return DataNodeType.Member;
 				default:
-					return NodeType.None;
+					return DataNodeType.None;
 			}
 		}
 
 
-		private static string ToNodeTypeText(NodeType nodeNodeType)
+		private static string ToNodeTypeText(DataNodeType nodeNodeType)
 		{
 			switch (nodeNodeType)
 			{
-				case NodeType.NameSpace:
+				case DataNodeType.NameSpace:
 					return CacheJsonTypes.NodeType.NameSpace;
-				case NodeType.Type:
+				case DataNodeType.Type:
 					return CacheJsonTypes.NodeType.Type;
-				case NodeType.Member:
+				case DataNodeType.Member:
 					return CacheJsonTypes.NodeType.Member;
 				default:
 					return null;
@@ -126,30 +126,30 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 
 
 		private static DataLink ToModelLink(CacheJsonTypes.Link link) => new DataLink(
-			NodeId.From(link.SourceId),
-			NodeId.From(link.TargetId),
+			new DataNodeName(link.Source),
+			new DataNodeName(link.Target),
 			true);
 
 
 		private static CacheJsonTypes.Link ToJsonLink(DataLink link) => new CacheJsonTypes.Link
 		{
-			SourceId = link.SourceId.AsString(),
-			TargetId = link.TargetId.AsString(),
+			Source = link.Source.FullName,
+			Target= link.Target.FullName,
 		};
 
 
 
 		private static IDataItem ToModelLine(CacheJsonTypes.Line line) => new DataLine(
-			NodeId.From(line.SourceId),
-			NodeId.From(line.TargetId),
+			new DataNodeName(line.Source),
+			new DataNodeName(line.Target),
 			ToLinePoints(line.Points),
 			line.LinkCount);
 
 
 		private static CacheJsonTypes.Line ToCacheJsonLine(DataLine line) => new CacheJsonTypes.Line
 		{
-			SourceId = line.SourceId.AsString(),
-			TargetId = line.TargetId.AsString(),
+			Source = line.Source.FullName,
+			Target = line.Target.FullName,
 			Points = ToJsonPoints(line.Points),
 			LinkCount = line.LinkCount
 		};

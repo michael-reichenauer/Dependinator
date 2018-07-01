@@ -8,25 +8,25 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 	internal class DataLine : Equatable<DataLine>, IDataItem
 	{
 		public DataLine(
-			NodeId sourceId,
-			NodeId targetId,
+			DataNodeName source,
+			DataNodeName target,
 			IReadOnlyList<Point> points, 
 			int linkCount)
 		{
-			SourceId = sourceId;
-			TargetId = targetId;
+			Source = source;
+			Target = target;
 			Points = points;
 			LinkCount = linkCount;
 
-			IsEqualWhenSame(SourceId, TargetId);
+			IsEqualWhenSame(Source, Target);
 		}
 
 
-		public NodeId SourceId { get; }
-		public NodeId TargetId { get; }
+		public DataNodeName Source { get; }
+		public DataNodeName Target { get; }
 		public IReadOnlyList<Point> Points { get; }
 		public int LinkCount { get; }
 
-		public override string ToString() => $"{SourceId}->{TargetId}";
+		public override string ToString() => $"{Source}->{Target}";
 	}
 }

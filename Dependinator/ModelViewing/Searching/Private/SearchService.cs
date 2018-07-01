@@ -27,7 +27,7 @@ namespace Dependinator.ModelViewing.Searching.Private
 
 			return modelService.AllNodes
 				.Where(node => NameContainsText(text, node))
-				.Select(node => new SearchEntry(node.Name.DisplayLongName, node.Id));
+				.Select(node => new SearchEntry(node.Name.DisplayLongName, node.Name));
 		}
 
 

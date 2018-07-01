@@ -16,6 +16,10 @@ namespace Dependinator.ModelViewing.Nodes
 
 		private NodeName(string fullName)
 		{
+			if (fullName == null)
+			{
+			
+			}
 			this.FullName = fullName;
 
 			parentName = new Lazy<NodeName>(GetParentName);

@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.Nodes;
 
 
 namespace Dependinator.ModelViewing.ModelHandling.Private
@@ -32,28 +34,52 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private static DataNode ToModelNode(Node node) =>
 			new DataNode(
-				node.Id,
-				node.Name,
-				node.Parent.Name.FullName,
-				node.NodeType,
-				node.Description,
-				node.View.ViewModel?.ItemBounds ?? node.View.Bounds,
-				node.View.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.View.ScaleFactor,
-				node.View.ViewModel?.Color ?? node.View.Color,
-				node.View.IsHidden ? Node.Hidden : null);
+				new DataNodeName(node.Name.FullName),
+				new DataNodeName(node.Parent.Name.FullName),
+				ToDataNodeType(node.NodeType),
+				false)
+			{
+				Description = node.Description,
+				Bounds = node.View.ViewModel?.ItemBounds ?? node.View.Bounds,
+				ItemsScaleFactor = node.View.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.View.ScaleFactor,
+				Color = node.View.ViewModel?.Color ?? node.View.Color,
+				ShowState = node.View.IsHidden ? Node.Hidden : null
+			};
+
+		
+
+
+		private static DataNodeType ToDataNodeType(NodeType nodeNodeType)
+		{
+			switch (nodeNodeType)
+			{
+				case NodeType.None:
+					return DataNodeType.None;
+				case NodeType.NameSpace:
+					return DataNodeType.NameSpace;
+				case NodeType.Type:
+					return DataNodeType.Type;
+				case NodeType.Member:
+					return DataNodeType.Member;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(nodeNodeType), nodeNodeType, null);
+			}
+		}
 
 
 		private static IEnumerable<DataLine> ToModelLines(IEnumerable<Line> lines) =>
 			lines
 				.Where(line => !line.IsHidden)
 				.Select(line => new DataLine(
-					line.Source.Id,
-					line.Target.Id,
+					new DataNodeName(line.Source.Name.FullName),
+					new DataNodeName(line.Target.Name.FullName),
 					line.View.MiddlePoints().ToList(),
 					line.LinkCount));
 
 
 		private static IEnumerable<DataLink> ToModelLinks(IEnumerable<Link> links) =>
-			links.Select(link => new DataLink(link.Source.Id, link.Target.Id));
+			links.Select(link => new DataLink(
+				new DataNodeName(link.Source.Name.FullName),
+				new DataNodeName(link.Target.Name.FullName)));
 	}
 }

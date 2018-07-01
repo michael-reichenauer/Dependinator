@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.DataHandling.Dtos;
@@ -27,7 +28,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public void UpdateNode(DataNode dataNode, int stamp)
 		{
-			if (nodeService.TryGetNode(dataNode.Id, out Node node))
+			if (nodeService.TryGetNode(NodeName.From(dataNode.Name.FullName), out Node node))
 			{
 				if (node.Stamp != stamp)
 				{
@@ -116,7 +117,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public void ShowHiddenNode(NodeName nodeName)
 		{
-			if (nodeService.TryGetNode(new NodeId(nodeName), out Node node))
+			if (nodeService.TryGetNode(nodeName, out Node node))
 			{
 				if (!node.View.IsHidden)
 				{
@@ -140,16 +141,17 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			UpdateData(node, dataNode);
 
-			nodeService.UpdateNodeTypeIfNeeded(node, dataNode.NodeType);
+			nodeService.UpdateNodeTypeIfNeeded(node, ToNodeType(dataNode.NodeType));
 		}
 
 
 		private void AddNodeToModel(DataNode dataNode, int stamp)
 		{
-			Node node = new Node(dataNode.Id, dataNode.Name)
+			NodeName nodeName = NodeName.From(dataNode.Name.FullName);
+			Node node = new Node(nodeName)
 			{
 				Stamp = stamp,
-				NodeType = dataNode.NodeType,
+				NodeType = ToNodeType(dataNode.NodeType),
 				Description = dataNode.Description,
 			};
 
@@ -158,7 +160,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			node.View.Color = dataNode.Color;
 			node.View.IsHidden = dataNode.ShowState == Node.Hidden;
 
-			Node parentNode = GetParentNode(dataNode.Name, dataNode);
+			Node parentNode = GetParentNode(nodeName, dataNode);
 
 			nodeService.AddNode(node, parentNode);
 		}
@@ -174,7 +176,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			NodeName parentName = GetParentName(nodeName, dataNode);
 
-			return nodeService.GetParentNode(parentName, dataNode.NodeType);
+			return nodeService.GetParentNode(parentName, ToNodeType(dataNode.NodeType));
 		}
 
 
@@ -182,10 +184,36 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private static NodeName GetParentName(NodeName nodeName, DataNode dataNode)
 		{
 			NodeName parentName = dataNode.Parent != null
-				? NodeName.From(dataNode.Parent)
+				? NodeName.From(dataNode.Parent.FullName)
 				: nodeName.ParentName;
 
 			return parentName;
+		}
+
+
+		private NodeType ToNodeType(DataNodeType nodeType)
+		{
+			switch (nodeType)
+			{
+				case DataNodeType.None:
+					return NodeType.None;
+				case DataNodeType.Solution:
+					return NodeType.NameSpace;
+				case DataNodeType.Project:
+					return NodeType.NameSpace;
+				case DataNodeType.Dll:
+					return NodeType.NameSpace;
+				case DataNodeType.Exe:
+					return NodeType.NameSpace;
+				case DataNodeType.NameSpace:
+					return NodeType.NameSpace;
+				case DataNodeType.Type:
+					return NodeType.Type;
+				case DataNodeType.Member:
+					return NodeType.Member;
+				default:
+					return NodeType.None; 
+			}
 		}
 	}
 }

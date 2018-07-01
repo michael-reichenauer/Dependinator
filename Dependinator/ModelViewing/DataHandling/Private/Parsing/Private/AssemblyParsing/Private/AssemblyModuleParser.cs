@@ -44,9 +44,13 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			parent = parent != null ? $"${parent?.Replace(".", ".$")}" : null;
 
 			string description = GetDescription();
-			NodeName nodeName = NodeName.From(moduleName);
-			NodeId nodeId = new NodeId(nodeName);
-			DataNode moduleNode = new DataNode(nodeId, nodeName, parent, NodeType.NameSpace, description);
+			DataNodeName nodeName = new DataNodeName(moduleName);
+			DataNode moduleNode = new DataNode(
+				nodeName,
+				parent != null ? new DataNodeName(parent) : null,
+				DataNodeType.NameSpace,
+				false)
+			{ Description = description };
 			itemsCallback(moduleNode);
 		}
 
@@ -64,7 +68,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			string assemblyDescription = argument?.Value as string;
 
 			string description = $"Assembly: {assemblyDescription}";
-	
+
 			return description;
 		}
 
@@ -72,8 +76,8 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		public void AddModuleReferences()
 		{
 			string moduleName = Name.GetModuleName(assembly);
-			NodeName moduleNodeName = NodeName.From(moduleName);
-			NodeId moduleId = new NodeId(moduleNodeName);
+			DataNodeName moduleNodeName = new DataNodeName(moduleName);
+
 
 			var references = assembly.MainModule.AssemblyReferences.
 				Where(reference => !IgnoredTypes.IsSystemIgnoredModuleName(reference.Name));
@@ -81,9 +85,9 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			if (references.Any())
 			{
 				string description = "External references";
-				NodeName nodeName = NodeName.From("$References");
-				NodeId nodeId = new NodeId(nodeName);
-				DataNode referencesNode = new DataNode(nodeId, nodeName, null, NodeType.NameSpace, description);
+				DataNodeName nodeName = new DataNodeName("$References");
+				DataNode referencesNode = new DataNode(nodeName, null, DataNodeType.NameSpace, false)
+					{Description = description};
 				itemsCallback(referencesNode);
 			}
 
@@ -101,12 +105,16 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				parent = $"${parent?.Replace(".", ".$")}";
 
 				string description = "Assembly";
-				NodeName referenceNodeName = NodeName.From(referenceName);
-				NodeId referenceId = new NodeId(referenceNodeName);
-				DataNode referenceNode = new DataNode(referenceId, referenceNodeName, parent, NodeType.NameSpace, description);
+				DataNodeName referenceNodeName = new DataNodeName(referenceName);
+
+				DataNode referenceNode = new DataNode(
+					referenceNodeName, 
+					parent != null ? new DataNodeName(parent) : null, 
+					DataNodeType.NameSpace, false)
+					{ Description =  description};
 				itemsCallback(referenceNode);
 
-				linkHandler.AddLink(moduleId, referenceName, NodeType.NameSpace);
+				linkHandler.AddLink(moduleNodeName, referenceName, DataNodeType.NameSpace);
 			}
 		}
 	}

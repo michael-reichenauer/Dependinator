@@ -27,9 +27,9 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		public void StartMoveToNode(NodeId nodeId)
+		public void StartMoveToNode(NodeName nodeName)
 		{
-			if (modelService.TryGetNode(nodeId, out Node node))
+			if (modelService.TryGetNode(nodeName, out Node node))
 			{
 				Operation operation = new Operation(
 					node,

@@ -139,12 +139,12 @@ namespace Dependinator.MainWindowViews
 			set
 			{
 				Set(value);
-				if (value == null || value.NodeId == null)
+				if (value == null || value.NodeName == null)
 				{
 					return;
 				}
 
-				locateService.StartMoveToNode(value.NodeId);
+				locateService.StartMoveToNode(value.NodeName);
 			}
 		}
 

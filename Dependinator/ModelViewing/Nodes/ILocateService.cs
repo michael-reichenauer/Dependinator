@@ -1,11 +1,7 @@
-﻿using System.Threading.Tasks;
-using Dependinator.ModelViewing.DataHandling.Dtos;
-
-
-namespace Dependinator.ModelViewing.Nodes
+﻿namespace Dependinator.ModelViewing.Nodes
 {
 	internal interface ILocateService
 	{
-		void StartMoveToNode(NodeId nodeId);
+		void StartMoveToNode(NodeName nodeName);
 	}
 }

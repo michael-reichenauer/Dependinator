@@ -52,7 +52,9 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			{
 				string name = Name.GetTypeFullName(type);
 				bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
-				string parent = isPrivate ? $"{NodeName.From(name).ParentName.FullName}.$private" : null;
+				DataNodeName parent = isPrivate 
+					? new DataNodeName($"{NodeName.From(name).ParentName.FullName}.$private")  
+					: null;
 				string description = xmlDockParser.GetDescription(name);
 
 				if (IsNameSpaceDocType(type, description))
@@ -61,9 +63,9 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 					yield break;
 				}
 
-				NodeName nodeName = NodeName.From(name);
-				NodeId nodeId = new NodeId(nodeName);
-				typeNode = new DataNode(nodeId, nodeName, parent, NodeType.Type, description);
+				DataNodeName nodeName = new DataNodeName(name);
+				typeNode = new DataNode(nodeName, parent, DataNodeType.Type, false)
+				{ Description = description };
 				itemsCallback(typeNode);
 			}
 
@@ -89,9 +91,9 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				if (!string.IsNullOrEmpty(description))
 				{
 					string name = Name.GetTypeNamespaceFullName(type);
-					NodeName nodeName = NodeName.From(name);
-					NodeId nodeId = new NodeId(nodeName);
-					DataNode node = new DataNode(nodeId, nodeName, null, NodeType.NameSpace, description);
+					DataNodeName nodeName = new DataNodeName(name);
+					DataNode node = new DataNode(nodeName, null, DataNodeType.NameSpace, false)
+					{ Description = description };
 					itemsCallback(node);
 				}
 
