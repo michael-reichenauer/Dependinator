@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq;
 using Dependinator.ModelViewing.DataHandling.Dtos;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.ErrorHandling;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;

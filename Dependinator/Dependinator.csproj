@@ -230,7 +230,7 @@
     <Compile Include="ModelViewing\Nodes\NodeControl.cs" />
     <Compile Include="ModelViewing\Nodes\NodeControlViewModel.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\LineViewData.cs" />
-    <Compile Include="ModelViewing\DataHandling\Dtos\NodeType.cs" />
+    <Compile Include="ModelViewing\Nodes\NodeType.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\NodeTraversalExtensions.cs" />
     <Compile Include="ModelViewing\ModelHandling\Core\NodeViewData.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\DataFileParsing\JsonTypes.cs" />
@@ -375,7 +375,7 @@
       <DependentUpon>MemberNodeView.xaml</DependentUpon>
     </Compile>
     <Compile Include="ModelViewing\Nodes\MemberNodeViewModel.cs" />
-    <Compile Include="ModelViewing\DataHandling\Dtos\NodeName.cs" />
+    <Compile Include="ModelViewing\Nodes\NodeName.cs" />
     <Compile Include="ModelViewing\Nodes\Private\NodeComparer.cs" />
     <Compile Include="ModelViewing\Items\ItemsView.xaml.cs">
       <DependentUpon>ItemsView.xaml</DependentUpon>

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.UI.Mvvm;
 
 

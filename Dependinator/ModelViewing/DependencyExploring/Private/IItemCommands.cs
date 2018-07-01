@@ -1,4 +1,5 @@
 using Dependinator.ModelViewing.DataHandling.Dtos;
+using Dependinator.ModelViewing.Nodes;
 
 
 namespace Dependinator.ModelViewing.DependencyExploring.Private

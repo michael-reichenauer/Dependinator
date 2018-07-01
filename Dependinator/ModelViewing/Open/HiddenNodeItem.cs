@@ -1,5 +1,6 @@
 ﻿using System;
 using Dependinator.ModelViewing.DataHandling.Dtos;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.UI.Mvvm;
 
 

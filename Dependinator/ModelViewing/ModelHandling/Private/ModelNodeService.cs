@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.Nodes;
 
 
 namespace Dependinator.ModelViewing.ModelHandling.Private

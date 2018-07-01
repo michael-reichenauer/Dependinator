@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Dependinator.ModelViewing.DataHandling.Dtos;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
 

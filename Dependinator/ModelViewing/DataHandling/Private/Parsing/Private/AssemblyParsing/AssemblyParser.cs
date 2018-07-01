@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.AssemblyParsing.Private;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 using Dependinator.Utils.ErrorHandling;
 using Mono.Cecil;

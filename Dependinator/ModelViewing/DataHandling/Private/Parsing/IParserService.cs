@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.DataHandling.Dtos;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.ErrorHandling;
 
 

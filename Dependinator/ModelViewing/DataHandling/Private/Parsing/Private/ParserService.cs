@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.AssemblyParsing;
 using Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.SolutionFileParsing;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 using Dependinator.Utils.ErrorHandling;
 using Dependinator.Utils.Threading;

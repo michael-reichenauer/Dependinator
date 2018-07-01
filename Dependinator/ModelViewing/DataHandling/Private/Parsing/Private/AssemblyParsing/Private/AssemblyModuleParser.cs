@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Reflection;
 using Dependinator.ModelViewing.DataHandling.Dtos;
+using Dependinator.ModelViewing.Nodes;
 using Mono.Cecil;
 using Mono.Collections.Generic;
 

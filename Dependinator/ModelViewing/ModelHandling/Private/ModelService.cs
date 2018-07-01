@@ -3,6 +3,7 @@ using System.Linq;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.Dependencies;
 
 
