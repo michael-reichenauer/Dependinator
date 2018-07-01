@@ -67,7 +67,7 @@ namespace Dependinator.ModelViewing.Nodes
 
 		public Brush TitleBrush => Node.View.IsHidden ? dimBrush : titleBrush;
 		public Brush RectangleBrush => Node.View.IsHidden ? dimBrush : rectangleBrush;
-		public Brush TitleBorderBrush => Node.NodeType == NodeType.Type ? RectangleBrush : null;
+		public Brush TitleBorderBrush => Node.NodeType.IsType() ? RectangleBrush : null;
 		public Brush BackgroundBrush => IsSelected ? selectedBrush : backgroundBrush;
 
 		public bool IsShowCodeButton { get => Get(); set => Set(value); }
@@ -76,7 +76,7 @@ namespace Dependinator.ModelViewing.Nodes
 		public bool IsShowItems => CanShowChildren;
 		public bool IsShowDescription => (!CanShowChildren || !Node.Children.Any());
 		public bool IsShowToolTip => true;
-		public bool HasCode => Node.NodeType == NodeType.Type || Node.NodeType == NodeType.Member;
+		public bool HasCode => Node.NodeType.IsType() || Node.NodeType.IsMember();
 		public Command ShowCodeCommand => Command(() => ShowCode());
 
 
@@ -239,9 +239,9 @@ namespace Dependinator.ModelViewing.Nodes
 			$"Links: {LinksCount}, Lines: {LinesCount}";
 
 		private int NodesCount => Node.Root.Descendents().Count();
-		private int TypesCount => Node.Root.Descendents().Count(node => node.NodeType == NodeType.Type);
-		private int NamespacesCount => Node.Root.Descendents().Count(node => node.NodeType == NodeType.NameSpace);
-		private int MembersCount => Node.Root.Descendents().Count(node => node.NodeType == NodeType.Member);
+		private int TypesCount => Node.Root.Descendents().Count(node => node.NodeType.IsType());
+		private int NamespacesCount => Node.Root.Descendents().Count(node => node.NodeType.IsNamespace());
+		private int MembersCount => Node.Root.Descendents().Count(node => node.NodeType.IsMember());
 		private int LinksCount => Node.Root.Descendents().SelectMany(node => node.SourceLinks).Count();
 		private int LinesCount => Node.Root.Descendents().SelectMany(node => node.SourceLines).Count();
 

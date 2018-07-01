@@ -100,7 +100,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				DataNode memberNode = new DataNode(
 					nodeName,
 					parent != null ? new DataNodeName(parent) : null, 
-					DataNodeType.Member, 
+					NodeType.Member, 
 						false)
 				{ Description = description };
 

@@ -3,7 +3,6 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.ModelViewing.DataHandling.Dtos;
-using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 
 
@@ -63,13 +62,13 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 			node.Parent != null ? new DataNodeName(node.Parent) : null,
 			FromNodeTypeText(node.Type),
 			false)
-			{
-				Description = node.Description,
-				Bounds = node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
-				ItemsScaleFactor = node.ItemsScaleFactor,
-				Color = node.Color,
-				ShowState = node.ShowState
-			};
+		{
+			Description = node.Description,
+			Bounds = node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
+			ItemsScaleFactor = node.ItemsScaleFactor,
+			Color = node.Color,
+			ShowState = node.ShowState
+		};
 
 
 		private static CacheJsonTypes.Node ToCacheJsonNode(DataNode node) => new CacheJsonTypes.Node
@@ -93,34 +92,56 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 		};
 
 
-		private static DataNodeType FromNodeTypeText(string nodeType)
+		private static NodeType FromNodeTypeText(string nodeType)
 		{
 			switch (nodeType)
 			{
+				case CacheJsonTypes.NodeType.Solution:
+					return NodeType.Solution;
+				case CacheJsonTypes.NodeType.Project:
+					return NodeType.Project;
+				case CacheJsonTypes.NodeType.Group:
+					return NodeType.Group;
+				case CacheJsonTypes.NodeType.Dll:
+					return NodeType.Dll;
+				case CacheJsonTypes.NodeType.Exe:
+					return NodeType.Exe;
 				case CacheJsonTypes.NodeType.NameSpace:
-					return DataNodeType.NameSpace;
+					return NodeType.NameSpace;
 				case CacheJsonTypes.NodeType.Type:
-					return DataNodeType.Type;
+					return NodeType.Type;
 				case CacheJsonTypes.NodeType.Member:
-					return DataNodeType.Member;
+					return NodeType.Member;
 				default:
-					return DataNodeType.None;
+					throw Asserter.FailFast("Unexpected type");
 			}
 		}
 
 
-		private static string ToNodeTypeText(DataNodeType nodeNodeType)
+		private static string ToNodeTypeText(NodeType nodeNodeType)
 		{
 			switch (nodeNodeType)
 			{
-				case DataNodeType.NameSpace:
+				case NodeType.NameSpace:
 					return CacheJsonTypes.NodeType.NameSpace;
-				case DataNodeType.Type:
+				case NodeType.Type:
 					return CacheJsonTypes.NodeType.Type;
-				case DataNodeType.Member:
+				case NodeType.Member:
 					return CacheJsonTypes.NodeType.Member;
-				default:
+				case NodeType.None:
 					return null;
+				case NodeType.Solution:
+					return CacheJsonTypes.NodeType.Solution;
+				case NodeType.Project:
+					return CacheJsonTypes.NodeType.Project;
+				case NodeType.Group:
+					return CacheJsonTypes.NodeType.Group;
+				case NodeType.Dll:
+					return CacheJsonTypes.NodeType.Dll;
+				case NodeType.Exe:
+					return CacheJsonTypes.NodeType.Exe;
+				default:
+					throw Asserter.FailFast("Unexpected type");
 			}
 		}
 
@@ -134,7 +155,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 		private static CacheJsonTypes.Link ToJsonLink(DataLink link) => new CacheJsonTypes.Link
 		{
 			Source = link.Source.FullName,
-			Target= link.Target.FullName,
+			Target = link.Target.FullName,
 		};
 
 

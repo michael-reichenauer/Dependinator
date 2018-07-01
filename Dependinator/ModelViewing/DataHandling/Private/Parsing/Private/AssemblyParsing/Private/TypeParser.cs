@@ -64,7 +64,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				}
 
 				DataNodeName nodeName = new DataNodeName(name);
-				typeNode = new DataNode(nodeName, parent, DataNodeType.Type, false)
+				typeNode = new DataNode(nodeName, parent, NodeType.Type, false)
 				{ Description = description };
 				itemsCallback(typeNode);
 			}
@@ -92,7 +92,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				{
 					string name = Name.GetTypeNamespaceFullName(type);
 					DataNodeName nodeName = new DataNodeName(name);
-					DataNode node = new DataNode(nodeName, null, DataNodeType.NameSpace, false)
+					DataNode node = new DataNode(nodeName, null, NodeType.NameSpace, false)
 					{ Description = description };
 					itemsCallback(node);
 				}

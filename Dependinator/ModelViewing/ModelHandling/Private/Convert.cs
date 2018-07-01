@@ -36,7 +36,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			new DataNode(
 				new DataNodeName(node.Name.FullName),
 				new DataNodeName(node.Parent.Name.FullName),
-				ToDataNodeType(node.NodeType),
+				node.NodeType,
 				false)
 			{
 				Description = node.Description,
@@ -45,26 +45,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				Color = node.View.ViewModel?.Color ?? node.View.Color,
 				ShowState = node.View.IsHidden ? Node.Hidden : null
 			};
-
-		
-
-
-		private static DataNodeType ToDataNodeType(NodeType nodeNodeType)
-		{
-			switch (nodeNodeType)
-			{
-				case NodeType.None:
-					return DataNodeType.None;
-				case NodeType.NameSpace:
-					return DataNodeType.NameSpace;
-				case NodeType.Type:
-					return DataNodeType.Type;
-				case NodeType.Member:
-					return DataNodeType.Member;
-				default:
-					throw new ArgumentOutOfRangeException(nameof(nodeNodeType), nodeNodeType, null);
-			}
-		}
 
 
 		private static IEnumerable<DataLine> ToModelLines(IEnumerable<Line> lines) =>

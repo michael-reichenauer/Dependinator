@@ -29,26 +29,12 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 	}
 
 
-	internal enum DataNodeType
-	{
-		None,
-		Solution,
-		Project,
-		Dll,
-		Exe,
-		NameSpace,
-		Type,
-		Member,
-	}
-
-
-
 	internal class DataNode : Equatable<DataNode>, IDataItem
 	{
 		public DataNode(
 			DataNodeName name,
 			DataNodeName parent,
-			DataNodeType nodeType,
+			NodeType nodeType,
 			bool isReferenced)
 		{
 			Name = name;
@@ -62,7 +48,7 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 
 		public DataNodeName Name { get; }
 		public DataNodeName Parent { get; }
-		public DataNodeType NodeType { get; }
+		public NodeType NodeType { get; }
 		public bool IsReferenced { get; }
 
 		// Node properties

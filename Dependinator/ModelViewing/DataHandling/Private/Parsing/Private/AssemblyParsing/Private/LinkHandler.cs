@@ -19,7 +19,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
-		public void AddLink(DataNodeName source, string targetName, DataNodeType targetType)
+		public void AddLink(DataNodeName source, string targetName, NodeType targetType)
 		{
 			SendLink(source, targetName, targetType);
 		}
@@ -39,7 +39,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				return;
 			}
 
-			SendLink(sourceNode.Name, targetNodeName, DataNodeType.Type);
+			SendLink(sourceNode.Name, targetNodeName, NodeType.Type);
 
 			if (targetType.IsGenericInstance)
 			{
@@ -63,11 +63,11 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				return;
 			}
 
-			SendLink(sourceNode.Name, targetNodeName, DataNodeType.Member);
+			SendLink(sourceNode.Name, targetNodeName, NodeType.Member);
 		}
 
 
-		private void SendLink(DataNodeName source, string targetName, DataNodeType targetType)
+		private void SendLink(DataNodeName source, string targetName, NodeType targetType)
 		{
 			if (!sentTargetNodes.TryGetValue(targetName, out DataNode targetNode))
 			{

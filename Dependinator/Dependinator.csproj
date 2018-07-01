@@ -175,6 +175,7 @@
     </Compile>
     <Compile Include="ModelViewing\CodeViewing\CodeViewModel.cs" />
     <Compile Include="ModelViewing\DataHandling\DataMonitorService.cs" />
+    <Compile Include="ModelViewing\DataHandling\Dtos\NodeType.cs" />
     <Compile Include="ModelViewing\DataHandling\IDataMonitorService.cs" />
     <Compile Include="ModelViewing\DataHandling\Private\DataDetailsService.cs" />
     <Compile Include="ModelViewing\DataHandling\IDataDetailsService.cs" />

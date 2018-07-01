@@ -48,7 +48,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			DataNode moduleNode = new DataNode(
 				nodeName,
 				parent != null ? new DataNodeName(parent) : null,
-				DataNodeType.NameSpace,
+				NodeType.NameSpace,
 				false)
 			{ Description = description };
 			itemsCallback(moduleNode);
@@ -86,7 +86,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			{
 				string description = "External references";
 				DataNodeName nodeName = new DataNodeName("$References");
-				DataNode referencesNode = new DataNode(nodeName, null, DataNodeType.NameSpace, false)
+				DataNode referencesNode = new DataNode(nodeName, null, NodeType.NameSpace, false)
 					{Description = description};
 				itemsCallback(referencesNode);
 			}
@@ -110,11 +110,11 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				DataNode referenceNode = new DataNode(
 					referenceNodeName, 
 					parent != null ? new DataNodeName(parent) : null, 
-					DataNodeType.NameSpace, false)
+					NodeType.NameSpace, false)
 					{ Description =  description};
 				itemsCallback(referenceNode);
 
-				linkHandler.AddLink(moduleNodeName, referenceName, DataNodeType.NameSpace);
+				linkHandler.AddLink(moduleNodeName, referenceName, NodeType.NameSpace);
 			}
 		}
 	}

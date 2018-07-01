@@ -129,7 +129,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				return NodeType.NameSpace;
 			}
 
-			return childNodeType == NodeType.Member ? NodeType.Type : NodeType.NameSpace;
+			return childNodeType.IsMember() ? NodeType.Type : NodeType.NameSpace;
 		}
 
 
@@ -153,11 +153,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private void CreateNodeViewModel(Node node)
 		{
-			if (node.NodeType == NodeType.Member)
+			if (node.NodeType.IsMember())
 			{
 				node.View.ViewModel = new MemberNodeViewModel(nodeViewModelService.Value, node);
 			}
-			else if (node.NodeType == NodeType.Type)
+			else if (node.NodeType.IsType())
 			{
 				node.View.ViewModel = new TypeViewModel(nodeViewModelService.Value, node);
 				node.View.ItemsCanvas = GetItemsCanvas(node);

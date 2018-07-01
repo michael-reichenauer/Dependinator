@@ -28,7 +28,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public void UpdateNode(DataNode dataNode, int stamp)
 		{
-			if (nodeService.TryGetNode(NodeName.From(dataNode.Name.FullName), out Node node))
+			NodeName nodeName = NodeName.From(dataNode.Name.FullName);
+
+			if (nodeService.TryGetNode(nodeName, out Node node))
 			{
 				if (node.Stamp != stamp)
 				{
@@ -54,7 +56,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			foreach (Node node in nodes)
 			{
-				if (node.Stamp != stamp && node.NodeType != NodeType.NameSpace && node.Descendents().All(n => n.Stamp != stamp))
+				if (node.Stamp != stamp && !node.NodeType.IsNamespace() && node.Descendents().All(n => n.Stamp != stamp))
 				{
 					List<Link> obsoleteLinks = node.SourceLinks.ToList();
 					modelLinkService.RemoveObsoleteLinks(obsoleteLinks);
@@ -69,7 +71,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			foreach (Node node in nodes.Reverse())
 			{
-				if (node.Stamp != stamp && node.NodeType == NodeType.NameSpace && !node.Children.Any())
+				if (node.Stamp != stamp && node.NodeType.IsNamespace() && !node.Children.Any())
 				{
 					// Node is an empty namespace, lets remove it
 					nodeService.RemoveNode(node);
@@ -141,7 +143,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			UpdateData(node, dataNode);
 
-			nodeService.UpdateNodeTypeIfNeeded(node, ToNodeType(dataNode.NodeType));
+			nodeService.UpdateNodeTypeIfNeeded(node, dataNode.NodeType);
 		}
 
 
@@ -151,7 +153,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			Node node = new Node(nodeName)
 			{
 				Stamp = stamp,
-				NodeType = ToNodeType(dataNode.NodeType),
+				NodeType = dataNode.NodeType,
 				Description = dataNode.Description,
 			};
 
@@ -176,9 +178,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			NodeName parentName = GetParentName(nodeName, dataNode);
 
-			return nodeService.GetParentNode(parentName, ToNodeType(dataNode.NodeType));
+			return nodeService.GetParentNode(parentName, dataNode.NodeType);
 		}
-
 
 
 		private static NodeName GetParentName(NodeName nodeName, DataNode dataNode)
@@ -188,32 +189,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				: nodeName.ParentName;
 
 			return parentName;
-		}
-
-
-		private NodeType ToNodeType(DataNodeType nodeType)
-		{
-			switch (nodeType)
-			{
-				case DataNodeType.None:
-					return NodeType.None;
-				case DataNodeType.Solution:
-					return NodeType.NameSpace;
-				case DataNodeType.Project:
-					return NodeType.NameSpace;
-				case DataNodeType.Dll:
-					return NodeType.NameSpace;
-				case DataNodeType.Exe:
-					return NodeType.NameSpace;
-				case DataNodeType.NameSpace:
-					return NodeType.NameSpace;
-				case DataNodeType.Type:
-					return NodeType.Type;
-				case DataNodeType.Member:
-					return NodeType.Member;
-				default:
-					return NodeType.None; 
-			}
 		}
 	}
 }
