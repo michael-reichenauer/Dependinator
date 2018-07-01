@@ -51,7 +51,7 @@ namespace Dependinator.MainWindowViews
 
 		public bool IsNewVersionAvailable { set => viewModel.IsNewVersionVisible = value; }
 
-		public void SetSearchFocus() => Search.SearchBox.Focus();
+		public void SetSearchFocus() => Search.Search.Focus();
 
 		private async void MainWindow_OnLoaded(object sender, RoutedEventArgs e) =>
 			await viewModel.LoadAsync();

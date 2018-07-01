@@ -35,7 +35,7 @@
 			<Button
 				Visibility="{Binding IsShowVisibilityButton, Converter={StaticResource VC}}"
 				Padding="5,3,0,0"
-				Content="&#xe3dc;"
+				Content="&#xe3ba;"
 				FontSize="11"
 				Style="{DynamicResource IconButtonStyle}"
 				Command="{Binding ToggleCollapseCommand}"
@@ -49,6 +49,24 @@
 				Style="{DynamicResource IconButtonStyle}"
 				Command="{Binding ShowCodeCommand}"
 				ToolTip="Show decompiled code" />
+
+			<Button
+				Visibility="{Binding IsShowButtons, Converter={StaticResource VC}}"
+				Padding="5,3,0,0"
+				Content="&#xe31c;"
+				FontSize="11"
+				Style="{DynamicResource IconButtonStyle}"
+				Command="{Binding ShowDependenciesCommand}"
+				ToolTip="Show Dependency Explorer  ..." />
+
+			<Button
+				Visibility="{Binding IsShowButtons, Converter={StaticResource VC}}"
+				Padding="5,3,0,0"
+				Content="&#xe3dc;"
+				FontSize="11"
+				Style="{DynamicResource IconButtonStyle}"
+				Command="{Binding LocateCommand}"
+				ToolTip="Show node in map" />
 
 			<!--<Button
 			  Visibility="{Binding IsShowVisibilityButton, Converter={StaticResource VC}}" 				Padding="5,3,0,0"

@@ -24,7 +24,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public Node Root { get; private set; }
 
-		public IEnumerable<Node> AllNodes => nodes.Values;
+		public IEnumerable<Node> AllNodes => nodes.Select(pair => pair.Value);
 
 		public Node GetNode(NodeId name) => nodes[name];
 

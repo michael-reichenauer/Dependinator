@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.Common.Installation;
-using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.ProgressHandling;
@@ -12,6 +12,8 @@ using Dependinator.ModelViewing;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Open;
+using Dependinator.ModelViewing.Searching;
+using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
@@ -30,14 +32,13 @@ namespace Dependinator.MainWindowViews
 		private readonly IStartInstanceService startInstanceService;
 		private readonly IItemSelectionService itemSelectionService;
 		private readonly IModelViewService modelViewService;
+		private readonly ISearchService searchService;
+		private readonly ILocateService locateService;
 		private readonly ModelMetadata modelMetadata;
-		private readonly IMessage message;
-
 
 
 		internal MainWindowViewModel(
 			ModelMetadata modelMetadata,
-			IMessage message,
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
 			ModelViewModel modelViewModel,
@@ -46,10 +47,11 @@ namespace Dependinator.MainWindowViews
 			IModelMetadataService modelMetadataService,
 			IStartInstanceService startInstanceService,
 			IItemSelectionService itemSelectionService,
-			IModelViewService modelViewService)
+			IModelViewService modelViewService,
+			ISearchService searchService,
+			ILocateService locateService)
 		{
 			this.modelMetadata = modelMetadata;
-			this.message = message;
 
 			this.mainWindowService = mainWindowService;
 			this.openModelService = openModelService;
@@ -58,17 +60,21 @@ namespace Dependinator.MainWindowViews
 			this.startInstanceService = startInstanceService;
 			this.itemSelectionService = itemSelectionService;
 			this.modelViewService = modelViewService;
+			this.searchService = searchService;
+			this.locateService = locateService;
 
 			ModelViewModel = modelViewModel;
 
 			modelMetadata.OnChange += (s, e) => Notify(nameof(WorkingFolder));
 			latestVersionService.OnNewVersionAvailable += (s, e) => IsNewVersionVisible = true;
 			latestVersionService.StartCheckForLatestVersion();
+			SearchItems = new ObservableCollection<SearchEntry>();
+			ClearSelectionItems();
 		}
 
 		public int WindowWith { set => ModelViewModel.Width = value; }
 
-		public bool IsInFilterMode => !string.IsNullOrEmpty(SearchBox);
+		public bool IsInFilterMode => !string.IsNullOrEmpty(SearchText);
 
 
 		public bool IsNewVersionVisible { get => Get(); set => Set(value); }
@@ -85,20 +91,69 @@ namespace Dependinator.MainWindowViews
 		public bool ShowMinimizeButton => !modelMetadataService.IsDefault;
 		public bool ShowMaximizeButton => !modelMetadataService.IsDefault;
 
+		public ObservableCollection<SearchEntry> SearchItems { get; }
 
-
-		public string SearchBox
+		public bool IsSearchDropDown { get => Get(); set => Set(value); }
+		public string SearchText
 		{
 			get => Get();
 			set
 			{
-				message.ShowInfo("Search is not yet implemented.");
-				//Set(value).Notify(nameof(IsInFilterMode));
-				// ModelViewModel.SetFilter(value);
+				Set(value);
+				
+				if (string.IsNullOrEmpty(value))
+				{
+					Set("");
+					ClearSelectionItems();
+					return;
+				}
+
+				if (value == SelectedSearchItem?.Name)
+				{
+					Set("");
+					ClearSelectionItems();
+					return;
+				}
+
+				IsSearchDropDown = true;
+				Set(value);
+				var items = searchService.Search(value).Take(21).OrderBy(i => i.Name).ToList();
+				SearchItems.Clear();
+				items.Take(20).ForEach(item => SearchItems.Add(item));
+				if (items.Count > 20)
+				{
+					SearchItems.Add(new SearchEntry("...", null));
+				}
+
+				if (!items.Any())
+				{
+					SearchItems.Add(new SearchEntry("<nothing found>", null));
+				}
 			}
 		}
 
 
+		public SearchEntry SelectedSearchItem
+		{
+			get => Get<SearchEntry>();
+			set
+			{
+				Set(value);
+				if (value == null || value.NodeId == null)
+				{
+					return;
+				}
+
+				locateService.StartMoveToNode(value.NodeId);
+			}
+		}
+
+
+		void ClearSelectionItems()
+		{
+			SearchItems.Clear();
+			SearchItems.Add(new SearchEntry("", null));
+		}
 
 		public BusyIndicator Busy => BusyIndicator();
 
@@ -189,9 +244,9 @@ namespace Dependinator.MainWindowViews
 
 		private void Escape()
 		{
-			if (!string.IsNullOrWhiteSpace(SearchBox))
+			if (!string.IsNullOrWhiteSpace(SearchText))
 			{
-				SearchBox = "";
+				SearchText = "";
 			}
 			else
 			{
@@ -250,9 +305,9 @@ namespace Dependinator.MainWindowViews
 
 		private void ClearFilter()
 		{
-			if (!string.IsNullOrWhiteSpace(SearchBox))
+			if (!string.IsNullOrWhiteSpace(SearchText))
 			{
-				SearchBox = "";
+				SearchText = "";
 			}
 		}
 	}

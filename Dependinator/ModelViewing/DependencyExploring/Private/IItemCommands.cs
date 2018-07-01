@@ -7,6 +7,9 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 	{
 		void ShowCode(NodeName nodeName);
 
+		void Locate(NodeName nodeName);
+
 		void FilterOn(DependencyItem item, bool isSourceItem);
+		void ShowDependencies(NodeName nodeName);
 	}
 }

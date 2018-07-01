@@ -38,7 +38,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 		public ObservableCollection<DependencyItemViewModel> SubItems { get; }
 		public bool IsShowCodeButton => IsShowButtons && Item.HasCode;
-		public bool IsShowVisibilityButton => IsShowButtons;
+		public bool IsShowVisibilityButton => IsShowButtons && SubItems.Any();
 
 		public string ToolTip { get => Get(); set => Set(value); }
 
@@ -63,6 +63,8 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		public Command ShowCodeCommand => Command(() => itemCommands.ShowCode(Item.NodeName));
 		public Command ToggleCollapseCommand => Command(SetExpand);
 		public Command FilterCommand => Command(Filter);
+		public Command LocateCommand => Command(() => itemCommands.Locate(Item.NodeName));
+		public Command ShowDependenciesCommand => Command(() => itemCommands.ShowDependencies(Item.NodeName));
 
 
 		private void Filter()

@@ -215,6 +215,11 @@
     <Compile Include="ModelViewing\ModelHandling\Private\ModelLineService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\ModelService.cs" />
     <Compile Include="ModelViewing\ModelHandling\Private\NodeService.cs" />
+    <Compile Include="ModelViewing\Nodes\ILocateService.cs" />
+    <Compile Include="ModelViewing\Nodes\Private\LocateService.cs" />
+    <Compile Include="ModelViewing\Searching\ISearchService.cs" />
+    <Compile Include="ModelViewing\Searching\Private\SearchService.cs" />
+    <Compile Include="ModelViewing\Searching\SearchEntry.cs" />
     <Compile Include="Utils\Serialization\Store.cs" />
     <Compile Include="Utils\System\ByteArrayExtensions.cs" />
     <Compile Include="Utils\Track.cs" />

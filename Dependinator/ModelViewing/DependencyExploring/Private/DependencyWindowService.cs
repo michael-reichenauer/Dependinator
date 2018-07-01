@@ -7,6 +7,7 @@ using Dependinator.ModelViewing.CodeViewing;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private;
+using Dependinator.ModelViewing.Nodes;
 
 
 namespace Dependinator.ModelViewing.DependencyExploring.Private
@@ -17,8 +18,9 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		private readonly IModelService modelService;
 		private readonly Lazy<IModelNotifications> modelNotifications;
 		private readonly IMessage message;
+		private readonly ILocateService locateService;
 		private readonly Func<NodeName, CodeDialog> codeDialogProvider;
-
+		private readonly Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider;
 
 
 		public DependencyWindowService(
@@ -26,13 +28,17 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			IModelService modelService,
 			Lazy<IModelNotifications> modelNotifications,
 			IMessage message,
-			Func<NodeName, CodeDialog> codeDialogProvider)
+			ILocateService locateService,
+			Func<NodeName, CodeDialog> codeDialogProvider,
+			Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider)
 		{
 			this.dependenciesService = dependenciesService;
 			this.modelService = modelService;
 			this.modelNotifications = modelNotifications;
 			this.message = message;
+			this.locateService = locateService;
 			this.codeDialogProvider = codeDialogProvider;
+			this.dependencyExplorerWindowProvider = dependencyExplorerWindowProvider;
 		}
 
 
@@ -111,6 +117,16 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 			await SetSourceAndTargetItemsAsync(viewModel, sourceNode, targetNode);
 		}
 
+
+		public void Locate(NodeName nodeName) => locateService.StartMoveToNode(new NodeId(nodeName));
+		public void ShowDependencies(NodeName nodeName)
+		{
+			if (TryGetNode(nodeName, out Node node))
+			{
+				var explorerWindow = dependencyExplorerWindowProvider(node, null);
+				explorerWindow.Show();
+			}
+		}
 
 
 		private async void InitializeFromNodeAsync(DependencyExplorerWindowViewModel viewModel, Node node)
