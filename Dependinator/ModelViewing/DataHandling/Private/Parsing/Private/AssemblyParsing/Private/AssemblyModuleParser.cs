@@ -37,7 +37,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			int index = moduleName.IndexOfTxt("*");
 			if (index > 0)
 			{
-				string groupName = moduleName.Substring(1, index - 1);
+				string groupName = moduleName.Substring(0, index);
 				parent = parent == null ? groupName : $"{parent}.{groupName}";
 			}
 
