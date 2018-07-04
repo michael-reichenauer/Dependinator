@@ -6,12 +6,10 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 {
 	internal class DataNodeName : Equatable<DataNodeName>
 	{
+		public static readonly DataNodeName Root = new DataNodeName("");
+
 		public DataNodeName(string fullName)
 		{
-			if (fullName == null)
-			{
-
-			}
 			this.FullName = fullName;
 
 			IsEqualWhenSame(fullName);
@@ -34,13 +32,11 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 		public DataNode(
 			DataNodeName name,
 			DataNodeName parent,
-			NodeType nodeType,
-			bool isReferenced)
+			NodeType nodeType)
 		{
 			Name = name;
 			Parent = parent;
 			NodeType = nodeType;
-			IsReferenced = isReferenced;
 
 			IsEqualWhenSame(Name);
 		}
@@ -49,14 +45,15 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 		public DataNodeName Name { get; }
 		public DataNodeName Parent { get; }
 		public NodeType NodeType { get; }
-		public bool IsReferenced { get; }
 
 		// Node properties
+		public bool IsReferenced { get; set; }
 		public string Description { get; set; }
 		public Rect Bounds { get; set; } = RectEx.Zero;
-		public double ItemsScaleFactor { get; set; }
+		public double Scale { get; set; }
 		public string Color { get; set; }
 		public string ShowState { get; set; }
+
 
 		public override string ToString() => Name.FullName;
 	}

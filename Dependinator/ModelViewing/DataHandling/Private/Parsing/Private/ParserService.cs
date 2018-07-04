@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Dependinator.ModelViewing.DataHandling.Dtos;
-using Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.AssemblyParsing;
-using Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.SolutionFileParsing;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 using Dependinator.Utils.ErrorHandling;
@@ -16,12 +10,12 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private
 {
 	internal class ParserService : IParserService
 	{
-		public async Task<R> ParseAsync(string filePath, DataItemsCallback dataItemsCallback)
+		public async Task<R> ParseAsync(string filePath, DataItemsCallback itemsCallback)
 		{
 			Log.Debug($"Parse {filePath} ...");
 			Timing t = Timing.Start();
 
-			R<WorkParser> workItemParser = GetWorkParser(filePath, dataItemsCallback);
+			R<WorkParser> workItemParser = new WorkParser(filePath, itemsCallback);
 			if (workItemParser.IsFaulted)
 			{
 				return workItemParser;
@@ -39,7 +33,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private
 
 		public async Task<R<string>> GetCodeAsync(string filePath, NodeName nodeName)
 		{
-			R<WorkParser> workItemParser = GetWorkParser(filePath, null);
+			R<WorkParser> workItemParser = new WorkParser(filePath, null);
 			if (workItemParser.IsFaulted)
 			{
 				return workItemParser.Error;
@@ -52,160 +46,11 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private
 		}
 
 
-		public IReadOnlyList<string> GetDataFilePaths(string filePath)
-		{
-			if (IsSolutionFile(filePath))
-			{
-				Solution solution = new Solution(filePath);
-
-				return GetSolutionProjects(solution)
-					.Select(project => project.GetOutputPath())
-					.Where(path => path != null)
-					.ToList();
-			}
-			else
-			{
-				return new[] { filePath };
-			}
-		}
+		public IReadOnlyList<string> GetDataFilePaths(string filePath) => 
+			WorkParser.GetDataFilePaths(filePath);
 
 
-		public IReadOnlyList<string> GetBuildPaths(string filePath)
-		{
-			if (IsSolutionFile(filePath))
-			{
-				Solution solution = new Solution(filePath);
-
-				return GetSolutionProjects(solution)
-					.SelectMany(project => project.GetWorkPaths())
-					.ToList();
-			}
-			else
-			{
-				return new string[0];
-			}
-		}
-
-
-		private static R<WorkParser> GetWorkParser(
-			string filePath, DataItemsCallback dataItemsCallback)
-		{
-			bool isSolutionFile = IsSolutionFile(filePath);
-			R<IReadOnlyList<AssemblyParser>> assemblyParsers = isSolutionFile
-				? GetSolutionAssemblyParsers(filePath, dataItemsCallback)
-				: GetAssemblyParser(filePath, dataItemsCallback);
-
-			if (assemblyParsers.IsFaulted)
-			{
-				return assemblyParsers.Error;
-			}
-
-			if (!assemblyParsers.Value.Any())
-			{
-				return Error.From(new NoAssembliesException(
-					$"Failed to parse:\n {filePath}\nNo Debug assemblies found."));
-			}
-
-			WorkParser workParser = new WorkParser(
-				filePath, assemblyParsers.Value, isSolutionFile, dataItemsCallback);
-
-			return workParser;
-		}
-
-
-		private static R<IReadOnlyList<AssemblyParser>> GetSolutionAssemblyParsers(
-			string filePath, DataItemsCallback itemsCallback)
-		{
-			Solution solution = new Solution(filePath);
-
-			IReadOnlyList<Project> projects = GetSolutionProjects(solution);
-
-			List<AssemblyParser> assemblyParsers = new List<AssemblyParser>();
-
-			string solutionName = GetName(solution.SolutionFilePath);
-
-			foreach (Project project in projects)
-			{
-				string outputPath = project.GetOutputPath();
-
-				if (outputPath != null)
-				{
-					string projectName = project.ProjectFullName;
-					string rootGroup = GetRootGroup(solutionName, projectName);
-
-					AssemblyParser assemblyParser = new AssemblyParser(
-						outputPath, rootGroup, itemsCallback);
-
-					assemblyParsers.Add(assemblyParser);
-				}
-				else
-				{
-					return Error.From(new MissingAssembliesException(
-						$"Failed to parse:\n {filePath}\nProject\n{project}\nhas no Debug assembly."));
-				}
-			}
-
-			return assemblyParsers;
-		}
-
-
-		private static R<IReadOnlyList<AssemblyParser>> GetAssemblyParser(
-			string filePath, DataItemsCallback itemsCallback)
-		{
-			if (!File.Exists(filePath))
-			{
-				return Error.From(new MissingAssembliesException(
-					$"Failed to parse {filePath}\nNo assembly found"));
-			}
-
-			string rootGroup = GetName(filePath);
-			return new[] { new AssemblyParser(filePath, rootGroup, itemsCallback) };
-		}
-
-
-
-		private static IReadOnlyList<Project> GetSolutionProjects(Solution solution) =>
-			solution.Projects.Where(project => !IsTestProject(solution, project)).ToList();
-
-
-		private static bool IsTestProject(Solution solution, Project project)
-		{
-			if (project.ProjectName.EndsWith("Test"))
-			{
-				string name = project.ProjectName.Substring(0, project.ProjectName.Length - 4);
-
-				if (solution.Projects.Any(p => p.ProjectName == name))
-				{
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-
-		private static string GetRootGroup(string solutionName, string projectName)
-		{
-			string rootGroup = solutionName;
-
-			int index = projectName.LastIndexOf("\\", StringComparison.Ordinal);
-			if (index > -1)
-			{
-				string solutionFolder = projectName.Substring(0, index);
-				rootGroup = $"{rootGroup}.{solutionFolder}";
-			}
-
-			rootGroup = rootGroup.Replace("\\", ".");
-			rootGroup = rootGroup.Replace("_", ".");
-			return rootGroup;
-		}
-
-
-		private static string GetName(string filePath) => Path.GetFileName(filePath).Replace(".", "*");
-
-
-		private static bool IsSolutionFile(string filePath) =>
-			Path.GetExtension(filePath).IsSameIgnoreCase(".sln");
-
+		public IReadOnlyList<string> GetBuildPaths(string filePath) =>
+			WorkParser.GetBuildFolderPaths(filePath);
 	}
 }

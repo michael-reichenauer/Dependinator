@@ -36,12 +36,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			new DataNode(
 				new DataNodeName(node.Name.FullName),
 				new DataNodeName(node.Parent.Name.FullName),
-				node.NodeType,
-				false)
+				node.NodeType)
 			{
 				Description = node.Description,
 				Bounds = node.View.ViewModel?.ItemBounds ?? node.View.Bounds,
-				ItemsScaleFactor = node.View.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.View.ScaleFactor,
+				Scale = node.View.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.View.ScaleFactor,
 				Color = node.View.ViewModel?.Color ?? node.View.Color,
 				ShowState = node.View.IsHidden ? Node.Hidden : null
 			};

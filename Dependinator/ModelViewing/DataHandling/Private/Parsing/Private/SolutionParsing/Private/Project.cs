@@ -2,21 +2,20 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.SolutionFileParsing.Private;
 
 
-namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.SolutionFileParsing
+namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.SolutionParsing.Private
 {
 	/// <summary>
 	/// Represents a project within a Solution
 	/// </summary>
 	internal class Project
 	{
-		private readonly ProjectInSolution projectInSolution;
+		private readonly VisualStudioProjectInSolution projectInSolution;
 		private readonly string solutionDirectory;
 
 
-		public Project(ProjectInSolution projectInSolution, string solutionDirectory)
+		public Project(VisualStudioProjectInSolution projectInSolution, string solutionDirectory)
 		{
 			this.projectInSolution = projectInSolution;
 			this.solutionDirectory = solutionDirectory;

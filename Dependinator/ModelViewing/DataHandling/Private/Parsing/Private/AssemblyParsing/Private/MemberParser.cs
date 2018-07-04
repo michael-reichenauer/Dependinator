@@ -32,7 +32,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
-		public void AddTypesMembers(IEnumerable<TypeInfo> typeInfos)
+		public void AddTypesMembers(IEnumerable<TypeData> typeInfos)
 		{
 			typeInfos.ForEach(AddTypeMembers);
 
@@ -40,14 +40,14 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
-		private void AddTypeMembers(TypeInfo typeInfo)
+		private void AddTypeMembers(TypeData typeData)
 		{
-			TypeDefinition type = typeInfo.Type;
-			DataNode typeNode = typeInfo.Node;
+			TypeDefinition type = typeData.Type;
+			DataNode typeNode = typeData.Node;
 
-			if (typeInfo.IsAsyncStateType)
+			if (typeData.IsAsyncStateType)
 			{
-				methodParser.AddAsyncStateType(typeInfo);
+				methodParser.AddAsyncStateType(typeData);
 				return;
 			}
 
@@ -100,8 +100,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				DataNode memberNode = new DataNode(
 					nodeName,
 					parent != null ? new DataNodeName(parent) : null, 
-					NodeType.Member, 
-						false)
+					NodeType.Member)
 				{ Description = description };
 
 				if (!sentNodes.ContainsKey(memberNode.Name))

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.DataHandling.Dtos;
-using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -27,9 +26,9 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
-		public void AddAsyncStateType(TypeInfo typeInfo)
+		public void AddAsyncStateType(TypeData typeData)
 		{
-			asyncStates[typeInfo.Type.FullName] = typeInfo.Type;
+			asyncStates[typeData.Type.FullName] = typeData.Type;
 		}
 
 

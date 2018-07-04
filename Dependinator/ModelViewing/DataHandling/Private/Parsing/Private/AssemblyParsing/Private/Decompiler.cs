@@ -1,6 +1,5 @@
 ﻿using System.Collections.Concurrent;
 using System.Linq;
-using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.ErrorHandling;
 using ICSharpCode.Decompiler;
@@ -16,7 +15,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			new ConcurrentDictionary<ModuleDefinition, CSharpDecompiler>();
 
 
-		public R<string> GetCodeAsync(ModuleDefinition moduleDefinition, NodeName nodeName)
+		public R<string> GetCode(ModuleDefinition moduleDefinition, NodeName nodeName)
 		{
 			string fullName = nodeName.FullName;
 

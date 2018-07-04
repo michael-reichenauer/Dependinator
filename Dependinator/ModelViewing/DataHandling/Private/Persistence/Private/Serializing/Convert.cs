@@ -60,12 +60,11 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 		private static DataNode ToModelNode(CacheJsonTypes.Node node) => new DataNode(
 			new DataNodeName(node.Name),
 			node.Parent != null ? new DataNodeName(node.Parent) : null,
-			FromNodeTypeText(node.Type),
-			false)
+			FromNodeTypeText(node.Type))
 		{
 			Description = node.Description,
 			Bounds = node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
-			ItemsScaleFactor = node.ItemsScaleFactor,
+			Scale = node.ItemsScaleFactor,
 			Color = node.Color,
 			ShowState = node.ShowState
 		};
@@ -78,7 +77,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 			Type = ToNodeTypeText(node.NodeType),
 			Description = node.Description,
 			Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
-			ItemsScaleFactor = node.ItemsScaleFactor,
+			ItemsScaleFactor = node.Scale,
 			Color = node.Color,
 			ShowState = node.ShowState,
 		};
@@ -86,7 +85,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 		private static SaveJsonTypes.Node ToSaveJsonNode(DataNode node) => new SaveJsonTypes.Node
 		{
 			Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
-			Scale = node.ItemsScaleFactor,
+			Scale = node.Scale,
 			Color = node.Color,
 			State = node.ShowState,
 		};
@@ -98,8 +97,10 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 			{
 				case CacheJsonTypes.NodeType.Solution:
 					return NodeType.Solution;
-				case CacheJsonTypes.NodeType.Project:
-					return NodeType.Project;
+				case CacheJsonTypes.NodeType.SolutionFolder:
+					return NodeType.SolutionFolder;
+				case CacheJsonTypes.NodeType.Assembly:
+					return NodeType.Assembly;
 				case CacheJsonTypes.NodeType.Group:
 					return NodeType.Group;
 				case CacheJsonTypes.NodeType.Dll:
@@ -113,7 +114,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 				case CacheJsonTypes.NodeType.Member:
 					return NodeType.Member;
 				default:
-					throw Asserter.FailFast("Unexpected type");
+					throw Asserter.FailFast($"Unexpected type {nodeType}");
 			}
 		}
 
@@ -132,16 +133,20 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 					return null;
 				case NodeType.Solution:
 					return CacheJsonTypes.NodeType.Solution;
-				case NodeType.Project:
-					return CacheJsonTypes.NodeType.Project;
+				case NodeType.Assembly:
+					return CacheJsonTypes.NodeType.Assembly;
 				case NodeType.Group:
 					return CacheJsonTypes.NodeType.Group;
 				case NodeType.Dll:
 					return CacheJsonTypes.NodeType.Dll;
 				case NodeType.Exe:
 					return CacheJsonTypes.NodeType.Exe;
+				case NodeType.SolutionFolder:
+					return CacheJsonTypes.NodeType.SolutionFolder;
+				case NodeType.PrivateMember:
+					return CacheJsonTypes.NodeType.Member;
 				default:
-					throw Asserter.FailFast("Unexpected type");
+					throw Asserter.FailFast($"Unexpected type {nodeNodeType}");
 			}
 		}
 

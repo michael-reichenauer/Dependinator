@@ -79,7 +79,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 					return;
 				}
 
-				targetNode = new DataNode(target, null, targetType, true);
+				targetNode = new DataNode(target, null, targetType) { IsReferenced = true };
 				sentTargetNodes[targetName] = targetNode;
 				itemsCallback(targetNode);
 			}

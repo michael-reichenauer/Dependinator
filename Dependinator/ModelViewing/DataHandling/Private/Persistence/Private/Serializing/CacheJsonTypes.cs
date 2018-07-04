@@ -8,6 +8,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 	{
 		public static string Version = "3";
 
+
 		// A model contains a list of nodes, links and lines
 		[Serializable]
 		public class Model
@@ -76,13 +77,14 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Persistence.Private.Ser
 		internal static class NodeType
 		{
 			public const string Solution = "Solution";
-			public const string Project = "Project";
+			public const string Assembly = "Assembly";
 			public const string Group = "Group";
 			public const string Dll = "Dll";
 			public const string Exe = "Exe";
 			public const string NameSpace = "NameSpace";
 			public const string Type = "Type";
 			public const string Member = "Member";
+			public const string SolutionFolder = "SolutionFolder";
 		}
 	}
 }

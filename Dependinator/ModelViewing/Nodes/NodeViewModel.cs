@@ -142,11 +142,51 @@ namespace Dependinator.ModelViewing.Nodes
 		}
 
 
-		public void UpdateToolTip() => ToolTip =
-			$"{Node.Name.DisplayLongName}" +
-			(string.IsNullOrWhiteSpace(Node.Description) ? "" : $"\n{Node.Description}") +
-			$"{DebugToolTip}";
+		public void UpdateToolTip()
+		{
+			string description = GetToolTipDescription();
+			ToolTip =
+				$"{Node.Name.DisplayLongName}" +
+				(description != null ? $"\n{description}" : null) +
+				$"{DebugToolTip}";
+		}
 
+
+		private string GetToolTipDescription()
+		{
+			if (!string.IsNullOrEmpty(Node.Description))
+			{
+				return Node.Description;
+			}
+
+			switch (Node.NodeType)
+			{
+				case NodeType.None:
+					return null;
+				case NodeType.Solution:
+					return "Solution";
+				case NodeType.SolutionFolder:
+					return "Solution folder";
+				case NodeType.Assembly:
+					return "Assembly";
+				case NodeType.Group:
+					return "Group";
+				case NodeType.Dll:
+					return "Assembly dll";
+				case NodeType.Exe:
+					return "Assembly exe";
+				case NodeType.NameSpace:
+					return "Namespace";
+				case NodeType.Type:
+					return "Type";
+				case NodeType.Member:
+					return "Type member";
+				case NodeType.PrivateMember:
+					return "Type member";
+			}
+
+			return null;
+		}
 
 
 		public void MouseClicked(MouseButtonEventArgs e)

@@ -158,7 +158,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			};
 
 			node.View.Bounds = dataNode.Bounds;
-			node.View.ScaleFactor = dataNode.ItemsScaleFactor;
+			node.View.ScaleFactor = dataNode.Scale;
 			node.View.Color = dataNode.Color;
 			node.View.IsHidden = dataNode.ShowState == Node.Hidden;
 

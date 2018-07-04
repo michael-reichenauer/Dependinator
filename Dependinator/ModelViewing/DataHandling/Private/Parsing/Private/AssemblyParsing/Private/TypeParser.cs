@@ -28,7 +28,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
-		public IEnumerable<TypeInfo> AddType(AssemblyDefinition assembly, TypeDefinition type)
+		public IEnumerable<TypeData> AddType(AssemblyDefinition assembly, TypeDefinition type)
 		{
 			bool isCompilerGenerated = Name.IsCompilerGenerated(type.Name);
 			bool isAsyncStateType = false;
@@ -64,12 +64,12 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				}
 
 				DataNodeName nodeName = new DataNodeName(name);
-				typeNode = new DataNode(nodeName, parent, NodeType.Type, false)
+				typeNode = new DataNode(nodeName, parent, NodeType.Type)
 				{ Description = description };
 				itemsCallback(typeNode);
 			}
 
-			yield return new TypeInfo(type, typeNode, isAsyncStateType);
+			yield return new TypeData(type, typeNode, isAsyncStateType);
 
 			// Iterate all nested types as well
 			foreach (var nestedType in type.NestedTypes)
@@ -92,7 +92,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				{
 					string name = Name.GetTypeNamespaceFullName(type);
 					DataNodeName nodeName = new DataNodeName(name);
-					DataNode node = new DataNode(nodeName, null, NodeType.NameSpace, false)
+					DataNode node = new DataNode(nodeName, null, NodeType.NameSpace)
 					{ Description = description };
 					itemsCallback(node);
 				}
@@ -104,22 +104,22 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
-		public void AddTypesLinks(IEnumerable<TypeInfo> typeInfos)
+		public void AddTypesLinks(IEnumerable<TypeData> typeInfos)
 		{
 			typeInfos.ForEach(AddLinksToBaseTypes);
 		}
 
 
-		private void AddLinksToBaseTypes(TypeInfo typeInfo)
+		private void AddLinksToBaseTypes(TypeData typeData)
 		{
-			if (typeInfo.IsAsyncStateType)
+			if (typeData.IsAsyncStateType)
 			{
 				// Internal async/await helper type,
 				return;
 			}
 
-			TypeDefinition type = typeInfo.Type;
-			DataNode sourceNode = typeInfo.Node;
+			TypeDefinition type = typeData.Type;
+			DataNode sourceNode = typeData.Node;
 
 			try
 			{

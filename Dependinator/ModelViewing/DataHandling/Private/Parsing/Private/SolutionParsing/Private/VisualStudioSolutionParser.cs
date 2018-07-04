@@ -5,19 +5,20 @@ using System.Linq;
 using System.Reflection;
 
 
-namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.SolutionFileParsing.Private
+namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.SolutionParsing.Private
 {
+
 	/// <summary>
 	/// This class parses solution files ".sln" files. It wraps the internal
 	/// Microsoft.Build.Construction.SolutionParser and uses
 	/// reflection to access the internal call and its functionality.
 	/// </summary>
-	internal class SolutionParser
+	internal class VisualStudioSolutionParser
 	{
 		private readonly object instance;
 
 
-		public SolutionParser()
+		public VisualStudioSolutionParser()
 		{
 			//Microsoft.Build.Construction.SolutionParser
 			string typeName = "Microsoft.Build.Construction.SolutionParser";
@@ -36,13 +37,13 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Solutio
 		}
 
 
-		public IReadOnlyList<ProjectInSolution> Projects
+		public IReadOnlyList<VisualStudioProjectInSolution> Projects
 		{
 			get
 			{
 				object[] objects = instance.GetProperty<object[]>(nameof(Projects));
 
-				return objects.Select(project => new ProjectInSolution(project)).ToList();
+				return objects.Select(project => new VisualStudioProjectInSolution(project)).ToList();
 			}
 		}
 

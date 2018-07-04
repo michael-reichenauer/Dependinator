@@ -90,8 +90,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				queuedNode.DataNode = new DataNode(
 					node.Name,
 					node.Parent,
-					node.NodeType,
-					false)
+					node.NodeType)
 				{
 					Description = node.Description
 				};
