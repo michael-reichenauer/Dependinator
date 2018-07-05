@@ -10,7 +10,7 @@
 	<ApplicationIcon>MainWindowViews\Application.ico</ApplicationIcon>
 	
 	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-	<DocumentationFile>bin\$(Configuration)\Dependinator.xml</DocumentationFile>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>1701;1702;1705,1591,1574,0419,1573,3001,3002,3009</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
