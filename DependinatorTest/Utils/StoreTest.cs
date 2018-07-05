@@ -10,7 +10,7 @@ using NUnit.Framework;
 
 namespace DependinatorTest.Utils
 {
-	[TestFixture]
+	[TestFixture, Explicit]
 	public class StoreTest
 	{
 		private readonly string dbDir = Path.Combine(Path.GetTempPath(), "StoreTest");

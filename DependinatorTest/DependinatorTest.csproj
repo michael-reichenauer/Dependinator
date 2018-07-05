@@ -1,36 +1,33 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Some global project properties -->
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{24BF4E2A-398D-4328-A691-4E0C042CE417}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>DependinatorTest</RootNamespace>
-    <AssemblyName>DependinatorTest</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <TargetFramework>net46</TargetFramework>
+	
+	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+	<DocumentationFile>bin\$(Configuration)\DependinatorTest.xml</DocumentationFile>
+    <NoWarn>1701;1702;1705,1591,1574,0419,1573,3001,3002,3009</NoWarn>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <WarningsAsErrors />
+	
+	<!-- To support '*' in AssemblyVersion attribute in AssemblyInfo.cs -->
+	<Deterministic>false</Deterministic>
+	
+	<!-- Attrbutes defined in the AssemblyInfo.cs file (they could also be defined here)-->
+	<GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+	<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+	<GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
+	<GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+	<GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+	<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <LangVersion>7.1</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+ 
+  <!-- Project references --> 
+  <ItemGroup>
+    <ProjectReference Include="..\Dependinator\Dependinator.csproj" />
+  </ItemGroup>
+  
+  <!-- Some standard references --> 
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -41,43 +38,15 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
   </ItemGroup>
+  
+  <!-- Pagage/NuGet references -->
   <ItemGroup>
-    <Compile Include="AutoMocking\AutoMock.cs" />
-    <Compile Include="AutoMocking\Private\AutofacMoqSource.cs" />
-    <Compile Include="Utils\CmdTest.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils\EquatableTest.cs" />
-    <Compile Include="Utils\StoreTest.cs" />
+    <PackageReference Include="Autofac" Version="4.8.1" />
+	<PackageReference Include="Autofac.Extras.Moq" Version="4.2.0" />
+	<PackageReference Include="Microsoft.Database.Collections.Generic" Version="1.9.4" />
+    <PackageReference Include="NUnit" Version="3.9.0" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Dependinator\Dependinator.csproj">
-      <Project>{5bec2bbc-5480-44b9-a412-659c0d057d41}</Project>
-      <Name>Dependinator</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Autofac">
-      <Version>4.8.1</Version>
-    </PackageReference>
-    <PackageReference Include="Autofac.Extras.Moq">
-      <Version>4.2.0</Version>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Database.Collections.Generic">
-      <Version>1.9.4</Version>
-    </PackageReference>
-    <PackageReference Include="NUnit">
-      <Version>3.9.0</Version>
-    </PackageReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
+  
+  
 </Project>
