@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Solutio
 
 		private readonly List<AssemblyParser> assemblyParsers = new List<AssemblyParser>();
 
-		private List<DataNode> parentNodesToSend;
+		private List<DataNode> parentNodesToSend = new List<DataNode>();
 
 
 		public SolutionParser(string solutionFilePath, DataItemsCallback itemsCallback)
@@ -35,7 +35,6 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Solutio
 
 		public async Task<R> ParseAsync()
 		{
-			parentNodesToSend = new List<DataNode>();
 			parentNodesToSend.Add(GetSolutionNode());
 
 			R result = CreateAssemblyParsers();
