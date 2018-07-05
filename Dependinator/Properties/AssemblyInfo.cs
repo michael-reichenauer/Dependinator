@@ -9,7 +9,6 @@ using System.Windows;
 // associated with an assembly.
 [assembly: AssemblyTitle("Dependiantor")]
 [assembly: AssemblyDescription("Visualizes dependencies in programs.")]
-[assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Michael Reichenauer")]
 [assembly: AssemblyProduct("Dependinator")]
 [assembly: AssemblyCopyright("Copyright © Michael Reichenauer 2017")]

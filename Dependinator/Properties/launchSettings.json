@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Dependinator": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Work Files\\GitMind\\GitMind.sln\""
+    }
+  }
+}
