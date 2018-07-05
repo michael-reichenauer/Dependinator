@@ -6,7 +6,6 @@ using System.Runtime.InteropServices;
 // associated with an assembly.
 [assembly: AssemblyTitle("Dependiater Updater")]
 [assembly: AssemblyDescription("Updates Dependiater")]
-[assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Michael Reichenauer")]
 [assembly: AssemblyProduct("Dependiater Updater")]
 [assembly: AssemblyCopyright("Copyright © Michael Reichenauer 2018")]

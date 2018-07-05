@@ -1,139 +1,41 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Some global project properties -->
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5BEC2BBC-5480-44B9-A412-659C0D057D41}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Dependinator</RootNamespace>
-    <AssemblyName>Dependinator</AssemblyName>
-    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <WarningLevel>4</WarningLevel>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <TargetFrameworkProfile />
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-    <PublishUrl>publish\</PublishUrl>
-    <Install>true</Install>
-    <InstallFrom>Disk</InstallFrom>
-    <UpdateEnabled>false</UpdateEnabled>
-    <UpdateMode>Foreground</UpdateMode>
-    <UpdateInterval>7</UpdateInterval>
-    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
-    <UpdatePeriodically>false</UpdatePeriodically>
-    <UpdateRequired>false</UpdateRequired>
-    <MapFileExtensions>true</MapFileExtensions>
-    <ApplicationRevision>0</ApplicationRevision>
-    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
-    <UseApplicationTrust>false</UseApplicationTrust>
-    <BootstrapperEnabled>true</BootstrapperEnabled>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <TargetFramework>net46</TargetFramework>
+	
+	<!-- Using Program.Main as entry point instead of app as in default wpf program -->
+	<StartupObject>Dependinator.Program</StartupObject>
+	<ApplicationIcon>MainWindowViews\Application.ico</ApplicationIcon>
+	
+	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>1701;1702;1705,1591,1574,0419,1573,3001,3002,3009</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <LangVersion>7.1</LangVersion>
-    <DocumentationFile>bin\Debug\Dependinator.xml</DocumentationFile>
-    <NoWarn>1591,1574,0419,1573,3001,3002,3009</NoWarn>
+    <WarningsAsErrors />
+	
+	<!-- To support '*' in AssemblyVersion attribute in AssemblyInfo.cs -->
+	<Deterministic>false</Deterministic>
+	
+	<!-- Attrbutes defined in the AssemblyInfo.cs file (they could also be defined here)-->
+	<GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+	<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+	<GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
+	<GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+	<GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+	<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\Dependinator.xml</DocumentationFile>
-    <NoWarn>1591,1574,0419,1573,3001,3002,3009</NoWarn>
-  </PropertyGroup>
-  <PropertyGroup>
-    <ApplicationIcon>MainWindowViews\Application.ico</ApplicationIcon>
-  </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject>Dependinator.Program</StartupObject>
-  </PropertyGroup>
+ 
+  <!-- Some standard references --> 
   <ItemGroup>
-    <Reference Include="Autofac, Version=4.8.1.0, Culture=neutral, PublicKeyToken=17863af14b0044da, processorArchitecture=MSIL">
-      <HintPath>..\packages\Autofac.4.8.1\lib\net45\Autofac.dll</HintPath>
-    </Reference>
-    <Reference Include="Esent.Collections, Version=1.9.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Database.Collections.Generic.1.9.4\lib\net40\Esent.Collections.dll</HintPath>
-    </Reference>
-    <Reference Include="Esent.Interop, Version=1.9.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\ManagedEsent.1.9.4\lib\net40\Esent.Interop.dll</HintPath>
-    </Reference>
-    <Reference Include="Esent.Isam, Version=1.9.4.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Database.Isam.1.9.4\lib\net40\Esent.Isam.dll</HintPath>
-    </Reference>
-    <Reference Include="Humanizer, Version=2.2.0.0, Culture=neutral, PublicKeyToken=979442b78dfc278e, processorArchitecture=MSIL">
-      <HintPath>..\packages\Humanizer.Core.2.2.0\lib\netstandard1.0\Humanizer.dll</HintPath>
-    </Reference>
-    <Reference Include="ICSharpCode.AvalonEdit, Version=5.0.3.0, Culture=neutral, PublicKeyToken=9cc39be672370310, processorArchitecture=MSIL">
-      <HintPath>..\packages\AvalonEdit.5.0.4\lib\Net40\ICSharpCode.AvalonEdit.dll</HintPath>
-    </Reference>
-    <Reference Include="ICSharpCode.Decompiler, Version=3.1.0.3652, Culture=neutral, PublicKeyToken=d4bfe873e7598c49, processorArchitecture=MSIL">
-      <HintPath>..\packages\ICSharpCode.Decompiler.3.1.0.3652\lib\net46\ICSharpCode.Decompiler.dll</HintPath>
-    </Reference>
-    <Reference Include="ICSharpCode.NRefactory, Version=5.0.0.0, Culture=neutral, PublicKeyToken=d4bfe873e7598c49, processorArchitecture=MSIL">
-      <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.dll</HintPath>
-    </Reference>
-    <Reference Include="ICSharpCode.NRefactory.Cecil, Version=5.0.0.0, Culture=neutral, PublicKeyToken=d4bfe873e7598c49, processorArchitecture=MSIL">
-      <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.Cecil.dll</HintPath>
-    </Reference>
-    <Reference Include="ICSharpCode.NRefactory.CSharp, Version=5.0.0.0, Culture=neutral, PublicKeyToken=d4bfe873e7598c49, processorArchitecture=MSIL">
-      <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="ICSharpCode.NRefactory.Xml, Version=5.0.0.0, Culture=neutral, PublicKeyToken=d4bfe873e7598c49, processorArchitecture=MSIL">
-      <HintPath>..\packages\ICSharpCode.NRefactory.5.5.1\lib\Net40\ICSharpCode.NRefactory.Xml.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.ApplicationInsights, Version=2.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.ApplicationInsights.2.3.0\lib\net46\Microsoft.ApplicationInsights.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.Build" />
-    <Reference Include="Mono.Cecil, Version=0.10.0.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mono.Cecil.0.10.0\lib\net40\Mono.Cecil.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Mdb, Version=0.10.0.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mono.Cecil.0.10.0\lib\net40\Mono.Cecil.Mdb.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Pdb, Version=0.10.0.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mono.Cecil.0.10.0\lib\net40\Mono.Cecil.Pdb.dll</HintPath>
-    </Reference>
-    <Reference Include="Mono.Cecil.Rocks, Version=0.10.0.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
-      <HintPath>..\packages\Mono.Cecil.0.10.0\lib\net40\Mono.Cecil.Rocks.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=8.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="PresentationFramework.Aero" />
-    <Reference Include="protobuf-net, Version=2.1.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67, processorArchitecture=MSIL">
-      <HintPath>..\packages\protobuf-net.2.1.0\lib\net451\protobuf-net.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Collections.Immutable.1.3.1\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
-    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.Runtime.Serialization" />
-    <Reference Include="System.ValueTuple, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.ValueTuple.4.4.0\lib\net461\System.ValueTuple.dll</HintPath>
-    </Reference>
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Windows.Interactivity">
       <HintPath>..\Binaries\System.Windows.Interactivity.dll</HintPath>
@@ -151,546 +53,37 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
   </ItemGroup>
+  
+  <!-- Pagage/NuGet references -->
   <ItemGroup>
-    <Compile Include="Common\IMainWindow.cs" />
-    <Compile Include="Common\MessageDialogs\IMessage.cs" />
-    <Compile Include="Common\MessageDialogs\IMessageService.cs" />
-    <Compile Include="Common\ModelMetadataFolders\Private\ExistingInstanceService.cs" />
-    <Compile Include="Common\ModelMetadataFolders\Private\IExistingInstanceService.cs" />
-    <Compile Include="Common\ModelMetadataFolders\Private\IJumpListService.cs" />
-    <Compile Include="Common\ModelMetadataFolders\IRecentModelsService.cs" />
-    <Compile Include="Common\ModelMetadataFolders\Private\ILoadModelService.cs" />
-    <Compile Include="Common\ModelMetadataFolders\Private\IStartInstanceService.cs" />
-    <Compile Include="Common\ModelMetadataFolders\Private\RecentModelsService.cs" />
-    <Compile Include="Common\ModelMetadataFolders\Private\StartInstanceService.cs" />
-    <Compile Include="Common\ProgressHandling\IBusyIndicatorProvider.cs" />
-    <Compile Include="Common\SettingsHandling\ISettingsService.cs" />
-    <Compile Include="Common\ModelMetadataFolders\IOpenModelService.cs" />
-    <Compile Include="Common\ModelMetadataFolders\Private\IOpenFileDialogService.cs" />
-    <Compile Include="Common\ModelMetadataFolders\Private\OpenFileDialogService.cs" />
-    <Compile Include="Common\ModelMetadataFolders\Private\OpenModelService.cs" />
-    <Compile Include="MainWindowViews\NamespaceDoc.cs" />
-    <Compile Include="ModelViewing\CodeViewing\CodeDialog.xaml.cs">
-      <DependentUpon>CodeDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="ModelViewing\CodeViewing\CodeViewModel.cs" />
-    <Compile Include="ModelViewing\DataHandling\DataMonitorService.cs" />
-    <Compile Include="ModelViewing\DataHandling\Dtos\NodeType.cs" />
-    <Compile Include="ModelViewing\DataHandling\IDataMonitorService.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\DataDetailsService.cs" />
-    <Compile Include="ModelViewing\DataHandling\IDataDetailsService.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\SolutionParsing\SolutionParser.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Persistence\Private\Serializing\SaveJsonTypes.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\IDependencyExplorerService.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyExplorerService.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyWindowService.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\Private\IDependencyWindowService.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\Private\IItemCommands.cs" />
-    <Compile Include="ModelViewing\IModelNotifications.cs" />
-    <Compile Include="ModelViewing\DataHandling\IDataService.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\DataService.cs" />
-    <Compile Include="ModelViewing\Items\VisualAreaHandler.cs" />
-    <Compile Include="ModelViewing\DataHandling\Dtos\NodeId.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\ParsingAssemblyResolver.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\Private\Decompiler.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\WorkParser.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\Private\IDependenciesService.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyItem.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyItemView.xaml.cs">
-      <DependentUpon>DependencyItemView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyItemViewModel.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\Private\DependenciesService.cs" />
-    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyExplorerWindow.xaml.cs">
-      <DependentUpon>DependencyExplorerWindow.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="ModelViewing\DependencyExploring\Private\DependencyExplorerWindowViewModel.cs" />
-    <Compile Include="ModelViewing\Items\ISelectableItem.cs" />
-    <Compile Include="ModelViewing\Lines\Private\ILineControlService.cs" />
-    <Compile Include="ModelViewing\Lines\Private\ILineDataService.cs" />
-    <Compile Include="ModelViewing\Lines\Private\LineControl.cs" />
-    <Compile Include="ModelViewing\Lines\Private\LineControlService.cs" />
-    <Compile Include="ModelViewing\Lines\Private\LineDataService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Core\IEdge.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\IModelLineService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\INodeService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\ModelLineService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\ModelService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\NodeService.cs" />
-    <Compile Include="ModelViewing\Nodes\ILocateService.cs" />
-    <Compile Include="ModelViewing\Nodes\Private\LocateService.cs" />
-    <Compile Include="ModelViewing\Searching\ISearchService.cs" />
-    <Compile Include="ModelViewing\Searching\Private\SearchService.cs" />
-    <Compile Include="ModelViewing\Searching\SearchEntry.cs" />
-    <Compile Include="Utils\Serialization\Store.cs" />
-    <Compile Include="Utils\System\ByteArrayExtensions.cs" />
-    <Compile Include="Utils\Track.cs" />
-    <Compile Include="Utils\AsserterEventArgs.cs" />
-    <Compile Include="Utils\Net\HttpClientDownloadWithProgress.cs" />
-    <Compile Include="Utils\OsSystem\SystemIdle.cs" />
-    <Compile Include="Utils\UI\MouseHelper.cs" />
-    <Compile Include="ModelViewing\Nodes\NodeControl.cs" />
-    <Compile Include="ModelViewing\Nodes\NodeControlViewModel.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Core\LineViewData.cs" />
-    <Compile Include="ModelViewing\Nodes\NodeType.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Core\NodeTraversalExtensions.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Core\NodeViewData.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\DataFileParsing\JsonTypes.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\Private\XmlDocParser.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Persistence\IPersistenceService.cs" />
-    <Compile Include="ModelViewing\DataHandling\Dtos\DataLine.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\Private\IgnoredTypes.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\Private\LinkHandler.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\Private\MemberParser.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\Private\MethodParser.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\Private\AssemblyReferencesParser.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\AssemblyParser.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\Private\Name.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\Private\TypeData.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\AssemblyParsing\Private\TypeParser.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\SolutionParsing\Private\Project.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\SolutionParsing\Private\VisualStudioProjectInSolution.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\SolutionParsing\Private\ReflectionExtensions.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\SolutionParsing\Private\Solution.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\SolutionParsing\Private\VisualStudioSolutionParser.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Persistence\NamespaceDoc.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Persistence\Private\Serializing\CacheJsonTypes.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Persistence\Private\PersistenceService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\NamespaceDoc.cs" />
-    <Compile Include="ModelViewing\NamespaceDoc.cs" />
-    <Compile Include="ModelViewing\Nodes\DescriptionView.xaml.cs">
-      <DependentUpon>DescriptionView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="ModelViewing\Nodes\INodeLayoutService.cs" />
-    <Compile Include="ModelViewing\Nodes\NodeControlView.xaml.cs">
-      <DependentUpon>NodeControlView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="ModelViewing\Items\IItemSelectionService.cs" />
-    <Compile Include="ModelViewing\Nodes\Private\NodeLayoutService.cs" />
-    <Compile Include="ModelViewing\Items\Private\ItemSelectionService.cs" />
-    <Compile Include="ModelViewing\Open\FileItem.cs" />
-    <Compile Include="ModelViewing\Open\HiddenNodeItem.cs" />
-    <Compile Include="ModelViewing\Open\OpenModelView.xaml.cs">
-      <DependentUpon>OpenModelView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="ModelViewing\Open\OpenModelViewModel.cs" />
-    <Compile Include="Common\NamespaceDoc.cs" />
-    <Compile Include="NamespaceDoc.cs" />
-    <Compile Include="Utils\BuildConfig.cs" />
-    <Compile Include="Utils\Culture.cs" />
-    <Compile Include="Utils\System\DoubleExtensions.cs" />
-    <Compile Include="Utils\NamespaceDoc.cs" />
-    <Compile Include="Utils\Collections\PriorityBlockingQueue.cs" />
-    <Compile Include="MainWindowViews\SearchFilter.xaml.cs">
-      <DependentUpon>SearchFilter.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="ModelViewing\DataHandling\Dtos\IDataItem.cs" />
-    <Compile Include="ModelViewing\DataHandling\Dtos\DataLink.cs" />
-    <Compile Include="ModelViewing\DataHandling\DataItemsCallback.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Persistence\Private\Serializing\Convert.cs" />
-    <Compile Include="ModelViewing\Nodes\TitleView.xaml.cs">
-      <DependentUpon>TitleView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="ModelViewing\ModelHandling\Private\Convert.cs" />
-    <Compile Include="Utils\OsSystem\AssemblyExtensions.cs" />
-    <Compile Include="Utils\Dependencies\AssemblyResolver.cs" />
-    <Compile Include="Utils\System\NamespaceDoc.cs" />
-    <Compile Include="Utils\UI\BrushExtensions.cs" />
-    <Compile Include="Utils\UI\DispatcherExtensions.cs" />
-    <Compile Include="Utils\UI\GeometryService.cs" />
-    <Compile Include="Utils\UI\IGeometryService.cs" />
-    <Compile Include="Utils\UI\DragUiElement.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\IModelLinkService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Core\Line.cs" />
-    <Compile Include="ModelViewing\Lines\LineView.xaml.cs">
-      <DependentUpon>LineView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="ModelViewing\Lines\LineViewModel.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Core\Link.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\ModelLinkService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\LinkSegment.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Core\Node.cs" />
-    <Compile Include="ModelViewing\Nodes\NodeViewModel.cs" />
-    <Compile Include="ModelViewing\ModelHandling\IModelHandlingService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\IModelNodeService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\ModelHandlingService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\ModelNodeService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\IModelService.cs" />
-    <Compile Include="ModelViewing\DataHandling\Dtos\DataNode.cs" />
-    <Compile Include="ModelViewing\Nodes\NamespaceViewModel.cs" />
-    <Compile Include="ModelViewing\Nodes\TypeView.xaml.cs">
-      <DependentUpon>TypeView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="ModelViewing\Nodes\TypeViewModel.cs" />
-    <Compile Include="ModelViewing\Items\Private\ItemsService.cs" />
-    <Compile Include="Utils\UI\DebounceDispatcher.cs" />
-    <Compile Include="Utils\UI\DelayDispatcher.cs" />
-    <Compile Include="Utils\UI\MouseClicked.cs" />
-    <Compile Include="Utils\UI\Mvvm\IPropertyNotify.cs" />
-    <Compile Include="Utils\UI\Mvvm\IPropertySetter.cs" />
-    <Compile Include="Utils\UI\Mvvm\Notifyable.cs" />
-    <Compile Include="Utils\UI\PointEx.cs" />
-    <Compile Include="Utils\UI\PointExtensions.cs" />
-    <Compile Include="Utils\UI\RectEx.cs" />
-    <Compile Include="Utils\UI\RectExtensions.cs" />
-    <Compile Include="Utils\UI\Mvvm\TargetWhenSetter.cs" />
-    <Compile Include="Utils\UI\SizeExtensions.cs" />
-    <Compile Include="Utils\UI\ThrottleDispatcher.cs" />
-    <Compile Include="Utils\UI\VectorExtensions.cs" />
-    <Page Include="App.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Compile Include="Common\ModelMetadataFolders\Private\IMetadataFolderService.cs" />
-    <Compile Include="Common\ModelMetadataFolders\Private\MetadataFolderService.cs" />
-    <Compile Include="Common\ModelMetadataFolders\ModelMetadata.cs" />
-    <Compile Include="Common\ThemeHandling\BranchColorsOption.cs" />
-    <Compile Include="Common\ThemeHandling\Converter.cs" />
-    <Compile Include="Common\ThemeHandling\Theme.cs" />
-    <Compile Include="Common\ThemeHandling\ThemeOption.cs" />
-    <Compile Include="Common\ThemeHandling\ThemesOption.cs" />
-    <Compile Include="Common\ModelMetadataFolders\Private\JumpListService.cs" />
-    <Compile Include="Common\MessageDialogs\Message.cs" />
-    <Compile Include="Common\MessageDialogs\MessageDialog.xaml.cs">
-      <DependentUpon>MessageDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Common\MessageDialogs\MessageDialogViewModel.cs" />
-    <Compile Include="Common\ProgressHandling\IProgressService.cs" />
-    <Compile Include="Common\ProgressHandling\Progress.cs" />
-    <Compile Include="Common\ProgressHandling\ProgressDialog.xaml.cs">
-      <DependentUpon>ProgressDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Common\ProgressHandling\ProgressDialogViewModel.cs" />
-    <Compile Include="Common\ProgressHandling\ProgressService.cs" />
-    <Compile Include="Common\ModelMetadataFolders\FileEventArgs.cs" />
-    <Compile Include="Common\ModelMetadataFolders\Private\IFolderMonitorService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\ILinkSegmentService.cs" />
-    <Compile Include="ModelViewing\Lines\Private\ILineViewModelService.cs" />
-    <Compile Include="ModelViewing\ModelHandling\Private\LinkSegmentService.cs" />
-    <Compile Include="ModelViewing\Lines\Private\LineViewModelService.cs" />
-    <Compile Include="ModelViewing\Lines\Private\LinkGroup.cs" />
-    <Compile Include="ModelViewing\Items\Private\IgnoreMouseWheelBehavior.cs" />
-    <Compile Include="ModelViewing\Nodes\INodeViewModelService.cs" />
-    <Compile Include="ModelViewing\Items\IItemsCanvasOwner.cs" />
-    <Compile Include="ModelViewing\Items\ItemsCanvas.cs" />
-    <Compile Include="ModelViewing\Nodes\MemberNodeView.xaml.cs">
-      <DependentUpon>MemberNodeView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="ModelViewing\Nodes\MemberNodeViewModel.cs" />
-    <Compile Include="ModelViewing\Nodes\NodeName.cs" />
-    <Compile Include="ModelViewing\Nodes\Private\NodeComparer.cs" />
-    <Compile Include="ModelViewing\Items\ItemsView.xaml.cs">
-      <DependentUpon>ItemsView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="ModelViewing\Items\ItemsViewModel.cs" />
-    <Compile Include="ModelViewing\Nodes\NamespaceView.xaml.cs">
-      <DependentUpon>NamespaceView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\Private\ParserService.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Parsing\IParserService.cs" />
-    <Compile Include="ModelViewing\Items\ItemViewModel.cs" />
-    <Compile Include="ModelViewing\Items\IItem.cs" />
-    <Compile Include="ModelViewing\IModelViewService.cs" />
-    <Compile Include="ModelViewing\Private\ModelViewService.cs" />
-    <Compile Include="ModelViewing\Nodes\Private\NodeViewModelService.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Persistence\Private\Serializing\DataSerializer.cs" />
-    <Compile Include="ModelViewing\DataHandling\Private\Persistence\Private\Serializing\IDataSerializer.cs" />
-    <Compile Include="Utils\System\CollectionExtensions.cs" />
-    <Compile Include="Utils\System\ExceptionAsyncExtensions.cs" />
-    <Compile Include="Utils\System\ExceptionExtensions.cs" />
-    <Compile Include="Utils\ErrorHandling\FatalExceptionEventArgs.cs" />
-    <Compile Include="Utils\System\MathExtensions.cs" />
-    <Compile Include="Utils\Threading\AsyncLock.cs" />
-    <Compile Include="Utils\Dependencies\DependencyInjection.cs" />
-    <Compile Include="Common\ModelMetadataFolders\Private\FolderMonitorService.cs" />
-    <Compile Include="MainWindowViews\IMainWindowService.cs" />
-    <Compile Include="Common\ModelMetadataFolders\Private\MainWindowIpcService.cs" />
-    <Compile Include="MainWindowViews\Private\MainWindowService.cs" />
-    <Compile Include="Common\WindowOwner.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Utils\ErrorHandling\StackTraceExtensions.cs" />
-    <Compile Include="Utils\OsSystem\StopParameter.cs" />
-    <Compile Include="Utils\Threading\Throttler.cs" />
-    <Compile Include="Utils\Txt.cs" />
-    <Compile Include="Utils\UI\CredentialsDialog.cs" />
-    <Compile Include="Common\SettingsHandling\Private\SettingsService.cs" />
-    <Compile Include="Common\SettingsHandling\Options.cs" />
-    <Compile Include="Common\SettingsHandling\WorkFolderSettings.cs" />
-    <Compile Include="Utils\Equatable.cs" />
-    <Compile Include="Utils\Net\IpcService.cs" />
-    <Compile Include="Utils\Serialization\Json.cs" />
-    <Compile Include="Utils\Serialization\ProtoBufSerializer.cs" />
-    <Compile Include="Utils\Dependencies\SingleInstanceAttribute.cs" />
-    <Compile Include="Utils\UI\InputBindingsBehavior.cs" />
-    <Compile Include="Utils\UI\VirtualCanvas\ItemEventArgs.cs" />
-    <Compile Include="Utils\UI\VirtualCanvas\WindowsExtensions.cs" />
-    <Compile Include="Utils\UI\VisibleWindow.cs" />
-    <Compile Include="Utils\UI\WpfBindingTraceListener.cs" />
-    <Compile Include="Common\ThemeHandling\ThemeService.cs" />
-    <Compile Include="ModelViewing\ModelView.xaml.cs">
-      <DependentUpon>ModelView.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="MainWindowViews\HamburgerButton.xaml.cs">
-      <DependentUpon>HamburgerButton.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Utils\Net\IpcRemotingService.cs" />
-    <Compile Include="Utils\UI\BusyProgress.cs" />
-    <Compile Include="Utils\UI\HideableGridSplitter.cs" />
-    <Compile Include="Utils\Compare.cs" />
-    <Compile Include="Common\ThemeHandling\IThemeService.cs" />
-    <Compile Include="ModelViewing\Items\Private\ItemsSource.cs" />
-    <Compile Include="ModelViewing\ModelViewModel.cs" />
-    <Compile Include="Utils\Collections\IReadOnlyKeyedList.cs" />
-    <Compile Include="Utils\Collections\KeyedList.cs" />
-    <Compile Include="Utils\ErrorHandling\ExceptionHandling.cs" />
-    <Compile Include="Utils\ErrorHandling\FatalExceptionsExtensions.cs" />
-    <Compile Include="Common\Environment\Private\CommandLine.cs" />
-    <Compile Include="Common\Environment\ICommandLine.cs" />
-    <Compile Include="Utils\Threading\AsyncSemaphore.cs" />
-    <Compile Include="Utils\System\EnumerableExtensions.cs" />
-    <Compile Include="Utils\ErrorHandling\Error.cs" />
-    <Compile Include="Common\Installation\IInstaller.cs" />
-    <Compile Include="Common\Installation\ILatestVersionService.cs" />
-    <Compile Include="Common\Installation\Private\LatestVersionService.cs" />
-    <Compile Include="Common\Installation\Private\Installer.cs" />
-    <Compile Include="ProgramInfo.cs" />
-    <Compile Include="Common\SettingsHandling\ProgramSettings.cs" />
-    <Compile Include="Utils\UI\PropertyToVisibilityConverter.cs" />
-    <Compile Include="Utils\OsSystem\CmdResult.cs" />
-    <Compile Include="Utils\ErrorHandling\R.cs" />
-    <Compile Include="Utils\Threading\TaskExExtensions.cs" />
-    <Compile Include="Utils\Threading\TaskThrottler.cs" />
-    <Compile Include="Utils\UI\BusyIndicator.cs" />
-    <Compile Include="Utils\UI\WpfExtensions.cs" />
-    <Compile Include="Utils\UI\Mvvm\Property.cs" />
-    <Compile Include="Utils\UI\Mvvm\Command.cs" />
-    <Compile Include="MainWindowViews\MainWindowViewModel.cs" />
-    <Compile Include="Utils\Asserter.cs" />
-    <Compile Include="Utils\Collections\Sorter.cs" />
-    <Compile Include="Utils\Threading\Timing.cs" />
-    <Compile Include="Utils\UI\Mvvm\ViewModel.cs" />
-    <Compile Include="Utils\UI\Mvvm\SourceWhenSetter.cs" />
-    <Compile Include="Utils\UI\VirtualCanvas\VirtualItemsSource.cs" />
-    <Compile Include="Utils\UI\VirtualCanvas\ArithmeticConverter.cs" />
-    <Compile Include="Utils\UI\VirtualCanvas\ISpatialItemsSource.cs" />
-    <Compile Include="Utils\UI\VirtualCanvas\LinkedListExtensions.cs" />
-    <Compile Include="Utils\UI\VirtualCanvas\MathExtensions.cs" />
-    <Compile Include="Utils\UI\VirtualCanvas\PriorityQuadTree.cs" />
-    <Compile Include="Utils\UI\VirtualCanvas\PriorityQueue.cs" />
-    <Compile Include="Utils\UI\VirtualCanvas\RectExtensions.cs" />
-    <Compile Include="Utils\OsSystem\Cmd.cs" />
-    <Compile Include="Utils\OsSystem\ICmd.cs" />
-    <Compile Include="Utils\Log.cs" />
-    <Compile Include="Utils\Dependencies\MicroDiContainer.cs" />
-    <Compile Include="Utils\UI\VirtualCanvas\VirtualPanel.cs" />
-    <Compile Include="Utils\UI\VirtualCanvas\ZoomableCanvas.cs" />
-    <Compile Include="Common\WindowControlButtons.xaml.cs">
-      <DependentUpon>WindowControlButtons.xaml</DependentUpon>
-    </Compile>
-    <Page Include="Common\MessageDialogs\MessageDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Common\ProgressHandling\ProgressDialog.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="MainWindowViews\SearchFilter.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="ModelViewing\CodeViewing\CodeDialog.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="ModelViewing\DependencyExploring\Private\DependencyItemView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="ModelViewing\DependencyExploring\Private\DependencyExplorerWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="ModelViewing\Lines\LineView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="ModelViewing\Nodes\DescriptionView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="ModelViewing\Nodes\NodeControlView.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Page Include="ModelViewing\Nodes\TitleView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="ModelViewing\Nodes\TypeView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="ModelViewing\ModelView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="MainWindowViews\HamburgerButton.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="MainWindowViews\MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-      <SubType>Designer</SubType>
-    </Page>
-    <Compile Include="App.xaml.cs">
-      <DependentUpon>App.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="MainWindowViews\MainWindow.xaml.cs">
-      <DependentUpon>MainWindow.xaml</DependentUpon>
-      <SubType>Code</SubType>
-    </Compile>
-    <Page Include="ModelViewing\Nodes\MemberNodeView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="ModelViewing\Open\OpenModelView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="ModelViewing\Items\ItemsView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="ModelViewing\Nodes\NamespaceView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Styles\ButtonStyle.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Styles\CheckboxStyle.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Styles\ColorStyle.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Styles\ComboBoxStyle.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Styles\ContextMenuStyle.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Styles\LabelStyle.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Styles\ListBoxItemControlTemplate.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Styles\ListBoxScrollbarStyle.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Styles\ListBoxStyle.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Styles\RadioButtonStyle.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Styles\ToolTipStyle.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Common\WindowControlButtons.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Styles\TreeViewStyle.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
+    <PackageReference Include="Autofac" Version="4.8.1"/>
+    <PackageReference Include="AvalonEdit" Version="5.0.4"/>
+    <PackageReference Include="ICSharpCode.Decompiler" Version="3.1.0.3652"/>
+    <PackageReference Include="ICSharpCode.NRefactory" Version="5.5.1"/>
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.3.0"/>
+    <PackageReference Include="Microsoft.Database.Collections.Generic" Version="1.9.4"/>
+    <PackageReference Include="Newtonsoft.Json" Version="8.0.3"/>
+    <PackageReference Include="protobuf-net" Version="2.1.0"/>
+    <PackageReference Include="System.ValueTuple" Version="4.4.0"/>
   </ItemGroup>
+  
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Settings.settings</DependentUpon>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-    </Compile>
-    <EmbeddedResource Include="Properties\Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <!-- some special included resources -->
+	<Resource Include="MainWindowViews\Application.ico" />   
     <Resource Include="Common\Resources\MaterialIcons-Regular.ttf" />
     <EmbeddedResource Include="Common\Resources\CSharp-Mode.xshd" />
-    <None Include="packages.config" />
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <AppDesigner Include="Properties\" />
+     
+    <!-- XAML elements -->
+    <Page Include="**\*.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
+    </Page>
+    <Compile Update="**\*.xaml.cs" SubType="Code" DependentUpon="%(Filename)" />
+	
+	 <!-- Settings -->
+    <None Update="Properties\Settings.settings" Generator="SettingsSingleFileGenerator" LastGenOutput="Settings.Designer.cs" />
+    <Compile Update="Properties\Settings.Designer.cs" AutoGen="True" DependentUpon="Settings.settings" />    
+	
   </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="MainWindowViews\Application.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <COMReference Include="IWshRuntimeLibrary">
-      <Guid>{F935DC20-1CF0-11D0-ADB9-00C04FD58A0B}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </COMReference>
-  </ItemGroup>
-  <ItemGroup>
-    <BootstrapperPackage Include=".NETFramework,Version=v4.6.1">
-      <Visible>False</Visible>
-      <ProductName>Microsoft .NET Framework 4.6.1 %28x86 and x64%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
-      <Visible>False</Visible>
-      <ProductName>.NET Framework 3.5 SP1</ProductName>
-      <Install>false</Install>
-    </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  
 </Project>
