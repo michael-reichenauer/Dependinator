@@ -2,7 +2,7 @@
 
   <!-- Some global project properties -->
   <PropertyGroup>
-    <TargetFramework>net46</TargetFramework>
+    <TargetFramework>net47</TargetFramework>
 	
 	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -44,7 +44,7 @@
     <PackageReference Include="Autofac" Version="4.8.1" />
 	<PackageReference Include="Autofac.Extras.Moq" Version="4.2.0" />
 	<PackageReference Include="Microsoft.Database.Collections.Generic" Version="1.9.4" />
-    <PackageReference Include="NUnit" Version="3.9.0" />
+    <PackageReference Include="NUnit" Version="3.10.1" />
   </ItemGroup>
 
   

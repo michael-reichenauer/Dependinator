@@ -3,7 +3,7 @@
   <!-- Some global project properties -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net46</TargetFramework>
+    <TargetFramework>net47</TargetFramework>
 	
 	<!-- Using Program.Main as entry point instead of app as in default wpf program -->
 	<StartupObject>Dependinator.Program</StartupObject>
@@ -56,15 +56,14 @@
   
   <!-- Pagage/NuGet references -->
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="4.8.1"/>
-    <PackageReference Include="AvalonEdit" Version="5.0.4"/>
-    <PackageReference Include="ICSharpCode.Decompiler" Version="3.1.0.3652"/>
-    <PackageReference Include="ICSharpCode.NRefactory" Version="5.5.1"/>
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.3.0"/>
-    <PackageReference Include="Microsoft.Database.Collections.Generic" Version="1.9.4"/>
-    <PackageReference Include="Newtonsoft.Json" Version="8.0.3"/>
-    <PackageReference Include="protobuf-net" Version="2.1.0"/>
-    <PackageReference Include="System.ValueTuple" Version="4.4.0"/>
+    <PackageReference Include="Autofac" Version="4.8.1" />
+    <PackageReference Include="AvalonEdit" Version="5.0.4" />
+    <PackageReference Include="ICSharpCode.Decompiler" Version="3.2.0.3856" />
+    <PackageReference Include="ICSharpCode.NRefactory" Version="5.5.1" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.6.4" />
+    <PackageReference Include="Microsoft.Database.Collections.Generic" Version="1.9.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="protobuf-net" Version="2.3.13" />
   </ItemGroup>
   
   <ItemGroup>
