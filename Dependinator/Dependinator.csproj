@@ -4,6 +4,8 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net46</TargetFramework>
+	
+	<!-- Using Program.Main as entry point instead of app as in default wpf program -->
 	<StartupObject>Dependinator.Program</StartupObject>
 	<ApplicationIcon>MainWindowViews\Application.ico</ApplicationIcon>
 	
