@@ -1,11 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Threading.Tasks;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.AssemblyParsing.Private;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 using Dependinator.Utils.ErrorHandling;
 using Mono.Cecil;
+using Mono.Collections.Generic;
 
 
 namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.AssemblyParsing
@@ -13,27 +18,31 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 	internal class AssemblyParser : IDisposable
 	{
 		private readonly string assemblyPath;
+		private readonly DataNodeName parentName;
+		private readonly DataItemsCallback itemsCallback;
 		private readonly Decompiler decompiler = new Decompiler();
-		private readonly AssemblyModuleParser assemblyModuleParser;
+		private readonly AssemblyReferencesParser assemblyReferencesParser;
 		private readonly TypeParser typeParser;
 		private readonly MemberParser memberParser;
 		private readonly ParsingAssemblyResolver resolver = new ParsingAssemblyResolver();
 		private readonly Lazy<AssemblyDefinition> assembly;
 
-		private List<TypeInfo> typeInfos = new List<TypeInfo>();
+		private List<TypeData> typeInfos = new List<TypeData>();
 
 
 		public AssemblyParser(
 			string assemblyPath,
-			string assemblyRootGroup,
+			DataNodeName parentName,
 			DataItemsCallback itemsCallback)
 		{
 			this.assemblyPath = assemblyPath;
+			this.parentName = parentName;
+			this.itemsCallback = itemsCallback;
 
 			XmlDocParser xmlDockParser = new XmlDocParser(assemblyPath);
 			LinkHandler linkHandler = new LinkHandler(itemsCallback);
 
-			assemblyModuleParser = new AssemblyModuleParser(assemblyRootGroup, linkHandler, itemsCallback);
+			assemblyReferencesParser = new AssemblyReferencesParser(linkHandler, itemsCallback);
 			typeParser = new TypeParser(linkHandler, xmlDockParser, itemsCallback);
 			memberParser = new MemberParser(linkHandler, xmlDockParser, itemsCallback);
 
@@ -43,21 +52,51 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 
 		public string ModuleName => Name.GetModuleName(assembly.Value);
 
+		public static IReadOnlyList<string> GetDataFilePaths(string filePath) => new[] { filePath };
 
-		public void ParseModule()
+		public static IReadOnlyList<string> GetBuildFolderPaths(string filePath) => new string[0];
+
+
+
+		public async Task<R> ParseAsync()
 		{
-			assemblyModuleParser.AddModule(assembly.Value);
+			if (!File.Exists(assemblyPath))
+			{
+				return Error.From(new MissingAssembliesException(
+					$"Failed to parse {assemblyPath}\nNo assembly found"));
+			}
+			
+			return await Task.Run(() =>
+			{
+				ParseAssemblyModule();
+				ParseAssemblyReferences(new string[0]);
+				ParseTypes();
+				ParseTypeMembers();
+				return R.Ok;
+			});
 		}
 
 
-		public void ParseModuleReferences()
+
+		public void ParseAssemblyModule()
+		{
+			DataNodeName assemblyName = new DataNodeName(Name.GetModuleName(assembly.Value));
+			string assemblyDescription = GetAssemblyDescription(assembly.Value);
+			DataNode assemblyNode = new DataNode(assemblyName, parentName, NodeType.Assembly)
+				{ Description = assemblyDescription };
+
+			itemsCallback(assemblyNode);
+		}
+
+
+		public void ParseAssemblyReferences(IReadOnlyList<string> internalModules)
 		{
 			if (assembly.Value == null)
 			{
 				return;
 			}
 
-			assemblyModuleParser.AddModuleReferences();
+			assemblyReferencesParser.AddReferences(assembly.Value, internalModules);
 		}
 
 
@@ -82,14 +121,14 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
+		public R<string> GetCode(NodeName nodeName) =>
+			decompiler.GetCode(assembly.Value.MainModule, nodeName);
+
+
 		public void Dispose()
 		{
 			assembly.Value?.Dispose();
 		}
-
-
-		public R<string> GetCodeAsync(NodeName nodeName) => 
-			decompiler.GetCodeAsync(assembly.Value.MainModule, nodeName);
 
 
 		private AssemblyDefinition GetAssembly()
@@ -117,5 +156,19 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			.Where(type =>
 				!Name.IsCompilerGenerated(type.Name) &&
 				!Name.IsCompilerGenerated(type.DeclaringType?.Name));
+
+
+		private static string GetAssemblyDescription(AssemblyDefinition assembly)
+		{
+			Collection<CustomAttribute> attributes = assembly.CustomAttributes;
+
+			CustomAttribute descriptionAttribute = attributes.FirstOrDefault(attribute =>
+				attribute.AttributeType.FullName == typeof(AssemblyDescriptionAttribute).FullName);
+
+			CustomAttributeArgument? argument = descriptionAttribute?.ConstructorArguments
+				.FirstOrDefault();
+
+			return argument?.Value as string;
+		}
 	}
 }

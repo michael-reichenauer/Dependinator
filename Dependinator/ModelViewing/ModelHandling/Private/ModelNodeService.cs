@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.Nodes;
 
 
 namespace Dependinator.ModelViewing.ModelHandling.Private
@@ -26,7 +28,9 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public void UpdateNode(DataNode dataNode, int stamp)
 		{
-			if (nodeService.TryGetNode(dataNode.Id, out Node node))
+			NodeName nodeName = NodeName.From(dataNode.Name.FullName);
+
+			if (nodeService.TryGetNode(nodeName, out Node node))
 			{
 				if (node.Stamp != stamp)
 				{
@@ -52,7 +56,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			foreach (Node node in nodes)
 			{
-				if (node.Stamp != stamp && node.NodeType != NodeType.NameSpace && node.Descendents().All(n => n.Stamp != stamp))
+				if (node.Stamp != stamp && !node.NodeType.IsNamespace() && node.Descendents().All(n => n.Stamp != stamp))
 				{
 					List<Link> obsoleteLinks = node.SourceLinks.ToList();
 					modelLinkService.RemoveObsoleteLinks(obsoleteLinks);
@@ -67,7 +71,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			foreach (Node node in nodes.Reverse())
 			{
-				if (node.Stamp != stamp && node.NodeType == NodeType.NameSpace && !node.Children.Any())
+				if (node.Stamp != stamp && node.NodeType.IsNamespace() && !node.Children.Any())
 				{
 					// Node is an empty namespace, lets remove it
 					nodeService.RemoveNode(node);
@@ -115,7 +119,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public void ShowHiddenNode(NodeName nodeName)
 		{
-			if (nodeService.TryGetNode(new NodeId(nodeName), out Node node))
+			if (nodeService.TryGetNode(nodeName, out Node node))
 			{
 				if (!node.View.IsHidden)
 				{
@@ -145,7 +149,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private void AddNodeToModel(DataNode dataNode, int stamp)
 		{
-			Node node = new Node(dataNode.Id, dataNode.Name)
+			NodeName nodeName = NodeName.From(dataNode.Name.FullName);
+			Node node = new Node(nodeName)
 			{
 				Stamp = stamp,
 				NodeType = dataNode.NodeType,
@@ -153,11 +158,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			};
 
 			node.View.Bounds = dataNode.Bounds;
-			node.View.ScaleFactor = dataNode.ItemsScaleFactor;
+			node.View.ScaleFactor = dataNode.Scale;
 			node.View.Color = dataNode.Color;
 			node.View.IsHidden = dataNode.ShowState == Node.Hidden;
 
-			Node parentNode = GetParentNode(dataNode.Name, dataNode);
+			Node parentNode = GetParentNode(nodeName, dataNode);
 
 			nodeService.AddNode(node, parentNode);
 		}
@@ -177,11 +182,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-
 		private static NodeName GetParentName(NodeName nodeName, DataNode dataNode)
 		{
 			NodeName parentName = dataNode.Parent != null
-				? NodeName.From(dataNode.Parent)
+				? NodeName.From(dataNode.Parent.FullName)
 				: nodeName.ParentName;
 
 			return parentName;

@@ -4,56 +4,56 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.DataHandling.Dtos
 {
+	internal class DataNodeName : Equatable<DataNodeName>
+	{
+		public static readonly DataNodeName Root = new DataNodeName("");
+
+		public DataNodeName(string fullName)
+		{
+			this.FullName = fullName;
+
+			IsEqualWhenSame(fullName);
+		}
+
+
+		public string FullName { get; }
+
+		public static DataNodeName From(string fullName)
+		{
+			return new DataNodeName(fullName);
+		}
+
+		public override string ToString() => FullName;
+	}
+
+
 	internal class DataNode : Equatable<DataNode>, IDataItem
 	{
 		public DataNode(
-			NodeId id,
-			NodeName name,
-			string parent,
-			NodeType nodeType,
-			string description,
-			bool isReferenced = false)
-			: this(id, name, parent, nodeType, description, RectEx.Zero, 0, null, null, isReferenced)
+			DataNodeName name,
+			DataNodeName parent,
+			NodeType nodeType)
 		{
-		}
-
-		public DataNode(
-			NodeId id,
-			NodeName name,
-			string parent,
-			NodeType nodeType,
-			string description,
-			Rect bounds,
-			double itemsScaleFactor,
-			string color,
-			string showState,
-			bool isReferenced = false)
-		{
-			Id = id;
 			Name = name;
 			Parent = parent;
 			NodeType = nodeType;
-			IsReferenced = isReferenced;
-			Description = description;
-			Bounds = bounds;
-			ItemsScaleFactor = itemsScaleFactor;
-			Color = color;
-			ShowState = showState;
 
 			IsEqualWhenSame(Name);
 		}
 
 
-		public NodeId Id { get; }
-		public NodeName Name { get; }
-		public string Parent { get; }
+		public DataNodeName Name { get; }
+		public DataNodeName Parent { get; }
 		public NodeType NodeType { get; }
-		public bool IsReferenced { get; }
-		public string Description { get; }
-		public Rect Bounds { get; }
-		public double ItemsScaleFactor { get; }
-		public string Color { get; }
-		public string ShowState { get; }
+
+		// Node properties
+		public bool IsReferenced { get; set; }
+		public string Description { get; set; }
+		public Rect Bounds { get; set; } = RectEx.Zero;
+		public double Scale { get; set; }
+		public string Color { get; set; }
+		public string ShowState { get; set; }
+
 
 		public override string ToString() => Name.FullName;
 	}

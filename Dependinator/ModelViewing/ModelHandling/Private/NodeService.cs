@@ -36,7 +36,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public Node Root => modelService.Root;
 
-		public bool TryGetNode(NodeId nodeId, out Node node) => modelService.TryGetNode(nodeId, out node);
+		public bool TryGetNode(NodeName nodeName, out Node node) => modelService.TryGetNode(nodeName, out node);
 
 		public void QueueNode(DataNode dataNode) => modelService.QueueNode(dataNode);
 		public void RemoveAll()
@@ -60,13 +60,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			AddNodeToParentCanvas(node, parentNode);
 
 			if (modelService.TryGetQueuedLinesAndLinks(
-				node.Id,
+				node.Name,
 				out IReadOnlyList<DataLine> lines,
 				out IReadOnlyList<DataLink> links))
 			{
 				lines.ForEach(line => modelLineService.UpdateLine(line, node.Stamp));
 				links.ForEach(link => modelLinkService.UpdateLink(link, node.Stamp));
-				modelService.RemovedQueuedNode(node.Id);
+				modelService.RemovedQueuedNode(node.Name);
 			}
 		}
 
@@ -103,7 +103,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public Node GetParentNode(NodeName parentName, NodeType childNodeType)
 		{
-			if (modelService.TryGetNode(new NodeId(parentName), out Node parent))
+			if (modelService.TryGetNode(parentName, out Node parent))
 			{
 				return parent;
 			}
@@ -114,7 +114,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			Node grandParent = GetParentNode(grandParentName, parentNodeType);
 
 
-			parent = new Node(new NodeId(parentName), parentName);
+			parent = new Node(parentName);
 			parent.NodeType = parentNodeType;
 
 			AddNode(parent, grandParent);
@@ -129,7 +129,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				return NodeType.NameSpace;
 			}
 
-			return childNodeType == NodeType.Member ? NodeType.Type : NodeType.NameSpace;
+			return childNodeType.IsMember() ? NodeType.Type : NodeType.NameSpace;
 		}
 
 
@@ -153,11 +153,11 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private void CreateNodeViewModel(Node node)
 		{
-			if (node.NodeType == NodeType.Member)
+			if (node.NodeType.IsMember())
 			{
 				node.View.ViewModel = new MemberNodeViewModel(nodeViewModelService.Value, node);
 			}
-			else if (node.NodeType == NodeType.Type)
+			else if (node.NodeType.IsType())
 			{
 				node.View.ViewModel = new TypeViewModel(nodeViewModelService.Value, node);
 				node.View.ItemsCanvas = GetItemsCanvas(node);

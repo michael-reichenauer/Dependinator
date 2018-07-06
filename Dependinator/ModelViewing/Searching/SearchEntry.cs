@@ -1,4 +1,4 @@
-﻿using Dependinator.ModelViewing.DataHandling.Dtos;
+﻿using Dependinator.ModelViewing.Nodes;
 
 
 namespace Dependinator.ModelViewing.Searching
@@ -6,10 +6,10 @@ namespace Dependinator.ModelViewing.Searching
 	internal class SearchEntry
 	{
 		public string Name { get; }
-		public NodeId NodeId { get; }
+		public NodeName NodeName { get; }
 
 
-		public SearchEntry(string name, NodeId nodeId)
+		public SearchEntry(string name, NodeName nodeName)
 		{
 			int parametersIndex = name.IndexOf('(');
 
@@ -19,7 +19,7 @@ namespace Dependinator.ModelViewing.Searching
 			}
 
 			Name = name;
-			NodeId = nodeId;
+			NodeName = nodeName;
 		}
 
 

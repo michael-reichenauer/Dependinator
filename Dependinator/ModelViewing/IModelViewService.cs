@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Nodes;
 
 
 namespace Dependinator.ModelViewing

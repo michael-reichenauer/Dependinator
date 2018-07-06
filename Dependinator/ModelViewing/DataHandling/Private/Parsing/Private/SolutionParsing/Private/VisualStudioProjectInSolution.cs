@@ -2,14 +2,14 @@ using System;
 using System.Collections;
 
 
-namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.SolutionFileParsing.Private
+namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.SolutionParsing.Private
 {
 	/// <summary>
 	/// Wraps the Microsoft.Build.Construction.ProjectInSolution type,
 	/// which is internal type and cannot be used directly. 
 	/// This class uses reflection to access the internal functionality.
 	/// </summary>
-	internal class ProjectInSolution
+	internal class VisualStudioProjectInSolution
 	{
 		private readonly string uniqueProjectName;
 		
@@ -23,7 +23,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Solutio
 		public bool IsIncludedDebug { get; }
 
 
-		public ProjectInSolution(object instance)
+		public VisualStudioProjectInSolution(object instance)
 		{
 			Project = instance;
 			uniqueProjectName = instance.GetField<string>(nameof(uniqueProjectName));

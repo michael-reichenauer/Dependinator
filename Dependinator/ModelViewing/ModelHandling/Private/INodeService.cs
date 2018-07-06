@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.Nodes;
 
 
 namespace Dependinator.ModelViewing.ModelHandling.Private
@@ -13,7 +14,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		void AddNode(Node node, Node parentNode);
 
-		bool TryGetNode(NodeId nodeId, out Node node);
+		bool TryGetNode(NodeName nodeName, out Node node);
 
 
 		void UpdateNodeTypeIfNeeded(Node node, NodeType nodeType);

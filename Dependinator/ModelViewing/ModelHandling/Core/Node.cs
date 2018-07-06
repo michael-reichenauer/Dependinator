@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Dependinator.ModelViewing.DataHandling.Dtos;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 
 
@@ -11,23 +12,20 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 
 		private readonly List<Node> children = new List<Node>();
 
-		public Node(NodeId id, NodeName name)
+		public Node(NodeName name)
 		{
-			Id = id;
 			Name = name;
 
 			Init();
-			IsEqualWhenSame(Id);
+			IsEqualWhenSame(Name);
 		}
-		
+
 
 		public int Stamp { get; set; }
 
-		public NodeId Id { get; }
 		public NodeName Name { get; }
 		public NodeType NodeType { get; set; }
 		public string Description { get; set; }
-		//public Lazy<string> CodeText { get; set; }
 
 		public Node Root { get; private set; }
 		public Node Parent { get; private set; }
@@ -40,10 +38,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 		public List<Line> SourceLines { get; } = new List<Line>();
 		public List<Line> TargetLines { get; } = new List<Line>();
 
-		public bool IsRoot => Id == NodeId.Root;
+		public bool IsRoot => Name == NodeName.Root;
 
 		public NodeViewData View { get; private set; }
-		public bool HasCode => NodeType == NodeType.Type || NodeType == NodeType.Member;
+		public bool HasCode => NodeType.IsType() || NodeType.IsMember();
 
 
 		public void AddChild(Node child)
@@ -52,7 +50,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Core
 			child.Root = Root;
 			children.Add(child);
 		}
-	
+
 
 		public void RemoveChild(Node child) => children.Remove(child);
 

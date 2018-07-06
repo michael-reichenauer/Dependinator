@@ -6,6 +6,7 @@ using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Lines;
 using Dependinator.ModelViewing.Lines.Private;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 
 
@@ -34,7 +35,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			try
 			{
-				Node source = modelService.GetNode(dataLine.SourceId);
+				Node source = modelService.GetNode(NodeName.From(dataLine.Source.FullName));
 
 				if (!TryGetTarget(dataLine, out Node target))
 				{
@@ -191,10 +192,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private bool TryGetTarget(DataLine dataLine, out Node target)
 		{
-			NodeId targetId = dataLine.TargetId;
-			if (!modelService.TryGetNode(targetId, out target))
+			NodeName targetName = NodeName.From(dataLine.Target.FullName);
+			if (!modelService.TryGetNode(targetName, out target))
 			{
-				modelService.QueueModelLine(targetId, dataLine);
+				modelService.QueueModelLine(targetName, dataLine);
 				return false;
 			}
 

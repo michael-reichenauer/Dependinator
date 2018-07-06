@@ -118,7 +118,7 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 		}
 
 
-		public void Locate(NodeName nodeName) => locateService.StartMoveToNode(new NodeId(nodeName));
+		public void Locate(NodeName nodeName) => locateService.StartMoveToNode(nodeName);
 		public void ShowDependencies(NodeName nodeName)
 		{
 			if (TryGetNode(nodeName, out Node node))
@@ -323,14 +323,14 @@ namespace Dependinator.ModelViewing.DependencyExploring.Private
 
 
 		private bool TryGetNode(NodeName nodeName, out Node node) =>
-			modelService.TryGetNode(new NodeId(nodeName), out node);
+			modelService.TryGetNode(nodeName, out node);
 
 
 		private Node GetNodeOrParent(NodeName nodeName)
 		{
 			while (true)
 			{
-				if (modelService.TryGetNode(new NodeId(nodeName), out Node node))
+				if (modelService.TryGetNode(nodeName, out Node node))
 				{
 					return node;
 				}

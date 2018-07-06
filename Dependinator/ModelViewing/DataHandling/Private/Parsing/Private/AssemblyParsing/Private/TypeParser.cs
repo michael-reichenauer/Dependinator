@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.DataHandling.Dtos;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 using Mono.Cecil;
 
@@ -27,7 +28,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
-		public IEnumerable<TypeInfo> AddType(AssemblyDefinition assembly, TypeDefinition type)
+		public IEnumerable<TypeData> AddType(AssemblyDefinition assembly, TypeDefinition type)
 		{
 			bool isCompilerGenerated = Name.IsCompilerGenerated(type.Name);
 			bool isAsyncStateType = false;
@@ -51,7 +52,9 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			{
 				string name = Name.GetTypeFullName(type);
 				bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
-				string parent = isPrivate ? $"{NodeName.From(name).ParentName.FullName}.$private" : null;
+				DataNodeName parent = isPrivate 
+					? new DataNodeName($"{NodeName.From(name).ParentName.FullName}.$private")  
+					: null;
 				string description = xmlDockParser.GetDescription(name);
 
 				if (IsNameSpaceDocType(type, description))
@@ -60,13 +63,13 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 					yield break;
 				}
 
-				NodeName nodeName = NodeName.From(name);
-				NodeId nodeId = new NodeId(nodeName);
-				typeNode = new DataNode(nodeId, nodeName, parent, NodeType.Type, description);
+				DataNodeName nodeName = new DataNodeName(name);
+				typeNode = new DataNode(nodeName, parent, NodeType.Type)
+				{ Description = description };
 				itemsCallback(typeNode);
 			}
 
-			yield return new TypeInfo(type, typeNode, isAsyncStateType);
+			yield return new TypeData(type, typeNode, isAsyncStateType);
 
 			// Iterate all nested types as well
 			foreach (var nestedType in type.NestedTypes)
@@ -88,9 +91,9 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				if (!string.IsNullOrEmpty(description))
 				{
 					string name = Name.GetTypeNamespaceFullName(type);
-					NodeName nodeName = NodeName.From(name);
-					NodeId nodeId = new NodeId(nodeName);
-					DataNode node = new DataNode(nodeId, nodeName, null, NodeType.NameSpace, description);
+					DataNodeName nodeName = new DataNodeName(name);
+					DataNode node = new DataNode(nodeName, null, NodeType.NameSpace)
+					{ Description = description };
 					itemsCallback(node);
 				}
 
@@ -101,22 +104,22 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
-		public void AddTypesLinks(IEnumerable<TypeInfo> typeInfos)
+		public void AddTypesLinks(IEnumerable<TypeData> typeInfos)
 		{
 			typeInfos.ForEach(AddLinksToBaseTypes);
 		}
 
 
-		private void AddLinksToBaseTypes(TypeInfo typeInfo)
+		private void AddLinksToBaseTypes(TypeData typeData)
 		{
-			if (typeInfo.IsAsyncStateType)
+			if (typeData.IsAsyncStateType)
 			{
 				// Internal async/await helper type,
 				return;
 			}
 
-			TypeDefinition type = typeInfo.Type;
-			DataNode sourceNode = typeInfo.Node;
+			TypeDefinition type = typeData.Type;
+			DataNode sourceNode = typeData.Node;
 
 			try
 			{

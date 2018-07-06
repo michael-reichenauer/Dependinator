@@ -13,6 +13,7 @@ using Dependinator.ModelViewing.DataHandling;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Open;
 using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;

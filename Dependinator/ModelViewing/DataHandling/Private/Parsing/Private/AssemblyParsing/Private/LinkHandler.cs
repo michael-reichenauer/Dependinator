@@ -19,9 +19,9 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
-		public void AddLink(NodeId sourceId, string targetName, NodeType targetType)
+		public void AddLink(DataNodeName source, string targetName, NodeType targetType)
 		{
-			SendLink(sourceId, targetName, targetType);
+			SendLink(source, targetName, targetType);
 		}
 
 
@@ -39,7 +39,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				return;
 			}
 
-			SendLink(sourceNode.Id, targetNodeName, NodeType.Type);
+			SendLink(sourceNode.Name, targetNodeName, NodeType.Type);
 
 			if (targetType.IsGenericInstance)
 			{
@@ -63,30 +63,28 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				return;
 			}
 
-			SendLink(sourceNode.Id, targetNodeName, NodeType.Member);
+			SendLink(sourceNode.Name, targetNodeName, NodeType.Member);
 		}
 
 
-		private void SendLink(NodeId sourceId, string targetName, NodeType targetType)
+		private void SendLink(DataNodeName source, string targetName, NodeType targetType)
 		{
 			if (!sentTargetNodes.TryGetValue(targetName, out DataNode targetNode))
 			{
-				NodeName targetNodeName = NodeName.From(targetName);
-				NodeId targetId = new NodeId(targetNodeName);
-				
-				targetNode = new DataNode(targetId, targetNodeName, null, targetType, null, true);
+				DataNodeName target = new DataNodeName(targetName);
+
+				if (source == target)
+				{
+					// Skipping link to self
+					return;
+				}
+
+				targetNode = new DataNode(target, null, targetType) { IsReferenced = true };
 				sentTargetNodes[targetName] = targetNode;
+				itemsCallback(targetNode);
 			}
 
-			if (sourceId == targetNode.Id)
-			{
-				// Skipping link to self
-				return;
-			}
-			
-			DataLink dataLink = new DataLink(sourceId, targetNode.Id);
-
-			itemsCallback(targetNode);
+			DataLink dataLink = new DataLink(source, targetNode.Name);
 			itemsCallback(dataLink);
 		}
 

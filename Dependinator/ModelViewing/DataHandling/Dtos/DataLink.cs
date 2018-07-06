@@ -6,23 +6,23 @@ namespace Dependinator.ModelViewing.DataHandling.Dtos
 	internal class DataLink : Equatable<DataLink>, IDataItem
 	{
 		public DataLink(
-			NodeId sourceId, 
-			NodeId targetId, 
+			DataNodeName source,
+			DataNodeName target, 
 			bool isAdded = false)
 		{
-			SourceId = sourceId;
-			TargetId = targetId;
+			Source = source;
+			Target = target;
 			IsAdded = isAdded;
 
-			IsEqualWhenSame(SourceId, TargetId);
+			IsEqualWhenSame(Source, Target);
 		}
 
 
-		public NodeId SourceId { get; }
-		public NodeId TargetId { get; }
+		public DataNodeName Source { get; }
+		public DataNodeName Target { get; }
 
 		public bool IsAdded { get; }
 
-		public override string ToString() => $"{SourceId}->{TargetId}";
+		public override string ToString() => $"{Source}->{Target}";
 	}
 }

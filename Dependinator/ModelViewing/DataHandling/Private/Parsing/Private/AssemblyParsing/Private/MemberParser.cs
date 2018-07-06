@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.DataHandling.Dtos;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 using Mono.Cecil;
 
@@ -14,7 +15,8 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		private readonly XmlDocParser xmlDocParser;
 		private readonly DataItemsCallback itemsCallback;
 		private readonly MethodParser methodParser;
-		private readonly Dictionary<NodeId, DataNode> sentNodes = new Dictionary<NodeId, DataNode>();
+		private readonly Dictionary<DataNodeName, DataNode> sentNodes = 
+			new Dictionary<DataNodeName, DataNode>();
 
 
 		public MemberParser(
@@ -30,7 +32,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
-		public void AddTypesMembers(IEnumerable<TypeInfo> typeInfos)
+		public void AddTypesMembers(IEnumerable<TypeData> typeInfos)
 		{
 			typeInfos.ForEach(AddTypeMembers);
 
@@ -38,14 +40,14 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
-		private void AddTypeMembers(TypeInfo typeInfo)
+		private void AddTypeMembers(TypeData typeData)
 		{
-			TypeDefinition type = typeInfo.Type;
-			DataNode typeNode = typeInfo.Node;
+			TypeDefinition type = typeData.Type;
+			DataNode typeNode = typeData.Node;
 
-			if (typeInfo.IsAsyncStateType)
+			if (typeData.IsAsyncStateType)
 			{
-				methodParser.AddAsyncStateType(typeInfo);
+				methodParser.AddAsyncStateType(typeData);
 				return;
 			}
 
@@ -94,14 +96,17 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				string description = xmlDocParser.GetDescription(memberName);
 
 
-				NodeName nodeName = NodeName.From(memberName);
-				NodeId nodeId = new NodeId(nodeName);
-				DataNode memberNode = new DataNode(nodeId, nodeName, parent, NodeType.Member, description);
+				DataNodeName nodeName = new DataNodeName(memberName);
+				DataNode memberNode = new DataNode(
+					nodeName,
+					parent != null ? new DataNodeName(parent) : null, 
+					NodeType.Member)
+				{ Description = description };
 
-				if (!sentNodes.ContainsKey(memberNode.Id))
+				if (!sentNodes.ContainsKey(memberNode.Name))
 				{
 					// Not yet sent this node name (properties get/set, events (add/remove) appear twice
-					sentNodes[memberNode.Id] = memberNode;
+					sentNodes[memberNode.Name] = memberNode;
 					itemsCallback(memberNode);
 				}
 

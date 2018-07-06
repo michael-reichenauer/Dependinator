@@ -26,9 +26,9 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 		}
 
 
-		public void AddAsyncStateType(TypeInfo typeInfo)
+		public void AddAsyncStateType(TypeData typeData)
 		{
-			asyncStates[typeInfo.Type.FullName] = typeInfo.Type;
+			asyncStates[typeData.Type.FullName] = typeData.Type;
 		}
 
 
@@ -138,7 +138,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				return;
 			}
 
-			linkHandler.AddLink(memberNode.Id, methodName, NodeType.Member);
+			linkHandler.AddLink(memberNode.Name, methodName, NodeType.Member);
 
 			TypeReference returnType = method.ReturnType;
 			linkHandler.AddLinkToType(memberNode, returnType);

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
 
 
@@ -27,7 +28,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			try
 			{
-				Node source = modelService.GetNode(dataLink.SourceId);
+				Node source = modelService.GetNode(NodeName.From(dataLink.Source.FullName));
 
 				if (!TryGetTarget(dataLink, out Node target))
 				{
@@ -61,10 +62,10 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private bool TryGetTarget(DataLink dataLink, out Node target)
 		{
-			NodeId targetId = dataLink.TargetId;
-			if (!modelService.TryGetNode(targetId, out target))
+			NodeName targetName = NodeName.From(dataLink.Target.FullName);
+			if (!modelService.TryGetNode(targetName, out target))
 			{
-				modelService.QueueModelLink(targetId, dataLink);
+				modelService.QueueModelLink(targetName, dataLink);
 				return false;
 			}
 
