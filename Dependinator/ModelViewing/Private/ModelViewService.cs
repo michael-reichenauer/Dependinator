@@ -88,6 +88,7 @@ namespace Dependinator.ModelViewing.Private
 			settingsService.Edit<WorkFolderSettings>(settings =>
 			{
 				settings.Scale = modelHandlingService.Root.View.ItemsCanvas.Scale;
+				settings.Offset = modelHandlingService.Root.View.ItemsCanvas.RootOffset;
 			});
 		}
 
@@ -98,6 +99,7 @@ namespace Dependinator.ModelViewing.Private
 			Node root = modelHandlingService.Root;
 
 			root.View.ItemsCanvas.SetRootScale(settings.Scale);
+			root.View.ItemsCanvas.SetRootOffset(settings.Offset);
 		}
 	}
 }

@@ -22,6 +22,7 @@ namespace Dependinator.ModelViewing.Items
 		private readonly List<ItemsCanvas> canvasChildren = new List<ItemsCanvas>();
 
 		private double rootScale;
+		private Point rootOffset;
 		private bool isFocused;
 		private bool IsShowing => owner?.IsShowing ?? true;
 		private bool CanShow => owner?.CanShow ?? true;
@@ -81,6 +82,7 @@ namespace Dependinator.ModelViewing.Items
 		public Rect ItemsCanvasBounds =>
 			owner?.ItemBounds ?? ZoomableCanvas?.ActualViewbox ?? Rect.Empty;
 
+
 		public bool IsZoomAndMoveEnabled { get; set; } = true;
 
 		public ItemsCanvas RootCanvas { get; }
@@ -89,11 +91,12 @@ namespace Dependinator.ModelViewing.Items
 		public double ScaleFactor { get; set; }
 
 		public double Scale => ParentCanvas?.Scale * ScaleFactor ?? rootScale;
+		public Point RootOffset => RootCanvas.ZoomableCanvas?.Offset ?? RootCanvas.rootOffset;
 
-
+		public void SetRootOffset(Point offset) => RootCanvas.rootOffset = offset;
 		public void SetRootScale(double scale) => RootCanvas.rootScale = scale;
 
-
+		
 		public void AddItem(IItem item)
 		{
 			item.ItemOwnerCanvas = this;
@@ -392,6 +395,10 @@ namespace Dependinator.ModelViewing.Items
 			{
 				ZoomableCanvas.IsDisableOffsetChange = true;
 			}
+			else
+			{
+				ZoomableCanvas.Offset = rootOffset;
+			}
 
 			ZoomableCanvas.ItemRealized += Canvas_ItemRealized;
 			ZoomableCanvas.ItemVirtualized += Canvas_ItemVirtualized;
@@ -454,11 +461,11 @@ namespace Dependinator.ModelViewing.Items
 		{
 			Rect viewBox = GetViewBox();
 
-			//if (!IsAnyNodesWithinView(viewBox, moveOffset))
-			//{
-			//	// No node (if moved) would be withing visible view
-			//	return;
-			//}
+			if (!IsAnyNodesWithinView(viewBox, moveOffset))
+			{
+				// No node (if moved) would be withing visible view
+				return;
+			}
 
 			if (IsRoot)
 			{
