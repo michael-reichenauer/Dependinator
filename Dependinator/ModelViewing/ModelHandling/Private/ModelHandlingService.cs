@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -43,7 +44,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private readonly IModelService modelService;
 		private readonly ModelMetadata modelMetadata;
 
-		private int currentId;
+		
 		private bool isShowingOpenModel = false;
 		private bool isWorking = false;
 
@@ -306,7 +307,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private async Task<R<int>> ShowModelAsync(Func<Operation, Task<R>> parseFunctionAsync)
 		{
-			Operation operation = new Operation(currentId++);
+			Operation operation = new Operation();
 
 			Timing t = Timing.Start();
 
@@ -338,7 +339,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private void ShowModel(Operation operation)
 		{
-			while (operation.Queue.TryTake(out IDataItem item, -1))
+			while (operation.Queue.TryTake(out IDataItem item, Timeout.Infinite))
 			{
 				Application.Current.Dispatcher.InvokeBackground(() =>
 				{
@@ -366,7 +367,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			});
 
 
-			while (queue.TryTake(out IDataItem item, -1))
+			while (queue.TryTake(out IDataItem item, Timeout.Infinite))
 			{
 				Application.Current.Dispatcher.InvokeBackground(() =>
 				{
@@ -417,6 +418,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private class Operation
 		{
+			private static int currentId;
+
+
+			public Operation()
+			{
+				Id = Interlocked.Increment(ref currentId);
+			}
+
 			public BlockingCollection<IDataItem> Queue { get; } =
 				new BlockingCollection<IDataItem>();
 

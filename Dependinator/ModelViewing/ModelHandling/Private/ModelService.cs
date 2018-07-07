@@ -13,7 +13,7 @@ using Dependinator.Utils.Dependencies;
 namespace Dependinator.ModelViewing.ModelHandling.Private
 {
 	[SingleInstance]
-	internal class ModelService : IModelService
+	internal class ModelDatabase : IModelDatabase
 	{
 		private readonly Dictionary<NodeName, Node> nodes = new Dictionary<NodeName, Node>();
 
@@ -22,7 +22,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private bool isDataModified = false;
 
 
-		public ModelService()
+		public ModelDatabase()
 		{
 			AddRoot();
 		}

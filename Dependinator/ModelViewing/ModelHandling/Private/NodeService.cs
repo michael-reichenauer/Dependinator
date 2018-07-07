@@ -12,7 +12,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 {
 	internal class NodeService : INodeService
 	{
-		private readonly IModelService modelService;
+		private readonly IModelDatabase modelService;
 		private readonly IModelLineService modelLineService;
 		private readonly IModelLinkService modelLinkService;
 		private readonly INodeLayoutService layoutService;
@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 
 		public NodeService(
-			IModelService modelService,
+			IModelDatabase modelService,
 			IModelLineService modelLineService,
 			IModelLinkService modelLinkService,
 			INodeLayoutService layoutService,

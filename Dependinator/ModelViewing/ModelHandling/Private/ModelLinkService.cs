@@ -12,12 +12,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	internal class ModelLinkService : IModelLinkService
 	{
 		private readonly IModelLineService modelLineService;
-		private readonly IModelService modelService;
+		private readonly IModelDatabase modelService;
 
 
 		public ModelLinkService(
 			IModelLineService modelLineService,
-			IModelService modelService)
+			IModelDatabase modelService)
 		{
 			this.modelLineService = modelLineService;
 			this.modelService = modelService;

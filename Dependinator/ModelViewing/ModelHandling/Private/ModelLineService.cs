@@ -16,13 +16,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	{
 		private readonly ILinkSegmentService linkSegmentService;
 		private readonly ILineViewModelService lineViewModelService;
-		private readonly IModelService modelService;
+		private readonly IModelDatabase modelService;
 
 
 		public ModelLineService(
 			ILinkSegmentService linkSegmentService,
 			ILineViewModelService lineViewModelService,
-			IModelService modelService)
+			IModelDatabase modelService)
 		{
 			this.linkSegmentService = linkSegmentService;
 			this.lineViewModelService = lineViewModelService;
