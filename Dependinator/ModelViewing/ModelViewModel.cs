@@ -19,7 +19,7 @@ namespace Dependinator.ModelViewing
 		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(100);
 
 		private readonly IThemeService themeService;
-		private readonly IModelViewService modelViewService;
+		private readonly IModelViewModelService modelViewModelService;
 		private readonly IProgressService progress;
 		private readonly IOpenModelService openModelService;
 
@@ -28,12 +28,12 @@ namespace Dependinator.ModelViewing
 
 
 		public ModelViewModel(
-			IModelViewService modelViewService,
+			IModelViewModelService modelViewModelService,
 			IThemeService themeService,
 			IProgressService progressService,
 			IOpenModelService openModelService)
 		{
-			this.modelViewService = modelViewService;
+			this.modelViewModelService = modelViewModelService;
 			this.themeService = themeService;
 			this.progress = progressService;
 			this.openModelService = openModelService;
@@ -41,7 +41,7 @@ namespace Dependinator.ModelViewing
 			ItemsCanvas rootCanvas = new ItemsCanvas();
 			ItemsViewModel = new ItemsViewModel(rootCanvas, null);
 
-			modelViewService.SetRootCanvas(rootCanvas);
+			modelViewModelService.SetRootCanvas(rootCanvas);
 		}
 
 		public ItemsViewModel ItemsViewModel { get; }
@@ -76,12 +76,12 @@ namespace Dependinator.ModelViewing
 		{
 			using (progress.ShowBusy())
 			{
-				await modelViewService.RefreshAsync(refreshLayout);
+				await modelViewModelService.RefreshAsync(refreshLayout);
 			}
 		}
 
 
-		public void Close() => modelViewService.Close();
+		public void Close() => modelViewModelService.Close();
 
 
 		public Task LoadFilesAsync(IReadOnlyList<string> filePaths)
@@ -92,13 +92,13 @@ namespace Dependinator.ModelViewing
 
 		public void MouseClicked(MouseButtonEventArgs mouseButtonEventArgs)
 		{
-			modelViewService.Clicked();
+			modelViewModelService.Clicked();
 		}
 
 
 		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e)
 		{
-			modelViewService.OnMouseWheel(uiElement, e);
+			modelViewModelService.OnMouseWheel(uiElement, e);
 		}
 	}
 }

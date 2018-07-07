@@ -9,7 +9,7 @@ using Dependinator.ModelViewing.Nodes;
 
 namespace Dependinator.ModelViewing
 {
-	internal interface IModelViewService
+	internal interface IModelViewModelService
 	{
 		void SetRootCanvas(ItemsCanvas rootCanvas);
 

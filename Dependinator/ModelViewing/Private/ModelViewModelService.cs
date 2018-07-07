@@ -17,7 +17,7 @@ using Dependinator.Utils.Threading;
 namespace Dependinator.ModelViewing.Private
 {
 	[SingleInstance]
-	internal class ModelViewService : IModelViewService, ILoadModelService
+	internal class ModelViewModelService : IModelViewModelService, ILoadModelService
 	{
 		private readonly ISettingsService settingsService;
 		private readonly IModelHandlingService modelHandlingService;
@@ -26,7 +26,7 @@ namespace Dependinator.ModelViewing.Private
 
 		private ItemsCanvas rootNodeCanvas;
 
-		public ModelViewService(
+		public ModelViewModelService(
 			ISettingsService settingsService,
 			IModelHandlingService modelHandlingService,
 			IItemSelectionService itemSelectionService)

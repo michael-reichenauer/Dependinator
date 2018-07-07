@@ -31,7 +31,7 @@ namespace Dependinator.MainWindowViews
 		private readonly IModelMetadataService modelMetadataService;
 		private readonly IStartInstanceService startInstanceService;
 		private readonly IItemSelectionService itemSelectionService;
-		private readonly IModelViewService modelViewService;
+		private readonly IModelViewModelService modelViewModelService;
 		private readonly ISearchService searchService;
 		private readonly ILocateService locateService;
 		private readonly ModelMetadata modelMetadata;
@@ -47,7 +47,7 @@ namespace Dependinator.MainWindowViews
 			IModelMetadataService modelMetadataService,
 			IStartInstanceService startInstanceService,
 			IItemSelectionService itemSelectionService,
-			IModelViewService modelViewService,
+			IModelViewModelService modelViewModelService,
 			ISearchService searchService,
 			ILocateService locateService)
 		{
@@ -59,7 +59,7 @@ namespace Dependinator.MainWindowViews
 			this.modelMetadataService = modelMetadataService;
 			this.startInstanceService = startInstanceService;
 			this.itemSelectionService = itemSelectionService;
-			this.modelViewService = modelViewService;
+			this.modelViewModelService = modelViewModelService;
 			this.searchService = searchService;
 			this.locateService = locateService;
 
@@ -179,14 +179,14 @@ namespace Dependinator.MainWindowViews
 
 		private IReadOnlyList<HiddenNodeItem> GetHiddenNodes()
 		{
-			return modelViewService.GetHiddenNodeNames()
-				.Select(name => new HiddenNodeItem(name, modelViewService.ShowHiddenNode))
+			return modelViewModelService.GetHiddenNodeNames()
+				.Select(name => new HiddenNodeItem(name, modelViewModelService.ShowHiddenNode))
 				.ToList();
 		}
 
 
 		public bool HasResent => recentModelsService.GetModelPaths().Any();
-		public bool HasHiddenNodes => modelViewService.GetHiddenNodeNames().Any();
+		public bool HasHiddenNodes => modelViewModelService.GetHiddenNodeNames().Any();
 
 		public bool IsSelectedNode => itemSelectionService.IsNodeSelected;
 
