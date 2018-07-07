@@ -11,6 +11,10 @@ namespace Dependinator.ModelViewing.Items
 			ViewName = this.GetType().Name;
 		}
 
+
+		// State data used by ItemsSource to track this item
+		object IItem.ItemState { get; set; }
+
 		public string ViewName { get => Get(); set => Set(value); }
 
 		public double ItemZIndex { get => Get(); set => Set(value); }
@@ -30,10 +34,6 @@ namespace Dependinator.ModelViewing.Items
 			set => Set(value)
 				.Notify(nameof(ItemTop), nameof(ItemLeft), nameof(ItemWidth), nameof(ItemHeight));
 		}
-
-		public object ItemState { get; set; }
-
-
 
 		public ItemsCanvas ItemOwnerCanvas { get; set; }
 		public double ItemScale => ItemOwnerCanvas?.Scale ?? 1;

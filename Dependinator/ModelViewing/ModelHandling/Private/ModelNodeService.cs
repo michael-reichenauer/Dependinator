@@ -108,7 +108,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 			modelLineService.UpdateLines(node);
 
-			node.Parent.View.ItemsCanvas.UpdateAndNotifyAll();
+			node.Parent.View.ItemsCanvas.UpdateAndNotifyAll(true);
 			node.Root.View.ItemsCanvas.UpdateAll();
 		}
 
@@ -130,7 +130,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 				modelLineService.UpdateLines(node);
 
-				node.Parent.View.ItemsCanvas?.UpdateAndNotifyAll();
+				node.Parent.View.ItemsCanvas?.UpdateAndNotifyAll(true);
 				node.Root.View.ItemsCanvas.UpdateAll();
 			}
 		}

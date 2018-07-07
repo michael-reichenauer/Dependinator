@@ -12,6 +12,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		IEnumerable<Node> AllNodes { get; }
 
+		void SetIsChanged();
 		void Add(Node node);
 		Node GetNode(NodeName name);
 		bool TryGetNode(NodeName nodeName, out Node node);

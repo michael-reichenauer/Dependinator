@@ -4,12 +4,14 @@ using System.Windows.Input;
 using Dependinator.ModelViewing.DependencyExploring.Private;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.ModelViewing.ModelHandling.Private;
 
 
 namespace Dependinator.ModelViewing.Lines.Private
 {
 	internal class LineViewModelService : ILineViewModelService
 	{
+		private readonly IModelService modelService;
 		private readonly ILineControlService lineControlService;
 		private readonly ILineDataService lineDataService;
 		private readonly IItemSelectionService itemSelectionService;
@@ -17,11 +19,13 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 
 		public LineViewModelService(
+			IModelService modelService,
 			ILineControlService lineControlService,
 			ILineDataService lineDataService,
 			IItemSelectionService itemSelectionService,
 			Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider)
 		{
+			this.modelService = modelService;
 			this.lineControlService = lineControlService;
 			this.lineDataService = lineDataService;
 			this.itemSelectionService = itemSelectionService;
@@ -75,5 +79,8 @@ namespace Dependinator.ModelViewing.Lines.Private
 			DependencyExplorerWindow window = dependencyExplorerWindowProvider(null, lineViewModel.Line);
 			window.Show();
 		}
+
+
+		public void SetIsChanged() => modelService.SetIsChanged();
 	}
 }

@@ -16,6 +16,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 {
 	internal class NodeViewModelService : INodeViewModelService
 	{
+		private readonly IModelService modelService;
 		private readonly IModelNodeService modelNodeService;
 		private readonly IThemeService themeService;
 		private readonly IModelLineService modelLineService;
@@ -26,6 +27,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 
 		public NodeViewModelService(
+			IModelService modelService,
 			IModelNodeService modelNodeService,
 			IThemeService themeService,
 			IModelLineService modelLineService,
@@ -34,6 +36,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider,
 			Func<NodeName, CodeDialog> codeDialogProvider)
 		{
+			this.modelService = modelService;
 			this.modelNodeService = modelNodeService;
 			this.themeService = themeService;
 			this.modelLineService = modelLineService;
@@ -64,6 +67,11 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 			modelNodeService.ShowHiddenNode(node.Name);
 		}
+
+
+		public void SetIsChanged() => modelService.SetIsChanged();
+
+
 
 		public Brush GetDimBrush() => themeService.GetDimBrush();
 		public Brush GetTitleBrush() => themeService.GetTextBrush();
@@ -151,7 +159,10 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		}
 
 
-		public void RearrangeLayout(NodeViewModel nodeViewModel) =>
+		public void RearrangeLayout(NodeViewModel nodeViewModel)
+		{
 			nodeLayoutService.ResetLayout(nodeViewModel.Node);
+			modelService.SetIsChanged();
+		}
 	}
 }

@@ -11,7 +11,7 @@ using System.Windows;
 [assembly: AssemblyDescription("Visualizes dependencies in programs.")]
 [assembly: AssemblyCompany("Michael Reichenauer")]
 [assembly: AssemblyProduct("Dependinator")]
-[assembly: AssemblyCopyright("Copyright © Michael Reichenauer 2017")]
+[assembly: AssemblyCopyright("Copyright © Michael Reichenauer 2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

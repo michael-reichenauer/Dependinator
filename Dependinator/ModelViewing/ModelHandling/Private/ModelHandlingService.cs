@@ -152,7 +152,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					modelMetadata.SetDefault();
 					Root.View.ItemsCanvas.SetRootScale(1);
 					Root.View.ItemsCanvas.IsZoomAndMoveEnabled = false;
-					Root.View.ItemsCanvas.UpdateAndNotifyAll();
+					Root.View.ItemsCanvas.UpdateAndNotifyAll(true);
 
 					Root.View.ItemsCanvas.AddItem(openModelViewModelProvider());
 				}

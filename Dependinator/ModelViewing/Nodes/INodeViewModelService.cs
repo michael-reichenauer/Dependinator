@@ -23,5 +23,6 @@ namespace Dependinator.ModelViewing.Nodes
 		Brush GetDimBrush();
 		Brush GetTitleBrush();
 		void ShowNode(Node node);
+		void SetIsChanged();
 	}
 }

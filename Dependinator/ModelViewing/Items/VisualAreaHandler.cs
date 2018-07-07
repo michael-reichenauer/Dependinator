@@ -80,8 +80,20 @@ namespace Dependinator.ModelViewing.Items
 
 			Size renderSize = (Size)((Vector)canvas.ItemsCanvasBounds.Size * parentScale);
 
+			double x = 0;
+			double y = 0;
+
+			if (canvas.IsRoot)
+			{
+				x = canvas.ZoomableCanvas.Offset.X;
+				y = canvas.ZoomableCanvas.Offset.Y;
+			}
+
 			Rect value = new Rect(
-				0 / scale, 0 / scale, renderSize.Width / scale, renderSize.Height / scale);
+				x / scale, 
+				y / scale, 
+				renderSize.Width / scale,
+				renderSize.Height / scale);
 
 			return value;
 		}

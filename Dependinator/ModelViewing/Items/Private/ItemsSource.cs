@@ -105,7 +105,7 @@ namespace Dependinator.ModelViewing.Items.Private
 			}
 		}
 
-		
+
 		public void Update(IEnumerable<IItem> items)
 		{
 			bool isTriggerItemsChanged = false;
@@ -174,7 +174,6 @@ namespace Dependinator.ModelViewing.Items.Private
 				SendItemsChanged();
 			}
 		}
-
 
 
 		public void ItemRealized(int virtualId)

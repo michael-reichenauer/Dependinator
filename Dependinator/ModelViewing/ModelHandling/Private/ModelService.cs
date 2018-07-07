@@ -1,9 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.Nodes;
+using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
 
 
@@ -15,6 +18,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private readonly Dictionary<NodeName, Node> nodes = new Dictionary<NodeName, Node>();
 
 		private readonly Dictionary<NodeName, QueuedNode> queuedNodes = new Dictionary<NodeName, QueuedNode>();
+
+		private bool isDataModified = false;
 
 
 		public ModelService()
@@ -30,6 +35,21 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		public Node GetNode(NodeName name) => nodes[name];
 
 		public bool TryGetNode(NodeName name, out Node node) => nodes.TryGetValue(name, out node);
+
+
+		public async void SetIsChanged()
+		{
+			if (!isDataModified)
+			{
+				isDataModified = true;
+
+				Log.Warn("Data modified");
+
+				await Task.Delay(TimeSpan.FromSeconds(5));
+				Log.Warn("Data saved");
+				isDataModified = false;
+			}
+		}
 
 
 		public void Add(Node node) => nodes[node.Name] = node;

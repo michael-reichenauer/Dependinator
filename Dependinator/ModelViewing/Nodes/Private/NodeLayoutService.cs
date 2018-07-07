@@ -59,7 +59,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			{
 				Rect bounds = GetBounds(index++, layout);
 
-				child.View.ViewModel.ItemBounds = bounds;
+				child.View.ViewModel.UpdateBounds(bounds);
 			}
 		}
 

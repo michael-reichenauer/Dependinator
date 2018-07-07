@@ -198,7 +198,15 @@ namespace Dependinator.ModelViewing.Nodes
 		public override void MoveItem(Vector moveOffset)
 		{
 			Point newLocation = ItemBounds.Location + moveOffset;
-			ItemBounds = new Rect(newLocation, ItemBounds.Size);
+			UpdateBounds(new Rect(newLocation, ItemBounds.Size));
+		}
+
+
+		public void UpdateBounds(Rect bounds)
+		{
+			ItemBounds = bounds;
+			nodeViewModelService.SetIsChanged();
+
 		}
 
 

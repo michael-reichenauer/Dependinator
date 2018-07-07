@@ -9,7 +9,7 @@ using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI;
 
 
-namespace Dependinator.ModelViewing.DataHandling
+namespace Dependinator.ModelViewing.DataHandling.Private
 {
 	[SingleInstance]
 	internal class DataMonitorService : IDataMonitorService

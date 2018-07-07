@@ -75,6 +75,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 			}
 
 			line.View.Points[pointIndex] = newPoint;
+			lineViewModelService.Value.SetIsChanged();
 		}
 
 
@@ -91,6 +92,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 				lineViewModelService.Value.UpdateLineBounds(line);
 				line.View.ViewModel.NotifyAll();
+				lineViewModelService.Value.SetIsChanged();
 			}
 		}
 

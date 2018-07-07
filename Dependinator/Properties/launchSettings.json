@@ -1,8 +1,15 @@
 {
   "profiles": {
-    "Dependinator": {
+    "Start": {
+      "commandName": "Project"
+    },
+    "GitMindDep": {
       "commandName": "Project",
       "commandLineArgs": "\"C:\\Work Files\\GitMind\\GitMind.sln\""
+    },
+    "AcsDep": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Work Files\\AcmAcs\\AllAssemblies.sln\""
     }
   }
 }

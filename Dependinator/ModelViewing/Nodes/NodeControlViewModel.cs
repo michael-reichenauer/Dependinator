@@ -96,7 +96,7 @@ namespace Dependinator.ModelViewing.Nodes
 			newLocation = newLocation.Rnd(5);
 			Rect newBounds = new Rect(newLocation, newSize);
 
-			nodeViewModel.ItemBounds = newBounds;
+			nodeViewModel.UpdateBounds(newBounds);
 
 			nodeViewModel.NotifyAll();
 			//Vector newCanvasMove = (location - newLocation) * ItemScale;
@@ -152,7 +152,7 @@ namespace Dependinator.ModelViewing.Nodes
 				return;
 			}
 
-			nodeViewModel.ItemBounds = newBounds;
+			nodeViewModel.UpdateBounds(newBounds);
 
 			nodeViewModel.NotifyAll();
 			nodeViewModel.ItemsViewModel?.MoveCanvas(newCanvasMove);

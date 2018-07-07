@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items.Private;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils;
@@ -141,7 +140,14 @@ namespace Dependinator.ModelViewing.Items
 
 			Point viewPosition = e.GetPosition(ZoomableCanvas);
 			//Log.Debug($"{zoom},   {viewPosition}");
-			ZoomNode(zoom, viewPosition);
+			if (IsRoot)
+			{
+				ZoomNode(zoom, viewPosition + (Vector)ZoomableCanvas.Offset);
+			}
+			else
+			{
+				ZoomNode(zoom, viewPosition);
+			}
 
 			e.Handled = true;
 		}
@@ -150,10 +156,10 @@ namespace Dependinator.ModelViewing.Items
 
 		public void ZoomWindowCenter(double zoom)
 		{
-			ZoomNode(zoom, new Point(ZoomableCanvas.ActualWidth/2, ZoomableCanvas.ActualHeight/2));
+			ZoomNode(zoom, new Point(ZoomableCanvas.ActualWidth / 2, ZoomableCanvas.ActualHeight / 2));
 		}
 
-		
+
 		public void ZoomNode(double zoom, Point? zoomCenter)
 		{
 			if (!IsZoomAndMoveEnabled)
@@ -181,17 +187,21 @@ namespace Dependinator.ModelViewing.Items
 
 			SetZoomableCanvasScale(zoomCenter);
 
-			UpdateAndNotifyAll();
+			UpdateAndNotifyAll(!IsRoot);
 
 			canvasChildren.ForEach(child => child.UpdateScale());
 		}
 
 
 
-		public void UpdateAndNotifyAll()
+		public void UpdateAndNotifyAll(bool isUpdate)
 		{
 			IReadOnlyList<ItemViewModel> items = itemsSource.GetAllItems().Cast<ItemViewModel>().ToList();
-			itemsSource.Update(items);
+			if (isUpdate)
+			{
+				itemsSource.Update(items);
+			}
+
 			items.ForEach(item => item.NotifyAll());
 		}
 
@@ -244,7 +254,7 @@ namespace Dependinator.ModelViewing.Items
 
 			SetZoomableCanvasScale(null);
 
-			UpdateAndNotifyAll();
+			UpdateAndNotifyAll(false);
 
 			canvasChildren.ForEach(child => child.UpdateScale());
 		}
@@ -349,7 +359,7 @@ namespace Dependinator.ModelViewing.Items
 
 				// point in parent canvas scale
 				Point childToParentCanvasPoint = ItemsCanvasBounds.Location + parentPoint;
-				
+
 				return ParentCanvas.CanvasToScreenPoint2(childToParentCanvasPoint) + ChildOffset;
 			}
 			else
@@ -378,7 +388,11 @@ namespace Dependinator.ModelViewing.Items
 			}
 
 			ZoomableCanvas = canvas;
-			ZoomableCanvas.IsDisableOffsetChange = true;
+			if (!IsRoot)
+			{
+				ZoomableCanvas.IsDisableOffsetChange = true;
+			}
+
 			ZoomableCanvas.ItemRealized += Canvas_ItemRealized;
 			ZoomableCanvas.ItemVirtualized += Canvas_ItemVirtualized;
 			ZoomableCanvas.ItemsOwner.ItemsSource = itemsSource;
@@ -440,19 +454,42 @@ namespace Dependinator.ModelViewing.Items
 		{
 			Rect viewBox = GetViewBox();
 
-			if (!IsAnyNodesWithinView(viewBox, moveOffset))
+			//if (!IsAnyNodesWithinView(viewBox, moveOffset))
+			//{
+			//	// No node (if moved) would be withing visible view
+			//	return;
+			//}
+
+			if (IsRoot)
 			{
-				// No node (if moved) would be withing visible view
-				return;
+				ZoomableCanvas.Offset -= moveOffset * Scale;
+			}
+			else
+			{
+				itemsSource.GetAllItems().ForEach(item => item.MoveItem(moveOffset));
 			}
 
-			itemsSource.GetAllItems().ForEach(item => item.MoveItem(moveOffset));
-
-			UpdateAndNotifyAll();
+			UpdateAndNotifyAll(!IsRoot);
 			TriggerInvalidated();
 			UpdateShownItemsInChildren();
 		}
 
+		//private void MoveCanvasItems(Vector moveOffset)
+		//{
+		//	Rect viewBox = GetViewBox();
+
+		//	if (!IsAnyNodesWithinView(viewBox, moveOffset))
+		//	{
+		//		// No node (if moved) would be withing visible view
+		//		return;
+		//	}
+
+		//	itemsSource.GetAllItems().ForEach(item => item.MoveItem(moveOffset));
+
+		//	UpdateAndNotifyAll();
+		//	TriggerInvalidated();
+		//	UpdateShownItemsInChildren();
+		//}
 
 		private Rect GetViewBox()
 		{
