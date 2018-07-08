@@ -1,4 +1,7 @@
-﻿namespace Dependinator.ModelViewing.Nodes
+﻿using Dependinator.ModelViewing.Nodes;
+
+
+namespace Dependinator.ModelViewing
 {
 	internal interface ILocateService
 	{

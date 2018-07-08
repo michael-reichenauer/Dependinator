@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 
 
-namespace Dependinator.ModelViewing
+namespace Dependinator.ModelViewing.ModelHandling
 {
 	internal interface IModelNotifications
 	{

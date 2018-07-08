@@ -9,11 +9,8 @@ using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.ModelViewing;
-using Dependinator.ModelViewing.Items;
-using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Open;
 using Dependinator.ModelViewing.Searching;
-using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
@@ -30,10 +27,7 @@ namespace Dependinator.MainWindowViews
 		private readonly IRecentModelsService recentModelsService;
 		private readonly IModelMetadataService modelMetadataService;
 		private readonly IStartInstanceService startInstanceService;
-		private readonly IItemSelectionService itemSelectionService;
-		private readonly IModelViewModelService modelViewModelService;
-		private readonly ISearchService searchService;
-		private readonly ILocateService locateService;
+		private readonly IModelViewService modelViewService;
 		private readonly ModelMetadata modelMetadata;
 
 
@@ -46,10 +40,7 @@ namespace Dependinator.MainWindowViews
 			IRecentModelsService recentModelsService,
 			IModelMetadataService modelMetadataService,
 			IStartInstanceService startInstanceService,
-			IItemSelectionService itemSelectionService,
-			IModelViewModelService modelViewModelService,
-			ISearchService searchService,
-			ILocateService locateService)
+			IModelViewService modelViewService)
 		{
 			this.modelMetadata = modelMetadata;
 
@@ -58,10 +49,7 @@ namespace Dependinator.MainWindowViews
 			this.recentModelsService = recentModelsService;
 			this.modelMetadataService = modelMetadataService;
 			this.startInstanceService = startInstanceService;
-			this.itemSelectionService = itemSelectionService;
-			this.modelViewModelService = modelViewModelService;
-			this.searchService = searchService;
-			this.locateService = locateService;
+			this.modelViewService = modelViewService;
 
 			ModelViewModel = modelViewModel;
 
@@ -100,7 +88,7 @@ namespace Dependinator.MainWindowViews
 			set
 			{
 				Set(value);
-				
+
 				if (string.IsNullOrEmpty(value))
 				{
 					Set("");
@@ -117,7 +105,7 @@ namespace Dependinator.MainWindowViews
 
 				IsSearchDropDown = true;
 				Set(value);
-				var items = searchService.Search(value).Take(21).OrderBy(i => i.Name).ToList();
+				var items = modelViewService.Search(value).Take(21).OrderBy(i => i.Name).ToList();
 				SearchItems.Clear();
 				items.Take(20).ForEach(item => SearchItems.Add(item));
 				if (items.Count > 20)
@@ -144,7 +132,7 @@ namespace Dependinator.MainWindowViews
 					return;
 				}
 
-				locateService.StartMoveToNode(value.NodeName);
+				modelViewService.StartMoveToNode(value.NodeName);
 			}
 		}
 
@@ -179,22 +167,19 @@ namespace Dependinator.MainWindowViews
 
 		private IReadOnlyList<HiddenNodeItem> GetHiddenNodes()
 		{
-			return modelViewModelService.GetHiddenNodeNames()
-				.Select(name => new HiddenNodeItem(name, modelViewModelService.ShowHiddenNode))
+			return modelViewService.GetHiddenNodeNames()
+				.Select(name => new HiddenNodeItem(name, modelViewService.ShowHiddenNode))
 				.ToList();
 		}
 
 
 		public bool HasResent => recentModelsService.GetModelPaths().Any();
-		public bool HasHiddenNodes => modelViewModelService.GetHiddenNodeNames().Any();
-
-		public bool IsSelectedNode => itemSelectionService.IsNodeSelected;
+		public bool HasHiddenNodes => modelViewService.GetHiddenNodeNames().Any();
 
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
 		public Command RefreshLayoutCommand => AsyncCommand(ManualRefreshLayoutAsync);
 
 		public Command OpenFileCommand => Command(openModelService.ShowOpenModelDialog);
-		public Command HideNodeCommand => Command(HideNode);
 
 
 		public Command RunLatestVersionCommand => AsyncCommand(RunLatestVersionAsync);
@@ -251,17 +236,6 @@ namespace Dependinator.MainWindowViews
 			else
 			{
 				Minimize();
-			}
-		}
-
-
-
-		private void HideNode()
-		{
-			if (itemSelectionService.SelectedItem is NodeViewModel nodeViewModel)
-			{
-				nodeViewModel.HideNode();
-				itemSelectionService.Deselect();
 			}
 		}
 

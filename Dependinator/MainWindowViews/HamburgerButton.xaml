@@ -33,17 +33,6 @@
 
 				<Separator Background="{DynamicResource BorderBrush}" />
 
-				<!--<MenuItem
-					Header="Hide Selected Node"
-					IsEnabled="{Binding IsSelectedNode}"
-					Command="{Binding HideNodeCommand}">
-					<MenuItem.Icon>
-						<Border>
-							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE882;" />
-						</Border>
-					</MenuItem.Icon>
-				</MenuItem>-->
-
 				<MenuItem
 					Header="Show Hidden Nodes"
 					IsEnabled="{Binding HasHiddenNodes}"

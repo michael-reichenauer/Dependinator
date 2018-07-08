@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Windows;
 using Dependinator.Common;
+using Dependinator.ModelViewing.ModelHandling;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 

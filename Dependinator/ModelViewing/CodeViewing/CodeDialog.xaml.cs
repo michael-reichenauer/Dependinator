@@ -9,6 +9,7 @@ using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelViewing.DataHandling;
 using Dependinator.ModelViewing.DataHandling.Dtos;
+using Dependinator.ModelViewing.ModelHandling;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.ErrorHandling;
 using ICSharpCode.AvalonEdit.Highlighting;

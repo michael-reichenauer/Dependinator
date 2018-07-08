@@ -7,6 +7,7 @@ using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Private;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI.Mvvm;
 
