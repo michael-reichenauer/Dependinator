@@ -24,7 +24,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		public void UpdateLink(DataLink dataLink, int stamp)
+		public void AddOrUpdateLink(DataLink dataLink, int stamp)
 		{
 			try
 			{

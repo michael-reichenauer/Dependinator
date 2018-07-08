@@ -13,16 +13,16 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 	internal class NodeService : INodeService
 	{
 		private readonly IModelDatabase modelService;
-		private readonly IModelLineService modelLineService;
-		private readonly IModelLinkService modelLinkService;
+		private readonly Lazy<IModelLineService> modelLineService;
+		private readonly Lazy<IModelLinkService> modelLinkService;
 		private readonly INodeLayoutService layoutService;
 		private readonly Lazy<INodeViewModelService> nodeViewModelService;
 
 
 		public NodeService(
 			IModelDatabase modelService,
-			IModelLineService modelLineService,
-			IModelLinkService modelLinkService,
+			Lazy<IModelLineService> modelLineService,
+			Lazy<IModelLinkService> modelLinkService,
 			INodeLayoutService layoutService,
 			Lazy<INodeViewModelService> nodeViewModelService)
 		{
@@ -64,8 +64,8 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 				out IReadOnlyList<DataLine> lines,
 				out IReadOnlyList<DataLink> links))
 			{
-				lines.ForEach(line => modelLineService.UpdateLine(line, node.Stamp));
-				links.ForEach(link => modelLinkService.UpdateLink(link, node.Stamp));
+				lines.ForEach(line => modelLineService.Value.AddOrUpdateLine(line, node.Stamp));
+				links.ForEach(link => modelLinkService.Value.AddOrUpdateLink(link, node.Stamp));
 				modelService.RemovedQueuedNode(node.Name);
 			}
 		}

@@ -7,7 +7,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 {
 	internal interface IModelLineService
 	{
-		void UpdateLine(DataLine dataLine, int stamp);
+		void AddOrUpdateLine(DataLine dataLine, int stamp);
 		void AddLinkLines(Link link);
 		void RemoveLine(Line line);
 		void AddLineViewModel(Line line);

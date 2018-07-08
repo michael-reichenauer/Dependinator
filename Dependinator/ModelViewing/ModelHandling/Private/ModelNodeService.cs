@@ -26,7 +26,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		}
 
 
-		public void UpdateNode(DataNode dataNode, int stamp)
+		public void AddOrUpdateNode(DataNode dataNode, int stamp)
 		{
 			NodeName nodeName = NodeName.From(dataNode.Name.FullName);
 

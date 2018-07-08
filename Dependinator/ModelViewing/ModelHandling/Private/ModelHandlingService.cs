@@ -32,9 +32,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		private readonly IDataService dataService;
 		private readonly IDataMonitorService dataMonitorService;
-		private readonly IModelNodeService modelNodeService;
-		private readonly IModelLinkService modelLinkService;
-		private readonly IModelLineService modelLineService;
+
 		private readonly IRecentModelsService recentModelsService;
 		private readonly IMessage message;
 		private readonly IProgressService progress;
@@ -51,9 +49,6 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		public ModelHandlingService(
 			IDataService dataService,
 			IDataMonitorService dataMonitorService,
-			IModelNodeService modelNodeService,
-			IModelLinkService modelLinkService,
-			IModelLineService modelLineService,
 			Func<OpenModelViewModel> openModelViewModelProvider,
 			IModelService modelService,
 			ModelMetadata modelMetadata,
@@ -64,9 +59,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		{
 			this.dataService = dataService;
 			this.dataMonitorService = dataMonitorService;
-			this.modelNodeService = modelNodeService;
-			this.modelLinkService = modelLinkService;
-			this.modelLineService = modelLineService;
+
 			this.openModelViewModelProvider = openModelViewModelProvider;
 
 			this.modelService = modelService;
@@ -163,7 +156,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 					Root.View.ItemsCanvas.IsZoomAndMoveEnabled = true;
 					UpdateLines(Root);
 					recentModelsService.AddModelPaths(modelMetadata.ModelFilePath);
-					modelNodeService.SetLayoutDone();
+					modelService.SetLayoutDone();
 				}
 
 				GC.Collect();
@@ -194,7 +187,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 					Root.View.ItemsCanvas.SetRootScale(2);
 
-					modelNodeService.RemoveAll();
+					modelService.RemoveAll();
 					await LoadAsync();
 					return;
 				}
@@ -211,14 +204,14 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 						recentModelsService.RemoveModelPath(modelMetadata.ModelFilePath);
 					}
 
-					modelNodeService.SetLayoutDone();
+					modelService.SetLayoutDone();
 					GC.Collect();
 					isWorking = false;
 					return;
 				}
 
-				modelNodeService.RemoveObsoleteNodesAndLinks(operationId.Value);
-				modelNodeService.SetLayoutDone();
+				modelService.RemoveObsoleteNodesAndLinks(operationId.Value);
+				modelService.SetLayoutDone();
 				GC.Collect();
 				isWorking = false;
 			}
@@ -229,13 +222,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 		public IReadOnlyList<NodeName> GetHiddenNodeNames()
 		{
-			return modelNodeService.GetHiddenNodeNames();
+			return modelService.GetHiddenNodeNames();
 		}
 
 
 		public void ShowHiddenNode(NodeName nodeName)
 		{
-			modelNodeService.ShowHiddenNode(nodeName);
+			modelService.ShowHiddenNode(nodeName);
 		}
 
 
@@ -343,7 +336,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			{
 				Application.Current.Dispatcher.InvokeBackground(() =>
 				{
-					UpdateItem(item, operation.Id);
+					modelService.AddOrUpdateItem(item, operation.Id);
 
 					for (int i = 0; i < BatchSize; i++)
 					{
@@ -352,7 +345,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 							break;
 						}
 
-						UpdateItem(item, operation.Id);
+						modelService.AddOrUpdateItem(item, operation.Id);
 					}
 				});
 			}
@@ -371,7 +364,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 			{
 				Application.Current.Dispatcher.InvokeBackground(() =>
 				{
-					UpdateItem(item, operation.Id);
+					modelService.AddOrUpdateItem(item, operation.Id);
 
 					for (int i = 0; i < BatchSize; i++)
 					{
@@ -380,30 +373,13 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 							break;
 						}
 
-						UpdateItem(item, operation.Id);
+						modelService.AddOrUpdateItem(item, operation.Id);
 					}
 				});
 			}
 		}
 
 
-		private void UpdateItem(IDataItem item, int stamp)
-		{
-			switch (item)
-			{
-				case DataLine line:
-					modelLineService.UpdateLine(line, stamp);
-					break;
-				case DataLink link:
-					modelLinkService.UpdateLink(link, stamp);
-					break;
-				case DataNode node:
-					modelNodeService.UpdateNode(node, stamp);
-					break;
-				default:
-					throw Asserter.FailFast($"Unknown item type {item}");
-			}
-		}
 
 
 
@@ -419,19 +395,12 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 		private class Operation
 		{
 			private static int currentId;
-
-
-			public Operation()
-			{
-				Id = Interlocked.Increment(ref currentId);
-			}
-
-			public BlockingCollection<IDataItem> Queue { get; } =
-				new BlockingCollection<IDataItem>();
+			
+			public BlockingCollection<IDataItem> Queue { get; } = new BlockingCollection<IDataItem>();
 
 			public int Id { get; }
 
-			public Operation(int stamp) => Id = stamp;
+			public Operation() => Id = Interlocked.Increment(ref currentId);
 		}
 	}
 }

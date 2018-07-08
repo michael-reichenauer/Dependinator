@@ -11,7 +11,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 {
 	internal class LineViewModelService : ILineViewModelService
 	{
-		private readonly IModelService modelService;
+		private readonly IModelDatabase modelService;
 		private readonly ILineControlService lineControlService;
 		private readonly ILineDataService lineDataService;
 		private readonly IItemSelectionService itemSelectionService;
@@ -19,7 +19,7 @@ namespace Dependinator.ModelViewing.Lines.Private
 
 
 		public LineViewModelService(
-			IModelService modelService,
+			IModelDatabase modelService,
 			ILineControlService lineControlService,
 			ILineDataService lineDataService,
 			IItemSelectionService itemSelectionService,

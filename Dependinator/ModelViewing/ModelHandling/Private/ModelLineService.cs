@@ -31,7 +31,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 
 
 
-		public void UpdateLine(DataLine dataLine, int stamp)
+		public void AddOrUpdateLine(DataLine dataLine, int stamp)
 		{
 			try
 			{

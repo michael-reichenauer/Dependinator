@@ -1,33 +1,33 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <!-- Some global project properties -->
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net47</TargetFramework>
-	
-	<!-- Using Program.Main as entry point instead of app as in default wpf program -->
-	<StartupObject>Dependinator.Program</StartupObject>
-	<ApplicationIcon>MainWindowViews\Application.ico</ApplicationIcon>
-	
-	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+    <!-- Using Program.Main as entry point instead of app as in default wpf program -->
+    <StartupObject>Dependinator.Program</StartupObject>
+    <ApplicationIcon>MainWindowViews\Application.ico</ApplicationIcon>
+
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>1701;1702;1705,1591,1574,0419,1573,3001,3002,3009</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <WarningsAsErrors />
-	
-	<!-- To support '*' in AssemblyVersion attribute in AssemblyInfo.cs -->
-	<Deterministic>false</Deterministic>
-	
-	<!-- Attrbutes defined in the AssemblyInfo.cs file (they could also be defined here)-->
-	<GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
-	<GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
-	<GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
-	<GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-	<GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
-	<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
+
+    <!-- To support '*' in AssemblyVersion attribute in AssemblyInfo.cs -->
+    <Deterministic>false</Deterministic>
+
+    <!-- Attrbutes defined in the AssemblyInfo.cs file (they could also be defined here)-->
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <GenerateAssemblyProductAttribute>false</GenerateAssemblyProductAttribute>
+    <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
   </PropertyGroup>
- 
-  <!-- Some standard references --> 
+
+  <!-- Some standard references -->
   <ItemGroup>
     <Reference Include="Microsoft.Build" />
     <Reference Include="PresentationFramework.Aero" />
@@ -53,7 +53,7 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
   </ItemGroup>
-  
+
   <!-- Pagage/NuGet references -->
   <ItemGroup>
     <PackageReference Include="Autofac" Version="4.8.1" />
@@ -65,24 +65,24 @@
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="protobuf-net" Version="2.3.13" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <!-- some special included resources -->
-	<Resource Include="MainWindowViews\Application.ico" />   
+    <Resource Include="MainWindowViews\Application.ico" />
     <Resource Include="Common\Resources\MaterialIcons-Regular.ttf" />
     <EmbeddedResource Include="Common\Resources\CSharp-Mode.xshd" />
-     
+
     <!-- XAML elements -->
     <Page Include="**\*.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </Page>
     <Compile Update="**\*.xaml.cs" SubType="Code" DependentUpon="%(Filename)" />
-	
-	 <!-- Settings -->
+
+    <!-- Settings -->
     <None Update="Properties\Settings.settings" Generator="SettingsSingleFileGenerator" LastGenOutput="Settings.Designer.cs" />
-    <Compile Update="Properties\Settings.Designer.cs" AutoGen="True" DependentUpon="Settings.settings" />    
-	
+    <Compile Update="Properties\Settings.Designer.cs" AutoGen="True" DependentUpon="Settings.settings" />
+
   </ItemGroup>
-  
+
 </Project>

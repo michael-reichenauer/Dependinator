@@ -5,7 +5,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.CodeViewing;
-using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.DependencyExploring.Private;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
@@ -17,9 +16,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 	internal class NodeViewModelService : INodeViewModelService
 	{
 		private readonly IModelService modelService;
-		private readonly IModelNodeService modelNodeService;
 		private readonly IThemeService themeService;
-		private readonly IModelLineService modelLineService;
 		private readonly IItemSelectionService itemSelectionService;
 		private readonly INodeLayoutService nodeLayoutService;
 		private readonly Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider;
@@ -28,18 +25,14 @@ namespace Dependinator.ModelViewing.Nodes.Private
 
 		public NodeViewModelService(
 			IModelService modelService,
-			IModelNodeService modelNodeService,
 			IThemeService themeService,
-			IModelLineService modelLineService,
 			IItemSelectionService itemSelectionService,
 			INodeLayoutService nodeLayoutService,
 			Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider,
 			Func<NodeName, CodeDialog> codeDialogProvider)
 		{
 			this.modelService = modelService;
-			this.modelNodeService = modelNodeService;
 			this.themeService = themeService;
-			this.modelLineService = modelLineService;
 			this.itemSelectionService = itemSelectionService;
 			this.nodeLayoutService = nodeLayoutService;
 			this.dependencyExplorerWindowProvider = dependencyExplorerWindowProvider;
@@ -55,7 +48,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 				return;
 			}
 
-			modelNodeService.HideNode(node);
+			modelService.HideNode(node);
 		}
 
 		public void ShowNode(Node node)
@@ -65,7 +58,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 				return;
 			}
 
-			modelNodeService.ShowHiddenNode(node.Name);
+			modelService.ShowHiddenNode(node.Name);
 		}
 
 
@@ -89,11 +82,11 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		{
 			node.SourceLines
 				.Where(line => line.View.ViewModel == null)
-				.ForEach(line => modelLineService.AddLineViewModel(line));
+				.ForEach(line => modelService.AddLineViewModel(line));
 
 			node.TargetLines
 				.Where(line => line.View.ViewModel == null)
-				.ForEach(line => modelLineService.AddLineViewModel(line));
+				.ForEach(line => modelService.AddLineViewModel(line));
 		}
 
 

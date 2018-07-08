@@ -8,7 +8,7 @@ namespace Dependinator.ModelViewing.ModelHandling.Private
 {
 	internal interface IModelNodeService
 	{
-		void UpdateNode(DataNode dataNode, int id);
+		void AddOrUpdateNode(DataNode dataNode, int id);
 		void RemoveObsoleteNodesAndLinks(int stamp);
 		void SetLayoutDone();
 		void ShowHiddenNode(NodeName nodeName);
