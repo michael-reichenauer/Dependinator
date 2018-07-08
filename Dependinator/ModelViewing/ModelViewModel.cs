@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using Dependinator.Common.ModelMetadataFolders;
-using Dependinator.Common.ProgressHandling;
-using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Private;
 using Dependinator.Utils.Dependencies;
@@ -19,25 +16,15 @@ namespace Dependinator.ModelViewing
 	{
 		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(100);
 
-		private readonly IThemeService themeService;
 		private readonly IModelViewModelService modelViewModelService;
-		private readonly IProgressService progress;
-		private readonly IOpenModelService openModelService;
 
 
 		private int width = 0;
 
 
-		public ModelViewModel(
-			IModelViewModelService modelViewModelService,
-			IThemeService themeService,
-			IProgressService progressService,
-			IOpenModelService openModelService)
+		public ModelViewModel(IModelViewModelService modelViewModelService)
 		{
 			this.modelViewModelService = modelViewModelService;
-			this.themeService = themeService;
-			this.progress = progressService;
-			this.openModelService = openModelService;
 
 			ItemsCanvas rootCanvas = new ItemsCanvas();
 			ItemsViewModel = new ItemsViewModel(rootCanvas, null);
@@ -48,7 +35,11 @@ namespace Dependinator.ModelViewing
 		public ItemsViewModel ItemsViewModel { get; }
 
 
-		public async Task LoadAsync() => await openModelService.OpenCurrentModelAsync();
+		public async Task OpenAsync() => await modelViewModelService.OpenAsync();
+
+
+		public Task OpenFilesAsync(IReadOnlyList<string> filePaths) =>
+			modelViewModelService.OpenFilesAsync(filePaths);
 
 
 		public int Width
@@ -64,31 +55,6 @@ namespace Dependinator.ModelViewing
 			}
 		}
 
-
-		public async Task ActivateRefreshAsync()
-		{
-			themeService.SetThemeWpfColors();
-
-			await Task.Yield();
-		}
-
-
-		public async Task ManualRefreshAsync(bool refreshLayout = false)
-		{
-			using (progress.ShowBusy())
-			{
-				await modelViewModelService.RefreshAsync(refreshLayout);
-			}
-		}
-
-
-		public void Close() => modelViewModelService.Close();
-
-
-		public Task LoadFilesAsync(IReadOnlyList<string> filePaths)
-		{
-			return openModelService.OpenModelAsync(filePaths);
-		}
 
 
 		public void MouseClicked(MouseButtonEventArgs mouseButtonEventArgs)

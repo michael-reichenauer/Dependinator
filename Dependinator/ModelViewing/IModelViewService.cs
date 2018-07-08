@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Dependinator.ModelViewing.Nodes;
-using Dependinator.ModelViewing.Searching;
 
 
 namespace Dependinator.ModelViewing
@@ -13,6 +13,9 @@ namespace Dependinator.ModelViewing
 
 		void ShowHiddenNode(NodeName nodeName);
 
-		IEnumerable<SearchEntry> Search(string text);
+		IEnumerable<NodeName> Search(string text);
+		Task ActivateRefreshAsync();
+		Task RefreshAsync(bool refreshLayout);
+		void Close();
 	}
 }

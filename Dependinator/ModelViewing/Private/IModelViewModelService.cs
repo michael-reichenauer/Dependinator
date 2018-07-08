@@ -20,5 +20,7 @@ namespace Dependinator.ModelViewing.Private
 		IReadOnlyList<NodeName> GetHiddenNodeNames();
 		void Clicked();
 		void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e);
+		Task OpenAsync();
+		Task OpenFilesAsync(IReadOnlyList<string> filePaths);
 	}
 }

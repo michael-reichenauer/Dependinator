@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing.DataHandling.Dtos;
@@ -22,6 +23,7 @@ namespace Dependinator.ModelViewing.Private
 		private readonly ISettingsService settingsService;
 		private readonly IModelHandlingService modelHandlingService;
 		private readonly IItemSelectionService itemSelectionService;
+		private readonly IOpenModelService openModelService;
 
 
 		private ItemsCanvas rootNodeCanvas;
@@ -29,11 +31,13 @@ namespace Dependinator.ModelViewing.Private
 		public ModelViewModelService(
 			ISettingsService settingsService,
 			IModelHandlingService modelHandlingService,
-			IItemSelectionService itemSelectionService)
+			IItemSelectionService itemSelectionService,
+			IOpenModelService openModelService)
 		{
 			this.settingsService = settingsService;
 			this.modelHandlingService = modelHandlingService;
 			this.itemSelectionService = itemSelectionService;
+			this.openModelService = openModelService;
 		}
 
 
@@ -73,6 +77,12 @@ namespace Dependinator.ModelViewing.Private
 
 
 		public void ShowHiddenNode(NodeName nodeName) => modelHandlingService.ShowHiddenNode(nodeName);
+
+
+		public async Task OpenAsync() => await openModelService.OpenCurrentModelAsync();
+
+		public Task OpenFilesAsync(IReadOnlyList<string> filePaths) =>
+			openModelService.OpenModelAsync(filePaths);
 
 
 		public void Close()

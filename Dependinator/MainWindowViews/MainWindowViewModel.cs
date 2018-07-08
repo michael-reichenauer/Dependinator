@@ -9,6 +9,7 @@ using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.ModelViewing;
+using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Open;
 using Dependinator.ModelViewing.Searching;
 using Dependinator.Utils.Dependencies;
@@ -19,6 +20,30 @@ using Application = System.Windows.Application;
 
 namespace Dependinator.MainWindowViews
 {
+	internal class SearchEntry
+	{
+		public string Name { get; }
+		public NodeName NodeName { get; }
+
+
+		public SearchEntry(string name, NodeName nodeName)
+		{
+			int parametersIndex = name.IndexOf('(');
+
+			if (parametersIndex > -1)
+			{
+				name = name.Substring(0, parametersIndex) + "()";
+			}
+
+			Name = name;
+			NodeName = nodeName;
+		}
+
+
+		public override string ToString() => Name;
+	}
+	
+
 	[SingleInstance]
 	internal class MainWindowViewModel : ViewModel, IBusyIndicatorProvider
 	{
@@ -28,6 +53,7 @@ namespace Dependinator.MainWindowViews
 		private readonly IModelMetadataService modelMetadataService;
 		private readonly IStartInstanceService startInstanceService;
 		private readonly IModelViewService modelViewService;
+		private readonly IProgressService progress;
 		private readonly ModelMetadata modelMetadata;
 
 
@@ -40,7 +66,8 @@ namespace Dependinator.MainWindowViews
 			IRecentModelsService recentModelsService,
 			IModelMetadataService modelMetadataService,
 			IStartInstanceService startInstanceService,
-			IModelViewService modelViewService)
+			IModelViewService modelViewService,
+			IProgressService progress)
 		{
 			this.modelMetadata = modelMetadata;
 
@@ -50,6 +77,7 @@ namespace Dependinator.MainWindowViews
 			this.modelMetadataService = modelMetadataService;
 			this.startInstanceService = startInstanceService;
 			this.modelViewService = modelViewService;
+			this.progress = progress;
 
 			ModelViewModel = modelViewModel;
 
@@ -105,7 +133,11 @@ namespace Dependinator.MainWindowViews
 
 				IsSearchDropDown = true;
 				Set(value);
-				var items = modelViewService.Search(value).Take(21).OrderBy(i => i.Name).ToList();
+				var items = modelViewService.Search(value)
+					.Take(21)
+					.OrderBy(nodeName => nodeName.DisplayLongName)
+					.Select(nodeName => new SearchEntry(nodeName.DisplayLongName, nodeName))
+					.ToList();
 				SearchItems.Clear();
 				items.Take(20).ForEach(item => SearchItems.Add(item));
 				if (items.Count > 20)
@@ -212,18 +244,27 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		public void ClosingWindow() => ModelViewModel.Close();
+		public void ClosingWindow() => modelViewService.Close();
 
-		private Task ManualRefreshAsync() => ModelViewModel.ManualRefreshAsync();
+		private Task ManualRefreshAsync() => ManualRefreshAsync();
 
-		private Task ManualRefreshLayoutAsync() => ModelViewModel.ManualRefreshAsync(true);
+		private Task ManualRefreshLayoutAsync() => ManualRefreshAsync(true);
 
 		private void Search() => mainWindowService.SetSearchFocus();
 
 
 		public Task ActivateRefreshAsync()
 		{
-			return ModelViewModel.ActivateRefreshAsync();
+			return modelViewService.ActivateRefreshAsync();
+		}
+
+
+		private async Task ManualRefreshAsync(bool refreshLayout = false)
+		{
+			using (progress.ShowBusy())
+			{
+				await modelViewService.RefreshAsync(refreshLayout);
+			}
 		}
 
 

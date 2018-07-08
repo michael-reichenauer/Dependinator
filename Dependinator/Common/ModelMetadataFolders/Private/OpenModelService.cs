@@ -11,27 +11,26 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 	internal class OpenModelService : IOpenModelService
 	{
 		private readonly IModelMetadataService modelMetadataService;
-		private readonly ILoadModelService loadModelService;
+		private readonly Lazy<ILoadModelService> loadModelService;
 		private readonly IOpenFileDialogService openFileDialogService;
 		private readonly IExistingInstanceService existingInstanceService;
 		private readonly IStartInstanceService startInstanceService;
-		private readonly Lazy<IMainWindow> mainWindow;
+
 
 
 		public OpenModelService(
-			ILoadModelService loadModelService,
+			Lazy<ILoadModelService> loadModelService,
 			IModelMetadataService modelMetadataService,
 			IOpenFileDialogService openFileDialogService,
 			IExistingInstanceService existingInstanceService,
-			IStartInstanceService startInstanceService,
-			Lazy<IMainWindow> mainWindow)
+			IStartInstanceService startInstanceService)
 		{
 			this.loadModelService = loadModelService;
 			this.modelMetadataService = modelMetadataService;
 			this.openFileDialogService = openFileDialogService;
 			this.existingInstanceService = existingInstanceService;
 			this.startInstanceService = startInstanceService;
-			this.mainWindow = mainWindow;
+
 		}
 
 
@@ -94,7 +93,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
 			existingInstanceService.RegisterPath(metadataFolderPath);
 
-			await loadModelService.LoadAsync();
+			await loadModelService.Value.LoadAsync();
 		}
 
 
