@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Dependinator.Utils.UI.Mvvm;
 
 
-namespace Dependinator.ModelViewing.Open
+namespace Dependinator.Common.ModelMetadataFolders.Private
 {
 	internal class FileItem : ViewModel
 	{

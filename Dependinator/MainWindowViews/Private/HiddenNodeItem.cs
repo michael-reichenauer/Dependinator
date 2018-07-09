@@ -1,10 +1,9 @@
 ﻿using System;
-using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.UI.Mvvm;
 
 
-namespace Dependinator.ModelViewing.Open
+namespace Dependinator.MainWindowViews.Private
 {
 	internal class HiddenNodeItem : ViewModel
 	{

@@ -7,9 +7,9 @@
 	xmlns:virtualCanvas="clr-namespace:Dependinator.Utils.UI.VirtualCanvas"
 	xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
 	xmlns:nodes="clr-namespace:Dependinator.ModelViewing.Nodes"
-	xmlns:open="clr-namespace:Dependinator.ModelViewing.Open"
 	xmlns:private="clr-namespace:Dependinator.ModelViewing.Items.Private"
 	xmlns:lines="clr-namespace:Dependinator.ModelViewing.Lines"
+	xmlns:modelMetadataFolders="clr-namespace:Dependinator.Common.ModelMetadataFolders"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
@@ -144,7 +144,7 @@
 						<Setter Property="ContentTemplate">
 							<Setter.Value>
 								<DataTemplate>
-									<open:OpenModelView />
+									<modelMetadataFolders:OpenModelView />
 								</DataTemplate>
 							</Setter.Value>
 						</Setter>

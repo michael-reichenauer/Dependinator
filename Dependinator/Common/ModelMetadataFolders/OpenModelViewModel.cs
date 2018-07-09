@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Windows;
-using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.ModelViewing.Items;
 
 
-namespace Dependinator.ModelViewing.Open
+namespace Dependinator.Common.ModelMetadataFolders
 {
 	internal class OpenModelViewModel : ItemViewModel
 	{
-		private static readonly Rect DefaultOpenModelNodeBounds = new Rect(30, 30, 730, 580);
+		private static readonly Rect DefaultOpenModelNodeBounds = new Rect(0, 80, 720, 580);
 
 		private readonly IOpenModelService openModelService;
 		private readonly IRecentModelsService recentModelsService;

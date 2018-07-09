@@ -1,9 +1,10 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Dependinator.Common.ModelMetadataFolders.Private;
 
 
-namespace Dependinator.ModelViewing.Open
+namespace Dependinator.Common.ModelMetadataFolders
 {
 	/// <summary>
 	/// Interaction logic for OpenModelView.xaml

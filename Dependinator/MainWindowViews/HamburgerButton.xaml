@@ -5,7 +5,7 @@
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
 	xmlns:local="clr-namespace:Dependinator"
-	xmlns:open="clr-namespace:Dependinator.ModelViewing.Open"
+	xmlns:private="clr-namespace:Dependinator.MainWindowViews.Private"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 
@@ -45,7 +45,7 @@
 
 					<MenuItem.Resources>
 						<DataTemplate
-							DataType="{x:Type open:HiddenNodeItem}">
+							DataType="{x:Type private:HiddenNodeItem}">
 							<MenuItem
 								Header="{Binding Name}"
 								Command="{Binding ShowNodeCommand}">
