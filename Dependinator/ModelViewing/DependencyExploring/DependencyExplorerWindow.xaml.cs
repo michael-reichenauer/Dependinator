@@ -2,11 +2,12 @@
 using System.ComponentModel;
 using System.Windows;
 using Dependinator.Common;
+using Dependinator.ModelViewing.DependencyExploring.Private;
 using Dependinator.ModelViewing.ModelHandling;
 using Dependinator.ModelViewing.ModelHandling.Core;
 
 
-namespace Dependinator.ModelViewing.DependencyExploring.Private
+namespace Dependinator.ModelViewing.DependencyExploring
 {
 	/// <summary>
 	/// Interaction logic for DependencyExplorerWindow.xaml
