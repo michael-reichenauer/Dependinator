@@ -1,3 +1,4 @@
+using System;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -12,6 +13,9 @@ namespace Dependinator.ModelViewing.Lines
 {
 	internal class LineViewModel : ItemViewModel, ISelectableItem
 	{
+		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(100);
+
+
 		private readonly ILineViewModelService lineViewModelService;
 		private readonly DelayDispatcher delayDispatcher = new DelayDispatcher();
 
@@ -89,7 +93,7 @@ namespace Dependinator.ModelViewing.Lines
 
 		public void OnMouseEnter()
 		{
-			delayDispatcher.Delay(ModelViewModel.MouseEnterDelay, _ =>
+			delayDispatcher.Delay(MouseEnterDelay, _ =>
 			{
 				IsMouseOver = true;
 				Notify(nameof(LineBrush), nameof(LineWidth), nameof(ArrowWidth));

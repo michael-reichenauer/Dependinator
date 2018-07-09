@@ -27,6 +27,11 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 
 		public void AddLinkToType(DataNode sourceNode, TypeReference targetType)
 		{
+			if (targetType is GenericInstanceType genericType)
+			{
+				genericType.GenericArguments.ForEach(argType => AddLinkToType(sourceNode, argType));
+			}
+
 			if (IsIgnoredReference(targetType))
 			{
 				return;
@@ -40,12 +45,6 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 			}
 
 			SendLink(sourceNode.Name, targetNodeName, NodeType.Type);
-
-			if (targetType.IsGenericInstance)
-			{
-				targetType.GenericParameters
-					.ForEach(argType => AddLinkToType(sourceNode, argType));
-			}
 		}
 
 

@@ -9,9 +9,7 @@ using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.ModelViewing;
-using Dependinator.ModelViewing.Nodes;
 using Dependinator.ModelViewing.Open;
-using Dependinator.ModelViewing.Searching;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
@@ -20,30 +18,6 @@ using Application = System.Windows.Application;
 
 namespace Dependinator.MainWindowViews
 {
-	internal class SearchEntry
-	{
-		public string Name { get; }
-		public NodeName NodeName { get; }
-
-
-		public SearchEntry(string name, NodeName nodeName)
-		{
-			int parametersIndex = name.IndexOf('(');
-
-			if (parametersIndex > -1)
-			{
-				name = name.Substring(0, parametersIndex) + "()";
-			}
-
-			Name = name;
-			NodeName = nodeName;
-		}
-
-
-		public override string ToString() => Name;
-	}
-	
-
 	[SingleInstance]
 	internal class MainWindowViewModel : ViewModel, IBusyIndicatorProvider
 	{
@@ -246,7 +220,7 @@ namespace Dependinator.MainWindowViews
 
 		public void ClosingWindow() => modelViewService.Close();
 
-		private Task ManualRefreshAsync() => ManualRefreshAsync();
+		private Task ManualRefreshAsync() => ManualRefreshAsync(false);
 
 		private Task ManualRefreshLayoutAsync() => ManualRefreshAsync(true);
 
@@ -259,7 +233,7 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		private async Task ManualRefreshAsync(bool refreshLayout = false)
+		private async Task ManualRefreshAsync(bool refreshLayout)
 		{
 			using (progress.ShowBusy())
 			{

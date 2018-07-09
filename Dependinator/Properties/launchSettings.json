@@ -7,6 +7,10 @@
       "commandName": "Project",
       "commandLineArgs": "\"C:\\Work Files\\GitMind\\GitMind.sln\""
     },
+    "DependinatorDep": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Work Files\\Dependinator\\Dependinator.sln\""
+    },
     "AcsDep": {
       "commandName": "Project",
       "commandLineArgs": "\"C:\\Work Files\\AcmAcs\\AllAssemblies.sln\""

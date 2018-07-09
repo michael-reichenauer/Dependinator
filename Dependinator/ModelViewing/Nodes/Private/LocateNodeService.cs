@@ -9,7 +9,7 @@ using Dependinator.ModelViewing.ModelHandling.Private;
 
 namespace Dependinator.ModelViewing.Nodes.Private
 {
-	internal class LocateService : ILocateService
+	internal class LocateNodeService : ILocateNodeService
 	{
 		private readonly IModelService modelService;
 
@@ -21,7 +21,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 		private static readonly double ZoomInFactor = 1.15;
 
 
-		public LocateService(IModelService modelService)
+		public LocateNodeService(IModelService modelService)
 		{
 			this.modelService = modelService;
 		}

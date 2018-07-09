@@ -40,6 +40,7 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 				linkHandler.AddLinkToType(memberNode, returnType);
 			}
 
+			
 			method.Parameters
 				.Select(parameter => parameter.ParameterType)
 				.ForEach(parameterType => linkHandler.AddLinkToType(memberNode, parameterType));
@@ -124,6 +125,12 @@ namespace Dependinator.ModelViewing.DataHandling.Private.Parsing.Private.Assembl
 
 		private void AddLinkToCallMethod(DataNode memberNode, MethodReference method)
 		{
+			if (method is GenericInstanceMethod genericMethod)
+			{
+				genericMethod.GenericArguments
+					.ForEach(genericArg => linkHandler.AddLinkToType(memberNode, genericArg));
+			}
+		
 			TypeReference declaringType = method.DeclaringType;
 
 			if (IgnoredTypes.IsIgnoredSystemType(declaringType))

@@ -14,8 +14,6 @@ namespace Dependinator.ModelViewing
 	[SingleInstance]
 	internal class ModelViewModel : ViewModel
 	{
-		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(100);
-
 		private readonly IModelViewModelService modelViewModelService;
 
 

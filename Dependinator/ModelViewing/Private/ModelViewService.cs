@@ -9,26 +9,26 @@ namespace Dependinator.ModelViewing.Private
 {
 	internal class ModelViewService : IModelViewService
 	{
-		private readonly ILocateService locateService;
+		private readonly ILocateNodeService locateNodeService;
 		private readonly IModelViewModelService modelViewModelService;
 		private readonly ISearchService searchService;
 		private readonly IThemeService themeService;
 
 
 		public ModelViewService(
-			ILocateService locateService,
+			ILocateNodeService locateNodeService,
 			IModelViewModelService modelViewModelService,
 			ISearchService searchService,
 			IThemeService themeService)
 		{
-			this.locateService = locateService;
+			this.locateNodeService = locateNodeService;
 			this.modelViewModelService = modelViewModelService;
 			this.searchService = searchService;
 			this.themeService = themeService;
 		}
 
 
-		public void StartMoveToNode(NodeName nodeName) => locateService.StartMoveToNode(nodeName);
+		public void StartMoveToNode(NodeName nodeName) => locateNodeService.StartMoveToNode(nodeName);
 		public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelViewModelService.GetHiddenNodeNames();
 		public void ShowHiddenNode(NodeName nodeName) => modelViewModelService.ShowHiddenNode(nodeName);
 		public IEnumerable<NodeName> Search(string text) => searchService.Search(text);
