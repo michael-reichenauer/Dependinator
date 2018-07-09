@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Threading;
-using Dependinator.ModelViewing.DataHandling.Dtos;
 using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.ModelHandling.Core;
 using Dependinator.ModelViewing.ModelHandling.Private;
+using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Nodes.Private
@@ -81,7 +81,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 				// Only zooming out when starting operation
 				zoom = 0;
 				return false;
-			}	
+			}
 
 			double rootScale = operation.TargetNode.Root.View.ItemsCanvas.Scale;
 
@@ -90,7 +90,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			if (rootScale > ScaleAim - 0.5
 					&& (itemScale > ScaleAim - 0.5 || targetVector.Length > MaxDistanceForZoomOut))
 			{
-				zoom = Math.Max(ZoomOutFactor, ScaleAim / rootScale);
+				zoom = Math.Max(ZoomOutFactor, (ScaleAim - 0.5) / rootScale);
 				return true;
 			}
 			else
@@ -117,7 +117,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			{
 				// Shorten the move vector, to move in several small steps
 				moveVector = targetVector * (MoveSteps / targetVector.Length);
-			}	
+			}
 
 			return true;
 		}
@@ -176,7 +176,7 @@ namespace Dependinator.ModelViewing.Nodes.Private
 			// Returns the center screen point of the target node
 			Rect targetArea = operation.TargetNode.View.ViewModel.ItemBounds;
 			Point targetCenter = new Point(
-				targetArea.Left + targetArea.Width / 2,targetArea.Top + targetArea.Height / 2);
+				targetArea.Left + targetArea.Width / 2, targetArea.Top + targetArea.Height / 2);
 			return operation.TargetNode.View.ViewModel.ItemOwnerCanvas.CanvasToScreenPoint2(targetCenter);
 		}
 

@@ -96,7 +96,7 @@ namespace Dependinator.ModelViewing.Items
 		public void SetRootOffset(Point offset) => RootCanvas.rootOffset = offset;
 		public void SetRootScale(double scale) => RootCanvas.rootScale = scale;
 
-		
+
 		public void AddItem(IItem item)
 		{
 			item.ItemOwnerCanvas = this;
@@ -159,7 +159,8 @@ namespace Dependinator.ModelViewing.Items
 
 		public void ZoomWindowCenter(double zoom)
 		{
-			ZoomNode(zoom, new Point(ZoomableCanvas.ActualWidth / 2, ZoomableCanvas.ActualHeight / 2));
+			Point viewCenter = new Point(ZoomableCanvas.ActualWidth / 2, ZoomableCanvas.ActualHeight / 2);
+			ZoomNode(zoom, viewCenter + (Vector)ZoomableCanvas.Offset - new Vector(10,10));
 		}
 
 
@@ -461,11 +462,11 @@ namespace Dependinator.ModelViewing.Items
 		{
 			Rect viewBox = GetViewBox();
 
-			if (!IsAnyNodesWithinView(viewBox, moveOffset))
-			{
-				// No node (if moved) would be withing visible view
-				return;
-			}
+			//if (!IsAnyNodesWithinView(viewBox, moveOffset))
+			//{
+			//	// No node (if moved) would be withing visible view
+			//	return;
+			//}
 
 			if (IsRoot)
 			{
