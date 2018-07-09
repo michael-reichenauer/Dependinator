@@ -1,6 +1,5 @@
 ﻿using System;
 using Dependinator.ModelViewing;
-using Dependinator.ModelViewing.Nodes;
 using Dependinator.Utils.UI.Mvvm;
 
 

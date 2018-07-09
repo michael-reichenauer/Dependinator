@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using Dependinator.ModelViewing.Items;
 using Dependinator.ModelViewing.Private;
+using Dependinator.ModelViewing.Private.Items;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI.Mvvm;
 

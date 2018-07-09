@@ -2,7 +2,7 @@
 using System.IO;
 using System.Windows;
 using Dependinator.Common.ModelMetadataFolders.Private;
-using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing;
 
 
 namespace Dependinator.Common.ModelMetadataFolders

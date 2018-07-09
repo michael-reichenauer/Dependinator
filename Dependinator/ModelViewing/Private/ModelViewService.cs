@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dependinator.Common.ThemeHandling;
-using Dependinator.ModelViewing.Nodes;
-using Dependinator.ModelViewing.Searching;
+using Dependinator.ModelViewing.Private.Nodes;
+using Dependinator.ModelViewing.Private.Searching;
 
 
 namespace Dependinator.ModelViewing.Private

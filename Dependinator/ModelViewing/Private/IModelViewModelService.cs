@@ -2,8 +2,7 @@
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using Dependinator.ModelViewing.Items;
-using Dependinator.ModelViewing.Nodes;
+using Dependinator.ModelViewing.Private.Items;
 
 
 namespace Dependinator.ModelViewing.Private
