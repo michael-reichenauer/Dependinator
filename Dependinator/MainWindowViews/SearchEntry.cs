@@ -1,4 +1,5 @@
-﻿using Dependinator.ModelViewing.Nodes;
+﻿using Dependinator.ModelViewing;
+using Dependinator.ModelViewing.Nodes;
 
 
 namespace Dependinator.MainWindowViews

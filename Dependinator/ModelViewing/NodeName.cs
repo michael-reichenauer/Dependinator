@@ -3,7 +3,7 @@ using System.Linq;
 using Dependinator.Utils;
 
 
-namespace Dependinator.ModelViewing.Nodes
+namespace Dependinator.ModelViewing
 {
 	internal class NodeName : Equatable<NodeName>
 	{
