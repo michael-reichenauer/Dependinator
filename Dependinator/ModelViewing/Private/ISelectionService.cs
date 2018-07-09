@@ -2,16 +2,14 @@
 using Dependinator.ModelViewing.Private.Nodes;
 
 
-namespace Dependinator.ModelViewing.Private.Items
+namespace Dependinator.ModelViewing.Private
 {
-	internal interface IItemSelectionService
+	internal interface ISelectionService
 	{
 		void Select(NodeViewModel item);
 
 		void Select(LineViewModel clickedItem);
 
 		void Deselect();
-		bool IsNodeSelected { get; }
-		ISelectableItem SelectedItem { get; }
 	}
 }

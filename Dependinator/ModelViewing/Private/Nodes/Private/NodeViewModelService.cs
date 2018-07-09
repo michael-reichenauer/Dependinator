@@ -17,7 +17,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 	{
 		private readonly IModelService modelService;
 		private readonly IThemeService themeService;
-		private readonly IItemSelectionService itemSelectionService;
+		private readonly ISelectionService selectionService;
 		private readonly INodeLayoutService nodeLayoutService;
 		private readonly Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider;
 		private readonly Func<NodeName, CodeDialog> codeDialogProvider;
@@ -26,14 +26,14 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 		public NodeViewModelService(
 			IModelService modelService,
 			IThemeService themeService,
-			IItemSelectionService itemSelectionService,
+			ISelectionService selectionService,
 			INodeLayoutService nodeLayoutService,
 			Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider,
 			Func<NodeName, CodeDialog> codeDialogProvider)
 		{
 			this.modelService = modelService;
 			this.themeService = themeService;
-			this.itemSelectionService = itemSelectionService;
+			this.selectionService = selectionService;
 			this.nodeLayoutService = nodeLayoutService;
 			this.dependencyExplorerWindowProvider = dependencyExplorerWindowProvider;
 			this.codeDialogProvider = codeDialogProvider;
@@ -91,7 +91,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 
 
 		public void MouseClicked(NodeViewModel nodeViewModel) =>
-			itemSelectionService.Select(nodeViewModel);
+			selectionService.Select(nodeViewModel);
 
 
 		public void OnMouseWheel(

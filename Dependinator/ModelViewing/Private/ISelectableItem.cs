@@ -1,4 +1,4 @@
-﻿namespace Dependinator.ModelViewing.Private.Items
+﻿namespace Dependinator.ModelViewing.Private
 {
 	internal interface ISelectableItem
 	{

@@ -20,7 +20,7 @@ namespace Dependinator.ModelViewing.Private
 	{
 		private readonly ISettingsService settingsService;
 		private readonly IModelHandlingService modelHandlingService;
-		private readonly IItemSelectionService itemSelectionService;
+		private readonly ISelectionService selectionService;
 		private readonly IOpenModelService openModelService;
 
 
@@ -29,12 +29,12 @@ namespace Dependinator.ModelViewing.Private
 		public ModelViewModelService(
 			ISettingsService settingsService,
 			IModelHandlingService modelHandlingService,
-			IItemSelectionService itemSelectionService,
+			ISelectionService selectionService,
 			IOpenModelService openModelService)
 		{
 			this.settingsService = settingsService;
 			this.modelHandlingService = modelHandlingService;
-			this.itemSelectionService = itemSelectionService;
+			this.selectionService = selectionService;
 			this.openModelService = openModelService;
 		}
 
@@ -67,7 +67,7 @@ namespace Dependinator.ModelViewing.Private
 
 		public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelHandlingService.GetHiddenNodeNames();
 
-		public void Clicked() => itemSelectionService.Deselect();
+		public void Clicked() => selectionService.Deselect();
 
 
 		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) =>

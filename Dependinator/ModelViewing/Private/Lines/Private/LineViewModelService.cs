@@ -14,7 +14,7 @@ namespace Dependinator.ModelViewing.Private.Lines.Private
 		private readonly IModelDatabase modelService;
 		private readonly ILineControlService lineControlService;
 		private readonly ILineDataService lineDataService;
-		private readonly IItemSelectionService itemSelectionService;
+		private readonly ISelectionService selectionService;
 		private readonly Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider;
 
 
@@ -22,13 +22,13 @@ namespace Dependinator.ModelViewing.Private.Lines.Private
 			IModelDatabase modelService,
 			ILineControlService lineControlService,
 			ILineDataService lineDataService,
-			IItemSelectionService itemSelectionService,
+			ISelectionService selectionService,
 			Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider)
 		{
 			this.modelService = modelService;
 			this.lineControlService = lineControlService;
 			this.lineDataService = lineDataService;
-			this.itemSelectionService = itemSelectionService;
+			this.selectionService = selectionService;
 			this.dependencyExplorerWindowProvider = dependencyExplorerWindowProvider;
 		}
 
@@ -58,7 +58,7 @@ namespace Dependinator.ModelViewing.Private.Lines.Private
 		public LineControl GetLineControl(Line line) => new LineControl(lineControlService, line);
 
 
-		public void Clicked(LineViewModel lineViewModel) => itemSelectionService.Select(lineViewModel);
+		public void Clicked(LineViewModel lineViewModel) => selectionService.Select(lineViewModel);
 
 
 		public void OnMouseWheel(LineViewModel lineViewModel, UIElement uiElement, MouseWheelEventArgs e)

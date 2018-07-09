@@ -1,5 +1,4 @@
 ﻿using System.Windows;
-using Dependinator.ModelViewing.Private.Nodes;
 using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 
@@ -8,14 +7,14 @@ namespace Dependinator.ModelViewing.Private.Items
 {
 	internal class ItemsViewModel : ViewModel
 	{
-		private readonly NodeViewModel node;
+		private readonly ISelectableItem item;
 
 
 		public ItemsViewModel(
 			ItemsCanvas itemsCanvas,
-			NodeViewModel node)
+			ISelectableItem item)
 		{
-			this.node = node;
+			this.item = item;
 			ItemsCanvas = itemsCanvas;
 		}
 
@@ -42,7 +41,7 @@ namespace Dependinator.ModelViewing.Private.Items
 
 		public void MoveAllItems(Point p1, Point p2)
 		{
-			if (node?.IsSelected ?? true)
+			if (item?.IsSelected ?? true)
 			{
 				ItemsCanvas.MoveAllItems(p1, p2);
 			}

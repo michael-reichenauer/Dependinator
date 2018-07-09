@@ -1,35 +1,34 @@
 ﻿using System.Linq;
+using Dependinator.ModelViewing.Private.Items;
 using Dependinator.ModelViewing.Private.Lines;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.ModelViewing.Private.Nodes;
 using Dependinator.Utils.Dependencies;
 
 
-namespace Dependinator.ModelViewing.Private.Items.Private
+namespace Dependinator.ModelViewing.Private
 {
 	[SingleInstance]
-	internal class ItemSelectionService : IItemSelectionService
+	internal class SelectionService : ISelectionService
 	{
-		public ISelectableItem SelectedItem { get; private set; }
-
-		public bool IsNodeSelected => SelectedItem is NodeViewModel;
+		private ISelectableItem selectedItem;
 
 
 		public void Deselect()
 		{
-			if (SelectedItem == null)
+			if (selectedItem == null)
 			{
 				return;
 			}
 
-			SelectedItem.IsSelected = false;
-			SelectedItem = null;
+			selectedItem.IsSelected = false;
+			selectedItem = null;
 		}
 
 
 		public void Select(LineViewModel clickedLine)
 		{
-			if (clickedLine == SelectedItem)
+			if (clickedLine == selectedItem)
 			{
 				// User clicked om selected line
 				Deselect();
@@ -38,22 +37,22 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 
 			Deselect();
 
-			SelectedItem = clickedLine;
-			SelectedItem.IsSelected = true;
+			selectedItem = clickedLine;
+			selectedItem.IsSelected = true;
 		}
 
 
 
 		public void Select(NodeViewModel clickedNode)
 		{
-			if (clickedNode == SelectedItem)
+			if (clickedNode == selectedItem)
 			{
 				// User clicked om selected node
 				Deselect();
 				return;
 			}
 
-			if (SelectedItem is LineViewModel selectedLine &&
+			if (selectedItem is LineViewModel selectedLine &&
 			    selectedLine.Line.Owner.AncestorsAndSelf().Any(ancestor => clickedNode == ancestor.View.ViewModel))
 			{
 				// Ancestor or root was clicked, just deselect line
@@ -61,7 +60,7 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 				return;
 			}
 
-			if (SelectedItem is NodeViewModel selectedNode &&
+			if (selectedItem is NodeViewModel selectedNode &&
 			    selectedNode.Node.Ancestors().Any(ancestor => clickedNode == ancestor.View.ViewModel))
 			{
 				// Ancestor or root was clicked, just deselect node
@@ -77,8 +76,8 @@ namespace Dependinator.ModelViewing.Private.Items.Private
 				return;
 			}
 
-			SelectedItem = clickedNode;
-			SelectedItem.IsSelected = true;
+			selectedItem = clickedNode;
+			selectedItem.IsSelected = true;
 		}
 	}
 }
