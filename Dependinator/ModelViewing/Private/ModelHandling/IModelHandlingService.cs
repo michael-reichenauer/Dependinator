@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 
 

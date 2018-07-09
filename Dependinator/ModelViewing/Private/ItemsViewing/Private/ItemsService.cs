@@ -1,4 +1,4 @@
-namespace Dependinator.ModelViewing.Private.Items.Private
+namespace Dependinator.ModelViewing.Private.ItemsViewing.Private
 {
 	//internal class ItemsService : IItemsService
 	//{

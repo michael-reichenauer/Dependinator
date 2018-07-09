@@ -1,5 +1,5 @@
 ﻿<UserControl
-	x:Class="Dependinator.ModelViewing.Private.Items.ItemsView"
+	x:Class="Dependinator.ModelViewing.Private.ItemsViewing.ItemsView"
 	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
 	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,9 +7,9 @@
 	xmlns:virtualCanvas="clr-namespace:Dependinator.Utils.UI.VirtualCanvas"
 	xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
 	xmlns:modelMetadataFolders="clr-namespace:Dependinator.Common.ModelMetadataFolders"
-	xmlns:private="clr-namespace:Dependinator.ModelViewing.Private.Items.Private"
 	xmlns:nodes="clr-namespace:Dependinator.ModelViewing.Private.Nodes"
 	xmlns:lines="clr-namespace:Dependinator.ModelViewing.Private.Lines"
+	xmlns:private="clr-namespace:Dependinator.ModelViewing.Private.ItemsViewing.Private"
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300">
 

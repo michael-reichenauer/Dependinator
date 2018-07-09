@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Threading;
-using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.ModelViewing.Private.ModelHandling.Private;
 

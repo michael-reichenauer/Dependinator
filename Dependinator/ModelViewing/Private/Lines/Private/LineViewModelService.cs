@@ -2,7 +2,6 @@ using System;
 using System.Windows;
 using System.Windows.Input;
 using Dependinator.ModelViewing.Private.DependencyExploring;
-using Dependinator.ModelViewing.Private.Items;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.ModelViewing.Private.ModelHandling.Private;
 

@@ -1,5 +1,5 @@
 using System.Windows;
-using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.ModelViewing.Private.Nodes;
 
 

@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using Dependinator.ModelViewing.Private.Items;
 using Dependinator.ModelViewing.Private.Lines;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.ModelViewing.Private.Nodes;

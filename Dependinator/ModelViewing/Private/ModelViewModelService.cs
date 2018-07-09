@@ -5,7 +5,7 @@ using System.Windows.Input;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.SettingsHandling;
-using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.ModelViewing.Private.ModelHandling;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.Utils;

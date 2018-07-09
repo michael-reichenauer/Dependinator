@@ -4,7 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
-using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.Utils;
 using Dependinator.Utils.UI;

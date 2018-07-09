@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Dependinator.ModelViewing.Private;
-using Dependinator.ModelViewing.Private.Items;
+using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI.Mvvm;
 

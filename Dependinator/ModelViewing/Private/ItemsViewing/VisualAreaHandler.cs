@@ -3,7 +3,7 @@ using System.Windows;
 using Dependinator.Utils;
 
 
-namespace Dependinator.ModelViewing.Private.Items
+namespace Dependinator.ModelViewing.Private.ItemsViewing
 {
 	/// <summary>
 	/// Handles visual area calculations while compensating for ancestors view areas

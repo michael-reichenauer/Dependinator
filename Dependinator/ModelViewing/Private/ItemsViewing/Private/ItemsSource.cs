@@ -5,7 +5,7 @@ using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependinator.ModelViewing.Private.Items.Private
+namespace Dependinator.ModelViewing.Private.ItemsViewing.Private
 {
 	internal class ItemsSource : VirtualItemsSource
 	{

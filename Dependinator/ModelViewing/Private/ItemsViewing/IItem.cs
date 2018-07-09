@@ -1,7 +1,7 @@
 using System.Windows;
 
 
-namespace Dependinator.ModelViewing.Private.Items
+namespace Dependinator.ModelViewing.Private.ItemsViewing
 {
 	internal interface IItem
 	{

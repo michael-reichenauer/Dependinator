@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using Dependinator.ModelViewing.Private.Items.Private;
+using Dependinator.ModelViewing.Private.ItemsViewing.Private;
 using Dependinator.ModelViewing.Private.Nodes;
 using Dependinator.Utils;
 using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependinator.ModelViewing.Private.Items
+namespace Dependinator.ModelViewing.Private.ItemsViewing
 {
 	internal class ItemsCanvas : Notifyable
 	{
