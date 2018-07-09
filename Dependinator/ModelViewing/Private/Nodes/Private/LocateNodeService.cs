@@ -4,6 +4,7 @@ using System.Windows.Threading;
 using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.ModelViewing.Private.ModelHandling.Private;
+using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Private.Nodes.Private
@@ -163,8 +164,8 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 			ItemsCanvas rootCanvas = rootNode.View.ItemsCanvas;
 			Rect rootArea = rootCanvas.ItemsCanvasBounds;
 			Point rootCenter = new Point(
-				rootArea.Left + rootArea.Width / 2,
-				rootArea.Top + rootArea.Height / 2);
+				rootArea.Left + rootArea.Width / 2.0,
+				rootArea.Top + rootArea.Height / 2.0);
 
 			return rootCanvas.CanvasToScreenPoint(rootCenter);
 		}
@@ -175,7 +176,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 			// Returns the center screen point of the target node
 			Rect targetArea = operation.TargetNode.View.ViewModel.ItemBounds;
 			Point targetCenter = new Point(
-				targetArea.Left + targetArea.Width / 2, targetArea.Top + targetArea.Height / 2);
+				targetArea.Left + targetArea.Width / 2.0, targetArea.Top + targetArea.Height / 2.0);
 			return operation.TargetNode.View.ViewModel.ItemOwnerCanvas.CanvasToScreenPoint2(targetCenter);
 		}
 

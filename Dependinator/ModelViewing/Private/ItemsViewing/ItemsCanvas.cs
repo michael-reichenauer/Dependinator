@@ -159,7 +159,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
 		public void ZoomWindowCenter(double zoom)
 		{
-			Point viewCenter = new Point(ZoomableCanvas.ActualWidth / 2, ZoomableCanvas.ActualHeight / 2);
+			Point viewCenter = new Point(ZoomableCanvas.ActualWidth / 2.0, ZoomableCanvas.ActualHeight / 2.0);
 			ZoomNode(zoom, viewCenter + (Vector)ZoomableCanvas.Offset - new Vector(10,10));
 		}
 
