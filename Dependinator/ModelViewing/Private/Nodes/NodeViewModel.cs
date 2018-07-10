@@ -49,12 +49,12 @@ namespace Dependinator.ModelViewing.Private.Nodes
 		{
 			get
 			{
-				if (Node.View.IsHidden && Node.Parent.View.IsHidden)
+				if (Node.IsHidden && Node.Parent.IsHidden)
 				{
 					return false;
 				}
 
-				return (ItemScale * ItemWidth > 20 && Node.Parent.View.CanShowChildren);
+				return (ItemScale * ItemWidth > 20 && Node.Parent.CanShowChildren);
 			}
 		}
 
@@ -65,13 +65,13 @@ namespace Dependinator.ModelViewing.Private.Nodes
 		public bool IsHorizontal => !IsVertical;
 		public bool IsVertical => (ItemWidth * 1.5 < ItemHeight) && ItemWidth * ItemScale < 80;
 
-		public Brush TitleBrush => Node.View.IsHidden ? dimBrush : titleBrush;
-		public Brush RectangleBrush => Node.View.IsHidden ? dimBrush : rectangleBrush;
+		public Brush TitleBrush => Node.IsHidden ? dimBrush : titleBrush;
+		public Brush RectangleBrush => Node.IsHidden ? dimBrush : rectangleBrush;
 		public Brush TitleBorderBrush => Node.NodeType.IsType() ? RectangleBrush : null;
 		public Brush BackgroundBrush => IsSelected ? selectedBrush : backgroundBrush;
 
 		public bool IsShowCodeButton { get => Get(); set => Set(value); }
-		public bool IsHidden => Node.View.IsHidden;
+		public bool IsHidden => Node.IsHidden;
 		public bool IsShowNode => ItemScale < 70;
 		public bool IsShowItems => CanShowChildren;
 		public bool IsShowDescription => (!CanShowChildren || !Node.Children.Any());
@@ -121,13 +121,13 @@ namespace Dependinator.ModelViewing.Private.Nodes
 				if (value)
 				{
 					view2Model = new NodeControlViewModel(this);
-					Node.Parent.View.ItemsCanvas.AddItem(view2Model);
+					Node.Parent.ItemsCanvas.AddItem(view2Model);
 				}
 				else
 				{
 					if (view2Model != null)
 					{
-						Node.Parent.View.ItemsCanvas.RemoveItem(view2Model);
+						Node.Parent.ItemsCanvas.RemoveItem(view2Model);
 						view2Model = null;
 					}
 				}
@@ -272,17 +272,17 @@ namespace Dependinator.ModelViewing.Private.Nodes
 			$"\n\n" +
 			$"FullName: {Node.Name.FullName}\n" +
 			$"Rect: {ItemBounds.TS()}\n" +
-			$"Scale {ItemScale.TS()}, ChildrenScale: {Node.View.ItemsCanvas?.Scale.TS()}\n" +
-			$"ScaleFactor: {Node.View.ScaleFactor}, {Node.View.ViewModel.ItemsViewModel?.ItemsCanvas?.ScaleFactor}\n" +
+			$"Scale {ItemScale.TS()}, ChildrenScale: {Node.ItemsCanvas?.Scale.TS()}\n" +
+			$"ScaleFactor: {Node.ScaleFactor}, {Node.ViewModel.ItemsViewModel?.ItemsCanvas?.ScaleFactor}\n" +
 			//$"C Point {Node.ItemsCanvas.CanvasPointToScreenPoint(new Point(0, 0)).TS()}\n" +
 			//$"R Point {Node.ItemsCanvas.CanvasPointToScreenPoint2(new Point(0, 0)).TS()}\n" +
 			//$"M Point {Mouse.GetPosition(Node.Root.ItemsCanvas.ZoomableCanvas).TS()}\n" +
-			$"Root Scale {Node.Root.View.ItemsCanvas?.Scale}\n" +
+			$"Root Scale {Node.Root.ItemsCanvas?.Scale}\n" +
 			$"Level {Node.Ancestors().Count()}\n" +
-			$"Items: {Node.View.ItemsCanvas?.ShownChildItemsCount()} ({Node.View.ItemsCanvas?.ChildItemsCount()})\n" +
-			$"ShownDescendantsItems {Node.View.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.View.ItemsCanvas?.DescendantsItemsCount()})\n" +
-			$"ParentItems {Node.Parent.View.ItemsCanvas?.ShownChildItemsCount()} ({Node.Parent.View.ItemsCanvas?.ChildItemsCount()})\n" +
-			$"RootShownDescendantsItems {Node.Root.View.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.Root.View.ItemsCanvas?.DescendantsItemsCount()})\n" +
+			$"Items: {Node.ItemsCanvas?.ShownChildItemsCount()} ({Node.ItemsCanvas?.ChildItemsCount()})\n" +
+			$"ShownDescendantsItems {Node.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.ItemsCanvas?.DescendantsItemsCount()})\n" +
+			$"ParentItems {Node.Parent.ItemsCanvas?.ShownChildItemsCount()} ({Node.Parent.ItemsCanvas?.ChildItemsCount()})\n" +
+			$"RootShownDescendantsItems {Node.Root.ItemsCanvas?.ShownDescendantsItemsCount()} ({Node.Root.ItemsCanvas?.DescendantsItemsCount()})\n" +
 			$"Nodes: {NodesCount}, Namespaces: {NamespacesCount}, Types: {TypesCount}, Members: {MembersCount}\n" +
 			$"Links: {LinksCount}, Lines: {LinesCount}";
 

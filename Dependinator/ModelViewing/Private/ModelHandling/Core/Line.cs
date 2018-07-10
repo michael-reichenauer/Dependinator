@@ -31,6 +31,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Core
 
 		public override string ToString() => $"{Source}->{Target}";
 
-		public bool IsHidden => Source.View.IsHidden || Target.View.IsHidden;
+		public bool IsHidden => Source.IsHidden || Target.IsHidden;
 	}
 }

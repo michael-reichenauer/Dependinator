@@ -62,13 +62,13 @@ namespace Dependinator.ModelViewing.Private.Lines.Private
 
 		public void OnMouseWheel(LineViewModel lineViewModel, UIElement uiElement, MouseWheelEventArgs e)
 		{
-			if (lineViewModel.Line.Owner.View.ViewModel != null)
+			if (lineViewModel.Line.Owner.ViewModel != null)
 			{
-				lineViewModel.Line.Owner.View.ViewModel.OnMouseWheel(uiElement, e);
+				lineViewModel.Line.Owner.ViewModel.OnMouseWheel(uiElement, e);
 			}
 			else
 			{
-				lineViewModel.Line.Owner.Root.View.ItemsCanvas.ZoomNode(e);
+				lineViewModel.Line.Owner.Root.ItemsCanvas.ZoomNode(e);
 			}
 		}
 

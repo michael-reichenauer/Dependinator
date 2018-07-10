@@ -39,7 +39,7 @@ namespace Dependinator.ModelViewing.Private.Lines
 
 		public override bool CanShow =>
 			ItemScale < 10
-			&& Line.Source.View.CanShow && Line.Target.View.CanShow
+			&& Line.Source.CanShow && Line.Target.CanShow
 			&& !Line.IsHidden;
 
 		public double LineWidth => lineViewModelService.GetLineWidth(Line);
@@ -47,8 +47,8 @@ namespace Dependinator.ModelViewing.Private.Lines
 		public double ArrowWidth => lineViewModelService.GetArrowWidth(Line);
 
 		public Brush LineBrush => Line.Source != Line.Target.Parent
-			? Line.Source.View.ViewModel.RectangleBrush
-			: Line.Target.View.ViewModel.RectangleBrush;
+			? Line.Source.ViewModel.RectangleBrush
+			: Line.Target.ViewModel.RectangleBrush;
 
 		public bool IsMouseOver { get => Get(); private set => Set(value); }
 
@@ -133,9 +133,9 @@ namespace Dependinator.ModelViewing.Private.Lines
 		private void TrackSourceOrTargetChanges()
 		{
 			// Source and targets are siblings. update line when either node is moved
-			WhenSet(Line.Source.View.ViewModel, nameof(Line.Source.View.ViewModel.ItemBounds))
+			WhenSet(Line.Source.ViewModel, nameof(Line.Source.ViewModel.ItemBounds))
 				.Notify(SourceOrTargetChanged);
-			WhenSet(Line.Target.View.ViewModel, nameof(Line.Target.View.ViewModel.ItemBounds))
+			WhenSet(Line.Target.ViewModel, nameof(Line.Target.ViewModel.ItemBounds))
 				.Notify(SourceOrTargetChanged);
 		}
 

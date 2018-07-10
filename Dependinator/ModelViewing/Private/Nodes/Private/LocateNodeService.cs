@@ -32,7 +32,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 			{
 				Operation operation = new Operation(
 					node,
-					node.Root.View.ItemsCanvas,
+					node.Root.ItemsCanvas,
 					GetRootScreenCenter(node.Root));
 
 				// Starting a move in several small steps on the UI threads
@@ -49,7 +49,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 
 		private static void DoZoomAndMoveSteps(Operation operation)
 		{
-			double targetScale = operation.TargetNode.View.ViewModel.ItemScale;
+			double targetScale = operation.TargetNode.ViewModel.ItemScale;
 			Vector targetVector = GetTargetVector(operation);
 
 			if (IsZoomingOut(operation, targetScale, targetVector, out double zoom))
@@ -82,7 +82,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 				return false;
 			}
 
-			double rootScale = operation.TargetNode.Root.View.ItemsCanvas.Scale;
+			double rootScale = operation.TargetNode.Root.ItemsCanvas.Scale;
 
 			// Zooming out until we reach root level or zoomed enough the to see the
 			// target node at target level and withing close distance
@@ -160,7 +160,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 		private static Point GetRootScreenCenter(Node rootNode)
 		{
 			// Returns the center of the root screen
-			ItemsCanvas rootCanvas = rootNode.View.ItemsCanvas;
+			ItemsCanvas rootCanvas = rootNode.ItemsCanvas;
 			Rect rootArea = rootCanvas.ItemsCanvasBounds;
 			Point rootCenter = new Point(
 				rootArea.Left + rootArea.Width / 2.0,
@@ -173,10 +173,10 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 		private static Point GetCurrentTargetScreenPoint(Operation operation)
 		{
 			// Returns the center screen point of the target node
-			Rect targetArea = operation.TargetNode.View.ViewModel.ItemBounds;
+			Rect targetArea = operation.TargetNode.ViewModel.ItemBounds;
 			Point targetCenter = new Point(
 				targetArea.Left + targetArea.Width / 2.0, targetArea.Top + targetArea.Height / 2.0);
-			return operation.TargetNode.View.ViewModel.ItemOwnerCanvas.CanvasToScreenPoint2(targetCenter);
+			return operation.TargetNode.ViewModel.ItemOwnerCanvas.CanvasToScreenPoint2(targetCenter);
 		}
 
 

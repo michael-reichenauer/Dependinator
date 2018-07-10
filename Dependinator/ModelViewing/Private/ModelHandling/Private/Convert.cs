@@ -37,10 +37,10 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 				node.NodeType)
 			{
 				Description = node.Description,
-				Bounds = node.View.ViewModel?.ItemBounds ?? node.View.Bounds,
-				Scale = node.View.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.View.ScaleFactor,
-				Color = node.View.ViewModel?.Color ?? node.View.Color,
-				ShowState = node.View.IsHidden ? Node.Hidden : null
+				Bounds = node.ViewModel?.ItemBounds ?? node.Bounds,
+				Scale = node.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.ScaleFactor,
+				Color = node.ViewModel?.Color ?? node.Color,
+				ShowState = node.IsHidden ? Node.Hidden : null
 			};
 
 

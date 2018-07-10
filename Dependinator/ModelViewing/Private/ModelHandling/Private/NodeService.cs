@@ -41,7 +41,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 		public void QueueNode(DataNode dataNode) => modelService.QueueNode(dataNode);
 		public void RemoveAll()
 		{
-			Root?.View.ItemsCanvas?.RemoveAll();
+			Root?.ItemsCanvas?.RemoveAll();
 
 			modelService.RemoveAll();
 		}
@@ -76,9 +76,9 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 			modelService.Remove(node);
 			node.Parent?.RemoveChild(node);
 
-			if (node.View.ItemsCanvas != null)
+			if (node.ItemsCanvas != null)
 			{
-				node.Parent?.View.ItemsCanvas.RemoveChildCanvas(node.View.ItemsCanvas);
+				node.Parent?.ItemsCanvas.RemoveChildCanvas(node.ItemsCanvas);
 
 			}
 
@@ -137,11 +137,11 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 		{
 			try
 			{
-				layoutService.SetLayout(node.View.ViewModel);
+				layoutService.SetLayout(node.ViewModel);
 
-				ItemsCanvas parentCanvas = parentNode.View.ItemsCanvas;
+				ItemsCanvas parentCanvas = parentNode.ItemsCanvas;
 
-				parentCanvas.AddItem(node.View.ViewModel);
+				parentCanvas.AddItem(node.ViewModel);
 			}
 			catch (Exception e)
 			{
@@ -155,17 +155,17 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 		{
 			if (node.NodeType.IsMember())
 			{
-				node.View.ViewModel = new MemberNodeViewModel(nodeViewModelService.Value, node);
+				node.ViewModel = new MemberNodeViewModel(nodeViewModelService.Value, node);
 			}
 			else if (node.NodeType.IsType())
 			{
-				node.View.ViewModel = new TypeViewModel(nodeViewModelService.Value, node);
-				node.View.ItemsCanvas = GetItemsCanvas(node);
+				node.ViewModel = new TypeViewModel(nodeViewModelService.Value, node);
+				node.ItemsCanvas = GetItemsCanvas(node);
 			}
 			else
 			{
-				node.View.ViewModel = new NamespaceViewModel(nodeViewModelService.Value, node);
-				node.View.ItemsCanvas = GetItemsCanvas(node);
+				node.ViewModel = new NamespaceViewModel(nodeViewModelService.Value, node);
+				node.ItemsCanvas = GetItemsCanvas(node);
 			}
 		}
 
@@ -173,9 +173,9 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 		private ItemsCanvas GetItemsCanvas(Node node)
 		{
 			// First try get existing items canvas
-			if (node.View.ItemsCanvas != null)
+			if (node.ItemsCanvas != null)
 			{
-				return node.View.ItemsCanvas;
+				return node.ItemsCanvas;
 			}
 
 			// The node does not yet have a canvas. So we need to get the parent canvas and
@@ -183,13 +183,13 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 			ItemsCanvas parentCanvas = GetItemsCanvas(node.Parent);
 
 			// Creating the child canvas to be the children canvas of the node
-			node.View.ItemsCanvas = new ItemsCanvas(node.View.ViewModel, parentCanvas);
-			node.View.ViewModel.ItemsViewModel = new ItemsViewModel(
-				node.View.ItemsCanvas, node.View.ViewModel);
+			node.ItemsCanvas = new ItemsCanvas(node.ViewModel, parentCanvas);
+			node.ViewModel.ItemsViewModel = new ItemsViewModel(
+				node.ItemsCanvas, node.ViewModel);
 
-			if (Math.Abs(node.View.ScaleFactor) > 0.0000001)
+			if (Math.Abs(node.ScaleFactor) > 0.0000001)
 			{
-				node.View.ItemsCanvas.ScaleFactor = node.View.ScaleFactor;
+				node.ItemsCanvas.ScaleFactor = node.ScaleFactor;
 			}
 
 			//if (node.Offset != PointEx.Zero)
@@ -197,14 +197,14 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 			//	node.ItemsCanvas.SetMoveOffset(node.Offset);
 			//}
 
-			return node.View.ItemsCanvas;
+			return node.ItemsCanvas;
 		}
 
 
 
 		private static void RemoveNodeFromParentCanvas(Node node)
 		{
-			node.Parent?.View.ItemsCanvas?.RemoveItem(node.View.ViewModel);
+			node.Parent?.ItemsCanvas?.RemoveItem(node.ViewModel);
 		}
 	}
 }

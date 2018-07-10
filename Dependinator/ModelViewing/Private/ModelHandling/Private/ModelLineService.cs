@@ -80,7 +80,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
 		private void ShowLinkIfNeeded(Link link)
 		{
-			if (!link.Source.View.IsHidden && !link.Target.View.IsHidden)
+			if (!link.Source.IsHidden && !link.Target.IsHidden)
 			{
 				AddLinkToLines(link);
 			}
@@ -88,7 +88,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
 		private void AddLinkToLines(Link link)
 		{
-			if (!link.Source.View.IsHidden && !link.Target.View.IsHidden)
+			if (!link.Source.IsHidden && !link.Target.IsHidden)
 			{
 				AddLinkLines(link);
 			}
@@ -121,7 +121,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 		{
 			LineViewModel lineViewModel = new LineViewModel(lineViewModelService, line);
 
-			line.Owner.View.ItemsCanvas.AddItem(lineViewModel);
+			line.Owner.ItemsCanvas.AddItem(lineViewModel);
 		}
 
 
@@ -153,7 +153,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 			line.LinkCount = linkCount;
 
 
-			if (line.Owner.View.IsShowing || line.Source.View.IsShowing || line.Target.View.IsShowing)
+			if (line.Owner.IsShowing || line.Source.IsShowing || line.Target.IsShowing)
 			{
 				AddLineViewModel(line);
 			}
@@ -166,7 +166,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 		{
 			if (line.View.ViewModel != null)
 			{
-				line.Owner.View.ItemsCanvas.RemoveItem(line.View.ViewModel);
+				line.Owner.ItemsCanvas.RemoveItem(line.View.ViewModel);
 			}
 		}
 

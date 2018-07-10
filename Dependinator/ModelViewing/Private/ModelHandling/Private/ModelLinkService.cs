@@ -91,7 +91,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
 		private void AddLinkToLines(Link link)
 		{
-			if (!link.Source.View.IsHidden && !link.Target.View.IsHidden)
+			if (!link.Source.IsHidden && !link.Target.IsHidden)
 			{
 				modelLineService.AddLinkLines(link);
 			}

@@ -39,8 +39,8 @@ namespace Dependinator.ModelViewing.Private.Lines.Private
 		public void MoveLinePoint(Line line, int pointIndex, Point newPoint, double scale)
 		{
 			// NOTE: These lines are currently disabled !!!
-			NodeViewModel source = line.Source.View.ViewModel;
-			NodeViewModel target = line.Target.View.ViewModel;
+			NodeViewModel source = line.Source.ViewModel;
+			NodeViewModel target = line.Target.ViewModel;
 
 			if (pointIndex == line.View.FirstIndex)
 			{

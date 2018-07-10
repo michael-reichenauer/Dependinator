@@ -75,7 +75,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
 		public Node Root => modelService.Root;
 
-		public void SetRootCanvas(ItemsCanvas rootCanvas) => Root.View.ItemsCanvas = rootCanvas;
+		public void SetRootCanvas(ItemsCanvas rootCanvas) => Root.ItemsCanvas = rootCanvas;
 
 
 		public Task ManualRefreshAsync(bool refreshLayout = false) => RefreshAsync(refreshLayout);
@@ -89,7 +89,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 				Log.Debug($"Metadata model: {modelMetadata.ModelFilePath} {DateTime.Now}");
 				string dataFilePath = GetDataFilePath();
 
-				Root.View.ItemsCanvas.IsZoomAndMoveEnabled = true;
+				Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
 
 				if (File.Exists(dataFilePath))
 				{
@@ -142,16 +142,16 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
 					isShowingOpenModel = true;
 					modelMetadata.SetDefault();
-					Root.View.ItemsCanvas.SetRootScale(1);
-					Root.View.ItemsCanvas.IsZoomAndMoveEnabled = false;
-					Root.View.ItemsCanvas.UpdateAndNotifyAll(true);
+					Root.ItemsCanvas.SetRootScale(1);
+					Root.ItemsCanvas.IsZoomAndMoveEnabled = false;
+					Root.ItemsCanvas.UpdateAndNotifyAll(true);
 
-					Root.View.ItemsCanvas.AddItem(openModelViewModelProvider());
+					Root.ItemsCanvas.AddItem(openModelViewModelProvider());
 				}
 				else
 				{
 					isShowingOpenModel = false;
-					Root.View.ItemsCanvas.IsZoomAndMoveEnabled = true;
+					Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
 					UpdateLines(Root);
 					recentModelsService.AddModelPaths(modelMetadata.ModelFilePath);
 					modelService.SetLayoutDone();
@@ -183,7 +183,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 						File.Delete(dataFilePath);
 					}
 
-					Root.View.ItemsCanvas.SetRootScale(2);
+					Root.ItemsCanvas.SetRootScale(2);
 
 					modelService.RemoveAll();
 					await LoadAsync();
@@ -262,7 +262,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 				.ForEach(line => line.View.ViewModel.NotifyAll());
 
 			node.Children
-				.Where(child => child.View.IsShowing)
+				.Where(child => child.IsShowing)
 				.ForEach(UpdateLines);
 		}
 
@@ -310,7 +310,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
 			await Task.WhenAll(showTask, parseTask, completeTask);
 
-			Root.View.ItemsCanvas.UpdateAll();
+			Root.ItemsCanvas.UpdateAll();
 
 			if (parseTask.Result.IsFaulted)
 			{

@@ -52,7 +52,7 @@ namespace Dependinator.ModelViewing.Private
 			}
 
 			if (selectedItem is LineViewModel selectedLine &&
-			    selectedLine.Line.Owner.AncestorsAndSelf().Any(ancestor => clickedNode == ancestor.View.ViewModel))
+			    selectedLine.Line.Owner.AncestorsAndSelf().Any(ancestor => clickedNode == ancestor.ViewModel))
 			{
 				// Ancestor or root was clicked, just deselect line
 				Deselect();
@@ -60,7 +60,7 @@ namespace Dependinator.ModelViewing.Private
 			}
 
 			if (selectedItem is NodeViewModel selectedNode &&
-			    selectedNode.Node.Ancestors().Any(ancestor => clickedNode == ancestor.View.ViewModel))
+			    selectedNode.Node.Ancestors().Any(ancestor => clickedNode == ancestor.ViewModel))
 			{
 				// Ancestor or root was clicked, just deselect node
 				Deselect();

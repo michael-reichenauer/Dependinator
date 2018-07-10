@@ -43,7 +43,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 
 		public void HideNode(Node node)
 		{
-			if (node.View.IsHidden)
+			if (node.IsHidden)
 			{
 				return;
 			}
@@ -53,7 +53,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 
 		public void ShowNode(Node node)
 		{
-			if (!node.View.IsHidden)
+			if (!node.IsHidden)
 			{
 				return;
 			}
@@ -72,8 +72,8 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 
 		public Brush GetNodeBrush(Node node)
 		{
-			return node.View.Color != null
-				? Converter.BrushFromHex(node.View.Color)
+			return node.Color != null
+				? Converter.BrushFromHex(node.Color)
 				: GetRandomRectangleBrush(node.Name.DisplayShortName);
 		}
 
@@ -99,7 +99,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 			UIElement uiElement,
 			MouseWheelEventArgs e)
 		{
-			ItemsCanvas itemsCanvas = nodeViewModel.ItemsViewModel?.ItemsCanvas ?? nodeViewModel.Node.Root.View.ItemsCanvas;
+			ItemsCanvas itemsCanvas = nodeViewModel.ItemsViewModel?.ItemsCanvas ?? nodeViewModel.Node.Root.ItemsCanvas;
 
 			if (nodeViewModel.IsInnerSelected)
 			{

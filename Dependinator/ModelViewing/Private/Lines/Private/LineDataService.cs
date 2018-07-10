@@ -15,8 +15,8 @@ namespace Dependinator.ModelViewing.Private.Lines.Private
 
 		public void UpdateLineEndPoints(Line line)
 		{
-			Rect source = line.Source.View.ViewModel.ItemBounds;
-			Rect target = line.Target.View.ViewModel.ItemBounds;
+			Rect source = line.Source.ViewModel.ItemBounds;
+			Rect target = line.Target.ViewModel.ItemBounds;
 
 			Point relativeSource = GetRelativeSource(line);
 			Point relativeTarget = GetRelativeTarget(line);
@@ -237,7 +237,7 @@ namespace Dependinator.ModelViewing.Private.Lines.Private
 
 		private static Point ParentPointToChildPoint(Node parent, Point point)
 		{
-			return parent.View.ItemsCanvas.ParentToChildCanvasPoint(point);
+			return parent.ItemsCanvas.ParentToChildCanvasPoint(point);
 		}
 	}
 }

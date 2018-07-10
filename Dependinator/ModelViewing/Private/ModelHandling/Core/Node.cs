@@ -1,5 +1,8 @@
 using System.Collections.Generic;
+using System.Windows;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
+using Dependinator.ModelViewing.Private.ItemsViewing;
+using Dependinator.ModelViewing.Private.Nodes;
 using Dependinator.Utils;
 
 
@@ -39,8 +42,21 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Core
 
 		public bool IsRoot => Name == NodeName.Root;
 
-		public NodeViewData View { get; private set; }
 		public bool HasCode => NodeType.IsType() || NodeType.IsMember();
+
+		public ItemsCanvas ItemsCanvas { get; set; }
+		public NodeViewModel ViewModel { get; set; }
+
+		public Rect Bounds { get; set; }
+		public double ScaleFactor { get; set; }
+		public string Color { get; set; }
+		public bool IsHidden { get; set; }
+
+
+		public bool IsLayoutCompleted { get; set; }
+		public bool CanShowChildren => IsRoot || (ViewModel?.CanShowChildren ?? false);
+		public bool CanShow => ViewModel?.CanShow ?? false;
+		public bool IsShowing => ViewModel?.IsShowing ?? false;
 
 
 		public void AddChild(Node child)
@@ -64,8 +80,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Core
 				Root = this;
 				Parent = this;
 			}
-
-			View = new NodeViewData(this);
 		}
 	}
 }

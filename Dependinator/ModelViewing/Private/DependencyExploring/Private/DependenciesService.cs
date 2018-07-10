@@ -71,7 +71,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 
 		private static bool IsIncluded(IEdge link, Options options)
 		{
-			if (link.Source.View.IsHidden || link.Target.View.IsHidden)
+			if (link.Source.IsHidden || link.Target.IsHidden)
 			{
 				// Always exclude hidden nodes links
 				return false;

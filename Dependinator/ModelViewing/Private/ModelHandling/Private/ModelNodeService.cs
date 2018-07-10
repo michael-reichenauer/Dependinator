@@ -80,34 +80,34 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
 		public void SetLayoutDone()
 		{
-			nodeService.AllNodes.ForEach(node => node.View.IsLayoutCompleted = true);
+			nodeService.AllNodes.ForEach(node => node.IsLayoutCompleted = true);
 		}
 
 
 		public IReadOnlyList<NodeName> GetHiddenNodeNames()
 			=> nodeService.AllNodes
-				.Where(node => node.View.IsHidden && !node.Parent.View.IsHidden)
+				.Where(node => node.IsHidden && !node.Parent.IsHidden)
 				.Select(node => node.Name)
 				.ToList();
 
 
 		public void HideNode(Node node)
 		{
-			if (node.View.IsHidden)
+			if (node.IsHidden)
 			{
 				return;
 			}
 
 			node.DescendentsAndSelf().ForEach(n =>
 			{
-				n.View.IsHidden = true;
-				n.View.ViewModel.IsFirstShow = true;
+				n.IsHidden = true;
+				n.ViewModel.IsFirstShow = true;
 			});
 
 			modelLineService.UpdateLines(node);
 
-			node.Parent.View.ItemsCanvas.UpdateAndNotifyAll(true);
-			node.Root.View.ItemsCanvas.UpdateAll();
+			node.Parent.ItemsCanvas.UpdateAndNotifyAll(true);
+			node.Root.ItemsCanvas.UpdateAll();
 		}
 
 
@@ -119,17 +119,17 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 		{
 			if (nodeService.TryGetNode(nodeName, out Node node))
 			{
-				if (!node.View.IsHidden)
+				if (!node.IsHidden)
 				{
 					return;
 				}
 
-				node.DescendentsAndSelf().ForEach(n => n.View.IsHidden = false);
+				node.DescendentsAndSelf().ForEach(n => n.IsHidden = false);
 
 				modelLineService.UpdateLines(node);
 
-				node.Parent.View.ItemsCanvas?.UpdateAndNotifyAll(true);
-				node.Root.View.ItemsCanvas.UpdateAll();
+				node.Parent.ItemsCanvas?.UpdateAndNotifyAll(true);
+				node.Root.ItemsCanvas.UpdateAll();
 			}
 		}
 
@@ -155,10 +155,10 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 				Description = dataNode.Description,
 			};
 
-			node.View.Bounds = dataNode.Bounds;
-			node.View.ScaleFactor = dataNode.Scale;
-			node.View.Color = dataNode.Color;
-			node.View.IsHidden = dataNode.ShowState == Node.Hidden;
+			node.Bounds = dataNode.Bounds;
+			node.ScaleFactor = dataNode.Scale;
+			node.Color = dataNode.Color;
+			node.IsHidden = dataNode.ShowState == Node.Hidden;
 
 			Node parentNode = GetParentNode(nodeName, dataNode);
 

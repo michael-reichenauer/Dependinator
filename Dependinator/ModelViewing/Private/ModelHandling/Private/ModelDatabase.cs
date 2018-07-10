@@ -58,11 +58,11 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
 		public void RemoveAll()
 		{
-			ItemsCanvas rootCanvas = Root.View.ItemsCanvas;
+			ItemsCanvas rootCanvas = Root.ItemsCanvas;
 			nodes.Clear();
 
 			AddRoot();
-			Root.View.ItemsCanvas = rootCanvas;
+			Root.ItemsCanvas = rootCanvas;
 		}
 
 
