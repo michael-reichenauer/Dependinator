@@ -4,7 +4,6 @@ using System.Windows.Threading;
 using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.ModelViewing.Private.ModelHandling.Private;
-using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Private.Nodes.Private

@@ -6,13 +6,60 @@ using System.Windows.Input;
 using Dependinator.ModelViewing.Private.ItemsViewing.Private;
 using Dependinator.ModelViewing.Private.Nodes;
 using Dependinator.Utils;
-using Dependinator.Utils.UI.Mvvm;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
 namespace Dependinator.ModelViewing.Private.ItemsViewing
 {
-	internal class ItemsCanvas : Notifyable
+	internal interface IItemsCanvas
+	{
+		bool IsFocused { get; set; }
+		ZoomableCanvas ZoomableCanvas { get; }
+		ItemsCanvas ParentCanvas { get; }
+		Rect ItemsCanvasBounds { get; }
+		bool IsZoomAndMoveEnabled { get; set; }
+		ItemsCanvas RootCanvas { get; }
+		bool IsRoot { get; }
+		double ScaleFactor { get; set; }
+		double Scale { get; }
+		Point RootOffset { get; }
+		void SetRootOffset(Point offset);
+		void SetRootScale(double scale);
+		void AddItem(IItem item);
+		void RemoveItem(IItem item);
+		void RemoveAll();
+		void UpdateItem(IItem item);
+		void SizeChanged();
+		void RemoveChildCanvas(ItemsCanvas childCanvas);
+		void CanvasRealized();
+		void CanvasVirtualized();
+		void UpdateAll();
+		void ZoomNode(MouseWheelEventArgs e);
+		void ZoomWindowCenter(double zoom);
+		void ZoomNode(double zoom, Point? zoomCenter);
+		void UpdateAndNotifyAll(bool isUpdate);
+		bool IsNodeInViewBox(Rect bounds);
+		void MoveAllItems(Point sp1, Point sp2);
+		void MoveAllItems(Vector viewOffset);
+		void UpdateScale();
+		Point MouseToCanvasPoint();
+		Point MouseEventToCanvasPoint(MouseEventArgs e);
+		Point CanvasToScreenPoint(Point canvasPoint);
+		Point ScreenToCanvasPoint(Point screenPoint);
+		Point ParentToChildCanvasPoint(Point parentCanvasPoint);
+		Point ChildToParentCanvasPoint(Point childCanvasPoint);
+		Point CanvasToScreenPoint2(Point childCanvasPoint);
+		void SetZoomableCanvas(ZoomableCanvas canvas);
+		string ToString();
+		int ChildItemsCount();
+		int ShownChildItemsCount();
+		int DescendantsItemsCount();
+		int ShownDescendantsItemsCount();
+	}
+
+
+	internal class ItemsCanvas //: Notifyable
+		: IItemsCanvas
 	{
 		public static readonly double DefaultScaleFactor = 1.0 / 7.0;
 		private static readonly Vector ChildOffset = new Vector(3, 3);
@@ -160,7 +207,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 		public void ZoomWindowCenter(double zoom)
 		{
 			Point viewCenter = new Point(ZoomableCanvas.ActualWidth / 2.0, ZoomableCanvas.ActualHeight / 2.0);
-			ZoomNode(zoom, viewCenter + (Vector)ZoomableCanvas.Offset - new Vector(10,10));
+			ZoomNode(zoom, viewCenter + (Vector)ZoomableCanvas.Offset - new Vector(10, 10));
 		}
 
 
@@ -482,22 +529,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 			UpdateShownItemsInChildren();
 		}
 
-		//private void MoveCanvasItems(Vector moveOffset)
-		//{
-		//	Rect viewBox = GetViewBox();
 
-		//	if (!IsAnyNodesWithinView(viewBox, moveOffset))
-		//	{
-		//		// No node (if moved) would be withing visible view
-		//		return;
-		//	}
-
-		//	itemsSource.GetAllItems().ForEach(item => item.MoveItem(moveOffset));
-
-		//	UpdateAndNotifyAll();
-		//	TriggerInvalidated();
-		//	UpdateShownItemsInChildren();
-		//}
 
 		private Rect GetViewBox()
 		{

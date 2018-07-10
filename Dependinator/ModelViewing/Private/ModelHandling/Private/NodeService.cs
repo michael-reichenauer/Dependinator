@@ -168,6 +168,8 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 				node.View.ItemsCanvas = GetItemsCanvas(node);
 			}
 		}
+
+
 		private ItemsCanvas GetItemsCanvas(Node node)
 		{
 			// First try get existing items canvas
