@@ -5,7 +5,13 @@ using Dependinator.Utils.Net;
 
 namespace Dependinator.Common.ModelMetadataFolders.Private
 {
-	internal class ExistingInstanceIpcService : IpcService
+	internal interface IExistingInstanceIpcService
+	{
+		void Activate(string[] args);
+	}
+
+
+	internal class ExistingInstanceIpcService : IpcService, IExistingInstanceIpcService
 	{
 		public void Activate(string[] args)
 		{

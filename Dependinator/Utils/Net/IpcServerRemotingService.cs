@@ -10,12 +10,11 @@ using System.Threading;
 
 namespace Dependinator.Utils.Net
 {
-	internal class IpcRemotingService : IDisposable
+	internal class IpcServerRemotingService : IDisposable
 	{
 		private string uniqueId;
 		private Mutex channelMutex;
 		private IpcServerChannel ipcServerChannel;
-		private IpcClientChannel ipcClientChannel;
 
 
 		public bool TryCreateServer(string serverId)
@@ -41,7 +40,7 @@ namespace Dependinator.Utils.Net
 			string mutexName = GetId(serverId);
 
 			Log.Debug($"Try {mutexName}");
-			
+
 			using (new Mutex(true, mutexName, out var isMutexCreated))
 			{
 				if (isMutexCreated)
@@ -56,38 +55,15 @@ namespace Dependinator.Utils.Net
 		}
 
 
-		public void PublishService(IpcService ipcService)
+		public void PublishService<T>(IpcService ipcService)
 		{
 			Asserter.Requires(ipcServerChannel != null);
 
 			// Publish the ipc service receiving the data
-			string ipcServiceName = uniqueId + ipcService.GetType().FullName;
+			string ipcServiceName = uniqueId + typeof(T).FullName;
 			RemotingServices.Marshal(ipcService, ipcServiceName);
 		}
 
-
-		public TRemoteService GetService<TRemoteService>(string serverId)
-		{
-			return CreateClientProxy<TRemoteService>(serverId);
-		}
-
-
-		public void CallService<TRemoteService>(
-			string serverId, Action<TRemoteService> serviceAction)
-		{
-			TRemoteService ipcProxy = CreateClientProxy<TRemoteService>(serverId);
-
-			serviceAction(ipcProxy);
-		}
-
-
-		public TResult CallService<TRemoteService, TResult>(
-			string serverId, Func<TRemoteService, TResult> serviceFunction)
-		{
-			TRemoteService ipcProxy = CreateClientProxy<TRemoteService>(serverId);
-
-			return serviceFunction(ipcProxy);
-		}
 
 
 		public void Dispose()
@@ -127,32 +103,7 @@ namespace Dependinator.Utils.Net
 			ChannelServices.RegisterChannel(ipcServerChannel, true);
 		}
 
-
-		private T CreateClientProxy<T>(string id)
-		{
-			string channelName = GetChannelName(id);
-
-			if (ipcClientChannel == null)
-			{
-				ipcClientChannel = new IpcClientChannel();
-
-				ChannelServices.RegisterChannel(ipcClientChannel, true);
-			}
-
-			string ipcServiceName = id + typeof(T).FullName;
-			string ipcUrl = $"ipc://{channelName}/{ipcServiceName}";
-
-			// Get proxy instance of rpc service instance published by server in PublishService()
-			T ipcProxy = (T)RemotingServices.Connect(typeof(T), ipcUrl);
-
-			if (ipcProxy == null)
-			{
-				Log.Error($"Failed to makeIPC call {channelName}");
-			}
-		
-			return ipcProxy;
-		}
-
+	
 
 		private static string GetChannelName(string uniqueName) => $"{GetId(uniqueName)}:rpc";
 

@@ -16,7 +16,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 	{
 		private readonly IModelMetadataService modelMetadataService;
 		private readonly ExistingInstanceIpcService existingInstanceIpcService;
-		private IpcRemotingService instanceIpcRemotingService;
+		private IpcServerRemotingService instanceIpcServerRemotingService;
 
 
 		public ExistingInstanceService(
@@ -32,19 +32,19 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		{
 			try
 			{
-				instanceIpcRemotingService?.Dispose();
+				instanceIpcServerRemotingService?.Dispose();
 
-				instanceIpcRemotingService = new IpcRemotingService();
+				instanceIpcServerRemotingService = new IpcServerRemotingService();
 
 				string id = GetMetadataFolderId(metaDataFolderPath);
 
-				if (!instanceIpcRemotingService.TryCreateServer(id))
+				if (!instanceIpcServerRemotingService.TryCreateServer(id))
 				{
 					throw new ApplicationException($"Failed to register rpc instance {metaDataFolderPath}");
 				}
 
 				Log.Debug($"$Register {id}");
-				instanceIpcRemotingService.PublishService(existingInstanceIpcService);
+				instanceIpcServerRemotingService.PublishService<ExistingInstanceIpcService>(existingInstanceIpcService);
 			}
 			catch (Exception e)
 			{
@@ -60,12 +60,12 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 			{
 				// Trying to contact another instance, which has a registered IpcRemotingService 
 				string id = GetMetadataFolderId(metaDataFolderPath);
-				using (IpcRemotingService ipcRemotingService = new IpcRemotingService())
+				using (IpcClientRemotingService ipcRemotingService = new IpcClientRemotingService())
 				{
 					if (ipcRemotingService.IsServerRegistered(id))
 					{
 						// Another instance for that working folder is already running, activate that.
-						ExistingInstanceIpcService service = ipcRemotingService
+						IExistingInstanceIpcService service = ipcRemotingService
 							.GetService<ExistingInstanceIpcService>(id);
 						service.Activate(args);
 
@@ -90,7 +90,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 				try
 				{
 					string id = GetMetadataFolderId(modelMetadataService.MetadataFolderPath);
-					using (IpcRemotingService ipcRemotingService = new IpcRemotingService())
+					using (IpcServerRemotingService ipcRemotingService = new IpcServerRemotingService())
 					{
 						if (ipcRemotingService.TryCreateServer(id))
 						{
