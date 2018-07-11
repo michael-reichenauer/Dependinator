@@ -1,103 +1,48 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
-using Dependinator.Common.ModelMetadataFolders.Private;
-using Dependinator.Common.SettingsHandling;
-using Dependinator.ModelViewing.DataHandling.Dtos;
-using Dependinator.ModelViewing.Items;
-using Dependinator.ModelViewing.ModelHandling;
-using Dependinator.ModelViewing.ModelHandling.Core;
-using Dependinator.ModelViewing.Nodes;
-using Dependinator.Utils;
-using Dependinator.Utils.Dependencies;
-using Dependinator.Utils.Threading;
+using Dependinator.Common.ThemeHandling;
+using Dependinator.ModelViewing.Private.Nodes;
+using Dependinator.ModelViewing.Private.Searching;
 
 
 namespace Dependinator.ModelViewing.Private
 {
-	[SingleInstance]
-	internal class ModelViewService : IModelViewService, ILoadModelService
+	internal class ModelViewService : IModelViewService
 	{
-		private readonly ISettingsService settingsService;
-		private readonly IModelHandlingService modelHandlingService;
-		private readonly IItemSelectionService itemSelectionService;
+		private readonly ILocateNodeService locateNodeService;
+		private readonly IModelViewModelService modelViewModelService;
+		private readonly ISearchService searchService;
+		private readonly IThemeService themeService;
 
-
-		private ItemsCanvas rootNodeCanvas;
 
 		public ModelViewService(
-			ISettingsService settingsService,
-			IModelHandlingService modelHandlingService,
-			IItemSelectionService itemSelectionService)
+			ILocateNodeService locateNodeService,
+			IModelViewModelService modelViewModelService,
+			ISearchService searchService,
+			IThemeService themeService)
 		{
-			this.settingsService = settingsService;
-			this.modelHandlingService = modelHandlingService;
-			this.itemSelectionService = itemSelectionService;
+			this.locateNodeService = locateNodeService;
+			this.modelViewModelService = modelViewModelService;
+			this.searchService = searchService;
+			this.themeService = themeService;
 		}
 
 
-		public void SetRootCanvas(ItemsCanvas rootCanvas)
+		public void StartMoveToNode(NodeName nodeName) => locateNodeService.StartMoveToNode(nodeName);
+		public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelViewModelService.GetHiddenNodeNames();
+		public void ShowHiddenNode(NodeName nodeName) => modelViewModelService.ShowHiddenNode(nodeName);
+		public IEnumerable<NodeName> Search(string text) => searchService.Search(text);
+
+
+		public async Task ActivateRefreshAsync()
 		{
-			this.rootNodeCanvas = rootCanvas;
-			modelHandlingService.SetRootCanvas(rootCanvas);
+			themeService.SetThemeWpfColors();
+
+			await Task.Yield();
 		}
 
 
-		public async Task LoadAsync()
-		{
-			Timing t = new Timing();
-
-			Log.Debug("Loading repository ...");
-
-			RestoreViewSettings();
-
-			await modelHandlingService.LoadAsync();
-			t.Log("Updated view model after cached/fresh");
-		}
-
-
-		public async Task RefreshAsync(bool refreshLayout)
-		{
-			await modelHandlingService.RefreshAsync(refreshLayout);
-		}
-
-
-		public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelHandlingService.GetHiddenNodeNames();
-
-		public void Clicked() => itemSelectionService.Deselect();
-
-
-		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) =>
-			rootNodeCanvas?.RootCanvas.ZoomNode(e);
-
-
-		public void ShowHiddenNode(NodeName nodeName) => modelHandlingService.ShowHiddenNode(nodeName);
-
-
-		public void Close()
-		{
-			StoreViewSettings();
-
-			modelHandlingService.Close();
-		}
-
-
-		private void StoreViewSettings()
-		{
-			settingsService.Edit<WorkFolderSettings>(settings =>
-			{
-				settings.Scale = modelHandlingService.Root.View.ItemsCanvas.Scale;
-			});
-		}
-
-
-		private void RestoreViewSettings()
-		{
-			WorkFolderSettings settings = settingsService.Get<WorkFolderSettings>();
-			Node root = modelHandlingService.Root;
-
-			root.View.ItemsCanvas.SetRootScale(settings.Scale);
-		}
+		public Task RefreshAsync(bool refreshLayout)=> modelViewModelService.RefreshAsync(refreshLayout);
+		public void Close() => modelViewModelService.Close();
 	}
 }

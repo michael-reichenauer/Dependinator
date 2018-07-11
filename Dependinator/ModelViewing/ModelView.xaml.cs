@@ -27,7 +27,7 @@ namespace Dependinator.ModelViewing
 		private async void ModelView_OnLoaded(object sender, RoutedEventArgs e)
 		{
 			ItemsView.SetFocus();
-			await ViewModel.LoadAsync();
+			await ViewModel.OpenAsync();
 		}
 
 
@@ -42,7 +42,7 @@ namespace Dependinator.ModelViewing
 
 			if (filePaths?.Any() ?? false)
 			{
-				await ViewModel.LoadFilesAsync(filePaths);
+				await ViewModel.OpenFilesAsync(filePaths);
 			}
 		}
 

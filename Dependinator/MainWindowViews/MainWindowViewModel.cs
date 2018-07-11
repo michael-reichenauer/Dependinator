@@ -8,12 +8,8 @@ using Dependinator.Common.Installation;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.ProgressHandling;
+using Dependinator.MainWindowViews.Private;
 using Dependinator.ModelViewing;
-using Dependinator.ModelViewing.Items;
-using Dependinator.ModelViewing.Nodes;
-using Dependinator.ModelViewing.Open;
-using Dependinator.ModelViewing.Searching;
-using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
@@ -30,10 +26,8 @@ namespace Dependinator.MainWindowViews
 		private readonly IRecentModelsService recentModelsService;
 		private readonly IModelMetadataService modelMetadataService;
 		private readonly IStartInstanceService startInstanceService;
-		private readonly IItemSelectionService itemSelectionService;
 		private readonly IModelViewService modelViewService;
-		private readonly ISearchService searchService;
-		private readonly ILocateService locateService;
+		private readonly IProgressService progress;
 		private readonly ModelMetadata modelMetadata;
 
 
@@ -46,10 +40,8 @@ namespace Dependinator.MainWindowViews
 			IRecentModelsService recentModelsService,
 			IModelMetadataService modelMetadataService,
 			IStartInstanceService startInstanceService,
-			IItemSelectionService itemSelectionService,
 			IModelViewService modelViewService,
-			ISearchService searchService,
-			ILocateService locateService)
+			IProgressService progress)
 		{
 			this.modelMetadata = modelMetadata;
 
@@ -58,10 +50,8 @@ namespace Dependinator.MainWindowViews
 			this.recentModelsService = recentModelsService;
 			this.modelMetadataService = modelMetadataService;
 			this.startInstanceService = startInstanceService;
-			this.itemSelectionService = itemSelectionService;
 			this.modelViewService = modelViewService;
-			this.searchService = searchService;
-			this.locateService = locateService;
+			this.progress = progress;
 
 			ModelViewModel = modelViewModel;
 
@@ -100,7 +90,7 @@ namespace Dependinator.MainWindowViews
 			set
 			{
 				Set(value);
-				
+
 				if (string.IsNullOrEmpty(value))
 				{
 					Set("");
@@ -117,7 +107,11 @@ namespace Dependinator.MainWindowViews
 
 				IsSearchDropDown = true;
 				Set(value);
-				var items = searchService.Search(value).Take(21).OrderBy(i => i.Name).ToList();
+				var items = modelViewService.Search(value)
+					.Take(21)
+					.OrderBy(nodeName => nodeName.DisplayLongName)
+					.Select(nodeName => new SearchEntry(nodeName.DisplayLongName, nodeName))
+					.ToList();
 				SearchItems.Clear();
 				items.Take(20).ForEach(item => SearchItems.Add(item));
 				if (items.Count > 20)
@@ -144,7 +138,7 @@ namespace Dependinator.MainWindowViews
 					return;
 				}
 
-				locateService.StartMoveToNode(value.NodeName);
+				modelViewService.StartMoveToNode(value.NodeName);
 			}
 		}
 
@@ -188,13 +182,10 @@ namespace Dependinator.MainWindowViews
 		public bool HasResent => recentModelsService.GetModelPaths().Any();
 		public bool HasHiddenNodes => modelViewService.GetHiddenNodeNames().Any();
 
-		public bool IsSelectedNode => itemSelectionService.IsNodeSelected;
-
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
 		public Command RefreshLayoutCommand => AsyncCommand(ManualRefreshLayoutAsync);
 
 		public Command OpenFileCommand => Command(openModelService.ShowOpenModelDialog);
-		public Command HideNodeCommand => Command(HideNode);
 
 
 		public Command RunLatestVersionCommand => AsyncCommand(RunLatestVersionAsync);
@@ -227,18 +218,27 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		public void ClosingWindow() => ModelViewModel.Close();
+		public void ClosingWindow() => modelViewService.Close();
 
-		private Task ManualRefreshAsync() => ModelViewModel.ManualRefreshAsync();
+		private Task ManualRefreshAsync() => ManualRefreshAsync(false);
 
-		private Task ManualRefreshLayoutAsync() => ModelViewModel.ManualRefreshAsync(true);
+		private Task ManualRefreshLayoutAsync() => ManualRefreshAsync(true);
 
 		private void Search() => mainWindowService.SetSearchFocus();
 
 
 		public Task ActivateRefreshAsync()
 		{
-			return ModelViewModel.ActivateRefreshAsync();
+			return modelViewService.ActivateRefreshAsync();
+		}
+
+
+		private async Task ManualRefreshAsync(bool refreshLayout)
+		{
+			using (progress.ShowBusy())
+			{
+				await modelViewService.RefreshAsync(refreshLayout);
+			}
 		}
 
 
@@ -251,17 +251,6 @@ namespace Dependinator.MainWindowViews
 			else
 			{
 				Minimize();
-			}
-		}
-
-
-
-		private void HideNode()
-		{
-			if (itemSelectionService.SelectedItem is NodeViewModel nodeViewModel)
-			{
-				nodeViewModel.HideNode();
-				itemSelectionService.Deselect();
 			}
 		}
 

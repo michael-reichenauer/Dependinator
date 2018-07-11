@@ -1,25 +1,20 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
-using Dependinator.ModelViewing.DataHandling.Dtos;
-using Dependinator.ModelViewing.Items;
-using Dependinator.ModelViewing.Nodes;
 
 
 namespace Dependinator.ModelViewing
 {
 	internal interface IModelViewService
 	{
-		void SetRootCanvas(ItemsCanvas rootCanvas);
+		void StartMoveToNode(NodeName nodeName);
 
-		Task RefreshAsync(bool refreshLayout);
+		IReadOnlyList<NodeName> GetHiddenNodeNames();
 
 		void ShowHiddenNode(NodeName nodeName);
 
+		IEnumerable<NodeName> Search(string text);
+		Task ActivateRefreshAsync();
+		Task RefreshAsync(bool refreshLayout);
 		void Close();
-		IReadOnlyList<NodeName> GetHiddenNodeNames();
-		void Clicked();
-		void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e);
 	}
 }
