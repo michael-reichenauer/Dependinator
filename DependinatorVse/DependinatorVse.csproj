@@ -154,15 +154,19 @@
   <ItemGroup>
     <VSCTCompile Include="ShowInDependinatorCommandPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
+      <SubType>Designer</SubType>
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="VSPackage.resx">
       <MergeWithCTO>true</MergeWithCTO>
       <ManifestResourceName>VSPackage</ManifestResourceName>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\Icon.png" />
+    <Content Include="Resources\Preview.png" />
     <Content Include="Resources\ShowInDependinatorCommand.png" />
     <Content Include="Resources\ShowInDependinatorCommandPackage.ico" />
   </ItemGroup>

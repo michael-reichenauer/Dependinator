@@ -93,11 +93,7 @@ namespace DependinatorVse
 		/// <param name="e">Event args.</param>
 		private async void Execute(object sender, EventArgs e)
 		{
-#pragma warning disable VSTHRD109 // Switch instead of assert in async methods
-			ThreadHelper.ThrowIfNotOnUIThread();
-#pragma warning restore VSTHRD109 // Switch instead of assert in async methods
-
-			DTE2 dte = await package.GetServiceAsync((typeof(DTE))) as DTE2;
+			DTE2 dte = (DTE2)await package.GetServiceAsync(typeof(DTE));
 			Solution solution = dte.Solution;
 
 			
