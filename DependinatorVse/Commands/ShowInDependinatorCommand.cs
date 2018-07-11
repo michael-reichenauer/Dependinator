@@ -2,8 +2,6 @@
 using System.ComponentModel.Design;
 using System.Globalization;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
