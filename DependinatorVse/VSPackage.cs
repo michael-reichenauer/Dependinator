@@ -33,21 +33,17 @@ namespace DependinatorVse
 	/// </para>
 	/// </remarks>
 	[PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
-	[InstalledProductRegistration("#110", "#112", "1.0", IconResourceID = 400)] // Info on this package for Help/About
+	[InstalledProductRegistration("#110", "#112", Vsix.Version, IconResourceID = 400)] // Info on this package for Help/About
 	[ProvideMenuResource("Menus.ctmenu", 1)]
-	[Guid(ShowInDependinatorCommandPackage.PackageGuidString)]
+	[Guid(PackageGuids.guidShowInDependinatorCommandPackageString)]
 	[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
-	public sealed class ShowInDependinatorCommandPackage : AsyncPackage
+	public sealed class VSPackage : AsyncPackage
 	{
-		/// <summary>
-		/// ShowInDependinatorCommandPackage GUID string.
-		/// </summary>
-		public const string PackageGuidString = "a85ebc56-4887-4217-a3d5-86cd3c5062da";
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ShowInDependinatorCommand"/> class.
 		/// </summary>
-		public ShowInDependinatorCommandPackage()
+		public VSPackage()
 		{
 			// Inside this method you can place any initialization code that does not require
 			// any Visual Studio service because at this point the package object is created but
@@ -55,7 +51,6 @@ namespace DependinatorVse
 			// initialization is the Initialize method.
 		}
 
-		#region Package Members
 
 		/// <summary>
 		/// Initialization of the package; this method is called right after the package is sited, so this is the place
@@ -71,7 +66,5 @@ namespace DependinatorVse
 			await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 			await ShowInDependinatorCommand.InitializeAsync(this);
 		}
-
-		#endregion
 	}
 }
