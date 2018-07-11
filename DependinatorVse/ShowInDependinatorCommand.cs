@@ -73,7 +73,9 @@ namespace DependinatorVse
 		{
 			// Verify the current thread is the UI thread - the call to AddCommand in ShowInDependinatorCommand's constructor requires
 			// the UI thread.
+#pragma warning disable VSTHRD109 // Switch instead of assert in async methods
 			ThreadHelper.ThrowIfNotOnUIThread();
+#pragma warning restore VSTHRD109 // Switch instead of assert in async methods
 
 			OleMenuCommandService commandService = await package.GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
 			Instance = new ShowInDependinatorCommand(package, commandService);
