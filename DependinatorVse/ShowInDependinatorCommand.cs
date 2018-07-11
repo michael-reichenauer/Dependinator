@@ -1,8 +1,11 @@
 ﻿using System;
 using System.ComponentModel.Design;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using EnvDTE;
+using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
@@ -88,9 +91,19 @@ namespace DependinatorVse
 		/// </summary>
 		/// <param name="sender">Event sender.</param>
 		/// <param name="e">Event args.</param>
-		private void Execute(object sender, EventArgs e)
+		private async void Execute(object sender, EventArgs e)
 		{
+#pragma warning disable VSTHRD109 // Switch instead of assert in async methods
 			ThreadHelper.ThrowIfNotOnUIThread();
+#pragma warning restore VSTHRD109 // Switch instead of assert in async methods
+
+			DTE2 dte = await package.GetServiceAsync((typeof(DTE))) as DTE2;
+			Solution solution = dte.Solution;
+
+			
+			Array projects = (Array)dte.ActiveSolutionProjects;
+			Project project = projects.Cast<Project>().ElementAtOrDefault(0);
+
 			string message = string.Format(CultureInfo.CurrentCulture, "Inside {0}.MenuItemCallback()", this.GetType().FullName);
 			string title = "ShowInDependinatorCommand";
 
