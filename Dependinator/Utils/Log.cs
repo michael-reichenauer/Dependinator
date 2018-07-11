@@ -7,7 +7,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Dependinator.Utils.OsSystem;
 
 
 namespace Dependinator.Utils
@@ -53,13 +52,13 @@ namespace Dependinator.Utils
 				// Wait for texts to log
 				string filePrefix = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss,fff} [{ProcessID}]";
 				string logText = logTexts.Take();
-				Native.OutputDebugString(logText);
+				OutputDebugString(logText);
 				batchedTexts.Add($"{filePrefix} {logText}");
 
 				// Check if there might be more buffered log texts, if so add them in batch
 				while (logTexts.TryTake(out logText))
 				{
-					Native.OutputDebugString(logText);
+					OutputDebugString(logText);
 					batchedTexts.Add($"{filePrefix} {logText}");
 				}
 
@@ -75,8 +74,31 @@ namespace Dependinator.Utils
 				}
 				catch (Exception e) when (e.IsNotFatal())
 				{
-					Native.OutputDebugString("ERROR Failed to log to file, " + e);
+					OutputDebugString("ERROR Failed to log to file, " + e);
 				}
+			}
+		}
+
+
+		private static void OutputDebugString(string logText)
+		{
+			const int maxLength = 1000;
+			int totalLength = logText.Length;
+
+			if (totalLength < maxLength)
+			{
+				Native.OutputDebugString(logText);
+				return;
+			}
+
+			// Seems that OutputDebugString has some max size
+			int index = 0;
+			int length = maxLength;
+			while (index < totalLength)
+			{
+				Native.OutputDebugString(logText.Substring(index, length));
+				index += length;
+				length = Math.Min(maxLength, totalLength - index);
 			}
 		}
 
@@ -135,8 +157,8 @@ namespace Dependinator.Utils
 			[CallerFilePath] string sourceFilePath = "",
 			[CallerLineNumber] int sourceLineNumber = 0)
 		{
-			Track.Exception(e, msg);
 			Write(LevelError, $"{msg}\n{e}", memberName, sourceFilePath, sourceLineNumber);
+			Track.Exception(e, msg);
 		}
 
 
@@ -147,8 +169,8 @@ namespace Dependinator.Utils
 			[CallerFilePath] string sourceFilePath = "",
 			[CallerLineNumber] int sourceLineNumber = 0)
 		{
-			Track.Exception(e, "");
 			Write(LevelError, $"{e}", memberName, sourceFilePath, sourceLineNumber);
+			Track.Exception(e, "");
 		}
 
 

@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.Common.Installation;
-using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.ProgressHandling;
-using Dependinator.Common.SettingsHandling;
+using Dependinator.MainWindowViews.Private;
 using Dependinator.ModelViewing;
-using Dependinator.ModelViewing.Items;
-using Dependinator.ModelViewing.Nodes;
-using Dependinator.ModelViewing.Open;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
@@ -29,16 +26,13 @@ namespace Dependinator.MainWindowViews
 		private readonly IRecentModelsService recentModelsService;
 		private readonly IModelMetadataService modelMetadataService;
 		private readonly IStartInstanceService startInstanceService;
-		private readonly IItemSelectionService itemSelectionService;
 		private readonly IModelViewService modelViewService;
+		private readonly IProgressService progress;
 		private readonly ModelMetadata modelMetadata;
-		private readonly IMessage message;
-
 
 
 		internal MainWindowViewModel(
 			ModelMetadata modelMetadata,
-			IMessage message,
 			ILatestVersionService latestVersionService,
 			IMainWindowService mainWindowService,
 			ModelViewModel modelViewModel,
@@ -46,30 +40,31 @@ namespace Dependinator.MainWindowViews
 			IRecentModelsService recentModelsService,
 			IModelMetadataService modelMetadataService,
 			IStartInstanceService startInstanceService,
-			IItemSelectionService itemSelectionService,
-			IModelViewService modelViewService)
+			IModelViewService modelViewService,
+			IProgressService progress)
 		{
 			this.modelMetadata = modelMetadata;
-			this.message = message;
 
 			this.mainWindowService = mainWindowService;
 			this.openModelService = openModelService;
 			this.recentModelsService = recentModelsService;
 			this.modelMetadataService = modelMetadataService;
 			this.startInstanceService = startInstanceService;
-			this.itemSelectionService = itemSelectionService;
 			this.modelViewService = modelViewService;
+			this.progress = progress;
 
 			ModelViewModel = modelViewModel;
 
 			modelMetadata.OnChange += (s, e) => Notify(nameof(WorkingFolder));
 			latestVersionService.OnNewVersionAvailable += (s, e) => IsNewVersionVisible = true;
 			latestVersionService.StartCheckForLatestVersion();
+			SearchItems = new ObservableCollection<SearchEntry>();
+			ClearSelectionItems();
 		}
 
 		public int WindowWith { set => ModelViewModel.Width = value; }
 
-		public bool IsInFilterMode => !string.IsNullOrEmpty(SearchBox);
+		public bool IsInFilterMode => !string.IsNullOrEmpty(SearchText);
 
 
 		public bool IsNewVersionVisible { get => Get(); set => Set(value); }
@@ -86,20 +81,73 @@ namespace Dependinator.MainWindowViews
 		public bool ShowMinimizeButton => !modelMetadataService.IsDefault;
 		public bool ShowMaximizeButton => !modelMetadataService.IsDefault;
 
+		public ObservableCollection<SearchEntry> SearchItems { get; }
 
-
-		public string SearchBox
+		public bool IsSearchDropDown { get => Get(); set => Set(value); }
+		public string SearchText
 		{
 			get => Get();
 			set
 			{
-				message.ShowInfo("Search is not yet implemented.");
-				//Set(value).Notify(nameof(IsInFilterMode));
-				// ModelViewModel.SetFilter(value);
+				Set(value);
+
+				if (string.IsNullOrEmpty(value))
+				{
+					Set("");
+					ClearSelectionItems();
+					return;
+				}
+
+				if (value == SelectedSearchItem?.Name)
+				{
+					Set("");
+					ClearSelectionItems();
+					return;
+				}
+
+				IsSearchDropDown = true;
+				Set(value);
+				var items = modelViewService.Search(value)
+					.Take(21)
+					.OrderBy(nodeName => nodeName.DisplayLongName)
+					.Select(nodeName => new SearchEntry(nodeName.DisplayLongName, nodeName))
+					.ToList();
+				SearchItems.Clear();
+				items.Take(20).ForEach(item => SearchItems.Add(item));
+				if (items.Count > 20)
+				{
+					SearchItems.Add(new SearchEntry("...", null));
+				}
+
+				if (!items.Any())
+				{
+					SearchItems.Add(new SearchEntry("<nothing found>", null));
+				}
 			}
 		}
 
 
+		public SearchEntry SelectedSearchItem
+		{
+			get => Get<SearchEntry>();
+			set
+			{
+				Set(value);
+				if (value == null || value.NodeName == null)
+				{
+					return;
+				}
+
+				modelViewService.StartMoveToNode(value.NodeName);
+			}
+		}
+
+
+		void ClearSelectionItems()
+		{
+			SearchItems.Clear();
+			SearchItems.Add(new SearchEntry("", null));
+		}
 
 		public BusyIndicator Busy => BusyIndicator();
 
@@ -134,13 +182,10 @@ namespace Dependinator.MainWindowViews
 		public bool HasResent => recentModelsService.GetModelPaths().Any();
 		public bool HasHiddenNodes => modelViewService.GetHiddenNodeNames().Any();
 
-		public bool IsSelectedNode => itemSelectionService.IsNodeSelected;
-
 		public Command RefreshCommand => AsyncCommand(ManualRefreshAsync);
 		public Command RefreshLayoutCommand => AsyncCommand(ManualRefreshLayoutAsync);
 
 		public Command OpenFileCommand => Command(openModelService.ShowOpenModelDialog);
-		public Command HideNodeCommand => Command(HideNode);
 
 
 		public Command RunLatestVersionCommand => AsyncCommand(RunLatestVersionAsync);
@@ -173,41 +218,39 @@ namespace Dependinator.MainWindowViews
 		}
 
 
-		public void ClosingWindow() => ModelViewModel.Close();
+		public void ClosingWindow() => modelViewService.Close();
 
-		private Task ManualRefreshAsync() => ModelViewModel.ManualRefreshAsync();
+		private Task ManualRefreshAsync() => ManualRefreshAsync(false);
 
-		private Task ManualRefreshLayoutAsync() => ModelViewModel.ManualRefreshAsync(true);
+		private Task ManualRefreshLayoutAsync() => ManualRefreshAsync(true);
 
 		private void Search() => mainWindowService.SetSearchFocus();
 
 
 		public Task ActivateRefreshAsync()
 		{
-			return ModelViewModel.ActivateRefreshAsync();
+			return modelViewService.ActivateRefreshAsync();
+		}
+
+
+		private async Task ManualRefreshAsync(bool refreshLayout)
+		{
+			using (progress.ShowBusy())
+			{
+				await modelViewService.RefreshAsync(refreshLayout);
+			}
 		}
 
 
 		private void Escape()
 		{
-			if (!string.IsNullOrWhiteSpace(SearchBox))
+			if (!string.IsNullOrWhiteSpace(SearchText))
 			{
-				SearchBox = "";
+				SearchText = "";
 			}
 			else
 			{
 				Minimize();
-			}
-		}
-
-
-
-		private void HideNode()
-		{
-			if (itemSelectionService.SelectedItem is NodeViewModel nodeViewModel)
-			{
-				nodeViewModel.HideNode();
-				itemSelectionService.Deselect();
 			}
 		}
 
@@ -251,9 +294,9 @@ namespace Dependinator.MainWindowViews
 
 		private void ClearFilter()
 		{
-			if (!string.IsNullOrWhiteSpace(SearchBox))
+			if (!string.IsNullOrWhiteSpace(SearchText))
 			{
-				SearchBox = "";
+				SearchText = "";
 			}
 		}
 	}

@@ -92,24 +92,6 @@ namespace Dependinator.Utils
 		}
 
 
-		public static void Dependency(
-			string commandName, string target, TimeSpan duration, bool isSuccess)
-		{
-
-			if (Uri.TryCreate(target, UriKind.Absolute, out Uri uri))
-			{
-				target = uri.Host;
-			}
-
-			Log.Info($"{commandName}, {target}, {duration}, {isSuccess}");
-			Tc?.TrackDependency(target, commandName, DateTimeOffset.Now - duration, duration, isSuccess);
-
-			//Tc?.TrackDependency(
-			//	target, target, target, 
-			//	commandName, DateTimeOffset.Now - duration, duration, isSuccess.ToString(), isSuccess);
-		}
-
-
 		public static void Info(string message)
 		{
 			Trace(message, SeverityLevel.Information);

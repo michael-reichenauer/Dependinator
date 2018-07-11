@@ -31,7 +31,7 @@ namespace System
 		public static bool StartsWithTxt(this string text, string value) =>
 			text.StartsWith(value, StringComparison.Ordinal);
 
-		public static bool StartsWithTxtIc(this string text, string value) =>
+		public static bool StartsWithIc(this string text, string value) =>
 			text.StartsWith(value, StringComparison.OrdinalIgnoreCase);
 
 

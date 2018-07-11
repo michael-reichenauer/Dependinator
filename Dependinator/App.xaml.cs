@@ -5,7 +5,6 @@ using Dependinator.Common.Environment;
 using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders.Private;
-using Dependinator.Common.SettingsHandling;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.MainWindowViews;
 using Dependinator.Utils;
