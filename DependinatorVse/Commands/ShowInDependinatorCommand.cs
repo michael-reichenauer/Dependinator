@@ -7,7 +7,6 @@ using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Task = System.Threading.Tasks.Task;
-using Dependinator.Api;
 
 namespace DependinatorVse.Commands
 {
@@ -58,7 +57,7 @@ namespace DependinatorVse.Commands
 		/// </summary>
 		private async void Execute(object sender, EventArgs e)
 		{
-			VsExtensionApi.Instance.ShowItem("Some item");
+			//VsExtensionApi.Instance.ShowItem("Some item");
 
 			DTE2 dte = (DTE2)await package.GetServiceAsync(typeof(DTE));
 			Solution solution = dte.Solution;

@@ -8,7 +8,7 @@ using Autofac.Core.Lifetime;
 using Autofac.Core.Registration;
 
 
-namespace GitMindTest.AutoMocking.Private
+namespace DependinatorTest.AutoMocking.Private
 {
 	internal class AutofacMoqSource : IRegistrationSource, IDisposable
 	{

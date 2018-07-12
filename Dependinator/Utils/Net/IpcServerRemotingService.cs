@@ -34,12 +34,9 @@ namespace Dependinator.Utils.Net
 		}
 
 
-		public bool IsServerRegistered(string serverId)
+		public static bool IsServerRegistered(string serverId)
 		{
-			uniqueId = serverId;
 			string mutexName = GetId(serverId);
-
-			Log.Debug($"Try {mutexName}");
 
 			using (new Mutex(true, mutexName, out var isMutexCreated))
 			{
@@ -48,8 +45,6 @@ namespace Dependinator.Utils.Net
 					return false;
 				}
 			}
-
-			Log.Debug($"Server {mutexName} exist");
 
 			return true;
 		}

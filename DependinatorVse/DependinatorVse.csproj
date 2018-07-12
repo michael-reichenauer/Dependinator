@@ -192,9 +192,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Dependinator\Dependinator.csproj">
-      <Project>{5bec2bbc-5480-44b9-a412-659c0d057d41}</Project>
-      <Name>Dependinator</Name>
+    <ProjectReference Include="..\DependinatorApi\DependinatorApi.csproj">
+      <Project>{b20f5cd9-08a8-40b5-8906-e17ea5b2b1b1}</Project>
+      <Name>DependinatorApi</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

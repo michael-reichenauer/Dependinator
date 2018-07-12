@@ -2,8 +2,7 @@
 
   <!-- Some global project properties -->
   <PropertyGroup>
-    <TargetFramework>net47</TargetFramework>
-	
+    <TargetFramework>net47</TargetFramework>	
 	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>1701;1702;1705,1591,1574,0419,1573,3001,3002,3009</NoWarn>
@@ -22,32 +21,23 @@
 	<GenerateAssemblyTitleAttribute>false</GenerateAssemblyTitleAttribute>
   </PropertyGroup>
  
-  <!-- Project references --> 
-  <ItemGroup>
-    <ProjectReference Include="..\DependinatorApi\DependinatorApi.csproj" />
-    <ProjectReference Include="..\Dependinator\Dependinator.csproj" />
-  </ItemGroup>
+  <!-- Project references -->
   
   <!-- Some standard references --> 
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
+    <Reference Include="System" />    
+    <Reference Include="System.Core" />    
+    <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Data.DataSetExtensions" />    
+    <Reference Include="Microsoft.CSharp" />   
+    <Reference Include="System.Data" />    
+    <Reference Include="System.Net.Http" />    
     <Reference Include="System.Xml" />
   </ItemGroup>
   
   <!-- Pagage/NuGet references -->
   <ItemGroup>
-    <PackageReference Include="Autofac" Version="4.8.1" />
-	<PackageReference Include="Autofac.Extras.Moq" Version="4.2.0" />
-	<PackageReference Include="Microsoft.Database.Collections.Generic" Version="1.9.4" />
-    <PackageReference Include="NUnit" Version="3.10.1" />
   </ItemGroup>
 
-  
-  
 </Project>

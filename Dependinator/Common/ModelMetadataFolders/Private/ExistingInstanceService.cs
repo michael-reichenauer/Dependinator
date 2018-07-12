@@ -44,7 +44,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 				}
 
 				Log.Debug($"$Register {id}");
-				instanceIpcServerRemotingService.PublishService<ExistingInstanceIpcService>(existingInstanceIpcService);
+				instanceIpcServerRemotingService.PublishService<IExistingInstanceIpcService>(existingInstanceIpcService);
 			}
 			catch (Exception e)
 			{
@@ -66,7 +66,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 					{
 						// Another instance for that working folder is already running, activate that.
 						IExistingInstanceIpcService service = ipcRemotingService
-							.GetService<ExistingInstanceIpcService>(id);
+							.GetService<IExistingInstanceIpcService>(id);
 						service.Activate(args);
 
 						return true;
@@ -133,7 +133,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 			byte[] shaHash = shaService.ComputeHash(textBytes, 0, textBytes.Length);
 
 			shaHash.ForEach(b => hashText.Append(b.ToString("x2")));
-			
+
 			return hashText.ToString();
 		}
 	}
