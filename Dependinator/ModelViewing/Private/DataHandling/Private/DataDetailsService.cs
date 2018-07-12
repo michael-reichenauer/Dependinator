@@ -19,5 +19,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
 		{
 			return await parserService.GetCodeAsync(filePath, nodeName);
 		}
+
+		public async Task<R<string>> GetSourceFilePath(string filePath, NodeName nodeName)
+		{
+			return await parserService.GetSourceFilePath(filePath, nodeName);
+		}
 	}
 }

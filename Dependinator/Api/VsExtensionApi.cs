@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Dependinator.Utils;
-using Dependinator.Utils.Dependencies;
 
 
 namespace Dependinator.Api

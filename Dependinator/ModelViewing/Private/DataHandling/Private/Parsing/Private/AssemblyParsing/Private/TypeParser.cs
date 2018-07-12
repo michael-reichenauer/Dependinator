@@ -4,6 +4,7 @@ using System.Linq;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.Utils;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.AssemblyParsing.Private

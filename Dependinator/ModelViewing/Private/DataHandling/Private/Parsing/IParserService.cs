@@ -10,10 +10,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing
 	{
 		Task<R> ParseAsync(string filePath, DataItemsCallback itemsCallback);
 
-		Task<R<string>> GetCodeAsync(string filePath, NodeName nodeName);
 
 		IReadOnlyList<string> GetDataFilePaths(string filePath);
 		IReadOnlyList<string> GetBuildPaths(string filePath);
+		Task<R<string>> GetCodeAsync(string filePath, NodeName nodeName);
+		Task<R<string>> GetSourceFilePath(string filePath, NodeName nodeName);
 	}
 
 

@@ -19,6 +19,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		private readonly string assemblyPath;
 		private readonly DataNodeName parentName;
 		private readonly DataItemsCallback itemsCallback;
+		private readonly bool isReadSymbols;
 		private readonly Decompiler decompiler = new Decompiler();
 		private readonly AssemblyReferencesParser assemblyReferencesParser;
 		private readonly TypeParser typeParser;
@@ -32,11 +33,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		public AssemblyParser(
 			string assemblyPath,
 			DataNodeName parentName,
-			DataItemsCallback itemsCallback)
+			DataItemsCallback itemsCallback,
+			bool isReadSymbols)
 		{
 			this.assemblyPath = assemblyPath;
 			this.parentName = parentName;
 			this.itemsCallback = itemsCallback;
+			this.isReadSymbols = isReadSymbols;
 
 			XmlDocParser xmlDockParser = new XmlDocParser(assemblyPath);
 			LinkHandler linkHandler = new LinkHandler(itemsCallback);
@@ -124,6 +127,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 			decompiler.GetCode(assembly.Value.MainModule, nodeName);
 
 
+		public R<string> GetSourceFilePath(NodeName nodeName) =>
+			decompiler.GetSourceFilePath(assembly.Value.MainModule, nodeName);
+
+
 		public void Dispose()
 		{
 			assembly.Value?.Dispose();
@@ -137,6 +144,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 				ReaderParameters parameters = new ReaderParameters
 				{
 					AssemblyResolver = resolver,
+					ReadSymbols = isReadSymbols,
 				};
 
 				return AssemblyDefinition.ReadAssembly(assemblyPath, parameters);
