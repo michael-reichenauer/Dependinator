@@ -1,7 +1,8 @@
 ﻿namespace DependinatorApi
 {
-	public interface IVsExtensionApi
+	public interface IDependinatorApi
 	{
+		void Activate(string[] args);
 		void ShowFile(string filePath);
 	}
 }

@@ -13,14 +13,14 @@ namespace DependinatorTest.DependinatorApi.ApiHandling
 		{
 			TestApiService instanceService = new TestApiService();
 
-			string serverId = Guid.NewGuid().ToString();
+			string serverName = Guid.NewGuid().ToString();
 
-			using (ApiIpcServer apiIpcServer = new ApiIpcServer(serverId))
-			using (ApiIpcClient apiIpcClient = new ApiIpcClient(serverId))
+			using (ApiIpcServer apiIpcServer = new ApiIpcServer(serverName))
+			using (ApiIpcClient apiIpcClient = new ApiIpcClient(serverName))
 			{
 				if (apiIpcServer.TryPublishService<ITestApiService>(instanceService))
 				{
-					if (ApiIpcClient.IsServerRegistered(serverId))
+					if (ApiIpcClient.IsServerRegistered(serverName))
 					{
 						// Another instance for that working folder is already running, activate that.
 						ITestApiService service = apiIpcClient.Service<ITestApiService>();

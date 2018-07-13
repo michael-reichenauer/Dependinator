@@ -49,16 +49,16 @@ namespace DependinatorApi.ApiHandling
 		{
 			try
 			{
-				if (channelMutex != null)
-				{
-					channelMutex.Close();
-					channelMutex = null;
-				}
-
 				if (ipcServerChannel != null)
 				{
 					ChannelServices.UnregisterChannel(ipcServerChannel);
 					ipcServerChannel = null;
+				}
+
+				if (channelMutex != null)
+				{
+					channelMutex.Close();
+					channelMutex = null;
 				}
 			}
 			catch (Exception e)

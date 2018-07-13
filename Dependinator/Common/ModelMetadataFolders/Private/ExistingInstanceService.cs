@@ -1,12 +1,11 @@
 ﻿using System;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
+using Dependinator.Api;
 using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
-using Dependinator.Utils.Net;
 using Dependinator.Utils.Threading;
+using DependinatorApi;
+using DependinatorApi.ApiHandling;
 
 
 namespace Dependinator.Common.ModelMetadataFolders.Private
@@ -14,63 +13,31 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 	[SingleInstance]
 	internal class ExistingInstanceService : IExistingInstanceService
 	{
-		private readonly IModelMetadataService modelMetadataService;
-		private readonly ExistingInstanceIpcService existingInstanceIpcService;
-		private IpcServerRemotingService instanceIpcServerRemotingService;
+		private readonly IApiManagerService apiManagerService;
+		
 
-
-		public ExistingInstanceService(
-			IModelMetadataService modelMetadataService,
-			ExistingInstanceIpcService existingInstanceIpcService)
+		public ExistingInstanceService(IApiManagerService apiManagerService)
 		{
-			this.modelMetadataService = modelMetadataService;
-			this.existingInstanceIpcService = existingInstanceIpcService;
+			this.apiManagerService = apiManagerService;
 		}
 
 
-		public void RegisterPath(string metaDataFolderPath)
+		public bool TryActivateExistingInstance(string[] args)
 		{
 			try
 			{
-				instanceIpcServerRemotingService?.Dispose();
+				string serverName = apiManagerService.GetCurrentInstanceServerName();
 
-				instanceIpcServerRemotingService = new IpcServerRemotingService();
-
-				string id = GetMetadataFolderId(metaDataFolderPath);
-
-				if (!instanceIpcServerRemotingService.TryCreateServer(id))
+				if (ApiIpcClient.IsServerRegistered(serverName))
 				{
-					throw new ApplicationException($"Failed to register rpc instance {metaDataFolderPath}");
-				}
-
-				Log.Debug($"$Register {id}");
-				instanceIpcServerRemotingService.PublishService<IExistingInstanceIpcService>(existingInstanceIpcService);
-			}
-			catch (Exception e)
-			{
-				Log.Exception(e);
-				throw;
-			}
-		}
-
-
-		public bool TryActivateExistingInstance(string metaDataFolderPath, string[] args)
-		{
-			try
-			{
-				// Trying to contact another instance, which has a registered IpcRemotingService 
-				string id = GetMetadataFolderId(metaDataFolderPath);
-				using (IpcClientRemotingService ipcRemotingService = new IpcClientRemotingService())
-				{
-					if (ipcRemotingService.IsServerRegistered(id))
+					using (ApiIpcClient apiIpcClient = new ApiIpcClient(serverName))
 					{
-						// Another instance for that working folder is already running, activate that.
-						IExistingInstanceIpcService service = ipcRemotingService
-							.GetService<IExistingInstanceIpcService>(id);
-						service.Activate(args);
-
-						return true;
+						IDependinatorApi dependinatorApi = apiIpcClient.Service<IDependinatorApi>();
+						dependinatorApi.Activate(args);
+						Log.Debug($"Call Activate on: {serverName}");
 					}
+
+					return true;
 				}
 			}
 			catch (Exception e)
@@ -89,15 +56,12 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 			{
 				try
 				{
-					string id = GetMetadataFolderId(modelMetadataService.MetadataFolderPath);
-					using (IpcServerRemotingService ipcRemotingService = new IpcServerRemotingService())
-					{
-						if (ipcRemotingService.TryCreateServer(id))
-						{
-							Log.Debug("Other instance has closed");
-							return true;
-						}
+					string serverName = apiManagerService.GetCurrentInstanceServerName();
 
+					if (!ApiIpcClient.IsServerRegistered(serverName))
+					{
+						Log.Debug("Other instance has closed");
+						return true;
 					}
 				}
 				catch (Exception e)
@@ -110,31 +74,6 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
 			Log.Error("Failed to wait for other instance");
 			return false;
-		}
-
-
-
-		private static string GetMetadataFolderId(string metadataFolderPath)
-		{
-			string name = ProgramInfo.Guid + Uri.EscapeDataString(metadataFolderPath);
-
-			string id = AsSha2Text(name);
-			return id;
-		}
-
-
-		private static string AsSha2Text(string text)
-		{
-			SHA256Managed shaService = new SHA256Managed();
-			StringBuilder hashText = new StringBuilder();
-
-			byte[] textBytes = Encoding.UTF8.GetBytes(text.ToLower());
-
-			byte[] shaHash = shaService.ComputeHash(textBytes, 0, textBytes.Length);
-
-			shaHash.ForEach(b => hashText.Append(b.ToString("x2")));
-
-			return hashText.ToString();
 		}
 	}
 }

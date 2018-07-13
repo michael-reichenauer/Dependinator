@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using Dependinator.Api;
 using Dependinator.Utils;
 
 
@@ -15,7 +16,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		private readonly IOpenFileDialogService openFileDialogService;
 		private readonly IExistingInstanceService existingInstanceService;
 		private readonly IStartInstanceService startInstanceService;
-
+		private readonly IApiManagerService apiManagerService;
 
 
 		public OpenModelService(
@@ -23,14 +24,15 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 			IModelMetadataService modelMetadataService,
 			IOpenFileDialogService openFileDialogService,
 			IExistingInstanceService existingInstanceService,
-			IStartInstanceService startInstanceService)
+			IStartInstanceService startInstanceService,
+			IApiManagerService apiManagerService)
 		{
 			this.loadModelService = loadModelService;
 			this.modelMetadataService = modelMetadataService;
 			this.openFileDialogService = openFileDialogService;
 			this.existingInstanceService = existingInstanceService;
 			this.startInstanceService = startInstanceService;
-
+			this.apiManagerService = apiManagerService;
 		}
 
 
@@ -65,7 +67,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		{
 			string metadataFolderPath = modelMetadataService.GetMetadataFolderPath(modelFilePath);
 
-			if (!existingInstanceService.TryActivateExistingInstance(metadataFolderPath, null))
+			if (!existingInstanceService.TryActivateExistingInstance(null))
 			{
 				startInstanceService.StartInstance(modelFilePath);
 			}
@@ -83,7 +85,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 		{
 			string metadataFolderPath = modelMetadataService.MetadataFolderPath;
 
-			if (existingInstanceService.TryActivateExistingInstance(metadataFolderPath, null))
+			if (existingInstanceService.TryActivateExistingInstance(null))
 			{
 				// Another instance for this working folder is already running and it received the
 				// command line from this instance, lets exit this instance, while other instance continuous
@@ -91,7 +93,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 				return;
 			}
 
-			existingInstanceService.RegisterPath(metadataFolderPath);
+			apiManagerService.Register();
 
 			await loadModelService.Value.LoadAsync();
 		}

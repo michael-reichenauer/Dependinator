@@ -3,9 +3,9 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 
-namespace DependinatorApi.ApiHandling
+namespace DependinatorApi.ApiHandling.Private
 {
-	public static class Log
+	internal static class Log
 	{
 		public static void Debug(
 			string msg,

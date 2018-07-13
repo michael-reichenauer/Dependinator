@@ -1,17 +1,15 @@
 ﻿using System.Windows;
 using Dependinator.Utils;
-using Dependinator.Utils.Net;
+using Dependinator.Utils.Dependencies;
+using DependinatorApi;
+using DependinatorApi.ApiHandling;
 
 
-namespace Dependinator.Common.ModelMetadataFolders.Private
+
+namespace Dependinator.Api
 {
-	internal interface IExistingInstanceIpcService
-	{
-		void Activate(string[] args);
-	}
-
-
-	internal class ExistingInstanceIpcService : IpcService, IExistingInstanceIpcService
+	[SingleInstance]
+	internal class DependinatorApiService : ApiIpcService, IDependinatorApi
 	{
 		public void Activate(string[] args)
 		{
@@ -23,6 +21,12 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
 				Log.Usage("Activated");
 			});
+		}
+
+
+		public void ShowFile(string filePath)
+		{
+
 		}
 	}
 }
