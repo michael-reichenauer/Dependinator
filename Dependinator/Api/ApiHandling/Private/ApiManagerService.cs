@@ -6,7 +6,7 @@ using DependinatorApi;
 using DependinatorApi.ApiHandling;
 
 
-namespace Dependinator.Api.Private
+namespace Dependinator.Api.ApiHandling.Private
 {
 	[SingleInstance]
 	internal class ApiManagerService : IApiManagerService
