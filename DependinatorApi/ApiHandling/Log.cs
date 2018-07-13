@@ -16,6 +16,7 @@ namespace DependinatorApi.ApiHandling
 			Write("DEBUG", msg, memberName, sourceFilePath, sourceLineNumber);
 		}
 
+
 		public static void Warn(
 			string msg,
 			[CallerMemberName] string memberName = "",

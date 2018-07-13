@@ -1,4 +1,4 @@
-﻿namespace Dependinator.Api
+﻿namespace DependinatorApi
 {
 	public interface IVsExtensionApi
 	{

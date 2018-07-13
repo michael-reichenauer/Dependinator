@@ -37,7 +37,5 @@
   </ItemGroup>
   
   <!-- Pagage/NuGet references -->
-  <ItemGroup>
-  </ItemGroup>
 
 </Project>

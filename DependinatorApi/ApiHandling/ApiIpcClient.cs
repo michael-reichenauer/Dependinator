@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Ipc;
+using DependinatorApi.ApiHandling.Private;
 
 
 namespace DependinatorApi.ApiHandling
@@ -15,38 +16,39 @@ namespace DependinatorApi.ApiHandling
 		private readonly Dictionary<Type, object> proxies = new Dictionary<Type, object>();
 
 
-		public ApiIpcClient(string serverId)
+		public ApiIpcClient(string serverName)
 		{
-			this.serverId = ApiIpcServer.GetUniqueId(serverId);
+			this.serverId = ApiIpcCommon.GetServerId(serverName);
 		}
 
 
-		public static bool IsServerRegistered(string serverId) => ApiIpcServer.IsServerRegistered(serverId);
-
+		public static bool IsServerRegistered(string serverName) => ApiIpcCommon.IsServerRegistered(serverName);
 
 
 		public TRemoteService Service<TRemoteService>()
 		{
-			if (!proxies.TryGetValue(typeof(TRemoteService), out object ipcProxy))
+			if (proxies.TryGetValue(typeof(TRemoteService), out object ipcProxy))
 			{
-				if (ipcClientChannel == null)
-				{
-					ipcClientChannel = new IpcClientChannel();
+				return (TRemoteService) ipcProxy;
+			}
 
-					ChannelServices.RegisterChannel(ipcClientChannel, true);
-				}
+			if (ipcClientChannel == null)
+			{
+				ipcClientChannel = new IpcClientChannel();
 
-				string ipcServiceName = serverId + typeof(TRemoteService).FullName;
-				string ipcUrl = $"ipc://{serverId}/{ipcServiceName}";
+				ChannelServices.RegisterChannel(ipcClientChannel, true);
+			}
 
-				// Get proxy instance of rpc service instance published by server in PublishService()
-				ipcProxy = RemotingServices.Connect(typeof(TRemoteService), ipcUrl);
-				proxies[typeof(TRemoteService)] = ipcProxy;
+			string ipcServiceName = ApiIpcCommon.GetServiceName<TRemoteService>(serverId);
+			string ipcUrl = $"ipc://{serverId}/{ipcServiceName}";
 
-				if (ipcProxy == null)
-				{
-					Log.Error("Failed to create IPC proxy");
-				}
+			// Get proxy instance of rpc service instance published by server in PublishService()
+			ipcProxy = RemotingServices.Connect(typeof(TRemoteService), ipcUrl);
+			proxies[typeof(TRemoteService)] = ipcProxy;
+
+			if (ipcProxy == null)
+			{
+				Log.Error("Failed to create IPC proxy");
 			}
 
 			return (TRemoteService)ipcProxy;

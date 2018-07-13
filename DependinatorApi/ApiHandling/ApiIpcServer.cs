@@ -5,41 +5,26 @@ using System.Runtime.Remoting;
 using System.Runtime.Remoting.Channels;
 using System.Runtime.Remoting.Channels.Ipc;
 using System.Runtime.Serialization.Formatters;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
+using DependinatorApi.ApiHandling.Private;
 
 
 namespace DependinatorApi.ApiHandling
 {
 	public class ApiIpcServer : IDisposable
 	{
-		private static readonly string ApiGuid = "AAFB58B3-34AF-408B-92BD-55DC977E5250";
-
 		private readonly string serverId;
 		private Mutex channelMutex;
 		private IpcServerChannel ipcServerChannel;
 
 
-		public ApiIpcServer(string serverId)
+		public ApiIpcServer(string serverName)
 		{
-			this.serverId = GetUniqueId(serverId);
+			this.serverId = ApiIpcCommon.GetServerId(serverName);
 		}
 
 
-		public static bool IsServerRegistered(string serverId)
-		{
-			serverId = GetUniqueId(serverId);
-			using (new Mutex(true, serverId, out var isMutexCreated))
-			{
-				if (isMutexCreated)
-				{
-					return false;
-				}
-			}
-
-			return true;
-		}
+		public static bool IsServerRegistered(string serverName) => ApiIpcCommon.IsServerRegistered(serverName);
 
 
 		public bool TryPublishService<TRemoteService>(ApiIpcService ipcService)
@@ -53,31 +38,9 @@ namespace DependinatorApi.ApiHandling
 			}
 
 			// Publish the ipc service receiving the data
-			string ipcServiceName = serverId + typeof(TRemoteService).FullName;
+			string ipcServiceName = ApiIpcCommon.GetServiceName<TRemoteService>(serverId);
 			RemotingServices.Marshal(ipcService, ipcServiceName);
 
-			return true;
-		}
-
-
-		internal static string GetUniqueId(string text) =>
-			AsSha2Text(ApiGuid + Environment.UserName + text.ToLower());
-
-
-		private bool TryCreateServer()
-		{
-			string mutexName = (serverId);
-			string channelName = serverId;
-
-			channelMutex = new Mutex(true, mutexName, out var isMutexCreated);
-			if (!isMutexCreated)
-			{
-				channelMutex?.Dispose();
-				channelMutex = null;
-				return false;
-			}
-
-			ipcServerChannel = CreateIpcServer(channelName);
 			return true;
 		}
 
@@ -105,37 +68,43 @@ namespace DependinatorApi.ApiHandling
 		}
 
 
-		private static IpcServerChannel CreateIpcServer(string channelName)
-		{
-			BinaryServerFormatterSinkProvider sinkProvider = new BinaryServerFormatterSinkProvider();
-			sinkProvider.TypeFilterLevel = TypeFilterLevel.Full;
 
-			IDictionary properties = new Dictionary<string, string>();
-			properties["name"] = channelName;
-			properties["portName"] = channelName;
-			properties["exclusiveAddressUse"] = "false";
+		private bool TryCreateServer()
+		{
+			string mutexName = (serverId);
+			string channelName = serverId;
+
+			channelMutex = new Mutex(true, mutexName, out var isMutexCreated);
+			if (!isMutexCreated)
+			{
+				channelMutex?.Dispose();
+				channelMutex = null;
+				return false;
+			}
+
+			ipcServerChannel = CreateIpcServerChannel(channelName);
+			return true;
+		}
+
+
+		private static IpcServerChannel CreateIpcServerChannel(string channelName)
+		{
+			BinaryServerFormatterSinkProvider sinkProvider = new BinaryServerFormatterSinkProvider
+			{
+				TypeFilterLevel = TypeFilterLevel.Full
+			};
+
+			IDictionary properties = new Dictionary<string, string>
+			{
+				["name"] = channelName,
+				["portName"] = channelName,
+				["exclusiveAddressUse"] = "false"
+			};
 
 			IpcServerChannel ipcServerChannel = new IpcServerChannel(properties, sinkProvider);
 			ChannelServices.RegisterChannel(ipcServerChannel, true);
 
 			return ipcServerChannel;
-		}
-
-
-		private static string AsSha2Text(string text)
-		{
-			byte[] textBytes = Encoding.UTF8.GetBytes(text.ToLower());
-
-			SHA256Managed shaService = new SHA256Managed();
-			byte[] shaHash = shaService.ComputeHash(textBytes, 0, textBytes.Length);
-
-			StringBuilder hashText = new StringBuilder();
-			foreach (byte b in shaHash)
-			{
-				hashText.Append(b.ToString("x2"));
-			}
-
-			return hashText.ToString();
 		}
 	}
 }
