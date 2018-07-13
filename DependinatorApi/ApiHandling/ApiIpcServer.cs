@@ -21,6 +21,7 @@ namespace DependinatorApi.ApiHandling
 		public ApiIpcServer(string serverName)
 		{
 			this.serverId = ApiIpcCommon.GetServerId(serverName);
+			Log.Debug($"Create server: {serverName} as {serverId}");
 		}
 
 
@@ -41,6 +42,7 @@ namespace DependinatorApi.ApiHandling
 			string ipcServiceName = ApiIpcCommon.GetServiceName<TRemoteService>(serverId);
 			RemotingServices.Marshal(ipcService, ipcServiceName);
 
+			Log.Debug($"Published: {ipcServiceName}");
 			return true;
 		}
 

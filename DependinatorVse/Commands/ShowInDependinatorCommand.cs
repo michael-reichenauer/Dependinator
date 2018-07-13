@@ -2,10 +2,15 @@
 using System.ComponentModel.Design;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
+using DependinatorApi;
+using DependinatorApi.ApiHandling;
+using DependinatorVse.Commands.Private;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
 namespace DependinatorVse.Commands
@@ -59,24 +64,35 @@ namespace DependinatorVse.Commands
 		{
 			//VsExtensionApi.Instance.ShowItem("Some item");
 
+			await package.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
+
 			DTE2 dte = (DTE2)await package.GetServiceAsync(typeof(DTE));
 			Solution solution = dte.Solution;
+
+			Document document = dte.ActiveDocument;
 
 
 			Array projects = (Array)dte.ActiveSolutionProjects;
 			Project project = projects.Cast<Project>().ElementAtOrDefault(0);
 
-			string message = string.Format(CultureInfo.CurrentCulture, "Inside {0}.MenuItemCallback()", this.GetType().FullName);
-			string title = "ShowInDependinatorCommand";
+			DependinatorApiClient apiClient = new DependinatorApiClient(solution.FileName);
 
-			// Show a message box to prove we were here
-			VsShellUtilities.ShowMessageBox(
-					this.package,
-					message,
-					title,
-					OLEMSGICON.OLEMSGICON_INFO,
-					OLEMSGBUTTON.OLEMSGBUTTON_OK,
-					OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+			await apiClient.ShowFileAsync(document.FullName);
+
+		
+	
+
+			//string message = string.Format(CultureInfo.CurrentCulture, "Inside {0}.MenuItemCallback()", this.GetType().FullName);
+			//string title = "ShowInDependinatorCommand";
+
+			//// Show a message box to prove we were here
+			//VsShellUtilities.ShowMessageBox(
+			//		this.package,
+			//		message,
+			//		title,
+			//		OLEMSGICON.OLEMSGICON_INFO,
+			//		OLEMSGBUTTON.OLEMSGBUTTON_OK,
+			//		OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
 		}
 	}
 }

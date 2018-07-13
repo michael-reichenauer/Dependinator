@@ -26,7 +26,7 @@ namespace Dependinator.Api
 
 		public void ShowFile(string filePath)
 		{
-
+			Log.Warn($"Show file {filePath}");
 		}
 	}
 }

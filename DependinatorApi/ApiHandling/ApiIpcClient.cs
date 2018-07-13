@@ -19,6 +19,7 @@ namespace DependinatorApi.ApiHandling
 		public ApiIpcClient(string serverName)
 		{
 			this.serverId = ApiIpcCommon.GetServerId(serverName);
+			Log.Debug($"Create client: {serverName} as {serverId}");
 		}
 
 
@@ -40,6 +41,8 @@ namespace DependinatorApi.ApiHandling
 			}
 
 			string ipcServiceName = ApiIpcCommon.GetServiceName<TRemoteService>(serverId);
+			Log.Debug($"Calling: {ipcServiceName}");
+
 			string ipcUrl = $"ipc://{serverId}/{ipcServiceName}";
 
 			// Get proxy instance of rpc service instance published by server in PublishService()
