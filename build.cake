@@ -1,6 +1,6 @@
 #tool nuget:?package=NUnit.ConsoleRunner&version=3.4.0
 #tool nuget:?package=Tools.InnoSetup&version=5.5.9
-#addin nuget:?package=Cake.VersionReader
+#addin nuget:?package=Cake.VersionReader&version=5.0.0
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -67,7 +67,8 @@ Task("Build")
       // Use MSBuild
       MSBuild(solutionPath, new MSBuildSettings {
         Configuration = configuration,
-        Verbosity = Verbosity.Minimal,   
+        Verbosity = Verbosity.Minimal,
+        MSBuildPlatform = MSBuildPlatform.x86,
         ArgumentCustomization = args => args.Append("/nologo") 
         }  );
     }
