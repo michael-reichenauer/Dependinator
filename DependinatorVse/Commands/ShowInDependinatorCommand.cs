@@ -67,6 +67,12 @@ namespace DependinatorVse.Commands
 			await package.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
 			DTE2 dte = (DTE2)await package.GetServiceAsync(typeof(DTE));
+			if (dte == null)
+			{
+				return;
+			}
+
+
 			Solution solution = dte.Solution;
 
 			Document document = dte.ActiveDocument;
