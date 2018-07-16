@@ -14,11 +14,13 @@ namespace DependinatorVse.Commands.Private
 		private static readonly char[] QuoteChar = "\"".ToCharArray();
 
 		private readonly string solutionFilePath;
+		private readonly bool isDeveloperStudio;
 
 
-		public DependinatorApiClient(string solutionFilePath)
+		public DependinatorApiClient(string solutionFilePath, bool isDeveloperStudio)
 		{
 			this.solutionFilePath = solutionFilePath;
+			this.isDeveloperStudio = isDeveloperStudio;
 		}
 
 
@@ -73,7 +75,7 @@ namespace DependinatorVse.Commands.Private
 		}
 
 
-		private static void StartedDependinator(string filePath)
+		private void StartedDependinator(string filePath)
 		{
 			string targetPath = Path.Combine(GetInstallFolderPath(), $"{Name}.exe");
 
@@ -114,8 +116,13 @@ namespace DependinatorVse.Commands.Private
 		}
 
 
-		public static string GetInstallFolderPath()
+		public string GetInstallFolderPath()
 		{
+			if (isDeveloperStudio)
+			{
+				return @"C:\Work Files\Dependinator\Dependinator\bin\Debug";
+			}
+
 			string programFolderPath = Environment.ExpandEnvironmentVariables("%ProgramW6432%");
 
 			return Path.Combine(programFolderPath, Name);

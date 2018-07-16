@@ -8,5 +8,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling
 	{
 		Task<R<string>> GetCode(string filePath, NodeName nodeName);
 		Task<R<string>> GetSourceFilePath(string filePath, NodeName nodeName);
+		Task<R<NodeName>> GetNodeForFilePathAsync(string filePath, string sourceFilePath);
+
 	}
 }

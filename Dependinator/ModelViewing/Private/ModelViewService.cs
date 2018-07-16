@@ -29,6 +29,9 @@ namespace Dependinator.ModelViewing.Private
 
 
 		public void StartMoveToNode(NodeName nodeName) => locateNodeService.StartMoveToNode(nodeName);
+		public void StartMoveToNode(string filePath) => locateNodeService.StartMoveToNode(filePath);
+
+
 		public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelViewModelService.GetHiddenNodeNames();
 		public void ShowHiddenNode(NodeName nodeName) => modelViewModelService.ShowHiddenNode(nodeName);
 		public IEnumerable<NodeName> Search(string text) => searchService.Search(text);

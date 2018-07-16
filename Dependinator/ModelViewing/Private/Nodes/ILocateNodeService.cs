@@ -3,5 +3,6 @@
 	internal interface ILocateNodeService
 	{
 		void StartMoveToNode(NodeName nodeName);
+		void StartMoveToNode(string filePath);
 	}
 }

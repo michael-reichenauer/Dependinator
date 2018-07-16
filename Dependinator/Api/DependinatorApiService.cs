@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using System.Windows.Threading;
 using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
 using DependinatorApi;
@@ -13,6 +14,20 @@ namespace Dependinator.Api
 	{
 		public void Activate(string[] args)
 		{
+			MoveMainWindowToFront();
+		}
+
+
+		public void ShowFile(string filePath)
+		{
+			MoveMainWindowToFront();
+
+			Log.Warn($"Show file {filePath}");
+		}
+
+
+		private static void MoveMainWindowToFront()
+		{
 			Application.Current.Dispatcher.InvokeAsync(() =>
 			{
 				Application.Current.MainWindow.WindowState = WindowState.Minimized;
@@ -21,12 +36,6 @@ namespace Dependinator.Api
 
 				Log.Usage("Activated");
 			});
-		}
-
-
-		public void ShowFile(string filePath)
-		{
-			Log.Warn($"Show file {filePath}");
 		}
 	}
 }

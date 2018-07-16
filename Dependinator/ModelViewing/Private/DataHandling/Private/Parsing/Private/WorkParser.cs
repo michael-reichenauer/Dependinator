@@ -74,6 +74,22 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		}
 
 
+		public async Task<R<NodeName>> GetNodeForFilePathAsync(string sourceFilePath)
+		{
+			await Task.Yield();
+
+			if (SolutionParser.IsSolutionFile(filePath))
+			{
+				solutionParser = new SolutionParser(filePath, null, true);
+				return await solutionParser.GetNodeForFilePathAsync(sourceFilePath);
+			}
+			else
+			{
+				return Error.From("Source file only available for solution based models");
+			}
+		}
+
+
 		public static IReadOnlyList<string> GetDataFilePaths(string filePath)
 		{
 			if (SolutionParser.IsSolutionFile(filePath))

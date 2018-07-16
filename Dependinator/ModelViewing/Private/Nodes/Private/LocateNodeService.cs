@@ -47,6 +47,12 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 		}
 
 
+		public void StartMoveToNode(string filePath)
+		{
+			throw new NotImplementedException();
+		}
+
+
 		private static void DoZoomAndMoveSteps(Operation operation)
 		{
 			double targetScale = operation.TargetNode.ViewModel.ItemScale;

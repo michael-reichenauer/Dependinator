@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -41,7 +42,14 @@ namespace DependinatorVse.Commands.Private
 		{
 			try
 			{
-				Native.OutputDebugString($"{level} {fileName}({lineNumber}) {member} - {msg}");
+				using (StringReader reader = new StringReader(msg))
+				{
+					string line;
+					while ((line = reader.ReadLine()) != null)
+					{
+						Native.OutputDebugString($"DepVse: {level} {fileName}({lineNumber}) {member} - {line}");
+					}
+				}
 			}
 			catch (Exception)
 			{

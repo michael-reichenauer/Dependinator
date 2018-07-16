@@ -46,9 +46,7 @@ namespace DependinatorVse.Commands
 		{
 			// Verify the current thread is the UI thread - the call to AddCommand in ShowInDependinatorCommand's constructor requires
 			// the UI thread.
-#pragma warning disable VSTHRD109 // Switch instead of assert in async methods
-			ThreadHelper.ThrowIfNotOnUIThread();
-#pragma warning restore VSTHRD109 // Switch instead of assert in async methods
+			await package.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
 			OleMenuCommandService commandService = await package.GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
 			Instance = new ShowInDependinatorCommand(package, commandService);
@@ -62,26 +60,26 @@ namespace DependinatorVse.Commands
 		/// </summary>
 		private async void Execute(object sender, EventArgs e)
 		{
-			//VsExtensionApi.Instance.ShowItem("Some item");
-
 			await package.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
-			DTE2 dte = (DTE2)await package.GetServiceAsync(typeof(DTE));
+			DTE2 dte = (DTE2)await ServiceProvider.GetServiceAsync(typeof(DTE));
 			if (dte == null)
 			{
 				return;
 			}
 
+			// When running in special developer studio, use developer Dependinator.exe 
+			bool isDeveloperStudio = dte.RegistryRoot?.Contains("15.0_ae5cc26aExp") ?? false;
 
 			Solution solution = dte.Solution;
 
 			Document document = dte.ActiveDocument;
 
 
-			Array projects = (Array)dte.ActiveSolutionProjects;
-			Project project = projects.Cast<Project>().ElementAtOrDefault(0);
+			//Array projects = (Array)dte.ActiveSolutionProjects;
+			//Project project = projects.Cast<Project>().ElementAtOrDefault(0);
 
-			DependinatorApiClient apiClient = new DependinatorApiClient(solution.FileName);
+			DependinatorApiClient apiClient = new DependinatorApiClient(solution.FileName, isDeveloperStudio);
 
 			await apiClient.ShowFileAsync(document.FullName);
 

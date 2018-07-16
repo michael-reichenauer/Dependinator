@@ -101,6 +101,32 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		}
 
 
+		public async Task<R<NodeName>> GetNodeForFilePathAsync(string sourceFilePath)
+		{
+			await Task.Yield();
+
+			R result = CreateAssemblyParsers();
+
+			if (result.IsFaulted)
+			{
+				return result.Error;
+			}
+
+			NodeName nodeName = null;
+
+			AssemblyParser parser = assemblyParsers
+				.FirstOrDefault(p => p.TryGetNodeNameFor(sourceFilePath, out nodeName));
+
+
+			if (nodeName == null)
+			{
+				return Error.From($"Failed to find node for {sourceFilePath}");
+			}
+
+			return nodeName;
+		}
+
+
 		private DataNodeName GetSolutionNodeName()
 		{
 			string solutionName = Path.GetFileName(solutionFilePath).Replace(".", "*");

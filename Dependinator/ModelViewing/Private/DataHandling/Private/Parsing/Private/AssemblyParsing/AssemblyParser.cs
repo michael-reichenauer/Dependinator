@@ -79,7 +79,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		}
 
 
-
 		public void ParseAssemblyModule()
 		{
 			DataNodeName assemblyName = new DataNodeName(Name.GetModuleName(assembly.Value));
@@ -130,6 +129,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		public R<string> GetSourceFilePath(NodeName nodeName) =>
 			decompiler.GetSourceFilePath(assembly.Value.MainModule, nodeName);
 
+
+		public bool TryGetNodeNameFor(string sourceFilePath, out NodeName nodeName)
+		{
+			IEnumerable<TypeDefinition> assemblyTypes = GetAssemblyTypes();
+
+			return decompiler.TryGetNodeNameForSourceFile(
+				assembly.Value.MainModule, assemblyTypes, sourceFilePath, out nodeName);
+		}
 
 		public void Dispose()
 		{

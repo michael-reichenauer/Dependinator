@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Dependinator.Utils.ErrorHandling;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
@@ -29,14 +31,35 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		{
 			if (TryGetType(module, nodeName, out TypeDefinition type))
 			{
-				return GetFilePath( type);
+				return GetFilePath(type);
 			}
 			else if (TryGetMember(module, nodeName, out IMemberDefinition member))
 			{
-				return GetFilePath( member);
+				return GetFilePath(member);
 			}
 
 			return Error.From($"Failed to locate file path for:\n{nodeName}");
+		}
+
+
+		public bool TryGetNodeNameForSourceFile(
+			ModuleDefinition module,
+			IEnumerable<TypeDefinition> assemblyTypes,
+			string sourceFilePath,
+			out NodeName nodeName)
+		{
+			foreach (TypeDefinition type in assemblyTypes)
+			{
+				R<string> path = GetFilePath(type);
+				if (path.IsOk && sourceFilePath.IsSameIgnoreCase(path.Value))
+				{
+					nodeName = NodeName.From(Name.GetTypeFullName(type));
+					return true;
+				}
+			}
+
+			nodeName = null;
+			return false;
 		}
 
 
@@ -50,7 +73,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 			if (typeIndex > -1)
 			{
 				string typeName = fullName.Substring(typeIndex + 1);
-				
+
 				type = module.GetType(typeName);
 				return type != null;
 			}
@@ -60,7 +83,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		}
 
 
-		private static bool TryGetMember(ModuleDefinition module,NodeName nodeName,out IMemberDefinition member)
+		private static bool TryGetMember(ModuleDefinition module, NodeName nodeName, out IMemberDefinition member)
 		{
 			string fullName = nodeName.FullName;
 
