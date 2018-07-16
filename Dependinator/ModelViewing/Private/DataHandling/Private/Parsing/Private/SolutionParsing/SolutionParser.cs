@@ -101,7 +101,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		}
 
 
-		public async Task<R<NodeName>> GetNodeForFilePathAsync(string sourceFilePath)
+		public async Task<R<NodeName>> GetNodeNameForFilePathAsync(string sourceFilePath)
 		{
 			await Task.Yield();
 
@@ -111,19 +111,25 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 			{
 				return result.Error;
 			}
-
-			NodeName nodeName = null;
-
-			AssemblyParser parser = assemblyParsers
-				.FirstOrDefault(p => p.TryGetNodeNameFor(sourceFilePath, out nodeName));
-
-
-			if (nodeName == null)
+			
+			foreach (AssemblyParser parser in assemblyParsers)
 			{
-				return Error.From($"Failed to find node for {sourceFilePath}");
+				if (parser.TryGetNodeNameFor(sourceFilePath, out NodeName nodeName))
+				{
+					return nodeName;
+				}
 			}
 
-			return nodeName;
+			sourceFilePath = Path.GetDirectoryName(sourceFilePath);
+			foreach (AssemblyParser parser in assemblyParsers)
+			{
+				if (parser.TryGetNodeNameFor(sourceFilePath, out NodeName nodeName))
+				{
+					return nodeName.ParentName;
+				}
+			}
+
+			return Error.From($"Failed to find node for {sourceFilePath}");
 		}
 
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Dependinator.Utils;
 using Dependinator.Utils.ErrorHandling;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
@@ -31,11 +32,17 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		{
 			if (TryGetType(module, nodeName, out TypeDefinition type))
 			{
-				return GetFilePath(type);
+				if (TryGetFilePath(type, out string filePath))
+				{
+					return filePath;
+				}
 			}
 			else if (TryGetMember(module, nodeName, out IMemberDefinition member))
 			{
-				return GetFilePath(member);
+				if (TryGetFilePath(member, out string filePath))
+				{
+					return filePath;
+				}
 			}
 
 			return Error.From($"Failed to locate file path for:\n{nodeName}");
@@ -50,11 +57,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		{
 			foreach (TypeDefinition type in assemblyTypes)
 			{
-				R<string> path = GetFilePath(type);
-				if (path.IsOk && sourceFilePath.IsSameIgnoreCase(path.Value))
+				if (TryGetFilePath(type, out string filePath))
 				{
-					nodeName = NodeName.From(Name.GetTypeFullName(type));
-					return true;
+					if (filePath.StartsWithIc(sourceFilePath))
+					{
+						nodeName = NodeName.From(Name.GetTypeFullName(type));
+						return true;
+					}
 				}
 			}
 
@@ -178,33 +187,36 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		}
 
 
-		private R<string> GetFilePath(TypeDefinition type)
+		private bool TryGetFilePath(TypeDefinition type, out string filePath)
 		{
 			foreach (MethodDefinition method in type.Methods)
 			{
 				SequencePoint sequencePoint = method.DebugInformation.SequencePoints.ElementAtOrDefault(0);
 				if (sequencePoint != null)
 				{
-					return sequencePoint.Document.Url;
+					filePath = sequencePoint.Document.Url;
+					return true;
 				}
 			}
 
-			return Error.From($"Failed to locate file path for {type.FullName}");
+			filePath = null;
+			return false;
 		}
 
 
-		private R<string> GetFilePath(IMemberDefinition member)
+		private bool TryGetFilePath(IMemberDefinition member, out string filePath)
 		{
 			if (member is MethodDefinition method)
 			{
 				SequencePoint sequencePoint = method.DebugInformation.SequencePoints.ElementAtOrDefault(0);
 				if (sequencePoint != null)
 				{
-					return sequencePoint.Document.Url;
+					filePath = sequencePoint.Document.Url;
+					return true;
 				}
 			}
 
-			return GetFilePath(member.DeclaringType);
+			return TryGetFilePath(member.DeclaringType, out filePath);
 		}
 
 

@@ -1,5 +1,6 @@
-﻿using System.Windows;
-using System.Windows.Threading;
+﻿using System;
+using System.Windows;
+using Dependinator.ModelViewing;
 using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
 using DependinatorApi;
@@ -12,6 +13,15 @@ namespace Dependinator.Api
 	[SingleInstance]
 	internal class DependinatorApiService : ApiIpcService, IDependinatorApi
 	{
+		private readonly Lazy<IModelViewService> modelViewService;
+
+
+		public DependinatorApiService(Lazy<IModelViewService> modelViewService)
+		{
+			this.modelViewService = modelViewService;
+		}
+
+
 		public void Activate(string[] args)
 		{
 			MoveMainWindowToFront();
@@ -22,7 +32,10 @@ namespace Dependinator.Api
 		{
 			MoveMainWindowToFront();
 
-			Log.Warn($"Show file {filePath}");
+			Application.Current.Dispatcher.InvokeAsync(() =>
+			{
+				modelViewService.Value.StartMoveToNode(filePath);
+			});
 		}
 
 

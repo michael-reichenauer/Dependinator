@@ -118,7 +118,8 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 		}
 
 
-		public void Locate(NodeName nodeName) => locateNodeService.StartMoveToNode(nodeName);
+		public void Locate(NodeName nodeName) => locateNodeService.TryStartMoveToNode(nodeName);
+
 		public void ShowDependencies(NodeName nodeName)
 		{
 			if (TryGetNode(nodeName, out Node node))

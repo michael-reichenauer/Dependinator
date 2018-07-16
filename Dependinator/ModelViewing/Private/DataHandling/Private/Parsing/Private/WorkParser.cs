@@ -81,7 +81,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 			if (SolutionParser.IsSolutionFile(filePath))
 			{
 				solutionParser = new SolutionParser(filePath, null, true);
-				return await solutionParser.GetNodeForFilePathAsync(sourceFilePath);
+				return await solutionParser.GetNodeNameForFilePathAsync(sourceFilePath);
 			}
 			else
 			{
