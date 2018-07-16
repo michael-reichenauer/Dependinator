@@ -1,7 +1,7 @@
-﻿namespace DependinatorVse
-{
-	public interface IDependinatorVseImpl
-	{
-		void Init();
-	}
-}
+﻿//namespace DependinatorVse
+//{
+//	public interface IDependinatorVseImpl
+//	{
+//		void Init();
+//	}
+//}

@@ -1,14 +1,14 @@
-﻿using System;
+﻿//using System;
 
 
-namespace DependinatorVse
-{
-	public interface IDynamicAssembly
-	{
-		void Load();
+//namespace DependinatorVse
+//{
+//	public interface IDynamicAssembly
+//	{
+//		void Load();
 
-		void UnLoad();
+//		void UnLoad();
 
-		object Resolve(Type type, object[] args);
-	}
-}
+//		object Resolve(Type type, object[] args);
+//	}
+//}
