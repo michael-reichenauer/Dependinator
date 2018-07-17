@@ -2,7 +2,7 @@ using System.Windows;
 using Dependinator.Utils.UI.Mvvm;
 
 
-namespace Dependinator.ModelViewing.Private.CodeViewing
+namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 {
 	internal class CodeViewModel : ViewModel
 	{

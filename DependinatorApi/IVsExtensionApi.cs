@@ -2,6 +2,6 @@
 {
 	public interface IVsExtensionApi
 	{
-		void ShowFile(string filePath);
+		void ShowFile(string filePath, int lineNumber);
 	}
 }

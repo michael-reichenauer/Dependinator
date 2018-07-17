@@ -15,12 +15,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
 			this.parserService = parserService;
 		}
 
-		public async Task<R<string>> GetCode(string filePath, NodeName nodeName)
+		public async Task<R<string>> GetCodeAsync(string filePath, NodeName nodeName)
 		{
 			return await parserService.GetCodeAsync(filePath, nodeName);
 		}
 
-		public async Task<R<string>> GetSourceFilePath(string filePath, NodeName nodeName)
+		public async Task<R<string>> GetSourceFilePathAsync(string filePath, NodeName nodeName)
 		{
 			return await parserService.GetSourceFilePath(filePath, nodeName);
 		}

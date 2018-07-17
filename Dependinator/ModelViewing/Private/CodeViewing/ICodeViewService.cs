@@ -1,7 +1,7 @@
 ﻿namespace Dependinator.ModelViewing.Private.CodeViewing
 {
-	public interface ICodeViewService
+	internal interface ICodeViewService
 	{
-		
+		void ShowCode(NodeName nodeName);
 	}
 }

@@ -1,4 +1,4 @@
-﻿namespace DependinatorApi
+﻿namespace DependinatorApi.ApiHandling
 {
 	public static class ApiServerNames
 	{

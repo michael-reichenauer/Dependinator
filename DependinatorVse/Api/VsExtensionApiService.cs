@@ -1,4 +1,5 @@
-﻿using DependinatorApi;
+﻿
+using DependinatorApi;
 using DependinatorApi.ApiHandling;
 using DependinatorVse.Commands.Private;
 using EnvDTE;
@@ -20,7 +21,7 @@ namespace DependinatorVse.Api
 
 
 #pragma warning disable VSTHRD100 // Api functions does not support Task type
-		public async void ShowFile(string filePath)
+		public async void ShowFile(string filePath, int lineNumber)
 #pragma warning restore VSTHRD100 
 		{
 			Log.Debug($"Show {filePath}");
@@ -28,9 +29,13 @@ namespace DependinatorVse.Api
 			await package.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 			DTE2 dte = (DTE2)await package.GetServiceAsync(typeof(DTE));
+			if (dte == null) return;
 
-			//dte.OpenFile(Constants.vsViewKindCode, filePath);
-			dte?.ExecuteCommand("File.OpenFile", $"\"{filePath}\"");
+			Window mainWindow = dte.MainWindow;
+			mainWindow.Activate();
+
+			dte.ExecuteCommand("File.OpenFile", $"\"{filePath}\"");
+			dte.ExecuteCommand("Edit.GoTo", $"{lineNumber}");
 		}
 	}
 }

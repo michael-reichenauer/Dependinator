@@ -3,15 +3,12 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Private.CodeViewing;
 using Dependinator.ModelViewing.Private.DependencyExploring;
 using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.ModelViewing.Private.ModelHandling.Private;
-using DependinatorApi;
-using DependinatorApi.ApiHandling;
 
 
 namespace Dependinator.ModelViewing.Private.Nodes.Private
@@ -22,9 +19,8 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 		private readonly IThemeService themeService;
 		private readonly ISelectionService selectionService;
 		private readonly INodeLayoutService nodeLayoutService;
+		private readonly ICodeViewService codeViewService;
 		private readonly Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider;
-		private readonly Func<NodeName, CodeDialog> codeDialogProvider;
-		private readonly ModelMetadata modelMetadata;
 
 
 		public NodeViewModelService(
@@ -32,21 +28,18 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 			IThemeService themeService,
 			ISelectionService selectionService,
 			INodeLayoutService nodeLayoutService,
-			Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider,
-			Func<NodeName, CodeDialog> codeDialogProvider,
-			ModelMetadata modelMetadata)
+			ICodeViewService codeViewService,
+			Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider)
 		{
 			this.modelService = modelService;
 			this.themeService = themeService;
 			this.selectionService = selectionService;
 			this.nodeLayoutService = nodeLayoutService;
+			this.codeViewService = codeViewService;
 			this.dependencyExplorerWindowProvider = dependencyExplorerWindowProvider;
-			this.codeDialogProvider = codeDialogProvider;
-			this.modelMetadata = modelMetadata;
 		}
 
-
-
+		
 		public void HideNode(Node node)
 		{
 			if (node.IsHidden)
@@ -151,23 +144,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 		}
 
 
-		public void ShowCode(Node node)
-		{
-			string serverName = ApiServerNames.ExtensionApiServerName(modelMetadata.ModelFilePath);
-			if (ApiIpcClient.IsServerRegistered(serverName))
-			{
-				using (ApiIpcClient apiIpcClient = new ApiIpcClient(serverName))
-				{
-					apiIpcClient.Service<IVsExtensionApi>().ShowFile(
-						@"C:\Work Files\GitMind\GitMind\RepositoryViews\CommitViewModel.cs");
-				}
-
-				return;
-			}
-
-			CodeDialog codeDialog = codeDialogProvider(node.Name);
-			codeDialog.Show();
-		}
+		public void ShowCode(Node node) => codeViewService.ShowCode(node.Name);
 
 
 		public void RearrangeLayout(NodeViewModel nodeViewModel)

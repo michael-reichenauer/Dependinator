@@ -175,7 +175,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		{
 			CSharpDecompiler decompiler = GetDecompiler(module);
 
-			return decompiler.DecompileTypesAsString(new[] { type }).Replace("\t", "  ");
+			return "// Decompiled code\n" +
+				decompiler.DecompileTypesAsString(new[] { type }).Replace("\t", "  ");
 		}
 
 
@@ -183,7 +184,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		{
 			CSharpDecompiler decompiler = GetDecompiler(module);
 
-			return decompiler.DecompileAsString(member).Replace("\t", "  ");
+			return "// Decompiled code\n" + 
+				decompiler.DecompileAsString(member).Replace("\t", "  ");
 		}
 
 
