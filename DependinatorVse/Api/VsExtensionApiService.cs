@@ -19,20 +19,18 @@ namespace DependinatorVse.Api
 		}
 
 
+#pragma warning disable VSTHRD100 // Api functions does not support Task type
 		public async void ShowFile(string filePath)
+#pragma warning restore VSTHRD100 
 		{
+			Log.Debug($"Show {filePath}");
+
 			await package.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 			DTE2 dte = (DTE2)await package.GetServiceAsync(typeof(DTE));
-			if (dte == null)
-			{
-				return;
-			}
 
 			//dte.OpenFile(Constants.vsViewKindCode, filePath);
-			dte.ExecuteCommand("File.OpenFile", $"\"{filePath}\"");
-
-			Log.Debug($"Show {filePath}");
+			dte?.ExecuteCommand("File.OpenFile", $"\"{filePath}\"");
 		}
 	}
 }

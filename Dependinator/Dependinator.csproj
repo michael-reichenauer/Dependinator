@@ -88,6 +88,7 @@
 
   <ItemGroup>
     <Folder Include="Common\VisualStudio\" />
+    <Folder Include="ModelViewing\Private\CodeViewing\Private\" />
   </ItemGroup>
 
 </Project>
