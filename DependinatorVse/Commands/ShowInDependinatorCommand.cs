@@ -75,7 +75,7 @@ namespace DependinatorVse.Commands
 
 			Document document = dte.ActiveDocument;
 
-
+			
 			//Array projects = (Array)dte.ActiveSolutionProjects;
 			//Project project = projects.Cast<Project>().ElementAtOrDefault(0);
 

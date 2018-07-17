@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
+using DependinatorVse.Api.ApiHandling.Private;
 using DependinatorVse.Commands;
-using EnvDTE;
-using EnvDTE80;
+using DependinatorVse.Commands.Private;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
+using SolutionEvents = Microsoft.VisualStudio.Shell.Events.SolutionEvents;
 using Task = System.Threading.Tasks.Task;
 
 namespace DependinatorVse
@@ -33,9 +36,10 @@ namespace DependinatorVse
 	[ProvideMenuResource("Menus.ctmenu", 1)]
 	[Guid(PackageGuids.guidShowInDependinatorCommandPackageString)]
 	[SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "pkgdef, VS and vsixmanifest are valid VS terms")]
+	[ProvideAutoLoad(VSConstants.UICONTEXT.SolutionOpening_string, PackageAutoLoadFlags.BackgroundLoad)]
 	public sealed class VSPackage : AsyncPackage
 	{
-
+		private ApiManagerService apiManagerService;
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ShowInDependinatorCommand"/> class.
 		/// </summary>
@@ -62,6 +66,9 @@ namespace DependinatorVse
 			await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
 			await ShowInDependinatorCommand.InitializeAsync(this);
+
+			apiManagerService = new ApiManagerService();
+			await apiManagerService.InitApiServerAsync(this);
 		}
 	}
 }

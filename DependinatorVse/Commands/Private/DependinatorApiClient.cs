@@ -32,7 +32,7 @@ namespace DependinatorVse.Commands.Private
 
 		private async Task CallAsync<TRemoteService>(Action<TRemoteService> action)
 		{
-			string serverName = DependinatorApiHelper.ServerName(solutionFilePath);
+			string serverName = ApiServerNames.DependinatorApiServerName(solutionFilePath);
 			Log.Debug($"Calling: {serverName}");
 
 			bool isStartedDependinator = false;
