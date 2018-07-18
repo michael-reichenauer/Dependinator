@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using Dependinator.Utils.Reflection;
 
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.SolutionParsing.Private

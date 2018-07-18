@@ -126,7 +126,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 			decompiler.GetCode(assembly.Value.MainModule, nodeName);
 
 
-		public R<string> GetSourceFilePath(NodeName nodeName) =>
+		public R<SourceLocation> GetSourceFilePath(NodeName nodeName) =>
 			decompiler.GetSourceFilePath(assembly.Value.MainModule, nodeName);
 
 

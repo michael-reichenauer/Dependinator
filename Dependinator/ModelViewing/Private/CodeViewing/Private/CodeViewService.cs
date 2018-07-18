@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelViewing.Private.DataHandling;
-using Dependinator.ModelViewing.Private.ModelHandling.Private;
 using Dependinator.Utils.ErrorHandling;
 using DependinatorApi;
 using DependinatorApi.ApiHandling;
@@ -16,13 +15,13 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 	{
 		private readonly IDataDetailsService dataDetailsService;
 
-		private readonly Func<NodeName, Func<NodeName, Task<R<string>>>, CodeDialog> codeDialogProvider;
+		private readonly Func<NodeName, Func<NodeName, Task<R<SourceCode>>>, CodeDialog> codeDialogProvider;
 		private readonly ModelMetadata modelMetadata;
 
 
 		public CodeViewService(
 			IDataDetailsService dataDetailsService,
-			Func<NodeName, Func<NodeName, Task<R<string>>>, CodeDialog> codeDialogProvider,
+			Func<NodeName, Func<NodeName, Task<R<SourceCode>>>, CodeDialog> codeDialogProvider,
 			ModelMetadata modelMetadata)
 		{
 			this.dataDetailsService = dataDetailsService;
@@ -35,8 +34,8 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 		{
 			string solutionPath = modelMetadata.ModelFilePath;
 
-			R<string> filePath = await TryGetFilePathAsync(nodeName);
-			if (filePath.IsOk)
+			R<SourceLocation> file = await TryGetFilePathAsync(nodeName);
+			if (file.IsOk)
 			{
 				string serverName = ApiServerNames.ExtensionApiServerName(solutionPath);
 
@@ -44,36 +43,53 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 				{
 					using (ApiIpcClient apiIpcClient = new ApiIpcClient(serverName))
 					{
-						apiIpcClient.Service<IVsExtensionApi>().ShowFile(filePath.Value, 250);
+						apiIpcClient.Service<IVsExtensionApi>().ShowFile(file.Value.FilePath, file.Value.LineNumber);
 					}
 				}
 				else
 				{
 					// No Visual studio has loaded this solution, lets show the file in "our" code viewer
-					string fileText = File.ReadAllText(filePath.Value);
-					CodeDialog codeDialog = codeDialogProvider(
-						nodeName, n => Task.FromResult(R.From(fileText)));
+					string fileText = File.ReadAllText(file.Value.FilePath);
+					CodeDialog codeDialog = codeDialogProvider(nodeName, name => GetCode(fileText, file.Value.LineNumber));
 					codeDialog.Show();
 				}
 			}
 			else
 			{
 				// Could not determine source file path, lets try to decompile th code
-				CodeDialog codeDialog = codeDialogProvider(
-					nodeName, n => dataDetailsService.GetCodeAsync(solutionPath, n));
+				CodeDialog codeDialog = codeDialogProvider(nodeName, name => GetCodeAsync(solutionPath, name));
 				codeDialog.Show();
 			}
 		}
 
 
-		private async Task<R<string>> TryGetFilePathAsync(NodeName nodeName)
+		private static Task<R<SourceCode>> GetCode(string fileText, int lineNumber)
+		{
+			SourceCode sourceCode = new SourceCode(fileText, lineNumber);
+			return Task.FromResult(R.From(sourceCode));
+		}
+
+
+		private async Task<R<SourceCode>> GetCodeAsync(string solutionPath, NodeName nodeName)
+		{
+			R<string> text = await dataDetailsService.GetCodeAsync(solutionPath, nodeName);
+			if (text.IsFaulted)
+			{
+				return text.Error;
+			}
+
+			return new SourceCode(text.Value, 0);
+		}
+
+
+		private async Task<R<SourceLocation>> TryGetFilePathAsync(NodeName nodeName)
 		{
 			string solutionPath = modelMetadata.ModelFilePath;
-			R<string> result = await dataDetailsService.GetSourceFilePathAsync(solutionPath, nodeName);
+			R<SourceLocation> result = await dataDetailsService.GetSourceFilePathAsync(solutionPath, nodeName);
 
 			if (result.IsOk)
 			{
-				if (File.Exists(result.Value))
+				if (File.Exists(result.Value.FilePath))
 				{
 					return result.Value;
 				}
@@ -89,11 +105,11 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 
 				if (filePaths.Count == 1)
 				{
-					return filePaths[0];
+					return new SourceLocation(filePaths[0], 0);
 				}
 			}
 
-			return R<string>.NoValue;
+			return R<SourceLocation>.NoValue;
 		}
 	}
 }

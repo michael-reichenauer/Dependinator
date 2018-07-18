@@ -2,7 +2,7 @@ using System;
 using System.Reflection;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.SolutionParsing.Private
+namespace Dependinator.Utils.Reflection
 {
 	/// <summary>
 	/// Method used to extract information from internal Microsoft classes using reflection

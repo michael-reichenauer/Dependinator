@@ -24,7 +24,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 		private readonly IMessage message;
 
 		private readonly NodeName nodeName;
-		private readonly Func<NodeName, Task<R<string>>> getCodeActionAsync;
+		private readonly Func<NodeName, Task<R<SourceCode>>> getCodeActionAsync;
 
 
 		internal CodeDialog(
@@ -32,7 +32,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 			IMessage message,
 			WindowOwner owner,
 			NodeName nodeName,
-			Func<NodeName, Task<R<string>>> getCodeActionAsync)
+			Func<NodeName, Task<R<SourceCode>>> getCodeActionAsync)
 		{
 			this.modelNotifications = modelNotifications;
 			this.message = message;
@@ -67,7 +67,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 		{
 			CodeView.Text = "Getting code ...";
 
-			R<string> codeResult = await getCodeActionAsync(nodeName);
+			R<SourceCode> codeResult = await getCodeActionAsync(nodeName);
 
 			if (codeResult.IsFaulted)
 			{
@@ -76,7 +76,12 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 				return;
 			}
 
-			CodeView.Text = codeResult.Value;
+			CodeView.Options.IndentationSize = 2;
+			CodeView.Text = codeResult.Value.Text;
+
+			// Await code to be rendered before scrolling to line number
+			await Task.Yield();
+			CodeView.ScrollTo(codeResult.Value.LineNumber, 0);
 		}
 
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dependinator.Utils;
 using Dependinator.Utils.ErrorHandling;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
@@ -28,20 +27,20 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		}
 
 
-		public R<string> GetSourceFilePath(ModuleDefinition module, NodeName nodeName)
+		public R<SourceLocation> GetSourceFilePath(ModuleDefinition module, NodeName nodeName)
 		{
 			if (TryGetType(module, nodeName, out TypeDefinition type))
 			{
-				if (TryGetFilePath(type, out string filePath))
+				if (TryGetFilePath(type, out SourceLocation fileLocation))
 				{
-					return filePath;
+					return fileLocation;
 				}
 			}
 			else if (TryGetMember(module, nodeName, out IMemberDefinition member))
 			{
-				if (TryGetFilePath(member, out string filePath))
+				if (TryGetFilePath(member, out SourceLocation fileLocation))
 				{
-					return filePath;
+					return fileLocation;
 				}
 			}
 
@@ -57,9 +56,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		{
 			foreach (TypeDefinition type in assemblyTypes)
 			{
-				if (TryGetFilePath(type, out string filePath))
+				if (TryGetFilePath(type, out SourceLocation fileLocation))
 				{
-					if (filePath.StartsWithIc(sourceFilePath))
+					if (fileLocation.FilePath.StartsWithIc(sourceFilePath))
 					{
 						nodeName = NodeName.From(Name.GetTypeFullName(type));
 						return true;
@@ -184,43 +183,46 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		{
 			CSharpDecompiler decompiler = GetDecompiler(module);
 
-			return "// Decompiled code\n" + 
+			return "// Decompiled code\n" +
 				decompiler.DecompileAsString(member).Replace("\t", "  ");
 		}
 
 
-		private bool TryGetFilePath(TypeDefinition type, out string filePath)
+		private bool TryGetFilePath(TypeDefinition type, out SourceLocation sourceLocation)
 		{
 			foreach (MethodDefinition method in type.Methods)
 			{
 				SequencePoint sequencePoint = method.DebugInformation.SequencePoints.ElementAtOrDefault(0);
 				if (sequencePoint != null)
 				{
-					filePath = sequencePoint.Document.Url;
+					sourceLocation = ToFileLocation(sequencePoint);
 					return true;
 				}
 			}
 
-			filePath = null;
+			sourceLocation = null;
 			return false;
 		}
 
 
-		private bool TryGetFilePath(IMemberDefinition member, out string filePath)
+		private bool TryGetFilePath(IMemberDefinition member, out SourceLocation sourceLocation)
 		{
 			if (member is MethodDefinition method)
 			{
 				SequencePoint sequencePoint = method.DebugInformation.SequencePoints.ElementAtOrDefault(0);
 				if (sequencePoint != null)
 				{
-					filePath = sequencePoint.Document.Url;
+					sourceLocation = ToFileLocation(sequencePoint);
 					return true;
 				}
 			}
 
-			return TryGetFilePath(member.DeclaringType, out filePath);
+			return TryGetFilePath(member.DeclaringType, out sourceLocation);
 		}
 
+
+		private SourceLocation ToFileLocation(SequencePoint sequencePoint) =>
+			new SourceLocation(sequencePoint.Document.Url, sequencePoint.StartLine);
 
 		private static CSharpDecompiler GetDecompiler(ModuleDefinition module) =>
 			new CSharpDecompiler(module, new DecompilerSettings(LanguageVersion.Latest));

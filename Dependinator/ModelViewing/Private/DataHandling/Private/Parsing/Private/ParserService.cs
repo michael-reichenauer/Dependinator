@@ -45,7 +45,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		}
 
 
-		public async Task<R<string>> GetSourceFilePath(string filePath, NodeName nodeName)
+		public async Task<R<SourceLocation>> GetSourceFilePath(string filePath, NodeName nodeName)
 		{
 			R<WorkParser> workItemParser = new WorkParser(filePath, null);
 			if (workItemParser.IsFaulted)
