@@ -21,21 +21,40 @@ namespace DependinatorVse.Api
 
 
 #pragma warning disable VSTHRD100 // Api functions does not support Task type
-		public async void ShowFile(string filePath, int lineNumber)
-#pragma warning restore VSTHRD100 
+		public async void Activate()
+#pragma warning restore VSTHRD100
 		{
-			Log.Debug($"Show {filePath}");
-
 			await package.JoinableTaskFactory.SwitchToMainThreadAsync();
 
 			DTE2 dte = (DTE2)await package.GetServiceAsync(typeof(DTE));
 			if (dte == null) return;
 
-			Window mainWindow = dte.MainWindow;
-			mainWindow.Activate();
+			ActivateMainWindow(dte);
+		}
 
+
+#pragma warning disable VSTHRD100 // Api functions does not support Task type
+		public async void ShowFile(string filePath, int lineNumber)
+#pragma warning restore VSTHRD100 
+		{
+			await package.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+			Log.Debug($"Show {filePath}");
+			
+			DTE2 dte = (DTE2)await package.GetServiceAsync(typeof(DTE));
+			if (dte == null) return;
+			
 			dte.ExecuteCommand("File.OpenFile", $"\"{filePath}\"");
 			dte.ExecuteCommand("Edit.GoTo", $"{lineNumber}");
+		}
+
+
+		private static void ActivateMainWindow(DTE2 dte)
+		{
+			Window mainWindow = dte.MainWindow;
+			mainWindow.WindowState = vsWindowState.vsWindowStateMinimize;
+			mainWindow.Activate();
+			mainWindow.WindowState = vsWindowState.vsWindowStateNormal;
 		}
 	}
 }

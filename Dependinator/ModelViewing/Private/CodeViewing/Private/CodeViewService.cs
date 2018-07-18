@@ -44,13 +44,14 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 					using (ApiIpcClient apiIpcClient = new ApiIpcClient(serverName))
 					{
 						apiIpcClient.Service<IVsExtensionApi>().ShowFile(file.Value.FilePath, file.Value.LineNumber);
+						apiIpcClient.Service<IVsExtensionApi>().Activate();
 					}
 				}
 				else
 				{
 					// No Visual studio has loaded this solution, lets show the file in "our" code viewer
 					string fileText = File.ReadAllText(file.Value.FilePath);
-					CodeDialog codeDialog = codeDialogProvider(nodeName, name => GetCode(fileText, file.Value.LineNumber));
+					CodeDialog codeDialog = codeDialogProvider(nodeName, name => GetCode(fileText, file.Value));
 					codeDialog.Show();
 				}
 			}
@@ -63,9 +64,9 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 		}
 
 
-		private static Task<R<SourceCode>> GetCode(string fileText, int lineNumber)
+		private static Task<R<SourceCode>> GetCode(string fileText, SourceLocation sourceLocation)
 		{
-			SourceCode sourceCode = new SourceCode(fileText, lineNumber);
+			SourceCode sourceCode = new SourceCode(fileText, sourceLocation.LineNumber, sourceLocation.FilePath);
 			return Task.FromResult(R.From(sourceCode));
 		}
 
@@ -78,7 +79,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 				return text.Error;
 			}
 
-			return new SourceCode(text.Value, 0);
+			return new SourceCode(text.Value, 0, null);
 		}
 
 

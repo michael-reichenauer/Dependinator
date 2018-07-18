@@ -70,6 +70,14 @@
 					<!-- Title -->
 					<TextBlock Text="{Binding Title}" Foreground="{DynamicResource TextBrush}" Margin="5, 5" />
 
+					<Button
+						HorizontalAlignment="Right" WindowChrome.IsHitTestVisibleInChrome="True"
+						Style="{DynamicResource IconButtonStyle}"
+						Content="&#xe051;"
+						FontSize="16"
+						Command="{Binding OpenInStudioCommand}"
+						CommandParameter="{Binding ElementName=CodeDialogWindow}" 
+						ToolTip="Open file in Visual Studio"/>
 				</StackPanel>
 
 				<!-- Close window Button -->

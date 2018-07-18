@@ -25,11 +25,13 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 
 		private readonly NodeName nodeName;
 		private readonly Func<NodeName, Task<R<SourceCode>>> getCodeActionAsync;
+		private readonly CodeViewModel codeViewModel;
 
 
 		internal CodeDialog(
 			Lazy<IModelNotifications> modelNotifications,
 			IMessage message,
+			ISolutionService solutionService,
 			WindowOwner owner,
 			NodeName nodeName,
 			Func<NodeName, Task<R<SourceCode>>> getCodeActionAsync)
@@ -42,7 +44,8 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 			Owner = owner;
 			InitializeComponent();
 
-			DataContext = new CodeViewModel(nodeName.DisplayLongName);
+			codeViewModel = new CodeViewModel(solutionService, nodeName.DisplayLongName, this);
+			DataContext = codeViewModel;
 
 			SetSyntaxHighlighting();
 
@@ -81,7 +84,9 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 
 			// Await code to be rendered before scrolling to line number
 			await Task.Yield();
-			CodeView.ScrollTo(codeResult.Value.LineNumber, 0);
+			codeViewModel.FilePath = codeResult.Value.FilePath;
+			codeViewModel.LineNumber = codeResult.Value.LineNumber;
+			CodeView.ScrollTo(codeViewModel.LineNumber, 0);
 		}
 
 

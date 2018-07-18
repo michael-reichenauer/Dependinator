@@ -63,6 +63,7 @@
     <Compile Include="Commands\Private\DependinatorApiClient.cs" />
     <Compile Include="Commands\Private\Log.cs" />
     <Compile Include="Commands\DynamicAssemblyMgr.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="IDependinatorVseImpl.cs" />
     <Compile Include="IDynamicAssembly.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
