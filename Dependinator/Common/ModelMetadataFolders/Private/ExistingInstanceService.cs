@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading;
-using Dependinator.Api;
 using Dependinator.Api.ApiHandling;
 using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
@@ -15,19 +14,25 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 	internal class ExistingInstanceService : IExistingInstanceService
 	{
 		private readonly IApiManagerService apiManagerService;
-		
+		private readonly ModelMetadata modelMetadata;
 
-		public ExistingInstanceService(IApiManagerService apiManagerService)
+
+		public ExistingInstanceService(
+			IApiManagerService apiManagerService,
+			ModelMetadata modelMetadata)
 		{
 			this.apiManagerService = apiManagerService;
+			this.modelMetadata = modelMetadata;
 		}
 
 
-		public bool TryActivateExistingInstance(string[] args)
+
+
+		public bool TryActivateExistingInstance(string modelFilePath, string[] args)
 		{
 			try
 			{
-				string serverName = apiManagerService.GetCurrentInstanceServerName();
+				string serverName = apiManagerService.GetCurrentInstanceServerName(modelFilePath);
 
 				if (ApiIpcClient.IsServerRegistered(serverName))
 				{
@@ -47,6 +52,12 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 			}
 
 			return false;
+		}
+
+
+		public bool TryActivateExistingInstance(string[] args)
+		{
+			return TryActivateExistingInstance(modelMetadata.ModelFilePath, args);
 		}
 
 

@@ -66,9 +66,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
 		private async Task OpenOtherModelAsync(string modelFilePath)
 		{
-			string metadataFolderPath = modelMetadataService.GetMetadataFolderPath(modelFilePath);
-
-			if (!existingInstanceService.TryActivateExistingInstance(null))
+			if (!existingInstanceService.TryActivateExistingInstance(modelFilePath, null))
 			{
 				startInstanceService.StartInstance(modelFilePath);
 			}
@@ -84,7 +82,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
 		public async Task OpenCurrentModelAsync()
 		{
-			string metadataFolderPath = modelMetadataService.MetadataFolderPath;
+			string modelFilePath = modelMetadataService.ModelFilePath;
 
 			if (existingInstanceService.TryActivateExistingInstance(null))
 			{

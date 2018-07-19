@@ -5,5 +5,6 @@
 		void Register();
 
 		string GetCurrentInstanceServerName();
+		string GetCurrentInstanceServerName(string modelFilePath);
 	}
 }

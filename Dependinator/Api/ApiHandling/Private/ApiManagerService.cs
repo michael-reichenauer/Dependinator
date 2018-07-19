@@ -29,7 +29,7 @@ namespace Dependinator.Api.ApiHandling.Private
 		{
 			try
 			{
-				string serverName = GetCurrentInstanceServerName();
+				string serverName = GetCurrentInstanceServerName(modelMetadataService.ModelFilePath);
 
 				apiIpcServer?.Dispose();
 				apiIpcServer = new ApiIpcServer(serverName);
@@ -48,6 +48,9 @@ namespace Dependinator.Api.ApiHandling.Private
 			}
 		}
 
+
+		public string GetCurrentInstanceServerName(string modelFilePath) =>
+			ApiServerNames.ServerName<IDependinatorApi>(modelFilePath);
 
 		public string GetCurrentInstanceServerName() =>
 			ApiServerNames.ServerName<IDependinatorApi>(modelMetadataService.ModelFilePath);
