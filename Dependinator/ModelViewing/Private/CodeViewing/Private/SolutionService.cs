@@ -24,7 +24,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing
 		{
 			string solutionFilePath = metadata.ModelFilePath;
 
-			string serverName = ApiServerNames.ExtensionApiServerName(solutionFilePath);
+			string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionFilePath);
 
 			Log.Debug($"Calling: {serverName}");
 
@@ -43,7 +43,6 @@ namespace Dependinator.ModelViewing.Private.CodeViewing
 						{
 							using (ApiIpcClient apiIpcClient = new ApiIpcClient(serverName))
 							{
-
 								apiIpcClient.Service<IVsExtensionApi>().Activate();
 							}
 						}
@@ -77,7 +76,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing
 		{
 			string solutionFilePath = metadata.ModelFilePath;
 
-			string serverName = ApiServerNames.ExtensionApiServerName(solutionFilePath);
+			string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionFilePath);
 
 			if (!ApiIpcClient.IsServerRegistered(serverName))
 			{

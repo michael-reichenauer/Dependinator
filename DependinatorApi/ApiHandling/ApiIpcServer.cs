@@ -12,6 +12,9 @@ using DependinatorApi.ApiHandling.Private;
 
 namespace DependinatorApi.ApiHandling
 {
+	/// <summary>
+	/// IPC server used to publish IPC api services, which can be called by ApiIpcClient.
+	/// </summary>
 	public class ApiIpcServer : IDisposable
 	{
 		private readonly string serverId;
@@ -130,14 +133,14 @@ namespace DependinatorApi.ApiHandling
 
 				// The mutex was already locked by some other thread/process, lets await it being unlocked
 				TaskInfo taskInfo = new TaskInfo(mutex);
-				taskInfo.Handle = ThreadPool.RegisterWaitForSingleObject(mutex, Resume, taskInfo, -1, true);
+				taskInfo.Handle = ThreadPool.RegisterWaitForSingleObject(mutex, OnMutexReleased, taskInfo, -1, true);
 
 				await taskInfo.Tcs.Task;
 			}
 		}
 
 
-		private static void Resume(object state, bool timedOut)
+		private static void OnMutexReleased(object state, bool timedOut)
 		{
 			TaskInfo taskInfo = (TaskInfo)state;
 
@@ -171,17 +174,13 @@ namespace DependinatorApi.ApiHandling
 		}
 
 
-		public class TaskInfo
+		private class TaskInfo
 		{
 			public Mutex Mutex { get; }
 			public RegisteredWaitHandle Handle { get; set; }
 			public TaskCompletionSource<bool> Tcs { get; } = new TaskCompletionSource<bool>();
 
-
-			public TaskInfo(Mutex mutex)
-			{
-				Mutex = mutex;
-			}
+			public TaskInfo(Mutex mutex) => Mutex = mutex;
 		}
 	}
 }

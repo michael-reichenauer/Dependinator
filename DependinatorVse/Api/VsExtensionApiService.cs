@@ -9,6 +9,10 @@ using Microsoft.VisualStudio.Shell;
 
 namespace DependinatorVse.Api
 {
+	/// <summary>
+	/// Api published byt the Dependinator Visual Studio extension.
+	/// Called by the Dependinator.exe, when triggering actions like Activate and ShowFile
+	/// </summary>
 	public class VsExtensionApiService : ApiIpcService, IVsExtensionApi
 	{
 		private readonly AsyncPackage package;

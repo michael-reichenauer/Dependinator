@@ -11,7 +11,6 @@ namespace DependinatorVse.Commands.Private
 	public class DependinatorApiClient
 	{
 		private static readonly string Name = "Dependinator";
-		private static readonly char[] QuoteChar = "\"".ToCharArray();
 
 		private readonly string solutionFilePath;
 		private readonly bool isDeveloperStudio;
@@ -24,15 +23,22 @@ namespace DependinatorVse.Commands.Private
 		}
 
 
-		public async Task ShowFileAsync(string filePath)
+		public async Task ShowFileAsync(string filePath, int lineNumber)
 		{
-			await CallAsync<IDependinatorApi>(api => api.ShowFile(filePath));
+			try
+			{
+				await CallAsync<IDependinatorApi>(api => api.ShowNodeForFile(filePath, lineNumber));
+			}
+			catch (Exception e)
+			{
+				Log.Warn($"Failed to call {e}");
+			}
 		}
 
 
 		private async Task CallAsync<TRemoteService>(Action<TRemoteService> action)
 		{
-			string serverName = ApiServerNames.DependinatorApiServerName(solutionFilePath);
+			string serverName = ApiServerNames.ServerName<TRemoteService>(solutionFilePath);
 			Log.Debug($"Calling: {serverName}");
 
 			bool isStartedDependinator = false;
@@ -110,13 +116,14 @@ namespace DependinatorVse.Commands.Private
 
 		private static string Quote(string text)
 		{
+			char[] QuoteChar = "\"".ToCharArray();
 			text = text.Trim();
 			text = text.Trim(QuoteChar);
 			return $"\"{text}\"";
 		}
 
 
-		public string GetInstallFolderPath()
+		private string GetInstallFolderPath()
 		{
 			if (isDeveloperStudio)
 			{

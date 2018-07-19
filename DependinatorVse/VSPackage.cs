@@ -2,14 +2,11 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Threading.Tasks;
-using DependinatorVse.Api.ApiHandling.Private;
+using DependinatorVse.Api.ApiHandling;
 using DependinatorVse.Commands;
 using DependinatorVse.Commands.Private;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using SolutionEvents = Microsoft.VisualStudio.Shell.Events.SolutionEvents;
 using Task = System.Threading.Tasks.Task;
 
 namespace DependinatorVse
@@ -40,6 +37,7 @@ namespace DependinatorVse
 	public sealed class VSPackage : AsyncPackage
 	{
 		private ApiManagerService apiManagerService;
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="ShowInDependinatorCommand"/> class.
 		/// </summary>
@@ -61,14 +59,21 @@ namespace DependinatorVse
 		/// <returns>A task representing the async work of package initialization, or an already completed task if there is none. Do not return null from this method.</returns>
 		protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
 		{
-			// When initialized asynchronously, the current thread may be a background thread at this point.
-			// Do any initialization that requires the UI thread after switching to the UI thread.
-			await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
+			try
+			{
+				// When initialized asynchronously, the current thread may be a background thread at this point.
+				// Do any initialization that requires the UI thread after switching to the UI thread.
+				await this.JoinableTaskFactory.SwitchToMainThreadAsync(cancellationToken);
 
-			await ShowInDependinatorCommand.InitializeAsync(this);
+				await ShowInDependinatorCommand.InitializeAsync(this);
 
-			apiManagerService = new ApiManagerService();
-			await apiManagerService.InitApiServerAsync(this);
+				apiManagerService = new ApiManagerService();
+				await apiManagerService.InitApiServerAsync(this);
+			}
+			catch (Exception e)
+			{
+				Log.Error($"Failed: {e}");
+			}
 		}
 	}
 }

@@ -8,6 +8,9 @@ using DependinatorApi.ApiHandling.Private;
 
 namespace DependinatorApi.ApiHandling
 {
+	/// <summary>
+	/// IPC client used to call IPC api service published using ApiIpcServer. 
+	/// </summary>
 	public class ApiIpcClient : IDisposable
 	{
 		private readonly string serverId;
@@ -41,9 +44,8 @@ namespace DependinatorApi.ApiHandling
 			}
 
 			string ipcServiceName = ApiIpcCommon.GetServiceName<TRemoteService>(serverId);
-			Log.Debug($"Calling: {ipcServiceName}");
-
 			string ipcUrl = $"ipc://{serverId}/{ipcServiceName}";
+			Log.Debug($"Calling: {ipcUrl}");
 
 			// Get proxy instance of rpc service instance published by server in PublishService()
 			ipcProxy = RemotingServices.Connect(typeof(TRemoteService), ipcUrl);

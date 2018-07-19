@@ -1,16 +1,11 @@
 ﻿using System;
 using System.ComponentModel.Design;
-using System.Globalization;
-using System.Linq;
 using System.Threading;
-using DependinatorApi;
-using DependinatorApi.ApiHandling;
 using DependinatorVse.Commands.Private;
+using DependinatorVse.Utils;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
 namespace DependinatorVse.Commands
@@ -39,7 +34,7 @@ namespace DependinatorVse.Commands
 		public static ShowInDependinatorCommand Instance { get; private set; }
 
 
-		private Microsoft.VisualStudio.Shell.IAsyncServiceProvider ServiceProvider => this.package;
+		private IAsyncServiceProvider ServiceProvider => this.package;
 
 
 		public static async Task InitializeAsync(AsyncPackage package)
@@ -60,43 +55,26 @@ namespace DependinatorVse.Commands
 		/// </summary>
 		private async void Execute(object sender, EventArgs e)
 		{
-			await package.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
-
-			DTE2 dte = (DTE2)await ServiceProvider.GetServiceAsync(typeof(DTE));
-			if (dte == null)
+			try
 			{
-				return;
+				await package.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+				DTE2 dte = await Studio.GetDteAsync(package);
+
+				Solution solution = dte.Solution;
+				if (solution == null) { return; }
+
+				Document document = dte.ActiveDocument;
+				TextSelection selection = (TextSelection)document.Selection;
+
+				DependinatorApiClient apiClient = new DependinatorApiClient(solution.FileName, Studio.IsDeveloperMode(dte));
+
+				await apiClient.ShowFileAsync(document.FullName, selection.CurrentLine);
 			}
-
-			// When running in special developer studio, use developer Dependinator.exe 
-			bool isDeveloperStudio = dte.RegistryRoot?.Contains("15.0_ae5cc26aExp") ?? false;
-
-			Solution solution = dte.Solution;
-
-			Document document = dte.ActiveDocument;
-
-			
-			//Array projects = (Array)dte.ActiveSolutionProjects;
-			//Project project = projects.Cast<Project>().ElementAtOrDefault(0);
-
-			DependinatorApiClient apiClient = new DependinatorApiClient(solution.FileName, isDeveloperStudio);
-
-			await apiClient.ShowFileAsync(document.FullName);
-
-		
-	
-
-			//string message = string.Format(CultureInfo.CurrentCulture, "Inside {0}.MenuItemCallback()", this.GetType().FullName);
-			//string title = "ShowInDependinatorCommand";
-
-			//// Show a message box to prove we were here
-			//VsShellUtilities.ShowMessageBox(
-			//		this.package,
-			//		message,
-			//		title,
-			//		OLEMSGICON.OLEMSGICON_INFO,
-			//		OLEMSGBUTTON.OLEMSGBUTTON_OK,
-			//		OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+			catch (Exception exception)
+			{
+				Log.Error($"Failed: {exception}");
+			}
 		}
 	}
 }

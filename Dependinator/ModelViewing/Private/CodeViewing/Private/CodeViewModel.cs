@@ -18,14 +18,16 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 			Title = title;
 		}
 
-		public string FilePath { get; set; }
+
+		public string FilePath { get => Get(); set => Set(value).Notify(nameof(IsShowOpenInStudioButton)); }
 
 		public int LineNumber { get; set; }
 
 		public Command<Window> CancelCommand => Command<Window>(w => w.Close());
 
-
 		public Command OpenInStudioCommand => AsyncCommand(OpenInStudio);
+
+		public bool IsShowOpenInStudioButton => !string.IsNullOrEmpty(FilePath);
 
 
 		private async Task OpenInStudio()

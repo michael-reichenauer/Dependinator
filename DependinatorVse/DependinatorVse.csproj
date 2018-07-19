@@ -56,18 +56,14 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Api\ApiHandling\IApiManagerService.cs" />
-    <Compile Include="Api\ApiHandling\Private\ApiManagerService.cs" />
+    <Compile Include="Api\ApiHandling\ApiManagerService.cs" />
     <Compile Include="Api\VsExtensionApiService.cs" />
-    <Compile Include="Commands\DynamicImplementation.cs" />
     <Compile Include="Commands\Private\DependinatorApiClient.cs" />
     <Compile Include="Commands\Private\Log.cs" />
-    <Compile Include="Commands\DynamicAssemblyMgr.cs" />
     <Compile Include="GlobalSuppressions.cs" />
-    <Compile Include="IDependinatorVseImpl.cs" />
-    <Compile Include="IDynamicAssembly.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Commands\ShowInDependinatorCommand.cs" />
+    <Compile Include="Utils\Studio.cs" />
     <Compile Include="VSPackage.cs" />
     <Compile Include="VSCommandTable.cs">
       <AutoGen>True</AutoGen>

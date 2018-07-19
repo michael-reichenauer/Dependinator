@@ -28,7 +28,7 @@ namespace Dependinator.Api
 		}
 
 
-		public void ShowFile(string filePath)
+		public void ShowNodeForFile(string filePath, int lineNumber)
 		{
 			MoveMainWindowToFront();
 

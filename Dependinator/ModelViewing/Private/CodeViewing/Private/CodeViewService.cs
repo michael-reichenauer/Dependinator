@@ -37,7 +37,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 			R<SourceLocation> file = await TryGetFilePathAsync(nodeName);
 			if (file.IsOk)
 			{
-				string serverName = ApiServerNames.ExtensionApiServerName(solutionPath);
+				string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionPath);
 
 				if (ApiIpcClient.IsServerRegistered(serverName))
 				{

@@ -12,9 +12,9 @@ using SolutionEvents = Microsoft.VisualStudio.Shell.Events.SolutionEvents;
 using Task = System.Threading.Tasks.Task;
 
 
-namespace DependinatorVse.Api.ApiHandling.Private
+namespace DependinatorVse.Api.ApiHandling
 {
-	internal class ApiManagerService : IApiManagerService
+	internal class ApiManagerService
 	{
 		private ApiIpcServer apiIpcServer;
 		private VsExtensionApiService vsExtensionApiService;
@@ -22,7 +22,7 @@ namespace DependinatorVse.Api.ApiHandling.Private
 
 
 
-		public  async Task InitApiServerAsync(AsyncPackage asyncPackage)
+		public async Task InitApiServerAsync(AsyncPackage asyncPackage)
 		{
 			Log.Debug("Init api");
 			package = asyncPackage;
@@ -35,7 +35,7 @@ namespace DependinatorVse.Api.ApiHandling.Private
 			{
 				HandleOpenSolution();
 			}
-			
+
 			SolutionEvents.OnAfterOpenSolution += HandleOpenSolution;
 			SolutionEvents.OnBeforeCloseSolution += HandleCloseSolution;
 		}
@@ -45,8 +45,7 @@ namespace DependinatorVse.Api.ApiHandling.Private
 		{
 			await package.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			var solService = await package.GetServiceAsync(typeof(SVsSolution)) as IVsSolution;
-			if (solService == null)
+			if (!(await package.GetServiceAsync(typeof(SVsSolution)) is IVsSolution solService))
 			{
 				return false;
 			}
@@ -54,14 +53,6 @@ namespace DependinatorVse.Api.ApiHandling.Private
 			ErrorHandler.ThrowOnFailure(solService.GetProperty((int)__VSPROPID.VSPROPID_IsSolutionOpen, out object value));
 
 			return value is bool isSolOpen && isSolOpen;
-		}
-
-
-		private void HandleCloseSolution(object sender, EventArgs e)
-		{
-			Log.Warn($"Close solution");
-			apiIpcServer?.Dispose();
-			apiIpcServer = null;
 		}
 
 
@@ -77,11 +68,19 @@ namespace DependinatorVse.Api.ApiHandling.Private
 
 			Solution solution = dte.Solution;
 
-			Register(solution.FileName);
+			await RegisterAsync(solution.FileName);
 		}
 
 
-		private void Register(string solutionFilePath)
+		private void HandleCloseSolution(object sender, EventArgs e)
+		{
+			Log.Warn("Close solution");
+			apiIpcServer?.Dispose();
+			apiIpcServer = null;
+		}
+
+
+		private async Task RegisterAsync(string solutionFilePath)
 		{
 			try
 			{
@@ -91,10 +90,7 @@ namespace DependinatorVse.Api.ApiHandling.Private
 				apiIpcServer?.Dispose();
 				apiIpcServer = new ApiIpcServer(serverName);
 
-				if (!apiIpcServer.TryPublishService<IVsExtensionApi>(vsExtensionApiService))
-				{
-					throw new ApplicationException($"Failed to register rpc instance {serverName}");
-				}
+				await apiIpcServer.PublishServiceAsync<IVsExtensionApi>(vsExtensionApiService);
 
 				Log.Debug($"Registered: {serverName}");
 			}
@@ -107,6 +103,6 @@ namespace DependinatorVse.Api.ApiHandling.Private
 
 
 		private static string GetServerName(string solutionFilePath) =>
-			ApiServerNames.ExtensionApiServerName(solutionFilePath);
+			ApiServerNames.ServerName<IVsExtensionApi>(solutionFilePath);
 	}
 }

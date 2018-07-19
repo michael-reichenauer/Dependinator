@@ -50,6 +50,6 @@ namespace Dependinator.Api.ApiHandling.Private
 
 
 		public string GetCurrentInstanceServerName() =>
-			ApiServerNames.DependinatorApiServerName(modelMetadataService.ModelFilePath);
+			ApiServerNames.ServerName<IDependinatorApi>(modelMetadataService.ModelFilePath);
 	}
 }

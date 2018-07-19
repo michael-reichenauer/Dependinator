@@ -72,9 +72,11 @@
 
 					<Button
 						HorizontalAlignment="Right" WindowChrome.IsHitTestVisibleInChrome="True"
+						Visibility="{Binding IsShowOpenInStudioButton, Converter={StaticResource VC}}"
 						Style="{DynamicResource IconButtonStyle}"
 						Content="&#xe051;"
 						FontSize="16"
+						Margin="20,0,0,0"
 						Command="{Binding OpenInStudioCommand}"
 						CommandParameter="{Binding ElementName=CodeDialogWindow}" 
 						ToolTip="Open file in Visual Studio"/>

@@ -242,7 +242,7 @@
 							Padding="2"
 							Style="{DynamicResource IconButtonStyle}"
 							Command="{Binding ShowCodeCommand}"
-							ToolTip="Show decompiled code" />
+							ToolTip="Show code" />
 					</StackPanel>
 
 					
