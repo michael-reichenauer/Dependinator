@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Utils;
 using DependinatorApi;
@@ -13,19 +15,21 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 {
 	internal class SolutionService : ISolutionService
 	{
+		private readonly IMessage message;
 		private readonly ModelMetadata metadata;
 
 
-		public SolutionService(ModelMetadata metadata)
+		public SolutionService(
+			IMessage message,
+			ModelMetadata metadata)
 		{
+			this.message = message;
 			this.metadata = metadata;
 		}
 
 
 		public async Task OpenAsync()
 		{
-			IsExtensionInstalled();
-
 			string solutionFilePath = metadata.ModelFilePath;
 
 			string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionFilePath);
@@ -58,6 +62,23 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 					if (!isStartedDependinator)
 					{
 						if (!IsExtensionInstalled())
+						{
+							if (!message.ShowAskOkCancel(
+								"The Visual Studio Dependinator extension does not seem to be installed.\n\n" +
+								"Please install the latest release.\n" +
+								"You may need to restart running Visual Studio instances."))
+							{
+								return;
+							}
+
+							if (!TryInstallExtension())
+							{
+								message.ShowWarning("The Visual Studio Dependinator extension does not\n"+
+								                    "seem to have been installed." );
+								return;
+							}
+						}
+
 						isStartedDependinator = true;
 						StartVisualStudio(solutionFilePath);
 						await Task.Delay(1000);
@@ -77,16 +98,64 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 		}
 
 
-		private bool IsExtensionInstalled()
+		private static bool TryInstallExtension()
 		{
-			string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-			
+			string studioPath = StudioPath();
 
-			var filePaths = Directory
-				.GetFiles(appData, "DependinatorVse.vsix", SearchOption.AllDirectories)
-				.ToList();
+			string filePath = Directory
+				.GetFiles(studioPath, "VSIXInstaller.exe", SearchOption.AllDirectories)
+				.FirstOrDefault();
+
+			if (filePath == null)
+			{
+				return false;
+			}
+
+			string extensionPath = Path.Combine(ProgramInfo.GetInstalledFilesFolderPath(), "VSIXInstaller.exe");
+			if (!File.Exists(extensionPath))
+			{
+				return false;
+			}
+
+			
+			try
+			{
+				Process process = new Process();
+				process.StartInfo.FileName = Quote(filePath);
+				process.StartInfo.Arguments = $"/a \"{extensionPath}\"";
+
+				process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+				process.StartInfo.CreateNoWindow = true;
+				process.StartInfo.UseShellExecute = false;
+
+				process.Start();
+			}
+			catch (Exception e)
+			{
+				Log.Error($"Failed to start studio, {e}");
+			}
 
 			return true;
+		}
+
+
+		private static bool IsExtensionInstalled()
+		{
+			string studioPath = StudioPath();
+
+			string filePath = Directory
+				.GetFiles(studioPath, "DependinatorVse.dll", SearchOption.AllDirectories)
+				.FirstOrDefault();
+
+			return !string.IsNullOrEmpty(filePath);
+		}
+
+
+		private static string StudioPath()
+		{
+			string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+			string studioPath = Path.Combine(programFiles, "Microsoft Visual Studio");
+			return studioPath;
 		}
 
 
@@ -136,7 +205,6 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 
 		private static void StartVisualStudioOrg(string solutionPath)
 		{
-
 			try
 			{
 				Process process = new Process();

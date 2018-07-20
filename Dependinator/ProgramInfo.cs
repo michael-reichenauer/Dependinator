@@ -63,6 +63,16 @@ namespace Dependinator
 		}
 
 
+
+		public static string GetInstalledFilesFolderPath()
+		{
+			string programFolderPath = GetInstallFolderPath();
+			
+			return Path.Combine(programFolderPath, GetInstalledInstanceVersion().ToString());
+		}
+
+
+
 		public static string GetDataFolderPath()
 		{
 			string programFolderPath = System.Environment.GetFolderPath(
