@@ -18,8 +18,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependinatorVse", "Dependin
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DependinatorApi", "DependinatorApi\DependinatorApi.csproj", "{B20F5CD9-08A8-40B5-8906-E17EA5B2B1B1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependinatorVseImpl", "DependinatorVseImpl\DependinatorVseImpl.csproj", "{D26A650F-E9A6-4CA2-B1AC-F120F86E7FF1}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,10 +44,6 @@ Global
 		{B20F5CD9-08A8-40B5-8906-E17EA5B2B1B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B20F5CD9-08A8-40B5-8906-E17EA5B2B1B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B20F5CD9-08A8-40B5-8906-E17EA5B2B1B1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D26A650F-E9A6-4CA2-B1AC-F120F86E7FF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D26A650F-E9A6-4CA2-B1AC-F120F86E7FF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D26A650F-E9A6-4CA2-B1AC-F120F86E7FF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D26A650F-E9A6-4CA2-B1AC-F120F86E7FF1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

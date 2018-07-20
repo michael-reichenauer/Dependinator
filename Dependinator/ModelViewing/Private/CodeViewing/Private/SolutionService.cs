@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Utils;
@@ -7,7 +9,7 @@ using DependinatorApi;
 using DependinatorApi.ApiHandling;
 
 
-namespace Dependinator.ModelViewing.Private.CodeViewing
+namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 {
 	internal class SolutionService : ISolutionService
 	{
@@ -22,6 +24,8 @@ namespace Dependinator.ModelViewing.Private.CodeViewing
 
 		public async Task OpenAsync()
 		{
+			IsExtensionInstalled();
+
 			string solutionFilePath = metadata.ModelFilePath;
 
 			string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionFilePath);
@@ -53,6 +57,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing
 					// IVsExtensionApi not yet registered, lets try to start Dependinator, or wait a little.
 					if (!isStartedDependinator)
 					{
+						if (!IsExtensionInstalled())
 						isStartedDependinator = true;
 						StartVisualStudio(solutionFilePath);
 						await Task.Delay(1000);
@@ -69,6 +74,19 @@ namespace Dependinator.ModelViewing.Private.CodeViewing
 			}
 
 			Log.Error("Failed to wait for other Dependiator instance");
+		}
+
+
+		private bool IsExtensionInstalled()
+		{
+			string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+			
+
+			var filePaths = Directory
+				.GetFiles(appData, "DependinatorVse.vsix", SearchOption.AllDirectories)
+				.ToList();
+
+			return true;
 		}
 
 

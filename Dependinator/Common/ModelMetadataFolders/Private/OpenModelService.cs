@@ -82,8 +82,6 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
 		public async Task OpenCurrentModelAsync()
 		{
-			string modelFilePath = modelMetadataService.ModelFilePath;
-
 			if (existingInstanceService.TryActivateExistingInstance(null))
 			{
 				// Another instance for this working folder is already running and it received the
