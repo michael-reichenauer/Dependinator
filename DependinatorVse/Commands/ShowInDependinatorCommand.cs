@@ -31,6 +31,7 @@ namespace DependinatorVse.Commands
 			commandService.AddCommand(menuItem);
 		}
 
+
 		public static ShowInDependinatorCommand Instance { get; private set; }
 
 
@@ -43,7 +44,8 @@ namespace DependinatorVse.Commands
 			// the UI thread.
 			await package.JoinableTaskFactory.SwitchToMainThreadAsync(CancellationToken.None);
 
-			OleMenuCommandService commandService = await package.GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
+			OleMenuCommandService commandService =
+				await package.GetServiceAsync((typeof(IMenuCommandService))) as OleMenuCommandService;
 			Instance = new ShowInDependinatorCommand(package, commandService);
 		}
 
@@ -62,18 +64,56 @@ namespace DependinatorVse.Commands
 				DTE2 dte = await Studio.GetDteAsync(package);
 
 				Solution solution = dte.Solution;
-				if (solution == null) { return; }
+				if (solution == null)
+				{
+					Studio.ShowInfoMessageBox(package, "No solution has been loaded yet.");
+					return;
+				}
 
 				Document document = dte.ActiveDocument;
 				TextSelection selection = (TextSelection)document.Selection;
 
-				DependinatorApiClient apiClient = new DependinatorApiClient(solution.FileName, Studio.IsDeveloperMode(dte));
+				DependinatorApiClient apiClient = new DependinatorApiClient(
+					solution.FileName, Studio.IsDeveloperMode(dte));
+
+				if (!apiClient.IsDependinatorInstalled)
+				{
+					if (Studio.ShowInfoMessageBox(package,
+						"The Dependinator application is needed to visualize the solution.\n\n" +
+						"Please install the latest release.", true))
+					{
+						OpenLatestReleasePage();
+					}
+
+					return;
+				}
 
 				await apiClient.ShowFileAsync(document.FullName, selection.CurrentLine);
 			}
 			catch (Exception exception)
 			{
+				Studio.ShowWarnMessageBox(package,
+					"Really sorry, the node could not be shown.\n" +
+					$"Error: {exception.Message}\n" +
+					"Please report the issue at:\n" +
+					"https://github.com/michael-reichenauer/Dependinator/issues");
+
 				Log.Error($"Failed: {exception}");
+			}
+		}
+
+
+		private static void OpenLatestReleasePage()
+		{
+			try
+			{
+				System.Diagnostics.Process process = new System.Diagnostics.Process();
+				process.StartInfo.FileName = "https://github.com/michael-reichenauer/Dependinator/releases/latest";
+				process.Start();
+			}
+			catch (Exception e)
+			{
+				Log.Error($"Failed to open latest release link {e}");
 			}
 		}
 	}

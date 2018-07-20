@@ -2,6 +2,7 @@
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 
 
 namespace DependinatorVse.Utils
@@ -19,16 +20,28 @@ namespace DependinatorVse.Utils
 			dte?.MainWindow?.Caption?.Contains("- Experimental Instance") ?? false;
 
 
-		//string message = string.Format(CultureInfo.CurrentCulture, "Inside {0}.MenuItemCallback()", this.GetType().FullName);
-		//string title = "ShowInDependinatorCommand";
+		public static bool ShowInfoMessageBox(
+			AsyncPackage package, string message, bool isCancellable = false) =>
+				1 == ShowMessageBox(package, message, OLEMSGICON.OLEMSGICON_INFO, isCancellable);
 
-		//// Show a message box to prove we were here
-		//VsShellUtilities.ShowMessageBox(
-		//		this.package,
-		//		message,
-		//		title,
-		//		OLEMSGICON.OLEMSGICON_INFO,
-		//		OLEMSGBUTTON.OLEMSGBUTTON_OK,
-		//		OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+		public static void ShowWarnMessageBox(AsyncPackage package, string message) =>
+			ShowMessageBox(package, message, OLEMSGICON.OLEMSGICON_WARNING, false);
+
+
+		private static int ShowMessageBox(
+			AsyncPackage package, 
+			string message, 
+			OLEMSGICON messageType, 
+			bool isCancellable)
+		{
+			OLEMSGBUTTON buttons = isCancellable ? OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL : OLEMSGBUTTON.OLEMSGBUTTON_OK;
+			return VsShellUtilities.ShowMessageBox(
+				package,
+				message,
+				"Dependinator Extension",
+				messageType,
+				buttons,
+				OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
+		}
 	}
 }

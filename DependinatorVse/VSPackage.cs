@@ -5,6 +5,7 @@ using System.Threading;
 using DependinatorVse.Api.ApiHandling;
 using DependinatorVse.Commands;
 using DependinatorVse.Commands.Private;
+using DependinatorVse.Utils;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -73,6 +74,12 @@ namespace DependinatorVse
 			}
 			catch (Exception e)
 			{
+				Studio.ShowWarnMessageBox(this,
+					"Really sorry, the Dependinator Extension failed to initialize.\n" +
+					$"Error: {e.Message}\n" +
+					"Please report the issue at:\n" +
+					"https://github.com/michael-reichenauer/Dependinator/issues");
+
 				Log.Error($"Failed: {e}");
 			}
 		}

@@ -10,8 +10,6 @@ namespace DependinatorVse.Commands.Private
 {
 	public class DependinatorApiClient
 	{
-		private static readonly string Name = "Dependinator";
-
 		private readonly string solutionFilePath;
 		private readonly bool isDeveloperStudio;
 
@@ -23,16 +21,12 @@ namespace DependinatorVse.Commands.Private
 		}
 
 
+		public bool IsDependinatorInstalled => File.Exists(GetDependinatorPath());
+
+
 		public async Task ShowFileAsync(string filePath, int lineNumber)
 		{
-			try
-			{
-				await CallAsync<IDependinatorApi>(api => api.ShowNodeForFile(filePath, lineNumber));
-			}
-			catch (Exception e)
-			{
-				Log.Warn($"Failed to call {e}");
-			}
+			await CallAsync<IDependinatorApi>(api => api.ShowNodeForFile(filePath, lineNumber));
 		}
 
 
@@ -42,10 +36,10 @@ namespace DependinatorVse.Commands.Private
 			Log.Debug($"Calling: {serverName}");
 
 			bool isStartedDependinator = false;
-			
+
 			Stopwatch t = Stopwatch.StartNew();
 
-			while (t.Elapsed < TimeSpan.FromSeconds(5))
+			while (t.Elapsed < TimeSpan.FromSeconds(20))
 			{
 				try
 				{
@@ -63,7 +57,7 @@ namespace DependinatorVse.Commands.Private
 					if (!isStartedDependinator)
 					{
 						isStartedDependinator = true;
-						StartedDependinator(solutionFilePath);
+						StartDependinator(solutionFilePath);
 						await Task.Delay(300);
 					}
 					else
@@ -74,16 +68,18 @@ namespace DependinatorVse.Commands.Private
 				catch (Exception e)
 				{
 					Log.Error($"Failed to check if Dependiator instance is running {e}");
+					throw;
 				}
 			}
 
 			Log.Error("Failed to wait for other Dependiator instance");
+			throw new Exception("Timeout while waiting for Dependiator to start.");
 		}
 
 
-		private void StartedDependinator(string filePath)
+		private void StartDependinator(string filePath)
 		{
-			string targetPath = Path.Combine(GetInstallFolderPath(), $"{Name}.exe");
+			string targetPath = GetDependinatorPath();
 
 			Log.Debug($"Starting: {targetPath}");
 
@@ -109,7 +105,7 @@ namespace DependinatorVse.Commands.Private
 			catch (Exception e)
 			{
 				Log.Error($"Failed to start {targetPath} {arguments}, {e}");
-				return false;
+				throw;
 			}
 		}
 
@@ -123,6 +119,9 @@ namespace DependinatorVse.Commands.Private
 		}
 
 
+		private string GetDependinatorPath() => Path.Combine(GetInstallFolderPath(), "Dependinator.exe");
+
+
 		private string GetInstallFolderPath()
 		{
 			if (isDeveloperStudio)
@@ -132,7 +131,7 @@ namespace DependinatorVse.Commands.Private
 
 			string programFolderPath = Environment.ExpandEnvironmentVariables("%ProgramW6432%");
 
-			return Path.Combine(programFolderPath, Name);
+			return Path.Combine(programFolderPath, "Dependinator");
 		}
 	}
 }

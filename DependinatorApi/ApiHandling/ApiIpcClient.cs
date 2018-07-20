@@ -53,7 +53,7 @@ namespace DependinatorApi.ApiHandling
 
 			if (ipcProxy == null)
 			{
-				Log.Error("Failed to create IPC proxy");
+				throw new Exception($"Failed to create IPC proxy for {typeof(TRemoteService).FullName}");
 			}
 
 			return (TRemoteService)ipcProxy;
