@@ -71,7 +71,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 								return;
 							}
 
-							if (!TryInstallExtension())
+							if (!TryInstallExtension() || !IsExtensionInstalled())
 							{
 								message.ShowWarning("The Visual Studio Dependinator extension does not\n"+
 								                    "seem to have been installed." );
@@ -111,13 +111,13 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 				return false;
 			}
 
-			string extensionPath = Path.Combine(ProgramInfo.GetInstalledFilesFolderPath(), "VSIXInstaller.exe");
+			string installedFilesFolderPath = ProgramInfo.GetInstalledFilesFolderPath();
+			string extensionPath = Path.Combine(installedFilesFolderPath, "DependinatorVse.vsix");
 			if (!File.Exists(extensionPath))
 			{
 				return false;
 			}
-
-			
+		
 			try
 			{
 				Process process = new Process();
@@ -129,6 +129,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 				process.StartInfo.UseShellExecute = false;
 
 				process.Start();
+				process.WaitForExit((int)TimeSpan.FromMinutes(5).TotalMilliseconds);
 			}
 			catch (Exception e)
 			{
@@ -181,7 +182,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 		}
 
 
-		private static void StartVisualStudio(string solutionPath)
+		private static void StartVisualStudioDebug(string solutionPath)
 		{
 			try
 			{
@@ -198,13 +199,18 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 			}
 			catch (Exception e)
 			{
-				Log.Error($"Failed to start studio, {e}");
+				Log.Error($"Failed to start Visual Studio, {e}");
 			}
 		}
 
 
-		private static void StartVisualStudioOrg(string solutionPath)
+		private static void StartVisualStudio(string solutionPath)
 		{
+			if (BuildConfig.IsDebug)
+			{
+				StartVisualStudioDebug(solutionPath);
+				return;
+			}
 			try
 			{
 				Process process = new Process();
@@ -213,7 +219,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 			}
 			catch (Exception ex) when (ex.IsNotFatal())
 			{
-				Log.Error($"Failed to open help link {ex}");
+				Log.Error($"Failed to start Visual Studio {ex}");
 			}
 
 		}
