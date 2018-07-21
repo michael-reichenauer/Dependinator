@@ -60,6 +60,7 @@ SignedUninstallerDir=Sign
 ; Copy all release output files to version folder
 Source: "..\Dependinator\bin\Release\*"; DestDir: "{app}\{#ProductVersion}"; Flags: ignoreversion
 Source: "..\Updater\bin\Release\*"; DestDir: "{app}\{#ProductVersion}"; Flags: ignoreversion
+Source: "..\DependinatorVse\bin\Release\DependinatorVse.vsix"; DestDir: "{app}\{#ProductVersion}"; Flags: ignoreversion
 
 ; Copy example files as well 
 Source: "..\Dependinator\bin\Release\*"; DestDir: "{app}\Example"; Flags: ignoreversion

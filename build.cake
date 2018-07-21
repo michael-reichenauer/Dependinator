@@ -1,6 +1,8 @@
 #tool nuget:?package=NUnit.ConsoleRunner&version=3.4.0
 #tool nuget:?package=Tools.InnoSetup&version=5.5.9
+#tool nuget:?package=Microsoft.VSSDK.Vsixsigntool&version=15.7.27703
 #addin nuget:?package=Cake.VersionReader&version=5.0.0
+#addin nuget:?package=Cake.VsixSignTool&version=1.2.0
 
 //////////////////////////////////////////////////////////////////////
 // ARGUMENTS
@@ -19,6 +21,7 @@ var name = "Dependinator";
 
 var solutionPath = $"./{name}.sln";
 var outputPath = $"{name}/bin/{configuration}/{name}.exe";
+var extensionOutputPath = $"{name}Vse/bin/{configuration}/{name}Vse.vsix";
 var setupPath = $"{name}Setup.exe";
 var uninstallerPath = $"Setup/Sign/Uninstaller.exe";
 var signedUninstallerPath = $"Setup/Sign/uninst-5.5.9 (u)-44666f8110.e32";
@@ -122,10 +125,34 @@ Task("Sign-Uninstaller")
 });;
 
 
+Task("Sign-Extension")
+    .IsDependentOn("Clean")
+	.IsDependentOn("Prompt-Sign-Password")
+    .Does(() =>
+{
+	// Sign extension file
+	var file = new FilePath(extensionOutputPath);
+    VsixSignToolSign(new VsixSignToolSignSettings {
+            TimestampServerUrl = "http://timestamp.digicert.com",
+            File = @"C:\Users\micha\OneDrive\CodeSigning\SignCert.pfx",
+            Hash = "1ccb2b742ff45d6a3a4e42d34fd8497ce5212ef0",
+            Password = signPassword
+    },
+    file);	
+})
+.OnError(exception =>
+{
+	RunTarget("Clean");
+	throw exception;
+});;
+
+
 Task("Build-Setup")
     .IsDependentOn("Clean")
 	.IsDependentOn("Prompt-Sign-Password")
 	.IsDependentOn("Sign-Uninstaller")
+	.IsDependentOn("Build")
+	.IsDependentOn("Sign-Extension")
     .IsDependentOn("Build-Setup-File")
     .Does(() =>
 {
