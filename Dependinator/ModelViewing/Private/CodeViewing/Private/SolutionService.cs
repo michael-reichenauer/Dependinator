@@ -133,7 +133,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 			}
 			catch (Exception e)
 			{
-				Log.Error($"Failed to start studio, {e}");
+				Log.Error($"Failed to start VSIXInstaller, {e}");
 			}
 
 			return true;

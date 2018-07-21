@@ -72,6 +72,7 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checkedonce
+Name: "enableextension"; Description: "Integrate with Visual Studio"; GroupDescription: "Integration:";
 
 [Dirs]
 Name: {commonappdata}\{#AppName}; Permissions: users-modify; Flags: uninsalwaysuninstall
@@ -81,8 +82,9 @@ Name: "{userstartmenu}\{#AppName}"; Filename: "{app}\{#AppExeName}"
 Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Run]
-; Run install helper tasks
-Filename: "{app}\{#ProductVersion}\{#AppExeName}"; Parameters: "/install /silent"; Flags: runhidden runminimized
+; Run install helper tasks (add  /installextension" if enableextension task is checked
+Filename: "{app}\{#ProductVersion}\{#AppExeName}"; Parameters: "/install /silent"; Flags: runhidden runminimized; Tasks: not enableextension
+Filename: "{app}\{#ProductVersion}\{#AppExeName}"; Parameters: "/install /silent /installextension"; Flags: runhidden runminimized; Tasks: enableextension
 
 ; Run to register updater tasks
 Filename: "{app}\{#ProductVersion}\Updater.exe"; Parameters: "/register"; Flags: runhidden runminimized
@@ -94,6 +96,7 @@ Filename: "{app}\{#AppExeName}"; Flags: nowait postinstall skipifsilent; Descrip
 ; Delete update and renew tasks (regardless of version)
 Filename: "schtasks"; Parameters: "/Delete /F /TN ""{#AppName} Update"""; Flags: runhidden runminimized
 Filename: "schtasks"; Parameters: "/Delete /F /TN ""{#AppName} Renew"""; Flags: runhidden runminimized
+Filename: "{app}\{#ProductVersion}\{#AppExeName}"; Parameters: "/uninstall /silent"; Flags: runhidden runminimized;
 
 [UninstallDelete]
 ; Delete application program files and program data folders

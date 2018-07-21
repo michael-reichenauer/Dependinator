@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Dependinator.Common.Environment;
@@ -42,6 +43,10 @@ namespace Dependinator.Common.Installation.Private
 			Log.Usage("Installing ...");
 			CreateMainExeShortcut();
 			CleanOldInstallations();
+			if (commandLine.IsInstallExtension)
+			{
+				InstallExtension();
+			}
 
 			Log.Usage("Installed");
 		}
@@ -50,6 +55,7 @@ namespace Dependinator.Common.Installation.Private
 		private void UninstallSilent()
 		{
 			Log.Debug("Uninstalling...");
+			UninstallExtension();
 			Log.Debug("Uninstalled");
 		}
 
@@ -158,6 +164,76 @@ namespace Dependinator.Common.Installation.Private
 			{
 				Log.Exception(e, $"Failed to delete {path}");
 			}
+		}
+
+		private static void InstallExtension()
+		{
+			if (!TryGetExtensionPath(out string extensionPath)) return;
+
+			RunVxixInstaller($"/a /q /f /\"{extensionPath}\"");
+		}
+
+		private static void UninstallExtension()
+		{
+			RunVxixInstaller("/a /q /u:/\"0117fbb8-b3c3-4baf-858e-d7ed140c01f4\"");
+		}
+
+
+
+		private static void RunVxixInstaller(string arguments)
+		{
+			if (!TryGetVsixInstallerPath(out string vsixInstallerPath))
+			{
+				Log.Warn("No VsixInstaller found");
+			}
+
+			try
+			{
+				Process process = new Process();
+				process.StartInfo.FileName = $"\"{vsixInstallerPath}\"";
+				process.StartInfo.Arguments = arguments;
+
+				process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+				process.StartInfo.CreateNoWindow = true;
+				process.StartInfo.UseShellExecute = false;
+
+				process.Start();
+			}
+			catch (Exception e)
+			{
+				Log.Error($"Failed to start VSIXInstaller, {e}");
+			}
+		}
+
+
+		private static bool TryGetExtensionPath(out string extensionPath)
+		{
+			string installedFilesFolderPath = ProgramInfo.GetInstalledFilesFolderPath();
+			extensionPath = Path.Combine(installedFilesFolderPath, "DependinatorVse.vsix");
+			Log.Debug($"DependinatorVse path {extensionPath}");
+
+			return File.Exists(extensionPath);
+		}
+
+
+		private static bool TryGetVsixInstallerPath(out string vsixInstallerPath)
+		{
+			string studioPath = StudioPath();
+
+			vsixInstallerPath = Directory
+				.GetFiles(studioPath, "VSIXInstaller.exe", SearchOption.AllDirectories)
+				.FirstOrDefault();
+			Log.Debug($"VSIXInstaller path {vsixInstallerPath}");
+
+			return vsixInstallerPath == null;
+		}
+
+
+		private static string StudioPath()
+		{
+			string programFiles = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFilesX86);
+			string studioPath = Path.Combine(programFiles, "Microsoft Visual Studio");
+			return studioPath;
 		}
 	}
 }
