@@ -43,9 +43,13 @@ namespace Dependinator.Api
 		{
 			Application.Current.Dispatcher.InvokeAsync(() =>
 			{
+				WindowState state = Application.Current.MainWindow.WindowState;
+
 				Application.Current.MainWindow.WindowState = WindowState.Minimized;
 				Application.Current.MainWindow.Activate();
-				Application.Current.MainWindow.WindowState = WindowState.Normal;
+				Application.Current.MainWindow.WindowState = state == WindowState.Maximized
+					? WindowState.Maximized
+					: WindowState.Normal;
 
 				Log.Usage("Activated");
 			});

@@ -56,9 +56,12 @@ namespace DependinatorVse.Api
 		private static void ActivateMainWindow(DTE2 dte)
 		{
 			Window mainWindow = dte.MainWindow;
+			vsWindowState state = mainWindow.WindowState;
 			mainWindow.WindowState = vsWindowState.vsWindowStateMinimize;
 			mainWindow.Activate();
-			mainWindow.WindowState = vsWindowState.vsWindowStateNormal;
+			mainWindow.WindowState = state == vsWindowState.vsWindowStateMaximize 
+				? vsWindowState.vsWindowStateMaximize
+				: vsWindowState.vsWindowStateNormal;
 		}
 	}
 }
