@@ -170,12 +170,12 @@ namespace Dependinator.Common.Installation.Private
 		{
 			if (!TryGetExtensionPath(out string extensionPath)) return;
 
-			RunVxixInstaller($"/a /q /f /\"{extensionPath}\"");
+			RunVxixInstaller($"/a /q /f \"{extensionPath}\"");
 		}
 
 		private static void UninstallExtension()
 		{
-			RunVxixInstaller("/a /q /u:/\"0117fbb8-b3c3-4baf-858e-d7ed140c01f4\"");
+			RunVxixInstaller("/a /q /u:\"0117fbb8-b3c3-4baf-858e-d7ed140c01f4\"");
 		}
 
 
@@ -210,7 +210,7 @@ namespace Dependinator.Common.Installation.Private
 		{
 			string installedFilesFolderPath = ProgramInfo.GetInstalledFilesFolderPath();
 			extensionPath = Path.Combine(installedFilesFolderPath, "DependinatorVse.vsix");
-			Log.Debug($"DependinatorVse path {extensionPath}");
+			Log.Debug($"DependinatorVse path: {extensionPath}");
 
 			return File.Exists(extensionPath);
 		}
@@ -225,7 +225,7 @@ namespace Dependinator.Common.Installation.Private
 				.FirstOrDefault();
 			Log.Debug($"VSIXInstaller path {vsixInstallerPath}");
 
-			return vsixInstallerPath == null;
+			return vsixInstallerPath != null;
 		}
 
 
