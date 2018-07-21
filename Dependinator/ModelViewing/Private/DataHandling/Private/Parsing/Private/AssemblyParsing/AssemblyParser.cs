@@ -9,6 +9,7 @@ using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Ass
 using Dependinator.Utils;
 using Dependinator.Utils.ErrorHandling;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
 
 
@@ -48,7 +49,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 			typeParser = new TypeParser(linkHandler, xmlDockParser, itemsCallback);
 			memberParser = new MemberParser(linkHandler, xmlDockParser, itemsCallback);
 
-			assembly = new Lazy<AssemblyDefinition>(GetAssembly);
+			assembly = new Lazy<AssemblyDefinition>(() => GetAssembly(isReadSymbols));
 		}
 
 
@@ -144,17 +145,22 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		}
 
 
-		private AssemblyDefinition GetAssembly()
+		private AssemblyDefinition GetAssembly(bool isSymbols)
 		{
 			try
 			{
 				ReaderParameters parameters = new ReaderParameters
 				{
 					AssemblyResolver = resolver,
-					ReadSymbols = isReadSymbols,
+					ReadSymbols = isSymbols,
 				};
 
 				return AssemblyDefinition.ReadAssembly(assemblyPath, parameters);
+			}
+			catch (SymbolsNotFoundException)
+			{
+				Log.Debug("Assembly does not have symbols");
+				return GetAssembly(false);
 			}
 			catch (Exception e)
 			{

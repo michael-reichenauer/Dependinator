@@ -38,24 +38,51 @@ namespace Dependinator.Common.Installation.Private
 		}
 
 
+		public bool IsExtensionInstalled()
+		{
+			string studioPath = StudioPath();
+
+			string filePath = Directory
+				.GetFiles(studioPath, "DependinatorVse.dll", SearchOption.AllDirectories)
+				.FirstOrDefault();
+
+			return filePath != null;
+		}
+
+
 		private void InstallSilent()
 		{
 			Log.Usage("Installing ...");
 			CreateMainExeShortcut();
 			CleanOldInstallations();
-			if (commandLine.IsInstallExtension)
+
+			if (commandLine.IsInstallExtension || IsExtensionInstalled())
 			{
-				InstallExtension();
+				InstallExtension(true, false);
 			}
 
 			Log.Usage("Installed");
 		}
 
 
+		public bool InstallExtension(bool isSilent, bool isWait)
+		{
+			if (!TryGetExtensionPath(out string extensionPath)) return false;
+
+			string args = $"/a /f \"{extensionPath}\"";
+			if (isSilent)
+			{
+				args = "/q " + args;
+			}
+
+			return RunVxixInstaller(args, isWait);
+		}
+
+
 		private void UninstallSilent()
 		{
 			Log.Debug("Uninstalling...");
-			UninstallExtension();
+			UninstallExtension(false);
 			Log.Debug("Uninstalled");
 		}
 
@@ -122,15 +149,6 @@ namespace Dependinator.Common.Installation.Private
 		}
 
 
-		private static void EnsureDirectoryIsCreated(string targetFolder)
-		{
-			if (!Directory.Exists(targetFolder))
-			{
-				Directory.CreateDirectory(targetFolder);
-			}
-		}
-
-
 		private void CleanOldInstallations()
 		{
 			Log.Debug("Try to clean old versions if needed");
@@ -166,25 +184,19 @@ namespace Dependinator.Common.Installation.Private
 			}
 		}
 
-		private static void InstallExtension()
-		{
-			if (!TryGetExtensionPath(out string extensionPath)) return;
 
-			RunVxixInstaller($"/a /q /f \"{extensionPath}\"");
-		}
-
-		private static void UninstallExtension()
+		private static void UninstallExtension(bool isWait)
 		{
-			RunVxixInstaller("/a /q /u:\"0117fbb8-b3c3-4baf-858e-d7ed140c01f4\"");
+			RunVxixInstaller("/a /q /u:\"0117fbb8-b3c3-4baf-858e-d7ed140c01f4\"", isWait);
 		}
 
 
-
-		private static void RunVxixInstaller(string arguments)
+		private static bool RunVxixInstaller(string arguments, bool isWait)
 		{
 			if (!TryGetVsixInstallerPath(out string vsixInstallerPath))
 			{
 				Log.Warn("No VsixInstaller found");
+				return false; 
 			}
 
 			try
@@ -192,16 +204,22 @@ namespace Dependinator.Common.Installation.Private
 				Process process = new Process();
 				process.StartInfo.FileName = $"\"{vsixInstallerPath}\"";
 				process.StartInfo.Arguments = arguments;
-
 				process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
 				process.StartInfo.CreateNoWindow = true;
 				process.StartInfo.UseShellExecute = false;
 
 				process.Start();
+				if (isWait)
+				{
+					process.WaitForExit();
+				}
+
+				return true;
 			}
 			catch (Exception e)
 			{
 				Log.Error($"Failed to start VSIXInstaller, {e}");
+				return false;
 			}
 		}
 
@@ -232,8 +250,7 @@ namespace Dependinator.Common.Installation.Private
 		private static string StudioPath()
 		{
 			string programFiles = System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFilesX86);
-			string studioPath = Path.Combine(programFiles, "Microsoft Visual Studio");
-			return studioPath;
+			return Path.Combine(programFiles, "Microsoft Visual Studio");
 		}
 	}
 }

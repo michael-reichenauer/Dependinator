@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.Remoting;
 using System.Threading.Tasks;
 using DependinatorApi;
 using DependinatorApi.ApiHandling;
@@ -65,9 +66,13 @@ namespace DependinatorVse.Commands.Private
 						await Task.Delay(100);
 					}
 				}
+				catch (RemotingException e)
+				{
+					Log.Warn($"Call error, {e.Message}");
+				}
 				catch (Exception e)
 				{
-					Log.Error($"Failed to check if Dependiator instance is running {e}");
+					Log.Error($"Failed to check if Dependiator instance is running, {e}");
 					throw;
 				}
 			}

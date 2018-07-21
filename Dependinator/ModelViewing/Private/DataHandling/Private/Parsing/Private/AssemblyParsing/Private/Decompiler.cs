@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Dependinator.Utils;
 using Dependinator.Utils.ErrorHandling;
 using ICSharpCode.Decompiler;
 using ICSharpCode.Decompiler.CSharp;
@@ -44,7 +45,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 				}
 			}
 
-			return Error.From($"Failed to locate file path for:\n{nodeName}");
+			Log.Debug("Failed to locate file path for: {nodeName}");
+			return R<SourceLocation>.NoValue;
 		}
 
 

@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Utils;
@@ -16,14 +16,17 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 	internal class SolutionService : ISolutionService
 	{
 		private readonly IMessage message;
+		private readonly IInstaller installer;
 		private readonly ModelMetadata metadata;
 
 
 		public SolutionService(
 			IMessage message,
+			IInstaller installer,
 			ModelMetadata metadata)
 		{
 			this.message = message;
+			this.installer = installer;
 			this.metadata = metadata;
 		}
 
@@ -61,7 +64,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 					// IVsExtensionApi not yet registered, lets try to start Dependinator, or wait a little.
 					if (!isStartedDependinator)
 					{
-						if (!IsExtensionInstalled())
+						if (!installer.IsExtensionInstalled())
 						{
 							if (!message.ShowAskOkCancel(
 								"The Visual Studio Dependinator extension does not seem to be installed.\n\n" +
@@ -71,10 +74,11 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 								return;
 							}
 
-							if (!TryInstallExtension() || !IsExtensionInstalled())
+							if (!installer.InstallExtension(false, true) || !installer.IsExtensionInstalled())
 							{
-								message.ShowWarning("The Visual Studio Dependinator extension does not\n"+
-								                    "seem to have been installed." );
+								message.ShowWarning(
+									"The Visual Studio Dependinator extension does not\n" +
+									"seem to have been installed.");
 								return;
 							}
 						}
@@ -96,69 +100,6 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 
 			Log.Error("Failed to wait for other Dependiator instance");
 		}
-
-
-		private static bool TryInstallExtension()
-		{
-			string studioPath = StudioPath();
-
-			string filePath = Directory
-				.GetFiles(studioPath, "VSIXInstaller.exe", SearchOption.AllDirectories)
-				.FirstOrDefault();
-
-			if (filePath == null)
-			{
-				return false;
-			}
-
-			string installedFilesFolderPath = ProgramInfo.GetInstalledFilesFolderPath();
-			string extensionPath = Path.Combine(installedFilesFolderPath, "DependinatorVse.vsix");
-			if (!File.Exists(extensionPath))
-			{
-				return false;
-			}
-		
-			try
-			{
-				Process process = new Process();
-				process.StartInfo.FileName = Quote(filePath);
-				process.StartInfo.Arguments = $"/a \"{extensionPath}\"";
-
-				process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-				process.StartInfo.CreateNoWindow = true;
-				process.StartInfo.UseShellExecute = false;
-
-				process.Start();
-				process.WaitForExit((int)TimeSpan.FromMinutes(5).TotalMilliseconds);
-			}
-			catch (Exception e)
-			{
-				Log.Error($"Failed to start VSIXInstaller, {e}");
-			}
-
-			return true;
-		}
-
-
-		private static bool IsExtensionInstalled()
-		{
-			string studioPath = StudioPath();
-
-			string filePath = Directory
-				.GetFiles(studioPath, "DependinatorVse.dll", SearchOption.AllDirectories)
-				.FirstOrDefault();
-
-			return !string.IsNullOrEmpty(filePath);
-		}
-
-
-		private static string StudioPath()
-		{
-			string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-			string studioPath = Path.Combine(programFiles, "Microsoft Visual Studio");
-			return studioPath;
-		}
-
 
 		public async Task OpenFileAsync(string filePath, int lineNumber)
 		{
@@ -182,28 +123,6 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 		}
 
 
-		private static void StartVisualStudioDebug(string solutionPath)
-		{
-			try
-			{
-				Process process = new Process();
-				process.StartInfo.FileName =
-					Quote(@"C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\devenv.exe");
-				process.StartInfo.Arguments = $"/rootsuffix Exp \"{solutionPath}\"";
-
-				process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-				process.StartInfo.CreateNoWindow = true;
-				process.StartInfo.UseShellExecute = false;
-
-				process.Start();
-			}
-			catch (Exception e)
-			{
-				Log.Error($"Failed to start Visual Studio, {e}");
-			}
-		}
-
-
 		private static void StartVisualStudio(string solutionPath)
 		{
 			if (BuildConfig.IsDebug)
@@ -211,28 +130,62 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 				StartVisualStudioDebug(solutionPath);
 				return;
 			}
+
 			try
 			{
 				Process process = new Process();
 				process.StartInfo.FileName = solutionPath;
+				process.StartInfo.UseShellExecute = true;
+
 				process.Start();
 			}
 			catch (Exception ex) when (ex.IsNotFatal())
 			{
 				Log.Error($"Failed to start Visual Studio {ex}");
 			}
-
 		}
 
 
-		private static string Quote(string text)
+		private static void StartVisualStudioDebug(string solutionPath)
 		{
-			char[] QuoteChar = "\"".ToCharArray();
+			try
+			{
+				if (TryGetStdioExePath(out string exePath))
+				{
+					Process process = new Process();
+					process.StartInfo.FileName = $"\"{exePath}\"";
+					process.StartInfo.Arguments = $"/rootsuffix Exp \"{solutionPath}\"";
 
-			text = text.Trim();
-			text = text.Trim(QuoteChar);
-			return $"\"{text}\"";
+					process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+					process.StartInfo.CreateNoWindow = true;
+					process.StartInfo.UseShellExecute = false;
+
+					process.Start();
+				}
+			}
+			catch (Exception e)
+			{
+				Log.Error($"Failed to start Visual Studio, {e}");
+			}
 		}
 
+		private static bool TryGetStdioExePath(out string studioExePath)
+		{
+			string studioPath = StudioPath();
+
+			studioExePath = Directory
+				.GetFiles(studioPath, "devenv.exe", SearchOption.AllDirectories)
+				.FirstOrDefault();
+			Log.Debug($"Studio exe path {studioPath}");
+
+			return studioExePath != null;
+		}
+
+
+		private static string StudioPath()
+		{
+			string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+			return Path.Combine(programFiles, "Microsoft Visual Studio");
+		}
 	}
 }
