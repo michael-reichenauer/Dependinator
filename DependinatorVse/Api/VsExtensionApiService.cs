@@ -10,7 +10,7 @@ using Microsoft.VisualStudio.Shell;
 namespace DependinatorVse.Api
 {
 	/// <summary>
-	/// Api published byt the Dependinator Visual Studio extension.
+	/// Implements the IVsExtensionApi Api published by the Dependinator Visual Studio extension.
 	/// Called by the Dependinator.exe, when triggering actions like Activate and ShowFile
 	/// </summary>
 	public class VsExtensionApiService : ApiIpcService, IVsExtensionApi
@@ -24,6 +24,9 @@ namespace DependinatorVse.Api
 		}
 
 
+		/// <summary>
+		/// Activate the studio main window to bring ti to the front.
+		/// </summary>
 #pragma warning disable VSTHRD100 // Api functions does not support Task type
 		public async void Activate()
 #pragma warning restore VSTHRD100
@@ -37,6 +40,9 @@ namespace DependinatorVse.Api
 		}
 
 
+		/// <summary>
+		/// Show the specified file in the studio
+		/// </summary>
 #pragma warning disable VSTHRD100 // Api functions does not support Task type
 		public async void ShowFile(string filePath, int lineNumber)
 #pragma warning restore VSTHRD100 
