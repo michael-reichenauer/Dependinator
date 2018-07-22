@@ -64,13 +64,19 @@ namespace DependinatorVse.Commands
 				DTE2 dte = await Studio.GetDteAsync(package);
 
 				Solution solution = dte.Solution;
-				if (solution == null)
+				if (solution == null || string.IsNullOrEmpty(solution.FullName))
 				{
 					Studio.ShowInfoMessageBox(package, "No solution has been loaded yet.");
 					return;
 				}
 
 				Document document = dte.ActiveDocument;
+				if (document == null)
+				{
+					Studio.ShowInfoMessageBox(package, "Open a file and set the cursor within it first.");
+					return;
+				}
+
 				TextSelection selection = (TextSelection)document.Selection;
 
 				DependinatorApiClient apiClient = new DependinatorApiClient(

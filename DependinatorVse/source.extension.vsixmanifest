@@ -4,11 +4,12 @@
         <Identity Id="0117fbb8-b3c3-4baf-858e-d7ed140c01f4" Version="1.0" Language="en-US" Publisher="Michael Reichenauer" />
         <DisplayName>Dependinator</DisplayName>
         <Description xml:space="preserve">Visualize program structure and dependencies as a map like interface to make it much easier to understand and refactor the architecture.</Description>
+        <MoreInfo>https://github.com/michael-reichenauer/Dependinator</MoreInfo>
         <Icon>Resources\Icon.png</Icon>
         <PreviewImage>Resources\Preview.png</PreviewImage>
         <Tags>Visualize, structure, architecture, code, refactor, dependencies</Tags>
     </Metadata>
-    <Installation>
+    <Installation AllUsers="true">
         <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0, 16.0)" />
     </Installation>
     <Dependencies>
