@@ -83,6 +83,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 							}
 						}
 
+						t.Restart();
 						isStartedDependinator = true;
 						StartVisualStudio(solutionFilePath);
 						await Task.Delay(1000);
