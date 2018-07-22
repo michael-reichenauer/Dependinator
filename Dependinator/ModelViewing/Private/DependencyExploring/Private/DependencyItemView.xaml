@@ -48,7 +48,7 @@
 				FontSize="11"
 				Style="{DynamicResource IconButtonStyle}"
 				Command="{Binding ShowCodeCommand}"
-				ToolTip="Show decompiled code" />
+				ToolTip="Show code" />
 
 			<Button
 				Visibility="{Binding IsShowButtons, Converter={StaticResource VC}}"

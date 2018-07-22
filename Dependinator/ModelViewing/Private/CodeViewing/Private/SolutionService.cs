@@ -36,11 +36,8 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 			string solutionFilePath = metadata.ModelFilePath;
 
 			string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionFilePath);
-
 			Log.Debug($"Calling: {serverName}");
-
 			bool isStartedDependinator = false;
-
 			Stopwatch t = Stopwatch.StartNew();
 
 			while (t.Elapsed < TimeSpan.FromSeconds(60))
@@ -64,28 +61,10 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 					// IVsExtensionApi not yet registered, lets try to start Dependinator, or wait a little.
 					if (!isStartedDependinator)
 					{
-						if (!installer.IsExtensionInstalled())
-						{
-							if (!message.ShowAskOkCancel(
-								"The Visual Studio Dependinator extension does not seem to be installed.\n\n" +
-								"Please install the latest release.\n" +
-								"You may need to restart running Visual Studio instances."))
-							{
-								return;
-							}
+						if (!TryStartVisualStudio(solutionFilePath)) return;
 
-							if (!installer.InstallExtension(false, true) || !installer.IsExtensionInstalled())
-							{
-								message.ShowWarning(
-									"The Visual Studio Dependinator extension does not\n" +
-									"seem to have been installed.");
-								return;
-							}
-						}
-
-						t.Restart();
 						isStartedDependinator = true;
-						StartVisualStudio(solutionFilePath);
+						t.Restart();
 						await Task.Delay(1000);
 					}
 					else
@@ -101,6 +80,33 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 
 			Log.Error("Failed to wait for other Dependiator instance");
 		}
+
+
+		private bool TryStartVisualStudio(string solutionFilePath)
+		{
+			if (!installer.IsExtensionInstalled())
+			{
+				if (!message.ShowAskOkCancel(
+					"The Visual Studio Dependinator extension does not seem to be installed.\n\n" +
+					"Please install the latest release.\n" +
+					"You may need to restart running Visual Studio instances."))
+				{
+					return false;
+				}
+
+				if (!installer.InstallExtension(false, true) || !installer.IsExtensionInstalled())
+				{
+					message.ShowWarning(
+						"The Visual Studio Dependinator extension does not\n" +
+						"seem to have been installed.");
+					return false;
+				}
+			}
+
+			StartVisualStudio(solutionFilePath);
+			return true;
+		}
+
 
 		public async Task OpenFileAsync(string filePath, int lineNumber)
 		{
