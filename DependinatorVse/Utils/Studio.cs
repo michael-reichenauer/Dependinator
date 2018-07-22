@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using EnvDTE;
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
@@ -7,6 +8,9 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace DependinatorVse.Utils
 {
+	/// <summary>
+	/// Utility class with some helper functions.
+	/// </summary>
 	internal class Studio
 	{
 		public static async Task<DTE2> GetDteAsync(AsyncPackage package) =>
@@ -29,7 +33,7 @@ namespace DependinatorVse.Utils
 
 
 		private static int ShowMessageBox(
-			AsyncPackage package, 
+			IServiceProvider package, 
 			string message, 
 			OLEMSGICON messageType, 
 			bool isCancellable)

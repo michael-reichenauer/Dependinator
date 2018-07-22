@@ -11,7 +11,7 @@ using Task = System.Threading.Tasks.Task;
 namespace DependinatorVse.Commands
 {
 	/// <summary>
-	/// Command handler
+	/// Command handler for show code node in Dependinator exe.
 	/// </summary>
 	internal sealed class ShowInDependinatorCommand
 	{
@@ -51,9 +51,7 @@ namespace DependinatorVse.Commands
 
 
 		/// <summary>
-		/// This function is the callback used to execute the command when the menu item is clicked.
-		/// See the constructor to see how the menu item is associated with this function using
-		/// OleMenuCommandService service and MenuCommand class.
+		/// Shows the node corresponding to the active text code in Dependinator
 		/// </summary>
 		private async void Execute(object sender, EventArgs e)
 		{
@@ -119,7 +117,7 @@ namespace DependinatorVse.Commands
 			}
 			catch (Exception e)
 			{
-				Log.Error($"Failed to open latest release link {e}");
+				Log.Error($"Failed to open latest release link, {e}");
 			}
 		}
 	}

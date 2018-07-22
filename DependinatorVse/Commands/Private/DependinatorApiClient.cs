@@ -9,6 +9,9 @@ using DependinatorApi.ApiHandling;
 
 namespace DependinatorVse.Commands.Private
 {
+	/// <summary>
+	/// Provides functions, which will forward the calls to the Dependinator application.
+	/// </summary>
 	public class DependinatorApiClient
 	{
 		private readonly string solutionFilePath;
@@ -25,6 +28,9 @@ namespace DependinatorVse.Commands.Private
 		public bool IsDependinatorInstalled => File.Exists(GetDependinatorPath());
 
 
+		/// <summary>
+		/// Show node, which corresponds to the specified file and line number.
+		/// </summary>
 		public async Task ShowFileAsync(string filePath, int lineNumber)
 		{
 			await CallAsync<IDependinatorApi>(api => api.ShowNodeForFile(filePath, lineNumber));
@@ -131,6 +137,7 @@ namespace DependinatorVse.Commands.Private
 		{
 			if (isDeveloperStudio)
 			{
+				// While developing
 				return @"C:\Work Files\Dependinator\Dependinator\bin\Debug";
 			}
 
