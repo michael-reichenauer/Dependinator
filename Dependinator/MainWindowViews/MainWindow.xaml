@@ -111,7 +111,7 @@
 						FontWeight="Bold"
 						Visibility="{Binding IsNewVersionVisible, Converter={StaticResource VC}}"			
 						Command="{Binding RunLatestVersionCommand}"
-						ToolTip="New version of Dependinator is available, click to reload ..." />
+						ToolTip="New version of Dependinator is available, click to reload..." />
 
 					<!-- Hamburger button -->
 					<mainWindowViews:HamburgerButton

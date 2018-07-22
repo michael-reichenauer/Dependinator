@@ -4,6 +4,7 @@ using System.Windows.Threading;
 using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.ModelViewing.Private.ModelHandling.Private;
+using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Private.Nodes.Private
@@ -26,7 +27,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 		}
 
 
-		public void StartMoveToNode(NodeName nodeName)
+		public bool TryStartMoveToNode(NodeName nodeName)
 		{
 			if (modelService.TryGetNode(nodeName, out Node node))
 			{
@@ -43,6 +44,12 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 					Dispatcher.CurrentDispatcher);
 
 				operation.Timer.Start();
+				return true;
+			}
+			else
+			{
+				Log.Debug($"Failed to locate {nodeName}");
+				return false;
 			}
 		}
 

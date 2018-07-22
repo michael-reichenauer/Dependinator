@@ -45,6 +45,36 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		}
 
 
+		public async Task<R<SourceLocation>> GetSourceFilePath(string filePath, NodeName nodeName)
+		{
+			R<WorkParser> workItemParser = new WorkParser(filePath, null);
+			if (workItemParser.IsFaulted)
+			{
+				return workItemParser.Error;
+			}
+
+			using (workItemParser.Value)
+			{
+				return await workItemParser.Value.GetSourceFilePath(nodeName);
+			}
+		}
+
+
+		public async Task<R<NodeName>> GetNodeForFilePathAsync(string filePath, string sourceFilePath)
+		{
+			R<WorkParser> workItemParser = new WorkParser(filePath, null);
+			if (workItemParser.IsFaulted)
+			{
+				return workItemParser.Error;
+			}
+
+			using (workItemParser.Value)
+			{
+				return await workItemParser.Value.GetNodeForFilePathAsync(sourceFilePath);
+			}
+		}
+
+
 		public IReadOnlyList<string> GetDataFilePaths(string filePath) => 
 			WorkParser.GetDataFilePaths(filePath);
 

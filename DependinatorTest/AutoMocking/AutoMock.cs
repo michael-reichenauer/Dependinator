@@ -2,11 +2,11 @@
 using System.Linq;
 using Autofac;
 using Autofac.Features.ResolveAnything;
-using GitMindTest.AutoMocking.Private;
+using DependinatorTest.AutoMocking.Private;
 using Moq;
 
 
-namespace GitMindTest.AutoMocking
+namespace DependinatorTest.AutoMocking
 {
 	public class AutoMock : IDisposable
 	{

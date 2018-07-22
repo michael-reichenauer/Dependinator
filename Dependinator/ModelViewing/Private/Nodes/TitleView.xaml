@@ -98,7 +98,7 @@
 			<ContextMenu>
 
 				<MenuItem
-					Header="Show Dependency Explorer  ..."
+					Header="Show Dependency Explorer..."
 					Command="{Binding ShowDependenciesCommand}">
 					<MenuItem.Icon>
 						<Border>
@@ -109,7 +109,7 @@
 				</MenuItem>
 
 				<MenuItem
-					Header="Show Decompiled Code ..."
+					Header="Show Code..."
 					Visibility="{Binding HasCode, Converter={StaticResource VC}}"
 					Command="{Binding ShowCodeCommand}">
 					<MenuItem.Icon>

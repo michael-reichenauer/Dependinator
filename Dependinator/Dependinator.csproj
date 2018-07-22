@@ -77,6 +77,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:UpdateDesignTimeXaml</Generator>
     </Page>
+    <Compile Remove="Common\VisualStudio\**" />
+    <EmbeddedResource Remove="Common\VisualStudio\**" />
+    <None Remove="Common\VisualStudio\**" />
+    <Page Remove="Common\VisualStudio\**" />
+    <ProjectReference Include="..\DependinatorApi\DependinatorApi.csproj" />
     <Compile Update="**\*.xaml.cs" SubType="Code" DependentUpon="%(Filename)" />
 
     <!-- Settings -->

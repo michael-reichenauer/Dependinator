@@ -57,7 +57,7 @@
 				FontSize="11"
 				Style="{DynamicResource IconButtonStyle}"
 				Command="{Binding ShowDependenciesCommand}"
-				ToolTip="Show Dependency Explorer  ..." />
+				ToolTip="Show Dependency Explorer..." />
 
 			<Button
 				Visibility="{Binding IsShowButtons, Converter={StaticResource VC}}"

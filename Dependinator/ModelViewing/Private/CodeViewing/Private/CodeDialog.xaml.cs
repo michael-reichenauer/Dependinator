@@ -2,49 +2,50 @@
 using System.ComponentModel;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
 using Dependinator.Common;
 using Dependinator.Common.MessageDialogs;
-using Dependinator.Common.ModelMetadataFolders;
-using Dependinator.ModelViewing.Private.DataHandling;
 using Dependinator.ModelViewing.Private.ModelHandling;
 using Dependinator.Utils.ErrorHandling;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
 
 
-namespace Dependinator.ModelViewing.Private.CodeViewing
+namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 {
 	/// <summary>
 	/// Interaction logic for ReferencesDialog.xaml
 	/// </summary>
 	public partial class CodeDialog : Window
 	{
-		private readonly IDataDetailsService dataDetailsService;
 		private readonly Lazy<IModelNotifications> modelNotifications;
 		private readonly IMessage message;
-		private readonly ModelMetadata modelMetadata;
+
 		private readonly NodeName nodeName;
+		private readonly Func<NodeName, Task<R<SourceCode>>> getCodeActionAsync;
+		private readonly CodeViewModel codeViewModel;
 
 
 		internal CodeDialog(
-			IDataDetailsService dataDetailsService,
 			Lazy<IModelNotifications> modelNotifications,
 			IMessage message,
-			ModelMetadata modelMetadata,
+			ISolutionService solutionService,
 			WindowOwner owner,
-			NodeName nodeName)
+			NodeName nodeName,
+			Func<NodeName, Task<R<SourceCode>>> getCodeActionAsync)
 		{
-			this.dataDetailsService = dataDetailsService;
 			this.modelNotifications = modelNotifications;
 			this.message = message;
-			this.modelMetadata = modelMetadata;
+
 			this.nodeName = nodeName;
+			this.getCodeActionAsync = getCodeActionAsync;
 			Owner = owner;
 			InitializeComponent();
 
-			DataContext = new CodeViewModel(nodeName.DisplayLongName);
+			codeViewModel = new CodeViewModel(solutionService, nodeName.DisplayLongName, this);
+			DataContext = codeViewModel;
 
 			SetSyntaxHighlighting();
 
@@ -69,7 +70,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing
 		{
 			CodeView.Text = "Getting code ...";
 
-			R<string> codeResult = await dataDetailsService.GetCode(modelMetadata.ModelFilePath, nodeName);
+			R<SourceCode> codeResult = await getCodeActionAsync(nodeName);
 
 			if (codeResult.IsFaulted)
 			{
@@ -78,7 +79,14 @@ namespace Dependinator.ModelViewing.Private.CodeViewing
 				return;
 			}
 
-			CodeView.Text = codeResult.Value;
+			CodeView.Options.IndentationSize = 2;
+			CodeView.Text = codeResult.Value.Text;
+
+			// Await code to be rendered before scrolling to line number
+			await Task.Yield();
+			codeViewModel.FilePath = codeResult.Value.FilePath;
+			codeViewModel.LineNumber = codeResult.Value.LineNumber;
+			CodeView.ScrollTo(codeViewModel.LineNumber, 0);
 		}
 
 

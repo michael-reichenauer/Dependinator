@@ -29,12 +29,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		{
 			if (SolutionParser.IsSolutionFile(filePath))
 			{
-				solutionParser = new SolutionParser(filePath, itemsCallback);
+				solutionParser = new SolutionParser(filePath, itemsCallback, false);
 				return await solutionParser.ParseAsync();
 			}
 			else
 			{
-				assemblyParser = new AssemblyParser(filePath, DataNodeName.Root, itemsCallback);
+				assemblyParser = new AssemblyParser(filePath, DataNodeName.Root, itemsCallback, false);
 				return await assemblyParser.ParseAsync();
 			}
 		}
@@ -46,13 +46,46 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 			if (SolutionParser.IsSolutionFile(filePath))
 			{
-				solutionParser = new SolutionParser(filePath, null);
+				solutionParser = new SolutionParser(filePath, null, true);
 				return await solutionParser.GetCodeAsync(nodeName);
 			}
 			else
 			{
-				assemblyParser = new AssemblyParser(filePath, DataNodeName.Root, itemsCallback);
+				assemblyParser = new AssemblyParser(filePath, DataNodeName.Root, itemsCallback, true);
 				return assemblyParser.GetCode(nodeName);
+			}
+		}
+
+
+		public async Task<R<SourceLocation>> GetSourceFilePath(NodeName nodeName)
+		{
+			await Task.Yield();
+
+			if (SolutionParser.IsSolutionFile(filePath))
+			{
+				solutionParser = new SolutionParser(filePath, null, true);
+				return await solutionParser.GetSourceFilePathAsync(nodeName);
+			}
+			else
+			{
+				assemblyParser = new AssemblyParser(filePath, DataNodeName.Root, itemsCallback, true);
+				return assemblyParser.GetSourceFilePath(nodeName);
+			}
+		}
+
+
+		public async Task<R<NodeName>> GetNodeForFilePathAsync(string sourceFilePath)
+		{
+			await Task.Yield();
+
+			if (SolutionParser.IsSolutionFile(filePath))
+			{
+				solutionParser = new SolutionParser(filePath, null, true);
+				return await solutionParser.GetNodeNameForFilePathAsync(sourceFilePath);
+			}
+			else
+			{
+				return Error.From("Source file only available for solution based models");
 			}
 		}
 

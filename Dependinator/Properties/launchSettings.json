@@ -14,6 +14,10 @@
     "AcsDep": {
       "commandName": "Project",
       "commandLineArgs": "\"C:\\Work Files\\AcmAcs\\AllAssemblies.sln\""
+    },
+    "Example": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Program Files\\Dependinator\\Example\\Example.exe\""
     }
   }
 }

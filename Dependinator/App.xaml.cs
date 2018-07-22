@@ -117,9 +117,7 @@ namespace Dependinator
 
 		private bool TryActivateExistingInstance()
 		{
-			string metadataFolderPath = modelMetadataService.MetadataFolderPath;
-			return existingInstanceService.TryActivateExistingInstance(
-				metadataFolderPath, Environment.GetCommandLineArgs());
+			return existingInstanceService.TryActivateExistingInstance(Environment.GetCommandLineArgs());
 		}
 
 

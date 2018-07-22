@@ -19,7 +19,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 		private readonly Lazy<IModelNotifications> modelNotifications;
 		private readonly IMessage message;
 		private readonly ILocateNodeService locateNodeService;
-		private readonly Func<NodeName, CodeDialog> codeDialogProvider;
+		private readonly ICodeViewService codeViewService;
 		private readonly Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider;
 
 
@@ -29,7 +29,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 			Lazy<IModelNotifications> modelNotifications,
 			IMessage message,
 			ILocateNodeService locateNodeService,
-			Func<NodeName, CodeDialog> codeDialogProvider,
+			ICodeViewService codeViewService,
 			Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider)
 		{
 			this.dependenciesService = dependenciesService;
@@ -37,16 +37,12 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 			this.modelNotifications = modelNotifications;
 			this.message = message;
 			this.locateNodeService = locateNodeService;
-			this.codeDialogProvider = codeDialogProvider;
+			this.codeViewService = codeViewService;
 			this.dependencyExplorerWindowProvider = dependencyExplorerWindowProvider;
 		}
 
 
-		public void ShowCode(NodeName nodeName)
-		{
-			CodeDialog codeDialog = codeDialogProvider(nodeName);
-			codeDialog.Show();
-		}
+		public void ShowCode(NodeName nodeName) => codeViewService.ShowCode(nodeName);
 
 
 		public void Initialize(DependencyExplorerWindowViewModel viewModel, Node node, Line line)
@@ -118,7 +114,8 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 		}
 
 
-		public void Locate(NodeName nodeName) => locateNodeService.StartMoveToNode(nodeName);
+		public void Locate(NodeName nodeName) => locateNodeService.TryStartMoveToNode(nodeName);
+
 		public void ShowDependencies(NodeName nodeName)
 		{
 			if (TryGetNode(nodeName, out Node node))

@@ -10,5 +10,6 @@
 		bool IsTest { get; }
 		bool HasFile { get; }
 		string FilePath { get; }
+		bool IsInstallExtension { get; }
 	}
 }

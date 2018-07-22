@@ -231,7 +231,7 @@
 							FontSize="20"
 							Style="{DynamicResource IconButtonStyle}"
 							Command="{Binding ShowDependenciesCommand}"
-							ToolTip="Show Dependency Explorer  ..." />
+							ToolTip="Show Dependency Explorer..." />
 
 						<Button
 							Visibility="{Binding HasCode, Converter={StaticResource VC}}"
@@ -242,7 +242,7 @@
 							Padding="2"
 							Style="{DynamicResource IconButtonStyle}"
 							Command="{Binding ShowCodeCommand}"
-							ToolTip="Show decompiled code" />
+							ToolTip="Show code" />
 					</StackPanel>
 
 					

@@ -2,6 +2,6 @@
 {
 	internal interface ILocateNodeService
 	{
-		void StartMoveToNode(NodeName nodeName);
+		bool TryStartMoveToNode(NodeName nodeName);
 	}
 }

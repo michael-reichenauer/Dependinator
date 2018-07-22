@@ -64,11 +64,21 @@
 				<Separator Background="{DynamicResource BorderBrush}" />
 
 				<MenuItem
-					Header="Open Model ..."
+					Header="Open Model..."
 					Command="{Binding OpenFileCommand}">
 					<MenuItem.Icon>
 						<Border>
 							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE89D;" />
+						</Border>
+					</MenuItem.Icon>
+				</MenuItem>
+
+				<MenuItem
+					Header="Open Model in Visual Studio..."
+					Command="{Binding OpenStudioCommand}">
+					<MenuItem.Icon>
+						<Border>
+							<TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xe051;" />
 						</Border>
 					</MenuItem.Icon>
 				</MenuItem>
@@ -84,7 +94,7 @@
 				</MenuItem>
 
 				<MenuItem
-					Header="Send feedback ..."
+					Header="Send feedback..."
 					Command="{Binding FeedbackCommand}">
 					<MenuItem.Icon>
 						<Border>
@@ -94,7 +104,7 @@
 				</MenuItem>
 
 				<MenuItem
-					Header="View help ..."
+					Header="View help..."
 					InputGestureText="F1"
 					Command="{Binding HelpCommand}">
 					<MenuItem.Icon>

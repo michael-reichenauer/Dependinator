@@ -16,16 +16,20 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 	{
 		private readonly string solutionFilePath;
 		private readonly DataItemsCallback itemsCallback;
+		private readonly bool isReadSymbols;
 
 		private readonly List<AssemblyParser> assemblyParsers = new List<AssemblyParser>();
+		private readonly List<DataNode> parentNodesToSend = new List<DataNode>();
 
-		private List<DataNode> parentNodesToSend = new List<DataNode>();
 
-
-		public SolutionParser(string solutionFilePath, DataItemsCallback itemsCallback)
+		public SolutionParser(
+			string solutionFilePath, 
+			DataItemsCallback itemsCallback,
+			bool isReadSymbols)
 		{
 			this.solutionFilePath = solutionFilePath;
 			this.itemsCallback = itemsCallback;
+			this.isReadSymbols = isReadSymbols;
 		}
 
 		public static bool IsSolutionFile(string filePath) =>
@@ -70,6 +74,62 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 			}
 
 			return assemblyParser.GetCode(nodeName);
+		}
+
+
+		public async Task<R<SourceLocation>> GetSourceFilePathAsync(NodeName nodeName)
+		{
+			await Task.Yield();
+
+			R result = CreateAssemblyParsers();
+
+			if (result.IsFaulted)
+			{
+				return result.Error;
+			}
+
+			string moduleName = GetModuleName(nodeName);
+			AssemblyParser assemblyParser = assemblyParsers
+				.FirstOrDefault(p => p.ModuleName == moduleName);
+
+			if (assemblyParser == null)
+			{
+				return Error.From($"Failed to find assembly for {moduleName}");
+			}
+
+			return assemblyParser.GetSourceFilePath(nodeName);
+		}
+
+
+		public async Task<R<NodeName>> GetNodeNameForFilePathAsync(string sourceFilePath)
+		{
+			await Task.Yield();
+
+			R result = CreateAssemblyParsers();
+
+			if (result.IsFaulted)
+			{
+				return result.Error;
+			}
+			
+			foreach (AssemblyParser parser in assemblyParsers)
+			{
+				if (parser.TryGetNodeNameFor(sourceFilePath, out NodeName nodeName))
+				{
+					return nodeName;
+				}
+			}
+
+			sourceFilePath = Path.GetDirectoryName(sourceFilePath);
+			foreach (AssemblyParser parser in assemblyParsers)
+			{
+				if (parser.TryGetNodeNameFor(sourceFilePath, out NodeName nodeName))
+				{
+					return nodeName.ParentName;
+				}
+			}
+
+			return Error.From($"Failed to find node for {sourceFilePath}");
 		}
 
 
@@ -125,7 +185,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 				DataNodeName parent = GetParent(solutionName, project);
 
-				var assemblyParser = new AssemblyParser(assemblyPath, parent, itemsCallback);
+				var assemblyParser = new AssemblyParser(assemblyPath, parent, itemsCallback, isReadSymbols);
 
 				assemblyParsers.Add(assemblyParser);
 			}

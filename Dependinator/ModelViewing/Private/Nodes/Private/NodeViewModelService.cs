@@ -19,8 +19,8 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 		private readonly IThemeService themeService;
 		private readonly ISelectionService selectionService;
 		private readonly INodeLayoutService nodeLayoutService;
+		private readonly ICodeViewService codeViewService;
 		private readonly Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider;
-		private readonly Func<NodeName, CodeDialog> codeDialogProvider;
 
 
 		public NodeViewModelService(
@@ -28,19 +28,18 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 			IThemeService themeService,
 			ISelectionService selectionService,
 			INodeLayoutService nodeLayoutService,
-			Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider,
-			Func<NodeName, CodeDialog> codeDialogProvider)
+			ICodeViewService codeViewService,
+			Func<Node, Line, DependencyExplorerWindow> dependencyExplorerWindowProvider)
 		{
 			this.modelService = modelService;
 			this.themeService = themeService;
 			this.selectionService = selectionService;
 			this.nodeLayoutService = nodeLayoutService;
+			this.codeViewService = codeViewService;
 			this.dependencyExplorerWindowProvider = dependencyExplorerWindowProvider;
-			this.codeDialogProvider = codeDialogProvider;
 		}
 
-
-
+		
 		public void HideNode(Node node)
 		{
 			if (node.IsHidden)
@@ -145,11 +144,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 		}
 
 
-		public void ShowCode(Node node)
-		{
-			CodeDialog codeDialog = codeDialogProvider(node.Name);
-			codeDialog.Show();
-		}
+		public void ShowCode(Node node) => codeViewService.ShowCode(node.Name);
 
 
 		public void RearrangeLayout(NodeViewModel nodeViewModel)

@@ -50,7 +50,7 @@
 					<ContextMenu >
 
 						<MenuItem
-							Header="Show Dependency Explorer ..."
+							Header="Show Dependency Explorer..."
 							Command="{Binding ShowDependenciesCommand}">
 							<MenuItem.Icon>
 								<Border>
@@ -78,7 +78,7 @@
 					<ContextMenu >
 
 						<MenuItem
-							Header="Show Dependency Explorer ..."
+							Header="Show Dependency Explorer..."
 							Command="{Binding ShowDependenciesCommand}">
 							<MenuItem.Icon>
 								<Border>

@@ -24,6 +24,7 @@
  
   <!-- Project references --> 
   <ItemGroup>
+    <ProjectReference Include="..\DependinatorApi\DependinatorApi.csproj" />
     <ProjectReference Include="..\Dependinator\Dependinator.csproj" />
   </ItemGroup>
   

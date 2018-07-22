@@ -9,6 +9,7 @@ using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Ass
 using Dependinator.Utils;
 using Dependinator.Utils.ErrorHandling;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
 
 
@@ -19,6 +20,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		private readonly string assemblyPath;
 		private readonly DataNodeName parentName;
 		private readonly DataItemsCallback itemsCallback;
+		private readonly bool isReadSymbols;
 		private readonly Decompiler decompiler = new Decompiler();
 		private readonly AssemblyReferencesParser assemblyReferencesParser;
 		private readonly TypeParser typeParser;
@@ -32,11 +34,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		public AssemblyParser(
 			string assemblyPath,
 			DataNodeName parentName,
-			DataItemsCallback itemsCallback)
+			DataItemsCallback itemsCallback,
+			bool isReadSymbols)
 		{
 			this.assemblyPath = assemblyPath;
 			this.parentName = parentName;
 			this.itemsCallback = itemsCallback;
+			this.isReadSymbols = isReadSymbols;
 
 			XmlDocParser xmlDockParser = new XmlDocParser(assemblyPath);
 			LinkHandler linkHandler = new LinkHandler(itemsCallback);
@@ -45,7 +49,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 			typeParser = new TypeParser(linkHandler, xmlDockParser, itemsCallback);
 			memberParser = new MemberParser(linkHandler, xmlDockParser, itemsCallback);
 
-			assembly = new Lazy<AssemblyDefinition>(GetAssembly);
+			assembly = new Lazy<AssemblyDefinition>(() => GetAssembly(isReadSymbols));
 		}
 
 
@@ -74,7 +78,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 				return R.Ok;
 			});
 		}
-
 
 
 		public void ParseAssemblyModule()
@@ -124,22 +127,40 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 			decompiler.GetCode(assembly.Value.MainModule, nodeName);
 
 
+		public R<SourceLocation> GetSourceFilePath(NodeName nodeName) =>
+			decompiler.GetSourceFilePath(assembly.Value.MainModule, nodeName);
+
+
+		public bool TryGetNodeNameFor(string sourceFilePath, out NodeName nodeName)
+		{
+			IEnumerable<TypeDefinition> assemblyTypes = GetAssemblyTypes();
+
+			return decompiler.TryGetNodeNameForSourceFile(
+				assembly.Value.MainModule, assemblyTypes, sourceFilePath, out nodeName);
+		}
+
 		public void Dispose()
 		{
 			assembly.Value?.Dispose();
 		}
 
 
-		private AssemblyDefinition GetAssembly()
+		private AssemblyDefinition GetAssembly(bool isSymbols)
 		{
 			try
 			{
 				ReaderParameters parameters = new ReaderParameters
 				{
 					AssemblyResolver = resolver,
+					ReadSymbols = isSymbols,
 				};
 
 				return AssemblyDefinition.ReadAssembly(assemblyPath, parameters);
+			}
+			catch (SymbolsNotFoundException)
+			{
+				Log.Debug("Assembly does not have symbols");
+				return GetAssembly(false);
 			}
 			catch (Exception e)
 			{

@@ -8,6 +8,8 @@ namespace Dependinator.ModelViewing
 	{
 		void StartMoveToNode(NodeName nodeName);
 
+		void StartMoveToNode(string filePath);
+
 		IReadOnlyList<NodeName> GetHiddenNodeNames();
 
 		void ShowHiddenNode(NodeName nodeName);

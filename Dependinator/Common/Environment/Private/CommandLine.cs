@@ -32,6 +32,7 @@ namespace Dependinator.Common.Environment.Private
 		public bool HasFile => args.Skip(1).Any(a => !a.StartsWith("/")) || IsTest;
 
 		public string FilePath => args.Skip(1).FirstOrDefault(a => !a.StartsWith("/"));
+		public bool IsInstallExtension => args.Contains("/installextension");
 
 
 		private bool IsSetupFile() => 
