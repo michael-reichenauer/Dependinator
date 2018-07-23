@@ -31,7 +31,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 		}
 
 
-		public async Task OpenAsync()
+		public async Task OpenStudioAsync()
 		{
 			string solutionFilePath = metadata.ModelFilePath;
 
@@ -116,7 +116,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 
 			if (!ApiIpcClient.IsServerRegistered(serverName))
 			{
-				await OpenAsync();
+				await OpenStudioAsync();
 			}
 
 			if (ApiIpcClient.IsServerRegistered(serverName))

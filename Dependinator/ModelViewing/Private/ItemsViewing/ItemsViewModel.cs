@@ -19,6 +19,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 		}
 
 
+
 		public ItemsCanvas ItemsCanvas { get; }
 
 		public bool IsRoot => ItemsCanvas.IsRoot;

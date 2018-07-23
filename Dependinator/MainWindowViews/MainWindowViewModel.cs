@@ -191,7 +191,7 @@ namespace Dependinator.MainWindowViews
 
 		public Command OpenFileCommand => Command(openModelService.ShowOpenModelDialog);
 
-		public Command OpenStudioCommand => AsyncCommand(solutionService.OpenAsync);
+		public Command OpenStudioCommand => AsyncCommand(solutionService.OpenStudioAsync);
 
 
 		public Command RunLatestVersionCommand => AsyncCommand(RunLatestVersionAsync);

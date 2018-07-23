@@ -83,6 +83,12 @@ namespace Dependinator.ModelViewing.Private
 			openModelService.OpenModelAsync(filePaths);
 
 
+		public void AddNewNode()
+		{
+			throw new System.NotImplementedException();
+		}
+
+
 		public void Close()
 		{
 			StoreViewSettings();

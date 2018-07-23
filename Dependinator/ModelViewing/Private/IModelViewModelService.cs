@@ -21,5 +21,6 @@ namespace Dependinator.ModelViewing.Private
 		void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e);
 		Task OpenAsync();
 		Task OpenFilesAsync(IReadOnlyList<string> filePaths);
+		void AddNewNode();
 	}
 }
