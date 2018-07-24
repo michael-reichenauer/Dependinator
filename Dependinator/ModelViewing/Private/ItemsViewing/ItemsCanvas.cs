@@ -6,6 +6,7 @@ using System.Windows.Input;
 using Dependinator.ModelViewing.Private.ItemsViewing.Private;
 using Dependinator.ModelViewing.Private.Nodes;
 using Dependinator.Utils;
+using Dependinator.Utils.Threading;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
@@ -34,7 +35,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 		void CanvasRealized();
 		void CanvasVirtualized();
 		void UpdateAll();
-		void ZoomNode(MouseWheelEventArgs e);
+		void Zoom(MouseWheelEventArgs e);
 		void ZoomWindowCenter(double zoom);
 		void ZoomNode(double zoom, Point? zoomCenter);
 		void UpdateAndNotifyAll(bool isUpdate);
@@ -183,26 +184,45 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 		public void UpdateAll() => RootCanvas.ZoomNode(1, new Point(0, 0));
 
 
-		public void ZoomNode(MouseWheelEventArgs e)
+		public void Zoom(MouseWheelEventArgs e)
+		{
+			if (IsRoot)
+			{
+				ZoomRootNode(e);
+			}
+			else
+			{
+				ZoomNode(e);
+			}
+
+			e.Handled = true;
+		}
+		
+
+		private void ZoomNode(MouseWheelEventArgs e)
 		{
 			int wheelDelta = e.Delta;
 			double zoom = Math.Pow(2, wheelDelta / 2000.0);
 
 			Point viewPosition = e.GetPosition(ZoomableCanvas);
 			//Log.Debug($"{zoom},   {viewPosition}");
-			if (IsRoot)
-			{
-				ZoomNode(zoom, viewPosition + (Vector)ZoomableCanvas.Offset);
-			}
-			else
-			{
-				ZoomNode(zoom, viewPosition);
-			}
 
-			e.Handled = true;
+			ZoomNode(zoom, viewPosition);
 		}
 
 
+		private void ZoomRootNode(MouseWheelEventArgs e)
+		{
+			Timing t = Timing.Start();
+			int wheelDelta = e.Delta;
+			double zoom = Math.Pow(2, wheelDelta / 2000.0);
+
+			Point viewPosition = e.GetPosition(ZoomableCanvas);
+
+			ZoomNode(zoom, viewPosition + (Vector)ZoomableCanvas.Offset);
+			t.Log("Zoomed root");
+		}
+		
 
 		public void ZoomWindowCenter(double zoom)
 		{
@@ -238,7 +258,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
 			SetZoomableCanvasScale(zoomCenter);
 
-			UpdateAndNotifyAll(!IsRoot);
+			//UpdateAndNotifyAll(!IsRoot);
 
 			canvasChildren.ForEach(child => child.UpdateScale());
 		}

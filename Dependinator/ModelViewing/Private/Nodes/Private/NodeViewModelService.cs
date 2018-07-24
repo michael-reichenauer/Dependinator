@@ -102,11 +102,11 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 
 			if (nodeViewModel.IsInnerSelected)
 			{
-				itemsCanvas.ZoomNode(e);
+				itemsCanvas.Zoom(e);
 			}
 			else
 			{
-				itemsCanvas.RootCanvas.ZoomNode(e);
+				itemsCanvas.RootCanvas.Zoom(e);
 			}
 		}
 
