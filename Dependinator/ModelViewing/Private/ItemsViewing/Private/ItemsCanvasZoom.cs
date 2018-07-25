@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
-using Dependinator.Utils.Threading;
 
 
 namespace Dependinator.ModelViewing.Private.ItemsViewing
@@ -19,44 +18,32 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 		}
 
 
-		public void ZoomRoot(MouseWheelEventArgs e)
-		{
-			Timing t = Timing.Start();
+		public void ZoomRoot(MouseWheelEventArgs e) => Zoom(itemsCanvas.RootCanvas, e);
 
+		public void ZoomNode(MouseWheelEventArgs e) => Zoom(itemsCanvas, e);
+
+
+		private static void Zoom(ItemsCanvas itemsCanvas, MouseWheelEventArgs e)
+		{
 			double zoomFactor = ZoomFactor(e);
-			ItemsCanvas rootCanvas = itemsCanvas.RootCanvas;
-			Point zoomCenter = ZoomCenter(rootCanvas, e);
+			Point zoomCenter = ZoomCenter(itemsCanvas, e);
 
-			ZoomRoot(rootCanvas, zoomFactor, zoomCenter);
-
-			t.Log("Zoomed root");
+			Zoom(itemsCanvas, zoomFactor, zoomCenter);
 		}
 
 
 
-
-		private static void ZoomRoot(ItemsCanvas rootCanvas, double zoom, Point zoomCenter)
+		private static void Zoom(ItemsCanvas itemsCanvas, double zoom, Point zoomCenter)
 		{
-			double newScale = rootCanvas.Scale * zoom;
+			double newScale = itemsCanvas.Scale * zoom;
 
-			if (newScale < 0.40 && zoom < 1)
-			{
-				// Reached minimum root zoom level
-				return;
-			}
+			if (!IsValidZoomScale(zoom, newScale)) return;
 
-			rootCanvas.rootScale = newScale;
+			if (itemsCanvas.IsRoot) itemsCanvas.rootScale = newScale;
+			else itemsCanvas.ScaleFactor = newScale / itemsCanvas.ParentCanvas.Scale;
 
-			Zoom(rootCanvas, zoomCenter);
-		}
-
-
-
-		private static void Zoom(ItemsCanvas itemsCanvas, Point zoomCenter)
-		{
 			SetZoomableCanvasScale(itemsCanvas, zoomCenter);
-			NotifyAllItems(itemsCanvas);
-
+			UpdateAndNotifyAll(itemsCanvas);
 			ZoomDescendants(itemsCanvas);
 		}
 
@@ -105,6 +92,9 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
 
 		private static double ZoomFactor(MouseWheelEventArgs e) => Math.Pow(2, e.Delta / 2000.0);
+
+		private static bool IsValidZoomScale(double zoom, double newScale) => newScale > 0.40 || zoom > 1;
+
 
 		private static Point ZoomCenter(ItemsCanvas itemsCanvas, MouseWheelEventArgs e)
 		{

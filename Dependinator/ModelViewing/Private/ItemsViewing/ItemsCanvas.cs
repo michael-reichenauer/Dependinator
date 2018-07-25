@@ -199,24 +199,12 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 			}
 			else
 			{
-				ZoomNode(e);
+				itemsCanvasZoom.ZoomNode(e);
 			}
 
 			e.Handled = true;
 		}
 		
-
-		private void ZoomNode(MouseWheelEventArgs e)
-		{
-			int wheelDelta = e.Delta;
-			double zoom = Math.Pow(2, wheelDelta / 2000.0);
-
-			Point viewPosition = e.GetPosition(ZoomableCanvas);
-			//Log.Debug($"{zoom},   {viewPosition}");
-
-			ZoomNode(zoom, viewPosition);
-		}
-
 
 
 
