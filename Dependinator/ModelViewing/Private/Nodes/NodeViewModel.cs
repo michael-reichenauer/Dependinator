@@ -54,11 +54,11 @@ namespace Dependinator.ModelViewing.Private.Nodes
 					return false;
 				}
 
-				return (ItemScale * ItemWidth > 20 && Node.Parent.CanShowChildren);
+				return (ItemScale * ItemWidth > 40 && Node.Parent.CanShowChildren);
 			}
 		}
 
-		public bool CanShowChildren => ItemScale * ItemWidth > 50 * 7;
+		public bool CanShowChildren => ItemScale * ItemWidth > 70 * 7;
 
 		public Node Node { get; }
 

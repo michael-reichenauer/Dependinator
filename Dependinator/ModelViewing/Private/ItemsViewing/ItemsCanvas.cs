@@ -6,7 +6,6 @@ using System.Windows.Input;
 using Dependinator.ModelViewing.Private.ItemsViewing.Private;
 using Dependinator.ModelViewing.Private.Nodes;
 using Dependinator.Utils;
-using Dependinator.Utils.Threading;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
@@ -65,15 +64,16 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 		public static readonly double DefaultScaleFactor = 1.0 / 7.0;
 		private static readonly Vector ChildOffset = new Vector(3, 3);
 
+		private readonly ItemsCanvasZoom itemsCanvasZoom;
 		private readonly IItemsCanvasOwner owner;
-		private readonly ItemsSource itemsSource;
-		private readonly List<ItemsCanvas> canvasChildren = new List<ItemsCanvas>();
+		public readonly ItemsSource itemsSource;
+		public readonly List<ItemsCanvas> canvasChildren = new List<ItemsCanvas>();
 
-		private double rootScale;
+		public double rootScale;
 		private Point rootOffset;
 		private bool isFocused;
-		private bool IsShowing => owner?.IsShowing ?? true;
-		private bool CanShow => owner?.CanShow ?? true;
+		public bool IsShowing => owner?.IsShowing ?? true;
+		public bool CanShow => owner?.CanShow ?? true;
 
 
 		// The root canvas
@@ -87,6 +87,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 		{
 			this.owner = owner;
 			this.ParentCanvas = parentCanvas;
+			itemsCanvasZoom = new ItemsCanvasZoom(this);
 
 			RootCanvas = parentCanvas?.RootCanvas ?? this;
 
@@ -186,9 +187,15 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
 		public void Zoom(MouseWheelEventArgs e)
 		{
+			if (!IsZoomAndMoveEnabled)
+			{
+				return;
+			}
+
+
 			if (IsRoot)
 			{
-				ZoomRootNode(e);
+				itemsCanvasZoom.ZoomRoot(e);
 			}
 			else
 			{
@@ -211,18 +218,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 		}
 
 
-		private void ZoomRootNode(MouseWheelEventArgs e)
-		{
-			Timing t = Timing.Start();
-			int wheelDelta = e.Delta;
-			double zoom = Math.Pow(2, wheelDelta / 2000.0);
 
-			Point viewPosition = e.GetPosition(ZoomableCanvas);
-
-			ZoomNode(zoom, viewPosition + (Vector)ZoomableCanvas.Offset);
-			t.Log("Zoomed root");
-		}
-		
 
 		public void ZoomWindowCenter(double zoom)
 		{
@@ -258,7 +254,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
 			SetZoomableCanvasScale(zoomCenter);
 
-			//UpdateAndNotifyAll(!IsRoot);
+			UpdateAndNotifyAll(!IsRoot);
 
 			canvasChildren.ForEach(child => child.UpdateScale());
 		}
@@ -500,6 +496,23 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
 			count += canvasChildren.Sum(canvas => canvas.ShownDescendantsItemsCount());
 			return count;
+		}
+
+
+
+		public IEnumerable<ItemsCanvas> Descendants()
+		{
+			Queue<ItemsCanvas> queue = new Queue<ItemsCanvas>();
+
+			canvasChildren.ForEach(queue.Enqueue);
+
+			while (queue.Any())
+			{
+				ItemsCanvas descendant = queue.Dequeue();
+				yield return descendant;
+
+				descendant.canvasChildren.ForEach(queue.Enqueue);
+			}
 		}
 
 

@@ -38,9 +38,10 @@ namespace Dependinator.ModelViewing.Private.Lines
 		public Line Line { get; }
 
 		public override bool CanShow =>
-			ItemScale < 10
+			ItemScale < 7
 			&& Line.Source.CanShow && Line.Target.CanShow
-			&& !Line.IsHidden;
+			&& !Line.IsHidden
+			&& (Line.Source.IsShowing || Line.Target.IsShowing);
 
 		public double LineWidth => lineViewModelService.GetLineWidth(Line);
 
