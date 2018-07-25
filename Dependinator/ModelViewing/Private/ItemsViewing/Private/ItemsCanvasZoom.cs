@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using Dependinator.Utils.UI.VirtualCanvas;
 
 
 namespace Dependinator.ModelViewing.Private.ItemsViewing
@@ -18,9 +19,37 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 		}
 
 
-		public void ZoomRoot(MouseWheelEventArgs e) => Zoom(itemsCanvas.RootCanvas, e);
+		public void Zoom(MouseWheelEventArgs e) => Zoom(itemsCanvas, e);
 
-		public void ZoomNode(MouseWheelEventArgs e) => Zoom(itemsCanvas, e);
+
+		public void ZoomRoot(double zoomFactor)
+		{
+			ItemsCanvas rootCanvas = itemsCanvas.RootCanvas;
+			Point zoomCenter = ZoomCenter(rootCanvas);
+
+			Zoom(rootCanvas, zoomFactor, zoomCenter);
+		}
+
+
+		public void ZoomNode(double zoomFactor, Point zoomCenter) => 
+			Zoom(itemsCanvas, zoomFactor, zoomCenter);
+
+
+		public void ZoomNode(double zoomFactor)
+		{
+			Point zoomCenter = ZoomCenter(itemsCanvas);
+			Zoom(itemsCanvas, zoomFactor, zoomCenter);
+		}
+
+
+		public void UpdateScale()
+		{
+			if (itemsCanvas.ZoomableCanvas == null) return;
+
+			SetZoomableCanvasScale(itemsCanvas);
+			UpdateAndNotifyAll(itemsCanvas);
+			ZoomDescendants(itemsCanvas);
+		}
 
 
 		private static void Zoom(ItemsCanvas itemsCanvas, MouseWheelEventArgs e)
@@ -32,16 +61,21 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 		}
 
 
-
-		private static void Zoom(ItemsCanvas itemsCanvas, double zoom, Point zoomCenter)
+		private static void Zoom(ItemsCanvas itemsCanvas, double zoomFactor, Point zoomCenter)
 		{
-			double newScale = itemsCanvas.Scale * zoom;
+			double newScale = itemsCanvas.Scale * zoomFactor;
 
-			if (!IsValidZoomScale(zoom, newScale)) return;
+			if (!IsValidZoomScale(zoomFactor, newScale)) return;
 
 			if (itemsCanvas.IsRoot) itemsCanvas.rootScale = newScale;
 			else itemsCanvas.ScaleFactor = newScale / itemsCanvas.ParentCanvas.Scale;
 
+			UpdateScale(itemsCanvas, zoomCenter);
+		}
+
+
+		private static void UpdateScale(ItemsCanvas itemsCanvas, Point zoomCenter)
+		{
 			SetZoomableCanvasScale(itemsCanvas, zoomCenter);
 			UpdateAndNotifyAll(itemsCanvas);
 			ZoomDescendants(itemsCanvas);
@@ -93,6 +127,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
 		private static double ZoomFactor(MouseWheelEventArgs e) => Math.Pow(2, e.Delta / 2000.0);
 
+
 		private static bool IsValidZoomScale(double zoom, double newScale) => newScale > 0.40 || zoom > 1;
 
 
@@ -101,6 +136,22 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 			Point viewPosition = e.GetPosition(itemsCanvas.ZoomableCanvas);
 
 			return viewPosition + (Vector)itemsCanvas.ZoomableCanvas.Offset;
+		}
+
+
+		private static Point ZoomCenter(ItemsCanvas itemsCanvas)
+		{
+			ZoomableCanvas zoomableCanvas = itemsCanvas.ZoomableCanvas;
+			Point viewCenter = new Point(zoomableCanvas.ActualWidth / 2.0, zoomableCanvas.ActualHeight / 2.0);
+			Point zoomCenter = viewCenter + (Vector)zoomableCanvas.Offset;
+
+			if (itemsCanvas.IsRoot)
+			{
+				// Compensate for root center offset to windows
+				zoomCenter -= new Vector(10, 10);
+			}
+
+			return zoomCenter;
 		}
 	}
 }

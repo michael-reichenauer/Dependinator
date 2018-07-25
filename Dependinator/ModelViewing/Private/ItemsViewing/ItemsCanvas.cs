@@ -11,50 +11,9 @@ using Dependinator.Utils.UI.VirtualCanvas;
 
 namespace Dependinator.ModelViewing.Private.ItemsViewing
 {
-	internal interface IItemsCanvas
+	internal class ItemsCanvasData
 	{
-		bool IsFocused { get; set; }
-		ZoomableCanvas ZoomableCanvas { get; }
-		ItemsCanvas ParentCanvas { get; }
-		Rect ItemsCanvasBounds { get; }
-		bool IsZoomAndMoveEnabled { get; set; }
-		ItemsCanvas RootCanvas { get; }
-		bool IsRoot { get; }
-		double ScaleFactor { get; set; }
-		double Scale { get; }
-		Point RootOffset { get; }
-		void SetRootOffset(Point offset);
-		void SetRootScale(double scale);
-		void AddItem(IItem item);
-		void RemoveItem(IItem item);
-		void RemoveAll();
-		void UpdateItem(IItem item);
-		void SizeChanged();
-		void RemoveChildCanvas(ItemsCanvas childCanvas);
-		void CanvasRealized();
-		void CanvasVirtualized();
-		void UpdateAll();
-		void Zoom(MouseWheelEventArgs e);
-		void ZoomWindowCenter(double zoom);
-		void ZoomNode(double zoom, Point? zoomCenter);
-		void UpdateAndNotifyAll(bool isUpdate);
-		bool IsNodeInViewBox(Rect bounds);
-		void MoveAllItems(Point sp1, Point sp2);
-		void MoveAllItems(Vector viewOffset);
-		void UpdateScale();
-		Point MouseToCanvasPoint();
-		Point MouseEventToCanvasPoint(MouseEventArgs e);
-		Point CanvasToScreenPoint(Point canvasPoint);
-		Point ScreenToCanvasPoint(Point screenPoint);
-		Point ParentToChildCanvasPoint(Point parentCanvasPoint);
-		Point ChildToParentCanvasPoint(Point childCanvasPoint);
-		Point CanvasToScreenPoint2(Point childCanvasPoint);
-		void SetZoomableCanvas(ZoomableCanvas canvas);
-		string ToString();
-		int ChildItemsCount();
-		int ShownChildItemsCount();
-		int DescendantsItemsCount();
-		int ShownDescendantsItemsCount();
+
 	}
 
 
@@ -176,76 +135,28 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 		}
 
 
-		public void CanvasRealized() => UpdateScale();
+		public void CanvasRealized() => itemsCanvasZoom.UpdateScale();
 
 
 		public void CanvasVirtualized() { }
 
 
-		public void UpdateAll() => RootCanvas.ZoomNode(1, new Point(0, 0));
+		public void UpdateAll() => itemsCanvasZoom.ZoomRoot(1);
 
 
 		public void Zoom(MouseWheelEventArgs e)
 		{
-			if (!IsZoomAndMoveEnabled)
-			{
-				return;
-			}
+			if (!IsZoomAndMoveEnabled) return;
 
-
-			if (IsRoot)
-			{
-				itemsCanvasZoom.ZoomRoot(e);
-			}
-			else
-			{
-				itemsCanvasZoom.ZoomNode(e);
-			}
+			itemsCanvasZoom.Zoom(e);
 
 			e.Handled = true;
 		}
-		
 
 
+		public void ZoomRoot(double zoomFactor) => itemsCanvasZoom.ZoomRoot(zoomFactor);
 
-		public void ZoomWindowCenter(double zoom)
-		{
-			Point viewCenter = new Point(ZoomableCanvas.ActualWidth / 2.0, ZoomableCanvas.ActualHeight / 2.0);
-			ZoomNode(zoom, viewCenter + (Vector)ZoomableCanvas.Offset - new Vector(10, 10));
-		}
-
-
-		public void ZoomNode(double zoom, Point? zoomCenter)
-		{
-			if (!IsZoomAndMoveEnabled)
-			{
-				return;
-			}
-
-			double oldScale = Scale;
-			double newScale = oldScale * zoom;
-			if (!IsShowing || !CanShow || IsRoot && newScale < 0.40 && zoom < 1)
-			{
-				// Item not shown or reached minimum root zoom level
-				return;
-			}
-
-
-			if (IsRoot)
-			{
-				rootScale = newScale;
-			}
-			else
-			{
-				ScaleFactor = newScale / ParentCanvas.Scale;
-			}
-
-			SetZoomableCanvasScale(zoomCenter);
-
-			UpdateAndNotifyAll(!IsRoot);
-
-			canvasChildren.ForEach(child => child.UpdateScale());
-		}
+		public void ZoomNode(double zoomFactor, Point zoomCenter) => itemsCanvasZoom.ZoomNode(zoomFactor, zoomCenter);
 
 
 
@@ -307,11 +218,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 				return;
 			}
 
-			SetZoomableCanvasScale(null);
-
-			UpdateAndNotifyAll(false);
-
-			canvasChildren.ForEach(child => child.UpdateScale());
+			itemsCanvasZoom.UpdateScale();
 		}
 
 
