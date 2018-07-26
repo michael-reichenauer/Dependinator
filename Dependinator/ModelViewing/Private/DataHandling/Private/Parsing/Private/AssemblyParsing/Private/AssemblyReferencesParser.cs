@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Mono.Cecil;
@@ -23,7 +23,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 			AssemblyDefinition assembly,
 			IReadOnlyList<string> internalModules)
 		{
-			DataNodeName sourceAssemblyName = new DataNodeName(Name.GetModuleName(assembly));
+			DataNodeName sourceAssemblyName = (DataNodeName)Name.GetModuleName(assembly);
 
 			var externalReferences = GetExternalAssemblyReferences(assembly, internalModules);
 
@@ -33,14 +33,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 				foreach (AssemblyNameReference reference in externalReferences)
 				{
-					DataNodeName referenceName = new DataNodeName(Name.GetModuleName(reference));
+					DataNodeName referenceName = (DataNodeName)Name.GetModuleName(reference);
 					DataNodeName parent = GetReferenceParent(referencesRootName, referenceName);
 
 					DataNode referenceNode = new DataNode(referenceName, parent, NodeType.Assembly);
 
 					itemsCallback(referenceNode);
 
-					linkHandler.AddLink(sourceAssemblyName, referenceName.FullName, NodeType.Assembly);
+					linkHandler.AddLink(sourceAssemblyName, (string)referenceName, NodeType.Assembly);
 				}
 			}
 		}
@@ -48,9 +48,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 		private DataNodeName SendReferencesRootNode()
 		{
-			DataNodeName referencesRootName = new DataNodeName("$References");
+			DataNodeName referencesRootName = (DataNodeName)"$References";
 			DataNode referencesRootNode = new DataNode(
-				referencesRootName, DataNodeName.Root, NodeType.Group)
+				referencesRootName, DataNodeName.None, NodeType.Group)
 			{ Description = "External references" };
 
 			itemsCallback(referencesRootNode);
@@ -60,13 +60,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 		private DataNodeName GetReferenceParent(DataNodeName parent, DataNodeName referenceName)
 		{
-			string[] parts = referenceName.FullName.Split("*".ToCharArray());
+			string[] parts = ((string)referenceName).Split("*".ToCharArray());
 
 			for (int i = 0; i < parts.Length - 1; i++)
 			{
 				string name = string.Join(".", parts.Take(i + 1));
 
-				DataNodeName groupName = new DataNodeName($"{parent.FullName}.{name}");
+				DataNodeName groupName = (DataNodeName)$"{(string)parent}.{name}";
 				DataNode groupNode = new DataNode(groupName, parent, NodeType.Group);
 
 				itemsCallback(groupNode);

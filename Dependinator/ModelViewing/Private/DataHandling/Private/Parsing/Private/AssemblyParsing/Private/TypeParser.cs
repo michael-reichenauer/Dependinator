@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
@@ -52,7 +52,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 				string name = Name.GetTypeFullName(type);
 				bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
 				DataNodeName parent = isPrivate
-					? new DataNodeName($"{NodeName.From(name).ParentName.FullName}.$private")
+					? (DataNodeName)$"{NodeName.From(name).ParentName.FullName}.$private"
 					: null;
 				string description = xmlDockParser.GetDescription(name);
 
@@ -62,7 +62,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 					yield break;
 				}
 
-				DataNodeName nodeName = new DataNodeName(name);
+				DataNodeName nodeName = (DataNodeName)name;
 				typeNode = new DataNode(nodeName, parent, NodeType.Type)
 				{ Description = description };
 				itemsCallback(typeNode);
@@ -90,7 +90,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 				if (!string.IsNullOrEmpty(description))
 				{
 					string name = Name.GetTypeNamespaceFullName(type);
-					DataNodeName nodeName = new DataNodeName(name);
+					DataNodeName nodeName = (DataNodeName)name;
 					DataNode node = new DataNode(nodeName, null, NodeType.NameSpace)
 					{ Description = description };
 					itemsCallback(node);

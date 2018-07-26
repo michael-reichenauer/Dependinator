@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
@@ -27,7 +27,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 		{
 			try
 			{
-				Node source = modelService.GetNode(NodeName.From(dataLink.Source.FullName));
+				Node source = modelService.GetNode(dataLink.Source);
 
 				if (!TryGetTarget(dataLink, out Node target))
 				{
@@ -61,7 +61,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
 		private bool TryGetTarget(DataLink dataLink, out Node target)
 		{
-			NodeName targetName = NodeName.From(dataLink.Target.FullName);
+			NodeName targetName = dataLink.Target;
 			if (!modelService.TryGetNode(targetName, out target))
 			{
 				modelService.QueueModelLink(targetName, dataLink);

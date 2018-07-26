@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -102,7 +102,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
 		public void QueueNode(DataNode node)
 		{
-			QueuedNode queuedNode = GetQueuedNode(NodeName.From(node.Name.FullName));
+			QueuedNode queuedNode = GetQueuedNode(node.Name);
 
 			if (queuedNode.DataNode == null)
 			{

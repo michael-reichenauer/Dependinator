@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
@@ -95,10 +95,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 				string description = xmlDocParser.GetDescription(memberName);
 
 
-				DataNodeName nodeName = new DataNodeName(memberName);
+				DataNodeName nodeName = (DataNodeName)memberName;
 				DataNode memberNode = new DataNode(
 					nodeName,
-					parent != null ? new DataNodeName(parent) : null, 
+					parent != null ? (DataNodeName)parent : null, 
 					NodeType.Member)
 				{ Description = description };
 

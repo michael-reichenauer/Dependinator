@@ -136,7 +136,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		private DataNodeName GetSolutionNodeName()
 		{
 			string solutionName = Path.GetFileName(solutionFilePath).Replace(".", "*");
-			DataNodeName solutionNodeName = new DataNodeName(solutionName);
+			DataNodeName solutionNodeName = (DataNodeName)solutionName;
 			return solutionNodeName;
 		}
 
@@ -161,7 +161,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		private DataNode GetSolutionNode()
 		{
 			DataNodeName solutionName = GetSolutionNodeName();
-			DataNode solutionNode = new DataNode(solutionName, DataNodeName.Root, NodeType.Solution)
+			DataNode solutionNode = new DataNode(solutionName, DataNodeName.None, NodeType.Solution)
 				{ Description = "Solution file" };
 			return solutionNode;
 		}
@@ -209,7 +209,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 			for (int i = 0; i < parts.Length - 1; i++)
 			{
 				string name = string.Join(".", parts.Take(i + 1));
-				DataNodeName folderName = new DataNodeName($"{solutionName.FullName}.{name}");
+				DataNodeName folderName = (DataNodeName)$"{(string)solutionName}.{name}";
 
 				if (!parentNodesToSend.Any(n => n.Name == folderName))
 				{

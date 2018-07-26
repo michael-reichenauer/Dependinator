@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
@@ -58,8 +58,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
 
 		private static DataNode ToModelNode(CacheJsonTypes.Node node) => new DataNode(
-			new DataNodeName(node.Name),
-			node.Parent != null ? new DataNodeName(node.Parent) : null,
+			(DataNodeName)node.Name,
+			node.Parent != null ? (DataNodeName)node.Parent : null,
 			FromNodeTypeText(node.Type))
 		{
 			Description = node.Description,
@@ -72,8 +72,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
 		private static CacheJsonTypes.Node ToCacheJsonNode(DataNode node) => new CacheJsonTypes.Node
 		{
-			Name = node.Name.FullName,
-			Parent = node.Parent.FullName,
+			Name = (string)node.Name,
+			Parent = (string)node.Parent,
 			Type = ToNodeTypeText(node.NodeType),
 			Description = node.Description,
 			Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
@@ -152,30 +152,30 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
 
 		private static DataLink ToModelLink(CacheJsonTypes.Link link) => new DataLink(
-			new DataNodeName(link.Source),
-			new DataNodeName(link.Target),
+			(DataNodeName)link.Source,
+			(DataNodeName)link.Target,
 			true);
 
 
 		private static CacheJsonTypes.Link ToJsonLink(DataLink link) => new CacheJsonTypes.Link
 		{
-			Source = link.Source.FullName,
-			Target = link.Target.FullName,
+			Source = (string)link.Source,
+			Target = (string)link.Target,
 		};
 
 
 
 		private static IDataItem ToModelLine(CacheJsonTypes.Line line) => new DataLine(
-			new DataNodeName(line.Source),
-			new DataNodeName(line.Target),
+			(DataNodeName)line.Source,
+			(DataNodeName)line.Target,
 			ToLinePoints(line.Points),
 			line.LinkCount);
 
 
 		private static CacheJsonTypes.Line ToCacheJsonLine(DataLine line) => new CacheJsonTypes.Line
 		{
-			Source = line.Source.FullName,
-			Target = line.Target.FullName,
+			Source = (string)line.Source,
+			Target = (string)line.Target,
 			Points = ToJsonPoints(line.Points),
 			LinkCount = line.LinkCount
 		};

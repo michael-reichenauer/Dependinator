@@ -1,5 +1,6 @@
-using System;
+﻿using System;
 using System.Linq;
+using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.Utils;
 
 
@@ -48,8 +49,11 @@ namespace Dependinator.ModelViewing
 
 		public override string ToString() => this != Root ? FullName : "<root>";
 
+        public static implicit operator NodeName(DataNodeName dataName) => new NodeName((string)dataName);
+	    public static implicit operator DataNodeName(NodeName nodeName) => (DataNodeName)nodeName.FullName;
 
-		private NodeName GetParentName()
+
+        private NodeName GetParentName()
 		{
 			// Split full name in name and parent name,
 			int index = FullName.LastIndexOfAny(PartsSeparators);

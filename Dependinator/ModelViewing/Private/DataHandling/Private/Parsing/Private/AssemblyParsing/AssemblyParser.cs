@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -82,7 +82,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 		public void ParseAssemblyModule()
 		{
-			DataNodeName assemblyName = new DataNodeName(Name.GetModuleName(assembly.Value));
+			DataNodeName assemblyName = (DataNodeName)Name.GetModuleName(assembly.Value);
 			string assemblyDescription = GetAssemblyDescription(assembly.Value);
 			DataNode assemblyNode = new DataNode(assemblyName, parentName, NodeType.Assembly)
 				{ Description = assemblyDescription };

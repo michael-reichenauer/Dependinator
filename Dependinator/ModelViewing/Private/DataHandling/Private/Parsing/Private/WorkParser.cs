@@ -34,7 +34,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 			}
 			else
 			{
-				assemblyParser = new AssemblyParser(filePath, DataNodeName.Root, itemsCallback, false);
+				assemblyParser = new AssemblyParser(filePath, DataNodeName.None, itemsCallback, false);
 				return await assemblyParser.ParseAsync();
 			}
 		}
@@ -51,7 +51,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 			}
 			else
 			{
-				assemblyParser = new AssemblyParser(filePath, DataNodeName.Root, itemsCallback, true);
+				assemblyParser = new AssemblyParser(filePath, DataNodeName.None, itemsCallback, true);
 				return assemblyParser.GetCode(nodeName);
 			}
 		}
@@ -68,7 +68,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 			}
 			else
 			{
-				assemblyParser = new AssemblyParser(filePath, DataNodeName.Root, itemsCallback, true);
+				assemblyParser = new AssemblyParser(filePath, DataNodeName.None, itemsCallback, true);
 				return assemblyParser.GetSourceFilePath(nodeName);
 			}
 		}

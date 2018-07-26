@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -282,11 +282,11 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 			}
 
 			Timing t = Timing.Start();
-			IReadOnlyList<Node> nodes = Root.Descendents().ToList();
-			t.Log($"Saving {nodes.Count} nodes");
+			//IReadOnlyList<Node> nodes = Root.Descendents().ToList();
+			//t.Log($"Saving {nodes.Count} nodes");
 
-			IReadOnlyList<IDataItem> items = Convert.ToDataItems(nodes);
-			t.Log($"Saving {items.Count} items");
+			IReadOnlyList<IDataItem> items = Convert.ToDataItems(Root.Descendents()).ToList();
+			t.Log($"Converted {items.Count} items");
 
 			string dataFilePath = GetDataFilePath();
 

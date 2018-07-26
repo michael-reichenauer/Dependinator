@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using Dependinator.Utils;
 
 
@@ -32,6 +32,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Dtos
 		public string ShowState { get; set; }
 
 
-		public override string ToString() => Name.FullName;
+		public override string ToString() => Name.ToString();
 	}
 }

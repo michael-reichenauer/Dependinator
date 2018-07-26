@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
@@ -6,57 +6,56 @@ using Dependinator.ModelViewing.Private.ModelHandling.Core;
 
 namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 {
-	internal class Convert
-	{
-		public static List<IDataItem> ToDataItems(IReadOnlyList<Node> nodes)
-		{
-			List<IDataItem> items = new List<IDataItem>();
-
-			nodes.ForEach(node => items.AddRange(ToModelNodeItems(node)));
-			nodes.ForEach(node => items.AddRange(ToModelLinks(node.SourceLinks)));
-
-			return items;
-		}
+    internal class Convert
+    {
+        public static IEnumerable<IDataItem> ToDataItems(IEnumerable<Node> nodes)
+        {
+            return nodes.SelectMany(ToDataItems);
+        }
 
 
-		private static IEnumerable<IDataItem> ToModelNodeItems(Node node)
-		{
-			yield return ToModelNode(node);
+        private static IEnumerable<IDataItem> ToDataItems(Node node)
+        {
+            yield return ToDataNode(node);
 
-			foreach (DataLine modelLine in ToModelLines(node.SourceLines))
-			{
-				yield return modelLine;
-			}
-		}
+            foreach (var line in node.SourceLines.Where(line => !line.IsHidden))
+            {
+                yield return ToDataLine(line);
+            }
 
-
-		private static DataNode ToModelNode(Node node) =>
-			new DataNode(
-				new DataNodeName(node.Name.FullName),
-				new DataNodeName(node.Parent.Name.FullName),
-				node.NodeType)
-			{
-				Description = node.Description,
-				Bounds = node.ViewModel?.ItemBounds ?? node.Bounds,
-				Scale = node.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.ScaleFactor,
-				Color = node.ViewModel?.Color ?? node.Color,
-				ShowState = node.IsHidden ? Node.Hidden : null
-			};
+            foreach (var link in node.SourceLinks)
+            {
+                yield return ToDataLink(link);
+            }
+        }
 
 
-		private static IEnumerable<DataLine> ToModelLines(IEnumerable<Line> lines) =>
-			lines
-				.Where(line => !line.IsHidden)
-				.Select(line => new DataLine(
-					new DataNodeName(line.Source.Name.FullName),
-					new DataNodeName(line.Target.Name.FullName),
-					line.View.MiddlePoints().ToList(),
-					line.LinkCount));
+        private static DataNode ToDataNode(Node node)
+        {
+            return new DataNode(
+                node.Name,
+                node.Parent.Name,
+                node.NodeType)
+            {
+                Description = node.Description,
+                Bounds = node.ViewModel?.ItemBounds ?? node.Bounds,
+                Scale = node.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.ScaleFactor,
+                Color = node.ViewModel?.Color ?? node.Color,
+                ShowState = node.IsHidden ? Node.Hidden : null
+            };
+        }
 
 
-		private static IEnumerable<DataLink> ToModelLinks(IEnumerable<Link> links) =>
-			links.Select(link => new DataLink(
-				new DataNodeName(link.Source.Name.FullName),
-				new DataNodeName(link.Target.Name.FullName)));
-	}
+        private static DataLine ToDataLine(Line line)
+        {
+            return new DataLine(
+                line.Source.Name,
+                line.Target.Name,
+                line.View.MiddlePoints().ToList(),
+                line.LinkCount);
+        }
+
+
+        private static DataLink ToDataLink(Link link) => new DataLink(link.Source.Name, link.Target.Name);
+    }
 }

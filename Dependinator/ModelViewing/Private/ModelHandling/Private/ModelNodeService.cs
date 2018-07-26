@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
@@ -26,7 +26,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
 		public void AddOrUpdateNode(DataNode dataNode, int stamp)
 		{
-			NodeName nodeName = NodeName.From(dataNode.Name.FullName);
+			NodeName nodeName = dataNode.Name;
 
 			if (nodeService.TryGetNode(nodeName, out Node node))
 			{
@@ -147,7 +147,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
 		private void AddNodeToModel(DataNode dataNode, int stamp)
 		{
-			NodeName nodeName = NodeName.From(dataNode.Name.FullName);
+			NodeName nodeName = dataNode.Name;
 			Node node = new Node(nodeName)
 			{
 				Stamp = stamp,
@@ -183,7 +183,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 		private static NodeName GetParentName(NodeName nodeName, DataNode dataNode)
 		{
 			NodeName parentName = dataNode.Parent != null
-				? NodeName.From(dataNode.Parent.FullName)
+				? (NodeName)dataNode.Parent
 				: nodeName.ParentName;
 
 			return parentName;

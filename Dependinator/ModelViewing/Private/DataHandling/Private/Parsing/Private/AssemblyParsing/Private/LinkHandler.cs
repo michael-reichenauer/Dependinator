@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
@@ -70,7 +70,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 		{
 			if (!sentTargetNodes.TryGetValue(targetName, out DataNode targetNode))
 			{
-				DataNodeName target = new DataNodeName(targetName);
+				DataNodeName target = (DataNodeName)targetName;
 
 				if (source == target)
 				{
