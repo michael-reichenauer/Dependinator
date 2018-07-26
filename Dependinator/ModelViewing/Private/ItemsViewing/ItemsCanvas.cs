@@ -11,24 +11,16 @@ using Dependinator.Utils.UI.VirtualCanvas;
 
 namespace Dependinator.ModelViewing.Private.ItemsViewing
 {
-	internal class ItemsCanvasData
-	{
 
-	}
-
-
-	internal class ItemsCanvas //: Notifyable
-		: IItemsCanvas
+	internal class ItemsCanvas : IItemsCanvas
 	{
 		public static readonly double DefaultScaleFactor = 1.0 / 7.0;
 		private static readonly Vector ChildOffset = new Vector(3, 3);
 
 		private readonly ItemsCanvasZoom itemsCanvasZoom;
 		private readonly IItemsCanvasOwner owner;
-		public readonly ItemsSource itemsSource;
-		public readonly List<ItemsCanvas> canvasChildren = new List<ItemsCanvas>();
 
-		public double rootScale;
+	
 		private Point rootOffset;
 		private bool isFocused;
 		public bool IsShowing => owner?.IsShowing ?? true;
@@ -51,12 +43,12 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 			RootCanvas = parentCanvas?.RootCanvas ?? this;
 
 			VisualAreaHandler visualAreaHandler = new VisualAreaHandler(this);
-			itemsSource = new ItemsSource(visualAreaHandler);
+			ItemsSource = new ItemsSource(visualAreaHandler);
 
 			if (IsRoot)
 			{
 				// Creating root node canvas
-				rootScale = 1;
+				RootScale = 1;
 				ScaleFactor = 1;
 				isFocused = true;
 			}
@@ -64,10 +56,25 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 			{
 				// Creating child node canvas
 				ScaleFactor = DefaultScaleFactor;
-
-				parentCanvas?.canvasChildren.Add(this);
+				parentCanvas?.CanvasChildren.Add(this);
 			}
 		}
+
+		public ItemsSource ItemsSource { get; }
+		public double RootScale { get; set; }
+		public double ScaleFactor { get; set; }
+		public double Scale => ParentCanvas?.Scale * ScaleFactor ?? RootScale;
+		public ZoomableCanvas ZoomableCanvas { get; private set; }
+		public List<ItemsCanvas> CanvasChildren { get; } = new List<ItemsCanvas>();
+		public ItemsCanvas ParentCanvas { get; private set; }
+		public ItemsCanvas RootCanvas { get; }
+		public bool IsRoot => ParentCanvas == null;
+		public bool IsZoomAndMoveEnabled { get; set; } = true;
+
+		public Rect ItemsCanvasBounds => owner?.ItemBounds ?? ZoomableCanvas?.ActualViewbox ?? Rect.Empty;
+		public Point RootOffset => RootCanvas.ZoomableCanvas?.Offset ?? RootCanvas.rootOffset;
+		public void SetRootOffset(Point offset) => RootCanvas.rootOffset = offset;
+		public void SetRootScale(double scale) => RootCanvas.RootScale = scale;
 
 
 		public bool IsFocused
@@ -82,62 +89,37 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 			}
 		}
 
-
-		public ZoomableCanvas ZoomableCanvas { get; private set; }
-
-		public ItemsCanvas ParentCanvas { get; private set; }
-
-		public Rect ItemsCanvasBounds =>
-			owner?.ItemBounds ?? ZoomableCanvas?.ActualViewbox ?? Rect.Empty;
-
-
-		public bool IsZoomAndMoveEnabled { get; set; } = true;
-
-		public ItemsCanvas RootCanvas { get; }
-		public bool IsRoot => ParentCanvas == null;
-
-		public double ScaleFactor { get; set; }
-
-		public double Scale => ParentCanvas?.Scale * ScaleFactor ?? rootScale;
-		public Point RootOffset => RootCanvas.ZoomableCanvas?.Offset ?? RootCanvas.rootOffset;
-
-		public void SetRootOffset(Point offset) => RootCanvas.rootOffset = offset;
-		public void SetRootScale(double scale) => RootCanvas.rootScale = scale;
-
-
 		public void AddItem(IItem item)
 		{
 			item.ItemOwnerCanvas = this;
-			itemsSource.Add(item);
+			ItemsSource.Add(item);
 		}
 
 
-		public void RemoveItem(IItem item) => itemsSource.Remove(item);
+		public void RemoveItem(IItem item) => ItemsSource.Remove(item);
 
 
 		public void RemoveAll()
 		{
-			itemsSource.RemoveAll();
-			canvasChildren.Clear();
+			ItemsSource.RemoveAll();
+			CanvasChildren.Clear();
 		}
 
 
-		public void UpdateItem(IItem item) => itemsSource.Update(item);
+		public void UpdateItem(IItem item) => ItemsSource.Update(item);
 
 
-		public void SizeChanged() => itemsSource.TriggerExtentChanged();
+		public void SizeChanged() => ItemsSource.TriggerExtentChanged();
 
 
 		public void RemoveChildCanvas(ItemsCanvas childCanvas)
 		{
 			childCanvas.ParentCanvas = null;
-			canvasChildren.Remove(childCanvas);
+			CanvasChildren.Remove(childCanvas);
 		}
 
 
 		public void CanvasRealized() => itemsCanvasZoom.UpdateScale();
-
-
 		public void CanvasVirtualized() { }
 
 
@@ -162,10 +144,10 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
 		public void UpdateAndNotifyAll(bool isUpdate)
 		{
-			IReadOnlyList<ItemViewModel> items = itemsSource.GetAllItems().Cast<ItemViewModel>().ToList();
+			IReadOnlyList<ItemViewModel> items = ItemsSource.GetAllItems().Cast<ItemViewModel>().ToList();
 			if (isUpdate)
 			{
-				itemsSource.Update(items);
+				ItemsSource.Update(items);
 			}
 
 			items.ForEach(item => item.NotifyAll());
@@ -361,7 +343,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
 			ZoomableCanvas.ItemRealized += Canvas_ItemRealized;
 			ZoomableCanvas.ItemVirtualized += Canvas_ItemVirtualized;
-			ZoomableCanvas.ItemsOwner.ItemsSource = itemsSource;
+			ZoomableCanvas.ItemsOwner.ItemsSource = ItemsSource;
 
 			ZoomableCanvas.Scale = Scale;
 		}
@@ -370,26 +352,26 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 		public override string ToString() => owner?.ToString() ?? NodeName.Root.ToString();
 
 
-		public int ChildItemsCount() => itemsSource.GetAllItems().Count();
+		public int ChildItemsCount() => ItemsSource.GetAllItems().Count();
 
 
-		public int ShownChildItemsCount() => itemsSource.GetAllItems().Count(item => item.IsShowing);
+		public int ShownChildItemsCount() => ItemsSource.GetAllItems().Count(item => item.IsShowing);
 
 
 		public int DescendantsItemsCount()
 		{
-			int count = itemsSource.GetAllItems().Count();
+			int count = ItemsSource.GetAllItems().Count();
 
-			count += canvasChildren.Sum(canvas => canvas.DescendantsItemsCount());
+			count += CanvasChildren.Sum(canvas => canvas.DescendantsItemsCount());
 			return count;
 		}
 
 
 		public int ShownDescendantsItemsCount()
 		{
-			int count = itemsSource.GetAllItems().Count(item => item.IsShowing);
+			int count = ItemsSource.GetAllItems().Count(item => item.IsShowing);
 
-			count += canvasChildren.Sum(canvas => canvas.ShownDescendantsItemsCount());
+			count += CanvasChildren.Sum(canvas => canvas.ShownDescendantsItemsCount());
 			return count;
 		}
 
@@ -399,38 +381,20 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 		{
 			Queue<ItemsCanvas> queue = new Queue<ItemsCanvas>();
 
-			canvasChildren.ForEach(queue.Enqueue);
+			CanvasChildren.ForEach(queue.Enqueue);
 
 			while (queue.Any())
 			{
 				ItemsCanvas descendant = queue.Dequeue();
 				yield return descendant;
 
-				descendant.canvasChildren.ForEach(queue.Enqueue);
+				descendant.CanvasChildren.ForEach(queue.Enqueue);
 			}
 		}
 
 
-		private void TriggerInvalidated() => itemsSource.TriggerInvalidated();
+		private void TriggerInvalidated() => ItemsSource.TriggerInvalidated();
 
-
-		private void SetZoomableCanvasScale(Point? zoomCenter)
-		{
-			if (ZoomableCanvas != null)
-			{
-				if (zoomCenter.HasValue)
-				{
-					// Adjust the offset to make the point at the center of zoom area stay still
-					double zoomFactor = Scale / ZoomableCanvas.Scale;
-					Vector position = (Vector)zoomCenter;
-
-					Vector moveOffset = position * zoomFactor - position;
-					MoveAllItems(-moveOffset);
-				}
-
-				ZoomableCanvas.Scale = Scale;
-			}
-		}
 
 
 		private void MoveCanvasItems(Vector moveOffset)
@@ -449,7 +413,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 			}
 			else
 			{
-				itemsSource.GetAllItems().ForEach(item => item.MoveItem(moveOffset));
+				ItemsSource.GetAllItems().ForEach(item => item.MoveItem(moveOffset));
 			}
 
 			UpdateAndNotifyAll(!IsRoot);
@@ -469,7 +433,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
 		private bool IsAnyNodesWithinView(Rect viewBox, Vector moveOffset)
 		{
-			IEnumerable<IItem> nodes = itemsSource.GetAllItems().Where(i => i is NodeViewModel);
+			IEnumerable<IItem> nodes = ItemsSource.GetAllItems().Where(i => i is NodeViewModel);
 			foreach (IItem node in nodes)
 			{
 				if (node.CanShow)
@@ -502,7 +466,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
 		private void UpdateShownItemsInChildren()
 		{
-			canvasChildren
+			CanvasChildren
 				.Where(canvas => canvas.IsShowing)
 				.ForEach(canvas =>
 				{
@@ -515,13 +479,13 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
 		private void Canvas_ItemRealized(object sender, ItemEventArgs e)
 		{
-			itemsSource.ItemRealized(e.VirtualId);
+			ItemsSource.ItemRealized(e.VirtualId);
 		}
 
 
 		private void Canvas_ItemVirtualized(object sender, ItemEventArgs e)
 		{
-			itemsSource.ItemVirtualized(e.VirtualId);
+			ItemsSource.ItemVirtualized(e.VirtualId);
 		}
 	}
 }

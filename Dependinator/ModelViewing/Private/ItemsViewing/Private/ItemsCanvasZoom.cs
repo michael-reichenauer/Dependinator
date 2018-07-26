@@ -67,7 +67,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
 			if (!IsValidZoomScale(zoomFactor, newScale)) return;
 
-			if (itemsCanvas.IsRoot) itemsCanvas.rootScale = newScale;
+			if (itemsCanvas.IsRoot) itemsCanvas.RootScale = newScale;
 			else itemsCanvas.ScaleFactor = newScale / itemsCanvas.ParentCanvas.Scale;
 
 			UpdateScale(itemsCanvas, zoomCenter);
@@ -95,14 +95,14 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
 
 		private static void NotifyAllItems(ItemsCanvas itemsCanvas) =>
-			itemsCanvas.itemsSource.GetAllItems().Cast<ItemViewModel>().ForEach(item => item.NotifyAll());
+			itemsCanvas.ItemsSource.GetAllItems().Cast<ItemViewModel>().ForEach(item => item.NotifyAll());
 
 
 		private static void UpdateAndNotifyAll(ItemsCanvas itemsCanvas)
 		{
-			IReadOnlyList<ItemViewModel> items = itemsCanvas.itemsSource.GetAllItems().Cast<ItemViewModel>().ToList();
+			IReadOnlyList<ItemViewModel> items = itemsCanvas.ItemsSource.GetAllItems().Cast<ItemViewModel>().ToList();
 
-			itemsCanvas.itemsSource.Update(items);
+			itemsCanvas.ItemsSource.Update(items);
 
 			items.ForEach(item => item.NotifyAll());
 		}
