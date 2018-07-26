@@ -7,7 +7,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Dtos
     {
         public static readonly DataNodeName None = new DataNodeName("");
 
-        private string fullName;
+        private readonly string fullName;
 
 
         private DataNodeName(string fullName)

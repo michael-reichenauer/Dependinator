@@ -14,18 +14,18 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
     [SingleInstance]
     internal class DataMonitorService : IDataMonitorService
     {
-        private readonly IParserService parserService;
-        private readonly FileSystemWatcher folderWatcher = new FileSystemWatcher();
-        private readonly DebounceDispatcher changeDebounce = new DebounceDispatcher();
-
-        private IReadOnlyList<string> monitoredFiles;
-        private IReadOnlyList<string> monitoredWorkFolders;
-        private Dispatcher dispatcher;
-
         private const NotifyFilters NotifyFilters =
             System.IO.NotifyFilters.LastWrite
             | System.IO.NotifyFilters.FileName
             | System.IO.NotifyFilters.DirectoryName;
+
+        private readonly DebounceDispatcher changeDebounce = new DebounceDispatcher();
+        private readonly FileSystemWatcher folderWatcher = new FileSystemWatcher();
+        private readonly IParserService parserService;
+        private Dispatcher dispatcher;
+
+        private IReadOnlyList<string> monitoredFiles;
+        private IReadOnlyList<string> monitoredWorkFolders;
 
 
         public DataMonitorService(
@@ -90,7 +90,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
                     // Log.Debug($"Work item {fullPath}, {e.ChangeType}");
                     changeDebounce.Debounce(
                         TimeSpan.FromSeconds(5), Trigger, null, DispatcherPriority.ApplicationIdle, dispatcher);
-                    return;
                 }
             }
         }

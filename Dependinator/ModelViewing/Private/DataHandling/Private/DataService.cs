@@ -10,8 +10,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
 {
     internal class DataService : IDataService
     {
-        private readonly IPersistenceService persistenceService;
         private readonly IParserService parserService;
+        private readonly IPersistenceService persistenceService;
 
 
         public DataService(

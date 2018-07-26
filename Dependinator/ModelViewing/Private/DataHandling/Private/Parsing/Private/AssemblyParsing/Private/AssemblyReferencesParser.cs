@@ -8,8 +8,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     internal class AssemblyReferencesParser
     {
-        private readonly LinkHandler linkHandler;
         private readonly DataItemsCallback itemsCallback;
+        private readonly LinkHandler linkHandler;
 
 
         public AssemblyReferencesParser(LinkHandler linkHandler, DataItemsCallback itemsCallback)

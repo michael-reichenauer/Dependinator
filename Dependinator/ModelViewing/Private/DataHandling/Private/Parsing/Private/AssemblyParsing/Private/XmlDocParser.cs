@@ -84,10 +84,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             int index1 = memberName.IndexOf('(');
             int index2 = memberName.IndexOf(')');
 
-            if (index1 > -1 && index2 > (index1 + 1))
+            if (index1 > -1 && index2 > index1 + 1)
             {
                 string parameters = memberName
-                    .Substring(index1 + 1, (index2 - index1) - 1)
+                    .Substring(index1 + 1, index2 - index1 - 1)
                     .Replace(".", "#");
 
                 memberName = $"{memberName.Substring(0, index1)}({parameters})";

@@ -158,11 +158,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             {
                 return $"{typeName}.{methodName}{parameters}";
             }
-            else
-            {
-                string genericParameters = $"`{methodInfo.GenericParameters.Count}";
-                return $"{typeName}.{methodName}{genericParameters}{parameters}";
-            }
+
+            string genericParameters = $"`{methodInfo.GenericParameters.Count}";
+            return $"{typeName}.{methodName}{genericParameters}{parameters}";
         }
 
 
@@ -182,11 +180,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             {
                 return $"{typeName}.{methodName}{parameters}";
             }
-            else
-            {
-                string genericParameters = $"`{methodInfo.GenericArguments.Count}";
-                return $"{typeName}.{methodName}{genericParameters}{parameters}";
-            }
+
+            string genericParameters = $"`{methodInfo.GenericArguments.Count}";
+            return $"{typeName}.{methodName}{genericParameters}{parameters}";
         }
 
 

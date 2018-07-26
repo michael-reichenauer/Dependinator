@@ -17,16 +17,16 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     internal class AssemblyParser : IDisposable
     {
-        private readonly string assemblyPath;
-        private readonly DataNodeName parentName;
-        private readonly DataItemsCallback itemsCallback;
-        private readonly bool isReadSymbols;
-        private readonly Decompiler decompiler = new Decompiler();
-        private readonly AssemblyReferencesParser assemblyReferencesParser;
-        private readonly TypeParser typeParser;
-        private readonly MemberParser memberParser;
-        private readonly ParsingAssemblyResolver resolver = new ParsingAssemblyResolver();
         private readonly Lazy<AssemblyDefinition> assembly;
+        private readonly string assemblyPath;
+        private readonly AssemblyReferencesParser assemblyReferencesParser;
+        private readonly Decompiler decompiler = new Decompiler();
+        private readonly bool isReadSymbols;
+        private readonly DataItemsCallback itemsCallback;
+        private readonly MemberParser memberParser;
+        private readonly DataNodeName parentName;
+        private readonly ParsingAssemblyResolver resolver = new ParsingAssemblyResolver();
+        private readonly TypeParser typeParser;
 
         private List<TypeData> typeInfos = new List<TypeData>();
 
@@ -54,6 +54,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 
         public string ModuleName => Name.GetModuleName(assembly.Value);
+
+
+        public void Dispose()
+        {
+            assembly.Value?.Dispose();
+        }
+
 
         public static IReadOnlyList<string> GetDataFilePaths(string filePath) => new[] {filePath};
 
@@ -139,12 +146,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public void Dispose()
-        {
-            assembly.Value?.Dispose();
-        }
-
-
         private AssemblyDefinition GetAssembly(bool isSymbols)
         {
             try
@@ -152,7 +153,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 ReaderParameters parameters = new ReaderParameters
                 {
                     AssemblyResolver = resolver,
-                    ReadSymbols = isSymbols,
+                    ReadSymbols = isSymbols
                 };
 
                 return AssemblyDefinition.ReadAssembly(assemblyPath, parameters);

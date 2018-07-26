@@ -12,7 +12,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Dtos
         NameSpace,
         Type,
         Member,
-        PrivateMember,
+        PrivateMember
     }
 
 

@@ -4,14 +4,15 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Dependinator.Utils.Reflection;
+using Microsoft.Build.Construction;
 
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.SolutionParsing.Private
 {
     /// <summary>
-    /// This class parses solution files ".sln" files. It wraps the internal
-    /// Microsoft.Build.Construction.SolutionParser and uses
-    /// reflection to access the internal call and its functionality.
+    ///     This class parses solution files ".sln" files. It wraps the internal
+    ///     Microsoft.Build.Construction.SolutionParser and uses
+    ///     reflection to access the internal call and its functionality.
     /// </summary>
     internal class VisualStudioSolutionParser
     {
@@ -22,7 +23,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             //Microsoft.Build.Construction.SolutionParser
             string typeName = "Microsoft.Build.Construction.SolutionParser";
-            Assembly assembly = typeof(Microsoft.Build.Construction.ProjectElement).Assembly;
+            Assembly assembly = typeof(ProjectElement).Assembly;
 
 
             Type type = Reflection.GetType(assembly, typeName);

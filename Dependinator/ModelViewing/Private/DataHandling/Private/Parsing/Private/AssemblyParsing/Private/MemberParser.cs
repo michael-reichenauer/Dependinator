@@ -10,13 +10,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     internal class MemberParser
     {
-        private readonly LinkHandler linkHandler;
-        private readonly XmlDocParser xmlDocParser;
         private readonly DataItemsCallback itemsCallback;
+        private readonly LinkHandler linkHandler;
         private readonly MethodParser methodParser;
 
         private readonly Dictionary<DataNodeName, DataNode> sentNodes =
             new Dictionary<DataNodeName, DataNode>();
+
+        private readonly XmlDocParser xmlDocParser;
 
 
         public MemberParser(

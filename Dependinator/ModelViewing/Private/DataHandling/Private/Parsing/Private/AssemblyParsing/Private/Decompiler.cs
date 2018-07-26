@@ -19,7 +19,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             {
                 return GetDecompiledText(module, type);
             }
-            else if (TryGetMember(module, nodeName, out IMemberDefinition member))
+
+            if (TryGetMember(module, nodeName, out IMemberDefinition member))
             {
                 return GetDecompiledText(module, member);
             }
@@ -133,11 +134,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             {
                 return true;
             }
-            else if (TryGetProperty(typeDefinition, fullName, out member))
+
+            if (TryGetProperty(typeDefinition, fullName, out member))
             {
                 return true;
             }
-            else if (TryGetField(typeDefinition, fullName, out member))
+
+            if (TryGetField(typeDefinition, fullName, out member))
             {
                 return true;
             }

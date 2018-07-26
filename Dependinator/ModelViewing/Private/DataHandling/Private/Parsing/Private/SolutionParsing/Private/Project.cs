@@ -7,7 +7,7 @@ using System.Linq;
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.SolutionParsing.Private
 {
     /// <summary>
-    /// Represents a project within a Solution
+    ///     Represents a project within a Solution
     /// </summary>
     internal class Project
     {
@@ -42,7 +42,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             return new[]
             {
                 Path.Combine(ProjectDirectory, "bin", "Debug"),
-                Path.Combine(ProjectDirectory, "obj", "Debug"),
+                Path.Combine(ProjectDirectory, "obj", "Debug")
             };
         }
 

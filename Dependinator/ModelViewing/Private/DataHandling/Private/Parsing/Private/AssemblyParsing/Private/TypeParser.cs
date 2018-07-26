@@ -10,9 +10,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     internal class TypeParser
     {
+        private readonly DataItemsCallback itemsCallback;
         private readonly LinkHandler linkHandler;
         private readonly XmlDocParser xmlDockParser;
-        private readonly DataItemsCallback itemsCallback;
 
 
         public TypeParser(

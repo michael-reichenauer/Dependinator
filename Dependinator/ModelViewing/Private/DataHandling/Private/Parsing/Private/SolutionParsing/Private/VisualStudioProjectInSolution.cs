@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using Dependinator.Utils.Reflection;
 
@@ -6,34 +6,30 @@ using Dependinator.Utils.Reflection;
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.SolutionParsing.Private
 {
     /// <summary>
-    /// Wraps the Microsoft.Build.Construction.ProjectInSolution type,
-    /// which is internal type and cannot be used directly. 
-    /// This class uses reflection to access the internal functionality.
+    ///     Wraps the Microsoft.Build.Construction.ProjectInSolution type,
+    ///     which is internal type and cannot be used directly.
+    ///     This class uses reflection to access the internal functionality.
     /// </summary>
     internal class VisualStudioProjectInSolution
     {
-        private readonly string uniqueProjectName;
+        public VisualStudioProjectInSolution(object instance)
+        {
+            Project = instance;
+            UniqueProjectName = instance.GetField<string>("uniqueProjectName");
+            ProjectName = instance.GetProperty<string>(nameof(ProjectName));
+            ProjectType = instance.GetProperty<object>(nameof(ProjectType)).ToString();
+            RelativePath = instance.GetProperty<string>(nameof(RelativePath));
+            IsIncludedDebug = GetIncludedInDebug(instance);
+        }
+
 
         public string ProjectName { get; }
         public string ProjectType { get; }
         public string RelativePath { get; }
-        public string UniqueProjectName => uniqueProjectName;
+        public string UniqueProjectName { get; }
         public object Project { get; }
-
         public bool IsSolutionFolder => ProjectType.IsSameIgnoreCase("SolutionFolder");
         public bool IsIncludedDebug { get; }
-
-
-        public VisualStudioProjectInSolution(object instance)
-        {
-            Project = instance;
-            uniqueProjectName = instance.GetField<string>(nameof(uniqueProjectName));
-            ProjectName = instance.GetProperty<string>(nameof(ProjectName));
-            ProjectType = instance.GetProperty<object>(nameof(ProjectType)).ToString();
-            RelativePath = instance.GetProperty<string>(nameof(RelativePath));
-
-            IsIncludedDebug = GetIncludedInDebug(instance);
-        }
 
 
         private bool GetIncludedInDebug(object instance)

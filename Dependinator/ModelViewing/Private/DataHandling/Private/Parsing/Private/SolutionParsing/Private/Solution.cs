@@ -7,7 +7,7 @@ using System.Linq;
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.SolutionParsing.Private
 {
     /// <summary>
-    /// Represents the solution loaded from a sln file.
+    ///     Represents the solution loaded from a sln file.
     /// </summary>
     internal class Solution
     {
@@ -16,7 +16,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
         public Solution(string solutionFilePath)
         {
-            this.SolutionFilePath = solutionFilePath;
+            SolutionFilePath = solutionFilePath;
             SolutionDirectory = Path.GetDirectoryName(solutionFilePath);
 
             projects = new Lazy<IReadOnlyList<Project>>(GetProjects);

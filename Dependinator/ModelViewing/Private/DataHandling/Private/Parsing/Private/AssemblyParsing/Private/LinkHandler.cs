@@ -109,12 +109,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                    || targetType.IsGenericParameter
                    || IgnoredTypes.IsIgnoredSystemType(targetType)
                    || IsGenericTypeArgument(targetType)
-                   || (targetType is ByReferenceType refType && refType.ElementType.IsGenericParameter);
+                   || targetType is ByReferenceType refType && refType.ElementType.IsGenericParameter;
         }
 
 
         /// <summary>
-        /// Return true if type is a generic type parameter T, as in e.g. Get'T'(T value)
+        ///     Return true if type is a generic type parameter T, as in e.g. Get'T'(T value)
         /// </summary>
         private static bool IsGenericTypeArgument(MemberReference targetType)
         {

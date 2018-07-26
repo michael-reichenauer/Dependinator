@@ -13,15 +13,22 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
     {
         private readonly string filePath;
         private readonly DataItemsCallback itemsCallback;
+        private AssemblyParser assemblyParser;
 
         private SolutionParser solutionParser;
-        private AssemblyParser assemblyParser;
 
 
         public WorkParser(string filePath, DataItemsCallback itemsCallback)
         {
             this.filePath = filePath;
             this.itemsCallback = itemsCallback;
+        }
+
+
+        public void Dispose()
+        {
+            solutionParser?.Dispose();
+            assemblyParser?.Dispose();
         }
 
 
@@ -32,11 +39,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 solutionParser = new SolutionParser(filePath, itemsCallback, false);
                 return await solutionParser.ParseAsync();
             }
-            else
-            {
-                assemblyParser = new AssemblyParser(filePath, DataNodeName.None, itemsCallback, false);
-                return await assemblyParser.ParseAsync();
-            }
+
+            assemblyParser = new AssemblyParser(filePath, DataNodeName.None, itemsCallback, false);
+            return await assemblyParser.ParseAsync();
         }
 
 
@@ -49,11 +54,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 solutionParser = new SolutionParser(filePath, null, true);
                 return await solutionParser.GetCodeAsync(nodeName);
             }
-            else
-            {
-                assemblyParser = new AssemblyParser(filePath, DataNodeName.None, itemsCallback, true);
-                return assemblyParser.GetCode(nodeName);
-            }
+
+            assemblyParser = new AssemblyParser(filePath, DataNodeName.None, itemsCallback, true);
+            return assemblyParser.GetCode(nodeName);
         }
 
 
@@ -66,11 +69,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 solutionParser = new SolutionParser(filePath, null, true);
                 return await solutionParser.GetSourceFilePathAsync(nodeName);
             }
-            else
-            {
-                assemblyParser = new AssemblyParser(filePath, DataNodeName.None, itemsCallback, true);
-                return assemblyParser.GetSourceFilePath(nodeName);
-            }
+
+            assemblyParser = new AssemblyParser(filePath, DataNodeName.None, itemsCallback, true);
+            return assemblyParser.GetSourceFilePath(nodeName);
         }
 
 
@@ -83,10 +84,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 solutionParser = new SolutionParser(filePath, null, true);
                 return await solutionParser.GetNodeNameForFilePathAsync(sourceFilePath);
             }
-            else
-            {
-                return Error.From("Source file only available for solution based models");
-            }
+
+            return Error.From("Source file only available for solution based models");
         }
 
 
@@ -96,10 +95,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             {
                 return SolutionParser.GetDataFilePaths(filePath);
             }
-            else
-            {
-                return AssemblyParser.GetDataFilePaths(filePath);
-            }
+
+            return AssemblyParser.GetDataFilePaths(filePath);
         }
 
 
@@ -109,17 +106,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             {
                 return SolutionParser.GetBuildFolderPaths(filePath);
             }
-            else
-            {
-                return AssemblyParser.GetBuildFolderPaths(filePath);
-            }
-        }
 
-
-        public void Dispose()
-        {
-            solutionParser?.Dispose();
-            assemblyParser?.Dispose();
+            return AssemblyParser.GetBuildFolderPaths(filePath);
         }
     }
 }

@@ -5,20 +5,18 @@ using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.Utils;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Cecil.Pdb;
 
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.AssemblyParsing.Private
 {
     internal class MethodParser
     {
-        private readonly List<MethodBodyNode> methodBodyNodes = new List<MethodBodyNode>();
-
         private readonly Dictionary<string, TypeDefinition> asyncStates =
             new Dictionary<string, TypeDefinition>();
 
 
         private readonly LinkHandler linkHandler;
+        private readonly List<MethodBodyNode> methodBodyNodes = new List<MethodBodyNode>();
 
 
         public MethodParser(LinkHandler linkHandler)
@@ -159,17 +157,17 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
         private class MethodBodyNode
         {
-            public DataNode MemberNode { get; }
-            public MethodDefinition Method { get; }
-            public bool IsMoveNext { get; }
-
-
             public MethodBodyNode(DataNode memberNode, MethodDefinition method, bool isMoveNext)
             {
                 MemberNode = memberNode;
                 Method = method;
                 IsMoveNext = isMoveNext;
             }
+
+
+            public DataNode MemberNode { get; }
+            public MethodDefinition Method { get; }
+            public bool IsMoveNext { get; }
         }
     }
 }

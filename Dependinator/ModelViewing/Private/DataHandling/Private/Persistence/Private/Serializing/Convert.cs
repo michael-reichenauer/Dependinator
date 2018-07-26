@@ -16,11 +16,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             {
                 return ToModelNode(item.Node);
             }
-            else if (item.Link != null)
+
+            if (item.Link != null)
             {
                 return ToModelLink(item.Link);
             }
-            else if (item.Line != null)
+
+            if (item.Line != null)
             {
                 return ToModelLine(item.Line);
             }
@@ -79,7 +81,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
             ItemsScaleFactor = node.Scale,
             Color = node.Color,
-            ShowState = node.ShowState,
+            ShowState = node.ShowState
         };
 
 
@@ -88,7 +90,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
             Scale = node.Scale,
             Color = node.Color,
-            State = node.ShowState,
+            State = node.ShowState
         };
 
 
@@ -161,7 +163,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         private static CacheJsonTypes.Link ToJsonLink(DataLink link) => new CacheJsonTypes.Link
         {
             Source = (string)link.Source,
-            Target = (string)link.Target,
+            Target = (string)link.Target
         };
 
 

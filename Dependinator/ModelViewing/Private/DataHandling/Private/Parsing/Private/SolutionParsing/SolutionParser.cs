@@ -14,12 +14,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     internal class SolutionParser : IDisposable
     {
-        private readonly string solutionFilePath;
-        private readonly DataItemsCallback itemsCallback;
-        private readonly bool isReadSymbols;
-
         private readonly List<AssemblyParser> assemblyParsers = new List<AssemblyParser>();
+        private readonly bool isReadSymbols;
+        private readonly DataItemsCallback itemsCallback;
         private readonly List<DataNode> parentNodesToSend = new List<DataNode>();
+        private readonly string solutionFilePath;
 
 
         public SolutionParser(
@@ -30,6 +29,15 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             this.solutionFilePath = solutionFilePath;
             this.itemsCallback = itemsCallback;
             this.isReadSymbols = isReadSymbols;
+        }
+
+
+        public void Dispose()
+        {
+            foreach (AssemblyParser parser in assemblyParsers)
+            {
+                parser.Dispose();
+            }
         }
 
 
@@ -147,15 +155,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             Solution solution = new Solution(filePath);
 
             return solution.GetDataFilePaths();
-        }
-
-
-        public void Dispose()
-        {
-            foreach (AssemblyParser parser in assemblyParsers)
-            {
-                parser.Dispose();
-            }
         }
 
 
