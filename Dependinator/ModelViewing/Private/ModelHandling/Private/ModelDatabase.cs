@@ -18,7 +18,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         private readonly Dictionary<NodeName, QueuedNode> queuedNodes = new Dictionary<NodeName, QueuedNode>();
 
-        private bool isDataModified = false;
+        private bool isDataModified;
 
 
         public ModelDatabase()
@@ -63,15 +63,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
             AddRoot();
             Root.ItemsCanvas = rootCanvas;
-        }
-
-
-        private void AddRoot()
-        {
-            Root = new Node(NodeName.Root);
-            Root.NodeType = NodeType.NameSpace;
-
-            Add(Root);
         }
 
 
@@ -136,6 +127,15 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
 
         public void RemovedQueuedNode(NodeName nodeName) => queuedNodes.Remove(nodeName);
+
+
+        private void AddRoot()
+        {
+            Root = new Node(NodeName.Root);
+            Root.NodeType = NodeType.NameSpace;
+
+            Add(Root);
+        }
 
 
         private QueuedNode GetQueuedNode(NodeName nodeName)

@@ -47,7 +47,8 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
                     break;
                 }
-                else if (link.Source == targetAncestors[i])
+
+                if (link.Source == targetAncestors[i])
                 {
                     // Source is a direct ancestor of th target
                     Node segmentSource = link.Source;
@@ -62,7 +63,8 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
                     break;
                 }
-                else if (link.Target == sourceAncestors[i])
+
+                if (link.Target == sourceAncestors[i])
                 {
                     // Target is a direct ancestor of the source
                     Node segmentSource = link.Source;

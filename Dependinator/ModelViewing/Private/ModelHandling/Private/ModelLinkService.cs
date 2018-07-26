@@ -59,19 +59,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        private bool TryGetTarget(DataLink dataLink, out Node target)
-        {
-            NodeName targetName = dataLink.Target;
-            if (!modelService.TryGetNode(targetName, out target))
-            {
-                modelService.QueueModelLink(targetName, dataLink);
-                return false;
-            }
-
-            return true;
-        }
-
-
         public void RemoveObsoleteLinks(IReadOnlyList<Link> obsoleteLinks)
         {
             foreach (Link link in obsoleteLinks)
@@ -87,6 +74,19 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
 
         public void Show(Link link) => AddLinkToLines(link);
+
+
+        private bool TryGetTarget(DataLink dataLink, out Node target)
+        {
+            NodeName targetName = dataLink.Target;
+            if (!modelService.TryGetNode(targetName, out target))
+            {
+                modelService.QueueModelLink(targetName, dataLink);
+                return false;
+            }
+
+            return true;
+        }
 
 
         private void AddLinkToLines(Link link)

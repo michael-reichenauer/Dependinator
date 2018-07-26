@@ -27,22 +27,22 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
     internal class ModelHandlingService : IModelHandlingService, IModelNotifications
     {
         private static readonly int BatchSize = 100;
-
-        private readonly IDataService dataService;
+        private readonly ICmd cmd;
         private readonly IDataMonitorService dataMonitorService;
 
-        private readonly IRecentModelsService recentModelsService;
+        private readonly IDataService dataService;
         private readonly IMessage message;
-        private readonly IProgressService progress;
-        private readonly ICmd cmd;
-        private readonly Func<OpenModelViewModel> openModelViewModelProvider;
-
-        private readonly IModelService modelService;
         private readonly ModelMetadata modelMetadata;
 
+        private readonly IModelService modelService;
+        private readonly Func<OpenModelViewModel> openModelViewModelProvider;
+        private readonly IProgressService progress;
 
-        private bool isShowingOpenModel = false;
-        private bool isWorking = false;
+        private readonly IRecentModelsService recentModelsService;
+
+
+        private bool isShowingOpenModel;
+        private bool isWorking;
 
 
         public ModelHandlingService(
@@ -72,14 +72,9 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        public event EventHandler ModelUpdated;
-
         public Node Root => modelService.Root;
 
         public void SetRootCanvas(ItemsCanvas rootCanvas) => Root.ItemsCanvas = rootCanvas;
-
-
-        public Task ManualRefreshAsync(bool refreshLayout = false) => RefreshAsync(refreshLayout);
 
 
         public async Task LoadAsync()
@@ -231,6 +226,40 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
+        public void Close()
+        {
+            dataMonitorService.Stop();
+            if (isWorking)
+            {
+                return;
+            }
+
+            if (isShowingOpenModel)
+            {
+                // Nothing to save
+                return;
+            }
+
+            Timing t = Timing.Start();
+            //IReadOnlyList<Node> nodes = Root.Descendents().ToList();
+            //t.Log($"Saving {nodes.Count} nodes");
+
+            IReadOnlyList<IDataItem> items = Convert.ToDataItems(Root.Descendents()).ToList();
+            t.Log($"Converted {items.Count} items");
+
+            string dataFilePath = GetDataFilePath();
+
+            dataService.SaveData(items, dataFilePath);
+            t.Log($"Saved {items.Count} items");
+        }
+
+
+        public event EventHandler ModelUpdated;
+
+
+        public Task ManualRefreshAsync(bool refreshLayout = false) => RefreshAsync(refreshLayout);
+
+
         private async void ChangedFiles(object sender, EventArgs e)
         {
             if (!isWorking)
@@ -263,34 +292,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             node.Children
                 .Where(child => child.IsShowing)
                 .ForEach(UpdateLines);
-        }
-
-
-        public void Close()
-        {
-            dataMonitorService.Stop();
-            if (isWorking)
-            {
-                return;
-            }
-
-            if (isShowingOpenModel)
-            {
-                // Nothing to save
-                return;
-            }
-
-            Timing t = Timing.Start();
-            //IReadOnlyList<Node> nodes = Root.Descendents().ToList();
-            //t.Log($"Saving {nodes.Count} nodes");
-
-            IReadOnlyList<IDataItem> items = Convert.ToDataItems(Root.Descendents()).ToList();
-            t.Log($"Converted {items.Count} items");
-
-            string dataFilePath = GetDataFilePath();
-
-            dataService.SaveData(items, dataFilePath);
-            t.Log($"Saved {items.Count} items");
         }
 
 
@@ -388,11 +389,11 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         {
             private static int currentId;
 
+            public Operation() => Id = Interlocked.Increment(ref currentId);
+
             public BlockingCollection<IDataItem> Queue { get; } = new BlockingCollection<IDataItem>();
 
             public int Id { get; }
-
-            public Operation() => Id = Interlocked.Increment(ref currentId);
         }
     }
 }

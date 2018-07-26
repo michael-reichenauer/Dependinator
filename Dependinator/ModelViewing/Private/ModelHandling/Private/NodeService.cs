@@ -12,10 +12,10 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 {
     internal class NodeService : INodeService
     {
-        private readonly IModelDatabase modelService;
+        private readonly INodeLayoutService layoutService;
         private readonly Lazy<IModelLineService> modelLineService;
         private readonly Lazy<IModelLinkService> modelLinkService;
-        private readonly INodeLayoutService layoutService;
+        private readonly IModelDatabase modelService;
         private readonly Lazy<INodeViewModelService> nodeViewModelService;
 
 

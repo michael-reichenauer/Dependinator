@@ -9,9 +9,9 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
     internal class ModelService : IModelService
     {
         private readonly IModelDatabase modelDatabase;
-        private readonly IModelNodeService modelNodeService;
-        private readonly IModelLinkService modelLinkService;
         private readonly IModelLineService modelLineService;
+        private readonly IModelLinkService modelLinkService;
+        private readonly IModelNodeService modelNodeService;
 
 
         public ModelService(

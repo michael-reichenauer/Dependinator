@@ -13,8 +13,8 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 {
     internal class ModelLineService : IModelLineService
     {
-        private readonly ILinkSegmentService linkSegmentService;
         private readonly ILineViewModelService lineViewModelService;
+        private readonly ILinkSegmentService linkSegmentService;
         private readonly IModelDatabase modelService;
 
 
@@ -67,33 +67,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        private void RemoveLineIfNoLinks(Line line)
-        {
-            if (line.LinkCount <= 0)
-            {
-                RemoveLine(line);
-            }
-        }
-
-
-        private void ShowLinkIfNeeded(Link link)
-        {
-            if (!link.Source.IsHidden && !link.Target.IsHidden)
-            {
-                AddLinkToLines(link);
-            }
-        }
-
-
-        private void AddLinkToLines(Link link)
-        {
-            if (!link.Source.IsHidden && !link.Target.IsHidden)
-            {
-                AddLinkLines(link);
-            }
-        }
-
-
         public IEnumerable<LinkSegment> GetLinkSegments(Link link) =>
             linkSegmentService.GetLinkSegments(link);
 
@@ -118,6 +91,33 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             LineViewModel lineViewModel = new LineViewModel(lineViewModelService, line);
 
             line.Owner.ItemsCanvas.AddItem(lineViewModel);
+        }
+
+
+        private void RemoveLineIfNoLinks(Line line)
+        {
+            if (line.LinkCount <= 0)
+            {
+                RemoveLine(line);
+            }
+        }
+
+
+        private void ShowLinkIfNeeded(Link link)
+        {
+            if (!link.Source.IsHidden && !link.Target.IsHidden)
+            {
+                AddLinkToLines(link);
+            }
+        }
+
+
+        private void AddLinkToLines(Link link)
+        {
+            if (!link.Source.IsHidden && !link.Target.IsHidden)
+            {
+                AddLinkLines(link);
+            }
         }
 
 

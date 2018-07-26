@@ -8,8 +8,8 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 {
     internal class ModelNodeService : IModelNodeService
     {
-        private readonly IModelLinkService modelLinkService;
         private readonly IModelLineService modelLineService;
+        private readonly IModelLinkService modelLinkService;
         private readonly INodeService nodeService;
 
 
@@ -151,7 +151,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             {
                 Stamp = stamp,
                 NodeType = dataNode.NodeType,
-                Description = dataNode.Description,
+                Description = dataNode.Description
             };
 
             node.Bounds = dataNode.Bounds;
