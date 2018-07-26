@@ -7,6 +7,15 @@ namespace System.Windows.Threading
 			this Dispatcher dispatcher, Action action) =>
 				dispatcher.BeginInvoke(DispatcherPriority.Normal, action);
 
+		public static void BeginInvokeBackground(
+			this Dispatcher dispatcher, Action action) =>
+			dispatcher.BeginInvoke(DispatcherPriority.Background, action);
+
+
+		public static void BeginInvokeBackground<T>(
+			this Dispatcher dispatcher, Action<T> action, T arg) =>
+			dispatcher.BeginInvoke(DispatcherPriority.Background, action, arg);
+
 		public static void InvokeBackground(
 			this Dispatcher dispatcher, Action action) =>
 			dispatcher.Invoke(DispatcherPriority.Background, action);

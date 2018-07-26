@@ -31,6 +31,8 @@ namespace Dependinator.ModelViewing
 
 		public ItemsViewModel ItemsViewModel { get; }
 
+		public Command AddNodeCommand => Command(modelViewModelService.AddNewNode);
+
 
 		public async Task OpenAsync() => await modelViewModelService.OpenAsync();
 

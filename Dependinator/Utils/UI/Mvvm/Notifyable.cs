@@ -13,6 +13,9 @@ namespace Dependinator.Utils.UI.Mvvm
 		private List<SourceWhenSetter> sourceWhenSetters;
 		private IReadOnlyList<string> allPropertyNames = null;
 
+		//private static Dictionary<Type, IReadOnlyList<string>> allPropertyNames2 = 
+		//	new Dictionary<Type, IReadOnlyList<string>>();
+
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
@@ -41,6 +44,17 @@ namespace Dependinator.Utils.UI.Mvvm
 
 			allPropertyNames.ForEach(OnPropertyChanged);
 		}
+
+		//public void NotifyAll2()
+		//{
+		//	if (!allPropertyNames2.TryGetValue(GetType(), out IReadOnlyList<string>  names))
+		//	{
+		//		names = GetAllPropertiesNames();
+		//		allPropertyNames2[GetType()] = names;
+		//	}
+
+		//	names.ForEach(OnPropertyChanged);
+		//}
 
 
 		public SourceWhenSetter WhenSet(params string[] sourcePropertyName)

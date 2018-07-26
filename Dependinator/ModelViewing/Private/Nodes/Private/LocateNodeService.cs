@@ -160,7 +160,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 
 		private static void ZoomCanvas(Operation operation, double zoom)
 		{
-			operation.RootCanvas.ZoomWindowCenter(zoom);
+			operation.RootCanvas.ZoomRoot(zoom);
 		}
 
 

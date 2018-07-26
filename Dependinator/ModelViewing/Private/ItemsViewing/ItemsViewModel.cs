@@ -19,6 +19,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 		}
 
 
+
 		public ItemsCanvas ItemsCanvas { get; }
 
 		public bool IsRoot => ItemsCanvas.IsRoot;
@@ -30,7 +31,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
 		public void MoveCanvas(Vector viewOffset) => ItemsCanvas.MoveAllItems(viewOffset);
 
-		public void Zoom(double zoom, Point viewPosition) => ItemsCanvas.ZoomNode(zoom, viewPosition);
+		public void Zoom(double zoomFactor, Point viewPosition) => ItemsCanvas.ZoomNode(zoomFactor, viewPosition);
 
 		public void SizeChanged() => ItemsCanvas.SizeChanged();
 

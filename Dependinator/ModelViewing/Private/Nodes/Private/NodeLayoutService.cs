@@ -19,8 +19,9 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 			new Layout(2, 1, 50, 2, 125, 50),
 			new Layout(4, 2, 50, 2, 125, 50),
 			new Layout(12, 4, 100, 1, 150, 120),
-			new Layout(30, 6, 50, 0.8, 150, 120),
-			new Layout(int.MaxValue, 9, 50, 0.6, 60, 120),
+			new Layout(int.MaxValue, 6, 50, 0.8, 150, 120),
+			//new Layout(30, 6, 50, 0.8, 150, 120),
+			//new Layout(int.MaxValue, 9, 50, 0.6, 60, 120),
 		};
 
 

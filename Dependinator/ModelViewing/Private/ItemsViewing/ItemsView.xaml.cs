@@ -61,7 +61,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 		{
 			if (viewModel.ItemsCanvas.IsFocused)
 			{
-				viewModel.ItemsCanvas.ZoomNode(e);
+				viewModel.ItemsCanvas.Zoom(e);
 			}
 		}
 

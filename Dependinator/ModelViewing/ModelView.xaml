@@ -8,6 +8,10 @@
 	mc:Ignorable="d"
 	d:DesignHeight="300" d:DesignWidth="300" Loaded="ModelView_OnLoaded">
 
+	<UserControl.InputBindings>
+		<KeyBinding Key="N" Modifiers="Ctrl" Command="{Binding AddNodeCommand}" />
+	</UserControl.InputBindings>
+
 	<!-- Model -->
 	<Border
 		BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
