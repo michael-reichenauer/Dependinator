@@ -3,5 +3,5 @@
 
 namespace Dependinator.ModelViewing.Private.DataHandling
 {
-	internal delegate void DataItemsCallback(IDataItem items);
+    internal delegate void DataItemsCallback(IDataItem items);
 }

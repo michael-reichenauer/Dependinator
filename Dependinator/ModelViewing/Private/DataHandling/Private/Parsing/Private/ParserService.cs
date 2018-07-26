@@ -7,79 +7,79 @@ using Dependinator.Utils.Threading;
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
-	internal class ParserService : IParserService
-	{
-		public async Task<R> ParseAsync(string filePath, DataItemsCallback itemsCallback)
-		{
-			Log.Debug($"Parse {filePath} ...");
-			Timing t = Timing.Start();
+    internal class ParserService : IParserService
+    {
+        public async Task<R> ParseAsync(string filePath, DataItemsCallback itemsCallback)
+        {
+            Log.Debug($"Parse {filePath} ...");
+            Timing t = Timing.Start();
 
-			R<WorkParser> workItemParser = new WorkParser(filePath, itemsCallback);
-			if (workItemParser.IsFaulted)
-			{
-				return workItemParser;
-			}
+            R<WorkParser> workItemParser = new WorkParser(filePath, itemsCallback);
+            if (workItemParser.IsFaulted)
+            {
+                return workItemParser;
+            }
 
-			using (workItemParser.Value)
-			{
-				await workItemParser.Value.ParseAsync();
-			}
+            using (workItemParser.Value)
+            {
+                await workItemParser.Value.ParseAsync();
+            }
 
-			t.Log($"Parsed {filePath}");
-			return R.Ok;
-		}
-
-
-		public async Task<R<string>> GetCodeAsync(string filePath, NodeName nodeName)
-		{
-			R<WorkParser> workItemParser = new WorkParser(filePath, null);
-			if (workItemParser.IsFaulted)
-			{
-				return workItemParser.Error;
-			}
-
-			using (workItemParser.Value)
-			{
-				return await workItemParser.Value.GetCodeAsync(nodeName);
-			}
-		}
+            t.Log($"Parsed {filePath}");
+            return R.Ok;
+        }
 
 
-		public async Task<R<SourceLocation>> GetSourceFilePath(string filePath, NodeName nodeName)
-		{
-			R<WorkParser> workItemParser = new WorkParser(filePath, null);
-			if (workItemParser.IsFaulted)
-			{
-				return workItemParser.Error;
-			}
+        public async Task<R<string>> GetCodeAsync(string filePath, NodeName nodeName)
+        {
+            R<WorkParser> workItemParser = new WorkParser(filePath, null);
+            if (workItemParser.IsFaulted)
+            {
+                return workItemParser.Error;
+            }
 
-			using (workItemParser.Value)
-			{
-				return await workItemParser.Value.GetSourceFilePath(nodeName);
-			}
-		}
-
-
-		public async Task<R<NodeName>> GetNodeForFilePathAsync(string filePath, string sourceFilePath)
-		{
-			R<WorkParser> workItemParser = new WorkParser(filePath, null);
-			if (workItemParser.IsFaulted)
-			{
-				return workItemParser.Error;
-			}
-
-			using (workItemParser.Value)
-			{
-				return await workItemParser.Value.GetNodeForFilePathAsync(sourceFilePath);
-			}
-		}
+            using (workItemParser.Value)
+            {
+                return await workItemParser.Value.GetCodeAsync(nodeName);
+            }
+        }
 
 
-		public IReadOnlyList<string> GetDataFilePaths(string filePath) => 
-			WorkParser.GetDataFilePaths(filePath);
+        public async Task<R<SourceLocation>> GetSourceFilePath(string filePath, NodeName nodeName)
+        {
+            R<WorkParser> workItemParser = new WorkParser(filePath, null);
+            if (workItemParser.IsFaulted)
+            {
+                return workItemParser.Error;
+            }
+
+            using (workItemParser.Value)
+            {
+                return await workItemParser.Value.GetSourceFilePath(nodeName);
+            }
+        }
 
 
-		public IReadOnlyList<string> GetBuildPaths(string filePath) =>
-			WorkParser.GetBuildFolderPaths(filePath);
-	}
+        public async Task<R<NodeName>> GetNodeForFilePathAsync(string filePath, string sourceFilePath)
+        {
+            R<WorkParser> workItemParser = new WorkParser(filePath, null);
+            if (workItemParser.IsFaulted)
+            {
+                return workItemParser.Error;
+            }
+
+            using (workItemParser.Value)
+            {
+                return await workItemParser.Value.GetNodeForFilePathAsync(sourceFilePath);
+            }
+        }
+
+
+        public IReadOnlyList<string> GetDataFilePaths(string filePath) =>
+            WorkParser.GetDataFilePaths(filePath);
+
+
+        public IReadOnlyList<string> GetBuildPaths(string filePath) =>
+            WorkParser.GetBuildFolderPaths(filePath);
+    }
 }
