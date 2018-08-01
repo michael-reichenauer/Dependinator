@@ -16,9 +16,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             Project = instance;
             UniqueProjectName = instance.GetField<string>("uniqueProjectName");
-            ProjectName = instance.GetProperty<string>(nameof(ProjectName));
-            ProjectType = instance.GetProperty<object>(nameof(ProjectType)).ToString();
-            RelativePath = instance.GetProperty<string>(nameof(RelativePath));
+            ProjectName = instance.GetProperty<string>("ProjectName");
+            ProjectType = instance.GetProperty<object>("ProjectType").ToString();
+            RelativePath = instance.GetProperty<string>("RelativePath");
             IsIncludedDebug = GetIncludedInDebug(instance);
         }
 
@@ -37,7 +37,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             // The project configuration is a dictionary, lets try to get the Debug and check
             // if it is included in the Debug build
             object projectConfigurations;
-            projectConfigurations = instance.GetField<object>(nameof(projectConfigurations));
+            projectConfigurations = instance.GetField<object>("projectConfigurations");
 
             IEnumerable configurations = projectConfigurations as IEnumerable;
 
@@ -47,12 +47,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 {
                     // item is KeyValuePair<string, object> type
                     object Value;
-                    Value = item.GetProperty<object>(nameof(Value));
+                    Value = item.GetProperty<object>("Value");
 
                     string ConfigurationName;
                     bool IncludeInBuild;
-                    ConfigurationName = Value.GetProperty<string>(nameof(ConfigurationName));
-                    IncludeInBuild = Value.GetProperty<bool>(nameof(IncludeInBuild));
+                    ConfigurationName = Value.GetProperty<string>("ConfigurationName");
+                    IncludeInBuild = Value.GetProperty<bool>("IncludeInBuild");
 
                     if (ConfigurationName == "Debug" && IncludeInBuild)
                     {

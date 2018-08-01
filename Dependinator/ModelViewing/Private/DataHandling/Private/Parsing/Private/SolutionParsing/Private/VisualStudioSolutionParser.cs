@@ -32,20 +32,20 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public StreamReader SolutionReader { set => instance.SetProperty(nameof(SolutionReader), value); }
+        public StreamReader SolutionReader { set => instance.SetProperty("SolutionReader", value); }
 
 
         public IReadOnlyList<VisualStudioProjectInSolution> Projects
         {
             get
             {
-                object[] objects = instance.GetProperty<object[]>(nameof(Projects));
+                object[] objects = instance.GetProperty<object[]>("Projects");
 
                 return objects.Select(project => new VisualStudioProjectInSolution(project)).ToList();
             }
         }
 
 
-        public void ParseSolution() => instance.Invoke(nameof(ParseSolution));
+        public void ParseSolution() => instance.Invoke("ParseSolution");
     }
 }
