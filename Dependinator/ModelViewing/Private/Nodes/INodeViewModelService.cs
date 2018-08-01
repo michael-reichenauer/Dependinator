@@ -6,23 +6,23 @@ using Dependinator.ModelViewing.Private.ModelHandling.Core;
 
 namespace Dependinator.ModelViewing.Private.Nodes
 {
-	internal interface INodeViewModelService
-	{
-		Brush GetBackgroundBrush(Brush brush);
+    internal interface INodeViewModelService
+    {
+        Brush GetBackgroundBrush(Brush brush);
 
-		Brush GetNodeBrush(Node node);
-		void FirstShowNode(Node node);
+        Brush GetNodeBrush(Node node);
+        void FirstShowNode(Node node);
 
-		void MouseClicked(NodeViewModel nodeViewModel);
-		void OnMouseWheel(NodeViewModel nodeViewModel, UIElement uiElement, MouseWheelEventArgs e);
-		Brush GetSelectedBrush(Brush brush);
-		void ShowReferences(NodeViewModel nodeViewModel);
-		void ShowCode(Node node);
-		void RearrangeLayout(NodeViewModel node);
-		void HideNode(Node node);
-		Brush GetDimBrush();
-		Brush GetTitleBrush();
-		void ShowNode(Node node);
-		void SetIsChanged(Node node);
-	}
+        void MouseClicked(NodeViewModel nodeViewModel);
+        void OnMouseWheel(NodeViewModel nodeViewModel, UIElement uiElement, MouseWheelEventArgs e);
+        Brush GetSelectedBrush(Brush brush);
+        void ShowReferences(NodeViewModel nodeViewModel);
+        void ShowCode(Node node);
+        void RearrangeLayout(NodeViewModel node);
+        void HideNode(Node node);
+        Brush GetDimBrush();
+        Brush GetTitleBrush();
+        void ShowNode(Node node);
+        void SetIsChanged(Node node);
+    }
 }

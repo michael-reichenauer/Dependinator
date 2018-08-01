@@ -61,18 +61,16 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
             node.Children.ForEach(child => modelDatabase.SetIsChanged(node));
         }
 
+
         private void ResetLayoutImpl(Node node)
         {
-            Log.Debug($"Reset {node}");
-            if (node.IsRoot)
-            { }
             Layout layout = GetLayout(node);
 
             SetScale(layout, node);
 
             int index = 0;
             IReadOnlyList<Node> sortedChildren = node.Children
-               // .OrderBy(child => child, CompareNodes())
+                // .OrderBy(child => child, CompareNodes())
                 .ToList();
 
             foreach (Node child in sortedChildren)
@@ -168,7 +166,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
             {
                 return 0;
             }
-            
+
             // Compare Parent to child references (links from outside nodes to child)
             // Child with more references from the outside is more to left/top
             Line parentToE1 = e1.Parent.SourceLines.FirstOrDefault(r => r.Target == e1);
