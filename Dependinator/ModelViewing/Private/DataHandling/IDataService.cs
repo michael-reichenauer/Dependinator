@@ -10,6 +10,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling
     {
         Task<R> TryReadSavedDataAsync(string dataFilePath, DataItemsCallback dataItemsCallback);
 
+        void CacheData(IReadOnlyList<IDataItem> items, string dataFilePath);
         void SaveData(IReadOnlyList<IDataItem> items, string dataFilePath);
 
         Task<R> ParseAsync(string filePath, DataItemsCallback dataItemsCallback);

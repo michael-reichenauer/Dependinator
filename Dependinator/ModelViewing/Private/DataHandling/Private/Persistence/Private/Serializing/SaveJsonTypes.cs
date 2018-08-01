@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 
@@ -22,6 +22,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         public class Item
         {
             public Node Node { get; set; }
+            public Line Line { get; set; }
         }
 
 
@@ -29,12 +30,25 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         [Serializable]
         public class Node
         {
-            // The name of a node with '.' separating hierarchy, e.g. like in namespaces
-            public string Id { get; set; }
+            public string Name { get; set; }
             public string Bounds { get; set; }
             public string Color { get; set; }
             public double Scale { get; set; }
             public string State { get; set; }
+        }
+
+
+        // A node
+        [Serializable]
+        public class Line
+        {
+            // The source node name
+            public string Source { get; set; }
+
+            // The target node name
+            public string Target { get; set; }
+
+            public List<string> Points { get; set; }
         }
     }
 }

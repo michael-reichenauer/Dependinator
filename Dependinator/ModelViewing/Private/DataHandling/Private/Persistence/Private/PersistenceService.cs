@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
@@ -19,8 +19,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        public void Serialize(IReadOnlyList<IDataItem> items, string dataFilePath) =>
-            dataSerializer.Serialize(items, dataFilePath);
+        public void SerializeCache(IReadOnlyList<IDataItem> items, string dataFilePath) =>
+            dataSerializer.SerializeCache(items, dataFilePath);
+
+
+        public void SerializeSave(IReadOnlyList<IDataItem> items, string path)=>
+            dataSerializer.SerializeSave(items, path);
 
 
         public async Task<R> TryDeserialize(string dataFilePath, DataItemsCallback dataItemsCallback)

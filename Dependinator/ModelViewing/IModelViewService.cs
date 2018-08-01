@@ -17,6 +17,6 @@ namespace Dependinator.ModelViewing
 		IEnumerable<NodeName> Search(string text);
 		Task ActivateRefreshAsync();
 		Task RefreshAsync(bool refreshLayout);
-		void Close();
+		Task CloseAsync();
 	}
 }

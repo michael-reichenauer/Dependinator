@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 
@@ -6,7 +6,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 {
     public static class CacheJsonTypes
     {
-        public static string Version = "3";
+        public static string Version = "4";
 
 
         // A model contains a list of nodes, links and lines
@@ -41,8 +41,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             public string Description { get; set; }
             public string Bounds { get; set; }
             public string Color { get; set; }
-            public double ItemsScaleFactor { get; set; }
-            public string ShowState { get; set; }
+            public double Scale { get; set; }
+            public string State { get; set; }
         }
 
 

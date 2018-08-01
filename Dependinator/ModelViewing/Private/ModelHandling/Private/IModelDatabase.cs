@@ -1,3 +1,4 @@
+﻿using System;
 using System.Collections.Generic;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
@@ -10,8 +11,10 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         Node Root { get; }
 
         IEnumerable<Node> AllNodes { get; }
+        bool IsChangeMonitored { get; set; }
 
-        void SetIsChanged();
+        void SetIsChanged(Node node);
+        void SetIsChanged(Line line);
         void Add(Node node);
         Node GetNode(NodeName name);
         bool TryGetNode(NodeName nodeName, out Node node);
@@ -30,5 +33,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         void RemovedQueuedNode(NodeName nodeName);
         IReadOnlyList<DataNode> GetAllQueuedNodes();
         void QueueNode(DataNode dataNode);
+        event EventHandler DataModified;
     }
 }

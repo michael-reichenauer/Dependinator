@@ -30,6 +30,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Dtos
         public double Scale { get; set; }
         public string Color { get; set; }
         public string ShowState { get; set; }
+        public bool IsModified { get; set; }
+        public bool HasModifiedChild { get; set; }
+        public bool HasParentModifiedChild { get; set; }
 
 
         public override string ToString() => Name.ToString();

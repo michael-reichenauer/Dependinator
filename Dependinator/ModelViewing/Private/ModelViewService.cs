@@ -79,6 +79,6 @@ namespace Dependinator.ModelViewing.Private
 
 
 		public Task RefreshAsync(bool refreshLayout)=> modelViewModelService.RefreshAsync(refreshLayout);
-		public void Close() => modelViewModelService.Close();
+		public Task CloseAsync() => modelViewModelService.CloseAsync();
 	}
 }

@@ -28,8 +28,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         private IReadOnlyList<string> monitoredWorkFolders;
 
 
-        public DataMonitorService(
-            IParserService parserService)
+        public DataMonitorService(IParserService parserService)
         {
             this.parserService = parserService;
 

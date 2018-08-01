@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
@@ -23,6 +23,6 @@ namespace Dependinator.ModelViewing.Private.Nodes
 		Brush GetDimBrush();
 		Brush GetTitleBrush();
 		void ShowNode(Node node);
-		void SetIsChanged();
+		void SetIsChanged(Node node);
 	}
 }

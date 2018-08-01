@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -61,7 +61,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 		}
 
 
-		public void SetIsChanged() => modelService.SetIsChanged();
+		public void SetIsChanged(Node node) => modelService.SetIsChanged(node);
 
 
 
@@ -150,7 +150,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 		public void RearrangeLayout(NodeViewModel nodeViewModel)
 		{
 			nodeLayoutService.ResetLayout(nodeViewModel.Node);
-			modelService.SetIsChanged();
+			//modelService.SetIsChanged(nodeViewModel.Node);
 		}
 	}
 }

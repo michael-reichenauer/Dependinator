@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 
 namespace Dependinator.Utils.ErrorHandling
@@ -6,7 +6,7 @@ namespace Dependinator.Utils.ErrorHandling
 	public class R
 	{
 		public static R Ok = new R(Error.None);
-		public static R NoValue = new R(Error.NoValue);
+		public static Error NoValue = Error.NoValue;
 	
 
 		public R(Error error)
@@ -43,7 +43,6 @@ namespace Dependinator.Utils.ErrorHandling
 	{
 		private readonly T storedValue;
 
-		public new static R<T> NoValue = new R<T>(Error.NoValue);
 
 		public R(T value)
 			: base(Error.None)

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -205,12 +205,11 @@ namespace Dependinator.ModelViewing.Private.Nodes
 		public void UpdateBounds(Rect bounds)
 		{
 			ItemBounds = bounds;
-			nodeViewModelService.SetIsChanged();
+			nodeViewModelService.SetIsChanged(Node);
+        }
 
-		}
 
-
-		public ItemsViewModel ItemsViewModel { get; set; }
+        public ItemsViewModel ItemsViewModel { get; set; }
 
 
 
@@ -297,5 +296,8 @@ namespace Dependinator.ModelViewing.Private.Nodes
 
 		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) =>
 			nodeViewModelService.OnMouseWheel(this, uiElement, e);
+
+
+
 	}
 }

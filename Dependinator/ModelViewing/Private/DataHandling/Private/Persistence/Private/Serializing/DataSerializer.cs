@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,11 +17,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
     {
         public Task SerializeAsync(IReadOnlyList<IDataItem> items, string path)
         {
-            return Task.Run(() => Serialize(items, path));
+            return Task.Run(() => SerializeCache(items, path));
         }
 
 
-        public void Serialize(IReadOnlyList<IDataItem> items, string path)
+        public void SerializeCache(IReadOnlyList<IDataItem> items, string path)
         {
             try
             {
@@ -29,6 +29,34 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 CacheJsonTypes.Model dataModel = new CacheJsonTypes.Model();
 
                 dataModel.Items = items.Select(Convert.ToCacheJsonItem).ToList();
+
+                t.Log($"Converted {dataModel.Items.Count} data items");
+
+                Json.Serialize(path, dataModel);
+
+                t.Log("Wrote data file");
+
+                //SaveJsonTypes.Model saveModel = new SaveJsonTypes.Model();
+                //saveModel.Items = items.Select(Convert.ToSaveJsonItem).Where(item => item != null).ToList();
+                //t.Log($"Converted {saveModel.Items.Count} data items");
+                //Json.Serialize(path + ".save.json", saveModel);
+                //t.Log("Wrote save file");
+            }
+            catch (Exception e)
+            {
+                Log.Exception(e, "Failed to serialize");
+            }
+        }
+
+
+        public void SerializeSave(IReadOnlyList<IDataItem> items, string path)
+        {
+            try
+            {
+                Timing t = new Timing();
+                SaveJsonTypes.Model dataModel = new SaveJsonTypes.Model();
+
+                dataModel.Items = items.Select(Convert.ToSaveJsonItem).ToList();
 
                 t.Log($"Converted {dataModel.Items.Count} data items");
 

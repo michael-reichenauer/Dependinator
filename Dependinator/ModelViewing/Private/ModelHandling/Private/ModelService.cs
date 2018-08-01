@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.Utils;
@@ -29,7 +29,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         public Node Root => modelDatabase.Root;
         public IEnumerable<Node> AllNodes => modelDatabase.AllNodes;
-        public void SetIsChanged() => modelDatabase.SetIsChanged();
+        public void SetIsChanged(Node node) => modelDatabase.SetIsChanged(node);
 
 
         // !! Ska nog bort

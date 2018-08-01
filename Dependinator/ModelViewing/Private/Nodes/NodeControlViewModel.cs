@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
@@ -154,8 +154,13 @@ namespace Dependinator.ModelViewing.Private.Nodes
 			nodeViewModel.UpdateBounds(newBounds);
 
 			nodeViewModel.NotifyAll();
-			nodeViewModel.ItemsViewModel?.MoveCanvas(newCanvasMove);
-			ItemOwnerCanvas.UpdateItem(nodeViewModel);
+
+		    if (control != NodeControl.Center)
+		    {
+                nodeViewModel.ItemsViewModel?.MoveCanvas(newCanvasMove);
+		    }
+
+		    ItemOwnerCanvas.UpdateItem(nodeViewModel);
 		}
 
 

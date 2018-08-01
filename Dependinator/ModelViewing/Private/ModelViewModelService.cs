@@ -89,11 +89,11 @@ namespace Dependinator.ModelViewing.Private
 		}
 
 
-		public void Close()
+		public async Task CloseAsync()
 		{
 			StoreViewSettings();
 
-			modelHandlingService.Close();
+			await modelHandlingService.CloseAsync();
 		}
 
 

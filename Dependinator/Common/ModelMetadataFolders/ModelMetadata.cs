@@ -11,7 +11,7 @@ namespace Dependinator.Common.ModelMetadataFolders
 	{
 		private readonly IModelMetadataService modelMetadataService;
 		
-		private string FolderPath => modelMetadataService.MetadataFolderPath;
+		public string FolderPath => modelMetadataService.MetadataFolderPath;
 
 
 		public ModelMetadata(IModelMetadataService modelMetadataService)

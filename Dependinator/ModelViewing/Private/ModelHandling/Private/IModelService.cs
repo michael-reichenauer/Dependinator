@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 
@@ -12,7 +12,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         // ???
         IEnumerable<Node> AllNodes { get; }
 
-        void SetIsChanged();
+        void SetIsChanged(Node node);
 
 
         // !! Ska nog bort

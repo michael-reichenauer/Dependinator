@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Input;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 
@@ -19,6 +19,6 @@ namespace Dependinator.ModelViewing.Private.Lines.Private
 		void UpdateLineEndPoints(Line line);
 		LineControl GetLineControl(Line line);
 		void ShowReferences(LineViewModel lineViewModel);
-		void SetIsChanged();
+		void SetIsChanged(LineViewModel lineViewModel);
 	}
 }

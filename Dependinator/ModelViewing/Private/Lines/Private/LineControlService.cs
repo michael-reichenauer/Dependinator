@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Media;
@@ -75,7 +75,7 @@ namespace Dependinator.ModelViewing.Private.Lines.Private
 			}
 
 			line.View.Points[pointIndex] = newPoint;
-			lineViewModelService.Value.SetIsChanged();
+			lineViewModelService.Value.SetIsChanged(line.View.ViewModel);
 		}
 
 
@@ -92,7 +92,7 @@ namespace Dependinator.ModelViewing.Private.Lines.Private
 
 				lineViewModelService.Value.UpdateLineBounds(line);
 				line.View.ViewModel.NotifyAll();
-				lineViewModelService.Value.SetIsChanged();
+				lineViewModelService.Value.SetIsChanged(line.View.ViewModel);
 			}
 		}
 

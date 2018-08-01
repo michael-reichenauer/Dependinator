@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Input;
 using Dependinator.ModelViewing.Private.DependencyExploring;
@@ -80,6 +80,6 @@ namespace Dependinator.ModelViewing.Private.Lines.Private
 		}
 
 
-		public void SetIsChanged() => modelService.SetIsChanged();
+		public void SetIsChanged(LineViewModel lineViewModel) => modelService.SetIsChanged(lineViewModel.Line);
 	}
 }

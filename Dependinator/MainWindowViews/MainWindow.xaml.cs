@@ -69,7 +69,6 @@ namespace Dependinator.MainWindowViews
 
 		private void MainWindow_OnClosing(object sender, CancelEventArgs e)
 		{
-			viewModel.ClosingWindow();
 			StoreWindowSettings();
 		}
 

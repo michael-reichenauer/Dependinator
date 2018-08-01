@@ -51,8 +51,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         {
             switch (item)
             {
-                case DataNode modelNode:
-                    return new SaveJsonTypes.Item {Node = ToSaveJsonNode(modelNode)};
+                case DataNode dataNode:
+                    return new SaveJsonTypes.Item {Node = ToSaveJsonNode(dataNode)};
+                case DataLine dataLine:
+                    return new SaveJsonTypes.Item {Line = ToSaveJsonNode(dataLine)};
             }
 
             return null;
@@ -66,9 +68,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         {
             Description = node.Description,
             Bounds = node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
-            Scale = node.ItemsScaleFactor,
+            Scale = node.Scale,
             Color = node.Color,
-            ShowState = node.ShowState
+            ShowState = node.State
         };
 
 
@@ -78,19 +80,28 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             Parent = (string)node.Parent,
             Type = ToNodeTypeText(node.NodeType),
             Description = node.Description,
-            Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
-            ItemsScaleFactor = node.Scale,
+            Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsIntString() : null,
+            Scale = node.Scale,
             Color = node.Color,
-            ShowState = node.ShowState
+            State = node.ShowState
         };
 
 
         private static SaveJsonTypes.Node ToSaveJsonNode(DataNode node) => new SaveJsonTypes.Node
         {
-            Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsString() : null,
+            Name = (string)node.Name,
+            Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsIntString() : null,
             Scale = node.Scale,
             Color = node.Color,
             State = node.ShowState
+        };
+
+
+        private static SaveJsonTypes.Line ToSaveJsonNode(DataLine line) => new SaveJsonTypes.Line
+        {
+            Source = (string)line.Source,
+            Target = (string)line.Target,
+            Points = ToJsonPoints(line.Points)
         };
 
 

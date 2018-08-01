@@ -29,6 +29,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         private static readonly int BatchSize = 100;
         private readonly ICmd cmd;
         private readonly IDataMonitorService dataMonitorService;
+        private readonly IModelPersistentHandler modelPersistentHandler;
 
         private readonly IDataService dataService;
         private readonly IMessage message;
@@ -48,6 +49,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         public ModelHandlingService(
             IDataService dataService,
             IDataMonitorService dataMonitorService,
+            IModelPersistentHandler modelPersistentHandler,
             Func<OpenModelViewModel> openModelViewModelProvider,
             IModelService modelService,
             ModelMetadata modelMetadata,
@@ -58,6 +60,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         {
             this.dataService = dataService;
             this.dataMonitorService = dataMonitorService;
+            this.modelPersistentHandler = modelPersistentHandler;
 
             this.openModelViewModelProvider = openModelViewModelProvider;
 
@@ -89,7 +92,10 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
                 if (File.Exists(dataFilePath))
                 {
+                    modelPersistentHandler.IsChangeMonitored = false;
                     R result = await TryShowSavedModelAsync(dataFilePath);
+                    modelPersistentHandler.IsChangeMonitored = true;
+
                     if (result.Error.Exception is NotSupportedException)
                     {
                         File.Delete(dataFilePath);
@@ -108,7 +114,12 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 }
                 else if (File.Exists(modelMetadata.ModelFilePath))
                 {
+                    //Root.ItemsCanvas.SetRootOffset(new Point(-37, 43));
+                    Root.ItemsCanvas.SetRootScale(2);
+                    modelPersistentHandler.IsChangeMonitored = false;
                     R result = await ShowParsedModelAsync();
+                    modelPersistentHandler.IsChangeMonitored = true;
+
                     if (result.IsFaulted)
                     {
                         message.ShowWarning(result.Message);
@@ -117,6 +128,8 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                         Application.Current.Shutdown(0);
                         return;
                     }
+
+                    modelPersistentHandler.TriggerDataModified();
                 }
 
                 if (!modelMetadata.IsDefault && !File.Exists(dataFilePath) && !File.Exists(modelMetadata.ModelFilePath))
@@ -206,6 +219,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
                 modelService.RemoveObsoleteNodesAndLinks(operationId.Value);
                 modelService.SetLayoutDone();
+                modelPersistentHandler.TriggerDataModified();
                 GC.Collect();
                 isWorking = false;
             }
@@ -226,7 +240,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        public void Close()
+        public async Task CloseAsync()
         {
             dataMonitorService.Stop();
             if (isWorking)
@@ -241,16 +255,19 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             }
 
             Timing t = Timing.Start();
-            //IReadOnlyList<Node> nodes = Root.Descendents().ToList();
-            //t.Log($"Saving {nodes.Count} nodes");
+            ////IReadOnlyList<Node> nodes = Root.Descendents().ToList();
+            ////t.Log($"Saving {nodes.Count} nodes");
 
-            IReadOnlyList<IDataItem> items = Convert.ToDataItems(Root.Descendents()).ToList();
-            t.Log($"Converted {items.Count} items");
+            //IReadOnlyList<IDataItem> items = Convert.ToDataItems(Root.Descendents()).ToList();
+            //t.Log($"Converted {items.Count} items");
 
-            string dataFilePath = GetDataFilePath();
+            //string dataFilePath = GetDataFilePath();
 
-            dataService.SaveData(items, dataFilePath);
-            t.Log($"Saved {items.Count} items");
+            //dataService.SaveData(items, dataFilePath);
+            Log.Debug("Saving ...");
+            await modelPersistentHandler.SaveAsync();
+
+            t.Log($"Saved items");
         }
 
 

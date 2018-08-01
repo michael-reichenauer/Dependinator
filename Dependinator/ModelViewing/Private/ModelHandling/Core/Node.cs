@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Windows;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ItemsViewing;
@@ -14,7 +14,8 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Core
 
 		private readonly List<Node> children = new List<Node>();
 
-		public Node(NodeName name)
+
+	    public Node(NodeName name)
 		{
 			Name = name;
 
@@ -57,9 +58,11 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Core
 		public bool CanShowChildren => IsRoot || (ViewModel?.CanShowChildren ?? false);
 		public bool CanShow => ViewModel?.CanShow ?? false;
 		public bool IsShowing => ViewModel?.IsShowing ?? false;
+	    public bool IsModified { get; set; }
+	    public bool HasModifiedChild { get; set; }
 
 
-		public void AddChild(Node child)
+        public void AddChild(Node child)
 		{
 			child.Parent = this;
 			child.Root = Root;

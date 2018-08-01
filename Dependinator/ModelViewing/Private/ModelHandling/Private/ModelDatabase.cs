@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
-using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
 
 
@@ -18,8 +16,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         private readonly Dictionary<NodeName, QueuedNode> queuedNodes = new Dictionary<NodeName, QueuedNode>();
 
-        private bool isDataModified;
-
+        public event EventHandler DataModified;
 
         public ModelDatabase()
         {
@@ -35,25 +32,47 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         public bool TryGetNode(NodeName name, out Node node) => nodes.TryGetValue(name, out node);
 
+        public bool IsChangeMonitored { get; set; } = true;
 
-        public async void SetIsChanged()
+        public void SetIsChanged(Node node)
         {
-            if (!isDataModified)
-            {
-                isDataModified = true;
+            if (!IsChangeMonitored) return;
 
-                Log.Warn("Data modified");
-
-                await Task.Delay(TimeSpan.FromSeconds(5));
-                Log.Warn("Data saved");
-                isDataModified = false;
-            }
+            // Log.Warn($"Node modified {node} and {node.Parent}");
+            node.IsModified = true;
+            node.Parent.HasModifiedChild = true;
+            DataModified?.Invoke(this, EventArgs.Empty);
         }
 
 
-        public void Add(Node node) => nodes[node.Name] = node;
+        public void SetIsChanged(Line line)
+        {
+            if (!IsChangeMonitored) return;
+            // Log.Warn($"Line modified {line}");
+            DataModified?.Invoke(this, EventArgs.Empty);
+        }
 
-        public void Remove(Node node) => nodes.Remove(node.Name);
+
+        public void Add(Node node)
+        {
+            nodes[node.Name] = node;
+
+            //if (IsChangeMonitored)
+            //{
+            //    DataModified?.Invoke(this, EventArgs.Empty);
+            //}
+        }
+
+
+        public void Remove(Node node)
+        {
+            nodes.Remove(node.Name);
+
+            //if (IsChangeMonitored)
+            //{
+            //    DataModified?.Invoke(this, EventArgs.Empty);
+            //}
+        }
 
 
         public void RemoveAll()
@@ -63,6 +82,11 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
             AddRoot();
             Root.ItemsCanvas = rootCanvas;
+
+            if (IsChangeMonitored)
+            {
+                DataModified?.Invoke(this, EventArgs.Empty);
+            }
         }
 
 

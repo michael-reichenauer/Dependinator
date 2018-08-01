@@ -15,7 +15,7 @@ namespace Dependinator.ModelViewing.Private
 
 		void ShowHiddenNode(NodeName nodeName);
 
-		void Close();
+		Task CloseAsync();
 		IReadOnlyList<NodeName> GetHiddenNodeNames();
 		void Clicked();
 		void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e);
