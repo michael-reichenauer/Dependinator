@@ -10,61 +10,61 @@ using Dependinator.Utils.UI.Mvvm;
 
 namespace Dependinator.ModelViewing
 {
-	[SingleInstance]
-	internal class ModelViewModel : ViewModel
-	{
-		private readonly IModelViewModelService modelViewModelService;
+    [SingleInstance]
+    internal class ModelViewModel : ViewModel
+    {
+        private readonly IModelViewModelService modelViewModelService;
 
 
-		private int width = 0;
+        private int width;
 
 
-		public ModelViewModel(IModelViewModelService modelViewModelService)
-		{
-			this.modelViewModelService = modelViewModelService;
+        public ModelViewModel(IModelViewModelService modelViewModelService)
+        {
+            this.modelViewModelService = modelViewModelService;
 
-			ItemsCanvas rootCanvas = new ItemsCanvas();
-			ItemsViewModel = new ItemsViewModel(rootCanvas, null);
+            ItemsCanvas rootCanvas = new ItemsCanvas();
+            ItemsViewModel = new ItemsViewModel(rootCanvas, null);
 
-			modelViewModelService.SetRootCanvas(rootCanvas);
-		}
-
-		public ItemsViewModel ItemsViewModel { get; }
-
-		public Command AddNodeCommand => Command(modelViewModelService.AddNewNode);
+            modelViewModelService.SetRootCanvas(rootCanvas);
+        }
 
 
-		public async Task OpenAsync() => await modelViewModelService.OpenAsync();
+        public ItemsViewModel ItemsViewModel { get; }
+
+        public Command AddNodeCommand => Command(modelViewModelService.AddNewNode);
 
 
-		public Task OpenFilesAsync(IReadOnlyList<string> filePaths) =>
-			modelViewModelService.OpenFilesAsync(filePaths);
+        public int Width
+        {
+            get => width;
+            set
+            {
+                if (width != value)
+                {
+                    width = value;
+                    ItemsViewModel.SizeChanged();
+                }
+            }
+        }
 
 
-		public int Width
-		{
-			get => width;
-			set
-			{
-				if (width != value)
-				{
-					width = value;
-					ItemsViewModel.SizeChanged();
-				}
-			}
-		}
+        public async Task OpenAsync() => await modelViewModelService.OpenAsync();
 
 
-
-		public void MouseClicked(MouseButtonEventArgs mouseButtonEventArgs)
-		{
-			modelViewModelService.Clicked();
-		}
+        public Task OpenFilesAsync(IReadOnlyList<string> filePaths) =>
+            modelViewModelService.OpenFilesAsync(filePaths);
 
 
-		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e)
-		{
-			modelViewModelService.OnMouseWheel(uiElement, e);
-		}
-	}
+        public void MouseClicked(MouseButtonEventArgs mouseButtonEventArgs)
+        {
+            modelViewModelService.Clicked();
+        }
+
+
+        public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e)
+        {
+            modelViewModelService.OnMouseWheel(uiElement, e);
+        }
+    }
 }

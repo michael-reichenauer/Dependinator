@@ -57,7 +57,7 @@ namespace Dependinator
 
         public static string GetInstallFolderPath()
         {
-            string programFolderPath = System.Environment.ExpandEnvironmentVariables("%ProgramW6432%");
+            string programFolderPath = Environment.ExpandEnvironmentVariables("%ProgramW6432%");
 
             return Path.Combine(programFolderPath, Name);
         }
@@ -73,8 +73,8 @@ namespace Dependinator
 
         public static string GetDataFolderPath()
         {
-            string programFolderPath = System.Environment.GetFolderPath(
-                System.Environment.SpecialFolder.CommonApplicationData);
+            string programFolderPath = Environment.GetFolderPath(
+                Environment.SpecialFolder.CommonApplicationData);
 
             return Path.Combine(programFolderPath, Name);
         }
@@ -98,10 +98,8 @@ namespace Dependinator
                 {
                     return GetVersion(GetSetupFilePath());
                 }
-                else
-                {
-                    return new Version(0, 0, 0, 0);
-                }
+
+                return new Version(0, 0, 0, 0);
             }
             catch (Exception)
             {
@@ -119,17 +117,15 @@ namespace Dependinator
                     string versionText = File.ReadAllText(GetInstallVersionFilePath());
                     return System.Version.Parse(versionText);
                 }
-                else
-                {
-                    // This method does not always work running in stances has been moved.
-                    string installFilePath = GetInstallFilePath();
-                    if (!File.Exists(installFilePath))
-                    {
-                        return new Version(0, 0, 0, 0);
-                    }
 
-                    return GetVersion(installFilePath);
+                // This method does not always work running in stances has been moved.
+                string installFilePath = GetInstallFilePath();
+                if (!File.Exists(installFilePath))
+                {
+                    return new Version(0, 0, 0, 0);
                 }
+
+                return GetVersion(installFilePath);
             }
             catch (Exception)
             {

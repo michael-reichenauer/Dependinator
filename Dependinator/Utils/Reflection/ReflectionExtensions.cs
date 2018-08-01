@@ -1,98 +1,100 @@
-using System;
+﻿using System;
 using System.Reflection;
 
 
 namespace Dependinator.Utils.Reflection
 {
-	/// <summary>
-	/// Method used to extract information from internal Microsoft classes using reflection
-	/// </summary>
-	internal static class Reflection
-	{
+    /// <summary>
+    ///     Method used to extract information from internal Microsoft classes using reflection
+    /// </summary>
+    internal static class Reflection
+    {
+        public static Type GetType(Assembly assembly, string typeName)
+        {
+            var type = assembly.GetType(typeName);
 
-		public static Type GetType(Assembly assembly, string typeName)
-		{
-			var type = assembly.GetType(typeName);
+            if (type == null)
+            {
+                throw new Exception("typeName");
+            }
 
-			if (type == null)
-			{
-				throw new Exception("typeName");
-			}
-
-			return type;
-		}
-
-
-		public static object Create(Type type, params object[] parameters)
-		{
-			ConstructorInfo constructor = type.GetConstructor(
-				BindingFlags.Instance | BindingFlags.NonPublic,
-				null, Type.EmptyTypes, null);
-
-			return constructor.Invoke(parameters);
-		}
+            return type;
+        }
 
 
-		public static T Invoke<T>(this object instance, string name, params object[] parameters)
-		{
-			MethodInfo method = GetMethod(instance, name);
-			object returnValue = method.Invoke(instance, parameters);
+        public static object Create(Type type, params object[] parameters)
+        {
+            ConstructorInfo constructor = type.GetConstructor(
+                BindingFlags.Instance | BindingFlags.NonPublic,
+                null, Type.EmptyTypes, null);
 
-			return (T)returnValue;
-		}
-
-		public static void Invoke(this object instance, string name, params object[] parameters)
-		{
-			MethodInfo method = GetMethod(instance, name);
-
-			method.Invoke(instance, parameters);
-		}
+            return constructor.Invoke(parameters);
+        }
 
 
-		public static T GetProperty<T>(this object instance, string name)
-		{
-			PropertyInfo property = GetProperty(instance, name);
+        public static T Invoke<T>(this object instance, string name, params object[] parameters)
+        {
+            MethodInfo method = GetMethod(instance, name);
+            object returnValue = method.Invoke(instance, parameters);
 
-			object value = property.GetValue(instance);
-
-			return (T)value;
-		}
-
-		public static T GetField<T>(this object instance, string name)
-		{
-			FieldInfo field = GetField(instance, name);
-
-			object value = field.GetValue(instance);
-
-			return (T)value;
-		}
-
-		public static void SetProperty(this object instance, string name, object value)
-		{
-			PropertyInfo property = GetProperty(instance, name);
-
-			property.SetValue(instance, value);
-		}
+            return (T)returnValue;
+        }
 
 
+        public static void Invoke(this object instance, string name, params object[] parameters)
+        {
+            MethodInfo method = GetMethod(instance, name);
 
-		private static MethodInfo GetMethod(object instance, string name)
-		{
-			return instance.GetType()
-				.GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance);
-		}
+            method.Invoke(instance, parameters);
+        }
 
 
-		private static PropertyInfo GetProperty(object instance, string name)
-		{
-			return instance.GetType()
-				.GetProperty(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-		}
+        public static T GetProperty<T>(this object instance, string name)
+        {
+            PropertyInfo property = GetProperty(instance, name);
 
-		private static FieldInfo GetField(object instance, string name)
-		{
-			return instance.GetType()
-				.GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-		}
-	}
+            object value = property.GetValue(instance);
+
+            return (T)value;
+        }
+
+
+        public static T GetField<T>(this object instance, string name)
+        {
+            FieldInfo field = GetField(instance, name);
+
+            object value = field.GetValue(instance);
+
+            return (T)value;
+        }
+
+
+        public static void SetProperty(this object instance, string name, object value)
+        {
+            PropertyInfo property = GetProperty(instance, name);
+
+            property.SetValue(instance, value);
+        }
+
+
+        private static MethodInfo GetMethod(object instance, string name)
+        {
+            return instance.GetType()
+                .GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance);
+        }
+
+
+        private static PropertyInfo GetProperty(object instance, string name)
+        {
+            return instance.GetType()
+                .GetProperty(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+        }
+
+
+        private static FieldInfo GetField(object instance, string name)
+        {
+            return instance.GetType()
+                .GetField(name, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+        }
+    }
 }

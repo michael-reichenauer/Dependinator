@@ -6,51 +6,53 @@ using Dependinator.Utils.UI;
 
 namespace Dependinator.ModelViewing.Private.Lines
 {
-	/// <summary>
-	/// Interaction logic for LineView.xaml
-	/// </summary>
-	public partial class LineView : UserControl
-	{
-		private MouseClicked lineClicked;
-		private readonly DragUiElement dragLine;
-		private readonly DragUiElement dragLineControlPoints;
-
-		private LineViewModel ViewModel => DataContext as LineViewModel;
+    /// <summary>
+    ///     Interaction logic for LineView.xaml
+    /// </summary>
+    public partial class LineView : UserControl
+    {
+        private readonly DragUiElement dragLine;
+        private readonly DragUiElement dragLineControlPoints;
+        private MouseClicked lineClicked;
 
 
-		public LineView()
-		{
-			InitializeComponent();
+        public LineView()
+        {
+            InitializeComponent();
 
-			lineClicked = new MouseClicked(this, Clicked);
-			//toggleClicked = new MouseClicked(ToggleLine, ClickToggleLine);
+            lineClicked = new MouseClicked(this, Clicked);
+            //toggleClicked = new MouseClicked(ToggleLine, ClickToggleLine);
 
-			dragLine = new DragUiElement(
-				LineControl,
-				(o, e) => ViewModel?.LineControl.MouseMove(false, e),
-				e => ViewModel?.LineControl.MouseDown(e),
-				e => ViewModel?.LineControl.MouseUp(e));
+            dragLine = new DragUiElement(
+                LineControl,
+                (o, e) => ViewModel?.LineControl.MouseMove(false, e),
+                e => ViewModel?.LineControl.MouseDown(e),
+                e => ViewModel?.LineControl.MouseUp(e));
 
-			dragLineControlPoints = new DragUiElement(
-				LinePoints,
-				(o, e) => ViewModel?.LineControl.MouseMove(true, e),
-				e => ViewModel?.LineControl.MouseDown(e),
-				e => ViewModel?.LineControl.MouseUp(e));
-		}
-
-
-		private void Clicked(MouseButtonEventArgs e) => ViewModel?.Clicked();
+            dragLineControlPoints = new DragUiElement(
+                LinePoints,
+                (o, e) => ViewModel?.LineControl.MouseMove(true, e),
+                e => ViewModel?.LineControl.MouseDown(e),
+                e => ViewModel?.LineControl.MouseUp(e));
+        }
 
 
-		private void UIElement_OnMouseEnter(object sender, MouseEventArgs e) =>
-			ViewModel?.OnMouseEnter();
-
-		private void UIElement_OnMouseLeave(object sender, MouseEventArgs e) =>
-			ViewModel?.OnMouseLeave();
+        private LineViewModel ViewModel => DataContext as LineViewModel;
 
 
-		protected override void OnMouseWheel(MouseWheelEventArgs e) => ViewModel.OnMouseWheel(this, e);
+        private void Clicked(MouseButtonEventArgs e) => ViewModel?.Clicked();
 
-		private void ToolTip_OnOpened(object sender, RoutedEventArgs e) => ViewModel?.UpdateToolTip();
-	}
+
+        private void UIElement_OnMouseEnter(object sender, MouseEventArgs e) =>
+            ViewModel?.OnMouseEnter();
+
+
+        private void UIElement_OnMouseLeave(object sender, MouseEventArgs e) =>
+            ViewModel?.OnMouseLeave();
+
+
+        protected override void OnMouseWheel(MouseWheelEventArgs e) => ViewModel.OnMouseWheel(this, e);
+
+        private void ToolTip_OnOpened(object sender, RoutedEventArgs e) => ViewModel?.UpdateToolTip();
+    }
 }

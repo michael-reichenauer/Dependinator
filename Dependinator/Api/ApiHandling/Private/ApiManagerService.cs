@@ -8,51 +8,52 @@ using DependinatorApi.ApiHandling;
 
 namespace Dependinator.Api.ApiHandling.Private
 {
-	[SingleInstance]
-	internal class ApiManagerService : IApiManagerService
-	{
-		private readonly IModelMetadataService modelMetadataService;
-		private readonly DependinatorApiService dependinatorApiService;
-		private ApiIpcServer apiIpcServer;
+    [SingleInstance]
+    internal class ApiManagerService : IApiManagerService
+    {
+        private readonly DependinatorApiService dependinatorApiService;
+        private readonly IModelMetadataService modelMetadataService;
+        private ApiIpcServer apiIpcServer;
 
 
-		public ApiManagerService(
-			IModelMetadataService modelMetadataService,
-			DependinatorApiService dependinatorApiService)
-		{
-			this.modelMetadataService = modelMetadataService;
-			this.dependinatorApiService = dependinatorApiService;
-		}
-		
-
-		public void Register()
-		{
-			try
-			{
-				string serverName = GetCurrentInstanceServerName(modelMetadataService.ModelFilePath);
-
-				apiIpcServer?.Dispose();
-				apiIpcServer = new ApiIpcServer(serverName);
-
-				if (!apiIpcServer.TryPublishService<IDependinatorApi>(dependinatorApiService))
-				{
-					throw new ApplicationException($"Failed to register rpc instance {serverName}");
-				}
-
-				Log.Info($"Registered: {serverName}");
-			}
-			catch (Exception e)
-			{
-				Log.Exception(e);
-				throw;
-			}
-		}
+        public ApiManagerService(
+            IModelMetadataService modelMetadataService,
+            DependinatorApiService dependinatorApiService)
+        {
+            this.modelMetadataService = modelMetadataService;
+            this.dependinatorApiService = dependinatorApiService;
+        }
 
 
-		public string GetCurrentInstanceServerName(string modelFilePath) =>
-			ApiServerNames.ServerName<IDependinatorApi>(modelFilePath);
+        public void Register()
+        {
+            try
+            {
+                string serverName = GetCurrentInstanceServerName(modelMetadataService.ModelFilePath);
 
-		public string GetCurrentInstanceServerName() =>
-			ApiServerNames.ServerName<IDependinatorApi>(modelMetadataService.ModelFilePath);
-	}
+                apiIpcServer?.Dispose();
+                apiIpcServer = new ApiIpcServer(serverName);
+
+                if (!apiIpcServer.TryPublishService<IDependinatorApi>(dependinatorApiService))
+                {
+                    throw new ApplicationException($"Failed to register rpc instance {serverName}");
+                }
+
+                Log.Info($"Registered: {serverName}");
+            }
+            catch (Exception e)
+            {
+                Log.Exception(e);
+                throw;
+            }
+        }
+
+
+        public string GetCurrentInstanceServerName(string modelFilePath) =>
+            ApiServerNames.ServerName<IDependinatorApi>(modelFilePath);
+
+
+        public string GetCurrentInstanceServerName() =>
+            ApiServerNames.ServerName<IDependinatorApi>(modelMetadataService.ModelFilePath);
+    }
 }

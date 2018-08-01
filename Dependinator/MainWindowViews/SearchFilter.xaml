@@ -8,51 +8,51 @@
              d:DesignHeight="300" d:DesignWidth="300">
 
 
-	<!-- Search and filter box  -->
-	<Border
-		BorderThickness="1"
-		BorderBrush="{DynamicResource BorderBrush}"
-		Margin="2">
-		<StackPanel Orientation="Horizontal">
+    <!-- Search and filter box  -->
+    <Border
+        BorderThickness="1"
+        BorderBrush="{DynamicResource BorderBrush}"
+        Margin="2">
+        <StackPanel Orientation="Horizontal">
 
-			<!-- Search icon -->
-			<TextBlock
-				FontFamily="{DynamicResource IconFont}"
-				Foreground="{DynamicResource TextLowBrush}"
-				FontSize="14"
-				Text="&#xE8B6;"
-				Padding="2,3,0,0"
-				ToolTip="Type type name to search for (Ctrl-F)" />
+            <!-- Search icon -->
+            <TextBlock
+                FontFamily="{DynamicResource IconFont}"
+                Foreground="{DynamicResource TextLowBrush}"
+                FontSize="14"
+                Text="&#xE8B6;"
+                Padding="2,3,0,0"
+                ToolTip="Type type name to search for (Ctrl-F)" />
 
-			<!-- Search text field -->
-			<ComboBox
-				Name="Search"
-				BorderBrush="Transparent"
-				IsDropDownOpen="{Binding IsSearchDropDown}"
-				IsEditable="True"
-				Margin="3,0"
-				Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-				ItemsSource="{Binding Path=SearchItems}"
-				IsTextSearchEnabled="False"
-				SelectedItem="{Binding SelectedSearchItem}"
-				Foreground="{DynamicResource TextBrush}"
-				Width="125"
-				Height="20"
-				HorizontalAlignment="Right"
-				VerticalAlignment="Center"
-				ToolTip="Type type name to search for (Ctrl-F)" >
+            <!-- Search text field -->
+            <ComboBox
+                Name="Search"
+                BorderBrush="Transparent"
+                IsDropDownOpen="{Binding IsSearchDropDown}"
+                IsEditable="True"
+                Margin="3,0"
+                Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                ItemsSource="{Binding Path=SearchItems}"
+                IsTextSearchEnabled="False"
+                SelectedItem="{Binding SelectedSearchItem}"
+                Foreground="{DynamicResource TextBrush}"
+                Width="125"
+                Height="20"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Center"
+                ToolTip="Type type name to search for (Ctrl-F)">
 
-				<ComboBox.ItemTemplate>
-					<DataTemplate>
-						<StackPanel Orientation="Horizontal">
-							<TextBlock Text="{Binding Name}" />
-						</StackPanel>
-					</DataTemplate>
-				</ComboBox.ItemTemplate>
-			</ComboBox>
+                <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{Binding Name}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ComboBox.ItemTemplate>
+            </ComboBox>
 
-			<!-- Clear filter button -->
-			<!--<Button 
+            <!-- Clear filter button -->
+            <!--<Button 
 					Content="&#xE15E;"					
 					Style="{DynamicResource IconButtonStyle}"
 					FontSize="14"					
@@ -61,7 +61,7 @@
 					Command="{Binding ClearFilterCommand}"
 					ToolTip="Return to branch view (Esc)"/>-->
 
-		</StackPanel>
+        </StackPanel>
 
-	</Border>
+    </Border>
 </UserControl>

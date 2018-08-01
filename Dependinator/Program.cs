@@ -10,7 +10,7 @@ using Dependinator.Utils.ErrorHandling;
 namespace Dependinator
 {
     /// <summary>
-    /// Contains the Main method and is the entry point of the program.
+    ///     Contains the Main method and is the entry point of the program.
     /// </summary>
     public class Program
     {

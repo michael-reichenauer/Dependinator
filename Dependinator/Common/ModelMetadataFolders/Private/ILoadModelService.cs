@@ -3,8 +3,8 @@
 
 namespace Dependinator.Common.ModelMetadataFolders.Private
 {
-	internal interface ILoadModelService
-	{
-		Task LoadAsync();
-	}
+    internal interface ILoadModelService
+    {
+        Task LoadAsync();
+    }
 }

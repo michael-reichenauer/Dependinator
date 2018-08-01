@@ -4,21 +4,21 @@ using System.Windows.Controls;
 
 namespace Dependinator.MainWindowViews
 {
-	/// <summary>
-	/// Interaction logic for HamburgerButton.xaml.
-	/// </summary>
-	public partial class HamburgerButton : UserControl
-	{
-		public HamburgerButton()
-		{
-			InitializeComponent();
-		}
+    /// <summary>
+    ///     Interaction logic for HamburgerButton.xaml.
+    /// </summary>
+    public partial class HamburgerButton : UserControl
+    {
+        public HamburgerButton()
+        {
+            InitializeComponent();
+        }
 
 
-		private void HamburgerButton_OnClick(object sender, RoutedEventArgs e)
-		{
-			HamburgerContextMenu.PlacementTarget = this;
-			HamburgerContextMenu.IsOpen = true;
-		}
-	}
+        private void HamburgerButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            HamburgerContextMenu.PlacementTarget = this;
+            HamburgerContextMenu.IsOpen = true;
+        }
+    }
 }

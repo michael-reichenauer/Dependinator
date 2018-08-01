@@ -47,7 +47,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             }
 
             Log.Debug("Failed to locate file path for: {nodeName}");
-            return R<SourceLocation>.NoValue;
+            return R.NoValue;
         }
 
 

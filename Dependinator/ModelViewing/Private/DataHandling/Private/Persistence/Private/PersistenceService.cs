@@ -23,7 +23,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             dataSerializer.SerializeCache(items, dataFilePath);
 
 
-        public void SerializeSave(IReadOnlyList<IDataItem> items, string path)=>
+        public void SerializeSave(IReadOnlyList<IDataItem> items, string path) =>
             dataSerializer.SerializeSave(items, path);
 
 

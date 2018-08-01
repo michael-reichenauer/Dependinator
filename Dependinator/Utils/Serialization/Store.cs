@@ -9,98 +9,98 @@ using Microsoft.Isam.Esent.Collections.Generic;
 
 namespace Dependinator.Utils.Serialization
 {
-
-	internal static class Store
-	{
-		public static void Delete(string directoryPath)
-		{
-			if (PersistentDictionaryFile.Exists(directoryPath))
-			{
-				PersistentDictionaryFile.DeleteFiles(directoryPath);
-			}
-		}
-	}
-
-
-	internal class Store<TKey, TValue> : IDisposable where TKey : IComparable<TKey>
-	{
-		private readonly BlockingCollection<KeyValuePair<TKey, TValue>> persistentQueue =
-			new BlockingCollection<KeyValuePair<TKey, TValue>>();
-		private readonly PersistentDictionary<TKey, TValue> persistentDictionary;
-		private readonly Dictionary<TKey, TValue> cache = new Dictionary<TKey, TValue>();
-
-		private readonly Task writeTask;
-		private readonly AutoResetEvent done = new AutoResetEvent(false);
+    internal static class Store
+    {
+        public static void Delete(string directoryPath)
+        {
+            if (PersistentDictionaryFile.Exists(directoryPath))
+            {
+                PersistentDictionaryFile.DeleteFiles(directoryPath);
+            }
+        }
+    }
 
 
-		public Store(string directoryPath)
-		{
-			persistentDictionary = new PersistentDictionary<TKey, TValue>(directoryPath);
+    internal class Store<TKey, TValue> : IDisposable where TKey : IComparable<TKey>
+    {
+        private readonly Dictionary<TKey, TValue> cache = new Dictionary<TKey, TValue>();
+        private readonly AutoResetEvent done = new AutoResetEvent(false);
+        private readonly PersistentDictionary<TKey, TValue> persistentDictionary;
 
-			writeTask = Task.Run(() => ProcessPersistentQueue());
-		}
+        private readonly BlockingCollection<KeyValuePair<TKey, TValue>> persistentQueue =
+            new BlockingCollection<KeyValuePair<TKey, TValue>>();
 
-
-		private void ProcessPersistentQueue()
-		{
-			while (persistentQueue.TryTake(out var pair, -1))
-			{
-				persistentDictionary[pair.Key] = pair.Value;
-			}
-
-			done.Set();
-		}
+        private readonly Task writeTask;
 
 
-		public void Set(TKey key, TValue value)
-		{
-			cache[key] = value;
-			persistentQueue.Add(new KeyValuePair<TKey, TValue>(key, value));
-		}
+        public Store(string directoryPath)
+        {
+            persistentDictionary = new PersistentDictionary<TKey, TValue>(directoryPath);
+
+            writeTask = Task.Run(() => ProcessPersistentQueue());
+        }
 
 
-		public bool TryGet(TKey key, out TValue value)
-		{
-			if (cache.TryGetValue(key, out value))
-			{
-				return true;
-			}
+        public void Dispose()
+        {
+            persistentQueue.CompleteAdding();
+            done.WaitOne();
 
-			if (persistentDictionary.TryGetValue(key, out value))
-			{
-				cache[key] = value;
-				return true;
-			}
+            persistentDictionary.Flush();
 
-			return false;
-		}
+            persistentQueue.Dispose();
+            persistentQueue.Dispose();
+
+            cache.Clear();
+        }
 
 
-		public IReadOnlyList<KeyValuePair<TKey, TValue>> GetAll()
-		{
-			return persistentDictionary.ToList();
-		}
+        private void ProcessPersistentQueue()
+        {
+            while (persistentQueue.TryTake(out var pair, -1))
+            {
+                persistentDictionary[pair.Key] = pair.Value;
+            }
+
+            done.Set();
+        }
 
 
-		public async Task CloseAsync()
-		{
-			persistentQueue.CompleteAdding();
-			await writeTask;
-			await Task.Run(() => persistentDictionary.Flush());
-		}
+        public void Set(TKey key, TValue value)
+        {
+            cache[key] = value;
+            persistentQueue.Add(new KeyValuePair<TKey, TValue>(key, value));
+        }
 
 
-		public void Dispose()
-		{
-			persistentQueue.CompleteAdding();
-			done.WaitOne();
+        public bool TryGet(TKey key, out TValue value)
+        {
+            if (cache.TryGetValue(key, out value))
+            {
+                return true;
+            }
 
-			persistentDictionary.Flush();
+            if (persistentDictionary.TryGetValue(key, out value))
+            {
+                cache[key] = value;
+                return true;
+            }
 
-			persistentQueue.Dispose();
-			persistentQueue.Dispose();
+            return false;
+        }
 
-			cache.Clear();
-		}
-	}
+
+        public IReadOnlyList<KeyValuePair<TKey, TValue>> GetAll()
+        {
+            return persistentDictionary.ToList();
+        }
+
+
+        public async Task CloseAsync()
+        {
+            persistentQueue.CompleteAdding();
+            await writeTask;
+            await Task.Run(() => persistentDictionary.Flush());
+        }
+    }
 }

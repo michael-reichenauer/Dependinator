@@ -3,13 +3,14 @@
 
 namespace Dependinator.Common.ModelMetadataFolders
 {
-	public class FileEventArgs : EventArgs
-	{
-		public DateTime DateTime { get; }
+    public class FileEventArgs : EventArgs
+    {
+        public FileEventArgs(DateTime dateTime)
+        {
+            DateTime = dateTime;
+        }
 
-		public FileEventArgs(DateTime dateTime)
-		{
-			DateTime = dateTime;
-		}
-	}
+
+        public DateTime DateTime { get; }
+    }
 }

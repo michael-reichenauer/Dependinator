@@ -14,7 +14,6 @@ using Dependinator.ModelViewing.Private.CodeViewing;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
-using Application = System.Windows.Application;
 
 
 namespace Dependinator.MainWindowViews
@@ -23,28 +22,28 @@ namespace Dependinator.MainWindowViews
     internal class MainWindowViewModel : ViewModel, IBusyIndicatorProvider
     {
         private readonly IMainWindowService mainWindowService;
-        private readonly IOpenModelService openModelService;
-        private readonly IRecentModelsService recentModelsService;
-        private readonly IModelMetadataService modelMetadataService;
-        private readonly IStartInstanceService startInstanceService;
-        private readonly ISolutionService solutionService;
-        private readonly IModelViewService modelViewService;
-        private readonly IProgressService progress;
         private readonly ModelMetadata modelMetadata;
+        private readonly IModelMetadataService modelMetadataService;
+        private readonly IModelViewService modelViewService;
+        private readonly IOpenModelService openModelService;
+        private readonly IProgressService progress;
+        private readonly IRecentModelsService recentModelsService;
+        private readonly ISolutionService solutionService;
+        private readonly IStartInstanceService startInstanceService;
 
 
         internal MainWindowViewModel(
-          ModelMetadata modelMetadata,
-          ILatestVersionService latestVersionService,
-          IMainWindowService mainWindowService,
-          ModelViewModel modelViewModel,
-          IOpenModelService openModelService,
-          IRecentModelsService recentModelsService,
-          IModelMetadataService modelMetadataService,
-          IStartInstanceService startInstanceService,
-          ISolutionService solutionService,
-          IModelViewService modelViewService,
-          IProgressService progress)
+            ModelMetadata modelMetadata,
+            ILatestVersionService latestVersionService,
+            IMainWindowService mainWindowService,
+            ModelViewModel modelViewModel,
+            IOpenModelService openModelService,
+            IRecentModelsService recentModelsService,
+            IModelMetadataService modelMetadataService,
+            IStartInstanceService startInstanceService,
+            ISolutionService solutionService,
+            IModelViewService modelViewService,
+            IProgressService progress)
         {
             this.modelMetadata = modelMetadata;
 
@@ -65,6 +64,7 @@ namespace Dependinator.MainWindowViews
             SearchItems = new ObservableCollection<SearchEntry>();
             ClearSelectionItems();
         }
+
 
         public int WindowWith { set => ModelViewModel.Width = value; }
 
@@ -88,6 +88,7 @@ namespace Dependinator.MainWindowViews
         public ObservableCollection<SearchEntry> SearchItems { get; }
 
         public bool IsSearchDropDown { get => Get(); set => Set(value); }
+
         public string SearchText
         {
             get => Get();
@@ -112,10 +113,10 @@ namespace Dependinator.MainWindowViews
                 IsSearchDropDown = true;
                 Set(value);
                 var items = modelViewService.Search(value)
-                  .Take(21)
-                  .OrderBy(nodeName => nodeName.DisplayLongName)
-                  .Select(nodeName => new SearchEntry(nodeName.DisplayLongName, nodeName))
-                  .ToList();
+                    .Take(21)
+                    .OrderBy(nodeName => nodeName.DisplayLongName)
+                    .Select(nodeName => new SearchEntry(nodeName.DisplayLongName, nodeName))
+                    .ToList();
                 SearchItems.Clear();
                 items.Take(20).ForEach(item => SearchItems.Add(item));
                 if (items.Count > 20)
@@ -146,15 +147,6 @@ namespace Dependinator.MainWindowViews
             }
         }
 
-
-        void ClearSelectionItems()
-        {
-            SearchItems.Clear();
-            SearchItems.Add(new SearchEntry("", null));
-        }
-
-        public BusyIndicator Busy => BusyIndicator();
-
         public ModelViewModel ModelViewModel { get; }
 
 
@@ -172,15 +164,6 @@ namespace Dependinator.MainWindowViews
 
 
         public IReadOnlyList<HiddenNodeItem> HiddenNodes => GetHiddenNodes();
-
-
-
-        private IReadOnlyList<HiddenNodeItem> GetHiddenNodes()
-        {
-            return modelViewService.GetHiddenNodeNames()
-              .Select(name => new HiddenNodeItem(name, modelViewService.ShowHiddenNode))
-              .ToList();
-        }
 
 
         public bool HasResent => recentModelsService.GetModelPaths().Any();
@@ -216,6 +199,22 @@ namespace Dependinator.MainWindowViews
 
         public Command SearchCommand => Command(Search);
 
+        public BusyIndicator Busy => BusyIndicator();
+
+
+        private void ClearSelectionItems()
+        {
+            SearchItems.Clear();
+            SearchItems.Add(new SearchEntry("", null));
+        }
+
+
+        private IReadOnlyList<HiddenNodeItem> GetHiddenNodes()
+        {
+            return modelViewService.GetHiddenNodeNames()
+                .Select(name => new HiddenNodeItem(name, modelViewService.ShowHiddenNode))
+                .ToList();
+        }
 
 
         public async Task LoadAsync()
@@ -262,7 +261,7 @@ namespace Dependinator.MainWindowViews
 
 
         private static void Minimize() =>
-          Application.Current.MainWindow.WindowState = WindowState.Minimized;
+            Application.Current.MainWindow.WindowState = WindowState.Minimized;
 
 
         private static void ToggleMaximize()
@@ -304,7 +303,6 @@ namespace Dependinator.MainWindowViews
                 Application.Current.Shutdown(0);
             }
         }
-
 
 
         private void ClearFilter()

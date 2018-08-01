@@ -3,10 +3,10 @@
 
 namespace Dependinator.ModelViewing.Private.CodeViewing
 {
-	internal interface ISolutionService
-	{
-		Task OpenStudioAsync();
+    internal interface ISolutionService
+    {
+        Task OpenStudioAsync();
 
-		Task OpenFileAsync(string filePath, int lineNumber);
-	}
+        Task OpenFileAsync(string filePath, int lineNumber);
+    }
 }

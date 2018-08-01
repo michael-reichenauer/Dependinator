@@ -1,49 +1,54 @@
 ﻿using System;
 using System.Windows;
+using System.Windows.Interop;
 using Dependinator.Utils.Dependencies;
+using IWin32Window = System.Windows.Forms.IWin32Window;
 
 
 namespace Dependinator.Common
 {
-	[SingleInstance]
-	internal class WindowOwner
-	{
-		public static implicit operator Window(WindowOwner owner) => owner.Window;
+    [SingleInstance]
+    internal class WindowOwner
+    {
+        public Window Window
+        {
+            get
+            {
+                if (Application.Current?.MainWindow is IMainWindow)
+                {
+                    return Application.Current?.MainWindow;
+                }
+
+                return null;
+            }
+        }
 
 
-		public Window Window
-		{
-			get
-			{
-				if (Application.Current?.MainWindow is IMainWindow)
-				{
-					return Application.Current?.MainWindow;
-				}
+        public IWin32Window Win32Window
+        {
+            get
+            {
+                var source = PresentationSource.FromVisual(Window) as HwndSource;
+                IWin32Window win = new Win32WindowHandle(source.Handle);
+                return win;
+            }
+        }
 
-				return null;
-			}
-		}
+        public static implicit operator Window(WindowOwner owner) => owner.Window;
 
 
-		public System.Windows.Forms.IWin32Window Win32Window
-		{
-			get
-			{
-				var source = PresentationSource.FromVisual(Window) as System.Windows.Interop.HwndSource;
-				System.Windows.Forms.IWin32Window win = new Win32WindowHandle(source.Handle);
-				return win;
-			}
-		}
+        private class Win32WindowHandle : IWin32Window
+        {
+            private readonly IntPtr _handle;
 
-		private class Win32WindowHandle : System.Windows.Forms.IWin32Window
-		{
-			private readonly IntPtr _handle;
-			public Win32WindowHandle(IntPtr handle)
-			{
-				_handle = handle;
-			}
 
-			IntPtr System.Windows.Forms.IWin32Window.Handle => _handle;
-		}
-	}
+            public Win32WindowHandle(IntPtr handle)
+            {
+                _handle = handle;
+            }
+
+
+            IntPtr IWin32Window.Handle => _handle;
+        }
+    }
 }

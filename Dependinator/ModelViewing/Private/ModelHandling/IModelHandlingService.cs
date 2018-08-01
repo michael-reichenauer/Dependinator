@@ -6,20 +6,19 @@ using Dependinator.ModelViewing.Private.ModelHandling.Core;
 
 namespace Dependinator.ModelViewing.Private.ModelHandling
 {
-	internal interface IModelHandlingService
-	{
-		void SetRootCanvas(ItemsCanvas rootCanvas);
+    internal interface IModelHandlingService
+    {
+        Node Root { get; }
+        void SetRootCanvas(ItemsCanvas rootCanvas);
 
-		Task LoadAsync();
+        Task LoadAsync();
 
-		Task RefreshAsync(bool refreshLayout);
+        Task RefreshAsync(bool refreshLayout);
 
-		Node Root { get; }
+        void ShowHiddenNode(NodeName nodeName);
 
-		void ShowHiddenNode(NodeName nodeName);
+        IReadOnlyList<NodeName> GetHiddenNodeNames();
 
-		IReadOnlyList<NodeName> GetHiddenNodeNames();
-
-		Task CloseAsync();
-	}
+        Task CloseAsync();
+    }
 }

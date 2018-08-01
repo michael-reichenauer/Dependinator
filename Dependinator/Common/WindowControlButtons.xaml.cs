@@ -3,14 +3,14 @@
 
 namespace Dependinator.Common
 {
-	/// <summary>
-	/// Interaction logic for WindowControlButtons.xaml
-	/// </summary>
-	public partial class WindowControlButtons : UserControl
-	{
-		public WindowControlButtons()
-		{
-			InitializeComponent();
-		}
-	}
+    /// <summary>
+    ///     Interaction logic for WindowControlButtons.xaml
+    /// </summary>
+    public partial class WindowControlButtons : UserControl
+    {
+        public WindowControlButtons()
+        {
+            InitializeComponent();
+        }
+    }
 }

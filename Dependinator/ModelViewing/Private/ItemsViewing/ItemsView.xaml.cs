@@ -12,188 +12,185 @@ using Dependinator.Utils.UI.VirtualCanvas;
 
 namespace Dependinator.ModelViewing.Private.ItemsViewing
 {
-	/// <summary>
-	/// Interaction logic for ItemsView.xaml
-	/// </summary>
-	public partial class ItemsView : UserControl
-	{
-		private TouchPoint initialTouchPoint1;
-		private TouchPoint lastTouchPoint1;
-		private TouchPoint lastTouchPoint2;
-		private double lastPinchLength = 0;
+    /// <summary>
+    ///     Interaction logic for ItemsView.xaml
+    /// </summary>
+    public partial class ItemsView : UserControl
+    {
+        private readonly List<TouchDevice> activeTouchDevices = new List<TouchDevice>();
+        private readonly DispatcherTimer longPressTimer;
 
-		private ItemsViewModel viewModel;
+        private readonly Stopwatch touchClickStopWatch = new Stopwatch();
+        private TouchPoint initialTouchPoint1;
+        private double lastPinchLength;
+        private TouchPoint lastTouchPoint1;
+        private TouchPoint lastTouchPoint2;
 
-		private readonly Stopwatch touchClickStopWatch = new Stopwatch();
-		private readonly DispatcherTimer longPressTimer;
-
-		private readonly List<TouchDevice> activeTouchDevices = new List<TouchDevice>();
-
-
-		public ItemsView()
-		{
-			InitializeComponent();
-			longPressTimer = new DispatcherTimer();
-			longPressTimer.Tick += OnLongPressTime;
-			longPressTimer.Interval = TimeSpan.FromMilliseconds(500);
-		}
+        private ItemsViewModel viewModel;
 
 
-		protected override void OnMouseMove(MouseEventArgs e) =>
-			MouseHelper.OnLeftButtonMove(this, e, (s, offset, p1, p2) => viewModel?.MoveAllItems(p1, p2));
+        public ItemsView()
+        {
+            InitializeComponent();
+            longPressTimer = new DispatcherTimer();
+            longPressTimer.Tick += OnLongPressTime;
+            longPressTimer.Interval = TimeSpan.FromMilliseconds(500);
+        }
 
 
-		private void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
-		{
-			viewModel = (ItemsViewModel)DataContext;
-			viewModel?.SetZoomableCanvas((ZoomableCanvas)sender);
-		}
+        protected override void OnMouseMove(MouseEventArgs e) =>
+            MouseHelper.OnLeftButtonMove(this, e, (s, offset, p1, p2) => viewModel?.MoveAllItems(p1, p2));
 
 
-		public void SetFocus()
-		{
-			ItemsListBox.Focus();
-		}
+        private void ZoomableCanvas_Loaded(object sender, RoutedEventArgs e)
+        {
+            viewModel = (ItemsViewModel)DataContext;
+            viewModel?.SetZoomableCanvas((ZoomableCanvas)sender);
+        }
 
 
-
-		protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
-		{
-			if (viewModel.ItemsCanvas.IsFocused)
-			{
-				viewModel.ItemsCanvas.Zoom(e);
-			}
-		}
+        public void SetFocus()
+        {
+            ItemsListBox.Focus();
+        }
 
 
-
-		protected override void OnTouchDown(TouchEventArgs e)
-		{
-			if (!(viewModel?.IsRoot ?? false))
-			{
-				return;
-			}
-
-			if (activeTouchDevices.Count > 1)
-			{
-				Log.Warn("No support for multi-touch yet");
-				return;
-			}
-
-			activeTouchDevices.Add(e.TouchDevice);
-
-			if (activeTouchDevices.Count == 1)
-			{
-				// First finger touch, check if possible click or long-press or else
-				touchClickStopWatch.Restart();
-				longPressTimer.Start();
-
-				initialTouchPoint1 = e.GetTouchPoint(ItemsListBox);
-				lastTouchPoint1 = e.GetTouchPoint(ItemsListBox);
-			}
-			else
-			{
-				// Second finger touch for zoom or pinch
-				longPressTimer.Stop();
-
-				lastTouchPoint2 = e.GetTouchPoint(ItemsListBox);
-				lastPinchLength = (lastTouchPoint2.Position - lastTouchPoint1.Position).Length;
-			}
-
-			CaptureTouch(e.TouchDevice);
-			e.Handled = true;
-		}
+        protected override void OnPreviewMouseWheel(MouseWheelEventArgs e)
+        {
+            if (viewModel.ItemsCanvas.IsFocused)
+            {
+                viewModel.ItemsCanvas.Zoom(e);
+            }
+        }
 
 
-		protected override void OnTouchUp(TouchEventArgs e)
-		{
-			if (!viewModel.IsRoot)
-			{
-				return;
-			}
+        protected override void OnTouchDown(TouchEventArgs e)
+        {
+            if (!(viewModel?.IsRoot ?? false))
+            {
+                return;
+            }
 
-			if (activeTouchDevices.Count == 1 && lastTouchPoint1.TouchDevice.Id == e.TouchDevice.Id)
-			{
-				// First finger upp, checking if distance is small enough to count as click or long-press
-				touchClickStopWatch.Stop();
-				longPressTimer.Stop();
+            if (activeTouchDevices.Count > 1)
+            {
+                Log.Warn("No support for multi-touch yet");
+                return;
+            }
 
-				TouchPoint currentPoint = e.GetTouchPoint(ItemsListBox);
+            activeTouchDevices.Add(e.TouchDevice);
 
-				if ((currentPoint.Position - initialTouchPoint1.Position).Length < 10)
-				{
-					if (touchClickStopWatch.Elapsed < TimeSpan.FromMilliseconds(200))
-					{
-						// A one finger short click
-						Log.Warn("Touch click");
-					}
-				}
-			}
+            if (activeTouchDevices.Count == 1)
+            {
+                // First finger touch, check if possible click or long-press or else
+                touchClickStopWatch.Restart();
+                longPressTimer.Start();
 
-			activeTouchDevices.Remove(e.TouchDevice);
-			ReleaseTouchCapture(e.TouchDevice);
-			e.Handled = true;
-		}
+                initialTouchPoint1 = e.GetTouchPoint(ItemsListBox);
+                lastTouchPoint1 = e.GetTouchPoint(ItemsListBox);
+            }
+            else
+            {
+                // Second finger touch for zoom or pinch
+                longPressTimer.Stop();
 
+                lastTouchPoint2 = e.GetTouchPoint(ItemsListBox);
+                lastPinchLength = (lastTouchPoint2.Position - lastTouchPoint1.Position).Length;
+            }
 
-		private void OnLongPressTime(object sender, EventArgs e)
-		{
-			longPressTimer.Stop();
-
-			if ((lastTouchPoint1.Position - initialTouchPoint1.Position).Length < 10)
-			{
-				Log.Warn("Touch long-press");
-			}
-		}
+            CaptureTouch(e.TouchDevice);
+            e.Handled = true;
+        }
 
 
-		protected override void OnTouchMove(TouchEventArgs e)
-		{
-			//if (!viewModel.IsRoot)
-			//{
-			//	return;
-			//}
+        protected override void OnTouchUp(TouchEventArgs e)
+        {
+            if (!viewModel.IsRoot)
+            {
+                return;
+            }
 
-			//TouchPoint currentPoint = e.GetTouchPoint(ItemsListBox);
+            if (activeTouchDevices.Count == 1 && lastTouchPoint1.TouchDevice.Id == e.TouchDevice.Id)
+            {
+                // First finger upp, checking if distance is small enough to count as click or long-press
+                touchClickStopWatch.Stop();
+                longPressTimer.Stop();
 
-			//if (activeTouchDevices.Count == 1 && lastTouchPoint1.TouchDevice.Id == currentPoint.TouchDevice.Id)
-			//{
-			//	// One finger touch move
-			//	Vector offset = currentPoint.Position - lastTouchPoint1.Position;
+                TouchPoint currentPoint = e.GetTouchPoint(ItemsListBox);
 
-			//	viewModel.MoveCanvas(offset);
-			//	lastTouchPoint1 = currentPoint;
-			//}
-			//else if (activeTouchDevices.Count == 2)
-			//{
-			//	// Two finger touch zoom or pinch			
-			//	if (currentPoint.TouchDevice.Id == lastTouchPoint1.TouchDevice.Id)
-			//	{
-			//		// Moved first finger
-			//		lastTouchPoint1 = currentPoint;
-			//	}
-			//	else if (currentPoint.TouchDevice.Id == lastTouchPoint2.TouchDevice.Id)
-			//	{
-			//		// Moved second finger
-			//		lastTouchPoint2 = currentPoint;
-			//	}
-			//	else
-			//	{
-			//		// Neither first or second finger (multi touch not yet supported
-			//		return;
-			//	}
+                if ((currentPoint.Position - initialTouchPoint1.Position).Length < 10)
+                {
+                    if (touchClickStopWatch.Elapsed < TimeSpan.FromMilliseconds(200))
+                    {
+                        // A one finger short click
+                        Log.Warn("Touch click");
+                    }
+                }
+            }
 
-			//	Vector vector = lastTouchPoint2.Position - lastTouchPoint1.Position;
+            activeTouchDevices.Remove(e.TouchDevice);
+            ReleaseTouchCapture(e.TouchDevice);
+            e.Handled = true;
+        }
 
-			//	double currentLength = vector.Length;
-			//	double zoomFactor = currentLength / lastPinchLength;
-			//	lastPinchLength = currentLength;
 
-			//	Point viewPosition = lastTouchPoint1.Position + (vector / 2);
-			//	//viewModel.ZoomRoot(zoomFactor, viewPosition);
-			//}
+        private void OnLongPressTime(object sender, EventArgs e)
+        {
+            longPressTimer.Stop();
 
-			e.Handled = true;
-		}
-	}
+            if ((lastTouchPoint1.Position - initialTouchPoint1.Position).Length < 10)
+            {
+                Log.Warn("Touch long-press");
+            }
+        }
+
+
+        protected override void OnTouchMove(TouchEventArgs e)
+        {
+            //if (!viewModel.IsRoot)
+            //{
+            //	return;
+            //}
+
+            //TouchPoint currentPoint = e.GetTouchPoint(ItemsListBox);
+
+            //if (activeTouchDevices.Count == 1 && lastTouchPoint1.TouchDevice.Id == currentPoint.TouchDevice.Id)
+            //{
+            //	// One finger touch move
+            //	Vector offset = currentPoint.Position - lastTouchPoint1.Position;
+
+            //	viewModel.MoveCanvas(offset);
+            //	lastTouchPoint1 = currentPoint;
+            //}
+            //else if (activeTouchDevices.Count == 2)
+            //{
+            //	// Two finger touch zoom or pinch			
+            //	if (currentPoint.TouchDevice.Id == lastTouchPoint1.TouchDevice.Id)
+            //	{
+            //		// Moved first finger
+            //		lastTouchPoint1 = currentPoint;
+            //	}
+            //	else if (currentPoint.TouchDevice.Id == lastTouchPoint2.TouchDevice.Id)
+            //	{
+            //		// Moved second finger
+            //		lastTouchPoint2 = currentPoint;
+            //	}
+            //	else
+            //	{
+            //		// Neither first or second finger (multi touch not yet supported
+            //		return;
+            //	}
+
+            //	Vector vector = lastTouchPoint2.Position - lastTouchPoint1.Position;
+
+            //	double currentLength = vector.Length;
+            //	double zoomFactor = currentLength / lastPinchLength;
+            //	lastPinchLength = currentLength;
+
+            //	Point viewPosition = lastTouchPoint1.Position + (vector / 2);
+            //	//viewModel.ZoomRoot(zoomFactor, viewPosition);
+            //}
+
+            e.Handled = true;
+        }
+    }
 }

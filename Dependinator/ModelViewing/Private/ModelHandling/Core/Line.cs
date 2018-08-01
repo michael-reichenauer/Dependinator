@@ -1,36 +1,36 @@
-using Dependinator.Utils;
+﻿using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Private.ModelHandling.Core
 {
-	internal class Line : Equatable<Line>, IEdge
-	{
-		public Line(Node source, Node target)
-		{
-			Source = source;
-			Target = target;
-			View = new LineViewData();
+    internal class Line : Equatable<Line>, IEdge
+    {
+        public Line(Node source, Node target)
+        {
+            Source = source;
+            Target = target;
+            View = new LineViewData();
 
-			IsEqualWhenSame(Source, Target);
-		}
+            IsEqualWhenSame(Source, Target);
+        }
 
 
-		public int Stamp { get; set; }
+        public int Stamp { get; set; }
+        public Node Owner => Source == Target.Parent ? Source : Source.Parent;
 
-		public Node Source { get; }
-		public Node Target { get; }
-		public Node Owner => Source == Target.Parent ? Source : Source.Parent;
+        public LineViewData View { get; }
 
-		public LineViewData View { get; }
-		
-		public int LinkCount { get; set; }
+        public int LinkCount { get; set; }
 
-		public bool IsToChild => Source == Target.Parent;
-		public bool IsToParent => Source.Parent == Target;
-		public bool IsToSibling => Source.Parent == Target.Parent;
+        public bool IsToChild => Source == Target.Parent;
+        public bool IsToParent => Source.Parent == Target;
+        public bool IsToSibling => Source.Parent == Target.Parent;
 
-		public override string ToString() => $"{Source}->{Target}";
+        public bool IsHidden => Source.IsHidden || Target.IsHidden;
 
-		public bool IsHidden => Source.IsHidden || Target.IsHidden;
-	}
+        public Node Source { get; }
+        public Node Target { get; }
+
+        public override string ToString() => $"{Source}->{Target}";
+    }
 }

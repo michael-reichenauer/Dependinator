@@ -11,481 +11,473 @@ using Dependinator.Utils.UI.VirtualCanvas;
 
 namespace Dependinator.ModelViewing.Private.ItemsViewing
 {
+    internal class ItemsCanvas : IItemsCanvas
+    {
+        public static readonly double DefaultScaleFactor = 1.0 / 7.0;
+        private static readonly Vector ChildOffset = new Vector(3, 3);
 
-	internal class ItemsCanvas : IItemsCanvas
-	{
-		public static readonly double DefaultScaleFactor = 1.0 / 7.0;
-		private static readonly Vector ChildOffset = new Vector(3, 3);
-
-		private readonly ItemsCanvasZoom itemsCanvasZoom;
-		private readonly IItemsCanvasOwner owner;
+        private readonly ItemsCanvasZoom itemsCanvasZoom;
+        private readonly IItemsCanvasOwner owner;
+        private bool isFocused;
 
-	
-		private Point rootOffset;
-		private bool isFocused;
-		public bool IsShowing => owner?.IsShowing ?? true;
-		public bool CanShow => owner?.CanShow ?? true;
 
+        private Point rootOffset;
 
-		// The root canvas
-		public ItemsCanvas()
-			: this(null, null)
-		{
-		}
 
+        // The root canvas
+        public ItemsCanvas()
+            : this(null, null)
+        {
+        }
 
-		public ItemsCanvas(IItemsCanvasOwner owner, ItemsCanvas parentCanvas)
-		{
-			this.owner = owner;
-			this.ParentCanvas = parentCanvas;
-			itemsCanvasZoom = new ItemsCanvasZoom(this);
 
-			RootCanvas = parentCanvas?.RootCanvas ?? this;
+        public ItemsCanvas(IItemsCanvasOwner owner, ItemsCanvas parentCanvas)
+        {
+            this.owner = owner;
+            ParentCanvas = parentCanvas;
+            itemsCanvasZoom = new ItemsCanvasZoom(this);
 
-			VisualAreaHandler visualAreaHandler = new VisualAreaHandler(this);
-			ItemsSource = new ItemsSource(visualAreaHandler);
+            RootCanvas = parentCanvas?.RootCanvas ?? this;
 
-			if (IsRoot)
-			{
-				// Creating root node canvas
-				RootScale = 1;
-				ScaleFactor = 1;
-				isFocused = true;
-			}
-			else
-			{
-				// Creating child node canvas
-				ScaleFactor = DefaultScaleFactor;
-				parentCanvas?.CanvasChildren.Add(this);
-			}
-		}
+            VisualAreaHandler visualAreaHandler = new VisualAreaHandler(this);
+            ItemsSource = new ItemsSource(visualAreaHandler);
 
-		public ItemsSource ItemsSource { get; }
-		public double RootScale { get; set; }
-		public double ScaleFactor { get; set; }
-		public double Scale => ParentCanvas?.Scale * ScaleFactor ?? RootScale;
-		public ZoomableCanvas ZoomableCanvas { get; private set; }
-		public List<ItemsCanvas> CanvasChildren { get; } = new List<ItemsCanvas>();
-		public ItemsCanvas ParentCanvas { get; private set; }
-		public ItemsCanvas RootCanvas { get; }
-		public bool IsRoot => ParentCanvas == null;
-		public bool IsZoomAndMoveEnabled { get; set; } = true;
+            if (IsRoot)
+            {
+                // Creating root node canvas
+                RootScale = 1;
+                ScaleFactor = 1;
+                isFocused = true;
+            }
+            else
+            {
+                // Creating child node canvas
+                ScaleFactor = DefaultScaleFactor;
+                parentCanvas?.CanvasChildren.Add(this);
+            }
+        }
 
-		public Rect ItemsCanvasBounds => owner?.ItemBounds ?? ZoomableCanvas?.ActualViewbox ?? Rect.Empty;
-		public Point RootOffset => RootCanvas.ZoomableCanvas?.Offset ?? RootCanvas.rootOffset;
-		public void SetRootOffset(Point offset) => RootCanvas.rootOffset = offset;
-		public void SetRootScale(double scale) => RootCanvas.RootScale = scale;
 
+        public bool IsShowing => owner?.IsShowing ?? true;
+        public bool CanShow => owner?.CanShow ?? true;
 
-		public bool IsFocused
-		{
-			get => isFocused;
-			set
-			{
-				isFocused = value;
+        public ItemsSource ItemsSource { get; }
+        public double RootScale { get; set; }
+        public List<ItemsCanvas> CanvasChildren { get; } = new List<ItemsCanvas>();
+        public double ScaleFactor { get; set; }
+        public double Scale => ParentCanvas?.Scale * ScaleFactor ?? RootScale;
+        public ZoomableCanvas ZoomableCanvas { get; private set; }
+        public ItemsCanvas ParentCanvas { get; private set; }
+        public ItemsCanvas RootCanvas { get; }
+        public bool IsRoot => ParentCanvas == null;
+        public bool IsZoomAndMoveEnabled { get; set; } = true;
 
-				// Root canvas is focused if no other canvas is focused
-				RootCanvas.isFocused = isFocused ? IsRoot : !IsRoot;
-			}
-		}
+        public Rect ItemsCanvasBounds => owner?.ItemBounds ?? ZoomableCanvas?.ActualViewbox ?? Rect.Empty;
+        public Point RootOffset => RootCanvas.ZoomableCanvas?.Offset ?? RootCanvas.rootOffset;
+        public void SetRootOffset(Point offset) => RootCanvas.rootOffset = offset;
+        public void SetRootScale(double scale) => RootCanvas.RootScale = scale;
 
-		public void AddItem(IItem item)
-		{
-			item.ItemOwnerCanvas = this;
-			ItemsSource.Add(item);
-		}
 
+        public bool IsFocused
+        {
+            get => isFocused;
+            set
+            {
+                isFocused = value;
 
-		public void RemoveItem(IItem item) => ItemsSource.Remove(item);
+                // Root canvas is focused if no other canvas is focused
+                RootCanvas.isFocused = isFocused ? IsRoot : !IsRoot;
+            }
+        }
 
 
-		public void RemoveAll()
-		{
-			ItemsSource.RemoveAll();
-			CanvasChildren.Clear();
-		}
+        public void AddItem(IItem item)
+        {
+            item.ItemOwnerCanvas = this;
+            ItemsSource.Add(item);
+        }
 
 
-		public void UpdateItem(IItem item) => ItemsSource.Update(item);
+        public void RemoveItem(IItem item) => ItemsSource.Remove(item);
 
 
-		public void SizeChanged() => ItemsSource.TriggerExtentChanged();
+        public void RemoveAll()
+        {
+            ItemsSource.RemoveAll();
+            CanvasChildren.Clear();
+        }
 
 
-		public void RemoveChildCanvas(ItemsCanvas childCanvas)
-		{
-			childCanvas.ParentCanvas = null;
-			CanvasChildren.Remove(childCanvas);
-		}
+        public void UpdateItem(IItem item) => ItemsSource.Update(item);
 
 
-		public void CanvasRealized() => itemsCanvasZoom.UpdateScale();
-		public void CanvasVirtualized() { }
+        public void SizeChanged() => ItemsSource.TriggerExtentChanged();
 
 
-		public void UpdateAll() => itemsCanvasZoom.ZoomRoot(1);
+        public void RemoveChildCanvas(ItemsCanvas childCanvas)
+        {
+            childCanvas.ParentCanvas = null;
+            CanvasChildren.Remove(childCanvas);
+        }
 
 
-		public void Zoom(MouseWheelEventArgs e)
-		{
-			if (!IsZoomAndMoveEnabled) return;
+        public void CanvasRealized() => itemsCanvasZoom.UpdateScale();
 
-			itemsCanvasZoom.Zoom(e);
 
-			e.Handled = true;
-		}
+        public void CanvasVirtualized()
+        {
+        }
 
 
-		public void ZoomRoot(double zoomFactor) => itemsCanvasZoom.ZoomRoot(zoomFactor);
+        public void UpdateAll() => itemsCanvasZoom.ZoomRoot(1);
 
-		public void ZoomNode(double zoomFactor, Point zoomCenter) => itemsCanvasZoom.ZoomNode(zoomFactor, zoomCenter);
 
+        public void Zoom(MouseWheelEventArgs e)
+        {
+            if (!IsZoomAndMoveEnabled) return;
 
+            itemsCanvasZoom.Zoom(e);
 
-		public void UpdateAndNotifyAll(bool isUpdate)
-		{
-			IReadOnlyList<ItemViewModel> items = ItemsSource.GetAllItems().Cast<ItemViewModel>().ToList();
-			if (isUpdate)
-			{
-				ItemsSource.Update(items);
-			}
+            e.Handled = true;
+        }
 
-			items.ForEach(item => item.NotifyAll());
-		}
 
+        public void ZoomRoot(double zoomFactor) => itemsCanvasZoom.ZoomRoot(zoomFactor);
 
-		public bool IsNodeInViewBox(Rect bounds)
-		{
-			Rect viewBox = GetViewBox();
 
-			return viewBox.IntersectsWith(bounds);
-		}
+        public void UpdateAndNotifyAll(bool isUpdate)
+        {
+            IReadOnlyList<ItemViewModel> items = ItemsSource.GetAllItems().Cast<ItemViewModel>().ToList();
+            if (isUpdate)
+            {
+                ItemsSource.Update(items);
+            }
 
+            items.ForEach(item => item.NotifyAll());
+        }
 
-		public void MoveAllItems(Point sp1, Point sp2)
-		{
-			if (!IsZoomAndMoveEnabled)
-			{
-				return;
-			}
 
-			Point cp1 = ScreenToCanvasPoint(sp1);
-			Point cp2 = ScreenToCanvasPoint(sp2);
+        public bool IsNodeInViewBox(Rect bounds)
+        {
+            Rect viewBox = GetViewBox();
 
-			Vector moveOffset = cp2 - cp1;
+            return viewBox.IntersectsWith(bounds);
+        }
 
-			MoveCanvasItems(moveOffset);
-		}
 
+        public void MoveAllItems(Point sp1, Point sp2)
+        {
+            if (!IsZoomAndMoveEnabled)
+            {
+                return;
+            }
 
-		public void MoveAllItems(Vector viewOffset)
-		{
-			if (!IsZoomAndMoveEnabled)
-			{
-				return;
-			}
+            Point cp1 = ScreenToCanvasPoint(sp1);
+            Point cp2 = ScreenToCanvasPoint(sp2);
 
-			Vector moveOffset = new Vector(viewOffset.X / Scale, viewOffset.Y / Scale);
+            Vector moveOffset = cp2 - cp1;
 
+            MoveCanvasItems(moveOffset);
+        }
 
-			MoveCanvasItems(moveOffset);
-		}
 
+        public void MoveAllItems(Vector viewOffset)
+        {
+            if (!IsZoomAndMoveEnabled)
+            {
+                return;
+            }
 
-		public void UpdateScale()
-		{
-			if (!IsShowing || !CanShow)
-			{
-				// Item not shown or will be hidden
-				return;
-			}
+            Vector moveOffset = new Vector(viewOffset.X / Scale, viewOffset.Y / Scale);
 
-			itemsCanvasZoom.UpdateScale();
-		}
 
+            MoveCanvasItems(moveOffset);
+        }
 
-		public Point MouseToCanvasPoint()
-		{
-			Point screenPoint = Mouse.GetPosition(ZoomableCanvas);
 
-			return ZoomableCanvas.GetCanvasPoint(screenPoint);
-		}
+        public void UpdateScale()
+        {
+            if (!IsShowing || !CanShow)
+            {
+                // Item not shown or will be hidden
+                return;
+            }
 
+            itemsCanvasZoom.UpdateScale();
+        }
 
-		public Point MouseEventToCanvasPoint(MouseEventArgs e)
-		{
-			Point screenPoint = e.GetPosition(ZoomableCanvas);
 
-			return ZoomableCanvas.GetCanvasPoint(screenPoint);
-		}
+        public Point MouseToCanvasPoint()
+        {
+            Point screenPoint = Mouse.GetPosition(ZoomableCanvas);
 
+            return ZoomableCanvas.GetCanvasPoint(screenPoint);
+        }
 
 
-		public Point CanvasToScreenPoint(Point canvasPoint)
-		{
-			try
-			{
-				Point localScreenPoint = ZoomableCanvas.GetVisualPoint(canvasPoint);
+        public Point MouseEventToCanvasPoint(MouseEventArgs e)
+        {
+            Point screenPoint = e.GetPosition(ZoomableCanvas);
 
-				Point screenPoint = ZoomableCanvas.PointToScreen(localScreenPoint);
+            return ZoomableCanvas.GetCanvasPoint(screenPoint);
+        }
 
-				return screenPoint;
-			}
-			catch (Exception e)
-			{
-				Log.Exception(e, $"Node {this}");
-				throw;
-			}
-		}
 
+        public Point CanvasToScreenPoint(Point canvasPoint)
+        {
+            try
+            {
+                Point localScreenPoint = ZoomableCanvas.GetVisualPoint(canvasPoint);
 
-		public Point ScreenToCanvasPoint(Point screenPoint)
-		{
-			try
-			{
-				Point localScreenPoint = ZoomableCanvas.PointFromScreen(screenPoint);
+                Point screenPoint = ZoomableCanvas.PointToScreen(localScreenPoint);
 
-				Point canvasPoint = ZoomableCanvas.GetCanvasPoint(localScreenPoint);
+                return screenPoint;
+            }
+            catch (Exception e)
+            {
+                Log.Exception(e, $"Node {this}");
+                throw;
+            }
+        }
 
-				return canvasPoint;
-			}
-			catch (Exception e)
-			{
-				Log.Exception(e, $"Node {this}");
-				throw;
-			}
-		}
 
+        public Point ScreenToCanvasPoint(Point screenPoint)
+        {
+            try
+            {
+                Point localScreenPoint = ZoomableCanvas.PointFromScreen(screenPoint);
 
+                Point canvasPoint = ZoomableCanvas.GetCanvasPoint(localScreenPoint);
 
-		public Point ParentToChildCanvasPoint(Point parentCanvasPoint)
-		{
-			if (!IsRoot)
-			{
-				Point relativeParentPoint = parentCanvasPoint - (Vector)ItemsCanvasBounds.Location;
+                return canvasPoint;
+            }
+            catch (Exception e)
+            {
+                Log.Exception(e, $"Node {this}");
+                throw;
+            }
+        }
 
-				// Point within the parent node
-				Point compensatedPoint = (Point)((Vector)relativeParentPoint / ScaleFactor);
 
-				return compensatedPoint;
-			}
-			else
-			{
-				return parentCanvasPoint;
-			}
-		}
+        public Point ParentToChildCanvasPoint(Point parentCanvasPoint)
+        {
+            if (!IsRoot)
+            {
+                Point relativeParentPoint = parentCanvasPoint - (Vector)ItemsCanvasBounds.Location;
 
+                // Point within the parent node
+                Point compensatedPoint = (Point)((Vector)relativeParentPoint / ScaleFactor);
 
-		public Point ChildToParentCanvasPoint(Point childCanvasPoint)
-		{
-			if (!IsRoot)
-			{
-				// Point within the parent node
-				Vector parentPoint = (Vector)childCanvasPoint * ScaleFactor;
+                return compensatedPoint;
+            }
 
-				// point in parent canvas scale
-				Point childToParentCanvasPoint = ItemsCanvasBounds.Location + parentPoint;
-				return childToParentCanvasPoint;
-			}
-			else
-			{
-				return childCanvasPoint;
-			}
-		}
+            return parentCanvasPoint;
+        }
 
 
-		public Point CanvasToScreenPoint2(Point childCanvasPoint)
-		{
-			if (!IsRoot)
-			{
-				// Point within the parent node
-				Vector parentPoint = (Vector)childCanvasPoint * ScaleFactor;
+        public Point ChildToParentCanvasPoint(Point childCanvasPoint)
+        {
+            if (!IsRoot)
+            {
+                // Point within the parent node
+                Vector parentPoint = (Vector)childCanvasPoint * ScaleFactor;
 
-				// point in parent canvas scale
-				Point childToParentCanvasPoint = ItemsCanvasBounds.Location + parentPoint;
+                // point in parent canvas scale
+                Point childToParentCanvasPoint = ItemsCanvasBounds.Location + parentPoint;
+                return childToParentCanvasPoint;
+            }
 
-				return ParentCanvas.CanvasToScreenPoint2(childToParentCanvasPoint) + ChildOffset;
-			}
-			else
-			{
-				return CanvasToScreenPoint(childCanvasPoint);
-			}
-		}
+            return childCanvasPoint;
+        }
 
 
+        public Point CanvasToScreenPoint2(Point childCanvasPoint)
+        {
+            if (!IsRoot)
+            {
+                // Point within the parent node
+                Vector parentPoint = (Vector)childCanvasPoint * ScaleFactor;
 
-		//public Point ParentToChildCanvasPoint2(Point parentCanvasPoint)
-		//{
-		//	Point parentScreenPoint = ParentCanvas.CanvasToScreenPoint(parentCanvasPoint);
-		//	return ScreenToCanvasPoint(parentScreenPoint);
-		//}
+                // point in parent canvas scale
+                Point childToParentCanvasPoint = ItemsCanvasBounds.Location + parentPoint;
 
+                return ParentCanvas.CanvasToScreenPoint2(childToParentCanvasPoint) + ChildOffset;
+            }
 
+            return CanvasToScreenPoint(childCanvasPoint);
+        }
 
-		public void SetZoomableCanvas(ZoomableCanvas canvas)
-		{
-			if (ZoomableCanvas != null)
-			{
-				// New canvas replacing previous canvas
-				ZoomableCanvas.ItemRealized -= Canvas_ItemRealized;
-				ZoomableCanvas.ItemVirtualized -= Canvas_ItemVirtualized;
-			}
 
-			ZoomableCanvas = canvas;
-			if (!IsRoot)
-			{
-				ZoomableCanvas.IsDisableOffsetChange = true;
-			}
-			else
-			{
-				ZoomableCanvas.Offset = rootOffset;
-			}
+        //public Point ParentToChildCanvasPoint2(Point parentCanvasPoint)
+        //{
+        //	Point parentScreenPoint = ParentCanvas.CanvasToScreenPoint(parentCanvasPoint);
+        //	return ScreenToCanvasPoint(parentScreenPoint);
+        //}
 
-			ZoomableCanvas.ItemRealized += Canvas_ItemRealized;
-			ZoomableCanvas.ItemVirtualized += Canvas_ItemVirtualized;
-			ZoomableCanvas.ItemsOwner.ItemsSource = ItemsSource;
 
-			ZoomableCanvas.Scale = Scale;
-		}
+        public void SetZoomableCanvas(ZoomableCanvas canvas)
+        {
+            if (ZoomableCanvas != null)
+            {
+                // New canvas replacing previous canvas
+                ZoomableCanvas.ItemRealized -= Canvas_ItemRealized;
+                ZoomableCanvas.ItemVirtualized -= Canvas_ItemVirtualized;
+            }
 
+            ZoomableCanvas = canvas;
+            if (!IsRoot)
+            {
+                ZoomableCanvas.IsDisableOffsetChange = true;
+            }
+            else
+            {
+                ZoomableCanvas.Offset = rootOffset;
+            }
 
-		public override string ToString() => owner?.ToString() ?? NodeName.Root.ToString();
+            ZoomableCanvas.ItemRealized += Canvas_ItemRealized;
+            ZoomableCanvas.ItemVirtualized += Canvas_ItemVirtualized;
+            ZoomableCanvas.ItemsOwner.ItemsSource = ItemsSource;
 
+            ZoomableCanvas.Scale = Scale;
+        }
 
-		public int ChildItemsCount() => ItemsSource.GetAllItems().Count();
 
+        public override string ToString() => owner?.ToString() ?? NodeName.Root.ToString();
 
-		public int ShownChildItemsCount() => ItemsSource.GetAllItems().Count(item => item.IsShowing);
 
+        public int ChildItemsCount() => ItemsSource.GetAllItems().Count();
 
-		public int DescendantsItemsCount()
-		{
-			int count = ItemsSource.GetAllItems().Count();
 
-			count += CanvasChildren.Sum(canvas => canvas.DescendantsItemsCount());
-			return count;
-		}
+        public int ShownChildItemsCount() => ItemsSource.GetAllItems().Count(item => item.IsShowing);
 
 
-		public int ShownDescendantsItemsCount()
-		{
-			int count = ItemsSource.GetAllItems().Count(item => item.IsShowing);
+        public int DescendantsItemsCount()
+        {
+            int count = ItemsSource.GetAllItems().Count();
 
-			count += CanvasChildren.Sum(canvas => canvas.ShownDescendantsItemsCount());
-			return count;
-		}
+            count += CanvasChildren.Sum(canvas => canvas.DescendantsItemsCount());
+            return count;
+        }
 
 
+        public int ShownDescendantsItemsCount()
+        {
+            int count = ItemsSource.GetAllItems().Count(item => item.IsShowing);
 
-		public IEnumerable<ItemsCanvas> Descendants()
-		{
-			Queue<ItemsCanvas> queue = new Queue<ItemsCanvas>();
+            count += CanvasChildren.Sum(canvas => canvas.ShownDescendantsItemsCount());
+            return count;
+        }
 
-			CanvasChildren.ForEach(queue.Enqueue);
 
-			while (queue.Any())
-			{
-				ItemsCanvas descendant = queue.Dequeue();
-				yield return descendant;
+        public void ZoomNode(double zoomFactor, Point zoomCenter) => itemsCanvasZoom.ZoomNode(zoomFactor, zoomCenter);
 
-				descendant.CanvasChildren.ForEach(queue.Enqueue);
-			}
-		}
 
+        public IEnumerable<ItemsCanvas> Descendants()
+        {
+            Queue<ItemsCanvas> queue = new Queue<ItemsCanvas>();
 
-		private void TriggerInvalidated() => ItemsSource.TriggerInvalidated();
+            CanvasChildren.ForEach(queue.Enqueue);
 
+            while (queue.Any())
+            {
+                ItemsCanvas descendant = queue.Dequeue();
+                yield return descendant;
 
+                descendant.CanvasChildren.ForEach(queue.Enqueue);
+            }
+        }
 
-		private void MoveCanvasItems(Vector moveOffset)
-		{
-			Rect viewBox = GetViewBox();
 
-			//if (!IsAnyNodesWithinView(viewBox, moveOffset))
-			//{
-			//	// No node (if moved) would be withing visible view
-			//	return;
-			//}
+        private void TriggerInvalidated() => ItemsSource.TriggerInvalidated();
 
-			if (IsRoot)
-			{
-				ZoomableCanvas.Offset -= moveOffset * Scale;
-			}
-			else
-			{
-				ItemsSource.GetAllItems().ForEach(item => item.MoveItem(moveOffset));
-			}
 
-			UpdateAndNotifyAll(!IsRoot);
-			TriggerInvalidated();
-			UpdateShownItemsInChildren();
-		}
+        private void MoveCanvasItems(Vector moveOffset)
+        {
+            Rect viewBox = GetViewBox();
 
+            //if (!IsAnyNodesWithinView(viewBox, moveOffset))
+            //{
+            //	// No node (if moved) would be withing visible view
+            //	return;
+            //}
 
+            if (IsRoot)
+            {
+                ZoomableCanvas.Offset -= moveOffset * Scale;
+            }
+            else
+            {
+                ItemsSource.GetAllItems().ForEach(item => item.MoveItem(moveOffset));
+            }
 
-		private Rect GetViewBox()
-		{
-			Rect viewBox = ZoomableCanvas.ActualViewbox;
-			viewBox.Inflate(-30 / Scale, -30 / Scale);
-			return viewBox;
-		}
+            UpdateAndNotifyAll(!IsRoot);
+            TriggerInvalidated();
+            UpdateShownItemsInChildren();
+        }
 
 
-		private bool IsAnyNodesWithinView(Rect viewBox, Vector moveOffset)
-		{
-			IEnumerable<IItem> nodes = ItemsSource.GetAllItems().Where(i => i is NodeViewModel);
-			foreach (IItem node in nodes)
-			{
-				if (node.CanShow)
-				{
-					if (IsNodeInViewBox(node, viewBox, moveOffset))
-					{
-						return true;
-					}
-				}
-			}
+        private Rect GetViewBox()
+        {
+            Rect viewBox = ZoomableCanvas.ActualViewbox;
+            viewBox.Inflate(-30 / Scale, -30 / Scale);
+            return viewBox;
+        }
 
-			return false;
-		}
 
+        private bool IsAnyNodesWithinView(Rect viewBox, Vector moveOffset)
+        {
+            IEnumerable<IItem> nodes = ItemsSource.GetAllItems().Where(i => i is NodeViewModel);
+            foreach (IItem node in nodes)
+            {
+                if (node.CanShow)
+                {
+                    if (IsNodeInViewBox(node, viewBox, moveOffset))
+                    {
+                        return true;
+                    }
+                }
+            }
 
-		private static bool IsNodeInViewBox(IItem node, Rect viewBox, Vector moveOffset)
-		{
-			Point location = node.ItemBounds.Location;
-			Size size = node.ItemBounds.Size;
+            return false;
+        }
 
-			Rect newBounds = new Rect(location + moveOffset, size);
-			if (viewBox.IntersectsWith(newBounds))
-			{
-				return true;
-			}
 
-			return false;
-		}
+        private static bool IsNodeInViewBox(IItem node, Rect viewBox, Vector moveOffset)
+        {
+            Point location = node.ItemBounds.Location;
+            Size size = node.ItemBounds.Size;
 
+            Rect newBounds = new Rect(location + moveOffset, size);
+            if (viewBox.IntersectsWith(newBounds))
+            {
+                return true;
+            }
 
-		private void UpdateShownItemsInChildren()
-		{
-			CanvasChildren
-				.Where(canvas => canvas.IsShowing)
-				.ForEach(canvas =>
-				{
-					canvas.TriggerInvalidated();
-					canvas.UpdateShownItemsInChildren();
-				});
-		}
+            return false;
+        }
 
 
+        private void UpdateShownItemsInChildren()
+        {
+            CanvasChildren
+                .Where(canvas => canvas.IsShowing)
+                .ForEach(canvas =>
+                {
+                    canvas.TriggerInvalidated();
+                    canvas.UpdateShownItemsInChildren();
+                });
+        }
 
-		private void Canvas_ItemRealized(object sender, ItemEventArgs e)
-		{
-			ItemsSource.ItemRealized(e.VirtualId);
-		}
 
+        private void Canvas_ItemRealized(object sender, ItemEventArgs e)
+        {
+            ItemsSource.ItemRealized(e.VirtualId);
+        }
 
-		private void Canvas_ItemVirtualized(object sender, ItemEventArgs e)
-		{
-			ItemsSource.ItemVirtualized(e.VirtualId);
-		}
-	}
+
+        private void Canvas_ItemVirtualized(object sender, ItemEventArgs e)
+        {
+            ItemsSource.ItemVirtualized(e.VirtualId);
+        }
+    }
 }

@@ -42,19 +42,19 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing.Private
 
         public void Add(IItem item)
         {
-            Add(new[] { item });
+            Add(new[] {item});
         }
 
 
         public void Update(IItem item)
         {
-            Update(new[] { item });
+            Update(new[] {item});
         }
 
 
         public void Remove(IItem item)
         {
-            Remove(new[] { item });
+            Remove(new[] {item});
         }
 
 

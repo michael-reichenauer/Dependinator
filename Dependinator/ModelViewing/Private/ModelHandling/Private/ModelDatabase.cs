@@ -16,12 +16,14 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         private readonly Dictionary<NodeName, QueuedNode> queuedNodes = new Dictionary<NodeName, QueuedNode>();
 
-        public event EventHandler DataModified;
 
         public ModelDatabase()
         {
             AddRoot();
         }
+
+
+        public event EventHandler DataModified;
 
 
         public Node Root { get; private set; }
@@ -33,6 +35,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         public bool TryGetNode(NodeName name, out Node node) => nodes.TryGetValue(name, out node);
 
         public bool IsChangeMonitored { get; set; } = true;
+
 
         public void SetIsChanged(Node node)
         {

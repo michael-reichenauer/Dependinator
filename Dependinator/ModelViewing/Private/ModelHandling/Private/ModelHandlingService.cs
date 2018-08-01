@@ -29,11 +29,11 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         private static readonly int BatchSize = 100;
         private readonly ICmd cmd;
         private readonly IDataMonitorService dataMonitorService;
-        private readonly IModelPersistentHandler modelPersistentHandler;
 
         private readonly IDataService dataService;
         private readonly IMessage message;
         private readonly ModelMetadata modelMetadata;
+        private readonly IModelPersistentHandler modelPersistentHandler;
 
         private readonly IModelService modelService;
         private readonly Func<OpenModelViewModel> openModelViewModelProvider;

@@ -1,41 +1,41 @@
 ﻿<UserControl x:Class="Dependinator.Common.WindowControlButtons"
-						 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-						 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-						 xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
-						 xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-						 xmlns:local="clr-namespace:Dependinator"
-						 mc:Ignorable="d" 
-						 d:DesignHeight="300" d:DesignWidth="300">
-	
-	
-	<!-- The 3 minimize, maximize and close window control buttons in the title bar -->
-	<StackPanel Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
-		
-		<!-- Minimize button-->
-		<Button
-			Margin="5,0,0,0"
-			Style="{DynamicResource IconButtonStyle}" 
-			Content="&#xE15B;" 
-			Padding="4,4,4,0" 
-			ToolTip="Minimize (Escape)"
-			Command="{Binding MinimizeCommand}"
-			Visibility="{Binding ShowMinimizeButton, Converter={StaticResource VC}}"/>
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Dependinator"
+             mc:Ignorable="d"
+             d:DesignHeight="300" d:DesignWidth="300">
 
-		<!-- Maximize button-->
-		<Button 
-			Style="{DynamicResource IconButtonStyle}" 
-			FontSize="14" Content="&#xE3C1;" 
-			ToolTip="Maximize"
-			Command="{Binding ToggleMaximizeCommand}"
-			Visibility="{Binding ShowMaximizeButton, Converter={StaticResource VC}}"/>
 
-		<!-- Close Button -->
-		<Button 
-			Style="{DynamicResource IconButtonStyle}" 
-			Content="&#xE14C;" 
-			ToolTip="Close (Ctrl-Q)"
-			Command="{Binding CloseCommand}"/>
-		
-	</StackPanel>
-	
+    <!-- The 3 minimize, maximize and close window control buttons in the title bar -->
+    <StackPanel Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+
+        <!-- Minimize button-->
+        <Button
+            Margin="5,0,0,0"
+            Style="{DynamicResource IconButtonStyle}"
+            Content="&#xE15B;"
+            Padding="4,4,4,0"
+            ToolTip="Minimize (Escape)"
+            Command="{Binding MinimizeCommand}"
+            Visibility="{Binding ShowMinimizeButton, Converter={StaticResource VC}}" />
+
+        <!-- Maximize button-->
+        <Button
+            Style="{DynamicResource IconButtonStyle}"
+            FontSize="14" Content="&#xE3C1;"
+            ToolTip="Maximize"
+            Command="{Binding ToggleMaximizeCommand}"
+            Visibility="{Binding ShowMaximizeButton, Converter={StaticResource VC}}" />
+
+        <!-- Close Button -->
+        <Button
+            Style="{DynamicResource IconButtonStyle}"
+            Content="&#xE14C;"
+            ToolTip="Close (Ctrl-Q)"
+            Command="{Binding CloseCommand}" />
+
+    </StackPanel>
+
 </UserControl>

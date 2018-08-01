@@ -4,15 +4,15 @@ using System.Threading.Tasks;
 
 namespace Dependinator.Common.ModelMetadataFolders
 {
-	public interface IOpenModelService
-	{
-		Task OpenOtherModelAsync();
+    public interface IOpenModelService
+    {
+        Task OpenOtherModelAsync();
 
-		Task OpenCurrentModelAsync();
+        Task OpenCurrentModelAsync();
 
-		Task TryModelAsync(string modelFilePath);
+        Task TryModelAsync(string modelFilePath);
 
-		Task OpenModelAsync(IReadOnlyList<string> modelFilePaths);
-		void ShowOpenModelDialog();
-	}
+        Task OpenModelAsync(IReadOnlyList<string> modelFilePaths);
+        void ShowOpenModelDialog();
+    }
 }
