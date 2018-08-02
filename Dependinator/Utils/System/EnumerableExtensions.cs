@@ -13,6 +13,28 @@ namespace System.Linq
             }
         }
 
+        public static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> source, int size)
+        {
+            using (var enumerator = source.GetEnumerator())
+            {
+                while (enumerator.MoveNext())
+                {
+                    int i = 0;
+
+                    // Batch is a local function closing over `i` and `enumerator` that
+                    // executes the inner batch enumeration
+                    IEnumerable<T> Batch()
+                    {
+                        do yield return enumerator.Current;
+                        while (++i < size && enumerator.MoveNext());
+                    }
+
+                    yield return Batch();
+                    while (++i < size && enumerator.MoveNext()); // discard skipped items
+                }
+            }
+        }
+
 
         public static IReadOnlyList<TSource> AsReadOnlyList<TSource>(this IReadOnlyList<TSource> source)
         {

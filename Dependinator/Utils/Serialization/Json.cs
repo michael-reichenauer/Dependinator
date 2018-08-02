@@ -10,7 +10,7 @@ namespace Dependinator.Utils.Serialization
         private static readonly JsonSerializerSettings ConvertSettings = new JsonSerializerSettings
         {
             Formatting = Formatting.Indented,
-            ObjectCreationHandling = ObjectCreationHandling.Replace
+            ObjectCreationHandling = ObjectCreationHandling.Replace,
         };
 
         // Used for serializing data and ignores null and default values

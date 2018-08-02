@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.Utils;
+using Dependinator.Utils.UI.VirtualCanvas;
 
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.Serializing
@@ -91,8 +92,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         {
             Name = (string)node.Name,
             Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsIntString() : null,
-            Scale = node.Scale,
-            Color = node.Color,
+            Scale = node.Scale.Round(3),
+            //Color = node.Color,
             State = node.ShowState
         };
 

@@ -88,7 +88,6 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 
             Layout layout = GetLayout(parent);
 
-            //SetScale(layout, parent);
 
             int index = 0;
 
@@ -143,10 +142,9 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
             double x = siblingIndex % layout.RowLength * (size.Width + layout.Padding) + layout.XMargin;
             double y = siblingIndex / layout.RowLength * (size.Height + layout.Padding) + layout.YMargin;
 
-            Point location = new Point(x, y);
+            Point location = new Point(x, y).Rnd(5);
 
-            Rect newBounds = new Rect(location.Rnd(5), size);
-            return newBounds;
+            return new Rect(location, size);
         }
 
 

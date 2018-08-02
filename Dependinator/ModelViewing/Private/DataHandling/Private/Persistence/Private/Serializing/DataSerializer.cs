@@ -9,6 +9,7 @@ using Dependinator.Utils.ErrorHandling;
 using Dependinator.Utils.Serialization;
 using Dependinator.Utils.Threading;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.Serializing
@@ -35,12 +36,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 Json.Serialize(path, dataModel);
 
                 t.Log("Wrote data file");
-
-                //SaveJsonTypes.Model saveModel = new SaveJsonTypes.Model();
-                //saveModel.Items = items.Select(Convert.ToSaveJsonItem).Where(item => item != null).ToList();
-                //t.Log($"Converted {saveModel.Items.Count} data items");
-                //Json.Serialize(path + ".save.json", saveModel);
-                //t.Log("Wrote save file");
             }
             catch (Exception e)
             {
@@ -54,21 +49,23 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             try
             {
                 Timing t = new Timing();
-                SaveJsonTypes.Model dataModel = new SaveJsonTypes.Model();
+                string folder = Path.GetDirectoryName(path);
+                string name = Path.GetFileNameWithoutExtension(path);
 
-                dataModel.Items = items.Select(Convert.ToSaveJsonItem).ToList();
+                int i = 0;
+                foreach (IEnumerable<IDataItem> itemBatch in items.Batch(5000000))
+                {
+                    SaveJsonTypes.Model dataModel = new SaveJsonTypes.Model();
 
-                t.Log($"Converted {dataModel.Items.Count} data items");
+                    dataModel.Items = itemBatch.Select(Convert.ToSaveJsonItem).ToList();
 
-                Json.Serialize(path, dataModel);
+                    string newName = name + $".dn.{i++}.json";
+                    path = Path.Combine(folder, newName);
+
+                    Serialize(path, dataModel);
+                }
 
                 t.Log("Wrote data file");
-
-                //SaveJsonTypes.Model saveModel = new SaveJsonTypes.Model();
-                //saveModel.Items = items.Select(Convert.ToSaveJsonItem).Where(item => item != null).ToList();
-                //t.Log($"Converted {saveModel.Items.Count} data items");
-                //Json.Serialize(path + ".save.json", saveModel);
-                //t.Log("Wrote save file");
             }
             catch (Exception e)
             {
@@ -146,6 +143,71 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             }
 
             return false;
+        }
+
+
+        private static void Serialize(string path, object dataModel)
+        {
+            JsonSerializer jsonSerializer = CreateSerializer();
+
+            using (StreamWriter stream = new StreamWriter(path))
+            {
+                jsonSerializer.Serialize(stream, dataModel);
+            }
+        }
+
+
+        // Used for serializing data and ignores null and default values
+        private static JsonSerializer CreateSerializer()
+        {
+            JsonSerializer jsonSerializer = new JsonSerializer
+            {
+                Formatting = Formatting.Indented,
+                ObjectCreationHandling = ObjectCreationHandling.Replace,
+                NullValueHandling = NullValueHandling.Ignore,
+                DefaultValueHandling = DefaultValueHandling.Ignore
+            };
+
+            jsonSerializer.Converters.Add(new ItemJsonConverter());
+
+            return jsonSerializer;
+        }
+
+
+        // Converter which serializes items as one line Used when serializing an array of items
+        // where each array item is one line in a file.
+        private class ItemJsonConverter : JsonConverter
+        {
+            private static readonly JsonSerializer ItemSerializer = new JsonSerializer
+            {
+                Formatting = Formatting.None,
+                ObjectCreationHandling = ObjectCreationHandling.Replace,
+                NullValueHandling = NullValueHandling.Ignore,
+                DefaultValueHandling = DefaultValueHandling.Ignore
+            };
+
+
+            public override bool CanRead => false;
+
+
+            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            {
+                JToken token = JToken.FromObject(value, ItemSerializer);
+
+                writer.Formatting = Formatting.None;
+                writer.WriteWhitespace("\n    ");
+                token.WriteTo(writer);
+                writer.Formatting = Formatting.Indented;
+            }
+
+
+            public override bool CanConvert(Type objectType) =>
+                typeof(SaveJsonTypes.Item).IsAssignableFrom(objectType);
+
+
+            public override object ReadJson(
+                JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) =>
+                throw new NotImplementedException("CanRead is false.");
         }
     }
 }
