@@ -18,15 +18,15 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         private readonly bool isReadSymbols;
         private readonly DataItemsCallback itemsCallback;
         private readonly List<DataNode> parentNodesToSend = new List<DataNode>();
-        private readonly string solutionFilePath;
+        private readonly DataFile dataFile;
 
 
         public SolutionParser(
-            string solutionFilePath,
+            DataFile dataFile,
             DataItemsCallback itemsCallback,
             bool isReadSymbols)
         {
-            this.solutionFilePath = solutionFilePath;
+            this.dataFile = dataFile;
             this.itemsCallback = itemsCallback;
             this.isReadSymbols = isReadSymbols;
         }
@@ -41,8 +41,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public static bool IsSolutionFile(string filePath) =>
-            Path.GetExtension(filePath).IsSameIgnoreCase(".sln");
+        public static bool IsSolutionFile(DataFile dataFile) =>
+            Path.GetExtension(dataFile.FilePath).IsSameIgnoreCase(".sln");
 
 
         public async Task<R> ParseAsync()
@@ -144,7 +144,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
         private DataNodeName GetSolutionNodeName()
         {
-            string solutionName = Path.GetFileName(solutionFilePath).Replace(".", "*");
+            string solutionName = Path.GetFileName(dataFile.FilePath).Replace(".", "*");
             DataNodeName solutionNodeName = (DataNodeName)solutionName;
             return solutionNodeName;
         }
@@ -171,7 +171,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             DataNodeName solutionName = GetSolutionNodeName();
 
-            Solution solution = new Solution(solutionFilePath);
+            Solution solution = new Solution(dataFile.FilePath);
             IReadOnlyList<Project> projects = solution.GetSolutionProjects();
 
             foreach (Project project in projects)
@@ -180,7 +180,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 if (assemblyPath == null)
                 {
                     return Error.From(new MissingAssembliesException(
-                        $"Failed to parse:\n {solutionFilePath}\nProject\n{project}\nhas no Debug assembly."));
+                        $"Failed to parse:\n {dataFile}\nProject\n{project}\nhas no Debug assembly."));
                 }
 
                 DataNodeName parent = GetParent(solutionName, project);

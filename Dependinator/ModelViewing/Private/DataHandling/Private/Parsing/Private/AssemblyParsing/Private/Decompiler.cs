@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.Utils;
 using Dependinator.Utils.ErrorHandling;
 using ICSharpCode.Decompiler;

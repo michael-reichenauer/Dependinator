@@ -11,16 +11,16 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     internal class WorkParser : IDisposable
     {
-        private readonly string filePath;
+        private readonly DataFile dataFile;
         private readonly DataItemsCallback itemsCallback;
         private AssemblyParser assemblyParser;
 
         private SolutionParser solutionParser;
 
 
-        public WorkParser(string filePath, DataItemsCallback itemsCallback)
+        public WorkParser(DataFile dataFile, DataItemsCallback itemsCallback)
         {
-            this.filePath = filePath;
+            this.dataFile = dataFile;
             this.itemsCallback = itemsCallback;
         }
 
@@ -34,13 +34,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
         public async Task<R> ParseAsync()
         {
-            if (SolutionParser.IsSolutionFile(filePath))
+            if (SolutionParser.IsSolutionFile(dataFile))
             {
-                solutionParser = new SolutionParser(filePath, itemsCallback, false);
+                solutionParser = new SolutionParser(dataFile, itemsCallback, false);
                 return await solutionParser.ParseAsync();
             }
 
-            assemblyParser = new AssemblyParser(filePath, DataNodeName.None, itemsCallback, false);
+            assemblyParser = new AssemblyParser(dataFile.FilePath, DataNodeName.None, itemsCallback, false);
             return await assemblyParser.ParseAsync();
         }
 
@@ -49,13 +49,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             await Task.Yield();
 
-            if (SolutionParser.IsSolutionFile(filePath))
+            if (SolutionParser.IsSolutionFile(dataFile))
             {
-                solutionParser = new SolutionParser(filePath, null, true);
+                solutionParser = new SolutionParser(dataFile, null, true);
                 return await solutionParser.GetCodeAsync(nodeName);
             }
 
-            assemblyParser = new AssemblyParser(filePath, DataNodeName.None, itemsCallback, true);
+            assemblyParser = new AssemblyParser(dataFile.FilePath, DataNodeName.None, itemsCallback, true);
             return assemblyParser.GetCode(nodeName);
         }
 
@@ -64,13 +64,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             await Task.Yield();
 
-            if (SolutionParser.IsSolutionFile(filePath))
+            if (SolutionParser.IsSolutionFile(dataFile))
             {
-                solutionParser = new SolutionParser(filePath, null, true);
+                solutionParser = new SolutionParser(dataFile, null, true);
                 return await solutionParser.GetSourceFilePathAsync(nodeName);
             }
 
-            assemblyParser = new AssemblyParser(filePath, DataNodeName.None, itemsCallback, true);
+            assemblyParser = new AssemblyParser(dataFile.FilePath, DataNodeName.None, itemsCallback, true);
             return assemblyParser.GetSourceFilePath(nodeName);
         }
 
@@ -79,9 +79,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             await Task.Yield();
 
-            if (SolutionParser.IsSolutionFile(filePath))
+            if (SolutionParser.IsSolutionFile(dataFile))
             {
-                solutionParser = new SolutionParser(filePath, null, true);
+                solutionParser = new SolutionParser(dataFile, null, true);
                 return await solutionParser.GetNodeNameForFilePathAsync(sourceFilePath);
             }
 
@@ -89,25 +89,25 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public static IReadOnlyList<string> GetDataFilePaths(string filePath)
+        public static IReadOnlyList<string> GetDataFilePaths(DataFile dataFile)
         {
-            if (SolutionParser.IsSolutionFile(filePath))
+            if (SolutionParser.IsSolutionFile(dataFile))
             {
-                return SolutionParser.GetDataFilePaths(filePath);
+                return SolutionParser.GetDataFilePaths(dataFile.FilePath);
             }
 
-            return AssemblyParser.GetDataFilePaths(filePath);
+            return AssemblyParser.GetDataFilePaths(dataFile.FilePath);
         }
 
 
-        public static IReadOnlyList<string> GetBuildFolderPaths(string filePath)
+        public static IReadOnlyList<string> GetBuildFolderPaths(DataFile dataFile)
         {
-            if (SolutionParser.IsSolutionFile(filePath))
+            if (SolutionParser.IsSolutionFile(dataFile))
             {
-                return SolutionParser.GetBuildFolderPaths(filePath);
+                return SolutionParser.GetBuildFolderPaths(dataFile.FilePath);
             }
 
-            return AssemblyParser.GetBuildFolderPaths(filePath);
+            return AssemblyParser.GetBuildFolderPaths(dataFile.FilePath);
         }
     }
 }

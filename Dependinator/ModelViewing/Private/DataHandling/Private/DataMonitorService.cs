@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Threading;
-using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing;
+using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI;
@@ -19,18 +19,19 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
             | System.IO.NotifyFilters.FileName
             | System.IO.NotifyFilters.DirectoryName;
 
+        private readonly IDataFilePaths dataFilePaths;
+
         private readonly DebounceDispatcher changeDebounce = new DebounceDispatcher();
         private readonly FileSystemWatcher folderWatcher = new FileSystemWatcher();
-        private readonly IParserService parserService;
         private Dispatcher dispatcher;
 
         private IReadOnlyList<string> monitoredFiles;
         private IReadOnlyList<string> monitoredWorkFolders;
 
 
-        public DataMonitorService(IParserService parserService)
+        public DataMonitorService(IDataFilePaths dataFilePaths)
         {
-            this.parserService = parserService;
+            this.dataFilePaths = dataFilePaths;
 
             folderWatcher.Changed += (s, e) => FileChange(e);
             folderWatcher.Created += (s, e) => FileChange(e);
@@ -41,19 +42,19 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         public event EventHandler DataChangedOccurred;
 
 
-        public void StartMonitorData(string filePath)
+        public void StartMonitorData(DataFile dataFile)
         {
             dispatcher = Dispatcher.CurrentDispatcher;
 
             StopMonitorData();
 
-            folderWatcher.Path = Path.GetDirectoryName(filePath);
+            folderWatcher.Path = dataFilePaths.GetDataFolderPath(dataFile);
             folderWatcher.NotifyFilter = NotifyFilters;
             folderWatcher.Filter = "*.*";
             folderWatcher.IncludeSubdirectories = true;
 
-            monitoredFiles = parserService.GetDataFilePaths(filePath);
-            monitoredWorkFolders = parserService.GetBuildPaths(filePath);
+            monitoredFiles = dataFilePaths.GetDataFilePaths(dataFile);
+            monitoredWorkFolders = dataFilePaths.GetBuildPaths(dataFile);
 
             folderWatcher.EnableRaisingEvents = true;
         }

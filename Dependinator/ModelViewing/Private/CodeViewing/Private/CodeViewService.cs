@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelViewing.Private.DataHandling;
+using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.Utils.ErrorHandling;
 using DependinatorApi;
 using DependinatorApi.ApiHandling;
@@ -14,16 +15,16 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
     internal class CodeViewService : ICodeViewService
     {
         private readonly Func<NodeName, Func<NodeName, Task<R<SourceCode>>>, CodeDialog> codeDialogProvider;
-        private readonly IDataDetailsService dataDetailsService;
+        private readonly IDataService dataService;
         private readonly ModelMetadata modelMetadata;
 
 
         public CodeViewService(
-            IDataDetailsService dataDetailsService,
+            IDataService dataService,
             Func<NodeName, Func<NodeName, Task<R<SourceCode>>>, CodeDialog> codeDialogProvider,
             ModelMetadata modelMetadata)
         {
-            this.dataDetailsService = dataDetailsService;
+            this.dataService = dataService;
             this.codeDialogProvider = codeDialogProvider;
             this.modelMetadata = modelMetadata;
         }
@@ -31,9 +32,10 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 
         public async void ShowCode(NodeName nodeName)
         {
-            string solutionPath = modelMetadata.ModelFilePath;
+            DataFile dataFile = modelMetadata.DataFile;
+            string solutionPath = dataFile.FilePath;
 
-            R<SourceLocation> file = await TryGetFilePathAsync(nodeName);
+            R<SourceLocation> file = await TryGetFilePathAsync(dataFile, nodeName);
             if (file.IsOk)
             {
                 string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionPath);
@@ -57,7 +59,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
             else
             {
                 // Could not determine source file path, lets try to decompile th code
-                CodeDialog codeDialog = codeDialogProvider(nodeName, name => GetCodeAsync(solutionPath, name));
+                CodeDialog codeDialog = codeDialogProvider(nodeName, name => GetCodeAsync(dataFile, name));
                 codeDialog.Show();
             }
         }
@@ -70,9 +72,9 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         }
 
 
-        private async Task<R<SourceCode>> GetCodeAsync(string solutionPath, NodeName nodeName)
+        private async Task<R<SourceCode>> GetCodeAsync(DataFile dataFile, NodeName nodeName)
         {
-            R<string> text = await dataDetailsService.GetCodeAsync(solutionPath, nodeName);
+            R<string> text = await dataService.GetCodeAsync(dataFile, nodeName);
             if (text.IsFaulted)
             {
                 return text.Error;
@@ -82,10 +84,10 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         }
 
 
-        private async Task<R<SourceLocation>> TryGetFilePathAsync(NodeName nodeName)
+        private async Task<R<SourceLocation>> TryGetFilePathAsync(DataFile dataFile, NodeName nodeName)
         {
             string solutionPath = modelMetadata.ModelFilePath;
-            R<SourceLocation> result = await dataDetailsService.GetSourceFilePathAsync(solutionPath, nodeName);
+            R<SourceLocation> result = await dataService.GetSourceFilePathAsync(dataFile, nodeName);
 
             if (result.IsOk)
             {

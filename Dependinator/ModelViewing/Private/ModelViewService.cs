@@ -13,7 +13,7 @@ namespace Dependinator.ModelViewing.Private
 {
     internal class ModelViewService : IModelViewService
     {
-        private readonly IDataDetailsService dataDetailsService;
+        private readonly IDataService dataService;
         private readonly ILocateNodeService locateNodeService;
         private readonly ModelMetadata modelMetadata;
         private readonly IModelViewModelService modelViewModelService;
@@ -24,14 +24,14 @@ namespace Dependinator.ModelViewing.Private
         public ModelViewService(
             ILocateNodeService locateNodeService,
             IModelViewModelService modelViewModelService,
-            IDataDetailsService dataDetailsService,
+            IDataService dataService,
             ISearchService searchService,
             IThemeService themeService,
             ModelMetadata modelMetadata)
         {
             this.locateNodeService = locateNodeService;
             this.modelViewModelService = modelViewModelService;
-            this.dataDetailsService = dataDetailsService;
+            this.dataService = dataService;
             this.searchService = searchService;
             this.themeService = themeService;
             this.modelMetadata = modelMetadata;
@@ -43,8 +43,8 @@ namespace Dependinator.ModelViewing.Private
 
         public async void StartMoveToNode(string filePath)
         {
-            R<NodeName> nodeName = await dataDetailsService.GetNodeForFilePathAsync(
-                modelMetadata.ModelFilePath, filePath);
+            R<NodeName> nodeName = await dataService.GetNodeForFilePathAsync(
+                modelMetadata.DataFile, filePath);
 
             if (nodeName.IsFaulted)
             {

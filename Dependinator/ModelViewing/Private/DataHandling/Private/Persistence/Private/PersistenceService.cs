@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.Serializing;
 using Dependinator.Utils.ErrorHandling;
@@ -14,37 +13,37 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
     internal class PersistenceService : IPersistenceService
     {
         private readonly ICacheSerializer cacheSerializer;
+        private readonly IDataFilePaths dataFilePaths;
         private readonly ISaveSerializer saveSerializer;
-        private readonly ModelMetadata metadata;
 
 
         public PersistenceService(
+            IDataFilePaths dataFilePaths,
             ICacheSerializer cacheSerializer,
-            ISaveSerializer saveSerializer,
-            ModelMetadata metadata)
+            ISaveSerializer saveSerializer)
         {
+            this.dataFilePaths = dataFilePaths;
             this.cacheSerializer = cacheSerializer;
             this.saveSerializer = saveSerializer;
-            this.metadata = metadata;
         }
 
 
-        public async Task<R> TryDeserialize(string dataFilePath, DataItemsCallback dataItemsCallback)
+        public async Task<R> TryDeserialize(DataFile dataFile, DataItemsCallback dataItemsCallback)
         {
-            if (!File.Exists(dataFilePath))
+            string cacheFilePath = dataFilePaths.GetCacheFilePath(dataFile);
+            if (!File.Exists(cacheFilePath))
             {
-                return Error.From(new MissingDataFileException($"No data file at {dataFilePath}"));
+                return Error.From(new MissingDataFileException($"No data file at {cacheFilePath}"));
             }
 
-            return await cacheSerializer.TryDeserializeAsStreamAsync(dataFilePath, dataItemsCallback);
+            return await cacheSerializer.TryDeserializeAsync(cacheFilePath, dataItemsCallback);
         }
 
 
-        public async Task SaveAsync(IReadOnlyList<IDataItem> items)
+        public async Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items)
         {
-
-            string saveFilePath = GetSaveFilePath();
-            string cacheFilePath = GetCacheFilePath();
+            string saveFilePath = dataFilePaths.GetSaveFilePath(dataFile);
+            string cacheFilePath = dataFilePaths.GetCacheFilePath(dataFile);
 
             await Task.Run(() =>
             {
@@ -58,9 +57,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 cacheSerializer.Serialize(cacheItems, cacheFilePath);
                 t.Log($"Cache {cacheItems.Count} items");
             });
-
         }
-
 
 
         private static List<IDataItem> GetSaveItems(IReadOnlyList<IDataItem> items)
@@ -90,23 +87,5 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             items
                 .Where(item => item is DataNode || item is DataLine)
                 .Concat(items.Where(item => item is DataLink)).ToList();
-
-
-        private string GetCacheFilePath()
-        {
-            string dataJson = $"{Path.GetFileName(metadata.ModelFilePath)}.dn.json";
-            string dataFilePath = Path.Combine(metadata.FolderPath, dataJson);
-            return dataFilePath;
-        }
-
-
-        private string GetSaveFilePath()
-        {
-            string dataJson = $"{Path.GetFileName(metadata.ModelFilePath)}.dpnr";
-            string folderPath = Path.GetDirectoryName(metadata.ModelFilePath);
-            //  string dataFilePath = Path.Combine(folderPath, dataJson);
-            string dataFilePath = Path.Combine(metadata.FolderPath, dataJson);
-            return dataFilePath;
-        }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelViewing.Private.DataHandling;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
@@ -20,6 +21,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         private static readonly TimeSpan SaveInterval = TimeSpan.FromSeconds(10);
         private static readonly TimeSpan Immediately = TimeSpan.Zero;
         private readonly IDataService dataService;
+        private readonly ModelMetadata metadata;
 
 
         private readonly IModelDatabase modelDatabase;
@@ -34,10 +36,12 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         public ModelPersistentHandler(
             IModelDatabase modelDatabase,
-            IDataService dataService)
+            IDataService dataService,
+            ModelMetadata metadata)
         {
             this.modelDatabase = modelDatabase;
             this.dataService = dataService;
+            this.metadata = metadata;
 
             modelDatabase.DataModified += OnDataModified;
 
@@ -100,7 +104,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             {
                 IReadOnlyList<IDataItem> items = await GetModelSnapshotAsync();
 
-                await saveToDiskThrottler.Run(() => dataService.SaveAsync(items));
+                await saveToDiskThrottler.Run(() => dataService.SaveAsync(metadata.DataFile, items));
             }
 
             tcs.TrySetResult(true);

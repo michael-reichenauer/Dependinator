@@ -23,7 +23,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         };
 
 
-        public void Serialize(IReadOnlyList<IDataItem> items, string path)
+        public void Serialize(IReadOnlyList<IDataItem> items, string cacheFilePath)
         {
             try
             {
@@ -34,7 +34,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
                 t.Log($"Converted {dataModel.Items.Count} data items");
 
-                Serialize(path, dataModel);
+                Serialize(cacheFilePath, dataModel);
 
                 t.Log("Wrote data file");
             }
@@ -45,8 +45,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        public Task<R> TryDeserializeAsStreamAsync(
-            string path, DataItemsCallback dataItemsCallback)
+        public Task<R> TryDeserializeAsync(string cacheFilePath, DataItemsCallback dataItemsCallback)
         {
             return Task.Run(() =>
             {
@@ -55,7 +54,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                     Timing t = new Timing();
                     int itemCount = 0;
 
-                    using (FileStream s = File.Open(path, FileMode.Open))
+                    using (FileStream s = File.Open(cacheFilePath, FileMode.Open))
                     using (StreamReader sr = new StreamReader(s))
                     using (JsonReader reader = new JsonTextReader(sr))
                     {
@@ -91,7 +90,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 }
                 catch (Exception e)
                 {
-                    return new InvalidDataFileException($"Failed to parse:{path},\n{e.Message}");
+                    return new InvalidDataFileException($"Failed to parse:{cacheFilePath},\n{e.Message}");
                 }
             });
         }

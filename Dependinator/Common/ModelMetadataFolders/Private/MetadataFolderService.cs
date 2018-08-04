@@ -63,10 +63,14 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
         private static string CreateMetadataFolderName(string path)
         {
-            string encoded = path.Replace(" ", "  ");
-            encoded = encoded.Replace(":", " ;");
-            encoded = encoded.Replace("/", " (");
-            encoded = encoded.Replace("\\", " )");
+            string encoded = path.Replace("%", "%%");
+            encoded = encoded.Replace(";", "%;");
+            encoded = encoded.Replace("(", "%(");
+            encoded = encoded.Replace(")", "%)");
+
+            encoded = encoded.Replace(":", ";");
+            encoded = encoded.Replace("/", "(");
+            encoded = encoded.Replace("\\", ")");
 
             return encoded;
         }

@@ -34,18 +34,31 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
-        public void StartMonitorData(string filePath) => dataMonitorService.StartMonitorData(filePath);
+        public void StartMonitorData(DataFile dataFile) => dataMonitorService.StartMonitorData(dataFile);
 
         public void StopMonitorData() => dataMonitorService.StopMonitorData();
 
-        public Task SaveAsync(IReadOnlyList<IDataItem> items) => persistenceService.SaveAsync(items);
+        public Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items) => 
+            persistenceService.SaveAsync(dataFile, items);
 
 
-        public Task<R> ParseAsync(string filePath, DataItemsCallback dataItemsCallback) =>
-            parserService.ParseAsync(filePath, dataItemsCallback);
+        public Task<R> ParseAsync(DataFile dataFile, DataItemsCallback dataItemsCallback) =>
+            parserService.ParseAsync(dataFile, dataItemsCallback);
 
 
-        public Task<R> TryReadSavedDataAsync(string dataFilePath, DataItemsCallback dataItemsCallback) =>
-            persistenceService.TryDeserialize(dataFilePath, dataItemsCallback);
+        public async Task<R<string>> GetCodeAsync(DataFile dataFile, NodeName nodeName) => 
+            await parserService.GetCodeAsync(dataFile, nodeName);
+
+
+        public async Task<R<SourceLocation>> GetSourceFilePathAsync(DataFile dataFile, NodeName nodeName) => 
+            await parserService.GetSourceFilePath(dataFile, nodeName);
+
+
+        public async Task<R<NodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath) => 
+            await parserService.GetNodeForFilePathAsync(dataFile, sourceFilePath);
+
+
+        public Task<R> TryReadSavedDataAsync(DataFile dataFile, DataItemsCallback dataItemsCallback) =>
+            persistenceService.TryDeserialize(dataFile, dataItemsCallback);
     }
 }

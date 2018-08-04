@@ -84,20 +84,20 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             using (progress.ShowBusy())
             {
                 isWorking = true;
-                Log.Debug($"Metadata model: {modelMetadata.ModelFilePath} {DateTime.Now}");
-                string dataFilePath = GetDataFilePath();
+                Log.Debug($"Metadata model: {modelMetadata.DataFile} {DateTime.Now}");
+                string cacheFilePath = modelMetadata.DataFile.CachePath;
 
                 Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
 
-                if (File.Exists(dataFilePath))
+                if (File.Exists(cacheFilePath))
                 {
                     modelPersistentHandler.IsChangeMonitored = false;
-                    R result = await TryShowSavedModelAsync(dataFilePath);
+                    R result = await TryShowSavedModelAsync();
                     modelPersistentHandler.IsChangeMonitored = true;
 
                     if (result.Error.Exception is NotSupportedException)
                     {
-                        File.Delete(dataFilePath);
+                        File.Delete(cacheFilePath);
                         await LoadAsync();
                         return;
                     }
@@ -131,7 +131,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                     modelPersistentHandler.TriggerDataModified();
                 }
 
-                if (!modelMetadata.IsDefault && !File.Exists(dataFilePath) && !File.Exists(modelMetadata.ModelFilePath))
+                if (!modelMetadata.IsDefault && !File.Exists(cacheFilePath) && !File.Exists(modelMetadata.ModelFilePath))
                 {
                     message.ShowWarning($"Model not found:\n{modelMetadata.ModelFilePath}");
                     recentModelsService.RemoveModelPath(modelMetadata.ModelFilePath);
@@ -143,9 +143,9 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
                 if (!Root.Children.Any())
                 {
-                    if (File.Exists(dataFilePath))
+                    if (File.Exists(cacheFilePath))
                     {
-                        File.Delete(dataFilePath);
+                        File.Delete(cacheFilePath);
                     }
 
                     isShowingOpenModel = true;
@@ -168,7 +168,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 GC.Collect();
                 isWorking = false;
 
-                dataService.StartMonitorData(modelMetadata.ModelFilePath);
+                dataService.StartMonitorData(modelMetadata.DataFile);
             }
         }
 
@@ -184,7 +184,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             {
                 if (isClean)
                 {
-                    string dataFilePath = GetDataFilePath();
+                    string dataFilePath = modelMetadata.DataFile.FilePath;
 
                     if (File.Exists(dataFilePath))
                     {
@@ -288,14 +288,14 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         private Task<R<int>> ShowParsedModelAsync()
         {
             return ShowModelAsync(operation => dataService.ParseAsync(
-                modelMetadata.ModelFilePath, items => UpdateDataItems(items, operation)));
+                modelMetadata.DataFile, items => UpdateDataItems(items, operation)));
         }
 
 
-        private Task<R<int>> TryShowSavedModelAsync(string dataFilePath)
+        private Task<R<int>> TryShowSavedModelAsync()
         {
             return ShowModelAsync(operation => dataService.TryReadSavedDataAsync(
-                dataFilePath, items => UpdateDataItems(items, operation)));
+                modelMetadata.DataFile, items => UpdateDataItems(items, operation)));
         }
 
 
@@ -392,13 +392,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             }
         }
 
-
-        private string GetDataFilePath()
-        {
-            string dataJson = $"{Path.GetFileName(modelMetadata.ModelFilePath)}.dn.json";
-            string dataFilePath = Path.Combine(modelMetadata, dataJson);
-            return dataFilePath;
-        }
 
 
         private class Operation

@@ -11,14 +11,20 @@ namespace Dependinator.ModelViewing.Private.DataHandling
     {
         event EventHandler DataChangedOccurred;
 
-        void StartMonitorData(string filePath);
+        void StartMonitorData(DataFile dataFile);
 
         void StopMonitorData();
 
-        Task<R> TryReadSavedDataAsync(string dataFilePath, DataItemsCallback dataItemsCallback);
+        Task<R> TryReadSavedDataAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
 
-        Task SaveAsync(IReadOnlyList<IDataItem> items);
+        Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items);
 
-        Task<R> ParseAsync(string filePath, DataItemsCallback dataItemsCallback);
+        Task<R> ParseAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
+
+        Task<R<string>> GetCodeAsync(DataFile dataFile, NodeName nodeName);
+
+        Task<R<SourceLocation>> GetSourceFilePathAsync(DataFile dataFile, NodeName nodeName);
+
+        Task<R<NodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath);
     }
 }
