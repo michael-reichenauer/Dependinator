@@ -48,20 +48,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        public static SaveJsonTypes.Item ToSaveJsonItem(IDataItem item)
-        {
-            switch (item)
-            {
-                case DataNode dataNode:
-                    return new SaveJsonTypes.Item {Node = ToSaveJsonNode(dataNode)};
-                case DataLine dataLine:
-                    return new SaveJsonTypes.Item {Line = ToSaveJsonNode(dataLine)};
-            }
-
-            return null;
-        }
-
-
         private static DataNode ToModelNode(CacheJsonTypes.Node node) => new DataNode(
             (DataNodeName)node.Name,
             node.Parent != null ? (DataNodeName)node.Parent : null,
@@ -88,19 +74,16 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         };
 
 
-        private static SaveJsonTypes.Node ToSaveJsonNode(DataNode node) => new SaveJsonTypes.Node
+        public static SaveJsonTypes.Node ToSaveJsonNode(DataNode node) => new SaveJsonTypes.Node
         {
             Name = (string)node.Name,
             Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsIntString() : null,
-            Scale = node.Scale.Round(3),
-            //Color = node.Color,
-            State = node.ShowState
+            Scale = node.Scale.Round(3)
         };
 
 
-        private static SaveJsonTypes.Line ToSaveJsonNode(DataLine line) => new SaveJsonTypes.Line
+        public static SaveJsonTypes.Line ToSaveJsonLine(DataLine line) => new SaveJsonTypes.Line
         {
-            Source = (string)line.Source,
             Target = (string)line.Target,
             Points = ToJsonPoints(line.Points)
         };

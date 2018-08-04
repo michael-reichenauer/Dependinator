@@ -23,8 +23,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
-        public void SaveData(IReadOnlyList<IDataItem> items, string dataFilePath) =>
-            persistenceService.SerializeSave(items, dataFilePath);
+
+        public Task SaveAsync(IReadOnlyList<IDataItem> items)
+        {
+            return persistenceService.SaveAsync(items);
+        }
 
 
         public Task<R> ParseAsync(string filePath, DataItemsCallback dataItemsCallback) =>
@@ -33,9 +36,5 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
 
         public Task<R> TryReadSavedDataAsync(string dataFilePath, DataItemsCallback dataItemsCallback) =>
             persistenceService.TryDeserialize(dataFilePath, dataItemsCallback);
-
-
-        public void CacheData(IReadOnlyList<IDataItem> items, string dataFilePath) =>
-            persistenceService.SerializeCache(items, dataFilePath);
     }
 }

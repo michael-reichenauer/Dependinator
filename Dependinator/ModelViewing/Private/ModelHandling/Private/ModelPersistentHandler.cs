@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelViewing.Private.DataHandling;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
@@ -22,7 +20,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         private static readonly TimeSpan SaveInterval = TimeSpan.FromSeconds(10);
         private static readonly TimeSpan Immediately = TimeSpan.Zero;
         private readonly IDataService dataService;
-        private readonly ModelMetadata metadata;
+
 
         private readonly IModelDatabase modelDatabase;
         private readonly TaskThrottler saveToDiskThrottler = new TaskThrottler(1);
@@ -36,12 +34,10 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         public ModelPersistentHandler(
             IModelDatabase modelDatabase,
-            IDataService dataService,
-            ModelMetadata metadata)
+            IDataService dataService)
         {
             this.modelDatabase = modelDatabase;
             this.dataService = dataService;
-            this.metadata = metadata;
 
             modelDatabase.DataModified += OnDataModified;
 
@@ -104,7 +100,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             {
                 IReadOnlyList<IDataItem> items = await GetModelSnapshotAsync();
 
-                await saveToDiskThrottler.Run(() => SaveModelAsync(items));
+                await saveToDiskThrottler.Run(() => dataService.SaveAsync(items));
             }
 
             tcs.TrySetResult(true);
@@ -172,81 +168,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        private async Task SaveModelAsync(IReadOnlyList<IDataItem> items)
-        {
-            string saveFilePath = GetSaveFilePath();
-            string cacheFilePath = GetCacheFilePath();
-
-            await Task.Run(() =>
-            {
-                Timing t = Timing.Start();
-                IReadOnlyList<IDataItem> saveItems = GetSaveItems(items);
-
-                dataService.SaveData(saveItems, saveFilePath);
-                t.Log($"Save {saveItems.Count} items");
-
-                IReadOnlyList<IDataItem> cacheItems = GetCacheItems(items);
-                dataService.CacheData(cacheItems, cacheFilePath);
-                t.Log($"Cache {cacheItems.Count} items");
-            });
-        }
-
-
-        private static List<IDataItem> GetSaveItems(IReadOnlyList<IDataItem> items)
-        {
-            List<IDataItem> saveItems = new List<IDataItem>();
-            foreach (IDataItem dataItem in items)
-            {
-                if (dataItem is DataNode dataNode)
-                {
-                    saveItems.Add(dataNode);
-                }
-
-                if (dataItem is DataLine dataLine)
-                {
-                    if (dataLine.Points.Count > 2)
-                    {
-                        saveItems.Add(dataLine);
-                    }
-                }
-            }
-
-            return saveItems;
-        }
-
-
-        //private static List<IDataItem> GetSaveItems(IReadOnlyList<IDataItem> items)
-        //{
-        //    List<IDataItem> saveItems = new List<IDataItem>();
-        //    foreach (IDataItem dataItem in items)
-        //    {
-        //        if (dataItem is DataNode dataNode)
-        //        {
-        //            if (dataNode.IsModified || dataNode.HasModifiedChild || dataNode.HasParentModifiedChild)
-        //            {
-        //                saveItems.Add(dataNode);
-        //            }
-        //        }
-
-        //        if (dataItem is DataLine dataLine)
-        //        {
-        //            if (dataLine.Points.Count > 2)
-        //            {
-        //                saveItems.Add(dataLine);
-        //            }
-        //        }
-        //    }
-
-        //    return saveItems;
-        //}
-
-
-        private static List<IDataItem> GetCacheItems(IReadOnlyList<IDataItem> items) =>
-            items
-                .Where(item => item is DataNode || item is DataLine)
-                .Concat(items.Where(item => item is DataLink)).ToList();
-
-
         private static IEnumerable<IDataItem> ToDataItems(Node node)
         {
             yield return ToDataNode(node);
@@ -310,23 +231,5 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             new DataLink(
                 link.Source.Name,
                 link.Target.Name);
-
-
-        private string GetCacheFilePath()
-        {
-            string dataJson = $"{Path.GetFileName(metadata.ModelFilePath)}.dn.json";
-            string dataFilePath = Path.Combine(metadata.FolderPath, dataJson);
-            return dataFilePath;
-        }
-
-
-        private string GetSaveFilePath()
-        {
-            string dataJson = $"{Path.GetFileName(metadata.ModelFilePath)}.dpnr";
-            string folderPath = Path.GetDirectoryName(metadata.ModelFilePath);
-            //  string dataFilePath = Path.Combine(folderPath, dataJson);
-            string dataFilePath = Path.Combine(metadata.FolderPath, dataJson);
-            return dataFilePath;
-        }
     }
 }

@@ -9,24 +9,15 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         public static string Version = "1";
 
 
-        // A model contains a list of nodes, links and lines
+        // A model contains a list of nodes, lines
         [Serializable]
         public class Model
         {
             public string FormatVersion { get; set; } = Version;
-            public List<Item> Items { get; set; }
+            public List<Node> Nodes { get; set; }
         }
 
 
-        [Serializable]
-        public class Item
-        {
-            public Node Node { get; set; }
-            public Line Line { get; set; }
-        }
-
-
-        // A node
         [Serializable]
         public class Node
         {
@@ -34,20 +25,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             public string Bounds { get; set; }
             public string Color { get; set; }
             public double Scale { get; set; }
-            public string State { get; set; }
+            public List<Line> Lines { get; set; }
         }
 
 
-        // A node
         [Serializable]
         public class Line
         {
-            // The source node name
-            public string Source { get; set; }
-
-            // The target node name
             public string Target { get; set; }
-
             public List<string> Points { get; set; }
         }
     }
