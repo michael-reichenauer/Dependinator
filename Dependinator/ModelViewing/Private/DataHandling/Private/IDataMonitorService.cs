@@ -5,9 +5,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling
 {
     internal interface IDataMonitorService
     {
-        event EventHandler ChangedOccurred;
+        event EventHandler DataChangedOccurred; 
 
-        void Start(string filePath);
-        void Stop();
+        void StartMonitorData(string filePath);
+        void StopMonitorData();
     }
 }

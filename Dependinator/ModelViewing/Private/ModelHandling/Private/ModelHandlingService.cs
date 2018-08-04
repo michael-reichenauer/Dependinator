@@ -28,7 +28,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
     {
         private static readonly int BatchSize = 100;
         private readonly ICmd cmd;
-        private readonly IDataMonitorService dataMonitorService;
+
 
         private readonly IDataService dataService;
         private readonly IMessage message;
@@ -48,7 +48,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         public ModelHandlingService(
             IDataService dataService,
-            IDataMonitorService dataMonitorService,
+
             IModelPersistentHandler modelPersistentHandler,
             Func<OpenModelViewModel> openModelViewModelProvider,
             IModelService modelService,
@@ -59,7 +59,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             ICmd cmd)
         {
             this.dataService = dataService;
-            this.dataMonitorService = dataMonitorService;
             this.modelPersistentHandler = modelPersistentHandler;
 
             this.openModelViewModelProvider = openModelViewModelProvider;
@@ -71,7 +70,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             this.progress = progress;
             this.cmd = cmd;
 
-            dataMonitorService.ChangedOccurred += ChangedFiles;
+            dataService.DataChangedOccurred += DataChangedFiles;
         }
 
 
@@ -169,7 +168,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 GC.Collect();
                 isWorking = false;
 
-                dataMonitorService.Start(modelMetadata.ModelFilePath);
+                dataService.StartMonitorData(modelMetadata.ModelFilePath);
             }
         }
 
@@ -242,7 +241,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         public async Task CloseAsync()
         {
-            dataMonitorService.Stop();
+            dataService.StopMonitorData();
             if (isWorking)
             {
                 return;
@@ -277,7 +276,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         public Task ManualRefreshAsync(bool refreshLayout = false) => RefreshAsync(refreshLayout);
 
 
-        private async void ChangedFiles(object sender, EventArgs e)
+        private async void DataChangedFiles(object sender, EventArgs e)
         {
             if (!isWorking)
             {

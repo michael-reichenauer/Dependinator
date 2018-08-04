@@ -38,14 +38,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
-        public event EventHandler ChangedOccurred;
+        public event EventHandler DataChangedOccurred;
 
 
-        public void Start(string filePath)
+        public void StartMonitorData(string filePath)
         {
             dispatcher = Dispatcher.CurrentDispatcher;
 
-            Stop();
+            StopMonitorData();
 
             folderWatcher.Path = Path.GetDirectoryName(filePath);
             folderWatcher.NotifyFilter = NotifyFilters;
@@ -59,7 +59,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
-        public void Stop()
+        public void StopMonitorData()
         {
             changeDebounce.Stop();
             folderWatcher.EnableRaisingEvents = false;
@@ -99,7 +99,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
             if (monitoredFiles.All(File.Exists))
             {
                 Log.Debug($"Monitored file changed");
-                ChangedOccurred?.Invoke(this, EventArgs.Empty);
+                DataChangedOccurred?.Invoke(this, EventArgs.Empty);
             }
             else
             {
