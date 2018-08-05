@@ -49,10 +49,15 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         {
             return Task.Run(() =>
             {
+                if (!File.Exists(cacheFilePath))
+                {
+                    return R.NoValue;
+                }
+
                 try
                 {
                     Timing t = new Timing();
-                    int itemCount = 0;
+                    int itemCount;
 
                     using (FileStream s = File.Open(cacheFilePath, FileMode.Open))
                     using (StreamReader sr = new StreamReader(s))
@@ -60,39 +65,62 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                     {
                         if (!IsValidVersion(reader))
                         {
-                            return new NotSupportedException("Unexpected format version in data file");
+                            throw new FormatException();
                         }
 
-                        while (reader.Read())
-                        {
-                            if (reader.TokenType == JsonToken.StartArray)
-                            {
-                                break;
-                            }
-                        }
+                        ReadToItemsStart(reader);
 
-                        while (reader.Read())
-                        {
-                            // deserialize only when there's "{" character in the stream
-                            if (reader.TokenType == JsonToken.StartObject)
-                            {
-                                CacheJsonTypes.Item jsonItem = 
-                                    Serializer.Deserialize<CacheJsonTypes.Item>(reader);
-                                IDataItem modelItem = Convert.ToModelItem(jsonItem);
-                                dataItemsCallback(modelItem);
-                                itemCount++;
-                            }
-                        }
+                        itemCount = ReadItems(dataItemsCallback, reader);
                     }
 
                     t.Log($"Sent all {itemCount} items");
                     return R.Ok;
                 }
+                catch (FormatException)
+                {
+                    Log.Debug("Unexpected format version in data file");
+                }
                 catch (Exception e)
                 {
-                    return new InvalidDataFileException($"Failed to parse:{cacheFilePath},\n{e.Message}");
+                    // Some unexpected error while reading the cache
+                    Log.Error($"Failed to parse:{cacheFilePath},\n{e.Message}");
                 }
+
+                File.Delete(cacheFilePath);
+                return R.NoValue;
             });
+        }
+
+
+        private static void ReadToItemsStart(JsonReader reader)
+        {
+            while (reader.Read())
+            {
+                if (reader.TokenType == JsonToken.StartArray)
+                {
+                    break;
+                }
+            }
+        }
+
+
+        private static int ReadItems(DataItemsCallback dataItemsCallback, JsonReader reader)
+        {
+            int itemCount = 0;
+            while (reader.Read())
+            {
+                // deserialize only when there's "{" character in the stream
+                if (reader.TokenType == JsonToken.StartObject)
+                {
+                    CacheJsonTypes.Item jsonItem =
+                        Serializer.Deserialize<CacheJsonTypes.Item>(reader);
+                    IDataItem modelItem = Convert.ToModelItem(jsonItem);
+                    dataItemsCallback(modelItem);
+                    itemCount++;
+                }
+            }
+
+            return itemCount;
         }
 
 
@@ -116,11 +144,18 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                     if (reader.Read() && reader.TokenType == JsonToken.String)
                     {
                         string versionText = (string)reader.Value;
-                        return versionText == CacheJsonTypes.Version;
+                        if (versionText != CacheJsonTypes.Version)
+                        {
+                            Log.Warn($"Expected {CacheJsonTypes.Version}, was {versionText}");
+                            return false;
+                        }
+
+                        return true;
                     }
                 }
             }
 
+            Log.Warn("Failed to read format version");
             return false;
         }
     }

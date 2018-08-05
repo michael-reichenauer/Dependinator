@@ -28,13 +28,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        public async Task<R> TryDeserialize(DataFile dataFile, DataItemsCallback dataItemsCallback)
+        public async Task<R> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
         {
             string cacheFilePath = dataFilePaths.GetCacheFilePath(dataFile);
-            if (!File.Exists(cacheFilePath))
-            {
-                return Error.From(new MissingDataFileException($"No data file at {cacheFilePath}"));
-            }
 
             return await cacheSerializer.TryDeserializeAsync(cacheFilePath, dataItemsCallback);
         }

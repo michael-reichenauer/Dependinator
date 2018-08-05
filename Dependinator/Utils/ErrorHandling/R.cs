@@ -16,7 +16,7 @@ namespace Dependinator.Utils.ErrorHandling
 
 
         public Error Error { get; }
-
+     
         public bool IsFaulted => Error != Error.None;
         public bool IsOk => Error == Error.None;
         public string Message => Error.Message;

@@ -19,6 +19,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
     internal class ModelPersistentHandler : IModelPersistentHandler
     {
         private static readonly TimeSpan SaveInterval = TimeSpan.FromSeconds(10);
+        private static readonly TimeSpan Soon = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan Immediately = TimeSpan.Zero;
         private readonly IDataService dataService;
         private readonly ModelMetadata metadata;
@@ -30,7 +31,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         private readonly ThrottleDispatcher triggerSaveThrottler = new ThrottleDispatcher();
 
         private bool isDataModified;
-        private bool isSaveTriggered;
+        private bool isSaveScheduled;
         private TaskCompletionSource<bool> saveInProgressTcs;
 
 
@@ -63,7 +64,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         {
             if (isDataModified)
             {
-                TriggerSave(Immediately);
+                ScheduleSaveModel(Immediately);
             }
 
             // Only takes time if as save actually is in progress (resent not yes saved change)
@@ -71,24 +72,27 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        public void TriggerDataModified() => OnDataModified(this, EventArgs.Empty);
+        public void TriggerDataModified() => TriggerDataModified(Soon);
 
 
-        private void OnDataModified(object sender, EventArgs e)
+        // Called when model data has been edited (node moved, line adjusted) 
+        private void OnDataModified(object sender, EventArgs e) => TriggerDataModified(SaveInterval);
+
+
+        private void TriggerDataModified(TimeSpan withinTime)
         {
             isDataModified = true;
 
-            if (!isSaveTriggered)
-            {
-                isSaveTriggered = true;
-                TriggerSave(SaveInterval);
-            }
+            if (isSaveScheduled) return;
+
+            isSaveScheduled = true;
+            ScheduleSaveModel(withinTime);
         }
 
 
-        private void TriggerSave(TimeSpan withinTime)
+        private void ScheduleSaveModel(TimeSpan withinTime)
         {
-            Log.Warn("Model save is triggered");
+            Log.Warn($"Model has changed, a save is scheduled within {withinTime}");
             saveInProgressTcs = new TaskCompletionSource<bool>();
             triggerSaveThrottler.Throttle(withinTime, SaveModelAsync, saveInProgressTcs);
         }
@@ -98,7 +102,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         {
             Log.Warn("Data being saved ...");
             TaskCompletionSource<bool> tcs = (TaskCompletionSource<bool>)state;
-            isSaveTriggered = false;
+            isSaveScheduled = false;
 
             if (isDataModified)
             {

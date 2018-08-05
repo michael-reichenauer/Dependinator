@@ -48,7 +48,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         public ModelHandlingService(
             IDataService dataService,
-
             IModelPersistentHandler modelPersistentHandler,
             Func<OpenModelViewModel> openModelViewModelProvider,
             IModelService modelService,
@@ -85,53 +84,20 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             {
                 isWorking = true;
                 Log.Debug($"Metadata model: {modelMetadata.DataFile} {DateTime.Now}");
-                string cacheFilePath = modelMetadata.DataFile.CachePath;
-
-                Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
-
-                if (File.Exists(cacheFilePath))
+                
+                if (modelMetadata.IsDefault)
                 {
-                    modelPersistentHandler.IsChangeMonitored = false;
-                    R result = await TryShowSavedModelAsync();
-                    modelPersistentHandler.IsChangeMonitored = true;
+                    isShowingOpenModel = true;
+                    modelMetadata.SetDefault();
+                    Root.ItemsCanvas.SetRootScale(1);
+                    Root.ItemsCanvas.IsZoomAndMoveEnabled = false;
+                    Root.ItemsCanvas.UpdateAndNotifyAll(true);
 
-                    if (result.Error.Exception is NotSupportedException)
-                    {
-                        File.Delete(cacheFilePath);
-                        await LoadAsync();
-                        return;
-                    }
-
-                    if (result.IsFaulted)
-                    {
-                        message.ShowWarning(result.Message);
-                        string targetPath = ProgramInfo.GetInstallFilePath();
-                        cmd.Start(targetPath, "");
-                        Application.Current.Shutdown(0);
-                        return;
-                    }
-                }
-                else if (File.Exists(modelMetadata.ModelFilePath))
-                {
-                    //Root.ItemsCanvas.SetRootOffset(new Point(-37, 43));
-                    Root.ItemsCanvas.SetRootScale(2);
-                    modelPersistentHandler.IsChangeMonitored = false;
-                    R result = await ShowParsedModelAsync();
-                    modelPersistentHandler.IsChangeMonitored = true;
-
-                    if (result.IsFaulted)
-                    {
-                        message.ShowWarning(result.Message);
-                        string targetPath = ProgramInfo.GetInstallFilePath();
-                        cmd.Start(targetPath, "");
-                        Application.Current.Shutdown(0);
-                        return;
-                    }
-
-                    modelPersistentHandler.TriggerDataModified();
+                    Root.ItemsCanvas.AddItem(openModelViewModelProvider());
+                    return;
                 }
 
-                if (!modelMetadata.IsDefault && !File.Exists(cacheFilePath) && !File.Exists(modelMetadata.ModelFilePath))
+                if (!File.Exists(modelMetadata.DataFile.FilePath))
                 {
                     message.ShowWarning($"Model not found:\n{modelMetadata.ModelFilePath}");
                     recentModelsService.RemoveModelPath(modelMetadata.ModelFilePath);
@@ -141,34 +107,29 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                     return;
                 }
 
-                if (!Root.Children.Any())
-                {
-                    if (File.Exists(cacheFilePath))
-                    {
-                        File.Delete(cacheFilePath);
-                    }
 
-                    isShowingOpenModel = true;
-                    modelMetadata.SetDefault();
-                    Root.ItemsCanvas.SetRootScale(1);
-                    Root.ItemsCanvas.IsZoomAndMoveEnabled = false;
-                    Root.ItemsCanvas.UpdateAndNotifyAll(true);
+                Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
 
-                    Root.ItemsCanvas.AddItem(openModelViewModelProvider());
-                }
-                else
+                modelPersistentHandler.IsChangeMonitored = false;
+                R<int> result = await TryShowModelAsync();
+                modelPersistentHandler.IsChangeMonitored = true;
+
+                if (result.IsFaulted)
                 {
-                    isShowingOpenModel = false;
-                    Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
-                    UpdateLines(Root);
-                    recentModelsService.AddModelPaths(modelMetadata.ModelFilePath);
-                    modelService.SetLayoutDone();
+                    message.ShowWarning(result.Message);
+                    string targetPath = ProgramInfo.GetInstallFilePath();
+                    cmd.Start(targetPath, "");
+                    Application.Current.Shutdown(0);
+                    return;
                 }
+
+                UpdateLines(Root);
+                recentModelsService.AddModelPaths(modelMetadata.ModelFilePath);
+                modelService.SetLayoutDone();
+                modelPersistentHandler.TriggerDataModified();
 
                 GC.Collect();
                 isWorking = false;
-
-                dataService.StartMonitorData(modelMetadata.DataFile);
             }
         }
 
@@ -182,24 +143,8 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
             using (progress.ShowBusy())
             {
-                if (isClean)
-                {
-                    string dataFilePath = modelMetadata.DataFile.FilePath;
-
-                    if (File.Exists(dataFilePath))
-                    {
-                        File.Delete(dataFilePath);
-                    }
-
-                    Root.ItemsCanvas.SetRootScale(2);
-
-                    modelService.RemoveAll();
-                    await LoadAsync();
-                    return;
-                }
-
                 isWorking = true;
-                R<int> operationId = await ShowParsedModelAsync();
+                R<int> operationId = await TryShowRefreshedModelAsync();
 
                 if (operationId.IsFaulted)
                 {
@@ -241,7 +186,8 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         public async Task CloseAsync()
         {
-            dataService.StopMonitorData();
+            dataService.DataChangedOccurred -= DataChangedFiles;
+
             if (isWorking)
             {
                 return;
@@ -285,16 +231,16 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        private Task<R<int>> ShowParsedModelAsync()
+        private Task<R<int>> TryShowModelAsync()
         {
-            return ShowModelAsync(operation => dataService.ParseAsync(
+            return ShowModelAsync(operation => dataService.TryReadAsync(
                 modelMetadata.DataFile, items => UpdateDataItems(items, operation)));
         }
 
 
-        private Task<R<int>> TryShowSavedModelAsync()
+        private Task<R<int>> TryShowRefreshedModelAsync()
         {
-            return ShowModelAsync(operation => dataService.TryReadSavedDataAsync(
+            return ShowModelAsync(operation => dataService.TryRefreshAsync(
                 modelMetadata.DataFile, items => UpdateDataItems(items, operation)));
         }
 

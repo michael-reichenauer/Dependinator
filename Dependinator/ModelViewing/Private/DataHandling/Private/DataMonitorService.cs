@@ -25,6 +25,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         private readonly FileSystemWatcher folderWatcher = new FileSystemWatcher();
         private Dispatcher dispatcher;
 
+        private DataFile monitoredDataFile;
         private IReadOnlyList<string> monitoredFiles;
         private IReadOnlyList<string> monitoredWorkFolders;
 
@@ -44,19 +45,38 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
 
         public void StartMonitorData(DataFile dataFile)
         {
+            if (IsMonitoring(dataFile))
+            {
+                return;
+            }
+
             dispatcher = Dispatcher.CurrentDispatcher;
 
             StopMonitorData();
+
+            monitoredDataFile = dataFile;
             monitoredFiles = dataFilePaths.GetDataFilePaths(dataFile);
             monitoredWorkFolders = dataFilePaths.GetBuildPaths(dataFile);
 
-            folderWatcher.Path = GetMonitorRootFolderPath(monitoredFiles, monitoredWorkFolders);
+            StartMonitorData();
+        }
 
+
+        private void StartMonitorData()
+        {
+            folderWatcher.Path = GetMonitorRootFolderPath(monitoredFiles, monitoredWorkFolders);
             folderWatcher.NotifyFilter = NotifyFilters;
             folderWatcher.Filter = "*.*";
             folderWatcher.IncludeSubdirectories = true;
-            
+
             folderWatcher.EnableRaisingEvents = true;
+        }
+
+
+        public void StopMonitorData()
+        {
+            changeDebounce.Stop();
+            folderWatcher.EnableRaisingEvents = false;
         }
 
 
@@ -88,14 +108,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
-
-        public void StopMonitorData()
-        {
-            changeDebounce.Stop();
-            folderWatcher.EnableRaisingEvents = false;
-        }
-
-
         private void FileChange(FileSystemEventArgs e)
         {
             string fullPath = e.FullPath;
@@ -122,6 +134,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
                 }
             }
         }
+
+
+        private bool IsMonitoring(DataFile dataFile) => 
+            monitoredDataFile != null &&
+            dataFile.FilePath.IsSameIgnoreCase(monitoredDataFile.FilePath);
 
 
         private void Trigger(object obj)

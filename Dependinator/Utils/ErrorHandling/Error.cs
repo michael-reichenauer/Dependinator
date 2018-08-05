@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 
 namespace Dependinator.Utils.ErrorHandling
@@ -56,6 +56,7 @@ namespace Dependinator.Utils.ErrorHandling
         public string Message { get; }
         public string Text { get; }
 
+
         public Exception Exception { get; }
 
         public static Error From(Exception e) => new Error(e);
@@ -68,10 +69,7 @@ namespace Dependinator.Utils.ErrorHandling
         public static implicit operator Error(Exception e) => new Error(e);
 
 
-        public bool Is<T>()
-        {
-            return this is T || Exception is T;
-        }
+        public bool Is<T>() => this is T || Exception is T;
 
 
         public override string ToString() => Text;
