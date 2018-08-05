@@ -15,7 +15,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         {
             this.parserService = parserService;
         }
-        public string GetDataFolderPath(DataFile dataFile) => Path.GetDirectoryName(dataFile.FilePath);
 
 
         public IReadOnlyList<string> GetDataFilePaths(DataFile dataFile) =>

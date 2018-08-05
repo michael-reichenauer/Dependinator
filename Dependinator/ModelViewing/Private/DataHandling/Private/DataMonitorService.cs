@@ -47,17 +47,46 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
             dispatcher = Dispatcher.CurrentDispatcher;
 
             StopMonitorData();
-
-            folderWatcher.Path = dataFilePaths.GetDataFolderPath(dataFile);
-            folderWatcher.NotifyFilter = NotifyFilters;
-            folderWatcher.Filter = "*.*";
-            folderWatcher.IncludeSubdirectories = true;
-
             monitoredFiles = dataFilePaths.GetDataFilePaths(dataFile);
             monitoredWorkFolders = dataFilePaths.GetBuildPaths(dataFile);
 
+            folderWatcher.Path = GetMonitorRootFolderPath(monitoredFiles, monitoredWorkFolders);
+
+            folderWatcher.NotifyFilter = NotifyFilters;
+            folderWatcher.Filter = "*.*";
+            folderWatcher.IncludeSubdirectories = true;
+            
             folderWatcher.EnableRaisingEvents = true;
         }
+
+
+        private string GetMonitorRootFolderPath(
+            IEnumerable<string> files,
+            IEnumerable<string> workFolders)
+        {
+            List<string> folders = files.Select(Path.GetDirectoryName).Concat(workFolders).ToList();
+            string rootPath = folders.Last();
+            bool isRoot;
+
+            do
+            {
+                isRoot = true;
+
+                foreach (string folder in folders)
+                {
+                    if (!folder.StartsWithIc(rootPath))
+                    {
+                        // The current root path was not root to this folder, lets retry with parent
+                        isRoot = false;
+                        rootPath = Path.GetDirectoryName(rootPath);
+                        break;
+                    }
+                }
+            } while (!isRoot);
+
+            return rootPath;
+        }
+
 
 
         public void StopMonitorData()
