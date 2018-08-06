@@ -19,6 +19,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
             | System.IO.NotifyFilters.FileName
             | System.IO.NotifyFilters.DirectoryName;
 
+        private static readonly TimeSpan DataChangedTime = TimeSpan.FromSeconds(10);
+        private static readonly TimeSpan DataChangingTime = TimeSpan.FromSeconds(5);
+        private static readonly TimeSpan DataNewTime = TimeSpan.FromSeconds(5);
+
         private readonly IDataFilePaths dataFilePaths;
 
         private readonly DebounceDispatcher changeDebounce = new DebounceDispatcher();
@@ -62,6 +66,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
+        public void TriggerDataChanged()
+        {
+            Log.Debug("Schedule data change event");
+            ScheduleDataChange(DataNewTime);
+        }
+
+
         private void StartMonitorData()
         {
             folderWatcher.Path = GetMonitorRootFolderPath(monitoredFiles, monitoredWorkFolders);
@@ -80,7 +91,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
-        private string GetMonitorRootFolderPath(
+        private static string GetMonitorRootFolderPath(
             IEnumerable<string> files,
             IEnumerable<string> workFolders)
         {
@@ -118,21 +129,26 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
 
             if (monitoredFiles.Any(file => file.IsSameIgnoreCase(fullPath)) && File.Exists(fullPath))
             {
-                // Log.Debug($"Monitored file {fullPath}, {e.ChangeType}, {changeDebounce.IsTriggered}");
-                changeDebounce.Debounce(
-                    TimeSpan.FromSeconds(10), Trigger, null, DispatcherPriority.ApplicationIdle, dispatcher);
+                // Data file has changed, postpone event a little 
+                ScheduleDataChange(DataChangedTime);
                 return;
             }
 
             if (monitoredWorkFolders.Any(folder => fullPath.StartsWithIc(folder)))
             {
+                // Data building event, postpone event a little 
                 if (changeDebounce.IsTriggered)
                 {
-                    // Log.Debug($"Work item {fullPath}, {e.ChangeType}");
-                    changeDebounce.Debounce(
-                        TimeSpan.FromSeconds(5), Trigger, null, DispatcherPriority.ApplicationIdle, dispatcher);
+                    ScheduleDataChange(DataChangingTime);
                 }
             }
+        }
+
+
+        private void ScheduleDataChange(TimeSpan withinTime)
+        {
+            changeDebounce.Debounce(
+                withinTime, TriggerEvent, null, DispatcherPriority.ApplicationIdle, dispatcher);
         }
 
 
@@ -141,7 +157,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
             dataFile.FilePath.IsSameIgnoreCase(monitoredDataFile.FilePath);
 
 
-        private void Trigger(object obj)
+        private void TriggerEvent(object obj)
         {
             if (monitoredFiles.All(File.Exists))
             {

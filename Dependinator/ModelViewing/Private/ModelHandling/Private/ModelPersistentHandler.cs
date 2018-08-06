@@ -60,7 +60,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        public Task SaveAsync()
+        public Task SaveIfModifiedAsync()
         {
             if (isDataModified)
             {

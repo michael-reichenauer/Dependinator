@@ -38,22 +38,27 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
-        public async Task<R> TryReadAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
+        public async Task<R> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
         {
             dataMonitorService.StartMonitorData(dataFile);
 
             R result = await persistenceService.TryReadCacheAsync(dataFile, dataItemsCallback);
 
-            if (!result.IsOk)
+            if (result.IsFaulted)
             {
-                return await parserService.ParseAsync(dataFile, dataItemsCallback);
+                return result;
+            }
+
+            if (IsCacheOlderThanData(dataFile))
+            {
+                dataMonitorService.TriggerDataChanged();
             }
 
             return R.Ok;
         }
 
 
-        public Task<R> TryRefreshAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
+        public Task<R> TryReadFreshAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
         {
             dataMonitorService.StartMonitorData(dataFile);
             return parserService.ParseAsync(dataFile, dataItemsCallback);
@@ -76,5 +81,35 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
 
         public async Task<R<NodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath) =>
             await parserService.GetNodeForFilePathAsync(dataFile, sourceFilePath);
+
+
+
+        private bool IsCacheOlderThanData(DataFile dataFile)
+        {
+            IReadOnlyList<string> dataFilePaths = filePaths.GetDataFilePaths(dataFile);
+            string cachePath = filePaths.GetCacheFilePath(dataFile);
+
+            if (!File.Exists(cachePath))
+            {
+                return false;
+            }
+
+
+            DateTime cacheTime = File.GetLastWriteTime(cachePath);
+            foreach (string dataFilePath in dataFilePaths)
+            {
+                if (File.Exists(dataFilePath))
+                {
+                    DateTime fileTime = File.GetLastWriteTime(dataFilePath);
+                    if (fileTime > cacheTime)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+
+            return false;
+        }
     }
 }

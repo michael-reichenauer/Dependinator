@@ -111,7 +111,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
 
                 modelPersistentHandler.IsChangeMonitored = false;
-                R<int> result = await TryShowModelAsync();
+                R result = await TryShowModelAsync();
                 modelPersistentHandler.IsChangeMonitored = true;
 
                 if (result.IsFaulted)
@@ -126,7 +126,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 UpdateLines(Root);
                 recentModelsService.AddModelPaths(modelMetadata.ModelFilePath);
                 modelService.SetLayoutDone();
-                modelPersistentHandler.TriggerDataModified();
+
 
                 GC.Collect();
                 isWorking = false;
@@ -199,20 +199,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 return;
             }
 
-            Timing t = Timing.Start();
-            ////IReadOnlyList<Node> nodes = Root.Descendents().ToList();
-            ////t.Log($"Saving {nodes.Count} nodes");
-
-            //IReadOnlyList<IDataItem> items = Convert.ToDataItems(Root.Descendents()).ToList();
-            //t.Log($"Converted {items.Count} items");
-
-            //string dataFilePath = GetDataFilePath();
-
-            //dataService.SaveData(items, dataFilePath);
-            Log.Debug("Saving ...");
-            await modelPersistentHandler.SaveAsync();
-
-            t.Log($"Saved items");
+            await modelPersistentHandler.SaveIfModifiedAsync();
         }
 
 
@@ -231,16 +218,31 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        private Task<R<int>> TryShowModelAsync()
+        private async Task<R> TryShowModelAsync()
         {
-            return ShowModelAsync(operation => dataService.TryReadAsync(
+            R cacheResult = await ShowModelAsync(operation => dataService.TryReadCacheAsync(
                 modelMetadata.DataFile, items => UpdateDataItems(items, operation)));
+
+            if (cacheResult.IsOk)
+            {
+                return R.Ok;
+            }
+            
+           R freshResult = await ShowModelAsync(operation => dataService.TryReadFreshAsync(
+                modelMetadata.DataFile, items => UpdateDataItems(items, operation)));
+
+            if (freshResult.IsOk)
+            {
+                modelPersistentHandler.TriggerDataModified();
+            }
+
+            return freshResult;
         }
 
 
         private Task<R<int>> TryShowRefreshedModelAsync()
         {
-            return ShowModelAsync(operation => dataService.TryRefreshAsync(
+            return ShowModelAsync(operation => dataService.TryReadFreshAsync(
                 modelMetadata.DataFile, items => UpdateDataItems(items, operation)));
         }
 

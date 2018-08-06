@@ -9,5 +9,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         event EventHandler DataChangedOccurred; 
 
         void StartMonitorData(DataFile dataFile);
+        void TriggerDataChanged();
     }
 }
