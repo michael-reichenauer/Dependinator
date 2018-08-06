@@ -36,50 +36,67 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
         public async Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items)
         {
-            string saveFilePath = dataFilePaths.GetSaveFilePath(dataFile);
+            Timing t = Timing.Start();
+            await SaveItemsAsync(dataFile, items);
+            t.Log("Save items");
+
+            await CacheItemsAsync(dataFile, items);
+            t.Log($"Cache {items.Count} items");
+        }
+
+
+        private async Task CacheItemsAsync(DataFile dataFile, IReadOnlyList<IDataItem> items)
+        {
             string cacheFilePath = dataFilePaths.GetCacheFilePath(dataFile);
 
-            await Task.Run(() =>
+            IReadOnlyList<IDataItem> cacheItems = await GetCacheItemsAsync(items);
+            await cacheSerializer.SerializeAsync(cacheItems, cacheFilePath);
+        }
+
+
+        private async Task SaveItemsAsync(DataFile dataFile, IReadOnlyList<IDataItem> items)
+        {
+            string saveFilePath = dataFilePaths.GetSaveFilePath(dataFile);
+
+            var dataPaths = dataFilePaths.GetDataFilePaths(dataFile);
+
+
+            IReadOnlyList<IDataItem> saveItems = await GetSaveItemsAsync(items);
+
+            await saveSerializer.SerializeAsync(saveItems, saveFilePath);
+        }
+
+
+        private static Task<List<IDataItem>> GetSaveItemsAsync(IReadOnlyList<IDataItem> items)
+        {
+            return Task.Run(() =>
             {
-                Timing t = Timing.Start();
-                IReadOnlyList<IDataItem> saveItems = GetSaveItems(items);
+                List<IDataItem> saveItems = new List<IDataItem>();
+                foreach (IDataItem dataItem in items)
+                {
+                    if (dataItem is DataNode dataNode)
+                    {
+                        saveItems.Add(dataNode);
+                    }
 
-                saveSerializer.Serialize(saveItems, saveFilePath);
-                t.Log($"Save {saveItems.Count} items");
+                    if (dataItem is DataLine dataLine)
+                    {
+                        if (dataLine.Points.Count > 0)
+                        {
+                            saveItems.Add(dataLine);
+                        }
+                    }
+                }
 
-                IReadOnlyList<IDataItem> cacheItems = GetCacheItems(items);
-                cacheSerializer.Serialize(cacheItems, cacheFilePath);
-                t.Log($"Cache {cacheItems.Count} items");
+                return saveItems;
             });
         }
 
 
-        private static List<IDataItem> GetSaveItems(IReadOnlyList<IDataItem> items)
-        {
-            List<IDataItem> saveItems = new List<IDataItem>();
-            foreach (IDataItem dataItem in items)
-            {
-                if (dataItem is DataNode dataNode)
-                {
-                    saveItems.Add(dataNode);
-                }
-
-                if (dataItem is DataLine dataLine)
-                {
-                    if (dataLine.Points.Count > 0)
-                    {
-                        saveItems.Add(dataLine);
-                    }
-                }
-            }
-
-            return saveItems;
-        }
-
-
-        private static List<IDataItem> GetCacheItems(IReadOnlyList<IDataItem> items) =>
-            items
+        private static Task<List<IDataItem>> GetCacheItemsAsync(IReadOnlyList<IDataItem> items) =>
+            Task.Run(() => items
                 .Where(item => item is DataNode || item is DataLine)
-                .Concat(items.Where(item => item is DataLink)).ToList();
+                .Concat(items.Where(item => item is DataLink))
+                .ToList());
     }
 }

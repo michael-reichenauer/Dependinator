@@ -8,7 +8,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 {
     internal interface ICacheSerializer
     {
-        void Serialize(IReadOnlyList<IDataItem> items, string path);
+        Task SerializeAsync(IReadOnlyList<IDataItem> items, string path);
 
         Task<R> TryDeserializeAsync(string cacheFilePath, DataItemsCallback dataItemsCallback);
     }

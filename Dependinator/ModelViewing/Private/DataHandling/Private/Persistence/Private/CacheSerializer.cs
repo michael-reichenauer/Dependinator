@@ -24,25 +24,23 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         };
 
 
-        public void Serialize(IReadOnlyList<IDataItem> items, string cacheFilePath)
+        public Task SerializeAsync(IReadOnlyList<IDataItem> items, string cacheFilePath)
         {
-            try
+            return Task.Run(() =>
             {
-                Timing t = new Timing();
-                JsonCacheTypes.Model dataModel = new JsonCacheTypes.Model();
+                try
+                {
+                    JsonCacheTypes.Model dataModel = new JsonCacheTypes.Model();
 
-                dataModel.Items = items.Select(Convert.ToCacheJsonItem).ToList();
+                    dataModel.Items = items.Select(Convert.ToCacheJsonItem).ToList();
 
-                t.Log($"Converted {dataModel.Items.Count} data items");
-
-                Serialize(cacheFilePath, dataModel);
-
-                t.Log("Wrote data file");
-            }
-            catch (Exception e)
-            {
-                Log.Exception(e, "Failed to serialize");
-            }
+                    Serialize(cacheFilePath, dataModel);
+                }
+                catch (Exception e)
+                {
+                    Log.Exception(e, "Failed to serialize");
+                }
+            });
         }
 
 
@@ -125,7 +123,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        public static void Serialize(string path, object dataModel)
+        private static void Serialize(string path, object dataModel)
         {
             using (StreamWriter stream = new StreamWriter(path))
             {

@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.JsonTypes;
 using Dependinator.Utils;
-using Dependinator.Utils.Threading;
 using Newtonsoft.Json;
 
 
@@ -16,29 +16,28 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         private static readonly char[] PartSeparator = ".".ToCharArray();
 
 
-        public void Serialize(IReadOnlyList<IDataItem> items, string path)
+        public Task SerializeAsync(IReadOnlyList<IDataItem> items, string path)
         {
-            try
+            return Task.Run(() =>
             {
-                Timing t = new Timing();
+                try
+                {
+                    List<JsonSaveTypes.Node> nodes = ToJsonNodes(items);
 
-                List<JsonSaveTypes.Node> nodes = ToJsonNodes(items);
+                    Dictionary<string, List<JsonSaveTypes.Line>> lines = ToJsonLines(items);
 
-                Dictionary<string, List<JsonSaveTypes.Line>> lines = ToJsonLines(items);
+                    AddLinesToNodes(nodes, lines);
 
-                AddLinesToNodes(nodes, lines);
+                    ShortenNodeNames(nodes);
 
-                ShortenNodeNames(nodes);
-
-                JsonSaveTypes.Model dataModel = new JsonSaveTypes.Model { Nodes = nodes };
-                Serialize(path, dataModel);
-
-                t.Log("Wrote data file");
-            }
-            catch (Exception e)
-            {
-                Log.Exception(e, "Failed to serialize");
-            }
+                    JsonSaveTypes.Model dataModel = new JsonSaveTypes.Model { Nodes = nodes };
+                    Serialize(path, dataModel);
+                }
+                catch (Exception e)
+                {
+                    Log.Exception(e, $"Failed to serialize to {path}");
+                }
+            });
         }
 
 
