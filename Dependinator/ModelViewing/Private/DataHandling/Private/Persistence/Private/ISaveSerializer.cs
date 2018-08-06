@@ -2,7 +2,7 @@
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.Serializing
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private
 {
     internal interface ISaveSerializer
     {

@@ -4,13 +4,14 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
+using Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.JsonTypes;
 using Dependinator.Utils;
 using Dependinator.Utils.ErrorHandling;
 using Dependinator.Utils.Threading;
 using Newtonsoft.Json;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.Serializing
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private
 {
     internal class CacheSerializer : ICacheSerializer
     {
@@ -28,7 +29,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             try
             {
                 Timing t = new Timing();
-                CacheJsonTypes.Model dataModel = new CacheJsonTypes.Model();
+                JsonCacheTypes.Model dataModel = new JsonCacheTypes.Model();
 
                 dataModel.Items = items.Select(Convert.ToCacheJsonItem).ToList();
 
@@ -112,8 +113,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 // deserialize only when there's "{" character in the stream
                 if (reader.TokenType == JsonToken.StartObject)
                 {
-                    CacheJsonTypes.Item jsonItem =
-                        Serializer.Deserialize<CacheJsonTypes.Item>(reader);
+                    JsonCacheTypes.Item jsonItem =
+                        Serializer.Deserialize<JsonCacheTypes.Item>(reader);
                     IDataItem modelItem = Convert.ToModelItem(jsonItem);
                     dataItemsCallback(modelItem);
                     itemCount++;
@@ -144,9 +145,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                     if (reader.Read() && reader.TokenType == JsonToken.String)
                     {
                         string versionText = (string)reader.Value;
-                        if (versionText != CacheJsonTypes.Version)
+                        if (versionText != JsonCacheTypes.Version)
                         {
-                            Log.Warn($"Expected {CacheJsonTypes.Version}, was {versionText}");
+                            Log.Warn($"Expected {JsonCacheTypes.Version}, was {versionText}");
                             return false;
                         }
 

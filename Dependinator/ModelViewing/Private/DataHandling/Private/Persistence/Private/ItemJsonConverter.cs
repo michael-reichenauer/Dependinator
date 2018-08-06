@@ -1,12 +1,13 @@
 ﻿using System;
+using Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.JsonTypes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.Serializing
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private
 {
     /// <summary>
-    ///     Converter which serializes items as one line Used when serializing an array of items
+    ///     Converter which serializes items as one line. Used when serializing an array of items
     ///     where each array item is one line in a file.
     /// </summary>
     internal class ItemJsonConverter : JsonConverter
@@ -35,7 +36,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
 
         public override bool CanConvert(Type objectType) =>
-            typeof(SaveJsonTypes.Node).IsAssignableFrom(objectType);
+            typeof(JsonSaveTypes.Node).IsAssignableFrom(objectType);
 
 
         public override object ReadJson(

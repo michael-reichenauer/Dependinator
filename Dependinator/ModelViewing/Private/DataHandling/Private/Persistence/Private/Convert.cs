@@ -3,15 +3,16 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
+using Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.JsonTypes;
 using Dependinator.Utils;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.Serializing
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private
 {
     internal class Convert
     {
-        public static IDataItem ToModelItem(CacheJsonTypes.Item item)
+        public static IDataItem ToModelItem(JsonCacheTypes.Item item)
         {
             if (item.Node != null)
             {
@@ -32,23 +33,23 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        public static CacheJsonTypes.Item ToCacheJsonItem(IDataItem item)
+        public static JsonCacheTypes.Item ToCacheJsonItem(IDataItem item)
         {
             switch (item)
             {
                 case DataNode modelNode:
-                    return new CacheJsonTypes.Item {Node = ToCacheJsonNode(modelNode)};
+                    return new JsonCacheTypes.Item {Node = ToCacheJsonNode(modelNode)};
                 case DataLink modelLink:
-                    return new CacheJsonTypes.Item {Link = ToJsonLink(modelLink)};
+                    return new JsonCacheTypes.Item {Link = ToJsonLink(modelLink)};
                 case DataLine modelLine:
-                    return new CacheJsonTypes.Item {Line = ToCacheJsonLine(modelLine)};
+                    return new JsonCacheTypes.Item {Line = ToCacheJsonLine(modelLine)};
                 default:
                     throw Asserter.FailFast($"Unsupported item {item?.GetType()}");
             }
         }
 
 
-        private static DataNode ToModelNode(CacheJsonTypes.Node node) => new DataNode(
+        private static DataNode ToModelNode(JsonCacheTypes.Node node) => new DataNode(
             (DataNodeName)node.Name,
             node.Parent != null ? (DataNodeName)node.Parent : null,
             FromNodeTypeText(node.Type))
@@ -61,7 +62,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         };
 
 
-        private static CacheJsonTypes.Node ToCacheJsonNode(DataNode node) => new CacheJsonTypes.Node
+        private static JsonCacheTypes.Node ToCacheJsonNode(DataNode node) => new JsonCacheTypes.Node
         {
             Name = (string)node.Name,
             Parent = (string)node.Parent,
@@ -74,7 +75,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         };
 
 
-        public static SaveJsonTypes.Node ToSaveJsonNode(DataNode node) => new SaveJsonTypes.Node
+        public static JsonSaveTypes.Node ToSaveJsonNode(DataNode node) => new JsonSaveTypes.Node
         {
             Name = (string)node.Name,
             Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsIntString() : null,
@@ -82,7 +83,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         };
 
 
-        public static SaveJsonTypes.Line ToSaveJsonLine(DataLine line) => new SaveJsonTypes.Line
+        public static JsonSaveTypes.Line ToSaveJsonLine(DataLine line) => new JsonSaveTypes.Line
         {
             Target = (string)line.Target,
             Points = ToJsonPoints(line.Points)
@@ -93,23 +94,23 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         {
             switch (nodeType)
             {
-                case CacheJsonTypes.NodeType.Solution:
+                case JsonCacheTypes.NodeType.Solution:
                     return NodeType.Solution;
-                case CacheJsonTypes.NodeType.SolutionFolder:
+                case JsonCacheTypes.NodeType.SolutionFolder:
                     return NodeType.SolutionFolder;
-                case CacheJsonTypes.NodeType.Assembly:
+                case JsonCacheTypes.NodeType.Assembly:
                     return NodeType.Assembly;
-                case CacheJsonTypes.NodeType.Group:
+                case JsonCacheTypes.NodeType.Group:
                     return NodeType.Group;
-                case CacheJsonTypes.NodeType.Dll:
+                case JsonCacheTypes.NodeType.Dll:
                     return NodeType.Dll;
-                case CacheJsonTypes.NodeType.Exe:
+                case JsonCacheTypes.NodeType.Exe:
                     return NodeType.Exe;
-                case CacheJsonTypes.NodeType.NameSpace:
+                case JsonCacheTypes.NodeType.NameSpace:
                     return NodeType.NameSpace;
-                case CacheJsonTypes.NodeType.Type:
+                case JsonCacheTypes.NodeType.Type:
                     return NodeType.Type;
-                case CacheJsonTypes.NodeType.Member:
+                case JsonCacheTypes.NodeType.Member:
                     return NodeType.Member;
                 default:
                     throw Asserter.FailFast($"Unexpected type {nodeType}");
@@ -122,54 +123,54 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             switch (nodeNodeType)
             {
                 case NodeType.NameSpace:
-                    return CacheJsonTypes.NodeType.NameSpace;
+                    return JsonCacheTypes.NodeType.NameSpace;
                 case NodeType.Type:
-                    return CacheJsonTypes.NodeType.Type;
+                    return JsonCacheTypes.NodeType.Type;
                 case NodeType.Member:
-                    return CacheJsonTypes.NodeType.Member;
+                    return JsonCacheTypes.NodeType.Member;
                 case NodeType.None:
                     return null;
                 case NodeType.Solution:
-                    return CacheJsonTypes.NodeType.Solution;
+                    return JsonCacheTypes.NodeType.Solution;
                 case NodeType.Assembly:
-                    return CacheJsonTypes.NodeType.Assembly;
+                    return JsonCacheTypes.NodeType.Assembly;
                 case NodeType.Group:
-                    return CacheJsonTypes.NodeType.Group;
+                    return JsonCacheTypes.NodeType.Group;
                 case NodeType.Dll:
-                    return CacheJsonTypes.NodeType.Dll;
+                    return JsonCacheTypes.NodeType.Dll;
                 case NodeType.Exe:
-                    return CacheJsonTypes.NodeType.Exe;
+                    return JsonCacheTypes.NodeType.Exe;
                 case NodeType.SolutionFolder:
-                    return CacheJsonTypes.NodeType.SolutionFolder;
+                    return JsonCacheTypes.NodeType.SolutionFolder;
                 case NodeType.PrivateMember:
-                    return CacheJsonTypes.NodeType.Member;
+                    return JsonCacheTypes.NodeType.Member;
                 default:
                     throw Asserter.FailFast($"Unexpected type {nodeNodeType}");
             }
         }
 
 
-        private static DataLink ToModelLink(CacheJsonTypes.Link link) => new DataLink(
+        private static DataLink ToModelLink(JsonCacheTypes.Link link) => new DataLink(
             (DataNodeName)link.Source,
             (DataNodeName)link.Target,
             true);
 
 
-        private static CacheJsonTypes.Link ToJsonLink(DataLink link) => new CacheJsonTypes.Link
+        private static JsonCacheTypes.Link ToJsonLink(DataLink link) => new JsonCacheTypes.Link
         {
             Source = (string)link.Source,
             Target = (string)link.Target
         };
 
 
-        private static IDataItem ToModelLine(CacheJsonTypes.Line line) => new DataLine(
+        private static IDataItem ToModelLine(JsonCacheTypes.Line line) => new DataLine(
             (DataNodeName)line.Source,
             (DataNodeName)line.Target,
             ToLinePoints(line.Points),
             line.LinkCount);
 
 
-        private static CacheJsonTypes.Line ToCacheJsonLine(DataLine line) => new CacheJsonTypes.Line
+        private static JsonCacheTypes.Line ToCacheJsonLine(DataLine line) => new JsonCacheTypes.Line
         {
             Source = (string)line.Source,
             Target = (string)line.Target,

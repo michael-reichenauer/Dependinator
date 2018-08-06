@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.Serializing
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.JsonTypes
 {
-    public static class SaveJsonTypes
+    public static class JsonSaveTypes
     {
         public static string Version = "1";
 

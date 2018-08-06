@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
+using Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.JsonTypes;
 using Dependinator.Utils;
 using Dependinator.Utils.Threading;
 using Newtonsoft.Json;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.Serializing
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private
 {
     internal class SaveSerializer : ISaveSerializer
     {
@@ -21,15 +22,15 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             {
                 Timing t = new Timing();
 
-                List<SaveJsonTypes.Node> nodes = ToJsonNodes(items);
+                List<JsonSaveTypes.Node> nodes = ToJsonNodes(items);
 
-                Dictionary<string, List<SaveJsonTypes.Line>> lines = ToJsonLines(items);
+                Dictionary<string, List<JsonSaveTypes.Line>> lines = ToJsonLines(items);
 
                 AddLinesToNodes(nodes, lines);
 
                 ShortenNodeNames(nodes);
 
-                SaveJsonTypes.Model dataModel = new SaveJsonTypes.Model { Nodes = nodes };
+                JsonSaveTypes.Model dataModel = new JsonSaveTypes.Model { Nodes = nodes };
                 Serialize(path, dataModel);
 
                 t.Log("Wrote data file");
@@ -41,7 +42,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        private static List<SaveJsonTypes.Node> ToJsonNodes(IEnumerable<IDataItem> items)
+        private static List<JsonSaveTypes.Node> ToJsonNodes(IEnumerable<IDataItem> items)
         {
             return items
                 .Where(item => item is DataNode)
@@ -52,17 +53,17 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        private static Dictionary<string, List<SaveJsonTypes.Line>> ToJsonLines(
+        private static Dictionary<string, List<JsonSaveTypes.Line>> ToJsonLines(
             IEnumerable<IDataItem> items)
         {
-            Dictionary<string, List<SaveJsonTypes.Line>> lines =
-                new Dictionary<string, List<SaveJsonTypes.Line>>();
+            Dictionary<string, List<JsonSaveTypes.Line>> lines =
+                new Dictionary<string, List<JsonSaveTypes.Line>>();
 
             foreach (DataLine line in items.Where(item => item is DataLine).Cast<DataLine>())
             {
                 if (!lines.TryGetValue((string)line.Source, out var nodeLines))
                 {
-                    nodeLines = new List<SaveJsonTypes.Line>();
+                    nodeLines = new List<JsonSaveTypes.Line>();
                     lines[(string)line.Source] = nodeLines;
                 }
 
@@ -74,10 +75,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
 
         private static void AddLinesToNodes(
-            IEnumerable<SaveJsonTypes.Node> nodes,
-            IReadOnlyDictionary<string, List<SaveJsonTypes.Line>> lines)
+            IEnumerable<JsonSaveTypes.Node> nodes,
+            IReadOnlyDictionary<string, List<JsonSaveTypes.Line>> lines)
         {
-            foreach (SaveJsonTypes.Node node in nodes)
+            foreach (JsonSaveTypes.Node node in nodes)
             {
                 if (lines.TryGetValue(node.Name, out var nodeLines))
                 {
@@ -88,7 +89,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        private static void ShortenNodeNames(IReadOnlyList<SaveJsonTypes.Node> nodes)
+        private static void ShortenNodeNames(IReadOnlyList<JsonSaveTypes.Node> nodes)
         {
             for (int j = nodes.Count - 1; j > 0; j--)
             {
@@ -108,7 +109,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             }
         }
 
-        private static void ShortenLineNames(string sourceName, IReadOnlyList<SaveJsonTypes.Line> lines)
+        private static void ShortenLineNames(string sourceName, IReadOnlyList<JsonSaveTypes.Line> lines)
         {
             string[] prefixParts = sourceName.Split(PartSeparator);
 
