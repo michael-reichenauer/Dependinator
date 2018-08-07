@@ -38,11 +38,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             switch (item)
             {
                 case DataNode modelNode:
-                    return new JsonCacheTypes.Item {Node = ToCacheJsonNode(modelNode)};
+                    return new JsonCacheTypes.Item { Node = ToCacheJsonNode(modelNode) };
                 case DataLink modelLink:
-                    return new JsonCacheTypes.Item {Link = ToJsonLink(modelLink)};
+                    return new JsonCacheTypes.Item { Link = ToJsonLink(modelLink) };
                 case DataLine modelLine:
-                    return new JsonCacheTypes.Item {Line = ToCacheJsonLine(modelLine)};
+                    return new JsonCacheTypes.Item { Line = ToCacheJsonLine(modelLine) };
                 default:
                     throw Asserter.FailFast($"Unsupported item {item?.GetType()}");
             }

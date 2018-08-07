@@ -14,7 +14,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         public class Model
         {
             public string FormatVersion { get; set; } = Version;
-            public List<Node> Nodes { get; set; }
+            public List<List<string>> Nodes { get; set; }
         }
 
 

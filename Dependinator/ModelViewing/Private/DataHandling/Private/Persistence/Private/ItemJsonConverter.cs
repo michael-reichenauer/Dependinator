@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.JsonTypes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -36,7 +37,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
 
         public override bool CanConvert(Type objectType) =>
-            typeof(JsonSaveTypes.Node).IsAssignableFrom(objectType);
+            typeof(JsonSaveTypes.Node).IsAssignableFrom(objectType) ||
+             typeof(List<string>).IsAssignableFrom(objectType);
 
 
         public override object ReadJson(

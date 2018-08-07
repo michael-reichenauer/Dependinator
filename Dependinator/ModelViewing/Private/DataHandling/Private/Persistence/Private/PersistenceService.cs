@@ -68,6 +68,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             }
 
             await saveSerializer.SerializeAsync(saveItems, saveFilePath);
+
+            //Timing t = Timing.Start();
+            //var it = await saveSerializer.DeserializeAsync(saveFilePath);
+            //t.Log("Deserialized data");
+            //await saveSerializer.SerializeAsync(it.Value, saveFilePath + ".read");
+            //t.Log("Serialized data");
         }
 
 

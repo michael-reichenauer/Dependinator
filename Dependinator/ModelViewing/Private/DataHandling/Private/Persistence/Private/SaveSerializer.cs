@@ -24,12 +24,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             {
                 try
                 {
-                    List<JsonSaveTypes.Node> nodes = ToJsonNodes(items);
+                    List<JsonSaveTypes.Node> nodes = ToSaveNodes(items);
                     AddLinesToNodes(items, nodes);
 
                     ShortenNodeNames(nodes);
 
-                    JsonSaveTypes.Model dataModel = new JsonSaveTypes.Model {Nodes = nodes};
+                    JsonSaveTypes.Model dataModel = new JsonSaveTypes.Model
+                        {Nodes = ToCompressedNodes(nodes)};
+
                     Serialize(path, dataModel);
                 }
                 catch (Exception e)
@@ -46,14 +48,16 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             {
                 try
                 {
-                    List<JsonSaveTypes.Node> nodes = ToJsonNodes(items);
+                    List<JsonSaveTypes.Node> nodes = ToSaveNodes(items);
                     AddLinesToNodes(items, nodes);
 
                     MergeInPreviousSavedNodes(path, nodes);
 
                     ShortenNodeNames(nodes);
 
-                    JsonSaveTypes.Model dataModel = new JsonSaveTypes.Model {Nodes = nodes};
+                    JsonSaveTypes.Model dataModel = new JsonSaveTypes.Model
+                        {Nodes = ToCompressedNodes(nodes)};
+
                     Serialize(path, dataModel);
                 }
                 catch (Exception e)
@@ -77,10 +81,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                         return R.NoValue;
                     }
 
-                    ExpandNodeNames(model.Nodes);
+                    List<JsonSaveTypes.Node> nodes = ToDecompressedNodes(model.Nodes);
+                    ExpandNodeNames(nodes);
 
-                    var dataNodes = model.Nodes.Select(Convert.ToDataNode);
-                    var dataLines = GetDataLines(model.Nodes);
+                    var dataNodes = nodes.Select(Convert.ToDataNode);
+                    var dataLines = GetDataLines(nodes);
 
                     IReadOnlyList<IDataItem> dataItems = dataNodes.Concat(dataLines).ToList();
 
@@ -134,9 +139,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 JsonSaveTypes.Model model = Deserialize<JsonSaveTypes.Model>(path);
                 if (model.FormatVersion == JsonSaveTypes.Version)
                 {
-                    ExpandNodeNames(model.Nodes);
+                    List<JsonSaveTypes.Node> nodes = ToDecompressedNodes(model.Nodes);
+                    ExpandNodeNames(nodes);
 
-                    foreach (JsonSaveTypes.Node node in model.Nodes)
+                    foreach (JsonSaveTypes.Node node in nodes)
                     {
                         previousNodes[node.Name] = node;
                     }
@@ -151,7 +157,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        private static List<JsonSaveTypes.Node> ToJsonNodes(IEnumerable<IDataItem> items)
+        private static List<JsonSaveTypes.Node> ToSaveNodes(IEnumerable<IDataItem> items)
         {
             return items
                 .Where(item => item is DataNode)
@@ -313,5 +319,82 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
             return jsonSerializer;
         }
+
+
+        private static List<List<string>> ToCompressedNodes(IEnumerable<JsonSaveTypes.Node> nodes) => 
+            nodes.Select(ToCompressedNode).ToList();
+
+
+        private static List<JsonSaveTypes.Node> ToDecompressedNodes(IEnumerable<List<string>> nodes) =>
+            nodes.Select(ToSaveNode).ToList();
+
+
+        private static List<string> ToCompressedNode(JsonSaveTypes.Node node) =>
+            node.Lines == null
+                ? new List<string>
+                {
+                    node.Name,
+                    node.Bounds,
+                    node.Scale.ToString()
+                }
+                : new List<string>
+                {
+                    node.Name,
+                    node.Bounds,
+                    node.Scale.ToString(),
+                    ToSaveListLines(node)
+                };
+
+
+        private static JsonSaveTypes.Node ToSaveNode(IReadOnlyList<string> node)
+        {
+            JsonSaveTypes.Node saveNode = new JsonSaveTypes.Node
+            {
+                Name = node[0],
+                Bounds = node[1],
+                Scale = double.Parse(node[2])
+            };
+
+            if (node.Count == 4) saveNode.Lines = ToSaveLines(node[3]);
+
+            return saveNode;
+        }
+
+
+        private static List<JsonSaveTypes.Line> ToSaveLines(string linesText)
+        {
+            string[] linesParts = linesText.Split("|".ToCharArray());
+            return linesParts.Select(ToSaveLine).ToList();
+        }
+
+
+        private static JsonSaveTypes.Line ToSaveLine(string lineText)
+        {
+            string[] lineParts = lineText.Split(",".ToCharArray());
+            JsonSaveTypes.Line saveLine = new JsonSaveTypes.Line
+            {
+                Target = lineParts[0],
+                Points = new List<string>()
+            };
+
+            for (int i = 1; i < lineParts.Length; i += 2)
+            {
+                saveLine.Points.Add($"{lineParts[i]},{lineParts[i + 1]}");
+            }
+
+            return saveLine;
+        }
+
+
+        private static string ToSaveListLines(JsonSaveTypes.Node node) =>
+            string.Join("|", node.Lines.Select(ToSaveListLine));
+
+
+        private static string ToSaveListLine(JsonSaveTypes.Line line) =>
+            $"{line.Target},{ToSaveListPoints(line)}";
+
+
+        private static string ToSaveListPoints(JsonSaveTypes.Line line) =>
+            string.Join(",", line.Points);
     }
 }
