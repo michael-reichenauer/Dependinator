@@ -49,6 +49,17 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
+        public static DataNode ToDataNode(JsonSaveTypes.Node node) => new DataNode(
+            (DataNodeName)node.Name,
+            null,
+            NodeType.None)
+        {
+            Bounds = node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
+            Scale = node.Scale,
+            Color = node.Color,
+        };
+
+
         private static DataNode ToModelNode(JsonCacheTypes.Node node) => new DataNode(
             (DataNodeName)node.Name,
             node.Parent != null ? (DataNodeName)node.Parent : null,

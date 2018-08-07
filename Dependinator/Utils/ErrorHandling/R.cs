@@ -19,6 +19,7 @@ namespace Dependinator.Utils.ErrorHandling
      
         public bool IsFaulted => Error != Error.None;
         public bool IsOk => Error == Error.None;
+        public bool Is<T>() => Error is T || Error.Exception is T;
         public string Message => Error.Message;
 
         public static R<T> From<T>(T result) => new R<T>(result);

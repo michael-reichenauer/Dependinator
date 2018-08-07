@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
@@ -56,12 +58,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
         private async Task SaveItemsAsync(DataFile dataFile, IReadOnlyList<IDataItem> items)
         {
+            IReadOnlyList<IDataItem> saveItems = await GetSaveItemsAsync(items);
+
             string saveFilePath = dataFilePaths.GetSaveFilePath(dataFile);
 
-            var dataPaths = dataFilePaths.GetDataFilePaths(dataFile);
-
-
-            IReadOnlyList<IDataItem> saveItems = await GetSaveItemsAsync(items);
+            if (IsSaveNewerThanData(dataFile))
+            {
+                await saveSerializer.SerializeMergedAsync(saveItems, saveFilePath);
+            }
 
             await saveSerializer.SerializeAsync(saveItems, saveFilePath);
         }
@@ -74,17 +78,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 List<IDataItem> saveItems = new List<IDataItem>();
                 foreach (IDataItem dataItem in items)
                 {
-                    if (dataItem is DataNode dataNode)
+                    switch (dataItem)
                     {
-                        saveItems.Add(dataNode);
-                    }
-
-                    if (dataItem is DataLine dataLine)
-                    {
-                        if (dataLine.Points.Count > 0)
-                        {
-                            saveItems.Add(dataLine);
-                        }
+                        case DataNode dataNode:
+                            saveItems.Add(dataNode);
+                            break;
+                        case DataLine dataLine:
+                            if (dataLine.Points.Count > 0) saveItems.Add(dataLine);
+                            break;
                     }
                 }
 
@@ -98,5 +99,33 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 .Where(item => item is DataNode || item is DataLine)
                 .Concat(items.Where(item => item is DataLink))
                 .ToList());
+
+
+        private bool IsSaveNewerThanData(DataFile dataFile)
+        {
+            string saveFilePath = dataFilePaths.GetSaveFilePath(dataFile);
+            var dataPaths = dataFilePaths.GetDataFilePaths(dataFile);
+
+            if (!File.Exists(saveFilePath))
+            {
+                return false;
+            }
+
+
+            DateTime saveTime = File.GetLastWriteTime(saveFilePath);
+            foreach (string dataFilePath in dataPaths)
+            {
+                if (!File.Exists(dataFilePath)) return true;
+
+                DateTime fileTime = File.GetLastWriteTime(dataFilePath);
+                if (saveTime > fileTime)
+                {
+                    return true;
+                }
+            }
+
+
+            return false;
+        }
     }
 }

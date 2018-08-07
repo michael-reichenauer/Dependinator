@@ -5,12 +5,14 @@ namespace System.Linq
 {
     public static class EnumerableExtensions
     {
-        public static void ForEach<T>(this IEnumerable<T> enumeration, Action<T> action)
+        public static IEnumerable<T> ForEach<T>(this IEnumerable<T> enumeration, Action<T> action)
         {
             foreach (T item in enumeration)
             {
                 action(item);
             }
+
+            return enumeration;
         }
 
         public static IEnumerable<IEnumerable<T>> Batch<T>(this IEnumerable<T> source, int size)
