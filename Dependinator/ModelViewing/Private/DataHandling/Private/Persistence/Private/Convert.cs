@@ -50,13 +50,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
 
         public static DataNode ToDataNode(JsonSaveTypes.Node node) => new DataNode(
-            (DataNodeName)node.Name,
+            (DataNodeName)node.N,
             null,
             NodeType.None)
         {
-            Bounds = node.Bounds != null ? Rect.Parse(node.Bounds) : RectEx.Zero,
-            Scale = node.Scale,
-            Color = node.Color,
+            Bounds = node.B != null ? Rect.Parse(node.B) : RectEx.Zero,
+            Scale = node.S,
+            Color = node.C,
         };
 
 
@@ -88,16 +88,16 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
         public static JsonSaveTypes.Node ToSaveJsonNode(DataNode node) => new JsonSaveTypes.Node
         {
-            Name = (string)node.Name,
-            Bounds = node.Bounds != RectEx.Zero ? node.Bounds.AsIntString() : null,
-            Scale = node.Scale.Round(3)
+            N = (string)node.Name,
+            B = node.Bounds != RectEx.Zero ? node.Bounds.AsIntString() : null,
+            S = node.Scale.Round(3)
         };
 
 
         public static JsonSaveTypes.Line ToSaveJsonLine(DataLine line) => new JsonSaveTypes.Line
         {
-            Target = (string)line.Target,
-            Points = ToJsonPoints(line.Points)
+            T = (string)line.Target,
+            P = ToJsonPoints(line.Points)
         };
 
 

@@ -8,6 +8,7 @@ using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Private.JsonTypes;
 using Dependinator.Utils;
 using Dependinator.Utils.ErrorHandling;
+using Dependinator.Utils.Threading;
 using Newtonsoft.Json;
 
 
@@ -16,6 +17,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
     internal class SaveSerializer : ISaveSerializer
     {
         private static readonly char[] PartSeparator = ".".ToCharArray();
+        private static readonly char[] LineSeparator = "|".ToCharArray();
+        private static readonly char[] ItemSeparator = ",".ToCharArray();
 
 
         public Task SerializeAsync(IReadOnlyList<IDataItem> items, string path)
@@ -29,8 +32,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
                     ShortenNodeNames(nodes);
 
-                    JsonSaveTypes.Model dataModel = new JsonSaveTypes.Model
-                        {Nodes = ToCompressedNodes(nodes)};
+                    //var compressedNodes = ToCompressedNodes(nodes);
+
+                    JsonSaveTypes.Model dataModel = new JsonSaveTypes.Model {Nodes = nodes};
 
                     Serialize(path, dataModel);
                 }
@@ -48,17 +52,26 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             {
                 try
                 {
+                    Timing t = Timing.Start();
                     List<JsonSaveTypes.Node> nodes = ToSaveNodes(items);
+                    t.Log("Json items");
+
                     AddLinesToNodes(items, nodes);
+                    t.Log("added lines");
 
                     MergeInPreviousSavedNodes(path, nodes);
+                    t.Log("merged with previous");
 
                     ShortenNodeNames(nodes);
+                    t.Log("shortened node names");
 
-                    JsonSaveTypes.Model dataModel = new JsonSaveTypes.Model
-                        {Nodes = ToCompressedNodes(nodes)};
+                    var compressedNodes = ToCompressedNodes(nodes);
+                    t.Log("compressed nodes");
+
+                    JsonSaveTypes.Model dataModel = new JsonSaveTypes.Model {Nodes = nodes };
 
                     Serialize(path, dataModel);
+                    t.Log("serailaized");
                 }
                 catch (Exception e)
                 {
@@ -81,7 +94,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                         return R.NoValue;
                     }
 
-                    List<JsonSaveTypes.Node> nodes = ToDecompressedNodes(model.Nodes);
+                   // List<JsonSaveTypes.Node> nodes = ToDecompressedNodes(model.Nodes);
+                    List<JsonSaveTypes.Node> nodes = model.Nodes;
                     ExpandNodeNames(nodes);
 
                     var dataNodes = nodes.Select(Convert.ToDataNode);
@@ -103,17 +117,17 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         private IEnumerable<IDataItem> GetDataLines(List<JsonSaveTypes.Node> modelNodes)
         {
             return modelNodes
-                .Where(node => node.Lines != null)
-                .ForEach(node => ExpandLineNames(node.Name, node.Lines))
-                .SelectMany(node => node.Lines.Select(line => ToDataLine(line, node)));
+                .Where(node => node.L != null)
+                .ForEach(node => ExpandLineNames(node.N, node.L))
+                .SelectMany(node => node.L.Select(line => ToDataLine(line, node)));
         }
 
 
         private static IDataItem ToDataLine(JsonSaveTypes.Line line, JsonSaveTypes.Node node) =>
             new DataLine(
-                (DataNodeName)node.Name,
-                (DataNodeName)line.Target,
-                line.Points.Select(Point.Parse).ToList(),
+                (DataNodeName)node.N,
+                (DataNodeName)line.T,
+                line.P.Select(Point.Parse).ToList(),
                 0);
 
 
@@ -122,11 +136,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             Dictionary<string, JsonSaveTypes.Node> previousNodes = GetPreviousNodes(path);
 
             // Add all previous nodes, that are not already in nodes
-            nodes.ForEach(node => previousNodes.Remove(node.Name));
+            nodes.ForEach(node => previousNodes.Remove(node.N));
             previousNodes.ForEach(pair => nodes.Add(pair.Value));
 
             // resort nodes
-            nodes = nodes.OrderBy(node => node.Name).ToList();
+            nodes = nodes.OrderBy(node => node.N).ToList();
         }
 
 
@@ -139,12 +153,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 JsonSaveTypes.Model model = Deserialize<JsonSaveTypes.Model>(path);
                 if (model.FormatVersion == JsonSaveTypes.Version)
                 {
-                    List<JsonSaveTypes.Node> nodes = ToDecompressedNodes(model.Nodes);
+                    //List<JsonSaveTypes.Node> nodes = ToDecompressedNodes(model.Nodes);
+                    List<JsonSaveTypes.Node> nodes = model.Nodes;
                     ExpandNodeNames(nodes);
 
                     foreach (JsonSaveTypes.Node node in nodes)
                     {
-                        previousNodes[node.Name] = node;
+                        previousNodes[node.N] = node;
                     }
                 }
             }
@@ -163,7 +178,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 .Where(item => item is DataNode)
                 .Cast<DataNode>()
                 .Select(Convert.ToSaveJsonNode)
-                .OrderBy(it => it.Name)
+                .OrderBy(it => it.N)
                 .ToList();
         }
 
@@ -197,10 +212,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
             foreach (JsonSaveTypes.Node node in nodes)
             {
-                if (lines.TryGetValue(node.Name, out var nodeLines))
+                if (lines.TryGetValue(node.N, out var nodeLines))
                 {
-                    node.Lines = nodeLines.OrderBy(line => line.Target).ToList();
-                    ShortenLineNames(node.Name, node.Lines);
+                    node.L = nodeLines.OrderBy(line => line.T).ToList();
+                    ShortenLineNames(node.N, node.L);
                 }
             }
         }
@@ -210,16 +225,16 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         {
             for (int i = nodes.Count - 1; i > 0; i--)
             {
-                string[] prefixParts = nodes[i - 1].Name.Split(PartSeparator);
+                string[] prefixParts = nodes[i - 1].N.Split(PartSeparator);
 
                 for (int partIndex = prefixParts.Length; partIndex >= 0; partIndex--)
                 {
                     string prefix = string.Join(".", prefixParts.Take(partIndex)) + ".";
 
-                    if (nodes[i].Name.StartsWith(prefix))
+                    if (nodes[i].N.StartsWith(prefix))
                     {
-                        var suffix = nodes[i].Name.Substring(prefix.Length);
-                        nodes[i].Name = new string('.', partIndex) + suffix;
+                        var suffix = nodes[i].N.Substring(prefix.Length);
+                        nodes[i].N = new string('.', partIndex) + suffix;
                         break;
                     }
                 }
@@ -231,14 +246,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         {
             for (int i = 1; i < nodes.Count; i++)
             {
-                string name = nodes[i].Name;
+                string name = nodes[i].N;
                 int partIndex = name.TakeWhile(c => c == '.').Count();
 
                 if (partIndex > 0)
                 {
-                    string[] prefixParts = nodes[i - 1].Name.Split(PartSeparator);
+                    string[] prefixParts = nodes[i - 1].N.Split(PartSeparator);
                     string prefix = string.Join(".", prefixParts.Take(partIndex));
-                    nodes[i].Name = $"{prefix}.{name.TrimStart('.')}";
+                    nodes[i].N = $"{prefix}.{name.TrimStart('.')}";
                 }
             }
         }
@@ -254,10 +269,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 {
                     string prefix = string.Join(".", prefixParts.Take(partIndex)) + ".";
 
-                    if (line.Target.StartsWith(prefix))
+                    if (line.T.StartsWith(prefix))
                     {
-                        var suffix = line.Target.Substring(prefix.Length);
-                        line.Target = new string('.', partIndex) + suffix;
+                        var suffix = line.T.Substring(prefix.Length);
+                        line.T = new string('.', partIndex) + suffix;
                         break;
                     }
                 }
@@ -271,12 +286,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
             foreach (JsonSaveTypes.Line line in lines)
             {
-                int partIndex = line.Target.TakeWhile(c => c == '.').Count();
+                int partIndex = line.T.TakeWhile(c => c == '.').Count();
 
                 if (partIndex > 0)
                 {
                     string prefix = string.Join(".", prefixParts.Take(partIndex));
-                    line.Target = $"{prefix}.{line.Target.TrimStart('.')}";
+                    line.T = $"{prefix}.{line.T.TrimStart('.')}";
                 }
             }
         }
@@ -330,18 +345,18 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
 
         private static List<string> ToCompressedNode(JsonSaveTypes.Node node) =>
-            node.Lines == null
+            node.L == null
                 ? new List<string>
                 {
-                    node.Name,
-                    node.Bounds,
-                    node.Scale.ToString()
+                    node.N,
+                    node.B,
+                    node.S.ToString()
                 }
                 : new List<string>
                 {
-                    node.Name,
-                    node.Bounds,
-                    node.Scale.ToString(),
+                    node.N,
+                    node.B,
+                    node.S.ToString(),
                     ToSaveListLines(node)
                 };
 
@@ -350,12 +365,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         {
             JsonSaveTypes.Node saveNode = new JsonSaveTypes.Node
             {
-                Name = node[0],
-                Bounds = node[1],
-                Scale = double.Parse(node[2])
+                N = node[0],
+                B = node[1],
+                S = double.Parse(node[2])
             };
 
-            if (node.Count == 4) saveNode.Lines = ToSaveLines(node[3]);
+            if (node.Count == 4) saveNode.L = ToSaveLines(node[3]);
 
             return saveNode;
         }
@@ -363,23 +378,23 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
         private static List<JsonSaveTypes.Line> ToSaveLines(string linesText)
         {
-            string[] linesParts = linesText.Split("|".ToCharArray());
+            string[] linesParts = linesText.Split(LineSeparator);
             return linesParts.Select(ToSaveLine).ToList();
         }
 
 
         private static JsonSaveTypes.Line ToSaveLine(string lineText)
         {
-            string[] lineParts = lineText.Split(",".ToCharArray());
+            string[] lineParts = lineText.Split(ItemSeparator);
             JsonSaveTypes.Line saveLine = new JsonSaveTypes.Line
             {
-                Target = lineParts[0],
-                Points = new List<string>()
+                T = lineParts[0],
+                P = new List<string>()
             };
 
             for (int i = 1; i < lineParts.Length; i += 2)
             {
-                saveLine.Points.Add($"{lineParts[i]},{lineParts[i + 1]}");
+                saveLine.P.Add($"{lineParts[i]},{lineParts[i + 1]}");
             }
 
             return saveLine;
@@ -387,14 +402,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
 
         private static string ToSaveListLines(JsonSaveTypes.Node node) =>
-            string.Join("|", node.Lines.Select(ToSaveListLine));
+            string.Join("|", node.L.Select(ToSaveListLine));
 
 
         private static string ToSaveListLine(JsonSaveTypes.Line line) =>
-            $"{line.Target},{ToSaveListPoints(line)}";
+            $"{line.T},{ToSaveListPoints(line)}";
 
 
         private static string ToSaveListPoints(JsonSaveTypes.Line line) =>
-            string.Join(",", line.Points);
+            string.Join(",", line.P);
     }
 }

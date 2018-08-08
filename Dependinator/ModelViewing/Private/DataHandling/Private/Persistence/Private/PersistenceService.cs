@@ -58,16 +58,24 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
         private async Task SaveItemsAsync(DataFile dataFile, IReadOnlyList<IDataItem> items)
         {
+            Timing t = Timing.Start();
             IReadOnlyList<IDataItem> saveItems = await GetSaveItemsAsync(items);
+            t.Log("Got items");
 
             string saveFilePath = dataFilePaths.GetSaveFilePath(dataFile);
 
             if (IsSaveNewerThanData(dataFile))
             {
                 await saveSerializer.SerializeMergedAsync(saveItems, saveFilePath);
+                t.Log("saved merged");
+            }
+            else
+            {
+                await saveSerializer.SerializeAsync(saveItems, saveFilePath);
+                t.Log("saved full");
             }
 
-            await saveSerializer.SerializeAsync(saveItems, saveFilePath);
+           
 
             //Timing t = Timing.Start();
             //var it = await saveSerializer.DeserializeAsync(saveFilePath);

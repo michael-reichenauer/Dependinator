@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using Mono.Cecil;
 
@@ -228,7 +228,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             string typeName = GetTypeFullNameImpl(p.ParameterType);
 
-            int index = typeName.IndexOf('.');
+            int index = typeName.LastIndexOf('.');
             if (index > -1)
             {
                 typeName = typeName.Substring(index + 1);

@@ -1,3 +1,4 @@
+﻿using System.Collections.Generic;
 using System.Globalization;
 
 
@@ -48,6 +49,22 @@ namespace System
         public static string I(FormattableString formattable)
         {
             return formattable.ToString(CultureInfo.InvariantCulture);
+        }
+
+
+        public static IEnumerable<string> Parts(this string text, char splitChar)
+        {
+            int index1 = 0;
+            int index2 = text.IndexOf(splitChar);
+
+            while (index2 > -1)
+            {
+                string part = text.Substring(index1, index2 - index1);
+                index1 = index2 + 1;
+                index2 = text.IndexOf(splitChar, index2 + 1);
+
+                yield return part;
+            }
         }
     }
 }

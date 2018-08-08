@@ -14,26 +14,26 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         public class Model
         {
             public string FormatVersion { get; set; } = Version;
-            public List<List<string>> Nodes { get; set; }
+            public List<Node> Nodes { get; set; }
         }
 
 
         [Serializable]
         public class Node
         {
-            public string Name { get; set; }
-            public string Bounds { get; set; }
-            public string Color { get; set; }
-            public double Scale { get; set; }
-            public List<Line> Lines { get; set; }
+            public string N { get; set; }
+            public string B { get; set; }
+            public string C { get; set; }
+            public double S { get; set; }
+            public List<Line> L { get; set; }
         }
 
 
         [Serializable]
         public class Line
         {
-            public string Target { get; set; }
-            public List<string> Points { get; set; }
+            public string T { get; set; }
+            public List<string> P { get; set; }
         }
     }
 }

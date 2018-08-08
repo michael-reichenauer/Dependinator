@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,6 +12,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
     {
         private readonly string assemblyPath;
         private readonly Lazy<IReadOnlyDictionary<string, string>> descriptions;
+        private static readonly char[] ParameterSeparator = ",".ToCharArray();
 
 
         public XmlDocParser(string assemblyPath)
@@ -86,11 +87,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
             if (index1 > -1 && index2 > index1 + 1)
             {
-                string parameters = memberName
-                    .Substring(index1 + 1, index2 - index1 - 1)
-                    .Replace(".", "#");
-
-                memberName = $"{memberName.Substring(0, index1)}({parameters})";
+                string parametersText = memberName.Substring(index1 + 1, index2 - index1 - 1);
+                string[] parts = parametersText.Split(ParameterSeparator);
+                parametersText = string.Join(",", parts.Select(ToShortTypeName));
+     
+                memberName = $"{memberName.Substring(0, index1)}({parametersText})";
             }
             else if (isMethod)
             {
@@ -105,6 +106,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             }
 
             items[fullName] = summary;
+        }
+
+
+        private static string ToShortTypeName(string fullName)
+        {
+            int index = fullName.LastIndexOf('.');
+            return index == -1 ? fullName : fullName.Substring(index + 1);
         }
 
 
