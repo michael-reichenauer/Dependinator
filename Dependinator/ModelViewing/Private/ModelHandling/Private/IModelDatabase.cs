@@ -34,5 +34,8 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         IReadOnlyList<DataNode> GetAllQueuedNodes();
         void QueueNode(DataNode dataNode);
         event EventHandler DataModified;
+        void SetSaveData(IReadOnlyList<IDataItem> savedItems);
+        bool TryGetSavedNode(NodeName name, out DataNode node);
+        bool TryGetSavedLine(LineId lineId, out DataLine line);
     }
 }

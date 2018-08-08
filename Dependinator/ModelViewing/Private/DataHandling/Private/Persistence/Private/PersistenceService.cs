@@ -36,14 +36,21 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
+        public Task<R<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile)
+        {
+            string saveFilePath = dataFilePaths.GetSaveFilePath(dataFile);
+            return saveSerializer.DeserializeAsync(saveFilePath);
+        }
+
+
         public async Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items)
         {
             Timing t = Timing.Start();
             await SaveItemsAsync(dataFile, items);
             t.Log("Save items");
 
-            await CacheItemsAsync(dataFile, items);
-            t.Log($"Cache {items.Count} items");
+            //await CacheItemsAsync(dataFile, items);
+            //t.Log($"Cache {items.Count} items");
         }
 
 

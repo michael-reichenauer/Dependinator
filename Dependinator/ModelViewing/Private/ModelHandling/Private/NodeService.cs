@@ -1,6 +1,7 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
@@ -37,6 +38,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         public Node Root => modelService.Root;
 
         public bool TryGetNode(NodeName nodeName, out Node node) => modelService.TryGetNode(nodeName, out node);
+        public bool TryGetSavedNode(NodeName nodeName, out DataNode node) => modelService.TryGetSavedNode(nodeName, out node);
 
         public void QueueNode(DataNode dataNode) => modelService.QueueNode(dataNode);
 
@@ -54,6 +56,15 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         public void AddNode(Node node, Node parentNode)
         {
+            if (node.Bounds == RectEx.Zero)
+            {
+                if (modelService.TryGetSavedNode(node.Name, out DataNode savedNode))
+                {
+                    node.Bounds = savedNode.Bounds;
+                    node.ScaleFactor = savedNode.Scale;
+                }
+            }
+            
             modelService.Add(node);
             parentNode.AddChild(node);
 
@@ -91,7 +102,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         {
             if (node.NodeType != nodeType)
             {
-                Log.Warn($"Node type has changed for {node} to {nodeType}");
+                Log.Warn($"Node type has changed for {node} to {node.NodeType}->{nodeType}");
 
                 node.NodeType = nodeType;
 

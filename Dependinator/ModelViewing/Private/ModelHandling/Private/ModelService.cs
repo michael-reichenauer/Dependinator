@@ -69,5 +69,10 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         public void HideNode(Node node) => modelNodeService.HideNode(node);
         public void AddLineViewModel(Line line) => modelLineService.AddLineViewModel(line);
+        public void SetSaveData(IReadOnlyList<IDataItem> savedItems)
+        {
+
+            modelDatabase.SetSaveData(savedItems);
+        }
     }
 }

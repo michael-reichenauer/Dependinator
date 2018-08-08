@@ -58,6 +58,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
+        public Task<R<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile) => 
+            persistenceService.TryReadSaveAsync(dataFile);
+
+
         public Task<R> TryReadFreshAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
         {
             dataMonitorService.StartMonitorData(dataFile);

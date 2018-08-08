@@ -13,6 +13,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling
 
         Task<R> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
 
+        Task<R<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile);
+
         Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items);
 
         Task<R> TryReadFreshAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);

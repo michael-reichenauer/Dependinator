@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
+using Dependinator.Utils.ErrorHandling;
 
 
 namespace Dependinator.ModelViewing.Private.ModelHandling.Private
@@ -30,5 +31,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         void AddOrUpdateItem(IDataItem item, int stamp);
         void HideNode(Node node);
         void AddLineViewModel(Line line);
+        void SetSaveData(IReadOnlyList<IDataItem> savedItems);
     }
 }

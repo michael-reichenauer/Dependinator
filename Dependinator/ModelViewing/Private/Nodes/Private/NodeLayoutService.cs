@@ -40,6 +40,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
             if (!nodeViewMode.Node.Bounds.Same(RectEx.Zero))
             {
                 nodeViewMode.ItemBounds = nodeViewMode.Node.Bounds;
+                nodeViewMode.Node.Parent.IsLayoutCompleted = true;
                 return;
             }
 

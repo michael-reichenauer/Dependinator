@@ -165,9 +165,15 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        private static void UpdateData(Node node, DataNode dataNode)
+        private void UpdateData(Node node, DataNode dataNode)
         {
             node.Description = dataNode.Description;
+            if (nodeService.TryGetSavedNode(node.Name, out DataNode savedNode))
+            {
+                if (node.ViewModel != null) node.ViewModel.ItemBounds = savedNode.Bounds;
+                if (node.ViewModel?.ItemsViewModel?.ItemsCanvas != null)
+                    node.ViewModel.ItemsViewModel.ItemsCanvas.ScaleFactor = savedNode.Scale;
+            }
         }
 
 

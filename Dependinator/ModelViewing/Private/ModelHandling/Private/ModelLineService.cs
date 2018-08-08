@@ -15,17 +15,17 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
     {
         private readonly ILineViewModelService lineViewModelService;
         private readonly ILinkSegmentService linkSegmentService;
-        private readonly IModelDatabase modelService;
+        private readonly IModelDatabase modelDatabase;
 
 
         public ModelLineService(
             ILinkSegmentService linkSegmentService,
             ILineViewModelService lineViewModelService,
-            IModelDatabase modelService)
+            IModelDatabase modelDatabase)
         {
             this.linkSegmentService = linkSegmentService;
             this.lineViewModelService = lineViewModelService;
-            this.modelService = modelService;
+            this.modelDatabase = modelDatabase;
         }
 
 
@@ -33,7 +33,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         {
             try
             {
-                Node source = modelService.GetNode(dataLine.Source);
+                Node source = modelDatabase.GetNode(dataLine.Source);
 
                 if (!TryGetTarget(dataLine, out Node target))
                 {
@@ -44,6 +44,16 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 {
                     // Already added link
                     line.Stamp = stamp;
+
+                    if (dataLine.Points == null)
+                    {
+                        if (modelDatabase.TryGetSavedLine(
+                            new LineId(source.Name, target.Name), out DataLine savedLine))
+                        {
+                            line.View.Points.InsertRange(1, savedLine.Points);
+                        }
+                    }
+
                     return;
                 }
 
@@ -143,6 +153,14 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             {
                 line.View.Points.InsertRange(1, points);
             }
+            else
+            {
+                if (modelDatabase.TryGetSavedLine(
+                    new LineId(source.Name, target.Name), out DataLine dataLine))
+                {
+                    line.View.Points.InsertRange(1, dataLine.Points);
+                }
+            }
 
             line.Source.SourceLines.Add(line);
             line.Target.TargetLines.Add(line);
@@ -189,9 +207,9 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         private bool TryGetTarget(DataLine dataLine, out Node target)
         {
             NodeName targetName = dataLine.Target;
-            if (!modelService.TryGetNode(targetName, out target))
+            if (!modelDatabase.TryGetNode(targetName, out target))
             {
-                modelService.QueueModelLine(targetName, dataLine);
+                modelDatabase.QueueModelLine(targetName, dataLine);
                 return false;
             }
 

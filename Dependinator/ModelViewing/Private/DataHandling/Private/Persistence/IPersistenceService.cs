@@ -11,6 +11,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence
     {
         Task<R> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
 
+        Task<R<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile);
+
         Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items);
     }
 

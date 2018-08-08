@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 
@@ -24,5 +24,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         void QueueNode(DataNode dataNode);
         void RemoveAll();
+        bool TryGetSavedNode(NodeName nodeName, out DataNode node);
     }
 }

@@ -5,16 +5,23 @@ using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.Utils.Dependencies;
+using Dependinator.Utils.Threading;
 
 
 namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 {
+    
     [SingleInstance]
     internal class ModelDatabase : IModelDatabase
     {
         private readonly Dictionary<NodeName, Node> nodes = new Dictionary<NodeName, Node>();
 
         private readonly Dictionary<NodeName, QueuedNode> queuedNodes = new Dictionary<NodeName, QueuedNode>();
+
+
+
+        private readonly Dictionary<NodeName, DataNode> savedNodes = new Dictionary<NodeName, DataNode>();
+        private readonly Dictionary<LineId, DataLine> savedLines = new Dictionary<LineId, DataLine>();
 
 
         public ModelDatabase()
@@ -24,6 +31,32 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
 
         public event EventHandler DataModified;
+
+        public void SetSaveData(IReadOnlyList<IDataItem> savedItems)
+        {
+            Timing t = Timing.Start();
+            savedNodes.Clear();
+            savedLines.Clear();
+            foreach (IDataItem item in savedItems)
+            {
+                if (item is DataNode dataNode) savedNodes[dataNode.Name] = dataNode;
+                if (item is DataLine dataLine) savedLines[new LineId(dataLine.Source, dataLine.Target)] = dataLine;
+            }
+
+            t.Log($"Set saved data {savedItems.Count} items");
+        }
+
+
+        public bool TryGetSavedNode(NodeName name, out DataNode node)
+        {
+           return savedNodes.TryGetValue(name, out node);
+        }
+
+
+        public bool TryGetSavedLine(LineId lineId, out DataLine line)
+        {
+            return savedLines.TryGetValue(lineId, out line);
+        }
 
 
         public Node Root { get; private set; }
@@ -59,22 +92,12 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         public void Add(Node node)
         {
             nodes[node.Name] = node;
-
-            //if (IsChangeMonitored)
-            //{
-            //    DataModified?.Invoke(this, EventArgs.Empty);
-            //}
         }
 
 
         public void Remove(Node node)
         {
             nodes.Remove(node.Name);
-
-            //if (IsChangeMonitored)
-            //{
-            //    DataModified?.Invoke(this, EventArgs.Empty);
-            //}
         }
 
 

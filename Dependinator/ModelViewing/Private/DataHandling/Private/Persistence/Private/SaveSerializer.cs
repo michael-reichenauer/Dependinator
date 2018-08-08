@@ -87,6 +87,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             {
                 try
                 {
+                    if (!File.Exists(path))
+                    {
+                        return R.NoValue;
+                    }
+
                     var model = Deserialize<JsonSaveTypes.Model>(path);
                     if (model.FormatVersion != JsonSaveTypes.Version)
                     {
@@ -133,6 +138,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
         private static void MergeInPreviousSavedNodes(string path, List<JsonSaveTypes.Node> nodes)
         {
+            if (!File.Exists(path))
+            {
+                return;
+            }
+
             Dictionary<string, JsonSaveTypes.Node> previousNodes = GetPreviousNodes(path);
 
             // Add all previous nodes, that are not already in nodes

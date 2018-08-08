@@ -84,7 +84,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             {
                 isWorking = true;
                 Log.Debug($"Metadata model: {modelMetadata.DataFile} {DateTime.Now}");
-                
+
                 if (modelMetadata.IsDefault)
                 {
                     isShowingOpenModel = true;
@@ -227,8 +227,18 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             {
                 return R.Ok;
             }
-            
-           R freshResult = await ShowModelAsync(operation => dataService.TryReadFreshAsync(
+
+            var savedItems = await dataService.TryReadSaveAsync(modelMetadata.DataFile);
+            if (savedItems.IsOk)
+            {
+                modelService.SetSaveData(savedItems.Value);
+            }
+            else
+            {
+                modelService.SetSaveData(new List<IDataItem>());
+            }
+
+            R freshResult = await ShowModelAsync(operation => dataService.TryReadFreshAsync(
                 modelMetadata.DataFile, items => UpdateDataItems(items, operation)));
 
             if (freshResult.IsOk)
@@ -339,7 +349,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 });
             }
         }
-
 
 
         private class Operation
