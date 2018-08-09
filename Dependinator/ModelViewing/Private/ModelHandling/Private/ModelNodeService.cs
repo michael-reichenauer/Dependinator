@@ -109,6 +109,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
             node.Parent.ItemsCanvas.UpdateAndNotifyAll(true);
             node.Root.ItemsCanvas.UpdateAll();
+            nodeService.SetIsChanged(node);
         }
 
 
@@ -130,6 +131,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
                 node.Parent.ItemsCanvas?.UpdateAndNotifyAll(true);
                 node.Root.ItemsCanvas.UpdateAll();
+                nodeService.SetIsChanged(node);
             }
         }
 
@@ -173,6 +175,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 if (node.ViewModel != null) node.ViewModel.ItemBounds = savedNode.Bounds;
                 if (node.ViewModel?.ItemsViewModel?.ItemsCanvas != null)
                     node.ViewModel.ItemsViewModel.ItemsCanvas.ScaleFactor = savedNode.Scale;
+                node.IsHidden = savedNode.ShowState == Node.Hidden;
             }
         }
 

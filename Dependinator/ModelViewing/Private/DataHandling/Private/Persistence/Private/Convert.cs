@@ -57,6 +57,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             Bounds = node.B != null ? Rect.Parse(node.B) : RectEx.Zero,
             Scale = node.S,
             Color = node.C,
+            ShowState = node.St
         };
 
 
@@ -90,7 +91,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         {
             N = (string)node.Name,
             B = node.Bounds != RectEx.Zero ? node.Bounds.AsIntString() : null,
-            S = node.Scale.Round(3)
+            S = node.Scale.Round(3),
+            St =  node.ShowState
         };
 
 

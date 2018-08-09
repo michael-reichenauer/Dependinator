@@ -65,8 +65,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                     ShortenNodeNames(nodes);
                     t.Log("shortened node names");
 
-                    var compressedNodes = ToCompressedNodes(nodes);
-                    t.Log("compressed nodes");
+                    //var compressedNodes = ToCompressedNodes(nodes);
+                    //t.Log("compressed nodes");
 
                     JsonSaveTypes.Model dataModel = new JsonSaveTypes.Model {Nodes = nodes };
 

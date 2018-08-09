@@ -21,10 +21,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         [Serializable]
         public class Node
         {
-            public string N { get; set; }
-            public string B { get; set; }
-            public string C { get; set; }
-            public double S { get; set; }
+           
+            public string N { get; set; }    // Name
+            public string B { get; set; }    // Bounds
+            public string C { get; set; }    // Color
+            public double S { get; set; }    // Scale
+            public string St { get; set; }   // State
+
             public List<Line> L { get; set; }
         }
 
@@ -32,8 +35,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         [Serializable]
         public class Line
         {
-            public string T { get; set; }
-            public List<string> P { get; set; }
+            public string T { get; set; }          // Target
+            public List<string> P { get; set; }    // Points
         }
     }
 }

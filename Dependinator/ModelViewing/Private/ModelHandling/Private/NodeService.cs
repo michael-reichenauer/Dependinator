@@ -39,6 +39,8 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         public bool TryGetNode(NodeName nodeName, out Node node) => modelService.TryGetNode(nodeName, out node);
         public bool TryGetSavedNode(NodeName nodeName, out DataNode node) => modelService.TryGetSavedNode(nodeName, out node);
+        public void SetIsChanged(Node node) => modelService.SetIsChanged(node);
+
 
         public void QueueNode(DataNode dataNode) => modelService.QueueNode(dataNode);
 
@@ -62,6 +64,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 {
                     node.Bounds = savedNode.Bounds;
                     node.ScaleFactor = savedNode.Scale;
+                    node.IsHidden = savedNode.ShowState == Node.Hidden;
                 }
             }
             
