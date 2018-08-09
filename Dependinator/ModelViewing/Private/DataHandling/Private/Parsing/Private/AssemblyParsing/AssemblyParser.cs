@@ -67,7 +67,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         public static IReadOnlyList<string> GetBuildFolderPaths(string filePath) => new string[0];
 
 
-        public async Task<R> ParseAsync()
+        public async Task<M> ParseAsync()
         {
             if (!File.Exists(assemblyPath))
             {
@@ -81,7 +81,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 ParseAssemblyReferences(new string[0]);
                 ParseTypes();
                 ParseTypeMembers();
-                return R.Ok;
+                return M.Ok;
             });
         }
 
@@ -129,11 +129,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public R<string> GetCode(NodeName nodeName) =>
+        public M<string> GetCode(NodeName nodeName) =>
             decompiler.GetCode(assembly.Value.MainModule, nodeName);
 
 
-        public R<SourceLocation> GetSourceFilePath(NodeName nodeName) =>
+        public M<SourceLocation> GetSourceFilePath(NodeName nodeName) =>
             decompiler.GetSourceFilePath(assembly.Value.MainModule, nodeName);
 
 

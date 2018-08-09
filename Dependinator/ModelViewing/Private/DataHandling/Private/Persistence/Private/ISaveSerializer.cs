@@ -10,6 +10,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
     {
         Task SerializeAsync(IReadOnlyList<IDataItem> items, string path);
         Task SerializeMergedAsync(IReadOnlyList<IDataItem> saveItems, string path);
-        Task<R<IReadOnlyList<IDataItem>>> DeserializeAsync(string path);
+        Task<M<IReadOnlyList<IDataItem>>> DeserializeAsync(string path);
     }
 }

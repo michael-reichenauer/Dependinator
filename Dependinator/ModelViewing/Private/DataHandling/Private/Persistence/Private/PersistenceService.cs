@@ -28,7 +28,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        public async Task<R> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
+        public async Task<M> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
         {
             string cacheFilePath = dataFilePaths.GetCacheFilePath(dataFile);
 
@@ -36,7 +36,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        public Task<R<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile)
+        public Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile)
         {
             string saveFilePath = dataFilePaths.GetSaveFilePath(dataFile);
             return saveSerializer.DeserializeAsync(saveFilePath);

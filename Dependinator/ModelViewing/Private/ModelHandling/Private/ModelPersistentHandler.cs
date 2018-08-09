@@ -127,7 +127,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 isDataModified = false;
 
                 Timing t = Timing.Start();
-                R<IReadOnlyList<IDataItem>> items = await TryGetModelSnapshotAsync();
+                M<IReadOnlyList<IDataItem>> items = await TryGetModelSnapshotAsync();
 
                 if (items.IsOk)
                 {
@@ -141,7 +141,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        private async Task<R<IReadOnlyList<IDataItem>>> TryGetModelSnapshotAsync()
+        private async Task<M<IReadOnlyList<IDataItem>>> TryGetModelSnapshotAsync()
         {
             try
             {
@@ -159,7 +159,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                         await Task.Delay(10);
 
                         // Stop if models was modified
-                        if (isDataModified) return R.NoValue;
+                        if (isDataModified) return M.NoValue;
                     }
 
                     items.AddRange(ToDataItems(node));
@@ -171,7 +171,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             {
                 // Nodes, links or lines changed while iterating. It is very rare.
                 // Just treating it as if some item where changed
-                return R.NoValue;
+                return M.NoValue;
             }
         }
 

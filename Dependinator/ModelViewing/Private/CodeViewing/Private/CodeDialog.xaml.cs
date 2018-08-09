@@ -21,7 +21,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
     public partial class CodeDialog : Window
     {
         private readonly CodeViewModel codeViewModel;
-        private readonly Func<NodeName, Task<R<SourceCode>>> getCodeActionAsync;
+        private readonly Func<NodeName, Task<M<SourceCode>>> getCodeActionAsync;
         private readonly IMessage message;
         private readonly Lazy<IModelNotifications> modelNotifications;
 
@@ -34,7 +34,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
             ISolutionService solutionService,
             WindowOwner owner,
             NodeName nodeName,
-            Func<NodeName, Task<R<SourceCode>>> getCodeActionAsync)
+            Func<NodeName, Task<M<SourceCode>>> getCodeActionAsync)
         {
             this.modelNotifications = modelNotifications;
             this.message = message;
@@ -70,7 +70,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         {
             CodeView.Text = "Getting code ...";
 
-            R<SourceCode> codeResult = await getCodeActionAsync(nodeName);
+            M<SourceCode> codeResult = await getCodeActionAsync(nodeName);
 
             if (codeResult.IsFaulted)
             {

@@ -81,7 +81,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        public Task<R<IReadOnlyList<IDataItem>>> DeserializeAsync(string path)
+        public Task<M<IReadOnlyList<IDataItem>>> DeserializeAsync(string path)
         {
             return Task.Run(() =>
             {
@@ -89,14 +89,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 {
                     if (!File.Exists(path))
                     {
-                        return R.NoValue;
+                        return M.NoValue;
                     }
 
                     var model = Deserialize<JsonSaveTypes.Model>(path);
                     if (model.FormatVersion != JsonSaveTypes.Version)
                     {
                         Log.Warn($"Unexpected format {model.FormatVersion}, expected {JsonSaveTypes.Version}");
-                        return R.NoValue;
+                        return M.NoValue;
                     }
 
                    // List<JsonSaveTypes.Node> nodes = ToDecompressedNodes(model.Nodes);
@@ -108,12 +108,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
                     IReadOnlyList<IDataItem> dataItems = dataNodes.Concat(dataLines).ToList();
 
-                    return R.From(dataItems);
+                    return M.From(dataItems);
                 }
                 catch (Exception e)
                 {
                     Log.Exception(e, $"Failed to serialize to {path}");
-                    return R.NoValue;
+                    return M.NoValue;
                 }
             });
         }

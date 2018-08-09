@@ -157,7 +157,7 @@ namespace Dependinator.Common.Installation.Private
         {
             try
             {
-                R<LatestInfo> latestInfo = await GetLatestInfoAsync();
+                M<LatestInfo> latestInfo = await GetLatestInfoAsync();
 
                 if (latestInfo.IsOk && latestInfo.Value.tag_name != null)
                 {
@@ -175,7 +175,7 @@ namespace Dependinator.Common.Installation.Private
         }
 
 
-        private async Task<R<LatestInfo>> GetLatestInfoAsync()
+        private async Task<M<LatestInfo>> GetLatestInfoAsync()
         {
             try
             {
