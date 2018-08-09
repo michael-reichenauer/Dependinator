@@ -14,95 +14,95 @@ using Task = System.Threading.Tasks.Task;
 
 namespace DependinatorVse.Api.ApiHandling
 {
-	internal class ApiManagerService
-	{
-		private ApiIpcServer apiIpcServer;
-		private VsExtensionApiService vsExtensionApiService;
-		private AsyncPackage package;
+    internal class ApiManagerService
+    {
+        private ApiIpcServer apiIpcServer;
+        private AsyncPackage package;
+        private VsExtensionApiService vsExtensionApiService;
 
 
+        public async Task InitApiServerAsync(AsyncPackage asyncPackage)
+        {
+            Log.Debug("Init api");
+            package = asyncPackage;
 
-		public async Task InitApiServerAsync(AsyncPackage asyncPackage)
-		{
-			Log.Debug("Init api");
-			package = asyncPackage;
+            vsExtensionApiService = new VsExtensionApiService(package);
 
-			vsExtensionApiService = new VsExtensionApiService(package);
+            bool isSolutionLoaded = await IsSolutionLoadedAsync(package);
 
-			bool isSolutionLoaded = await IsSolutionLoadedAsync(package);
+            if (isSolutionLoaded)
+            {
+                HandleOpenSolution();
+            }
 
-			if (isSolutionLoaded)
-			{
-				HandleOpenSolution();
-			}
-
-			SolutionEvents.OnAfterOpenSolution += HandleOpenSolution;
-			SolutionEvents.OnBeforeCloseSolution += HandleCloseSolution;
-		}
-
-
-		private static async Task<bool> IsSolutionLoadedAsync(AsyncPackage package)
-		{
-			await package.JoinableTaskFactory.SwitchToMainThreadAsync();
-
-			if (!(await package.GetServiceAsync(typeof(SVsSolution)) is IVsSolution solService))
-			{
-				return false;
-			}
-
-			ErrorHandler.ThrowOnFailure(solService.GetProperty((int)__VSPROPID.VSPROPID_IsSolutionOpen, out object value));
-
-			return value is bool isSolOpen && isSolOpen;
-		}
+            SolutionEvents.OnAfterOpenSolution += HandleOpenSolution;
+            SolutionEvents.OnBeforeCloseSolution += HandleCloseSolution;
+        }
 
 
-		private async void HandleOpenSolution(object sender = null, EventArgs e = null)
-		{
-			await package.JoinableTaskFactory.SwitchToMainThreadAsync();
+        private static async Task<bool> IsSolutionLoadedAsync(AsyncPackage package)
+        {
+            await package.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-			DTE2 dte = (DTE2)await package.GetServiceAsync(typeof(DTE));
-			if (dte == null)
-			{
-				return;
-			}
+            if (!(await package.GetServiceAsync(typeof(SVsSolution)) is IVsSolution solService))
+            {
+                return false;
+            }
 
-			Solution solution = dte.Solution;
+            ErrorHandler.ThrowOnFailure(solService.GetProperty((int)__VSPROPID.VSPROPID_IsSolutionOpen,
+                out object value));
 
-			await RegisterAsync(solution.FileName);
-		}
-
-
-		private void HandleCloseSolution(object sender, EventArgs e)
-		{
-			Log.Warn("Close solution");
-			apiIpcServer?.Dispose();
-			apiIpcServer = null;
-		}
+            return value is bool isSolOpen && isSolOpen;
+        }
 
 
-		private async Task RegisterAsync(string solutionFilePath)
-		{
-			try
-			{
-				string serverName = GetServerName(solutionFilePath);
-				Log.Debug($"Register: {serverName}");
+        private async void HandleOpenSolution(object sender = null, EventArgs e = null)
+        {
+            await package.JoinableTaskFactory.SwitchToMainThreadAsync();
 
-				apiIpcServer?.Dispose();
-				apiIpcServer = new ApiIpcServer(serverName);
+            DTE2 dte = (DTE2)await package.GetServiceAsync(typeof(DTE));
+            if (dte == null)
+            {
+                return;
+            }
 
-				await apiIpcServer.PublishServiceAsync<IVsExtensionApi>(vsExtensionApiService);
+            Solution solution = dte.Solution;
 
-				Log.Debug($"Registered: {serverName}");
-			}
-			catch (Exception e)
-			{
-				Log.Error($"Error {e}");
-				throw;
-			}
-		}
+            await RegisterAsync(solution.FileName);
+        }
 
 
-		private static string GetServerName(string solutionFilePath) =>
-			ApiServerNames.ServerName<IVsExtensionApi>(solutionFilePath);
-	}
+        private void HandleCloseSolution(object sender, EventArgs e)
+        {
+            Log.Warn("Close solution");
+            apiIpcServer?.Dispose();
+            apiIpcServer = null;
+        }
+
+
+        private async Task RegisterAsync(string solutionFilePath)
+        {
+            try
+            {
+                string serverName = GetServerName(solutionFilePath);
+                Log.Debug($"Register: {serverName}");
+
+                apiIpcServer?.Dispose();
+                apiIpcServer = new ApiIpcServer(serverName);
+
+                await apiIpcServer.PublishServiceAsync<IVsExtensionApi>(vsExtensionApiService);
+
+                Log.Debug($"Registered: {serverName}");
+            }
+            catch (Exception e)
+            {
+                Log.Error($"Error {e}");
+                throw;
+            }
+        }
+
+
+        private static string GetServerName(string solutionFilePath) =>
+            ApiServerNames.ServerName<IVsExtensionApi>(solutionFilePath);
+    }
 }

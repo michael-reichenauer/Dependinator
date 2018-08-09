@@ -5,25 +5,28 @@ using System.Windows.Input;
 
 namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 {
-	/// <summary>
-	/// Interaction logic for DependencyItemView.xaml
-	/// </summary>
-	public partial class DependencyItemView : UserControl
-	{
-		private DependencyItemViewModel ViewModel => DataContext as DependencyItemViewModel;
-
-		public DependencyItemView()
-		{
-			InitializeComponent();
-		}
+    /// <summary>
+    ///     Interaction logic for DependencyItemView.xaml
+    /// </summary>
+    public partial class DependencyItemView : UserControl
+    {
+        public DependencyItemView()
+        {
+            InitializeComponent();
+        }
 
 
-		private void UIElement_OnMouseEnter(object sender, MouseEventArgs e) => 
-			ViewModel?.OnMouseEnter();
+        private DependencyItemViewModel ViewModel => DataContext as DependencyItemViewModel;
 
-		private void UIElement_OnMouseLeave(object sender, MouseEventArgs e) =>
-			ViewModel?.OnMouseLeave();
 
-		private void ToolTip_OnOpened(object sender, RoutedEventArgs e) => ViewModel?.UpdateToolTip();
-	}
+        private void UIElement_OnMouseEnter(object sender, MouseEventArgs e) =>
+            ViewModel?.OnMouseEnter();
+
+
+        private void UIElement_OnMouseLeave(object sender, MouseEventArgs e) =>
+            ViewModel?.OnMouseLeave();
+
+
+        private void ToolTip_OnOpened(object sender, RoutedEventArgs e) => ViewModel?.UpdateToolTip();
+    }
 }

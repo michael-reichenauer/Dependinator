@@ -1,10 +1,10 @@
 ﻿namespace Dependinator.Common.ModelMetadataFolders.Private
 {
-	public interface IStartInstanceService
-	{
-		bool StartInstance(string modelFilePath);
+    public interface IStartInstanceService
+    {
+        bool StartInstance(string modelFilePath);
 
-		bool OpenOrStartInstance(string modelFilePath);
-		bool OpenOrStartDefaultInstance();
-	}
+        bool OpenOrStartInstance(string modelFilePath);
+        bool OpenOrStartDefaultInstance();
+    }
 }

@@ -12,266 +12,265 @@ using Dependinator.Utils.ErrorHandling;
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.SolutionParsing
 {
-	internal class SolutionParser : IDisposable
-	{
-		private readonly string solutionFilePath;
-		private readonly DataItemsCallback itemsCallback;
-		private readonly bool isReadSymbols;
+    internal class SolutionParser : IDisposable
+    {
+        private readonly List<AssemblyParser> assemblyParsers = new List<AssemblyParser>();
+        private readonly bool isReadSymbols;
+        private readonly DataItemsCallback itemsCallback;
+        private readonly List<DataNode> parentNodesToSend = new List<DataNode>();
+        private readonly DataFile dataFile;
 
-		private readonly List<AssemblyParser> assemblyParsers = new List<AssemblyParser>();
-		private readonly List<DataNode> parentNodesToSend = new List<DataNode>();
 
+        public SolutionParser(
+            DataFile dataFile,
+            DataItemsCallback itemsCallback,
+            bool isReadSymbols)
+        {
+            this.dataFile = dataFile;
+            this.itemsCallback = itemsCallback;
+            this.isReadSymbols = isReadSymbols;
+        }
 
-		public SolutionParser(
-			string solutionFilePath, 
-			DataItemsCallback itemsCallback,
-			bool isReadSymbols)
-		{
-			this.solutionFilePath = solutionFilePath;
-			this.itemsCallback = itemsCallback;
-			this.isReadSymbols = isReadSymbols;
-		}
-
-		public static bool IsSolutionFile(string filePath) =>
-			Path.GetExtension(filePath).IsSameIgnoreCase(".sln");
 
+        public void Dispose()
+        {
+            foreach (AssemblyParser parser in assemblyParsers)
+            {
+                parser.Dispose();
+            }
+        }
 
-		public async Task<R> ParseAsync()
-		{
-			parentNodesToSend.Add(GetSolutionNode());
-
-			R result = CreateAssemblyParsers();
-			if (result.IsFaulted)
-			{
-				return result.Error;
-			}
 
-			parentNodesToSend.ForEach(node => itemsCallback(node));
+        public static bool IsSolutionFile(DataFile dataFile) =>
+            Path.GetExtension(dataFile.FilePath).IsSameIgnoreCase(".sln");
 
-			await ParseSolutionAssembliesAsync();
-			return R.Ok;
-		}
 
+        public async Task<R> ParseAsync()
+        {
+            parentNodesToSend.Add(GetSolutionNode());
 
-		public async Task<R<string>> GetCodeAsync(NodeName nodeName)
-		{
-			await Task.Yield();
+            R result = CreateAssemblyParsers();
+            if (result.IsFaulted)
+            {
+                return result.Error;
+            }
 
-			R result = CreateAssemblyParsers();
+            parentNodesToSend.ForEach(node => itemsCallback(node));
 
-			if (result.IsFaulted)
-			{
-				return result.Error;
-			}
+            await ParseSolutionAssembliesAsync();
+            return R.Ok;
+        }
 
-			string moduleName = GetModuleName(nodeName);
-			AssemblyParser assemblyParser = assemblyParsers
-				.FirstOrDefault(p => p.ModuleName == moduleName);
 
-			if (assemblyParser == null)
-			{
-				return Error.From($"Failed to find assembly for {moduleName}");
-			}
+        public async Task<R<string>> GetCodeAsync(NodeName nodeName)
+        {
+            await Task.Yield();
 
-			return assemblyParser.GetCode(nodeName);
-		}
+            R result = CreateAssemblyParsers();
 
+            if (result.IsFaulted)
+            {
+                return result.Error;
+            }
 
-		public async Task<R<SourceLocation>> GetSourceFilePathAsync(NodeName nodeName)
-		{
-			await Task.Yield();
+            string moduleName = GetModuleName(nodeName);
+            AssemblyParser assemblyParser = assemblyParsers
+                .FirstOrDefault(p => p.ModuleName == moduleName);
 
-			R result = CreateAssemblyParsers();
-
-			if (result.IsFaulted)
-			{
-				return result.Error;
-			}
+            if (assemblyParser == null)
+            {
+                return Error.From($"Failed to find assembly for {moduleName}");
+            }
 
-			string moduleName = GetModuleName(nodeName);
-			AssemblyParser assemblyParser = assemblyParsers
-				.FirstOrDefault(p => p.ModuleName == moduleName);
+            return assemblyParser.GetCode(nodeName);
+        }
 
-			if (assemblyParser == null)
-			{
-				return Error.From($"Failed to find assembly for {moduleName}");
-			}
 
-			return assemblyParser.GetSourceFilePath(nodeName);
-		}
+        public async Task<R<SourceLocation>> GetSourceFilePathAsync(NodeName nodeName)
+        {
+            await Task.Yield();
 
+            R result = CreateAssemblyParsers();
 
-		public async Task<R<NodeName>> GetNodeNameForFilePathAsync(string sourceFilePath)
-		{
-			await Task.Yield();
+            if (result.IsFaulted)
+            {
+                return result.Error;
+            }
 
-			R result = CreateAssemblyParsers();
+            string moduleName = GetModuleName(nodeName);
+            AssemblyParser assemblyParser = assemblyParsers
+                .FirstOrDefault(p => p.ModuleName == moduleName);
 
-			if (result.IsFaulted)
-			{
-				return result.Error;
-			}
-			
-			foreach (AssemblyParser parser in assemblyParsers)
-			{
-				if (parser.TryGetNodeNameFor(sourceFilePath, out NodeName nodeName))
-				{
-					return nodeName;
-				}
-			}
-
-			sourceFilePath = Path.GetDirectoryName(sourceFilePath);
-			foreach (AssemblyParser parser in assemblyParsers)
-			{
-				if (parser.TryGetNodeNameFor(sourceFilePath, out NodeName nodeName))
-				{
-					return nodeName.ParentName;
-				}
-			}
+            if (assemblyParser == null)
+            {
+                return Error.From($"Failed to find assembly for {moduleName}");
+            }
 
-			return Error.From($"Failed to find node for {sourceFilePath}");
-		}
+            return assemblyParser.GetSourceFilePath(nodeName);
+        }
 
 
-		private DataNodeName GetSolutionNodeName()
-		{
-			string solutionName = Path.GetFileName(solutionFilePath).Replace(".", "*");
-			DataNodeName solutionNodeName = new DataNodeName(solutionName);
-			return solutionNodeName;
-		}
+        public async Task<R<NodeName>> GetNodeNameForFilePathAsync(string sourceFilePath)
+        {
+            await Task.Yield();
 
+            R result = CreateAssemblyParsers();
 
-		public static IReadOnlyList<string> GetDataFilePaths(string filePath)
-		{
-			Solution solution = new Solution(filePath);
+            if (result.IsFaulted)
+            {
+                return result.Error;
+            }
 
-			return solution.GetDataFilePaths();
-		}
+            foreach (AssemblyParser parser in assemblyParsers)
+            {
+                if (parser.TryGetNodeNameFor(sourceFilePath, out NodeName nodeName))
+                {
+                    return nodeName;
+                }
+            }
 
+            sourceFilePath = Path.GetDirectoryName(sourceFilePath);
+            foreach (AssemblyParser parser in assemblyParsers)
+            {
+                if (parser.TryGetNodeNameFor(sourceFilePath, out NodeName nodeName))
+                {
+                    return nodeName.ParentName;
+                }
+            }
 
-		public void Dispose()
-		{
-			foreach (AssemblyParser parser in assemblyParsers)
-			{
-				parser.Dispose();
-			}
-		}
+            return Error.From($"Failed to find node for {sourceFilePath}");
+        }
 
 
-		private DataNode GetSolutionNode()
-		{
-			DataNodeName solutionName = GetSolutionNodeName();
-			DataNode solutionNode = new DataNode(solutionName, DataNodeName.Root, NodeType.Solution)
-				{ Description = "Solution file" };
-			return solutionNode;
-		}
+        private DataNodeName GetSolutionNodeName()
+        {
+            string solutionName = Path.GetFileName(dataFile.FilePath).Replace(".", "*");
+            DataNodeName solutionNodeName = (DataNodeName)solutionName;
+            return solutionNodeName;
+        }
 
 
-		private R CreateAssemblyParsers()
-		{
-			DataNodeName solutionName = GetSolutionNodeName();
+        public static IReadOnlyList<string> GetDataFilePaths(string filePath)
+        {
+            Solution solution = new Solution(filePath);
 
-			Solution solution = new Solution(solutionFilePath);
-			IReadOnlyList<Project> projects = solution.GetSolutionProjects();
+            return solution.GetDataFilePaths();
+        }
 
-			foreach (Project project in projects)
-			{
-				string assemblyPath = project.GetOutputPath();
-				if (assemblyPath == null)
-				{
-					return Error.From(new MissingAssembliesException(
-						$"Failed to parse:\n {solutionFilePath}\nProject\n{project}\nhas no Debug assembly."));
-				}
 
-				DataNodeName parent = GetParent(solutionName, project);
+        private DataNode GetSolutionNode()
+        {
+            DataNodeName solutionName = GetSolutionNodeName();
+            DataNode solutionNode = new DataNode(solutionName, DataNodeName.None, NodeType.Solution)
+                {Description = "Solution file"};
+            return solutionNode;
+        }
 
-				var assemblyParser = new AssemblyParser(assemblyPath, parent, itemsCallback, isReadSymbols);
 
-				assemblyParsers.Add(assemblyParser);
-			}
+        private R CreateAssemblyParsers()
+        {
+            DataNodeName solutionName = GetSolutionNodeName();
 
+            Solution solution = new Solution(dataFile.FilePath);
+            IReadOnlyList<Project> projects = solution.GetSolutionProjects();
 
-			return R.Ok;
-		}
+            foreach (Project project in projects)
+            {
+                string assemblyPath = project.GetOutputPath();
+                if (assemblyPath == null)
+                {
+                    return Error.From(new MissingAssembliesException(
+                        $"Failed to parse:\n {dataFile}\nProject\n{project}\nhas no Debug assembly."));
+                }
 
+                DataNodeName parent = GetParent(solutionName, project);
 
-		private DataNodeName GetParent(DataNodeName solutionName, Project project)
-		{
-			DataNodeName parent = solutionName;
-			string projectName = project.ProjectFullName;
+                var assemblyParser = new AssemblyParser(assemblyPath, parent, itemsCallback, isReadSymbols);
 
-			string[] parts = projectName.Split("\\".ToCharArray());
-			if (parts.Length == 1)
-			{
-				return parent;
-			}
+                assemblyParsers.Add(assemblyParser);
+            }
 
-			for (int i = 0; i < parts.Length - 1; i++)
-			{
-				string name = string.Join(".", parts.Take(i + 1));
-				DataNodeName folderName = new DataNodeName($"{solutionName.FullName}.{name}");
 
-				if (!parentNodesToSend.Any(n => n.Name == folderName))
-				{
-					DataNode folderNode = new DataNode(folderName, parent, NodeType.SolutionFolder);
-					parentNodesToSend.Add(folderNode);
-				}
+            return R.Ok;
+        }
 
-				parent = folderName;
-			}
 
-			return parent;
+        private DataNodeName GetParent(DataNodeName solutionName, Project project)
+        {
+            DataNodeName parent = solutionName;
+            string projectName = project.ProjectFullName;
 
-		}
+            string[] parts = projectName.Split("\\".ToCharArray());
+            if (parts.Length == 1)
+            {
+                return parent;
+            }
 
+            for (int i = 0; i < parts.Length - 1; i++)
+            {
+                string name = string.Join(".", parts.Take(i + 1));
+                DataNodeName folderName = (DataNodeName)$"{(string)solutionName}.{name}";
 
-		public static IReadOnlyList<string> GetBuildFolderPaths(string filePath)
-		{
-			Solution solution = new Solution(filePath);
+                if (!parentNodesToSend.Any(n => n.Name == folderName))
+                {
+                    DataNode folderNode = new DataNode(folderName, parent, NodeType.SolutionFolder);
+                    parentNodesToSend.Add(folderNode);
+                }
 
-			return solution.GetBuildFolderPaths();
-		}
+                parent = folderName;
+            }
 
+            return parent;
+        }
 
-		private static string GetModuleName(NodeName nodeName)
-		{
-			while (true)
-			{
-				if (nodeName.ParentName == NodeName.Root)
-				{
-					return nodeName.DisplayShortName;
-				}
 
-				nodeName = nodeName.ParentName;
-			}
-		}
+        public static IReadOnlyList<string> GetBuildFolderPaths(string filePath)
+        {
+            Solution solution = new Solution(filePath);
 
+            return solution.GetBuildFolderPaths();
+        }
 
-		private async Task ParseSolutionAssembliesAsync()
-		{
-			ParallelOptions option = GetParallelOptions();
 
-			var internalModules = assemblyParsers.Select(p => p.ModuleName).ToList();
+        private static string GetModuleName(NodeName nodeName)
+        {
+            while (true)
+            {
+                if (nodeName.ParentName == NodeName.Root)
+                {
+                    return nodeName.DisplayShortName;
+                }
 
-			await Task.Run(() =>
-			{
-				Parallel.ForEach(assemblyParsers, option, parser => parser.ParseAssemblyModule());
-				Parallel.ForEach(assemblyParsers, option, parser => parser.ParseAssemblyReferences(internalModules));
-				Parallel.ForEach(assemblyParsers, option, parser => parser.ParseTypes());
-				Parallel.ForEach(assemblyParsers, option, parser => parser.ParseTypeMembers());
-			});
-		}
+                nodeName = nodeName.ParentName;
+            }
+        }
 
 
-		private static ParallelOptions GetParallelOptions()
-		{
-			// Leave room for UI thread
-			int workerThreadsCount = Math.Max(Environment.ProcessorCount - 1, 1);
+        private async Task ParseSolutionAssembliesAsync()
+        {
+            ParallelOptions option = GetParallelOptions();
 
-			// workerThreadsCount = 1;
-			var option = new ParallelOptions { MaxDegreeOfParallelism = workerThreadsCount };
-			Log.Debug($"Parallelism: {workerThreadsCount}");
-			return option;
-		}
-	}
+            var internalModules = assemblyParsers.Select(p => p.ModuleName).ToList();
+
+            await Task.Run(() =>
+            {
+                Parallel.ForEach(assemblyParsers, option, parser => parser.ParseAssemblyModule());
+                Parallel.ForEach(assemblyParsers, option, parser => parser.ParseAssemblyReferences(internalModules));
+                Parallel.ForEach(assemblyParsers, option, parser => parser.ParseTypes());
+                Parallel.ForEach(assemblyParsers, option, parser => parser.ParseTypeMembers());
+            });
+        }
+
+
+        private static ParallelOptions GetParallelOptions()
+        {
+            // Leave room for UI thread
+            int workerThreadsCount = Math.Max(Environment.ProcessorCount - 1, 1);
+
+            // workerThreadsCount = 1;
+            var option = new ParallelOptions {MaxDegreeOfParallelism = workerThreadsCount};
+            Log.Debug($"Parallelism: {workerThreadsCount}");
+            return option;
+        }
+    }
 }

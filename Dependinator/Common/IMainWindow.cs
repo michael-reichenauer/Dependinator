@@ -1,7 +1,7 @@
 namespace Dependinator.Common
 {
-	internal interface IMainWindow
-	{
-		void RestoreWindowSettings();
-	}
+    internal interface IMainWindow
+    {
+        void RestoreWindowSettings();
+    }
 }

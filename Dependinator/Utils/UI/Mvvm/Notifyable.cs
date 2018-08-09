@@ -6,137 +6,138 @@ using System.Runtime.CompilerServices;
 
 namespace Dependinator.Utils.UI.Mvvm
 {
-	internal abstract class Notifyable : INotifyPropertyChanged
-	{
-		private readonly Dictionary<string, Property> properties = new Dictionary<string, Property>();
-		private List<TargetWhenSetter> targetWhenSetters;
-		private List<SourceWhenSetter> sourceWhenSetters;
-		private IReadOnlyList<string> allPropertyNames = null;
+    internal abstract class Notifyable : INotifyPropertyChanged
+    {
+        private readonly Dictionary<string, Property> properties = new Dictionary<string, Property>();
+        private IReadOnlyList<string> allPropertyNames;
+        private List<SourceWhenSetter> sourceWhenSetters;
+        private List<TargetWhenSetter> targetWhenSetters;
 
-		//private static Dictionary<Type, IReadOnlyList<string>> allPropertyNames2 = 
-		//	new Dictionary<Type, IReadOnlyList<string>>();
-
-
-		public event PropertyChangedEventHandler PropertyChanged;
+        //private static Dictionary<Type, IReadOnlyList<string>> allPropertyNames2 = 
+        //	new Dictionary<Type, IReadOnlyList<string>>();
 
 
-		public void Notify(string propertyNames)
-		{
-			OnPropertyChanged(propertyNames);
-		}
+        public event PropertyChangedEventHandler PropertyChanged;
 
 
-		public void Notify(params string[] otherPropertyNames)
-		{
-			foreach (string otherPropertyName in otherPropertyNames)
-			{
-				OnPropertyChanged(otherPropertyName);
-			}
-		}
+        public void Notify(string propertyNames)
+        {
+            OnPropertyChanged(propertyNames);
+        }
 
 
-		public void NotifyAll()
-		{
-			if (allPropertyNames == null)
-			{
-				allPropertyNames = GetAllPropertiesNames();
-			}
-
-			allPropertyNames.ForEach(OnPropertyChanged);
-		}
-
-		//public void NotifyAll2()
-		//{
-		//	if (!allPropertyNames2.TryGetValue(GetType(), out IReadOnlyList<string>  names))
-		//	{
-		//		names = GetAllPropertiesNames();
-		//		allPropertyNames2[GetType()] = names;
-		//	}
-
-		//	names.ForEach(OnPropertyChanged);
-		//}
+        public void Notify(params string[] otherPropertyNames)
+        {
+            foreach (string otherPropertyName in otherPropertyNames)
+            {
+                OnPropertyChanged(otherPropertyName);
+            }
+        }
 
 
-		public SourceWhenSetter WhenSet(params string[] sourcePropertyName)
-		{
-			if (sourceWhenSetters == null)
-			{
-				sourceWhenSetters = new List<SourceWhenSetter>();
-			}
+        public void NotifyAll()
+        {
+            if (allPropertyNames == null)
+            {
+                allPropertyNames = GetAllPropertiesNames();
+            }
 
-			SourceWhenSetter whenSetter = new SourceWhenSetter(this, sourcePropertyName);
-			sourceWhenSetters.Add(whenSetter);
-
-			return whenSetter;
-		}
+            allPropertyNames.ForEach(OnPropertyChanged);
+        }
 
 
-		protected TargetWhenSetter WhenSet(
-			Notifyable sourceNotifyable, params string[] sourcePropertyName)
-		{
-			if (targetWhenSetters == null)
-			{
-				targetWhenSetters = new List<TargetWhenSetter>();
-			}
+        //public void NotifyAll2()
+        //{
+        //	if (!allPropertyNames2.TryGetValue(GetType(), out IReadOnlyList<string>  names))
+        //	{
+        //		names = GetAllPropertiesNames();
+        //		allPropertyNames2[GetType()] = names;
+        //	}
 
-			TargetWhenSetter whenSetter = new TargetWhenSetter(this, sourceNotifyable, sourcePropertyName);
-			targetWhenSetters.Add(whenSetter);
-
-			return whenSetter;
-		}
+        //	names.ForEach(OnPropertyChanged);
+        //}
 
 
-		protected void OnPropertyChanged(string propertyName)
-		{
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-		}
+        public SourceWhenSetter WhenSet(params string[] sourcePropertyName)
+        {
+            if (sourceWhenSetters == null)
+            {
+                sourceWhenSetters = new List<SourceWhenSetter>();
+            }
+
+            SourceWhenSetter whenSetter = new SourceWhenSetter(this, sourcePropertyName);
+            sourceWhenSetters.Add(whenSetter);
+
+            return whenSetter;
+        }
 
 
-		protected Property Get([CallerMemberName] string memberName = "") => GetProperty(memberName);
+        protected TargetWhenSetter WhenSet(
+            Notifyable sourceNotifyable, params string[] sourcePropertyName)
+        {
+            if (targetWhenSetters == null)
+            {
+                targetWhenSetters = new List<TargetWhenSetter>();
+            }
+
+            TargetWhenSetter whenSetter = new TargetWhenSetter(this, sourceNotifyable, sourcePropertyName);
+            targetWhenSetters.Add(whenSetter);
+
+            return whenSetter;
+        }
 
 
-		protected T Get<T>([CallerMemberName] string memberName = "")
-		{
-			Property property = Get(memberName);
-			if (property.Value == null)
-			{
-				return default(T);
-			}
-
-			return (T)property.Value;
-		}
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
 
-		protected IPropertyNotify Set<T>(T value, [CallerMemberName] string memberName = "")
-		{
-			Property property = GetProperty(memberName);
-			((IPropertySetter)property).Set(value);
-
-			return property;
-		}
+        protected Property Get([CallerMemberName] string memberName = "") => GetProperty(memberName);
 
 
-		private Property GetProperty(string propertyName)
-		{
-			if (properties.TryGetValue(propertyName, out Property property))
-			{
-				return property;
-			}
+        protected T Get<T>([CallerMemberName] string memberName = "")
+        {
+            Property property = Get(memberName);
+            if (property.Value == null)
+            {
+                return default(T);
+            }
 
-			property = new Property(propertyName, this);
-			properties[propertyName] = property;
-
-			return property;
-		}
+            return (T)property.Value;
+        }
 
 
-		private IReadOnlyList<string> GetAllPropertiesNames()
-		{
-			return this.GetType()
-				.GetProperties()
-				.Where(pi => pi.GetGetMethod() != null)
-				.Select(pi => pi.Name)
-				.ToList();
-		}
-	}
+        protected IPropertyNotify Set<T>(T value, [CallerMemberName] string memberName = "")
+        {
+            Property property = GetProperty(memberName);
+            ((IPropertySetter)property).Set(value);
+
+            return property;
+        }
+
+
+        private Property GetProperty(string propertyName)
+        {
+            if (properties.TryGetValue(propertyName, out Property property))
+            {
+                return property;
+            }
+
+            property = new Property(propertyName, this);
+            properties[propertyName] = property;
+
+            return property;
+        }
+
+
+        private IReadOnlyList<string> GetAllPropertiesNames()
+        {
+            return GetType()
+                .GetProperties()
+                .Where(pi => pi.GetGetMethod() != null)
+                .Select(pi => pi.Name)
+                .ToList();
+        }
+    }
 }

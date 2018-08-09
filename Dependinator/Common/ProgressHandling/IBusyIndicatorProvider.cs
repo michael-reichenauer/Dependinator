@@ -3,8 +3,8 @@
 
 namespace Dependinator.Common.ProgressHandling
 {
-	internal interface IBusyIndicatorProvider
-	{
-		BusyIndicator Busy { get; }
-	}
+    internal interface IBusyIndicatorProvider
+    {
+        BusyIndicator Busy { get; }
+    }
 }

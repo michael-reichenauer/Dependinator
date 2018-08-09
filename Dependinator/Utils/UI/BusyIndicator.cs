@@ -5,112 +5,111 @@ using Dependinator.Utils.UI.Mvvm;
 
 namespace Dependinator.Utils.UI
 {
-	internal class BusyIndicator : ViewModel
-	{
-		private readonly string propertyName;
-		private readonly Action<string> onPropertyChanged;
+    internal class BusyIndicator : ViewModel
+    {
+        private static readonly string[] indicators = {"o", "o o", "o o o", "o o o o"};
+        private static readonly TimeSpan InitialIndicatorTime = TimeSpan.FromMilliseconds(10);
+        private static readonly TimeSpan IndicatorInterval = TimeSpan.FromMilliseconds(500);
+        private readonly Action<string> onPropertyChanged;
+        private readonly string propertyName;
 
-		private static readonly string[] indicators = { "o", "o o", "o o o", "o o o o" };
-		private static readonly TimeSpan InitialIndicatorTime = TimeSpan.FromMilliseconds(10);
-		private static readonly TimeSpan IndicatorInterval = TimeSpan.FromMilliseconds(500);
-
-		private readonly DispatcherTimer timer = new DispatcherTimer();
-		private int progressCount;
-		private int indicatorIndex;
-		private string progressText = null;
-
-		public BusyIndicator(string propertyName, Action<string> onPropertyChanged)
-		{
-			this.propertyName = propertyName;
-			this.onPropertyChanged = onPropertyChanged;
-			timer.Tick += UpdateIndicator;
-		}
+        private readonly DispatcherTimer timer = new DispatcherTimer();
+        private int indicatorIndex;
+        private int progressCount;
+        private string progressText;
 
 
-		public string Text { get; private set; }
-		public string ProgressText { get; private set; }
+        public BusyIndicator(string propertyName, Action<string> onPropertyChanged)
+        {
+            this.propertyName = propertyName;
+            this.onPropertyChanged = onPropertyChanged;
+            timer.Tick += UpdateIndicator;
+        }
 
 
-		public BusyProgress Progress(string statusText = null)
-		{
-			StartIndicator(statusText);
-
-			return new BusyProgress(this, statusText);
-		}
+        public string Text { get; private set; }
+        public string ProgressText { get; private set; }
 
 
-		public void Done(string statusText)
-		{
-			progressCount--;
+        public BusyProgress Progress(string statusText = null)
+        {
+            StartIndicator(statusText);
 
-			if (progressCount == 0)
-			{
-				timer.Stop();
-				indicatorIndex = 0;
-				progressText = null;
-				Set("");
-			}
-		}
+            return new BusyProgress(this, statusText);
+        }
 
 
-		private void StartIndicator(string statusText)
-		{
-			progressCount++;
+        public void Done(string statusText)
+        {
+            progressCount--;
 
-			if (progressCount == 1)
-			{
-				progressText = statusText;
-				indicatorIndex = 0;
-				timer.Interval = InitialIndicatorTime;
-				timer.Start();
-			}
-		}
-
-
-		private void UpdateIndicator(object sender, EventArgs e)
-		{
-			if (progressCount > 0)
-			{
-				string indicatorText = indicators[indicatorIndex];
-				Set(indicatorText);
-				indicatorIndex = (indicatorIndex + 1) % indicators.Length;
-
-				timer.Interval = IndicatorInterval;
-			}
-			else
-			{
-				timer.Stop();
-				indicatorIndex = 0;
-				progressText = null;
-				Set("");
-			}
-		}
+            if (progressCount == 0)
+            {
+                timer.Stop();
+                indicatorIndex = 0;
+                progressText = null;
+                Set("");
+            }
+        }
 
 
-		private void Set(string indicatorText)
-		{
-			Text = indicatorText;
-			ProgressText = progressText;
-			onPropertyChanged(propertyName);
-		}
+        private void StartIndicator(string statusText)
+        {
+            progressCount++;
+
+            if (progressCount == 1)
+            {
+                progressText = statusText;
+                indicatorIndex = 0;
+                timer.Interval = InitialIndicatorTime;
+                timer.Start();
+            }
+        }
 
 
-		//public void Add(Task task)
-		//{
-		//	if (task.IsCompleted)
-		//	{
-		//		return;
-		//	}
+        private void UpdateIndicator(object sender, EventArgs e)
+        {
+            if (progressCount > 0)
+            {
+                string indicatorText = indicators[indicatorIndex];
+                Set(indicatorText);
+                indicatorIndex = (indicatorIndex + 1) % indicators.Length;
 
-		//	taskCount++;
+                timer.Interval = IndicatorInterval;
+            }
+            else
+            {
+                timer.Stop();
+                indicatorIndex = 0;
+                progressText = null;
+                Set("");
+            }
+        }
 
-		//	if (taskCount == 1)
-		//	{
-		//		StartIndicator();
-		//	}
 
-		//	task.ContinueWith(t => Done(), TaskScheduler.FromCurrentSynchronizationContext());
-		//}
+        private void Set(string indicatorText)
+        {
+            Text = indicatorText;
+            ProgressText = progressText;
+            onPropertyChanged(propertyName);
+        }
 
-	}
+
+        //public void Add(Task task)
+        //{
+        //	if (task.IsCompleted)
+        //	{
+        //		return;
+        //	}
+
+        //	taskCount++;
+
+        //	if (taskCount == 1)
+        //	{
+        //		StartIndicator();
+        //	}
+
+        //	task.ContinueWith(t => Done(), TaskScheduler.FromCurrentSynchronizationContext());
+        //}
+    }
 }

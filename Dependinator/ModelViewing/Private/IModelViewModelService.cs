@@ -7,20 +7,20 @@ using Dependinator.ModelViewing.Private.ItemsViewing;
 
 namespace Dependinator.ModelViewing.Private
 {
-	internal interface IModelViewModelService
-	{
-		void SetRootCanvas(ItemsCanvas rootCanvas);
+    internal interface IModelViewModelService
+    {
+        void SetRootCanvas(ItemsCanvas rootCanvas);
 
-		Task RefreshAsync(bool refreshLayout);
+        Task RefreshAsync(bool refreshLayout);
 
-		void ShowHiddenNode(NodeName nodeName);
+        void ShowHiddenNode(NodeName nodeName);
 
-		void Close();
-		IReadOnlyList<NodeName> GetHiddenNodeNames();
-		void Clicked();
-		void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e);
-		Task OpenAsync();
-		Task OpenFilesAsync(IReadOnlyList<string> filePaths);
-		void AddNewNode();
-	}
+        Task CloseAsync();
+        IReadOnlyList<NodeName> GetHiddenNodeNames();
+        void Clicked();
+        void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e);
+        Task OpenAsync();
+        Task OpenFilesAsync(IReadOnlyList<string> filePaths);
+        void AddNewNode();
+    }
 }

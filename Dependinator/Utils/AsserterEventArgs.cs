@@ -3,10 +3,9 @@
 
 namespace Dependinator.Utils
 {
-	public class AsserterEventArgs : EventArgs
-	{
-		public Exception Exception { get; }
-
-		public AsserterEventArgs(Exception exception) => Exception = exception;
-	}
+    public class AsserterEventArgs : EventArgs
+    {
+        public AsserterEventArgs(Exception exception) => Exception = exception;
+        public Exception Exception { get; }
+    }
 }

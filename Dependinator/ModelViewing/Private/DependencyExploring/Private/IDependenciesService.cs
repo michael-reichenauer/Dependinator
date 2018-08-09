@@ -5,10 +5,10 @@ using Dependinator.ModelViewing.Private.ModelHandling.Core;
 
 namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 {
-	internal interface IDependenciesService
-	{
-		Task<IReadOnlyList<DependencyItem>> GetDependencyItemsAsync(bool isSource,
-			Node sourceNode,
-			Node targetNode);
-	}
+    internal interface IDependenciesService
+    {
+        Task<IReadOnlyList<DependencyItem>> GetDependencyItemsAsync(bool isSource,
+            Node sourceNode,
+            Node targetNode);
+    }
 }

@@ -1,10 +1,10 @@
 ﻿namespace Dependinator.Api.ApiHandling
 {
-	internal interface IApiManagerService
-	{
-		void Register();
+    internal interface IApiManagerService
+    {
+        void Register();
 
-		string GetCurrentInstanceServerName();
-		string GetCurrentInstanceServerName(string modelFilePath);
-	}
+        string GetCurrentInstanceServerName();
+        string GetCurrentInstanceServerName(string modelFilePath);
+    }
 }

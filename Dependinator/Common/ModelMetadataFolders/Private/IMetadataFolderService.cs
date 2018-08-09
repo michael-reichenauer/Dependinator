@@ -3,17 +3,16 @@
 
 namespace Dependinator.Common.ModelMetadataFolders.Private
 {
-	internal interface IModelMetadataService
-	{
-		event EventHandler OnChange;
+    internal interface IModelMetadataService
+    {
+        string ModelFilePath { get; }
 
-		string ModelFilePath { get; }
+        string MetadataFolderPath { get; }
+        bool IsDefault { get; }
+        event EventHandler OnChange;
 
-		string MetadataFolderPath { get; }
-		bool IsDefault { get; }
-
-		void SetModelFilePath(string path);
-		void SetDefault();
-		string GetMetadataFolderPath(string modelFilePath);
-	}
+        void SetModelFilePath(string path);
+        void SetDefault();
+        string GetMetadataFolderPath(string modelFilePath);
+    }
 }

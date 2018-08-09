@@ -5,47 +5,48 @@ using System.Windows.Input;
 
 namespace Dependinator.Utils.UI
 {
-	internal static class MouseHelper
-	{
-		private static Point? lastMousePoint;
+    internal static class MouseHelper
+    {
+        private static Point? lastMousePoint;
 
-		public static void OnLeftButtonMove(
-			UIElement element,
-			MouseEventArgs e,
-			Action<UIElement, Vector, Point, Point> moveAction)
-		{
-			PresentationSource presentationSource = PresentationSource.FromVisual(element);
-			if (presentationSource == null)
-			{
-				// No longer visible
-				return;
-			}
 
-			Point viewPosition = e.GetPosition(element);
-			viewPosition = element.PointToScreen(viewPosition);
+        public static void OnLeftButtonMove(
+            UIElement element,
+            MouseEventArgs e,
+            Action<UIElement, Vector, Point, Point> moveAction)
+        {
+            PresentationSource presentationSource = PresentationSource.FromVisual(element);
+            if (presentationSource == null)
+            {
+                // No longer visible
+                return;
+            }
 
-			viewPosition = new Point(viewPosition.X, viewPosition.Y);
+            Point viewPosition = e.GetPosition(element);
+            viewPosition = element.PointToScreen(viewPosition);
 
-			if (Mouse.LeftButton == MouseButtonState.Pressed)
-			{
-				element.CaptureMouse();
+            viewPosition = new Point(viewPosition.X, viewPosition.Y);
 
-				if (lastMousePoint.HasValue)
-				{
-					Vector viewOffset = viewPosition - lastMousePoint.Value;
+            if (Mouse.LeftButton == MouseButtonState.Pressed)
+            {
+                element.CaptureMouse();
 
-					moveAction(element, viewOffset, lastMousePoint.Value, viewPosition);
-				}
+                if (lastMousePoint.HasValue)
+                {
+                    Vector viewOffset = viewPosition - lastMousePoint.Value;
 
-				lastMousePoint = viewPosition;
+                    moveAction(element, viewOffset, lastMousePoint.Value, viewPosition);
+                }
 
-				e.Handled = true;
-			}
-			else
-			{
-				element.ReleaseMouseCapture();
-				lastMousePoint = null;
-			}
-		}
-	}
+                lastMousePoint = viewPosition;
+
+                e.Handled = true;
+            }
+            else
+            {
+                element.ReleaseMouseCapture();
+                lastMousePoint = null;
+            }
+        }
+    }
 }

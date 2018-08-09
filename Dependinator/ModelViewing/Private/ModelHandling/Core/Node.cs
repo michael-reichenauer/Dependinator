@@ -1,4 +1,5 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ItemsViewing;
@@ -8,78 +9,97 @@ using Dependinator.Utils;
 
 namespace Dependinator.ModelViewing.Private.ModelHandling.Core
 {
-	internal class Node : Equatable<Node>
-	{
-		public static readonly string Hidden = "hidden";
+    internal class Node : Equatable<Node>
+    {
+        public static readonly string Hidden = "hidden";
 
-		private readonly List<Node> children = new List<Node>();
-
-		public Node(NodeName name)
-		{
-			Name = name;
-
-			Init();
-			IsEqualWhenSame(Name);
-		}
+        private readonly List<Node> children = new List<Node>();
+        private bool? isHidden;
 
 
-		public int Stamp { get; set; }
+        public Node(NodeName name)
+        {
+            Name = name;
 
-		public NodeName Name { get; }
-		public NodeType NodeType { get; set; }
-		public string Description { get; set; }
-
-		public Node Root { get; private set; }
-		public Node Parent { get; private set; }
-		public IReadOnlyList<Node> Children => children;
+            Init();
+            IsEqualWhenSame(Name);
+        }
 
 
-		public List<Link> SourceLinks { get; } = new List<Link>();
-		public List<Link> TargetLinks { get; } = new List<Link>();
+        public int Stamp { get; set; }
 
-		public List<Line> SourceLines { get; } = new List<Line>();
-		public List<Line> TargetLines { get; } = new List<Line>();
+        public NodeName Name { get; }
+        public NodeType NodeType { get; set; }
+        public string Description { get; set; }
 
-		public bool IsRoot => Name == NodeName.Root;
-
-		public bool HasCode => NodeType.IsType() || NodeType.IsMember();
-
-		public ItemsCanvas ItemsCanvas { get; set; }
-		public NodeViewModel ViewModel { get; set; }
-
-		public Rect Bounds { get; set; }
-		public double ScaleFactor { get; set; }
-		public string Color { get; set; }
-		public bool IsHidden { get; set; }
+        public Node Root { get; private set; }
+        public Node Parent { get; private set; }
+        public IReadOnlyList<Node> Children => children;
 
 
-		public bool IsLayoutCompleted { get; set; }
-		public bool CanShowChildren => IsRoot || (ViewModel?.CanShowChildren ?? false);
-		public bool CanShow => ViewModel?.CanShow ?? false;
-		public bool IsShowing => ViewModel?.IsShowing ?? false;
+        public List<Link> SourceLinks { get; } = new List<Link>();
+        public List<Link> TargetLinks { get; } = new List<Link>();
+
+        public List<Line> SourceLines { get; } = new List<Line>();
+        public List<Line> TargetLines { get; } = new List<Line>();
+
+        public bool IsRoot => Name == NodeName.Root;
+
+        public bool HasCode => NodeType.IsType() || NodeType.IsMember();
+
+        public ItemsCanvas ItemsCanvas { get; set; }
+        public NodeViewModel ViewModel { get; set; }
+
+        public Rect Bounds { get; set; }
+        public double ScaleFactor { get; set; }
+        public string Color { get; set; }
+        public bool IsNodeHidden { get; set; }
+
+        public bool IsHidden
+        {
+            get
+            {
+                if (!isHidden.HasValue)
+                {
+                    isHidden = this.AncestorsAndSelf().Any(n => n.IsNodeHidden);
+                }
+
+                return isHidden ?? false;
+            }
+
+            set => isHidden = value;
+        }
 
 
-		public void AddChild(Node child)
-		{
-			child.Parent = this;
-			child.Root = Root;
-			children.Add(child);
-		}
+        public bool IsLayoutCompleted { get; set; }
+        public bool CanShowChildren => IsRoot || (ViewModel?.CanShowChildren ?? false);
+        public bool CanShow => ViewModel?.CanShow ?? false;
+        public bool IsShowing => ViewModel?.IsShowing ?? false;
+        public bool IsModified { get; set; }
+        public bool HasModifiedChild { get; set; }
 
 
-		public void RemoveChild(Node child) => children.Remove(child);
+        public void AddChild(Node child)
+        {
+            child.Parent = this;
+            child.Root = Root;
+            children.Add(child);
+        }
 
 
-		public override string ToString() => Name.ToString();
+        public void RemoveChild(Node child) => children.Remove(child);
 
 
-		private void Init()
-		{
-			if (IsRoot)
-			{
-				Root = this;
-				Parent = this;
-			}
-		}
-	}
+        public override string ToString() => Name.ToString();
+
+
+        private void Init()
+        {
+            if (IsRoot)
+            {
+                Root = this;
+                Parent = this;
+            }
+        }
+    }
 }

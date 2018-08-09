@@ -1,4 +1,3 @@
 ﻿namespace Dependinator.Utils.OsSystem
 {
-	
 }

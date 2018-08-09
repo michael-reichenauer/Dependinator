@@ -1,27 +1,26 @@
-using Dependinator.Utils;
+﻿using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Dtos
 {
-	internal class DataNodeName : Equatable<DataNodeName>
-	{
-		public static readonly DataNodeName Root = new DataNodeName("");
+    internal class DataNodeName : Equatable<DataNodeName>
+    {
+        public static readonly DataNodeName None = new DataNodeName("");
 
-		public DataNodeName(string fullName)
-		{
-			this.FullName = fullName;
-
-			IsEqualWhenSame(fullName);
-		}
+        private readonly string fullName;
 
 
-		public string FullName { get; }
+        private DataNodeName(string fullName)
+        {
+            this.fullName = fullName;
 
-		public static DataNodeName From(string fullName)
-		{
-			return new DataNodeName(fullName);
-		}
+            IsEqualWhenSame(fullName);
+        }
 
-		public override string ToString() => FullName;
-	}
+
+        public static explicit operator DataNodeName(string fullName) => new DataNodeName(fullName);
+        public static explicit operator string(DataNodeName dataName) => dataName.fullName;
+
+        public override string ToString() => fullName;
+    }
 }
