@@ -116,7 +116,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
                 if (result.IsFaulted)
                 {
-                    message.ShowWarning(result.Message);
+                    message.ShowWarning(result.ErrorMessage);
                     string targetPath = ProgramInfo.GetInstallFilePath();
                     cmd.Start(targetPath, "");
                     Application.Current.Shutdown(0);
@@ -148,7 +148,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
                 if (operationId.IsFaulted)
                 {
-                    message.ShowWarning(operationId.Message);
+                    message.ShowWarning(operationId.ErrorMessage);
 
                     if (!File.Exists(modelMetadata.ModelFilePath))
                     {

@@ -74,7 +74,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 
             if (codeResult.IsFaulted)
             {
-                message.ShowWarning(codeResult.Message);
+                message.ShowWarning(codeResult.ErrorMessage);
                 Close();
                 return;
             }

@@ -9,25 +9,23 @@ namespace Dependinator.Utils.ErrorHandling
         public static Error NoValue = Error.NoValue;
 
 
-        public M(Error error)
+        protected M(Error error)
         {
             Error = error;
         }
 
 
         public Error Error { get; }
-     
-        public bool IsFaulted => Error != Error.None;
+        public string ErrorMessage => Error.Message;
+
         public bool IsOk => Error == Error.None;
+        public bool IsFaulted => Error != Error.None;
         public bool Is<T>() => Error is T || Error.Exception is T;
-        public string Message => Error.Message;
+
 
         public static M<T> From<T>(T result) => new M<T>(result);
 
         public static implicit operator M(Error error) => new M(error);
-        public static implicit operator M(Exception e) => new M(Error.From(e));
-
-        public static implicit operator bool(M m) => !m.IsFaulted;
 
 
         public override string ToString()
@@ -75,8 +73,6 @@ namespace Dependinator.Utils.ErrorHandling
 
 
         public static implicit operator M<T>(Error error) => new M<T>(error);
-        public static implicit operator M<T>(Exception e) => new M<T>(Error.From(e));
-        public static implicit operator bool(M<T> m) => !m.IsFaulted;
 
 
         public static implicit operator M<T>(T value)
@@ -89,8 +85,6 @@ namespace Dependinator.Utils.ErrorHandling
             return new M<T>(value);
         }
 
-
-        //public bool HasValue => ;
 
 
         public bool HasValue(out T value)
@@ -106,15 +100,7 @@ namespace Dependinator.Utils.ErrorHandling
         }
 
 
-        public T Or(T defaultValue)
-        {
-            if (IsFaulted)
-            {
-                return defaultValue;
-            }
-
-            return Value;
-        }
+        public T Or(T defaultValue) => IsFaulted ? defaultValue : Value;
 
 
         public override string ToString()
