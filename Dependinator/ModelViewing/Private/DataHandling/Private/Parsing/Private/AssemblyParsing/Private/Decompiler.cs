@@ -14,7 +14,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     internal class Decompiler
     {
-        public M<string> GetCode(ModuleDefinition module, NodeName nodeName)
+        public M<string> GetCode(ModuleDefinition module, DataNodeName nodeName)
         {
             if (TryGetType(module, nodeName, out TypeDefinition type))
             {
@@ -30,7 +30,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public M<SourceLocation> GetSourceFilePath(ModuleDefinition module, NodeName nodeName)
+        public M<SourceLocation> GetSourceFilePath(ModuleDefinition module, DataNodeName nodeName)
         {
             if (TryGetType(module, nodeName, out TypeDefinition type))
             {
@@ -56,7 +56,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             ModuleDefinition module,
             IEnumerable<TypeDefinition> assemblyTypes,
             string sourceFilePath,
-            out NodeName nodeName)
+            out DataNodeName nodeName)
         {
             foreach (TypeDefinition type in assemblyTypes)
             {
@@ -64,7 +64,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 {
                     if (fileLocation.FilePath.StartsWithIc(sourceFilePath))
                     {
-                        nodeName = NodeName.From(Name.GetTypeFullName(type));
+                        nodeName = (DataNodeName)Name.GetTypeFullName(type);
                         return true;
                     }
                 }
@@ -75,9 +75,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private static bool TryGetType(ModuleDefinition module, NodeName nodeName, out TypeDefinition type)
+        private static bool TryGetType(
+            ModuleDefinition module, DataNodeName nodeName, out TypeDefinition type)
         {
-            string fullName = nodeName.FullName;
+            string fullName = (string)nodeName;
 
             // The type starts after the module name, which is after the first '.'
             int typeIndex = fullName.IndexOf(".");
@@ -95,9 +96,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private static bool TryGetMember(ModuleDefinition module, NodeName nodeName, out IMemberDefinition member)
+        private static bool TryGetMember(
+            ModuleDefinition module, DataNodeName nodeName, out IMemberDefinition member)
         {
-            string fullName = nodeName.FullName;
+            string fullName = (string)nodeName;
 
             // The type starts after the module name, which is after the first '.'
             int typeIndex = fullName.IndexOf(".");

@@ -14,6 +14,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     internal class SolutionParser : IDisposable
     {
+        private static readonly char[] PartsSeparators = "./".ToCharArray();
+
         private readonly List<AssemblyParser> assemblyParsers = new List<AssemblyParser>();
         private readonly bool isReadSymbols;
         private readonly DataItemsCallback itemsCallback;
@@ -62,7 +64,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<M<string>> GetCodeAsync(NodeName nodeName)
+        public async Task<M<string>> GetCodeAsync(DataNodeName nodeName)
         {
             await Task.Yield();
 
@@ -86,7 +88,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<M<SourceLocation>> GetSourceFilePathAsync(NodeName nodeName)
+        public async Task<M<SourceLocation>> GetSourceFilePathAsync(DataNodeName nodeName)
         {
             await Task.Yield();
 
@@ -110,7 +112,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<M<NodeName>> GetNodeNameForFilePathAsync(string sourceFilePath)
+        public async Task<M<DataNodeName>> GetNodeNameForFilePathAsync(string sourceFilePath)
         {
             await Task.Yield();
 
@@ -123,7 +125,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
             foreach (AssemblyParser parser in assemblyParsers)
             {
-                if (parser.TryGetNodeNameFor(sourceFilePath, out NodeName nodeName))
+                if (parser.TryGetNodeNameFor(sourceFilePath, out DataNodeName nodeName))
                 {
                     return nodeName;
                 }
@@ -132,9 +134,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             sourceFilePath = Path.GetDirectoryName(sourceFilePath);
             foreach (AssemblyParser parser in assemblyParsers)
             {
-                if (parser.TryGetNodeNameFor(sourceFilePath, out NodeName nodeName))
+                if (parser.TryGetNodeNameFor(sourceFilePath, out DataNodeName nodeName))
                 {
-                    return nodeName.ParentName;
+                    return GetParentName(nodeName);
                 }
             }
 
@@ -162,7 +164,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             DataNodeName solutionName = GetSolutionNodeName();
             DataNode solutionNode = new DataNode(solutionName, DataNodeName.None, NodeType.Solution)
-                {Description = "Solution file"};
+            { Description = "Solution file" };
             return solutionNode;
         }
 
@@ -232,19 +234,30 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private static string GetModuleName(NodeName nodeName)
+        private static string GetModuleName(DataNodeName nodeName)
         {
             while (true)
             {
-                if (nodeName.ParentName == NodeName.Root)
+                DataNodeName parentName = GetParentName(nodeName);
+                if (parentName == DataNodeName.None)
                 {
-                    return nodeName.DisplayShortName;
+                    return (string)nodeName;
                 }
 
-                nodeName = nodeName.ParentName;
+                nodeName = parentName;
             }
         }
 
+
+        private static DataNodeName GetParentName(DataNodeName nodeName)
+        {
+           
+            // Split full name in name and parent name,
+            var fullName = ((string)nodeName);
+            int index = fullName.LastIndexOfAny(PartsSeparators);
+
+            return index > -1 ? (DataNodeName)fullName.Substring(0, index) : DataNodeName.None;
+        }
 
         private async Task ParseSolutionAssembliesAsync()
         {
@@ -268,7 +281,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             int workerThreadsCount = Math.Max(Environment.ProcessorCount - 1, 1);
 
             // workerThreadsCount = 1;
-            var option = new ParallelOptions {MaxDegreeOfParallelism = workerThreadsCount};
+            var option = new ParallelOptions { MaxDegreeOfParallelism = workerThreadsCount };
             Log.Debug($"Parallelism: {workerThreadsCount}");
             return option;
         }

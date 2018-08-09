@@ -75,15 +75,15 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
-        public async Task<M<string>> GetCodeAsync(DataFile dataFile, NodeName nodeName) =>
+        public async Task<M<string>> GetCodeAsync(DataFile dataFile, DataNodeName nodeName) =>
             await parserService.GetCodeAsync(dataFile, nodeName);
 
 
-        public async Task<M<SourceLocation>> GetSourceFilePathAsync(DataFile dataFile, NodeName nodeName) =>
+        public async Task<M<SourceLocation>> GetSourceFilePathAsync(DataFile dataFile, DataNodeName nodeName) =>
             await parserService.GetSourceFilePath(dataFile, nodeName);
 
 
-        public async Task<M<NodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath) =>
+        public async Task<M<DataNodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath) =>
             await parserService.GetNodeForFilePathAsync(dataFile, sourceFilePath);
 
 

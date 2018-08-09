@@ -129,15 +129,15 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public M<string> GetCode(NodeName nodeName) =>
+        public M<string> GetCode(DataNodeName nodeName) =>
             decompiler.GetCode(assembly.Value.MainModule, nodeName);
 
 
-        public M<SourceLocation> GetSourceFilePath(NodeName nodeName) =>
+        public M<SourceLocation> GetSourceFilePath(DataNodeName nodeName) =>
             decompiler.GetSourceFilePath(assembly.Value.MainModule, nodeName);
 
 
-        public bool TryGetNodeNameFor(string sourceFilePath, out NodeName nodeName)
+        public bool TryGetNodeNameFor(string sourceFilePath, out DataNodeName nodeName)
         {
             IEnumerable<TypeDefinition> assemblyTypes = GetAssemblyTypes();
 

@@ -10,6 +10,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     internal class MemberParser
     {
+        private static readonly char[] PartsSeparators = "./".ToCharArray();
+
         private readonly DataItemsCallback itemsCallback;
         private readonly LinkHandler linkHandler;
         private readonly MethodParser methodParser;
@@ -92,9 +94,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             try
             {
                 string memberName = Name.GetMemberFullName(memberInfo);
-                string parent = isPrivate
-                    ? $"{NodeName.From(memberName).ParentName.FullName}.$private"
-                    : null;
+                string parent = isPrivate ? $"{GetParentName(memberName)}.$private" : null;
                 string description = xmlDocParser.GetDescription(memberName);
 
 
@@ -103,7 +103,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                         nodeName,
                         parent != null ? (DataNodeName)parent : null,
                         NodeType.Member)
-                    {Description = description};
+                { Description = description };
 
                 if (!sentNodes.ContainsKey(memberNode.Name))
                 {
@@ -148,6 +148,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             {
                 Log.Exception(e, $"Failed to links for member {member} in {sourceMemberNode.Name}");
             }
+        }
+
+        private static string GetParentName(string fullName)
+        {
+            // Split full name in name and parent name,
+            int index = fullName.LastIndexOfAny(PartsSeparators);
+
+            return index > -1 ? fullName.Substring(0, index) : "";
         }
     }
 }
