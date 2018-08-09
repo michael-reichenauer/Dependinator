@@ -32,7 +32,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<R> ParseAsync()
+        public async Task<M> ParseAsync()
         {
             if (SolutionParser.IsSolutionFile(dataFile))
             {
@@ -45,7 +45,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<R<string>> GetCodeAsync(NodeName nodeName)
+        public async Task<M<string>> GetCodeAsync(NodeName nodeName)
         {
             await Task.Yield();
 
@@ -60,7 +60,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<R<SourceLocation>> GetSourceFilePath(NodeName nodeName)
+        public async Task<M<SourceLocation>> GetSourceFilePath(NodeName nodeName)
         {
             await Task.Yield();
 
@@ -75,7 +75,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<R<NodeName>> GetNodeForFilePathAsync(string sourceFilePath)
+        public async Task<M<NodeName>> GetNodeForFilePathAsync(string sourceFilePath)
         {
             await Task.Yield();
 

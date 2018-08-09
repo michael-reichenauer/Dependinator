@@ -9,14 +9,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing
 {
     internal interface IParserService
     {
-        Task<R> ParseAsync(DataFile dataFile, DataItemsCallback itemsCallback);
+        Task<M> ParseAsync(DataFile dataFile, DataItemsCallback itemsCallback);
 
 
         IReadOnlyList<string> GetDataFilePaths(DataFile dataFile);
         IReadOnlyList<string> GetBuildPaths(DataFile dataFile);
-        Task<R<string>> GetCodeAsync(DataFile dataFile, NodeName nodeName);
-        Task<R<SourceLocation>> GetSourceFilePath(DataFile dataFile, NodeName nodeName);
-        Task<R<NodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath);
+        Task<M<string>> GetCodeAsync(DataFile dataFile, NodeName nodeName);
+        Task<M<SourceLocation>> GetSourceFilePath(DataFile dataFile, NodeName nodeName);
+        Task<M<NodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath);
     }
 
 

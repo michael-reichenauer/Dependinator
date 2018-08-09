@@ -43,7 +43,7 @@ namespace Dependinator.ModelViewing.Private
 
         public async void StartMoveToNode(string filePath)
         {
-            R<NodeName> nodeName = await dataService.GetNodeForFilePathAsync(
+            M<NodeName> nodeName = await dataService.GetNodeForFilePathAsync(
                 modelMetadata.DataFile, filePath);
 
             if (nodeName.IsFaulted)

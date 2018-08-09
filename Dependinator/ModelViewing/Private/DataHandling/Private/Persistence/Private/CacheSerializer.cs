@@ -44,13 +44,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        public Task<R> TryDeserializeAsync(string cacheFilePath, DataItemsCallback dataItemsCallback)
+        public Task<M> TryDeserializeAsync(string cacheFilePath, DataItemsCallback dataItemsCallback)
         {
             return Task.Run(() =>
             {
                 if (!File.Exists(cacheFilePath))
                 {
-                    return R.NoValue;
+                    return M.NoValue;
                 }
 
                 try
@@ -73,7 +73,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                     }
 
                     t.Log($"Sent all {itemCount} items");
-                    return R.Ok;
+                    return M.Ok;
                 }
                 catch (FormatException)
                 {
@@ -86,7 +86,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 }
 
                 File.Delete(cacheFilePath);
-                return R.NoValue;
+                return M.NoValue;
             });
         }
 

@@ -11,18 +11,18 @@ namespace Dependinator.ModelViewing.Private.DataHandling
     {
         event EventHandler DataChangedOccurred;
 
-        Task<R> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
+        Task<M> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
 
-        Task<R<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile);
+        Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile);
 
         Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items);
 
-        Task<R> TryReadFreshAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
+        Task<M> TryReadFreshAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
 
-        Task<R<string>> GetCodeAsync(DataFile dataFile, NodeName nodeName);
+        Task<M<string>> GetCodeAsync(DataFile dataFile, NodeName nodeName);
 
-        Task<R<SourceLocation>> GetSourceFilePathAsync(DataFile dataFile, NodeName nodeName);
+        Task<M<SourceLocation>> GetSourceFilePathAsync(DataFile dataFile, NodeName nodeName);
 
-        Task<R<NodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath);
+        Task<M<NodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath);
     }
 }

@@ -14,14 +14,14 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 {
     internal class CodeViewService : ICodeViewService
     {
-        private readonly Func<NodeName, Func<NodeName, Task<R<SourceCode>>>, CodeDialog> codeDialogProvider;
+        private readonly Func<NodeName, Func<NodeName, Task<M<SourceCode>>>, CodeDialog> codeDialogProvider;
         private readonly IDataService dataService;
         private readonly ModelMetadata modelMetadata;
 
 
         public CodeViewService(
             IDataService dataService,
-            Func<NodeName, Func<NodeName, Task<R<SourceCode>>>, CodeDialog> codeDialogProvider,
+            Func<NodeName, Func<NodeName, Task<M<SourceCode>>>, CodeDialog> codeDialogProvider,
             ModelMetadata modelMetadata)
         {
             this.dataService = dataService;
@@ -35,7 +35,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
             DataFile dataFile = modelMetadata.DataFile;
             string solutionPath = dataFile.FilePath;
 
-            R<SourceLocation> file = await TryGetFilePathAsync(dataFile, nodeName);
+            M<SourceLocation> file = await TryGetFilePathAsync(dataFile, nodeName);
             if (file.IsOk)
             {
                 string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionPath);
@@ -65,16 +65,16 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         }
 
 
-        private static Task<R<SourceCode>> GetCode(string fileText, SourceLocation sourceLocation)
+        private static Task<M<SourceCode>> GetCode(string fileText, SourceLocation sourceLocation)
         {
             SourceCode sourceCode = new SourceCode(fileText, sourceLocation.LineNumber, sourceLocation.FilePath);
-            return Task.FromResult(R.From(sourceCode));
+            return Task.FromResult(M.From(sourceCode));
         }
 
 
-        private async Task<R<SourceCode>> GetCodeAsync(DataFile dataFile, NodeName nodeName)
+        private async Task<M<SourceCode>> GetCodeAsync(DataFile dataFile, NodeName nodeName)
         {
-            R<string> text = await dataService.GetCodeAsync(dataFile, nodeName);
+            M<string> text = await dataService.GetCodeAsync(dataFile, nodeName);
             if (text.IsFaulted)
             {
                 return text.Error;
@@ -84,10 +84,10 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         }
 
 
-        private async Task<R<SourceLocation>> TryGetFilePathAsync(DataFile dataFile, NodeName nodeName)
+        private async Task<M<SourceLocation>> TryGetFilePathAsync(DataFile dataFile, NodeName nodeName)
         {
             string solutionPath = modelMetadata.ModelFilePath;
-            R<SourceLocation> result = await dataService.GetSourceFilePathAsync(dataFile, nodeName);
+            M<SourceLocation> result = await dataService.GetSourceFilePathAsync(dataFile, nodeName);
 
             if (result.IsOk)
             {
@@ -111,7 +111,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
                 }
             }
 
-            return R.NoValue;
+            return M.NoValue;
         }
     }
 }

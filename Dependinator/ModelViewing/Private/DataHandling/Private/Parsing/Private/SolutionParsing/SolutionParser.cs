@@ -45,11 +45,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             Path.GetExtension(dataFile.FilePath).IsSameIgnoreCase(".sln");
 
 
-        public async Task<R> ParseAsync()
+        public async Task<M> ParseAsync()
         {
             parentNodesToSend.Add(GetSolutionNode());
 
-            R result = CreateAssemblyParsers();
+            M result = CreateAssemblyParsers();
             if (result.IsFaulted)
             {
                 return result.Error;
@@ -58,15 +58,15 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             parentNodesToSend.ForEach(node => itemsCallback(node));
 
             await ParseSolutionAssembliesAsync();
-            return R.Ok;
+            return M.Ok;
         }
 
 
-        public async Task<R<string>> GetCodeAsync(NodeName nodeName)
+        public async Task<M<string>> GetCodeAsync(NodeName nodeName)
         {
             await Task.Yield();
 
-            R result = CreateAssemblyParsers();
+            M result = CreateAssemblyParsers();
 
             if (result.IsFaulted)
             {
@@ -86,11 +86,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<R<SourceLocation>> GetSourceFilePathAsync(NodeName nodeName)
+        public async Task<M<SourceLocation>> GetSourceFilePathAsync(NodeName nodeName)
         {
             await Task.Yield();
 
-            R result = CreateAssemblyParsers();
+            M result = CreateAssemblyParsers();
 
             if (result.IsFaulted)
             {
@@ -110,11 +110,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<R<NodeName>> GetNodeNameForFilePathAsync(string sourceFilePath)
+        public async Task<M<NodeName>> GetNodeNameForFilePathAsync(string sourceFilePath)
         {
             await Task.Yield();
 
-            R result = CreateAssemblyParsers();
+            M result = CreateAssemblyParsers();
 
             if (result.IsFaulted)
             {
@@ -167,7 +167,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private R CreateAssemblyParsers()
+        private M CreateAssemblyParsers()
         {
             DataNodeName solutionName = GetSolutionNodeName();
 
@@ -191,7 +191,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             }
 
 
-            return R.Ok;
+            return M.Ok;
         }
 
 

@@ -38,11 +38,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
-        public async Task<R> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
+        public async Task<M> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
         {
             dataMonitorService.StartMonitorData(dataFile);
 
-            R result = await persistenceService.TryReadCacheAsync(dataFile, dataItemsCallback);
+            M result = await persistenceService.TryReadCacheAsync(dataFile, dataItemsCallback);
 
             if (result.IsFaulted)
             {
@@ -54,15 +54,15 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
                 dataMonitorService.TriggerDataChanged();
             }
 
-            return R.Ok;
+            return M.Ok;
         }
 
 
-        public Task<R<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile) => 
+        public Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile) => 
             persistenceService.TryReadSaveAsync(dataFile);
 
 
-        public Task<R> TryReadFreshAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
+        public Task<M> TryReadFreshAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
         {
             dataMonitorService.StartMonitorData(dataFile);
             return parserService.ParseAsync(dataFile, dataItemsCallback);
@@ -75,15 +75,15 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
-        public async Task<R<string>> GetCodeAsync(DataFile dataFile, NodeName nodeName) =>
+        public async Task<M<string>> GetCodeAsync(DataFile dataFile, NodeName nodeName) =>
             await parserService.GetCodeAsync(dataFile, nodeName);
 
 
-        public async Task<R<SourceLocation>> GetSourceFilePathAsync(DataFile dataFile, NodeName nodeName) =>
+        public async Task<M<SourceLocation>> GetSourceFilePathAsync(DataFile dataFile, NodeName nodeName) =>
             await parserService.GetSourceFilePath(dataFile, nodeName);
 
 
-        public async Task<R<NodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath) =>
+        public async Task<M<NodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath) =>
             await parserService.GetNodeForFilePathAsync(dataFile, sourceFilePath);
 
 

@@ -10,6 +10,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
     {
         Task SerializeAsync(IReadOnlyList<IDataItem> items, string path);
 
-        Task<R> TryDeserializeAsync(string cacheFilePath, DataItemsCallback dataItemsCallback);
+        Task<M> TryDeserializeAsync(string cacheFilePath, DataItemsCallback dataItemsCallback);
     }
 }

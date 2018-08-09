@@ -66,8 +66,6 @@ namespace Dependinator.Utils.ErrorHandling
         public static Error From(string message) => new Error(message);
 
 
-        public static implicit operator Error(Exception e) => new Error(e);
-
 
         public bool Is<T>() => this is T || Exception is T;
 

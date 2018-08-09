@@ -9,9 +9,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence
 {
     internal interface IPersistenceService
     {
-        Task<R> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
+        Task<M> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
 
-        Task<R<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile);
+        Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile);
 
         Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items);
     }

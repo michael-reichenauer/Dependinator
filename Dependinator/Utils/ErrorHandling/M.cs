@@ -3,31 +3,29 @@
 
 namespace Dependinator.Utils.ErrorHandling
 {
-    public class R
+    public class M
     {
-        public static R Ok = new R(Error.None);
+        public static M Ok = new M(Error.None);
         public static Error NoValue = Error.NoValue;
 
 
-        public R(Error error)
+        protected M(Error error)
         {
             Error = error;
         }
 
 
         public Error Error { get; }
-     
-        public bool IsFaulted => Error != Error.None;
+        public string ErrorMessage => Error.Message;
+
         public bool IsOk => Error == Error.None;
+        public bool IsFaulted => Error != Error.None;
         public bool Is<T>() => Error is T || Error.Exception is T;
-        public string Message => Error.Message;
 
-        public static R<T> From<T>(T result) => new R<T>(result);
 
-        public static implicit operator R(Error error) => new R(error);
-        public static implicit operator R(Exception e) => new R(Error.From(e));
+        public static M<T> From<T>(T result) => new M<T>(result);
 
-        public static implicit operator bool(R r) => !r.IsFaulted;
+        public static implicit operator M(Error error) => new M(error);
 
 
         public override string ToString()
@@ -42,19 +40,19 @@ namespace Dependinator.Utils.ErrorHandling
     }
 
 
-    public class R<T> : R
+    public class M<T> : M
     {
         private readonly T storedValue;
 
 
-        public R(T value)
+        public M(T value)
             : base(Error.None)
         {
             storedValue = value;
         }
 
 
-        public R(Error error)
+        public M(Error error)
             : base(error)
         {
         }
@@ -74,23 +72,19 @@ namespace Dependinator.Utils.ErrorHandling
         }
 
 
-        public static implicit operator R<T>(Error error) => new R<T>(error);
-        public static implicit operator R<T>(Exception e) => new R<T>(Error.From(e));
-        public static implicit operator bool(R<T> r) => !r.IsFaulted;
+        public static implicit operator M<T>(Error error) => new M<T>(error);
 
 
-        public static implicit operator R<T>(T value)
+        public static implicit operator M<T>(T value)
         {
             if (value == null)
             {
                 throw Asserter.FailFast("Value cannot be null");
             }
 
-            return new R<T>(value);
+            return new M<T>(value);
         }
 
-
-        //public bool HasValue => ;
 
 
         public bool HasValue(out T value)
@@ -106,15 +100,7 @@ namespace Dependinator.Utils.ErrorHandling
         }
 
 
-        public T Or(T defaultValue)
-        {
-            if (IsFaulted)
-            {
-                return defaultValue;
-            }
-
-            return Value;
-        }
+        public T Or(T defaultValue) => IsFaulted ? defaultValue : Value;
 
 
         public override string ToString()

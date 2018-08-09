@@ -111,12 +111,12 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
 
                 modelPersistentHandler.IsChangeMonitored = false;
-                R result = await TryShowModelAsync();
+                M result = await TryShowModelAsync();
                 modelPersistentHandler.IsChangeMonitored = true;
 
                 if (result.IsFaulted)
                 {
-                    message.ShowWarning(result.Message);
+                    message.ShowWarning(result.ErrorMessage);
                     string targetPath = ProgramInfo.GetInstallFilePath();
                     cmd.Start(targetPath, "");
                     Application.Current.Shutdown(0);
@@ -144,11 +144,11 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             using (progress.ShowBusy())
             {
                 isWorking = true;
-                R<int> operationId = await TryShowRefreshedModelAsync();
+                M<int> operationId = await TryShowRefreshedModelAsync();
 
                 if (operationId.IsFaulted)
                 {
-                    message.ShowWarning(operationId.Message);
+                    message.ShowWarning(operationId.ErrorMessage);
 
                     if (!File.Exists(modelMetadata.ModelFilePath))
                     {
@@ -218,14 +218,14 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        private async Task<R> TryShowModelAsync()
+        private async Task<M> TryShowModelAsync()
         {
-            R cacheResult = await ShowModelAsync(operation => dataService.TryReadCacheAsync(
+            M cacheResult = await ShowModelAsync(operation => dataService.TryReadCacheAsync(
                 modelMetadata.DataFile, items => UpdateDataItems(items, operation)));
 
             if (cacheResult.IsOk)
             {
-                return R.Ok;
+                return M.Ok;
             }
 
             var savedItems = await dataService.TryReadSaveAsync(modelMetadata.DataFile);
@@ -238,7 +238,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 modelService.SetSaveData(new List<IDataItem>());
             }
 
-            R freshResult = await ShowModelAsync(operation => dataService.TryReadFreshAsync(
+            M freshResult = await ShowModelAsync(operation => dataService.TryReadFreshAsync(
                 modelMetadata.DataFile, items => UpdateDataItems(items, operation)));
 
             if (freshResult.IsOk)
@@ -250,7 +250,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        private Task<R<int>> TryShowRefreshedModelAsync()
+        private Task<M<int>> TryShowRefreshedModelAsync()
         {
             return ShowModelAsync(operation => dataService.TryReadFreshAsync(
                 modelMetadata.DataFile, items => UpdateDataItems(items, operation)));
@@ -269,7 +269,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        private async Task<R<int>> ShowModelAsync(Func<Operation, Task<R>> parseFunctionAsync)
+        private async Task<M<int>> ShowModelAsync(Func<Operation, Task<M>> parseFunctionAsync)
         {
             Operation operation = new Operation();
 
@@ -277,7 +277,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
             Task showTask = Task.Run(() => ShowModel(operation));
 
-            Task<R> parseTask = parseFunctionAsync(operation);
+            Task<M> parseTask = parseFunctionAsync(operation);
 
             Task completeTask = parseTask.ContinueWith(_ => operation.Queue.CompleteAdding());
 

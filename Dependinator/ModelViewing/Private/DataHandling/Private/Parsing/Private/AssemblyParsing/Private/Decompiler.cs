@@ -14,7 +14,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     internal class Decompiler
     {
-        public R<string> GetCode(ModuleDefinition module, NodeName nodeName)
+        public M<string> GetCode(ModuleDefinition module, NodeName nodeName)
         {
             if (TryGetType(module, nodeName, out TypeDefinition type))
             {
@@ -30,7 +30,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public R<SourceLocation> GetSourceFilePath(ModuleDefinition module, NodeName nodeName)
+        public M<SourceLocation> GetSourceFilePath(ModuleDefinition module, NodeName nodeName)
         {
             if (TryGetType(module, nodeName, out TypeDefinition type))
             {
@@ -48,7 +48,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             }
 
             Log.Debug("Failed to locate file path for: {nodeName}");
-            return R.NoValue;
+            return M.NoValue;
         }
 
 

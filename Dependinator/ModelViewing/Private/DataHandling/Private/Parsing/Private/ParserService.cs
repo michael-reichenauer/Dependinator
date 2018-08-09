@@ -10,12 +10,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     internal class ParserService : IParserService
     {
-        public async Task<R> ParseAsync(DataFile dataFile, DataItemsCallback itemsCallback)
+        public async Task<M> ParseAsync(DataFile dataFile, DataItemsCallback itemsCallback)
         {
             Log.Debug($"Parse {dataFile} ...");
             Timing t = Timing.Start();
 
-            R<WorkParser> workItemParser = new WorkParser(dataFile, itemsCallback);
+            M<WorkParser> workItemParser = new WorkParser(dataFile, itemsCallback);
             if (workItemParser.IsFaulted)
             {
                 return workItemParser;
@@ -27,13 +27,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             }
 
             t.Log($"Parsed {dataFile}");
-            return R.Ok;
+            return M.Ok;
         }
 
 
-        public async Task<R<string>> GetCodeAsync(DataFile dataFile, NodeName nodeName)
+        public async Task<M<string>> GetCodeAsync(DataFile dataFile, NodeName nodeName)
         {
-            R<WorkParser> workItemParser = new WorkParser(dataFile, null);
+            M<WorkParser> workItemParser = new WorkParser(dataFile, null);
             if (workItemParser.IsFaulted)
             {
                 return workItemParser.Error;
@@ -46,9 +46,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<R<SourceLocation>> GetSourceFilePath(DataFile dataFile, NodeName nodeName)
+        public async Task<M<SourceLocation>> GetSourceFilePath(DataFile dataFile, NodeName nodeName)
         {
-            R<WorkParser> workItemParser = new WorkParser(dataFile, null);
+            M<WorkParser> workItemParser = new WorkParser(dataFile, null);
             if (workItemParser.IsFaulted)
             {
                 return workItemParser.Error;
@@ -61,9 +61,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<R<NodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath)
+        public async Task<M<NodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath)
         {
-            R<WorkParser> workItemParser = new WorkParser(dataFile, null);
+            M<WorkParser> workItemParser = new WorkParser(dataFile, null);
             if (workItemParser.IsFaulted)
             {
                 return workItemParser.Error;
