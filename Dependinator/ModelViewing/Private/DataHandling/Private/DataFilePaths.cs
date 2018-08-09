@@ -36,7 +36,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
 
         public string GetSaveFilePath(DataFile dataFile)
         {
-            string dataFileName = $"{Path.GetFileName(dataFile.FilePath)}.dpnr";
+            string dataFileName = $"{Path.GetFileNameWithoutExtension(dataFile.FilePath)}.dpnr";
             string folderPath = Path.GetDirectoryName(dataFile.FilePath);
             //  string dataFilePath = Path.Combine(folderPath, dataJson);
             return Path.Combine(dataFile.WorkFolderPath, dataFileName);
