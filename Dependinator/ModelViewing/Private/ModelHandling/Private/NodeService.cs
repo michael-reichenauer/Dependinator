@@ -64,7 +64,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 {
                     node.Bounds = savedNode.Bounds;
                     node.ScaleFactor = savedNode.Scale;
-                    node.IsHidden = savedNode.ShowState == Node.Hidden;
+                    node.IsNodeHidden = savedNode.ShowState == Node.Hidden;
                 }
             }
             

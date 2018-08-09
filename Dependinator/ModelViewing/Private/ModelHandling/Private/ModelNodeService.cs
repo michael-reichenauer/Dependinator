@@ -99,6 +99,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 return;
             }
 
+            node.IsNodeHidden = true;
             node.DescendentsAndSelf().ForEach(n =>
             {
                 n.IsHidden = true;
@@ -125,6 +126,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                     return;
                 }
 
+                node.IsNodeHidden = false;
                 node.DescendentsAndSelf().ForEach(n => n.IsHidden = false);
 
                 modelLineService.UpdateLines(node);
@@ -159,7 +161,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             node.Bounds = dataNode.Bounds;
             node.ScaleFactor = dataNode.Scale;
             node.Color = dataNode.Color;
-            node.IsHidden = dataNode.ShowState == Node.Hidden;
+            node.IsNodeHidden = dataNode.ShowState == Node.Hidden;
 
             Node parentNode = GetParentNode(nodeName, dataNode);
 
@@ -175,7 +177,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 if (node.ViewModel != null) node.ViewModel.ItemBounds = savedNode.Bounds;
                 if (node.ViewModel?.ItemsViewModel?.ItemsCanvas != null)
                     node.ViewModel.ItemsViewModel.ItemsCanvas.ScaleFactor = savedNode.Scale;
-                node.IsHidden = savedNode.ShowState == Node.Hidden;
+                node.IsNodeHidden = savedNode.ShowState == Node.Hidden;
             }
         }
 

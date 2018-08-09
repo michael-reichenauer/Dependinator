@@ -223,7 +223,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 IsModified = node.IsModified,
                 HasParentModifiedChild = node.Parent.HasModifiedChild,
                 HasModifiedChild = node.HasModifiedChild,
-                ShowState = node.IsHidden ? Node.Hidden : null
+                ShowState = node.IsNodeHidden ? Node.Hidden : null
             };
 
 

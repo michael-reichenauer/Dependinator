@@ -41,7 +41,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 Bounds = node.ViewModel?.ItemBounds ?? node.Bounds,
                 Scale = node.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.ScaleFactor,
                 Color = node.ViewModel?.Color ?? node.Color,
-                ShowState = node.IsHidden ? Node.Hidden : null
+                ShowState = node.IsNodeHidden ? Node.Hidden : null
             };
         }
 

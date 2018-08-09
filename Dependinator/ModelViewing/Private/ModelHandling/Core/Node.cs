@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ItemsViewing;
@@ -13,6 +14,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Core
         public static readonly string Hidden = "hidden";
 
         private readonly List<Node> children = new List<Node>();
+        private bool? isHidden;
 
 
         public Node(NodeName name)
@@ -51,7 +53,22 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Core
         public Rect Bounds { get; set; }
         public double ScaleFactor { get; set; }
         public string Color { get; set; }
-        public bool IsHidden { get; set; }
+        public bool IsNodeHidden { get; set; }
+
+        public bool IsHidden
+        {
+            get
+            {
+                if (!isHidden.HasValue)
+                {
+                    isHidden = this.AncestorsAndSelf().Any(n => n.IsNodeHidden);
+                }
+
+                return isHidden ?? false;
+            }
+
+            set => isHidden = value;
+        }
 
 
         public bool IsLayoutCompleted { get; set; }
