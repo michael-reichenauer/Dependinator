@@ -108,6 +108,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
+        public IEnumerable<string> GetReferencePaths(IReadOnlyList<string> internalModules)
+            => assemblyReferencesParser.GetReferencesPaths(
+                assemblyPath, assembly.Value, internalModules);
+
+
         public void ParseTypes()
         {
             if (assembly.Value == null)

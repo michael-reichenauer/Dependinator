@@ -68,7 +68,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             await Task.Yield();
 
-            M result = CreateAssemblyParsers();
+            M result = CreateAssemblyParsers(true);
 
             if (result.IsFaulted)
             {
@@ -169,7 +169,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private M CreateAssemblyParsers()
+        private M CreateAssemblyParsers(bool includeReferences = false)
         {
             DataNodeName solutionName = GetSolutionNodeName();
 
@@ -192,6 +192,22 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 assemblyParsers.Add(assemblyParser);
             }
 
+            if (includeReferences)
+            {
+                var internalModules = assemblyParsers.Select(p => p.ModuleName).ToList();
+                var referencePaths = assemblyParsers
+                    .SelectMany(parser => parser.GetReferencePaths(internalModules))
+                    .Distinct()
+                    .Where(File.Exists)
+                    .ToList();
+
+                foreach (string referencePath in referencePaths)
+                {
+                    var assemblyParser = new AssemblyParser(referencePath, null, itemsCallback, isReadSymbols);
+
+                    assemblyParsers.Add(assemblyParser);
+                }
+            }
 
             return M.Ok;
         }
