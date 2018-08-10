@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -65,12 +65,6 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
             viewModel.TargetNodeName = nodeName;
 
             await SetSidesAsync(viewModel);
-        }
-
-
-        public async Task RefreshAsync(DependencyExplorerWindowViewModel viewModel)
-        {
-            await RefreshModelAsync();
         }
 
 
@@ -335,8 +329,5 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
                 nodeName = nodeName.ParentName;
             }
         }
-
-
-        private Task RefreshModelAsync() => modelNotifications.Value.ManualRefreshAsync(false);
     }
 }

@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Windows;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.Utils.UI.Mvvm;
@@ -35,8 +35,6 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
         public Command<Window> CancelCommand => Command<Window>(w => w.Close());
 
         public Command SwitchSidesCommand => AsyncCommand(() => dependencyWindowService.SwitchSidesAsync(this));
-
-        public Command RefreshCommand => AsyncCommand(() => dependencyWindowService.RefreshAsync(this));
 
 
         public ObservableCollection<DependencyItemViewModel> SourceItems { get; } =

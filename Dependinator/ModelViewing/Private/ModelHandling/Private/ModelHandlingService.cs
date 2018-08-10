@@ -24,7 +24,7 @@ using Dependinator.Utils.Threading;
 namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 {
     [SingleInstance]
-    internal class ModelHandlingService : IModelHandlingService, IModelNotifications
+    internal class ModelHandlingService : IModelHandlingService
     {
         private static readonly int BatchSize = 100;
         private readonly ICmd cmd;
@@ -40,6 +40,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         private readonly IProgressService progress;
 
         private readonly IRecentModelsService recentModelsService;
+        private readonly IModelNotificationService modelNotificationService;
 
 
         private bool isShowingOpenModel;
@@ -53,6 +54,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             IModelService modelService,
             ModelMetadata modelMetadata,
             IRecentModelsService recentModelsService,
+            IModelNotificationService modelNotificationService,
             IMessage message,
             IProgressService progress,
             ICmd cmd)
@@ -65,6 +67,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             this.modelService = modelService;
             this.modelMetadata = modelMetadata;
             this.recentModelsService = recentModelsService;
+            this.modelNotificationService = modelNotificationService;
             this.message = message;
             this.progress = progress;
             this.cmd = cmd;
@@ -168,7 +171,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 isWorking = false;
             }
 
-            ModelUpdated?.Invoke(this, EventArgs.Empty);
+            modelNotificationService.TriggerNotification();
         }
 
 
@@ -201,12 +204,9 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
             await modelPersistentHandler.SaveIfModifiedAsync();
         }
+        
 
-
-        public event EventHandler ModelUpdated;
-
-
-        public Task ManualRefreshAsync(bool refreshLayout = false) => RefreshAsync(refreshLayout);
+        //public Task ManualRefreshAsync(bool refreshLayout = false) => RefreshAsync(refreshLayout);
 
 
         private async void DataChangedFiles(object sender, EventArgs e)

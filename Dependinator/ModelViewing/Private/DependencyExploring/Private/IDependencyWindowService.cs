@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 
 
@@ -9,9 +9,6 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
         void Initialize(DependencyExplorerWindowViewModel viewModel, Node node, Line line);
 
         Task SwitchSidesAsync(DependencyExplorerWindowViewModel viewModel);
-
-        Task RefreshAsync(DependencyExplorerWindowViewModel viewModel);
-
 
         void FilterOn(
             DependencyExplorerWindowViewModel viewModel,
