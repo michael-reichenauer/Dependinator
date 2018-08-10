@@ -34,13 +34,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public void Dispose()
-        {
-            foreach (AssemblyParser parser in assemblyParsers)
-            {
-                parser.Dispose();
-            }
-        }
+        public void Dispose() => assemblyParsers.ForEach(parser => parser.Dispose());
 
 
         public static bool IsSolutionFile(DataFile dataFile) =>
