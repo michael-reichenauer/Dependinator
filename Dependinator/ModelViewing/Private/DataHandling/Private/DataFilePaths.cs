@@ -38,8 +38,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         {
             string dataFileName = $"{Path.GetFileNameWithoutExtension(dataFile.FilePath)}.dpnr";
             string folderPath = Path.GetDirectoryName(dataFile.FilePath);
-            //  string dataFilePath = Path.Combine(folderPath, dataJson);
-            return Path.Combine(dataFile.WorkFolderPath, dataFileName);
+            return Path.Combine(folderPath, dataFileName);
+
+            ////  string dataFilePath = Path.Combine(folderPath, dataJson);
+            //return Path.Combine(dataFile.WorkFolderPath, dataFileName);
         }
     }
 }
