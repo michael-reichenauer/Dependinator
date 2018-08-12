@@ -43,7 +43,7 @@
             Key="Escape"
             Command="{Binding CancelCommand}"
             CommandParameter="{Binding ElementName=ReferencesDialogWindow}" />
-        <KeyBinding Key="F5" Command="{Binding RefreshCommand}" />
+        <!--<KeyBinding Key="F5" Command="{Binding RefreshCommand}" />-->
     </Window.InputBindings>
 
     <Grid>

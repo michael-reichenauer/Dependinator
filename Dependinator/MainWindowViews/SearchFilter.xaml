@@ -36,7 +36,7 @@
                 IsTextSearchEnabled="False"
                 SelectedItem="{Binding SelectedSearchItem}"
                 Foreground="{DynamicResource TextBrush}"
-                Width="125"
+                Width="145"
                 Height="20"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Center"

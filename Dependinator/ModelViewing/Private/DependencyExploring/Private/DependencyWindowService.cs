@@ -121,6 +121,25 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
         }
 
 
+        public void HideDependencies(
+            DependencyExplorerWindowViewModel viewModel, NodeName nodeName, bool isSourceItem)
+        {
+            if (!modelService.TryGetNode(nodeName, out Node node))
+            {
+                return;
+            }
+
+            var hiddenNodes = isSourceItem ? viewModel.HiddenSourceNodes : viewModel.HiddenTargetNodes;
+            
+            if (!hiddenNodes.Contains(node))
+            {
+                hiddenNodes.Add(node);
+            }
+
+            viewModel.ModelChanged();
+        }
+
+
         private async void InitializeFromNodeAsync(DependencyExplorerWindowViewModel viewModel, Node node)
         {
             Node sourceNode;
@@ -246,7 +265,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
             viewModel.SourceNodeName = sourceNode.Name;
             viewModel.TargetNodeName = targetNode.Name;
 
-            var dependencyItems = await GetDependencyItemsAsync(isSourceSide, sourceNode, targetNode);
+            var dependencyItems = await GetDependencyItemsAsync(viewModel, isSourceSide, sourceNode, targetNode);
 
             var items = isSourceSide ? viewModel.SourceItems : viewModel.TargetItems;
 
@@ -259,8 +278,16 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 
 
         private Task<IReadOnlyList<DependencyItem>> GetDependencyItemsAsync(
-            bool isSourceSide, Node sourceNode, Node targetNode) =>
-            dependenciesService.GetDependencyItemsAsync(isSourceSide, sourceNode, targetNode);
+            DependencyExplorerWindowViewModel viewModel,
+            bool isSourceSide,
+            Node sourceNode,
+            Node targetNode)
+        {
+            Options options = new Options(
+                isSourceSide, sourceNode, targetNode, viewModel.HiddenSourceNodes, viewModel.HiddenTargetNodes);
+
+            return dependenciesService.GetDependencyItemsAsync(options);
+        }
 
 
         private async Task SetTextsAsync(

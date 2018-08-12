@@ -62,6 +62,15 @@
             <Button
                 Visibility="{Binding IsShowButtons, Converter={StaticResource VC}}"
                 Padding="5,3,0,0"
+                Content="&#xe3a5;"
+                FontSize="11"
+                Style="{DynamicResource IconButtonStyle}"
+                Command="{Binding HideDependenciesCommand}"
+                ToolTip="Hide dependencies" />
+
+            <Button
+                Visibility="{Binding IsShowButtons, Converter={StaticResource VC}}"
+                Padding="5,3,0,0"
                 Content="&#xe3dc;"
                 FontSize="11"
                 Style="{DynamicResource IconButtonStyle}"

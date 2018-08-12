@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Windows;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.Utils.UI.Mvvm;
@@ -30,7 +31,8 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 
         public string TargetText { get => Get(); set => Set(value); }
         public string SourceTargetToolTip { get => Get(); set => Set(value); }
-
+        public List<Node> HiddenSourceNodes { get; } = new List<Node>();
+        public List<Node> HiddenTargetNodes { get; } = new List<Node>();
 
         public Command<Window> CancelCommand => Command<Window>(w => w.Close());
 
@@ -48,6 +50,9 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
         public void Locate(NodeName nodeName) => dependencyWindowService.Locate(nodeName);
 
         public void ShowDependencies(NodeName nodeName) => dependencyWindowService.ShowDependencies(nodeName);
+        public void HideDependencies(NodeName nodeName, bool isSourceItem) => 
+            dependencyWindowService.HideDependencies(this, nodeName, isSourceItem);
+ 
 
 
         public void FilterOn(DependencyItem item, bool isSourceItem) =>
