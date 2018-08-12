@@ -6,7 +6,7 @@ using System.Windows.Input;
 using Dependinator.Utils.UI.VirtualCanvas;
 
 
-namespace Dependinator.ModelViewing.Private.ItemsViewing
+namespace Dependinator.ModelViewing.Private.ItemsViewing.Private
 {
     internal class ItemsCanvasZoom
     {
