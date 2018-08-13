@@ -35,6 +35,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
+        public int IlCount => methodParser.IlCount;
+
         public void AddTypesMembers(IEnumerable<TypeData> typeInfos)
         {
             typeInfos.ForEach(AddTypeMembers);

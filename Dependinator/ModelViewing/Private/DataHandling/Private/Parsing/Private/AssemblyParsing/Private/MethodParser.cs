@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
@@ -23,6 +23,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             this.linkHandler = linkHandler;
         }
+
+
+        public int IlCount { get; private set; } = 0;
 
 
         public void AddAsyncStateType(TypeData typeData)
@@ -73,6 +76,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
                 foreach (Instruction instruction in body.Instructions)
                 {
+                    IlCount++;
                     if (instruction.Operand is MethodReference methodCall)
                     {
                         AddLinkToCallMethod(memberNode, methodCall);

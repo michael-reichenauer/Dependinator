@@ -55,6 +55,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
         public string ModuleName => Name.GetModuleName(assembly.Value);
 
+        public int IlCount => memberParser.IlCount;
 
         public void Dispose()
         {
@@ -131,6 +132,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             typeParser.AddTypesLinks(typeInfos);
             memberParser.AddTypesMembers(typeInfos);
+            Log.Debug($"IL count for {ModuleName}: {IlCount}");
         }
 
 
