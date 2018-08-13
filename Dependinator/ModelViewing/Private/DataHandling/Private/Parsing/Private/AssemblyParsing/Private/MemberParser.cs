@@ -36,6 +36,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 
         public int IlCount => methodParser.IlCount;
+        public int MembersCount { get; private set; } = 0;
+
 
         public void AddTypesMembers(IEnumerable<TypeData> typeInfos)
         {
@@ -109,6 +111,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
                 if (!sentNodes.ContainsKey(memberNode.Name))
                 {
+                    MembersCount++;
                     // Not yet sent this node name (properties get/set, events (add/remove) appear twice
                     sentNodes[memberNode.Name] = memberNode;
                     itemsCallback(memberNode);

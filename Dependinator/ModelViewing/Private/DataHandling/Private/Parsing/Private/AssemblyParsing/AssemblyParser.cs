@@ -27,7 +27,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         private readonly DataNodeName parentName;
         private readonly ParsingAssemblyResolver resolver = new ParsingAssemblyResolver();
         private readonly TypeParser typeParser;
-
+        private LinkHandler linkHandler;
         private List<TypeData> typeInfos = new List<TypeData>();
 
 
@@ -43,7 +43,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             this.isReadSymbols = isReadSymbols;
 
             XmlDocParser xmlDockParser = new XmlDocParser(assemblyPath);
-            LinkHandler linkHandler = new LinkHandler(itemsCallback);
+            linkHandler = new LinkHandler(itemsCallback);
 
             assemblyReferencesParser = new AssemblyReferencesParser(linkHandler, itemsCallback);
             typeParser = new TypeParser(linkHandler, xmlDockParser, itemsCallback);
@@ -55,7 +55,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
         public string ModuleName => Name.GetModuleName(assembly.Value);
 
+        public int TypeCount => typeInfos.Count;
+        public int MemberCount => memberParser.MembersCount;
         public int IlCount => memberParser.IlCount;
+        public int LinksCount => linkHandler.LinksCount;
+
 
         public void Dispose()
         {
@@ -132,7 +136,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             typeParser.AddTypesLinks(typeInfos);
             memberParser.AddTypesMembers(typeInfos);
-            Log.Debug($"IL count for {ModuleName}: {IlCount}");
         }
 
 

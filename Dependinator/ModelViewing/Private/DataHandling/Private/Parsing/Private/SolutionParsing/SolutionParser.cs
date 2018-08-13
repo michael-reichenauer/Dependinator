@@ -54,7 +54,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             parentNodesToSend.ForEach(node => itemsCallback(node));
 
             await ParseSolutionAssembliesAsync();
-            Log.Debug($"Il count: {assemblyParsers.Sum(parser => parser.IlCount)}");
+            int typeCount = assemblyParsers.Sum(parser => parser.TypeCount);
+            int memberCount = assemblyParsers.Sum(parser => parser.MemberCount);
+            int ilCount = assemblyParsers.Sum(parser => parser.IlCount);
+            int linksCount = assemblyParsers.Sum(parser => parser.LinksCount);
+
+            Log.Debug($"Solution: {typeCount} types, {memberCount} members, {ilCount} il-instructions, {linksCount} links");
             return M.Ok;
         }
 

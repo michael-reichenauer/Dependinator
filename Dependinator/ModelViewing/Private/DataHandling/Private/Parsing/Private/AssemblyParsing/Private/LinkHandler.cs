@@ -20,6 +20,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
+        public int LinksCount { get; private set; } = 0;
+
+
         public void AddLink(DataNodeName source, string targetName, NodeType targetType)
         {
             SendLink(source, targetName, targetType);
@@ -86,6 +89,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
             DataLink dataLink = new DataLink(source, targetNode.Name);
             itemsCallback(dataLink);
+            LinksCount++;
         }
 
 
