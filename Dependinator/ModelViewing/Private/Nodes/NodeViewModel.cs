@@ -232,13 +232,15 @@ namespace Dependinator.ModelViewing.Private.Nodes
         public override void MoveItem(Vector moveOffset)
         {
             Point newLocation = ItemBounds.Location + moveOffset;
-            UpdateBounds(new Rect(newLocation, ItemBounds.Size));
+
+            SetBounds(new Rect(newLocation, ItemBounds.Size), false);
+            nodeViewModelService.SetIsChanged(Node);
         }
 
 
         public void UpdateBounds(Rect bounds)
         {
-            ItemBounds = bounds;
+            SetBounds(bounds, true);
             nodeViewModelService.SetIsChanged(Node);
         }
 

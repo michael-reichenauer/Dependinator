@@ -44,6 +44,7 @@ namespace Dependinator.ModelViewing.Private
 
         public async void StartMoveToNode(string filePath)
         {
+    
             M<DataNodeName> nodeName = await dataService.GetNodeForFilePathAsync(
                 modelMetadata.DataFile, filePath);
 

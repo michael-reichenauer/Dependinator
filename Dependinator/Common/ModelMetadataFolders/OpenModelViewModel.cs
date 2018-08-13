@@ -21,7 +21,7 @@ namespace Dependinator.Common.ModelMetadataFolders
         {
             this.openModelService = openModelService;
             this.recentModelsService = recentModelsService;
-            ItemBounds = DefaultOpenModelNodeBounds;
+            SetBounds(DefaultOpenModelNodeBounds, false);
 
             RecentFiles = GetRecentFiles();
         }

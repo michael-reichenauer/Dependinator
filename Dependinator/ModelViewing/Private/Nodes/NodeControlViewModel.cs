@@ -22,10 +22,10 @@ namespace Dependinator.ModelViewing.Private.Nodes
         {
             this.nodeViewModel = nodeViewModel;
 
-            ItemBounds = nodeViewModel.ItemBounds;
+            SetBounds(nodeViewModel.ItemBounds, false);
 
             WhenSet(nodeViewModel, nameof(nodeViewModel.ItemBounds))
-                .Notify(_ => ItemBounds = this.nodeViewModel.ItemBounds);
+                .Notify(_ => SetBounds(this.nodeViewModel.ItemBounds, true));
 
             IsShowControls = true;
         }
@@ -122,7 +122,7 @@ namespace Dependinator.ModelViewing.Private.Nodes
         public override void MoveItem(Vector moveOffset)
         {
             Point newLocation = ItemBounds.Location + moveOffset;
-            ItemBounds = new Rect(newLocation, ItemBounds.Size);
+            SetBounds(new Rect(newLocation, ItemBounds.Size), false);
         }
 
 

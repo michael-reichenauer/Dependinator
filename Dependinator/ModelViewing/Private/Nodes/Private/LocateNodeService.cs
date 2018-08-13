@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Threading;
 using Dependinator.ModelViewing.Private.ItemsViewing;
@@ -28,26 +29,27 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 
         public bool TryStartMoveToNode(NodeName nodeName)
         {
-            if (modelService.TryGetNode(nodeName, out Node node))
+            if (!modelService.TryGetNode(nodeName, out Node node) ||
+                node.AncestorsAndSelf().Any(n => !n.IsLayoutCompleted))
             {
-                Operation operation = new Operation(
-                    node,
-                    node.Root.ItemsCanvas,
-                    GetRootScreenCenter(node.Root));
-
-                // Starting a move in several small steps on the UI threads
-                operation.Timer = new DispatcherTimer(
-                    StepInterval,
-                    DispatcherPriority.Normal,
-                    (s, e) => DoZoomAndMoveSteps(operation),
-                    Dispatcher.CurrentDispatcher);
-
-                operation.Timer.Start();
-                return true;
+                Log.Debug($"Failed to locate {nodeName}");
+                return false;
             }
 
-            Log.Debug($"Failed to locate {nodeName}");
-            return false;
+            Operation operation = new Operation(
+                node,
+                node.Root.ItemsCanvas,
+                GetRootScreenCenter(node.Root));
+
+            // Starting a move in several small steps on the UI threads
+            operation.Timer = new DispatcherTimer(
+                StepInterval,
+                DispatcherPriority.Normal,
+                (s, e) => DoZoomAndMoveSteps(operation),
+                Dispatcher.CurrentDispatcher);
+
+            operation.Timer.Start();
+            return true;
         }
 
 

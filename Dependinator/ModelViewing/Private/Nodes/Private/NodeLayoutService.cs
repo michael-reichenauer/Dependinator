@@ -35,22 +35,22 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
         }
 
 
-        public void SetLayout(NodeViewModel nodeViewMode)
+        public void SetLayout(NodeViewModel nodeViewModel)
         {
-            if (!nodeViewMode.Node.Bounds.Same(RectEx.Zero))
+            if (!nodeViewModel.Node.Bounds.Same(RectEx.Zero))
             {
-                nodeViewMode.ItemBounds = nodeViewMode.Node.Bounds;
-                nodeViewMode.Node.Parent.IsLayoutCompleted = true;
+                nodeViewModel.SetBounds(nodeViewModel.Node.Bounds, false);
+                nodeViewModel.Node.Parent.IsLayoutCompleted = true;
                 return;
             }
 
-            if (nodeViewMode.Node.Parent.IsLayoutCompleted)
+            if (nodeViewModel.Node.Parent.IsLayoutCompleted)
             {
-                AdjustLayout(nodeViewMode);
+                AdjustLayout(nodeViewModel);
             }
             else
             {
-                Node parent = nodeViewMode.Node.Parent;
+                Node parent = nodeViewModel.Node.Parent;
                 ResetLayoutImpl(parent);
             }
         }
@@ -78,7 +78,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
             {
                 Rect bounds = GetBounds(index++, layout);
 
-                child.ViewModel.ItemBounds = bounds;
+                child.ViewModel.SetBounds(bounds, true);
             }
         }
 
@@ -98,7 +98,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 
                 if (!IsIntersecting(bounds, parent.Children))
                 {
-                    nodeViewModel.ItemBounds = bounds;
+                    nodeViewModel.SetBounds(bounds, true);
                     break;
                 }
             }

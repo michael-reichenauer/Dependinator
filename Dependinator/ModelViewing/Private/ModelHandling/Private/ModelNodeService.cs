@@ -174,7 +174,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             node.Description = dataNode.Description;
             if (nodeService.TryGetSavedNode(node.Name, out DataNode savedNode))
             {
-                if (node.ViewModel != null) node.ViewModel.ItemBounds = savedNode.Bounds;
+                if (node.ViewModel != null) node.ViewModel.SetBounds(savedNode.Bounds, true);
                 if (node.ViewModel?.ItemsViewModel?.ItemsCanvas != null)
                     node.ViewModel.ItemsViewModel.ItemsCanvas.ScaleFactor = savedNode.Scale;
                 node.IsNodeHidden = savedNode.ShowState == Node.Hidden;
