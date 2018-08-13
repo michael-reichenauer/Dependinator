@@ -49,8 +49,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             await SaveItemsAsync(dataFile, items);
             t.Log("Save items");
 
-            //await CacheItemsAsync(dataFile, items);
-            //t.Log($"Cache {items.Count} items");
+            await CacheItemsAsync(dataFile, items);
+            t.Log($"Cache {items.Count} items");
         }
 
 

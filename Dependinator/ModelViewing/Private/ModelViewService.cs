@@ -56,7 +56,7 @@ namespace Dependinator.ModelViewing.Private
 
             Log.Debug($"Start to move to {nodeName.Value}");
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 25; i++)
             {
                 if (locateNodeService.TryStartMoveToNode(nodeName.Value))
                 {
