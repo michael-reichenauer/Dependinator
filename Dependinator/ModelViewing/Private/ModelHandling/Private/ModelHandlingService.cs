@@ -229,9 +229,12 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 return M.Ok;
             }
 
+
             modelService.Root.ItemsCanvas.SetRootScale(WorkFolderSettings.DefaultScale);
+            modelService.Root.ItemsCanvas.SetRootOffset(WorkFolderSettings.DefaultOffset);
+
             modelService.Root.ItemsCanvas.ZoomableCanvas.Scale = WorkFolderSettings.DefaultScale;
-            modelService.Root.ItemsCanvas.ZoomableCanvas.Offset = new Point(0, 0);
+            modelService.Root.ItemsCanvas.ZoomableCanvas.Offset = WorkFolderSettings.DefaultOffset;
 
             var savedItems = await dataService.TryReadSaveAsync(modelMetadata.DataFile);
             if (savedItems.IsOk)
