@@ -10,6 +10,7 @@ using System.Windows.Threading;
 using Dependinator.Common.MessageDialogs;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ProgressHandling;
+using Dependinator.Common.SettingsHandling;
 using Dependinator.ModelViewing.Private.DataHandling;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ItemsViewing;
@@ -227,6 +228,10 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             {
                 return M.Ok;
             }
+
+            modelService.Root.ItemsCanvas.SetRootScale(WorkFolderSettings.DefaultScale);
+            modelService.Root.ItemsCanvas.ZoomableCanvas.Scale = WorkFolderSettings.DefaultScale;
+            modelService.Root.ItemsCanvas.ZoomableCanvas.Offset = new Point(0, 0);
 
             var savedItems = await dataService.TryReadSaveAsync(modelMetadata.DataFile);
             if (savedItems.IsOk)

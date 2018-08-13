@@ -368,7 +368,6 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
             return count;
         }
 
-
         public void ZoomNode(double zoomFactor, Point zoomCenter) => itemsCanvasZoom.ZoomNode(zoomFactor, zoomCenter);
 
 

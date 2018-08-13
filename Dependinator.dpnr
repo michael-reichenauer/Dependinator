@@ -1201,6 +1201,7 @@
 ,{"N":"..........GetDataFilePaths(String)","B":"1150,120,200,100"}
 ,{"N":"..........GetReferencePaths(IReadOnlyList`1)","B":"900,270,200,100"}
 ,{"N":"..........GetSourceFilePath(DataNodeName)","B":"400,420,200,100"}
+,{"N":"..........IlCount","B":"125,350,200,100"}
 ,{"N":"..........isReadSymbols","B":"1150,120,200,100"}
 ,{"N":"..........itemsCallback","B":"1400,120,200,100"}
 ,{"N":"..........memberParser","B":"150,270,200,100"}
@@ -1276,6 +1277,7 @@
 ,{"N":"...........cctor()","B":"750,520,200,100"}
 ,{"N":"...........ctor(LinkHandler,XmlDocParser,DataItemsCallback)","B":"375,50,200,100"}
 ,{"N":"...........GetParentName(String)","B":"450,520,200,100"}
+,{"N":"...........IlCount","B":"125,200,200,100"}
 ,{"N":"...........itemsCallback","B":"450,120,200,100"}
 ,{"N":"...........linkHandler","B":"750,120,200,100"}
 ,{"N":"...........methodParser","B":"1050,120,200,100"}
@@ -1295,6 +1297,7 @@
 ,{"N":"...........AddMethodLinks(DataNode,MethodDefinition)","B":"1050,120,200,100"}
 ,{"N":"...........asyncStates","B":"450,120,200,100"}
 ,{"N":"...........ctor(LinkHandler)","B":"450,120,200,100"}
+,{"N":"...........IlCount","B":"125,350,200,100"}
 ,{"N":"...........linkHandler","B":"750,120,200,100"}
 ,{"N":"...........methodBodyNodes","B":"1050,120,200,100"}
 ,{"N":"..........MethodParser/MethodBodyNode","B":"150,120,200,100","S":0.286}

@@ -27,18 +27,18 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing.Private
             ItemsCanvas rootCanvas = itemsCanvas.RootCanvas;
             Point zoomCenter = ZoomCenter(rootCanvas);
 
-            Zoom(rootCanvas, zoomFactor, zoomCenter);
+            Zoom(rootCanvas, zoomFactor, zoomCenter, false);
         }
 
 
         public void ZoomNode(double zoomFactor, Point zoomCenter) =>
-            Zoom(itemsCanvas, zoomFactor, zoomCenter);
+            Zoom(itemsCanvas, zoomFactor, zoomCenter, false);
 
 
         public void ZoomNode(double zoomFactor)
         {
             Point zoomCenter = ZoomCenter(itemsCanvas);
-            Zoom(itemsCanvas, zoomFactor, zoomCenter);
+            Zoom(itemsCanvas, zoomFactor, zoomCenter, false);
         }
 
 
@@ -57,15 +57,16 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing.Private
             double zoomFactor = ZoomFactor(e);
             Point zoomCenter = ZoomCenter(itemsCanvas, e);
 
-            Zoom(itemsCanvas, zoomFactor, zoomCenter);
+            Zoom(itemsCanvas, zoomFactor, zoomCenter, true);
         }
 
 
-        private static void Zoom(ItemsCanvas itemsCanvas, double zoomFactor, Point zoomCenter)
+        private static void Zoom(
+            ItemsCanvas itemsCanvas, double zoomFactor, Point zoomCenter, bool isManual)
         {
             double newScale = itemsCanvas.Scale * zoomFactor;
 
-            if (!IsValidZoomScale(zoomFactor, newScale)) return;
+            if (isManual && !IsValidZoomScale(zoomFactor, newScale)) return;
 
             if (itemsCanvas.IsRoot) itemsCanvas.RootScale = newScale;
             else itemsCanvas.ScaleFactor = newScale / itemsCanvas.ParentCanvas.Scale;
