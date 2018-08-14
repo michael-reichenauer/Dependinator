@@ -31,7 +31,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<M<string>> GetCodeAsync(DataFile dataFile, NodeName nodeName)
+        public async Task<M<string>> GetCodeAsync(DataFile dataFile, DataNodeName nodeName)
         {
             M<WorkParser> workItemParser = new WorkParser(dataFile, null);
             if (workItemParser.IsFaulted)
@@ -46,7 +46,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<M<SourceLocation>> GetSourceFilePath(DataFile dataFile, NodeName nodeName)
+        public async Task<M<SourceLocation>> GetSourceFilePath(DataFile dataFile, DataNodeName nodeName)
         {
             M<WorkParser> workItemParser = new WorkParser(dataFile, null);
             if (workItemParser.IsFaulted)
@@ -61,7 +61,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<M<NodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath)
+        public async Task<M<DataNodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath)
         {
             M<WorkParser> workItemParser = new WorkParser(dataFile, null);
             if (workItemParser.IsFaulted)

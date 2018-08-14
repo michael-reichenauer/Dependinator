@@ -19,10 +19,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling
 
         Task<M> TryReadFreshAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
 
-        Task<M<string>> GetCodeAsync(DataFile dataFile, NodeName nodeName);
+        Task<M<string>> GetCodeAsync(DataFile dataFile, DataNodeName nodeName);
 
-        Task<M<SourceLocation>> GetSourceFilePathAsync(DataFile dataFile, NodeName nodeName);
+        Task<M<SourceLocation>> GetSourceFilePathAsync(DataFile dataFile, DataNodeName nodeName);
 
-        Task<M<NodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath);
+        Task<M<DataNodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath);
     }
 }

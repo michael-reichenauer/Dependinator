@@ -1,4 +1,4 @@
-namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
+﻿namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 {
     internal interface IItemCommands
     {
@@ -7,6 +7,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
         void Locate(NodeName nodeName);
 
         void FilterOn(DependencyItem item, bool isSourceItem);
-        void ShowDependencies(NodeName nodeName);
+        void ShowDependencyExplorer(NodeName nodeName);
+        void HideDependencies(NodeName nodeName, bool isSourceItem);
     }
 }

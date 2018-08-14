@@ -1,4 +1,4 @@
-using System.Windows;
+﻿using System.Windows;
 using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.Utils.UI.Mvvm;
 
@@ -35,8 +35,17 @@ namespace Dependinator.ModelViewing
         public Rect ItemBounds
         {
             get => Get();
-            set => Set(value)
+            private set => Set(value)
                 .Notify(nameof(ItemTop), nameof(ItemLeft), nameof(ItemWidth), nameof(ItemHeight));
+        }
+
+
+        public void SetBounds(Rect bounds, bool isUpdateParent)
+        {
+            if (ItemBounds == bounds) return;
+
+            ItemBounds = bounds;
+            if (isUpdateParent) ItemOwnerCanvas?.UpdateItem(this);
         }
 
         public ItemsCanvas ItemOwnerCanvas { get; set; }

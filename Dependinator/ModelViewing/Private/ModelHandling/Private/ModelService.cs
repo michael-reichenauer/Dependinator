@@ -10,6 +10,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
     {
         private readonly IModelDatabase modelDatabase;
         private readonly IModelLineService modelLineService;
+        private readonly IModelNotificationService modelNotificationService;
         private readonly IModelLinkService modelLinkService;
         private readonly IModelNodeService modelNodeService;
 
@@ -18,12 +19,14 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             IModelDatabase modelDatabase,
             IModelNodeService modelNodeService,
             IModelLinkService modelLinkService,
-            IModelLineService modelLineService)
+            IModelLineService modelLineService,
+            IModelNotificationService modelNotificationService)
         {
             this.modelDatabase = modelDatabase;
             this.modelNodeService = modelNodeService;
             this.modelLinkService = modelLinkService;
             this.modelLineService = modelLineService;
+            this.modelNotificationService = modelNotificationService;
         }
 
 
@@ -45,7 +48,11 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
 
         public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelNodeService.GetHiddenNodeNames();
-        public void ShowHiddenNode(NodeName nodeName) => modelNodeService.ShowHiddenNode(nodeName);
+        public void ShowHiddenNode(NodeName nodeName)
+        {
+            modelNodeService.ShowHiddenNode(nodeName);
+            modelNotificationService.TriggerNotification();
+        }
 
 
         public void AddOrUpdateItem(IDataItem item, int stamp)
@@ -67,7 +74,13 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        public void HideNode(Node node) => modelNodeService.HideNode(node);
+        public void HideNode(Node node)
+        {
+            modelNodeService.HideNode(node);
+            modelNotificationService.TriggerNotification();
+        }
+
+
         public void AddLineViewModel(Line line) => modelLineService.AddLineViewModel(line);
         public void SetSaveData(IReadOnlyList<IDataItem> savedItems)
         {

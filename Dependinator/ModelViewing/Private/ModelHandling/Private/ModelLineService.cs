@@ -71,9 +71,9 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         {
             node.Root.Descendents().SelectMany(n => n.SourceLines).ForEach(line => line.LinkCount = 0);
 
-            node.Root.Descendents().SelectMany(n => n.SourceLinks).ForEach(link => ShowLinkIfNeeded(link));
+            node.Root.Descendents().SelectMany(n => n.SourceLinks).ForEach(ShowLinkIfNeeded);
 
-            node.Root.Descendents().SelectMany(n => n.SourceLines).ToList().ForEach(line => RemoveLineIfNoLinks(line));
+            node.Root.Descendents().SelectMany(n => n.SourceLines).ToList().ForEach(RemoveLineIfNoLinks);
         }
 
 

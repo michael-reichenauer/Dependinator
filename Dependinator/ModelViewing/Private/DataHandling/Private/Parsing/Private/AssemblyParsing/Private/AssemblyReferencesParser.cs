@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Mono.Cecil;
@@ -46,12 +47,34 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
+        public IReadOnlyList<string> GetReferencesPaths(
+            string assemblyPath,
+            AssemblyDefinition assembly,
+            IReadOnlyList<string> internalModules)
+        {
+            string folderPath = Path.GetDirectoryName(assemblyPath);
+            var assemblyReferences = GetExternalAssemblyReferences(assembly, internalModules);
+
+            return assemblyReferences
+                .Select(reference => AssemblyFileName(reference, folderPath))
+                .ToList();
+        }
+
+
+        private static string AssemblyFileName(AssemblyNameReference reference, string folderPath)
+            => Path.Combine(folderPath, $"{GetAssemblyName(reference)}.dll");
+
+
+        private static string GetAssemblyName(AssemblyNameReference reference)
+            => Name.GetModuleName(reference).Replace("*", ".");
+
+
         private DataNodeName SendReferencesRootNode()
         {
             DataNodeName referencesRootName = (DataNodeName)"$References";
             DataNode referencesRootNode = new DataNode(
                     referencesRootName, DataNodeName.None, NodeType.Group)
-                {Description = "External references"};
+            { Description = "External references" };
 
             itemsCallback(referencesRootNode);
             return referencesRootName;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -66,8 +66,10 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
         public Command ToggleCollapseCommand => Command(SetExpand);
         public Command FilterCommand => Command(Filter);
         public Command LocateCommand => Command(() => itemCommands.Locate(Item.NodeName));
-        public Command ShowDependenciesCommand => Command(() => itemCommands.ShowDependencies(Item.NodeName));
+        public Command ShowDependencyExplorerCommand => Command(() => itemCommands.ShowDependencyExplorer(Item.NodeName));
 
+        public Command HideDependenciesCommand => Command(() => itemCommands.HideDependencies(
+            Item.NodeName, isSourceItem));
 
         private void Filter()
         {

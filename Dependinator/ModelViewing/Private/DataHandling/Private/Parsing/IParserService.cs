@@ -14,9 +14,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing
 
         IReadOnlyList<string> GetDataFilePaths(DataFile dataFile);
         IReadOnlyList<string> GetBuildPaths(DataFile dataFile);
-        Task<M<string>> GetCodeAsync(DataFile dataFile, NodeName nodeName);
-        Task<M<SourceLocation>> GetSourceFilePath(DataFile dataFile, NodeName nodeName);
-        Task<M<NodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath);
+        Task<M<string>> GetCodeAsync(DataFile dataFile, DataNodeName nodeName);
+        Task<M<SourceLocation>> GetSourceFilePath(DataFile dataFile, DataNodeName nodeName);
+        Task<M<DataNodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath);
     }
 
 

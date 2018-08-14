@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
@@ -8,15 +8,10 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 {
     internal class DependenciesService : IDependenciesService
     {
-        public async Task<IReadOnlyList<DependencyItem>> GetDependencyItemsAsync(
-            bool isSource,
-            Node sourceNode,
-            Node targetNode)
+        public async Task<IReadOnlyList<DependencyItem>> GetDependencyItemsAsync(Options options)
         {
             return await Task.Run(() =>
             {
-                Options options = new Options(isSource, sourceNode, targetNode);
-
                 IEnumerable<Link> links = GetLinks(options);
 
                 var items = CreateReferenceHierarchy(links, options);
@@ -25,7 +20,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 
                 AddMainNodeIfNeeded(rootItem, options);
 
-                return new List<DependencyItem> {rootItem};
+                return new List<DependencyItem> { rootItem };
             });
         }
 
@@ -75,6 +70,14 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
                 return false;
             }
 
+
+            if (options.HiddenSourceDependencies.Any(n => link.Source.AncestorsAndSelf().Contains(n)) ||
+                options.HiddenTargetDependencies.Any(n => link.Target.AncestorsAndSelf().Contains(n)))
+            {
+                // Excluding hidden dependencies
+                return false;
+            }
+            
             return
                 link.Source.AncestorsAndSelf().Contains(options.SourceNode) &&
                 (options.SourceNode2 == null || !link.Source.AncestorsAndSelf().Contains(options.SourceNode2)) &&
@@ -134,39 +137,6 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
         private static Node EndPoint(IEdge edge, bool isSource)
         {
             return isSource ? edge.Source : edge.Target;
-        }
-
-
-        private class Options
-        {
-            public Options(
-                bool isSource,
-                Node sourceNode,
-                Node targetNode)
-            {
-                IsSource = isSource;
-
-                SourceNode = sourceNode == targetNode.Parent ? sourceNode.Root : sourceNode;
-                SourceNode2 = sourceNode == targetNode.Parent
-                    ? targetNode.Parent
-                    : targetNode.Ancestors().Contains(sourceNode)
-                        ? targetNode
-                        : null;
-
-                TargetNode = targetNode == sourceNode.Parent ? targetNode.Root : targetNode;
-                TargetNode2 = targetNode == sourceNode.Parent
-                    ? sourceNode.Parent
-                    : targetNode.Ancestors().Contains(sourceNode)
-                        ? null
-                        : sourceNode;
-            }
-
-
-            public bool IsSource { get; }
-            public Node SourceNode { get; }
-            public Node TargetNode { get; }
-            public Node SourceNode2 { get; }
-            public Node TargetNode2 { get; }
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ThemeHandling;
 using Dependinator.ModelViewing.Private.DataHandling;
+using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.Nodes;
 using Dependinator.ModelViewing.Private.Searching;
 using Dependinator.Utils;
@@ -43,7 +44,8 @@ namespace Dependinator.ModelViewing.Private
 
         public async void StartMoveToNode(string filePath)
         {
-            M<NodeName> nodeName = await dataService.GetNodeForFilePathAsync(
+    
+            M<DataNodeName> nodeName = await dataService.GetNodeForFilePathAsync(
                 modelMetadata.DataFile, filePath);
 
             if (nodeName.IsFaulted)
@@ -54,7 +56,7 @@ namespace Dependinator.ModelViewing.Private
 
             Log.Debug($"Start to move to {nodeName.Value}");
 
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 25; i++)
             {
                 if (locateNodeService.TryStartMoveToNode(nodeName.Value))
                 {

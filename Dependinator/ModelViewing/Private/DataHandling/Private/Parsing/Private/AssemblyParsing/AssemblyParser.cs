@@ -27,7 +27,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         private readonly DataNodeName parentName;
         private readonly ParsingAssemblyResolver resolver = new ParsingAssemblyResolver();
         private readonly TypeParser typeParser;
-
+        private LinkHandler linkHandler;
         private List<TypeData> typeInfos = new List<TypeData>();
 
 
@@ -43,7 +43,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             this.isReadSymbols = isReadSymbols;
 
             XmlDocParser xmlDockParser = new XmlDocParser(assemblyPath);
-            LinkHandler linkHandler = new LinkHandler(itemsCallback);
+            linkHandler = new LinkHandler(itemsCallback);
 
             assemblyReferencesParser = new AssemblyReferencesParser(linkHandler, itemsCallback);
             typeParser = new TypeParser(linkHandler, xmlDockParser, itemsCallback);
@@ -54,6 +54,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 
         public string ModuleName => Name.GetModuleName(assembly.Value);
+
+        public int TypeCount => typeInfos.Count;
+        public int MemberCount => memberParser.MembersCount;
+        public int IlCount => memberParser.IlCount;
+        public int LinksCount => linkHandler.LinksCount;
 
 
         public void Dispose()
@@ -108,6 +113,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
+        public IEnumerable<string> GetReferencePaths(IReadOnlyList<string> internalModules)
+            => assemblyReferencesParser.GetReferencesPaths(
+                assemblyPath, assembly.Value, internalModules);
+
+
         public void ParseTypes()
         {
             if (assembly.Value == null)
@@ -129,15 +139,15 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public M<string> GetCode(NodeName nodeName) =>
+        public M<string> GetCode(DataNodeName nodeName) =>
             decompiler.GetCode(assembly.Value.MainModule, nodeName);
 
 
-        public M<SourceLocation> GetSourceFilePath(NodeName nodeName) =>
+        public M<SourceLocation> GetSourceFilePath(DataNodeName nodeName) =>
             decompiler.GetSourceFilePath(assembly.Value.MainModule, nodeName);
 
 
-        public bool TryGetNodeNameFor(string sourceFilePath, out NodeName nodeName)
+        public bool TryGetNodeNameFor(string sourceFilePath, out DataNodeName nodeName)
         {
             IEnumerable<TypeDefinition> assemblyTypes = GetAssemblyTypes();
 

@@ -1,4 +1,6 @@
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.Utils.UI.Mvvm;
@@ -22,6 +24,14 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
         }
 
 
+        public bool HasHiddenDependencies => HasHiddenSourceNodes || HasHiddenTargetNodes;
+        public bool HasHiddenSourceNodes => HiddenSourceNodes.Any();
+        public bool HasHiddenTargetNodes => HiddenTargetNodes.Any();
+
+        public IReadOnlyList<HiddenNodeItem> HiddenSourceItems => GetHiddenSourceItems();
+        public IReadOnlyList<HiddenNodeItem> HiddenTargetItems => GetHiddenTargetItems();
+
+
         public NodeName SourceNodeName { get; set; }
 
         public NodeName TargetNodeName { get; set; }
@@ -30,13 +40,12 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 
         public string TargetText { get => Get(); set => Set(value); }
         public string SourceTargetToolTip { get => Get(); set => Set(value); }
-
+        public List<Node> HiddenSourceNodes { get; } = new List<Node>();
+        public List<Node> HiddenTargetNodes { get; } = new List<Node>();
 
         public Command<Window> CancelCommand => Command<Window>(w => w.Close());
 
         public Command SwitchSidesCommand => AsyncCommand(() => dependencyWindowService.SwitchSidesAsync(this));
-
-        public Command RefreshCommand => AsyncCommand(() => dependencyWindowService.RefreshAsync(this));
 
 
         public ObservableCollection<DependencyItemViewModel> SourceItems { get; } =
@@ -49,7 +58,12 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
         public void ShowCode(NodeName nodeName) => dependencyWindowService.ShowCode(nodeName);
         public void Locate(NodeName nodeName) => dependencyWindowService.Locate(nodeName);
 
-        public void ShowDependencies(NodeName nodeName) => dependencyWindowService.ShowDependencies(nodeName);
+        public void ShowDependencyExplorer(NodeName nodeName)
+            => dependencyWindowService.ShowDependencyExplorer(nodeName);
+
+        public void HideDependencies(NodeName nodeName, bool isSourceItem) =>
+            dependencyWindowService.HideDependencies(this, nodeName, isSourceItem);
+
 
 
         public void FilterOn(DependencyItem item, bool isSourceItem) =>
@@ -57,5 +71,19 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 
 
         public void ModelChanged() => dependencyWindowService.Refresh(this);
+
+
+        private IReadOnlyList<HiddenNodeItem> GetHiddenSourceItems()
+            => HiddenSourceNodes.Select(node => new HiddenNodeItem(
+                node.Name, name => ShowDependencies(name, true))).ToList();
+
+
+        private IReadOnlyList<HiddenNodeItem> GetHiddenTargetItems()
+            => HiddenTargetNodes.Select(node => new HiddenNodeItem(
+                node.Name, name => ShowDependencies(name, false))).ToList();
+
+
+        private void ShowDependencies(NodeName nodeName, bool isSource)
+            => dependencyWindowService.ShowDependencies(this, nodeName, isSource);
     }
 }

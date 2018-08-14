@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 
 
@@ -10,9 +10,6 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 
         Task SwitchSidesAsync(DependencyExplorerWindowViewModel viewModel);
 
-        Task RefreshAsync(DependencyExplorerWindowViewModel viewModel);
-
-
         void FilterOn(
             DependencyExplorerWindowViewModel viewModel,
             DependencyItem dependencyItem,
@@ -23,6 +20,11 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 
         Task Refresh(DependencyExplorerWindowViewModel viewModel);
         void Locate(NodeName nodeName);
-        void ShowDependencies(NodeName nodeName);
+        void ShowDependencyExplorer(NodeName nodeName);
+        void HideDependencies(DependencyExplorerWindowViewModel viewModel, NodeName nodeName, bool isSourceItem);
+
+
+        void ShowDependencies(
+            DependencyExplorerWindowViewModel viewModel, NodeName nodeName, bool isSourceItem);
     }
 }

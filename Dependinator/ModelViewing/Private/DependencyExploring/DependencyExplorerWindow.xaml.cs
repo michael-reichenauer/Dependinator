@@ -10,7 +10,7 @@ using Dependinator.ModelViewing.Private.ModelHandling.Core;
 namespace Dependinator.ModelViewing.Private.DependencyExploring
 {
     /// <summary>
-    ///     Interaction logic for DependencyExplorerWindow.xaml
+    /// Interaction logic for DependencyExplorerWindow.xaml
     /// </summary>
     public partial class DependencyExplorerWindow : Window
     {
@@ -42,6 +42,13 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring
         {
             modelNotifications.ModelUpdated -= OnModelChanged;
             base.OnClosing(e);
+        }
+
+
+        private void Suppressed_OnClick(object sender, RoutedEventArgs e)
+        {
+            SuppressedContextMenu.PlacementTarget = this;
+            SuppressedContextMenu.IsOpen = true;
         }
     }
 }

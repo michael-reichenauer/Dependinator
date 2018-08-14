@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Windows;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
@@ -74,7 +74,7 @@ namespace Dependinator.ModelViewing.Private.Lines.Private
             bounds.Inflate(margin, margin);
 
             // Set the new bounds
-            line.View.ViewModel.ItemBounds = bounds;
+            line.View.ViewModel.SetBounds(bounds, true);
         }
 
 

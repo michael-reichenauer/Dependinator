@@ -250,7 +250,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing.Private
             lastViewAreaQuery = viewArea;
 
             IEnumerable<int> itemIds = viewItemsTree.GetItemsIntersecting(viewArea)
-                .Where(i => i.ItemState != null && i.CanShow)
+                .Where(i => i.ItemState != null && i.CanShow && i.ItemBounds != Rect.Empty)
                 .Select(i => ((ViewItem)i.ItemState).ItemId);
 
             // Log.Debug($"Items in {itemsSourceArea}: {string.Join(", ", itemIds)}");
