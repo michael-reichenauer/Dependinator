@@ -38,6 +38,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
                     Serialize(path, dataModel);
                 }
+                catch (UnauthorizedAccessException e)
+                {
+                    Log.Debug($"Failed to save {path}, {e.Message}");
+                }
                 catch (Exception e)
                 {
                     Log.Exception(e, $"Failed to serialize to {path}");
@@ -72,6 +76,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
                     Serialize(path, dataModel);
                     t.Log("serailaized");
+                }
+                catch (UnauthorizedAccessException e)
+                {
+                    Log.Debug($"Failed to save {path}, {e.Message}");
                 }
                 catch (Exception e)
                 {

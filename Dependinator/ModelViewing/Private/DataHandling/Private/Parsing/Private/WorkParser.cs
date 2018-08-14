@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.AssemblyParsing;
@@ -40,7 +41,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 return await solutionParser.ParseAsync();
             }
 
-            assemblyParser = new AssemblyParser(dataFile.FilePath, DataNodeName.None, itemsCallback, false);
+            DataNode workNode = GetWorkNode();
+            itemsCallback(workNode);
+
+            assemblyParser = new AssemblyParser(dataFile.FilePath, workNode.Name, itemsCallback, false);
             return await assemblyParser.ParseAsync();
         }
 
@@ -108,6 +112,16 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             }
 
             return AssemblyParser.GetBuildFolderPaths(dataFile.FilePath);
+        }
+
+
+
+        private DataNode GetWorkNode()
+        {
+            DataNodeName solutionName = (DataNodeName)Path.GetFileName(dataFile.FilePath).Replace(".", "*");
+            DataNode workNode = new DataNode(solutionName, DataNodeName.None, NodeType.Assembly)
+                { Description = "Assembly file", Scale = 0.286 };
+            return workNode;
         }
     }
 }

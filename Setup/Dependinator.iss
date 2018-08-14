@@ -66,6 +66,7 @@ Source: "..\DependinatorVse\bin\Release\DependinatorVse.vsix"; DestDir: "{app}\{
 Source: "..\Dependinator\bin\Release\*"; DestDir: "{app}\Example"; Flags: ignoreversion
 Source: "..\Dependinator\bin\Release\Dependinator.exe"; DestDir: "{app}\Example";  DestName:"Example.exe"; Flags: ignoreversion
 Source: "..\Dependinator\bin\Release\Dependinator.xml"; DestDir: "{app}\Example";  DestName:"Example.xml"; Flags: ignoreversion
+Source: "..\Dependinator.dpnr"; DestDir: "{app}\Example";  DestName:"Example.dpnr"; Flags: ignoreversion
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
