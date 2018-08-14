@@ -20,7 +20,11 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 
         Task Refresh(DependencyExplorerWindowViewModel viewModel);
         void Locate(NodeName nodeName);
-        void ShowDependencies(NodeName nodeName);
+        void ShowDependencyExplorer(NodeName nodeName);
         void HideDependencies(DependencyExplorerWindowViewModel viewModel, NodeName nodeName, bool isSourceItem);
+
+
+        void ShowDependencies(
+            DependencyExplorerWindowViewModel viewModel, NodeName nodeName, bool isSourceItem);
     }
 }

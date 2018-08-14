@@ -43,7 +43,6 @@
             Key="Escape"
             Command="{Binding CancelCommand}"
             CommandParameter="{Binding ElementName=ReferencesDialogWindow}" />
-        <!--<KeyBinding Key="F5" Command="{Binding RefreshCommand}" />-->
     </Window.InputBindings>
 
     <Grid>
@@ -84,12 +83,61 @@
                         Command="{Binding SwitchSidesCommand}"
                         ToolTip="Switch sides" />
 
-                    <!--<Button
-						WindowChrome.IsHitTestVisibleInChrome="True"
-						Style="{DynamicResource IconButtonStyle}"
-						Content="&#xE5D5;"
-						Command="{Binding RefreshCommand}"
-						ToolTip="Refresh model data (F5)" />-->
+                    <Button
+                        WindowChrome.IsHitTestVisibleInChrome="True"
+                        Style="{DynamicResource IconButtonStyle}"
+                        Click="Suppressed_OnClick"
+                        ToolTip="Suppressed Dependencies"
+                        Visibility="{Binding HasHiddenDependencies, Converter={StaticResource VC}}"				>
+
+                        <Grid Margin="0">
+                            <TextBlock
+                                Text="&#xe3a5;" Style="{DynamicResource MenuIconStyle}" Margin="0,0"
+                                Padding="0,0" />
+                            <TextBlock
+                                FontSize="15" Text="&#xE5C5;" Style="{DynamicResource MenuIconStyle}"
+                                Margin="17,0,0,0" Padding="0,0" Background="Transparent"
+                                Foreground="{DynamicResource TextLowBrush}" />
+                        </Grid>
+
+                        <Button.ContextMenu>
+                            <ContextMenu Name="SuppressedContextMenu">
+
+                                <MenuItem
+                                    Header="Show Suppressed Sources"
+                                    IsEnabled="{Binding HasHiddenSourceNodes}"
+                                    ItemsSource="{Binding HiddenSourceItems}">
+
+                                    <MenuItem.Resources>
+                                        <DataTemplate
+                                            DataType="{x:Type private:HiddenNodeItem}">
+                                            <MenuItem
+                                                Header="{Binding Name}"
+                                                Command="{Binding ShowNodeCommand}">
+                                            </MenuItem>
+                                        </DataTemplate>
+                                    </MenuItem.Resources>
+                                </MenuItem>
+
+                                <MenuItem
+                                    Header="Show Suppressed Targets"
+                                    IsEnabled="{Binding HasHiddenTargetNodes}"
+                                    ItemsSource="{Binding HiddenTargetItems}">
+
+                                    <MenuItem.Resources>
+                                        <DataTemplate
+                                            DataType="{x:Type private:HiddenNodeItem}">
+                                            <MenuItem
+                                                Header="{Binding Name}"
+                                                Command="{Binding ShowNodeCommand}">
+                                            </MenuItem>
+                                        </DataTemplate>
+                                    </MenuItem.Resources>
+                                </MenuItem>
+                            </ContextMenu>
+
+                        </Button.ContextMenu>
+                    </Button>
 
                 </StackPanel>
 
@@ -124,12 +172,6 @@
             Content="&#xe8e4;"
             Command="{Binding SwitchSidesCommand}"
             ToolTip="Switch sides" />
-
-        <!--<TextBlock
-			Grid.Row="1" Grid.Column="1"
-			FontSize="40"
-			Text="&#xe8e4;" Style="{DynamicResource MenuIconStyle}" 
-			ToolTip="{Binding SourceTargetToolTip}"/>-->
 
         <TextBlock
             Margin="10,5"
