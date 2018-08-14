@@ -17,8 +17,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
     internal class SaveSerializer : ISaveSerializer
     {
         private static readonly char[] PartSeparator = ".".ToCharArray();
-        private static readonly char[] LineSeparator = "|".ToCharArray();
-        private static readonly char[] ItemSeparator = ",".ToCharArray();
 
 
         public Task SerializeAsync(IReadOnlyList<IDataItem> items, string path)
@@ -31,8 +29,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                     AddLinesToNodes(items, nodes);
 
                     ShortenNodeNames(nodes);
-
-                    //var compressedNodes = ToCompressedNodes(nodes);
 
                     JsonSaveTypes.Model dataModel = new JsonSaveTypes.Model {Nodes = nodes};
 
@@ -69,13 +65,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                     ShortenNodeNames(nodes);
                     t.Log("shortened node names");
 
-                    //var compressedNodes = ToCompressedNodes(nodes);
-                    //t.Log("compressed nodes");
-
                     JsonSaveTypes.Model dataModel = new JsonSaveTypes.Model {Nodes = nodes };
 
                     Serialize(path, dataModel);
-                    t.Log("serailaized");
+                    t.Log("serialized");
                 }
                 catch (UnauthorizedAccessException e)
                 {
@@ -107,7 +100,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                         return M.NoValue;
                     }
 
-                   // List<JsonSaveTypes.Node> nodes = ToDecompressedNodes(model.Nodes);
                     List<JsonSaveTypes.Node> nodes = model.Nodes;
                     ExpandNodeNames(nodes);
 
@@ -352,82 +344,5 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
             return jsonSerializer;
         }
-
-
-        private static List<List<string>> ToCompressedNodes(IEnumerable<JsonSaveTypes.Node> nodes) => 
-            nodes.Select(ToCompressedNode).ToList();
-
-
-        private static List<JsonSaveTypes.Node> ToDecompressedNodes(IEnumerable<List<string>> nodes) =>
-            nodes.Select(ToSaveNode).ToList();
-
-
-        private static List<string> ToCompressedNode(JsonSaveTypes.Node node) =>
-            node.L == null
-                ? new List<string>
-                {
-                    node.N,
-                    node.B,
-                    node.S.ToString()
-                }
-                : new List<string>
-                {
-                    node.N,
-                    node.B,
-                    node.S.ToString(),
-                    ToSaveListLines(node)
-                };
-
-
-        private static JsonSaveTypes.Node ToSaveNode(IReadOnlyList<string> node)
-        {
-            JsonSaveTypes.Node saveNode = new JsonSaveTypes.Node
-            {
-                N = node[0],
-                B = node[1],
-                S = double.Parse(node[2])
-            };
-
-            if (node.Count == 4) saveNode.L = ToSaveLines(node[3]);
-
-            return saveNode;
-        }
-
-
-        private static List<JsonSaveTypes.Line> ToSaveLines(string linesText)
-        {
-            string[] linesParts = linesText.Split(LineSeparator);
-            return linesParts.Select(ToSaveLine).ToList();
-        }
-
-
-        private static JsonSaveTypes.Line ToSaveLine(string lineText)
-        {
-            string[] lineParts = lineText.Split(ItemSeparator);
-            JsonSaveTypes.Line saveLine = new JsonSaveTypes.Line
-            {
-                T = lineParts[0],
-                P = new List<string>()
-            };
-
-            for (int i = 1; i < lineParts.Length; i += 2)
-            {
-                saveLine.P.Add($"{lineParts[i]},{lineParts[i + 1]}");
-            }
-
-            return saveLine;
-        }
-
-
-        private static string ToSaveListLines(JsonSaveTypes.Node node) =>
-            string.Join("|", node.L.Select(ToSaveListLine));
-
-
-        private static string ToSaveListLine(JsonSaveTypes.Line line) =>
-            $"{line.T},{ToSaveListPoints(line)}";
-
-
-        private static string ToSaveListPoints(JsonSaveTypes.Line line) =>
-            string.Join(",", line.P);
     }
 }

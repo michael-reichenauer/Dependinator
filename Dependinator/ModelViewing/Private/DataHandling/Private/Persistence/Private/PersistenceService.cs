@@ -30,6 +30,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
         public async Task<M> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
         {
+            if (IsCacheOlderThanSave(dataFile))
+            {
+                return M.NoValue;
+            }
+
             string cacheFilePath = dataFilePaths.GetCacheFilePath(dataFile);
 
             return await cacheSerializer.TryDeserializeAsync(cacheFilePath, dataItemsCallback);
@@ -139,6 +144,22 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
 
             return false;
+        }
+
+
+        private bool IsCacheOlderThanSave(DataFile dataFile)
+        {
+            string saveFilePath = dataFilePaths.GetSaveFilePath(dataFile);
+            string cacheFilePath = dataFilePaths.GetCacheFilePath(dataFile);
+            
+            if (!File.Exists(saveFilePath) || !File.Exists(cacheFilePath))
+            {
+                return false;
+            }
+            
+            DateTime saveTime = File.GetLastWriteTime(saveFilePath);
+            DateTime cacheTime = File.GetLastWriteTime(cacheFilePath);
+            return cacheTime < saveTime;
         }
     }
 }
