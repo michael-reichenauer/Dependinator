@@ -114,9 +114,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
                 Root.ItemsCanvas.IsZoomAndMoveEnabled = true;
 
-                modelPersistentHandler.IsChangeMonitored = false;
                 M result = await TryShowModelAsync();
-                modelPersistentHandler.IsChangeMonitored = true;
 
                 if (result.IsFaulted)
                 {

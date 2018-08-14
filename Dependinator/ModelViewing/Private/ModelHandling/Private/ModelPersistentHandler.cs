@@ -18,7 +18,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
     [SingleInstance]
     internal class ModelPersistentHandler : IModelPersistentHandler
     {
-        private static readonly TimeSpan SaveInterval = TimeSpan.FromSeconds(10);
+        private static readonly TimeSpan SaveInterval = TimeSpan.FromSeconds(60);
         private static readonly TimeSpan Soon = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan Immediately = TimeSpan.Zero;
         private readonly IDataService dataService;
@@ -49,14 +49,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             // Create an "already saved" progress tcs, in case a call is made to SaveAsync()
             saveInProgressTcs = new TaskCompletionSource<bool>();
             saveInProgressTcs.TrySetResult(true);
-        }
-
-
-        public bool IsChangeMonitored
-        {
-            get => modelDatabase.IsChangeMonitored;
-            set => modelDatabase.IsChangeMonitored = true;
-            //set => modelDatabase.IsChangeMonitored = value;
         }
 
 
