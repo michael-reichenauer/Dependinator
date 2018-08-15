@@ -84,7 +84,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         private void ScheduleSaveModel(TimeSpan withinTime)
         {
-            Log.Warn($"Model has changed, a save is scheduled within {withinTime}");
+            Log.Debug($"Model has changed, a save is scheduled within {withinTime}");
             saveInProgressTcs = new TaskCompletionSource<bool>();
             triggerSaveThrottler.Throttle(withinTime, SaveModelAsync, saveInProgressTcs);
         }
@@ -92,7 +92,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         private async void SaveModelAsync(object state)
         {
-            Log.Warn("Data being saved ...");
+            Log.Debug("Data being saved ...");
             TaskCompletionSource<bool> tcs = (TaskCompletionSource<bool>)state;
             isSaveScheduled = false;
 
@@ -104,7 +104,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             }
 
             tcs.TrySetResult(true);
-            Log.Warn("Data saved ");
+            Log.Debug("Data saved ");
         }
 
 

@@ -40,7 +40,7 @@
 ,{"N":"Dependinator*sln","B":"125,50,200,100","S":0.286}
 ,{"N":"Dependinator.Dependinator","B":"70,10,570,285","S":0.408}
 ,{"N":"..Api","B":"1180,75,120,60","S":0.169}
-,{"N":"...ApiHandling","B":"125,200,200,100","S":0.286}
+,{"N":"...ApiHandling","B":"415,90,200,100","S":0.286}
 ,{"N":"....IApiManagerService","B":"125,50,200,100","S":0.286}
 ,{"N":".....GetCurrentInstanceServerName()","B":"375,50,200,100"}
 ,{"N":".....GetCurrentInstanceServerName(String)","B":"125,200,200,100"}
@@ -55,7 +55,7 @@
 ,{"N":"......GetCurrentInstanceServerName(String)","B":"1050,120,200,100"}
 ,{"N":"......modelMetadataService","B":"375,50,200,100"}
 ,{"N":"......Register()","B":"750,120,200,100"}
-,{"N":"...DependinatorApiService","B":"125,50,200,100","S":0.286}
+,{"N":"...DependinatorApiService","B":"160,80,200,100","S":0.286}
 ,{"N":"....$private","B":"125,50,200,100","S":0.286}
 ,{"N":"....Activate(String)","B":"125,200,200,100"}
 ,{"N":"....ctor(Lazy`1)","B":"375,50,200,100"}
@@ -2355,7 +2355,6 @@
 ,{"N":"......IModelNotificationService","B":"150,270,200,100","S":0.714}
 ,{"N":".......TriggerNotification()","B":"40,20,200,100"}
 ,{"N":"......IModelPersistentHandler","B":"400,270,200,100","S":0.286}
-,{"N":".......IsChangeMonitored","B":"125,50,200,100"}
 ,{"N":".......SaveIfModifiedAsync()","B":"375,50,200,100"}
 ,{"N":".......TriggerDataModified()","B":"125,200,200,100"}
 ,{"N":"......IModelService","B":"650,270,200,100","S":0.114}
@@ -2539,7 +2538,6 @@
 ,{"N":".......dataService","B":"900,120,200,100"}
 ,{"N":".......GetModelSnapshotAsync()","B":"900,420,200,100"}
 ,{"N":".......Immediately","B":"650,120,200,100"}
-,{"N":".......IsChangeMonitored","B":"450,120,200,100"}
 ,{"N":".......isDataModified","B":"650,270,200,100"}
 ,{"N":".......isSaveScheduled","B":"900,270,200,100"}
 ,{"N":".......metadata","B":"1150,120,200,100"}
