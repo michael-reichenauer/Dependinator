@@ -1068,9 +1068,12 @@
 ,{"N":".......ToString()","B":"400,420,200,100"}
 ,{"N":"......DataNodeName","B":"150,320,200,100","S":0.143}
 ,{"N":".......$private","B":"450,120,200,100","S":0.286}
+,{"N":".......AsId()","B":"450,320,200,100"}
 ,{"N":".......cctor()","B":"125,200,200,100"}
+,{"N":".......ComputeHash(Byte)","B":"750,120,200,100"}
 ,{"N":".......ctor(String)","B":"375,50,200,100"}
 ,{"N":".......fullName","B":"125,50,200,100"}
+,{"N":".......Hash","B":"375,200,200,100"}
 ,{"N":".......None","B":"150,120,200,100"}
 ,{"N":".......op_Explicit(DataNodeName)","B":"1050,120,200,100"}
 ,{"N":".......op_Explicit(String)","B":"750,120,200,100"}
@@ -4774,7 +4777,5 @@
 ,{"N":"...TryUpdate()","B":"400,270,200,100"}
 ,{"N":"...UpdateTaskName","B":"1150,120,200,100"}
 ,{"N":"...ValidCertificateHash","B":"150,120,200,100"}
-,{"N":"Dependinator.Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.SolutionParsing.SolutionParser.TryGetFilePath(DataNodeName)","B":"900,420,200,100"}
-,{"N":"........AssemblyParsing.AssemblyParser.ctor(String,DataNodeName,DataItemsCallback,Boolean)","B":"650,120,200,100"}
   ]
 }
