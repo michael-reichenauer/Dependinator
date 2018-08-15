@@ -89,7 +89,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
         public static JsonSaveTypes.Node ToSaveJsonNode(DataNode node) => new JsonSaveTypes.Node
         {
-            N = (string)node.Name,
+            N = (string)node.Name.AsId(),
             B = node.Bounds != RectEx.Zero ? node.Bounds.AsIntString() : null,
             S = node.Scale.Round(3),
             St =  node.ShowState
@@ -98,7 +98,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
         public static JsonSaveTypes.Line ToSaveJsonLine(DataLine line) => new JsonSaveTypes.Line
         {
-            T = (string)line.Target,
+            T = (string)line.Target.AsId(),
             P = ToJsonPoints(line.Points)
         };
 

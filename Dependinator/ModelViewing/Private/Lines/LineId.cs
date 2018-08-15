@@ -5,19 +5,19 @@ namespace Dependinator.ModelViewing
 {
     internal class LineId : Equatable<LineId>
     {
-        private readonly NodeName source;
-        private readonly NodeName target;
+        public NodeName Source { get; }
+        public NodeName Target { get; }
 
 
         public LineId(NodeName source, NodeName target)
         {
-            this.source = source;
-            this.target = target;
+            this.Source = source;
+            this.Target = target;
 
             IsEqualWhenSame(source, target);
         }
 
 
-        public override string ToString() => $"{source}->{target}";
+        public override string ToString() => $"{Source}->{Target}";
     }
 }

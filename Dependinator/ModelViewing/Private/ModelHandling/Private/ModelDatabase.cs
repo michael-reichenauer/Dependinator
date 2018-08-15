@@ -10,7 +10,7 @@ using Dependinator.Utils.Threading;
 
 namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 {
-    
+
     [SingleInstance]
     internal class ModelDatabase : IModelDatabase
     {
@@ -18,10 +18,8 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         private readonly Dictionary<NodeName, QueuedNode> queuedNodes = new Dictionary<NodeName, QueuedNode>();
 
-
-
-        private readonly Dictionary<NodeName, DataNode> savedNodes = new Dictionary<NodeName, DataNode>();
-        private readonly Dictionary<LineId, DataLine> savedLines = new Dictionary<LineId, DataLine>();
+        private readonly Dictionary<string, DataNode> savedNodes = new Dictionary<string, DataNode>();
+        private readonly Dictionary<string, DataLine> savedLines = new Dictionary<string, DataLine>();
 
 
         public ModelDatabase()
@@ -39,8 +37,8 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             savedLines.Clear();
             foreach (IDataItem item in savedItems)
             {
-                if (item is DataNode dataNode) savedNodes[dataNode.Name] = dataNode;
-                if (item is DataLine dataLine) savedLines[new LineId(dataLine.Source, dataLine.Target)] = dataLine;
+                if (item is DataNode dataNode) savedNodes[(string)dataNode.Name] = dataNode;
+                if (item is DataLine dataLine) savedLines[(string)dataLine.Source + (string)dataLine.Target] = dataLine;
             }
 
             t.Log($"Set saved data {savedItems.Count} items");
@@ -49,13 +47,14 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         public bool TryGetSavedNode(NodeName name, out DataNode node)
         {
-           return savedNodes.TryGetValue(name, out node);
+            return savedNodes.TryGetValue(((DataNodeName)name).AsId(), out node);
         }
 
 
         public bool TryGetSavedLine(LineId lineId, out DataLine line)
         {
-            return savedLines.TryGetValue(lineId, out line);
+            string lineKey = ((DataNodeName)lineId.Source).AsId() + ((DataNodeName)lineId.Target).AsId();
+            return savedLines.TryGetValue(lineKey, out line);
         }
 
 
