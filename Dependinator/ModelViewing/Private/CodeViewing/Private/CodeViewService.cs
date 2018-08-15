@@ -35,7 +35,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
             DataFile dataFile = modelMetadata.DataFile;
             string solutionPath = dataFile.FilePath;
 
-            M<SourceLocation> file = await TryGetFilePathAsync(dataFile, nodeName);
+            M<Source> file = await TryGetFilePathAsync(dataFile, nodeName);
             if (file.IsOk)
             {
                 string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionPath);
@@ -44,14 +44,14 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
                 {
                     using (ApiIpcClient apiIpcClient = new ApiIpcClient(serverName))
                     {
-                        apiIpcClient.Service<IVsExtensionApi>().ShowFile(file.Value.FilePath, file.Value.LineNumber);
+                        apiIpcClient.Service<IVsExtensionApi>().ShowFile(file.Value.Path, file.Value.LineNumber);
                         apiIpcClient.Service<IVsExtensionApi>().Activate();
                     }
                 }
                 else
                 {
                     // No Visual studio has loaded this solution, lets show the file in "our" code viewer
-                    string fileText = File.ReadAllText(file.Value.FilePath);
+                    string fileText = File.ReadAllText(file.Value.Path);
                     CodeDialog codeDialog = codeDialogProvider(nodeName, name => GetCode(fileText, file.Value));
                     codeDialog.Show();
                 }
@@ -65,9 +65,9 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         }
 
 
-        private static Task<M<SourceCode>> GetCode(string fileText, SourceLocation sourceLocation)
+        private static Task<M<SourceCode>> GetCode(string fileText, Source source)
         {
-            SourceCode sourceCode = new SourceCode(fileText, sourceLocation.LineNumber, sourceLocation.FilePath);
+            SourceCode sourceCode = new SourceCode(fileText, source.LineNumber, source.Path);
             return Task.FromResult(M.From(sourceCode));
         }
 
@@ -84,14 +84,14 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         }
 
 
-        private async Task<M<SourceLocation>> TryGetFilePathAsync(DataFile dataFile, NodeName nodeName)
+        private async Task<M<Source>> TryGetFilePathAsync(DataFile dataFile, NodeName nodeName)
         {
             string solutionPath = modelMetadata.ModelFilePath;
-            M<SourceLocation> result = await dataService.GetSourceFilePathAsync(dataFile, nodeName);
+            M<Source> result = await dataService.GetSourceFilePathAsync(dataFile, nodeName);
 
             if (result.IsOk)
             {
-                if (File.Exists(result.Value.FilePath))
+                if (File.Exists(result.Value.Path))
                 {
                     return result.Value;
                 }
@@ -107,7 +107,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 
                 if (filePaths.Count == 1)
                 {
-                    return new SourceLocation(filePaths[0], 0);
+                    return new Source(filePaths[0], 0);
                 }
             }
 

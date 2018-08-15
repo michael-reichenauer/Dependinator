@@ -88,7 +88,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<M<SourceLocation>> GetSourceFilePathAsync(DataNodeName nodeName)
+        public async Task<M<Source>> GetSourceFilePathAsync(DataNodeName nodeName)
         {
             await Task.Yield();
 

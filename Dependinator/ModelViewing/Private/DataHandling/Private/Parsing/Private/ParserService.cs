@@ -46,7 +46,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<M<SourceLocation>> GetSourceFilePath(DataFile dataFile, DataNodeName nodeName)
+        public async Task<M<Source>> GetSourceFilePath(DataFile dataFile, DataNodeName nodeName)
         {
             M<WorkParser> workItemParser = new WorkParser(dataFile, null);
             if (workItemParser.IsFaulted)
@@ -80,7 +80,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             WorkParser.GetDataFilePaths(dataFile);
 
 
-        public IReadOnlyList<string> GetBuildPaths(DataFile dataFile) =>
+        public IReadOnlyList<string> GetMonitorChangesPaths(DataFile dataFile) =>
             WorkParser.GetBuildFolderPaths(dataFile);
     }
 }

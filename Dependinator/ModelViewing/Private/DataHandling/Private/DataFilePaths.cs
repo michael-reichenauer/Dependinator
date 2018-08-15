@@ -23,7 +23,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
 
 
         public IReadOnlyList<string> GetBuildPaths(DataFile dataFile) => 
-            parserService.GetBuildPaths(dataFile);
+            parserService.GetMonitorChangesPaths(dataFile);
 
 
         public string GetCacheFilePath(DataFile dataFile)

@@ -143,7 +143,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             decompiler.GetCode(assembly.Value.MainModule, nodeName);
 
 
-        public M<SourceLocation> GetSourceFilePath(DataNodeName nodeName) =>
+        public M<Source> GetSourceFilePath(DataNodeName nodeName) =>
             decompiler.GetSourceFilePath(assembly.Value.MainModule, nodeName);
 
 

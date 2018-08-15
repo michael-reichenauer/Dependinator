@@ -1,14 +1,14 @@
 ﻿namespace Dependinator.ModelViewing.Private.DataHandling.Dtos
 {
-    internal class SourceLocation
+    internal class Source
     {
-        public string FilePath { get; }
+        public string Path { get; }
         public int LineNumber { get; }
         
 
-        public SourceLocation(string filePath, int lineNumber)
+        public Source(string path, int lineNumber)
         {
-            FilePath = filePath;
+            Path = path;
             LineNumber = lineNumber;
         }
     }

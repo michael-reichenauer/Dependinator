@@ -21,7 +21,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling
 
         Task<M<string>> GetCodeAsync(DataFile dataFile, DataNodeName nodeName);
 
-        Task<M<SourceLocation>> GetSourceFilePathAsync(DataFile dataFile, DataNodeName nodeName);
+        Task<M<Source>> GetSourceFilePathAsync(DataFile dataFile, DataNodeName nodeName);
 
         Task<M<DataNodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath);
     }
