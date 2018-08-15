@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 
 
 namespace Dependinator.ModelViewing
@@ -8,7 +9,7 @@ namespace Dependinator.ModelViewing
     {
         void StartMoveToNode(NodeName nodeName);
 
-        void StartMoveToNode(string filePath);
+        void StartMoveToNode(Source source);
 
         IReadOnlyList<NodeName> GetHiddenNodeNames();
 

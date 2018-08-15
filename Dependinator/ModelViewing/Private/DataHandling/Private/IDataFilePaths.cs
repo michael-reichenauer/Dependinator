@@ -8,8 +8,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
     {
         IReadOnlyList<string> GetDataFilePaths(DataFile dataFile);
 
-        IReadOnlyList<string> GetBuildPaths(DataFile dataFile);
-
         string GetCacheFilePath(DataFile dataFile);
 
         string GetSaveFilePath(DataFile dataFile);

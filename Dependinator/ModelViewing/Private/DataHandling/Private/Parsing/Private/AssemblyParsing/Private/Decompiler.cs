@@ -14,40 +14,32 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     internal class Decompiler
     {
-        public M<string> GetCode(ModuleDefinition module, DataNodeName nodeName)
+        public M<Source> TryGetSource(ModuleDefinition module, DataNodeName nodeName)
         {
             if (TryGetType(module, nodeName, out TypeDefinition type))
             {
-                return GetDecompiledText(module, type);
-            }
+                string codeText = GetDecompiledText(module, type);
 
-            if (TryGetMember(module, nodeName, out IMemberDefinition member))
-            {
-                return GetDecompiledText(module, member);
-            }
-
-            return Error.From($"Failed to locate code for:\n{nodeName}");
-        }
-
-
-        public M<Source> GetSourceFilePath(ModuleDefinition module, DataNodeName nodeName)
-        {
-            if (TryGetType(module, nodeName, out TypeDefinition type))
-            {
-                if (TryGetFilePath(type, out Source fileLocation))
+                if (TryGetFilePath(type, out Source source))
                 {
-                    return fileLocation;
+                    return new Source(source.Path, codeText, source.LineNumber);
                 }
+
+                return new Source(null, codeText, 0);
             }
             else if (TryGetMember(module, nodeName, out IMemberDefinition member))
             {
-                if (TryGetFilePath(member, out Source fileLocation))
+                string codeText = GetDecompiledText(module, member);
+             
+                if (TryGetFilePath(member, out Source source))
                 {
-                    return fileLocation;
+                    return new Source(source.Path, codeText, source.LineNumber);
                 }
+
+                return new Source(null, codeText, 0);
             }
 
-            Log.Debug("Failed to locate file path for: {nodeName}");
+            Log.Debug($"Failed to locate source for:\n{nodeName}");
             return M.NoValue;
         }
 
@@ -229,7 +221,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 
         private Source ToFileLocation(SequencePoint sequencePoint) =>
-            new Source(sequencePoint.Document.Url, sequencePoint.StartLine);
+            new Source(sequencePoint.Document.Url, null, sequencePoint.StartLine);
 
 
         private static CSharpDecompiler GetDecompiler(ModuleDefinition module) =>

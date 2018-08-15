@@ -31,7 +31,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
 
         private DataFile monitoredDataFile;
         private IReadOnlyList<string> monitoredFiles;
-        private IReadOnlyList<string> monitoredWorkFolders;
+        private string monitoredFolder;
 
 
         public DataMonitorService(IDataFilePaths dataFilePaths)
@@ -60,7 +60,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
 
             monitoredDataFile = dataFile;
             monitoredFiles = dataFilePaths.GetDataFilePaths(dataFile);
-            monitoredWorkFolders = dataFilePaths.GetBuildPaths(dataFile);
+            monitoredFolder = Path.GetDirectoryName(dataFile.FilePath);
 
             StartMonitorData();
         }
@@ -75,7 +75,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
 
         private void StartMonitorData()
         {
-            folderWatcher.Path = GetMonitorRootFolderPath(monitoredFiles, monitoredWorkFolders);
+            folderWatcher.Path = monitoredFolder;
             folderWatcher.NotifyFilter = NotifyFilters;
             folderWatcher.Filter = "*.*";
             folderWatcher.IncludeSubdirectories = true;
@@ -88,34 +88,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         {
             changeDebounce.Stop();
             folderWatcher.EnableRaisingEvents = false;
-        }
-
-
-        private static string GetMonitorRootFolderPath(
-            IEnumerable<string> files,
-            IEnumerable<string> workFolders)
-        {
-            List<string> folders = files.Select(Path.GetDirectoryName).Concat(workFolders).ToList();
-            string rootPath = folders.Last();
-            bool isRoot;
-
-            do
-            {
-                isRoot = true;
-
-                foreach (string folder in folders)
-                {
-                    if (!folder.StartsWithIc(rootPath))
-                    {
-                        // The current root path was not root to this folder, lets retry with parent
-                        isRoot = false;
-                        rootPath = Path.GetDirectoryName(rootPath);
-                        break;
-                    }
-                }
-            } while (!isRoot);
-
-            return rootPath;
         }
 
 
@@ -134,13 +106,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
                 return;
             }
 
-            if (monitoredWorkFolders.Any(folder => fullPath.StartsWithIc(folder)))
+
+            // Data building event, postpone event a little 
+            if (changeDebounce.IsTriggered)
             {
-                // Data building event, postpone event a little 
-                if (changeDebounce.IsTriggered)
-                {
-                    ScheduleDataChange(DataChangingTime);
-                }
+                ScheduleDataChange(DataChangingTime);
             }
         }
 
@@ -152,7 +122,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
-        private bool IsMonitoring(DataFile dataFile) => 
+        private bool IsMonitoring(DataFile dataFile) =>
             monitoredDataFile != null &&
             dataFile.FilePath.IsSameIgnoreCase(monitoredDataFile.FilePath);
 

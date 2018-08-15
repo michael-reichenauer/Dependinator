@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.ModelViewing.Private.DataHandling;
@@ -35,31 +34,41 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
             DataFile dataFile = modelMetadata.DataFile;
             string solutionPath = dataFile.FilePath;
 
-            M<Source> file = await TryGetFilePathAsync(dataFile, nodeName);
-            if (file.IsOk)
+            M<Source> source = await dataService.TryGetSourceAsync(dataFile, nodeName);
+            if (source.IsOk)
             {
-                string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionPath);
-
-                if (ApiIpcClient.IsServerRegistered(serverName))
+                if (source.Value.Path != null)
                 {
-                    using (ApiIpcClient apiIpcClient = new ApiIpcClient(serverName))
+                    string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionPath);
+
+                    if (ApiIpcClient.IsServerRegistered(serverName))
                     {
-                        apiIpcClient.Service<IVsExtensionApi>().ShowFile(file.Value.Path, file.Value.LineNumber);
-                        apiIpcClient.Service<IVsExtensionApi>().Activate();
+                        using (ApiIpcClient apiIpcClient = new ApiIpcClient(serverName))
+                        {
+                            apiIpcClient.Service<IVsExtensionApi>().ShowFile(source.Value.Path, source.Value.LineNumber);
+                            apiIpcClient.Service<IVsExtensionApi>().Activate();
+                        }
+                    }
+                    else
+                    {
+                        // No Visual studio has loaded this solution, lets show the file in "our" code viewer
+                        string fileText = File.ReadAllText(source.Value.Path);
+                        CodeDialog codeDialog = codeDialogProvider(nodeName, name => GetCode(fileText, source.Value));
+                        codeDialog.Show();
                     }
                 }
                 else
                 {
-                    // No Visual studio has loaded this solution, lets show the file in "our" code viewer
-                    string fileText = File.ReadAllText(file.Value.Path);
-                    CodeDialog codeDialog = codeDialogProvider(nodeName, name => GetCode(fileText, file.Value));
+                    CodeDialog codeDialog = codeDialogProvider(nodeName,
+                        name => GetCode(source.Value.Text, source.Value));
                     codeDialog.Show();
                 }
             }
             else
             {
-                // Could not determine source file path, lets try to decompile th code
-                CodeDialog codeDialog = codeDialogProvider(nodeName, name => GetCodeAsync(dataFile, name));
+                // Could not determine source file path,
+                CodeDialog codeDialog = codeDialogProvider(nodeName,
+                    name => Task.FromResult((M<SourceCode>)source.Error));
                 codeDialog.Show();
             }
         }
@@ -69,49 +78,6 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         {
             SourceCode sourceCode = new SourceCode(fileText, source.LineNumber, source.Path);
             return Task.FromResult(M.From(sourceCode));
-        }
-
-
-        private async Task<M<SourceCode>> GetCodeAsync(DataFile dataFile, NodeName nodeName)
-        {
-            M<string> text = await dataService.GetCodeAsync(dataFile, nodeName);
-            if (text.IsFaulted)
-            {
-                return text.Error;
-            }
-
-            return new SourceCode(text.Value, 0, null);
-        }
-
-
-        private async Task<M<Source>> TryGetFilePathAsync(DataFile dataFile, NodeName nodeName)
-        {
-            string solutionPath = modelMetadata.ModelFilePath;
-            M<Source> result = await dataService.GetSourceFilePathAsync(dataFile, nodeName);
-
-            if (result.IsOk)
-            {
-                if (File.Exists(result.Value.Path))
-                {
-                    return result.Value;
-                }
-            }
-            else
-            {
-                // Node information did not contain file path info. Try locate file within the solution
-                string solutionFolderPath = Path.GetDirectoryName(solutionPath);
-
-                var filePaths = Directory
-                    .GetFiles(solutionFolderPath, $"{nodeName.DisplayShortName}.cs", SearchOption.AllDirectories)
-                    .ToList();
-
-                if (filePaths.Count == 1)
-                {
-                    return new Source(filePaths[0], 0);
-                }
-            }
-
-            return M.NoValue;
         }
     }
 }

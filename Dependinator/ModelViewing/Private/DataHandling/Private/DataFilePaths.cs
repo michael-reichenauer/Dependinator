@@ -21,11 +21,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
             parserService.GetDataFilePaths(dataFile);
 
 
-
-        public IReadOnlyList<string> GetBuildPaths(DataFile dataFile) => 
-            parserService.GetMonitorChangesPaths(dataFile);
-
-
         public string GetCacheFilePath(DataFile dataFile)
         {
             var dataFileName = Path.GetFileName(dataFile.FilePath);

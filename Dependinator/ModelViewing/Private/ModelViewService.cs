@@ -42,15 +42,15 @@ namespace Dependinator.ModelViewing.Private
         public void StartMoveToNode(NodeName nodeName) => locateNodeService.TryStartMoveToNode(nodeName);
 
 
-        public async void StartMoveToNode(string filePath)
+        public async void StartMoveToNode(Source source)
         {
     
             M<DataNodeName> nodeName = await dataService.GetNodeForFilePathAsync(
-                modelMetadata.DataFile, filePath);
+                modelMetadata.DataFile, source);
 
             if (nodeName.IsFaulted)
             {
-                Log.Warn($"Failed to locate node for {filePath}");
+                Log.Warn($"Failed to locate node for {source}");
                 return;
             }
 

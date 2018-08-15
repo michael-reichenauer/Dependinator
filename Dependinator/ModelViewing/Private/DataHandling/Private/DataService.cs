@@ -58,7 +58,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
-        public Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile) => 
+        public Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile) =>
             persistenceService.TryReadSaveAsync(dataFile);
 
 
@@ -75,16 +75,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
-        public async Task<M<string>> GetCodeAsync(DataFile dataFile, DataNodeName nodeName) =>
-            await parserService.GetCodeAsync(dataFile, nodeName);
+        public async Task<M<Source>> TryGetSourceAsync(DataFile dataFile, DataNodeName nodeName) =>
+            await parserService.GetSourceAsync(dataFile, nodeName);
 
 
-        public async Task<M<Source>> GetSourceFilePathAsync(DataFile dataFile, DataNodeName nodeName) =>
-            await parserService.GetSourceFilePath(dataFile, nodeName);
-
-
-        public async Task<M<DataNodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath) =>
-            await parserService.GetNodeForFilePathAsync(dataFile, sourceFilePath);
+        public async Task<M<DataNodeName>> GetNodeForFilePathAsync(DataFile dataFile, Source source) =>
+            await parserService.GetNodeForFilePathAsync(dataFile, source);
 
 
 

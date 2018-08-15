@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -33,14 +33,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             return GetSolutionProjects()
                 .Select(project => project.GetOutputPath())
                 .Where(path => path != null)
-                .ToList();
-        }
-
-
-        public IReadOnlyList<string> GetBuildFolderPaths()
-        {
-            return GetSolutionProjects()
-                .SelectMany(project => project.GetWorkPaths())
                 .ToList();
         }
 

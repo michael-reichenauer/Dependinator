@@ -44,49 +44,34 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             DataNode workNode = GetWorkNode();
             itemsCallback(workNode);
 
-            assemblyParser = new AssemblyParser(dataFile.FilePath, workNode.Name, itemsCallback, false);
+            assemblyParser = new AssemblyParser(dataFile.FilePath, null, workNode.Name, itemsCallback, false);
             return await assemblyParser.ParseAsync();
         }
 
 
-        public async Task<M<string>> GetCodeAsync(DataNodeName nodeName)
+        public async Task<M<Source>> GetSourceAsync(DataNodeName nodeName)
         {
             await Task.Yield();
 
             if (SolutionParser.IsSolutionFile(dataFile))
             {
                 solutionParser = new SolutionParser(dataFile, null, true);
-                return await solutionParser.GetCodeAsync(nodeName);
+                return await solutionParser.GetSourceAsync(nodeName);
             }
 
-            assemblyParser = new AssemblyParser(dataFile.FilePath, DataNodeName.None, itemsCallback, true);
-            return assemblyParser.GetCode(nodeName);
+            assemblyParser = new AssemblyParser(dataFile.FilePath, null, DataNodeName.None, itemsCallback, true);
+            return assemblyParser.TryGetSource(nodeName);
         }
 
 
-        public async Task<M<Source>> GetSourceFilePath(DataNodeName nodeName)
+        public async Task<M<DataNodeName>> GetNodeForFilePathAsync(Source source)
         {
             await Task.Yield();
 
             if (SolutionParser.IsSolutionFile(dataFile))
             {
                 solutionParser = new SolutionParser(dataFile, null, true);
-                return await solutionParser.GetSourceFilePathAsync(nodeName);
-            }
-
-            assemblyParser = new AssemblyParser(dataFile.FilePath, DataNodeName.None, itemsCallback, true);
-            return assemblyParser.GetSourceFilePath(nodeName);
-        }
-
-
-        public async Task<M<DataNodeName>> GetNodeForFilePathAsync(string sourceFilePath)
-        {
-            await Task.Yield();
-
-            if (SolutionParser.IsSolutionFile(dataFile))
-            {
-                solutionParser = new SolutionParser(dataFile, null, true);
-                return await solutionParser.GetNodeNameForFilePathAsync(sourceFilePath);
+                return await solutionParser.GetNodeNameForFilePathAsync(source);
             }
 
             return Error.From("Source file only available for solution based models");
@@ -102,18 +87,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
             return AssemblyParser.GetDataFilePaths(dataFile.FilePath);
         }
-
-
-        public static IReadOnlyList<string> GetBuildFolderPaths(DataFile dataFile)
-        {
-            if (SolutionParser.IsSolutionFile(dataFile))
-            {
-                return SolutionParser.GetBuildFolderPaths(dataFile.FilePath);
-            }
-
-            return AssemblyParser.GetBuildFolderPaths(dataFile.FilePath);
-        }
-
 
 
         private DataNode GetWorkNode()

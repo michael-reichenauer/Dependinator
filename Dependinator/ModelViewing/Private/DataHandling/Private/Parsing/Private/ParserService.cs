@@ -31,7 +31,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<M<string>> GetCodeAsync(DataFile dataFile, DataNodeName nodeName)
+        public async Task<M<Source>> GetSourceAsync(DataFile dataFile, DataNodeName nodeName)
         {
             M<WorkParser> workItemParser = new WorkParser(dataFile, null);
             if (workItemParser.IsFaulted)
@@ -41,12 +41,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
             using (workItemParser.Value)
             {
-                return await workItemParser.Value.GetCodeAsync(nodeName);
+                return await workItemParser.Value.GetSourceAsync(nodeName);
             }
         }
 
 
-        public async Task<M<Source>> GetSourceFilePath(DataFile dataFile, DataNodeName nodeName)
+        public async Task<M<DataNodeName>> GetNodeForFilePathAsync(DataFile dataFile, Source source)
         {
             M<WorkParser> workItemParser = new WorkParser(dataFile, null);
             if (workItemParser.IsFaulted)
@@ -56,31 +56,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
             using (workItemParser.Value)
             {
-                return await workItemParser.Value.GetSourceFilePath(nodeName);
-            }
-        }
-
-
-        public async Task<M<DataNodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath)
-        {
-            M<WorkParser> workItemParser = new WorkParser(dataFile, null);
-            if (workItemParser.IsFaulted)
-            {
-                return workItemParser.Error;
-            }
-
-            using (workItemParser.Value)
-            {
-                return await workItemParser.Value.GetNodeForFilePathAsync(sourceFilePath);
+                return await workItemParser.Value.GetNodeForFilePathAsync(source);
             }
         }
 
 
         public IReadOnlyList<string> GetDataFilePaths(DataFile dataFile) =>
             WorkParser.GetDataFilePaths(dataFile);
-
-
-        public IReadOnlyList<string> GetMonitorChangesPaths(DataFile dataFile) =>
-            WorkParser.GetBuildFolderPaths(dataFile);
     }
 }

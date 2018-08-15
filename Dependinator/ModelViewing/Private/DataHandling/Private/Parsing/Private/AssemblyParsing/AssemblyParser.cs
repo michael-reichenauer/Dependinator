@@ -17,30 +17,32 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     internal class AssemblyParser : IDisposable
     {
+      
         private readonly Lazy<AssemblyDefinition> assembly;
         private readonly string assemblyPath;
         private readonly AssemblyReferencesParser assemblyReferencesParser;
         private readonly Decompiler decompiler = new Decompiler();
-        private readonly bool isReadSymbols;
+
         private readonly DataItemsCallback itemsCallback;
         private readonly MemberParser memberParser;
         private readonly DataNodeName parentName;
         private readonly ParsingAssemblyResolver resolver = new ParsingAssemblyResolver();
         private readonly TypeParser typeParser;
-        private LinkHandler linkHandler;
+        private readonly LinkHandler linkHandler;
         private List<TypeData> typeInfos = new List<TypeData>();
 
 
         public AssemblyParser(
             string assemblyPath,
+            string projectPath,
             DataNodeName parentName,
             DataItemsCallback itemsCallback,
             bool isReadSymbols)
         {
+            ProjectPath = projectPath;
             this.assemblyPath = assemblyPath;
             this.parentName = parentName;
             this.itemsCallback = itemsCallback;
-            this.isReadSymbols = isReadSymbols;
 
             XmlDocParser xmlDockParser = new XmlDocParser(assemblyPath);
             linkHandler = new LinkHandler(itemsCallback);
@@ -52,6 +54,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             assembly = new Lazy<AssemblyDefinition>(() => GetAssembly(isReadSymbols));
         }
 
+        public string ProjectPath { get; }
 
         public string ModuleName => Name.GetModuleName(assembly.Value);
 
@@ -67,10 +70,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public static IReadOnlyList<string> GetDataFilePaths(string filePath) => new[] {filePath};
-
-        public static IReadOnlyList<string> GetBuildFolderPaths(string filePath) => new string[0];
-
+        public static IReadOnlyList<string> GetDataFilePaths(string filePath) => new[] { filePath };
 
         public async Task<M> ParseAsync()
         {
@@ -96,7 +96,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             DataNodeName assemblyName = (DataNodeName)Name.GetModuleName(assembly.Value);
             string assemblyDescription = GetAssemblyDescription(assembly.Value);
             DataNode assemblyNode = new DataNode(assemblyName, parentName, NodeType.Assembly)
-                {Description = assemblyDescription};
+            { Description = assemblyDescription };
 
             itemsCallback(assemblyNode);
         }
@@ -139,12 +139,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public M<string> GetCode(DataNodeName nodeName) =>
-            decompiler.GetCode(assembly.Value.MainModule, nodeName);
-
-
-        public M<Source> GetSourceFilePath(DataNodeName nodeName) =>
-            decompiler.GetSourceFilePath(assembly.Value.MainModule, nodeName);
+        public M<Source> TryGetSource(DataNodeName nodeName) =>
+            decompiler.TryGetSource(assembly.Value.MainModule, nodeName);
 
 
         public bool TryGetNodeNameFor(string sourceFilePath, out DataNodeName nodeName)

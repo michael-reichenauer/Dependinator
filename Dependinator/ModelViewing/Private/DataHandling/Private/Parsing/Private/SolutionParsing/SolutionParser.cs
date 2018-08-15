@@ -64,34 +64,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<M<string>> GetCodeAsync(DataNodeName nodeName)
+        public async Task<M<Source>> GetSourceAsync(DataNodeName nodeName)
         {
-            await Task.Yield();
-
-            M result = CreateAssemblyParsers(true);
-
-            if (result.IsFaulted)
-            {
-                return result.Error;
-            }
-
-            string moduleName = GetModuleName(nodeName);
-            AssemblyParser assemblyParser = assemblyParsers
-                .FirstOrDefault(p => p.ModuleName == moduleName);
-
-            if (assemblyParser == null)
-            {
-                return Error.From($"Failed to find assembly for {moduleName}");
-            }
-
-            return assemblyParser.GetCode(nodeName);
-        }
-
-
-        public async Task<M<Source>> GetSourceFilePathAsync(DataNodeName nodeName)
-        {
-            await Task.Yield();
-
             M result = CreateAssemblyParsers();
 
             if (result.IsFaulted)
@@ -108,11 +82,25 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 return Error.From($"Failed to find assembly for {moduleName}");
             }
 
-            return assemblyParser.GetSourceFilePath(nodeName);
+            return await Task.Run(() =>
+            {
+                M<Source> source = assemblyParser.TryGetSource(nodeName);
+
+                if (source.IsFaulted || source.Value.Path != null) return source;
+
+                var sourcePath = TryGetFilePath(nodeName, assemblyParser.ProjectPath);
+                if (sourcePath.IsOk)
+                {
+                    return new Source(sourcePath.Value, source.Value.Text, source.Value.LineNumber);
+                }
+
+                return source;
+            });
         }
 
 
-        public async Task<M<DataNodeName>> GetNodeNameForFilePathAsync(string sourceFilePath)
+
+        public async Task<M<DataNodeName>> GetNodeNameForFilePathAsync(Source source)
         {
             await Task.Yield();
 
@@ -125,13 +113,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
             foreach (AssemblyParser parser in assemblyParsers)
             {
-                if (parser.TryGetNodeNameFor(sourceFilePath, out DataNodeName nodeName))
+                if (parser.TryGetNodeNameFor(source.Path, out DataNodeName nodeName))
                 {
                     return nodeName;
                 }
             }
 
-            sourceFilePath = Path.GetDirectoryName(sourceFilePath);
+            string sourceFilePath = Path.GetDirectoryName(source.Path);
             foreach (AssemblyParser parser in assemblyParsers)
             {
                 if (parser.TryGetNodeNameFor(sourceFilePath, out DataNodeName nodeName))
@@ -187,7 +175,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
                 DataNodeName parent = GetParent(solutionName, project);
 
-                var assemblyParser = new AssemblyParser(assemblyPath, parent, itemsCallback, isReadSymbols);
+                var assemblyParser = new AssemblyParser(assemblyPath, project.ProjectFilePath, parent, itemsCallback, isReadSymbols);
 
                 assemblyParsers.Add(assemblyParser);
             }
@@ -203,7 +191,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
                 foreach (string referencePath in referencePaths)
                 {
-                    var assemblyParser = new AssemblyParser(referencePath, null, itemsCallback, isReadSymbols);
+                    var assemblyParser = new AssemblyParser(referencePath, null, null, itemsCallback, isReadSymbols);
 
                     assemblyParsers.Add(assemblyParser);
                 }
@@ -242,14 +230,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public static IReadOnlyList<string> GetBuildFolderPaths(string filePath)
-        {
-            Solution solution = new Solution(filePath);
-
-            return solution.GetBuildFolderPaths();
-        }
-
-
         private static string GetModuleName(DataNodeName nodeName)
         {
             while (true)
@@ -267,13 +247,56 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
         private static DataNodeName GetParentName(DataNodeName nodeName)
         {
-           
             // Split full name in name and parent name,
-            var fullName = ((string)nodeName);
+            var fullName = (string)nodeName;
             int index = fullName.LastIndexOfAny(PartsSeparators);
 
             return index > -1 ? (DataNodeName)fullName.Substring(0, index) : DataNodeName.None;
         }
+        
+
+        private M<string> TryGetFilePath(DataNodeName nodeName, string projectPath)
+        {
+            // Source information did not contain file path info. Try locate file within project
+            string solutionFolderPath = Path.GetDirectoryName(projectPath?? dataFile.FilePath);
+
+            var filePaths = Directory
+                .GetFiles(solutionFolderPath, $"{GetShortName(nodeName)}.cs", SearchOption.AllDirectories)
+                .ToList();
+
+            if (filePaths.Count == 0)
+            {
+                // Name was not found, try with parent in case it is a member name
+                filePaths = Directory
+                    .GetFiles(solutionFolderPath, $"{GetShortName(GetParentName(nodeName))}.cs", SearchOption.AllDirectories)
+                    .ToList();
+            }
+
+            if (filePaths.Count == 1)
+            {
+                return filePaths[0];
+            }
+
+            return M.NoValue;
+        }
+
+
+        private static DataNodeName GetShortName(DataNodeName nodeName)
+        {
+
+            var fullName = (string)nodeName;
+
+            int parametersIndex = fullName.IndexOf('(');
+            if (parametersIndex > -1)
+            {
+                fullName = fullName.Substring(0, parametersIndex);
+            }
+
+            int index = fullName.LastIndexOfAny(PartsSeparators);
+
+            return index > -1 ? (DataNodeName)fullName.Substring(index + 1) : DataNodeName.None;
+        }
+
 
         private async Task ParseSolutionAssembliesAsync()
         {
