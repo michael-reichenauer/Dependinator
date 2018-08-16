@@ -153,7 +153,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 JsonSaveTypes.Model model = Deserialize<JsonSaveTypes.Model>(path);
                 if (model.FormatVersion == JsonSaveTypes.Version)
                 {
-                    //List<JsonSaveTypes.Node> nodes = ToDecompressedNodes(model.Nodes);
                     List<JsonSaveTypes.Node> nodes = model.Nodes;
 
                     foreach (JsonSaveTypes.Node node in nodes)
@@ -190,10 +189,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
             foreach (DataLine line in items.Where(item => item is DataLine).Cast<DataLine>())
             {
-                if (!lines.TryGetValue(line.Source.AsId(), out var nodeLines))
+                string sourceId = line.Source.AsId();
+                if (!lines.TryGetValue(sourceId, out var nodeLines))
                 {
                     nodeLines = new List<JsonSaveTypes.Line>();
-                    lines[line.Source.AsId()] = nodeLines;
+                    lines[sourceId] = nodeLines;
                 }
 
                 nodeLines.Add(Convert.ToSaveJsonLine(line));

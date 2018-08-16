@@ -89,16 +89,16 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
         public static JsonSaveTypes.Node ToSaveJsonNode(DataNode node) => new JsonSaveTypes.Node
         {
-            N = (string)node.Name.AsId(),
+            N = node.Name.AsId(),
             B = node.Bounds != RectEx.Zero ? node.Bounds.AsIntString() : null,
             S = node.Scale.Round(3),
-            St =  node.ShowState
+            St = node.ShowState
         };
 
 
         public static JsonSaveTypes.Line ToSaveJsonLine(DataLine line) => new JsonSaveTypes.Line
         {
-            T = (string)line.Target.AsId(),
+            T = line.Target.AsId(),
             P = ToJsonPoints(line.Points)
         };
 

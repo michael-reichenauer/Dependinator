@@ -29,14 +29,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Dtos
         {
             byte[] dataBytes = Encoding.UTF8.GetBytes(fullName);
             byte[] hashBytes = ComputeHash(dataBytes);
-            string base64String = Convert.ToBase64String(hashBytes, 0, 10);
+            string base64String = Convert.ToBase64String(hashBytes, 0, 15);
 
-            return base64String.Substring(0, 10);
+            return base64String.Substring(0, 15);
         }
 
+
         public override string ToString() => fullName;
-
-
+        
         
         private static byte[] ComputeHash(byte[] dataBytes)
         {
