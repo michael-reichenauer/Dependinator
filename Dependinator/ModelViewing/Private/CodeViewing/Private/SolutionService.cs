@@ -9,6 +9,7 @@ using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Utils;
 using DependinatorApi;
 using DependinatorApi.ApiHandling;
+using Mono.CSharp;
 
 
 namespace Dependinator.ModelViewing.Private.CodeViewing.Private
@@ -61,7 +62,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
                     // IVsExtensionApi not yet registered, lets try to start Dependinator, or wait a little.
                     if (!isStartedDependinator)
                     {
-                        if (!TryStartVisualStudio(solutionFilePath)) return;
+                        if (!await TryStartVisualStudioAsync(solutionFilePath)) return;
 
                         isStartedDependinator = true;
                         t.Restart();
@@ -104,9 +105,9 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         }
 
 
-        private bool TryStartVisualStudio(string solutionFilePath)
+        private async Task<bool> TryStartVisualStudioAsync(string solutionFilePath)
         {
-            if (!installer.IsExtensionInstalled())
+            if (!await IsExtensionInstalledAsync())
             {
                 if (!message.ShowAskOkCancel(
                     "The Visual Studio Dependinator extension does not seem to be installed.\n\n" +
@@ -129,6 +130,8 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
             return true;
         }
 
+
+        private Task<bool> IsExtensionInstalledAsync() => Task.Run(() => installer.IsExtensionInstalled());
 
         private static void StartVisualStudio(string solutionPath)
         {

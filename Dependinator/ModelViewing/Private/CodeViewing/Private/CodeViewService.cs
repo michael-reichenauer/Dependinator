@@ -55,12 +55,14 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 
                 if (source.Path != null && File.Exists(source.Path))
                 {
-                    if (!TryOpenInVisualStudio(dataFile, source))
+                    if (TryOpenInVisualStudio(dataFile, source))
                     {
-                        // Lets show the file in "our" code viewer
-                        string fileText = File.ReadAllText(source.Path);
-                        source = new Source(source.Path, fileText, source.LineNumber);
+                        return;
                     }
+
+                    // Lets show the file in "our" code viewer
+                    string fileText = File.ReadAllText(source.Path);
+                    source = new Source(source.Path, fileText, source.LineNumber);
                 }
             }
 
@@ -71,7 +73,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         }
 
 
-        private bool TryOpenInVisualStudio(DataFile dataFile, Source source)
+        private static bool TryOpenInVisualStudio(DataFile dataFile, Source source)
         {
             string solutionPath = dataFile.FilePath;
             string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionPath);

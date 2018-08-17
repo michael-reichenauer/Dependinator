@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
 using Dependinator.Common;
+using Dependinator.Common.ProgressHandling;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ModelHandling;
 using Dependinator.Utils.ErrorHandling;
@@ -29,6 +30,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         internal CodeDialog(
             Lazy<IModelNotifications> modelNotifications,
             ISolutionService solutionService,
+            IProgressService progressService,
             WindowOwner owner,
             NodeName nodeName,
             Source source,
@@ -42,7 +44,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
             Owner = owner;
             InitializeComponent();
 
-            codeViewModel = new CodeViewModel(solutionService, nodeName.DisplayLongName, this);
+            codeViewModel = new CodeViewModel(solutionService, progressService, nodeName.DisplayLongName, this);
             DataContext = codeViewModel;
 
             SetSyntaxHighlighting();
