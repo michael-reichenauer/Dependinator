@@ -15,7 +15,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         {
             public string FormatVersion { get; set; } = Version;
             public string Description { get; set; } =
-                "This file contains model layout data. Merge conflicts are not a serious problem. " +
+                "This file contains Dependinator model layout data. " +
+                "Merge conflicts are not a serious problem. " +
                 "Just select one of the conflicting lines." +
                 "In worst case, a node or line might be a little off.";
             public List<Node> Nodes { get; set; }

@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
@@ -17,7 +18,7 @@ namespace Dependinator.ModelViewing.Private.Nodes
         void OnMouseWheel(NodeViewModel nodeViewModel, UIElement uiElement, MouseWheelEventArgs e);
         Brush GetSelectedBrush(Brush brush);
         void ShowReferences(NodeViewModel nodeViewModel);
-        void ShowCode(Node node);
+        Task ShowCodeAsync(Node node);
         void RearrangeLayout(NodeViewModel node);
         void HideNode(Node node);
         Brush GetDimBrush();

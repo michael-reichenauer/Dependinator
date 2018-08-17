@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using Dependinator.Utils;
 using Dependinator.Utils.Threading;
 
@@ -10,7 +11,7 @@ namespace Dependinator.Common.ProgressHandling
     internal class ProgressService : IProgressService
     {
         private readonly Lazy<IBusyIndicatorProvider> mainWindowViewModel;
-        private readonly WindowOwner owner;
+        private readonly WindowOwner windowOwner;
         private Progress currentProgress;
 
 
@@ -18,7 +19,7 @@ namespace Dependinator.Common.ProgressHandling
             WindowOwner owner,
             Lazy<IBusyIndicatorProvider> mainWindowViewModel)
         {
-            this.owner = owner;
+            this.windowOwner = owner;
             this.mainWindowViewModel = mainWindowViewModel;
         }
 
@@ -35,11 +36,11 @@ namespace Dependinator.Common.ProgressHandling
         }
 
 
-        public Progress ShowDialog(string text = "")
+        public Progress ShowDialog(string text = "", Window owner = null)
         {
             Log.Debug($"Progress status: {text}");
 
-            ProgressBox progress = new ProgressBox(owner, text);
+            ProgressBox progress = new ProgressBox(owner ?? windowOwner, text);
 
             progress.StartShowDialog();
             currentProgress = progress;
@@ -54,7 +55,7 @@ namespace Dependinator.Common.ProgressHandling
             private readonly Timing timing;
 
 
-            public ProgressBox(WindowOwner owner, string text)
+            public ProgressBox(Window owner, string text)
             {
                 timing = new Timing();
                 timing.Log($"Progress status: {text}");

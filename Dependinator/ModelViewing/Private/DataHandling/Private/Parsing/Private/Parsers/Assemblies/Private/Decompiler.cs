@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.Utils;
 using Dependinator.Utils.ErrorHandling;
 using ICSharpCode.Decompiler;
@@ -10,33 +9,33 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.AssemblyParsing.Private
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private
 {
     internal class Decompiler
     {
-        public M<Source> TryGetSource(ModuleDefinition module, DataNodeName nodeName)
+        public M<NodeDataSource> TryGetSource(ModuleDefinition module, string nodeName)
         {
             if (TryGetType(module, nodeName, out TypeDefinition type))
             {
                 string codeText = GetDecompiledText(module, type);
 
-                if (TryGetFilePath(type, out Source source))
+                if (TryGetFilePath(type, out NodeDataSource source))
                 {
-                    return new Source(source.Path, codeText, source.LineNumber);
+                    return new NodeDataSource(codeText, source.LineNumber, source.Path);
                 }
 
-                return new Source(null, codeText, 0);
+                return new NodeDataSource(codeText, 0, null);
             }
             else if (TryGetMember(module, nodeName, out IMemberDefinition member))
             {
                 string codeText = GetDecompiledText(module, member);
-             
-                if (TryGetFilePath(member, out Source source))
+
+                if (TryGetFilePath(member, out NodeDataSource source))
                 {
-                    return new Source(source.Path, codeText, source.LineNumber);
+                    return new NodeDataSource(codeText, source.LineNumber, source.Path);
                 }
 
-                return new Source(null, codeText, 0);
+                return new NodeDataSource(codeText, 0, null);
             }
 
             Log.Debug($"Failed to locate source for:\n{nodeName}");
@@ -48,15 +47,15 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             ModuleDefinition module,
             IEnumerable<TypeDefinition> assemblyTypes,
             string sourceFilePath,
-            out DataNodeName nodeName)
+            out string nodeName)
         {
             foreach (TypeDefinition type in assemblyTypes)
             {
-                if (TryGetFilePath(type, out Source fileLocation))
+                if (TryGetFilePath(type, out NodeDataSource source))
                 {
-                    if (fileLocation.Path.StartsWithIc(sourceFilePath))
+                    if (source.Path.StartsWithIc(sourceFilePath))
                     {
-                        nodeName = (DataNodeName)Name.GetTypeFullName(type);
+                        nodeName = Name.GetTypeFullName(type);
                         return true;
                     }
                 }
@@ -68,16 +67,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 
         private static bool TryGetType(
-            ModuleDefinition module, DataNodeName nodeName, out TypeDefinition type)
+            ModuleDefinition module, string nodeName, out TypeDefinition type)
         {
-            string fullName = (string)nodeName;
-
             // The type starts after the module name, which is after the first '.'
-            int typeIndex = fullName.IndexOf(".");
+            int typeIndex = nodeName.IndexOf(".");
 
             if (typeIndex > -1)
             {
-                string typeName = fullName.Substring(typeIndex + 1);
+                string typeName = nodeName.Substring(typeIndex + 1);
 
                 type = module.GetType(typeName);
                 return type != null;
@@ -89,16 +86,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 
         private static bool TryGetMember(
-            ModuleDefinition module, DataNodeName nodeName, out IMemberDefinition member)
+            ModuleDefinition module, string nodeName, out IMemberDefinition member)
         {
-            string fullName = (string)nodeName;
-
             // The type starts after the module name, which is after the first '.'
-            int typeIndex = fullName.IndexOf(".");
+            int typeIndex = nodeName.IndexOf(".");
 
             if (typeIndex > -1)
             {
-                string name = fullName.Substring(typeIndex + 1);
+                string name = nodeName.Substring(typeIndex + 1);
 
                 // Was no type, so it is a member of a type.
                 int memberIndex = name.LastIndexOf('.');
@@ -110,7 +105,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                     TypeDefinition typeDefinition = module.GetType(typeName);
 
                     if (typeDefinition != null
-                        && TryGetMember(typeDefinition, fullName, out member))
+                        && TryGetMember(typeDefinition, nodeName, out member))
                     {
                         return true;
                     }
@@ -174,7 +169,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             CSharpDecompiler decompiler = GetDecompiler(module);
 
             return "// Decompiled code\n" +
-                   decompiler.DecompileTypesAsString(new[] {type}).Replace("\t", "  ");
+                   decompiler.DecompileTypesAsString(new[] { type }).Replace("\t", "  ");
         }
 
 
@@ -187,7 +182,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private bool TryGetFilePath(TypeDefinition type, out Source source)
+        private bool TryGetFilePath(TypeDefinition type, out NodeDataSource source)
         {
             foreach (MethodDefinition method in type.Methods)
             {
@@ -204,7 +199,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private bool TryGetFilePath(IMemberDefinition member, out Source source)
+        private bool TryGetFilePath(IMemberDefinition member, out NodeDataSource source)
         {
             if (member is MethodDefinition method)
             {
@@ -220,8 +215,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private Source ToFileLocation(SequencePoint sequencePoint) =>
-            new Source(sequencePoint.Document.Url, null, sequencePoint.StartLine);
+        private NodeDataSource ToFileLocation(SequencePoint sequencePoint) =>
+            new NodeDataSource(null, sequencePoint.StartLine, sequencePoint.Document.Url);
 
 
         private static CSharpDecompiler GetDecompiler(ModuleDefinition module) =>

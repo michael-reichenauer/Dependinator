@@ -11,9 +11,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing
         Task<M> ParseAsync(DataFile dataFile, DataItemsCallback itemsCallback);
         
         IReadOnlyList<string> GetDataFilePaths(DataFile dataFile);
-
-
+        
         Task<M<Source>> GetSourceAsync(DataFile dataFile, DataNodeName nodeName);
-        Task<M<DataNodeName>> GetNodeForFilePathAsync(DataFile dataFile, Source source);
+
+        Task<M<DataNodeName>> TryGetNodeAsync(DataFile dataFile, Source source);
     }
 }

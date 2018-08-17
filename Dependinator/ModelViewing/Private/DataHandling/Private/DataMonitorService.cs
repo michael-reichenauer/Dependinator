@@ -99,7 +99,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
                 return;
             }
 
-            if (monitoredFiles.Any(file => file.IsSameIgnoreCase(fullPath)) && File.Exists(fullPath))
+            if (monitoredFiles.Any(file => file.IsSameIc(fullPath)) && File.Exists(fullPath))
             {
                 // Data file has changed, postpone event a little 
                 ScheduleDataChange(DataChangedTime);
@@ -124,7 +124,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
 
         private bool IsMonitoring(DataFile dataFile) =>
             monitoredDataFile != null &&
-            dataFile.FilePath.IsSameIgnoreCase(monitoredDataFile.FilePath);
+            dataFile.FilePath.IsSameIc(monitoredDataFile.FilePath);
 
 
         private void TriggerEvent(object obj)

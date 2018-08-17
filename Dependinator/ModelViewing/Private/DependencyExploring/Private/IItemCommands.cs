@@ -1,8 +1,11 @@
-﻿namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
+﻿using System.Threading.Tasks;
+
+
+namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
 {
     internal interface IItemCommands
     {
-        void ShowCode(NodeName nodeName);
+        Task ShowCodeAsync(NodeName nodeName);
 
         void Locate(NodeName nodeName);
 

@@ -7,7 +7,7 @@ using Dependinator.Utils.Reflection;
 using Microsoft.Build.Construction;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.SolutionParsing.Private
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Solutions.Private
 {
     /// <summary>
     ///     This class parses solution files ".sln" files. It wraps the internal

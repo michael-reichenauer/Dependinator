@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using Mono.Cecil;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.AssemblyParsing.Private
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private
 {
     internal class IgnoredTypes
     {

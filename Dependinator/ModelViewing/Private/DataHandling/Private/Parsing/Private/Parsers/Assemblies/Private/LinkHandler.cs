@@ -1,35 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Mono.Cecil;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.AssemblyParsing.Private
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private
 {
     internal class LinkHandler
     {
-        private readonly DataItemsCallback itemsCallback;
-
-        private readonly Dictionary<string, DataNode> sentTargetNodes = new Dictionary<string, DataNode>();
+        private readonly Action<LinkData> linkCallback;
 
 
-        public LinkHandler(DataItemsCallback itemsCallback)
+        public LinkHandler(Action<LinkData> linkCallback)
         {
-            this.itemsCallback = itemsCallback;
+            this.linkCallback = linkCallback;
         }
 
 
         public int LinksCount { get; private set; } = 0;
 
 
-        public void AddLink(DataNodeName source, string targetName, NodeType targetType)
+        public void AddLink(string source, string target, string targetType)
         {
-            SendLink(source, targetName, targetType);
+            SendLink(source, target, targetType);
         }
 
 
-        public void AddLinkToType(DataNode sourceNode, TypeReference targetType)
+        public void AddLinkToType(NodeData sourceNode, TypeReference targetType)
         {
             if (targetType is GenericInstanceType genericType)
             {
@@ -48,11 +44,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 return;
             }
 
-            SendLink(sourceNode.Name, targetNodeName, NodeType.Type);
+            SendLink(sourceNode.Name, targetNodeName, NodeData.TypeType);
         }
 
 
-        public void AddLinkToMember(DataNode sourceNode, IMemberDefinition memberInfo)
+        public void AddLinkToMember(NodeData sourceNode, IMemberDefinition memberInfo)
         {
             if (IsIgnoredTargetMember(memberInfo))
             {
@@ -66,29 +62,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 return;
             }
 
-            SendLink(sourceNode.Name, targetNodeName, NodeType.Member);
+            SendLink(sourceNode.Name, targetNodeName, NodeData.MemberType);
         }
 
 
-        private void SendLink(DataNodeName source, string targetName, NodeType targetType)
+        private void SendLink(string source, string targetName, string targetType)
         {
-            if (!sentTargetNodes.TryGetValue(targetName, out DataNode targetNode))
-            {
-                DataNodeName target = (DataNodeName)targetName;
-
-                if (source == target)
-                {
-                    // Skipping link to self
-                    return;
-                }
-
-                targetNode = new DataNode(target, null, targetType) {IsReferenced = true};
-                sentTargetNodes[targetName] = targetNode;
-                itemsCallback(targetNode);
-            }
-
-            DataLink dataLink = new DataLink(source, targetNode.Name);
-            itemsCallback(dataLink);
+            LinkData dataLink = new LinkData(source, targetName, targetType);
+            linkCallback(dataLink);
             LinksCount++;
         }
 
@@ -118,7 +99,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 
         /// <summary>
-        ///     Return true if type is a generic type parameter T, as in e.g. Get'T'(T value)
+        /// Return true if type is a generic type parameter T, as in e.g. Get'T'(T value)
         /// </summary>
         private static bool IsGenericTypeArgument(MemberReference targetType)
         {

@@ -4,8 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Dependinator.ModelViewing.Private.DataHandling.Dtos;
-using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.AssemblyParsing.Private;
+using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private;
 using Dependinator.Utils;
 using Dependinator.Utils.ErrorHandling;
 using Mono.Cecil;
@@ -13,19 +12,19 @@ using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.AssemblyParsing
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies
 {
     internal class AssemblyParser : IDisposable
     {
-      
         private readonly Lazy<AssemblyDefinition> assembly;
         private readonly string assemblyPath;
         private readonly AssemblyReferencesParser assemblyReferencesParser;
         private readonly Decompiler decompiler = new Decompiler();
 
-        private readonly DataItemsCallback itemsCallback;
+        private readonly Action<NodeData> nodeCallback;
+
         private readonly MemberParser memberParser;
-        private readonly DataNodeName parentName;
+        private readonly string parentName;
         private readonly ParsingAssemblyResolver resolver = new ParsingAssemblyResolver();
         private readonly TypeParser typeParser;
         private readonly LinkHandler linkHandler;
@@ -35,21 +34,22 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         public AssemblyParser(
             string assemblyPath,
             string projectPath,
-            DataNodeName parentName,
-            DataItemsCallback itemsCallback,
+            string parentName,
+            Action<NodeData> nodeCallback,
+            Action<LinkData> linkCallback,
             bool isReadSymbols)
         {
             ProjectPath = projectPath;
             this.assemblyPath = assemblyPath;
             this.parentName = parentName;
-            this.itemsCallback = itemsCallback;
+            this.nodeCallback = nodeCallback;
 
             XmlDocParser xmlDockParser = new XmlDocParser(assemblyPath);
-            linkHandler = new LinkHandler(itemsCallback);
+            linkHandler = new LinkHandler(linkCallback);
 
-            assemblyReferencesParser = new AssemblyReferencesParser(linkHandler, itemsCallback);
-            typeParser = new TypeParser(linkHandler, xmlDockParser, itemsCallback);
-            memberParser = new MemberParser(linkHandler, xmlDockParser, itemsCallback);
+            assemblyReferencesParser = new AssemblyReferencesParser(linkHandler, nodeCallback);
+            typeParser = new TypeParser(linkHandler, xmlDockParser, nodeCallback);
+            memberParser = new MemberParser(linkHandler, xmlDockParser, nodeCallback);
 
             assembly = new Lazy<AssemblyDefinition>(() => GetAssembly(isReadSymbols));
         }
@@ -76,8 +76,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             if (!File.Exists(assemblyPath))
             {
-                return Error.From(new MissingAssembliesException(
-                    $"Failed to parse {assemblyPath}\nNo assembly found"));
+                return Error.From($"Failed to parse {assemblyPath}\nNo assembly found");
             }
 
             return await Task.Run(() =>
@@ -93,12 +92,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
         public void ParseAssemblyModule()
         {
-            DataNodeName assemblyName = (DataNodeName)Name.GetModuleName(assembly.Value);
+            string nodeName = Name.GetModuleName(assembly.Value);
             string assemblyDescription = GetAssemblyDescription(assembly.Value);
-            DataNode assemblyNode = new DataNode(assemblyName, parentName, NodeType.Assembly)
-            { Description = assemblyDescription };
+            NodeData assemblyNode = new NodeData(nodeName, parentName, NodeData.AssemblyType, assemblyDescription);
 
-            itemsCallback(assemblyNode);
+            nodeCallback(assemblyNode);
         }
 
 
@@ -139,11 +137,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public M<Source> TryGetSource(DataNodeName nodeName) =>
+        public M<NodeDataSource> TryGetSource(string nodeName) =>
             decompiler.TryGetSource(assembly.Value.MainModule, nodeName);
 
 
-        public bool TryGetNodeNameFor(string sourceFilePath, out DataNodeName nodeName)
+        public bool TryGetNode(string sourceFilePath, out string nodeName)
         {
             IEnumerable<TypeDefinition> assemblyTypes = GetAssemblyTypes();
 

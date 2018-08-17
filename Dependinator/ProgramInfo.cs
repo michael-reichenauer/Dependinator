@@ -34,9 +34,9 @@ namespace Dependinator
 
         public static Version GetInstalledVersion() => GetInstalledInstanceVersion();
 
-        public static bool IsInstalledInstance() => Location.IsSameIgnoreCase(GetInstallFilePath());
+        public static bool IsInstalledInstance() => Location.IsSameIc(GetInstallFilePath());
 
-        public static bool IsSetupFile() => Path.GetFileName(Location).IsSameIgnoreCase(SetupName);
+        public static bool IsSetupFile() => Path.GetFileName(Location).IsSameIc(SetupName);
 
         public static DateTime GetBuildTime() => GetBuildTime(Location);
 

@@ -6,31 +6,30 @@ using Dependinator.Utils;
 using Mono.Cecil;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.AssemblyParsing.Private
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private
 {
     internal class MemberParser
     {
         private static readonly char[] PartsSeparators = "./".ToCharArray();
 
-        private readonly DataItemsCallback itemsCallback;
         private readonly LinkHandler linkHandler;
         private readonly MethodParser methodParser;
 
-        private readonly Dictionary<DataNodeName, DataNode> sentNodes =
-            new Dictionary<DataNodeName, DataNode>();
+        private readonly Dictionary<string, NodeData> sentNodes = new Dictionary<string, NodeData>();
 
         private readonly XmlDocParser xmlDocParser;
+        private readonly Action<NodeData> nodeCallback;
 
 
         public MemberParser(
             LinkHandler linkHandler,
             XmlDocParser xmlDocParser,
-            DataItemsCallback itemsCallback)
+            Action<NodeData> nodeCallback)
         {
             this.linkHandler = linkHandler;
             this.xmlDocParser = xmlDocParser;
+            this.nodeCallback = nodeCallback;
 
-            this.itemsCallback = itemsCallback;
             methodParser = new MethodParser(linkHandler);
         }
 
@@ -50,7 +49,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         private void AddTypeMembers(TypeData typeData)
         {
             TypeDefinition type = typeData.Type;
-            DataNode typeNode = typeData.Node;
+            NodeData typeNode = typeData.Node;
 
             if (typeData.IsAsyncStateType)
             {
@@ -93,7 +92,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private void AddMember(IMemberDefinition memberInfo, DataNode parentTypeNode, bool isPrivate)
+        private void AddMember(IMemberDefinition memberInfo, NodeData parentTypeNode, bool isPrivate)
         {
             try
             {
@@ -102,19 +101,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 string description = xmlDocParser.GetDescription(memberName);
 
 
-                DataNodeName nodeName = (DataNodeName)memberName;
-                DataNode memberNode = new DataNode(
-                        nodeName,
-                        parent != null ? (DataNodeName)parent : null,
-                        NodeType.Member)
-                { Description = description };
+                NodeData memberNode = new NodeData(memberName, parent, NodeData.MemberType, description);
 
                 if (!sentNodes.ContainsKey(memberNode.Name))
                 {
                     MembersCount++;
                     // Not yet sent this node name (properties get/set, events (add/remove) appear twice
                     sentNodes[memberNode.Name] = memberNode;
-                    itemsCallback(memberNode);
+                    nodeCallback(memberNode);
                 }
 
                 AddMemberLinks(memberNode, memberInfo);
@@ -126,7 +120,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private void AddMemberLinks(DataNode sourceMemberNode, IMemberDefinition member)
+        private void AddMemberLinks(NodeData sourceMemberNode, IMemberDefinition member)
         {
             try
             {

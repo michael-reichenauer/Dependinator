@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Dependinator.ModelViewing.Private.DataHandling.Dtos;
-using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.AssemblyParsing;
-using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.SolutionParsing.Private;
+using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies;
 using Dependinator.Utils;
 using Dependinator.Utils.ErrorHandling;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.SolutionParsing
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Solutions.Private
 {
     internal class SolutionParser : IDisposable
     {
@@ -18,32 +16,33 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
         private readonly List<AssemblyParser> assemblyParsers = new List<AssemblyParser>();
         private readonly bool isReadSymbols;
-        private readonly DataItemsCallback itemsCallback;
-        private readonly List<DataNode> parentNodesToSend = new List<DataNode>();
-        private readonly DataFile dataFile;
+
+        private readonly List<NodeData> parentNodesToSend = new List<NodeData>();
+        private readonly string solutionFilePath;
+        private readonly Action<NodeData> nodeCallback;
+        private readonly Action<LinkData> linkCallback;
 
 
         public SolutionParser(
-            DataFile dataFile,
-            DataItemsCallback itemsCallback,
+            string solutionFilePath,
+            Action<NodeData> nodeCallback,
+            Action<LinkData> linkCallback,
             bool isReadSymbols)
         {
-            this.dataFile = dataFile;
-            this.itemsCallback = itemsCallback;
+            this.solutionFilePath = solutionFilePath;
+            this.nodeCallback = nodeCallback;
+            this.linkCallback = linkCallback;
             this.isReadSymbols = isReadSymbols;
         }
 
+        private string SolutionNodeName => Path.GetFileName(solutionFilePath).Replace(".", "*");
 
         public void Dispose() => assemblyParsers.ForEach(parser => parser.Dispose());
 
 
-        public static bool IsSolutionFile(DataFile dataFile) =>
-            Path.GetExtension(dataFile.FilePath).IsSameIgnoreCase(".sln");
-
-
         public async Task<M> ParseAsync()
         {
-            parentNodesToSend.Add(GetSolutionNode());
+            parentNodesToSend.Add(CreateSolutionNode());
 
             M result = CreateAssemblyParsers();
             if (result.IsFaulted)
@@ -51,7 +50,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 return result.Error;
             }
 
-            parentNodesToSend.ForEach(node => itemsCallback(node));
+            parentNodesToSend.ForEach(node => nodeCallback(node));
 
             await ParseSolutionAssembliesAsync();
             int typeCount = assemblyParsers.Sum(parser => parser.TypeCount);
@@ -64,9 +63,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<M<Source>> GetSourceAsync(DataNodeName nodeName)
+        public async Task<M<NodeDataSource>> TryGetSourceAsync(string nodeName)
         {
-            M result = CreateAssemblyParsers();
+            M result = CreateAssemblyParsers(true);
 
             if (result.IsFaulted)
             {
@@ -84,14 +83,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
             return await Task.Run(() =>
             {
-                M<Source> source = assemblyParser.TryGetSource(nodeName);
+                M<NodeDataSource> source = assemblyParser.TryGetSource(nodeName);
 
                 if (source.IsFaulted || source.Value.Path != null) return source;
 
                 var sourcePath = TryGetFilePath(nodeName, assemblyParser.ProjectPath);
                 if (sourcePath.IsOk)
                 {
-                    return new Source(sourcePath.Value, source.Value.Text, source.Value.LineNumber);
+                    return new NodeDataSource(source.Value.Text, source.Value.LineNumber, sourcePath.Value);
                 }
 
                 return source;
@@ -100,11 +99,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 
 
-        public async Task<M<DataNodeName>> GetNodeNameForFilePathAsync(Source source)
+        public async Task<M<string>> TryGetNodeAsync(NodeDataSource source)
         {
             await Task.Yield();
 
-            M result = CreateAssemblyParsers();
+            M result = CreateAssemblyParsers(true);
 
             if (result.IsFaulted)
             {
@@ -113,7 +112,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
             foreach (AssemblyParser parser in assemblyParsers)
             {
-                if (parser.TryGetNodeNameFor(source.Path, out DataNodeName nodeName))
+                if (parser.TryGetNode(source.Path, out string nodeName))
                 {
                     return nodeName;
                 }
@@ -122,7 +121,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             string sourceFilePath = Path.GetDirectoryName(source.Path);
             foreach (AssemblyParser parser in assemblyParsers)
             {
-                if (parser.TryGetNodeNameFor(sourceFilePath, out DataNodeName nodeName))
+                if (parser.TryGetNode(sourceFilePath, out string nodeName))
                 {
                     return GetParentName(nodeName);
                 }
@@ -132,12 +131,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private DataNodeName GetSolutionNodeName()
-        {
-            string solutionName = Path.GetFileName(dataFile.FilePath).Replace(".", "*");
-            DataNodeName solutionNodeName = (DataNodeName)solutionName;
-            return solutionNodeName;
-        }
+
 
 
         public static IReadOnlyList<string> GetDataFilePaths(string filePath)
@@ -148,20 +142,15 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private DataNode GetSolutionNode()
-        {
-            DataNodeName solutionName = GetSolutionNodeName();
-            DataNode solutionNode = new DataNode(solutionName, DataNodeName.None, NodeType.Solution)
-            { Description = "Solution file" };
-            return solutionNode;
-        }
+        private NodeData CreateSolutionNode() =>
+            new NodeData(SolutionNodeName, null, NodeData.SolutionType, "Solution file");
 
 
         private M CreateAssemblyParsers(bool includeReferences = false)
         {
-            DataNodeName solutionName = GetSolutionNodeName();
+            string solutionName = SolutionNodeName;
 
-            Solution solution = new Solution(dataFile.FilePath);
+            Solution solution = new Solution(solutionFilePath);
             IReadOnlyList<Project> projects = solution.GetSolutionProjects();
 
             foreach (Project project in projects)
@@ -169,13 +158,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 string assemblyPath = project.GetOutputPath();
                 if (assemblyPath == null)
                 {
-                    return Error.From(new MissingAssembliesException(
-                        $"Failed to parse:\n {dataFile}\nProject\n{project}\nhas no Debug assembly."));
+                    return Error.From($"Failed to parse:\n {solutionFilePath}\n" +
+                        $"Project\n{project}\nhas no Debug assembly.");
                 }
 
-                DataNodeName parent = GetParent(solutionName, project);
+                string parent = GetProjectParentName(solutionName, project);
 
-                var assemblyParser = new AssemblyParser(assemblyPath, project.ProjectFilePath, parent, itemsCallback, isReadSymbols);
+                var assemblyParser = new AssemblyParser(
+                    assemblyPath, project.ProjectFilePath, parent, nodeCallback, linkCallback, isReadSymbols);
 
                 assemblyParsers.Add(assemblyParser);
             }
@@ -191,7 +181,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
                 foreach (string referencePath in referencePaths)
                 {
-                    var assemblyParser = new AssemblyParser(referencePath, null, null, itemsCallback, isReadSymbols);
+                    var assemblyParser = new AssemblyParser(
+                        referencePath, null, null, nodeCallback, linkCallback, isReadSymbols);
 
                     assemblyParsers.Add(assemblyParser);
                 }
@@ -201,9 +192,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private DataNodeName GetParent(DataNodeName solutionName, Project project)
+        private string GetProjectParentName(string solutionName, Project project)
         {
-            DataNodeName parent = solutionName;
+            string parent = solutionName;
             string projectName = project.ProjectFullName;
 
             string[] parts = projectName.Split("\\".ToCharArray());
@@ -215,11 +206,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             for (int i = 0; i < parts.Length - 1; i++)
             {
                 string name = string.Join(".", parts.Take(i + 1));
-                DataNodeName folderName = (DataNodeName)$"{(string)solutionName}.{name}";
+                string folderName = $"{solutionName}.{name}";
 
                 if (!parentNodesToSend.Any(n => n.Name == folderName))
                 {
-                    DataNode folderNode = new DataNode(folderName, parent, NodeType.SolutionFolder);
+                    NodeData folderNode = new NodeData(folderName, parent, NodeData.SolutionFolderType, null);
                     parentNodesToSend.Add(folderNode);
                 }
 
@@ -230,14 +221,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private static string GetModuleName(DataNodeName nodeName)
+        private static string GetModuleName(string nodeName)
         {
             while (true)
             {
-                DataNodeName parentName = GetParentName(nodeName);
-                if (parentName == DataNodeName.None)
+                string parentName = GetParentName(nodeName);
+                if (parentName == "")
                 {
-                    return (string)nodeName;
+                    return nodeName;
                 }
 
                 nodeName = parentName;
@@ -245,20 +236,20 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private static DataNodeName GetParentName(DataNodeName nodeName)
+        private static string GetParentName(string nodeName)
         {
             // Split full name in name and parent name,
             var fullName = (string)nodeName;
             int index = fullName.LastIndexOfAny(PartsSeparators);
 
-            return index > -1 ? (DataNodeName)fullName.Substring(0, index) : DataNodeName.None;
+            return index > -1 ? fullName.Substring(0, index) : "";
         }
-        
 
-        private M<string> TryGetFilePath(DataNodeName nodeName, string projectPath)
+
+        private M<string> TryGetFilePath(string nodeName, string projectPath)
         {
             // Source information did not contain file path info. Try locate file within project
-            string solutionFolderPath = Path.GetDirectoryName(projectPath?? dataFile.FilePath);
+            string solutionFolderPath = Path.GetDirectoryName(projectPath ?? solutionFilePath);
 
             var filePaths = Directory
                 .GetFiles(solutionFolderPath, $"{GetShortName(nodeName)}.cs", SearchOption.AllDirectories)
@@ -281,7 +272,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private static DataNodeName GetShortName(DataNodeName nodeName)
+        private static string GetShortName(string nodeName)
         {
 
             var fullName = (string)nodeName;
@@ -294,7 +285,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
             int index = fullName.LastIndexOfAny(PartsSeparators);
 
-            return index > -1 ? (DataNodeName)fullName.Substring(index + 1) : DataNodeName.None;
+            return index > -1 ? fullName.Substring(index + 1) : "";
         }
 
 

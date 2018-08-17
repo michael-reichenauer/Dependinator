@@ -42,7 +42,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
         }
 
 
-        public void ShowCode(NodeName nodeName) => codeViewService.ShowCode(nodeName);
+        public Task ShowCodeAsync(NodeName nodeName) => codeViewService.ShowCodeAsync(nodeName);
 
 
         public void Initialize(DependencyExplorerWindowViewModel viewModel, Node node, Line line)

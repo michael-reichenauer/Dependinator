@@ -6,7 +6,7 @@ using System.Xml.Linq;
 using Dependinator.Utils;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.AssemblyParsing.Private
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private
 {
     internal class XmlDocParser
     {

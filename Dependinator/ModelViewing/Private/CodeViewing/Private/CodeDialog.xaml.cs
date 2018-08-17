@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
 using Dependinator.Common;
-using Dependinator.Common.MessageDialogs;
+using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ModelHandling;
 using Dependinator.Utils.ErrorHandling;
 using ICSharpCode.AvalonEdit.Highlighting;
@@ -21,26 +21,24 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
     public partial class CodeDialog : Window
     {
         private readonly CodeViewModel codeViewModel;
-        private readonly Func<NodeName, Task<M<SourceCode>>> getCodeActionAsync;
-        private readonly IMessage message;
+        private Source source;
+        private readonly Func<Task<M<Source>>> updateSource;
         private readonly Lazy<IModelNotifications> modelNotifications;
 
-        private readonly NodeName nodeName;
-
-
+        
         internal CodeDialog(
             Lazy<IModelNotifications> modelNotifications,
-            IMessage message,
             ISolutionService solutionService,
             WindowOwner owner,
             NodeName nodeName,
-            Func<NodeName, Task<M<SourceCode>>> getCodeActionAsync)
+            Source source,
+            Func<Task<M<Source>>> updateSource)
         {
             this.modelNotifications = modelNotifications;
-            this.message = message;
 
-            this.nodeName = nodeName;
-            this.getCodeActionAsync = getCodeActionAsync;
+            this.source = source;
+            this.updateSource = updateSource;
+
             Owner = owner;
             InitializeComponent();
 
@@ -63,29 +61,27 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         }
 
 
-        private void OnModelUpdated(object sender, EventArgs e) => SetCodeText();
+        private async void OnModelUpdated(object sender, EventArgs e)
+        {
+            M<Source> result = await updateSource();
+            if (result.IsOk)
+            {
+                source = result.Value;
+            }
+
+            SetCodeText();
+        }
 
 
         private async void SetCodeText()
         {
-            CodeView.Text = "Getting code ...";
-
-            M<SourceCode> codeResult = await getCodeActionAsync(nodeName);
-
-            if (codeResult.IsFaulted)
-            {
-                message.ShowWarning(codeResult.ErrorMessage);
-                Close();
-                return;
-            }
-
-            CodeView.Options.IndentationSize = 2;
-            CodeView.Text = codeResult.Value.Text;
+            CodeView.Options.IndentationSize = 4;
+            CodeView.Text = source.Text;
 
             // Await code to be rendered before scrolling to line number
             await Task.Yield();
-            codeViewModel.FilePath = codeResult.Value.FilePath;
-            codeViewModel.LineNumber = codeResult.Value.LineNumber;
+            codeViewModel.FilePath = source.Path;
+            codeViewModel.LineNumber = source.LineNumber;
             CodeView.ScrollTo(codeViewModel.LineNumber, 0);
         }
 

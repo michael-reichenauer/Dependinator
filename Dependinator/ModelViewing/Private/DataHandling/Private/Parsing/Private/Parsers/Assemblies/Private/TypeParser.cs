@@ -1,29 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.Utils;
 using Mono.Cecil;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.AssemblyParsing.Private
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private
 {
     internal class TypeParser
     {
-        private readonly DataItemsCallback itemsCallback;
         private readonly LinkHandler linkHandler;
         private readonly XmlDocParser xmlDockParser;
+        private readonly Action<NodeData> nodeCallback;
 
 
         public TypeParser(
             LinkHandler linkHandler,
             XmlDocParser xmlDockParser,
-            DataItemsCallback itemsCallback)
+            Action<NodeData> nodeCallback)
         {
             this.linkHandler = linkHandler;
             this.xmlDockParser = xmlDockParser;
-
-            this.itemsCallback = itemsCallback;
+            this.nodeCallback = nodeCallback;
         }
 
 
@@ -31,7 +29,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             bool isCompilerGenerated = Name.IsCompilerGenerated(type.Name);
             bool isAsyncStateType = false;
-            DataNode typeNode = null;
+            NodeData typeNode = null;
 
             if (isCompilerGenerated)
             {
@@ -51,9 +49,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             {
                 string name = Name.GetTypeFullName(type);
                 bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
-                DataNodeName parent = isPrivate
-                    ? (DataNodeName)$"{NodeName.From(name).ParentName.FullName}.$private"
-                    : null;
+                string parent = isPrivate
+                    ? $"{NodeName.From(name).ParentName.FullName}.$private" : null;
                 string description = xmlDockParser.GetDescription(name);
 
                 if (IsNameSpaceDocType(type, description))
@@ -62,10 +59,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                     yield break;
                 }
 
-                DataNodeName nodeName = (DataNodeName)name;
-                typeNode = new DataNode(nodeName, parent, NodeType.Type)
-                    {Description = description};
-                itemsCallback(typeNode);
+                typeNode = new NodeData(name, parent, NodeData.TypeType, description);
+                nodeCallback(typeNode);
             }
 
             yield return new TypeData(type, typeNode, isAsyncStateType);
@@ -84,15 +79,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
         private bool IsNameSpaceDocType(TypeDefinition type, string description)
         {
-            if (type.Name.IsSameIgnoreCase("NamespaceDoc"))
+            if (type.Name.IsSameIc("NamespaceDoc"))
             {
                 if (!string.IsNullOrEmpty(description))
                 {
                     string name = Name.GetTypeNamespaceFullName(type);
-                    DataNodeName nodeName = (DataNodeName)name;
-                    DataNode node = new DataNode(nodeName, null, NodeType.NameSpace)
-                        {Description = description};
-                    itemsCallback(node);
+                    NodeData node = new NodeData(name, null, NodeData.NameSpaceType, description);
+                    nodeCallback(node);
                 }
 
                 return true;
@@ -117,7 +110,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             }
 
             TypeDefinition type = typeData.Type;
-            DataNode sourceNode = typeData.Node;
+            NodeData sourceNode = typeData.Node;
 
             try
             {

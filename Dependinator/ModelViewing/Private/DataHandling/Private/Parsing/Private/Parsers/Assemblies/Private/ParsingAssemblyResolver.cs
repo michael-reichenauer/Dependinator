@@ -1,9 +1,9 @@
-using System;
+﻿using System;
 using Dependinator.Utils;
 using Mono.Cecil;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.AssemblyParsing
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private
 {
     internal class ParsingAssemblyResolver : DefaultAssemblyResolver
     {

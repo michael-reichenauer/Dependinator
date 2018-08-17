@@ -62,7 +62,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
         public bool IsSelected { get => Get(); set => Set(value); }
         public bool IsExpanded { get => Get(); set => Set(value); }
 
-        public Command ShowCodeCommand => Command(() => itemCommands.ShowCode(Item.NodeName));
+        public Command ShowCodeCommand => AsyncCommand(() => itemCommands.ShowCodeAsync(Item.NodeName));
         public Command ToggleCollapseCommand => Command(SetExpand);
         public Command FilterCommand => Command(Filter);
         public Command LocateCommand => Command(() => itemCommands.Locate(Item.NodeName));

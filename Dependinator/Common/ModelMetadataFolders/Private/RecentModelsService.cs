@@ -52,7 +52,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
         public void RemoveModelPath(string modelFilePath)
         {
             List<string> resentPaths = settingsService.Get<ProgramSettings>().ResentModelPaths.ToList();
-            int index = resentPaths.FindIndex(path => path.IsSameIgnoreCase(modelFilePath));
+            int index = resentPaths.FindIndex(path => path.IsSameIc(modelFilePath));
 
             if (index != -1)
             {
@@ -69,7 +69,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
             List<string> resentPaths = settings.ResentModelPaths
                 .Where(File.Exists).ToList();
-            int index = resentPaths.FindIndex(path => path.IsSameIgnoreCase(modelFilePath));
+            int index = resentPaths.FindIndex(path => path.IsSameIc(modelFilePath));
 
             if (index != -1)
             {

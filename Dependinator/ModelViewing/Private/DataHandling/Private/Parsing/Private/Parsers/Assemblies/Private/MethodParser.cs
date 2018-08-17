@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.Utils;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.AssemblyParsing.Private
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private
 {
     internal class MethodParser
     {
@@ -34,7 +33,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public void AddMethodLinks(DataNode memberNode, MethodDefinition method)
+        public void AddMethodLinks(NodeData memberNode, MethodDefinition method)
         {
             if (!method.IsConstructor)
             {
@@ -61,7 +60,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             try
             {
-                DataNode memberNode = methodBodyNode.MemberNode;
+                NodeData memberNode = methodBodyNode.MemberNode;
                 MethodDefinition method = methodBodyNode.Method;
 
                 if (method.DeclaringType.IsInterface || !method.HasBody)
@@ -97,7 +96,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 
         private void AddLinkToMethodVariable(
-            DataNode memberNode, VariableDefinition variable, bool isMoveNext)
+            NodeData memberNode, VariableDefinition variable, bool isMoveNext)
         {
             if (!isMoveNext &&
                 variable.VariableType.IsNested &&
@@ -111,7 +110,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private void AddAsyncStateLinks(DataNode memberNode, TypeDefinition asyncType)
+        private void AddAsyncStateLinks(NodeData memberNode, TypeDefinition asyncType)
         {
             // Try to get the "MovNext method with contains the actual "async/await" code
             MethodDefinition moveNextMethod = asyncType.Methods
@@ -126,7 +125,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private void AddLinkToCallMethod(DataNode memberNode, MethodReference method)
+        private void AddLinkToCallMethod(NodeData memberNode, MethodReference method)
         {
             if (method is GenericInstanceMethod genericMethod)
             {
@@ -148,7 +147,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 return;
             }
 
-            linkHandler.AddLink(memberNode.Name, methodName, NodeType.Member);
+            linkHandler.AddLink(memberNode.Name, methodName, NodeData.MemberType);
 
             TypeReference returnType = method.ReturnType;
             linkHandler.AddLinkToType(memberNode, returnType);
@@ -161,7 +160,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
         private class MethodBodyNode
         {
-            public MethodBodyNode(DataNode memberNode, MethodDefinition method, bool isMoveNext)
+            public MethodBodyNode(NodeData memberNode, MethodDefinition method, bool isMoveNext)
             {
                 MemberNode = memberNode;
                 Method = method;
@@ -169,7 +168,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             }
 
 
-            public DataNode MemberNode { get; }
+            public NodeData MemberNode { get; }
             public MethodDefinition Method { get; }
             public bool IsMoveNext { get; }
         }

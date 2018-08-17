@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.SolutionParsing.Private
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Solutions.Private
 {
     /// <summary>
     ///     Represents the solution loaded from a sln file.

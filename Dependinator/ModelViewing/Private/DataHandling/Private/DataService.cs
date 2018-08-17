@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing;
@@ -79,8 +80,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
             await parserService.GetSourceAsync(dataFile, nodeName);
 
 
-        public async Task<M<DataNodeName>> GetNodeForFilePathAsync(DataFile dataFile, Source source) =>
-            await parserService.GetNodeForFilePathAsync(dataFile, source);
+        public async Task<M<DataNodeName>> TryGetNodeAsync(DataFile dataFile, Source source) =>
+            await parserService.TryGetNodeAsync(dataFile, source);
 
 
 
@@ -96,18 +97,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
 
 
             DateTime cacheTime = File.GetLastWriteTime(cachePath);
-            foreach (string dataFilePath in dataFilePaths)
+            foreach (string dataFilePath in dataFilePaths.Where(File.Exists))
             {
-                if (File.Exists(dataFilePath))
+                DateTime fileTime = File.GetLastWriteTime(dataFilePath);
+                if (fileTime > cacheTime)
                 {
-                    DateTime fileTime = File.GetLastWriteTime(dataFilePath);
-                    if (fileTime > cacheTime)
-                    {
-                        return true;
-                    }
+                    return true;
                 }
             }
-
 
             return false;
         }

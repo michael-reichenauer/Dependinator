@@ -166,6 +166,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         private static DataLink ToModelLink(JsonCacheTypes.Link link) => new DataLink(
             (DataNodeName)link.Source,
             (DataNodeName)link.Target,
+            NodeType.None,
             true);
 
 

@@ -1,7 +1,10 @@
-﻿namespace Dependinator.ModelViewing.Private.CodeViewing
+﻿using System.Threading.Tasks;
+
+
+namespace Dependinator.ModelViewing.Private.CodeViewing
 {
     internal interface ICodeViewService
     {
-        void ShowCode(NodeName nodeName);
+        Task ShowCodeAsync(NodeName nodeName);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -130,7 +131,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
         }
 
 
-        public void ShowCode(Node node) => codeViewService.ShowCode(node.Name);
+        public Task ShowCodeAsync(Node node) => codeViewService.ShowCodeAsync(node.Name);
 
 
         public void RearrangeLayout(NodeViewModel nodeViewModel)

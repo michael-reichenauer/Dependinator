@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.SolutionParsing.Private
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Solutions.Private
 {
     /// <summary>
     ///     Represents a project within a Solution
@@ -64,7 +64,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 
         private static bool HasExtension(string path, string extension) =>
-            Path.GetExtension(path).IsSameIgnoreCase(extension);
+            Path.GetExtension(path).IsSameIc(extension);
 
 
         public override string ToString() => ProjectFilePath;

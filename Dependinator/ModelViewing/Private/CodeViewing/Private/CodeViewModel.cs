@@ -1,4 +1,4 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.Utils.UI.Mvvm;
 
@@ -10,11 +10,14 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         private readonly Window owner;
         private readonly ISolutionService solutionService;
 
-
-        public CodeViewModel(ISolutionService solutionService, string title, Window owner)
+        public CodeViewModel(
+            ISolutionService solutionService,
+            string title,
+            Window owner)
         {
             this.solutionService = solutionService;
             this.owner = owner;
+
             Title = title;
         }
 
@@ -38,6 +41,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
             if (FilePath != null)
             {
                 await solutionService.OpenFileAsync(FilePath, LineNumber);
+
                 owner.Close();
             }
         }

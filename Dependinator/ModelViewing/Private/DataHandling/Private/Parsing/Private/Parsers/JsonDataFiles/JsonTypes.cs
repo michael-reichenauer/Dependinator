@@ -1,4 +1,4 @@
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.DataFileParsing
+﻿namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.JsonDataFiles
 {
     //public static class JsonTypes
     //{

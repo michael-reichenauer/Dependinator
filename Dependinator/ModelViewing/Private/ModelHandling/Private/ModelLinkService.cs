@@ -31,6 +31,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
                 if (!TryGetTarget(dataLink, out Node target))
                 {
+                    modelService.QueueNode(new DataNode(dataLink.Target, null, dataLink.TargetType));
                     return;
                 }
 

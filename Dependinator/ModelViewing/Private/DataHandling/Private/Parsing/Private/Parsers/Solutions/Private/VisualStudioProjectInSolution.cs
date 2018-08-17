@@ -3,7 +3,7 @@ using System.Collections;
 using Dependinator.Utils.Reflection;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.SolutionParsing.Private
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Solutions.Private
 {
     /// <summary>
     ///     Wraps the Microsoft.Build.Construction.ProjectInSolution type,
@@ -28,7 +28,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         public string RelativePath { get; }
         public string UniqueProjectName { get; }
         public object Project { get; }
-        public bool IsSolutionFolder => ProjectType.IsSameIgnoreCase("SolutionFolder");
+        public bool IsSolutionFolder => ProjectType.IsSameIc("SolutionFolder");
         public bool IsIncludedDebug { get; }
 
 

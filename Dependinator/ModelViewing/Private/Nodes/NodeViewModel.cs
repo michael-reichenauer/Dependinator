@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -79,7 +80,7 @@ namespace Dependinator.ModelViewing.Private.Nodes
         public bool IsShowDescription => !CanShowChildren || !Node.Children.Any();
         public bool IsShowToolTip => true;
         public bool HasCode => Node.NodeType.IsType() || Node.NodeType.IsMember();
-        public Command ShowCodeCommand => Command(() => ShowCode());
+        public Command ShowCodeCommand => AsyncCommand(() => ShowCodeAsync());
 
 
         public string Name => Node.Name.DisplayShortName;
@@ -170,7 +171,7 @@ namespace Dependinator.ModelViewing.Private.Nodes
         }
 
 
-        public void ShowCode() => nodeViewModelService.ShowCode(Node);
+        public Task ShowCodeAsync() => nodeViewModelService.ShowCodeAsync(Node);
 
 
         public void ShowDependencies() => nodeViewModelService.ShowReferences(this);

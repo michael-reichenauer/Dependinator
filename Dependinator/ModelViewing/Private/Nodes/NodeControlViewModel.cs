@@ -67,7 +67,7 @@ namespace Dependinator.ModelViewing.Private.Nodes
 
         public Command ToggleEditModeCommand => Command(ToggleEditNode);
         public Command ShowDependenciesCommand => Command(nodeViewModel.ShowDependencies);
-        public Command ShowCodeCommand => Command(nodeViewModel.ShowCode);
+        public Command ShowCodeCommand => AsyncCommand(nodeViewModel.ShowCodeAsync);
         public Command RearrangeLayoutCommand => Command(nodeViewModel.RearrangeLayout);
 
 
