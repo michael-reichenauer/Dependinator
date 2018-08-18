@@ -55,10 +55,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                     using (StreamReader sr = new StreamReader(s))
                     using (JsonReader reader = new JsonTextReader(sr))
                     {
-                        if (!IsValidVersion(reader))
-                        {
-                            throw new FormatException($"Unexpected format version in {path}");
-                        }
+                        ValidateVersion(reader);
 
                         SkipToItemsStart(reader);
 
@@ -67,19 +64,21 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
                     Log.Debug($"Read {itemCount} items");
                 }
-
                 catch (Exception e)
                 {
                     // Some unexpected error while reading the cache
-                    throw new Exception($"Failed to parse:{path},\n{e.Message}");
+                    throw new Exception($"Failed to parse:\n{path},\n{e.Message}");
                 }
             });
         }
 
 
-        public Task<NodeDataSource> GetSourceAsync(string path, string nodeName) => null;
+        public Task<NodeDataSource> GetSourceAsync(string path, string nodeName) => 
+            Task.FromResult((NodeDataSource)null);
 
-        public Task<string> GetNodeAsync(string path, NodeDataSource source) => null;
+
+        public Task<string> GetNodeAsync(string path, NodeDataSource source) =>
+            Task.FromResult((string)null);
 
 
         public DateTime GetDataTime(string path) => File.GetLastWriteTime(path);
@@ -131,7 +130,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             new LinkData(link.Source, link.Target, null);
 
 
-        private static bool IsValidVersion(JsonReader reader)
+        private static void ValidateVersion(JsonReader reader)
         {
             // Look for first property "FormatVersion" and verify that the expected version is found
             if (reader.Read() && reader.TokenType == JsonToken.StartObject)
@@ -144,17 +143,15 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                         string versionText = (string)reader.Value;
                         if (versionText != JsonTypes.Version)
                         {
-                            Log.Warn($"Expected {JsonTypes.Version}, was {versionText}");
-                            return false;
+                            throw new FormatException($"Expected {JsonTypes.Version}, was {versionText}");
                         }
 
-                        return true;
+                        return;
                     }
                 }
             }
 
-            Log.Warn("Failed to read format version");
-            return false;
+            throw new FormatException("Failed to read format version");
         }
     }
 }

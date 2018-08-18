@@ -65,7 +65,14 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 
             if (result.IsFaulted)
             {
-                message.ShowWarning($"Error while showing code for:\n{nodeName}\n\n{result.ErrorMessage}");
+                if (result.Error == M.NoValue)
+                {
+                    message.ShowInfo($"No source available for {nodeName}");
+                }
+                else
+                {
+                    message.ShowWarning($"Error while showing code for:\n{nodeName}\n\n{result.ErrorMessage}");
+                }
                 return;
             }
 

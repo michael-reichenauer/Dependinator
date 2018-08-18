@@ -6,7 +6,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     public static class JsonTypes
     {
-        public static string Version = "1";
+        public static string Version = "4";
 
         // A model contains a list of nodes and links
         [Serializable]

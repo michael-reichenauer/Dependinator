@@ -134,13 +134,13 @@
                     Grid.Column="1" Grid.Row="1"
                     FontSize="11"
                     Foreground="{DynamicResource TextLowBrush}"
-                    Text=".sln, .exe and .dll files"
+                    Text=".sln, .exe, .dll and .json files"
                     MouseUp="OpenFile_OnClick"
                     Cursor="Hand" />
 
                 <Grid.ToolTip>
                     <ToolTip
-                        Content="Open model from .NET .sln, .exe or .dll file"
+                        Content="Open model from file"
                         Placement="Mouse"
                         BorderBrush="{DynamicResource BorderBrush}"
                         BorderThickness="1" />

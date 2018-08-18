@@ -143,7 +143,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             (DataNodeName)node.Name,
             node.Parent != null ? (DataNodeName)node.Parent : null,
             ToNodeType(node.Type))
-        { Description = node.Description };
+            { Description = node.Description };
 
 
         private static IDataItem ToDataItem(LinkData link) => new DataLink(
