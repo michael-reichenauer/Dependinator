@@ -181,8 +181,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
         private static string GetCacheFilePath(DataFile dataFile)
         {
-            var dataFileName = Path.GetFileName(dataFile.FilePath);
-            string cacheFileName = $"{dataFileName}.dn.json";
+            var dataFileName = Path.GetFileNameWithoutExtension(dataFile.FilePath);
+            string cacheFileName = $"{dataFileName}.cache.json";
             return Path.Combine(dataFile.WorkFolderPath, cacheFileName);
         }
 
