@@ -54,7 +54,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        public async Task<M> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
+        public async Task<M> TryReadCacheAsync(DataFile dataFile, Action<IDataItem> dataItemsCallback)
         {
             Log.Debug($"Try reading cached model: {dataFile}");
             if (IsCacheOlderThanSave(dataFile))

@@ -14,7 +14,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing
 
         DateTime GetDataTime(DataFile dataFile);
 
-        Task<M> ParseAsync(DataFile dataFile, DataItemsCallback itemsCallback);
+        Task<M> ParseAsync(DataFile dataFile, Action<IDataItem> itemsCallback);
 
         Task<M<Source>> GetSourceAsync(DataFile dataFile, DataNodeName nodeName);
 

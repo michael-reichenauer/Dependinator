@@ -11,13 +11,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling
     {
         event EventHandler DataChanged;
 
-        Task<M> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
+        Task<M> TryReadCacheAsync(DataFile dataFile, Action<IDataItem> dataItemsCallback);
 
         Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile);
 
         Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items);
 
-        Task<M> TryReadFreshAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
+        Task<M> TryReadFreshAsync(DataFile dataFile, Action<IDataItem> dataItemsCallback);
 
         Task<M<Source>> TryGetSourceAsync(DataFile dataFile, DataNodeName nodeName);
 

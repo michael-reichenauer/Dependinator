@@ -11,9 +11,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence
     {
         DateTime GetCacheTime(DataFile dataFile);
 
-        DateTime GetSaveTime(DataFile dataFile);
-
-        Task<M> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
+        Task<M> TryReadCacheAsync(DataFile dataFile, Action<IDataItem> dataItemsCallback);
 
         Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile);
 

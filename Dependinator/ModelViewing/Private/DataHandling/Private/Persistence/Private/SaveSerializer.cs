@@ -54,7 +54,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
                     AddLinesToNodes(items, nodes);
 
-                    MergeInPreviousSavedNodes(path, nodes);
+                    nodes = MergeInPreviousSavedNodes(path, nodes);
 
                     JsonSaveTypes.Model dataModel = new JsonSaveTypes.Model {Nodes = nodes };
 
@@ -127,11 +127,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 0);
 
 
-        private static void MergeInPreviousSavedNodes(string path, List<JsonSaveTypes.Node> nodes)
+        private static List<JsonSaveTypes.Node> MergeInPreviousSavedNodes(string path, List<JsonSaveTypes.Node> nodes)
         {
             if (!File.Exists(path))
             {
-                return;
+                return nodes;
             }
 
             Dictionary<string, JsonSaveTypes.Node> previousNodes = GetPreviousNodes(path);
@@ -142,6 +142,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
             // resort nodes
             nodes = nodes.OrderBy(node => node.N).ToList();
+            return nodes;
         }
 
 

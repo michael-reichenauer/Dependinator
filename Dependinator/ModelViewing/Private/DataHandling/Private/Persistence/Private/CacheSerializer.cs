@@ -45,7 +45,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        public Task<M> TryDeserializeAsync(string cacheFilePath, DataItemsCallback dataItemsCallback)
+        public Task<M> TryDeserializeAsync(string cacheFilePath, Action<IDataItem> dataItemsCallback)
         {
             return Task.Run(() =>
             {
@@ -105,7 +105,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        private static int ReadItems(DataItemsCallback dataItemsCallback, JsonReader reader)
+        private static int ReadItems(Action<IDataItem> dataItemsCallback, JsonReader reader)
         {
             int itemCount = 0;
             while (reader.Read())

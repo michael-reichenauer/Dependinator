@@ -41,31 +41,33 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         {
             Source source = null;
             DataFile dataFile = modelMetadata.DataFile;
+            M<Source> result;
 
             using (progressService.ShowDialog("Getting source code.."))
             {
-                M<Source> result = await dataService.TryGetSourceAsync(dataFile, nodeName);
+               result = await dataService.TryGetSourceAsync(dataFile, nodeName);
 
-                if (!result.HasValue(out source))
+                if (result.HasValue(out source))
                 {
-                    message.ShowWarning($"Error while showing code for:\n{nodeName}\n\n{result.ErrorMessage}");
-                    return;
-                }
-
-
-                if (source.Path != null && File.Exists(source.Path))
-                {
-                    if (TryOpenInVisualStudio(dataFile, source))
+                    if (source.Path != null && File.Exists(source.Path))
                     {
-                        return;
-                    }
+                        if (TryOpenInVisualStudio(dataFile, source))
+                        {
+                            return;
+                        }
 
-                    // Lets show the file in "our" code viewer
-                    string fileText = File.ReadAllText(source.Path);
-                    source = new Source(source.Path, fileText, source.LineNumber);
+                        // Lets show the file in "our" code viewer
+                        string fileText = File.ReadAllText(source.Path);
+                        source = new Source(source.Path, fileText, source.LineNumber);
+                    }
                 }
             }
 
+            if (result.IsFaulted)
+            {
+                message.ShowWarning($"Error while showing code for:\n{nodeName}\n\n{result.ErrorMessage}");
+                return;
+            }
 
             CodeDialog codeDialog = codeDialogProvider(
                 nodeName, source, () => dataService.TryGetSourceAsync(dataFile, nodeName));

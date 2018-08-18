@@ -49,7 +49,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<M> ParseAsync(DataFile dataFile, DataItemsCallback itemsCallback)
+        public async Task<M> ParseAsync(DataFile dataFile, Action<IDataItem> itemsCallback)
         {
             Log.Debug($"Parse {dataFile} ...");
             Timing t = Timing.Start();

@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Threading;
-using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Solutions.Private;
 using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Solutions.Private
 {
     [SingleInstance]
     internal class DataMonitorService : IDataMonitorService
@@ -21,7 +20,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
 
         private static readonly TimeSpan DataChangedTime = TimeSpan.FromSeconds(10);
         private static readonly TimeSpan DataChangingTime = TimeSpan.FromSeconds(5);
-        private static readonly TimeSpan DataNewTime = TimeSpan.FromSeconds(5);
 
         private readonly DebounceDispatcher changeDebounce = new DebounceDispatcher();
         private readonly FileSystemWatcher folderWatcher = new FileSystemWatcher();

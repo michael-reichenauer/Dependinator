@@ -31,7 +31,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         public event EventHandler DataChanged;
 
 
-        public async Task<M> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
+        public async Task<M> TryReadCacheAsync(DataFile dataFile, Action<IDataItem> dataItemsCallback)
         {
             parserService.StartMonitorDataChanges(dataFile);
 
@@ -53,7 +53,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
-        public Task<M> TryReadFreshAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
+        public Task<M> TryReadFreshAsync(DataFile dataFile, Action<IDataItem> dataItemsCallback)
         {
             parserService.StartMonitorDataChanges(dataFile);
             return parserService.ParseAsync(dataFile, dataItemsCallback);

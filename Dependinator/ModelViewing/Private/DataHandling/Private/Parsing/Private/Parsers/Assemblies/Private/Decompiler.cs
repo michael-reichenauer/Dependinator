@@ -13,6 +13,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     internal class Decompiler
     {
+        private static readonly string DecompiledText = "// Note: Decompiled code\n// ---------------------\n\n";
+
+
         public M<NodeDataSource> TryGetSource(ModuleDefinition module, string nodeName)
         {
             if (TryGetType(module, nodeName, out TypeDefinition type))
@@ -168,17 +171,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             CSharpDecompiler decompiler = GetDecompiler(module);
 
-            return "// Decompiled code\n" +
-                   decompiler.DecompileTypesAsString(new[] { type }).Replace("\t", "  ");
+            return DecompiledText + decompiler.DecompileTypesAsString(new[] { type }).Replace("\t", "  ");
         }
 
 
         private static string GetDecompiledText(ModuleDefinition module, IMemberDefinition member)
         {
             CSharpDecompiler decompiler = GetDecompiler(module);
-
-            return "// Decompiled code\n" +
-                   decompiler.DecompileAsString(member).Replace("\t", "  ");
+            return DecompiledText + decompiler.DecompileAsString(member).Replace("\t", "  ");
         }
 
 

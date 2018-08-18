@@ -52,8 +52,21 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public Task<NodeDataSource> GetSourceAsync(string path, string nodeName) =>
-            Task.FromResult((NodeDataSource)null);
+        public async Task<NodeDataSource> GetSourceAsync(string path, string nodeName)
+        {
+            using (AssemblyParser assemblyParser = new AssemblyParser(
+                path, null, null, null, null, true))
+            {
+                M<NodeDataSource> result = await Task.Run(() => assemblyParser.TryGetSource(nodeName));
+
+                if (result.IsFaulted)
+                {
+                    throw new Exception(result.ErrorMessage);
+                }
+
+                return result.Value;
+            }
+        }
 
 
         public Task<string> GetNodeAsync(string path, NodeDataSource source) =>
