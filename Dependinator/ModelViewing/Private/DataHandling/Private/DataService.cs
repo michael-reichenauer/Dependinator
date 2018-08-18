@@ -1,47 +1,39 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing;
 using Dependinator.ModelViewing.Private.DataHandling.Private.Persistence;
+using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.ErrorHandling;
 
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Private
 {
+    [SingleInstance]
     internal class DataService : IDataService
     {
-        private readonly IDataMonitorService dataMonitorService;
-        private readonly IDataFilePaths filePaths;
         private readonly IParserService parserService;
         private readonly IPersistenceService persistenceService;
 
 
         public DataService(
             IPersistenceService persistenceService,
-            IParserService parserService,
-            IDataMonitorService dataMonitorService,
-            IDataFilePaths filePaths)
+            IParserService parserService)
         {
             this.persistenceService = persistenceService;
             this.parserService = parserService;
-            this.dataMonitorService = dataMonitorService;
-            this.filePaths = filePaths;
+            parserService.DataChanged += (s, e) => DataChanged?.Invoke(this, e);
         }
 
 
-        public event EventHandler DataChangedOccurred
-        {
-            add => dataMonitorService.DataChangedOccurred += value;
-            remove => dataMonitorService.DataChangedOccurred -= value;
-        }
+        public event EventHandler DataChanged;
 
 
         public async Task<M> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
         {
-            dataMonitorService.StartMonitorData(dataFile);
+            parserService.StartMonitorDataChanges(dataFile);
 
             M result = await persistenceService.TryReadCacheAsync(dataFile, dataItemsCallback);
 
@@ -50,22 +42,20 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
                 return result;
             }
 
-            if (IsCacheOlderThanData(dataFile))
-            {
-                dataMonitorService.TriggerDataChanged();
-            }
-
             return M.Ok;
         }
 
 
-        public Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile) =>
-            persistenceService.TryReadSaveAsync(dataFile);
+        public Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile)
+        {
+            parserService.StartMonitorDataChanges(dataFile);
+            return persistenceService.TryReadSaveAsync(dataFile);
+        }
 
 
         public Task<M> TryReadFreshAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
         {
-            dataMonitorService.StartMonitorData(dataFile);
+            parserService.StartMonitorDataChanges(dataFile);
             return parserService.ParseAsync(dataFile, dataItemsCallback);
         }
 
@@ -84,29 +74,19 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
             await parserService.TryGetNodeAsync(dataFile, source);
 
 
-
-        private bool IsCacheOlderThanData(DataFile dataFile)
+        public void TriggerDataChangedIfDataNewerThanCache(DataFile dataFile)
         {
-            IReadOnlyList<string> dataFilePaths = filePaths.GetDataFilePaths(dataFile);
-            string cachePath = filePaths.GetCacheFilePath(dataFile);
+            DateTime cacheTime = persistenceService.GetCacheTime(dataFile);
+            DateTime dataTime = parserService.GetDataTime(dataFile);
 
-            if (!File.Exists(cachePath))
+            Log.Debug($"Data time: {dataTime}, cache time: {cacheTime}");
+
+            if (dataTime > cacheTime)
             {
-                return false;
+                Log.Debug("Data is newer than cache");
+                Task.Delay(TimeSpan.FromSeconds(5))
+                    .ContinueWith(_ => DataChanged?.Invoke(this, EventArgs.Empty)).RunInBackground();
             }
-
-
-            DateTime cacheTime = File.GetLastWriteTime(cachePath);
-            foreach (string dataFilePath in dataFilePaths.Where(File.Exists))
-            {
-                DateTime fileTime = File.GetLastWriteTime(dataFilePath);
-                if (fileTime > cacheTime)
-                {
-                    return true;
-                }
-            }
-
-            return false;
         }
     }
 }

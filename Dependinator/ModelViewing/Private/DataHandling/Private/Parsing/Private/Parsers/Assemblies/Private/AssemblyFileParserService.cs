@@ -8,13 +8,27 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     internal class AssemblyFileParserService : IParser
     {
-#pragma warning disable 0067
-        public event EventHandler DataChanged;
-#pragma warning restore 0067
+        private readonly IDataMonitorService dataMonitorService;
+
+
+        public AssemblyFileParserService(IDataMonitorService dataMonitorService)
+        {
+            this.dataMonitorService = dataMonitorService;
+        }
+
+        public event EventHandler DataChanged
+        {
+            add => dataMonitorService.DataChangedOccurred += value;
+            remove => dataMonitorService.DataChangedOccurred -= value;
+        }
+
 
         public bool CanSupport(string path) =>
             Path.GetExtension(path).IsSameIc(".exe") ||
             Path.GetExtension(path).IsSameIc(".dll");
+
+
+        public void StartMonitorDataChanges(string path) => dataMonitorService.StartMonitorData(path);
 
 
         public async Task ParseAsync(
@@ -38,27 +52,15 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<NodeDataSource> GetSourceAsync(string path, string nodeName)
-        {
-            using (AssemblyParser assemblyParser = new AssemblyParser(
-                path, null, null, null, null, true))
-            {
-                M<NodeDataSource> result = await Task.Run(() => assemblyParser.TryGetSource(nodeName));
-
-                if (result.IsFaulted)
-                {
-                    throw new Exception(result.ErrorMessage);
-                }
-
-                return result.Value;
-            }
-        }
+        public Task<NodeDataSource> GetSourceAsync(string path, string nodeName) =>
+            Task.FromResult((NodeDataSource)null);
 
 
-        public Task<string> GetNodeAsync(string path, NodeDataSource source)
-        {
-            throw new NotImplementedException();
-        }
+        public Task<string> GetNodeAsync(string path, NodeDataSource source) =>
+            Task.FromResult((string)null);
+
+
+        public DateTime GetDataTime(string path) => File.GetLastWriteTime(path);
 
 
         private static NodeData GetAssemblyFileNode(string path)

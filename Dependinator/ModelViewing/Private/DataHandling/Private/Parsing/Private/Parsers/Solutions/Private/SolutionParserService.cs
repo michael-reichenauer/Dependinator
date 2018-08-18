@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.Utils.ErrorHandling;
 
@@ -8,16 +9,35 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
     internal class SolutionParserService : IParser
     {
-        #pragma warning disable 0067
-        public event EventHandler DataChanged;
-        #pragma warning restore 0067
+        private readonly IDataMonitorService dataMonitorService;
 
+
+        public SolutionParserService(IDataMonitorService dataMonitorService)
+        {
+            this.dataMonitorService = dataMonitorService;
+        }
+
+
+        public event EventHandler DataChanged
+        {
+            add => dataMonitorService.DataChangedOccurred += value;
+            remove => dataMonitorService.DataChangedOccurred -= value;
+        }
+
+        
         public bool CanSupport(string path) => Path.GetExtension(path).IsSameIc(".sln");
+
+
+        public void StartMonitorDataChanges(string path)
+        {
+            var dataFilePaths = SolutionParser.GetDataFilePaths(path);
+            dataMonitorService.StartMonitorData(path, dataFilePaths);
+        }
 
 
         public async Task ParseAsync(
             string path,
-            Action<NodeData> nodeCallback, 
+            Action<NodeData> nodeCallback,
             Action<LinkData> linkCallback)
         {
             using (SolutionParser solutionParser = new SolutionParser(path, nodeCallback, linkCallback, false))
@@ -61,6 +81,24 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
                 return nodeName.Value;
             }
+        }
+
+
+        public DateTime GetDataTime(string path)
+        {
+            DateTime time = DateTime.MaxValue;
+
+            foreach (string dataPath in SolutionParser.GetDataFilePaths(path).Where(File.Exists))
+            {
+                DateTime fileTime = File.GetLastWriteTime(dataPath);
+                if (fileTime < time)
+                {
+                    time = fileTime;
+                }
+            }
+
+            // return oldest file time
+            return time != DateTime.MaxValue ? time : DateTime.MinValue;
         }
     }
 }

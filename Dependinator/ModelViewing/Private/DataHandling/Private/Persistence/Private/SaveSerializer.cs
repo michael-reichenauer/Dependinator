@@ -22,6 +22,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             {
                 try
                 {
+                    Log.Debug($"Saving model layout to {path}");
                     List<JsonSaveTypes.Node> nodes = ToSaveNodes(items);
                     AddLinesToNodes(items, nodes);
 
@@ -31,11 +32,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 }
                 catch (UnauthorizedAccessException e)
                 {
-                    Log.Debug($"Failed to save {path}, {e.Message}");
+                    Log.Debug($"Failed to save model layout to {path}, {e.Message}");
                 }
                 catch (Exception e)
                 {
-                    Log.Exception(e, $"Failed to serialize to {path}");
+                    Log.Exception(e, $"Failed to save model layout to {path}");
                 }
             });
         }
@@ -47,20 +48,18 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             {
                 try
                 {
+                    Log.Debug($"Saving merged model layout to {path}");
                     Timing t = Timing.Start();
                     List<JsonSaveTypes.Node> nodes = ToSaveNodes(items);
-                    t.Log("Json items");
 
                     AddLinesToNodes(items, nodes);
-                    t.Log("added lines");
 
                     MergeInPreviousSavedNodes(path, nodes);
-                    t.Log("merged with previous");
 
                     JsonSaveTypes.Model dataModel = new JsonSaveTypes.Model {Nodes = nodes };
 
                     Serialize(path, dataModel);
-                    t.Log("serialized");
+                    t.Log("Saved model layout");
                 }
                 catch (UnauthorizedAccessException e)
                 {
@@ -80,8 +79,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             {
                 try
                 {
+                    Log.Debug($"Reading model layout from: {path}");
                     if (!File.Exists(path))
                     {
+                        Log.Debug($"Model layout file does not exist: {path}");
                         return M.NoValue;
                     }
 

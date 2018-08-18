@@ -5,12 +5,14 @@ using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers;
 using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.ErrorHandling;
 using Dependinator.Utils.Threading;
 
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 {
+    [SingleInstance]
     internal class ParserService : IParserService
     {
         private readonly IEnumerable<IParser> parsers;
@@ -19,6 +21,31 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         public ParserService(IEnumerable<IParser> parsers)
         {
             this.parsers = parsers;
+
+            parsers.ForEach(parser => parser.DataChanged += (s, e) => DataChanged?.Invoke(this, e));
+        }
+
+
+        public event EventHandler DataChanged;
+
+
+        public void StartMonitorDataChanges(DataFile dataFile)
+        {
+            if (TryGetParser(dataFile, out IParser parser))
+            {
+                parser.StartMonitorDataChanges(dataFile.FilePath);
+            }
+        }
+
+
+        public DateTime GetDataTime(DataFile dataFile)
+        {
+            if (!TryGetParser(dataFile, out IParser parser))
+            {
+                return DateTime.MinValue;
+            }
+
+            return parser.GetDataTime(dataFile.FilePath);
         }
 
 
@@ -50,6 +77,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
         public async Task<M<Source>> GetSourceAsync(DataFile dataFile, DataNodeName nodeName)
         {
+            Log.Debug($"Get source for {nodeName} in model {dataFile}...");
             try
             {
                 if (!TryGetParser(dataFile, out IParser parser))
@@ -75,6 +103,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
         public async Task<M<DataNodeName>> TryGetNodeAsync(DataFile dataFile, Source source)
         {
+            Log.Debug($"Get node for {source} in model {dataFile}...");
+
             try
             {
                 if (!TryGetParser(dataFile, out IParser parser))
@@ -99,13 +129,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public IReadOnlyList<string> GetDataFilePaths(DataFile dataFile) => new List<string>();
-        //        WorkParser.GetDataFilePaths(dataFile);
-
 
         private bool TryGetParser(DataFile dataFile, out IParser parser)
         {
             parser = parsers.FirstOrDefault(p => p.CanSupport(dataFile.FilePath));
+            if (parser == null) Log.Warn($"No supported parser for {dataFile}");
+
             return parser != null;
         }
 

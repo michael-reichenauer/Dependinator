@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
+using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing;
+using Dependinator.Utils;
 using Dependinator.Utils.ErrorHandling;
 using Dependinator.Utils.Threading;
 
@@ -13,47 +15,75 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
     internal class PersistenceService : IPersistenceService
     {
         private readonly ICacheSerializer cacheSerializer;
-        private readonly IDataFilePaths dataFilePaths;
         private readonly ISaveSerializer saveSerializer;
+        private readonly IParserService parserService;
 
 
         public PersistenceService(
-            IDataFilePaths dataFilePaths,
             ICacheSerializer cacheSerializer,
-            ISaveSerializer saveSerializer)
+            ISaveSerializer saveSerializer,
+            IParserService parserService)
         {
-            this.dataFilePaths = dataFilePaths;
             this.cacheSerializer = cacheSerializer;
             this.saveSerializer = saveSerializer;
+            this.parserService = parserService;
+        }
+
+
+        public DateTime GetCacheTime(DataFile dataFile)
+        {
+            string cacheFilePath = GetCacheFilePath(dataFile);
+            if (!File.Exists(cacheFilePath))
+            {
+                return DateTime.MinValue;
+            }
+
+            return File.GetLastWriteTime(cacheFilePath);
+        }
+
+
+        public DateTime GetSaveTime(DataFile dataFile)
+        {
+            string saveFilePath = GetSaveFilePath(dataFile);
+            if (!File.Exists(saveFilePath))
+            {
+                return DateTime.MinValue;
+            }
+
+            return File.GetLastWriteTime(saveFilePath);
         }
 
 
         public async Task<M> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
         {
+            Log.Debug($"Try reading cached model: {dataFile}");
             if (IsCacheOlderThanSave(dataFile))
             {
+                Log.Debug("Cache is older than saved layout data, ignoring cache.");
                 return M.NoValue;
             }
-
-            string cacheFilePath = dataFilePaths.GetCacheFilePath(dataFile);
-
+            
+            string cacheFilePath = GetCacheFilePath(dataFile);
             return await cacheSerializer.TryDeserializeAsync(cacheFilePath, dataItemsCallback);
         }
 
 
         public Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile)
         {
-            string saveFilePath = dataFilePaths.GetSaveFilePath(dataFile);
+            Log.Debug($"Try reading saved model layout: {dataFile}");
+            string saveFilePath = GetSaveFilePath(dataFile);
             return saveSerializer.DeserializeAsync(saveFilePath);
         }
 
 
         public async Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items)
         {
+            Log.Debug($"Saving model layout: {dataFile}");
             Timing t = Timing.Start();
             await SaveItemsAsync(dataFile, items);
             t.Log("Save items");
 
+            Log.Debug($"Saving cache layout: {dataFile}");
             await CacheItemsAsync(dataFile, items);
             t.Log($"Cache {items.Count} items");
         }
@@ -61,7 +91,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
         private async Task CacheItemsAsync(DataFile dataFile, IReadOnlyList<IDataItem> items)
         {
-            string cacheFilePath = dataFilePaths.GetCacheFilePath(dataFile);
+            string cacheFilePath = GetCacheFilePath(dataFile);
 
             IReadOnlyList<IDataItem> cacheItems = await GetCacheItemsAsync(items);
             await cacheSerializer.SerializeAsync(cacheItems, cacheFilePath);
@@ -74,7 +104,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             IReadOnlyList<IDataItem> saveItems = await GetSaveItemsAsync(items);
             t.Log("Got items");
 
-            string saveFilePath = dataFilePaths.GetSaveFilePath(dataFile);
+            string saveFilePath = GetSaveFilePath(dataFile);
 
             if (IsSaveNewerThanData(dataFile))
             {
@@ -121,45 +151,47 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
         private bool IsSaveNewerThanData(DataFile dataFile)
         {
-            string saveFilePath = dataFilePaths.GetSaveFilePath(dataFile);
-            var dataPaths = dataFilePaths.GetDataFilePaths(dataFile);
+            DateTime saveTime = GetSaveTime(dataFile);
+            DateTime dataTime = parserService.GetDataTime(dataFile);
+            Log.Debug($"Save time: {saveTime}, Data time: {dataTime}");
 
-            if (!File.Exists(saveFilePath))
+            if (saveTime == DateTime.MinValue || dataTime == DateTime.MinValue)
             {
                 return false;
             }
 
-
-            DateTime saveTime = File.GetLastWriteTime(saveFilePath);
-            foreach (string dataFilePath in dataPaths)
-            {
-                if (!File.Exists(dataFilePath)) return true;
-
-                DateTime fileTime = File.GetLastWriteTime(dataFilePath);
-                if (saveTime > fileTime)
-                {
-                    return true;
-                }
-            }
-
-
-            return false;
+            return saveTime > dataTime;
         }
 
 
         private bool IsCacheOlderThanSave(DataFile dataFile)
         {
-            string saveFilePath = dataFilePaths.GetSaveFilePath(dataFile);
-            string cacheFilePath = dataFilePaths.GetCacheFilePath(dataFile);
-            
-            if (!File.Exists(saveFilePath) || !File.Exists(cacheFilePath))
+            DateTime saveTime = GetSaveTime(dataFile);
+            DateTime cacheTime = GetCacheTime(dataFile);
+            Log.Debug($"Save time: {saveTime}, CacheTime time: {cacheTime}");
+
+            if (saveTime == DateTime.MinValue || cacheTime == DateTime.MinValue)
             {
                 return false;
             }
-            
-            DateTime saveTime = File.GetLastWriteTime(saveFilePath);
-            DateTime cacheTime = File.GetLastWriteTime(cacheFilePath);
+
             return cacheTime < saveTime;
+        }
+
+
+        private static string GetCacheFilePath(DataFile dataFile)
+        {
+            var dataFileName = Path.GetFileName(dataFile.FilePath);
+            string cacheFileName = $"{dataFileName}.dn.json";
+            return Path.Combine(dataFile.WorkFolderPath, cacheFileName);
+        }
+
+
+        private static string GetSaveFilePath(DataFile dataFile)
+        {
+            string dataFileName = $"{Path.GetFileNameWithoutExtension(dataFile.FilePath)}.dpnr";
+            string folderPath = Path.GetDirectoryName(dataFile.FilePath);
+            return Path.Combine(folderPath, dataFileName);
         }
     }
 }

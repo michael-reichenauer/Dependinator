@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Threading;
-using Dependinator.ModelViewing.Private.DataHandling.Dtos;
+using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Solutions.Private;
 using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI;
@@ -23,21 +23,17 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         private static readonly TimeSpan DataChangingTime = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan DataNewTime = TimeSpan.FromSeconds(5);
 
-        private readonly IDataFilePaths dataFilePaths;
-
         private readonly DebounceDispatcher changeDebounce = new DebounceDispatcher();
         private readonly FileSystemWatcher folderWatcher = new FileSystemWatcher();
         private Dispatcher dispatcher;
 
-        private DataFile monitoredDataFile;
+        private string monitoredDataFile;
         private IReadOnlyList<string> monitoredFiles;
         private string monitoredFolder;
 
 
-        public DataMonitorService(IDataFilePaths dataFilePaths)
+        public DataMonitorService()
         {
-            this.dataFilePaths = dataFilePaths;
-
             folderWatcher.Changed += (s, e) => FileChange(e);
             folderWatcher.Created += (s, e) => FileChange(e);
             folderWatcher.Renamed += (s, e) => FileChange(e);
@@ -47,9 +43,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         public event EventHandler DataChangedOccurred;
 
 
-        public void StartMonitorData(DataFile dataFile)
+        public void StartMonitorData(string solutionPath, IReadOnlyList<string> dataPaths)
         {
-            if (IsMonitoring(dataFile))
+            if (IsMonitoring(solutionPath))
             {
                 return;
             }
@@ -58,19 +54,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
 
             StopMonitorData();
 
-            monitoredDataFile = dataFile;
-            monitoredFiles = dataFilePaths.GetDataFilePaths(dataFile);
-            monitoredFolder = Path.GetDirectoryName(dataFile.FilePath);
+            monitoredDataFile = solutionPath;
+            monitoredFiles = dataPaths;
+            monitoredFolder = Path.GetDirectoryName(solutionPath);
 
             StartMonitorData();
         }
 
-
-        public void TriggerDataChanged()
-        {
-            Log.Debug("Schedule data change event");
-            ScheduleDataChange(DataNewTime);
-        }
 
 
         private void StartMonitorData()
@@ -122,9 +112,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
-        private bool IsMonitoring(DataFile dataFile) =>
-            monitoredDataFile != null &&
-            dataFile.FilePath.IsSameIc(monitoredDataFile.FilePath);
+        private bool IsMonitoring(string dataFile) =>
+            monitoredDataFile != null && dataFile.IsSameIc(monitoredDataFile);
 
 
         private void TriggerEvent(object obj)

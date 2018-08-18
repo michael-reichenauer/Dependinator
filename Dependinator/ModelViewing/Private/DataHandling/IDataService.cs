@@ -9,7 +9,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling
 {
     internal interface IDataService
     {
-        event EventHandler DataChangedOccurred;
+        event EventHandler DataChanged;
 
         Task<M> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
 
@@ -22,5 +22,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling
         Task<M<Source>> TryGetSourceAsync(DataFile dataFile, DataNodeName nodeName);
 
         Task<M<DataNodeName>> TryGetNodeAsync(DataFile dataFile, Source source);
+        void TriggerDataChangedIfDataNewerThanCache(DataFile dataFile);
     }
 }

@@ -134,9 +134,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 
 
-        public static IReadOnlyList<string> GetDataFilePaths(string filePath)
+        public static IReadOnlyList<string> GetDataFilePaths(string solutionFilePath)
         {
-            Solution solution = new Solution(filePath);
+            Solution solution = new Solution(solutionFilePath);
 
             return solution.GetDataFilePaths();
         }

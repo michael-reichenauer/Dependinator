@@ -73,7 +73,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             this.progress = progress;
             this.cmd = cmd;
 
-            dataService.DataChangedOccurred += DataChangedFiles;
+            dataService.DataChanged += DataChangedFiles;
         }
 
 
@@ -188,7 +188,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         public async Task CloseAsync()
         {
-            dataService.DataChangedOccurred -= DataChangedFiles;
+            dataService.DataChanged -= DataChangedFiles;
 
             if (isWorking)
             {
@@ -204,8 +204,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             await modelPersistentHandler.SaveIfModifiedAsync();
         }
         
-
-        //public Task ManualRefreshAsync(bool refreshLayout = false) => RefreshAsync(refreshLayout);
 
 
         private async void DataChangedFiles(object sender, EventArgs e)
@@ -224,6 +222,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
             if (cacheResult.IsOk)
             {
+                dataService.TriggerDataChangedIfDataNewerThanCache(modelMetadata.DataFile);
                 return M.Ok;
             }
 

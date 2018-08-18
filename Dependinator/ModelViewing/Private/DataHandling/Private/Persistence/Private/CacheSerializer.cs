@@ -30,6 +30,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             {
                 try
                 {
+                    Log.Debug($"Cache model to {cacheFilePath}");
                     JsonCacheTypes.Model dataModel = new JsonCacheTypes.Model();
 
                     dataModel.Items = items.Select(Convert.ToCacheJsonItem).ToList();
@@ -38,7 +39,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 }
                 catch (Exception e)
                 {
-                    Log.Exception(e, "Failed to serialize");
+                    Log.Exception(e, "Failed to cache model");
                 }
             });
         }
@@ -50,6 +51,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             {
                 if (!File.Exists(cacheFilePath))
                 {
+                    Log.Debug($"No cache file at {cacheFilePath}");
                     return M.NoValue;
                 }
 
@@ -72,7 +74,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                         itemCount = ReadItems(dataItemsCallback, reader);
                     }
 
-                    t.Log($"Sent all {itemCount} items");
+                    t.Log($"Sent all cached {itemCount} items");
                     return M.Ok;
                 }
                 catch (FormatException)
