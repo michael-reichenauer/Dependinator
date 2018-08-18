@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Windows.Threading;
+using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Solutions.Private;
 using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private
+namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Common
 {
     [SingleInstance]
     internal class DataMonitorService : IDataMonitorService
@@ -23,7 +26,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         private readonly FileSystemWatcher folderWatcher = new FileSystemWatcher();
         private Dispatcher dispatcher;
 
-        private string monitoredDataFile;
+        private string monitoredMainPath;
+        private IReadOnlyList<string> monitoredFiles;
         private string monitoredFolder;
 
 
@@ -38,9 +42,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         public event EventHandler DataChangedOccurred;
 
 
-        public void StartMonitorData(string solutionPath)
+        public void StartMonitorData(string mainPath, IReadOnlyList<string> dataPaths)
         {
-            if (IsMonitoring(solutionPath))
+            if (IsMonitoring(mainPath))
             {
                 return;
             }
@@ -49,11 +53,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
             StopMonitorData();
 
-            monitoredDataFile = solutionPath;
-            monitoredFolder = Path.GetDirectoryName(solutionPath);
+            monitoredMainPath = mainPath;
+            monitoredFiles = dataPaths;
+            monitoredFolder = Path.GetDirectoryName(mainPath);
 
             StartMonitorData();
         }
+
 
 
         private void StartMonitorData()
@@ -82,7 +88,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 return;
             }
 
-            if (monitoredDataFile.IsSameIc(fullPath) && File.Exists(fullPath))
+            if (monitoredFiles.Any(file => file.IsSameIc(fullPath)) && File.Exists(fullPath))
             {
                 // Data file has changed, postpone event a little 
                 ScheduleDataChange(DataChangedTime);
@@ -105,13 +111,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private bool IsMonitoring(string dataFile) =>
-            monitoredDataFile != null && dataFile.IsSameIc(monitoredDataFile);
+        private bool IsMonitoring(string mainPath) =>
+            monitoredMainPath != null && mainPath.IsSameIc(monitoredMainPath);
 
 
         private void TriggerEvent(object obj)
         {
-            if (File.Exists(monitoredDataFile))
+            if (monitoredFiles.All(File.Exists))
             {
                 Log.Debug($"Monitored file changed");
                 DataChangedOccurred?.Invoke(this, EventArgs.Empty);

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Common;
 using Dependinator.Utils.ErrorHandling;
 
 
@@ -28,7 +29,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             Path.GetExtension(path).IsSameIc(".dll");
 
 
-        public void StartMonitorDataChanges(string path) => dataMonitorService.StartMonitorData(path);
+        public void StartMonitorDataChanges(string path) => dataMonitorService.StartMonitorData(path, new[] { path });
 
 
         public async Task ParseAsync(

@@ -69,7 +69,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                             throw new FormatException();
                         }
 
-                        ReadToItemsStart(reader);
+                        SkipToItemsStart(reader);
 
                         itemCount = ReadItems(dataItemsCallback, reader);
                     }
@@ -93,14 +93,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        private static void ReadToItemsStart(JsonReader reader)
+        private static void SkipToItemsStart(JsonReader reader)
         {
-            while (reader.Read())
+            // Skip until start of array
+            while (reader.Read() && reader.TokenType != JsonToken.StartArray)
             {
-                if (reader.TokenType == JsonToken.StartArray)
-                {
-                    break;
-                }
             }
         }
 

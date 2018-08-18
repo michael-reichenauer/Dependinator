@@ -139,14 +139,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private IDataItem ToDataItem(NodeData node) => new DataNode(
+        private static IDataItem ToDataItem(NodeData node) => new DataNode(
             (DataNodeName)node.Name,
             node.Parent != null ? (DataNodeName)node.Parent : null,
             ToNodeType(node.Type))
         { Description = node.Description };
 
 
-        private IDataItem ToDataItem(LinkData link) => new DataLink(
+        private static IDataItem ToDataItem(LinkData link) => new DataLink(
             (DataNodeName)link.Source,
             (DataNodeName)link.Target,
             ToNodeType(link.TargetType));
@@ -157,6 +157,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             switch (nodeType)
             {
+                case null:
+                    return NodeType.None;
                 case NodeData.SolutionType:
                     return NodeType.Solution;
                 case NodeData.SolutionFolderType:
