@@ -44,7 +44,7 @@ namespace Dependinator.Common.Installation.Private
             string studioPath = StudioPath();
 
             string filePath = Directory
-                .GetFiles(studioPath, "DependinatorVse.dll", SearchOption.AllDirectories)
+                .EnumerateFiles(studioPath, "DependinatorVse.dll", SearchOption.AllDirectories)
                 .FirstOrDefault();
 
             return filePath != null;
@@ -240,7 +240,7 @@ namespace Dependinator.Common.Installation.Private
             string studioPath = StudioPath();
 
             vsixInstallerPath = Directory
-                .GetFiles(studioPath, "VSIXInstaller.exe", SearchOption.AllDirectories)
+                .EnumerateFiles(studioPath, "VSIXInstaller.exe", SearchOption.AllDirectories)
                 .FirstOrDefault();
             Log.Debug($"VSIXInstaller path {vsixInstallerPath}");
 

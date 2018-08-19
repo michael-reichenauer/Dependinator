@@ -252,14 +252,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             string solutionFolderPath = Path.GetDirectoryName(projectPath ?? solutionFilePath);
 
             var filePaths = Directory
-                .GetFiles(solutionFolderPath, $"{GetShortName(nodeName)}.cs", SearchOption.AllDirectories)
+                .EnumerateFiles(solutionFolderPath, $"{GetShortName(nodeName)}.cs", SearchOption.AllDirectories)
                 .ToList();
 
             if (filePaths.Count == 0)
             {
                 // Name was not found, try with parent in case it is a member name
                 filePaths = Directory
-                    .GetFiles(solutionFolderPath, $"{GetShortName(GetParentName(nodeName))}.cs", SearchOption.AllDirectories)
+                    .EnumerateFiles(solutionFolderPath, $"{GetShortName(GetParentName(nodeName))}.cs", SearchOption.AllDirectories)
                     .ToList();
             }
 

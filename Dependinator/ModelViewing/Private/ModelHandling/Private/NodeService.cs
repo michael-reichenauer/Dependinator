@@ -116,19 +116,23 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        public Node GetParentNode(NodeName parentName, NodeType childNodeType)
+        public Node GetParentNode(NodeName parentName, NodeType childNodeType, bool isQueued)
         {
             if (modelService.TryGetNode(parentName, out Node parent))
             {
+                if (isQueued && parentName == NodeName.Root)
+                {
+                    return GetParentNode(NodeName.From("$References"), NodeType.Group, false);
+                }
+
                 return parent;
             }
 
             NodeType parentNodeType = GetParentNodeType(parentName, childNodeType);
 
             NodeName grandParentName = parentName.ParentName;
-            Node grandParent = GetParentNode(grandParentName, parentNodeType);
-
-
+            Node grandParent = GetParentNode(grandParentName, parentNodeType, isQueued);
+            
             parent = new Node(parentName);
             parent.NodeType = parentNodeType;
 

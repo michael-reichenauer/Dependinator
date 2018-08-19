@@ -22,6 +22,12 @@
     "Json": {
       "commandName": "Project",
       "commandLineArgs": "\"C:\\ProgramData\\Dependinator\\WorkingFolders\\C;)Work Files)GitMind)GitMind.sln\\GitMind.cache.json\""
+    },
+
+    "Json2": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Work Files\\ParseHeaderFiles\\model.json\""
     }
+
   }
 }

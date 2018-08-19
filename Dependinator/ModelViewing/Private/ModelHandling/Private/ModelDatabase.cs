@@ -151,7 +151,8 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                     node.Parent,
                     node.NodeType)
                 {
-                    Description = node.Description
+                    Description = node.Description,
+                    IsQueued = true,
                 };
             }
         }

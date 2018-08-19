@@ -35,9 +35,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             // The name of a node with '.' separating hierarchy, e.g. like in namespaces
             public string Name { get; set; }
 
-            // Optional data like type, node location and size ...
+            // Optional data like parent, type, ...
             public string Parent { get; set; }
             public string Type { get; set; }
+            public string Description { get; set; }
         }
 
 
@@ -50,6 +51,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
             // The target node name
             public string Target { get; set; }
+
+            // Optional data like type, ...
+            public string TargetType { get; set; }
         }
 
 

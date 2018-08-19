@@ -49,7 +49,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             {
                 try
                 {
-
                     int itemCount;
                     using (FileStream s = File.Open(path, FileMode.Open))
                     using (StreamReader sr = new StreamReader(s))
@@ -123,11 +122,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 
         private static NodeData ToNodeData(JsonTypes.Node node) =>
-            new NodeData(node.Name, node.Parent, node.Type, null);
+            new NodeData(node.Name, node.Parent, node.Type, node.Description);
 
 
         private static LinkData ToLinkData(JsonTypes.Link link) =>
-            new LinkData(link.Source, link.Target, null);
+            new LinkData(link.Source, link.Target, link.TargetType ?? JsonTypes.NodeType.Type);
 
 
         private static void ValidateVersion(JsonReader reader)

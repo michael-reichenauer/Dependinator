@@ -107,6 +107,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         {
             switch (nodeType)
             {
+                case null:
+                    return NodeType.None;
                 case JsonCacheTypes.NodeType.Solution:
                     return NodeType.Solution;
                 case JsonCacheTypes.NodeType.SolutionFolder:

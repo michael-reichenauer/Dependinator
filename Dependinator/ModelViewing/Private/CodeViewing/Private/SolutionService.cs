@@ -185,7 +185,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
             string studioPath = StudioPath();
 
             studioExePath = Directory
-                .GetFiles(studioPath, "devenv.exe", SearchOption.AllDirectories)
+                .EnumerateFiles(studioPath, "devenv.exe", SearchOption.AllDirectories)
                 .FirstOrDefault();
             Log.Debug($"Studio exe path {studioPath}");
 

@@ -47,7 +47,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             // Get all ".dll" or ".exe" assemblies of the project name. Could be several configurations 
             // have been built. Order them latest built first
             var filePaths = Directory
-                .GetFiles(binariesDir, $"{ProjectName}.*", SearchOption.AllDirectories)
+                .EnumerateFiles(binariesDir, $"{ProjectName}.*", SearchOption.AllDirectories)
                 .Where(IsAssembly)
                 .OrderByDescending(GetBuildTime);
 
