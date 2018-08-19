@@ -205,13 +205,15 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
         
 
-
-        private async void DataChangedFiles(object sender, EventArgs e)
+        private void DataChangedFiles(object sender, EventArgs e)
         {
-            if (!isWorking)
+            Application.Current.Dispatcher.InvokeBackground(async () =>
             {
-                await RefreshAsync(false);
-            }
+                if (!isWorking)
+                {
+                    await RefreshAsync(false);
+                }
+            });
         }
 
 
