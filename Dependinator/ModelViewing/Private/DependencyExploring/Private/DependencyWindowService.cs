@@ -288,6 +288,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
             items.Clear();
 
             dependencyItems
+                .OrderBy(item => item.NodeName.DisplayShortName)
                 .Select(item => new DependencyItemViewModel(item, viewModel, isSourceSide))
                 .ForEach(item => items.Add(item));
         }

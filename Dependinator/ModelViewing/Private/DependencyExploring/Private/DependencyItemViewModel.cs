@@ -92,7 +92,9 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
             IEnumerable<DependencyItem> subItems)
         {
             return new ObservableCollection<DependencyItemViewModel>(
-                subItems.Select(i => new DependencyItemViewModel(i, itemCommands, isSourceItem)));
+                subItems
+                    .OrderBy(i => i.NodeName.DisplayShortName)
+                    .Select(i => new DependencyItemViewModel(i, itemCommands, isSourceItem)));
         }
 
 
