@@ -40,7 +40,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
         public string SourceText { get => Get(); set => Set(value); }
 
         public string TargetText { get => Get(); set => Set(value); }
-        public string SourceTargetToolTip { get => Get(); set => Set(value); }
+
         public List<Node> HiddenSourceNodes { get; } = new List<Node>();
         public List<Node> HiddenTargetNodes { get; } = new List<Node>();
 
