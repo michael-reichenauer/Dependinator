@@ -70,7 +70,6 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public static IReadOnlyList<string> GetDataFilePaths(string filePath) => new[] { filePath };
 
         public async Task<M> ParseAsync()
         {

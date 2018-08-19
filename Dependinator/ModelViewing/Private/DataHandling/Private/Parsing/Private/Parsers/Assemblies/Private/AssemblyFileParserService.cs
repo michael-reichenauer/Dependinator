@@ -80,6 +80,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         private static NodeData GetAssemblyFileNode(string path)
         {
             string name = Path.GetFileName(path).Replace(".", "*");
+            if (name == "Example*exe")
+            {
+                // Special case for the example project to fix layout problem
+                name = "Dependinator*sln";
+            }
+
             return new NodeData(name, null, NodeData.AssemblyType, "Assembly file");
         }
     }
