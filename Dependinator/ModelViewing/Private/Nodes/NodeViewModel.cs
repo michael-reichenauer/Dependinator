@@ -150,13 +150,13 @@ namespace Dependinator.ModelViewing.Private.Nodes
                 if (value)
                 {
                     view2Model = new NodeControlViewModel(this);
-                    Node.Parent.ItemsCanvas.AddItem(view2Model);
+                    Node.Root.ItemsCanvas.AddItem(view2Model);
                 }
                 else
                 {
                     if (view2Model != null)
                     {
-                        Node.Parent.ItemsCanvas.RemoveItem(view2Model);
+                        Node.Root.ItemsCanvas.RemoveItem(view2Model);
                         view2Model = null;
                     }
                 }

@@ -40,27 +40,27 @@ namespace Dependinator.ModelViewing
         }
 
 
+        public ItemsCanvas ItemOwnerCanvas { get; set; }
+        
+        public virtual bool CanShow { get; } = true;
+        
+        public bool IsShowing { get; private set; }
+        
+        public virtual void ItemRealized() => IsShowing = true;
+        
+        public virtual void ItemVirtualized() => IsShowing = false;
+
+        public virtual void MoveItem(Vector moveOffset)
+        {
+        }
+
+
         public void SetBounds(Rect bounds, bool isUpdateParent)
         {
             if (ItemBounds == bounds) return;
 
             ItemBounds = bounds;
             if (isUpdateParent) ItemOwnerCanvas?.UpdateItem(this);
-        }
-
-        public ItemsCanvas ItemOwnerCanvas { get; set; }
-
-        public virtual bool CanShow { get; } = true;
-
-        public bool IsShowing { get; private set; }
-
-        public virtual void ItemRealized() => IsShowing = true;
-
-        public virtual void ItemVirtualized() => IsShowing = false;
-
-
-        public virtual void MoveItem(Vector moveOffset)
-        {
         }
     }
 }

@@ -22,10 +22,10 @@ namespace Dependinator.ModelViewing.Private.Nodes
         {
             this.nodeViewModel = nodeViewModel;
 
-            SetBounds(nodeViewModel.ItemBounds, false);
+            SetControlBounds(nodeViewModel.ItemBounds, false);
 
             WhenSet(nodeViewModel, nameof(nodeViewModel.ItemBounds))
-                .Notify(_ => SetBounds(this.nodeViewModel.ItemBounds, true));
+                .Notify(_ => SetControlBounds(this.nodeViewModel.ItemBounds, true));
 
             IsShowControls = true;
         }
@@ -36,7 +36,7 @@ namespace Dependinator.ModelViewing.Private.Nodes
         public override double ItemWidth => ItemBounds.Width + 2 * Margin;
         public override double ItemHeight => ItemBounds.Height + 2 * Margin;
 
-        public override bool CanShow => true;
+        public override bool CanShow => nodeViewModel.CanShow;
         public bool HasCode => nodeViewModel.HasCode;
 
         public Brush Brush => ControlBrush;
@@ -98,10 +98,7 @@ namespace Dependinator.ModelViewing.Private.Nodes
             nodeViewModel.UpdateBounds(newBounds);
 
             nodeViewModel.NotifyAll();
-            //Vector newCanvasMove = (location - newLocation) * ItemScale;
-            //nodeViewModel.ItemsViewModel?.MoveCanvas(newCanvasMove);
             ItemOwnerCanvas.UpdateItem(nodeViewModel);
-
             nodeViewModel.ItemsViewModel.Zoom(i, new Point(0, 0));
         }
 
@@ -224,6 +221,30 @@ namespace Dependinator.ModelViewing.Private.Nodes
             }
 
             return newLocation;
+        }
+
+
+
+        private void SetControlBounds(Rect bounds, bool isUpdateParent)
+        {
+            if (nodeViewModel.Node.Parent.IsRoot)
+            {
+                // Node owner is root, no need to transform
+                SetBounds(bounds, isUpdateParent);
+                return;
+            }
+
+            // The item bounds are translated to the root canvas coordinate system
+            Point screenLocation = nodeViewModel.Node.Parent.ItemsCanvas.CanvasToScreenPoint2(bounds.Location);
+            Point rootLocation = nodeViewModel.Node.Root.ItemsCanvas.ScreenToCanvasPoint(screenLocation);
+
+            double scale = nodeViewModel.Node.Root.ItemsCanvas.Scale;
+            Size rootSize = new Size(
+                (bounds.Size.Width * nodeViewModel.ItemScale) / scale,
+                (bounds.Size.Height * nodeViewModel.ItemScale) / scale);
+
+            Rect rootBounds = new Rect(rootLocation, rootSize);
+            SetBounds(rootBounds, isUpdateParent);
         }
 
 
