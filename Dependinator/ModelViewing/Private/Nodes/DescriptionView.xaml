@@ -19,7 +19,7 @@
                 FontSize="{Binding CodeIconSize}"
                 Style="{DynamicResource IconButtonStyle}"
                 Command="{Binding ShowCodeCommand}"
-                ToolTip="Show decompiled code" />
+                ToolTip="Show source" />
 
         </StackPanel>
 
