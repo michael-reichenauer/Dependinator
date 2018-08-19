@@ -136,8 +136,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 
         public void RearrangeLayout(NodeViewModel nodeViewModel)
         {
-            nodeLayoutService.ResetLayout(nodeViewModel.Node);
-            //modelService.SetIsChanged(nodeViewModel.Node);
+            nodeLayoutService.RearrangeLayout(nodeViewModel.Node);
         }
 
 

@@ -73,10 +73,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        public void SetLayoutDone()
-        {
-            nodeService.AllNodes.ForEach(node => node.IsLayoutCompleted = true);
-        }
+        public void SetLayoutDone() => nodeService.SetLayoutDone();
 
 
         public IReadOnlyList<NodeName> GetHiddenNodeNames()

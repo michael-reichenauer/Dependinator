@@ -26,5 +26,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         void RemoveAll();
         bool TryGetSavedNode(NodeName nodeName, out DataNode node);
         void SetIsChanged(Node node);
+        void SetLayoutDone();
     }
 }

@@ -116,6 +116,9 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
+        public void SetLayoutDone() => AllNodes.ForEach(node =>node.IsLayoutCompleted = true);
+
+
         public Node GetParentNode(NodeName parentName, NodeType childNodeType, bool isQueued)
         {
             if (modelService.TryGetNode(parentName, out Node parent))

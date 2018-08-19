@@ -7,6 +7,7 @@ using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.ModelViewing.Private.ModelHandling.Private;
 using Dependinator.Utils;
+using Dependinator.Utils.Collections;
 
 
 namespace Dependinator.ModelViewing.Private.Nodes.Private
@@ -56,25 +57,41 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
         }
 
 
-        public void ResetLayout(Node node)
+        public void RearrangeLayout(Node node)
         {
-            ResetLayoutImpl(node);
-            node.Children.ForEach(child => modelDatabase.SetIsChanged(node));
-        }
+            if (!node.Children.Any())
+            {
+                return;
+            }
 
-
-        private void ResetLayoutImpl(Node node)
-        {
             Layout layout = GetLayout(node);
 
             SetScale(layout, node);
 
             int index = 0;
-            IReadOnlyList<Node> sortedChildren = node.Children
-                // .OrderBy(child => child, CompareNodes())
-                .ToList();
+            IList<Node> children = node.Children.OrderBy(child => child, CompareNodes()).ToList();
 
-            foreach (Node child in sortedChildren)
+            foreach (Node child in children)
+            {
+                Rect bounds = GetBounds(index++, layout);
+
+                child.ViewModel.SetBounds(bounds, true);
+            }
+
+            node.Children.ForEach(child => modelDatabase.SetIsChanged(node));
+        }
+
+
+
+        private void ResetLayoutImpl(Node parent)
+        {
+            Layout layout = GetLayout(parent);
+
+            SetScale(layout, parent);
+
+            int index = 0;
+
+            foreach (Node child in parent.Children)
             {
                 Rect bounds = GetBounds(index++, layout);
 
@@ -184,25 +201,6 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
                 return 1;
             }
 
-            // Compare child to parent references (links from child to outside nodes)
-            // Child with more references to outside is more to right/bottom
-            Line e1ToParent = e1.SourceLines.FirstOrDefault(r => r.Target == e1.Parent);
-            Line e2ToParent = e2.SourceLines.FirstOrDefault(r => r.Target == e2.Parent);
-
-            int e1ToParentCount = e1ToParent?.LinkCount ?? 0;
-            int e2ToParentCount = e2ToParent?.LinkCount ?? 0;
-
-            if (e1ToParentCount > e2ToParentCount)
-            {
-                return 1;
-            }
-
-            if (e1ToParentCount < e2ToParentCount)
-            {
-                return -1;
-            }
-
-
             // Compare siblings references
             // Sibling with more references to the other is more to left/top
             Line e1ToE2 = e1.SourceLines.FirstOrDefault(r => r.Target == e2);
@@ -221,6 +219,26 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
                 return 1;
             }
 
+
+            // Compare child to parent references (links from child to outside nodes)
+            // Child with more references to outside is more to right/bottom
+            Line e1ToParent = e1.SourceLines.FirstOrDefault(r => r.Target == e1.Parent);
+            Line e2ToParent = e2.SourceLines.FirstOrDefault(r => r.Target == e2.Parent);
+
+            int e1ToParentCount = e1ToParent?.LinkCount ?? 0;
+            int e2ToParentCount = e2ToParent?.LinkCount ?? 0;
+
+            if (e1ToParentCount > e2ToParentCount)
+            {
+                return 1;
+            }
+
+            if (e1ToParentCount < e2ToParentCount)
+            {
+                return -1;
+            }
+
+            
             return Txt.Compare(e1.Name.FullName, e2.Name.FullName);
         }
 
