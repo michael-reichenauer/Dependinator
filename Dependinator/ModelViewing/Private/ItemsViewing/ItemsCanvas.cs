@@ -394,11 +394,11 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
         {
             Rect viewBox = GetViewBox();
 
-            //if (!IsAnyNodesWithinView(viewBox, moveOffset))
-            //{
-            //	// No node (if moved) would be withing visible view
-            //	return;
-            //}
+            if (IsRoot && !IsAnyNodesWithinView(viewBox, moveOffset))
+            {
+                // No node (if moved) would be withing visible view
+                return;
+            }
 
             if (IsRoot)
             {
