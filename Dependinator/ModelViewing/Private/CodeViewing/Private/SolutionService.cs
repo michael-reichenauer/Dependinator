@@ -5,11 +5,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
-using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Utils;
 using DependinatorApi;
 using DependinatorApi.ApiHandling;
-using Mono.CSharp;
 
 
 namespace Dependinator.ModelViewing.Private.CodeViewing.Private
@@ -18,23 +16,20 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
     {
         private readonly IInstaller installer;
         private readonly IMessage message;
-        private readonly ModelMetadata metadata;
 
 
         public SolutionService(
             IMessage message,
-            IInstaller installer,
-            ModelMetadata metadata)
+            IInstaller installer)
         {
             this.message = message;
             this.installer = installer;
-            this.metadata = metadata;
         }
 
 
-        public async Task OpenStudioAsync()
+        public async Task OpenModelAsync(ModelPaths modelPaths)
         {
-            string solutionFilePath = metadata.ModelFilePath;
+            string solutionFilePath = modelPaths.ModelPath;
 
             string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionFilePath);
             Log.Debug($"Calling: {serverName}");
@@ -83,15 +78,15 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         }
 
 
-        public async Task OpenFileAsync(string filePath, int lineNumber)
+        public async Task OpenFileAsync(ModelPaths modelPaths, string filePath, int lineNumber)
         {
-            string solutionFilePath = metadata.ModelFilePath;
+            string solutionFilePath = modelPaths.ModelPath;
 
             string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionFilePath);
 
             if (!ApiIpcClient.IsServerRegistered(serverName))
             {
-                await OpenStudioAsync();
+                await OpenModelAsync(modelPaths);
             }
 
             if (ApiIpcClient.IsServerRegistered(serverName))

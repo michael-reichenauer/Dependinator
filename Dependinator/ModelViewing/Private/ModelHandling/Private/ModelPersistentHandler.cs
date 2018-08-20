@@ -100,7 +100,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             {
                 IReadOnlyList<IDataItem> items = await GetModelSnapshotAsync();
 
-                await saveToDiskThrottler.Run(() => dataService.SaveAsync(metadata.DataFile, items));
+                await saveToDiskThrottler.Run(() => dataService.SaveAsync(metadata.ModelPaths, items));
             }
 
             tcs.TrySetResult(true);

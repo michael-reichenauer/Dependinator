@@ -19,5 +19,6 @@ namespace Dependinator.ModelViewing
         Task ActivateRefreshAsync();
         Task RefreshAsync(bool refreshLayout);
         Task CloseAsync();
+        Task OpenModelAsync(ModelPaths modelPaths);
     }
 }

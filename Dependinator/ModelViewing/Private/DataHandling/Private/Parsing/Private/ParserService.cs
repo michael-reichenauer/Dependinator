@@ -29,34 +29,34 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         public event EventHandler DataChanged;
 
 
-        public void StartMonitorDataChanges(DataFile dataFile)
+        public void StartMonitorDataChanges(ModelPaths modelPaths)
         {
-            if (TryGetParser(dataFile, out IParser parser))
+            if (TryGetParser(modelPaths, out IParser parser))
             {
-                parser.StartMonitorDataChanges(dataFile.FilePath);
+                parser.StartMonitorDataChanges(modelPaths.ModelPath);
             }
         }
 
 
-        public DateTime GetDataTime(DataFile dataFile)
+        public DateTime GetDataTime(ModelPaths modelPaths)
         {
-            if (!TryGetParser(dataFile, out IParser parser))
+            if (!TryGetParser(modelPaths, out IParser parser))
             {
                 return DateTime.MinValue;
             }
 
-            return parser.GetDataTime(dataFile.FilePath);
+            return parser.GetDataTime(modelPaths.ModelPath);
         }
 
 
-        public async Task<M> ParseAsync(DataFile dataFile, Action<IDataItem> itemsCallback)
+        public async Task<M> ParseAsync(ModelPaths modelPaths, Action<IDataItem> itemsCallback)
         {
-            Log.Debug($"Parse {dataFile} ...");
+            Log.Debug($"Parse {modelPaths} ...");
             Timing t = Timing.Start();
 
-            if (!TryGetParser(dataFile, out IParser parser))
+            if (!TryGetParser(modelPaths, out IParser parser))
             {
-                return Error.From($"File not supported: {dataFile}");
+                return Error.From($"File not supported: {modelPaths}");
             }
 
             void NodeCallback(NodeData nodeData) => itemsCallback(ToDataItem(nodeData));
@@ -64,8 +64,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
             try
             {
-                await parser.ParseAsync(dataFile.FilePath, NodeCallback, LinkCallback);
-                t.Log($"Parsed {dataFile}");
+                await parser.ParseAsync(modelPaths.ModelPath, NodeCallback, LinkCallback);
+                t.Log($"Parsed {modelPaths}");
                 return M.Ok;
             }
             catch (Exception e)
@@ -75,17 +75,17 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<M<Source>> GetSourceAsync(DataFile dataFile, DataNodeName nodeName)
+        public async Task<M<Source>> GetSourceAsync(ModelPaths modelPaths, DataNodeName nodeName)
         {
-            Log.Debug($"Get source for {nodeName} in model {dataFile}...");
+            Log.Debug($"Get source for {nodeName} in model {modelPaths}...");
             try
             {
-                if (!TryGetParser(dataFile, out IParser parser))
+                if (!TryGetParser(modelPaths, out IParser parser))
                 {
-                    return Error.From($"File not supported: {dataFile}");
+                    return Error.From($"File not supported: {modelPaths}");
                 }
 
-                NodeDataSource source = await parser.GetSourceAsync(dataFile.FilePath, (string)nodeName);
+                NodeDataSource source = await parser.GetSourceAsync(modelPaths.ModelPath, (string)nodeName);
                 if (source == null)
                 {
                     return M.NoValue;
@@ -101,20 +101,20 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public async Task<M<DataNodeName>> TryGetNodeAsync(DataFile dataFile, Source source)
+        public async Task<M<DataNodeName>> TryGetNodeAsync(ModelPaths modelPaths, Source source)
         {
-            Log.Debug($"Get node for {source} in model {dataFile}...");
+            Log.Debug($"Get node for {source} in model {modelPaths}...");
 
             try
             {
-                if (!TryGetParser(dataFile, out IParser parser))
+                if (!TryGetParser(modelPaths, out IParser parser))
                 {
-                    return Error.From($"File not supported: {dataFile}");
+                    return Error.From($"File not supported: {modelPaths}");
                 }
 
                 NodeDataSource nodeSource = new NodeDataSource(source.Text, source.LineNumber, source.Path);
 
-                string nodeName = await parser.GetNodeAsync(dataFile.FilePath, nodeSource);
+                string nodeName = await parser.GetNodeAsync(modelPaths.ModelPath, nodeSource);
                 if (nodeName == null)
                 {
                     return M.NoValue;
@@ -130,10 +130,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 
 
-        private bool TryGetParser(DataFile dataFile, out IParser parser)
+        private bool TryGetParser(ModelPaths modelPaths, out IParser parser)
         {
-            parser = parsers.FirstOrDefault(p => p.CanSupport(dataFile.FilePath));
-            if (parser == null) Log.Warn($"No supported parser for {dataFile}");
+            parser = parsers.FirstOrDefault(p => p.CanSupport(modelPaths.ModelPath));
+            if (parser == null) Log.Warn($"No supported parser for {modelPaths}");
 
             return parser != null;
         }

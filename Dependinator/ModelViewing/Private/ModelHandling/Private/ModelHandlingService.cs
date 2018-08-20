@@ -87,7 +87,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             using (progress.ShowBusy())
             {
                 isWorking = true;
-                Log.Debug($"Metadata model: {modelMetadata.DataFile} {DateTime.Now}");
+                Log.Debug($"Metadata model: {modelMetadata.ModelPaths} {DateTime.Now}");
 
                 if (modelMetadata.IsDefault)
                 {
@@ -101,7 +101,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                     return;
                 }
 
-                if (!File.Exists(modelMetadata.DataFile.FilePath))
+                if (!File.Exists(modelMetadata.ModelPaths.ModelPath))
                 {
                     message.ShowWarning($"Model not found:\n{modelMetadata.ModelFilePath}");
                     recentModelsService.RemoveModelPath(modelMetadata.ModelFilePath);
@@ -220,11 +220,11 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         private async Task<M> TryShowModelAsync()
         {
             M cacheResult = await ShowModelAsync(operation => dataService.TryReadCacheAsync(
-                modelMetadata.DataFile, items => UpdateDataItems(items, operation)));
+                modelMetadata.ModelPaths, items => UpdateDataItems(items, operation)));
 
             if (cacheResult.IsOk)
             {
-                dataService.TriggerDataChangedIfDataNewerThanCache(modelMetadata.DataFile);
+                dataService.TriggerDataChangedIfDataNewerThanCache(modelMetadata.ModelPaths);
                 return M.Ok;
             }
 
@@ -235,7 +235,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             modelService.Root.ItemsCanvas.ZoomableCanvas.Scale = WorkFolderSettings.DefaultScale;
             modelService.Root.ItemsCanvas.ZoomableCanvas.Offset = WorkFolderSettings.DefaultOffset;
 
-            var savedItems = await dataService.TryReadSaveAsync(modelMetadata.DataFile);
+            var savedItems = await dataService.TryReadSaveAsync(modelMetadata.ModelPaths);
             if (savedItems.IsOk)
             {
                 modelService.SetSaveData(savedItems.Value);
@@ -246,7 +246,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             }
 
             M freshResult = await ShowModelAsync(operation => dataService.TryReadFreshAsync(
-                modelMetadata.DataFile, items => UpdateDataItems(items, operation)));
+                modelMetadata.ModelPaths, items => UpdateDataItems(items, operation)));
 
             if (freshResult.IsOk)
             {
@@ -260,7 +260,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         private Task<M<int>> TryShowRefreshedModelAsync()
         {
             return ShowModelAsync(operation => dataService.TryReadFreshAsync(
-                modelMetadata.DataFile, items => UpdateDataItems(items, operation)));
+                modelMetadata.ModelPaths, items => UpdateDataItems(items, operation)));
         }
 
 

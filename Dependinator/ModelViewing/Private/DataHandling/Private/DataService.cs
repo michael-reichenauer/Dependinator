@@ -31,11 +31,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         public event EventHandler DataChanged;
 
 
-        public async Task<M> TryReadCacheAsync(DataFile dataFile, Action<IDataItem> dataItemsCallback)
+        public async Task<M> TryReadCacheAsync(ModelPaths modelPaths, Action<IDataItem> dataItemsCallback)
         {
-            parserService.StartMonitorDataChanges(dataFile);
+            parserService.StartMonitorDataChanges(modelPaths);
 
-            M result = await persistenceService.TryReadCacheAsync(dataFile, dataItemsCallback);
+            M result = await persistenceService.TryReadCacheAsync(modelPaths, dataItemsCallback);
 
             if (result.IsFaulted)
             {
@@ -46,38 +46,38 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private
         }
 
 
-        public Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile)
+        public Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(ModelPaths modelPaths)
         {
-            parserService.StartMonitorDataChanges(dataFile);
-            return persistenceService.TryReadSaveAsync(dataFile);
+            parserService.StartMonitorDataChanges(modelPaths);
+            return persistenceService.TryReadSaveAsync(modelPaths);
         }
 
 
-        public Task<M> TryReadFreshAsync(DataFile dataFile, Action<IDataItem> dataItemsCallback)
+        public Task<M> TryReadFreshAsync(ModelPaths modelPaths, Action<IDataItem> dataItemsCallback)
         {
-            parserService.StartMonitorDataChanges(dataFile);
-            return parserService.ParseAsync(dataFile, dataItemsCallback);
+            parserService.StartMonitorDataChanges(modelPaths);
+            return parserService.ParseAsync(modelPaths, dataItemsCallback);
         }
 
 
-        public Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items)
+        public Task SaveAsync(ModelPaths modelPaths, IReadOnlyList<IDataItem> items)
         {
-            return persistenceService.SaveAsync(dataFile, items);
+            return persistenceService.SaveAsync(modelPaths, items);
         }
 
 
-        public async Task<M<Source>> TryGetSourceAsync(DataFile dataFile, DataNodeName nodeName) =>
-            await parserService.GetSourceAsync(dataFile, nodeName);
+        public async Task<M<Source>> TryGetSourceAsync(ModelPaths modelPaths, DataNodeName nodeName) =>
+            await parserService.GetSourceAsync(modelPaths, nodeName);
 
 
-        public async Task<M<DataNodeName>> TryGetNodeAsync(DataFile dataFile, Source source) =>
-            await parserService.TryGetNodeAsync(dataFile, source);
+        public async Task<M<DataNodeName>> TryGetNodeAsync(ModelPaths modelPaths, Source source) =>
+            await parserService.TryGetNodeAsync(modelPaths, source);
 
 
-        public void TriggerDataChangedIfDataNewerThanCache(DataFile dataFile)
+        public void TriggerDataChangedIfDataNewerThanCache(ModelPaths modelPaths)
         {
-            DateTime cacheTime = persistenceService.GetCacheTime(dataFile);
-            DateTime dataTime = parserService.GetDataTime(dataFile);
+            DateTime cacheTime = persistenceService.GetCacheTime(modelPaths);
+            DateTime dataTime = parserService.GetDataTime(modelPaths);
 
             Log.Debug($"Data time: {dataTime}, cache time: {cacheTime}");
 

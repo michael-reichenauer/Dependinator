@@ -10,14 +10,14 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing
     {
         event EventHandler DataChanged;
 
-        void StartMonitorDataChanges(DataFile dataFile);
+        void StartMonitorDataChanges(ModelPaths modelPaths);
 
-        DateTime GetDataTime(DataFile dataFile);
+        DateTime GetDataTime(ModelPaths modelPaths);
 
-        Task<M> ParseAsync(DataFile dataFile, Action<IDataItem> itemsCallback);
+        Task<M> ParseAsync(ModelPaths modelPaths, Action<IDataItem> itemsCallback);
 
-        Task<M<Source>> GetSourceAsync(DataFile dataFile, DataNodeName nodeName);
+        Task<M<Source>> GetSourceAsync(ModelPaths modelPaths, DataNodeName nodeName);
 
-        Task<M<DataNodeName>> TryGetNodeAsync(DataFile dataFile, Source source);
+        Task<M<DataNodeName>> TryGetNodeAsync(ModelPaths modelPaths, Source source);
     }
 }

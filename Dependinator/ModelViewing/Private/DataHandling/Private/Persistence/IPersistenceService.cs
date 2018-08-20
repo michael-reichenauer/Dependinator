@@ -9,12 +9,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence
 {
     internal interface IPersistenceService
     {
-        DateTime GetCacheTime(DataFile dataFile);
+        DateTime GetCacheTime(ModelPaths modelPaths);
 
-        Task<M> TryReadCacheAsync(DataFile dataFile, Action<IDataItem> dataItemsCallback);
+        Task<M> TryReadCacheAsync(ModelPaths modelPaths, Action<IDataItem> dataItemsCallback);
 
-        Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile);
+        Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(ModelPaths modelPaths);
 
-        Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items);
+        Task SaveAsync(ModelPaths modelPaths, IReadOnlyList<IDataItem> items);
     }
 }

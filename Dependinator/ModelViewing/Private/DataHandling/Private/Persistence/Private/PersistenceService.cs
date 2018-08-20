@@ -30,9 +30,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        public DateTime GetCacheTime(DataFile dataFile)
+        public DateTime GetCacheTime(ModelPaths modelPaths)
         {
-            string cacheFilePath = GetCacheFilePath(dataFile);
+            string cacheFilePath = GetCacheFilePath(modelPaths);
             if (!File.Exists(cacheFilePath))
             {
                 return DateTime.MinValue;
@@ -42,9 +42,9 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        public DateTime GetSaveTime(DataFile dataFile)
+        public DateTime GetSaveTime(ModelPaths modelPaths)
         {
-            string saveFilePath = GetSaveFilePath(dataFile);
+            string saveFilePath = GetSaveFilePath(modelPaths);
             if (!File.Exists(saveFilePath))
             {
                 return DateTime.MinValue;
@@ -54,59 +54,59 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        public async Task<M> TryReadCacheAsync(DataFile dataFile, Action<IDataItem> dataItemsCallback)
+        public async Task<M> TryReadCacheAsync(ModelPaths modelPaths, Action<IDataItem> dataItemsCallback)
         {
-            Log.Debug($"Try reading cached model: {dataFile}");
-            if (IsCacheOlderThanSave(dataFile))
+            Log.Debug($"Try reading cached model: {modelPaths}");
+            if (IsCacheOlderThanSave(modelPaths))
             {
                 Log.Debug("Cache is older than saved layout data, ignoring cache.");
                 return M.NoValue;
             }
             
-            string cacheFilePath = GetCacheFilePath(dataFile);
+            string cacheFilePath = GetCacheFilePath(modelPaths);
             return await cacheSerializer.TryDeserializeAsync(cacheFilePath, dataItemsCallback);
         }
 
 
-        public Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile)
+        public Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(ModelPaths modelPaths)
         {
-            Log.Debug($"Try reading saved model layout: {dataFile}");
-            string saveFilePath = GetSaveFilePath(dataFile);
+            Log.Debug($"Try reading saved model layout: {modelPaths}");
+            string saveFilePath = GetSaveFilePath(modelPaths);
             return saveSerializer.DeserializeAsync(saveFilePath);
         }
 
 
-        public async Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items)
+        public async Task SaveAsync(ModelPaths modelPaths, IReadOnlyList<IDataItem> items)
         {
-            Log.Debug($"Saving model layout: {dataFile}");
+            Log.Debug($"Saving model layout: {modelPaths}");
             Timing t = Timing.Start();
-            await SaveItemsAsync(dataFile, items);
+            await SaveItemsAsync(modelPaths, items);
             t.Log("Save items");
 
-            Log.Debug($"Saving cache layout: {dataFile}");
-            await CacheItemsAsync(dataFile, items);
+            Log.Debug($"Saving cache layout: {modelPaths}");
+            await CacheItemsAsync(modelPaths, items);
             t.Log($"Cache {items.Count} items");
         }
 
 
-        private async Task CacheItemsAsync(DataFile dataFile, IReadOnlyList<IDataItem> items)
+        private async Task CacheItemsAsync(ModelPaths modelPaths, IReadOnlyList<IDataItem> items)
         {
-            string cacheFilePath = GetCacheFilePath(dataFile);
+            string cacheFilePath = GetCacheFilePath(modelPaths);
 
             IReadOnlyList<IDataItem> cacheItems = await GetCacheItemsAsync(items);
             await cacheSerializer.SerializeAsync(cacheItems, cacheFilePath);
         }
 
 
-        private async Task SaveItemsAsync(DataFile dataFile, IReadOnlyList<IDataItem> items)
+        private async Task SaveItemsAsync(ModelPaths modelPaths, IReadOnlyList<IDataItem> items)
         {
             Timing t = Timing.Start();
             IReadOnlyList<IDataItem> saveItems = await GetSaveItemsAsync(items);
             t.Log("Got items");
 
-            string saveFilePath = GetSaveFilePath(dataFile);
+            string saveFilePath = GetSaveFilePath(modelPaths);
 
-            if (IsSaveNewerThanData(dataFile))
+            if (IsSaveNewerThanData(modelPaths))
             {
                 await saveSerializer.SerializeMergedAsync(saveItems, saveFilePath);
                 t.Log("saved merged");
@@ -149,10 +149,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 .ToList());
 
 
-        private bool IsSaveNewerThanData(DataFile dataFile)
+        private bool IsSaveNewerThanData(ModelPaths modelPaths)
         {
-            DateTime saveTime = GetSaveTime(dataFile);
-            DateTime dataTime = parserService.GetDataTime(dataFile);
+            DateTime saveTime = GetSaveTime(modelPaths);
+            DateTime dataTime = parserService.GetDataTime(modelPaths);
             Log.Debug($"Save time: {saveTime}, Data time: {dataTime}");
 
             if (saveTime == DateTime.MinValue || dataTime == DateTime.MinValue)
@@ -164,10 +164,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        private bool IsCacheOlderThanSave(DataFile dataFile)
+        private bool IsCacheOlderThanSave(ModelPaths modelPaths)
         {
-            DateTime saveTime = GetSaveTime(dataFile);
-            DateTime cacheTime = GetCacheTime(dataFile);
+            DateTime saveTime = GetSaveTime(modelPaths);
+            DateTime cacheTime = GetCacheTime(modelPaths);
             Log.Debug($"Save time: {saveTime}, CacheTime time: {cacheTime}");
 
             if (saveTime == DateTime.MinValue || cacheTime == DateTime.MinValue)
@@ -179,18 +179,18 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        private static string GetCacheFilePath(DataFile dataFile)
+        private static string GetCacheFilePath(ModelPaths modelPaths)
         {
-            var dataFileName = Path.GetFileNameWithoutExtension(dataFile.FilePath);
+            var dataFileName = Path.GetFileNameWithoutExtension(modelPaths.ModelPath);
             string cacheFileName = $"{dataFileName}.cache.json";
-            return Path.Combine(dataFile.WorkFolderPath, cacheFileName);
+            return Path.Combine(modelPaths.WorkFolderPath, cacheFileName);
         }
 
 
-        private static string GetSaveFilePath(DataFile dataFile)
+        private static string GetSaveFilePath(ModelPaths modelPaths)
         {
-            string dataFileName = $"{Path.GetFileNameWithoutExtension(dataFile.FilePath)}.dpnr";
-            string folderPath = Path.GetDirectoryName(dataFile.FilePath);
+            string dataFileName = $"{Path.GetFileNameWithoutExtension(modelPaths.ModelPath)}.dpnr";
+            string folderPath = Path.GetDirectoryName(modelPaths.ModelPath);
             return Path.Combine(folderPath, dataFileName);
         }
     }

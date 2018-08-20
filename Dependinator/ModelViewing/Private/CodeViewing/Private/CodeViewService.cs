@@ -40,18 +40,18 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         public async Task ShowCodeAsync(NodeName nodeName)
         {
             Source source = null;
-            DataFile dataFile = modelMetadata.DataFile;
+            ModelPaths modelPaths = modelMetadata.ModelPaths;
             M<Source> result;
 
             using (progressService.ShowDialog("Getting source code.."))
             {
-               result = await dataService.TryGetSourceAsync(dataFile, nodeName);
+               result = await dataService.TryGetSourceAsync(modelPaths, nodeName);
 
                 if (result.HasValue(out source))
                 {
                     if (source.Path != null && File.Exists(source.Path))
                     {
-                        if (TryOpenInVisualStudio(dataFile, source))
+                        if (TryOpenInVisualStudio(modelPaths, source))
                         {
                             return;
                         }
@@ -77,14 +77,14 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
             }
 
             CodeDialog codeDialog = codeDialogProvider(
-                nodeName, source, () => dataService.TryGetSourceAsync(dataFile, nodeName));
+                nodeName, source, () => dataService.TryGetSourceAsync(modelPaths, nodeName));
             codeDialog.Show();
         }
 
 
-        private static bool TryOpenInVisualStudio(DataFile dataFile, Source source)
+        private static bool TryOpenInVisualStudio(ModelPaths modelPaths, Source source)
         {
-            string solutionPath = dataFile.FilePath;
+            string solutionPath = modelPaths.ModelPath;
             string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionPath);
 
             if (!ApiIpcClient.IsServerRegistered(serverName)) return false;

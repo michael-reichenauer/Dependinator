@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ThemeHandling;
+using Dependinator.ModelViewing.Private.CodeViewing;
 using Dependinator.ModelViewing.Private.DataHandling;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.Nodes;
@@ -20,6 +21,7 @@ namespace Dependinator.ModelViewing.Private
         private readonly IModelViewModelService modelViewModelService;
         private readonly ISearchService searchService;
         private readonly IThemeService themeService;
+        private readonly ISolutionService solutionService;
 
 
         public ModelViewService(
@@ -28,6 +30,7 @@ namespace Dependinator.ModelViewing.Private
             IDataService dataService,
             ISearchService searchService,
             IThemeService themeService,
+            ISolutionService solutionService,
             ModelMetadata modelMetadata)
         {
             this.locateNodeService = locateNodeService;
@@ -35,6 +38,7 @@ namespace Dependinator.ModelViewing.Private
             this.dataService = dataService;
             this.searchService = searchService;
             this.themeService = themeService;
+            this.solutionService = solutionService;
             this.modelMetadata = modelMetadata;
         }
 
@@ -46,7 +50,7 @@ namespace Dependinator.ModelViewing.Private
         {
     
             M<DataNodeName> nodeName = await dataService.TryGetNodeAsync(
-                modelMetadata.DataFile, source);
+                modelMetadata.ModelPaths, source);
 
             if (nodeName.IsFaulted)
             {
@@ -83,5 +87,6 @@ namespace Dependinator.ModelViewing.Private
 
         public Task RefreshAsync(bool refreshLayout) => modelViewModelService.RefreshAsync(refreshLayout);
         public Task CloseAsync() => modelViewModelService.CloseAsync();
+        public Task OpenModelAsync(ModelPaths modelPaths) => solutionService.OpenModelAsync(modelPaths);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Dependinator.Common.ModelMetadataFolders.Private;
+using Dependinator.ModelViewing;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.Utils.Dependencies;
 
@@ -18,7 +19,7 @@ namespace Dependinator.Common.ModelMetadataFolders
             this.modelMetadataService = modelMetadataService;
         }
 
-        public DataFile DataFile => new DataFile(ModelFilePath, FolderPath);
+        public ModelPaths ModelPaths => new ModelPaths(ModelFilePath, FolderPath);
 
         public string FolderPath => modelMetadataService.MetadataFolderPath;
 

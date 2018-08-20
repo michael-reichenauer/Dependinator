@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Xml;
 using Dependinator.Common;
+using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.ModelHandling;
@@ -26,11 +27,12 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         private readonly Func<Task<M<Source>>> updateSource;
         private readonly Lazy<IModelNotifications> modelNotifications;
 
-        
+
         internal CodeDialog(
             Lazy<IModelNotifications> modelNotifications,
             ISolutionService solutionService,
             IProgressService progressService,
+            ModelMetadata modelMetadata,
             WindowOwner owner,
             NodeName nodeName,
             Source source,
@@ -44,7 +46,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
             Owner = owner;
             InitializeComponent();
 
-            codeViewModel = new CodeViewModel(solutionService, progressService, nodeName.DisplayLongName, this);
+            codeViewModel = new CodeViewModel(solutionService, progressService, modelMetadata.ModelPaths, nodeName.DisplayLongName, this);
             DataContext = codeViewModel;
 
             SetSyntaxHighlighting();
