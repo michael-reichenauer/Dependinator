@@ -25,7 +25,7 @@
 
         <TextBlock
             Visibility="{Binding IsHidden, Converter={StaticResource NVC}}"
-            Margin="10,25,10,0"
+            Margin="10,25,10,5"
             Text="{Binding Description}"
             Foreground="{DynamicResource TextLowBrush}"
             FontSize="{Binding DescriptionFontSize}"

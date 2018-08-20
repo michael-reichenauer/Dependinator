@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("Dependiater Updater")]
-[assembly: AssemblyDescription("Updates Dependiater")]
+[assembly: AssemblyDescription("Auto-updates the Dependiater application.")]
 [assembly: AssemblyCompany("Michael Reichenauer")]
 [assembly: AssemblyProduct("Dependiater Updater")]
 [assembly: AssemblyCopyright("Copyright © Michael Reichenauer 2018")]

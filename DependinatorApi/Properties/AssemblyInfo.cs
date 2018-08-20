@@ -6,7 +6,9 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("DependinatorApi")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription(
+    "The Api used to call the Dependinator application from e.g. " +
+    "other instances or the Visual Studio extension.")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("DependinatorApi")]
 [assembly: AssemblyCopyright("Copyright ©  2018")]

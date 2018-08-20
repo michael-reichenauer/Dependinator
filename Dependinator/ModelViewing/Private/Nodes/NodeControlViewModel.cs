@@ -99,7 +99,7 @@ namespace Dependinator.ModelViewing.Private.Nodes
 
             nodeViewModel.NotifyAll();
             ItemOwnerCanvas.UpdateItem(nodeViewModel);
-            nodeViewModel.ItemsViewModel.Zoom(i, new Point(0, 0));
+            nodeViewModel.ItemsViewModel?.Zoom(i, new Point(0, 0));
         }
 
 
