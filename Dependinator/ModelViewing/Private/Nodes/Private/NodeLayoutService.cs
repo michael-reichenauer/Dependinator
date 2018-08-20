@@ -7,7 +7,6 @@ using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.ModelViewing.Private.ModelHandling.Private;
 using Dependinator.Utils;
-using Dependinator.Utils.Collections;
 
 
 namespace Dependinator.ModelViewing.Private.Nodes.Private
@@ -124,8 +123,10 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
 
         private void SetScale(Layout layout, Node parentNode)
         {
-            double scaleFactor = layout.ScaleFactor;
-
+            // Adjust if scale if node has been resized
+            double customFactor = DefaultSize.Width / parentNode.ViewModel.ItemBounds.Width;
+            double scaleFactor = layout.ScaleFactor / customFactor;
+            
             if (!scaleFactor.Same(parentNode.ItemsCanvas.ScaleFactor))
             {
                 // modelDatabase.SetIsChanged(parentNode);
@@ -238,7 +239,7 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
                 return -1;
             }
 
-            
+
             return Txt.Compare(e1.Name.FullName, e2.Name.FullName);
         }
 
