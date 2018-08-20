@@ -36,6 +36,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         event EventHandler DataModified;
         void SetSaveData(IReadOnlyList<IDataItem> savedItems);
         bool TryGetSavedNode(NodeName name, out DataNode node);
-        bool TryGetSavedLine(LineId lineId, out DataLine line);
+        bool TryGetSavedLine(NodeName source, NodeName target, out DataLine line);
     }
 }

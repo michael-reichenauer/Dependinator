@@ -6,6 +6,7 @@ using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.Threading;
+using Mono.CSharp;
 
 
 namespace Dependinator.ModelViewing.Private.ModelHandling.Private
@@ -51,9 +52,9 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        public bool TryGetSavedLine(LineId lineId, out DataLine line)
+        public bool TryGetSavedLine(NodeName source, NodeName target, out DataLine line)
         {
-            string lineKey = ((DataNodeName)lineId.Source).AsId() + ((DataNodeName)lineId.Target).AsId();
+            string lineKey = ((DataNodeName)source).AsId() + ((DataNodeName)target).AsId();
             return savedLines.TryGetValue(lineKey, out line);
         }
 
