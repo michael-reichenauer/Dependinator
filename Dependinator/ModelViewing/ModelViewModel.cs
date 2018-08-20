@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -24,7 +24,7 @@ namespace Dependinator.ModelViewing
             this.modelViewModelService = modelViewModelService;
 
             ItemsCanvas rootCanvas = new ItemsCanvas();
-            ItemsViewModel = new ItemsViewModel(rootCanvas, null);
+            ItemsViewModel = new ItemsViewModel(rootCanvas);
 
             modelViewModelService.SetRootCanvas(rootCanvas);
         }

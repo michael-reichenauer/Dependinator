@@ -10,12 +10,17 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
         private readonly ISelectableItem item;
 
 
+        public ItemsViewModel(ItemsCanvas itemsCanvas)
+            : this(itemsCanvas, null)
+        {
+        }
+
         public ItemsViewModel(
             ItemsCanvas itemsCanvas,
             ISelectableItem item)
         {
-            this.item = item;
             ItemsCanvas = itemsCanvas;
+            this.item = item;
         }
 
 

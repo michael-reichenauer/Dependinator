@@ -39,7 +39,7 @@ namespace Dependinator.ModelViewing.Private.Lines
         public Line Line { get; }
 
         public override bool CanShow =>
-            ItemScale < 7
+            ItemScale < 8
             && Line.Source.CanShow && Line.Target.CanShow
             && !Line.IsHidden
             && (Line.Source.IsShowing || Line.Target.IsShowing);
