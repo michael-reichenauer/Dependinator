@@ -1,17 +1,16 @@
-// ReSharper disable once CheckNamespace
 namespace System
 {
-	internal class FatalExceptionEventArgs : EventArgs
-	{
-		public string Message { get; }
+    internal class FatalExceptionEventArgs : EventArgs
+    {
+        public FatalExceptionEventArgs(string message, Exception exception)
+        {
+            Message = message;
+            Exception = exception;
+        }
 
-		public Exception Exception { get; }
 
+        public string Message { get; }
 
-		public FatalExceptionEventArgs(string message, Exception exception)
-		{
-			Message = message;
-			Exception = exception;
-		}
-	}
+        public Exception Exception { get; }
+    }
 }

@@ -1,112 +1,70 @@
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using Dependinator.Common.ModelMetadataFolders;
-using Dependinator.Common.ProgressHandling;
-using Dependinator.Common.ThemeHandling;
-using Dependinator.ModelViewing.Items;
+using Dependinator.ModelViewing.Private;
+using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI.Mvvm;
 
 
 namespace Dependinator.ModelViewing
 {
-	[SingleInstance]
-	internal class ModelViewModel : ViewModel, IModelNotifications
-	{
-		public static readonly TimeSpan MouseEnterDelay = TimeSpan.FromMilliseconds(100);
-		public static readonly TimeSpan MouseExitDelay = TimeSpan.FromMilliseconds(10);
-
-		public static bool IsControlling => Keyboard.Modifiers.HasFlag(ModifierKeys.Control);
-
-		private readonly IThemeService themeService;
-		private readonly IModelViewService modelViewService;
-		private readonly IProgressService progress;
-		private readonly IOpenModelService openModelService;
-		private readonly ModelMetadata modelMetadata;
-
-		private int width = 0;
+    [SingleInstance]
+    internal class ModelViewModel : ViewModel
+    {
+        private readonly IModelViewModelService modelViewModelService;
 
 
-		public ModelViewModel(
-			IModelViewService modelViewService,
-			IThemeService themeService,
-			IProgressService progressService,
-			IOpenModelService openModelService,
-			ModelMetadata modelMetadata)
-		{
-			this.modelViewService = modelViewService;
-			this.themeService = themeService;
-			this.progress = progressService;
-			this.openModelService = openModelService;
-			this.modelMetadata = modelMetadata;
-
-			ItemsCanvas rootCanvas = new ItemsCanvas();
-			ItemsViewModel = new ItemsViewModel(rootCanvas, null);
-
-			modelViewService.SetRootCanvas(rootCanvas);
-		}
-
-		public ItemsViewModel ItemsViewModel { get; }
+        private int width;
 
 
-		public async Task LoadAsync() => await openModelService.OpenCurrentModelAsync();
+        public ModelViewModel(IModelViewModelService modelViewModelService)
+        {
+            this.modelViewModelService = modelViewModelService;
+
+            ItemsCanvas rootCanvas = new ItemsCanvas();
+            ItemsViewModel = new ItemsViewModel(rootCanvas);
+
+            modelViewModelService.SetRootCanvas(rootCanvas);
+        }
 
 
-		public int Width
-		{
-			get => width;
-			set
-			{
-				if (width != value)
-				{
-					width = value;
-					ItemsViewModel.SizeChanged();
-				}
-			}
-		}
+        public ItemsViewModel ItemsViewModel { get; }
+
+        public Command AddNodeCommand => Command(modelViewModelService.AddNewNode);
 
 
-		public async Task ActivateRefreshAsync()
-		{
-			themeService.SetThemeWpfColors();
-
-			using (progress.ShowBusy())
-			{
-				await Task.Yield();
-			}
-		}
-
-
-		public async Task ManualRefreshAsync(bool refreshLayout = false)
-		{
-			using (progress.ShowBusy())
-			{
-				await modelViewService.RefreshAsync(refreshLayout);
-			}
-		}
+        public int Width
+        {
+            get => width;
+            set
+            {
+                if (width != value)
+                {
+                    width = value;
+                    ItemsViewModel.SizeChanged();
+                }
+            }
+        }
 
 
-		public void Close() => modelViewService.Close();
+        public async Task OpenAsync() => await modelViewModelService.OpenAsync();
 
 
-		public Task LoadFilesAsync(IReadOnlyList<string> filePaths)
-		{
-			return openModelService.OpenModelAsync(filePaths);
-		}
+        public Task OpenFilesAsync(IReadOnlyList<string> filePaths) =>
+            modelViewModelService.OpenFilesAsync(filePaths);
 
 
-		public void MouseClicked(MouseButtonEventArgs mouseButtonEventArgs)
-		{
-			modelViewService.Clicked();
-		}
+        public void MouseClicked(MouseButtonEventArgs mouseButtonEventArgs)
+        {
+            modelViewModelService.Clicked();
+        }
 
 
-		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e)
-		{
-			modelViewService.OnMouseWheel(uiElement, e);
-		}
-	}
+        public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e)
+        {
+            modelViewModelService.OnMouseWheel(uiElement, e);
+        }
+    }
 }

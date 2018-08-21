@@ -1,140 +1,89 @@
 ﻿using System;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
+using Dependinator.Api.ApiHandling;
 using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
-using Dependinator.Utils.Net;
 using Dependinator.Utils.Threading;
+using DependinatorApi;
+using DependinatorApi.ApiHandling;
 
 
 namespace Dependinator.Common.ModelMetadataFolders.Private
 {
-	[SingleInstance]
-	internal class ExistingInstanceService : IExistingInstanceService
-	{
-		private readonly IModelMetadataService modelMetadataService;
-		private readonly ExistingInstanceIpcService existingInstanceIpcService;
-		private IpcRemotingService instanceIpcRemotingService;
+    [SingleInstance]
+    internal class ExistingInstanceService : IExistingInstanceService
+    {
+        private readonly IApiManagerService apiManagerService;
+        private readonly ModelMetadata modelMetadata;
 
 
-		public ExistingInstanceService(
-			IModelMetadataService modelMetadataService,
-			ExistingInstanceIpcService existingInstanceIpcService)
-		{
-			this.modelMetadataService = modelMetadataService;
-			this.existingInstanceIpcService = existingInstanceIpcService;
-		}
+        public ExistingInstanceService(
+            IApiManagerService apiManagerService,
+            ModelMetadata modelMetadata)
+        {
+            this.apiManagerService = apiManagerService;
+            this.modelMetadata = modelMetadata;
+        }
 
 
-		public void RegisterPath(string metaDataFolderPath)
-		{
-			try
-			{
-				instanceIpcRemotingService?.Dispose();
+        public bool TryActivateExistingInstance(string modelFilePath, string[] args)
+        {
+            try
+            {
+                string serverName = apiManagerService.GetCurrentInstanceServerName(modelFilePath);
 
-				instanceIpcRemotingService = new IpcRemotingService();
+                if (ApiIpcClient.IsServerRegistered(serverName))
+                {
+                    using (ApiIpcClient apiIpcClient = new ApiIpcClient(serverName))
+                    {
+                        IDependinatorApi dependinatorApi = apiIpcClient.Service<IDependinatorApi>();
+                        dependinatorApi.Activate(args);
+                        Log.Debug($"Call Activate on: {serverName}");
+                    }
 
-				string id = GetMetadataFolderId(metaDataFolderPath);
+                    return true;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Exception(e, "Failed to activate other instance");
+            }
 
-				if (!instanceIpcRemotingService.TryCreateServer(id))
-				{
-					throw new ApplicationException($"Failed to register rpc instance {metaDataFolderPath}");
-				}
-
-				Log.Debug($"$Register {id}");
-				instanceIpcRemotingService.PublishService(existingInstanceIpcService);
-			}
-			catch (Exception e)
-			{
-				Log.Exception(e);
-				throw;
-			}
-		}
-
-
-		public bool TryActivateExistingInstance(string metaDataFolderPath, string[] args)
-		{
-			try
-			{
-				// Trying to contact another instance, which has a registered IpcRemotingService 
-				string id = GetMetadataFolderId(metaDataFolderPath);
-				using (IpcRemotingService ipcRemotingService = new IpcRemotingService())
-				{
-					if (ipcRemotingService.IsServerRegistered(id))
-					{
-						// Another instance for that working folder is already running, activate that.
-						ExistingInstanceIpcService service = ipcRemotingService
-							.GetService<ExistingInstanceIpcService>(id);
-						service.Activate(args);
-
-						return true;
-					}
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Exception(e, "Failed to activate other instance");
-			}
-
-			return false;
-		}
+            return false;
+        }
 
 
-		public bool WaitForOtherInstance()
-		{
-			Timing t = Timing.Start();
-			while (t.Elapsed < TimeSpan.FromSeconds(20))
-			{
-				try
-				{
-					string id = GetMetadataFolderId(modelMetadataService.MetadataFolderPath);
-					using (IpcRemotingService ipcRemotingService = new IpcRemotingService())
-					{
-						if (ipcRemotingService.TryCreateServer(id))
-						{
-							Log.Debug("Other instance has closed");
-							return true;
-						}
-
-					}
-				}
-				catch (Exception e)
-				{
-					Log.Exception(e, "Failed to check if other instance is running");
-				}
-
-				Thread.Sleep(100);
-			}
-
-			Log.Error("Failed to wait for other instance");
-			return false;
-		}
+        public bool TryActivateExistingInstance(string[] args)
+        {
+            return TryActivateExistingInstance(modelMetadata.ModelFilePath, args);
+        }
 
 
+        public bool WaitForOtherInstance()
+        {
+            Timing t = Timing.Start();
+            while (t.Elapsed < TimeSpan.FromSeconds(20))
+            {
+                try
+                {
+                    string serverName = apiManagerService.GetCurrentInstanceServerName();
 
-		private static string GetMetadataFolderId(string metadataFolderPath)
-		{
-			string name = ProgramInfo.Guid + Uri.EscapeDataString(metadataFolderPath);
+                    if (!ApiIpcClient.IsServerRegistered(serverName))
+                    {
+                        Log.Debug("Other instance has closed");
+                        return true;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Exception(e, "Failed to check if other instance is running");
+                }
 
-			string id = AsSha2Text(name);
-			return id;
-		}
+                Thread.Sleep(100);
+            }
 
-
-		private static string AsSha2Text(string text)
-		{
-			SHA256Managed shaService = new SHA256Managed();
-			StringBuilder hashText = new StringBuilder();
-
-			byte[] textBytes = Encoding.UTF8.GetBytes(text.ToLower());
-
-			byte[] shaHash = shaService.ComputeHash(textBytes, 0, textBytes.Length);
-
-			shaHash.ForEach(b => hashText.Append(b.ToString("x2")));
-			
-			return hashText.ToString();
-		}
-	}
+            Log.Error("Failed to wait for other instance");
+            return false;
+        }
+    }
 }

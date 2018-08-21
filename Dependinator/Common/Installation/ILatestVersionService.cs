@@ -4,12 +4,11 @@ using System.Threading.Tasks;
 
 namespace Dependinator.Common.Installation
 {
-	internal interface ILatestVersionService
-	{
-		event EventHandler OnNewVersionAvailable;
+    internal interface ILatestVersionService
+    {
+        event EventHandler OnNewVersionAvailable;
 
-		void StartCheckForLatestVersion();
-		Task CheckLatestVersionAsync();
-
-	}
+        void StartCheckForLatestVersion();
+        Task CheckLatestVersionAsync();
+    }
 }

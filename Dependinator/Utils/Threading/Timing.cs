@@ -1,85 +1,87 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using Dependinator.Utils.OsSystem;
 
 
 namespace Dependinator.Utils.Threading
 {
-	public class Timing
-	{
-		private readonly Stopwatch stopwatch;
-		private TimeSpan lastTimeSpan = TimeSpan.Zero;
-		private int count = 0;
-
-		public Timing()
-		{
-			stopwatch = new Stopwatch();
-			stopwatch.Start();
-		}
-
-		public static Timing Start() => new Timing();
+    public class Timing
+    {
+        private readonly Stopwatch stopwatch;
+        private int count;
+        private TimeSpan lastTimeSpan = TimeSpan.Zero;
 
 
-		public TimeSpan Stop()
-		{
-			stopwatch.Stop();
-			return stopwatch.Elapsed;
-		}
+        public Timing()
+        {
+            stopwatch = new Stopwatch();
+            stopwatch.Start();
+        }
 
 
-		public TimeSpan Elapsed 
-		{
-			get
-			{
-				lastTimeSpan = stopwatch.Elapsed;
-				return lastTimeSpan;
-			}
-		}
+        public TimeSpan Elapsed
+        {
+            get
+            {
+                lastTimeSpan = stopwatch.Elapsed;
+                return lastTimeSpan;
+            }
+        }
 
-		public long ElapsedMs => (long)Elapsed.TotalMilliseconds;
+        public long ElapsedMs => (long)Elapsed.TotalMilliseconds;
 
-		public TimeSpan Diff
-		{
-			get
-			{
-				TimeSpan previous = lastTimeSpan;
-				return Elapsed - previous;
-			}
-		}
+        public TimeSpan Diff
+        {
+            get
+            {
+                TimeSpan previous = lastTimeSpan;
+                return Elapsed - previous;
+            }
+        }
 
-		public long DiffMs => (long)Diff.TotalMilliseconds;
+        public long DiffMs => (long)Diff.TotalMilliseconds;
+
+        public static Timing Start() => new Timing();
 
 
-		public void Log(
-			string message,
-			DelimiterParameter delimiterParameter = default(DelimiterParameter),
-			[CallerMemberName] string memberName = "",
-			[CallerFilePath] string sourceFilePath = "",
-			[CallerLineNumber] int sourceLineNumber = 0)
-		{
-			count++;
+        public TimeSpan Stop()
+        {
+            stopwatch.Stop();
+            return stopwatch.Elapsed;
+        }
 
-			Utils.Log.Debug(
-				$"{count}: {message}: {this}", memberName, sourceFilePath, sourceLineNumber);	
-		}
 
-		public void Log(
-			DelimiterParameter delimiterParameter = default(DelimiterParameter),
-			[CallerMemberName] string memberName = "",
-			[CallerFilePath] string sourceFilePath = "",
-			[CallerLineNumber] int sourceLineNumber = 0)
-		{
-			count++;
+        public void Log(
+            string message,
+            DelimiterParameter delimiterParameter = default(DelimiterParameter),
+            [CallerMemberName] string memberName = "",
+            [CallerFilePath] string sourceFilePath = "",
+            [CallerLineNumber] int sourceLineNumber = 0)
+        {
+            count++;
 
-			Utils.Log.Debug($"At {count}: {this}", memberName, sourceFilePath, sourceLineNumber);		
-		}
+            Utils.Log.Debug(
+                $"{count}: {message}: {this}", memberName, sourceFilePath, sourceLineNumber);
+        }
 
-		
-		public override string ToString() => $"Timing: {DiffMs}ms ({ElapsedMs}ms)";
 
-		public struct DelimiterParameter
-		{
-		}
-	}
+        public void Log(
+            DelimiterParameter delimiterParameter = default(DelimiterParameter),
+            [CallerMemberName] string memberName = "",
+            [CallerFilePath] string sourceFilePath = "",
+            [CallerLineNumber] int sourceLineNumber = 0)
+        {
+            count++;
+
+            Utils.Log.Debug($"At {count}: {this}", memberName, sourceFilePath, sourceLineNumber);
+        }
+
+
+        public override string ToString() => $"Timing: {DiffMs}ms ({ElapsedMs}ms)";
+
+
+        public struct DelimiterParameter
+        {
+        }
+    }
 }

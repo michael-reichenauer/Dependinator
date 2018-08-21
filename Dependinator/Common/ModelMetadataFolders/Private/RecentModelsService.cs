@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Dependinator.Common.SettingsHandling;
 using Dependinator.Utils.Dependencies;
@@ -7,81 +8,82 @@ using Dependinator.Utils.Dependencies;
 
 namespace Dependinator.Common.ModelMetadataFolders.Private
 {
-	[SingleInstance]
-	internal class RecentModelsService : IRecentModelsService
-	{
-		private readonly ISettingsService settingsService;
-		private readonly IJumpListService jumpListService;
+    [SingleInstance]
+    internal class RecentModelsService : IRecentModelsService
+    {
+        private readonly IJumpListService jumpListService;
+        private readonly ISettingsService settingsService;
 
 
-		public RecentModelsService(
-			ISettingsService settingsService,
-			IJumpListService jumpListService)
-		{
-			this.settingsService = settingsService;
-			this.jumpListService = jumpListService;
-		}
+        public RecentModelsService(
+            ISettingsService settingsService,
+            IJumpListService jumpListService)
+        {
+            this.settingsService = settingsService;
+            this.jumpListService = jumpListService;
+        }
 
 
-		public event EventHandler Changed;
-		
-		public void AddModelPaths(string modelFilePath)
-		{
-			if (!System.IO.File.Exists(modelFilePath))
-			{
-				return;
-			}
-
-			AddToResentPathInProgramSettings(modelFilePath);
-
-			jumpListService.AddPath(modelFilePath);
-			Changed?.Invoke(this, EventArgs.Empty);
-		}
+        public event EventHandler Changed;
 
 
-		public IReadOnlyList<string> GetModelPaths()
-		{
-			ProgramSettings settings = settingsService.Get<ProgramSettings>();
+        public void AddModelPaths(string modelFilePath)
+        {
+            if (!File.Exists(modelFilePath))
+            {
+                return;
+            }
 
-			return settings.ResentModelPaths.Where(System.IO.File.Exists).ToList();
-		}
+            AddToResentPathInProgramSettings(modelFilePath);
 
-
-		public void RemoveModelPath(string modelFilePath)
-		{
-			List<string> resentPaths = settingsService.Get<ProgramSettings>().ResentModelPaths.ToList();
-			int index = resentPaths.FindIndex(path => path.IsSameIgnoreCase(modelFilePath));
-
-			if (index != -1)
-			{
-				resentPaths.RemoveAt(index);
-			}
-
-			settingsService.Edit<ProgramSettings>(s => { s.ResentModelPaths = resentPaths; });
-		}
+            jumpListService.AddPath(modelFilePath);
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
 
 
-		private void AddToResentPathInProgramSettings(string modelFilePath)
-		{
-			ProgramSettings settings = settingsService.Get<ProgramSettings>();
+        public IReadOnlyList<string> GetModelPaths()
+        {
+            ProgramSettings settings = settingsService.Get<ProgramSettings>();
 
-			List<string> resentPaths = settings.ResentModelPaths
-				.Where(System.IO.File.Exists).ToList();
-			int index = resentPaths.FindIndex(path => path.IsSameIgnoreCase(modelFilePath));
+            return settings.ResentModelPaths.Where(File.Exists).ToList();
+        }
 
-			if (index != -1)
-			{
-				resentPaths.RemoveAt(index);
-			}
 
-			resentPaths.Insert(0, modelFilePath);
+        public void RemoveModelPath(string modelFilePath)
+        {
+            List<string> resentPaths = settingsService.Get<ProgramSettings>().ResentModelPaths.ToList();
+            int index = resentPaths.FindIndex(path => path.IsSameIc(modelFilePath));
 
-			if (resentPaths.Count > 10)
-			{
-				resentPaths.RemoveRange(10, resentPaths.Count - 10);
-			}
+            if (index != -1)
+            {
+                resentPaths.RemoveAt(index);
+            }
 
-			settingsService.Edit<ProgramSettings>(s => { s.ResentModelPaths = resentPaths; });
-		}
-	}
+            settingsService.Edit<ProgramSettings>(s => { s.ResentModelPaths = resentPaths; });
+        }
+
+
+        private void AddToResentPathInProgramSettings(string modelFilePath)
+        {
+            ProgramSettings settings = settingsService.Get<ProgramSettings>();
+
+            List<string> resentPaths = settings.ResentModelPaths
+                .Where(File.Exists).ToList();
+            int index = resentPaths.FindIndex(path => path.IsSameIc(modelFilePath));
+
+            if (index != -1)
+            {
+                resentPaths.RemoveAt(index);
+            }
+
+            resentPaths.Insert(0, modelFilePath);
+
+            if (resentPaths.Count > 10)
+            {
+                resentPaths.RemoveRange(10, resentPaths.Count - 10);
+            }
+
+            settingsService.Edit<ProgramSettings>(s => { s.ResentModelPaths = resentPaths; });
+        }
+    }
 }

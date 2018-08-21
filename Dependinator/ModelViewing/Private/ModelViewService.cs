@@ -1,114 +1,92 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Input;
-using Dependinator.Common;
-using Dependinator.Common.ModelMetadataFolders.Private;
-using Dependinator.Common.ProgressHandling;
-using Dependinator.Common.SettingsHandling;
-using Dependinator.ModelViewing.Items;
-using Dependinator.ModelViewing.ModelHandling;
-using Dependinator.ModelViewing.ModelHandling.Core;
+using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.ThemeHandling;
+using Dependinator.ModelViewing.Private.CodeViewing;
+using Dependinator.ModelViewing.Private.DataHandling;
+using Dependinator.ModelViewing.Private.DataHandling.Dtos;
+using Dependinator.ModelViewing.Private.Nodes;
+using Dependinator.ModelViewing.Private.Searching;
 using Dependinator.Utils;
-using Dependinator.Utils.Dependencies;
-using Dependinator.Utils.Threading;
+using Dependinator.Utils.ErrorHandling;
 
 
 namespace Dependinator.ModelViewing.Private
 {
-	[SingleInstance]
-	internal class ModelViewService : IModelViewService, ILoadModelService
-	{
-		private readonly ISettingsService settingsService;
-		private readonly IModelHandlingService modelHandlingService;
-		private readonly IItemSelectionService itemSelectionService;
-		private readonly IProgressService progress;
-
-		private ItemsCanvas rootNodeCanvas;
-
-		public ModelViewService(
-			ISettingsService settingsService,
-			IModelHandlingService modelHandlingService,
-			IItemSelectionService itemSelectionService,
-			IProgressService progress)
-		{
-			this.settingsService = settingsService;
-			this.modelHandlingService = modelHandlingService;
-			this.itemSelectionService = itemSelectionService;
-			this.progress = progress;
-		}
+    internal class ModelViewService : IModelViewService
+    {
+        private readonly IDataService dataService;
+        private readonly ILocateNodeService locateNodeService;
+        private readonly ModelMetadata modelMetadata;
+        private readonly IModelViewModelService modelViewModelService;
+        private readonly ISearchService searchService;
+        private readonly IThemeService themeService;
+        private readonly ISolutionService solutionService;
 
 
-		public void SetRootCanvas(ItemsCanvas rootCanvas)
-		{
-			this.rootNodeCanvas = rootCanvas;
-			modelHandlingService.SetRootCanvas(rootCanvas);
-		}
+        public ModelViewService(
+            ILocateNodeService locateNodeService,
+            IModelViewModelService modelViewModelService,
+            IDataService dataService,
+            ISearchService searchService,
+            IThemeService themeService,
+            ISolutionService solutionService,
+            ModelMetadata modelMetadata)
+        {
+            this.locateNodeService = locateNodeService;
+            this.modelViewModelService = modelViewModelService;
+            this.dataService = dataService;
+            this.searchService = searchService;
+            this.themeService = themeService;
+            this.solutionService = solutionService;
+            this.modelMetadata = modelMetadata;
+        }
 
 
-		public async Task LoadAsync()
-		{
-			Timing t = new Timing();
-
-			Log.Debug("Loading repository ...");
-
-			using (progress.ShowBusy())
-			{
-				RestoreViewSettings();
-
-				await modelHandlingService.LoadAsync();
-				t.Log("Updated view model after cached/fresh");
-			}
-		}
+        public void StartMoveToNode(NodeName nodeName) => locateNodeService.TryStartMoveToNode(nodeName);
 
 
-		public async Task RefreshAsync(bool refreshLayout)
-		{
-			if (refreshLayout)
-			{
-				Node root = modelHandlingService.Root;
-				root.View.ItemsCanvas.SetRootScale(2);
-			}
+        public async void StartMoveToNode(Source source)
+        {
+    
+            M<DataNodeName> nodeName = await dataService.TryGetNodeAsync(
+                modelMetadata.ModelPaths, source);
 
-			await modelHandlingService.RefreshAsync(refreshLayout);
-		}
+            if (nodeName.IsFaulted)
+            {
+                Log.Warn($"Failed to locate node for {source}");
+                return;
+            }
 
+            Log.Debug($"Start to move to {nodeName.Value}");
 
-		public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelHandlingService.GetHiddenNodeNames();
+            for (int i = 0; i < 25; i++)
+            {
+                if (locateNodeService.TryStartMoveToNode(nodeName.Value))
+                {
+                    return;
+                }
 
-		public void Clicked() => itemSelectionService.Deselect();
-
-
-		public void OnMouseWheel(UIElement uiElement, MouseWheelEventArgs e) => 
-			rootNodeCanvas?.OnMouseWheel(uiElement, e, false);
-
-
-		public void ShowHiddenNode(NodeName nodeName) => modelHandlingService.ShowHiddenNode(nodeName);
-
-
-		public void Close()
-		{
-			StoreViewSettings();
-
-			modelHandlingService.Save();
-		}
+                await Task.Delay(1000);
+            }
+        }
 
 
-		private void StoreViewSettings()
-		{
-			settingsService.Edit<WorkFolderSettings>(settings =>
-			{
-				settings.Scale = modelHandlingService.Root.View.ItemsCanvas.Scale;
-			});
-		}
+        public IReadOnlyList<NodeName> GetHiddenNodeNames() => modelViewModelService.GetHiddenNodeNames();
+        public void ShowHiddenNode(NodeName nodeName) => modelViewModelService.ShowHiddenNode(nodeName);
+        public IEnumerable<NodeName> Search(string text) => searchService.Search(text);
 
 
-		private void RestoreViewSettings()
-		{
-			WorkFolderSettings settings = settingsService.Get<WorkFolderSettings>();
-			Node root = modelHandlingService.Root;
+        public async Task ActivateRefreshAsync()
+        {
+            themeService.SetThemeWpfColors();
 
-			root.View.ItemsCanvas.SetRootScale(settings.Scale);
-		}
-	}
+            await Task.Yield();
+        }
+
+
+        public Task RefreshAsync(bool refreshLayout) => modelViewModelService.RefreshAsync(refreshLayout);
+        public Task CloseAsync() => modelViewModelService.CloseAsync();
+        public Task OpenModelAsync(ModelPaths modelPaths) => solutionService.OpenModelAsync(modelPaths);
+    }
 }

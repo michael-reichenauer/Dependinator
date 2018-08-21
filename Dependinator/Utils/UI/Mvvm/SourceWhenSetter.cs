@@ -6,66 +6,68 @@ using System.Linq;
 
 namespace Dependinator.Utils.UI.Mvvm
 {
-	internal class SourceWhenSetter
-	{
-		private Notifyable targetNotifyable;
-		private readonly string[] sourcePropertyNames;
+    internal class SourceWhenSetter
+    {
+        private readonly string[] sourcePropertyNames;
+        private bool isNotifyAll;
 
-		private Action<string> notifyPropertyAction;
-		private bool isNotifyAll = false;
-		private IEnumerable<string> targetPropertyNames;
-
-		public SourceWhenSetter(
-			INotifyPropertyChanged sourceNotifyable,
-			params string[] sourcePropertyNames)
-		{
-			this.sourcePropertyNames = sourcePropertyNames;
-
-			sourcePropertyNames.ForEach(
-				propertyName => PropertyChangedEventManager.AddHandler(
-					sourceNotifyable, PropertyChangedEventHandler, propertyName));
-		}
+        private Action<string> notifyPropertyAction;
+        private Notifyable targetNotifyable;
+        private IEnumerable<string> targetPropertyNames;
 
 
-		public void Notify(Notifyable target, params string[] propertyNames)
-		{
-			targetNotifyable = target;
-			targetPropertyNames = propertyNames;
-		}
+        public SourceWhenSetter(
+            INotifyPropertyChanged sourceNotifyable,
+            params string[] sourcePropertyNames)
+        {
+            this.sourcePropertyNames = sourcePropertyNames;
 
-		public void NotifyAll(Notifyable target)
-		{
-			targetNotifyable = target;
-			isNotifyAll = true;
-		}
-
-		public void Notify(Action<string> notifyAction)
-		{
-			notifyPropertyAction = notifyAction;
-		}
+            sourcePropertyNames.ForEach(
+                propertyName => PropertyChangedEventManager.AddHandler(
+                    sourceNotifyable, PropertyChangedEventHandler, propertyName));
+        }
 
 
-		private void PropertyChangedEventHandler(object sender, PropertyChangedEventArgs e)
-		{
-			if (!sourcePropertyNames.Any(name => name == e.PropertyName))
-			{
-				// changed property was not one of the specified source properties 
-				return;
-			}
+        public void Notify(Notifyable target, params string[] propertyNames)
+        {
+            targetNotifyable = target;
+            targetPropertyNames = propertyNames;
+        }
 
-			if (notifyPropertyAction != null)
-			{
-				notifyPropertyAction(e.PropertyName);
-			}
-			else if (isNotifyAll)
-			{
-				targetNotifyable.NotifyAll();
-			}
-			else
-			{
-				targetPropertyNames.ForEach(name => targetNotifyable.Notify(name));
-			}
-		}
-	}
 
+        public void NotifyAll(Notifyable target)
+        {
+            targetNotifyable = target;
+            isNotifyAll = true;
+        }
+
+
+        public void Notify(Action<string> notifyAction)
+        {
+            notifyPropertyAction = notifyAction;
+        }
+
+
+        private void PropertyChangedEventHandler(object sender, PropertyChangedEventArgs e)
+        {
+            if (!sourcePropertyNames.Any(name => name == e.PropertyName))
+            {
+                // changed property was not one of the specified source properties 
+                return;
+            }
+
+            if (notifyPropertyAction != null)
+            {
+                notifyPropertyAction(e.PropertyName);
+            }
+            else if (isNotifyAll)
+            {
+                targetNotifyable.NotifyAll();
+            }
+            else
+            {
+                targetPropertyNames.ForEach(name => targetNotifyable.Notify(name));
+            }
+        }
+    }
 }

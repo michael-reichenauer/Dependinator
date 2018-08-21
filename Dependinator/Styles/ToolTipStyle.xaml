@@ -1,19 +1,19 @@
-﻿<ResourceDictionary 
-	xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-	xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+﻿<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-	
-	<!-- Tool tip style -->
-	<Style x:Key="{x:Type ToolTip}" TargetType="ToolTip">
 
-		<Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
-		<Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
-		<Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
-		<Setter Property="BorderThickness" Value="1" />
-		<Setter Property="HasDropShadow" Value="True" />
-		<Setter Property="Placement" Value="Bottom" />
-		<Setter Property="VerticalOffset" Value="5" />
+    <!-- Tool tip style -->
+    <Style x:Key="{x:Type ToolTip}" TargetType="ToolTip">
 
-	</Style>
-	
+        <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="HasDropShadow" Value="True" />
+        <Setter Property="Placement" Value="Bottom" />
+        <Setter Property="VerticalOffset" Value="5" />
+
+    </Style>
+
 </ResourceDictionary>

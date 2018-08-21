@@ -7,243 +7,239 @@ using Dependinator.Utils.Serialization;
 
 namespace Dependinator.Common.SettingsHandling.Private
 {
-	internal class SettingsService : ISettingsService
-	{
-		private readonly ModelMetadata modelMetadata;
-
-		public SettingsService(ModelMetadata folder)
-		{
-			modelMetadata = folder;
-		}
+    internal class SettingsService : ISettingsService
+    {
+        private readonly ModelMetadata modelMetadata;
 
 
-		public void EnsureExists<T>() where T : class
-		{
-			// A Get will ensure that the file exists
-			T settings = Get<T>();
-			Set(settings);
-		}
+        public SettingsService(ModelMetadata folder)
+        {
+            modelMetadata = folder;
+        }
 
 
-
-		public void Edit<T>(Action<T> editAction) where T : class
-		{
-			try
-			{
-				if (typeof(T) == typeof(WorkFolderSettings))
-				{
-					WorkFolderSettings settings = Get<WorkFolderSettings>();
-					editAction(settings as T);
-					Set(settings);
-				}
-				else
-				{
-					T settings = Get<T>();
-					editAction(settings);
-					Set(settings);
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Exception(e, "Error editing the settings");
-			}
-		}
+        public void EnsureExists<T>() where T : class
+        {
+            // A Get will ensure that the file exists
+            T settings = Get<T>();
+            Set(settings);
+        }
 
 
-		public void Edit<T>(string path, Action<T> editAction) where T : class
-		{
-			try
-			{
-				if (typeof(T) == typeof(WorkFolderSettings))
-				{
-					WorkFolderSettings settings = Get<WorkFolderSettings>(path);
-					editAction(settings as T);
-					Set(path, settings);
-				}
-				else
-				{
-					T settings = Get<T>(path);
-					editAction(settings);
-					Set(path, settings);
-				}
-			}
-			catch (Exception e)
-			{
-				Log.Exception(e, "Error editing the settings");
-			}
-		}
+        public void Edit<T>(Action<T> editAction) where T : class
+        {
+            try
+            {
+                if (typeof(T) == typeof(WorkFolderSettings))
+                {
+                    WorkFolderSettings settings = Get<WorkFolderSettings>();
+                    editAction(settings as T);
+                    Set(settings);
+                }
+                else
+                {
+                    T settings = Get<T>();
+                    editAction(settings);
+                    Set(settings);
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Exception(e, "Error editing the settings");
+            }
+        }
 
 
-
-		public T Get<T>() where T:class
-		{
-			if (typeof(T) == typeof(WorkFolderSettings))
-			{
-				string path = GetWorkFolderSettingsPath();
-
-				return ReadAs<WorkFolderSettings>(path) as T;
-			}
-			else
-			{
-				string path = GetProgramSettingsPath<T>();
-				return ReadAs<T>(path);
-			}	
-		}
-
-
-		public T Get<T>(string path) where T : class
-		{
-			string settingsPath = GetSettingsFilePath<T>(path);
-
-			if (typeof(T) == typeof(WorkFolderSettings))
-			{
-				
-				return ReadAs<WorkFolderSettings>(settingsPath) as T;
-			}
-			else
-			{
-				return ReadAs<T>(settingsPath);
-			}
-		}
+        public void Edit<T>(string path, Action<T> editAction) where T : class
+        {
+            try
+            {
+                if (typeof(T) == typeof(WorkFolderSettings))
+                {
+                    WorkFolderSettings settings = Get<WorkFolderSettings>(path);
+                    editAction(settings as T);
+                    Set(path, settings);
+                }
+                else
+                {
+                    T settings = Get<T>(path);
+                    editAction(settings);
+                    Set(path, settings);
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Exception(e, "Error editing the settings");
+            }
+        }
 
 
+        public T Get<T>() where T : class
+        {
+            if (typeof(T) == typeof(WorkFolderSettings))
+            {
+                string path = GetWorkFolderSettingsPath();
 
-		public void Set<T>(T setting) where T : class
-		{
-			string path = GetProgramSettingsPath<T>();
-			WriteAs(path, setting);
-		}
-
-
-		private void Set(WorkFolderSettings settings)
-		{
-			string path = GetWorkFolderSettingsPath();
-
-			if (ParentFolderExists(path))
-			{
-				WriteAs(path, settings);
-			}
-		}
-
-		public void Set<T>(string path, T setting) where T : class
-		{
-			string settingsPath = GetSettingsFilePath<T>(path);
-			WriteAs(settingsPath, setting);
-		}
-
-		private void Set(string path, WorkFolderSettings settings)
-		{
-			string settingsPath = GetSettingsFilePath<WorkFolderSettings>(path);
-			if (ParentFolderExists(path))
-			{
-				WriteAs(settingsPath, settings);
-			}
-		}
+                return ReadAs<WorkFolderSettings>(path) as T;
+            }
+            else
+            {
+                string path = GetProgramSettingsPath<T>();
+                return ReadAs<T>(path);
+            }
+        }
 
 
-		public string GetFilePath<T>() where T : class
-		{
-			if (typeof(T) == typeof(WorkFolderSettings))
-			{
-				return GetWorkFolderSettingsPath();
-				}
-			else
-			{
-				return GetProgramSettingsPath<T>();
-			}
-		}
+        public T Get<T>(string path) where T : class
+        {
+            string settingsPath = GetSettingsFilePath<T>(path);
+
+            if (typeof(T) == typeof(WorkFolderSettings))
+            {
+                return ReadAs<WorkFolderSettings>(settingsPath) as T;
+            }
+
+            return ReadAs<T>(settingsPath);
+        }
 
 
-		private static void WriteAs<T>(string path, T obj)
-		{
-			try
-			{
-				string json = Json.AsJson(obj);
-				WriteFileText(path, json);
-			}
-			catch (Exception e) when (e.IsNotFatal())
-			{
-				Log.Error($"Failed to create json {e}");
-			}
-		}
+        public void Set<T>(T setting) where T : class
+        {
+            string path = GetProgramSettingsPath<T>();
+            WriteAs(path, setting);
+        }
 
 
-		private static T ReadAs<T>(string path)
-		{
-			string json = TryReadFileText(path);
-			if (json != null)
-			{
-				try
-				{
-					return Json.As<T>(json);
-				}
-				catch (Exception e) when (e.IsNotFatal())
-				{
-					Log.Error($"Failed to parse json {e}");
-				}
-			}
-
-			T defaultObject = Activator.CreateInstance<T>();
-			if (ParentFolderExists(path))
-			{
-				if (json == null)
-				{
-					// Initial use of this settings file, lets store default
-					json = Json.AsJson(defaultObject);
-					WriteFileText(path, json);
-				}
-			}
-
-			return defaultObject;
-		}
+        public void Set<T>(string path, T setting) where T : class
+        {
+            string settingsPath = GetSettingsFilePath<T>(path);
+            WriteAs(settingsPath, setting);
+        }
 
 
-		private static bool ParentFolderExists(string path)
-		{
-			string parentFolderPath = Path.GetDirectoryName(path);
-			return Directory.Exists(parentFolderPath);
-		}
+        public string GetFilePath<T>() where T : class
+        {
+            if (typeof(T) == typeof(WorkFolderSettings))
+            {
+                return GetWorkFolderSettingsPath();
+            }
+
+            return GetProgramSettingsPath<T>();
+        }
 
 
-		private static string TryReadFileText(string path)
-		{
-			try
-			{
-				if (File.Exists(path))
-				{
-					return File.ReadAllText(path);
-				}
-			}
-			catch (Exception e) when (e.IsNotFatal())
-			{
-				Log.Exception(e, $"Failed to read file {path}");
-			}
+        private void Set(WorkFolderSettings settings)
+        {
+            string path = GetWorkFolderSettingsPath();
 
-			return null;
-		}
+            if (ParentFolderExists(path))
+            {
+                WriteAs(path, settings);
+            }
+        }
 
 
-		private static void WriteFileText(string path, string text)
-		{
-			try
-			{
-				File.WriteAllText(path, text);
-			}
-			catch (Exception e) when (e.IsNotFatal())
-			{
-				Log.Exception(e, $"Failed to write file {path}");
-			}
-		}
+        private void Set(string path, WorkFolderSettings settings)
+        {
+            string settingsPath = GetSettingsFilePath<WorkFolderSettings>(path);
+            if (ParentFolderExists(path))
+            {
+                WriteAs(settingsPath, settings);
+            }
+        }
 
 
-		private static string GetProgramSettingsPath<T>() =>
-			GetSettingsFilePath<T>(ProgramInfo.GetEnsuredDataFolderPath());
+        private static void WriteAs<T>(string path, T obj)
+        {
+            try
+            {
+                string json = Json.AsJson(obj);
+                WriteFileText(path, json);
+            }
+            catch (Exception e) when (e.IsNotFatal())
+            {
+                Log.Error($"Failed to create json {e}");
+            }
+        }
 
 
-		private string GetWorkFolderSettingsPath() => 
-			GetSettingsFilePath<WorkFolderSettings>(modelMetadata);
+        private static T ReadAs<T>(string path)
+        {
+            string json = TryReadFileText(path);
+            if (json != null)
+            {
+                try
+                {
+                    return Json.As<T>(json);
+                }
+                catch (Exception e) when (e.IsNotFatal())
+                {
+                    Log.Error($"Failed to parse json {e}");
+                }
+            }
 
-		private static string GetSettingsFilePath<T>(string folderPath) => 
-			Path.Combine(folderPath, typeof(T).Name + ".json");
-	}
+            T defaultObject = Activator.CreateInstance<T>();
+            if (ParentFolderExists(path))
+            {
+                if (json == null)
+                {
+                    // Initial use of this settings file, lets store default
+                    json = Json.AsJson(defaultObject);
+                    WriteFileText(path, json);
+                }
+            }
+
+            return defaultObject;
+        }
+
+
+        private static bool ParentFolderExists(string path)
+        {
+            string parentFolderPath = Path.GetDirectoryName(path);
+            return Directory.Exists(parentFolderPath);
+        }
+
+
+        private static string TryReadFileText(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    return File.ReadAllText(path);
+                }
+            }
+            catch (Exception e) when (e.IsNotFatal())
+            {
+                Log.Exception(e, $"Failed to read file {path}");
+            }
+
+            return null;
+        }
+
+
+        private static void WriteFileText(string path, string text)
+        {
+            try
+            {
+                File.WriteAllText(path, text);
+            }
+            catch (Exception e) when (e.IsNotFatal())
+            {
+                Log.Exception(e, $"Failed to write file {path}");
+            }
+        }
+
+
+        private static string GetProgramSettingsPath<T>() =>
+            GetSettingsFilePath<T>(ProgramInfo.GetEnsuredDataFolderPath());
+
+
+        private string GetWorkFolderSettingsPath() =>
+            GetSettingsFilePath<WorkFolderSettings>(modelMetadata);
+
+
+        private static string GetSettingsFilePath<T>(string folderPath) =>
+            Path.Combine(folderPath, typeof(T).Name + ".json");
+    }
 }

@@ -6,88 +6,105 @@ using System.Windows;
 
 namespace Dependinator.Utils.UI.VirtualCanvas
 {
-	public abstract class VirtualItemsSource : ISpatialItemsSource, IList
-	{
-		public static readonly Rect EmptyExtent = RectEx.Zero;
+    public abstract class VirtualItemsSource : ISpatialItemsSource, IList
+    {
+        public static readonly Rect EmptyExtent = RectEx.Zero;
 
-		public event EventHandler ExtentChanged;
+        /// <summary>
+        ///     The virtual area, which would be needed to show all commits
+        /// </summary>
+        protected abstract Rect VirtualArea { get; }
 
-		public event EventHandler QueryInvalidated;
-
-		public Rect Extent => VirtualArea;
-
-		public IEnumerable<int> Query(Rect viewArea) => GetVirtualItemIds(viewArea);
-
-		public object this[int id]
-		{
-			get { return GetVirtualItem(id); }
-			set { }
-		}
-
-		/// <summary>
-		/// The virtual area, which would be needed to show all commits
-		/// </summary>
-		protected abstract Rect VirtualArea { get; }
-
-		/// <summary>
-		/// Returns range of item ids, which are visible in the view area currently shown
-		/// </summary>
-		protected abstract IEnumerable<int> GetVirtualItemIds(Rect viewArea);
-
-		/// <summary>
-		/// Returns the item corresponding to the specified id.
-		/// </summary>
-		protected abstract object GetVirtualItem(int id);
+        public object this[int id] { get { return GetVirtualItem(id); } set { } }
 
 
-		public void TriggerExtentChanged()
-		{
-			ExtentChanged?.Invoke(this, EventArgs.Empty);
-		}
+        int IList.Add(object value) => 0;
 
 
-		public void TriggerItemsChanged()
-		{
-			QueryInvalidated?.Invoke(this, EventArgs.Empty);
-		}
+        void IList.Clear()
+        {
+        }
 
 
-		public void TriggerInvalidated()
-		{
-			QueryInvalidated?.Invoke(this, EventArgs.Empty);
-			ExtentChanged?.Invoke(this, EventArgs.Empty);
-		}
+        bool IList.Contains(object value) => false;
+
+        int IList.IndexOf(object value) => 0;
 
 
-		int IList.Add(object value) => 0;
+        void IList.Insert(int index, object value)
+        {
+        }
 
-		void IList.Clear() { }
 
-		bool IList.Contains(object value) => false;
+        void IList.Remove(object value)
+        {
+        }
 
-		int IList.IndexOf(object value) => 0;
 
-		void IList.Insert(int index, object value) { }
+        void IList.RemoveAt(int index)
+        {
+        }
 
-		void IList.Remove(object value) { }
 
-		void IList.RemoveAt(int index) { }
+        void ICollection.CopyTo(Array array, int index)
+        {
+        }
 
-		void ICollection.CopyTo(Array array, int index) { }
 
-		bool IList.IsFixedSize => false;
+        bool IList.IsFixedSize => false;
 
-		bool IList.IsReadOnly => true;
+        bool IList.IsReadOnly => true;
 
-		bool ICollection.IsSynchronized => false;
+        bool ICollection.IsSynchronized => false;
 
-		object ICollection.SyncRoot { get; } = new object();
+        object ICollection.SyncRoot { get; } = new object();
 
-		int ICollection.Count => int.MaxValue;
+        int ICollection.Count => int.MaxValue;
 
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			yield break;
-		}
-	}
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            yield break;
+        }
+
+
+        public event EventHandler ExtentChanged;
+
+        public event EventHandler QueryInvalidated;
+
+        public Rect Extent => VirtualArea;
+
+        public IEnumerable<int> Query(Rect viewArea) => GetVirtualItemIds(viewArea);
+
+
+        /// <summary>
+        ///     Returns range of item ids, which are visible in the view area currently shown
+        /// </summary>
+        protected abstract IEnumerable<int> GetVirtualItemIds(Rect viewArea);
+
+
+        /// <summary>
+        ///     Returns the item corresponding to the specified id.
+        /// </summary>
+        protected abstract object GetVirtualItem(int id);
+
+
+        public void TriggerExtentChanged()
+        {
+            ExtentChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+
+        public void TriggerItemsChanged()
+        {
+            QueryInvalidated?.Invoke(this, EventArgs.Empty);
+        }
+
+
+        public void TriggerInvalidated()
+        {
+            QueryInvalidated?.Invoke(this, EventArgs.Empty);
+            ExtentChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
 }

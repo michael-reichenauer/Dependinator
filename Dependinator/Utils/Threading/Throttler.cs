@@ -4,35 +4,40 @@ using System.Threading.Tasks;
 
 namespace Dependinator.Utils.Threading
 {
-	public class Throttler
-	{
-		private readonly AsyncSemaphore semaphore;
+    public class Throttler
+    {
+        private readonly AsyncSemaphore semaphore;
 
-		public Throttler(int maxConcurrencyLevel)
-		{
-			semaphore = new AsyncSemaphore(maxConcurrencyLevel);
-		}
 
-		public async Task<IDisposable> EnterAsync()
-		{
-			await semaphore.WaitAsync();
+        public Throttler(int maxConcurrencyLevel)
+        {
+            semaphore = new AsyncSemaphore(maxConcurrencyLevel);
+        }
 
-			return new ThrottleState(semaphore);		
-		}
-		
-		private class ThrottleState : IDisposable
-		{
-			private readonly AsyncSemaphore semaphore;
 
-			public ThrottleState(AsyncSemaphore semaphore)
-			{
-				this.semaphore = semaphore;
-			}
+        public async Task<IDisposable> EnterAsync()
+        {
+            await semaphore.WaitAsync();
 
-			public void Dispose()
-			{
-				semaphore.Release();
-			}
-		}
-	}
+            return new ThrottleState(semaphore);
+        }
+
+
+        private class ThrottleState : IDisposable
+        {
+            private readonly AsyncSemaphore semaphore;
+
+
+            public ThrottleState(AsyncSemaphore semaphore)
+            {
+                this.semaphore = semaphore;
+            }
+
+
+            public void Dispose()
+            {
+                semaphore.Release();
+            }
+        }
+    }
 }

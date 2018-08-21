@@ -1,0 +1,33 @@
+{
+  "profiles": {
+    "Start": {
+      "commandName": "Project"
+    },
+    "GitMindDep": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Work Files\\GitMind\\GitMind.sln\""
+    },
+    "DependinatorDep": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Work Files\\Dependinator\\Dependinator.sln\""
+    },
+    "AcsDep": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Work Files\\AcmAcs\\AllAssemblies.sln\""
+    },
+    "Example": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Program Files\\Dependinator\\Example\\Example.exe\""
+    },
+    "Json": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\ProgramData\\Dependinator\\WorkingFolders\\C;)Work Files)GitMind)GitMind.sln\\GitMind.cache.json\""
+    },
+
+    "Json2": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Work Files\\ParseHeaderFiles\\model.json\""
+    }
+
+  }
+}
