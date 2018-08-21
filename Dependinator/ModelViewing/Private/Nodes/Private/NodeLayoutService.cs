@@ -124,9 +124,9 @@ namespace Dependinator.ModelViewing.Private.Nodes.Private
         private void SetScale(Layout layout, Node parentNode)
         {
             // Adjust if scale if node has been resized
-            double customFactor = DefaultSize.Width / parentNode.ViewModel.ItemBounds.Width;
+            double customFactor = DefaultSize.Width / (parentNode.ViewModel?.ItemBounds.Width ?? 1);
             double scaleFactor = layout.ScaleFactor / customFactor;
-            
+
             if (!scaleFactor.Same(parentNode.ItemsCanvas.ScaleFactor))
             {
                 // modelDatabase.SetIsChanged(parentNode);

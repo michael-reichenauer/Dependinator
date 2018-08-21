@@ -125,7 +125,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             {
                 if (isQueued && parentName == NodeName.Root)
                 {
-                    return GetParentNode(NodeName.From("$References"), NodeType.Group, false);
+                    return GetParentNode(NodeName.From("$Externals"), NodeType.Group, false);
                 }
 
                 return parent;

@@ -71,7 +71,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
         private string SendReferencesRootNode()
         {
-            string referencesRootName = "$References";
+            string referencesRootName = "$Externals";
             NodeData referencesRootNode = new NodeData(
                 referencesRootName, null, NodeData.GroupType, "External references");
 

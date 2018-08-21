@@ -6,7 +6,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 {
     public static class JsonCacheTypes
     {
-        public static string Version = "4";
+        public static string Version = "5";
 
 
         // A model contains a list of nodes, links and lines
