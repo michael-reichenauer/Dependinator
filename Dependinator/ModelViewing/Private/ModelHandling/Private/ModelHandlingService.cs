@@ -94,6 +94,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                     isShowingOpenModel = true;
                     modelMetadata.SetDefault();
                     Root.ItemsCanvas.SetRootScale(1);
+                    Root.ItemsCanvas.SetRootOffset(new Point(-32, 50));
                     Root.ItemsCanvas.IsZoomAndMoveEnabled = false;
                     Root.ItemsCanvas.UpdateAndNotifyAll(true);
 
@@ -203,7 +204,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
             await modelPersistentHandler.SaveIfModifiedAsync();
         }
-        
+
 
         private void DataChangedFiles(object sender, EventArgs e)
         {
