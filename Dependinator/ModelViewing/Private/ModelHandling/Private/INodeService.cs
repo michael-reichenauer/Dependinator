@@ -18,7 +18,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         void UpdateNodeTypeIfNeeded(Node node, NodeType nodeType);
 
-        Node GetParentNode(NodeName parentName, NodeType nodeType);
+        Node GetParentNode(NodeName parentName, NodeType nodeType, bool isQueued);
 
         void RemoveNode(Node node);
 
@@ -26,5 +26,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         void RemoveAll();
         bool TryGetSavedNode(NodeName nodeName, out DataNode node);
         void SetIsChanged(Node node);
+        void SetLayoutDone();
     }
 }

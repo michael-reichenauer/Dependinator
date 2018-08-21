@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -56,11 +57,11 @@ namespace Dependinator.ModelViewing.Private.Nodes
                     return false;
                 }
 
-                return ItemScale * ItemWidth > 40 && Node.Parent.CanShowChildren;
+                return ItemScale * ItemWidth > 20 && Node.Parent.CanShowChildren;
             }
         }
 
-        public bool CanShowChildren => ItemScale * ItemWidth > 70 * 7;
+        public bool CanShowChildren => ItemScale * ItemWidth > 60 * 7;
 
         public Node Node { get; }
 
@@ -79,7 +80,7 @@ namespace Dependinator.ModelViewing.Private.Nodes
         public bool IsShowDescription => !CanShowChildren || !Node.Children.Any();
         public bool IsShowToolTip => true;
         public bool HasCode => Node.NodeType.IsType() || Node.NodeType.IsMember();
-        public Command ShowCodeCommand => Command(() => ShowCode());
+        public Command ShowCodeCommand => AsyncCommand(() => ShowCodeAsync());
 
 
         public string Name => Node.Name.DisplayShortName;
@@ -149,13 +150,13 @@ namespace Dependinator.ModelViewing.Private.Nodes
                 if (value)
                 {
                     view2Model = new NodeControlViewModel(this);
-                    Node.Parent.ItemsCanvas.AddItem(view2Model);
+                    Node.Root.ItemsCanvas.AddItem(view2Model);
                 }
                 else
                 {
                     if (view2Model != null)
                     {
-                        Node.Parent.ItemsCanvas.RemoveItem(view2Model);
+                        Node.Root.ItemsCanvas.RemoveItem(view2Model);
                         view2Model = null;
                     }
                 }
@@ -170,7 +171,7 @@ namespace Dependinator.ModelViewing.Private.Nodes
         }
 
 
-        public void ShowCode() => nodeViewModelService.ShowCode(Node);
+        public Task ShowCodeAsync() => nodeViewModelService.ShowCodeAsync(Node);
 
 
         public void ShowDependencies() => nodeViewModelService.ShowReferences(this);

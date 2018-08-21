@@ -4,14 +4,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
-
     mc:Ignorable="d"
     d:DesignHeight="300" d:DesignWidth="300">
 
-
     <Grid>
-
         <Rectangle
             Visibility="{Binding IsShowControls, Converter={StaticResource VC}}"
             Name="ControlCenter"
@@ -145,7 +141,7 @@
             MouseMove="Control_OnMouseMove" />
 
         <!-- Tool buttons -->
-        <StackPanel>
+        <StackPanel MaxWidth="350" HorizontalAlignment="Left">
             <Border
                 Margin="50,0,50,0"
                 BorderThickness="1"
@@ -155,85 +151,41 @@
                 <Grid>
                     <StackPanel
                         Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        VerticalAlignment="Top">
-
-                        <Button
-                            Visibility="{Binding IsHidden, Converter={StaticResource NVC}}"
-                            VerticalAlignment="Center"
-                            HorizontalAlignment="Left"
-                            Content="&#xe0bc;"
-                            FontSize="16"
-                            Padding="2"
-                            Style="{DynamicResource IconButtonStyle}"
-                            Command="{Binding RearrangeLayoutCommand}"
-                            ToolTip="Rearrange layout of inner nodes" />
-
-                        <Button
-                            Visibility="{Binding CanShowEditNode, Converter={StaticResource VC}}"
-                            VerticalAlignment="Center"
-                            HorizontalAlignment="Left"
-                            Content="&#xE22F;"
-                            FontSize="18"
-                            Style="{DynamicResource IconButtonStyle}"
-                            Command="{Binding ToggleEditModeCommand}"
-                            ToolTip="{Binding EditModeToolTop}" />
-
-                        <Button
-                            Visibility="{Binding IsHidden, Converter={StaticResource NVC}}"
-                            VerticalAlignment="Center"
-                            HorizontalAlignment="Left"
-                            Content="&#xE882;"
-                            Style="{DynamicResource IconButtonStyle}"
-                            Command="{Binding HideNodeCommand}"
-                            ToolTip="Dim node and hides dependencies" />
-
-                        <Button
-                            Visibility="{Binding IsHidden, Converter={StaticResource VC}}"
-                            VerticalAlignment="Center"
-                            HorizontalAlignment="Left"
-                            Content="&#xE883;"
-                            Style="{DynamicResource IconButtonStyle}"
-                            Command="{Binding ShowNodeCommand}"
-                            ToolTip="Show node and the dependencies" />
-                    </StackPanel>
-
-                    <StackPanel
-                        Orientation="Horizontal"
                         HorizontalAlignment="Left"
                         VerticalAlignment="Top"
                         Background="{DynamicResource BackgroundBrush}">
 
                         <Button
+                            ToolTip="Increase node size"
                             VerticalAlignment="Center"
                             HorizontalAlignment="Left"
                             Content="&#xe3bc;"
                             FontSize="20"
                             Style="{DynamicResource IconButtonStyle}"
-                            Command="{Binding IncreaseCommand}"
-                            ToolTip="Increase node size" />
+                            Command="{Binding IncreaseCommand}" />
 
                         <Button
+                            ToolTip="Decrease node size"
                             VerticalAlignment="Center"
                             HorizontalAlignment="Left"
                             Padding="3"
                             Content="&#xe3bc;"
                             FontSize="15"
                             Style="{DynamicResource IconButtonStyle}"
-                            Command="{Binding DecreaseCommand}"
-                            ToolTip="Decrease node size" />
+                            Command="{Binding DecreaseCommand}" />
 
                         <Button
+                            ToolTip="Show Dependency Explorer..."
                             Visibility="{Binding IsHidden, Converter={StaticResource NVC}}"
                             VerticalAlignment="Center"
                             HorizontalAlignment="Left"
                             Content="&#xe31c;"
                             FontSize="20"
                             Style="{DynamicResource IconButtonStyle}"
-                            Command="{Binding ShowDependenciesCommand}"
-                            ToolTip="Show Dependency Explorer..." />
+                            Command="{Binding ShowDependenciesCommand}" />
 
                         <Button
+                            ToolTip="Show source"
                             Visibility="{Binding HasCode, Converter={StaticResource VC}}"
                             VerticalAlignment="Center"
                             HorizontalAlignment="Left"
@@ -241,13 +193,66 @@
                             FontSize="16"
                             Padding="2"
                             Style="{DynamicResource IconButtonStyle}"
-                            Command="{Binding ShowCodeCommand}"
-                            ToolTip="Show code" />
+                            Command="{Binding ShowCodeCommand}" />
+
+                        <Button
+                            ToolTip="More tools..."
+                            Content="&#xE8FE;"
+                            Style="{DynamicResource IconButtonStyle}"
+                            Click="HamburgerButton_OnClick"
+                            Margin="50,0,0,0">
+
+                            <Button.ContextMenu>
+                                <ContextMenu Name="HamburgerContextMenu">
+
+                                    <MenuItem
+                                        Header="Enable Pan/Zoom of Node Canvas"
+                                        Command="{Binding ToggleEditModeCommand}">
+                                        <MenuItem.Icon>
+                                            <Border>
+                                                <TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE22F;" />
+                                            </Border>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+
+                                    <MenuItem
+                                        Header="Rearrange Nodes Layout"
+                                        Command="{Binding RearrangeLayoutCommand}">
+                                        <MenuItem.Icon>
+                                            <Border>
+                                                <TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xe0bc;" />
+                                            </Border>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+
+
+                                    <MenuItem
+                                        Header="Dim Node and Hide Dependencies"
+                                        Visibility="{Binding IsHidden, Converter={StaticResource NVC}}"
+                                        Command="{Binding HideNodeCommand}">
+                                        <MenuItem.Icon>
+                                            <Border>
+                                                <TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE882;" />
+                                            </Border>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+
+                                    <MenuItem
+                                        Header="Show Node and Dependencies"
+                                        Visibility="{Binding IsHidden, Converter={StaticResource VC}}"
+                                        Command="{Binding ShowNodeCommand}">
+                                        <MenuItem.Icon>
+                                            <Border>
+                                                <TextBlock Style="{DynamicResource MenuIconStyle}" Text="&#xE883;" />
+                                            </Border>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+
+                                </ContextMenu>
+                            </Button.ContextMenu>
+                        </Button>
                     </StackPanel>
-
-
                 </Grid>
-
             </Border>
         </StackPanel>
     </Grid>

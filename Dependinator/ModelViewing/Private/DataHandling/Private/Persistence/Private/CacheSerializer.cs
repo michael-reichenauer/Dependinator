@@ -30,6 +30,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
             {
                 try
                 {
+                    Log.Debug($"Cache model to {cacheFilePath}");
                     JsonCacheTypes.Model dataModel = new JsonCacheTypes.Model();
 
                     dataModel.Items = items.Select(Convert.ToCacheJsonItem).ToList();
@@ -38,18 +39,19 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                 }
                 catch (Exception e)
                 {
-                    Log.Exception(e, "Failed to serialize");
+                    Log.Exception(e, "Failed to cache model");
                 }
             });
         }
 
 
-        public Task<M> TryDeserializeAsync(string cacheFilePath, DataItemsCallback dataItemsCallback)
+        public Task<M> TryDeserializeAsync(string cacheFilePath, Action<IDataItem> dataItemsCallback)
         {
             return Task.Run(() =>
             {
                 if (!File.Exists(cacheFilePath))
                 {
+                    Log.Debug($"No cache file at {cacheFilePath}");
                     return M.NoValue;
                 }
 
@@ -67,12 +69,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
                             throw new FormatException();
                         }
 
-                        ReadToItemsStart(reader);
+                        SkipToItemsStart(reader);
 
                         itemCount = ReadItems(dataItemsCallback, reader);
                     }
 
-                    t.Log($"Sent all {itemCount} items");
+                    t.Log($"Sent all cached {itemCount} items");
                     return M.Ok;
                 }
                 catch (FormatException)
@@ -91,19 +93,16 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         }
 
 
-        private static void ReadToItemsStart(JsonReader reader)
+        private static void SkipToItemsStart(JsonReader reader)
         {
-            while (reader.Read())
+            // Skip until start of array
+            while (reader.Read() && reader.TokenType != JsonToken.StartArray)
             {
-                if (reader.TokenType == JsonToken.StartArray)
-                {
-                    break;
-                }
             }
         }
 
 
-        private static int ReadItems(DataItemsCallback dataItemsCallback, JsonReader reader)
+        private static int ReadItems(Action<IDataItem> dataItemsCallback, JsonReader reader)
         {
             int itemCount = 0;
             while (reader.Read())

@@ -23,8 +23,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Dtos
         public DataNodeName Parent { get; }
         public NodeType NodeType { get; }
 
-        // Node properties
-        public bool IsReferenced { get; set; }
+
         public string Description { get; set; }
         public Rect Bounds { get; set; } = RectEx.Zero;
         public double Scale { get; set; }
@@ -33,6 +32,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Dtos
         public bool IsModified { get; set; }
         public bool HasModifiedChild { get; set; }
         public bool HasParentModifiedChild { get; set; }
+        public bool IsQueued { get; set; }
 
 
         public override string ToString() => Name.ToString();

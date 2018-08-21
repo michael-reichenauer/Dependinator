@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dependinator.Common.Installation;
 using Dependinator.Common.MessageDialogs;
-using Dependinator.Common.ModelMetadataFolders;
 using Dependinator.Utils;
 using DependinatorApi;
 using DependinatorApi.ApiHandling;
@@ -17,23 +16,20 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
     {
         private readonly IInstaller installer;
         private readonly IMessage message;
-        private readonly ModelMetadata metadata;
 
 
         public SolutionService(
             IMessage message,
-            IInstaller installer,
-            ModelMetadata metadata)
+            IInstaller installer)
         {
             this.message = message;
             this.installer = installer;
-            this.metadata = metadata;
         }
 
 
-        public async Task OpenStudioAsync()
+        public async Task OpenModelAsync(ModelPaths modelPaths)
         {
-            string solutionFilePath = metadata.ModelFilePath;
+            string solutionFilePath = modelPaths.ModelPath;
 
             string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionFilePath);
             Log.Debug($"Calling: {serverName}");
@@ -61,7 +57,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
                     // IVsExtensionApi not yet registered, lets try to start Dependinator, or wait a little.
                     if (!isStartedDependinator)
                     {
-                        if (!TryStartVisualStudio(solutionFilePath)) return;
+                        if (!await TryStartVisualStudioAsync(solutionFilePath)) return;
 
                         isStartedDependinator = true;
                         t.Restart();
@@ -82,15 +78,15 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         }
 
 
-        public async Task OpenFileAsync(string filePath, int lineNumber)
+        public async Task OpenFileAsync(ModelPaths modelPaths, string filePath, int lineNumber)
         {
-            string solutionFilePath = metadata.ModelFilePath;
+            string solutionFilePath = modelPaths.ModelPath;
 
             string serverName = ApiServerNames.ServerName<IVsExtensionApi>(solutionFilePath);
 
             if (!ApiIpcClient.IsServerRegistered(serverName))
             {
-                await OpenStudioAsync();
+                await OpenModelAsync(modelPaths);
             }
 
             if (ApiIpcClient.IsServerRegistered(serverName))
@@ -104,9 +100,9 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
         }
 
 
-        private bool TryStartVisualStudio(string solutionFilePath)
+        private async Task<bool> TryStartVisualStudioAsync(string solutionFilePath)
         {
-            if (!installer.IsExtensionInstalled())
+            if (!await IsExtensionInstalledAsync())
             {
                 if (!message.ShowAskOkCancel(
                     "The Visual Studio Dependinator extension does not seem to be installed.\n\n" +
@@ -129,6 +125,8 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
             return true;
         }
 
+
+        private Task<bool> IsExtensionInstalledAsync() => Task.Run(() => installer.IsExtensionInstalled());
 
         private static void StartVisualStudio(string solutionPath)
         {
@@ -182,7 +180,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
             string studioPath = StudioPath();
 
             studioExePath = Directory
-                .GetFiles(studioPath, "devenv.exe", SearchOption.AllDirectories)
+                .EnumerateFiles(studioPath, "devenv.exe", SearchOption.AllDirectories)
                 .FirstOrDefault();
             Log.Debug($"Studio exe path {studioPath}");
 

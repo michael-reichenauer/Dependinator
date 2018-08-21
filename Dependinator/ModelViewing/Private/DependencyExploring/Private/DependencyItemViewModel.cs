@@ -62,7 +62,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
         public bool IsSelected { get => Get(); set => Set(value); }
         public bool IsExpanded { get => Get(); set => Set(value); }
 
-        public Command ShowCodeCommand => Command(() => itemCommands.ShowCode(Item.NodeName));
+        public Command ShowCodeCommand => AsyncCommand(() => itemCommands.ShowCodeAsync(Item.NodeName));
         public Command ToggleCollapseCommand => Command(SetExpand);
         public Command FilterCommand => Command(Filter);
         public Command LocateCommand => Command(() => itemCommands.Locate(Item.NodeName));
@@ -92,7 +92,9 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
             IEnumerable<DependencyItem> subItems)
         {
             return new ObservableCollection<DependencyItemViewModel>(
-                subItems.Select(i => new DependencyItemViewModel(i, itemCommands, isSourceItem)));
+                subItems
+                    .OrderBy(i => i.NodeName.DisplayShortName)
+                    .Select(i => new DependencyItemViewModel(i, itemCommands, isSourceItem)));
         }
 
 

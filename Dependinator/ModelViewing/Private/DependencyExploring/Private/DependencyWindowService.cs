@@ -42,7 +42,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
         }
 
 
-        public void ShowCode(NodeName nodeName) => codeViewService.ShowCode(nodeName);
+        public Task ShowCodeAsync(NodeName nodeName) => codeViewService.ShowCodeAsync(nodeName);
 
 
         public void Initialize(DependencyExplorerWindowViewModel viewModel, Node node, Line line)
@@ -288,6 +288,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
             items.Clear();
 
             dependencyItems
+                .OrderBy(item => item.NodeName.DisplayShortName)
                 .Select(item => new DependencyItemViewModel(item, viewModel, isSourceSide))
                 .ForEach(item => items.Add(item));
         }

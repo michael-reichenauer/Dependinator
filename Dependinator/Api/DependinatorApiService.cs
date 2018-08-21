@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using Dependinator.ModelViewing;
+using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
 using DependinatorApi;
@@ -42,7 +43,8 @@ namespace Dependinator.Api
         {
             MoveMainWindowToFront();
 
-            Application.Current.Dispatcher.InvokeAsync(() => { modelViewService.Value.StartMoveToNode(filePath); });
+            Application.Current.Dispatcher.InvokeAsync(() => 
+                { modelViewService.Value.StartMoveToNode(new Source(filePath, null, lineNumber)); });
         }
 
 

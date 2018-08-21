@@ -19,13 +19,13 @@
                 FontSize="{Binding CodeIconSize}"
                 Style="{DynamicResource IconButtonStyle}"
                 Command="{Binding ShowCodeCommand}"
-                ToolTip="Show decompiled code" />
+                ToolTip="Show source" />
 
         </StackPanel>
 
         <TextBlock
             Visibility="{Binding IsHidden, Converter={StaticResource NVC}}"
-            Margin="10,25,10,0"
+            Margin="10,25,10,5"
             Text="{Binding Description}"
             Foreground="{DynamicResource TextLowBrush}"
             FontSize="{Binding DescriptionFontSize}"

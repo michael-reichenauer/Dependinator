@@ -9,26 +9,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence
 {
     internal interface IPersistenceService
     {
-        Task<M> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
+        DateTime GetCacheTime(ModelPaths modelPaths);
 
-        Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile);
+        Task<M> TryReadCacheAsync(ModelPaths modelPaths, Action<IDataItem> dataItemsCallback);
 
-        Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items);
-    }
+        Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(ModelPaths modelPaths);
 
-
-    internal class MissingDataFileException : Exception
-    {
-        public MissingDataFileException(string msg) : base(msg)
-        {
-        }
-    }
-
-
-    internal class InvalidDataFileException : Exception
-    {
-        public InvalidDataFileException(string msg, Exception inner = null) : base(msg, inner)
-        {
-        }
+        Task SaveAsync(ModelPaths modelPaths, IReadOnlyList<IDataItem> items);
     }
 }

@@ -140,18 +140,18 @@ namespace Dependinator.ModelViewing.Private.Lines.Private
             }
             else if (linksCount < 15)
             {
-                lineWidth = 4;
+                lineWidth = 2;
             }
             else
             {
-                lineWidth = 6;
+                lineWidth = 3;
             }
 
-            double lineLineWidth = (lineWidth * 0.7 * scale).MM(0.1, 4);
+            double lineLineWidth = (lineWidth * 0.7 * scale).MM(0.5, 3);
 
             if (line.View.ViewModel.IsMouseOver)
             {
-                lineLineWidth = (lineLineWidth * 1.5).MM(0, 6);
+                lineLineWidth = (lineLineWidth * 1.5).MM(1, 5);
             }
 
             return lineLineWidth;

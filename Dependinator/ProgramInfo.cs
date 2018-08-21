@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Dependinator.Utils;
 using Dependinator.Utils.OsSystem;
@@ -34,9 +35,9 @@ namespace Dependinator
 
         public static Version GetInstalledVersion() => GetInstalledInstanceVersion();
 
-        public static bool IsInstalledInstance() => Location.IsSameIgnoreCase(GetInstallFilePath());
+        public static bool IsInstalledInstance() => Location.IsSameIc(GetInstallFilePath());
 
-        public static bool IsSetupFile() => Path.GetFileName(Location).IsSameIgnoreCase(SetupName);
+        public static bool IsSetupFile() => Path.GetFileName(Location).IsSameIc(SetupName);
 
         public static DateTime GetBuildTime() => GetBuildTime(Location);
 
@@ -163,7 +164,7 @@ namespace Dependinator
             try
             {
                 string tempFolderPath = GetTempFolderPath();
-                string[] tempFiles = Directory.GetFiles(tempFolderPath);
+                var tempFiles = Directory.EnumerateFiles(tempFolderPath).ToList();
                 foreach (string tempFile in tempFiles)
                 {
                     try

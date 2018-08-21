@@ -16,7 +16,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
             bool isSourceSide);
 
 
-        void ShowCode(NodeName nodeName);
+        Task ShowCodeAsync(NodeName nodeName);
 
         Task Refresh(DependencyExplorerWindowViewModel viewModel);
         void Locate(NodeName nodeName);

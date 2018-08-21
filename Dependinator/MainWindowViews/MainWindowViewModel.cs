@@ -10,7 +10,6 @@ using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.Common.ProgressHandling;
 using Dependinator.MainWindowViews.Private;
 using Dependinator.ModelViewing;
-using Dependinator.ModelViewing.Private.CodeViewing;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI;
 using Dependinator.Utils.UI.Mvvm;
@@ -28,7 +27,7 @@ namespace Dependinator.MainWindowViews
         private readonly IOpenModelService openModelService;
         private readonly IProgressService progress;
         private readonly IRecentModelsService recentModelsService;
-        private readonly ISolutionService solutionService;
+
         private readonly IStartInstanceService startInstanceService;
 
 
@@ -41,7 +40,6 @@ namespace Dependinator.MainWindowViews
             IRecentModelsService recentModelsService,
             IModelMetadataService modelMetadataService,
             IStartInstanceService startInstanceService,
-            ISolutionService solutionService,
             IModelViewService modelViewService,
             IProgressService progress)
         {
@@ -52,7 +50,6 @@ namespace Dependinator.MainWindowViews
             this.recentModelsService = recentModelsService;
             this.modelMetadataService = modelMetadataService;
             this.startInstanceService = startInstanceService;
-            this.solutionService = solutionService;
             this.modelViewService = modelViewService;
             this.progress = progress;
 
@@ -174,7 +171,7 @@ namespace Dependinator.MainWindowViews
 
         public Command OpenFileCommand => Command(openModelService.ShowOpenModelDialog);
 
-        public Command OpenStudioCommand => AsyncCommand(solutionService.OpenStudioAsync);
+        public Command OpenStudioCommand => AsyncCommand(() => modelViewService.OpenModelAsync(modelMetadata.ModelPaths));
 
 
         public Command RunLatestVersionCommand => AsyncCommand(RunLatestVersionAsync);

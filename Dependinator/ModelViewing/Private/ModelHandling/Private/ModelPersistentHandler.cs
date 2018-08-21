@@ -18,7 +18,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
     [SingleInstance]
     internal class ModelPersistentHandler : IModelPersistentHandler
     {
-        private static readonly TimeSpan SaveInterval = TimeSpan.FromSeconds(10);
+        private static readonly TimeSpan SaveInterval = TimeSpan.FromSeconds(60);
         private static readonly TimeSpan Soon = TimeSpan.FromSeconds(5);
         private static readonly TimeSpan Immediately = TimeSpan.Zero;
         private readonly IDataService dataService;
@@ -49,14 +49,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             // Create an "already saved" progress tcs, in case a call is made to SaveAsync()
             saveInProgressTcs = new TaskCompletionSource<bool>();
             saveInProgressTcs.TrySetResult(true);
-        }
-
-
-        public bool IsChangeMonitored
-        {
-            get => modelDatabase.IsChangeMonitored;
-            set => modelDatabase.IsChangeMonitored = true;
-            //set => modelDatabase.IsChangeMonitored = value;
         }
 
 
@@ -92,7 +84,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         private void ScheduleSaveModel(TimeSpan withinTime)
         {
-            Log.Warn($"Model has changed, a save is scheduled within {withinTime}");
+            Log.Debug($"Model has changed, a save is scheduled within {withinTime}");
             saveInProgressTcs = new TaskCompletionSource<bool>();
             triggerSaveThrottler.Throttle(withinTime, SaveModelAsync, saveInProgressTcs);
         }
@@ -100,7 +92,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
         private async void SaveModelAsync(object state)
         {
-            Log.Warn("Data being saved ...");
+            Log.Debug("Data being saved ...");
             TaskCompletionSource<bool> tcs = (TaskCompletionSource<bool>)state;
             isSaveScheduled = false;
 
@@ -108,11 +100,11 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             {
                 IReadOnlyList<IDataItem> items = await GetModelSnapshotAsync();
 
-                await saveToDiskThrottler.Run(() => dataService.SaveAsync(metadata.DataFile, items));
+                await saveToDiskThrottler.Run(() => dataService.SaveAsync(metadata.ModelPaths, items));
             }
 
             tcs.TrySetResult(true);
-            Log.Warn("Data saved ");
+            Log.Debug("Data saved ");
         }
 
 
@@ -162,7 +154,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                         if (isDataModified) return M.NoValue;
                     }
 
-                    items.AddRange(ToDataItems(node));
+                    items.AddRange(Convert.ToDataItems(node));
                 }
 
                 return items;
@@ -175,23 +167,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             }
         }
 
-
-        private static IEnumerable<IDataItem> ToDataItems(Node node)
-        {
-            yield return ToDataNode(node);
-
-            foreach (var line in node.SourceLines
-                .OrderBy(l => $"{l.Source.Name.FullName}->{l.Target.Name.FullName}"))
-            {
-                yield return ToDataLine(line);
-            }
-
-            foreach (var link in node.SourceLinks
-                .OrderBy(l => $"{l.Source.Name.FullName}->{l.Target.Name.FullName}"))
-            {
-                yield return ToDataLink(link);
-            }
-        }
 
 
         public static IEnumerable<Node> AllNodes(Node node)
@@ -208,36 +183,5 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 descendent.Children.OrderBy(c => c.Name.FullName).ForEach(queue.Enqueue);
             }
         }
-
-
-        private static DataNode ToDataNode(Node node) =>
-            new DataNode(
-                node.Name,
-                node.Parent.Name,
-                node.NodeType)
-            {
-                Bounds = node.ViewModel?.ItemBounds ?? node.Bounds,
-                Scale = node.ViewModel?.ItemsViewModel?.ItemsCanvas?.ScaleFactor ?? node.ScaleFactor,
-                Color = node.ViewModel?.Color ?? node.Color,
-                Description = node.Description,
-                IsModified = node.IsModified,
-                HasParentModifiedChild = node.Parent.HasModifiedChild,
-                HasModifiedChild = node.HasModifiedChild,
-                ShowState = node.IsNodeHidden ? Node.Hidden : null
-            };
-
-
-        private static DataLine ToDataLine(Line line) =>
-            new DataLine(
-                line.Source.Name,
-                line.Target.Name,
-                line.View.MiddlePoints().ToList(),
-                line.LinkCount);
-
-
-        private static DataLink ToDataLink(Link link) =>
-            new DataLink(
-                link.Source.Name,
-                link.Target.Name);
     }
 }

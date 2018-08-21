@@ -18,7 +18,7 @@ namespace System
             0 == string.Compare(strA, strB, StringComparison.Ordinal);
 
 
-        public static bool IsSameIgnoreCase(this string strA, string strB) =>
+        public static bool IsSameIc(this string strA, string strB) =>
             0 == string.Compare(strA, strB, StringComparison.OrdinalIgnoreCase);
 
 

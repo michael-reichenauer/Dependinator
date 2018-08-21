@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.Utils.UI.Mvvm;
@@ -39,7 +40,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
         public string SourceText { get => Get(); set => Set(value); }
 
         public string TargetText { get => Get(); set => Set(value); }
-        public string SourceTargetToolTip { get => Get(); set => Set(value); }
+
         public List<Node> HiddenSourceNodes { get; } = new List<Node>();
         public List<Node> HiddenTargetNodes { get; } = new List<Node>();
 
@@ -55,7 +56,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring.Private
             new ObservableCollection<DependencyItemViewModel>();
 
 
-        public void ShowCode(NodeName nodeName) => dependencyWindowService.ShowCode(nodeName);
+        public Task ShowCodeAsync(NodeName nodeName) => dependencyWindowService.ShowCodeAsync(nodeName);
         public void Locate(NodeName nodeName) => dependencyWindowService.Locate(nodeName);
 
         public void ShowDependencyExplorer(NodeName nodeName)

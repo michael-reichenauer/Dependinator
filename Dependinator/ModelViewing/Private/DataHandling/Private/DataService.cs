@@ -1,119 +1,92 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing;
 using Dependinator.ModelViewing.Private.DataHandling.Private.Persistence;
+using Dependinator.Utils;
+using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.ErrorHandling;
 
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Private
 {
+    [SingleInstance]
     internal class DataService : IDataService
     {
-        private readonly IDataMonitorService dataMonitorService;
-        private readonly IDataFilePaths filePaths;
         private readonly IParserService parserService;
         private readonly IPersistenceService persistenceService;
 
 
         public DataService(
             IPersistenceService persistenceService,
-            IParserService parserService,
-            IDataMonitorService dataMonitorService,
-            IDataFilePaths filePaths)
+            IParserService parserService)
         {
             this.persistenceService = persistenceService;
             this.parserService = parserService;
-            this.dataMonitorService = dataMonitorService;
-            this.filePaths = filePaths;
+            parserService.DataChanged += (s, e) => DataChanged?.Invoke(this, e);
         }
 
 
-        public event EventHandler DataChangedOccurred
+        public event EventHandler DataChanged;
+
+
+        public async Task<M> TryReadCacheAsync(ModelPaths modelPaths, Action<IDataItem> dataItemsCallback)
         {
-            add => dataMonitorService.DataChangedOccurred += value;
-            remove => dataMonitorService.DataChangedOccurred -= value;
-        }
+            parserService.StartMonitorDataChanges(modelPaths);
 
-
-        public async Task<M> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
-        {
-            dataMonitorService.StartMonitorData(dataFile);
-
-            M result = await persistenceService.TryReadCacheAsync(dataFile, dataItemsCallback);
+            M result = await persistenceService.TryReadCacheAsync(modelPaths, dataItemsCallback);
 
             if (result.IsFaulted)
             {
                 return result;
             }
 
-            if (IsCacheOlderThanData(dataFile))
-            {
-                dataMonitorService.TriggerDataChanged();
-            }
-
             return M.Ok;
         }
 
 
-        public Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile) => 
-            persistenceService.TryReadSaveAsync(dataFile);
-
-
-        public Task<M> TryReadFreshAsync(DataFile dataFile, DataItemsCallback dataItemsCallback)
+        public Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(ModelPaths modelPaths)
         {
-            dataMonitorService.StartMonitorData(dataFile);
-            return parserService.ParseAsync(dataFile, dataItemsCallback);
+            parserService.StartMonitorDataChanges(modelPaths);
+            return persistenceService.TryReadSaveAsync(modelPaths);
         }
 
 
-        public Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items)
+        public Task<M> TryReadFreshAsync(ModelPaths modelPaths, Action<IDataItem> dataItemsCallback)
         {
-            return persistenceService.SaveAsync(dataFile, items);
+            parserService.StartMonitorDataChanges(modelPaths);
+            return parserService.ParseAsync(modelPaths, dataItemsCallback);
         }
 
 
-        public async Task<M<string>> GetCodeAsync(DataFile dataFile, DataNodeName nodeName) =>
-            await parserService.GetCodeAsync(dataFile, nodeName);
-
-
-        public async Task<M<SourceLocation>> GetSourceFilePathAsync(DataFile dataFile, DataNodeName nodeName) =>
-            await parserService.GetSourceFilePath(dataFile, nodeName);
-
-
-        public async Task<M<DataNodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath) =>
-            await parserService.GetNodeForFilePathAsync(dataFile, sourceFilePath);
-
-
-
-        private bool IsCacheOlderThanData(DataFile dataFile)
+        public Task SaveAsync(ModelPaths modelPaths, IReadOnlyList<IDataItem> items)
         {
-            IReadOnlyList<string> dataFilePaths = filePaths.GetDataFilePaths(dataFile);
-            string cachePath = filePaths.GetCacheFilePath(dataFile);
+            return persistenceService.SaveAsync(modelPaths, items);
+        }
 
-            if (!File.Exists(cachePath))
+
+        public async Task<M<Source>> TryGetSourceAsync(ModelPaths modelPaths, DataNodeName nodeName) =>
+            await parserService.GetSourceAsync(modelPaths, nodeName);
+
+
+        public async Task<M<DataNodeName>> TryGetNodeAsync(ModelPaths modelPaths, Source source) =>
+            await parserService.TryGetNodeAsync(modelPaths, source);
+
+
+        public void TriggerDataChangedIfDataNewerThanCache(ModelPaths modelPaths)
+        {
+            DateTime cacheTime = persistenceService.GetCacheTime(modelPaths);
+            DateTime dataTime = parserService.GetDataTime(modelPaths);
+
+            Log.Debug($"Data time: {dataTime}, cache time: {cacheTime}");
+
+            if (dataTime > cacheTime)
             {
-                return false;
+                Log.Debug("Data is newer than cache");
+                Task.Delay(TimeSpan.FromSeconds(5))
+                    .ContinueWith(_ => DataChanged?.Invoke(this, EventArgs.Empty)).RunInBackground();
             }
-
-
-            DateTime cacheTime = File.GetLastWriteTime(cachePath);
-            foreach (string dataFilePath in dataFilePaths)
-            {
-                if (File.Exists(dataFilePath))
-                {
-                    DateTime fileTime = File.GetLastWriteTime(dataFilePath);
-                    if (fileTime > cacheTime)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-
-            return false;
         }
     }
 }

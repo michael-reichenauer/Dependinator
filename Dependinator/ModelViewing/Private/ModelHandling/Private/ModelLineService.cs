@@ -47,8 +47,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
                     if (dataLine.Points == null)
                     {
-                        if (modelDatabase.TryGetSavedLine(
-                            new LineId(source.Name, target.Name), out DataLine savedLine))
+                        if (modelDatabase.TryGetSavedLine(source.Name, target.Name, out DataLine savedLine))
                         {
                             line.View.Points.InsertRange(1, savedLine.Points);
                         }
@@ -155,8 +154,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             }
             else
             {
-                if (modelDatabase.TryGetSavedLine(
-                    new LineId(source.Name, target.Name), out DataLine dataLine))
+                if (modelDatabase.TryGetSavedLine(source.Name, target.Name, out DataLine dataLine))
                 {
                     line.View.Points.InsertRange(1, dataLine.Points);
                 }

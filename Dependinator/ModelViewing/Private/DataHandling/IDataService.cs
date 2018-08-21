@@ -9,20 +9,19 @@ namespace Dependinator.ModelViewing.Private.DataHandling
 {
     internal interface IDataService
     {
-        event EventHandler DataChangedOccurred;
+        event EventHandler DataChanged;
 
-        Task<M> TryReadCacheAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
+        Task<M> TryReadCacheAsync(ModelPaths modelPaths, Action<IDataItem> dataItemsCallback);
 
-        Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(DataFile dataFile);
+        Task<M<IReadOnlyList<IDataItem>>> TryReadSaveAsync(ModelPaths modelPaths);
 
-        Task SaveAsync(DataFile dataFile, IReadOnlyList<IDataItem> items);
+        Task SaveAsync(ModelPaths modelPaths, IReadOnlyList<IDataItem> items);
 
-        Task<M> TryReadFreshAsync(DataFile dataFile, DataItemsCallback dataItemsCallback);
+        Task<M> TryReadFreshAsync(ModelPaths modelPaths, Action<IDataItem> dataItemsCallback);
 
-        Task<M<string>> GetCodeAsync(DataFile dataFile, DataNodeName nodeName);
+        Task<M<Source>> TryGetSourceAsync(ModelPaths modelPaths, DataNodeName nodeName);
 
-        Task<M<SourceLocation>> GetSourceFilePathAsync(DataFile dataFile, DataNodeName nodeName);
-
-        Task<M<DataNodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath);
+        Task<M<DataNodeName>> TryGetNodeAsync(ModelPaths modelPaths, Source source);
+        void TriggerDataChangedIfDataNewerThanCache(ModelPaths modelPaths);
     }
 }

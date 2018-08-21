@@ -1,5 +1,7 @@
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using System.Windows;
+using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.ProgressHandling;
 using Dependinator.Utils.UI.Mvvm;
 
 
@@ -9,12 +11,23 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
     {
         private readonly Window owner;
         private readonly ISolutionService solutionService;
+        private readonly IProgressService progressService;
+        private readonly ModelPaths modelPaths;
 
 
-        public CodeViewModel(ISolutionService solutionService, string title, Window owner)
+
+        public CodeViewModel(
+            ISolutionService solutionService,
+            IProgressService progressService,
+            ModelPaths modelPaths,
+            string title,
+            Window owner)
         {
             this.solutionService = solutionService;
+            this.progressService = progressService;
+            this.modelPaths = modelPaths;
             this.owner = owner;
+
             Title = title;
         }
 
@@ -35,10 +48,14 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 
         private async Task OpenInStudio()
         {
-            if (FilePath != null)
+            if (FilePath == null) return;
+
+            owner.Close();
+            await Task.Yield();
+
+            using (progressService.ShowDialog("Opening file in Visual Studio..."))
             {
-                await solutionService.OpenFileAsync(FilePath, LineNumber);
-                owner.Close();
+                await solutionService.OpenFileAsync(modelPaths, FilePath, LineNumber);
             }
         }
     }

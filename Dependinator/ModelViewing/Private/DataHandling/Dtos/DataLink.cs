@@ -1,4 +1,4 @@
-using Dependinator.Utils;
+﻿using Dependinator.Utils;
 
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Dtos
@@ -8,10 +8,12 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Dtos
         public DataLink(
             DataNodeName source,
             DataNodeName target,
+            NodeType targetType,
             bool isAdded = false)
         {
             Source = source;
             Target = target;
+            TargetType = targetType;
             IsAdded = isAdded;
 
             IsEqualWhenSame(Source, Target);
@@ -20,6 +22,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Dtos
 
         public DataNodeName Source { get; }
         public DataNodeName Target { get; }
+        public NodeType TargetType { get; }
 
         public bool IsAdded { get; }
 

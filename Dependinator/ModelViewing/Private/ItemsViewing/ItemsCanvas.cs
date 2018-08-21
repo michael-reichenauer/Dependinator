@@ -392,12 +392,12 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
         private void MoveCanvasItems(Vector moveOffset)
         {
-            Rect viewBox = GetViewBox();
+            //Rect viewBox = GetViewBox();
 
-            //if (!IsAnyNodesWithinView(viewBox, moveOffset))
+            //if (IsRoot && !IsAnyNodesWithinView(viewBox, moveOffset))
             //{
-            //	// No node (if moved) would be withing visible view
-            //	return;
+            //    // No node (if moved) would be withing visible view
+            //    return;
             //}
 
             if (IsRoot)

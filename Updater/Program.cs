@@ -9,7 +9,10 @@ using System.Threading;
 
 namespace Updater
 {
-    internal class Program
+    /// <summary>
+    /// Contains the main() entry point.
+    /// </summary>
+    public class Program
     {
         private static readonly string ValidCertificateHash = "1CCB2B742FF45D6A3A4E42D34FD8497CE5212EF0";
 
@@ -19,7 +22,13 @@ namespace Updater
         private static readonly string UpdateTaskName = $"{ProgramName} Update";
 
 
-        private static void Main(string[] args)
+        /// <summary>
+        /// Accepts 3 commands:
+        /// * /register, which is call{ed by the installer to register this update.exe as 2 scheduled windows tasks.
+        /// * /update, which will try to download a new  version of the Setup (if available)
+        /// * /renew, which will run a new version of the Setup (if downloaded)
+        /// </summary>
+        public static void Main(string[] args)
         {
             if (args.Contains("/register"))
             {
@@ -37,9 +46,9 @@ namespace Updater
 
 
         /// <summary>
-        ///     Registers the update as 2 scheduled windows tasks.
+        /// Registers this updater as 2 scheduled windows tasks.
         /// </summary>
-        private static void Register()
+        public static void Register()
         {
             // Register TryUpdate task running as normal user, which will
             // check for new updates and download new installer if available
@@ -54,7 +63,11 @@ namespace Updater
         }
 
 
-        private static void TryUpdate()
+        /// <summary>
+        /// Tries to download a new version of the Setup (if available) by calling the
+        /// Dependinator exe to do the actual task.
+        /// </summary>
+        public static void TryUpdate()
         {
             // Get path to Dependinator.exe
             string programFolder = Path.GetDirectoryName(typeof(Program).Assembly.Location);
@@ -68,8 +81,10 @@ namespace Updater
             }
         }
 
-
-        private static void TryRenew()
+        /// <summary>
+        /// If there is a new Setup, its signature is verified and run
+        /// </summary>
+        public static void TryRenew()
         {
             // Get path to installer in ProgramData folder
             string programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);

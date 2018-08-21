@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.Design;
+using System.Linq;
 using System.Threading;
 using DependinatorVse.Commands.Private;
 using DependinatorVse.Utils;
@@ -70,14 +71,21 @@ namespace DependinatorVse.Commands
                     return;
                 }
 
-                Document document = dte.ActiveDocument;
-                if (document == null)
+
+                int lineNumber = 0;
+
+                string filePath = TryGetSelectedFilePath(dte);
+
+                if (filePath == null)
+                {
+                    filePath = TryGetActiveDocumentFilePath(dte, out lineNumber);
+                }
+
+                if (filePath == null)
                 {
                     Studio.ShowInfoMessageBox(package, "Open a file and set the cursor within it first.");
                     return;
                 }
-
-                TextSelection selection = (TextSelection)document.Selection;
 
                 DependinatorApiClient apiClient = new DependinatorApiClient(
                     solution.FileName, Studio.IsDeveloperMode(dte));
@@ -94,7 +102,7 @@ namespace DependinatorVse.Commands
                     return;
                 }
 
-                await apiClient.ShowFileAsync(document.FullName, selection.CurrentLine);
+                await apiClient.ShowFileAsync(filePath, lineNumber);
             }
             catch (Exception exception)
             {
@@ -106,6 +114,38 @@ namespace DependinatorVse.Commands
 
                 Log.Error($"Failed: {exception}");
             }
+        }
+
+
+        private static string TryGetActiveDocumentFilePath(DTE2 dte, out int lineNumber)
+        {
+            string filePath = null;
+            lineNumber = 0;
+
+            Document document = dte.ActiveDocument;
+            if (document != null)
+            {
+                TextSelection selection = (TextSelection) document.Selection;
+                filePath = document.FullName;
+                lineNumber = selection.CurrentLine;
+            }
+
+            return filePath;
+        }
+
+
+        private static string TryGetSelectedFilePath(DTE2 dte)
+        {
+            var items = (Array) dte.ToolWindows.SolutionExplorer.SelectedItems;
+            string filePath = items.Cast<UIHierarchyItem>()
+                .Select(item => new
+                {
+                    item,
+                    pi = item.Object as ProjectItem
+                })
+                .Select(t => t.pi.FileNames[1])
+                .FirstOrDefault();
+            return filePath;
         }
 
 

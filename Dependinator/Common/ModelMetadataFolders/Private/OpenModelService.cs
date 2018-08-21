@@ -52,7 +52,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
         public async Task TryModelAsync(string modelFilePath)
         {
-            if (modelMetadataService.ModelFilePath.IsSameIgnoreCase(modelFilePath))
+            if (modelMetadataService.ModelFilePath.IsSameIc(modelFilePath))
             {
                 Log.Debug("User tries to open same model that is already open");
                 return;

@@ -38,12 +38,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
                 return;
             }
 
-            if (dataNode.IsReferenced)
-            {
-                nodeService.QueueNode(dataNode);
-                return;
-            }
-
             AddNodeToModel(dataNode, stamp);
         }
 
@@ -79,10 +73,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         }
 
 
-        public void SetLayoutDone()
-        {
-            nodeService.AllNodes.ForEach(node => node.IsLayoutCompleted = true);
-        }
+        public void SetLayoutDone() => nodeService.SetLayoutDone();
 
 
         public IReadOnlyList<NodeName> GetHiddenNodeNames()
@@ -186,7 +177,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         {
             NodeName parentName = GetParentName(nodeName, dataNode);
 
-            return nodeService.GetParentNode(parentName, dataNode.NodeType);
+            return nodeService.GetParentNode(parentName, dataNode.NodeType, dataNode.IsQueued);
         }
 
 

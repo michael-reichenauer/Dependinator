@@ -35,12 +35,12 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
             EnsureFolderExists(metadataPath);
 
-            if (MetadataFolderPath.IsSameIgnoreCase(metadataPath))
+            if (MetadataFolderPath.IsSameIc(metadataPath))
             {
                 return;
             }
 
-            IsDefault = defaultPath.IsSameIgnoreCase(modelFilePath);
+            IsDefault = defaultPath.IsSameIc(modelFilePath);
 
             MetadataFolderPath = metadataPath;
             ModelFilePath = modelFilePath;

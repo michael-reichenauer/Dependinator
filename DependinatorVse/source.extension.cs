@@ -9,7 +9,7 @@ namespace DependinatorVse
 		{
 				public const string Id = "0117fbb8-b3c3-4baf-858e-d7ed140c01f4";
 				public const string Name = "Dependinator";
-				public const string Description = @"Visualize program structure and dependencies as a map like interface to make it much easier to understand and refactor the architecture.";
+				public const string Description = @"Visualize program structure and dependencies in a map like view to make it easier to understand and refactor the architecture.";
 				public const string Language = "en-US";
 				public const string Version = "1.0";
 				public const string Author = "Michael Reichenauer";

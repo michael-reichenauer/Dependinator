@@ -89,16 +89,16 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
 
         public static JsonSaveTypes.Node ToSaveJsonNode(DataNode node) => new JsonSaveTypes.Node
         {
-            N = (string)node.Name,
+            N = node.Name.AsId(),
             B = node.Bounds != RectEx.Zero ? node.Bounds.AsIntString() : null,
             S = node.Scale.Round(3),
-            St =  node.ShowState
+            St = node.ShowState
         };
 
 
         public static JsonSaveTypes.Line ToSaveJsonLine(DataLine line) => new JsonSaveTypes.Line
         {
-            T = (string)line.Target,
+            T = line.Target.AsId(),
             P = ToJsonPoints(line.Points)
         };
 
@@ -107,6 +107,8 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         {
             switch (nodeType)
             {
+                case null:
+                    return NodeType.None;
                 case JsonCacheTypes.NodeType.Solution:
                     return NodeType.Solution;
                 case JsonCacheTypes.NodeType.SolutionFolder:
@@ -166,6 +168,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Persistence.Pri
         private static DataLink ToModelLink(JsonCacheTypes.Link link) => new DataLink(
             (DataNodeName)link.Source,
             (DataNodeName)link.Target,
+            NodeType.None,
             true);
 
 

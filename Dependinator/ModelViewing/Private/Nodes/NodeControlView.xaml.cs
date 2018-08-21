@@ -59,5 +59,12 @@ namespace Dependinator.ModelViewing.Private.Nodes
             NodeControl control = points[rectangle.Name];
             ViewModel?.Move(control, offset, p1, p2);
         }
+
+
+        private void HamburgerButton_OnClick(object sender, RoutedEventArgs e)
+        {
+            HamburgerContextMenu.PlacementTarget = this;
+            HamburgerContextMenu.IsOpen = true;
+        }
     }
 }

@@ -35,6 +35,7 @@ namespace Dependinator.Common.ProgressHandling
 
             viewModel.Stop();
             DialogResult = true;
+            Owner.Activate();
         }
 
 

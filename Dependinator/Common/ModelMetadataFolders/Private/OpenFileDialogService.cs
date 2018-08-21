@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using Dependinator.Utils;
 using Microsoft.Win32;
@@ -8,13 +8,13 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 {
     internal class OpenFileDialogService : IOpenFileDialogService
     {
-        private static readonly string OpenFileDialogTitle = "Select a .NET .sln, .exe or .dll file";
+        private static readonly string OpenFileDialogTitle = "Select a .sln,.exe,.dll or .json file";
 
-        private static readonly string[] SupportedFileExtensions = {".sln", ".exe", ".dll"};
+        private static readonly string[] SupportedFileExtensions = {".sln", ".exe", ".dll", ".json"};
         private static readonly string DefaultFileExtension = ".sln";
 
         private static readonly string SupportedFileTypes =
-            ".NET files (*.sln *.exe, *.dll)|*.sln; *.exe;*.dll";
+            ".NET files (*.sln *.exe *.dll)|*.sln; *.exe;*.dll|Json files|*.json";
 
 
         public bool TryShowOpenFileDialog(out string filePath)

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.Utils.ErrorHandling;
@@ -9,29 +8,16 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing
 {
     internal interface IParserService
     {
-        Task<M> ParseAsync(DataFile dataFile, DataItemsCallback itemsCallback);
+        event EventHandler DataChanged;
 
+        void StartMonitorDataChanges(ModelPaths modelPaths);
 
-        IReadOnlyList<string> GetDataFilePaths(DataFile dataFile);
-        IReadOnlyList<string> GetBuildPaths(DataFile dataFile);
-        Task<M<string>> GetCodeAsync(DataFile dataFile, DataNodeName nodeName);
-        Task<M<SourceLocation>> GetSourceFilePath(DataFile dataFile, DataNodeName nodeName);
-        Task<M<DataNodeName>> GetNodeForFilePathAsync(DataFile dataFile, string sourceFilePath);
-    }
+        DateTime GetDataTime(ModelPaths modelPaths);
 
+        Task<M> ParseAsync(ModelPaths modelPaths, Action<IDataItem> itemsCallback);
 
-    internal class NoAssembliesException : Exception
-    {
-        public NoAssembliesException(string msg) : base(msg)
-        {
-        }
-    }
+        Task<M<Source>> GetSourceAsync(ModelPaths modelPaths, DataNodeName nodeName);
 
-
-    internal class MissingAssembliesException : Exception
-    {
-        public MissingAssembliesException(string msg) : base(msg)
-        {
-        }
+        Task<M<DataNodeName>> TryGetNodeAsync(ModelPaths modelPaths, Source source);
     }
 }
