@@ -45,6 +45,7 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
 
             Owner = owner;
             InitializeComponent();
+            Loaded += Window_Loaded;
 
             codeViewModel = new CodeViewModel(solutionService, progressService, modelMetadata.ModelPaths, nodeName.DisplayLongName, this);
             DataContext = codeViewModel;
@@ -74,6 +75,15 @@ namespace Dependinator.ModelViewing.Private.CodeViewing.Private
             }
 
             SetCodeText();
+        }
+
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Try to ensure that multiple windows are not at exactly same position (hiding lower)
+            Random random = new Random();
+            Left = Math.Max(10, Left + random.Next(-100, 100));
+            Top = Math.Max(10, Top + random.Next(-100, 100));
         }
 
 
