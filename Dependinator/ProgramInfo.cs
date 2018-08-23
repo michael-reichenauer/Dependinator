@@ -21,7 +21,7 @@ namespace Dependinator
             $"mailto:michael.reichenauer@gmail.com&subject={Name} Feedback";
 
         public static readonly string GitHubHelpAddress =
-            $"https://github.com/michael-reichenauer/{Name}/wiki/Help";
+            $"https://github.com/michael-reichenauer/{Name}/wiki/Dependinator-Help";
 
         public static readonly string ProgramFileName = Name + ".exe";
         public static readonly string ProgramLogName = Name + ".log";
