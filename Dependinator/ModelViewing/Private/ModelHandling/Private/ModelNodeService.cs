@@ -27,7 +27,7 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         public void AddOrUpdateNode(DataNode dataNode, int stamp)
         {
             NodeName nodeName = dataNode.Name;
-
+            
             if (nodeService.TryGetNode(nodeName, out Node node))
             {
                 if (node.Stamp != stamp)
