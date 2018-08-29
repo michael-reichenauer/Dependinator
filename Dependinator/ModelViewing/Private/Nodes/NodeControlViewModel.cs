@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using Dependinator.Common.ThemeHandling;
+using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.Utils.UI.Mvvm;
 
 
@@ -152,7 +153,7 @@ namespace Dependinator.ModelViewing.Private.Nodes
 
             if (control != NodeControl.Center)
             {
-                nodeViewModel.ItemsViewModel?.MoveCanvas(newCanvasMove);
+               nodeViewModel.ItemsViewModel?.MoveItems(newCanvasMove);
             }
 
             ItemOwnerCanvas.UpdateItem(nodeViewModel);
@@ -179,17 +180,17 @@ namespace Dependinator.ModelViewing.Private.Nodes
                 case NodeControl.LeftTop:
                     newLocation = location + offset;
                     newSize = new Size(size.Width - offset.X, size.Height - offset.Y);
-                    newCanvasMove = new Vector(-offset.X * ItemScale, -offset.Y * ItemScale);
+                    newCanvasMove = new Vector(-offset.X, -offset.Y);
                     break;
                 case NodeControl.LeftBottom:
                     newLocation = location + new Vector(offset.X, 0);
                     newSize = new Size(size.Width - offset.X, size.Height + offset.Y);
-                    newCanvasMove = new Vector(-offset.X * ItemScale, 0);
+                    newCanvasMove = new Vector(-offset.X, 0);
                     break;
                 case NodeControl.RightTop:
                     newLocation = location + new Vector(0, offset.Y);
                     newSize = new Size(size.Width + offset.X, size.Height - offset.Y);
-                    newCanvasMove = new Vector(0, -offset.Y * ItemScale);
+                    newCanvasMove = new Vector(0, -offset.Y);
                     break;
                 case NodeControl.RightBottom:
                     newLocation = location;
@@ -199,12 +200,12 @@ namespace Dependinator.ModelViewing.Private.Nodes
                 case NodeControl.Top:
                     newLocation = location + new Vector(0, offset.Y);
                     newSize = new Size(size.Width, size.Height - offset.Y);
-                    newCanvasMove = new Vector(0, -offset.Y * ItemScale);
+                    newCanvasMove = new Vector(0, -offset.Y);
                     break;
                 case NodeControl.Left:
                     newLocation = location + new Vector(offset.X, 0);
                     newSize = new Size(size.Width - offset.X, size.Height);
-                    newCanvasMove = new Vector(-offset.X * ItemScale, 0);
+                    newCanvasMove = new Vector(-offset.X, 0);
                     break;
                 case NodeControl.Right:
                     newLocation = location + new Vector(0, 0);

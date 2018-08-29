@@ -34,6 +34,7 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
 
         public void MoveCanvas(Vector viewOffset) => ItemsCanvas.MoveAllItems(viewOffset);
+        public void MoveItems(Vector viewOffset) => ItemsCanvas.MoveItems(viewOffset);
 
         public void Zoom(double zoomFactor, Point viewPosition) => ItemsCanvas.ZoomNode(zoomFactor, viewPosition);
 

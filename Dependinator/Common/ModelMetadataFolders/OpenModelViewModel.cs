@@ -1,16 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Windows;
 using Dependinator.Common.ModelMetadataFolders.Private;
-using Dependinator.ModelViewing;
+using Dependinator.Utils.UI.Mvvm;
 
 
 namespace Dependinator.Common.ModelMetadataFolders
 {
-    internal class OpenModelViewModel : ItemViewModel
+    internal class OpenModelViewModel : ViewModel
     {
-        private static readonly Rect DefaultOpenModelNodeBounds = new Rect(0, 80, 720, 580);
-
         private readonly IOpenModelService openModelService;
         private readonly IRecentModelsService recentModelsService;
 
@@ -21,7 +18,7 @@ namespace Dependinator.Common.ModelMetadataFolders
         {
             this.openModelService = openModelService;
             this.recentModelsService = recentModelsService;
-            SetBounds(DefaultOpenModelNodeBounds, false);
+
 
             RecentFiles = GetRecentFiles();
         }

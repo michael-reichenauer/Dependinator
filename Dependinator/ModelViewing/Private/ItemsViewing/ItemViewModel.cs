@@ -1,9 +1,8 @@
 ﻿using System.Windows;
-using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.Utils.UI.Mvvm;
 
 
-namespace Dependinator.ModelViewing
+namespace Dependinator.ModelViewing.Private.ItemsViewing
 {
     internal abstract class ItemViewModel : ViewModel, IItem, IItemsCanvasOwner
     {

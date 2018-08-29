@@ -28,30 +28,23 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
     internal class ModelHandlingService : IModelHandlingService
     {
         private static readonly int BatchSize = 100;
+
         private readonly ICmd cmd;
-
-
         private readonly IDataService dataService;
         private readonly IMessage message;
         private readonly ModelMetadata modelMetadata;
         private readonly IModelPersistentHandler modelPersistentHandler;
-
         private readonly IModelService modelService;
-        private readonly Func<OpenModelViewModel> openModelViewModelProvider;
         private readonly IProgressService progress;
-
         private readonly IRecentModelsService recentModelsService;
         private readonly IModelNotificationService modelNotificationService;
 
-
-        private bool isShowingOpenModel;
         private bool isWorking;
 
 
         public ModelHandlingService(
             IDataService dataService,
             IModelPersistentHandler modelPersistentHandler,
-            Func<OpenModelViewModel> openModelViewModelProvider,
             IModelService modelService,
             ModelMetadata modelMetadata,
             IRecentModelsService recentModelsService,
@@ -62,9 +55,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
         {
             this.dataService = dataService;
             this.modelPersistentHandler = modelPersistentHandler;
-
-            this.openModelViewModelProvider = openModelViewModelProvider;
-
             this.modelService = modelService;
             this.modelMetadata = modelMetadata;
             this.recentModelsService = recentModelsService;
@@ -88,19 +78,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
             {
                 isWorking = true;
                 Log.Debug($"Metadata model: {modelMetadata.ModelPaths} {DateTime.Now}");
-
-                if (modelMetadata.IsDefault)
-                {
-                    isShowingOpenModel = true;
-                    modelMetadata.SetDefault();
-                    Root.ItemsCanvas.SetRootScale(1);
-                    Root.ItemsCanvas.SetRootOffset(new Point(-32, 50));
-                    Root.ItemsCanvas.IsZoomAndMoveEnabled = false;
-                    Root.ItemsCanvas.UpdateAndNotifyAll(true);
-
-                    Root.ItemsCanvas.AddItem(openModelViewModelProvider());
-                    return;
-                }
 
                 if (!File.Exists(modelMetadata.ModelPaths.ModelPath))
                 {
@@ -193,12 +170,6 @@ namespace Dependinator.ModelViewing.Private.ModelHandling.Private
 
             if (isWorking)
             {
-                return;
-            }
-
-            if (isShowingOpenModel)
-            {
-                // Nothing to save
                 return;
             }
 
