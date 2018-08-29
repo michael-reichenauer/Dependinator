@@ -180,9 +180,11 @@ namespace Dependinator.ModelViewing.Private.Nodes
         public void UpdateToolTip()
         {
             string description = GetToolTipDescription();
+            string isHiddenText = IsHidden ? "\n\nNode is hidden, Select 'Show Node' in the menu button" : "";
             ToolTip =
                 $"{Node.Name.DisplayLongName}" +
                 (description != null ? $"\n{description}" : null) +
+                isHiddenText +
                 $"{DebugToolTip}";
         }
 
