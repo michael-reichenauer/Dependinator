@@ -1,4 +1,4 @@
-﻿namespace Dependinator.Api.ApiHandling
+﻿namespace Dependinator.Common.ApiHandling
 {
     internal interface IApiManagerService
     {

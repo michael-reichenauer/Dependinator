@@ -72,7 +72,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public Task<NodeDataSource> GetSourceAsync(string path, string nodeName) => 
+        public Task<NodeDataSource> GetSourceAsync(string path, string nodeName) =>
             Task.FromResult((NodeDataSource)null);
 
 
@@ -106,11 +106,13 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                     JsonTypes.Item jsonItem = Serializer.Deserialize<JsonTypes.Item>(reader);
                     if (jsonItem.Node != null)
                     {
-                        nodeCallback(ToNodeData(jsonItem.Node));
+                        NodeData nodeData = ToNodeData(jsonItem.Node);
+                        nodeCallback(nodeData);
                     }
                     else if (jsonItem.Link != null)
                     {
-                        linkCallback(ToLinkData(jsonItem.Link));
+                        LinkData linkData = ToLinkData(jsonItem.Link);
+                        linkCallback(linkData);
                     }
 
                     itemCount++;

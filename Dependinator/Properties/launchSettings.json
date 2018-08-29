@@ -19,9 +19,13 @@
       "commandName": "Project",
       "commandLineArgs": "\"C:\\Program Files\\Dependinator\\Example\\Example.exe\""
     },
-    "Json": {
+    "JsonGo": {
       "commandName": "Project",
-      "commandLineArgs": "\"C:\\ProgramData\\Dependinator\\WorkingFolders\\C;)Work Files)GitMind)GitMind.sln\\GitMind.cache.json\""
+      "commandLineArgs": "\"C:\\Users\\micha\\Go\\src\\github.com\\michael-reichenauer\\goparser\\model.json\""
+    },
+    "JsonGo2": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Users\\micha\\Go\\src\\github.com\\michael-reichenauer\\testdata\\model.json\""
     },
 
     "Json2": {
