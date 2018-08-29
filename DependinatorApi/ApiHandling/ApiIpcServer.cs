@@ -55,7 +55,11 @@ namespace DependinatorApi.ApiHandling
         public static bool IsServerRegistered(string serverName) => ApiIpcCommon.IsServerRegistered(serverName);
 
 
-        public bool TryPublishService<TRemoteService>(ApiIpcService ipcService)
+        public bool TryPublishService<TRemoteService>(IApiIpcService ipcService) => 
+            TryPublishService(typeof(TRemoteService), ipcService);
+
+
+        public bool TryPublishService(Type interfaceType, IApiIpcService ipcService)
         {
             if (channelMutex == null)
             {
@@ -66,15 +70,15 @@ namespace DependinatorApi.ApiHandling
             }
 
             // Publish the ipc service receiving the data
-            string ipcServiceName = ApiIpcCommon.GetServiceName<TRemoteService>(serverId);
-            RemotingServices.Marshal(ipcService, ipcServiceName);
+            string ipcServiceName = ApiIpcCommon.GetServiceName(interfaceType, serverId);
+            RemotingServices.Marshal(ipcService as ApiIpcService, ipcServiceName);
 
             Log.Debug($"Published: {ipcServiceName}");
             return true;
         }
 
 
-        public async Task PublishServiceAsync<TRemoteService>(ApiIpcService ipcService)
+        public async Task PublishServiceAsync<TRemoteService>(IApiIpcService ipcService)
         {
             if (channelMutex == null)
             {
@@ -83,7 +87,7 @@ namespace DependinatorApi.ApiHandling
 
             // Publish the ipc service receiving the data
             string ipcServiceName = ApiIpcCommon.GetServiceName<TRemoteService>(serverId);
-            RemotingServices.Marshal(ipcService, ipcServiceName);
+            RemotingServices.Marshal(ipcService as ApiIpcService, ipcServiceName);
 
             Log.Debug($"Published: {ipcServiceName}");
         }

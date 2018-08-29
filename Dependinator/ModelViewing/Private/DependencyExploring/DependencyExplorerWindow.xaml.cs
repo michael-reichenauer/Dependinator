@@ -28,6 +28,7 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring
             this.modelNotifications = modelNotifications;
             Owner = owner;
             InitializeComponent();
+            Loaded += Window_Loaded;
 
             viewModel = new DependencyExplorerWindowViewModel(dependencyWindowService, node, line);
             DataContext = viewModel;
@@ -35,14 +36,23 @@ namespace Dependinator.ModelViewing.Private.DependencyExploring
         }
 
 
-        private void OnModelChanged(object sender, EventArgs e) => viewModel.ModelChanged();
-
-
         protected override void OnClosing(CancelEventArgs e)
         {
             modelNotifications.ModelUpdated -= OnModelChanged;
             base.OnClosing(e);
         }
+
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Try to ensure that multiple windows are not at exactly same position (hiding lower)
+            Random random = new Random();
+            Left = Math.Max(10, Left + random.Next(-100, 100));
+            Top = Math.Max(10, Top + random.Next(-100, 100));
+        }
+
+
+        private void OnModelChanged(object sender, EventArgs e) => viewModel.ModelChanged();
 
 
         private void Suppressed_OnClick(object sender, RoutedEventArgs e)

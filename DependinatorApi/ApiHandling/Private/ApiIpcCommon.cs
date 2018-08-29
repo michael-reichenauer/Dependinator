@@ -28,7 +28,11 @@ namespace DependinatorApi.ApiHandling.Private
 
 
         internal static string GetServiceName<TRemoteService>(string serverId) =>
-            serverId + typeof(TRemoteService).FullName;
+            GetServiceName(typeof(TRemoteService), serverId);
+
+
+        internal static string GetServiceName(Type interfaceType, string serverId) =>
+            serverId + interfaceType.FullName;
 
 
         internal static string GetServerId(string text) => AsSha2Text(ApiGuid + Environment.UserName + text);
