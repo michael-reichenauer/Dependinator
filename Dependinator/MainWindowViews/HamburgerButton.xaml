@@ -74,7 +74,7 @@
                 </MenuItem>
 
                 <MenuItem
-                    Header="Open Model in Visual Studio..."
+                    Header="Open in Visual Studio..."
                     Command="{Binding OpenStudioCommand}">
                     <MenuItem.Icon>
                         <Border>
