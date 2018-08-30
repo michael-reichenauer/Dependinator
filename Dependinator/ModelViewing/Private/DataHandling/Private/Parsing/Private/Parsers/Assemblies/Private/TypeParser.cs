@@ -117,11 +117,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 TypeReference baseType = type.BaseType;
                 if (baseType != null && baseType.FullName != "System.Object")
                 {
-                    linkHandler.AddLinkToType(sourceNode, baseType);
+                    linkHandler.AddLinkToType(sourceNode.Name, baseType);
                 }
 
                 type.Interfaces
-                    .ForEach(interfaceType => linkHandler.AddLinkToType(sourceNode, interfaceType.InterfaceType));
+                    .ForEach(interfaceType => linkHandler.AddLinkToType(sourceNode.Name, interfaceType.InterfaceType));
             }
             catch (Exception e)
             {
