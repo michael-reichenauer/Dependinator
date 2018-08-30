@@ -21,11 +21,8 @@ namespace Dependinator.MainWindowViews.Private
         }
 
 
-        public bool IsNewVersionAvailable { set => mainWindow.Value.IsNewVersionAvailable = value; }
 
         public void SetSearchFocus() => mainWindow.Value.SetSearchFocus();
-
-        public void SetMainWindowFocus() => mainWindow.Value.Focus();
 
 
         public void SendFeedback()
