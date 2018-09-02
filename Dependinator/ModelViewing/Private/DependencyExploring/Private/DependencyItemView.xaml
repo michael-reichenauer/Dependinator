@@ -78,7 +78,7 @@
                 ToolTip="Show node in map" />
 
             <!-- End margin for mouse over -->
-            <TextBlock Text="           " Visibility="{Binding IsShowButtons, Converter={StaticResource NVC}}" />
+            <TextBlock Text="                         " Visibility="{Binding IsShowButtons, Converter={StaticResource NVC}}" />
 
         </StackPanel>
     </Grid>

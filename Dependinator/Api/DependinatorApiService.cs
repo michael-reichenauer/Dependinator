@@ -11,9 +11,9 @@ using DependinatorApi.ApiHandling;
 namespace Dependinator.Api
 {
     /// <summary>
-    ///     Implements the IDependinatorApi api published by the Dependinator exe.
-    ///     It is used by the Visual Studio extension to call the Dependinator exe and by different
-    ///     Dependiator instances, when they are interacting.
+    /// Implements the IDependinatorApi api published by the Dependinator exe.
+    /// It is used by the Visual Studio extension to call the Dependinator exe and by different
+    /// Dependiator instances, when they are interacting.
     /// </summary>
     [SingleInstance]
     internal class DependinatorApiService : ApiIpcService, IDependinatorApi
@@ -28,7 +28,7 @@ namespace Dependinator.Api
 
 
         /// <summary>
-        ///     Activate the studio main window to bring ti to the front.
+        /// Activate the studio main window to bring ti to the front.
         /// </summary>
         public void Activate(string[] args)
         {
@@ -37,13 +37,13 @@ namespace Dependinator.Api
 
 
         /// <summary>
-        ///     Show the node that correspond to the specified file
+        /// Show the node that correspond to the specified file
         /// </summary>
         public void ShowNodeForFile(string filePath, int lineNumber)
         {
             MoveMainWindowToFront();
 
-            Application.Current.Dispatcher.InvokeAsync(() => 
+            Application.Current.Dispatcher.InvokeAsync(() =>
                 { modelViewService.Value.StartMoveToNode(new Source(filePath, null, lineNumber)); });
         }
 

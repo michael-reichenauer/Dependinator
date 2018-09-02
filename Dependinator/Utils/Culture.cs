@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.Threading;
 
 
@@ -6,18 +6,20 @@ namespace Dependinator.Utils
 {
     public static class Culture
     {
-        public static void Initialize()
+        /// <summary>
+        /// Sets the default culture to Invariant, with some minor adjustments to date/time format.
+        /// This makes string usage throughout the program more predictable
+        /// </summary>
+        public static void SetDefaultInvariantCulture()
         {
             CultureInfo originalCurrentCulture = CultureInfo.CurrentCulture;
-
-            //Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo("en-US");
-            //CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("en-US");
 
             CultureInfo threadCulture = (CultureInfo)CultureInfo.InvariantCulture.Clone();
             DateTimeFormatInfo dateTimeFormat =
                 (DateTimeFormatInfo)CultureInfo.GetCultureInfo("sv-SE").DateTimeFormat.Clone();
             threadCulture.DateTimeFormat = dateTimeFormat;
 
+            // Make sure current (main) and new worker threads have the same invariant culture 
             Thread.CurrentThread.CurrentCulture = threadCulture;
             CultureInfo.DefaultThreadCurrentCulture = threadCulture;
 
@@ -29,34 +31,16 @@ namespace Dependinator.Utils
 
             var dateTimeFormatInfo =
                 (DateTimeFormatInfo)originalCurrentCulture.DateTimeFormat.Clone();
-            //var dateTimeFormatInfo = (DateTimeFormatInfo)culture.DateTimeFormat.Clone();
+
             dateTimeFormatInfo.Calendar = new GregorianCalendar();
 
             var culture = (CultureInfo)chosenLanguageCulture.Clone();
             culture.NumberFormat = numberFormat;
             culture.DateTimeFormat = dateTimeFormatInfo;
 
+            // Make sure current (main) and new worker threads have the same UI culture 
             Thread.CurrentThread.CurrentUICulture = culture;
             CultureInfo.DefaultThreadCurrentUICulture = culture;
         }
-
-
-        //private static void LogCultures()
-        //{
-        //	Log.Info($"CultureInfo: ");
-        //	Log.Info($"  .DefaultThreadCurrentCulture: {CultureInfo.DefaultThreadCurrentCulture}");
-        //	Log.Info($"  .DefaultThreadCurrentUICulture: {CultureInfo.DefaultThreadCurrentUICulture}");
-        //	Log.Info($"  .InstalledUICulture: {CultureInfo.InstalledUICulture}");
-        //	string shortDatePattern = CultureInfo.InstalledUICulture.DateTimeFormat.ShortDatePattern;
-        //	Log.Info($"  .InstalledUICulture.DateTimeFormat.ShortDatePattern: {shortDatePattern}");
-
-        //	Log.Info($"Thread.CurrentThread");
-        //	Log.Info($"  .CurrentCulture: {Thread.CurrentThread.CurrentCulture}");
-        //	shortDatePattern = Thread.CurrentThread.CurrentCulture.DateTimeFormat.ShortDatePattern;
-        //	Log.Info($"  .CurrentCulture.DateTimeFormat.ShortDatePattern: {shortDatePattern}");
-        //	Log.Info($"  .CurrentUICulture: {Thread.CurrentThread.CurrentUICulture}");
-        //	string datePattern = Thread.CurrentThread.CurrentUICulture.DateTimeFormat.ShortDatePattern;
-        //	Log.Info($"  .CurrentUICulture.DateTimeFormat.ShortDatePattern: {datePattern}");
-        //}
     }
 }

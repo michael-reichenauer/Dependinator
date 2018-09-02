@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.ModelViewing.Private.Lines.Private;
 using Dependinator.ModelViewing.Private.ModelHandling.Core;
 using Dependinator.Utils;

@@ -10,7 +10,7 @@ using Dependinator.Utils.ErrorHandling;
 namespace Dependinator
 {
     /// <summary>
-    ///     Contains the Main method and is the entry point of the program.
+    ///  Contains the Main method and is the entry point of the program.
     /// </summary>
     public class Program
     {
@@ -20,18 +20,31 @@ namespace Dependinator
         [STAThread]
         public static void Main()
         {
+            Init();
+
+            Log.Debug(GetStartLineText());
+
+            Program program = new Program();
+            program.Run();
+        }
+
+
+        private static void Init()
+        {
             // Make external assemblies that Dependinator depends on available, when needed (extracted)
             AssemblyResolver.Activate(ProgramInfo.Assembly);
 
-            Culture.Initialize();
+            // Set invariant culture as default to make string functions more predictable
+            Culture.SetDefaultInvariantCulture();
+
+            // Enable usage tracking (to Azure) 
             Track.Enable(
                 ProgramInfo.Name,
                 ProgramInfo.Version,
                 ProgramInfo.IsInstalledInstance() || ProgramInfo.IsSetupFile());
+
+            // Init trace logging to default log file
             Log.Init(ProgramInfo.GetLogFilePath());
-            Log.Debug(GetStartLineText());
-            Program program = new Program();
-            program.Run();
         }
 
 
@@ -51,16 +64,10 @@ namespace Dependinator
         }
 
 
-        private static string GetStartLineText()
-        {
-            string cmd = string.Join("','", Environment.GetCommandLineArgs());
-
-            return $"Start version: {ProgramInfo.Version}, cmd: '{cmd}'";
-        }
-
-
         private void ManageUnhandledExceptions()
         {
+            // Restart in case of unexpected errors. but in case of errors at program start
+            // A message box is shown instead, in order to avoid endless restarts  
             ExceptionHandling.ExceptionOccurred += (s, e) => Restart();
             ExceptionHandling.ExceptionOnStartupOccurred += (s, e) =>
                 Message.ShowError("Sorry, but an unexpected error just occurred");
@@ -71,9 +78,17 @@ namespace Dependinator
 
         private void Restart()
         {
+            // Restarts the program for the current model
             ModelMetadata modelMetadata = dependencyInjection.Resolve<ModelMetadata>();
             StartInstanceService startInstanceService = new StartInstanceService();
             startInstanceService.StartInstance(modelMetadata.ModelFilePath);
+        }
+
+
+        private static string GetStartLineText()
+        {
+            string cmd = string.Join("','", Environment.GetCommandLineArgs());
+            return $"Start version: {ProgramInfo.Version}, cmd: '{cmd}'";
         }
     }
 }

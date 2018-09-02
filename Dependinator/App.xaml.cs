@@ -19,6 +19,7 @@ namespace Dependinator
     {
         // This mutex is used by the installer (and uninstaller) to determine if instances are running
         private static Mutex applicationMutex;
+
         private readonly ICommandLine commandLine;
         private readonly IExistingInstanceService existingInstanceService;
         private readonly IInstaller installer;
@@ -70,14 +71,6 @@ namespace Dependinator
                 modelMetadataService.SetModelFilePath(commandLine.FilePath);
             }
 
-            if (IsCommands())
-            {
-                // Command line contains some command like diff 
-                // which will be handled and then this instance can end.
-                HandleCommand();
-                Current.Shutdown(0);
-                return;
-            }
 
             if (commandLine.IsRunInstalled)
             {
@@ -136,16 +129,6 @@ namespace Dependinator
         }
 
 
-        private void HandleCommand()
-        {
-            // Need some main window when only message boxes will be shown for commands
-            MainWindow = CreateTempMainWindow();
-
-            // Commands like Install, Uninstall, Diff, can be handled immediately
-            HandleCommands();
-        }
-
-
         private void Start()
         {
             // This mutex is used by the installer (or uninstaller) to determine if instances are running
@@ -158,19 +141,6 @@ namespace Dependinator
             MainWindow.Show();
 
             ProgramInfo.TryDeleteTempFiles();
-        }
-
-
-        private bool IsCommands()
-        {
-            // No commands yet
-            return false;
-        }
-
-
-        private void HandleCommands()
-        {
-            // No commands yet
         }
 
 

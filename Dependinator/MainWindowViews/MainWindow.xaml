@@ -6,6 +6,7 @@
     xmlns:mainWindowViews="clr-namespace:Dependinator.MainWindowViews"
     xmlns:ui="clr-namespace:Dependinator.Utils.UI"
     xmlns:modelViewing="clr-namespace:Dependinator.ModelViewing"
+    xmlns:modelMetadataFolders="clr-namespace:Dependinator.Common.ModelMetadataFolders"
     Title="{Binding Title}" Icon="Application.ico"
     Width="900" Height="700"
     BorderBrush="{DynamicResource BorderBrush}" BorderThickness="3"
@@ -46,7 +47,7 @@
         <Grid.RowDefinitions>
             <!-- Title and tool bar -->
             <RowDefinition Height="Auto" />
-            <!-- Repository view -->
+            <!-- Main view -->
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -71,7 +72,7 @@
                         Source="Application.ico" Width="15" Height="15" Margin="5,0"
                         ToolTip="{Binding VersionText}" />
 
-                    <!-- Working folder -->
+                    <!-- Title -->
                     <Button
                         Style="{DynamicResource BaseButtonStyle}"
                         FontSize="12"
@@ -82,13 +83,13 @@
                                 BorderThickness="2"
                                 BorderBrush="{DynamicResource BorderBrush}">
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding WorkingFolderPath}"
+                                    <TextBlock Text="{Binding MainTitleToolTip}"
                                                Foreground="{DynamicResource TextBrush}" />
                                 </StackPanel>
                             </ToolTip>
                         </Button.ToolTip>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{Binding WorkingFolder}" />
+                            <TextBlock Text="{Binding MainTitle}" />
                         </StackPanel>
                     </Button>
 
@@ -143,8 +144,19 @@
             </Grid>
         </Border>
 
-        <!-- Model view -->
-        <modelViewing:ModelView x:Name="ModelView" Grid.Row="1" DataContext="{Binding ModelViewModel}" />
+        <!-- Model items view -->
+        <Border 
+            Visibility="{Binding IsModel, Converter={StaticResource VC}}"
+            Grid.Row="1" BorderThickness="0">
+            <modelViewing:ModelView x:Name="ModelView" DataContext="{Binding ModelViewModel}" />
+        </Border>
+
+        <!-- Open model view -->
+        <Border 
+            Visibility="{Binding IsModel, Converter={StaticResource NVC}}"
+            Grid.Row="1" BorderThickness="0">
+            <modelMetadataFolders:OpenModelView  DataContext="{Binding OpenModelViewModel}" />
+        </Border>
 
     </Grid>
 </Window>
