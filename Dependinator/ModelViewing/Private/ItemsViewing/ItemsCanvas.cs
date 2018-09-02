@@ -190,6 +190,18 @@ namespace Dependinator.ModelViewing.Private.ItemsViewing
 
             Vector moveOffset = new Vector(viewOffset.X / Scale, viewOffset.Y / Scale);
 
+            MoveCanvasItems(moveOffset);
+        }
+
+
+        public void MoveItems(Vector parentOffset)
+        {
+            if (!IsZoomAndMoveEnabled)
+            {
+                return;
+            }
+
+            Vector moveOffset = new Vector(parentOffset.X / ScaleFactor, parentOffset.Y / ScaleFactor);
 
             MoveCanvasItems(moveOffset);
         }

@@ -33,20 +33,25 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public void AddMethodLinks(NodeData memberNode, MethodDefinition method)
+        public void AddMethodLinks(string memberName, MethodDefinition method)
         {
             if (!method.IsConstructor)
             {
                 TypeReference returnType = method.ReturnType;
-                linkHandler.AddLinkToType(memberNode, returnType);
+                linkHandler.AddLinkToType(memberName, returnType);
             }
 
 
             method.Parameters
                 .Select(parameter => parameter.ParameterType)
-                .ForEach(parameterType => linkHandler.AddLinkToType(memberNode, parameterType));
+                .ForEach(parameterType => linkHandler.AddLinkToType(memberName, parameterType));
 
-            methodBodyNodes.Add(new MethodBodyNode(memberNode, method, false));
+            methodBodyNodes.Add(new MethodBodyNode(memberName, method, false));
+        }
+
+        public void AddMethodBodyLinks(string memberName, MethodDefinition method)
+        {
+           methodBodyNodes.Add(new MethodBodyNode(memberName, method, false));
         }
 
 
@@ -60,7 +65,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         {
             try
             {
-                NodeData memberNode = methodBodyNode.MemberNode;
+                string memberName = methodBodyNode.MemberName;
                 MethodDefinition method = methodBodyNode.Method;
 
                 if (method.DeclaringType.IsInterface || !method.HasBody)
@@ -71,20 +76,20 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 MethodBody body = method.Body;
 
                 body.Variables.ForEach(variable =>
-                    AddLinkToMethodVariable(memberNode, variable, methodBodyNode.IsMoveNext));
+                    AddLinkToMethodVariable(memberName, variable, methodBodyNode.IsMoveNext));
 
                 foreach (Instruction instruction in body.Instructions)
                 {
                     IlCount++;
                     if (instruction.Operand is MethodReference methodCall)
                     {
-                        AddLinkToCallMethod(memberNode, methodCall);
+                        AddLinkToCallMethod(memberName, methodCall);
                     }
                     else if (instruction.Operand is FieldDefinition field)
                     {
-                        linkHandler.AddLinkToType(memberNode, field.FieldType);
+                        linkHandler.AddLinkToType(memberName, field.FieldType);
 
-                        linkHandler.AddLinkToMember(memberNode, field);
+                        linkHandler.AddLinkToMember(memberName, field);
                     }
                 }
             }
@@ -96,21 +101,21 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
 
         private void AddLinkToMethodVariable(
-            NodeData memberNode, VariableDefinition variable, bool isMoveNext)
+            string memberName, VariableDefinition variable, bool isMoveNext)
         {
             if (!isMoveNext &&
                 variable.VariableType.IsNested &&
                 asyncStates.TryGetValue(variable.VariableType.FullName, out TypeDefinition asyncType))
             {
                 // There is a async state type with this name
-                AddAsyncStateLinks(memberNode, asyncType);
+                AddAsyncStateLinks(memberName, asyncType);
             }
 
-            linkHandler.AddLinkToType(memberNode, variable.VariableType);
+            linkHandler.AddLinkToType(memberName, variable.VariableType);
         }
 
 
-        private void AddAsyncStateLinks(NodeData memberNode, TypeDefinition asyncType)
+        private void AddAsyncStateLinks(string memberName, TypeDefinition asyncType)
         {
             // Try to get the "MovNext method with contains the actual "async/await" code
             MethodDefinition moveNextMethod = asyncType.Methods
@@ -118,19 +123,19 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
             if (moveNextMethod != null)
             {
-                MethodBodyNode methodBodyNode = new MethodBodyNode(memberNode, moveNextMethod, true);
+                MethodBodyNode methodBodyNode = new MethodBodyNode(memberName, moveNextMethod, true);
 
                 AddMethodBodyLinks(methodBodyNode);
             }
         }
 
 
-        private void AddLinkToCallMethod(NodeData memberNode, MethodReference method)
+        private void AddLinkToCallMethod(string memberName, MethodReference method)
         {
             if (method is GenericInstanceMethod genericMethod)
             {
                 genericMethod.GenericArguments
-                    .ForEach(genericArg => linkHandler.AddLinkToType(memberNode, genericArg));
+                    .ForEach(genericArg => linkHandler.AddLinkToType(memberName, genericArg));
             }
 
             TypeReference declaringType = method.DeclaringType;
@@ -147,28 +152,28 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 return;
             }
 
-            linkHandler.AddLink(memberNode.Name, methodName, NodeData.MemberType);
+            linkHandler.AddLink(memberName, methodName, NodeData.MemberType);
 
             TypeReference returnType = method.ReturnType;
-            linkHandler.AddLinkToType(memberNode, returnType);
+            linkHandler.AddLinkToType(memberName, returnType);
 
             method.Parameters
                 .Select(parameter => parameter.ParameterType)
-                .ForEach(parameterType => linkHandler.AddLinkToType(memberNode, parameterType));
+                .ForEach(parameterType => linkHandler.AddLinkToType(memberName, parameterType));
         }
 
 
         private class MethodBodyNode
         {
-            public MethodBodyNode(NodeData memberNode, MethodDefinition method, bool isMoveNext)
+            public MethodBodyNode(string memberName, MethodDefinition method, bool isMoveNext)
             {
-                MemberNode = memberNode;
+                MemberName = memberName;
                 Method = method;
                 IsMoveNext = isMoveNext;
             }
 
 
-            public NodeData MemberNode { get; }
+            public string MemberName { get; }
             public MethodDefinition Method { get; }
             public bool IsMoveNext { get; }
         }

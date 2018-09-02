@@ -22,7 +22,7 @@ namespace Dependinator.Common.ModelMetadataFolders.Private
 
         public string FileName { get; }
 
-        public string ToolTip => "Show model for " + FilePath;
+        public string ToolTip => "Open model:\n" + FilePath;
 
         public Command OpenFileCommand => Command(() => openFileAction(FilePath));
     }

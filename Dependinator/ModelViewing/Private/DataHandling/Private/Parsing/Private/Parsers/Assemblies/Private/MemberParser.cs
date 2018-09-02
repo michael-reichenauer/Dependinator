@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Dependinator.ModelViewing.Private.DataHandling.Dtos;
 using Dependinator.Utils;
 using Mono.Cecil;
 
@@ -51,6 +50,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             TypeDefinition type = typeData.Type;
             NodeData typeNode = typeData.Node;
 
+            if (typeNode?.Name?.Contains("Dependinator.Program") ?? false)
+            {
+
+            }
             if (typeData.IsAsyncStateType)
             {
                 methodParser.AddAsyncStateType(typeData);
@@ -84,6 +87,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                     .Where(member => !Name.IsCompilerGenerated(member.Name))
                     .ForEach(member => AddMember(
                         member, typeNode, member.Attributes.HasFlag(MethodAttributes.Private)));
+
+                type.Methods
+                    .Where(member => Name.IsCompilerGenerated(member.Name))
+                    .ForEach(member => AddCompilerGeneratedMember(member, typeNode, type));
             }
             catch (Exception e) when (e.IsNotFatal())
             {
@@ -111,7 +118,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                     nodeCallback(memberNode);
                 }
 
-                AddMemberLinks(memberNode, memberInfo);
+                AddMemberLinks(memberName, memberInfo);
             }
             catch (Exception e)
             {
@@ -120,23 +127,59 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        private void AddMemberLinks(NodeData sourceMemberNode, IMemberDefinition member)
+        private void AddCompilerGeneratedMember(MethodDefinition memberInfo,
+            NodeData parentTypeNode, TypeDefinition type)
+        {
+            try
+            {
+                // Some Compiler generated functions are sub functions of some "normal" base function
+                // in e.g. lambda expressions. So lets try to get the name of the base function
+                // as source and and links from within the body of the compiler generated method
+                string memberName = Name.GetMemberFullName(memberInfo);
+                int startName = memberName.LastIndexOf('<');
+                if (startName > -1)
+                {
+                    int endName = memberName.IndexOf('>', startName);
+                    if (endName > -1 && endName > startName + 1)
+                    {
+                        // Get the base name between the '<' and '>' char
+                        string baseName = memberName.Substring(startName + 1, endName - startName - 1);
+
+                        // Find the corresponding base method (problem for overloads)
+                        MethodDefinition baseMethod = type.Methods.FirstOrDefault(m => m.Name == baseName);
+                        if (baseMethod != null)
+                        {
+                            string baseMethodName = Name.GetMemberFullName(baseMethod);
+
+                            methodParser.AddMethodBodyLinks(baseMethodName, memberInfo);
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Exception(e, $"Failed to add member {memberInfo} in {parentTypeNode?.Name}");
+            }
+        }
+
+
+        private void AddMemberLinks(string sourceMemberName, IMemberDefinition member)
         {
             try
             {
                 switch (member)
                 {
                     case FieldDefinition field:
-                        linkHandler.AddLinkToType(sourceMemberNode, field.FieldType);
+                        linkHandler.AddLinkToType(sourceMemberName, field.FieldType);
                         break;
                     case PropertyDefinition property:
-                        linkHandler.AddLinkToType(sourceMemberNode, property.PropertyType);
+                        linkHandler.AddLinkToType(sourceMemberName, property.PropertyType);
                         break;
                     case EventDefinition eventInfo:
-                        linkHandler.AddLinkToType(sourceMemberNode, eventInfo.EventType);
+                        linkHandler.AddLinkToType(sourceMemberName, eventInfo.EventType);
                         break;
                     case MethodDefinition method:
-                        methodParser.AddMethodLinks(sourceMemberNode, method);
+                        methodParser.AddMethodLinks(sourceMemberName, method);
                         break;
                     default:
                         Log.Warn($"Unknown member type {member.DeclaringType}.{member.Name}");
@@ -145,9 +188,10 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             }
             catch (Exception e)
             {
-                Log.Exception(e, $"Failed to links for member {member} in {sourceMemberNode.Name}");
+                Log.Exception(e, $"Failed to links for member {member} in {sourceMemberName}");
             }
         }
+
 
         private static string GetParentName(string fullName)
         {

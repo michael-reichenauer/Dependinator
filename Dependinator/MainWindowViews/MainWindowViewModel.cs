@@ -36,6 +36,7 @@ namespace Dependinator.MainWindowViews
             ILatestVersionService latestVersionService,
             IMainWindowService mainWindowService,
             ModelViewModel modelViewModel,
+            OpenModelViewModel openModelViewModel,
             IOpenModelService openModelService,
             IRecentModelsService recentModelsService,
             IModelMetadataService modelMetadataService,
@@ -54,8 +55,9 @@ namespace Dependinator.MainWindowViews
             this.progress = progress;
 
             ModelViewModel = modelViewModel;
+            OpenModelViewModel = openModelViewModel;
 
-            modelMetadata.OnChange += (s, e) => Notify(nameof(WorkingFolder));
+            modelMetadata.OnChange += (s, e) => Notify(nameof(MainTitle));
             latestVersionService.OnNewVersionAvailable += (s, e) => IsNewVersionVisible = true;
             latestVersionService.StartCheckForLatestVersion();
             SearchItems = new ObservableCollection<SearchEntry>();
@@ -70,12 +72,14 @@ namespace Dependinator.MainWindowViews
 
         public bool IsNewVersionVisible { get => Get(); set => Set(value); }
 
-        public string WorkingFolder => modelMetadata.ModelName;
+        public string MainTitle => modelMetadata.IsDefault ? "Open" : modelMetadata.ModelName;
 
-        public string WorkingFolderPath => modelMetadata.ModelFilePath;
+        public string MainTitleToolTip => modelMetadata.IsDefault ? "Open model" : modelMetadata.ModelFilePath;
 
 
-        public string Title => $"{modelMetadata.ModelName} - {ProgramInfo.Name}";
+        public string Title => modelMetadata.IsDefault
+            ? ProgramInfo.Name
+            : $"{modelMetadata.ModelName} - {ProgramInfo.Name}";
 
 
         public bool IsModel => !modelMetadataService.IsDefault;
@@ -144,7 +148,19 @@ namespace Dependinator.MainWindowViews
             }
         }
 
+        public ViewModel MainViewModel
+        {
+            get
+            {
+                if (modelMetadataService.IsDefault) return OpenModelViewModel;
+                else return ModelViewModel;
+            }
+        }
+
+
         public ModelViewModel ModelViewModel { get; }
+
+        public OpenModelViewModel OpenModelViewModel { get; }
 
 
         public string VersionText

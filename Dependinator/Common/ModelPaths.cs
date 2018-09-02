@@ -1,4 +1,4 @@
-﻿namespace Dependinator.ModelViewing
+﻿namespace Dependinator.Common
 {
     public class ModelPaths
     {

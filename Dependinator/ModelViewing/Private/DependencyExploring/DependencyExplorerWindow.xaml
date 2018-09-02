@@ -86,7 +86,7 @@
                         Command="{Binding SwitchSidesCommand}" />
 
                     <Button
-                        ToolTip="Suppressed Dependencies"
+                        ToolTip="Show suppressed dependencies"
                         WindowChrome.IsHitTestVisibleInChrome="True"
                         Style="{DynamicResource IconButtonStyle}"
                         Click="Suppressed_OnClick">

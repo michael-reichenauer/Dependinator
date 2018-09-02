@@ -2,6 +2,8 @@
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Dependinator.Common.ModelMetadataFolders;
+using Dependinator.Common.ModelMetadataFolders.Private;
 using Dependinator.ModelViewing.Private;
 using Dependinator.ModelViewing.Private.ItemsViewing;
 using Dependinator.Utils.Dependencies;
@@ -14,14 +16,18 @@ namespace Dependinator.ModelViewing
     internal class ModelViewModel : ViewModel
     {
         private readonly IModelViewModelService modelViewModelService;
+        private readonly ModelMetadata modelMetadata;
 
 
         private int width;
 
 
-        public ModelViewModel(IModelViewModelService modelViewModelService)
+        public ModelViewModel(
+            IModelViewModelService modelViewModelService,
+            ModelMetadata modelMetadata)
         {
             this.modelViewModelService = modelViewModelService;
+            this.modelMetadata = modelMetadata;
 
             ItemsCanvas rootCanvas = new ItemsCanvas();
             ItemsViewModel = new ItemsViewModel(rootCanvas);
@@ -49,7 +55,16 @@ namespace Dependinator.ModelViewing
         }
 
 
-        public async Task OpenAsync() => await modelViewModelService.OpenAsync();
+        public async Task OpenAsync()
+        {
+            if (modelMetadata.IsDefault)
+            {
+                // Model not needed for open model view
+                return;
+            }
+
+            await modelViewModelService.OpenAsync();
+        }
 
 
         public Task OpenFilesAsync(IReadOnlyList<string> filePaths) =>

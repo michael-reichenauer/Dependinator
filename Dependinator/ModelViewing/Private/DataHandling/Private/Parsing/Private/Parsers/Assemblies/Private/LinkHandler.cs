@@ -25,11 +25,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
         }
 
 
-        public void AddLinkToType(NodeData sourceNode, TypeReference targetType)
+        public void AddLinkToType(string sourceName, TypeReference targetType)
         {
             if (targetType is GenericInstanceType genericType)
             {
-                genericType.GenericArguments.ForEach(argType => AddLinkToType(sourceNode, argType));
+                genericType.GenericArguments.ForEach(argType => AddLinkToType(sourceName, argType));
             }
 
             if (IsIgnoredReference(targetType))
@@ -44,11 +44,11 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 return;
             }
 
-            SendLink(sourceNode.Name, targetNodeName, NodeData.TypeType);
+            SendLink(sourceName, targetNodeName, NodeData.TypeType);
         }
 
 
-        public void AddLinkToMember(NodeData sourceNode, IMemberDefinition memberInfo)
+        public void AddLinkToMember(string sourceName, IMemberDefinition memberInfo)
         {
             if (IsIgnoredTargetMember(memberInfo))
             {
@@ -62,7 +62,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
                 return;
             }
 
-            SendLink(sourceNode.Name, targetNodeName, NodeData.MemberType);
+            SendLink(sourceName, targetNodeName, NodeData.MemberType);
         }
 
 

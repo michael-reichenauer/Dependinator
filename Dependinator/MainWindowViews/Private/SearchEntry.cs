@@ -1,7 +1,7 @@
 ﻿using Dependinator.ModelViewing;
 
 
-namespace Dependinator.MainWindowViews
+namespace Dependinator.MainWindowViews.Private
 {
     internal class SearchEntry
     {
