@@ -4,7 +4,7 @@ Dependinator visualizes code structure and dependencies in a map-like interface 
 
 ## Get Started
 
-* **Download** Dependinator from the [latest release](https://github.com/michael-reichenauer/Dependinator/releases/latest.)
+* **Download** Dependinator from the [latest release](https://github.com/michael-reichenauer/Dependinator/releases/latest).
 * **More information** is available in the [documentation](https://github.com/michael-reichenauer/Dependinator/wiki/Dependinator-Help).
 
 ## About Dependinator
