@@ -17,18 +17,18 @@ The first time, the view shows an overview of the top level components and their
 
 ![Model View](doc/resources/model_view.png)
 
-### The Dependency Explorer View
+### Dependency Explorer
 
 References and dependencies between different parts of the code can be explored in detail by using the Dependency Explorer window. It makes it easier to investigate exactly what type or member within a node that has a reference to some other type/member within some other node.
 
 ![Dependency Explorer](doc/resources/de.png)
 
-### Thew Source Code View
+### Source Code View
 
 For types and members it is possible to see the source code. Often, the actual source file can be shown and in some cases, Dependinator will show the decompiled code.
 
 ![Source Code](doc/resources/code.png)
 
-### The Visual Studio Extension
+### Visual Studio Extension
 
 The Dependinator Visual Studio Extension (installed by default) supports integration between Dependinator and Visual Studio (VS). In the model view, it is possible to open the source file for a node in VS, and in VS, it is possible to trigger Dependinator to pan and zoom to show the node that correspond to the active window in VS.  
