@@ -6,15 +6,15 @@ Dependinator visualizes code structure and dependencies in a map-like interface 
 
 ### Download
 
-Download Dependinator installer from the [latest Release](https://github.com/michael-reichenauer/Dependinator/releases/latest)
+Download Dependinator installer from the [latest release](https://github.com/michael-reichenauer/Dependinator/releases/latest.)
 
 ### How to Use
 
-More information on how to use is available in the [documentation](https://github.com/michael-reichenauer/Dependinator/wiki/Dependinator-Help)
+More information on how to use is available in the [documentation](https://github.com/michael-reichenauer/Dependinator/wiki/Dependinator-Help).
 
 ## About Dependinator
 
-Dependinator parses a data source like e.g. a .Net solution with assemblies and creates a model, which is visualized as a map-like interface similar to e.g. Google maps. The is also support for third part parser integration, e.g. the [Go parser](https://github.com/michael-reichenauer/depgoparser).
+Dependinator parses a data source like e.g. a .Net solution with assemblies and creates a model, which is visualized as a map-like interface similar to e.g. Google maps. Dependinator also supports integration with third party parsers like e.g. the [Dependinator Go parser](https://github.com/michael-reichenauer/depgoparser).
 
 ### The Model View
 
