@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Threading;
-using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Solutions.Private;
 using Dependinator.Utils;
 using Dependinator.Utils.Dependencies;
 using Dependinator.Utils.UI;
