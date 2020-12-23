@@ -135,7 +135,7 @@ Task("Sign-Extension")
     VsixSignToolSign(new VsixSignToolSignSettings {
             TimestampServerUrl = "http://timestamp.digicert.com",
             File = @"C:\Users\micha\OneDrive\CodeSigning\SignCert.pfx",
-            Hash = "1ccb2b742ff45d6a3a4e42d34fd8497ce5212ef0",
+            Hash = "c40a3d6324961ac5256bb3de62ded166c6c8f6da",
             Password = signPassword
     },
     file);	
