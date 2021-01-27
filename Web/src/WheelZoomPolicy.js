@@ -67,15 +67,14 @@ export let WheelZoomPolicy = draw2d.policy.canvas.ZoomPolicy.extend(
       if (this.center === null) {
         let client = this.canvas.fromCanvasToDocumentCoordinate(x, y)
 
-
         this.center = {
           x: x,
           y: y,
           clientX: client.x,
           clientY: client.y
         }
-        console.log('center:', this.center)
       }
+
       this._zoom(newZoom, this.center)
       this.debouncedZoomedCallback()
 
