@@ -4,25 +4,37 @@ import "jquery-ui-bundle"; // you also need this
 import "jquery-ui-bundle/jquery-ui.css";
 import draw2d from "draw2d";
 import { WheelZoomPolicy } from "./WheelZoomPolicy"
+import { PanPolicyReadOnly } from "./PanPolicyReadOnly"
 
 
 class Canvas extends Component {
 
+    canvas = null;
+
     componentDidMount() {
+        console.log('componentDidMount')
         this.renderCanvas();
     }
 
+    componentWillUnmount() {
+        console.log('componentWillUnmount')
+        this.canvas.destroy()
+    }
+
     renderCanvas() {
-        var canvas = new draw2d.Canvas("canvas");
+
+        this.canvas = new draw2d.Canvas("canvas");
+        let canvas = this.canvas
         canvas.setScrollArea("#canvas");
-        canvas.installEditPolicy(new draw2d.policy.canvas.ShowGridEditPolicy())
-        let rsp = new draw2d.policy.canvas.ReadOnlySelectionPolicy()
+        //canvas.installEditPolicy(new draw2d.policy.canvas.ShowGridEditPolicy())
+
+        let rsp = new PanPolicyReadOnly()
         let psp = new draw2d.policy.canvas.PanningSelectionPolicy()
 
         rsp.onClick = (figure, mouseX, mouseY, shiftKey, ctrlKey) => {
             console.log('rsp click;', figure, mouseX, mouseY, shiftKey, ctrlKey)
             if (figure !== null) {
-                canvas.uninstallEditPolicy(rsp)
+                this.canvas.uninstallEditPolicy(rsp)
                 //psp = new draw2d.policy.canvas.PanningSelectionPolicy()
                 canvas.installEditPolicy(psp)
                 psp.select(canvas, figure)
@@ -37,16 +49,6 @@ class Canvas extends Component {
             }
         }
 
-        // let f1 = new draw2d.shape.node.Between();
-        // f1.setWidth(100);
-        // f1.setHeight(100);
-        // canvas.add(f1, 100, 100);
-
-        // let f2 = new draw2d.shape.node.Between();
-        // f2.setWidth(100);
-        // f2.setHeight(100);
-        // canvas.add(f2, 300, 300);
-
 
         let nwp = new WheelZoomPolicy()
 
@@ -60,11 +62,16 @@ class Canvas extends Component {
             }
         });
 
-        let f = new draw2d.shape.node.Between();
-        f.setWidth(100);
-        f.setHeight(100);
-        canvas.add(f, 3000, 3000);
-        canvas.setDimension(new draw2d.geo.Rectangle(0, 0, 10000, 10000))
+        //canvas.setDimension(new draw2d.geo.Rectangle(0, 0, 10000, 10000))
+
+
+        let cf = new draw2d.shape.composite.Jailhouse({ width: 200, height: 200, bgColor: 'none' })
+        canvas.add(cf, 400, 400);
+
+        let f = new draw2d.shape.node.Between({ width: 50, height: 50 });
+        f.getPorts().each((i, port) => { port.setVisible(false) })
+        canvas.add(f, 450, 450);
+        cf.assignFigure(f)
 
         console.time('figures')
         for (var i = 0; i < 10; i++) {
@@ -80,17 +87,20 @@ class Canvas extends Component {
         }
 
         setTimeout(() => {
+            canvas.setDimension()
             console.timeEnd('figures')
         }, 0);
 
     }
 
     render() {
+        console.log('render')
+        let w = this.props.width
+        let h = this.props.height
+
         return (
-            <div style={{ margin: 100, background: 'red' }}>
-                <div id="canvas"
-                    style={{ height: 1000, width: 1000, position: 'absolute', overflow: 'scroll', maxWidth: 1000, maxHeight: 1000 }}></div>
-            </div>
+            <div id="canvas"
+                style={{ width: w, height: h, position: 'absolute', overflow: 'scroll', maxWidth: w, maxHeight: h }}></div>
         );
     }
 }

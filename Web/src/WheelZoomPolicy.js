@@ -135,8 +135,10 @@ export let WheelZoomPolicy = draw2d.policy.canvas.ZoomPolicy.extend(
         return
       }
 
+
       canvas.zoomFactor = zoom
 
+      //console.log('zoom canvas:', canvas.initialWidth, canvas.initialHeight)
       canvas.paper.setViewBox(0, 0, canvas.initialWidth, canvas.initialHeight)
       // Change the width and the height attributes manually through DOM
       // unfortunately the raphaelJS 'setSize' method changes the viewBox as well and this is unwanted in this case
