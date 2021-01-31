@@ -5,7 +5,8 @@ import "jquery-ui-bundle/jquery-ui.css";
 import draw2d from "draw2d";
 import { WheelZoomPolicy } from "./WheelZoomPolicy"
 import { PanPolicyReadOnly } from "./PanPolicyReadOnly"
-
+import { PanPolicyEdit } from "./PanPolicyEdit"
+import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 
 class Canvas extends Component {
 
@@ -28,14 +29,29 @@ class Canvas extends Component {
         canvas.setScrollArea("#canvas");
         //canvas.installEditPolicy(new draw2d.policy.canvas.ShowGridEditPolicy())
 
+        let createItem = (x, y, shiftKey, ctrlKey) => {
+            console.log('onNoPortDrop', x, y, shiftKey, ctrlKey)
+
+            let f = new draw2d.shape.node.Between({ width: 50, height: 50 });
+            canvas.add(f, x - 25, y - 25);
+            return f
+        }
+
         let rsp = new PanPolicyReadOnly()
-        let psp = new draw2d.policy.canvas.PanningSelectionPolicy()
+        let psp = new PanPolicyEdit()
 
         rsp.onClick = (figure, mouseX, mouseY, shiftKey, ctrlKey) => {
             console.log('rsp click;', figure, mouseX, mouseY, shiftKey, ctrlKey)
+            if (ctrlKey) {
+                let f = createItem(mouseX, mouseY, shiftKey, ctrlKey)
+                this.canvas.uninstallEditPolicy(rsp)
+                canvas.installEditPolicy(psp)
+                psp.select(canvas, f)
+                return
+            }
+
             if (figure !== null) {
                 this.canvas.uninstallEditPolicy(rsp)
-                //psp = new draw2d.policy.canvas.PanningSelectionPolicy()
                 canvas.installEditPolicy(psp)
                 psp.select(canvas, figure)
             }
@@ -43,6 +59,11 @@ class Canvas extends Component {
 
         psp.onClick = (figure, mouseX, mouseY, shiftKey, ctrlKey) => {
             console.log('psp click;', figure, mouseX, mouseY, shiftKey, ctrlKey)
+            if (ctrlKey) {
+                let f = createItem(mouseX, mouseY, shiftKey, ctrlKey)
+                psp.select(canvas, f)
+                return
+            }
             if (figure === null) {
                 canvas.uninstallEditPolicy(psp)
                 canvas.installEditPolicy(rsp)
@@ -50,11 +71,11 @@ class Canvas extends Component {
         }
 
 
-        let nwp = new WheelZoomPolicy()
 
+        let ccp = new ConnectionCreatePolicy()
         canvas.installEditPolicy(rsp)
-        canvas.installEditPolicy(nwp);
-        // canvas.setDimension(new draw2d.geo.Rectangle(0, 0, 50, 50))
+        canvas.installEditPolicy(new WheelZoomPolicy());
+        canvas.installEditPolicy(ccp)
 
         canvas.getCommandStack().addEventListener(function (e) {
             if (e.isPostChangeEvent()) {
@@ -62,35 +83,22 @@ class Canvas extends Component {
             }
         });
 
-        //canvas.setDimension(new draw2d.geo.Rectangle(0, 0, 10000, 10000))
-
-
         let cf = new draw2d.shape.composite.Jailhouse({ width: 200, height: 200, bgColor: 'none' })
         canvas.add(cf, 400, 400);
 
         let f = new draw2d.shape.node.Between({ width: 50, height: 50 });
-        f.getPorts().each((i, port) => { port.setVisible(false) })
         canvas.add(f, 450, 450);
+        f.getPorts().each((i, port) => { port.setVisible(false) })
         cf.assignFigure(f)
 
-        console.time('figures')
-        for (var i = 0; i < 10; i++) {
-            setTimeout(() => {
-                for (var i = 0; i < 100; i++) {
-                    let f = new draw2d.shape.node.Between();
-                    f.setWidth(random(10, 50));
-                    f.setHeight(random(10, 50));
-                    f.getPorts().each((i, port) => { port.setVisible(false) })
-                    canvas.add(f, random(0, 8000), random(0, 8000));
-                }
-            }, 0)
-        }
+        let f2 = new draw2d.shape.node.Between({ width: 50, height: 50 });
+        canvas.add(f2, 200, 200);
+        f2.getPorts().each((i, port) => { port.setVisible(false) })
 
-        setTimeout(() => {
-            canvas.setDimension()
-            console.timeEnd('figures')
-        }, 0);
 
+
+
+        //createManyItems(canvas)
     }
 
     render() {
@@ -103,6 +111,27 @@ class Canvas extends Component {
                 style={{ width: w, height: h, position: 'absolute', overflow: 'scroll', maxWidth: w, maxHeight: h }}></div>
         );
     }
+}
+
+function createManyItems(canvas) {
+    console.time('figures')
+    for (var i = 0; i < 10; i++) {
+        setTimeout(() => {
+            for (var i = 0; i < 100; i++) {
+                let f = new draw2d.shape.node.Between();
+                f.setWidth(random(10, 50));
+                f.setHeight(random(10, 50));
+
+                canvas.add(f, random(0, 8000), random(0, 8000));
+                f.getPorts().each((i, port) => { port.setVisible(false) })
+            }
+        }, 0)
+    }
+
+    setTimeout(() => {
+        canvas.setDimension()
+        console.timeEnd('figures')
+    }, 0);
 }
 
 function random(min, max) {

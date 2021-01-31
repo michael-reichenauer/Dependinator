@@ -37,7 +37,7 @@ function App() {
 
   return (
     <div>
-      <div style={{ margin: 100, background: 'red' }}>
+      <div style={{ margin: 100, backgroundColor: "green" }}>
         <Canvas width={dimensions.width - 200} height={dimensions.height - 200} />
       </div>
     </div>

@@ -18,10 +18,6 @@ export let PanPolicyReadOnly = draw2d.policy.canvas.SelectionPolicy.extend(
         },
 
         onUninstall: function (canvas) {
-            canvas.getAllPorts().each(function (i, port) {
-                port.setVisible(true)
-            })
-
             this._super(canvas)
         },
 
