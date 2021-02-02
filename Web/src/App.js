@@ -1,44 +1,17 @@
-import React, { useState } from "react";
+import React from "react";
 
 import './App.css';
 import Canvas from './Canvas';
+import { useWindowSize } from "./common/windowsize"
 
-function debounce(fn, ms) {
-  let timer
-  return _ => {
-    clearTimeout(timer)
-    timer = setTimeout(_ => {
-      timer = null
-      fn.apply(this, arguments)
-    }, ms)
-  };
-}
 
 function App() {
-  const [dimensions, setDimensions] = useState({
-    height: window.innerHeight,
-    width: window.innerWidth
-  })
-
-  React.useEffect(() => {
-    const debouncedHandleResize = debounce(function handleResize() {
-      setDimensions({
-        height: window.innerHeight,
-        width: window.innerWidth
-      })
-    }, 300)
-
-    window.addEventListener('resize', debouncedHandleResize)
-
-    return _ => {
-      window.removeEventListener('resize', debouncedHandleResize)
-    }
-  })
+  const [size] = useWindowSize()
 
   return (
     <div>
       <div style={{ margin: 100, backgroundColor: "green" }}>
-        <Canvas width={dimensions.width - 200} height={dimensions.height - 200} />
+        <Canvas width={size.width - 200} height={size.height - 200} />
       </div>
     </div>
 
