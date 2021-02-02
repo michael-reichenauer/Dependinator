@@ -95,7 +95,15 @@ class Canvas extends Component {
         canvas.add(f2, 200, 200);
         f2.getPorts().each((i, port) => { port.setVisible(false) })
 
+        let f3 = new draw2d.shape.node.Between({ width: 50, height: 50 });
+        canvas.add(f3, 100, 100);
+        f3.getPorts().each((i, port) => { port.setVisible(false) })
 
+        var c = new draw2d.Connection({
+            source: f3.getOutputPort(0),
+            target: f2.getInputPort(0)
+        });
+        canvas.add(c);
 
 
         //createManyItems(canvas)
