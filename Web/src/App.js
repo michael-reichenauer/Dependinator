@@ -1,6 +1,6 @@
 import React from "react";
 
-import Canvas from './Canvas';
+import Canvas from './components/canvas/Canvas';
 import { useWindowSize } from "./common/windowsize"
 import ApplicationBar from './components/ApplicationBar'
 
