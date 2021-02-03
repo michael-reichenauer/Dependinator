@@ -12,6 +12,10 @@ class Canvas extends Component {
 
     canvas = null;
 
+    canvasWidth = 0;
+    canvasHeigh = 0;
+    hasRendered = false;
+
     componentDidMount() {
         console.log('componentDidMount')
         this.renderCanvas();
@@ -113,6 +117,16 @@ class Canvas extends Component {
         console.log('render')
         let w = this.props.width
         let h = this.props.height
+        console.log('size:', w, h)
+        if (this.hasRendered && (this.canvasWidth !== w || this.canvasHeigh !== h)) {
+            setTimeout(() => {
+                this.canvas.setDimension(new draw2d.geo.Rectangle(0, 0, w, h));
+            }, 0);
+        }
+        this.hasRendered = true
+        this.canvasWidth = w;
+        this.canvasHeigh = h;
+
 
         return (
             <div id="canvas"

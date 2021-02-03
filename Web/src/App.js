@@ -10,10 +10,8 @@ function App() {
 
   return (
     <div>
-      <ApplicationBar />
-
-      <Canvas width={size.width} height={size.height - 70} />
-
+      <ApplicationBar height={55} />
+      <Canvas width={size.width} height={size.height - 55} />
     </div>
 
   );

@@ -1,27 +1,21 @@
 import React from "react";
 import { Typography, fade, AppBar, Toolbar, IconButton, Tooltip } from "@material-ui/core";
 import makeStyles from "@material-ui/core/styles/makeStyles";
-// import { ApplicationMenu } from "./ApplicationMenu"
-import PublishIcon from '@material-ui/icons/Publish';
-import GetAppIcon from '@material-ui/icons/GetApp';
+import { ApplicationMenu } from "./ApplicationMenu"
 
-import ToggleButton from '@material-ui/lab/ToggleButton';
-import ToggleButtonGroup from '@material-ui/lab/ToggleButtonGroup';
 import RefreshIcon from '@material-ui/icons/Refresh';
 
-
-export default function ApplicationBar({ commands }) {
+export default function ApplicationBar({ height }) {
     const classes = useAppBarStyles();
 
     return (
-        <AppBar position="static" style={{ height: "55px" }}>
+        <AppBar position="static" style={{ height: height }}>
             <Toolbar>
                 <Typography className={classes.title} variant="h6" noWrap>Dependinator</Typography>
 
-                <Tooltip title="Refresh list" ><IconButton onClick={() => { }}><RefreshIcon /></IconButton></Tooltip>
+                {/* <Tooltip title="Refresh list" ><IconButton onClick={() => { }}><RefreshIcon /></IconButton></Tooltip> */}
 
-
-                {/* <ApplicationMenu /> */}
+                <ApplicationMenu />
 
             </Toolbar>
         </AppBar >
