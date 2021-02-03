@@ -135,32 +135,32 @@ class Canvas extends Component {
     }
 }
 
-function createManyItems(canvas) {
-    console.time('figures')
-    for (var i = 0; i < 10; i++) {
-        setTimeout(() => {
-            for (var i = 0; i < 100; i++) {
-                let f = new draw2d.shape.node.Between();
-                f.setWidth(random(10, 50));
-                f.setHeight(random(10, 50));
+// function createManyItems(canvas) {
+//     console.time('figures')
+//     for (var i = 0; i < 10; i++) {
+//         setTimeout(() => {
+//             for (var i = 0; i < 100; i++) {
+//                 let f = new draw2d.shape.node.Between();
+//                 f.setWidth(random(10, 50));
+//                 f.setHeight(random(10, 50));
 
-                canvas.add(f, random(0, 8000), random(0, 8000));
-                f.getPorts().each((i, port) => { port.setVisible(false) })
-            }
-        }, 0)
-    }
+//                 canvas.add(f, random(0, 8000), random(0, 8000));
+//                 f.getPorts().each((i, port) => { port.setVisible(false) })
+//             }
+//         }, 0)
+//     }
 
-    setTimeout(() => {
-        canvas.setDimension()
-        console.timeEnd('figures')
-    }, 0);
-}
+//     setTimeout(() => {
+//         canvas.setDimension()
+//         console.timeEnd('figures')
+//     }, 0);
+// }
 
-function random(min, max) {
-    min = Math.ceil(min);
-    max = Math.floor(max);
-    return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
-}
+// function random(min, max) {
+//     min = Math.ceil(min);
+//     max = Math.floor(max);
+//     return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+// }
 
 
 export default Canvas;

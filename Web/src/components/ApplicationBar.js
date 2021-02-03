@@ -1,9 +1,7 @@
 import React from "react";
-import { Typography, fade, AppBar, Toolbar, IconButton, Tooltip } from "@material-ui/core";
+import { Typography, fade, AppBar, Toolbar, } from "@material-ui/core";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { ApplicationMenu } from "./ApplicationMenu"
-
-import RefreshIcon from '@material-ui/icons/Refresh';
 
 export default function ApplicationBar({ height }) {
     const classes = useAppBarStyles();
@@ -21,7 +19,6 @@ export default function ApplicationBar({ height }) {
         </AppBar >
     )
 }
-
 
 
 const useAppBarStyles = makeStyles((theme) => ({
