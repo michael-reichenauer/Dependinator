@@ -7,24 +7,53 @@ import { WheelZoomPolicy } from "./WheelZoomPolicy"
 import { PanPolicyReadOnly } from "./PanPolicyReadOnly"
 import { PanPolicyEdit } from "./PanPolicyEdit"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
+import { Menu, MenuItem } from "@material-ui/core";
+
+const initialState = {
+    mouseX: null,
+    mouseY: null,
+};
 
 class Canvas extends Component {
-
     canvas = null;
-
     canvasWidth = 0;
     canvasHeigh = 0;
     hasRendered = false;
 
+    constructor(props) {
+        super(props);
+        this.state = initialState;
+    }
+
     componentDidMount() {
         console.log('componentDidMount')
         this.renderCanvas();
+        document.addEventListener("contextmenu", this.handleContextMenu);
     }
 
     componentWillUnmount() {
         console.log('componentWillUnmount')
+        document.removeEventListener("contextmenu", this.handleContextMenu);
         this.canvas.destroy()
     }
+
+    handleContextMenu = (event) => {
+        if (!event.path.some((i) => i.id === "canvas")) {
+            // Not within the canvas 
+            return
+        }
+        event.preventDefault();
+
+        // Show menu
+        this.setState({
+            mouseX: event.clientX - 2,
+            mouseY: event.clientY - 4,
+        });
+    };
+
+    handleCloseContextMenu = () => {
+        this.setState(initialState);
+    };
 
     renderCanvas() {
 
@@ -107,6 +136,7 @@ class Canvas extends Component {
             source: f3.getOutputPort(0),
             target: f2.getInputPort(0)
         });
+
         canvas.add(c);
 
 
@@ -115,6 +145,8 @@ class Canvas extends Component {
 
     render() {
         console.log('render')
+        const { mouseX, mouseY } = this.state;
+
         let w = this.props.width
         let h = this.props.height
         console.log('size:', w, h)
@@ -129,8 +161,26 @@ class Canvas extends Component {
 
 
         return (
-            <div id="canvas"
-                style={{ width: w, height: h, position: 'absolute', overflow: 'scroll', maxWidth: w, maxHeight: h }}></div>
+            <>
+                <div id="canvas"
+                    style={{ width: w, height: h, position: 'absolute', overflow: 'scroll', maxWidth: w, maxHeight: h }}></div>
+                <Menu
+                    keepMounted
+                    open={mouseY !== null}
+                    onClose={this.handleCloseContextMenu}
+                    anchorReference="anchorPosition"
+                    anchorPosition={
+                        mouseY !== null && mouseX !== null
+                            ? { top: mouseY, left: mouseX }
+                            : undefined
+                    }
+                >
+                    <MenuItem onClick={this.handleCloseContextMenu}>Copy</MenuItem>
+                    <MenuItem onClick={this.handleCloseContextMenu}>Print</MenuItem>
+                    <MenuItem onClick={this.handleCloseContextMenu}>Highlight</MenuItem>
+                    <MenuItem onClick={this.handleCloseContextMenu}>Email</MenuItem>
+                </Menu>
+            </>
         );
     }
 }

@@ -21,6 +21,7 @@ export let PanPolicyReadOnly = draw2d.policy.canvas.SelectionPolicy.extend(
             this._super(canvas)
         },
 
+
         /**
          * 
          *
