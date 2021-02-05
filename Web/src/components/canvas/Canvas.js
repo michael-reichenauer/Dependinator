@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import "import-jquery";
-import "jquery-ui-bundle"; // you also need this
+import "jquery-ui-bundle";
 import "jquery-ui-bundle/jquery-ui.css";
 import draw2d from "draw2d";
 import { WheelZoomPolicy } from "./WheelZoomPolicy"
@@ -10,12 +10,16 @@ import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { Menu, MenuItem } from "@material-ui/core";
 
 const initialState = {
-    mouseX: null,
-    mouseY: null,
+    showContextMenu: false,
+    figure: null,
+    contextMenuX: null,
+    contextMenuY: null,
 };
 
 class Canvas extends Component {
     canvas = null;
+    panPolicyCurrent = null
+    panPolicyOther = null;
     canvasWidth = 0;
     canvasHeigh = 0;
     hasRendered = false;
@@ -26,13 +30,11 @@ class Canvas extends Component {
     }
 
     componentDidMount() {
-        console.log('componentDidMount')
-        this.renderCanvas();
+        this.createCanvas();
         document.addEventListener("contextmenu", this.handleContextMenu);
     }
 
     componentWillUnmount() {
-        console.log('componentWillUnmount')
         document.removeEventListener("contextmenu", this.handleContextMenu);
         this.canvas.destroy()
     }
@@ -44,71 +46,61 @@ class Canvas extends Component {
         }
         event.preventDefault();
 
+        // Try get figure for context menu
+        event = getEvent(event)
+        let point = this.canvas.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
+        let figure = this.canvas.getBestFigure(point.x, point.y)
+        console.log('Figure:', figure)
+
         // Show menu
         this.setState({
-            mouseX: event.clientX - 2,
-            mouseY: event.clientY - 4,
+            showContextMenu: true,
+            figure: figure,
+            contextMenuX: event.clientX,
+            contextMenuY: event.clientY,
         });
     };
 
     handleCloseContextMenu = () => {
-        this.setState(initialState);
+        this.setState({ showContextMenu: false });
     };
 
-    renderCanvas() {
+    togglePanPolicy = () => {
+        let current = this.panPolicyCurrent
+        this.canvas.uninstallEditPolicy(this.panPolicyCurrent)
 
-        this.canvas = new draw2d.Canvas("canvas");
+        this.panPolicyCurrent = this.panPolicyOther
+        this.panPolicyOther = current
+        this.canvas.installEditPolicy(this.panPolicyCurrent)
+    }
+
+    addDefaultItem = (x, y, shiftKey, ctrlKey) => {
+        let figure = new draw2d.shape.node.Between({ width: 50, height: 50 });
+        this.canvas.add(figure, x - 25, y - 25);
+        return figure
+    }
+
+    handleAddNode = (event) => {
+        this.handleCloseContextMenu()
+        console.log('e', event)
+        let point = this.canvas.fromDocumentToCanvasCoordinate(this.state.contextMenuX, this.state.contextMenuY)
+        let figure = new draw2d.shape.node.Between({ width: 50, height: 50 });
+        this.canvas.add(figure, point.x - 25, point.y - 25);
+    }
+
+    createCanvas() {
+
+        this.canvas = new draw2d.Canvas("canvas")
         let canvas = this.canvas
-        canvas.setScrollArea("#canvas");
-        //canvas.installEditPolicy(new draw2d.policy.canvas.ShowGridEditPolicy())
+        canvas.setScrollArea("#canvas")
 
-        let createItem = (x, y, shiftKey, ctrlKey) => {
-            console.log('onNoPortDrop', x, y, shiftKey, ctrlKey)
+        // Pan policy readonly/edit
+        this.panPolicyCurrent = new PanPolicyReadOnly(this.togglePanPolicy, this.addDefaultItem)
+        this.panPolicyOther = new PanPolicyEdit(this.togglePanPolicy, this.addDefaultItem)
+        canvas.installEditPolicy(this.panPolicyCurrent)
 
-            let f = new draw2d.shape.node.Between({ width: 50, height: 50 });
-            canvas.add(f, x - 25, y - 25);
-            return f
-        }
-
-        let rsp = new PanPolicyReadOnly()
-        let psp = new PanPolicyEdit()
-
-        rsp.onClick = (figure, mouseX, mouseY, shiftKey, ctrlKey) => {
-            console.log('rsp click;', figure, mouseX, mouseY, shiftKey, ctrlKey)
-            if (ctrlKey) {
-                let f = createItem(mouseX, mouseY, shiftKey, ctrlKey)
-                this.canvas.uninstallEditPolicy(rsp)
-                canvas.installEditPolicy(psp)
-                psp.select(canvas, f)
-                return
-            }
-
-            if (figure !== null) {
-                this.canvas.uninstallEditPolicy(rsp)
-                canvas.installEditPolicy(psp)
-                psp.select(canvas, figure)
-            }
-        }
-
-        psp.onClick = (figure, mouseX, mouseY, shiftKey, ctrlKey) => {
-            console.log('psp click;', figure, mouseX, mouseY, shiftKey, ctrlKey)
-            if (ctrlKey) {
-                let f = createItem(mouseX, mouseY, shiftKey, ctrlKey)
-                psp.select(canvas, f)
-                return
-            }
-            if (figure === null) {
-                canvas.uninstallEditPolicy(psp)
-                canvas.installEditPolicy(rsp)
-            }
-        }
-
-
-
-        let ccp = new ConnectionCreatePolicy()
-        canvas.installEditPolicy(rsp)
         canvas.installEditPolicy(new WheelZoomPolicy());
-        canvas.installEditPolicy(ccp)
+        canvas.installEditPolicy(new ConnectionCreatePolicy())
 
         canvas.getCommandStack().addEventListener(function (e) {
             if (e.isPostChangeEvent()) {
@@ -116,40 +108,36 @@ class Canvas extends Component {
             }
         });
 
-        let cf = new draw2d.shape.composite.Jailhouse({ width: 200, height: 200, bgColor: 'none' })
-        canvas.add(cf, 400, 400);
+        // let cf = new draw2d.shape.composite.Jailhouse({ width: 200, height: 200, bgColor: 'none' })
+        // canvas.add(cf, 400, 400);
 
-        let f = new draw2d.shape.node.Between({ width: 50, height: 50 });
-        canvas.add(f, 450, 450);
-        f.getPorts().each((i, port) => { port.setVisible(false) })
-        cf.assignFigure(f)
+        // let f = new draw2d.shape.node.Between({ width: 50, height: 50 });
+        // canvas.add(f, 450, 450);
+        // f.getPorts().each((i, port) => { port.setVisible(false) })
+        // cf.assignFigure(f)
 
-        let f2 = new draw2d.shape.node.Between({ width: 50, height: 50 });
-        canvas.add(f2, 200, 200);
-        f2.getPorts().each((i, port) => { port.setVisible(false) })
+        // let f2 = new draw2d.shape.node.Between({ width: 50, height: 50 });
+        // canvas.add(f2, 200, 200);
+        // f2.getPorts().each((i, port) => { port.setVisible(false) })
 
-        let f3 = new draw2d.shape.node.Between({ width: 50, height: 50 });
-        canvas.add(f3, 100, 100);
-        f3.getPorts().each((i, port) => { port.setVisible(false) })
+        // let f3 = new draw2d.shape.node.Between({ width: 50, height: 50 });
+        // canvas.add(f3, 100, 100);
+        // f3.getPorts().each((i, port) => { port.setVisible(false) })
 
-        var c = new draw2d.Connection({
-            source: f3.getOutputPort(0),
-            target: f2.getInputPort(0)
-        });
+        // var c = new draw2d.Connection({
+        //     source: f3.getOutputPort(0),
+        //     target: f2.getInputPort(0)
+        // });
 
-        canvas.add(c);
-
-
-        //createManyItems(canvas)
+        // canvas.add(c);
     }
 
     render() {
         console.log('render')
-        const { mouseX, mouseY } = this.state;
+        const { showContextMenu, figure, contextMenuX, contextMenuY } = this.state;
 
         let w = this.props.width
         let h = this.props.height
-        console.log('size:', w, h)
         if (this.hasRendered && (this.canvasWidth !== w || this.canvasHeigh !== h)) {
             setTimeout(() => {
                 this.canvas.setDimension(new draw2d.geo.Rectangle(0, 0, w, h));
@@ -166,51 +154,36 @@ class Canvas extends Component {
                     style={{ width: w, height: h, position: 'absolute', overflow: 'scroll', maxWidth: w, maxHeight: h }}></div>
                 <Menu
                     keepMounted
-                    open={mouseY !== null}
+                    open={showContextMenu}
                     onClose={this.handleCloseContextMenu}
                     anchorReference="anchorPosition"
                     anchorPosition={
-                        mouseY !== null && mouseX !== null
-                            ? { top: mouseY, left: mouseX }
+                        contextMenuX !== null && contextMenuY !== null
+                            ? { left: contextMenuX - 2, top: contextMenuY - 4 }
                             : undefined
                     }
                 >
-                    <MenuItem onClick={this.handleCloseContextMenu}>Copy</MenuItem>
-                    <MenuItem onClick={this.handleCloseContextMenu}>Print</MenuItem>
-                    <MenuItem onClick={this.handleCloseContextMenu}>Highlight</MenuItem>
-                    <MenuItem onClick={this.handleCloseContextMenu}>Email</MenuItem>
+                    {figure !== null && <MenuItem onClick={this.handleCloseContextMenu}>Figure</MenuItem>}
+                    {figure === null && <MenuItem onClick={this.handleAddNode}>Add Node</MenuItem>}
+
                 </Menu>
             </>
         );
     }
 }
 
-// function createManyItems(canvas) {
-//     console.time('figures')
-//     for (var i = 0; i < 10; i++) {
-//         setTimeout(() => {
-//             for (var i = 0; i < 100; i++) {
-//                 let f = new draw2d.shape.node.Between();
-//                 f.setWidth(random(10, 50));
-//                 f.setHeight(random(10, 50));
+function getEvent(event) {
+    // check for iPad, Android touch events
+    if (typeof event.originalEvent !== "undefined") {
+        if (event.originalEvent.touches && event.originalEvent.touches.length) {
+            return event.originalEvent.touches[0]
+        } else if (event.originalEvent.changedTouches && event.originalEvent.changedTouches.length) {
+            return event.originalEvent.changedTouches[0]
+        }
+    }
+    return event
+}
 
-//                 canvas.add(f, random(0, 8000), random(0, 8000));
-//                 f.getPorts().each((i, port) => { port.setVisible(false) })
-//             }
-//         }, 0)
-//     }
-
-//     setTimeout(() => {
-//         canvas.setDimension()
-//         console.timeEnd('figures')
-//     }, 0);
-// }
-
-// function random(min, max) {
-//     min = Math.ceil(min);
-//     max = Math.floor(max);
-//     return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
-// }
 
 
 export default Canvas;

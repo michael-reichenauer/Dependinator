@@ -6,12 +6,19 @@ export let PanPolicyReadOnly = draw2d.policy.canvas.SelectionPolicy.extend(
     {
         NAME: "PanPolicyReadOnly",
 
-        init: function (attr, setter, getter) {
+        togglePanPolicy: null,
+        createItem: null,
+        canvas: null,
+
+        init: function (togglePanPolicy, createItem, attr, setter, getter) {
             this._super(attr, setter, getter)
+            this.togglePanPolicy = togglePanPolicy
+            this.createItem = createItem
         },
 
         onInstall: function (canvas) {
             this._super(canvas)
+            this.canvas = canvas
             canvas.getAllPorts().each(function (i, port) {
                 port.setVisible(false)
             })
@@ -21,6 +28,23 @@ export let PanPolicyReadOnly = draw2d.policy.canvas.SelectionPolicy.extend(
             this._super(canvas)
         },
 
+
+        onClick: function (figure, mouseX, mouseY, shiftKey, ctrlKey) {
+            if (figure === null) {
+                return
+            }
+
+            this.togglePanPolicy()
+        },
+
+        onDoubleClick: function (figure, mouseX, mouseY, shiftKey, ctrlKey) {
+            if (figure !== null) {
+                return
+            }
+
+            this.createItem(mouseX, mouseY, shiftKey, ctrlKey)
+            this.togglePanPolicy()
+        },
 
         /**
          * 

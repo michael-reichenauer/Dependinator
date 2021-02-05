@@ -3,20 +3,43 @@ import draw2d from "draw2d";
 
 export let PanPolicyEdit = draw2d.policy.canvas.SingleSelectionPolicy.extend(
     {
-
         NAME: "PanPolicyEdit",
 
-        init: function () {
+        togglePanPolicy: null,
+        createItem: null,
+        canvas: null,
+
+        init: function (togglePanPolicy, createItem) {
             this._super()
+            this.togglePanPolicy = togglePanPolicy
+            this.createItem = createItem
         },
 
         onInstall: function (canvas) {
             this._super(canvas)
+            this.canvas = canvas
             console.time('getports')
             canvas.getAllPorts().each(function (i, port) {
                 port.setVisible(true)
             })
             console.timeEnd('getports')
+        },
+
+        onClick: function (figure, mouseX, mouseY, shiftKey, ctrlKey) {
+            if (figure !== null) {
+                return
+            }
+
+            this.togglePanPolicy()
+        },
+
+        onDoubleClick: function (figure, mouseX, mouseY, shiftKey, ctrlKey) {
+            if (figure !== null) {
+                return
+            }
+
+            this.createItem(mouseX, mouseY, shiftKey, ctrlKey)
+            this.togglePanPolicy()
         },
 
         /**
