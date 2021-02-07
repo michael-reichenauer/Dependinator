@@ -231,7 +231,13 @@ export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePol
 
         createConnection: function () {
             var connection = this._super();
+            connection.setColor('#222222')
             connection.setRouter(new draw2d.layout.connection.DirectRouter());
+
+            const arrow = new draw2d.decoration.connection.ArrowDecorator()
+            arrow.setBackgroundColor(connection.getColor())
+            arrow.setDimension(12, 12)
+            connection.targetDecorator = arrow
 
             return connection;
         }

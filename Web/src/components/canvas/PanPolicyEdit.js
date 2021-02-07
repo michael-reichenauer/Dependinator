@@ -28,18 +28,19 @@ export let PanPolicyEdit = draw2d.policy.canvas.SingleSelectionPolicy.extend(
             if (figure !== null) {
                 return
             }
+            console.log('figure', figure)
 
             this.togglePanPolicy()
         },
 
-        onDoubleClick: function (figure, mouseX, mouseY, shiftKey, ctrlKey) {
-            if (figure !== null) {
-                return
-            }
+        // onDoubleClick: function (figure, mouseX, mouseY, shiftKey, ctrlKey) {
+        //     if (figure !== null) {
+        //         return
+        //     }
 
-            this.createItem(mouseX, mouseY, shiftKey, ctrlKey)
-            this.togglePanPolicy()
-        },
+        //     this.createItem(mouseX, mouseY, shiftKey, ctrlKey)
+        //     this.togglePanPolicy()
+        // },
 
         /**
          * 
