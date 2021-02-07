@@ -5,6 +5,9 @@ import { ApplicationMenu } from "./ApplicationMenu"
 import PersonAddIcon from '@material-ui/icons/PersonAdd';
 import LibraryAddOutlinedIcon from '@material-ui/icons/LibraryAddOutlined';
 import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
+import UndoIcon from '@material-ui/icons/Undo';
+import RedoIcon from '@material-ui/icons/Redo';
+
 
 export default function ApplicationBar({ height, commands }) {
     const classes = useAppBarStyles();
@@ -13,10 +16,12 @@ export default function ApplicationBar({ height, commands }) {
         <AppBar position="static" style={{ height: height }}>
             <Toolbar>
                 <Typography className={classes.title} variant="h6" noWrap>Dependinator</Typography>
-
-                <Tooltip title="Add node" ><IconButton onClick={() => commands.addNode()}><AddBoxOutlinedIcon style={{ color: 'white' }} /></IconButton></Tooltip>
-                <Tooltip title="Add user node" ><IconButton onClick={() => commands.addUserNode()}><PersonAddIcon style={{ color: 'white' }} /></IconButton></Tooltip>
-                <Tooltip title="Add external system node" ><IconButton onClick={() => commands.addExternalNode()}><LibraryAddOutlinedIcon style={{ color: 'white' }} /></IconButton></Tooltip>
+                <Tooltip title="Undo" ><IconButton onClick={() => commands.undo()}><UndoIcon className={classes.icons} /></IconButton></Tooltip>
+                <Tooltip title="Redo" ><IconButton onClick={() => commands.redo()}><RedoIcon className={classes.icons} /></IconButton></Tooltip>
+                <Tooltip title="Add node" ><IconButton onClick={() => commands.addNode()}><AddBoxOutlinedIcon className={classes.icons} /></IconButton></Tooltip>
+                <Tooltip title="Add user node" ><IconButton onClick={() => commands.addUserNode()}><PersonAddIcon className={classes.icons} /></IconButton></Tooltip>
+                <Tooltip title="Add external system node" ><IconButton onClick={() => commands.addExternalNode()}><LibraryAddOutlinedIcon className={classes.icons} /></IconButton></Tooltip>
+                <Typography className={classes.space} variant="h6" noWrap> </Typography>
                 <ApplicationMenu />
 
             </Toolbar>
@@ -30,11 +35,18 @@ const useAppBarStyles = makeStyles((theme) => ({
         flexGrow: 1,
     },
     title: {
-        flexGrow: 1,
+        //flexGrow: 1,
         display: 'none',
         [theme.breakpoints.up('sm')]: {
             display: 'block',
         },
+    },
+    space: {
+        flexGrow: 1,
+    },
+    icons: {
+        //flexGrow: 1,
+        color: 'white',
     },
     search: {
         position: 'relative',

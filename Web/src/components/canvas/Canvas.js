@@ -29,6 +29,16 @@ class Canvas extends Component {
         props.commands.addNode = this.addNode
         props.commands.addUserNode = this.addUserNode
         props.commands.addExternalNode = this.addExternalNode
+        props.commands.undo = this.undo
+        props.commands.redo = this.redo
+    }
+
+    undo = () => {
+        this.canvas.getCommandStack().undo();
+    }
+
+    redo = () => {
+        this.canvas.getCommandStack().redo();
     }
 
     addNode = () => {
@@ -98,7 +108,8 @@ class Canvas extends Component {
         this.panPolicyCurrent = this.panPolicyOther
         this.panPolicyOther = current
         this.canvas.installEditPolicy(this.panPolicyCurrent)
-        if (figure !== null) {
+
+        if (figure != null) {
             this.canvas.setCurrentSelection(figure)
         }
     }
