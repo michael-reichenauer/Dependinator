@@ -8,12 +8,11 @@ import { PanPolicyReadOnly } from "./PanPolicyReadOnly"
 import { PanPolicyEdit } from "./PanPolicyEdit"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { Menu, MenuItem } from "@material-ui/core";
+import { random } from '../../common/utils'
+import { addNode, addUserNode, addExternalNode } from './standardFigures'
 
 const initialState = {
-    showContextMenu: false,
-    figure: null,
-    contextMenuX: null,
-    contextMenuY: null,
+    contextMenu: null,
 };
 
 class Canvas extends Component {
@@ -21,75 +20,90 @@ class Canvas extends Component {
     panPolicyCurrent = null
     panPolicyOther = null;
     canvasWidth = 0;
-    canvasHeigh = 0;
+    canvasHeight = 0;
     hasRendered = false;
 
     constructor(props) {
         super(props);
         this.state = initialState;
+        props.commands.addNode = this.addNode
+        props.commands.addUserNode = this.addUserNode
+        props.commands.addExternalNode = this.addExternalNode
     }
 
-    componentDidMount() {
+    addNode = () => {
+        addNode(this.canvas, this.randomCenterPoint());
+    }
+
+    addUserNode = () => {
+        addUserNode(this.canvas, this.randomCenterPoint());
+    }
+
+    addExternalNode = () => {
+        addExternalNode(this.canvas, this.randomCenterPoint());
+    }
+
+    addDefaultItem = (x, y, shiftKey, ctrlKey) => {
+        addNode(this.canvas, { x: x, y: y })
+    }
+
+    handleMenuAddNode = () => {
+        const { x, y } = this.handleCloseContextMenu()
+        addNode(this.canvas, this.toCanvasCoordinate(x, y))
+    }
+
+    handleMenuAddUserNode = () => {
+        const { x, y } = this.handleCloseContextMenu()
+        addUserNode(this.canvas, this.toCanvasCoordinate(x, y))
+    }
+
+    handleMenuAddExternalNode = () => {
+        const { x, y } = this.handleCloseContextMenu()
+        addExternalNode(this.canvas, this.toCanvasCoordinate(x, y))
+    }
+
+
+    componentDidMount = () => {
         this.createCanvas();
         document.addEventListener("contextmenu", this.handleContextMenu);
     }
 
-    componentWillUnmount() {
+    componentWillUnmount = () => {
         document.removeEventListener("contextmenu", this.handleContextMenu);
         this.canvas.destroy()
     }
 
     handleContextMenu = (event) => {
         if (!event.path.some((i) => i.id === "canvas")) {
-            // Not within the canvas 
+            // Not a right click within the canvas 
             return
         }
         event.preventDefault();
-
-        // Try get figure for context menu
         event = getEvent(event)
-        let point = this.canvas.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
-        let figure = this.canvas.getBestFigure(point.x, point.y)
-        console.log('Figure:', figure)
 
-        // Show menu
-        this.setState({
-            showContextMenu: true,
-            figure: figure,
-            contextMenuX: event.clientX,
-            contextMenuY: event.clientY,
-        });
+        let figure = this.tryGetFigure(event.clientX, event.clientY)
+        this.setState({ contextMenu: { figure: figure, x: event.clientX, y: event.clientY } });
     };
 
     handleCloseContextMenu = () => {
-        this.setState({ showContextMenu: false });
+        const { x, y } = this.state.contextMenu
+        this.setState({ contextMenu: null });
+        return { x, y }
     };
 
-    togglePanPolicy = () => {
+    togglePanPolicy = (figure) => {
         let current = this.panPolicyCurrent
         this.canvas.uninstallEditPolicy(this.panPolicyCurrent)
 
         this.panPolicyCurrent = this.panPolicyOther
         this.panPolicyOther = current
         this.canvas.installEditPolicy(this.panPolicyCurrent)
+        if (figure !== null) {
+            this.canvas.setCurrentSelection(figure)
+        }
     }
 
-    addDefaultItem = (x, y, shiftKey, ctrlKey) => {
-        let figure = new draw2d.shape.node.Between({ width: 50, height: 50 });
-        this.canvas.add(figure, x - 25, y - 25);
-        return figure
-    }
-
-    handleAddNode = (event) => {
-        this.handleCloseContextMenu()
-        console.log('e', event)
-        let point = this.canvas.fromDocumentToCanvasCoordinate(this.state.contextMenuX, this.state.contextMenuY)
-        let figure = new draw2d.shape.node.Between({ width: 50, height: 50 });
-        this.canvas.add(figure, point.x - 25, point.y - 25);
-    }
-
-    createCanvas() {
-
+    createCanvas = () => {
         this.canvas = new draw2d.Canvas("canvas")
         let canvas = this.canvas
         canvas.setScrollArea("#canvas")
@@ -132,21 +146,20 @@ class Canvas extends Component {
         // canvas.add(c);
     }
 
-    render() {
+    render = () => {
         console.log('render')
-        const { showContextMenu, figure, contextMenuX, contextMenuY } = this.state;
+        const { contextMenu } = this.state;
 
         let w = this.props.width
         let h = this.props.height
-        if (this.hasRendered && (this.canvasWidth !== w || this.canvasHeigh !== h)) {
+        if (this.hasRendered && (this.canvasWidth !== w || this.canvasHeight !== h)) {
             setTimeout(() => {
                 this.canvas.setDimension(new draw2d.geo.Rectangle(0, 0, w, h));
             }, 0);
         }
         this.hasRendered = true
         this.canvasWidth = w;
-        this.canvasHeigh = h;
-
+        this.canvasHeight = h;
 
         return (
             <>
@@ -154,21 +167,40 @@ class Canvas extends Component {
                     style={{ width: w, height: h, position: 'absolute', overflow: 'scroll', maxWidth: w, maxHeight: h }}></div>
                 <Menu
                     keepMounted
-                    open={showContextMenu}
+                    open={contextMenu !== null}
                     onClose={this.handleCloseContextMenu}
                     anchorReference="anchorPosition"
                     anchorPosition={
-                        contextMenuX !== null && contextMenuY !== null
-                            ? { left: contextMenuX - 2, top: contextMenuY - 4 }
+                        contextMenu !== null
+                            ? { left: contextMenu.x - 2, top: contextMenu.y - 4 }
                             : undefined
                     }
                 >
-                    {figure !== null && <MenuItem onClick={this.handleCloseContextMenu}>Figure</MenuItem>}
-                    {figure === null && <MenuItem onClick={this.handleAddNode}>Add Node</MenuItem>}
+                    {contextMenu !== null && contextMenu.figure !== null && <MenuItem onClick={this.handleCloseContextMenu}>Figure</MenuItem>}
+                    {contextMenu !== null && contextMenu.figure === null && <MenuItem onClick={this.handleMenuAddNode}>Add Node</MenuItem>}
+                    {contextMenu !== null && contextMenu.figure === null && <MenuItem onClick={this.handleMenuAddUserNode}>Add User Node</MenuItem>}
+                    {contextMenu !== null && contextMenu.figure === null && <MenuItem onClick={this.handleMenuAddExternalNode}>Add External Node</MenuItem>}
 
                 </Menu>
             </>
         );
+    }
+
+    tryGetFigure = (x, y) => {
+        let cp = this.toCanvasCoordinate(x, y)
+        let figure = this.canvas.getBestFigure(cp.x, cp.y)
+        console.log('Figure:', figure)
+        return figure
+    }
+
+    toCanvasCoordinate = (x, y) => {
+        return this.canvas.fromDocumentToCanvasCoordinate(x, y)
+    }
+
+    randomCenterPoint = () => {
+        let x = this.canvasWidth / 2 + random(-10, 10)
+        let y = this.canvasHeight / 2 + random(-10, 10)
+        return { x: x, y: y }
     }
 }
 

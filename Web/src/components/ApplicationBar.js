@@ -1,9 +1,12 @@
 import React from "react";
-import { Typography, fade, AppBar, Toolbar, } from "@material-ui/core";
+import { Typography, fade, AppBar, Toolbar, IconButton, Tooltip, } from "@material-ui/core";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { ApplicationMenu } from "./ApplicationMenu"
+import PersonAddIcon from '@material-ui/icons/PersonAdd';
+import LibraryAddOutlinedIcon from '@material-ui/icons/LibraryAddOutlined';
+import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
 
-export default function ApplicationBar({ height }) {
+export default function ApplicationBar({ height, commands }) {
     const classes = useAppBarStyles();
 
     return (
@@ -11,8 +14,9 @@ export default function ApplicationBar({ height }) {
             <Toolbar>
                 <Typography className={classes.title} variant="h6" noWrap>Dependinator</Typography>
 
-                {/* <Tooltip title="Refresh list" ><IconButton onClick={() => { }}><RefreshIcon /></IconButton></Tooltip> */}
-
+                <Tooltip title="Add node" ><IconButton onClick={() => commands.addNode()}><AddBoxOutlinedIcon style={{ color: 'white' }} /></IconButton></Tooltip>
+                <Tooltip title="Add user node" ><IconButton onClick={() => commands.addUserNode()}><PersonAddIcon style={{ color: 'white' }} /></IconButton></Tooltip>
+                <Tooltip title="Add external system node" ><IconButton onClick={() => commands.addExternalNode()}><LibraryAddOutlinedIcon style={{ color: 'white' }} /></IconButton></Tooltip>
                 <ApplicationMenu />
 
             </Toolbar>

@@ -18,11 +18,10 @@ export let PanPolicyEdit = draw2d.policy.canvas.SingleSelectionPolicy.extend(
         onInstall: function (canvas) {
             this._super(canvas)
             this.canvas = canvas
-            console.time('getports')
+            canvas.isReadOnlyMode = false
             canvas.getAllPorts().each(function (i, port) {
                 port.setVisible(true)
             })
-            console.timeEnd('getports')
         },
 
         onClick: function (figure, mouseX, mouseY, shiftKey, ctrlKey) {

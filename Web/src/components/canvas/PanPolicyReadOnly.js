@@ -19,6 +19,7 @@ export let PanPolicyReadOnly = draw2d.policy.canvas.SelectionPolicy.extend(
         onInstall: function (canvas) {
             this._super(canvas)
             this.canvas = canvas
+            canvas.isReadOnlyMode = true
             canvas.getAllPorts().each(function (i, port) {
                 port.setVisible(false)
             })
@@ -34,7 +35,7 @@ export let PanPolicyReadOnly = draw2d.policy.canvas.SelectionPolicy.extend(
                 return
             }
 
-            this.togglePanPolicy()
+            this.togglePanPolicy(figure)
         },
 
         onDoubleClick: function (figure, mouseX, mouseY, shiftKey, ctrlKey) {
