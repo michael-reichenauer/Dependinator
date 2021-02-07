@@ -44,7 +44,6 @@ export let PanPolicyReadOnly = draw2d.policy.canvas.SelectionPolicy.extend(
             }
 
             this.createItem(mouseX, mouseY, shiftKey, ctrlKey)
-            this.togglePanPolicy()
         },
 
         /**

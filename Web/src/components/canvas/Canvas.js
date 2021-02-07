@@ -43,33 +43,40 @@ class Canvas extends Component {
 
     addNode = () => {
         addNode(this.canvas, this.randomCenterPoint());
+        this.enableEditMode()
     }
 
     addUserNode = () => {
         addUserNode(this.canvas, this.randomCenterPoint());
+        this.enableEditMode()
     }
 
     addExternalNode = () => {
         addExternalNode(this.canvas, this.randomCenterPoint());
+        this.enableEditMode()
     }
 
     addDefaultItem = (x, y, shiftKey, ctrlKey) => {
         addNode(this.canvas, { x: x, y: y })
+        this.enableEditMode()
     }
 
     handleMenuAddNode = () => {
         const { x, y } = this.handleCloseContextMenu()
         addNode(this.canvas, this.toCanvasCoordinate(x, y))
+        this.enableEditMode()
     }
 
     handleMenuAddUserNode = () => {
         const { x, y } = this.handleCloseContextMenu()
         addUserNode(this.canvas, this.toCanvasCoordinate(x, y))
+        this.enableEditMode()
     }
 
     handleMenuAddExternalNode = () => {
         const { x, y } = this.handleCloseContextMenu()
         addExternalNode(this.canvas, this.toCanvasCoordinate(x, y))
+        this.enableEditMode()
     }
 
 
@@ -126,6 +133,7 @@ class Canvas extends Component {
 
         canvas.installEditPolicy(new WheelZoomPolicy());
         canvas.installEditPolicy(new ConnectionCreatePolicy())
+        canvas.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
 
         canvas.getCommandStack().addEventListener(function (e) {
             if (e.isPostChangeEvent()) {
@@ -212,6 +220,13 @@ class Canvas extends Component {
         let x = this.canvasWidth / 2 + random(-10, 10)
         let y = this.canvasHeight / 2 + random(-10, 10)
         return { x: x, y: y }
+    }
+
+    enableEditMode = () => {
+        if (!this.canvas.isReadOnlyMode) {
+            return
+        }
+        this.togglePanPolicy()
     }
 }
 
