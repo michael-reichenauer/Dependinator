@@ -138,6 +138,9 @@ export let WheelZoomPolicy = draw2d.policy.canvas.ZoomPolicy.extend(
 
       canvas.zoomFactor = zoom
 
+      console.log('zoom', canvas.zoomFactor, canvas.initialWidth, canvas.initialHeight, canvas.maxFigureWidth, canvas.maxFigureHeight)
+      console.log('zoom', canvas.zoomFactor, canvas.initialWidth / zoom, canvas.initialHeight / zoom, canvas.maxFigureWidth / zoom, canvas.maxFigureHeight / zoom)
+
       //console.log('zoom canvas:', canvas.initialWidth, canvas.initialHeight)
       canvas.paper.setViewBox(0, 0, canvas.initialWidth, canvas.initialHeight)
       // Change the width and the height attributes manually through DOM

@@ -134,10 +134,15 @@ class Canvas extends Component {
         canvas.installEditPolicy(new WheelZoomPolicy());
         canvas.installEditPolicy(new ConnectionCreatePolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
+        canvas.installEditPolicy(new draw2d.policy.canvas.ShowGridEditPolicy());
+
+        canvas.maxFigureWidth = 0
+        canvas.maxFigureWidth = 0
 
         canvas.getCommandStack().addEventListener(function (e) {
             if (e.isPostChangeEvent()) {
                 console.log('event:', e)
+                updateCanvasMaxFigureSize(canvas)
             }
         });
 
@@ -166,14 +171,30 @@ class Canvas extends Component {
     }
 
     render = () => {
-        console.log('render')
         const { contextMenu } = this.state;
 
         let w = this.props.width
         let h = this.props.height
+        console.log('render', w, h, this.canvas?.getZoom(),)
         if (this.hasRendered && (this.canvasWidth !== w || this.canvasHeight !== h)) {
             setTimeout(() => {
-                this.canvas.setDimension(new draw2d.geo.Rectangle(0, 0, w, h));
+                // let cw = Math.max(w, this.canvas.maxFigureWidth)
+                // let ch = Math.max(h, this.canvas.maxFigureHeight)
+                let cw = w
+                let ch = h
+                let zoom = this.canvas.getZoom()
+                console.log('resize ', cw, ch, zoom)
+                this.canvas.setDimension(new draw2d.geo.Rectangle(0, 0, cw, ch));
+                // Must adjust region constraint since setDimension does not do that
+                this.canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, cw, ch)
+                this.canvas.paper.setViewBox(0, 0, cw, ch)
+
+                this.canvas.html
+                    .find("svg")
+                    .attr({
+                        'width': cw / zoom,
+                        'height': ch / zoom,
+                    })
             }, 0);
         }
         this.hasRendered = true
@@ -204,6 +225,8 @@ class Canvas extends Component {
             </>
         );
     }
+
+
 
     tryGetFigure = (x, y) => {
         let cp = this.toCanvasCoordinate(x, y)
@@ -242,6 +265,32 @@ function getEvent(event) {
     return event
 }
 
+const updateCanvasMaxFigureSize = (canvas) => {
+    let w = 0
+    let h = 0
+
+    canvas.getFigures().each((i, f) => {
+        let fw = f.getAbsoluteX() + f.getWidth()
+        let fh = f.getAbsoluteY() + f.getHeight()
+
+        if (i === 0) {
+            w = fw
+            h = fh
+            return
+        }
+
+        if (fw > w) {
+            w = fw
+        }
+        if (fh > h) {
+            h = fh
+        }
+    })
+
+    canvas.maxFigureWidth = w
+    canvas.maxFigureHeight = h
+    console.log('figure size', w, h)
+}
 
 
 export default Canvas;
