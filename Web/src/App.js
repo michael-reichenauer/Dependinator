@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 
-import Diagram from './components/Diagram';
+import Canvas from './components/diagram/Canvas';
 import { useWindowSize } from "./common/windowsize"
 import ApplicationBar from './components/ApplicationBar'
 
@@ -13,7 +13,7 @@ function App() {
   return (
     <>
       <ApplicationBar height={55} commands={commands.current} />
-      <Diagram width={size.width} height={size.height - 55} commands={commands.current} />
+      <Canvas width={size.width} height={size.height - 55} commands={commands.current} />
     </>
   );
 }
