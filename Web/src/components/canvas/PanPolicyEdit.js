@@ -26,6 +26,10 @@ export let PanPolicyEdit = draw2d.policy.canvas.SingleSelectionPolicy.extend(
 
         onClick: function (figure, mouseX, mouseY, shiftKey, ctrlKey) {
             if (figure !== null) {
+                if (figure instanceof draw2d.shape.basic.GhostVertexResizeHandle) {
+                    // Clicked on connection vertex handle, add a new vertex
+                    figure.onClick()
+                }
                 return
             }
 

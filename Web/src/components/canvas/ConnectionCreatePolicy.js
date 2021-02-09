@@ -232,7 +232,7 @@ export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePol
         createConnection: function () {
             var connection = this._super();
             connection.setColor('#222222')
-            connection.setRouter(new draw2d.layout.connection.DirectRouter());
+            connection.setRouter(new draw2d.layout.connection.VertexRouter());
 
             const arrow = new draw2d.decoration.connection.ArrowDecorator()
             arrow.setBackgroundColor(connection.getColor())
