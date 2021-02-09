@@ -143,7 +143,7 @@ class Canvas extends Component {
 
         canvas.getCommandStack().addEventListener(function (e) {
             if (e.isPostChangeEvent()) {
-                console.log('event:', e)
+                // console.log('event:', e)
                 updateCanvasMaxFigureSize(canvas)
             }
         });
@@ -187,7 +187,7 @@ class Canvas extends Component {
                 // let cw = w
                 // let ch = h
                 let zoom = this.canvas.getZoom()
-                console.log('resize ', cw, ch, zoom)
+                //console.log('resize ', cw, ch, zoom)
                 this.canvas.setDimension(new draw2d.geo.Rectangle(0, 0, cw, ch));
                 // Must adjust region constraint since setDimension does not do that
                 this.canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, cw, ch)
@@ -235,7 +235,6 @@ class Canvas extends Component {
     tryGetFigure = (x, y) => {
         let cp = this.toCanvasCoordinate(x, y)
         let figure = this.canvas.getBestFigure(cp.x, cp.y)
-        console.log('Figure:', figure)
         return figure
     }
 
@@ -293,7 +292,7 @@ const updateCanvasMaxFigureSize = (canvas) => {
 
     canvas.maxFigureWidth = w
     canvas.maxFigureHeight = h
-    console.log('figure size', w, h)
+    // console.log('figure size', w, h)
 }
 
 

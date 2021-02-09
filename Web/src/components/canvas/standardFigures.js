@@ -1,3 +1,4 @@
+import { AddPhotoAlternateSharp } from "@material-ui/icons";
 import draw2d from "draw2d";
 
 const w = 200
@@ -10,6 +11,8 @@ export const addNode = (canvas, p) => {
     });
 
     addFigureLabels(figure, 'Node')
+    figure.createPort("input", new InputTopPortLocator());
+    figure.createPort("output", new OutputBottomPortLocator());
     addFigure(canvas, figure, p);
 }
 
@@ -22,6 +25,7 @@ export const addUserNode = (canvas, p) => {
     });
 
     addFigureLabels(figure, 'User')
+    figure.createPort("output", new OutputBottomPortLocator());
     addFigure(canvas, figure, p);
 }
 
@@ -32,6 +36,8 @@ export const addExternalNode = (canvas, p) => {
     });
 
     addFigureLabels(figure, 'External System')
+    figure.createPort("input", new InputTopPortLocator());
+    figure.createPort("output", new OutputBottomPortLocator());
     addFigure(canvas, figure, p);
 }
 
@@ -79,3 +85,24 @@ const labelLocator = (y) => {
     }
     return locator
 }
+
+const InputTopPortLocator = draw2d.layout.locator.PortLocator.extend({
+    init: function () {
+        this._super();
+    },
+    relocate: function (index, figure) {
+        this.applyConsiderRotation(figure, figure.getParent().getWidth() / 2, 0);
+    }
+});
+
+
+const OutputBottomPortLocator = draw2d.layout.locator.PortLocator.extend({
+    init: function () {
+        this._super();
+    },
+    relocate: function (index, figure) {
+        var p = figure.getParent();
+
+        this.applyConsiderRotation(figure, p.getWidth() / 2, p.getHeight());
+    }
+});
