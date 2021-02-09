@@ -230,7 +230,7 @@ export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePol
 
 
         createConnection: function () {
-            var connection = this._super();
+            const connection = this._super();
             connection.setColor('#222222')
             connection.setRouter(new draw2d.layout.connection.VertexRouter());
 
@@ -239,9 +239,15 @@ export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePol
             arrow.setDimension(12, 12)
             connection.targetDecorator = arrow
 
+            const label = new draw2d.shape.basic.Text({
+                text: "Description", stroke: 0,
+                fontSize: 14, fontColor: '#222222', bold: false
+            })
+
+            label.installEditor(new draw2d.ui.LabelInplaceEditor());
+            connection.add(label, new draw2d.layout.locator.ManhattanMidpointLocator(connection));
+
             return connection;
         }
-
-
     });
 

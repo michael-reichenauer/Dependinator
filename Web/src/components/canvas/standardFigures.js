@@ -1,12 +1,11 @@
-import { AddPhotoAlternateSharp } from "@material-ui/icons";
 import draw2d from "draw2d";
 
-const w = 200
-const h = 150
+const defaultNodeWidth = 200
+const defaultNodeHeight = 150
 
 export const addNode = (canvas, p) => {
     const figure = new draw2d.shape.node.Between({
-        width: w, height: h,
+        width: defaultNodeWidth, height: defaultNodeHeight,
         color: '#4B0082', bgColor: '#9370DB'
     });
 
@@ -18,7 +17,7 @@ export const addNode = (canvas, p) => {
 
 export const addUserNode = (canvas, p) => {
     const figure = new draw2d.shape.node.Start({
-        width: w, height: h,
+        width: defaultNodeWidth, height: defaultNodeHeight,
         color: '#111111', bgColor: '#B9B9B9',
         radius: 30,
 
@@ -31,7 +30,7 @@ export const addUserNode = (canvas, p) => {
 
 export const addExternalNode = (canvas, p) => {
     const figure = new draw2d.shape.node.Between({
-        width: w, height: h,
+        width: defaultNodeWidth, height: defaultNodeHeight,
         color: '#111111', bgColor: '#B9B9B9'
     });
 
@@ -44,8 +43,7 @@ export const addExternalNode = (canvas, p) => {
 const addFigure = (canvas, figure, p) => {
     hidePortsIfReadOnly(canvas, figure)
 
-
-    var command = new draw2d.command.CommandAdd(canvas, figure, p.x - w / 2, p.y - h / 2);
+    const command = new draw2d.command.CommandAdd(canvas, figure, p.x - figure.width / 2, p.y - figure.height / 2);
     canvas.getCommandStack().execute(command);
 }
 
