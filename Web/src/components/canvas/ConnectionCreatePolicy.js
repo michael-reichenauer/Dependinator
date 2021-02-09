@@ -3,7 +3,7 @@ import draw2d from "draw2d";
 export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePolicy.extend(
     {
 
-        NAME: "draw2d.policy.connection.DragConnectionCreatePolicy",
+        NAME: "ConnectionCreatePolicy",
 
         /**
          *

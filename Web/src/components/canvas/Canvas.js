@@ -136,8 +136,10 @@ class Canvas extends Component {
         canvas.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
         canvas.installEditPolicy(new draw2d.policy.canvas.ShowGridEditPolicy());
 
+        canvas.canvasWidth = this.props.width
+        canvas.canvasHeight = this.props.height
         canvas.maxFigureWidth = 0
-        canvas.maxFigureWidth = 0
+        canvas.maxFigureHeight = 0
 
         canvas.getCommandStack().addEventListener(function (e) {
             if (e.isPostChangeEvent()) {
@@ -178,10 +180,12 @@ class Canvas extends Component {
         console.log('render', w, h, this.canvas?.getZoom(),)
         if (this.hasRendered && (this.canvasWidth !== w || this.canvasHeight !== h)) {
             setTimeout(() => {
-                // let cw = Math.max(w, this.canvas.maxFigureWidth)
-                // let ch = Math.max(h, this.canvas.maxFigureHeight)
-                let cw = w
-                let ch = h
+                this.canvas.canvasWidth = w;
+                this.canvas.canvasHeight = h;
+                let cw = Math.max(w, this.canvas.maxFigureWidth)
+                let ch = Math.max(h, this.canvas.maxFigureHeight)
+                // let cw = w
+                // let ch = h
                 let zoom = this.canvas.getZoom()
                 console.log('resize ', cw, ch, zoom)
                 this.canvas.setDimension(new draw2d.geo.Rectangle(0, 0, cw, ch));

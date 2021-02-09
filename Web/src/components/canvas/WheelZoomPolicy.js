@@ -2,15 +2,10 @@ import draw2d from "draw2d";
 import { Tweenable } from "shifty"
 
 
-
 export let WheelZoomPolicy = draw2d.policy.canvas.ZoomPolicy.extend(
-  /** @lends draw2d.policy.canvas.WheelZoomPolicy.prototype */
   {
+    NAME: "WheelZoomPolicy",
 
-    NAME: "draw2d.policy.canvas.WheelZoomPolicy",
-
-    /**
-     */
     init: function () {
       this._super()
 
@@ -32,38 +27,19 @@ export let WheelZoomPolicy = draw2d.policy.canvas.ZoomPolicy.extend(
 
     onUninstall: function (canvas) {
       this._super(canvas)
-
-      // cleanup the canvas object and remove custom properties
-      //
       delete canvas.__wheelZoom
     },
 
 
-    /**
-     *
-     * called if the user uses the mouse wheel.
-     *
-     *
-     * @param wheelDelta
-     * @param {Number} x the x coordinate of the event
-     * @param {Number} y the y coordinate of the event
-     * @param shiftKey
-     * @param ctrlKey
-     * @since 5.8.0
-     * @template
-     * @returns {Boolean} return <b>false</b> to preven tthe default event operation (e.g. scrolling)
-     */
     onMouseWheel: function (wheelDelta, x, y, shiftKey, ctrlKey) {
-      // mouse wheel is only supported if the user presses the shift key.
-      // normally the canvas scrolls during mouseWheel usage.
-      //
-      // if (shiftKey === false) {
-      //   return true
-      // }
-
-      wheelDelta = wheelDelta / 1024
+      wheelDelta = wheelDelta / 5024
 
       let newZoom = ((Math.min(5, Math.max(0.1, this.canvas.zoomFactor + wheelDelta)) * 10000 | 0) / 10000)
+
+      // Make sure svn canvas is not smaller than the div size
+      newZoom = Math.min(1, newZoom)
+
+      // Center zoom around mouse pointer
       if (this.center === null) {
         let client = this.canvas.fromCanvasToDocumentCoordinate(x, y)
 
@@ -81,13 +57,6 @@ export let WheelZoomPolicy = draw2d.policy.canvas.ZoomPolicy.extend(
       return false
     },
 
-    /**
-     *
-     * Set the new zoom level of the canvas.
-     *
-     * @param zoomFactor
-     * @param animated
-     */
     setZoom: function (zoomFactor, animated) {
 
       // determine the center of the current canvas. We try to keep the
@@ -121,13 +90,6 @@ export let WheelZoomPolicy = draw2d.policy.canvas.ZoomPolicy.extend(
       }
     },
 
-    /**
-     *
-     *
-     * @param {Number} zoom
-     * @param {draw2d.geo.Point} center
-     * @private
-     */
     _zoom: function (zoom, center) {
       let canvas = this.canvas
 
@@ -138,10 +100,6 @@ export let WheelZoomPolicy = draw2d.policy.canvas.ZoomPolicy.extend(
 
       canvas.zoomFactor = zoom
 
-      console.log('zoom', canvas.zoomFactor, canvas.initialWidth, canvas.initialHeight, canvas.maxFigureWidth, canvas.maxFigureHeight)
-      console.log('zoom', canvas.zoomFactor, canvas.initialWidth / zoom, canvas.initialHeight / zoom, canvas.maxFigureWidth / zoom, canvas.maxFigureHeight / zoom)
-
-      //console.log('zoom canvas:', canvas.initialWidth, canvas.initialHeight)
       canvas.paper.setViewBox(0, 0, canvas.initialWidth, canvas.initialHeight)
       // Change the width and the height attributes manually through DOM
       // unfortunately the raphaelJS 'setSize' method changes the viewBox as well and this is unwanted in this case

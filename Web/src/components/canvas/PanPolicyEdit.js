@@ -28,7 +28,6 @@ export let PanPolicyEdit = draw2d.policy.canvas.SingleSelectionPolicy.extend(
             if (figure !== null) {
                 return
             }
-            console.log('figure', figure)
 
             this.togglePanPolicy()
         },
@@ -55,7 +54,6 @@ export let PanPolicyEdit = draw2d.policy.canvas.SingleSelectionPolicy.extend(
          * @template
          */
         onMouseDrag: function (canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey) {
-            console.trace('drag')
             this._super(canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey)
 
             if (this.mouseDraggingElement === null && this.mouseDownElement === null) {
