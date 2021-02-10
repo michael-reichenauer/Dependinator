@@ -30,11 +30,12 @@ class Canvas extends Component {
     constructor(props) {
         super(props);
         this.state = initialState;
+        props.commands.undo = this.undo
+        props.commands.redo = this.redo
         props.commands.addNode = this.commandAddNode
         props.commands.addUserNode = this.commandAddUserNode
         props.commands.addExternalNode = this.commandAddExternalNode
-        props.commands.undo = this.undo
-        props.commands.redo = this.redo
+        props.commands.clear = this.commandClearCanvas
     }
 
     undo = () => this.canvas.getCommandStack().undo();
@@ -43,6 +44,7 @@ class Canvas extends Component {
     commandAddNode = () => this.addFigure(createDefaultNode(), this.randomCenterPoint())
     commandAddUserNode = () => this.addFigure(createDefaultUserNode(), this.randomCenterPoint())
     commandAddExternalNode = () => this.addFigure(createDefaultExternalNode(), this.randomCenterPoint())
+    commandClearCanvas = () => this.canvas.clear()
     handleMenuAddNode = () => this.handleMenuAdd(createDefaultNode())
     handleMenuAddUserNode = () => this.handleMenuAdd(createDefaultUserNode())
     handleMenuAddExternalNode = () => this.handleMenuAdd(createDefaultExternalNode())
