@@ -9,8 +9,12 @@ import { PanPolicyEdit } from "./PanPolicyEdit"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { Menu, MenuItem } from "@material-ui/core";
 import { random } from '../../common/utils'
-import { addNode, addUserNode, addExternalNode } from './standardFigures'
+import {
+    createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
+    serializeCanvas, deserializeCanvas,
+} from './canvasItems'
 
+const diagramName = 'diagram'
 const initialState = {
     contextMenu: null,
 };
@@ -26,59 +30,34 @@ class Canvas extends Component {
     constructor(props) {
         super(props);
         this.state = initialState;
-        props.commands.addNode = this.addNode
-        props.commands.addUserNode = this.addUserNode
-        props.commands.addExternalNode = this.addExternalNode
+        props.commands.addNode = this.commandAddNode
+        props.commands.addUserNode = this.commandAddUserNode
+        props.commands.addExternalNode = this.commandAddExternalNode
         props.commands.undo = this.undo
         props.commands.redo = this.redo
     }
 
-    undo = () => {
-        this.canvas.getCommandStack().undo();
-    }
+    undo = () => this.canvas.getCommandStack().undo();
+    redo = () => this.canvas.getCommandStack().redo();
 
-    redo = () => {
-        this.canvas.getCommandStack().redo();
-    }
+    commandAddNode = () => this.addFigure(createDefaultNode(), this.randomCenterPoint())
+    commandAddUserNode = () => this.addFigure(createDefaultUserNode(), this.randomCenterPoint())
+    commandAddExternalNode = () => this.addFigure(createDefaultExternalNode(), this.randomCenterPoint())
+    handleMenuAddNode = () => this.handleMenuAdd(createDefaultNode())
+    handleMenuAddUserNode = () => this.handleMenuAdd(createDefaultUserNode())
+    handleMenuAddExternalNode = () => this.handleMenuAdd(createDefaultExternalNode())
+    addDefaultItem = (x, y, shiftKey, ctrlKey) => this.addFigure(createDefaultNode(), { x: x, y: y })
 
-    addNode = () => {
-        addNode(this.canvas, this.randomCenterPoint());
-        this.enableEditMode()
-    }
-
-    addUserNode = () => {
-        addUserNode(this.canvas, this.randomCenterPoint());
-        this.enableEditMode()
-    }
-
-    addExternalNode = () => {
-        addExternalNode(this.canvas, this.randomCenterPoint());
-        this.enableEditMode()
-    }
-
-    addDefaultItem = (x, y, shiftKey, ctrlKey) => {
-        addNode(this.canvas, { x: x, y: y })
-        this.enableEditMode()
-    }
-
-    handleMenuAddNode = () => {
+    handleMenuAdd = (figure) => {
         const { x, y } = this.handleCloseContextMenu()
-        addNode(this.canvas, this.toCanvasCoordinate(x, y))
-        this.enableEditMode()
+        this.addFigure(figure, this.toCanvasCoordinate(x, y))
     }
 
-    handleMenuAddUserNode = () => {
-        const { x, y } = this.handleCloseContextMenu()
-        addUserNode(this.canvas, this.toCanvasCoordinate(x, y))
+
+    addFigure = (figure, p) => {
+        addFigureToCanvas(this.canvas, figure, p)
         this.enableEditMode()
     }
-
-    handleMenuAddExternalNode = () => {
-        const { x, y } = this.handleCloseContextMenu()
-        addExternalNode(this.canvas, this.toCanvasCoordinate(x, y))
-        this.enableEditMode()
-    }
-
 
     componentDidMount = () => {
         this.createCanvas();
@@ -126,6 +105,9 @@ class Canvas extends Component {
         let canvas = this.canvas
         canvas.setScrollArea("#canvas")
 
+        restoreDiagram(canvas)
+        updateCanvasMaxFigureSize(canvas)
+
         // Pan policy readonly/edit
         this.panPolicyCurrent = new PanPolicyReadOnly(this.togglePanPolicy, this.addDefaultItem)
         this.panPolicyOther = new PanPolicyEdit(this.togglePanPolicy, this.addDefaultItem)
@@ -138,38 +120,14 @@ class Canvas extends Component {
 
         canvas.canvasWidth = this.props.width
         canvas.canvasHeight = this.props.height
-        canvas.maxFigureWidth = 0
-        canvas.maxFigureHeight = 0
 
         canvas.getCommandStack().addEventListener(function (e) {
             if (e.isPostChangeEvent()) {
                 // console.log('event:', e)
                 updateCanvasMaxFigureSize(canvas)
+                saveDiagram(canvas)
             }
         });
-
-        // let cf = new draw2d.shape.composite.Jailhouse({ width: 200, height: 200, bgColor: 'none' })
-        // canvas.add(cf, 400, 400);
-
-        // let f = new draw2d.shape.node.Between({ width: 50, height: 50 });
-        // canvas.add(f, 450, 450);
-        // f.getPorts().each((i, port) => { port.setVisible(false) })
-        // cf.assignFigure(f)
-
-        // let f2 = new draw2d.shape.node.Between({ width: 50, height: 50 });
-        // canvas.add(f2, 200, 200);
-        // f2.getPorts().each((i, port) => { port.setVisible(false) })
-
-        // let f3 = new draw2d.shape.node.Between({ width: 50, height: 50 });
-        // canvas.add(f3, 100, 100);
-        // f3.getPorts().each((i, port) => { port.setVisible(false) })
-
-        // var c = new draw2d.Connection({
-        //     source: f3.getOutputPort(0),
-        //     target: f2.getInputPort(0)
-        // });
-
-        // canvas.add(c);
     }
 
     render = () => {
@@ -295,5 +253,44 @@ const updateCanvasMaxFigureSize = (canvas) => {
     // console.log('figure size', w, h)
 }
 
+const addFigureToCanvas = (canvas, figure, p) => {
+    hidePortsIfReadOnly(canvas, figure)
+
+    const command = new draw2d.command.CommandAdd(canvas, figure, p.x - figure.width / 2, p.y - figure.height / 2);
+    canvas.getCommandStack().execute(command);
+}
+
+
+const hidePortsIfReadOnly = (canvas, figure) => {
+    if (canvas.isReadOnlyMode) {
+        figure.getPorts().each((i, port) => { port.setVisible(false) })
+    }
+}
+
+
+const saveDiagram = (canvas) => {
+    // Serialize canvas figures and connections into canvas data object
+    const canvasData = serializeCanvas(canvas);
+
+
+    // Store canvas data in local storage
+    const canvasText = JSON.stringify(canvasData)
+    localStorage.setItem(diagramName, canvasText)
+}
+
+const restoreDiagram = (canvas) => {
+    // Get canvas data from local storage
+    let canvasText = localStorage.getItem(diagramName)
+    if (canvasText == null) {
+        return
+    }
+    const canvasData = JSON.parse(canvasText)
+    if (canvasData == null || canvasData.figures == null) {
+        return
+    }
+
+    // Deserialize canvas
+    deserializeCanvas(canvas, canvasData)
+}
 
 export default Canvas;

@@ -1,14 +1,10 @@
 import draw2d from "draw2d";
+import { configureDefaultConnection } from './canvasItems'
 
 export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePolicy.extend(
     {
-
         NAME: "ConnectionCreatePolicy",
 
-        /**
-         *
-         * Creates a new connection create policy instance
-         */
         init: function (attr, setter, getter) {
             this._super(attr, setter, getter);
 
@@ -17,15 +13,6 @@ export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePol
             this.currentTarget = null;
         },
 
-        /**
-         * 
-         *
-         * @param {draw2d.Canvas} canvas
-         * @param {Number} x the x-coordinate of the mouse down event
-         * @param {Number} y the y-coordinate of the mouse down event
-         * @param {Boolean} shiftKey true if the shift key has been pressed during this event
-         * @param {Boolean} ctrlKey true if the ctrl key has been pressed during the event
-         */
         onMouseDown: function (canvas, x, y, shiftKey, ctrlKey) {
             //just consider ports
             //
@@ -67,16 +54,6 @@ export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePol
             }
         },
 
-        /**
-         * 
-         *
-         * @param {draw2d.Canvas} canvas
-         * @param {Number} dx The x diff between start of dragging and this event
-         * @param {Number} dy The y diff between start of dragging and this event
-         * @param {Number} dx2 The x diff since the last call of this dragging operation
-         * @param {Number} dy2 The y diff since the last call of this dragging operation
-         * @template
-         */
         onMouseDrag: function (canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey) {
             try {
                 if (this.mouseDraggingElement !== null) {
@@ -147,16 +124,6 @@ export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePol
             }
         },
 
-
-        /**
-         * 
-         *
-         * @param {draw2d.Figure} figure the shape below the mouse or null
-         * @param {Number} x the x-coordinate of the mouse down event
-         * @param {Number} y the y-coordinate of the mouse down event
-         * @param {Boolean} shiftKey true if the shift key has been pressed during this event
-         * @param {Boolean} ctrlKey true if the ctrl key has been pressed during the event
-         */
         onMouseUp: function (canvas, x, y, shiftKey, ctrlKey) {
             let isDropOnPort = false
 
@@ -231,23 +198,7 @@ export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePol
 
         createConnection: function () {
             const connection = this._super();
-            connection.setColor('#222222')
-            connection.setRouter(new draw2d.layout.connection.VertexRouter());
-
-            const arrow = new draw2d.decoration.connection.ArrowDecorator()
-            arrow.setBackgroundColor(connection.getColor())
-            arrow.setDimension(12, 12)
-            connection.targetDecorator = arrow
-
-            const label = new draw2d.shape.basic.Text({
-                text: "Description", stroke: 0,
-                fontSize: 14, fontColor: '#222222', bold: false
-            })
-
-            label.installEditor(new draw2d.ui.LabelInplaceEditor());
-            connection.add(label, new draw2d.layout.locator.ManhattanMidpointLocator(connection));
-
-            return connection;
+            return configureDefaultConnection(connection)
         }
     });
 
