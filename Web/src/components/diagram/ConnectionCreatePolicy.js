@@ -1,5 +1,5 @@
 import draw2d from "draw2d";
-import { configureDefaultConnection } from './figures'
+import { configureDefaultConnection } from './connections'
 
 export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePolicy.extend(
     {

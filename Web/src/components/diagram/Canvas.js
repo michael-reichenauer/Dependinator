@@ -9,10 +9,8 @@ import { PanEditPolicy } from "./PanEditPolicy"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { Menu, MenuItem } from "@material-ui/core";
 import { random } from '../../common/utils'
-import {
-    createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
-    serializeCanvas, deserializeCanvas,
-} from './figures'
+import { createDefaultNode, createDefaultUserNode, createDefaultExternalNode } from './figures'
+import { serializeCanvas, deserializeCanvas } from './serialization'
 
 const diagramName = 'diagram'
 const initialState = {
