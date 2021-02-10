@@ -62,11 +62,13 @@ class Canvas extends Component {
     }
 
     componentDidMount = () => {
+        console.log('componentDidMount')
         this.createCanvas();
         document.addEventListener("contextmenu", this.handleContextMenu);
     }
 
     componentWillUnmount = () => {
+        console.log('componentWillUnmount')
         document.removeEventListener("contextmenu", this.handleContextMenu);
         this.canvas.destroy()
     }
@@ -118,16 +120,19 @@ class Canvas extends Component {
         canvas.installEditPolicy(new WheelZoomPolicy());
         canvas.installEditPolicy(new ConnectionCreatePolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
-        canvas.installEditPolicy(new draw2d.policy.canvas.ShowGridEditPolicy());
+        // canvas.installEditPolicy(new draw2d.policy.canvas.ShowGridEditPolicy());
 
         canvas.canvasWidth = this.props.width
         canvas.canvasHeight = this.props.height
 
         canvas.getCommandStack().addEventListener(function (e) {
+            // console.log('event:', e)
             if (e.isPostChangeEvent()) {
-                // console.log('event:', e)
-                updateCanvasMaxFigureSize(canvas)
-                saveDiagram(canvas)
+                // console.log('event isPostChangeEvent:', e)
+                if (e.action === "POST_EXECUTE") {
+                    updateCanvasMaxFigureSize(canvas)
+                    saveDiagram(canvas)
+                }
             }
         });
     }
@@ -278,11 +283,14 @@ const saveDiagram = (canvas) => {
     // Store canvas data in local storage
     const canvasText = JSON.stringify(canvasData)
     localStorage.setItem(diagramName, canvasText)
+    console.log('save', canvasText)
 }
 
 const restoreDiagram = (canvas) => {
-    // Get canvas data from local storage
+    // Get canvas data from local storage.
     let canvasText = localStorage.getItem(diagramName)
+    console.log('load', canvasText)
+
     if (canvasText == null) {
         return
     }
