@@ -1,5 +1,5 @@
 import draw2d from "draw2d";
-import { configureDefaultConnection } from './canvasItems'
+import { configureDefaultConnection } from './figures'
 
 export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePolicy.extend(
     {
@@ -14,34 +14,21 @@ export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePol
         },
 
         onMouseDown: function (canvas, x, y, shiftKey, ctrlKey) {
-            //just consider ports
-            //
             var port = canvas.getBestFigure(x, y);
 
-
-            // nothing found at all
-            //
-            if (port === null) {
-                return;
-            }
-
-            // may there is a resize handle below the port or another figure
-            // in this case the ResizeHandle has prio. and handled by another
-            // Policy
-            if (!(port instanceof draw2d.Port)) {
+            if (port === null || !(port instanceof draw2d.Port)) {
+                // Not a port
                 return;
             }
 
             // this can happen if the user release the mouse button outside the window during a drag&drop
             // operation. In this case we must fire the "onDragEnd" event postpond.
-            //
             if (port.isInDragDrop === true) {
                 port.onDragEnd(x, y, shiftKey, ctrlKey);
                 port.isInDragDrop = false;
             }
 
             // introspect the port only if it is draggable at all
-            //
             if (port.isDraggable()) {
                 var canDragStart = port.onDragStart(x - port.getAbsoluteX(), y - port.getAbsoluteY(), shiftKey, ctrlKey);
                 if (canDragStart) {

@@ -4,15 +4,15 @@ import "jquery-ui-bundle";
 import "jquery-ui-bundle/jquery-ui.css";
 import draw2d from "draw2d";
 import { WheelZoomPolicy } from "./WheelZoomPolicy"
-import { PanPolicyReadOnly } from "./PanPolicyReadOnly"
-import { PanPolicyEdit } from "./PanPolicyEdit"
+import { PanReadOnlyPolicy } from "./PanReadOnlyPolicy"
+import { PanEditPolicy } from "./PanEditPolicy"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { Menu, MenuItem } from "@material-ui/core";
 import { random } from '../../common/utils'
 import {
     createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
     serializeCanvas, deserializeCanvas,
-} from './canvasItems'
+} from './figures'
 
 const diagramName = 'diagram'
 const initialState = {
@@ -113,8 +113,8 @@ class Canvas extends Component {
         updateCanvasMaxFigureSize(canvas)
 
         // Pan policy readonly/edit
-        this.panPolicyCurrent = new PanPolicyReadOnly(this.togglePanPolicy, this.addDefaultItem)
-        this.panPolicyOther = new PanPolicyEdit(this.togglePanPolicy, this.addDefaultItem)
+        this.panPolicyCurrent = new PanReadOnlyPolicy(this.togglePanPolicy, this.addDefaultItem)
+        this.panPolicyOther = new PanEditPolicy(this.togglePanPolicy, this.addDefaultItem)
         canvas.installEditPolicy(this.panPolicyCurrent)
 
         canvas.installEditPolicy(new WheelZoomPolicy());

@@ -1,9 +1,9 @@
 import draw2d from "draw2d";
 
 
-export let PanPolicyEdit = draw2d.policy.canvas.SingleSelectionPolicy.extend(
+export let PanEditPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
     {
-        NAME: "PanPolicyEdit",
+        NAME: "PanEditPolicy",
 
         togglePanPolicy: null,
         createItem: null,
@@ -36,27 +36,6 @@ export let PanPolicyEdit = draw2d.policy.canvas.SingleSelectionPolicy.extend(
             this.togglePanPolicy()
         },
 
-        // onDoubleClick: function (figure, mouseX, mouseY, shiftKey, ctrlKey) {
-        //     if (figure !== null) {
-        //         return
-        //     }
-
-        //     this.createItem(mouseX, mouseY, shiftKey, ctrlKey)
-        //     this.togglePanPolicy()
-        // },
-
-        /**
-         * 
-         *
-         * @param {draw2d.Canvas} canvas
-         * @param {Number} dx The x diff between start of dragging and this event
-         * @param {Number} dy The y diff between start of dragging and this event
-         * @param {Number} dx2 The x diff since the last call of this dragging operation
-         * @param {Number} dy2 The y diff since the last call of this dragging operation
-         * @param {Boolean} shiftKey true if the shift key has been pressed during this event
-         * @param {Boolean} ctrlKey true if the ctrl key has been pressed during the event
-         * @template
-         */
         onMouseDrag: function (canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey) {
             this._super(canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey)
 

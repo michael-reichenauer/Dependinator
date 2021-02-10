@@ -2,9 +2,9 @@ import draw2d from "draw2d";
 
 
 
-export let PanPolicyReadOnly = draw2d.policy.canvas.SelectionPolicy.extend(
+export let PanReadOnlyPolicy = draw2d.policy.canvas.SelectionPolicy.extend(
     {
-        NAME: "PanPolicyReadOnly",
+        NAME: "PanReadOnlyPolicy",
 
         togglePanPolicy: null,
         createItem: null,
