@@ -123,6 +123,10 @@ class Canvas extends Component {
         canvas.installEditPolicy(new ConnectionCreatePolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
         // canvas.installEditPolicy(new draw2d.policy.canvas.ShowGridEditPolicy());
+        canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGeometryEditPolicy())
+        canvas.installEditPolicy(new draw2d.policy.canvas.SnapToInBetweenEditPolicy())
+        canvas.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
+        canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
 
         canvas.canvasWidth = this.props.width
         canvas.canvasHeight = this.props.height
