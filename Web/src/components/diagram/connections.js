@@ -1,4 +1,9 @@
 import draw2d from "draw2d";
+import { canvasBackground } from "./colors";
+
+const connectionColor = canvasBackground.getIdealTextColor()
+const labelTextColor = canvasBackground.getIdealTextColor();
+const labelColorBackground = canvasBackground.lighter(0.03);
 
 export const configureDefaultConnection = (connection) => {
     return configureConnection(connection, 'Description')
@@ -40,7 +45,7 @@ export const deserializeConnections = (canvas, connections) => {
 }
 
 const configureConnection = (connection, description) => {
-    connection.setColor('#222222')
+    connection.setColor(connectionColor)
     connection.setRouter(new draw2d.layout.connection.VertexRouter());
 
     const arrow = new draw2d.decoration.connection.ArrowDecorator()
@@ -51,7 +56,7 @@ const configureConnection = (connection, description) => {
     const label = new draw2d.shape.basic.Text({
         text: description, stroke: 0,
         fontSize: 14, bold: false,
-        fontColor: '#222222', bgColor: '#ffffff',
+        fontColor: labelTextColor, bgColor: labelColorBackground,
         userData: { type: "description" }
     })
 

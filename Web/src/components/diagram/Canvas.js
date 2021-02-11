@@ -11,6 +11,7 @@ import { Menu, MenuItem } from "@material-ui/core";
 import { random } from '../../common/utils'
 import { createDefaultNode, createDefaultUserNode, createDefaultExternalNode } from './figures'
 import { serializeCanvas, deserializeCanvas } from './serialization'
+import { canvasDivBackground } from "./colors";
 
 const diagramName = 'diagram'
 const initialState = {
@@ -171,7 +172,10 @@ class Canvas extends Component {
         return (
             <>
                 <div id="canvas"
-                    style={{ width: w, height: h, position: 'absolute', overflow: 'scroll', maxWidth: w, maxHeight: h }}></div>
+                    style={{
+                        width: w, height: h, maxWidth: w, maxHeight: h, position: 'absolute',
+                        overflow: 'scroll', background: canvasDivBackground
+                    }}></div>
                 <Menu
                     keepMounted
                     open={contextMenu !== null}
