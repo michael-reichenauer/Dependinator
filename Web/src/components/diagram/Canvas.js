@@ -285,7 +285,7 @@ const saveDiagram = (canvas) => {
     // Store canvas data in local storage
     const canvasText = JSON.stringify(canvasData)
     localStorage.setItem(diagramName, canvasText)
-    console.log('save', canvasText)
+    // console.log('save', canvasText)
 }
 
 const restoreDiagram = (canvas) => {

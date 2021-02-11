@@ -3,7 +3,7 @@ import { canvasBackground } from "./colors";
 
 const connectionColor = canvasBackground.getIdealTextColor()
 const labelTextColor = canvasBackground.getIdealTextColor();
-const labelColorBackground = canvasBackground.lighter(0.03);
+const labelColorBackground = canvasBackground;
 
 export const configureDefaultConnection = (connection) => {
     return configureConnection(connection, 'Description')

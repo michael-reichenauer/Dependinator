@@ -1,5 +1,6 @@
 import draw2d from "draw2d";
 import { configureDefaultConnection } from './connections'
+import { createNode, defaultNodeWidth, defaultNodeHeight } from "./figures";
 
 export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePolicy.extend(
     {
@@ -117,12 +118,12 @@ export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePol
             if (this.mouseDraggingElement !== null) {
                 var de = this.mouseDraggingElement;
                 var ct = this.currentTarget;
-                // start CommandStack transaction
+
                 canvas.getCommandStack().startTransaction();
 
                 de.onDragEnd(x, y, shiftKey, ctrlKey);
+
                 // notify all installed policies
-                //
                 if (ct) {
                     de.editPolicy.each(function (i, e) {
                         if (e instanceof draw2d.policy.port.PortFeedbackPolicy) {
@@ -138,17 +139,41 @@ export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePol
                 });
 
                 // Reset the drag&drop flyover information
-                //
                 this.currentTarget = null;
                 de.isInDragDrop = false;
 
                 // fire an event
-                // @since 5.3.3
                 de.fireEvent("dragend", { x: x, y: y, shiftKey: shiftKey, ctrlKey: ctrlKey });
+
+
+                if (this.currentDropTarget === null) {
+                    // No drop target, lets create a node first to connect to
+                    let p = { x: x, y: y - defaultNodeHeight / 2 }
+                    let targetPortName = 'input0'
+
+                    if (this.mouseDraggingElement.name === "output1") {
+                        p = { x: x - defaultNodeWidth / 2, y: y }
+                        targetPortName = 'input1'
+                    }
+
+                    const figure = createNode(
+                        draw2d.util.UUID.create(),
+                        defaultNodeWidth, defaultNodeHeight,
+                        //  nodeColor, nodeBorderColor,
+                        'Node', 'Description')
+
+                    // Add node first so connection can be added in next command
+                    const command = new draw2d.command.CommandAdd(canvas, figure, p.x, p.y);
+                    canvas.getCommandStack().execute(command);
+                    canvas.getCommandStack().commitTransaction();
+
+                    // Prepare to add connection in next command
+                    this.currentDropTarget = figure.getPort(targetPortName);
+                    canvas.getCommandStack().startTransaction();
+                }
 
                 // check if we drop the port onto a valid
                 // drop target and create a connection if possible
-                //
                 if (this.currentDropTarget !== null) {
                     this.mouseDraggingElement.onDrop(this.currentDropTarget, x, y, shiftKey, ctrlKey);
 
@@ -156,7 +181,6 @@ export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePol
                     this.currentDropTarget.fireEvent("dragLeave", { draggingElement: this.mouseDraggingElement });
 
                     // Ports accepts only Ports as DropTarget
-                    //
                     if (this.currentDropTarget instanceof draw2d.Port) {
                         var request = new draw2d.command.CommandType(draw2d.command.CommandType.CONNECT);
                         request.source = this.currentDropTarget;

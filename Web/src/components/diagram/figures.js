@@ -1,8 +1,8 @@
 import draw2d from "draw2d";
 import { NodeBorderColors, NodeColors, NodeFontColors } from "./colors";
 
-const defaultNodeWidth = 230
-const defaultNodeHeight = 150
+export const defaultNodeWidth = 230
+export const defaultNodeHeight = 150
 
 
 export const serializeFigures = (canvas) => {
