@@ -15,7 +15,7 @@ const useMenuStyles = makeStyles((theme) => ({
 }));
 
 
-export function ApplicationMenu() {
+export function ApplicationMenu({ commands }) {
     const classes = useMenuStyles();
     const [menu, setMenu] = useState(null);
     const [anchorEl, setAnchorEl] = React.useState(null);
@@ -24,6 +24,17 @@ export function ApplicationMenu() {
         setMenu(null);
         console.info(`Show About`)
         setAnchorEl(event.currentTarget);
+    };
+
+
+    const handleClear = (event) => {
+        setMenu(null);
+        console.info(`Clear Diagram`)
+
+        var shouldDelete = confirm('Do you really want to clear the diagram?') //eslint-disable-line
+        if (shouldDelete) {
+            commands.clear()
+        }
     };
 
     const handleCloseAbout = () => {
@@ -58,7 +69,9 @@ export function ApplicationMenu() {
                 }}
             >
 
+                <MenuItem onClick={handleClear}>Clear Diagram</MenuItem>
                 <MenuItem onClick={handleAbout}>About</MenuItem>
+
             </Menu>
             <Popover
                 id={id}
