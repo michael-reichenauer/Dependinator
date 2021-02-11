@@ -1,5 +1,5 @@
 import draw2d from "draw2d";
-import { NodeBorderColors, NodeColors, NodeFontColors } from "./colors";
+import { getNodeColor, getNodeFontColor, getNodeBorderColor } from "./colors";
 
 export const defaultNodeWidth = 230
 export const defaultNodeHeight = 150
@@ -19,7 +19,8 @@ export const serializeFigures = (canvas) => {
             w: f.width,
             h: f.height,
             name: nameLabel?.text ?? '',
-            description: descriptionLabel?.text ?? ''
+            description: descriptionLabel?.text ?? '',
+            color: f.userData.color
         };
     });
 }
@@ -29,13 +30,13 @@ export const deserializeFigures = (figures) => {
         let figure
         switch (f.type) {
             case 'node':
-                figure = createNode(f.id, f.w, f.h, f.name, f.description)
+                figure = createNode(f.id, f.w, f.h, f.name, f.description, f.color)
                 break;
             case 'user':
-                figure = createUserNode(f.id, f.w, f.h, f.name, f.description)
+                figure = createUserNode(f.id, f.w, f.h, f.name, f.description, f.color)
                 break;
             case 'external':
-                figure = createExternalNode(f.id, f.w, f.h, f.name, f.description)
+                figure = createExternalNode(f.id, f.w, f.h, f.name, f.description, f.color)
                 break;
             default:
                 throw new Error('Unexpected node typw!');
@@ -46,13 +47,28 @@ export const deserializeFigures = (figures) => {
     })
 }
 
+export const setNodeColor = (figure, colorName) => {
+    figure.setBackgroundColor(getNodeColor(colorName))
+    const children = figure.getChildren().asArray()
+    const nameLabel = children.find(c => c.userData?.type === 'name');
+    const descriptionLabel = children.find(c => c.userData?.type === 'description');
+    const icon = children.find(c => c instanceof draw2d.shape.icon.Icon);
+
+    nameLabel?.setFontColor(getNodeFontColor(colorName))
+    descriptionLabel?.setFontColor(getNodeFontColor(colorName))
+    icon?.setBackgroundColor(getNodeColor(colorName))
+    icon?.setColor(getNodeFontColor(colorName))
+
+    figure.setUserData({ ...figure.getUserData(), color: colorName })
+}
 
 export const createDefaultNode = () => {
     return createNode(
         draw2d.util.UUID.create(),
         defaultNodeWidth, defaultNodeHeight,
         //  nodeColor, nodeBorderColor,
-        'Node', 'Description')
+        'Node', 'Description',
+        "DeepPurple")
 }
 
 export const createDefaultUserNode = () => {
@@ -60,7 +76,8 @@ export const createDefaultUserNode = () => {
         draw2d.util.UUID.create(),
         defaultNodeWidth, defaultNodeHeight,
         // userNodeColor, userNodeBorderColor,
-        'External User', 'Description')
+        'External User', 'Description',
+        "BlueGrey")
 }
 
 export const createDefaultExternalNode = () => {
@@ -68,41 +85,44 @@ export const createDefaultExternalNode = () => {
         draw2d.util.UUID.create(),
         defaultNodeWidth, defaultNodeHeight,
         // externalNodeColor, externalNodeBorderColor,
-        'External System', 'Description')
+        'External System', 'Description',
+        "BlueGrey")
 }
 
 
-export const createNode = (id, width, height, name, description) => {
-    const color = NodeColors.DeepPurple
-    const borderColor = NodeBorderColors.DeepPurple
+export const createNode = (id, width, height, name, description, colorName) => {
+    const color = getNodeColor(colorName)
+    const borderColor = getNodeBorderColor(colorName)
+    const fontColor = getNodeFontColor(colorName)
     const figure = new draw2d.shape.node.Between({
         id: id,
         width: width, height: height,
         bgColor: color, color: borderColor,
         radius: 5,
-        userData: { type: "node" }
+        userData: { type: "node", color: colorName }
     });
 
-    addFigureLabels(figure, NodeFontColors.DeepPurple, name, description)
+    addFigureLabels(figure, fontColor, name, description)
     figure.createPort("input", new InputTopPortLocator());
     figure.createPort("output", new OutputBottomPortLocator());
 
     return figure
 }
 
-export const createUserNode = (id, width, height, name, description) => {
-    const color = NodeColors.BlueGrey
-    const borderColor = NodeBorderColors.BlueGrey
+export const createUserNode = (id, width, height, name, description, colorName) => {
+    const color = getNodeColor(colorName)
+    const borderColor = getNodeBorderColor(colorName)
+    const fontColor = getNodeFontColor(colorName)
     const figure = new draw2d.shape.node.Between({
         id: id,
         width: width, height: height,
         bgColor: color, color: borderColor,
         radius: 5,
-        userData: { type: "user" }
+        userData: { type: "user", color: colorName }
     });
 
-    addFigureLabels(figure, NodeFontColors.BlueGrey, name, description)
-    const icon = new draw2d.shape.icon.User({ width: 18, height: 15, color: NodeFontColors.BlueGrey, bgColor: color });
+    addFigureLabels(figure, fontColor, name, description, colorName)
+    const icon = new draw2d.shape.icon.User({ width: 18, height: 15, color: fontColor, bgColor: color });
     const iconLocator = new draw2d.layout.locator.XYRelPortLocator(1, 10)
     figure.add(icon, iconLocator)
     figure.createPort("input", new InputTopPortLocator());
@@ -111,19 +131,20 @@ export const createUserNode = (id, width, height, name, description) => {
     return figure
 }
 
-export const createExternalNode = (id, width, height, name, description) => {
-    const color = NodeColors.BlueGrey
-    const borderColor = NodeBorderColors.BlueGrey
+export const createExternalNode = (id, width, height, name, description, colorName) => {
+    const color = getNodeColor(colorName)
+    const borderColor = getNodeBorderColor(colorName)
+    const fontColor = getNodeFontColor(colorName)
     const figure = new draw2d.shape.node.Between({
         id: id,
         width: width, height: height,
         bgColor: color, color: borderColor,
         radius: 5,
-        userData: { type: "external" }
+        userData: { type: "external", color: colorName }
     });
 
-    addFigureLabels(figure, NodeFontColors.BlueGrey, name, description)
-    const icon = new draw2d.shape.icon.NewWindow({ width: 15, height: 15, color: NodeFontColors.BlueGrey, bgColor: color });
+    addFigureLabels(figure, fontColor, name, description)
+    const icon = new draw2d.shape.icon.NewWindow({ width: 15, height: 15, color: fontColor, bgColor: color });
     const iconLocator = new draw2d.layout.locator.XYRelPortLocator(1, 10)
     figure.add(icon, iconLocator)
     figure.createPort("input", new InputTopPortLocator());

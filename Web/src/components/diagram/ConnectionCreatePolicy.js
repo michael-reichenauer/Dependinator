@@ -1,8 +1,8 @@
 import draw2d from "draw2d";
 import { configureDefaultConnection } from './connections'
-import { createNode, defaultNodeWidth, defaultNodeHeight } from "./figures";
+import { createDefaultNode } from "./figures";
 
-export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePolicy.extend(
+export const ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePolicy.extend(
     {
         NAME: "ConnectionCreatePolicy",
 
@@ -148,19 +148,34 @@ export let ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePol
 
                 if (this.currentDropTarget === null) {
                     // No drop target, lets create a node first to connect to
-                    let p = { x: x, y: y - defaultNodeHeight / 2 }
-                    let targetPortName = 'input0'
+                    const figure = createDefaultNode()
 
-                    if (this.mouseDraggingElement.name === "output1") {
-                        p = { x: x - defaultNodeWidth / 2, y: y }
-                        targetPortName = 'input1'
+                    console.log('port', this.mouseDraggingElement.name)
+
+                    // Determine figure point and port name
+                    let p = null
+                    let targetPortName = null
+                    switch (this.mouseDraggingElement.name) {
+                        case "output0":
+                            p = { x: x, y: y - figure.height / 2 }
+                            targetPortName = 'input0'
+                            break
+                        case "output1":
+                            p = { x: x - figure.width / 2, y: y }
+                            targetPortName = 'input1'
+                            break
+                        case "input0":
+                            p = { x: x - figure.width, y: y - figure.height / 2 }
+                            targetPortName = 'output0'
+                            break
+                        case "input1":
+                            p = { x: x - figure.width / 2, y: y - figure.height }
+                            targetPortName = 'output1'
+                            break
+                        default:
+                            throw new Error('Unknown port name' + this.mouseDraggingElement.name)
                     }
 
-                    const figure = createNode(
-                        draw2d.util.UUID.create(),
-                        defaultNodeWidth, defaultNodeHeight,
-                        //  nodeColor, nodeBorderColor,
-                        'Node', 'Description')
 
                     // Add node first so connection can be added in next command
                     const command = new draw2d.command.CommandAdd(canvas, figure, p.x, p.y);

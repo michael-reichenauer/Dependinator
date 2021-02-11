@@ -11,12 +11,15 @@ import { Menu, MenuItem } from "@material-ui/core";
 import { random } from '../../common/utils'
 import { createDefaultNode, createDefaultUserNode, createDefaultExternalNode } from './figures'
 import { serializeCanvas, deserializeCanvas } from './serialization'
-import { canvasDivBackground } from "./colors";
+import { canvasDivBackground, nodeColorNames } from "./colors";
+import { CommandChangeColor } from "./commandChangeColor";
 
 const diagramName = 'diagram'
 const initialState = {
     contextMenu: null,
 };
+
+
 
 class Canvas extends Component {
     canvas = null;
@@ -169,6 +172,23 @@ class Canvas extends Component {
         this.canvasWidth = w;
         this.canvasHeight = h;
 
+        const isCanvas = contextMenu !== null && contextMenu.figure === null
+        const isFigure = contextMenu !== null && contextMenu.figure !== null
+
+        const figureMenu = () => {
+            const setColor = (colorName) => {
+                this.handleCloseContextMenu()
+                const command = new CommandChangeColor(contextMenu.figure, colorName);
+                this.canvas.getCommandStack().execute(command);
+
+                //setNodeColor(contextMenu.figure, colorName)
+            }
+
+            return nodeColorNames().map((item) => (
+                <MenuItem onClick={() => setColor(item)} key={`item-${item}`}>{item}</MenuItem>
+            ))
+        }
+
         return (
             <>
                 <div id="canvas"
@@ -187,16 +207,16 @@ class Canvas extends Component {
                             : undefined
                     }
                 >
-                    {contextMenu !== null && contextMenu.figure !== null && <MenuItem onClick={this.handleCloseContextMenu}>Figure</MenuItem>}
-                    {contextMenu !== null && contextMenu.figure === null && <MenuItem onClick={this.handleMenuAddNode}>Add Node</MenuItem>}
-                    {contextMenu !== null && contextMenu.figure === null && <MenuItem onClick={this.handleMenuAddUserNode}>Add User Node</MenuItem>}
-                    {contextMenu !== null && contextMenu.figure === null && <MenuItem onClick={this.handleMenuAddExternalNode}>Add External Node</MenuItem>}
+                    {isFigure && figureMenu()}
+
+                    {isCanvas && <MenuItem onClick={this.handleMenuAddNode}>Add Node</MenuItem>}
+                    {isCanvas && <MenuItem onClick={this.handleMenuAddUserNode}>Add User Node</MenuItem>}
+                    {isCanvas && <MenuItem onClick={this.handleMenuAddExternalNode}>Add External Node</MenuItem>}
 
                 </Menu>
             </>
         );
     }
-
 
 
     tryGetFigure = (x, y) => {
@@ -222,6 +242,8 @@ class Canvas extends Component {
         this.togglePanPolicy()
     }
 }
+
+
 
 function getEvent(event) {
     // check for iPad, Android touch events
@@ -280,7 +302,6 @@ const hidePortsIfReadOnly = (canvas, figure) => {
 const saveDiagram = (canvas) => {
     // Serialize canvas figures and connections into canvas data object
     const canvasData = serializeCanvas(canvas);
-
 
     // Store canvas data in local storage
     const canvasText = JSON.stringify(canvasData)
