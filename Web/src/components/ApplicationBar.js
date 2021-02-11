@@ -7,7 +7,6 @@ import LibraryAddOutlinedIcon from '@material-ui/icons/LibraryAddOutlined';
 import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
-import DeleteForeverIcon from '@material-ui/icons/DeleteForever';
 
 
 export default function ApplicationBar({ height, commands }) {

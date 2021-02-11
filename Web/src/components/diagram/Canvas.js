@@ -291,7 +291,7 @@ const saveDiagram = (canvas) => {
 const restoreDiagram = (canvas) => {
     // Get canvas data from local storage.
     let canvasText = localStorage.getItem(diagramName)
-    console.log('load', canvasText)
+    //console.log('load', canvasText)
 
     if (canvasText == null) {
         return
