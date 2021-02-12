@@ -123,7 +123,7 @@ export const createUserNode = (id, width, height, name, description, colorName) 
 
     addFigureLabels(figure, fontColor, name, description, colorName)
     const icon = new draw2d.shape.icon.User({ width: 18, height: 15, color: fontColor, bgColor: color });
-    const iconLocator = new draw2d.layout.locator.XYRelPortLocator(1, 10)
+    const iconLocator = new draw2d.layout.locator.XYRelPortLocator(1, 1)
     figure.add(icon, iconLocator)
     figure.createPort("input", new InputTopPortLocator());
     figure.createPort("output", new OutputBottomPortLocator());
@@ -145,7 +145,7 @@ export const createExternalNode = (id, width, height, name, description, colorNa
 
     addFigureLabels(figure, fontColor, name, description)
     const icon = new draw2d.shape.icon.NewWindow({ width: 15, height: 15, color: fontColor, bgColor: color });
-    const iconLocator = new draw2d.layout.locator.XYRelPortLocator(1, 10)
+    const iconLocator = new draw2d.layout.locator.XYRelPortLocator(1, 1)
     figure.add(icon, iconLocator)
     figure.createPort("input", new InputTopPortLocator());
     figure.createPort("output", new OutputBottomPortLocator());
@@ -168,7 +168,7 @@ const addFigureLabels = (figure, color, name, description) => {
     })
 
     nameLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-    figure.add(nameLabel, labelLocator(5));
+    figure.add(nameLabel, labelLocator(7));
     descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
     figure.add(descriptionLabel, labelLocator(30));
 }
