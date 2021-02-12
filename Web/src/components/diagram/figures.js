@@ -47,6 +47,7 @@ export const deserializeFigures = (figures) => {
     })
 }
 
+
 export const setNodeColor = (figure, colorName) => {
     figure.setBackgroundColor(getNodeColor(colorName))
     const children = figure.getChildren().asArray()
@@ -62,6 +63,7 @@ export const setNodeColor = (figure, colorName) => {
     figure.setUserData({ ...figure.getUserData(), color: colorName })
 }
 
+
 export const createDefaultNode = () => {
     return createNode(
         draw2d.util.UUID.create(),
@@ -71,6 +73,7 @@ export const createDefaultNode = () => {
         "DeepPurple")
 }
 
+
 export const createDefaultUserNode = () => {
     return createUserNode(
         draw2d.util.UUID.create(),
@@ -79,6 +82,7 @@ export const createDefaultUserNode = () => {
         'External User', 'Description',
         "BlueGrey")
 }
+
 
 export const createDefaultExternalNode = () => {
     return createExternalNode(
@@ -91,25 +95,24 @@ export const createDefaultExternalNode = () => {
 
 
 export const createNode = (id, width, height, name, description, colorName) => {
-    const color = getNodeColor(colorName)
-    const borderColor = getNodeBorderColor(colorName)
-    const fontColor = getNodeFontColor(colorName)
-    const figure = new draw2d.shape.node.Between({
-        id: id,
-        width: width, height: height,
-        bgColor: color, color: borderColor,
-        radius: 5,
-        userData: { type: "node", color: colorName }
-    });
-
-    addFigureLabels(figure, fontColor, name, description)
-    figure.createPort("input", new InputTopPortLocator());
-    figure.createPort("output", new OutputBottomPortLocator());
-
-    return figure
+    return createCommonNode("node", id, width, height, name, description, colorName,
+        null)
 }
 
+
 export const createUserNode = (id, width, height, name, description, colorName) => {
+    return createCommonNode("user", id, width, height, name, description, colorName,
+        new draw2d.shape.icon.User())
+}
+
+
+export const createExternalNode = (id, width, height, name, description, colorName) => {
+    return createCommonNode("external", id, width, height, name, description, colorName,
+        new draw2d.shape.icon.NewWindow())
+}
+
+
+const createCommonNode = (type, id, width, height, name, description, colorName, icon) => {
     const color = getNodeColor(colorName)
     const borderColor = getNodeBorderColor(colorName)
     const fontColor = getNodeFontColor(colorName)
@@ -118,38 +121,15 @@ export const createUserNode = (id, width, height, name, description, colorName) 
         width: width, height: height,
         bgColor: color, color: borderColor,
         radius: 5,
-        userData: { type: "user", color: colorName }
+        userData: { type: type, color: colorName }
     });
 
     addFigureLabels(figure, fontColor, name, description, colorName)
-    const icon = new draw2d.shape.icon.User({ width: 18, height: 15, color: fontColor, bgColor: color });
-    const iconLocator = new draw2d.layout.locator.XYRelPortLocator(1, 1)
-    figure.add(icon, iconLocator)
-    figure.createPort("input", new InputTopPortLocator());
-    figure.createPort("output", new OutputBottomPortLocator());
+    if (icon != null) {
+        addIcon(figure, icon, fontColor, color);
+    }
 
-    return figure
-}
-
-export const createExternalNode = (id, width, height, name, description, colorName) => {
-    const color = getNodeColor(colorName)
-    const borderColor = getNodeBorderColor(colorName)
-    const fontColor = getNodeFontColor(colorName)
-    const figure = new draw2d.shape.node.Between({
-        id: id,
-        width: width, height: height,
-        bgColor: color, color: borderColor,
-        radius: 5,
-        userData: { type: "external", color: colorName }
-    });
-
-    addFigureLabels(figure, fontColor, name, description)
-    const icon = new draw2d.shape.icon.NewWindow({ width: 15, height: 15, color: fontColor, bgColor: color });
-    const iconLocator = new draw2d.layout.locator.XYRelPortLocator(1, 1)
-    figure.add(icon, iconLocator)
-    figure.createPort("input", new InputTopPortLocator());
-    figure.createPort("output", new OutputBottomPortLocator());
-
+    addPorts(figure)
     return figure
 }
 
@@ -173,6 +153,18 @@ const addFigureLabels = (figure, color, name, description) => {
     figure.add(descriptionLabel, labelLocator(30));
 }
 
+
+const addIcon = (figure, icon, color, bgColor) => {
+    icon.attr({ width: 18, height: 15, color: color, bgColor: bgColor })
+    const iconLocator = new draw2d.layout.locator.XYRelPortLocator(1, 1)
+    figure.add(icon, iconLocator)
+}
+
+
+const addPorts = (figure) => {
+    figure.createPort("input", new InputTopPortLocator());
+    figure.createPort("output", new OutputBottomPortLocator());
+}
 
 const labelLocator = (y) => {
     const locator = new draw2d.layout.locator.XYRelPortLocator(0, y)
