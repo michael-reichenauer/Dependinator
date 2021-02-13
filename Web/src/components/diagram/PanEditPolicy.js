@@ -30,6 +30,10 @@ export let PanEditPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
                     // Clicked on connection vertex handle, add a new vertex
                     figure.onClick()
                 }
+                if (figure instanceof draw2d.shape.icon.Diagram) {
+                    // Clicked on connection vertex handle, add a new vertex
+                    figure.onClickDiagram()
+                }
                 return
             }
 

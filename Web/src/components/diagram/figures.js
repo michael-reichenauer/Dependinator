@@ -1,8 +1,14 @@
 import draw2d from "draw2d";
 import { getNodeColor, getNodeFontColor, getNodeBorderColor } from "./colors";
+import { Tweenable } from "shifty"
 
-export const defaultNodeWidth = 230
-export const defaultNodeHeight = 150
+const defaultNodeWidth = 230
+const defaultNodeHeight = 150
+const nodeType = 'node'
+const userType = 'user'
+const externalType = 'external'
+const newUserIcon = () => new draw2d.shape.icon.User()
+const newExternalIcon = () => new draw2d.shape.icon.NewWindow()
 
 
 export const serializeFigures = (canvas) => {
@@ -29,13 +35,13 @@ export const deserializeFigures = (figures) => {
     return figures.map(f => {
         let figure
         switch (f.type) {
-            case 'node':
+            case nodeType:
                 figure = createNode(f.id, f.w, f.h, f.name, f.description, f.color)
                 break;
-            case 'user':
+            case userType:
                 figure = createUserNode(f.id, f.w, f.h, f.name, f.description, f.color)
                 break;
-            case 'external':
+            case externalType:
                 figure = createExternalNode(f.id, f.w, f.h, f.name, f.description, f.color)
                 break;
             default:
@@ -45,22 +51,6 @@ export const deserializeFigures = (figures) => {
         figure.y = f.y
         return figure
     })
-}
-
-
-export const setNodeColor = (figure, colorName) => {
-    figure.setBackgroundColor(getNodeColor(colorName))
-    const children = figure.getChildren().asArray()
-    const nameLabel = children.find(c => c.userData?.type === 'name');
-    const descriptionLabel = children.find(c => c.userData?.type === 'description');
-    const icon = children.find(c => c instanceof draw2d.shape.icon.Icon);
-
-    nameLabel?.setFontColor(getNodeFontColor(colorName))
-    descriptionLabel?.setFontColor(getNodeFontColor(colorName))
-    icon?.setBackgroundColor(getNodeColor(colorName))
-    icon?.setColor(getNodeFontColor(colorName))
-
-    figure.setUserData({ ...figure.getUserData(), color: colorName })
 }
 
 
@@ -95,20 +85,34 @@ export const createDefaultExternalNode = () => {
 
 
 export const createNode = (id, width, height, name, description, colorName) => {
-    return createCommonNode("node", id, width, height, name, description, colorName,
+    return createCommonNode(nodeType, id, width, height, name, description, colorName,
         null)
 }
 
 
 export const createUserNode = (id, width, height, name, description, colorName) => {
-    return createCommonNode("user", id, width, height, name, description, colorName,
-        new draw2d.shape.icon.User())
+    return createCommonNode(userType, id, width, height, name, description, colorName, newUserIcon())
 }
 
 
 export const createExternalNode = (id, width, height, name, description, colorName) => {
-    return createCommonNode("external", id, width, height, name, description, colorName,
-        new draw2d.shape.icon.NewWindow())
+    return createCommonNode(externalType, id, width, height, name, description, colorName, newExternalIcon())
+}
+
+
+export const setNodeColor = (figure, colorName) => {
+    figure.setBackgroundColor(getNodeColor(colorName))
+    const children = figure.getChildren().asArray()
+    const nameLabel = children.find(c => c.userData?.type === 'name');
+    const descriptionLabel = children.find(c => c.userData?.type === 'description');
+    const icon = children.find(c => c instanceof draw2d.shape.icon.Icon);
+
+    nameLabel?.setFontColor(getNodeFontColor(colorName))
+    descriptionLabel?.setFontColor(getNodeFontColor(colorName))
+    icon?.setBackgroundColor(getNodeColor(colorName))
+    icon?.setColor(getNodeFontColor(colorName))
+
+    figure.setUserData({ ...figure.getUserData(), color: colorName })
 }
 
 
@@ -128,6 +132,7 @@ const createCommonNode = (type, id, width, height, name, description, colorName,
     if (icon != null) {
         addIcon(figure, icon, fontColor, color);
     }
+    addInnerDiagramIcon(figure, fontColor, color)
 
     addPorts(figure)
     return figure
@@ -161,10 +166,53 @@ const addIcon = (figure, icon, color, bgColor) => {
 }
 
 
+const addInnerDiagramIcon = (figure, color, bgColor) => {
+    const icon = new draw2d.shape.icon.Diagram({
+        width: 20, height: 20, color: color, bgColor: bgColor,
+    })
+
+    icon.onClickDiagram = () => zoomAndMoveShowInnerDiagram(figure, icon)
+    const locator = new InnerDiagramLocator()
+    figure.add(icon, locator)
+}
+
+const zoomAndMoveShowInnerDiagram = (figure, icon) => {
+    const canvas = icon.getCanvas()
+    let tweenable = new Tweenable()
+    //console.log('figure', figure.x, figure.y, canvas.canvasWidth, canvas.canvasHeight)
+
+    const targetZoom = 0.2 * figure.width / defaultNodeWidth
+    let area = canvas.getScrollArea()
+
+
+    const fc = { x: figure.x + figure.width / 2, y: figure.y + figure.height / 2 }
+    const cc = { x: canvas.canvasWidth / 2, y: canvas.canvasHeight / 2 }
+
+    tweenable.tween({
+        from: { 'zoom': canvas.zoomFactor },
+        to: { 'zoom': targetZoom },
+        duration: 2000,
+        easing: "easeOutSine",
+        step: params => {
+            canvas.setZoom(params.zoom, false)
+
+            // Scroll figure to center
+            const tp = { x: fc.x - cc.x * params.zoom, y: fc.y - cc.y * params.zoom }
+            // canvas.scrollTo((tp.x) / params.zoom, (tp.y) / params.zoom)
+            area.scrollLeft((tp.x) / params.zoom)
+            area.scrollTop((tp.y) / params.zoom)
+        },
+        finish: state => {
+        }
+    })
+
+}
+
 const addPorts = (figure) => {
     figure.createPort("input", new InputTopPortLocator());
     figure.createPort("output", new OutputBottomPortLocator());
 }
+
 
 const labelLocator = (y) => {
     const locator = new draw2d.layout.locator.XYRelPortLocator(0, y)
@@ -179,6 +227,16 @@ const labelLocator = (y) => {
     return locator
 }
 
+
+const InnerDiagramLocator = draw2d.layout.locator.PortLocator.extend({
+    init: function () {
+        this._super();
+    },
+    relocate: function (index, figure) {
+        const parent = figure.getParent()
+        this.applyConsiderRotation(figure, parent.getWidth() / 2 - 10, parent.getHeight() - 25);
+    }
+});
 
 const InputTopPortLocator = draw2d.layout.locator.PortLocator.extend({
     init: function () {

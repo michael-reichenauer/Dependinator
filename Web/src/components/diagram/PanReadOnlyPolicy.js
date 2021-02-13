@@ -34,6 +34,11 @@ export let PanReadOnlyPolicy = draw2d.policy.canvas.SelectionPolicy.extend(
             if (figure === null) {
                 return
             }
+            if (figure instanceof draw2d.shape.icon.Diagram) {
+                // Clicked on connection vertex handle, add a new vertex
+                figure.onClickDiagram()
+                return
+            }
 
             this.togglePanPolicy(figure)
         },
@@ -61,7 +66,7 @@ export let PanReadOnlyPolicy = draw2d.policy.canvas.SelectionPolicy.extend(
         onMouseDrag: function (canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey) {
             let area = canvas.getScrollArea()
             let zoom = canvas.getZoom()
-
+            //console.log('area', area.scrollLeft(), area.scrollTop())
             //console.log("Pan:", dx, dy, dx2, dy2, shiftKey, ctrlKey, area.scrollLeft(), area.scrollTop(), zoom)
             area.scrollLeft(area.scrollLeft() - dx2 / zoom)
             area.scrollTop(area.scrollTop() - dy2 / zoom)
