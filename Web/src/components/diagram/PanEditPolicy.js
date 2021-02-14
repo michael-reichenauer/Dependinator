@@ -1,7 +1,7 @@
 import draw2d from "draw2d";
 
 
-export let PanEditPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
+export let PanEditPolicy = draw2d.policy.canvas.BoundingboxSelectionPolicy.extend(
     {
         NAME: "PanEditPolicy",
 

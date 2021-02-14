@@ -41,8 +41,15 @@ class Canvas extends Component {
         props.commands.clear = this.commandClearCanvas
     }
 
-    undo = () => this.canvas.getCommandStack().undo();
-    redo = () => this.canvas.getCommandStack().redo();
+    undo = () => {
+        this.canvas.getCommandStack().undo();
+        saveDiagram(this.canvas)
+    }
+
+    redo = () => {
+        this.canvas.getCommandStack().redo();
+        saveDiagram(this.canvas)
+    }
 
     commandAddNode = () => this.addFigure(createDefaultNode(), this.randomCenterPoint())
     commandAddUserNode = () => this.addFigure(createDefaultUserNode(), this.randomCenterPoint())
@@ -60,7 +67,7 @@ class Canvas extends Component {
 
     clearDiagram = () => {
         this.canvas.clear()
-        //saveDiagram(this.canvas)
+
         addDefaultNewDiagram(this.canvas)
     }
 
