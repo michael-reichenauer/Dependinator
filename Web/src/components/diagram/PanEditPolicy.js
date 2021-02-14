@@ -43,19 +43,19 @@ export let PanEditPolicy = draw2d.policy.canvas.BoundingboxSelectionPolicy.exten
         onMouseDrag: function (canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey) {
             this._super(canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey)
 
-            if (this.mouseDraggingElement === null && this.mouseDownElement === null) {
+            // if (this.mouseDraggingElement === null && this.mouseDownElement === null) {
 
-                // check if we are dragging a port. This isn't reported by the selection handler anymore
-                //
-                let p = canvas.fromDocumentToCanvasCoordinate(canvas.mouseDownX + (dx / canvas.zoomFactor), canvas.mouseDownY + (dy / canvas.zoomFactor))
-                let figure = canvas.getBestFigure(p.x, p.y)
+            //     // check if we are dragging a port. This isn't reported by the selection handler anymore
+            //     //
+            //     let p = canvas.fromDocumentToCanvasCoordinate(canvas.mouseDownX + (dx / canvas.zoomFactor), canvas.mouseDownY + (dy / canvas.zoomFactor))
+            //     let figure = canvas.getBestFigure(p.x, p.y)
 
-                if (figure === null) {
-                    let area = canvas.getScrollArea()
-                    let zoom = canvas.getZoom()
-                    area.scrollTop(area.scrollTop() - dy2 / zoom)
-                    area.scrollLeft(area.scrollLeft() - dx2 / zoom)
-                }
-            }
+            //     if (figure === null) {
+            //         let area = canvas.getScrollArea()
+            //         let zoom = canvas.getZoom()
+            //         area.scrollTop(area.scrollTop() - dy2 / zoom)
+            //         area.scrollLeft(area.scrollLeft() - dx2 / zoom)
+            //     }
+            // }
         }
     })

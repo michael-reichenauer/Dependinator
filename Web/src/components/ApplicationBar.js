@@ -7,6 +7,7 @@ import LibraryAddOutlinedIcon from '@material-ui/icons/LibraryAddOutlined';
 import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
+import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
 
 
 export default function ApplicationBar({ height, commands }) {
@@ -21,6 +22,7 @@ export default function ApplicationBar({ height, commands }) {
                 <Tooltip title="Add node" ><IconButton onClick={() => commands.addNode()}><AddBoxOutlinedIcon className={classes.icons} /></IconButton></Tooltip>
                 <Tooltip title="Add user node" ><IconButton onClick={() => commands.addUserNode()}><PersonAddIcon className={classes.icons} /></IconButton></Tooltip>
                 <Tooltip title="Add external system node" ><IconButton onClick={() => commands.addExternalNode()}><LibraryAddOutlinedIcon className={classes.icons} /></IconButton></Tooltip>
+                <Tooltip title="Scroll and zoom to show diagram" ><IconButton onClick={() => commands.showTotalDiagram()}><FilterCenterFocusIcon className={classes.icons} /></IconButton></Tooltip>
                 <Typography className={classes.space} variant="h6" noWrap> </Typography>
                 <ApplicationMenu commands={commands} />
 

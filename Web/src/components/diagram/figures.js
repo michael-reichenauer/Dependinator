@@ -217,6 +217,42 @@ const zoomAndMoveShowInnerDiagram = (figure, icon) => {
 
 }
 
+export const zoomAndMoveShowTotalDiagram = (canvas) => {
+    let tweenable = new Tweenable()
+    let area = canvas.getScrollArea()
+
+    const fc = {
+        x: canvas.minFigureX + (canvas.maxFigureWidth - canvas.minFigureX) / 2,
+        y: canvas.minFigureY + (canvas.maxFigureHeight - canvas.minFigureY) / 2
+    }
+    const cc = { x: canvas.canvasWidth / 2, y: canvas.canvasHeight / 2 }
+
+    const targetZoom = Math.max(1,
+        (canvas.maxFigureWidth - canvas.minFigureX) / (canvas.canvasWidth - 100),
+        (canvas.maxFigureHeight - canvas.minFigureY) / (canvas.canvasHeight - 100))
+
+    tweenable.tween({
+        from: { 'zoom': canvas.zoomFactor },
+        to: { 'zoom': targetZoom },
+        duration: 2000,
+        easing: "easeOutSine",
+        step: params => {
+            canvas.setZoom(params.zoom, false)
+
+            // Scroll figure to center
+            const tp = { x: fc.x - cc.x * params.zoom, y: fc.y - cc.y * params.zoom }
+            // canvas.scrollTo((tp.x) / params.zoom, (tp.y) / params.zoom)
+            area.scrollLeft((tp.x) / params.zoom)
+            area.scrollTop((tp.y) / params.zoom)
+        },
+        finish: state => {
+        }
+    })
+
+}
+
+
+
 const addPorts = (figure) => {
     figure.createPort("input", new InputTopPortLocator());
     figure.createPort("output", new OutputBottomPortLocator());
