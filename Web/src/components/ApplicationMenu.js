@@ -5,7 +5,7 @@ import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
 import Tooltip from '@material-ui/core/Tooltip';
 import makeStyles from "@material-ui/core/styles/makeStyles";
-import { Box, Popover, Typography } from "@material-ui/core";
+import { Box, Link, Popover, Typography } from "@material-ui/core";
 
 
 const useMenuStyles = makeStyles((theme) => ({
@@ -36,6 +36,7 @@ export function ApplicationMenu({ commands }) {
             commands.clear()
         }
     };
+    const preventDefault = (event) => event.preventDefault();
 
     const handleCloseAbout = () => {
         console.info(`Hide About`)
@@ -89,12 +90,13 @@ export function ApplicationMenu({ commands }) {
                     horizontal: 'center',
                 }}
             >
-                <Box style={{ width: 300, height: 200, padding: 20 }}>
+                <Box style={{ width: 400, height: 200, padding: 20 }}>
                     <Typography variant="h5">Dependinator</Typography>
                     <Typography >
-                        Early preview tool for visualizing software architecture inspired by map tools for
-                        navigation and the "C4 Model" by Simon Brown.
-                        </Typography>
+                        Early preview of a tool for visualizing software architecture inspired by map tools for
+                        navigation and the "<Link href="https://c4model.com" target="_blank">C4 Model</Link>"by Simon Brown.
+
+                    </Typography>
                 </Box>
 
             </Popover>
