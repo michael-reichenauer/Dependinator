@@ -36,7 +36,7 @@ export function ApplicationMenu({ commands }) {
             commands.clear()
         }
     };
-    const preventDefault = (event) => event.preventDefault();
+    //const preventDefault = (event) => event.preventDefault();
 
     const handleCloseAbout = () => {
         console.info(`Hide About`)
