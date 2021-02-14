@@ -10,6 +10,17 @@ export const configureDefaultConnection = (connection) => {
 }
 
 
+export const createDefaultConnection = (src, srcPortName, dst, dstPortName) => {
+    const connection = new draw2d.Connection()
+    const srcPort = src.getPort(srcPortName)
+    const dstPort = dst.getPort(dstPortName)
+    connection.setSource(srcPort)
+    connection.setTarget(dstPort)
+
+    configureConnection(connection, 'Description')
+    return connection
+}
+
 export const serializeConnections = (canvas) => {
     return canvas.getLines().asArray().map((line) => {
         //console.log('connection', line)

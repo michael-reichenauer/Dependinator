@@ -9,10 +9,11 @@ import { PanEditPolicy } from "./PanEditPolicy"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { Menu, MenuItem } from "@material-ui/core";
 import { random } from '../../common/utils'
-import { createDefaultNode, createDefaultUserNode, createDefaultExternalNode } from './figures'
+import { createDefaultNode, createDefaultUserNode, createDefaultExternalNode, createDefaultSystemNode } from './figures'
 import { serializeCanvas, deserializeCanvas } from './serialization'
 import { canvasDivBackground, nodeColorNames } from "./colors";
 import { CommandChangeColor } from "./commandChangeColor";
+import { createDefaultConnection } from "./connections";
 
 const diagramName = 'diagram'
 const initialState = {
@@ -46,7 +47,7 @@ class Canvas extends Component {
     commandAddNode = () => this.addFigure(createDefaultNode(), this.randomCenterPoint())
     commandAddUserNode = () => this.addFigure(createDefaultUserNode(), this.randomCenterPoint())
     commandAddExternalNode = () => this.addFigure(createDefaultExternalNode(), this.randomCenterPoint())
-    commandClearCanvas = () => this.canvas.clear()
+    commandClearCanvas = () => this.clearDiagram()
     handleMenuAddNode = () => this.handleMenuAdd(createDefaultNode())
     handleMenuAddUserNode = () => this.handleMenuAdd(createDefaultUserNode())
     handleMenuAddExternalNode = () => this.handleMenuAdd(createDefaultExternalNode())
@@ -57,6 +58,11 @@ class Canvas extends Component {
         this.addFigure(figure, this.toCanvasCoordinate(x, y))
     }
 
+    clearDiagram = () => {
+        this.canvas.clear()
+        //saveDiagram(this.canvas)
+        addDefaultNewDiagram(this.canvas)
+    }
 
     addFigure = (figure, p) => {
         addFigureToCanvas(this.canvas, figure, p)
@@ -295,6 +301,11 @@ const addFigureToCanvas = (canvas, figure, p) => {
     canvas.getCommandStack().execute(command);
 }
 
+const addConnectionToCanvas = (canvas, connection) => {
+    const command = new draw2d.command.CommandAdd(canvas, connection, 0, 0);
+    canvas.getCommandStack().execute(command);
+}
+
 
 const hidePortsIfReadOnly = (canvas, figure) => {
     if (canvas.isReadOnlyMode) {
@@ -319,15 +330,29 @@ const restoreDiagram = (canvas) => {
     //console.log('load', canvasText)
 
     if (canvasText == null) {
+        console.log('no diagram')
+        addDefaultNewDiagram(canvas)
         return
     }
+    //console.log('saved', canvasText)
     const canvasData = JSON.parse(canvasText)
-    if (canvasData == null || canvasData.figures == null) {
+    if (canvasData == null || canvasData.figures == null || canvasData.figures.lengths === 0) {
         return
     }
 
     // Deserialize canvas
     deserializeCanvas(canvas, canvasData)
+}
+
+const addDefaultNewDiagram = (canvas) => {
+    const user = createDefaultUserNode()
+    const system = createDefaultSystemNode()
+    const external = createDefaultExternalNode()
+    addFigureToCanvas(canvas, user, { x: 200, y: 400 })
+    addFigureToCanvas(canvas, system, { x: 600, y: 400 })
+    addConnectionToCanvas(canvas, createDefaultConnection(user, 'output0', system, 'input0'))
+    addFigureToCanvas(canvas, external, { x: 1000, y: 400 })
+    addConnectionToCanvas(canvas, createDefaultConnection(system, 'output0', external, 'input0'))
 }
 
 export default Canvas;

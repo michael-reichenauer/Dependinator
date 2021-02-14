@@ -63,6 +63,15 @@ export const createDefaultNode = () => {
         "DeepPurple")
 }
 
+export const createDefaultSystemNode = () => {
+    return createNode(
+        draw2d.util.UUID.create(),
+        defaultNodeWidth, defaultNodeHeight,
+        //  nodeColor, nodeBorderColor,
+        'System', 'Description',
+        "DeepPurple")
+}
+
 
 export const createDefaultUserNode = () => {
     return createUserNode(
