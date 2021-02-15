@@ -217,7 +217,48 @@ const zoomAndMoveShowInnerDiagram = (figure, icon) => {
 
 }
 
+export const updateCanvasMaxFigureSize = (canvas) => {
+    let x = 10000
+    let y = 10000
+    let w = 0
+    let h = 0
+
+    canvas.getFigures().each((i, f) => {
+        let fx = f.getAbsoluteX()
+        let fy = f.getAbsoluteY()
+        let fw = fx + f.getWidth()
+        let fh = fy + f.getHeight()
+
+        if (i === 0) {
+            x = fx
+            y = fy
+            w = fw
+            h = fh
+            return
+        }
+
+        if (fw > w) {
+            w = fw
+        }
+        if (fh > h) {
+            h = fh
+        }
+        if (fx < x) {
+            x = fx
+        }
+        if (fy < y) {
+            y = fy
+        }
+    })
+    canvas.minFigureX = x
+    canvas.minFigureY = y
+    canvas.maxFigureWidth = w
+    canvas.maxFigureHeight = h
+    // console.log('figure size', w, h)
+}
+
 export const zoomAndMoveShowTotalDiagram = (canvas) => {
+    updateCanvasMaxFigureSize(canvas)
     let tweenable = new Tweenable()
     let area = canvas.getScrollArea()
 

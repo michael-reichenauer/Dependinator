@@ -9,7 +9,7 @@ import { PanEditPolicy } from "./PanEditPolicy"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { Menu, MenuItem } from "@material-ui/core";
 import { random } from '../../common/utils'
-import { createDefaultNode, createDefaultUserNode, createDefaultExternalNode, createDefaultSystemNode, zoomAndMoveShowTotalDiagram } from './figures'
+import { createDefaultNode, createDefaultUserNode, createDefaultExternalNode, createDefaultSystemNode, zoomAndMoveShowTotalDiagram, updateCanvasMaxFigureSize } from './figures'
 import { serializeCanvas, deserializeCanvas } from './serialization'
 import { canvasDivBackground, nodeColorNames } from "./colors";
 import { CommandChangeColor } from "./commandChangeColor";
@@ -126,11 +126,13 @@ class Canvas extends Component {
         this.setState({ contextMenu: { figure: figure, x: event.clientX, y: event.clientY } });
     };
 
+
     handleCloseContextMenu = () => {
         const { x, y } = this.state.contextMenu
         this.setState({ contextMenu: null });
         return { x, y }
     };
+
 
     togglePanPolicy = (figure) => {
         let current = this.panPolicyCurrent
@@ -212,8 +214,6 @@ class Canvas extends Component {
                 this.handleCloseContextMenu()
                 const command = new CommandChangeColor(contextMenu.figure, colorName);
                 this.canvas.getCommandStack().execute(command);
-
-                //setNodeColor(contextMenu.figure, colorName)
             }
 
             return nodeColorNames().map((item) => (
@@ -290,45 +290,7 @@ function getEvent(event) {
     return event
 }
 
-const updateCanvasMaxFigureSize = (canvas) => {
-    let x = 10000
-    let y = 10000
-    let w = 0
-    let h = 0
 
-    canvas.getFigures().each((i, f) => {
-        let fx = f.getAbsoluteX()
-        let fy = f.getAbsoluteY()
-        let fw = fx + f.getWidth()
-        let fh = fy + f.getHeight()
-
-        if (i === 0) {
-            x = fx
-            y = fy
-            w = fw
-            h = fh
-            return
-        }
-
-        if (fw > w) {
-            w = fw
-        }
-        if (fh > h) {
-            h = fh
-        }
-        if (fx < x) {
-            x = fx
-        }
-        if (fy < y) {
-            y = fy
-        }
-    })
-    canvas.minFigureX = x
-    canvas.minFigureY = y
-    canvas.maxFigureWidth = w
-    canvas.maxFigureHeight = h
-    // console.log('figure size', w, h)
-}
 
 const addFigureToCanvas = (canvas, figure, p) => {
     hidePortsIfReadOnly(canvas, figure)
