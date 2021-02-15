@@ -36,3 +36,8 @@ For types and members, it is possible to see the source code. Often, the actual 
 ### Visual Studio Extension
 
 The Dependinator Visual Studio Extension (installed by default) supports integration between Dependinator and Visual Studio (VS). In the model view, it is possible to open the source file for a node in VS, and in VS, it is possible to trigger Dependinator to pan and zoom to show the node that corresponds to the active window in VS.
+
+
+## Preview Web UI
+A preview version of a new web based ui with limited functionality is available at:
+[web ui](https://red-flower-0a55bb003.azurestaticapps.net/)
