@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import PubSub from 'pubsub-js'
 import Menu from "@material-ui/core/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
 import IconButton from "@material-ui/core/IconButton";
@@ -15,7 +16,7 @@ const useMenuStyles = makeStyles((theme) => ({
 }));
 
 
-export function ApplicationMenu({ commands }) {
+export function ApplicationMenu() {
     const classes = useMenuStyles();
     const [menu, setMenu] = useState(null);
     const [anchorEl, setAnchorEl] = React.useState(null);
@@ -27,16 +28,15 @@ export function ApplicationMenu({ commands }) {
     };
 
 
-    const handleClear = (event) => {
+    const handleNewDiagram = (event) => {
         setMenu(null);
-        console.info(`Clear Diagram`)
+        console.info(`New Diagram`)
 
         var shouldDelete = confirm('Do you really want to clear the current diagram?') //eslint-disable-line
         if (shouldDelete) {
-            commands.clear()
+            PubSub.publish('diagram.NewDiagram')
         }
     };
-    //const preventDefault = (event) => event.preventDefault();
 
     const handleCloseAbout = () => {
         console.info(`Hide About`)
@@ -70,7 +70,7 @@ export function ApplicationMenu({ commands }) {
                 }}
             >
 
-                <MenuItem onClick={handleClear}>New Diagram</MenuItem>
+                <MenuItem onClick={handleNewDiagram}>New Diagram</MenuItem>
                 <MenuItem onClick={handleAbout}>About</MenuItem>
 
             </Menu>

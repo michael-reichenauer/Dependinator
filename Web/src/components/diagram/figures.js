@@ -115,11 +115,14 @@ export const setNodeColor = (figure, colorName) => {
     const nameLabel = children.find(c => c.userData?.type === 'name');
     const descriptionLabel = children.find(c => c.userData?.type === 'description');
     const icon = children.find(c => c instanceof draw2d.shape.icon.Icon);
+    const diagramIcon = children.find(c => c instanceof draw2d.shape.icon.Diagram);
 
     nameLabel?.setFontColor(getNodeFontColor(colorName))
     descriptionLabel?.setFontColor(getNodeFontColor(colorName))
     icon?.setBackgroundColor(getNodeColor(colorName))
     icon?.setColor(getNodeFontColor(colorName))
+    diagramIcon?.setBackgroundColor(getNodeColor(colorName))
+    diagramIcon?.setColor(getNodeFontColor(colorName))
 
     figure.setUserData({ ...figure.getUserData(), color: colorName })
 }

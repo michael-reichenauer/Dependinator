@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import PubSub from 'pubsub-js'
 import "import-jquery";
 import "jquery-ui-bundle";
 import "jquery-ui-bundle/jquery-ui.css";
@@ -15,6 +16,11 @@ import { canvasDivBackground, nodeColorNames } from "./colors";
 import { CommandChangeColor } from "./commandChangeColor";
 import { createDefaultConnection } from "./connections";
 
+import { atom } from 'jotai'
+
+export const canUndo = atom(false)
+export const canRedo = atom(false)
+
 const diagramName = 'diagram'
 const initialState = {
     contextMenu: null,
@@ -24,34 +30,23 @@ const initialState = {
 
 class Canvas extends Component {
     canvas = null;
-    panPolicyCurrent = null
-    panPolicyOther = null;
-    canvasWidth = 0;
-    canvasHeight = 0;
-    hasRendered = false;
+
 
     constructor(props) {
         super(props);
         this.state = initialState;
-        props.commands.undo = this.undo
-        props.commands.redo = this.redo
-        props.commands.addNode = this.commandAddNode
-        props.commands.addUserNode = this.commandAddUserNode
-        props.commands.addExternalNode = this.commandAddExternalNode
-        props.commands.clear = this.commandClearCanvas
-        props.commands.showTotalDiagram = this.showTotalDiagram
     }
 
     showTotalDiagram = () => {
         zoomAndMoveShowTotalDiagram(this.canvas)
     }
 
-    undo = () => {
+    commandUndo = () => {
         this.canvas.getCommandStack().undo();
         saveDiagram(this.canvas)
     }
 
-    redo = () => {
+    commandRedo = () => {
         this.canvas.getCommandStack().redo();
         saveDiagram(this.canvas)
     }
@@ -59,7 +54,6 @@ class Canvas extends Component {
     commandAddNode = () => this.addFigure(createDefaultNode(), this.randomCenterPoint())
     commandAddUserNode = () => this.addFigure(createDefaultUserNode(), this.randomCenterPoint())
     commandAddExternalNode = () => this.addFigure(createDefaultExternalNode(), this.randomCenterPoint())
-    commandClearCanvas = () => this.clearDiagram()
     handleMenuAddNode = () => this.handleMenuAdd(createDefaultNode())
     handleMenuAddUserNode = () => this.handleMenuAdd(createDefaultUserNode())
     handleMenuAddExternalNode = () => this.handleMenuAdd(createDefaultExternalNode())
@@ -70,31 +64,10 @@ class Canvas extends Component {
         this.addFigure(figure, this.toCanvasCoordinate(x, y))
     }
 
-    clearDiagram = () => {
-        const canvas = this.canvas
-        canvas.lines.clone().each(function (i, e) {
-            canvas.remove(e)
-        })
-
-        canvas.figures.clone().each(function (i, e) {
-            canvas.remove(e)
-        })
-
-
-        canvas.selection.clear()
-        canvas.currentDropTarget = null
-
-        // internal document with all figures, ports, ....
-        //
-        canvas.figures = new draw2d.util.ArrayList()
-        canvas.lines = new draw2d.util.ArrayList()
-        canvas.commonPorts = new draw2d.util.ArrayList()
-
-        canvas.commandStack.markSaveLocation()
-        canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
-        canvas.lineIntersections = new draw2d.util.ArrayList()
-
+    commandNewDiagram = () => {
+        this.clearDiagram()
         addDefaultNewDiagram(this.canvas)
+
     }
 
     addFigure = (figure, p) => {
@@ -104,13 +77,27 @@ class Canvas extends Component {
 
     componentDidMount = () => {
         console.log('componentDidMount')
-        this.createCanvas();
+        this.canvas = createCanvas('canvas', this.togglePanPolicy, this.addDefaultItem);
+        this.canvas.canvasWidth = this.props.width
+        this.canvas.canvasHeight = this.props.height
+
+        zoomAndMoveShowTotalDiagram(this.canvas)
+
         document.addEventListener("contextmenu", this.handleContextMenu);
+        PubSub.subscribe('diagram.AddNode', this.commandAddNode)
+        PubSub.subscribe('diagram.AddUserNode', this.commandAddUserNode)
+        PubSub.subscribe('diagram.AddExternalNode', this.commandAddExternalNode)
+        PubSub.subscribe('diagram.Undo', this.commandUndo)
+        PubSub.subscribe('diagram.Redo', this.commandRedo)
+        PubSub.subscribe('diagram.ShowTotalDiagram', this.showTotalDiagram)
+        PubSub.subscribe('diagram.NewDiagram', this.commandNewDiagram)
     }
 
     componentWillUnmount = () => {
         console.log('componentWillUnmount')
+        PubSub.unsubscribe('diagram');
         document.removeEventListener("contextmenu", this.handleContextMenu);
+
         this.canvas.destroy()
     }
 
@@ -135,99 +122,43 @@ class Canvas extends Component {
 
 
     togglePanPolicy = (figure) => {
-        let current = this.panPolicyCurrent
-        this.canvas.uninstallEditPolicy(this.panPolicyCurrent)
+        let current = this.canvas.panPolicyCurrent
+        this.canvas.uninstallEditPolicy(this.canvas.panPolicyCurrent)
 
-        this.panPolicyCurrent = this.panPolicyOther
-        this.panPolicyOther = current
-        this.canvas.installEditPolicy(this.panPolicyCurrent)
+        this.canvas.panPolicyCurrent = this.canvas.panPolicyOther
+        this.canvas.panPolicyOther = current
+        this.canvas.installEditPolicy(this.canvas.panPolicyCurrent)
 
         if (figure != null) {
             this.canvas.setCurrentSelection(figure)
         }
     }
 
-    createCanvas = () => {
-        this.canvas = new draw2d.Canvas("canvas")
-        let canvas = this.canvas
-        canvas.setScrollArea("#canvas")
-        canvas.setDimension(new draw2d.geo.Rectangle(0, 0, 10000, 10000))
-        canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, 10000, 10000)
 
-        restoreDiagram(canvas)
-        updateCanvasMaxFigureSize(canvas)
-
-        // Pan policy readonly/edit
-        this.panPolicyCurrent = new PanReadOnlyPolicy(this.togglePanPolicy, this.addDefaultItem)
-        this.panPolicyOther = new PanEditPolicy(this.togglePanPolicy, this.addDefaultItem)
-        canvas.installEditPolicy(this.panPolicyCurrent)
-
-        canvas.installEditPolicy(new WheelZoomPolicy());
-        canvas.installEditPolicy(new ConnectionCreatePolicy())
-        canvas.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
-        const sg = new draw2d.policy.canvas.ShowGridEditPolicy(1, 1, canvasDivBackground)
-        sg.onZoomCallback = () => { }
-        canvas.installEditPolicy(sg);
-        canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGeometryEditPolicy())
-        canvas.installEditPolicy(new draw2d.policy.canvas.SnapToInBetweenEditPolicy())
-        canvas.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
-        canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
-
-        canvas.canvasWidth = this.props.width
-        canvas.canvasHeight = this.props.height
-
-        zoomAndMoveShowTotalDiagram(canvas)
-
-        canvas.getCommandStack().addEventListener(function (e) {
-            // console.log('event:', e)
-            if (e.isPostChangeEvent()) {
-                // console.log('event isPostChangeEvent:', e)
-                if (e.action === "POST_EXECUTE") {
-                    updateCanvasMaxFigureSize(canvas)
-                    saveDiagram(canvas)
-                }
-            }
-        });
-    }
 
     render = () => {
         const { contextMenu } = this.state;
 
-        let w = this.props.width
-        let h = this.props.height
+        let width = this.props.width
+        let height = this.props.height
         //console.log('render', w, h, this.canvas?.getZoom(),)
 
         if (this.canvas != null) {
-            this.canvas.canvasWidth = w;
-            this.canvas.canvasHeight = h
+            this.canvas.canvasWidth = width;
+            this.canvas.canvasHeight = height
         }
-
-        this.hasRendered = true
-        this.canvasWidth = w;
-        this.canvasHeight = h;
 
         const isCanvas = contextMenu !== null && contextMenu.figure === null
         const isFigure = contextMenu !== null && contextMenu.figure !== null
 
-        const figureMenu = () => {
-            const setColor = (colorName) => {
-                this.handleCloseContextMenu()
-                const command = new CommandChangeColor(contextMenu.figure, colorName);
-                this.canvas.getCommandStack().execute(command);
-            }
-
-            return nodeColorNames().map((item) => (
-                <MenuItem onClick={() => setColor(item)} key={`item-${item}`}>{item}</MenuItem>
-            ))
-        }
-
         return (
             <>
-                <div id="canvas"
-                    style={{
-                        width: w, height: h, maxWidth: w, maxHeight: h, position: 'absolute',
-                        overflow: 'scroll', background: '#D5DBDB'
-                    }}></div>
+                <div id="canvas" style={{
+                    width: width, height: height, maxWidth: width, maxHeight: height, position: 'absolute',
+                    overflow: 'scroll', background: '#D5DBDB'
+                }}>
+                </div>
+
                 <Menu
                     keepMounted
                     open={contextMenu !== null}
@@ -239,7 +170,7 @@ class Canvas extends Component {
                             : undefined
                     }
                 >
-                    {isFigure && figureMenu()}
+                    {isFigure && figureMenu(contextMenu.figure, this.handleCloseContextMenu)}
 
                     {isCanvas && <MenuItem onClick={this.handleMenuAddNode}>Add Node</MenuItem>}
                     {isCanvas && <MenuItem onClick={this.handleMenuAddUserNode}>Add User Node</MenuItem>}
@@ -261,12 +192,14 @@ class Canvas extends Component {
         return this.canvas.fromDocumentToCanvasCoordinate(x, y)
     }
 
+
     randomCenterPoint = () => {
-        let x = (this.canvasWidth / 2 + random(-10, 10) + this.canvas.getScrollLeft()) * this.canvas.getZoom()
-        let y = (this.canvasHeight / 2 + random(-10, 10) + this.canvas.getScrollTop()) * this.canvas.getZoom()
+        let x = (this.canvas.canvasWidth / 2 + random(-10, 10) + this.canvas.getScrollLeft()) * this.canvas.getZoom()
+        let y = (this.canvas.canvasHeight / 2 + random(-10, 10) + this.canvas.getScrollTop()) * this.canvas.getZoom()
 
         return { x: x, y: y }
     }
+
 
     enableEditMode = () => {
         if (!this.canvas.isReadOnlyMode) {
@@ -274,9 +207,68 @@ class Canvas extends Component {
         }
         this.togglePanPolicy()
     }
+
+
+    clearDiagram = () => {
+        const canvas = this.canvas
+        canvas.lines.clone().each(function (i, e) {
+            canvas.remove(e)
+        })
+
+        canvas.figures.clone().each(function (i, e) {
+            canvas.remove(e)
+        })
+
+
+        canvas.selection.clear()
+        canvas.currentDropTarget = null
+        canvas.figures = new draw2d.util.ArrayList()
+        canvas.lines = new draw2d.util.ArrayList()
+        canvas.commonPorts = new draw2d.util.ArrayList()
+        canvas.commandStack.markSaveLocation()
+        canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
+        canvas.lineIntersections = new draw2d.util.ArrayList()
+    }
 }
 
+const createCanvas = (canvasId, togglePanPolicy, addDefaultItem) => {
+    const canvas = new draw2d.Canvas(canvasId)
+    canvas.setScrollArea("#" + canvasId)
+    canvas.setDimension(new draw2d.geo.Rectangle(0, 0, 10000, 10000))
+    canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, 10000, 10000)
 
+    restoreDiagram(canvas)
+    updateCanvasMaxFigureSize(canvas)
+
+    // Pan policy readonly/edit
+    canvas.panPolicyCurrent = new PanReadOnlyPolicy(togglePanPolicy, addDefaultItem)
+    canvas.panPolicyOther = new PanEditPolicy(togglePanPolicy, addDefaultItem)
+    canvas.installEditPolicy(canvas.panPolicyCurrent)
+
+    canvas.installEditPolicy(new WheelZoomPolicy());
+    canvas.installEditPolicy(new ConnectionCreatePolicy())
+    canvas.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
+    const sg = new draw2d.policy.canvas.ShowGridEditPolicy(1, 1, canvasDivBackground)
+    sg.onZoomCallback = () => { }
+    canvas.installEditPolicy(sg);
+    canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGeometryEditPolicy())
+    canvas.installEditPolicy(new draw2d.policy.canvas.SnapToInBetweenEditPolicy())
+    canvas.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
+    canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
+
+
+    canvas.getCommandStack().addEventListener(function (e) {
+        // console.log('event:', e)
+        if (e.isPostChangeEvent()) {
+            // console.log('event isPostChangeEvent:', e)
+            if (e.action === "POST_EXECUTE") {
+                updateCanvasMaxFigureSize(canvas)
+                saveDiagram(canvas)
+            }
+        }
+    });
+    return canvas
+}
 
 function getEvent(event) {
     // check for iPad, Android touch events
@@ -290,6 +282,17 @@ function getEvent(event) {
     return event
 }
 
+const figureMenu = (figure, closeMenu) => {
+    const setColor = (figure, colorName) => {
+        closeMenu()
+        const command = new CommandChangeColor(figure, colorName);
+        figure.getCanvas().getCommandStack().execute(command);
+    }
+
+    return nodeColorNames().map((item) => (
+        <MenuItem onClick={() => setColor(figure, item)} key={`item-${item}`}>{item}</MenuItem>
+    ))
+}
 
 
 const addFigureToCanvas = (canvas, figure, p) => {
