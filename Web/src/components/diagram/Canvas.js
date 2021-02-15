@@ -31,9 +31,6 @@ class Canvas extends Component {
     canvas = null;
     panPolicyCurrent = null
     panPolicyOther = null;
-    canvasWidth = 0;
-    canvasHeight = 0;
-    hasRendered = false;
 
     constructor(props) {
         super(props);
@@ -187,24 +184,10 @@ class Canvas extends Component {
             this.canvas.canvasHeight = h
         }
 
-        this.hasRendered = true
-        this.canvasWidth = w;
-        this.canvasHeight = h;
-
         const isCanvas = contextMenu !== null && contextMenu.figure === null
         const isFigure = contextMenu !== null && contextMenu.figure !== null
 
-        const figureMenu = () => {
-            const setColor = (colorName) => {
-                this.handleCloseContextMenu()
-                const command = new CommandChangeColor(contextMenu.figure, colorName);
-                this.canvas.getCommandStack().execute(command);
-            }
 
-            return nodeColorNames().map((item) => (
-                <MenuItem onClick={() => setColor(item)} key={`item-${item}`}>{item}</MenuItem>
-            ))
-        }
 
         return (
             <>
@@ -224,7 +207,7 @@ class Canvas extends Component {
                             : undefined
                     }
                 >
-                    {isFigure && figureMenu()}
+                    {isFigure && figureMenu(contextMenu.figure, this.handleCloseContextMenu)}
 
                     {isCanvas && <MenuItem onClick={this.handleMenuAddNode}>Add Node</MenuItem>}
                     {isCanvas && <MenuItem onClick={this.handleMenuAddUserNode}>Add User Node</MenuItem>}
@@ -248,8 +231,8 @@ class Canvas extends Component {
 
 
     randomCenterPoint = () => {
-        let x = (this.canvasWidth / 2 + random(-10, 10) + this.canvas.getScrollLeft()) * this.canvas.getZoom()
-        let y = (this.canvasHeight / 2 + random(-10, 10) + this.canvas.getScrollTop()) * this.canvas.getZoom()
+        let x = (this.canvas.canvasWidth / 2 + random(-10, 10) + this.canvas.getScrollLeft()) * this.canvas.getZoom()
+        let y = (this.canvas.canvasHeight / 2 + random(-10, 10) + this.canvas.getScrollTop()) * this.canvas.getZoom()
 
         return { x: x, y: y }
     }
@@ -299,6 +282,17 @@ function getEvent(event) {
     return event
 }
 
+const figureMenu = (figure, closeMenu) => {
+    const setColor = (figure, colorName) => {
+        closeMenu()
+        const command = new CommandChangeColor(figure, colorName);
+        figure.getCanvas().getCommandStack().execute(command);
+    }
+
+    return nodeColorNames().map((item) => (
+        <MenuItem onClick={() => setColor(figure, item)} key={`item-${item}`}>{item}</MenuItem>
+    ))
+}
 
 
 const addFigureToCanvas = (canvas, figure, p) => {
