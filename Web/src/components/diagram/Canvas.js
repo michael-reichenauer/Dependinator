@@ -30,8 +30,7 @@ const initialState = {
 
 class Canvas extends Component {
     canvas = null;
-    panPolicyCurrent = null
-    panPolicyOther = null;
+
 
     constructor(props) {
         super(props);
@@ -78,7 +77,12 @@ class Canvas extends Component {
 
     componentDidMount = () => {
         console.log('componentDidMount')
-        this.createCanvas();
+        this.canvas = createCanvas('canvas', this.togglePanPolicy, this.addDefaultItem);
+        this.canvas.canvasWidth = this.props.width
+        this.canvas.canvasHeight = this.props.height
+
+        zoomAndMoveShowTotalDiagram(this.canvas)
+
         document.addEventListener("contextmenu", this.handleContextMenu);
         PubSub.subscribe('diagram.AddNode', this.commandAddNode)
         PubSub.subscribe('diagram.AddUserNode', this.commandAddUserNode)
@@ -118,60 +122,19 @@ class Canvas extends Component {
 
 
     togglePanPolicy = (figure) => {
-        let current = this.panPolicyCurrent
-        this.canvas.uninstallEditPolicy(this.panPolicyCurrent)
+        let current = this.canvas.panPolicyCurrent
+        this.canvas.uninstallEditPolicy(this.canvas.panPolicyCurrent)
 
-        this.panPolicyCurrent = this.panPolicyOther
-        this.panPolicyOther = current
-        this.canvas.installEditPolicy(this.panPolicyCurrent)
+        this.canvas.panPolicyCurrent = this.canvas.panPolicyOther
+        this.canvas.panPolicyOther = current
+        this.canvas.installEditPolicy(this.canvas.panPolicyCurrent)
 
         if (figure != null) {
             this.canvas.setCurrentSelection(figure)
         }
     }
 
-    createCanvas = () => {
-        this.canvas = new draw2d.Canvas("canvas")
-        let canvas = this.canvas
-        canvas.setScrollArea("#canvas")
-        canvas.setDimension(new draw2d.geo.Rectangle(0, 0, 10000, 10000))
-        canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, 10000, 10000)
 
-        restoreDiagram(canvas)
-        updateCanvasMaxFigureSize(canvas)
-
-        // Pan policy readonly/edit
-        this.panPolicyCurrent = new PanReadOnlyPolicy(this.togglePanPolicy, this.addDefaultItem)
-        this.panPolicyOther = new PanEditPolicy(this.togglePanPolicy, this.addDefaultItem)
-        canvas.installEditPolicy(this.panPolicyCurrent)
-
-        canvas.installEditPolicy(new WheelZoomPolicy());
-        canvas.installEditPolicy(new ConnectionCreatePolicy())
-        canvas.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
-        const sg = new draw2d.policy.canvas.ShowGridEditPolicy(1, 1, canvasDivBackground)
-        sg.onZoomCallback = () => { }
-        canvas.installEditPolicy(sg);
-        canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGeometryEditPolicy())
-        canvas.installEditPolicy(new draw2d.policy.canvas.SnapToInBetweenEditPolicy())
-        canvas.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
-        canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
-
-        canvas.canvasWidth = this.props.width
-        canvas.canvasHeight = this.props.height
-
-        zoomAndMoveShowTotalDiagram(canvas)
-
-        canvas.getCommandStack().addEventListener(function (e) {
-            // console.log('event:', e)
-            if (e.isPostChangeEvent()) {
-                // console.log('event isPostChangeEvent:', e)
-                if (e.action === "POST_EXECUTE") {
-                    updateCanvasMaxFigureSize(canvas)
-                    saveDiagram(canvas)
-                }
-            }
-        });
-    }
 
     render = () => {
         const { contextMenu } = this.state;
@@ -268,7 +231,44 @@ class Canvas extends Component {
     }
 }
 
+const createCanvas = (canvasId, togglePanPolicy, addDefaultItem) => {
+    const canvas = new draw2d.Canvas(canvasId)
+    canvas.setScrollArea("#" + canvasId)
+    canvas.setDimension(new draw2d.geo.Rectangle(0, 0, 10000, 10000))
+    canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, 10000, 10000)
 
+    restoreDiagram(canvas)
+    updateCanvasMaxFigureSize(canvas)
+
+    // Pan policy readonly/edit
+    canvas.panPolicyCurrent = new PanReadOnlyPolicy(togglePanPolicy, addDefaultItem)
+    canvas.panPolicyOther = new PanEditPolicy(togglePanPolicy, addDefaultItem)
+    canvas.installEditPolicy(canvas.panPolicyCurrent)
+
+    canvas.installEditPolicy(new WheelZoomPolicy());
+    canvas.installEditPolicy(new ConnectionCreatePolicy())
+    canvas.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
+    const sg = new draw2d.policy.canvas.ShowGridEditPolicy(1, 1, canvasDivBackground)
+    sg.onZoomCallback = () => { }
+    canvas.installEditPolicy(sg);
+    canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGeometryEditPolicy())
+    canvas.installEditPolicy(new draw2d.policy.canvas.SnapToInBetweenEditPolicy())
+    canvas.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
+    canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
+
+
+    canvas.getCommandStack().addEventListener(function (e) {
+        // console.log('event:', e)
+        if (e.isPostChangeEvent()) {
+            // console.log('event isPostChangeEvent:', e)
+            if (e.action === "POST_EXECUTE") {
+                updateCanvasMaxFigureSize(canvas)
+                saveDiagram(canvas)
+            }
+        }
+    });
+    return canvas
+}
 
 function getEvent(event) {
     // check for iPad, Android touch events
