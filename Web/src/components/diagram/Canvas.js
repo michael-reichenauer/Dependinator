@@ -38,7 +38,7 @@ class Canvas extends Component {
         props.commands.addNode = this.commandAddNode
         props.commands.addUserNode = this.commandAddUserNode
         props.commands.addExternalNode = this.commandAddExternalNode
-        props.commands.clear = this.commandClearCanvas
+        props.commands.clear = this.commandNewDiagram
         props.commands.showTotalDiagram = this.showTotalDiagram
     }
 
@@ -59,7 +59,6 @@ class Canvas extends Component {
     commandAddNode = () => this.addFigure(createDefaultNode(), this.randomCenterPoint())
     commandAddUserNode = () => this.addFigure(createDefaultUserNode(), this.randomCenterPoint())
     commandAddExternalNode = () => this.addFigure(createDefaultExternalNode(), this.randomCenterPoint())
-    commandClearCanvas = () => this.clearDiagram()
     handleMenuAddNode = () => this.handleMenuAdd(createDefaultNode())
     handleMenuAddUserNode = () => this.handleMenuAdd(createDefaultUserNode())
     handleMenuAddExternalNode = () => this.handleMenuAdd(createDefaultExternalNode())
@@ -70,32 +69,13 @@ class Canvas extends Component {
         this.addFigure(figure, this.toCanvasCoordinate(x, y))
     }
 
-    clearDiagram = () => {
-        const canvas = this.canvas
-        canvas.lines.clone().each(function (i, e) {
-            canvas.remove(e)
-        })
-
-        canvas.figures.clone().each(function (i, e) {
-            canvas.remove(e)
-        })
-
-
-        canvas.selection.clear()
-        canvas.currentDropTarget = null
-
-        // internal document with all figures, ports, ....
-        //
-        canvas.figures = new draw2d.util.ArrayList()
-        canvas.lines = new draw2d.util.ArrayList()
-        canvas.commonPorts = new draw2d.util.ArrayList()
-
-        canvas.commandStack.markSaveLocation()
-        canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
-        canvas.lineIntersections = new draw2d.util.ArrayList()
-
+    commandNewDiagram = () => {
+        this.clearDiagram()
         addDefaultNewDiagram(this.canvas)
+
     }
+
+
 
     addFigure = (figure, p) => {
         addFigureToCanvas(this.canvas, figure, p)
@@ -261,6 +241,7 @@ class Canvas extends Component {
         return this.canvas.fromDocumentToCanvasCoordinate(x, y)
     }
 
+
     randomCenterPoint = () => {
         let x = (this.canvasWidth / 2 + random(-10, 10) + this.canvas.getScrollLeft()) * this.canvas.getZoom()
         let y = (this.canvasHeight / 2 + random(-10, 10) + this.canvas.getScrollTop()) * this.canvas.getZoom()
@@ -268,11 +249,34 @@ class Canvas extends Component {
         return { x: x, y: y }
     }
 
+
     enableEditMode = () => {
         if (!this.canvas.isReadOnlyMode) {
             return
         }
         this.togglePanPolicy()
+    }
+
+
+    clearDiagram = () => {
+        const canvas = this.canvas
+        canvas.lines.clone().each(function (i, e) {
+            canvas.remove(e)
+        })
+
+        canvas.figures.clone().each(function (i, e) {
+            canvas.remove(e)
+        })
+
+
+        canvas.selection.clear()
+        canvas.currentDropTarget = null
+        canvas.figures = new draw2d.util.ArrayList()
+        canvas.lines = new draw2d.util.ArrayList()
+        canvas.commonPorts = new draw2d.util.ArrayList()
+        canvas.commandStack.markSaveLocation()
+        canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
+        canvas.lineIntersections = new draw2d.util.ArrayList()
     }
 }
 
