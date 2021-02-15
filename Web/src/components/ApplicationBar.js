@@ -22,7 +22,7 @@ export default function ApplicationBar({ height, commands }) {
                 <Tooltip title="Add node" ><IconButton onClick={() => commands.addNode()}><AddBoxOutlinedIcon className={classes.icons} /></IconButton></Tooltip>
                 <Tooltip title="Add user node" ><IconButton onClick={() => commands.addUserNode()}><PersonAddIcon className={classes.icons} /></IconButton></Tooltip>
                 <Tooltip title="Add external system node" ><IconButton onClick={() => commands.addExternalNode()}><LibraryAddOutlinedIcon className={classes.icons} /></IconButton></Tooltip>
-                <Tooltip title="Scroll and zoom to show diagram" ><IconButton onClick={() => commands.showTotalDiagram()}><FilterCenterFocusIcon className={classes.icons} /></IconButton></Tooltip>
+                <Tooltip title="Scroll and zoom to show full diagram" ><IconButton onClick={() => commands.showTotalDiagram()}><FilterCenterFocusIcon className={classes.icons} /></IconButton></Tooltip>
                 <Typography className={classes.space} variant="h6" noWrap> </Typography>
                 <ApplicationMenu commands={commands} />
 

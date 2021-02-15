@@ -27,13 +27,13 @@ export function ApplicationMenu({ commands }) {
     };
 
 
-    const handleClear = (event) => {
+    const handleNewDiagram = (event) => {
         setMenu(null);
-        console.info(`Clear Diagram`)
+        console.info(`New Diagram`)
 
         var shouldDelete = confirm('Do you really want to clear the current diagram?') //eslint-disable-line
         if (shouldDelete) {
-            commands.clear()
+            commands.newDiagram()
         }
     };
     //const preventDefault = (event) => event.preventDefault();
@@ -70,7 +70,7 @@ export function ApplicationMenu({ commands }) {
                 }}
             >
 
-                <MenuItem onClick={handleClear}>New Diagram</MenuItem>
+                <MenuItem onClick={handleNewDiagram}>New Diagram</MenuItem>
                 <MenuItem onClick={handleAbout}>About</MenuItem>
 
             </Menu>

@@ -15,6 +15,11 @@ import { canvasDivBackground, nodeColorNames } from "./colors";
 import { CommandChangeColor } from "./commandChangeColor";
 import { createDefaultConnection } from "./connections";
 
+import { atom } from 'jotai'
+
+export const canUndo = atom(false)
+export const canRedo = atom(false)
+
 const diagramName = 'diagram'
 const initialState = {
     contextMenu: null,
@@ -38,7 +43,7 @@ class Canvas extends Component {
         props.commands.addNode = this.commandAddNode
         props.commands.addUserNode = this.commandAddUserNode
         props.commands.addExternalNode = this.commandAddExternalNode
-        props.commands.clear = this.commandNewDiagram
+        props.commands.newDiagram = this.commandNewDiagram
         props.commands.showTotalDiagram = this.showTotalDiagram
     }
 
