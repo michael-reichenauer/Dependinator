@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import PubSub from 'pubsub-js'
 import "import-jquery";
 import "jquery-ui-bundle";
 import "jquery-ui-bundle/jquery-ui.css";
@@ -35,25 +36,18 @@ class Canvas extends Component {
     constructor(props) {
         super(props);
         this.state = initialState;
-        props.commands.undo = this.undo
-        props.commands.redo = this.redo
-        props.commands.addNode = this.commandAddNode
-        props.commands.addUserNode = this.commandAddUserNode
-        props.commands.addExternalNode = this.commandAddExternalNode
-        props.commands.newDiagram = this.commandNewDiagram
-        props.commands.showTotalDiagram = this.showTotalDiagram
     }
 
     showTotalDiagram = () => {
         zoomAndMoveShowTotalDiagram(this.canvas)
     }
 
-    undo = () => {
+    commandUndo = () => {
         this.canvas.getCommandStack().undo();
         saveDiagram(this.canvas)
     }
 
-    redo = () => {
+    commandRedo = () => {
         this.canvas.getCommandStack().redo();
         saveDiagram(this.canvas)
     }
@@ -77,8 +71,6 @@ class Canvas extends Component {
 
     }
 
-
-
     addFigure = (figure, p) => {
         addFigureToCanvas(this.canvas, figure, p)
         this.enableEditMode()
@@ -88,11 +80,20 @@ class Canvas extends Component {
         console.log('componentDidMount')
         this.createCanvas();
         document.addEventListener("contextmenu", this.handleContextMenu);
+        PubSub.subscribe('diagram.AddNode', this.commandAddNode)
+        PubSub.subscribe('diagram.AddUserNode', this.commandAddUserNode)
+        PubSub.subscribe('diagram.AddExternalNode', this.commandAddExternalNode)
+        PubSub.subscribe('diagram.Undo', this.commandUndo)
+        PubSub.subscribe('diagram.Redo', this.commandRedo)
+        PubSub.subscribe('diagram.ShowTotalDiagram', this.showTotalDiagram)
+        PubSub.subscribe('diagram.NewDiagram', this.commandNewDiagram)
     }
 
     componentWillUnmount = () => {
         console.log('componentWillUnmount')
+        PubSub.unsubscribe('diagram');
         document.removeEventListener("contextmenu", this.handleContextMenu);
+
         this.canvas.destroy()
     }
 

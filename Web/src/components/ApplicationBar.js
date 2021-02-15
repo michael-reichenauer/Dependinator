@@ -1,4 +1,5 @@
 import React from "react";
+import PubSub from 'pubsub-js'
 import { Typography, fade, AppBar, Toolbar, IconButton, Tooltip, } from "@material-ui/core";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { ApplicationMenu } from "./ApplicationMenu"
@@ -10,22 +11,23 @@ import RedoIcon from '@material-ui/icons/Redo';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
 
 
-export default function ApplicationBar({ height, commands }) {
+export default function ApplicationBar({ height }) {
     const classes = useAppBarStyles();
 
     return (
         <AppBar position="static" style={{ height: height }}>
             <Toolbar>
                 <Typography className={classes.title} variant="h6" noWrap>Dependinator</Typography>
-                <Tooltip title="Undo" ><IconButton onClick={() => commands.undo()}><UndoIcon className={classes.icons} /></IconButton></Tooltip>
-                <Tooltip title="Redo" ><IconButton onClick={() => commands.redo()}><RedoIcon className={classes.icons} /></IconButton></Tooltip>
-                <Tooltip title="Add node" ><IconButton onClick={() => commands.addNode()}><AddBoxOutlinedIcon className={classes.icons} /></IconButton></Tooltip>
-                <Tooltip title="Add user node" ><IconButton onClick={() => commands.addUserNode()}><PersonAddIcon className={classes.icons} /></IconButton></Tooltip>
-                <Tooltip title="Add external system node" ><IconButton onClick={() => commands.addExternalNode()}><LibraryAddOutlinedIcon className={classes.icons} /></IconButton></Tooltip>
-                <Tooltip title="Scroll and zoom to show full diagram" ><IconButton onClick={() => commands.showTotalDiagram()}><FilterCenterFocusIcon className={classes.icons} /></IconButton></Tooltip>
-                <Typography className={classes.space} variant="h6" noWrap> </Typography>
-                <ApplicationMenu commands={commands} />
 
+                <Tooltip title="Undo" ><IconButton onClick={() => PubSub.publish('diagram.Undo')}><UndoIcon className={classes.icons} /></IconButton></Tooltip>
+                <Tooltip title="Redo" ><IconButton onClick={() => PubSub.publish('diagram.Redo')}><RedoIcon className={classes.icons} /></IconButton></Tooltip>
+                <Tooltip title="Add node" ><IconButton onClick={() => PubSub.publish('diagram.AddNode')}><AddBoxOutlinedIcon className={classes.icons} /></IconButton></Tooltip>
+                <Tooltip title="Add user node" ><IconButton onClick={() => PubSub.publish('diagram.AddUserNode')}><PersonAddIcon className={classes.icons} /></IconButton></Tooltip>
+                <Tooltip title="Add external system node" ><IconButton onClick={() => PubSub.publish('diagram.AddExternalNode')}><LibraryAddOutlinedIcon className={classes.icons} /></IconButton></Tooltip>
+                <Tooltip title="Scroll and zoom to show full diagram" ><IconButton onClick={() => PubSub.publish('diagram.ShowTotalDiagram')}><FilterCenterFocusIcon className={classes.icons} /></IconButton></Tooltip>
+
+                <Typography className={classes.space} variant="h6" noWrap> </Typography>
+                <ApplicationMenu />
             </Toolbar>
         </AppBar >
     )
