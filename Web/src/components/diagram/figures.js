@@ -217,6 +217,83 @@ const zoomAndMoveShowInnerDiagram = (figure, icon) => {
 
 }
 
+export const updateCanvasMaxFigureSize = (canvas) => {
+    let x = 10000
+    let y = 10000
+    let w = 0
+    let h = 0
+
+    canvas.getFigures().each((i, f) => {
+        let fx = f.getAbsoluteX()
+        let fy = f.getAbsoluteY()
+        let fw = fx + f.getWidth()
+        let fh = fy + f.getHeight()
+
+        if (i === 0) {
+            x = fx
+            y = fy
+            w = fw
+            h = fh
+            return
+        }
+
+        if (fw > w) {
+            w = fw
+        }
+        if (fh > h) {
+            h = fh
+        }
+        if (fx < x) {
+            x = fx
+        }
+        if (fy < y) {
+            y = fy
+        }
+    })
+    canvas.minFigureX = x
+    canvas.minFigureY = y
+    canvas.maxFigureWidth = w
+    canvas.maxFigureHeight = h
+    // console.log('figure size', w, h)
+}
+
+export const zoomAndMoveShowTotalDiagram = (canvas) => {
+    updateCanvasMaxFigureSize(canvas)
+    let tweenable = new Tweenable()
+    let area = canvas.getScrollArea()
+
+    const fc = {
+        x: canvas.minFigureX + (canvas.maxFigureWidth - canvas.minFigureX) / 2,
+        y: canvas.minFigureY + (canvas.maxFigureHeight - canvas.minFigureY) / 2
+    }
+    const cc = { x: canvas.canvasWidth / 2, y: canvas.canvasHeight / 2 }
+
+    const targetZoom = Math.max(1,
+        (canvas.maxFigureWidth - canvas.minFigureX) / (canvas.canvasWidth - 100),
+        (canvas.maxFigureHeight - canvas.minFigureY) / (canvas.canvasHeight - 100))
+
+    tweenable.tween({
+        from: { 'zoom': canvas.zoomFactor },
+        to: { 'zoom': targetZoom },
+        duration: 2000,
+        easing: "easeOutSine",
+        step: params => {
+            canvas.setZoom(params.zoom, false)
+
+            // Scroll figure to center
+            const tp = { x: fc.x - cc.x * params.zoom, y: fc.y - cc.y * params.zoom }
+            // canvas.scrollTo((tp.x) / params.zoom, (tp.y) / params.zoom)
+            area.scrollLeft((tp.x) / params.zoom)
+            area.scrollTop((tp.y) / params.zoom)
+        },
+        finish: state => {
+        }
+    })
+
+}
+
+
+
 const addPorts = (figure) => {
     figure.createPort("input", new InputTopPortLocator());
     figure.createPort("output", new OutputBottomPortLocator());

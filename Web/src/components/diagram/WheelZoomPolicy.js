@@ -34,14 +34,17 @@ export let WheelZoomPolicy = draw2d.policy.canvas.ZoomPolicy.extend(
     onMouseWheel: function (wheelDelta, x, y, shiftKey, ctrlKey) {
       wheelDelta = wheelDelta / 5024
 
-      let newZoom = ((Math.min(5, Math.max(0.1, this.canvas.zoomFactor + wheelDelta)) * 10000 | 0) / 10000)
+      let newZoom = ((Math.min(10, Math.max(0.1, this.canvas.zoomFactor + wheelDelta)) * 10000 | 0) / 10000)
 
+      //console.log('zoom', newZoom, this.canvas.initialWidth / this.canvas.canvasWidth, this.canvas.initialHeight / this.canvas.canvasHeight,)
+      newZoom = Math.min(newZoom, Math.max(this.canvas.initialWidth / this.canvas.canvasWidth, this.canvas.initialHeight / this.canvas.canvasHeight))
+      // if (this.canvas.initialHeight * this.)
       // Limit zoom to include all canvas figures
-      let maxZoom = Math.max(1, this.canvas.maxFigureWidth / this.canvas.canvasWidth, this.canvas.maxFigureHeight / this.canvas.canvasHeight)
-      maxZoom = Math.min(10, maxZoom)
-      if (newZoom > maxZoom) {
-        newZoom = maxZoom
-      }
+      // let maxZoom = Math.max(1, this.canvas.maxFigureWidth / this.canvas.canvasWidth, this.canvas.maxFigureHeight / this.canvas.canvasHeight)
+      // maxZoom = Math.min(10, maxZoom)
+      // if (newZoom > maxZoom) {
+      //   newZoom = maxZoom
+      // }
 
       // Center zoom around mouse pointer
       if (this.center === null) {
@@ -103,6 +106,7 @@ export let WheelZoomPolicy = draw2d.policy.canvas.ZoomPolicy.extend(
 
 
       canvas.zoomFactor = zoom
+      //console.log('Zoom', zoom)
 
       canvas.paper.setViewBox(0, 0, canvas.initialWidth, canvas.initialHeight)
       // Change the width and the height attributes manually through DOM

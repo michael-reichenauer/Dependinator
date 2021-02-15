@@ -9,7 +9,7 @@ import { PanEditPolicy } from "./PanEditPolicy"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { Menu, MenuItem } from "@material-ui/core";
 import { random } from '../../common/utils'
-import { createDefaultNode, createDefaultUserNode, createDefaultExternalNode, createDefaultSystemNode } from './figures'
+import { createDefaultNode, createDefaultUserNode, createDefaultExternalNode, createDefaultSystemNode, zoomAndMoveShowTotalDiagram, updateCanvasMaxFigureSize } from './figures'
 import { serializeCanvas, deserializeCanvas } from './serialization'
 import { canvasDivBackground, nodeColorNames } from "./colors";
 import { CommandChangeColor } from "./commandChangeColor";
@@ -39,6 +39,11 @@ class Canvas extends Component {
         props.commands.addUserNode = this.commandAddUserNode
         props.commands.addExternalNode = this.commandAddExternalNode
         props.commands.clear = this.commandClearCanvas
+        props.commands.showTotalDiagram = this.showTotalDiagram
+    }
+
+    showTotalDiagram = () => {
+        zoomAndMoveShowTotalDiagram(this.canvas)
     }
 
     undo = () => {
@@ -66,7 +71,28 @@ class Canvas extends Component {
     }
 
     clearDiagram = () => {
-        this.canvas.clear()
+        const canvas = this.canvas
+        canvas.lines.clone().each(function (i, e) {
+            canvas.remove(e)
+        })
+
+        canvas.figures.clone().each(function (i, e) {
+            canvas.remove(e)
+        })
+
+
+        canvas.selection.clear()
+        canvas.currentDropTarget = null
+
+        // internal document with all figures, ports, ....
+        //
+        canvas.figures = new draw2d.util.ArrayList()
+        canvas.lines = new draw2d.util.ArrayList()
+        canvas.commonPorts = new draw2d.util.ArrayList()
+
+        canvas.commandStack.markSaveLocation()
+        canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
+        canvas.lineIntersections = new draw2d.util.ArrayList()
 
         addDefaultNewDiagram(this.canvas)
     }
@@ -100,11 +126,13 @@ class Canvas extends Component {
         this.setState({ contextMenu: { figure: figure, x: event.clientX, y: event.clientY } });
     };
 
+
     handleCloseContextMenu = () => {
         const { x, y } = this.state.contextMenu
         this.setState({ contextMenu: null });
         return { x, y }
     };
+
 
     togglePanPolicy = (figure) => {
         let current = this.panPolicyCurrent
@@ -123,6 +151,8 @@ class Canvas extends Component {
         this.canvas = new draw2d.Canvas("canvas")
         let canvas = this.canvas
         canvas.setScrollArea("#canvas")
+        canvas.setDimension(new draw2d.geo.Rectangle(0, 0, 10000, 10000))
+        canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, 10000, 10000)
 
         restoreDiagram(canvas)
         updateCanvasMaxFigureSize(canvas)
@@ -135,7 +165,9 @@ class Canvas extends Component {
         canvas.installEditPolicy(new WheelZoomPolicy());
         canvas.installEditPolicy(new ConnectionCreatePolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
-        // canvas.installEditPolicy(new draw2d.policy.canvas.ShowGridEditPolicy());
+        const sg = new draw2d.policy.canvas.ShowGridEditPolicy(1, 1, canvasDivBackground)
+        sg.onZoomCallback = () => { }
+        canvas.installEditPolicy(sg);
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGeometryEditPolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToInBetweenEditPolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
@@ -143,6 +175,8 @@ class Canvas extends Component {
 
         canvas.canvasWidth = this.props.width
         canvas.canvasHeight = this.props.height
+
+        zoomAndMoveShowTotalDiagram(canvas)
 
         canvas.getCommandStack().addEventListener(function (e) {
             // console.log('event:', e)
@@ -161,30 +195,13 @@ class Canvas extends Component {
 
         let w = this.props.width
         let h = this.props.height
-        console.log('render', w, h, this.canvas?.getZoom(),)
-        if (this.hasRendered && (this.canvasWidth !== w || this.canvasHeight !== h)) {
-            setTimeout(() => {
-                this.canvas.canvasWidth = w;
-                this.canvas.canvasHeight = h;
-                let cw = Math.max(w, this.canvas.maxFigureWidth)
-                let ch = Math.max(h, this.canvas.maxFigureHeight)
-                // let cw = w
-                // let ch = h
-                let zoom = this.canvas.getZoom()
-                //console.log('resize ', cw, ch, zoom)
-                this.canvas.setDimension(new draw2d.geo.Rectangle(0, 0, cw, ch));
-                // Must adjust region constraint since setDimension does not do that
-                this.canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, cw, ch)
-                this.canvas.paper.setViewBox(0, 0, cw, ch)
+        //console.log('render', w, h, this.canvas?.getZoom(),)
 
-                this.canvas.html
-                    .find("svg")
-                    .attr({
-                        'width': cw / zoom,
-                        'height': ch / zoom,
-                    })
-            }, 0);
+        if (this.canvas != null) {
+            this.canvas.canvasWidth = w;
+            this.canvas.canvasHeight = h
         }
+
         this.hasRendered = true
         this.canvasWidth = w;
         this.canvasHeight = h;
@@ -197,8 +214,6 @@ class Canvas extends Component {
                 this.handleCloseContextMenu()
                 const command = new CommandChangeColor(contextMenu.figure, colorName);
                 this.canvas.getCommandStack().execute(command);
-
-                //setNodeColor(contextMenu.figure, colorName)
             }
 
             return nodeColorNames().map((item) => (
@@ -211,7 +226,7 @@ class Canvas extends Component {
                 <div id="canvas"
                     style={{
                         width: w, height: h, maxWidth: w, maxHeight: h, position: 'absolute',
-                        overflow: 'scroll', background: canvasDivBackground
+                        overflow: 'scroll', background: '#D5DBDB'
                     }}></div>
                 <Menu
                     keepMounted
@@ -247,8 +262,9 @@ class Canvas extends Component {
     }
 
     randomCenterPoint = () => {
-        let x = this.canvasWidth / 2 + random(-10, 10)
-        let y = this.canvasHeight / 2 + random(-10, 10)
+        let x = (this.canvasWidth / 2 + random(-10, 10) + this.canvas.getScrollLeft()) * this.canvas.getZoom()
+        let y = (this.canvasHeight / 2 + random(-10, 10) + this.canvas.getScrollTop()) * this.canvas.getZoom()
+
         return { x: x, y: y }
     }
 
@@ -274,32 +290,7 @@ function getEvent(event) {
     return event
 }
 
-const updateCanvasMaxFigureSize = (canvas) => {
-    let w = 0
-    let h = 0
 
-    canvas.getFigures().each((i, f) => {
-        let fw = f.getAbsoluteX() + f.getWidth()
-        let fh = f.getAbsoluteY() + f.getHeight()
-
-        if (i === 0) {
-            w = fw
-            h = fh
-            return
-        }
-
-        if (fw > w) {
-            w = fw
-        }
-        if (fh > h) {
-            h = fh
-        }
-    })
-
-    canvas.maxFigureWidth = w
-    canvas.maxFigureHeight = h
-    // console.log('figure size', w, h)
-}
 
 const addFigureToCanvas = (canvas, figure, p) => {
     hidePortsIfReadOnly(canvas, figure)
@@ -355,11 +346,13 @@ const addDefaultNewDiagram = (canvas) => {
     const user = createDefaultUserNode()
     const system = createDefaultSystemNode()
     const external = createDefaultExternalNode()
-    addFigureToCanvas(canvas, user, { x: 200, y: 400 })
-    addFigureToCanvas(canvas, system, { x: 600, y: 400 })
+    addFigureToCanvas(canvas, user, { x: 5200, y: 5400 })
+    addFigureToCanvas(canvas, system, { x: 5600, y: 5400 })
     addConnectionToCanvas(canvas, createDefaultConnection(user, 'output0', system, 'input0'))
-    addFigureToCanvas(canvas, external, { x: 1000, y: 400 })
+    addFigureToCanvas(canvas, external, { x: 6000, y: 5400 })
     addConnectionToCanvas(canvas, createDefaultConnection(system, 'output0', external, 'input0'))
+
+    zoomAndMoveShowTotalDiagram(canvas)
 }
 
 export default Canvas;
