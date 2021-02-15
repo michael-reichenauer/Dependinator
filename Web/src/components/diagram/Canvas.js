@@ -175,27 +175,26 @@ class Canvas extends Component {
     render = () => {
         const { contextMenu } = this.state;
 
-        let w = this.props.width
-        let h = this.props.height
+        let width = this.props.width
+        let height = this.props.height
         //console.log('render', w, h, this.canvas?.getZoom(),)
 
         if (this.canvas != null) {
-            this.canvas.canvasWidth = w;
-            this.canvas.canvasHeight = h
+            this.canvas.canvasWidth = width;
+            this.canvas.canvasHeight = height
         }
 
         const isCanvas = contextMenu !== null && contextMenu.figure === null
         const isFigure = contextMenu !== null && contextMenu.figure !== null
 
-
-
         return (
             <>
-                <div id="canvas"
-                    style={{
-                        width: w, height: h, maxWidth: w, maxHeight: h, position: 'absolute',
-                        overflow: 'scroll', background: '#D5DBDB'
-                    }}></div>
+                <div id="canvas" style={{
+                    width: width, height: height, maxWidth: width, maxHeight: height, position: 'absolute',
+                    overflow: 'scroll', background: '#D5DBDB'
+                }}>
+                </div>
+
                 <Menu
                     keepMounted
                     open={contextMenu !== null}
