@@ -27,23 +27,19 @@ const diagramName = 'diagram'
 export default class Canvas {
     canvas = null;
 
-    constructor(canvasId, width, height) {
-        this.canvas = this.createCanvas(canvasId, width, height)
-
+    constructor(canvasId) {
+        this.canvas = this.createCanvas(canvasId)
     }
 
     delete() {
         this.canvas.destroy()
     }
 
-    createCanvas(canvasId, width, height) {
+    createCanvas(canvasId) {
         const canvas = new draw2d.Canvas(canvasId)
         canvas.setScrollArea("#" + canvasId)
         canvas.setDimension(new draw2d.geo.Rectangle(0, 0, 10000, 10000))
         canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, 10000, 10000)
-
-        canvas.canvasWidth = width
-        canvas.canvasHeight = height
 
         restoreDiagram(canvas)
         updateCanvasMaxFigureSize(canvas)
@@ -140,8 +136,8 @@ export default class Canvas {
 
 
     randomCenterPoint = () => {
-        let x = (this.canvas.canvasWidth / 2 + random(-10, 10) + this.canvas.getScrollLeft()) * this.canvas.getZoom()
-        let y = (this.canvas.canvasHeight / 2 + random(-10, 10) + this.canvas.getScrollTop()) * this.canvas.getZoom()
+        let x = (this.canvas.getWidth() / 2 + random(-10, 10) + this.canvas.getScrollLeft()) * this.canvas.getZoom()
+        let y = (this.canvas.getHeight() / 2 + random(-10, 10) + this.canvas.getScrollTop()) * this.canvas.getZoom()
 
         return { x: x, y: y }
     }

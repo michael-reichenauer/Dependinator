@@ -15,7 +15,7 @@ export default function Diagram({ width, height }) {
 
     useEffect(() => {
         // Initialize canvas
-        const canvas = new Canvas('canvas', width, height);
+        const canvas = new Canvas('canvas');
         canvasRef.current = canvas
 
         const contextMenuHandler = enableContextMenu(setContextMenu, canvas)
@@ -29,19 +29,13 @@ export default function Diagram({ width, height }) {
             document.removeEventListener("contextmenu", contextMenuHandler);
             canvasRef.current.delete()
         }
-        // width height only used at initialization
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
 
     const onCloseMenu = () => setContextMenu(null);
-    const { isCanvas, x, y, figure } = contextMenu ?? {};
+    const { canvas, figure, x, y } = contextMenu ?? {};
 
-    const canvas = canvasRef.current
-    if (canvas != null) {
-        canvas.canvasWidth = width;
-        canvas.canvasHeight = height
-    }
+
 
     return (
         <>
@@ -51,7 +45,7 @@ export default function Diagram({ width, height }) {
             }}>
             </div>
 
-            <CanvasMenu canvas={canvas} isCanvas={isCanvas} onClose={onCloseMenu} x={x} y={y} />
+            <CanvasMenu canvas={canvas} onClose={onCloseMenu} x={x} y={y} />
             <FigureMenu figure={figure} onClose={onCloseMenu} x={x} y={y} />
         </>
     )
@@ -68,7 +62,7 @@ function enableContextMenu(setContextMenu, canvas) {
         event = getCommonEvent(event)
 
         let figure = canvas.tryGetFigure(event.clientX, event.clientY)
-        setContextMenu({ isCanvas: figure === null, figure: figure, x: event.clientX, y: event.clientY });
+        setContextMenu({ canvas: figure == null ? canvas : null, figure: figure, x: event.clientX, y: event.clientY });
     }
 
     document.addEventListener("contextmenu", handleContextMenu);

@@ -3,8 +3,8 @@ import ContextMenu from "../../common/ContextMenu";
 import { createDefaultExternalNode, createDefaultNode, createDefaultUserNode } from "./figures";
 
 
-export default function CanvasMenu({ canvas, isCanvas, onClose, x, y }) {
-    if (!isCanvas) {
+export default function CanvasMenu({ canvas, onClose, x, y }) {
+    if (canvas == null) {
         return null
     }
 

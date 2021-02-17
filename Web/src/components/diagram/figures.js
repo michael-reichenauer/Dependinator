@@ -191,14 +191,13 @@ const addInnerDiagramIcon = (figure, color, bgColor) => {
 const zoomAndMoveShowInnerDiagram = (figure, icon) => {
     const canvas = icon.getCanvas()
     let tweenable = new Tweenable()
-    //console.log('figure', figure.x, figure.y, canvas.canvasWidth, canvas.canvasHeight)
 
     const targetZoom = 0.2 * figure.width / defaultNodeWidth
     let area = canvas.getScrollArea()
 
 
     const fc = { x: figure.x + figure.width / 2, y: figure.y + figure.height / 2 }
-    const cc = { x: canvas.canvasWidth / 2, y: canvas.canvasHeight / 2 }
+    const cc = { x: canvas.getWidth() / 2, y: canvas.getHeight() / 2 }
 
     tweenable.tween({
         from: { 'zoom': canvas.zoomFactor },
@@ -269,11 +268,11 @@ export const zoomAndMoveShowTotalDiagram = (canvas) => {
         x: canvas.minFigureX + (canvas.maxFigureWidth - canvas.minFigureX) / 2,
         y: canvas.minFigureY + (canvas.maxFigureHeight - canvas.minFigureY) / 2
     }
-    const cc = { x: canvas.canvasWidth / 2, y: canvas.canvasHeight / 2 }
+    const cc = { x: canvas.getWidth() / 2, y: canvas.getHeight() / 2 }
 
     const targetZoom = Math.max(1,
-        (canvas.maxFigureWidth - canvas.minFigureX) / (canvas.canvasWidth - 100),
-        (canvas.maxFigureHeight - canvas.minFigureY) / (canvas.canvasHeight - 100))
+        (canvas.maxFigureWidth - canvas.minFigureX) / (canvas.getWidth() - 100),
+        (canvas.maxFigureHeight - canvas.minFigureY) / (canvas.getHeight() - 100))
 
     tweenable.tween({
         from: { 'zoom': canvas.zoomFactor },
