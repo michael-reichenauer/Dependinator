@@ -3,11 +3,9 @@ import "import-jquery";
 import "jquery-ui-bundle";
 import "jquery-ui-bundle/jquery-ui.css";
 import PubSub from 'pubsub-js'
-import { Menu, MenuItem } from "@material-ui/core";
-import { CommandChangeColor } from "./commandChangeColor";
-import { nodeColorNames } from "./colors";
 import Canvas from "./Canvas"
-import { createDefaultExternalNode, createDefaultNode, createDefaultUserNode, zoomAndMoveShowTotalDiagram } from "./figures";
+import CanvasMenu from "./CanvasMenu";
+import FigureMenu from "./FigureMenu";
 
 const initialState = {
     contextMenu: null,
@@ -47,14 +45,6 @@ export default class Diagram extends Component {
     }
 
 
-    handleMenuAddNode = () => this.handleMenuAdd(createDefaultNode())
-    handleMenuAddUserNode = () => this.handleMenuAdd(createDefaultUserNode())
-    handleMenuAddExternalNode = () => this.handleMenuAdd(createDefaultExternalNode())
-    handleMenuAdd = (figure) => {
-        const { x, y } = this.handleCloseContextMenu()
-        this.canvasw.addFigure(figure, this.canvasw.toCanvasCoordinate(x, y))
-    }
-
     handleContextMenu = (event) => {
         if (!event.path.some((i) => i.id === "canvas")) {
             // Not a right click within the canvas 
@@ -65,32 +55,33 @@ export default class Diagram extends Component {
 
         let figure = this.canvasw.tryGetFigure(event.clientX, event.clientY)
 
-        this.setState({ contextMenu: { figure: figure, x: event.clientX, y: event.clientY } });
+        this.setState({
+            contextMenu: {
+                isCanvas: figure === null,
+                figure: figure,
+                x: event.clientX,
+                y: event.clientY
+            }
+        });
     };
 
 
     handleCloseContextMenu = () => {
-        const { x, y } = this.state.contextMenu
         this.setState({ contextMenu: null });
-        return { x, y }
     };
 
 
     render = () => {
         console.log('Render')
-        const { contextMenu } = this.state;
+        const { isCanvas, x, y, figure } = this.state.contextMenu ?? {};
 
         let width = this.props.width
         let height = this.props.height
-        //console.log('render', w, h, this.canvas?.getZoom(),)
 
         if (this.canvasw != null) {
             this.canvasw.canvas.canvasWidth = width;
             this.canvasw.canvas.canvasHeight = height
         }
-
-        const isCanvas = contextMenu !== null && contextMenu.figure === null
-        const isFigure = contextMenu !== null && contextMenu.figure !== null
 
         return (
             <>
@@ -100,28 +91,14 @@ export default class Diagram extends Component {
                 }}>
                 </div>
 
-                <Menu
-                    keepMounted
-                    open={contextMenu !== null}
-                    onClose={this.handleCloseContextMenu}
-                    anchorReference="anchorPosition"
-                    anchorPosition={
-                        contextMenu !== null
-                            ? { left: contextMenu.x - 2, top: contextMenu.y - 4 }
-                            : undefined
-                    }
-                >
-                    {isFigure && figureMenu(contextMenu.figure, this.handleCloseContextMenu)}
-
-                    {isCanvas && <MenuItem onClick={this.handleMenuAddNode}>Add Node</MenuItem>}
-                    {isCanvas && <MenuItem onClick={this.handleMenuAddUserNode}>Add User Node</MenuItem>}
-                    {isCanvas && <MenuItem onClick={this.handleMenuAddExternalNode}>Add External Node</MenuItem>}
-
-                </Menu>
+                <CanvasMenu canvas={this.canvasw} isCanvas={isCanvas} onClose={this.handleCloseContextMenu} x={x} y={y} />
+                <FigureMenu figure={figure} onClose={this.handleCloseContextMenu} x={x} y={y} />
             </>
         );
     }
 }
+
+
 
 function getEvent(event) {
     // check for iPad, Android touch events
@@ -133,18 +110,6 @@ function getEvent(event) {
         }
     }
     return event
-}
-
-const figureMenu = (figure, closeMenu) => {
-    const setColor = (figure, colorName) => {
-        closeMenu()
-        const command = new CommandChangeColor(figure, colorName);
-        figure.getCanvas().getCommandStack().execute(command);
-    }
-
-    return nodeColorNames().map((item) => (
-        <MenuItem onClick={() => setColor(figure, item)} key={`item-${item}`}>{item}</MenuItem>
-    ))
 }
 
 
