@@ -32,10 +32,7 @@ export default function Diagram({ width, height }) {
     }, [])
 
 
-    const onCloseMenu = () => setContextMenu(null);
     const { canvas, figure, x, y } = contextMenu ?? {};
-
-
 
     return (
         <>
@@ -45,8 +42,8 @@ export default function Diagram({ width, height }) {
             }}>
             </div>
 
-            <CanvasMenu canvas={canvas} onClose={onCloseMenu} x={x} y={y} />
-            <FigureMenu figure={figure} onClose={onCloseMenu} x={x} y={y} />
+            <CanvasMenu canvas={canvas} onClose={setContextMenu} x={x} y={y} />
+            <FigureMenu figure={figure} onClose={setContextMenu} x={x} y={y} />
         </>
     )
 }
