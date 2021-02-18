@@ -10,7 +10,7 @@ import { PanEditPolicy } from "./PanEditPolicy"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 
 import { random } from '../../common/utils'
-import { createDefaultNode, createDefaultUserNode, createDefaultExternalNode, createDefaultSystemNode, zoomAndMoveShowTotalDiagram, updateCanvasMaxFigureSize } from './figures'
+import { createDefaultNode, createDefaultUserNode, createDefaultExternalNode, createDefaultSystemNode, zoomAndMoveShowTotalDiagram } from './figures'
 import { serializeCanvas, deserializeCanvas } from './serialization'
 import { canvasDivBackground } from "./colors";
 
@@ -43,7 +43,6 @@ export default class Canvas {
         canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, 10000, 10000)
 
         restoreDiagram(canvas)
-        updateCanvasMaxFigureSize(canvas)
 
         // Pan policy readonly/edit
         canvas.panPolicyCurrent = new PanReadOnlyPolicy(this.togglePanPolicy, this.addDefaultItem)
@@ -69,7 +68,6 @@ export default class Canvas {
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
                 if (e.action === "POST_EXECUTE") {
-                    updateCanvasMaxFigureSize(canvas)
                     saveDiagram(canvas)
                 }
             }
