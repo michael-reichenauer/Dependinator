@@ -38,6 +38,20 @@ export function ApplicationMenu() {
         }
     };
 
+    function ImagetoPrint(source) {
+        return "<html><head></head><body>\n" +
+            " Text</body></html>";
+    }
+
+
+    const handleExport = (event) => {
+        console.log('export')
+        setMenu(null);
+        const tab = window.open("export:diagram", "_blank");
+        tab.document.open();
+        tab.document.write(ImagetoPrint());
+    }
+
     const handleCloseAbout = () => {
         console.info(`Hide About`)
         setAnchorEl(null);
@@ -71,6 +85,7 @@ export function ApplicationMenu() {
             >
 
                 <MenuItem onClick={handleNewDiagram}>New Diagram</MenuItem>
+                <MenuItem onClick={handleExport}>Export Diagram</MenuItem>
                 <MenuItem onClick={handleAbout}>About</MenuItem>
 
             </Menu>
