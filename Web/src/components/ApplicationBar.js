@@ -9,18 +9,33 @@ import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
+import { canRedoAtom, canUndoAtom } from "./diagram/Diagram";
+import { useAtom } from "jotai";
 
 
 export default function ApplicationBar({ height }) {
+
+    const [canUndo] = useAtom(canUndoAtom)
+    const [canRedo] = useAtom(canRedoAtom)
     const classes = useAppBarStyles();
+
+    const undoStyle = canUndo ? classes.icons : classes.iconsDisabled
+    const redoStyle = canRedo ? classes.icons : classes.iconsDisabled
+
 
     return (
         <AppBar position="static" style={{ height: height }}>
             <Toolbar>
                 <Typography className={classes.title} variant="h6" noWrap>Dependinator</Typography>
 
-                <Tooltip title="Undo" ><IconButton onClick={() => PubSub.publish('diagram.Undo')}><UndoIcon className={classes.icons} /></IconButton></Tooltip>
-                <Tooltip title="Redo" ><IconButton onClick={() => PubSub.publish('diagram.Redo')}><RedoIcon className={classes.icons} /></IconButton></Tooltip>
+                <Tooltip title={canUndo ? 'Undo' : ''} >
+                    <IconButton disabled={!canUndo} onClick={() => PubSub.publish('diagram.Undo')}>
+                        <UndoIcon className={undoStyle} /></IconButton></Tooltip>
+
+                <Tooltip title={canRedo ? 'Redo' : ''} >
+                    <IconButton disabled={!canRedo} onClick={() => PubSub.publish('diagram.Redo')}>
+                        <RedoIcon className={redoStyle} /></IconButton></Tooltip>
+
                 <Tooltip title="Add node" ><IconButton onClick={() => PubSub.publish('diagram.AddNode')}><AddBoxOutlinedIcon className={classes.icons} /></IconButton></Tooltip>
                 <Tooltip title="Add user node" ><IconButton onClick={() => PubSub.publish('diagram.AddUserNode')}><PersonAddIcon className={classes.icons} /></IconButton></Tooltip>
                 <Tooltip title="Add external system node" ><IconButton onClick={() => PubSub.publish('diagram.AddExternalNode')}><LibraryAddOutlinedIcon className={classes.icons} /></IconButton></Tooltip>
@@ -50,8 +65,10 @@ const useAppBarStyles = makeStyles((theme) => ({
         flexGrow: 1,
     },
     icons: {
-        //flexGrow: 1,
         color: 'white',
+    },
+    iconsDisabled: {
+        color: 'grey',
     },
     search: {
         position: 'relative',
