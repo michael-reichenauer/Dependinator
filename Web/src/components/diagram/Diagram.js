@@ -7,15 +7,22 @@ import Canvas from "./Canvas"
 import CanvasMenu from "./CanvasMenu";
 import FigureMenu from "./FigureMenu";
 import { getCommonEvent } from "../../common/events";
+import { atom, useAtom } from 'jotai'
+
+
+export const canUndoAtom = atom(false)
+export const canRedoAtom = atom(false)
 
 
 export default function Diagram({ width, height }) {
     const canvasRef = useRef(null)
     const [contextMenu, setContextMenu] = useState()
+    const [, setCanUndo] = useAtom(canUndoAtom)
+    const [, setCanRedo] = useAtom(canRedoAtom)
 
     useEffect(() => {
         // Initialize canvas
-        const canvas = new Canvas('canvas');
+        const canvas = new Canvas('canvas', setCanUndo, setCanRedo);
         canvasRef.current = canvas
 
         const contextMenuHandler = enableContextMenu(setContextMenu, canvas)
@@ -29,7 +36,7 @@ export default function Diagram({ width, height }) {
             document.removeEventListener("contextmenu", contextMenuHandler);
             canvasRef.current.delete()
         }
-    }, [])
+    }, [setCanUndo, setCanRedo])
 
 
     const { canvas, figure, x, y } = contextMenu ?? {};

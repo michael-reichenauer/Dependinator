@@ -16,10 +16,8 @@ import { canvasDivBackground } from "./colors";
 
 import { createDefaultConnection } from "./connections";
 
-import { atom } from 'jotai'
 
-export const canUndo = atom(false)
-export const canRedo = atom(false)
+
 
 const diagramName = 'diagram'
 
@@ -27,15 +25,18 @@ const diagramName = 'diagram'
 export default class Canvas {
     canvas = null;
 
-    constructor(canvasId) {
-        this.canvas = this.createCanvas(canvasId)
+
+    constructor(canvasId, setCanUndo, setCanRedo) {
+        this.canvas = this.createCanvas(canvasId, setCanUndo, setCanRedo)
     }
+
 
     delete() {
         this.canvas.destroy()
     }
 
-    createCanvas(canvasId) {
+
+    createCanvas(canvasId, setCanUndo, setCanRedo) {
         const canvas = new draw2d.Canvas(canvasId)
         canvas.setScrollArea("#" + canvasId)
         canvas.setDimension(new draw2d.geo.Rectangle(0, 0, 10000, 10000))
@@ -60,9 +61,11 @@ export default class Canvas {
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
 
-
         canvas.getCommandStack().addEventListener(function (e) {
             // console.log('event:', e)
+            setCanUndo(canvas.getCommandStack().canUndo())
+            setCanRedo(canvas.getCommandStack().canRedo())
+
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
                 if (e.action === "POST_EXECUTE") {
@@ -73,7 +76,6 @@ export default class Canvas {
         });
         return canvas
     }
-
 
 
     showTotalDiagram = () => {
