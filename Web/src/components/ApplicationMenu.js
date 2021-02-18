@@ -38,12 +38,6 @@ export function ApplicationMenu() {
         }
     };
 
-    function ImagetoPrint(source) {
-        return "<html><head></head><body>\n" +
-            " Text</body></html>";
-    }
-
-
     const handleExport = (event) => {
         console.log('export')
         setMenu(null);

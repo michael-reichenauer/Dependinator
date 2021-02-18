@@ -28,3 +28,10 @@ export const deserializeCanvas = (canvas, canvasData) => {
 }
 
 
+
+function ImagetoPrint(source) {
+    return "<html><head></head><body>\n" +
+        " Text</body></html>";
+}
+
+
