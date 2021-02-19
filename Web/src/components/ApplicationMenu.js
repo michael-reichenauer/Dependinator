@@ -30,18 +30,18 @@ export function ApplicationMenu() {
 
     const handleNewDiagram = (event) => {
         setMenu(null);
-        console.info(`New Diagram`)
-
         var shouldDelete = confirm('Do you really want to clear the current diagram?') //eslint-disable-line
         if (shouldDelete) {
             PubSub.publish('diagram.NewDiagram')
         }
     };
 
-    const handleCloseAbout = () => {
-        console.info(`Hide About`)
-        setAnchorEl(null);
-    };
+    const handleExport = (event) => {
+        setMenu(null);
+        PubSub.publish('diagram.Export')
+    }
+
+    const handleCloseAbout = () => { setAnchorEl(null); };
 
     const open = Boolean(anchorEl);
     const id = open ? 'simple-popover' : undefined;
@@ -71,6 +71,7 @@ export function ApplicationMenu() {
             >
 
                 <MenuItem onClick={handleNewDiagram}>New Diagram</MenuItem>
+                <MenuItem onClick={handleExport}>Export Diagram as Page (A4)</MenuItem>
                 <MenuItem onClick={handleAbout}>About</MenuItem>
 
             </Menu>
@@ -94,8 +95,8 @@ export function ApplicationMenu() {
                     <Typography variant="h5">Dependinator</Typography>
                     <Typography >
                         Early preview of a tool for visualizing software architecture inspired by map tools for
-                        navigation and the "<Link href="https://c4model.com" target="_blank">C4 Model</Link>"by Simon Brown.
-
+                        navigation and the "<Link href="https://c4model.com" target="_blank">C4 Model</Link>"
+                        by Simon Brown.
                     </Typography>
                 </Box>
 

@@ -219,11 +219,11 @@ const zoomAndMoveShowInnerDiagram = (figure, icon) => {
 
 }
 
-const getCanvasMaxFigureSize = (canvas) => {
-    let x = 10000
-    let y = 10000
-    let w = 0
-    let h = 0
+export const getCanvasFiguresRect = (canvas) => {
+    let minX = 10000
+    let minY = 10000
+    let maxX = 0
+    let maxY = 0
 
     canvas.getFigures().each((i, f) => {
         let fx = f.getAbsoluteX()
@@ -232,40 +232,40 @@ const getCanvasMaxFigureSize = (canvas) => {
         let fh = fy + f.getHeight()
 
         if (i === 0) {
-            x = fx
-            y = fy
-            w = fw
-            h = fh
+            minX = fx
+            minY = fy
+            maxX = fw
+            maxY = fh
             return
         }
 
-        if (fw > w) {
-            w = fw
+        if (fx < minX) {
+            minX = fx
         }
-        if (fh > h) {
-            h = fh
+        if (fy < minY) {
+            minY = fy
         }
-        if (fx < x) {
-            x = fx
+        if (fw > maxX) {
+            maxX = fw
         }
-        if (fy < y) {
-            y = fy
+        if (fh > maxY) {
+            maxY = fh
         }
     })
 
-    return { x: x, y: y, w: w, h: h }
+    return { x: minX, y: minY, w: maxX - minX, h: maxY - minY }
 }
 
 
 export const zoomAndMoveShowTotalDiagram = (canvas) => {
-    const { x, y, w, h } = getCanvasMaxFigureSize(canvas)
+    const { x, y, w, h } = getCanvasFiguresRect(canvas)
     let tweenable = new Tweenable()
     let area = canvas.getScrollArea()
 
-    const fc = { x: x + (w - x) / 2, y: y + (h - y) / 2 }
+    const fc = { x: x + w / 2, y: y + h / 2 }
     const cc = { x: canvas.getWidth() / 2, y: canvas.getHeight() / 2 }
 
-    const targetZoom = Math.max(1, (w - x) / (canvas.getWidth() - 100), (h - y) / (canvas.getHeight() - 100))
+    const targetZoom = Math.max(1, w / (canvas.getWidth() - 100), h / (canvas.getHeight() - 100))
 
     tweenable.tween({
         from: { 'zoom': canvas.zoomFactor },
