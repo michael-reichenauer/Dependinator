@@ -34,12 +34,7 @@ export const deserializeCanvas = (canvas, canvasData) => {
 export const exportCanvas = (canvas, rect, result) => {
     var writer = new draw2d.io.svg.Writer();
     writer.marshal(canvas, (svg) => {
-        // Export size (A4)
-        const prefix = `<svg width="210mm" height="297mm" style="border:1px solid silver" version="1.1" `
-
-        // Replace svg size with A4 size
-        const index = svg.indexOf('xmlns="http://www.w3.org/2000/svg"')
-        let res = prefix + svg.substr(index)
+        // console.log('svg org:', svg)
 
         // Show diagram with some margin
         const margin = 25
@@ -49,7 +44,21 @@ export const exportCanvas = (canvas, rect, result) => {
             w: rect.w + margin * 2,
             h: rect.h + margin * 2
         }
-        res = res.replace('viewBox="0 0 10000 10000"', `viewBox="${r.x} ${r.y} ${r.w} ${r.h}"`)
+
+        // Export size (A4) and view box
+        const prefix = `<svg width="210mm" height="297mm" version="1.1"
+         viewBox="${r.x} ${r.y} ${r.w} ${r.h}" style="border:1px solid silver" `
+
+        // Replace svg size with A4 size and view box
+        const index = svg.indexOf('xmlns="http://www.w3.org/2000/svg"')
+        let res = prefix + svg.substr(index)
+
+        // Add border to 
+        // res = res.replace('style="', 'style="border:1px solid silver ')
+
+
+        // Remove org view box (if it exists)
+        res = res.replace('viewBox="0 0 10000 10000"', '')
 
         result(res)
     });
