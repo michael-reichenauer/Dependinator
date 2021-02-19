@@ -8,14 +8,14 @@ import { WheelZoomPolicy } from "./WheelZoomPolicy"
 import { PanReadOnlyPolicy } from "./PanReadOnlyPolicy"
 import { PanEditPolicy } from "./PanEditPolicy"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
-
 import { random } from '../../common/utils'
-import { createDefaultNode, createDefaultUserNode, createDefaultExternalNode, createDefaultSystemNode, zoomAndMoveShowTotalDiagram } from './figures'
-import { serializeCanvas, deserializeCanvas } from './serialization'
+import {
+    createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
+    createDefaultSystemNode, zoomAndMoveShowTotalDiagram, getCanvasFiguresRect
+} from './figures'
+import { serializeCanvas, deserializeCanvas, exportCanvas } from './serialization'
 import { canvasDivBackground } from "./colors";
-
 import { createDefaultConnection } from "./connections";
-
 
 
 
@@ -24,6 +24,7 @@ const diagramName = 'diagram'
 
 export default class Canvas {
     canvas = null;
+    backgroundPolicy = null;
 
 
     constructor(canvasId, setCanUndo, setCanRedo) {
@@ -52,9 +53,10 @@ export default class Canvas {
         canvas.installEditPolicy(new WheelZoomPolicy());
         canvas.installEditPolicy(new ConnectionCreatePolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
-        const sg = new draw2d.policy.canvas.ShowGridEditPolicy(1, 1, canvasDivBackground)
-        sg.onZoomCallback = () => { }
-        canvas.installEditPolicy(sg);
+        this.backgroundPolicy = new draw2d.policy.canvas.ShowGridEditPolicy(1, 1, canvasDivBackground)
+        this.backgroundPolicy.onZoomCallback = () => { }
+
+        canvas.installEditPolicy(this.backgroundPolicy);
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGeometryEditPolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToInBetweenEditPolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
@@ -108,6 +110,14 @@ export default class Canvas {
         this.enableEditMode()
     }
 
+    export = (result) => {
+        const rect = getCanvasFiguresRect(this.canvas)
+        this.canvas.uninstallEditPolicy(this.backgroundPolicy);
+        exportCanvas(this.canvas, rect, (svg) => {
+            result(svg)
+            this.canvas.installEditPolicy(this.backgroundPolicy);
+        })
+    }
 
     togglePanPolicy = (figure) => {
         let current = this.canvas.panPolicyCurrent
@@ -121,7 +131,6 @@ export default class Canvas {
             this.canvas.setCurrentSelection(figure)
         }
     }
-
 
 
     tryGetFigure = (x, y) => {

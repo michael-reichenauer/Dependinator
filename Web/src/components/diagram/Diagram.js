@@ -9,7 +9,6 @@ import FigureMenu from "./FigureMenu";
 import { getCommonEvent } from "../../common/events";
 import { atom, useAtom } from 'jotai'
 
-
 export const canUndoAtom = atom(false)
 export const canRedoAtom = atom(false)
 
@@ -45,7 +44,7 @@ export default function Diagram({ width, height }) {
         <>
             <div id="canvas" style={{
                 width: width, height: height, maxWidth: width, maxHeight: height, position: 'absolute',
-                overflow: 'scroll', background: '#D5DBDB'
+                overflow: 'scroll'
             }}>
             </div>
 
@@ -73,6 +72,21 @@ function enableContextMenu(setContextMenu, canvas) {
     return handleContextMenu
 }
 
+function exportDiagram(canvas) {
+    const tab = window.open("export:diagram", "_blank");
+    tab.document.open();
+    canvas.export(function (svg) {
+        tab.document.write(`
+        <html>
+            <head><title>Dependinator Diagram</title></head>
+            <body>${svg}</body>
+        </html>`)
+    })
+
+    tab.focus(); //required for IE
+    //tab.print();
+}
+
 
 function HandleToolbarCommands(canvas) {
     PubSub.subscribe('diagram.AddNode', canvas.commandAddNode)
@@ -82,4 +96,5 @@ function HandleToolbarCommands(canvas) {
     PubSub.subscribe('diagram.Redo', canvas.commandRedo)
     PubSub.subscribe('diagram.ShowTotalDiagram', canvas.showTotalDiagram)
     PubSub.subscribe('diagram.NewDiagram', canvas.commandNewDiagram)
+    PubSub.subscribe('diagram.Export', () => exportDiagram(canvas))
 }
