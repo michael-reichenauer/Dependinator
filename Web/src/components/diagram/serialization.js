@@ -1,6 +1,7 @@
 import draw2d from "draw2d";
 import { serializeFigures, deserializeFigures } from './figures'
 import { serializeConnections, deserializeConnections } from './connections'
+import { canvasDivBackground } from "./colors";
 
 export const serializeCanvas = (canvas) => {
     const figures = serializeFigures(canvas);
@@ -47,15 +48,11 @@ export const exportCanvas = (canvas, rect, result) => {
 
         // Export size (A4) and view box
         const prefix = `<svg width="210mm" height="297mm" version="1.1"
-         viewBox="${r.x} ${r.y} ${r.w} ${r.h}" style="border:1px solid silver" `
+         viewBox="${r.x} ${r.y} ${r.w} ${r.h}" style="background-color:${canvasDivBackground}" `
 
         // Replace svg size with A4 size and view box
         const index = svg.indexOf('xmlns="http://www.w3.org/2000/svg"')
         let res = prefix + svg.substr(index)
-
-        // Add border to 
-        // res = res.replace('style="', 'style="border:1px solid silver ')
-
 
         // Remove org view box (if it exists)
         res = res.replace('viewBox="0 0 10000 10000"', '')

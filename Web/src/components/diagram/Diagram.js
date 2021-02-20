@@ -73,15 +73,15 @@ function enableContextMenu(setContextMenu, canvas) {
 }
 
 function exportDiagram(canvas) {
+    // Open other tab
     const tab = window.open(":", "_blank");
     tab.document.open();
 
-    canvas.export(function (svg) {
-        console.log('svg', svg)
+    canvas.export(svg => {
         tab.document.write(`
-            <html>
+            <html style="margin: 0; background-color: silver">
                 <head><title>Dependinator Diagram</title></head>
-                <body>${svg}</body>
+                <body style="margin: 0;">${svg}</body>
             </html>`)
         tab.focus(); //required for IE
     })
