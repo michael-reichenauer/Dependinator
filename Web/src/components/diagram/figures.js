@@ -270,7 +270,7 @@ export const zoomAndMoveShowTotalDiagram = (canvas) => {
     tweenable.tween({
         from: { 'zoom': canvas.zoomFactor },
         to: { 'zoom': targetZoom },
-        duration: 1000,
+        duration: 500,
         easing: "easeOutSine",
         step: params => {
             canvas.setZoom(params.zoom, false)

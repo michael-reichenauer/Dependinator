@@ -30,8 +30,6 @@ export const deserializeCanvas = (canvas, canvasData) => {
 }
 
 
-
-
 export const exportCanvas = (canvas, rect, result) => {
     var writer = new draw2d.io.svg.Writer();
     writer.marshal(canvas, (svg) => {

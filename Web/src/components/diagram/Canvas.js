@@ -19,7 +19,7 @@ import { createDefaultConnection } from "./connections";
 
 
 
-const diagramName = 'diagram'
+const storeDiagramName = 'diagram'
 
 
 export default class Canvas {
@@ -210,13 +210,13 @@ const saveDiagram = (canvas) => {
 
     // Store canvas data in local storage
     const canvasText = JSON.stringify(canvasData)
-    localStorage.setItem(diagramName, canvasText)
+    localStorage.setItem(storeDiagramName, canvasText)
     // console.log('save', canvasText)
 }
 
 const restoreDiagram = (canvas) => {
     // Get canvas data from local storage.
-    let canvasText = localStorage.getItem(diagramName)
+    let canvasText = localStorage.getItem(storeDiagramName)
     //console.log('load', canvasText)
 
     if (canvasText == null) {

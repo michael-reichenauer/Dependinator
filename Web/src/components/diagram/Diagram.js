@@ -79,7 +79,7 @@ function exportDiagram(canvas) {
 
     canvas.export(svg => {
         tab.document.write(`
-            <html style="margin: 0; background-color: silver">
+            <html style="margin: 0; ">
                 <head><title>Dependinator Diagram</title></head>
                 <body style="margin: 0;">${svg}</body>
             </html>`)
