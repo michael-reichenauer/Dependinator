@@ -11,12 +11,13 @@ import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { random } from '../../common/utils'
 import {
     createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
-    createDefaultSystemNode, zoomAndMoveShowTotalDiagram, getCanvasFiguresRect
+    createDefaultSystemNode, zoomAndMoveShowTotalDiagram, getCanvasFiguresRect,
+    createDefaultGroupNode, defaultNodeWidth
 } from './figures'
 import { serializeCanvas, deserializeCanvas, exportCanvas } from './serialization'
 import { canvasDivBackground } from "./colors";
 import { createDefaultConnection } from "./connections";
-
+import { Tweenable } from "shifty"
 
 
 const storeDiagramName = 'diagram'
@@ -24,11 +25,15 @@ const storeDiagramName = 'diagram'
 
 export default class Canvas {
     canvas = null;
-    backgroundPolicy = null;
+    diagramStack = []
+    setCanUndo = null
+    setCanRedo = null
 
 
     constructor(canvasId, setCanUndo, setCanRedo) {
         this.canvas = this.createCanvas(canvasId, setCanUndo, setCanRedo)
+        this.setCanUndo = setCanUndo
+        this.setCanRedo = setCanRedo
     }
 
 
@@ -53,10 +58,9 @@ export default class Canvas {
         canvas.installEditPolicy(new WheelZoomPolicy());
         canvas.installEditPolicy(new ConnectionCreatePolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
-        this.backgroundPolicy = new draw2d.policy.canvas.ShowGridEditPolicy(1, 1, canvasDivBackground)
-        this.backgroundPolicy.onZoomCallback = () => { }
 
-        canvas.installEditPolicy(this.backgroundPolicy);
+        canvas.html.find("svg").css('background-color', canvasDivBackground)
+
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGeometryEditPolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToInBetweenEditPolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
@@ -94,7 +98,8 @@ export default class Canvas {
 
     commandAddNode = () => this.addFigure(createDefaultNode(), this.randomCenterPoint())
     commandAddUserNode = () => this.addFigure(createDefaultUserNode(), this.randomCenterPoint())
-    commandAddExternalNode = () => this.addFigure(createDefaultExternalNode(), this.randomCenterPoint())
+    // commandAddExternalNode = () => this.addFigure(createDefaultExternalNode(), this.randomCenterPoint())
+    commandAddExternalNode = () => this.addFigure(createDefaultGroupNode(), this.randomCenterPoint())
 
     addDefaultItem = (x, y, shiftKey, ctrlKey) => this.addFigure(createDefaultNode(), { x: x, y: y })
 
@@ -102,7 +107,20 @@ export default class Canvas {
     commandNewDiagram = () => {
         this.clearDiagram()
         addDefaultNewDiagram(this.canvas)
+    }
 
+    commandShowInnerDiagram = (msg, figure) => {
+        zoomAndMoveShowInnerDiagram(figure, () => {
+            this.pushDiagram()
+            const group = createDefaultGroupNode()
+
+            this.canvas.add(group, 5200, 5400)
+            zoomAndMoveShowTotalDiagram(this.canvas)
+        })
+    }
+
+    commandCloseInnerDiagram = () => {
+        this.popDiagram()
     }
 
     addFigure = (figure, p) => {
@@ -112,11 +130,7 @@ export default class Canvas {
 
     export = (result) => {
         const rect = getCanvasFiguresRect(this.canvas)
-        this.canvas.uninstallEditPolicy(this.backgroundPolicy);
-        exportCanvas(this.canvas, rect, (svg) => {
-            result(svg)
-            this.canvas.installEditPolicy(this.backgroundPolicy);
-        })
+        exportCanvas(this.canvas, rect, result)
     }
 
     togglePanPolicy = (figure) => {
@@ -180,8 +194,129 @@ export default class Canvas {
         canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
         canvas.lineIntersections = new draw2d.util.ArrayList()
     }
+
+    pushDiagram = () => {
+        const canvas = this.canvas
+        const canvasData = {
+            lines: canvas.lines.clone(),
+            figures: canvas.figures.clone(),
+            commonPorts: canvas.commonPorts,
+            commandStack: canvas.commandStack,
+            linesToRepaintAfterDragDrop: canvas.linesToRepaintAfterDragDrop,
+            lineIntersections: canvas.lineIntersections,
+        }
+
+        canvasData.lines.each(function (i, e) {
+            canvas.remove(e)
+        })
+
+        canvasData.figures.each(function (i, e) {
+            canvas.remove(e)
+        })
+
+
+        canvas.selection.clear()
+        canvas.currentDropTarget = null
+        canvas.figures = new draw2d.util.ArrayList()
+        canvas.lines = new draw2d.util.ArrayList()
+        canvas.commonPorts = new draw2d.util.ArrayList()
+
+        // canvas.commandStack.markSaveLocation()
+        canvas.commandStack = new draw2d.command.CommandStack()
+        const setCanUndo = this.setCanUndo
+        const setCanRedo = this.setCanRedo
+        canvas.getCommandStack().addEventListener(function (e) {
+            // console.log('event:', e)
+            setCanUndo(canvas.getCommandStack().canUndo())
+            setCanRedo(canvas.getCommandStack().canRedo())
+
+            if (e.isPostChangeEvent()) {
+                // console.log('event isPostChangeEvent:', e)
+                if (e.action === "POST_EXECUTE") {
+                    //saveDiagram(canvas)
+                }
+            }
+        });
+
+        canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
+        canvas.lineIntersections = new draw2d.util.ArrayList()
+
+        this.diagramStack.push(canvasData)
+    }
+
+    popDiagram = () => {
+        if (this.diagramStack.length === 0) {
+            return
+        }
+        const canvas = this.canvas
+        canvas.lines.clone().each(function (i, e) {
+            canvas.remove(e)
+        })
+
+        canvas.figures.clone().each(function (i, e) {
+            canvas.remove(e)
+        })
+
+
+        const canvasData = this.diagramStack.pop()
+
+        canvas.selection.clear()
+        canvas.currentDropTarget = null
+
+        canvas.figures = new draw2d.util.ArrayList()
+        canvas.lines = new draw2d.util.ArrayList()
+
+        canvasData.figures.each(function (i, e) {
+            canvas.add(e)
+        })
+
+        canvasData.lines.each(function (i, e) {
+            canvas.add(e)
+        })
+
+
+        canvas.commonPorts = canvasData.commonPorts
+        canvas.commandStack = canvasData.commandStack
+        canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
+        canvas.lineIntersections = new draw2d.util.ArrayList()
+    }
 }
 
+const zoomAndMoveShowInnerDiagram = (figure, done) => {
+    const canvas = figure.getCanvas()
+    let tweenable = new Tweenable()
+
+    const targetZoom = 0.2 * figure.width / defaultNodeWidth
+    let area = canvas.getScrollArea()
+
+
+    const fc = { x: figure.x + figure.width / 2, y: figure.y + figure.height / 2 }
+    const cc = { x: canvas.getWidth() / 2, y: canvas.getHeight() / 2 }
+
+    tweenable.tween({
+        from: { 'zoom': canvas.zoomFactor },
+        to: { 'zoom': targetZoom },
+        duration: 1000,
+        easing: "easeOutSine",
+        step: params => {
+            canvas.setZoom(params.zoom, false)
+
+            // Scroll figure to center
+            const tp = { x: fc.x - cc.x * params.zoom, y: fc.y - cc.y * params.zoom }
+            area.scrollLeft((tp.x) / params.zoom)
+            area.scrollTop((tp.y) / params.zoom)
+        },
+        finish: params => {
+            canvas.setZoom(targetZoom, false)
+
+            const tp = { x: fc.x - cc.x * targetZoom, y: fc.y - cc.y * targetZoom }
+            area.scrollLeft((tp.x) / targetZoom)
+            area.scrollTop((tp.y) / targetZoom)
+            done()
+        }
+    })
+
+}
 
 
 const addFigureToCanvas = (canvas, figure, p) => {

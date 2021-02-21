@@ -8,6 +8,7 @@ import CanvasMenu from "./CanvasMenu";
 import FigureMenu from "./FigureMenu";
 import { getCommonEvent } from "../../common/events";
 import { atom, useAtom } from 'jotai'
+import { groupType } from "./figures";
 
 export const canUndoAtom = atom(false)
 export const canRedoAtom = atom(false)
@@ -65,6 +66,13 @@ function enableContextMenu(setContextMenu, canvas) {
         event = getCommonEvent(event)
 
         let figure = canvas.tryGetFigure(event.clientX, event.clientY)
+
+        const userData = figure.getUserData()
+        if (userData?.type === groupType) {
+            // Context menu in group node, treat as canvas 
+            figure = null
+        }
+
         setContextMenu({ canvas: figure == null ? canvas : null, figure: figure, x: event.clientX, y: event.clientY });
     }
 
@@ -99,4 +107,7 @@ function HandleToolbarCommands(canvas) {
     PubSub.subscribe('diagram.ShowTotalDiagram', canvas.showTotalDiagram)
     PubSub.subscribe('diagram.NewDiagram', canvas.commandNewDiagram)
     PubSub.subscribe('diagram.Export', () => exportDiagram(canvas))
+    PubSub.subscribe('diagram.ShowInnerDiagram', canvas.commandShowInnerDiagram)
+    PubSub.subscribe('diagram.CloseInnerDiagram', canvas.commandCloseInnerDiagram)
+
 }

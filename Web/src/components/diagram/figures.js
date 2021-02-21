@@ -1,12 +1,14 @@
 import draw2d from "draw2d";
-import { getNodeColor, getNodeFontColor, getNodeBorderColor } from "./colors";
+import { getNodeColor, getNodeFontColor, getNodeBorderColor, canvasBackground } from "./colors";
 import { Tweenable } from "shifty"
+import PubSub from 'pubsub-js'
 
-const defaultNodeWidth = 230
+export const defaultNodeWidth = 230
 const defaultNodeHeight = 150
 const nodeType = 'node'
 const userType = 'user'
 const externalType = 'external'
+export const groupType = 'group'
 const newUserIcon = () => new draw2d.shape.icon.User()
 const newExternalIcon = () => new draw2d.shape.icon.NewWindow()
 
@@ -43,6 +45,9 @@ export const deserializeFigures = (figures) => {
                 break;
             case externalType:
                 figure = createExternalNode(f.id, f.w, f.h, f.name, f.description, f.color)
+                break;
+            case groupType:
+                figure = createGroupNode(f.id, f.w, f.h, f.name, f.description, f.color)
                 break;
             default:
                 throw new Error('Unexpected node typw!');
@@ -90,6 +95,48 @@ export const createDefaultExternalNode = () => {
         // externalNodeColor, externalNodeBorderColor,
         'External System', 'Description',
         "BlueGrey")
+}
+
+export const createDefaultGroupNode = () => {
+    return createGroupNode(
+        draw2d.util.UUID.create(),
+        1000, 800,
+        // externalNodeColor, externalNodeBorderColor,
+        'Group', 'Description',
+        "BlueGrey")
+}
+
+export const createGroupNode = (id, width, height, name, description, colorName) => {
+    const type = groupType
+    const color = canvasBackground
+    const borderColor = color.darker(0.8)
+    const fontColor = borderColor
+
+    const figure = new draw2d.shape.composite.Raft({
+        id: id,
+        width: width, height: height,
+        bgColor: color, color: borderColor, dasharray: '- ',
+        radius: 5,
+        userData: { type: type, color: colorName }
+    });
+
+    const nameLabel = new draw2d.shape.basic.Label({
+        text: name, stroke: 0,
+        fontSize: 14, fontColor: fontColor, bold: true,
+        userData: { type: "name" }
+    })
+
+    const nameLocator = new GroupNameLocator()
+    figure.add(nameLabel, nameLocator);
+
+    const icon = new draw2d.shape.icon.Contract({
+        width: 15, height: 15, color: fontColor, bgColor: canvasBackground,
+    })
+    icon.onClickDiagram = () => PubSub.publish('diagram.CloseInnerDiagram')
+    const locator = new ContractIconLocator()
+    figure.add(icon, locator)
+
+    return figure
 }
 
 
@@ -183,40 +230,9 @@ const addInnerDiagramIcon = (figure, color, bgColor) => {
         width: 20, height: 20, color: color, bgColor: bgColor,
     })
 
-    icon.onClickDiagram = () => zoomAndMoveShowInnerDiagram(figure, icon)
+    icon.onClickDiagram = () => PubSub.publish('diagram.ShowInnerDiagram', figure)
     const locator = new InnerDiagramLocator()
     figure.add(icon, locator)
-}
-
-const zoomAndMoveShowInnerDiagram = (figure, icon) => {
-    const canvas = icon.getCanvas()
-    let tweenable = new Tweenable()
-
-    const targetZoom = 0.2 * figure.width / defaultNodeWidth
-    let area = canvas.getScrollArea()
-
-
-    const fc = { x: figure.x + figure.width / 2, y: figure.y + figure.height / 2 }
-    const cc = { x: canvas.getWidth() / 2, y: canvas.getHeight() / 2 }
-
-    tweenable.tween({
-        from: { 'zoom': canvas.zoomFactor },
-        to: { 'zoom': targetZoom },
-        duration: 2000,
-        easing: "easeOutSine",
-        step: params => {
-            canvas.setZoom(params.zoom, false)
-
-            // Scroll figure to center
-            const tp = { x: fc.x - cc.x * params.zoom, y: fc.y - cc.y * params.zoom }
-            // canvas.scrollTo((tp.x) / params.zoom, (tp.y) / params.zoom)
-            area.scrollLeft((tp.x) / params.zoom)
-            area.scrollTop((tp.y) / params.zoom)
-        },
-        finish: state => {
-        }
-    })
-
 }
 
 export const getCanvasFiguresRect = (canvas) => {
@@ -334,5 +350,25 @@ const OutputBottomPortLocator = draw2d.layout.locator.PortLocator.extend({
     relocate: function (index, figure) {
         var p = figure.getParent();
         this.applyConsiderRotation(figure, p.getWidth() / 2, p.getHeight());
+    }
+});
+
+const GroupNameLocator = draw2d.layout.locator.Locator.extend({
+    init: function () {
+        this._super();
+    },
+    relocate: function (index, target) {
+        let targetBoundingBox = target.getBoundingBox()
+        target.setPosition(0, -(targetBoundingBox.h + 2))
+    }
+});
+
+const ContractIconLocator = draw2d.layout.locator.Locator.extend({
+    init: function () {
+        this._super();
+    },
+    relocate: function (index, target) {
+        const parent = target.getParent()
+        target.setPosition(6, 5)
     }
 });

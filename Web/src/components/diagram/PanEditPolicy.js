@@ -30,7 +30,7 @@ export let PanEditPolicy = draw2d.policy.canvas.BoundingboxSelectionPolicy.exten
                     // Clicked on connection vertex handle, add a new vertex
                     figure.onClick()
                 }
-                if (figure instanceof draw2d.shape.icon.Diagram) {
+                if (figure instanceof draw2d.shape.icon.Diagram || figure instanceof draw2d.shape.icon.Contract) {
                     // Clicked on connection vertex handle, add a new vertex
                     figure.onClickDiagram()
                 }
