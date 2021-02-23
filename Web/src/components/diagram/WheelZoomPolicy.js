@@ -34,6 +34,12 @@ export let WheelZoomPolicy = draw2d.policy.canvas.ZoomPolicy.extend(
     onMouseWheel: function (wheelDelta, x, y, shiftKey, ctrlKey) {
       wheelDelta = wheelDelta / 5024
 
+      if (!this.canvas.selection.all.isEmpty()) {
+        // Deselect items, since zooming with selected figures is slow
+        this.canvas.selection.getAll().each((i, f) => f.unselect())
+        this.canvas.selection.clear()
+      }
+
       let newZoom = ((Math.min(10, Math.max(0.1, this.canvas.zoomFactor + wheelDelta)) * 10000 | 0) / 10000)
       newZoom = Math.min(newZoom, Math.max(this.canvas.initialWidth / this.canvas.getWidth(), this.canvas.initialHeight / this.canvas.getHeight()))
 

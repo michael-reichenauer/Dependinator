@@ -11,8 +11,8 @@ import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { random } from '../../common/utils'
 import {
     createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
-    createDefaultSystemNode, zoomAndMoveShowTotalDiagram, getCanvasFiguresRect,
-    createDefaultGroupNode, defaultNodeWidth
+    createDefaultSystemNode, getCanvasFiguresRect,
+    createDefaultGroupNode, defaultNodeWidth, getFigureName
 } from './figures'
 import { serializeCanvas, deserializeCanvas, exportCanvas } from './serialization'
 import { canvasDivBackground } from "./colors";
@@ -20,20 +20,21 @@ import { createDefaultConnection } from "./connections";
 import { Tweenable } from "shifty"
 
 
-const storeDiagramName = 'diagram'
+const defaultStoreDiagramName = 'diagram'
 
 
 export default class Canvas {
     canvas = null;
     diagramStack = []
+    storeName = defaultStoreDiagramName
     setCanUndo = null
     setCanRedo = null
 
 
     constructor(canvasId, setCanUndo, setCanRedo) {
-        this.canvas = this.createCanvas(canvasId, setCanUndo, setCanRedo)
         this.setCanUndo = setCanUndo
         this.setCanRedo = setCanRedo
+        this.canvas = this.createCanvas(canvasId)
     }
 
 
@@ -42,13 +43,15 @@ export default class Canvas {
     }
 
 
-    createCanvas(canvasId, setCanUndo, setCanRedo) {
+    createCanvas(canvasId) {
         const canvas = new draw2d.Canvas(canvasId)
         canvas.setScrollArea("#" + canvasId)
         canvas.setDimension(new draw2d.geo.Rectangle(0, 0, 10000, 10000))
         canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, 10000, 10000)
 
-        restoreDiagram(canvas)
+        if (!restoreDiagram(canvas, this.storeName)) {
+            addDefaultNewDiagram(canvas)
+        }
 
         // Pan policy readonly/edit
         canvas.panPolicyCurrent = new PanReadOnlyPolicy(this.togglePanPolicy, this.addDefaultItem)
@@ -66,15 +69,16 @@ export default class Canvas {
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
 
-        canvas.getCommandStack().addEventListener(function (e) {
+
+        canvas.getCommandStack().addEventListener(e => {
             // console.log('event:', e)
-            setCanUndo(canvas.getCommandStack().canUndo())
-            setCanRedo(canvas.getCommandStack().canRedo())
+            this.setCanUndo(canvas.getCommandStack().canUndo())
+            this.setCanRedo(canvas.getCommandStack().canRedo())
 
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
                 if (e.action === "POST_EXECUTE") {
-                    saveDiagram(canvas)
+                    saveDiagram(canvas, this.storeName)
                 }
             }
         });
@@ -88,18 +92,18 @@ export default class Canvas {
 
     commandUndo = () => {
         this.canvas.getCommandStack().undo();
-        saveDiagram(this.canvas)
+        saveDiagram(this.canvas, this.storName)
     }
 
     commandRedo = () => {
         this.canvas.getCommandStack().redo();
-        saveDiagram(this.canvas)
+        saveDiagram(this.canvas, this.storName)
     }
 
     commandAddNode = () => this.addFigure(createDefaultNode(), this.randomCenterPoint())
     commandAddUserNode = () => this.addFigure(createDefaultUserNode(), this.randomCenterPoint())
-    // commandAddExternalNode = () => this.addFigure(createDefaultExternalNode(), this.randomCenterPoint())
-    commandAddExternalNode = () => this.addFigure(createDefaultGroupNode(), this.randomCenterPoint())
+    commandAddExternalNode = () => this.addFigure(createDefaultExternalNode(), this.randomCenterPoint())
+    //commandAddExternalNode = () => this.addFigure(createDefaultGroupNode(), this.randomCenterPoint())
 
     addDefaultItem = (x, y, shiftKey, ctrlKey) => this.addFigure(createDefaultNode(), { x: x, y: y })
 
@@ -111,10 +115,12 @@ export default class Canvas {
 
     commandShowInnerDiagram = (msg, figure) => {
         zoomAndMoveShowInnerDiagram(figure, () => {
-            this.pushDiagram()
-            const group = createDefaultGroupNode()
+            this.pushDiagram(figure.getId())
+            if (!restoreDiagram(this.canvas, figure.getId())) {
+                const group = createDefaultGroupNode(getFigureName(figure))
+                this.canvas.add(group, 5200, 5400)
+            }
 
-            this.canvas.add(group, 5200, 5400)
             zoomAndMoveShowTotalDiagram(this.canvas)
         })
     }
@@ -195,9 +201,10 @@ export default class Canvas {
         canvas.lineIntersections = new draw2d.util.ArrayList()
     }
 
-    pushDiagram = () => {
+    pushDiagram = (newStoreName) => {
         const canvas = this.canvas
         const canvasData = {
+            storeName: this.storeName,
             lines: canvas.lines.clone(),
             figures: canvas.figures.clone(),
             commonPorts: canvas.commonPorts,
@@ -223,17 +230,19 @@ export default class Canvas {
 
         // canvas.commandStack.markSaveLocation()
         canvas.commandStack = new draw2d.command.CommandStack()
-        const setCanUndo = this.setCanUndo
-        const setCanRedo = this.setCanRedo
-        canvas.getCommandStack().addEventListener(function (e) {
+
+        this.setCanUndo(canvas.getCommandStack().canUndo())
+        this.setCanRedo(canvas.getCommandStack().canRedo())
+
+        canvas.getCommandStack().addEventListener(e => {
             // console.log('event:', e)
-            setCanUndo(canvas.getCommandStack().canUndo())
-            setCanRedo(canvas.getCommandStack().canRedo())
+            this.setCanUndo(canvas.getCommandStack().canUndo())
+            this.setCanRedo(canvas.getCommandStack().canRedo())
 
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
                 if (e.action === "POST_EXECUTE") {
-                    //saveDiagram(canvas)
+                    saveDiagram(canvas, this.storeName)
                 }
             }
         });
@@ -242,6 +251,7 @@ export default class Canvas {
         canvas.lineIntersections = new draw2d.util.ArrayList()
 
         this.diagramStack.push(canvasData)
+        this.storeName = newStoreName
     }
 
     popDiagram = () => {
@@ -277,13 +287,81 @@ export default class Canvas {
 
         canvas.commonPorts = canvasData.commonPorts
         canvas.commandStack = canvasData.commandStack
+        this.setCanUndo(canvas.getCommandStack().canUndo())
+        this.setCanRedo(canvas.getCommandStack().canRedo())
+
         canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
         canvas.lineIntersections = new draw2d.util.ArrayList()
+
+        this.storeName = canvasData.storeName
     }
+
+    //     canvas.addAll = function (figures) {
+    //         for(var i = 0; i < figures.length; i++) {
+    //            var figure = figures[i].figure, x = figures[i].x, y = figures[i].y;
+
+    //            if (figure.getCanvas() === this) { return; }
+
+    //            if (figure instanceof draw2d.shape.basic.Line) {
+    //                this.lines.add(figure);
+    //            } else {
+    //                this.figures.add(figure);
+    //                if (typeof y !== "undefined") {
+    //                    figure.setPosition(x, y);
+    //                } else if (typeof x !== "undefined") {
+    //                    figure.setPosition(x);
+    //                }
+    //            }
+
+    //            figure.setCanvas(this);
+
+    //            // to avoid drag&drop outside of this canvas
+    //            figure.installEditPolicy(this.regionDragDropConstraint);
+
+    //            // important inital call
+    //            figure.getShapeElement();
+
+    //            // fire the figure:add event before the "move" event and after the figure.repaint() call!
+    //            //   - the move event can only be fired if the figure part of the canvas.
+    //            //     and in this case the notification event should be fired to the listener before
+    //            this.fireEvent("figure:add", {figure: figure, canvas: this});
+
+    //            // fire the event that the figure is part of the canvas
+    //            figure.fireEvent("added", {figure: figure, canvas: this});
+
+    //            // ...now we can fire the initial move event
+    //            figure.fireEvent("move", {figure: figure, dx: 0, dy: 0});
+
+    //            if (figure instanceof draw2d.shape.basic.PolyLine) {
+    //                this.calculateConnectionIntersection();
+    //            }
+    //        }
+    //        console.debug("Added all figures", performance.now());
+
+    //        console.debug("Repainting figures", performance.now());
+    //        this.figures.each(function(i, fig){
+    //            fig.repaint();
+    //        });
+    //        console.debug("Repainted figures", performance.now());
+
+    //        console.debug("Repainting lines", performance.now());
+    //        this.lines.each(function (i, line) {
+    //            line.svgPathString = null;
+    //            line.repaint();
+    //        });
+    //        console.debug("Repainted lines", performance.now());
+    //        return this;
+    //    };
 }
 
 const zoomAndMoveShowInnerDiagram = (figure, done) => {
     const canvas = figure.getCanvas()
+
+    if (!canvas.selection.all.isEmpty()) {
+        // Deselect items, since zooming with selected figures is slow
+        canvas.selection.getAll().each((i, f) => f.unselect())
+        canvas.selection.clear()
+    }
     let tweenable = new Tweenable()
 
     const targetZoom = 0.2 * figure.width / defaultNodeWidth
@@ -339,34 +417,34 @@ const hidePortsIfReadOnly = (canvas, figure) => {
 }
 
 
-const saveDiagram = (canvas) => {
+const saveDiagram = (canvas, storeName) => {
     // Serialize canvas figures and connections into canvas data object
     const canvasData = serializeCanvas(canvas);
 
     // Store canvas data in local storage
     const canvasText = JSON.stringify(canvasData)
-    localStorage.setItem(storeDiagramName, canvasText)
-    // console.log('save', canvasText)
+    localStorage.setItem(storeName, canvasText)
+    //console.log('save', storeName, canvasText)
 }
 
-const restoreDiagram = (canvas) => {
+const restoreDiagram = (canvas, storeName) => {
     // Get canvas data from local storage.
-    let canvasText = localStorage.getItem(storeDiagramName)
-    //console.log('load', canvasText)
+    let canvasText = localStorage.getItem(storeName)
+    //console.log('load', storeName, canvasText)
 
     if (canvasText == null) {
         console.log('no diagram')
-        addDefaultNewDiagram(canvas)
-        return
+        return false
     }
     //console.log('saved', canvasText)
     const canvasData = JSON.parse(canvasText)
     if (canvasData == null || canvasData.figures == null || canvasData.figures.lengths === 0) {
-        return
+        return false
     }
 
     // Deserialize canvas
     deserializeCanvas(canvas, canvasData)
+    return true
 }
 
 const addDefaultNewDiagram = (canvas) => {
@@ -382,3 +460,37 @@ const addDefaultNewDiagram = (canvas) => {
     zoomAndMoveShowTotalDiagram(canvas)
 }
 
+const zoomAndMoveShowTotalDiagram = (canvas) => {
+    if (!canvas.selection.all.isEmpty()) {
+        // Deselect items, since zooming with selected figures is slow
+        canvas.selection.getAll().each((i, f) => f.unselect())
+        canvas.selection.clear()
+    }
+
+    const { x, y, w, h } = getCanvasFiguresRect(canvas)
+    let tweenable = new Tweenable()
+    let area = canvas.getScrollArea()
+
+    const fc = { x: x + w / 2, y: y + h / 2 }
+    const cc = { x: canvas.getWidth() / 2, y: canvas.getHeight() / 2 }
+
+    const targetZoom = Math.max(1, w / (canvas.getWidth() - 100), h / (canvas.getHeight() - 100))
+
+    tweenable.tween({
+        from: { 'zoom': canvas.zoomFactor },
+        to: { 'zoom': targetZoom },
+        duration: 500,
+        easing: "easeOutSine",
+        step: params => {
+            canvas.setZoom(params.zoom, false)
+
+            // Scroll figure to center
+            const tp = { x: fc.x - cc.x * params.zoom, y: fc.y - cc.y * params.zoom }
+            // canvas.scrollTo((tp.x) / params.zoom, (tp.y) / params.zoom)
+            area.scrollLeft((tp.x) / params.zoom)
+            area.scrollTop((tp.y) / params.zoom)
+        },
+        finish: state => {
+        }
+    })
+}

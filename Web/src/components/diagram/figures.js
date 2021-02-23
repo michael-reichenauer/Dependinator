@@ -33,6 +33,12 @@ export const serializeFigures = (canvas) => {
     });
 }
 
+export const getFigureName = (figure) => {
+    const children = figure.getChildren().asArray()
+    const nameLabel = children.find(c => c.userData?.type === 'name');
+    return nameLabel?.text ?? ''
+}
+
 export const deserializeFigures = (figures) => {
     return figures.map(f => {
         let figure
@@ -97,12 +103,11 @@ export const createDefaultExternalNode = () => {
         "BlueGrey")
 }
 
-export const createDefaultGroupNode = () => {
+export const createDefaultGroupNode = (name) => {
     return createGroupNode(
         draw2d.util.UUID.create(),
         1000, 800,
-        // externalNodeColor, externalNodeBorderColor,
-        'Group', 'Description',
+        name, 'Description',
         "BlueGrey")
 }
 
@@ -119,6 +124,7 @@ export const createGroupNode = (id, width, height, name, description, colorName)
         radius: 5,
         userData: { type: type, color: colorName }
     });
+    figure.setDeleteable(false)
 
     const nameLabel = new draw2d.shape.basic.Label({
         text: name, stroke: 0,
@@ -273,34 +279,7 @@ export const getCanvasFiguresRect = (canvas) => {
 }
 
 
-export const zoomAndMoveShowTotalDiagram = (canvas) => {
-    const { x, y, w, h } = getCanvasFiguresRect(canvas)
-    let tweenable = new Tweenable()
-    let area = canvas.getScrollArea()
 
-    const fc = { x: x + w / 2, y: y + h / 2 }
-    const cc = { x: canvas.getWidth() / 2, y: canvas.getHeight() / 2 }
-
-    const targetZoom = Math.max(1, w / (canvas.getWidth() - 100), h / (canvas.getHeight() - 100))
-
-    tweenable.tween({
-        from: { 'zoom': canvas.zoomFactor },
-        to: { 'zoom': targetZoom },
-        duration: 500,
-        easing: "easeOutSine",
-        step: params => {
-            canvas.setZoom(params.zoom, false)
-
-            // Scroll figure to center
-            const tp = { x: fc.x - cc.x * params.zoom, y: fc.y - cc.y * params.zoom }
-            // canvas.scrollTo((tp.x) / params.zoom, (tp.y) / params.zoom)
-            area.scrollLeft((tp.x) / params.zoom)
-            area.scrollTop((tp.y) / params.zoom)
-        },
-        finish: state => {
-        }
-    })
-}
 
 
 const addPorts = (figure) => {
