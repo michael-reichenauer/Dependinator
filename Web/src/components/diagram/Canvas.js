@@ -11,13 +11,13 @@ import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { random } from '../../common/utils'
 import {
     createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
-    createDefaultSystemNode, getCanvasFiguresRect,
-    createDefaultGroupNode, defaultNodeWidth, getFigureName
+    createDefaultSystemNode, getCanvasFiguresRect, createDefaultGroupNode, getFigureName
 } from './figures'
 import { serializeCanvas, deserializeCanvas, exportCanvas } from './serialization'
 import { canvasDivBackground } from "./colors";
 import { createDefaultConnection } from "./connections";
 import { Tweenable } from "shifty"
+import { moveAndZoomToShowInnerDiagram } from "./innerDiagram";
 
 
 const defaultStoreDiagramName = 'diagram'
@@ -114,7 +114,7 @@ export default class Canvas {
     }
 
     commandShowInnerDiagram = (msg, figure) => {
-        zoomAndMoveShowInnerDiagram(figure, () => {
+        moveAndZoomToShowInnerDiagram(figure, () => {
             this.pushDiagram(figure.getId())
             if (!restoreDiagram(this.canvas, figure.getId())) {
                 const group = createDefaultGroupNode(getFigureName(figure))
@@ -352,48 +352,6 @@ export default class Canvas {
     //        console.debug("Repainted lines", performance.now());
     //        return this;
     //    };
-}
-
-const zoomAndMoveShowInnerDiagram = (figure, done) => {
-    const canvas = figure.getCanvas()
-
-    if (!canvas.selection.all.isEmpty()) {
-        // Deselect items, since zooming with selected figures is slow
-        canvas.selection.getAll().each((i, f) => f.unselect())
-        canvas.selection.clear()
-    }
-    let tweenable = new Tweenable()
-
-    const targetZoom = 0.2 * figure.width / defaultNodeWidth
-    let area = canvas.getScrollArea()
-
-
-    const fc = { x: figure.x + figure.width / 2, y: figure.y + figure.height / 2 }
-    const cc = { x: canvas.getWidth() / 2, y: canvas.getHeight() / 2 }
-
-    tweenable.tween({
-        from: { 'zoom': canvas.zoomFactor },
-        to: { 'zoom': targetZoom },
-        duration: 1000,
-        easing: "easeOutSine",
-        step: params => {
-            canvas.setZoom(params.zoom, false)
-
-            // Scroll figure to center
-            const tp = { x: fc.x - cc.x * params.zoom, y: fc.y - cc.y * params.zoom }
-            area.scrollLeft((tp.x) / params.zoom)
-            area.scrollTop((tp.y) / params.zoom)
-        },
-        finish: params => {
-            canvas.setZoom(targetZoom, false)
-
-            const tp = { x: fc.x - cc.x * targetZoom, y: fc.y - cc.y * targetZoom }
-            area.scrollLeft((tp.x) / targetZoom)
-            area.scrollTop((tp.y) / targetZoom)
-            done()
-        }
-    })
-
 }
 
 

@@ -1,6 +1,5 @@
 import draw2d from "draw2d";
 import { getNodeColor, getNodeFontColor, getNodeBorderColor, canvasBackground } from "./colors";
-import { Tweenable } from "shifty"
 import PubSub from 'pubsub-js'
 
 export const defaultNodeWidth = 230
@@ -347,7 +346,6 @@ const ContractIconLocator = draw2d.layout.locator.Locator.extend({
         this._super();
     },
     relocate: function (index, target) {
-        const parent = target.getParent()
         target.setPosition(6, 5)
     }
 });
