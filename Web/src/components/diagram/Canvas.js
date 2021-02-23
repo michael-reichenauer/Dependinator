@@ -49,6 +49,10 @@ export default class Canvas {
         canvas.setDimension(new draw2d.geo.Rectangle(0, 0, 10000, 10000))
         canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, 10000, 10000)
 
+        const area = canvas.getScrollArea()
+        area.scrollLeft(5000)
+        area.scrollTop(5000)
+
         if (!restoreDiagram(canvas, this.storeName)) {
             addDefaultNewDiagram(canvas)
         }
@@ -425,28 +429,71 @@ const zoomAndMoveShowTotalDiagram = (canvas) => {
         canvas.selection.clear()
     }
 
+    moveToShowTotalDiagram(canvas, () => zoomToShowTotalDiagram(canvas))
+}
+
+const moveToShowTotalDiagram = (canvas, done) => {
+    if (!canvas.selection.all.isEmpty()) {
+        // Deselect items, since zooming with selected figures is slow
+        canvas.selection.getAll().each((i, f) => f.unselect())
+        canvas.selection.clear()
+    }
+
+    const area = canvas.getScrollArea()
+
     const { x, y, w, h } = getCanvasFiguresRect(canvas)
+
+    const zoom = canvas.zoomFactor
+    const fc = { x: (x + w / 2) / zoom, y: (y + h / 2) / zoom }
+    const cc = { x: canvas.getWidth() / 2, y: canvas.getHeight() / 2 }
+
+    const tp = { x: fc.x - cc.x, y: fc.y - cc.y }
+
     let tweenable = new Tweenable()
-    let area = canvas.getScrollArea()
+    tweenable.tween({
+        from: { x: area.scrollLeft(), y: area.scrollTop() },
+        to: { x: (tp.x), y: tp.y },
+        duration: 500,
+        easing: "easeOutSine",
+        step: state => {
+            area.scrollLeft(state.x)
+            area.scrollTop(state.y)
+        },
+        finish: state => {
+            done()
+        }
+    })
+}
+
+const zoomToShowTotalDiagram = (canvas) => {
+    if (!canvas.selection.all.isEmpty()) {
+        // Deselect items, since zooming with selected figures is slow
+        canvas.selection.getAll().each((i, f) => f.unselect())
+        canvas.selection.clear()
+    }
+
+    const area = canvas.getScrollArea()
+
+    const { x, y, w, h } = getCanvasFiguresRect(canvas)
 
     const fc = { x: x + w / 2, y: y + h / 2 }
     const cc = { x: canvas.getWidth() / 2, y: canvas.getHeight() / 2 }
 
     const targetZoom = Math.max(1, w / (canvas.getWidth() - 100), h / (canvas.getHeight() - 100))
 
+    let tweenable = new Tweenable()
     tweenable.tween({
         from: { 'zoom': canvas.zoomFactor },
         to: { 'zoom': targetZoom },
         duration: 500,
         easing: "easeOutSine",
-        step: params => {
-            canvas.setZoom(params.zoom, false)
+        step: state => {
+            canvas.setZoom(state.zoom, false)
 
-            // Scroll figure to center
-            const tp = { x: fc.x - cc.x * params.zoom, y: fc.y - cc.y * params.zoom }
-            // canvas.scrollTo((tp.x) / params.zoom, (tp.y) / params.zoom)
-            area.scrollLeft((tp.x) / params.zoom)
-            area.scrollTop((tp.y) / params.zoom)
+            // Adjust scroll to center
+            const tp = { x: fc.x - cc.x * state.zoom, y: fc.y - cc.y * state.zoom }
+            area.scrollLeft((tp.x) / state.zoom)
+            area.scrollTop((tp.y) / state.zoom)
         },
         finish: state => {
         }
