@@ -150,8 +150,6 @@ export const ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreateP
                     // No drop target, lets create a node first to connect to
                     const figure = createDefaultNode()
 
-                    console.log('port', this.mouseDraggingElement.name)
-
                     // Determine figure point and port name
                     let p = null
                     let targetPortName = null

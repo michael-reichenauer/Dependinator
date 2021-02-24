@@ -114,6 +114,8 @@ export default class Canvas {
 
     commandNewDiagram = () => {
         this.clearDiagram()
+        localStorage.clear()
+        console.log('Cleared all stored')
         addDefaultNewDiagram(this.canvas)
     }
 
@@ -386,25 +388,27 @@ const saveDiagram = (canvas, storeName) => {
     // Store canvas data in local storage
     const canvasText = JSON.stringify(canvasData)
     localStorage.setItem(storeName, canvasText)
-    //console.log('save', storeName, canvasText)
+    console.log('saved', storeName)
 }
 
 const restoreDiagram = (canvas, storeName) => {
     // Get canvas data from local storage.
     let canvasText = localStorage.getItem(storeName)
-    //console.log('load', storeName, canvasText)
+
 
     if (canvasText == null) {
-        console.log('no diagram')
+        console.log('no stored diagram for', storeName)
         return false
     }
     //console.log('saved', canvasText)
     const canvasData = JSON.parse(canvasText)
     if (canvasData == null || canvasData.figures == null || canvasData.figures.lengths === 0) {
+        console.log('no diagram could be parsed (or no figures) for', storeName)
         return false
     }
 
     // Deserialize canvas
+    console.log('loaded', storeName)
     deserializeCanvas(canvas, canvasData)
     return true
 }
