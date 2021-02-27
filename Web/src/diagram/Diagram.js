@@ -6,7 +6,7 @@ import PubSub from 'pubsub-js'
 import Canvas from "./Canvas"
 import CanvasMenu from "./CanvasMenu";
 import FigureMenu from "./FigureMenu";
-import { getCommonEvent } from "../../common/events";
+import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { groupType } from "./figures";
 

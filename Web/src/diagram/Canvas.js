@@ -8,7 +8,7 @@ import { WheelZoomPolicy } from "./WheelZoomPolicy"
 import { PanReadOnlyPolicy } from "./PanReadOnlyPolicy"
 import { PanEditPolicy } from "./PanEditPolicy"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
-import { random } from '../../common/utils'
+import { random } from '../common/utils'
 import {
     createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
     createDefaultSystemNode, getCanvasFiguresRect, createDefaultGroupNode, getFigureName

@@ -1,7 +1,7 @@
 import React from "react";
 import { useWindowSize } from "./common/windowsize"
 import ApplicationBar from './application/ApplicationBar'
-import Diagram from "./components/diagram/Diagram";
+import Diagram from "./diagram/Diagram";
 
 
 function App() {

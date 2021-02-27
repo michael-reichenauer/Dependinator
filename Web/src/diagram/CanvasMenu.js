@@ -1,5 +1,5 @@
 import React from "react";
-import ContextMenu from "../../common/ContextMenu";
+import ContextMenu from "../common/ContextMenu";
 import { createDefaultExternalNode, createDefaultNode, createDefaultUserNode } from "./figures";
 
 
