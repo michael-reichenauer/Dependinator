@@ -132,6 +132,7 @@ export default class Canvas {
     }
 
     commandCloseInnerDiagram = () => {
+
         this.popDiagram()
     }
 
@@ -494,7 +495,7 @@ const zoomToShowTotalDiagram = (canvas) => {
         step: state => {
             canvas.setZoom(state.zoom, false)
 
-            // Adjust scroll to center
+            // Adjust scroll to center, since canvas zoom lacks zoom at center point
             const tp = { x: fc.x - cc.x * state.zoom, y: fc.y - cc.y * state.zoom }
             area.scrollLeft((tp.x) / state.zoom)
             area.scrollTop((tp.y) / state.zoom)
