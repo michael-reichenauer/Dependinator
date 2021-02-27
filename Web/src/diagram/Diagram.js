@@ -43,10 +43,12 @@ export default function Diagram({ width, height }) {
 
     return (
         <>
-            <div id="canvas" style={{
-                width: width, height: height, maxWidth: width, maxHeight: height, position: 'absolute',
-                overflow: 'scroll'
-            }}>
+            <div id="diagram">
+                <div id="canvas" style={{
+                    width: width, height: height, maxWidth: width, maxHeight: height, position: 'absolute',
+                    overflow: 'scroll'
+                }}>
+                </div>
             </div>
 
             <CanvasMenu canvas={canvas} onClose={setContextMenu} x={x} y={y} />
@@ -58,8 +60,8 @@ export default function Diagram({ width, height }) {
 
 function enableContextMenu(setContextMenu, canvas) {
     const handleContextMenu = (event) => {
-        if (!event.path.some((i) => i.id === "canvas")) {
-            // Not a right click within the canvas 
+        if (!event.path.some((i) => i.id === 'diagram')) {
+            // Not a right click within the diagram canvas 
             return
         }
         event.preventDefault();

@@ -2,7 +2,6 @@ import React from "react";
 import ContextMenu from "../common/ContextMenu";
 import { nodeColorNames } from "./colors";
 import { CommandChangeColor } from "./commandChangeColor";
-import { groupType } from "./figures";
 
 
 export default function FigureMenu({ figure, onClose, x, y }) {

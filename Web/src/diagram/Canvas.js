@@ -24,6 +24,7 @@ const defaultStoreDiagramName = 'diagram'
 
 
 export default class Canvas {
+    canvasId = null
     canvas = null;
     diagramStack = []
     storeName = defaultStoreDiagramName
@@ -44,6 +45,7 @@ export default class Canvas {
 
 
     createCanvas(canvasId) {
+        this.canvasId = canvasId
         const canvas = new draw2d.Canvas(canvasId)
         canvas.setScrollArea("#" + canvasId)
         canvas.setDimension(new draw2d.geo.Rectangle(0, 0, 10000, 10000))
@@ -90,9 +92,10 @@ export default class Canvas {
     }
 
 
-    showTotalDiagram = () => {
-        zoomAndMoveShowTotalDiagram(this.canvas)
-    }
+    getId = () => this.canvas.canvasId
+
+    showTotalDiagram = () => zoomAndMoveShowTotalDiagram(this.canvas)
+
 
     commandUndo = () => {
         this.canvas.getCommandStack().undo();
@@ -107,7 +110,6 @@ export default class Canvas {
     commandAddNode = () => this.addFigure(createDefaultNode(), this.randomCenterPoint())
     commandAddUserNode = () => this.addFigure(createDefaultUserNode(), this.randomCenterPoint())
     commandAddExternalNode = () => this.addFigure(createDefaultExternalNode(), this.randomCenterPoint())
-    //commandAddExternalNode = () => this.addFigure(createDefaultGroupNode(), this.randomCenterPoint())
 
     addDefaultItem = (x, y, shiftKey, ctrlKey) => this.addFigure(createDefaultNode(), { x: x, y: y })
 
@@ -120,20 +122,32 @@ export default class Canvas {
     }
 
     commandShowInnerDiagram = (msg, figure) => {
+        this.unselectAll()
         moveAndZoomToShowInnerDiagram(figure, () => {
+            console.time('showinner')
             this.pushDiagram(figure.getId())
             if (!restoreDiagram(this.canvas, figure.getId())) {
                 const group = createDefaultGroupNode(getFigureName(figure))
                 this.canvas.add(group, 5200, 5400)
             }
+            console.timeEnd('showinner')
 
             zoomAndMoveShowTotalDiagram(this.canvas)
         })
     }
 
-    commandCloseInnerDiagram = () => {
+    unselectAll = () => {
+        if (!this.canvas.selection.all.isEmpty()) {
+            // Deselect items, since zooming with selected figures is slow
+            this.canvas.selection.getAll().each((i, f) => f.unselect())
+            this.canvas.selection.clear()
+        }
+    }
 
+    commandCloseInnerDiagram = () => {
+        console.time('showOuter')
         this.popDiagram()
+        console.timeEnd('showOuter')
     }
 
     addFigure = (figure, p) => {
@@ -438,12 +452,6 @@ const zoomAndMoveShowTotalDiagram = (canvas) => {
 }
 
 const moveToShowTotalDiagram = (canvas, done) => {
-    if (!canvas.selection.all.isEmpty()) {
-        // Deselect items, since zooming with selected figures is slow
-        canvas.selection.getAll().each((i, f) => f.unselect())
-        canvas.selection.clear()
-    }
-
     const area = canvas.getScrollArea()
 
     const { x, y, w, h } = getCanvasFiguresRect(canvas)
@@ -471,12 +479,6 @@ const moveToShowTotalDiagram = (canvas, done) => {
 }
 
 const zoomToShowTotalDiagram = (canvas) => {
-    if (!canvas.selection.all.isEmpty()) {
-        // Deselect items, since zooming with selected figures is slow
-        canvas.selection.getAll().each((i, f) => f.unselect())
-        canvas.selection.clear()
-    }
-
     const area = canvas.getScrollArea()
 
     const { x, y, w, h } = getCanvasFiguresRect(canvas)

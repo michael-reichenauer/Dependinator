@@ -3,13 +3,6 @@ import { defaultNodeWidth } from "./figures";
 
 
 export const moveAndZoomToShowInnerDiagram = (figure, done) => {
-    const canvas = figure.getCanvas()
-    if (!canvas.selection.all.isEmpty()) {
-        // Deselect items, since zooming with selected figures is slow
-        canvas.selection.getAll().each((i, f) => f.unselect())
-        canvas.selection.clear()
-    }
-
     moveToShowInnerDiagram(figure, () => zoomToShowInnerDiagram(figure, done))
 }
 
