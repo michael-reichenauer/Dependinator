@@ -9,7 +9,7 @@ import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
-import { canRedoAtom, canUndoAtom } from "./diagram/Diagram";
+import { canRedoAtom, canUndoAtom } from "../components/diagram/Diagram";
 import { useAtom } from "jotai";
 
 
