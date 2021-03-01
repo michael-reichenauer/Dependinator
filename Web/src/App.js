@@ -1,5 +1,5 @@
 import React from "react";
-import { useWindowSize } from "./common/windowsize"
+import { useWindowSize } from "./common/windowSize"
 import ApplicationBar from './application/ApplicationBar'
 import Diagram from "./diagram/Diagram";
 

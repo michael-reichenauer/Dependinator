@@ -25,7 +25,7 @@ export const serializeConnections = (canvas) => {
     return canvas.getLines().asArray().map((line) => {
         //console.log('connection', line)
         const children = line.getChildren().asArray()
-        // console.log('connection childres', children)
+        // console.log('connection children', children)
         const l = line.getPersistentAttributes();
         const descriptionLabel = children.find(c => c.userData?.type === 'description');
         return {

@@ -1,4 +1,3 @@
-import { get } from "jquery";
 import { Tweenable } from "shifty"
 import { defaultGroupNodeWidth } from "./figures";
 

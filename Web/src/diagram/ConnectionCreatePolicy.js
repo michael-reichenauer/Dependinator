@@ -23,7 +23,7 @@ export const ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreateP
             }
 
             // this can happen if the user release the mouse button outside the window during a drag&drop
-            // operation. In this case we must fire the "onDragEnd" event postpond.
+            // operation. In this case we must fire the "onDragEnd" event postpone.
             if (port.isInDragDrop === true) {
                 port.onDragEnd(x, y, shiftKey, ctrlKey);
                 port.isInDragDrop = false;

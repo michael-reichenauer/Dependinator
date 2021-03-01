@@ -492,36 +492,3 @@ const InnerDiagram = draw2d.SetFigure.extend({
     }
 
 });
-
-
-
-
-// const MySVGFigure = draw2d.SVGFigure.extend({
-//     NAME: "MySVGFigure",
-
-//     init: function () {
-//         this._super();
-//     },
-
-
-//     getSVG: function () {
-//         // return svgdiagram
-
-//         return '<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
-//             '<path d="m8.2627,0l0,35.36035l31.23926,-17.76025l-31.23926,-17.60011l0,0l0,0.00001zm2.27832,27.36719l4.08105,0m-2.10449,-2.20703l0,4.27979m2.26367,-21.35938l-4.15918,0"  stroke="#1B1B1B" fill="none"/>' +
-//             '<line x1="0.53516"  y1="8"  x2="8.21191"  y2="8"  stroke="#010101"/>' +
-//             '<line x1="39.14941" y1="18" x2="45.81055" y2="18" stroke="#010101" />' +
-//             '<line x1="0.53516"  y1="27" x2="8.21191"  y2="27" stroke="#010101" />' +
-//             '</svg>';
-//     }
-
-// });
-
-// const svgdiagram = `
-// <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-// <rect x="5" y="5" width="230" height="150" ">
-// </rect>
-// <rect x="1.078125" y="5" width="137.84375" height="30" ">
-// </rect>
-// </svg>
-// ` 

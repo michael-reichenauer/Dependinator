@@ -13,11 +13,12 @@ import {
     createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
     createDefaultSystemNode, getCanvasFiguresRect, createDefaultGroupNode, getFigureName
 } from './figures'
-import { serializeCanvas, deserializeCanvas, exportCanvas } from './serialization'
+import { exportCanvas } from './serialization'
 import { canvasDivBackground } from "./colors";
 import { createDefaultConnection } from "./connections";
 import { Tweenable } from "shifty"
 import { moveAndZoomToShowInnerDiagram } from "./innerDiagram";
+import { restoreDiagram, saveDiagram } from "./store";
 
 
 const defaultStoreDiagramName = 'diagram'
@@ -114,7 +115,7 @@ export default class Canvas {
         this.unselectAll()
         moveAndZoomToShowInnerDiagram(figure, () => {
             console.log('figure', figure)
-            console.time('showinner')
+            console.time('show inner')
             this.pushDiagram(figure.getId())
             if (!restoreDiagram(this.canvas, figure.getId())) {
                 const group = createDefaultGroupNode(getFigureName(figure))
@@ -122,7 +123,7 @@ export default class Canvas {
                 const x = 5000 + (width - 1000) / 2
                 this.canvas.add(group, x, 5250)
             }
-            console.timeEnd('showinner')
+            console.timeEnd('show inner')
         })
     }
 
@@ -135,9 +136,9 @@ export default class Canvas {
     }
 
     commandCloseInnerDiagram = () => {
-        console.time('showOuter')
+        console.time('show Outer')
         this.popDiagram()
-        console.timeEnd('showOuter')
+        console.timeEnd('show Outer')
     }
 
     addFigure = (figure, p) => {
@@ -337,7 +338,7 @@ export default class Canvas {
     //            // to avoid drag&drop outside of this canvas
     //            figure.installEditPolicy(this.regionDragDropConstraint);
 
-    //            // important inital call
+    //            // important initial call
     //            figure.getShapeElement();
 
     //            // fire the figure:add event before the "move" event and after the figure.repaint() call!
@@ -391,39 +392,6 @@ const hidePortsIfReadOnly = (canvas, figure) => {
     if (canvas.isReadOnlyMode) {
         figure.getPorts().each((i, port) => { port.setVisible(false) })
     }
-}
-
-
-const saveDiagram = (canvas, storeName) => {
-    // Serialize canvas figures and connections into canvas data object
-    const canvasData = serializeCanvas(canvas);
-
-    // Store canvas data in local storage
-    const canvasText = JSON.stringify(canvasData)
-    localStorage.setItem(storeName, canvasText)
-    console.log('saved', storeName)
-}
-
-const restoreDiagram = (canvas, storeName) => {
-    // Get canvas data from local storage.
-    let canvasText = localStorage.getItem(storeName)
-
-
-    if (canvasText == null) {
-        console.log('no stored diagram for', storeName)
-        return false
-    }
-    //console.log('saved', canvasText)
-    const canvasData = JSON.parse(canvasText)
-    if (canvasData == null || canvasData.figures == null || canvasData.figures.lengths === 0) {
-        console.log('no diagram could be parsed (or no figures) for', storeName)
-        return false
-    }
-
-    // Deserialize canvas
-    console.log('loaded', storeName)
-    deserializeCanvas(canvas, canvasData)
-    return true
 }
 
 const addDefaultNewDiagram = (canvas) => {
