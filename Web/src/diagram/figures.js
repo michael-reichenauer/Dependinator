@@ -45,7 +45,7 @@ export const getFigureName = (figure) => {
 }
 
 export const deserializeFigures = (figures) => {
-    return figures.map(f => deserializeFigure(f))
+    return figures.map(f => deserializeFigure(f)).filter(f => f != null)
 }
 
 const deserializeFigure = (f) => {

@@ -52,7 +52,7 @@ export const deserializeConnections = (canvas, connections) => {
 
         configureConnection(connection, c.description)
         return connection
-    })
+    }).filter(c => c != null)
 }
 
 const configureConnection = (connection, description) => {
