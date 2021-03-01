@@ -20,12 +20,18 @@ export const serializeCanvas = (canvas) => {
 export const deserializeCanvas = (canvas, canvasData) => {
     const figures = deserializeFigures(canvasData.figures)
     for (let i = 0; i < figures.length; i++) {
-        canvas.add(figures[i])
+        const f = figures[i]
+        if (f != null) {
+            canvas.add(f)
+        }
     }
 
     const connections = deserializeConnections(canvas, canvasData.connections)
     for (let i = 0; i < connections.length; i++) {
-        canvas.add(connections[i])
+        const c = connections[i]
+        if (c != null) {
+            canvas.add(c)
+        }
     }
 }
 
@@ -33,7 +39,7 @@ export const deserializeCanvas = (canvas, canvasData) => {
 export const exportCanvas = (canvas, rect, result) => {
     var writer = new draw2d.io.svg.Writer();
     writer.marshal(canvas, (svg) => {
-        // console.log('svg org:', svg)
+        console.log('svg org:', svg)
 
         // Show diagram with some margin
         const margin = 25

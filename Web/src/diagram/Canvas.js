@@ -75,19 +75,8 @@ export default class Canvas {
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
 
+        this.enableCommandStackHandler(canvas.commandStack)
 
-        canvas.getCommandStack().addEventListener(e => {
-            // console.log('event:', e)
-            this.setCanUndo(canvas.getCommandStack().canUndo())
-            this.setCanRedo(canvas.getCommandStack().canRedo())
-
-            if (e.isPostChangeEvent()) {
-                // console.log('event isPostChangeEvent:', e)
-                if (e.action === "POST_EXECUTE") {
-                    saveDiagram(canvas, this.storeName)
-                }
-            }
-        });
         return canvas
     }
 
@@ -124,15 +113,16 @@ export default class Canvas {
     commandShowInnerDiagram = (msg, figure) => {
         this.unselectAll()
         moveAndZoomToShowInnerDiagram(figure, () => {
+            console.log('figure', figure)
             console.time('showinner')
             this.pushDiagram(figure.getId())
             if (!restoreDiagram(this.canvas, figure.getId())) {
                 const group = createDefaultGroupNode(getFigureName(figure))
-                this.canvas.add(group, 5200, 5400)
+                const width = this.canvas.getWidth()
+                const x = 5000 + (width - 1000) / 2
+                this.canvas.add(group, x, 5250)
             }
             console.timeEnd('showinner')
-
-            zoomAndMoveShowTotalDiagram(this.canvas)
         })
     }
 
@@ -251,28 +241,36 @@ export default class Canvas {
 
         // canvas.commandStack.markSaveLocation()
         canvas.commandStack = new draw2d.command.CommandStack()
+        this.enableCommandStackHandler(canvas.commandStack)
 
         this.setCanUndo(canvas.getCommandStack().canUndo())
         this.setCanRedo(canvas.getCommandStack().canRedo())
 
-        canvas.getCommandStack().addEventListener(e => {
+        canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
+        canvas.lineIntersections = new draw2d.util.ArrayList()
+
+        canvas.setZoom(1)
+        const area = canvas.getScrollArea()
+        area.scrollLeft(5000)
+        area.scrollTop(5000)
+
+        this.diagramStack.push(canvasData)
+        this.storeName = newStoreName
+    }
+
+    enableCommandStackHandler = (commandStack) => {
+        commandStack.addEventListener(e => {
             // console.log('event:', e)
-            this.setCanUndo(canvas.getCommandStack().canUndo())
-            this.setCanRedo(canvas.getCommandStack().canRedo())
+            this.setCanUndo(commandStack.canUndo())
+            this.setCanRedo(commandStack.canRedo())
 
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
                 if (e.action === "POST_EXECUTE") {
-                    saveDiagram(canvas, this.storeName)
+                    saveDiagram(this.canvas, this.storeName)
                 }
             }
         });
-
-        canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
-        canvas.lineIntersections = new draw2d.util.ArrayList()
-
-        this.diagramStack.push(canvasData)
-        this.storeName = newStoreName
     }
 
     popDiagram = () => {

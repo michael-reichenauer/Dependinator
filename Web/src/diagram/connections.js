@@ -1,7 +1,7 @@
 import draw2d from "draw2d";
 import { canvasBackground } from "./colors";
 
-const connectionColor = canvasBackground.getIdealTextColor()
+export const connectionColor = canvasBackground.getIdealTextColor()
 const labelTextColor = canvasBackground.getIdealTextColor();
 const labelColorBackground = canvasBackground;
 
@@ -33,7 +33,7 @@ export const serializeConnections = (canvas) => {
             srcPort: l.source.port,
             trg: l.target.node,
             trgPort: l.target.port,
-            v: l.vertex.slice(1, l.vertex.length - 1),
+            v: l.vertex,
             description: descriptionLabel?.text ?? ''
         }
     });

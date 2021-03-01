@@ -1,5 +1,6 @@
+import { get } from "jquery";
 import { Tweenable } from "shifty"
-import { defaultNodeWidth } from "./figures";
+import { defaultGroupNodeWidth } from "./figures";
 
 
 export const moveAndZoomToShowInnerDiagram = (figure, done) => {
@@ -10,13 +11,12 @@ const moveToShowInnerDiagram = (figure, done) => {
     const canvas = figure.getCanvas()
     const area = canvas.getScrollArea()
 
+    // Calculate how to scroll from current point to get figure to the center near the top
     const zoom = canvas.zoomFactor
-    const figureCenter = { x: (figure.x + figure.width / 2) / zoom, y: (figure.y + figure.height / 2) / zoom }
-    const canvasCenter = { x: canvas.getWidth() / 2, y: canvas.getHeight() / 2 }
+    const sourcePoint = { x: area.scrollLeft() * zoom, y: area.scrollTop() * zoom }
+    const targetPoint = getTargetScrollPoint(canvas, figure, zoom)
 
-    const sourcePoint = { x: area.scrollLeft(), y: area.scrollTop() }
-    const targetPoint = { x: figureCenter.x - canvasCenter.x, y: figureCenter.y - canvasCenter.y }
-
+    // Scroll step by step from source point to target point
     const tweenable = new Tweenable()
     tweenable.tween({
         from: sourcePoint,
@@ -24,8 +24,8 @@ const moveToShowInnerDiagram = (figure, done) => {
         duration: 500,
         easing: "easeOutSine",
         step: state => {
-            area.scrollLeft(state.x)
-            area.scrollTop(state.y)
+            area.scrollLeft(state.x / zoom)
+            area.scrollTop(state.y / zoom)
         },
         finish: data => {
             done()
@@ -33,15 +33,15 @@ const moveToShowInnerDiagram = (figure, done) => {
     })
 }
 
+
+
 const zoomToShowInnerDiagram = (figure, done) => {
     const canvas = figure.getCanvas()
     const area = canvas.getScrollArea()
 
     const zoom = canvas.zoomFactor
-    const targetZoom = 0.2 * figure.width / defaultNodeWidth
 
-    const fc = { x: figure.x + figure.width / 2, y: figure.y + figure.height / 2 }
-    const cc = { x: canvas.getWidth() / 2, y: canvas.getHeight() / 2 }
+    const targetZoom = figure.width / defaultGroupNodeWidth
 
     const tweenable = new Tweenable()
     tweenable.tween({
@@ -52,8 +52,7 @@ const zoomToShowInnerDiagram = (figure, done) => {
         step: state => {
             canvas.setZoom(state.zoom, false)
 
-            // Adjusts scroll figure to center (id needed)
-            const tp = { x: fc.x - cc.x * state.zoom, y: fc.y - cc.y * state.zoom }
+            const tp = getTargetScrollPoint(canvas, figure, state.zoom)
             area.scrollLeft(tp.x / state.zoom)
             area.scrollTop(tp.y / state.zoom)
         },
@@ -63,3 +62,9 @@ const zoomToShowInnerDiagram = (figure, done) => {
     })
 }
 
+const getTargetScrollPoint = (canvas, figure, zoom) => {
+    const figurePoint = { x: figure.x + figure.width / 2, y: figure.y }
+    const canvasPoint = { x: zoom * canvas.getWidth() / 2, y: zoom * 250 }
+
+    return { x: figurePoint.x - canvasPoint.x, y: figurePoint.y - canvasPoint.y }
+}

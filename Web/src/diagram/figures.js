@@ -1,7 +1,10 @@
 import draw2d from "draw2d";
-import { getNodeColor, getNodeFontColor, getNodeBorderColor, canvasBackground } from "./colors";
+import { getNodeColor, getNodeFontColor, getNodeBorderColor, canvasDivBackground, canvasBackground } from "./colors";
+import { connectionColor } from './connections'
 import PubSub from 'pubsub-js'
 
+export const defaultGroupNodeWidth = 1000
+export const defaultGroupNodeHeight = 800
 export const defaultNodeWidth = 230
 const defaultNodeHeight = 150
 const nodeType = 'node'
@@ -13,24 +16,27 @@ const newExternalIcon = () => new draw2d.shape.icon.NewWindow()
 
 
 export const serializeFigures = (canvas) => {
-    return canvas.getFigures().asArray().map((f) => {
-        //console.log('figure', f)
-        const children = f.getChildren().asArray()
-        const nameLabel = children.find(c => c.userData?.type === 'name');
-        const descriptionLabel = children.find(c => c.userData?.type === 'description');
-        return {
-            type: f.userData.type,
-            id: f.id,
-            x: f.x,
-            y: f.y,
-            w: f.width,
-            h: f.height,
-            name: nameLabel?.text ?? '',
-            description: descriptionLabel?.text ?? '',
-            color: f.userData.color
-        };
-    });
+    return canvas.getFigures().asArray().map((f) => serializeFigure(f));
 }
+
+const serializeFigure = (f) => {
+    //console.log('figure', f)
+    const children = f.getChildren().asArray()
+    const nameLabel = children.find(c => c.userData?.type === 'name');
+    const descriptionLabel = children.find(c => c.userData?.type === 'description');
+    return {
+        type: f.userData.type,
+        id: f.id,
+        x: f.x,
+        y: f.y,
+        w: f.width,
+        h: f.height,
+        name: nameLabel?.text ?? '',
+        description: descriptionLabel?.text ?? '',
+        color: f.userData.color
+    };
+}
+
 
 export const getFigureName = (figure) => {
     const children = figure.getChildren().asArray()
@@ -39,38 +45,65 @@ export const getFigureName = (figure) => {
 }
 
 export const deserializeFigures = (figures) => {
-    return figures.map(f => {
-        let figure
-        switch (f.type) {
-            case nodeType:
-                figure = createNode(f.id, f.w, f.h, f.name, f.description, f.color)
-                break;
-            case userType:
-                figure = createUserNode(f.id, f.w, f.h, f.name, f.description, f.color)
-                break;
-            case externalType:
-                figure = createExternalNode(f.id, f.w, f.h, f.name, f.description, f.color)
-                break;
-            case groupType:
-                figure = createGroupNode(f.id, f.w, f.h, f.name, f.description, f.color)
-                break;
-            default:
-                throw new Error('Unexpected node typw!');
-        }
-        figure.x = f.x
-        figure.y = f.y
-        return figure
-    })
+    return figures.map(f => deserializeFigure(f))
+}
+
+const deserializeFigure = (f) => {
+    let figure
+    switch (f.type) {
+        case nodeType:
+            figure = createNode(f.id, f.w, f.h, f.name, f.description, f.color)
+            break;
+        case userType:
+            figure = createUserNode(f.id, f.w, f.h, f.name, f.description, f.color)
+            break;
+        case externalType:
+            figure = createExternalNode(f.id, f.w, f.h, f.name, f.description, f.color)
+            break;
+        case groupType:
+            figure = createGroupNode(f.id, f.w, f.h, f.name, f.description, f.color)
+            break;
+        default:
+            return null
+        //throw new Error('Unexpected node typw!');
+    }
+    figure.x = f.x
+    figure.y = f.y
+    return figure
 }
 
 
+
 export const createDefaultNode = () => {
-    return createNode(
-        draw2d.util.UUID.create(),
-        defaultNodeWidth, defaultNodeHeight,
-        //  nodeColor, nodeBorderColor,
-        'Node', 'Description',
-        "DeepPurple")
+    const storeName = 'diagram'
+    let canvasText = localStorage.getItem(storeName)
+
+    if (canvasText == null) {
+        console.log('no stored diagram for', storeName)
+        return null
+    }
+    //console.log('saved', canvasText)
+    const canvasData = JSON.parse(canvasText)
+    if (canvasData == null || canvasData.figures == null || canvasData.figures.lengths === 0) {
+        console.log('no diagram could be parsed (or no figures) for', storeName)
+        return false
+    }
+
+
+    console.log('data', canvasData)
+    return new InnerDiagram({
+        width: defaultGroupNodeWidth,
+        height: defaultGroupNodeHeight,
+        userData: { type: 'svg', color: "BlueGrey" },
+    }, canvasData)
+
+
+    // return createNode(
+    //     draw2d.util.UUID.create(),
+    //     defaultNodeWidth, defaultNodeHeight,
+    //     //  nodeColor, nodeBorderColor,
+    //     'Node', 'Description',
+    //     "DeepPurple")
 }
 
 export const createDefaultSystemNode = () => {
@@ -105,7 +138,7 @@ export const createDefaultExternalNode = () => {
 export const createDefaultGroupNode = (name) => {
     return createGroupNode(
         draw2d.util.UUID.create(),
-        1000, 800,
+        defaultGroupNodeWidth, defaultGroupNodeHeight,
         name, 'Description',
         "BlueGrey")
 }
@@ -349,3 +382,146 @@ const ContractIconLocator = draw2d.layout.locator.Locator.extend({
         target.setPosition(6, 5)
     }
 });
+
+
+const InnerDiagram = draw2d.SetFigure.extend({
+    NAME: "InnerDiagram",
+
+    init: function (attr, canvasData) {
+        this._super(attr);
+        this.canvasData = canvasData
+    },
+
+    createSet: function () {
+        var set = this.canvas.paper.set()
+
+        // Set the group node
+        set.push(this.rect({
+            x: 0, y: 0, width: defaultGroupNodeWidth, height: defaultGroupNodeHeight,
+            "stroke-width": "1", 'stroke-dasharray': '- ', r: 5, fill: canvasDivBackground
+        }))
+
+        console.log('this.figures', this.canvasData.figures)
+        this.canvasData.figures.forEach(f => this.deserializeFigure(set, f))
+        this.canvasData.connections.forEach(c => this.deserializeConnection(set, c))
+
+        // set.push(this.node({
+        //     x: 30, y: 30, width: defaultNodeWidth, height: defaultNodeHeight, r: 5, fill: "#4f6870",
+        //     stroke: "#1b1b1b", "stroke-width": "0.5",
+        // }))
+        // set.push(this.text({ x: defaultNodeWidth / 2 + 30, y: 55, text: 'External User', fill: 'white', 'font-size': 20, 'font-weight': 'bold' }))
+
+        // this.push(this.rect({
+        //     x: 2000, y: 200, width: defaultNodeWidth, height: defaultNodeHeight, r: 5, fill: "#4f6870",
+        //     stroke: "#1b1b1b", "stroke-width": "0.5",
+        // }))
+
+        return set;
+    },
+
+
+    deserializeFigure: function (set, f) {
+        // console.log('figure', f)
+        switch (f.type) {
+            case nodeType:
+            case userType:
+            case externalType:
+                set.push(this.node(f.x - 5100, f.y - 5000, f.w, f.h, f.color))
+                set.push(this.nodeName(f.x - 5100, f.y - 5000, f.w, f.name, f.color))
+                break;
+            default:
+                return null
+            //throw new Error('Unexpected node typw!');
+        }
+    },
+
+    deserializeConnection: function (set, c) {
+        console.log('connection', c)
+        let pathText = null
+        c.v.forEach(v => {
+            if (pathText === null) {
+                pathText = `M${v.x - 5100},${v.y - 5000}`
+            } else {
+                pathText = pathText + `L${v.x - 5100},${v.y - 5000}`
+            }
+        })
+
+        const path = this.canvas.paper.path(pathText);
+        path.attr({ "stroke-width": 2, "stroke": connectionColor })
+
+        set.push(path)
+    },
+
+
+
+    text: function (attr) {
+        const f = this.canvas.paper.text()
+        f.attr(attr)
+        return f
+    },
+
+    nodeName: function (x, y, w, name, colorName) {
+        const fontColor = '#' + getNodeFontColor(colorName).hex()
+        const f = this.canvas.paper.text()
+        f.attr({
+            x: w / 2 + x, y: y + 25, text: name, fill: fontColor,
+            'font-size': 20, 'font-weight': 'bold'
+        })
+        return f
+    },
+
+
+
+    node: function (x, y, w, h, colorName) {
+        const color = '#' + getNodeColor(colorName).hex()
+        const borderColor = '#' + getNodeBorderColor(colorName).hex()
+        const f = this.canvas.paper.rect()
+        f.attr({
+            x: x, y: y, width: w, height: h,
+            "stroke-width": 1, r: 5,
+            fill: color, stroke: borderColor
+        })
+        return f
+    },
+
+
+    rect: function (attr) {
+        const f = this.canvas.paper.rect()
+        f.attr(attr)
+        return f
+    }
+
+});
+
+
+
+
+// const MySVGFigure = draw2d.SVGFigure.extend({
+//     NAME: "MySVGFigure",
+
+//     init: function () {
+//         this._super();
+//     },
+
+
+//     getSVG: function () {
+//         // return svgdiagram
+
+//         return '<svg xmlns="http://www.w3.org/2000/svg" version="1.1">' +
+//             '<path d="m8.2627,0l0,35.36035l31.23926,-17.76025l-31.23926,-17.60011l0,0l0,0.00001zm2.27832,27.36719l4.08105,0m-2.10449,-2.20703l0,4.27979m2.26367,-21.35938l-4.15918,0"  stroke="#1B1B1B" fill="none"/>' +
+//             '<line x1="0.53516"  y1="8"  x2="8.21191"  y2="8"  stroke="#010101"/>' +
+//             '<line x1="39.14941" y1="18" x2="45.81055" y2="18" stroke="#010101" />' +
+//             '<line x1="0.53516"  y1="27" x2="8.21191"  y2="27" stroke="#010101" />' +
+//             '</svg>';
+//     }
+
+// });
+
+// const svgdiagram = `
+// <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+// <rect x="5" y="5" width="230" height="150" ">
+// </rect>
+// <rect x="1.078125" y="5" width="137.84375" height="30" ">
+// </rect>
+// </svg>
+// ` 
