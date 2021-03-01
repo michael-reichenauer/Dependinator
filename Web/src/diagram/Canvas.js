@@ -18,7 +18,7 @@ import { canvasDivBackground } from "./colors";
 import { createDefaultConnection } from "./connections";
 import { Tweenable } from "shifty"
 import { moveAndZoomToShowInnerDiagram } from "./innerDiagram";
-import { restoreDiagram, saveDiagram } from "./store";
+import { loadDiagram, saveDiagram } from "./store";
 
 
 const defaultStoreDiagramName = 'diagram'
@@ -56,7 +56,7 @@ export default class Canvas {
         area.scrollLeft(5000)
         area.scrollTop(5000)
 
-        if (!restoreDiagram(canvas, this.storeName)) {
+        if (!loadDiagram(canvas, this.storeName)) {
             addDefaultNewDiagram(canvas)
         }
 
@@ -117,7 +117,7 @@ export default class Canvas {
             console.log('figure', figure)
             console.time('show inner')
             this.pushDiagram(figure.getId())
-            if (!restoreDiagram(this.canvas, figure.getId())) {
+            if (!loadDiagram(this.canvas, figure.getId())) {
                 const group = createDefaultGroupNode(getFigureName(figure))
                 const width = this.canvas.getWidth()
                 const x = 5000 + (width - 1000) / 2

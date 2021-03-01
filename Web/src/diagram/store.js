@@ -1,20 +1,26 @@
+import { timing } from "../common/timing";
 import { deserializeCanvas, serializeCanvas } from "./serialization";
 
 
 export const saveDiagram = (canvas, storeName) => {
     // Serialize canvas figures and connections into canvas data object
+    let t = timing('saveDiagram')
     const canvasData = serializeCanvas(canvas);
+    t.log('serialized')
 
     // Store canvas data in local storage
     const canvasText = JSON.stringify(canvasData)
+    t.log('stringified')
+
     localStorage.setItem(storeName, canvasText)
-    console.log('saved', storeName)
+    t.log('saved')
 }
 
-export const restoreDiagram = (canvas, storeName) => {
+export const loadDiagram = (canvas, storeName) => {
+    let t = timing('loadDiagram')
     // Get canvas data from local storage.
     let canvasText = localStorage.getItem(storeName)
-
+    t.log('loaded')
 
     if (canvasText == null) {
         console.log('no stored diagram for', storeName)
@@ -26,9 +32,10 @@ export const restoreDiagram = (canvas, storeName) => {
         console.log('no diagram could be parsed (or no figures) for', storeName)
         return false
     }
+    t.log('parsed')
 
     // Deserialize canvas
-    console.log('loaded', storeName)
     deserializeCanvas(canvas, canvasData)
+    t.log('deserialized')
     return true
 }
