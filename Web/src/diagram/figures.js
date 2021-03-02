@@ -1,15 +1,15 @@
 import draw2d from "draw2d";
-import { getNodeColor, getNodeFontColor, getNodeBorderColor, canvasDivBackground, canvasBackground } from "./colors";
-import { connectionColor } from './connections'
+import { getNodeColor, getNodeFontColor, getNodeBorderColor, canvasBackground } from "./colors";
 import PubSub from 'pubsub-js'
+import { InnerDiagram } from "./innerDiagram";
 
 export const defaultGroupNodeWidth = 1000
 export const defaultGroupNodeHeight = 800
 export const defaultNodeWidth = 230
-const defaultNodeHeight = 150
-const nodeType = 'node'
-const userType = 'user'
-const externalType = 'external'
+export const defaultNodeHeight = 150
+export const nodeType = 'node'
+export const userType = 'user'
+export const externalType = 'external'
 export const groupType = 'group'
 const newUserIcon = () => new draw2d.shape.icon.User()
 const newExternalIcon = () => new draw2d.shape.icon.NewWindow()
@@ -91,11 +91,15 @@ export const createDefaultNode = () => {
 
 
     console.log('data', canvasData)
-    return new InnerDiagram({
-        width: defaultGroupNodeWidth,
-        height: defaultGroupNodeHeight,
+    const color = canvasBackground
+    const innerDiagram = new InnerDiagram({
+        width: 500,
+        height: 200,
+        keepAspectRatio: true,
+        bgColor: color,
         userData: { type: 'svg', color: "BlueGrey" },
     }, canvasData)
+    return innerDiagram
 
 
     // return createNode(
@@ -282,14 +286,14 @@ export const getCanvasFiguresRect = (canvas) => {
     canvas.getFigures().each((i, f) => {
         let fx = f.getAbsoluteX()
         let fy = f.getAbsoluteY()
-        let fw = fx + f.getWidth()
-        let fh = fy + f.getHeight()
+        let fx2 = fx + f.getWidth()
+        let fy2 = fy + f.getHeight()
 
         if (i === 0) {
             minX = fx
             minY = fy
-            maxX = fw
-            maxY = fh
+            maxX = fx2
+            maxY = fy2
             return
         }
 
@@ -299,11 +303,11 @@ export const getCanvasFiguresRect = (canvas) => {
         if (fy < minY) {
             minY = fy
         }
-        if (fw > maxX) {
-            maxX = fw
+        if (fx2 > maxX) {
+            maxX = fx2
         }
-        if (fh > maxY) {
-            maxY = fh
+        if (fy2 > maxY) {
+            maxY = fy2
         }
     })
 
@@ -381,114 +385,4 @@ const ContractIconLocator = draw2d.layout.locator.Locator.extend({
     relocate: function (index, target) {
         target.setPosition(6, 5)
     }
-});
-
-
-const InnerDiagram = draw2d.SetFigure.extend({
-    NAME: "InnerDiagram",
-
-    init: function (attr, canvasData) {
-        this._super(attr);
-        this.canvasData = canvasData
-    },
-
-    createSet: function () {
-        var set = this.canvas.paper.set()
-
-        // Set the group node
-        set.push(this.rect({
-            x: 0, y: 0, width: defaultGroupNodeWidth, height: defaultGroupNodeHeight,
-            "stroke-width": "1", 'stroke-dasharray': '- ', r: 5, fill: canvasDivBackground
-        }))
-
-        console.log('this.figures', this.canvasData.figures)
-        this.canvasData.figures.forEach(f => this.deserializeFigure(set, f))
-        this.canvasData.connections.forEach(c => this.deserializeConnection(set, c))
-
-        // set.push(this.node({
-        //     x: 30, y: 30, width: defaultNodeWidth, height: defaultNodeHeight, r: 5, fill: "#4f6870",
-        //     stroke: "#1b1b1b", "stroke-width": "0.5",
-        // }))
-        // set.push(this.text({ x: defaultNodeWidth / 2 + 30, y: 55, text: 'External User', fill: 'white', 'font-size': 20, 'font-weight': 'bold' }))
-
-        // this.push(this.rect({
-        //     x: 2000, y: 200, width: defaultNodeWidth, height: defaultNodeHeight, r: 5, fill: "#4f6870",
-        //     stroke: "#1b1b1b", "stroke-width": "0.5",
-        // }))
-
-        return set;
-    },
-
-
-    deserializeFigure: function (set, f) {
-        // console.log('figure', f)
-        switch (f.type) {
-            case nodeType:
-            case userType:
-            case externalType:
-                set.push(this.node(f.x - 5100, f.y - 5000, f.w, f.h, f.color))
-                set.push(this.nodeName(f.x - 5100, f.y - 5000, f.w, f.name, f.color))
-                break;
-            default:
-                return null
-            //throw new Error('Unexpected node typw!');
-        }
-    },
-
-    deserializeConnection: function (set, c) {
-        console.log('connection', c)
-        let pathText = null
-        c.v.forEach(v => {
-            if (pathText === null) {
-                pathText = `M${v.x - 5100},${v.y - 5000}`
-            } else {
-                pathText = pathText + `L${v.x - 5100},${v.y - 5000}`
-            }
-        })
-
-        const path = this.canvas.paper.path(pathText);
-        path.attr({ "stroke-width": 2, "stroke": connectionColor })
-
-        set.push(path)
-    },
-
-
-
-    text: function (attr) {
-        const f = this.canvas.paper.text()
-        f.attr(attr)
-        return f
-    },
-
-    nodeName: function (x, y, w, name, colorName) {
-        const fontColor = '#' + getNodeFontColor(colorName).hex()
-        const f = this.canvas.paper.text()
-        f.attr({
-            x: w / 2 + x, y: y + 25, text: name, fill: fontColor,
-            'font-size': 20, 'font-weight': 'bold'
-        })
-        return f
-    },
-
-
-
-    node: function (x, y, w, h, colorName) {
-        const color = '#' + getNodeColor(colorName).hex()
-        const borderColor = '#' + getNodeBorderColor(colorName).hex()
-        const f = this.canvas.paper.rect()
-        f.attr({
-            x: x, y: y, width: w, height: h,
-            "stroke-width": 1, r: 5,
-            fill: color, stroke: borderColor
-        })
-        return f
-    },
-
-
-    rect: function (attr) {
-        const f = this.canvas.paper.rect()
-        f.attr(attr)
-        return f
-    }
-
 });

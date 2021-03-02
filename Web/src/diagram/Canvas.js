@@ -74,7 +74,7 @@ export default class Canvas {
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGeometryEditPolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToInBetweenEditPolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
-        canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
+        //canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
 
         this.enableCommandStackHandler(canvas.commandStack)
 

@@ -1,13 +1,15 @@
 import draw2d from "draw2d";
-import { serializeFigures, deserializeFigures } from './figures'
+import { serializeFigures, deserializeFigures, getCanvasFiguresRect } from './figures'
 import { serializeConnections, deserializeConnections } from './connections'
 import { canvasDivBackground } from "./colors";
 
 export const serializeCanvas = (canvas) => {
+    const bb = getCanvasFiguresRect(canvas)
     const figures = serializeFigures(canvas);
     const connections = serializeConnections(canvas)
 
     const canvasData = {
+        box: bb,
         figures: figures,
         connections: connections,
         zoom: canvas.getZoom()
