@@ -2,6 +2,7 @@ import draw2d from "draw2d";
 import { getNodeColor, getNodeFontColor, getNodeBorderColor, canvasBackground } from "./colors";
 import PubSub from 'pubsub-js'
 import { InnerDiagram } from "./innerDiagram";
+import { timing } from "../common/timing";
 
 export const defaultGroupNodeWidth = 1000
 export const defaultGroupNodeHeight = 800
@@ -75,9 +76,21 @@ const deserializeFigure = (f) => {
 
 
 export const createDefaultNode = () => {
+    return createInnerNode()
+
+    // return createNode(
+    //     draw2d.util.UUID.create(),
+    //     defaultNodeWidth, defaultNodeHeight,
+    //     //  nodeColor, nodeBorderColor,
+    //     'Node', 'Description',
+    //     "DeepPurple")
+}
+
+const createInnerNode = () => {
+    const t = timing()
     const storeName = 'diagram'
     let canvasText = localStorage.getItem(storeName)
-
+    t.log('loaded')
     if (canvasText == null) {
         console.log('no stored diagram for', storeName)
         return null
@@ -88,27 +101,21 @@ export const createDefaultNode = () => {
         console.log('no diagram could be parsed (or no figures) for', storeName)
         return false
     }
+    t.log('parsed')
 
-
-    console.log('data', canvasData)
     const color = canvasBackground
     const innerDiagram = new InnerDiagram({
-        width: 500,
-        height: 200,
+        width: defaultNodeWidth,
+        height: defaultNodeHeight,
         keepAspectRatio: true,
         bgColor: color,
         userData: { type: 'svg', color: "BlueGrey" },
     }, canvasData)
+    t.log('created')
     return innerDiagram
 
-
-    // return createNode(
-    //     draw2d.util.UUID.create(),
-    //     defaultNodeWidth, defaultNodeHeight,
-    //     //  nodeColor, nodeBorderColor,
-    //     'Node', 'Description',
-    //     "DeepPurple")
 }
+
 
 export const createDefaultSystemNode = () => {
     return createNode(
@@ -311,7 +318,7 @@ export const getCanvasFiguresRect = (canvas) => {
         }
     })
 
-    return { x: minX, y: minY, w: maxX - minX, h: maxY - minY }
+    return { x: minX, y: minY, w: maxX - minX, h: maxY - minY, x2: maxX, y2: maxY }
 }
 
 

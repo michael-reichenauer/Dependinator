@@ -22,5 +22,10 @@ export class Timing {
 }
 
 export const timing = (label, isStart) => {
+    if (label === undefined) {
+        const stack = new Error().stack
+        const caller = stack.split('\n')[2].trim().split(' ')[1];
+        label = caller
+    }
     return new Timing(label, isStart)
 }

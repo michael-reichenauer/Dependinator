@@ -4,7 +4,7 @@ import { deserializeCanvas, serializeCanvas } from "./serialization";
 
 export const saveDiagram = (canvas, storeName) => {
     // Serialize canvas figures and connections into canvas data object
-    let t = timing('saveDiagram')
+    let t = timing()
     const canvasData = serializeCanvas(canvas);
     t.log('serialized')
 
@@ -17,7 +17,7 @@ export const saveDiagram = (canvas, storeName) => {
 }
 
 export const loadDiagram = (canvas, storeName) => {
-    let t = timing('loadDiagram')
+    let t = timing()
     // Get canvas data from local storage.
     let canvasText = localStorage.getItem(storeName)
     t.log('loaded')

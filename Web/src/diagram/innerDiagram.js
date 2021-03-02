@@ -25,7 +25,10 @@ export const InnerDiagram = draw2d.SetFigure.extend({
         this.canvasData.figures.forEach(f => this.deserializeFigure(set, f, dx, dy))
         this.canvasData.connections.forEach(c => this.deserializeConnection(set, c, dx, dy))
 
+        const box = this.canvasData.box
         const b = set.getBBox()
+        console.log('figure box', box)
+        console.log('set box', b)
 
         console.log('fig', this.width, this.height)
 
@@ -39,21 +42,27 @@ export const InnerDiagram = draw2d.SetFigure.extend({
 
         if (wh < 1) {
             if (b.x2 < b.y2) {
-                // OK
-                width = b.y2 * wh
-                height = b.y2
+                // ?
+                console.log('111', this.width, b.x2)
+                width = (b.x2 / (this.width / wh)) * this.width / wh
+                height = (b.x2 / (this.width / wh)) * this.height / wh
             } else {
-                // OK
-                width = b.x2
-                height = b.x2 / wh
+                // ?
+                console.log('222')
+                width = (b.x2 / (this.width / wh)) * this.width / wh
+                height = (b.x2 / (this.width / wh)) * this.height / wh
             }
         } else {
             if (b.x2 < b.y2) {
+                // ?
+                console.log('333')
                 width = b.y2 * wh
                 height = b.y2
             } else {
-                width = b.x2
-                height = b.x2 / wh
+                // ?
+                console.log('444')
+                width = (b.x2 / (this.width / wh)) * this.width / wh
+                height = (b.x2 / (this.width / wh)) * this.height / wh
             }
         }
 
@@ -65,21 +74,21 @@ export const InnerDiagram = draw2d.SetFigure.extend({
         // const m = 100
         set.push(this.rect({
             x: 0, y: 0, width: width, height: height,
-            "stroke-width": "1", 'stroke-dasharray': '- ', r: 5, fill: 'none'
+            "stroke-width": "0", fill: 'none'
         }))
 
         return set;
     },
 
 
-    deserializeFigure: function (set, f, x, y) {
+    deserializeFigure: function (set, f, dx, dy) {
         // console.log('figure', f)
         switch (f.type) {
             case nodeType:
             case userType:
             case externalType:
-                set.push(this.node(f.x + x, f.y + y, f.w, f.h, f.color))
-                set.push(this.nodeName(f.x + x, f.y + y, f.w, f.name, f.color))
+                set.push(this.node(f.x + dx, f.y + dy, f.w, f.h, f.color))
+                set.push(this.nodeName(f.x + dx, f.y + dy, f.w, f.name, f.color))
                 break;
             default:
                 return null
@@ -87,14 +96,14 @@ export const InnerDiagram = draw2d.SetFigure.extend({
         }
     },
 
-    deserializeConnection: function (set, c, x, y) {
+    deserializeConnection: function (set, c, dx, dy) {
         console.log('connection', c)
         let pathText = null
         c.v.forEach(v => {
             if (pathText === null) {
-                pathText = `M${v.x + x},${v.y + y}`
+                pathText = `M${v.x + dx},${v.y + dy}`
             } else {
-                pathText = pathText + `L${v.x + x},${v.y + y}`
+                pathText = pathText + `L${v.x + dx},${v.y + dy}`
             }
         })
 
