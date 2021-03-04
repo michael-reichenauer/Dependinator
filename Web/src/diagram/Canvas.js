@@ -11,14 +11,15 @@ import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { random } from '../common/utils'
 import {
     createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
-    createDefaultSystemNode, getCanvasFiguresRect, createDefaultGroupNode, getFigureName
+    createDefaultSystemNode, getCanvasFiguresRect, createDefaultGroupNode, getFigureName, createInnerNode
 } from './figures'
 import { exportCanvas } from './serialization'
 import { canvasDivBackground } from "./colors";
 import { createDefaultConnection } from "./connections";
 import { Tweenable } from "shifty"
 import { moveAndZoomToShowInnerDiagram } from "./innerDiagram";
-import { loadDiagram, saveDiagram } from "./store";
+import { clearStoredDiagram, loadDiagram, saveDiagram } from "./store";
+import { timing } from "../common/timing";
 
 
 const defaultStoreDiagramName = 'diagram'
@@ -106,25 +107,44 @@ export default class Canvas {
 
     commandNewDiagram = () => {
         this.clearDiagram()
-        localStorage.clear()
+        clearStoredDiagram()
         console.log('Cleared all stored')
         addDefaultNewDiagram(this.canvas)
     }
 
     commandShowInnerDiagram = (msg, figure) => {
+        const t = timing()
         this.unselectAll()
-        moveAndZoomToShowInnerDiagram(figure, () => {
+
+        const innerNode = createInnerNode(figure)
+        t.log('created node')
+
+        this.canvas.add(innerNode, figure.x + 2, figure.y + 2)
+        //figure.setVisible(false)
+        t.log('added node')
+
+        moveAndZoomToShowInnerDiagram(innerNode, () => {
             console.log('figure', figure)
-            console.time('show inner')
+            const t2 = timing('innerDiagram')
+            figure.setVisible(true)
+
             this.pushDiagram(figure.getId())
+            t2.log('Pushed')
+
             if (!loadDiagram(this.canvas, figure.getId())) {
                 const group = createDefaultGroupNode(getFigureName(figure))
                 const width = this.canvas.getWidth()
                 const x = 5000 + (width - 1000) / 2
                 this.canvas.add(group, x, 5250)
             }
-            console.timeEnd('show inner')
+            t2.log('showed')
         })
+    }
+
+    commandCloseInnerDiagram = () => {
+        console.time('show Outer')
+        this.popDiagram()
+        console.timeEnd('show Outer')
     }
 
     unselectAll = () => {
@@ -135,11 +155,7 @@ export default class Canvas {
         }
     }
 
-    commandCloseInnerDiagram = () => {
-        console.time('show Outer')
-        this.popDiagram()
-        console.timeEnd('show Outer')
-    }
+
 
     addFigure = (figure, p) => {
         addFigureToCanvas(this.canvas, figure, p)
@@ -215,8 +231,12 @@ export default class Canvas {
 
     pushDiagram = (newStoreName) => {
         const canvas = this.canvas
+        const area = canvas.getScrollArea()
         const canvasData = {
             storeName: this.storeName,
+            zoom: canvas.zoomFactor,
+            x: area.scrollLeft(),
+            y: area.scrollTop(),
             lines: canvas.lines.clone(),
             figures: canvas.figures.clone(),
             commonPorts: canvas.commonPorts,
@@ -251,7 +271,6 @@ export default class Canvas {
         canvas.lineIntersections = new draw2d.util.ArrayList()
 
         canvas.setZoom(1)
-        const area = canvas.getScrollArea()
         area.scrollLeft(5000)
         area.scrollTop(5000)
 
@@ -295,6 +314,11 @@ export default class Canvas {
 
         canvas.figures = new draw2d.util.ArrayList()
         canvas.lines = new draw2d.util.ArrayList()
+        canvas.setZoom(canvasData.zoom)
+        const area = canvas.getScrollArea()
+        area.scrollLeft(canvasData.x)
+        area.scrollTop(canvasData.y)
+
 
         canvasData.figures.each(function (i, e) {
             canvas.add(e)
@@ -315,11 +339,6 @@ export default class Canvas {
 
         this.storeName = canvasData.storeName
     }
-
-    // setAddAllFunction = (canvas) => {
-
-    // }
-
 }
 
 

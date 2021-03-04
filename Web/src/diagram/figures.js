@@ -3,6 +3,7 @@ import { getNodeColor, getNodeFontColor, getNodeBorderColor, canvasBackground } 
 import PubSub from 'pubsub-js'
 import { InnerDiagram } from "./innerDiagram";
 import { timing } from "../common/timing";
+import { loadData, loadDiagram } from "./store";
 
 export const defaultGroupNodeWidth = 1000
 export const defaultGroupNodeHeight = 800
@@ -76,43 +77,35 @@ const deserializeFigure = (f) => {
 
 
 export const createDefaultNode = () => {
-    return createInnerNode()
+    //return createInnerNode()
 
-    // return createNode(
-    //     draw2d.util.UUID.create(),
-    //     defaultNodeWidth, defaultNodeHeight,
-    //     //  nodeColor, nodeBorderColor,
-    //     'Node', 'Description',
-    //     "DeepPurple")
+    return createNode(
+        draw2d.util.UUID.create(),
+        defaultNodeWidth, defaultNodeHeight,
+        //  nodeColor, nodeBorderColor,
+        'Node', 'Description',
+        "DeepPurple")
 }
 
-const createInnerNode = () => {
+export const createInnerNode = (figure) => {
     const t = timing()
-    const storeName = 'diagram'
-    let canvasText = localStorage.getItem(storeName)
-    t.log('loaded')
-    if (canvasText == null) {
-        console.log('no stored diagram for', storeName)
-        return null
-    }
-    //console.log('saved', canvasText)
-    const canvasData = JSON.parse(canvasText)
-    if (canvasData == null || canvasData.figures == null || canvasData.figures.lengths === 0) {
-        console.log('no diagram could be parsed (or no figures) for', storeName)
-        return false
-    }
-    t.log('parsed')
 
-    const color = canvasBackground
-    const innerDiagram = new InnerDiagram({
-        width: defaultNodeWidth,
-        height: defaultNodeHeight,
+    const canvasData = loadData(figure.getId())
+    t.log('loaded data')
+    const color = getNodeColor("DeepPurple")
+    const bgColor = canvasBackground
+    const innerDiagramNode = new InnerDiagram({
+        width: figure.width - 4,
+        height: figure.height - 4,
         keepAspectRatio: true,
-        bgColor: color,
+        color: 'none',
+        bgColor: bgColor,
+        radius: 5,
         userData: { type: 'svg', color: "BlueGrey" },
-    }, canvasData)
+    },
+        canvasData)
     t.log('created')
-    return innerDiagram
+    return innerDiagramNode
 
 }
 

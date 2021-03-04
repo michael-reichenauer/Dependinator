@@ -1,8 +1,8 @@
 import draw2d from "draw2d";
 import { Tweenable } from "shifty"
-import { getNodeBorderColor, getNodeColor, getNodeFontColor } from "./colors";
+import { canvasBackground, canvasDivBackground, getNodeBorderColor, getNodeColor, getNodeFontColor } from "./colors";
 import { connectionColor } from "./connections";
-import { defaultGroupNodeWidth, nodeType, userType, externalType } from "./figures";
+import { defaultGroupNodeWidth, nodeType, userType, externalType, groupType } from "./figures";
 
 
 export const InnerDiagram = draw2d.SetFigure.extend({
@@ -11,93 +11,74 @@ export const InnerDiagram = draw2d.SetFigure.extend({
     init: function (attr, canvasData) {
         this._super(attr);
         this.canvasData = canvasData
+        if (this.canvasData == null) {
+            this.canvasData = {
+                zoom: 1,
+                box: { x: 5090, y: 5250, w: 1000, h: 800 },
+                figures: [{ type: groupType, x: 5090, y: 5250, w: 1000, h: 800, name: 'group' }],
+                connections: [],
+            }
+        }
     },
 
     createSet: function () {
         var set = this.canvas.paper.set()
+        const diagramBox = this.canvasData.box
 
-        // // Set the group node
+        const figureAspectRatio = this.width / this.height
+        const diagramAspectRatio = diagramBox.w / diagramBox.h
 
-
-        console.log('this.figures', this.canvasData.figures)
-        const dx = - this.canvasData.box.x
-        const dy = - this.canvasData.box.y
-        this.canvasData.figures.forEach(f => this.deserializeFigure(set, f, dx, dy))
-        this.canvasData.connections.forEach(c => this.deserializeConnection(set, c, dx, dy))
-
-        const box = this.canvasData.box
-        const b = set.getBBox()
-        console.log('figure box', box)
-        console.log('set box', b)
-
-        console.log('fig', this.width, this.height)
-
-        const wh = this.width / this.height
-
-        let width = 0
-        let height = 0
-
-
-        console.log('wh', wh)
-
-        if (wh < 1) {
-            if (b.x2 < b.y2) {
-                // ?
-                console.log('111', this.width, b.x2)
-                width = (b.x2 / (this.width / wh)) * this.width / wh
-                height = (b.x2 / (this.width / wh)) * this.height / wh
-            } else {
-                // ?
-                console.log('222')
-                width = (b.x2 / (this.width / wh)) * this.width / wh
-                height = (b.x2 / (this.width / wh)) * this.height / wh
-            }
+        // Adjust diagram to keep same aspect ratio as figure
+        let diagramWidth = 0
+        let diagramHeight = 0
+        if (figureAspectRatio > diagramAspectRatio) {
+            diagramWidth = diagramBox.w * (figureAspectRatio / diagramAspectRatio)
+            diagramHeight = diagramBox.h
         } else {
-            if (b.x2 < b.y2) {
-                // ?
-                console.log('333')
-                width = b.y2 * wh
-                height = b.y2
-            } else {
-                // ?
-                console.log('444')
-                width = (b.x2 / (this.width / wh)) * this.width / wh
-                height = (b.x2 / (this.width / wh)) * this.height / wh
-            }
+            diagramWidth = diagramBox.w
+            diagramHeight = diagramBox.h * (diagramAspectRatio / figureAspectRatio)
         }
 
-
-        // const w = 
-        // if 
-        // if (b.width/wh <
-
-        // const m = 100
+        // Draw an invisible rect to ensure diagram keeps aspect rate
+        const margin = 20
         set.push(this.rect({
-            x: 0, y: 0, width: width, height: height,
+            x: 0, y: 0, width: diagramWidth + margin * 2, height: diagramHeight + margin * 2,
             "stroke-width": "0", fill: 'none'
         }))
 
+        // Center diagram within the figure
+        let dx = - diagramBox.x + margin
+        if (diagramBox.w < diagramWidth) {
+            dx = dx + (diagramWidth - diagramBox.w) / 2
+        }
+        let dy = - diagramBox.y + margin
+        if (diagramBox.h < diagramHeight) {
+            dy = dy + (diagramHeight - diagramBox.h) / 2
+        }
+
+        // Add the inner diagram figures and connections
+        this.canvasData.figures.forEach(f => this.addFigure(set, f, dx, dy))
+        this.canvasData.connections.forEach(c => this.addConnection(set, c, dx, dy))
         return set;
     },
 
 
-    deserializeFigure: function (set, f, dx, dy) {
+    addFigure: function (set, f, dx, dy) {
         // console.log('figure', f)
         switch (f.type) {
             case nodeType:
             case userType:
             case externalType:
-                set.push(this.node(f.x + dx, f.y + dy, f.w, f.h, f.color))
-                set.push(this.nodeName(f.x + dx, f.y + dy, f.w, f.name, f.color))
+                set.push(this.createNode(f.x + dx, f.y + dy, f.w, f.h, f.color))
+                set.push(this.createNodeName(f.x + dx, f.y + dy, f.w, f.name, f.color))
                 break;
-            default:
-                return null
-            //throw new Error('Unexpected node typw!');
+            case groupType:
+                set.push(this.createGroupNode(f.x + dx, f.y + dy, f.w, f.h))
+                break;
         }
     },
 
-    deserializeConnection: function (set, c, dx, dy) {
-        console.log('connection', c)
+    addConnection: function (set, c, dx, dy) {
         let pathText = null
         c.v.forEach(v => {
             if (pathText === null) {
@@ -113,15 +94,7 @@ export const InnerDiagram = draw2d.SetFigure.extend({
         set.push(path)
     },
 
-
-
-    text: function (attr) {
-        const f = this.canvas.paper.text()
-        f.attr(attr)
-        return f
-    },
-
-    nodeName: function (x, y, w, name, colorName) {
+    createNodeName: function (x, y, w, name, colorName) {
         const fontColor = '#' + getNodeFontColor(colorName).hex()
         const f = this.canvas.paper.text()
         f.attr({
@@ -132,8 +105,7 @@ export const InnerDiagram = draw2d.SetFigure.extend({
     },
 
 
-
-    node: function (x, y, w, h, colorName) {
+    createNode: function (x, y, w, h, colorName) {
         const color = '#' + getNodeColor(colorName).hex()
         const borderColor = '#' + getNodeBorderColor(colorName).hex()
         const f = this.canvas.paper.rect()
@@ -146,12 +118,24 @@ export const InnerDiagram = draw2d.SetFigure.extend({
     },
 
 
+    createGroupNode: function (x, y, w, h) {
+        const color = '#' + canvasBackground.hex()
+        const borderColor = '#' + canvasBackground.getIdealTextColor().hex()
+        const f = this.canvas.paper.rect()
+        f.attr({
+            x: x, y: y, width: w, height: h,
+            r: 20, "stroke-width": "1", 'stroke-dasharray': '- ', fill: 'none',
+            stroke: borderColor
+        })
+        return f
+    },
+
+
     rect: function (attr) {
         const f = this.canvas.paper.rect()
         f.attr(attr)
         return f
     }
-
 });
 
 
