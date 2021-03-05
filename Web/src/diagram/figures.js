@@ -3,7 +3,7 @@ import { getNodeColor, getNodeFontColor, getNodeBorderColor, canvasBackground } 
 import PubSub from 'pubsub-js'
 import { InnerDiagram } from "./innerDiagram";
 import { timing } from "../common/timing";
-import { loadData, loadDiagram } from "./store";
+import { loadData } from "./store";
 
 export const defaultGroupNodeWidth = 1000
 export const defaultGroupNodeHeight = 800
@@ -90,9 +90,9 @@ export const createDefaultNode = () => {
 export const createInnerNode = (figure) => {
     const t = timing()
 
+    const name = getFigureName(figure)
     const canvasData = loadData(figure.getId())
     t.log('loaded data')
-    const color = getNodeColor("DeepPurple")
     const bgColor = canvasBackground
     const innerDiagramNode = new InnerDiagram({
         width: figure.width - 4,
@@ -103,7 +103,7 @@ export const createInnerNode = (figure) => {
         radius: 5,
         userData: { type: 'svg', color: "BlueGrey" },
     },
-        canvasData)
+        canvasData, name)
     t.log('created')
     return innerDiagramNode
 
@@ -164,7 +164,7 @@ export const createGroupNode = (id, width, height, name, description, colorName)
 
     const nameLabel = new draw2d.shape.basic.Label({
         text: name, stroke: 0,
-        fontSize: 14, fontColor: fontColor, bold: true,
+        fontSize: 30, fontColor: fontColor, bold: true,
         userData: { type: "name" }
     })
 
@@ -233,7 +233,9 @@ const createCommonNode = (type, id, width, height, name, description, colorName,
     if (icon != null) {
         addIcon(figure, icon, fontColor, color);
     }
-    addInnerDiagramIcon(figure, fontColor, color)
+    if (type === nodeType) {
+        addInnerDiagramIcon(figure, fontColor, color)
+    }
 
     addPorts(figure)
     return figure
@@ -374,7 +376,7 @@ const GroupNameLocator = draw2d.layout.locator.Locator.extend({
     },
     relocate: function (index, target) {
         let targetBoundingBox = target.getBoundingBox()
-        target.setPosition(0, -(targetBoundingBox.h + 2))
+        target.setPosition(0, -(targetBoundingBox.h - 7))
     }
 });
 

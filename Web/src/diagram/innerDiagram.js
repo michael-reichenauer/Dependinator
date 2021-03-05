@@ -1,34 +1,37 @@
 import draw2d from "draw2d";
 import { Tweenable } from "shifty"
-import { canvasBackground, canvasDivBackground, getNodeBorderColor, getNodeColor, getNodeFontColor } from "./colors";
+import { canvasBackground, getNodeBorderColor, getNodeColor, getNodeFontColor } from "./colors";
 import { connectionColor } from "./connections";
-import { defaultGroupNodeWidth, nodeType, userType, externalType, groupType } from "./figures";
+import { nodeType, userType, externalType, groupType } from "./figures";
 
 
 export const InnerDiagram = draw2d.SetFigure.extend({
     NAME: "InnerDiagram",
 
-    init: function (attr, canvasData) {
+    init: function (attr, canvasData, name) {
         this._super(attr);
+        this.name = name
         this.canvasData = canvasData
+
         if (this.canvasData == null) {
             this.canvasData = {
                 zoom: 1,
                 box: { x: 5090, y: 5250, w: 1000, h: 800 },
-                figures: [{ type: groupType, x: 5090, y: 5250, w: 1000, h: 800, name: 'group' }],
+                figures: [{ type: groupType, x: 5090, y: 5250, w: 1000, h: 800, name: name }],
                 connections: [],
             }
         }
     },
 
     createSet: function () {
-        var set = this.canvas.paper.set()
+        const margin = 30
+        const set = this.canvas.paper.set()
         const diagramBox = this.canvasData.box
 
         const figureAspectRatio = this.width / this.height
         const diagramAspectRatio = diagramBox.w / diagramBox.h
 
-        // Adjust diagram to keep same aspect ratio as figure
+        // Adjust inner diagram width and height to fit and keep same aspect ratio as figure
         let diagramWidth = 0
         let diagramHeight = 0
         if (figureAspectRatio > diagramAspectRatio) {
@@ -39,26 +42,36 @@ export const InnerDiagram = draw2d.SetFigure.extend({
             diagramHeight = diagramBox.h * (diagramAspectRatio / figureAspectRatio)
         }
 
-        // Draw an invisible rect to ensure diagram keeps aspect rate
-        const margin = 20
+        // Add some margin around the inner diagram
+        diagramWidth = diagramWidth + margin * 2
+        diagramHeight = diagramHeight + margin * 2
+
+        // Draw an invisible rect to ensure diagram keeps aspect rate within the figure
         set.push(this.rect({
-            x: 0, y: 0, width: diagramWidth + margin * 2, height: diagramHeight + margin * 2,
+            x: 0, y: 0, width: diagramWidth, height: diagramHeight,
             "stroke-width": "0", fill: 'none'
         }))
 
-        // Center diagram within the figure
-        let dx = - diagramBox.x + margin
+
+        // Center diagram within the figure inner diagram rect
+        let dx = - diagramBox.x
         if (diagramBox.w < diagramWidth) {
             dx = dx + (diagramWidth - diagramBox.w) / 2
         }
-        let dy = - diagramBox.y + margin
+        let dy = - diagramBox.y + 10   // adjust +10 for group name
         if (diagramBox.h < diagramHeight) {
             dy = dy + (diagramHeight - diagramBox.h) / 2
         }
 
-        // Add the inner diagram figures and connections
+        // Add the inner diagram figures and connections (centered within figure)
         this.canvasData.figures.forEach(f => this.addFigure(set, f, dx, dy))
         this.canvasData.connections.forEach(c => this.addConnection(set, c, dx, dy))
+
+        // Set the inner diagram zoom factor, used when zooming outer diagram before showing inner
+        console.log('dx dy', dx, dy, diagramBox)
+        this.dx = dx
+        this.dy = dy
+        this.innerZoom = this.width / diagramWidth
         return set;
     },
 
@@ -74,7 +87,11 @@ export const InnerDiagram = draw2d.SetFigure.extend({
                 break;
             case groupType:
                 set.push(this.createGroupNode(f.x + dx, f.y + dy, f.w, f.h))
+                set.push(this.createGroupName(f.x + dx, f.y + dy, f.w, f.name, f.color))
                 break;
+            default:
+                // Ignore other types
+                break
         }
     },
 
@@ -104,6 +121,15 @@ export const InnerDiagram = draw2d.SetFigure.extend({
         return f
     },
 
+    createGroupName: function (x, y, w, name, colorName) {
+        const fontColor = '#' + canvasBackground.getIdealTextColor().hex()
+        const f = this.canvas.paper.text()
+        f.attr({
+            x: x + 40, y: y - 15, text: name, fill: fontColor,
+            'font-size': 30, 'font-weight': 'bold'
+        })
+        return f
+    },
 
     createNode: function (x, y, w, h, colorName) {
         const color = '#' + getNodeColor(colorName).hex()
@@ -119,12 +145,11 @@ export const InnerDiagram = draw2d.SetFigure.extend({
 
 
     createGroupNode: function (x, y, w, h) {
-        const color = '#' + canvasBackground.hex()
         const borderColor = '#' + canvasBackground.getIdealTextColor().hex()
         const f = this.canvas.paper.rect()
         f.attr({
             x: x, y: y, width: w, height: h,
-            r: 20, "stroke-width": "1", 'stroke-dasharray': '- ', fill: 'none',
+            r: 5, "stroke-width": "1", 'stroke-dasharray': '- ', fill: 'none',
             stroke: borderColor
         })
         return f
@@ -177,8 +202,7 @@ const zoomToShowInnerDiagram = (figure, done) => {
     const area = canvas.getScrollArea()
 
     const zoom = canvas.zoomFactor
-
-    const targetZoom = figure.width / defaultGroupNodeWidth
+    const targetZoom = figure.innerZoom
 
     const tweenable = new Tweenable()
     tweenable.tween({
@@ -201,7 +225,7 @@ const zoomToShowInnerDiagram = (figure, done) => {
 
 const getTargetScrollPoint = (canvas, figure, zoom) => {
     const figurePoint = { x: figure.x + figure.width / 2, y: figure.y }
-    const canvasPoint = { x: zoom * canvas.getWidth() / 2, y: zoom * 250 }
+    const canvasPoint = { x: (canvas.getWidth() / 2) * zoom, y: 250 * zoom }
 
     return { x: figurePoint.x - canvasPoint.x, y: figurePoint.y - canvasPoint.y }
 }

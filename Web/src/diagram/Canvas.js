@@ -11,7 +11,7 @@ import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { random } from '../common/utils'
 import {
     createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
-    createDefaultSystemNode, getCanvasFiguresRect, createDefaultGroupNode, getFigureName, createInnerNode
+    createDefaultSystemNode, getCanvasFiguresRect, createInnerNode, getFigureName, createDefaultGroupNode,
 } from './figures'
 import { exportCanvas } from './serialization'
 import { canvasDivBackground } from "./colors";
@@ -111,23 +111,23 @@ export default class Canvas {
         console.log('Cleared all stored')
         addDefaultNewDiagram(this.canvas)
     }
+    innerFigureParent = null
 
     commandShowInnerDiagram = (msg, figure) => {
         const t = timing()
         this.unselectAll()
 
+        this.innerFigureParent = figure
         const innerNode = createInnerNode(figure)
         t.log('created node')
 
         this.canvas.add(innerNode, figure.x + 2, figure.y + 2)
-        //figure.setVisible(false)
         t.log('added node')
 
         moveAndZoomToShowInnerDiagram(innerNode, () => {
-            console.log('figure', figure)
             const t2 = timing('innerDiagram')
-            figure.setVisible(true)
 
+            this.canvas.remove(innerNode)
             this.pushDiagram(figure.getId())
             t2.log('Pushed')
 
@@ -137,6 +137,13 @@ export default class Canvas {
                 const x = 5000 + (width - 1000) / 2
                 this.canvas.add(group, x, 5250)
             }
+            const b = getCanvasFiguresRect(this.canvas)
+
+            const area = this.canvas.getScrollArea()
+            this.canvas.setZoom(1)
+            area.scrollLeft(b.x - (this.canvas.getWidth() - b.w) / 2)
+            area.scrollTop(b.y - 250 - 40)
+
             t2.log('showed')
         })
     }
@@ -144,6 +151,10 @@ export default class Canvas {
     commandCloseInnerDiagram = () => {
         console.time('show Outer')
         this.popDiagram()
+        const figure = this.innerFigureParent
+        const innerNode = createInnerNode(figure)
+        this.canvas.add(innerNode, figure.x + 2, figure.y + 2)
+
         console.timeEnd('show Outer')
     }
 
