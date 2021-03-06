@@ -44,7 +44,7 @@ export const InnerDiagram = draw2d.SetFigure.extend({
 
         // Add some margin around the inner diagram
         diagramWidth = diagramWidth + margin * 2
-        diagramHeight = diagramHeight + margin * 2
+        diagramHeight = diagramHeight + margin * 2 - 30
 
         // Draw an invisible rect to ensure diagram keeps aspect rate within the figure
         set.push(this.rect({
@@ -58,7 +58,7 @@ export const InnerDiagram = draw2d.SetFigure.extend({
         if (diagramBox.w < diagramWidth) {
             dx = dx + (diagramWidth - diagramBox.w) / 2
         }
-        let dy = - diagramBox.y + 10   // adjust +10 for group name
+        let dy = - diagramBox.y + 13   // adjust +10 for group name
         if (diagramBox.h < diagramHeight) {
             dy = dy + (diagramHeight - diagramBox.h) / 2
         }
@@ -125,7 +125,7 @@ export const InnerDiagram = draw2d.SetFigure.extend({
         const fontColor = '#' + canvasBackground.getIdealTextColor().hex()
         const f = this.canvas.paper.text()
         f.attr({
-            x: x + 40, y: y - 15, text: name, fill: fontColor,
+            x: x + 42, y: y - 14, text: name, fill: fontColor,
             'font-size': 30, 'font-weight': 'bold'
         })
         return f

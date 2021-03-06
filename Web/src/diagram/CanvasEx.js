@@ -1,15 +1,22 @@
+import draw2d from "draw2d";
+import { timing } from "../common/timing";
 
-const CanvasEx = draw2d.Canvas.extend(
+export const CanvasEx = draw2d.Canvas.extend(
     {
         init: function (canvasId, width, height) {
             this._super(canvasId, width, height);
         },
 
         addAll: function (figures) {
-            for (var i = 0; i < figures.length; i++) {
-                var figure = figures[i], x = figures[i].x, y = figures[i].y;
+            const t = timing()
+            for (let i = 0; i < figures.length; i++) {
+                let figure = figures[i]
+                let x = figures[i].x
+                let y = figures[i].y;
 
-                if (figure.getCanvas() === this) { return; }
+                if (figure.getCanvas() === this) {
+                    return;
+                }
 
                 if (figure instanceof draw2d.shape.basic.Line) {
                     this.lines.add(figure);
@@ -45,20 +52,19 @@ const CanvasEx = draw2d.Canvas.extend(
                     this.calculateConnectionIntersection();
                 }
             }
-            console.debug("Added all figures", performance.now());
+            //t.log("Added all figures");
 
-            console.debug("Repainting figures", performance.now());
             this.figures.each(function (i, fig) {
                 fig.repaint();
             });
-            console.debug("Repainted figures", performance.now());
+            //t.log("Repainted figures");
 
-            console.debug("Repainting lines", performance.now());
             this.lines.each(function (i, line) {
                 line.svgPathString = null;
                 line.repaint();
             });
-            console.debug("Repainted lines", performance.now());
+            // t.log("Repainted lines");
+            t.log("done");
             return this;
         }
     }

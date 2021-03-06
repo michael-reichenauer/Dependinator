@@ -1,7 +1,7 @@
 export class Timing {
     constructor(label, isStart) {
         this.label = label
-        this.start = Date.now()
+        this.start = performance.now()
         this.current = this.start
         if (isStart) {
             console.log(`${this.label}:`, 'Start')
@@ -9,12 +9,16 @@ export class Timing {
     }
 
     log(...properties) {
-        const now = Date.now()
+        const now = performance.now()
+        let currentInterval = now - this.current
+        let totalInterval = now - this.start
+        currentInterval = currentInterval > 5 ? currentInterval.toFixed(0) : currentInterval.toFixed(1)
+        totalInterval = totalInterval > 5 ? totalInterval.toFixed(0) : totalInterval.toFixed(1)
 
         if (this.label != null) {
-            console.log(`${this.label}:`, ...properties, `${now - this.current} ms (${now - this.start} ms)`)
+            console.log(`${this.label}:`, ...properties, `${currentInterval} ms (${totalInterval} ms)`)
         } else {
-            console.log(...properties, `${now - this.current} ms (${now - this.start} m)`)
+            console.log(...properties, `${currentInterval} ms (${totalInterval} m)`)
         }
         this.current = now
         return this

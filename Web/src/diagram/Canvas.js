@@ -20,7 +20,7 @@ import { Tweenable } from "shifty"
 import { moveAndZoomToShowInnerDiagram } from "./innerDiagram";
 import { clearStoredDiagram, loadDiagram, saveDiagram } from "./store";
 import { timing } from "../common/timing";
-
+import { CanvasEx } from './CanvasEx'
 
 const defaultStoreDiagramName = 'diagram'
 
@@ -48,7 +48,7 @@ export default class Canvas {
 
     createCanvas(canvasId) {
         this.canvasId = canvasId
-        const canvas = new draw2d.Canvas(canvasId)
+        const canvas = new CanvasEx(canvasId)
         canvas.setScrollArea("#" + canvasId)
         canvas.setDimension(new draw2d.geo.Rectangle(0, 0, 10000, 10000))
         canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, 10000, 10000)
@@ -98,6 +98,7 @@ export default class Canvas {
         saveDiagram(this.canvas, this.storName)
     }
 
+
     commandAddNode = () => this.addFigure(createDefaultNode(), this.randomCenterPoint())
     commandAddUserNode = () => this.addFigure(createDefaultUserNode(), this.randomCenterPoint())
     commandAddExternalNode = () => this.addFigure(createDefaultExternalNode(), this.randomCenterPoint())
@@ -125,37 +126,44 @@ export default class Canvas {
         t.log('added node')
 
         moveAndZoomToShowInnerDiagram(innerNode, () => {
+            // setTimeout(() => {
             const t2 = timing('innerDiagram')
 
             this.canvas.remove(innerNode)
+            t2.log('removed diagram node')
             this.pushDiagram(figure.getId())
-            t2.log('Pushed')
 
+            t2.log('Pushed')
             if (!loadDiagram(this.canvas, figure.getId())) {
                 const group = createDefaultGroupNode(getFigureName(figure))
                 const width = this.canvas.getWidth()
                 const x = 5000 + (width - 1000) / 2
                 this.canvas.add(group, x, 5250)
             }
+            t2.log('loaded diagram')
             const b = getCanvasFiguresRect(this.canvas)
 
             const area = this.canvas.getScrollArea()
             this.canvas.setZoom(1)
             area.scrollLeft(b.x - (this.canvas.getWidth() - b.w) / 2)
-            area.scrollTop(b.y - 250 - 40)
+            area.scrollTop(b.y - 250 - 30)
+
 
             t2.log('showed')
+            //}, 3000);
+
         })
     }
 
     commandCloseInnerDiagram = () => {
-        console.time('show Outer')
+        const t = timing()
         this.popDiagram()
+        t.log('popped diagram')
         const figure = this.innerFigureParent
         const innerNode = createInnerNode(figure)
+        t.log('created inned diagram node')
         this.canvas.add(innerNode, figure.x + 2, figure.y + 2)
-
-        console.timeEnd('show Outer')
+        t.log('added diagram node')
     }
 
     unselectAll = () => {
@@ -281,9 +289,9 @@ export default class Canvas {
         canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
         canvas.lineIntersections = new draw2d.util.ArrayList()
 
-        canvas.setZoom(1)
-        area.scrollLeft(5000)
-        area.scrollTop(5000)
+        //canvas.setZoom(1)
+        // area.scrollLeft(5000)
+        // area.scrollTop(5000)
 
         this.diagramStack.push(canvasData)
         this.storeName = newStoreName

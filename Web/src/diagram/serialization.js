@@ -20,17 +20,17 @@ export const serializeCanvas = (canvas) => {
 
 
 export const deserializeCanvas = (canvas, canvasData) => {
-    const figures = deserializeFigures(canvasData.figures)
-    for (let i = 0; i < figures.length; i++) {
-        canvas.add(figures[i])
-    }
+    // const figures = deserializeFigures(canvasData.figures)
+    // for (let i = 0; i < figures.length; i++) {
+    //     canvas.add(figures[i])
+    // }
 
-    const connections = deserializeConnections(canvas, canvasData.connections)
-    for (let i = 0; i < connections.length; i++) {
-        canvas.add(connections[i])
-    }
-    // canvas.addAll(deserializeFigures(canvasData.figures))
-    // canvas.addAll(deserializeConnections(canvas, canvasData.connections))
+    // const connections = deserializeConnections(canvas, canvasData.connections)
+    // for (let i = 0; i < connections.length; i++) {
+    //     canvas.add(connections[i])
+    // }
+    canvas.addAll(deserializeFigures(canvasData.figures.concat(canvasData.connections)))
+    canvas.addAll(deserializeConnections(canvas, canvasData.connections))
 }
 
 
