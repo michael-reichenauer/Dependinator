@@ -17,7 +17,7 @@ import { exportCanvas } from './serialization'
 import { canvasDivBackground } from "./colors";
 import { createDefaultConnection } from "./connections";
 import { Tweenable } from "shifty"
-import { moveAndZoomToShowInnerDiagram } from "./innerDiagram";
+import { moveAndZoomToShowInnerDiagram, moveAndZoomToShowOuterDiagram, zoomToShowOuterDiagram } from "./innerDiagram";
 import { clearStoredDiagram, loadDiagram, saveDiagram } from "./store";
 import { timing } from "../common/timing";
 import { CanvasEx } from './CanvasEx'
@@ -112,46 +112,53 @@ export default class Canvas {
         console.log('Cleared all stored')
         addDefaultNewDiagram(this.canvas)
     }
-    innerFigureParent = null
+
 
     commandShowInnerDiagram = (msg, figure) => {
         const t = timing()
         this.unselectAll()
 
-        this.innerFigureParent = figure
+        const area = this.canvas.getScrollArea()
+
+        this.outerFigureData = {
+            figure: figure,
+            x: area.scrollLeft(),
+            y: area.scrollTop(),
+            zoom: this.canvas.zoomFactor
+        }
+
         const innerNode = createInnerNode(figure)
         t.log('created node')
 
         this.canvas.add(innerNode, figure.x + 2, figure.y + 2)
         t.log('added node')
 
-        moveAndZoomToShowInnerDiagram(innerNode, () => {
-            // setTimeout(() => {
-            const t2 = timing('innerDiagram')
+        moveAndZoomToShowInnerDiagram(innerNode, innerNode.marginY, () => {
+            setTimeout(() => {
+                const t2 = timing('innerDiagram')
 
-            this.canvas.remove(innerNode)
-            t2.log('removed diagram node')
-            this.pushDiagram(figure.getId())
+                this.canvas.remove(innerNode)
+                t2.log('removed diagram node')
+                this.pushDiagram(figure.getId())
 
-            t2.log('Pushed')
-            if (!loadDiagram(this.canvas, figure.getId())) {
-                const group = createDefaultGroupNode(getFigureName(figure))
-                const width = this.canvas.getWidth()
-                const x = 5000 + (width - 1000) / 2
-                this.canvas.add(group, x, 5250)
-            }
-            t2.log('loaded diagram')
-            const b = getCanvasFiguresRect(this.canvas)
+                t2.log('Pushed')
+                if (!loadDiagram(this.canvas, figure.getId())) {
+                    const group = createDefaultGroupNode(getFigureName(figure))
+                    const width = this.canvas.getWidth()
+                    const x = 5000 + (width - 1000) / 2
+                    this.canvas.add(group, x, 5250)
+                }
+                t2.log('loaded diagram')
+                const b = getCanvasFiguresRect(this.canvas)
 
-            const area = this.canvas.getScrollArea()
-            this.canvas.setZoom(1)
-            area.scrollLeft(b.x - (this.canvas.getWidth() - b.w) / 2)
-            area.scrollTop(b.y - 250 - 30)
+                const area = this.canvas.getScrollArea()
+                this.canvas.setZoom(1)
+                area.scrollLeft(b.x - (this.canvas.getWidth() - b.w) / 2)
+                area.scrollTop(b.y - 250)
 
 
-            t2.log('showed')
-            //}, 3000);
-
+                t2.log('showed')
+            }, 3000);
         })
     }
 
@@ -159,11 +166,19 @@ export default class Canvas {
         const t = timing()
         this.popDiagram()
         t.log('popped diagram')
-        const figure = this.innerFigureParent
+        const figure = this.outerFigureData.figure
+        const targetZoom = this.outerFigureData.zoom
+        const targetPoint = { x: this.outerFigureData.x, y: this.outerFigureData.y }
         const innerNode = createInnerNode(figure)
         t.log('created inned diagram node')
         this.canvas.add(innerNode, figure.x + 2, figure.y + 2)
-        t.log('added diagram node')
+        setTimeout(() => {
+            t.log('added diagram node')
+            moveAndZoomToShowOuterDiagram(figure, targetZoom, targetPoint, innerNode.marginY, () => {
+                this.canvas.remove(innerNode)
+            })
+        }, 0);
+
     }
 
     unselectAll = () => {

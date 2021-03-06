@@ -376,7 +376,7 @@ const GroupNameLocator = draw2d.layout.locator.Locator.extend({
     },
     relocate: function (index, target) {
         let targetBoundingBox = target.getBoundingBox()
-        target.setPosition(0, -(targetBoundingBox.h - 7))
+        target.setPosition(0, -(targetBoundingBox.h - 36))
     }
 });
 
@@ -385,6 +385,7 @@ const ContractIconLocator = draw2d.layout.locator.Locator.extend({
         this._super();
     },
     relocate: function (index, target) {
-        target.setPosition(6, 5)
+        let parentBoundingBox = target.getParent().getBoundingBox()
+        target.setPosition(parentBoundingBox.w - 23, 5)
     }
 });
