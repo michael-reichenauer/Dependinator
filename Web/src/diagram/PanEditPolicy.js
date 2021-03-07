@@ -1,4 +1,5 @@
 import draw2d from "draw2d";
+import { InnerDiagram } from "./innerDiagramFigure";
 
 
 export let PanEditPolicy = draw2d.policy.canvas.BoundingboxSelectionPolicy.extend(
@@ -29,10 +30,17 @@ export let PanEditPolicy = draw2d.policy.canvas.BoundingboxSelectionPolicy.exten
                 if (figure instanceof draw2d.shape.basic.GhostVertexResizeHandle) {
                     // Clicked on connection vertex handle, add a new vertex
                     figure.onClick()
+                    return
+                }
+                if (figure instanceof InnerDiagram) {
+                    // Clicked on connection vertex handle, add a new vertex
+                    figure.onClick()
+                    return
                 }
                 if (figure instanceof draw2d.shape.icon.Diagram || figure instanceof draw2d.shape.icon.Contract) {
                     // Clicked on connection vertex handle, add a new vertex
-                    figure.onClickDiagram()
+                    figure.onClick()
+                    return
                 }
                 return
             }

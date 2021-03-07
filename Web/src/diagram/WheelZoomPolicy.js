@@ -43,6 +43,7 @@ export let WheelZoomPolicy = draw2d.policy.canvas.ZoomPolicy.extend(
       let newZoom = ((Math.min(10, Math.max(0.1, this.canvas.zoomFactor + wheelDelta)) * 10000 | 0) / 10000)
       newZoom = Math.min(newZoom, Math.max(this.canvas.initialWidth / this.canvas.getWidth(), this.canvas.initialHeight / this.canvas.getHeight()))
 
+      // console.log('zoom', this.canvas.zoomFactor, newZoom)
       // Center zoom around mouse pointer
       if (this.center === null) {
         let client = this.canvas.fromCanvasToDocumentCoordinate(x, y)

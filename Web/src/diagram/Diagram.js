@@ -111,5 +111,6 @@ function HandleToolbarCommands(canvas) {
     PubSub.subscribe('diagram.Export', () => exportDiagram(canvas))
     PubSub.subscribe('diagram.ShowInnerDiagram', canvas.commandShowInnerDiagram)
     PubSub.subscribe('diagram.CloseInnerDiagram', canvas.commandCloseInnerDiagram)
+    PubSub.subscribe('diagram.EditInnerDiagram', canvas.commandEditInnerDiagram)
 
 }
