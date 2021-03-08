@@ -143,7 +143,6 @@ export const createDefaultGroupNode = (name) => {
 }
 
 export const createGroupNode = (id, width, height, name, description, colorName) => {
-    const type = groupType
     const color = canvasBackground
     const borderColor = color.darker(0.8)
     const fontColor = borderColor
@@ -153,7 +152,7 @@ export const createGroupNode = (id, width, height, name, description, colorName)
         width: width, height: height,
         bgColor: color, color: borderColor, dasharray: '- ',
         radius: 5,
-        userData: { type: type, color: colorName }
+        userData: { type: groupType, color: colorName }
     });
     figure.setDeleteable(false)
 
@@ -188,10 +187,10 @@ export const createExternalNode = (id, width, height, name, description, colorNa
 export const setNodeColor = (figure, colorName) => {
     figure.setBackgroundColor(getNodeColor(colorName))
     const children = figure.getChildren().asArray()
-    const nameLabel = children.find(c => c.userData?.type === 'name');
-    const descriptionLabel = children.find(c => c.userData?.type === 'description');
+    const nameLabel = getNameLabel(figure)
+    const descriptionLabel = getDescriptionLabel(figure);
     const icon = children.find(c => c instanceof draw2d.shape.icon.Icon);
-    const diagramIcon = children.find(c => c instanceof draw2d.shape.icon.Diagram);
+    const diagramIcon = getDiagramIcon(figure);
 
     nameLabel?.setFontColor(getNodeFontColor(colorName))
     descriptionLabel?.setFontColor(getNodeFontColor(colorName))
@@ -201,6 +200,21 @@ export const setNodeColor = (figure, colorName) => {
     diagramIcon?.setColor(getNodeFontColor(colorName))
 
     figure.setUserData({ ...figure.getUserData(), color: colorName })
+}
+
+const getNameLabel = (figure) => {
+    return figure.getChildren().asArray()
+        .find(c => c.userData?.type === 'name')
+}
+
+const getDescriptionLabel = (figure) => {
+    return figure.getChildren().asArray()
+        .find(c => c.userData?.type === 'description')
+}
+
+const getDiagramIcon = (figure) => {
+    return figure.getChildren().asArray()
+        .find(c => c instanceof draw2d.shape.icon.Diagram)
 }
 
 
@@ -269,6 +283,10 @@ const addInnerDiagramIcon = (figure, color, bgColor) => {
 
 const showInnerDiagram = (figure, color, bgColor) => {
     const t = timing()
+    getNameLabel(figure)?.setVisible(false)
+    getDescriptionLabel(figure)?.setVisible(false)
+    getDiagramIcon(figure)?.setVisible(false)
+
     const innerDiagramNode = createInnerNode(figure)
     innerDiagramNode.onClick = onClickHandler(
         () => hideInnerDiagram(figure),
@@ -284,6 +302,10 @@ export const getInnerDiagram = (figure) => {
 
 const hideInnerDiagram = (figure) => {
     const t = timing()
+    getNameLabel(figure)?.setVisible(true)
+    getDescriptionLabel(figure)?.setVisible(true)
+    getDiagramIcon(figure)?.setVisible(true)
+
     const innerDiagramNode = getInnerDiagram(figure)
     if (innerDiagramNode != null) {
         figure.remove(innerDiagramNode, new InnerDiagramLocator())

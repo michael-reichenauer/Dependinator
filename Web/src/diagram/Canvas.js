@@ -18,6 +18,7 @@ import { Tweenable } from "shifty"
 import { clearStoredDiagram, loadDiagram, saveDiagram } from "./store";
 import { timing } from "../common/timing";
 import { CanvasEx } from './CanvasEx'
+import { moveAndZoomEnough, zoomEnough } from "./innerDiagram";
 
 const defaultStoreDiagramName = 'diagram'
 
@@ -113,7 +114,8 @@ export default class Canvas {
 
     commandEditInnerDiagram = (msg, figure) => {
         this.setProgress(true)
-        setTimeout(() => {
+        this.unselectAll()
+        moveAndZoomEnough(figure, () => {
             const t = timing()
 
             const innerDiagram = getInnerDiagram(figure)
@@ -149,21 +151,19 @@ export default class Canvas {
             area.scrollTop((b.y) / this.canvas.zoomFactor - yd)
             this.setProgress(false)
             t.log('scrolled diagram')
-        }, 10);
-
+        })
     }
 
 
     commandCloseInnerDiagram = () => {
         this.setProgress(true)
+        this.unselectAll()
         setTimeout(() => {
             const t = timing()
             this.popDiagram()
             this.setProgress(false)
             t.log('popped diagram')
-        }, 10);
-
-
+        }, 30);
 
 
         // const figure = this.outerFigureData.figure

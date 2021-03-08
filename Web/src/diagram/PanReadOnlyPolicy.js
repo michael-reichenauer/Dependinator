@@ -1,4 +1,5 @@
 import draw2d from "draw2d";
+import { groupType } from "./figures";
 import { InnerDiagram } from "./innerDiagramFigure";
 
 

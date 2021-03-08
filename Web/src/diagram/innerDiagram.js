@@ -1,6 +1,65 @@
 import { Tweenable } from "shifty"
+import { getInnerDiagram } from "./figures"
 
 
+
+
+export const moveAndZoomEnough = (figure, done) => {
+    moveEnough(figure, () => zoomEnough(figure, done))
+}
+
+const moveEnough = (figure, done) => {
+    const canvas = figure.getCanvas()
+    const area = canvas.getScrollArea()
+
+    // Calculate how to scroll from current point to get figure to the center near the top
+    const zoom = canvas.zoomFactor
+    const sourcePoint = { x: area.scrollLeft() * zoom, y: area.scrollTop() * zoom }
+    const targetPoint = getTargetPoint(canvas, figure, zoom)
+
+    // Scroll step by step from source point to target point
+    const tweenable = new Tweenable()
+    tweenable.tween({
+        from: sourcePoint,
+        to: targetPoint,
+        duration: 500,
+        easing: "easeOutSine",
+        step: state => {
+            area.scrollLeft(state.x / zoom)
+            area.scrollTop(state.y / zoom)
+        },
+        finish: data => {
+            done()
+        }
+    })
+}
+
+
+const zoomEnough = (figure, done) => {
+    const canvas = figure.getCanvas()
+    const area = canvas.getScrollArea()
+
+    const zoom = canvas.zoomFactor
+    const targetZoom = getInnerDiagram(figure).innerZoom
+
+    const tweenable = new Tweenable()
+    tweenable.tween({
+        from: { zoom: zoom },
+        to: { zoom: targetZoom },
+        duration: 500,
+        easing: "easeOutSine",
+        step: state => {
+            canvas.setZoom(state.zoom, false)
+
+            const tp = getTargetPoint(canvas, figure, state.zoom)
+            area.scrollLeft(tp.x / state.zoom)
+            area.scrollTop(tp.y / state.zoom)
+        },
+        finish: data => {
+            done()
+        }
+    })
+}
 
 
 export const moveAndZoomToShowOuterDiagram = (figure, targetZoom, targetPoint, marginY, done) => {
@@ -123,6 +182,13 @@ const zoomToShowInnerDiagram = (figure, marginY, done) => {
 const getTargetScrollPoint = (canvas, figure, zoom, marginY) => {
     const figurePoint = { x: figure.x + figure.width / 2, y: figure.y }
     const canvasPoint = { x: (canvas.getWidth() / 2) * zoom, y: (250 - marginY) * zoom }
+
+    return { x: figurePoint.x - canvasPoint.x, y: figurePoint.y - canvasPoint.y }
+}
+
+const getTargetPoint = (canvas, figure, zoom) => {
+    const figurePoint = { x: figure.x + figure.width / 2, y: figure.y + figure.height / 2 }
+    const canvasPoint = { x: (canvas.getWidth() / 2) * zoom, y: (canvas.getHeight() / 2) * zoom }
 
     return { x: figurePoint.x - canvasPoint.x, y: figurePoint.y - canvasPoint.y }
 }
