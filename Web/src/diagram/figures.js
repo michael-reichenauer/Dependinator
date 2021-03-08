@@ -78,8 +78,6 @@ const deserializeFigure = (f) => {
 
 
 export const createDefaultNode = () => {
-    //return createInnerNode()
-
     return createNode(
         draw2d.util.UUID.create(),
         defaultNodeWidth, defaultNodeHeight,
@@ -89,11 +87,9 @@ export const createDefaultNode = () => {
 }
 
 const createInnerNode = (figure) => {
-    const t = timing()
-
     const name = getFigureName(figure)
     const canvasData = loadData(figure.getId())
-    t.log('loaded data')
+
     const bgColor = canvasBackground
     const innerDiagramNode = new InnerDiagram({
         width: figure.width - 4,
@@ -105,9 +101,7 @@ const createInnerNode = (figure) => {
         userData: { type: 'svg', color: "BlueGrey" },
     },
         canvasData, name, () => hideInnerDiagram(figure))
-    t.log('created')
     return innerDiagramNode
-
 }
 
 
@@ -171,14 +165,6 @@ export const createGroupNode = (id, width, height, name, description, colorName)
 
     const nameLocator = new GroupNameLocator()
     figure.add(nameLabel, nameLocator);
-
-    const icon = new draw2d.shape.icon.Contract({
-        width: 15, height: 15, color: fontColor, bgColor: canvasBackground,
-    })
-    icon.onClick = () => PubSub.publish('diagram.CloseInnerDiagram')
-    const locator = new ContractIconLocator()
-    figure.add(icon, locator)
-
     return figure
 }
 
@@ -282,11 +268,13 @@ const addInnerDiagramIcon = (figure, color, bgColor) => {
 
 
 const showInnerDiagram = (figure, color, bgColor) => {
+    const t = timing()
     const innerDiagramNode = createInnerNode(figure)
     innerDiagramNode.onClick = onClickHandler(
         () => hideInnerDiagram(figure),
         () => editInnerDiagram(figure))
     figure.add(innerDiagramNode, new InnerDiagramLocator())
+    t.log('added')
 }
 
 export const getInnerDiagram = (figure) => {
@@ -295,10 +283,12 @@ export const getInnerDiagram = (figure) => {
 }
 
 const hideInnerDiagram = (figure) => {
+    const t = timing()
     const innerDiagramNode = getInnerDiagram(figure)
     if (innerDiagramNode != null) {
         figure.remove(innerDiagramNode, new InnerDiagramLocator())
     }
+    t.log()
 }
 
 const editInnerDiagram = (figure) => {
@@ -403,16 +393,6 @@ const GroupNameLocator = draw2d.layout.locator.Locator.extend({
     relocate: function (index, target) {
         let targetBoundingBox = target.getBoundingBox()
         target.setPosition(0, -(targetBoundingBox.h - 36))
-    }
-});
-
-const ContractIconLocator = draw2d.layout.locator.Locator.extend({
-    init: function () {
-        this._super();
-    },
-    relocate: function (index, target) {
-        let parentBoundingBox = target.getParent().getBoundingBox()
-        target.setPosition(parentBoundingBox.w - 23, 5)
     }
 });
 

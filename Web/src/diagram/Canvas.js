@@ -1,5 +1,3 @@
-
-
 import "import-jquery";
 import "jquery-ui-bundle";
 import "jquery-ui-bundle/jquery-ui.css";
@@ -32,9 +30,11 @@ export default class Canvas {
     setCanRedo = null
 
 
-    constructor(canvasId, setCanUndo, setCanRedo) {
+    constructor(canvasId, setCanUndo, setCanRedo, setProgress, setCanPopDiagram) {
         this.setCanUndo = setCanUndo
         this.setCanRedo = setCanRedo
+        this.setProgress = setProgress
+        this.setCanPopDiagram = setCanPopDiagram
         this.canvas = this.createCanvas(canvasId)
     }
 
@@ -112,94 +112,60 @@ export default class Canvas {
     }
 
     commandEditInnerDiagram = (msg, figure) => {
-        const t = timing()
-        const innerDiagram = getInnerDiagram(figure)
-        if (innerDiagram == null) {
-            return
-        }
-        const area = this.canvas.getScrollArea()
-        const zoomFactor = this.canvas.zoomFactor
+        this.setProgress(true)
+        setTimeout(() => {
+            const t = timing()
 
-        // get the inner diagram margin in canvas coordinated
-        const imx = innerDiagram.marginX * innerDiagram.innerZoom
-        const imy = innerDiagram.marginY * innerDiagram.innerZoom
+            const innerDiagram = getInnerDiagram(figure)
+            if (innerDiagram == null) {
+                return
+            }
+            const area = this.canvas.getScrollArea()
+            const zoomFactor = this.canvas.zoomFactor
 
-        // get the inner diagram pos
-        const xd = (figure.x + 2 + imx - area.scrollLeft() * zoomFactor) / zoomFactor
-        const yd = (figure.y + 2 + imy - area.scrollTop() * zoomFactor) / zoomFactor
+            // get the inner diagram margin in canvas coordinated
+            const imx = innerDiagram.marginX * innerDiagram.innerZoom
+            const imy = innerDiagram.marginY * innerDiagram.innerZoom
 
-        this.pushDiagram(figure.getId())
-        t.log('pushed diagram')
+            // get the inner diagram pos
+            const xd = (figure.x + 2 + imx - area.scrollLeft() * zoomFactor) / zoomFactor
+            const yd = (figure.y + 2 + imy - area.scrollTop() * zoomFactor) / zoomFactor
 
-        if (!loadDiagram(this.canvas, figure.getId())) {
-            const group = createDefaultGroupNode(getFigureName(figure))
-            const width = this.canvas.getWidth()
-            const x = 5000 + (width - 1000) / 2
-            this.canvas.add(group, x, 5250)
-        }
-        t.log('loaded diagram')
-        const b = getCanvasFiguresRect(this.canvas)
+            this.pushDiagram(figure.getId())
+            t.log('pushed diagram')
 
-        this.canvas.setZoom(zoomFactor / innerDiagram.innerZoom)
+            if (!loadDiagram(this.canvas, figure.getId())) {
+                const group = createDefaultGroupNode(getFigureName(figure))
+                const width = this.canvas.getWidth()
+                const x = 5000 + (width - 1000) / 2
+                this.canvas.add(group, x, 5250)
+            }
+            t.log('loaded diagram')
+            const b = getCanvasFiguresRect(this.canvas)
 
-        area.scrollLeft((b.x) / this.canvas.zoomFactor - xd)
-        area.scrollTop((b.y) / this.canvas.zoomFactor - yd)
-        t.log('scrolled diagram')
+            this.canvas.setZoom(zoomFactor / innerDiagram.innerZoom)
+
+            area.scrollLeft((b.x) / this.canvas.zoomFactor - xd)
+            area.scrollTop((b.y) / this.canvas.zoomFactor - yd)
+            this.setProgress(false)
+            t.log('scrolled diagram')
+        }, 10);
 
     }
-    commandShowInnerDiagram = (msg, figure) => {
 
-        // const t = timing()
-        // this.unselectAll()
-
-        // const area = this.canvas.getScrollArea()
-
-        // this.outerFigureData = {
-        //     figure: figure,
-        //     x: area.scrollLeft(),
-        //     y: area.scrollTop(),
-        //     zoom: this.canvas.zoomFactor
-        // }
-
-        // const innerNode = createInnerNode(figure)
-        // t.log('created node')
-
-        // this.canvas.add(innerNode, figure.x + 2, figure.y + 2)
-        // t.log('added node')
-
-        // moveAndZoomToShowInnerDiagram(innerNode, innerNode.marginY, () => {
-        //     setTimeout(() => {
-        //         const t2 = timing('innerDiagram')
-
-        //         this.canvas.remove(innerNode)
-        //         t2.log('removed diagram node')
-        //         this.pushDiagram(figure.getId())
-
-        //         t2.log('Pushed')
-        //         if (!loadDiagram(this.canvas, figure.getId())) {
-        //             const group = createDefaultGroupNode(getFigureName(figure))
-        //             const width = this.canvas.getWidth()
-        //             const x = 5000 + (width - 1000) / 2
-        //             this.canvas.add(group, x, 5250)
-        //         }
-        //         t2.log('loaded diagram')
-        //         const b = getCanvasFiguresRect(this.canvas)
-
-        //         const area = this.canvas.getScrollArea()
-        //         this.canvas.setZoom(1)
-        //         area.scrollLeft(b.x - (this.canvas.getWidth() - b.w) / 2)
-        //         area.scrollTop(b.y - 250)
-
-
-        //         t2.log('showed')
-        //     }, 3000);
-        // })
-    }
 
     commandCloseInnerDiagram = () => {
-        const t = timing()
-        this.popDiagram()
-        t.log('popped diagram')
+        this.setProgress(true)
+        setTimeout(() => {
+            const t = timing()
+            this.popDiagram()
+            this.setProgress(false)
+            t.log('popped diagram')
+        }, 10);
+
+
+
+
         // const figure = this.outerFigureData.figure
         // const targetZoom = this.outerFigureData.zoom
         // const targetPoint = { x: this.outerFigureData.x, y: this.outerFigureData.y }
@@ -344,6 +310,7 @@ export default class Canvas {
 
         this.diagramStack.push(canvasData)
         this.storeName = newStoreName
+        this.setCanPopDiagram(true)
     }
 
     enableCommandStackHandler = (commandStack) => {
@@ -376,6 +343,7 @@ export default class Canvas {
 
 
         const canvasData = this.diagramStack.pop()
+        this.setCanPopDiagram(this.diagramStack.length > 0)
 
         canvas.selection.clear()
         canvas.currentDropTarget = null

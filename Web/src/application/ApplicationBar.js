@@ -9,7 +9,8 @@ import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
-import { canRedoAtom, canUndoAtom } from "../diagram/Diagram";
+import ZoomOutMapIcon from '@material-ui/icons/ZoomOutMap';
+import { canPopDiagramAtom, canRedoAtom, canUndoAtom } from "../diagram/Diagram";
 import { useAtom } from "jotai";
 
 
@@ -17,10 +18,13 @@ export default function ApplicationBar({ height }) {
 
     const [canUndo] = useAtom(canUndoAtom)
     const [canRedo] = useAtom(canRedoAtom)
+    const [canPopDiagram] = useAtom(canPopDiagramAtom)
     const classes = useAppBarStyles();
 
     const undoStyle = canUndo ? classes.icons : classes.iconsDisabled
     const redoStyle = canRedo ? classes.icons : classes.iconsDisabled
+    const popDiagramStyle = canPopDiagram ? classes.icons : classes.iconsDisabled
+
 
 
     return (
@@ -40,6 +44,10 @@ export default function ApplicationBar({ height }) {
                 <Tooltip title="Add user node" ><IconButton onClick={() => PubSub.publish('diagram.AddUserNode')}><PersonAddIcon className={classes.icons} /></IconButton></Tooltip>
                 <Tooltip title="Add external system node" ><IconButton onClick={() => PubSub.publish('diagram.AddExternalNode')}><LibraryAddOutlinedIcon className={classes.icons} /></IconButton></Tooltip>
                 <Tooltip title="Scroll and zoom to show full diagram" ><IconButton onClick={() => PubSub.publish('diagram.ShowTotalDiagram')}><FilterCenterFocusIcon className={classes.icons} /></IconButton></Tooltip>
+
+                <Tooltip title={canPopDiagram ? 'Zoom out and back to surrounding diagram' : ''} >
+                    <IconButton disabled={!canPopDiagram} onClick={() => PubSub.publish('diagram.CloseInnerDiagram')}>
+                        <ZoomOutMapIcon className={popDiagramStyle} /></IconButton></Tooltip>
 
                 <Typography className={classes.space} variant="h6" noWrap> </Typography>
                 <ApplicationMenu />

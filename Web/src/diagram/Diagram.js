@@ -9,20 +9,33 @@ import FigureMenu from "./FigureMenu";
 import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { groupType } from "./figures";
+import { Backdrop, makeStyles } from "@material-ui/core";
+
 
 export const canUndoAtom = atom(false)
 export const canRedoAtom = atom(false)
+export const canPopDiagramAtom = atom(false)
+export const progressAtom = atom(false)
 
+const useStyles = makeStyles((theme) => ({
+    backdrop: {
+        zIndex: theme.zIndex.drawer + 1,
+        color: '#fff',
+    },
+}));
 
 export default function Diagram({ width, height }) {
     const canvasRef = useRef(null)
     const [contextMenu, setContextMenu] = useState()
     const [, setCanUndo] = useAtom(canUndoAtom)
     const [, setCanRedo] = useAtom(canRedoAtom)
+    const [, setCanPopDiagram] = useAtom(canPopDiagramAtom)
+    const [isProgress, setProgress] = useAtom(progressAtom)
+    const classes = useStyles();
 
     useEffect(() => {
         // Initialize canvas
-        const canvas = new Canvas('canvas', setCanUndo, setCanRedo);
+        const canvas = new Canvas('canvas', setCanUndo, setCanRedo, setProgress, setCanPopDiagram);
         canvasRef.current = canvas
 
         const contextMenuHandler = enableContextMenu(setContextMenu, canvas)
@@ -36,13 +49,14 @@ export default function Diagram({ width, height }) {
             document.removeEventListener("contextmenu", contextMenuHandler);
             canvasRef.current.delete()
         }
-    }, [setCanUndo, setCanRedo])
-
+    }, [setCanUndo, setCanRedo, setProgress, setCanPopDiagram])
 
     const { canvas, figure, x, y } = contextMenu ?? {};
 
     return (
         <>
+            <Backdrop className={classes.backdrop} open={isProgress} />
+
             <div id="diagram">
                 <div id="canvas" style={{
                     width: width, height: height, maxWidth: width, maxHeight: height, position: 'absolute',
@@ -109,7 +123,6 @@ function HandleToolbarCommands(canvas) {
     PubSub.subscribe('diagram.ShowTotalDiagram', canvas.showTotalDiagram)
     PubSub.subscribe('diagram.NewDiagram', canvas.commandNewDiagram)
     PubSub.subscribe('diagram.Export', () => exportDiagram(canvas))
-    PubSub.subscribe('diagram.ShowInnerDiagram', canvas.commandShowInnerDiagram)
     PubSub.subscribe('diagram.CloseInnerDiagram', canvas.commandCloseInnerDiagram)
     PubSub.subscribe('diagram.EditInnerDiagram', canvas.commandEditInnerDiagram)
 

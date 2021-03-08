@@ -1,5 +1,5 @@
 import draw2d from "draw2d";
-import { timing } from "../common/timing";
+// import { timing } from "../common/timing";
 
 export const CanvasEx = draw2d.Canvas.extend(
     {
@@ -8,7 +8,7 @@ export const CanvasEx = draw2d.Canvas.extend(
         },
 
         addAll: function (figures) {
-            const t = timing()
+            //const t = timing()
             for (let i = 0; i < figures.length; i++) {
                 let figure = figures[i]
                 let x = figures[i].x
@@ -64,7 +64,7 @@ export const CanvasEx = draw2d.Canvas.extend(
                 line.repaint();
             });
             // t.log("Repainted lines");
-            t.log("done");
+            //t.log();
             return this;
         }
     }
