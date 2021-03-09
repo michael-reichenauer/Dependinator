@@ -3,8 +3,6 @@ import "jquery-ui-bundle";
 import "jquery-ui-bundle/jquery-ui.css";
 import draw2d from "draw2d";
 import { WheelZoomPolicy } from "./WheelZoomPolicy"
-import { PanReadOnlyPolicy } from "./PanReadOnlyPolicy"
-import { PanEditPolicy } from "./PanEditPolicy"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { random } from '../common/utils'
 import {
@@ -18,9 +16,11 @@ import { Tweenable } from "shifty"
 import { clearStoredDiagram, loadDiagram, saveDiagram } from "./store";
 import { timing } from "../common/timing";
 import { CanvasEx } from './CanvasEx'
-import { moveAndZoomEnough, zoomEnough } from "./innerDiagram";
+import { moveAndZoomEnough } from "./innerDiagram";
+import { PanPolicy } from "./PanPolicy";
 
 const defaultStoreDiagramName = 'diagram'
+const diagramSize = 100000
 
 export default class Canvas {
     canvasId = null
@@ -49,21 +49,18 @@ export default class Canvas {
         this.canvasId = canvasId
         const canvas = new CanvasEx(canvasId)
         canvas.setScrollArea("#" + canvasId)
-        canvas.setDimension(new draw2d.geo.Rectangle(0, 0, 10000, 10000))
-        canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, 10000, 10000)
+        canvas.setDimension(new draw2d.geo.Rectangle(0, 0, diagramSize, diagramSize))
+        canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, diagramSize, diagramSize)
 
         const area = canvas.getScrollArea()
-        area.scrollLeft(5000)
-        area.scrollTop(5000)
+        area.scrollLeft(diagramSize / 2)
+        area.scrollTop(diagramSize / 2)
 
         if (!loadDiagram(canvas, this.storeName)) {
             addDefaultNewDiagram(canvas)
         }
 
-        // Pan policy readonly/edit
-        canvas.panPolicyCurrent = new PanReadOnlyPolicy(this.togglePanPolicy, this.addDefaultItem)
-        canvas.panPolicyOther = new PanEditPolicy(this.togglePanPolicy, this.addDefaultItem)
-        canvas.installEditPolicy(canvas.panPolicyCurrent)
+        canvas.installEditPolicy(new PanPolicy())
 
         canvas.installEditPolicy(new WheelZoomPolicy());
         canvas.installEditPolicy(new ConnectionCreatePolicy())
@@ -139,8 +136,8 @@ export default class Canvas {
             if (!loadDiagram(this.canvas, figure.getId())) {
                 const group = createDefaultGroupNode(getFigureName(figure))
                 const width = this.canvas.getWidth()
-                const x = 5000 + (width - 1000) / 2
-                this.canvas.add(group, x, 5250)
+                const x = diagramSize / 2 + (width - 1000) / 2
+                this.canvas.add(group, x, diagramSize / 2 + 250)
             }
             t.log('loaded diagram')
             const b = getCanvasFiguresRect(this.canvas)
@@ -200,20 +197,6 @@ export default class Canvas {
         const rect = getCanvasFiguresRect(this.canvas)
         exportCanvas(this.canvas, rect, result)
     }
-
-    togglePanPolicy = (figure) => {
-        let current = this.canvas.panPolicyCurrent
-        this.canvas.uninstallEditPolicy(this.canvas.panPolicyCurrent)
-
-        this.canvas.panPolicyCurrent = this.canvas.panPolicyOther
-        this.canvas.panPolicyOther = current
-        this.canvas.installEditPolicy(this.canvas.panPolicyCurrent)
-
-        if (figure != null) {
-            this.canvas.setCurrentSelection(figure)
-        }
-    }
-
 
     tryGetFigure = (x, y) => {
         let cp = this.toCanvasCoordinate(x, y)
@@ -303,10 +286,6 @@ export default class Canvas {
 
         canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
         canvas.lineIntersections = new draw2d.util.ArrayList()
-
-        //canvas.setZoom(1)
-        // area.scrollLeft(5000)
-        // area.scrollTop(5000)
 
         this.diagramStack.push(canvasData)
         this.storeName = newStoreName
@@ -401,10 +380,11 @@ const addDefaultNewDiagram = (canvas) => {
     const user = createDefaultUserNode()
     const system = createDefaultSystemNode()
     const external = createDefaultExternalNode()
-    addFigureToCanvas(canvas, user, { x: 5200, y: 5400 })
-    addFigureToCanvas(canvas, system, { x: 5600, y: 5400 })
+    const b = diagramSize / 2
+    addFigureToCanvas(canvas, user, { x: b + 200, y: b + 400 })
+    addFigureToCanvas(canvas, system, { x: b + 600, y: b + 400 })
     addConnectionToCanvas(canvas, createDefaultConnection(user, 'output0', system, 'input0'))
-    addFigureToCanvas(canvas, external, { x: 6000, y: 5400 })
+    addFigureToCanvas(canvas, external, { x: b + 1000, y: b + 400 })
     addConnectionToCanvas(canvas, createDefaultConnection(system, 'output0', external, 'input0'))
 
     zoomAndMoveShowTotalDiagram(canvas)

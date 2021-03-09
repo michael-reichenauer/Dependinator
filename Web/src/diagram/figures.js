@@ -238,6 +238,13 @@ const createCommonNode = (type, id, width, height, name, description, colorName,
         addInnerDiagramIcon(figure, fontColor, color)
     }
 
+    figure.on("click", function (emitter, event) {
+        console.log('click node')
+    });
+    figure.on("dblclick", function (emitter, event) {
+        console.log('double click node')
+    });
+
     addPorts(figure)
     return figure
 }
@@ -275,7 +282,14 @@ const addInnerDiagramIcon = (figure, color, bgColor) => {
         width: 20, height: 20, color: color, bgColor: bgColor,
     })
 
-    icon.onClick = () => showInnerDiagram(figure, color, bgColor)
+    icon.on("click", function (emitter, event) {
+        console.log('click icon')
+    });
+    icon.on("dblclick", function (emitter, event) {
+        console.log('double click icon')
+    });
+
+    //icon.onClick = () => showInnerDiagram(figure, color, bgColor)
     const locator = new InnerDiagramIconLocator()
     figure.add(icon, locator)
 }
@@ -283,10 +297,6 @@ const addInnerDiagramIcon = (figure, color, bgColor) => {
 
 const showInnerDiagram = (figure, color, bgColor) => {
     const t = timing()
-    getNameLabel(figure)?.setVisible(false)
-    getDescriptionLabel(figure)?.setVisible(false)
-    getDiagramIcon(figure)?.setVisible(false)
-
     const innerDiagramNode = createInnerNode(figure)
     innerDiagramNode.onClick = onClickHandler(
         () => hideInnerDiagram(figure),
@@ -302,9 +312,6 @@ export const getInnerDiagram = (figure) => {
 
 const hideInnerDiagram = (figure) => {
     const t = timing()
-    getNameLabel(figure)?.setVisible(true)
-    getDescriptionLabel(figure)?.setVisible(true)
-    getDiagramIcon(figure)?.setVisible(true)
 
     const innerDiagramNode = getInnerDiagram(figure)
     if (innerDiagramNode != null) {
