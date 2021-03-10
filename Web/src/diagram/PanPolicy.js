@@ -8,7 +8,8 @@ export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
         NAME: "PanPolicy",
 
 
-        init: function () {
+        init: function (createItem) {
+            this.createItem = createItem
             this.isInsideMode = (rect1, rect2) => rect1.isInside(rect2)
             this.intersectsMode = (rect1, rect2) => rect1.intersects(rect2)
 
@@ -26,6 +27,14 @@ export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
             this.isReadOnly = true
             this.isReadOnlySelect = false
             this.isPort = false
+        },
+
+        onDoubleClick: function (figure, mouseX, mouseY, shiftKey, ctrlKey) {
+            if (figure !== null) {
+                return
+            }
+
+            this.createItem(mouseX, mouseY, shiftKey, ctrlKey)
         },
 
 

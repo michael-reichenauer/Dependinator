@@ -282,41 +282,44 @@ const addInnerDiagramIcon = (figure, color, bgColor) => {
         width: 20, height: 20, color: color, bgColor: bgColor,
     })
 
-    icon.on("click", function (emitter, event) {
-        console.log('click icon')
-    });
-    icon.on("dblclick", function (emitter, event) {
-        console.log('double click icon')
-    });
+    icon.on("click", () => showInnerDiagram(figure, color, bgColor))
 
-    //icon.onClick = () => showInnerDiagram(figure, color, bgColor)
     const locator = new InnerDiagramIconLocator()
     figure.add(icon, locator)
 }
 
 
-const showInnerDiagram = (figure, color, bgColor) => {
+export const showInnerDiagram = (figure) => {
     const t = timing()
+
+    getNameLabel(figure)?.setVisible(false)
+    getDescriptionLabel(figure)?.setVisible(false)
+    getDiagramIcon(figure)?.setVisible(false)
+
     const innerDiagramNode = createInnerNode(figure)
     innerDiagramNode.onClick = onClickHandler(
         () => hideInnerDiagram(figure),
         () => editInnerDiagram(figure))
+    figure.innerDiagram = innerDiagramNode
     figure.add(innerDiagramNode, new InnerDiagramLocator())
+    figure.repaint()
     t.log('added')
 }
 
-export const getInnerDiagram = (figure) => {
-    const children = figure.getChildren().asArray()
-    return children.find(c => c instanceof InnerDiagram);
-}
+// export const getInnerDiagram = (figure) => {
+//     const children = figure.getChildren().asArray()
+//     return children.find(c => c instanceof InnerDiagram);
+// }
 
 const hideInnerDiagram = (figure) => {
     const t = timing()
 
-    const innerDiagramNode = getInnerDiagram(figure)
-    if (innerDiagramNode != null) {
-        figure.remove(innerDiagramNode, new InnerDiagramLocator())
-    }
+    getNameLabel(figure)?.setVisible(true)
+    getDescriptionLabel(figure)?.setVisible(true)
+    getDiagramIcon(figure)?.setVisible(true)
+
+    figure.remove(figure.innerDiagram)
+    figure.innerDiagram = null
     t.log()
 }
 

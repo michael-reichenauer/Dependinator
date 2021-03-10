@@ -1,5 +1,5 @@
 import { Tweenable } from "shifty"
-import { getInnerDiagram } from "./figures"
+//import { getInnerDiagram } from "./figures"
 
 
 
@@ -40,7 +40,7 @@ const zoomEnough = (figure, done) => {
     const area = canvas.getScrollArea()
 
     const zoom = canvas.zoomFactor
-    const targetZoom = getInnerDiagram(figure).innerZoom
+    const targetZoom = 0.2 //getInnerDiagram(figure).innerZoom
 
     const tweenable = new Tweenable()
     tweenable.tween({

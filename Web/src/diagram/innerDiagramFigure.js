@@ -26,6 +26,7 @@ export const InnerDiagram = draw2d.SetFigure.extend({
 
 
     createSet: function () {
+        console.log('create set ++')
         const set = this.canvas.paper.set()
         const diagramBox = this.canvasData.box
 

@@ -7,7 +7,8 @@ import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { random } from '../common/utils'
 import {
     createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
-    createDefaultSystemNode, getCanvasFiguresRect, getFigureName, createDefaultGroupNode, getInnerDiagram,
+    createDefaultSystemNode, getCanvasFiguresRect, getFigureName, createDefaultGroupNode,
+    showInnerDiagram
 } from './figures'
 import { exportCanvas } from './serialization'
 import { canvasDivBackground } from "./colors";
@@ -16,7 +17,6 @@ import { Tweenable } from "shifty"
 import { clearStoredDiagram, loadDiagram, saveDiagram } from "./store";
 import { timing } from "../common/timing";
 import { CanvasEx } from './CanvasEx'
-import { moveAndZoomEnough } from "./innerDiagram";
 import { PanPolicy } from "./PanPolicy";
 
 const defaultStoreDiagramName = 'diagram'
@@ -60,7 +60,7 @@ export default class Canvas {
             addDefaultNewDiagram(canvas)
         }
 
-        canvas.installEditPolicy(new PanPolicy())
+        canvas.installEditPolicy(new PanPolicy(this.addDefaultItem))
 
         canvas.installEditPolicy(new WheelZoomPolicy());
         canvas.installEditPolicy(new ConnectionCreatePolicy())
@@ -110,25 +110,31 @@ export default class Canvas {
     }
 
     commandEditInnerDiagram = (msg, figure) => {
+        const innerDiagram = figure.innerDiagram
+        if (innerDiagram == null) {
+            return
+        }
+
         this.setProgress(true)
-        this.unselectAll()
-        moveAndZoomEnough(figure, () => {
+        setTimeout(() => {
+            // this.unselectAll()
+            // moveAndZoomEnough(figure, () => {
             const t = timing()
 
-            const innerDiagram = getInnerDiagram(figure)
-            if (innerDiagram == null) {
-                return
-            }
             const area = this.canvas.getScrollArea()
             const zoomFactor = this.canvas.zoomFactor
+            this.outerFigureData = { figureId: figure.getId(), zoom: zoomFactor }
 
-            // get the inner diagram margin in canvas coordinated
+            // get the inner diagram margin in outer canvas coordinates
             const imx = innerDiagram.marginX * innerDiagram.innerZoom
             const imy = innerDiagram.marginY * innerDiagram.innerZoom
 
-            // get the inner diagram pos
+            // get the inner diagram pos in outer coordinates
             const xd = (figure.x + 2 + imx - area.scrollLeft() * zoomFactor) / zoomFactor
             const yd = (figure.y + 2 + imy - area.scrollTop() * zoomFactor) / zoomFactor
+
+            figure.remove(figure.innerDiagram)
+            figure.innerDiagram = null
 
             this.pushDiagram(figure.getId())
             t.log('pushed diagram')
@@ -148,34 +154,21 @@ export default class Canvas {
             area.scrollTop((b.y) / this.canvas.zoomFactor - yd)
             this.setProgress(false)
             t.log('scrolled diagram')
-        })
+        }, 30);
     }
 
 
     commandCloseInnerDiagram = () => {
         this.setProgress(true)
-        this.unselectAll()
         setTimeout(() => {
             const t = timing()
             this.popDiagram()
+            const figure = this.canvas.getFigure(this.outerFigureData.figureId)
+            showInnerDiagram(figure)
+
             this.setProgress(false)
             t.log('popped diagram')
         }, 30);
-
-
-        // const figure = this.outerFigureData.figure
-        // const targetZoom = this.outerFigureData.zoom
-        // const targetPoint = { x: this.outerFigureData.x, y: this.outerFigureData.y }
-        // const innerNode = createInnerNode(figure)
-        // t.log('created inned diagram node')
-        // this.canvas.add(innerNode, figure.x + 2, figure.y + 2)
-        // setTimeout(() => {
-        //     t.log('added diagram node')
-        //     moveAndZoomToShowOuterDiagram(figure, targetZoom, targetPoint, innerNode.marginY, () => {
-        //         this.canvas.remove(innerNode)
-        //     })
-        // }, 0);
-
     }
 
     unselectAll = () => {
