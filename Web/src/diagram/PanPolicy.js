@@ -1,13 +1,10 @@
-import { TransferWithinAStationOutlined } from "@material-ui/icons";
 import draw2d from "draw2d";
 
 
 
-export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
-    /** @lends draw2d.policy.canvas.BoundingboxSelectionPolicy.prototype */
+export const PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
     {
         NAME: "PanPolicy",
-
 
         init: function (onEditMode) {
             this.onEditMode = onEditMode
@@ -77,7 +74,6 @@ export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
             }
 
             // adding connections to the selection of the source and target port part of the current selection
-
             let selection = canvas.getSelection()
             canvas.getLines().each((i, line) => {
                 if (line instanceof draw2d.Connection) {
@@ -88,18 +84,6 @@ export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
             })
         },
 
-
-        /**
-         * 
-         * Set the selection handling mode to <b>intersection</b> or to <b>isInside</b>.
-         * <ul>
-         *   <li>true = intersection, shapes must only touch the selection bounding box </li>
-         *   <li>false = isInside, shapes must complete inside the selection bounding box (default)</li>
-         * </ul>
-         *
-         * @param {Boolean} useIntersectionMode set true if the selection handle should use the alternative selection approach
-         * @since 4.9.0
-         */
         setDecisionMode: function (useIntersectionMode) {
             if (useIntersectionMode === true) {
                 this.decision = this.intersectsMode
@@ -111,15 +95,7 @@ export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
             return this
         },
 
-        /**
-         * 
-         *
-         * @param {draw2d.Canvas} canvas
-         * @param {Number} x the x-coordinate of the mouse down event
-         * @param {Number} y the y-coordinate of the mouse down event
-         * @param {Boolean} shiftKey true if the shift key has been pressed during this event
-         * @param {Boolean} ctrlKey true if the ctrl key has been pressed during the event
-         */
+
         onMouseDown: function (canvas, x, y, shiftKey, ctrlKey) {
             try {
                 this.x = x
@@ -153,7 +129,6 @@ export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
                 }
 
                 // ignore ports since version 6.1.0. This is handled by the ConnectionCreatePolicy
-                //
                 if (figure instanceof draw2d.Port) {
                     // Mouse down on port, make sure pan drag does not move canvas while port is handled
                     this.isPort = true
@@ -196,7 +171,6 @@ export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
                     if (figure instanceof draw2d.shape.basic.Line) {
                         // you can move a line with Drag&Drop...but not a connection.
                         // A Connection is fixed linked with the corresponding ports.
-                        //
                         if (!(figure instanceof draw2d.Connection)) {
                             canvas.draggingLineCommand = figure.createCommand(new draw2d.command.CommandType(draw2d.command.CommandType.MOVE))
                             if (canvas.draggingLineCommand !== null) {
@@ -243,18 +217,7 @@ export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
             }
         },
 
-        /**
-         * 
-         *
-         * @param {draw2d.Canvas} canvas
-         * @param {Number} dx The x diff between start of dragging and this event
-         * @param {Number} dy The y diff between start of dragging and this event
-         * @param {Number} dx2 The x diff since the last call of this dragging operation
-         * @param {Number} dy2 The y diff since the last call of this dragging operation
-         * @param {Boolean} shiftKey true if the shift key has been pressed during this event
-         * @param {Boolean} ctrlKey true if the ctrl key has been pressed during the event
-         * @template
-         */
+
         onMouseDrag: function (canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey) {
             if (this.isReadOnly && !this.isPort) {
                 // Read only mode and not dragging a port, let pan the canvas
@@ -317,15 +280,7 @@ export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
             }
         },
 
-        /**
-         * 
-         *
-         * @param {draw2d.Canvas} canvas
-         * @param {Number} x the x-coordinate of the mouse down event
-         * @param {Number} y the y-coordinate of the mouse down event
-         * @param {Boolean} shiftKey true if the shift key has been pressed during this event
-         * @param {Boolean} ctrlKey true if the ctrl key has been pressed during the event
-         */
+
         onMouseUp: function (canvas, x, y, shiftKey, ctrlKey) {
             // No longer port handling
             this.isPort = false
@@ -346,7 +301,6 @@ export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
                 else if (this.mouseDownElement instanceof draw2d.ResizeHandle || (this.mouseDownElement instanceof draw2d.shape.basic.LineResizeHandle)) {
                     // Do nothing
                     // A click on a resize handle didn't change the selection of the canvas
-                    //
                 }
                 // delete the current selection if you click on another figure than the current
                 // selection and you didn't drag the complete selection.
@@ -362,7 +316,6 @@ export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
 
                 if (this.boundingBoxFigure1 !== null) {
                     // retrieve all figures which are inside the bounding box and select all of them
-                    //
                     let selectionRect = this.boundingBoxFigure1.getBoundingBox()
                     canvas.getFigures().each((i, figure) => {
                         if (figure.isSelectable() === true && figure.isVisible() === true && this.decision(figure.getBoundingBox(), selectionRect)) {

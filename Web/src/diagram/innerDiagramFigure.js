@@ -6,6 +6,15 @@ import { externalType, groupType, nodeType, userType } from "./figures";
 
 const groupColor = '#' + canvasBackground.getIdealTextColor().hex()
 
+const emptyDiagramData = (name) => {
+    return {
+        zoom: 1,
+        box: { x: 5090, y: 5250, w: 1000, h: 800 },
+        figures: [{ type: groupType, x: 5090, y: 5250, w: 1000, h: 800, name: name }],
+        connections: [],
+    }
+}
+
 export const InnerDiagram = draw2d.SetFigure.extend({
     NAME: "InnerDiagram",
 
@@ -16,18 +25,13 @@ export const InnerDiagram = draw2d.SetFigure.extend({
         this.clicks = 0
 
         if (this.canvasData == null) {
-            this.canvasData = {
-                zoom: 1,
-                box: { x: 5090, y: 5250, w: 1000, h: 800 },
-                figures: [{ type: groupType, x: 5090, y: 5250, w: 1000, h: 800, name: name }],
-                connections: [],
-            }
+            // No diagram data provided, use default empty diagram
+            this.canvasData = emptyDiagramData(name)
         }
     },
 
 
     createSet: function () {
-        console.log('create set ++')
         const set = this.canvas.paper.set()
         const diagramBox = this.canvasData.box
 
@@ -57,8 +61,6 @@ export const InnerDiagram = draw2d.SetFigure.extend({
         let dx = (diagramWidth - diagramBox.w) / 2 - diagramBox.x
         let dy = (diagramHeight - diagramBox.h) / 2 - diagramBox.y
 
-
-
         // Add the inner diagram figures and connections (centered within figure)
         this.canvasData.figures.forEach(f => this.addFigure(set, f, dx, dy))
         this.canvasData.connections.forEach(c => this.addConnection(set, c, dx, dy))
@@ -71,18 +73,17 @@ export const InnerDiagram = draw2d.SetFigure.extend({
     },
 
 
-    addFigure: function (set, f, dx, dy) {
-        // console.log('figure', f)
-        switch (f.type) {
+    addFigure: function (set, figure, offsetX, offsetY) {
+        switch (figure.type) {
             case nodeType:
             case userType:
             case externalType:
-                set.push(this.createNode(f.x + dx, f.y + dy, f.w, f.h, f.color))
-                set.push(this.createNodeName(f.x + dx, f.y + dy, f.w, f.name, f.color))
+                set.push(this.createNode(figure.x + offsetX, figure.y + offsetY, figure.w, figure.h, figure.color))
+                set.push(this.createNodeName(figure.x + offsetX, figure.y + offsetY, figure.w, figure.name, figure.color))
                 break;
             case groupType:
-                set.push(this.createGroupNode(f.x + dx, f.y + dy, f.w, f.h))
-                set.push(this.createGroupName(f.x + dx, f.y + dy, f.w, f.name, f.color))
+                set.push(this.createGroupNode(figure.x + offsetX, figure.y + offsetY, figure.w, figure.h))
+                set.push(this.createGroupName(figure.x + offsetX, figure.y + offsetY, figure.w, figure.name))
                 break;
             default:
                 // Ignore other types
@@ -90,13 +91,13 @@ export const InnerDiagram = draw2d.SetFigure.extend({
         }
     },
 
-    addConnection: function (set, c, dx, dy) {
+    addConnection: function (set, connection, offsetX, offsetY) {
         let pathText = null
-        c.v.forEach(v => {
+        connection.v.forEach(v => {
             if (pathText === null) {
-                pathText = `M${v.x + dx},${v.y + dy}`
+                pathText = `M${v.x + offsetX},${v.y + offsetY}`
             } else {
-                pathText = pathText + `L${v.x + dx},${v.y + dy}`
+                pathText = pathText + `L${v.x + offsetX},${v.y + offsetY}`
             }
         })
 
@@ -116,7 +117,7 @@ export const InnerDiagram = draw2d.SetFigure.extend({
         return f
     },
 
-    createGroupName: function (x, y, w, name, colorName) {
+    createGroupName: function (x, y, w, name) {
         const f = this.canvas.paper.text()
         f.attr({
             'text-anchor': 'start',
