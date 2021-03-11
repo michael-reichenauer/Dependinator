@@ -144,13 +144,13 @@ export const createDefaultGroupNode = (name) => {
 
 export const createGroupNode = (id, width, height, name, description, colorName) => {
     const color = canvasBackground
-    const borderColor = color.darker(0.8)
+    const borderColor = canvasBackground.getIdealTextColor()
     const fontColor = borderColor
 
     const figure = new draw2d.shape.composite.Raft({
         id: id,
         width: width, height: height,
-        bgColor: color, color: borderColor, dasharray: '- ',
+        bgColor: color, alpha: 0.5, color: borderColor, dasharray: '- ',
         radius: 5,
         userData: { type: groupType, color: colorName }
     });
