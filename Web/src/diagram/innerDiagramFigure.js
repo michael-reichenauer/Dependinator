@@ -4,6 +4,7 @@ import { connectionColor } from "./connections";
 import { externalType, groupType, nodeType, userType } from "./figures";
 
 
+const groupNameColor = '#' + canvasBackground.getIdealTextColor().hex()
 
 export const InnerDiagram = draw2d.SetFigure.extend({
     NAME: "InnerDiagram",
@@ -119,7 +120,8 @@ export const InnerDiagram = draw2d.SetFigure.extend({
         const fontColor = '#' + canvasBackground.getIdealTextColor().hex()
         const f = this.canvas.paper.text()
         f.attr({
-            x: x + 42, y: y + 16, text: name, fill: fontColor,
+            'text-anchor': 'start',
+            x: x + 5, y: y + 16, text: name, fill: fontColor,
             'font-size': 30, 'font-weight': 'bold'
         })
         return f
