@@ -59,10 +59,18 @@ export default class Canvas {
         if (!loadDiagram(canvas, this.storeName)) {
             addDefaultNewDiagram(canvas)
         }
+        const panPolicy = new PanPolicy(this.onEditMode)
+        panPolicy.onDoubleClick = (figure, mouseX, mouseY, shiftKey, ctrlKey) => {
+            if (figure !== null) {
+                return
+            }
+            this.addDefaultItem(mouseX, mouseY)
+        }
 
-        canvas.installEditPolicy(new PanPolicy(this.addDefaultItem))
+        canvas.installEditPolicy(panPolicy)
 
-        canvas.installEditPolicy(new WheelZoomPolicy());
+        this.zoomPolicy = new WheelZoomPolicy()
+        canvas.installEditPolicy(this.zoomPolicy);
         canvas.installEditPolicy(new ConnectionCreatePolicy())
         canvas.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
 
@@ -78,6 +86,31 @@ export default class Canvas {
         return canvas
     }
 
+    onEditMode = (isEditMode) => {
+        if (!isEditMode) {
+            this.canvas.html.find("svg").css({
+                'background-color': canvasDivBackground,
+                "background": canvasDivBackground,
+                "background-size": 0
+            })
+            return
+        }
+
+        const bgColor = canvasDivBackground
+        const color = new draw2d.util.Color('#E0E3E3').rgba()
+        const interval = 10
+        const gridStroke = 1
+
+        let background =
+            ` linear-gradient(to right,  ${color} ${gridStroke}px, transparent ${gridStroke}px),
+              linear-gradient(to bottom, ${color} ${gridStroke}px, ${bgColor}  ${gridStroke}px)`
+        let backgroundSize = `${interval}px ${interval}px`
+
+        this.canvas.html.find("svg").css({
+            "background": background,
+            "background-size": backgroundSize
+        })
+    }
 
     getId = () => this.canvas.canvasId
 
@@ -116,6 +149,7 @@ export default class Canvas {
         }
 
         this.setProgress(true)
+
         setTimeout(() => {
             // this.unselectAll()
             // moveAndZoomEnough(figure, () => {
@@ -149,9 +183,10 @@ export default class Canvas {
             const b = getCanvasFiguresRect(this.canvas)
 
             this.canvas.setZoom(zoomFactor / innerDiagram.innerZoom)
+            console.log('inner zoom begin', this.canvas.zoomFactor)
 
-            area.scrollLeft((b.x) / this.canvas.zoomFactor - xd)
-            area.scrollTop((b.y) / this.canvas.zoomFactor - yd)
+            area.scrollLeft(b.x / this.canvas.zoomFactor - xd)
+            area.scrollTop(b.y / this.canvas.zoomFactor - yd)
             this.setProgress(false)
             t.log('scrolled diagram')
         }, 30);
@@ -162,14 +197,35 @@ export default class Canvas {
         this.setProgress(true)
         setTimeout(() => {
             const t = timing()
+            const area = this.canvas.getScrollArea()
+            const postInnerZoom = this.canvas.zoomFactor
+            const b = getCanvasFiguresRect(this.canvas)
+            const x = b.x - area.scrollLeft()
+            const y = b.y - area.scrollTop()
+            console.log('scroll inner', area.scrollLeft(), area.scrollTop())
+
+            console.log('b', b, x, y)
             this.popDiagram()
             const figure = this.canvas.getFigure(this.outerFigureData.figureId)
             showInnerDiagram(figure)
+            console.log('zoom', this.canvas.zoomFactor)
+            console.log('post inner zoom', postInnerZoom)
+            const preInnerZoom = this.canvas.zoomFactor / figure.innerDiagram.innerZoom
+
+            console.log('pre inner zoom', preInnerZoom)
+
+            const newZoom = this.canvas.zoomFactor * (postInnerZoom / preInnerZoom)
+            console.log('new zoom', newZoom)
+
+            this.canvas.setZoom(newZoom)
+            area.scrollLeft((figure.x - 100) / newZoom)
+            area.scrollTop((figure.y - 100) / newZoom)
 
             this.setProgress(false)
             t.log('popped diagram')
         }, 30);
     }
+
 
     unselectAll = () => {
         if (!this.canvas.selection.all.isEmpty()) {
@@ -178,7 +234,6 @@ export default class Canvas {
             this.canvas.selection.clear()
         }
     }
-
 
 
     addFigure = (figure, p) => {

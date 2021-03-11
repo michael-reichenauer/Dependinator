@@ -1,3 +1,4 @@
+import { TransferWithinAStationOutlined } from "@material-ui/icons";
 import draw2d from "draw2d";
 
 
@@ -8,8 +9,9 @@ export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
         NAME: "PanPolicy",
 
 
-        init: function (createItem) {
-            this.createItem = createItem
+        init: function (onEditMode) {
+            this.onEditMode = onEditMode
+
             this.isInsideMode = (rect1, rect2) => rect1.isInside(rect2)
             this.intersectsMode = (rect1, rect2) => rect1.intersects(rect2)
 
@@ -29,19 +31,15 @@ export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
             this.isPort = false
         },
 
-        onDoubleClick: function (figure, mouseX, mouseY, shiftKey, ctrlKey) {
-            if (figure !== null) {
-                return
-            }
-
-            this.createItem(mouseX, mouseY, shiftKey, ctrlKey)
-        },
-
 
         select: function (canvas, figure) {
             if (figure == null) {
                 // clicked outside a figure, lets enable readonly 
-                this.isReadOnly = true
+                if (!this.isReadOnly) {
+                    this.isReadOnly = true
+                    this.onEditMode(false)
+                }
+
                 return
             } else {
                 // Click on figure, (if in readonly mode, lets enable edit mode)
@@ -322,7 +320,11 @@ export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
 
             if (this.isReadOnlySelect) {
                 // Was a click on figure (started in select), lets enable edit mode
-                this.isReadOnly = false
+                if (this.isReadOnly) {
+                    this.onEditMode(true)
+                    this.isReadOnly = false
+                }
+
                 this.isReadOnlySelect = false
             }
 
