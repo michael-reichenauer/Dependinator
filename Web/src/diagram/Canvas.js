@@ -204,7 +204,6 @@ export default class Canvas {
             const t = timing()
 
             const zoomFactor = this.canvas.zoomFactor
-            this.outerFigureData = { figureId: figure.getId(), zoom: zoomFactor }
 
             // get the inner diagram margin in outer canvas coordinates
             const imx = innerDiagram.marginX * innerDiagram.innerZoom
@@ -254,10 +253,10 @@ export default class Canvas {
             const b = this.fromCanvasToScreenViewCoordinate(innerDiagramBox.x, innerDiagramBox.y)
 
             // Show outer diagram (closing the inner diagram)
-            this.popDiagram()
+            const figureId = this.popDiagram()
 
             // Update the figures inner diagram image 
-            const figure = this.canvas.getFigure(this.outerFigureData.figureId)
+            const figure = this.canvas.getFigure(figureId)
             showInnerDiagram(figure)
 
             // Zoom outer diagram to correspond to the inner diagram
@@ -361,6 +360,7 @@ export default class Canvas {
             commandStack: canvas.commandStack,
             linesToRepaintAfterDragDrop: canvas.linesToRepaintAfterDragDrop,
             lineIntersections: canvas.lineIntersections,
+            figureId: newStoreName
         }
 
         canvasData.lines.each(function (i, e) {
@@ -454,6 +454,7 @@ export default class Canvas {
         canvas.lineIntersections = new draw2d.util.ArrayList()
 
         this.storeName = canvasData.storeName
+        return canvasData.figureId
     }
 }
 
