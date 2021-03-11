@@ -194,9 +194,9 @@ export const setNodeColor = (figure, colorName) => {
 
     nameLabel?.setFontColor(getNodeFontColor(colorName))
     descriptionLabel?.setFontColor(getNodeFontColor(colorName))
-    icon?.setBackgroundColor(getNodeColor(colorName))
+    //icon?.setBackgroundColor(getNodeColor(colorName))
     icon?.setColor(getNodeFontColor(colorName))
-    diagramIcon?.setBackgroundColor(getNodeColor(colorName))
+    // diagramIcon?.setBackgroundColor(getNodeColor(colorName))
     diagramIcon?.setColor(getNodeFontColor(colorName))
 
     figure.setUserData({ ...figure.getUserData(), color: colorName })
@@ -271,7 +271,7 @@ const addFigureLabels = (figure, color, name, description) => {
 
 
 const addIcon = (figure, icon, color, bgColor) => {
-    icon.attr({ width: 18, height: 15, color: color, bgColor: bgColor })
+    icon.attr({ width: 18, height: 15, color: color, bgColor: 'none' })
     const iconLocator = new draw2d.layout.locator.XYRelPortLocator(1, 1)
     figure.add(icon, iconLocator)
 }
@@ -279,7 +279,7 @@ const addIcon = (figure, icon, color, bgColor) => {
 
 const addInnerDiagramIcon = (figure, color, bgColor) => {
     const icon = new draw2d.shape.icon.Diagram({
-        width: 20, height: 20, color: color, bgColor: bgColor,
+        width: 20, height: 20, color: color, bgColor: 'none',
     })
 
     icon.on("click", () => showInnerDiagram(figure, color, bgColor))
@@ -306,10 +306,7 @@ export const showInnerDiagram = (figure) => {
     t.log('added')
 }
 
-// export const getInnerDiagram = (figure) => {
-//     const children = figure.getChildren().asArray()
-//     return children.find(c => c instanceof InnerDiagram);
-// }
+
 
 const hideInnerDiagram = (figure) => {
     const t = timing()
