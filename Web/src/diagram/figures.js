@@ -162,6 +162,15 @@ export const createGroupNode = (id, width, height, name, description, colorName)
         userData: { type: "name" }
     })
 
+    figure.on("click", function (emitter, event) {
+        PubSub.publish('diagram.SetReadOnlyMode', figure)
+    });
+
+    figure.on("dblclick", function (emitter, event) {
+        PubSub.publish('diagram.AddDefaultItem', { x: event.x, y: event.y })
+    });
+
+
     const nameLocator = new GroupNameLocator()
     figure.add(nameLabel, nameLocator);
     return figure

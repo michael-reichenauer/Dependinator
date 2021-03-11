@@ -59,20 +59,27 @@ export default class Canvas {
         if (!loadDiagram(canvas, this.storeName)) {
             addDefaultNewDiagram(canvas)
         }
-        const panPolicy = new PanPolicy(this.onEditMode)
-        panPolicy.onDoubleClick = (figure, mouseX, mouseY, shiftKey, ctrlKey) => {
-            if (figure !== null) {
+
+        canvas.on('dblclick', (emitter, event) => {
+            if (event.figure !== null) {
                 return
             }
-            console.log('abs', this.canvas.getAbsoluteX(), this.canvas.getAbsoluteY())
-            console.log('mouse', mouseX, mouseY)
-            const doc = this.canvas.fromCanvasToDocumentCoordinate(mouseX, mouseY)
-            console.log('doc', doc)
-            console.log('scroll inner', this.getScrollInCanvasCoordinate())
-            // this.addDefaultItem(mouseX, mouseY)
-        }
 
-        canvas.installEditPolicy(panPolicy)
+            if (this.diagramStack.length > 0) {
+                // double click out side group node in inner diagram lets pop
+                this.commandCloseInnerDiagram()
+                return
+            }
+            // console.log('abs', this.canvas.getAbsoluteX(), this.canvas.getAbsoluteY())
+            // console.log('mouse', mouseX, mouseY)
+            // const doc = this.canvas.fromCanvasToDocumentCoordinate(mouseX, mouseY)
+            // console.log('doc', doc)
+            // console.log('scroll inner', this.getScrollInCanvasCoordinate())
+            this.addDefaultItem(event.x, event.y)
+        });
+
+        canvas.panPolicy = new PanPolicy(this.onEditMode)
+        canvas.installEditPolicy(canvas.panPolicy)
 
         this.zoomPolicy = new WheelZoomPolicy()
         canvas.installEditPolicy(this.zoomPolicy);
@@ -90,6 +97,15 @@ export default class Canvas {
 
         return canvas
     }
+
+    commandSetEditMode = () => {
+        this.canvas.panPolicy.setEditMode(true)
+    }
+
+    commandSetReadOnlyMode = () => {
+        this.canvas.panPolicy.setEditMode(false)
+    }
+
 
     fromCanvasToScreenViewCoordinate = (x, y) => {
         return new draw2d.geo.Point(
@@ -161,6 +177,10 @@ export default class Canvas {
     commandAddNode = () => this.addFigure(createDefaultNode(), this.randomCenterPoint())
     commandAddUserNode = () => this.addFigure(createDefaultUserNode(), this.randomCenterPoint())
     commandAddExternalNode = () => this.addFigure(createDefaultExternalNode(), this.randomCenterPoint())
+
+    commandAddDefaultItem = (msg, p) => {
+        this.addDefaultItem(p.x, p.y)
+    }
 
     addDefaultItem = (x, y, shiftKey, ctrlKey) => this.addFigure(createDefaultNode(), { x: x, y: y })
 

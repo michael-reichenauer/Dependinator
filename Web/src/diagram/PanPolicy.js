@@ -31,18 +31,30 @@ export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
             this.isPort = false
         },
 
+        setEditMode: function (isEditMode) {
+            if (isEditMode) {
+                if (this.isReadOnly) {
+                    this.onEditMode(true)
+                    this.isReadOnly = false
+                }
+                this.isReadOnlySelect = false
+            } else {
+                if (!this.isReadOnly) {
+                    this.isReadOnly = true
+                    this.isReadOnlySelect = false
+                    this.onEditMode(false)
+                }
+            }
+        },
+
 
         select: function (canvas, figure) {
             if (figure == null) {
-                // clicked outside a figure, lets enable readonly 
-                if (!this.isReadOnly) {
-                    this.isReadOnly = true
-                    this.onEditMode(false)
-                }
-
+                // clicked outside a figure, lets set readonly mode
+                this.setEditMode(false)
                 return
             } else {
-                // Click on figure, (if in readonly mode, lets enable edit mode)
+                // Click on figure, (if in readonly mode, lets prepare for edit mode)
                 if (this.isReadOnly) {
                     this.isReadOnlySelect = true
                 }
@@ -320,12 +332,7 @@ export let PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
 
             if (this.isReadOnlySelect) {
                 // Was a click on figure (started in select), lets enable edit mode
-                if (this.isReadOnly) {
-                    this.onEditMode(true)
-                    this.isReadOnly = false
-                }
-
-                this.isReadOnlySelect = false
+                this.setEditMode(true)
             }
 
             try {
