@@ -31,11 +31,12 @@ export default class Canvas {
     setCanRedo = null
 
 
-    constructor(canvasId, setCanUndo, setCanRedo, setProgress, setCanPopDiagram) {
+    constructor(canvasId, setCanUndo, setCanRedo, setProgress, setCanPopDiagram, setEditMode) {
         this.setCanUndo = setCanUndo
         this.setCanRedo = setCanRedo
         this.setProgress = setProgress
         this.setCanPopDiagram = setCanPopDiagram
+        this.setEditMode = setEditMode
         this.canvas = this.createCanvas(canvasId)
     }
 
@@ -133,6 +134,7 @@ export default class Canvas {
 
 
     onEditMode = (isEditMode) => {
+        this.setEditMode(isEditMode)
         if (!isEditMode) {
             this.canvas.html.find("svg").css({
                 'background-color': canvasDivBackground,

@@ -1,6 +1,6 @@
 import React from "react";
 import PubSub from 'pubsub-js'
-import { Typography, fade, AppBar, Toolbar, IconButton, Tooltip, } from "@material-ui/core";
+import { Typography, fade, AppBar, Toolbar, IconButton, Tooltip, FormControlLabel, Switch, } from "@material-ui/core";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { ApplicationMenu } from "./ApplicationMenu"
 import PersonAddIcon from '@material-ui/icons/PersonAdd';
@@ -10,12 +10,15 @@ import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
 import ZoomOutMapIcon from '@material-ui/icons/ZoomOutMap';
-import { canPopDiagramAtom, canRedoAtom, canUndoAtom } from "../diagram/Diagram";
+import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom } from "../diagram/Diagram";
 import { useAtom } from "jotai";
+import { withStyles } from "@material-ui/styles";
+import { grey } from "@material-ui/core/colors";
+
 
 
 export default function ApplicationBar({ height }) {
-
+    const [editMode, setEditMode] = useAtom(editModeAtom);
     const [canUndo] = useAtom(canUndoAtom)
     const [canRedo] = useAtom(canRedoAtom)
     const [canPopDiagram] = useAtom(canPopDiagramAtom)
@@ -25,7 +28,14 @@ export default function ApplicationBar({ height }) {
     const redoStyle = canRedo ? classes.icons : classes.iconsDisabled
     const popDiagramStyle = canPopDiagram ? classes.icons : classes.iconsDisabled
 
-
+    const handleChange = (event) => {
+        setEditMode(event.target.checked);
+        if (event.target.checked) {
+            PubSub.publish('diagram.SetEditMode')
+        } else {
+            PubSub.publish('diagram.SetReadOnlyMode')
+        }
+    };
 
     return (
         <AppBar position="static" style={{ height: height }}>
@@ -45,17 +55,45 @@ export default function ApplicationBar({ height }) {
                 <Tooltip title="Add external system node" ><IconButton onClick={() => PubSub.publish('diagram.AddExternalNode')}><LibraryAddOutlinedIcon className={classes.icons} /></IconButton></Tooltip>
                 <Tooltip title="Scroll and zoom to show full diagram" ><IconButton onClick={() => PubSub.publish('diagram.ShowTotalDiagram')}><FilterCenterFocusIcon className={classes.icons} /></IconButton></Tooltip>
 
+                <Typography className={classes.title} variant="h4" noWrap>|</Typography>
                 <Tooltip title={canPopDiagram ? 'Zoom out and back to surrounding diagram' : ''} >
                     <IconButton disabled={!canPopDiagram} onClick={() => PubSub.publish('diagram.CloseInnerDiagram')}>
                         <ZoomOutMapIcon className={popDiagramStyle} /></IconButton></Tooltip>
 
                 <Typography className={classes.space} variant="h6" noWrap> </Typography>
+                <Tooltip title="Toggle edit mode" >
+                    <FormControlLabel
+                        control={
+                            <GreySwitch
+                                checked={editMode}
+                                onChange={handleChange}
+                                name="Edit"
+                            />
+                        }
+                        label="Edit"
+                    />
+                </Tooltip>
+
                 <ApplicationMenu />
             </Toolbar>
         </AppBar >
     )
 }
 
+
+const GreySwitch = withStyles({
+    switchBase: {
+        color: grey[400],
+        '&$checked': {
+            color: grey[50],
+        },
+        '&$checked + $track': {
+            backgroundColor: grey[50],
+        },
+    },
+    checked: {},
+    track: {},
+})(Switch);
 
 
 const useAppBarStyles = makeStyles((theme) => ({

@@ -16,6 +16,7 @@ export const canUndoAtom = atom(false)
 export const canRedoAtom = atom(false)
 export const canPopDiagramAtom = atom(false)
 export const progressAtom = atom(false)
+export const editModeAtom = atom(false)
 
 const useStyles = makeStyles((theme) => ({
     backdrop: {
@@ -30,12 +31,13 @@ export default function Diagram({ width, height }) {
     const [, setCanUndo] = useAtom(canUndoAtom)
     const [, setCanRedo] = useAtom(canRedoAtom)
     const [, setCanPopDiagram] = useAtom(canPopDiagramAtom)
+    const [, setEditMode] = useAtom(editModeAtom)
     const [isProgress, setProgress] = useAtom(progressAtom)
     const classes = useStyles();
 
     useEffect(() => {
         // Initialize canvas
-        const canvas = new Canvas('canvas', setCanUndo, setCanRedo, setProgress, setCanPopDiagram);
+        const canvas = new Canvas('canvas', setCanUndo, setCanRedo, setProgress, setCanPopDiagram, setEditMode);
         canvasRef.current = canvas
 
         const contextMenuHandler = enableContextMenu(setContextMenu, canvas)
