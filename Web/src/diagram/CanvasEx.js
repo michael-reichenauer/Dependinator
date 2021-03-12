@@ -1,6 +1,44 @@
 import draw2d from "draw2d";
+import { WheelZoomPolicy } from "./WheelZoomPolicy"
+import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
+import { PanPolicy } from "./PanPolicy";
+import { canvasDivBackground } from "./colors";
 
-export const CanvasEx = draw2d.Canvas.extend(
+const diagramSize = 100000
+
+export const createCanvas = (canvasId, onEditMode) => {
+    const canvas = new CanvasEx(canvasId)
+    canvas.setScrollArea("#" + canvasId)
+    canvas.setDimension(new draw2d.geo.Rectangle(0, 0, diagramSize, diagramSize))
+
+    // A likely bug in draw2d can be fixed with this hack
+    canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, diagramSize, diagramSize)
+
+    // Center the canvas
+    const area = canvas.getScrollArea()
+    area.scrollLeft(diagramSize / 2)
+    area.scrollTop(diagramSize / 2)
+
+    canvas.panPolicy = new PanPolicy(onEditMode)
+    canvas.installEditPolicy(canvas.panPolicy)
+
+    canvas.zoomPolicy = new WheelZoomPolicy()
+    canvas.installEditPolicy(canvas.zoomPolicy);
+
+    canvas.installEditPolicy(new ConnectionCreatePolicy())
+    canvas.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
+
+    canvas.html.find("svg").css('background-color', canvasDivBackground)
+
+    canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGeometryEditPolicy())
+    canvas.installEditPolicy(new draw2d.policy.canvas.SnapToInBetweenEditPolicy())
+    canvas.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
+    //canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
+
+    return canvas
+}
+
+const CanvasEx = draw2d.Canvas.extend(
     {
         init: function (canvasId, width, height) {
             this._super(canvasId, width, height);

@@ -2,8 +2,7 @@ import "import-jquery";
 import "jquery-ui-bundle";
 import "jquery-ui-bundle/jquery-ui.css";
 import draw2d from "draw2d";
-import { WheelZoomPolicy } from "./WheelZoomPolicy"
-import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
+
 import { random } from '../common/utils'
 import {
     createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
@@ -16,11 +15,11 @@ import { createDefaultConnection } from "./connections";
 import { Tweenable } from "shifty"
 import { clearStoredDiagram, loadDiagram, saveDiagram } from "./store";
 import { timing } from "../common/timing";
-import { CanvasEx } from './CanvasEx'
-import { PanPolicy } from "./PanPolicy";
+import { createCanvas } from "./CanvasEx";
+
 
 const defaultStoreDiagramName = 'diagram'
-const diagramSize = 100000
+
 
 export default class Canvas {
     canvasId = null
@@ -32,67 +31,25 @@ export default class Canvas {
 
     constructor(canvasId, callbacks) {
         this.callbacks = callbacks
-        this.canvas = this.createCanvas(canvasId)
+        this.canvasId = canvasId
+        this.canvas = createCanvas(canvasId, this.onEditMode)
     }
+
+    init() {
+        if (!loadDiagram(this.canvas, this.storeName)) {
+            addDefaultNewDiagram(this.canvas)
+        }
+
+        this.handleDoubleClick(this.canvas)
+        this.handleEditChanges(this.canvas)
+    }
+
 
 
     delete() {
         this.canvas.destroy()
     }
 
-
-    createCanvas(canvasId) {
-        this.canvasId = canvasId
-        const canvas = new CanvasEx(canvasId)
-        canvas.setScrollArea("#" + canvasId)
-        canvas.setDimension(new draw2d.geo.Rectangle(0, 0, diagramSize, diagramSize))
-        canvas.regionDragDropConstraint.constRect = new draw2d.geo.Rectangle(0, 0, diagramSize, diagramSize)
-
-        const area = canvas.getScrollArea()
-        area.scrollLeft(diagramSize / 2)
-        area.scrollTop(diagramSize / 2)
-
-        if (!loadDiagram(canvas, this.storeName)) {
-            addDefaultNewDiagram(canvas)
-        }
-
-        canvas.on('dblclick', (emitter, event) => {
-            if (event.figure !== null) {
-                return
-            }
-
-            if (this.diagramStack.length > 0) {
-                // double click out side group node in inner diagram lets pop
-                this.commandCloseInnerDiagram()
-                return
-            }
-            // console.log('abs', this.canvas.getAbsoluteX(), this.canvas.getAbsoluteY())
-            // console.log('mouse', mouseX, mouseY)
-            // const doc = this.canvas.fromCanvasToDocumentCoordinate(mouseX, mouseY)
-            // console.log('doc', doc)
-            // console.log('scroll inner', this.getScrollInCanvasCoordinate())
-            this.addDefaultItem(event.x, event.y)
-        });
-
-        canvas.panPolicy = new PanPolicy(this.onEditMode)
-        canvas.installEditPolicy(canvas.panPolicy)
-
-        this.zoomPolicy = new WheelZoomPolicy()
-        canvas.installEditPolicy(this.zoomPolicy);
-        canvas.installEditPolicy(new ConnectionCreatePolicy())
-        canvas.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
-
-        canvas.html.find("svg").css('background-color', canvasDivBackground)
-
-        canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGeometryEditPolicy())
-        canvas.installEditPolicy(new draw2d.policy.canvas.SnapToInBetweenEditPolicy())
-        canvas.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
-        //canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
-
-        this.enableCommandStackHandler(canvas.commandStack)
-
-        return canvas
-    }
 
     commandSetEditMode = (msg, isEditMode) => {
         this.canvas.panPolicy.setEditMode(isEditMode)
@@ -218,9 +175,10 @@ export default class Canvas {
             // Load inner diagram or a default group node if first time
             if (!loadDiagram(this.canvas, figure.getId())) {
                 const group = createDefaultGroupNode(getFigureName(figure))
-                const width = this.canvas.getWidth()
-                const x = diagramSize / 2 + (width - 1000) / 2
-                this.canvas.add(group, x, diagramSize / 2 + 250)
+                const d = this.canvas.getDimension()
+                const x = d.getWidth() / 2 + (this.canvas.getWidth() - 1000) / 2
+                const y = d.getHeight() / 2 + 250
+                this.canvas.add(group, x, y)
             }
             t.log('loaded diagram')
 
@@ -373,10 +331,7 @@ export default class Canvas {
 
         // canvas.commandStack.markSaveLocation()
         canvas.commandStack = new draw2d.command.CommandStack()
-        this.enableCommandStackHandler(canvas.commandStack)
-
-        this.setCanUndo(canvas.getCommandStack().canUndo())
-        this.setCanRedo(canvas.getCommandStack().canRedo())
+        this.handleEditChanges(canvas)
 
         canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
         canvas.lineIntersections = new draw2d.util.ArrayList()
@@ -426,8 +381,8 @@ export default class Canvas {
 
         canvas.commonPorts = canvasData.commonPorts
         canvas.commandStack = canvasData.commandStack
-        this.setCanUndo(canvas.getCommandStack().canUndo())
-        this.setCanRedo(canvas.getCommandStack().canRedo())
+        this.callbacks.setCanUndo(canvas.getCommandStack().canUndo())
+        this.callbacks.setCanRedo(canvas.getCommandStack().canRedo())
 
         canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
         canvas.lineIntersections = new draw2d.util.ArrayList()
@@ -436,11 +391,14 @@ export default class Canvas {
         return canvasData.figureId
     }
 
-    enableCommandStackHandler = (commandStack) => {
-        commandStack.addEventListener(e => {
+    handleEditChanges = (canvas) => {
+        this.callbacks.setCanUndo(canvas.commandStack.canUndo())
+        this.callbacks.setCanRedo(canvas.commandStack.canRedo())
+
+        canvas.commandStack.addEventListener(e => {
             // console.log('event:', e)
-            this.callbacks.setCanUndo(commandStack.canUndo())
-            this.callbacks.setCanRedo(commandStack.canRedo())
+            this.callbacks.setCanUndo(canvas.commandStack.canUndo())
+            this.callbacks.setCanRedo(canvas.commandStack.canRedo())
 
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
@@ -451,6 +409,21 @@ export default class Canvas {
         });
     }
 
+    handleDoubleClick(canvas) {
+        canvas.on('dblclick', (emitter, event) => {
+            if (event.figure !== null) {
+                return
+            }
+
+            if (this.diagramStack.length > 0) {
+                // double click out side group node in inner diagram lets pop
+                this.commandCloseInnerDiagram()
+                return
+            }
+
+            this.addDefaultItem(event.x, event.y)
+        });
+    }
 }
 
 
@@ -477,7 +450,7 @@ const addDefaultNewDiagram = (canvas) => {
     const user = createDefaultUserNode()
     const system = createDefaultSystemNode()
     const external = createDefaultExternalNode()
-    const b = diagramSize / 2
+    const b = canvas.getDimension().getWidth() / 2
     addFigureToCanvas(canvas, user, { x: b + 200, y: b + 400 })
     addFigureToCanvas(canvas, system, { x: b + 600, y: b + 400 })
     addConnectionToCanvas(canvas, createDefaultConnection(user, 'output0', system, 'input0'))

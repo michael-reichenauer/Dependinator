@@ -42,6 +42,7 @@ export default function Diagram({ width, height }) {
             setEditMode: setEditMode
         }
         const canvas = new Canvas('canvas', callbacks);
+        canvas.init()
         canvasRef.current = canvas
 
         const contextMenuHandler = enableContextMenu(setContextMenu, canvas)
