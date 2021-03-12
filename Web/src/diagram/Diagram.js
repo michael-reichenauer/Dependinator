@@ -1,7 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-import "import-jquery";
-import "jquery-ui-bundle";
-import "jquery-ui-bundle/jquery-ui.css";
 import PubSub from 'pubsub-js'
 import Canvas from "./Canvas"
 import CanvasMenu from "./CanvasMenu";
