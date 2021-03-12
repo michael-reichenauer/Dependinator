@@ -128,6 +128,5 @@ function HandleToolbarCommands(canvas) {
     PubSub.subscribe('diagram.CloseInnerDiagram', canvas.commandCloseInnerDiagram)
     PubSub.subscribe('diagram.EditInnerDiagram', canvas.commandEditInnerDiagram)
     PubSub.subscribe('diagram.SetEditMode', canvas.commandSetEditMode)
-    PubSub.subscribe('diagram.SetReadOnlyMode', canvas.commandSetReadOnlyMode)
     PubSub.subscribe('diagram.AddDefaultItem', canvas.commandAddDefaultItem)
 }

@@ -16,57 +16,56 @@ import { withStyles } from "@material-ui/styles";
 import { grey } from "@material-ui/core/colors";
 
 
-
 export default function ApplicationBar({ height }) {
+    const classes = useAppBarStyles();
     const [editMode, setEditMode] = useAtom(editModeAtom);
     const [canUndo] = useAtom(canUndoAtom)
     const [canRedo] = useAtom(canRedoAtom)
     const [canPopDiagram] = useAtom(canPopDiagramAtom)
-    const classes = useAppBarStyles();
 
-    const undoStyle = canUndo ? classes.icons : classes.iconsDisabled
-    const redoStyle = canRedo ? classes.icons : classes.iconsDisabled
-    const popDiagramStyle = canPopDiagram ? classes.icons : classes.iconsDisabled
-
-    const handleChange = (event) => {
+    const handleEditModeChange = (event) => {
         setEditMode(event.target.checked);
-        if (event.target.checked) {
-            PubSub.publish('diagram.SetEditMode')
-        } else {
-            PubSub.publish('diagram.SetReadOnlyMode')
-        }
+        PubSub.publish('diagram.SetEditMode', event.target.checked)
     };
+
+    const style = (disabled) => {
+        return !disabled ? classes.icons : classes.iconsDisabled
+    }
 
     return (
         <AppBar position="static" style={{ height: height }}>
             <Toolbar>
                 <Typography className={classes.title} variant="h6" noWrap>Dependinator</Typography>
 
-                <Tooltip title={canUndo ? 'Undo' : ''} >
-                    <IconButton disabled={!canUndo} onClick={() => PubSub.publish('diagram.Undo')}>
-                        <UndoIcon className={undoStyle} /></IconButton></Tooltip>
+                <Button tooltip="Undo" disabled={!canUndo} icon={<UndoIcon className={style(!canUndo)} />}
+                    onClick={() => PubSub.publish('diagram.Undo')} />
+                <Button tooltip="Redo" disabled={!canRedo} icon={<RedoIcon className={style(!canRedo)} />}
+                    onClick={() => PubSub.publish('diagram.Redo')} />
 
-                <Tooltip title={canRedo ? 'Redo' : ''} >
-                    <IconButton disabled={!canRedo} onClick={() => PubSub.publish('diagram.Redo')}>
-                        <RedoIcon className={redoStyle} /></IconButton></Tooltip>
+                <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 
-                <Tooltip title="Add node" ><IconButton onClick={() => PubSub.publish('diagram.AddNode')}><AddBoxOutlinedIcon className={classes.icons} /></IconButton></Tooltip>
-                <Tooltip title="Add user node" ><IconButton onClick={() => PubSub.publish('diagram.AddUserNode')}><PersonAddIcon className={classes.icons} /></IconButton></Tooltip>
-                <Tooltip title="Add external system node" ><IconButton onClick={() => PubSub.publish('diagram.AddExternalNode')}><LibraryAddOutlinedIcon className={classes.icons} /></IconButton></Tooltip>
-                <Tooltip title="Scroll and zoom to show full diagram" ><IconButton onClick={() => PubSub.publish('diagram.ShowTotalDiagram')}><FilterCenterFocusIcon className={classes.icons} /></IconButton></Tooltip>
+                <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={style()} />}
+                    onClick={() => PubSub.publish('diagram.AddNode')} />
+                <Button tooltip="Add user node" icon={<PersonAddIcon className={style()} />}
+                    onClick={() => PubSub.publish('diagram.AddUserNode')} />
+                <Button tooltip="Add external node" icon={<LibraryAddOutlinedIcon className={style()} />}
+                    onClick={() => PubSub.publish('diagram.AddExternalNode')} />
 
-                <Typography className={classes.title} variant="h4" noWrap>|</Typography>
-                <Tooltip title={canPopDiagram ? 'Zoom out and back to surrounding diagram' : ''} >
-                    <IconButton disabled={!canPopDiagram} onClick={() => PubSub.publish('diagram.CloseInnerDiagram')}>
-                        <ZoomOutMapIcon className={popDiagramStyle} /></IconButton></Tooltip>
+                <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 
-                <Typography className={classes.space} variant="h6" noWrap> </Typography>
+                <Button tooltip="Scroll and zoom to show all of the diagram" icon={<FilterCenterFocusIcon className={style()} />}
+                    onClick={() => PubSub.publish('diagram.ShowTotalDiagram')} />
+                <Button tooltip="Zoom out and back to surrounding diagram" disabled={!canPopDiagram} icon={<ZoomOutMapIcon className={style(!canPopDiagram)} />}
+                    onClick={() => PubSub.publish('diagram.CloseInnerDiagram')} />
+
+                <Typography className={classes.space} variant="h7" noWrap> </Typography>
+
                 <Tooltip title="Toggle edit mode" >
                     <FormControlLabel
                         control={
                             <GreySwitch
                                 checked={editMode}
-                                onChange={handleChange}
+                                onChange={handleEditModeChange}
                                 name="Edit"
                             />
                         }
@@ -75,8 +74,18 @@ export default function ApplicationBar({ height }) {
                 </Tooltip>
 
                 <ApplicationMenu />
+
             </Toolbar>
         </AppBar >
+    )
+}
+
+
+const Button = ({ icon, tooltip, disabled, onClick }) => {
+    return (
+        <Tooltip title={!disabled ? tooltip : ''} >
+            <IconButton disabled={disabled} onClick={onClick}>
+                {icon}</IconButton></Tooltip>
     )
 }
 

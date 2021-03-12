@@ -99,12 +99,8 @@ export default class Canvas {
         return canvas
     }
 
-    commandSetEditMode = () => {
-        this.canvas.panPolicy.setEditMode(true)
-    }
-
-    commandSetReadOnlyMode = () => {
-        this.canvas.panPolicy.setEditMode(false)
+    commandSetEditMode = (msg, isEditMode) => {
+        this.canvas.panPolicy.setEditMode(isEditMode)
     }
 
 
