@@ -19,11 +19,10 @@ const useMenuStyles = makeStyles((theme) => ({
 export function ApplicationMenu() {
     const classes = useMenuStyles();
     const [menu, setMenu] = useState(null);
-    const [anchorEl, setAnchorEl] = React.useState(null);
+    const [anchorEl, setAnchorEl] = useState(null);
 
     const handleAbout = (event) => {
         setMenu(null);
-        console.info(`Show About`)
         setAnchorEl(event.currentTarget);
     };
 
@@ -36,7 +35,7 @@ export function ApplicationMenu() {
         }
     };
 
-    const handleExport = (event) => {
+    const handleExport = () => {
         setMenu(null);
         PubSub.publish('diagram.Export')
     }
@@ -64,9 +63,6 @@ export function ApplicationMenu() {
                 open={Boolean(menu)}
                 onClose={() => setMenu(null)}
                 PaperProps={{
-                    // style: {
-                    //     backgroundColor: "#333333"
-                    // },
                 }}
             >
 
@@ -75,6 +71,7 @@ export function ApplicationMenu() {
                 <MenuItem onClick={handleAbout}>About</MenuItem>
 
             </Menu>
+
             <Popover
                 id={id}
                 open={open}
@@ -99,7 +96,6 @@ export function ApplicationMenu() {
                         by Simon Brown.
                     </Typography>
                 </Box>
-
             </Popover>
         </>
     )
