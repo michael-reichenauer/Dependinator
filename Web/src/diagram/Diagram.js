@@ -34,7 +34,14 @@ export default function Diagram({ width, height }) {
 
     useEffect(() => {
         // Initialize canvas
-        const canvas = new Canvas('canvas', setCanUndo, setCanRedo, setProgress, setCanPopDiagram, setEditMode);
+        const callbacks = {
+            setCanUndo: setCanUndo,
+            setCanRedo: setCanRedo,
+            setProgress: setProgress,
+            setCanPopDiagram: setCanPopDiagram,
+            setEditMode: setEditMode
+        }
+        const canvas = new Canvas('canvas', callbacks);
         canvasRef.current = canvas
 
         const contextMenuHandler = enableContextMenu(setContextMenu, canvas)
@@ -48,7 +55,7 @@ export default function Diagram({ width, height }) {
             document.removeEventListener("contextmenu", contextMenuHandler);
             canvasRef.current.delete()
         }
-    }, [setCanUndo, setCanRedo, setProgress, setCanPopDiagram])
+    }, [setCanUndo, setCanRedo, setProgress, setCanPopDiagram, setEditMode])
 
     const { canvas, figure, x, y } = contextMenu ?? {};
 

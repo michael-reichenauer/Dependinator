@@ -1,5 +1,4 @@
 import draw2d from "draw2d";
-// import { timing } from "../common/timing";
 
 export const CanvasEx = draw2d.Canvas.extend(
     {
@@ -28,6 +27,7 @@ export const CanvasEx = draw2d.Canvas.extend(
                         figure.setPosition(x);
                     }
                 }
+
 
                 figure.setCanvas(this);
 

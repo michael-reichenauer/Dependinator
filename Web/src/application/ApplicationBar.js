@@ -58,7 +58,7 @@ export default function ApplicationBar({ height }) {
                 <Button tooltip="Zoom out and back to surrounding diagram" disabled={!canPopDiagram} icon={<ZoomOutMapIcon className={style(!canPopDiagram)} />}
                     onClick={() => PubSub.publish('diagram.CloseInnerDiagram')} />
 
-                <Typography className={classes.space} variant="h7" noWrap> </Typography>
+                <Typography className={classes.space} variant="h6" noWrap> </Typography>
 
                 <Tooltip title="Toggle edit mode" >
                     <FormControlLabel

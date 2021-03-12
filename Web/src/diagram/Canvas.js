@@ -27,16 +27,11 @@ export default class Canvas {
     canvas = null;
     diagramStack = []
     storeName = defaultStoreDiagramName
-    setCanUndo = null
-    setCanRedo = null
+    callbacks = null
 
 
-    constructor(canvasId, setCanUndo, setCanRedo, setProgress, setCanPopDiagram, setEditMode) {
-        this.setCanUndo = setCanUndo
-        this.setCanRedo = setCanRedo
-        this.setProgress = setProgress
-        this.setCanPopDiagram = setCanPopDiagram
-        this.setEditMode = setEditMode
+    constructor(canvasId, callbacks) {
+        this.callbacks = callbacks
         this.canvas = this.createCanvas(canvasId)
     }
 
@@ -130,7 +125,7 @@ export default class Canvas {
 
 
     onEditMode = (isEditMode) => {
-        this.setEditMode(isEditMode)
+        this.callbacks.setEditMode(isEditMode)
         if (!isEditMode) {
             this.canvas.html.find("svg").css({
                 'background-color': canvasDivBackground,
@@ -196,7 +191,7 @@ export default class Canvas {
             return
         }
 
-        this.setProgress(true)
+        this.callbacks.setProgress(true)
 
         setTimeout(() => {
             const t = timing()
@@ -234,14 +229,14 @@ export default class Canvas {
             this.canvas.setZoom(zoomFactor / innerDiagram.innerZoom)
 
             this.setScrollInCanvasCoordinate(b.x - xd * this.canvas.zoomFactor, b.y - yd * this.canvas.zoomFactor)
-            this.setProgress(false)
+            this.callbacks.setProgress(false)
             t.log()
         }, 30);
     }
 
 
     commandCloseInnerDiagram = () => {
-        this.setProgress(true)
+        this.callbacks.setProgress(true)
         setTimeout(() => {
             const t = timing()
 
@@ -271,7 +266,7 @@ export default class Canvas {
             const sy = figure.y + 2 + imy - (b.y * this.canvas.zoomFactor)
             this.setScrollInCanvasCoordinate(sx, sy)
 
-            this.setProgress(false)
+            this.callbacks.setProgress(false)
             t.log('popped diagram')
         }, 30);
     }
@@ -388,23 +383,9 @@ export default class Canvas {
 
         this.diagramStack.push(canvasData)
         this.storeName = newStoreName
-        this.setCanPopDiagram(true)
+        this.callbacks.setCanPopDiagram(true)
     }
 
-    enableCommandStackHandler = (commandStack) => {
-        commandStack.addEventListener(e => {
-            // console.log('event:', e)
-            this.setCanUndo(commandStack.canUndo())
-            this.setCanRedo(commandStack.canRedo())
-
-            if (e.isPostChangeEvent()) {
-                // console.log('event isPostChangeEvent:', e)
-                if (e.action === "POST_EXECUTE") {
-                    saveDiagram(this.canvas, this.storeName)
-                }
-            }
-        });
-    }
 
     popDiagram = () => {
         if (this.diagramStack.length === 0) {
@@ -421,7 +402,7 @@ export default class Canvas {
 
 
         const canvasData = this.diagramStack.pop()
-        this.setCanPopDiagram(this.diagramStack.length > 0)
+        this.callbacks.setCanPopDiagram(this.diagramStack.length > 0)
 
         canvas.selection.clear()
         canvas.currentDropTarget = null
@@ -454,6 +435,22 @@ export default class Canvas {
         this.storeName = canvasData.storeName
         return canvasData.figureId
     }
+
+    enableCommandStackHandler = (commandStack) => {
+        commandStack.addEventListener(e => {
+            // console.log('event:', e)
+            this.callbacks.setCanUndo(commandStack.canUndo())
+            this.callbacks.setCanRedo(commandStack.canRedo())
+
+            if (e.isPostChangeEvent()) {
+                // console.log('event isPostChangeEvent:', e)
+                if (e.action === "POST_EXECUTE") {
+                    saveDiagram(this.canvas, this.storeName)
+                }
+            }
+        });
+    }
+
 }
 
 
