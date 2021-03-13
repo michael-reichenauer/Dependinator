@@ -2,7 +2,7 @@ import draw2d from "draw2d";
 import { WheelZoomPolicy } from "./WheelZoomPolicy"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { PanPolicy } from "./PanPolicy";
-import { canvasDivBackground } from "./colors";
+import { canvasBackground, canvasDivBackground } from "./colors";
 
 const diagramSize = 100000
 
@@ -36,6 +36,32 @@ export const createCanvas = (canvasId, onEditMode) => {
     //canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
 
     return canvas
+}
+
+export const setBackground = (canvas) => {
+    canvas.html.find("svg").css({
+        'background-color': canvasDivBackground,
+        "background": canvasDivBackground,
+        "background-size": 0
+    })
+}
+
+export const setGridBackground = (canvas) => {
+    // In edit mode, add a grid background
+    const bgColor = canvasDivBackground
+    const color = canvasBackground.darker(0.1).rgba()
+    const interval = 10
+    const gridStroke = 1
+
+    let background =
+        ` linear-gradient(to right,  ${color} ${gridStroke}px, transparent ${gridStroke}px),
+          linear-gradient(to bottom, ${color} ${gridStroke}px, ${bgColor}  ${gridStroke}px)`
+    let backgroundSize = `${interval}px ${interval}px`
+
+    canvas.html.find("svg").css({
+        "background": background,
+        "background-size": backgroundSize
+    })
 }
 
 const CanvasEx = draw2d.Canvas.extend(

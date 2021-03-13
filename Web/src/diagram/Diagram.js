@@ -46,7 +46,7 @@ export default function Diagram({ width, height }) {
         canvasRef.current = canvas
 
         const contextMenuHandler = enableContextMenu(setContextMenu, canvas)
-        HandleToolbarCommands(canvas)
+        PubSub.subscribe('diagram.Export', () => exportDiagram(canvas))
 
         setTimeout(() => canvas.showTotalDiagram(), 0);
 
@@ -79,6 +79,7 @@ export default function Diagram({ width, height }) {
 }
 
 
+
 function enableContextMenu(setContextMenu, canvas) {
     const handleContextMenu = (event) => {
         if (!event.path.some((i) => i.id === 'diagram')) {
@@ -103,6 +104,7 @@ function enableContextMenu(setContextMenu, canvas) {
     return handleContextMenu
 }
 
+
 function exportDiagram(canvas) {
     // Open other tab
     const tab = window.open(":", "_blank");
@@ -118,20 +120,4 @@ function exportDiagram(canvas) {
     })
 
     //tab.print();
-}
-
-
-function HandleToolbarCommands(canvas) {
-    PubSub.subscribe('diagram.AddNode', canvas.commandAddNode)
-    PubSub.subscribe('diagram.AddUserNode', canvas.commandAddUserNode)
-    PubSub.subscribe('diagram.AddExternalNode', canvas.commandAddExternalNode)
-    PubSub.subscribe('diagram.Undo', canvas.commandUndo)
-    PubSub.subscribe('diagram.Redo', canvas.commandRedo)
-    PubSub.subscribe('diagram.ShowTotalDiagram', canvas.showTotalDiagram)
-    PubSub.subscribe('diagram.NewDiagram', canvas.commandNewDiagram)
-    PubSub.subscribe('diagram.Export', () => exportDiagram(canvas))
-    PubSub.subscribe('diagram.CloseInnerDiagram', canvas.commandCloseInnerDiagram)
-    PubSub.subscribe('diagram.EditInnerDiagram', canvas.commandEditInnerDiagram)
-    PubSub.subscribe('diagram.SetEditMode', canvas.commandSetEditMode)
-    PubSub.subscribe('diagram.AddDefaultItem', canvas.commandAddDefaultItem)
 }

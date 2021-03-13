@@ -31,7 +31,7 @@ export function ApplicationMenu() {
         setMenu(null);
         var shouldDelete = confirm('Do you really want to clear the current diagram?') //eslint-disable-line
         if (shouldDelete) {
-            PubSub.publish('diagram.NewDiagram')
+            PubSub.publish('canvas.NewDiagram')
         }
     };
 

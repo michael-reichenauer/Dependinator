@@ -25,7 +25,7 @@ export default function ApplicationBar({ height }) {
 
     const handleEditModeChange = (event) => {
         setEditMode(event.target.checked);
-        PubSub.publish('diagram.SetEditMode', event.target.checked)
+        PubSub.publish('canvas.SetEditMode', event.target.checked)
     };
 
     const style = (disabled) => {
@@ -38,25 +38,25 @@ export default function ApplicationBar({ height }) {
                 <Typography className={classes.title} variant="h6" noWrap>Dependinator</Typography>
 
                 <Button tooltip="Undo" disabled={!canUndo} icon={<UndoIcon className={style(!canUndo)} />}
-                    onClick={() => PubSub.publish('diagram.Undo')} />
+                    onClick={() => PubSub.publish('canvas.Undo')} />
                 <Button tooltip="Redo" disabled={!canRedo} icon={<RedoIcon className={style(!canRedo)} />}
-                    onClick={() => PubSub.publish('diagram.Redo')} />
+                    onClick={() => PubSub.publish('canvas.Redo')} />
 
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 
                 <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={style()} />}
-                    onClick={() => PubSub.publish('diagram.AddNode')} />
+                    onClick={() => PubSub.publish('canvas.AddNode')} />
                 <Button tooltip="Add user node" icon={<PersonAddIcon className={style()} />}
-                    onClick={() => PubSub.publish('diagram.AddUserNode')} />
+                    onClick={() => PubSub.publish('canvas.AddUserNode')} />
                 <Button tooltip="Add external node" icon={<LibraryAddOutlinedIcon className={style()} />}
-                    onClick={() => PubSub.publish('diagram.AddExternalNode')} />
+                    onClick={() => PubSub.publish('canvas.AddExternalNode')} />
 
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 
                 <Button tooltip="Scroll and zoom to show all of the diagram" icon={<FilterCenterFocusIcon className={style()} />}
-                    onClick={() => PubSub.publish('diagram.ShowTotalDiagram')} />
+                    onClick={() => PubSub.publish('canvas.ShowTotalDiagram')} />
                 <Button tooltip="Zoom out and back to surrounding diagram" disabled={!canPopDiagram} icon={<ZoomOutMapIcon className={style(!canPopDiagram)} />}
-                    onClick={() => PubSub.publish('diagram.CloseInnerDiagram')} />
+                    onClick={() => PubSub.publish('canvas.CloseInnerDiagram')} />
 
                 <Typography className={classes.space} variant="h6" noWrap> </Typography>
 

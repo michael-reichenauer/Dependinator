@@ -163,11 +163,11 @@ export const createGroupNode = (id, width, height, name, description, colorName)
     })
 
     figure.on("click", function (emitter, event) {
-        PubSub.publish('diagram.SetReadOnlyMode', figure)
+        PubSub.publish('canvas.SetReadOnlyMode', figure)
     });
 
     figure.on("dblclick", function (emitter, event) {
-        PubSub.publish('diagram.AddDefaultItem', { x: event.x, y: event.y })
+        PubSub.publish('canvas.AddDefaultNode', { x: event.x, y: event.y })
     });
 
 
@@ -330,7 +330,7 @@ const hideInnerDiagram = (figure) => {
 }
 
 const editInnerDiagram = (figure) => {
-    PubSub.publish('diagram.EditInnerDiagram', figure)
+    PubSub.publish('canvas.EditInnerDiagram', figure)
 }
 
 export const getCanvasFiguresRect = (canvas) => {

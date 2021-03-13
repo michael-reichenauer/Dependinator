@@ -2,7 +2,7 @@ import "import-jquery";
 import "jquery-ui-bundle";
 import "jquery-ui-bundle/jquery-ui.css";
 import draw2d from "draw2d";
-
+import PubSub from 'pubsub-js'
 import { random } from '../common/utils'
 import {
     createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
@@ -10,12 +10,11 @@ import {
     showInnerDiagram
 } from './figures'
 import { exportCanvas } from './serialization'
-import { canvasDivBackground } from "./colors";
 import { createDefaultConnection } from "./connections";
 import { Tweenable } from "shifty"
 import { clearStoredDiagram, loadDiagram, saveDiagram } from "./store";
 import { timing } from "../common/timing";
-import { createCanvas } from "./CanvasEx";
+import { createCanvas, setBackground, setGridBackground } from "./CanvasEx";
 
 
 const defaultStoreDiagramName = 'diagram'
@@ -27,7 +26,6 @@ export default class Canvas {
     diagramStack = []
     storeName = defaultStoreDiagramName
     callbacks = null
-
 
     constructor(canvasId, callbacks) {
         this.callbacks = callbacks
@@ -42,8 +40,8 @@ export default class Canvas {
 
         this.handleDoubleClick(this.canvas)
         this.handleEditChanges(this.canvas)
+        this.handleCommands()
     }
-
 
 
     delete() {
@@ -51,88 +49,29 @@ export default class Canvas {
     }
 
 
-    commandSetEditMode = (msg, isEditMode) => {
-        this.canvas.panPolicy.setEditMode(isEditMode)
-    }
-
-
-    fromCanvasToScreenViewCoordinate = (x, y) => {
-        return new draw2d.geo.Point(
-            ((x * (1 / this.canvas.zoomFactor)) - this.canvas.getScrollLeft()),
-            ((y * (1 / this.canvas.zoomFactor)) - this.canvas.getScrollTop()))
-    }
-
-    fromScreenViewToCanvasCoordinate = (x, y) => {
-        return new draw2d.geo.Point(
-            (x + this.canvas.getScrollLeft()) * this.canvas.zoomFactor,
-            (y + this.canvas.getScrollTop()) * this.canvas.zoomFactor)
-    }
-
-
-    setScrollInCanvasCoordinate = (left, top) => {
-        const area = this.canvas.getScrollArea()
-        area.scrollLeft(left / this.canvas.zoomFactor)
-        area.scrollTop(top / this.canvas.zoomFactor)
-    }
-
-    getScrollInCanvasCoordinate = () => {
-        const area = this.canvas.getScrollArea()
-        return { left: area.scrollLeft() * this.canvas.zoomFactor, top: area.scrollTop() * this.canvas.zoomFactor }
-    }
-
-
-    onEditMode = (isEditMode) => {
-        this.callbacks.setEditMode(isEditMode)
-        if (!isEditMode) {
-            this.canvas.html.find("svg").css({
-                'background-color': canvasDivBackground,
-                "background": canvasDivBackground,
-                "background-size": 0
-            })
-            return
-        }
-
-        const bgColor = canvasDivBackground
-        const color = new draw2d.util.Color('#E0E3E3').rgba()
-        const interval = 10
-        const gridStroke = 1
-
-        let background =
-            ` linear-gradient(to right,  ${color} ${gridStroke}px, transparent ${gridStroke}px),
-              linear-gradient(to bottom, ${color} ${gridStroke}px, ${bgColor}  ${gridStroke}px)`
-        let backgroundSize = `${interval}px ${interval}px`
-
-        this.canvas.html.find("svg").css({
-            "background": background,
-            "background-size": backgroundSize
+    handleCommands = () => {
+        PubSub.subscribe('canvas.Undo', () => {
+            this.canvas.getCommandStack().undo();
+            saveDiagram(this.canvas, this.storName)
         })
+        PubSub.subscribe('canvas.Redo', () => {
+            this.canvas.getCommandStack().redo();
+            saveDiagram(this.canvas, this.storName)
+        })
+
+        PubSub.subscribe('canvas.AddNode', () => this.addFigure(createDefaultNode(), this.randomCenterPoint()))
+        PubSub.subscribe('canvas.AddUserNode', () => this.addFigure(createDefaultUserNode(), this.randomCenterPoint()))
+        PubSub.subscribe('canvas.AddExternalNode', () => this.addFigure(createDefaultExternalNode(), this.randomCenterPoint()))
+        PubSub.subscribe('canvas.AddDefaultNode', (_, data) => this.addFigure(createDefaultNode(), { x: data.x, y: data.y }))
+
+        PubSub.subscribe('canvas.ShowTotalDiagram', this.showTotalDiagram)
+
+        PubSub.subscribe('canvas.EditInnerDiagram', this.commandEditInnerDiagram)
+        PubSub.subscribe('canvas.CloseInnerDiagram', this.commandCloseInnerDiagram)
+
+        PubSub.subscribe('canvas.SetEditMode', (_, isEditMode) => this.canvas.panPolicy.setEditMode(isEditMode))
+        PubSub.subscribe('canvas.NewDiagram', this.commandNewDiagram)
     }
-
-    getId = () => this.canvas.canvasId
-
-    showTotalDiagram = () => zoomAndMoveShowTotalDiagram(this.canvas)
-
-
-    commandUndo = () => {
-        this.canvas.getCommandStack().undo();
-        saveDiagram(this.canvas, this.storName)
-    }
-
-    commandRedo = () => {
-        this.canvas.getCommandStack().redo();
-        saveDiagram(this.canvas, this.storName)
-    }
-
-
-    commandAddNode = () => this.addFigure(createDefaultNode(), this.randomCenterPoint())
-    commandAddUserNode = () => this.addFigure(createDefaultUserNode(), this.randomCenterPoint())
-    commandAddExternalNode = () => this.addFigure(createDefaultExternalNode(), this.randomCenterPoint())
-
-    commandAddDefaultItem = (msg, p) => {
-        this.addDefaultItem(p.x, p.y)
-    }
-
-    addDefaultItem = (x, y, shiftKey, ctrlKey) => this.addFigure(createDefaultNode(), { x: x, y: y })
 
 
     commandNewDiagram = () => {
@@ -229,6 +168,20 @@ export default class Canvas {
         }, 30);
     }
 
+    onEditMode = (isEditMode) => {
+        this.callbacks.setEditMode(isEditMode)
+
+        if (!isEditMode) {
+            // Remove grid
+            setBackground(this.canvas)
+            return
+        }
+
+        setGridBackground(this.canvas)
+    }
+
+
+    showTotalDiagram = () => zoomAndMoveShowTotalDiagram(this.canvas)
 
     unselectAll = () => {
         if (!this.canvas.selection.all.isEmpty()) {
@@ -259,6 +212,29 @@ export default class Canvas {
         return this.canvas.fromDocumentToCanvasCoordinate(x, y)
     }
 
+    fromCanvasToScreenViewCoordinate = (x, y) => {
+        return new draw2d.geo.Point(
+            ((x * (1 / this.canvas.zoomFactor)) - this.canvas.getScrollLeft()),
+            ((y * (1 / this.canvas.zoomFactor)) - this.canvas.getScrollTop()))
+    }
+
+    fromScreenViewToCanvasCoordinate = (x, y) => {
+        return new draw2d.geo.Point(
+            (x + this.canvas.getScrollLeft()) * this.canvas.zoomFactor,
+            (y + this.canvas.getScrollTop()) * this.canvas.zoomFactor)
+    }
+
+
+    setScrollInCanvasCoordinate = (left, top) => {
+        const area = this.canvas.getScrollArea()
+        area.scrollLeft(left / this.canvas.zoomFactor)
+        area.scrollTop(top / this.canvas.zoomFactor)
+    }
+
+    getScrollInCanvasCoordinate = () => {
+        const area = this.canvas.getScrollArea()
+        return { left: area.scrollLeft() * this.canvas.zoomFactor, top: area.scrollTop() * this.canvas.zoomFactor }
+    }
 
     randomCenterPoint = () => {
         let x = (this.canvas.getWidth() / 2 + random(-10, 10) + this.canvas.getScrollLeft()) * this.canvas.getZoom()
@@ -420,8 +396,7 @@ export default class Canvas {
                 this.commandCloseInnerDiagram()
                 return
             }
-
-            this.addDefaultItem(event.x, event.y)
+            PubSub.publish('canvas.AddDefaultNode', { x: event.x, y: event.y })
         });
     }
 }
