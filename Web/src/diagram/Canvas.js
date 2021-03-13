@@ -117,9 +117,9 @@ export default class Canvas {
             this.canvas.setZoom(outerZoom / innerDiagram.innerZoom)
 
             // Scroll inner diagram to correspond to where the inner diagram image was
-            const figuresRect = getCanvasFiguresRect(this.canvas)
-            const left = figuresRect.x - innerDiagramViewPos.left * this.canvas.zoomFactor
-            const top = figuresRect.y - innerDiagramViewPos.top * this.canvas.zoomFactor
+            const innerDiagramRect = getCanvasFiguresRect(this.canvas)
+            const left = innerDiagramRect.x - innerDiagramViewPos.left * this.canvas.zoomFactor
+            const top = innerDiagramRect.y - innerDiagramViewPos.top * this.canvas.zoomFactor
             this.setScrollInCanvasCoordinate(left, top)
 
             t.log()
@@ -131,15 +131,17 @@ export default class Canvas {
         this.withWorkingIndicator(() => {
             const t = timing()
 
-            // Remember inner diagram zoom and position relative screen view
+            // Get the inner diagram zoom to use when zooming outer diagram
             const postInnerZoom = this.canvas.zoomFactor
-            const innerDiagramBox = getCanvasFiguresRect(this.canvas)
-            const b = this.fromCanvasToViewCoordinate(innerDiagramBox.x, innerDiagramBox.y)
+
+            // Get inner diagram view position to scroll the outer diagram to same position
+            const innerDiagramRect = getCanvasFiguresRect(this.canvas)
+            const innerDiagramViewPos = this.fromCanvasToViewCoordinate(innerDiagramRect.x, innerDiagramRect.y)
 
             // Show outer diagram (closing the inner diagram)
             const figureId = this.popDiagram()
 
-            // Update the figures inner diagram image 
+            // Update the figures inner diagram image in the node
             const figure = this.canvas.getFigure(figureId)
             showInnerDiagram(figure)
 
@@ -153,11 +155,10 @@ export default class Canvas {
             const imy = figure.innerDiagram.marginY * figure.innerDiagram.innerZoom
 
             // Scroll outer diagram to correspond to inner diagram position
-            const sx = figure.x + 2 + imx - (b.x * this.canvas.zoomFactor)
-            const sy = figure.y + 2 + imy - (b.y * this.canvas.zoomFactor)
-            this.setScrollInCanvasCoordinate(sx, sy)
+            const sx = figure.x + 2 + imx - (innerDiagramViewPos.x * this.canvas.zoomFactor)
+            const sy = figure.y + 2 + imy - (innerDiagramViewPos.y * this.canvas.zoomFactor)
 
-            this.callbacks.setProgress(false)
+            this.setScrollInCanvasCoordinate(sx, sy)
             t.log('popped diagram')
         });
     }
@@ -191,20 +192,19 @@ export default class Canvas {
         this.enableEditMode()
     }
 
+
     export = (result) => {
         const rect = getCanvasFiguresRect(this.canvas)
         exportCanvas(this.canvas, rect, result)
     }
 
+
     tryGetFigure = (x, y) => {
-        let cp = this.toCanvasCoordinate(x, y)
+        let cp = this.canvas.fromDocumentToCanvasCoordinate(x, y)
         let figure = this.canvas.getBestFigure(cp.x, cp.y)
         return figure
     }
 
-    toCanvasCoordinate = (x, y) => {
-        return this.canvas.fromDocumentToCanvasCoordinate(x, y)
-    }
 
     fromCanvasToViewCoordinate = (x, y) => {
         return new draw2d.geo.Point(
