@@ -30,6 +30,25 @@ export const InnerDiagram = draw2d.SetFigure.extend({
         }
     },
 
+    getDiagramViewCoordinate: function () {
+        const canvasZoom = this.canvas.zoomFactor
+
+        // get the diagram margin in canvas coordinates
+        const imx = this.marginX * this.innerZoom
+        const imy = this.marginY * this.innerZoom
+
+        // get the inner diagram pos in canvas view coordinates
+        const outerScrollPos = this.getScrollInCanvasCoordinate()
+        const vx = (this.getAbsoluteX() + imx - outerScrollPos.left) / canvasZoom
+        const vy = (this.getAbsoluteY() + imy - outerScrollPos.top) / canvasZoom
+        return { left: vx, top: vy }
+    },
+
+
+    getScrollInCanvasCoordinate: function () {
+        const area = this.canvas.getScrollArea()
+        return { left: area.scrollLeft() * this.canvas.zoomFactor, top: area.scrollTop() * this.canvas.zoomFactor }
+    },
 
     createSet: function () {
         const set = this.canvas.paper.set()

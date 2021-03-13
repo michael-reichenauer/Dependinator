@@ -85,46 +85,43 @@ export default class Canvas {
     commandEditInnerDiagram = (msg, figure) => {
         const innerDiagram = figure.innerDiagram
         if (innerDiagram == null) {
+            // Figure has no inner diagram, thus nothing to edit
             return
         }
 
         this.withWorkingIndicator(() => {
             const t = timing()
 
-            const zoomFactor = this.canvas.zoomFactor
+            // Remember the current outer zoom, which is used when zooming ghr inner diagram
+            const outerZoom = this.canvas.zoomFactor
 
-            // get the inner diagram margin in outer canvas coordinates
-            const imx = innerDiagram.marginX * innerDiagram.innerZoom
-            const imy = innerDiagram.marginY * innerDiagram.innerZoom
-
-            // get the inner diagram pos in outer coordinates
-            const innerScroll = this.getScrollInCanvasCoordinate()
-            const xd = (figure.x + 2 + imx - innerScroll.left) / zoomFactor
-            const yd = (figure.y + 2 + imy - innerScroll.top) / zoomFactor
+            // Get the view coordinates of the inner diagram image where the inner diagram should
+            // positioned after the switch 
+            const innerDiagramViewPos = innerDiagram.getDiagramViewCoordinate()
 
             // Remove the inner diagram image from figure (will be updated when popping)
             figure.remove(figure.innerDiagram)
             figure.innerDiagram = null
 
-            // Show the inner diagram
+            // Show the actual inner diagram
             this.pushDiagram(figure.getId())
             t.log('pushed diagram')
 
             // Load inner diagram or a default group node if first time
             if (!loadDiagram(this.canvas, figure.getId())) {
-                const group = createDefaultGroupNode(getFigureName(figure))
-                const d = this.canvas.getDimension()
-                const x = d.getWidth() / 2 + (this.canvas.getWidth() - 1000) / 2
-                const y = d.getHeight() / 2 + 250
-                this.canvas.add(group, x, y)
+                addDefaultInnerDiagram(this.canvas, getFigureName(figure))
             }
             t.log('loaded diagram')
 
-            // Zoom and scroll inner diagram to correspond to outer diagram
-            const b = getCanvasFiguresRect(this.canvas)
-            this.canvas.setZoom(zoomFactor / innerDiagram.innerZoom)
+            // Zoom inner diagram to correspond to inner diagram image size
+            this.canvas.setZoom(outerZoom / innerDiagram.innerZoom)
 
-            this.setScrollInCanvasCoordinate(b.x - xd * this.canvas.zoomFactor, b.y - yd * this.canvas.zoomFactor)
+            // Scroll inner diagram to correspond to where the inner diagram image was
+            const figuresRect = getCanvasFiguresRect(this.canvas)
+            const left = figuresRect.x - innerDiagramViewPos.left * this.canvas.zoomFactor
+            const top = figuresRect.y - innerDiagramViewPos.top * this.canvas.zoomFactor
+            this.setScrollInCanvasCoordinate(left, top)
+
             t.log()
         });
     }
@@ -137,7 +134,7 @@ export default class Canvas {
             // Remember inner diagram zoom and position relative screen view
             const postInnerZoom = this.canvas.zoomFactor
             const innerDiagramBox = getCanvasFiguresRect(this.canvas)
-            const b = this.fromCanvasToScreenViewCoordinate(innerDiagramBox.x, innerDiagramBox.y)
+            const b = this.fromCanvasToViewCoordinate(innerDiagramBox.x, innerDiagramBox.y)
 
             // Show outer diagram (closing the inner diagram)
             const figureId = this.popDiagram()
@@ -209,13 +206,13 @@ export default class Canvas {
         return this.canvas.fromDocumentToCanvasCoordinate(x, y)
     }
 
-    fromCanvasToScreenViewCoordinate = (x, y) => {
+    fromCanvasToViewCoordinate = (x, y) => {
         return new draw2d.geo.Point(
             ((x * (1 / this.canvas.zoomFactor)) - this.canvas.getScrollLeft()),
             ((y * (1 / this.canvas.zoomFactor)) - this.canvas.getScrollTop()))
     }
 
-    fromScreenViewToCanvasCoordinate = (x, y) => {
+    fromViewToCanvasCoordinate = (x, y) => {
         return new draw2d.geo.Point(
             (x + this.canvas.getScrollLeft()) * this.canvas.zoomFactor,
             (y + this.canvas.getScrollTop()) * this.canvas.zoomFactor)
@@ -438,6 +435,14 @@ const addDefaultNewDiagram = (canvas) => {
     addConnectionToCanvas(canvas, createDefaultConnection(system, 'output0', external, 'input0'))
 
     zoomAndMoveShowTotalDiagram(canvas)
+}
+
+const addDefaultInnerDiagram = (canvas, name) => {
+    const group = createDefaultGroupNode(name)
+    const d = canvas.getDimension()
+    const x = d.getWidth() / 2 + (canvas.getWidth() - 1000) / 2
+    const y = d.getHeight() / 2 + 250
+    canvas.add(group, x, y)
 }
 
 const zoomAndMoveShowTotalDiagram = (canvas) => {
