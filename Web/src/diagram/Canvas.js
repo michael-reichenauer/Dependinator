@@ -81,15 +81,14 @@ export default class Canvas {
         addDefaultNewDiagram(this.canvas)
     }
 
+
     commandEditInnerDiagram = (msg, figure) => {
         const innerDiagram = figure.innerDiagram
         if (innerDiagram == null) {
             return
         }
 
-        this.callbacks.setProgress(true)
-
-        setTimeout(() => {
+        this.withWorkingIndicator(() => {
             const t = timing()
 
             const zoomFactor = this.canvas.zoomFactor
@@ -126,15 +125,13 @@ export default class Canvas {
             this.canvas.setZoom(zoomFactor / innerDiagram.innerZoom)
 
             this.setScrollInCanvasCoordinate(b.x - xd * this.canvas.zoomFactor, b.y - yd * this.canvas.zoomFactor)
-            this.callbacks.setProgress(false)
             t.log()
-        }, 30);
+        });
     }
 
 
     commandCloseInnerDiagram = () => {
-        this.callbacks.setProgress(true)
-        setTimeout(() => {
+        this.withWorkingIndicator(() => {
             const t = timing()
 
             // Remember inner diagram zoom and position relative screen view
@@ -165,7 +162,7 @@ export default class Canvas {
 
             this.callbacks.setProgress(false)
             t.log('popped diagram')
-        }, 30);
+        });
     }
 
     onEditMode = (isEditMode) => {
@@ -398,6 +395,14 @@ export default class Canvas {
             }
             PubSub.publish('canvas.AddDefaultNode', { x: event.x, y: event.y })
         });
+    }
+
+    withWorkingIndicator = (action) => {
+        this.callbacks.setProgress(true)
+        setTimeout(() => {
+            action()
+            this.callbacks.setProgress(false)
+        }, 20);
     }
 }
 
