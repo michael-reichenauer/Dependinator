@@ -19,27 +19,66 @@ const newUserIcon = () => new draw2d.shape.icon.User()
 const newExternalIcon = () => new draw2d.shape.icon.NewWindow()
 
 
-export const serializeFigures = (canvas) => {
-    return canvas.getFigures().asArray().map((f) => serializeFigure(f));
-}
+class Figures {
+    // constructor(canvas) {
+    //     this.canvas = canvas
+    // }
 
-const serializeFigure = (f) => {
-    //console.log('figure', f)
-    const children = f.getChildren().asArray()
-    const nameLabel = children.find(c => c.userData?.type === 'name');
-    const descriptionLabel = children.find(c => c.userData?.type === 'description');
-    return {
-        type: f.userData.type,
-        id: f.id,
-        x: f.x,
-        y: f.y,
-        w: f.width,
-        h: f.height,
-        name: nameLabel?.text ?? '',
-        description: descriptionLabel?.text ?? '',
-        color: f.userData.color
-    };
+    serializeFigures = (canvas) => {
+        return canvas.getFigures().asArray().map((f) => this.serializeFigure(f));
+    }
+
+    deserializeFigures = (figures) => {
+        return figures.map(f => this.deserializeFigure(f)).filter(f => f != null)
+    }
+
+
+    serializeFigure = (f) => {
+        //console.log('figure', f)
+        const children = f.getChildren().asArray()
+        const nameLabel = children.find(c => c.userData?.type === 'name');
+        const descriptionLabel = children.find(c => c.userData?.type === 'description');
+        return {
+            type: f.userData.type,
+            id: f.id,
+            x: f.x,
+            y: f.y,
+            w: f.width,
+            h: f.height,
+            name: nameLabel?.text ?? '',
+            description: descriptionLabel?.text ?? '',
+            color: f.userData.color
+        };
+    }
+
+
+    deserializeFigure = (f) => {
+        let figure
+        switch (f.type) {
+            case nodeType:
+                figure = createNode(f.id, f.w, f.h, f.name, f.description, f.color)
+                break;
+            case userType:
+                figure = createUserNode(f.id, f.w, f.h, f.name, f.description, f.color)
+                break;
+            case externalType:
+                figure = createExternalNode(f.id, f.w, f.h, f.name, f.description, f.color)
+                break;
+            case groupType:
+                figure = createGroupNode(f.id, f.w, f.h, f.name, f.description, f.color)
+                break;
+            default:
+                return null
+            //throw new Error('Unexpected node typw!');
+        }
+        figure.x = f.x
+        figure.y = f.y
+        return figure
+    }
 }
+export const figures = new Figures()
+
+
 
 
 export const getFigureName = (figure) => {
@@ -47,35 +86,6 @@ export const getFigureName = (figure) => {
     const nameLabel = children.find(c => c.userData?.type === 'name');
     return nameLabel?.text ?? ''
 }
-
-export const deserializeFigures = (figures) => {
-    return figures.map(f => deserializeFigure(f)).filter(f => f != null)
-}
-
-const deserializeFigure = (f) => {
-    let figure
-    switch (f.type) {
-        case nodeType:
-            figure = createNode(f.id, f.w, f.h, f.name, f.description, f.color)
-            break;
-        case userType:
-            figure = createUserNode(f.id, f.w, f.h, f.name, f.description, f.color)
-            break;
-        case externalType:
-            figure = createExternalNode(f.id, f.w, f.h, f.name, f.description, f.color)
-            break;
-        case groupType:
-            figure = createGroupNode(f.id, f.w, f.h, f.name, f.description, f.color)
-            break;
-        default:
-            return null
-        //throw new Error('Unexpected node typw!');
-    }
-    figure.x = f.x
-    figure.y = f.y
-    return figure
-}
-
 
 
 export const createDefaultNode = () => {

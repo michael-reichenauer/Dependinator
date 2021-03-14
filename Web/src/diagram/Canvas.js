@@ -7,9 +7,10 @@ import { random } from '../common/utils'
 import {
     createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
     createDefaultSystemNode, getCanvasFiguresRect, getFigureName, createDefaultGroupNode,
-    showInnerDiagram
+    showInnerDiagram,
+    figures
 } from './figures'
-import { deserializeCanvas, exportCanvas, serializeCanvas } from './serialization'
+import Serializer from './serializer'
 import { createDefaultConnection } from "./connections";
 import { Tweenable } from "shifty"
 import { store } from "./store";
@@ -27,11 +28,13 @@ export default class Canvas {
     storeName = defaultStoreDiagramName
     callbacks = null
     store = store
+    serializer = null
 
     constructor(canvasId, callbacks) {
         this.callbacks = callbacks
         this.canvasId = canvasId
         this.canvas = createCanvas(canvasId, this.onEditMode)
+        this.serializer = new Serializer(this.canvas)
     }
 
     init() {
@@ -76,7 +79,7 @@ export default class Canvas {
 
     saveDiagram = (canvas, storeName) => {
         // Serialize canvas figures and connections into canvas data object
-        const canvasData = serializeCanvas(canvas);
+        const canvasData = this.serializer.serialize();
 
         this.store.write(canvasData, storeName)
     }
@@ -88,7 +91,7 @@ export default class Canvas {
         }
 
         // Deserialize canvas
-        deserializeCanvas(canvas, canvasData)
+        this.serializer.deserialize(canvasData)
         return true
     }
 
@@ -215,7 +218,7 @@ export default class Canvas {
 
     export = (result) => {
         const rect = getCanvasFiguresRect(this.canvas)
-        exportCanvas(this.canvas, rect, result)
+        this.serializer.export(rect, result)
     }
 
 

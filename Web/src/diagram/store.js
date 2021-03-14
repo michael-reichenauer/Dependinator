@@ -1,6 +1,3 @@
-import { timing } from "../common/timing";
-import { deserializeCanvas, serializeCanvas } from "./serialization";
-
 
 
 class Store {
