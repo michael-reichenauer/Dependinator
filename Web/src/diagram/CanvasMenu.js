@@ -1,6 +1,6 @@
 import React from "react";
 import ContextMenu from "../common/ContextMenu";
-import { createDefaultExternalNode, createDefaultNode, createDefaultUserNode } from "./figures";
+import Node from "./figures";
 
 
 export default function CanvasMenu({ canvas, onClose, x, y }) {
@@ -8,12 +8,12 @@ export default function CanvasMenu({ canvas, onClose, x, y }) {
         return null
     }
 
-    const add = figure => canvas.addFigure(figure, canvas.toCanvasCoordinate(x, y))
+    const add = type => canvas.addNode(type, canvas.fromDocumentToCanvasCoordinate(x, y))
 
     const items = [
-        { text: 'Add Node', do: () => add(createDefaultNode()) },
-        { text: 'Add User Node', do: () => add(createDefaultUserNode()) },
-        { text: 'Add External Node', do: () => add(createDefaultExternalNode()) }
+        { text: 'Add Node', do: () => add(Node.nodeType) },
+        { text: 'Add User Node', do: () => add(Node.userType) },
+        { text: 'Add External Node', do: () => add(Node.externalType) }
     ]
 
     return (

@@ -1,6 +1,6 @@
 import draw2d from "draw2d";
 import { configureDefaultConnection } from './connections'
-import { createDefaultNode } from "./figures";
+import Node from "./figures";
 
 export const ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePolicy.extend(
     {
@@ -148,7 +148,7 @@ export const ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreateP
 
                 if (this.currentDropTarget === null) {
                     // No drop target, lets create a node first to connect to
-                    const figure = createDefaultNode()
+                    const figure = Node.createDefault(Node.nodeType).figure
 
                     // Determine figure point and port name
                     let p = null

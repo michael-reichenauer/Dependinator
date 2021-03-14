@@ -5,8 +5,7 @@ import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
 import { random } from '../common/utils'
 import Node, {
-    createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
-    createDefaultSystemNode, getCanvasFiguresRect, getFigureName, createDefaultGroupNode,
+    getCanvasFiguresRect, getFigureName, createDefaultGroupNode,
     showInnerDiagram,
 } from './figures'
 import Serializer from './serializer'
@@ -208,7 +207,7 @@ export default class Canvas {
 
 
     addNode = (type, p) => {
-        const node = Node.create(type)
+        const node = Node.createDefault(type)
         addFigureToCanvas(this.canvas, node.figure, p)
     }
 
@@ -238,6 +237,9 @@ export default class Canvas {
             (y + this.canvas.getScrollTop()) * this.canvas.zoomFactor)
     }
 
+    fromDocumentToCanvasCoordinate = (x, y) => {
+        return this.canvas.fromDocumentToCanvasCoordinate(x, y)
+    }
 
     setScrollInCanvasCoordinate = (left, top) => {
         const area = this.canvas.getScrollArea()
@@ -435,9 +437,9 @@ const hidePortsIfReadOnly = (canvas, figure) => {
 }
 
 const addDefaultNewDiagram = (canvas) => {
-    const user = createDefaultUserNode()
-    const system = createDefaultSystemNode()
-    const external = createDefaultExternalNode()
+    const user = Node.createDefault(Node.userType).figure
+    const system = Node.createDefault(Node.nodeType).figure
+    const external = Node.createDefault(Node.externalType).figure
     const b = canvas.getDimension().getWidth() / 2
     addFigureToCanvas(canvas, user, { x: b + 200, y: b + 400 })
     addFigureToCanvas(canvas, system, { x: b + 600, y: b + 400 })
