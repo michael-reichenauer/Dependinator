@@ -4,7 +4,7 @@ import "jquery-ui-bundle/jquery-ui.css";
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
 import { random } from '../common/utils'
-import {
+import Node, {
     createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
     createDefaultSystemNode, getCanvasFiguresRect, getFigureName, createDefaultGroupNode,
     showInnerDiagram,
@@ -37,7 +37,7 @@ export default class Canvas {
     }
 
     init() {
-        if (!this.loadDiagram(this.canvas, this.storeName)) {
+        if (!this.load(this.storeName)) {
             addDefaultNewDiagram(this.canvas)
         }
 
@@ -55,17 +55,17 @@ export default class Canvas {
     handleCommands = () => {
         PubSub.subscribe('canvas.Undo', () => {
             this.canvas.getCommandStack().undo();
-            this.saveDiagram(this.canvas, this.storName)
+            this.save(this.canvas, this.storName)
         })
         PubSub.subscribe('canvas.Redo', () => {
             this.canvas.getCommandStack().redo();
-            this.saveDiagram(this.canvas, this.storName)
+            this.save(this.canvas, this.storName)
         })
 
-        PubSub.subscribe('canvas.AddNode', () => this.addFigure(createDefaultNode(), this.randomCenterPoint()))
-        PubSub.subscribe('canvas.AddUserNode', () => this.addFigure(createDefaultUserNode(), this.randomCenterPoint()))
-        PubSub.subscribe('canvas.AddExternalNode', () => this.addFigure(createDefaultExternalNode(), this.randomCenterPoint()))
-        PubSub.subscribe('canvas.AddDefaultNode', (_, data) => this.addFigure(createDefaultNode(), { x: data.x, y: data.y }))
+        PubSub.subscribe('canvas.AddNode', () => this.addNode(Node.nodeType, this.getCenter()))
+        PubSub.subscribe('canvas.AddUserNode', () => this.addNode(Node.userType, this.getCenter()))
+        PubSub.subscribe('canvas.AddExternalNode', () => this.addNode(Node.externalType, this.getCenter()))
+        PubSub.subscribe('canvas.AddDefaultNode', (_, p) => this.addNode(Node.nodeType, p))
 
         PubSub.subscribe('canvas.ShowTotalDiagram', this.showTotalDiagram)
 
@@ -76,14 +76,14 @@ export default class Canvas {
         PubSub.subscribe('canvas.NewDiagram', this.commandNewDiagram)
     }
 
-    saveDiagram = (canvas, storeName) => {
+    save = (canvas, storeName) => {
         // Serialize canvas figures and connections into canvas data object
         const canvasData = this.serializer.serialize();
 
         this.store.write(canvasData, storeName)
     }
 
-    loadDiagram = (canvas, storeName) => {
+    load = (storeName) => {
         const canvasData = this.store.read(storeName)
         if (canvasData == null) {
             return false
@@ -98,8 +98,6 @@ export default class Canvas {
     commandNewDiagram = () => {
         this.clearDiagram()
         this.store.clear()
-        // clearStoredDiagram()
-        console.log('Cleared all stored')
         addDefaultNewDiagram(this.canvas)
     }
 
@@ -130,7 +128,7 @@ export default class Canvas {
             t.log('pushed diagram')
 
             // Load inner diagram or a default group node if first time
-            if (!this.loadDiagram(this.canvas, figure.getId())) {
+            if (!this.load(figure.getId())) {
                 addDefaultInnerDiagram(this.canvas, getFigureName(figure))
             }
             t.log('loaded diagram')
@@ -209,9 +207,9 @@ export default class Canvas {
     }
 
 
-    addFigure = (figure, p) => {
-        addFigureToCanvas(this.canvas, figure, p)
-        this.enableEditMode()
+    addNode = (type, p) => {
+        const node = Node.create(type)
+        addFigureToCanvas(this.canvas, node.figure, p)
     }
 
 
@@ -252,21 +250,12 @@ export default class Canvas {
         return { left: area.scrollLeft() * this.canvas.zoomFactor, top: area.scrollTop() * this.canvas.zoomFactor }
     }
 
-    randomCenterPoint = () => {
+    getCenter = () => {
         let x = (this.canvas.getWidth() / 2 + random(-10, 10) + this.canvas.getScrollLeft()) * this.canvas.getZoom()
         let y = (this.canvas.getHeight() / 2 + random(-10, 10) + this.canvas.getScrollTop()) * this.canvas.getZoom()
 
         return { x: x, y: y }
     }
-
-
-    enableEditMode = () => {
-        if (!this.canvas.isReadOnlyMode) {
-            return
-        }
-        this.togglePanPolicy()
-    }
-
 
     clearDiagram = () => {
         const canvas = this.canvas
@@ -395,7 +384,7 @@ export default class Canvas {
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
                 if (e.action === "POST_EXECUTE") {
-                    this.saveDiagram(this.canvas, this.storeName)
+                    this.save(this.canvas, this.storeName)
                 }
             }
         });

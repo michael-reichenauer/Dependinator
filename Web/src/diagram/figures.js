@@ -25,6 +25,7 @@ export default class Node {
     static externalType = 'external'
     static groupType = 'group'
 
+
     constructor(figure) {
         this.figure = figure
         this.figure.userData2 = this
@@ -38,13 +39,7 @@ export default class Node {
     static create = (type) => {
         const node = new Node(new draw2d.shape.node.Between())
         node.configure(type)
-
-        const { name, colorName } = this.getDefaultValues(type)
-
-        return new Node(createNode(
-            draw2d.util.UUID.create(),
-            defaultNodeWidth, defaultNodeHeight,
-            name, 'Description', colorName))
+        return node
     }
 
     getFigure = () => {
@@ -52,12 +47,15 @@ export default class Node {
     }
 
     configure = (type) => {
-        //const { name, colorName } = this.getDefaultValues(type)
-
+        const { name, colorName, icon } = this.getDefaultValues(type)
+        this.configureNode(type,
+            this.newId(),
+            defaultNodeWidth, defaultNodeHeight,
+            name, 'Description', colorName, icon)
     }
 
 
-    configureCommonNode = (type, id, width, height, name, description, colorName, icon) => {
+    configureNode = (type, id, width, height, name, description, colorName, icon) => {
         const color = Colors.getNodeColor(colorName)
         const borderColor = Colors.getNodeBorderColor(colorName)
         const fontColor = Colors.getNodeFontColor(colorName)
@@ -100,15 +98,17 @@ export default class Node {
     getDefaultValues = (type) => {
         switch (type) {
             case Node.nodeType:
-                return { name: 'Node', colorName: 'DeepPurple' }
+                return { name: 'Node', colorName: 'DeepPurple', icon: null }
             case Node.userType:
-                return { name: 'External User', colorName: 'BlueGrey' }
+                return { name: 'External User', colorName: 'BlueGrey', icon: newUserIcon() }
             case Node.externalType:
-                return { name: 'External System', colorName: 'BlueGrey' }
+                return { name: 'External System', colorName: 'BlueGrey', icon: newExternalIcon() }
             default:
                 throw new Error('Unknown type: ' + type);
         }
     }
+
+    newId = () => draw2d.util.UUID.create()
 }
 
 
