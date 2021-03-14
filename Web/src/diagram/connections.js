@@ -1,9 +1,9 @@
 import draw2d from "draw2d";
-import { canvasBackground } from "./colors";
+import Colors from "./colors";
 
-export const connectionColor = canvasBackground.getIdealTextColor()
-const labelTextColor = canvasBackground.getIdealTextColor();
-const labelColorBackground = canvasBackground;
+export const connectionColor = Colors.canvasText
+const labelTextColor = Colors.canvasText
+const labelColorBackground = Colors.canvasBackground;
 
 export const configureDefaultConnection = (connection) => {
     return configureConnection(connection, 'Description')

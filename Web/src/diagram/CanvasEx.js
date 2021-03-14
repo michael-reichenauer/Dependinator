@@ -2,7 +2,7 @@ import draw2d from "draw2d";
 import { WheelZoomPolicy } from "./WheelZoomPolicy"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { PanPolicy } from "./PanPolicy";
-import { canvasBackground, canvasDivBackground } from "./colors";
+import Colors from "./colors";
 
 const diagramSize = 100000
 
@@ -28,7 +28,7 @@ export const createCanvas = (canvasId, onEditMode) => {
     canvas.installEditPolicy(new ConnectionCreatePolicy())
     canvas.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
 
-    canvas.html.find("svg").css('background-color', canvasDivBackground)
+    canvas.html.find("svg").css('background-color', Colors.canvasDivBackground)
 
     canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGeometryEditPolicy())
     canvas.installEditPolicy(new draw2d.policy.canvas.SnapToInBetweenEditPolicy())
@@ -40,22 +40,22 @@ export const createCanvas = (canvasId, onEditMode) => {
 
 export const setBackground = (canvas) => {
     canvas.html.find("svg").css({
-        'background-color': canvasDivBackground,
-        "background": canvasDivBackground,
+        'background-color': Colors.canvasDivBackground,
+        "background": Colors.canvasDivBackground,
         "background-size": 0
     })
 }
 
 export const setGridBackground = (canvas) => {
-    // In edit mode, add a grid background
-    const bgColor = canvasDivBackground
-    const color = canvasBackground.darker(0.1).rgba()
+    // In edit mode, add a grid background.
+    const bgColor = Colors.canvasDivBackground
+    const gridColor = Colors.canvasGridRgb
     const interval = 10
     const gridStroke = 1
 
     let background =
-        ` linear-gradient(to right,  ${color} ${gridStroke}px, transparent ${gridStroke}px),
-          linear-gradient(to bottom, ${color} ${gridStroke}px, ${bgColor}  ${gridStroke}px)`
+        ` linear-gradient(to right,  ${gridColor} ${gridStroke}px, transparent ${gridStroke}px),
+          linear-gradient(to bottom, ${gridColor} ${gridStroke}px, ${bgColor}  ${gridStroke}px)`
     let backgroundSize = `${interval}px ${interval}px`
 
     canvas.html.find("svg").css({

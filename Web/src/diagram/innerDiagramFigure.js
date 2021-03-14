@@ -1,10 +1,10 @@
 import draw2d from "draw2d";
-import { canvasBackground, getNodeBorderColor, getNodeColor, getNodeFontColor } from "./colors";
+import Colors from "./colors";
 import { connectionColor } from "./connections";
 import { externalType, groupType, nodeType, userType } from "./figures";
 
 
-const groupColor = '#' + canvasBackground.getIdealTextColor().hex()
+const groupColor = '#' + Colors.canvasText.hex()
 
 const emptyDiagramData = (name) => {
     return {
@@ -127,7 +127,7 @@ export const InnerDiagram = draw2d.SetFigure.extend({
     },
 
     createNodeName: function (x, y, w, name, colorName) {
-        const fontColor = '#' + getNodeFontColor(colorName).hex()
+        const fontColor = Colors.getNodeFontHexColor(colorName)
         const f = this.canvas.paper.text()
         f.attr({
             x: w / 2 + x, y: y + 25, text: name, fill: fontColor,
@@ -147,8 +147,8 @@ export const InnerDiagram = draw2d.SetFigure.extend({
     },
 
     createNode: function (x, y, w, h, colorName) {
-        const color = '#' + getNodeColor(colorName).hex()
-        const borderColor = '#' + getNodeBorderColor(colorName).hex()
+        const color = Colors.getNodeHexColor(colorName)
+        const borderColor = Colors.getNodeBorderHexColor(colorName)
         const f = this.canvas.paper.rect()
         f.attr({
             x: x, y: y, width: w, height: h,

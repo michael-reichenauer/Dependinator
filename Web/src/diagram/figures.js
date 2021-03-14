@@ -1,5 +1,5 @@
 import draw2d from "draw2d";
-import { getNodeColor, getNodeFontColor, getNodeBorderColor, canvasBackground } from "./colors";
+import Colors from "./colors";
 import PubSub from 'pubsub-js'
 import { InnerDiagram } from "./innerDiagramFigure";
 import { timing } from "../common/timing";
@@ -17,6 +17,100 @@ export const externalType = 'external'
 export const groupType = 'group'
 const newUserIcon = () => new draw2d.shape.icon.User()
 const newExternalIcon = () => new draw2d.shape.icon.NewWindow()
+
+
+export default class Node {
+    static nodeType = 'node'
+    static userType = 'user'
+    static externalType = 'external'
+    static groupType = 'group'
+
+    constructor(figure) {
+        this.figure = figure
+        this.figure.userData2 = this
+    }
+
+    static from = (figure) => {
+        return new Node(figure)
+    }
+
+
+    static create = (type) => {
+        const node = new Node(new draw2d.shape.node.Between())
+        node.configure(type)
+
+        const { name, colorName } = this.getDefaultValues(type)
+
+        return new Node(createNode(
+            draw2d.util.UUID.create(),
+            defaultNodeWidth, defaultNodeHeight,
+            name, 'Description', colorName))
+    }
+
+    getFigure = () => {
+        return this.figure
+    }
+
+    configure = (type) => {
+        //const { name, colorName } = this.getDefaultValues(type)
+
+    }
+
+
+    configureCommonNode = (type, id, width, height, name, description, colorName, icon) => {
+        const color = Colors.getNodeColor(colorName)
+        const borderColor = Colors.getNodeBorderColor(colorName)
+        const fontColor = Colors.getNodeFontColor(colorName)
+        this.figure.attr({
+            id: id,
+            width: width, height: height,
+            bgColor: color, color: borderColor,
+            radius: 5,
+            userData: { type: type, color: colorName }
+        });
+
+        addFigureLabels(this.figure, fontColor, name, description, colorName)
+        if (icon != null) {
+            addIcon(this.figure, icon, fontColor, color);
+        }
+        if (type === nodeType) {
+            addInnerDiagramIcon(this.figure, fontColor, color)
+        }
+
+        this.figure.on("click", function (emitter, event) {
+            console.log('click node')
+        });
+        this.figure.on("dblclick", function (emitter, event) {
+            console.log('double click node')
+        });
+
+        addPorts(this.figure)
+    }
+
+
+    getName = () => {
+        const children = this.figure.getChildren().asArray()
+        const nameLabel = children.find(c => c.userData?.type === 'name');
+        return nameLabel?.text ?? ''
+    }
+
+
+
+
+    getDefaultValues = (type) => {
+        switch (type) {
+            case Node.nodeType:
+                return { name: 'Node', colorName: 'DeepPurple' }
+            case Node.userType:
+                return { name: 'External User', colorName: 'BlueGrey' }
+            case Node.externalType:
+                return { name: 'External System', colorName: 'BlueGrey' }
+            default:
+                throw new Error('Unknown type: ' + type);
+        }
+    }
+}
+
 
 
 class Figures {
@@ -101,7 +195,7 @@ const createInnerNode = (figure, store) => {
     const name = getFigureName(figure)
     const canvasData = store.read(figure.getId())
 
-    const bgColor = canvasBackground
+    const bgColor = Colors.canvasBackground
     const innerDiagramNode = new InnerDiagram({
         width: figure.width - 4,
         height: figure.height - 4,
@@ -154,8 +248,8 @@ export const createDefaultGroupNode = (name) => {
 }
 
 export const createGroupNode = (id, width, height, name, description, colorName) => {
-    const color = canvasBackground
-    const borderColor = canvasBackground.getIdealTextColor()
+    const color = Colors.canvasBackground
+    const borderColor = Colors.canvasText
     const fontColor = borderColor
 
     const figure = new draw2d.shape.composite.Raft({
@@ -205,19 +299,19 @@ export const createExternalNode = (id, width, height, name, description, colorNa
 
 
 export const setNodeColor = (figure, colorName) => {
-    figure.setBackgroundColor(getNodeColor(colorName))
+    figure.setBackgroundColor(Colors.getNodeColor(colorName))
     const children = figure.getChildren().asArray()
     const nameLabel = getNameLabel(figure)
     const descriptionLabel = getDescriptionLabel(figure);
     const icon = children.find(c => c instanceof draw2d.shape.icon.Icon);
     const diagramIcon = getDiagramIcon(figure);
 
-    nameLabel?.setFontColor(getNodeFontColor(colorName))
-    descriptionLabel?.setFontColor(getNodeFontColor(colorName))
+    nameLabel?.setFontColor(Colors.getNodeFontColor(colorName))
+    descriptionLabel?.setFontColor(Colors.getNodeFontColor(colorName))
     //icon?.setBackgroundColor(getNodeColor(colorName))
-    icon?.setColor(getNodeFontColor(colorName))
+    icon?.setColor(Colors.getNodeFontColor(colorName))
     // diagramIcon?.setBackgroundColor(getNodeColor(colorName))
-    diagramIcon?.setColor(getNodeFontColor(colorName))
+    diagramIcon?.setColor(Colors.getNodeFontColor(colorName))
 
     figure.setUserData({ ...figure.getUserData(), color: colorName })
 }
@@ -239,9 +333,9 @@ const getDiagramIcon = (figure) => {
 
 
 const createCommonNode = (type, id, width, height, name, description, colorName, icon) => {
-    const color = getNodeColor(colorName)
-    const borderColor = getNodeBorderColor(colorName)
-    const fontColor = getNodeFontColor(colorName)
+    const color = Colors.getNodeColor(colorName)
+    const borderColor = Colors.getNodeBorderColor(colorName)
+    const fontColor = Colors.getNodeFontColor(colorName)
     const figure = new draw2d.shape.node.Between({
         id: id,
         width: width, height: height,

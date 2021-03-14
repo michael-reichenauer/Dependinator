@@ -1,12 +1,14 @@
 import draw2d from "draw2d";
 import { figures, getCanvasFiguresRect } from './figures'
 import { deserializeConnections, serializeConnections } from './connections'
-import { canvasDivBackground } from "./colors";
+import Colors from "./colors";
+
 
 export default class Serializer {
     constructor(canvas) {
         this.canvas = canvas
     }
+
 
     serialize = () => {
         const canvas = this.canvas
@@ -24,6 +26,7 @@ export default class Serializer {
         return canvasData
     }
 
+
     deserialize = (canvasData) => {
         // const figures = deserializeFigures(canvasData.figures) 
         // for (let i = 0; i < figures.length; i++) {
@@ -37,6 +40,7 @@ export default class Serializer {
         this.canvas.addAll(figures.deserializeFigures(canvasData.figures))
         this.canvas.addAll(deserializeConnections(this.canvas, canvasData.connections))
     }
+
 
     export = (rect, result) => {
         var writer = new draw2d.io.svg.Writer();
@@ -54,7 +58,7 @@ export default class Serializer {
 
             // Export size (A4) and view box
             const prefix = `<svg width="210mm" height="297mm" version="1.1"
-             viewBox="${r.x} ${r.y} ${r.w} ${r.h}" style="background-color:${canvasDivBackground}" `
+             viewBox="${r.x} ${r.y} ${r.w} ${r.h}" style="background-color:${Colors.canvasDivBackground}" `
 
             // Replace svg size with A4 size and view box
             const index = svg.indexOf('xmlns="http://www.w3.org/2000/svg"')

@@ -8,7 +8,6 @@ import {
     createDefaultNode, createDefaultUserNode, createDefaultExternalNode,
     createDefaultSystemNode, getCanvasFiguresRect, getFigureName, createDefaultGroupNode,
     showInnerDiagram,
-    figures
 } from './figures'
 import Serializer from './serializer'
 import { createDefaultConnection } from "./connections";
