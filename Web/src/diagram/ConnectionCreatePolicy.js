@@ -1,6 +1,6 @@
 import draw2d from "draw2d";
 import { configureDefaultConnection } from './connections'
-import Node from "./figures";
+import Node from './Node'
 
 export const ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePolicy.extend(
     {

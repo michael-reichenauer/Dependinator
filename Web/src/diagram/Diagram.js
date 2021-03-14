@@ -5,8 +5,8 @@ import CanvasMenu from "./CanvasMenu";
 import FigureMenu from "./FigureMenu";
 import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
-import { groupType } from "./figures";
 import { Backdrop, makeStyles } from "@material-ui/core";
+import Group from "./Group";
 
 
 export const canUndoAtom = atom(false)
@@ -92,7 +92,7 @@ function enableContextMenu(setContextMenu, canvas) {
         let figure = canvas.tryGetFigure(event.clientX, event.clientY)
 
         const userData = figure?.getUserData()
-        if (userData?.type === groupType) {
+        if (userData?.type === Group.groupType) {
             // Context menu in group node, treat as canvas 
             figure = null
         }

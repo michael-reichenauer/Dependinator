@@ -1,6 +1,6 @@
 import React from "react";
 import ContextMenu from "../common/ContextMenu";
-import Node from "./figures";
+import Node from './Node'
 
 
 export default function CanvasMenu({ canvas, onClose, x, y }) {

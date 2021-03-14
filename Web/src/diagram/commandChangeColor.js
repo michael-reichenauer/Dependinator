@@ -1,6 +1,4 @@
 import draw2d from "draw2d";
-import { setNodeColor } from "./figures";
-
 
 export const CommandChangeColor = draw2d.command.Command.extend(
     {
@@ -9,7 +7,7 @@ export const CommandChangeColor = draw2d.command.Command.extend(
         init: function (figure, colorName) {
             this._super("change color")
             this.figure = figure
-            this.oldColorName = figure.userData?.color ?? ""
+            this.oldColorName = figure.userData?.colorName ?? ""
             this.colorName = colorName
         },
 
@@ -26,11 +24,11 @@ export const CommandChangeColor = draw2d.command.Command.extend(
 
 
         undo: function () {
-            setNodeColor(this.figure, this.oldColorName)
+            this.figure.userData.setColor(this.oldColorName)
         },
 
 
         redo: function () {
-            setNodeColor(this.figure, this.colorName)
+            this.figure.userData.setColor(this.colorName)
         },
     })

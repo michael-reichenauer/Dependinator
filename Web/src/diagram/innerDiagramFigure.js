@@ -1,7 +1,8 @@
 import draw2d from "draw2d";
 import Colors from "./colors";
 import { connectionColor } from "./connections";
-import { externalType, groupType, nodeType, userType } from "./figures";
+import Group from "./Group";
+import Node from "./Node";
 
 
 const groupColor = '#' + Colors.canvasText.hex()
@@ -9,8 +10,8 @@ const groupColor = '#' + Colors.canvasText.hex()
 const emptyDiagramData = (name) => {
     return {
         zoom: 1,
-        box: { x: 5090, y: 5250, w: 1000, h: 800 },
-        figures: [{ type: groupType, x: 5090, y: 5250, w: 1000, h: 800, name: name }],
+        box: { x: 5090, y: 5250, w: Group.defaultWidth, h: Group.defaultHeight },
+        figures: [{ type: Group.groupType, x: 5090, y: 5250, w: Group.defaultWidth, h: Group.defaultHeight, name: name }],
         connections: [],
     }
 }
@@ -94,13 +95,13 @@ export const InnerDiagram = draw2d.SetFigure.extend({
 
     addFigure: function (set, figure, offsetX, offsetY) {
         switch (figure.type) {
-            case nodeType:
-            case userType:
-            case externalType:
+            case Node.nodeType:
+            case Node.userType:
+            case Node.externalType:
                 set.push(this.createNode(figure.x + offsetX, figure.y + offsetY, figure.w, figure.h, figure.color))
                 set.push(this.createNodeName(figure.x + offsetX, figure.y + offsetY, figure.w, figure.name, figure.color))
                 break;
-            case groupType:
+            case Group.groupType:
                 set.push(this.createGroupNode(figure.x + offsetX, figure.y + offsetY, figure.w, figure.h))
                 set.push(this.createGroupName(figure.x + offsetX, figure.y + offsetY, figure.w, figure.name))
                 break;

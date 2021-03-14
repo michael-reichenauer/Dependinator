@@ -4,16 +4,15 @@ import "jquery-ui-bundle/jquery-ui.css";
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
 import { random } from '../common/utils'
-import Node, {
-    getCanvasFiguresRect, getFigureName, createDefaultGroupNode,
-    showInnerDiagram,
-} from './figures'
+import { getCanvasFiguresRect, showInnerDiagram, } from './figures'
+import Node from './Node'
 import Serializer from './serializer'
 import { createDefaultConnection } from "./connections";
 import { Tweenable } from "shifty"
 import { store } from "./store";
 import { timing } from "../common/timing";
 import { createCanvas, setBackground, setGridBackground } from "./CanvasEx";
+import Group from "./Group";
 
 
 const defaultStoreDiagramName = 'diagram'
@@ -128,7 +127,7 @@ export default class Canvas {
 
             // Load inner diagram or a default group node if first time
             if (!this.load(figure.getId())) {
-                addDefaultInnerDiagram(this.canvas, getFigureName(figure))
+                addDefaultInnerDiagram(this.canvas, figure.userData.getName())
             }
             t.log('loaded diagram')
 
@@ -451,7 +450,7 @@ const addDefaultNewDiagram = (canvas) => {
 }
 
 const addDefaultInnerDiagram = (canvas, name) => {
-    const group = createDefaultGroupNode(name)
+    const group = new Group(name).figure
     const d = canvas.getDimension()
     const x = d.getWidth() / 2 + (canvas.getWidth() - 1000) / 2
     const y = d.getHeight() / 2 + 250
