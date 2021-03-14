@@ -9,10 +9,10 @@ import {
     createDefaultSystemNode, getCanvasFiguresRect, getFigureName, createDefaultGroupNode,
     showInnerDiagram
 } from './figures'
-import { exportCanvas } from './serialization'
+import { deserializeCanvas, exportCanvas, serializeCanvas } from './serialization'
 import { createDefaultConnection } from "./connections";
 import { Tweenable } from "shifty"
-import { clearStoredDiagram, loadDiagram, saveDiagram } from "./store";
+import { store } from "./store";
 import { timing } from "../common/timing";
 import { createCanvas, setBackground, setGridBackground } from "./CanvasEx";
 
@@ -26,6 +26,7 @@ export default class Canvas {
     diagramStack = []
     storeName = defaultStoreDiagramName
     callbacks = null
+    store = store
 
     constructor(canvasId, callbacks) {
         this.callbacks = callbacks
@@ -34,7 +35,7 @@ export default class Canvas {
     }
 
     init() {
-        if (!loadDiagram(this.canvas, this.storeName)) {
+        if (!this.loadDiagram(this.canvas, this.storeName)) {
             addDefaultNewDiagram(this.canvas)
         }
 
@@ -52,11 +53,11 @@ export default class Canvas {
     handleCommands = () => {
         PubSub.subscribe('canvas.Undo', () => {
             this.canvas.getCommandStack().undo();
-            saveDiagram(this.canvas, this.storName)
+            this.saveDiagram(this.canvas, this.storName)
         })
         PubSub.subscribe('canvas.Redo', () => {
             this.canvas.getCommandStack().redo();
-            saveDiagram(this.canvas, this.storName)
+            this.saveDiagram(this.canvas, this.storName)
         })
 
         PubSub.subscribe('canvas.AddNode', () => this.addFigure(createDefaultNode(), this.randomCenterPoint()))
@@ -73,10 +74,29 @@ export default class Canvas {
         PubSub.subscribe('canvas.NewDiagram', this.commandNewDiagram)
     }
 
+    saveDiagram = (canvas, storeName) => {
+        // Serialize canvas figures and connections into canvas data object
+        const canvasData = serializeCanvas(canvas);
+
+        this.store.write(canvasData, storeName)
+    }
+
+    loadDiagram = (canvas, storeName) => {
+        const canvasData = this.store.read(storeName)
+        if (canvasData == null) {
+            return false
+        }
+
+        // Deserialize canvas
+        deserializeCanvas(canvas, canvasData)
+        return true
+    }
+
 
     commandNewDiagram = () => {
         this.clearDiagram()
-        clearStoredDiagram()
+        this.store.clear()
+        // clearStoredDiagram()
         console.log('Cleared all stored')
         addDefaultNewDiagram(this.canvas)
     }
@@ -108,7 +128,7 @@ export default class Canvas {
             t.log('pushed diagram')
 
             // Load inner diagram or a default group node if first time
-            if (!loadDiagram(this.canvas, figure.getId())) {
+            if (!this.loadDiagram(this.canvas, figure.getId())) {
                 addDefaultInnerDiagram(this.canvas, getFigureName(figure))
             }
             t.log('loaded diagram')
@@ -143,7 +163,7 @@ export default class Canvas {
 
             // Update the figures inner diagram image in the node
             const figure = this.canvas.getFigure(figureId)
-            showInnerDiagram(figure)
+            showInnerDiagram(figure, this.store)
 
             // Zoom outer diagram to correspond to the inner diagram
             const preInnerZoom = this.canvas.zoomFactor / figure.innerDiagram.innerZoom
@@ -373,7 +393,7 @@ export default class Canvas {
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
                 if (e.action === "POST_EXECUTE") {
-                    saveDiagram(this.canvas, this.storeName)
+                    this.saveDiagram(this.canvas, this.storeName)
                 }
             }
         });

@@ -3,8 +3,9 @@ import { getNodeColor, getNodeFontColor, getNodeBorderColor, canvasBackground } 
 import PubSub from 'pubsub-js'
 import { InnerDiagram } from "./innerDiagramFigure";
 import { timing } from "../common/timing";
-import { loadData } from "./store";
+//import { loadData } from "./store";
 import { onClickHandler } from "../common/mouseClicks";
+import { store } from "./store";
 
 export const defaultGroupNodeWidth = 1000
 export const defaultGroupNodeHeight = 800
@@ -86,9 +87,9 @@ export const createDefaultNode = () => {
         "DeepPurple")
 }
 
-const createInnerNode = (figure) => {
+const createInnerNode = (figure, store) => {
     const name = getFigureName(figure)
-    const canvasData = loadData(figure.getId())
+    const canvasData = store.read(figure.getId())
 
     const bgColor = canvasBackground
     const innerDiagramNode = new InnerDiagram({
@@ -291,21 +292,21 @@ const addInnerDiagramIcon = (figure, color, bgColor) => {
         width: 20, height: 20, color: color, bgColor: 'none',
     })
 
-    icon.on("click", () => showInnerDiagram(figure, color, bgColor))
+    icon.on("click", () => showInnerDiagram(figure, store))
 
     const locator = new InnerDiagramIconLocator()
     figure.add(icon, locator)
 }
 
 
-export const showInnerDiagram = (figure) => {
+export const showInnerDiagram = (figure, store) => {
     const t = timing()
 
     getNameLabel(figure)?.setVisible(false)
     getDescriptionLabel(figure)?.setVisible(false)
     getDiagramIcon(figure)?.setVisible(false)
 
-    const innerDiagramNode = createInnerNode(figure)
+    const innerDiagramNode = createInnerNode(figure, store)
     innerDiagramNode.onClick = onClickHandler(
         () => hideInnerDiagram(figure),
         () => editInnerDiagram(figure))
