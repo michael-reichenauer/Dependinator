@@ -39,14 +39,28 @@ export default class Group extends draw2d.shape.composite.Raft {
         });
 
         this.setDeleteable(false)
+        this.addLabel(name)
 
+        this.on("click", (s, e) => PubSub.publish('canvas.SetEditMode', false))
+        this.on("dblclick", (s, e) => PubSub.publish('canvas.AddDefaultNode', { x: e.x, y: e.y }))
+    }
+
+    static deserialize(data) {
+        return new Group(data.name, { id: data.id, width: data.w, height: data.h, description: data.description })
+    }
+
+    serialize() {
+        return {
+            type: this.type, id: this.id, x: this.x, y: this.y, w: this.width, h: this.height,
+            name: this.getName(), description: this.getDescription(), color: this.colorName
+        }
+    }
+
+    addLabel(name) {
         this.nameLabel = new draw2d.shape.basic.Label({
             text: name, stroke: 0, fontSize: 30, fontColor: Colors.canvasText, bold: true,
         })
         this.add(this.nameLabel, new GroupNameLocator());
-
-        this.on("click", (s, e) => PubSub.publish('canvas.SetEditMode', false))
-        this.on("dblclick", (s, e) => PubSub.publish('canvas.AddDefaultNode', { x: e.x, y: e.y }))
     }
 }
 

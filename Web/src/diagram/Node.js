@@ -1,7 +1,11 @@
 import draw2d from "draw2d";
+import PubSub from 'pubsub-js'
+import { onClickHandler } from "../common/mouseClicks";
+import { timing } from "../common/timing";
 import Colors from "./colors";
+import { InnerDiagram } from "./innerDiagram";
 import { store } from "./store";
-import { showInnerDiagram } from './figures'
+
 
 
 const defaultOptions = (type) => {
@@ -65,8 +69,22 @@ export default class Node extends draw2d.shape.node.Between {
         this.on("dblclick", (s, e) => console.log('double click node'))
     }
 
+    static deserialize(data) {
+        return new Node(data.type,
+            {
+                id: data.id, width: data.w, height: data.h,
+                name: data.name, description: data.description, colorName: data.color
+            })
+    }
 
-    setNodeColor = (colorName) => {
+    serialize() {
+        return {
+            type: this.type, id: this.id, x: this.x, y: this.y, w: this.width, h: this.height,
+            name: this.getName(), description: this.getDescription(), color: this.colorName
+        }
+    }
+
+    setNodeColor(colorName) {
         this.colorName = colorName
         const color = Colors.getNodeColor(colorName)
         const borderColor = Colors.getNodeBorderColor(colorName)
@@ -79,6 +97,40 @@ export default class Node extends draw2d.shape.node.Between {
         this.descriptionLabel?.setFontColor(fontColor)
         this.icon?.setColor(fontColor)
         this.diagramIcon?.setColor(fontColor)
+    }
+
+    showInnerDiagram() {
+        const t = timing()
+        const canvasData = store.read(this.getId())
+
+        this.nameLabel?.setVisible(false)
+        this.descriptionLabel?.setVisible(false)
+        this.diagramIcon?.setVisible(false)
+
+        this.innerDiagram = new InnerDiagram(this, canvasData)
+        this.innerDiagram.onClick = onClickHandler(
+            () => this.hideInnerDiagram(),
+            () => PubSub.publish('canvas.EditInnerDiagram', this))
+
+        this.add(this.innerDiagram, new InnerDiagramLocator())
+        this.repaint()
+        t.log('added')
+    }
+
+
+    hideInnerDiagram() {
+        const t = timing()
+        if (this.innerDiagram == null) {
+            return
+        }
+
+        this.nameLabel?.setVisible(true)
+        this.descriptionLabel?.setVisible(true)
+        this.diagramIcon?.setVisible(true)
+
+        this.remove(this.innerDiagram)
+        this.innerDiagram = null
+        t.log()
     }
 
 
@@ -121,7 +173,7 @@ export default class Node extends draw2d.shape.node.Between {
             width: 20, height: 20, color: iconColor, bgColor: 'none',
         })
 
-        this.diagramIcon.on("click", () => showInnerDiagram(this, store))
+        this.diagramIcon.on("click", () => this.showInnerDiagram())
 
         this.add(this.diagramIcon, new InnerDiagramIconLocator())
     }
@@ -168,3 +220,15 @@ class OutputBottomPortLocator extends draw2d.layout.locator.PortLocator {
         this.applyConsiderRotation(figure, p.getWidth() / 2, p.getHeight());
     }
 }
+
+
+
+const InnerDiagramLocator = draw2d.layout.locator.Locator.extend({
+    init: function () {
+        this._super();
+    },
+    relocate: function (index, target) {
+        // let parentBoundingBox = target.getParent().getBoundingBox()
+        target.setPosition(2, 2)
+    }
+});

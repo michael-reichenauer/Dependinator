@@ -1,34 +1,44 @@
 import draw2d from "draw2d";
+import Node from "./Node";
 
-export const CommandChangeColor = draw2d.command.Command.extend(
-    {
-        NAME: "CommandChangeColor",
+export class CommandChangeColor extends draw2d.command.Command {
+    NAME = "CommandChangeColor"
 
-        init: function (figure, colorName) {
-            this._super("change color")
-            this.figure = figure
-            this.oldColorName = figure.userData?.colorName ?? ""
-            this.colorName = colorName
-        },
-
-
-        canExecute: function () {
-            // return false if we doesn't modify the model => NOP Command
-            return this.oldColorName !== this.colorName
-        },
+    constructor(figure, colorName) {
+        super("change color")
+        this.figure = this.getFigure(figure)
+        this.oldColorName = figure?.colorName ?? ""
+        this.colorName = colorName
+    }
 
 
-        execute: function () {
-            this.redo()
-        },
+    canExecute() {
+        // return false if we doesn't modify the model => NOP Command
+        return this.figure != null && this.oldColorName !== this.colorName
+    }
 
 
-        undo: function () {
-            this.figure.setNodeColor(this.oldColorName)
-        },
+    execute() {
+        this.redo()
+    }
 
 
-        redo: function () {
-            this.figure.setNodeColor(this.colorName)
-        },
-    })
+    undo() {
+        this.figure.setNodeColor(this.oldColorName)
+    }
+
+
+    redo() {
+        this.figure.setNodeColor(this.colorName)
+    }
+
+    getFigure(figure) {
+        if (figure == null) {
+            return null
+        }
+        if (figure instanceof Node) {
+            return figure
+        }
+        return figure.getParent()
+    }
+}

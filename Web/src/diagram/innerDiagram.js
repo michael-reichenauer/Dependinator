@@ -19,9 +19,17 @@ const defaultDiagramData = (name) => {
 export class InnerDiagram extends draw2d.SetFigure {
     NAME = "InnerDiagram"
 
-    constructor(name, canvasData, attr) {
-        super(attr);
-        this.canvasData = canvasData ?? defaultDiagramData(name)
+    constructor(parent, canvasData) {
+        super({
+            width: parent.width - 4,
+            height: parent.height - 4,
+            keepAspectRatio: true,
+            color: 'none',
+            bgColor: Colors.canvasBackground,
+            radius: 5,
+        });
+
+        this.canvasData = canvasData ?? defaultDiagramData(parent.getName())
     }
 
     getDiagramViewCoordinate() {
@@ -164,9 +172,9 @@ export class InnerDiagram extends draw2d.SetFigure {
     }
 
 
-    rect(attr) {
-        const f = this.canvas.paper.rect()
-        f.attr(attr)
-        return f
-    }
+rect(attr) {
+    const f = this.canvas.paper.rect()
+    f.attr(attr)
+    return f
+}
 }

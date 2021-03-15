@@ -1,7 +1,10 @@
 import draw2d from "draw2d";
-import { figures, getCanvasFiguresRect } from './figures'
+
 import { deserializeConnections, serializeConnections } from './connections'
 import Colors from "./colors";
+import { getCanvasFiguresRect } from "./Canvas";
+import Group from "./Group";
+import Node from "./Node";
 
 
 export default class Serializer {
@@ -13,7 +16,7 @@ export default class Serializer {
     serialize = () => {
         const canvas = this.canvas
         const bb = getCanvasFiguresRect(canvas)
-        const figs = figures.serializeFigures(canvas);
+        const figs = this.serializeFigures();
         const conns = serializeConnections(canvas)
 
         const canvasData = {
@@ -28,16 +31,7 @@ export default class Serializer {
 
 
     deserialize = (canvasData) => {
-        // const figures = deserializeFigures(canvasData.figures) 
-        // for (let i = 0; i < figures.length; i++) {
-        //     canvas.add(figures[i])
-        // }
-
-        // const connections = deserializeConnections(canvas, canvasData.connections)
-        // for (let i = 0; i < connections.length; i++) {
-        //     canvas.add(connections[i])
-        // }
-        this.canvas.addAll(figures.deserializeFigures(canvasData.figures))
+        this.canvas.addAll(this.deserializeFigures(canvasData.figures))
         this.canvas.addAll(deserializeConnections(this.canvas, canvasData.connections))
     }
 
@@ -69,5 +63,27 @@ export default class Serializer {
 
             result(res)
         });
+    }
+
+
+    serializeFigures = () => {
+        return this.canvas.getFigures().asArray().map((f) => f.serialize());
+    }
+
+    deserializeFigures = (figures) => {
+        return figures.map(f => this.deserializeFigure(f)).filter(f => f != null)
+    }
+
+    deserializeFigure = (f) => {
+        let figure
+        if (f.type === Group.groupType) {
+            figure = Group.deserialize(f)
+        } else {
+            figure = Node.deserialize(f)
+        }
+
+        figure.x = f.x
+        figure.y = f.y
+        return figure
     }
 }

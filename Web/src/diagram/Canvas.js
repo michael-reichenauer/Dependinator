@@ -4,7 +4,7 @@ import "jquery-ui-bundle/jquery-ui.css";
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
 import { random } from '../common/utils'
-import { getCanvasFiguresRect, showInnerDiagram, } from './figures'
+
 import Node from './Node'
 import Serializer from './serializer'
 import { createDefaultConnection } from "./connections";
@@ -161,7 +161,7 @@ export default class Canvas {
 
             // Update the figures inner diagram image in the node
             const figure = this.canvas.getFigure(figureId)
-            showInnerDiagram(figure, this.store)
+            figure.showInnerDiagram()
 
             // Zoom outer diagram to correspond to the inner diagram
             const preInnerZoom = this.canvas.zoomFactor / figure.innerDiagram.innerZoom
@@ -521,4 +521,42 @@ const zoomToShowTotalDiagram = (canvas) => {
         finish: state => {
         }
     })
+}
+
+
+export const getCanvasFiguresRect = (canvas) => {
+    let minX = 10000
+    let minY = 10000
+    let maxX = 0
+    let maxY = 0
+
+    canvas.getFigures().each((i, f) => {
+        let fx = f.getAbsoluteX()
+        let fy = f.getAbsoluteY()
+        let fx2 = fx + f.getWidth()
+        let fy2 = fy + f.getHeight()
+
+        if (i === 0) {
+            minX = fx
+            minY = fy
+            maxX = fx2
+            maxY = fy2
+            return
+        }
+
+        if (fx < minX) {
+            minX = fx
+        }
+        if (fy < minY) {
+            minY = fy
+        }
+        if (fx2 > maxX) {
+            maxX = fx2
+        }
+        if (fy2 > maxY) {
+            maxY = fy2
+        }
+    })
+
+    return { x: minX, y: minY, w: maxX - minX, h: maxY - minY, x2: maxX, y2: maxY }
 }
