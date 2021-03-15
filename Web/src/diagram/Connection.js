@@ -34,7 +34,6 @@ export default class Connection extends draw2d.Connection {
     }
 
     static deserialize(canvas, c) {
-        console.log('c', c)
         const src = canvas.getFigure(c.src)
         const trg = canvas.getFigure(c.trg)
         return new Connection(c.description, src, c.srcPort, trg, c.trgPort)

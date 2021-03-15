@@ -10,36 +10,26 @@ export default class Serializer {
         this.canvas = canvas
     }
 
-
     serialize = () => {
-        const canvas = this.canvas
-        const bb = canvas.getFiguresRect()
-        const figs = this.serializeFigures();
-        const conns = this.serializeConnections(canvas)
-
-        const canvasData = {
-            box: bb,
-            figures: figs,
-            connections: conns,
-            zoom: canvas.getZoom()
+        return {
+            box: this.canvas.getFiguresRect(),
+            figures: this.serializeFigures(),
+            connections: this.serializeConnections(),
+            zoom: this.canvas.getZoom()
         }
-
-        return canvasData
     }
 
 
     deserialize = (canvasData) => {
         this.canvas.addAll(this.deserializeFigures(canvasData.figures))
-        const cs = this.deserializeConnections(canvasData.connections)
-        console.log('cs', cs)
-        this.canvas.addAll(cs)
+        this.canvas.addAll(this.deserializeConnections(canvasData.connections))
     }
 
 
     export = (rect, result) => {
         var writer = new draw2d.io.svg.Writer();
         writer.marshal(this.canvas, (svg) => {
-            console.log('svg org:', svg)
+            // console.log('svg org:', svg)
 
             // Show diagram with some margin
             const margin = 25

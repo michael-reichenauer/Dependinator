@@ -46,7 +46,8 @@ export default class Group extends draw2d.shape.composite.Raft {
     }
 
     static deserialize(data) {
-        return new Group(data.name, { id: data.id, width: data.w, height: data.h, description: data.description })
+        return new Group(data.name,
+            { id: data.id, width: data.w, height: data.h, description: data.description })
     }
 
     serialize() {
