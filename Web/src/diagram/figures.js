@@ -1,7 +1,7 @@
 import draw2d from "draw2d";
 import Colors from "./colors";
 import PubSub from 'pubsub-js'
-import { InnerDiagram } from "./innerDiagramFigure";
+import { InnerDiagram } from "./InnerDiagram";
 import { timing } from "../common/timing";
 import { onClickHandler } from "../common/mouseClicks";
 import Node from "./Node";
