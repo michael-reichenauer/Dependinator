@@ -164,5 +164,6 @@ export default class CanvasEx extends draw2d.Canvas {
 
         return { x: minX, y: minY, w: maxX - minX, h: maxY - minY, x2: maxX, y2: maxY }
     }
+
 }
 

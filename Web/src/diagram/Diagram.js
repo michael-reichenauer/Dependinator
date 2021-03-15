@@ -90,9 +90,7 @@ function enableContextMenu(setContextMenu, canvas) {
         event = getCommonEvent(event)
 
         let figure = canvas.tryGetFigure(event.clientX, event.clientY)
-
-        const userData = figure?.getUserData()
-        if (userData?.type === Group.groupType) {
+        if (figure?.type === Group.groupType) {
             // Context menu in group node, treat as canvas 
             figure = null
         }
