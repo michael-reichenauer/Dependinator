@@ -16,11 +16,11 @@ const emptyDiagramData = (name) => {
     }
 }
 
-export const InnerDiagram = draw2d.SetFigure.extend({
-    NAME: "InnerDiagram",
+export class InnerDiagram extends draw2d.SetFigure {
+    NAME = "InnerDiagram"
 
-    init: function (attr, canvasData, name) {
-        this._super(attr);
+    constructor(name, canvasData, attr) {
+        super(attr);
         this.name = name
         this.canvasData = canvasData
         this.clicks = 0
@@ -29,9 +29,9 @@ export const InnerDiagram = draw2d.SetFigure.extend({
             // No diagram data provided, use default empty diagram
             this.canvasData = emptyDiagramData(name)
         }
-    },
+    }
 
-    getDiagramViewCoordinate: function () {
+    getDiagramViewCoordinate() {
         const canvasZoom = this.canvas.zoomFactor
 
         // get the diagram margin in canvas coordinates
@@ -43,15 +43,15 @@ export const InnerDiagram = draw2d.SetFigure.extend({
         const vx = (this.getAbsoluteX() + imx - outerScrollPos.left) / canvasZoom
         const vy = (this.getAbsoluteY() + imy - outerScrollPos.top) / canvasZoom
         return { left: vx, top: vy }
-    },
+    }
 
 
-    getScrollInCanvasCoordinate: function () {
+    getScrollInCanvasCoordinate() {
         const area = this.canvas.getScrollArea()
         return { left: area.scrollLeft() * this.canvas.zoomFactor, top: area.scrollTop() * this.canvas.zoomFactor }
-    },
+    }
 
-    createSet: function () {
+    createSet() {
         const set = this.canvas.paper.set()
         const diagramBox = this.canvasData.box
 
@@ -90,10 +90,10 @@ export const InnerDiagram = draw2d.SetFigure.extend({
         this.marginX = (diagramWidth - diagramBox.w) / 2
         this.marginY = (diagramHeight - diagramBox.h) / 2
         return set;
-    },
+    }
 
 
-    addFigure: function (set, figure, offsetX, offsetY) {
+    addFigure(set, figure, offsetX, offsetY) {
         switch (figure.type) {
             case Node.nodeType:
             case Node.userType:
@@ -109,9 +109,9 @@ export const InnerDiagram = draw2d.SetFigure.extend({
                 // Ignore other types
                 break
         }
-    },
+    }
 
-    addConnection: function (set, connection, offsetX, offsetY) {
+    addConnection(set, connection, offsetX, offsetY) {
         let pathText = null
         connection.v.forEach(v => {
             if (pathText === null) {
@@ -125,9 +125,9 @@ export const InnerDiagram = draw2d.SetFigure.extend({
         path.attr({ "stroke-width": 2, "stroke": connectionColor })
 
         set.push(path)
-    },
+    }
 
-    createNodeName: function (x, y, w, name, colorName) {
+    createNodeName(x, y, w, name, colorName) {
         const fontColor = Colors.getNodeFontHexColor(colorName)
         const f = this.canvas.paper.text()
         f.attr({
@@ -135,9 +135,9 @@ export const InnerDiagram = draw2d.SetFigure.extend({
             'font-size': 20, 'font-weight': 'bold'
         })
         return f
-    },
+    }
 
-    createGroupName: function (x, y, w, name) {
+    createGroupName(x, y, w, name) {
         const f = this.canvas.paper.text()
         f.attr({
             'text-anchor': 'start',
@@ -145,9 +145,9 @@ export const InnerDiagram = draw2d.SetFigure.extend({
             'font-size': 30, 'font-weight': 'bold'
         })
         return f
-    },
+    }
 
-    createNode: function (x, y, w, h, colorName) {
+    createNode(x, y, w, h, colorName) {
         const color = Colors.getNodeHexColor(colorName)
         const borderColor = Colors.getNodeBorderHexColor(colorName)
         const f = this.canvas.paper.rect()
@@ -157,10 +157,10 @@ export const InnerDiagram = draw2d.SetFigure.extend({
             fill: color, stroke: borderColor
         })
         return f
-    },
+    }
 
 
-    createGroupNode: function (x, y, w, h) {
+    createGroupNode(x, y, w, h) {
         const f = this.canvas.paper.rect()
         f.attr({
             x: x, y: y, width: w, height: h,
@@ -168,13 +168,13 @@ export const InnerDiagram = draw2d.SetFigure.extend({
             stroke: groupColor
         })
         return f
-    },
+    }
 
 
-    rect: function (attr) {
+    rect(attr) {
         const f = this.canvas.paper.rect()
         f.attr(attr)
         return f
     }
-});
+}
 

@@ -48,13 +48,10 @@ export default class Group {
 }
 
 
-const GroupNameLocator = draw2d.layout.locator.Locator.extend({
-    init: function () {
-        this._super();
-    },
-    relocate: function (index, target) {
+class GroupNameLocator extends draw2d.layout.locator.Locator {
+    relocate(index, target) {
         let targetBoundingBox = target.getBoundingBox()
         target.setPosition(0, -(targetBoundingBox.h - 36))
     }
-});
+}
 

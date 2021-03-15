@@ -52,16 +52,16 @@ const createInnerNode = (figure, store) => {
     const canvasData = store.read(figure.getId())
 
     const bgColor = Colors.canvasBackground
-    const innerDiagramNode = new InnerDiagram({
-        width: figure.width - 4,
-        height: figure.height - 4,
-        keepAspectRatio: true,
-        color: 'none',
-        bgColor: bgColor,
-        radius: 5,
-        userData: { type: 'svg', color: "BlueGrey" },
-    },
-        canvasData, name, () => hideInnerDiagram(figure))
+    const innerDiagramNode = new InnerDiagram(name, canvasData,
+        {
+            width: figure.width - 4,
+            height: figure.height - 4,
+            keepAspectRatio: true,
+            color: 'none',
+            bgColor: bgColor,
+            radius: 5,
+            userData: { type: 'svg', color: "BlueGrey" },
+        })
     return innerDiagramNode
 }
 
