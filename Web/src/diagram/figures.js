@@ -67,26 +67,6 @@ const createInnerNode = (figure, store) => {
 
 
 
-
-
-// export const setNodeColor = (figure, colorName) => {
-//     figure.setBackgroundColor(Colors.getNodeColor(colorName))
-//     const children = figure.getChildren().asArray()
-//     const nameLabel = getNameLabel(figure)
-//     const descriptionLabel = getDescriptionLabel(figure);
-//     const icon = children.find(c => c instanceof draw2d.shape.icon.Icon);
-//     const diagramIcon = getDiagramIcon(figure);
-
-//     nameLabel?.setFontColor(Colors.getNodeFontColor(colorName))
-//     descriptionLabel?.setFontColor(Colors.getNodeFontColor(colorName))
-//     //icon?.setBackgroundColor(getNodeColor(colorName))
-//     icon?.setColor(Colors.getNodeFontColor(colorName))
-//     // diagramIcon?.setBackgroundColor(getNodeColor(colorName))
-//     diagramIcon?.setColor(Colors.getNodeFontColor(colorName))
-
-//     figure.setUserData({ ...figure.getUserData(), color: colorName })
-// }
-
 const getNameLabel = (figure) => {
     return figure.getChildren().asArray()
         .find(c => c.userData?.type === 'name')

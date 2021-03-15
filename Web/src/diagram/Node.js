@@ -186,32 +186,23 @@ const labelLocator = (y) => {
 }
 
 
-const InnerDiagramIconLocator = draw2d.layout.locator.PortLocator.extend({
-    init: function () {
-        this._super();
-    },
-    relocate: function (index, figure) {
+class InnerDiagramIconLocator extends draw2d.layout.locator.PortLocator {
+    relocate(index, figure) {
         const parent = figure.getParent()
         this.applyConsiderRotation(figure, parent.getWidth() / 2 - 10, parent.getHeight() - 25);
     }
-});
+}
 
-const InputTopPortLocator = draw2d.layout.locator.PortLocator.extend({
-    init: function () {
-        this._super();
-    },
-    relocate: function (index, figure) {
+
+class InputTopPortLocator extends draw2d.layout.locator.PortLocator {
+    relocate(index, figure) {
         this.applyConsiderRotation(figure, figure.getParent().getWidth() / 2, 0);
     }
-});
+}
 
-
-const OutputBottomPortLocator = draw2d.layout.locator.PortLocator.extend({
-    init: function () {
-        this._super();
-    },
-    relocate: function (index, figure) {
+class OutputBottomPortLocator extends draw2d.layout.locator.PortLocator {
+    relocate(index, figure) {
         var p = figure.getParent();
         this.applyConsiderRotation(figure, p.getWidth() / 2, p.getHeight());
     }
-});
+}
