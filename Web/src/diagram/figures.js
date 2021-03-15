@@ -25,8 +25,8 @@ class Figures {
     serializeFigure = (f) => {
         //console.log('figure', f)
         return {
-            type: f.userData.type, id: f.id, x: f.x, y: f.y, w: f.width, h: f.height,
-            name: f.userData.getName(), description: f.userData.getDescription(), color: f.userData.colorName
+            type: f.type, id: f.id, x: f.x, y: f.y, w: f.width, h: f.height,
+            name: f.getName(), description: f.getDescription(), color: f.colorName
         };
     }
 
@@ -34,9 +34,9 @@ class Figures {
     deserializeFigure = (f) => {
         let figure
         if (f.type === Group.groupType) {
-            figure = new Group(f.name, f.id, f.w, f.h, f.description).figure
+            figure = new Group(f.name, { id: f.id, width: f.w, height: f.h, description: f.description })
         } else {
-            figure = Node.create(f.type, f.id, f.w, f.h, f.name, f.description, f.color).figure
+            figure = new Node(f.type, { id: f.id, width: f.w, height: f.h, name: f.name, description: f.description, colorName: f.color })
         }
 
         figure.x = f.x
@@ -48,7 +48,7 @@ export const figures = new Figures()
 
 
 const createInnerNode = (figure, store) => {
-    const name = figure.userData.getName()
+    const name = figure.getName()
     const canvasData = store.read(figure.getId())
 
     const bgColor = Colors.canvasBackground
@@ -67,29 +67,29 @@ const createInnerNode = (figure, store) => {
 
 
 
-const getNameLabel = (figure) => {
-    return figure.getChildren().asArray()
-        .find(c => c.userData?.type === 'name')
-}
+// const getNameLabel = (figure) => {
+//     return figure.getChildren().asArray()
+//         .find(c => c.userData?.type === 'name')
+// }
 
-const getDescriptionLabel = (figure) => {
-    return figure.getChildren().asArray()
-        .find(c => c.userData?.type === 'description')
-}
+// const getDescriptionLabel = (figure) => {
+//     return figure.getChildren().asArray()
+//         .find(c => c.userData?.type === 'description')
+// }
 
-const getDiagramIcon = (figure) => {
-    return figure.getChildren().asArray()
-        .find(c => c instanceof draw2d.shape.icon.Diagram)
-}
+// const getDiagramIcon = (figure) => {
+//     return figure.getChildren().asArray()
+//         .find(c => c instanceof draw2d.shape.icon.Diagram)
+// }
 
 
 
 export const showInnerDiagram = (figure, store) => {
     const t = timing()
 
-    getNameLabel(figure)?.setVisible(false)
-    getDescriptionLabel(figure)?.setVisible(false)
-    getDiagramIcon(figure)?.setVisible(false)
+    figure.nameLabel?.setVisible(false)
+    figure.descriptionLabel?.setVisible(false)
+    figure.diagramIcon?.setVisible(false)
 
     const innerDiagramNode = createInnerNode(figure, store)
     innerDiagramNode.onClick = onClickHandler(
@@ -106,9 +106,9 @@ export const showInnerDiagram = (figure, store) => {
 const hideInnerDiagram = (figure) => {
     const t = timing()
 
-    getNameLabel(figure)?.setVisible(true)
-    getDescriptionLabel(figure)?.setVisible(true)
-    getDiagramIcon(figure)?.setVisible(true)
+    figure.nameLabel?.setVisible(true)
+    figure.descriptionLabel?.setVisible(true)
+    figure.diagramIcon?.setVisible(true)
 
     figure.remove(figure.innerDiagram)
     figure.innerDiagram = null

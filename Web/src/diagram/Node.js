@@ -4,15 +4,31 @@ import { store } from "./store";
 import { showInnerDiagram } from './figures'
 
 
+const defaultOptions = (type) => {
+    const dv = {
+        id: draw2d.util.UUID.create(),
+        width: 230,
+        height: 150,
+        description: 'Description',
+    }
 
-const newId = () => draw2d.util.UUID.create()
+    switch (type) {
+        case Node.nodeType:
+            return { ...dv, name: 'Node', colorName: 'DeepPurple', icon: null }
+        case Node.userType:
+            return { ...dv, name: 'External User', colorName: 'BlueGrey', icon: new draw2d.shape.icon.User() }
+        case Node.externalType:
+            return { ...dv, name: 'External System', colorName: 'BlueGrey', icon: new draw2d.shape.icon.NewWindow() }
+        default:
+            throw new Error('Unknown type: ' + type);
+    }
+}
 
-export default class Node {
+
+export default class Node extends draw2d.shape.node.Between {
     static nodeType = 'node'
     static userType = 'user'
     static externalType = 'external'
-    static defaultWidth = 230
-    static defaultHeight = 150
 
 
     figure = null
@@ -27,33 +43,37 @@ export default class Node {
     getName = () => this.nameLabel?.text ?? ''
     getDescription = () => this.descriptionLabel?.text ?? ''
 
-    constructor(figure) {
-        this.figure = figure
-        this.figure.userData = this
+    constructor(type = Node.nodeType, options) {
+        const o = { ...defaultOptions(type), ...options }
+
+        super({
+            id: o.id,
+            width: o.width, height: o.height,
+            bgColor: Colors.getNodeColor(o.colorName), color: Colors.getNodeBorderColor(o.colorName),
+            radius: 5,
+        });
+
+        this.type = type
+        this.colorName = o.colorName
+
+        this.addLabels(o.name, o.description)
+        this.addIcon(o.icon);
+        this.addInnerDiagramIcon()
+        this.addPorts()
+
+        this.on("click", (s, e) => console.log('click node'))
+        this.on("dblclick", (s, e) => console.log('double click node'))
     }
 
 
-    static createDefault = (type) => {
-        const node = new Node(new draw2d.shape.node.Between())
-        node.configure(type)
-        return node
-    }
-
-    static create = (type, id, width, height, name, description, colorName) => {
-        const node = new Node(new draw2d.shape.node.Between())
-        node.configureNode(type, id, width, height, name, description, colorName, node.getDefaultIcon(type))
-        return node
-    }
-
-
-    setColor = (colorName) => {
+    setNodeColor = (colorName) => {
         this.colorName = colorName
         const color = Colors.getNodeColor(colorName)
         const borderColor = Colors.getNodeBorderColor(colorName)
         const fontColor = Colors.getNodeFontColor(colorName)
 
-        this.figure.setBackgroundColor(color)
-        this.figure.setColor(borderColor)
+        this.setBackgroundColor(color)
+        this.setColor(borderColor)
 
         this.nameLabel?.setFontColor(fontColor)
         this.descriptionLabel?.setFontColor(fontColor)
@@ -62,68 +82,37 @@ export default class Node {
     }
 
 
-    configure = (type) => {
-        const { name, colorName, icon } = this.getDefaultValues(type)
-        this.configureNode(type, newId(), Node.defaultWidth, Node.defaultHeight,
-            name, 'Description', colorName, icon)
-    }
-
-
-    configureNode = (type, id, width, height, name, description, colorName, icon) => {
-        this.type = type
-        this.colorName = colorName
-        const color = Colors.getNodeColor(colorName)
-        const borderColor = Colors.getNodeBorderColor(colorName)
-        const fontColor = Colors.getNodeFontColor(colorName)
-        this.figure.attr({
-            id: id,
-            width: width, height: height,
-            bgColor: color, color: borderColor,
-            radius: 5,
-        });
-
-        this.addLabels(name, description)
-        this.addIcon(icon);
-        this.addInnerDiagramIcon(this.figure, fontColor, color)
-        this.addPorts()
-
-        this.figure.on("click", (src, event) => console.log('click node'))
-        this.figure.on("dblclick", (src, event) => console.log('double click node'))
-    }
-
     addLabels = (name, description) => {
         const fontColor = Colors.getNodeFontColor(this.colorName)
 
         this.nameLabel = new draw2d.shape.basic.Label({
             text: name, stroke: 0,
             fontSize: 20, fontColor: fontColor, bold: true,
-            userData: { type: "name" }
         })
 
         this.descriptionLabel = new draw2d.shape.basic.Text({
             text: description, stroke: 0,
             fontSize: 14, fontColor: fontColor, bold: false,
-            userData: { type: "description" }
         })
 
         this.nameLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-        this.figure.add(this.nameLabel, labelLocator(7));
+        this.add(this.nameLabel, new LabelLocator(7));
         this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-        this.figure.add(this.descriptionLabel, labelLocator(30));
+        this.add(this.descriptionLabel, new LabelLocator(30));
     }
 
-    addIcon = (icon) => {
+    addIcon(icon) {
         if (icon == null) {
             return
         }
         this.icon = icon
         const iconColor = Colors.getNodeFontColor(this.colorName)
         this.icon.attr({ width: 18, height: 15, color: iconColor, bgColor: 'none' })
-        this.figure.add(this.icon, new draw2d.layout.locator.XYRelPortLocator(1, 1))
+        this.add(this.icon, new draw2d.layout.locator.XYRelPortLocator(1, 1))
     }
 
 
-    addInnerDiagramIcon = () => {
+    addInnerDiagramIcon() {
         if (this.type !== Node.nodeType) {
             return
         }
@@ -132,57 +121,30 @@ export default class Node {
             width: 20, height: 20, color: iconColor, bgColor: 'none',
         })
 
-        this.diagramIcon.on("click", () => showInnerDiagram(this.figure, store))
+        this.diagramIcon.on("click", () => showInnerDiagram(this, store))
 
-        this.figure.add(this.diagramIcon, new InnerDiagramIconLocator())
+        this.add(this.diagramIcon, new InnerDiagramIconLocator())
     }
 
-    addPorts = () => {
-        this.figure.createPort("input", new InputTopPortLocator());
-        this.figure.createPort("output", new OutputBottomPortLocator());
-    }
-
-
-    getDefaultValues = (type) => {
-        switch (type) {
-            case Node.nodeType:
-                return { name: 'Node', colorName: 'DeepPurple', icon: this.getDefaultIcon(type) }
-            case Node.userType:
-                return { name: 'External User', colorName: 'BlueGrey', icon: this.getDefaultIcon(type) }
-            case Node.externalType:
-                return { name: 'External System', colorName: 'BlueGrey', icon: this.getDefaultIcon(type) }
-            default:
-                throw new Error('Unknown type: ' + type);
-        }
-    }
-
-    getDefaultIcon = (type) => {
-        switch (type) {
-            case Node.nodeType:
-                return null
-            case Node.userType:
-                return new draw2d.shape.icon.User()
-            case Node.externalType:
-                return new draw2d.shape.icon.NewWindow()
-            default:
-                throw new Error('Unknown type: ' + type);
-        }
+    addPorts() {
+        this.createPort("input", new InputTopPortLocator());
+        this.createPort("output", new OutputBottomPortLocator());
     }
 }
 
 
-
-const labelLocator = (y) => {
-    const locator = new draw2d.layout.locator.XYRelPortLocator(0, y)
-    locator.relocate = (index, figure) => {
+class LabelLocator extends draw2d.layout.locator.XYRelPortLocator {
+    constructor(y) {
+        super(0, y)
+    }
+    relocate(index, figure) {
         let parent = figure.getParent()
-        locator.applyConsiderRotation(
+        this.applyConsiderRotation(
             figure,
             parent.getWidth() / 2 - figure.getWidth() / 2,
-            parent.getHeight() / 100 * locator.y
+            parent.getHeight() / 100 * this.y
         )
     }
-    return locator
 }
 
 

@@ -3,15 +3,23 @@ import PubSub from 'pubsub-js'
 import Colors from "./colors";
 
 
-const newId = () => draw2d.util.UUID.create()
+const defaultOptions = () => {
+    return {
+        id: draw2d.util.UUID.create(),
+        width: Group.defaultWidth,
+        height: Group.defaultHeight,
+        description: 'Description',
+    }
+}
 
 
-export default class Group {
+export default class Group extends draw2d.shape.composite.Raft {
+    NAME = 'Group'
+
     static groupType = 'group'
     static defaultWidth = 1000
     static defaultHeight = 800
 
-    figure = null
     type = Group.groupType
     colorName = null
     nameLabel = null
@@ -21,29 +29,24 @@ export default class Group {
     getName = () => this.nameLabel?.text ?? ''
     getDescription = () => this.descriptionLabel?.text ?? ''
 
-    constructor(name = 'group',
-        id = newId(), width = Group.defaultWidth, height = Group.defaultHeight, description = 'Description') {
-        const figure = new draw2d.shape.composite.Raft({
-            id: id, width: width, height: height,
+    constructor(name = 'Group', options) {
+        const o = { ...defaultOptions(), ...options }
+
+        super({
+            id: o.id, width: o.width, height: o.height,
             bgColor: Colors.canvasBackground, alpha: 0.5, color: Colors.canvasText,
             dasharray: '- ', radius: 5,
         });
 
-        figure.setDeleteable(false)
+        this.setDeleteable(false)
 
         this.nameLabel = new draw2d.shape.basic.Label({
-            text: name, stroke: 0,
-            fontSize: 30, fontColor: Colors.canvasText, bold: true,
-            userData: { type: "name" }
+            text: name, stroke: 0, fontSize: 30, fontColor: Colors.canvasText, bold: true,
         })
-        figure.add(this.nameLabel, new GroupNameLocator());
+        this.add(this.nameLabel, new GroupNameLocator());
 
-        figure.on("click", (s, e) => PubSub.publish('canvas.SetReadOnlyMode', figure))
-        figure.on("dblclick", (s, e) => PubSub.publish('canvas.AddDefaultNode', { x: e.x, y: e.y }))
-
-
-        this.figure = figure
-        this.figure.userData = this
+        this.on("click", (s, e) => PubSub.publish('canvas.SetEditMode', false))
+        this.on("dblclick", (s, e) => PubSub.publish('canvas.AddDefaultNode', { x: e.x, y: e.y }))
     }
 }
 

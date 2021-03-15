@@ -148,7 +148,7 @@ export const ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreateP
 
                 if (this.currentDropTarget === null) {
                     // No drop target, lets create a node first to connect to
-                    const figure = Node.createDefault(Node.nodeType).figure
+                    const figure = new Node(Node.nodeType)
 
                     // Determine figure point and port name
                     let p = null

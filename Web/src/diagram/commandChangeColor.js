@@ -24,11 +24,11 @@ export const CommandChangeColor = draw2d.command.Command.extend(
 
 
         undo: function () {
-            this.figure.userData.setColor(this.oldColorName)
+            this.figure.setNodeColor(this.oldColorName)
         },
 
 
         redo: function () {
-            this.figure.userData.setColor(this.colorName)
+            this.figure.setNodeColor(this.colorName)
         },
     })

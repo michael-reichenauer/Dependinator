@@ -127,7 +127,7 @@ export default class Canvas {
 
             // Load inner diagram or a default group node if first time
             if (!this.load(figure.getId())) {
-                addDefaultInnerDiagram(this.canvas, figure.userData.getName())
+                addDefaultInnerDiagram(this.canvas, figure.getName())
             }
             t.log('loaded diagram')
 
@@ -206,8 +206,8 @@ export default class Canvas {
 
 
     addNode = (type, p) => {
-        const node = Node.createDefault(type)
-        addFigureToCanvas(this.canvas, node.figure, p)
+        const node = new Node(type)
+        addFigureToCanvas(this.canvas, node, p)
     }
 
 
@@ -253,7 +253,7 @@ export default class Canvas {
 
     getCenter = () => {
         let x = (this.canvas.getWidth() / 2 + random(-10, 10) + this.canvas.getScrollLeft()) * this.canvas.getZoom()
-        let y = (this.canvas.getHeight() / 2 + random(-10, 10) + this.canvas.getScrollTop()) * this.canvas.getZoom()
+        let y = (100 + random(-10, 10) + this.canvas.getScrollTop()) * this.canvas.getZoom()
 
         return { x: x, y: y }
     }
@@ -436,9 +436,9 @@ const hidePortsIfReadOnly = (canvas, figure) => {
 }
 
 const addDefaultNewDiagram = (canvas) => {
-    const user = Node.createDefault(Node.userType).figure
-    const system = Node.createDefault(Node.nodeType).figure
-    const external = Node.createDefault(Node.externalType).figure
+    const user = new Node(Node.userType)
+    const system = new Node(Node.nodeType)
+    const external = new Node(Node.externalType)
     const b = canvas.getDimension().getWidth() / 2
     addFigureToCanvas(canvas, user, { x: b + 200, y: b + 400 })
     addFigureToCanvas(canvas, system, { x: b + 600, y: b + 400 })
@@ -450,7 +450,7 @@ const addDefaultNewDiagram = (canvas) => {
 }
 
 const addDefaultInnerDiagram = (canvas, name) => {
-    const group = new Group(name).figure
+    const group = new Group(name)
     const d = canvas.getDimension()
     const x = d.getWidth() / 2 + (canvas.getWidth() - 1000) / 2
     const y = d.getHeight() / 2 + 250
