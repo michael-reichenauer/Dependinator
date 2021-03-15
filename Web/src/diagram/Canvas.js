@@ -11,7 +11,7 @@ import { createDefaultConnection } from "./connections";
 import { Tweenable } from "shifty"
 import { store } from "./store";
 import { timing } from "../common/timing";
-import { createCanvas, setBackground, setGridBackground } from "./CanvasEx";
+import CanvasEx from "./CanvasEx";
 import Group from "./Group";
 
 
@@ -30,7 +30,7 @@ export default class Canvas {
     constructor(canvasId, callbacks) {
         this.callbacks = callbacks
         this.canvasId = canvasId
-        this.canvas = createCanvas(canvasId, this.onEditMode)
+        this.canvas = new CanvasEx(canvasId, this.onEditMode, 100000, 100000)
         this.serializer = new Serializer(this.canvas)
     }
 
@@ -186,11 +186,11 @@ export default class Canvas {
 
         if (!isEditMode) {
             // Remove grid
-            setBackground(this.canvas)
+            this.canvas.setNormalBackground()
             return
         }
 
-        setGridBackground(this.canvas)
+        this.canvas.setGridBackground()
     }
 
 
@@ -525,8 +525,9 @@ const zoomToShowTotalDiagram = (canvas) => {
 
 
 export const getCanvasFiguresRect = (canvas) => {
-    let minX = 10000
-    let minY = 10000
+    const d = canvas.getDimension()
+    let minX = d.getWidth()
+    let minY = d.getHeight()
     let maxX = 0
     let maxY = 0
 
