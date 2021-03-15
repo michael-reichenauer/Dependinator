@@ -1,8 +1,6 @@
 import draw2d from "draw2d";
-
 import { deserializeConnections, serializeConnections } from './connections'
 import Colors from "./colors";
-import { getCanvasFiguresRect } from "./Canvas";
 import Group from "./Group";
 import Node from "./Node";
 
@@ -15,7 +13,7 @@ export default class Serializer {
 
     serialize = () => {
         const canvas = this.canvas
-        const bb = getCanvasFiguresRect(canvas)
+        const bb = canvas.getFiguresRect()
         const figs = this.serializeFigures();
         const conns = serializeConnections(canvas)
 

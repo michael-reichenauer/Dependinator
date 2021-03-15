@@ -126,5 +126,43 @@ export default class CanvasEx extends draw2d.Canvas {
         //t.log();
         return this;
     }
+
+    getFiguresRect() {
+        const d = this.getDimension()
+        let minX = d.getWidth()
+        let minY = d.getHeight()
+        let maxX = 0
+        let maxY = 0
+
+        this.getFigures().each((i, f) => {
+            let fx = f.getAbsoluteX()
+            let fy = f.getAbsoluteY()
+            let fx2 = fx + f.getWidth()
+            let fy2 = fy + f.getHeight()
+
+            if (i === 0) {
+                minX = fx
+                minY = fy
+                maxX = fx2
+                maxY = fy2
+                return
+            }
+
+            if (fx < minX) {
+                minX = fx
+            }
+            if (fy < minY) {
+                minY = fy
+            }
+            if (fx2 > maxX) {
+                maxX = fx2
+            }
+            if (fy2 > maxY) {
+                maxY = fy2
+            }
+        })
+
+        return { x: minX, y: minY, w: maxX - minX, h: maxY - minY, x2: maxX, y2: maxY }
+    }
 }
 

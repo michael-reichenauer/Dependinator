@@ -135,7 +135,7 @@ export default class Canvas {
             this.canvas.setZoom(outerZoom / innerDiagram.innerZoom)
 
             // Scroll inner diagram to correspond to where the inner diagram image was
-            const innerDiagramRect = getCanvasFiguresRect(this.canvas)
+            const innerDiagramRect = this.canvas.getFiguresRect()
             const left = innerDiagramRect.x - innerDiagramViewPos.left * this.canvas.zoomFactor
             const top = innerDiagramRect.y - innerDiagramViewPos.top * this.canvas.zoomFactor
             this.setScrollInCanvasCoordinate(left, top)
@@ -153,7 +153,7 @@ export default class Canvas {
             const postInnerZoom = this.canvas.zoomFactor
 
             // Get inner diagram view position to scroll the outer diagram to same position
-            const innerDiagramRect = getCanvasFiguresRect(this.canvas)
+            const innerDiagramRect = this.canvas.getFiguresRect()
             const innerDiagramViewPos = this.fromCanvasToViewCoordinate(innerDiagramRect.x, innerDiagramRect.y)
 
             // Show outer diagram (closing the inner diagram)
@@ -212,7 +212,7 @@ export default class Canvas {
 
 
     export = (result) => {
-        const rect = getCanvasFiguresRect(this.canvas)
+        const rect = this.canvas.getFiguresRect()
         this.serializer.export(rect, result)
     }
 
@@ -470,7 +470,7 @@ const zoomAndMoveShowTotalDiagram = (canvas) => {
 const moveToShowTotalDiagram = (canvas, done) => {
     const area = canvas.getScrollArea()
 
-    const { x, y, w, h } = getCanvasFiguresRect(canvas)
+    const { x, y, w, h } = canvas.getFiguresRect()
 
     const zoom = canvas.zoomFactor
     const fc = { x: (x + w / 2) / zoom, y: (y + h / 2) / zoom }
@@ -497,7 +497,7 @@ const moveToShowTotalDiagram = (canvas, done) => {
 const zoomToShowTotalDiagram = (canvas) => {
     const area = canvas.getScrollArea()
 
-    const { x, y, w, h } = getCanvasFiguresRect(canvas)
+    const { x, y, w, h } = canvas.getFiguresRect()
 
     const fc = { x: x + w / 2, y: y + h / 2 }
     const cc = { x: canvas.getWidth() / 2, y: canvas.getHeight() / 2 }
@@ -524,40 +524,3 @@ const zoomToShowTotalDiagram = (canvas) => {
 }
 
 
-export const getCanvasFiguresRect = (canvas) => {
-    const d = canvas.getDimension()
-    let minX = d.getWidth()
-    let minY = d.getHeight()
-    let maxX = 0
-    let maxY = 0
-
-    canvas.getFigures().each((i, f) => {
-        let fx = f.getAbsoluteX()
-        let fy = f.getAbsoluteY()
-        let fx2 = fx + f.getWidth()
-        let fy2 = fy + f.getHeight()
-
-        if (i === 0) {
-            minX = fx
-            minY = fy
-            maxX = fx2
-            maxY = fy2
-            return
-        }
-
-        if (fx < minX) {
-            minX = fx
-        }
-        if (fy < minY) {
-            minY = fy
-        }
-        if (fx2 > maxX) {
-            maxX = fx2
-        }
-        if (fy2 > maxY) {
-            maxY = fy2
-        }
-    })
-
-    return { x: minX, y: minY, w: maxX - minX, h: maxY - minY, x2: maxX, y2: maxY }
-}
