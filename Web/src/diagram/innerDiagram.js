@@ -1,6 +1,5 @@
 import draw2d from "draw2d";
 import Colors from "./colors";
-import { connectionColor } from "./connections";
 import Group from "./Group";
 import Node from "./Node";
 
@@ -123,7 +122,7 @@ export class InnerDiagram extends draw2d.SetFigure {
         })
 
         const path = this.canvas.paper.path(pathText);
-        path.attr({ "stroke-width": 2, "stroke": connectionColor })
+        path.attr({ "stroke-width": 2, "stroke": Colors.connectionColor })
 
         set.push(path)
     }
@@ -172,9 +171,9 @@ export class InnerDiagram extends draw2d.SetFigure {
     }
 
 
-rect(attr) {
-    const f = this.canvas.paper.rect()
-    f.attr(attr)
-    return f
-}
+    rect(attr) {
+        const f = this.canvas.paper.rect()
+        f.attr(attr)
+        return f
+    }
 }

@@ -15,6 +15,7 @@ export default class Colors {
     static canvasBackground = new draw2d.util.Color(Colors.canvasDivBackground)
     static canvasText = Colors.canvasBackground.getIdealTextColor()
     static canvasGridRgb = Colors.canvasBackground.darker(0.1).rgba()
+    static connectionColor = Colors.canvasText
 
     static NodeColors = {
         Red: new draw2d.util.Color(red[shade]),

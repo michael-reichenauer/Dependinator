@@ -3,12 +3,11 @@ import "jquery-ui-bundle";
 import "jquery-ui-bundle/jquery-ui.css";
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
+import { Tweenable } from "shifty"
 import { random } from '../common/utils'
-
 import Node from './Node'
 import Serializer from './serializer'
-import { createDefaultConnection } from "./connections";
-import { Tweenable } from "shifty"
+import Connection from "./Connection";
 import { store } from "./store";
 import { timing } from "../common/timing";
 import CanvasEx from "./CanvasEx";
@@ -442,9 +441,9 @@ const addDefaultNewDiagram = (canvas) => {
     const b = canvas.getDimension().getWidth() / 2
     addFigureToCanvas(canvas, user, { x: b + 200, y: b + 400 })
     addFigureToCanvas(canvas, system, { x: b + 600, y: b + 400 })
-    addConnectionToCanvas(canvas, createDefaultConnection(user, 'output0', system, 'input0'))
+    addConnectionToCanvas(canvas, new Connection(null, user, 'output0', system, 'input0'))
     addFigureToCanvas(canvas, external, { x: b + 1000, y: b + 400 })
-    addConnectionToCanvas(canvas, createDefaultConnection(system, 'output0', external, 'input0'))
+    addConnectionToCanvas(canvas, new Connection(null, system, 'output0', external, 'input0'))
 
     zoomAndMoveShowTotalDiagram(canvas)
 }

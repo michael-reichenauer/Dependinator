@@ -1,5 +1,5 @@
 import draw2d from "draw2d";
-import { deserializeConnections, serializeConnections } from './connections'
+import Connection from './Connection'
 import Colors from "./colors";
 import Group from "./Group";
 import Node from "./Node";
@@ -15,7 +15,7 @@ export default class Serializer {
         const canvas = this.canvas
         const bb = canvas.getFiguresRect()
         const figs = this.serializeFigures();
-        const conns = serializeConnections(canvas)
+        const conns = this.serializeConnections(canvas)
 
         const canvasData = {
             box: bb,
@@ -30,7 +30,9 @@ export default class Serializer {
 
     deserialize = (canvasData) => {
         this.canvas.addAll(this.deserializeFigures(canvasData.figures))
-        this.canvas.addAll(deserializeConnections(this.canvas, canvasData.connections))
+        const cs = this.deserializeConnections(canvasData.connections)
+        console.log('cs', cs)
+        this.canvas.addAll(cs)
     }
 
 
@@ -65,7 +67,7 @@ export default class Serializer {
 
 
     serializeFigures = () => {
-        return this.canvas.getFigures().asArray().map((f) => f.serialize());
+        return this.canvas.getFigures().asArray().map((figure) => figure.serialize());
     }
 
     deserializeFigures = (figures) => {
@@ -83,5 +85,13 @@ export default class Serializer {
         figure.x = f.x
         figure.y = f.y
         return figure
+    }
+
+    serializeConnections() {
+        return this.canvas.getLines().asArray().map((line) => line.serialize())
+    }
+
+    deserializeConnections(connections) {
+        return connections.map(c => Connection.deserialize(this.canvas, c)).filter(c => c != null)
     }
 }

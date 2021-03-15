@@ -1,5 +1,5 @@
 import draw2d from "draw2d";
-import { configureDefaultConnection } from './connections'
+import Connection, { configureDefaultConnection } from './Connection'
 import Node from './Node'
 
 export const ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreatePolicy.extend(
@@ -221,8 +221,7 @@ export const ConnectionCreatePolicy = draw2d.policy.connection.ConnectionCreateP
 
 
         createConnection: function () {
-            const connection = this._super();
-            return configureDefaultConnection(connection)
+            return new Connection()
         }
     });
 
