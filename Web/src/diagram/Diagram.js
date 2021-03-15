@@ -1,12 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import PubSub from 'pubsub-js'
 import Canvas from "./Canvas"
-import CanvasMenu from "./CanvasMenu";
-import FigureMenu from "./FigureMenu";
 import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { Backdrop, makeStyles } from "@material-ui/core";
-import Group from "./Group";
+import ContextMenu from "../common/ContextMenu";
 
 
 export const canUndoAtom = atom(false)
@@ -58,7 +56,6 @@ export default function Diagram({ width, height }) {
         }
     }, [setCanUndo, setCanRedo, setProgress, setCanPopDiagram, setEditMode])
 
-    const { canvas, figure, x, y } = contextMenu ?? {};
 
     return (
         <>
@@ -72,8 +69,7 @@ export default function Diagram({ width, height }) {
                 </div>
             </div>
 
-            <CanvasMenu canvas={canvas} onClose={setContextMenu} x={x} y={y} />
-            <FigureMenu figure={figure} onClose={setContextMenu} x={x} y={y} />
+            <ContextMenu menu={contextMenu} onClose={setContextMenu} />
         </>
     )
 }
@@ -89,19 +85,33 @@ function enableContextMenu(setContextMenu, canvas) {
         event.preventDefault();
         event = getCommonEvent(event)
 
-        let figure = canvas.tryGetFigure(event.clientX, event.clientY)
-        if (figure?.type === Group.groupType) {
-            // Context menu in group node, treat as canvas 
-            figure = null
+        const { x, y } = { x: event.clientX, y: event.clientY }
+
+        // Get target figure or use canvas as target
+        let figure = getFigure(canvas, event)
+        const target = figure ?? canvas
+
+        if (typeof target.getContextMenuItems !== "function") {
+            // No context menu on target
+            return
         }
 
-        setContextMenu({ canvas: figure == null ? canvas : null, figure: figure, x: event.clientX, y: event.clientY });
+        const menuItems = target.getContextMenuItems(x, y)
+        setContextMenu({ items: menuItems, x: x, y: y });
     }
 
     document.addEventListener("contextmenu", handleContextMenu);
     return handleContextMenu
 }
 
+const getFigure = (canvas, event) => {
+    let figure = canvas.tryGetFigure(event.clientX, event.clientY)
+    if (typeof figure.getContextMenuItems !== "function" && figure.getParent() != null) {
+        // Figure did not have context menu, but has a parent (e.g. a label) lets try parent
+        figure = figure.getParent()
+    }
+    return figure
+}
 
 function exportDiagram(canvas) {
     // Open other tab

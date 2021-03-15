@@ -12,6 +12,7 @@ import { store } from "./store";
 import { timing } from "../common/timing";
 import CanvasEx from "./CanvasEx";
 import Group from "./Group";
+import { Item } from "../common/ContextMenu";
 
 
 const defaultStoreDiagramName = 'diagram'
@@ -71,6 +72,16 @@ export default class Canvas {
 
         PubSub.subscribe('canvas.SetEditMode', (_, isEditMode) => this.canvas.panPolicy.setEditMode(isEditMode))
         PubSub.subscribe('canvas.NewDiagram', this.commandNewDiagram)
+    }
+
+    getContextMenuItems(x, y) {
+        const pos = this.canvas.fromDocumentToCanvasCoordinate(x, y)
+
+        return [
+            new Item('Add node', () => this.addNode(Node.nodeType, pos)),
+            new Item('Add user node', () => this.addNode(Node.userType, pos)),
+            new Item('Add external node', () => this.addNode(Node.externalType, pos))
+        ]
     }
 
     save = (canvas, storeName) => {

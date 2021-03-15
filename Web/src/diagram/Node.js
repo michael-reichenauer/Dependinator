@@ -1,8 +1,10 @@
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
+import { Item, NestedItem } from "../common/ContextMenu";
 import { onClickHandler } from "../common/mouseClicks";
 import { timing } from "../common/timing";
 import Colors from "./colors";
+import { CommandChangeColor } from "./commandChangeColor";
 import { InnerDiagram } from "./innerDiagram";
 import { store } from "./store";
 
@@ -82,6 +84,19 @@ export default class Node extends draw2d.shape.node.Between {
             type: this.type, id: this.id, x: this.x, y: this.y, w: this.width, h: this.height,
             name: this.getName(), description: this.getDescription(), color: this.colorName
         }
+    }
+
+    getContextMenuItems(x, y) {
+        const setColor = (colorName) => {
+            const command = new CommandChangeColor(this, colorName);
+            this.getCanvas().getCommandStack().execute(command);
+        }
+
+        const colorItems = Colors.nodeColorNames().map((colorName) => {
+            return new Item(colorName, () => setColor(colorName))
+        })
+
+        return [new NestedItem('Set color', colorItems)]
     }
 
     setNodeColor(colorName) {

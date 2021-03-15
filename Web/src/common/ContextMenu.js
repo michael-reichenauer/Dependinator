@@ -18,7 +18,11 @@ export class NestedItem {
     }
 }
 
-export default function ContextMenu({ items, onClose, x, y }) {
+export default function ContextMenu({ menu, onClose }) {
+    if (menu?.items == null) {
+        return null
+    }
+
     const onClick = (item) => {
         onClose()
 
@@ -34,9 +38,9 @@ export default function ContextMenu({ items, onClose, x, y }) {
             open={true}
             onClose={onClose}
             anchorReference="anchorPosition"
-            anchorPosition={{ left: x, top: y }}
+            anchorPosition={{ left: menu.x - 2, top: menu.y - 2 }}
         >
-            {getMenuItems(items, onClick)}
+            {getMenuItems(menu.items, onClick)}
         </Menu>
     )
 }
