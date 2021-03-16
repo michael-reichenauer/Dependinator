@@ -57,6 +57,11 @@ export default class Group extends draw2d.shape.composite.Raft {
         }
     }
 
+    getContextMenuItems(x, y) {
+        // Reuse the canvas context menu
+        return this.getCanvas().canvas.getContextMenuItems(x, y)
+    }
+
     addLabel(name) {
         this.nameLabel = new draw2d.shape.basic.Label({
             text: name, stroke: 0, fontSize: 30, fontColor: Colors.canvasText, bold: true,

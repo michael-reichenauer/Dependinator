@@ -276,7 +276,8 @@ export const PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
                 }
             }
             catch (exc) {
-                console.log(exc)
+                console.error(exc)
+                debugger
             }
         },
 
@@ -342,7 +343,7 @@ export const PanPolicy = draw2d.policy.canvas.SingleSelectionPolicy.extend(
                 }
             }
             catch (exc) {
-                console.log(exc)
+                console.error(exc)
                 debugger
             }
         }

@@ -18,7 +18,6 @@ export default class Colors {
     static connectionColor = Colors.canvasText
 
     static NodeColors = {
-        Red: new draw2d.util.Color(red[shade]),
         Pink: new draw2d.util.Color(pink[shade]),
         Purple: new draw2d.util.Color(purple[shade]),
         DeepPurple: new draw2d.util.Color(deepPurple[shade]),
@@ -28,7 +27,6 @@ export default class Colors {
         Teal: new draw2d.util.Color(teal[shade]),
         Green: new draw2d.util.Color(green[shade]),
         LightGreen: new draw2d.util.Color(lightGreen[shade]),
-        Orange: new draw2d.util.Color(orange[shade]),
         DeepOrange: new draw2d.util.Color(deepOrange[shade]),
         Brown: new draw2d.util.Color(brown[shade]),
         Grey: new draw2d.util.Color(grey[shade]),

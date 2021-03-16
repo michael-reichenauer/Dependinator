@@ -68,7 +68,7 @@ export default class Node extends draw2d.shape.node.Between {
         this.addPorts()
 
         this.on("click", (s, e) => console.log('click node'))
-        this.on("dblclick", (s, e) => console.log('double click node'))
+        this.on("dblclick", (s, e) => this.editInnerDiagram())
     }
 
     static deserialize(data) {
@@ -96,7 +96,16 @@ export default class Node extends draw2d.shape.node.Between {
             return new Item(colorName, () => setColor(colorName))
         })
 
-        return [new NestedItem('Set color', colorItems)]
+        const menuItems = [
+            new Item('Show inner diagram', () => this.showInnerDiagram(), this.innerDiagram == null),
+            new Item('Hide inner diagram', () => this.hideInnerDiagram(), this.innerDiagram != null),
+            new Item('Edit inner diagram (dbl-click)', () => this.editInnerDiagram()),
+            new NestedItem('Set color', colorItems),
+            new Item('To front', () => this.toFront()),
+            new Item('To back', () => this.toBack()),
+        ]
+
+        return menuItems
     }
 
     setNodeColor(colorName) {
@@ -125,7 +134,7 @@ export default class Node extends draw2d.shape.node.Between {
         this.innerDiagram = new InnerDiagram(this, canvasData)
         this.innerDiagram.onClick = onClickHandler(
             () => this.hideInnerDiagram(),
-            () => PubSub.publish('canvas.EditInnerDiagram', this))
+            () => this.editInnerDiagram())
 
         this.add(this.innerDiagram, new InnerDiagramLocator())
         this.repaint()
@@ -148,6 +157,13 @@ export default class Node extends draw2d.shape.node.Between {
         t.log()
     }
 
+    editInnerDiagram() {
+        if (this.innerDiagram == null) {
+            this.showInnerDiagram()
+        }
+
+        PubSub.publish('canvas.EditInnerDiagram', this)
+    }
 
     addLabels = (name, description) => {
         const fontColor = Colors.getNodeFontColor(this.colorName)
@@ -222,6 +238,12 @@ class InnerDiagramIconLocator extends draw2d.layout.locator.PortLocator {
     }
 }
 
+class InnerDiagramLocator extends draw2d.layout.locator.Locator {
+    relocate(index, target) {
+        target.setPosition(2, 2)
+    }
+}
+
 
 class InputTopPortLocator extends draw2d.layout.locator.PortLocator {
     relocate(index, figure) {
@@ -236,14 +258,3 @@ class OutputBottomPortLocator extends draw2d.layout.locator.PortLocator {
     }
 }
 
-
-
-const InnerDiagramLocator = draw2d.layout.locator.Locator.extend({
-    init: function () {
-        this._super();
-    },
-    relocate: function (index, target) {
-        // let parentBoundingBox = target.getParent().getBoundingBox()
-        target.setPosition(2, 2)
-    }
-});

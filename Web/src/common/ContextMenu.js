@@ -4,17 +4,21 @@ import NestedMenuItem from "material-ui-nested-menu-item";
 
 
 export class Item {
-    constructor(text, action) {
+    constructor(text, action, isEnabled = true, isShow = true) {
         this.text = text
         this.action = action
+        this.isEnabled = isEnabled
+        this.isShow = isShow
     }
 }
 
 export class NestedItem {
     items = []
-    constructor(text, items) {
+    constructor(text, items, isEnabled = true, isShow = true) {
         this.text = text
         this.items = items
+        this.isEnabled = isEnabled
+        this.isShow = isShow
     }
 }
 
@@ -48,18 +52,28 @@ export default function ContextMenu({ menu, onClose }) {
 const getMenuItems = (items, onClick) => {
     return items.map((item, i) => {
         //console.log('try item', item)
+        if (!item.isShow) {
+            return null
+        }
         if (item instanceof Item) {
             return (
-                <MenuItem onClick={() => onClick(item)} key={`item-${i}`}>{item.text}</MenuItem>
+                <MenuItem
+                    key={`item-${i}`}
+                    onClick={() => onClick(item)}
+                    disabled={!item.isEnabled}
+                    dense>
+                    {item.text}
+                </MenuItem>
             )
         } else if (item instanceof NestedItem) {
-
             return (
                 <NestedMenuItem
+                    key={`item-${i}`}
+                    onClick={() => onClick(null)}
                     label={item.text}
                     parentMenuOpen={true}
-                    onClick={() => onClick(null)}
-                    key={`item-${i}`}
+                    disabled={!item.isEnabled}
+                    dense
                 >
                     {getMenuItems(item.items, onClick)}
                 </NestedMenuItem>
@@ -68,5 +82,5 @@ const getMenuItems = (items, onClick) => {
         console.warn('Unknown item', item)
         return null
 
-    })
+    }).filter(i => i != null)
 }

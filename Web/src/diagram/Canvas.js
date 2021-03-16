@@ -31,6 +31,7 @@ export default class Canvas {
         this.callbacks = callbacks
         this.canvasId = canvasId
         this.canvas = new CanvasEx(canvasId, this.onEditMode, 100000, 100000)
+        this.canvas.canvas = this
         this.serializer = new Serializer(this.canvas)
     }
 
@@ -80,7 +81,8 @@ export default class Canvas {
         return [
             new Item('Add node', () => this.addNode(Node.nodeType, pos)),
             new Item('Add user node', () => this.addNode(Node.userType, pos)),
-            new Item('Add external node', () => this.addNode(Node.externalType, pos))
+            new Item('Add external node', () => this.addNode(Node.externalType, pos)),
+            new Item('Pop to surrounding diagram', () => PubSub.publish('canvas.CloseInnerDiagram'), true, this.diagramStack.length > 0),
         ]
     }
 
