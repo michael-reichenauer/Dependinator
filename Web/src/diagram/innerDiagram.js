@@ -1,4 +1,5 @@
 import draw2d from "draw2d";
+import Canvas from "./Canvas";
 import Colors from "./colors";
 import Group from "./Group";
 import Node from "./Node";
@@ -7,10 +8,17 @@ import Node from "./Node";
 const groupColor = '#' + Colors.canvasText.hex()
 
 const defaultDiagramData = (name) => {
+    const gx = Canvas.size / 2, gy = Canvas.size / 2
+    const nx = Canvas.size / 2 + Group.defaultWidth / 2 - Node.defaultWidth / 2
+    const ny = Canvas.size / 2 + Group.defaultHeight / 2 - Node.defaultHeight / 2
+
     return {
         zoom: 1,
-        box: { x: 5090, y: 5250, w: Group.defaultWidth, h: Group.defaultHeight },
-        figures: [{ type: Group.groupType, x: 5090, y: 5250, w: Group.defaultWidth, h: Group.defaultHeight, name: name }],
+        box: { x: gx, y: gy, w: Group.defaultWidth, h: Group.defaultHeight },
+        figures: [
+            { type: Group.groupType, x: Canvas.size / 2, y: Canvas.size / 2, w: Group.defaultWidth, h: Group.defaultHeight, name: name },
+            { type: Node.nodeType, x: nx, y: ny, w: Node.defaultWidth, h: Node.defaultHeight, name: 'Node', color: 'DeepPurple' }
+        ],
         connections: [],
     }
 }

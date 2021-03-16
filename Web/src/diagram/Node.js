@@ -14,8 +14,8 @@ import { store } from "./store";
 const defaultOptions = (type) => {
     const dv = {
         id: draw2d.util.UUID.create(),
-        width: 230,
-        height: 150,
+        width: Node.defaultWidth,
+        height: Node.defaultHeight,
         description: 'Description',
     }
 
@@ -61,6 +61,8 @@ export default class Node extends draw2d.shape.node.Between {
     static nodeType = 'node'
     static userType = 'user'
     static externalType = 'external'
+    static defaultWidth = 230
+    static defaultHeight = 150
 
 
     figure = null

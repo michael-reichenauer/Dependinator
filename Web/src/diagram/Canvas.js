@@ -19,6 +19,7 @@ const defaultStoreDiagramName = 'diagram'
 
 
 export default class Canvas {
+    static size = 100000
     canvasId = null
     canvas = null;
     diagramStack = []
@@ -30,7 +31,7 @@ export default class Canvas {
     constructor(canvasId, callbacks) {
         this.callbacks = callbacks
         this.canvasId = canvasId
-        this.canvas = new CanvasEx(canvasId, this.onEditMode, 100000, 100000)
+        this.canvas = new CanvasEx(canvasId, this.onEditMode, Canvas.size, Canvas.size)
         this.canvas.canvas = this
         this.serializer = new Serializer(this.canvas)
     }
@@ -463,11 +464,19 @@ const addDefaultNewDiagram = (canvas) => {
 }
 
 const addDefaultInnerDiagram = (canvas, name) => {
+    // Add a default group at the center of the canvas
     const group = new Group(name)
     const d = canvas.getDimension()
-    const x = d.getWidth() / 2 + (canvas.getWidth() - 1000) / 2
-    const y = d.getHeight() / 2 + 250
-    canvas.add(group, x, y)
+    const gx = d.getWidth() / 2 + (canvas.getWidth() - 1000) / 2
+    const gy = d.getHeight() / 2 + 250
+    canvas.add(group, gx, gy)
+
+    // Add a default node in the center of the group
+    const node = new Node(Node.nodeType)
+    const nx = gx + group.getWidth() / 2 - node.getWidth() / 2
+    const ny = gy + group.getHeight() / 2 - node.getHeight() / 2
+    canvas.add(node, nx, ny)
+
 }
 
 const zoomAndMoveShowTotalDiagram = (canvas) => {
