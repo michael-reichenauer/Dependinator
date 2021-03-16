@@ -1,4 +1,5 @@
 import draw2d from "draw2d";
+import { Item } from "../common/ContextMenu";
 import Colors from "./colors";
 
 
@@ -50,4 +51,14 @@ export default class Connection extends draw2d.Connection {
             description: this.descriptionLabel?.text ?? ''
         }
     }
+
+    getContextMenuItems(x, y) {
+        const menuItems = [
+            new Item('To front', () => this.toFront()),
+            new Item('To back', () => this.toBack()),
+        ]
+
+        return menuItems
+    }
+
 }

@@ -47,12 +47,8 @@ export default function ApplicationBar({ height }) {
 
                 <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={style()} />}
                     onClick={() => PubSub.publish('canvas.AddNode')} />
-
-
-
                 <Button tooltip="Add user node" icon={<PersonAddIcon className={style()} />}
                     onClick={() => PubSub.publish('canvas.AddUserNode')} />
-
                 <Button tooltip="Add external node" icon={<LibraryAddOutlinedIcon className={style()} />}
                     onClick={() => PubSub.publish('canvas.AddExternalNode')} />
 
