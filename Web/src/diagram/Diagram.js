@@ -13,15 +13,12 @@ export const canPopDiagramAtom = atom(false)
 export const progressAtom = atom(false)
 export const editModeAtom = atom(false)
 
-const useStyles = makeStyles((theme) => ({
-    backdrop: {
-        zIndex: theme.zIndex.drawer + 1,
-        color: '#fff',
-    },
-}));
+
 
 export default function Diagram({ width, height }) {
+    // The ref to the canvas handler for all canvas operations
     const canvasRef = useRef(null)
+
     const [contextMenu, setContextMenu] = useState()
     const [, setCanUndo] = useAtom(canUndoAtom)
     const [, setCanRedo] = useAtom(canRedoAtom)
@@ -63,8 +60,8 @@ export default function Diagram({ width, height }) {
 
             <div id="diagram">
                 <div id="canvas" style={{
-                    width: width, height: height, maxWidth: width, maxHeight: height, position: 'absolute',
-                    overflow: 'scroll'
+                    width: width, height: height, maxWidth: width, maxHeight: height,
+                    position: 'absolute', overflow: 'scroll'
                 }}>
                 </div>
             </div>
@@ -74,7 +71,12 @@ export default function Diagram({ width, height }) {
     )
 }
 
-
+const useStyles = makeStyles((theme) => ({
+    backdrop: {
+        zIndex: theme.zIndex.drawer + 1,
+        color: '#fff',
+    },
+}));
 
 function enableContextMenu(setContextMenu, canvas) {
     const handleContextMenu = (event) => {
@@ -104,6 +106,7 @@ function enableContextMenu(setContextMenu, canvas) {
     return handleContextMenu
 }
 
+
 const getFigure = (canvas, event) => {
     let figure = canvas.tryGetFigure(event.clientX, event.clientY)
     if (typeof figure.getContextMenuItems !== "function" && figure.getParent() != null) {
@@ -112,6 +115,7 @@ const getFigure = (canvas, event) => {
     }
     return figure
 }
+
 
 function exportDiagram(canvas) {
     // Open other tab
