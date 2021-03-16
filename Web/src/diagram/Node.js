@@ -5,6 +5,7 @@ import { clickHandler } from "../common/mouseClicks";
 import { timing } from "../common/timing";
 import Colors from "./colors";
 import { CommandChangeColor } from "./commandChangeColor";
+import { CommandChangeIcon } from "./commandChangeIcon";
 import { InnerDiagram } from "./innerDiagram";
 import { store } from "./store";
 
@@ -20,14 +21,39 @@ const defaultOptions = (type) => {
 
     switch (type) {
         case Node.nodeType:
-            return { ...dv, name: 'Node', colorName: 'DeepPurple', icon: null }
+            return { ...dv, name: 'Node', colorName: 'DeepPurple', icon: 'Node', }
         case Node.userType:
-            return { ...dv, name: 'External User', colorName: 'BlueGrey', icon: new draw2d.shape.icon.User() }
+            return { ...dv, name: 'External User', colorName: 'BlueGrey', icon: 'User' }
         case Node.externalType:
-            return { ...dv, name: 'External System', colorName: 'BlueGrey', icon: new draw2d.shape.icon.NewWindow() }
+            return { ...dv, name: 'External System', colorName: 'BlueGrey', icon: 'External' }
         default:
             throw new Error('Unknown type: ' + type);
     }
+}
+
+const icons = {
+    Node: () => new draw2d.shape.icon.Ipad(),
+    User: () => new draw2d.shape.icon.User(),
+    External: () => new draw2d.shape.icon.NewWindow(),
+
+    IPhone: () => new draw2d.shape.icon.Iphone(),
+    DB: () => new draw2d.shape.icon.Db(),
+    Cloud: () => new draw2d.shape.icon.Cloud(),
+    Gear: () => new draw2d.shape.icon.Gear(),
+    Key: () => new draw2d.shape.icon.Key(),
+
+    Ie: () => new draw2d.shape.icon.Ie(),
+    Chrome: () => new draw2d.shape.icon.Chrome(),
+    Safari: () => new draw2d.shape.icon.Safari(),
+    Firefox: () => new draw2d.shape.icon.Firefox(),
+
+    Windows: () => new draw2d.shape.icon.Windows(),
+    Linux: () => new draw2d.shape.icon.Linux(),
+    Apple: () => new draw2d.shape.icon.Apple(),
+
+    Europe: () => new draw2d.shape.icon.GlobeAlt(),
+    Americas: () => new draw2d.shape.icon.Globe(),
+    Asia: () => new draw2d.shape.icon.GlobeAlt(),
 }
 
 
@@ -75,33 +101,38 @@ export default class Node extends draw2d.shape.node.Between {
         return new Node(data.type,
             {
                 id: data.id, width: data.w, height: data.h,
-                name: data.name, description: data.description, colorName: data.color
+                name: data.name, description: data.description, colorName: data.color, icon: data.icon
             })
     }
 
     serialize() {
         return {
             type: this.type, id: this.id, x: this.x, y: this.y, w: this.width, h: this.height,
-            name: this.getName(), description: this.getDescription(), color: this.colorName
+            name: this.getName(), description: this.getDescription(), color: this.colorName, icon: this.iconName
         }
     }
 
     getContextMenuItems(x, y) {
-        const colorItems = Colors.nodeColorNames().map((colorName) => {
-            return new Item(colorName, () => this.runSetColorCmd(colorName))
+        const isNode = this.type === Node.nodeType
+        const colorItems = Colors.nodeColorNames().map((name) => {
+            return new Item(name, () => this.runSetColorCmd(name))
+        })
+        const iconItems = getIconNames().map((name) => {
+            return new Item(name, () => this.runSetIconCmd(name))
         })
 
-        const menuItems = [
-            new Item('Show inner diagram', () => this.showInnerDiagram(), this.innerDiagram == null),
-            new Item('Hide inner diagram', () => this.hideInnerDiagram(), this.innerDiagram != null),
-            new Item('Edit inner diagram (dbl-click)', () => this.editInnerDiagram()),
-            new NestedItem('Set color', colorItems),
+        return [
+            new NestedItem('Inner diagram', [
+                new Item('Show', () => this.showInnerDiagram(), this.innerDiagram == null, isNode),
+                new Item('Hide (click)', () => this.hideInnerDiagram(), this.innerDiagram != null, isNode),
+                new Item('Edit (dbl-click)', () => this.editInnerDiagram(), true, isNode),
+            ], true, isNode),
+            new NestedItem('Change color', colorItems, true, isNode),
+            new NestedItem('Change icon', iconItems, true, isNode),
             new Item('To front', () => this.toFront()),
             new Item('To back', () => this.toBack()),
             new Item('Delete node', () => this.deleteNodeCmd())
         ]
-
-        return menuItems
     }
 
     deleteNodeCmd() {
@@ -127,6 +158,21 @@ export default class Node extends draw2d.shape.node.Between {
         this.descriptionLabel?.setFontColor(fontColor)
         this.icon?.setColor(fontColor)
         this.diagramIcon?.setColor(fontColor)
+    }
+
+    runSetIconCmd(iconName) {
+        const command = new CommandChangeIcon(this, iconName);
+        this.getCanvas().getCommandStack().execute(command);
+    }
+
+    setIcon(name) {
+        if (this.icon != null) {
+            this.remove(this.icon)
+            this.icon = null
+            this.iconName = null
+        }
+        this.addIcon(name)
+        this.repaint()
     }
 
     showInnerDiagram() {
@@ -192,13 +238,19 @@ export default class Node extends draw2d.shape.node.Between {
         this.add(this.descriptionLabel, new LabelLocator(30));
     }
 
-    addIcon(icon) {
+    addIcon(iconName) {
+        if (iconName == null) {
+            return
+        }
+        const icon = createIcon(iconName)
         if (icon == null) {
             return
         }
+
+        this.iconName = iconName
         this.icon = icon
         const iconColor = Colors.getNodeFontColor(this.colorName)
-        this.icon.attr({ width: 18, height: 15, color: iconColor, bgColor: 'none' })
+        this.icon.attr({ width: 15, height: 15, color: iconColor, bgColor: 'none' })
         this.add(this.icon, new draw2d.layout.locator.XYRelPortLocator(1, 1))
     }
 
@@ -266,3 +318,18 @@ class OutputBottomPortLocator extends draw2d.layout.locator.PortLocator {
     }
 }
 
+const getIconNames = () => Object.entries(icons).map(e => e[0])
+
+const createIcon = (name) => {
+    if (name == null) {
+        return null
+    }
+
+    const create = icons[name]
+    if (create == null) {
+        return null
+
+    }
+
+    return create()
+}
