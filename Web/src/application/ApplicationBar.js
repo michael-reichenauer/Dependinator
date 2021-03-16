@@ -10,6 +10,7 @@ import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
 import ZoomOutMapIcon from '@material-ui/icons/ZoomOutMap';
+import SaveAltIcon from '@material-ui/icons/SaveAlt';
 import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom } from "../diagram/Diagram";
 import { useAtom } from "jotai";
 import { withStyles } from "@material-ui/styles";
@@ -46,8 +47,12 @@ export default function ApplicationBar({ height }) {
 
                 <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={style()} />}
                     onClick={() => PubSub.publish('canvas.AddNode')} />
+
+
+
                 <Button tooltip="Add user node" icon={<PersonAddIcon className={style()} />}
                     onClick={() => PubSub.publish('canvas.AddUserNode')} />
+
                 <Button tooltip="Add external node" icon={<LibraryAddOutlinedIcon className={style()} />}
                     onClick={() => PubSub.publish('canvas.AddExternalNode')} />
 
@@ -55,7 +60,7 @@ export default function ApplicationBar({ height }) {
 
                 <Button tooltip="Scroll and zoom to show all of the diagram" icon={<FilterCenterFocusIcon className={style()} />}
                     onClick={() => PubSub.publish('canvas.ShowTotalDiagram')} />
-                <Button tooltip="Pop to surrounding diagram" disabled={!canPopDiagram} icon={<ZoomOutMapIcon className={style(!canPopDiagram)} />}
+                <Button tooltip="Pop to surrounding diagram" disabled={!canPopDiagram} icon={<SaveAltIcon className={style(!canPopDiagram)} style={{ transform: 'rotate(180deg)' }} />}
                     onClick={() => PubSub.publish('canvas.CloseInnerDiagram')} />
 
                 <Typography className={classes.space} variant="h6" noWrap> </Typography>
