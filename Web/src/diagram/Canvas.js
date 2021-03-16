@@ -70,7 +70,7 @@ export default class Canvas {
         PubSub.subscribe('canvas.ShowTotalDiagram', this.showTotalDiagram)
 
         PubSub.subscribe('canvas.EditInnerDiagram', this.commandEditInnerDiagram)
-        PubSub.subscribe('canvas.CloseInnerDiagram', this.commandCloseInnerDiagram)
+        PubSub.subscribe('canvas.PopInnerDiagram', this.commandPopFromInnerDiagram)
 
         PubSub.subscribe('canvas.SetEditMode', (_, isEditMode) => this.canvas.panPolicy.setEditMode(isEditMode))
         PubSub.subscribe('canvas.NewDiagram', this.commandNewDiagram)
@@ -83,7 +83,7 @@ export default class Canvas {
             new Item('Add node', () => this.addNode(Node.nodeType, pos)),
             new Item('Add user node', () => this.addNode(Node.userType, pos)),
             new Item('Add external node', () => this.addNode(Node.externalType, pos)),
-            new Item('Pop to surrounding diagram (dbl-click)', () => PubSub.publish('canvas.CloseInnerDiagram'),
+            new Item('Pop to surrounding diagram (dbl-click)', () => PubSub.publish('canvas.PopInnerDiagram'),
                 true, this.diagramStack.length > 0),
         ]
     }
@@ -159,7 +159,7 @@ export default class Canvas {
     }
 
 
-    commandCloseInnerDiagram = () => {
+    commandPopFromInnerDiagram = () => {
         this.withWorkingIndicator(() => {
             const t = timing()
 
@@ -413,7 +413,7 @@ export default class Canvas {
 
             if (this.diagramStack.length > 0) {
                 // double click out side group node in inner diagram lets pop
-                this.commandCloseInnerDiagram()
+                this.commandPopFromInnerDiagram()
                 return
             }
             PubSub.publish('canvas.AddDefaultNode', { x: event.x, y: event.y })

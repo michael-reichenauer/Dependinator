@@ -56,7 +56,7 @@ export default function ApplicationBar({ height }) {
                 <Button tooltip="Scroll and zoom to show all of the diagram" icon={<FilterCenterFocusIcon className={style()} />}
                     onClick={() => PubSub.publish('canvas.ShowTotalDiagram')} />
                 <Button tooltip="Pop to surrounding diagram" disabled={!canPopDiagram} icon={<SaveAltIcon className={style(!canPopDiagram)} style={{ transform: 'rotate(180deg)' }} />}
-                    onClick={() => PubSub.publish('canvas.CloseInnerDiagram')} />
+                    onClick={() => PubSub.publish('canvas.PopInnerDiagram')} />
 
                 <Typography className={classes.space} variant="h6" noWrap> </Typography>
 
