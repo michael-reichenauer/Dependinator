@@ -54,11 +54,11 @@ export default class Canvas {
     handleCommands = () => {
         PubSub.subscribe('canvas.Undo', () => {
             this.canvas.getCommandStack().undo();
-            this.save(this.canvas, this.storName)
+            this.save(this.storName)
         })
         PubSub.subscribe('canvas.Redo', () => {
             this.canvas.getCommandStack().redo();
-            this.save(this.canvas, this.storName)
+            this.save(this.storName)
         })
 
         PubSub.subscribe('canvas.AddNode', () => this.addNode(Node.nodeType, this.getCenter()))
@@ -82,11 +82,12 @@ export default class Canvas {
             new Item('Add node', () => this.addNode(Node.nodeType, pos)),
             new Item('Add user node', () => this.addNode(Node.userType, pos)),
             new Item('Add external node', () => this.addNode(Node.externalType, pos)),
-            new Item('Pop to surrounding diagram', () => PubSub.publish('canvas.CloseInnerDiagram'), true, this.diagramStack.length > 0),
+            new Item('Pop to surrounding diagram (dbl-click)', () => PubSub.publish('canvas.CloseInnerDiagram'),
+                true, this.diagramStack.length > 0),
         ]
     }
 
-    save = (canvas, storeName) => {
+    save = (storeName) => {
         // Serialize canvas figures and connections into canvas data object
         const canvasData = this.serializer.serialize();
 
@@ -397,7 +398,7 @@ export default class Canvas {
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
                 if (e.action === "POST_EXECUTE") {
-                    this.save(this.canvas, this.storeName)
+                    this.save(this.storeName)
                 }
             }
         });

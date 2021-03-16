@@ -1,7 +1,7 @@
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
 import { Item, NestedItem } from "../common/ContextMenu";
-import { onClickHandler } from "../common/mouseClicks";
+import { clickHandler } from "../common/mouseClicks";
 import { timing } from "../common/timing";
 import Colors from "./colors";
 import { CommandChangeColor } from "./commandChangeColor";
@@ -131,14 +131,12 @@ export default class Node extends draw2d.shape.node.Between {
 
     showInnerDiagram() {
         const t = timing()
+
+        this.setChildrenVisible(false)
+
         const canvasData = store.read(this.getId())
-
-        this.nameLabel?.setVisible(false)
-        this.descriptionLabel?.setVisible(false)
-        this.diagramIcon?.setVisible(false)
-
         this.innerDiagram = new InnerDiagram(this, canvasData)
-        this.innerDiagram.onClick = onClickHandler(
+        this.innerDiagram.onClick = clickHandler(
             () => this.hideInnerDiagram(),
             () => this.editInnerDiagram())
 
@@ -148,16 +146,14 @@ export default class Node extends draw2d.shape.node.Between {
     }
 
 
+
     hideInnerDiagram() {
         const t = timing()
         if (this.innerDiagram == null) {
             return
         }
 
-        this.nameLabel?.setVisible(true)
-        this.descriptionLabel?.setVisible(true)
-        this.diagramIcon?.setVisible(true)
-
+        this.setChildrenVisible(true)
         this.remove(this.innerDiagram)
         this.innerDiagram = null
         t.log()
@@ -169,6 +165,12 @@ export default class Node extends draw2d.shape.node.Between {
         }
 
         PubSub.publish('canvas.EditInnerDiagram', this)
+    }
+
+    setChildrenVisible(isVisible) {
+        this.nameLabel?.setVisible(isVisible)
+        this.descriptionLabel?.setVisible(isVisible)
+        this.diagramIcon?.setVisible(isVisible)
     }
 
     addLabels = (name, description) => {

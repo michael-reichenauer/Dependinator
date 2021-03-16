@@ -1,5 +1,5 @@
 
-export const onClickHandler = (onSingleClick, onDoubleClick) => {
+export const clickHandler = (onSingleClick, onDoubleClick) => {
     let clickTimeout = null
     let clicks = 0
 
