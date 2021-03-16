@@ -1,7 +1,7 @@
 import draw2d from "draw2d";
 import {
-    blueGrey, deepPurple, indigo, pink, purple, red, blue, cyan,
-    teal, green, brown, lightGreen, orange, deepOrange, grey
+    blueGrey, deepPurple, indigo, pink, purple, blue, cyan,
+    teal, green, brown, lightGreen, deepOrange, grey
 } from '@material-ui/core/colors';
 
 

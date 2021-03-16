@@ -9,7 +9,6 @@ import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
-import ZoomOutMapIcon from '@material-ui/icons/ZoomOutMap';
 import SaveAltIcon from '@material-ui/icons/SaveAlt';
 import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom } from "../diagram/Diagram";
 import { useAtom } from "jotai";
