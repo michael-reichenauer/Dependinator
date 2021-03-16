@@ -74,7 +74,7 @@ export default class Group extends draw2d.shape.composite.Raft {
 class GroupNameLocator extends draw2d.layout.locator.Locator {
     relocate(index, target) {
         let targetBoundingBox = target.getBoundingBox()
-        target.setPosition(0, -(targetBoundingBox.h - 36))
+        target.setPosition(1, -(targetBoundingBox.h - 6))
     }
 }
 

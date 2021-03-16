@@ -64,7 +64,7 @@ export class InnerDiagram extends draw2d.SetFigure {
         const diagramBox = this.canvasData.box
 
         // Calculate diagram size with some margin
-        const margin = 20
+        const margin = 70
         let diagramWidth = diagramBox.w + margin
         let diagramHeight = diagramBox.h + margin
 
@@ -149,7 +149,7 @@ export class InnerDiagram extends draw2d.SetFigure {
         const f = this.canvas.paper.text()
         f.attr({
             'text-anchor': 'start',
-            x: x + 5, y: y + 16, text: name, fill: groupColor,
+            x: x + 5, y: y - 14, text: name, fill: groupColor,
             'font-size': 30, 'font-weight': 'bold'
         })
         return f

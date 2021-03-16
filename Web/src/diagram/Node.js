@@ -218,6 +218,7 @@ export default class Node extends draw2d.shape.node.Between {
     setChildrenVisible(isVisible) {
         this.nameLabel?.setVisible(isVisible)
         this.descriptionLabel?.setVisible(isVisible)
+        this.icon?.setVisible(isVisible)
         this.diagramIcon?.setVisible(isVisible)
     }
 
