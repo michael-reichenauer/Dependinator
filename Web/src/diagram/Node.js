@@ -87,13 +87,8 @@ export default class Node extends draw2d.shape.node.Between {
     }
 
     getContextMenuItems(x, y) {
-        const setColor = (colorName) => {
-            const command = new CommandChangeColor(this, colorName);
-            this.getCanvas().getCommandStack().execute(command);
-        }
-
         const colorItems = Colors.nodeColorNames().map((colorName) => {
-            return new Item(colorName, () => setColor(colorName))
+            return new Item(colorName, () => this.runSetColorCmd(colorName))
         })
 
         const menuItems = [
@@ -103,9 +98,20 @@ export default class Node extends draw2d.shape.node.Between {
             new NestedItem('Set color', colorItems),
             new Item('To front', () => this.toFront()),
             new Item('To back', () => this.toBack()),
+            new Item('Delete node', () => this.deleteNodeCmd())
         ]
 
         return menuItems
+    }
+
+    deleteNodeCmd() {
+        const command = new draw2d.command.CommandDelete(this);
+        this.getCanvas().getCommandStack().execute(command);
+    }
+
+    runSetColorCmd(colorName) {
+        const command = new CommandChangeColor(this, colorName);
+        this.getCanvas().getCommandStack().execute(command);
     }
 
     setNodeColor(colorName) {
