@@ -11,9 +11,56 @@ export default class CanvasStack {
 
     pushDiagram() {
         const canvas = this.canvas
+        const canvasData = this.getCanvasData(canvas)
 
+        // Store the canvas data so it can be popped later
+        this.diagramStack.push(canvasData)
+
+        this.clearCanvas(canvas)
+
+        // new command stack, but reuse command stack event listeners from parent
+        canvas.commandStack.eventListeners = canvasData.commandStack.eventListeners
+    }
+
+
+    popDiagram() {
+        if (this.diagramStack.length === 0) {
+            return
+        }
+        const canvas = this.canvas
+
+        this.clearCanvas(canvas)
+
+        // pop canvas data and restore canvas
+        const canvasData = this.diagramStack.pop()
+        this.restoreCanvasData(canvasData, canvas)
+
+    }
+
+    clearCanvas(canvas) {
+        // Remove all connections and nodes
+        canvas.lines.clone().each(function (i, e) {
+            canvas.remove(e)
+        })
+        canvas.figures.clone().each(function (i, e) {
+            canvas.remove(e)
+        })
+
+        // Clear all canvas data
+        canvas.selection.clear()
+        canvas.currentDropTarget = null
+        canvas.figures = new draw2d.util.ArrayList()
+        canvas.lines = new draw2d.util.ArrayList()
+        canvas.commonPorts = new draw2d.util.ArrayList()
+        canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
+        canvas.lineIntersections = new draw2d.util.ArrayList()
+        canvas.commandStack = new draw2d.command.CommandStack()
+    }
+
+
+    getCanvasData(canvas) {
         const area = canvas.getScrollArea()
-        const canvasData = {
+        return {
             name: canvas.name,
             zoom: canvas.zoomFactor,
             x: area.scrollLeft(),
@@ -25,57 +72,10 @@ export default class CanvasStack {
             linesToRepaintAfterDragDrop: canvas.linesToRepaintAfterDragDrop,
             lineIntersections: canvas.lineIntersections,
         }
-
-        canvasData.lines.each(function (i, e) {
-            canvas.remove(e)
-        })
-
-        canvasData.figures.each(function (i, e) {
-            canvas.remove(e)
-        })
-
-
-        canvas.selection.clear()
-        canvas.currentDropTarget = null
-        canvas.figures = new draw2d.util.ArrayList()
-        canvas.lines = new draw2d.util.ArrayList()
-        canvas.commonPorts = new draw2d.util.ArrayList()
-
-        // new command stack, but reuse event listeners
-        canvas.commandStack = new draw2d.command.CommandStack()
-        canvas.commandStack.eventListeners = canvasData.commandStack.eventListeners
-
-        canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
-        canvas.lineIntersections = new draw2d.util.ArrayList()
-
-        this.diagramStack.push(canvasData)
     }
 
-
-    popDiagram() {
-        if (this.diagramStack.length === 0) {
-            return
-        }
-        const canvas = this.canvas
-
-        canvas.lines.clone().each(function (i, e) {
-            canvas.remove(e)
-        })
-
-        canvas.figures.clone().each(function (i, e) {
-            canvas.remove(e)
-        })
-
-
-        const canvasData = this.diagramStack.pop()
+    restoreCanvasData(canvasData, canvas) {
         canvas.name = canvasData.name
-
-        canvas.selection.clear()
-        canvas.currentDropTarget = null
-
-        canvas.figures = new draw2d.util.ArrayList()
-        canvas.lines = new draw2d.util.ArrayList()
-
         canvas.setZoom(canvasData.zoom)
         const area = canvas.getScrollArea()
         area.scrollLeft(canvasData.x)
@@ -84,16 +84,11 @@ export default class CanvasStack {
         canvasData.figures.each(function (i, e) {
             canvas.add(e)
         })
-
         canvasData.lines.each(function (i, e) {
             canvas.add(e)
         })
-
         canvas.commonPorts = canvasData.commonPorts
         canvas.commandStack = canvasData.commandStack
-        canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
-        canvas.lineIntersections = new draw2d.util.ArrayList()
-
-        return
     }
+
 }
