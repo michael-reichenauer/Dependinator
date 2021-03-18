@@ -129,8 +129,8 @@ export default class Node extends draw2d.shape.node.Between {
                 new Item('Hide (click)', () => this.hideInnerDiagram(), this.innerDiagram != null, isNode),
                 new Item('Edit (dbl-click)', () => this.editInnerDiagram(), true, isNode),
             ], true, isNode),
-            new NestedItem('Change color', colorItems, true, isNode),
-            new NestedItem('Change icon', iconItems, true, isNode),
+            new NestedItem('Change color', colorItems),
+            new NestedItem('Change icon', iconItems),
             new Item('To front', () => this.toFront()),
             new Item('To back', () => this.toBack()),
             new Item('Delete node', () => this.deleteNodeCmd())
