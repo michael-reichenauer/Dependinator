@@ -26,6 +26,8 @@ const defaultDiagramData = (name) => {
 export class InnerDiagram extends draw2d.SetFigure {
     NAME = "InnerDiagram"
 
+    parent = null
+
     constructor(parent, canvasData) {
         super({
             width: parent.width - 4,
@@ -35,6 +37,7 @@ export class InnerDiagram extends draw2d.SetFigure {
             bgColor: Colors.canvasBackground,
             radius: 5,
         });
+        this.parent = parent
 
         this.canvasData = canvasData ?? defaultDiagramData(parent.getName())
     }
@@ -84,6 +87,8 @@ export class InnerDiagram extends draw2d.SetFigure {
             x: 0, y: 0, width: diagramWidth, height: diagramHeight,
             "stroke-width": "0", fill: 'none'
         }))
+        this.diagramWidth = diagramWidth
+        this.diagramHeight = diagramHeight
 
         // Center diagram within the figure inner diagram rect
         let dx = (diagramWidth - diagramBox.w) / 2 - diagramBox.x
@@ -92,7 +97,7 @@ export class InnerDiagram extends draw2d.SetFigure {
         // Add the inner diagram figures and connections (centered within figure)
         this.addFigures(set, dx, dy)
         this.addConnections(set, dx, dy)
-        this.addExternals(set, dx, dy)
+        this.addExternalGroupConnections(set)
 
         // Set the inner diagram zoom factor, used when zooming outer diagram before showing inner
         this.innerZoom = this.width / diagramWidth
@@ -108,8 +113,28 @@ export class InnerDiagram extends draw2d.SetFigure {
     addConnections(set, dx, dy) {
         this.canvasData.connections.forEach(c => this.addConnection(set, c, dx, dy))
     }
-    addExternals(set, dx, dy) {
 
+    addExternalGroupConnections(set) {
+        // Check which external connections that are active
+        const hasLeftInput = this.parent.getPort('input0').getConnections().asArray().length > 0
+        const hasTopInput = this.parent.getPort('input1').getConnections().asArray().length > 0
+        const hasRightOutput = this.parent.getPort('output0').getConnections().asArray().length > 0
+        const hasBottomOutput = this.parent.getPort('output1').getConnections().asArray().length > 0
+
+        // Draw lines for each of the active connections
+        const { x, y, w, h } = this.groupRect
+        if (hasLeftInput) {
+            set.push(this.line(0, y + h / 2, x, y + h / 2))
+        }
+        if (hasTopInput) {
+            set.push(this.line(x + w / 2, 0, x + w / 2, y))
+        }
+        if (hasRightOutput) {
+            set.push(this.line(x + w, y + h / 2, this.diagramWidth, y + h / 2))
+        }
+        if (hasBottomOutput) {
+            set.push(this.line(x + w / 2, y + h, x + w / 2, this.diagramHeight))
+        }
     }
 
     addFigure(set, figure, offsetX, offsetY) {
@@ -180,6 +205,7 @@ export class InnerDiagram extends draw2d.SetFigure {
 
 
     createGroupNode(x, y, w, h) {
+        this.groupRect = { x: x, y: y, w: w, h: h }
         const f = this.canvas.paper.rect()
         f.attr({
             x: x, y: y, width: w, height: h,
@@ -187,6 +213,12 @@ export class InnerDiagram extends draw2d.SetFigure {
             stroke: groupColor
         })
         return f
+    }
+
+    line(sx, sy, tx, ty) {
+        const path = this.canvas.paper.path(`M${sx},${sy}L${tx},${ty}`)
+        path.attr({ "stroke-width": 2, "stroke": Colors.connectionColor })
+        return path
     }
 
 
