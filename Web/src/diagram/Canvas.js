@@ -16,24 +16,18 @@ import { Item } from "../common/ContextMenu";
 import CanvasStack from "./CanvasStack";
 
 
-const defaultStoreDiagramName = 'root'
-
-
 export default class Canvas {
     static size = 100000
 
     canvasStack = null
     serializer = null
-
-    canvasId = null
-    canvas = null;
-    storeName = defaultStoreDiagramName
-    callbacks = null
     store = store
+
+    canvas = null;
+    callbacks = null
 
     constructor(canvasId, callbacks) {
         this.callbacks = callbacks
-        this.canvasId = canvasId
         this.canvas = new CanvasEx(canvasId, this.onEditMode, Canvas.size, Canvas.size)
         this.canvas.canvas = this
         this.serializer = new Serializer(this.canvas)
@@ -41,7 +35,7 @@ export default class Canvas {
     }
 
     init() {
-        if (!this.load(this.storeName)) {
+        if (!this.load(this.canvas.name)) {
             addDefaultNewDiagram(this.canvas)
         }
 
@@ -93,6 +87,7 @@ export default class Canvas {
     }
 
     save = (storeName) => {
+        console.log('save', storeName)
         // Serialize canvas figures and connections into canvas data object
         const canvasData = this.serializer.serialize();
 
@@ -100,6 +95,7 @@ export default class Canvas {
     }
 
     load = (storeName) => {
+        console.log('load', storeName)
         const canvasData = this.store.read(storeName)
         if (canvasData == null) {
             return false
@@ -175,7 +171,8 @@ export default class Canvas {
             const innerDiagramViewPos = this.fromCanvasToViewCoordinate(innerDiagramRect.x, innerDiagramRect.y)
 
             // Show outer diagram (closing the inner diagram)
-            const figureId = this.popDiagram()
+            const figureId = this.canvas.name
+            this.popDiagram()
 
             // Update the figures inner diagram image in the node
             const figure = this.canvas.getFigure(figureId)
@@ -297,21 +294,20 @@ export default class Canvas {
         canvas.lineIntersections = new draw2d.util.ArrayList()
     }
 
-    pushDiagram(newStoreName) {
-        this.canvasStack.pushDiagram(this.storeName)
-        this.storeName = newStoreName
-        this.handleEditChanges(this.canvas)
-        this.callbacks.setCanPopDiagram(true)
+    pushDiagram(newName) {
+        this.canvasStack.pushDiagram()
+
+        this.canvas.name = newName
+        this.setToolbarButtonsStates()
+
     }
 
     popDiagram() {
-        const figureId = this.storeName
-        this.storeName = this.canvasStack.popDiagram()
+        this.canvasStack.popDiagram()
+
         this.callbacks.setCanPopDiagram(!this.canvasStack.isRoot())
         this.callbacks.setCanUndo(this.canvas.getCommandStack().canUndo())
         this.callbacks.setCanRedo(this.canvas.getCommandStack().canRedo())
-
-        return figureId
     }
 
 
@@ -327,10 +323,16 @@ export default class Canvas {
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
                 if (e.action === "POST_EXECUTE") {
-                    this.save(this.storeName)
+                    this.save(canvas.name)
                 }
             }
         });
+    }
+
+    setToolbarButtonsStates() {
+        this.callbacks.setCanPopDiagram(!this.canvasStack.isRoot())
+        this.callbacks.setCanUndo(this.canvas.getCommandStack().canUndo())
+        this.callbacks.setCanRedo(this.canvas.getCommandStack().canRedo())
     }
 
     handleDoubleClick(canvas) {

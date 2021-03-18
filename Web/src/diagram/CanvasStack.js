@@ -9,12 +9,12 @@ export default class CanvasStack {
 
     isRoot = () => this.diagramStack.length === 0
 
-    pushDiagram(storeName) {
+    pushDiagram() {
         const canvas = this.canvas
 
         const area = canvas.getScrollArea()
         const canvasData = {
-            storeName: storeName,
+            name: canvas.name,
             zoom: canvas.zoomFactor,
             x: area.scrollLeft(),
             y: area.scrollTop(),
@@ -41,8 +41,9 @@ export default class CanvasStack {
         canvas.lines = new draw2d.util.ArrayList()
         canvas.commonPorts = new draw2d.util.ArrayList()
 
-        // canvas.commandStack.markSaveLocation()
+        // new command stack, but reuse event listeners
         canvas.commandStack = new draw2d.command.CommandStack()
+        canvas.commandStack.eventListeners = canvasData.commandStack.eventListeners
 
         canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
         canvas.lineIntersections = new draw2d.util.ArrayList()
@@ -56,6 +57,7 @@ export default class CanvasStack {
             return
         }
         const canvas = this.canvas
+
         canvas.lines.clone().each(function (i, e) {
             canvas.remove(e)
         })
@@ -66,6 +68,7 @@ export default class CanvasStack {
 
 
         const canvasData = this.diagramStack.pop()
+        canvas.name = canvasData.name
 
         canvas.selection.clear()
         canvas.currentDropTarget = null
@@ -88,12 +91,9 @@ export default class CanvasStack {
 
         canvas.commonPorts = canvasData.commonPorts
         canvas.commandStack = canvasData.commandStack
-
-
         canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
         canvas.lineIntersections = new draw2d.util.ArrayList()
 
-
-        return canvasData.storeName
+        return
     }
 }

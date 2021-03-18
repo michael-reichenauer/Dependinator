@@ -6,6 +6,7 @@ import Colors from "./colors";
 
 
 export default class CanvasEx extends draw2d.Canvas {
+    name = 'root'
 
     constructor(canvasId, onEditMode, width, height) {
         super(canvasId, width, height);
