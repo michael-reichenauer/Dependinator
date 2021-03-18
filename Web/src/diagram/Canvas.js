@@ -436,12 +436,14 @@ const moveToShowTotalDiagram = (canvas, done) => {
             area.scrollTop(state.y)
         },
         finish: state => {
-            done()
+            if (done != null) {
+                done()
+            }
         }
     })
 }
 
-const zoomToShowTotalDiagram = (canvas) => {
+const zoomToShowTotalDiagram = (canvas, done) => {
     const area = canvas.getScrollArea()
 
     const { x, y, w, h } = canvas.getFiguresRect()
@@ -466,6 +468,9 @@ const zoomToShowTotalDiagram = (canvas) => {
             area.scrollTop((tp.y) / state.zoom)
         },
         finish: state => {
+            if (done != null) {
+                done()
+            }
         }
     })
 }
