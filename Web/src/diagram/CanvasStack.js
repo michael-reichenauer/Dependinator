@@ -9,7 +9,7 @@ export default class CanvasStack {
 
     isRoot = () => this.diagramStack.length === 0
 
-    pushDiagram(storeName, newStoreName) {
+    pushDiagram(storeName) {
         const canvas = this.canvas
 
         const area = canvas.getScrollArea()
@@ -24,7 +24,6 @@ export default class CanvasStack {
             commandStack: canvas.commandStack,
             linesToRepaintAfterDragDrop: canvas.linesToRepaintAfterDragDrop,
             lineIntersections: canvas.lineIntersections,
-            figureId: newStoreName
         }
 
         canvasData.lines.each(function (i, e) {
@@ -95,7 +94,6 @@ export default class CanvasStack {
         canvas.lineIntersections = new draw2d.util.ArrayList()
 
 
-        return { figureId: canvasData.figureId, storeName: canvasData.storeName }
+        return canvasData.storeName
     }
-
 }

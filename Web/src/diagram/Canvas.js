@@ -16,7 +16,7 @@ import { Item } from "../common/ContextMenu";
 import CanvasStack from "./CanvasStack";
 
 
-const defaultStoreDiagramName = 'diagram'
+const defaultStoreDiagramName = 'root'
 
 
 export default class Canvas {
@@ -298,15 +298,15 @@ export default class Canvas {
     }
 
     pushDiagram(newStoreName) {
-        this.canvasStack.pushDiagram(this.storName, newStoreName)
+        this.canvasStack.pushDiagram(this.storeName)
         this.storeName = newStoreName
         this.handleEditChanges(this.canvas)
         this.callbacks.setCanPopDiagram(true)
     }
 
     popDiagram() {
-        const { figureId, storeName } = this.canvasStack.popDiagram()
-        this.storeName = storeName
+        const figureId = this.storeName
+        this.storeName = this.canvasStack.popDiagram()
         this.callbacks.setCanPopDiagram(!this.canvasStack.isRoot())
         this.callbacks.setCanUndo(this.canvas.getCommandStack().canUndo())
         this.callbacks.setCanRedo(this.canvas.getCommandStack().canRedo())
