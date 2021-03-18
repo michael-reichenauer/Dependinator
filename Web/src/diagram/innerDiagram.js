@@ -90,8 +90,9 @@ export class InnerDiagram extends draw2d.SetFigure {
         let dy = (diagramHeight - diagramBox.h) / 2 - diagramBox.y
 
         // Add the inner diagram figures and connections (centered within figure)
-        this.canvasData.figures.forEach(f => this.addFigure(set, f, dx, dy))
-        this.canvasData.connections.forEach(c => this.addConnection(set, c, dx, dy))
+        this.addFigures(set, dx, dy)
+        this.addConnections(set, dx, dy)
+        this.addExternals(set, dx, dy)
 
         // Set the inner diagram zoom factor, used when zooming outer diagram before showing inner
         this.innerZoom = this.width / diagramWidth
@@ -100,6 +101,16 @@ export class InnerDiagram extends draw2d.SetFigure {
         return set;
     }
 
+    addFigures(set, dx, dy) {
+        this.canvasData.figures.forEach(f => this.addFigure(set, f, dx, dy))
+    }
+
+    addConnections(set, dx, dy) {
+        this.canvasData.connections.forEach(c => this.addConnection(set, c, dx, dy))
+    }
+    addExternals(set, dx, dy) {
+
+    }
 
     addFigure(set, figure, offsetX, offsetY) {
         switch (figure.type) {
