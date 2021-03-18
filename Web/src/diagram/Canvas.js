@@ -13,6 +13,7 @@ import { timing } from "../common/timing";
 import CanvasEx from "./CanvasEx";
 import Group from "./Group";
 import { Item } from "../common/ContextMenu";
+import CanvasStack from "./CanvasStack";
 
 
 const defaultStoreDiagramName = 'diagram'
@@ -20,13 +21,15 @@ const defaultStoreDiagramName = 'diagram'
 
 export default class Canvas {
     static size = 100000
+
+    canvasStack = null
+    serializer = null
+
     canvasId = null
     canvas = null;
-    diagramStack = []
     storeName = defaultStoreDiagramName
     callbacks = null
     store = store
-    serializer = null
 
     constructor(canvasId, callbacks) {
         this.callbacks = callbacks
@@ -34,6 +37,7 @@ export default class Canvas {
         this.canvas = new CanvasEx(canvasId, this.onEditMode, Canvas.size, Canvas.size)
         this.canvas.canvas = this
         this.serializer = new Serializer(this.canvas)
+        this.canvasStack = new CanvasStack(this.canvas)
     }
 
     init() {
@@ -293,99 +297,23 @@ export default class Canvas {
         canvas.lineIntersections = new draw2d.util.ArrayList()
     }
 
-    pushDiagram = (newStoreName) => {
-        const canvas = this.canvas
-        const area = canvas.getScrollArea()
-        const canvasData = {
-            storeName: this.storeName,
-            zoom: canvas.zoomFactor,
-            x: area.scrollLeft(),
-            y: area.scrollTop(),
-            lines: canvas.lines.clone(),
-            figures: canvas.figures.clone(),
-            commonPorts: canvas.commonPorts,
-            commandStack: canvas.commandStack,
-            linesToRepaintAfterDragDrop: canvas.linesToRepaintAfterDragDrop,
-            lineIntersections: canvas.lineIntersections,
-            figureId: newStoreName
-        }
-
-        canvasData.lines.each(function (i, e) {
-            canvas.remove(e)
-        })
-
-        canvasData.figures.each(function (i, e) {
-            canvas.remove(e)
-        })
-
-
-        canvas.selection.clear()
-        canvas.currentDropTarget = null
-        canvas.figures = new draw2d.util.ArrayList()
-        canvas.lines = new draw2d.util.ArrayList()
-        canvas.commonPorts = new draw2d.util.ArrayList()
-
-        // canvas.commandStack.markSaveLocation()
-        canvas.commandStack = new draw2d.command.CommandStack()
-        this.handleEditChanges(canvas)
-
-        canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
-        canvas.lineIntersections = new draw2d.util.ArrayList()
-
-        this.diagramStack.push(canvasData)
+    pushDiagram(newStoreName) {
+        this.canvasStack.pushDiagram(this.storName, newStoreName)
         this.storeName = newStoreName
+        this.handleEditChanges(this.canvas)
         this.callbacks.setCanPopDiagram(true)
     }
 
+    popDiagram() {
+        const { figureId, storeName } = this.canvasStack.popDiagram()
+        this.storeName = storeName
+        this.callbacks.setCanPopDiagram(!this.canvasStack.isRoot())
+        this.callbacks.setCanUndo(this.canvas.getCommandStack().canUndo())
+        this.callbacks.setCanRedo(this.canvas.getCommandStack().canRedo())
 
-    popDiagram = () => {
-        if (this.diagramStack.length === 0) {
-            return
-        }
-        const canvas = this.canvas
-        canvas.lines.clone().each(function (i, e) {
-            canvas.remove(e)
-        })
-
-        canvas.figures.clone().each(function (i, e) {
-            canvas.remove(e)
-        })
-
-
-        const canvasData = this.diagramStack.pop()
-        this.callbacks.setCanPopDiagram(this.diagramStack.length > 0)
-
-        canvas.selection.clear()
-        canvas.currentDropTarget = null
-
-        canvas.figures = new draw2d.util.ArrayList()
-        canvas.lines = new draw2d.util.ArrayList()
-        canvas.setZoom(canvasData.zoom)
-        const area = canvas.getScrollArea()
-        area.scrollLeft(canvasData.x)
-        area.scrollTop(canvasData.y)
-
-
-        canvasData.figures.each(function (i, e) {
-            canvas.add(e)
-        })
-
-        canvasData.lines.each(function (i, e) {
-            canvas.add(e)
-        })
-
-
-        canvas.commonPorts = canvasData.commonPorts
-        canvas.commandStack = canvasData.commandStack
-        this.callbacks.setCanUndo(canvas.getCommandStack().canUndo())
-        this.callbacks.setCanRedo(canvas.getCommandStack().canRedo())
-
-        canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
-        canvas.lineIntersections = new draw2d.util.ArrayList()
-
-        this.storeName = canvasData.storeName
-        return canvasData.figureId
+        return figureId
     }
+
 
     handleEditChanges = (canvas) => {
         this.callbacks.setCanUndo(canvas.commandStack.canUndo())
@@ -411,7 +339,7 @@ export default class Canvas {
                 return
             }
 
-            if (this.diagramStack.length > 0) {
+            if (!this.canvasStack.isRoot()) {
                 // double click out side group node in inner diagram lets pop
                 this.commandPopFromInnerDiagram()
                 return
