@@ -298,27 +298,21 @@ export default class Canvas {
         this.canvasStack.pushDiagram()
 
         this.canvas.name = newName
-        this.setToolbarButtonsStates()
-
+        this.updateToolbarButtonsStates()
     }
 
     popDiagram() {
         this.canvasStack.popDiagram()
-
-        this.callbacks.setCanPopDiagram(!this.canvasStack.isRoot())
-        this.callbacks.setCanUndo(this.canvas.getCommandStack().canUndo())
-        this.callbacks.setCanRedo(this.canvas.getCommandStack().canRedo())
+        this.updateToolbarButtonsStates()
     }
 
 
     handleEditChanges = (canvas) => {
-        this.callbacks.setCanUndo(canvas.commandStack.canUndo())
-        this.callbacks.setCanRedo(canvas.commandStack.canRedo())
+        this.updateToolbarButtonsStates()
 
         canvas.commandStack.addEventListener(e => {
             // console.log('event:', e)
-            this.callbacks.setCanUndo(canvas.commandStack.canUndo())
-            this.callbacks.setCanRedo(canvas.commandStack.canRedo())
+            this.updateToolbarButtonsStates()
 
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
@@ -329,7 +323,7 @@ export default class Canvas {
         });
     }
 
-    setToolbarButtonsStates() {
+    updateToolbarButtonsStates() {
         this.callbacks.setCanPopDiagram(!this.canvasStack.isRoot())
         this.callbacks.setCanUndo(this.canvas.getCommandStack().canUndo())
         this.callbacks.setCanRedo(this.canvas.getCommandStack().canRedo())
@@ -346,6 +340,7 @@ export default class Canvas {
                 this.commandPopFromInnerDiagram()
                 return
             }
+
             PubSub.publish('canvas.AddDefaultNode', { x: event.x, y: event.y })
         });
     }

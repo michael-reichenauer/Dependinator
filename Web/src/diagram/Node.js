@@ -208,6 +208,10 @@ export default class Node extends draw2d.shape.node.Between {
     }
 
     editInnerDiagram() {
+        if (this.type !== Node.nodeType) {
+            return
+        }
+
         if (this.innerDiagram == null) {
             this.showInnerDiagram()
         }
