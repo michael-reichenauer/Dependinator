@@ -356,23 +356,16 @@ export default class Canvas {
 
 
 const addFigureToCanvas = (canvas, figure, p) => {
-    hidePortsIfReadOnly(canvas, figure)
-
     const command = new draw2d.command.CommandAdd(canvas, figure, p.x - figure.width / 2, p.y - figure.height / 2);
     canvas.getCommandStack().execute(command);
 }
+
 
 const addConnectionToCanvas = (canvas, connection) => {
     const command = new draw2d.command.CommandAdd(canvas, connection, 0, 0);
     canvas.getCommandStack().execute(command);
 }
 
-
-const hidePortsIfReadOnly = (canvas, figure) => {
-    if (canvas.isReadOnlyMode) {
-        figure.getPorts().each((i, port) => { port.setVisible(false) })
-    }
-}
 
 const addDefaultNewDiagram = (canvas) => {
     const user = new Node(Node.userType)

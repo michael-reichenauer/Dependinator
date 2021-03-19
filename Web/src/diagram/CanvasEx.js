@@ -1,5 +1,5 @@
 import draw2d from "draw2d";
-import { WheelZoomPolicy } from "./WheelZoomPolicy"
+import { ZoomPolicy } from "./WheelZoomPolicy"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { PanPolicy } from "./PanPolicy";
 import Colors from "./colors";
@@ -25,7 +25,7 @@ export default class CanvasEx extends draw2d.Canvas {
         this.panPolicy = new PanPolicy(onEditMode)
         this.installEditPolicy(this.panPolicy)
 
-        this.zoomPolicy = new WheelZoomPolicy()
+        this.zoomPolicy = new ZoomPolicy()
         this.installEditPolicy(this.zoomPolicy);
 
         this.installEditPolicy(new ConnectionCreatePolicy())
