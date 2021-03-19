@@ -81,7 +81,7 @@ export default class CanvasStack {
         area.scrollLeft(canvasData.x)
         area.scrollTop(canvasData.y)
         canvas.figures = canvasData.figures
-        canvas.lines = canvas.lines
+        canvas.lines = canvasData.lines
         canvas.commonPorts = canvasData.commonPorts
         canvas.commandStack = canvasData.commandStack
 
@@ -90,7 +90,8 @@ export default class CanvasStack {
             e.repaint()
         })
         canvasData.lines.each(function (i, e) {
-            canvas.add(e)
+            e.setCanvas(canvas)
+            e.repaint()
         })
     }
 
