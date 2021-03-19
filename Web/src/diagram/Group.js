@@ -1,6 +1,8 @@
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
 import Colors from "./colors";
+import Node from "./Node";
+import { InputTopPortLocator, OutputBottomPortLocator } from "./nodeLocators";
 
 
 const defaultOptions = () => {
@@ -18,7 +20,7 @@ export default class Group extends draw2d.shape.composite.Raft {
 
     static groupType = 'group'
     static defaultWidth = 1000
-    static defaultHeight = 800
+    static defaultHeight = Group.defaultWidth * 150 / 230
 
     type = Group.groupType
     colorName = null
@@ -40,6 +42,7 @@ export default class Group extends draw2d.shape.composite.Raft {
 
         this.setDeleteable(false)
         this.addLabel(name)
+        // this.addPorts()
 
         this.on("click", (s, e) => PubSub.publish('canvas.SetEditMode', false))
         this.on("dblclick", (s, e) => PubSub.publish('canvas.AddDefaultNode', { x: e.x, y: e.y }))
@@ -75,6 +78,11 @@ export default class Group extends draw2d.shape.composite.Raft {
         })
         this.add(this.nameLabel, new GroupNameLocator());
     }
+
+    // addPorts() {
+    //     this.createPort("output", new InputTopPortLocator());
+    //     this.createPort("input", new OutputBottomPortLocator());
+    // }
 }
 
 

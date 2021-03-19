@@ -41,13 +41,18 @@ export default class Connection extends draw2d.Connection {
     }
 
     serialize() {
-        const l = this.getPersistentAttributes();
+        console.log('connection', this)
+        const srcGrp = this.sourcePort.parent.group != null
+        const trgGrp = this.targetPort.parent.group != null
+
         return {
-            src: l.source.node,
-            srcPort: l.source.port,
-            trg: l.target.node,
-            trgPort: l.target.port,
-            v: l.vertex,
+            src: this.sourcePort.parent.id,
+            srcPort: this.sourcePort.name,
+            srcGrp: srcGrp,
+            trg: this.targetPort.parent.id,
+            trgPort: this.targetPort.name,
+            trgGrp: trgGrp,
+            v: this.vertices.asArray().map(v => { return { x: v.x, y: v.y } }),
             description: this.descriptionLabel?.text ?? ''
         }
     }

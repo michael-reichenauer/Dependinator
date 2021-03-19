@@ -88,6 +88,7 @@ export default class CanvasStack {
         canvasData.figures.each(function (i, e) {
             e.setCanvas(canvas)
             e.repaint()
+            e.nameLabel?.repaint()
         })
         canvasData.lines.each(function (i, e) {
             e.setCanvas(canvas)

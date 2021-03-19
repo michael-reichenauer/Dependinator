@@ -8,14 +8,15 @@ import Node from "./Node";
 const groupColor = '#' + Colors.canvasText.hex()
 
 const defaultDiagramData = (name) => {
-    const gx = Canvas.size / 2, gy = Canvas.size / 2
-    const nx = Canvas.size / 2 + Group.defaultWidth / 2 - Node.defaultWidth / 2
-    const ny = Canvas.size / 2 + Group.defaultHeight / 2 - Node.defaultHeight / 2
+    const gx = Canvas.defaultWidth / 2
+    const gy = Canvas.defaultHeight / 2
+    const nx = gx + Group.defaultWidth / 2 - Node.defaultWidth / 2
+    const ny = gy + Group.defaultHeight / 2 - Node.defaultHeight / 2
 
     return {
         zoom: 1,
         figures: [
-            { type: Group.groupType, x: Canvas.size / 2, y: Canvas.size / 2, w: Group.defaultWidth, h: Group.defaultHeight, name: name },
+            { type: Group.groupType, x: gx, y: gy, w: Group.defaultWidth, h: Group.defaultHeight, name: name },
             { type: Node.nodeType, x: nx, y: ny, w: Node.defaultWidth, h: Node.defaultHeight, name: 'Node', color: 'DeepPurple', hasGroup: true }
         ],
         connections: [],
@@ -106,7 +107,7 @@ export class InnerDiagram extends draw2d.SetFigure {
     }
 
     getGroup(figures) {
-        return figures.find(f => f.type == Group.groupType)
+        return figures.find(f => f.type === Group.groupType)
     }
 
     addFigures(set, dx, dy) {
@@ -162,17 +163,30 @@ export class InnerDiagram extends draw2d.SetFigure {
 
     addConnection(set, connection, offsetX, offsetY) {
         let pathText = null
-        connection.v.forEach(v => {
-            if (pathText === null) {
-                pathText = `M${v.x + offsetX},${v.y + offsetY}`
-            } else {
-                pathText = pathText + `L${v.x + offsetX},${v.y + offsetY}`
-            }
-        })
+        const { x, y, w, h } = this.groupRect
 
+        if (!connection.srcGrp && connection.trgGrp) {
+            pathText = `M${x},${y + h / 2}L${connection.v[1].x + offsetX},${connection.v[1].y + offsetY}`
+            console.log('path', pathText)
+        } else if (connection.srcGrp && !connection.trgGrp) {
+            pathText = `M${connection.v[0].x + offsetX},${connection.v[0].y + offsetY}L${x + w},${y + h / 2}`
+            console.log('path', pathText)
+        } else if (connection.srcGrp && connection.trgGrp) {
+            connection.v.forEach(v => {
+                if (pathText === null) {
+                    pathText = `M${v.x + offsetX},${v.y + offsetY}`
+                } else {
+                    pathText = pathText + `L${v.x + offsetX},${v.y + offsetY}`
+                }
+            })
+        } else {
+            return
+        }
+        console.log('path', pathText)
         const path = this.canvas.paper.path(pathText);
         path.attr({ "stroke-width": 2, "stroke": Colors.connectionColor })
 
+        console.log('connection', connection)
         set.push(path)
     }
 
@@ -233,3 +247,15 @@ export class InnerDiagram extends draw2d.SetFigure {
         return f
     }
 }
+
+function intersects(ax1, ay1, ax2, ay2, bx1, by1, bx2, by2) {
+    var det, gamma, lambda;
+    det = (ax2 - ax1) * (by2 - by1) - (bx2 - bx1) * (ay2 - ay1);
+    if (det === 0) {
+        return false;
+    } else {
+        lambda = ((by2 - by1) * (bx2 - ax1) + (bx1 - bx2) * (by2 - ay1)) / det;
+        gamma = ((ay1 - ay2) * (bx2 - ax1) + (ax2 - ax1) * (by2 - ay1)) / det;
+        return (0 < lambda && lambda < 1) && (0 < gamma && gamma < 1);
+    }
+};
