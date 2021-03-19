@@ -190,7 +190,7 @@ export default class Node extends draw2d.shape.node.Between {
 
         this.add(this.innerDiagram, new InnerDiagramLocator())
         this.repaint()
-        t.log('added')
+        t.log()
     }
 
 

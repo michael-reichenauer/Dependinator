@@ -39,11 +39,11 @@ export default class CanvasStack {
 
     clearCanvas(canvas) {
         // Remove all connections and nodes
-        canvas.lines.clone().each(function (i, e) {
-            canvas.remove(e)
+        canvas.lines.each(function (i, e) {
+            e.setCanvas(null)
         })
         canvas.figures.clone().each(function (i, e) {
-            canvas.remove(e)
+            e.setCanvas(null)
         })
 
         // Clear all canvas data
@@ -65,8 +65,8 @@ export default class CanvasStack {
             zoom: canvas.zoomFactor,
             x: area.scrollLeft(),
             y: area.scrollTop(),
-            lines: canvas.lines.clone(),
-            figures: canvas.figures.clone(),
+            lines: canvas.lines,
+            figures: canvas.figures,
             commonPorts: canvas.commonPorts,
             commandStack: canvas.commandStack,
             linesToRepaintAfterDragDrop: canvas.linesToRepaintAfterDragDrop,
@@ -80,15 +80,18 @@ export default class CanvasStack {
         const area = canvas.getScrollArea()
         area.scrollLeft(canvasData.x)
         area.scrollTop(canvasData.y)
+        canvas.figures = canvasData.figures
+        canvas.lines = canvas.lines
+        canvas.commonPorts = canvasData.commonPorts
+        canvas.commandStack = canvasData.commandStack
 
         canvasData.figures.each(function (i, e) {
-            canvas.add(e)
+            e.setCanvas(canvas)
+            e.repaint()
         })
         canvasData.lines.each(function (i, e) {
             canvas.add(e)
         })
-        canvas.commonPorts = canvasData.commonPorts
-        canvas.commandStack = canvasData.commandStack
     }
 
 }

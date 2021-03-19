@@ -116,10 +116,10 @@ export class InnerDiagram extends draw2d.SetFigure {
 
     addExternalGroupConnections(set) {
         // Check which external connections that are active
-        const hasLeftInput = this.parent.getPort('input0').getConnections().asArray().length > 0
-        const hasTopInput = this.parent.getPort('input1').getConnections().asArray().length > 0
-        const hasRightOutput = this.parent.getPort('output0').getConnections().asArray().length > 0
-        const hasBottomOutput = this.parent.getPort('output1').getConnections().asArray().length > 0
+        const hasLeftInput = this.parent.getInputPort(0).getConnections().asArray().length > 0
+        const hasTopInput = this.parent.getInputPort(1).getConnections().asArray().length > 0
+        const hasRightOutput = this.parent.getOutputPort(0).getConnections().asArray().length > 0
+        const hasBottomOutput = this.parent.getOutputPort(1).getConnections().asArray().length > 0
 
         // Draw lines for each of the active connections
         const { x, y, w, h } = this.groupRect
