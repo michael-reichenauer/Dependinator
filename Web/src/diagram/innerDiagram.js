@@ -14,10 +14,9 @@ const defaultDiagramData = (name) => {
 
     return {
         zoom: 1,
-        box: { x: gx, y: gy, w: Group.defaultWidth, h: Group.defaultHeight },
         figures: [
             { type: Group.groupType, x: Canvas.size / 2, y: Canvas.size / 2, w: Group.defaultWidth, h: Group.defaultHeight, name: name },
-            { type: Node.nodeType, x: nx, y: ny, w: Node.defaultWidth, h: Node.defaultHeight, name: 'Node', color: 'DeepPurple' }
+            { type: Node.nodeType, x: nx, y: ny, w: Node.defaultWidth, h: Node.defaultHeight, name: 'Node', color: 'DeepPurple', hasGroup: true }
         ],
         connections: [],
     }
@@ -64,7 +63,7 @@ export class InnerDiagram extends draw2d.SetFigure {
 
     createSet() {
         const set = this.canvas.paper.set()
-        const diagramBox = this.canvasData.box
+        const diagramBox = this.getGroup(this.canvasData.figures)
 
         // Calculate diagram size with some margin
         const margin = 70
@@ -106,6 +105,10 @@ export class InnerDiagram extends draw2d.SetFigure {
         return set;
     }
 
+    getGroup(figures) {
+        return figures.find(f => f.type == Group.groupType)
+    }
+
     addFigures(set, dx, dy) {
         this.canvasData.figures.forEach(f => this.addFigure(set, f, dx, dy))
     }
@@ -142,8 +145,10 @@ export class InnerDiagram extends draw2d.SetFigure {
             case Node.nodeType:
             case Node.userType:
             case Node.externalType:
-                set.push(this.createNode(figure.x + offsetX, figure.y + offsetY, figure.w, figure.h, figure.color))
-                set.push(this.createNodeName(figure.x + offsetX, figure.y + offsetY, figure.w, figure.name, figure.color))
+                if (figure.hasGroup) {
+                    set.push(this.createNode(figure.x + offsetX, figure.y + offsetY, figure.w, figure.h, figure.color))
+                    set.push(this.createNodeName(figure.x + offsetX, figure.y + offsetY, figure.w, figure.name, figure.color))
+                }
                 break;
             case Group.groupType:
                 set.push(this.createGroupNode(figure.x + offsetX, figure.y + offsetY, figure.w, figure.h))

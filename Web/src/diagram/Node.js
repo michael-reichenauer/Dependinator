@@ -87,7 +87,8 @@ export default class Node extends draw2d.shape.node.Between {
     serialize() {
         return {
             type: this.type, id: this.id, x: this.x, y: this.y, w: this.width, h: this.height,
-            name: this.getName(), description: this.getDescription(), color: this.colorName, icon: this.iconName
+            name: this.getName(), description: this.getDescription(), color: this.colorName, icon: this.iconName,
+            hasGroup: this.group != null
         }
     }
 

@@ -58,7 +58,6 @@ export default class Group extends draw2d.shape.composite.Raft {
     }
 
     serialize() {
-        console.log('children', this.getChildren())
         return {
             type: this.type, id: this.id, x: this.x, y: this.y, w: this.width, h: this.height,
             name: this.getName(), description: this.getDescription(), color: this.colorName

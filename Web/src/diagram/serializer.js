@@ -11,6 +11,10 @@ export default class Serializer {
     }
 
     serialize = () => {
+        if (this.canvas.group != null) {
+            this.canvas.group.getAboardFigures(true).each((i, f) => f.group = this.canvas.group)
+        }
+
         return {
             box: this.canvas.getFiguresRect(),
             figures: this.serializeFigures(),
@@ -57,7 +61,11 @@ export default class Serializer {
 
 
     serializeFigures = () => {
-        return this.canvas.getFigures().asArray().map((figure) => figure.serialize());
+        return this.canvas.getFigures().asArray().map((figure) => {
+            const sf = figure.serialize()
+            figure.group = null
+            return sf
+        });
     }
 
     deserializeFigures = (figures) => {

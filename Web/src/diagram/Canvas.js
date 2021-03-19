@@ -148,7 +148,7 @@ export default class Canvas {
             this.canvas.setZoom(outerZoom / innerDiagram.innerZoom)
 
             // Scroll inner diagram to correspond to where the inner diagram image was
-            const innerDiagramRect = this.canvas.getFiguresRect()
+            const innerDiagramRect = this.getInnerDiagramRect()
             const left = innerDiagramRect.x - innerDiagramViewPos.left * this.canvas.zoomFactor
             const top = innerDiagramRect.y - innerDiagramViewPos.top * this.canvas.zoomFactor
             this.setScrollInCanvasCoordinate(left, top)
@@ -156,7 +156,6 @@ export default class Canvas {
             t.log()
         });
     }
-
 
     commandPopFromInnerDiagram = () => {
         this.withWorkingIndicator(() => {
@@ -166,7 +165,7 @@ export default class Canvas {
             const postInnerZoom = this.canvas.zoomFactor
 
             // Get inner diagram view position to scroll the outer diagram to same position
-            const innerDiagramRect = this.canvas.getFiguresRect()
+            const innerDiagramRect = this.getInnerDiagramRect()
             const innerDiagramViewPos = this.fromCanvasToViewCoordinate(innerDiagramRect.x, innerDiagramRect.y)
 
             // Show outer diagram (closing the inner diagram)
@@ -216,6 +215,11 @@ export default class Canvas {
             this.canvas.selection.getAll().each((i, f) => f.unselect())
             this.canvas.selection.clear()
         }
+    }
+
+    getInnerDiagramRect() {
+        const g = this.canvas.group
+        return { x: g.x, y: g.y, w: g.width, h: g.heigh }
     }
 
 
