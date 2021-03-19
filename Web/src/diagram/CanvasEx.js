@@ -1,5 +1,5 @@
 import draw2d from "draw2d";
-import { ZoomPolicy } from "./WheelZoomPolicy"
+import { ZoomPolicy } from "./ZoomPolicy"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { PanPolicy } from "./PanPolicy";
 import Colors from "./colors";
