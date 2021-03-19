@@ -9,7 +9,7 @@ import { CommandChangeIcon } from "./commandChangeIcon";
 import { createNodeIcon, getNodeIconNames } from "./icons";
 import { InnerDiagram } from "./innerDiagram";
 import { store } from "./store";
-
+import { InnerDiagramIconLocator, LabelLocator, InputTopPortLocator, OutputBottomPortLocator } from './nodeLocators'
 
 
 const defaultOptions = (type) => {
@@ -165,7 +165,7 @@ export default class Node extends draw2d.shape.node.Between {
             () => this.hideInnerDiagram(),
             () => this.editInnerDiagram())
 
-        this.add(this.innerDiagram, new InnerDiagramLocator())
+        this.add(this.innerDiagram, new InnerDiagramIconLocator())
         this.repaint()
         t.log()
     }
@@ -256,49 +256,6 @@ export default class Node extends draw2d.shape.node.Between {
     addPorts() {
         this.createPort("input", new InputTopPortLocator());
         this.createPort("output", new OutputBottomPortLocator());
-    }
-}
-
-
-class LabelLocator extends draw2d.layout.locator.XYRelPortLocator {
-    constructor(y) {
-        super(0, y)
-    }
-    relocate(index, figure) {
-        let parent = figure.getParent()
-        this.applyConsiderRotation(
-            figure,
-            parent.getWidth() / 2 - figure.getWidth() / 2,
-            parent.getHeight() / 100 * this.y
-        )
-    }
-}
-
-
-class InnerDiagramIconLocator extends draw2d.layout.locator.PortLocator {
-    relocate(index, figure) {
-        const parent = figure.getParent()
-        this.applyConsiderRotation(figure, parent.getWidth() / 2 - 10, parent.getHeight() - 25);
-    }
-}
-
-class InnerDiagramLocator extends draw2d.layout.locator.Locator {
-    relocate(index, target) {
-        target.setPosition(2, 2)
-    }
-}
-
-
-class InputTopPortLocator extends draw2d.layout.locator.PortLocator {
-    relocate(index, figure) {
-        this.applyConsiderRotation(figure, figure.getParent().getWidth() / 2, 0);
-    }
-}
-
-class OutputBottomPortLocator extends draw2d.layout.locator.PortLocator {
-    relocate(index, figure) {
-        var p = figure.getParent();
-        this.applyConsiderRotation(figure, p.getWidth() / 2, p.getHeight());
     }
 }
 
