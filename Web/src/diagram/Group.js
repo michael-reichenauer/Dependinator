@@ -74,7 +74,7 @@ export default class Group extends draw2d.shape.composite.Raft {
 
     addLabel(name) {
         this.nameLabel = new draw2d.shape.basic.Label({
-            text: name, stroke: 0, fontSize: 30, fontColor: Colors.canvasText, bold: true,
+            text: name, stroke: 0, fontSize: 40, fontColor: Colors.canvasText, bold: true,
         })
         this.add(this.nameLabel, new GroupNameLocator());
     }
@@ -89,7 +89,7 @@ export default class Group extends draw2d.shape.composite.Raft {
 class GroupNameLocator extends draw2d.layout.locator.Locator {
     relocate(index, target) {
         let targetBoundingBox = target.getBoundingBox()
-        target.setPosition(1, -(targetBoundingBox.h - 6))
+        target.setPosition(1, -(targetBoundingBox.h - 8))
     }
 }
 

@@ -76,6 +76,12 @@ export default class Node extends draw2d.shape.node.Between {
         this.on("dblclick", (s, e) => this.editInnerDiagram())
     }
 
+    setCanvas(canvas) {
+        super.setCanvas(canvas)
+        this.diagramIcon?.shape?.attr({ "cursor": "pointer" })
+    }
+
+
     static deserialize(data) {
         return new Node(data.type,
             {

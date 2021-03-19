@@ -42,6 +42,12 @@ export class InnerDiagram extends draw2d.SetFigure {
         this.canvasData = canvasData ?? defaultDiagramData(parent.getName())
     }
 
+    setCanvas(canvas) {
+        super.setCanvas(canvas)
+        this.shape?.attr({ "cursor": "pointer" })
+    }
+
+
     getDiagramViewCoordinate() {
         const canvasZoom = this.canvas.zoomFactor
 
@@ -67,7 +73,7 @@ export class InnerDiagram extends draw2d.SetFigure {
         const diagramBox = this.getGroup(this.canvasData.figures)
 
         // Calculate diagram size with some margin
-        const margin = 70
+        const margin = 80
         let diagramWidth = diagramBox.w + margin
         let diagramHeight = diagramBox.h + margin
 
@@ -204,8 +210,8 @@ export class InnerDiagram extends draw2d.SetFigure {
         const f = this.canvas.paper.text()
         f.attr({
             'text-anchor': 'start',
-            x: x + 5, y: y - 14, text: name, fill: groupColor,
-            'font-size': 30, 'font-weight': 'bold'
+            x: x + 5, y: y - 18, text: name, fill: groupColor,
+            'font-size': 40, 'font-weight': 'bold'
         })
         return f
     }
