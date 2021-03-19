@@ -9,7 +9,7 @@ import { CommandChangeIcon } from "./commandChangeIcon";
 import { createNodeIcon, getNodeIconNames } from "./icons";
 import { InnerDiagram } from "./innerDiagram";
 import { store } from "./store";
-import { InnerDiagramIconLocator, LabelLocator, InputTopPortLocator, OutputBottomPortLocator } from './nodeLocators'
+import { InnerDiagramIconLocator, LabelLocator, InputTopPortLocator, OutputBottomPortLocator, InnerDiagramLocator } from './nodeLocators'
 
 
 const defaultOptions = (type) => {
@@ -165,7 +165,7 @@ export default class Node extends draw2d.shape.node.Between {
             () => this.hideInnerDiagram(),
             () => this.editInnerDiagram())
 
-        this.add(this.innerDiagram, new InnerDiagramIconLocator())
+        this.add(this.innerDiagram, new InnerDiagramLocator())
         this.repaint()
         t.log()
     }
