@@ -45,7 +45,7 @@ export default class CanvasStack {
         canvas.figures.clone().each(function (i, e) {
             e.setCanvas(null)
         })
-
+        canvas.group = null
         // Clear all canvas data
         canvas.selection.clear()
         canvas.currentDropTarget = null

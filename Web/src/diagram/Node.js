@@ -154,6 +154,12 @@ export default class Node extends draw2d.shape.node.Between {
         this.repaint()
     }
 
+    toBack() {
+        super.toBack()
+        const group = this.getCanvas()?.group
+        group?.toBack()
+
+    }
     showInnerDiagram() {
         const t = timing()
 
@@ -169,7 +175,6 @@ export default class Node extends draw2d.shape.node.Between {
         this.repaint()
         t.log()
     }
-
 
 
     hideInnerDiagram() {
@@ -217,9 +222,11 @@ export default class Node extends draw2d.shape.node.Between {
         })
 
         this.nameLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-        this.add(this.nameLabel, new LabelLocator(7));
+        this.nameLabel.labelLocator = new LabelLocator(7)
+        this.add(this.nameLabel, this.nameLabel.labelLocator);
         this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-        this.add(this.descriptionLabel, new LabelLocator(30));
+        this.descriptionLabel.labelLocator = new LabelLocator(30)
+        this.add(this.descriptionLabel, this.descriptionLabel.labelLocator);
     }
 
     addIcon(iconName) {

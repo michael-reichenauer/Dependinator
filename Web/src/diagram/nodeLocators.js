@@ -2,9 +2,11 @@ import draw2d from "draw2d";
 
 
 export class LabelLocator extends draw2d.layout.locator.XYRelPortLocator {
+    cachedWidth = null
     constructor(y) {
         super(0, y)
     }
+
     relocate(index, figure) {
         let parent = figure.getParent()
         this.applyConsiderRotation(

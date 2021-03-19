@@ -81,7 +81,7 @@ export default class Canvas {
             new Item('Add user node', () => this.addNode(Node.userType, pos)),
             new Item('Add external node', () => this.addNode(Node.externalType, pos)),
             new Item('Pop to surrounding diagram (dbl-click)', () => PubSub.publish('canvas.PopInnerDiagram'),
-                true, this.diagramStack.length > 0),
+                true, !this.canvasStack.isRoot()),
         ]
     }
 
@@ -310,7 +310,7 @@ export default class Canvas {
         this.updateToolbarButtonsStates()
 
         canvas.commandStack.addEventListener(e => {
-            // console.log('event:', e)
+            //console.log('event:', e)
             this.updateToolbarButtonsStates()
 
             if (e.isPostChangeEvent()) {
