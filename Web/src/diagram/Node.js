@@ -6,6 +6,7 @@ import { timing } from "../common/timing";
 import Colors from "./colors";
 import { CommandChangeColor } from "./commandChangeColor";
 import { CommandChangeIcon } from "./commandChangeIcon";
+import { createNodeIcon, getNodeIconNames } from "./icons";
 import { InnerDiagram } from "./innerDiagram";
 import { store } from "./store";
 
@@ -31,30 +32,6 @@ const defaultOptions = (type) => {
     }
 }
 
-const icons = {
-    Node: () => new draw2d.shape.icon.Ipad(),
-    User: () => new draw2d.shape.icon.User(),
-    External: () => new draw2d.shape.icon.NewWindow(),
-
-    IPhone: () => new draw2d.shape.icon.Iphone(),
-    DB: () => new draw2d.shape.icon.Db(),
-    Cloud: () => new draw2d.shape.icon.Cloud(),
-    Gear: () => new draw2d.shape.icon.Gear(),
-    Key: () => new draw2d.shape.icon.Key(),
-
-    Ie: () => new draw2d.shape.icon.Ie(),
-    Chrome: () => new draw2d.shape.icon.Chrome(),
-    Safari: () => new draw2d.shape.icon.Safari(),
-    Firefox: () => new draw2d.shape.icon.Firefox(),
-
-    Windows: () => new draw2d.shape.icon.Windows(),
-    Linux: () => new draw2d.shape.icon.Linux(),
-    Apple: () => new draw2d.shape.icon.Apple(),
-
-    Europe: () => new draw2d.shape.icon.GlobeAlt(),
-    Americas: () => new draw2d.shape.icon.Globe(),
-    Asia: () => new draw2d.shape.icon.GlobeAlt(),
-}
 
 
 export default class Node extends draw2d.shape.node.Between {
@@ -119,7 +96,7 @@ export default class Node extends draw2d.shape.node.Between {
         const colorItems = Colors.nodeColorNames().map((name) => {
             return new Item(name, () => this.runSetColorCmd(name))
         })
-        const iconItems = getIconNames().map((name) => {
+        const iconItems = getNodeIconNames().map((name) => {
             return new Item(name, () => this.runSetIconCmd(name))
         })
 
@@ -249,7 +226,7 @@ export default class Node extends draw2d.shape.node.Between {
         if (iconName == null) {
             return
         }
-        const icon = createIcon(iconName)
+        const icon = createNodeIcon(iconName)
         if (icon == null) {
             return
         }
@@ -325,18 +302,3 @@ class OutputBottomPortLocator extends draw2d.layout.locator.PortLocator {
     }
 }
 
-const getIconNames = () => Object.entries(icons).map(e => e[0])
-
-const createIcon = (name) => {
-    if (name == null) {
-        return null
-    }
-
-    const create = icons[name]
-    if (create == null) {
-        return null
-
-    }
-
-    return create()
-}
