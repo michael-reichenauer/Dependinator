@@ -154,6 +154,7 @@ export default class Node extends draw2d.shape.node.Between {
         group?.toBack()
 
     }
+
     showInnerDiagram() {
         const t = timing()
 

@@ -16,13 +16,12 @@ export class CanvasInner {
     }
 
     editInnerDiagram = (figure) => {
+        const t = timing()
         const innerDiagram = figure.innerDiagram
         if (innerDiagram == null) {
             // Figure has no inner diagram, thus nothing to edit
             return
         }
-
-        const t = timing()
 
         // Remember the current outer zoom, which is used when zooming ghr inner diagram
         const outerZoom = this.canvas.zoomFactor
@@ -31,15 +30,11 @@ export class CanvasInner {
         // positioned after the switch 
         const innerDiagramViewPos = innerDiagram.getDiagramViewCoordinate()
 
-        // Remove the inner diagram image from figure (will be updated when popping)
-        figure.remove(figure.innerDiagram)
-        figure.innerDiagram = null
+        // Hide the inner diagram image from figure (will be updated when popping)
+        figure.hideInnerDiagram()
 
-        // Show the actual inner diagram
-        //this.pushDiagram(figure.getId())
-        this.canvasStack.pushDiagram()
-        this.canvas.name = figure.getId()
-
+        // Push current diagram to make room for new diagram 
+        this.canvasStack.pushDiagram(figure.getId())
         t.log('pushed diagram')
 
         // Load inner diagram or a default group node if first time
@@ -90,9 +85,9 @@ export class CanvasInner {
         // Scroll outer diagram to correspond to inner diagram position
         const sx = figure.x + 2 + imx - (innerDiagramViewPos.x * this.canvas.zoomFactor)
         const sy = figure.y + 2 + imy - (innerDiagramViewPos.y * this.canvas.zoomFactor)
-
         this.setScrollInCanvasCoordinate(sx, sy)
-        t.log('popped diagram')
+
+        t.log()
     }
 
 

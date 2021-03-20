@@ -9,7 +9,7 @@ export default class CanvasStack {
 
     isRoot = () => this.diagramStack.length === 0
 
-    pushDiagram() {
+    pushDiagram(newName) {
         const canvas = this.canvas
         const canvasData = this.getCanvasData(canvas)
 
@@ -20,6 +20,7 @@ export default class CanvasStack {
 
         // new command stack, but reuse command stack event listeners from parent
         canvas.commandStack.eventListeners = canvasData.commandStack.eventListeners
+        canvas.name = newName
     }
 
 

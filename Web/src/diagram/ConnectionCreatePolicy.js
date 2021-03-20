@@ -3,7 +3,7 @@ import Connection from './Connection'
 import Node from './Node'
 
 export class ConnectionCreatePolicy extends draw2d.policy.connection.ConnectionCreatePolicy {
-    NAME: "ConnectionCreatePolicy"
+    NAME = "ConnectionCreatePolicy"
 
     constructor(attr, setter, getter) {
         super(attr, setter, getter);
