@@ -39,6 +39,10 @@ export default class CanvasEx extends draw2d.Canvas {
         //canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
     }
 
+    runCmd(command) {
+        this.getCommandStack().execute(command);
+    }
+
     setNormalBackground() {
         this.html.find("svg").css({
             'background-color': Colors.canvasDivBackground,

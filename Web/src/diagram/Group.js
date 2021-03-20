@@ -1,8 +1,6 @@
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
 import Colors from "./colors";
-import Node from "./Node";
-import { InputTopPortLocator, OutputBottomPortLocator } from "./nodeLocators";
 
 
 const defaultOptions = () => {

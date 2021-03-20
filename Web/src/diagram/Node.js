@@ -101,10 +101,10 @@ export default class Node extends draw2d.shape.node.Between {
     getContextMenuItems(x, y) {
         const isNode = this.type === Node.nodeType
         const colorItems = Colors.nodeColorNames().map((name) => {
-            return new Item(name, () => this.runSetColorCmd(name))
+            return new Item(name, () => this.canvas.runCmd(new CommandChangeColor(this, name)))
         })
         const iconItems = getNodeIconNames().map((name) => {
-            return new Item(name, () => this.runSetIconCmd(name))
+            return new Item(name, () => this.canvas.runCmd(new CommandChangeIcon(this, name)))
         })
 
         return [
@@ -117,19 +117,10 @@ export default class Node extends draw2d.shape.node.Between {
             new NestedItem('Change icon', iconItems),
             new Item('To front', () => this.toFront()),
             new Item('To back', () => this.toBack()),
-            new Item('Delete node', () => this.deleteNodeCmd())
+            new Item('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)))
         ]
     }
 
-    deleteNodeCmd() {
-        const command = new draw2d.command.CommandDelete(this);
-        this.getCanvas().getCommandStack().execute(command);
-    }
-
-    runSetColorCmd(colorName) {
-        const command = new CommandChangeColor(this, colorName);
-        this.getCanvas().getCommandStack().execute(command);
-    }
 
     setNodeColor(colorName) {
         this.colorName = colorName
@@ -146,10 +137,6 @@ export default class Node extends draw2d.shape.node.Between {
         this.diagramIcon?.setColor(fontColor)
     }
 
-    runSetIconCmd(iconName) {
-        const command = new CommandChangeIcon(this, iconName);
-        this.getCanvas().getCommandStack().execute(command);
-    }
 
     setIcon(name) {
         if (this.icon != null) {
