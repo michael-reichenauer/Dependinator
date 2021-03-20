@@ -7,12 +7,11 @@ import { random } from '../common/utils'
 import Node from './Node'
 import Serializer from './serializer'
 import { store } from "./store";
-import { timing } from "../common/timing";
 import CanvasEx from "./CanvasEx";
 import { Item } from "../common/ContextMenu";
 import CanvasStack from "./CanvasStack";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
-import { addDefaultInnerDiagram, addDefaultNewDiagram, addFigureToCanvas } from "./addDefault";
+import { addDefaultNewDiagram, addFigureToCanvas } from "./addDefault";
 import { CanvasInner } from "./CanvasInner";
 
 
