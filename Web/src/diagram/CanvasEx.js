@@ -39,6 +39,27 @@ export default class CanvasEx extends draw2d.Canvas {
         //canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
     }
 
+    clearDiagram = () => {
+        const canvas = this
+        canvas.lines.clone().each(function (i, e) {
+            canvas.remove(e)
+        })
+
+        canvas.figures.clone().each(function (i, e) {
+            canvas.remove(e)
+        })
+
+        canvas.selection.clear()
+        canvas.currentDropTarget = null
+        canvas.figures = new draw2d.util.ArrayList()
+        canvas.lines = new draw2d.util.ArrayList()
+        canvas.commonPorts = new draw2d.util.ArrayList()
+        canvas.commandStack.markSaveLocation()
+        canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
+        canvas.lineIntersections = new draw2d.util.ArrayList()
+    }
+
+
     runCmd(command) {
         this.getCommandStack().execute(command);
     }

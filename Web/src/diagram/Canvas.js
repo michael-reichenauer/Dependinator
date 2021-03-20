@@ -1,7 +1,6 @@
 import "import-jquery";
 import "jquery-ui-bundle";
 import "jquery-ui-bundle/jquery-ui.css";
-import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
 import { random } from '../common/utils'
 import Node from './Node'
@@ -110,7 +109,7 @@ export default class Canvas {
 
 
     commandNewDiagram = () => {
-        this.clearDiagram()
+        this.canvas.clearDiagram()
         this.store.clear()
         addDefaultNewDiagram(this.canvas)
     }
@@ -145,19 +144,6 @@ export default class Canvas {
 
     showTotalDiagram = () => zoomAndMoveShowTotalDiagram(this.canvas)
 
-    unselectAll = () => {
-        if (!this.canvas.selection.all.isEmpty()) {
-            // Deselect items, since zooming with selected figures is slow
-            this.canvas.selection.getAll().each((i, f) => f.unselect())
-            this.canvas.selection.clear()
-        }
-    }
-
-    getInnerDiagramRect() {
-        const g = this.canvas.group
-        return { x: g.x, y: g.y, w: g.width, h: g.heigh }
-    }
-
 
     addNode = (type, p) => {
         const node = new Node(type)
@@ -178,59 +164,11 @@ export default class Canvas {
     }
 
 
-    fromCanvasToViewCoordinate = (x, y) => {
-        return new draw2d.geo.Point(
-            ((x * (1 / this.canvas.zoomFactor)) - this.canvas.getScrollLeft()),
-            ((y * (1 / this.canvas.zoomFactor)) - this.canvas.getScrollTop()))
-    }
-
-    fromViewToCanvasCoordinate = (x, y) => {
-        return new draw2d.geo.Point(
-            (x + this.canvas.getScrollLeft()) * this.canvas.zoomFactor,
-            (y + this.canvas.getScrollTop()) * this.canvas.zoomFactor)
-    }
-
-    fromDocumentToCanvasCoordinate = (x, y) => {
-        return this.canvas.fromDocumentToCanvasCoordinate(x, y)
-    }
-
-    setScrollInCanvasCoordinate = (left, top) => {
-        const area = this.canvas.getScrollArea()
-        area.scrollLeft(left / this.canvas.zoomFactor)
-        area.scrollTop(top / this.canvas.zoomFactor)
-    }
-
-    getScrollInCanvasCoordinate = () => {
-        const area = this.canvas.getScrollArea()
-        return { left: area.scrollLeft() * this.canvas.zoomFactor, top: area.scrollTop() * this.canvas.zoomFactor }
-    }
-
     getCenter = () => {
         let x = (this.canvas.getWidth() / 2 + random(-10, 10) + this.canvas.getScrollLeft()) * this.canvas.getZoom()
         let y = (100 + random(-10, 10) + this.canvas.getScrollTop()) * this.canvas.getZoom()
 
         return { x: x, y: y }
-    }
-
-    clearDiagram = () => {
-        const canvas = this.canvas
-        canvas.lines.clone().each(function (i, e) {
-            canvas.remove(e)
-        })
-
-        canvas.figures.clone().each(function (i, e) {
-            canvas.remove(e)
-        })
-
-
-        canvas.selection.clear()
-        canvas.currentDropTarget = null
-        canvas.figures = new draw2d.util.ArrayList()
-        canvas.lines = new draw2d.util.ArrayList()
-        canvas.commonPorts = new draw2d.util.ArrayList()
-        canvas.commandStack.markSaveLocation()
-        canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
-        canvas.lineIntersections = new draw2d.util.ArrayList()
     }
 
 
