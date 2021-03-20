@@ -259,7 +259,7 @@ export default class Node extends draw2d.shape.node.Between {
         }
         const iconColor = Colors.getNodeFontColor(this.colorName)
         this.diagramIcon = new draw2d.shape.icon.Diagram({
-            width: 20, height: 20, color: iconColor, bgColor: 'none',
+            width: 15, height: 15, color: iconColor, bgColor: 'none',
         })
 
         this.diagramIcon.on("click", () => this.showInnerDiagram())

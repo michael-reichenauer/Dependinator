@@ -21,7 +21,7 @@ export class LabelLocator extends draw2d.layout.locator.XYRelPortLocator {
 export class InnerDiagramIconLocator extends draw2d.layout.locator.PortLocator {
     relocate(index, figure) {
         const parent = figure.getParent()
-        this.applyConsiderRotation(figure, parent.getWidth() / 2 - 10, parent.getHeight() - 25);
+        this.applyConsiderRotation(figure, parent.getWidth() / 2 - 8, parent.getHeight() - 23);
     }
 }
 
