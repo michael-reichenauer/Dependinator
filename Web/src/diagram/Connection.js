@@ -16,7 +16,8 @@ export default class Connection extends draw2d.Connection {
         }
 
         this.setColor(Colors.connectionColor)
-        this.setRouter(new draw2d.layout.connection.VertexRouter());
+        // this.setRouter(new draw2d.layout.connection.VertexRouter());
+        this.setRouter(new draw2d.layout.connection.DirectRouter());
 
         const arrow = new draw2d.decoration.connection.ArrowDecorator()
         arrow.setBackgroundColor(this.getColor())

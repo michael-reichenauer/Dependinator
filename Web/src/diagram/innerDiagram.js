@@ -173,11 +173,9 @@ export class InnerDiagram extends draw2d.SetFigure {
 
         if (!connection.srcGrp && connection.trgGrp) {
             pathText = `M${x},${y + h / 2}L${connection.v[1].x + offsetX},${connection.v[1].y + offsetY}`
-            console.log('path', pathText)
         } else if (connection.srcGrp && !connection.trgGrp) {
             pathText = `M${connection.v[0].x + offsetX},${connection.v[0].y + offsetY}L${x + w},${y + h / 2}`
-            console.log('path', pathText)
-        } else if (connection.srcGrp && connection.trgGrp) {
+        } else if (this.isInternalConnection(connection)) {
             connection.v.forEach(v => {
                 if (pathText === null) {
                     pathText = `M${v.x + offsetX},${v.y + offsetY}`
@@ -195,6 +193,59 @@ export class InnerDiagram extends draw2d.SetFigure {
         console.log('connection', connection)
         set.push(path)
     }
+
+    isInternalConnection(connection) {
+        return connection.srcGrp && connection.trgGrp
+    }
+
+
+    isExternalConnection(connection) {
+        return (!connection.srcGrp && connection.trgGrp)
+            || (connection.srcGrp && !connection.trgGrp)
+    }
+
+    getExternalLine(connection, offsetX, offsetY) {
+        let pathText
+        //   const { x, y, w, h } = this.groupRect
+
+        const { id } = connection
+        if (this.parent.getInputPort(0).getConnections().asArray().find(c => c.sourcePort.parent.id === id)) {
+            console.log('left')
+        }
+
+
+
+        // const hasLeftInput = this.parent.getInputPort(0).getConnections().asArray().length > 0
+        // const hasTopInput = this.parent.getInputPort(1).getConnections().asArray().length > 0
+        // const hasRightOutput = this.parent.getOutputPort(0).getConnections().asArray().length > 0
+        // const hasBottomOutput = this.parent.getOutputPort(1).getConnections().asArray().length > 0
+
+        // let pathText = null
+        // const cf = {x:connection.v[0].x+offsetX, y:connection.v[0].y +offsetY}
+        // const cl = {x:connection.v[1].x+offsetX, y:connection.v[1].y +offsetY}
+        // const lc = {x1:cf.x,y1:cf.y,x2:cl.x,y2:cl.y}
+
+        // const ll = {x1:x,y1:y,x2:x,y2:y+h}
+        // const lt = {x1:x,y1:y,x2:x+w,y2:y}
+        // const lr = {x1:x+w,y1:y,x2:x+w,y2:y+h}
+        // const lb = {x1:x,y1:y+h,x2:x+w,y2:y+h}
+
+        //  if (!connection.srcGrp && connection.trgGrp) {
+
+        //     if (intersects(lc, ll)) {
+        //         pathText = `M${x},${y + h / 2}L${cl.x},${cl.y}`
+        //     } else if (intersects(lc, lt)){
+        //         pathText = `M${x+w/2},${y}L${cl.x},${cl.y}`
+        //     }
+
+        //     pathText = `M${x},${y + h / 2}L${connection.v[1].x + offsetX},${connection.v[1].y + offsetY}`
+        // } else if (connection.srcGrp && !connection.trgGrp) {
+        //     pathText = `M${connection.v[0].x + offsetX},${connection.v[0].y + offsetY}L${x + w},${y + h / 2}`
+
+        // }
+        return pathText
+    }
+
 
     createNodeName(x, y, w, name, colorName) {
         const fontColor = Colors.getNodeFontHexColor(colorName)
@@ -254,7 +305,10 @@ export class InnerDiagram extends draw2d.SetFigure {
     }
 }
 
-function intersects(ax1, ay1, ax2, ay2, bx1, by1, bx2, by2) {
+function intersects(l1, l2) {
+    const { ax1, ay1, ax2, ay2 } = l1
+    const { bx1, by1, bx2, by2 } = l2
+
     var det, gamma, lambda;
     det = (ax2 - ax1) * (by2 - by1) - (bx2 - bx1) * (ay2 - ay1);
     if (det === 0) {
