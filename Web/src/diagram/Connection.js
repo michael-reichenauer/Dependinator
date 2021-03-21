@@ -42,7 +42,6 @@ export default class Connection extends draw2d.Connection {
     }
 
     serialize() {
-        console.log('connection', this)
         const srcGrp = this.sourcePort.parent.group != null
         const trgGrp = this.targetPort.parent.group != null
 

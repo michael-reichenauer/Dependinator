@@ -9,7 +9,7 @@ import { CommandChangeIcon } from "./commandChangeIcon";
 import { createNodeIcon, getNodeIconNames } from "./icons";
 import { InnerDiagram } from "./innerDiagram";
 import { store } from "./store";
-import { InnerDiagramIconLocator, LabelLocator, InputTopPortLocator, OutputBottomPortLocator, InnerDiagramLocator } from './nodeLocators'
+import { InnerDiagramIconLocator, LabelLocator, InnerDiagramLocator } from './nodeLocators'
 
 
 const defaultOptions = (type) => {
@@ -256,8 +256,8 @@ export default class Node extends draw2d.shape.node.Between {
     }
 
     addPorts() {
-        this.createPort("input", new InputTopPortLocator());
-        this.createPort("output", new OutputBottomPortLocator());
+        this.createPort("input", new draw2d.layout.locator.XYRelPortLocator(50, 0))
+        this.createPort("output", new draw2d.layout.locator.XYRelPortLocator(50, 100))
     }
 }
 

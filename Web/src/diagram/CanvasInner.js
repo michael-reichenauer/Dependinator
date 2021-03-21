@@ -1,6 +1,8 @@
 import draw2d from "draw2d";
 import { timing } from "../common/timing";
 import { addDefaultInnerDiagram } from "./addDefault";
+import Connection from "./Connection";
+import Node from "./Node";
 
 export class CanvasInner {
     canvas = null
@@ -30,6 +32,7 @@ export class CanvasInner {
         // positioned after the switch 
         const innerDiagramViewPos = innerDiagram.getDiagramViewCoordinate()
 
+        const connectedNodes = this.getConnectedNodes(figure)
         // Hide the inner diagram image from figure (will be updated when popping)
         figure.hideInnerDiagram()
 
@@ -41,6 +44,7 @@ export class CanvasInner {
         if (!this.load(figure.getId())) {
             addDefaultInnerDiagram(this.canvas, figure.getName())
         }
+        this.addConnectedNodes(connectedNodes)
         t.log('loaded diagram')
 
         // Zoom inner diagram to correspond to inner diagram image size
@@ -53,6 +57,87 @@ export class CanvasInner {
         this.setScrollInCanvasCoordinate(left, top)
 
         t.log()
+    }
+
+    sortNodesOnX(nodes) {
+        nodes.sort((d1, d2) => d1.node.x < d2.node.x ? -1 : d1.node.x > d2.node.x ? 1 : 0)
+    }
+    sortNodesOnY(nodes) {
+        nodes.sort((d1, d2) => d1.node.y < d2.node.y ? -1 : d1.node.y > d2.node.y ? 1 : 0)
+    }
+
+    getConnectedNodes(figure) {
+        const left = figure.getPort('input0').getConnections().asArray()
+            .map(c => { return { node: c.sourcePort.parent.serialize(), connection: c.serialize() } })
+        const top = figure.getPort('input1').getConnections().asArray()
+            .map(c => { return { node: c.sourcePort.parent.serialize(), connection: c.serialize() } })
+        const right = figure.getPort('output0').getConnections().asArray()
+            .map(c => { return { node: c.targetPort.parent.serialize(), connection: c.serialize() } })
+        const bottom = figure.getPort('output1').getConnections().asArray()
+            .map(c => { return { node: c.targetPort.parent.serialize(), connection: c.serialize() } })
+
+        this.sortNodesOnY(left)
+        this.sortNodesOnY(right)
+        this.sortNodesOnX(top)
+        this.sortNodesOnX(bottom)
+
+        return { left: left, top: top, right: right, bottom: bottom }
+    }
+
+    addConnectedNodes(nodes) {
+        const group = this.canvas.group
+        const marginGroup = 100
+        const marginBetween = 50
+
+        let y = group.y
+        let x = group.x - Node.defaultWidth - marginGroup
+        nodes.left.forEach(data => {
+            const node = this.addNode(data, x, y)
+            this.addConnection(data, node, group)
+            y = y + Node.defaultHeight + marginBetween
+        });
+
+        y = group.y - Node.defaultHeight - marginGroup
+        x = group.x
+        nodes.top.forEach(data => {
+            const node = this.addNode(data, x, y)
+            this.addConnection(data, node, group)
+            x = x + Node.defaultWidth + marginBetween
+        });
+
+        y = group.y
+        x = group.x + group.width + marginGroup
+        nodes.right.forEach(data => {
+            const node = this.addNode(data, x, y)
+            this.addConnection(data, group, node)
+            y = y + Node.defaultHeight + marginBetween
+        });
+
+        y = group.y + group.height + marginGroup
+        x = group.x
+        nodes.bottom.forEach(data => {
+            const node = this.addNode(data, x, y)
+            this.addConnection(data, group, node)
+            x = x + Node.defaultWidth + marginBetween
+        });
+    }
+
+    addConnection(data, src, trg) {
+        const description = data.connection.deserialize
+        const srcPort = data.connection.srcPort
+        const trgPort = data.connection.trgPort
+        const connection = new Connection(description, src, srcPort, trg, trgPort)
+        connection.setDeleteable(false)
+
+        this.canvas.add(connection)
+    }
+
+    addNode(data, x, y) {
+        const node = Node.deserialize(data.node)
+        node.attr({ width: Node.defaultWidth, height: Node.defaultHeight, alpha: 0.8, resizeable: false })
+        node.setDeleteable(false)
+        this.canvas.add(node, x, y)
+        return node
     }
 
     popFromInnerDiagram = () => {

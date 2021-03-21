@@ -40,7 +40,7 @@ export default class Group extends draw2d.shape.composite.Raft {
 
         this.setDeleteable(false)
         this.addLabel(name)
-        // this.addPorts()
+        this.addPorts()
 
         this.on("click", (s, e) => PubSub.publish('canvas.SetEditMode', false))
         this.on("dblclick", (s, e) => PubSub.publish('canvas.AddDefaultNode', { x: e.x, y: e.y }))
@@ -77,10 +77,12 @@ export default class Group extends draw2d.shape.composite.Raft {
         this.add(this.nameLabel, new GroupNameLocator());
     }
 
-    // addPorts() {
-    //     this.createPort("output", new InputTopPortLocator());
-    //     this.createPort("input", new OutputBottomPortLocator());
-    // }
+    addPorts() {
+        this.createPort("input", new draw2d.layout.locator.XYRelPortLocator(0, 50))
+        this.createPort("input", new draw2d.layout.locator.XYRelPortLocator(50, 0))
+        this.createPort("output", new draw2d.layout.locator.XYRelPortLocator(100, 50))
+        this.createPort("output", new draw2d.layout.locator.XYRelPortLocator(50, 100))
+    }
 }
 
 

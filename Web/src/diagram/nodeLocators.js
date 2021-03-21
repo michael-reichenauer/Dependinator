@@ -33,17 +33,17 @@ export class InnerDiagramLocator extends draw2d.layout.locator.Locator {
 }
 
 
-export class InputTopPortLocator extends draw2d.layout.locator.PortLocator {
-    relocate(index, figure) {
-        this.applyConsiderRotation(figure, figure.getParent().getWidth() / 2, 0);
-    }
-}
+// export class InputTopPortLocator extends draw2d.layout.locator.PortLocator {
+//     relocate(index, figure) {
+//         this.applyConsiderRotation(figure, figure.getParent().getWidth() / 2, 0);
+//     }
+// }
 
 
-export class OutputBottomPortLocator extends draw2d.layout.locator.PortLocator {
-    relocate(index, figure) {
-        var p = figure.getParent();
-        this.applyConsiderRotation(figure, p.getWidth() / 2, p.getHeight());
-    }
-}
+// export class OutputBottomPortLocator extends draw2d.layout.locator.PortLocator {
+//     relocate(index, figure) {
+//         var p = figure.getParent();
+//         this.applyConsiderRotation(figure, p.getWidth() / 2, p.getHeight());
+//     }
+// }
 
