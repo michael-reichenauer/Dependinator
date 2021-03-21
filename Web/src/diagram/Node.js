@@ -121,6 +121,13 @@ export default class Node extends draw2d.shape.node.Between {
         ]
     }
 
+    setName(name) {
+        this.nameLabel?.setText(name)
+    }
+
+    setDescription(description) {
+        this.descriptionLabel?.setText(description)
+    }
 
     setNodeColor(colorName) {
         this.colorName = colorName

@@ -17,40 +17,44 @@ export class CanvasInner {
         this.serializer = serializer
     }
 
-    editInnerDiagram = (figure) => {
+    editInnerDiagram = (node) => {
         const t = timing()
-        const innerDiagram = figure.innerDiagram
+        const innerDiagram = node.innerDiagram
         if (innerDiagram == null) {
             // Figure has no inner diagram, thus nothing to edit
             return
         }
 
-        // Remember the current outer zoom, which is used when zooming ghr inner diagram
+        // Remember the current outer zoom, which is used when zooming inner diagram
         const outerZoom = this.canvas.zoomFactor
 
         // Get the view coordinates of the inner diagram image where the inner diagram should
         // positioned after the switch 
         const innerDiagramViewPos = innerDiagram.getDiagramViewCoordinate()
 
-        const connectedNodes = this.getConnectedNodes(figure)
-        // Hide the inner diagram image from figure (will be updated when popping)
-        figure.hideInnerDiagram()
+        // Get nodes connected to outer node so they can be re-added in the inner diagram after push
+        const connectedNodes = this.getNodesConnectedToOuterNode(node)
 
-        // Push current diagram to make room for new diagram 
-        this.canvasStack.pushDiagram(figure.getId())
+        // Hide the inner diagram image from node (will be updated and shown when popping)
+        node.hideInnerDiagram()
+
+        // Push current diagram to make room for new inner diagram 
+        this.canvasStack.pushDiagram(node.getId())
         t.log('pushed diagram')
 
         // Load inner diagram or a default group node if first time
-        if (!this.load(figure.getId())) {
-            addDefaultInnerDiagram(this.canvas, figure.getName())
+        if (!this.load(node.getId())) {
+            addDefaultInnerDiagram(this.canvas, node.getName())
         }
-        this.addConnectedNodes(connectedNodes)
-        t.log('loaded diagram')
 
-        // Zoom inner diagram to correspond to inner diagram image size
+        t.log('loaded diagram')
+        this.addConnectedNodes(connectedNodes)
+        t.log('added connected nodes')
+
+        // Zoom inner diagram to correspond to inner diagram image size in the outer node
         this.canvas.setZoom(outerZoom / innerDiagram.innerZoom)
 
-        // Scroll inner diagram to correspond to where the inner diagram image was
+        // Scroll inner diagram to correspond to where the inner diagram image in the outer node was
         const innerDiagramRect = this.getInnerDiagramRect()
         const left = innerDiagramRect.x - innerDiagramViewPos.left * this.canvas.zoomFactor
         const top = innerDiagramRect.y - innerDiagramViewPos.top * this.canvas.zoomFactor
@@ -59,14 +63,44 @@ export class CanvasInner {
         t.log()
     }
 
-    sortNodesOnX(nodes) {
-        nodes.sort((d1, d2) => d1.node.x < d2.node.x ? -1 : d1.node.x > d2.node.x ? 1 : 0)
-    }
-    sortNodesOnY(nodes) {
-        nodes.sort((d1, d2) => d1.node.y < d2.node.y ? -1 : d1.node.y > d2.node.y ? 1 : 0)
+
+    popFromInnerDiagram = () => {
+        const t = timing()
+
+        // Get the inner diagram zoom to use when zooming outer diagram
+        const postInnerZoom = this.canvas.zoomFactor
+
+        // Get inner diagram view position to scroll the outer diagram to same position
+        const innerDiagramRect = this.getInnerDiagramRect()
+        const innerDiagramViewPos = this.fromCanvasToViewCoordinate(innerDiagramRect.x, innerDiagramRect.y)
+
+        // Show outer diagram (closing the inner diagram)
+        const figureId = this.canvas.name
+        this.canvasStack.popDiagram()
+
+        // Update the figures inner diagram image in the node
+        const figure = this.canvas.getFigure(figureId)
+        figure.showInnerDiagram()
+
+        // Zoom outer diagram to correspond to the inner diagram
+        const preInnerZoom = this.canvas.zoomFactor / figure.innerDiagram.innerZoom
+        const newZoom = this.canvas.zoomFactor * (postInnerZoom / preInnerZoom)
+        this.canvas.setZoom(newZoom)
+
+        // get the inner diagram margin in outer canvas coordinates
+        const imx = figure.innerDiagram.marginX * figure.innerDiagram.innerZoom
+        const imy = figure.innerDiagram.marginY * figure.innerDiagram.innerZoom
+
+        // Scroll outer diagram to correspond to inner diagram position
+        const sx = figure.x + 2 + imx - (innerDiagramViewPos.x * this.canvas.zoomFactor)
+        const sy = figure.y + 2 + imy - (innerDiagramViewPos.y * this.canvas.zoomFactor)
+        this.setScrollInCanvasCoordinate(sx, sy)
+
+        t.log()
     }
 
-    getConnectedNodes(figure) {
+
+    getNodesConnectedToOuterNode(figure) {
         const left = figure.getPort('input0').getConnections().asArray()
             .map(c => { return { node: c.sourcePort.parent.serialize(), connection: c.serialize() } })
         const top = figure.getPort('input1').getConnections().asArray()
@@ -122,57 +156,43 @@ export class CanvasInner {
         });
     }
 
-    addConnection(data, src, trg) {
-        const description = data.connection.deserialize
-        const srcPort = data.connection.srcPort
-        const trgPort = data.connection.trgPort
-        const connection = new Connection(description, src, srcPort, trg, trgPort)
-        connection.setDeleteable(false)
-
-        this.canvas.add(connection)
-    }
-
     addNode(data, x, y) {
-        const node = Node.deserialize(data.node)
-        node.attr({ width: Node.defaultWidth, height: Node.defaultHeight, alpha: 0.8, resizeable: false })
+        let node = this.canvas.getFigure(data.node.id)
+        if (node != null) {
+            // Node already exist, updating data
+            node.setName(data.node.name)
+            node.setDescription(data.node.description)
+            node.setIcon(data.node.icon)
+            node.setNodeColor(data.node.color)
+            node.attr({ alpha: 0.8, resizeable: false })
+        } else {
+            // Node needs to be created and added
+            node = Node.deserialize(data.node)
+            node.attr({ width: Node.defaultWidth, height: Node.defaultHeight, alpha: 0.8, resizeable: false })
+            this.canvas.add(node, x, y)
+        }
+
         node.setDeleteable(false)
-        this.canvas.add(node, x, y)
         return node
     }
 
-    popFromInnerDiagram = () => {
-        const t = timing()
+    addConnection(data, src, trg) {
+        const id = data.connection.id
+        const description = data.connection.description
+        const srcPort = data.connection.srcPort
+        const trgPort = data.connection.trgPort
 
-        // Get the inner diagram zoom to use when zooming outer diagram
-        const postInnerZoom = this.canvas.zoomFactor
+        let connection = this.canvas.getLine(id)
+        if (connection != null) {
+            // Connection already exist, updating data
+            connection.setDescription(description)
+        } else {
+            // Connection needs to be added
+            connection = new Connection(description, src, srcPort, trg, trgPort, id)
+        }
 
-        // Get inner diagram view position to scroll the outer diagram to same position
-        const innerDiagramRect = this.getInnerDiagramRect()
-        const innerDiagramViewPos = this.fromCanvasToViewCoordinate(innerDiagramRect.x, innerDiagramRect.y)
-
-        // Show outer diagram (closing the inner diagram)
-        const figureId = this.canvas.name
-        this.canvasStack.popDiagram()
-
-        // Update the figures inner diagram image in the node
-        const figure = this.canvas.getFigure(figureId)
-        figure.showInnerDiagram()
-
-        // Zoom outer diagram to correspond to the inner diagram
-        const preInnerZoom = this.canvas.zoomFactor / figure.innerDiagram.innerZoom
-        const newZoom = this.canvas.zoomFactor * (postInnerZoom / preInnerZoom)
-        this.canvas.setZoom(newZoom)
-
-        // get the inner diagram margin in outer canvas coordinates
-        const imx = figure.innerDiagram.marginX * figure.innerDiagram.innerZoom
-        const imy = figure.innerDiagram.marginY * figure.innerDiagram.innerZoom
-
-        // Scroll outer diagram to correspond to inner diagram position
-        const sx = figure.x + 2 + imx - (innerDiagramViewPos.x * this.canvas.zoomFactor)
-        const sy = figure.y + 2 + imy - (innerDiagramViewPos.y * this.canvas.zoomFactor)
-        this.setScrollInCanvasCoordinate(sx, sy)
-
-        t.log()
+        connection.setDeleteable(false)
+        this.canvas.add(connection)
     }
 
 
@@ -204,5 +224,13 @@ export class CanvasInner {
         // Deserialize canvas
         this.serializer.deserialize(canvasData)
         return true
+    }
+
+    sortNodesOnX(nodes) {
+        nodes.sort((d1, d2) => d1.node.x < d2.node.x ? -1 : d1.node.x > d2.node.x ? 1 : 0)
+    }
+
+    sortNodesOnY(nodes) {
+        nodes.sort((d1, d2) => d1.node.y < d2.node.y ? -1 : d1.node.y > d2.node.y ? 1 : 0)
     }
 }

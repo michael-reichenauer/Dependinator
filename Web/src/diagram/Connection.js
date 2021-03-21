@@ -4,8 +4,11 @@ import Colors from "./colors";
 
 
 export default class Connection extends draw2d.Connection {
-    constructor(description, src, srcPortName, dst, dstPortName) {
-        super()
+    descriptionLabel = null
+
+    constructor(description, src, srcPortName, dst, dstPortName, id) {
+        id = id ?? draw2d.util.UUID.create()
+        super({ id: id })
 
         description = description ?? 'Description'
         if (src !== undefined) {
@@ -38,7 +41,7 @@ export default class Connection extends draw2d.Connection {
     static deserialize(canvas, c) {
         const src = canvas.getFigure(c.src)
         const trg = canvas.getFigure(c.trg)
-        return new Connection(c.description, src, c.srcPort, trg, c.trgPort)
+        return new Connection(c.description, src, c.srcPort, trg, c.trgPort, c.id)
     }
 
     serialize() {
@@ -46,6 +49,7 @@ export default class Connection extends draw2d.Connection {
         const trgGrp = this.targetPort.parent.group != null
 
         return {
+            id: this.id,
             src: this.sourcePort.parent.id,
             srcPort: this.sourcePort.name,
             srcGrp: srcGrp,
@@ -66,4 +70,7 @@ export default class Connection extends draw2d.Connection {
         return menuItems
     }
 
+    setDescription(description) {
+        this.descriptionLabel?.setText(description)
+    }
 }

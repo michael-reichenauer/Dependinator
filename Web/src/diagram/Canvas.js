@@ -50,7 +50,6 @@ export default class Canvas {
         this.canvas.destroy()
     }
 
-
     handleCommands = () => {
         PubSub.subscribe('canvas.Undo', () => {
             this.canvas.getCommandStack().undo();
