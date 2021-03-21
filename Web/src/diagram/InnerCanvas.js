@@ -191,6 +191,8 @@ export class InnerCanvas {
             connection = new Connection(description, src, srcPort, trg, trgPort, id)
         }
 
+        connection.setDashArray("--")
+        connection.setStroke(4)
         connection.setDeleteable(false)
         this.canvas.add(connection)
     }

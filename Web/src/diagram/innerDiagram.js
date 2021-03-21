@@ -128,6 +128,7 @@ export class InnerDiagram extends draw2d.SetFigure {
 
     addExternalGroupConnections(set) {
         // Check which external connections that are active
+        const dashPattern = '--'
         const hasLeftInput = this.parent.getInputPort(0).getConnections().asArray().length > 0
         const hasTopInput = this.parent.getInputPort(1).getConnections().asArray().length > 0
         const hasRightOutput = this.parent.getOutputPort(0).getConnections().asArray().length > 0
@@ -136,16 +137,16 @@ export class InnerDiagram extends draw2d.SetFigure {
         // Draw lines for each of the active connections
         const { x, y, w, h } = this.groupRect
         if (hasLeftInput) {
-            set.push(this.line(0, y + h / 2, x, y + h / 2))
+            set.push(this.externalLine(0, y + h / 2, x, y + h / 2), dashPattern)
         }
         if (hasTopInput) {
-            set.push(this.line(x + w / 2, 0, x + w / 2, y))
+            set.push(this.externalLine(x + w / 2, 0, x + w / 2, y), dashPattern)
         }
         if (hasRightOutput) {
-            set.push(this.line(x + w, y + h / 2, this.diagramWidth, y + h / 2))
+            set.push(this.externalLine(x + w, y + h / 2, this.diagramWidth, y + h / 2), dashPattern)
         }
         if (hasBottomOutput) {
-            set.push(this.line(x + w / 2, y + h, x + w / 2, this.diagramHeight))
+            set.push(this.externalLine(x + w / 2, y + h, x + w / 2, this.diagramHeight), dashPattern)
         }
     }
 
@@ -173,43 +174,38 @@ export class InnerDiagram extends draw2d.SetFigure {
         let pathText = null
         const { x, y, w, h } = this.groupRect
 
+        if (this.isInternalConnection(connection)) {
+            // Connection between 2 internal nodes
+            set.push(this.internalLine(connection.v, offsetX, offsetY))
+            return
+        }
+
         if (!connection.srcGrp && connection.trgGrp) {
             // External node connected to internal node
             const sp = connection.v[1]
             if (connection.trgPort === 'input0') {
                 // External node left of group
-                pathText = `M${x},${y + h / 2}L${sp.x + offsetX},${sp.y + offsetY}`
+                set.push(this.externalLine(x, y + h / 2, sp.x + offsetX, sp.y + offsetY))
             } else {
                 // External node above group
-                pathText = `M${x + w / 2},${y}L${sp.x + offsetX},${sp.y + offsetY}`
+                set.push(this.externalLine(x + w / 2, y, sp.x + offsetX, sp.y + offsetY))
             }
-        } else if (connection.srcGrp && !connection.trgGrp) {
+            return
+        }
+
+        if (connection.srcGrp && !connection.trgGrp) {
             // Internal node connected to external node
             const tp = connection.v[0]
             if (connection.srcPort === 'output0') {
                 // External node right of group
-                pathText = `M${tp.x + offsetX},${tp.y + offsetY}L${x + w},${y + h / 2}`
+                set.push(this.externalLine(tp.x + offsetX, tp.y + offsetY, x + w, y + h / 2, y + h / 2))
             } else {
                 // External node below group
-                pathText = `M${tp.x + offsetX},${tp.y + offsetY}L${x + w / 2},${y + h}`
+                set.push(this.externalLine(tp.x + offsetX, tp.y + offsetY, x + w / 2, y + h))
             }
-        } else if (this.isInternalConnection(connection)) {
-            // Connection between 2 internal nodes
-            connection.v.forEach(v => {
-                if (pathText === null) {
-                    pathText = `M${v.x + offsetX},${v.y + offsetY}`
-                } else {
-                    pathText = pathText + `L${v.x + offsetX},${v.y + offsetY}`
-                }
-            })
-        } else {
-            // Connection between 2 external nodes, no need to show in diagram image
-            return
         }
 
-        const path = this.canvas.paper.path(pathText);
-        path.attr({ "stroke-width": 2, "stroke": Colors.connectionColor })
-        set.push(path)
+        // Ignoring external node connections
     }
 
     isInternalConnection(connection) {
@@ -266,9 +262,26 @@ export class InnerDiagram extends draw2d.SetFigure {
         return f
     }
 
-    line(sx, sy, tx, ty) {
-        const path = this.canvas.paper.path(`M${sx},${sy}L${tx},${ty}`)
+    internalLine(vertexes, offsetX, offsetY) {
+        let pathText = null
+
+        vertexes.forEach(v => {
+            if (pathText === null) {
+                pathText = `M${v.x + offsetX},${v.y + offsetY}`
+            } else {
+                pathText = pathText + `L${v.x + offsetX},${v.y + offsetY}`
+            }
+        })
+
+        const path = this.canvas.paper.path(pathText);
         path.attr({ "stroke-width": 2, "stroke": Colors.connectionColor })
+        return path
+    }
+
+
+    externalLine(sx, sy, tx, ty) {
+        const path = this.canvas.paper.path(`M${sx},${sy}L${tx},${ty}`)
+        path.attr({ "stroke-width": 4, "stroke": Colors.connectionColor, "stroke-dasharray": '--' })
         return path
     }
 
