@@ -72,8 +72,9 @@ export default class Node extends draw2d.shape.node.Between {
         this.addInnerDiagramIcon()
         this.addPorts()
 
-        this.on("click", (s, e) => console.log('click node'))
+        // this.on("click", (s, e) => console.log('click node'))
         this.on("dblclick", (s, e) => this.editInnerDiagram())
+        this.on('resize', (s, e) => this.handleResize())
     }
 
     setCanvas(canvas) {
@@ -203,6 +204,14 @@ export default class Node extends draw2d.shape.node.Between {
         PubSub.publish('canvas.EditInnerDiagram', this)
     }
 
+    handleResize() {
+        if (this.innerDiagram == null) {
+            return
+        }
+
+        this.hideInnerDiagram()
+        this.showInnerDiagram()
+    }
     setChildrenVisible(isVisible) {
         this.nameLabel?.setVisible(isVisible)
         this.descriptionLabel?.setVisible(isVisible)

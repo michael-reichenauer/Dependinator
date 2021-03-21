@@ -4,7 +4,7 @@ import { addDefaultInnerDiagram } from "./addDefault";
 import Connection from "./Connection";
 import Node from "./Node";
 
-export class CanvasInner {
+export class InnerCanvas {
     canvas = null
     canvasStack = null
     store = null

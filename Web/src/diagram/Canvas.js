@@ -11,7 +11,7 @@ import { Item } from "../common/ContextMenu";
 import CanvasStack from "./CanvasStack";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
 import { addDefaultNewDiagram, addFigureToCanvas } from "./addDefault";
-import { CanvasInner } from "./CanvasInner";
+import { InnerCanvas } from "./InnerCanvas";
 
 
 export default class Canvas {
@@ -32,7 +32,7 @@ export default class Canvas {
         this.canvas.canvas = this
         this.serializer = new Serializer(this.canvas)
         this.canvasStack = new CanvasStack(this.canvas)
-        this.inner = new CanvasInner(this.canvas, this.canvasStack, this.store, this.serializer)
+        this.inner = new InnerCanvas(this.canvas, this.canvasStack, this.store, this.serializer)
     }
 
     init() {
