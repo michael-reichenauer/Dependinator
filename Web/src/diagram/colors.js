@@ -7,7 +7,7 @@ import {
 
 const shade = 600
 const diagramBackgroundShade = 50
-const darkerBorder = 0.8
+const darkerBorder = 0.3
 
 
 export default class Colors {

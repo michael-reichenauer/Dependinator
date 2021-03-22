@@ -53,11 +53,11 @@ export default class Canvas {
     handleCommands = () => {
         PubSub.subscribe('canvas.Undo', () => {
             this.canvas.getCommandStack().undo();
-            this.save(this.storName)
+            this.save(this.canvas.name)
         })
         PubSub.subscribe('canvas.Redo', () => {
             this.canvas.getCommandStack().redo();
-            this.save(this.storName)
+            this.save(this.canvas.name)
         })
 
         PubSub.subscribe('canvas.AddNode', () => this.addNode(Node.nodeType, this.getCenter()))
@@ -118,6 +118,7 @@ export default class Canvas {
         this.withWorkingIndicator(() => {
             this.inner.editInnerDiagram(figure)
             this.updateToolbarButtonsStates()
+            this.save(this.canvas.name)
         });
     }
 
@@ -125,6 +126,7 @@ export default class Canvas {
         this.withWorkingIndicator(() => {
             this.inner.popFromInnerDiagram()
             this.updateToolbarButtonsStates()
+            this.save(this.canvas.name)
         });
     }
 

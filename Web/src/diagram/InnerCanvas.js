@@ -1,7 +1,9 @@
 import draw2d from "draw2d";
 import { timing } from "../common/timing";
+import { random } from "../common/utils";
 import { addDefaultInnerDiagram } from "./addDefault";
 import Connection from "./Connection";
+import Group from "./Group";
 import Node from "./Node";
 
 export class InnerCanvas {
@@ -48,7 +50,7 @@ export class InnerCanvas {
         }
 
         t.log('loaded diagram')
-        this.addConnectedNodes(connectedNodes)
+        this.addOrUpdateConnectedNodes(connectedNodes)
         t.log('added connected nodes')
 
         // Zoom inner diagram to correspond to inner diagram image size in the outer node
@@ -76,6 +78,8 @@ export class InnerCanvas {
 
         // Show outer diagram (closing the inner diagram)
         const figureId = this.canvas.name
+
+        const externalNodes = this.getNodesExternalToGroup()
         this.canvasStack.popDiagram()
 
         // Update the figures inner diagram image in the node
@@ -96,18 +100,131 @@ export class InnerCanvas {
         const sy = figure.y + 2 + imy - (innerDiagramViewPos.y * this.canvas.zoomFactor)
         this.setScrollInCanvasCoordinate(sx, sy)
 
+        this.addOrUpdateExternalNodes(externalNodes, figure)
+
         t.log()
     }
+
+    getNodesExternalToGroup() {
+        const group = this.canvas.group
+        const internalNodes = group.getAboardFigures(true).asArray()
+        const externalNodes = this.canvas.getFigures().asArray()
+            .filter(f => f !== group && null == internalNodes.find(i => i.id === f.id))
+
+        return {
+            nodes: externalNodes.map(n => {
+                return {
+                    node: n.serialize(),
+                    connections: this.serializeExternalConnections(n)
+                }
+            })
+        }
+    }
+
+    serializeExternalConnections(node) {
+        const ports = node.getPorts().asArray()
+        return ports.flatMap(p => p.getConnections().asArray().map(c => c.serialize()))
+    }
+
+
+
+    addOrUpdateExternalNodes(data, outerNode) {
+        const marginX = 150
+        const marginY = 100
+        data.nodes.forEach(d => {
+
+            let isNewNode = false
+            let node = this.canvas.getFigure(d.node.id)
+            if (node != null) {
+                // Node already exist, updating data
+                node.setName(d.node.name)
+                node.setDescription(d.node.description)
+                node.setIcon(d.node.icon)
+                node.setNodeColor(d.node.color)
+            } else {
+                node = Node.deserialize(d.node)
+                const x = outerNode.x - node.width - marginX
+                const y = outerNode.y - node.height - marginY
+                const p = this.getRandomAdjusted(x, y)
+                this.canvas.add(node, p.x, p.y)
+                isNewNode = true
+            }
+
+            d.connections.forEach(c => {
+                let connection = this.canvas.getLine(c.id)
+                if (connection != null) {
+                    // Connection already exist, updating data
+                    connection.setDescription(c.description)
+                } else {
+                    let srcPort = null
+                    let trgPort = null
+                    let src = null
+                    let trg = null
+                    let x = node.x
+                    let y = node.y
+
+                    if (c.src === node.id) {
+                        // source is node, target should be outerNode
+                        src = node
+                        trg = outerNode
+                        if (c.srcPort === 'output0') {
+                            // from right to left 
+                            srcPort = 'output0'
+                            trgPort = 'input0'
+                            x = outerNode.x - node.width - marginX
+                            y = outerNode.y
+                        } else {
+                            // from bottom down to top
+                            srcPort = 'output1'
+                            trgPort = 'input1'
+                            x = outerNode.x
+                            y = outerNode.y - node.height - marginY
+                        }
+                    } else {
+                        src = outerNode
+                        trg = node
+                        if (c.trgPort === 'input0') {
+                            // from right to left 
+                            srcPort = 'output0'
+                            trgPort = 'input0'
+                            x = outerNode.x + outerNode.width + marginX
+                            y = outerNode.y
+                        } else {
+                            // from bottom down to top
+                            srcPort = 'output1'
+                            trgPort = 'input1'
+                            x = outerNode.x
+                            y = outerNode.y + outerNode.height + marginY
+                        }
+                    }
+                    if (isNewNode) {
+                        // Adjust node pos to match connection
+                        const p = this.getRandomAdjusted(x, y)
+                        node.attr({ x: p.x, y: p.y })
+                    }
+                    // Connection needs to be added
+                    connection = new Connection(c.description, src, srcPort, trg, trgPort, c.id)
+                    this.canvas.add(connection)
+                }
+            })
+        })
+    }
+
+
 
 
     getNodesConnectedToOuterNode(figure) {
         const left = figure.getPort('input0').getConnections().asArray()
+            .filter(c => c.sourcePort.parent.type !== Group.groupType)
             .map(c => { return { node: c.sourcePort.parent.serialize(), connection: c.serialize() } })
         const top = figure.getPort('input1').getConnections().asArray()
+            .filter(c => c.sourcePort.parent.type !== Group.groupType)
             .map(c => { return { node: c.sourcePort.parent.serialize(), connection: c.serialize() } })
         const right = figure.getPort('output0').getConnections().asArray()
+            .filter(c => c.targetPort.parent.type !== Group.groupType)
             .map(c => { return { node: c.targetPort.parent.serialize(), connection: c.serialize() } })
         const bottom = figure.getPort('output1').getConnections().asArray()
+            .filter(c => c.targetPort.parent.type !== Group.groupType)
             .map(c => { return { node: c.targetPort.parent.serialize(), connection: c.serialize() } })
 
         this.sortNodesOnY(left)
@@ -118,45 +235,42 @@ export class InnerCanvas {
         return { left: left, top: top, right: right, bottom: bottom }
     }
 
-    addConnectedNodes(nodes) {
+    addOrUpdateConnectedNodes(nodes) {
         const group = this.canvas.group
-        const marginGroup = 100
-        const marginBetween = 50
+        const marginX = 150
+        const marginY = 100
 
-        let y = group.y
-        let x = group.x - Node.defaultWidth - marginGroup
+        let x = group.x - Node.defaultWidth - marginX
+        let y = group.y + group.height / 2 - Node.defaultHeight / 2
         nodes.left.forEach(data => {
-            const node = this.addNode(data, x, y)
+            const node = this.addNode(data, x, y, nodes.left.length)
             this.addConnection(data, node, group)
-            y = y + Node.defaultHeight + marginBetween
         });
 
-        y = group.y - Node.defaultHeight - marginGroup
-        x = group.x
+        x = group.x + group.width / 1 - Node.defaultWidth / 2
+        y = group.y - Node.defaultHeight - marginY
         nodes.top.forEach(data => {
-            const node = this.addNode(data, x, y)
+            const node = this.addNode(data, x, y, nodes.top.length)
             this.addConnection(data, node, group)
-            x = x + Node.defaultWidth + marginBetween
         });
 
-        y = group.y
-        x = group.x + group.width + marginGroup
+        x = group.x + group.width + marginX
+        y = group.y + group.height / 2 - Node.defaultHeight / 2
         nodes.right.forEach(data => {
-            const node = this.addNode(data, x, y)
+            const node = this.addNode(data, x, y, nodes.right.length)
             this.addConnection(data, group, node)
-            y = y + Node.defaultHeight + marginBetween
         });
 
-        y = group.y + group.height + marginGroup
-        x = group.x
+        x = group.x + group.width / 1 - Node.defaultWidth / 2
+        y = group.y + group.height + marginY
         nodes.bottom.forEach(data => {
-            const node = this.addNode(data, x, y)
+            const node = this.addNode(data, x, y, nodes.bottom.length)
             this.addConnection(data, group, node)
-            x = x + Node.defaultWidth + marginBetween
         });
     }
 
-    addNode(data, x, y) {
+    addNode(data, x, y, count) {
+        const alpha = 0.6
         let node = this.canvas.getFigure(data.node.id)
         if (node != null) {
             // Node already exist, updating data
@@ -164,11 +278,18 @@ export class InnerCanvas {
             node.setDescription(data.node.description)
             node.setIcon(data.node.icon)
             node.setNodeColor(data.node.color)
-            node.attr({ alpha: 0.8, resizeable: false })
+            node.attr({ alpha: alpha, resizeable: false })
         } else {
             // Node needs to be created and added
             node = Node.deserialize(data.node)
-            node.attr({ width: Node.defaultWidth, height: Node.defaultHeight, alpha: 0.8, resizeable: false })
+            node.attr({ width: Node.defaultWidth, height: Node.defaultHeight, alpha: alpha, resizeable: false })
+            const p = this.getRandomAdjusted(x, y)
+            if (count > 1) {
+                // Multiple nodes on same position lets spread a bit
+                const p = this.getRandomAdjusted(x, y)
+                x = p.x
+                y = p.y
+            }
             this.canvas.add(node, x, y)
         }
 
@@ -189,12 +310,12 @@ export class InnerCanvas {
         } else {
             // Connection needs to be added
             connection = new Connection(description, src, srcPort, trg, trgPort, id)
+            this.canvas.add(connection)
         }
 
-        connection.setDashArray("--")
+        //connection.setDashArray("--")
         connection.setStroke(4)
         connection.setDeleteable(false)
-        this.canvas.add(connection)
     }
 
 
@@ -234,5 +355,11 @@ export class InnerCanvas {
 
     sortNodesOnY(nodes) {
         nodes.sort((d1, d2) => d1.node.y < d2.node.y ? -1 : d1.node.y > d2.node.y ? 1 : 0)
+    }
+
+    getRandomAdjusted = (x, y) => {
+        x = x + random(-10, 10)
+        y = y + random(-10, 10)
+        return { x: x, y: y }
     }
 }

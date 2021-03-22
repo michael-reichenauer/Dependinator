@@ -105,7 +105,7 @@ export class InnerDiagram extends draw2d.SetFigure {
         // Add the inner diagram figures and connections (centered within figure)
         this.addFigures(set, dx, dy)
         this.addConnections(set, dx, dy)
-        this.addExternalGroupConnections(set)
+        //this.addExternalGroupConnections(set)
 
         // Set the inner diagram zoom factor, used when zooming outer diagram before showing inner
         this.innerZoom = this.width / diagramWidth
@@ -126,29 +126,29 @@ export class InnerDiagram extends draw2d.SetFigure {
         this.canvasData.connections.forEach(c => this.addConnection(set, c, dx, dy))
     }
 
-    addExternalGroupConnections(set) {
-        // Check which external connections that are active
-        const dashPattern = '--'
-        const hasLeftInput = this.parent.getInputPort(0).getConnections().asArray().length > 0
-        const hasTopInput = this.parent.getInputPort(1).getConnections().asArray().length > 0
-        const hasRightOutput = this.parent.getOutputPort(0).getConnections().asArray().length > 0
-        const hasBottomOutput = this.parent.getOutputPort(1).getConnections().asArray().length > 0
+    // addExternalGroupConnections(set) {
+    //     // Check which external connections that are active
+    //     const dashPattern = '--'
+    //     const hasLeftInput = this.parent.getInputPort(0).getConnections().asArray().length > 0
+    //     const hasTopInput = this.parent.getInputPort(1).getConnections().asArray().length > 0
+    //     const hasRightOutput = this.parent.getOutputPort(0).getConnections().asArray().length > 0
+    //     const hasBottomOutput = this.parent.getOutputPort(1).getConnections().asArray().length > 0
 
-        // Draw lines for each of the active connections
-        const { x, y, w, h } = this.groupRect
-        if (hasLeftInput) {
-            set.push(this.externalLine(0, y + h / 2, x, y + h / 2), dashPattern)
-        }
-        if (hasTopInput) {
-            set.push(this.externalLine(x + w / 2, 0, x + w / 2, y), dashPattern)
-        }
-        if (hasRightOutput) {
-            set.push(this.externalLine(x + w, y + h / 2, this.diagramWidth, y + h / 2), dashPattern)
-        }
-        if (hasBottomOutput) {
-            set.push(this.externalLine(x + w / 2, y + h, x + w / 2, this.diagramHeight), dashPattern)
-        }
-    }
+    //     // Draw lines for each of the active connections
+    //     const { x, y, w, h } = this.groupRect
+    //     if (hasLeftInput) {
+    //         set.push(this.externalLine(0, y + h / 2, x, y + h / 2), dashPattern)
+    //     }
+    //     if (hasTopInput) {
+    //         set.push(this.externalLine(x + w / 2, 0, x + w / 2, y), dashPattern)
+    //     }
+    //     if (hasRightOutput) {
+    //         set.push(this.externalLine(x + w, y + h / 2, this.diagramWidth, y + h / 2), dashPattern)
+    //     }
+    //     if (hasBottomOutput) {
+    //         set.push(this.externalLine(x + w / 2, y + h, x + w / 2, this.diagramHeight), dashPattern)
+    //     }
+    // }
 
     addFigure(set, figure, offsetX, offsetY) {
         switch (figure.type) {
@@ -171,7 +171,6 @@ export class InnerDiagram extends draw2d.SetFigure {
     }
 
     addConnection(set, connection, offsetX, offsetY) {
-        let pathText = null
         const { x, y, w, h } = this.groupRect
 
         if (this.isInternalConnection(connection)) {
@@ -185,10 +184,10 @@ export class InnerDiagram extends draw2d.SetFigure {
             const sp = connection.v[1]
             if (connection.trgPort === 'input0') {
                 // External node left of group
-                set.push(this.externalLine(x, y + h / 2, sp.x + offsetX, sp.y + offsetY))
+                set.push(this.externalLine(0, y + h / 2, sp.x + offsetX, sp.y + offsetY))
             } else {
                 // External node above group
-                set.push(this.externalLine(x + w / 2, y, sp.x + offsetX, sp.y + offsetY))
+                set.push(this.externalLine(x + w / 2, 0, sp.x + offsetX, sp.y + offsetY))
             }
             return
         }
@@ -198,10 +197,10 @@ export class InnerDiagram extends draw2d.SetFigure {
             const tp = connection.v[0]
             if (connection.srcPort === 'output0') {
                 // External node right of group
-                set.push(this.externalLine(tp.x + offsetX, tp.y + offsetY, x + w, y + h / 2, y + h / 2))
+                set.push(this.externalLine(tp.x + offsetX, tp.y + offsetY, this.diagramWidth, y + h / 2, y + h / 2))
             } else {
                 // External node below group
-                set.push(this.externalLine(tp.x + offsetX, tp.y + offsetY, x + w / 2, y + h))
+                set.push(this.externalLine(tp.x + offsetX, tp.y + offsetY, x + w / 2, this.diagramHeight))
             }
         }
 
@@ -274,17 +273,16 @@ export class InnerDiagram extends draw2d.SetFigure {
         })
 
         const path = this.canvas.paper.path(pathText);
-        path.attr({ "stroke-width": 2, "stroke": Colors.connectionColor })
+        path.attr({ "stroke-width": 2, "stroke": Colors.connectionColor, 'arrow-end': 'block-wide-long' })
         return path
     }
 
 
     externalLine(sx, sy, tx, ty) {
         const path = this.canvas.paper.path(`M${sx},${sy}L${tx},${ty}`)
-        path.attr({ "stroke-width": 4, "stroke": Colors.connectionColor, "stroke-dasharray": '--' })
+        path.attr({ "stroke-width": 4, "stroke": Colors.connectionColor, 'arrow-end': 'block-wide-long' })
         return path
     }
-
 
     rect(attr) {
         const f = this.canvas.paper.rect()

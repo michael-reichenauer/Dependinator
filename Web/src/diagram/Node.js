@@ -59,9 +59,9 @@ export default class Node extends draw2d.shape.node.Between {
 
         super({
             id: o.id,
-            width: o.width, height: o.height,
+            width: o.width, height: o.height, stroke: 1.1,
             bgColor: Colors.getNodeColor(o.colorName), color: Colors.getNodeBorderColor(o.colorName),
-            radius: 5,
+            radius: 5, glow: true
         });
 
         this.type = type
@@ -274,6 +274,10 @@ export default class Node extends draw2d.shape.node.Between {
     addPorts() {
         this.createPort("input", new draw2d.layout.locator.XYRelPortLocator(50, 0))
         this.createPort("output", new draw2d.layout.locator.XYRelPortLocator(50, 100))
+
+        // this.getPorts().each(function (i, port) {
+        //     port.setConnectionAnchor(new draw2d.layout.anchor.FanConnectionAnchor(port));
+        // });
     }
 }
 
