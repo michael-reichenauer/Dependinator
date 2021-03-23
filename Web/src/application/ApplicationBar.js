@@ -58,8 +58,11 @@ export default function ApplicationBar({ height }) {
                     onClick={() => PubSub.publish('canvas.ShowTotalDiagram')} />
                 <Button tooltip="Pop to surrounding diagram" disabled={!canPopDiagram} icon={<SaveAltIcon className={style(!canPopDiagram)} style={{ transform: 'rotate(180deg)' }} />}
                     onClick={() => PubSub.publish('canvas.PopInnerDiagram')} />
+
                 <Box m={2} />
                 <Typography className={classes.title} variant="h6" noWrap>{titleText}</Typography>
+                <Box m={0.5} />
+                <Typography className={classes.title} variant="h6" noWrap>- Context</Typography>
 
                 <Typography className={classes.space} variant="h6" noWrap> </Typography>
 
