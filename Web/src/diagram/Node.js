@@ -9,7 +9,6 @@ import { CommandChangeIcon } from "./commandChangeIcon";
 import { createNodeIcon, getNodeIconNames } from "./icons";
 import { InnerDiagramFigure } from "./innerDiagramFigure";
 import { store } from "./store";
-import { InnerDiagramIconLocator, LabelLocator, InnerDiagramLocator } from './nodeLocators'
 
 
 const defaultOptions = (type) => {
@@ -285,3 +284,34 @@ export default class Node extends draw2d.shape.node.Between {
     }
 }
 
+
+export class LabelLocator extends draw2d.layout.locator.XYRelPortLocator {
+    cachedWidth = null
+    constructor(y) {
+        super(0, y)
+    }
+
+    relocate(index, figure) {
+        let parent = figure.getParent()
+        this.applyConsiderRotation(
+            figure,
+            parent.getWidth() / 2 - figure.getWidth() / 2,
+            parent.getHeight() / 100 * this.y
+        )
+    }
+}
+
+
+export class InnerDiagramIconLocator extends draw2d.layout.locator.PortLocator {
+    relocate(index, figure) {
+        const parent = figure.getParent()
+        this.applyConsiderRotation(figure, parent.getWidth() / 2 - 8, parent.getHeight() - 23);
+    }
+}
+
+
+export class InnerDiagramLocator extends draw2d.layout.locator.Locator {
+    relocate(index, target) {
+        target.setPosition(2, 2)
+    }
+}
