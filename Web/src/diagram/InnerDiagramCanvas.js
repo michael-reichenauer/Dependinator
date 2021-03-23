@@ -117,7 +117,8 @@ export class InnerDiagramCanvas {
                     node: n.serialize(),
                     connections: this.serializeExternalConnections(n)
                 }
-            })
+            }),
+            group: group.serialize()
         }
     }
 
@@ -128,6 +129,9 @@ export class InnerDiagramCanvas {
 
 
     addOrUpdateExternalNodes(data, outerNode) {
+        outerNode.setName(data.group.name)
+        outerNode.setDescription(data.group.description)
+
         const marginX = 150
         const marginY = 100
         data.nodes.forEach(d => {

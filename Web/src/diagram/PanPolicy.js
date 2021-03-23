@@ -1,6 +1,4 @@
 import draw2d from "draw2d";
-import Group from "./Group";
-
 
 
 export class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolicy {

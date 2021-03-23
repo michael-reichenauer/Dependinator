@@ -1,5 +1,6 @@
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
+import { Item } from "../common/ContextMenu";
 import Colors from "./colors";
 
 
@@ -65,6 +66,14 @@ export default class Group extends draw2d.shape.composite.Raft {
         }
     }
 
+    getContextMenuItems(x, y) {
+        // Reuse the canvas context menu
+        return [
+            ...this.getCanvas().canvas.getContextMenuItems(x, y),
+            new Item('Set default size', () => this.setDefaultSize()),
+        ]
+    }
+
     setName(name) {
         this.nameLabel?.setText(name)
     }
@@ -73,21 +82,22 @@ export default class Group extends draw2d.shape.composite.Raft {
         this.descriptionLabel?.setText(description)
     }
 
-
-    getContextMenuItems(x, y) {
-        // Reuse the canvas context menu
-        return this.getCanvas().canvas.getContextMenuItems(x, y)
+    setDefaultSize() {
+        this.setWidth(Group.defaultWidth)
+        this.setHeight(Group.defaultHeight)
     }
 
     addLabels(name, description) {
         this.nameLabel = new draw2d.shape.basic.Label({
-            text: name, stroke: 0, fontSize: 40, fontColor: Colors.canvasText, bold: true,
+            text: name, stroke: 0, fontSize: 30, fontColor: Colors.canvasText, bold: true,
         })
+        this.nameLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
         this.add(this.nameLabel, new GroupNameLocator());
 
         this.descriptionLabel = new draw2d.shape.basic.Label({
             text: description, stroke: 0, fontSize: 14, fontColor: Colors.canvasText, bold: false,
         })
+        this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
         this.add(this.descriptionLabel, new GroupDescriptionLocator());
     }
 
@@ -108,7 +118,7 @@ class GroupNameLocator extends draw2d.layout.locator.Locator {
 
 class GroupDescriptionLocator extends draw2d.layout.locator.Locator {
     relocate(index, target) {
-        target.setPosition(4, -22)
+        target.setPosition(4, -24)
     }
 }
 

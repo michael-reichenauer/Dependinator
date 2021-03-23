@@ -117,6 +117,7 @@ export default class Node extends draw2d.shape.node.Between {
             new NestedItem('Change icon', iconItems),
             new Item('To front', () => this.toFront()),
             new Item('To back', () => this.toBack()),
+            new Item('Set default size', () => this.setDefaultSize()),
             new Item('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)))
         ]
     }
@@ -131,6 +132,11 @@ export default class Node extends draw2d.shape.node.Between {
 
     getAllConnections() {
         return this.getPorts().asArray().flatMap(p => p.getConnections().asArray())
+    }
+
+    setDefaultSize() {
+        this.setWidth(Node.defaultWidth)
+        this.setHeight(Node.defaultHeight)
     }
 
     setNodeColor(colorName) {
@@ -208,6 +214,11 @@ export default class Node extends draw2d.shape.node.Between {
     }
 
     handleResize() {
+        this.nameLabel?.setTextWidth(this.width)
+        this.nameLabel?.repaint()
+        this.descriptionLabel?.setTextWidth(this.width)
+        this.descriptionLabel?.repaint()
+
         if (this.innerDiagram == null) {
             return
         }
@@ -225,12 +236,12 @@ export default class Node extends draw2d.shape.node.Between {
     addLabels = (name, description) => {
         const fontColor = Colors.getNodeFontColor(this.colorName)
 
-        this.nameLabel = new draw2d.shape.basic.Label({
+        this.nameLabel = new LabelText(this.width, {
             text: name, stroke: 0,
             fontSize: 20, fontColor: fontColor, bold: true,
         })
 
-        this.descriptionLabel = new draw2d.shape.basic.Text({
+        this.descriptionLabel = new LabelText(this.width, {
             text: description, stroke: 0,
             fontSize: 14, fontColor: fontColor, bold: false,
         })
@@ -239,7 +250,7 @@ export default class Node extends draw2d.shape.node.Between {
         this.nameLabel.labelLocator = new LabelLocator(7)
         this.add(this.nameLabel, this.nameLabel.labelLocator);
         this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-        this.descriptionLabel.labelLocator = new LabelLocator(30)
+        this.descriptionLabel.labelLocator = new LabelLocator(40)
         this.add(this.descriptionLabel, this.descriptionLabel.labelLocator);
     }
 
@@ -313,5 +324,59 @@ export class InnerDiagramIconLocator extends draw2d.layout.locator.PortLocator {
 export class InnerDiagramLocator extends draw2d.layout.locator.Locator {
     relocate(index, target) {
         target.setPosition(2, 2)
+    }
+}
+
+
+class LabelText extends draw2d.shape.basic.Text {
+    textWidth = 0
+    constructor(textWidth, attr, getter, setter) {
+        super(attr, getter, setter)
+        this.textWidth = textWidth
+    }
+
+    setTextWidth(textWidth) {
+        this.cachedWrappedAttr = null
+        this.textWidth = textWidth
+    }
+    wrappedTextAttr(text, width) {
+        let words = text.split(" ")
+        if (this.canvas === null || words.length === 0) {
+            return { text: text, width: width, height: 20 }
+        }
+
+        if (this.cachedWrappedAttr === null) {
+            let abc = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            let svgText = this.canvas.paper.text(0, 0, "").attr({ ...this.calculateTextAttr(), ...{ text: abc } })
+
+            // get a good estimation of a letter width...not correct but this is working for the very first draft implementation
+            let letterWidth = svgText.getBBox(true).width / abc.length
+
+            let s = [words[0]], x = s[0].length * letterWidth
+            let w = null
+            for (let i = 1; i < words.length; i++) {
+                w = words[i]
+                let l = w.length * letterWidth
+                if ((x + l) > this.textWidth) {
+                    s.push("\n")
+                    x = l
+                } else {
+                    s.push(" ")
+                    x += l
+                }
+                s.push(w)
+            }
+            // set the wrapped text and get the resulted bounding box
+            //
+            svgText.attr({ text: s.join("") })
+            let bbox = svgText.getBBox(true)
+            svgText.remove()
+            this.cachedWrappedAttr = {
+                text: s.join(""),
+                width: (Math.max(width, bbox.width) + this.padding.left + this.padding.right),
+                height: (bbox.height + this.padding.top + this.padding.bottom)
+            }
+        }
+        return this.cachedWrappedAttr
     }
 }
