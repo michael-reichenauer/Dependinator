@@ -35,7 +35,7 @@ export default class Group extends draw2d.shape.composite.Raft {
         super({
             id: o.id, width: o.width, height: o.height,
             bgColor: Colors.canvasBackground, alpha: 0.5, color: Colors.canvasText,
-            dasharray: '- ', radius: 5,
+            dasharray: '- ', radius: 5, stroke: 2
         });
 
         this.setDeleteable(false)

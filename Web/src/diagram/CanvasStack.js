@@ -1,4 +1,5 @@
 import draw2d from "draw2d";
+import Group from "./Group";
 
 export default class CanvasStack {
     diagramStack = []
@@ -86,15 +87,23 @@ export default class CanvasStack {
         canvas.commonPorts = canvasData.commonPorts
         canvas.commandStack = canvasData.commandStack
 
-        canvasData.figures.each(function (i, e) {
-            e.setCanvas(canvas)
-            e.repaint()
-            e.nameLabel?.repaint()
-        })
+        // Set canvas first in lines (needed to restore e.g group)
         canvasData.lines.each(function (i, e) {
             e.setCanvas(canvas)
+
+        })
+
+        // Set canvas for figures (group need that lines have been set)
+        canvasData.figures.each(function (i, e) {
+            e.setCanvas(canvas)
+        })
+
+        // Repaint lines and figures
+        canvasData.lines.each(function (i, e) {
+            e.repaint()
+        })
+        canvasData.figures.each(function (i, e) {
             e.repaint()
         })
     }
-
 }
