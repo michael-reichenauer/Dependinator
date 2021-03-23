@@ -6,7 +6,7 @@ import Connection from "./Connection";
 import Group from "./Group";
 import Node from "./Node";
 
-export class InnerCanvas {
+export class InnerDiagramCanvas {
     canvas = null
     canvasStack = null
     store = null
