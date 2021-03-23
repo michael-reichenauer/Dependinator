@@ -3,10 +3,14 @@ import { ZoomPolicy } from "./ZoomPolicy"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { PanPolicy } from "./PanPolicy";
 import Colors from "./colors";
+import { random } from "../common/utils";
 
+
+const randomDist = 30
 
 export default class CanvasEx extends draw2d.Canvas {
     name = 'root'
+
 
     constructor(canvasId, onEditMode, width, height) {
         super(canvasId, width, height);
@@ -88,6 +92,19 @@ export default class CanvasEx extends draw2d.Canvas {
             "background": background,
             "background-size": backgroundSize
         })
+    }
+
+    addAtApproximately(figure, x, y) {
+        if (null != this.getFigures().asArray().find(f => f.x === x && f.y === y)) {
+            // Figure exists at that place, lets retry with other coordinate
+            x = x + random(-randomDist, randomDist)
+            y = y + random(-randomDist, randomDist)
+            this.addAtApproximately(figure, x, y)
+            return
+        }
+
+        // No other figure at this place, lets add
+        this.add(figure, x, y)
     }
 
 

@@ -1,6 +1,5 @@
 import draw2d from "draw2d";
 import { timing } from "../common/timing";
-import { random } from "../common/utils";
 import { addDefaultInnerDiagram } from "./addDefault";
 import Connection from "./Connection";
 import Group from "./Group";
@@ -127,7 +126,6 @@ export class InnerDiagramCanvas {
     }
 
 
-
     addOrUpdateExternalNodes(data, outerNode) {
         const marginX = 150
         const marginY = 100
@@ -146,7 +144,7 @@ export class InnerDiagramCanvas {
                 const x = outerNode.x - node.width - marginX
                 const y = outerNode.y - node.height - marginY
                 const p = this.getRandomAdjusted(x, y)
-                this.canvas.add(node, p.x, p.y)
+                this.canvas.addAtApproximately(node, p.x, p.y)
                 isNewNode = true
             }
 
@@ -243,33 +241,33 @@ export class InnerDiagramCanvas {
         let x = group.x - Node.defaultWidth - marginX
         let y = group.y + group.height / 2 - Node.defaultHeight / 2
         nodes.left.forEach(data => {
-            const node = this.addNode(data, x, y, nodes.left.length)
+            const node = this.addNode(data, x, y)
             this.addConnection(data, node, group)
         });
 
         x = group.x + group.width / 1 - Node.defaultWidth / 2
         y = group.y - Node.defaultHeight - marginY
         nodes.top.forEach(data => {
-            const node = this.addNode(data, x, y, nodes.top.length)
+            const node = this.addNode(data, x, y)
             this.addConnection(data, node, group)
         });
 
         x = group.x + group.width + marginX
         y = group.y + group.height / 2 - Node.defaultHeight / 2
         nodes.right.forEach(data => {
-            const node = this.addNode(data, x, y, nodes.right.length)
+            const node = this.addNode(data, x, y)
             this.addConnection(data, group, node)
         });
 
         x = group.x + group.width / 1 - Node.defaultWidth / 2
         y = group.y + group.height + marginY
         nodes.bottom.forEach(data => {
-            const node = this.addNode(data, x, y, nodes.bottom.length)
+            const node = this.addNode(data, x, y)
             this.addConnection(data, group, node)
         });
     }
 
-    addNode(data, x, y, count) {
+    addNode(data, x, y) {
         const alpha = 0.6
         let node = this.canvas.getFigure(data.node.id)
         if (node != null) {
@@ -283,14 +281,7 @@ export class InnerDiagramCanvas {
             // Node needs to be created and added
             node = Node.deserialize(data.node)
             node.attr({ width: Node.defaultWidth, height: Node.defaultHeight, alpha: alpha, resizeable: false })
-            const p = this.getRandomAdjusted(x, y)
-            if (count > 1) {
-                // Multiple nodes on same position lets spread a bit
-                const p = this.getRandomAdjusted(x, y)
-                x = p.x
-                y = p.y
-            }
-            this.canvas.add(node, x, y)
+            this.canvas.addAtApproximately(node, x, y)
         }
 
         node.setDeleteable(false)
@@ -355,11 +346,5 @@ export class InnerDiagramCanvas {
 
     sortNodesOnY(nodes) {
         nodes.sort((d1, d2) => d1.node.y < d2.node.y ? -1 : d1.node.y > d2.node.y ? 1 : 0)
-    }
-
-    getRandomAdjusted = (x, y) => {
-        x = x + random(-10, 10)
-        y = y + random(-10, 10)
-        return { x: x, y: y }
     }
 }
