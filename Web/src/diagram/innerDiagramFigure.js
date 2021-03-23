@@ -162,7 +162,7 @@ export class InnerDiagramFigure extends draw2d.SetFigure {
                 break;
             case Group.groupType:
                 set.push(this.createGroupNode(figure.x + offsetX, figure.y + offsetY, figure.w, figure.h))
-                set.push(this.createGroupName(figure.x + offsetX, figure.y + offsetY, figure.w, figure.name))
+                set.push(this.createGroupName(figure.x + offsetX, figure.y + offsetY, figure.w, this.parent.getName()))
                 break;
             default:
                 // Ignore other types

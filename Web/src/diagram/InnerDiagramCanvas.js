@@ -49,6 +49,7 @@ export class InnerDiagramCanvas {
         }
 
         t.log('loaded diagram')
+        this.updateGroup(node)
         this.addOrUpdateConnectedNodes(connectedNodes)
         t.log('added connected nodes')
 
@@ -236,6 +237,11 @@ export class InnerDiagramCanvas {
         this.sortNodesOnX(bottom)
 
         return { left: left, top: top, right: right, bottom: bottom }
+    }
+
+    updateGroup(node) {
+        this.canvas.group.setName(node.getName())
+        this.canvas.group.setDescription(node.getDescription())
     }
 
     addOrUpdateConnectedNodes(nodes) {
