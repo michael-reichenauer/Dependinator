@@ -250,7 +250,7 @@ export default class Node extends draw2d.shape.node.Between {
         this.nameLabel.labelLocator = new LabelLocator(7)
         this.add(this.nameLabel, this.nameLabel.labelLocator);
         this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-        this.descriptionLabel.labelLocator = new LabelLocator(40)
+        this.descriptionLabel.labelLocator = new LabelLocator(45)
         this.add(this.descriptionLabel, this.descriptionLabel.labelLocator);
     }
 

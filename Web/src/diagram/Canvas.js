@@ -82,8 +82,8 @@ export default class Canvas {
 
         return [
             new Item('Add node', () => this.addNode(Node.nodeType, pos)),
-            new Item('Add user node', () => this.addNode(Node.userType, pos)),
-            new Item('Add external node', () => this.addNode(Node.externalType, pos)),
+            new Item('Add external user', () => this.addNode(Node.userType, pos)),
+            new Item('Add external system', () => this.addNode(Node.externalType, pos)),
             new Item('Pop to surrounding diagram (dbl-click)', () => PubSub.publish('canvas.PopInnerDiagram'),
                 true, !this.canvasStack.isRoot()),
         ]

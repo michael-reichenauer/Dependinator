@@ -1,6 +1,6 @@
 import React from "react";
 import PubSub from 'pubsub-js'
-import { Typography, fade, AppBar, Toolbar, IconButton, Tooltip, FormControlLabel, Switch, } from "@material-ui/core";
+import { Typography, fade, AppBar, Toolbar, IconButton, Tooltip, FormControlLabel, Switch, Box, } from "@material-ui/core";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { ApplicationMenu } from "./ApplicationMenu"
 import PersonAddIcon from '@material-ui/icons/PersonAdd';
@@ -36,7 +36,7 @@ export default function ApplicationBar({ height }) {
     return (
         <AppBar position="static" style={{ height: height }}>
             <Toolbar>
-                <Typography className={classes.title} variant="h6" noWrap>{titleText}</Typography>
+
 
                 <Button tooltip="Undo" disabled={!canUndo} icon={<UndoIcon className={style(!canUndo)} />}
                     onClick={() => PubSub.publish('canvas.Undo')} />
@@ -47,9 +47,9 @@ export default function ApplicationBar({ height }) {
 
                 <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={style()} />}
                     onClick={() => PubSub.publish('canvas.AddNode')} />
-                <Button tooltip="Add user node" icon={<PersonAddIcon className={style()} />}
+                <Button tooltip="Add external user" icon={<PersonAddIcon className={style()} />}
                     onClick={() => PubSub.publish('canvas.AddUserNode')} />
-                <Button tooltip="Add external node" icon={<LibraryAddOutlinedIcon className={style()} />}
+                <Button tooltip="Add external system" icon={<LibraryAddOutlinedIcon className={style()} />}
                     onClick={() => PubSub.publish('canvas.AddExternalNode')} />
 
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
@@ -58,6 +58,8 @@ export default function ApplicationBar({ height }) {
                     onClick={() => PubSub.publish('canvas.ShowTotalDiagram')} />
                 <Button tooltip="Pop to surrounding diagram" disabled={!canPopDiagram} icon={<SaveAltIcon className={style(!canPopDiagram)} style={{ transform: 'rotate(180deg)' }} />}
                     onClick={() => PubSub.publish('canvas.PopInnerDiagram')} />
+                <Box m={2} />
+                <Typography className={classes.title} variant="h6" noWrap>{titleText}</Typography>
 
                 <Typography className={classes.space} variant="h6" noWrap> </Typography>
 
