@@ -24,7 +24,7 @@ const defaultDiagramData = (name) => {
     }
 }
 
-export class InnerDiagram extends draw2d.SetFigure {
+export class InnerDiagramFigure extends draw2d.SetFigure {
     NAME = "InnerDiagram"
     static innerPadding = 2
 
@@ -32,8 +32,8 @@ export class InnerDiagram extends draw2d.SetFigure {
 
     constructor(parent, canvasData) {
         super({
-            width: parent.width - InnerDiagram.innerPadding * 2,
-            height: parent.height - InnerDiagram.innerPadding * 2,
+            width: parent.width - InnerDiagramFigure.innerPadding * 2,
+            height: parent.height - InnerDiagramFigure.innerPadding * 2,
             keepAspectRatio: true,
             color: 'none',
             bgColor: Colors.canvasBackground,

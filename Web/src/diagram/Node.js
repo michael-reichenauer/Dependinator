@@ -7,7 +7,7 @@ import Colors from "./colors";
 import { CommandChangeColor } from "./commandChangeColor";
 import { CommandChangeIcon } from "./commandChangeIcon";
 import { createNodeIcon, getNodeIconNames } from "./icons";
-import { InnerDiagram } from "./innerDiagram";
+import { InnerDiagramFigure } from "./innerDiagramFigure";
 import { store } from "./store";
 import { InnerDiagramIconLocator, LabelLocator, InnerDiagramLocator } from './nodeLocators'
 
@@ -169,7 +169,7 @@ export default class Node extends draw2d.shape.node.Between {
         this.setChildrenVisible(false)
 
         const canvasData = store.read(this.getId())
-        this.innerDiagram = new InnerDiagram(this, canvasData)
+        this.innerDiagram = new InnerDiagramFigure(this, canvasData)
         this.innerDiagram.onClick = clickHandler(
             () => this.hideInnerDiagram(),
             () => this.editInnerDiagram())
