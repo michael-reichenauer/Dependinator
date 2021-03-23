@@ -1,5 +1,5 @@
 import draw2d from "draw2d";
-import Group from "./Group";
+
 
 export default class CanvasStack {
     diagramStack = []

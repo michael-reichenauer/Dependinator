@@ -1,4 +1,5 @@
 import draw2d from "draw2d";
+import Group from "./Group";
 
 
 
@@ -24,6 +25,7 @@ export class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolicy {
         this.isReadOnly = true
         this.isReadOnlySelect = false
         this.isPort = false
+        this.isResizeHandle = false
     }
 
     setEditMode(isEditMode) {
@@ -43,7 +45,7 @@ export class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolicy {
     }
 
 
-    select(canvas, figure) {
+    select(canvas, figure, x, y) {
         if (figure == null) {
             // clicked outside a figure, lets set readonly mode
             this.setEditMode(false)
@@ -132,6 +134,9 @@ export class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolicy {
                 this.isPort = true
                 return
             }
+            if (figure instanceof draw2d.ResizeHandle) {
+                this.isResizeHandle = true
+            }
 
             if (figure !== null && figure.isSelectable() === false && figure.isDraggable() === false) {
                 figure = null;
@@ -216,14 +221,14 @@ export class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolicy {
     }
 
     onMouseDrag(canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey) {
-        if (this.isReadOnly && !this.isPort) {
+        if (this.isReadOnly && !this.isPort && !this.isResizeHandle) {
             // Read only mode and not dragging a port, let pan the canvas
             this.isReadOnlySelect = false
 
-            if (!this.canvas.selection.all.isEmpty()) {
+            if (!canvas.selection.all.isEmpty()) {
                 // Deselect items, since panning with selected figures is slow
-                this.canvas.selection.getAll().each((i, f) => f.unselect())
-                this.canvas.selection.clear()
+                canvas.selection.getAll().each((i, f) => f.unselect())
+                canvas.selection.clear()
             }
 
             let area = canvas.getScrollArea()
@@ -282,6 +287,7 @@ export class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolicy {
     onMouseUp(canvas, x, y, shiftKey, ctrlKey) {
         // No longer port handling
         this.isPort = false
+        this.isResizeHandle = false
 
         if (this.isReadOnlySelect) {
             // Was a click on figure (started in select), lets enable edit mode
