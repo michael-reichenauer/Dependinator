@@ -7,6 +7,8 @@ import { Backdrop, makeStyles } from "@material-ui/core";
 import ContextMenu from "../common/ContextMenu";
 
 
+
+export const titleAtom = atom('System')
 export const canUndoAtom = atom(false)
 export const canRedoAtom = atom(false)
 export const canPopDiagramAtom = atom(false)
@@ -20,6 +22,7 @@ export default function Diagram({ width, height }) {
     const canvasRef = useRef(null)
 
     const [contextMenu, setContextMenu] = useState()
+    const [, setTitle] = useAtom(titleAtom)
     const [, setCanUndo] = useAtom(canUndoAtom)
     const [, setCanRedo] = useAtom(canRedoAtom)
     const [, setCanPopDiagram] = useAtom(canPopDiagramAtom)
@@ -30,6 +33,7 @@ export default function Diagram({ width, height }) {
     useEffect(() => {
         // Initialize canvas
         const callbacks = {
+            setTitle: setTitle,
             setCanUndo: setCanUndo,
             setCanRedo: setCanRedo,
             setProgress: setProgress,

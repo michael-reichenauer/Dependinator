@@ -4,6 +4,13 @@ import Group from "./Group";
 import Node from "./Node";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
 
+const systemId = 'system'
+
+export const setSystemNodeReadOnly = (canvas) => {
+    const systemNode = canvas.getFigure(systemId)
+    systemNode?.setDeleteable(false)
+    return systemNode
+}
 
 export const addFigureToCanvas = (canvas, figure, p) => {
     const x = p.x - figure.width / 2
@@ -17,6 +24,9 @@ export const addDefaultNewDiagram = (canvas) => {
     const marginY = 200
     const user = new Node(Node.userType)
     const system = new Node(Node.nodeType)
+    system.setId(systemId)
+    system.setIcon('Diagram')
+    system.setName('System')
     const external = new Node(Node.externalType)
 
     // Add nodes at the center of the canvas
@@ -25,14 +35,15 @@ export const addDefaultNewDiagram = (canvas) => {
     const x = cx
     const y = cy - user.height / 2 - marginY
 
-    addFigureToCanvas(canvas, user, { x: x, y: y })
+    addFigure(canvas, user, { x: x, y: y })
 
-    addFigureToCanvas(canvas, system, { x: x, y: user.y + user.height + marginY })
-    addConnectionToCanvas(canvas, new Connection(null, user, 'output1', system, 'input1'))
+    addFigure(canvas, system, { x: x, y: user.y + user.height + marginY })
+    canvas.add(new Connection(null, user, 'output1', system, 'input1'))
 
-    addFigureToCanvas(canvas, external, { x: x, y: system.y + system.height + marginY })
-    addConnectionToCanvas(canvas, new Connection(null, system, 'output1', external, 'input1'))
+    addFigure(canvas, external, { x: x, y: system.y + system.height + marginY })
+    canvas.add(new Connection(null, system, 'output1', external, 'input1'))
 
+    setSystemNodeReadOnly(canvas)
     zoomAndMoveShowTotalDiagram(canvas)
 }
 
@@ -52,6 +63,8 @@ export const addDefaultInnerDiagram = (canvas, name, description) => {
 }
 
 
-const addConnectionToCanvas = (canvas, connection) => {
-    canvas.runCmd(new draw2d.command.CommandAdd(canvas, connection, 0, 0))
+const addFigure = (canvas, figure, p) => {
+    const x = p.x - figure.width / 2
+    const y = p.y - figure.height / 2
+    canvas.add(figure, x, y)
 }

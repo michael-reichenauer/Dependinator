@@ -10,7 +10,7 @@ import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
 import SaveAltIcon from '@material-ui/icons/SaveAlt';
-import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom } from "../diagram/Diagram";
+import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom, titleAtom } from "../diagram/Diagram";
 import { useAtom } from "jotai";
 import { withStyles } from "@material-ui/styles";
 import { grey } from "@material-ui/core/colors";
@@ -18,6 +18,7 @@ import { grey } from "@material-ui/core/colors";
 
 export default function ApplicationBar({ height }) {
     const classes = useAppBarStyles();
+    const [titleText] = useAtom(titleAtom)
     const [editMode, setEditMode] = useAtom(editModeAtom);
     const [canUndo] = useAtom(canUndoAtom)
     const [canRedo] = useAtom(canRedoAtom)
@@ -35,7 +36,7 @@ export default function ApplicationBar({ height }) {
     return (
         <AppBar position="static" style={{ height: height }}>
             <Toolbar>
-                <Typography className={classes.title} variant="h6" noWrap>Dependinator</Typography>
+                <Typography className={classes.title} variant="h6" noWrap>{titleText}</Typography>
 
                 <Button tooltip="Undo" disabled={!canUndo} icon={<UndoIcon className={style(!canUndo)} />}
                     onClick={() => PubSub.publish('canvas.Undo')} />

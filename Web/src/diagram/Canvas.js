@@ -10,7 +10,7 @@ import CanvasEx from "./CanvasEx";
 import { Item } from "../common/ContextMenu";
 import CanvasStack from "./CanvasStack";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
-import { addDefaultNewDiagram, addFigureToCanvas } from "./addDefault";
+import { addDefaultNewDiagram, addFigureToCanvas, setSystemNodeReadOnly } from "./addDefault";
 import { InnerDiagramCanvas } from "./InnerDiagramCanvas";
 
 
@@ -39,6 +39,9 @@ export default class Canvas {
         if (!this.load(this.canvas.name)) {
             addDefaultNewDiagram(this.canvas)
         }
+        const systemNode = setSystemNodeReadOnly(this.canvas)
+        this.callbacks.setTitle(systemNode.getName())
+
 
         this.handleDoubleClick(this.canvas)
         this.handleEditChanges(this.canvas)
@@ -183,6 +186,10 @@ export default class Canvas {
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
                 if (e.action === "POST_EXECUTE") {
+                    if (e.command?.figure?.parent?.getId() === 'system') {
+                        // Update the title whenever the system node name changes
+                        this.callbacks.setTitle(e.command.figure.parent.getName())
+                    }
                     this.save(canvas.name)
                 }
             }

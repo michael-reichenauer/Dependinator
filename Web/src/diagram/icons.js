@@ -11,6 +11,7 @@ const nodeIcons = {
     Cloud: () => new draw2d.shape.icon.Cloud(),
     Gear: () => new draw2d.shape.icon.Gear(),
     Key: () => new draw2d.shape.icon.Key(),
+    Diagram: () => new draw2d.shape.icon.Diagram({ angle: 180 }),
 
     Ie: () => new draw2d.shape.icon.Ie(),
     Chrome: () => new draw2d.shape.icon.Chrome(),
