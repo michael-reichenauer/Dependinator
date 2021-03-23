@@ -130,6 +130,10 @@ export default class Node extends draw2d.shape.node.Between {
         this.descriptionLabel?.setText(description)
     }
 
+    getAllConnections() {
+        return this.getPorts().asArray().flatMap(p => p.getConnections().asArray())
+    }
+
     setNodeColor(colorName) {
         this.colorName = colorName
         const color = Colors.getNodeColor(colorName)

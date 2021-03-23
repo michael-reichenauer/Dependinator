@@ -29,7 +29,7 @@ export default class Group extends draw2d.shape.composite.Raft {
     getName = () => this.nameLabel?.text ?? ''
     getDescription = () => this.descriptionLabel?.text ?? ''
 
-    constructor(name = 'Group', options) {
+    constructor(name = 'Group', description = 'Description', options) {
         const o = { ...defaultOptions(), ...options }
 
         super({
@@ -39,7 +39,7 @@ export default class Group extends draw2d.shape.composite.Raft {
         });
 
         this.setDeleteable(false)
-        this.addLabel(name)
+        this.addLabels(name, description)
         this.addPorts()
 
         this.on("click", (s, e) => PubSub.publish('canvas.SetEditMode', false))
@@ -54,8 +54,8 @@ export default class Group extends draw2d.shape.composite.Raft {
     }
 
     static deserialize(data) {
-        return new Group(data.name,
-            { id: data.id, width: data.w, height: data.h, description: data.description })
+        return new Group(data.name, data.description,
+            { id: data.id, width: data.w, height: data.h })
     }
 
     serialize() {
@@ -65,16 +65,30 @@ export default class Group extends draw2d.shape.composite.Raft {
         }
     }
 
+    setName(name) {
+        this.nameLabel?.setText(name)
+    }
+
+    setDescription(description) {
+        this.descriptionLabel?.setText(description)
+    }
+
+
     getContextMenuItems(x, y) {
         // Reuse the canvas context menu
         return this.getCanvas().canvas.getContextMenuItems(x, y)
     }
 
-    addLabel(name) {
+    addLabels(name, description) {
         this.nameLabel = new draw2d.shape.basic.Label({
             text: name, stroke: 0, fontSize: 40, fontColor: Colors.canvasText, bold: true,
         })
         this.add(this.nameLabel, new GroupNameLocator());
+
+        this.descriptionLabel = new draw2d.shape.basic.Label({
+            text: description, stroke: 0, fontSize: 14, fontColor: Colors.canvasText, bold: false,
+        })
+        this.add(this.descriptionLabel, new GroupDescriptionLocator());
     }
 
     addPorts() {
@@ -88,8 +102,14 @@ export default class Group extends draw2d.shape.composite.Raft {
 
 class GroupNameLocator extends draw2d.layout.locator.Locator {
     relocate(index, target) {
-        let targetBoundingBox = target.getBoundingBox()
-        target.setPosition(1, -(targetBoundingBox.h - 8))
+        target.setPosition(2, -60)
     }
 }
+
+class GroupDescriptionLocator extends draw2d.layout.locator.Locator {
+    relocate(index, target) {
+        target.setPosition(4, -22)
+    }
+}
+
 

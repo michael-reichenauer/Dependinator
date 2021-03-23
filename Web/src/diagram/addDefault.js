@@ -14,28 +14,31 @@ export const addFigureToCanvas = (canvas, figure, p) => {
 
 export const addDefaultNewDiagram = (canvas) => {
     // Add a user connected to a system, connected to an external system 
+    const marginY = 200
     const user = new Node(Node.userType)
     const system = new Node(Node.nodeType)
     const external = new Node(Node.externalType)
 
-    // At the center of the canvas
+    // Add nodes at the center of the canvas
     const cx = canvas.getDimension().getWidth() / 2
     const cy = canvas.getDimension().getHeight() / 2
+    const x = cx
+    const y = cy - user.height / 2 - marginY
 
-    addFigureToCanvas(canvas, user, { x: cx + 200, y: cy + 400 })
+    addFigureToCanvas(canvas, user, { x: x, y: y })
 
-    addFigureToCanvas(canvas, system, { x: cx + 600, y: cy + 400 })
-    addConnectionToCanvas(canvas, new Connection(null, user, 'output0', system, 'input0'))
+    addFigureToCanvas(canvas, system, { x: x, y: user.y + user.height + marginY })
+    addConnectionToCanvas(canvas, new Connection(null, user, 'output1', system, 'input1'))
 
-    addFigureToCanvas(canvas, external, { x: cx + 1000, y: cy + 400 })
-    addConnectionToCanvas(canvas, new Connection(null, system, 'output0', external, 'input0'))
+    addFigureToCanvas(canvas, external, { x: x, y: system.y + system.height + marginY })
+    addConnectionToCanvas(canvas, new Connection(null, system, 'output1', external, 'input1'))
 
     zoomAndMoveShowTotalDiagram(canvas)
 }
 
-export const addDefaultInnerDiagram = (canvas, name) => {
+export const addDefaultInnerDiagram = (canvas, name, description) => {
     // Add a default group at the center of the canvas
-    const group = new Group(name)
+    const group = new Group(name, description)
     const d = canvas.getDimension()
     const gx = d.getWidth() / 2 + (canvas.getWidth() - 1000) / 2
     const gy = d.getHeight() / 2 + 250

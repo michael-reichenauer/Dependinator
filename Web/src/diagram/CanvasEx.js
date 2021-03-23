@@ -23,8 +23,8 @@ export default class CanvasEx extends draw2d.Canvas {
 
         // Center the canvas
         const area = this.getScrollArea()
-        area.scrollLeft(width / 2)
-        area.scrollTop(height / 2)
+        area.scrollLeft(width / 2 - this.getWidth() / 2)
+        area.scrollTop(height / 2 - this.getHeight() / 2)
 
         this.panPolicy = new PanPolicy(onEditMode)
         this.installEditPolicy(this.panPolicy)

@@ -45,7 +45,7 @@ export class InnerDiagramCanvas {
 
         // Load inner diagram or a default group node if first time
         if (!this.load(node.getId())) {
-            addDefaultInnerDiagram(this.canvas, node.getName())
+            addDefaultInnerDiagram(this.canvas, node.getName(), node.getDescription())
         }
 
         t.log('loaded diagram')
@@ -252,7 +252,7 @@ export class InnerDiagramCanvas {
             addedNodes.push(node)
         });
 
-        x = group.x + group.width / 1 - Node.defaultWidth / 2
+        x = group.x + group.width / 2 - Node.defaultWidth / 2
         y = group.y - Node.defaultHeight - marginY
         nodes.top.forEach(data => {
             const node = this.addConnectedNode(data, x, y)
@@ -268,7 +268,7 @@ export class InnerDiagramCanvas {
             addedNodes.push(node)
         });
 
-        x = group.x + group.width / 1 - Node.defaultWidth / 2
+        x = group.x + group.width / 2 - Node.defaultWidth / 2
         y = group.y + group.height + marginY
         nodes.bottom.forEach(data => {
             const node = this.addConnectedNode(data, x, y)
@@ -282,13 +282,14 @@ export class InnerDiagramCanvas {
 
         externalNodes.forEach(n => {
             if (n.isConnected) {
+                // Node is connected from the outside
                 return
             }
 
-            n.getPorts().asArray().flatMap(p => p.getConnections().asArray()).forEach(c => this.canvas.remove(c))
+            // Node is not connected from the outside, remove all node connections and the node
+            n.getAllConnections().forEach(c => this.canvas.remove(c))
             this.canvas.remove(n)
         })
-
     }
 
     addConnectedNode(data, x, y) {
