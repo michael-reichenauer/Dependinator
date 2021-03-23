@@ -140,11 +140,8 @@ export class InnerDiagramCanvas {
                 node.setIcon(d.node.icon)
                 node.setNodeColor(d.node.color)
             } else {
+                // New node needed (will be added below)
                 node = Node.deserialize(d.node)
-                const x = outerNode.x - node.width - marginX
-                const y = outerNode.y - node.height - marginY
-                const p = this.getRandomAdjusted(x, y)
-                this.canvas.addAtApproximately(node, p.x, p.y)
                 isNewNode = true
             }
 
@@ -197,14 +194,22 @@ export class InnerDiagramCanvas {
                     }
                     if (isNewNode) {
                         // Adjust node pos to match connection
-                        const p = this.getRandomAdjusted(x, y)
-                        node.attr({ x: p.x, y: p.y })
+                        this.canvas.addAtApproximately(node, x, y)
+                        isNewNode = false
                     }
                     // Connection needs to be added
                     connection = new Connection(c.description, src, srcPort, trg, trgPort, c.id)
                     this.canvas.add(connection)
                 }
             })
+
+            if (isNewNode) {
+                // Add node which did not have a new connection
+                const x = outerNode.x - node.width - marginX
+                const y = outerNode.y - node.height - marginY
+                this.canvas.addAtApproximately(node, x, y)
+                isNewNode = false
+            }
         })
     }
 
@@ -238,36 +243,55 @@ export class InnerDiagramCanvas {
         const marginX = 150
         const marginY = 100
 
+        const addedNodes = []
         let x = group.x - Node.defaultWidth - marginX
         let y = group.y + group.height / 2 - Node.defaultHeight / 2
         nodes.left.forEach(data => {
-            const node = this.addNode(data, x, y)
+            const node = this.addConnectedNode(data, x, y)
             this.addConnection(data, node, group)
+            addedNodes.push(node)
         });
 
         x = group.x + group.width / 1 - Node.defaultWidth / 2
         y = group.y - Node.defaultHeight - marginY
         nodes.top.forEach(data => {
-            const node = this.addNode(data, x, y)
+            const node = this.addConnectedNode(data, x, y)
             this.addConnection(data, node, group)
+            addedNodes.push(node)
         });
 
         x = group.x + group.width + marginX
         y = group.y + group.height / 2 - Node.defaultHeight / 2
         nodes.right.forEach(data => {
-            const node = this.addNode(data, x, y)
+            const node = this.addConnectedNode(data, x, y)
             this.addConnection(data, group, node)
+            addedNodes.push(node)
         });
 
         x = group.x + group.width / 1 - Node.defaultWidth / 2
         y = group.y + group.height + marginY
         nodes.bottom.forEach(data => {
-            const node = this.addNode(data, x, y)
+            const node = this.addConnectedNode(data, x, y)
             this.addConnection(data, group, node)
+            addedNodes.push(node)
         });
+
+        const internalNodes = group.getAboardFigures(true).asArray()
+        const externalNodes = this.canvas.getFigures().asArray()
+            .filter(f => f !== group && null == internalNodes.find(i => i.id === f.id))
+
+        externalNodes.forEach(n => {
+            if (n.isConnected) {
+                return
+            }
+
+            n.getPorts().asArray().flatMap(p => p.getConnections().asArray()).forEach(c => this.canvas.remove(c))
+            this.canvas.remove(n)
+        })
+
     }
 
-    addNode(data, x, y) {
+    addConnectedNode(data, x, y) {
         const alpha = 0.6
         let node = this.canvas.getFigure(data.node.id)
         if (node != null) {
@@ -284,6 +308,7 @@ export class InnerDiagramCanvas {
             this.canvas.addAtApproximately(node, x, y)
         }
 
+        node.isConnected = true
         node.setDeleteable(false)
         return node
     }
