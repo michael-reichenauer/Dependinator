@@ -9,6 +9,7 @@ const systemId = 'system'
 export const setSystemNodeReadOnly = (canvas) => {
     const systemNode = canvas.getFigure(systemId)
     systemNode?.setDeleteable(false)
+    canvas.system = systemNode
     return systemNode
 }
 

@@ -61,8 +61,6 @@ export default function ApplicationBar({ height }) {
 
                 <Box m={2} />
                 <Typography className={classes.title} variant="h6" noWrap>{titleText}</Typography>
-                <Box m={0.5} />
-                <Typography className={classes.title} variant="h6" noWrap>- Context</Typography>
 
                 <Typography className={classes.space} variant="h6" noWrap> </Typography>
 

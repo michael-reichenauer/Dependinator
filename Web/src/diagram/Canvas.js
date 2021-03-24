@@ -39,8 +39,8 @@ export default class Canvas {
         if (!this.load(this.canvas.name)) {
             addDefaultNewDiagram(this.canvas)
         }
-        const systemNode = setSystemNodeReadOnly(this.canvas)
-        this.callbacks.setTitle(systemNode.getName())
+        setSystemNodeReadOnly(this.canvas)
+        this.callbacks.setTitle(this.getTitle())
 
 
         this.handleDoubleClick(this.canvas)
@@ -54,14 +54,8 @@ export default class Canvas {
     }
 
     handleCommands = () => {
-        PubSub.subscribe('canvas.Undo', () => {
-            this.canvas.getCommandStack().undo();
-            this.save(this.canvas.name)
-        })
-        PubSub.subscribe('canvas.Redo', () => {
-            this.canvas.getCommandStack().redo();
-            this.save(this.canvas.name)
-        })
+        PubSub.subscribe('canvas.Undo', () => this.commandUndo())
+        PubSub.subscribe('canvas.Redo', () => this.commandRedo())
 
         PubSub.subscribe('canvas.AddNode', () => this.addNode(Node.nodeType, this.getCenter()))
         PubSub.subscribe('canvas.AddUserNode', () => this.addNode(Node.userType, this.getCenter()))
@@ -109,6 +103,15 @@ export default class Canvas {
         return true
     }
 
+    commandUndo = () => {
+        this.canvas.getCommandStack().undo()
+        this.save(this.canvas.name)
+    }
+
+    commandRedo = () => {
+        this.canvas.getCommandStack().redo()
+        this.save(this.canvas.name)
+    }
 
     commandNewDiagram = () => {
         this.canvas.clearDiagram()
@@ -120,6 +123,7 @@ export default class Canvas {
     commandEditInnerDiagram = (msg, figure) => {
         this.withWorkingIndicator(() => {
             this.inner.editInnerDiagram(figure)
+            this.callbacks.setTitle(this.getTitle())
             this.updateToolbarButtonsStates()
             this.save(this.canvas.name)
         });
@@ -128,6 +132,7 @@ export default class Canvas {
     commandPopFromInnerDiagram = () => {
         this.withWorkingIndicator(() => {
             this.inner.popFromInnerDiagram()
+            this.callbacks.setTitle(this.getTitle())
             this.updateToolbarButtonsStates()
             this.save(this.canvas.name)
         });
@@ -180,21 +185,36 @@ export default class Canvas {
         this.updateToolbarButtonsStates()
 
         canvas.commandStack.addEventListener(e => {
-            //console.log('event:', e)
+            // console.log('event:', e)
             this.updateToolbarButtonsStates()
 
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
+                if (e.command?.figure?.parent?.getId() === 'system' || e.command?.figure === this.canvas.group) {
+                    this.callbacks.setTitle(this.getTitle())
+                    // Update the title whenever the system node name changes
+                }
+
                 if (e.action === "POST_EXECUTE") {
-                    if (e.command?.figure?.parent?.getId() === 'system') {
-                        // Update the title whenever the system node name changes
-                        this.callbacks.setTitle(e.command.figure.parent.getName())
-                    }
                     this.save(canvas.name)
                 }
             }
         });
     }
+
+    getTitle() {
+        switch (this.canvasStack.getLevel()) {
+            case 0:
+                return this.canvas.system.getName() + ' - Context'
+            case 1:
+                return this.canvas.group.getName() + ' - Container'
+            case 2:
+                return this.canvas.group.getName() + ' - Component'
+            default:
+                return this.canvas.group.getName() + ' - Code'
+        }
+    }
+
 
     updateToolbarButtonsStates() {
         this.callbacks.setCanPopDiagram(!this.canvasStack.isRoot())

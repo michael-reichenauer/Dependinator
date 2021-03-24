@@ -10,6 +10,8 @@ export default class CanvasStack {
 
     isRoot = () => this.diagramStack.length === 0
 
+    getLevel = () => this.diagramStack.length
+
     pushDiagram(newName) {
         const canvas = this.canvas
         const canvasData = this.getCanvasData(canvas)
