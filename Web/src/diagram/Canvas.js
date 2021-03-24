@@ -4,6 +4,7 @@ import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { PanPolicy } from "./PanPolicy";
 import Colors from "./colors";
 import { random } from "../common/utils";
+import KeyboardPolicy from "./KeyboardPolicy";
 
 
 const randomDist = 30
@@ -40,6 +41,7 @@ export default class Canvas extends draw2d.Canvas {
         this.installEditPolicy(new draw2d.policy.canvas.SnapToGeometryEditPolicy())
         this.installEditPolicy(new draw2d.policy.canvas.SnapToInBetweenEditPolicy())
         this.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
+        this.installEditPolicy(new KeyboardPolicy())
         //canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
     }
 
