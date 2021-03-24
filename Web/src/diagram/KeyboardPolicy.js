@@ -19,6 +19,7 @@ export default class KeyboardPolicy extends draw2d.policy.canvas.KeyboardPolicy 
                     break
                 case 70: // F
                     canvas.getPrimarySelection().toFront()
+                    break
                 default:
                 //console.log('Key', keyCode)
             }
