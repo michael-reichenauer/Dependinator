@@ -20,6 +20,12 @@ export default class KeyboardPolicy extends draw2d.policy.canvas.KeyboardPolicy 
                 case 70: // F
                     canvas.getPrimarySelection().toFront()
                     break
+                case 90: // z
+                    PubSub.publish('canvas.Undo')
+                    break
+                case 89: // y
+                    PubSub.publish('canvas.Redo')
+                    break
                 default:
                 //console.log('Key', keyCode)
             }
