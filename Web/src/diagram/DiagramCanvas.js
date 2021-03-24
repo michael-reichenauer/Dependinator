@@ -2,6 +2,7 @@ import "import-jquery";
 import "jquery-ui-bundle";
 import "jquery-ui-bundle/jquery-ui.css";
 import PubSub from 'pubsub-js'
+
 import { random } from '../common/utils'
 import Node from './Node'
 import Serializer from './serializer'
@@ -110,13 +111,14 @@ export default class DiagramCanvas {
 
     commandRedo = () => {
         this.canvas.getCommandStack().redo()
-        this.save(this.canvas.name)
     }
 
     commandNewDiagram = () => {
-        this.canvas.clearDiagram()
-        this.store.clear()
-        addDefaultNewDiagram(this.canvas)
+        store.loadFile(file => console.log('File:', file))
+
+        // this.canvas.clearDiagram()
+        // this.store.clear()
+        // addDefaultNewDiagram(this.canvas)
     }
 
 
