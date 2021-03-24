@@ -8,6 +8,7 @@ import { CommandChangeColor } from "./commandChangeColor";
 import { CommandChangeIcon } from "./commandChangeIcon";
 import { createNodeIcon, getNodeIconNames } from "./icons";
 import { InnerDiagramFigure } from "./innerDiagramFigure";
+import { Label } from "./Label";
 import { store } from "./store";
 
 
@@ -242,12 +243,12 @@ export default class Node extends draw2d.shape.node.Between {
     addLabels = (name, description) => {
         const fontColor = Colors.getNodeFontColor(this.colorName)
 
-        this.nameLabel = new LabelText(this.width, {
+        this.nameLabel = new Label(this.width, {
             text: name, stroke: 0,
             fontSize: 20, fontColor: fontColor, bold: true,
         })
 
-        this.descriptionLabel = new LabelText(this.width, {
+        this.descriptionLabel = new Label(this.width, {
             text: description, stroke: 0,
             fontSize: 14, fontColor: fontColor, bold: false,
         })
@@ -302,87 +303,30 @@ export default class Node extends draw2d.shape.node.Between {
 }
 
 
-export class LabelLocator extends draw2d.layout.locator.XYRelPortLocator {
-    cachedWidth = null
-    constructor(y) {
-        super(0, y)
-    }
 
+class LabelLocator extends draw2d.layout.locator.Locator {
+    constructor(percentY) {
+        super()
+        this.percentY = percentY
+    }
     relocate(index, figure) {
-        let parent = figure.getParent()
-        this.applyConsiderRotation(
-            figure,
-            parent.getWidth() / 2 - figure.getWidth() / 2,
-            parent.getHeight() / 100 * this.y
-        )
+        // Center in the x middle and then percent of height 
+        const parent = figure.getParent()
+        const x = parent.getWidth() / 2
+        const y = parent.getHeight() / 100 * this.percentY
+        figure.setPosition(x, y);
     }
 }
 
-
-export class InnerDiagramIconLocator extends draw2d.layout.locator.PortLocator {
+class InnerDiagramIconLocator extends draw2d.layout.locator.PortLocator {
     relocate(index, figure) {
         const parent = figure.getParent()
         this.applyConsiderRotation(figure, parent.getWidth() / 2 - 8, parent.getHeight() - 23);
     }
 }
 
-
-export class InnerDiagramLocator extends draw2d.layout.locator.Locator {
+class InnerDiagramLocator extends draw2d.layout.locator.Locator {
     relocate(index, target) {
         target.setPosition(2, 2)
-    }
-}
-
-
-class LabelText extends draw2d.shape.basic.Text {
-    textWidth = 0
-    constructor(textWidth, attr, getter, setter) {
-        super(attr, getter, setter)
-        this.textWidth = textWidth
-    }
-
-    setTextWidth(textWidth) {
-        this.cachedWrappedAttr = null
-        this.textWidth = textWidth
-    }
-    wrappedTextAttr(text, width) {
-        let words = text.split(" ")
-        if (this.canvas === null || words.length === 0) {
-            return { text: text, width: width, height: 20 }
-        }
-
-        if (this.cachedWrappedAttr === null) {
-            let abc = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-            let svgText = this.canvas.paper.text(0, 0, "").attr({ ...this.calculateTextAttr(), ...{ text: abc } })
-
-            // get a good estimation of a letter width...not correct but this is working for the very first draft implementation
-            let letterWidth = svgText.getBBox(true).width / abc.length
-
-            let s = [words[0]], x = s[0].length * letterWidth
-            let w = null
-            for (let i = 1; i < words.length; i++) {
-                w = words[i]
-                let l = w.length * letterWidth
-                if ((x + l) > this.textWidth) {
-                    s.push("\n")
-                    x = l
-                } else {
-                    s.push(" ")
-                    x += l
-                }
-                s.push(w)
-            }
-            // set the wrapped text and get the resulted bounding box
-            //
-            svgText.attr({ text: s.join("") })
-            let bbox = svgText.getBBox(true)
-            svgText.remove()
-            this.cachedWrappedAttr = {
-                text: s.join(""),
-                width: (Math.max(width, bbox.width) + this.padding.left + this.padding.right),
-                height: (bbox.height + this.padding.top + this.padding.bottom)
-            }
-        }
-        return this.cachedWrappedAttr
     }
 }
