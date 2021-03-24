@@ -50,7 +50,7 @@ export default class Group extends draw2d.shape.composite.Raft {
     setCanvas(canvas) {
         super.setCanvas(canvas)
         if (canvas != null) {
-            canvas.group = this
+            canvas.mainNode = this
         }
     }
 

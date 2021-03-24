@@ -78,7 +78,13 @@ export default class Node extends draw2d.shape.node.Between {
 
     setCanvas(canvas) {
         super.setCanvas(canvas)
-        this.diagramIcon?.shape?.attr({ "cursor": "pointer" })
+
+        if (canvas != null) {
+            if (this.id == 'system') {
+                canvas.mainNode = this
+            }
+            this.diagramIcon?.shape?.attr({ "cursor": "pointer" })
+        }
     }
 
 

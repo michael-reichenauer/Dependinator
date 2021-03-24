@@ -11,8 +11,8 @@ export default class Serializer {
     }
 
     serialize = () => {
-        if (this.canvas.group != null) {
-            this.canvas.group.getAboardFigures(true).each((i, f) => f.group = this.canvas.group)
+        if (this.canvas.mainNode instanceof Group) {
+            this.canvas.mainNode.getAboardFigures(true).each((i, f) => f.group = this.canvas.mainNode)
         }
 
         const canvasData = {

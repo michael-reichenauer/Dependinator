@@ -106,7 +106,7 @@ export class InnerDiagramCanvas {
     }
 
     getNodesExternalToGroup() {
-        const group = this.canvas.group
+        const group = this.canvas.mainNode
         const internalNodes = group.getAboardFigures(true).asArray()
         const externalNodes = this.canvas.getFigures().asArray()
             .filter(f => f !== group && null == internalNodes.find(i => i.id === f.id))
@@ -244,12 +244,12 @@ export class InnerDiagramCanvas {
     }
 
     updateGroup(node) {
-        this.canvas.group.setName(node.getName())
-        this.canvas.group.setDescription(node.getDescription())
+        this.canvas.mainNode.setName(node.getName())
+        this.canvas.mainNode.setDescription(node.getDescription())
     }
 
     addOrUpdateConnectedNodes(nodes) {
-        const group = this.canvas.group
+        const group = this.canvas.mainNode
         const marginX = 150
         const marginY = 100
 
@@ -360,7 +360,7 @@ export class InnerDiagramCanvas {
 
 
     getInnerDiagramRect() {
-        const g = this.canvas.group
+        const g = this.canvas.mainNode
         return { x: g.x, y: g.y, w: g.width, h: g.heigh }
     }
 

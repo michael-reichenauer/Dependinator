@@ -190,9 +190,9 @@ export default class Canvas {
 
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
-                if (e.command?.figure?.parent?.getId() === 'system' || e.command?.figure === this.canvas.group) {
+                if (e.command?.figure === this.canvas.mainNode) {
+                    // Update the title whenever the main node changes
                     this.callbacks.setTitle(this.getTitle())
-                    // Update the title whenever the system node name changes
                 }
 
                 if (e.action === "POST_EXECUTE") {
@@ -203,18 +203,18 @@ export default class Canvas {
     }
 
     getTitle() {
+        const name = this.canvas?.mainNode?.getName() ?? ''
         switch (this.canvasStack.getLevel()) {
             case 0:
-                return this.canvas.system.getName() + ' - Context'
+                return name + ' - Context'
             case 1:
-                return this.canvas.group.getName() + ' - Container'
+                return name + ' - Container'
             case 2:
-                return this.canvas.group.getName() + ' - Component'
+                return name + ' - Component'
             default:
-                return this.canvas.group.getName() + ' - Code'
+                return name + ' - Code'
         }
     }
-
 
     updateToolbarButtonsStates() {
         this.callbacks.setCanPopDiagram(!this.canvasStack.isRoot())
