@@ -14,7 +14,7 @@ import { addDefaultNewDiagram, addFigureToCanvas, setSystemNodeReadOnly } from "
 import { InnerDiagramCanvas } from "./InnerDiagramCanvas";
 
 
-export default class Canvas {
+export default class DiagramCanvas {
     static defaultWidth = 100000
     static defaultHeight = 100000
 
@@ -28,7 +28,7 @@ export default class Canvas {
 
     constructor(canvasId, callbacks) {
         this.callbacks = callbacks
-        this.canvas = new CanvasEx(canvasId, this.onEditMode, Canvas.defaultWidth, Canvas.defaultHeight)
+        this.canvas = new CanvasEx(canvasId, this.onEditMode, DiagramCanvas.defaultWidth, DiagramCanvas.defaultHeight)
         this.canvas.canvas = this
         this.serializer = new Serializer(this.canvas)
         this.canvasStack = new CanvasStack(this.canvas)

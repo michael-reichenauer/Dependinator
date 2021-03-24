@@ -1,5 +1,5 @@
 import draw2d from "draw2d";
-import Canvas from "./Canvas";
+import DiagramCanvas from "./DiagramCanvas";
 import Colors from "./colors";
 import Group from "./Group";
 import Node from "./Node";
@@ -9,8 +9,8 @@ const groupColor = '#' + Colors.canvasText.hex()
 
 const defaultDiagramData = (name) => {
     // Group node with one node in the center of that group
-    const gx = Canvas.defaultWidth / 2
-    const gy = Canvas.defaultHeight / 2
+    const gx = DiagramCanvas.defaultWidth / 2
+    const gy = DiagramCanvas.defaultHeight / 2
     const nx = gx + Group.defaultWidth / 2 - Node.defaultWidth / 2
     const ny = gy + Group.defaultHeight / 2 - Node.defaultHeight / 2
 

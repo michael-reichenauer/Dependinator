@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import PubSub from 'pubsub-js'
-import Canvas from "./Canvas"
+import DiagramCanvas from "./DiagramCanvas"
 import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { Backdrop, makeStyles } from "@material-ui/core";
@@ -40,7 +40,7 @@ export default function Diagram({ width, height }) {
             setCanPopDiagram: setCanPopDiagram,
             setEditMode: setEditMode
         }
-        const canvas = new Canvas('canvas', callbacks);
+        const canvas = new DiagramCanvas('canvas', callbacks);
         canvas.init()
         canvasRef.current = canvas
 
@@ -55,7 +55,7 @@ export default function Diagram({ width, height }) {
             document.removeEventListener("contextmenu", contextMenuHandler);
             canvasRef.current.delete()
         }
-    }, [setCanUndo, setCanRedo, setProgress, setCanPopDiagram, setEditMode])
+    }, [setCanUndo, setCanRedo, setProgress, setCanPopDiagram, setEditMode, setTitle])
 
 
     return (

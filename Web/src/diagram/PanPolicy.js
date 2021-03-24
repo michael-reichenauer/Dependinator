@@ -107,7 +107,7 @@ export class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolicy {
             // in this case wrong  events are fired if we select a figure if already a figure is selected!
             // WRONG: selectNewFigure -> unselectOldFigure
             // RIGHT: unselectOldFigure -> selectNewFigure
-            // To ensure this I must copy the parent code and postbound the event propagation
+            // To ensure this I must copy the parent code and postpone the event propagation
             //
             this.mouseMovedDuringMouseDown = false
             let canDragStart = true
