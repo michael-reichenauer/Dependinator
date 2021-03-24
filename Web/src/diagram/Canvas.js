@@ -8,7 +8,7 @@ import { random } from "../common/utils";
 
 const randomDist = 30
 
-export default class CanvasEx extends draw2d.Canvas {
+export default class Canvas extends draw2d.Canvas {
     name = 'root'
 
 

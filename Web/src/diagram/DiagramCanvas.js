@@ -6,7 +6,7 @@ import { random } from '../common/utils'
 import Node from './Node'
 import Serializer from './serializer'
 import { store } from "./store";
-import CanvasEx from "./CanvasEx";
+import Canvas from "./Canvas";
 import { Item } from "../common/ContextMenu";
 import CanvasStack from "./CanvasStack";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
@@ -28,7 +28,7 @@ export default class DiagramCanvas {
 
     constructor(canvasId, callbacks) {
         this.callbacks = callbacks
-        this.canvas = new CanvasEx(canvasId, this.onEditMode, DiagramCanvas.defaultWidth, DiagramCanvas.defaultHeight)
+        this.canvas = new Canvas(canvasId, this.onEditMode, DiagramCanvas.defaultWidth, DiagramCanvas.defaultHeight)
         this.canvas.canvas = this
         this.serializer = new Serializer(this.canvas)
         this.canvasStack = new CanvasStack(this.canvas)
