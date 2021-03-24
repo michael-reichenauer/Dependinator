@@ -81,7 +81,7 @@ export default class Node extends draw2d.shape.node.Between {
         super.setCanvas(canvas)
 
         if (canvas != null) {
-            if (this.id == 'system') {
+            if (this.id === 'system') {
                 canvas.mainNode = this
             }
             this.diagramIcon?.shape?.attr({ "cursor": "pointer" })
@@ -312,7 +312,7 @@ class LabelLocator extends draw2d.layout.locator.Locator {
     relocate(index, figure) {
         // Center in the x middle and then percent of height 
         const parent = figure.getParent()
-        const x = parent.getWidth() / 2
+        const x = parent.getWidth() / 2 - figure.getWidth() / 2
         const y = parent.getHeight() / 100 * this.percentY
         figure.setPosition(x, y);
     }

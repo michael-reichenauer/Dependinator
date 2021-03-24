@@ -1,6 +1,7 @@
 import draw2d from "draw2d";
 import { Item } from "../common/ContextMenu";
 import Colors from "./colors";
+import { Label } from "./Label";
 
 const defaultTextWidth = 230
 export default class Connection extends draw2d.Connection {
@@ -50,7 +51,7 @@ export default class Connection extends draw2d.Connection {
     }
 
     addLabels(description) {
-        this.descriptionLabel = new DescriptionText({
+        this.descriptionLabel = new Label(defaultTextWidth, {
             text: description, stroke: 0,
             fontSize: 14, bold: false,
             fontColor: Colors.canvasText, bgColor: Colors.canvasBackground,
@@ -58,7 +59,7 @@ export default class Connection extends draw2d.Connection {
         // this.descriptionLabel.setResizeable(true)
         // this.descriptionLabel.setSelectable(true)
         this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-        this.add(this.descriptionLabel, new draw2d.layout.locator.ManhattanMidpointLocator(this));
+        this.add(this.descriptionLabel, new LabelLocator(this));
     }
 
     addArrow() {
@@ -82,46 +83,20 @@ export default class Connection extends draw2d.Connection {
     }
 }
 
+class LabelLocator extends draw2d.layout.locator.ConnectionLocator {
+    relocate(index, target) {
+        let conn = target.getParent()
+        let points = conn.getVertices()
 
-class DescriptionText extends draw2d.shape.basic.Text {
-    wrappedTextAttr(text, width) {
-        let words = text.split(" ")
-        if (this.canvas === null || words.length === 0) {
-            return { text: text, width: width, height: 20 }
-        }
+        let segmentIndex = Math.floor((points.getSize() - 2) / 2)
+        if (points.getSize() <= segmentIndex + 1)
+            return
 
-        if (this.cachedWrappedAttr === null) {
-            let abc = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-            let svgText = this.canvas.paper.text(0, 0, "").attr({ ...this.calculateTextAttr(), ...{ text: abc } })
+        let p1 = points.get(segmentIndex)
+        let p2 = points.get(segmentIndex + 1)
 
-            // get a good estimation of a letter width...not correct but this is working for the very first draft implementation
-            let letterWidth = svgText.getBBox(true).width / abc.length
-
-            let s = [words[0]], x = s[0].length * letterWidth
-            let w = null
-            for (let i = 1; i < words.length; i++) {
-                w = words[i]
-                let l = w.length * letterWidth
-                if ((x + l) > defaultTextWidth) {
-                    s.push("\n")
-                    x = l
-                } else {
-                    s.push(" ")
-                    x += l
-                }
-                s.push(w)
-            }
-            // set the wrapped text and get the resulted bounding box
-            //
-            svgText.attr({ text: s.join("") })
-            let bbox = svgText.getBBox(true)
-            svgText.remove()
-            this.cachedWrappedAttr = {
-                text: s.join(""),
-                width: (Math.max(width, bbox.width) + this.padding.left + this.padding.right),
-                height: (bbox.height + this.padding.top + this.padding.bottom)
-            }
-        }
-        return this.cachedWrappedAttr
+        target.setPosition(
+            ((p2.x - p1.x) / 2 + p1.x - target.getWidth() / 2) | 0,
+            ((p2.y - p1.y) / 2 + p1.y - target.getHeight() / 2) | 0)
     }
 }

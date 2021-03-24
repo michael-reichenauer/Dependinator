@@ -1,5 +1,6 @@
 import draw2d from "draw2d";
 
+// Label which has centered text and specified width
 export class Label extends draw2d.shape.basic.Text {
     textWidth = 0
     constructor(textWidth, attr, getter, setter) {
@@ -14,7 +15,7 @@ export class Label extends draw2d.shape.basic.Text {
             "font-weight": (this.bold === true) ? "bold" : "normal",
             fill: this.fontColor.rgba(),
             stroke: this.outlineColor.rgba(),
-            "stroke-width": this.outlineStroke
+            "stroke-width": this.outlineStroke,
         }
         if (this.fontFamily !== null) {
             attr["font-family"] = this.fontFamily
@@ -27,6 +28,24 @@ export class Label extends draw2d.shape.basic.Text {
         this.cachedWrappedAttr = null
         this.textWidth = textWidth
     }
+
+    repaint(attributes) {
+        if (this.repaintBlocked === true || this.shape === null) {
+            return
+        }
+
+        this.svgNodes.attr({ ...this.calculateTextAttr(), ...this.wrappedTextAttr(this.text, this.getWidth() - this.padding.left - this.padding.right) })
+
+        // set of the x/y must be done AFTER the font-size and bold has been set.
+        // Reason: the getHeight method needs the font-size for calculation because
+        //         it redirects the calculation to the SVG element.
+        this.svgNodes.attr({ x: this.getWidth() / 2, y: this.getHeight() / 2 })
+
+        // this is an exception call. Don't call the super method (Label) to avoid
+        // the calculation in this method.
+        draw2d.SetFigure.prototype.repaint.call(this, attributes)
+    }
+
 
     wrappedTextAttr(text, width) {
         let words = text.split(" ")
@@ -55,8 +74,8 @@ export class Label extends draw2d.shape.basic.Text {
                 }
                 s.push(w)
             }
+
             // set the wrapped text and get the resulted bounding box
-            //
             svgText.attr({ text: s.join("") })
             let bbox = svgText.getBBox(true)
             svgText.remove()
