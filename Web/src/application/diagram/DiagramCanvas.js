@@ -30,7 +30,6 @@ export default class DiagramCanvas {
     constructor(canvasId, callbacks) {
         this.callbacks = callbacks
         this.canvas = new Canvas(canvasId, this.onEditMode, DiagramCanvas.defaultWidth, DiagramCanvas.defaultHeight)
-        this.canvas.canvas = this
         this.serializer = new Serializer(this.canvas)
         this.canvasStack = new CanvasStack(this.canvas)
         this.inner = new InnerDiagramCanvas(this.canvas, this.canvasStack, this.store, this.serializer)
@@ -43,12 +42,10 @@ export default class DiagramCanvas {
         setSystemNodeReadOnly(this.canvas)
         this.callbacks.setTitle(this.getTitle())
 
-
         this.handleDoubleClick(this.canvas)
         this.handleEditChanges(this.canvas)
         this.handleCommands()
     }
-
 
     delete() {
         this.canvas.destroy()
@@ -73,40 +70,22 @@ export default class DiagramCanvas {
     }
 
     getContextMenuItems(x, y) {
-        const pos = this.canvas.fromDocumentToCanvasCoordinate(x, y)
+        const mouseXY = this.canvas.fromDocumentToCanvasCoordinate(x, y)
 
         return [
-            new Item('Add node', () => this.addNode(Node.nodeType, pos)),
-            new Item('Add external user', () => this.addNode(Node.userType, pos)),
-            new Item('Add external system', () => this.addNode(Node.externalType, pos)),
+            new Item('Add node', () => this.addNode(Node.nodeType, mouseXY)),
+            new Item('Add external user', () => this.addNode(Node.userType, mouseXY)),
+            new Item('Add external system', () => this.addNode(Node.externalType, mouseXY)),
             new Item('Pop to surrounding diagram (dbl-click)', () => PubSub.publish('canvas.PopInnerDiagram'),
                 true, !this.canvasStack.isRoot()),
         ]
     }
 
-    save = (storeName) => {
-        console.log('save', storeName)
-        // Serialize canvas figures and connections into canvas data object
-        const canvasData = this.serializer.serialize();
 
-        this.store.write(canvasData, storeName)
-    }
-
-    load = (storeName) => {
-        console.log('load', storeName)
-        const canvasData = this.store.read(storeName)
-        if (canvasData == null) {
-            return false
-        }
-
-        // Deserialize canvas
-        this.serializer.deserialize(canvasData)
-        return true
-    }
 
     commandUndo = () => {
         this.canvas.getCommandStack().undo()
-        this.save(this.canvas.name)
+        this.save()
     }
 
     commandRedo = () => {
@@ -119,6 +98,7 @@ export default class DiagramCanvas {
         // this.canvas.clearDiagram()
         // this.store.clear()
         // addDefaultNewDiagram(this.canvas)
+        // this.save()
     }
 
 
@@ -127,7 +107,7 @@ export default class DiagramCanvas {
             this.inner.editInnerDiagram(figure)
             this.callbacks.setTitle(this.getTitle())
             this.updateToolbarButtonsStates()
-            this.save(this.canvas.name)
+            this.save()
         });
     }
 
@@ -136,7 +116,7 @@ export default class DiagramCanvas {
             this.inner.popFromInnerDiagram()
             this.callbacks.setTitle(this.getTitle())
             this.updateToolbarButtonsStates()
-            this.save(this.canvas.name)
+            this.save()
         });
     }
 
@@ -152,21 +132,17 @@ export default class DiagramCanvas {
         this.canvas.setGridBackground()
     }
 
-
     showTotalDiagram = () => zoomAndMoveShowTotalDiagram(this.canvas)
-
 
     addNode = (type, p) => {
         const node = new Node(type)
         addFigureToCanvas(this.canvas, node, p)
     }
 
-
     export = (result) => {
         const rect = this.canvas.getFiguresRect()
         this.serializer.export(rect, result)
     }
-
 
     tryGetFigure = (x, y) => {
         let cp = this.canvas.fromDocumentToCanvasCoordinate(x, y)
@@ -174,8 +150,24 @@ export default class DiagramCanvas {
         return figure
     }
 
+    save() {
+        // Serialize canvas figures and connections into canvas data object
+        const canvasData = this.serializer.serialize();
+        this.store.write(canvasData, this.canvas.name)
+    }
 
-    getCenter = () => {
+    load() {
+        const canvasData = this.store.read(this.canvas.name)
+        if (canvasData == null) {
+            return false
+        }
+
+        // Deserialize canvas
+        this.serializer.deserialize(canvasData)
+        return true
+    }
+
+    getCenter() {
         let x = (this.canvas.getWidth() / 2 + random(-10, 10) + this.canvas.getScrollLeft()) * this.canvas.getZoom()
         let y = (100 + random(-10, 10) + this.canvas.getScrollTop()) * this.canvas.getZoom()
 
@@ -183,7 +175,7 @@ export default class DiagramCanvas {
     }
 
 
-    handleEditChanges = (canvas) => {
+    handleEditChanges(canvas) {
         this.updateToolbarButtonsStates()
 
         canvas.commandStack.addEventListener(e => {
@@ -198,7 +190,7 @@ export default class DiagramCanvas {
                 }
 
                 if (e.action === "POST_EXECUTE") {
-                    this.save(canvas.name)
+                    this.save()
                 }
             }
         });
@@ -240,7 +232,7 @@ export default class DiagramCanvas {
         });
     }
 
-    withWorkingIndicator = (action) => {
+    withWorkingIndicator(action) {
         this.callbacks.setProgress(true)
         setTimeout(() => {
             action()
