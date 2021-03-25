@@ -3,7 +3,9 @@ import { Item } from "../common/ContextMenu";
 import Colors from "./Colors";
 import { Label } from "./Label";
 
+
 const defaultTextWidth = 230
+
 export default class Connection extends draw2d.Connection {
     descriptionLabel = null
 
@@ -59,7 +61,7 @@ export default class Connection extends draw2d.Connection {
         // this.descriptionLabel.setResizeable(true)
         // this.descriptionLabel.setSelectable(true)
         this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-        this.add(this.descriptionLabel, new LabelLocator(this));
+        this.add(this.descriptionLabel, new ConnectionLabelLocator(this));
     }
 
     addArrow() {
@@ -83,7 +85,8 @@ export default class Connection extends draw2d.Connection {
     }
 }
 
-class LabelLocator extends draw2d.layout.locator.ConnectionLocator {
+
+class ConnectionLabelLocator extends draw2d.layout.locator.ConnectionLocator {
     relocate(index, target) {
         let conn = target.getParent()
         let points = conn.getVertices()

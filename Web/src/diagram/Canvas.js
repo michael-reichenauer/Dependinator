@@ -1,6 +1,6 @@
 import draw2d from "draw2d";
 import { ZoomPolicy } from "./ZoomPolicy"
-import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
+import ConnectionCreatePolicy from "./ConnectionCreatePolicy"
 import { PanPolicy } from "./PanPolicy";
 import Colors from "./Colors";
 import { random } from "../common/utils";
@@ -11,7 +11,6 @@ const randomDist = 30
 
 export default class Canvas extends draw2d.Canvas {
     name = 'root'
-
 
     constructor(canvasId, onEditMode, width, height) {
         super(canvasId, width, height);
