@@ -5,7 +5,7 @@ import PubSub from 'pubsub-js'
 
 import { random } from '../common/utils'
 import Node from './Node'
-import Serializer from './serializer'
+import Serializer from './Serializer'
 import { store } from "./store";
 import Canvas from "./Canvas";
 import { Item } from "../common/ContextMenu";
