@@ -5,7 +5,8 @@ import Connection from "./Connection";
 import Group from "./Group";
 import Node from "./Node";
 
-export class InnerDiagramCanvas {
+
+export default class InnerDiagramCanvas {
     canvas = null
     canvasStack = null
     store = null
@@ -64,7 +65,6 @@ export class InnerDiagramCanvas {
 
         t.log()
     }
-
 
     popFromInnerDiagram = () => {
         const t = timing()
@@ -126,7 +126,6 @@ export class InnerDiagramCanvas {
         const ports = node.getPorts().asArray()
         return ports.flatMap(p => p.getConnections().asArray().map(c => c.serialize()))
     }
-
 
     addOrUpdateExternalNodes(data, outerNode) {
         outerNode.setName(data.group.name)
@@ -217,9 +216,6 @@ export class InnerDiagramCanvas {
             }
         })
     }
-
-
-
 
     getNodesConnectedToOuterNode(figure) {
         const left = figure.getPort('input0').getConnections().asArray()

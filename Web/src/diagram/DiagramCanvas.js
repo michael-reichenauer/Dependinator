@@ -12,7 +12,7 @@ import { Item } from "../common/ContextMenu";
 import CanvasStack from "./CanvasStack";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
 import { addDefaultNewDiagram, addFigureToCanvas, setSystemNodeReadOnly } from "./addDefault";
-import { InnerDiagramCanvas } from "./InnerDiagramCanvas";
+import InnerDiagramCanvas from "./InnerDiagramCanvas";
 
 
 export default class DiagramCanvas {
