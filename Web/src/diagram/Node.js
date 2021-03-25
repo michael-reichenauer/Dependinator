@@ -9,7 +9,7 @@ import CommandChangeIcon from "./CommandChangeIcon";
 import NodeIcons from "./NodeIcons";
 import InnerDiagramFigure from "./InnerDiagramFigure";
 import Label from "./Label";
-import { store } from "./store";
+import { store } from "./Store";
 
 
 const defaultOptions = (type) => {
