@@ -1,4 +1,5 @@
 import draw2d from "draw2d";
+import cuid from 'cuid'
 import { Item } from "../../common/ContextMenu";
 import Colors from "./Colors";
 import Label from "./Label";
@@ -10,7 +11,7 @@ export default class Connection extends draw2d.Connection {
     descriptionLabel = null
 
     constructor(description, src, srcPortName, dst, dstPortName, id) {
-        id = id ?? draw2d.util.UUID.create()
+        id = id ?? cuid()
         super({ id: id })
 
         description = description ?? 'Description'

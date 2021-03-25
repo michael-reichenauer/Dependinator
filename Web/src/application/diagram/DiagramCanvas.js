@@ -81,8 +81,6 @@ export default class DiagramCanvas {
         ]
     }
 
-
-
     commandUndo = () => {
         this.canvas.getCommandStack().undo()
         this.save()
@@ -93,12 +91,11 @@ export default class DiagramCanvas {
     }
 
     commandNewDiagram = () => {
-        store.loadFile(file => console.log('File:', file))
-
-        // this.canvas.clearDiagram()
-        // this.store.clear()
-        // addDefaultNewDiagram(this.canvas)
-        // this.save()
+        //store.loadFile(file => console.log('File:', file))
+        this.canvas.clearDiagram()
+        this.store.clear()
+        addDefaultNewDiagram(this.canvas)
+        this.save()
     }
 
 

@@ -10,6 +10,7 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
+    "cuid": "^2.1.8",
     "draw2d": "^1.0.38",
     "file-saver": "^2.0.5",
     "import-jquery": "^1.0.1",

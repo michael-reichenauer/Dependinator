@@ -1,5 +1,6 @@
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
+import cuid from 'cuid'
 import { Item, NestedItem } from "../../common/ContextMenu";
 import { clickHandler } from "../../common/mouseClicks";
 import { timing } from "../../common/timing";
@@ -14,7 +15,7 @@ import { store } from "./Store";
 
 const defaultOptions = (type) => {
     const dv = {
-        id: draw2d.util.UUID.create(),
+        id: cuid(),
         width: Node.defaultWidth,
         height: Node.defaultHeight,
         description: 'Description',

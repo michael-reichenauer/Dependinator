@@ -1,12 +1,13 @@
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
+import cuid from 'cuid'
 import { Item } from "../../common/ContextMenu";
 import Colors from "./Colors";
 
 
 const defaultOptions = () => {
     return {
-        id: draw2d.util.UUID.create(),
+        id: cuid(),
         width: Group.defaultWidth,
         height: Group.defaultHeight,
         description: 'Description',
