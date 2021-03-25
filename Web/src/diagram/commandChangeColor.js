@@ -1,7 +1,7 @@
 import draw2d from "draw2d";
 import Node from "./Node";
 
-export class CommandChangeColor extends draw2d.command.Command {
+export default class CommandChangeColor extends draw2d.command.Command {
     NAME = "CommandChangeColor"
 
     constructor(figure, colorName) {
