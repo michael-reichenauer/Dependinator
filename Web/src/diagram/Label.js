@@ -1,7 +1,8 @@
 import draw2d from "draw2d";
 
+
 // Label which has centered text and specified width
-export class Label extends draw2d.shape.basic.Text {
+export default class Label extends draw2d.shape.basic.Text {
     textWidth = 0
     constructor(textWidth, attr, getter, setter) {
         super(attr, getter, setter)

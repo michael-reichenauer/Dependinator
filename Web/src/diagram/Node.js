@@ -8,7 +8,7 @@ import CommandChangeColor from "./CommandChangeColor";
 import CommandChangeIcon from "./CommandChangeIcon";
 import NodeIcons from "./NodeIcons";
 import InnerDiagramFigure from "./InnerDiagramFigure";
-import { Label } from "./Label";
+import Label from "./Label";
 import { store } from "./store";
 
 

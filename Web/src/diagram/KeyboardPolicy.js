@@ -1,10 +1,12 @@
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
 
+
 export default class KeyboardPolicy extends draw2d.policy.canvas.KeyboardPolicy {
 
     onKeyDown(canvas, keyCode, shiftKey, ctrlKey) {
         if (canvas.getPrimarySelection() !== null && ctrlKey === true) {
+            // When node is selected
             switch (keyCode) {
                 case 71: // G
                     if (canvas.getPrimarySelection() instanceof draw2d.shape.composite.Group && canvas.getSelection().getSize() === 1) {
@@ -39,7 +41,6 @@ export default class KeyboardPolicy extends draw2d.policy.canvas.KeyboardPolicy 
             } else {
                 super.onKeyDown(canvas, keyCode, shiftKey, ctrlKey)
             }
-
         }
     }
 }
