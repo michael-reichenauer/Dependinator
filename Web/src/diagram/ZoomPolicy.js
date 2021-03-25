@@ -2,7 +2,7 @@ import draw2d from "draw2d";
 import { Tweenable } from "shifty"
 
 
-export class ZoomPolicy extends draw2d.policy.canvas.ZoomPolicy {
+export default class ZoomPolicy extends draw2d.policy.canvas.ZoomPolicy {
   NAME = "ZoomPolicy"
 
   constructor() {
