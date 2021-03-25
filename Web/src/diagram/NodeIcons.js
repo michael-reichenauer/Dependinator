@@ -1,5 +1,5 @@
-
 import draw2d from "draw2d";
+
 
 const nodeIcons = {
     Node: () => new draw2d.shape.icon.Ipad(),
@@ -27,18 +27,22 @@ const nodeIcons = {
     Asia: () => new draw2d.shape.icon.GlobeAlt(),
 }
 
-export const getNodeIconNames = () => Object.entries(nodeIcons).map(e => e[0])
 
-export const createNodeIcon = (name) => {
-    if (name == null) {
-        return null
+export default class NodeIcons {
+    create(name) {
+        if (name == null) {
+            return null
+        }
+
+        const createFunction = nodeIcons[name]
+        if (createFunction == null) {
+            return null
+        }
+
+        return createFunction()
     }
 
-    const create = nodeIcons[name]
-    if (create == null) {
-        return null
-
+    getNames() {
+        return Object.entries(nodeIcons).map(e => e[0])
     }
-
-    return create()
 }

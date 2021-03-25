@@ -6,7 +6,7 @@ import { timing } from "../common/timing";
 import Colors from "./Colors";
 import CommandChangeColor from "./CommandChangeColor";
 import CommandChangeIcon from "./CommandChangeIcon";
-import { createNodeIcon, getNodeIconNames } from "./icons";
+import NodeIcons from "./NodeIcons";
 import { InnerDiagramFigure } from "./innerDiagramFigure";
 import { Label } from "./Label";
 import { store } from "./store";
@@ -41,7 +41,7 @@ export default class Node extends draw2d.shape.node.Between {
     static defaultWidth = 230
     static defaultHeight = 150
 
-
+    nodeIcons = new NodeIcons()
     figure = null
     type = null
     colorName = null
@@ -110,7 +110,7 @@ export default class Node extends draw2d.shape.node.Between {
         const colorItems = Colors.nodeColorNames().map((name) => {
             return new Item(name, () => this.canvas.runCmd(new CommandChangeColor(this, name)))
         })
-        const iconItems = getNodeIconNames().map((name) => {
+        const iconItems = this.nodeIcons.getNames().map((name) => {
             return new Item(name, () => this.canvas.runCmd(new CommandChangeIcon(this, name)))
         })
 
@@ -265,7 +265,7 @@ export default class Node extends draw2d.shape.node.Between {
         if (iconName == null) {
             return
         }
-        const icon = createNodeIcon(iconName)
+        const icon = this.nodeIcons.create(iconName)
         if (icon == null) {
             return
         }
