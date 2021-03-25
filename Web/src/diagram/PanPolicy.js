@@ -1,7 +1,7 @@
 import draw2d from "draw2d";
 
 
-export class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolicy {
+export default class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolicy {
     NAME = "PanPolicy"
 
     constructor(onEditMode) {
