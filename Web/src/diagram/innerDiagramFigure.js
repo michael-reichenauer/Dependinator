@@ -24,7 +24,8 @@ const defaultDiagramData = (name) => {
     }
 }
 
-export class InnerDiagramFigure extends draw2d.SetFigure {
+
+export default class InnerDiagramFigure extends draw2d.SetFigure {
     NAME = "InnerDiagram"
     static innerPadding = 2
 
