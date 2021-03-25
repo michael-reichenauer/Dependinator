@@ -1,5 +1,5 @@
 import draw2d from "draw2d";
-import { Item } from "../common/ContextMenu";
+import { Item } from "../../common/ContextMenu";
 import Colors from "./Colors";
 import Label from "./Label";
 

@@ -3,12 +3,12 @@ import "jquery-ui-bundle";
 import "jquery-ui-bundle/jquery-ui.css";
 import PubSub from 'pubsub-js'
 
-import { random } from '../common/utils'
+import { random } from '../../common/utils'
 import Node from './Node'
 import Serializer from './Serializer'
 import { store } from "./Store";
 import Canvas from "./Canvas";
-import { Item } from "../common/ContextMenu";
+import { Item } from "../../common/ContextMenu";
 import CanvasStack from "./CanvasStack";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
 import { addDefaultNewDiagram, addFigureToCanvas, setSystemNodeReadOnly } from "./addDefault";

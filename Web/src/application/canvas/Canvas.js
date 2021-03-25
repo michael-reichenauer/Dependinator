@@ -4,7 +4,7 @@ import ZoomPolicy from "./ZoomPolicy"
 import KeyboardPolicy from "./KeyboardPolicy";
 import ConnectionCreatePolicy from "./ConnectionCreatePolicy"
 import Colors from "./Colors";
-import { random } from "../common/utils";
+import { random } from "../../common/utils";
 
 
 const randomDist = 30

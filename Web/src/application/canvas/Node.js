@@ -1,8 +1,8 @@
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
-import { Item, NestedItem } from "../common/ContextMenu";
-import { clickHandler } from "../common/mouseClicks";
-import { timing } from "../common/timing";
+import { Item, NestedItem } from "../../common/ContextMenu";
+import { clickHandler } from "../../common/mouseClicks";
+import { timing } from "../../common/timing";
 import Colors from "./Colors";
 import CommandChangeColor from "./CommandChangeColor";
 import CommandChangeIcon from "./CommandChangeIcon";
