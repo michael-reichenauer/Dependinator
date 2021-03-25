@@ -10,7 +10,7 @@ import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
 import SaveAltIcon from '@material-ui/icons/SaveAlt';
-import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom, titleAtom } from "../diagram/Diagram";
+import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom, titleAtom } from "./Diagram";
 import { useAtom } from "jotai";
 import { withStyles } from "@material-ui/styles";
 import { grey } from "@material-ui/core/colors";
