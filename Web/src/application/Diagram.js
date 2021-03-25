@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import PubSub from 'pubsub-js'
-import DiagramCanvas from "./canvas/DiagramCanvas"
+import DiagramCanvas from "./diagram/DiagramCanvas"
 import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { Backdrop, makeStyles } from "@material-ui/core";
