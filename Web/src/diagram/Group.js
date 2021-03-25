@@ -1,7 +1,7 @@
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
 import { Item } from "../common/ContextMenu";
-import Colors from "./colors";
+import Colors from "./Colors";
 
 
 const defaultOptions = () => {

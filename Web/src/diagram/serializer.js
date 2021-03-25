@@ -1,6 +1,6 @@
 import draw2d from "draw2d";
 import Connection from './Connection'
-import Colors from "./colors";
+import Colors from "./Colors";
 import Group from "./Group";
 import Node from "./Node";
 

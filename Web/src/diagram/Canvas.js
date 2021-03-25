@@ -2,7 +2,7 @@ import draw2d from "draw2d";
 import { ZoomPolicy } from "./ZoomPolicy"
 import { ConnectionCreatePolicy } from "./ConnectionCreatePolicy"
 import { PanPolicy } from "./PanPolicy";
-import Colors from "./colors";
+import Colors from "./Colors";
 import { random } from "../common/utils";
 import KeyboardPolicy from "./KeyboardPolicy";
 

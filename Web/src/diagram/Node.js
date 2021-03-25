@@ -3,7 +3,7 @@ import PubSub from 'pubsub-js'
 import { Item, NestedItem } from "../common/ContextMenu";
 import { clickHandler } from "../common/mouseClicks";
 import { timing } from "../common/timing";
-import Colors from "./colors";
+import Colors from "./Colors";
 import { CommandChangeColor } from "./commandChangeColor";
 import { CommandChangeIcon } from "./commandChangeIcon";
 import { createNodeIcon, getNodeIconNames } from "./icons";
