@@ -5,7 +5,7 @@ import { clickHandler } from "../common/mouseClicks";
 import { timing } from "../common/timing";
 import Colors from "./Colors";
 import CommandChangeColor from "./CommandChangeColor";
-import { CommandChangeIcon } from "./commandChangeIcon";
+import CommandChangeIcon from "./CommandChangeIcon";
 import { createNodeIcon, getNodeIconNames } from "./icons";
 import { InnerDiagramFigure } from "./innerDiagramFigure";
 import { Label } from "./Label";

@@ -2,7 +2,7 @@ import draw2d from "draw2d";
 import Node from "./Node";
 
 
-export class CommandChangeIcon extends draw2d.command.Command {
+export default class CommandChangeIcon extends draw2d.command.Command {
     NAME = "CommandChangeIcon"
 
     constructor(figure, iconName) {
@@ -12,22 +12,17 @@ export class CommandChangeIcon extends draw2d.command.Command {
         this.iconName = iconName
     }
 
-
     canExecute() {
-        // return false if we doesn't modify the model => NOP Command
         return this.figure != null && this.oldIConName !== this.iconName
     }
-
 
     execute() {
         this.redo()
     }
 
-
     undo() {
         this.figure.setIcon(this.oldIconName)
     }
-
 
     redo() {
         this.figure.setIcon(this.iconName)
