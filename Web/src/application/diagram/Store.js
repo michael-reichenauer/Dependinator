@@ -1,7 +1,7 @@
 import FileSaver from 'file-saver'
-import { timers } from 'jquery'
 
 const diagramKey = 'diagram'
+const diagramDataKey = 'DiagramData'
 const lastUsedDiagramKey = 'lastUsedDiagram'
 const rootCanvasId = 'root'
 
@@ -15,7 +15,7 @@ class Store {
 
         for (var i = 0, len = localStorage.length; i < len; i++) {
             var key = localStorage.key(i);
-            if (key.endsWith('.DiagramData')) {
+            if (key.endsWith(diagramDataKey)) {
                 const value = JSON.parse(localStorage[key])
                 const parts = key.split('.')
                 const id = parts[1]
@@ -28,22 +28,103 @@ class Store {
         return diagrams.reverse()
     }
 
-    saveFile() {
-        const blob = new Blob(["Hello, world!"], { type: "text/plain;charset=utf-8" });
-        FileSaver.saveAs(blob, "hello world.txt");
+    loadDiagramFromFile(resultHandler) {
+        this.loadFile(fileText => {
+            if (fileText == null) {
+                resultHandler(null)
+                return
+            }
+
+            const diagrams = JSON.parse(fileText)
+            if (diagrams == null) {
+                console.warn('Failed to parse file')
+                resultHandler(null)
+                return
+            }
+
+            let firstDiagramId = null
+            diagrams.diagrams.forEach(diagram => {
+                if (firstDiagramId == null) {
+                    firstDiagramId = diagram.DiagramData.diagramId
+                }
+                this.writeDiagramObject(diagram)
+            })
+            resultHandler(firstDiagramId)
+        })
+    }
+
+    saveDiagramToFile(diagramId) {
+        const diagramData = this.readDiagramData(diagramId)
+        if (diagramData == null) {
+            return
+        }
+
+        const diagram = this.readDiagramObject(diagramId)
+        const diagrams = { diagrams: [diagram] }
+
+        const fileName = `${diagramData.name}.json`
+        const fileText = JSON.stringify(diagrams)
+        this.saveFile(fileName, fileText)
+    }
+
+    writeDiagramObject(diagram) {
+        const diagramData = diagram.diagramData
+        const diagramId = diagramData.diagramId
+
+        this.writeDiagramData(diagramId, diagramData)
+        Object.entries(diagram).forEach(property => {
+            const key = property[0]
+            const value = property[1]
+            if (key === diagramDataKey) {
+                return
+            }
+            this.writeData(this.canvasKey(diagramId, key), value)
+        })
+    }
+
+
+
+    readDiagramObject(diagramId) {
+        const diagramData = this.readDiagramData(diagramId)
+        if (diagramData == null) {
+            return
+        }
+
+        const diagram = {}
+
+        for (var i = 0, len = localStorage.length; i < len; i++) {
+            var key = localStorage.key(i);
+            if (key.startsWith(diagramKey)) {
+                const parts = key.split('.')
+                const id = parts[1]
+                if (id === diagramId) {
+                    const propertyName = parts[2]
+                    const value = localStorage[key]
+                    diagram[propertyName] = JSON.parse(value)
+                }
+            }
+        }
+
+        return diagram
+    }
+
+
+    saveFile(fileName, fileText) {
+        const blob = new Blob([fileText], { type: "text/plain;charset=utf-8" });
+        FileSaver.saveAs(blob, fileName);
 
     }
 
-    loadFile(fileHandler) {
+    loadFile(resultHandler) {
         const readFile = this.buildFileSelector(e => {
             var file = e.path[0].files[0];
             if (!file) {
-                fileHandler(null);
+                resultHandler(null);
             }
 
             const reader = new FileReader();
-            reader.onload = e => fileHandler(e.target.result)
-            reader.onerror = e => fileHandler(null)
+            reader.onload = e => resultHandler(e.target.result)
+            reader.onerror = e => resultHandler(null)
 
             reader.readAsText(file);
         })
@@ -88,7 +169,7 @@ class Store {
     }
 
     newDiagram(diagramId, systemId, name) {
-        const diagramData = { systemId: systemId, name: name }
+        const diagramData = { diagramId: diagramId, systemId: systemId, name: name }
         this.writeDiagramData(diagramId, diagramData)
         this.writeData(lastUsedDiagramKey, { id: diagramId })
     }
@@ -164,7 +245,7 @@ class Store {
     }
 
     diagramKey(diagramId) {
-        return `${diagramKey}.${diagramId}.DiagramData`
+        return `${diagramKey}.${diagramId}.${diagramDataKey}`
     }
 }
 

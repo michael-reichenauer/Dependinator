@@ -136,23 +136,8 @@ export default class DiagramCanvas {
         this.showTotalDiagram()
     }
 
-    commandSaveToFile = (msg, diagramId) => {
-        if (diagramId === this.canvas.diagramId) {
-            // Same diagram, no need to open
-            return
-        }
-
-        const canvasData = this.store.readDiagramRootCanvas(diagramId)
-        if (canvasData == null) {
-            // No data for that id, lets create it
-            return
-        }
-        this.canvas.clearDiagram()
-
-        // Deserialize canvas
-        this.canvas.deserialize(canvasData)
-        this.callbacks.setTitle(this.getTitle())
-        this.showTotalDiagram()
+    commandSaveToFile = () => {
+        this.store.saveDiagramToFile(this.canvas.diagramId)
     }
 
 
