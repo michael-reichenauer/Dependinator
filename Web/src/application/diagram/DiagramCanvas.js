@@ -63,6 +63,7 @@ export default class DiagramCanvas {
         PubSub.subscribe('canvas.SetEditMode', (_, isEditMode) => this.canvas.panPolicy.setEditMode(isEditMode))
         PubSub.subscribe('canvas.NewDiagram', this.commandNewDiagram)
         PubSub.subscribe('canvas.OpenDiagram', this.commandOpenDiagram)
+        PubSub.subscribe('canvas.DeleteDiagram', this.commandDeleteDiagram)
     }
 
 
@@ -91,9 +92,15 @@ export default class DiagramCanvas {
         //store.loadFile(file => console.log('File:', file))
         this.canvas.clearDiagram()
         this.createNewDiagram()
+        this.callbacks.setTitle(this.getTitle())
     }
 
     commandOpenDiagram = (msg, diagramId) => {
+        if (diagramId === this.canvas.diagramId) {
+            // Same diagram, no need to open
+            return
+        }
+
         const canvasData = this.store.readDiagramRootCanvas(diagramId)
         if (canvasData == null) {
             // No data for that id, lets create it
@@ -103,7 +110,27 @@ export default class DiagramCanvas {
 
         // Deserialize canvas
         this.canvas.deserialize(canvasData)
+        this.callbacks.setTitle(this.getTitle())
     }
+
+    commandDeleteDiagram = () => {
+        this.store.deleteDiagram(this.canvas.diagramId)
+        this.canvas.clearDiagram()
+
+        // Try get first diagram to open
+        const canvasData = this.store.readDiagramRootCanvas(this.store.getDiagrams()[0]?.id)
+        if (canvasData == null) {
+            // No data for that id, lets create new diagram
+            this.createNewDiagram()
+            this.callbacks.setTitle(this.getTitle())
+            return
+        }
+
+        // Deserialize canvas
+        this.canvas.deserialize(canvasData)
+        this.callbacks.setTitle(this.getTitle())
+    }
+
 
     commandEditInnerDiagram = (msg, figure) => {
         this.withWorkingIndicator(() => {
@@ -177,6 +204,7 @@ export default class DiagramCanvas {
         const diagramId = cuid()
         this.canvas.diagramId = diagramId
         addDefaultNewDiagram(this.canvas)
+
         this.store.newDiagram(diagramId, this.canvas.canvasId, this.getName())
         this.save()
     }
@@ -197,7 +225,7 @@ export default class DiagramCanvas {
             this.updateToolbarButtonsStates()
 
             if (e.isPostChangeEvent()) {
-                console.log('event isPostChangeEvent:', e)
+                // console.log('event isPostChangeEvent:', e)
                 if (e.command?.figure?.parent?.id === this.canvas.mainNodeId) {
                     // Update the title whenever the main node changes
                     this.callbacks.setTitle(this.getTitle())

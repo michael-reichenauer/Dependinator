@@ -16,7 +16,6 @@ const useMenuStyles = makeStyles((theme) => ({
 }));
 
 const asItems = (diagrams) => {
-    console.log('diagrams', diagrams)
     return diagrams.map(d => {
         return new Item(d.name, () => PubSub.publish('canvas.OpenDiagram', d.id))
     })
@@ -27,10 +26,20 @@ export function ApplicationMenu() {
     const [menu, setMenu] = useState(null);
     const [anchorEl, setAnchorEl] = useState(null);
 
+    const deleteDiagram = () => {
+        var shouldDelete = confirm('Do you really want to delete the current diagram?') //eslint-disable-line
+        if (shouldDelete) {
+            PubSub.publish('canvas.DeleteDiagram')
+        }
+    };
+
+
     const diagrams = menu == null ? [] : asItems(store.getDiagrams())
     const menuItems = [
         new Item('New Diagram', () => PubSub.publish('canvas.NewDiagram')),
         new NestedItem('Open Diagram', diagrams),
+        new Item('Export Diagram as Page (A4)', () => PubSub.publish('diagram.Export')),
+        new Item('Delete current diagram', deleteDiagram),
         new Item('Export Diagram as Page (A4)', () => PubSub.publish('diagram.Export')),
         new Item('About', () => setAnchorEl(true)),
     ]

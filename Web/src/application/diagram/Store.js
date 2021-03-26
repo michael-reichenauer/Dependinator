@@ -14,9 +14,7 @@ class Store {
 
         for (var i = 0, len = localStorage.length; i < len; i++) {
             var key = localStorage.key(i);
-            console.log('key', key)
             if (key.endsWith('.DiagramData')) {
-                console.log('ends with', key)
                 const value = JSON.parse(localStorage[key])
                 const parts = key.split('.')
                 const id = parts[1]
@@ -90,6 +88,23 @@ class Store {
         const diagramData = { systemId: systemId, name: name }
         this.writeData(this.diagramKey(diagramId), diagramData)
         this.writeData(lastUsedDiagramKey, { id: diagramId })
+    }
+
+    deleteDiagram(diagramId) {
+        let keys = []
+
+        for (var i = 0, len = localStorage.length; i < len; i++) {
+            var key = localStorage.key(i);
+            if (key.startsWith(diagramKey)) {
+                const parts = key.split('.')
+                const id = parts[1]
+                if (id === diagramId) {
+                    keys.push(key)
+                }
+            }
+        }
+
+        keys.forEach(key => localStorage.removeItem(key))
     }
 
     setDiagramName(diagramId, name) {

@@ -19,7 +19,6 @@ export class NestedItem {
         this.items = items
         this.isEnabled = isEnabled
         this.isShow = isShow
-        console.log('items', items)
     }
 }
 
@@ -42,7 +41,7 @@ export function AppMenu({ anchorEl, items, onClose }) {
             anchorEl={anchorEl}
             keepMounted
             open={true}
-            onClose={onClose}
+            onClose={() => onClose()}
             PaperProps={{
             }}
         >
