@@ -1,4 +1,5 @@
 import FileSaver from 'file-saver'
+import { timers } from 'jquery'
 
 const diagramKey = 'diagram'
 const lastUsedDiagramKey = 'lastUsedDiagram'
@@ -19,11 +20,12 @@ class Store {
                 const parts = key.split('.')
                 const id = parts[1]
                 const name = value.name
-                diagrams.push({ id: id, name: name })
+                diagrams.push({ id: id, name: name, accessed: value.accessed })
             }
         }
 
-        return diagrams
+        diagrams.sort((i1, i2) => i1.accessed < i2.accessed ? -1 : i1.accessed > i2.accessed ? 1 : 0)
+        return diagrams.reverse()
     }
 
     saveFile() {
@@ -75,10 +77,11 @@ class Store {
         if (diagramId == null) {
             return null
         }
-        const diagramData = this.readData(this.diagramKey(diagramId))
+        const diagramData = this.readDiagramData(diagramId)
         if (diagramData == null) {
             return null
         }
+        //, accessed:Date.now()
         this.writeData(lastUsedDiagramKey, { id: diagramId })
 
         return this.readCanvas(diagramId, rootCanvasId)
@@ -86,7 +89,7 @@ class Store {
 
     newDiagram(diagramId, systemId, name) {
         const diagramData = { systemId: systemId, name: name }
-        this.writeData(this.diagramKey(diagramId), diagramData)
+        this.writeDiagramData(diagramId, diagramData)
         this.writeData(lastUsedDiagramKey, { id: diagramId })
     }
 
@@ -108,17 +111,29 @@ class Store {
     }
 
     setDiagramName(diagramId, name) {
-        const diagramData = this.readData(this.diagramKey(diagramId))
+        const diagramData = this.readDiagramData(diagramId)
         this.writeData(this.diagramKey(diagramId), { ...diagramData, name: name })
+    }
+
+    readDiagramData(diagramId) {
+        let diagramData = this.readData(this.diagramKey(diagramId))
+        this.writeDiagramData(diagramId, diagramData)
+        return diagramData
+    }
+
+    writeDiagramData(diagramId, diagramData) {
+        diagramData = { ...diagramData, accessed: Date.now() }
+        this.writeData(this.diagramKey(diagramId), diagramData)
     }
 
     readCanvas(diagramId, canvasId) {
         return this.readData(this.canvasKey(diagramId, canvasId))
     }
 
-
     writeCanvas(canvasData, canvasId) {
         this.writeData(this.canvasKey(canvasData.diagramId, canvasId), canvasData)
+        // Update access time
+        this.writeDiagramData(canvasData.diagramId, this.readDiagramData(canvasData.diagramId))
     }
 
     buildFileSelector(selectedHandler) {

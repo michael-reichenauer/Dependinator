@@ -223,7 +223,7 @@ export default class Node extends draw2d.shape.node.Between {
     }
 
     editInnerDiagram() {
-        if (this.diagramIcon != null) {
+        if (this.diagramIcon == null) {
             return
         }
 
