@@ -10,13 +10,11 @@ export default class InnerDiagramCanvas {
     canvas = null
     canvasStack = null
     store = null
-    serializer = null
 
-    constructor(canvas, canvasStack, store, serializer) {
+    constructor(canvas, canvasStack, store) {
         this.canvas = canvas
         this.canvasStack = canvasStack
         this.store = store
-        this.serializer = serializer
     }
 
     editInnerDiagram = (node) => {
@@ -41,24 +39,26 @@ export default class InnerDiagramCanvas {
         node.hideInnerDiagram()
 
         // Push current diagram to make room for new inner diagram 
-        this.canvasStack.pushDiagram(node.getId())
+        this.canvasStack.pushDiagram()
         t.log('pushed diagram')
 
         // Load inner diagram or a default group node if first time
-        if (!this.load(node.getId())) {
+        if (!this.load(node.id)) {
+            this.canvas.canvasId = node.id
             addDefaultInnerDiagram(this.canvas, node.getName(), node.getDescription())
         }
 
         t.log('loaded diagram')
-        this.updateGroup(node)
-        this.addOrUpdateConnectedNodes(connectedNodes)
+        const groupNode = this.canvas.getFigure(this.canvas.mainNodeId)
+        this.updateGroup(groupNode, node)
+        this.addOrUpdateConnectedNodes(groupNode, connectedNodes)
         t.log('added connected nodes')
 
         // Zoom inner diagram to correspond to inner diagram image size in the outer node
         this.canvas.setZoom(outerZoom / innerDiagram.innerZoom)
 
         // Scroll inner diagram to correspond to where the inner diagram image in the outer node was
-        const innerDiagramRect = this.getInnerDiagramRect()
+        const innerDiagramRect = this.getInnerDiagramRect(groupNode)
         const left = innerDiagramRect.x - innerDiagramViewPos.left * this.canvas.zoomFactor
         const top = innerDiagramRect.y - innerDiagramViewPos.top * this.canvas.zoomFactor
         this.setScrollInCanvasCoordinate(left, top)
@@ -68,45 +68,45 @@ export default class InnerDiagramCanvas {
 
     popFromInnerDiagram = () => {
         const t = timing()
+        const groupNode = this.canvas.getFigure(this.canvas.mainNodeId)
 
         // Get the inner diagram zoom to use when zooming outer diagram
         const postInnerZoom = this.canvas.zoomFactor
 
         // Get inner diagram view position to scroll the outer diagram to same position
-        const innerDiagramRect = this.getInnerDiagramRect()
+        const innerDiagramRect = this.getInnerDiagramRect(groupNode)
         const innerDiagramViewPos = this.fromCanvasToViewCoordinate(innerDiagramRect.x, innerDiagramRect.y)
 
-        // Show outer diagram (closing the inner diagram)
-        const figureId = this.canvas.name
+        // Show outer diagram (closing the inner diagram) (same id as group)
+        const outerNodeId = this.canvas.canvasId
 
-        const externalNodes = this.getNodesExternalToGroup()
+        const externalNodes = this.getNodesExternalToGroup(groupNode)
         this.canvasStack.popDiagram()
 
-        // Update the figures inner diagram image in the node
-        const figure = this.canvas.getFigure(figureId)
-        figure.showInnerDiagram()
+        // Update the nodes inner diagram image in the outer node
+        const node = this.canvas.getFigure(outerNodeId)
+        node.showInnerDiagram()
 
         // Zoom outer diagram to correspond to the inner diagram
-        const preInnerZoom = this.canvas.zoomFactor / figure.innerDiagram.innerZoom
+        const preInnerZoom = this.canvas.zoomFactor / node.innerDiagram.innerZoom
         const newZoom = this.canvas.zoomFactor * (postInnerZoom / preInnerZoom)
         this.canvas.setZoom(newZoom)
 
         // get the inner diagram margin in outer canvas coordinates
-        const imx = figure.innerDiagram.marginX * figure.innerDiagram.innerZoom
-        const imy = figure.innerDiagram.marginY * figure.innerDiagram.innerZoom
+        const imx = node.innerDiagram.marginX * node.innerDiagram.innerZoom
+        const imy = node.innerDiagram.marginY * node.innerDiagram.innerZoom
 
         // Scroll outer diagram to correspond to inner diagram position
-        const sx = figure.x + 2 + imx - (innerDiagramViewPos.x * this.canvas.zoomFactor)
-        const sy = figure.y + 2 + imy - (innerDiagramViewPos.y * this.canvas.zoomFactor)
+        const sx = node.x + 2 + imx - (innerDiagramViewPos.x * this.canvas.zoomFactor)
+        const sy = node.y + 2 + imy - (innerDiagramViewPos.y * this.canvas.zoomFactor)
         this.setScrollInCanvasCoordinate(sx, sy)
 
-        this.addOrUpdateExternalNodes(externalNodes, figure)
+        this.addOrUpdateExternalNodes(externalNodes, node)
 
         t.log()
     }
 
-    getNodesExternalToGroup() {
-        const group = this.canvas.mainNode
+    getNodesExternalToGroup(group) {
         const internalNodes = group.getAboardFigures(true).asArray()
         const externalNodes = this.canvas.getFigures().asArray()
             .filter(f => f !== group && null == internalNodes.find(i => i.id === f.id))
@@ -239,13 +239,12 @@ export default class InnerDiagramCanvas {
         return { left: left, top: top, right: right, bottom: bottom }
     }
 
-    updateGroup(node) {
-        this.canvas.mainNode.setName(node.getName())
-        this.canvas.mainNode.setDescription(node.getDescription())
+    updateGroup(group, node) {
+        group.setName(node.getName())
+        group.setDescription(node.getDescription())
     }
 
-    addOrUpdateConnectedNodes(nodes) {
-        const group = this.canvas.mainNode
+    addOrUpdateConnectedNodes(group, nodes) {
         const marginX = 150
         const marginY = 100
 
@@ -355,20 +354,20 @@ export default class InnerDiagramCanvas {
     }
 
 
-    getInnerDiagramRect() {
-        const g = this.canvas.mainNode
+    getInnerDiagramRect(groupNode) {
+        const g = groupNode
         return { x: g.x, y: g.y, w: g.width, h: g.heigh }
     }
 
-    load = (storeName) => {
-        console.log('load', storeName)
-        const canvasData = this.store.read(storeName)
+    load = (canvasId) => {
+        console.log('load', canvasId)
+        const canvasData = this.store.readCanvas(this.canvas.diagramId, canvasId)
         if (canvasData == null) {
             return false
         }
 
         // Deserialize canvas
-        this.serializer.deserialize(canvasData)
+        this.canvas.deserialize(canvasData)
         return true
     }
 

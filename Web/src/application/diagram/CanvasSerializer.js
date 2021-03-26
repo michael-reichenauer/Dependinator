@@ -5,36 +5,45 @@ import Group from "./Group";
 import Node from "./Node";
 
 
-export default class Serializer {
+export default class CanvasSerializer {
     constructor(canvas) {
         this.canvas = canvas
     }
 
-    serialize = () => {
-        if (this.canvas.mainNode instanceof Group) {
-            this.canvas.mainNode.getAboardFigures(true).each((i, f) => f.group = this.canvas.mainNode)
+    serialize() {
+        // If canvas is a group, mark all nodes within the group as group to be included in data
+        const node = this.canvas.getFigure(this.canvas.mainNodeId)
+        if (node instanceof Group) {
+            node.getAboardFigures(true).each((i, f) => f.group = node)
         }
 
         const canvasData = {
+            diagramId: this.canvas.diagramId,
+            canvasId: this.canvas.canvasId,
+            mainNodeId: this.canvas.mainNodeId,
             box: this.canvas.getFiguresRect(),
             figures: this.serializeFigures(),
             connections: this.serializeConnections(),
             zoom: this.canvas.getZoom()
         }
 
+        // Unmark all nodes 
         this.canvas.getFigures().each((i, f) => f.group = null)
 
         return canvasData
     }
 
 
-    deserialize = (canvasData) => {
+    deserialize(canvasData) {
+        this.canvas.diagramId = canvasData.diagramId
+        this.canvas.canvasId = canvasData.canvasId
+        this.canvas.mainNodeId = canvasData.mainNodeId
         this.canvas.addAll(this.deserializeFigures(canvasData.figures))
         this.canvas.addAll(this.deserializeConnections(canvasData.connections))
     }
 
 
-    export = (rect, result) => {
+    export(rect, resultHandler) {
         var writer = new draw2d.io.svg.Writer();
         writer.marshal(this.canvas, (svg) => {
             // console.log('svg org:', svg)
@@ -59,7 +68,7 @@ export default class Serializer {
             // Remove org view box (if it exists)
             res = res.replace('viewBox="0 0 10000 10000"', '')
 
-            result(res)
+            resultHandler(res)
         });
     }
 

@@ -4,14 +4,8 @@ import Group from "./Group";
 import Node from "./Node";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
 
-const systemId = 'system'
+const marginY = 200
 
-export const setSystemNodeReadOnly = (canvas) => {
-    const systemNode = canvas.getFigure(systemId)
-    systemNode?.setDeleteable(false)
-    canvas.system = systemNode
-    return systemNode
-}
 
 export const addFigureToCanvas = (canvas, figure, p) => {
     const x = p.x - figure.width / 2
@@ -19,15 +13,12 @@ export const addFigureToCanvas = (canvas, figure, p) => {
     canvas.runCmd(new draw2d.command.CommandAdd(canvas, figure, x, y))
 }
 
-
 export const addDefaultNewDiagram = (canvas) => {
-    // Add a user connected to a system, connected to an external system 
-    const marginY = 200
-    const user = new Node(Node.userType)
+    // Add a system node with a connected external user and external system 
     const system = new Node(Node.nodeType)
-    system.setId(systemId)
     system.setIcon('Diagram')
     system.setName('System')
+    const user = new Node(Node.userType)
     const external = new Node(Node.externalType)
 
     // Add nodes at the center of the canvas
@@ -36,19 +27,21 @@ export const addDefaultNewDiagram = (canvas) => {
     const x = cx
     const y = cy - user.height / 2 - marginY
 
-    addFigure(canvas, user, { x: x, y: y })
+    addNode(canvas, user, { x: x, y: y })
+    addNode(canvas, system, { x: x, y: user.y + user.height + marginY })
+    addNode(canvas, external, { x: x, y: system.y + system.height + marginY })
 
-    addFigure(canvas, system, { x: x, y: user.y + user.height + marginY })
-    canvas.add(new Connection(null, user, 'output1', system, 'input1'))
+    addConnection(canvas, user, system)
+    addConnection(canvas, system, external)
 
-    addFigure(canvas, external, { x: x, y: system.y + system.height + marginY })
-    canvas.add(new Connection(null, system, 'output1', external, 'input1'))
+    canvas.canvasId = 'root'
+    canvas.mainNodeId = system.id
 
-    setSystemNodeReadOnly(canvas)
     zoomAndMoveShowTotalDiagram(canvas)
 }
 
 export const addDefaultInnerDiagram = (canvas, name, description) => {
+    console.log('canvas', canvas)
     // Add a default group at the center of the canvas
     const group = new Group(name, description)
     const d = canvas.getDimension()
@@ -64,8 +57,12 @@ export const addDefaultInnerDiagram = (canvas, name, description) => {
 }
 
 
-const addFigure = (canvas, figure, p) => {
-    const x = p.x - figure.width / 2
-    const y = p.y - figure.height / 2
-    canvas.add(figure, x, y)
+const addNode = (canvas, node, p) => {
+    const x = p.x - node.width / 2
+    const y = p.y - node.height / 2
+    canvas.add(node, x, y)
+}
+
+const addConnection = (canvas, src, trg) => {
+    canvas.add(new Connection(null, src, 'output1', trg, 'input1'))
 }

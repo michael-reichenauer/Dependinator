@@ -1,7 +1,13 @@
 import FileSaver from 'file-saver'
 
+const diagramKey = 'diagram'
+const lastUsedDiagramKey = 'lastUsedDiagram'
+const rootCanvasId = 'root'
 
 class Store {
+    getLastUsedDiagramId() {
+        return this.readData(lastUsedDiagramKey)?.id
+    }
 
     saveFile() {
         const blob = new Blob(["Hello, world!"], { type: "text/plain;charset=utf-8" });
@@ -27,7 +33,6 @@ class Store {
     }
 
 
-
     onChanged(e) {
         var file = e.path[0].files[0];
         if (!file) {
@@ -49,25 +54,37 @@ class Store {
         localStorage.clear()
     }
 
-    read(storeName) {
-        // Get canvas data from local storage.
-        let canvasText = localStorage.getItem(storeName)
-        if (canvasText == null) {
+    readDiagramRootCanvas(diagramId) {
+        if (diagramId == null) {
             return null
         }
+        const diagramData = this.readData(this.diagramKey(diagramId))
+        if (diagramData == null) {
+            return null
+        }
+        this.writeData(lastUsedDiagramKey, { id: diagramId })
 
-        const canvasData = JSON.parse(canvasText)
-        if (canvasData == null) {
-            console.warn('Failed to parse canvas data', storeName)
-            return null
-        }
-        return canvasData
+        return this.readCanvas(diagramId, rootCanvasId)
     }
 
-    write(canvasData, storeName) {
-        // Store canvas data in local storage
-        const canvasText = JSON.stringify(canvasData)
-        localStorage.setItem(storeName, canvasText)
+    newDiagram(diagramId, systemId, name) {
+        const diagramData = { systemId: systemId, name: name }
+        this.writeData(this.diagramKey(diagramId), diagramData)
+        this.writeData(lastUsedDiagramKey, { id: diagramId })
+    }
+
+    setDiagramName(diagramId, name) {
+        const diagramData = this.readData(this.diagramKey(diagramId))
+        this.writeData(this.diagramKey(diagramId), { ...diagramData, name: name })
+    }
+
+    readCanvas(diagramId, canvasId) {
+        return this.readData(this.canvasKey(diagramId, canvasId))
+    }
+
+
+    writeCanvas(canvasData, canvasId) {
+        this.writeData(this.canvasKey(canvasData.diagramId, canvasId), canvasData)
     }
 
     buildFileSelector(selectedHandler) {
@@ -77,6 +94,28 @@ class Store {
         fileSelector.addEventListener('change', selectedHandler, false);
 
         return fileSelector;
+    }
+
+    readData(key) {
+        let text = localStorage.getItem(key)
+        if (text == null) {
+            console.log('No data for key', key)
+            return null
+        }
+        return JSON.parse(text)
+    }
+
+    writeData(key, data) {
+        const text = JSON.stringify(data)
+        localStorage.setItem(key, text)
+    }
+
+    canvasKey(diagramId, canvasId) {
+        return `${diagramKey}.${diagramId}.${canvasId}`
+    }
+
+    diagramKey(diagramId) {
+        return `${diagramKey}.${diagramId}.DiagramData`
     }
 }
 

@@ -48,13 +48,6 @@ export default class Group extends draw2d.shape.composite.Raft {
         this.on("dblclick", (s, e) => PubSub.publish('canvas.AddDefaultNode', { x: e.x, y: e.y }))
     }
 
-    setCanvas(canvas) {
-        super.setCanvas(canvas)
-        if (canvas != null) {
-            canvas.mainNode = this
-        }
-    }
-
     static deserialize(data) {
         return new Group(data.name, data.description,
             { id: data.id, width: data.w, height: data.h })
@@ -73,6 +66,17 @@ export default class Group extends draw2d.shape.composite.Raft {
             ...this.getCanvas().canvas.getContextMenuItems(x, y),
             new Item('Set default size', () => this.setDefaultSize()),
         ]
+    }
+
+    setCanvas(canvas) {
+        super.setCanvas(canvas)
+
+        if (canvas != null) {
+            // Group is main node
+            canvas.mainNodeId = this.id
+            // Cannot delete main node of canvas
+            this.setDeleteable(false)
+        }
     }
 
     setName(name) {

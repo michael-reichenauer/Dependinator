@@ -50,6 +50,7 @@ export default class Node extends draw2d.shape.node.Between {
     descriptionLabel = null
     icon = null
     diagramIcon = null
+    isDeleteable = true
 
 
     getName = () => this.nameLabel?.text ?? ''
@@ -82,8 +83,9 @@ export default class Node extends draw2d.shape.node.Between {
         super.setCanvas(canvas)
 
         if (canvas != null) {
-            if (this.id === 'system') {
-                canvas.mainNode = this
+            if (canvas.mainNodeId === this.id) {
+                // Cannot delete main node of canvas
+                this.setDeleteable(false)
             }
             this.diagramIcon?.shape?.attr({ "cursor": "pointer" })
         }
@@ -126,7 +128,7 @@ export default class Node extends draw2d.shape.node.Between {
             new Item('To front', () => this.toFront()),
             new Item('To back', () => this.toBack()),
             new Item('Set default size', () => this.setDefaultSize()),
-            new Item('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)))
+            new Item('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.isDeleteable)
         ]
     }
 
@@ -162,6 +164,10 @@ export default class Node extends draw2d.shape.node.Between {
         this.diagramIcon?.setColor(fontColor)
     }
 
+    setDeleteable(flag) {
+        super.setDeleteable(flag)
+        this.isDeleteable = flag
+    }
 
     setIcon(name) {
         if (this.icon != null) {
@@ -185,7 +191,7 @@ export default class Node extends draw2d.shape.node.Between {
 
         this.setChildrenVisible(false)
 
-        const canvasData = store.read(this.getId())
+        const canvasData = store.readCanvas(this.getCanvas().diagramId, this.getId())
         this.innerDiagram = new InnerDiagramFigure(this, canvasData)
         this.innerDiagram.onClick = clickHandler(
             () => this.hideInnerDiagram(),
@@ -234,6 +240,7 @@ export default class Node extends draw2d.shape.node.Between {
         this.hideInnerDiagram()
         this.showInnerDiagram()
     }
+
     setChildrenVisible(isVisible) {
         this.nameLabel?.setVisible(isVisible)
         this.descriptionLabel?.setVisible(isVisible)

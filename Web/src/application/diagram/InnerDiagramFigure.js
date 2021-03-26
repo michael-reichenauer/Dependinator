@@ -41,13 +41,18 @@ export default class InnerDiagramFigure extends draw2d.SetFigure {
             radius: 5,
         });
 
+        console.log('parent', parent)
+        console.log('data', canvasData)
+
         this.parent = parent
         this.canvasData = canvasData ?? defaultDiagramData(parent.getName())
     }
 
     setCanvas(canvas) {
         super.setCanvas(canvas)
-        this.shape?.attr({ "cursor": "pointer" })
+        if (canvas != null) {
+            this.shape?.attr({ "cursor": "pointer" })
+        }
     }
 
 
@@ -104,7 +109,7 @@ export default class InnerDiagramFigure extends draw2d.SetFigure {
         let dy = (diagramHeight - diagramBox.h) / 2 - diagramBox.y
 
         // Add the inner diagram figures and connections (centered within figure)
-        this.addFigures(set, dx, dy)
+        this.addNodes(set, dx, dy)
         this.addConnections(set, dx, dy)
         //this.addExternalGroupConnections(set)
 
@@ -119,51 +124,27 @@ export default class InnerDiagramFigure extends draw2d.SetFigure {
         return figures.find(f => f.type === Group.groupType)
     }
 
-    addFigures(set, dx, dy) {
-        this.canvasData.figures.forEach(f => this.addFigure(set, f, dx, dy))
+    addNodes(set, dx, dy) {
+        this.canvasData.figures.forEach(f => this.addNode(set, f, dx, dy))
     }
 
     addConnections(set, dx, dy) {
         this.canvasData.connections.forEach(c => this.addConnection(set, c, dx, dy))
     }
 
-    // addExternalGroupConnections(set) {
-    //     // Check which external connections that are active
-    //     const dashPattern = '--'
-    //     const hasLeftInput = this.parent.getInputPort(0).getConnections().asArray().length > 0
-    //     const hasTopInput = this.parent.getInputPort(1).getConnections().asArray().length > 0
-    //     const hasRightOutput = this.parent.getOutputPort(0).getConnections().asArray().length > 0
-    //     const hasBottomOutput = this.parent.getOutputPort(1).getConnections().asArray().length > 0
-
-    //     // Draw lines for each of the active connections
-    //     const { x, y, w, h } = this.groupRect
-    //     if (hasLeftInput) {
-    //         set.push(this.externalLine(0, y + h / 2, x, y + h / 2), dashPattern)
-    //     }
-    //     if (hasTopInput) {
-    //         set.push(this.externalLine(x + w / 2, 0, x + w / 2, y), dashPattern)
-    //     }
-    //     if (hasRightOutput) {
-    //         set.push(this.externalLine(x + w, y + h / 2, this.diagramWidth, y + h / 2), dashPattern)
-    //     }
-    //     if (hasBottomOutput) {
-    //         set.push(this.externalLine(x + w / 2, y + h, x + w / 2, this.diagramHeight), dashPattern)
-    //     }
-    // }
-
-    addFigure(set, figure, offsetX, offsetY) {
-        switch (figure.type) {
+    addNode(set, node, offsetX, offsetY) {
+        switch (node.type) {
             case Node.nodeType:
             case Node.userType:
             case Node.externalType:
-                if (figure.hasGroup) {
-                    set.push(this.createNode(figure.x + offsetX, figure.y + offsetY, figure.w, figure.h, figure.color))
-                    set.push(this.createNodeName(figure.x + offsetX, figure.y + offsetY, figure.w, figure.name, figure.color))
+                if (node.hasGroup) {
+                    set.push(this.createNode(node.x + offsetX, node.y + offsetY, node.w, node.h, node.color))
+                    set.push(this.createNodeName(node.x + offsetX, node.y + offsetY, node.w, node.name, node.color))
                 }
                 break;
             case Group.groupType:
-                set.push(this.createGroupNode(figure.x + offsetX, figure.y + offsetY, figure.w, figure.h))
-                set.push(this.createGroupName(figure.x + offsetX, figure.y + offsetY, figure.w, this.parent.getName()))
+                set.push(this.createGroupNode(node.x + offsetX, node.y + offsetY, node.w, node.h))
+                set.push(this.createGroupName(node.x + offsetX, node.y + offsetY, node.w, this.parent.getName()))
                 break;
             default:
                 // Ignore other types

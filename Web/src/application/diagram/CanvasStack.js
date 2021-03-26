@@ -12,7 +12,7 @@ export default class CanvasStack {
 
     getLevel = () => this.diagramStack.length
 
-    pushDiagram(newName) {
+    pushDiagram() {
         const canvas = this.canvas
         const canvasData = this.getCanvasData(canvas)
 
@@ -23,7 +23,6 @@ export default class CanvasStack {
 
         // new command stack, but reuse command stack event listeners from parent
         canvas.commandStack.eventListeners = canvasData.commandStack.eventListeners
-        canvas.name = newName
     }
 
 
@@ -43,13 +42,8 @@ export default class CanvasStack {
 
     clearCanvas(canvas) {
         // Remove all connections and nodes
-        canvas.lines.each(function (i, e) {
-            e.setCanvas(null)
-        })
-        canvas.figures.clone().each(function (i, e) {
-            e.setCanvas(null)
-        })
-        canvas.mainNode = null
+        canvas.lines.each((i, e) => e.setCanvas(null))
+        canvas.figures.each((i, e) => e.setCanvas(null))
         // Clear all canvas data
         canvas.selection.clear()
         canvas.currentDropTarget = null
@@ -59,13 +53,17 @@ export default class CanvasStack {
         canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
         canvas.lineIntersections = new draw2d.util.ArrayList()
         canvas.commandStack = new draw2d.command.CommandStack()
+        canvas.mainNodeId = null
+        canvas.canvasId = null
     }
 
 
     getCanvasData(canvas) {
         const area = canvas.getScrollArea()
         return {
-            name: canvas.name,
+            diagramId: canvas.diagramId,
+            canvasId: canvas.canvasId,
+            mainNodeId: canvas.mainNodeId,
             zoom: canvas.zoomFactor,
             x: area.scrollLeft(),
             y: area.scrollTop(),
@@ -79,7 +77,10 @@ export default class CanvasStack {
     }
 
     restoreCanvasData(canvasData, canvas) {
-        canvas.name = canvasData.name
+        canvas.diagramId = canvasData.diagramId
+        canvas.canvasId = canvasData.canvasId
+        canvas.mainNodeId = canvasData.mainNodeId
+
         canvas.setZoom(canvasData.zoom)
         const area = canvas.getScrollArea()
         area.scrollLeft(canvasData.x)
@@ -90,22 +91,13 @@ export default class CanvasStack {
         canvas.commandStack = canvasData.commandStack
 
         // Set canvas first in lines (needed to restore e.g group)
-        canvasData.lines.each(function (i, e) {
-            e.setCanvas(canvas)
-
-        })
+        canvasData.lines.each((i, e) => e.setCanvas(canvas))
 
         // Set canvas for figures (group need that lines have been set)
-        canvasData.figures.each(function (i, e) {
-            e.setCanvas(canvas)
-        })
+        canvasData.figures.each((i, e) => e.setCanvas(canvas))
 
         // Repaint lines and figures
-        canvasData.lines.each(function (i, e) {
-            e.repaint()
-        })
-        canvasData.figures.each(function (i, e) {
-            e.repaint()
-        })
+        canvasData.lines.each((i, e) => e.repaint())
+        canvasData.figures.each((i, e) => e.repaint())
     }
 }

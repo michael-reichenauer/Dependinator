@@ -2,16 +2,15 @@ import "import-jquery";
 import "jquery-ui-bundle";
 import "jquery-ui-bundle/jquery-ui.css";
 import PubSub from 'pubsub-js'
-
+import cuid from 'cuid'
 import { random } from '../../common/utils'
 import Node from './Node'
-import Serializer from './Serializer'
 import { store } from "./Store";
 import Canvas from "./Canvas";
 import { Item } from "../../common/ContextMenu";
 import CanvasStack from "./CanvasStack";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
-import { addDefaultNewDiagram, addFigureToCanvas, setSystemNodeReadOnly } from "./addDefault";
+import { addDefaultNewDiagram, addFigureToCanvas } from "./addDefault";
 import InnerDiagramCanvas from "./InnerDiagramCanvas";
 
 
@@ -20,26 +19,22 @@ export default class DiagramCanvas {
     static defaultHeight = 100000
 
     canvasStack = null
-    serializer = null
     store = store
     inner = null
 
     canvas = null;
     callbacks = null
 
-    constructor(canvasId, callbacks) {
+    constructor(htmlElementId, callbacks) {
         this.callbacks = callbacks
-        this.canvas = new Canvas(canvasId, this.onEditMode, DiagramCanvas.defaultWidth, DiagramCanvas.defaultHeight)
-        this.serializer = new Serializer(this.canvas)
+        this.canvas = new Canvas(htmlElementId, this.onEditMode, DiagramCanvas.defaultWidth, DiagramCanvas.defaultHeight)
         this.canvasStack = new CanvasStack(this.canvas)
-        this.inner = new InnerDiagramCanvas(this.canvas, this.canvasStack, this.store, this.serializer)
+        this.inner = new InnerDiagramCanvas(this.canvas, this.canvasStack, this.store)
     }
 
     init() {
-        if (!this.load(this.canvas.name)) {
-            addDefaultNewDiagram(this.canvas)
-        }
-        setSystemNodeReadOnly(this.canvas)
+        this.loadInitialDiagram()
+
         this.callbacks.setTitle(this.getTitle())
 
         this.handleDoubleClick(this.canvas)
@@ -93,11 +88,8 @@ export default class DiagramCanvas {
     commandNewDiagram = () => {
         //store.loadFile(file => console.log('File:', file))
         this.canvas.clearDiagram()
-        this.store.clear()
-        addDefaultNewDiagram(this.canvas)
-        this.save()
+        this.createNewDiagram()
     }
-
 
     commandEditInnerDiagram = (msg, figure) => {
         this.withWorkingIndicator(() => {
@@ -138,7 +130,7 @@ export default class DiagramCanvas {
 
     export = (result) => {
         const rect = this.canvas.getFiguresRect()
-        this.serializer.export(rect, result)
+        this.canvas.export(rect, result)
     }
 
     tryGetFigure = (x, y) => {
@@ -149,19 +141,30 @@ export default class DiagramCanvas {
 
     save() {
         // Serialize canvas figures and connections into canvas data object
-        const canvasData = this.serializer.serialize();
-        this.store.write(canvasData, this.canvas.name)
+        const canvasData = this.canvas.serialize();
+        this.store.writeCanvas(canvasData, this.canvas.canvasId)
     }
 
-    load() {
-        const canvasData = this.store.read(this.canvas.name)
+    loadInitialDiagram() {
+        const diagramId = this.store.getLastUsedDiagramId()
+        const canvasData = this.store.readDiagramRootCanvas(diagramId)
         if (canvasData == null) {
-            return false
+            // No data for that id, lets create it
+            this.createNewDiagram()
+            return
         }
 
         // Deserialize canvas
-        this.serializer.deserialize(canvasData)
+        this.canvas.deserialize(canvasData)
         return true
+    }
+
+    createNewDiagram = () => {
+        const diagramId = cuid()
+        this.canvas.diagramId = diagramId
+        addDefaultNewDiagram(this.canvas)
+        this.store.newDiagram(diagramId, this.canvas.canvasId, this.getName())
+        this.save()
     }
 
     getCenter() {
@@ -180,10 +183,11 @@ export default class DiagramCanvas {
             this.updateToolbarButtonsStates()
 
             if (e.isPostChangeEvent()) {
-                // console.log('event isPostChangeEvent:', e)
-                if (e.command?.figure === this.canvas.mainNode) {
+                console.log('event isPostChangeEvent:', e)
+                if (e.command?.figure?.parent?.id === this.canvas.mainNodeId) {
                     // Update the title whenever the main node changes
                     this.callbacks.setTitle(this.getTitle())
+                    this.store.setDiagramName(this.canvas.diagramId, this.getName())
                 }
 
                 if (e.action === "POST_EXECUTE") {
@@ -194,7 +198,7 @@ export default class DiagramCanvas {
     }
 
     getTitle() {
-        const name = this.canvas?.mainNode?.getName() ?? ''
+        const name = this.getName()
         switch (this.canvasStack.getLevel()) {
             case 0:
                 return name + ' - Context'
@@ -205,6 +209,10 @@ export default class DiagramCanvas {
             default:
                 return name + ' - Code'
         }
+    }
+
+    getName() {
+        return this.canvas.getFigure(this.canvas.mainNodeId)?.getName() ?? ''
     }
 
     updateToolbarButtonsStates() {

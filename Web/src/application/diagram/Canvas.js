@@ -5,17 +5,24 @@ import KeyboardPolicy from "./KeyboardPolicy";
 import ConnectionCreatePolicy from "./ConnectionCreatePolicy"
 import Colors from "./Colors";
 import { random } from "../../common/utils";
+import CanvasSerializer from "./CanvasSerializer";
 
 
 const randomDist = 30
 
 export default class Canvas extends draw2d.Canvas {
-    name = 'root'
+    serializer = null
 
-    constructor(canvasId, onEditMode, width, height) {
-        super(canvasId, width, height);
+    diagramId = null
+    canvasId = null
+    mainNodeId = null
 
-        this.setScrollArea("#" + canvasId)
+    constructor(htmlElementId, onEditMode, width, height) {
+        super(htmlElementId, width, height);
+
+        this.serializer = new CanvasSerializer(this)
+
+        this.setScrollArea("#" + htmlElementId)
         this.setDimension(new draw2d.geo.Rectangle(0, 0, width, height))
 
         // A likely bug in draw2d can be fixed with this hack
@@ -41,19 +48,25 @@ export default class Canvas extends draw2d.Canvas {
         this.installEditPolicy(new draw2d.policy.canvas.SnapToInBetweenEditPolicy())
         this.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
         this.installEditPolicy(new KeyboardPolicy())
-        //canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
+        //canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))      
+    }
+
+    serialize() {
+        return this.serializer.serialize()
+    }
+
+    deserialize(canvasData) {
+        this.serializer.deserialize(canvasData)
+    }
+
+    export(rect, resultHandler) {
+        this.serializer.export(rect, resultHandler)
     }
 
     clearDiagram = () => {
         const canvas = this
-        canvas.lines.clone().each(function (i, e) {
-            canvas.remove(e)
-        })
-
-        canvas.figures.clone().each(function (i, e) {
-            canvas.remove(e)
-        })
-
+        canvas.lines.clone().each((i, e) => canvas.remove(e))
+        canvas.figures.clone().each((i, e) => canvas.remove(e))
         canvas.selection.clear()
         canvas.currentDropTarget = null
         canvas.figures = new draw2d.util.ArrayList()
@@ -62,6 +75,8 @@ export default class Canvas extends draw2d.Canvas {
         canvas.commandStack.markSaveLocation()
         canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList()
         canvas.lineIntersections = new draw2d.util.ArrayList()
+        canvas.diagramId = null
+        canvas.canvasId = null
     }
 
 
@@ -208,6 +223,4 @@ export default class Canvas extends draw2d.Canvas {
 
         return { x: minX, y: minY, w: maxX - minX, h: maxY - minY, x2: maxX, y2: maxY }
     }
-
 }
-
