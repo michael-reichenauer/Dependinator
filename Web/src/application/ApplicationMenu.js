@@ -15,7 +15,7 @@ const useMenuStyles = makeStyles((theme) => ({
     },
 }));
 
-const asItems = (diagrams) => {
+const asMenuItems = (diagrams) => {
     return diagrams.map(d => {
         return new Item(d.name, () => PubSub.publish('canvas.OpenDiagram', d.id))
     })
@@ -34,12 +34,14 @@ export function ApplicationMenu() {
     };
 
 
-    const diagrams = menu == null ? [] : asItems(store.getDiagrams())
+    const diagrams = menu == null ? [] : asMenuItems(store.getDiagrams())
+
     const menuItems = [
         new Item('New Diagram', () => PubSub.publish('canvas.NewDiagram')),
-        new NestedItem('Open Diagram', diagrams),
-        new Item('Delete current diagram', deleteDiagram),
-        new Item('Open print preview tab (A4)', () => PubSub.publish('diagram.Export')),
+        new NestedItem('Open Recent', diagrams),
+        new Item('Save to file', PubSub.publish('canvas.SaveDiagramToFile')),
+        new Item('Print', () => PubSub.publish('diagram.Export')),
+        new Item('Delete', deleteDiagram),
         new Item('About', () => setAnchorEl(true)),
     ]
 

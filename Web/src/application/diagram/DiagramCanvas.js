@@ -64,6 +64,7 @@ export default class DiagramCanvas {
         PubSub.subscribe('canvas.NewDiagram', this.commandNewDiagram)
         PubSub.subscribe('canvas.OpenDiagram', this.commandOpenDiagram)
         PubSub.subscribe('canvas.DeleteDiagram', this.commandDeleteDiagram)
+        PubSub.subscribe('canvas.SaveDiagramToFile', this.commandSaveToFile)
     }
 
 
@@ -128,6 +129,25 @@ export default class DiagramCanvas {
             this.showTotalDiagram()
             return
         }
+
+        // Deserialize canvas
+        this.canvas.deserialize(canvasData)
+        this.callbacks.setTitle(this.getTitle())
+        this.showTotalDiagram()
+    }
+
+    commandSaveToFile = (msg, diagramId) => {
+        if (diagramId === this.canvas.diagramId) {
+            // Same diagram, no need to open
+            return
+        }
+
+        const canvasData = this.store.readDiagramRootCanvas(diagramId)
+        if (canvasData == null) {
+            // No data for that id, lets create it
+            return
+        }
+        this.canvas.clearDiagram()
 
         // Deserialize canvas
         this.canvas.deserialize(canvasData)

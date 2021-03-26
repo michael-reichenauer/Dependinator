@@ -133,22 +133,14 @@ export default class InnerDiagramFigure extends draw2d.SetFigure {
     }
 
     addNode(set, node, offsetX, offsetY) {
-        switch (node.type) {
-            case Node.nodeType:
-            case Node.userType:
-            case Node.externalType:
-                if (node.hasGroup) {
-                    set.push(this.createNode(node.x + offsetX, node.y + offsetY, node.w, node.h, node.color))
-                    set.push(this.createNodeName(node.x + offsetX, node.y + offsetY, node.w, node.name, node.color))
-                }
-                break;
-            case Group.groupType:
-                set.push(this.createGroupNode(node.x + offsetX, node.y + offsetY, node.w, node.h))
-                set.push(this.createGroupName(node.x + offsetX, node.y + offsetY, node.w, this.parent.getName()))
-                break;
-            default:
-                // Ignore other types
-                break
+        if (node.type === Group.groupType) {
+            set.push(this.createGroupNode(node.x + offsetX, node.y + offsetY, node.w, node.h))
+            set.push(this.createGroupName(node.x + offsetX, node.y + offsetY, node.w, this.parent.getName()))
+        } else {
+            if (node.hasGroup) {
+                set.push(this.createNode(node.x + offsetX, node.y + offsetY, node.w, node.h, node.color))
+                set.push(this.createNodeName(node.x + offsetX, node.y + offsetY, node.w, node.name, node.color))
+            }
         }
     }
 

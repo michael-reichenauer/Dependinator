@@ -13,6 +13,7 @@ import Label from "./Label";
 import { store } from "./Store";
 
 
+
 const defaultOptions = (type) => {
     const dv = {
         id: cuid(),
@@ -24,6 +25,11 @@ const defaultOptions = (type) => {
     switch (type) {
         case Node.nodeType:
             return { ...dv, name: 'Node', colorName: 'DeepPurple', icon: 'Node', }
+        case Node.systemType:
+            return {
+                ...dv, name: 'System', colorName: 'DeepPurple', icon: 'Diagram',
+                width: Node.defaultWidth * 1.2, height: Node.defaultHeight * 1.2,
+            }
         case Node.userType:
             return { ...dv, name: 'External User', colorName: 'BlueGrey', icon: 'User' }
         case Node.externalType:
@@ -37,6 +43,7 @@ const defaultOptions = (type) => {
 
 export default class Node extends draw2d.shape.node.Between {
     static nodeType = 'node'
+    static systemType = 'system'
     static userType = 'user'
     static externalType = 'external'
     static defaultWidth = 230
@@ -109,7 +116,7 @@ export default class Node extends draw2d.shape.node.Between {
     }
 
     getContextMenuItems(x, y) {
-        const isNode = this.type === Node.nodeType
+        const hasDiagramIcon = this.diagramIcon != null
         const colorItems = Colors.nodeColorNames().map((name) => {
             return new Item(name, () => this.canvas.runCmd(new CommandChangeColor(this, name)))
         })
@@ -119,10 +126,10 @@ export default class Node extends draw2d.shape.node.Between {
 
         return [
             new NestedItem('Inner diagram', [
-                new Item('Show', () => this.showInnerDiagram(), this.innerDiagram == null, isNode),
-                new Item('Hide (click)', () => this.hideInnerDiagram(), this.innerDiagram != null, isNode),
-                new Item('Edit (dbl-click)', () => this.editInnerDiagram(), true, isNode),
-            ], true, isNode),
+                new Item('Show', () => this.showInnerDiagram(), this.innerDiagram == null, hasDiagramIcon),
+                new Item('Hide (click)', () => this.hideInnerDiagram(), this.innerDiagram != null, hasDiagramIcon),
+                new Item('Edit (dbl-click)', () => this.editInnerDiagram(), true, hasDiagramIcon),
+            ], true, hasDiagramIcon),
             new NestedItem('Change color', colorItems),
             new NestedItem('Change icon', iconItems),
             new Item('To front', () => this.toFront()),
@@ -216,7 +223,7 @@ export default class Node extends draw2d.shape.node.Between {
     }
 
     editInnerDiagram() {
-        if (this.type !== Node.nodeType) {
+        if (this.diagramIcon != null) {
             return
         }
 
@@ -287,7 +294,7 @@ export default class Node extends draw2d.shape.node.Between {
 
 
     addInnerDiagramIcon() {
-        if (this.type !== Node.nodeType) {
+        if (this.type !== Node.nodeType && this.type !== Node.systemType) {
             return
         }
         const iconColor = Colors.getNodeFontColor(this.colorName)
