@@ -1,7 +1,7 @@
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
 import cuid from 'cuid'
-import { Item, NestedItem } from "../../common/ContextMenu";
+import { menuItem, menuParentItem } from "../../common/Menus";
 import { clickHandler } from "../../common/mouseClicks";
 import { timing } from "../../common/timing";
 import Colors from "./Colors";
@@ -118,24 +118,24 @@ export default class Node extends draw2d.shape.node.Between {
     getContextMenuItems(x, y) {
         const hasDiagramIcon = this.diagramIcon != null
         const colorItems = Colors.nodeColorNames().map((name) => {
-            return new Item(name, () => this.canvas.runCmd(new CommandChangeColor(this, name)))
+            return menuItem(name, () => this.canvas.runCmd(new CommandChangeColor(this, name)))
         })
         const iconItems = this.nodeIcons.getNames().map((name) => {
-            return new Item(name, () => this.canvas.runCmd(new CommandChangeIcon(this, name)))
+            return menuItem(name, () => this.canvas.runCmd(new CommandChangeIcon(this, name)))
         })
 
         return [
-            new NestedItem('Inner diagram', [
-                new Item('Show', () => this.showInnerDiagram(), this.innerDiagram == null, hasDiagramIcon),
-                new Item('Hide (click)', () => this.hideInnerDiagram(), this.innerDiagram != null, hasDiagramIcon),
-                new Item('Edit (dbl-click)', () => this.editInnerDiagram(), true, hasDiagramIcon),
+            menuParentItem('Inner diagram', [
+                menuItem('Show', () => this.showInnerDiagram(), this.innerDiagram == null, hasDiagramIcon),
+                menuItem('Hide (click)', () => this.hideInnerDiagram(), this.innerDiagram != null, hasDiagramIcon),
+                menuItem('Edit (dbl-click)', () => this.editInnerDiagram(), true, hasDiagramIcon),
             ], true, hasDiagramIcon),
-            new NestedItem('Change color', colorItems),
-            new NestedItem('Change icon', iconItems),
-            new Item('To front', () => this.toFront()),
-            new Item('To back', () => this.toBack()),
-            new Item('Set default size', () => this.setDefaultSize()),
-            new Item('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.isDeleteable)
+            menuParentItem('Change color', colorItems),
+            menuParentItem('Change icon', iconItems),
+            menuItem('To front', () => this.toFront()),
+            menuItem('To back', () => this.toBack()),
+            menuItem('Set default size', () => this.setDefaultSize()),
+            menuItem('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.isDeleteable)
         ]
     }
 

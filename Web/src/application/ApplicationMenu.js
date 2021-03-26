@@ -5,7 +5,7 @@ import MenuIcon from "@material-ui/icons/Menu";
 import Tooltip from '@material-ui/core/Tooltip';
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { Box, Link, Popover, Typography } from "@material-ui/core";
-import { AppMenu, Item, NestedItem } from "../common/ContextMenu";
+import { AppMenu, menuItem, menuParentItem } from "../common/Menus";
 import { store } from "./diagram/Store";
 
 
@@ -17,7 +17,7 @@ const useMenuStyles = makeStyles((theme) => ({
 
 const asMenuItems = (diagrams) => {
     return diagrams.map(d => {
-        return new Item(d.name, () => PubSub.publish('canvas.OpenDiagram', d.id))
+        return menuItem(d.name, () => PubSub.publish('canvas.OpenDiagram', d.id))
     })
 }
 
@@ -37,12 +37,12 @@ export function ApplicationMenu() {
     const diagrams = menu == null ? [] : asMenuItems(store.getDiagrams())
 
     const menuItems = [
-        new Item('New Diagram', () => PubSub.publish('canvas.NewDiagram')),
-        new NestedItem('Open Recent', diagrams),
-        new Item('Save to file', PubSub.publish('canvas.SaveDiagramToFile')),
-        new Item('Print', () => PubSub.publish('diagram.Export')),
-        new Item('Delete', deleteDiagram),
-        new Item('About', () => setAnchorEl(true)),
+        menuItem('New Diagram', () => PubSub.publish('canvas.NewDiagram')),
+        menuParentItem('Open Recent', diagrams),
+        menuItem('Save to file', PubSub.publish('canvas.SaveDiagramToFile')),
+        menuItem('Print', () => PubSub.publish('diagram.Export')),
+        menuItem('Delete', deleteDiagram),
+        menuItem('About', () => setAnchorEl(true)),
     ]
 
     const handleCloseAbout = () => { setAnchorEl(null); };

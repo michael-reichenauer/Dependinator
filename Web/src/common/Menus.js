@@ -3,7 +3,15 @@ import { Menu, MenuItem } from "@material-ui/core";
 import NestedMenuItem from "material-ui-nested-menu-item";
 
 
-export class Item {
+export const menuItem = (text, action, isEnabled = true, isShow = true) => {
+    return new Item(text, action, isEnabled, isShow)
+}
+
+export const menuParentItem = (text, items, isEnabled = true, isShow = true) => {
+    return new NestedItem(text, items, isEnabled, isShow)
+}
+
+class Item {
     constructor(text, action, isEnabled = true, isShow = true) {
         this.text = text
         this.action = action
@@ -12,7 +20,7 @@ export class Item {
     }
 }
 
-export class NestedItem {
+class NestedItem {
     items = []
     constructor(text, items, isEnabled = true, isShow = true) {
         this.text = text

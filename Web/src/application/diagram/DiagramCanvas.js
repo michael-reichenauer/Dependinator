@@ -7,7 +7,7 @@ import { random } from '../../common/utils'
 import Node from './Node'
 import { store } from "./Store";
 import Canvas from "./Canvas";
-import { Item } from "../../common/ContextMenu";
+import { menuItem } from "../../common/Menus";
 import CanvasStack from "./CanvasStack";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
 import { addDefaultNewDiagram, addFigureToCanvas } from "./addDefault";
@@ -72,10 +72,10 @@ export default class DiagramCanvas {
         const mouseXY = this.canvas.fromDocumentToCanvasCoordinate(x, y)
 
         return [
-            new Item('Add node', () => this.addNode(Node.nodeType, mouseXY)),
-            new Item('Add external user', () => this.addNode(Node.userType, mouseXY)),
-            new Item('Add external system', () => this.addNode(Node.externalType, mouseXY)),
-            new Item('Pop to surrounding diagram (dbl-click)', () => PubSub.publish('canvas.PopInnerDiagram'),
+            menuItem('Add node', () => this.addNode(Node.nodeType, mouseXY)),
+            menuItem('Add external user', () => this.addNode(Node.userType, mouseXY)),
+            menuItem('Add external system', () => this.addNode(Node.externalType, mouseXY)),
+            menuItem('Pop to surrounding diagram (dbl-click)', () => PubSub.publish('canvas.PopInnerDiagram'),
                 true, !this.canvasStack.isRoot()),
         ]
     }

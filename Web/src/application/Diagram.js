@@ -4,7 +4,7 @@ import DiagramCanvas from "./diagram/DiagramCanvas"
 import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { Backdrop, makeStyles } from "@material-ui/core";
-import { ContextMenu } from "../common/ContextMenu";
+import { ContextMenu } from "../common/Menus";
 
 
 

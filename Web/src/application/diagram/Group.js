@@ -1,7 +1,7 @@
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
 import cuid from 'cuid'
-import { Item } from "../../common/ContextMenu";
+import { menuItem } from "../../common/Menus";
 import Colors from "./Colors";
 
 
@@ -64,7 +64,7 @@ export default class Group extends draw2d.shape.composite.Raft {
         // Reuse the canvas context menu
         return [
             ...this.getCanvas().canvas.getContextMenuItems(x, y),
-            new Item('Set default size', () => this.setDefaultSize()),
+            menuItem('Set default size', () => this.setDefaultSize()),
         ]
     }
 
