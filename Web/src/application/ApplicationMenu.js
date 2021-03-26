@@ -38,9 +38,8 @@ export function ApplicationMenu() {
     const menuItems = [
         new Item('New Diagram', () => PubSub.publish('canvas.NewDiagram')),
         new NestedItem('Open Diagram', diagrams),
-        new Item('Export Diagram as Page (A4)', () => PubSub.publish('diagram.Export')),
         new Item('Delete current diagram', deleteDiagram),
-        new Item('Export Diagram as Page (A4)', () => PubSub.publish('diagram.Export')),
+        new Item('Open print preview tab (A4)', () => PubSub.publish('diagram.Export')),
         new Item('About', () => setAnchorEl(true)),
     ]
 

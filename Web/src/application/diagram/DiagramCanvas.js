@@ -93,6 +93,7 @@ export default class DiagramCanvas {
         this.canvas.clearDiagram()
         this.createNewDiagram()
         this.callbacks.setTitle(this.getTitle())
+        this.showTotalDiagram()
     }
 
     commandOpenDiagram = (msg, diagramId) => {
@@ -111,6 +112,7 @@ export default class DiagramCanvas {
         // Deserialize canvas
         this.canvas.deserialize(canvasData)
         this.callbacks.setTitle(this.getTitle())
+        this.showTotalDiagram()
     }
 
     commandDeleteDiagram = () => {
@@ -123,12 +125,14 @@ export default class DiagramCanvas {
             // No data for that id, lets create new diagram
             this.createNewDiagram()
             this.callbacks.setTitle(this.getTitle())
+            this.showTotalDiagram()
             return
         }
 
         // Deserialize canvas
         this.canvas.deserialize(canvasData)
         this.callbacks.setTitle(this.getTitle())
+        this.showTotalDiagram()
     }
 
 

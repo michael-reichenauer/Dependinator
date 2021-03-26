@@ -5,6 +5,7 @@ import Group from "./Group";
 import Node from "./Node";
 
 
+
 export default class CanvasSerializer {
     constructor(canvas) {
         this.canvas = canvas
@@ -43,7 +44,12 @@ export default class CanvasSerializer {
     }
 
 
+
     export(rect, resultHandler) {
+        const a4margin = -70
+        const a4Width = 793.7007874 - a4margin
+        const a4Height = 1122.519685 - a4margin
+
         var writer = new draw2d.io.svg.Writer();
         writer.marshal(this.canvas, (svg) => {
             // console.log('svg org:', svg)
@@ -56,6 +62,17 @@ export default class CanvasSerializer {
                 w: rect.w + margin * 2,
                 h: rect.h + margin * 2
             }
+
+            if (r.w < a4Width && r.h < a4Height) {
+                const xd = a4Width - r.w
+                const yd = a4Height - r.h
+
+                r.w = r.w + xd
+                r.x = r.x - xd / 2
+                r.h = r.h + yd
+                r.y = r.y - yd / 2
+            }
+
 
             // Export size (A4) and view box
             const prefix = `<svg width="210mm" height="297mm" version="1.1"
