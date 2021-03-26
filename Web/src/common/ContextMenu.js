@@ -19,10 +19,40 @@ export class NestedItem {
         this.items = items
         this.isEnabled = isEnabled
         this.isShow = isShow
+        console.log('items', items)
     }
 }
 
-export default function ContextMenu({ menu, onClose }) {
+export function AppMenu({ anchorEl, items, onClose }) {
+    if (anchorEl == null || items == null || items.length === 0) {
+        return null
+    }
+
+    const onClick = (item) => {
+        onClose()
+
+        if (!item instanceof Item) {
+            return
+        }
+        item.action()
+    }
+
+    return (
+        <Menu
+            anchorEl={anchorEl}
+            keepMounted
+            open={true}
+            onClose={onClose}
+            PaperProps={{
+            }}
+        >
+            {getMenuItems(items, onClick)}
+        </Menu>
+    )
+}
+
+
+export function ContextMenu({ menu, onClose }) {
     if (menu?.items == null) {
         return null
     }

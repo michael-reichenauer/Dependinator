@@ -9,6 +9,25 @@ class Store {
         return this.readData(lastUsedDiagramKey)?.id
     }
 
+    getDiagrams() {
+        let diagrams = []
+
+        for (var i = 0, len = localStorage.length; i < len; i++) {
+            var key = localStorage.key(i);
+            console.log('key', key)
+            if (key.endsWith('.DiagramData')) {
+                console.log('ends with', key)
+                const value = JSON.parse(localStorage[key])
+                const parts = key.split('.')
+                const id = parts[1]
+                const name = value.name
+                diagrams.push({ id: id, name: name })
+            }
+        }
+
+        return diagrams
+    }
+
     saveFile() {
         const blob = new Blob(["Hello, world!"], { type: "text/plain;charset=utf-8" });
         FileSaver.saveAs(blob, "hello world.txt");

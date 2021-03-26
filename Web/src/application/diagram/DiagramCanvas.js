@@ -62,7 +62,9 @@ export default class DiagramCanvas {
 
         PubSub.subscribe('canvas.SetEditMode', (_, isEditMode) => this.canvas.panPolicy.setEditMode(isEditMode))
         PubSub.subscribe('canvas.NewDiagram', this.commandNewDiagram)
+        PubSub.subscribe('canvas.OpenDiagram', this.commandOpenDiagram)
     }
+
 
     getContextMenuItems(x, y) {
         const mouseXY = this.canvas.fromDocumentToCanvasCoordinate(x, y)
@@ -89,6 +91,18 @@ export default class DiagramCanvas {
         //store.loadFile(file => console.log('File:', file))
         this.canvas.clearDiagram()
         this.createNewDiagram()
+    }
+
+    commandOpenDiagram = (msg, diagramId) => {
+        const canvasData = this.store.readDiagramRootCanvas(diagramId)
+        if (canvasData == null) {
+            // No data for that id, lets create it
+            return
+        }
+        this.canvas.clearDiagram()
+
+        // Deserialize canvas
+        this.canvas.deserialize(canvasData)
     }
 
     commandEditInnerDiagram = (msg, figure) => {

@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import PubSub from 'pubsub-js'
-import Menu from "@material-ui/core/Menu";
-import MenuItem from "@material-ui/core/MenuItem";
 import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
 import Tooltip from '@material-ui/core/Tooltip';
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { Box, Link, Popover, Typography } from "@material-ui/core";
+import { AppMenu, Item, NestedItem } from "../common/ContextMenu";
+import { store } from "./diagram/Store";
 
 
 const useMenuStyles = makeStyles((theme) => ({
@@ -15,30 +15,25 @@ const useMenuStyles = makeStyles((theme) => ({
     },
 }));
 
+const asItems = (diagrams) => {
+    console.log('diagrams', diagrams)
+    return diagrams.map(d => {
+        return new Item(d.name, () => PubSub.publish('canvas.OpenDiagram', d.id))
+    })
+}
 
 export function ApplicationMenu() {
     const classes = useMenuStyles();
     const [menu, setMenu] = useState(null);
     const [anchorEl, setAnchorEl] = useState(null);
 
-    const handleAbout = (event) => {
-        setMenu(null);
-        setAnchorEl(event.currentTarget);
-    };
-
-
-    const handleNewDiagram = (event) => {
-        setMenu(null);
-        var shouldDelete = confirm('Do you really want to clear the current diagram?') //eslint-disable-line
-        if (shouldDelete) {
-            PubSub.publish('canvas.NewDiagram')
-        }
-    };
-
-    const handleExport = () => {
-        setMenu(null);
-        PubSub.publish('diagram.Export')
-    }
+    const diagrams = menu == null ? [] : asItems(store.getDiagrams())
+    const menuItems = [
+        new Item('New Diagram', () => PubSub.publish('canvas.NewDiagram')),
+        new NestedItem('Open Diagram', diagrams),
+        new Item('Export Diagram as Page (A4)', () => PubSub.publish('diagram.Export')),
+        new Item('About', () => setAnchorEl(true)),
+    ]
 
     const handleCloseAbout = () => { setAnchorEl(null); };
 
@@ -57,25 +52,12 @@ export function ApplicationMenu() {
                     <MenuIcon />
                 </IconButton>
             </Tooltip>
-            <Menu
-                anchorEl={menu}
-                keepMounted
-                open={Boolean(menu)}
-                onClose={() => setMenu(null)}
-                PaperProps={{
-                }}
-            >
 
-                <MenuItem onClick={handleNewDiagram}>New Diagram</MenuItem>
-                <MenuItem onClick={handleExport}>Export Diagram as Page (A4)</MenuItem>
-                <MenuItem onClick={handleAbout}>About</MenuItem>
-
-            </Menu>
+            <AppMenu anchorEl={menu} items={menuItems} onClose={setMenu} />
 
             <Popover
                 id={id}
                 open={open}
-                anchorEl={anchorEl}
                 onClose={handleCloseAbout}
                 anchorReference="anchorPosition"
                 anchorPosition={{ top: 200, left: 400 }}
