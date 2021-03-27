@@ -53,6 +53,18 @@ class Store {
         })
     }
 
+    archiveToFile() {
+        const diagrams = this.getDiagrams()
+            .map(d => this.readDiagramObject(d.id))
+            .filter(d => d != null)
+        const diagramsObject = { diagrams: diagrams }
+
+        const fileName = `diagrams.json`
+        const fileText = JSON.stringify(diagramsObject, null, 2)
+        this.saveFile(fileName, fileText)
+    }
+
+
     saveDiagramToFile(diagramId) {
         const diagramData = this.readDiagramData(diagramId)
         if (diagramData == null) {
@@ -63,12 +75,12 @@ class Store {
         const diagrams = { diagrams: [diagram] }
 
         const fileName = `${diagramData.name}.json`
-        const fileText = JSON.stringify(diagrams)
+        const fileText = JSON.stringify(diagrams, null, 2)
         this.saveFile(fileName, fileText)
     }
 
     writeDiagramObject(diagram) {
-        const diagramData = diagram.diagramData
+        const diagramData = diagram.DiagramData
         const diagramId = diagramData.diagramId
 
         this.writeDiagramData(diagramId, diagramData)
@@ -87,6 +99,7 @@ class Store {
     readDiagramObject(diagramId) {
         const diagramData = this.readDiagramData(diagramId)
         if (diagramData == null) {
+            console.log('diagram not found', diagramId)
             return
         }
 
@@ -198,6 +211,9 @@ class Store {
 
     readDiagramData(diagramId) {
         let diagramData = this.readData(this.diagramKey(diagramId))
+        if (diagramData == null) {
+            return null
+        }
         this.writeDiagramData(diagramId, diagramData)
         return diagramData
     }

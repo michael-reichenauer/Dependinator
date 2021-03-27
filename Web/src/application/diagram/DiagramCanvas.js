@@ -65,6 +65,8 @@ export default class DiagramCanvas {
         PubSub.subscribe('canvas.OpenDiagram', this.commandOpenDiagram)
         PubSub.subscribe('canvas.DeleteDiagram', this.commandDeleteDiagram)
         PubSub.subscribe('canvas.SaveDiagramToFile', this.commandSaveToFile)
+        PubSub.subscribe('canvas.OpenFile', this.commandOpenFile)
+        PubSub.subscribe('canvas.ArchiveToFile', this.commandArchiveToFile)
     }
 
 
@@ -98,11 +100,6 @@ export default class DiagramCanvas {
     }
 
     commandOpenDiagram = (msg, diagramId) => {
-        if (diagramId === this.canvas.diagramId) {
-            // Same diagram, no need to open
-            return
-        }
-
         const canvasData = this.store.readDiagramRootCanvas(diagramId)
         if (canvasData == null) {
             // No data for that id, lets create it
@@ -140,6 +137,13 @@ export default class DiagramCanvas {
         this.store.saveDiagramToFile(this.canvas.diagramId)
     }
 
+    commandOpenFile = () => {
+        this.store.loadDiagramFromFile(diagramId => this.commandOpenDiagram('', diagramId))
+    }
+
+    commandArchiveToFile = () => {
+        this.store.archiveToFile()
+    }
 
     commandEditInnerDiagram = (msg, figure) => {
         this.withWorkingIndicator(() => {

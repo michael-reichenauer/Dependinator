@@ -39,7 +39,9 @@ export function ApplicationMenu() {
     const menuItems = [
         menuItem('New Diagram', () => PubSub.publish('canvas.NewDiagram')),
         menuParentItem('Open Recent', diagrams),
+        menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
         menuItem('Save to file', () => PubSub.publish('canvas.SaveDiagramToFile')),
+        menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
         menuItem('Print', () => PubSub.publish('diagram.Export')),
         menuItem('Delete', deleteDiagram),
         menuItem('About', () => setAnchorEl(true)),
