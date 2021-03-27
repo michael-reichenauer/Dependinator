@@ -24,6 +24,7 @@
     "react-loading-overlay": "^1.0.1",
     "react-scripts": "4.0.1",
     "shifty": "^2.15.2",
+    "use-long-press": "^1.0.5",
     "web-vitals": "^0.2.4"
   },
   "scripts": {

@@ -5,6 +5,8 @@ import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { Backdrop, makeStyles } from "@material-ui/core";
 import { ContextMenu } from "../common/Menus";
+//import { useLongPress } from "use-long-press";
+//import useLongPress from "../common/useLongPress";
 
 export const titleAtom = atom('System')
 export const canUndoAtom = atom(false)
@@ -27,6 +29,26 @@ export default function Diagram({ width, height }) {
     const [, setEditMode] = useAtom(editModeAtom)
     const [isProgress, setProgress] = useAtom(progressAtom)
     const classes = useStyles();
+
+
+    // const bind = useLongPress(event => {
+    //     const { x, y } = { x: event.clientX, y: event.clientY }
+
+    //     // Get target figure or use canvas as target
+    //     let figure = getFigure(canvasRef.current, event)
+    //     const target = figure ?? canvasRef.current
+
+    //     if (typeof target.getContextMenuItems !== "function") {
+    //         // No context menu on target
+    //         return
+    //     }
+
+    //     const menuItems = target.getContextMenuItems(x, y)
+    //     setTimeout(() => {
+    //         setContextMenu({ items: menuItems, x: x, y: y });
+    //     }, 100);
+
+    // });
 
     useEffect(() => {
         // Initialize canvas
@@ -52,6 +74,30 @@ export default function Diagram({ width, height }) {
             canvasRef.current.delete()
         }
     }, [setCanUndo, setCanRedo, setProgress, setCanPopDiagram, setEditMode, setTitle])
+
+    // const onLongPress = (event) => {
+    //     console.log('d', event)
+    //     const { x, y } = { x: event.clientX, y: event.clientY }
+
+    //     // Get target figure or use canvas as target
+    //     let figure = getFigure(canvasRef.current, event)
+    //     const target = figure ?? canvasRef.current
+
+    //     if (typeof target.getContextMenuItems !== "function") {
+    //         // No context menu on target
+    //         return
+    //     }
+
+    //     const menuItems = target.getContextMenuItems(x, y)
+    //     setContextMenu({ items: menuItems, x: x, y: y });
+    // };
+
+
+    // const defaultOptions = {
+    //     shouldPreventDefault: true,
+    //     delay: 500,
+    // };
+    // const longPressEvent = useLongPress(onLongPress, () => { }, defaultOptions);
 
 
     return (
