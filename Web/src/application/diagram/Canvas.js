@@ -181,6 +181,7 @@ export default class Canvas extends draw2d.Canvas {
         this.lines.each(function (i, line) {
             line.svgPathString = null;
             line.repaint();
+
         });
         //t.log();
         return this;
