@@ -5,7 +5,7 @@ import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { Backdrop, makeStyles } from "@material-ui/core";
 import { ContextMenu } from "../common/Menus";
-
+import Printer from "../common/Printer";
 
 
 export const titleAtom = atom('System')
@@ -46,6 +46,7 @@ export default function Diagram({ width, height }) {
 
         const contextMenuHandler = enableContextMenu(setContextMenu, canvas)
         PubSub.subscribe('diagram.Export', () => exportDiagram(canvas))
+        Printer.overridePrintKey(() => exportDiagram(canvas))
 
         setTimeout(() => canvas.showTotalDiagram(), 0);
 
@@ -125,18 +126,14 @@ const getFigure = (canvas, event) => {
 
 
 function exportDiagram(canvas) {
-    // Open other tab
-    const tab = window.open(":", "_blank");
-    tab.document.open();
-
     canvas.export(svg => {
-        tab.document.write(`
-            <html style="margin: 0; ">
-                <head><title>Dependinator Diagram</title></head>
-                <body style="margin: 0;">${svg}</body>
-            </html>`)
-        tab.focus(); //required for IE
-    })
+        const printer = new Printer()
+        printer.print(svg)
 
-    //tab.print();
+        // tab.document.write(`
+        //     <html style="margin: 0; ">
+        //         <head><title>Dependinator Diagram</title></head>
+        //         <body style="margin: 0;">${svg}</body>
+        //     </html>`)
+    })
 }
