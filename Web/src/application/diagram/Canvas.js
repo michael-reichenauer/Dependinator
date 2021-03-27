@@ -182,7 +182,6 @@ export default class Canvas extends draw2d.Canvas {
             line.svgPathString = null;
             line.repaint();
         });
-        // t.log("Repainted lines");
         //t.log();
         return this;
     }
