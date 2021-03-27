@@ -57,7 +57,7 @@ export default class Node extends draw2d.shape.node.Between {
     descriptionLabel = null
     icon = null
     diagramIcon = null
-    isDeleteable = true
+    canDelete = true
 
 
     getName = () => this.nameLabel?.text ?? ''
@@ -135,7 +135,7 @@ export default class Node extends draw2d.shape.node.Between {
             menuItem('To front', () => this.toFront()),
             menuItem('To back', () => this.toBack()),
             menuItem('Set default size', () => this.setDefaultSize()),
-            menuItem('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.isDeleteable)
+            menuItem('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.canDelete)
         ]
     }
 
@@ -173,7 +173,7 @@ export default class Node extends draw2d.shape.node.Between {
 
     setDeleteable(flag) {
         super.setDeleteable(flag)
-        this.isDeleteable = flag
+        this.canDelete = flag
     }
 
     setIcon(name) {
