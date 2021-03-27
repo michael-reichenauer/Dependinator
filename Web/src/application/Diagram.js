@@ -6,7 +6,7 @@ import { atom, useAtom } from 'jotai'
 import { Backdrop, makeStyles } from "@material-ui/core";
 import { ContextMenu } from "../common/Menus";
 //import { useLongPress } from "use-long-press";
-//import useLongPress from "../common/useLongPress";
+import useLongPress from "../common/useLongPress";
 
 export const titleAtom = atom('System')
 export const canUndoAtom = atom(false)
@@ -30,8 +30,20 @@ export default function Diagram({ width, height }) {
     const [isProgress, setProgress] = useAtom(progressAtom)
     const classes = useStyles();
 
+    const callback = React.useCallback(() => {
+        console.log("Long pressed!");
+    }, []);
 
-    // const bind = useLongPress(event => {
+    const onLongPress = useLongPress(callback, {
+        onStart: () => console.log("Press started"),
+        onFinish: () => console.log("Long press finished"),
+        onCancel: () => console.log("Press cancelled"),
+        threshold: 500,
+        captureEvent: true,
+        detect: 'both'
+    });
+
+    // const onLongPress = useLongPress(event => {
     //     const { x, y } = { x: event.clientX, y: event.clientY }
 
     //     // Get target figure or use canvas as target
@@ -65,6 +77,7 @@ export default function Diagram({ width, height }) {
         canvasRef.current = canvas
 
         const contextMenuHandler = enableContextMenu(setContextMenu, canvas)
+
         setTimeout(() => canvas.showTotalDiagram(), 0);
 
         return () => {

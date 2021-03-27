@@ -1,59 +1,86 @@
-// import { useCallback, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 
-// const useLongPress = (
-//     onLongPress,
-//     { shouldPreventDefault = true, delay = 300 } = {}
-// ) => {
-//     const [longPressTriggered, setLongPressTriggered] = useState(false);
-//     const timeout = useRef();
-//     const target = useRef();
+const useLongPress = (
+    onLongPress,
+    { shouldPreventDefault = false, delay = 800 } = {}
+) => {
 
-//     const start = useCallback(
-//         event => {
-//             if (shouldPreventDefault) {
-//                 event.target?.addEventListener("touchend", preventDefault, {
-//                     passive: false
-//                 });
-//                 target.current = event.target;
-//             }
-//             timeout.current = setTimeout(() => {
-//                 onLongPress(event);
-//                 setLongPressTriggered(true);
-//             }, delay);
-//         },
-//         [onLongPress, delay, shouldPreventDefault]
-//     );
+    const timeout = useRef();
+    const target = useRef();
+    const isMouseDown = useRef(false);
 
-//     const clear = useCallback(
-//         (event) => {
-//             clearTimeout(timeout.current);
-//             setLongPressTriggered(false);
-//             if (shouldPreventDefault) {
-//                 target.current?.removeEventListener("touchend", preventDefault);
-//             }
-//         },
-//         [shouldPreventDefault, longPressTriggered]
-//     );
+    const start = useCallback(event => {
+        if (shouldPreventDefault) {
+            event.target?.addEventListener("touchend", preventDefault, { passive: false });
+            target.current = event.target;
+        }
+        timeout.current = setTimeout(() => onLongPress(event), delay);
+    },
+        [onLongPress, delay, shouldPreventDefault]
+    );
 
-//     return {
-//         onMouseDown: e => start(e),
-//         onTouchStart: e => start(e),
-//         onMouseUp: e => clear(e),
-//         onMouseLeave: e => clear(e, false),
-//         onTouchEnd: e => clear(e)
-//     };
-// };
+    const clear = useCallback((event) => {
+        clearTimeout(timeout.current);
+        if (shouldPreventDefault) {
+            target.current?.removeEventListener("touchend", preventDefault);
+        }
+    },
+        [shouldPreventDefault]
+    );
 
-// const isTouchEvent = event => {
-//     return "touches" in event; 
-// };
 
-// const preventDefault = event => {
-//     if (!isTouchEvent(event)) return;
+    return {
+        onMouseDown: e => {
+            isMouseDown.current = true;
+            console.log('onMouseDown', e.target);
+            start(e);
+        },
 
-//     if (event.touches.length < 2 && event.preventDefault) {
-//         event.preventDefault();
-//     }
-// };
+        onMouseUp: e => {
+            isMouseDown.current = false; console.log('onMouseUp');
+            clear(e);
+        },
 
-// export default useLongPress;
+        onTouchStart: e => {
+            console.log('onTouchStart');
+            start(e);
+        },
+
+        onMouseMove: e => {
+            if (isMouseDown.current) {
+                console.log('onMouseMove', isMouseDown.current);
+                clear(e);
+            }
+        },
+
+        onTouchMove: e => {
+            console.log('onTouchMove'); clear(e);
+        },
+
+
+
+        onMouseLeave: e => {
+            isMouseDown.current = false; console.log('onMouseLeave');
+            clear(e);
+        },
+
+        onTouchEnd: e => {
+            console.log('touch end');
+            clear(e);
+        },
+    };
+};
+
+const isTouchEvent = event => {
+    return "touches" in event;
+};
+
+const preventDefault = event => {
+    if (!isTouchEvent(event)) return;
+
+    if (event.touches.length < 2 && event.preventDefault) {
+        event.preventDefault();
+    }
+};
+
+export default useLongPress;
