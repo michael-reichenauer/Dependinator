@@ -5,8 +5,6 @@ import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { Backdrop, makeStyles } from "@material-ui/core";
 import { ContextMenu } from "../common/Menus";
-import Printer from "../common/Printer";
-
 
 export const titleAtom = atom('System')
 export const canUndoAtom = atom(false)
@@ -45,9 +43,6 @@ export default function Diagram({ width, height }) {
         canvasRef.current = canvas
 
         const contextMenuHandler = enableContextMenu(setContextMenu, canvas)
-        PubSub.subscribe('diagram.Export', () => exportDiagram(canvas))
-        Printer.overridePrintKey(() => exportDiagram(canvas))
-
         setTimeout(() => canvas.showTotalDiagram(), 0);
 
         return () => {
@@ -67,8 +62,10 @@ export default function Diagram({ width, height }) {
                 <div id="canvas" style={{
                     width: width, height: height, maxWidth: width, maxHeight: height,
                     position: 'absolute', overflow: 'scroll'
-                }}>
-                </div>
+                }} />
+                <div id="canvasPrint" style={{
+                    width: 0, height: 0, maxWidth: 0, maxHeight: 0, position: 'absolute', overflow: 'hidden'
+                }} />
             </div>
 
             <ContextMenu menu={contextMenu} onClose={setContextMenu} />
@@ -124,16 +121,3 @@ const getFigure = (canvas, event) => {
     return figure
 }
 
-
-function exportDiagram(canvas) {
-    canvas.export(svg => {
-        const printer = new Printer()
-        printer.print(svg)
-
-        // tab.document.write(`
-        //     <html style="margin: 0; ">
-        //         <head><title>Dependinator Diagram</title></head>
-        //         <body style="margin: 0;">${svg}</body>
-        //     </html>`)
-    })
-}

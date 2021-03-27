@@ -12,6 +12,7 @@ import CanvasStack from "./CanvasStack";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
 import { addDefaultNewDiagram, addFigureToCanvas } from "./addDefault";
 import InnerDiagramCanvas from "./InnerDiagramCanvas";
+import Printer from "../../common/Printer";
 
 
 export default class DiagramCanvas {
@@ -67,6 +68,7 @@ export default class DiagramCanvas {
         PubSub.subscribe('canvas.SaveDiagramToFile', this.commandSaveToFile)
         PubSub.subscribe('canvas.OpenFile', this.commandOpenFile)
         PubSub.subscribe('canvas.ArchiveToFile', this.commandArchiveToFile)
+        PubSub.subscribe('canvas.Print', this.commandPrint)
     }
 
 
@@ -142,7 +144,25 @@ export default class DiagramCanvas {
     }
 
     commandArchiveToFile = () => {
+        console.log('arch')
         this.store.archiveToFile()
+    }
+
+    commandPrint = () => {
+        this.withWorkingIndicator(() => {
+            const canvasDataList = this.store.readAllCanvases(this.canvas.diagramId)
+
+            const results = []
+            canvasDataList.forEach(canvasData => {
+                const canvas = new Canvas('canvasPrint', null, DiagramCanvas.defaultWidth, DiagramCanvas.defaultWidth)
+                canvas.deserialize(canvasData)
+                canvas.export(svg => results.push(svg))
+                canvas.destroy()
+            })
+
+            const printer = new Printer()
+            printer.print(results.join())
+        })
     }
 
     commandEditInnerDiagram = (msg, figure) => {
@@ -182,10 +202,8 @@ export default class DiagramCanvas {
         addFigureToCanvas(this.canvas, node, p)
     }
 
-    export = (result) => {
-        const rect = this.canvas.getFiguresRect()
-        this.canvas.export(rect, result)
-    }
+
+
 
     tryGetFigure = (x, y) => {
         let cp = this.canvas.fromDocumentToCanvasCoordinate(x, y)

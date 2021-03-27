@@ -55,7 +55,7 @@ export default class CanvasSerializer {
             // console.log('svg org:', svg)
 
             // Show diagram with some margin
-            const margin = 25
+            const margin = 0
             const r = {
                 x: rect.x - margin,
                 y: rect.y - margin,

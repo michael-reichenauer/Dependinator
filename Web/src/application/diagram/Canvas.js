@@ -59,7 +59,8 @@ export default class Canvas extends draw2d.Canvas {
         this.serializer.deserialize(canvasData)
     }
 
-    export(rect, resultHandler) {
+    export(resultHandler) {
+        const rect = this.getFiguresRect()
         this.serializer.export(rect, resultHandler)
     }
 

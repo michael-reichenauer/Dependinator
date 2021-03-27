@@ -2,17 +2,23 @@
 // Inspired of https://levelup.gitconnected.com/pretty-print-your-site-with-javascript-d69f63956529
 export default class Printer {
 
-    static overridePrintKey(action) {
+    static registerPrintKey(action) {
         // override Ctrl/Cmd + P
-        document.addEventListener("keydown", (event) => {
+
+        const handler = (event) => {
             if ((event.ctrlKey || event.metaKey) && event.key === "p") {
                 action();
                 event.preventDefault();
                 return false;
             }
-        }, false);
+        }
+        document.addEventListener("keydown", handler, false);
+        return handler
     }
 
+    static deregisterPrintKey(handler) {
+        document.removeEventListener("keydown", handler, false);
+    }
 
     print(pages) {
         // create a hidden iframe named PrettyPrintFrame
@@ -82,7 +88,8 @@ export default class Printer {
         let css = '<style>';
 
         // global css
-        css += 'body { margin: 0;padding: 0px 0px; }';
+        css += 'body {padding: 40px 24px;  }';
+        css += 'svg { page-break-inside: avoid; }';
         css += 'table tr { page-break-inside: avoid; }';
         css += 'table td { vertical-align: top; padding: 0px 0px;}';
         css += 'img { height: 100px !important; width: 100px !important; }';

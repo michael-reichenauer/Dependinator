@@ -233,6 +233,26 @@ class Store {
         this.writeDiagramData(canvasData.diagramId, this.readDiagramData(canvasData.diagramId))
     }
 
+    readAllCanvases(diagramId) {
+        const keys = []
+
+        for (var i = 0, len = localStorage.length; i < len; i++) {
+            var key = localStorage.key(i);
+            if (key.startsWith(diagramKey)) {
+                const parts = key.split('.')
+                const id = parts[1]
+                const name = parts[2]
+                if (id === diagramId && name !== diagramDataKey) {
+                    keys.push(key)
+                }
+            }
+        }
+
+        return keys.map(key => this.readData(key)).filter(data => data != null)
+    }
+
+
+
     buildFileSelector(selectedHandler) {
         const fileSelector = document.createElement('input');
         fileSelector.setAttribute('type', 'file');

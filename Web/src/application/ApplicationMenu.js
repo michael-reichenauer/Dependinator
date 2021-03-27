@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PubSub from 'pubsub-js'
 import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
@@ -7,6 +7,7 @@ import makeStyles from "@material-ui/core/styles/makeStyles";
 import { Box, Link, Popover, Typography } from "@material-ui/core";
 import { AppMenu, menuItem, menuParentItem } from "../common/Menus";
 import { store } from "./diagram/Store";
+import Printer from "../common/Printer";
 
 
 const useMenuStyles = makeStyles((theme) => ({
@@ -26,13 +27,18 @@ export function ApplicationMenu() {
     const [menu, setMenu] = useState(null);
     const [anchorEl, setAnchorEl] = useState(null);
 
+    useEffect(() => {
+        const handler = Printer.registerPrintKey(() => PubSub.publish('canvas.Print'))
+        return () => Printer.deregisterPrintKey(handler)
+
+    })
+
     const deleteDiagram = () => {
         var shouldDelete = confirm('Do you really want to delete the current diagram?') //eslint-disable-line
         if (shouldDelete) {
             PubSub.publish('canvas.DeleteDiagram')
         }
     };
-
 
     const diagrams = menu == null ? [] : asMenuItems(store.getDiagrams())
 
@@ -42,7 +48,7 @@ export function ApplicationMenu() {
         menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
         menuItem('Save to file', () => PubSub.publish('canvas.SaveDiagramToFile')),
         menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
-        menuItem('Print', () => PubSub.publish('diagram.Export')),
+        menuItem('Print', () => PubSub.publish('canvas.Print')),
         menuItem('Delete', deleteDiagram),
         menuItem('About', () => setAnchorEl(true)),
     ]
