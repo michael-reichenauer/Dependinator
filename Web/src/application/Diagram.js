@@ -121,7 +121,7 @@ export default function Diagram({ width, height }) {
                 <div id="canvas" style={{
                     width: width, height: height, maxWidth: width, maxHeight: height,
                     position: 'absolute', overflow: 'scroll'
-                }} />
+                }} {...onLongPress} />
                 <div id="canvasPrint" style={{
                     width: 0, height: 0, maxWidth: 0, maxHeight: 0, position: 'absolute', overflow: 'hidden'
                 }} />

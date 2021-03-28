@@ -2,7 +2,7 @@ import { useCallback, useRef } from "react";
 
 const useLongPress = (
     onLongPress,
-    { shouldPreventDefault = false, delay = 800 } = {}
+    { shouldPreventDefault = true, delay = 800 } = {}
 ) => {
 
     const timeout = useRef();
