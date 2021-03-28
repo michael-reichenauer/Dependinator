@@ -1,5 +1,4 @@
 import FileSaver from 'file-saver'
-
 const diagramKey = 'diagram'
 const diagramDataKey = 'DiagramData'
 const lastUsedDiagramKey = 'lastUsedDiagram'
