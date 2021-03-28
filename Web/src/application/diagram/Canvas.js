@@ -251,7 +251,7 @@ export default class Canvas extends draw2d.Canvas {
                     return
                 }
 
-                let delta = 70
+                let delta = 200 * this.zoomFactor
                 if (curDiff > this.pinchDiff) {
                     // The distance between the two pointers has increased (zoom in)
                     delta = -delta
