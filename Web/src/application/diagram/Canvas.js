@@ -17,6 +17,9 @@ export default class Canvas extends draw2d.Canvas {
     canvasId = null
     mainNodeId = null
 
+    touchStartTime = 0
+    touchEndTime = 0
+
     constructor(htmlElementId, onEditMode, width, height) {
         super(htmlElementId, width, height);
 
@@ -49,48 +52,9 @@ export default class Canvas extends draw2d.Canvas {
         this.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
         this.installEditPolicy(new KeyboardPolicy())
 
-        //canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))  
-        this.html.bind("touchstart", (event) => {
-            try {
-                let pos = null
-                switch (event.which) {
-                    case 1: //touch pressed
-                    case 0: //Left mouse button pressed
-                        try {
-                            event.preventDefault()
-                            event = this._getEvent(event)
-                            this.mouseDownX = event.clientX
-                            this.mouseDownY = event.clientY
-                            this.mouseDragDiffX = 0
-                            this.mouseDragDiffY = 0
-                            pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
-                            this.mouseDown = true
-                            this.editPolicy.each((i, policy) => {
-                                policy.onMouseDown(this, pos.x, pos.y, event.shiftKey, event.ctrlKey)
-                            })
-                        } catch (exc) {
-                            console.log(exc)
-                        }
-                        break
-                    case 3: //Right mouse button pressed
-                        event.preventDefault()
-                        if (typeof event.stopPropagation !== "undefined")
-                            event.stopPropagation()
-                        event = this._getEvent(event)
-                        pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
-                        this.onRightMouseDown(pos.x, pos.y, event.shiftKey, event.ctrlKey)
-                        return false
-                    case 2:
-                        //Middle mouse button pressed
-                        break
-                    default:
-                    //You have a strange mouse
-                }
-            } catch (exc) {
-                console.log(exc)
-            }
-        })
+        this.enableTouchSupport()
 
+        //canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))  
 
     }
 
@@ -266,5 +230,101 @@ export default class Canvas extends draw2d.Canvas {
         })
 
         return { x: minX, y: minY, w: maxX - minX, h: maxY - minY, x2: maxX, y2: maxY }
+    }
+
+    enableTouchSupport() {
+        // Seems that the parent canvas forgot handling touchstart as a mouse down event
+        this.html.bind("touchstart", (event) => {
+            console.log('touchstart', event)
+            try {
+                let pos = null
+                switch (event.which) {
+                    case 1: //touch pressed
+                    case 0: //Left mouse button pressed
+                        try {
+                            event.preventDefault()
+                            event = this._getEvent(event)
+                            this.mouseDownX = event.clientX
+                            this.mouseDownY = event.clientY
+                            this.mouseDragDiffX = 0
+                            this.mouseDragDiffY = 0
+                            pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
+                            this.mouseDown = true
+                            this.editPolicy.each((i, policy) => {
+                                policy.onMouseDown(this, pos.x, pos.y, event.shiftKey, event.ctrlKey)
+                            })
+                        } catch (exc) {
+                            console.log(exc)
+                        }
+                        break
+                    case 3: //Right mouse button pressed
+                        event.preventDefault()
+                        if (typeof event.stopPropagation !== "undefined")
+                            event.stopPropagation()
+                        event = this._getEvent(event)
+                        pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
+                        this.onRightMouseDown(pos.x, pos.y, event.shiftKey, event.ctrlKey)
+                        return false
+                    case 2:
+                        //Middle mouse button pressed
+                        break
+                    default:
+                    //You have a strange mouse
+                }
+            } catch (exc) {
+                console.log(exc)
+            }
+
+            // const interval = performance.now() - this.touchStartTime
+            // if (interval < 500) {
+            //     console.log('double click')
+            //     event = this._getEvent(event)
+
+            //     this.mouseDownX = event.clientX
+            //     this.mouseDownY = event.clientY
+            //     let pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
+            //     this.onDoubleClick(pos.x, pos.y, event.shiftKey, event.ctrlKey)
+            // }
+
+            // console.log('timing', performance.now() - this.touchStartTime)
+
+            // this.touchStartTime = performance.now()
+
+        })
+
+        this.html.bind("touchstart", (event) => {
+            console.log('touchstart')
+            this.touchStartTime = performance.now()
+            this.touchDownX = event.clientX
+            this.touchDownY = event.clientY
+        })
+
+        this.html.bind("touchend", (event) => {
+            console.log('touchend')
+            const startTimeInterval = performance.now() - this.touchStartTime
+            const endTimeInterval = performance.now() - this.touchEndTime
+            this.touchEndTime = performance.now()
+
+            console.log('intervals', startTimeInterval, endTimeInterval)
+            // if (startTimeInterval < 300) {
+            //     console.log('click')
+            //     event = this._getEvent(event)
+            //     // if (this.touchDownX === event.clientX || this.touchDownY === event.clientY) {
+            //     console.log('send click')
+            //     let pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
+            //     this.onClick(pos.x, pos.y, event.shiftKey, event.ctrlKey)
+            //     //  }
+            // }
+
+            if (endTimeInterval < 500) {
+                console.log('double click')
+                event = this._getEvent(event)
+
+                this.touchDownX = event.clientX
+                this.touchDownY = event.clientY
+                let pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
+                this.onDoubleClick(pos.x, pos.y, event.shiftKey, event.ctrlKey)
+            }
+        })
     }
 }

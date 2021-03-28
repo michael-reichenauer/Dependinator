@@ -302,7 +302,7 @@ export default class Node extends draw2d.shape.node.Between {
             width: 15, height: 15, color: iconColor, bgColor: 'none',
         })
 
-        this.diagramIcon.on("click", () => this.showInnerDiagram())
+        this.diagramIcon.on("click", () => { console.trace('click'); this.showInnerDiagram() })
 
         this.add(this.diagramIcon, new InnerDiagramIconLocator())
     }
