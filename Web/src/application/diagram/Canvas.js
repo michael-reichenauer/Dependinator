@@ -235,9 +235,9 @@ export default class Canvas extends draw2d.Canvas {
     enableTouchSupport() {
         // Seems that the parent canvas forgot handling touchstart as a mouse down event
         this.html.bind("touchstart", (event) => {
-            console.log('touchstart', event)
             try {
                 let pos = null
+                console.log('which', event.which)
                 switch (event.which) {
                     case 1: //touch pressed
                     case 0: //Left mouse button pressed
@@ -274,52 +274,25 @@ export default class Canvas extends draw2d.Canvas {
             } catch (exc) {
                 console.log(exc)
             }
-
-            // const interval = performance.now() - this.touchStartTime
-            // if (interval < 500) {
-            //     console.log('double click')
-            //     event = this._getEvent(event)
-
-            //     this.mouseDownX = event.clientX
-            //     this.mouseDownY = event.clientY
-            //     let pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
-            //     this.onDoubleClick(pos.x, pos.y, event.shiftKey, event.ctrlKey)
-            // }
-
-            // console.log('timing', performance.now() - this.touchStartTime)
-
-            // this.touchStartTime = performance.now()
-
         })
 
-        this.html.bind("touchstart", (event) => {
-            console.log('touchstart')
-            this.touchStartTime = performance.now()
-            this.touchDownX = event.clientX
-            this.touchDownY = event.clientY
-        })
 
+        // Parent canvas seems to have forgotten to handle click and double-click for touchend
         this.html.bind("touchend", (event) => {
-            console.log('touchend')
-            const startTimeInterval = performance.now() - this.touchStartTime
-            const endTimeInterval = performance.now() - this.touchEndTime
+            // Calculate double click interval
+            const clickInterval = performance.now() - this.touchEndTime
             this.touchEndTime = performance.now()
 
-            console.log('intervals', startTimeInterval, endTimeInterval)
-            // if (startTimeInterval < 300) {
-            //     console.log('click')
-            //     event = this._getEvent(event)
-            //     // if (this.touchDownX === event.clientX || this.touchDownY === event.clientY) {
-            //     console.log('send click')
-            //     let pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
-            //     this.onClick(pos.x, pos.y, event.shiftKey, event.ctrlKey)
-            //     //  }
-            // }
+            event = this._getEvent(event)
 
-            if (endTimeInterval < 500) {
-                console.log('double click')
-                event = this._getEvent(event)
+            if (this.mouseDownX === event.clientX || this.mouseDownX === event.clientY) {
+                // Handle click for touch events
+                let pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
+                this.onClick(pos.x, pos.y, event.shiftKey, event.ctrlKey)
+            }
 
+            if (clickInterval < 500) {
+                // Handle double-click event for touch
                 this.touchDownX = event.clientX
                 this.touchDownY = event.clientY
                 let pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
