@@ -95,6 +95,7 @@ export default class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolic
 
 
     onMouseDown(canvas, x, y, shiftKey, ctrlKey) {
+        //console.log('onMouseDown')
         try {
             this.x = x
             this.y = y
@@ -219,6 +220,7 @@ export default class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolic
     }
 
     onMouseDrag(canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey) {
+        //console.log('onMouseDrag')
         if (this.isReadOnly && !this.isPort && !this.isResizeHandle) {
             // Read only mode and not dragging a port, let pan the canvas
             this.isReadOnlySelect = false
@@ -228,6 +230,7 @@ export default class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolic
                 canvas.selection.getAll().each((i, f) => f.unselect())
                 canvas.selection.clear()
             }
+
 
             let area = canvas.getScrollArea()
             let zoom = canvas.getZoom()
@@ -283,6 +286,7 @@ export default class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolic
 
 
     onMouseUp(canvas, x, y, shiftKey, ctrlKey) {
+        //console.log('onMouseUp')
         // No longer port handling
         this.isPort = false
         this.isResizeHandle = false

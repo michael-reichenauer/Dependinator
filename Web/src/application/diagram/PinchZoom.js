@@ -14,17 +14,36 @@ var evCache = [];
 var prevDiff = -1;
 
 function init(elementId) {
-    // Install event handlers for the pointer target
-    var el = document.getElementById(elementId);
-    el.onpointerdown = pointerdown_handler;
-    el.onpointermove = pointermove_handler;
 
-    // Use same handler for pointer{up,cancel,out,leave} events since
-    // the semantics for these events - in this app - are the same.
-    el.onpointerup = pointerup_handler;
-    el.onpointercancel = pointerup_handler;
-    el.onpointerout = pointerup_handler;
-    el.onpointerleave = pointerup_handler;
+
+    var el = document.getElementById(elementId);
+
+    el.addEventListener("mousedown", logEvent, true);
+    el.addEventListener("mouseup", logEvent, true);
+    el.addEventListener("mousemove", logEvent, true);
+
+    document.addEventListener("ontouchstart", logEvent, true);
+    document.addEventListener("ontouchend", logEvent, true);
+    document.addEventListener("ontouchmove", logEvent, true);
+    document.addEventListener("ontouchcancel", logEvent, true);
+
+    // // Install event handlers for the pointer target
+    // var el = document.getElementById(elementId);
+
+    // el.onpointerdown = pointerdown_handler;
+
+    // el.onpointermove = pointermove_handler;
+
+    // // Use same handler for pointer{up,cancel,out,leave} events since
+    // // the semantics for these events - in this app - are the same.
+    // el.onpointerup = pointerup_handler;
+    // el.onpointercancel = pointerup_handler;
+    // el.onpointerout = pointerup_handler;
+    // el.onpointerleave = pointerup_handler;
+}
+function logEvent(e) {
+    console.log('Event:', e.type, e)
+    e.preventDefault()
 }
 
 function pointerdown_handler(ev) {
@@ -32,9 +51,11 @@ function pointerdown_handler(ev) {
     // This event is cached to support 2-finger gestures
     evCache.push(ev);
     console.log("pointerDown", ev);
+    ev.preventDefault()
 }
 
 function pointermove_handler(ev) {
+    ev.preventDefault()
     // This function implements a 2-pointer horizontal pinch/zoom gesture.
     //
     // If the distance between the two pointers has increased (zoom in),
@@ -78,6 +99,7 @@ function pointermove_handler(ev) {
 }
 
 function pointerup_handler(ev) {
+    ev.preventDefault()
     console.log(ev.type, ev);
     // Remove this pointer from the cache and reset the target's
     // background and border

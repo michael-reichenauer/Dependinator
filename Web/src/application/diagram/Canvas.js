@@ -48,7 +48,50 @@ export default class Canvas extends draw2d.Canvas {
         this.installEditPolicy(new draw2d.policy.canvas.SnapToInBetweenEditPolicy())
         this.installEditPolicy(new draw2d.policy.canvas.SnapToCenterEditPolicy())
         this.installEditPolicy(new KeyboardPolicy())
-        //canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))      
+
+        //canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))  
+        this.html.bind("touchstart", (event) => {
+            try {
+                let pos = null
+                switch (event.which) {
+                    case 1: //touch pressed
+                    case 0: //Left mouse button pressed
+                        try {
+                            event.preventDefault()
+                            event = this._getEvent(event)
+                            this.mouseDownX = event.clientX
+                            this.mouseDownY = event.clientY
+                            this.mouseDragDiffX = 0
+                            this.mouseDragDiffY = 0
+                            pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
+                            this.mouseDown = true
+                            this.editPolicy.each((i, policy) => {
+                                policy.onMouseDown(this, pos.x, pos.y, event.shiftKey, event.ctrlKey)
+                            })
+                        } catch (exc) {
+                            console.log(exc)
+                        }
+                        break
+                    case 3: //Right mouse button pressed
+                        event.preventDefault()
+                        if (typeof event.stopPropagation !== "undefined")
+                            event.stopPropagation()
+                        event = this._getEvent(event)
+                        pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
+                        this.onRightMouseDown(pos.x, pos.y, event.shiftKey, event.ctrlKey)
+                        return false
+                    case 2:
+                        //Middle mouse button pressed
+                        break
+                    default:
+                    //You have a strange mouse
+                }
+            } catch (exc) {
+                console.log(exc)
+            }
+        })
+
+
     }
 
     serialize() {

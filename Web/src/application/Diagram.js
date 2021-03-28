@@ -6,8 +6,8 @@ import { atom, useAtom } from 'jotai'
 import { Backdrop, makeStyles } from "@material-ui/core";
 import { ContextMenu } from "../common/Menus";
 //import { useLongPress } from "use-long-press";
-import useLongPress from "../common/useLongPress";
-import PinchZoom from "./diagram/PinchZoom";
+// import useLongPress from "../common/useLongPress";
+// import PinchZoom from "./diagram/PinchZoom";
 
 export const titleAtom = atom('System')
 export const canUndoAtom = atom(false)
@@ -73,21 +73,28 @@ export default function Diagram({ width, height }) {
             setCanPopDiagram: setCanPopDiagram,
             setEditMode: setEditMode
         }
+
+        // document.body.addEventListener("touchmove", function (event) {
+        //     event.preventDefault();
+        //     event.stopPropagation();
+        // }, false);
+
+
         const canvas = new DiagramCanvas('canvas', callbacks);
         canvas.init()
         canvasRef.current = canvas
 
-        const pz = new PinchZoom()
-        pz.enable('canvas')
-
-        const contextMenuHandler = enableContextMenu(setContextMenu, canvas)
+        const contextMenuHandler = enableContextMenu('canvas', setContextMenu, canvas)
 
         setTimeout(() => canvas.showTotalDiagram(), 0);
+        // const pz = new PinchZoom()
+        // pz.enable('canvas')
 
         return () => {
             // Clean initialization 
             PubSub.unsubscribe('diagram');
-            document.removeEventListener("contextmenu", contextMenuHandler);
+            var el = document.getElementById('canvas');
+            el.removeEventListener("contextmenu", contextMenuHandler);
             canvasRef.current.delete()
         }
     }, [setCanUndo, setCanRedo, setProgress, setCanPopDiagram, setEditMode, setTitle])
@@ -143,12 +150,8 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-function enableContextMenu(setContextMenu, canvas) {
+function enableContextMenu(elementId, setContextMenu, canvas) {
     const handleContextMenu = (event) => {
-        if (!event.path.some((i) => i.id === 'diagram')) {
-            // Not a right click within the diagram canvas 
-            return
-        }
         event.preventDefault();
         event = getCommonEvent(event)
 
@@ -167,7 +170,8 @@ function enableContextMenu(setContextMenu, canvas) {
         setContextMenu({ items: menuItems, x: x, y: y });
     }
 
-    document.addEventListener("contextmenu", handleContextMenu);
+    var el = document.getElementById(elementId);
+    el.addEventListener("contextmenu", handleContextMenu);
     return handleContextMenu
 }
 
