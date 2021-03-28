@@ -74,12 +74,6 @@ export default function Diagram({ width, height }) {
             setEditMode: setEditMode
         }
 
-        // document.body.addEventListener("touchmove", function (event) {
-        //     event.preventDefault();
-        //     event.stopPropagation();
-        // }, false);
-
-
         const canvas = new DiagramCanvas('canvas', callbacks);
         canvas.init()
         canvasRef.current = canvas
@@ -95,6 +89,7 @@ export default function Diagram({ width, height }) {
             PubSub.unsubscribe('diagram');
             var el = document.getElementById('canvas');
             el.removeEventListener("contextmenu", contextMenuHandler);
+            document.removeEventListener("longclick", contextMenuHandler);
             canvasRef.current.delete()
         }
     }, [setCanUndo, setCanRedo, setProgress, setCanPopDiagram, setEditMode, setTitle])
@@ -152,8 +147,15 @@ const useStyles = makeStyles((theme) => ({
 
 function enableContextMenu(elementId, setContextMenu, canvas) {
     const handleContextMenu = (event) => {
-        event.preventDefault();
-        event = getCommonEvent(event)
+        //console.log('right', event)
+        if (event.type === 'longclick') {
+            // long click event from Canvas to simulate context menu on touch device
+            event = event.detail
+        } else {
+            // Normal contextmenu event
+            event.preventDefault();
+            event = getCommonEvent(event)
+        }
 
         const { x, y } = { x: event.clientX, y: event.clientY }
 
@@ -172,8 +174,11 @@ function enableContextMenu(elementId, setContextMenu, canvas) {
 
     var el = document.getElementById(elementId);
     el.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("longclick", handleContextMenu);
     return handleContextMenu
 }
+
+
 
 
 const getFigure = (canvas, event) => {

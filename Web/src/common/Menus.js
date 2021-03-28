@@ -38,11 +38,15 @@ export function AppMenu({ anchorEl, items, onClose }) {
     const onClick = (item) => {
         onClose()
 
-        if (!item instanceof Item) {
+        if (!(item instanceof Item)) {
             return
         }
-        item.action()
+        item?.action()
     }
+
+    const onNestedClick = (item) => {
+    }
+
 
     return (
         <Menu
@@ -53,7 +57,7 @@ export function AppMenu({ anchorEl, items, onClose }) {
             PaperProps={{
             }}
         >
-            {getMenuItems(items, onClick)}
+            {getMenuItems(items, onClick, onNestedClick)}
         </Menu>
     )
 }
@@ -65,12 +69,14 @@ export function ContextMenu({ menu, onClose }) {
     }
 
     const onClick = (item) => {
-        onClose()
-
-        if (!item instanceof Item) {
+        if (!(item instanceof Item)) {
             return
         }
-        item.action()
+        onClose()
+        item?.action()
+    }
+
+    const onNestedClick = (item) => {
     }
 
     return (
@@ -81,12 +87,12 @@ export function ContextMenu({ menu, onClose }) {
             anchorReference="anchorPosition"
             anchorPosition={{ left: menu.x - 2, top: menu.y - 2 }}
         >
-            {getMenuItems(menu.items, onClick)}
+            {getMenuItems(menu.items, onClick, onNestedClick)}
         </Menu>
     )
 }
 
-const getMenuItems = (items, onClick) => {
+const getMenuItems = (items, onClick, onNestedClick) => {
     return items.map((item, i) => {
         //console.log('try item', item)
         if (!item.isShow) {
@@ -106,7 +112,7 @@ const getMenuItems = (items, onClick) => {
             return (
                 <NestedMenuItem
                     key={`item-${i}`}
-                    onClick={() => onClick(null)}
+                    onClick={(e) => onNestedClick(e)}
                     label={item.text}
                     parentMenuOpen={true}
                     disabled={!item.isEnabled}

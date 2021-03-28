@@ -233,11 +233,13 @@ export default class Canvas extends draw2d.Canvas {
     }
 
     enableTouchSupport() {
+
+        //this.on('click', e => console.log('click', e))
+
         // Seems that the parent canvas forgot handling touchstart as a mouse down event
         this.html.bind("touchstart", (event) => {
             try {
                 let pos = null
-                console.log('which', event.which)
                 switch (event.which) {
                     case 1: //touch pressed
                     case 0: //Left mouse button pressed
@@ -248,6 +250,7 @@ export default class Canvas extends draw2d.Canvas {
                             this.mouseDownY = event.clientY
                             this.mouseDragDiffX = 0
                             this.mouseDragDiffY = 0
+                            this.touchStartTime = performance.now()
                             pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
                             this.mouseDown = true
                             this.editPolicy.each((i, policy) => {
@@ -279,16 +282,31 @@ export default class Canvas extends draw2d.Canvas {
 
         // Parent canvas seems to have forgotten to handle click and double-click for touchend
         this.html.bind("touchend", (event) => {
+            const longClickTimeout = 500
+            const maxDist = 10
+
             // Calculate double click interval
             const clickInterval = performance.now() - this.touchEndTime
+            const clickTime = performance.now() - this.touchStartTime
             this.touchEndTime = performance.now()
 
             event = this._getEvent(event)
 
-            if (this.mouseDownX === event.clientX || this.mouseDownX === event.clientY) {
+            if (this.mouseDownX === event.clientX || this.mouseDownY === event.clientY) {
                 // Handle click for touch events
                 let pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
                 this.onClick(pos.x, pos.y, event.shiftKey, event.ctrlKey)
+            }
+
+            if (clickTime > longClickTimeout &&
+                (Math.abs(this.mouseDownX - event.clientX) < maxDist &&
+                    Math.abs(this.mouseDownY - event.clientY) < maxDist)) {
+                // Handle long click to simulate context menu
+                // console.log('abs', Math.abs(this.mouseDownX - event.clientX), Math.abs(this.mouseDownY - event.clientY))
+
+                // console.log('Send ev', clickTime)
+                const ev = new CustomEvent('longclick', { detail: event });
+                document.dispatchEvent(ev);
             }
 
             if (clickInterval < 500) {

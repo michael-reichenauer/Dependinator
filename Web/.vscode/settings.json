@@ -4,6 +4,7 @@
         "Inplace",
         "Resizeable",
         "Tweenable",
-        "bbox"
+        "bbox",
+        "longclick"
     ]
 }
