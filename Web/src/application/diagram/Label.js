@@ -49,7 +49,7 @@ export default class Label extends draw2d.shape.basic.Text {
 
 
     wrappedTextAttr(text, width) {
-        let words = text.split(" ")
+        let words = text.replace(';', ' ; ').split(" ")
         if (this.canvas === null || words.length === 0) {
             return { text: text, width: width, height: 20 }
         }
@@ -61,11 +61,24 @@ export default class Label extends draw2d.shape.basic.Text {
             // get a good estimation of a letter width...not correct but this is working for the very first draft implementation
             let letterWidth = svgText.getBBox(true).width / abc.length
 
-            let s = [words[0]], x = s[0].length * letterWidth
+            let s = []
+            let x = 0
             let w = null
-            for (let i = 1; i < words.length; i++) {
+            for (let i = 0; i < words.length; i++) {
                 w = words[i]
+                let isStart = false
+
+                if (w.startsWith(';')) {
+                    w = w.substr(1)
+                    isStart = true
+                }
+
                 let l = w.length * letterWidth
+                if (isStart || w.startsWith('[')) {
+                    s.push("\n")
+                    x = l
+                }
+
                 if ((x + l) > this.textWidth) {
                     s.push("\n")
                     x = l
@@ -73,6 +86,7 @@ export default class Label extends draw2d.shape.basic.Text {
                     s.push(" ")
                     x += l
                 }
+
                 s.push(w)
             }
 
