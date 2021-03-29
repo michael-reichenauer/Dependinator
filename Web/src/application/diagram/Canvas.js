@@ -19,7 +19,7 @@ export default class Canvas extends draw2d.Canvas {
 
     touchStartTime = 0
     touchEndTime = 0
-    pinchDiff = -1
+    previousPinchDiff = -1
 
     constructor(htmlElementId, onEditMode, width, height) {
         super(htmlElementId, width, height);
@@ -234,188 +234,200 @@ export default class Canvas extends draw2d.Canvas {
     }
 
     enableTouchSupport() {
+        // Seems that the parent does nog handle touchstart same as a mouse down event
+        this.html.bind("touchstart", (event) => this.handleTouchStart(event))
 
+        //Seems that the parent does nog handle click and double-click for touchend
+        this.html.bind("touchend", (event) => this.handleTouchEnd(event))
+
+        // Need to replace the parent handler of mouse and touch move to enable multi touch as well
         this.html.unbind("mousemove touchmove")
-
         this.html.bind("mousemove touchmove", (event) => {
-            // console.log('orgevent', event)
             if (event.type === 'touchmove' && event.touches.length === 2) {
-                // Pinch touch with two touches
-                //console.log('orgevent', event)
-                const t1 = event.touches[0]
-                const t2 = event.touches[1]
-                const curDiff = this.distance(t1.clientX, t1.clientY, t2.clientX, t2.clientY)
-
-                if (this.pinchDiff === -1) {
-                    this.pinchDiff = curDiff
-                    return
-                }
-
-                let delta = 200 * this.zoomFactor
-                if (curDiff > this.pinchDiff) {
-                    // The distance between the two pointers has increased (zoom in)
-                    delta = -delta
-                } else if (curDiff < this.pinchDiff) {
-                    // The distance between the two pointers has decreased (zoom out)
-                }
-                this.pinchDiff = curDiff
-
-                const x = (t2.clientX - t1.clientX) / 2 + t1.clientX
-                const y = (t2.clientY - t1.clientY) / 2 + t1.clientY
-
-                let pos = this.fromDocumentToCanvasCoordinate(x, y)
-                this.onMouseWheel(delta, pos.x, pos.y, false, false)
+                this.handleMultiTouchMove(event)
                 return
             }
 
-
-            event = this._getEvent(event)
-            //console.log('event', event)
-            let pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
-            if (this.mouseDown === false) {
-                // mouseEnter/mouseLeave events for Figures. Don't use the Raphael or DOM native functions.
-                // Raphael didn't work for Rectangle with transparent fill (events only fired for the border line)
-                // DOM didn't work well for lines. No eclipse area - you must hit the line exact to retrieve the event.
-                // In this case I implement my own stuff...again and again.
-                //
-                // don't break the main event loop if one element fires an error during enter/leave event.
-                try {
-                    let hover = this.getBestFigure(pos.x, pos.y)
-                    if (hover !== this.currentHoverFigure && this.currentHoverFigure !== null) {
-                        this.currentHoverFigure.onMouseLeave() // deprecated
-                        this.currentHoverFigure.fireEvent("mouseleave")
-                        this.fireEvent("mouseleave", { figure: this.currentHoverFigure })
-                    }
-                    if (hover !== this.currentHoverFigure && hover !== null) {
-                        hover.onMouseEnter()
-                        hover.fireEvent("mouseenter")
-                        this.fireEvent("mouseenter", { figure: hover })
-                    }
-                    this.currentHoverFigure = hover
-                } catch (exc) {
-                    // just write it to the console
-                    console.log(exc)
-                }
-
-                this.editPolicy.each((i, policy) => {
-                    policy.onMouseMove(this, pos.x, pos.y, event.shiftKey, event.ctrlKey)
-                })
-                this.fireEvent("mousemove", {
-                    x: pos.x,
-                    y: pos.y,
-                    shiftKey: event.shiftKey,
-                    ctrlKey: event.ctrlKey,
-                    hoverFigure: this.currentHoverFigure
-                })
-            } else {
-                let diffXAbs = (event.clientX - this.mouseDownX) * this.zoomFactor
-                let diffYAbs = (event.clientY - this.mouseDownY) * this.zoomFactor
-                this.editPolicy.each((i, policy) => {
-                    policy.onMouseDrag(this, diffXAbs, diffYAbs, diffXAbs - this.mouseDragDiffX, diffYAbs - this.mouseDragDiffY, event.shiftKey, event.ctrlKey)
-                })
-                this.mouseDragDiffX = diffXAbs
-                this.mouseDragDiffY = diffYAbs
-                this.fireEvent("mousemove", {
-                    x: pos.x,
-                    y: pos.y,
-                    shiftKey: event.shiftKey,
-                    ctrlKey: event.ctrlKey,
-                    hoverFigure: this.currentHoverFigure
-                })
-            }
-        })
-
-
-
-        //this.on('click', e => console.log('click', e))
-
-        // Seems that the parent canvas forgot handling touchstart as a mouse down event
-        this.html.bind("touchstart", (event) => {
-            try {
-                let pos = null
-                switch (event.which) {
-                    case 1: //touch pressed
-                    case 0: //Left mouse button pressed
-                        try {
-                            event.preventDefault()
-                            event = this._getEvent(event)
-                            this.mouseDownX = event.clientX
-                            this.mouseDownY = event.clientY
-                            this.mouseDragDiffX = 0
-                            this.mouseDragDiffY = 0
-                            this.pinchDiff = -1
-                            this.touchStartTime = performance.now()
-                            pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
-                            this.mouseDown = true
-                            this.editPolicy.each((i, policy) => {
-                                policy.onMouseDown(this, pos.x, pos.y, event.shiftKey, event.ctrlKey)
-                            })
-                        } catch (exc) {
-                            console.log(exc)
-                        }
-                        break
-                    case 3: //Right mouse button pressed
-                        event.preventDefault()
-                        if (typeof event.stopPropagation !== "undefined")
-                            event.stopPropagation()
-                        event = this._getEvent(event)
-                        pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
-                        this.onRightMouseDown(pos.x, pos.y, event.shiftKey, event.ctrlKey)
-                        return false
-                    case 2:
-                        //Middle mouse button pressed
-                        break
-                    default:
-                    //You have a strange mouse
-                }
-            } catch (exc) {
-                console.log(exc)
-            }
-        })
-
-
-        // Parent canvas seems to have forgotten to handle click and double-click for touchend
-        this.html.bind("touchend", (event) => {
-            const longClickTimeout = 500
-            const maxDist = 10
-
-            // Calculate click length and double click interval
-            const clickTime = performance.now() - this.touchStartTime
-            const clickInterval = performance.now() - this.touchEndTime
-            this.touchEndTime = performance.now()
-
-            if (event.touches?.length > 0) {
-                // Multi touch ends for one touch, skip this event since neither click nor double click
-                this.touchEndTime = 0
-                this.pinchDiff = -1
-                return
-            }
-
-            event = this._getEvent(event)
-
-            if (this.mouseDownX === event.clientX || this.mouseDownY === event.clientY) {
-                // Handle click for touch events
-                let pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
-                this.onClick(pos.x, pos.y, event.shiftKey, event.ctrlKey)
-                console.log('click')
-            }
-
-            if (clickTime > longClickTimeout &&
-                (Math.abs(this.mouseDownX - event.clientX) < maxDist &&
-                    Math.abs(this.mouseDownY - event.clientY) < maxDist)) {
-                // long click to simulate context menu
-                document.dispatchEvent(new CustomEvent('longclick', { detail: event }));
-            }
-
-            if (clickInterval < 500) {
-                // Handle double-click event for touch
-                this.touchDownX = event.clientX
-                this.touchDownY = event.clientY
-                let pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
-                this.onDoubleClick(pos.x, pos.y, event.shiftKey, event.ctrlKey)
-            }
+            this.handleMouseTouchMove(event)
         })
     }
+
+    // Handle touch start same as if mouse down in parent canvas
+    handleTouchStart(event) {
+        try {
+            let pos = null
+            switch (event.which) {
+                case 1: //touch pressed
+                case 0: //Left mouse button pressed or touch
+                    try {
+                        event.preventDefault()
+                        event = this._getEvent(event)
+                        this.mouseDownX = event.clientX
+                        this.mouseDownY = event.clientY
+                        this.mouseDragDiffX = 0
+                        this.mouseDragDiffY = 0
+                        this.previousPinchDiff = -1
+                        this.touchStartTime = performance.now()
+                        pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
+                        this.mouseDown = true
+                        this.editPolicy.each((i, policy) => {
+                            policy.onMouseDown(this, pos.x, pos.y, event.shiftKey, event.ctrlKey)
+                        })
+                    } catch (exc) {
+                        console.log(exc)
+                    }
+                    break
+                case 3: //Right mouse button pressed
+                    event.preventDefault()
+                    if (typeof event.stopPropagation !== "undefined")
+                        event.stopPropagation()
+                    event = this._getEvent(event)
+                    pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
+                    this.onRightMouseDown(pos.x, pos.y, event.shiftKey, event.ctrlKey)
+                    return false
+                case 2:
+                    //Middle mouse button pressed
+                    break
+                default:
+                //You have a strange mouse
+            }
+        } catch (exc) {
+            console.log(exc)
+        }
+    }
+
+    // Handle touch end to support touch click, double-click and long click to simulate right click
+    // for context menu
+    handleTouchEnd(event) {
+        const longClickTimeout = 500
+        const maxDist = 10
+
+        // Calculate click length and double click interval
+        const clickTime = performance.now() - this.touchStartTime
+        const clickInterval = performance.now() - this.touchEndTime
+        this.touchEndTime = performance.now()
+
+        if (event.touches?.length > 0) {
+            // Multi touch ends for one touch, skip this event since neither click nor double click
+            this.touchEndTime = 0
+            this.pinchDiff = -1
+            return
+        }
+
+        event = this._getEvent(event)
+
+        if (this.mouseDownX === event.clientX || this.mouseDownY === event.clientY) {
+            // Handle click for touch events
+            let pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
+            this.onClick(pos.x, pos.y, event.shiftKey, event.ctrlKey)
+            console.log('click')
+        }
+
+        if (clickTime > longClickTimeout &&
+            (Math.abs(this.mouseDownX - event.clientX) < maxDist &&
+                Math.abs(this.mouseDownY - event.clientY) < maxDist)) {
+            // long click to simulate context menu
+            document.dispatchEvent(new CustomEvent('longclick', { detail: event }));
+        }
+
+        if (clickInterval < 500) {
+            // Handle double-click event for touch
+            this.touchDownX = event.clientX
+            this.touchDownY = event.clientY
+            let pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
+            this.onDoubleClick(pos.x, pos.y, event.shiftKey, event.ctrlKey)
+        }
+    }
+
+    // Handle touch move when two touch (pinch zoom) 
+    handleMultiTouchMove(event) {
+        let pinchDelta = 200 * this.zoomFactor
+        const t1 = event.touches[0]
+        const t2 = event.touches[1]
+        const currentDiff = this.distance(t1.clientX, t1.clientY, t2.clientX, t2.clientY)
+
+        if (this.previousPinchDiff === -1) {
+            // First event for pinch (lets just save diff and to be used in next event)
+            this.previousPinchDiff = currentDiff
+            return
+        }
+
+        if (currentDiff > this.previousPinchDiff) {
+            // The distance between the two pointers has increased (zoom in), reverse pinch delta
+            pinchDelta = -pinchDelta
+        }
+
+        // Store diff to be used in next event
+        this.previousPinchDiff = currentDiff
+
+        // Calculate the zoom center (middle of the two touch points)
+        const x = (t2.clientX - t1.clientX) / 2 + t1.clientX
+        const y = (t2.clientY - t1.clientY) / 2 + t1.clientY
+        const center = this.fromDocumentToCanvasCoordinate(x, y)
+
+        // Pinch uses same as mouse wheel to zoom
+        this.onMouseWheel(pinchDelta, center.x, center.y, false, false)
+        return
+    }
+
+    // The parent handler of muse move and touch move did not handle multi touch move (pinch)
+    handleMouseTouchMove(event) {
+        event = this._getEvent(event)
+        //console.log('event', event)
+        let pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
+        if (this.mouseDown === false) {
+            // mouseEnter/mouseLeave events for Figures. Don't use the Raphael or DOM native functions.
+            // Raphael didn't work for Rectangle with transparent fill (events only fired for the border line)
+            // DOM didn't work well for lines. No eclipse area - you must hit the line exact to retrieve the event.
+            // In this case I implement my own stuff...again and again.
+            //
+            // don't break the main event loop if one element fires an error during enter/leave event.
+            try {
+                let hover = this.getBestFigure(pos.x, pos.y)
+                if (hover !== this.currentHoverFigure && this.currentHoverFigure !== null) {
+                    this.currentHoverFigure.onMouseLeave() // deprecated
+                    this.currentHoverFigure.fireEvent("mouseleave")
+                    this.fireEvent("mouseleave", { figure: this.currentHoverFigure })
+                }
+                if (hover !== this.currentHoverFigure && hover !== null) {
+                    hover.onMouseEnter()
+                    hover.fireEvent("mouseenter")
+                    this.fireEvent("mouseenter", { figure: hover })
+                }
+                this.currentHoverFigure = hover
+            } catch (exc) {
+                // just write it to the console
+                console.log(exc)
+            }
+
+            this.editPolicy.each((i, policy) => {
+                policy.onMouseMove(this, pos.x, pos.y, event.shiftKey, event.ctrlKey)
+            })
+            this.fireEvent("mousemove", {
+                x: pos.x,
+                y: pos.y,
+                shiftKey: event.shiftKey,
+                ctrlKey: event.ctrlKey,
+                hoverFigure: this.currentHoverFigure
+            })
+        } else {
+            let diffXAbs = (event.clientX - this.mouseDownX) * this.zoomFactor
+            let diffYAbs = (event.clientY - this.mouseDownY) * this.zoomFactor
+            this.editPolicy.each((i, policy) => {
+                policy.onMouseDrag(this, diffXAbs, diffYAbs, diffXAbs - this.mouseDragDiffX, diffYAbs - this.mouseDragDiffY, event.shiftKey, event.ctrlKey)
+            })
+            this.mouseDragDiffX = diffXAbs
+            this.mouseDragDiffY = diffYAbs
+            this.fireEvent("mousemove", {
+                x: pos.x,
+                y: pos.y,
+                shiftKey: event.shiftKey,
+                ctrlKey: event.ctrlKey,
+                hoverFigure: this.currentHoverFigure
+            })
+        }
+    }
+
 
     distance = (x1, y1, x2, y2) => {
         return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
