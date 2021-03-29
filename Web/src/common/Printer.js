@@ -88,7 +88,7 @@ export default class Printer {
         let css = '<style>';
 
         // global css
-        css += 'body {padding: 40px 24px;  }';
+        css += 'body {padding: 0px 0px;  }';
         css += 'svg { page-break-inside: avoid; }';
         css += 'table tr { page-break-inside: avoid; }';
         css += 'table td { vertical-align: top; padding: 0px 0px;}';
