@@ -50,6 +50,7 @@ export function ApplicationMenu() {
         menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
         menuItem('Print', () => PubSub.publish('canvas.Print')),
         menuItem('Delete', deleteDiagram),
+        menuItem('Reload web page', () => window.location.reload(true)),
         menuItem('About', () => setAnchorEl(true)),
     ]
 
