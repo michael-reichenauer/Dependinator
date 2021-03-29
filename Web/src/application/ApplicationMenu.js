@@ -12,7 +12,7 @@ import Printer from "../common/Printer";
 
 const useMenuStyles = makeStyles((theme) => ({
     menuButton: {
-        marginLeft: theme.spacing(2),
+
     },
 }));
 

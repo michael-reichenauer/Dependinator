@@ -49,11 +49,11 @@ export default function ApplicationBar({ height }) {
 
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 
-                <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={style()} />}
+                <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={style()} />} className={style()}
                     onClick={() => PubSub.publish('canvas.AddNode')} />
-                <Button tooltip="Add external user" icon={<PersonAddIcon className={style()} />}
+                <Button tooltip="Add external user" icon={<PersonAddIcon className={style()} />} className={style()}
                     onClick={() => PubSub.publish('canvas.AddUserNode')} />
-                <Button tooltip="Add external system" icon={<LibraryAddOutlinedIcon className={style()} />}
+                <Button tooltip="Add external system" icon={<LibraryAddOutlinedIcon className={style()} />} className={style()}
                     onClick={() => PubSub.publish('canvas.AddExternalNode')} />
 
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
@@ -89,9 +89,9 @@ export default function ApplicationBar({ height }) {
 }
 
 
-const Button = ({ icon, tooltip, disabled, onClick }) => {
+const Button = ({ icon, tooltip, disabled, onClick, className }) => {
     return (
-        <Tooltip title={!disabled ? tooltip : ''} >
+        <Tooltip title={!disabled ? tooltip : ''} className={className}>
             <IconButton disabled={disabled} onClick={onClick}>
                 {icon}</IconButton></Tooltip>
     )
