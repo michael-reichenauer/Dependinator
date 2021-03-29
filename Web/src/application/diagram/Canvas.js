@@ -244,7 +244,7 @@ export default class Canvas extends draw2d.Canvas {
         this.html.unbind("mousemove touchmove")
         this.html.bind("mousemove touchmove", (event) => {
             if (event.type === 'touchmove' && event.touches.length === 2) {
-                this.handleMultiTouchMove(event)
+                this.handlePinchTouchMove(event)
                 return
             }
 
@@ -253,7 +253,7 @@ export default class Canvas extends draw2d.Canvas {
     }
 
     // Handle touch start same as if mouse down in parent canvas
-    handleTouchStart(event) {
+    handleTouchStart = (event) => {
         try {
             let pos = null
             switch (event.which) {
@@ -268,6 +268,7 @@ export default class Canvas extends draw2d.Canvas {
                         this.mouseDragDiffY = 0
                         this.previousPinchDiff = -1
                         this.touchStartTime = performance.now()
+                        this.startLongTouchDetection(event)
                         pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
                         this.mouseDown = true
                         this.editPolicy.each((i, policy) => {
@@ -296,21 +297,25 @@ export default class Canvas extends draw2d.Canvas {
         }
     }
 
+
     // Handle touch end to support touch click, double-click and long click to simulate right click
     // for context menu
-    handleTouchEnd(event) {
-        const longClickTimeout = 500
-        const maxDist = 10
+    handleTouchEnd = (event) => {
+        this.cancelLongTouch()
+        this.pinchDiff = -1
 
         // Calculate click length and double click interval
-        const clickTime = performance.now() - this.touchStartTime
         const clickInterval = performance.now() - this.touchEndTime
         this.touchEndTime = performance.now()
+
+        if (this.longTouchHandled) {
+            // No click detection when long touch press
+            return
+        }
 
         if (event.touches?.length > 0) {
             // Multi touch ends for one touch, skip this event since neither click nor double click
             this.touchEndTime = 0
-            this.pinchDiff = -1
             return
         }
 
@@ -320,14 +325,7 @@ export default class Canvas extends draw2d.Canvas {
             // Handle click for touch events
             let pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
             this.onClick(pos.x, pos.y, event.shiftKey, event.ctrlKey)
-            console.log('click')
-        }
-
-        if (clickTime > longClickTimeout &&
-            (Math.abs(this.mouseDownX - event.clientX) < maxDist &&
-                Math.abs(this.mouseDownY - event.clientY) < maxDist)) {
-            // long click to simulate context menu
-            document.dispatchEvent(new CustomEvent('longclick', { detail: event }));
+            // console.log('click')
         }
 
         if (clickInterval < 500) {
@@ -340,7 +338,9 @@ export default class Canvas extends draw2d.Canvas {
     }
 
     // Handle touch move when two touch (pinch zoom) 
-    handleMultiTouchMove(event) {
+    handlePinchTouchMove = (event) => {
+        this.cancelLongTouch()
+
         let pinchDelta = 200 * this.zoomFactor
         const t1 = event.touches[0]
         const t2 = event.touches[1]
@@ -371,7 +371,9 @@ export default class Canvas extends draw2d.Canvas {
     }
 
     // The parent handler of muse move and touch move did not handle multi touch move (pinch)
-    handleMouseTouchMove(event) {
+    handleMouseTouchMove = (event) => {
+        this.cancelLongTouchIfMove(event)
+
         event = this._getEvent(event)
         //console.log('event', event)
         let pos = this.fromDocumentToCanvasCoordinate(event.clientX, event.clientY)
@@ -428,6 +430,38 @@ export default class Canvas extends draw2d.Canvas {
         }
     }
 
+
+    startLongTouchDetection = (event) => {
+        const longPressTimeout = 500
+        console.log('Start touch timer')
+        this.cancelLongTouch()
+        this.longTouchStartEvent = event
+        this.longTouchHandled = false
+        this.longTouchTimer = setTimeout(() => this.handleLongTouchTimeout(), longPressTimeout);
+    }
+
+    handleLongTouchTimeout = () => {
+        // console.log('touch timeout')
+        this.cancelLongTouch()
+        this.longTouchHandled = true
+        document.dispatchEvent(new CustomEvent('longclick', { detail: this.longTouchStartEvent }));
+    }
+
+    cancelLongTouch = () => {
+        clearTimeout(this.longTouchTimer)
+    }
+
+    cancelLongTouchIfMove = (event) => {
+        if (event.type === 'touchmove' && !this.isClose(event)) {
+            this.cancelLongTouch()
+        }
+    }
+
+    isClose = (event) => {
+        const maxDist = 10
+        return Math.abs(this.mouseDownX - event.clientX) < maxDist &&
+            Math.abs(this.mouseDownY - event.clientY) < maxDist
+    }
 
     distance = (x1, y1, x2, y2) => {
         return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
