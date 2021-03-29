@@ -26,12 +26,13 @@ export function useWindowSize() {
         }, 300)
 
         window.addEventListener('resize', debouncedHandleResize)
+        window.addEventListener('orientationchange ', debouncedHandleResize)
 
         return _ => {
             window.removeEventListener('resize', debouncedHandleResize)
+            window.removeEventListener('orientationchange', debouncedHandleResize)
         }
     })
 
     return [dimensions]
 }
-
