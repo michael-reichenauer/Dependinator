@@ -33,14 +33,18 @@ export default function ApplicationBar({ height }) {
         return !disabled ? classes.icons : classes.iconsDisabled
     }
 
+    const styleAlways = (disabled) => {
+        return !disabled ? classes.iconsAlways : classes.iconsAlwaysDisabled
+    }
+
     return (
         <AppBar position="static" style={{ height: height }}>
             <Toolbar>
 
 
-                <Button tooltip="Undo" disabled={!canUndo} icon={<UndoIcon className={style(!canUndo)} />}
+                <Button tooltip="Undo" disabled={!canUndo} icon={<UndoIcon className={styleAlways(!canUndo)} />}
                     onClick={() => PubSub.publish('canvas.Undo')} />
-                <Button tooltip="Redo" disabled={!canRedo} icon={<RedoIcon className={style(!canRedo)} />}
+                <Button tooltip="Redo" disabled={!canRedo} icon={<RedoIcon className={styleAlways(!canRedo)} />}
                     onClick={() => PubSub.publish('canvas.Redo')} />
 
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
@@ -54,9 +58,9 @@ export default function ApplicationBar({ height }) {
 
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 
-                <Button tooltip="Scroll and zoom to show all of the diagram" icon={<FilterCenterFocusIcon className={style()} />}
+                <Button tooltip="Scroll and zoom to show all of the diagram" icon={<FilterCenterFocusIcon className={styleAlways()} />}
                     onClick={() => PubSub.publish('canvas.ShowTotalDiagram')} />
-                <Button tooltip="Pop to surrounding diagram" disabled={!canPopDiagram} icon={<SaveAltIcon className={style(!canPopDiagram)} style={{ transform: 'rotate(180deg)' }} />}
+                <Button tooltip="Pop to surrounding diagram" disabled={!canPopDiagram} icon={<SaveAltIcon className={styleAlways(!canPopDiagram)} style={{ transform: 'rotate(180deg)' }} />}
                     onClick={() => PubSub.publish('canvas.PopInnerDiagram')} />
 
                 <Box m={2} />
@@ -125,10 +129,25 @@ const useAppBarStyles = makeStyles((theme) => ({
     },
     icons: {
         color: 'white',
+        display: 'none',
+        [theme.breakpoints.up('sm')]: {
+            display: 'block',
+        },
     },
     iconsDisabled: {
         color: 'grey',
+        display: 'none',
+        [theme.breakpoints.up('sm')]: {
+            display: 'block',
+        },
     },
+    iconsAlways: {
+        color: 'white',
+    },
+    iconsAlwaysDisabled: {
+        color: 'grey',
+    },
+
     search: {
         position: 'relative',
         borderRadius: theme.shape.borderRadius,
