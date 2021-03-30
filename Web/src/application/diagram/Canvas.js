@@ -230,6 +230,23 @@ export default class Canvas extends draw2d.Canvas {
             }
         })
 
+        this.getLines().each((i, l) => {
+            l.vertices.each((i, v) => {
+                if (v.x < minX) {
+                    minX = v.x
+                }
+                if (v.y < minY) {
+                    minY = v.y
+                }
+                if (v.x > maxX) {
+                    maxX = v.x
+                }
+                if (v.y > maxY) {
+                    maxY = v.y
+                }
+            })
+        })
+
         return { x: minX, y: minY, w: maxX - minX, h: maxY - minY, x2: maxX, y2: maxY }
     }
 

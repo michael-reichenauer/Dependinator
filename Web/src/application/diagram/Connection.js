@@ -33,7 +33,13 @@ export default class Connection extends draw2d.Connection {
     static deserialize(canvas, c) {
         const src = canvas.getFigure(c.src)
         const trg = canvas.getFigure(c.trg)
-        return new Connection(c.description, src, c.srcPort, trg, c.trgPort, c.id)
+        const connection = new Connection(c.description, src, c.srcPort, trg, c.trgPort, c.id)
+
+        for (let i = 1; i < c.v.length - 1; i++) {
+            const v = c.v[i];
+            connection.insertVertexAt(i, v.x, v.y)
+        }
+        return connection
     }
 
     serialize() {
@@ -110,6 +116,7 @@ export default class Connection extends draw2d.Connection {
         this.getCanvas().getCommandStack().execute(cmd)
     }
 
+
     getClosestVertexIndex(x, y) {
         const vertices = this.getVertices().asArray()
 
@@ -145,10 +152,11 @@ export default class Connection extends draw2d.Connection {
         var dy = line.ey - line.sy;
         var l2 = dx * dx + dy * dy;
 
-        if (l2 == 0)
+        if (l2 === 0) {
             return this.dist(point, line.sx, line.sy);
+        }
 
-        var t = ((point.x - line.sx) * dx + (point.y - line.sy) * dy) / l2;
+        let t = ((point.x - line.sx) * dx + (point.y - line.sy) * dy) / l2;
         t = Math.max(0, Math.min(1, t));
 
         return this.dist(point, line.sx + t * dx, line.sy + t * dy);
