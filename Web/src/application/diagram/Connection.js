@@ -23,8 +23,8 @@ export default class Connection extends draw2d.Connection {
         }
 
         this.setColor(Colors.connectionColor)
-        // this.setRouter(new draw2d.layout.connection.VertexRouter());
-        this.setRouter(new draw2d.layout.connection.DirectRouter());
+        this.setRouter(new draw2d.layout.connection.VertexRouter());
+        // this.setRouter(new draw2d.layout.connection.DirectRouter());
 
         this.addArrow()
         this.addLabels(description)

@@ -16,10 +16,9 @@ const useMenuStyles = makeStyles((theme) => ({
     },
 }));
 
-const asMenuItems = (diagrams) => {
-    return diagrams.map(d => {
-        return menuItem(d.name, () => PubSub.publish('canvas.OpenDiagram', d.id))
-    })
+const asMenuItems = (diagrams, lastUsedDiagramId) => {
+    return diagrams.filter(d => d.id != lastUsedDiagramId)
+        .map(d => menuItem(d.name, () => PubSub.publish('canvas.OpenDiagram', d.id)))
 }
 
 export function ApplicationMenu() {
@@ -40,11 +39,11 @@ export function ApplicationMenu() {
         }
     };
 
-    const diagrams = menu == null ? [] : asMenuItems(store.getDiagrams())
+    const diagrams = menu == null ? [] : asMenuItems(store.getDiagrams(), store.getLastUsedDiagramId())
 
     const menuItems = [
         menuItem('New Diagram', () => PubSub.publish('canvas.NewDiagram')),
-        menuParentItem('Open Recent', diagrams),
+        menuParentItem('Open Recent', diagrams, diagrams.length > 0),
         menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
         menuItem('Save to file', () => PubSub.publish('canvas.SaveDiagramToFile')),
         menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
