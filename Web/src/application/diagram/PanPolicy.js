@@ -1,5 +1,4 @@
 import draw2d from "draw2d";
-import Connection from "./Connection";
 
 
 export default class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolicy {

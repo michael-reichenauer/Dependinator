@@ -27,11 +27,6 @@ export default class Connection extends draw2d.Connection {
         router.onDrag = () => { }
         this.setRouter(router);
         // this.setRouter(new draw2d.layout.connection.DirectRouter());
-        //this.uninstallEditPolicy()
-        // const po = this.editPolicy.find(p => p instanceof draw2d.policy.figure.DragDropEditPolicy)
-        // this.uninstallEditPolicy(po)
-
-        //console.log('pol', this.editPolicy.asArray())
         this.installEditPolicy(new VertexSelectionFeedbackPolicy())
 
         this.addArrow()
@@ -195,11 +190,6 @@ class ConnectionLabelLocator extends draw2d.layout.locator.ConnectionLocator {
 class VertexSelectionFeedbackPolicy extends draw2d.policy.line.LineSelectionFeedbackPolicy {
     NAME = "VertexSelectionFeedbackPolicy"
 
-    constructor(attr, setter, getter) {
-        super(attr, setter, getter)
-    }
-
-
     onSelect(canvas, figure, isPrimarySelection) {
         console.log('select')
         let startHandle = new draw2d.shape.basic.LineStartResizeHandle(figure)
@@ -223,7 +213,6 @@ class VertexSelectionFeedbackPolicy extends draw2d.policy.line.LineSelectionFeed
         }
 
         // figure.selectionHandles.add(new draw2d.shape.basic.GhostVertexResizeHandle(figure, i - 1))
-
         figure.selectionHandles.each((i, e) => {
             e.setDraggable(figure.isResizeable())
             e.show(canvas)
