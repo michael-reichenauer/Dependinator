@@ -76,12 +76,84 @@ export default class Connection extends draw2d.Connection {
         return [
             menuItem('To front', () => this.toFront()),
             menuItem('To back', () => this.toBack()),
+            menuItem('Add segment', () => this.addSegmentAt(x, y)),
+            menuItem('Remove segment', () => this.removeSegmentAt(x, y), this.getVertices().asArray().length > 2)
         ]
     }
 
     setDescription(description) {
         this.descriptionLabel?.setText(description)
     }
+
+    addSegmentAt(x, y) {
+        const cp = this.getCanvas().fromDocumentToCanvasCoordinate(x, y)
+        const closestIndex = this.getClosestVertexIndex(cp.x, cp.y)
+
+        let cmd = new draw2d.command.CommandAddVertex(this, closestIndex + 1, cp.x, cp.y)
+        this.getCanvas().getCommandStack().execute(cmd)
+
+        // Make sure line is selected so the move handle is ready to be used
+        if (this.getCanvas().getSelection().contains(this)) {
+            return // nothing to to
+        }
+        this.select(true) // primary selection
+        this.getCanvas().getSelection().setPrimary(this)
+    }
+
+    removeSegmentAt(x, y) {
+        const cp = this.getCanvas().fromDocumentToCanvasCoordinate(x, y)
+        if (this.getVertices().asArray().length < 2) {
+            return
+        }
+        const closestIndex = this.getClosestVertexIndex(cp.x, cp.y)
+        let cmd = new draw2d.command.CommandRemoveVertex(this, closestIndex + 1)
+        this.getCanvas().getCommandStack().execute(cmd)
+    }
+
+    getClosestVertexIndex(x, y) {
+        const vertices = this.getVertices().asArray()
+
+        const lineDistances = []
+        for (let i = 0; i < vertices.length - 1; i++) {
+            const p1 = vertices[i];
+            const p2 = vertices[i + 1];
+            const dl = this.distToSegment({ x: x, y: y }, { sx: p1.x, sy: p1.y, ex: p2.x, ey: p2.y })
+            lineDistances.push(dl)
+        }
+
+        let closestIndex = 0
+        let closestDistance = lineDistances[0]
+        lineDistances.forEach((distance, i) => {
+            if (distance < closestDistance) {
+                closestIndex = i
+                closestDistance = distance
+            }
+        })
+
+        return closestIndex
+    }
+
+
+    dist(point, x, y) {
+        var dx = x - point.x;
+        var dy = y - point.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    distToSegment(point, line) {
+        var dx = line.ex - line.sx;
+        var dy = line.ey - line.sy;
+        var l2 = dx * dx + dy * dy;
+
+        if (l2 == 0)
+            return this.dist(point, line.sx, line.sy);
+
+        var t = ((point.x - line.sx) * dx + (point.y - line.sy) * dy) / l2;
+        t = Math.max(0, Math.min(1, t));
+
+        return this.dist(point, line.sx + t * dx, line.sy + t * dy);
+    }
+
 }
 
 

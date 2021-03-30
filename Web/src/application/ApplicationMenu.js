@@ -17,7 +17,7 @@ const useMenuStyles = makeStyles((theme) => ({
 }));
 
 const asMenuItems = (diagrams, lastUsedDiagramId) => {
-    return diagrams.filter(d => d.id != lastUsedDiagramId)
+    return diagrams.filter(d => d.id !== lastUsedDiagramId)
         .map(d => menuItem(d.name, () => PubSub.publish('canvas.OpenDiagram', d.id)))
 }
 
