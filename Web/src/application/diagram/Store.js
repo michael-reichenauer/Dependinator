@@ -248,7 +248,7 @@ class Store {
         }
 
         return keys.map(key => this.readData(key)).filter(data => data != null)
-            .sort((d1, d2) => d1.canvasId === 'root' ? -1 : d2.canvasId === 'root' ? 1 : 0)
+            .sort((d1, d2) => d1.canvasId === rootCanvasId ? -1 : d2.canvasId === rootCanvasId ? 1 : 0)
     }
 
 
