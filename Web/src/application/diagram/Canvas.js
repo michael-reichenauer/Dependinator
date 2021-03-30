@@ -449,6 +449,7 @@ export default class Canvas extends draw2d.Canvas {
 
 
     startLongTouchDetection = (event) => {
+        console.log('Start detection')
         const longPressTimeout = 500
 
         this.cancelLongTouch()
@@ -464,6 +465,7 @@ export default class Canvas extends draw2d.Canvas {
     }
 
     cancelLongTouch = () => {
+        //console.log('cancel')
         clearTimeout(this.longTouchTimer)
     }
 
@@ -474,7 +476,7 @@ export default class Canvas extends draw2d.Canvas {
     }
 
     isClose = (event) => {
-        const maxDist = 10
+        const maxDist = 5
         return Math.abs(this.mouseDownX - event.clientX) < maxDist &&
             Math.abs(this.mouseDownY - event.clientY) < maxDist
     }

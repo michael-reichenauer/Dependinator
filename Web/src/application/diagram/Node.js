@@ -84,6 +84,14 @@ export default class Node extends draw2d.shape.node.Between {
         // this.on("click", (s, e) => console.log('click node'))
         this.on("dblclick", (s, e) => this.editInnerDiagram())
         this.on('resize', (s, e) => this.handleResize())
+
+        const sel = this.editPolicy.find(p => p instanceof draw2d.policy.figure.RectangleSelectionFeedbackPolicy)
+        if (sel != null) {
+            sel.createResizeHandle = (owner, type) => {
+                return new draw2d.ResizeHandle({ owner: owner, type: type, width: 15, height: 15 });
+            }
+        }
+        console.log('pol', this.editPolicy.asArray())
     }
 
     setCanvas(canvas) {
