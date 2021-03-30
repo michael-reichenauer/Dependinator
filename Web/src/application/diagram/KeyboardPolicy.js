@@ -5,42 +5,37 @@ import PubSub from 'pubsub-js'
 export default class KeyboardPolicy extends draw2d.policy.canvas.KeyboardPolicy {
 
     onKeyDown(canvas, keyCode, shiftKey, ctrlKey) {
-        if (canvas.getPrimarySelection() !== null && ctrlKey === true) {
-            // When node is selected
-            switch (keyCode) {
-                case 71: // G
-                    if (canvas.getPrimarySelection() instanceof draw2d.shape.composite.Group && canvas.getSelection().getSize() === 1) {
-                        canvas.getCommandStack().execute(new draw2d.command.CommandUngroup(canvas, canvas.getPrimarySelection()))
-                    }
-                    else {
-                        canvas.getCommandStack().execute(new draw2d.command.CommandGroup(canvas, canvas.getSelection()))
-                    }
-                    break
-                case 66: // B
-                    canvas.getPrimarySelection().toBack()
-                    break
-                case 70: // F
-                    canvas.getPrimarySelection().toFront()
-                    break
-                case 90: // z
-                    PubSub.publish('canvas.Undo')
-                    break
-                case 89: // y
-                    PubSub.publish('canvas.Redo')
-                    break
-                default:
-                //console.log('Key', keyCode)
+        // console.log('Key', keyCode, shiftKey, ctrlKey)
+
+        const handleKey = keys => {
+            // Get key definition for keyCode and predicate (ctrl, ...)
+            const keyDef = keys.find(key => keyCode === key[0].charCodeAt(0) && key[1])
+            if (keyDef != null) {
+                const keyAction = keyDef[2]
+                keyAction()
+                return
             }
+
+            super.onKeyDown(canvas, keyCode, shiftKey, ctrlKey)
         }
-        else {
-            // console.log('Key', keyCode)
-            if (keyCode === 90 && ctrlKey) { // ctrl-z
-                PubSub.publish('canvas.Undo')
-            } else if (keyCode === 89 && ctrlKey) {  // ctrl-y
-                PubSub.publish('canvas.Redo')
-            } else {
-                super.onKeyDown(canvas, keyCode, shiftKey, ctrlKey)
-            }
-        }
+
+        const isSelected = canvas.getPrimarySelection() !== null
+
+        handleKey([
+            ['Z', ctrlKey, () => PubSub.publish('canvas.Undo')],
+            ['Y', ctrlKey, () => PubSub.publish('canvas.Redo')],
+            ['B', ctrlKey && isSelected, () => canvas.getPrimarySelection().toBack()],
+            ['F', ctrlKey && isSelected, () => canvas.getPrimarySelection().toFront()],
+        ])
     }
 }
+
+
+// Grouping:
+// const keyG = 71
+//     if (canvas.getPrimarySelection() instanceof draw2d.shape.composite.Group && canvas.getSelection().getSize() === 1) {
+//         canvas.getCommandStack().execute(new draw2d.command.CommandUngroup(canvas, canvas.getPrimarySelection()))
+//     }
+//     else {
+//         canvas.getCommandStack().execute(new draw2d.command.CommandGroup(canvas, canvas.getSelection()))
+//     }

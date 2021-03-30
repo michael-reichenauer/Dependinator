@@ -161,7 +161,7 @@ export default class DiagramCanvas {
             })
 
             const printer = new Printer()
-            printer.print(results.join())
+            printer.print(results.join('<p style="page-break-after: always;">&nbsp;</p>'))
         })
     }
 

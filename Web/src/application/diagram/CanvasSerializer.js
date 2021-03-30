@@ -75,7 +75,7 @@ export default class CanvasSerializer {
 
 
             // Export size (A4) and view box
-            const prefix = `<svg width="210mm" height="297mm" version="1.1"
+            const prefix = `<svg width="210mm" height="277mm" version="1.1 style="page-break-after: always;"
              viewBox="${r.x} ${r.y} ${r.w} ${r.h}" style="background-color:${Colors.canvasDivBackground}" `
 
             // Replace svg size with A4 size and view box
