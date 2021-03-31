@@ -3,7 +3,7 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011"
                  xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
     <Metadata>
-        <Identity Id="0117fbb8-b3c3-4baf-858e-d7ed140c01f4" Version="1.0" Language="en-US"
+        <Identity Id="0117fbb8-b3c3-4baf-858e-d7ed140c01f4" Version="1.1" Language="en-US"
                   Publisher="Michael Reichenauer" />
         <DisplayName>Dependinator</DisplayName>
         <Description xml:space="preserve">Visualize program structure and dependencies in a map like view to make it easier to understand and refactor the architecture.</Description>
@@ -13,7 +13,7 @@
         <Tags>Visualize, structure, architecture, code, refactor, dependencies</Tags>
     </Metadata>
     <Installation AllUsers="true">
-        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0, 16.0)" />
+        <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[15.0, 17.0)" />
     </Installation>
     <Dependencies>
         <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual"
@@ -22,7 +22,7 @@
                     Version="[15.0]" />
     </Dependencies>
     <Prerequisites>
-        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0,16.0)"
+        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0,17.0)"
                       DisplayName="Visual Studio core editor" />
     </Prerequisites>
     <Assets>
