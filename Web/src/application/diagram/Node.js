@@ -278,7 +278,7 @@ export default class Node extends draw2d.shape.node.Between {
         })
 
         this.nameLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-        this.nameLabel.labelLocator = new LabelLocator(7)
+        this.nameLabel.labelLocator = new LabelLocator(12)
         this.add(this.nameLabel, this.nameLabel.labelLocator);
         this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
         this.descriptionLabel.labelLocator = new LabelLocator(45)
@@ -297,7 +297,7 @@ export default class Node extends draw2d.shape.node.Between {
         this.iconName = iconName
         this.icon = icon
         const iconColor = Colors.getNodeFontColor(this.colorName)
-        this.icon.attr({ width: 15, height: 15, color: iconColor, bgColor: 'none' })
+        this.icon.attr({ width: 22, height: 22, color: iconColor, bgColor: 'none' })
         this.add(this.icon, new draw2d.layout.locator.XYRelPortLocator(1, 1))
     }
 
