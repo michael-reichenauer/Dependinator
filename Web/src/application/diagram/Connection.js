@@ -197,7 +197,6 @@ class VertexSelectionFeedbackPolicy extends draw2d.policy.line.LineSelectionFeed
     NAME = "VertexSelectionFeedbackPolicy"
 
     onSelect(canvas, figure, isPrimarySelection) {
-        console.log('select')
         let startHandle = new draw2d.shape.basic.LineStartResizeHandle(figure)
         startHandle.setMinWidth(15)
 
