@@ -1,45 +1,57 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PubSub from 'pubsub-js'
-import Menu from "@material-ui/core/Menu";
-import MenuItem from "@material-ui/core/MenuItem";
 import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
 import Tooltip from '@material-ui/core/Tooltip';
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { Box, Link, Popover, Typography } from "@material-ui/core";
+import { AppMenu, menuItem, menuParentItem } from "../common/Menus";
+import { store } from "./diagram/Store";
+import Printer from "../common/Printer";
 
 
 const useMenuStyles = makeStyles((theme) => ({
     menuButton: {
-        marginLeft: theme.spacing(2),
+
     },
 }));
 
+const asMenuItems = (diagrams, lastUsedDiagramId) => {
+    return diagrams.filter(d => d.id !== lastUsedDiagramId)
+        .map(d => menuItem(d.name, () => PubSub.publish('canvas.OpenDiagram', d.id)))
+}
 
 export function ApplicationMenu() {
     const classes = useMenuStyles();
     const [menu, setMenu] = useState(null);
-    const [anchorEl, setAnchorEl] = React.useState(null);
+    const [anchorEl, setAnchorEl] = useState(null);
 
-    const handleAbout = (event) => {
-        setMenu(null);
-        console.info(`Show About`)
-        setAnchorEl(event.currentTarget);
-    };
+    useEffect(() => {
+        const handler = Printer.registerPrintKey(() => PubSub.publish('canvas.Print'))
+        return () => Printer.deregisterPrintKey(handler)
 
+    })
 
-    const handleNewDiagram = (event) => {
-        setMenu(null);
-        var shouldDelete = confirm('Do you really want to clear the current diagram?') //eslint-disable-line
+    const deleteDiagram = () => {
+        var shouldDelete = confirm('Do you really want to delete the current diagram?') //eslint-disable-line
         if (shouldDelete) {
-            PubSub.publish('diagram.NewDiagram')
+            PubSub.publish('canvas.DeleteDiagram')
         }
     };
 
-    const handleExport = (event) => {
-        setMenu(null);
-        PubSub.publish('diagram.Export')
-    }
+    const diagrams = menu == null ? [] : asMenuItems(store.getDiagrams(), store.getLastUsedDiagramId())
+
+    const menuItems = [
+        menuItem('New Diagram', () => PubSub.publish('canvas.NewDiagram')),
+        menuParentItem('Open Recent', diagrams, diagrams.length > 0),
+        menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
+        menuItem('Save to file', () => PubSub.publish('canvas.SaveDiagramToFile')),
+        menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
+        menuItem('Print', () => PubSub.publish('canvas.Print')),
+        menuItem('Delete', deleteDiagram),
+        menuItem('Reload web page', () => window.location.reload(true)),
+        menuItem('About', () => setAnchorEl(true)),
+    ]
 
     const handleCloseAbout = () => { setAnchorEl(null); };
 
@@ -58,27 +70,12 @@ export function ApplicationMenu() {
                     <MenuIcon />
                 </IconButton>
             </Tooltip>
-            <Menu
-                anchorEl={menu}
-                keepMounted
-                open={Boolean(menu)}
-                onClose={() => setMenu(null)}
-                PaperProps={{
-                    // style: {
-                    //     backgroundColor: "#333333"
-                    // },
-                }}
-            >
 
-                <MenuItem onClick={handleNewDiagram}>New Diagram</MenuItem>
-                <MenuItem onClick={handleExport}>Export Diagram as Page (A4)</MenuItem>
-                <MenuItem onClick={handleAbout}>About</MenuItem>
+            <AppMenu anchorEl={menu} items={menuItems} onClose={setMenu} />
 
-            </Menu>
             <Popover
                 id={id}
                 open={open}
-                anchorEl={anchorEl}
                 onClose={handleCloseAbout}
                 anchorReference="anchorPosition"
                 anchorPosition={{ top: 200, left: 400 }}
@@ -99,7 +96,6 @@ export function ApplicationMenu() {
                         by Simon Brown.
                     </Typography>
                 </Box>
-
             </Popover>
         </>
     )

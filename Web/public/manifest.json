@@ -1,6 +1,8 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Dependinator",
+  "name": "Dependinator",
+  "sha": "%REACT_APP_SHA%",
+  "buildTime": "%REACT_APP_BUILD_TIME%",
   "icons": [
     {
       "src": "favicon.ico",
