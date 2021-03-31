@@ -49,8 +49,19 @@ export default class Label extends draw2d.shape.basic.Text {
 
 
     wrappedTextAttr(text, width) {
-        let words = text.replaceAll('[', ';[').replaceAll(']', '];')
-            .replaceAll(';', ' ; ').split(" ")
+        text = text.trim()
+        text = text.replaceAll('[', ';[').replaceAll(']', '];')
+        if (text.startsWith(';[')) {
+            text = text.substr(1)
+        }
+        if (text.endsWith('];')) {
+            text = text.substr(0, text.length - 1)
+        }
+        console.log('text', text)
+
+        text = text.replaceAll(';', "\n")
+
+        let words = text.split(" ")
         if (this.canvas === null || words.length === 0) {
             return { text: text, width: width, height: 20 }
         }
@@ -67,21 +78,8 @@ export default class Label extends draw2d.shape.basic.Text {
             let w = null
             for (let i = 0; i < words.length; i++) {
                 w = words[i]
-                let isStart = false
-
-                if (w.startsWith(';')) {
-                    w = w.substr(1)
-                    if (i != 1) {
-                        isStart = true
-                    }
-                }
 
                 let l = w.length * letterWidth
-                if (isStart) {
-                    s.push("\n")
-                    x = l
-                }
-
                 if ((x + l) > this.textWidth) {
                     s.push("\n")
                     x = l
