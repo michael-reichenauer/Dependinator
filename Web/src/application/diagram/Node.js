@@ -323,6 +323,12 @@ export default class Node extends draw2d.shape.node.Between {
         // this.getPorts().each(function (i, port) {
         //     port.setConnectionAnchor(new draw2d.layout.anchor.FanConnectionAnchor(port));
         // });
+
+        // Make ports larger to support touch
+        this.getPorts().each((i, p) => {
+            p.setCoronaWidth(20)
+            p.setDimension(15)
+        })
     }
 }
 
