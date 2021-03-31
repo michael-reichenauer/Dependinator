@@ -44,7 +44,13 @@ export default class Canvas extends draw2d.Canvas {
         this.installEditPolicy(this.zoomPolicy);
 
         this.installEditPolicy(new ConnectionCreatePolicy())
-        this.installEditPolicy(new draw2d.policy.canvas.CoronaDecorationPolicy());
+        const cdp = new draw2d.policy.canvas.CoronaDecorationPolicy()
+        cdp.onMouseDown = (canvas, x, y, shiftKey, ctrlKey) => {
+            cdp.startDragX = x
+            cdp.startDragY = y
+            cdp.updatePorts(canvas, x, y)
+        }
+        this.installEditPolicy(cdp);
 
         this.setNormalBackground()
 
