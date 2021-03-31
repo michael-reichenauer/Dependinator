@@ -86,8 +86,14 @@ export default class Connection extends draw2d.Connection {
             menuItem('To front', () => this.toFront()),
             menuItem('To back', () => this.toBack()),
             menuItem('Add segment', () => this.addSegmentAt(x, y)),
-            menuItem('Remove segment', () => this.removeSegmentAt(x, y), this.getVertices().asArray().length > 2)
+            menuItem('Remove segment', () => this.removeSegmentAt(x, y), this.getVertices().asArray().length > 2),
+            menuItem('Delete connection', () => this.deleteConnection())
         ]
+    }
+
+    deleteConnection() {
+        let cmd = new draw2d.command.CommandDelete(this)
+        this.getCanvas().getCommandStack().execute(cmd)
     }
 
     setDescription(description) {

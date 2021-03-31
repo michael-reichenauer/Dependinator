@@ -326,7 +326,7 @@ export default class Node extends draw2d.shape.node.Between {
 
         // Make ports larger to support touch
         this.getPorts().each((i, p) => {
-            p.setCoronaWidth(20)
+            p.setCoronaWidth(15)
             p.setDimension(15)
         })
     }
