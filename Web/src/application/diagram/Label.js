@@ -50,7 +50,7 @@ export default class Label extends draw2d.shape.basic.Text {
 
     wrappedTextAttr(text, width) {
         text = text.trim()
-        text = text.replaceAll('[', ';[').replaceAll(']', '];')
+        text = text.replaceAll("\n", ";").replaceAll('[', ';[').replaceAll(']', '];')
         if (text.startsWith(';[')) {
             text = text.substr(1)
         }
@@ -59,7 +59,7 @@ export default class Label extends draw2d.shape.basic.Text {
         }
         console.log('text', text)
 
-        text = text.replaceAll(';', "\n")
+        text = text.replaceAll(';', " \n ")
 
         let words = text.split(" ")
         if (this.canvas === null || words.length === 0) {
@@ -75,20 +75,32 @@ export default class Label extends draw2d.shape.basic.Text {
 
             let s = []
             let x = 0
-            let w = null
+            let word = null
             for (let i = 0; i < words.length; i++) {
-                w = words[i]
+                word = words[i]
+                let wordWidth = word.length * letterWidth
 
-                let l = w.length * letterWidth
-                if ((x + l) > this.textWidth) {
+                if (word === "\n") {
                     s.push("\n")
-                    x = l
+                    x = 0
+                } else if ((x + wordWidth) > this.textWidth) {
+                    // Word does not fit, put on next line (unless not first word on line)
+                    if (x > 0) {
+                        s.push("\n")
+                    }
+                    s.push(word)
+                    x = wordWidth
                 } else {
-                    s.push(" ")
-                    x += l
+                    // Word does fit, just add a space before (unless not first word on line)
+                    if (x > 0) {
+                        s.push(" ")
+                        s.push(word)
+                        x += wordWidth + 1 * letterWidth
+                    } else {
+                        s.push(word)
+                        x += wordWidth
+                    }
                 }
-
-                s.push(w)
             }
 
             // set the wrapped text and get the resulted bounding box
