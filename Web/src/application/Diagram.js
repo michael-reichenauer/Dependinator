@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import PubSub from 'pubsub-js'
+// import { useSnackbar } from "notistack";
 import DiagramCanvas from "./diagram/DiagramCanvas"
 import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
@@ -22,6 +23,7 @@ export default function Diagram({ width, height }) {
     // The ref to the canvas handler for all canvas operations
     const canvasRef = useRef(null)
 
+    //const { enqueueSnackbar, closeSnackbar } = useSnackbar();
     const [contextMenu, setContextMenu] = useState()
     const [, setTitle] = useAtom(titleAtom)
     const [, setCanUndo] = useAtom(canUndoAtom)
@@ -83,6 +85,17 @@ export default function Diagram({ width, height }) {
         setTimeout(() => canvas.showTotalDiagram(), 0);
         // const pz = new PinchZoom()
         // pz.enable('canvas')
+
+        //setTimeout(() => {
+        //     const sb = enqueueSnackbar("warning", {
+        //         variant: "warning", onClick: () => closeSnackbar(sb), autoHideDuration: null
+        //     })
+        // }, 3000);
+        // setTimeout(() => {
+        //     const sb = enqueueSnackbar("Failee errorog", {
+        //         variant: "error", onClick: () => closeSnackbar(sb), autoHideDuration: null
+        //     })
+        // }, 2000);
 
         return () => {
             // Clean initialization 
