@@ -57,7 +57,7 @@ export default class Label extends draw2d.shape.basic.Text {
         if (text.endsWith('];')) {
             text = text.substr(0, text.length - 1)
         }
-        console.log('text', text)
+        // console.log('text', text)
 
         text = text.replaceAll(';', " \n ")
 

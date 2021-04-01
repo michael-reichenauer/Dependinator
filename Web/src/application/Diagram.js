@@ -97,6 +97,18 @@ export default function Diagram({ width, height }) {
         //     })
         // }, 2000);
 
+        const testGet = async () => {
+            try {
+                const msg = await fetch(`/api/message`)
+                console.log('msg', msg)
+                let { text } = await (msg).json();
+                console.log('retrieved', text);
+            } catch (err) {
+                console.warn('Error', err)
+            }
+        }
+        testGet()
+
         return () => {
             // Clean initialization 
             PubSub.unsubscribe('diagram');
