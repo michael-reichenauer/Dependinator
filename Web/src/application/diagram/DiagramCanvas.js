@@ -102,7 +102,7 @@ export default class DiagramCanvas {
     }
 
     commandOpenDiagram = (msg, diagramId) => {
-        const canvasData = this.store.readDiagramRootCanvas(diagramId)
+        const canvasData = this.store.getDiagramRootCanvas(diagramId)
         if (canvasData == null) {
             // No data for that id, lets create it
             return
@@ -120,7 +120,7 @@ export default class DiagramCanvas {
         this.canvas.clearDiagram()
 
         // Try get first diagram to open
-        const canvasData = this.store.readDiagramRootCanvas(this.store.getDiagrams()[0]?.id)
+        const canvasData = this.store.getFirstDiagramRootCanvas()
         if (canvasData == null) {
             // No data for that id, lets create new diagram
             this.createNewDiagram()
@@ -144,13 +144,12 @@ export default class DiagramCanvas {
     }
 
     commandArchiveToFile = () => {
-        console.log('arch')
-        this.store.archiveToFile()
+        this.store.saveAllDiagramsToFile()
     }
 
     commandPrint = () => {
         this.withWorkingIndicator(() => {
-            const canvasDataList = this.store.readAllCanvases(this.canvas.diagramId)
+            const canvasDataList = this.store.getAllDiagramCanvases(this.canvas.diagramId)
 
             const results = []
             canvasDataList.forEach(canvasData => {
@@ -202,9 +201,6 @@ export default class DiagramCanvas {
         addFigureToCanvas(this.canvas, node, p)
     }
 
-
-
-
     tryGetFigure = (x, y) => {
         let cp = this.canvas.fromDocumentToCanvasCoordinate(x, y)
         let figure = this.canvas.getBestFigure(cp.x, cp.y)
@@ -214,12 +210,11 @@ export default class DiagramCanvas {
     save() {
         // Serialize canvas figures and connections into canvas data object
         const canvasData = this.canvas.serialize();
-        this.store.writeCanvas(canvasData, this.canvas.canvasId)
+        this.store.setCanvas(canvasData)
     }
 
     loadInitialDiagram() {
-        const diagramId = this.store.getLastUsedDiagramId()
-        const canvasData = this.store.readDiagramRootCanvas(diagramId)
+        const canvasData = this.store.getLastUsedCanvas()
         if (canvasData == null) {
             // No data for that id, lets create it
             this.createNewDiagram()
@@ -236,8 +231,8 @@ export default class DiagramCanvas {
         this.canvas.diagramId = diagramId
         addDefaultNewDiagram(this.canvas)
 
-        this.store.newDiagram(diagramId, this.canvas.canvasId, this.getName())
-        this.save()
+        const canvasData = this.canvas.serialize();
+        this.store.newDiagram(diagramId, this.getName(), canvasData)
     }
 
     getCenter() {

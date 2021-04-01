@@ -6,6 +6,7 @@ import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { Backdrop, makeStyles } from "@material-ui/core";
 import { ContextMenu } from "../common/Menus";
+import Api from "./diagram/Api";
 //import { useLongPress } from "use-long-press";
 // import useLongPress from "../common/useLongPress";
 // import PinchZoom from "./diagram/PinchZoom";
@@ -98,10 +99,9 @@ export default function Diagram({ width, height }) {
         // }, 2000);
 
         const testGet = async () => {
+            const api = new Api()
             try {
-                const msg = await fetch(`/api/message`)
-                console.log('msg', msg)
-                let { text } = await (msg).json();
+                const text = await api.getMessage()
                 console.log('retrieved', text);
             } catch (err) {
                 console.warn('Error', err)

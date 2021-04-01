@@ -207,7 +207,7 @@ export default class Node extends draw2d.shape.node.Between {
 
         this.setChildrenVisible(false)
 
-        const canvasData = store.readCanvas(this.getCanvas().diagramId, this.getId())
+        const canvasData = store.getCanvas(this.getCanvas().diagramId, this.getId())
         this.innerDiagram = new InnerDiagramFigure(this, canvasData)
         this.innerDiagram.onClick = clickHandler(
             () => this.hideInnerDiagram(),

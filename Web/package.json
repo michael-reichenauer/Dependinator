@@ -10,6 +10,7 @@
     "@testing-library/jest-dom": "^5.11.10",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.8.3",
+    "axios": "^0.21.1",
     "cuid": "^2.1.8",
     "draw2d": "^1.0.38",
     "file-saver": "^2.0.5",
@@ -51,6 +52,6 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },  
-   "proxy": "http://localhost:7071/"
+  },
+  "proxy": "http://localhost:7071/"
 }
