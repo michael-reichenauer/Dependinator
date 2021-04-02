@@ -18,7 +18,7 @@ export default class Api {
                 canvasData: canvasData
             });
         } catch (error) {
-            console.error(error)
+            console.log(error)
         }
 
     }
@@ -27,7 +27,7 @@ export default class Api {
         try {
             return (await axios.get('/api/GetAllDiagramInfos')).data;
         } catch (error) {
-            console.warn(error)
+            console.log(error)
         }
     }
 }
