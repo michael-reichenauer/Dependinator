@@ -31,7 +31,7 @@ export default class StoreFiles {
         const readFile = this.buildFileSelector(e => {
             var file = e.path[0].files[0];
             if (!file) {
-                console.log('File not read')
+                console.log('No file')
                 resultHandler(null);
             }
 

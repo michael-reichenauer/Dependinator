@@ -34,6 +34,7 @@ export default class DiagramCanvas {
     }
 
     init() {
+        this.store.setErrorHandler(this.callbacks.errorHandler)
         this.loadInitialDiagram()
 
         this.callbacks.setTitle(this.getTitle())
@@ -104,7 +105,7 @@ export default class DiagramCanvas {
     commandOpenDiagram = (msg, diagramId) => {
         const canvasData = this.store.getDiagramRootCanvas(diagramId)
         if (canvasData == null) {
-            // No data for that id
+            this.callbacks.errorHandler('Failed to load diagram')
             return
         }
         this.canvas.clearDiagram()
@@ -140,7 +141,12 @@ export default class DiagramCanvas {
     }
 
     commandOpenFile = () => {
-        this.store.loadDiagramFromFile(diagramId => this.commandOpenDiagram('', diagramId))
+        this.store.loadDiagramFromFile(diagramId => {
+            if (diagramId == null) {
+                this.callbacks.errorHandler('Failed to load file')
+            }
+            this.commandOpenDiagram('', diagramId)
+        })
     }
 
     commandArchiveToFile = () => {

@@ -5,8 +5,14 @@ const diagramDataKey = 'DiagramData'
 const lastUsedDiagramKey = 'lastUsedDiagram'
 const rootCanvasId = 'root'
 
+
 class Store {
     files = new StoreFiles()
+    errorHandler = null
+
+    setErrorHandler(errorHandler) {
+        this.errorHandler = errorHandler
+    }
 
     newDiagram(diagramId, name, canvasData) {
         const diagramData = { diagramId: diagramId, name: name }
@@ -57,12 +63,9 @@ class Store {
         return this.readCanvas(diagramId, rootCanvasId)
     }
 
-
     loadDiagramFromFile(resultHandler) {
         this.files.loadFile(file => {
-
             if (file == null) {
-                console.warn('Failed load file')
                 resultHandler(null)
                 return
             }
@@ -179,7 +182,6 @@ class Store {
     readDiagram(diagramId) {
         const diagramData = this.readDiagramData(diagramId)
         if (diagramData == null) {
-            console.log('diagram not found', diagramId)
             return
         }
         const canvases = this.readCanvases(diagramId)
@@ -217,7 +219,6 @@ class Store {
     readData(key) {
         let text = localStorage.getItem(key)
         if (text == null) {
-            console.log('No data for key', key)
             return null
         }
         return JSON.parse(text)
