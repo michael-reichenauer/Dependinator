@@ -41,10 +41,6 @@ class Store {
         return this.getDiagramRootCanvas(lastUsedDiagramId)
     }
 
-    getAllDiagramInfos() {
-        return this.readAllDiagramsInfos()
-    }
-
     getFirstDiagramRootCanvas() {
         const diagrams = this.getRecentDiagramInfos()
         const diagramId = diagrams[0]?.id
@@ -91,7 +87,7 @@ class Store {
     }
 
     saveAllDiagramsToFile() {
-        const diagrams = this.getAllDiagramInfos()
+        const diagrams = this.readAllDiagramsInfos()
             .map(d => this.readDiagram(d.id))
             .filter(d => d != null)
 
@@ -100,9 +96,13 @@ class Store {
     }
 
 
+    // For printing 
     getAllDiagramCanvases(diagramId) {
         return this.readCanvases(diagramId)
     }
+
+    // private --------------------
+
 
     canvasKey(diagramId, canvasId) {
         return `${diagramKey}.${diagramId}.${canvasId}`

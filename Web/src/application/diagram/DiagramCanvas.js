@@ -104,7 +104,7 @@ export default class DiagramCanvas {
     commandOpenDiagram = (msg, diagramId) => {
         const canvasData = this.store.getDiagramRootCanvas(diagramId)
         if (canvasData == null) {
-            // No data for that id, lets create it
+            // No data for that id
             return
         }
         this.canvas.clearDiagram()
@@ -151,16 +151,9 @@ export default class DiagramCanvas {
         this.withWorkingIndicator(() => {
             const canvasDataList = this.store.getAllDiagramCanvases(this.canvas.diagramId)
 
-            const results = []
-            canvasDataList.forEach(canvasData => {
-                const canvas = new Canvas('canvasPrint', null, DiagramCanvas.defaultWidth, DiagramCanvas.defaultWidth)
-                canvas.deserialize(canvasData)
-                canvas.export(svg => results.push(svg))
-                canvas.destroy()
-            })
-
+            const pages = canvasDataList.map(d => this.canvas.exportAsSvg(d))
             const printer = new Printer()
-            printer.print(results.join('<p style="page-break-after: always;">&nbsp;</p>'))
+            printer.print(pages)
         })
     }
 

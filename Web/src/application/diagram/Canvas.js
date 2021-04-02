@@ -73,6 +73,17 @@ export default class Canvas extends draw2d.Canvas {
         this.serializer.deserialize(canvasData)
     }
 
+    exportAsSvg(canvasData) {
+        const width = this.getDimension().getWidth()
+        const height = this.getDimension().getHeight()
+        let svgResult = null
+        const canvas = new Canvas('canvasPrint', null, width, height)
+        canvas.deserialize(canvasData)
+        canvas.export(svg => svgResult = svg)
+        canvas.destroy()
+        return svgResult
+    }
+
     export(resultHandler) {
         const rect = this.getFiguresRect()
         this.serializer.export(rect, resultHandler)
