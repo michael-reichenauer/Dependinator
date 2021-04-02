@@ -46,7 +46,6 @@ export default class StoreFiles {
         readFile.click()
     }
 
-
     buildFileSelector(selectedHandler) {
         const fileSelector = document.createElement('input');
         fileSelector.setAttribute('type', 'file');

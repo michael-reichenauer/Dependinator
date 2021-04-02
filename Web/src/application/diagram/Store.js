@@ -10,15 +10,63 @@ class Store {
     files = new StoreFiles()
     errorHandler = null
 
+    // local methods
     setErrorHandler(errorHandler) {
         this.errorHandler = errorHandler
     }
 
+    loadDiagramFromFile(resultHandler) {
+        this.files.loadFile(file => {
+            if (file == null) {
+                resultHandler(null)
+                return
+            }
+
+            // Store all read diagrams
+            this.setAllDiagrams(file.diagrams)
+
+            let firstDiagramId = file.diagrams[0]?.diagramData.diagramId
+            resultHandler(firstDiagramId)
+        })
+    }
+
+    saveDiagramToFile(diagramId) {
+        const diagram = this.getDiagram(diagramId)
+        if (diagram == null) {
+            return
+        }
+
+        const file = { diagrams: [diagram] }
+        this.files.saveFile(`${diagram.diagramData.name}.json`, file)
+    }
+
+    saveAllDiagramsToFile() {
+        const diagrams = this.getAllDiagrams()
+        if (diagrams.length === 0) {
+            return
+        }
+
+        const file = { diagrams: diagrams }
+        this.files.saveFile(`diagrams.json`, file)
+    }
+
+    setLastUsedDiagram(diagramId) {
+        this.writeData(lastUsedDiagramKey, { diagramId: diagramId })
+    }
+
+    getLastUsedDiagramId() {
+        return this.readData(lastUsedDiagramKey)?.diagramId
+    }
+
+
+    // local and remote functions -------------------------
     newDiagram(diagramId, name, canvasData) {
         const diagramData = { diagramId: diagramId, name: name }
         this.writeDiagramData(diagramData)
         this.writeCanvas(canvasData)
         this.updateAccessedDiagram(diagramId)
+
+        this.setLastUsedDiagram(diagramId)
     }
 
     setDiagramName(diagramId, name) {
@@ -32,10 +80,11 @@ class Store {
     setCanvas(canvasData) {
         this.writeCanvas(canvasData)
         this.updateAccessedDiagram(canvasData.diagramId)
+        this.setLastUsedDiagram(canvasData.diagramId)
     }
 
     getRecentDiagramInfos() {
-        const lastUsedDiagramId = this.readData(lastUsedDiagramKey)?.diagramId
+        const lastUsedDiagramId = this.getLastUsedDiagramId()
         return this.readAllDiagramsInfos()
             .filter(d => d.id !== lastUsedDiagramId)
             .sort((i1, i2) => i1.accessed < i2.accessed ? -1 : i1.accessed > i2.accessed ? 1 : 0)
@@ -43,7 +92,7 @@ class Store {
     }
 
     getLastUsedCanvas() {
-        const lastUsedDiagramId = this.readData(lastUsedDiagramKey)?.diagramId
+        const lastUsedDiagramId = this.getLastUsedDiagramId()
         return this.getDiagramRootCanvas(lastUsedDiagramId)
     }
 
@@ -60,42 +109,17 @@ class Store {
         }
 
         this.updateAccessedDiagram(diagramId)
+        this.setLastUsedDiagram(diagramId)
         return this.readCanvas(diagramId, rootCanvasId)
     }
 
-    loadDiagramFromFile(resultHandler) {
-        this.files.loadFile(file => {
-            if (file == null) {
-                resultHandler(null)
-                return
-            }
-
-            // Store all read diagrams
-            file.diagrams.forEach(diagram => this.writeDiagram(diagram))
-
-            let firstDiagramId = file.diagrams[0]?.diagramData.diagramId
-            resultHandler(firstDiagramId)
-        })
+    // For archiving
+    getAllDiagrams() {
+        return this.readAllDiagrams()
     }
 
-
-    saveDiagramToFile(diagramId) {
-        const diagram = this.readDiagram(diagramId)
-        if (diagram == null) {
-            return
-        }
-
-        const file = { diagrams: [diagram] }
-        this.files.saveFile(`${diagram.diagramData.name}.json`, file)
-    }
-
-    saveAllDiagramsToFile() {
-        const diagrams = this.readAllDiagramsInfos()
-            .map(d => this.readDiagram(d.id))
-            .filter(d => d != null)
-
-        const file = { diagrams: diagrams }
-        this.files.saveFile(`diagrams.json`, file)
+    setAllDiagrams(diagrams) {
+        diagrams.forEach(diagram => this.writeDiagram(diagram))
     }
 
 
@@ -108,7 +132,6 @@ class Store {
         this.removeDiagram(diagramId)
     }
 
-
     // private --------------------
     canvasKey(diagramId, canvasId) {
         return `${diagramKey}.${diagramId}.${canvasId}`
@@ -118,6 +141,11 @@ class Store {
         return `${diagramKey}.${diagramId}.${diagramDataKey}`
     }
 
+    readAllDiagrams() {
+        return this.readAllDiagramsInfos()
+            .map(d => this.readDiagram(d.id))
+            .filter(d => d != null)
+    }
 
     readCanvases(diagramId) {
         const keys = []
@@ -154,7 +182,6 @@ class Store {
         keys.forEach(key => this.removeData(key))
     }
 
-
     readAllDiagramsInfos() {
         const diagrams = []
         for (var i = 0, len = localStorage.length; i < len; i++) {
@@ -169,7 +196,6 @@ class Store {
     }
 
     updateAccessedDiagram(diagramId) {
-        this.writeData(lastUsedDiagramKey, { diagramId: diagramId })
         this.updateDiagramData(diagramId, { accessed: Date.now() })
     }
 
