@@ -149,9 +149,9 @@ export default class DiagramCanvas {
 
     commandPrint = () => {
         this.withWorkingIndicator(() => {
-            const canvasDataList = this.store.getAllDiagramCanvases(this.canvas.diagramId)
+            const diagram = this.store.getDiagram(this.canvas.diagramId)
 
-            const pages = canvasDataList.map(d => this.canvas.exportAsSvg(d))
+            const pages = diagram.canvases.map(d => this.canvas.exportAsSvg(d))
             const printer = new Printer()
             printer.print(pages)
         })

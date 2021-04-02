@@ -97,13 +97,16 @@ class Store {
 
 
     // For printing 
-    getAllDiagramCanvases(diagramId) {
-        return this.readCanvases(diagramId)
+    getDiagram(diagramId) {
+        return this.readDiagram(diagramId)
     }
 
+    deleteDiagram(diagramId) {
+        this.removeDiagram(diagramId)
+    }
+
+
     // private --------------------
-
-
     canvasKey(diagramId, canvasId) {
         return `${diagramKey}.${diagramId}.${canvasId}`
     }
@@ -131,7 +134,7 @@ class Store {
         return keys.map(key => this.readData(key)).filter(data => data != null)
     }
 
-    deleteDiagram(diagramId) {
+    removeDiagram(diagramId) {
         let keys = []
 
         for (var i = 0, len = localStorage.length; i < len; i++) {
@@ -145,7 +148,7 @@ class Store {
             }
         }
 
-        keys.forEach(key => this.deleteData(key))
+        keys.forEach(key => this.removeData(key))
     }
 
 
@@ -166,7 +169,6 @@ class Store {
         this.writeData(lastUsedDiagramKey, { diagramId: diagramId })
         this.updateDiagramData(diagramId, { accessed: Date.now() })
     }
-
 
 
     writeDiagram(diagram) {
@@ -226,7 +228,7 @@ class Store {
         localStorage.setItem(key, text)
     }
 
-    deleteData(key) {
+    removeData(key) {
         localStorage.removeItem(key)
     }
 }
