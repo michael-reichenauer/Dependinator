@@ -37,8 +37,6 @@ export default class DiagramCanvas {
         this.store.setErrorHandler(this.callbacks.errorHandler)
         this.loadInitialDiagram()
 
-        this.callbacks.setTitle(this.getTitle())
-
         this.handleDoubleClick(this.canvas)
         this.handleEditChanges(this.canvas)
         this.handleCommands()
@@ -212,17 +210,16 @@ export default class DiagramCanvas {
         this.store.setCanvas(canvasData)
     }
 
-    loadInitialDiagram() {
-        const canvasData = this.store.getLastUsedCanvas()
+    async loadInitialDiagram() {
+        const canvasData = await this.store.getLastUsedCanvas()
         if (canvasData == null) {
             // No data for that id, lets create it
             this.createNewDiagram()
             return
         }
-
         // Deserialize canvas
         this.canvas.deserialize(canvasData)
-        return true
+        this.callbacks.setTitle(this.getTitle())
     }
 
     createNewDiagram = () => {

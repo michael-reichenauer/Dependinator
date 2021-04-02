@@ -66,6 +66,7 @@ class Store {
         const diagramData = { diagramId: diagramId, name: name, accessed: Date.now() }
         this.writeDiagramData(diagramData)
         this.writeCanvas(canvasData)
+
         this.api.newDiagram(diagramId, name, canvasData)
 
         this.setLastUsedDiagram(diagramId)
@@ -93,9 +94,21 @@ class Store {
             .reverse()
     }
 
-    getLastUsedCanvas() {
-        this.api.getAllDiagramsInfos().then(r => console.log('infos', r))
+    async getLastUsedCanvas() {
         const lastUsedDiagramId = this.getLastUsedDiagramId()
+        if (lastUsedDiagramId == null) {
+            return null
+        }
+
+        const diagram = await this.api.getDiagram(lastUsedDiagramId)
+
+        if (!diagram || diagram.canvases.length === 0) {
+            return null
+        }
+
+        // Cache diagram locally
+        this.writeDiagram(diagram)
+
         return this.getDiagramRootCanvas(lastUsedDiagramId)
     }
 

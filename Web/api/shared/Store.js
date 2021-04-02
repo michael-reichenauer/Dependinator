@@ -20,7 +20,9 @@ exports.newDiagram = async (context, clientInfo, parameters) => {
     const diagramData = { diagramId: diagramId, name: name, accessed: Date.now() }
 
     const tableName = getTableName(clientInfo)
-    await createTableIfNotExists(tableName)
+    if (clientInfo.token === '12345') {
+        await createTableIfNotExists(tableName)
+    }
 
     const batch = new azure.TableBatch()
     batch.insertEntity(makeDiagramData(diagramData))
@@ -47,9 +49,37 @@ exports.getAllDiagramsInfos = async (context, clientInfo) => {
     }))
 }
 
+exports.getDiagram = async (context, clientInfo, diagramId) => {
+    const tableName = getTableName(clientInfo)
+
+    var tableQuery = new azure.TableQuery()
+        .where('diagramId == ?string?', diagramId);
+
+    const items = await queryEntities(tableName, tableQuery, null)
+    context.log(`queried: ${items.length}`)
+
+    const diagram = { diagramData: { diagramId: diagramId }, canvases: [] }
+
+    items.forEach(i => {
+        if (i.type === 'diagram') {
+            diagram.diagramData.etag = i['odata.etag']
+            diagram.diagramData.timestamp = i.Timestamp
+            diagram.diagramData.name = i.name
+            diagram.diagramData.accessed = i.accessed
+        } else if (i.type === 'canvas') {
+            const canvasData = JSON.parse(i.canvasData)
+            canvasData.etag = i['odata.etag']
+            canvasData.timestamp = i.Timestamp
+            diagram.canvases.push(canvasData)
+        }
+    })
+
+    return diagram
+}
+
 
 function getTableName(clientInfo) {
-    return baseTableName + clientInfo.clientPrincipal.userId
+    return baseTableName + clientInfo.token
 }
 
 function makeCanvasData(canvasData) {
