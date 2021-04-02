@@ -9,4 +9,17 @@ export default class Api {
         let { text } = rsp.data
         return text
     }
+
+    async newDiagram(diagramId, name, canvasData) {
+        try {
+            await axios.post('/api/NewDiagram', {
+                diagramId: diagramId,
+                name: name,
+                canvasData: canvasData
+            });
+        } catch (error) {
+            console.error('failed to post')
+        }
+
+    }
 }

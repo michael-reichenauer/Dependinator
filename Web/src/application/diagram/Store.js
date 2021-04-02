@@ -1,3 +1,4 @@
+import Api from "./Api"
 import StoreFiles from "./StoreFiles"
 
 const diagramKey = 'diagram'
@@ -9,6 +10,7 @@ const rootCanvasId = 'root'
 class Store {
     files = new StoreFiles()
     errorHandler = null
+    api = new Api()
 
     // local methods
     setErrorHandler(errorHandler) {
@@ -61,10 +63,10 @@ class Store {
 
     // local and remote functions -------------------------
     newDiagram(diagramId, name, canvasData) {
-        const diagramData = { diagramId: diagramId, name: name }
+        const diagramData = { diagramId: diagramId, name: name, accessed: Date.now() }
         this.writeDiagramData(diagramData)
         this.writeCanvas(canvasData)
-        this.updateAccessedDiagram(diagramId)
+        this.api.newDiagram(diagramId, name, canvasData)
 
         this.setLastUsedDiagram(diagramId)
     }
