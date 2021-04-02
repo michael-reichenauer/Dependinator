@@ -84,6 +84,8 @@ class Store {
         this.writeCanvas(canvasData)
         this.updateAccessedDiagram(canvasData.diagramId)
         this.setLastUsedDiagram(canvasData.diagramId)
+
+        this.api.setCanvas(canvasData).then(diagramData => { console.log('updated diagram', diagramData) })
     }
 
     getRecentDiagramInfos() {

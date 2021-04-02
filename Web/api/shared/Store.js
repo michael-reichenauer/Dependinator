@@ -31,6 +31,26 @@ exports.newDiagram = async (context, clientInfo, parameters) => {
     await executeBatch(tableName, batch)
 }
 
+exports.setCanvas = async (context, clientInfo, canvasData) => {
+    if (!canvasData) {
+        throw new Error('missing parameters');
+    }
+
+    const { diagramId } = canvasData
+    const diagramData = { diagramId: diagramId, accessed: Date.now() }
+
+    const tableName = getTableName(clientInfo)
+
+    const batch = new azure.TableBatch()
+    batch.mergeEntity(makeDiagramData(diagramData))
+    batch.replaceEntity(makeCanvasData(canvasData))
+
+    await executeBatch(tableName, batch)
+
+    const entity = await retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
+    return toDiagramInfo(entity)
+}
+
 exports.getAllDiagramsInfos = async (context, clientInfo) => {
     const tableName = getTableName(clientInfo)
 
@@ -40,13 +60,7 @@ exports.getAllDiagramsInfos = async (context, clientInfo) => {
     const items = await queryEntities(tableName, tableQuery, null)
     context.log(`queried: ${items.length}`)
 
-    return items.map(i => ({
-        etag: i['odata.etag'],
-        timestamp: i.Timestamp,
-        diagramId: i.diagramId,
-        name: i.name,
-        accessed: i.accessed,
-    }))
+    return items.map(i => toDiagramInfo(i))
 }
 
 exports.getDiagram = async (context, clientInfo, diagramId) => {
@@ -62,15 +76,9 @@ exports.getDiagram = async (context, clientInfo, diagramId) => {
 
     items.forEach(i => {
         if (i.type === 'diagram') {
-            diagram.diagramData.etag = i['odata.etag']
-            diagram.diagramData.timestamp = i.Timestamp
-            diagram.diagramData.name = i.name
-            diagram.diagramData.accessed = i.accessed
+            diagram.diagramData = toDiagramInfo(i)
         } else if (i.type === 'canvas') {
-            const canvasData = JSON.parse(i.canvasData)
-            canvasData.etag = i['odata.etag']
-            canvasData.timestamp = i.Timestamp
-            diagram.canvases.push(canvasData)
+            diagram.canvases.push(toCanvasData(i))
         }
     })
 
@@ -78,9 +86,27 @@ exports.getDiagram = async (context, clientInfo, diagramId) => {
 }
 
 
-function getTableName(clientInfo) {
-    return baseTableName + clientInfo.token
+// -----------------------------------------------------------------
+
+function toCanvasData(item) {
+    const canvasData = JSON.parse(item.canvasData)
+    canvasData.etag = item['odata.etag']
+    canvasData.timestamp = item.Timestamp
+    return canvasData
 }
+
+
+function toDiagramInfo(item) {
+    return {
+        etag: item['odata.etag'],
+        timestamp: item.Timestamp,
+        diagramId: item.diagramId,
+        name: item.name,
+        accessed: item.accessed,
+    }
+}
+
+
 
 function makeCanvasData(canvasData) {
     const { diagramId, canvasId } = canvasData
@@ -97,17 +123,25 @@ function makeCanvasData(canvasData) {
 
 function makeDiagramData(diagramData) {
     const { diagramId, name, accessed } = diagramData
-    return {
+    const item = {
         RowKey: entGen.String(diagramKey(diagramId)),
         PartitionKey: entGen.String(partitionKeyName),
 
         type: entGen.String('diagram'),
         diagramId: entGen.String(diagramId),
-        name: entGen.String(name),
-        accessed: entGen.Int64(accessed)
     }
+    if (name != null) {
+        item.name = entGen.String(name)
+    }
+    if (accessed != null) {
+        item.accessed = entGen.Int64(accessed)
+    }
+    return item
 }
 
+function getTableName(clientInfo) {
+    return baseTableName + clientInfo.token
+}
 
 function canvasKey(diagramId, canvasId) {
     return `${diagramKeyKey}.${diagramId}.${canvasId}`
@@ -116,6 +150,8 @@ function canvasKey(diagramId, canvasId) {
 function diagramKey(diagramId) {
     return `${diagramKeyKey}.${diagramId}.${diagramDataKey}`
 }
+
+// Storage table operations -----------------------------------------
 
 function createTableIfNotExists(tableName) {
     return new Promise(function (resolve, reject) {

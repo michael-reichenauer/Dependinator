@@ -13,29 +13,28 @@ export default class Api {
         }
     })
 
-    async getMessage() {
-        const rsp = await this.get(`/api/message`)
-        console.log('rsp', rsp)
-        let { text } = rsp.data
-        return text
+    async getAllDiagramsInfos() {
+        return this.get(`/api/GetAllDiagramInfos`);
     }
 
     async newDiagram(diagramId, name, canvasData) {
-        this.post('/api/NewDiagram', {
+        return this.post('/api/NewDiagram', {
             diagramId: diagramId,
             name: name,
             canvasData: canvasData
         });
     }
 
-    async getAllDiagramsInfos() {
-        return this.get(`/api/GetAllDiagramInfos`);
+    async setCanvas(canvasData) {
+        return this.post('/api/SetCanvas', canvasData);
     }
 
     async getDiagram(diagramId) {
         return this.get(`/api/GetDiagram?diagramId=${diagramId}`)
     }
 
+
+    // api helper functions ---------------------------------
     async get(uri) {
         try {
             return (await this.api.get(uri)).data;
