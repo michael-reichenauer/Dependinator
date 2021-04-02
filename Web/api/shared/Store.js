@@ -1,6 +1,6 @@
 const azure = require('azure-storage');
+var table = require('../shared/table.js');
 
-const tableService = azure.createTableService();
 const entGen = azure.TableUtilities.entityGenerator;
 const baseTableName = 'diagrams'
 const partitionKeyName = 'dep'
@@ -25,10 +25,10 @@ exports.newDiagram = async (context, clientInfo, parameters) => {
     }
 
     const batch = new azure.TableBatch()
-    batch.insertEntity(makeDiagramData(diagramData))
-    batch.insertEntity(makeCanvasData(canvasData))
+    batch.insertEntity(toDiagramDataItem(diagramData))
+    batch.insertEntity(toCanvasDataItem(canvasData))
 
-    await executeBatch(tableName, batch)
+    await table.executeBatch(tableName, batch)
 }
 
 exports.setCanvas = async (context, clientInfo, canvasData) => {
@@ -42,12 +42,12 @@ exports.setCanvas = async (context, clientInfo, canvasData) => {
     const tableName = getTableName(clientInfo)
 
     const batch = new azure.TableBatch()
-    batch.mergeEntity(makeDiagramData(diagramData))
-    batch.replaceEntity(makeCanvasData(canvasData))
+    batch.mergeEntity(toDiagramDataItem(diagramData))
+    batch.replaceEntity(toCanvasDataItem(canvasData))
 
-    await executeBatch(tableName, batch)
+    await table.executeBatch(tableName, batch)
 
-    const entity = await retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
+    const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
     return toDiagramInfo(entity)
 }
 
@@ -57,7 +57,7 @@ exports.getAllDiagramsInfos = async (context, clientInfo) => {
     var tableQuery = new azure.TableQuery()
         .where('type == ?string?', 'diagram');
 
-    const items = await queryEntities(tableName, tableQuery, null)
+    const items = await table.queryEntities(tableName, tableQuery, null)
     context.log(`queried: ${items.length}`)
 
     return items.map(i => toDiagramInfo(i))
@@ -69,7 +69,7 @@ exports.getDiagram = async (context, clientInfo, diagramId) => {
     var tableQuery = new azure.TableQuery()
         .where('diagramId == ?string?', diagramId);
 
-    const items = await queryEntities(tableName, tableQuery, null)
+    const items = await table.queryEntities(tableName, tableQuery, null)
     context.log(`queried: ${items.length}`)
 
     const diagram = { diagramData: { diagramId: diagramId }, canvases: [] }
@@ -88,27 +88,20 @@ exports.getDiagram = async (context, clientInfo, diagramId) => {
 
 // -----------------------------------------------------------------
 
-function toCanvasData(item) {
-    const canvasData = JSON.parse(item.canvasData)
-    canvasData.etag = item['odata.etag']
-    canvasData.timestamp = item.Timestamp
-    return canvasData
+
+function getTableName(clientInfo) {
+    return baseTableName + clientInfo.token
 }
 
-
-function toDiagramInfo(item) {
-    return {
-        etag: item['odata.etag'],
-        timestamp: item.Timestamp,
-        diagramId: item.diagramId,
-        name: item.name,
-        accessed: item.accessed,
-    }
+function canvasKey(diagramId, canvasId) {
+    return `${diagramKeyKey}.${diagramId}.${canvasId}`
 }
 
+function diagramKey(diagramId) {
+    return `${diagramKeyKey}.${diagramId}.${diagramDataKey}`
+}
 
-
-function makeCanvasData(canvasData) {
+function toCanvasDataItem(canvasData) {
     const { diagramId, canvasId } = canvasData
     return {
         RowKey: entGen.String(canvasKey(diagramId, canvasId)),
@@ -121,7 +114,14 @@ function makeCanvasData(canvasData) {
     }
 }
 
-function makeDiagramData(diagramData) {
+function toCanvasData(item) {
+    const canvasData = JSON.parse(item.canvasData)
+    canvasData.etag = item['odata.etag']
+    canvasData.timestamp = item.Timestamp
+    return canvasData
+}
+
+function toDiagramDataItem(diagramData) {
     const { diagramId, name, accessed } = diagramData
     const item = {
         RowKey: entGen.String(diagramKey(diagramId)),
@@ -139,94 +139,12 @@ function makeDiagramData(diagramData) {
     return item
 }
 
-function getTableName(clientInfo) {
-    return baseTableName + clientInfo.token
-}
-
-function canvasKey(diagramId, canvasId) {
-    return `${diagramKeyKey}.${diagramId}.${canvasId}`
-}
-
-function diagramKey(diagramId) {
-    return `${diagramKeyKey}.${diagramId}.${diagramDataKey}`
-}
-
-// Storage table operations -----------------------------------------
-
-function createTableIfNotExists(tableName) {
-    return new Promise(function (resolve, reject) {
-        tableService.createTableIfNotExists(tableName, function (error, result) {
-            if (error) {
-                reject(error);
-            }
-            else {
-                resolve(result);
-            }
-        })
-    });
-}
-
-function executeBatch(tableName, batch) {
-    return new Promise(function (resolve, reject) {
-        tableService.executeBatch(tableName, batch, function (error, result) {
-            if (error) {
-                reject(error);
-            }
-            else {
-                resolve(result);
-            }
-        })
-    })
-}
-
-function insertEntity(tableName, item) {
-    return new Promise(function (resolve, reject) {
-        tableService.insertEntity(tableName, item, function (error, result) {
-            if (error) {
-                reject(error);
-            }
-            else {
-                resolve(result);
-            }
-        })
-    })
-}
-
-function retrieveEntity(tableName, partitionKey, rowKey) {
-    return new Promise(function (resolve, reject) {
-        tableService.retrieveEntity(tableName, partitionKey, rowKey, function (error, result, response) {
-            if (error) {
-                reject(error);
-            }
-            else {
-                resolve(response.body);
-            }
-        })
-    })
-}
-
-function queryEntities(tableName, tableQuery, continuationToken) {
-    return new Promise(function (resolve, reject) {
-        tableService.queryEntities(tableName, tableQuery, continuationToken, function (error, result, response) {
-            if (error) {
-                reject(error);
-            }
-            else {
-                resolve(response.body.value);
-            }
-        })
-    })
-}
-
-function deleteTableIfExists(tableName,) {
-    return new Promise(function (resolve, reject) {
-        tableService.deleteTableIfExists(tableName, function (error, result) {
-            if (error) {
-                reject(error);
-            }
-            else {
-                resolve();
-            }
-        })
-    })
+function toDiagramInfo(item) {
+    return {
+        etag: item['odata.etag'],
+        timestamp: item.Timestamp,
+        diagramId: item.diagramId,
+        name: item.name,
+        accessed: item.accessed,
+    }
 }
