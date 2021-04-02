@@ -94,6 +94,7 @@ class Store {
     }
 
     getLastUsedCanvas() {
+        this.api.getAllDiagramsInfos().then(r => console.log('infos', r))
         const lastUsedDiagramId = this.getLastUsedDiagramId()
         return this.getDiagramRootCanvas(lastUsedDiagramId)
     }

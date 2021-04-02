@@ -6,7 +6,6 @@ import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { Backdrop, makeStyles } from "@material-ui/core";
 import { ContextMenu } from "../common/Menus";
-import Api from "./diagram/Api";
 
 
 export const titleAtom = atom('System')
@@ -57,17 +56,6 @@ export default function Diagram({ width, height }) {
         const contextMenuHandler = enableContextMenu('canvas', setContextMenu, canvas)
 
         setTimeout(() => canvas.showTotalDiagram(), 0);
-
-        const testGet = async () => {
-            const api = new Api()
-            try {
-                const text = await api.getMessage()
-                console.log('retrieved', text);
-            } catch (err) {
-                console.warn('Error', err)
-            }
-        }
-        testGet()
 
         return () => {
             // Clean initialization 

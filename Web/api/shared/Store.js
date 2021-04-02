@@ -1,8 +1,8 @@
 const azure = require('azure-storage');
 
 const tableService = azure.createTableService();
-const baseTableName = 'diagrams'
 const entGen = azure.TableUtilities.entityGenerator;
+const baseTableName = 'diagrams'
 const partitionKeyName = 'dep'
 
 const diagramKeyKey = 'diagram'
@@ -11,7 +11,7 @@ const diagramDataKey = 'DiagramData'
 
 
 
-exports.newDiagram = async (context, info, parameters) => {
+exports.newDiagram = async (context, clientInfo, parameters) => {
     const { diagramId, name, canvasData } = parameters
     if (!diagramId || !name || !canvasData) {
         throw new Error('missing parameters: ');
@@ -19,7 +19,7 @@ exports.newDiagram = async (context, info, parameters) => {
 
     const diagramData = { diagramId: diagramId, name: name, accessed: Date.now() }
 
-    const tableName = baseTableName + info.clientPrincipal.userId
+    const tableName = getTableName(clientInfo)
     await createTableIfNotExists(tableName)
 
     const batch = new azure.TableBatch()
@@ -29,6 +29,28 @@ exports.newDiagram = async (context, info, parameters) => {
     await executeBatch(tableName, batch)
 }
 
+exports.getAllDiagramsInfos = async (context, clientInfo) => {
+    const tableName = getTableName(clientInfo)
+
+    var tableQuery = new azure.TableQuery()
+        .where('type == ?string?', 'diagram');
+
+    const items = await queryEntities(tableName, tableQuery, null)
+    context.log(`queried: ${items.length}`)
+
+    return items.map(i => ({
+        etag: i['odata.etag'],
+        timestamp: i.Timestamp,
+        diagramId: i.diagramId,
+        name: i.name,
+        accessed: i.accessed,
+    }))
+}
+
+
+function getTableName(clientInfo) {
+    return baseTableName + clientInfo.clientPrincipal.userId
+}
 
 function makeCanvasData(canvasData) {
     const { diagramId, canvasId } = canvasData
@@ -36,6 +58,7 @@ function makeCanvasData(canvasData) {
         RowKey: entGen.String(canvasKey(diagramId, canvasId)),
         PartitionKey: entGen.String(partitionKeyName),
 
+        type: entGen.String('canvas'),
         diagramId: entGen.String(diagramId),
         canvasId: entGen.String(canvasId),
         canvasData: entGen.String(JSON.stringify(canvasData))
@@ -48,9 +71,10 @@ function makeDiagramData(diagramData) {
         RowKey: entGen.String(diagramKey(diagramId)),
         PartitionKey: entGen.String(partitionKeyName),
 
+        type: entGen.String('diagram'),
         diagramId: entGen.String(diagramId),
         name: entGen.String(name),
-        accessed: entGen.String(accessed)
+        accessed: entGen.Int64(accessed)
     }
 }
 

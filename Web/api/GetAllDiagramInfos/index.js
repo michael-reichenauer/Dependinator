@@ -5,17 +5,12 @@ module.exports = async function (context, req) {
     try {
         const info = clientInfo.getInfo(context, req)
 
-        if (!req.body) {
-            throw new Error('Invalid request')
-        }
-
         //context.log('parameters', req.body)
-        await store.newDiagram(context, info, req.body)
+        const diagramInfos = await store.getAllDiagramsInfos(context, info)
 
-        context.res = { status: 200, body: "" };
+        context.res = { status: 200, body: diagramInfos };
     } catch (err) {
-        context.log(`## NewDiagram error: '${err}'`);
+        context.log(`## GetAllDiagramInfos error: '${err}'`);
         context.res = { status: 400, body: "Error: " + err.message }
     }
 }
-

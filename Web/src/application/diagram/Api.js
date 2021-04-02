@@ -18,8 +18,16 @@ export default class Api {
                 canvasData: canvasData
             });
         } catch (error) {
-            console.error('failed to post')
+            console.error(error)
         }
 
+    }
+
+    async getAllDiagramsInfos() {
+        try {
+            return (await axios.get('/api/GetAllDiagramInfos')).data;
+        } catch (error) {
+            console.warn(error)
+        }
     }
 }
