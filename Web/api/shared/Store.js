@@ -177,7 +177,7 @@ exports.downloadAllDiagrams = async (context) => {
             if (diagrams[id] == null) {
                 diagrams[id] = { canvases: [canvasData] }
             } else {
-                const canvases = diagrams[id].canvases ?? []
+                const canvases = diagrams[id].canvases ? diagrams[id].canvases : []
                 canvases.push(canvasData)
                 diagrams[id].canvases = canvases
             }
