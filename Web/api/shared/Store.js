@@ -11,48 +11,48 @@ const partitionKeyName = 'dep'
 // //     await table.createTableIfNotExists(tableName)
 // // }
 
-exports.newDiagram = async (context, diagram) => {
-    const tableName = getTableName(context)
-    const { diagramId, name } = diagram.diagramData
-    const canvasData = diagram?.canvases[0]
-    if (!diagramId || !name || !canvasData) {
-        throw new Error('missing parameters: ');
-    }
-
-    // if (clientInfo.token === '12345') {
-    await table.createTableIfNotExists(tableName)
-    // }
-
-    const diagramData = { diagramId: diagramId, name: name, accessed: Date.now() }
-
-    const batch = new azure.TableBatch()
-    batch.insertEntity(toDiagramDataItem(diagramData))
-    batch.insertEntity(toCanvasDataItem(canvasData))
-
-    await table.executeBatch(tableName, batch)
-
-    const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
-    return toDiagramInfo(entity)
-}
-
-// exports.setCanvas = async (context, canvasData) => {
+// exports.newDiagram = async (context, diagram) => {
 //     const tableName = getTableName(context)
-//     if (!canvasData) {
-//         throw new Error('missing parameters');
+//     const { diagramId, name } = diagram.diagramData
+//     const canvasData = diagram?.canvases[0]
+//     if (!diagramId || !name || !canvasData) {
+//         throw new Error('missing parameters: ');
 //     }
 
-//     const { diagramId } = canvasData
-//     const diagramData = { diagramId: diagramId, accessed: Date.now() }
+//     // if (clientInfo.token === '12345') {
+//     await table.createTableIfNotExists(tableName)
+//     // }
+
+//     const diagramData = { diagramId: diagramId, name: name, accessed: Date.now() }
 
 //     const batch = new azure.TableBatch()
-//     batch.mergeEntity(toDiagramDataItem(diagramData))
-//     batch.insertOrReplaceEntity(toCanvasDataItem(canvasData))
+//     batch.insertEntity(toDiagramDataItem(diagramData))
+//     batch.insertEntity(toCanvasDataItem(canvasData))
 
 //     await table.executeBatch(tableName, batch)
 
 //     const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
 //     return toDiagramInfo(entity)
 // }
+
+exports.setCanvas = async (context, canvasData) => {
+    const tableName = getTableName(context)
+    if (!canvasData) {
+        throw new Error('missing parameters');
+    }
+
+    const { diagramId } = canvasData
+    const diagramData = { diagramId: diagramId, accessed: Date.now() }
+
+    const batch = new azure.TableBatch()
+    batch.mergeEntity(toDiagramDataItem(diagramData))
+    batch.insertOrReplaceEntity(toCanvasDataItem(canvasData))
+
+    await table.executeBatch(tableName, batch)
+
+    const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
+    return toDiagramInfo(entity)
+}
 
 exports.getAllDiagramsData = async (context) => {
     const tableName = getTableName(context)
