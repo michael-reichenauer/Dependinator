@@ -7,7 +7,7 @@ const rootCanvasId = 'root'
 class Store {
     files = new StoreFiles()
     local = new StoreLocal()
-    api = new Api()
+    remote = new Api()
 
     errorHandler = null
 
@@ -25,9 +25,14 @@ class Store {
         return this.openDiagramRootCanvas(lastUsedDiagramId)
     }
 
+    async openFirstDiagramRootCanvas() {
+        const diagramId = this.getRecentDiagramInfos()[0]?.id
+        return this.openDiagramRootCanvas(diagramId)
+    }
+
     async openDiagramRootCanvas(diagramId) {
         // Try to get diagram from remote server
-        const diagram = await this.api.getDiagram(diagramId)
+        const diagram = await this.remote.getDiagram(diagramId)
 
         if (!diagram || diagram.canvases.length === 0) {
             // Removed from server, lets remove local as well (client will create new diagram)
@@ -47,25 +52,6 @@ class Store {
         return canvasData
     }
 
-    async openFirstDiagramRootCanvas() {
-        const diagramId = this.getRecentDiagramInfos()[0]?.id
-        return this.openDiagramRootCanvas(diagramId)
-    }
-
-    async loadDiagramFromFile(resultHandler) {
-        this.files.loadFile(file => {
-            if (file == null) {
-                resultHandler(null)
-                return
-            }
-
-            // Store all read diagrams
-            file.diagrams.forEach(diagram => this.local.writeDiagram(diagram))
-
-            let firstDiagramId = file.diagrams[0]?.diagramData.diagramId
-            resultHandler(firstDiagramId)
-        })
-    }
 
     async newDiagram(diagramId, name, canvasData) {
         const diagram = {
@@ -76,7 +62,7 @@ class Store {
         this.local.writeLastUsedDiagram(diagramId)
 
         // Sync with remote server
-        const diagramData = await this.api.newDiagram(diagram)
+        const diagramData = await this.remote.newDiagram(diagram)
         this.local.writeDiagramData(diagramData)
     }
 
@@ -86,10 +72,22 @@ class Store {
         this.local.writeLastUsedDiagram(canvasData.diagramId)
 
         // Sync with remote server
-        this.api.setCanvas(canvasData)
+        this.remote.setCanvas(canvasData)
             .then(diagramData => this.local.writeDiagramData(diagramData))
     }
 
+
+    async loadDiagramFromFile() {
+        const file = await this.files.loadFile()
+
+        // Store all read diagram
+        await this.remote.uploadDiagrams(file.diagrams)
+        //file.diagrams.forEach(diagram => this.local.writeDiagram(diagram))
+
+        this.triggerDiagramsSync()
+        let firstDiagramId = file.diagrams[0]?.diagramData.diagramId
+        return firstDiagramId
+    }
 
     saveDiagramToFile(diagramId) {
         const diagram = this.local.readDiagram(diagramId)
@@ -102,7 +100,7 @@ class Store {
     }
 
     async saveAllDiagramsToFile() {
-        const diagrams = await this.api.readAllDiagrams()()
+        const diagrams = await this.remote.downloadAllDiagrams()
         if (diagrams.length === 0) {
             return
         }
@@ -115,7 +113,7 @@ class Store {
     setDiagramName(diagramId, name) {
         this.local.updateDiagramData(diagramId, { name: name })
 
-        this.api.updateDiagram({ diagramData: { diagramId: diagramId, name: name } })
+        this.remote.updateDiagram({ diagramData: { diagramId: diagramId, name: name } })
             .then(diagramData => this.local.writeDiagramData(diagramData))
     }
 
@@ -133,7 +131,7 @@ class Store {
 
     async triggerDiagramsSync() {
         // Get all remote server diagrams data and write to local store
-        const diagramsData = await this.api.getAllDiagramsData()
+        const diagramsData = await this.remote.getAllDiagramsData()
         diagramsData.forEach(data => this.local.writeDiagramData(data))
     }
 
@@ -145,7 +143,7 @@ class Store {
 
     async deleteDiagram(diagramId) {
         this.local.removeDiagram(diagramId)
-        await this.api.deleteDiagram(diagramId)
+        await this.remote.deleteDiagram(diagramId)
     }
 }
 

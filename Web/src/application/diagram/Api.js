@@ -37,6 +37,13 @@ export default class Api {
         return this.post(`/api/UpdateDiagram`, diagram)
     }
 
+    async uploadDiagrams(diagrams) {
+        return this.post(`/api/UploadDiagrams`, diagrams)
+    }
+
+    async downloadAllDiagrams() {
+        return this.get(`/api/DownloadAllDiagrams`)
+    }
 
     // api helper functions ---------------------------------
     async get(uri) {

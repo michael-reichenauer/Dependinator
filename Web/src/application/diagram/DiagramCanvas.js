@@ -138,13 +138,12 @@ export default class DiagramCanvas {
         this.store.saveDiagramToFile(this.canvas.diagramId)
     }
 
-    commandOpenFile = () => {
-        this.store.loadDiagramFromFile(diagramId => {
-            if (diagramId == null) {
-                this.callbacks.errorHandler('Failed to load file')
-            }
-            this.commandOpenDiagram('', diagramId)
-        })
+    commandOpenFile = async () => {
+        const diagramId = await this.store.loadDiagramFromFile()
+        if (diagramId == null) {
+            this.callbacks.errorHandler('Failed to load file')
+        }
+        this.commandOpenDiagram('', diagramId)
     }
 
     commandArchiveToFile = () => {
