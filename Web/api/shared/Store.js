@@ -90,31 +90,30 @@ exports.getDiagram = async (context, diagramId) => {
     return diagram
 }
 
-// exports.deleteDiagram = async (context, parameters) => {
-//     const tableName = getTableName(context)
-//     const { diagramId } = parameters
-//     if (!diagramId) {
-//         throw new Error('Missing parameter')
-//     }
+exports.deleteDiagram = async (context, parameters) => {
+    const tableName = getTableName(context)
+    const { diagramId } = parameters
+    if (!diagramId) {
+        throw new Error('Missing parameter')
+    }
 
-//     let tableQuery = new azure.TableQuery()
-//         .where('diagramId == ?string?', diagramId);
+    let tableQuery = new azure.TableQuery()
+        .where('diagramId == ?string?', diagramId);
 
-//     const items = await table.queryEntities(tableName, tableQuery, null)
-//     context.log(`queried: ${items.length}`)
+    const items = await table.queryEntities(tableName, tableQuery, null)
+    context.log(`queried: ${items.length}`)
 
-//     const batch = new azure.TableBatch()
-//     items.forEach(i => {
-//         if (i.type === 'diagram') {
-//             batch.deleteEntity(toDiagramDataItem(toDiagramInfo(i)))
-//         } else if (i.type === 'canvas') {
-//             batch.deleteEntity(toCanvasDataItem(toCanvasData(i)))
-//         }
-//     })
+    const batch = new azure.TableBatch()
+    items.forEach(i => {
+        if (i.type === 'diagram') {
+            batch.deleteEntity(toDiagramDataItem(toDiagramInfo(i)))
+        } else if (i.type === 'canvas') {
+            batch.deleteEntity(toCanvasDataItem(toCanvasData(i)))
+        }
+    })
 
-//     await table.executeBatch(tableName, batch)
-//     return
-// }
+    await table.executeBatch(tableName, batch)
+}
 
 // exports.updateDiagram = async (context, diagram) => {
 //     const tableName = getTableName(context)
