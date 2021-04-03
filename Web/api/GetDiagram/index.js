@@ -1,4 +1,5 @@
-var store = require('../shared/Store.js');
+//var store = require('../shared/Store.js');
+var auth = require('../shared/auth.js');
 
 module.exports = async function (context, req) {
     try {
@@ -7,10 +8,13 @@ module.exports = async function (context, req) {
             throw new Error('Invalid args')
         }
 
-        //context.log('parameters', req.body)
-        const diagram = await store.getDiagram(context, diagramId)
+        const clientPrincipal = auth.getClientPrincipal(req)
 
-        context.res = { status: 200, body: diagram };
+        //context.log('parameters', req.body)
+        //const diagram = await store.getDiagram(context, diagramId)
+
+        //context.res = { status: 200, body: diagram };
+        context.res = { status: 200, body: 'diagram' };
     } catch (err) {
         context.log.error('error:', err);
         context.res = { status: 400, body: `error: '${err.message}', ${err.stack}` };
