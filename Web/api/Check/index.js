@@ -1,5 +1,10 @@
 module.exports = async function (context, req) {
-    context.log('JavaScript HTTP trigger function processed a request.');
+    try {
+        context.log('JavaScript HTTP trigger function processed a request.');
+        // throw new Error('some error')
 
-    context.res = { status: 200, body: 'checked' + Date.now() };
+    } catch (err) {
+        context.error('error:', err);
+        context.res = { status: 400, body: `error: '${err.message}', ${err.stack}` };
+    }
 }

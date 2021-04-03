@@ -54,7 +54,16 @@ export default class Api {
         try {
             return (await this.api.get(uri)).data;
         } catch (error) {
-            console.log(error)
+            if (error.response) {
+                // Request made and server responded
+                console.log(`Error: status: ${error.response.status}: '${error.response.data}'`)
+            } else if (error.request) {
+                // The request was made but no response was received
+                console.log(`Error: request: ${error.request}: `)
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                console.log('Error', error.message);
+            }
             return null
         }
     }
