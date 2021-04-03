@@ -100,8 +100,8 @@ export default class DiagramCanvas {
         this.showTotalDiagram()
     }
 
-    commandOpenDiagram = (msg, diagramId) => {
-        const canvasData = this.store.getDiagramRootCanvas(diagramId)
+    commandOpenDiagram = async (msg, diagramId) => {
+        const canvasData = await this.store.openDiagramRootCanvas(diagramId)
         if (canvasData == null) {
             this.callbacks.errorHandler('Failed to load diagram')
             return
@@ -114,12 +114,12 @@ export default class DiagramCanvas {
         this.showTotalDiagram()
     }
 
-    commandDeleteDiagram = () => {
+    commandDeleteDiagram = async () => {
         this.store.deleteDiagram(this.canvas.diagramId)
         this.canvas.clearDiagram()
 
         // Try get first diagram to open
-        const canvasData = this.store.getFirstDiagramRootCanvas()
+        const canvasData = await this.store.openFirstDiagramRootCanvas()
         if (canvasData == null) {
             // No data for that id, lets create new diagram
             this.createNewDiagram()
@@ -211,7 +211,7 @@ export default class DiagramCanvas {
     }
 
     async loadInitialDiagram() {
-        const canvasData = await this.store.getLastUsedCanvas()
+        const canvasData = await this.store.openLastUsedDiagramCanvas()
         if (canvasData == null) {
             // No data for that id, lets create it
             this.createNewDiagram()

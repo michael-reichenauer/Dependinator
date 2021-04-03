@@ -4,13 +4,8 @@ var clientInfo = require('../shared/clientInfo.js');
 module.exports = async function (context, req) {
     const info = clientInfo.getInfo(context, req)
 
-    if (!req.body) {
-        throw new Error('Invalid request')
-    }
-
     //context.log('parameters', req.body)
-    const diagramInfo = await store.newDiagram(context, info, req.body)
+    const diagramsData = await store.getAllDiagramsData(context, info)
 
-    context.res = { status: 200, body: diagramInfo };
+    context.res = { status: 200, body: diagramsData };
 }
-

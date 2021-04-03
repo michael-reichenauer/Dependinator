@@ -55,6 +55,7 @@ exports.retrieveEntity = (tableName, partitionKey, rowKey) => {
     })
 }
 
+
 exports.queryEntities = (tableName, tableQuery, continuationToken) => {
     return new Promise(function (resolve, reject) {
         tableService.queryEntities(tableName, tableQuery, continuationToken, function (error, result, response) {

@@ -4,8 +4,11 @@ var clientInfo = require('../shared/clientInfo.js');
 module.exports = async function (context, req) {
     const info = clientInfo.getInfo(context, req)
 
-    //context.log('parameters', req.body)
-    const diagramInfos = await store.getAllDiagramsInfos(context, info)
+    if (!req.body) {
+        throw new Error('Invalid request')
+    }
 
-    context.res = { status: 200, body: diagramInfos };
+    await store.deleteDiagram(context, info, req.body)
+
+    context.res = { status: 200, body: "" };
 }

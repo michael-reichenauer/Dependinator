@@ -13,16 +13,12 @@ export default class Api {
         }
     })
 
-    async getAllDiagramsInfos() {
-        return this.get(`/api/GetAllDiagramInfos`);
+    async getAllDiagramsData() {
+        return this.get(`/api/GetAllDiagramsData`);
     }
 
-    async newDiagram(diagramId, name, canvasData) {
-        return this.post('/api/NewDiagram', {
-            diagramId: diagramId,
-            name: name,
-            canvasData: canvasData
-        });
+    async newDiagram(diagram) {
+        return this.post('/api/NewDiagram', diagram);
     }
 
     async setCanvas(canvasData) {
@@ -31,6 +27,14 @@ export default class Api {
 
     async getDiagram(diagramId) {
         return this.get(`/api/GetDiagram?diagramId=${diagramId}`)
+    }
+
+    async deleteDiagram(diagramId) {
+        return this.post(`/api/DeleteDiagram`, { diagramId: diagramId })
+    }
+
+    async updateDiagram(diagram) {
+        return this.post(`/api/UpdateDiagram`, diagram)
     }
 
 

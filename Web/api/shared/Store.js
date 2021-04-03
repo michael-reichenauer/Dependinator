@@ -11,8 +11,9 @@ const diagramDataKey = 'DiagramData'
 
 
 
-exports.newDiagram = async (context, clientInfo, parameters) => {
-    const { diagramId, name, canvasData } = parameters
+exports.newDiagram = async (context, clientInfo, diagram) => {
+    const { diagramId, name } = diagram.diagramData
+    const canvasData = diagram?.canvases[0]
     if (!diagramId || !name || !canvasData) {
         throw new Error('missing parameters: ');
     }
@@ -21,7 +22,7 @@ exports.newDiagram = async (context, clientInfo, parameters) => {
 
     const tableName = getTableName(clientInfo)
     if (clientInfo.token === '12345') {
-        await createTableIfNotExists(tableName)
+        await table.createTableIfNotExists(tableName)
     }
 
     const batch = new azure.TableBatch()
@@ -29,6 +30,9 @@ exports.newDiagram = async (context, clientInfo, parameters) => {
     batch.insertEntity(toCanvasDataItem(canvasData))
 
     await table.executeBatch(tableName, batch)
+
+    const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
+    return toDiagramInfo(entity)
 }
 
 exports.setCanvas = async (context, clientInfo, canvasData) => {
@@ -43,7 +47,7 @@ exports.setCanvas = async (context, clientInfo, canvasData) => {
 
     const batch = new azure.TableBatch()
     batch.mergeEntity(toDiagramDataItem(diagramData))
-    batch.replaceEntity(toCanvasDataItem(canvasData))
+    batch.insertOrReplaceEntity(toCanvasDataItem(canvasData))
 
     await table.executeBatch(tableName, batch)
 
@@ -51,7 +55,7 @@ exports.setCanvas = async (context, clientInfo, canvasData) => {
     return toDiagramInfo(entity)
 }
 
-exports.getAllDiagramsInfos = async (context, clientInfo) => {
+exports.getAllDiagramsData = async (context, clientInfo) => {
     const tableName = getTableName(clientInfo)
 
     var tableQuery = new azure.TableQuery()
@@ -66,11 +70,11 @@ exports.getAllDiagramsInfos = async (context, clientInfo) => {
 exports.getDiagram = async (context, clientInfo, diagramId) => {
     const tableName = getTableName(clientInfo)
 
-    var tableQuery = new azure.TableQuery()
+    let tableQuery = new azure.TableQuery()
         .where('diagramId == ?string?', diagramId);
 
     const items = await table.queryEntities(tableName, tableQuery, null)
-    context.log(`queried: ${items.length}`)
+
 
     const diagram = { diagramData: { diagramId: diagramId }, canvases: [] }
 
@@ -85,20 +89,61 @@ exports.getDiagram = async (context, clientInfo, diagramId) => {
     return diagram
 }
 
+exports.deleteDiagram = async (context, clientInfo, parameters) => {
+    const { diagramId } = parameters
+    if (!diagramId) {
+        throw new Error('Missing parameter')
+    }
+
+    const tableName = getTableName(clientInfo)
+
+    let tableQuery = new azure.TableQuery()
+        .where('diagramId == ?string?', diagramId);
+
+    const items = await table.queryEntities(tableName, tableQuery, null)
+    context.log(`queried: ${items.length}`)
+
+    const batch = new azure.TableBatch()
+    items.forEach(item => batch.deleteEntity(item))
+
+    await table.executeBatch(tableName, batch)
+    return
+}
+
+exports.updateDiagram = async (context, clientInfo, diagram) => {
+    const { diagramId } = diagram.diagramData
+
+    if (!diagramId) {
+        throw new Error('missing parameters: ');
+    }
+
+    const tableName = getTableName(clientInfo)
+
+    const diagramData = { ...diagram.diagramData, accessed: Date.now() }
+
+    const batch = new azure.TableBatch()
+    batch.mergeEntity(toDiagramDataItem(diagramData))
+    diagram.canvases?.forEach(canvasData => batch.insertOrReplaceEntity(toCanvasDataItem(canvasData)))
+
+    await table.executeBatch(tableName, batch)
+
+    const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
+    return toDiagramInfo(entity)
+}
+
 
 // -----------------------------------------------------------------
-
 
 function getTableName(clientInfo) {
     return baseTableName + clientInfo.token
 }
 
 function canvasKey(diagramId, canvasId) {
-    return `${diagramKeyKey}.${diagramId}.${canvasId}`
+    return `${diagramId}.${canvasId}`
 }
 
 function diagramKey(diagramId) {
-    return `${diagramKeyKey}.${diagramId}.${diagramDataKey}`
+    return `${diagramId}`
 }
 
 function toCanvasDataItem(canvasData) {

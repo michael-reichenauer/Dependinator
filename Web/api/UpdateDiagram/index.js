@@ -8,9 +8,7 @@ module.exports = async function (context, req) {
         throw new Error('Invalid request')
     }
 
-    //context.log('parameters', req.body)
-    const diagramInfo = await store.newDiagram(context, info, req.body)
+    const diagramInfo = await store.updateDiagram(context, info, req.body)
 
     context.res = { status: 200, body: diagramInfo };
 }
-
