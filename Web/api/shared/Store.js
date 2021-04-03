@@ -67,12 +67,12 @@ exports.getAllDiagramsData = async (context) => {
 }
 
 exports.getDiagram = async (context, diagramId) => {
-    const tableName = getTableName(context)
+    let tableName = getTableName(context)
     //if (clientInfo.token === '12345') {
     await table.createTableIfNotExists(tableName)
     // }
 
-
+    tableName = tableName + 'dd'
     let tableQuery = new azure.TableQuery()
         .where('diagramId == ?string?', diagramId);
 
