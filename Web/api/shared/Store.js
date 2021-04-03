@@ -1,10 +1,10 @@
 const azure = require('azure-storage');
-// var table = require('../shared/table.js');
-// var clientInfo = require('../shared/clientInfo.js');
+var table = require('../shared/table.js');
+var clientInfo = require('../shared/clientInfo.js');
 
-// const entGen = azure.TableUtilities.entityGenerator;
-// const baseTableName = 'diagrams'
-// const partitionKeyName = 'dep'
+const entGen = azure.TableUtilities.entityGenerator;
+const baseTableName = 'diagrams'
+const partitionKeyName = 'dep'
 
 
 // // if (clientInfo.token === '12345') {
@@ -66,31 +66,31 @@ const azure = require('azure-storage');
 //     return items.map(i => toDiagramInfo(i))
 // }
 
-// exports.getDiagram = async (context, diagramId) => {
-//     const tableName = getTableName(context)
-//     //if (clientInfo.token === '12345') {
-//     await table.createTableIfNotExists(tableName)
-//     // }
+exports.getDiagram = async (context, diagramId) => {
+    const tableName = getTableName(context)
+    //if (clientInfo.token === '12345') {
+    await table.createTableIfNotExists(tableName)
+    // }
 
 
-//     let tableQuery = new azure.TableQuery()
-//         .where('diagramId == ?string?', diagramId);
+    let tableQuery = new azure.TableQuery()
+        .where('diagramId == ?string?', diagramId);
 
-//     const items = await table.queryEntities(tableName, tableQuery, null)
+    const items = await table.queryEntities(tableName, tableQuery, null)
 
 
-//     const diagram = { diagramData: { diagramId: diagramId }, canvases: [] }
+    const diagram = { diagramData: { diagramId: diagramId }, canvases: [] }
 
-//     items.forEach(i => {
-//         if (i.type === 'diagram') {
-//             diagram.diagramData = toDiagramInfo(i)
-//         } else if (i.type === 'canvas') {
-//             diagram.canvases.push(toCanvasData(i))
-//         }
-//     })
+    items.forEach(i => {
+        if (i.type === 'diagram') {
+            diagram.diagramData = toDiagramInfo(i)
+        } else if (i.type === 'canvas') {
+            diagram.canvases.push(toCanvasData(i))
+        }
+    })
 
-//     return diagram
-// }
+    return diagram
+}
 
 // exports.deleteDiagram = async (context, parameters) => {
 //     const tableName = getTableName(context)
@@ -191,63 +191,63 @@ const azure = require('azure-storage');
 
 // // -----------------------------------------------------------------
 
-// function getTableName(context) {
-//     const info = clientInfo.getInfo(context)
-//     return baseTableName + info.token
-// }
+function getTableName(context) {
+    const info = clientInfo.getInfo(context)
+    return baseTableName + info.token
+}
 
-// function canvasKey(diagramId, canvasId) {
-//     return `${diagramId}.${canvasId}`
-// }
+function canvasKey(diagramId, canvasId) {
+    return `${diagramId}.${canvasId}`
+}
 
-// function diagramKey(diagramId) {
-//     return `${diagramId}`
-// }
+function diagramKey(diagramId) {
+    return `${diagramId}`
+}
 
-// function toCanvasDataItem(canvasData) {
-//     const { diagramId, canvasId } = canvasData
-//     return {
-//         RowKey: entGen.String(canvasKey(diagramId, canvasId)),
-//         PartitionKey: entGen.String(partitionKeyName),
+function toCanvasDataItem(canvasData) {
+    const { diagramId, canvasId } = canvasData
+    return {
+        RowKey: entGen.String(canvasKey(diagramId, canvasId)),
+        PartitionKey: entGen.String(partitionKeyName),
 
-//         type: entGen.String('canvas'),
-//         diagramId: entGen.String(diagramId),
-//         canvasId: entGen.String(canvasId),
-//         canvasData: entGen.String(JSON.stringify(canvasData))
-//     }
-// }
+        type: entGen.String('canvas'),
+        diagramId: entGen.String(diagramId),
+        canvasId: entGen.String(canvasId),
+        canvasData: entGen.String(JSON.stringify(canvasData))
+    }
+}
 
-// function toCanvasData(item) {
-//     const canvasData = JSON.parse(item.canvasData)
-//     canvasData.etag = item['odata.etag']
-//     canvasData.timestamp = item.Timestamp
-//     return canvasData
-// }
+function toCanvasData(item) {
+    const canvasData = JSON.parse(item.canvasData)
+    canvasData.etag = item['odata.etag']
+    canvasData.timestamp = item.Timestamp
+    return canvasData
+}
 
-// function toDiagramDataItem(diagramData) {
-//     const { diagramId, name, accessed } = diagramData
-//     const item = {
-//         RowKey: entGen.String(diagramKey(diagramId)),
-//         PartitionKey: entGen.String(partitionKeyName),
+function toDiagramDataItem(diagramData) {
+    const { diagramId, name, accessed } = diagramData
+    const item = {
+        RowKey: entGen.String(diagramKey(diagramId)),
+        PartitionKey: entGen.String(partitionKeyName),
 
-//         type: entGen.String('diagram'),
-//         diagramId: entGen.String(diagramId),
-//     }
-//     if (name != null) {
-//         item.name = entGen.String(name)
-//     }
-//     if (accessed != null) {
-//         item.accessed = entGen.Int64(accessed)
-//     }
-//     return item
-// }
+        type: entGen.String('diagram'),
+        diagramId: entGen.String(diagramId),
+    }
+    if (name != null) {
+        item.name = entGen.String(name)
+    }
+    if (accessed != null) {
+        item.accessed = entGen.Int64(accessed)
+    }
+    return item
+}
 
-// function toDiagramInfo(item) {
-//     return {
-//         etag: item['odata.etag'],
-//         timestamp: item.Timestamp,
-//         diagramId: item.diagramId,
-//         name: item.name,
-//         accessed: item.accessed,
-//     }
-// }
+function toDiagramInfo(item) {
+    return {
+        etag: item['odata.etag'],
+        timestamp: item.Timestamp,
+        diagramId: item.diagramId,
+        name: item.name,
+        accessed: item.accessed,
+    }
+}

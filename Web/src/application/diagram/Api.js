@@ -51,8 +51,11 @@ export default class Api {
 
     // api helper functions ---------------------------------
     async get(uri) {
+        console.log('get', uri)
         try {
-            return (await this.api.get(uri)).data;
+            const rsp = (await this.api.get(uri)).data;
+            console.log('got', uri, rsp)
+            return rsp
         } catch (error) {
             if (error.response) {
                 // Request made and server responded
