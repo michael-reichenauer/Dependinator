@@ -1,5 +1,6 @@
 //var store = require('../shared/Store.js');
 //var auth = require('../shared/auth.js');
+var table = require('../shared/table.js');
 var clientInfo = require('../shared/clientInfo.js');
 
 const baseTableName = 'diagrams'
