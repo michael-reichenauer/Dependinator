@@ -1,4 +1,4 @@
-var store = require('../shared/Store.js');
+var store = require('../shared/store.js');
 //var auth = require('../shared/auth.js');
 const azure = require('azure-storage');
 var table = require('../shared/table.js');
