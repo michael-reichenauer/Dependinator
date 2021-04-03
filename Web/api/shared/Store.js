@@ -1,10 +1,10 @@
-// const azure = require('azure-storage');
-// var table = require('../shared/table.js');
-// var clientInfo = require('../shared/clientInfo.js');
+const azure = require('azure-storage');
+var table = require('../shared/table.js');
+var clientInfo = require('../shared/clientInfo.js');
 
-// const entGen = azure.TableUtilities.entityGenerator;
-// const baseTableName = 'diagrams'
-// const partitionKeyName = 'dep'
+const entGen = azure.TableUtilities.entityGenerator;
+const baseTableName = 'diagrams'
+const partitionKeyName = 'dep'
 
 
 // if (clientInfo.token === '12345') {
@@ -19,9 +19,9 @@ exports.newDiagram = async (context, diagram) => {
         throw new Error('missing parameters: ');
     }
 
-    if (clientInfo.token === '12345') {
-        await table.createTableIfNotExists(tableName)
-    }
+    // if (clientInfo.token === '12345') {
+    await table.createTableIfNotExists(tableName)
+    // }
 
     const diagramData = { diagramId: diagramId, name: name, accessed: Date.now() }
 
@@ -68,9 +68,9 @@ exports.getAllDiagramsData = async (context) => {
 
 exports.getDiagram = async (context, diagramId) => {
     const tableName = getTableName(context)
-    if (clientInfo.token === '12345') {
-        await table.createTableIfNotExists(tableName)
-    }
+    //if (clientInfo.token === '12345') {
+    await table.createTableIfNotExists(tableName)
+    // }
 
 
     let tableQuery = new azure.TableQuery()
