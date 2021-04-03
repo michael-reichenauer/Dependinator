@@ -115,27 +115,27 @@ exports.deleteDiagram = async (context, parameters) => {
     await table.executeBatch(tableName, batch)
 }
 
-// exports.updateDiagram = async (context, diagram) => {
-//     const tableName = getTableName(context)
-//     const { diagramId } = diagram.diagramData
-//     if (!diagramId) {
-//         throw new Error('missing parameters: ');
-//     }
+exports.updateDiagram = async (context, diagram) => {
+    const tableName = getTableName(context)
+    const { diagramId } = diagram.diagramData
+    if (!diagramId) {
+        throw new Error('missing parameters: ');
+    }
 
-//     const diagramData = { ...diagram.diagramData, accessed: Date.now() }
+    const diagramData = { ...diagram.diagramData, accessed: Date.now() }
 
-//     const batch = new azure.TableBatch()
-//     batch.mergeEntity(toDiagramDataItem(diagramData))
-//     if (diagram.canvases) {
-//         diagram.canvases.forEach(canvasData => batch.insertOrReplaceEntity(toCanvasDataItem(canvasData)))
-//     }
+    const batch = new azure.TableBatch()
+    batch.mergeEntity(toDiagramDataItem(diagramData))
+    if (diagram.canvases) {
+        diagram.canvases.forEach(canvasData => batch.insertOrReplaceEntity(toCanvasDataItem(canvasData)))
+    }
 
 
-//     await table.executeBatch(tableName, batch)
+    await table.executeBatch(tableName, batch)
 
-//     const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
-//     return toDiagramInfo(entity)
-// }
+    const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
+    return toDiagramInfo(entity)
+}
 
 
 // exports.uploadDiagrams = async (context, diagrams) => {
