@@ -1,6 +1,7 @@
 var auth = require('../shared/auth.js');
 
-exports.getInfo = (context, req) => {
+exports.getInfo = (context) => {
+    const req = context.req
     const clientPrincipal = auth.getClientPrincipal(req)
 
     if (!req.headers['xtoken']) {

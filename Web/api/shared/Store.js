@@ -1,17 +1,18 @@
 const azure = require('azure-storage');
 var table = require('../shared/table.js');
+var clientInfo = require('../shared/clientInfo.js');
 
 const entGen = azure.TableUtilities.entityGenerator;
 const baseTableName = 'diagrams'
 const partitionKeyName = 'dep'
 
-const diagramKeyKey = 'diagram'
-const diagramDataKey = 'DiagramData'
-//const rootCanvasId = 'root'
 
+// if (clientInfo.token === '12345') {
+//     await table.createTableIfNotExists(tableName)
+// }
 
-
-exports.newDiagram = async (context, clientInfo, diagram) => {
+exports.newDiagram = async (context, diagram) => {
+    const tableName = getTableName(context)
     const { diagramId, name } = diagram.diagramData
     const canvasData = diagram?.canvases[0]
     if (!diagramId || !name || !canvasData) {
@@ -19,11 +20,6 @@ exports.newDiagram = async (context, clientInfo, diagram) => {
     }
 
     const diagramData = { diagramId: diagramId, name: name, accessed: Date.now() }
-
-    const tableName = getTableName(clientInfo)
-    if (clientInfo.token === '12345') {
-        await table.createTableIfNotExists(tableName)
-    }
 
     const batch = new azure.TableBatch()
     batch.insertEntity(toDiagramDataItem(diagramData))
@@ -35,15 +31,14 @@ exports.newDiagram = async (context, clientInfo, diagram) => {
     return toDiagramInfo(entity)
 }
 
-exports.setCanvas = async (context, clientInfo, canvasData) => {
+exports.setCanvas = async (context, canvasData) => {
+    const tableName = getTableName(context)
     if (!canvasData) {
         throw new Error('missing parameters');
     }
 
     const { diagramId } = canvasData
     const diagramData = { diagramId: diagramId, accessed: Date.now() }
-
-    const tableName = getTableName(clientInfo)
 
     const batch = new azure.TableBatch()
     batch.mergeEntity(toDiagramDataItem(diagramData))
@@ -55,8 +50,8 @@ exports.setCanvas = async (context, clientInfo, canvasData) => {
     return toDiagramInfo(entity)
 }
 
-exports.getAllDiagramsData = async (context, clientInfo) => {
-    const tableName = getTableName(clientInfo)
+exports.getAllDiagramsData = async (context) => {
+    const tableName = getTableName(context)
 
     var tableQuery = new azure.TableQuery()
         .where('type == ?string?', 'diagram');
@@ -67,8 +62,8 @@ exports.getAllDiagramsData = async (context, clientInfo) => {
     return items.map(i => toDiagramInfo(i))
 }
 
-exports.getDiagram = async (context, clientInfo, diagramId) => {
-    const tableName = getTableName(clientInfo)
+exports.getDiagram = async (context, diagramId) => {
+    const tableName = getTableName(context)
 
     let tableQuery = new azure.TableQuery()
         .where('diagramId == ?string?', diagramId);
@@ -89,13 +84,12 @@ exports.getDiagram = async (context, clientInfo, diagramId) => {
     return diagram
 }
 
-exports.deleteDiagram = async (context, clientInfo, parameters) => {
+exports.deleteDiagram = async (context, parameters) => {
+    const tableName = getTableName(context)
     const { diagramId } = parameters
     if (!diagramId) {
         throw new Error('Missing parameter')
     }
-
-    const tableName = getTableName(clientInfo)
 
     let tableQuery = new azure.TableQuery()
         .where('diagramId == ?string?', diagramId);
@@ -116,14 +110,12 @@ exports.deleteDiagram = async (context, clientInfo, parameters) => {
     return
 }
 
-exports.updateDiagram = async (context, clientInfo, diagram) => {
+exports.updateDiagram = async (context, diagram) => {
+    const tableName = getTableName(context)
     const { diagramId } = diagram.diagramData
-
     if (!diagramId) {
         throw new Error('missing parameters: ');
     }
-
-    const tableName = getTableName(clientInfo)
 
     const diagramData = { ...diagram.diagramData, accessed: Date.now() }
 
@@ -138,12 +130,11 @@ exports.updateDiagram = async (context, clientInfo, diagram) => {
 }
 
 
-exports.uploadDiagrams = async (context, clientInfo, diagrams) => {
+exports.uploadDiagrams = async (context, diagrams) => {
+    const tableName = getTableName(context)
     if (!diagrams) {
         throw new Error('missing parameters: ');
     }
-
-    const tableName = getTableName(clientInfo)
 
     const batch = new azure.TableBatch()
     diagrams.forEach(diagram => {
@@ -155,8 +146,8 @@ exports.uploadDiagrams = async (context, clientInfo, diagrams) => {
     await table.executeBatch(tableName, batch)
 }
 
-exports.downloadAllDiagrams = async (context, clientInfo) => {
-    const tableName = getTableName(clientInfo)
+exports.downloadAllDiagrams = async (context) => {
+    const tableName = getTableName(context)
 
     let tableQuery = new azure.TableQuery()
         .where('type == ?string? || type == ?string?', 'diagram', 'canvas');
@@ -192,8 +183,9 @@ exports.downloadAllDiagrams = async (context, clientInfo) => {
 
 // -----------------------------------------------------------------
 
-function getTableName(clientInfo) {
-    return baseTableName + clientInfo.token
+function getTableName(context) {
+    const info = clientInfo.getInfo(context)
+    return baseTableName + info.token
 }
 
 function canvasKey(diagramId, canvasId) {
