@@ -11,29 +11,29 @@ const partitionKeyName = 'dep'
 // //     await table.createTableIfNotExists(tableName)
 // // }
 
-// exports.newDiagram = async (context, diagram) => {
-//     const tableName = getTableName(context)
-//     const { diagramId, name } = diagram.diagramData
-//     const canvasData = diagram?.canvases[0]
-//     if (!diagramId || !name || !canvasData) {
-//         throw new Error('missing parameters: ');
-//     }
+exports.newDiagram = async (context, diagram) => {
+    const tableName = getTableName(context)
+    const { diagramId, name } = diagram.diagramData
+    const canvasData = diagram?.canvases[0]
+    if (!diagramId || !name || !canvasData) {
+        throw new Error('missing parameters: ');
+    }
 
-//     // if (clientInfo.token === '12345') {
-//     await table.createTableIfNotExists(tableName)
-//     // }
+    // if (clientInfo.token === '12345') {
+    await table.createTableIfNotExists(tableName)
+    // }
 
-//     const diagramData = { diagramId: diagramId, name: name, accessed: Date.now() }
+    const diagramData = { diagramId: diagramId, name: name, accessed: Date.now() }
 
-//     const batch = new azure.TableBatch()
-//     batch.insertEntity(toDiagramDataItem(diagramData))
-//     batch.insertEntity(toCanvasDataItem(canvasData))
+    const batch = new azure.TableBatch()
+    batch.insertEntity(toDiagramDataItem(diagramData))
+    batch.insertEntity(toCanvasDataItem(canvasData))
 
-//     await table.executeBatch(tableName, batch)
+    await table.executeBatch(tableName, batch)
 
-//     const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
-//     return toDiagramInfo(entity)
-// }
+    const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
+    return toDiagramInfo(entity)
+}
 
 // exports.setCanvas = async (context, canvasData) => {
 //     const tableName = getTableName(context)
@@ -72,7 +72,6 @@ exports.getDiagram = async (context, diagramId) => {
     await table.createTableIfNotExists(tableName)
     // }
 
-    tableName = tableName + 'dd'
     let tableQuery = new azure.TableQuery()
         .where('diagramId == ?string?', diagramId);
 
