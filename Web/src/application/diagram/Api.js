@@ -13,6 +13,10 @@ export default class Api {
         }
     })
 
+    async check() {
+        return this.get('/api/Check')
+    }
+
     async getAllDiagramsData() {
         return this.get(`/api/GetAllDiagramsData`);
     }
