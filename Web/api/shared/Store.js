@@ -1,10 +1,10 @@
-const azure = require('azure-storage');
-var table = require('../shared/table.js');
-var clientInfo = require('../shared/clientInfo.js');
+// const azure = require('azure-storage');
+// var table = require('../shared/table.js');
+// var clientInfo = require('../shared/clientInfo.js');
 
-const entGen = azure.TableUtilities.entityGenerator;
-const baseTableName = 'diagrams'
-const partitionKeyName = 'dep'
+// const entGen = azure.TableUtilities.entityGenerator;
+// const baseTableName = 'diagrams'
+// const partitionKeyName = 'dep'
 
 
 // if (clientInfo.token === '12345') {
