@@ -57,14 +57,14 @@ export default function Diagram({ width, height }) {
         const contextMenuHandler = enableContextMenu('canvas', setContextMenu, canvas)
 
         setTimeout(() => canvas.showTotalDiagram(), 0);
-        const api = new Api()
-        setTimeout(() => {
-            api.check().then(rsp => {
-                console.log('check', rsp)
-                setTitle(rsp)
-            })
+        // const api = new Api()
+        // setTimeout(() => {
+        //     api.check().then(rsp => {
+        //         console.log('check', rsp)
+        //         setTitle(rsp)
+        //     })
 
-        }, 1000);
+        // }, 1000);
 
         return () => {
             // Clean initialization 

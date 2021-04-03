@@ -66,7 +66,7 @@ exports.getAllDiagramsData = async (context) => {
 }
 
 exports.getDiagram = async (context, diagramId) => {
-    let tableName = getTableName(context)
+    const tableName = getTableName(context)
     //if (clientInfo.token === '12345') {
     await table.createTableIfNotExists(tableName)
     // }
