@@ -138,23 +138,23 @@ exports.updateDiagram = async (context, diagram) => {
 }
 
 
-// exports.uploadDiagrams = async (context, diagrams) => {
-//     const tableName = getTableName(context)
-//     if (!diagrams) {
-//         throw new Error('missing parameters: ');
-//     }
+exports.uploadDiagrams = async (context, diagrams) => {
+    const tableName = getTableName(context)
+    if (!diagrams) {
+        throw new Error('missing parameters: ');
+    }
 
-//     const batch = new azure.TableBatch()
-//     diagrams.forEach(diagram => {
-//         const diagramData = { ...diagram.diagramData, accessed: Date.now() }
-//         batch.insertOrMergeEntity(toDiagramDataItem(diagramData))
-//         if (diagram.canvases) {
-//             diagram.canvases.forEach(canvasData => batch.insertOrReplaceEntity(toCanvasDataItem(canvasData)))
-//         }
-//     })
+    const batch = new azure.TableBatch()
+    diagrams.forEach(diagram => {
+        const diagramData = { ...diagram.diagramData, accessed: Date.now() }
+        batch.insertOrMergeEntity(toDiagramDataItem(diagramData))
+        if (diagram.canvases) {
+            diagram.canvases.forEach(canvasData => batch.insertOrReplaceEntity(toCanvasDataItem(canvasData)))
+        }
+    })
 
-//     await table.executeBatch(tableName, batch)
-// }
+    await table.executeBatch(tableName, batch)
+}
 
 // exports.downloadAllDiagrams = async (context) => {
 //     const tableName = getTableName(context)
