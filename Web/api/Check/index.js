@@ -4,7 +4,7 @@ module.exports = async function (context, req) {
         // throw new Error('some error')
 
     } catch (err) {
-        context.error('error:', err);
+        context.log.error('error:', err);
         context.res = { status: 400, body: `error: '${err.message}', ${err.stack}` };
     }
 }

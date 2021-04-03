@@ -12,7 +12,7 @@ module.exports = async function (context, req) {
 
         context.res = { status: 200, body: diagram };
     } catch (err) {
-        context.error('error:', err);
+        context.log.error('error:', err);
         context.res = { status: 400, body: `error: '${err.message}', ${err.stack}` };
     }
 }
