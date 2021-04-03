@@ -51,10 +51,10 @@ export default class Api {
 
     // api helper functions ---------------------------------
     async get(uri) {
-        console.log('get', uri)
+        // console.log('get', uri)
         try {
             const rsp = (await this.api.get(uri)).data;
-            console.log('got', uri, rsp)
+            // console.log('got', uri, rsp)
             return rsp
         } catch (error) {
             console.log('Failed get:', uri)
@@ -73,10 +73,10 @@ export default class Api {
     }
 
     async post(uri, data) {
-        console.log('post', uri, data)
+        // console.log('post', uri, data)
         try {
             const rsp = (await this.api.post(uri, data)).data;
-            console.log('posted', uri, data, rsp)
+            // console.log('posted', uri, data, rsp)
             return rsp
         } catch (error) {
             console.log('Failed post:', uri, data)

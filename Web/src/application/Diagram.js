@@ -6,7 +6,6 @@ import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { Backdrop, makeStyles } from "@material-ui/core";
 import { ContextMenu } from "../common/Menus";
-import Api from "./diagram/Api";
 
 
 export const titleAtom = atom('System')
