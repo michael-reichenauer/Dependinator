@@ -57,6 +57,7 @@ export default class Api {
             console.log('got', uri, rsp)
             return rsp
         } catch (error) {
+            console.log('Failed get:', uri)
             if (error.response) {
                 // Request made and server responded
                 console.log(`Error: status: ${error.response.status}: '${error.response.data}'`)
@@ -78,6 +79,7 @@ export default class Api {
             console.log('posted', uri, data, rsp)
             return rsp
         } catch (error) {
+            console.log('Failed post:', uri, data)
             if (error.response) {
                 // Request made and server responded
                 console.log(`Error: status: ${error.response.status}: '${error.response.data}'`)
