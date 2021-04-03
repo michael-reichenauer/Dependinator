@@ -156,37 +156,36 @@ exports.uploadDiagrams = async (context, diagrams) => {
     await table.executeBatch(tableName, batch)
 }
 
-// exports.downloadAllDiagrams = async (context) => {
-//     const tableName = getTableName(context)
+exports.downloadAllDiagrams = async (context) => {
+    const tableName = getTableName(context)
 
-//     let tableQuery = new azure.TableQuery()
-//         .where('type == ?string? || type == ?string?', 'diagram', 'canvas');
+    let tableQuery = new azure.TableQuery()
+        .where('type == ?string? || type == ?string?', 'diagram', 'canvas');
 
-//     const items = await table.queryEntities(tableName, tableQuery, null)
+    const items = await table.queryEntities(tableName, tableQuery, null)
 
-//     const diagrams = {}
+    const diagrams = {}
 
-//     items.forEach(i => {
-//         if (i.type === 'diagram') {
-//             const diagramData = toDiagramInfo(i)
-//             const id = diagramData.diagramId
-//             diagrams[id] = { ...diagrams[id], diagramData: diagramData }
+    items.forEach(i => {
+        if (i.type === 'diagram') {
+            const diagramData = toDiagramInfo(i)
+            const id = diagramData.diagramId
+            diagrams[id] = { ...diagrams[id], diagramData: diagramData }
+        } else if (i.type === 'canvas') {
+            const canvasData = toCanvasData(i)
+            const id = canvasData.diagramId
+            if (diagrams[id] == null) {
+                diagrams[id] = { canvases: [canvasData] }
+            } else {
+                const canvases = diagrams[id].canvases ?? []
+                canvases.push(canvasData)
+                diagrams[id].canvases = canvases
+            }
+        }
+    })
 
-//         } else if (i.type === 'canvas') {
-//             const canvasData = toCanvasData(i)
-//             const id = canvasData.diagramId
-//             if (diagrams[id] == null) {
-//                 diagrams[id] = { canvases: [canvasData] }
-//             } else {
-//                 const canvases = diagrams[id].canvases ?? []
-//                 canvases.push(canvasData)
-//                 diagrams[id].canvases = canvases
-//             }
-//         }
-//     })
-
-//     return Object.entries(diagrams).map(e => e[1])
-// }
+    return Object.entries(diagrams).map(e => e[1])
+}
 
 
 
