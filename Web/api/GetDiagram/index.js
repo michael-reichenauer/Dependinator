@@ -1,5 +1,9 @@
 //var store = require('../shared/Store.js');
 //var auth = require('../shared/auth.js');
+var clientInfo = require('../shared/clientInfo.js');
+
+const baseTableName = 'diagrams'
+const partitionKeyName = 'dep'
 
 module.exports = async function (context, req) {
     try {
