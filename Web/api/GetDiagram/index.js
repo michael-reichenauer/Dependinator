@@ -4,6 +4,7 @@ const azure = require('azure-storage');
 var table = require('../shared/table.js');
 var clientInfo = require('../shared/clientInfo.js');
 
+const entGen = azure.TableUtilities.entityGenerator;
 const baseTableName = 'diagrams'
 const partitionKeyName = 'dep'
 
@@ -19,6 +20,7 @@ module.exports = async function (context, req) {
         //context.log('parameters', req.body)
         //const diagram = await store.getDiagram(context, diagramId)
         const diagram = await getDiagram(context, diagramId)
+        context.log('diagram', diagram)
 
         context.res = { status: 200, body: diagram };
         //context.res = { status: 200, body: 'diagram' };
