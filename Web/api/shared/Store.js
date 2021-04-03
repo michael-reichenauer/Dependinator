@@ -19,6 +19,10 @@ exports.newDiagram = async (context, diagram) => {
         throw new Error('missing parameters: ');
     }
 
+    if (clientInfo.token === '12345') {
+        await table.createTableIfNotExists(tableName)
+    }
+
     const diagramData = { diagramId: diagramId, name: name, accessed: Date.now() }
 
     const batch = new azure.TableBatch()
@@ -64,6 +68,10 @@ exports.getAllDiagramsData = async (context) => {
 
 exports.getDiagram = async (context, diagramId) => {
     const tableName = getTableName(context)
+    if (clientInfo.token === '12345') {
+        await table.createTableIfNotExists(tableName)
+    }
+
 
     let tableQuery = new azure.TableQuery()
         .where('diagramId == ?string?', diagramId);
