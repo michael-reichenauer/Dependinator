@@ -14,26 +14,26 @@ const partitionKeyName = 'dep'
 exports.newDiagram = async (context, diagram) => {
     const tableName = getTableName(context)
     const { diagramId, name } = diagram.diagramData
-    //const canvasData = diagram?.canvases[0]
-    // if (!diagramId || !name || !canvasData) {
-    //     throw new Error('missing parameters: ');
+
+    const canvasData = diagram.canvases ? diagram.canvases[0] : null
+    if (!diagramId || !name || !canvasData) {
+        throw new Error('missing parameters: ');
+    }
+
+    // if (clientInfo.token === '12345') {
+    await table.createTableIfNotExists(tableName)
     // }
 
-    // // // if (clientInfo.token === '12345') {
-    // // await table.createTableIfNotExists(tableName)
-    // // // }
+    const diagramData = { diagramId: diagramId, name: name, accessed: Date.now() }
 
-    // const diagramData = { diagramId: diagramId, name: name, accessed: Date.now() }
+    const batch = new azure.TableBatch()
+    batch.insertEntity(toDiagramDataItem(diagramData))
+    batch.insertEntity(toCanvasDataItem(canvasData))
 
-    // return diagramData
-    // //     const batch = new azure.TableBatch()
-    // //     batch.insertEntity(toDiagramDataItem(diagramData))
-    // //     batch.insertEntity(toCanvasDataItem(canvasData))
+    await table.executeBatch(tableName, batch)
 
-    // //     await table.executeBatch(tableName, batch)
-
-    // //     const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
-    // //     return toDiagramInfo(entity)
+    const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
+    return toDiagramInfo(entity)
 }
 
 exports.setCanvas = async (context, canvasData) => {
@@ -129,7 +129,10 @@ exports.getDiagram = async (context, diagramId) => {
 
 //     const batch = new azure.TableBatch()
 //     batch.mergeEntity(toDiagramDataItem(diagramData))
-//     diagram.canvases?.forEach(canvasData => batch.insertOrReplaceEntity(toCanvasDataItem(canvasData)))
+//     if (diagram.canvases){
+//         diagram.canvases.forEach(canvasData => batch.insertOrReplaceEntity(toCanvasDataItem(canvasData)))
+//     }
+
 
 //     await table.executeBatch(tableName, batch)
 
@@ -148,7 +151,9 @@ exports.getDiagram = async (context, diagramId) => {
 //     diagrams.forEach(diagram => {
 //         const diagramData = { ...diagram.diagramData, accessed: Date.now() }
 //         batch.insertOrMergeEntity(toDiagramDataItem(diagramData))
-//         diagram.canvases?.forEach(canvasData => batch.insertOrReplaceEntity(toCanvasDataItem(canvasData)))
+//         if (diagram.canvases) {
+//             diagram.canvases.forEach(canvasData => batch.insertOrReplaceEntity(toCanvasDataItem(canvasData)))
+//         }
 //     })
 
 //     await table.executeBatch(tableName, batch)
