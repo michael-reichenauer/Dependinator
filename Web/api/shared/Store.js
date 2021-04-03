@@ -14,7 +14,7 @@ const partitionKeyName = 'dep'
 exports.newDiagram = async (context, diagram) => {
     const tableName = getTableName(context)
     // const { diagramId, name } = diagram.diagramData
-    // const canvasData = diagram?.canvases[0]
+    const canvasData = diagram?.canvases[0]
     // if (!diagramId || !name || !canvasData) {
     //     throw new Error('missing parameters: ');
     // }
