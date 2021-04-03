@@ -1,5 +1,6 @@
 //var store = require('../shared/Store.js');
 //var auth = require('../shared/auth.js');
+const azure = require('azure-storage');
 var table = require('../shared/table.js');
 var clientInfo = require('../shared/clientInfo.js');
 
@@ -56,4 +57,60 @@ const getDiagram = async (context, diagramId) => {
 function getTableName(context) {
     const info = clientInfo.getInfo(context)
     return baseTableName + info.token
+}
+
+function canvasKey(diagramId, canvasId) {
+    return `${diagramId}.${canvasId}`
+}
+
+function diagramKey(diagramId) {
+    return `${diagramId}`
+}
+
+function toCanvasDataItem(canvasData) {
+    const { diagramId, canvasId } = canvasData
+    return {
+        RowKey: entGen.String(canvasKey(diagramId, canvasId)),
+        PartitionKey: entGen.String(partitionKeyName),
+
+        type: entGen.String('canvas'),
+        diagramId: entGen.String(diagramId),
+        canvasId: entGen.String(canvasId),
+        canvasData: entGen.String(JSON.stringify(canvasData))
+    }
+}
+
+function toCanvasData(item) {
+    const canvasData = JSON.parse(item.canvasData)
+    canvasData.etag = item['odata.etag']
+    canvasData.timestamp = item.Timestamp
+    return canvasData
+}
+
+function toDiagramDataItem(diagramData) {
+    const { diagramId, name, accessed } = diagramData
+    const item = {
+        RowKey: entGen.String(diagramKey(diagramId)),
+        PartitionKey: entGen.String(partitionKeyName),
+
+        type: entGen.String('diagram'),
+        diagramId: entGen.String(diagramId),
+    }
+    if (name != null) {
+        item.name = entGen.String(name)
+    }
+    if (accessed != null) {
+        item.accessed = entGen.Int64(accessed)
+    }
+    return item
+}
+
+function toDiagramInfo(item) {
+    return {
+        etag: item['odata.etag'],
+        timestamp: item.Timestamp,
+        diagramId: item.diagramId,
+        name: item.name,
+        accessed: item.accessed,
+    }
 }
