@@ -72,10 +72,22 @@ export default class Api {
     }
 
     async post(uri, data) {
+        console.log('post', uri, data)
         try {
-            return (await this.api.post(uri, data)).data;
+            const rsp = (await this.api.post(uri, data)).data;
+            console.log('posted', uri, data, rsp)
+            return rsp
         } catch (error) {
-            console.log(error)
+            if (error.response) {
+                // Request made and server responded
+                console.log(`Error: status: ${error.response.status}: '${error.response.data}'`)
+            } else if (error.request) {
+                // The request was made but no response was received
+                console.log(`Error: request: ${error.request}: `)
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                console.log('Error', error.message);
+            }
             return null
         }
     }

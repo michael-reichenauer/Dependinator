@@ -54,17 +54,17 @@ const partitionKeyName = 'dep'
 //     return toDiagramInfo(entity)
 // }
 
-// exports.getAllDiagramsData = async (context) => {
-//     const tableName = getTableName(context)
+exports.getAllDiagramsData = async (context) => {
+    const tableName = getTableName(context)
 
-//     var tableQuery = new azure.TableQuery()
-//         .where('type == ?string?', 'diagram');
+    var tableQuery = new azure.TableQuery()
+        .where('type == ?string?', 'diagram');
 
-//     const items = await table.queryEntities(tableName, tableQuery, null)
-//     context.log(`queried: ${items.length}`)
+    const items = await table.queryEntities(tableName, tableQuery, null)
+    context.log(`queried: ${items.length}`)
 
-//     return items.map(i => toDiagramInfo(i))
-// }
+    return items.map(i => toDiagramInfo(i))
+}
 
 exports.getDiagram = async (context, diagramId) => {
     const tableName = getTableName(context)
