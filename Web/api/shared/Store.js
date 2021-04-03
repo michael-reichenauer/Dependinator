@@ -90,104 +90,104 @@ exports.getDiagram = async (context, diagramId) => {
     return diagram
 }
 
-exports.deleteDiagram = async (context, parameters) => {
-    const tableName = getTableName(context)
-    const { diagramId } = parameters
-    if (!diagramId) {
-        throw new Error('Missing parameter')
-    }
+// exports.deleteDiagram = async (context, parameters) => {
+//     const tableName = getTableName(context)
+//     const { diagramId } = parameters
+//     if (!diagramId) {
+//         throw new Error('Missing parameter')
+//     }
 
-    let tableQuery = new azure.TableQuery()
-        .where('diagramId == ?string?', diagramId);
+//     let tableQuery = new azure.TableQuery()
+//         .where('diagramId == ?string?', diagramId);
 
-    const items = await table.queryEntities(tableName, tableQuery, null)
-    context.log(`queried: ${items.length}`)
+//     const items = await table.queryEntities(tableName, tableQuery, null)
+//     context.log(`queried: ${items.length}`)
 
-    const batch = new azure.TableBatch()
-    items.forEach(i => {
-        if (i.type === 'diagram') {
-            batch.deleteEntity(toDiagramDataItem(toDiagramInfo(i)))
-        } else if (i.type === 'canvas') {
-            batch.deleteEntity(toCanvasDataItem(toCanvasData(i)))
-        }
-    })
+//     const batch = new azure.TableBatch()
+//     items.forEach(i => {
+//         if (i.type === 'diagram') {
+//             batch.deleteEntity(toDiagramDataItem(toDiagramInfo(i)))
+//         } else if (i.type === 'canvas') {
+//             batch.deleteEntity(toCanvasDataItem(toCanvasData(i)))
+//         }
+//     })
 
-    await table.executeBatch(tableName, batch)
-    return
-}
+//     await table.executeBatch(tableName, batch)
+//     return
+// }
 
-exports.updateDiagram = async (context, diagram) => {
-    const tableName = getTableName(context)
-    const { diagramId } = diagram.diagramData
-    if (!diagramId) {
-        throw new Error('missing parameters: ');
-    }
+// exports.updateDiagram = async (context, diagram) => {
+//     const tableName = getTableName(context)
+//     const { diagramId } = diagram.diagramData
+//     if (!diagramId) {
+//         throw new Error('missing parameters: ');
+//     }
 
-    const diagramData = { ...diagram.diagramData, accessed: Date.now() }
+//     const diagramData = { ...diagram.diagramData, accessed: Date.now() }
 
-    const batch = new azure.TableBatch()
-    batch.mergeEntity(toDiagramDataItem(diagramData))
-    if (diagram.canvases) {
-        diagram.canvases.forEach(canvasData => batch.insertOrReplaceEntity(toCanvasDataItem(canvasData)))
-    }
-
-
-    await table.executeBatch(tableName, batch)
-
-    const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
-    return toDiagramInfo(entity)
-}
+//     const batch = new azure.TableBatch()
+//     batch.mergeEntity(toDiagramDataItem(diagramData))
+//     if (diagram.canvases) {
+//         diagram.canvases.forEach(canvasData => batch.insertOrReplaceEntity(toCanvasDataItem(canvasData)))
+//     }
 
 
-exports.uploadDiagrams = async (context, diagrams) => {
-    const tableName = getTableName(context)
-    if (!diagrams) {
-        throw new Error('missing parameters: ');
-    }
+//     await table.executeBatch(tableName, batch)
 
-    const batch = new azure.TableBatch()
-    diagrams.forEach(diagram => {
-        const diagramData = { ...diagram.diagramData, accessed: Date.now() }
-        batch.insertOrMergeEntity(toDiagramDataItem(diagramData))
-        if (diagram.canvases) {
-            diagram.canvases.forEach(canvasData => batch.insertOrReplaceEntity(toCanvasDataItem(canvasData)))
-        }
-    })
+//     const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
+//     return toDiagramInfo(entity)
+// }
 
-    await table.executeBatch(tableName, batch)
-}
 
-exports.downloadAllDiagrams = async (context) => {
-    const tableName = getTableName(context)
+// exports.uploadDiagrams = async (context, diagrams) => {
+//     const tableName = getTableName(context)
+//     if (!diagrams) {
+//         throw new Error('missing parameters: ');
+//     }
 
-    let tableQuery = new azure.TableQuery()
-        .where('type == ?string? || type == ?string?', 'diagram', 'canvas');
+//     const batch = new azure.TableBatch()
+//     diagrams.forEach(diagram => {
+//         const diagramData = { ...diagram.diagramData, accessed: Date.now() }
+//         batch.insertOrMergeEntity(toDiagramDataItem(diagramData))
+//         if (diagram.canvases) {
+//             diagram.canvases.forEach(canvasData => batch.insertOrReplaceEntity(toCanvasDataItem(canvasData)))
+//         }
+//     })
 
-    const items = await table.queryEntities(tableName, tableQuery, null)
+//     await table.executeBatch(tableName, batch)
+// }
 
-    const diagrams = {}
+// exports.downloadAllDiagrams = async (context) => {
+//     const tableName = getTableName(context)
 
-    items.forEach(i => {
-        if (i.type === 'diagram') {
-            const diagramData = toDiagramInfo(i)
-            const id = diagramData.diagramId
-            diagrams[id] = { ...diagrams[id], diagramData: diagramData }
+//     let tableQuery = new azure.TableQuery()
+//         .where('type == ?string? || type == ?string?', 'diagram', 'canvas');
 
-        } else if (i.type === 'canvas') {
-            const canvasData = toCanvasData(i)
-            const id = canvasData.diagramId
-            if (diagrams[id] == null) {
-                diagrams[id] = { canvases: [canvasData] }
-            } else {
-                const canvases = diagrams[id].canvases ?? []
-                canvases.push(canvasData)
-                diagrams[id].canvases = canvases
-            }
-        }
-    })
+//     const items = await table.queryEntities(tableName, tableQuery, null)
 
-    return Object.entries(diagrams).map(e => e[1])
-}
+//     const diagrams = {}
+
+//     items.forEach(i => {
+//         if (i.type === 'diagram') {
+//             const diagramData = toDiagramInfo(i)
+//             const id = diagramData.diagramId
+//             diagrams[id] = { ...diagrams[id], diagramData: diagramData }
+
+//         } else if (i.type === 'canvas') {
+//             const canvasData = toCanvasData(i)
+//             const id = canvasData.diagramId
+//             if (diagrams[id] == null) {
+//                 diagrams[id] = { canvases: [canvasData] }
+//             } else {
+//                 const canvases = diagrams[id].canvases ?? []
+//                 canvases.push(canvasData)
+//                 diagrams[id].canvases = canvases
+//             }
+//         }
+//     })
+
+//     return Object.entries(diagrams).map(e => e[1])
+// }
 
 
 
