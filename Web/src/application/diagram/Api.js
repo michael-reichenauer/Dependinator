@@ -36,6 +36,7 @@ export default class Api {
         return await this.get('/.auth/me')
     }
 
+
     async check() {
         return this.get('/api/Check')
     }

@@ -64,8 +64,9 @@ export default function Diagram({ width, height }) {
                 console.log('user', user)
                 if (user.clientPrincipal) {
                     setTitle(user.clientPrincipal.userId)
+                    // window.location.href = "https://google.com";
                 } else {
-                    setTitle('no user')
+                    // window.location.href = "https://google.com";
                 }
 
             } catch (error) {
