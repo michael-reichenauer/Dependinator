@@ -11,6 +11,13 @@ const partitionKeyName = 'dep'
 // //     await table.createTableIfNotExists(tableName)
 // // }
 
+exports.connect = async (context) => {
+    const req = context.req
+    const clientPrincipal = auth.getClientPrincipal(req)
+
+    return { token: '12345', clientPrincipal: clientPrincipal }
+}
+
 exports.newDiagram = async (context, diagram) => {
     const tableName = getTableName(context)
     const { diagramId, name } = diagram.diagramData
@@ -77,7 +84,7 @@ exports.getDiagram = async (context, diagramId) => {
     const items = await table.queryEntities(tableName, tableQuery, null)
 
 
-    const diagram = { diagramData: { diagramId: diagramId }, canvases: [] }
+    const diagram = { canvases: [] }
 
     items.forEach(i => {
         if (i.type === 'diagram') {
@@ -86,6 +93,10 @@ exports.getDiagram = async (context, diagramId) => {
             diagram.canvases.push(toCanvasData(i))
         }
     })
+
+    if (!diagram.diagramData || diagram.canvases.length == 0) {
+        throw new Error('NOTFOUND')
+    }
 
     return diagram
 }

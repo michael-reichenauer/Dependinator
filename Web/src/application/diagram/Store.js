@@ -21,14 +21,12 @@ class Store {
     }
 
     isCloudSyncEnabled() {
-        console.log('is enabled', this.isCloudSync)
         return this.isCloudSync
     }
 
     async enableCloudSync() {
         this.setProgress(true)
         try {
-            console.log('Enable sync')
             await delay(3000)
             this.isCloudSync = true
         } catch (error) {

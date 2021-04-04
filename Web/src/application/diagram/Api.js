@@ -19,8 +19,29 @@ export default class Api {
         this.setProgress = setProgress
     }
 
+    async getCurrentUser() {
+        console.log('host', window.location.hostname)
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            await this.get('/api/Check')
+            return {
+                clientPrincipal: {
+                    "identityProvider": "local",
+                    "userId": 'local',
+                    "userDetails": 'local',
+                    "userRoles": ["anonymous", "authenticated"]
+                }
+            }
+        }
+
+        return await this.get('/.auth/me')
+    }
+
     async check() {
         return this.get('/api/Check')
+    }
+
+    async connect() {
+        return this.get('/api/Connect')
     }
 
     async getAllDiagramsData() {
@@ -58,7 +79,7 @@ export default class Api {
     // api helper functions ---------------------------------
     async get(uri) {
         console.log('get', uri)
-        this.setProgress(true)
+        //  this.setProgress(true)
         const t = timing()
         try {
             const rsp = (await this.api.get(uri)).data;
@@ -78,14 +99,14 @@ export default class Api {
             }
             throw (error)
         } finally {
-            this.setProgress(false)
+            //  this.setProgress(false)
         }
 
     }
 
     async post(uri, data) {
         console.log('post', uri, data)
-        this.setProgress(true)
+        //  this.setProgress(true)
         const t = timing()
         try {
             const rsp = (await this.api.post(uri, data)).data;
@@ -105,7 +126,7 @@ export default class Api {
             }
             throw (error)
         } finally {
-            this.setProgress(false)
+            //    this.setProgress(false)
         }
     }
 }

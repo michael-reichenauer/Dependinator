@@ -6,6 +6,7 @@ import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { ContextMenu } from "../common/Menus";
 import Progress, { useProgress } from '../common/Progress'
+import Api from "./diagram/Api";
 
 
 export const titleAtom = atom('System')
@@ -56,14 +57,22 @@ export default function Diagram({ width, height }) {
         const contextMenuHandler = enableContextMenu('canvas', setContextMenu, canvas)
 
         setTimeout(() => canvas.showTotalDiagram(), 0);
-        // const api = new Api()
-        // setTimeout(() => {
-        //     api.check().then(rsp => {
-        //         console.log('check', rsp)
-        //         setTitle(rsp)
-        //     })
+        const api = new Api()
+        setTimeout(async () => {
+            try {
+                const user = await api.getCurrentUser()
+                console.log('user', user)
+                if (user.clientPrincipal) {
+                    setTitle(user.clientPrincipal.userId)
+                } else {
+                    setTitle('no user')
+                }
 
-        // }, 1000);
+            } catch (error) {
+                errorHandler(`error: ${error.message}`)
+            }
+
+        }, 1000);
 
         return () => {
             // Clean initialization 
