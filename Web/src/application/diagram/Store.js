@@ -25,7 +25,7 @@ class Store {
     }
 
     loginGitHub() {
-        const redirectUri = `http://${window.location.host}/Connect`
+        const redirectUri = `https://${window.location.host}/Connect`
         window.location.href = `/.auth/login/github?post_login_redirect_uri=${redirectUri}`;
     }
 
