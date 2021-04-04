@@ -68,8 +68,8 @@ export default class StoreLocal {
         for (var i = 0, len = localStorage.length; i < len; i++) {
             var key = localStorage.key(i);
             if (key.endsWith(diagramDataKey)) {
-                const value = JSON.parse(localStorage[key])
-                diagrams.push({ diagramId: value.diagramId, name: value.name, accessed: value.accessed })
+                const diagramInfo = JSON.parse(localStorage[key])
+                diagrams.push(diagramInfo)
             }
         }
 

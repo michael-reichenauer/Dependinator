@@ -165,7 +165,7 @@ class Store {
                         }
                     } else {
                         // Local info can just be deleted since it was deleted on the server
-                        this.local.deleteDiagram(localInfo.diagramId)
+                        this.local.removeDiagram(localInfo.diagramId)
                     }
                 } else {
                     // The local info never pushed, lets push to remote
