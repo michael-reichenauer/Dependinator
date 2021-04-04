@@ -25,8 +25,16 @@ class Store {
     }
 
     loginGitHub() {
-        const redirectUri = `https://${window.location.host}/Connect`
-        window.location.href = `/.auth/login/github?post_login_redirect_uri=${redirectUri}`;
+        localStorage.setItem('connecting', 'true')
+        window.location.href = `/.auth/login/github`;
+    }
+
+    async connect() {
+        if (localStorage.getItem('connecting') === 'true') {
+            localStorage.removeItem('connecting')
+            const token = await this.remote.connect()
+            console.log('token', token)
+        }
     }
 
     async enableCloudSync() {
@@ -73,6 +81,7 @@ class Store {
 
     async openDiagramRootCanvas(diagramId) {
         try {
+            await this.connect()
             // Try to get diagram from remote server
             const diagram = await this.remote.getDiagram(diagramId)
 
