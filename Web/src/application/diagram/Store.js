@@ -80,6 +80,7 @@ class Store {
         this.local.removeDiagram(diagramId)
         this.local.clearLastUsedDiagram(diagramId)
 
+        console.log('Delete', diagramId)
         await this.remote.deleteDiagram(diagramId)
         await this.syncDiagrams()
     }
@@ -165,6 +166,7 @@ class Store {
                         }
                     } else {
                         // Local info can just be deleted since it was deleted on the server
+                        console.log('Remove', localInfo.diagramId)
                         this.local.removeDiagram(localInfo.diagramId)
                     }
                 } else {
