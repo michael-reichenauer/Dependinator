@@ -1,6 +1,7 @@
 import Api from "./Api"
 import StoreFiles from "./StoreFiles"
 import StoreLocal from "./StoreLocal"
+import { delay } from '../../common/utils'
 
 const rootCanvasId = 'root'
 
@@ -11,10 +12,43 @@ class Store {
 
     setError = null
     setProgress = null
+    isCloudSync = false
 
     setHandlers(setError, setProgress) {
         this.setError = setError
+        this.setProgress = setProgress
         this.remote.setProgressHandler(setProgress)
+    }
+
+    isCloudSyncEnabled() {
+        console.log('is enabled', this.isCloudSync)
+        return this.isCloudSync
+    }
+
+    async enableCloudSync() {
+        this.setProgress(true)
+        try {
+            console.log('Enable sync')
+            await delay(3000)
+            this.isCloudSync = true
+        } catch (error) {
+            this.setError('Failed to enable cloud sync')
+        } finally {
+            this.setProgress(false)
+        }
+    }
+
+    async disableCloudSync() {
+        this.setProgress(true)
+        try {
+            console.log('Disable sync')
+            await delay(3000)
+            this.isCloudSync = false
+        } catch (error) {
+            this.setError('Failed to disable cloud sync')
+        } finally {
+            this.setProgress(false)
+        }
     }
 
     async openLastUsedDiagramCanvas() {

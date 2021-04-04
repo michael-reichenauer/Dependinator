@@ -28,6 +28,7 @@ export default function Diagram({ width, height }) {
     const [, setCanRedo] = useAtom(canRedoAtom)
     const [, setCanPopDiagram] = useAtom(canPopDiagramAtom)
     const [, setEditMode] = useAtom(editModeAtom)
+
     const [isProgress, setProgress] = useProgress()
 
     useEffect(() => {

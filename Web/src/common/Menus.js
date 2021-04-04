@@ -105,6 +105,7 @@ const getMenuItems = (items, onClick) => {
         } else if (item instanceof NestedItem) {
             return (
                 <NestedMenuItem
+
                     key={`item-${i}`}
                     label={item.text}
                     parentMenuOpen={true}

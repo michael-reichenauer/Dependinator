@@ -3,11 +3,10 @@ import PubSub from 'pubsub-js'
 import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
 import Tooltip from '@material-ui/core/Tooltip';
-import { Box, Link, Popover, Typography } from "@material-ui/core";
 import { AppMenu, menuItem, menuParentItem } from "../common/Menus";
 import { store } from "./diagram/Store";
 import Printer from "../common/Printer";
-
+import About, { useAbout } from "./About";
 
 
 
@@ -17,7 +16,7 @@ const asMenuItems = (diagrams) => {
 
 export function ApplicationMenu() {
     const [menu, setMenu] = useState(null);
-    const [anchorEl, setAnchorEl] = useState(null);
+    const [, setShowAbout] = useAbout()
 
     useEffect(() => {
         const handler = Printer.registerPrintKey(() => PubSub.publish('canvas.Print'))
@@ -37,19 +36,18 @@ export function ApplicationMenu() {
     const menuItems = [
         menuItem('New Diagram', () => PubSub.publish('canvas.NewDiagram')),
         menuParentItem('Open Recent', diagrams, diagrams.length > 0),
-        menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
-        menuItem('Save to file', () => PubSub.publish('canvas.SaveDiagramToFile')),
-        menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
         menuItem('Print', () => PubSub.publish('canvas.Print')),
         menuItem('Delete', deleteDiagram),
-        menuItem('Reload web page', () => window.location.reload(true)),
-        menuItem('About', () => setAnchorEl(true)),
+        menuItem('Enable cloud sync', () => store.enableCloudSync(), true, !store.isCloudSyncEnabled()),
+        menuItem('Disable cloud sync', () => store.disableCloudSync(), true, store.isCloudSyncEnabled()),
+        menuItem('Reload web page', () => window.location.reload()),
+        menuParentItem('Files', [
+            menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
+            menuItem('Save diagram to file', () => PubSub.publish('canvas.SaveDiagramToFile')),
+            menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
+        ]),
+        menuItem('About', () => setShowAbout(true)),
     ]
-
-    const handleCloseAbout = () => { setAnchorEl(null); };
-
-    const open = Boolean(anchorEl);
-    const id = open ? 'simple-popover' : undefined;
 
     return (
         <>
@@ -65,30 +63,7 @@ export function ApplicationMenu() {
 
             <AppMenu anchorEl={menu} items={menuItems} onClose={setMenu} />
 
-            <Popover
-                id={id}
-                open={open}
-                onClose={handleCloseAbout}
-                anchorReference="anchorPosition"
-                anchorPosition={{ top: 200, left: 400 }}
-                anchorOrigin={{
-                    vertical: 'center',
-                    horizontal: 'center',
-                }}
-                transformOrigin={{
-                    vertical: 'center',
-                    horizontal: 'center',
-                }}
-            >
-                <Box style={{ width: 400, height: 200, padding: 20 }}>
-                    <Typography variant="h5">Dependinator</Typography>
-                    <Typography >
-                        Early preview of a tool for visualizing software architecture inspired by map tools for
-                        navigation and the "<Link href="https://c4model.com" target="_blank">C4 Model</Link>"
-                        by Simon Brown.
-                    </Typography>
-                </Box>
-            </Popover>
+            <About />
         </>
     )
 }
