@@ -1,5 +1,6 @@
 var store = require('../shared/Store.js');
 
+
 module.exports = async function (context, req) {
     try {
         const { diagramId } = req.query

@@ -5,6 +5,7 @@ import axios from 'axios';
 export default class Api {
     id = '12345'
 
+
     api = axios.create({
         headers: {
             common: {        // can be common or any other method
@@ -12,6 +13,10 @@ export default class Api {
             }
         }
     })
+
+    setProgressHandler(setProgress) {
+        this.setProgress = setProgress
+    }
 
     async check() {
         return this.get('/api/Check')
@@ -52,6 +57,7 @@ export default class Api {
     // api helper functions ---------------------------------
     async get(uri) {
         console.log('get', uri)
+        this.setProgress(true)
         try {
             const rsp = (await this.api.get(uri)).data;
             console.log('got', uri, rsp)
@@ -69,11 +75,15 @@ export default class Api {
                 console.log('Error', error.message);
             }
             return null
+        } finally {
+            this.setProgress(false)
         }
+
     }
 
     async post(uri, data) {
         console.log('post', uri, data)
+        this.setProgress(true)
         try {
             const rsp = (await this.api.post(uri, data)).data;
             console.log('posted', uri, data, rsp)
@@ -91,6 +101,8 @@ export default class Api {
                 console.log('Error', error.message);
             }
             return null
+        } finally {
+            this.setProgress(false)
         }
     }
 }

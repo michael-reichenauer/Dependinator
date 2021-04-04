@@ -4,15 +4,15 @@ import { useSnackbar } from "notistack";
 import DiagramCanvas from "./diagram/DiagramCanvas"
 import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
-import { Backdrop, makeStyles } from "@material-ui/core";
 import { ContextMenu } from "../common/Menus";
+import Progress, { useProgress } from '../common/Progress'
 
 
 export const titleAtom = atom('System')
 export const canUndoAtom = atom(false)
 export const canRedoAtom = atom(false)
 export const canPopDiagramAtom = atom(false)
-export const progressAtom = atom(false)
+
 export const editModeAtom = atom(false)
 
 
@@ -28,8 +28,7 @@ export default function Diagram({ width, height }) {
     const [, setCanRedo] = useAtom(canRedoAtom)
     const [, setCanPopDiagram] = useAtom(canPopDiagramAtom)
     const [, setEditMode] = useAtom(editModeAtom)
-    const [isProgress, setProgress] = useAtom(progressAtom)
-    const classes = useStyles();
+    const [isProgress, setProgress] = useProgress()
 
     useEffect(() => {
         // Initialize canvas
@@ -77,7 +76,7 @@ export default function Diagram({ width, height }) {
 
     return (
         <>
-            <Backdrop className={classes.backdrop} open={isProgress} />
+            <Progress open={isProgress} />
 
             <div id="diagram">
                 <div id="canvas" style={{
@@ -93,13 +92,6 @@ export default function Diagram({ width, height }) {
         </>
     )
 }
-
-const useStyles = makeStyles((theme) => ({
-    backdrop: {
-        zIndex: theme.zIndex.drawer + 1,
-        color: '#fff',
-    },
-}));
 
 function enableContextMenu(elementId, setContextMenu, canvas) {
     const handleContextMenu = (event) => {

@@ -192,6 +192,14 @@ exports.downloadAllDiagrams = async (context) => {
 
 // // -----------------------------------------------------------------
 
+
+async function delay(time) {
+    return new Promise(res => {
+        setTimeout(res, time)
+    })
+}
+
+
 function getTableName(context) {
     const info = clientInfo.getInfo(context)
     return baseTableName + info.token

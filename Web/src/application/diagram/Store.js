@@ -10,10 +10,11 @@ class Store {
     remote = new Api()
 
     errorHandler = null
+    setProgress = null
 
-    // local methods
-    setErrorHandler(errorHandler) {
+    setHandlers(errorHandler, setProgress) {
         this.errorHandler = errorHandler
+        this.remote.setProgressHandler(setProgress)
     }
 
     async openLastUsedDiagramCanvas() {
@@ -48,7 +49,7 @@ class Store {
         this.local.writeLastUsedDiagram(diagramId)
         const canvasData = this.local.readCanvas(diagramId, rootCanvasId)
 
-        this.syncDiagrams()
+        await this.syncDiagrams()
         return canvasData
     }
 
@@ -184,13 +185,10 @@ class Store {
         }
     }
 
-
     // For printing 
     getDiagram(diagramId) {
         return this.local.readDiagram(diagramId)
     }
-
-
 }
 
 export const store = new Store()
