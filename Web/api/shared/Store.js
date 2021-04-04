@@ -1,6 +1,7 @@
 const azure = require('azure-storage');
 var table = require('../shared/table.js');
 var clientInfo = require('../shared/clientInfo.js');
+var auth = require('../shared/auth.js');
 
 const entGen = azure.TableUtilities.entityGenerator;
 const baseTableName = 'diagrams'
