@@ -9,48 +9,56 @@ class Store {
     local = new StoreLocal()
     remote = new Api()
 
-    errorHandler = null
+    setError = null
     setProgress = null
 
-    setHandlers(errorHandler, setProgress) {
-        this.errorHandler = errorHandler
+    setHandlers(setError, setProgress) {
+        this.setError = setError
         this.remote.setProgressHandler(setProgress)
     }
 
     async openLastUsedDiagramCanvas() {
-        const lastUsedDiagramId = this.local.readLastUsedDiagramId()
-        if (lastUsedDiagramId == null) {
+        const diagramId = this.local.readLastUsedDiagramId()
+        if (!diagramId) {
             return null
         }
 
-        return this.openDiagramRootCanvas(lastUsedDiagramId)
+        return this.openDiagramRootCanvas(diagramId)
     }
 
     async openFirstDiagramRootCanvas() {
         const diagramId = this.getRecentDiagramInfos()[0]?.diagramId
+        if (!diagramId) {
+            return null
+        }
         return this.openDiagramRootCanvas(diagramId)
     }
 
     async openDiagramRootCanvas(diagramId) {
-        // Try to get diagram from remote server
-        const diagram = await this.remote.getDiagram(diagramId)
+        try {
+            // Try to get diagram from remote server
+            const diagram = await this.remote.getDiagram(diagramId)
 
-        if (!diagram || diagram.canvases.length === 0) {
-            // Removed from server, lets remove local as well (client will create new diagram)
-            this.local.removeDiagram(diagramId)
-            this.syncDiagrams()
+            if (!diagram || diagram.canvases.length === 0) {
+                // Removed from server, lets remove local as well (client will create new diagram)
+                this.local.removeDiagram(diagramId)
+                this.syncDiagrams()
+                return null
+            }
+
+            // Cache diagram locally
+            this.local.writeDiagram(diagram)
+
+            // Now read the root canvas from local store
+            this.local.writeLastUsedDiagram(diagramId)
+            const canvasData = this.local.readCanvas(diagramId, rootCanvasId)
+
+            await this.syncDiagrams()
+            return canvasData
+        } catch (error) {
+            this.setError('Failed to open diagram')
             return null
         }
-
-        // Cache diagram locally
-        this.local.writeDiagram(diagram)
-
-        // Now read the root canvas from local store
-        this.local.writeLastUsedDiagram(diagramId)
-        const canvasData = this.local.readCanvas(diagramId, rootCanvasId)
-
-        await this.syncDiagrams()
-        return canvasData
     }
 
 

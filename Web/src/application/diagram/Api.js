@@ -1,5 +1,6 @@
 
 import axios from 'axios';
+import { timing } from '../../common/timing';
 
 
 export default class Api {
@@ -58,12 +59,13 @@ export default class Api {
     async get(uri) {
         console.log('get', uri)
         this.setProgress(true)
+        const t = timing()
         try {
             const rsp = (await this.api.get(uri)).data;
-            console.log('got', uri, rsp)
+            t.log('got', uri, rsp)
             return rsp
         } catch (error) {
-            console.log('Failed get:', uri)
+            t.log('Failed get:', uri, error)
             if (error.response) {
                 // Request made and server responded
                 console.log(`Error: status: ${error.response.status}: '${error.response.data}'`)
@@ -74,7 +76,7 @@ export default class Api {
                 // Something happened in setting up the request that triggered an Error
                 console.log('Error', error.message);
             }
-            return null
+            throw (error)
         } finally {
             this.setProgress(false)
         }
@@ -84,12 +86,13 @@ export default class Api {
     async post(uri, data) {
         console.log('post', uri, data)
         this.setProgress(true)
+        const t = timing()
         try {
             const rsp = (await this.api.post(uri, data)).data;
-            console.log('posted', uri, data, rsp)
+            t.log('posted', uri, data, rsp)
             return rsp
         } catch (error) {
-            console.log('Failed post:', uri, data)
+            t.log('Failed post:', uri, data, error)
             if (error.response) {
                 // Request made and server responded
                 console.log(`Error: status: ${error.response.status}: '${error.response.data}'`)
@@ -100,7 +103,7 @@ export default class Api {
                 // Something happened in setting up the request that triggered an Error
                 console.log('Error', error.message);
             }
-            return null
+            throw (error)
         } finally {
             this.setProgress(false)
         }
