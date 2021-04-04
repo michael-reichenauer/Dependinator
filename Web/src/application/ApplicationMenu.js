@@ -10,18 +10,13 @@ import { store } from "./diagram/Store";
 import Printer from "../common/Printer";
 
 
-const useMenuStyles = makeStyles((theme) => ({
-    menuButton: {
 
-    },
-}));
 
 const asMenuItems = (diagrams) => {
-    return diagrams.map(d => menuItem(d.name, () => PubSub.publish('canvas.OpenDiagram', d.id)))
+    return diagrams.map(d => menuItem(d.name, () => PubSub.publish('canvas.OpenDiagram', d.diagramId)))
 }
 
 export function ApplicationMenu() {
-    const classes = useMenuStyles();
     const [menu, setMenu] = useState(null);
     const [anchorEl, setAnchorEl] = useState(null);
 
@@ -62,7 +57,6 @@ export function ApplicationMenu() {
             <Tooltip title="Customize and control">
                 <IconButton
                     edge="start"
-                    className={classes.menuButton}
                     color="inherit"
                     onClick={e => setMenu(e.currentTarget)}
                 >

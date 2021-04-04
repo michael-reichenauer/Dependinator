@@ -24,7 +24,7 @@ export default class StoreLocal {
 
     readAllDiagrams() {
         return this.readAllDiagramsInfos()
-            .map(d => this.readDiagram(d.id))
+            .map(d => this.readDiagram(d.diagramId))
             .filter(d => d != null)
     }
 
@@ -69,7 +69,7 @@ export default class StoreLocal {
             var key = localStorage.key(i);
             if (key.endsWith(diagramDataKey)) {
                 const value = JSON.parse(localStorage[key])
-                diagrams.push({ id: value.diagramId, name: value.name, accessed: value.accessed })
+                diagrams.push({ diagramId: value.diagramId, name: value.name, accessed: value.accessed })
             }
         }
 

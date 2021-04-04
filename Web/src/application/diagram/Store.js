@@ -26,7 +26,7 @@ class Store {
     }
 
     async openFirstDiagramRootCanvas() {
-        const diagramId = this.getRecentDiagramInfos()[0]?.id
+        const diagramId = this.getRecentDiagramInfos()[0]?.diagramId
         return this.openDiagramRootCanvas(diagramId)
     }
 
@@ -124,15 +124,47 @@ class Store {
     getRecentDiagramInfos() {
         const lastUsedDiagramId = this.local.readLastUsedDiagramId()
         return this.local.readAllDiagramsInfos()
-            .filter(d => d.id !== lastUsedDiagramId)
+            .filter(d => d.diagramId !== lastUsedDiagramId)
             .sort((i1, i2) => i1.accessed < i2.accessed ? -1 : i1.accessed > i2.accessed ? 1 : 0)
             .reverse()
     }
 
     async triggerDiagramsSync() {
         // Get all remote server diagrams data and write to local store
-        const diagramsData = await this.remote.getAllDiagramsData()
-        diagramsData.forEach(data => this.local.writeDiagramData(data))
+        const remoteInfos = await this.remote.getAllDiagramsData()
+        remoteInfos.forEach(data => this.local.writeDiagramData(data))
+
+        // Get local diagram infos to check if to be deleted or published
+        const localInfos = this.local.readAllDiagramsInfos()
+        const currentId = this.local.readLastUsedDiagramId()
+
+        localInfos.forEach(async localInfo => {
+            const isRemote = remoteInfos.find(remoteInfo => remoteInfo.diagramId === localInfo.diagramId)
+            if (!isRemote) {
+                // The local info is not a remote info
+                if (localInfo.etag) {
+                    // The local info was a remote, but no longer
+                    if (currentId === localInfo.diagramId) {
+                        // Is the current diagram, lets re-add the diagram to remote
+                        const diagram = this.local.readDiagram(localInfo.diagramId)
+                        const newInfo = await this.remote.newDiagram(diagram)
+
+                        // Update local diagram info
+                        this.local.writeDiagramData(newInfo)
+                    } else {
+                        // Local info can just be deleted since it was deleted on the server
+                        this.local.deleteDiagram(localInfo.diagramId)
+                    }
+                } else {
+                    // The local info never pushed, lets push to remote
+                    const diagram = this.local.readDiagram(localInfo.diagramId)
+                    const newInfo = await this.remote.newDiagram(diagram)
+
+                    // Update local diagram info
+                    this.local.writeDiagramData(newInfo)
+                }
+            }
+        });
     }
 
 
