@@ -115,8 +115,8 @@ export default class DiagramCanvas {
     }
 
     commandDeleteDiagram = async () => {
-        this.store.deleteDiagram(this.canvas.diagramId)
         this.canvas.clearDiagram()
+        await this.store.deleteDiagram(this.canvas.diagramId)
 
         // Try get first diagram to open
         const canvasData = await this.store.openFirstDiagramRootCanvas()

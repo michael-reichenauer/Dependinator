@@ -3,7 +3,6 @@ import PubSub from 'pubsub-js'
 import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
 import Tooltip from '@material-ui/core/Tooltip';
-import makeStyles from "@material-ui/core/styles/makeStyles";
 import { Box, Link, Popover, Typography } from "@material-ui/core";
 import { AppMenu, menuItem, menuParentItem } from "../common/Menus";
 import { store } from "./diagram/Store";
