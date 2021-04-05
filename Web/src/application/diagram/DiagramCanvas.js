@@ -273,17 +273,17 @@ export default class DiagramCanvas {
                 console.log('not syncing')
                 return
             }
-            const current = store.getRecentDiagramInfos()[0]
+            const before = store.getRecentDiagramInfos()[0]
             await store.syncDiagrams()
-            const afterSync = store.getRecentDiagramInfos()[0]
-            console.log('before', current)
-            console.log('after ', afterSync)
-            if (current.TimeStamp === afterSync.TimeStamp) {
+            const after = store.getRecentDiagramInfos()[0]
+            console.log('before', before)
+            console.log('after ', after)
+            if (before.timeStamp === after.imeStamp && before.diagramId == after.diagramId) {
                 console.log('No changes')
                 return
             }
             console.log('Server had changes')
-            this.commandOpenDiagram('', afterSync.diagramId)
+            this.commandOpenDiagram('', after.diagramId)
 
         } catch (error) {
             // No resent diagram data, lets create new diagram
