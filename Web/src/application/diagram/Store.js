@@ -100,6 +100,12 @@ class Store {
         this.local.updateSync({ isConnecting: true, provider: provider })
         if (provider === 'Local') {
             window.location.reload()
+        } else if (provider === 'Google') {
+            window.location.href = `/.auth/login/google`;
+        } else if (provider === 'Microsoft') {
+            window.location.href = `/.auth/login/aad`;
+        } else if (provider === 'Facebook') {
+            window.location.href = `/.auth/login/facebook`;
         } else if (provider === 'GitHub') {
             window.location.href = `/.auth/login/github`;
         } else {

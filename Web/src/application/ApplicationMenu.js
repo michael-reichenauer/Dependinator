@@ -39,6 +39,9 @@ export function ApplicationMenu() {
         menuItem('Print', () => PubSub.publish('canvas.Print')),
         menuItem('Delete', deleteDiagram),
         menuParentItem('Enable cloud sync', [
+            menuItem('With Google id ...', () => store.login('Google'), true, !store.isLocal()),
+            menuItem('With Microsoft id ...', () => store.login('Microsoft'), true, !store.isLocal()),
+            menuItem('With Facebook id ...', () => store.login('Facebook'), true, !store.isLocal()),
             menuItem('With GitHub id ...', () => store.login('GitHub'), true, !store.isLocal()),
             menuItem('With Local id ...', () => store.login('GitHub'), true, store.isLocal()),
         ], true, !store.isCloudSyncEnabled()),
