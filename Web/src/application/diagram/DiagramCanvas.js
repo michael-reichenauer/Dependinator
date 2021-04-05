@@ -266,7 +266,6 @@ export default class DiagramCanvas {
     }
 
     async activated() {
-        this.setProgress(true)
         try {
             if (!store.isCloudSyncEnabled()) {
                 return
@@ -279,13 +278,9 @@ export default class DiagramCanvas {
             }
             console.log('Server had changes')
             this.commandOpenDiagram('', after.diagramId)
-
         } catch (error) {
             // No resent diagram data, lets create new diagram
             this.setError('Activation error')
-        }
-        finally {
-            this.setProgress(false)
         }
     }
 
