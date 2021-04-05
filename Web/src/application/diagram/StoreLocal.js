@@ -1,6 +1,6 @@
 const diagramKey = 'diagram'
 const diagramDataKey = 'DiagramData'
-const lastUsedDiagramKey = 'lastUsedDiagram'
+//const lastUsedDiagramKey = 'lastUsedDiagram'
 
 
 export default class StoreLocal {
@@ -9,17 +9,17 @@ export default class StoreLocal {
     diagramKey = (diagramId) => `${diagramKey}.${diagramId}.${diagramDataKey}`
 
 
-    writeLastUsedDiagram(diagramId) {
-        this.writeData(lastUsedDiagramKey, { diagramId: diagramId })
-    }
+    // writeLastUsedDiagram(diagramId) {
+    //     this.writeData(lastUsedDiagramKey, { diagramId: diagramId })
+    // }
 
-    readLastUsedDiagramId() {
-        return this.readData(lastUsedDiagramKey)?.diagramId
-    }
+    // readLastUsedDiagramId() {
+    //     return this.readData(lastUsedDiagramKey)?.diagramId
+    // }
 
-    clearLastUsedDiagram() {
-        return this.removeData(lastUsedDiagramKey)
-    }
+    // clearLastUsedDiagram() {
+    //     return this.removeData(lastUsedDiagramKey)
+    // }
 
 
     readAllDiagrams() {

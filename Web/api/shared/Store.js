@@ -75,15 +75,11 @@ exports.getAllDiagramsData = async (context) => {
 
 exports.getDiagram = async (context, diagramId) => {
     const tableName = getTableName(context)
-    //if (clientInfo.token === '12345') {
-    await table.createTableIfNotExists(tableName)
-    // }
 
     let tableQuery = new azure.TableQuery()
         .where('diagramId == ?string?', diagramId);
 
     const items = await table.queryEntities(tableName, tableQuery, null)
-
 
     const diagram = { canvases: [] }
 
@@ -98,6 +94,12 @@ exports.getDiagram = async (context, diagramId) => {
     if (!diagram.diagramData || diagram.canvases.length == 0) {
         throw new Error('NOTFOUND')
     }
+
+    // Update accessed diagram time
+    const diagramData = { diagramId: diagramId, accessed: Date.now() }
+    const batch = new azure.TableBatch()
+    batch.mergeEntity(toDiagramDataItem(diagramData))
+    await table.executeBatch(tableName, batch)
 
     return diagram
 }

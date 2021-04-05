@@ -119,7 +119,7 @@ export default class DiagramCanvas {
         this.canvas.clearDiagram()
 
         // Try get first diagram to open
-        const canvasData = await this.store.openFirstDiagramRootCanvas()
+        const canvasData = await this.store.openMostResentDiagramCanvas()
         if (canvasData == null) {
             // No data for that id, lets create new diagram
             this.createNewDiagram()
@@ -210,7 +210,7 @@ export default class DiagramCanvas {
     }
 
     async loadInitialDiagram() {
-        const canvasData = await this.store.openLastUsedDiagramCanvas()
+        const canvasData = await this.store.openMostResentDiagramCanvas()
         if (canvasData == null) {
             // No data for that id, lets create it
             this.createNewDiagram()

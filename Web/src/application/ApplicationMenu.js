@@ -31,7 +31,7 @@ export function ApplicationMenu() {
         }
     };
 
-    const diagrams = menu == null ? [] : asMenuItems(store.getRecentDiagramInfos())
+    const diagrams = menu == null ? [] : asMenuItems(store.getRecentDiagramInfos().slice(1))
 
     const menuItems = [
         menuItem('New Diagram', () => PubSub.publish('canvas.NewDiagram')),
