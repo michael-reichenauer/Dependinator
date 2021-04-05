@@ -14,7 +14,7 @@ export const addFigureToCanvas = (canvas, figure, p) => {
 }
 
 export const addDefaultNewDiagram = (canvas) => {
-    // Add a system node with a connected external user and external system 
+    // Add a system node with a connected external user and external system.
     const system = new Node(Node.systemType)
     const user = new Node(Node.userType)
     const external = new Node(Node.externalType)
