@@ -1,9 +1,10 @@
 import Api from "./Api"
 import StoreFiles from "./StoreFiles"
 import StoreLocal from "./StoreLocal"
-import { delay } from '../../common/utils'
+//import { delay } from '../../common/utils'
 
 const rootCanvasId = 'root'
+
 
 class Store {
     files = new StoreFiles()
@@ -12,7 +13,11 @@ class Store {
 
     setError = null
     setProgress = null
-    isCloudSync = false
+    isCloudSyncEnabled = false
+
+    isCloudSyncEnabled = () => this.isCloudSyncEnabled
+    isLocal = () => window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+
 
     setHandlers(setError, setProgress) {
         this.setError = setError
@@ -20,41 +25,97 @@ class Store {
         this.remote.setProgressHandler(setProgress)
     }
 
-    isCloudSyncEnabled() {
-        return this.isCloudSync
-    }
 
-    loginGitHub() {
-        localStorage.setItem('connecting', 'true')
-        window.location.href = `/.auth/login/github`;
-    }
+    async initialize() {
+        console.log('initialize')
+        let sync = this.local.getSync()
+        let didConnect = false
 
-    async connect() {
-        if (localStorage.getItem('connecting') === 'true') {
-            localStorage.removeItem('connecting')
-            const token = await this.remote.connect()
-            console.log('token', token)
+        console.log('sync', sync)
+        if (sync.isConnecting) {
+            // A previous login triggered reload and now we should call connect
+            this.local.updateSync({ isConnecting: false })
+            const connectData = await this.remote.connect()
+            didConnect = true
+            console.log('connected', connectData)
+            sync = this.local.updateSync({ token: connectData.token })
         }
+
+        if (!sync.token) {
+            console.log('No sync token, sync is disabled')
+            this.isCloudSyncEnabled = false
+            return
+        }
+
+        if (!didConnect) {
+            await this.remote.check()
+        }
+
+        this.remote.setToken(sync.token)
+        this.isCloudSyncEnabled = true
+        console.log('Sync is enabled')
     }
 
-    async enableCloudSync() {
-        this.setProgress(true)
+    async openMostResentDiagramCanvas() {
+        const diagramId = this.getMostResentDiagramId()
+        if (!diagramId) {
+            throw new Error('No resent diagram')
+        }
+
+        return this.openDiagramRootCanvas(diagramId)
+    }
+
+
+    async openDiagramRootCanvas(diagramId) {
         try {
-            await delay(3000)
-            this.isCloudSync = true
+            if (this.isCloudSyncEnabled) {
+                // Try to get diagram from remote server and cache locally
+                const diagram = await this.remote.getDiagram(diagramId)
+                this.local.writeDiagram(diagram)
+
+                // Now read the root canvas from local store
+                return this.local.readCanvas(diagramId, rootCanvasId)
+            }
+
+            // Local mode: read the root canvas from local store
+            const canvasData = this.local.readCanvas(diagramId, rootCanvasId)
+            if (!canvasData) {
+                throw new Error('Diagram not found')
+            }
+
+            this.local.updateAccessedDiagram(canvasData.diagramId)
+            return canvasData
         } catch (error) {
-            this.setError('Failed to enable cloud sync')
-        } finally {
-            this.setProgress(false)
+            this.local.removeDiagram(diagramId)
+            throw error
+        }
+        finally {
+            await this.syncDiagrams()
         }
     }
+
+
+    login(provider) {
+        this.local.updateSync({ isConnecting: true, provider: provider })
+        if (provider === 'Local') {
+            window.location.reload()
+        } else if (provider === 'GitHub') {
+            window.location.href = `/.auth/login/github`;
+        } else {
+            this.local.updateSync({ isConnecting: false, provider: null })
+            throw new Error('Unsupported identity provider ' + provider)
+        }
+    }
+
 
     async disableCloudSync() {
         this.setProgress(true)
         try {
-            console.log('Disable sync')
-            await delay(3000)
-            this.isCloudSync = false
+            console.log('Disable cloud sync')
+            this.isCloudSyncEnabled = false
+            this.local.updateSync({ token: null, isConnecting: false, provider: null })
+            this.remote.setToken(null)
+            window.location.href = `/.auth/logout`;
         } catch (error) {
             this.setError('Failed to disable cloud sync')
         } finally {
@@ -66,46 +127,6 @@ class Store {
         return this.getRecentDiagramInfos()[0]?.diagramId
     }
 
-    async openMostResentDiagramCanvas() {
-        const diagramId = this.getMostResentDiagramId()
-        if (!diagramId) {
-            return null
-        }
-
-        return this.openDiagramRootCanvas(diagramId)
-    }
-
-
-    async openDiagramRootCanvas(diagramId) {
-        try {
-            await this.connect()
-            // Try to get diagram from remote server
-            const diagram = await this.remote.getDiagram(diagramId)
-
-            if (!diagram || diagram.canvases.length === 0) {
-                // Removed from server, lets remove local as well (client will create new diagram)
-                this.local.removeDiagram(diagramId)
-                this.syncDiagrams()
-                return null
-            }
-
-            // Cache diagram locally
-            this.local.writeDiagram(diagram)
-
-            // Now read the root canvas from local store
-            const canvasData = this.local.readCanvas(diagramId, rootCanvasId)
-            //this.local.updateAccessedDiagram(canvasData.diagramId) !! only if not connected
-
-            await this.syncDiagrams()
-            return canvasData
-        } catch (error) {
-            console.trace(error)
-            this.setError('Failed to open diagram')
-            return null
-        }
-    }
-
-
     async newDiagram(diagramId, name, canvasData) {
         const diagram = {
             diagramData: { diagramId: diagramId, name: name, accessed: Date.now() },
@@ -113,33 +134,43 @@ class Store {
         }
         this.local.writeDiagram(diagram)
 
-        // Sync with remote server
-        const diagramData = await this.remote.newDiagram(diagram)
-        this.local.writeDiagramData(diagramData)
+        if (this.isCloudSyncEnabled) {
+            // Sync with remote server
+            const diagramData = await this.remote.newDiagram(diagram)
+            this.local.writeDiagramData(diagramData)
+        }
     }
 
     setCanvas(canvasData) {
         this.local.writeCanvas(canvasData)
         this.local.updateAccessedDiagram(canvasData.diagramId)
 
-        // Sync with remote server
-        this.remote.setCanvas(canvasData)
-            .then(diagramData => this.local.writeDiagramData(diagramData))
+        if (this.isCloudSyncEnabled) {
+            // Sync with remote server
+            this.remote.setCanvas(canvasData)
+                .then(diagramData => this.local.writeDiagramData(diagramData))
+                .catch(error => this.setError('Failed to sync canvas change'))
+        }
     }
 
     async deleteDiagram(diagramId) {
         this.local.removeDiagram(diagramId)
 
         console.log('Delete', diagramId)
-        await this.remote.deleteDiagram(diagramId)
-        await this.syncDiagrams()
+        if (this.isCloudSyncEnabled) {
+            await this.remote.deleteDiagram(diagramId)
+            await this.syncDiagrams()
+        }
     }
 
     setDiagramName(diagramId, name) {
         this.local.updateDiagramData(diagramId, { name: name })
 
-        this.remote.updateDiagram({ diagramData: { diagramId: diagramId, name: name } })
-            .then(diagramData => this.local.writeDiagramData(diagramData))
+        if (this.isCloudSyncEnabled) {
+            this.remote.updateDiagram({ diagramData: { diagramId: diagramId, name: name } })
+                .then(diagramData => this.local.writeDiagramData(diagramData))
+                .catch(error => this.setError('Failed to sync name change'))
+        }
     }
 
     getCanvas(diagramId, canvasId) {
@@ -155,12 +186,17 @@ class Store {
     async loadDiagramFromFile() {
         const file = await this.files.loadFile()
 
-        // Store all read diagram
-        await this.remote.uploadDiagrams(file.diagrams)
-        //file.diagrams.forEach(diagram => this.local.writeDiagram(diagram))
-
-        this.syncDiagrams()
-        let firstDiagramId = file.diagrams[0]?.diagramData.diagramId
+        if (this.isCloudSyncEnabled) {
+            // Store all read diagram
+            await this.remote.uploadDiagrams(file.diagrams)
+            await this.syncDiagrams()
+        } else {
+            file.diagrams.forEach(diagram => this.local.writeDiagram(diagram))
+        }
+        const firstDiagramId = file.diagrams[0]?.diagramData.diagramId
+        if (!firstDiagramId) {
+            throw new Error('No diagram in file')
+        }
         return firstDiagramId
     }
 
@@ -175,9 +211,11 @@ class Store {
     }
 
     async saveAllDiagramsToFile() {
-        const diagrams = await this.remote.downloadAllDiagrams()
-        if (diagrams.length === 0) {
-            return
+        let diagrams = []
+        if (this.isCloudSyncEnabled) {
+            diagrams = await this.remote.downloadAllDiagrams()
+        } else {
+            diagrams = this.local.readAllDiagrams()
         }
 
         const file = { diagrams: diagrams }
@@ -186,6 +224,10 @@ class Store {
 
 
     async syncDiagrams() {
+        if (!this.isCloudSyncEnabled) {
+            return
+        }
+
         const currentId = this.getMostResentDiagramId()
 
         // Get all remote server diagrams data and write to local store

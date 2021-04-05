@@ -4,10 +4,6 @@ exports.getInfo = (context) => {
     const req = context.req
     const clientPrincipal = auth.getClientPrincipal(req)
 
-    if (!req.headers['xtoken']) {
-        throw new Error('Invalid token')
-    }
-
     const userAgent = req.headers["user-agent"];
     const forwardedHost = req.headers["x-forwarded-host"];
     const forwardedFor = req.headers["x-forwarded-for"];

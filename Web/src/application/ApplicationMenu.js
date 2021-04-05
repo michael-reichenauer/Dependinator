@@ -38,11 +38,11 @@ export function ApplicationMenu() {
         menuParentItem('Open Recent', diagrams, diagrams.length > 0),
         menuItem('Print', () => PubSub.publish('canvas.Print')),
         menuItem('Delete', deleteDiagram),
-        menuParentItem('Cloud sync', [
-            menuItem('With GitHub id ...', () => store.loginGitHub()),
-        ]),
-        menuItem('Enable cloud sync', () => store.enableCloudSync(), true, !store.isCloudSyncEnabled()),
-        menuItem('Disable cloud sync', () => store.disableCloudSync(), true, store.isCloudSyncEnabled()),
+        menuParentItem('Enable cloud sync', [
+            menuItem('With GitHub id ...', () => store.login('GitHub'), false, !store.isLocal()),
+            menuItem('With Local id ...', () => store.login('GitHub'), false, store.isLocal()),
+        ], false, !store.isCloudSyncEnabled),
+        menuItem('Disable cloud sync', () => store.disableCloudSync(), false, store.isCloudSyncEnabled),
         menuItem('Reload web page', () => window.location.reload()),
         menuParentItem('Files', [
             menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),

@@ -1,5 +1,6 @@
 const diagramKey = 'diagram'
 const diagramDataKey = 'DiagramData'
+const syncKey = 'sync'
 //const lastUsedDiagramKey = 'lastUsedDiagram'
 
 
@@ -20,6 +21,16 @@ export default class StoreLocal {
     // clearLastUsedDiagram() {
     //     return this.removeData(lastUsedDiagramKey)
     // }
+
+    getSync() {
+        return this.readData(syncKey) ?? {}
+    }
+
+    updateSync(data) {
+        const sync = { ...this.getSync(), ...data }
+        this.writeData(syncKey, sync)
+        return sync
+    }
 
 
     readAllDiagrams() {

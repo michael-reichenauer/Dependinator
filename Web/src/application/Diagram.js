@@ -6,7 +6,7 @@ import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { ContextMenu } from "../common/Menus";
 import Progress, { useProgress } from '../common/Progress'
-import Api from "./diagram/Api";
+//import Api from "./diagram/Api";
 
 
 export const titleAtom = atom('System')
@@ -57,23 +57,23 @@ export default function Diagram({ width, height }) {
         const contextMenuHandler = enableContextMenu('canvas', setContextMenu, canvas)
 
         setTimeout(() => canvas.showTotalDiagram(), 0);
-        const api = new Api()
-        setTimeout(async () => {
-            try {
-                const user = await api.getCurrentUser()
-                console.log('user', user)
-                if (user.clientPrincipal) {
-                    setTitle(user.clientPrincipal.userId)
-                    // window.location.href = "https://google.com";
-                } else {
-                    // window.location.href = "https://google.com";
-                }
+        // const api = new Api()
+        // setTimeout(async () => {
+        //     try {
+        //         const user = await api.getCurrentUser()
+        //         console.log('user', user)
+        //         if (user.clientPrincipal) {
+        //             setTitle(user.clientPrincipal.userId)
+        //             // window.location.href = "https://google.com";
+        //         } else {
+        //             // window.location.href = "https://google.com";
+        //         }
 
-            } catch (error) {
-                errorHandler(`error: ${error.message}`)
-            }
+        //     } catch (error) {
+        //         errorHandler(`error: ${error.message}`)
+        //     }
 
-        }, 1000);
+        // }, 1000);
 
         return () => {
             // Clean initialization 

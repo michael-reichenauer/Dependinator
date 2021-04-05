@@ -6,17 +6,41 @@ var auth = require('../shared/auth.js');
 const entGen = azure.TableUtilities.entityGenerator;
 const baseTableName = 'diagrams'
 const partitionKeyName = 'dep'
+const usersTableName = 'users'
+const userPartitionKey = 'users'
 
-
-// // if (clientInfo.token === '12345') {
-// //     await table.createTableIfNotExists(tableName)
-// // }
 
 exports.connect = async (context) => {
     const req = context.req
     const clientPrincipal = auth.getClientPrincipal(req)
 
-    return { token: '12345', clientPrincipal: clientPrincipal }
+    const userId = clientPrincipal.userId
+    if (!userId) {
+        return null
+    }
+
+    try {
+        const entity = await retrieveEntity(usersTableName, userPartitionKey, userId)
+        if (entity.tableId) {
+            await table.createTableIfNotExists(entity.tableId)
+            return { token: entity.tableId }
+        }
+    } catch (err) {
+        // User not yet added 
+    }
+
+    // Create a new random diagrams table id to be used for the user
+    const tableId = baseTableName + makeRandomId()
+
+    // Create a user in the users table
+    await table.createTableIfNotExists(usersTableName)
+    const batch = new azure.TableBatch()
+    batch.insertEntity(toUserItem(userId, tableId))
+    await table.executeBatch(userTableName, batch)
+
+    // Create the actual diagram table
+    await table.createTableIfNotExists(tableId)
+    return { token: tableId }
 }
 
 exports.newDiagram = async (context, diagram) => {
@@ -28,7 +52,6 @@ exports.newDiagram = async (context, diagram) => {
         throw new Error('missing parameters: ');
     }
 
-    await table.createTableIfNotExists(tableName)
 
     const diagramData = { diagramId: diagramId, name: name, accessed: Date.now() }
 
@@ -207,6 +230,15 @@ exports.downloadAllDiagrams = async (context) => {
 // // -----------------------------------------------------------------
 
 
+function makeRandomId() {
+    let ID = "";
+    let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    for (var i = 0; i < 12; i++) {
+        ID += characters.charAt(Math.floor(Math.random() * 36));
+    }
+    return ID;
+}
+
 async function delay(time) {
     return new Promise(res => {
         setTimeout(res, time)
@@ -216,6 +248,10 @@ async function delay(time) {
 
 function getTableName(context) {
     const info = clientInfo.getInfo(context)
+    if (!info.token) {
+        throw new Error('Invalid token')
+    }
+
     return baseTableName + info.token
 }
 
@@ -225,6 +261,15 @@ function canvasKey(diagramId, canvasId) {
 
 function diagramKey(diagramId) {
     return `${diagramId}`
+}
+
+function toUserItem(userId, tableId) {
+    return {
+        RowKey: entGen.String(userId),
+        PartitionKey: entGen.String(userPartitionKey),
+
+        tableId: entGen.String(tableId),
+    }
 }
 
 function toCanvasDataItem(canvasData) {
