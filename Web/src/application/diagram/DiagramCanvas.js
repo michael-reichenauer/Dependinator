@@ -152,7 +152,6 @@ export default class DiagramCanvas {
         } finally {
             this.setProgress(false)
         }
-
     }
 
     commandSaveToFile = () => {

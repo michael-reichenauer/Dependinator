@@ -39,10 +39,10 @@ export function ApplicationMenu() {
         menuItem('Print', () => PubSub.publish('canvas.Print')),
         menuItem('Delete', deleteDiagram),
         menuParentItem('Enable cloud sync', [
-            menuItem('With GitHub id ...', () => store.login('GitHub'), false, !store.isLocal()),
-            menuItem('With Local id ...', () => store.login('GitHub'), false, store.isLocal()),
-        ], false, !store.isCloudSyncEnabled),
-        menuItem('Disable cloud sync', () => store.disableCloudSync(), false, store.isCloudSyncEnabled),
+            menuItem('With GitHub id ...', () => store.login('GitHub'), true, !store.isLocal()),
+            menuItem('With Local id ...', () => store.login('GitHub'), true, store.isLocal()),
+        ], true, !store.isCloudSyncEnabled()),
+        menuItem('Disable cloud sync', () => store.disableCloudSync(), true, store.isCloudSyncEnabled()),
         menuItem('Reload web page', () => window.location.reload()),
         menuParentItem('Files', [
             menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),

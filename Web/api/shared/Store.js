@@ -20,12 +20,16 @@ exports.connect = async (context) => {
     }
 
     try {
-        const entity = await retrieveEntity(usersTableName, userPartitionKey, userId)
+        const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
+        context.log('got user', userId, entity)
         if (entity.tableId) {
+            context.log('got user', userId, entity)
             await table.createTableIfNotExists(entity.tableId)
             return { token: entity.tableId }
         }
+        context.log('Failed to get table id')
     } catch (err) {
+        context.log('failed to get', userId, err)
         // User not yet added 
     }
 
@@ -36,7 +40,7 @@ exports.connect = async (context) => {
     await table.createTableIfNotExists(usersTableName)
     const batch = new azure.TableBatch()
     batch.insertEntity(toUserItem(userId, tableId))
-    await table.executeBatch(userTableName, batch)
+    await table.executeBatch(usersTableName, batch)
 
     // Create the actual diagram table
     await table.createTableIfNotExists(tableId)
@@ -98,6 +102,7 @@ exports.getAllDiagramsData = async (context) => {
 
 exports.getDiagram = async (context, diagramId) => {
     const tableName = getTableName(context)
+    context.log('table name', tableName)
 
     let tableQuery = new azure.TableQuery()
         .where('diagramId == ?string?', diagramId);
@@ -252,7 +257,7 @@ function getTableName(context) {
         throw new Error('Invalid token')
     }
 
-    return baseTableName + info.token
+    return info.token
 }
 
 function canvasKey(diagramId, canvasId) {

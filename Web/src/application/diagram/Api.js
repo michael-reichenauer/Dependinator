@@ -4,18 +4,11 @@ import { timing } from '../../common/timing';
 
 
 export default class Api {
-    headers = null
+    token = null
 
 
     setToken(token) {
-        if (!token) {
-            this.headers = null
-        }
-        this.headers = {
-            common: {        // can be common or any other method
-                xtoken: token
-            }
-        }
+        this.token = token
     }
 
     setProgressHandler(setProgress) {
@@ -86,7 +79,7 @@ export default class Api {
         //  this.setProgress(true)
         const t = timing()
         try {
-            const rsp = (await axios.get(uri, this.headers)).data;
+            const rsp = (await axios.get(uri, { headers: { xtoken: this.token } })).data;
             t.log('got', uri, rsp)
             return rsp
         } catch (error) {
@@ -113,7 +106,7 @@ export default class Api {
         //  this.setProgress(true)
         const t = timing()
         try {
-            const rsp = (await axios.post(uri, data, this.headers)).data;
+            const rsp = (await axios.post(uri, data, { headers: { xtoken: this.token } })).data;
             t.log('posted', uri, data, rsp)
             return rsp
         } catch (error) {

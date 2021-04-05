@@ -13,9 +13,9 @@ class Store {
 
     setError = null
     setProgress = null
-    isCloudSyncEnabled = false
+    isSyncEnabled = false
 
-    isCloudSyncEnabled = () => this.isCloudSyncEnabled
+    isCloudSyncEnabled = () => this.isSyncEnabled
     isLocal = () => window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 
 
@@ -43,7 +43,7 @@ class Store {
 
         if (!sync.token) {
             console.log('No sync token, sync is disabled')
-            this.isCloudSyncEnabled = false
+            this.isSyncEnabled = false
             return
         }
 
@@ -52,7 +52,8 @@ class Store {
         }
 
         this.remote.setToken(sync.token)
-        this.isCloudSyncEnabled = true
+        this.isSyncEnabled = true
+        await this.syncDiagrams()
         console.log('Sync is enabled')
     }
 
@@ -68,7 +69,7 @@ class Store {
 
     async openDiagramRootCanvas(diagramId) {
         try {
-            if (this.isCloudSyncEnabled) {
+            if (this.isSyncEnabled) {
                 // Try to get diagram from remote server and cache locally
                 const diagram = await this.remote.getDiagram(diagramId)
                 this.local.writeDiagram(diagram)
@@ -112,7 +113,7 @@ class Store {
         this.setProgress(true)
         try {
             console.log('Disable cloud sync')
-            this.isCloudSyncEnabled = false
+            this.isSyncEnabled = false
             this.local.updateSync({ token: null, isConnecting: false, provider: null })
             this.remote.setToken(null)
             window.location.href = `/.auth/logout`;
@@ -134,7 +135,7 @@ class Store {
         }
         this.local.writeDiagram(diagram)
 
-        if (this.isCloudSyncEnabled) {
+        if (this.isSyncEnabled) {
             // Sync with remote server
             const diagramData = await this.remote.newDiagram(diagram)
             this.local.writeDiagramData(diagramData)
@@ -145,7 +146,7 @@ class Store {
         this.local.writeCanvas(canvasData)
         this.local.updateAccessedDiagram(canvasData.diagramId)
 
-        if (this.isCloudSyncEnabled) {
+        if (this.isSyncEnabled) {
             // Sync with remote server
             this.remote.setCanvas(canvasData)
                 .then(diagramData => this.local.writeDiagramData(diagramData))
@@ -157,7 +158,7 @@ class Store {
         this.local.removeDiagram(diagramId)
 
         console.log('Delete', diagramId)
-        if (this.isCloudSyncEnabled) {
+        if (this.isSyncEnabled) {
             await this.remote.deleteDiagram(diagramId)
             await this.syncDiagrams()
         }
@@ -166,7 +167,7 @@ class Store {
     setDiagramName(diagramId, name) {
         this.local.updateDiagramData(diagramId, { name: name })
 
-        if (this.isCloudSyncEnabled) {
+        if (this.isSyncEnabled) {
             this.remote.updateDiagram({ diagramData: { diagramId: diagramId, name: name } })
                 .then(diagramData => this.local.writeDiagramData(diagramData))
                 .catch(error => this.setError('Failed to sync name change'))
@@ -186,7 +187,7 @@ class Store {
     async loadDiagramFromFile() {
         const file = await this.files.loadFile()
 
-        if (this.isCloudSyncEnabled) {
+        if (this.isSyncEnabled) {
             // Store all read diagram
             await this.remote.uploadDiagrams(file.diagrams)
             await this.syncDiagrams()
@@ -212,7 +213,7 @@ class Store {
 
     async saveAllDiagramsToFile() {
         let diagrams = []
-        if (this.isCloudSyncEnabled) {
+        if (this.isSyncEnabled) {
             diagrams = await this.remote.downloadAllDiagrams()
         } else {
             diagrams = this.local.readAllDiagrams()
@@ -224,7 +225,9 @@ class Store {
 
 
     async syncDiagrams() {
-        if (!this.isCloudSyncEnabled) {
+        console.log('Syncing')
+        if (!this.isSyncEnabled) {
+            console.log('Syncing not enabled')
             return
         }
 
