@@ -266,20 +266,15 @@ export default class DiagramCanvas {
     }
 
     async activated() {
-        console.log('activated canvas')
         this.setProgress(true)
         try {
             if (!store.isCloudSyncEnabled()) {
-                console.log('not syncing')
                 return
             }
             const before = store.getRecentDiagramInfos()[0]
             await store.syncDiagrams()
             const after = store.getRecentDiagramInfos()[0]
-            console.log('before', before)
-            console.log('after ', after)
             if (before.timestamp === after.timestamp && before.diagramId === after.diagramId) {
-                console.log('No changes')
                 return
             }
             console.log('Server had changes')
