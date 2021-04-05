@@ -278,7 +278,7 @@ export default class DiagramCanvas {
             const after = store.getRecentDiagramInfos()[0]
             console.log('before', before)
             console.log('after ', after)
-            if (before.timeStamp === after.imeStamp && before.diagramId == after.diagramId) {
+            if (before.timestamp === after.timestamp && before.diagramId === after.diagramId) {
                 console.log('No changes')
                 return
             }
