@@ -466,7 +466,7 @@ export default class Canvas extends draw2d.Canvas {
 
 
     startLongTouchDetection = (event) => {
-        console.log('Start detection')
+        // console.log('Start detection')
         const longPressTimeout = 500
 
         this.cancelLongTouch()

@@ -6,6 +6,7 @@ import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { ContextMenu } from "../common/Menus";
 import Progress, { useProgress } from '../common/Progress'
+import { activityEventName } from '../common/activity'
 //import Api from "./diagram/Api";
 
 
@@ -21,6 +22,7 @@ export const editModeAtom = atom(false)
 export default function Diagram({ width, height }) {
     // The ref to the canvas handler for all canvas operations
     const canvasRef = useRef(null)
+    const activeRef = useRef(true)
 
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
     const [contextMenu, setContextMenu] = useState()
@@ -38,6 +40,14 @@ export default function Diagram({ width, height }) {
             const sb = enqueueSnackbar(errorMsg, {
                 variant: "error", onClick: () => closeSnackbar(sb), autoHideDuration: null
             })
+        }
+
+        const onActivityEvent = (activity) => {
+            if (!activeRef.current && activity.detail) {
+                console.log('Activated')
+                canvasRef.current.activated()
+            }
+            activeRef.current = activity.detail
         }
 
         const callbacks = {
@@ -75,8 +85,11 @@ export default function Diagram({ width, height }) {
 
         // }, 1000);
 
+        document.addEventListener(activityEventName, onActivityEvent)
+
         return () => {
             // Clean initialization 
+            document.removeEventListener(activityEventName, onActivityEvent)
             PubSub.unsubscribe('diagram');
             var el = document.getElementById('canvas');
             el.removeEventListener("contextmenu", contextMenuHandler);

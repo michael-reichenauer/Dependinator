@@ -115,6 +115,7 @@ export default class DiagramCanvas {
     commandOpenDiagram = async (msg, diagramId) => {
         this.setProgress(true)
         try {
+            console.log('open', diagramId)
             const canvasData = await this.store.openDiagramRootCanvas(diagramId)
 
             this.canvas.clearDiagram()
@@ -258,6 +259,33 @@ export default class DiagramCanvas {
         } catch (error) {
             // No resent diagram data, lets create new diagram
             await this.createNewDiagram()
+        }
+        finally {
+            this.setProgress(false)
+        }
+    }
+
+    async activated() {
+        console.log('activated canvas')
+        this.setProgress(true)
+        try {
+            if (!store.isCloudSyncEnabled()) {
+                console.log('not syncing')
+                return
+            }
+            const current = store.getRecentDiagramInfos()[0]
+            await store.syncDiagrams()
+            const afterSync = store.getRecentDiagramInfos()[0]
+            if (current.TimeStamp === afterSync.TimeStamp) {
+                console.log('No changes')
+                return
+            }
+            console.log('Server had changes')
+            this.commandOpenDiagram('', afterSync.diagramId)
+
+        } catch (error) {
+            // No resent diagram data, lets create new diagram
+            this.setError('Activation error')
         }
         finally {
             this.setProgress(false)

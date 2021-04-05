@@ -1,4 +1,10 @@
 
+const humanizeDuration = require("humanize-duration");
+
+export const durationString = duration => {
+    return humanizeDuration(duration)
+}
+
 export const random = (min, max) => {
     min = Math.ceil(min);
     max = Math.floor(max) + 1;
