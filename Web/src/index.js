@@ -4,11 +4,22 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { Provider } from 'jotai'
+import { SnackbarProvider } from 'notistack';
+
+
 
 ReactDOM.render(
   // <React.StrictMode>
   <Provider>
-    <App />
+    <SnackbarProvider
+      maxSnack={3}
+      preventDuplicate={true}
+      anchorOrigin={{
+        vertical: 'top',
+        horizontal: 'center'
+      }}>
+      <App />
+    </SnackbarProvider>
   </Provider>,
   // </React.StrictMode>,
   document.getElementById('root')

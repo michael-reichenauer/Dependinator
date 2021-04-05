@@ -3,28 +3,20 @@ import PubSub from 'pubsub-js'
 import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
 import Tooltip from '@material-ui/core/Tooltip';
-import makeStyles from "@material-ui/core/styles/makeStyles";
-import { Box, Link, Popover, Typography } from "@material-ui/core";
 import { AppMenu, menuItem, menuParentItem } from "../common/Menus";
 import { store } from "./diagram/Store";
 import Printer from "../common/Printer";
+import About, { useAbout } from "./About";
 
 
-const useMenuStyles = makeStyles((theme) => ({
-    menuButton: {
 
-    },
-}));
-
-const asMenuItems = (diagrams, lastUsedDiagramId) => {
-    return diagrams.filter(d => d.id !== lastUsedDiagramId)
-        .map(d => menuItem(d.name, () => PubSub.publish('canvas.OpenDiagram', d.id)))
+const asMenuItems = (diagrams) => {
+    return diagrams.map(d => menuItem(d.name, () => PubSub.publish('canvas.OpenDiagram', d.diagramId)))
 }
 
 export function ApplicationMenu() {
-    const classes = useMenuStyles();
     const [menu, setMenu] = useState(null);
-    const [anchorEl, setAnchorEl] = useState(null);
+    const [, setShowAbout] = useAbout()
 
     useEffect(() => {
         const handler = Printer.registerPrintKey(() => PubSub.publish('canvas.Print'))
@@ -39,31 +31,35 @@ export function ApplicationMenu() {
         }
     };
 
-    const diagrams = menu == null ? [] : asMenuItems(store.getDiagrams(), store.getLastUsedDiagramId())
+    const diagrams = menu == null ? [] : asMenuItems(store.getRecentDiagramInfos().slice(1))
 
     const menuItems = [
         menuItem('New Diagram', () => PubSub.publish('canvas.NewDiagram')),
         menuParentItem('Open Recent', diagrams, diagrams.length > 0),
-        menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
-        menuItem('Save to file', () => PubSub.publish('canvas.SaveDiagramToFile')),
-        menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
         menuItem('Print', () => PubSub.publish('canvas.Print')),
         menuItem('Delete', deleteDiagram),
-        menuItem('Reload web page', () => window.location.reload(true)),
-        menuItem('About', () => setAnchorEl(true)),
+        menuParentItem('Enable cloud sync', [
+            menuItem('With Google id ...', () => store.login('Google'), true, !store.isLocal()),
+            menuItem('With Microsoft id ...', () => store.login('Microsoft'), true, !store.isLocal()),
+            menuItem('With Facebook id ...', () => store.login('Facebook'), true, !store.isLocal()),
+            menuItem('With GitHub id ...', () => store.login('GitHub'), true, !store.isLocal()),
+            menuItem('With Local id ...', () => store.login('GitHub'), true, store.isLocal()),
+        ], true, !store.isCloudSyncEnabled()),
+        menuItem('Disable cloud sync', () => store.disableCloudSync(), true, store.isCloudSyncEnabled()),
+        menuItem('Reload web page', () => window.location.reload()),
+        menuParentItem('Files', [
+            menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
+            menuItem('Save diagram to file', () => PubSub.publish('canvas.SaveDiagramToFile')),
+            menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
+        ]),
+        menuItem('About', () => setShowAbout(true)),
     ]
-
-    const handleCloseAbout = () => { setAnchorEl(null); };
-
-    const open = Boolean(anchorEl);
-    const id = open ? 'simple-popover' : undefined;
 
     return (
         <>
             <Tooltip title="Customize and control">
                 <IconButton
                     edge="start"
-                    className={classes.menuButton}
                     color="inherit"
                     onClick={e => setMenu(e.currentTarget)}
                 >
@@ -73,30 +69,7 @@ export function ApplicationMenu() {
 
             <AppMenu anchorEl={menu} items={menuItems} onClose={setMenu} />
 
-            <Popover
-                id={id}
-                open={open}
-                onClose={handleCloseAbout}
-                anchorReference="anchorPosition"
-                anchorPosition={{ top: 200, left: 400 }}
-                anchorOrigin={{
-                    vertical: 'center',
-                    horizontal: 'center',
-                }}
-                transformOrigin={{
-                    vertical: 'center',
-                    horizontal: 'center',
-                }}
-            >
-                <Box style={{ width: 400, height: 200, padding: 20 }}>
-                    <Typography variant="h5">Dependinator</Typography>
-                    <Typography >
-                        Early preview of a tool for visualizing software architecture inspired by map tools for
-                        navigation and the "<Link href="https://c4model.com" target="_blank">C4 Model</Link>"
-                        by Simon Brown.
-                    </Typography>
-                </Box>
-            </Popover>
+            <About />
         </>
     )
 }

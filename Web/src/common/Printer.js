@@ -21,6 +21,9 @@ export default class Printer {
     }
 
     print(pages) {
+        // Create one page with page brakes between
+        const pagesHtml = pages.join('<p style="page-break-after: always;">&nbsp;</p>')
+
         // create a hidden iframe named PrettyPrintFrame
         const prettyPrintIframe = document.createElement('iframe');
         prettyPrintIframe.setAttribute('id', 'PrettyPrintFrame');
@@ -32,7 +35,7 @@ export default class Printer {
 
         // add generated header content
         prettyPrintIframe.contentWindow.document.head.innerHTML = this.generateHeaderHtml();
-        prettyPrintIframe.contentWindow.document.body.innerHTML = pages;
+        prettyPrintIframe.contentWindow.document.body.innerHTML = pagesHtml;
 
         try {
             // reference to iframe window

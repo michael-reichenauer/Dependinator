@@ -26,7 +26,7 @@ export default class Connection extends draw2d.Connection {
         const router = new draw2d.layout.connection.VertexRouter()
         router.onDrag = () => { }
         this.setRouter(router);
-        // this.setRouter(new draw2d.layout.connection.DirectRouter());
+        // this.setRouter(new draw2d.layout.connection.DirectRouter())
         this.installEditPolicy(new VertexSelectionFeedbackPolicy())
 
         this.addArrow()
