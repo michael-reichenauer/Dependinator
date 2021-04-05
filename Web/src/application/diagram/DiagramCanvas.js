@@ -276,6 +276,8 @@ export default class DiagramCanvas {
             const current = store.getRecentDiagramInfos()[0]
             await store.syncDiagrams()
             const afterSync = store.getRecentDiagramInfos()[0]
+            console.log('before', current)
+            console.log('after ', afterSync)
             if (current.TimeStamp === afterSync.TimeStamp) {
                 console.log('No changes')
                 return
