@@ -17,7 +17,7 @@ exports.connect = async (context) => {
     const userId = clientPrincipal.userId
     const userDetails = clientPrincipal.userDetails
     if (!userId) {
-        return null
+        throw new Error('No user id')
     }
 
     try {
@@ -26,6 +26,7 @@ exports.connect = async (context) => {
         if (entity.tableId) {
             context.log('got user', userId, entity)
             await table.createTableIfNotExists(entity.tableId)
+            await table.insertOrReplaceEntity(entity.tableId, toTableUserItem(userId, userDetails))
             return { token: entity.tableId }
         }
         context.log('Failed to get table id')
@@ -39,6 +40,7 @@ exports.connect = async (context) => {
 
     // Create the actual diagram table
     await table.createTableIfNotExists(tableId)
+    await table.insertOrReplaceEntity(tableId, toTableUserItem(userId, userDetails))
 
     // Create a user in the users table
     await table.createTableIfNotExists(usersTableName)
@@ -46,6 +48,27 @@ exports.connect = async (context) => {
 
     return { token: tableId }
 }
+
+
+exports.clearAllData = async (context) => {
+    const req = context.req
+    const clientPrincipal = auth.getClientPrincipal(req)
+
+    const userId = clientPrincipal.userId
+    if (!userId) {
+        throw new Error('No user id')
+    }
+
+    const tableName = getTableName(context)
+    await table.deleteTableIfExists(tableName)
+
+    try {
+        await table.deleteEntity(usersTableName, toUserItem(userId, '', ''))
+    } catch (error) {
+        // No user, so done
+    }
+}
+
 
 exports.newDiagram = async (context, diagram) => {
     const tableName = getTableName(context)
@@ -55,7 +78,6 @@ exports.newDiagram = async (context, diagram) => {
     if (!diagramId || !name || !canvas) {
         throw new Error('missing parameters: ');
     }
-
 
     const diagramInfo = { diagramId: diagramId, name: name, accessed: Date.now() }
 
@@ -276,6 +298,16 @@ function toUserItem(userId, tableId, userDetails) {
         userId: entGen.String(userId),
         tableId: entGen.String(tableId),
         userDetails: entGen.String(userDetails),
+    }
+}
+
+function toTableUserItem(userId, userDetails) {
+    return {
+        RowKey: entGen.String(userId),
+        PartitionKey: entGen.String(partitionKeyName),
+
+        type: entGen.String('user'),
+        name: entGen.String(userDetails),
     }
 }
 

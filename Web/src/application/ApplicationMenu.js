@@ -42,6 +42,17 @@ export function ApplicationMenu() {
         window.location.reload()
     };
 
+    const clearAllData = async () => {
+        if (!confirm('Do you really want to clear all local and remote data?')) {//eslint-disable-line
+            return
+        }
+
+        if (await store.clearRemoteData()) {
+            store.clearLocalData()
+            window.location.reload()
+        }
+    };
+
     const diagrams = menu == null ? [] : asMenuItems(store.getRecentDiagramInfos().slice(1))
 
     const menuItems = [
@@ -61,6 +72,7 @@ export function ApplicationMenu() {
         menuParentItem('More', [
             menuItem('Reload web page', () => window.location.reload()),
             menuItem('Clear all local data', () => clearLocalData()),
+            menuItem('Clear all data', () => clearAllData()),
             menuParentItem('Files', [
                 menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
                 menuItem('Save diagram to file', () => PubSub.publish('canvas.SaveDiagramToFile')),

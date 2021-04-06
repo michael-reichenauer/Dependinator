@@ -37,6 +37,10 @@ export default class Api {
         return this.get('/api/Check')
     }
 
+    async clearAllData() {
+        return this.post('/api/ClearAllData')
+    }
+
     async connect() {
         return this.get('/api/Connect')
     }

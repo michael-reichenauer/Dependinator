@@ -233,6 +233,23 @@ class Store {
         this.local.clearAllData()
     }
 
+    async clearRemoteData() {
+        this.setProgress(true)
+        try {
+            if (!this.isSyncEnabled) {
+                this.setError('Cloud sync not enabled, cannot clear remote data')
+                return false
+            }
+            await this.remote.clearAllData()
+            return true
+        } catch (error) {
+            this.setError('Failed to clear remote data, ' + error.message)
+            return false
+        } finally {
+            this.setProgress(false)
+        }
+    }
+
 
     async syncDiagrams() {
         console.log('Syncing')
