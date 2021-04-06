@@ -42,6 +42,20 @@ exports.insertEntity = (tableName, item) => {
     })
 }
 
+exports.insertOrReplaceEntity = (tableName, item) => {
+    return new Promise(function (resolve, reject) {
+        tableService.insertOrReplaceEntity(tableName, item, function (error, result) {
+            if (error) {
+                reject(error);
+            }
+            else {
+                resolve(result);
+            }
+        })
+    })
+}
+
+
 exports.retrieveEntity = (tableName, partitionKey, rowKey) => {
     return new Promise(function (resolve, reject) {
         tableService.retrieveEntity(tableName, partitionKey, rowKey, function (error, result, response) {

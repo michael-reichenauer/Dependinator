@@ -15,6 +15,7 @@ exports.connect = async (context) => {
     const clientPrincipal = auth.getClientPrincipal(req)
 
     const userId = clientPrincipal.userId
+    const userDetails = clientPrincipal.userDetails
     if (!userId) {
         return null
     }
@@ -36,32 +37,31 @@ exports.connect = async (context) => {
     // Create a new random diagrams table id to be used for the user
     const tableId = baseTableName + makeRandomId()
 
-    // Create a user in the users table
-    await table.createTableIfNotExists(usersTableName)
-    const batch = new azure.TableBatch()
-    batch.insertEntity(toUserItem(userId, tableId))
-    await table.executeBatch(usersTableName, batch)
-
     // Create the actual diagram table
     await table.createTableIfNotExists(tableId)
+
+    // Create a user in the users table
+    await table.createTableIfNotExists(usersTableName)
+    await table.insertOrReplaceEntity(usersTableName, toUserItem(userId, tableId, userDetails))
+
     return { token: tableId }
 }
 
 exports.newDiagram = async (context, diagram) => {
     const tableName = getTableName(context)
-    const { diagramId, name } = diagram.diagramData
+    const { diagramId, name } = diagram.diagramInfo
 
-    const canvasData = diagram.canvases ? diagram.canvases[0] : null
-    if (!diagramId || !name || !canvasData) {
+    const canvas = diagram.canvases ? diagram.canvases[0] : null
+    if (!diagramId || !name || !canvas) {
         throw new Error('missing parameters: ');
     }
 
 
-    const diagramData = { diagramId: diagramId, name: name, accessed: Date.now() }
+    const diagramInfo = { diagramId: diagramId, name: name, accessed: Date.now() }
 
     const batch = new azure.TableBatch()
-    batch.insertEntity(toDiagramDataItem(diagramData))
-    batch.insertEntity(toCanvasDataItem(canvasData))
+    batch.insertEntity(toDiagramInfoItem(diagramInfo))
+    batch.insertEntity(toCanvasItem(canvas))
 
     await table.executeBatch(tableName, batch)
 
@@ -69,18 +69,18 @@ exports.newDiagram = async (context, diagram) => {
     return toDiagramInfo(entity)
 }
 
-exports.setCanvas = async (context, canvasData) => {
+exports.setCanvas = async (context, canvas) => {
     const tableName = getTableName(context)
-    if (!canvasData) {
+    if (!canvas) {
         throw new Error('missing parameters');
     }
 
-    const { diagramId } = canvasData
-    const diagramData = { diagramId: diagramId, accessed: Date.now() }
+    const { diagramId } = canvas
+    const diagramInfo = { diagramId: diagramId, accessed: Date.now() }
 
     const batch = new azure.TableBatch()
-    batch.mergeEntity(toDiagramDataItem(diagramData))
-    batch.insertOrReplaceEntity(toCanvasDataItem(canvasData))
+    batch.mergeEntity(toDiagramInfoItem(diagramInfo))
+    batch.insertOrReplaceEntity(toCanvasItem(canvas))
 
     await table.executeBatch(tableName, batch)
 
@@ -113,20 +113,20 @@ exports.getDiagram = async (context, diagramId) => {
 
     items.forEach(i => {
         if (i.type === 'diagram') {
-            diagram.diagramData = toDiagramInfo(i)
+            diagram.diagramInfo = toDiagramInfo(i)
         } else if (i.type === 'canvas') {
-            diagram.canvases.push(toCanvasData(i))
+            diagram.canvases.push(toCanvas(i))
         }
     })
 
-    if (!diagram.diagramData || diagram.canvases.length == 0) {
+    if (!diagram.diagramInfo || diagram.canvases.length == 0) {
         throw new Error('NOTFOUND')
     }
 
     // Update accessed diagram time
-    const diagramData = { diagramId: diagramId, accessed: Date.now() }
+    const diagramInfo = { diagramId: diagramId, accessed: Date.now() }
     const batch = new azure.TableBatch()
-    batch.mergeEntity(toDiagramDataItem(diagramData))
+    batch.mergeEntity(toDiagramInfoItem(diagramInfo))
     await table.executeBatch(tableName, batch)
 
     return diagram
@@ -148,9 +148,9 @@ exports.deleteDiagram = async (context, parameters) => {
     const batch = new azure.TableBatch()
     items.forEach(i => {
         if (i.type === 'diagram') {
-            batch.deleteEntity(toDiagramDataItem(toDiagramInfo(i)))
+            batch.deleteEntity(toDiagramInfoItem(toDiagramInfo(i)))
         } else if (i.type === 'canvas') {
-            batch.deleteEntity(toCanvasDataItem(toCanvasData(i)))
+            batch.deleteEntity(toCanvasItem(toCanvas(i)))
         }
     })
 
@@ -159,17 +159,17 @@ exports.deleteDiagram = async (context, parameters) => {
 
 exports.updateDiagram = async (context, diagram) => {
     const tableName = getTableName(context)
-    const { diagramId } = diagram.diagramData
+    const { diagramId } = diagram.diagramInfo
     if (!diagramId) {
         throw new Error('missing parameters: ');
     }
 
-    const diagramData = { ...diagram.diagramData, accessed: Date.now() }
+    const diagramInfo = { ...diagram.diagramInfo, accessed: Date.now() }
 
     const batch = new azure.TableBatch()
-    batch.mergeEntity(toDiagramDataItem(diagramData))
+    batch.mergeEntity(toDiagramInfoItem(diagramInfo))
     if (diagram.canvases) {
-        diagram.canvases.forEach(canvasData => batch.insertOrReplaceEntity(toCanvasDataItem(canvasData)))
+        diagram.canvases.forEach(canvas => batch.insertOrReplaceEntity(toCanvasItem(canvas)))
     }
 
 
@@ -188,10 +188,10 @@ exports.uploadDiagrams = async (context, diagrams) => {
 
     const batch = new azure.TableBatch()
     diagrams.forEach(diagram => {
-        const diagramData = { ...diagram.diagramData, accessed: Date.now() }
-        batch.insertOrMergeEntity(toDiagramDataItem(diagramData))
+        const diagramInfo = { ...diagram.diagramInfo, accessed: Date.now() }
+        batch.insertOrMergeEntity(toDiagramInfoItem(diagramInfo))
         if (diagram.canvases) {
-            diagram.canvases.forEach(canvasData => batch.insertOrReplaceEntity(toCanvasDataItem(canvasData)))
+            diagram.canvases.forEach(canvas => batch.insertOrReplaceEntity(toCanvasItem(canvas)))
         }
     })
 
@@ -210,17 +210,17 @@ exports.downloadAllDiagrams = async (context) => {
 
     items.forEach(i => {
         if (i.type === 'diagram') {
-            const diagramData = toDiagramInfo(i)
-            const id = diagramData.diagramId
-            diagrams[id] = { ...diagrams[id], diagramData: diagramData }
+            const diagramInfo = toDiagramInfo(i)
+            const id = diagramInfo.diagramId
+            diagrams[id] = { ...diagrams[id], diagramInfo: diagramInfo }
         } else if (i.type === 'canvas') {
-            const canvasData = toCanvasData(i)
-            const id = canvasData.diagramId
+            const canvas = toCanvas(i)
+            const id = canvas.diagramId
             if (diagrams[id] == null) {
-                diagrams[id] = { canvases: [canvasData] }
+                diagrams[id] = { canvases: [canvas] }
             } else {
                 const canvases = diagrams[id].canvases ? diagrams[id].canvases : []
-                canvases.push(canvasData)
+                canvases.push(canvas)
                 diagrams[id].canvases = canvases
             }
         }
@@ -268,17 +268,19 @@ function diagramKey(diagramId) {
     return `${diagramId}`
 }
 
-function toUserItem(userId, tableId) {
+function toUserItem(userId, tableId, userDetails) {
     return {
         RowKey: entGen.String(userId),
         PartitionKey: entGen.String(userPartitionKey),
 
+        userId: entGen.String(userId),
         tableId: entGen.String(tableId),
+        userDetails: entGen.String(userDetails),
     }
 }
 
-function toCanvasDataItem(canvasData) {
-    const { diagramId, canvasId } = canvasData
+function toCanvasItem(canvas) {
+    const { diagramId, canvasId } = canvas
     return {
         RowKey: entGen.String(canvasKey(diagramId, canvasId)),
         PartitionKey: entGen.String(partitionKeyName),
@@ -286,19 +288,19 @@ function toCanvasDataItem(canvasData) {
         type: entGen.String('canvas'),
         diagramId: entGen.String(diagramId),
         canvasId: entGen.String(canvasId),
-        canvasData: entGen.String(JSON.stringify(canvasData))
+        canvas: entGen.String(JSON.stringify(canvas))
     }
 }
 
-function toCanvasData(item) {
-    const canvasData = JSON.parse(item.canvasData)
-    canvasData.etag = item['odata.etag']
-    canvasData.timestamp = item.Timestamp
-    return canvasData
+function toCanvas(item) {
+    const canvas = JSON.parse(item.canvas)
+    canvas.etag = item['odata.etag']
+    canvas.timestamp = item.Timestamp
+    return canvas
 }
 
-function toDiagramDataItem(diagramData) {
-    const { diagramId, name, accessed } = diagramData
+function toDiagramInfoItem(diagramInfo) {
+    const { diagramId, name, accessed } = diagramInfo
     const item = {
         RowKey: entGen.String(diagramKey(diagramId)),
         PartitionKey: entGen.String(partitionKeyName),

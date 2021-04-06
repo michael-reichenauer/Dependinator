@@ -79,13 +79,13 @@ class Store {
             }
 
             // Local mode: read the root canvas from local store
-            const canvasData = this.local.readCanvas(diagramId, rootCanvasId)
-            if (!canvasData) {
+            const canvas = this.local.readCanvas(diagramId, rootCanvasId)
+            if (!canvas) {
                 throw new Error('Diagram not found')
             }
 
-            this.local.updateAccessedDiagram(canvasData.diagramId)
-            return canvasData
+            this.local.updateAccessedDiagram(canvas.diagramId)
+            return canvas
         } catch (error) {
             this.local.removeDiagram(diagramId)
             throw error
@@ -134,28 +134,28 @@ class Store {
         return this.getRecentDiagramInfos()[0]?.diagramId
     }
 
-    async newDiagram(diagramId, name, canvasData) {
+    async newDiagram(diagramId, name, canvas) {
         const diagram = {
-            diagramData: { diagramId: diagramId, name: name, accessed: Date.now() },
-            canvases: [canvasData]
+            diagramInfo: { diagramId: diagramId, name: name, accessed: Date.now() },
+            canvases: [canvas]
         }
         this.local.writeDiagram(diagram)
 
         if (this.isSyncEnabled) {
             // Sync with remote server
-            const diagramData = await this.remote.newDiagram(diagram)
-            this.local.writeDiagramData(diagramData)
+            const diagramInfo = await this.remote.newDiagram(diagram)
+            this.local.writeDiagramInfo(diagramInfo)
         }
     }
 
-    setCanvas(canvasData) {
-        this.local.writeCanvas(canvasData)
-        this.local.updateAccessedDiagram(canvasData.diagramId)
+    setCanvas(canvas) {
+        this.local.writeCanvas(canvas)
+        this.local.updateAccessedDiagram(canvas.diagramId)
 
         if (this.isSyncEnabled) {
             // Sync with remote server
-            this.remote.setCanvas(canvasData)
-                .then(diagramData => this.local.writeDiagramData(diagramData))
+            this.remote.setCanvas(canvas)
+                .then(diagramInfo => this.local.writeDiagramInfo(diagramInfo))
                 .catch(error => this.setError('Failed to sync canvas change'))
         }
     }
@@ -171,11 +171,11 @@ class Store {
     }
 
     setDiagramName(diagramId, name) {
-        this.local.updateDiagramData(diagramId, { name: name })
+        this.local.updateDiagramInfo(diagramId, { name: name })
 
         if (this.isSyncEnabled) {
-            this.remote.updateDiagram({ diagramData: { diagramId: diagramId, name: name } })
-                .then(diagramData => this.local.writeDiagramData(diagramData))
+            this.remote.updateDiagram({ diagramInfo: { diagramId: diagramId, name: name } })
+                .then(diagramInfo => this.local.writeDiagramInfo(diagramInfo))
                 .catch(error => this.setError('Failed to sync name change'))
         }
     }
@@ -200,7 +200,7 @@ class Store {
         } else {
             file.diagrams.forEach(diagram => this.local.writeDiagram(diagram))
         }
-        const firstDiagramId = file.diagrams[0]?.diagramData.diagramId
+        const firstDiagramId = file.diagrams[0]?.diagramInfo.diagramId
         if (!firstDiagramId) {
             throw new Error('No diagram in file')
         }
@@ -214,7 +214,7 @@ class Store {
         }
 
         const file = { diagrams: [diagram] }
-        this.files.saveFile(`${diagram.diagramData.name}.json`, file)
+        this.files.saveFile(`${diagram.diagramInfo.name}.json`, file)
     }
 
     async saveAllDiagramsToFile() {
@@ -229,6 +229,10 @@ class Store {
         this.files.saveFile(`diagrams.json`, file)
     }
 
+    clearLocalData() {
+        this.local.clearAllData()
+    }
+
 
     async syncDiagrams() {
         console.log('Syncing')
@@ -241,7 +245,7 @@ class Store {
 
         // Get all remote server diagrams data and write to local store
         const remoteInfos = await this.remote.getAllDiagramsData()
-        remoteInfos.forEach(data => this.local.writeDiagramData(data))
+        remoteInfos.forEach(data => this.local.writeDiagramInfo(data))
 
         // Get local diagram infos to check if to be deleted or published
         const localInfos = this.local.readAllDiagramsInfos()
@@ -262,7 +266,7 @@ class Store {
                             const newInfo = await this.remote.newDiagram(diagram)
 
                             // Update local diagram info
-                            this.local.writeDiagramData(newInfo)
+                            this.local.writeDiagramInfo(newInfo)
                         }
                     } else {
                         // Local info can just be deleted since it was deleted on the server
@@ -277,7 +281,7 @@ class Store {
                         const newInfo = await this.remote.newDiagram(diagram)
 
                         // Update local diagram info
-                        this.local.writeDiagramData(newInfo)
+                        this.local.writeDiagramInfo(newInfo)
                     }
                 }
             }

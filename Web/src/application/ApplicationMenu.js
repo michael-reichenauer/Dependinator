@@ -25,10 +25,21 @@ export function ApplicationMenu() {
     })
 
     const deleteDiagram = () => {
-        var shouldDelete = confirm('Do you really want to delete the current diagram?') //eslint-disable-line
-        if (shouldDelete) {
-            PubSub.publish('canvas.DeleteDiagram')
+        if (!confirm('Do you really want to delete the current diagram?')) {//eslint-disable-line       
+            return
         }
+
+        PubSub.publish('canvas.DeleteDiagram')
+    };
+
+
+    const clearLocalData = () => {
+        if (!confirm('Do you really want to clear all local data?')) {//eslint-disable-line
+            return
+        }
+
+        store.clearLocalData()
+        window.location.reload()
     };
 
     const diagrams = menu == null ? [] : asMenuItems(store.getRecentDiagramInfos().slice(1))
@@ -46,13 +57,17 @@ export function ApplicationMenu() {
             menuItem('With Local id ...', () => store.login('GitHub'), true, store.isLocal()),
         ], true, !store.isCloudSyncEnabled()),
         menuItem('Disable cloud sync', () => store.disableCloudSync(), true, store.isCloudSyncEnabled()),
-        menuItem('Reload web page', () => window.location.reload()),
-        menuParentItem('Files', [
-            menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
-            menuItem('Save diagram to file', () => PubSub.publish('canvas.SaveDiagramToFile')),
-            menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
-        ]),
         menuItem('About', () => setShowAbout(true)),
+        menuParentItem('More', [
+            menuItem('Reload web page', () => window.location.reload()),
+            menuItem('Clear all local data', () => clearLocalData()),
+            menuParentItem('Files', [
+                menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
+                menuItem('Save diagram to file', () => PubSub.publish('canvas.SaveDiagramToFile')),
+                menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
+            ]),
+        ]),
+
     ]
 
     return (

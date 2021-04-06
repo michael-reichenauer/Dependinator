@@ -49,8 +49,8 @@ export default class Api {
         return this.post('/api/NewDiagram', diagram);
     }
 
-    async setCanvas(canvasData) {
-        return this.post('/api/SetCanvas', canvasData);
+    async setCanvas(canvas) {
+        return this.post('/api/SetCanvas', canvas);
     }
 
     async getDiagram(diagramId) {

@@ -1,26 +1,16 @@
 const diagramKey = 'diagram'
-const diagramDataKey = 'DiagramData'
+const diagramInfoKey = 'diagramInfo'
 const syncKey = 'sync'
-//const lastUsedDiagramKey = 'lastUsedDiagram'
 
 
 export default class StoreLocal {
 
     canvasKey = (diagramId, canvasId) => `${diagramKey}.${diagramId}.${canvasId}`
-    diagramKey = (diagramId) => `${diagramKey}.${diagramId}.${diagramDataKey}`
+    diagramKey = (diagramId) => `${diagramKey}.${diagramId}.${diagramInfoKey}`
 
-
-    // writeLastUsedDiagram(diagramId) {
-    //     this.writeData(lastUsedDiagramKey, { diagramId: diagramId })
-    // }
-
-    // readLastUsedDiagramId() {
-    //     return this.readData(lastUsedDiagramKey)?.diagramId
-    // }
-
-    // clearLastUsedDiagram() {
-    //     return this.removeData(lastUsedDiagramKey)
-    // }
+    clearAllData() {
+        localStorage.clear()
+    }
 
     getSync() {
         return this.readData(syncKey) ?? {}
@@ -48,7 +38,7 @@ export default class StoreLocal {
                 const parts = key.split('.')
                 const id = parts[1]
                 const name = parts[2]
-                if (id === diagramId && name !== diagramDataKey) {
+                if (id === diagramId && name !== diagramInfoKey) {
                     keys.push(key)
                 }
             }
@@ -78,7 +68,7 @@ export default class StoreLocal {
         const diagrams = []
         for (var i = 0, len = localStorage.length; i < len; i++) {
             var key = localStorage.key(i);
-            if (key.endsWith(diagramDataKey)) {
+            if (key.endsWith(diagramInfoKey)) {
                 const diagramInfo = JSON.parse(localStorage[key])
                 diagrams.push(diagramInfo)
             }
@@ -88,50 +78,50 @@ export default class StoreLocal {
     }
 
     updateAccessedDiagram(diagramId) {
-        this.updateDiagramData(diagramId, { accessed: Date.now() })
+        this.updateDiagramInfo(diagramId, { accessed: Date.now() })
     }
 
 
     writeDiagram(diagram) {
-        this.writeDiagramData(diagram.diagramData)
-        diagram.canvases.forEach(canvasData => this.writeCanvas(canvasData))
+        this.writeDiagramInfo(diagram.diagramInfo)
+        diagram.canvases.forEach(canvas => this.writeCanvas(canvas))
     }
 
     readDiagram(diagramId) {
-        const diagramData = this.readDiagramData(diagramId)
-        if (diagramData == null) {
+        const diagramInfo = this.readDiagramInfo(diagramId)
+        if (diagramInfo == null) {
             return
         }
         const canvases = this.readCanvases(diagramId)
-        const diagram = { diagramData: diagramData, canvases: canvases }
+        const diagram = { diagramInfo: diagramInfo, canvases: canvases }
 
         return diagram
     }
 
 
-    readDiagramData(diagramId) {
+    readDiagramInfo(diagramId) {
         return this.readData(this.diagramKey(diagramId))
     }
 
-    writeDiagramData(diagramData) {
-        this.writeData(this.diagramKey(diagramData.diagramId), diagramData)
+    writeDiagramInfo(diagramInfo) {
+        this.writeData(this.diagramKey(diagramInfo.diagramId), diagramInfo)
     }
 
-    updateDiagramData(diagramId, data) {
-        const diagramData = this.readDiagramData(diagramId)
-        if (diagramData == null) {
+    updateDiagramInfo(diagramId, data) {
+        const diagramInfo = this.readDiagramInfo(diagramId)
+        if (diagramInfo == null) {
             return
         }
-        this.writeDiagramData({ ...diagramData, ...data })
+        this.writeDiagramInfo({ ...diagramInfo, ...data })
     }
 
     readCanvas(diagramId, canvasId) {
         return this.readData(this.canvasKey(diagramId, canvasId))
     }
 
-    writeCanvas(canvasData) {
-        const { diagramId, canvasId } = canvasData
-        this.writeData(this.canvasKey(diagramId, canvasId), canvasData)
+    writeCanvas(canvas) {
+        const { diagramId, canvasId } = canvas
+        this.writeData(this.canvasKey(diagramId, canvasId), canvas)
     }
 
     readData(key) {
