@@ -27,7 +27,7 @@ const defaultOptions = (type) => {
             return { ...dv, name: 'Node', colorName: 'DeepPurple', icon: 'Node', }
         case Node.systemType:
             return {
-                ...dv, name: 'System', colorName: 'DeepPurple', icon: 'Diagram',
+                ...dv, name: store.getUniqueSystemName(), colorName: 'DeepPurple', icon: 'Diagram',
                 width: Node.defaultWidth * 1.2, height: Node.defaultHeight * 1.2,
             }
         case Node.userType:

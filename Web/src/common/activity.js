@@ -66,7 +66,7 @@ export function useActivityMonitor() {
             const now = Date.now()
             if (now - activityTime < activityTimeout) {
                 // Still active, reschedule check
-                console.log(`Still active (total: ${durationString(Date.now() - activityStartTime)})`)
+                // console.log(`Still active (total: ${durationString(Date.now() - activityStartTime)})`)
                 const timeout = activityTimeout - (now - activityTime) + activityMargin
                 activityCheckTimer = setTimeout(checkIfActive, timeout)
                 return

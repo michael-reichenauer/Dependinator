@@ -1,7 +1,7 @@
 import Api from "./Api"
 import StoreFiles from "./StoreFiles"
 import StoreLocal from "./StoreLocal"
-import { delay } from '../../common/utils'
+// import { delay } from '../../common/utils'
 
 const rootCanvasId = 'root'
 
@@ -103,18 +103,15 @@ class Store {
         try {
             // Checking if user already is logged in with the specified provider
             const user = await this.remote.getCurrentUser()
-            console.log('user data', user.clientPrincipal)
             if (user?.clientPrincipal?.identityProvider === provider) {
                 // User is logged in, lets just reload site (no need to login again)
                 console.log('Still logged in with', provider)
-                await delay(10000)
                 window.location.reload()
             }
 
         } catch (error) {
             // Failed to check current user, lets ignore that and login
         }
-        await delay(10000)
 
         // Login for the specified id provider
         if (provider === 'Local') {
@@ -148,6 +145,21 @@ class Store {
         } finally {
             this.setProgress(false)
         }
+    }
+
+    getUniqueSystemName() {
+        const infos = this.getRecentDiagramInfos()
+
+        for (let i = 0; i < 20; i++) {
+            const name = i === 0 ? 'System' : `System (${i})`
+            if (!infos.find(info => name === info.name)) {
+                // No other info with that name
+                return name
+            }
+        }
+
+        // Seems all names are used, lets just reuse System
+        return 'System'
     }
 
     getMostResentDiagramId() {
