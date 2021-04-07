@@ -1,7 +1,7 @@
 import Api from "./Api"
 import StoreFiles from "./StoreFiles"
 import StoreLocal from "./StoreLocal"
-//import { delay } from '../../common/utils'
+import { delay } from '../../common/utils'
 
 const rootCanvasId = 'root'
 
@@ -96,9 +96,29 @@ class Store {
     }
 
 
-    login(provider) {
+    async login(provider) {
+        console.log('Login with', provider)
         this.local.updateSync({ isConnecting: true, provider: provider })
+
+        try {
+            // Checking if user already is logged in with the specified provider
+            const user = await this.remote.getCurrentUser()
+            console.log('user data', user.clientPrincipal)
+            if (user?.clientPrincipal?.identityProvider === provider) {
+                // User is logged in, lets just reload site (no need to login again)
+                console.log('Still logged in with', provider)
+                await delay(10000)
+                window.location.reload()
+            }
+
+        } catch (error) {
+            // Failed to check current user, lets ignore that and login
+        }
+        await delay(10000)
+
+        // Login for the specified id provider
         if (provider === 'Local') {
+            // Local (dev), just reload
             window.location.reload()
         } else if (provider === 'Google') {
             window.location.href = `/.auth/login/google`;

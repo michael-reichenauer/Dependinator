@@ -65,7 +65,7 @@ export function ApplicationMenu() {
             menuItem('With Microsoft id ...', () => store.login('Microsoft'), true, !store.isLocal()),
             menuItem('With Facebook id ...', () => store.login('Facebook'), true, !store.isLocal()),
             menuItem('With GitHub id ...', () => store.login('GitHub'), true, !store.isLocal()),
-            menuItem('With Local id ...', () => store.login('GitHub'), true, store.isLocal()),
+            menuItem('With Local id ...', () => store.login('Local'), true, store.isLocal()),
         ], true, !store.isCloudSyncEnabled()),
         menuItem('Disable cloud sync', () => store.disableCloudSync(), true, store.isCloudSyncEnabled()),
         menuItem('About', () => setShowAbout(true)),

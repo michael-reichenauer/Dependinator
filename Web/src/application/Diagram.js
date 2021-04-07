@@ -44,7 +44,6 @@ export default function Diagram({ width, height }) {
 
         const onActivityEvent = (activity) => {
             if (!activeRef.current && activity.detail) {
-                console.log('Activated')
                 canvasRef.current.activated()
             }
             activeRef.current = activity.detail

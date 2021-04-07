@@ -21,7 +21,7 @@ export default class Api {
             await this.get('/api/Check')
             return {
                 clientPrincipal: {
-                    "identityProvider": "local",
+                    "identityProvider": "Local",
                     "userId": 'local',
                     "userDetails": 'local',
                     "userRoles": ["anonymous", "authenticated"]
