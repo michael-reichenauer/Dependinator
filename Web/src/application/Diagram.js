@@ -14,7 +14,7 @@ export const titleAtom = atom('System')
 export const canUndoAtom = atom(false)
 export const canRedoAtom = atom(false)
 export const canPopDiagramAtom = atom(false)
-
+export const syncModeAtom = atom(false)
 export const editModeAtom = atom(false)
 
 
@@ -31,6 +31,7 @@ export default function Diagram({ width, height }) {
     const [, setCanRedo] = useAtom(canRedoAtom)
     const [, setCanPopDiagram] = useAtom(canPopDiagramAtom)
     const [, setEditMode] = useAtom(editModeAtom)
+    const [, setSyncMode] = useAtom(syncModeAtom)
 
     const [isProgress, setProgress] = useProgress()
 
@@ -56,6 +57,7 @@ export default function Diagram({ width, height }) {
             setProgress: setProgress,
             setCanPopDiagram: setCanPopDiagram,
             setEditMode: setEditMode,
+            setSyncMode: setSyncMode,
             errorHandler: errorHandler
         }
 
@@ -95,7 +97,7 @@ export default function Diagram({ width, height }) {
             document.removeEventListener("longclick", contextMenuHandler);
             canvasRef.current.delete()
         }
-    }, [setCanUndo, setCanRedo, setProgress, setCanPopDiagram, setEditMode, setTitle, closeSnackbar, enqueueSnackbar])
+    }, [setCanUndo, setCanRedo, setProgress, setCanPopDiagram, setEditMode, setSyncMode, setTitle, closeSnackbar, enqueueSnackbar])
 
     return (
         <>

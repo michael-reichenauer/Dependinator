@@ -6,23 +6,15 @@ const aboutAtom = atom(false)
 export const useAbout = () => useAtom(aboutAtom)
 
 export default function About() {
-    const [showAbout, setShowAbout] = useAbout()
+    const [show, setShow] = useAbout()
 
     return (
         <Popover
-            id={'simple-popover'}
-            open={showAbout}
-            onClose={() => setShowAbout(false)}
-            anchorReference="anchorPosition"
-            anchorPosition={{ top: 200, left: 400 }}
-            anchorOrigin={{
-                vertical: 'center',
-                horizontal: 'center',
-            }}
-            transformOrigin={{
-                vertical: 'center',
-                horizontal: 'center',
-            }}
+            open={show}
+            onClose={() => setShow(false)}
+            anchorEl={document.body}
+            anchorOrigin={{ vertical: 'center', horizontal: 'center' }}
+            transformOrigin={{ vertical: 'center', horizontal: 'center' }}
         >
             <Box style={{ width: 400, height: 200, padding: 20 }}>
                 <Typography variant="h5">Dependinator</Typography>

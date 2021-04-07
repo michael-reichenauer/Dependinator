@@ -10,23 +10,35 @@ import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
 import SaveAltIcon from '@material-ui/icons/SaveAlt';
-import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom, titleAtom } from "./Diagram";
+import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom, syncModeAtom, titleAtom } from "./Diagram";
 import { useAtom } from "jotai";
 import { withStyles } from "@material-ui/styles";
 import { grey } from "@material-ui/core/colors";
+import { store } from "./diagram/Store";
+import { useLogin } from "./Login";
 
 
 export default function ApplicationBar({ height }) {
     const classes = useAppBarStyles();
     const [titleText] = useAtom(titleAtom)
     const [editMode, setEditMode] = useAtom(editModeAtom);
+    const [syncMode] = useAtom(syncModeAtom)
     const [canUndo] = useAtom(canUndoAtom)
     const [canRedo] = useAtom(canRedoAtom)
     const [canPopDiagram] = useAtom(canPopDiagramAtom)
+    const [, setShowLogin] = useLogin()
 
     const handleEditModeChange = (event) => {
         setEditMode(event.target.checked);
         PubSub.publish('canvas.SetEditMode', event.target.checked)
+    };
+    const handleSyncModeChange = (event) => {
+        const isChecked = event.target.checked
+        if (!isChecked) {
+            store.disableCloudSync()
+            return
+        }
+        setShowLogin(true)
     };
 
     const style = (disabled) => {
@@ -67,6 +79,19 @@ export default function ApplicationBar({ height }) {
                 <Typography className={classes.title} variant="h6" noWrap>{titleText}</Typography>
 
                 <Typography className={classes.space} variant="h6" noWrap> </Typography>
+
+                <Tooltip title="Toggle cloud sync on/off" >
+                    <FormControlLabel className={style()}
+                        control={
+                            <GreySwitch
+                                checked={syncMode}
+                                onChange={handleSyncModeChange}
+                                name="Sync"
+                            />
+                        }
+                        label="Sync"
+                    />
+                </Tooltip>
 
                 <Tooltip title="Toggle edit mode" >
                     <FormControlLabel
@@ -130,14 +155,14 @@ const useAppBarStyles = makeStyles((theme) => ({
     icons: {
         color: 'white',
         display: 'none',
-        [theme.breakpoints.up('sm')]: {
+        [theme.breakpoints.up('md')]: {
             display: 'block',
         },
     },
     iconsDisabled: {
         color: 'grey',
         display: 'none',
-        [theme.breakpoints.up('sm')]: {
+        [theme.breakpoints.up('md')]: {
             display: 'block',
         },
     },
@@ -157,7 +182,7 @@ const useAppBarStyles = makeStyles((theme) => ({
         },
         marginLeft: 0,
         width: '100%',
-        [theme.breakpoints.up('sm')]: {
+        [theme.breakpoints.up('md')]: {
             marginLeft: theme.spacing(1),
             width: 'auto',
         },

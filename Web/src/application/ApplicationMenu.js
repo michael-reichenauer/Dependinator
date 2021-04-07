@@ -6,7 +6,8 @@ import Tooltip from '@material-ui/core/Tooltip';
 import { AppMenu, menuItem, menuParentItem } from "../common/Menus";
 import { store } from "./diagram/Store";
 import Printer from "../common/Printer";
-import About, { useAbout } from "./About";
+import { useAbout } from "./About";
+import { useLogin } from "./Login";
 
 
 
@@ -17,6 +18,7 @@ const asMenuItems = (diagrams) => {
 export function ApplicationMenu() {
     const [menu, setMenu] = useState(null);
     const [, setShowAbout] = useAbout()
+    const [, setShowLogin] = useLogin()
 
     useEffect(() => {
         const handler = Printer.registerPrintKey(() => PubSub.publish('canvas.Print'))
@@ -60,13 +62,7 @@ export function ApplicationMenu() {
         menuParentItem('Open Recent', diagrams, diagrams.length > 0),
         menuItem('Print', () => PubSub.publish('canvas.Print')),
         menuItem('Delete', deleteDiagram),
-        menuParentItem('Enable cloud sync', [
-            menuItem('With Google id ...', () => store.login('Google'), true, !store.isLocal()),
-            menuItem('With Microsoft id ...', () => store.login('Microsoft'), true, !store.isLocal()),
-            menuItem('With Facebook id ...', () => store.login('Facebook'), true, !store.isLocal()),
-            menuItem('With GitHub id ...', () => store.login('GitHub'), true, !store.isLocal()),
-            menuItem('With Local id ...', () => store.login('Local'), true, store.isLocal()),
-        ], true, !store.isCloudSyncEnabled()),
+        menuItem('Enable cloud sync', () => setShowLogin(true), true, !store.isCloudSyncEnabled()),
         menuItem('Disable cloud sync', () => store.disableCloudSync(), true, store.isCloudSyncEnabled()),
         menuItem('About', () => setShowAbout(true)),
         menuParentItem('More', [
@@ -95,8 +91,6 @@ export function ApplicationMenu() {
             </Tooltip>
 
             <AppMenu anchorEl={menu} items={menuItems} onClose={setMenu} />
-
-            <About />
         </>
     )
 }

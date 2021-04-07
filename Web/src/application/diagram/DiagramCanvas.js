@@ -38,7 +38,7 @@ export default class DiagramCanvas {
     }
 
     init() {
-        this.store.setHandlers(this.callbacks.errorHandler, this.callbacks.setProgress)
+        this.store.setHandlers(this.callbacks.errorHandler, this.callbacks.setProgress, this.callbacks.setSyncMode)
         this.loadInitialDiagram()
 
         this.handleDoubleClick(this.canvas)

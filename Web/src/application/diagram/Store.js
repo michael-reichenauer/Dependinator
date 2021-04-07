@@ -19,9 +19,10 @@ class Store {
     isLocal = () => window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 
 
-    setHandlers(setError, setProgress) {
+    setHandlers(setError, setProgress, setSyncMode) {
         this.setError = setError
         this.setProgress = setProgress
+        this.setSyncMode = setSyncMode
         this.remote.setProgressHandler(setProgress)
     }
 
@@ -44,6 +45,7 @@ class Store {
         if (!sync.token) {
             console.log('No sync token, sync is disabled')
             this.isSyncEnabled = false
+            this.setSyncMode(false)
             return
         }
 
@@ -53,6 +55,7 @@ class Store {
 
         this.remote.setToken(sync.token)
         this.isSyncEnabled = true
+        this.setSyncMode(true)
         await this.syncDiagrams()
         console.log('Sync is enabled')
     }
@@ -131,8 +134,14 @@ class Store {
         }
     }
 
+    async enableSync(flag) {
+        this.setSyncMode(flag)
+    }
 
     async disableCloudSync() {
+        if (!this.isSyncEnabled) {
+            return
+        }
         this.setProgress(true)
         try {
             console.log('Disable cloud sync')
