@@ -44,9 +44,7 @@ export default function Diagram({ width, height }) {
         }
 
         const onActivityEvent = (activity) => {
-            console.log('On active event')
             if (!activeRef.current && activity.detail) {
-                console.log('activated')
                 canvasRef.current.activated()
             }
             activeRef.current = activity.detail
@@ -70,23 +68,6 @@ export default function Diagram({ width, height }) {
         const contextMenuHandler = enableContextMenu('canvas', setContextMenu, canvas)
 
         setTimeout(() => canvas.showTotalDiagram(), 0);
-        // const api = new Api()
-        // setTimeout(async () => {
-        //     try {
-        //         const user = await api.getCurrentUser()
-        //         console.log('user', user)
-        //         if (user.clientPrincipal) {
-        //             setTitle(user.clientPrincipal.userId)
-        //             // window.location.href = "https://google.com";
-        //         } else {
-        //             // window.location.href = "https://google.com";
-        //         }
-
-        //     } catch (error) {
-        //         errorHandler(`error: ${error.message}`)
-        //     }
-
-        // }, 1000);
 
         document.addEventListener(activityEventName, onActivityEvent)
 

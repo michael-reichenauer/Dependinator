@@ -268,13 +268,10 @@ export default class DiagramCanvas {
 
     async activated() {
         try {
-            console.log('Activated')
             if (!await this.store.serverHadChanges()) {
-                console.log('No changes')
                 return
             }
 
-            console.log('Get most recent')
             const diagramId = this.store.getMostResentDiagramId()
             if (!diagramId) {
                 throw new Error('No resent diagram')
@@ -282,7 +279,6 @@ export default class DiagramCanvas {
 
             this.commandOpenDiagram('', diagramId)
         } catch (error) {
-            console.trace('Error', error)
             // No resent diagram data, lets create new diagram
             this.setError('Activation error')
         }
