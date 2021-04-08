@@ -122,6 +122,7 @@ export default class DiagramCanvas {
 
             // Deserialize canvas
             this.canvas.deserialize(canvasData)
+
             this.callbacks.setTitle(this.getTitle())
             this.showTotalDiagram()
         } catch (error) {

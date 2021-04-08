@@ -25,8 +25,9 @@ exports.connect = async (context) => {
         context.log('got user', userId, entity)
         if (entity.tableId) {
             context.log('got user', userId, entity)
-            await table.createTableIfNotExists(entity.tableId)
-            await table.insertOrReplaceEntity(entity.tableId, toTableUserItem(userId, userDetails))
+            const tableName = baseTableName + entity.tableId
+            await table.createTableIfNotExists(tableName)
+            await table.insertOrReplaceEntity(tableName, toTableUserItem(clientPrincipal))
             return { token: entity.tableId }
         }
         context.log('Failed to get table id')
@@ -36,15 +37,16 @@ exports.connect = async (context) => {
     }
 
     // Create a new random diagrams table id to be used for the user
-    const tableId = baseTableName + makeRandomId()
+    const tableId = makeRandomId()
+    const tableName = baseTableName + tableId
 
     // Create the actual diagram table
-    await table.createTableIfNotExists(tableId)
-    await table.insertOrReplaceEntity(tableId, toTableUserItem(userId, userDetails))
+    await table.createTableIfNotExists(tableName)
+    await table.insertOrReplaceEntity(tableName, toTableUserItem(clientPrincipal))
 
     // Create a user in the users table
     await table.createTableIfNotExists(usersTableName)
-    await table.insertOrReplaceEntity(usersTableName, toUserItem(userId, tableId, userDetails))
+    await table.insertOrReplaceEntity(usersTableName, toUserItem(clientPrincipal, tableId))
 
     return { token: tableId }
 }
@@ -279,7 +281,7 @@ function getTableName(context) {
         throw new Error('Invalid token')
     }
 
-    return info.token
+    return baseTableName + info.token
 }
 
 function canvasKey(diagramId, canvasId) {
@@ -290,24 +292,27 @@ function diagramKey(diagramId) {
     return `${diagramId}`
 }
 
-function toUserItem(userId, tableId, userDetails) {
+function toUserItem(clientPrincipal, tableId) {
     return {
-        RowKey: entGen.String(userId),
+        RowKey: entGen.String(clientPrincipal.userId),
         PartitionKey: entGen.String(userPartitionKey),
 
-        userId: entGen.String(userId),
+        userId: entGen.String(clientPrincipal.userId),
         tableId: entGen.String(tableId),
-        userDetails: entGen.String(userDetails),
+        userDetails: entGen.String(clientPrincipal.userDetails),
+        provider: entGen.String(clientPrincipal.identityProvider),
     }
 }
 
-function toTableUserItem(userId, userDetails) {
+function toTableUserItem(clientPrincipal) {
     return {
-        RowKey: entGen.String(userId),
+        RowKey: entGen.String(clientPrincipal.userId),
         PartitionKey: entGen.String(partitionKeyName),
 
         type: entGen.String('user'),
-        name: entGen.String(userDetails),
+        userId: entGen.String(clientPrincipal.userId),
+        name: entGen.String(clientPrincipal.userDetails),
+        provider: entGen.String(clientPrincipal.identityProvider),
     }
 }
 
