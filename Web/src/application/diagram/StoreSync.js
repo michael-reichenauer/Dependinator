@@ -57,13 +57,18 @@ export default class StoreSync {
     }
 
     async serverHadChanges() {
+        console.log('Check server changes')
         if (!this.isSyncEnabled) {
+            console.log('no sync')
             return false
         }
+        console.log('checking')
 
         const before = this.store.getRecentDiagramInfos()[0]
         await this.syncDiagrams()
         const after = this.store.getRecentDiagramInfos()[0]
+        console.log('before', before)
+        console.log('after ', after)
         if (before.timestamp === after.timestamp && before.diagramId === after.diagramId) {
             return false
         }
@@ -227,7 +232,7 @@ export default class StoreSync {
             return
         }
 
-        console.log('Syncing')
+        console.trace('Syncing')
         const diagramsToPublish = []
         let localInfos = this.local.readAllDiagramsInfos()
 
