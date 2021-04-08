@@ -268,18 +268,18 @@ export default class DiagramCanvas {
 
     async activated() {
         try {
-            if (!store.isCloudSyncEnabled()) {
+            if (!await this.store.serverHadChanges()) {
                 return
             }
-            const before = store.getRecentDiagramInfos()[0]
-            await store.syncDiagrams()
-            const after = store.getRecentDiagramInfos()[0]
-            if (before.timestamp === after.timestamp && before.diagramId === after.diagramId) {
-                return
+
+            const diagramId = this.store.getMostResentDiagramId()
+            if (!diagramId) {
+                throw new Error('No resent diagram')
             }
-            console.log('Server had changes')
-            this.commandOpenDiagram('', after.diagramId)
+
+            this.commandOpenDiagram('', diagramId)
         } catch (error) {
+            console.trace('Error', error)
             // No resent diagram data, lets create new diagram
             this.setError('Activation error')
         }

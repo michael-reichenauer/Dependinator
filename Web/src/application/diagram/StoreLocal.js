@@ -81,6 +81,10 @@ export default class StoreLocal {
         this.updateDiagramInfo(diagramId, { accessed: Date.now() })
     }
 
+    updateWrittenDiagram(diagramId) {
+        const now = Date.now()
+        this.updateDiagramInfo(diagramId, { accessed: now, written: now })
+    }
 
     writeDiagram(diagram) {
         this.writeDiagramInfo(diagram.diagramInfo)

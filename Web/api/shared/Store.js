@@ -15,7 +15,6 @@ exports.connect = async (context) => {
     const clientPrincipal = auth.getClientPrincipal(req)
 
     const userId = clientPrincipal.userId
-    const userDetails = clientPrincipal.userDetails
     if (!userId) {
         throw new Error('No user id')
     }
@@ -65,7 +64,7 @@ exports.clearAllData = async (context) => {
     await table.deleteTableIfExists(tableName)
 
     try {
-        await table.deleteEntity(usersTableName, toUserItem(userId, '', ''))
+        await table.deleteEntity(usersTableName, toUserItem(clientPrincipal, ''))
     } catch (error) {
         // No user, so done
     }
@@ -81,7 +80,8 @@ exports.newDiagram = async (context, diagram) => {
         throw new Error('missing parameters: ');
     }
 
-    const diagramInfo = { diagramId: diagramId, name: name, accessed: Date.now() }
+    const now = Date.now()
+    const diagramInfo = { diagramId: diagramId, name: name, accessed: now, written: now }
 
     const batch = new azure.TableBatch()
     batch.insertEntity(toDiagramInfoItem(diagramInfo))
@@ -100,7 +100,8 @@ exports.setCanvas = async (context, canvas) => {
     }
 
     const { diagramId } = canvas
-    const diagramInfo = { diagramId: diagramId, accessed: Date.now() }
+    const now = Date.now()
+    const diagramInfo = { diagramId: diagramId, accessed: now, written: now }
 
     const batch = new azure.TableBatch()
     batch.mergeEntity(toDiagramInfoItem(diagramInfo))
@@ -188,7 +189,8 @@ exports.updateDiagram = async (context, diagram) => {
         throw new Error('missing parameters: ');
     }
 
-    const diagramInfo = { ...diagram.diagramInfo, accessed: Date.now() }
+    const now = Date.now()
+    const diagramInfo = { ...diagram.diagramInfo, accessed: now, written: now }
 
     const batch = new azure.TableBatch()
     batch.mergeEntity(toDiagramInfoItem(diagramInfo))
@@ -209,10 +211,10 @@ exports.uploadDiagrams = async (context, diagrams) => {
     if (!diagrams) {
         throw new Error('missing parameters: ');
     }
-
+    const now = Date.now()
     const batch = new azure.TableBatch()
     diagrams.forEach(diagram => {
-        const diagramInfo = { ...diagram.diagramInfo, accessed: Date.now() }
+        const diagramInfo = { ...diagram.diagramInfo, accessed: now, written: now }
         batch.insertOrMergeEntity(toDiagramInfoItem(diagramInfo))
         if (diagram.canvases) {
             diagram.canvases.forEach(canvas => batch.insertOrReplaceEntity(toCanvasItem(canvas)))

@@ -56,6 +56,21 @@ export default class StoreSync {
         await this.syncDiagrams()
     }
 
+    async serverHadChanges() {
+        if (!this.isSyncEnabled) {
+            return false
+        }
+
+        const before = this.store.getRecentDiagramInfos()[0]
+        await this.syncDiagrams()
+        const after = this.store.getRecentDiagramInfos()[0]
+        if (before.timestamp === after.timestamp && before.diagramId === after.diagramId) {
+            return false
+        }
+        console.log('Server had changes')
+        return true
+    }
+
     async login(provider) {
         console.log('Login with', provider)
         this.local.updateSync({ isConnecting: true, provider: provider })

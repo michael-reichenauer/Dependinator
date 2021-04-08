@@ -80,18 +80,7 @@ export default function ApplicationBar({ height }) {
 
                 <Typography className={classes.space} variant="h6" noWrap> </Typography>
 
-                <Tooltip title="Toggle cloud sync on/off" >
-                    <FormControlLabel className={style()}
-                        control={
-                            <GreySwitch
-                                checked={syncMode}
-                                onChange={handleSyncModeChange}
-                                name="Sync"
-                            />
-                        }
-                        label="Sync"
-                    />
-                </Tooltip>
+
 
                 <Tooltip title="Toggle edit mode" >
                     <FormControlLabel
@@ -103,6 +92,19 @@ export default function ApplicationBar({ height }) {
                             />
                         }
                         label="Edit"
+                    />
+                </Tooltip>
+
+                <Tooltip title="Toggle cloud sync on/off" >
+                    <FormControlLabel className={style()}
+                        control={
+                            <GreySwitch
+                                checked={syncMode}
+                                onChange={handleSyncModeChange}
+                                name="Sync"
+                            />
+                        }
+                        label="Sync"
                     />
                 </Tooltip>
 

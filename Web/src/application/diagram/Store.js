@@ -17,7 +17,7 @@ class Store {
     setProgress = null
     isSyncEnabled = false
 
-    isCloudSyncEnabled = () => this.isSyncEnabled
+    isCloudSyncEnabled = () => this.sync.isSyncEnabled
     isLocal = () => window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
 
 
@@ -45,6 +45,10 @@ class Store {
 
     async disableCloudSync() {
         return this.sync.disableCloudSync()
+    }
+
+    async serverHadChanges() {
+        return this.sync.serverHadChanges()
     }
 
     async openMostResentDiagramCanvas() {
@@ -108,8 +112,9 @@ class Store {
 
     async newDiagram(diagramId, name, canvas) {
         console.log('new diagram', diagramId, name)
+        const now = Date.now()
         const diagram = {
-            diagramInfo: { diagramId: diagramId, name: name, accessed: Date.now() },
+            diagramInfo: { diagramId: diagramId, name: name, accessed: now, written: now },
             canvases: [canvas]
         }
         this.local.writeDiagram(diagram)
@@ -119,7 +124,7 @@ class Store {
 
     setCanvas(canvas) {
         this.local.writeCanvas(canvas)
-        this.local.updateAccessedDiagram(canvas.diagramId)
+        this.local.updateWrittenDiagram(canvas.diagramId)
 
         this.sync.setCanvas(canvas)
     }
@@ -133,6 +138,8 @@ class Store {
 
     setDiagramName(diagramId, name) {
         this.local.updateDiagramInfo(diagramId, { name: name })
+        this.local.updateWrittenDiagram(diagramId)
+
 
         this.sync.setDiagramName(diagramId, name)
     }
