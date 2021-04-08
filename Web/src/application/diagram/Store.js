@@ -157,7 +157,7 @@ class Store {
     async loadDiagramFromFile() {
         const file = await this.files.loadFile()
 
-        if (!await this.sync.uploadDiagram(file.diagrams)) {
+        if (!await this.sync.uploadDiagrams(file.diagrams)) {
             // save locally
             file.diagrams.forEach(diagram => this.local.writeDiagram(diagram))
         }

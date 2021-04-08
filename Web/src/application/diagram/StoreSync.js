@@ -228,51 +228,59 @@ export default class StoreSync {
         }
 
         console.log('Syncing')
-        const currentId = this.store.getMostResentDiagramId()
+        const diagramsToPublish = []
+        let localInfos = this.local.readAllDiagramsInfos()
 
         // Get all remote server diagrams data and write to local store
         const remoteInfos = await this.remote.getAllDiagramsData()
-        remoteInfos.forEach(data => this.local.writeDiagramInfo(data))
-
-        // Get local diagram infos to check if to be deleted or published
-        const localInfos = this.local.readAllDiagramsInfos()
-
-        for (let i = 0; i < localInfos.length; i++) {
-            const localInfo = localInfos[i];
-            const isRemote = remoteInfos.find(remoteInfo => remoteInfo.diagramId === localInfo.diagramId)
-            if (!isRemote) {
-                // The local info is not a remote info
-                console.log('local', localInfo)
-                if (localInfo.etag) {
-                    // The local info was a remote, but no longer
-                    if (currentId === localInfo.diagramId) {
-                        // Is the current diagram, lets re-add the diagram to remote
-                        const diagram = this.local.readDiagram(localInfo.diagramId)
-                        if (diagram) {
-                            console.log('push', diagram)
-                            const newInfo = await this.remote.newDiagram(diagram)
-
-                            // Update local diagram info
-                            this.local.writeDiagramInfo(newInfo)
-                        }
-                    } else {
-                        // Local info can just be deleted since it was deleted on the server
-                        console.log('Remove', localInfo.diagramId)
-                        this.local.removeDiagram(localInfo.diagramId)
-                    }
-                } else {
-                    // The local info never pushed, lets push to remote
+        for (let i = 0; i < remoteInfos.length; i++) {
+            const remoteInfo = remoteInfos[i];
+            const localInfo = localInfos.find(l => l.diagramId === remoteInfo.diagramId)
+            if (!localInfo) {
+                // The remote info is not yet downloaded
+                this.local.writeDiagramInfo(remoteInfo)
+            } else {
+                // The remote info has previously been downloaded, comparing write times
+                if (localInfo.written < remoteInfo.written) {
+                    // Remote info is newer, lets update local
+                    this.local.writeDiagramInfo(remoteInfo)
+                } else if (localInfo.written > remoteInfo.written) {
+                    // Local info is newer, lets publish
                     const diagram = this.local.readDiagram(localInfo.diagramId)
                     if (diagram) {
-                        console.log('push', diagram)
-                        const newInfo = await this.remote.newDiagram(diagram)
-
-                        // Update local diagram info
-                        this.local.writeDiagramInfo(newInfo)
+                        diagramsToPublish.push(diagram)
                     }
                 }
             }
         }
-    }
 
+        // Update local diagram infos to check if diagrams are to be deleted or published
+        localInfos = this.local.readAllDiagramsInfos()
+
+        // No check of some local diagrams can be deleted or published
+        for (let i = 0; i < localInfos.length; i++) {
+            const localInfo = localInfos[i];
+            const remoteInfo = remoteInfos.find(r => r.diagramId === localInfo.diagramId)
+            if (!remoteInfo) {
+                // The local info is not a remote info, 
+                console.log('local', localInfo)
+                if (localInfo.etag) {
+                    // The local info was a remote, but no longer. Lets delete local as well
+                    console.log('Remove', localInfo.diagramId)
+                    this.local.removeDiagram(localInfo.diagramId)
+                } else {
+                    // The local info never pushed, lets push to remote
+                    const diagram = this.local.readDiagram(localInfo.diagramId)
+                    if (diagram) {
+                        diagramsToPublish.push(diagram)
+                    }
+                }
+            }
+        }
+
+        if (diagramsToPublish.length > 0) {
+            // Some diagrams should be published
+            await this.remote.uploadDiagrams(diagramsToPublish)
+        }
+    }
 }
