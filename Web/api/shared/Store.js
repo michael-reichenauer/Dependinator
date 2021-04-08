@@ -339,7 +339,7 @@ function toCanvas(item) {
 }
 
 function toDiagramInfoItem(diagramInfo) {
-    const { diagramId, name, accessed } = diagramInfo
+    const { diagramId, name, accessed, written } = diagramInfo
     const item = {
         RowKey: entGen.String(diagramKey(diagramId)),
         PartitionKey: entGen.String(partitionKeyName),
@@ -353,6 +353,9 @@ function toDiagramInfoItem(diagramInfo) {
     if (accessed != null) {
         item.accessed = entGen.Int64(accessed)
     }
+    if (written != null) {
+        item.written = entGen.Int64(written)
+    }
     return item
 }
 
@@ -363,5 +366,6 @@ function toDiagramInfo(item) {
         diagramId: item.diagramId,
         name: item.name,
         accessed: item.accessed,
+        written: item.written,
     }
 }
