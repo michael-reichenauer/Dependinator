@@ -30,7 +30,7 @@ class Store {
     }
 
     async disableCloudSync() {
-        return this.sync.disableCloudSync()
+        this.sync.disableCloudSync()
     }
 
     async serverHadChanges() {

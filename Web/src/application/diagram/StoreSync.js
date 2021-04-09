@@ -111,25 +111,17 @@ export default class StoreSync {
         }
     }
 
-
-    async disableCloudSync() {
+    disableCloudSync() {
         if (!this.isSyncEnabled) {
             return
         }
-        setProgress(true)
-        try {
-            console.log('Disable cloud sync')
-            this.isSyncEnabled = false
-            this.local.updateSync({ token: null, isConnecting: false, provider: null })
-            this.remote.setToken(null)
-            window.location.href = `/.auth/logout`;
-        } catch (error) {
-            setErrorMessage('Failed to disable cloud sync')
-        } finally {
-            setProgress(false)
-        }
-    }
 
+        console.log('Disable cloud sync')
+        this.isSyncEnabled = false
+        this.local.updateSync({ token: null, isConnecting: false, provider: null })
+        this.remote.setToken(null)
+        window.location.reload()
+    }
 
     async openDiagramRootCanvas(diagramId) {
         if (!this.isSyncEnabled) {
