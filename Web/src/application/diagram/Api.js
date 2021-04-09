@@ -1,6 +1,21 @@
 
 import axios from 'axios';
 import { timing } from '../../common/timing';
+import { atom, useAtom } from "jotai"
+
+const connectionAtom = atom(false)
+let setConnectionFunc = null
+let isConnectionOK = null
+
+const setConnection = flag => setConnectionFunc?.(flag)
+
+export const useConnection = () => {
+    const [connection, setConnection] = useAtom(connectionAtom)
+    if (!setConnectionFunc) {
+        setConnectionFunc = setConnection
+    }
+    return [connection]
+}
 
 
 export default class Api {
@@ -76,48 +91,74 @@ export default class Api {
 
     // api helper functions ---------------------------------
     async get(uri) {
-        console.log('get', uri)
+        this.handleRequest('get', uri)
         const t = timing()
         try {
             const rsp = (await axios.get(uri, { headers: { xtoken: this.token } })).data;
-            t.log('got', uri, rsp)
+            this.handleOK('get', uri, null, rsp)
             return rsp
         } catch (error) {
-            t.log('Failed get:', uri, error)
-            if (error.response) {
-                // Request made and server responded
-                console.log(`Error: status: ${error.response.status}: '${error.response.data}'`)
-            } else if (error.request) {
-                // The request was made but no response was received
-                console.log(`Error: request: ${error.request}: `)
-            } else {
-                // Something happened in setting up the request that triggered an Error
-                console.log('Error', error.message);
-            }
+            this.handleError('get', error, uri)
             throw (error)
+        }
+        finally {
+            t.log('get', uri)
         }
     }
 
     async post(uri, data) {
-        console.log('post', uri, data)
+        this.handleRequest('post', uri, data)
         const t = timing()
         try {
             const rsp = (await axios.post(uri, data, { headers: { xtoken: this.token } })).data;
-            t.log('posted', uri, data, rsp)
+            this.handleOK('post', uri, data, rsp)
             return rsp
         } catch (error) {
-            t.log('Failed post:', uri, data, error)
-            if (error.response) {
-                // Request made and server responded
-                console.log(`Error: status: ${error.response.status}: '${error.response.data}'`)
-            } else if (error.request) {
-                // The request was made but no response was received
-                console.log(`Error: request: ${error.request}: `)
-            } else {
-                // Something happened in setting up the request that triggered an Error
-                console.log('Error', error.message);
-            }
+            this.handleError('post', error, uri, data)
             throw (error)
         }
+        finally {
+            t.log('post', uri)
+        }
+    }
+
+    handleRequest(method, uri, postData) {
+        console.log('Request:', method, uri, postData)
+    }
+
+    handleOK(method, uri, postData, rsp) {
+        if (isConnectionOK !== true) {
+            console.log('Connection OK')
+            setConnection(true)
+        }
+        isConnectionOK = true
+        console.log('OK:', method, uri, postData, rsp)
+    }
+
+    handleError(method, error, uri, postData) {
+        //console.log('Failed:', method, uri, postData, error)
+        if (error.response) {
+            // Request made and server responded
+            if (error.response.status === 500 && error.response.data?.includes('(ECONNREFUSED)')) {
+                this.handleNetworkError()
+                return
+            }
+            console.log(`Failed ${method} ${uri} ${postData}, status: ${error.response.status}: '${error.response.data}'`)
+        } else if (error.request) {
+            // The request was made but no response was received
+            this.handleNetworkError()
+        } else {
+            // Something happened in setting up the request that triggered an Error
+            console.error('Error', method, uri, postData, error, error.message);
+        }
+    }
+
+    handleNetworkError() {
+        console.log('Network error')
+        if (isConnectionOK !== false) {
+            console.log('Connection error')
+            setConnection(false)
+        }
+        isConnectionOK = false
     }
 }

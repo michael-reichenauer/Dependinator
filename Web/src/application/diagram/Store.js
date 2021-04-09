@@ -1,4 +1,3 @@
-import Api from "./Api"
 import StoreFiles from "./StoreFiles"
 import StoreLocal from "./StoreLocal"
 import StoreSync, { rootCanvasId } from "./StoreSync"
@@ -10,7 +9,6 @@ import StoreSync, { rootCanvasId } from "./StoreSync"
 class Store {
     files = new StoreFiles()
     local = new StoreLocal()
-    remote = new Api()
     sync = null
 
     isSyncEnabled = false
@@ -37,6 +35,14 @@ class Store {
 
     async serverHadChanges() {
         return this.sync.serverHadChanges()
+    }
+
+    async checkCloudConnection() {
+        return this.sync.checkCloudConnection()
+    }
+
+    async retryCloudConnection() {
+        return this.sync.retryCloudConnection()
     }
 
     async openMostResentDiagramCanvas() {

@@ -17,6 +17,10 @@ import { grey } from "@material-ui/core/colors";
 import { store } from "./diagram/Store";
 import { useLogin } from "./Login";
 import { useSyncMode } from './Online'
+import { useConnection } from "./diagram/Api";
+import SyncIcon from '@material-ui/icons/Sync';
+import SyncProblemIcon from '@material-ui/icons/SyncProblem';
+import SyncDisabledIcon from '@material-ui/icons/SyncDisabled';
 
 
 export default function ApplicationBar({ height }) {
@@ -28,19 +32,14 @@ export default function ApplicationBar({ height }) {
     const [canRedo] = useAtom(canRedoAtom)
     const [canPopDiagram] = useAtom(canPopDiagramAtom)
     const [, setShowLogin] = useLogin()
+    const [connection] = useConnection()
 
     const handleEditModeChange = (event) => {
         setEditMode(event.target.checked);
         PubSub.publish('canvas.SetEditMode', event.target.checked)
     };
-    const handleSyncModeChange = (event) => {
-        const isChecked = event.target.checked
-        if (!isChecked) {
-            store.disableCloudSync()
-            return
-        }
-        setShowLogin(true)
-    };
+
+    const syncState = syncMode && connection ? true : syncMode && !connection ? false : null
 
     const style = (disabled) => {
         return !disabled ? classes.icons : classes.iconsDisabled
@@ -53,7 +52,12 @@ export default function ApplicationBar({ height }) {
     return (
         <AppBar position="static" style={{ height: height }}>
             <Toolbar>
-
+                {syncState === true && <Button tooltip="Cloud sync enabled and OK, click to check cloud connection" icon={<SyncIcon style={{ color: 'Lime' }} />}
+                    onClick={() => store.checkCloudConnection()} />}
+                {syncState === false && <Button tooltip="Cloud connection error, sync disabled, click to retry" icon={<SyncProblemIcon style={{ color: '#FF3366' }} />}
+                    onClick={() => store.checkCloudConnection()} />}
+                {syncState === null && <Button tooltip="Cloud sync disabled, click to enable" icon={<SyncDisabledIcon style={{ color: '#FFFF66' }} />}
+                    onClick={() => setShowLogin(true)} />}
 
                 <Button tooltip="Undo" disabled={!canUndo} icon={<UndoIcon className={styleAlways(!canUndo)} />}
                     onClick={() => PubSub.publish('canvas.Undo')} />
@@ -93,19 +97,6 @@ export default function ApplicationBar({ height }) {
                             />
                         }
                         label="Edit"
-                    />
-                </Tooltip>
-
-                <Tooltip title="Toggle cloud sync on/off" >
-                    <FormControlLabel className={style()}
-                        control={
-                            <GreySwitch
-                                checked={syncMode}
-                                onChange={handleSyncModeChange}
-                                name="Sync"
-                            />
-                        }
-                        label="Sync"
                     />
                 </Tooltip>
 
@@ -174,6 +165,10 @@ const useAppBarStyles = makeStyles((theme) => ({
     },
     iconsAlwaysDisabled: {
         color: 'grey',
+    },
+
+    connectionIcons: {
+        color: 'green',
     },
 
     search: {

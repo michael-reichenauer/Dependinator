@@ -2,7 +2,12 @@ import { useEffect } from 'react';
 import { SnackbarProvider, useSnackbar } from 'notistack';
 
 let setErrorFunc = null
+let setInfoFunc = null
+let setSuccessFunc = null
+
 export const setErrorMessage = message => setErrorFunc?.(message)
+export const setInfoMessage = message => setInfoFunc?.(message)
+export const setSuccessMessage = message => setSuccessFunc?.(message)
 
 export const MessageProvider = (props) => {
     return (
@@ -29,6 +34,19 @@ const Enable = () => {
                 variant: "error",
                 onClick: () => closeSnackbar(sb),
                 autoHideDuration: null
+            })
+        }
+        setInfoFunc = msg => {
+            const sb = enqueueSnackbar(msg, {
+                variant: "info",
+                onClick: () => closeSnackbar(sb),
+            })
+        }
+        setSuccessFunc = msg => {
+            const sb = enqueueSnackbar(msg, {
+                variant: "success",
+                onClick: () => closeSnackbar(sb),
+                autoHideDuration: 3000,
             })
         }
     }, [closeSnackbar, enqueueSnackbar])

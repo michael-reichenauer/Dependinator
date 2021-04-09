@@ -1,5 +1,7 @@
+import { setErrorMessage, setSuccessMessage } from "../../common/MessageSnackbar"
 import { setProgress } from "../../common/Progress"
 import { setSyncMode } from "../Online"
+import Api from "./Api"
 
 export const rootCanvasId = 'root'
 
@@ -7,20 +9,31 @@ export default class StoreSync {
 
     store = null
     local = null
-    remote = null
+    remote = new Api()
+
     isSyncEnabled = false
 
     constructor(store) {
         this.store = store
         this.local = store.local
-        this.remote = store.remote
+    }
+
+    async checkCloudConnection() {
+        setProgress(true)
+        try {
+            await this.remote.check()
+            setSuccessMessage('Cloud connection OK')
+        } catch (error) {
+            setErrorMessage('No connection with cloud server')
+        } finally {
+            setProgress(false)
+        }
     }
 
 
     async initialize() {
         console.log('initialize')
         let sync = this.local.getSync()
-        let didConnect = false
 
         console.log('sync', sync)
         if (sync.isConnecting) {
@@ -28,7 +41,6 @@ export default class StoreSync {
             // A previous login triggered reload and now we should call connect
             this.local.updateSync({ isConnecting: false })
             const connectData = await this.remote.connect()
-            didConnect = true
             console.log('connected', connectData)
             sync = this.local.updateSync({ token: connectData.token })
         }
@@ -38,11 +50,6 @@ export default class StoreSync {
             this.isSyncEnabled = false
             setSyncMode(false)
             return
-        }
-
-        if (!didConnect) {
-            // Checking connection with api (but only if not already connected)
-            await this.remote.check()
         }
 
         this.remote.setToken(sync.token)

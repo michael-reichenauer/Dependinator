@@ -15,7 +15,6 @@ export const canPopDiagramAtom = atom(false)
 export const editModeAtom = atom(false)
 
 
-
 export default function Diagram({ width, height }) {
     // The ref to the canvas handler for all canvas operations
     const canvasRef = useRef(null)
