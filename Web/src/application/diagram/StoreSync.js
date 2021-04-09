@@ -9,16 +9,11 @@ export default class StoreSync {
     local = null
     remote = null
     isSyncEnabled = false
-    setError = null
 
     constructor(store) {
         this.store = store
         this.local = store.local
         this.remote = store.remote
-    }
-
-    setHandlers(setError) {
-        this.setError = setError
     }
 
 
@@ -122,7 +117,7 @@ export default class StoreSync {
             this.remote.setToken(null)
             window.location.href = `/.auth/logout`;
         } catch (error) {
-            this.setError('Failed to disable cloud sync')
+            setErrorMessage('Failed to disable cloud sync')
         } finally {
             setProgress(false)
         }
@@ -168,7 +163,7 @@ export default class StoreSync {
         // Sync with remote server
         this.remote.setCanvas(canvas)
             .then(diagramInfo => this.local.writeDiagramInfo(diagramInfo))
-            .catch(error => this.setError('Failed to sync canvas change'))
+            .catch(error => setErrorMessage('Failed to sync canvas change'))
     }
 
     async deleteDiagram(diagramId) {
@@ -187,7 +182,7 @@ export default class StoreSync {
 
         this.remote.updateDiagram({ diagramInfo: { diagramId: diagramId, name: name } })
             .then(diagramInfo => this.local.writeDiagramInfo(diagramInfo))
-            .catch(error => this.setError('Failed to sync name change'))
+            .catch(error => setErrorMessage('Failed to sync name change'))
     }
 
     async uploadDiagrams(diagrams) {
@@ -212,13 +207,13 @@ export default class StoreSync {
         setProgress(true)
         try {
             if (!this.isSyncEnabled) {
-                this.setError('Cloud sync not enabled, cannot clear remote data')
+                setErrorMessage('Cloud sync not enabled, cannot clear remote data')
                 return false
             }
             await this.remote.clearAllData()
             return true
         } catch (error) {
-            this.setError('Failed to clear remote data, ' + error.message)
+            setErrorMessage('Failed to clear remote data, ' + error.message)
             return false
         } finally {
             setProgress(false)

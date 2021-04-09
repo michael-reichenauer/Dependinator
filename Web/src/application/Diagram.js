@@ -22,7 +22,6 @@ export default function Diagram({ width, height }) {
     const canvasRef = useRef(null)
     const activeRef = useRef(true)
 
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
     const [contextMenu, setContextMenu] = useState()
     const [, setTitle] = useAtom(titleAtom)
     const [, setCanUndo] = useAtom(canUndoAtom)
@@ -33,13 +32,6 @@ export default function Diagram({ width, height }) {
     const [isProgress] = useProgress()
 
     useEffect(() => {
-        // Initialize canvas
-        const errorHandler = errorMsg => {
-            const sb = enqueueSnackbar(errorMsg, {
-                variant: "error", onClick: () => closeSnackbar(sb), autoHideDuration: null
-            })
-        }
-
         const onActivityEvent = (activity) => {
             if (!activeRef.current && activity.detail) {
                 canvasRef.current.activated()
@@ -53,7 +45,6 @@ export default function Diagram({ width, height }) {
             setCanRedo: setCanRedo,
             setCanPopDiagram: setCanPopDiagram,
             setEditMode: setEditMode,
-            errorHandler: errorHandler
         }
 
         const canvas = new DiagramCanvas('canvas', callbacks);
@@ -75,7 +66,7 @@ export default function Diagram({ width, height }) {
             document.removeEventListener("longclick", contextMenuHandler);
             canvasRef.current.delete()
         }
-    }, [setCanUndo, setCanRedo, setCanPopDiagram, setEditMode, setTitle, closeSnackbar, enqueueSnackbar])
+    }, [setCanUndo, setCanRedo, setCanPopDiagram, setEditMode, setTitle])
 
     return (
         <>

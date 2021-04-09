@@ -14,6 +14,7 @@ import { addDefaultNewDiagram, addFigureToCanvas } from "./addDefault";
 import InnerDiagramCanvas from "./InnerDiagramCanvas";
 import Printer from "../../common/Printer";
 import { setProgress } from "../../common/Progress";
+import { setErrorMessage } from "../../common/MessageSnackbar";
 
 
 export default class DiagramCanvas {
@@ -26,18 +27,15 @@ export default class DiagramCanvas {
 
     canvas = null;
     callbacks = null
-    setError = null
 
     constructor(htmlElementId, callbacks) {
         this.callbacks = callbacks
         this.canvas = new Canvas(htmlElementId, this.onEditMode, DiagramCanvas.defaultWidth, DiagramCanvas.defaultHeight)
         this.canvasStack = new CanvasStack(this.canvas)
         this.inner = new InnerDiagramCanvas(this.canvas, this.canvasStack, this.store)
-        this.setError = callbacks.errorHandler
     }
 
     init() {
-        this.store.setHandlers(this.callbacks.errorHandler)
         this.loadInitialDiagram()
 
         this.handleDoubleClick(this.canvas)
@@ -104,7 +102,7 @@ export default class DiagramCanvas {
             this.callbacks.setTitle(this.getTitle())
             this.showTotalDiagram()
         } catch (error) {
-            this.setError('Failed to create new diagram')
+            setErrorMessage('Failed to create new diagram')
         }
         finally {
             setProgress(false)
@@ -125,7 +123,7 @@ export default class DiagramCanvas {
             this.callbacks.setTitle(this.getTitle())
             this.showTotalDiagram()
         } catch (error) {
-            this.setError('Failed to load diagram')
+            setErrorMessage('Failed to load diagram')
         }
         finally {
             setProgress(false)
@@ -165,7 +163,7 @@ export default class DiagramCanvas {
             const diagramId = await this.store.loadDiagramFromFile()
             this.commandOpenDiagram('', diagramId)
         } catch (error) {
-            this.setError('Failed to load file')
+            setErrorMessage('Failed to load file')
         } finally {
             setProgress(false)
         }
@@ -177,7 +175,7 @@ export default class DiagramCanvas {
         try {
             this.store.saveAllDiagramsToFile()
         } catch (error) {
-            this.setError('Failed to save all diagram')
+            setErrorMessage('Failed to save all diagram')
         } finally {
             setProgress(false)
         }
@@ -249,7 +247,7 @@ export default class DiagramCanvas {
             try {
                 await store.initialize()
             } catch (error) {
-                this.setError('Failed to connect to cloud server, sync is disabled')
+                setErrorMessage('Failed to connect to cloud server, sync is disabled')
             }
 
             // Get the last used diagram and show 
@@ -279,7 +277,7 @@ export default class DiagramCanvas {
             this.commandOpenDiagram('', diagramId)
         } catch (error) {
             // No resent diagram data, lets create new diagram
-            this.setError('Activation error')
+            setErrorMessage('Activation error')
         }
     }
 

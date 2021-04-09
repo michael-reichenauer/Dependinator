@@ -13,7 +13,6 @@ class Store {
     remote = new Api()
     sync = null
 
-    setError = null
     isSyncEnabled = false
 
     isCloudSyncEnabled = () => this.sync.isSyncEnabled
@@ -23,12 +22,6 @@ class Store {
     constructor() {
         this.sync = new StoreSync(this)
     }
-
-    setHandlers(setError) {
-        this.setError = setError
-        this.sync.setHandlers(setError)
-    }
-
 
     async initialize() {
         return this.sync.initialize(0)
