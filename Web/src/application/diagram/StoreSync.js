@@ -1,3 +1,6 @@
+import { setProgress } from "../../common/Progress"
+import { setSyncMode } from "../Online"
+
 export const rootCanvasId = 'root'
 
 export default class StoreSync {
@@ -6,6 +9,7 @@ export default class StoreSync {
     local = null
     remote = null
     isSyncEnabled = false
+    setError = null
 
     constructor(store) {
         this.store = store
@@ -13,10 +17,8 @@ export default class StoreSync {
         this.remote = store.remote
     }
 
-    setHandlers(setError, setProgress, setSyncMode) {
+    setHandlers(setError) {
         this.setError = setError
-        this.setProgress = setProgress
-        this.setSyncMode = setSyncMode
     }
 
 
@@ -39,7 +41,7 @@ export default class StoreSync {
         if (!sync.token) {
             console.log('No sync token, sync is disabled')
             this.isSyncEnabled = false
-            this.setSyncMode(false)
+            setSyncMode(false)
             return
         }
 
@@ -50,7 +52,7 @@ export default class StoreSync {
 
         this.remote.setToken(sync.token)
         this.isSyncEnabled = true
-        this.setSyncMode(true)
+        setSyncMode(true)
         console.log('Sync is enabled')
 
         await this.syncDiagrams()
@@ -73,7 +75,6 @@ export default class StoreSync {
 
     async login(provider) {
         console.log('Login with', provider)
-        this.local.updateSync({ isConnecting: true, provider: provider })
 
         try {
             // Checking if user already is logged in with the specified provider
@@ -86,8 +87,10 @@ export default class StoreSync {
 
         } catch (error) {
             // Failed to check current user, lets ignore that and login
+            console.trace('error', error)
         }
 
+        this.local.updateSync({ isConnecting: true, provider: provider })
         // Login for the specified id provider
         if (provider === 'Local') {
             // Local (dev), just reload
@@ -111,7 +114,7 @@ export default class StoreSync {
         if (!this.isSyncEnabled) {
             return
         }
-        this.setProgress(true)
+        setProgress(true)
         try {
             console.log('Disable cloud sync')
             this.isSyncEnabled = false
@@ -121,7 +124,7 @@ export default class StoreSync {
         } catch (error) {
             this.setError('Failed to disable cloud sync')
         } finally {
-            this.setProgress(false)
+            setProgress(false)
         }
     }
 
@@ -206,7 +209,7 @@ export default class StoreSync {
     }
 
     async clearRemoteData() {
-        this.setProgress(true)
+        setProgress(true)
         try {
             if (!this.isSyncEnabled) {
                 this.setError('Cloud sync not enabled, cannot clear remote data')
@@ -218,7 +221,7 @@ export default class StoreSync {
             this.setError('Failed to clear remote data, ' + error.message)
             return false
         } finally {
-            this.setProgress(false)
+            setProgress(false)
         }
     }
 

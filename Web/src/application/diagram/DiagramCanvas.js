@@ -13,6 +13,7 @@ import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
 import { addDefaultNewDiagram, addFigureToCanvas } from "./addDefault";
 import InnerDiagramCanvas from "./InnerDiagramCanvas";
 import Printer from "../../common/Printer";
+import { setProgress } from "../../common/Progress";
 
 
 export default class DiagramCanvas {
@@ -26,7 +27,6 @@ export default class DiagramCanvas {
     canvas = null;
     callbacks = null
     setError = null
-    setProgress = null
 
     constructor(htmlElementId, callbacks) {
         this.callbacks = callbacks
@@ -34,11 +34,10 @@ export default class DiagramCanvas {
         this.canvasStack = new CanvasStack(this.canvas)
         this.inner = new InnerDiagramCanvas(this.canvas, this.canvasStack, this.store)
         this.setError = callbacks.errorHandler
-        this.setProgress = callbacks.setProgress
     }
 
     init() {
-        this.store.setHandlers(this.callbacks.errorHandler, this.callbacks.setProgress, this.callbacks.setSyncMode)
+        this.store.setHandlers(this.callbacks.errorHandler)
         this.loadInitialDiagram()
 
         this.handleDoubleClick(this.canvas)
@@ -97,7 +96,7 @@ export default class DiagramCanvas {
     }
 
     commandNewDiagram = async () => {
-        this.setProgress(true)
+        setProgress(true)
         try {
             //store.loadFile(file => console.log('File:', file))
             this.canvas.clearDiagram()
@@ -108,12 +107,12 @@ export default class DiagramCanvas {
             this.setError('Failed to create new diagram')
         }
         finally {
-            this.setProgress(false)
+            setProgress(false)
         }
     }
 
     commandOpenDiagram = async (msg, diagramId) => {
-        this.setProgress(true)
+        setProgress(true)
         try {
             console.log('open', diagramId)
             const canvasData = await this.store.openDiagramRootCanvas(diagramId)
@@ -129,12 +128,12 @@ export default class DiagramCanvas {
             this.setError('Failed to load diagram')
         }
         finally {
-            this.setProgress(false)
+            setProgress(false)
         }
     }
 
     commandDeleteDiagram = async () => {
-        this.setProgress(true)
+        setProgress(true)
         try {
             await this.store.deleteDiagram(this.canvas.diagramId)
             this.canvas.clearDiagram()
@@ -152,7 +151,7 @@ export default class DiagramCanvas {
             this.callbacks.setTitle(this.getTitle())
             this.showTotalDiagram()
         } finally {
-            this.setProgress(false)
+            setProgress(false)
         }
     }
 
@@ -161,26 +160,26 @@ export default class DiagramCanvas {
     }
 
     commandOpenFile = async () => {
-        this.setProgress(true)
+        setProgress(true)
         try {
             const diagramId = await this.store.loadDiagramFromFile()
             this.commandOpenDiagram('', diagramId)
         } catch (error) {
             this.setError('Failed to load file')
         } finally {
-            this.setProgress(false)
+            setProgress(false)
         }
 
     }
 
     commandArchiveToFile = async () => {
-        this.setProgress(true)
+        setProgress(true)
         try {
             this.store.saveAllDiagramsToFile()
         } catch (error) {
             this.setError('Failed to save all diagram')
         } finally {
-            this.setProgress(false)
+            setProgress(false)
         }
 
     }
@@ -245,7 +244,7 @@ export default class DiagramCanvas {
     }
 
     async loadInitialDiagram() {
-        this.setProgress(true)
+        setProgress(true)
         try {
             try {
                 await store.initialize()
@@ -262,7 +261,7 @@ export default class DiagramCanvas {
             await this.createNewDiagram()
         }
         finally {
-            this.setProgress(false)
+            setProgress(false)
         }
     }
 
@@ -364,10 +363,10 @@ export default class DiagramCanvas {
     }
 
     withWorkingIndicator(action) {
-        this.callbacks.setProgress(true)
+        setProgress(true)
         setTimeout(() => {
             action()
-            this.callbacks.setProgress(false)
+            setProgress(false)
         }, 20);
     }
 }

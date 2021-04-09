@@ -7,14 +7,12 @@ import { atom, useAtom } from 'jotai'
 import { ContextMenu } from "../common/Menus";
 import Progress, { useProgress } from '../common/Progress'
 import { activityEventName } from '../common/activity'
-//import Api from "./diagram/Api";
 
 
 export const titleAtom = atom('System')
 export const canUndoAtom = atom(false)
 export const canRedoAtom = atom(false)
 export const canPopDiagramAtom = atom(false)
-export const syncModeAtom = atom(false)
 export const editModeAtom = atom(false)
 
 
@@ -31,9 +29,8 @@ export default function Diagram({ width, height }) {
     const [, setCanRedo] = useAtom(canRedoAtom)
     const [, setCanPopDiagram] = useAtom(canPopDiagramAtom)
     const [, setEditMode] = useAtom(editModeAtom)
-    const [, setSyncMode] = useAtom(syncModeAtom)
 
-    const [isProgress, setProgress] = useProgress()
+    const [isProgress] = useProgress()
 
     useEffect(() => {
         // Initialize canvas
@@ -54,10 +51,8 @@ export default function Diagram({ width, height }) {
             setTitle: setTitle,
             setCanUndo: setCanUndo,
             setCanRedo: setCanRedo,
-            setProgress: setProgress,
             setCanPopDiagram: setCanPopDiagram,
             setEditMode: setEditMode,
-            setSyncMode: setSyncMode,
             errorHandler: errorHandler
         }
 
@@ -80,7 +75,7 @@ export default function Diagram({ width, height }) {
             document.removeEventListener("longclick", contextMenuHandler);
             canvasRef.current.delete()
         }
-    }, [setCanUndo, setCanRedo, setProgress, setCanPopDiagram, setEditMode, setSyncMode, setTitle, closeSnackbar, enqueueSnackbar])
+    }, [setCanUndo, setCanRedo, setCanPopDiagram, setEditMode, setTitle, closeSnackbar, enqueueSnackbar])
 
     return (
         <>

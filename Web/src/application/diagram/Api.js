@@ -11,9 +11,6 @@ export default class Api {
         this.token = token
     }
 
-    setProgressHandler(setProgress) {
-        this.setProgress = setProgress
-    }
 
     async getCurrentUser() {
         console.log('host', window.location.hostname)
@@ -80,7 +77,6 @@ export default class Api {
     // api helper functions ---------------------------------
     async get(uri) {
         console.log('get', uri)
-        //  this.setProgress(true)
         const t = timing()
         try {
             const rsp = (await axios.get(uri, { headers: { xtoken: this.token } })).data;
@@ -99,15 +95,11 @@ export default class Api {
                 console.log('Error', error.message);
             }
             throw (error)
-        } finally {
-            //  this.setProgress(false)
         }
-
     }
 
     async post(uri, data) {
         console.log('post', uri, data)
-        //  this.setProgress(true)
         const t = timing()
         try {
             const rsp = (await axios.post(uri, data, { headers: { xtoken: this.token } })).data;
@@ -126,8 +118,6 @@ export default class Api {
                 console.log('Error', error.message);
             }
             throw (error)
-        } finally {
-            //    this.setProgress(false)
         }
     }
 }

@@ -4,10 +4,17 @@ import React, { useCallback, useRef } from 'react'
 
 
 const progressAtom = atom(false)
+let setProgressFunc = null
+
+export const setProgress = flag => setProgressFunc?.(flag)
 
 export const useProgress = () => {
     const [isProgress, setProgress] = useAtom(progressAtom)
     const count = useRef(0)
+
+    if (!setProgressFunc) {
+        setProgressFunc = setProgress
+    }
 
     const set = useCallback(isStart => {
         if (isStart) {

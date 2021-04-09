@@ -10,19 +10,20 @@ import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
 import SaveAltIcon from '@material-ui/icons/SaveAlt';
-import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom, syncModeAtom, titleAtom } from "./Diagram";
+import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom, titleAtom } from "./Diagram";
 import { useAtom } from "jotai";
 import { withStyles } from "@material-ui/styles";
 import { grey } from "@material-ui/core/colors";
 import { store } from "./diagram/Store";
 import { useLogin } from "./Login";
+import { useSyncMode } from './Online'
 
 
 export default function ApplicationBar({ height }) {
     const classes = useAppBarStyles();
     const [titleText] = useAtom(titleAtom)
     const [editMode, setEditMode] = useAtom(editModeAtom);
-    const [syncMode] = useAtom(syncModeAtom)
+    const [syncMode] = useSyncMode()
     const [canUndo] = useAtom(canUndoAtom)
     const [canRedo] = useAtom(canRedoAtom)
     const [canPopDiagram] = useAtom(canPopDiagramAtom)

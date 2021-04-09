@@ -14,7 +14,6 @@ class Store {
     sync = null
 
     setError = null
-    setProgress = null
     isSyncEnabled = false
 
     isCloudSyncEnabled = () => this.sync.isSyncEnabled
@@ -25,13 +24,9 @@ class Store {
         this.sync = new StoreSync(this)
     }
 
-    setHandlers(setError, setProgress, setSyncMode) {
+    setHandlers(setError) {
         this.setError = setError
-        this.setProgress = setProgress
-        this.setSyncMode = setSyncMode
-        this.remote.setProgressHandler(setProgress)
-
-        this.sync.setHandlers(setError, setProgress, setSyncMode)
+        this.sync.setHandlers(setError)
     }
 
 
