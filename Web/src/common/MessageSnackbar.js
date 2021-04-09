@@ -31,9 +31,6 @@ const Enable = () => {
                 autoHideDuration: null
             })
         }
-
-
-
     }, [closeSnackbar, enqueueSnackbar])
 
     return null

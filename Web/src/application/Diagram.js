@@ -1,11 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import PubSub from 'pubsub-js'
-import { useSnackbar } from "notistack";
 import DiagramCanvas from "./diagram/DiagramCanvas"
 import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { ContextMenu } from "../common/Menus";
-import Progress, { useProgress } from '../common/Progress'
+import Progress from '../common/Progress'
 import { activityEventName } from '../common/activity'
 
 
@@ -28,8 +27,6 @@ export default function Diagram({ width, height }) {
     const [, setCanRedo] = useAtom(canRedoAtom)
     const [, setCanPopDiagram] = useAtom(canPopDiagramAtom)
     const [, setEditMode] = useAtom(editModeAtom)
-
-    const [isProgress] = useProgress()
 
     useEffect(() => {
         const onActivityEvent = (activity) => {
@@ -70,7 +67,7 @@ export default function Diagram({ width, height }) {
 
     return (
         <>
-            <Progress open={isProgress} />
+            <Progress />
 
             <div id="diagram">
                 <div id="canvas" style={{

@@ -8,7 +8,27 @@ let setProgressFunc = null
 
 export const setProgress = flag => setProgressFunc?.(flag)
 
-export const useProgress = () => {
+export default function Progress() {
+    const classes = useStyles();
+    const [isProgress] = useProgress()
+
+    return (
+        <Fade
+            in={isProgress}
+            style={{
+                transitionDelay: isProgress ? '800ms' : '0ms',
+            }}
+            unmountOnExit
+        >
+            <Backdrop className={classes.backdrop} open={isProgress} >
+                <CircularProgress className={classes.colorPrimary} color='primary' />
+            </Backdrop>
+        </Fade>
+    )
+}
+
+
+const useProgress = () => {
     const [isProgress, setProgress] = useAtom(progressAtom)
     const count = useRef(0)
 
@@ -47,23 +67,5 @@ const useStyles = makeStyles((theme) => ({
         color: 'white',
     },
 }));
-
-export default function Progress({ open }) {
-    const classes = useStyles();
-
-    return (
-        <Fade
-            in={open}
-            style={{
-                transitionDelay: open ? '800ms' : '0ms',
-            }}
-            unmountOnExit
-        >
-            <Backdrop className={classes.backdrop} open={open} >
-                <CircularProgress className={classes.colorPrimary} color='primary' />
-            </Backdrop>
-        </Fade>
-    )
-}
 
 
