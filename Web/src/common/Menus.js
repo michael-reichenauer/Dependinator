@@ -47,11 +47,9 @@ export function AppMenu({ anchorEl, items, onClose }) {
     return (
         <Menu
             anchorEl={anchorEl}
-            keepMounted
             open={true}
             onClose={() => onClose()}
-            PaperProps={{
-            }}
+            PaperProps={{}}
         >
             {getMenuItems(items, onClick)}
         </Menu>
@@ -75,7 +73,6 @@ export function ContextMenu({ menu, onClose }) {
 
     return (
         <Menu
-            keepMounted
             open={true}
             onClose={onClose}
             anchorReference="anchorPosition"
@@ -105,7 +102,6 @@ const getMenuItems = (items, onClick) => {
         } else if (item instanceof NestedItem) {
             return (
                 <NestedMenuItem
-
                     key={`item-${i}`}
                     label={item.text}
                     parentMenuOpen={true}

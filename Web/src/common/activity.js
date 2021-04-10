@@ -1,3 +1,4 @@
+import { Backdrop, Fade, makeStyles } from '@material-ui/core';
 import { useEffect, useState } from 'react';
 import { durationString } from './utils';
 
@@ -11,6 +12,31 @@ let activityCheckTimer = null
 let isDocumentActive = false
 const monitorEvents = ["mousemove", "mousedown", "touchstart", "touchmove", "keydown", "wheel"]
 export const activityEventName = 'customActivityChange'
+
+const useStyles = makeStyles((theme) => ({
+    backdrop: {
+        zIndex: theme.zIndex.drawer + 1,
+        color: '#fff',
+    },
+}));
+
+
+export default function ActivityFade() {
+    const classes = useStyles();
+    const [isActive] = useActivity()
+
+    return (
+        <Fade
+            in={isActive}
+            style={{
+                transitionDelay: isActive ? '800ms' : '0ms',
+            }}
+            unmountOnExit
+        >
+            <Backdrop className={classes.backdrop} open={isActive} />
+        </Fade>
+    )
+}
 
 export function useActivityMonitor() {
     useEffect(() => {

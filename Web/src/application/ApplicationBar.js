@@ -1,6 +1,6 @@
 import React from "react";
 import PubSub from 'pubsub-js'
-import { Typography, fade, AppBar, Toolbar, IconButton, Tooltip, Box, } from "@material-ui/core";
+import { Typography, AppBar, Toolbar, IconButton, Tooltip, Box, } from "@material-ui/core";
 import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { ApplicationMenu } from "./ApplicationMenu"
@@ -67,6 +67,7 @@ export default function ApplicationBar({ height }) {
     return (
         <AppBar position="static" style={{ height: height }}>
             <Toolbar>
+                <ApplicationMenu />
                 {syncState === true && <Button tooltip="Cloud sync enabled and OK, click to check cloud connection" icon={<SyncIcon style={{ color: 'Lime' }} />}
                     onClick={() => store.checkCloudConnection()} />}
                 {syncState === false && <Button tooltip="Cloud connection error, sync disabled, click to retry" icon={<SyncProblemIcon style={{ color: '#FF3366' }} />}
@@ -95,12 +96,6 @@ export default function ApplicationBar({ height }) {
                 <Button tooltip="Pop to surrounding diagram" disabled={!canPopDiagram} icon={<SaveAltIcon className={styleAlways(!canPopDiagram)} style={{ transform: 'rotate(180deg)' }} />}
                     onClick={() => PubSub.publish('canvas.PopInnerDiagram')} />
 
-                <Box m={2} className={style()} />
-                <Typography className={classes.title} variant="h6" noWrap>{titleText}</Typography>
-
-                <Typography className={classes.space} variant="h6" noWrap> </Typography>
-
-
                 <ToggleButtonGroup
                     size="small"
                     value={editToggle}
@@ -110,8 +105,10 @@ export default function ApplicationBar({ height }) {
                     <ToggleButton value="edit" ><Tooltip title="Enable edit mode"><EditIcon className={editStyleAlways(!editMode)} /></Tooltip></ToggleButton>
                 </ToggleButtonGroup>
 
-                <ApplicationMenu />
+                <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 
+                <Box m={2} className={style()} />
+                <Typography className={classes.title} variant="h6" noWrap>{titleText}</Typography>
             </Toolbar>
         </AppBar >
     )
@@ -166,45 +163,5 @@ const useAppBarStyles = makeStyles((theme) => ({
     },
     connectionIcons: {
         color: 'green',
-    },
-
-    search: {
-        position: 'relative',
-        borderRadius: theme.shape.borderRadius,
-        backgroundColor: fade(theme.palette.common.white, 0.15),
-        '&:hover': {
-            backgroundColor: fade(theme.palette.common.white, 0.25),
-        },
-        marginLeft: 0,
-        width: '100%',
-        [theme.breakpoints.up('md')]: {
-            marginLeft: theme.spacing(1),
-            width: 'auto',
-        },
-    },
-    searchIcon: {
-        padding: theme.spacing(0, 2),
-        height: '100%',
-        position: 'absolute',
-        pointerEvents: 'none',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    inputRoot: {
-        color: 'inherit',
-    },
-    inputInput: {
-        padding: theme.spacing(1, 1, 1, 0),
-        // vertical padding + font size from searchIcon
-        paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
-        transition: theme.transitions.create('width'),
-        width: '100%',
-        [theme.breakpoints.up('sm')]: {
-            width: '8ch',
-            '&:focus': {
-                width: '20ch',
-            },
-        },
     },
 }));
