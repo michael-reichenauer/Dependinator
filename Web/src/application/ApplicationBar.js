@@ -105,8 +105,6 @@ export default function ApplicationBar({ height }) {
                     <ToggleButton value="edit" ><Tooltip title="Enable edit mode"><EditIcon className={editStyleAlways(!editMode)} /></Tooltip></ToggleButton>
                 </ToggleButtonGroup>
 
-                <Typography className={classes.title} variant="h5" noWrap>|</Typography>
-
                 <Box m={2} className={style()} />
                 <Typography className={classes.title} variant="h6" noWrap>{titleText}</Typography>
             </Toolbar>
