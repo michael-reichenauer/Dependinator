@@ -44,12 +44,10 @@ export default function Diagram({ width, height }) {
         }
 
         const canvas = new DiagramCanvas('canvas', callbacks);
-        canvas.init()
         canvasRef.current = canvas
+        canvas.init()
 
         const contextMenuHandler = enableContextMenu('canvas', setContextMenu, canvas)
-
-        setTimeout(() => canvas.showTotalDiagram(), 0);
 
         document.addEventListener(activityEventName, onActivityEvent)
 

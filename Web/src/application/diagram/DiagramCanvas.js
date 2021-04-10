@@ -254,6 +254,7 @@ export default class DiagramCanvas {
             const canvasData = await this.store.openMostResentDiagramCanvas()
             this.canvas.deserialize(canvasData)
             this.callbacks.setTitle(this.getTitle())
+            this.showTotalDiagram()
         } catch (error) {
             // No resent diagram data, lets create new diagram
             await this.createNewDiagram()
