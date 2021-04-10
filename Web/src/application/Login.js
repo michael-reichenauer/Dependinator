@@ -17,12 +17,12 @@ function ListItemLink(props) {
 
 export default function Login() {
     const [show, setShow] = useLogin()
-    const isLocalDev = !store.isLocal()
+    const isLocalDev = store.isLocal()
 
-    const hasShown = localStorage.getItem('showLogin')
-    localStorage.setItem('showLogin', 'true')
-    if (!hasShown) {
-        setShow(true)
+    const hasShown = localStorage.getItem('hasShownLogin')
+    localStorage.setItem('hasShownLogin', 'true')
+    if (!show && !hasShown) {
+        setTimeout(() => setShow(true), 3000);
     }
 
 
