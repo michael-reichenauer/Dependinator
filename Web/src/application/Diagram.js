@@ -5,7 +5,7 @@ import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { ContextMenu } from "../common/Menus";
 import Progress from '../common/Progress'
-import ActivityFade, { activityEventName } from '../common/activity'
+import { activityEventName } from '../common/activity'
 
 export const titleAtom = atom('System')
 export const canUndoAtom = atom(false)
