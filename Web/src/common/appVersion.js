@@ -1,14 +1,11 @@
 import { useEffect, useRef } from 'react'
-import axios from 'axios';
+import Api from '../application/diagram/Api'
 import { useActivity } from './activity'
-// import { atom, useAtom } from 'jotai';
+
 
 const checkRemoteInterval = 30 * 60 * 1000
 const retryFailedRemoteInterval = 5 * 60 * 1000
 
-// const appVersionAtom = atom({ sha: '', shortSha: '', buildTime: '' })
-
-// export const useAppVersion = () => useAtom(appVersionAtom)
 
 export const startTime = dateToLocalISO(new Date().toISOString())
 export const localSha = process.env.REACT_APP_SHA === '%REACT_APP_SHA%' ? '000000' : process.env.REACT_APP_SHA
@@ -30,27 +27,17 @@ export const useAppVersionMonitor = () => {
                 console.log('Disable remote version check')
                 return
             }
-            // const handleError = () => {
-            //     enqueueSnackbar('Failed to access server to get version',
-            //         {
-            //             variant: "error",
-            //             onClick: () => closeSnackbar(),
-            //             autoHideDuration: null
-            //         })
-            // }
 
             try {
-                // console.log(`getting manifest ...`)
                 console.log(`Checking remote, active=${isActive} ...`)
-                const data = await axios.get('/manifest.json')
-                const manifest = data.data
-                // console.log(`Got remote manifest`, manifest)
+                const api = new Api()
+                const manifest = await api.getManifest('/manifest.json')
+
                 const remoteSha = manifest.sha === '%REACT_APP_SHA%' ? '000000' : manifest.sha
                 const remoteBuildTime = manifest.buildTime === '%REACT_APP_BUILD_TIME%' ? '' : manifest.buildTime
 
                 console.info(`Local version:  '${localSha.substring(0, 6)}' '${remoteBuildTime}'`)
                 console.info(`Remote version: '${remoteSha.substring(0, 6)}' '${remoteBuildTime}'`)
-                // setRemoteVersion({ sha: remoteSha, buildTime: remoteBuildTime })
 
                 if (localSha !== remoteSha) {
                     console.info(`Local version: '${localSha.substring(0, 6)}' '${localBuildTime}'`)
@@ -64,14 +51,9 @@ export const useAppVersionMonitor = () => {
             }
             catch (err) {
                 console.error("Failed get remote manifest:", err)
-                // handleError()
-                //networkError(err)
                 if (!isRunning.current) {
                     timerRef.current = setTimeout(getRemoteVersion, retryFailedRemoteInterval)
                 }
-            }
-            finally {
-                // setIsLoading(false)
             }
         }
         isRunning.current = true
@@ -83,12 +65,6 @@ export const useAppVersionMonitor = () => {
         }
     }, [isActive, timerRef, isRunning])
 }
-
-
-// export const useAppVersion = () => {
-//     const [remoteVersion] = useGlobal('remoteVersion')
-//     return { localSha: localSha, localBuildTime: localBuildTime, remoteSha: remoteVersion.sha, remoteBuildTime: remoteVersion.buildTime }
-// }
 
 
 function dateToLocalISO(dateText) {

@@ -44,6 +44,9 @@ export default class Api {
         return await this.get('/.auth/me')
     }
 
+    async getManifest() {
+        return this.get('/manifest.json')
+    }
 
     async check() {
         return this.get('/api/Check')
