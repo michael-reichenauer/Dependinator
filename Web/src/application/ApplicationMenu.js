@@ -11,7 +11,7 @@ import { useLogin } from "./Login";
 import { localBuildTime, localShortSha } from "../common/appVersion";
 
 
-
+// Menu
 const asMenuItems = (diagrams) => {
     return diagrams.map(d => menuItem(d.name, () => PubSub.publish('canvas.OpenDiagram', d.diagramId)))
 }
