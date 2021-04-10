@@ -33,10 +33,10 @@ export const useAppVersionMonitor = () => {
                 const api = new Api()
                 const manifest = await api.getManifest('/manifest.json')
 
-                const remoteSha = manifest.sha === '%REACT_APP_SHA%' ? '000000' : manifest.sha
-                const remoteBuildTime = manifest.buildTime === '%REACT_APP_BUILD_TIME%' ? '' : manifest.buildTime
+                const remoteSha = manifest.sha === '%REACT_APP_SHA%' ? localSha : manifest.sha
+                const remoteBuildTime = manifest.buildTime === '%REACT_APP_BUILD_TIME%' ? localBuildTime : dateToLocalISO(manifest.buildTime)
 
-                console.info(`Local version:  '${localSha.substring(0, 6)}' '${remoteBuildTime}'`)
+                console.info(`Local version:  '${localSha.substring(0, 6)}' '${localBuildTime}'`)
                 console.info(`Remote version: '${remoteSha.substring(0, 6)}' '${remoteBuildTime}'`)
 
                 if (localSha !== remoteSha) {
