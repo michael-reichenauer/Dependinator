@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { timing } from '../../common/timing';
 import { atom, useAtom } from "jotai"
+import { setErrorMessage, setSuccessMessage } from '../../common/MessageSnackbar';
 
 const connectionAtom = atom(false)
 let setConnectionFunc = null
@@ -133,6 +134,7 @@ export default class Api {
         if (isConnectionOK !== true) {
             console.log('Connection OK')
             setConnection(true)
+            setSuccessMessage('Cloud connection OK')
         }
         isConnectionOK = true
         console.log('OK:', method, uri, postData, rsp)
@@ -161,6 +163,7 @@ export default class Api {
         if (isConnectionOK !== false) {
             console.log('Connection error')
             setConnection(false)
+            setErrorMessage('Cloud connection failed')
         }
         isConnectionOK = false
     }
