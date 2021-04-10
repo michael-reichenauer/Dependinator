@@ -10,8 +10,9 @@ const retryFailedRemoteInterval = 5 * 60 * 1000
 export const startTime = dateToLocalISO(new Date().toISOString())
 export const localSha = process.env.REACT_APP_SHA === '%REACT_APP_SHA%' ? '000000' : process.env.REACT_APP_SHA
 export const localShortSha = process.env.REACT_APP_SHA === '%REACT_APP_SHA%' ? '000000' : process.env.REACT_APP_SHA?.substring(0, 6)
-export const localBuildTime = process.env.REACT_APP_BUILD_TIME === '%REACT_APP_BUILD_TIME%' ? startTime : process.env.REACT_APP_BUILD_TIME
+export const localBuildTime = process.env.REACT_APP_BUILD_TIME === '%REACT_APP_BUILD_TIME%' ? startTime : dateToLocalISO(process.env.REACT_APP_BUILD_TIME)
 
+console.info(`Local version:  '${localSha.substring(0, 6)}' '${localBuildTime}'`)
 
 export const useAppVersionMonitor = () => {
     const [isActive] = useActivity()
@@ -29,18 +30,17 @@ export const useAppVersionMonitor = () => {
             }
 
             try {
-                console.log(`Checking remote, active=${isActive} ...`)
+                // console.log(`Checking remote, active=${isActive} ...`)
                 const api = new Api()
                 const manifest = await api.getManifest('/manifest.json')
 
                 const remoteSha = manifest.sha === '%REACT_APP_SHA%' ? localSha : manifest.sha
                 const remoteBuildTime = manifest.buildTime === '%REACT_APP_BUILD_TIME%' ? localBuildTime : dateToLocalISO(manifest.buildTime)
 
-                console.info(`Local version:  '${localSha.substring(0, 6)}' '${localBuildTime}'`)
                 console.info(`Remote version: '${remoteSha.substring(0, 6)}' '${remoteBuildTime}'`)
 
                 if (localSha !== remoteSha) {
-                    console.info(`Local version: '${localSha.substring(0, 6)}' '${localBuildTime}'`)
+                    console.info(`Local version:  '${localSha.substring(0, 6)}' '${localBuildTime}'`)
                     console.info("Remote version differs, reloading ...")
                     //logger.flush().then(() => window.location.reload(true))
                 }
