@@ -7,28 +7,11 @@ import { ContextMenu } from "../common/Menus";
 import Progress from '../common/Progress'
 import { activityEventName } from '../common/activity'
 
-
 export const titleAtom = atom('System')
 export const canUndoAtom = atom(false)
 export const canRedoAtom = atom(false)
 export const canPopDiagramAtom = atom(false)
 export const editModeAtom = atom(false)
-
-
-const startTime = dateToLocalISO(new Date().toISOString())
-const localSha = process.env.REACT_APP_SHA === '%REACT_APP_SHA%' ? '' : process.env.REACT_APP_SHA
-const localBuildTime = process.env.REACT_APP_BUILD_TIME === '%REACT_APP_BUILD_TIME%' ? startTime : process.env.REACT_APP_BUILD_TIME
-
-
-function dateToLocalISO(dateText) {
-    const date = new Date(dateText)
-    const off = date.getTimezoneOffset()
-    const absoff = Math.abs(off)
-    return (new Date(date.getTime() - off * 60 * 1000).toISOString().substr(0, 23) +
-        (off > 0 ? '-' : '+') +
-        (absoff / 60).toFixed(0).padStart(2, '0') + ':' +
-        (absoff % 60).toString().padStart(2, '0'))
-}
 
 
 export default function Diagram({ width, height }) {
@@ -58,7 +41,6 @@ export default function Diagram({ width, height }) {
             setCanPopDiagram: setCanPopDiagram,
             setEditMode: setEditMode,
         }
-        console.log('version', localSha, localBuildTime, process.env)
 
         const canvas = new DiagramCanvas('canvas', callbacks);
         canvasRef.current = canvas

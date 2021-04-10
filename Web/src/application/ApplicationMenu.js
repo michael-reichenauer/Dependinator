@@ -8,6 +8,7 @@ import { store } from "./diagram/Store";
 import Printer from "../common/Printer";
 import { useAbout } from "./About";
 import { useLogin } from "./Login";
+import { localBuildTime, localShortSha } from "../common/appVersion";
 
 
 
@@ -75,7 +76,8 @@ export function ApplicationMenu() {
                 menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
             ]),
         ]),
-
+        menuItem(localShortSha),
+        menuItem(localBuildTime)
     ]
 
     return (

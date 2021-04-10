@@ -42,12 +42,11 @@ export const useAppVersionMonitor = () => {
                 if (localSha !== remoteSha) {
                     console.info(`Local version:  '${localSha.substring(0, 6)}' '${localBuildTime}'`)
                     console.info("Remote version differs, reloading ...")
-                    //logger.flush().then(() => window.location.reload(true))
+                    window.location.reload()
                 }
                 if (!isRunning.current) {
                     timerRef.current = setTimeout(getRemoteVersion, checkRemoteInterval)
                 }
-
             }
             catch (err) {
                 console.error("Failed get remote manifest:", err)
