@@ -1,5 +1,5 @@
 import { atom, useAtom } from "jotai"
-import { Box, List, Popover, Typography } from "@material-ui/core";
+import { Box, Button, List, Popover, Typography } from "@material-ui/core";
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import { store } from "./diagram/Store";
@@ -17,7 +17,14 @@ function ListItemLink(props) {
 
 export default function Login() {
     const [show, setShow] = useLogin()
-    const isLocalDev = store.isLocal()
+    const isLocalDev = !store.isLocal()
+
+    const hasShown = localStorage.getItem('showLogin')
+    localStorage.setItem('showLogin', 'true')
+    if (!hasShown) {
+        setShow(true)
+    }
+
 
     const onClick = (provider) => {
         setShow(false)
@@ -32,13 +39,13 @@ export default function Login() {
             anchorOrigin={{ vertical: 'center', horizontal: 'center' }}
             transformOrigin={{ vertical: 'center', horizontal: 'center' }}
         >
-            <Box style={{ width: 400, height: 320, padding: 20 }}>
+            <Box style={{ width: 320, height: 350, padding: 20 }}>
                 <Typography variant="h6">Enable Cloud Sync</Typography>
                 <Typography >
-                    Dependinator can sync diagrams between different devices.
-                    Login with one of the supported identity provides:
+                    Dependinator can sync diagrams between different devices if you
+                    login with one of the supported identity providers:
             </Typography>
-                <List component="nav" style={{ padding: 10 }}>
+                <List component="nav" style={{ padding: 0 }}>
 
                     {!isLocalDev &&
                         <ListItemLink onClick={() => onClick('Google')}>
@@ -67,6 +74,13 @@ export default function Login() {
                     }
 
                 </List>
+                <Box style={{
+                    position: 'absolute',
+                    bottom: 20,
+                    left: '40%',
+                }}
+                    textAlign='center'> <Button onClick={() => setShow(false)} variant="contained" >Later</Button>
+                </Box>
             </Box>
         </Popover>
     )
