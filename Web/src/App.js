@@ -5,12 +5,14 @@ import Diagram from "./application/Diagram";
 import { useActivityMonitor } from "./common/activity";
 import About from "./application/About";
 import Login from "./application/Login";
+import { useAppVersionMonitor } from "./common/appVersion";
 
 
 function App() {
   const [size] = useWindowSize()
 
   useActivityMonitor()
+  useAppVersionMonitor()
 
   return (
     <>

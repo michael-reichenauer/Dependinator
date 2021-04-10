@@ -43,6 +43,7 @@ export default class StoreSync {
             const connectData = await this.remote.connect()
             console.log('connected', connectData)
             sync = this.local.updateSync({ token: connectData.token })
+            setSuccessMessage('Cloud sync connection is enabled')
         }
 
         if (!sync.token) {
