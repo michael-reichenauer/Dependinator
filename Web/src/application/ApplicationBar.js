@@ -1,26 +1,28 @@
 import React from "react";
 import PubSub from 'pubsub-js'
-import { Typography, fade, AppBar, Toolbar, IconButton, Tooltip, FormControlLabel, Switch, Box, } from "@material-ui/core";
+import { Typography, fade, AppBar, Toolbar, IconButton, Tooltip, Box, } from "@material-ui/core";
+import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { ApplicationMenu } from "./ApplicationMenu"
 import PersonAddIcon from '@material-ui/icons/PersonAdd';
 import LibraryAddOutlinedIcon from '@material-ui/icons/LibraryAddOutlined';
 import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
+import SyncIcon from '@material-ui/icons/Sync';
+import SyncProblemIcon from '@material-ui/icons/SyncProblem';
+import SyncDisabledIcon from '@material-ui/icons/SyncDisabled';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
+import ControlCameraIcon from '@material-ui/icons/ControlCamera';
+import EditIcon from '@material-ui/icons/Edit';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
 import SaveAltIcon from '@material-ui/icons/SaveAlt';
 import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom, titleAtom } from "./Diagram";
 import { useAtom } from "jotai";
-import { withStyles } from "@material-ui/styles";
-import { grey } from "@material-ui/core/colors";
 import { store } from "./diagram/Store";
 import { useLogin } from "./Login";
 import { useSyncMode } from './Online'
 import { useConnection } from "./diagram/Api";
-import SyncIcon from '@material-ui/icons/Sync';
-import SyncProblemIcon from '@material-ui/icons/SyncProblem';
-import SyncDisabledIcon from '@material-ui/icons/SyncDisabled';
+
 
 
 export default function ApplicationBar({ height }) {
@@ -34,11 +36,6 @@ export default function ApplicationBar({ height }) {
     const [, setShowLogin] = useLogin()
     const [connection] = useConnection()
 
-    const handleEditModeChange = (event) => {
-        setEditMode(event.target.checked);
-        PubSub.publish('canvas.SetEditMode', event.target.checked)
-    };
-
     const syncState = syncMode && connection ? true : syncMode && !connection ? false : null
 
     const style = (disabled) => {
@@ -47,6 +44,24 @@ export default function ApplicationBar({ height }) {
 
     const styleAlways = (disabled) => {
         return !disabled ? classes.iconsAlways : classes.iconsAlwaysDisabled
+    }
+    const editStyleAlways = (disabled) => {
+        return !disabled ? classes.iconsAlways : classes.iconsAlwaysDarker
+    }
+
+    const editToggle = editMode ? ['edit'] : ['pan']
+
+    const handleEditToggleChange = (_, newMode) => {
+        if (!editMode && newMode.includes('edit')) {
+            setEditMode(true)
+            PubSub.publish('canvas.SetEditMode', true)
+            return
+        }
+        if (editMode && newMode.includes('pan')) {
+            setEditMode(false)
+            PubSub.publish('canvas.SetEditMode', false)
+            return
+        }
     }
 
     return (
@@ -80,25 +95,20 @@ export default function ApplicationBar({ height }) {
                 <Button tooltip="Pop to surrounding diagram" disabled={!canPopDiagram} icon={<SaveAltIcon className={styleAlways(!canPopDiagram)} style={{ transform: 'rotate(180deg)' }} />}
                     onClick={() => PubSub.publish('canvas.PopInnerDiagram')} />
 
-                <Box m={2} />
+                <Box m={2} className={style()} />
                 <Typography className={classes.title} variant="h6" noWrap>{titleText}</Typography>
 
                 <Typography className={classes.space} variant="h6" noWrap> </Typography>
 
 
-
-                <Tooltip title="Toggle edit mode" >
-                    <FormControlLabel
-                        control={
-                            <GreySwitch
-                                checked={editMode}
-                                onChange={handleEditModeChange}
-                                name="Edit"
-                            />
-                        }
-                        label="Edit"
-                    />
-                </Tooltip>
+                <ToggleButtonGroup
+                    size="small"
+                    value={editToggle}
+                    onChange={handleEditToggleChange}
+                >
+                    <ToggleButton value="pan" ><Tooltip title="Enable pan mode"><ControlCameraIcon className={editStyleAlways(editMode)} /></Tooltip></ToggleButton>
+                    <ToggleButton value="edit" ><Tooltip title="Enable edit mode"><EditIcon className={editStyleAlways(!editMode)} /></Tooltip></ToggleButton>
+                </ToggleButtonGroup>
 
                 <ApplicationMenu />
 
@@ -107,7 +117,6 @@ export default function ApplicationBar({ height }) {
     )
 }
 
-
 const Button = ({ icon, tooltip, disabled, onClick, className }) => {
     return (
         <Tooltip title={!disabled ? tooltip : ''} className={className}>
@@ -115,21 +124,6 @@ const Button = ({ icon, tooltip, disabled, onClick, className }) => {
                 {icon}</IconButton></Tooltip>
     )
 }
-
-
-const GreySwitch = withStyles({
-    switchBase: {
-        color: grey[400],
-        '&$checked': {
-            color: grey[50],
-        },
-        '&$checked + $track': {
-            backgroundColor: grey[50],
-        },
-    },
-    checked: {},
-    track: {},
-})(Switch);
 
 
 const useAppBarStyles = makeStyles((theme) => ({
@@ -167,6 +161,9 @@ const useAppBarStyles = makeStyles((theme) => ({
         color: 'grey',
     },
 
+    iconsAlwaysDarker: {
+        color: 'Silver',
+    },
     connectionIcons: {
         color: 'green',
     },

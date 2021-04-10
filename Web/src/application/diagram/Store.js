@@ -57,11 +57,9 @@ class Store {
 
 
     async openDiagramRootCanvas(diagramId) {
-        console.log('Open diagram', diagramId)
         try {
             let canvas = await this.sync.openDiagramRootCanvas(diagramId)
             if (canvas) {
-                console.log('Got diagram canvas from remote', diagramId)
                 // Got diagram via cloud
                 return canvas
             }
@@ -69,7 +67,6 @@ class Store {
             // Local mode: read the root canvas from local store
             canvas = this.local.readCanvas(diagramId, rootCanvasId)
             if (!canvas) {
-                console.log('Diagram not found in local store', diagramId)
                 throw new Error('Diagram not found')
             }
 
