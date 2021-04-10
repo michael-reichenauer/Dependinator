@@ -76,8 +76,8 @@ export function ApplicationMenu() {
                 menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
             ]),
         ]),
+        menuItem(localBuildTime),
         menuItem(localShortSha),
-        menuItem(localBuildTime)
     ]
 
     return (
