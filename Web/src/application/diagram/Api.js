@@ -3,7 +3,6 @@ import axios from 'axios';
 import { timing } from '../../common/timing';
 import { atom, useAtom } from "jotai"
 import { setErrorMessage, setSuccessMessage } from '../../common/MessageSnackbar';
-import { setSyncMode } from '../Online';
 
 const connectionAtom = atom(false)
 let setConnectionFunc = null
