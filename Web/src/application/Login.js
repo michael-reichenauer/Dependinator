@@ -17,7 +17,7 @@ function ListItemLink(props) {
 
 export default function Login() {
     const [show, setShow] = useLogin()
-    const isLocalDev = !store.isLocal()
+    const isLocalDev = store.isLocal()
 
     const onClick = (provider) => {
         setShow(false)
