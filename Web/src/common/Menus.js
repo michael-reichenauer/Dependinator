@@ -74,9 +74,10 @@ export function ContextMenu({ menu, onClose }) {
     return (
         <Menu
             open={true}
-            onClose={onClose}
+            onClose={() => onClose()}
             anchorReference="anchorPosition"
             anchorPosition={{ left: menu.x - 2, top: menu.y - 2 }}
+            PaperProps={{}}
             keepMounted
         >
             {getMenuItems(menu.items, onClick)}
