@@ -247,7 +247,7 @@ export default class DiagramCanvas {
             try {
                 await store.initialize()
             } catch (error) {
-                setErrorMessage('Failed to connect to cloud server, sync is disabled')
+                setErrorMessage('Failed to connect to cloud server')
             }
 
             // Get the last used diagram and show 

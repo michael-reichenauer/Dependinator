@@ -3,6 +3,7 @@ import axios from 'axios';
 import { timing } from '../../common/timing';
 import { atom, useAtom } from "jotai"
 import { setErrorMessage, setSuccessMessage } from '../../common/MessageSnackbar';
+import { setSyncMode } from '../Online';
 
 const connectionAtom = atom(false)
 let setConnectionFunc = null
@@ -22,10 +23,12 @@ export const useConnection = () => {
 
 export default class Api {
     token = null
+    onInvalidToken = null
 
 
-    setToken(token) {
+    setToken(token, onInvalidToken) {
         this.token = token
+        this.onInvalidToken = onInvalidToken
     }
 
 
@@ -152,6 +155,14 @@ export default class Api {
                 this.handleNetworkError()
                 return
             }
+            if (error.response.status === 400 && error.response.data?.includes('The table specified does not exist')) {
+                this.handleInvalidToken()
+                return
+            }
+            if (error.response.status === 400 && error.response.data?.includes('Invalid token')) {
+                this.handleInvalidToken()
+                return
+            }
             console.log(`Failed ${method} ${uri} ${postData}, status: ${error.response.status}: '${error.response.data}'`)
         } else if (error.request) {
             // The request was made but no response was received
@@ -160,6 +171,12 @@ export default class Api {
             // Something happened in setting up the request that triggered an Error
             console.error('Error', method, uri, postData, error, error.message);
         }
+    }
+
+    handleInvalidToken() {
+        console.error('Invalid Token')
+        this.token = null
+        this?.onInvalidToken?.()
     }
 
     handleNetworkError() {

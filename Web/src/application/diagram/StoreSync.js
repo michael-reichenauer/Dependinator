@@ -53,7 +53,16 @@ export default class StoreSync {
             return
         }
 
-        this.remote.setToken(sync.token)
+        this.remote.setToken(sync.token, () => {
+            // Called when token id invalid
+            if (this.isSyncEnabled) {
+                this.isSyncEnabled = false
+                this.local.updateSync({ token: null, isConnecting: false, provider: null })
+                setSyncMode(false)
+                setErrorMessage('Cloud sync failed. You need to re-enable cloud sync')
+            }
+        })
+
         this.isSyncEnabled = true
         setSyncMode(true)
         console.log('Sync is enabled')
@@ -120,8 +129,7 @@ export default class StoreSync {
         console.log('Disable cloud sync')
         this.isSyncEnabled = false
         this.local.updateSync({ token: null, isConnecting: false, provider: null })
-        this.remote.setToken(null)
-        window.location.reload()
+        this.remote.setToken(null, null)
     }
 
     async openDiagramRootCanvas(diagramId) {

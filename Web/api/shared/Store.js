@@ -279,10 +279,11 @@ async function delay(time) {
 
 function getTableName(context) {
     const info = clientInfo.getInfo(context)
-    if (!info.token) {
+    if (!info.token || info.token == null || info.token === 'null') {
         throw new Error('Invalid token')
     }
 
+    context.log('#### token', info.token)
     return baseTableName + info.token
 }
 
