@@ -1,5 +1,7 @@
 import { atom, useAtom } from "jotai"
-import { Box, Button, Link, Popover, Typography } from "@material-ui/core";
+import { Box, Button, Link, Popover, Tooltip, Typography } from "@material-ui/core";
+import { localBuildTime, localSha } from "../common/appVersion";
+import { useLogin } from "./Login";
 
 const aboutAtom = atom(false)
 
@@ -7,27 +9,46 @@ export const useAbout = () => useAtom(aboutAtom)
 
 export default function About() {
     const [show, setShow] = useAbout()
+    const [, setShowLogin] = useLogin()
+
+    const hasShown = localStorage.getItem('hasShownAbout')
+    localStorage.setItem('hasShownAbout', 'true')
+
+    if (!show && hasShown !== 'true') {
+        console.log('Set timeout')
+        setTimeout(() => setShow(true), 3000);
+    }
+
+    const enableCloudSync = () => {
+        setShowLogin(true);
+    }
 
     return (
         <Popover
             open={show}
-            onClose={() => setShow(false)}
+            onClose={() => { }}
             anchorEl={document.body}
             anchorOrigin={{ vertical: 'center', horizontal: 'center' }}
             transformOrigin={{ vertical: 'center', horizontal: 'center' }}
         >
-            <Box style={{ width: 320, height: 200, padding: 20 }}>
-                <Typography variant="h5">Dependinator</Typography>
+            <Box style={{ width: 320, height: 300, padding: 20 }}>
+                <Tooltip title={`version: ${localBuildTime} (${localSha.substring(0, 6)})`}>
+                    <Typography variant="h5">About Dependinator</Typography>
+                </Tooltip>
                 <Typography >
-                    A tool for visualizing software architecture inspired by map tools for
-                navigation and the "<Link href="https://c4model.com" target="_blank">C4 Model</Link>"
-                by Simon Brown.
+                    A tool for modeling and visualizing software architecture inspired by map tools for
+                    navigation.
                 </Typography>
-                <Box style={{
-                    position: 'absolute',
-                    bottom: 20,
-                    left: '40%',
-                }}
+
+                <Typography style={{ paddingTop: 10 }} >
+                    Checkout the  "<Link href="https://c4model.com" target="_blank">C4 Model</Link>"
+                    by Simon Brown  to better understand on how to use the tool.
+                </Typography>
+                <Typography style={{ paddingTop: 10 }} >
+                    You can sync diagrams between different devices if you <Link onClick={enableCloudSync}>enable cloud sync</Link>
+                </Typography>
+
+                <Box style={{ position: 'absolute', bottom: 20, left: '40%', }}
                     textAlign='center'> <Button onClick={() => setShow(false)} variant="contained" >Close</Button>
                 </Box>
             </Box>

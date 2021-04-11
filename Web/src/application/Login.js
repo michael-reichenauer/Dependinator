@@ -17,14 +17,7 @@ function ListItemLink(props) {
 
 export default function Login() {
     const [show, setShow] = useLogin()
-    const isLocalDev = store.isLocal()
-
-    const hasShown = localStorage.getItem('hasShownLogin')
-    localStorage.setItem('hasShownLogin', 'true')
-    if (!show && !hasShown) {
-        setTimeout(() => setShow(true), 3000);
-    }
-
+    const isLocalDev = !store.isLocal()
 
     const onClick = (provider) => {
         setShow(false)
@@ -34,7 +27,7 @@ export default function Login() {
     return (
         <Popover
             open={show}
-            onClose={() => setShow(false)}
+            onClose={() => { }}
             anchorEl={document.body}
             anchorOrigin={{ vertical: 'center', horizontal: 'center' }}
             transformOrigin={{ vertical: 'center', horizontal: 'center' }}
@@ -43,33 +36,34 @@ export default function Login() {
                 <Typography variant="h6">Enable Cloud Sync</Typography>
                 <Typography >
                     Dependinator can sync diagrams between different devices if you
-                    login with one of the supported identity providers:
-            </Typography>
-                <List component="nav" style={{ padding: 0 }}>
+                    login with one of the supported identity providers.
+                </Typography>
+                <Typography style={{ paddingTop: 15, fontWeight: 'bold' }} variant="subtitle1">Login with: </Typography>
+                <List component="nav" style={{ paddingLeft: 20 }} >
 
                     {!isLocalDev &&
-                        <ListItemLink onClick={() => onClick('Google')}>
-                            <ListItemText primary="Google" />
+                        <ListItemLink style={{ padding: 0 }} onClick={() => onClick('Google')}>
+                            <ListItemText primary="- Google" />
                         </ListItemLink>
                     }
                     {!isLocalDev &&
-                        <ListItemLink onClick={() => onClick('Microsoft')}>
-                            <ListItemText primary="Microsoft" />
+                        <ListItemLink style={{ padding: 0 }} onClick={() => onClick('Microsoft')}>
+                            <ListItemText primary="- Microsoft" />
                         </ListItemLink>
                     }
                     {!isLocalDev &&
-                        <ListItemLink onClick={() => onClick('Facebook')}>
-                            <ListItemText primary="Facebook" />
+                        <ListItemLink style={{ padding: 0 }} onClick={() => onClick('Facebook')}>
+                            <ListItemText primary="- Facebook" />
                         </ListItemLink>
                     }
                     {!isLocalDev &&
-                        <ListItemLink onClick={() => onClick('GitHub')}>
-                            <ListItemText primary="GitHub" />
+                        <ListItemLink style={{ padding: 0 }} onClick={() => onClick('GitHub')}>
+                            <ListItemText primary="- GitHub" />
                         </ListItemLink>
                     }
                     {isLocalDev &&
-                        <ListItemLink onClick={() => onClick('Local')}>
-                            <ListItemText primary="Local" />
+                        <ListItemLink style={{ padding: 0 }} onClick={() => onClick('Local')}>
+                            <ListItemText primary="- Local" />
                         </ListItemLink>
                     }
 

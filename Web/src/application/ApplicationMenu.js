@@ -8,11 +8,10 @@ import { store } from "./diagram/Store";
 import Printer from "../common/Printer";
 import { useAbout } from "./About";
 import { useLogin } from "./Login";
-import { localBuildTime, localShortSha } from "../common/appVersion";
 
 
-// Menu
-const asMenuItems = (diagrams) => {
+const getDiagramsMenuItems = () => {
+    const diagrams = store.getRecentDiagramInfos().slice(1)
     return diagrams.map(d => menuItem(d.name, () => PubSub.publish('canvas.OpenDiagram', d.diagramId)))
 }
 
@@ -56,7 +55,11 @@ export function ApplicationMenu() {
         }
     };
 
-    const diagrams = menu == null ? [] : asMenuItems(store.getRecentDiagramInfos().slice(1))
+    const diagrams = menu == null ? [] : getDiagramsMenuItems()
+    const isInStandaloneMode = () =>
+        (window.matchMedia('(display-mode: standalone)').matches)
+        || (window.navigator.standalone)
+        || document.referrer.includes('android-app://');
 
     const menuItems = [
         menuItem('New Diagram', () => PubSub.publish('canvas.NewDiagram')),
@@ -65,19 +68,17 @@ export function ApplicationMenu() {
         menuItem('Delete', deleteDiagram),
         menuItem('Enable cloud sync', () => setShowLogin(true), true, !store.isCloudSyncEnabled()),
         menuItem('Disable cloud sync', () => store.disableCloudSync(), true, store.isCloudSyncEnabled()),
-        menuItem('About', () => setShowAbout(true)),
-        menuParentItem('More', [
-            menuItem('Reload web page', () => window.location.reload()),
-            menuItem('Clear all local data', () => clearLocalData()),
-            menuItem('Clear all data', () => clearAllData()),
-            menuParentItem('Files', [
-                menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
-                menuItem('Save diagram to file', () => PubSub.publish('canvas.SaveDiagramToFile')),
-                menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
-            ]),
+        menuParentItem('Files', [
+            menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
+            menuItem('Save diagram to file', () => PubSub.publish('canvas.SaveDiagramToFile')),
+            menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
         ]),
-        menuItem(localBuildTime),
-        menuItem(localShortSha),
+        menuItem('Reload web page', () => window.location.reload(), true, isInStandaloneMode()),
+        menuItem('About', () => setShowAbout(true)),
+        menuParentItem('Advanced', [
+            menuItem('Clear all local data', () => clearLocalData()),
+            menuItem('Clear all local and remote user data', () => clearAllData()),
+        ]),
     ]
 
     return (
