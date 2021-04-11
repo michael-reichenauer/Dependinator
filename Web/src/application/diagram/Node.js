@@ -134,6 +134,8 @@ export default class Node extends draw2d.shape.node.Between {
         })
 
         return [
+            menuItem('To front', () => this.toFront()),
+            menuItem('To back', () => this.toBack()),
             menuParentItem('Inner diagram', [
                 menuItem('Show', () => this.showInnerDiagram(), this.innerDiagram == null, hasDiagramIcon),
                 menuItem('Hide (click)', () => this.hideInnerDiagram(), this.innerDiagram != null, hasDiagramIcon),
@@ -141,8 +143,6 @@ export default class Node extends draw2d.shape.node.Between {
             ], true, hasDiagramIcon),
             menuParentItem('Change color', colorItems),
             menuParentItem('Change icon', iconItems),
-            menuItem('To front', () => this.toFront()),
-            menuItem('To back', () => this.toBack()),
             menuItem('Set default size', () => this.setDefaultSize()),
             menuItem('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.canDelete)
         ]

@@ -77,6 +77,7 @@ export function ContextMenu({ menu, onClose }) {
             onClose={onClose}
             anchorReference="anchorPosition"
             anchorPosition={{ left: menu.x - 2, top: menu.y - 2 }}
+            keepMounted
         >
             {getMenuItems(menu.items, onClick)}
         </Menu>
@@ -95,7 +96,8 @@ const getMenuItems = (items, onClick) => {
                     key={`item-${i}`}
                     onClick={() => onClick(item)}
                     disabled={!item.isEnabled}
-                    dense>
+                    dense
+                >
                     {item.text}
                 </MenuItem>
             )
