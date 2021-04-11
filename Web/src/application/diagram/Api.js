@@ -7,6 +7,7 @@ import { setErrorMessage, setSuccessMessage } from '../../common/MessageSnackbar
 const connectionAtom = atom(false)
 let setConnectionFunc = null
 let isConnectionOK = null
+let isFirstCheck = true
 
 const setConnection = flag => setConnectionFunc?.(flag)
 
@@ -134,8 +135,11 @@ export default class Api {
         if (isConnectionOK !== true) {
             console.log('Connection OK')
             setConnection(true)
-            setSuccessMessage('Cloud connection OK')
+            if (!isFirstCheck) {
+                setSuccessMessage('Cloud connection OK')
+            }
         }
+        isFirstCheck = false
         isConnectionOK = true
         console.log('OK:', method, uri, postData, rsp)
     }
