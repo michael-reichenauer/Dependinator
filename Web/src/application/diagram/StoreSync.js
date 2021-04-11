@@ -1,4 +1,4 @@
-import { setErrorMessage, setSuccessMessage } from "../../common/MessageSnackbar"
+import { setErrorMessage, setInfoMessage, setSuccessMessage } from "../../common/MessageSnackbar"
 import { setProgress } from "../../common/Progress"
 import { setSyncMode } from "../Online"
 import Api from "./Api"
@@ -130,6 +130,8 @@ export default class StoreSync {
         this.isSyncEnabled = false
         this.local.updateSync({ token: null, isConnecting: false, provider: null })
         this.remote.setToken(null, null)
+        setSyncMode(false)
+        setInfoMessage('Cloud sync is disabled')
     }
 
     async openDiagramRootCanvas(diagramId) {
