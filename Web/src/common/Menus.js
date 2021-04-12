@@ -107,7 +107,7 @@ const getMenuItems = (items, onClick) => {
                 <NestedMenuItem
                     key={`item-${i}`}
                     label={item.text}
-                    parentMenuOpen={true}
+                    parentMenuOpen={!!item.isEnabled}
                     disabled={!item.isEnabled}
                     dense
                 >
