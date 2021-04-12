@@ -78,7 +78,9 @@ export default class StoreSync {
         const before = this.store.getRecentDiagramInfos()[0]
         await this.syncDiagrams()
         const after = this.store.getRecentDiagramInfos()[0]
-        if (before.timestamp === after.timestamp && before.diagramId === after.diagramId) {
+        console.log('before:', before)
+        console.log('after: ', after)
+        if (before.diagramId === after.diagramId && before.timestamp === after.timestamp) {
             return false
         }
         console.log('Server had changes')
@@ -249,15 +251,15 @@ export default class StoreSync {
                 this.local.writeDiagramInfo(remoteInfo)
             } else {
                 // The remote info has previously been downloaded, comparing write times
-                if (localInfo.written < remoteInfo.written) {
-                    // Remote info is newer, lets update local
-                    this.local.writeDiagramInfo(remoteInfo)
-                } else if (localInfo.written > remoteInfo.written) {
+                if (localInfo.written > remoteInfo.written) {
                     // Local info is newer, lets publish
                     const diagram = this.local.readDiagram(localInfo.diagramId)
                     if (diagram) {
                         diagramsToPublish.push(diagram)
                     }
+                } else {
+                    // Remote might have changed, lets update local
+                    this.local.writeDiagramInfo(remoteInfo)
                 }
             }
         }
@@ -270,8 +272,7 @@ export default class StoreSync {
             const localInfo = localInfos[i];
             const remoteInfo = remoteInfos.find(r => r.diagramId === localInfo.diagramId)
             if (!remoteInfo) {
-                // The local info is not a remote info, 
-                console.log('local', localInfo)
+                // The local info is not a remote info, check if it can be deleted or should be published
                 if (localInfo.etag) {
                     // The local info was a remote, but no longer. Lets delete local as well
                     console.log('Remove', localInfo.diagramId)
