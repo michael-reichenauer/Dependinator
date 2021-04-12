@@ -15,6 +15,7 @@ import InnerDiagramCanvas from "./InnerDiagramCanvas";
 import Printer from "../../common/Printer";
 import { setProgress } from "../../common/Progress";
 import { setErrorMessage } from "../../common/MessageSnackbar";
+import NodeGroup from "./NodeGroup";
 
 
 export default class DiagramCanvas {
@@ -79,6 +80,7 @@ export default class DiagramCanvas {
             menuItem('Add node', () => this.addNode(Node.nodeType, mouseXY)),
             menuItem('Add external user', () => this.addNode(Node.userType, mouseXY)),
             menuItem('Add external system', () => this.addNode(Node.externalType, mouseXY)),
+            menuItem('Add group', () => this.addNode(NodeGroup.nodeType, mouseXY)),
             menuItem('Pop to surrounding diagram (dbl-click)', () => PubSub.publish('canvas.PopInnerDiagram'),
                 true, !this.canvasStack.isRoot()),
         ]
@@ -225,6 +227,12 @@ export default class DiagramCanvas {
     showTotalDiagram = () => zoomAndMoveShowTotalDiagram(this.canvas)
 
     addNode = (type, p) => {
+        if (type === NodeGroup.nodeType) {
+            const node = new NodeGroup()
+            addFigureToCanvas(this.canvas, node, p)
+            return
+        }
+
         const node = new Node(type)
         addFigureToCanvas(this.canvas, node, p)
     }
