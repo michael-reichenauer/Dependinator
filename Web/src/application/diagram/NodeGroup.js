@@ -2,7 +2,6 @@ import draw2d from "draw2d";
 import cuid from 'cuid'
 import { menuItem } from "../../common/Menus";
 import Colors from "./Colors";
-import Label from "./Label";
 
 const defaultOptions = () => {
     return {
