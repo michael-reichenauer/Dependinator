@@ -25,7 +25,6 @@ export const useAppVersionMonitor = () => {
             if (!isActive || !isRunning.current) {
                 isRunning.current = false
                 clearTimeout(timerRef.current)
-                console.log('Disable remote version check')
                 return
             }
 
