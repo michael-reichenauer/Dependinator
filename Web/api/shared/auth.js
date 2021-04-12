@@ -1,3 +1,5 @@
+
+
 exports.getClientPrincipal = req => {
 
     const header = req.headers["x-ms-client-principal"];

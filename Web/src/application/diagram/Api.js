@@ -21,6 +21,7 @@ export const useConnection = () => {
 
 
 export default class Api {
+    apiKey = '0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade'
     token = null
     onInvalidToken = null
 
@@ -101,7 +102,7 @@ export default class Api {
         this.handleRequest('get', uri)
         const t = timing()
         try {
-            const rsp = (await axios.get(uri, { headers: { xtoken: this.token } })).data;
+            const rsp = (await axios.get(uri, { headers: { 'x-api-key': this.apiKey, xtoken: this.token } })).data;
             this.handleOK('get', uri, null, rsp)
             return rsp
         } catch (error) {
@@ -117,7 +118,7 @@ export default class Api {
         this.handleRequest('post', uri, data)
         const t = timing()
         try {
-            const rsp = (await axios.post(uri, data, { headers: { xtoken: this.token } })).data;
+            const rsp = (await axios.post(uri, data, { headers: { 'x-api-key': this.apiKey, xtoken: this.token } })).data;
             this.handleOK('post', uri, data, rsp)
             return rsp
         } catch (error) {
@@ -159,6 +160,10 @@ export default class Api {
                 return
             }
             if (error.response.status === 400 && error.response.data?.includes('Invalid token')) {
+                this.handleInvalidToken()
+                return
+            }
+            if (error.response.status === 400 && error.response.data?.includes('Invalid api request')) {
                 this.handleInvalidToken()
                 return
             }

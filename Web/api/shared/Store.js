@@ -8,7 +8,16 @@ const baseTableName = 'diagrams'
 const partitionKeyName = 'dep'
 const usersTableName = 'users'
 const userPartitionKey = 'users'
+const standardApiKey = '0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade'
 
+
+exports.verifyApiKey = context => {
+    const req = context.req
+    const apiKey = req.headers['x-api-key']
+    if (apiKey !== standardApiKey) {
+        throw new Error('Invalid api request')
+    }
+}
 
 exports.connect = async (context) => {
     const req = context.req
@@ -261,6 +270,7 @@ exports.downloadAllDiagrams = async (context) => {
 // // -----------------------------------------------------------------
 
 
+
 function makeRandomId() {
     let ID = "";
     let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -283,7 +293,6 @@ function getTableName(context) {
         throw new Error('Invalid token')
     }
 
-    context.log('#### token', info.token)
     return baseTableName + info.token
 }
 

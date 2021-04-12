@@ -2,6 +2,7 @@ var store = require('../shared/Store.js');
 
 module.exports = async function (context, req) {
     try {
+        store.verifyApiKey(context)
         const diagramInfo = await store.updateDiagram(context, req.body)
 
         context.res = { status: 200, body: diagramInfo };
