@@ -50,6 +50,15 @@ export default class NodeGroup extends draw2d.shape.basic.Rectangle {
         }
     }
 
+    setCanvas(canvas) {
+        super.setCanvas(canvas)
+
+        if (canvas != null) {
+            this.toBack()
+        }
+    }
+
+
     static deserialize(data) {
         return new NodeGroup({ id: data.id, width: data.w, height: data.h, name: data.name })
     }
