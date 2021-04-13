@@ -78,8 +78,6 @@ export default class StoreSync {
         const before = this.store.getRecentDiagramInfos()[0]
         await this.syncDiagrams()
         const after = this.store.getRecentDiagramInfos()[0]
-        console.log('before:', before)
-        console.log('after: ', after)
         if (before.diagramId === after.diagramId && before.timestamp === after.timestamp) {
             return false
         }
