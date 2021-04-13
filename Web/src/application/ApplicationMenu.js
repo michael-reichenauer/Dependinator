@@ -35,25 +35,25 @@ export function ApplicationMenu() {
     };
 
 
-    const clearLocalData = () => {
-        if (!confirm('Do you really want to clear all local data?')) {//eslint-disable-line
-            return
-        }
+    // const clearLocalData = () => {
+    //     if (!confirm('Do you really want to clear all local data?')) {//eslint-disable-line
+    //         return
+    //     }
 
-        store.clearLocalData()
-        window.location.reload()
-    };
+    //     store.clearLocalData()
+    //     window.location.reload()
+    // };
 
-    const clearAllData = async () => {
-        if (!confirm('Do you really want to clear all local and remote data?')) {//eslint-disable-line
-            return
-        }
+    // const clearAllData = async () => {
+    //     if (!confirm('Do you really want to clear all local and remote data?')) {//eslint-disable-line
+    //         return
+    //     }
 
-        if (await store.clearRemoteData()) {
-            store.clearLocalData()
-            window.location.reload()
-        }
-    };
+    //     if (await store.clearRemoteData()) {
+    //         store.clearLocalData()
+    //         window.location.reload()
+    //     }
+    // };
 
     const diagrams = menu == null ? [] : getDiagramsMenuItems()
     const isInStandaloneMode = () =>
@@ -75,10 +75,10 @@ export function ApplicationMenu() {
         ]),
         menuItem('Reload web page', () => window.location.reload(), true, isInStandaloneMode()),
         menuItem('About', () => setShowAbout(true)),
-        menuParentItem('Advanced', [
-            menuItem('Clear all local data', () => clearLocalData()),
-            menuItem('Clear all local and remote user data', () => clearAllData()),
-        ]),
+        // menuParentItem('Advanced', [
+        //     menuItem('Clear all local data', () => clearLocalData()),
+        //     menuItem('Clear all local and remote user data', () => clearAllData()),
+        // ]),
     ]
 
     return (

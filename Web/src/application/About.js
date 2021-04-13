@@ -31,7 +31,7 @@ export default function About() {
             anchorOrigin={{ vertical: 'center', horizontal: 'center' }}
             transformOrigin={{ vertical: 'center', horizontal: 'center' }}
         >
-            <Box style={{ width: 320, height: 300, padding: 20 }}>
+            <Box style={{ width: 320, height: 330, padding: 20 }}>
                 <Tooltip title={`version: ${localBuildTime} (${localSha.substring(0, 6)})`}>
                     <Typography variant="h5">About Dependinator</Typography>
                 </Tooltip>
@@ -46,6 +46,9 @@ export default function About() {
                 </Typography>
                 <Typography style={{ paddingTop: 10 }} >
                     You can sync diagrams between different devices if you <Link onClick={enableCloudSync}>enable cloud sync</Link>
+                </Typography>
+                <Typography style={{ paddingTop: 30 }} variant="body2">
+                    Context menus provides additional functionality.
                 </Typography>
 
                 <Box style={{ position: 'absolute', bottom: 20, left: '40%', }}
