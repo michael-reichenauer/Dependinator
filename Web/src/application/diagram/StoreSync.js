@@ -42,7 +42,7 @@ export default class StoreSync {
             this.local.updateSync({ isConnecting: false })
             const connectData = await this.remote.connect()
             console.log('connected', connectData)
-            sync = this.local.updateSync({ token: connectData.token })
+            sync = this.local.updateSync({ token: connectData.token, provider: connectData.provider, details: connectData.details })
             setSuccessMessage('Cloud sync connection is enabled')
         }
 
@@ -57,7 +57,7 @@ export default class StoreSync {
             // Called when token id invalid
             if (this.isSyncEnabled) {
                 this.isSyncEnabled = false
-                this.local.updateSync({ token: null, isConnecting: false, provider: null })
+                this.local.updateSync({ token: null, isConnecting: false, provider: null, details: null })
                 setSyncMode(false)
                 setErrorMessage('Cloud sync failed. You need to re-enable cloud sync')
             }

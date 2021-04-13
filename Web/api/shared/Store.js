@@ -32,11 +32,11 @@ exports.connect = async (context) => {
         const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
         context.log('got user', userId, entity)
         if (entity.tableId) {
-            context.log('got user', userId, entity)
+            // context.log('got user', userId, entity)
             const tableName = baseTableName + entity.tableId
             await table.createTableIfNotExists(tableName)
             await table.insertOrReplaceEntity(tableName, toTableUserItem(clientPrincipal))
-            return { token: entity.tableId }
+            return { token: entity.tableId, provider: clientPrincipal.identityProvider, details: clientPrincipal.userDetails }
         }
         context.log('Failed to get table id')
     } catch (err) {
@@ -56,7 +56,7 @@ exports.connect = async (context) => {
     await table.createTableIfNotExists(usersTableName)
     await table.insertOrReplaceEntity(usersTableName, toUserItem(clientPrincipal, tableId))
 
-    return { token: tableId }
+    return { token: tableId, provider: clientPrincipal.identityProvider, details: clientPrincipal.userDetails }
 }
 
 

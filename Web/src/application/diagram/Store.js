@@ -56,6 +56,10 @@ class Store {
     }
 
 
+    getSync() {
+        return this.local.getSync()
+    }
+
     async openDiagramRootCanvas(diagramId) {
         try {
             let canvas = await this.sync.openDiagramRootCanvas(diagramId)

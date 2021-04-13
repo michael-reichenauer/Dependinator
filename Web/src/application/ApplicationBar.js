@@ -64,11 +64,13 @@ export default function ApplicationBar({ height }) {
         }
     }
 
+    const { details, provider } = store.getSync()
+
     return (
         <AppBar position="static" style={{ height: height }}>
             <Toolbar>
                 <ApplicationMenu />
-                {syncState === true && <Button tooltip="Cloud sync enabled and OK, click to check cloud connection" icon={<SyncIcon style={{ color: 'Lime' }} />}
+                {syncState === true && <Button tooltip={`Cloud sync enabled and OK for ${details}, ${provider}, click to check cloud connection`} icon={<SyncIcon style={{ color: 'Lime' }} />}
                     onClick={() => store.checkCloudConnection()} />}
                 {syncState === false && <Button tooltip="Cloud connection error, sync disabled, click to retry" icon={<SyncProblemIcon style={{ color: '#FF3366' }} />}
                     onClick={() => store.checkCloudConnection()} />}
