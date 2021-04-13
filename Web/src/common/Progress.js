@@ -4,10 +4,37 @@ import React, { useCallback, useRef } from 'react'
 
 
 const progressAtom = atom(false)
+let setProgressFunc = null
 
-export const useProgress = () => {
+export const setProgress = flag => setProgressFunc?.(flag)
+
+export default function Progress() {
+    const classes = useStyles();
+    const [isProgress] = useProgress()
+
+    return (
+        <Fade
+            in={isProgress}
+            style={{
+                transitionDelay: isProgress ? '800ms' : '0ms',
+            }}
+            unmountOnExit
+        >
+            <Backdrop className={classes.backdrop} open={isProgress} >
+                <CircularProgress className={classes.colorPrimary} color='primary' />
+            </Backdrop>
+        </Fade>
+    )
+}
+
+
+const useProgress = () => {
     const [isProgress, setProgress] = useAtom(progressAtom)
     const count = useRef(0)
+
+    if (!setProgressFunc) {
+        setProgressFunc = setProgress
+    }
 
     const set = useCallback(isStart => {
         if (isStart) {
@@ -40,23 +67,5 @@ const useStyles = makeStyles((theme) => ({
         color: 'white',
     },
 }));
-
-export default function Progress({ open }) {
-    const classes = useStyles();
-
-    return (
-        <Fade
-            in={open}
-            style={{
-                transitionDelay: open ? '800ms' : '0ms',
-            }}
-            unmountOnExit
-        >
-            <Backdrop className={classes.backdrop} open={open} >
-                <CircularProgress className={classes.colorPrimary} color='primary' />
-            </Backdrop>
-        </Fade>
-    )
-}
 
 

@@ -7,7 +7,7 @@ import Node from "./Node";
 
 const groupColor = '#' + Colors.canvasText.hex()
 
-const defaultDiagramData = (name) => {
+const defaultCanvasData = (name) => {
     // Group node with one node in the center of that group
     const gx = DiagramCanvas.defaultWidth / 2
     const gy = DiagramCanvas.defaultHeight / 2
@@ -45,7 +45,7 @@ export default class InnerDiagramFigure extends draw2d.SetFigure {
         console.log('data', canvasData)
 
         this.parent = parent
-        this.canvasData = canvasData ?? defaultDiagramData(parent.getName())
+        this.canvasData = canvasData ?? defaultCanvasData(parent.getName())
     }
 
     setCanvas(canvas) {

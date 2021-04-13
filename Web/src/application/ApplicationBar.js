@@ -1,33 +1,42 @@
 import React from "react";
 import PubSub from 'pubsub-js'
-import { Typography, fade, AppBar, Toolbar, IconButton, Tooltip, FormControlLabel, Switch, Box, } from "@material-ui/core";
+import { Typography, AppBar, Toolbar, IconButton, Tooltip, Box, } from "@material-ui/core";
+import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { ApplicationMenu } from "./ApplicationMenu"
 import PersonAddIcon from '@material-ui/icons/PersonAdd';
 import LibraryAddOutlinedIcon from '@material-ui/icons/LibraryAddOutlined';
 import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
+import SyncIcon from '@material-ui/icons/Sync';
+import SyncProblemIcon from '@material-ui/icons/SyncProblem';
+import SyncDisabledIcon from '@material-ui/icons/SyncDisabled';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
+import ControlCameraIcon from '@material-ui/icons/ControlCamera';
+import EditIcon from '@material-ui/icons/Edit';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
 import SaveAltIcon from '@material-ui/icons/SaveAlt';
 import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom, titleAtom } from "./Diagram";
 import { useAtom } from "jotai";
-import { withStyles } from "@material-ui/styles";
-import { grey } from "@material-ui/core/colors";
+import { store } from "./diagram/Store";
+import { useLogin } from "./Login";
+import { useSyncMode } from './Online'
+import { useConnection } from "./diagram/Api";
+
 
 
 export default function ApplicationBar({ height }) {
     const classes = useAppBarStyles();
     const [titleText] = useAtom(titleAtom)
     const [editMode, setEditMode] = useAtom(editModeAtom);
+    const [syncMode] = useSyncMode()
     const [canUndo] = useAtom(canUndoAtom)
     const [canRedo] = useAtom(canRedoAtom)
     const [canPopDiagram] = useAtom(canPopDiagramAtom)
+    const [, setShowLogin] = useLogin()
+    const [connection] = useConnection()
 
-    const handleEditModeChange = (event) => {
-        setEditMode(event.target.checked);
-        PubSub.publish('canvas.SetEditMode', event.target.checked)
-    };
+    const syncState = syncMode && connection ? true : syncMode && !connection ? false : null
 
     const style = (disabled) => {
         return !disabled ? classes.icons : classes.iconsDisabled
@@ -36,11 +45,37 @@ export default function ApplicationBar({ height }) {
     const styleAlways = (disabled) => {
         return !disabled ? classes.iconsAlways : classes.iconsAlwaysDisabled
     }
+    const editStyleAlways = (disabled) => {
+        return !disabled ? classes.iconsAlways : classes.iconsAlwaysDarker
+    }
+
+    const editToggle = editMode ? ['edit'] : ['pan']
+
+    const handleEditToggleChange = (_, newMode) => {
+        if (!editMode && newMode.includes('edit')) {
+            setEditMode(true)
+            PubSub.publish('canvas.SetEditMode', true)
+            return
+        }
+        if (editMode && newMode.includes('pan')) {
+            setEditMode(false)
+            PubSub.publish('canvas.SetEditMode', false)
+            return
+        }
+    }
+
+    const { details, provider } = store.getSync()
 
     return (
         <AppBar position="static" style={{ height: height }}>
             <Toolbar>
-
+                <ApplicationMenu />
+                {syncState === true && <Button tooltip={`Cloud sync enabled and OK for ${details}, ${provider}, click to check cloud connection`} icon={<SyncIcon style={{ color: 'Lime' }} />}
+                    onClick={() => store.checkCloudConnection()} />}
+                {syncState === false && <Button tooltip="Cloud connection error, sync disabled, click to retry" icon={<SyncProblemIcon style={{ color: '#FF3366' }} />}
+                    onClick={() => store.checkCloudConnection()} />}
+                {syncState === null && <Button tooltip="Cloud sync disabled, click to enable" icon={<SyncDisabledIcon style={{ color: '#FFFF66' }} />}
+                    onClick={() => setShowLogin(true)} />}
 
                 <Button tooltip="Undo" disabled={!canUndo} icon={<UndoIcon className={styleAlways(!canUndo)} />}
                     onClick={() => PubSub.publish('canvas.Undo')} />
@@ -63,31 +98,21 @@ export default function ApplicationBar({ height }) {
                 <Button tooltip="Pop to surrounding diagram" disabled={!canPopDiagram} icon={<SaveAltIcon className={styleAlways(!canPopDiagram)} style={{ transform: 'rotate(180deg)' }} />}
                     onClick={() => PubSub.publish('canvas.PopInnerDiagram')} />
 
-                <Box m={2} />
+                <ToggleButtonGroup
+                    size="small"
+                    value={editToggle}
+                    onChange={handleEditToggleChange}
+                >
+                    <ToggleButton value="pan" ><Tooltip title="Enable pan mode"><ControlCameraIcon className={editStyleAlways(editMode)} /></Tooltip></ToggleButton>
+                    <ToggleButton value="edit" ><Tooltip title="Enable edit mode"><EditIcon className={editStyleAlways(!editMode)} /></Tooltip></ToggleButton>
+                </ToggleButtonGroup>
+
+                <Box m={2} className={style()} />
                 <Typography className={classes.title} variant="h6" noWrap>{titleText}</Typography>
-
-                <Typography className={classes.space} variant="h6" noWrap> </Typography>
-
-                <Tooltip title="Toggle edit mode" >
-                    <FormControlLabel
-                        control={
-                            <GreySwitch
-                                checked={editMode}
-                                onChange={handleEditModeChange}
-                                name="Edit"
-                            />
-                        }
-                        label="Edit"
-                    />
-                </Tooltip>
-
-                <ApplicationMenu />
-
             </Toolbar>
         </AppBar >
     )
 }
-
 
 const Button = ({ icon, tooltip, disabled, onClick, className }) => {
     return (
@@ -96,21 +121,6 @@ const Button = ({ icon, tooltip, disabled, onClick, className }) => {
                 {icon}</IconButton></Tooltip>
     )
 }
-
-
-const GreySwitch = withStyles({
-    switchBase: {
-        color: grey[400],
-        '&$checked': {
-            color: grey[50],
-        },
-        '&$checked + $track': {
-            backgroundColor: grey[50],
-        },
-    },
-    checked: {},
-    track: {},
-})(Switch);
 
 
 const useAppBarStyles = makeStyles((theme) => ({
@@ -130,14 +140,14 @@ const useAppBarStyles = makeStyles((theme) => ({
     icons: {
         color: 'white',
         display: 'none',
-        [theme.breakpoints.up('sm')]: {
+        [theme.breakpoints.up('md')]: {
             display: 'block',
         },
     },
     iconsDisabled: {
         color: 'grey',
         display: 'none',
-        [theme.breakpoints.up('sm')]: {
+        [theme.breakpoints.up('md')]: {
             display: 'block',
         },
     },
@@ -148,43 +158,10 @@ const useAppBarStyles = makeStyles((theme) => ({
         color: 'grey',
     },
 
-    search: {
-        position: 'relative',
-        borderRadius: theme.shape.borderRadius,
-        backgroundColor: fade(theme.palette.common.white, 0.15),
-        '&:hover': {
-            backgroundColor: fade(theme.palette.common.white, 0.25),
-        },
-        marginLeft: 0,
-        width: '100%',
-        [theme.breakpoints.up('sm')]: {
-            marginLeft: theme.spacing(1),
-            width: 'auto',
-        },
+    iconsAlwaysDarker: {
+        color: 'Silver',
     },
-    searchIcon: {
-        padding: theme.spacing(0, 2),
-        height: '100%',
-        position: 'absolute',
-        pointerEvents: 'none',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    inputRoot: {
-        color: 'inherit',
-    },
-    inputInput: {
-        padding: theme.spacing(1, 1, 1, 0),
-        // vertical padding + font size from searchIcon
-        paddingLeft: `calc(1em + ${theme.spacing(4)}px)`,
-        transition: theme.transitions.create('width'),
-        width: '100%',
-        [theme.breakpoints.up('sm')]: {
-            width: '8ch',
-            '&:focus': {
-                width: '20ch',
-            },
-        },
+    connectionIcons: {
+        color: 'green',
     },
 }));

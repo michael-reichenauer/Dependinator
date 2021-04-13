@@ -3,7 +3,8 @@ var store = require('../shared/Store.js');
 module.exports = async function (context, req) {
     try {
         store.verifyApiKey(context)
-        await store.uploadDiagrams(context, req.body)
+        await store.clearAllData(context)
+
         context.res = { status: 200, body: "" };
     } catch (err) {
         context.log.error('error:', err);

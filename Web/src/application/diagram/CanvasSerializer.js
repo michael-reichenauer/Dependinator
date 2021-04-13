@@ -3,6 +3,7 @@ import Connection from './Connection'
 import Colors from "./Colors";
 import Group from "./Group";
 import Node from "./Node";
+import NodeGroup from "./NodeGroup";
 
 
 
@@ -30,7 +31,6 @@ export default class CanvasSerializer {
 
         // Unmark all nodes 
         this.canvas.getFigures().each((i, f) => f.group = null)
-
         return canvasData
     }
 
@@ -102,6 +102,8 @@ export default class CanvasSerializer {
         let figure
         if (f.type === Group.groupType) {
             figure = Group.deserialize(f)
+        } else if (f.type === NodeGroup.nodeType) {
+            figure = NodeGroup.deserialize(f)
         } else {
             figure = Node.deserialize(f)
         }

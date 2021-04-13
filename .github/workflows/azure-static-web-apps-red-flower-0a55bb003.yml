@@ -18,6 +18,12 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: true
+      - shell: bash
+        run: |
+          sed -i "s/%REACT_APP_BUILD_TIME%/$(date -u +'%Y-%m-%dT%H:%M:%S')+00:00/g" Web/.env
+          sed -i "s/%REACT_APP_BUILD_TIME%/$(date -u +'%Y-%m-%dT%H:%M:%S')+00:00/g" Web/public/manifest.json
+          sed -i "s/%REACT_APP_SHA%/${{github.event.pull_request.head.sha}}/g" Web/.env
+          sed -i "s/%REACT_APP_SHA%/${{github.event.pull_request.head.sha}}/g" Web/public/manifest.json
       - name: Build And Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v0.0.1-preview

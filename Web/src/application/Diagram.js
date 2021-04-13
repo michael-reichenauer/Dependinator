@@ -1,22 +1,17 @@
 import React, { useEffect, useRef, useState } from "react";
 import PubSub from 'pubsub-js'
-import { useSnackbar } from "notistack";
 import DiagramCanvas from "./diagram/DiagramCanvas"
 import { getCommonEvent } from "../common/events";
 import { atom, useAtom } from 'jotai'
 import { ContextMenu } from "../common/Menus";
-import Progress, { useProgress } from '../common/Progress'
+import Progress from '../common/Progress'
 import { activityEventName } from '../common/activity'
-//import Api from "./diagram/Api";
-
 
 export const titleAtom = atom('System')
 export const canUndoAtom = atom(false)
 export const canRedoAtom = atom(false)
 export const canPopDiagramAtom = atom(false)
-
 export const editModeAtom = atom(false)
-
 
 
 export default function Diagram({ width, height }) {
@@ -24,7 +19,6 @@ export default function Diagram({ width, height }) {
     const canvasRef = useRef(null)
     const activeRef = useRef(true)
 
-    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
     const [contextMenu, setContextMenu] = useState()
     const [, setTitle] = useAtom(titleAtom)
     const [, setCanUndo] = useAtom(canUndoAtom)
@@ -32,19 +26,9 @@ export default function Diagram({ width, height }) {
     const [, setCanPopDiagram] = useAtom(canPopDiagramAtom)
     const [, setEditMode] = useAtom(editModeAtom)
 
-    const [isProgress, setProgress] = useProgress()
-
     useEffect(() => {
-        // Initialize canvas
-        const errorHandler = errorMsg => {
-            const sb = enqueueSnackbar(errorMsg, {
-                variant: "error", onClick: () => closeSnackbar(sb), autoHideDuration: null
-            })
-        }
-
         const onActivityEvent = (activity) => {
             if (!activeRef.current && activity.detail) {
-                console.log('Activated')
                 canvasRef.current.activated()
             }
             activeRef.current = activity.detail
@@ -54,36 +38,15 @@ export default function Diagram({ width, height }) {
             setTitle: setTitle,
             setCanUndo: setCanUndo,
             setCanRedo: setCanRedo,
-            setProgress: setProgress,
             setCanPopDiagram: setCanPopDiagram,
             setEditMode: setEditMode,
-            errorHandler: errorHandler
         }
 
         const canvas = new DiagramCanvas('canvas', callbacks);
-        canvas.init()
         canvasRef.current = canvas
+        canvas.init()
 
         const contextMenuHandler = enableContextMenu('canvas', setContextMenu, canvas)
-
-        setTimeout(() => canvas.showTotalDiagram(), 0);
-        // const api = new Api()
-        // setTimeout(async () => {
-        //     try {
-        //         const user = await api.getCurrentUser()
-        //         console.log('user', user)
-        //         if (user.clientPrincipal) {
-        //             setTitle(user.clientPrincipal.userId)
-        //             // window.location.href = "https://google.com";
-        //         } else {
-        //             // window.location.href = "https://google.com";
-        //         }
-
-        //     } catch (error) {
-        //         errorHandler(`error: ${error.message}`)
-        //     }
-
-        // }, 1000);
 
         document.addEventListener(activityEventName, onActivityEvent)
 
@@ -96,11 +59,11 @@ export default function Diagram({ width, height }) {
             document.removeEventListener("longclick", contextMenuHandler);
             canvasRef.current.delete()
         }
-    }, [setCanUndo, setCanRedo, setProgress, setCanPopDiagram, setEditMode, setTitle, closeSnackbar, enqueueSnackbar])
+    }, [setCanUndo, setCanRedo, setCanPopDiagram, setEditMode, setTitle])
 
     return (
         <>
-            <Progress open={isProgress} />
+            <Progress />
 
             <div id="diagram">
                 <div id="canvas" style={{
