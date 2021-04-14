@@ -48,7 +48,7 @@ export default function About() {
                     You can sync diagrams between different devices if you <Link onClick={enableCloudSync}>enable cloud sync</Link>
                 </Typography>
                 <Typography style={{ paddingTop: 30 }} variant="body2">
-                    Context menus provides additional functionality.
+                    Hint: Use context menus to access functionality.
                 </Typography>
 
                 <Box style={{ position: 'absolute', bottom: 20, left: '40%', }}
