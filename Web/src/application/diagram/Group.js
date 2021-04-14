@@ -46,6 +46,14 @@ export default class Group extends draw2d.shape.composite.Raft {
 
         this.on("click", (s, e) => PubSub.publish('canvas.SetEditMode', false))
         this.on("dblclick", (s, e) => PubSub.publish('canvas.AddDefaultNode', { x: e.x, y: e.y }))
+
+        const selectionPolicy = this.editPolicy
+            .find(p => p instanceof draw2d.policy.figure.RectangleSelectionFeedbackPolicy)
+        if (selectionPolicy != null) {
+            selectionPolicy.createResizeHandle = (owner, type) => {
+                return new draw2d.ResizeHandle({ owner: owner, type: type, width: 15, height: 15 });
+            }
+        }
     }
 
     static deserialize(data) {

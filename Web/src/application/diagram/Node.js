@@ -27,7 +27,7 @@ const defaultOptions = (type) => {
             return { ...dv, name: 'Node', colorName: 'DeepPurple', icon: 'Node', }
         case Node.systemType:
             return {
-                ...dv, name: 'System', colorName: 'DeepPurple', icon: 'Diagram',
+                ...dv, name: store.getUniqueSystemName(), colorName: 'DeepPurple', icon: 'Diagram',
                 width: Node.defaultWidth * 1.2, height: Node.defaultHeight * 1.2,
             }
         case Node.userType:
@@ -134,6 +134,8 @@ export default class Node extends draw2d.shape.node.Between {
         })
 
         return [
+            menuItem('To front', () => this.toFront()),
+            menuItem('To back', () => this.toBack()),
             menuParentItem('Inner diagram', [
                 menuItem('Show', () => this.showInnerDiagram(), this.innerDiagram == null, hasDiagramIcon),
                 menuItem('Hide (click)', () => this.hideInnerDiagram(), this.innerDiagram != null, hasDiagramIcon),
@@ -141,8 +143,6 @@ export default class Node extends draw2d.shape.node.Between {
             ], true, hasDiagramIcon),
             menuParentItem('Change color', colorItems),
             menuParentItem('Change icon', iconItems),
-            menuItem('To front', () => this.toFront()),
-            menuItem('To back', () => this.toBack()),
             menuItem('Set default size', () => this.setDefaultSize()),
             menuItem('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.canDelete)
         ]
@@ -207,7 +207,7 @@ export default class Node extends draw2d.shape.node.Between {
 
         this.setChildrenVisible(false)
 
-        const canvasData = store.readCanvas(this.getCanvas().diagramId, this.getId())
+        const canvasData = store.getCanvas(this.getCanvas().diagramId, this.getId())
         this.innerDiagram = new InnerDiagramFigure(this, canvasData)
         this.innerDiagram.onClick = clickHandler(
             () => this.hideInnerDiagram(),
@@ -278,7 +278,7 @@ export default class Node extends draw2d.shape.node.Between {
         })
 
         this.nameLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-        this.nameLabel.labelLocator = new LabelLocator(7)
+        this.nameLabel.labelLocator = new LabelLocator(12)
         this.add(this.nameLabel, this.nameLabel.labelLocator);
         this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
         this.descriptionLabel.labelLocator = new LabelLocator(45)
@@ -297,7 +297,7 @@ export default class Node extends draw2d.shape.node.Between {
         this.iconName = iconName
         this.icon = icon
         const iconColor = Colors.getNodeFontColor(this.colorName)
-        this.icon.attr({ width: 15, height: 15, color: iconColor, bgColor: 'none' })
+        this.icon.attr({ width: 22, height: 22, color: iconColor, bgColor: 'none' })
         this.add(this.icon, new draw2d.layout.locator.XYRelPortLocator(1, 1))
     }
 
@@ -326,7 +326,7 @@ export default class Node extends draw2d.shape.node.Between {
 
         // Make ports larger to support touch
         this.getPorts().each((i, p) => {
-            p.setCoronaWidth(15)
+            p.setCoronaWidth(25)
             p.setDimension(15)
         })
     }

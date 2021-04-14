@@ -4,11 +4,16 @@ import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { Provider } from 'jotai'
+import { MessageProvider } from './common/MessageSnackbar';
+
+
 
 ReactDOM.render(
   // <React.StrictMode>
   <Provider>
-    <App />
+    <MessageProvider>
+      <App />
+    </MessageProvider>
   </Provider>,
   // </React.StrictMode>,
   document.getElementById('root')

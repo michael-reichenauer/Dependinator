@@ -361,7 +361,7 @@ export default class InnerDiagramCanvas {
 
     load = (canvasId) => {
         console.log('load', canvasId)
-        const canvasData = this.store.readCanvas(this.canvas.diagramId, canvasId)
+        const canvasData = this.store.getCanvas(this.canvas.diagramId, canvasId)
         if (canvasData == null) {
             return false
         }

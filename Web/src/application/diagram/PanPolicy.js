@@ -158,7 +158,7 @@ export default class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolic
 
             // we click on an element which are not part of the current selection
             // => reset the "old" current selection if we didn't press the shift key
-            if (shiftKey === false) {
+            if (shiftKey === false || shiftKey === undefined) {
                 if (this.mouseDownElement !== null && this.mouseDownElement.isResizeHandle === false && !currentSelection.contains(this.mouseDownElement)) {
                     currentSelection.each((i, figure) => {
                         this.unselect(canvas, figure)

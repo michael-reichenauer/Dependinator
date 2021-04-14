@@ -1,287 +1,202 @@
-import FileSaver from 'file-saver'
-const diagramKey = 'diagram'
-const diagramDataKey = 'DiagramData'
-const lastUsedDiagramKey = 'lastUsedDiagram'
-const rootCanvasId = 'root'
+import StoreFiles from "./StoreFiles"
+import StoreLocal from "./StoreLocal"
+import StoreSync, { rootCanvasId } from "./StoreSync"
+// import { delay } from '../../common/utils'
+
+
+
 
 class Store {
-    getLastUsedDiagramId() {
-        return this.readData(lastUsedDiagramKey)?.id
+    files = new StoreFiles()
+    local = new StoreLocal()
+    sync = null
+
+    isSyncEnabled = false
+
+    isCloudSyncEnabled = () => this.sync.isSyncEnabled
+    isLocal = () => window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+
+
+    constructor() {
+        this.sync = new StoreSync(this)
     }
 
-    getDiagrams() {
-        let diagrams = []
+    async initialize() {
+        return this.sync.initialize(0)
+    }
 
-        for (var i = 0, len = localStorage.length; i < len; i++) {
-            var key = localStorage.key(i);
-            if (key.endsWith(diagramDataKey)) {
-                const value = JSON.parse(localStorage[key])
-                const parts = key.split('.')
-                const id = parts[1]
-                const name = value.name
-                diagrams.push({ id: id, name: name, accessed: value.accessed })
+    async login(provider) {
+        return this.sync.login(provider)
+    }
+
+    async disableCloudSync() {
+        this.sync.disableCloudSync()
+    }
+
+    async serverHadChanges() {
+        return this.sync.serverHadChanges()
+    }
+
+    async checkCloudConnection() {
+        return this.sync.checkCloudConnection()
+    }
+
+    async retryCloudConnection() {
+        return this.sync.retryCloudConnection()
+    }
+
+    async openMostResentDiagramCanvas() {
+        const diagramId = this.getMostResentDiagramId()
+        if (!diagramId) {
+            console.log('No recent diagram')
+            throw new Error('No resent diagram')
+        }
+
+        return this.openDiagramRootCanvas(diagramId)
+    }
+
+
+    getSync() {
+        return this.local.getSync()
+    }
+
+    async openDiagramRootCanvas(diagramId) {
+        try {
+            let canvas = await this.sync.openDiagramRootCanvas(diagramId)
+            if (canvas) {
+                // Got diagram via cloud
+                return canvas
+            }
+
+            // Local mode: read the root canvas from local store
+            canvas = this.local.readCanvas(diagramId, rootCanvasId)
+            if (!canvas) {
+                throw new Error('Diagram not found')
+            }
+
+            this.local.updateAccessedDiagram(canvas.diagramId)
+            return canvas
+        } catch (error) {
+            this.local.removeDiagram(diagramId)
+            throw error
+        }
+        finally {
+            await this.sync.syncDiagrams()
+        }
+    }
+
+
+    getUniqueSystemName() {
+        const infos = this.getRecentDiagramInfos()
+
+        for (let i = 0; i < 20; i++) {
+            const name = i === 0 ? 'System' : `System (${i})`
+            if (!infos.find(info => name === info.name)) {
+                // No other info with that name
+                return name
             }
         }
 
-        diagrams.sort((i1, i2) => i1.accessed < i2.accessed ? -1 : i1.accessed > i2.accessed ? 1 : 0)
-        return diagrams.reverse()
+        // Seems all names are used, lets just reuse System
+        return 'System'
     }
 
-    loadDiagramFromFile(resultHandler) {
-        this.loadFile(fileText => {
-            if (fileText == null) {
-                resultHandler(null)
-                return
-            }
-
-            const diagrams = JSON.parse(fileText)
-            if (diagrams == null) {
-                console.warn('Failed to parse file')
-                resultHandler(null)
-                return
-            }
-
-            let firstDiagramId = null
-            diagrams.diagrams.forEach(diagram => {
-                if (firstDiagramId == null) {
-                    firstDiagramId = diagram.DiagramData.diagramId
-                }
-                this.writeDiagramObject(diagram)
-            })
-            resultHandler(firstDiagramId)
-        })
+    getMostResentDiagramId() {
+        return this.getRecentDiagramInfos()[0]?.diagramId
     }
 
-    archiveToFile() {
-        const diagrams = this.getDiagrams()
-            .map(d => this.readDiagramObject(d.id))
-            .filter(d => d != null)
-        const diagramsObject = { diagrams: diagrams }
-
-        const fileName = `diagrams.json`
-        const fileText = JSON.stringify(diagramsObject, null, 2)
-        this.saveFile(fileName, fileText)
-    }
-
-
-    saveDiagramToFile(diagramId) {
-        const diagramData = this.readDiagramData(diagramId)
-        if (diagramData == null) {
-            return
+    async newDiagram(diagramId, name, canvas) {
+        console.log('new diagram', diagramId, name)
+        const now = Date.now()
+        const diagram = {
+            diagramInfo: { diagramId: diagramId, name: name, accessed: now, written: now },
+            canvases: [canvas]
         }
+        this.local.writeDiagram(diagram)
 
-        const diagram = this.readDiagramObject(diagramId)
-        const diagrams = { diagrams: [diagram] }
-
-        const fileName = `${diagramData.name}.json`
-        const fileText = JSON.stringify(diagrams, null, 2)
-        this.saveFile(fileName, fileText)
+        await this.sync.newDiagram(diagram)
     }
 
-    writeDiagramObject(diagram) {
-        const diagramData = diagram.DiagramData
-        const diagramId = diagramData.diagramId
+    setCanvas(canvas) {
+        this.local.writeCanvas(canvas)
+        this.local.updateWrittenDiagram(canvas.diagramId)
 
-        this.writeDiagramData(diagramId, diagramData)
-        Object.entries(diagram).forEach(property => {
-            const key = property[0]
-            const value = property[1]
-            if (key === diagramDataKey) {
-                return
-            }
-            this.writeData(this.canvasKey(diagramId, key), value)
-        })
+        this.sync.setCanvas(canvas)
     }
 
+    async deleteDiagram(diagramId) {
+        console.log('Delete diagram', diagramId)
+        this.local.removeDiagram(diagramId)
 
-
-    readDiagramObject(diagramId) {
-        const diagramData = this.readDiagramData(diagramId)
-        if (diagramData == null) {
-            console.log('diagram not found', diagramId)
-            return
-        }
-
-        const diagram = {}
-
-        for (var i = 0, len = localStorage.length; i < len; i++) {
-            var key = localStorage.key(i);
-            if (key.startsWith(diagramKey)) {
-                const parts = key.split('.')
-                const id = parts[1]
-                if (id === diagramId) {
-                    const propertyName = parts[2]
-                    const value = localStorage[key]
-                    diagram[propertyName] = JSON.parse(value)
-                }
-            }
-        }
-
-        return diagram
-    }
-
-
-    saveFile(fileName, fileText) {
-        const blob = new Blob([fileText], { type: "text/plain;charset=utf-8" });
-        FileSaver.saveAs(blob, fileName);
-
-    }
-
-    loadFile(resultHandler) {
-        const readFile = this.buildFileSelector(e => {
-            var file = e.path[0].files[0];
-            if (!file) {
-                resultHandler(null);
-            }
-
-            const reader = new FileReader();
-            reader.onload = e => resultHandler(e.target.result)
-            reader.onerror = e => resultHandler(null)
-
-            reader.readAsText(file);
-        })
-
-        readFile.click()
-    }
-
-
-    onChanged(e) {
-        var file = e.path[0].files[0];
-        if (!file) {
-            return;
-        }
-        const reader = new FileReader();
-
-        reader.onload = e => {
-            var contents = e.target.result;
-            console.log('file', contents);
-        };
-        reader.onerror = e => console.error('error', e)
-
-        reader.readAsText(file);
-    }
-
-
-    clear() {
-        localStorage.clear()
-    }
-
-    readDiagramRootCanvas(diagramId) {
-        if (diagramId == null) {
-            return null
-        }
-        const diagramData = this.readDiagramData(diagramId)
-        if (diagramData == null) {
-            return null
-        }
-        //, accessed:Date.now()
-        this.writeData(lastUsedDiagramKey, { id: diagramId })
-
-        return this.readCanvas(diagramId, rootCanvasId)
-    }
-
-    newDiagram(diagramId, systemId, name) {
-        const diagramData = { diagramId: diagramId, systemId: systemId, name: name }
-        this.writeDiagramData(diagramId, diagramData)
-        this.writeData(lastUsedDiagramKey, { id: diagramId })
-    }
-
-    deleteDiagram(diagramId) {
-        let keys = []
-
-        for (var i = 0, len = localStorage.length; i < len; i++) {
-            var key = localStorage.key(i);
-            if (key.startsWith(diagramKey)) {
-                const parts = key.split('.')
-                const id = parts[1]
-                if (id === diagramId) {
-                    keys.push(key)
-                }
-            }
-        }
-
-        keys.forEach(key => localStorage.removeItem(key))
+        await this.sync.deleteDiagram(diagramId)
     }
 
     setDiagramName(diagramId, name) {
-        const diagramData = this.readDiagramData(diagramId)
-        this.writeData(this.diagramKey(diagramId), { ...diagramData, name: name })
+        this.local.updateDiagramInfo(diagramId, { name: name })
+        this.local.updateWrittenDiagram(diagramId)
+
+
+        this.sync.setDiagramName(diagramId, name)
     }
 
-    readDiagramData(diagramId) {
-        let diagramData = this.readData(this.diagramKey(diagramId))
-        if (diagramData == null) {
-            return null
-        }
-        this.writeDiagramData(diagramId, diagramData)
-        return diagramData
+    getCanvas(diagramId, canvasId) {
+        return this.local.readCanvas(diagramId, canvasId)
     }
 
-    writeDiagramData(diagramId, diagramData) {
-        diagramData = { ...diagramData, accessed: Date.now() }
-        this.writeData(this.diagramKey(diagramId), diagramData)
+    getRecentDiagramInfos() {
+        return this.local.readAllDiagramsInfos()
+            .sort((i1, i2) => i1.accessed < i2.accessed ? -1 : i1.accessed > i2.accessed ? 1 : 0)
+            .reverse()
     }
 
-    readCanvas(diagramId, canvasId) {
-        return this.readData(this.canvasKey(diagramId, canvasId))
-    }
+    async loadDiagramFromFile() {
+        const file = await this.files.loadFile()
 
-    writeCanvas(canvasData, canvasId) {
-        this.writeData(this.canvasKey(canvasData.diagramId, canvasId), canvasData)
-        // Update access time
-        this.writeDiagramData(canvasData.diagramId, this.readDiagramData(canvasData.diagramId))
-    }
-
-    readAllCanvases(diagramId) {
-        const keys = []
-
-        for (var i = 0, len = localStorage.length; i < len; i++) {
-            var key = localStorage.key(i);
-            if (key.startsWith(diagramKey)) {
-                const parts = key.split('.')
-                const id = parts[1]
-                const name = parts[2]
-                if (id === diagramId && name !== diagramDataKey) {
-                    keys.push(key)
-                }
-            }
+        if (!await this.sync.uploadDiagrams(file.diagrams)) {
+            // save locally
+            file.diagrams.forEach(diagram => this.local.writeDiagram(diagram))
         }
 
-        return keys.map(key => this.readData(key)).filter(data => data != null)
-            .sort((d1, d2) => d1.canvasId === rootCanvasId ? -1 : d2.canvasId === rootCanvasId ? 1 : 0)
-    }
-
-
-
-    buildFileSelector(selectedHandler) {
-        const fileSelector = document.createElement('input');
-        fileSelector.setAttribute('type', 'file');
-        fileSelector.setAttribute('multiple', 'multiple');
-        fileSelector.addEventListener('change', selectedHandler, false);
-
-        return fileSelector;
-    }
-
-    readData(key) {
-        let text = localStorage.getItem(key)
-        if (text == null) {
-            console.log('No data for key', key)
-            return null
+        const firstDiagramId = file.diagrams[0]?.diagramInfo.diagramId
+        if (!firstDiagramId) {
+            throw new Error('No diagram in file')
         }
-        return JSON.parse(text)
+        return firstDiagramId
     }
 
-    writeData(key, data) {
-        const text = JSON.stringify(data)
-        localStorage.setItem(key, text)
+    saveDiagramToFile(diagramId) {
+        const diagram = this.local.readDiagram(diagramId)
+        if (diagram == null) {
+            return
+        }
+
+        const file = { diagrams: [diagram] }
+        this.files.saveFile(`${diagram.diagramInfo.name}.json`, file)
     }
 
-    canvasKey(diagramId, canvasId) {
-        return `${diagramKey}.${diagramId}.${canvasId}`
+    async saveAllDiagramsToFile() {
+        let diagrams = await this.sync.downloadAllDiagrams()
+        if (!diagrams) {
+            // Read from local    
+            diagrams = this.local.readAllDiagrams()
+        }
+
+        const file = { diagrams: diagrams }
+        this.files.saveFile(`diagrams.json`, file)
     }
 
-    diagramKey(diagramId) {
-        return `${diagramKey}.${diagramId}.${diagramDataKey}`
+    clearLocalData() {
+        this.local.clearAllData()
+    }
+
+    async clearRemoteData() {
+        return this.sync.clearRemoteData()
+    }
+
+
+    // For printing 
+    getDiagram(diagramId) {
+        return this.local.readDiagram(diagramId)
     }
 }
 

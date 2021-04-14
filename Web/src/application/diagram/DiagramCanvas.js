@@ -13,6 +13,9 @@ import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
 import { addDefaultNewDiagram, addFigureToCanvas } from "./addDefault";
 import InnerDiagramCanvas from "./InnerDiagramCanvas";
 import Printer from "../../common/Printer";
+import { setProgress } from "../../common/Progress";
+import { setErrorMessage } from "../../common/MessageSnackbar";
+import NodeGroup from "./NodeGroup";
 
 
 export default class DiagramCanvas {
@@ -35,8 +38,6 @@ export default class DiagramCanvas {
 
     init() {
         this.loadInitialDiagram()
-
-        this.callbacks.setTitle(this.getTitle())
 
         this.handleDoubleClick(this.canvas)
         this.handleEditChanges(this.canvas)
@@ -79,6 +80,7 @@ export default class DiagramCanvas {
             menuItem('Add node', () => this.addNode(Node.nodeType, mouseXY)),
             menuItem('Add external user', () => this.addNode(Node.userType, mouseXY)),
             menuItem('Add external system', () => this.addNode(Node.externalType, mouseXY)),
+            menuItem('Add group', () => this.addNode(NodeGroup.nodeType, mouseXY)),
             menuItem('Pop to surrounding diagram (dbl-click)', () => PubSub.publish('canvas.PopInnerDiagram'),
                 true, !this.canvasStack.isRoot()),
         ]
@@ -93,75 +95,102 @@ export default class DiagramCanvas {
         this.canvas.getCommandStack().redo()
     }
 
-    commandNewDiagram = () => {
-        //store.loadFile(file => console.log('File:', file))
-        this.canvas.clearDiagram()
-        this.createNewDiagram()
-        this.callbacks.setTitle(this.getTitle())
-        this.showTotalDiagram()
-    }
-
-    commandOpenDiagram = (msg, diagramId) => {
-        const canvasData = this.store.readDiagramRootCanvas(diagramId)
-        if (canvasData == null) {
-            // No data for that id, lets create it
-            return
-        }
-        this.canvas.clearDiagram()
-
-        // Deserialize canvas
-        this.canvas.deserialize(canvasData)
-        this.callbacks.setTitle(this.getTitle())
-        this.showTotalDiagram()
-    }
-
-    commandDeleteDiagram = () => {
-        this.store.deleteDiagram(this.canvas.diagramId)
-        this.canvas.clearDiagram()
-
-        // Try get first diagram to open
-        const canvasData = this.store.readDiagramRootCanvas(this.store.getDiagrams()[0]?.id)
-        if (canvasData == null) {
-            // No data for that id, lets create new diagram
-            this.createNewDiagram()
+    commandNewDiagram = async () => {
+        setProgress(true)
+        try {
+            //store.loadFile(file => console.log('File:', file))
+            this.canvas.clearDiagram()
+            await this.createNewDiagram()
             this.callbacks.setTitle(this.getTitle())
             this.showTotalDiagram()
-            return
+        } catch (error) {
+            setErrorMessage('Failed to create new diagram')
         }
+        finally {
+            setProgress(false)
+        }
+    }
 
-        // Deserialize canvas
-        this.canvas.deserialize(canvasData)
-        this.callbacks.setTitle(this.getTitle())
-        this.showTotalDiagram()
+    commandOpenDiagram = async (msg, diagramId) => {
+        setProgress(true)
+        try {
+            console.log('open', diagramId)
+            const canvasData = await this.store.openDiagramRootCanvas(diagramId)
+
+            this.canvas.clearDiagram()
+
+            // Deserialize canvas
+            this.canvas.deserialize(canvasData)
+
+            this.callbacks.setTitle(this.getTitle())
+            this.showTotalDiagram()
+        } catch (error) {
+            setErrorMessage('Failed to load diagram')
+        }
+        finally {
+            setProgress(false)
+        }
+    }
+
+    commandDeleteDiagram = async () => {
+        setProgress(true)
+        try {
+            await this.store.deleteDiagram(this.canvas.diagramId)
+            this.canvas.clearDiagram()
+
+            // Try get first diagram to open
+            const canvasData = await this.store.openMostResentDiagramCanvas()
+
+            // Deserialize canvas
+            this.canvas.deserialize(canvasData)
+            this.callbacks.setTitle(this.getTitle())
+            this.showTotalDiagram()
+        } catch (error) {
+            // Failed to open most resent diagram, lets create new diagram
+            await this.createNewDiagram()
+            this.callbacks.setTitle(this.getTitle())
+            this.showTotalDiagram()
+        } finally {
+            setProgress(false)
+        }
     }
 
     commandSaveToFile = () => {
         this.store.saveDiagramToFile(this.canvas.diagramId)
     }
 
-    commandOpenFile = () => {
-        this.store.loadDiagramFromFile(diagramId => this.commandOpenDiagram('', diagramId))
+    commandOpenFile = async () => {
+        setProgress(true)
+        try {
+            const diagramId = await this.store.loadDiagramFromFile()
+            this.commandOpenDiagram('', diagramId)
+        } catch (error) {
+            setErrorMessage('Failed to load file')
+        } finally {
+            setProgress(false)
+        }
+
     }
 
-    commandArchiveToFile = () => {
-        console.log('arch')
-        this.store.archiveToFile()
+    commandArchiveToFile = async () => {
+        setProgress(true)
+        try {
+            this.store.saveAllDiagramsToFile()
+        } catch (error) {
+            setErrorMessage('Failed to save all diagram')
+        } finally {
+            setProgress(false)
+        }
+
     }
 
     commandPrint = () => {
         this.withWorkingIndicator(() => {
-            const canvasDataList = this.store.readAllCanvases(this.canvas.diagramId)
+            const diagram = this.store.getDiagram(this.canvas.diagramId)
 
-            const results = []
-            canvasDataList.forEach(canvasData => {
-                const canvas = new Canvas('canvasPrint', null, DiagramCanvas.defaultWidth, DiagramCanvas.defaultWidth)
-                canvas.deserialize(canvasData)
-                canvas.export(svg => results.push(svg))
-                canvas.destroy()
-            })
-
+            const pages = diagram.canvases.map(d => this.canvas.exportAsSvg(d))
             const printer = new Printer()
-            printer.print(results.join('<p style="page-break-after: always;">&nbsp;</p>'))
+            printer.print(pages)
         })
     }
 
@@ -198,12 +227,15 @@ export default class DiagramCanvas {
     showTotalDiagram = () => zoomAndMoveShowTotalDiagram(this.canvas)
 
     addNode = (type, p) => {
+        if (type === NodeGroup.nodeType) {
+            const node = new NodeGroup()
+            addFigureToCanvas(this.canvas, node, p)
+            return
+        }
+
         const node = new Node(type)
         addFigureToCanvas(this.canvas, node, p)
     }
-
-
-
 
     tryGetFigure = (x, y) => {
         let cp = this.canvas.fromDocumentToCanvasCoordinate(x, y)
@@ -214,30 +246,57 @@ export default class DiagramCanvas {
     save() {
         // Serialize canvas figures and connections into canvas data object
         const canvasData = this.canvas.serialize();
-        this.store.writeCanvas(canvasData, this.canvas.canvasId)
+        this.store.setCanvas(canvasData)
     }
 
-    loadInitialDiagram() {
-        const diagramId = this.store.getLastUsedDiagramId()
-        const canvasData = this.store.readDiagramRootCanvas(diagramId)
-        if (canvasData == null) {
-            // No data for that id, lets create it
-            this.createNewDiagram()
-            return
+    async loadInitialDiagram() {
+        setProgress(true)
+        try {
+            try {
+                await store.initialize()
+            } catch (error) {
+                setErrorMessage('Failed to connect to cloud server')
+            }
+
+            // Get the last used diagram and show 
+            const canvasData = await this.store.openMostResentDiagramCanvas()
+            this.canvas.deserialize(canvasData)
+            this.callbacks.setTitle(this.getTitle())
+            this.showTotalDiagram()
+        } catch (error) {
+            // No resent diagram data, lets create new diagram
+            await this.createNewDiagram()
         }
-
-        // Deserialize canvas
-        this.canvas.deserialize(canvasData)
-        return true
+        finally {
+            setProgress(false)
+        }
     }
 
-    createNewDiagram = () => {
+    async activated() {
+        try {
+            if (!await this.store.serverHadChanges()) {
+                return
+            }
+
+            const diagramId = this.store.getMostResentDiagramId()
+            if (!diagramId) {
+                throw new Error('No resent diagram')
+            }
+
+            this.commandOpenDiagram('', diagramId)
+        } catch (error) {
+            // No resent diagram data, lets create new diagram
+            setErrorMessage('Activation error')
+        }
+    }
+
+    createNewDiagram = async () => {
         const diagramId = cuid()
         this.canvas.diagramId = diagramId
         addDefaultNewDiagram(this.canvas)
 
-        this.store.newDiagram(diagramId, this.canvas.canvasId, this.getName())
-        this.save()
+        const canvasData = this.canvas.serialize();
+        await this.store.newDiagram(diagramId, this.getName(), canvasData)
     }
 
     getCenter() {
@@ -311,10 +370,10 @@ export default class DiagramCanvas {
     }
 
     withWorkingIndicator(action) {
-        this.callbacks.setProgress(true)
+        setProgress(true)
         setTimeout(() => {
             action()
-            this.callbacks.setProgress(false)
+            setProgress(false)
         }, 20);
     }
 }

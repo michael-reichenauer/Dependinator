@@ -3,28 +3,22 @@ import PubSub from 'pubsub-js'
 import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
 import Tooltip from '@material-ui/core/Tooltip';
-import makeStyles from "@material-ui/core/styles/makeStyles";
-import { Box, Link, Popover, Typography } from "@material-ui/core";
 import { AppMenu, menuItem, menuParentItem } from "../common/Menus";
 import { store } from "./diagram/Store";
 import Printer from "../common/Printer";
+import { useAbout } from "./About";
+import { useLogin } from "./Login";
 
 
-const useMenuStyles = makeStyles((theme) => ({
-    menuButton: {
-
-    },
-}));
-
-const asMenuItems = (diagrams, lastUsedDiagramId) => {
-    return diagrams.filter(d => d.id !== lastUsedDiagramId)
-        .map(d => menuItem(d.name, () => PubSub.publish('canvas.OpenDiagram', d.id)))
+const getDiagramsMenuItems = () => {
+    const diagrams = store.getRecentDiagramInfos().slice(1)
+    return diagrams.map(d => menuItem(d.name, () => PubSub.publish('canvas.OpenDiagram', d.diagramId)))
 }
 
 export function ApplicationMenu() {
-    const classes = useMenuStyles();
     const [menu, setMenu] = useState(null);
-    const [anchorEl, setAnchorEl] = useState(null);
+    const [, setShowAbout] = useAbout()
+    const [, setShowLogin] = useLogin()
 
     useEffect(() => {
         const handler = Printer.registerPrintKey(() => PubSub.publish('canvas.Print'))
@@ -33,37 +27,65 @@ export function ApplicationMenu() {
     })
 
     const deleteDiagram = () => {
-        var shouldDelete = confirm('Do you really want to delete the current diagram?') //eslint-disable-line
-        if (shouldDelete) {
-            PubSub.publish('canvas.DeleteDiagram')
+        if (!confirm('Do you really want to delete the current diagram?')) {//eslint-disable-line       
+            return
         }
+
+        PubSub.publish('canvas.DeleteDiagram')
     };
 
-    const diagrams = menu == null ? [] : asMenuItems(store.getDiagrams(), store.getLastUsedDiagramId())
+
+    // const clearLocalData = () => {
+    //     if (!confirm('Do you really want to clear all local data?')) {//eslint-disable-line
+    //         return
+    //     }
+
+    //     store.clearLocalData()
+    //     window.location.reload()
+    // };
+
+    // const clearAllData = async () => {
+    //     if (!confirm('Do you really want to clear all local and remote data?')) {//eslint-disable-line
+    //         return
+    //     }
+
+    //     if (await store.clearRemoteData()) {
+    //         store.clearLocalData()
+    //         window.location.reload()
+    //     }
+    // };
+
+    const diagrams = menu == null ? [] : getDiagramsMenuItems()
+    const isInStandaloneMode = () =>
+        (window.matchMedia('(display-mode: standalone)').matches)
+        || (window.navigator.standalone)
+        || document.referrer.includes('android-app://');
 
     const menuItems = [
         menuItem('New Diagram', () => PubSub.publish('canvas.NewDiagram')),
         menuParentItem('Open Recent', diagrams, diagrams.length > 0),
-        menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
-        menuItem('Save to file', () => PubSub.publish('canvas.SaveDiagramToFile')),
-        menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
         menuItem('Print', () => PubSub.publish('canvas.Print')),
         menuItem('Delete', deleteDiagram),
-        menuItem('Reload web page', () => window.location.reload(true)),
-        menuItem('About', () => setAnchorEl(true)),
+        menuItem('Enable cloud sync', () => setShowLogin(true), true, !store.isCloudSyncEnabled()),
+        menuItem('Disable cloud sync', () => store.disableCloudSync(), true, store.isCloudSyncEnabled()),
+        menuParentItem('Files', [
+            menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
+            menuItem('Save diagram to file', () => PubSub.publish('canvas.SaveDiagramToFile')),
+            menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
+        ]),
+        menuItem('Reload web page', () => window.location.reload(), true, isInStandaloneMode()),
+        menuItem('About', () => setShowAbout(true)),
+        // menuParentItem('Advanced', [
+        //     menuItem('Clear all local data', () => clearLocalData()),
+        //     menuItem('Clear all local and remote user data', () => clearAllData()),
+        // ]),
     ]
-
-    const handleCloseAbout = () => { setAnchorEl(null); };
-
-    const open = Boolean(anchorEl);
-    const id = open ? 'simple-popover' : undefined;
 
     return (
         <>
             <Tooltip title="Customize and control">
                 <IconButton
                     edge="start"
-                    className={classes.menuButton}
                     color="inherit"
                     onClick={e => setMenu(e.currentTarget)}
                 >
@@ -72,31 +94,6 @@ export function ApplicationMenu() {
             </Tooltip>
 
             <AppMenu anchorEl={menu} items={menuItems} onClose={setMenu} />
-
-            <Popover
-                id={id}
-                open={open}
-                onClose={handleCloseAbout}
-                anchorReference="anchorPosition"
-                anchorPosition={{ top: 200, left: 400 }}
-                anchorOrigin={{
-                    vertical: 'center',
-                    horizontal: 'center',
-                }}
-                transformOrigin={{
-                    vertical: 'center',
-                    horizontal: 'center',
-                }}
-            >
-                <Box style={{ width: 400, height: 200, padding: 20 }}>
-                    <Typography variant="h5">Dependinator</Typography>
-                    <Typography >
-                        Early preview of a tool for visualizing software architecture inspired by map tools for
-                        navigation and the "<Link href="https://c4model.com" target="_blank">C4 Model</Link>"
-                        by Simon Brown.
-                    </Typography>
-                </Box>
-            </Popover>
         </>
     )
 }
