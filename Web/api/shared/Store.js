@@ -7,7 +7,9 @@ const entGen = azure.TableUtilities.entityGenerator;
 const baseTableName = 'diagrams'
 const partitionKeyName = 'dep'
 const usersTableName = 'users'
-const userPartitionKey = 'users'
+const usersPartitionKey = 'users'
+const devicesTableName = 'devices'
+const devicesPartitionKey = 'devices'
 const standardApiKey = '0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade'
 
 
@@ -19,6 +21,93 @@ exports.verifyApiKey = context => {
     }
 }
 
+
+exports.registerDevice = async (context, body) => {
+    const { name, type } = body
+    if (!name) {
+        throw new Error('No name')
+    }
+    const now = Date.now()
+    const deviceId = makeRandomId()
+
+    const deviceData = {
+        deviceId: deviceId,
+        userId: null,
+        time: now,
+        name: name,
+        type: type,
+    }
+
+    await table.createTableIfNotExists(devicesTableName)
+    await table.insertEntity(devicesTableName, toDeviceItem(deviceData))
+
+    return deviceData
+}
+
+exports.getDevice = async (context, deviceId) => {
+    if (!deviceId) {
+        throw new Error('No id')
+    }
+
+    const item = await table.retrieveEntity(devicesTableName, deviceId)
+    return toDeviceItem(item)
+}
+
+exports.connectCustom = async (context, data) => {
+    const { connectorId, deviceId } = data
+    if (!connectorId || !deviceId) {
+        throw new Error('Missing parameters')
+    }
+
+    const connectorEntity = await table.retrieveEntity(devicesTableName, devicePartitionKey, connectorId)
+    const deviceEntity = await table.retrieveEntity(devicesTableName, devicePartitionKey, connectorId)
+    const connector = toDevice(connectorEntity)
+    const device = toDevice(deviceEntity)
+
+    if (!connector.userId) {
+        // Connector has not yet a user
+        if (device.userId) {
+            // Device has a user, lets reuse that device user id and update connector device for future
+            connector.userId = device.userId
+            await table.insertOrReplaceEntity(devicesTableName, toDeviceItem(connector))
+        } else {
+            // No known user id, lets create a new user id
+            await table.createTableIfNotExists(usersTableName)
+            connector.userId = makeRandomId()
+            const connectorUser = {
+                userId: connector.userId,
+                tableId: makeRandomId(),
+                userDetails: 'custom',
+                provider: 'custom'
+            }
+
+            await table.insertEntity(usersTableName, toUserItem(connectorUser, tableId))
+        }
+    }
+
+    const connectorUserEntity = await table.retrieveEntity(usersTableName, userPartitionKey, connector.userId)
+    const connectorUser = toUser(connectorUserEntity)
+
+    device.userId = connectorUser.userId
+    await table.insertOrReplaceEntity(devicesTableName, toDeviceItem(device))
+
+
+    // // Create a new random diagrams table id to be used for the user
+    // const tableId = makeRandomId()
+    // const tableName = baseTableName + tableId
+
+    // // Create the actual diagram table
+    // await table.createTableIfNotExists(tableName)
+    // await table.insertOrReplaceEntity(tableName, toTableUserItem(clientPrincipal))
+
+    // // Create a user in the users table
+    // await table.createTableIfNotExists(usersTableName)
+    // await table.insertOrReplaceEntity(usersTableName, toUserItem(clientPrincipal, tableId))
+
+    // return { token: tableId, provider: clientPrincipal.identityProvider, details: clientPrincipal.userDetails }
+}
+
+
 exports.connect = async (context) => {
     const req = context.req
     const clientPrincipal = auth.getClientPrincipal(req)
@@ -29,8 +118,7 @@ exports.connect = async (context) => {
     }
 
     try {
-        const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
-        context.log('got user', userId, entity)
+        const entity = await table.retrieveEntity(usersTableName, usersPartitionKey, userId)
         if (entity.tableId) {
             // context.log('got user', userId, entity)
             const tableName = baseTableName + entity.tableId
@@ -304,10 +392,35 @@ function diagramKey(diagramId) {
     return `${diagramId}`
 }
 
+
+function toDeviceItem(data) {
+    return {
+        RowKey: entGen.String(data.deviceId),
+        PartitionKey: entGen.String(devicesPartitionKey),
+
+        userId: entGen.String(data.userId),
+        time: entGen.Int64(data.time),
+        name: entGen.String(data.name),
+        type: entGen.String(data.type),
+    }
+}
+
+
+function toDevice(item) {
+    return {
+        deviceId: item.RowKey,
+        userId: item.userId,
+        time: item.time,
+        name: item.name,
+        type: item.type
+    }
+}
+
+
 function toUserItem(clientPrincipal, tableId) {
     return {
         RowKey: entGen.String(clientPrincipal.userId),
-        PartitionKey: entGen.String(userPartitionKey),
+        PartitionKey: entGen.String(usersPartitionKey),
 
         userId: entGen.String(clientPrincipal.userId),
         tableId: entGen.String(tableId),
