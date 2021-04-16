@@ -12,11 +12,16 @@ export default function About() {
     const [, setShowLogin] = useLogin()
 
     const hasShown = localStorage.getItem('hasShownAbout')
-    localStorage.setItem('hasShownAbout', 'true')
+    console.log('had shown', hasShown)
 
     if (!show && hasShown !== 'true') {
         console.log('Set timeout')
-        setTimeout(() => setShow(true), 3000);
+
+        setTimeout(() => {
+            localStorage.setItem('hasShownAbout', 'true')
+            setShow(true)
+        }, 3000);
+
     }
 
     const enableCloudSync = () => {
