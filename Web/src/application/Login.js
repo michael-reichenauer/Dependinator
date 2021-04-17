@@ -1,5 +1,5 @@
 import { atom, useAtom } from "jotai"
-import { Box, Button, List, Popover, Typography } from "@material-ui/core";
+import { Box, Button, Dialog, List, Typography } from "@material-ui/core";
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import { store } from "./diagram/Store";
@@ -25,13 +25,7 @@ export default function Login() {
     }
 
     return (
-        <Popover
-            open={show}
-            onClose={() => { }}
-            anchorEl={document.body}
-            anchorOrigin={{ vertical: 'center', horizontal: 'center' }}
-            transformOrigin={{ vertical: 'center', horizontal: 'center' }}
-        >
+        <Dialog open={show} onClose={() => { }} >
             <Box style={{ width: 320, height: 350, padding: 20 }}>
                 <Typography variant="h6">Enable Cloud Sync</Typography>
                 <Typography >
@@ -73,9 +67,9 @@ export default function Login() {
                     bottom: 20,
                     left: '40%',
                 }}
-                    textAlign='center'> <Button onClick={() => setShow(false)} variant="contained" >Later</Button>
+                    textAlign='center'> <Button onClick={() => setShow(false)} variant="contained" color="primary">Later</Button>
                 </Box>
             </Box>
-        </Popover>
+        </Dialog>
     )
 }
