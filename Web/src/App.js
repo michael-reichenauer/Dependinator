@@ -7,6 +7,7 @@ import About from "./application/About";
 import Login from "./application/Login";
 import { useAppVersionMonitor } from "./common/appVersion";
 import Credential from "./application/Credential";
+import AlertDialog from "./common/AlertDialog";
 
 
 function App() {
@@ -22,6 +23,7 @@ function App() {
       <About />
       <Login />
       <Credential />
+      <AlertDialog />
     </>
   );
 }

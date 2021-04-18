@@ -4,6 +4,7 @@ import { Formik, Form, Field } from 'formik';
 import { TextField } from 'formik-material-ui';
 import { delay } from "../common/utils";
 import { useState } from "react";
+import { setConfirmAlert } from "../common/AlertDialog";
 
 const credentialAtom = atom(true)
 const usernameKey = 'credential.userName'
@@ -45,7 +46,7 @@ export default function Credential() {
                     }}
 
                     onSubmit={async (values, { setSubmitting, setErrors, setValues }) => {
-                        await delay(3000)
+                        await delay(1000)
                         if (showConfirm) {
                             setErrors({ username: 'User already exists' })
                         } else {
@@ -54,7 +55,7 @@ export default function Credential() {
 
                         localStorage.setItem(usernameKey, values.username)
 
-                        // alert(JSON.stringify(values, null, 2));
+                        setConfirmAlert('Login', 'Login OK', () => setShow(false))
                     }}
                 >
 
