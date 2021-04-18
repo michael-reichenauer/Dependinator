@@ -4,7 +4,8 @@ import { Formik, Form, Field } from 'formik';
 import { TextField } from 'formik-material-ui';
 import { delay } from "../common/utils";
 import { useState } from "react";
-import { setConfirmAlert } from "../common/AlertDialog";
+import { setErrorMessage } from "../common/MessageSnackbar";
+import { sha256 } from '../common/utils'
 
 const credentialAtom = atom(true)
 const usernameKey = 'credential.userName'
@@ -47,15 +48,11 @@ export default function Credential() {
 
                     onSubmit={async (values, { setSubmitting, setErrors, setValues }) => {
                         await delay(1000)
-                        if (showConfirm) {
-                            setErrors({ username: 'User already exists' })
-                        } else {
-                            setErrors({ username: 'Invalid username or password' })
-                        }
+                        const sha = await sha256('text')
+                        console.log('sha', 'text', sha)
 
                         localStorage.setItem(usernameKey, values.username)
-
-                        setConfirmAlert('Login', 'Login OK', () => setShow(false))
+                        setErrorMessage('Failed to login, invalid username or password')
                     }}
                 >
 
