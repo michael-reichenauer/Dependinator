@@ -27,6 +27,13 @@ export default function Credential() {
     const [createAccount, setCreateAccount] = useState(false)
     const userName = localStorage.getItem(usernameKey) ?? ''
 
+    const onKeyUp = (event) => {
+        if (event.code === 'Enter') {
+            const b = document.getElementById('OKButton')
+            b.click()
+        }
+    }
+
     return (
         <Dialog open={show} onClose={() => { }}  >
             <Box style={{ width: 320, height: 330, padding: 20 }}>
@@ -86,7 +93,7 @@ export default function Credential() {
                 >
 
                     {({ submitForm, isSubmitting }) => (
-                        <Form>
+                        <Form onKeyUp={onKeyUp}>
                             {isSubmitting && <LinearProgress style={{ marginBottom: 10 }} />}
                             <Field
                                 component={TextField}
@@ -125,6 +132,7 @@ export default function Credential() {
 
                             <Box style={{ position: 'absolute', bottom: 15, left: 80 }}>
                                 <Button
+                                    id='OKButton'
                                     variant="contained"
                                     color="primary"
                                     disabled={isSubmitting}
