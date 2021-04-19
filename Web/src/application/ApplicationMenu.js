@@ -29,11 +29,7 @@ export function ApplicationMenu() {
 
     const deleteDiagram = () => {
         setConfirmAlert('Delete', 'Do you really want to delete the current diagram?',
-            ok => {
-                if (ok) {
-                    PubSub.publish('canvas.DeleteDiagram')
-                }
-            })
+            () => PubSub.publish('canvas.DeleteDiagram'))
     };
 
 
