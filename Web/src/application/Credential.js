@@ -63,6 +63,8 @@ export default function Credential() {
                             try {
                                 await store.createUser({ username: values.username, password: password })
                                 localStorage.setItem(usernameKey, values.username)
+                                setCreateAccount(false)
+                                setFieldValue('confirm', '', false)
                             } catch (error) {
                                 setFieldValue('password', '', false)
                                 setFieldValue('confirm', '', false)

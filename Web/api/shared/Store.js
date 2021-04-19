@@ -1,8 +1,10 @@
 const azure = require('azure-storage');
 const crypto = require("crypto")
+const bcrypt = require("bcryptjs")
 var table = require('../shared/table.js');
 var clientInfo = require('../shared/clientInfo.js');
 var auth = require('../shared/auth.js');
+const { brotliCompress } = require('zlib');
 
 const entGen = azure.TableUtilities.entityGenerator;
 const baseTableName = 'diagrams'
@@ -10,7 +12,7 @@ const partitionKeyName = 'dep'
 const usersTableName = 'users'
 const userPartitionKey = 'users'
 const standardApiKey = '0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade'
-
+const saltRounds = 10
 
 exports.verifyApiKey = context => {
     const req = context.req
@@ -28,9 +30,13 @@ exports.createUser = async (context, data) => {
     const userDetails = username
     const userId = toUserId(username)
 
+    // Hash the password using bcrypt
+    const salt = await bcryptGenSalt(saltRounds)
+    const passwordHash = await bcryptHash(password, salt)
+
     const user = {
         userId: userId,
-        password: password,
+        passwordHash: passwordHash,
         userDetails: userDetails,
         identityProvider: 'Custom',
     }
@@ -50,7 +56,6 @@ exports.connectUser = async (context, data) => {
     const userId = toUserId(username)
     const user = {
         userId: userId,
-        password: password,
         userDetails: userDetails,
         identityProvider: 'Custom',
     }
@@ -60,8 +65,9 @@ exports.connectUser = async (context, data) => {
         // Only support custom identity provider users, other users use connect()
         throw new Error('Invalid user')
     }
-    if (entity.password !== password) {
-        // use bcrypt 11111111111111111111111111111111111
+
+    const isMatch = await bcryptCompare(password, entity.passwordHash)
+    if (!isMatch) {
         throw new Error('Invalid user')
     }
 
@@ -326,6 +332,42 @@ exports.downloadAllDiagrams = async (context) => {
 
 // // -----------------------------------------------------------------
 
+const bcryptGenSalt = (saltRounds) => {
+    return new Promise(function (resolve, reject) {
+        bcrypt.genSalt(saltRounds, function (err, salt) {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(salt)
+            }
+        })
+    })
+}
+
+
+const bcryptHash = (password, salt) => {
+    return new Promise(function (resolve, reject) {
+        bcrypt.hash(password, salt, function (err, hash) {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(hash)
+            }
+        })
+    })
+}
+
+const bcryptCompare = (password, hash) => {
+    return new Promise(function (resolve, reject) {
+        bcrypt.compare(password, hash, function (err, isMatch) {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(isMatch)
+            }
+        })
+    })
+}
 
 
 function makeRandomId() {
@@ -370,7 +412,7 @@ function toUserItem(user, tableId) {
         tableId: entGen.String(tableId),
         userDetails: entGen.String(user.userDetails),
         provider: entGen.String(user.identityProvider),
-        password: entGen.String(user.password)
+        passwordHash: entGen.String(user.passwordHash)
     }
 }
 
