@@ -1,5 +1,6 @@
 import { setErrorMessage, setInfoMessage, setSuccessMessage } from "../../common/MessageSnackbar"
 import { setProgress } from "../../common/Progress"
+import { showCredential } from "../Credential"
 import { setSyncMode } from "../Online"
 import Api from "./Api"
 
@@ -30,7 +31,6 @@ export default class StoreSync {
         }
     }
 
-
     async initialize() {
         console.log('initialize')
         let sync = this.local.getSync()
@@ -43,6 +43,10 @@ export default class StoreSync {
             const connectData = await this.remote.connect()
             console.log('connected', connectData)
             sync = this.local.updateSync({ token: connectData.token, provider: connectData.provider, details: connectData.details })
+            setSuccessMessage('Cloud sync connection is enabled')
+        } else if (sync.isConnected) {
+            // When using custom id
+            this.local.updateSync({ isConnected: false })
             setSuccessMessage('Cloud sync connection is enabled')
         }
 
@@ -101,13 +105,15 @@ export default class StoreSync {
             // Failed to check current user, lets ignore that and login
             console.trace('error', error)
         }
+        console.log('Provider', provider)
+        if (provider === 'Custom') {
+            showCredential(true)
+            return
+        }
 
         this.local.updateSync({ isConnecting: true, provider: provider })
         // Login for the specified id provider
-        if (provider === 'Local') {
-            // Local (dev), just reload
-            window.location.reload()
-        } else if (provider === 'Google') {
+        if (provider === 'Google') {
             window.location.href = `/.auth/login/google`;
         } else if (provider === 'Microsoft') {
             window.location.href = `/.auth/login/aad`;
@@ -119,6 +125,16 @@ export default class StoreSync {
             this.local.updateSync({ isConnecting: false, provider: null })
             throw new Error('Unsupported identity provider ' + provider)
         }
+    }
+
+    async createUser(user) {
+        await this.remote.createUser(user)
+    }
+
+    async connectUser(user) {
+        const connectData = await this.remote.connectUser(user)
+        this.local.updateSync({ isConnecting: false, isConnected: true, token: connectData.token, provider: connectData.provider, details: connectData.details })
+        window.location.reload()
     }
 
     disableCloudSync() {

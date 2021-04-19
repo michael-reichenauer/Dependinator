@@ -1,7 +1,10 @@
 const azure = require('azure-storage');
+const crypto = require("crypto")
+const bcrypt = require("bcryptjs")
 var table = require('../shared/table.js');
 var clientInfo = require('../shared/clientInfo.js');
 var auth = require('../shared/auth.js');
+const { brotliCompress } = require('zlib');
 
 const entGen = azure.TableUtilities.entityGenerator;
 const baseTableName = 'diagrams'
@@ -9,7 +12,7 @@ const partitionKeyName = 'dep'
 const usersTableName = 'users'
 const userPartitionKey = 'users'
 const standardApiKey = '0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade'
-
+const saltRounds = 10
 
 exports.verifyApiKey = context => {
     const req = context.req
@@ -19,24 +22,84 @@ exports.verifyApiKey = context => {
     }
 }
 
+exports.createUser = async (context, data) => {
+    const { username, password } = data
+    if (!username || !password) {
+        throw new Error('Missing parameter')
+    }
+    const userDetails = username
+    const userId = toUserId(username)
+
+    // Hash the password using bcrypt
+    const salt = await bcryptGenSalt(saltRounds)
+    const passwordHash = await bcryptHash(password, salt)
+
+    const user = {
+        userId: userId,
+        passwordHash: passwordHash,
+        userDetails: userDetails,
+        identityProvider: 'Custom',
+    }
+    const tableId = makeRandomId()
+
+    await table.createTableIfNotExists(usersTableName)
+    await table.insertEntity(usersTableName, toUserItem(user, tableId))
+}
+
+exports.connectUser = async (context, data) => {
+    const { username, password } = data
+    if (!username || !password) {
+        throw new Error('Invalid user')
+    }
+
+    const userDetails = username
+    const userId = toUserId(username)
+    const user = {
+        userId: userId,
+        userDetails: userDetails,
+        identityProvider: 'Custom',
+    }
+
+    const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
+    if (entity.provider !== 'Custom') {
+        // Only support custom identity provider users, other users use connect()
+        throw new Error('Invalid user')
+    }
+
+    const isMatch = await bcryptCompare(password, entity.passwordHash)
+    if (!isMatch) {
+        throw new Error('Invalid user')
+    }
+
+    if (!entity.tableId) {
+        throw new Error('Invalid user')
+    }
+
+    // context.log('got user', userId, entity)
+    const tableName = baseTableName + entity.tableId
+    await table.createTableIfNotExists(tableName)
+
+    await table.insertOrReplaceEntity(tableName, toTableUserItem(user))
+    return { token: entity.tableId, provider: user.identityProvider, details: user.userDetails }
+}
+
 exports.connect = async (context) => {
     const req = context.req
-    const clientPrincipal = auth.getClientPrincipal(req)
+    const user = auth.getClientPrincipal(req)
 
-    const userId = clientPrincipal.userId
+    const userId = user.userId
     if (!userId) {
         throw new Error('No user id')
     }
 
     try {
         const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
-        context.log('got user', userId, entity)
         if (entity.tableId) {
             // context.log('got user', userId, entity)
             const tableName = baseTableName + entity.tableId
             await table.createTableIfNotExists(tableName)
-            await table.insertOrReplaceEntity(tableName, toTableUserItem(clientPrincipal))
-            return { token: entity.tableId, provider: clientPrincipal.identityProvider, details: clientPrincipal.userDetails }
+            await table.insertOrReplaceEntity(tableName, toTableUserItem(user))
+            return { token: entity.tableId, provider: user.identityProvider, details: user.userDetails }
         }
         context.log('Failed to get table id')
     } catch (err) {
@@ -50,13 +113,13 @@ exports.connect = async (context) => {
 
     // Create the actual diagram table
     await table.createTableIfNotExists(tableName)
-    await table.insertOrReplaceEntity(tableName, toTableUserItem(clientPrincipal))
+    await table.insertOrReplaceEntity(tableName, toTableUserItem(user))
 
     // Create a user in the users table
     await table.createTableIfNotExists(usersTableName)
-    await table.insertOrReplaceEntity(usersTableName, toUserItem(clientPrincipal, tableId))
+    await table.insertOrReplaceEntity(usersTableName, toUserItem(user, tableId))
 
-    return { token: tableId, provider: clientPrincipal.identityProvider, details: clientPrincipal.userDetails }
+    return { token: tableId, provider: user.identityProvider, details: user.userDetails }
 }
 
 
@@ -269,6 +332,42 @@ exports.downloadAllDiagrams = async (context) => {
 
 // // -----------------------------------------------------------------
 
+const bcryptGenSalt = (saltRounds) => {
+    return new Promise(function (resolve, reject) {
+        bcrypt.genSalt(saltRounds, function (err, salt) {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(salt)
+            }
+        })
+    })
+}
+
+
+const bcryptHash = (password, salt) => {
+    return new Promise(function (resolve, reject) {
+        bcrypt.hash(password, salt, function (err, hash) {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(hash)
+            }
+        })
+    })
+}
+
+const bcryptCompare = (password, hash) => {
+    return new Promise(function (resolve, reject) {
+        bcrypt.compare(password, hash, function (err, isMatch) {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(isMatch)
+            }
+        })
+    })
+}
 
 
 function makeRandomId() {
@@ -304,17 +403,19 @@ function diagramKey(diagramId) {
     return `${diagramId}`
 }
 
-function toUserItem(clientPrincipal, tableId) {
+function toUserItem(user, tableId) {
     return {
-        RowKey: entGen.String(clientPrincipal.userId),
+        RowKey: entGen.String(user.userId),
         PartitionKey: entGen.String(userPartitionKey),
 
-        userId: entGen.String(clientPrincipal.userId),
+        userId: entGen.String(user.userId),
         tableId: entGen.String(tableId),
-        userDetails: entGen.String(clientPrincipal.userDetails),
-        provider: entGen.String(clientPrincipal.identityProvider),
+        userDetails: entGen.String(user.userDetails),
+        provider: entGen.String(user.identityProvider),
+        passwordHash: entGen.String(user.passwordHash)
     }
 }
+
 
 function toTableUserItem(clientPrincipal) {
     return {
@@ -378,4 +479,14 @@ function toDiagramInfo(item) {
         accessed: item.accessed,
         written: item.written,
     }
+}
+
+function sha256(message) {
+    return crypto.createHash("sha256")
+        .update(message)
+        .digest("hex");
+}
+
+function toUserId(name) {
+    return sha256(name).substr(0, 32)
 }

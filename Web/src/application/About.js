@@ -1,5 +1,5 @@
 import { atom, useAtom } from "jotai"
-import { Box, Button, Link, Popover, Tooltip, Typography } from "@material-ui/core";
+import { Box, Button, Dialog, Link, Tooltip, Typography } from "@material-ui/core";
 import { localBuildTime, localSha } from "../common/appVersion";
 import { useLogin } from "./Login";
 
@@ -29,13 +29,7 @@ export default function About() {
     }
 
     return (
-        <Popover
-            open={show}
-            onClose={() => { }}
-            anchorEl={document.body}
-            anchorOrigin={{ vertical: 'center', horizontal: 'center' }}
-            transformOrigin={{ vertical: 'center', horizontal: 'center' }}
-        >
+        <Dialog open={show} onClose={() => { }} >
             <Box style={{ width: 320, height: 330, padding: 20 }}>
                 <Tooltip title={`version: ${localBuildTime} (${localSha.substring(0, 6)})`}>
                     <Typography variant="h5">About Dependinator</Typography>
@@ -57,9 +51,9 @@ export default function About() {
                 </Typography>
 
                 <Box style={{ position: 'absolute', bottom: 20, left: '40%', }}
-                    textAlign='center'> <Button onClick={() => setShow(false)} variant="contained" >Close</Button>
+                    textAlign='center'> <Button onClick={() => setShow(false)} variant="contained" color="primary">Close</Button>
                 </Box>
             </Box>
-        </Popover>
+        </Dialog>
     )
 }

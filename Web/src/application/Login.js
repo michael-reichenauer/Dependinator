@@ -1,5 +1,5 @@
 import { atom, useAtom } from "jotai"
-import { Box, Button, List, Popover, Typography } from "@material-ui/core";
+import { Box, Button, Dialog, List, Typography } from "@material-ui/core";
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import { store } from "./diagram/Store";
@@ -24,14 +24,9 @@ export default function Login() {
         store.login(provider)
     }
 
+
     return (
-        <Popover
-            open={show}
-            onClose={() => { }}
-            anchorEl={document.body}
-            anchorOrigin={{ vertical: 'center', horizontal: 'center' }}
-            transformOrigin={{ vertical: 'center', horizontal: 'center' }}
-        >
+        <Dialog open={show} onClose={() => { }} >
             <Box style={{ width: 320, height: 350, padding: 20 }}>
                 <Typography variant="h6">Enable Cloud Sync</Typography>
                 <Typography >
@@ -40,6 +35,10 @@ export default function Login() {
                 </Typography>
                 <Typography style={{ paddingTop: 15, fontWeight: 'bold' }} variant="subtitle1">Login with: </Typography>
                 <List component="nav" style={{ paddingLeft: 20 }} >
+
+                    <ListItemLink style={{ padding: 0 }} onClick={() => onClick('Custom')}>
+                        <ListItemText primary="- Dependinator" />
+                    </ListItemLink>
 
                     {!isLocalDev &&
                         <ListItemLink style={{ padding: 0 }} onClick={() => onClick('Google')}>
@@ -61,11 +60,7 @@ export default function Login() {
                             <ListItemText primary="- GitHub" />
                         </ListItemLink>
                     }
-                    {isLocalDev &&
-                        <ListItemLink style={{ padding: 0 }} onClick={() => onClick('Local')}>
-                            <ListItemText primary="- Local" />
-                        </ListItemLink>
-                    }
+
 
                 </List>
                 <Box style={{
@@ -73,9 +68,9 @@ export default function Login() {
                     bottom: 20,
                     left: '40%',
                 }}
-                    textAlign='center'> <Button onClick={() => setShow(false)} variant="contained" >Later</Button>
+                    textAlign='center'> <Button onClick={() => setShow(false)} variant="contained" color="primary">Later</Button>
                 </Box>
             </Box>
-        </Popover>
+        </Dialog>
     )
 }

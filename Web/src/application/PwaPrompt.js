@@ -34,7 +34,7 @@ export const PwaPrompt = () => {
                    </DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button variant="outlined" onClick={handleClose} >Close</Button>
+                        <Button variant="outlined" color="primary" onClick={handleClose} >Close</Button>
                     </DialogActions>
                 </Dialog>
             }
