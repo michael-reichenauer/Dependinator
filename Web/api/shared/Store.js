@@ -488,5 +488,5 @@ function sha256(message) {
 }
 
 function toUserId(name) {
-    return sha256(name).substr(0, 32)
+    return sha256(name.toLowerCase()).substr(0, 32)
 }

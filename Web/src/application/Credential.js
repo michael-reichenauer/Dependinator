@@ -75,6 +75,7 @@ export default function Credential() {
 
                         try {
                             await store.connectUser({ username: values.username, password: password })
+                            localStorage.setItem(usernameKey, values.username)
                         } catch (error) {
                             console.log('error', error)
                             const msg = 'Invalid username or password'
