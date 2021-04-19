@@ -1,4 +1,5 @@
 const azure = require('azure-storage');
+const crypto = require("crypto")
 var table = require('../shared/table.js');
 var clientInfo = require('../shared/clientInfo.js');
 var auth = require('../shared/auth.js');
@@ -19,24 +20,80 @@ exports.verifyApiKey = context => {
     }
 }
 
+exports.createUser = async (context, data) => {
+    const { username, password } = data
+    if (!username || !password) {
+        throw new Error('Missing parameter')
+    }
+    const userDetails = username
+    const userId = toUserId(username)
+
+    const user = {
+        userId: userId,
+        password: password,
+        userDetails: userDetails,
+        identityProvider: 'Custom',
+    }
+    const tableId = makeRandomId()
+
+    await table.createTableIfNotExists(usersTableName)
+    await table.insertEntity(usersTableName, toUserItem(user, tableId))
+}
+
+exports.connectUser = async (context, data) => {
+    const { username, password } = data
+    if (!username || !password) {
+        throw new Error('Invalid user')
+    }
+
+    const userDetails = username
+    const userId = toUserId(username)
+    const user = {
+        userId: userId,
+        password: password,
+        userDetails: userDetails,
+        identityProvider: 'Custom',
+    }
+
+    const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
+    if (entity.provider !== 'Custom') {
+        // Only support custom identity provider users, other users use connect()
+        throw new Error('Invalid user')
+    }
+    if (entity.password !== password) {
+        // use bcrypt 11111111111111111111111111111111111
+        throw new Error('Invalid user')
+    }
+
+    if (!entity.tableId) {
+        throw new Error('Invalid user')
+    }
+
+    // context.log('got user', userId, entity)
+    const tableName = baseTableName + entity.tableId
+    await table.createTableIfNotExists(tableName)
+
+    await table.insertOrReplaceEntity(tableName, toTableUserItem(user))
+    return { token: entity.tableId, provider: user.identityProvider, details: user.userDetails }
+}
+
 exports.connect = async (context) => {
     const req = context.req
-    const clientPrincipal = auth.getClientPrincipal(req)
+    const user = auth.getClientPrincipal(req)
 
-    const userId = clientPrincipal.userId
+    const userId = user.userId
     if (!userId) {
         throw new Error('No user id')
     }
 
     try {
         const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
-        context.log('got user', userId, entity)
         if (entity.tableId) {
             // context.log('got user', userId, entity)
             const tableName = baseTableName + entity.tableId
             await table.createTableIfNotExists(tableName)
-            await table.insertOrReplaceEntity(tableName, toTableUserItem(clientPrincipal))
-            return { token: entity.tableId, provider: clientPrincipal.identityProvider, details: clientPrincipal.userDetails }
+            await table.insertOrReplaceEntity(tableName, toTableUserItem(user))
+            return { token: entity.tableId, provider: user.identityProvider, details: user.userDetails }
         }
         context.log('Failed to get table id')
     } catch (err) {
@@ -50,13 +107,13 @@ exports.connect = async (context) => {
 
     // Create the actual diagram table
     await table.createTableIfNotExists(tableName)
-    await table.insertOrReplaceEntity(tableName, toTableUserItem(clientPrincipal))
+    await table.insertOrReplaceEntity(tableName, toTableUserItem(user))
 
     // Create a user in the users table
     await table.createTableIfNotExists(usersTableName)
-    await table.insertOrReplaceEntity(usersTableName, toUserItem(clientPrincipal, tableId))
+    await table.insertOrReplaceEntity(usersTableName, toUserItem(user, tableId))
 
-    return { token: tableId, provider: clientPrincipal.identityProvider, details: clientPrincipal.userDetails }
+    return { token: tableId, provider: user.identityProvider, details: user.userDetails }
 }
 
 
@@ -304,17 +361,19 @@ function diagramKey(diagramId) {
     return `${diagramId}`
 }
 
-function toUserItem(clientPrincipal, tableId) {
+function toUserItem(user, tableId) {
     return {
-        RowKey: entGen.String(clientPrincipal.userId),
+        RowKey: entGen.String(user.userId),
         PartitionKey: entGen.String(userPartitionKey),
 
-        userId: entGen.String(clientPrincipal.userId),
+        userId: entGen.String(user.userId),
         tableId: entGen.String(tableId),
-        userDetails: entGen.String(clientPrincipal.userDetails),
-        provider: entGen.String(clientPrincipal.identityProvider),
+        userDetails: entGen.String(user.userDetails),
+        provider: entGen.String(user.identityProvider),
+        password: entGen.String(user.password)
     }
 }
+
 
 function toTableUserItem(clientPrincipal) {
     return {
@@ -378,4 +437,14 @@ function toDiagramInfo(item) {
         accessed: item.accessed,
         written: item.written,
     }
+}
+
+function sha256(message) {
+    return crypto.createHash("sha256")
+        .update(message)
+        .digest("hex");
+}
+
+function toUserId(name) {
+    return sha256(name).substr(0, 32)
 }

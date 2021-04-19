@@ -1,28 +1,38 @@
+import { useState } from "react";
 import { atom, useAtom } from "jotai"
 import { Box, Button, Dialog, FormControlLabel, LinearProgress, Switch, Typography } from "@material-ui/core";
 import { Formik, Form, Field } from 'formik';
 import { TextField } from 'formik-material-ui';
-import { delay } from "../common/utils";
-import { useState } from "react";
-import { setErrorMessage } from "../common/MessageSnackbar";
 import { sha256 } from '../common/utils'
+import { store } from "./diagram/Store";
 
-const credentialAtom = atom(true)
+
+const credentialAtom = atom(false)
 const usernameKey = 'credential.userName'
+let setShowFunc = null
 
-export const useCredential = () => useAtom(credentialAtom)
+export const showCredential = flag => setShowFunc?.(flag)
+
+export const useCredential = () => {
+    const [show, setShow] = useAtom(credentialAtom)
+    if (setShowFunc == null) {
+        setShowFunc = setShow
+    }
+    return [show, setShow]
+}
+
 
 export default function Credential() {
     const [show, setShow] = useCredential()
-    const [showConfirm, setShowConfirm] = useState(false)
+    const [createAccount, setCreateAccount] = useState(false)
     const userName = localStorage.getItem(usernameKey) ?? ''
 
     return (
         <Dialog open={show} onClose={() => { }}  >
             <Box style={{ width: 320, height: 330, padding: 20 }}>
 
-                {!showConfirm && <Typography variant="h5" style={{ paddingBottom: 10 }} >Login</Typography>}
-                {showConfirm && <Typography variant="h5" style={{ paddingBottom: 10 }} >Create an Account</Typography>}
+                {!createAccount && <Typography variant="h5" style={{ paddingBottom: 10 }} >Login</Typography>}
+                {createAccount && <Typography variant="h5" style={{ paddingBottom: 10 }} >Create an Account</Typography>}
 
                 <Formik
                     initialValues={{
@@ -40,19 +50,35 @@ export default function Credential() {
                         if (!values.password) {
                             errors.password = 'Required';
                         }
-                        if (showConfirm && values.password !== values.confirm) {
+                        if (createAccount && values.password !== values.confirm) {
                             errors.confirm = 'Does not match password'
                         }
                         return errors;
                     }}
 
-                    onSubmit={async (values, { setSubmitting, setErrors, setValues }) => {
-                        await delay(1000)
-                        const sha = await sha256('text')
-                        console.log('sha', 'text', sha)
+                    onSubmit={async (values, { setErrors, setFieldValue }) => {
+                        // Reduce risk of clair text password logging
+                        const password = await sha256(values.password)
+                        if (createAccount) {
+                            try {
+                                await store.createUser({ username: values.username, password: password })
+                                localStorage.setItem(usernameKey, values.username)
+                            } catch (error) {
+                                setFieldValue('password', '', false)
+                                setFieldValue('confirm', '', false)
+                                setErrors({ username: 'User already exist' })
+                                return
+                            }
+                        }
 
-                        localStorage.setItem(usernameKey, values.username)
-                        setErrorMessage('Failed to login, invalid username or password')
+                        try {
+                            await store.connectUser({ username: values.username, password: password })
+                        } catch (error) {
+                            console.log('error', error)
+                            const msg = 'Invalid username or password'
+                            setFieldValue('password', '', false)
+                            setErrors({ username: msg })
+                        }
                     }}
                 >
 
@@ -75,7 +101,7 @@ export default function Credential() {
                                 fullWidth={true}
                             />
                             <br />
-                            {showConfirm && <Field
+                            {createAccount && <Field
                                 component={TextField}
                                 type="password"
                                 label="Confirm"
@@ -87,7 +113,7 @@ export default function Credential() {
                             <FormControlLabel style={{ position: 'absolute', bottom: 70 }}
                                 control={
                                     <Field component={Switch} type="checkbox" name="create" color='primary'
-                                        onChange={e => setShowConfirm(e.target.checked)} />
+                                        onChange={e => setCreateAccount(e.target.checked)} />
                                 }
                                 label="Create an account"
                             />

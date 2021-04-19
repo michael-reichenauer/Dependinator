@@ -24,6 +24,7 @@ export default function Login() {
         store.login(provider)
     }
 
+
     return (
         <Dialog open={show} onClose={() => { }} >
             <Box style={{ width: 320, height: 350, padding: 20 }}>
@@ -34,6 +35,10 @@ export default function Login() {
                 </Typography>
                 <Typography style={{ paddingTop: 15, fontWeight: 'bold' }} variant="subtitle1">Login with: </Typography>
                 <List component="nav" style={{ paddingLeft: 20 }} >
+
+                    <ListItemLink style={{ padding: 0 }} onClick={() => onClick('Custom')}>
+                        <ListItemText primary="- Dependinator" />
+                    </ListItemLink>
 
                     {!isLocalDev &&
                         <ListItemLink style={{ padding: 0 }} onClick={() => onClick('Google')}>
@@ -55,11 +60,7 @@ export default function Login() {
                             <ListItemText primary="- GitHub" />
                         </ListItemLink>
                     }
-                    {isLocalDev &&
-                        <ListItemLink style={{ padding: 0 }} onClick={() => onClick('Local')}>
-                            <ListItemText primary="- Local" />
-                        </ListItemLink>
-                    }
+
 
                 </List>
                 <Box style={{
