@@ -12,7 +12,6 @@ export default function About() {
     const [, setShowLogin] = useLogin()
 
     const hasShown = localStorage.getItem('hasShownAbout')
-    console.log('had shown', hasShown)
 
     if (!show && hasShown !== 'true') {
         console.log('Set timeout')
@@ -44,7 +43,7 @@ export default function About() {
                     by Simon Brown  to better understand on how to use the tool.
                 </Typography>
                 <Typography style={{ paddingTop: 10 }} >
-                    You can sync diagrams between different devices if you <Link onClick={enableCloudSync}>enable cloud sync</Link>
+                    You can sync diagrams between different devices if you login to <Link onClick={enableCloudSync}>enable cloud sync</Link>
                 </Typography>
                 <Typography style={{ paddingTop: 30 }} variant="body2">
                     Hint: Use context menus to access functionality.

@@ -1,18 +1,18 @@
 import React from "react";
-import { useWindowSize } from "./common/windowSizeX"
 import ApplicationBar from './application/ApplicationBar'
-import Diagram from "./application/Diagram";
+import { useWindowSize } from "./common/windowSizeX"
 import { useActivityMonitor } from "./common/activity";
+import { useAppVersionMonitor } from "./common/appVersion";
+import Diagram from "./application/Diagram";
 import About from "./application/About";
 import Login from "./application/Login";
-import { useAppVersionMonitor } from "./common/appVersion";
-import Credential from "./application/Credential";
 import AlertDialog from "./common/AlertDialog";
 
 
 function App() {
   const [size] = useWindowSize()
 
+  // Enable user activity detection (e.g. moving mouse ) and new available web site at server detection
   useActivityMonitor()
   useAppVersionMonitor()
 
@@ -22,7 +22,6 @@ function App() {
       <Diagram width={size.width} height={size.height - 55} />
       <About />
       <Login />
-      <Credential />
       <AlertDialog />
     </>
   );

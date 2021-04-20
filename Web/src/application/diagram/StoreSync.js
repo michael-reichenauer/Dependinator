@@ -1,6 +1,5 @@
 import { setErrorMessage, setInfoMessage, setSuccessMessage } from "../../common/MessageSnackbar"
 import { setProgress } from "../../common/Progress"
-import { showCredential } from "../Credential"
 import { setSyncMode } from "../Online"
 import Api from "./Api"
 
@@ -104,11 +103,6 @@ export default class StoreSync {
         } catch (error) {
             // Failed to check current user, lets ignore that and login
             console.trace('error', error)
-        }
-        console.log('Provider', provider)
-        if (provider === 'Custom') {
-            showCredential(true)
-            return
         }
 
         this.local.updateSync({ isConnecting: true, provider: provider })

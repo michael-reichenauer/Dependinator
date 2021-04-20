@@ -36,3 +36,6 @@ export async function sha256(message) {
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
     return hashHex;
 }
+
+export const isDeveloperMode = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+
