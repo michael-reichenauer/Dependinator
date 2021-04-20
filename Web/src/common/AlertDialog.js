@@ -10,12 +10,16 @@ import { atom, useAtom } from 'jotai';
 const alertAtom = atom(null)
 let setAlertFunc = null
 
-export const setOKAlert = (title, message, onOk) => setAlertFunc?.({ title: title, message: message, onOk: onOk, confirm: false })
 
-export const setConfirmAlert = (title, message, onOk, onCancel) => setAlertFunc?.({ title: title, message: message, onOk: onOk, onCancel: onCancel, confirm: true })
+// Show a confirm (ok/cancel) alert
+export const showConfirmAlert = (title, message, onOk, onCancel) => setAlertFunc?.({ title: title, message: message, onOk: onOk, onCancel: onCancel, confirm: true })
 
 
+// Shows a OK alert
+export const showOKAlert = (title, message, onOk) => setAlertFunc?.({ title: title, message: message, onOk: onOk, confirm: false })
 
+
+// Use alert for OK/cancel or just OK
 export const useAlert = () => {
   const [alert, setAlert] = useAtom(alertAtom)
   if (setAlertFunc == null) {

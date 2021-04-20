@@ -8,7 +8,7 @@ import { store } from "./diagram/Store";
 import Printer from "../common/Printer";
 import { useAbout } from "./About";
 import { useLogin } from "./Login";
-import { setConfirmAlert } from "../common/AlertDialog";
+import { showConfirmAlert } from "../common/AlertDialog";
 
 
 const getDiagramsMenuItems = () => {
@@ -28,7 +28,7 @@ export function ApplicationMenu() {
     })
 
     const deleteDiagram = () => {
-        setConfirmAlert('Delete', 'Do you really want to delete the current diagram?',
+        showConfirmAlert('Delete', 'Do you really want to delete the current diagram?',
             () => PubSub.publish('canvas.DeleteDiagram'))
     };
 
