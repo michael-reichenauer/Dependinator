@@ -1,8 +1,5 @@
-var auth = require('../shared/auth.js');
-
 exports.getInfo = (context) => {
     const req = context.req
-    const clientPrincipal = auth.getClientPrincipal(req)
 
     const userAgent = req.headers["user-agent"];
     const forwardedHost = req.headers["x-forwarded-host"];
@@ -12,7 +9,6 @@ exports.getInfo = (context) => {
 
     return {
         token: req.headers['xtoken'],
-        clientPrincipal: clientPrincipal,
         userAgent: userAgent,
         clientIp: clientIp,
         forwardedHost: forwardedHost,

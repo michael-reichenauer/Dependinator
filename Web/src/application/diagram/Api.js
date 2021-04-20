@@ -61,6 +61,14 @@ export default class Api {
         return this.post('/api/ClearAllData')
     }
 
+    async createUser(user) {
+        return this.post('/api/CreateUser', user)
+    }
+
+    async connectUser(user) {
+        return this.post('/api/ConnectUser', user)
+    }
+
     async connect() {
         return this.get('/api/Connect')
     }

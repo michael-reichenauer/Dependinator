@@ -22,27 +22,35 @@ class Store {
     }
 
     async initialize() {
-        return this.sync.initialize(0)
+        return await this.sync.initialize(0)
     }
 
     async login(provider) {
-        return this.sync.login(provider)
+        return await this.sync.login(provider)
+    }
+
+    async createUser(user) {
+        await this.sync.createUser(user)
+    }
+
+    async connectUser(user) {
+        return await this.sync.connectUser(user)
     }
 
     async disableCloudSync() {
-        this.sync.disableCloudSync()
+        await this.sync.disableCloudSync()
     }
 
     async serverHadChanges() {
-        return this.sync.serverHadChanges()
+        return await this.sync.serverHadChanges()
     }
 
     async checkCloudConnection() {
-        return this.sync.checkCloudConnection()
+        return await this.sync.checkCloudConnection()
     }
 
     async retryCloudConnection() {
-        return this.sync.retryCloudConnection()
+        return await this.sync.retryCloudConnection()
     }
 
     async openMostResentDiagramCanvas() {
@@ -52,7 +60,7 @@ class Store {
             throw new Error('No resent diagram')
         }
 
-        return this.openDiagramRootCanvas(diagramId)
+        return await this.openDiagramRootCanvas(diagramId)
     }
 
 
