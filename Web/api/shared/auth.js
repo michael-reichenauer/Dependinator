@@ -1,7 +1,6 @@
 
 
 exports.getClientPrincipal = req => {
-
     const header = req.headers["x-ms-client-principal"];
     let clientPrincipal
 
@@ -12,12 +11,7 @@ exports.getClientPrincipal = req => {
     }
 
     if (!clientPrincipal) {
-        clientPrincipal = {
-            "identityProvider": "local",
-            "userId": 'local',
-            "userDetails": 'local',
-            "userRoles": ["anonymous", "authenticated"]
-        }
+        throw new Error('No user')
     }
     return clientPrincipal
 }

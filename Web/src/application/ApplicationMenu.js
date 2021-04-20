@@ -8,6 +8,7 @@ import { store } from "./diagram/Store";
 import Printer from "../common/Printer";
 import { useAbout } from "./About";
 import { useLogin } from "./Login";
+import { setConfirmAlert } from "../common/AlertDialog";
 
 
 const getDiagramsMenuItems = () => {
@@ -27,11 +28,8 @@ export function ApplicationMenu() {
     })
 
     const deleteDiagram = () => {
-        if (!confirm('Do you really want to delete the current diagram?')) {//eslint-disable-line       
-            return
-        }
-
-        PubSub.publish('canvas.DeleteDiagram')
+        setConfirmAlert('Delete', 'Do you really want to delete the current diagram?',
+            () => PubSub.publish('canvas.DeleteDiagram'))
     };
 
 
