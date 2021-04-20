@@ -1,6 +1,6 @@
 import React from "react";
 import ApplicationBar from './application/ApplicationBar'
-import { useWindowSize } from "./common/windowSizeX"
+import useWindowSize from "./common/windowSize"
 import { useActivityMonitor } from "./common/activity";
 import { useAppVersionMonitor } from "./common/appVersion";
 import Diagram from "./application/Diagram";
