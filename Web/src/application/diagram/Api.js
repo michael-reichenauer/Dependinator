@@ -1,6 +1,6 @@
 
 import axios from 'axios';
-import { timing } from '../../common/timing';
+import timing from '../../common/timing';
 import { atom, useAtom } from "jotai"
 import { setErrorMessage, setSuccessMessage } from '../../common/MessageSnackbar';
 
