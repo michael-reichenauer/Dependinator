@@ -3,7 +3,7 @@ import { atom, useAtom } from "jotai"
 import { Box, Button, Dialog, FormControlLabel, LinearProgress, Switch, Typography } from "@material-ui/core";
 import { Formik, Form, Field } from 'formik';
 import { TextField } from 'formik-material-ui';
-import { sha256 } from '../common/utils'
+import { sha256Hash } from '../common/utils'
 import { store } from "./diagram/Store";
 import { isDeveloperMode } from '../common/utils'
 
@@ -62,7 +62,7 @@ export default function Login() {
 
                     onSubmit={async (values, { setErrors, setFieldValue }) => {
                         // Reduce risk of clear text password logging
-                        const password = await sha256(values.password)
+                        const password = await sha256Hash(values.password)
 
                         if (createAccount) {
                             try {
