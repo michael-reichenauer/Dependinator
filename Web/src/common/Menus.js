@@ -13,7 +13,7 @@ export const menuParentItem = (text, items, isEnabled = true, isShow = true) => 
 }
 
 
-// Shows the app bar menu
+// Shows the app bar menu.
 export function AppMenu({ anchorEl, items, onClose }) {
     if (anchorEl == null || items == null || items.length === 0) {
         return null
