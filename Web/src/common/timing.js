@@ -1,4 +1,23 @@
-export class Timing {
+
+// Utility function to log code timing
+export default function timing(label, isStart) {
+    if (label === undefined) {
+        const stack = new Error().stack
+        const caller = stack.split('\n')[2].trim().split(' ');
+
+        if (caller.length === 3) {
+            label = caller[1]
+        } else {
+            label = '()=>'
+        }
+
+        return new Timing(label, isStart)
+    }
+
+    return new Timing(label, isStart)
+}
+
+class Timing {
     constructor(label, isStart) {
         this.label = label
         this.start = performance.now()
@@ -25,17 +44,3 @@ export class Timing {
     }
 }
 
-export const timing = (label, isStart) => {
-    if (label === undefined) {
-        const stack = new Error().stack
-        const caller = stack.split('\n')[2].trim().split(' ');
-
-        if (caller.length === 3) {
-            label = caller[1]
-        } else {
-            label = '()=>'
-        }
-
-        return new Timing(label, isStart)
-    }
-}

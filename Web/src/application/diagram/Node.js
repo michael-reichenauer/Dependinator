@@ -3,7 +3,7 @@ import PubSub from 'pubsub-js'
 import cuid from 'cuid'
 import { menuItem, menuParentItem } from "../../common/Menus";
 import { clickHandler } from "../../common/mouseClicks";
-import { timing } from "../../common/timing";
+import timing from "../../common/timing";
 import Colors from "./Colors";
 import CommandChangeColor from "./CommandChangeColor";
 import CommandChangeIcon from "./CommandChangeIcon";

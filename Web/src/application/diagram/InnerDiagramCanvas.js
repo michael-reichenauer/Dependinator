@@ -1,5 +1,5 @@
 import draw2d from "draw2d";
-import { timing } from "../../common/timing";
+import timing from "../../common/timing";
 import { addDefaultInnerDiagram } from "./addDefault";
 import Connection from "./Connection";
 import Group from "./Group";

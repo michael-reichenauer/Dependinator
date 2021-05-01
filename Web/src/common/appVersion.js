@@ -1,5 +1,5 @@
+import axios from 'axios'
 import { useEffect, useRef } from 'react'
-import Api from '../application/diagram/Api'
 import { useActivity } from './activity'
 
 
@@ -14,6 +14,7 @@ export const localBuildTime = process.env.REACT_APP_BUILD_TIME === '%REACT_APP_B
 
 console.info(`Local version:  '${localSha.substring(0, 6)}' '${localBuildTime}'`)
 
+// Monitors server version of the web site and if newer, triggers a force reload to ensure latest web is shown
 export const useAppVersionMonitor = () => {
     const [isActive] = useActivity()
     const timerRef = useRef();
@@ -30,8 +31,7 @@ export const useAppVersionMonitor = () => {
 
             try {
                 // console.log(`Checking remote, active=${isActive} ...`)
-                const api = new Api()
-                const manifest = await api.getManifest('/manifest.json')
+                const manifest = (await axios.get('/manifest.json')).data
 
                 const remoteSha = manifest.sha === '%REACT_APP_SHA%' ? localSha : manifest.sha
                 const remoteBuildTime = manifest.buildTime === '%REACT_APP_BUILD_TIME%' ? localBuildTime : dateToLocalISO(manifest.buildTime)

@@ -2,34 +2,18 @@ import React from "react";
 import { Menu, MenuItem } from "@material-ui/core";
 import NestedMenuItem from "material-ui-nested-menu-item";
 
-
+// Normal menu item
 export const menuItem = (text, action, isEnabled = true, isShow = true) => {
     return new Item(text, action, isEnabled, isShow)
 }
 
+// Parent menu item with children items
 export const menuParentItem = (text, items, isEnabled = true, isShow = true) => {
     return new NestedItem(text, items, isEnabled, isShow)
 }
 
-class Item {
-    constructor(text, action, isEnabled = true, isShow = true) {
-        this.text = text
-        this.action = action
-        this.isEnabled = isEnabled
-        this.isShow = isShow
-    }
-}
 
-class NestedItem {
-    items = []
-    constructor(text, items, isEnabled = true, isShow = true) {
-        this.text = text
-        this.items = items
-        this.isEnabled = isEnabled
-        this.isShow = isShow
-    }
-}
-
+// Shows the app bar menu
 export function AppMenu({ anchorEl, items, onClose }) {
     if (anchorEl == null || items == null || items.length === 0) {
         return null
@@ -56,7 +40,7 @@ export function AppMenu({ anchorEl, items, onClose }) {
     )
 }
 
-
+// Shows the context menu (when user right-click or long-click)
 export function ContextMenu({ menu, onClose }) {
     if (menu?.items == null) {
         return null
@@ -69,7 +53,6 @@ export function ContextMenu({ menu, onClose }) {
         onClose()
         item?.action()
     }
-
 
     return (
         <Menu
@@ -87,7 +70,6 @@ export function ContextMenu({ menu, onClose }) {
 
 const getMenuItems = (items, onClick) => {
     return items.map((item, i) => {
-        //console.log('try item', item)
         if (!item.isShow) {
             return null
         }
@@ -119,4 +101,24 @@ const getMenuItems = (items, onClick) => {
         return null
 
     }).filter(i => i != null)
+}
+
+
+class Item {
+    constructor(text, action, isEnabled = true, isShow = true) {
+        this.text = text
+        this.action = action
+        this.isEnabled = isEnabled
+        this.isShow = isShow
+    }
+}
+
+class NestedItem {
+    items = []
+    constructor(text, items, isEnabled = true, isShow = true) {
+        this.text = text
+        this.items = items
+        this.isEnabled = isEnabled
+        this.isShow = isShow
+    }
 }
