@@ -2,7 +2,7 @@ import React from "react";
 import { Menu, MenuItem } from "@material-ui/core";
 import NestedMenuItem from "material-ui-nested-menu-item";
 
-// Normal menu item
+// Normal menu item.
 export const menuItem = (text, action, isEnabled = true, isShow = true) => {
     return new Item(text, action, isEnabled, isShow)
 }
