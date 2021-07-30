@@ -21,7 +21,7 @@ export const useConnection = () => {
 
 
 export default class Api {
-    apiKey = '0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade'
+    apiKey = '0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade'  // Must be same as in server side api
     token = null
     onInvalidToken = null
 

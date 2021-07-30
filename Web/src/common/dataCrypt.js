@@ -3,6 +3,30 @@ import { crypt } from './crypt';
 
 
 class DataCrypt {
+    async encryptText(text, kek) {
+        const data = new TextEncoder().encode(text)
+
+        const dek = await this.generateDek(kek)
+        const cipher = await crypt.encryptData(data, dek.key)
+        return {
+            data: toBase64(cipher.data),
+            iv: toBase64(cipher.iv),
+            wDek: dek.wDek,
+        }
+    }
+
+    async decryptText(eData, kek) {
+        const dek = await this.unWrapDek(eData.wDek, kek)
+
+        const data = fromBase64(eData.data)
+        const iv = fromBase64(eData.iv)
+
+        const dData = await crypt.decryptData(data, dek, iv)
+
+        const text = new TextDecoder().decode(dData)
+        return text
+    }
+
 
     async encryptWithPassword(text, password) {
         // Kek handling
@@ -58,29 +82,7 @@ class DataCrypt {
         return await crypt.unWrapKey(wrappedDek, kek, wrappedDekIv)
     }
 
-    async encryptText(text, kek) {
-        const data = new TextEncoder().encode(text)
 
-        const dek = await this.generateDek(kek)
-        const cipher = await crypt.encryptData(data, dek.key)
-        return {
-            data: toBase64(cipher.data),
-            iv: toBase64(cipher.iv),
-            wDek: dek.wDek,
-        }
-    }
-
-    async decryptText(eData, kek) {
-        const dek = await this.unWrapDek(eData.wDek, kek)
-
-        const data = fromBase64(eData.data)
-        const iv = fromBase64(eData.iv)
-
-        const dData = await crypt.decryptData(data, dek, iv)
-
-        const text = new TextDecoder().decode(dData)
-        return text
-    }
 }
 
 export const dataCrypt = new DataCrypt()
