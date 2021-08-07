@@ -25,9 +25,9 @@ class Store {
         return await this.sync.initialize(0)
     }
 
-    async login(provider) {
-        return await this.sync.login(provider)
-    }
+    // async login(provider) {
+    //     return await this.sync.login(provider)
+    // }
 
     async createUser(user) {
         await this.sync.createUser(user)
@@ -37,9 +37,12 @@ class Store {
         return await this.sync.connectUser(user)
     }
 
+
     async disableCloudSync() {
         await this.sync.disableCloudSync()
     }
+
+
 
     async serverHadChanges() {
         return await this.sync.serverHadChanges()

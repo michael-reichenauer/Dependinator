@@ -14,6 +14,7 @@ class Authenticate {
         return await store.connectUser(user)
     }
 
+
     async passwordHash(text) {
         // encode as UTF-8
         const msgBuffer = new TextEncoder().encode(text);

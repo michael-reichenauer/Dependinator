@@ -2,6 +2,7 @@ import { setErrorMessage, setInfoMessage, setSuccessMessage } from "../../common
 import { setProgress } from "../../common/Progress"
 import { setSyncMode } from "../Online"
 import Api from "./Api"
+import { keyVault } from './../../common/keyVault';
 
 export const rootCanvasId = 'root'
 
@@ -9,19 +10,32 @@ export default class StoreSync {
 
     store = null
     local = null
-    remote = new Api()
+    api = null
 
     isSyncEnabled = false
 
     constructor(store) {
         this.store = store
         this.local = store.local
+        this.api = new Api(this.onInvalidToken)
+    }
+
+    onInvalidToken() {
+        console.log('on invalid token')
+        keyVault.setToken(null)
+        // Called when token id invalid
+        if (this.isSyncEnabled) {
+            this.isSyncEnabled = false
+            this.local.updateSync({ token: null, isConnecting: false, provider: null, details: null })
+            setSyncMode(false)
+            setErrorMessage('Cloud sync failed. You need to re-enable cloud sync')
+        }
     }
 
     async checkCloudConnection() {
         setProgress(true)
         try {
-            await this.remote.check()
+            await this.api.check()
             setSuccessMessage('Cloud connection OK')
         } catch (error) {
             setErrorMessage('No connection with cloud server')
@@ -39,7 +53,7 @@ export default class StoreSync {
             console.log('Connecting after a previous login')
             // A previous login triggered reload and now we should call connect
             this.local.updateSync({ isConnecting: false })
-            const connectData = await this.remote.connect()
+            const connectData = await this.api.connect()
             console.log('connected', connectData)
             sync = this.local.updateSync({ token: connectData.token, provider: connectData.provider, details: connectData.details })
             setSuccessMessage('Cloud sync connection is enabled')
@@ -56,15 +70,8 @@ export default class StoreSync {
             return
         }
 
-        this.remote.setToken(sync.token, () => {
-            // Called when token id invalid
-            if (this.isSyncEnabled) {
-                this.isSyncEnabled = false
-                this.local.updateSync({ token: null, isConnecting: false, provider: null, details: null })
-                setSyncMode(false)
-                setErrorMessage('Cloud sync failed. You need to re-enable cloud sync')
-            }
-        })
+        keyVault.setToken(sync.token)
+
 
         this.isSyncEnabled = true
         setSyncMode(true)
@@ -88,45 +95,45 @@ export default class StoreSync {
         return true
     }
 
-    async login(provider) {
-        console.log('Login with', provider)
+    // async login(provider) {
+    //     console.log('Login with', provider)
 
-        try {
-            // Checking if user already is logged in with the specified provider
-            const user = await this.remote.getCurrentUser()
-            if (user?.clientPrincipal?.identityProvider === provider) {
-                // User is logged in, lets just reload site (no need to login again)
-                console.log('Still logged in with', provider)
-                window.location.reload()
-            }
+    //     try {
+    //         // Checking if user already is logged in with the specified provider
+    //         const user = await this.remote.getCurrentUser()
+    //         if (user?.clientPrincipal?.identityProvider === provider) {
+    //             // User is logged in, lets just reload site (no need to login again)
+    //             console.log('Still logged in with', provider)
+    //             window.location.reload()
+    //         }
 
-        } catch (error) {
-            // Failed to check current user, lets ignore that and login
-            console.trace('error', error)
-        }
+    //     } catch (error) {
+    //         // Failed to check current user, lets ignore that and login
+    //         console.trace('error', error)
+    //     }
 
-        this.local.updateSync({ isConnecting: true, provider: provider })
-        // Login for the specified id provider
-        if (provider === 'Google') {
-            window.location.href = `/.auth/login/google`;
-        } else if (provider === 'Microsoft') {
-            window.location.href = `/.auth/login/aad`;
-        } else if (provider === 'Facebook') {
-            window.location.href = `/.auth/login/facebook`;
-        } else if (provider === 'GitHub') {
-            window.location.href = `/.auth/login/github`;
-        } else {
-            this.local.updateSync({ isConnecting: false, provider: null })
-            throw new Error('Unsupported identity provider ' + provider)
-        }
-    }
+    //     this.local.updateSync({ isConnecting: true, provider: provider })
+    //     // Login for the specified id provider
+    //     if (provider === 'Google') {
+    //         window.location.href = `/.auth/login/google`;
+    //     } else if (provider === 'Microsoft') {
+    //         window.location.href = `/.auth/login/aad`;
+    //     } else if (provider === 'Facebook') {
+    //         window.location.href = `/.auth/login/facebook`;
+    //     } else if (provider === 'GitHub') {
+    //         window.location.href = `/.auth/login/github`;
+    //     } else {
+    //         this.local.updateSync({ isConnecting: false, provider: null })
+    //         throw new Error('Unsupported identity provider ' + provider)
+    //     }
+    // }
 
     async createUser(user) {
-        await this.remote.createUser(user)
+        await this.api.createUser(user)
     }
 
     async connectUser(user) {
-        const connectData = await this.remote.connectUser(user)
+        const connectData = await this.api.connectUser(user)
         this.local.updateSync({ isConnecting: false, isConnected: true, token: connectData.token, provider: connectData.provider, details: connectData.details })
         window.location.reload()
     }
@@ -139,7 +146,7 @@ export default class StoreSync {
         console.log('Disable cloud sync')
         this.isSyncEnabled = false
         this.local.updateSync({ token: null, isConnecting: false, provider: null })
-        this.remote.setToken(null, null)
+        this.api.setToken(null, null)
         setSyncMode(false)
         setInfoMessage('Cloud sync is disabled')
     }
@@ -149,7 +156,7 @@ export default class StoreSync {
             return null
         }
         // Try to get diagram from remote server and cache locally
-        const diagram = await this.remote.getDiagram(diagramId)
+        const diagram = await this.api.getDiagram(diagramId)
         this.local.writeDiagram(diagram)
 
         try {
@@ -171,7 +178,7 @@ export default class StoreSync {
 
         }
         // Sync with remote server
-        const diagramInfo = await this.remote.newDiagram(diagram)
+        const diagramInfo = await this.api.newDiagram(diagram)
         this.local.writeDiagramInfo(diagramInfo)
     }
 
@@ -181,7 +188,7 @@ export default class StoreSync {
         }
 
         // Sync with remote server
-        this.remote.setCanvas(canvas)
+        this.api.setCanvas(canvas)
             .then(diagramInfo => this.local.writeDiagramInfo(diagramInfo))
             .catch(error => setErrorMessage('Failed to sync canvas change'))
     }
@@ -191,7 +198,7 @@ export default class StoreSync {
             return
         }
 
-        await this.remote.deleteDiagram(diagramId)
+        await this.api.deleteDiagram(diagramId)
         await this.syncDiagrams()
     }
 
@@ -200,7 +207,7 @@ export default class StoreSync {
             return
         }
 
-        this.remote.updateDiagram({ diagramInfo: { diagramId: diagramId, name: name } })
+        this.api.updateDiagram({ diagramInfo: { diagramId: diagramId, name: name } })
             .then(diagramInfo => this.local.writeDiagramInfo(diagramInfo))
             .catch(error => setErrorMessage('Failed to sync name change'))
     }
@@ -211,7 +218,7 @@ export default class StoreSync {
         }
 
         // Store all read diagram
-        await this.remote.uploadDiagrams(diagrams)
+        await this.api.uploadDiagrams(diagrams)
         await this.syncDiagrams()
         return true
     }
@@ -220,7 +227,7 @@ export default class StoreSync {
         if (!this.isSyncEnabled) {
             return null
         }
-        return await this.remote.downloadAllDiagrams()
+        return await this.api.downloadAllDiagrams()
     }
 
     async clearRemoteData() {
@@ -230,7 +237,7 @@ export default class StoreSync {
                 setErrorMessage('Cloud sync not enabled, cannot clear remote data')
                 return false
             }
-            await this.remote.clearAllData()
+            await this.api.clearAllData()
             return true
         } catch (error) {
             setErrorMessage('Failed to clear remote data, ' + error.message)
@@ -250,7 +257,7 @@ export default class StoreSync {
         let localInfos = this.local.readAllDiagramsInfos()
 
         // Get all remote server diagrams data and write to local store
-        const remoteInfos = await this.remote.getAllDiagramsData()
+        const remoteInfos = await this.api.getAllDiagramsData()
         for (let i = 0; i < remoteInfos.length; i++) {
             const remoteInfo = remoteInfos[i];
             const localInfo = localInfos.find(l => l.diagramId === remoteInfo.diagramId)
@@ -297,7 +304,7 @@ export default class StoreSync {
 
         if (diagramsToPublish.length > 0) {
             // Some diagrams should be published
-            await this.remote.uploadDiagrams(diagramsToPublish)
+            await this.api.uploadDiagrams(diagramsToPublish)
         }
     }
 }
