@@ -1,12 +1,15 @@
+import Api from "../application/diagram/Api";
 import { store } from "../application/diagram/Store";
 
 
 class Authenticate {
+    api = new Api()
+
     async createUser(user) {
         // Reduce risk of clear text password logging
         user.password = await authenticate.passwordHash(user.password)
 
-        await store.createUser(user)
+        await this.api.createUser(user)
     }
 
     async connectUser(user) {

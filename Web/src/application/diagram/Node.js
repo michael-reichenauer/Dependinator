@@ -11,7 +11,7 @@ import NodeIcons from "./NodeIcons";
 import InnerDiagramFigure from "./InnerDiagramFigure";
 import Label from "./Label";
 import { store } from "./Store";
-
+import { icons } from './../../common/icons';
 
 
 const defaultOptions = (type) => {
@@ -299,6 +299,11 @@ export default class Node extends draw2d.shape.node.Between {
         const iconColor = Colors.getNodeFontColor(this.colorName)
         this.icon.attr({ width: 22, height: 22, color: iconColor, bgColor: 'none' })
         this.add(this.icon, new draw2d.layout.locator.XYRelPortLocator(1, 1))
+
+        // const src = icons.getIconSrc('./Azure/Analytics/00009-icon-service-Log-Analytics-Workspaces.svg')
+        // const im = new draw2d.shape.basic.Image({ path: src })
+        // im.attr({ width: 40, height: 40, bgColor: 'none' })
+        // this.add(im, new draw2d.layout.locator.XYRelPortLocator(30, -30))
     }
 
 

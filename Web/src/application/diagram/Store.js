@@ -25,13 +25,6 @@ class Store {
         return await this.sync.initialize(0)
     }
 
-    // async login(provider) {
-    //     return await this.sync.login(provider)
-    // }
-
-    async createUser(user) {
-        await this.sync.createUser(user)
-    }
 
     async connectUser(user) {
         return await this.sync.connectUser(user)

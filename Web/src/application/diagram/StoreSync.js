@@ -128,10 +128,6 @@ export default class StoreSync {
     //     }
     // }
 
-    async createUser(user) {
-        await this.api.createUser(user)
-    }
-
     async connectUser(user) {
         const connectData = await this.api.connectUser(user)
         this.local.updateSync({ isConnecting: false, isConnected: true, token: connectData.token, provider: connectData.provider, details: connectData.details })
