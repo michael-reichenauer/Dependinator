@@ -109,22 +109,21 @@ export default class NodeGroup extends draw2d.shape.basic.Rectangle {
 
     addLabels = (name) => {
         this.nameLabel = new draw2d.shape.basic.Label({
-            text: name, stroke: 0, fontSize: 14, fontColor: Colors.canvasText, bold: false,
+            text: name, stroke: 0, fontSize: 12, fontColor: Colors.canvasText, bold: true,
         })
 
         this.nameLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-        this.nameLabel.labelLocator = new LabelLocator()
+        this.nameLabel.labelLocator = new NodeGroupNameLocator()
         this.add(this.nameLabel, this.nameLabel.labelLocator);
     }
 }
 
-class LabelLocator extends draw2d.layout.locator.Locator {
-    relocate(index, figure) {
-        // Center in the x middle and then percent of height 
-        const parent = figure.getParent()
-        const x = 0
-        const y = parent.getHeight() - 22
-        figure.setPosition(x, y);
+
+class NodeGroupNameLocator extends draw2d.layout.locator.Locator {
+    relocate(index, label) {
+        const node = label.getParent()
+        const x = node.getWidth() / 2 - label.getWidth() / 2
+        const y = node.getHeight() + 0
+        label.setPosition(x, y)
     }
 }
-

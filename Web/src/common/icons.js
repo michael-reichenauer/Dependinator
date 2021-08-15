@@ -1,31 +1,55 @@
-class Icons {
+const svgFiles = require.context("../resources/icons", true, /\.(svg)$/)
+const defaultKey = 'defaultIcon'
 
-    svgs = []
+class Icons {
+    svgIcons = []
 
     constructor() {
-        const svgFiles = require.context("../resources/icons", true, /\.(svg)$/)
-        this.svgs = svgFiles
+
+        // Parse all svg files into an array of objects
+        this.svgIcons = svgFiles
             .keys()
-            .map(key => {
-                const file = svgFiles(key)
+            .map(path => {
+                const file = svgFiles(path)
                 const src = file.default
 
-                const name = src
-                    .slice(33)               // Skip prefix e.g. '/static/media/10165-icon-service-'
-                    .slice(0, -13)           // Skip sufic e.g. '.4e31000e.svg'
-                    .replaceAll('-', ' ')
+                var name = path.replaceAll('-', ' ')
+                var fullName = name
+                var key = path.replaceAll(' ', '_')
 
-                return { key: key, name: name, src: src }
+                if (path.startsWith('./DefaultIcon')) {
+                    name = 'Default Icon'
+                    fullName = name
+                    key = defaultKey
+                }
+                else if (path.startsWith('./Azure')) {
+                    // Azure icons have a pattern like ./Azure/Storage/00776-icon-service-Azure-HCP-Cache.svg
+                    const parts = path.split('/')
+                    name = parts[3]
+                        .slice(19)              // Skip prefix e.g. '10165-icon-service-'
+                        .slice(0, -4)           // Skip sufic e.g. '.svg'
+                        .replaceAll('-', ' ')
+                    fullName = `${parts[1]}/${parts[2]}/${name}`
+                    key = `${parts[1]}/${parts[2]}/${name}`.replaceAll(' ', '_')
+                }
+
+                // console.log('path', path, src)
+                return { key: key, name: name, fullName: fullName, src: src }
             })
-        // console.log('svg', this.svgs)
+        console.log('svg', this.svgIcons.slice(0, 20))
     }
 
-    getIconSrc(key) {
-        const svg = this.svgs.find(svg => svg.key === key)
+    getAllIcons() {
+        return [...this.svgIcons]
+    }
+
+    getIcon(key) {
+        const svg = this.svgIcons.find(svg => svg.key === key)
         if (svg === undefined) {
-            return 'apple-touch-icon.png'
+            // Return default icon
+            return this.svgIcons.find(svg => svg.key === defaultKey)
         }
-        return svg.src
+        return svg
     }
 
     // 

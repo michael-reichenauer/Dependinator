@@ -12,7 +12,7 @@ export default class Connection extends draw2d.Connection {
 
     constructor(description, src, srcPortName, dst, dstPortName, id) {
         id = id ?? cuid()
-        super({ id: id })
+        super({ id: id, stroke: 1 })
 
         description = description ?? 'Description'
         if (src !== undefined) {
@@ -65,7 +65,7 @@ export default class Connection extends draw2d.Connection {
     addLabels(description) {
         this.descriptionLabel = new Label(defaultTextWidth, {
             text: description, stroke: 0,
-            fontSize: 14, bold: false,
+            fontSize: 12, bold: false,
             fontColor: Colors.canvasText, bgColor: Colors.canvasBackground,
         })
         // this.descriptionLabel.setResizeable(true)
@@ -77,7 +77,7 @@ export default class Connection extends draw2d.Connection {
     addArrow() {
         const arrow = new draw2d.decoration.connection.ArrowDecorator()
         arrow.setBackgroundColor(this.getColor())
-        arrow.setDimension(12, 12)
+        arrow.setDimension(8, 8)
         this.targetDecorator = arrow
     }
 
