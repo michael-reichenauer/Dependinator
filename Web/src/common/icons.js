@@ -17,15 +17,22 @@ class Icons {
                 var fullName = name
                 var key = path.replaceAll(' ', '_')
                 var parts = path.split('/').slice(1)
+                var group = ''
+                var root = ''
 
                 if (path.startsWith('./DefaultIcon')) {
                     key = defaultKey
                     name = 'Default Icon'
                     fullName = name
                 }
-                if (path.startsWith('./azure-official.svg')) {
+                else if (path.startsWith('./azure-official.svg')) {
                     key = 'Azure'
                     name = 'Azure'
+                    fullName = name
+                }
+                else if (path.startsWith('./aws-official.svg')) {
+                    key = 'Aws'
+                    name = 'Aws'
                     fullName = name
                 }
                 else if (path.startsWith('./Azure')) {
@@ -34,17 +41,40 @@ class Icons {
                         .slice(19)              // Skip prefix e.g. '10165-icon-service-'
                         .slice(0, -4)           // Skip sufic e.g. '.svg'
                         .replaceAll('-', ' ')
-                    fullName = `${parts[0]}/${parts[1]}/${name}`
-                    key = `${parts[0]}/${parts[1]}/${name}`.replaceAll(' ', '_')
+                    root = 'Azure'
+                    group = parts[1]
+                    fullName = `${root}/${group}/${name}`
+                    key = `${root}/${group}/${name}`.replaceAll(' ', '_')
+                } else if (path.startsWith('./Aws')) {
+                    // Aws icons have a pattern like ./Aws/Aws/Architecture-Service-Icons_07302021/Arch_Analytics/Arch_16
+                    const awsPath = path.replaceAll('/Architecture-Service-Icons_07302021', '')
+                        .replaceAll('/Category-Icons_07302021', '').replaceAll('/Resource-Icons_07302021', '')
+                        .replaceAll('_16.svg', '').replaceAll('/Arch_16', '').replaceAll('/16', '')
+                        .replaceAll('Arch_Amazon-', '').replaceAll('Arch_AWS-', '').replaceAll('Arch_', '')
+                        .replaceAll('Arch-Category_16', 'Category').replaceAll('Arch-Category_', '')
+                        .replaceAll('/Arch-Category_', '/')
+                        .replaceAll('/Res_48_Dark', '').replaceAll('/Res_48_Light', '').replaceAll('/Res_', '/')
+                        .replaceAll('_48_Dark.svg', '').replaceAll('_48_Light.svg', '')
+                        .replaceAll('-', ' ').replaceAll('_', ' ')
+
+                    parts = awsPath.split('/').slice(1)
+                    root = 'Aws'
+                    name = parts[2]
+                    group = parts[1]
+                    fullName = `${root}/${group}/${name}`
+                    key = `${root}/${group}/${name}`.replaceAll(' ', '_')
                 }
 
                 // console.log('path', path, src)
-                return { key: key, name: name, fullName: fullName, src: src, parts: parts }
+                const svg = { key: key, name: name, fullName: fullName, src: src, root: root, group: group }
+                //console.log('svg', svg)
+                return svg
             })
-        console.log('svg', this.svgIcons.slice(0, 20))
+        //console.log('svg', this.svgIcons.slice(0, 20))
     }
 
     getAllIcons() {
+        console.log('icons length ', this.svgIcons.length)
         return [...this.svgIcons]
     }
 

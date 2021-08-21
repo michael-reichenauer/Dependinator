@@ -31,11 +31,14 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export const useNodes = () => useAtom(nodesAtom)
+const allIcons = icons.getAllIcons()
+
 
 export default function Nodes() {
     const classes = useStyles();
     const [show, setShow] = useNodes()
     const [openAzure, setOpenAzure] = useState(false);
+    const [openAws, setOpenAws] = useState(false);
     const [filter, setFilter] = useState('');
 
 
@@ -44,37 +47,53 @@ export default function Nodes() {
         if (!openAzure && value) {
             setOpenAzure(true)
         }
-        console.log('Search', value)
+        if (!openAws && value) {
+            setOpenAws(true)
+        }
     }
 
     const cancelSearch = () => {
-        console.log('Cancel search')
+        setFilter('')
+        if (openAzure) {
+            setOpenAzure(false)
+        }
+        if (openAws) {
+            setOpenAws(false)
+        }
     }
 
-    const handleClick = () => {
-        setOpenAzure(!openAzure);
+    const handleAzureClick = () => {
+        setOpenAzure(!openAzure)
     };
 
+    const handleAwsClick = () => {
+        setOpenAws(!openAws)
+    };
     const clickedItem = (item) => {
         PubSub.publish('canvas.addNode', item.key)
     }
 
-    const getListItems = (items, first, filter) => {
+    const getListItems = (items, root, filter) => {
 
-        return items.map((item, i) => {
-            if (item.parts[0] !== first) {
-                return null
+        // Filter
+        const filtered = items.filter(item => {
+            if (item.root !== root) {
+                return false
             }
 
-            if (filter) {
-                const filters = filter.split(' ')
-                for (i = 0; i < filters.length; i++) {
-                    if (!item.fullName.toLowerCase().includes(filters[i])) {
-                        return null
-                    }
+            const filters = filter.split(' ')
+            for (var i = 0; i < filters.length; i++) {
+                if (!item.fullName.toLowerCase().includes(filters[i])) {
+                    return false
                 }
             }
+            return true
+        })
 
+        // In some cases the same icon exist in different groups
+        const unique = filtered.filter((item, index) => index === filtered.findIndex(it => it.src === item.src && it.name === item.name))
+
+        return unique.map((item, i) => {
             return (
                 <ListItem button onClick={clickedItem(item)} key={item.key} className={classes.nested}>
                     <ListItemIcon>
@@ -82,10 +101,8 @@ export default function Nodes() {
                     </ListItemIcon>
                     <ListItemText primary={item.name} />
                 </ListItem>
-
             )
         })
-            .filter(item => item != null)
     }
 
     return (
@@ -103,7 +120,7 @@ export default function Nodes() {
 
                 <Paper style={{ maxHeight: 440, overflow: 'auto' }}>
                     <List component="nav" dense disablePadding>
-                        <ListItem button onClick={handleClick} key='az'>
+                        <ListItem button onClick={handleAzureClick} key='az'>
                             <ListItemIcon>
                                 <img src={icons.getIcon('Azure').src} alt='' width='30' height='30' />
                             </ListItemIcon>
@@ -112,7 +129,19 @@ export default function Nodes() {
                         </ListItem>
                         <Collapse in={openAzure} timeout="auto" unmountOnExit>
                             <List component="div" disablePadding dense>
-                                {getListItems(icons.getAllIcons(), 'Azure', filter)}
+                                {getListItems(allIcons, 'Azure', filter)}
+                            </List>
+                        </Collapse>
+                        <ListItem button onClick={handleAwsClick} key='aw'>
+                            <ListItemIcon>
+                                <img src={icons.getIcon('Aws').src} alt='' width='30' height='30' />
+                            </ListItemIcon>
+                            <ListItemText primary="Aws" />
+                            {openAws ? <ExpandLess /> : <ExpandMore />}
+                        </ListItem>
+                        <Collapse in={openAws} timeout="auto" unmountOnExit>
+                            <List component="div" disablePadding dense>
+                                {getListItems(allIcons, 'Aws', filter)}
                             </List>
                         </Collapse>
                     </List>
