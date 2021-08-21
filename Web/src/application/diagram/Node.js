@@ -133,9 +133,7 @@ export default class Node extends draw2d.shape.node.Between {
         const colorItems = Colors.nodeColorNames().map((name) => {
             return menuItem(name, () => this.canvas.runCmd(new CommandChangeColor(this, name)))
         })
-        // const iconItems = this.nodeIcons.getNames().map((name) => {
-        //     return menuItem(name, () => this.canvas.runCmd(new CommandChangeIcon(this, name)))
-        // })
+
         const iconItems = icons.getAllIcons().map((icon) => {
             return menuItem(icon.name, () => this.canvas.runCmd(new CommandChangeIcon(this, icon.key)), true, true, icon.src)
         })
@@ -297,9 +295,7 @@ export default class Node extends draw2d.shape.node.Between {
             return
         }
 
-
         const ic = icons.getIcon(iconKey)
-        console.log('Add icon', ic)
         const icon = new draw2d.shape.basic.Image({ path: ic.src, width: this.width, height: this.height, bgColor: 'none' })
 
         this.iconName = iconKey

@@ -52,7 +52,7 @@ export default class DiagramCanvas {
         PubSub.subscribe('canvas.Undo', () => this.commandUndo())
         PubSub.subscribe('canvas.Redo', () => this.commandRedo())
 
-        PubSub.subscribe('canvas.AddNode', () => this.addNode(Node.nodeType, this.getCenter()))
+        PubSub.subscribe('canvas.AddNode', (_, key) => this.addNode(Node.nodeType, this.getCenter()))
         PubSub.subscribe('canvas.AddUserNode', () => this.addNode(Node.userType, this.getCenter()))
         PubSub.subscribe('canvas.AddExternalNode', () => this.addNode(Node.externalType, this.getCenter()))
         PubSub.subscribe('canvas.AddDefaultNode', (_, p) => this.addNode(Node.nodeType, p))

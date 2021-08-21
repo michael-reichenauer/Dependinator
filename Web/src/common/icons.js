@@ -16,25 +16,30 @@ class Icons {
                 var name = path.replaceAll('-', ' ')
                 var fullName = name
                 var key = path.replaceAll(' ', '_')
+                var parts = path.split('/').slice(1)
 
                 if (path.startsWith('./DefaultIcon')) {
+                    key = defaultKey
                     name = 'Default Icon'
                     fullName = name
-                    key = defaultKey
+                }
+                if (path.startsWith('./azure-official.svg')) {
+                    key = 'Azure'
+                    name = 'Azure'
+                    fullName = name
                 }
                 else if (path.startsWith('./Azure')) {
                     // Azure icons have a pattern like ./Azure/Storage/00776-icon-service-Azure-HCP-Cache.svg
-                    const parts = path.split('/')
-                    name = parts[3]
+                    name = parts[2]
                         .slice(19)              // Skip prefix e.g. '10165-icon-service-'
                         .slice(0, -4)           // Skip sufic e.g. '.svg'
                         .replaceAll('-', ' ')
-                    fullName = `${parts[1]}/${parts[2]}/${name}`
-                    key = `${parts[1]}/${parts[2]}/${name}`.replaceAll(' ', '_')
+                    fullName = `${parts[0]}/${parts[1]}/${name}`
+                    key = `${parts[0]}/${parts[1]}/${name}`.replaceAll(' ', '_')
                 }
 
                 // console.log('path', path, src)
-                return { key: key, name: name, fullName: fullName, src: src }
+                return { key: key, name: name, fullName: fullName, src: src, parts: parts }
             })
         console.log('svg', this.svgIcons.slice(0, 20))
     }

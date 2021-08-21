@@ -4,8 +4,6 @@ import { Typography, AppBar, Toolbar, IconButton, Tooltip, Box, } from "@materia
 import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { ApplicationMenu } from "./ApplicationMenu"
-import PersonAddIcon from '@material-ui/icons/PersonAdd';
-import LibraryAddOutlinedIcon from '@material-ui/icons/LibraryAddOutlined';
 import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
 import SyncIcon from '@material-ui/icons/Sync';
 import SyncProblemIcon from '@material-ui/icons/SyncProblem';
@@ -22,6 +20,7 @@ import { store } from "./diagram/Store";
 import { useLogin } from "./Login";
 import { useSyncMode } from './Online'
 import { useConnection } from "./diagram/Api";
+import { useNodes } from './Nodes';
 
 
 
@@ -34,6 +33,7 @@ export default function ApplicationBar({ height }) {
     const [canRedo] = useAtom(canRedoAtom)
     const [canPopDiagram] = useAtom(canPopDiagramAtom)
     const [, setShowLogin] = useLogin()
+    const [, setShowNodes] = useNodes()
     const [connection] = useConnection()
 
     const syncState = syncMode && connection ? true : syncMode && !connection ? false : null
@@ -85,11 +85,7 @@ export default function ApplicationBar({ height }) {
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 
                 <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={style()} />} className={style()}
-                    onClick={() => PubSub.publish('canvas.AddNode')} />
-                <Button tooltip="Add external user" icon={<PersonAddIcon className={style()} />} className={style()}
-                    onClick={() => PubSub.publish('canvas.AddUserNode')} />
-                <Button tooltip="Add external system" icon={<LibraryAddOutlinedIcon className={style()} />} className={style()}
-                    onClick={() => PubSub.publish('canvas.AddExternalNode')} />
+                    onClick={() => setShowNodes(true)} />
 
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 

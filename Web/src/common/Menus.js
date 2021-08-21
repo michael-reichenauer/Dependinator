@@ -102,7 +102,7 @@ const getMenuItems = (items, onClick) => {
         console.warn('Unknown item', item)
         return null
 
-    }).filter(i => i != null)
+    }).filter(item => item != null)
 }
 
 

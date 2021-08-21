@@ -8,6 +8,7 @@ import About from "./application/About";
 import Login from "./application/Login";
 import AlertDialog from "./common/AlertDialog";
 import { dataCrypt } from './common/dataCrypt';
+import Nodes from "./application/Nodes";
 
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
       <Diagram width={size.width} height={size.height - 55} />
       <About />
       <Login />
+      <Nodes />
       <AlertDialog />
     </>
   );
