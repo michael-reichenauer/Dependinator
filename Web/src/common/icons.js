@@ -44,7 +44,7 @@ class Icons {
                     root = 'Azure'
                     group = parts[1]
                     fullName = `${root}/${group}/${name}`
-                    key = `${root}/${group}/${name}`.replaceAll(' ', '_')
+                    key = `${root}/${group}/${name}`.replaceAll(' ', '')
                 } else if (path.startsWith('./Aws')) {
                     // Aws icons have a pattern like ./Aws/Aws/Architecture-Service-Icons_07302021/Arch_Analytics/Arch_16
                     const awsPath = path.replaceAll('/Architecture-Service-Icons_07302021', '')
@@ -62,7 +62,7 @@ class Icons {
                     name = parts[2]
                     group = parts[1]
                     fullName = `${root}/${group}/${name}`
-                    key = `${root}/${group}/${name}`.replaceAll(' ', '_')
+                    key = `${root}/${group}/${name}`.replaceAll(' ', '')
                 }
 
                 // console.log('path', path, src)
@@ -74,7 +74,7 @@ class Icons {
     }
 
     getAllIcons() {
-        console.log('icons length ', this.svgIcons.length)
+        //console.log('icons length ', this.svgIcons.length)
         return [...this.svgIcons]
     }
 

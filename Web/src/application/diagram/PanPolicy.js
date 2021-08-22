@@ -95,7 +95,7 @@ export default class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolic
 
 
     onMouseDown(canvas, x, y, shiftKey, ctrlKey) {
-        //console.log('onMouseDown')
+        console.log('onMouseDown')
         try {
             this.x = x
             this.y = y
@@ -116,6 +116,7 @@ export default class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolic
             this.canDrawBoundingBox = false
 
             let figure = canvas.getBestFigure(x, y)
+            console.log('figure', figure)
 
             // may the figure is assigned to a composite. In this case the composite can
             // override the event receiver
@@ -220,7 +221,7 @@ export default class PanPolicy extends draw2d.policy.canvas.SingleSelectionPolic
     }
 
     onMouseDrag(canvas, dx, dy, dx2, dy2, shiftKey, ctrlKey) {
-        //console.log('onMouseDrag')
+        console.log('onMouseDrag')
         if (this.isReadOnly && !this.isPort && !this.isResizeHandle) {
             // Read only mode and not dragging a port, let pan the canvas
             this.isReadOnlySelect = false

@@ -13,6 +13,7 @@ import Label from "./Label";
 import { store } from "./Store";
 import { icons } from './../../common/icons';
 
+const defaultIconKey = 'Azure/General/Module'
 
 const defaultOptions = (type) => {
     const dv = {
@@ -24,16 +25,16 @@ const defaultOptions = (type) => {
 
     switch (type) {
         case Node.nodeType:
-            return { ...dv, name: 'Node', icon: 'Azure/General/Module', }
+            return { ...dv, icon: defaultIconKey, }
         case Node.systemType:
             return {
-                ...dv, name: store.getUniqueSystemName(), colorName: 'DeepPurple', icon: 'Azure/Compute/Cloud_Services_(Classic)',
+                ...dv, name: store.getUniqueSystemName(), colorName: 'DeepPurple', icon: 'Azure/Compute/CloudServices(Classic)',
                 width: Node.defaultWidth * 1.2, height: Node.defaultHeight * 1.2,
             }
         case Node.userType:
-            return { ...dv, name: 'External Users', icon: 'Azure/Management_+_Governance/My_Customers' }
+            return { ...dv, name: 'External Users', icon: 'Azure/Management+Governance/MyCustomers' }
         case Node.externalType:
-            return { ...dv, name: 'External Systems', icon: 'Azure/Databases/Virtual_Clusters' }
+            return { ...dv, name: 'External Systems', icon: 'Azure/Databases/VirtualClusters' }
         default:
             throw new Error('Unknown type: ' + type);
     }
@@ -65,6 +66,10 @@ export default class Node extends draw2d.shape.node.Between {
 
     constructor(type = Node.nodeType, options) {
         const o = { ...defaultOptions(type), ...options }
+        if (!o.name) {
+            const ic = icons.getIcon(o.icon)
+            o.name = ic.name
+        }
 
         super({
             id: o.id,
@@ -81,8 +86,8 @@ export default class Node extends draw2d.shape.node.Between {
 
         this.addLabels(o.name, o.description)
         this.addIcon(o.icon);
-        //this.addInnerDiagramIcon()
         this.addPorts()
+        //this.addInnerDiagramIcon()
 
         // this.on("click", (s, e) => console.log('click node'))
         this.on("dblclick", (s, e) => this.editInnerDiagram())
@@ -291,6 +296,7 @@ export default class Node extends draw2d.shape.node.Between {
     }
 
     addIcon(iconKey) {
+        //console.log('add icon key', iconKey)
         if (iconKey == null) {
             return
         }
@@ -328,8 +334,8 @@ export default class Node extends draw2d.shape.node.Between {
 
         // Make ports larger to support touch
         this.getPorts().each((i, p) => {
-            p.setCoronaWidth(25)
-            p.setDimension(15)
+            p.setCoronaWidth(5)
+            p.setDimension(10)
         })
     }
 }

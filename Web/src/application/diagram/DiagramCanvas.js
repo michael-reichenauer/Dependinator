@@ -7,7 +7,6 @@ import { random } from '../../common/utils'
 import Node from './Node'
 import { store } from "./Store";
 import Canvas from "./Canvas";
-import { menuItem } from "../../common/Menus";
 import CanvasStack from "./CanvasStack";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
 import { addDefaultNewDiagram, addFigureToCanvas } from "./addDefault";
@@ -15,7 +14,7 @@ import InnerDiagramCanvas from "./InnerDiagramCanvas";
 import Printer from "../../common/Printer";
 import { setProgress } from "../../common/Progress";
 import { setErrorMessage } from "../../common/MessageSnackbar";
-import NodeGroup from "./NodeGroup";
+
 
 
 export default class DiagramCanvas {
@@ -52,10 +51,7 @@ export default class DiagramCanvas {
         PubSub.subscribe('canvas.Undo', () => this.commandUndo())
         PubSub.subscribe('canvas.Redo', () => this.commandRedo())
 
-        PubSub.subscribe('canvas.AddNode', (_, key) => this.addNode(Node.nodeType, this.getCenter()))
-        PubSub.subscribe('canvas.AddUserNode', () => this.addNode(Node.userType, this.getCenter()))
-        PubSub.subscribe('canvas.AddExternalNode', () => this.addNode(Node.externalType, this.getCenter()))
-        PubSub.subscribe('canvas.AddDefaultNode', (_, p) => this.addNode(Node.nodeType, p))
+        PubSub.subscribe('canvas.AddNode', (_, data) => this.addNode(data.icon, data.position))
 
         PubSub.subscribe('canvas.ShowTotalDiagram', this.showTotalDiagram)
 
@@ -73,18 +69,18 @@ export default class DiagramCanvas {
     }
 
 
-    getContextMenuItems(x, y) {
-        const mouseXY = this.canvas.fromDocumentToCanvasCoordinate(x, y)
+    // getContextMenuItems(x, y) {
+    //     const mouseXY = this.canvas.fromDocumentToCanvasCoordinate(x, y)
 
-        return [
-            menuItem('Add node', () => this.addNode(Node.nodeType, mouseXY)),
-            menuItem('Add external user', () => this.addNode(Node.userType, mouseXY)),
-            menuItem('Add external system', () => this.addNode(Node.externalType, mouseXY)),
-            menuItem('Add group', () => this.addNode(NodeGroup.nodeType, mouseXY)),
-            menuItem('Pop to surrounding diagram (dbl-click)', () => PubSub.publish('canvas.PopInnerDiagram'),
-                true, !this.canvasStack.isRoot()),
-        ]
-    }
+    //     return [
+    //         // menuItem('Add node', () => this.addNode(Node.nodeType, mouseXY)),
+    //         // menuItem('Add external user', () => this.addNode(Node.userType, mouseXY)),
+    //         // menuItem('Add external system', () => this.addNode(Node.externalType, mouseXY)),
+    //         // menuItem('Add group', () => this.addNode(NodeGroup.nodeType, mouseXY)),
+    //         menuItem('Pop to surrounding diagram (dbl-click)', () => PubSub.publish('canvas.PopInnerDiagram'),
+    //             true, !this.canvasStack.isRoot()),
+    //     ]
+    // }
 
     commandUndo = () => {
         this.canvas.getCommandStack().undo()
@@ -226,15 +222,31 @@ export default class DiagramCanvas {
 
     showTotalDiagram = () => zoomAndMoveShowTotalDiagram(this.canvas)
 
-    addNode = (type, p) => {
-        if (type === NodeGroup.nodeType) {
-            const node = new NodeGroup()
-            addFigureToCanvas(this.canvas, node, p)
-            return
+    addNewNode = (type, position) => {
+
+        PubSub.publish('nodes.showDialog', position)
+        // this.addNode(type, position)
+
+    }
+
+    addNode = (icon, position) => {
+        console.log('Add node', icon, position)
+        if (!position) {
+            position = this.getCenter()
         }
 
-        const node = new Node(type)
-        addFigureToCanvas(this.canvas, node, p)
+        // if (type === NodeGroup.nodeType) {
+        //     const node = new NodeGroup()
+        //     addFigureToCanvas(this.canvas, node, p)
+        //     return
+        // }
+        var options = null
+        if (icon) {
+            options = { icon: icon }
+        }
+
+        const node = new Node(Node.nodeType, options)
+        addFigureToCanvas(this.canvas, node, position)
     }
 
     tryGetFigure = (x, y) => {
@@ -364,8 +376,7 @@ export default class DiagramCanvas {
                 this.commandPopFromInnerDiagram()
                 return
             }
-
-            PubSub.publish('canvas.AddDefaultNode', { x: event.x, y: event.y })
+            PubSub.publish('nodes.showDialog', { x: event.x, y: event.y })
         });
     }
 

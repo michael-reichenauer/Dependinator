@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { atom, useAtom } from "jotai"
 import PubSub from 'pubsub-js'
 import { makeStyles } from '@material-ui/core/styles';
@@ -34,6 +34,7 @@ export const useNodes = () => useAtom(nodesAtom)
 const allIcons = icons.getAllIcons()
 
 
+
 export default function Nodes() {
     const classes = useStyles();
     const [show, setShow] = useNodes()
@@ -41,25 +42,17 @@ export default function Nodes() {
     const [openAws, setOpenAws] = useState(false);
     const [filter, setFilter] = useState('');
 
+    useEffect(() => {
+        PubSub.subscribe('nodes.showDialog', (_, position) => setShow(position))
+        return () => PubSub.unsubscribe('nodes.showDialog')
+    }, [setShow])
 
-    const requestSearch = (value) => {
+    const onChangeSearch = (value) => {
         setFilter(value.toLowerCase())
-        if (!openAzure && value) {
-            setOpenAzure(true)
-        }
-        if (!openAws && value) {
-            setOpenAws(true)
-        }
     }
 
     const cancelSearch = () => {
         setFilter('')
-        if (openAzure) {
-            setOpenAzure(false)
-        }
-        if (openAws) {
-            setOpenAws(false)
-        }
     }
 
     const handleAzureClick = () => {
@@ -69,18 +62,28 @@ export default function Nodes() {
     const handleAwsClick = () => {
         setOpenAws(!openAws)
     };
+
     const clickedItem = (item) => {
-        PubSub.publish('canvas.addNode', item.key)
+        var position = show
+        console.log('show', show)
+        if (position === true) {
+            position = null
+        }
+        PubSub.publish('canvas.AddNode', { icon: item.key, position: position })
+        setShow(false)
     }
 
     const getListItems = (items, root, filter) => {
 
         // Filter
         const filtered = items.filter(item => {
+            // Check if root items match (e.g. searching Azure or Aws)
             if (item.root !== root) {
                 return false
             }
 
+            // This filter uses implicit 'AND' between words in the search filter
+            // Check if all words are part of the items full name
             const filters = filter.split(' ')
             for (var i = 0; i < filters.length; i++) {
                 if (!item.fullName.toLowerCase().includes(filters[i])) {
@@ -90,12 +93,13 @@ export default function Nodes() {
             return true
         })
 
-        // In some cases the same icon exist in different groups
-        const unique = filtered.filter((item, index) => index === filtered.findIndex(it => it.src === item.src && it.name === item.name))
+        // In some cases the same icon exist in different groups, lets get unique items
+        const unique = filtered.filter(
+            (item, index) => index === filtered.findIndex(it => it.src === item.src && it.name === item.name))
 
         return unique.map((item, i) => {
             return (
-                <ListItem button onClick={clickedItem(item)} key={item.key} className={classes.nested}>
+                <ListItem button onClick={() => clickedItem(item)} key={item.key} className={classes.nested}>
                     <ListItemIcon>
                         <img src={item.src} alt='' width='30' height='30' />
                     </ListItemIcon>
@@ -106,7 +110,7 @@ export default function Nodes() {
     }
 
     return (
-        <Dialog open={show} onClose={() => { setShow(false) }}  >
+        <Dialog open={show ? true : false} onClose={() => { setShow(false) }}  >
 
             <Box style={{ width: 400, height: 530, padding: 20 }}>
 
@@ -114,7 +118,7 @@ export default function Nodes() {
 
                 <SearchBar
                     value={filter}
-                    onChange={(searchVal) => requestSearch(searchVal)}
+                    onChange={(searchVal) => onChangeSearch(searchVal)}
                     onCancelSearch={() => cancelSearch()}
                 />
 
