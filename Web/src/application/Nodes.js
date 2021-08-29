@@ -6,7 +6,11 @@ import { Box, Collapse, Dialog, List, ListItem, ListItemIcon, ListItemText, Pape
 import SearchBar from "material-ui-search-bar";
 import { ExpandLess, ExpandMore } from "@material-ui/icons";
 import { icons } from './../common/icons';
+import { FixedSizeList } from 'react-window';
 
+const subItemsSize = 9
+const iconsSize = 30
+const subItemsHeight = iconsSize + 6
 
 const nodesAtom = atom(false)
 const useStyles = makeStyles((theme) => ({
@@ -34,6 +38,31 @@ export const useNodes = () => useAtom(nodesAtom)
 const allIcons = icons.getAllIcons()
 
 
+const filterItems = (root, filter) => {
+    const filters = filter.split(' ')
+    const items = allIcons.filter(item => {
+        // Check if root items match (e.g. searching Azure or Aws)
+        if (item.root !== root) {
+            return false
+        }
+
+        // This filter uses implicit 'AND' between words in the search filter
+        // Check if all words are part of the items full name
+        for (var i = 0; i < filters.length; i++) {
+            if (!item.fullName.toLowerCase().includes(filters[i])) {
+                return false
+            }
+        }
+        return true
+    })
+
+    // Some icons exist in multiple groups, lets get unique items
+    const uniqueItems = items.filter(
+        (item, index) => index === items.findIndex(it => it.src === item.src && it.name === item.name))
+
+    return uniqueItems
+}
+
 
 export default function Nodes() {
     const classes = useStyles();
@@ -43,6 +72,7 @@ export default function Nodes() {
     const [filter, setFilter] = useState('');
 
     useEffect(() => {
+        // Listen for nodes.showDialog commands to show this Nodes dialog
         PubSub.subscribe('nodes.showDialog', (_, position) => setShow(position))
         return () => PubSub.unsubscribe('nodes.showDialog')
     }, [setShow])
@@ -55,59 +85,49 @@ export default function Nodes() {
         setFilter('')
     }
 
-    const handleAzureClick = () => {
-        setOpenAzure(!openAzure)
-    };
+    // Expand Azure/aws sub items
+    const handleAzureClick = () => setOpenAzure(!openAzure)
+    const handleAwsClick = () => setOpenAws(!openAws)
 
-    const handleAwsClick = () => {
-        setOpenAws(!openAws)
-    };
 
     const clickedItem = (item) => {
+        // show value can be a position or just 'true'. Is position, then the new node will be added
+        // at that position. But is value is 'true', the new node position will centered in the diagram
         var position = show
-        console.log('show', show)
         if (position === true) {
             position = null
         }
+
         PubSub.publish('canvas.AddNode', { icon: item.key, position: position })
         setShow(false)
     }
 
-    const getListItems = (items, root, filter) => {
+    const renderRow = (props, items) => {
+        const { index, style } = props;
+        const item = items[index]
 
-        // Filter
-        const filtered = items.filter(item => {
-            // Check if root items match (e.g. searching Azure or Aws)
-            if (item.root !== root) {
-                return false
-            }
-
-            // This filter uses implicit 'AND' between words in the search filter
-            // Check if all words are part of the items full name
-            const filters = filter.split(' ')
-            for (var i = 0; i < filters.length; i++) {
-                if (!item.fullName.toLowerCase().includes(filters[i])) {
-                    return false
-                }
-            }
-            return true
-        })
-
-        // In some cases the same icon exist in different groups, lets get unique items
-        const unique = filtered.filter(
-            (item, index) => index === filtered.findIndex(it => it.src === item.src && it.name === item.name))
-
-        return unique.map((item, i) => {
-            return (
-                <ListItem button onClick={() => clickedItem(item)} key={item.key} className={classes.nested}>
-                    <ListItemIcon>
-                        <img src={item.src} alt='' width='30' height='30' />
-                    </ListItemIcon>
-                    <ListItemText primary={item.name} />
-                </ListItem>
-            )
-        })
+        return (
+            <ListItem key={index} button style={style} onClick={() => clickedItem(item)} className={classes.nested}>
+                <ListItemIcon>
+                    <img src={item.src} alt='' width={iconsSize} height={iconsSize} />
+                </ListItemIcon>
+                <ListItemText primary={item.name} />
+            </ListItem>
+        );
     }
+
+    // Azure and Aws items
+    const azureItems = filterItems('Azure', filter)
+    const azureHeight = Math.min(azureItems.length, subItemsSize) * subItemsHeight
+    const renderAzureRow = (props) => renderRow(props, azureItems)
+    const awsItems = filterItems('Aws', filter)
+    const awsHeight = Math.min(awsItems.length, subItemsSize) * subItemsHeight
+    const renderAwsRow = (props) => renderRow(props, awsItems)
+
+
+
+
+
 
     return (
         <Dialog open={show ? true : false} onClose={() => { setShow(false) }}  >
@@ -124,30 +144,35 @@ export default function Nodes() {
 
                 <Paper style={{ maxHeight: 440, overflow: 'auto' }}>
                     <List component="nav" dense disablePadding>
-                        <ListItem button onClick={handleAzureClick} key='az'>
+
+                        {/* Azure items */}
+                        <ListItem button onClick={handleAzureClick}>
                             <ListItemIcon>
-                                <img src={icons.getIcon('Azure').src} alt='' width='30' height='30' />
+                                <img src={icons.getIcon('Azure').src} alt='' width={iconsSize} height={iconsSize} />
                             </ListItemIcon>
                             <ListItemText primary="Azure" />
                             {openAzure ? <ExpandLess /> : <ExpandMore />}
                         </ListItem>
                         <Collapse in={openAzure} timeout="auto" unmountOnExit>
-                            <List component="div" disablePadding dense>
-                                {getListItems(allIcons, 'Azure', filter)}
-                            </List>
+                            <FixedSizeList width={400} height={azureHeight} itemSize={subItemsHeight} itemCount={azureItems.length} >
+                                {renderAzureRow}
+                            </FixedSizeList>
                         </Collapse>
-                        <ListItem button onClick={handleAwsClick} key='aw'>
+
+                        {/* Aws items */}
+                        <ListItem button onClick={handleAwsClick}>
                             <ListItemIcon>
-                                <img src={icons.getIcon('Aws').src} alt='' width='30' height='30' />
+                                <img src={icons.getIcon('Aws').src} alt='' width={iconsSize} height={iconsSize} />
                             </ListItemIcon>
                             <ListItemText primary="Aws" />
                             {openAws ? <ExpandLess /> : <ExpandMore />}
                         </ListItem>
                         <Collapse in={openAws} timeout="auto" unmountOnExit>
-                            <List component="div" disablePadding dense>
-                                {getListItems(allIcons, 'Aws', filter)}
-                            </List>
+                            <FixedSizeList width={400} height={awsHeight} itemSize={subItemsHeight} itemCount={awsItems.length} >
+                                {renderAwsRow}
+                            </FixedSizeList>
                         </Collapse>
+
                     </List>
                 </Paper>
             </Box>

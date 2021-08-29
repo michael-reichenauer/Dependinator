@@ -29,6 +29,7 @@
     "react-dom": "^17.0.2",
     "react-loading-overlay": "^1.0.1",
     "react-scripts": "4.0.1",
+    "react-window": "^1.8.6",
     "shifty": "^2.15.2",
     "use-long-press": "^1.1.1",
     "web-vitals": "^0.2.4"
