@@ -7,11 +7,13 @@ import SearchBar from "material-ui-search-bar";
 import { ExpandLess, ExpandMore } from "@material-ui/icons";
 import { icons } from './../common/icons';
 import { FixedSizeList } from 'react-window';
+import { useLocalStorage } from "../common/useLocalStorage";
 
 const subItemsSize = 9
 const iconsSize = 30
 const subItemsHeight = iconsSize + 6
 const allIcons = icons.getAllIcons()
+
 
 const nodesAtom = atom(false)
 const useStyles = makeStyles((theme) => ({
@@ -41,6 +43,7 @@ export const useNodes = () => useAtom(nodesAtom)
 export default function Nodes() {
     const [show, setShow] = useNodes()
     const [filter, setFilter] = useState('');
+    const [mru, setMru] = useLocalStorage('nodesMru', [])
 
     useEffect(() => {
         // Listen for nodes.showDialog commands to show this Nodes dialog
@@ -61,9 +64,29 @@ export default function Nodes() {
         }
 
         PubSub.publish('canvas.AddNode', { icon: item.key, position: position })
+        setMru([item.key, ...mru.filter(key => key !== item.key)].slice(0, 8))
         setShow(false)
     }
 
+    // The list of most resently used icons to make it easier to us
+    const mruItems = (filter) => {
+        const filterWords = filter.split(' ')
+
+        return mru.slice(0, 8).map((key, i) => {
+            const item = icons.getIcon(key)
+            if (!isItemInFilterWords(item, filterWords)) {
+                return null
+            }
+            return (
+                <ListItem button onClick={() => clickedItem(item)} key={key} >
+                    <ListItemIcon>
+                        <img src={item.src} alt='' width={iconsSize} height={iconsSize} />
+                    </ListItemIcon>
+                    <ListItemText primary={item.name} />
+                </ListItem>
+            )
+        }).filter(item => item !== null)
+    }
 
     return (
         <Dialog open={show ? true : false} onClose={() => { setShow(false) }}  >
@@ -77,8 +100,10 @@ export default function Nodes() {
                     onCancelSearch={() => cancelSearch()}
                 />
 
-                <Paper style={{ maxHeight: 440, overflow: 'auto' }}>
+                <Paper style={{ maxHeight: 460, overflow: 'auto' }}>
                     <List component="nav" dense disablePadding>
+                        {mruItems(filter)}
+
                         {NodeItemsList('Azure', filter, clickedItem)}
                         {NodeItemsList('Aws', filter, clickedItem)}
                     </List>
@@ -122,7 +147,7 @@ const NodeItemsList = (root, filter, clickedItem) => {
                 {open ? <ExpandLess /> : <ExpandMore />}
             </ListItem>
             <Collapse in={open} timeout="auto" unmountOnExit>
-                <FixedSizeList width={385} height={height} itemSize={subItemsHeight} itemCount={items.length} >
+                <FixedSizeList width={380} height={height} itemSize={subItemsHeight} itemCount={items.length} >
                     {(props) => renderRow(props, items)}
                 </FixedSizeList>
             </Collapse>
@@ -141,14 +166,7 @@ const filterItems = (root, filter) => {
             return false
         }
 
-        // Check if all filter words are part of the items full name
-        for (var i = 0; i < filterWords.length; i++) {
-            if (!item.fullName.toLowerCase().includes(filterWords[i])) {
-                return false
-            }
-        }
-
-        return true
+        return isItemInFilterWords(item, filterWords)
     })
 
     // Some icons exist in multiple groups, lets get unique items
@@ -156,4 +174,14 @@ const filterItems = (root, filter) => {
         (item, index) => index === items.findIndex(it => it.src === item.src && it.name === item.name))
 
     return uniqueItems
+}
+
+const isItemInFilterWords = (item, filterWords) => {
+    // Check if all filter words are part of the items full name
+    for (var i = 0; i < filterWords.length; i++) {
+        if (!item.fullName.toLowerCase().includes(filterWords[i])) {
+            return false
+        }
+    }
+    return true
 }
