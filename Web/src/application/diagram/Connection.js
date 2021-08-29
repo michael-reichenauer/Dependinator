@@ -23,11 +23,7 @@ export default class Connection extends draw2d.Connection {
         }
 
         this.setColor(Colors.connectionColor)
-        const router = new draw2d.layout.connection.VertexRouter()
-        router.onDrag = () => { }
-        this.setRouter(router);
-        // this.setRouter(new draw2d.layout.connection.DirectRouter())
-        this.installEditPolicy(new VertexSelectionFeedbackPolicy())
+        this.setRouter(new draw2d.layout.connection.InteractiveManhattanConnectionRouter());
 
         this.addArrow()
         this.addLabels(description)
@@ -38,10 +34,13 @@ export default class Connection extends draw2d.Connection {
         const trg = canvas.getFigure(c.trg)
         const connection = new Connection(c.description, src, c.srcPort, trg, c.trgPort, c.id)
 
+        // Restore vertices
         for (let i = 1; i < c.v.length - 1; i++) {
             const v = c.v[i];
             connection.insertVertexAt(i, v.x, v.y)
         }
+        connection.getRouter().verticesSet(connection)
+
         return connection
     }
 
@@ -49,6 +48,7 @@ export default class Connection extends draw2d.Connection {
         const srcGrp = this.sourcePort.parent.group != null
         const trgGrp = this.targetPort.parent.group != null
 
+        console.log('Connection:', this.vertices.asArray())
         return {
             id: this.id,
             src: this.sourcePort.parent.id,
@@ -85,8 +85,8 @@ export default class Connection extends draw2d.Connection {
         return [
             menuItem('To front', () => this.toFront()),
             menuItem('To back', () => this.toBack()),
-            menuItem('Add segment', () => this.addSegmentAt(x, y)),
-            menuItem('Remove segment', () => this.removeSegmentAt(x, y), this.getVertices().asArray().length > 2),
+            // menuItem('Add segment', () => this.addSegmentAt(x, y)),
+            // menuItem('Remove segment', () => this.removeSegmentAt(x, y), this.getVertices().asArray().length > 2),
             menuItem('Delete connection', () => this.deleteConnection())
         ]
     }
@@ -193,36 +193,36 @@ class ConnectionLabelLocator extends draw2d.layout.locator.ConnectionLocator {
 }
 
 
-class VertexSelectionFeedbackPolicy extends draw2d.policy.line.LineSelectionFeedbackPolicy {
-    NAME = "VertexSelectionFeedbackPolicy"
+// class VertexSelectionFeedbackPolicy extends draw2d.policy.line.LineSelectionFeedbackPolicy {
+//     NAME = "VertexSelectionFeedbackPolicy"
 
-    onSelect(canvas, figure, isPrimarySelection) {
-        let startHandle = new draw2d.shape.basic.LineStartResizeHandle(figure)
-        startHandle.setMinWidth(15)
+//     onSelect(canvas, figure, isPrimarySelection) {
+//         let startHandle = new draw2d.shape.basic.LineStartResizeHandle(figure)
+//         startHandle.setMinWidth(15)
 
-        let endHandle = new draw2d.shape.basic.LineEndResizeHandle(figure)
-        endHandle.setMinWidth(15)
+//         let endHandle = new draw2d.shape.basic.LineEndResizeHandle(figure)
+//         endHandle.setMinWidth(15)
 
-        figure.selectionHandles.add(startHandle)
-        figure.selectionHandles.add(endHandle)
+//         figure.selectionHandles.add(startHandle)
+//         figure.selectionHandles.add(endHandle)
 
-        let points = figure.getVertices()
-        let count = points.getSize() - 1
-        let i = 1
-        for (; i < count; i++) {
-            const handle = new draw2d.shape.basic.VertexResizeHandle(figure, i)
-            handle.setMinWidth(15)
-            handle.setMinHeight(15)
-            figure.selectionHandles.add(handle)
-            //figure.selectionHandles.add(new draw2d.shape.basic.GhostVertexResizeHandle(figure, i - 1))
-        }
+//         let points = figure.getVertices()
+//         let count = points.getSize() - 1
+//         let i = 1
+//         for (; i < count; i++) {
+//             const handle = new draw2d.shape.basic.VertexResizeHandle(figure, i)
+//             handle.setMinWidth(15)
+//             handle.setMinHeight(15)
+//             figure.selectionHandles.add(handle)
+//             //figure.selectionHandles.add(new draw2d.shape.basic.GhostVertexResizeHandle(figure, i - 1))
+//         }
 
-        // figure.selectionHandles.add(new draw2d.shape.basic.GhostVertexResizeHandle(figure, i - 1))
-        figure.selectionHandles.each((i, e) => {
-            e.setDraggable(figure.isResizeable())
-            e.show(canvas)
-        })
+//         // figure.selectionHandles.add(new draw2d.shape.basic.GhostVertexResizeHandle(figure, i - 1))
+//         figure.selectionHandles.each((i, e) => {
+//             e.setDraggable(figure.isResizeable())
+//             e.show(canvas)
+//         })
 
-        this.moved(canvas, figure)
-    }
-}
+//         this.moved(canvas, figure)
+//     }
+// }

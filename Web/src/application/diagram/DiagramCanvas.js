@@ -222,13 +222,6 @@ export default class DiagramCanvas {
 
     showTotalDiagram = () => zoomAndMoveShowTotalDiagram(this.canvas)
 
-    addNewNode = (type, position) => {
-
-        PubSub.publish('nodes.showDialog', position)
-        // this.addNode(type, position)
-
-    }
-
     addNode = (icon, position) => {
         console.log('Add node', icon, position)
         if (!position) {
