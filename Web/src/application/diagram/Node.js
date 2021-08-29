@@ -139,10 +139,6 @@ export default class Node extends draw2d.shape.node.Between {
             return menuItem(name, () => this.canvas.runCmd(new CommandChangeColor(this, name)))
         })
 
-        const iconItems = icons.getAllIcons().map((icon) => {
-            return menuItem(icon.name, () => this.canvas.runCmd(new CommandChangeIcon(this, icon.key)), true, true, icon.src)
-        })
-
         return [
             menuItem('To front', () => this.toFront()),
             menuItem('To back', () => this.toBack()),
@@ -152,10 +148,14 @@ export default class Node extends draw2d.shape.node.Between {
                 menuItem('Edit (dbl-click)', () => this.editInnerDiagram(), true, hasDiagramIcon),
             ], true, hasDiagramIcon),
             menuParentItem('Change color', colorItems),
-            menuParentItem('Change icon', iconItems),
+            menuItem('Change icon ...', () => PubSub.publish('nodes.showDialog', { action: (iconKey) => this.changeIcon(iconKey) })),
             menuItem('Set default size', () => this.setDefaultSize()),
             menuItem('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.canDelete)
         ]
+    }
+
+    changeIcon(iconKey) {
+        this.canvas.runCmd(new CommandChangeIcon(this, iconKey))
     }
 
     setName(name) {

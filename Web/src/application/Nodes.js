@@ -2,20 +2,22 @@ import { useState, useEffect } from "react";
 import { atom, useAtom } from "jotai"
 import PubSub from 'pubsub-js'
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Collapse, Dialog, List, ListItem, ListItemIcon, ListItemText, Paper, Typography } from "@material-ui/core";
+import { Box, Collapse, Dialog, List, ListItem, ListItemIcon, ListItemText, Paper, SvgIcon, Typography } from "@material-ui/core";
 import SearchBar from "material-ui-search-bar";
 import { ExpandLess, ExpandMore } from "@material-ui/icons";
 import { icons } from './../common/icons';
 import { FixedSizeList } from 'react-window';
 import { useLocalStorage } from "../common/useLocalStorage";
+import CropDinIcon from '@material-ui/icons/CropDin';
 
 const subItemsSize = 9
 const iconsSize = 30
 const subItemsHeight = iconsSize + 6
 const allIcons = icons.getAllIcons()
 
-
 const nodesAtom = atom(false)
+const useNodes = () => useAtom(nodesAtom)
+
 const useStyles = makeStyles((theme) => ({
     root: {
         width: '100%',
@@ -37,8 +39,6 @@ const useStyles = makeStyles((theme) => ({
     },
 }));
 
-export const useNodes = () => useAtom(nodesAtom)
-
 
 export default function Nodes() {
     const [show, setShow] = useNodes()
@@ -47,7 +47,7 @@ export default function Nodes() {
 
     useEffect(() => {
         // Listen for nodes.showDialog commands to show this Nodes dialog
-        PubSub.subscribe('nodes.showDialog', (_, position) => setShow(position))
+        PubSub.subscribe('nodes.showDialog', (_, data) => setShow(data ?? true))
         return () => PubSub.unsubscribe('nodes.showDialog')
     }, [setShow])
 
@@ -56,19 +56,37 @@ export default function Nodes() {
     const cancelSearch = () => setFilter('')
 
     const clickedItem = (item) => {
+        setShow(false)
+        setMru([item.key, ...mru.filter(key => key !== item.key)].slice(0, 8))
+
         // show value can be a position or just 'true'. Is position, then the new node will be added
         // at that position. But is value is 'true', the new node position will centered in the diagram
-        var position = show
-        if (position === true) {
-            position = null
+        var position = null
+        if (show !== true) {
+            if (show.action) {
+                show.action(item.key)
+                return
+            }
+
+            position = show
         }
 
         PubSub.publish('canvas.AddNode', { icon: item.key, position: position })
-        setMru([item.key, ...mru.filter(key => key !== item.key)].slice(0, 8))
-        setShow(false)
     }
 
-    // The list of most resently used icons to make it easier to us
+    const clickedGroup = () => {
+        setShow(false)
+
+        var position = null
+        if (show !== true) {
+            position = show
+        }
+
+        console.log('group', position)
+        PubSub.publish('canvas.AddGroup', { position: position })
+    }
+
+    // The list of most recently used icons to make it easier to us
     const mruItems = (filter) => {
         const filterWords = filter.split(' ')
 
@@ -102,6 +120,12 @@ export default function Nodes() {
 
                 <Paper style={{ maxHeight: 460, overflow: 'auto' }}>
                     <List component="nav" dense disablePadding>
+                        <ListItem button onClick={clickedGroup}  >
+                            <ListItemIcon>
+                                <CropDinIcon />
+                            </ListItemIcon>
+                            <ListItemText primary='Group' />
+                        </ListItem>
                         {mruItems(filter)}
 
                         {NodeItemsList('Azure', filter, clickedItem)}
@@ -109,7 +133,7 @@ export default function Nodes() {
                     </List>
                 </Paper>
 
-            </Box>
+            </Box >
         </Dialog >
     )
 }

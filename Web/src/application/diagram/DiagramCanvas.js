@@ -14,6 +14,7 @@ import InnerDiagramCanvas from "./InnerDiagramCanvas";
 import Printer from "../../common/Printer";
 import { setProgress } from "../../common/Progress";
 import { setErrorMessage } from "../../common/MessageSnackbar";
+import NodeGroup from './NodeGroup';
 
 
 
@@ -52,6 +53,7 @@ export default class DiagramCanvas {
         PubSub.subscribe('canvas.Redo', () => this.commandRedo())
 
         PubSub.subscribe('canvas.AddNode', (_, data) => this.addNode(data.icon, data.position))
+        PubSub.subscribe('canvas.AddGroup', (_, data) => this.addGroup(data.position))
 
         PubSub.subscribe('canvas.ShowTotalDiagram', this.showTotalDiagram)
 
@@ -223,16 +225,10 @@ export default class DiagramCanvas {
     showTotalDiagram = () => zoomAndMoveShowTotalDiagram(this.canvas)
 
     addNode = (icon, position) => {
-        console.log('Add node', icon, position)
         if (!position) {
             position = this.getCenter()
         }
 
-        // if (type === NodeGroup.nodeType) {
-        //     const node = new NodeGroup()
-        //     addFigureToCanvas(this.canvas, node, p)
-        //     return
-        // }
         var options = null
         if (icon) {
             options = { icon: icon }
@@ -240,6 +236,16 @@ export default class DiagramCanvas {
 
         const node = new Node(Node.nodeType, options)
         addFigureToCanvas(this.canvas, node, position)
+    }
+
+    addGroup = (position) => {
+        if (!position) {
+            const p = this.getCenter()
+            position = { x: p.x, y: p.y + 200 }
+        }
+
+        const group = new NodeGroup()
+        addFigureToCanvas(this.canvas, group, position)
     }
 
     tryGetFigure = (x, y) => {

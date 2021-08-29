@@ -33,7 +33,6 @@ export default function ApplicationBar({ height }) {
     const [canRedo] = useAtom(canRedoAtom)
     const [canPopDiagram] = useAtom(canPopDiagramAtom)
     const [, setShowLogin] = useLogin()
-    const [, setShowNodes] = useNodes()
     const [connection] = useConnection()
 
     const syncState = syncMode && connection ? true : syncMode && !connection ? false : null
@@ -85,7 +84,7 @@ export default function ApplicationBar({ height }) {
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 
                 <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={style()} />} className={style()}
-                    onClick={() => setShowNodes(true)} />
+                    onClick={() => PubSub.publish('nodes.showDialog')} />
 
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 

@@ -48,7 +48,6 @@ export default class Connection extends draw2d.Connection {
         const srcGrp = this.sourcePort.parent.group != null
         const trgGrp = this.targetPort.parent.group != null
 
-        console.log('Connection:', this.vertices.asArray())
         return {
             id: this.id,
             src: this.sourcePort.parent.id,
