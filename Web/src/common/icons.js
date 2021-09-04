@@ -1,3 +1,4 @@
+
 const svgFiles = require.context("../resources/icons", true, /\.(svg)$/)
 const defaultKey = 'defaultIcon'
 
@@ -13,66 +14,82 @@ class Icons {
                 const file = svgFiles(path)
                 const src = file.default
 
+                var key = path.replaceAll(' ', '_')
                 var name = path.replaceAll('-', ' ')
                 var fullName = name
-                var key = path.replaceAll(' ', '_')
-                var parts = path.split('/').slice(1)
-                var group = ''
-                var root = ''
+                var svg = { key: key, name: name, fullName: fullName, src: src, root: '', group: '' }
 
                 if (path.startsWith('./DefaultIcon')) {
-                    key = defaultKey
-                    name = 'Default Icon'
-                    fullName = name
+                    svg = this._getDefaultSvg(svg)
                 }
                 else if (path.startsWith('./azure-official.svg')) {
-                    key = 'Azure'
-                    name = 'Azure'
-                    fullName = name
+                    svg = this._getAzureRootSvg(svg)
                 }
                 else if (path.startsWith('./aws-official.svg')) {
-                    key = 'Aws'
-                    name = 'Aws'
-                    fullName = name
+                    svg = this._getAwsRootSvg(svg)
                 }
                 else if (path.startsWith('./Azure')) {
-                    // Azure icons have a pattern like ./Azure/Storage/00776-icon-service-Azure-HCP-Cache.svg
-                    name = parts[2]
-                        .slice(19)              // Skip prefix e.g. '10165-icon-service-'
-                        .slice(0, -4)           // Skip sufic e.g. '.svg'
-                        .replaceAll('-', ' ')
-                    root = 'Azure'
-                    group = parts[1]
-                    fullName = `${root}/${group}/${name}`
-                    key = `${root}/${group}/${name}`.replaceAll(' ', '')
-                } else if (path.startsWith('./Aws')) {
-                    // Aws icons have a pattern like ./Aws/Aws/Architecture-Service-Icons_07302021/Arch_Analytics/Arch_16
-                    const awsPath = path
-                        .replaceAll('/Architecture-Service-Icons_07302021', '')
-                        .replaceAll('/Category-Icons_07302021', '')
-                        .replaceAll('/Resource-Icons_07302021', '')
-                        .replaceAll('_16.svg', '').replaceAll('/Arch_16', '').replaceAll('/16', '')
-                        .replaceAll('Arch_Amazon-', '').replaceAll('Arch_AWS-', '').replaceAll('Arch_', '')
-                        .replaceAll('Arch-Category_16', 'Category').replaceAll('Arch-Category_', '')
-                        .replaceAll('/Arch-Category_', '/')
-                        .replaceAll('/Res_48_Dark', '').replaceAll('/Res_48_Light', '').replaceAll('/Res_', '/')
-                        .replaceAll('_48_Dark.svg', '').replaceAll('_48_Light.svg', '')
-                        .replaceAll('-', ' ').replaceAll('_', ' ')
-
-                    parts = awsPath.split('/').slice(1)
-                    root = 'Aws'
-                    name = parts[2]
-                    group = parts[1]
-                    fullName = `${root}/${group}/${name}`
-                    key = `${root}/${group}/${name}`.replaceAll(' ', '')
+                    svg = this._getAzureSvg(svg, path)
+                }
+                else if (path.startsWith('./Aws')) {
+                    svg = this._getAwsSvg(svg, path)
                 }
 
-                // console.log('path', path, src)
-                const svg = { key: key, name: name, fullName: fullName, src: src, root: root, group: group }
                 //console.log('svg', svg)
                 return svg
             })
         //console.log('svg', this.svgIcons.slice(0, 20))
+    }
+
+    _getDefaultSvg(svg) {
+        return { ...svg, key: defaultKey, name: 'Default Icon', fullName: 'Default Icon' }
+    }
+
+    _getAzureRootSvg(svg) {
+        return { ...svg, key: 'Azure', name: 'Azure', fullName: 'Azure' }
+    }
+
+    _getAwsRootSvg(svg) {
+        return { ...svg, key: 'Aws', name: 'Aws', fullName: 'Aws' }
+    }
+
+    _getAzureSvg(svg, path) {
+        // Azure icons have a pattern like ./Azure/Storage/00776-icon-service-Azure-HCP-Cache.svg
+        const parts = path.split('/').slice(1)
+        const name = parts[2]
+            .slice(19)              // Skip prefix e.g. '10165-icon-service-'
+            .slice(0, -4)           // Skip sufic e.g. '.svg'
+            .replaceAll('-', ' ')
+        const root = 'Azure'
+        const group = parts[1]
+        const fullName = `${root}/${group}/${name}`
+        const key = `${root}/${group}/${name}`.replaceAll(' ', '')
+
+        return { ...svg, key: key, root: root, group: group, name: name, fullName: fullName }
+    }
+
+    _getAwsSvg(svg, path) {
+        // Aws icons have a pattern like ./Aws/Aws/Architecture-Service-Icons_07302021/Arch_Analytics/Arch_16
+        const awsPath = path
+            .replaceAll('/Architecture-Service-Icons_07302021', '')
+            .replaceAll('/Category-Icons_07302021', '')
+            .replaceAll('/Resource-Icons_07302021', '')
+            .replaceAll('_16.svg', '').replaceAll('/Arch_16', '').replaceAll('/16', '')
+            .replaceAll('Arch_Amazon-', '').replaceAll('Arch_AWS-', '').replaceAll('Arch_', '')
+            .replaceAll('Arch-Category_16', 'Category').replaceAll('Arch-Category_', '')
+            .replaceAll('/Arch-Category_', '/')
+            .replaceAll('/Res_48_Dark', '').replaceAll('/Res_48_Light', '').replaceAll('/Res_', '/')
+            .replaceAll('_48_Dark.svg', '').replaceAll('_48_Light.svg', '')
+            .replaceAll('-', ' ').replaceAll('_', ' ')
+
+        const parts = awsPath.split('/').slice(1)
+        const root = 'Aws'
+        const name = parts[2]
+        const group = parts[1]
+        const fullName = `${root}/${group}/${name}`
+        const key = `${root}/${group}/${name}`.replaceAll(' ', '')
+
+        return { ...svg, key: key, root: root, group: group, name: name, fullName: fullName }
     }
 
     getAllIcons() {
