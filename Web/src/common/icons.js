@@ -47,8 +47,10 @@ class Icons {
                     key = `${root}/${group}/${name}`.replaceAll(' ', '')
                 } else if (path.startsWith('./Aws')) {
                     // Aws icons have a pattern like ./Aws/Aws/Architecture-Service-Icons_07302021/Arch_Analytics/Arch_16
-                    const awsPath = path.replaceAll('/Architecture-Service-Icons_07302021', '')
-                        .replaceAll('/Category-Icons_07302021', '').replaceAll('/Resource-Icons_07302021', '')
+                    const awsPath = path
+                        .replaceAll('/Architecture-Service-Icons_07302021', '')
+                        .replaceAll('/Category-Icons_07302021', '')
+                        .replaceAll('/Resource-Icons_07302021', '')
                         .replaceAll('_16.svg', '').replaceAll('/Arch_16', '').replaceAll('/16', '')
                         .replaceAll('Arch_Amazon-', '').replaceAll('Arch_AWS-', '').replaceAll('Arch_', '')
                         .replaceAll('Arch-Category_16', 'Category').replaceAll('Arch-Category_', '')
