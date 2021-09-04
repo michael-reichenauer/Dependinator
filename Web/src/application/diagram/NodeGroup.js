@@ -13,6 +13,7 @@ const defaultOptions = () => {
 }
 
 
+//export default class NodeGroup extends draw2d.shape.composite.Raft {
 export default class NodeGroup extends draw2d.shape.basic.Rectangle {
     static nodeType = 'nodeGroup'
     static defaultWidth = 500

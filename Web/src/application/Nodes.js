@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { atom, useAtom } from "jotai"
 import PubSub from 'pubsub-js'
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Collapse, Dialog, List, ListItem, ListItemIcon, ListItemText, Paper, SvgIcon, Typography } from "@material-ui/core";
+import { Box, Collapse, Dialog, List, ListItem, ListItemIcon, ListItemText, Paper, Typography } from "@material-ui/core";
 import SearchBar from "material-ui-search-bar";
 import { ExpandLess, ExpandMore } from "@material-ui/icons";
 import { icons } from './../common/icons';
