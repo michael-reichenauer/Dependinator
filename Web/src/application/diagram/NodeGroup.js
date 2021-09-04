@@ -3,6 +3,8 @@ import cuid from 'cuid'
 import { menuItem } from "../../common/Menus";
 import Colors from "./Colors";
 import { icons } from "../../common/icons";
+import CommandChangeIcon from './CommandChangeIcon';
+import { PubSub } from 'pubsub-js';
 
 const defaultOptions = () => {
     return {
@@ -11,7 +13,7 @@ const defaultOptions = () => {
         height: NodeGroup.defaultHeight,
         name: 'Group',
         description: 'Description',
-        icon: 'Aws/Group/AWSCloudalt',
+        icon: 'Default',
     }
 }
 
@@ -67,14 +69,14 @@ export default class NodeGroup extends draw2d.shape.basic.Rectangle {
 
 
     static deserialize(data) {
-        return new NodeGroup({ id: data.id, width: data.w, height: data.h, name: data.name })
+        return new NodeGroup({ id: data.id, width: data.w, height: data.h, name: data.name, icon: data.icon })
     }
 
     serialize() {
         try {
             return {
                 type: this.type, id: this.id, x: this.x, y: this.y, w: this.width, h: this.height,
-                name: this.getName(), hasGroup: this.group != null
+                name: this.getName(), hasGroup: this.group != null, icon: this.iconName,
             }
         } catch (error) {
             console.error('error', error)
@@ -82,9 +84,14 @@ export default class NodeGroup extends draw2d.shape.basic.Rectangle {
 
     }
 
+    changeIcon(iconKey) {
+        this.canvas.runCmd(new CommandChangeIcon(this, iconKey))
+    }
+
     getContextMenuItems(x, y) {
         return [
             menuItem('To back', () => this.toBack()),
+            menuItem('Change icon ...', () => PubSub.publish('nodes.showDialog', { action: (iconKey) => this.changeIcon(iconKey) })),
             menuItem('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.canDelete)
         ]
     }
@@ -134,6 +141,16 @@ export default class NodeGroup extends draw2d.shape.basic.Rectangle {
         this.add(this.descriptionLabel, this.descriptionLabel.labelLocator);
     }
 
+    setIcon(name) {
+        if (this.icon != null) {
+            this.remove(this.icon)
+            this.icon = null
+            this.iconName = null
+        }
+        this.addIcon(name)
+        this.repaint()
+    }
+
     addIcon(iconKey) {
         //console.log('add icon key', iconKey)
         if (iconKey == null) {
@@ -155,7 +172,6 @@ class NodeGroupNameLocator extends draw2d.layout.locator.Locator {
         label.setPosition(22, -3)
     }
 }
-
 
 
 class NodeGroupDescriptionLocator extends draw2d.layout.locator.Locator {

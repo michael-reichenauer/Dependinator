@@ -83,7 +83,6 @@ export default function Nodes() {
             position = show
         }
 
-        console.log('group', position)
         PubSub.publish('canvas.AddGroup', { position: position })
     }
 

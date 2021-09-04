@@ -242,7 +242,6 @@ export default class DiagramCanvas {
     }
 
     addGroup = (position) => {
-        console.log('pos', position)
         const group = new NodeGroup()
         var x = 0
         var y = 0
