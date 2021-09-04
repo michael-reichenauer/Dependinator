@@ -282,14 +282,15 @@ export default class Node extends draw2d.shape.node.Between {
             fontSize: 12, fontColor: fontColor, bold: true,
         })
 
+        this.nameLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
+        this.nameLabel.labelLocator = new NodeNameLocator()
+        this.add(this.nameLabel, this.nameLabel.labelLocator);
+
         this.descriptionLabel = new Label(this.width + 40, {
             text: description, stroke: 0,
             fontSize: 9, fontColor: fontColor, bold: false,
         })
 
-        this.nameLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-        this.nameLabel.labelLocator = new NodeNameLocator()
-        this.add(this.nameLabel, this.nameLabel.labelLocator);
         this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
         this.descriptionLabel.labelLocator = new NodeDescriptionLocator()
         this.add(this.descriptionLabel, this.descriptionLabel.labelLocator);

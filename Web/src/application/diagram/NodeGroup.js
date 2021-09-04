@@ -2,6 +2,7 @@ import draw2d from "draw2d";
 import cuid from 'cuid'
 import { menuItem } from "../../common/Menus";
 import Colors from "./Colors";
+import { icons } from "../../common/icons";
 
 const defaultOptions = () => {
     return {
@@ -9,6 +10,8 @@ const defaultOptions = () => {
         width: NodeGroup.defaultWidth,
         height: NodeGroup.defaultHeight,
         name: 'Group',
+        description: 'Description',
+        icon: 'Aws/Group/AWSCloudalt',
     }
 }
 
@@ -21,8 +24,10 @@ export default class NodeGroup extends draw2d.shape.basic.Rectangle {
 
     type = NodeGroup.nodeType
     nameLabel = null
+    descriptionLabel = null
 
     getName = () => this.nameLabel?.text ?? ''
+    getDescription = () => this.descriptionLabel?.text ?? ''
 
 
     constructor(options) {
@@ -35,7 +40,8 @@ export default class NodeGroup extends draw2d.shape.basic.Rectangle {
             radius: 5, glow: true, dasharray: '- ',
         });
 
-        this.addLabels(o.name)
+        this.addIcon(o.icon);
+        this.addLabels(o.name, o.description)
 
         // this.on("click", (s, e) => console.log('click node'))
         this.on("dblclick", (s, e) => { })
@@ -108,7 +114,7 @@ export default class NodeGroup extends draw2d.shape.basic.Rectangle {
         this.nameLabel?.setVisible(isVisible)
     }
 
-    addLabels = (name) => {
+    addLabels = (name, description) => {
         this.nameLabel = new draw2d.shape.basic.Label({
             text: name, stroke: 0, fontSize: 12, fontColor: Colors.canvasText, bold: true,
         })
@@ -116,15 +122,54 @@ export default class NodeGroup extends draw2d.shape.basic.Rectangle {
         this.nameLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
         this.nameLabel.labelLocator = new NodeGroupNameLocator()
         this.add(this.nameLabel, this.nameLabel.labelLocator);
+
+
+        this.descriptionLabel =
+            new draw2d.shape.basic.Label({
+                text: description, stroke: 0, fontSize: 9, fontColor: Colors.canvasText, bold: false,
+            })
+
+        this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
+        this.descriptionLabel.labelLocator = new NodeGroupDescriptionLocator()
+        this.add(this.descriptionLabel, this.descriptionLabel.labelLocator);
+    }
+
+    addIcon(iconKey) {
+        //console.log('add icon key', iconKey)
+        if (iconKey == null) {
+            return
+        }
+
+        const ic = icons.getIcon(iconKey)
+        const icon = new draw2d.shape.basic.Image({ path: ic.src, width: 20, height: 20, bgColor: 'none' })
+
+        this.iconName = iconKey
+        this.icon = icon
+        this.add(icon, new NodeIconLocator())
     }
 }
 
 
 class NodeGroupNameLocator extends draw2d.layout.locator.Locator {
     relocate(index, label) {
+        label.setPosition(22, -3)
+    }
+}
+
+
+
+class NodeGroupDescriptionLocator extends draw2d.layout.locator.Locator {
+    relocate(index, label) {
         const node = label.getParent()
-        const x = node.getWidth() / 2 - label.getWidth() / 2
-        const y = node.getHeight() + 0
+        const nameHeight = node.nameLabel.getHeight()
+        const x = node.nameLabel.x
+        const y = node.nameLabel.y + nameHeight - 8
         label.setPosition(x, y)
+    }
+}
+
+class NodeIconLocator extends draw2d.layout.locator.Locator {
+    relocate(index, icon) {
+        icon.setPosition(3, 3)
     }
 }

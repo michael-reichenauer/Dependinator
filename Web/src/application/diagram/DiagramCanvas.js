@@ -235,17 +235,28 @@ export default class DiagramCanvas {
         }
 
         const node = new Node(Node.nodeType, options)
-        addFigureToCanvas(this.canvas, node, position)
+        const x = position.x - node.width / 2
+        const y = position.y - node.height / 2
+
+        addFigureToCanvas(this.canvas, node, x, y)
     }
 
     addGroup = (position) => {
+        console.log('pos', position)
+        const group = new NodeGroup()
+        var x = 0
+        var y = 0
+
         if (!position) {
-            const p = this.getCenter()
-            position = { x: p.x, y: p.y + 200 }
+            position = this.getCenter()
+            x = position.x - group.width / 2
+            y = position.y - 20
+        } else {
+            x = position.x - 20
+            y = position.y - 20
         }
 
-        const group = new NodeGroup()
-        addFigureToCanvas(this.canvas, group, position)
+        addFigureToCanvas(this.canvas, group, x, y)
     }
 
     tryGetFigure = (x, y) => {
@@ -316,6 +327,7 @@ export default class DiagramCanvas {
 
         return { x: x, y: y }
     }
+
 
 
     handleEditChanges(canvas) {

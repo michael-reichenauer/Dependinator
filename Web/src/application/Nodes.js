@@ -71,6 +71,7 @@ export default function Nodes() {
             position = show
         }
 
+        console.log('Icon', item.key)
         PubSub.publish('canvas.AddNode', { icon: item.key, position: position })
     }
 

@@ -79,7 +79,7 @@ class Icons {
             .replaceAll('Arch-Category_16', 'Category').replaceAll('Arch-Category_', '')
             .replaceAll('/Arch-Category_', '/')
             .replaceAll('/Res_48_Dark', '').replaceAll('/Res_48_Light', '').replaceAll('/Res_', '/')
-            .replaceAll('_48_Dark.svg', '').replaceAll('_48_Light.svg', '')
+            .replaceAll('_48_Dark.svg', '').replaceAll('_48_Light.svg', '').replaceAll('_light-bg.svg', '')
             .replaceAll('-', ' ').replaceAll('_', ' ')
 
         const parts = awsPath.split('/').slice(1)
