@@ -1,7 +1,5 @@
 import draw2d from "draw2d";
 import Connection from './Connection'
-import Node from './Node'
-import { distance } from './../../common/utils'
 
 export default class ConnectionCreatePolicy extends draw2d.policy.connection.ConnectionCreatePolicy {
     NAME = "ConnectionCreatePolicy"

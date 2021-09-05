@@ -71,19 +71,6 @@ export default class DiagramCanvas {
     }
 
 
-    // getContextMenuItems(x, y) {
-    //     const mouseXY = this.canvas.fromDocumentToCanvasCoordinate(x, y)
-
-    //     return [
-    //         // menuItem('Add node', () => this.addNode(Node.nodeType, mouseXY)),
-    //         // menuItem('Add external user', () => this.addNode(Node.userType, mouseXY)),
-    //         // menuItem('Add external system', () => this.addNode(Node.externalType, mouseXY)),
-    //         // menuItem('Add group', () => this.addNode(NodeGroup.nodeType, mouseXY)),
-    //         menuItem('Pop to surrounding diagram (dbl-click)', () => PubSub.publish('canvas.PopInnerDiagram'),
-    //             true, !this.canvasStack.isRoot()),
-    //     ]
-    // }
-
     commandUndo = () => {
         this.canvas.getCommandStack().undo()
         this.save()
@@ -225,7 +212,6 @@ export default class DiagramCanvas {
     showTotalDiagram = () => zoomAndMoveShowTotalDiagram(this.canvas)
 
     addNode = (data) => {
-        console.log('data', data)
         if (data.group) {
             this.addGroup(data.icon, data.position)
             return
