@@ -7,9 +7,8 @@ import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
 const marginY = 200
 
 
-export const addFigureToCanvas = (canvas, figure, p) => {
-    const x = p.x - figure.width / 2
-    const y = p.y - figure.height / 2
+export const addFigureToCanvas = (canvas, figure, x, y) => {
+
     canvas.runCmd(new draw2d.command.CommandAdd(canvas, figure, x, y))
 }
 

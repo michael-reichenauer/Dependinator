@@ -7,7 +7,6 @@ import { random } from '../../common/utils'
 import Node from './Node'
 import { store } from "./Store";
 import Canvas from "./Canvas";
-import { menuItem } from "../../common/Menus";
 import CanvasStack from "./CanvasStack";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
 import { addDefaultNewDiagram, addFigureToCanvas } from "./addDefault";
@@ -15,7 +14,8 @@ import InnerDiagramCanvas from "./InnerDiagramCanvas";
 import Printer from "../../common/Printer";
 import { setProgress } from "../../common/Progress";
 import { setErrorMessage } from "../../common/MessageSnackbar";
-import NodeGroup from "./NodeGroup";
+import NodeGroup from './NodeGroup';
+
 
 
 export default class DiagramCanvas {
@@ -52,10 +52,8 @@ export default class DiagramCanvas {
         PubSub.subscribe('canvas.Undo', () => this.commandUndo())
         PubSub.subscribe('canvas.Redo', () => this.commandRedo())
 
-        PubSub.subscribe('canvas.AddNode', () => this.addNode(Node.nodeType, this.getCenter()))
-        PubSub.subscribe('canvas.AddUserNode', () => this.addNode(Node.userType, this.getCenter()))
-        PubSub.subscribe('canvas.AddExternalNode', () => this.addNode(Node.externalType, this.getCenter()))
-        PubSub.subscribe('canvas.AddDefaultNode', (_, p) => this.addNode(Node.nodeType, p))
+        PubSub.subscribe('canvas.AddNode', (_, data) => this.addNode(data.icon, data.position))
+        PubSub.subscribe('canvas.AddGroup', (_, data) => this.addGroup(data.position))
 
         PubSub.subscribe('canvas.ShowTotalDiagram', this.showTotalDiagram)
 
@@ -73,18 +71,18 @@ export default class DiagramCanvas {
     }
 
 
-    getContextMenuItems(x, y) {
-        const mouseXY = this.canvas.fromDocumentToCanvasCoordinate(x, y)
+    // getContextMenuItems(x, y) {
+    //     const mouseXY = this.canvas.fromDocumentToCanvasCoordinate(x, y)
 
-        return [
-            menuItem('Add node', () => this.addNode(Node.nodeType, mouseXY)),
-            menuItem('Add external user', () => this.addNode(Node.userType, mouseXY)),
-            menuItem('Add external system', () => this.addNode(Node.externalType, mouseXY)),
-            menuItem('Add group', () => this.addNode(NodeGroup.nodeType, mouseXY)),
-            menuItem('Pop to surrounding diagram (dbl-click)', () => PubSub.publish('canvas.PopInnerDiagram'),
-                true, !this.canvasStack.isRoot()),
-        ]
-    }
+    //     return [
+    //         // menuItem('Add node', () => this.addNode(Node.nodeType, mouseXY)),
+    //         // menuItem('Add external user', () => this.addNode(Node.userType, mouseXY)),
+    //         // menuItem('Add external system', () => this.addNode(Node.externalType, mouseXY)),
+    //         // menuItem('Add group', () => this.addNode(NodeGroup.nodeType, mouseXY)),
+    //         menuItem('Pop to surrounding diagram (dbl-click)', () => PubSub.publish('canvas.PopInnerDiagram'),
+    //             true, !this.canvasStack.isRoot()),
+    //     ]
+    // }
 
     commandUndo = () => {
         this.canvas.getCommandStack().undo()
@@ -226,15 +224,38 @@ export default class DiagramCanvas {
 
     showTotalDiagram = () => zoomAndMoveShowTotalDiagram(this.canvas)
 
-    addNode = (type, p) => {
-        if (type === NodeGroup.nodeType) {
-            const node = new NodeGroup()
-            addFigureToCanvas(this.canvas, node, p)
-            return
+    addNode = (icon, position) => {
+        if (!position) {
+            position = this.getCenter()
         }
 
-        const node = new Node(type)
-        addFigureToCanvas(this.canvas, node, p)
+        var options = null
+        if (icon) {
+            options = { icon: icon }
+        }
+
+        const node = new Node(Node.nodeType, options)
+        const x = position.x - node.width / 2
+        const y = position.y - node.height / 2
+
+        addFigureToCanvas(this.canvas, node, x, y)
+    }
+
+    addGroup = (position) => {
+        const group = new NodeGroup()
+        var x = 0
+        var y = 0
+
+        if (!position) {
+            position = this.getCenter()
+            x = position.x - group.width / 2
+            y = position.y - 20
+        } else {
+            x = position.x - 20
+            y = position.y - 20
+        }
+
+        addFigureToCanvas(this.canvas, group, x, y)
     }
 
     tryGetFigure = (x, y) => {
@@ -307,6 +328,7 @@ export default class DiagramCanvas {
     }
 
 
+
     handleEditChanges(canvas) {
         this.updateToolbarButtonsStates()
 
@@ -364,8 +386,7 @@ export default class DiagramCanvas {
                 this.commandPopFromInnerDiagram()
                 return
             }
-
-            PubSub.publish('canvas.AddDefaultNode', { x: event.x, y: event.y })
+            PubSub.publish('nodes.showDialog', { x: event.x, y: event.y })
         });
     }
 

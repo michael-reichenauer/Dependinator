@@ -1,10 +1,11 @@
 import React from "react";
-import { Menu, MenuItem } from "@material-ui/core";
+import { ListItemIcon, ListItemText, Menu, MenuItem } from "@material-ui/core";
 import NestedMenuItem from "material-ui-nested-menu-item";
 
+
 // Normal menu item.
-export const menuItem = (text, action, isEnabled = true, isShow = true) => {
-    return new Item(text, action, isEnabled, isShow)
+export const menuItem = (text, action, isEnabled = true, isShow = true, icon = null) => {
+    return new Item(text, action, isEnabled, isShow, icon)
 }
 
 // Parent menu item with children items
@@ -81,7 +82,8 @@ const getMenuItems = (items, onClick) => {
                     disabled={!item.isEnabled}
                     dense
                 >
-                    {item.text}
+                    {item.icon && <ListItemIcon><img src={item.icon} alt="" /></ListItemIcon>}
+                    <ListItemText primary={item.text} />
                 </MenuItem>
             )
         } else if (item instanceof NestedItem) {
@@ -100,16 +102,17 @@ const getMenuItems = (items, onClick) => {
         console.warn('Unknown item', item)
         return null
 
-    }).filter(i => i != null)
+    }).filter(item => item != null)
 }
 
 
 class Item {
-    constructor(text, action, isEnabled = true, isShow = true) {
+    constructor(text, action, isEnabled = true, isShow = true, icon = null) {
         this.text = text
         this.action = action
         this.isEnabled = isEnabled
         this.isShow = isShow
+        this.icon = icon
     }
 }
 

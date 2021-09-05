@@ -11,8 +11,9 @@ import NodeIcons from "./NodeIcons";
 import InnerDiagramFigure from "./InnerDiagramFigure";
 import Label from "./Label";
 import { store } from "./Store";
+import { icons } from './../../common/icons';
 
-
+const defaultIconKey = 'Azure/General/Module'
 
 const defaultOptions = (type) => {
     const dv = {
@@ -24,16 +25,16 @@ const defaultOptions = (type) => {
 
     switch (type) {
         case Node.nodeType:
-            return { ...dv, name: 'Node', colorName: 'DeepPurple', icon: 'Node', }
+            return { ...dv, icon: defaultIconKey, }
         case Node.systemType:
             return {
-                ...dv, name: store.getUniqueSystemName(), colorName: 'DeepPurple', icon: 'Diagram',
+                ...dv, name: store.getUniqueSystemName(), colorName: 'DeepPurple', icon: 'Azure/Compute/CloudServices(Classic)',
                 width: Node.defaultWidth * 1.2, height: Node.defaultHeight * 1.2,
             }
         case Node.userType:
-            return { ...dv, name: 'External User', colorName: 'BlueGrey', icon: 'User' }
+            return { ...dv, name: 'External Users', icon: 'Azure/Management+Governance/MyCustomers' }
         case Node.externalType:
-            return { ...dv, name: 'External System', colorName: 'BlueGrey', icon: 'External' }
+            return { ...dv, name: 'External Systems', icon: 'Azure/Databases/VirtualClusters' }
         default:
             throw new Error('Unknown type: ' + type);
     }
@@ -65,21 +66,28 @@ export default class Node extends draw2d.shape.node.Between {
 
     constructor(type = Node.nodeType, options) {
         const o = { ...defaultOptions(type), ...options }
+        if (!o.name) {
+            const ic = icons.getIcon(o.icon)
+            o.name = ic.name
+        }
 
         super({
             id: o.id,
-            width: o.width, height: o.height, stroke: 1.1,
-            bgColor: Colors.getNodeColor(o.colorName), color: Colors.getNodeBorderColor(o.colorName),
+            width: 60, height: 60, stroke: 0.1,
+            bgColor: 'none', color: Colors.nodeBorderColor,
             radius: 5, glow: true
         });
+
+        // const icon = new draw2d.shape.basic.Image({ path: ic.src, width: 22, height: 22, bgColor: 'none' })
+
 
         this.type = type
         this.colorName = o.colorName
 
         this.addLabels(o.name, o.description)
         this.addIcon(o.icon);
-        this.addInnerDiagramIcon()
         this.addPorts()
+        //this.addInnerDiagramIcon()
 
         // this.on("click", (s, e) => console.log('click node'))
         this.on("dblclick", (s, e) => this.editInnerDiagram())
@@ -89,8 +97,9 @@ export default class Node extends draw2d.shape.node.Between {
         const selectionPolicy = this.editPolicy
             .find(p => p instanceof draw2d.policy.figure.RectangleSelectionFeedbackPolicy)
         if (selectionPolicy != null) {
+            //this.editPolicy.remove(selectionPolicy)
             selectionPolicy.createResizeHandle = (owner, type) => {
-                return new draw2d.ResizeHandle({ owner: owner, type: type, width: 15, height: 15 });
+                return new draw2d.ResizeHandle({ owner: owner, type: type, width: 1, height: 1 });
             }
         }
     }
@@ -129,9 +138,6 @@ export default class Node extends draw2d.shape.node.Between {
         const colorItems = Colors.nodeColorNames().map((name) => {
             return menuItem(name, () => this.canvas.runCmd(new CommandChangeColor(this, name)))
         })
-        const iconItems = this.nodeIcons.getNames().map((name) => {
-            return menuItem(name, () => this.canvas.runCmd(new CommandChangeIcon(this, name)))
-        })
 
         return [
             menuItem('To front', () => this.toFront()),
@@ -142,10 +148,14 @@ export default class Node extends draw2d.shape.node.Between {
                 menuItem('Edit (dbl-click)', () => this.editInnerDiagram(), true, hasDiagramIcon),
             ], true, hasDiagramIcon),
             menuParentItem('Change color', colorItems),
-            menuParentItem('Change icon', iconItems),
+            menuItem('Change icon ...', () => PubSub.publish('nodes.showDialog', { action: (iconKey) => this.changeIcon(iconKey) })),
             menuItem('Set default size', () => this.setDefaultSize()),
             menuItem('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.canDelete)
         ]
+    }
+
+    changeIcon(iconKey) {
+        this.canvas.runCmd(new CommandChangeIcon(this, iconKey))
     }
 
     setName(name) {
@@ -176,7 +186,7 @@ export default class Node extends draw2d.shape.node.Between {
 
         this.nameLabel?.setFontColor(fontColor)
         this.descriptionLabel?.setFontColor(fontColor)
-        this.icon?.setColor(fontColor)
+        // this.icon?.setColor(fontColor)
         this.diagramIcon?.setColor(fontColor)
     }
 
@@ -265,40 +275,39 @@ export default class Node extends draw2d.shape.node.Between {
     }
 
     addLabels = (name, description) => {
-        const fontColor = Colors.getNodeFontColor(this.colorName)
+        const fontColor = Colors.labelColor
 
-        this.nameLabel = new Label(this.width, {
+        this.nameLabel = new Label(this.width + 40, {
             text: name, stroke: 0,
-            fontSize: 20, fontColor: fontColor, bold: true,
-        })
-
-        this.descriptionLabel = new Label(this.width, {
-            text: description, stroke: 0,
-            fontSize: 14, fontColor: fontColor, bold: false,
+            fontSize: 12, fontColor: fontColor, bold: true,
         })
 
         this.nameLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-        this.nameLabel.labelLocator = new LabelLocator(12)
+        this.nameLabel.labelLocator = new NodeNameLocator()
         this.add(this.nameLabel, this.nameLabel.labelLocator);
+
+        this.descriptionLabel = new Label(this.width + 40, {
+            text: description, stroke: 0,
+            fontSize: 9, fontColor: fontColor, bold: false,
+        })
+
         this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-        this.descriptionLabel.labelLocator = new LabelLocator(45)
+        this.descriptionLabel.labelLocator = new NodeDescriptionLocator()
         this.add(this.descriptionLabel, this.descriptionLabel.labelLocator);
     }
 
-    addIcon(iconName) {
-        if (iconName == null) {
-            return
-        }
-        const icon = this.nodeIcons.create(iconName)
-        if (icon == null) {
+    addIcon(iconKey) {
+        //console.log('add icon key', iconKey)
+        if (iconKey == null) {
             return
         }
 
-        this.iconName = iconName
+        const ic = icons.getIcon(iconKey)
+        const icon = new draw2d.shape.basic.Image({ path: ic.src, width: this.width, height: this.height, bgColor: 'none' })
+
+        this.iconName = iconKey
         this.icon = icon
-        const iconColor = Colors.getNodeFontColor(this.colorName)
-        this.icon.attr({ width: 22, height: 22, color: iconColor, bgColor: 'none' })
-        this.add(this.icon, new draw2d.layout.locator.XYRelPortLocator(1, 1))
+        this.add(icon, new NodeIconLocator())
     }
 
 
@@ -326,27 +335,39 @@ export default class Node extends draw2d.shape.node.Between {
 
         // Make ports larger to support touch
         this.getPorts().each((i, p) => {
-            p.setCoronaWidth(25)
-            p.setDimension(15)
+            p.setCoronaWidth(5)
+            p.setDimension(10)
         })
     }
 }
 
 
-
-class LabelLocator extends draw2d.layout.locator.Locator {
-    constructor(percentY) {
-        super()
-        this.percentY = percentY
-    }
-    relocate(index, figure) {
-        // Center in the x middle and then percent of height 
-        const parent = figure.getParent()
-        const x = parent.getWidth() / 2 - figure.getWidth() / 2
-        const y = parent.getHeight() / 100 * this.percentY
-        figure.setPosition(x, y);
+class NodeNameLocator extends draw2d.layout.locator.Locator {
+    relocate(index, label) {
+        const node = label.getParent()
+        const x = node.getWidth() / 2 - label.getWidth() / 2
+        const y = node.getHeight() + 0
+        label.setPosition(x, y)
     }
 }
+
+class NodeDescriptionLocator extends draw2d.layout.locator.Locator {
+    relocate(index, label) {
+        const node = label.getParent()
+        const nameHeight = node.nameLabel.getHeight()
+        const x = node.getWidth() / 2 - label.getWidth() / 2
+        const y = node.getHeight() + nameHeight - 8
+        label.setPosition(x, y)
+    }
+}
+
+
+class NodeIconLocator extends draw2d.layout.locator.Locator {
+    relocate(index, icon) {
+        icon.setPosition(0, 0)
+    }
+}
+
 
 class InnerDiagramIconLocator extends draw2d.layout.locator.PortLocator {
     relocate(index, figure) {

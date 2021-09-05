@@ -3,6 +3,7 @@ import axios from 'axios';
 import timing from '../../common/timing';
 import { atom, useAtom } from "jotai"
 import { setErrorMessage, setSuccessMessage } from '../../common/MessageSnackbar';
+import { keyVault } from './../../common/keyVault';
 
 const connectionAtom = atom(false)
 let setConnectionFunc = null
@@ -21,33 +22,32 @@ export const useConnection = () => {
 
 
 export default class Api {
-    apiKey = '0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade'
-    token = null
+    apiKey = '0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade'  // Must be same as in server side api
     onInvalidToken = null
 
-
-    setToken(token, onInvalidToken) {
-        this.token = token
+    constructor(onInvalidToken) {
         this.onInvalidToken = onInvalidToken
     }
 
 
-    async getCurrentUser() {
-        console.log('host', window.location.hostname)
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            await this.get('/api/Check')
-            return {
-                clientPrincipal: {
-                    "identityProvider": "Local",
-                    "userId": 'local',
-                    "userDetails": 'local',
-                    "userRoles": ["anonymous", "authenticated"]
-                }
-            }
-        }
+    getToken = () => keyVault.getToken()
 
-        return await this.get('/.auth/me')
-    }
+    // async getCurrentUser() {
+    //     console.log('host', window.location.hostname)
+    //     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    //         await this.get('/api/Check')
+    //         return {
+    //             clientPrincipal: {
+    //                 "identityProvider": "Local",
+    //                 "userId": 'local',
+    //                 "userDetails": 'local',
+    //                 "userRoles": ["anonymous", "authenticated"]
+    //             }
+    //         }
+    //     }
+
+    //     return await this.get('/.auth/me')
+    // }
 
     async getManifest() {
         return this.get('/manifest.json')
@@ -57,9 +57,10 @@ export default class Api {
         return this.get('/api/Check')
     }
 
-    async clearAllData() {
-        return this.post('/api/ClearAllData')
-    }
+    // async clearAllData() {
+    //     return this.post('/api/ClearAllData')
+    // }
+
 
     async createUser(user) {
         return this.post('/api/CreateUser', user)
@@ -72,6 +73,8 @@ export default class Api {
     async connect() {
         return this.get('/api/Connect')
     }
+
+
 
     async getAllDiagramsData() {
         return this.get(`/api/GetAllDiagramsData`);
@@ -110,7 +113,7 @@ export default class Api {
         this.handleRequest('get', uri)
         const t = timing()
         try {
-            const rsp = (await axios.get(uri, { headers: { 'x-api-key': this.apiKey, xtoken: this.token } })).data;
+            const rsp = (await axios.get(uri, { headers: { 'x-api-key': this.apiKey, xtoken: this.getToken() } })).data;
             this.handleOK('get', uri, null, rsp)
             return rsp
         } catch (error) {
@@ -126,7 +129,7 @@ export default class Api {
         this.handleRequest('post', uri, data)
         const t = timing()
         try {
-            const rsp = (await axios.post(uri, data, { headers: { 'x-api-key': this.apiKey, xtoken: this.token } })).data;
+            const rsp = (await axios.post(uri, data, { headers: { 'x-api-key': this.apiKey, xtoken: this.getToken() } })).data;
             this.handleOK('post', uri, data, rsp)
             return rsp
         } catch (error) {
@@ -187,7 +190,6 @@ export default class Api {
 
     handleInvalidToken() {
         console.error('Invalid Token')
-        this.token = null
         this?.onInvalidToken?.()
     }
 
