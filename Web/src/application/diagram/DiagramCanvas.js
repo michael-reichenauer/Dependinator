@@ -15,7 +15,6 @@ import Printer from "../../common/Printer";
 import { setProgress } from "../../common/Progress";
 import { setErrorMessage } from "../../common/MessageSnackbar";
 import NodeGroup from './NodeGroup';
-import { icons } from "../../common/icons";
 
 
 
