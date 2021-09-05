@@ -75,7 +75,7 @@ export default class Node extends draw2d.shape.node.Between {
             id: o.id,
             width: 60, height: 60, stroke: 0.1,
             bgColor: 'none', color: Colors.nodeBorderColor,
-            radius: 5, glow: true
+            radius: 5, glow: true, resizeable: false,
         });
 
         // const icon = new draw2d.shape.basic.Image({ path: ic.src, width: 22, height: 22, bgColor: 'none' })
