@@ -11,7 +11,6 @@ const defaultOptions = () => {
         id: cuid(),
         width: NodeGroup.defaultWidth,
         height: NodeGroup.defaultHeight,
-        name: 'Group',
         description: 'Description',
         icon: 'Default',
     }
@@ -41,6 +40,10 @@ export default class NodeGroup extends draw2d.shape.basic.Rectangle {
             bgColor: Colors.canvasBackground, alpha: 0.4, color: Colors.canvasText,
             radius: 5, glow: true, dasharray: '- ',
         });
+        if (!o.name) {
+            const ic = icons.getIcon(o.icon)
+            o.name = ic.name
+        }
 
         this.addIcon(o.icon);
         this.addLabels(o.name, o.description)

@@ -64,7 +64,7 @@ export default class Connection extends draw2d.Connection {
     addLabels(description) {
         this.descriptionLabel = new Label(defaultTextWidth, {
             text: description, stroke: 0,
-            fontSize: 12, bold: false,
+            fontSize: 9, bold: false,
             fontColor: Colors.canvasText, bgColor: Colors.canvasBackground,
         })
         // this.descriptionLabel.setResizeable(true)
