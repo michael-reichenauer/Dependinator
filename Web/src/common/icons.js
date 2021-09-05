@@ -31,8 +31,14 @@ class Icons {
                 else if (path.startsWith('./Azure')) {
                     svg = this._getAzureSvg(svg, path)
                 }
-                else if (path.startsWith('./Aws')) {
-                    svg = this._getAwsSvg(svg, path)
+                else if (path.startsWith('./Aws/Architecture')) {
+                    svg = this._getAwsSvg(svg, path, 'Architecture')
+                }
+                else if (path.startsWith('./Aws/Category')) {
+                    svg = this._getAwsSvg(svg, path, 'Category')
+                }
+                else if (path.startsWith('./Aws/Resource')) {
+                    svg = this._getAwsSvg(svg, path, 'Resource')
                 }
 
                 //console.log('svg', svg)
@@ -68,7 +74,7 @@ class Icons {
         return { ...svg, key: key, root: root, group: group, name: name, fullName: fullName }
     }
 
-    _getAwsSvg(svg, path) {
+    _getAwsSvg(svg, path, subType) {
         // Aws icons have a pattern like ./Aws/Aws/Architecture-Service-Icons_07302021/Arch_Analytics/Arch_16
         const awsPath = path
             .replaceAll('/Architecture-Service-Icons_07302021', '')
@@ -85,9 +91,9 @@ class Icons {
         const parts = awsPath.split('/').slice(1)
         const root = 'Aws'
         const name = parts[2]
-        const group = parts[1]
+        const group = `${subType}/${parts[1]}`
         const fullName = `${root}/${group}/${name}`
-        const key = `${root}/${group}/${name}`.replaceAll(' ', '')
+        const key = `${root}/${group.replaceAll('/', '')}/${name}`.replaceAll(' ', '')
 
         return { ...svg, key: key, root: root, group: group, name: name, fullName: fullName }
     }

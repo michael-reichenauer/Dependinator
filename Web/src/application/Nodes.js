@@ -126,12 +126,6 @@ export default function Nodes() {
 
                 <Paper style={{ maxHeight: 450, overflow: 'auto', marginTop: 3 }}>
                     <List component="nav" dense disablePadding >
-                        {/* <ListItem button onClick={clickedGroup}  >
-                            <ListItemIcon>
-                                <CropDinIcon />
-                            </ListItemIcon>
-                            <ListItemText primary='Group' />
-                        </ListItem> */}
                         {mruItems(filter)}
 
                         {NodeItemsList('Azure', filter, clickedItem)}
@@ -148,7 +142,8 @@ export default function Nodes() {
 // Items list for Azure and Aws (which can be filtered)
 const NodeItemsList = (root, filter, clickedItem) => {
     const classes = useStyles();
-    const items = filterItems(root, filter)
+    const filteredItems = filterItems(root, filter)
+    const items = groupedItems(filteredItems)
     const height = Math.min(items.length, subItemsSize) * subItemsHeight
     const [open, setOpen] = useState(false);
     const iconsSrc = icons.getIcon(root).src
@@ -156,6 +151,14 @@ const NodeItemsList = (root, filter, clickedItem) => {
     const renderRow = (props, items) => {
         const { index, style } = props;
         const item = items[index]
+
+        if (item.groupHeader) {
+            return (
+                <ListItem key={index} button style={style} className={classes.nested}>
+                    <Typography variant='caption' >{item.groupHeader.replace('/', ' - ')}</Typography>
+                </ListItem>
+            )
+        }
 
         return (
             <ListItem key={index} button style={style} onClick={() => clickedItem(item)} className={classes.nested}>
@@ -183,6 +186,20 @@ const NodeItemsList = (root, filter, clickedItem) => {
             </Collapse>
         </>
     )
+}
+
+const groupedItems = (items) => {
+    var it = []
+    var group = ''
+    for (var i = 0; i < items.length; i++) {
+        if (items[i].group !== group) {
+            group = items[i].group
+            it.push({ groupHeader: group })
+        }
+        it.push(items[i])
+    }
+
+    return it
 }
 
 // Filter node items based on root and filter
