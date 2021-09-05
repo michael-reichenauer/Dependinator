@@ -20,7 +20,7 @@ import { store } from "./diagram/Store";
 import { useLogin } from "./Login";
 import { useSyncMode } from './Online'
 import { useConnection } from "./diagram/Api";
-
+import PostAddIcon from '@material-ui/icons/PostAdd';
 
 
 export default function ApplicationBar({ height }) {
@@ -84,6 +84,8 @@ export default function ApplicationBar({ height }) {
 
                 <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={style()} />} className={style()}
                     onClick={() => PubSub.publish('nodes.showDialog', { add: true })} />
+                <Button tooltip="Add group" icon={<PostAddIcon className={style()} />} className={style()}
+                    onClick={() => PubSub.publish('nodes.showDialog', { add: true, group: true })} />
 
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 

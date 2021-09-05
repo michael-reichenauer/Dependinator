@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { atom, useAtom } from "jotai"
 import PubSub from 'pubsub-js'
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Collapse, Dialog, List, ListItem, ListItemIcon, ListItemText, Paper, Tooltip, FormControlLabel, Switch, Typography } from "@material-ui/core";
+import { Box, Collapse, Dialog, List, ListItem, ListItemIcon, ListItemText, Paper, Typography } from "@material-ui/core";
 import SearchBar from "material-ui-search-bar";
 import { ExpandLess, ExpandMore } from "@material-ui/icons";
 import { icons } from './../common/icons';
@@ -43,25 +43,35 @@ const useStyles = makeStyles((theme) => ({
 export default function Nodes() {
     const [show, setShow] = useNodes(false)
     const [filter, setFilter] = useState('');
-    const [mru, setMru] = useLocalStorage('nodesMru', [])
-    const [nodeType, setNodeType] = useState(false)
+    const [mruNodes, setMruNodes] = useLocalStorage('nodesMru', [])
+    const [mruGroups, setMruGroups] = useLocalStorage('groupsMru', [])
+    const [groupType, setGroupType] = useState(false)
 
     useEffect(() => {
         // Listen for nodes.showDialog commands to show this Nodes dialog
-        PubSub.subscribe('nodes.showDialog', (_, data) => setShow(data ?? { add: true }))
+        PubSub.subscribe('nodes.showDialog', (_, data) => {
+            console.log('data', data)
+            setShow(data)
+            setGroupType(!!data.group)
+        })
         return () => PubSub.unsubscribe('nodes.showDialog')
     }, [setShow])
+
+    var [mru, setMru] = [mruNodes, setMruNodes]
+    if (groupType) {
+        [mru, setMru] = [mruGroups, setMruGroups]
+    }
 
     // Handle search
     const onChangeSearch = (value) => setFilter(value.toLowerCase())
     const cancelSearch = () => setFilter('')
 
-    const titleType = nodeType ? 'Group' : 'Node'
+    const titleType = groupType ? 'Group' : 'Node'
     const title = !!show && show.add ? `Add ${titleType}` : `Change Icon`
 
     const clickedItem = (item) => {
         setShow(false)
-        setNodeType(false)
+        setGroupType(false)
         setMru([item.key, ...mru.filter(key => key !== item.key)].slice(0, 8))
 
         if (show.action) {
@@ -78,7 +88,7 @@ export default function Nodes() {
         }
 
         console.log('Icon', item.key)
-        PubSub.publish('canvas.AddNode', { icon: item.key, position: position, group: nodeType })
+        PubSub.publish('canvas.AddNode', { icon: item.key, position: position, group: groupType })
     }
 
 
@@ -103,21 +113,10 @@ export default function Nodes() {
     }
 
     return (
-        <Dialog open={!!show} onClose={() => { setShow(false); setNodeType(false) }}  >
+        <Dialog open={!!show} onClose={() => { setShow(false); setGroupType(false) }}  >
             <Box style={{ width: 400, height: 530, padding: 20 }}>
 
                 <Typography variant="h5" style={{ paddingBottom: 10, }} >{title}</Typography>
-                {!!show && show.add &&
-                    <Tooltip title='Toggle to add node or group' >
-                        <FormControlLabel style={{ position: 'absolute', left: 330, top: 17 }}
-                            label="Group"
-                            control={
-                                <Switch name="type" color='primary' checked={nodeType}
-                                    onChange={e => setNodeType(e.target.checked)} />
-                            }
-                        />
-                    </Tooltip>
-                }
 
                 <SearchBar
                     value={filter}
@@ -125,8 +124,8 @@ export default function Nodes() {
                     onCancelSearch={() => cancelSearch()}
                 />
 
-                <Paper style={{ maxHeight: 460, overflow: 'auto' }}>
-                    <List component="nav" dense disablePadding>
+                <Paper style={{ maxHeight: 450, overflow: 'auto', marginTop: 3 }}>
+                    <List component="nav" dense disablePadding >
                         {/* <ListItem button onClick={clickedGroup}  >
                             <ListItemIcon>
                                 <CropDinIcon />
