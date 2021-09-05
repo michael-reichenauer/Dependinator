@@ -91,7 +91,7 @@ export default class NodeGroup extends draw2d.shape.basic.Rectangle {
     getContextMenuItems(x, y) {
         return [
             menuItem('To back', () => this.toBack()),
-            menuItem('Change icon ...', () => PubSub.publish('nodes.showDialog', { action: (iconKey) => this.changeIcon(iconKey) })),
+            menuItem('Change icon ...', () => PubSub.publish('nodes.showDialog', { add: false, action: (iconKey) => this.changeIcon(iconKey) })),
             menuItem('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.canDelete)
         ]
     }

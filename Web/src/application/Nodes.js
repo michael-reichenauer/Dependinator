@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { atom, useAtom } from "jotai"
 import PubSub from 'pubsub-js'
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Collapse, Dialog, List, ListItem, ListItemIcon, ListItemText, Paper, Typography } from "@material-ui/core";
+import { Box, Collapse, Dialog, List, ListItem, ListItemIcon, ListItemText, Paper, Tooltip, FormControlLabel, Switch, Typography } from "@material-ui/core";
 import SearchBar from "material-ui-search-bar";
 import { ExpandLess, ExpandMore } from "@material-ui/icons";
 import { icons } from './../common/icons';
 import { FixedSizeList } from 'react-window';
 import { useLocalStorage } from "../common/useLocalStorage";
-import CropDinIcon from '@material-ui/icons/CropDin';
+
 
 const subItemsSize = 9
 const iconsSize = 30
@@ -41,13 +41,14 @@ const useStyles = makeStyles((theme) => ({
 
 
 export default function Nodes() {
-    const [show, setShow] = useNodes()
+    const [show, setShow] = useNodes(false)
     const [filter, setFilter] = useState('');
     const [mru, setMru] = useLocalStorage('nodesMru', [])
+    const [nodeType, setNodeType] = useState(false)
 
     useEffect(() => {
         // Listen for nodes.showDialog commands to show this Nodes dialog
-        PubSub.subscribe('nodes.showDialog', (_, data) => setShow(data ?? true))
+        PubSub.subscribe('nodes.showDialog', (_, data) => setShow(data ?? { add: true }))
         return () => PubSub.unsubscribe('nodes.showDialog')
     }, [setShow])
 
@@ -55,36 +56,31 @@ export default function Nodes() {
     const onChangeSearch = (value) => setFilter(value.toLowerCase())
     const cancelSearch = () => setFilter('')
 
+    const titleType = nodeType ? 'Group' : 'Node'
+    const title = !!show && show.add ? `Add ${titleType}` : `Change Icon`
+
     const clickedItem = (item) => {
         setShow(false)
+        setNodeType(false)
         setMru([item.key, ...mru.filter(key => key !== item.key)].slice(0, 8))
+
+        if (show.action) {
+            show.action(item.key)
+            return
+        }
 
         // show value can be a position or just 'true'. Is position, then the new node will be added
         // at that position. But is value is 'true', the new node position will centered in the diagram
         var position = null
-        if (show !== true) {
-            if (show.action) {
-                show.action(item.key)
-                return
-            }
 
-            position = show
+        if (show.x) {
+            position = { x: show.x, y: show.y }
         }
 
         console.log('Icon', item.key)
-        PubSub.publish('canvas.AddNode', { icon: item.key, position: position })
+        PubSub.publish('canvas.AddNode', { icon: item.key, position: position, group: nodeType })
     }
 
-    const clickedGroup = () => {
-        setShow(false)
-
-        var position = null
-        if (show !== true) {
-            position = show
-        }
-
-        PubSub.publish('canvas.AddGroup', { position: position })
-    }
 
     // The list of most recently used icons to make it easier to us
     const mruItems = (filter) => {
@@ -107,10 +103,21 @@ export default function Nodes() {
     }
 
     return (
-        <Dialog open={show ? true : false} onClose={() => { setShow(false) }}  >
+        <Dialog open={!!show} onClose={() => { setShow(false); setNodeType(false) }}  >
             <Box style={{ width: 400, height: 530, padding: 20 }}>
 
-                <Typography variant="h5" style={{ paddingBottom: 10, }} >Add Node</Typography>
+                <Typography variant="h5" style={{ paddingBottom: 10, }} >{title}</Typography>
+                {!!show && show.add &&
+                    <Tooltip title='Toggle to add node or group' >
+                        <FormControlLabel style={{ position: 'absolute', left: 330, top: 17 }}
+                            label="Group"
+                            control={
+                                <Switch name="type" color='primary' checked={nodeType}
+                                    onChange={e => setNodeType(e.target.checked)} />
+                            }
+                        />
+                    </Tooltip>
+                }
 
                 <SearchBar
                     value={filter}
@@ -120,12 +127,12 @@ export default function Nodes() {
 
                 <Paper style={{ maxHeight: 460, overflow: 'auto' }}>
                     <List component="nav" dense disablePadding>
-                        <ListItem button onClick={clickedGroup}  >
+                        {/* <ListItem button onClick={clickedGroup}  >
                             <ListItemIcon>
                                 <CropDinIcon />
                             </ListItemIcon>
                             <ListItemText primary='Group' />
-                        </ListItem>
+                        </ListItem> */}
                         {mruItems(filter)}
 
                         {NodeItemsList('Azure', filter, clickedItem)}

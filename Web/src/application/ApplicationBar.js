@@ -83,7 +83,7 @@ export default function ApplicationBar({ height }) {
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 
                 <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={style()} />} className={style()}
-                    onClick={() => PubSub.publish('nodes.showDialog')} />
+                    onClick={() => PubSub.publish('nodes.showDialog', { add: true })} />
 
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 

@@ -148,7 +148,7 @@ export default class Node extends draw2d.shape.node.Between {
                 menuItem('Edit (dbl-click)', () => this.editInnerDiagram(), true, hasDiagramIcon),
             ], true, hasDiagramIcon),
             menuParentItem('Change color', colorItems),
-            menuItem('Change icon ...', () => PubSub.publish('nodes.showDialog', { action: (iconKey) => this.changeIcon(iconKey) })),
+            menuItem('Change icon ...', () => PubSub.publish('nodes.showDialog', { add: false, action: (iconKey) => this.changeIcon(iconKey) })),
             menuItem('Set default size', () => this.setDefaultSize()),
             menuItem('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.canDelete)
         ]

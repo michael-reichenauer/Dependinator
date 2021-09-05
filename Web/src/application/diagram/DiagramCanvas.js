@@ -15,6 +15,7 @@ import Printer from "../../common/Printer";
 import { setProgress } from "../../common/Progress";
 import { setErrorMessage } from "../../common/MessageSnackbar";
 import NodeGroup from './NodeGroup';
+import { icons } from "../../common/icons";
 
 
 
@@ -52,7 +53,7 @@ export default class DiagramCanvas {
         PubSub.subscribe('canvas.Undo', () => this.commandUndo())
         PubSub.subscribe('canvas.Redo', () => this.commandRedo())
 
-        PubSub.subscribe('canvas.AddNode', (_, data) => this.addNode(data.icon, data.position))
+        PubSub.subscribe('canvas.AddNode', (_, data) => this.addNode(data))
         PubSub.subscribe('canvas.AddGroup', (_, data) => this.addGroup(data.position))
 
         PubSub.subscribe('canvas.ShowTotalDiagram', this.showTotalDiagram)
@@ -224,7 +225,14 @@ export default class DiagramCanvas {
 
     showTotalDiagram = () => zoomAndMoveShowTotalDiagram(this.canvas)
 
-    addNode = (icon, position) => {
+    addNode = (data) => {
+        console.log('data', data)
+        if (data.group) {
+            this.addGroup(data.icon, data.position)
+            return
+        }
+
+        var { icon, position } = data
         if (!position) {
             position = this.getCenter()
         }
@@ -241,8 +249,8 @@ export default class DiagramCanvas {
         addFigureToCanvas(this.canvas, node, x, y)
     }
 
-    addGroup = (position) => {
-        const group = new NodeGroup()
+    addGroup = (icon, position) => {
+        const group = new NodeGroup({ icon: icon })
         var x = 0
         var y = 0
 
@@ -386,7 +394,7 @@ export default class DiagramCanvas {
                 this.commandPopFromInnerDiagram()
                 return
             }
-            PubSub.publish('nodes.showDialog', { x: event.x, y: event.y })
+            PubSub.publish('nodes.showDialog', { add: true, x: event.x, y: event.y })
         });
     }
 

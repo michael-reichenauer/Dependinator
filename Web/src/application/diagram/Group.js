@@ -45,7 +45,7 @@ export default class Group extends draw2d.shape.composite.Raft {
         this.addPorts()
 
         this.on("click", (s, e) => PubSub.publish('canvas.SetEditMode', false))
-        this.on("dblclick", (s, e) => PubSub.publish('nodes.showDialog', { x: e.x, y: e.y }))
+        this.on("dblclick", (s, e) => PubSub.publish('nodes.showDialog', { add: true, x: e.x, y: e.y }))
 
         const selectionPolicy = this.editPolicy
             .find(p => p instanceof draw2d.policy.figure.RectangleSelectionFeedbackPolicy)
