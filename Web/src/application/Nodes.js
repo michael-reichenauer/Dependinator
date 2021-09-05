@@ -110,7 +110,7 @@ export default function Nodes() {
         <Dialog open={show ? true : false} onClose={() => { setShow(false) }}  >
             <Box style={{ width: 400, height: 530, padding: 20 }}>
 
-                <Typography style={{ paddingBottom: 10 }} >Add Node</Typography>
+                <Typography variant="h5" style={{ paddingBottom: 10, }} >Add Node</Typography>
 
                 <SearchBar
                     value={filter}

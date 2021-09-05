@@ -20,7 +20,6 @@ import { store } from "./diagram/Store";
 import { useLogin } from "./Login";
 import { useSyncMode } from './Online'
 import { useConnection } from "./diagram/Api";
-import { useNodes } from './Nodes';
 
 
 
