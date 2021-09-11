@@ -13,12 +13,13 @@ const defaultOptions = () => {
         height: NodeGroup.defaultHeight,
         description: 'Description',
         icon: 'Default',
+        sticky: false,
     }
 }
 
 
-//export default class NodeGroup extends draw2d.shape.composite.Raft {
-export default class NodeGroup extends draw2d.shape.basic.Rectangle {
+export default class NodeGroup extends draw2d.shape.composite.Raft {
+    //export default class NodeGroup extends draw2d.shape.basic.Rectangle {
     static nodeType = 'nodeGroup'
     static defaultWidth = 500
     static defaultHeight = 340
@@ -60,6 +61,11 @@ export default class NodeGroup extends draw2d.shape.basic.Rectangle {
                 return new draw2d.ResizeHandle({ owner: owner, type: type, width: 15, height: 15 });
             }
         }
+
+        this.getAboardFiguresOrg = this.getAboardFigures
+        if (!o.sticky) {
+            this.getAboardFigures = () => new draw2d.util.ArrayList()
+        }
     }
 
     setCanvas(canvas) {
@@ -72,14 +78,19 @@ export default class NodeGroup extends draw2d.shape.basic.Rectangle {
 
 
     static deserialize(data) {
-        return new NodeGroup({ id: data.id, width: data.w, height: data.h, name: data.name, icon: data.icon })
+        return new NodeGroup({
+            id: data.id, width: data.w, height: data.h,
+            name: data.name, icon: data.icon, sticky: data.sticky
+        })
     }
 
     serialize() {
+        const sticky = this.getAboardFigures === this.getAboardFiguresOrg
         try {
             return {
                 type: this.type, id: this.id, x: this.x, y: this.y, w: this.width, h: this.height,
                 name: this.getName(), hasGroup: this.group != null, icon: this.iconName,
+                sticky: sticky
             }
         } catch (error) {
             console.error('error', error)
@@ -87,14 +98,27 @@ export default class NodeGroup extends draw2d.shape.basic.Rectangle {
 
     }
 
+
+    toggleStickySubItems() {
+        if (this.getAboardFigures === this.getAboardFiguresOrg) {
+            this.getAboardFigures = () => new draw2d.util.ArrayList()
+        } else {
+            this.getAboardFigures = this.getAboardFiguresOrg
+        }
+        this.canvas.save()
+    }
+
     changeIcon(iconKey) {
         this.canvas.runCmd(new CommandChangeIcon(this, iconKey))
     }
 
     getContextMenuItems(x, y) {
+        const stickyText = this.getAboardFigures === this.getAboardFiguresOrg ?
+            "Disable sticky sub items" : "Enable sticky sub items"
         return [
             menuItem('To back', () => this.toBack()),
             menuItem('Change icon ...', () => PubSub.publish('nodes.showDialog', { add: false, group: true, action: (iconKey) => this.changeIcon(iconKey) })),
+            menuItem(stickyText, () => this.toggleStickySubItems()),
             menuItem('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.canDelete)
         ]
     }

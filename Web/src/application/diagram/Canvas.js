@@ -21,8 +21,9 @@ export default class Canvas extends draw2d.Canvas {
     touchEndTime = 0
     previousPinchDiff = -1
 
-    constructor(htmlElementId, onEditMode, width, height) {
+    constructor(diagramCanvas, htmlElementId, onEditMode, width, height) {
         super(htmlElementId, width, height);
+        this.diagramCanvas = diagramCanvas
 
         this.serializer = new CanvasSerializer(this)
 
@@ -71,6 +72,10 @@ export default class Canvas extends draw2d.Canvas {
 
     deserialize(canvasData) {
         this.serializer.deserialize(canvasData)
+    }
+
+    save() {
+        this.diagramCanvas.save()
     }
 
     exportAsSvg(canvasData) {

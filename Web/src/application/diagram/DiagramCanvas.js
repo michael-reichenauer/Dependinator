@@ -31,7 +31,7 @@ export default class DiagramCanvas {
 
     constructor(htmlElementId, callbacks) {
         this.callbacks = callbacks
-        this.canvas = new Canvas(htmlElementId, this.onEditMode, DiagramCanvas.defaultWidth, DiagramCanvas.defaultHeight)
+        this.canvas = new Canvas(this, htmlElementId, this.onEditMode, DiagramCanvas.defaultWidth, DiagramCanvas.defaultHeight)
         this.canvasStack = new CanvasStack(this.canvas)
         this.inner = new InnerDiagramCanvas(this.canvas, this.canvasStack, this.store)
     }
