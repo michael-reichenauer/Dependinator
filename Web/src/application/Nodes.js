@@ -41,6 +41,7 @@ const useStyles = makeStyles((theme) => ({
 
 
 export default function Nodes() {
+    const classes = useStyles();
     const [show, setShow] = useNodes(false)
     const [filter, setFilter] = useState('');
     const [mruNodes, setMruNodes] = useLocalStorage('nodesMru', [])
@@ -111,7 +112,7 @@ export default function Nodes() {
                 return null
             }
             return (
-                <ListItem button onClick={() => clickedItem(item)} key={key} >
+                <ListItem button onClick={() => clickedItem(item)} key={key} className={classes.nested}>
                     <ListItemIcon>
                         <img src={item.src} alt='' width={iconsSize} height={iconsSize} />
                     </ListItemIcon>
@@ -137,8 +138,8 @@ export default function Nodes() {
                     <List component="nav" dense disablePadding >
                         {mruItems(filter)}
 
-                        {NodeItemsList('Azure', filter, clickedItem)}
-                        {NodeItemsList('Aws', filter, clickedItem)}
+                        {NodeItemsList('Azure', 'Azure icons', filter, clickedItem)}
+                        {NodeItemsList('Aws', 'Aws icons', filter, clickedItem)}
                     </List>
                 </Paper>
 
@@ -149,7 +150,7 @@ export default function Nodes() {
 
 
 // Items list for Azure and Aws (which can be filtered)
-const NodeItemsList = (root, filter, clickedItem) => {
+const NodeItemsList = (root, name, filter, clickedItem) => {
     const classes = useStyles();
     const filteredItems = filterItems(root, filter)
     const items = groupedItems(filteredItems)
@@ -189,7 +190,7 @@ const NodeItemsList = (root, filter, clickedItem) => {
                 <ListItemIcon>
                     <img src={iconsSrc} alt='' width={iconsSize} height={iconsSize} />
                 </ListItemIcon>
-                <ListItemText primary={root} />
+                <ListItemText primary={name} />
                 {open ? <ExpandLess /> : <ExpandMore />}
             </ListItem>
             <Collapse in={open} timeout="auto" unmountOnExit>
