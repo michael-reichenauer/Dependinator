@@ -5,7 +5,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Box, Collapse, Dialog, List, ListItem, ListItemIcon, ListItemText, Paper, Typography } from "@material-ui/core";
 import SearchBar from "material-ui-search-bar";
 import { ExpandLess, ExpandMore } from "@material-ui/icons";
-import { icons } from './../common/icons';
+import { defaultIconKey, icons } from './../common/icons';
 import { FixedSizeList } from 'react-window';
 import { useLocalStorage } from "../common/useLocalStorage";
 
@@ -69,10 +69,16 @@ export default function Nodes() {
     const titleType = groupType ? 'Group' : 'Node'
     const title = !!show && show.add ? `Add ${titleType}` : `Change Icon`
 
+    const addToMru = (list, key) => {
+        const newList = [key, ...list.filter(k => k !== key && k !== defaultIconKey)]
+            .slice(0, 8)
+        return newList
+    }
+
     const clickedItem = (item) => {
         setShow(false)
         setGroupType(false)
-        setMru([item.key, ...mru.filter(key => key !== item.key)].slice(0, 8))
+        setMru(addToMru(mru, item.key))
 
         if (show.action) {
             show.action(item.key)
@@ -99,6 +105,9 @@ export default function Nodes() {
         return mru.slice(0, 8).map((key, i) => {
             const item = icons.getIcon(key)
             if (!isItemInFilterWords(item, filterWords)) {
+                return null
+            }
+            if (item.key === defaultIconKey) {
                 return null
             }
             return (
@@ -148,6 +157,10 @@ const NodeItemsList = (root, filter, clickedItem) => {
     const [open, setOpen] = useState(false);
     const iconsSrc = icons.getIcon(root).src
 
+    const toggleList = () => {
+        setOpen(!open)
+    }
+
     const renderRow = (props, items) => {
         const { index, style } = props;
         const item = items[index]
@@ -172,7 +185,7 @@ const NodeItemsList = (root, filter, clickedItem) => {
 
     return (
         <>
-            <ListItem button onClick={() => setOpen(!open)}>
+            <ListItem button onClick={toggleList}>
                 <ListItemIcon>
                     <img src={iconsSrc} alt='' width={iconsSize} height={iconsSize} />
                 </ListItemIcon>
@@ -180,9 +193,11 @@ const NodeItemsList = (root, filter, clickedItem) => {
                 {open ? <ExpandLess /> : <ExpandMore />}
             </ListItem>
             <Collapse in={open} timeout="auto" unmountOnExit>
-                <FixedSizeList width={380} height={height} itemSize={subItemsHeight} itemCount={items.length} >
-                    {(props) => renderRow(props, items)}
-                </FixedSizeList>
+                <Box border={1}>
+                    <FixedSizeList width={380} height={height} itemSize={subItemsHeight} itemCount={items.length} >
+                        {(props) => renderRow(props, items)}
+                    </FixedSizeList>
+                </Box>
             </Collapse>
         </>
     )

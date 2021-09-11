@@ -1,6 +1,6 @@
 
 const svgFiles = require.context("../resources/icons", true, /\.(svg)$/)
-const defaultKey = 'defaultIcon'
+export const defaultIconKey = 'defaultIcon'
 
 class Icons {
     svgIcons = []
@@ -48,7 +48,7 @@ class Icons {
     }
 
     _getDefaultSvg(svg) {
-        return { ...svg, key: defaultKey, name: 'Default Icon', fullName: 'Default Icon' }
+        return { ...svg, key: defaultIconKey, name: 'Default Icon', fullName: 'Default Icon' }
     }
 
     _getAzureRootSvg(svg) {
@@ -107,7 +107,7 @@ class Icons {
         const svg = this.svgIcons.find(svg => svg.key === key)
         if (svg === undefined) {
             // Return default icon
-            return this.svgIcons.find(svg => svg.key === defaultKey)
+            return this.svgIcons.find(svg => svg.key === defaultIconKey)
         }
         return svg
     }
