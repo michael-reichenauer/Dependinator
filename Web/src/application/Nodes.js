@@ -162,6 +162,7 @@ const NodeItemsList = (root, name, filter, clickedItem) => {
         setOpen(!open)
     }
 
+
     const renderRow = (props, items) => {
         const { index, style } = props;
         const item = items[index]
@@ -186,20 +187,22 @@ const NodeItemsList = (root, name, filter, clickedItem) => {
 
     return (
         <>
-            <ListItem button onClick={toggleList}>
-                <ListItemIcon>
-                    <img src={iconsSrc} alt='' width={iconsSize} height={iconsSize} />
-                </ListItemIcon>
-                <ListItemText primary={name} />
-                {open ? <ExpandLess /> : <ExpandMore />}
-            </ListItem>
-            <Collapse in={open} timeout="auto" unmountOnExit>
-                <Box border={1}>
+            <Box border={open ? 1 : 0}>
+                <ListItem button onClick={toggleList}>
+                    <ListItemIcon>
+                        <img src={iconsSrc} alt='' width={iconsSize} height={iconsSize} />
+                    </ListItemIcon>
+                    <ListItemText primary={name} />
+                    {open ? <ExpandLess /> : <ExpandMore />}
+                </ListItem>
+                <Collapse in={open} timeout="auto" unmountOnExit>
+
                     <FixedSizeList width={380} height={height} itemSize={subItemsHeight} itemCount={items.length} >
                         {(props) => renderRow(props, items)}
                     </FixedSizeList>
-                </Box>
-            </Collapse>
+
+                </Collapse>
+            </Box>
         </>
     )
 }
