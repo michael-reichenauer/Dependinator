@@ -45,6 +45,13 @@ export default function PromptDialog() {
         setPrompt({ ...prompt, text: e.target.value });
     }
 
+    const catchReturn = (ev) => {
+        if (ev.key === 'Enter') {
+            handleOK()
+            ev.preventDefault();
+        }
+    }
+
 
     return (
         <Dialog open={!!prompt} onClose={handleCancel}   >
@@ -62,6 +69,7 @@ export default function PromptDialog() {
                     variant="standard"
                     defaultValue={prompt?.text ?? ''}
                     onChange={handleTextFieldChange}
+                    onKeyPress={catchReturn}
                 />
             </DialogContent>
 
