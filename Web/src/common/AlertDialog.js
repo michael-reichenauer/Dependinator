@@ -46,9 +46,9 @@ export default function AlertDialog() {
 
   return (
     <Dialog open={!!alert} onClose={() => { }}   >
-      <DialogTitle id="alert-dialog-title">{alert?.title}</DialogTitle>
+      <DialogTitle>{alert?.title}</DialogTitle>
       <DialogContent style={{ minWidth: 300 }}>
-        <DialogContentText id="alert-dialog-description">
+        <DialogContentText >
           {alert?.message}
         </DialogContentText>
       </DialogContent>

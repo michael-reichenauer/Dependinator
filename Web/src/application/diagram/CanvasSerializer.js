@@ -21,6 +21,7 @@ export default class CanvasSerializer {
 
         const canvasData = {
             diagramId: this.canvas.diagramId,
+            diagramName: this.canvas.diagramName,
             canvasId: this.canvas.canvasId,
             mainNodeId: this.canvas.mainNodeId,
             box: this.canvas.getFiguresRect(),
@@ -37,6 +38,7 @@ export default class CanvasSerializer {
 
     deserialize(canvasData) {
         this.canvas.diagramId = canvasData.diagramId
+        this.canvas.diagramName = canvasData.diagramName
         this.canvas.canvasId = canvasData.canvasId
         this.canvas.mainNodeId = canvasData.mainNodeId
         this.canvas.addAll(this.deserializeFigures(canvasData.figures))

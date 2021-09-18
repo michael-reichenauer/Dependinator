@@ -63,6 +63,7 @@ export default class DiagramCanvas {
         PubSub.subscribe('canvas.SetEditMode', (_, isEditMode) => this.canvas.panPolicy.setEditMode(isEditMode))
         PubSub.subscribe('canvas.NewDiagram', this.commandNewDiagram)
         PubSub.subscribe('canvas.OpenDiagram', this.commandOpenDiagram)
+        PubSub.subscribe('canvas.RenameDiagram', (_, name) => this.commandRenameDiagram(name))
         PubSub.subscribe('canvas.DeleteDiagram', this.commandDeleteDiagram)
         PubSub.subscribe('canvas.SaveDiagramToFile', this.commandSaveToFile)
         PubSub.subscribe('canvas.OpenFile', this.commandOpenFile)
@@ -115,6 +116,11 @@ export default class DiagramCanvas {
         finally {
             setProgress(false)
         }
+    }
+
+    commandRenameDiagram = async (name) => {
+        this.setName(name)
+        this.save()
     }
 
     commandDeleteDiagram = async () => {
@@ -331,11 +337,11 @@ export default class DiagramCanvas {
 
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
-                if (e.command?.figure?.parent?.id === this.canvas.mainNodeId) {
-                    // Update the title whenever the main node changes
-                    this.callbacks.setTitle(this.getTitle())
-                    this.store.setDiagramName(this.canvas.diagramId, this.getName())
-                }
+                // if (e.command?.figure?.parent?.id === this.canvas.mainNodeId) {
+                //     // Update the title whenever the main node changes
+                //     this.callbacks.setTitle(this.getTitle())
+                //     this.store.setDiagramName(this.canvas.diagramId, this.getName())
+                // }
 
                 if (e.action === "POST_EXECUTE") {
                     this.save()
@@ -359,7 +365,12 @@ export default class DiagramCanvas {
     }
 
     getName() {
-        return this.canvas.getFigure(this.canvas.mainNodeId)?.getName() ?? ''
+        return this.canvas.diagramName ?? ''
+    }
+
+    setName(name) {
+        this.canvas.diagramName = name
+        this.callbacks.setTitle(this.getTitle())
     }
 
     updateToolbarButtonsStates() {

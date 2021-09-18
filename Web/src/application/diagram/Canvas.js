@@ -14,6 +14,7 @@ export default class Canvas extends draw2d.Canvas {
     serializer = null
 
     diagramId = null
+    diagramName = null
     canvasId = null
     mainNodeId = null
 

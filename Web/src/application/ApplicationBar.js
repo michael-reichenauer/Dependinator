@@ -1,6 +1,6 @@
 import React from "react";
 import PubSub from 'pubsub-js'
-import { Typography, AppBar, Toolbar, IconButton, Tooltip, Box, } from "@material-ui/core";
+import { Typography, AppBar, Toolbar, IconButton, Tooltip, Box, Link, } from "@material-ui/core";
 import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { ApplicationMenu } from "./ApplicationMenu"
@@ -21,6 +21,7 @@ import { useLogin } from "./Login";
 import { useSyncMode } from './Online'
 import { useConnection } from "./diagram/Api";
 import PostAddIcon from '@material-ui/icons/PostAdd';
+import { showPrompt } from './../common/PromptDialog';
 
 
 export default function ApplicationBar({ height }) {
@@ -46,6 +47,18 @@ export default function ApplicationBar({ height }) {
     const editStyleAlways = (disabled) => {
         return !disabled ? classes.iconsAlways : classes.iconsAlwaysDarker
     }
+
+    const renameDiagram = () => {
+
+        var name = titleText
+        const index = titleText.lastIndexOf(' - ')
+        if (index > -1) {
+            name = name.substring(0, index)
+        }
+
+        showPrompt('Rename Diagram', null, name,
+            (name) => PubSub.publish('canvas.RenameDiagram', name))
+    };
 
     const editToggle = editMode ? ['edit'] : ['pan']
 
@@ -104,7 +117,7 @@ export default function ApplicationBar({ height }) {
                 </ToggleButtonGroup>
 
                 <Box m={2} className={style()} />
-                <Typography className={classes.title} variant="h6" noWrap>{titleText}</Typography>
+                <Typography className={classes.title} variant="h6" noWrap onClick={renameDiagram}>{titleText}</Typography>
             </Toolbar>
         </AppBar >
     )

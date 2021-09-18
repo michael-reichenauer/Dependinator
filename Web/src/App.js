@@ -7,6 +7,7 @@ import Diagram from "./application/Diagram";
 import About from "./application/About";
 import Login from "./application/Login";
 import AlertDialog from "./common/AlertDialog";
+import PromptDialog from "./common/PromptDialog";
 // import { dataCrypt } from './common/dataCrypt';
 import Nodes from "./application/Nodes";
 
@@ -45,6 +46,7 @@ function App() {
       <Login />
       <Nodes />
       <AlertDialog />
+      <PromptDialog />
     </>
   );
 }
