@@ -1,6 +1,6 @@
 import React from "react";
 import PubSub from 'pubsub-js'
-import { Typography, AppBar, Toolbar, IconButton, Tooltip, Box, Link, } from "@material-ui/core";
+import { Typography, AppBar, Toolbar, IconButton, Tooltip, Box, } from "@material-ui/core";
 import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { ApplicationMenu } from "./ApplicationMenu"
