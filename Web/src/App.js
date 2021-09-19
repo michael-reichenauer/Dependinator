@@ -10,6 +10,8 @@ import AlertDialog from "./common/AlertDialog";
 import PromptDialog from "./common/PromptDialog";
 // import { dataCrypt } from './common/dataCrypt';
 import Nodes from "./application/Nodes";
+import NodeLabelDialog from "./application/diagram/LabelEditor";
+
 
 
 function App() {
@@ -47,6 +49,7 @@ function App() {
       <Nodes />
       <AlertDialog />
       <PromptDialog />
+      <NodeLabelDialog />
     </>
   );
 }

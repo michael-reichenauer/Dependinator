@@ -332,8 +332,9 @@ export default class DiagramCanvas {
         this.updateToolbarButtonsStates()
 
         canvas.commandStack.addEventListener(e => {
-            // console.log('event:', e)
+            // console.log('change event:', e)
             this.updateToolbarButtonsStates()
+
 
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
@@ -344,6 +345,7 @@ export default class DiagramCanvas {
                 // }
 
                 if (e.action === "POST_EXECUTE") {
+                    // console.log('save')
                     this.save()
                 }
             }

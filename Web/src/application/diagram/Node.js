@@ -12,6 +12,7 @@ import InnerDiagramFigure from "./InnerDiagramFigure";
 import Label from "./Label";
 import { store } from "./Store";
 import { icons } from './../../common/icons';
+import { LabelEditor } from './LabelEditor';
 
 const defaultIconKey = 'Azure/General/Module'
 
@@ -282,7 +283,7 @@ export default class Node extends draw2d.shape.node.Between {
             fontSize: 12, fontColor: fontColor, bold: true,
         })
 
-        this.nameLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
+        this.nameLabel.installEditor(new LabelEditor(this));
         this.nameLabel.labelLocator = new NodeNameLocator()
         this.add(this.nameLabel, this.nameLabel.labelLocator);
 
@@ -291,7 +292,7 @@ export default class Node extends draw2d.shape.node.Between {
             fontSize: 9, fontColor: fontColor, bold: false,
         })
 
-        this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
+        this.descriptionLabel.installEditor(new LabelEditor(this));
         this.descriptionLabel.labelLocator = new NodeDescriptionLocator()
         this.add(this.descriptionLabel, this.descriptionLabel.labelLocator);
     }
@@ -381,3 +382,5 @@ class InnerDiagramLocator extends draw2d.layout.locator.Locator {
         target.setPosition(2, 2)
     }
 }
+
+
