@@ -71,12 +71,12 @@ export default function LabelEditorDialog() {
         setPrompt({ ...label, description: e.target.value });
     }
 
-    const catchReturn = (ev) => {
-        if (ev.key === 'Enter') {
-            handleOK()
-            ev.preventDefault();
-        }
-    }
+    // const catchReturn = (ev) => {
+    //     if (ev.key === 'Enter') {
+    //         handleOK()
+    //         ev.preventDefault();
+    //     }
+    // }
 
 
     return (
@@ -91,9 +91,11 @@ export default function LabelEditorDialog() {
                     fullWidth
                     variant="standard"
                     size="small"
+                    multiline
+                    rows={2}
                     defaultValue={label?.name ?? ''}
                     onChange={handleNameFieldChange}
-                    onKeyPress={catchReturn}
+                //onKeyPress={catchReturn}
                 />
                 <TextField
                     id="description"
