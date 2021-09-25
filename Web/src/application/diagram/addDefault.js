@@ -61,5 +61,5 @@ const addNode = (canvas, node, p) => {
 }
 
 const addConnection = (canvas, src, trg) => {
-    canvas.add(new Connection(null, src, 'output1', trg, 'input1'))
+    canvas.add(new Connection(null, null, src, 'output1', trg, 'input1'))
 }

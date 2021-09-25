@@ -93,7 +93,14 @@ export default class CanvasSerializer {
 
 
     serializeFigures = () => {
-        return this.canvas.getFigures().asArray().map((figure) => figure.serialize());
+        const figures = this.canvas.getFigures().clone()
+        figures.sort(function (a, b) {
+            // return 1  if a before b
+            // return -1 if b before a
+            return a.getZOrder() > b.getZOrder() ? 1 : -1;
+        });
+
+        return figures.asArray().map((figure) => figure.serialize());
     }
 
     deserializeFigures = (figures) => {

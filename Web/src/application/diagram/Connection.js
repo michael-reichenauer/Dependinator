@@ -8,13 +8,20 @@ import Label from "./Label";
 const defaultTextWidth = 230
 
 export default class Connection extends draw2d.Connection {
+    nameLabel = null
     descriptionLabel = null
 
-    constructor(description, src, srcPortName, dst, dstPortName, id) {
+    getName = () => this.nameLabel?.text ?? ''
+    getDescription = () => this.descriptionLabel?.text ?? ''
+
+
+    constructor(name, description, src, srcPortName, dst, dstPortName, id) {
         id = id ?? cuid()
         super({ id: id, stroke: 1 })
 
-        description = description ?? 'Description'
+        name = name ?? 'Name'
+        description = description ?? 'description'
+
         if (src !== undefined) {
             const srcPort = src.getPort(srcPortName)
             const dstPort = dst.getPort(dstPortName)
@@ -26,13 +33,13 @@ export default class Connection extends draw2d.Connection {
         this.setRouter(new draw2d.layout.connection.InteractiveManhattanConnectionRouter());
 
         this.addArrow()
-        this.addLabels(description)
+        this.addLabels(name, description)
     }
 
     static deserialize(canvas, c) {
         const src = canvas.getFigure(c.src)
         const trg = canvas.getFigure(c.trg)
-        const connection = new Connection(c.description, src, c.srcPort, trg, c.trgPort, c.id)
+        const connection = new Connection(c.name, c.description, src, c.srcPort, trg, c.trgPort, c.id)
 
         // Restore vertices
         for (let i = 1; i < c.v.length - 1; i++) {
@@ -57,20 +64,29 @@ export default class Connection extends draw2d.Connection {
             trgPort: this.targetPort.name,
             trgGrp: trgGrp,
             v: this.vertices.asArray().map(v => ({ x: v.x, y: v.y })),
-            description: this.descriptionLabel?.text ?? ''
+            name: this.getName(),
+            description: this.getDescription()
         }
     }
 
-    addLabels(description) {
+    addLabels(name, description) {
+        this.nameLabel = new Label(defaultTextWidth, {
+            text: 'name', stroke: 0,
+            fontSize: 9, bold: true,
+            fontColor: Colors.canvasText, bgColor: Colors.canvasBackground,
+        })
+
+        this.nameLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
+        this.add(this.nameLabel, new ConnectionNameLabelLocator(this));
+
         this.descriptionLabel = new Label(defaultTextWidth, {
             text: description, stroke: 0,
             fontSize: 9, bold: false,
             fontColor: Colors.canvasText, bgColor: Colors.canvasBackground,
         })
-        // this.descriptionLabel.setResizeable(true)
-        // this.descriptionLabel.setSelectable(true)
+
         this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-        this.add(this.descriptionLabel, new ConnectionLabelLocator(this));
+        this.add(this.descriptionLabel, new ConnectionDescriptionLabelLocator(this));
     }
 
     addArrow() {
@@ -171,7 +187,7 @@ export default class Connection extends draw2d.Connection {
 }
 
 
-class ConnectionLabelLocator extends draw2d.layout.locator.ConnectionLocator {
+class ConnectionNameLabelLocator extends draw2d.layout.locator.ConnectionLocator {
     relocate(index, target) {
         let conn = target.getParent()
         let points = conn.getVertices()
@@ -183,9 +199,29 @@ class ConnectionLabelLocator extends draw2d.layout.locator.ConnectionLocator {
         let p1 = points.get(segmentIndex)
         let p2 = points.get(segmentIndex + 1)
 
-        target.setPosition(
-            ((p2.x - p1.x) / 2 + p1.x - target.getWidth() / 2) | 0,
-            ((p2.y - p1.y) / 2 + p1.y - target.getHeight() / 2) | 0)
+        const x = ((p2.x - p1.x) / 2 + p1.x - target.getWidth() / 2) | 0
+        const y = ((p2.y - p1.y) / 2 + p1.y - target.getHeight() / 2) | 0
+
+        target.setPosition(x, y - 6)
+    }
+}
+
+class ConnectionDescriptionLabelLocator extends draw2d.layout.locator.ConnectionLocator {
+    relocate(index, target) {
+        let conn = target.getParent()
+        let points = conn.getVertices()
+
+        let segmentIndex = Math.floor((points.getSize() - 2) / 2)
+        if (points.getSize() <= segmentIndex + 1)
+            return
+
+        let p1 = points.get(segmentIndex)
+        let p2 = points.get(segmentIndex + 1)
+
+        const x = ((p2.x - p1.x) / 2 + p1.x - target.getWidth() / 2) | 0
+        const y = ((p2.y - p1.y) / 2 + p1.y - target.getHeight() / 2) | 0
+
+        target.setPosition(x, y + 6)
     }
 }
 

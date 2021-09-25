@@ -13,6 +13,7 @@ import Label from "./Label";
 import { store } from "./Store";
 import { icons } from './../../common/icons';
 import { LabelEditor } from './LabelEditor';
+import NodeGroup from './NodeGroup';
 
 const defaultIconKey = 'Azure/General/Module'
 
@@ -21,7 +22,7 @@ const defaultOptions = (type) => {
         id: cuid(),
         width: Node.defaultWidth,
         height: Node.defaultHeight,
-        description: 'Description',
+        description: '',
     }
 
     switch (type) {
@@ -142,7 +143,7 @@ export default class Node extends draw2d.shape.node.Between {
 
         return [
             menuItem('To front', () => this.toFront()),
-            menuItem('To back', () => this.toBack()),
+            menuItem('To back', () => this.toNodeBack()),
             menuParentItem('Inner diagram', [
                 menuItem('Show', () => this.showInnerDiagram(), this.innerDiagram == null, hasDiagramIcon),
                 menuItem('Hide (click)', () => this.hideInnerDiagram(), this.innerDiagram != null, hasDiagramIcon),
@@ -154,6 +155,26 @@ export default class Node extends draw2d.shape.node.Between {
             menuItem('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.canDelete)
         ]
     }
+
+    toNodeBack() {
+        this.toBack()
+
+        // Get all figures in z order
+        const figures = this.canvas.getFigures().clone()
+        figures.sort(function (a, b) {
+            // return 1  if a before b
+            // return -1 if b before a
+            return a.getZOrder() > b.getZOrder() ? -1 : 1;
+        });
+
+        // move all group nodes to back to be behind all nodes
+        figures.asArray().forEach(f => {
+            if (f instanceof NodeGroup) {
+                f.toBack()
+            }
+        })
+    }
+
 
     changeIcon(iconKey) {
         this.canvas.runCmd(new CommandChangeIcon(this, iconKey))
@@ -206,8 +227,8 @@ export default class Node extends draw2d.shape.node.Between {
         this.repaint()
     }
 
-    toBack() {
-        super.toBack()
+    toBack(figure) {
+        super.toBack(figure)
         const group = this.getCanvas()?.group
         group?.toBack()
 

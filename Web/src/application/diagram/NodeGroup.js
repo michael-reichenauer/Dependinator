@@ -5,13 +5,14 @@ import Colors from "./Colors";
 import { icons } from "../../common/icons";
 import CommandChangeIcon from './CommandChangeIcon';
 import { PubSub } from 'pubsub-js';
+import { LabelEditor } from './LabelEditor';
 
 const defaultOptions = () => {
     return {
         id: cuid(),
         width: NodeGroup.defaultWidth,
         height: NodeGroup.defaultHeight,
-        description: 'Description',
+        description: 'ddd',
         icon: 'Default',
         sticky: false,
     }
@@ -21,8 +22,8 @@ const defaultOptions = () => {
 export default class NodeGroup extends draw2d.shape.composite.Raft {
     //export default class NodeGroup extends draw2d.shape.basic.Rectangle {
     static nodeType = 'nodeGroup'
-    static defaultWidth = 500
-    static defaultHeight = 340
+    static defaultWidth = 300
+    static defaultHeight = 200
 
     type = NodeGroup.nodeType
     nameLabel = null
@@ -68,19 +69,11 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
         }
     }
 
-    setCanvas(canvas) {
-        super.setCanvas(canvas)
-
-        if (canvas != null) {
-            this.toBack()
-        }
-    }
-
 
     static deserialize(data) {
         return new NodeGroup({
             id: data.id, width: data.w, height: data.h,
-            name: data.name, icon: data.icon, sticky: data.sticky
+            name: data.name, description: data.description, icon: data.icon, sticky: data.sticky
         })
     }
 
@@ -89,7 +82,7 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
         try {
             return {
                 type: this.type, id: this.id, x: this.x, y: this.y, w: this.width, h: this.height,
-                name: this.getName(), hasGroup: this.group != null, icon: this.iconName,
+                name: this.getName(), description: this.getDescription(), hasGroup: this.group != null, icon: this.iconName,
                 sticky: sticky
             }
         } catch (error) {
@@ -117,6 +110,7 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
             "Disable sticky sub items" : "Enable sticky sub items"
         return [
             menuItem('To back', () => this.toBack()),
+            menuItem('To front', () => this.toGroupFront()),
             menuItem('Change icon ...', () => PubSub.publish('nodes.showDialog', { add: false, group: true, action: (iconKey) => this.changeIcon(iconKey) })),
             menuItem(stickyText, () => this.toggleStickySubItems()),
             menuItem('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.canDelete)
@@ -131,6 +125,24 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
         this.setWidth(NodeGroup.defaultWidth)
         this.setHeight(NodeGroup.defaultHeight)
     }
+
+    toGroupFront() {
+        this.toFront()
+
+        // Get all figures in z order
+        const figures = this.canvas.getFigures().clone()
+        figures.sort(function (a, b) {
+            return a.getZOrder() > b.getZOrder() ? 1 : -1;
+        });
+
+        // move all group nodes to back to be behind all nodes
+        figures.asArray().forEach(f => {
+            if (f instanceof draw2d.shape.node.Between) {
+                f.toFront()
+            }
+        })
+    }
+
 
     toBack() {
         super.toBack()
@@ -153,7 +165,7 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
             text: name, stroke: 0, fontSize: 12, fontColor: Colors.canvasText, bold: true,
         })
 
-        this.nameLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
+        this.nameLabel.installEditor(new LabelEditor(this));
         this.nameLabel.labelLocator = new NodeGroupNameLocator()
         this.add(this.nameLabel, this.nameLabel.labelLocator);
 
@@ -163,7 +175,7 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
                 text: description, stroke: 0, fontSize: 9, fontColor: Colors.canvasText, bold: false,
             })
 
-        this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
+        this.descriptionLabel.installEditor(new LabelEditor(this));
         this.descriptionLabel.labelLocator = new NodeGroupDescriptionLocator()
         this.add(this.descriptionLabel, this.descriptionLabel.labelLocator);
     }
@@ -196,7 +208,9 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
 
 class NodeGroupNameLocator extends draw2d.layout.locator.Locator {
     relocate(index, label) {
-        label.setPosition(22, -3)
+        const node = label.getParent()
+        const y = node.getDescription() === '' ? 2 : -3
+        label.setPosition(22, y)
     }
 }
 
