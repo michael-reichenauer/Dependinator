@@ -1,7 +1,7 @@
 import { atom, useAtom } from "jotai"
-import { Box, Button, Dialog, Link, Tooltip, Typography } from "@material-ui/core";
+import { Box, Button, Dialog, Tooltip, Typography } from "@material-ui/core";
 import { localBuildTime, localSha } from "../common/appVersion";
-import { useLogin } from "./Login";
+//import { useLogin } from "./Login";
 
 const aboutAtom = atom(false)
 
@@ -9,7 +9,7 @@ export const useAbout = () => useAtom(aboutAtom)
 
 export default function About() {
     const [show, setShow] = useAbout()
-    const [, setShowLogin] = useLogin()
+    //const [, setShowLogin] = useLogin()
 
     const hasShown = localStorage.getItem('hasShownAbout')
 
@@ -23,9 +23,9 @@ export default function About() {
 
     }
 
-    const enableCloudSync = () => {
-        setShowLogin(true);
-    }
+    // const enableCloudSync = () => {
+    //     setShowLogin(true);
+    // }
 
     return (
         <Dialog open={show} onClose={() => { }} >

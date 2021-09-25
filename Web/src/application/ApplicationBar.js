@@ -5,9 +5,9 @@ import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { ApplicationMenu } from "./ApplicationMenu"
 import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
-import SyncIcon from '@material-ui/icons/Sync';
-import SyncProblemIcon from '@material-ui/icons/SyncProblem';
-import SyncDisabledIcon from '@material-ui/icons/SyncDisabled';
+// import SyncIcon from '@material-ui/icons/Sync';
+// import SyncProblemIcon from '@material-ui/icons/SyncProblem';
+// import SyncDisabledIcon from '@material-ui/icons/SyncDisabled';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
 import ControlCameraIcon from '@material-ui/icons/ControlCamera';
@@ -16,10 +16,10 @@ import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
 import SaveAltIcon from '@material-ui/icons/SaveAlt';
 import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom, titleAtom } from "./Diagram";
 import { useAtom } from "jotai";
-import { store } from "./diagram/Store";
-import { useLogin } from "./Login";
-import { useSyncMode } from './Online'
-import { useConnection } from "./diagram/Api";
+// import { store } from "./diagram/Store";
+//import { useLogin } from "./Login";
+// import { useSyncMode } from './Online'
+// import { useConnection } from "./diagram/Api";
 import PostAddIcon from '@material-ui/icons/PostAdd';
 import { showPrompt } from './../common/PromptDialog';
 
@@ -28,14 +28,14 @@ export default function ApplicationBar({ height }) {
     const classes = useAppBarStyles();
     const [titleText] = useAtom(titleAtom)
     const [editMode, setEditMode] = useAtom(editModeAtom);
-    const [syncMode] = useSyncMode()
+    // const [syncMode] = useSyncMode()
     const [canUndo] = useAtom(canUndoAtom)
     const [canRedo] = useAtom(canRedoAtom)
     const [canPopDiagram] = useAtom(canPopDiagramAtom)
-    const [, setShowLogin] = useLogin()
-    const [connection] = useConnection()
+    //const [, setShowLogin] = useLogin()
+    //const [connection] = useConnection()
 
-    const syncState = syncMode && connection ? true : syncMode && !connection ? false : null
+    // const syncState = syncMode && connection ? true : syncMode && !connection ? false : null
 
     const style = (disabled) => {
         return !disabled ? classes.icons : classes.iconsDisabled
@@ -75,18 +75,18 @@ export default function ApplicationBar({ height }) {
         }
     }
 
-    const { details, provider } = store.getSync()
+    //const { details, provider } = store.getSync()
 
     return (
         <AppBar position="static" style={{ height: height }}>
             <Toolbar>
                 <ApplicationMenu />
-                {syncState === true && <Button tooltip={`Cloud sync enabled and OK for ${details}, ${provider}, click to check cloud connection`} icon={<SyncIcon style={{ color: 'Lime' }} />}
+                {/* {syncState === true && <Button  tooltip={`Cloud sync enabled and OK for ${details}, ${provider}, click to check cloud connection`} icon={<SyncIcon style={{ color: 'Lime' }} />}
                     onClick={() => store.checkCloudConnection()} />}
-                {syncState === false && <Button tooltip="Cloud connection error, sync disabled, click to retry" icon={<SyncProblemIcon style={{ color: '#FF3366' }} />}
+                {syncState === false && <Button  tooltip="Cloud connection error, sync disabled, click to retry" icon={<SyncProblemIcon style={{ color: '#FF3366' }} />}
                     onClick={() => store.checkCloudConnection()} />}
-                {syncState === null && <Button tooltip="Cloud sync disabled, click to enable" icon={<SyncDisabledIcon style={{ color: '#FFFF66' }} />}
-                    onClick={() => setShowLogin(true)} />}
+                {syncState === null && <Button  tooltip="Cloud sync disabled, click to enable" icon={<SyncDisabledIcon style={{ color: '#FFFF66' }} />}
+                    onClick={() => setShowLogin(true)} />} */}
 
                 <Button tooltip="Undo" disabled={!canUndo} icon={<UndoIcon className={styleAlways(!canUndo)} />}
                     onClick={() => PubSub.publish('canvas.Undo')} />
