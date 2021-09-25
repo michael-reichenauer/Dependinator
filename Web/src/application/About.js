@@ -31,20 +31,19 @@ export default function About() {
         <Dialog open={show} onClose={() => { }} >
             <Box style={{ width: 320, height: 330, padding: 20 }}>
                 <Tooltip title={`version: ${localBuildTime} (${localSha.substring(0, 6)})`}>
-                    <Typography variant="h5">About Dependinator</Typography>
+                    <Typography variant="h5">About Dependitor</Typography>
                 </Tooltip>
                 <Typography >
-                    A tool for modeling and visualizing software architecture inspired by map tools for
-                    navigation.
+                    A tool for modeling software architecture.
                 </Typography>
 
-                <Typography style={{ paddingTop: 10 }} >
+                {/* <Typography style={{ paddingTop: 10 }} >
                     Checkout the  "<Link href="https://c4model.com" target="_blank">C4 Model</Link>"
                     by Simon Brown  to better understand on how to use the tool.
                 </Typography>
                 <Typography style={{ paddingTop: 10 }} >
                     You can sync diagrams between different devices if you login to <Link onClick={enableCloudSync}>enable cloud sync</Link>
-                </Typography>
+                </Typography> */}
                 <Typography style={{ paddingTop: 30 }} variant="body2">
                     Hint: Use context menus to access functionality.
                 </Typography>

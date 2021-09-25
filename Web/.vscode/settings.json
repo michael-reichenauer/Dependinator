@@ -1,11 +1,12 @@
 {
     "cSpell.words": [
-        "Deleteable",
-        "Inplace",
-        "Resizeable",
-        "Tweenable",
         "bbox",
-        "longclick"
+        "Deleteable",
+        "Dependitor",
+        "Inplace",
+        "longclick",
+        "Resizeable",
+        "Tweenable"
     ],
     "azureFunctions.deploySubpath": "api",
     "azureFunctions.postDeployTask": "npm install",

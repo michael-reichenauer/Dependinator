@@ -1,6 +1,6 @@
 {
-  "short_name": "Dependinator",
-  "name": "Dependinator",
+  "short_name": "Dependitor",
+  "name": "Dependitor",
   "sha": "%REACT_APP_SHA%",
   "buildTime": "%REACT_APP_BUILD_TIME%",
   "icons": [
