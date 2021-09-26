@@ -88,8 +88,8 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
         } catch (error) {
             console.error('error', error)
         }
-
     }
+
 
 
     toggleStickySubItems() {
@@ -109,12 +109,22 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
         const stickyText = this.getAboardFigures === this.getAboardFiguresOrg ?
             "Disable sticky sub items" : "Enable sticky sub items"
         return [
-            menuItem('To back', () => this.toBack()),
-            menuItem('To front', () => this.toGroupFront()),
+            menuItem('To front', () => this.moveToFront()),
+            menuItem('To back', () => this.moveToBack()),
             menuItem('Change icon ...', () => PubSub.publish('nodes.showDialog', { add: false, group: true, action: (iconKey) => this.changeIcon(iconKey) })),
             menuItem(stickyText, () => this.toggleStickySubItems()),
             menuItem('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.canDelete)
         ]
+    }
+
+    moveToBack() {
+        this.toBack()
+        PubSub.publish('canvas.Save')
+    }
+
+    moveToFront() {
+        this.toFront()
+        PubSub.publish('canvas.Save')
     }
 
     setName(name) {
@@ -126,9 +136,37 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
         this.setHeight(NodeGroup.defaultHeight)
     }
 
-    toGroupFront() {
-        this.toFront()
+    setCanvas(canvas) {
+        // Since parent type is a composite, the parent will call toBack().
+        // However, we do not want that, so we signal to toBack() to act differently when called
+        this.isSetCanvas = true
+        super.setCanvas(canvas)
+        this.isSetCanvas = false
+    }
 
+
+    toBack() {
+        if (this.isSetCanvas) {
+            // Since parent type is a composite, the parent called toBack() when setCanvas() was called.
+            // However, we do not want that, just be back behind all figures, but in front of all groups
+            this.moveAllFiguresToFront()
+            return
+        }
+
+        super.toBack()
+        // const group = this.getCanvas()?.group
+        // group?.toBack()
+    }
+
+    toFront() {
+        console.log('group toFront', this.getName())
+        super.toFront()
+
+        // When moving group to front, move all figures to front as well to ensure groups are behind
+        this.moveAllFiguresToFront()
+    }
+
+    moveAllFiguresToFront() {
         // Get all figures in z order
         const figures = this.canvas.getFigures().clone()
         figures.sort(function (a, b) {
@@ -143,13 +181,6 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
         })
     }
 
-
-    toBack() {
-        super.toBack()
-        const group = this.getCanvas()?.group
-        group?.toBack()
-
-    }
 
     handleResize() {
         this.nameLabel?.setTextWidth(this.width)

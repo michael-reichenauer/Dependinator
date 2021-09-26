@@ -110,10 +110,6 @@ export default class Node extends draw2d.shape.node.Between {
         super.setCanvas(canvas)
 
         if (canvas != null) {
-            if (canvas.mainNodeId === this.id) {
-                // Cannot delete main node of canvas
-                this.setDeleteable(false)
-            }
             this.diagramIcon?.shape?.attr({ "cursor": "pointer" })
         }
     }
@@ -142,8 +138,8 @@ export default class Node extends draw2d.shape.node.Between {
         })
 
         return [
-            menuItem('To front', () => this.toFront()),
-            menuItem('To back', () => this.toNodeBack()),
+            menuItem('To front', () => this.moveToFront()),
+            menuItem('To back', () => this.moveToBack()),
             menuParentItem('Inner diagram', [
                 menuItem('Show', () => this.showInnerDiagram(), this.innerDiagram == null, hasDiagramIcon),
                 menuItem('Hide (click)', () => this.hideInnerDiagram(), this.innerDiagram != null, hasDiagramIcon),
@@ -156,9 +152,16 @@ export default class Node extends draw2d.shape.node.Between {
         ]
     }
 
-    toNodeBack() {
-        this.toBack()
+    toBack(figure) {
+        super.toBack(figure)
 
+        // When node is moved back, all groups should be moved back as well
+        this.moveAllGroupsToBack()
+        // const group = this.getCanvas()?.group
+        // group?.toBack()
+    }
+
+    moveAllGroupsToBack() {
         // Get all figures in z order
         const figures = this.canvas.getFigures().clone()
         figures.sort(function (a, b) {
@@ -175,6 +178,15 @@ export default class Node extends draw2d.shape.node.Between {
         })
     }
 
+    moveToBack() {
+        this.toBack()
+        PubSub.publish('canvas.Save')
+    }
+
+    moveToFront() {
+        this.toFront()
+        PubSub.publish('canvas.Save')
+    }
 
     changeIcon(iconKey) {
         this.canvas.runCmd(new CommandChangeIcon(this, iconKey))
@@ -227,12 +239,7 @@ export default class Node extends draw2d.shape.node.Between {
         this.repaint()
     }
 
-    toBack(figure) {
-        super.toBack(figure)
-        const group = this.getCanvas()?.group
-        group?.toBack()
 
-    }
 
     showInnerDiagram() {
         const t = timing()
@@ -334,9 +341,6 @@ export default class Node extends draw2d.shape.node.Between {
 
 
     addInnerDiagramIcon() {
-        if (this.type !== Node.nodeType && this.type !== Node.systemType) {
-            return
-        }
         const iconColor = Colors.getNodeFontColor(this.colorName)
         this.diagramIcon = new draw2d.shape.icon.Diagram({
             width: 15, height: 15, color: iconColor, bgColor: 'none',

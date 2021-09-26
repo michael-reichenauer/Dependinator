@@ -66,6 +66,7 @@ export default class DiagramCanvas {
         PubSub.subscribe('canvas.RenameDiagram', (_, name) => this.commandRenameDiagram(name))
         PubSub.subscribe('canvas.DeleteDiagram', this.commandDeleteDiagram)
         PubSub.subscribe('canvas.SaveDiagramToFile', this.commandSaveToFile)
+        PubSub.subscribe('canvas.Save', () => this.save())
         PubSub.subscribe('canvas.OpenFile', this.commandOpenFile)
         PubSub.subscribe('canvas.ArchiveToFile', this.commandArchiveToFile)
         PubSub.subscribe('canvas.Print', this.commandPrint)

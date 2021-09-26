@@ -3,6 +3,7 @@ import cuid from 'cuid'
 import { menuItem } from "../../common/Menus";
 import Colors from "./Colors";
 import Label from "./Label";
+import { LabelEditor } from './LabelEditor';
 
 
 const defaultTextWidth = 230
@@ -71,12 +72,12 @@ export default class Connection extends draw2d.Connection {
 
     addLabels(name, description) {
         this.nameLabel = new Label(defaultTextWidth, {
-            text: 'name', stroke: 0,
+            text: name, stroke: 0,
             fontSize: 9, bold: true,
             fontColor: Colors.canvasText, bgColor: Colors.canvasBackground,
         })
 
-        this.nameLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
+        this.nameLabel.installEditor(new LabelEditor(this));
         this.add(this.nameLabel, new ConnectionNameLabelLocator(this));
 
         this.descriptionLabel = new Label(defaultTextWidth, {
@@ -85,7 +86,7 @@ export default class Connection extends draw2d.Connection {
             fontColor: Colors.canvasText, bgColor: Colors.canvasBackground,
         })
 
-        this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
+        this.descriptionLabel.installEditor(new LabelEditor(this));
         this.add(this.descriptionLabel, new ConnectionDescriptionLabelLocator(this));
     }
 
@@ -221,7 +222,7 @@ class ConnectionDescriptionLabelLocator extends draw2d.layout.locator.Connection
         const x = ((p2.x - p1.x) / 2 + p1.x - target.getWidth() / 2) | 0
         const y = ((p2.y - p1.y) / 2 + p1.y - target.getHeight() / 2) | 0
 
-        target.setPosition(x, y + 6)
+        target.setPosition(x, y + 7)
     }
 }
 
