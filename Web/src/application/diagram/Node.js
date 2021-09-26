@@ -5,7 +5,6 @@ import { menuItem, menuParentItem } from "../../common/Menus";
 import { clickHandler } from "../../common/mouseClicks";
 import timing from "../../common/timing";
 import Colors from "./Colors";
-import CommandChangeColor from "./CommandChangeColor";
 import CommandChangeIcon from "./CommandChangeIcon";
 import NodeIcons from "./NodeIcons";
 import InnerDiagramFigure from "./InnerDiagramFigure";
