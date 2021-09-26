@@ -29,10 +29,7 @@ const defaultOptions = (type) => {
         case Node.nodeType:
             return { ...dv, icon: defaultIconKey, }
         case Node.systemType:
-            return {
-                ...dv, name: store.getUniqueSystemName(), colorName: 'DeepPurple', icon: 'Azure/Compute/CloudServices(Classic)',
-                width: Node.defaultWidth * 1.2, height: Node.defaultHeight * 1.2,
-            }
+            return { ...dv, name: 'System', icon: 'Azure/Compute/CloudServices(Classic)' }
         case Node.userType:
             return { ...dv, name: 'External Users', icon: 'Azure/Management+Governance/MyCustomers' }
         case Node.externalType:
@@ -133,9 +130,7 @@ export default class Node extends draw2d.shape.node.Between {
 
     getContextMenuItems(x, y) {
         const hasDiagramIcon = this.diagramIcon != null
-        const colorItems = Colors.nodeColorNames().map((name) => {
-            return menuItem(name, () => this.canvas.runCmd(new CommandChangeColor(this, name)))
-        })
+
 
         return [
             menuItem('To front', () => this.moveToFront()),
@@ -145,7 +140,7 @@ export default class Node extends draw2d.shape.node.Between {
                 menuItem('Hide (click)', () => this.hideInnerDiagram(), this.innerDiagram != null, hasDiagramIcon),
                 menuItem('Edit (dbl-click)', () => this.editInnerDiagram(), true, hasDiagramIcon),
             ], true, hasDiagramIcon),
-            menuParentItem('Change color', colorItems),
+
             menuItem('Change icon ...', () => PubSub.publish('nodes.showDialog', { add: false, action: (iconKey) => this.changeIcon(iconKey) })),
             menuItem('Set default size', () => this.setDefaultSize()),
             menuItem('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.canDelete)
