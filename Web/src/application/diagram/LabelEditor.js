@@ -7,6 +7,8 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import draw2d from "draw2d";
 import { atom, useAtom } from 'jotai';
+import Connection from './Connection';
+import Colors from './Colors';
 
 
 const labelAtom = atom(null)
@@ -25,8 +27,14 @@ export class LabelEditor {
 
         showEditLabelDialog(nameLabel.getText(), descriptionLabel.getText(),
             (name, description) => {
-                const nameCmd = new draw2d.command.CommandAttr(nameLabel, { text: name })
-                const descriptionCmd = new draw2d.command.CommandAttr(descriptionLabel, { text: description })
+                let nameBackground = nameLabel.background
+                let descriptionBackground = descriptionLabel.background
+                if (this.parent instanceof Connection) {
+                    nameBackground = !name ? 'none' : Colors.canvasBackground
+                    descriptionBackground = !description ? 'none' : Colors.canvasBackground
+                }
+                const nameCmd = new draw2d.command.CommandAttr(nameLabel, { text: name, bgColor: nameBackground })
+                const descriptionCmd = new draw2d.command.CommandAttr(descriptionLabel, { text: description, bgColor: descriptionBackground })
 
                 cmdStack.startTransaction('Edit Label')
                 cmdStack.execute(nameCmd)

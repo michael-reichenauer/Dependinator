@@ -71,10 +71,13 @@ export default class Connection extends draw2d.Connection {
     }
 
     addLabels(name, description) {
+        const nameBackground = !name ? 'none' : Colors.canvasBackground
+        const descriptionBackground = !description ? 'none' : Colors.canvasBackground
+
         this.nameLabel = new Label(defaultTextWidth, {
             text: name, stroke: 0,
             fontSize: 9, bold: true,
-            fontColor: Colors.canvasText, bgColor: Colors.canvasBackground,
+            fontColor: Colors.canvasText, bgColor: nameBackground,
         })
 
         this.nameLabel.installEditor(new LabelEditor(this));
@@ -83,7 +86,7 @@ export default class Connection extends draw2d.Connection {
         this.descriptionLabel = new Label(defaultTextWidth, {
             text: description, stroke: 0,
             fontSize: 9, bold: false,
-            fontColor: Colors.canvasText, bgColor: Colors.canvasBackground,
+            fontColor: Colors.canvasText, bgColor: descriptionBackground,
         })
 
         this.descriptionLabel.installEditor(new LabelEditor(this));
