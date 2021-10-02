@@ -195,12 +195,11 @@ const NodeItemsList = (root, name, filter, clickedItem) => {
                     <ListItemText primary={name} />
                     {open ? <ExpandLess /> : <ExpandMore />}
                 </ListItem>
-                <Collapse in={open} timeout="auto" unmountOnExit>
 
+                <Collapse in={open} timeout="auto" unmountOnExit>
                     <FixedSizeList width={380} height={height} itemSize={subItemsHeight} itemCount={items.length} >
                         {(props) => renderRow(props, items)}
                     </FixedSizeList>
-
                 </Collapse>
             </Box>
         </>

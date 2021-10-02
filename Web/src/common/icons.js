@@ -22,23 +22,11 @@ class Icons {
                 if (path.startsWith('./DefaultIcon')) {
                     svg = this._getDefaultSvg(svg)
                 }
-                else if (path.startsWith('./azure-official.svg')) {
-                    svg = this._getAzureRootSvg(svg)
-                }
-                else if (path.startsWith('./aws-official.svg')) {
-                    svg = this._getAwsRootSvg(svg)
-                }
                 else if (path.startsWith('./Azure')) {
                     svg = this._getAzureSvg(svg, path)
                 }
-                else if (path.startsWith('./Aws/Architecture')) {
-                    svg = this._getAwsSvg(svg, path, 'Architecture')
-                }
-                else if (path.startsWith('./Aws/Category')) {
-                    svg = this._getAwsSvg(svg, path, 'Category')
-                }
-                else if (path.startsWith('./Aws/Resource')) {
-                    svg = this._getAwsSvg(svg, path, 'Resource')
+                else if (path.startsWith('./Aws')) {
+                    svg = this._getAwsSvg(svg, path)
                 }
 
                 //console.log('svg', svg)
@@ -51,15 +39,12 @@ class Icons {
         return { ...svg, key: defaultIconKey, name: 'Default Icon', fullName: 'Default Icon' }
     }
 
-    _getAzureRootSvg(svg) {
-        return { ...svg, key: 'Azure', name: 'Azure', fullName: 'Azure' }
-    }
-
-    _getAwsRootSvg(svg) {
-        return { ...svg, key: 'Aws', name: 'Aws', fullName: 'Aws' }
-    }
 
     _getAzureSvg(svg, path) {
+        if (path.startsWith('./Azure/root-icon.svg')) {
+            return { ...svg, key: 'Azure', name: 'Azure', fullName: 'Azure' }
+        }
+
         // Azure icons have a pattern like ./Azure/Storage/00776-icon-service-Azure-HCP-Cache.svg
         const parts = path.split('/').slice(1)
         const name = parts[2]
@@ -74,7 +59,24 @@ class Icons {
         return { ...svg, key: key, root: root, group: group, name: name, fullName: fullName }
     }
 
-    _getAwsSvg(svg, path, subType) {
+    _getAwsSvg(svg, path) {
+        if (path.startsWith('./Aws/root-icon.svg')) {
+            return { ...svg, key: 'Aws', name: 'Aws', fullName: 'Aws' }
+        }
+        else if (path.startsWith('./Aws/Architecture')) {
+            return this._getAwsSubSvg(svg, path, 'Architecture')
+        }
+        else if (path.startsWith('./Aws/Category')) {
+            return this._getAwsSubSvg(svg, path, 'Category')
+        }
+        else if (path.startsWith('./Aws/Resource')) {
+            return this._getAwsSubSvg(svg, path, 'Resource')
+        }
+
+        return this._getDefaultSvg(svg)
+    }
+
+    _getAwsSubSvg(svg, path, subType) {
         // Aws icons have a pattern like ./Aws/Aws/Architecture-Service-Icons_07302021/Arch_Analytics/Arch_16
         const awsPath = path
             .replaceAll('/Architecture-Service-Icons_07302021', '')
