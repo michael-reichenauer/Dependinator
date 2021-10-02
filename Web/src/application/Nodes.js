@@ -140,6 +140,7 @@ export default function Nodes() {
 
                         {NodeItemsList('Azure', 'Azure icons', filter, clickedItem)}
                         {NodeItemsList('Aws', 'Aws icons', filter, clickedItem)}
+                        {NodeItemsList('OSA', 'OSA icons', filter, clickedItem)}
                     </List>
                 </Paper>
 

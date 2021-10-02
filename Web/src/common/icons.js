@@ -28,6 +28,9 @@ class Icons {
                 else if (path.startsWith('./Aws')) {
                     svg = this._getAwsSvg(svg, path)
                 }
+                else if (path.startsWith('./OSA')) {
+                    svg = this._getOsaSvg(svg, path)
+                }
 
                 //console.log('svg', svg)
                 return svg
@@ -51,6 +54,7 @@ class Icons {
             .slice(19)              // Skip prefix e.g. '10165-icon-service-'
             .slice(0, -4)           // Skip sufic e.g. '.svg'
             .replaceAll('-', ' ')
+            .replaceAll('_', ' ')
         const root = 'Azure'
         const group = parts[1]
         const fullName = `${root}/${group}/${name}`
@@ -96,6 +100,26 @@ class Icons {
         const group = `${subType}/${parts[1]}`
         const fullName = `${root}/${group}/${name}`
         const key = `${root}/${group.replaceAll('/', '')}/${name}`.replaceAll(' ', '')
+
+        return { ...svg, key: key, root: root, group: group, name: name, fullName: fullName }
+    }
+
+    _getOsaSvg(svg, path) {
+        if (path.startsWith('./OSA/root-icon.svg')) {
+            return { ...svg, key: 'OSA', name: 'OSA', fullName: 'OSA' }
+        }
+
+        // Azure icons have a pattern like ./OSA/osa_cloud.svg
+        const parts = path.split('/').slice(1)
+        const name = parts[1]
+            .slice(4)              // Skip prefix e.g. 'osa_'
+            .slice(0, -4)           // Skip sufic e.g. '.svg'
+            .replaceAll('-', ' ')
+            .replaceAll('_', ' ')
+        const root = 'OSA'
+        const group = 'General'
+        const fullName = `${root}/${group}/${name}`
+        const key = `${root}/${group}/${name}`.replaceAll(' ', '')
 
         return { ...svg, key: key, root: root, group: group, name: name, fullName: fullName }
     }
