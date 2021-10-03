@@ -41,7 +41,13 @@ export default class CanvasSerializer {
         this.canvas.diagramName = canvasData.diagramName
         this.canvas.canvasId = canvasData.canvasId
         this.canvas.mainNodeId = canvasData.mainNodeId
+        // const figures = this.deserializeFigures(canvasData.figures)
+        // figures.forEach(figure => this.canvas.add(figure));
+
+        // const connection = this.deserializeConnections(canvasData.connections)
+        // connection.forEach(connection => this.canvas.add(connection));
         this.canvas.addAll(this.deserializeFigures(canvasData.figures))
+
         this.canvas.addAll(this.deserializeConnections(canvasData.connections))
     }
 

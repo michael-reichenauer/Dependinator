@@ -1,7 +1,7 @@
 import draw2d from "draw2d";
 import PubSub from 'pubsub-js'
 import cuid from 'cuid'
-import { menuItem, menuParentItem } from "../../common/Menus";
+import { menuItem } from "../../common/Menus";
 import { clickHandler } from "../../common/mouseClicks";
 import timing from "../../common/timing";
 import Colors from "./Colors";
@@ -128,20 +128,21 @@ export default class Node extends draw2d.shape.node.Between {
     }
 
     getContextMenuItems(x, y) {
-        const hasDiagramIcon = this.diagramIcon != null
+        //const hasDiagramIcon = this.diagramIcon != null
 
 
         return [
             menuItem('To front', () => this.moveToFront()),
             menuItem('To back', () => this.moveToBack()),
-            menuParentItem('Inner diagram', [
-                menuItem('Show', () => this.showInnerDiagram(), this.innerDiagram == null, hasDiagramIcon),
-                menuItem('Hide (click)', () => this.hideInnerDiagram(), this.innerDiagram != null, hasDiagramIcon),
-                menuItem('Edit (dbl-click)', () => this.editInnerDiagram(), true, hasDiagramIcon),
-            ], true, hasDiagramIcon),
+            menuItem('Edit label', () => this.nameLabel.editor.start(this)),
+            // menuParentItem('Inner diagram', [
+            //     menuItem('Show', () => this.showInnerDiagram(), this.innerDiagram == null, hasDiagramIcon),
+            //     menuItem('Hide (click)', () => this.hideInnerDiagram(), this.innerDiagram != null, hasDiagramIcon),
+            //     menuItem('Edit (dbl-click)', () => this.editInnerDiagram(), true, hasDiagramIcon),
+            // ], true, hasDiagramIcon),
 
-            menuItem('Change icon ...', () => PubSub.publish('nodes.showDialog', { add: false, action: (iconKey) => this.changeIcon(iconKey) })),
-            menuItem('Set default size', () => this.setDefaultSize()),
+            menuItem('Edit icon ...', () => PubSub.publish('nodes.showDialog', { add: false, action: (iconKey) => this.changeIcon(iconKey) })),
+            //  menuItem('Set default size', () => this.setDefaultSize()),
             menuItem('Delete node', () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)), this.canDelete)
         ]
     }

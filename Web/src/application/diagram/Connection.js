@@ -20,8 +20,8 @@ export default class Connection extends draw2d.Connection {
         id = id ?? cuid()
         super({ id: id, stroke: 1 })
 
-        name = name ?? 'Name'
-        description = description ?? 'description'
+        name = name ?? ''
+        description = description ?? ''
 
         if (src !== undefined) {
             const srcPort = src.getPort(srcPortName)
@@ -38,6 +38,7 @@ export default class Connection extends draw2d.Connection {
     }
 
     static deserialize(canvas, c) {
+        // console.log('Deserialize', c)
         const src = canvas.getFigure(c.src)
         const trg = canvas.getFigure(c.trg)
         const connection = new Connection(c.name, c.description, src, c.srcPort, trg, c.trgPort, c.id)
@@ -56,7 +57,23 @@ export default class Connection extends draw2d.Connection {
         const srcGrp = this.sourcePort.parent.group != null
         const trgGrp = this.targetPort.parent.group != null
 
-        return {
+        // Serializing the vertices
+        let v = this.vertices.asArray().map(v => ({ x: v.x, y: v.y }))
+        if (v.length === 2) {
+            // For some reason, serializing InteractiveManhattanConnectionRouter with a straight line
+            // will cause bug when deserializing. So a middle point is inserted.
+            if (v[0].x === v[1].x) {
+                const mp = { x: v[0].x, y: (v[0].y + v[1].y) / 2 }
+                v.splice(1, 0, mp)
+                v.splice(1, 0, mp)
+            } else if (v[0].y === v[1].y) {
+                const mp = { x: (v[0].x + v[1].x) / 2, y: v[0].y }
+                v.splice(1, 0, mp)
+                v.splice(1, 0, mp)
+            }
+        }
+
+        const c = {
             id: this.id,
             src: this.sourcePort.parent.id,
             srcPort: this.sourcePort.name,
@@ -64,10 +81,12 @@ export default class Connection extends draw2d.Connection {
             trg: this.targetPort.parent.id,
             trgPort: this.targetPort.name,
             trgGrp: trgGrp,
-            v: this.vertices.asArray().map(v => ({ x: v.x, y: v.y })),
+            v: v,
             name: this.getName(),
             description: this.getDescription()
         }
+        //console.log('Serialize', c)
+        return c
     }
 
     addLabels(name, description) {
@@ -104,6 +123,7 @@ export default class Connection extends draw2d.Connection {
         return [
             menuItem('To front', () => this.toFront()),
             menuItem('To back', () => this.toBack()),
+            menuItem('Edit label', () => this.nameLabel.editor.start(this)),
             menuItem('Delete connection', () => this.deleteConnection())
         ]
     }
@@ -205,8 +225,9 @@ class ConnectionNameLabelLocator extends draw2d.layout.locator.ConnectionLocator
 
         const x = ((p2.x - p1.x) / 2 + p1.x - target.getWidth() / 2) | 0
         const y = ((p2.y - p1.y) / 2 + p1.y - target.getHeight() / 2) | 0
+        const yOffset = conn.getDescription() === '' ? 0 : 6
 
-        target.setPosition(x, y - 6)
+        target.setPosition(x, y - yOffset)
     }
 }
 
@@ -225,7 +246,8 @@ class ConnectionDescriptionLabelLocator extends draw2d.layout.locator.Connection
         const x = ((p2.x - p1.x) / 2 + p1.x - target.getWidth() / 2) | 0
         const y = ((p2.y - p1.y) / 2 + p1.y - target.getHeight() / 2) | 0
 
-        target.setPosition(x, y + 7)
+        const yOffset = conn.getName() === '' ? 0 : +7
+        target.setPosition(x, y + yOffset)
     }
 }
 

@@ -86,6 +86,7 @@ export default class DiagramCanvas {
         setProgress(true)
         try {
             //store.loadFile(file => console.log('File:', file))
+            this.canvas.diagramName = 'Name'
             this.canvas.clearDiagram()
             await this.createNewDiagram()
             this.callbacks.setTitle(this.getTitle())
@@ -357,7 +358,7 @@ export default class DiagramCanvas {
         const name = this.getName()
         switch (this.canvasStack.getLevel()) {
             case 0:
-                return name + ' - Context'
+                return name + ''
             case 1:
                 return name + ' - Container'
             case 2:
@@ -368,7 +369,7 @@ export default class DiagramCanvas {
     }
 
     getName() {
-        return this.canvas.diagramName ?? ''
+        return this.canvas.diagramName ?? 'Name'
     }
 
     setName(name) {
