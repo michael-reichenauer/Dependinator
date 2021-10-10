@@ -7,9 +7,20 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { atom, useAtom } from 'jotai';
+import { makeStyles } from '@material-ui/core';
 
 const promptAtom = atom(null)
 let setPromptFunc = null
+
+const useStyles = makeStyles((theme) => ({
+    topScrollPaper: {
+        alignItems: 'flex-start',
+    },
+    topPaperScrollBody: {
+        verticalAlign: 'top',
+    },
+}));
+
 
 
 // Show a prompt (ok/cancel)
@@ -29,6 +40,7 @@ export const usePrompt = () => {
 
 
 export default function PromptDialog() {
+    const classes = useStyles();
     const [prompt, setPrompt] = usePrompt();
 
     const handleCancel = () => {
@@ -54,7 +66,11 @@ export default function PromptDialog() {
 
 
     return (
-        <Dialog open={!!prompt} onClose={handleCancel}   >
+        <Dialog open={!!prompt} onClose={handleCancel}
+            classes={{
+                scrollPaper: classes.topScrollPaper,
+                paperScrollBody: classes.topPaperScrollBody,
+            }} >
             <DialogTitle >{prompt?.title}</DialogTitle>
             <DialogContent style={{ minWidth: 300 }}>
                 {prompt?.message && <DialogContentText >

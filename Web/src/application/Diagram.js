@@ -118,6 +118,7 @@ const getFigure = (canvas, event) => {
     if (figure == null) {
         return null
     }
+
     if (typeof figure.getContextMenuItems !== "function" && figure.getParent() != null) {
         // Figure did not have context menu, but has a parent (e.g. a label) lets try parent
         figure = figure.getParent()

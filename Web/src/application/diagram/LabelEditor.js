@@ -9,10 +9,21 @@ import draw2d from "draw2d";
 import { atom, useAtom } from 'jotai';
 import Connection from './Connection';
 import Colors from './Colors';
+import { makeStyles } from '@material-ui/core';
 
 
 const labelAtom = atom(null)
 let setLabelFunc = null
+
+const useStyles = makeStyles((theme) => ({
+    topScrollPaper: {
+        alignItems: 'flex-start',
+    },
+    topPaperScrollBody: {
+        verticalAlign: 'top',
+    },
+}));
+
 
 export class LabelEditor {
     constructor(parent) {
@@ -60,6 +71,7 @@ const useLabel = () => {
 
 
 export default function LabelEditorDialog() {
+    const classes = useStyles();
     const [label, setPrompt] = useLabel();
 
     const handleCancel = () => {
@@ -79,16 +91,14 @@ export default function LabelEditorDialog() {
         setPrompt({ ...label, description: e.target.value });
     }
 
-    // const catchReturn = (ev) => {
-    //     if (ev.key === 'Enter') {
-    //         handleOK()
-    //         ev.preventDefault();
-    //     }
-    // }
 
 
     return (
-        <Dialog open={!!label} onClose={handleCancel}   >
+        <Dialog open={!!label} onClose={handleCancel}
+            classes={{
+                scrollPaper: classes.topScrollPaper,
+                paperScrollBody: classes.topPaperScrollBody,
+            }}  >
             <DialogContent style={{ minWidth: 200 }}>
                 <DialogContentText>Name and Description</DialogContentText>
 

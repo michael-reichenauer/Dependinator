@@ -27,6 +27,12 @@ const useStyles = makeStyles((theme) => ({
         overflow: 'auto',
         maxHeight: 300,
     },
+    topScrollPaper: {
+        alignItems: 'flex-start',
+    },
+    topPaperScrollBody: {
+        verticalAlign: 'top',
+    },
     nested: {
         paddingLeft: theme.spacing(4),
     },
@@ -123,7 +129,11 @@ export default function Nodes() {
     }
 
     return (
-        <Dialog open={!!show} onClose={() => { setShow(false); setGroupType(false) }}  >
+        <Dialog open={!!show} onClose={() => { setShow(false); setGroupType(false) }}
+            classes={{
+                scrollPaper: classes.topScrollPaper,
+                paperScrollBody: classes.topPaperScrollBody,
+            }} >
             <Box style={{ width: 400, height: 530, padding: 20 }}>
 
                 <Typography variant="h5" style={{ paddingBottom: 10, }} >{title}</Typography>

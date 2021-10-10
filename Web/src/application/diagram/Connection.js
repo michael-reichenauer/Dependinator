@@ -30,6 +30,8 @@ export default class Connection extends draw2d.Connection {
             this.setTarget(dstPort)
         }
 
+        this.on("contextmenu", (s, e) => { })
+
         this.setColor(Colors.connectionColor)
         this.setRouter(new draw2d.layout.connection.InteractiveManhattanConnectionRouter());
 
