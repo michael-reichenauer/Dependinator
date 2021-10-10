@@ -10,11 +10,12 @@ import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
 // import SyncDisabledIcon from '@material-ui/icons/SyncDisabled';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
+import TuneIcon from '@material-ui/icons/Tune';
 import ControlCameraIcon from '@material-ui/icons/ControlCamera';
 import EditIcon from '@material-ui/icons/Edit';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
 import SaveAltIcon from '@material-ui/icons/SaveAlt';
-import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom, titleAtom } from "./Diagram";
+import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom, selectModeAtom, titleAtom } from "./Diagram";
 import { useAtom } from "jotai";
 // import { store } from "./diagram/Store";
 //import { useLogin } from "./Login";
@@ -28,6 +29,7 @@ export default function ApplicationBar({ height }) {
     const classes = useAppBarStyles();
     const [titleText] = useAtom(titleAtom)
     const [editMode, setEditMode] = useAtom(editModeAtom);
+    const [selectMode] = useAtom(selectModeAtom);
     // const [syncMode] = useSyncMode()
     const [canUndo] = useAtom(canUndoAtom)
     const [canRedo] = useAtom(canRedoAtom)
@@ -75,8 +77,6 @@ export default function ApplicationBar({ height }) {
         }
     }
 
-    //const { details, provider } = store.getSync()
-
     return (
         <AppBar position="static" style={{ height: height }}>
             <Toolbar>
@@ -99,6 +99,8 @@ export default function ApplicationBar({ height }) {
                     onClick={() => PubSub.publish('nodes.showDialog', { add: true })} />
                 <Button tooltip="Add group" icon={<PostAddIcon className={style()} />} className={style()}
                     onClick={() => PubSub.publish('nodes.showDialog', { add: true, group: true })} />
+                <Button tooltip="Tune selected item" disabled={!selectMode} icon={<TuneIcon className={styleAlways(!selectMode)} />}
+                    onClick={(e) => { PubSub.publish('canvas.TuneSelected', { x: e.pageX - 20, y: 50 }) }} />
 
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 

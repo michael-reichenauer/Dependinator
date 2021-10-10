@@ -41,6 +41,7 @@ export default class DiagramCanvas {
 
         this.handleDoubleClick(this.canvas)
         this.handleEditChanges(this.canvas)
+        this.handleSelect(this.canvas)
         this.handleCommands()
     }
 
@@ -58,6 +59,7 @@ export default class DiagramCanvas {
         PubSub.subscribe('canvas.ShowTotalDiagram', this.showTotalDiagram)
 
         PubSub.subscribe('canvas.EditInnerDiagram', this.commandEditInnerDiagram)
+        PubSub.subscribe('canvas.TuneSelected', (_, data) => this.commandTuneSelected(data.x, data.y))
         PubSub.subscribe('canvas.PopInnerDiagram', this.commandPopFromInnerDiagram)
 
         PubSub.subscribe('canvas.SetEditMode', (_, isEditMode) => this.canvas.panPolicy.setEditMode(isEditMode))
@@ -196,6 +198,19 @@ export default class DiagramCanvas {
         });
     }
 
+    commandTuneSelected = (x, y) => {
+        // Get target figure or use canvas as target
+        let target = this.canvas.getSelection().primary
+
+        if (typeof target?.getContextMenuItems !== "function") {
+            // No context menu on target
+            return
+        }
+
+        const menuItems = target.getContextMenuItems()
+        this.callbacks.setContextMenu({ items: menuItems, x: x, y: y });
+    }
+
     commandPopFromInnerDiagram = () => {
         this.withWorkingIndicator(() => {
             this.inner.popFromInnerDiagram()
@@ -205,8 +220,14 @@ export default class DiagramCanvas {
         });
     }
 
+
+
+
     onEditMode = (isEditMode) => {
         this.callbacks.setEditMode(isEditMode)
+        if (!isEditMode) {
+            this.callbacks.setSelectMode(false)
+        }
 
         if (!isEditMode) {
             // Remove grid
@@ -395,6 +416,18 @@ export default class DiagramCanvas {
                 return
             }
             PubSub.publish('nodes.showDialog', { add: true, x: event.x, y: event.y })
+        });
+    }
+
+
+    handleSelect(canvas) {
+        canvas.on('select', (emitter, event) => {
+            if (event.figure !== null) {
+                this.callbacks.setSelectMode(true)
+            }
+            else {
+                this.callbacks.setSelectMode(false)
+            }
         });
     }
 
