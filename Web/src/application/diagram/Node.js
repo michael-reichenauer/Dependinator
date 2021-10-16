@@ -13,6 +13,7 @@ import { store } from "./Store";
 import { icons } from './../../common/icons';
 import { LabelEditor } from './LabelEditor';
 import NodeGroup from './NodeGroup';
+import NodeSelectionFeedbackPolicy from "./NodeSelectionFeedbackPolicy";
 
 const defaultIconKey = 'Azure/General/Module'
 
@@ -92,14 +93,7 @@ export default class Node extends draw2d.shape.node.Between {
         this.on('resize', (s, e) => this.handleResize())
 
         // Adjust selection handle sizes
-        const selectionPolicy = this.editPolicy
-            .find(p => p instanceof draw2d.policy.figure.RectangleSelectionFeedbackPolicy)
-        if (selectionPolicy != null) {
-            //this.editPolicy.remove(selectionPolicy)
-            selectionPolicy.createResizeHandle = (owner, type) => {
-                return new draw2d.ResizeHandle({ owner: owner, type: type, width: 1, height: 1 });
-            }
-        }
+        this.installEditPolicy(new NodeSelectionFeedbackPolicy())
     }
 
     setCanvas(canvas) {
