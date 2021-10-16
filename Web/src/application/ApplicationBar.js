@@ -128,9 +128,9 @@ export default function ApplicationBar({ height }) {
 
 const Button = ({ icon, tooltip, disabled, onClick, className }) => {
     return (
-        <Tooltip title={!disabled ? tooltip : ''} className={className}>
+        <Tooltip title={tooltip} className={className}><span>
             <IconButton disabled={disabled} onClick={onClick}>
-                {icon}</IconButton></Tooltip>
+                {icon}</IconButton></span></Tooltip>
     )
 }
 
