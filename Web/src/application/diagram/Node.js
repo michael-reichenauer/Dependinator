@@ -97,6 +97,7 @@ export default class Node extends draw2d.shape.node.Between {
     }
 
     setCanvas(canvas) {
+
         super.setCanvas(canvas)
 
         if (canvas != null) {

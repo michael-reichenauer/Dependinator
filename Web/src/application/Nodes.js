@@ -5,7 +5,7 @@ import { makeStyles } from '@material-ui/core/styles';
 import { Box, Collapse, Dialog, List, ListItem, ListItemIcon, ListItemText, Paper, Typography } from "@material-ui/core";
 import SearchBar from "material-ui-search-bar";
 import { ExpandLess, ExpandMore } from "@material-ui/icons";
-import { defaultIconKey, icons } from './../common/icons';
+import { defaultIconKey, greenNumberIconKey, icons } from './../common/icons';
 import { FixedSizeList } from 'react-window';
 import { useLocalStorage } from "../common/useLocalStorage";
 
@@ -114,7 +114,7 @@ export default function Nodes() {
             if (!isItemInFilterWords(item, filterWords)) {
                 return null
             }
-            if (item.key === defaultIconKey) {
+            if (item.key === defaultIconKey || item.key === greenNumberIconKey) {
                 return null
             }
             return (
@@ -126,6 +126,18 @@ export default function Nodes() {
                 </ListItem>
             )
         }).filter(item => item !== null)
+    }
+
+    const numberItem = () => {
+        const item = icons.getIcon(greenNumberIconKey)
+        return (
+            <ListItem button onClick={() => clickedItem(item)} key={'numberIcon'} className={classes.nested}>
+                <ListItemIcon>
+                    <img src={item.src} alt='' width={iconsSize} height={iconsSize} />
+                </ListItemIcon>
+                <ListItemText primary={item.name} />
+            </ListItem>
+        )
     }
 
     return (
@@ -146,6 +158,7 @@ export default function Nodes() {
 
                 <Paper style={{ maxHeight: 450, overflow: 'auto', marginTop: 3 }}>
                     <List component="nav" dense disablePadding >
+                        {numberItem()}
                         {mruItems(filter)}
 
                         {NodeItemsList('Azure', 'Azure icons', filter, clickedItem)}

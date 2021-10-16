@@ -4,6 +4,7 @@ import Colors from "./Colors";
 import Group from "./Group";
 import Node from "./Node";
 import NodeGroup from "./NodeGroup";
+import NodeNumber from "./NodeNumber";
 
 
 
@@ -32,11 +33,13 @@ export default class CanvasSerializer {
 
         // Unmark all nodes 
         this.canvas.getFigures().each((i, f) => f.group = null)
+        console.log('data', canvasData)
         return canvasData
     }
 
 
     deserialize(canvasData) {
+        console.log('data', canvasData)
         this.canvas.diagramId = canvasData.diagramId
         this.canvas.diagramName = canvasData.diagramName
         this.canvas.canvasId = canvasData.canvasId
@@ -119,6 +122,8 @@ export default class CanvasSerializer {
             figure = Group.deserialize(f)
         } else if (f.type === NodeGroup.nodeType) {
             figure = NodeGroup.deserialize(f)
+        } else if (f.type === NodeNumber.nodeType) {
+            figure = NodeNumber.deserialize(f)
         } else {
             figure = Node.deserialize(f)
         }

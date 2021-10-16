@@ -15,6 +15,8 @@ import Printer from "../../common/Printer";
 import { setProgress } from "../../common/Progress";
 import { setErrorMessage } from "../../common/MessageSnackbar";
 import NodeGroup from './NodeGroup';
+import { greenNumberIconKey } from "../../common/icons";
+import NodeNumber from "./NodeNumber";
 
 
 
@@ -246,6 +248,11 @@ export default class DiagramCanvas {
             return
         }
 
+        console.log('add', data)
+        if (data.icon === greenNumberIconKey) {
+            this.addNumber(data)
+            return
+        }
         var { icon, position } = data
         if (!position) {
             position = this.getCenter()
@@ -278,6 +285,19 @@ export default class DiagramCanvas {
         }
 
         addFigureToCanvas(this.canvas, group, x, y)
+    }
+
+    addNumber = (data) => {
+        var { position } = data
+        if (!position) {
+            position = this.getCenter()
+        }
+
+        const node = new NodeNumber()
+        const x = position.x - node.width / 2
+        const y = position.y - node.height / 2
+
+        addFigureToCanvas(this.canvas, node, x, y)
     }
 
     tryGetFigure = (x, y) => {

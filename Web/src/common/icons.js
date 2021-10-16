@@ -1,6 +1,7 @@
 
 const svgFiles = require.context("../resources/icons", true, /\.(svg)$/)
 export const defaultIconKey = 'defaultIcon'
+export const greenNumberIconKey = 'greenNumberIcon'
 
 class Icons {
     svgIcons = []
@@ -22,6 +23,9 @@ class Icons {
                 if (path.startsWith('./DefaultIcon')) {
                     svg = this._getDefaultSvg(svg)
                 }
+                if (path.startsWith('./green_number-1')) {
+                    svg = this._getGreenNumberSvg(svg)
+                }
                 else if (path.startsWith('./Azure')) {
                     svg = this._getAzureSvg(svg, path)
                 }
@@ -42,6 +46,9 @@ class Icons {
         return { ...svg, key: defaultIconKey, name: 'Default Icon', fullName: 'Default Icon' }
     }
 
+    _getGreenNumberSvg(svg) {
+        return { ...svg, key: greenNumberIconKey, name: 'Number Label', fullName: 'Number Label' }
+    }
 
     _getAzureSvg(svg, path) {
         if (path.startsWith('./Azure/root-icon.svg')) {
