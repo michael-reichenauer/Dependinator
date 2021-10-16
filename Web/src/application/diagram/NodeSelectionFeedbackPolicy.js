@@ -3,9 +3,6 @@ import draw2d from "draw2d";
 export default class NodeSelectionFeedbackPolicy extends draw2d.policy.figure.SelectionFeedbackPolicy {
     NAME = "NodeSelection"
 
-    constructor(attr, setter, getter) {
-        super(attr, setter, getter)
-    }
 
     onSelect(canvas, figure, isPrimarySelection) {
         if (figure.selectionHandles.isEmpty()) {

@@ -5,6 +5,7 @@ import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { ApplicationMenu } from "./ApplicationMenu"
 import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
+
 // import SyncIcon from '@material-ui/icons/Sync';
 // import SyncProblemIcon from '@material-ui/icons/SyncProblem';
 // import SyncDisabledIcon from '@material-ui/icons/SyncDisabled';
