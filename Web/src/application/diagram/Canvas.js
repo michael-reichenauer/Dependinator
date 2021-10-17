@@ -21,6 +21,7 @@ export default class Canvas extends draw2d.Canvas {
     touchStartTime = 0
     touchEndTime = 0
     previousPinchDiff = -1
+    coronaDecorationPolicy = null
 
     constructor(diagramCanvas, htmlElementId, onEditMode, width, height) {
         super(htmlElementId, width, height);
@@ -52,6 +53,8 @@ export default class Canvas extends draw2d.Canvas {
             cdp.startDragY = y
             cdp.updatePorts(canvas, x, y)
         }
+        this.coronaDecorationPolicy = cdp
+
         this.installEditPolicy(cdp);
 
         this.setNormalBackground()
@@ -214,7 +217,9 @@ export default class Canvas extends draw2d.Canvas {
             line.repaint();
 
         });
-        //t.log();
+
+        // Fix so that all ports are not shown at first start, only when mouse is moved close to node
+        this.coronaDecorationPolicy.updatePorts(this, 0, 0)
         return this;
     }
 

@@ -33,13 +33,13 @@ export default class CanvasSerializer {
 
         // Unmark all nodes 
         this.canvas.getFigures().each((i, f) => f.group = null)
-        console.log('data', canvasData)
+        // console.log('data', canvasData)
         return canvasData
     }
 
 
     deserialize(canvasData) {
-        console.log('data', canvasData)
+        // console.log('data', canvasData)
         this.canvas.diagramId = canvasData.diagramId
         this.canvas.diagramName = canvasData.diagramName
         this.canvas.canvasId = canvasData.canvasId
