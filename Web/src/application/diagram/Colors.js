@@ -7,6 +7,7 @@ import {
 
 const shade = 600
 const background = 50
+const darkerBackground = 100
 const diagramBackgroundShade = 50
 const darkerBorder = 0.3
 
@@ -40,6 +41,7 @@ export default class Colors {
 
     static BackgroundColors = {
         None: new draw2d.util.Color(blueGrey[background]),
+        Grey: new draw2d.util.Color(blueGrey[darkerBackground]),
         Red: new draw2d.util.Color(red[background]),
         Purple: new draw2d.util.Color(deepPurple[background]),
         Blue: new draw2d.util.Color(blue[background]),

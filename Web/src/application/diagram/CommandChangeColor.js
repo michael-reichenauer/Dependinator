@@ -6,17 +6,15 @@ export default class CommandChangeColor extends draw2d.command.Command {
     NAME = "CommandChangeColor"
 
     constructor(figure, colorName) {
-        console.log('log new', figure, colorName)
         super("change color")
         this.figure = this.getFigure(figure)
         this.oldColorName = figure?.colorName ?? ""
         this.colorName = colorName
-        console.log('col', figure, colorName)
+      
     }
 
 
     canExecute() {
-        console.log('can', this.figure != null && this.oldColorName !== this.colorName)
         // return false if we doesn't modify the model => NOP Command
         return this.figure != null && this.oldColorName !== this.colorName
     }
