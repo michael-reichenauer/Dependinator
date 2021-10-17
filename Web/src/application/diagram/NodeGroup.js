@@ -55,6 +55,7 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
         this.colorName = o.colorName
         this.addIcon(o.icon);
         this.addLabels(o.name, o.description)
+        this.addPorts()
 
         // this.on("click", (s, e) => console.log('click node'))
         this.on("dblclick", (s, e) => { })
@@ -155,6 +156,19 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
         this.isSetCanvas = false
     }
 
+
+    addPorts() {
+        this.createPort("input", new draw2d.layout.locator.XYRelPortLocator(0, 50))
+        this.createPort("input", new draw2d.layout.locator.XYRelPortLocator(50, 0))
+        this.createPort("output", new draw2d.layout.locator.XYRelPortLocator(100, 50))
+        this.createPort("output", new draw2d.layout.locator.XYRelPortLocator(50, 100))
+
+        // Make ports larger to support touch
+        this.getPorts().each((i, p) => {
+            p.setCoronaWidth(5)
+            p.setDimension(10)
+        })
+    }
 
     toBack() {
         if (this.isSetCanvas) {

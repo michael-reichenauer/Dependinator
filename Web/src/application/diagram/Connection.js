@@ -33,8 +33,15 @@ export default class Connection extends draw2d.Connection {
         this.on("contextmenu", (s, e) => { })
 
         this.setColor(Colors.connectionColor)
-        this.setRouter(new draw2d.layout.connection.InteractiveManhattanConnectionRouter());
+        const cr = new draw2d.layout.connection.InteractiveManhattanConnectionRouter()
+        this.setRouter(cr);
 
+        // const selectionPolicy = cr.editPolicy.find(p => p instanceof draw2d.policy.figure.RectangleSelectionFeedbackPolicy)
+        // if (selectionPolicy != null) {
+        //     selectionPolicy.createResizeHandle = (owner, type) => {
+        //         return new draw2d.ResizeHandle({ owner: owner, type: type, width: 15, height: 15 });
+        //     }
+        // }
         this.addArrow()
         this.addLabels(name, description)
     }
