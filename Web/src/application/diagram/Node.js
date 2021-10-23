@@ -73,7 +73,7 @@ export default class Node extends draw2d.shape.node.Between {
         super({
             id: o.id,
             width: 60, height: 60, stroke: 0.1,
-            bgColor: 'none', color: Colors.nodeBorderColor,
+            bgColor: 'none', color: 'none',
             radius: 5, glow: true, resizeable: false,
         });
 
