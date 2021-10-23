@@ -206,7 +206,7 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
 
         // move all group nodes to back to be behind all nodes
         figures.asArray().forEach(f => {
-            if (f instanceof draw2d.shape.node.Between) {
+            if (!(f instanceof NodeGroup)) {
                 f.toFront()
             }
         })
