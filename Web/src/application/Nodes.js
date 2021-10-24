@@ -4,7 +4,6 @@ import PubSub from 'pubsub-js'
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, Dialog, Button, ListItem, ListItemIcon, ListItemText, Typography, Menu, MenuItem } from "@material-ui/core";
 import SearchBar from "material-ui-search-bar";
-import Stack from '@mui/material/Stack';
 import { defaultIconKey, greenNumberIconKey, icons } from './../common/icons';
 import { FixedSizeList } from 'react-window';
 import { useLocalStorage } from "../common/useLocalStorage";
@@ -126,18 +125,18 @@ export default function Nodes() {
                 paperScrollBody: classes.topPaperScrollBody,
             }} >
             <Box style={{ width: 400, height: 530, padding: 20 }}>
-                <Stack direction="row" spacing={5} style={{ paddingBottom: 10, }}>
 
-                    <Typography variant="subtitle1"  >{title}</Typography>
-                    <Button
-                        variant="contained"
-                        disableElevation
-                        onClick={e => setAnchorEl(e.currentTarget)}
-                        endIcon={<KeyboardArrowDownIcon />}
-                    >
-                        Icon sets
-                    </Button>
-                </Stack>
+
+                <Typography variant="subtitle1"  >{title}</Typography>
+                <Button style={{ position: 'absolute', top: 14, left: 170, paddingTop: 5, paddingBottom: 5 }}
+                    variant="contained"
+                    disableElevation
+                    onClick={e => setAnchorEl(e.currentTarget)}
+                    endIcon={<KeyboardArrowDownIcon />}
+                >
+                    Icon sets
+                </Button>
+
                 <Menu
                     anchorEl={anchorEl}
                     open={open}
