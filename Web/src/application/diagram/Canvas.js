@@ -128,21 +128,21 @@ export default class Canvas extends draw2d.Canvas {
     }
 
     setGridBackground() {
-        // In edit mode, add a grid background.
-        const bgColor = Colors.canvasDivBackground
-        const gridColor = Colors.canvasGridRgb
-        const interval = 10
-        const gridStroke = 1
+        // // In edit mode, add a grid background.
+        // const bgColor = Colors.canvasDivBackground
+        // const gridColor = Colors.canvasGridRgb
+        // const interval = 10
+        // const gridStroke = 1
 
-        let background =
-            ` linear-gradient(to right,  ${gridColor} ${gridStroke}px, transparent ${gridStroke}px),
-              linear-gradient(to bottom, ${gridColor} ${gridStroke}px, ${bgColor}  ${gridStroke}px)`
-        let backgroundSize = `${interval}px ${interval}px`
+        // let background =
+        //     ` linear-gradient(to right,  ${gridColor} ${gridStroke}px, transparent ${gridStroke}px),
+        //       linear-gradient(to bottom, ${gridColor} ${gridStroke}px, ${bgColor}  ${gridStroke}px)`
+        // let backgroundSize = `${interval}px ${interval}px`
 
-        this.html.find("svg").css({
-            "background": background,
-            "background-size": backgroundSize
-        })
+        // this.html.find("svg").css({
+        //     "background": background,
+        //     "background-size": backgroundSize
+        // })
     }
 
     addAtApproximately(figure, x, y) {

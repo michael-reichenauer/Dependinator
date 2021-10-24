@@ -1,7 +1,7 @@
 import React from "react";
 import PubSub from 'pubsub-js'
 import { Typography, AppBar, Toolbar, IconButton, Tooltip, Box, } from "@material-ui/core";
-import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
+
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { ApplicationMenu } from "./ApplicationMenu"
 import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
@@ -12,11 +12,9 @@ import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
 import TuneIcon from '@material-ui/icons/Tune';
-import ControlCameraIcon from '@material-ui/icons/ControlCamera';
-import EditIcon from '@material-ui/icons/Edit';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
-import SaveAltIcon from '@material-ui/icons/SaveAlt';
-import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom, selectModeAtom, titleAtom } from "./Diagram";
+
+import { canRedoAtom, canUndoAtom, selectModeAtom, titleAtom } from "./Diagram";
 import { useAtom } from "jotai";
 // import { store } from "./diagram/Store";
 //import { useLogin } from "./Login";
@@ -30,12 +28,11 @@ import { showPrompt } from './../common/PromptDialog';
 export default function ApplicationBar({ height }) {
     const classes = useAppBarStyles();
     const [titleText] = useAtom(titleAtom)
-    const [editMode, setEditMode] = useAtom(editModeAtom);
     const [selectMode] = useAtom(selectModeAtom);
     // const [syncMode] = useSyncMode()
     const [canUndo] = useAtom(canUndoAtom)
     const [canRedo] = useAtom(canRedoAtom)
-    const [canPopDiagram] = useAtom(canPopDiagramAtom)
+    // const [canPopDiagram] = useAtom(canPopDiagramAtom)
     //const [, setShowLogin] = useLogin()
     //const [connection] = useConnection()
 
@@ -47,9 +44,6 @@ export default function ApplicationBar({ height }) {
 
     const styleAlways = (disabled) => {
         return !disabled ? classes.iconsAlways : classes.iconsAlwaysDisabled
-    }
-    const editStyleAlways = (disabled) => {
-        return !disabled ? classes.iconsAlways : classes.iconsAlwaysDarker
     }
 
     const renameDiagram = () => {
@@ -64,20 +58,6 @@ export default function ApplicationBar({ height }) {
             (name) => PubSub.publish('canvas.RenameDiagram', name))
     };
 
-    const editToggle = editMode ? ['edit'] : ['pan']
-
-    const handleEditToggleChange = (_, newMode) => {
-        if (!editMode && newMode.includes('edit')) {
-            setEditMode(true)
-            PubSub.publish('canvas.SetEditMode', true)
-            return
-        }
-        if (editMode && newMode.includes('pan')) {
-            setEditMode(false)
-            PubSub.publish('canvas.SetEditMode', false)
-            return
-        }
-    }
 
     return (
         <AppBar position="static" style={{ height: height }}>
@@ -108,17 +88,17 @@ export default function ApplicationBar({ height }) {
 
                 <Button tooltip="Scroll and zoom to show all of the diagram" icon={<FilterCenterFocusIcon className={styleAlways()} />}
                     onClick={() => PubSub.publish('canvas.ShowTotalDiagram')} />
-                <Button tooltip="Pop to surrounding diagram" disabled={!canPopDiagram} icon={<SaveAltIcon className={styleAlways(!canPopDiagram)} style={{ transform: 'rotate(180deg)' }} />}
-                    onClick={() => PubSub.publish('canvas.PopInnerDiagram')} />
+                {/* <Button tooltip="Pop to surrounding diagram" disabled={!canPopDiagram} icon={<SaveAltIcon className={styleAlways(!canPopDiagram)} style={{ transform: 'rotate(180deg)' }} />}
+                    onClick={() => PubSub.publish('canvas.PopInnerDiagram')} /> */}
 
-                <ToggleButtonGroup
+                {/* <ToggleButtonGroup
                     size="small"
                     value={editToggle}
                     onChange={handleEditToggleChange}
                 >
                     <ToggleButton value="pan" ><Tooltip title="Enable pan mode"><ControlCameraIcon className={editStyleAlways(editMode)} /></Tooltip></ToggleButton>
                     <ToggleButton value="edit" ><Tooltip title="Enable edit mode"><EditIcon className={editStyleAlways(!editMode)} /></Tooltip></ToggleButton>
-                </ToggleButtonGroup>
+                </ToggleButtonGroup> */}
 
                 <Box m={2} className={style()} />
                 <Typography className={classes.title} variant="h6" noWrap onClick={renameDiagram}>{titleText}</Typography>

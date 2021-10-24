@@ -195,14 +195,14 @@ const NodesList = (roots, mru, filter, clickedItem) => {
 
         if (item.groupHeader) {
             return (
-                <ListItem key={index} button style={style} >
+                <ListItem key={index} button style={style} disableGutters>
                     <Typography variant='caption' >{item.groupHeader.replace('/', ' - ')}</Typography>
                 </ListItem>
             )
         }
 
         return (
-            <ListItem key={index} button style={style} onClick={() => clickedItem(item)} >
+            <ListItem key={index} button style={style} onClick={() => clickedItem(item)} disableGutters >
                 <ListItemIcon>
                     <img src={item.src} alt='' width={iconsSize} height={iconsSize} />
                 </ListItemIcon>

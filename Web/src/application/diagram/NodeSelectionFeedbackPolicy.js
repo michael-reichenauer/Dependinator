@@ -92,7 +92,7 @@ export default class NodeSelectionFeedbackPolicy extends draw2d.policy.figure.Se
             return // silently
         }
 
-        let margin = 3 * canvas.getZoom()
+        let margin = 5 * canvas.getZoom()
         let objHeight = figure.getHeight()
         let objWidth = figure.getWidth()
         let xPos = figure.getAbsoluteX()
@@ -125,7 +125,7 @@ export default class NodeSelectionFeedbackPolicy extends draw2d.policy.figure.Se
             y: yPos - margin,
             width: objWidth + margin * 2,
             height: objHeight + margin * 2,
-            stroke: canvas.getZoom() * 2
+            stroke: canvas.getZoom() * 3
         })
 
         box.setRotationAngle(figure.getRotationAngle())
