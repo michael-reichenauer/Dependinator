@@ -2,15 +2,19 @@ import { useState, useEffect } from "react";
 import { atom, useAtom } from "jotai"
 import PubSub from 'pubsub-js'
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Collapse, Dialog, List, ListItem, ListItemIcon, ListItemText, Paper, Typography } from "@material-ui/core";
+import { Box, Dialog, Button, ListItem, ListItemIcon, ListItemText, Typography, Menu } from "@material-ui/core";
 import SearchBar from "material-ui-search-bar";
-import { ExpandLess, ExpandMore } from "@material-ui/icons";
+import Stack from '@mui/material/Stack';
 import { defaultIconKey, greenNumberIconKey, icons } from './../common/icons';
 import { FixedSizeList } from 'react-window';
 import { useLocalStorage } from "../common/useLocalStorage";
+import { MenuItem } from "@mui/material";
+import CheckIcon from '@material-ui/icons/Check';
+import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
 
 
-const subItemsSize = 9
+const subItemsSize = 12
+const mruSize = 8
 const iconsSize = 30
 const subItemsHeight = iconsSize + 6
 const allIcons = icons.getAllIcons()
@@ -52,7 +56,10 @@ export default function Nodes() {
     const [filter, setFilter] = useState('');
     const [mruNodes, setMruNodes] = useLocalStorage('nodesMru', [])
     const [mruGroups, setMruGroups] = useLocalStorage('groupsMru', [])
+    const [iconSets, setIconSets] = useLocalStorage('iconSets', ['Azure', 'Aws', 'OSA'])
     const [groupType, setGroupType] = useState(false)
+    const [anchorEl, setAnchorEl] = useState(null);
+    const open = Boolean(anchorEl);
 
     useEffect(() => {
         // Listen for nodes.showDialog commands to show this Nodes dialog
@@ -77,12 +84,15 @@ export default function Nodes() {
     const title = !!show && show.add ? `Add ${titleType}` : `Change Icon`
 
     const addToMru = (list, key) => {
+        console.log('before', list)
         const newList = [key, ...list.filter(k => k !== key && k !== defaultIconKey)]
-            .slice(0, 8)
+            .slice(0, mruSize)
+        console.log('after', newList)
         return newList
     }
 
     const clickedItem = (item) => {
+        console.log('clicked', item)
         setShow(false)
         setGroupType(false)
         setMru(addToMru(mru, item.key))
@@ -104,41 +114,16 @@ export default function Nodes() {
         PubSub.publish('canvas.AddNode', { icon: item.key, position: position, group: groupType })
     }
 
+    const handleMenuSelect = (iconSet) => {
+        if (iconSets.includes(iconSet)) {
+            setIconSets(iconSets.filter(i => i !== iconSet))
+        } else {
+            iconSets.push(iconSet)
+            setIconSets(iconSets)
+        }
 
-    // The list of most recently used icons to make it easier to us
-    const mruItems = (filter) => {
-        const filterWords = filter.split(' ')
-
-        return mru.slice(0, 8).map((key, i) => {
-            const item = icons.getIcon(key)
-            if (!isItemInFilterWords(item, filterWords)) {
-                return null
-            }
-            if (item.key === defaultIconKey || item.key === greenNumberIconKey) {
-                return null
-            }
-            return (
-                <ListItem button onClick={() => clickedItem(item)} key={key} className={classes.nested}>
-                    <ListItemIcon>
-                        <img src={item.src} alt='' width={iconsSize} height={iconsSize} />
-                    </ListItemIcon>
-                    <ListItemText primary={item.name} />
-                </ListItem>
-            )
-        }).filter(item => item !== null)
-    }
-
-    const numberItem = () => {
-        const item = icons.getIcon(greenNumberIconKey)
-        return (
-            <ListItem button onClick={() => clickedItem(item)} key={'numberIcon'} className={classes.nested}>
-                <ListItemIcon>
-                    <img src={item.src} alt='' width={iconsSize} height={iconsSize} />
-                </ListItemIcon>
-                <ListItemText primary={item.name} />
-            </ListItem>
-        )
-    }
+        setAnchorEl(null);
+    };
 
     return (
         <Dialog open={!!show} onClose={() => { setShow(false); setGroupType(false) }}
@@ -147,8 +132,50 @@ export default function Nodes() {
                 paperScrollBody: classes.topPaperScrollBody,
             }} >
             <Box style={{ width: 400, height: 530, padding: 20 }}>
+                <Stack direction="row" spacing={5} style={{ paddingBottom: 10, }}>
 
-                <Typography variant="h5" style={{ paddingBottom: 10, }} >{title}</Typography>
+                    <Typography variant="subtitle1"  >{title}</Typography>
+                    <Button
+                        variant="contained"
+                        disableElevation
+                        onClick={e => setAnchorEl(e.currentTarget)}
+                        endIcon={<KeyboardArrowDownIcon />}
+                    >
+                        Icon sets
+                    </Button>
+                </Stack>
+                <Menu
+                    anchorEl={anchorEl}
+                    open={open}
+                    onClose={() => setAnchorEl(null)}
+                    anchorOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                    }}
+                    transformOrigin={{
+                        vertical: 'top',
+                        horizontal: 'right',
+                    }}
+                >
+                    <MenuItem onClick={() => handleMenuSelect('Azure')}>
+                        <ListItemIcon>
+                            {iconSets.includes('Azure') && <CheckIcon fontSize="small" />}
+                        </ListItemIcon>
+                        Azure
+                    </MenuItem>
+                    <MenuItem onClick={() => handleMenuSelect('Aws')}>
+                        <ListItemIcon>
+                            {iconSets.includes('Aws') && <CheckIcon fontSize="small" />}
+                        </ListItemIcon>
+                        Aws
+                    </MenuItem>
+                    <MenuItem onClick={() => handleMenuSelect('OSA')}>
+                        <ListItemIcon>
+                            {iconSets.includes('OSA') && <CheckIcon fontSize="small" />}
+                        </ListItemIcon>
+                        OSA
+                    </MenuItem>
+                </Menu>
 
                 <SearchBar
                     value={filter}
@@ -156,16 +183,7 @@ export default function Nodes() {
                     onCancelSearch={() => cancelSearch()}
                 />
 
-                <Paper style={{ maxHeight: 450, overflow: 'auto', marginTop: 3 }}>
-                    <List component="nav" dense disablePadding >
-                        {numberItem()}
-                        {mruItems(filter)}
-
-                        {NodeItemsList('Azure', 'Azure icons', filter, clickedItem)}
-                        {NodeItemsList('Aws', 'Aws icons', filter, clickedItem)}
-                        {NodeItemsList('OSA', 'OSA icons', filter, clickedItem)}
-                    </List>
-                </Paper>
+                {NodesList(iconSets, mru, filter, clickedItem)}
 
             </Box >
         </Dialog >
@@ -173,19 +191,10 @@ export default function Nodes() {
 }
 
 
-// Items list for Azure and Aws (which can be filtered)
-const NodeItemsList = (root, name, filter, clickedItem) => {
-    const classes = useStyles();
-    const filteredItems = filterItems(root, filter)
+const NodesList = (roots, mru, filter, clickedItem) => {
+    const filteredItems = filterItems(mru, roots, filter)
     const items = groupedItems(filteredItems)
     const height = Math.min(items.length, subItemsSize) * subItemsHeight
-    const [open, setOpen] = useState(false);
-    const iconsSrc = icons.getIcon(root).src
-
-    const toggleList = () => {
-        setOpen(!open)
-    }
-
 
     const renderRow = (props, items) => {
         const { index, style } = props;
@@ -193,14 +202,14 @@ const NodeItemsList = (root, name, filter, clickedItem) => {
 
         if (item.groupHeader) {
             return (
-                <ListItem key={index} button style={style} className={classes.nested}>
+                <ListItem key={index} button style={style} >
                     <Typography variant='caption' >{item.groupHeader.replace('/', ' - ')}</Typography>
                 </ListItem>
             )
         }
 
         return (
-            <ListItem key={index} button style={style} onClick={() => clickedItem(item)} className={classes.nested}>
+            <ListItem key={index} button style={style} onClick={() => clickedItem(item)} >
                 <ListItemIcon>
                     <img src={item.src} alt='' width={iconsSize} height={iconsSize} />
                 </ListItemIcon>
@@ -210,33 +219,24 @@ const NodeItemsList = (root, name, filter, clickedItem) => {
     }
 
     return (
-        <>
-            <Box border={open ? 1 : 0}>
-                <ListItem button onClick={toggleList}>
-                    <ListItemIcon>
-                        <img src={iconsSrc} alt='' width={iconsSize} height={iconsSize} />
-                    </ListItemIcon>
-                    <ListItemText primary={name} />
-                    {open ? <ExpandLess /> : <ExpandMore />}
-                </ListItem>
-
-                <Collapse in={open} timeout="auto" unmountOnExit>
-                    <FixedSizeList width={380} height={height} itemSize={subItemsHeight} itemCount={items.length} >
-                        {(props) => renderRow(props, items)}
-                    </FixedSizeList>
-                </Collapse>
-            </Box>
-        </>
+        <FixedSizeList height={height} itemSize={subItemsHeight} itemCount={items.length} >
+            {(props) => renderRow(props, items)}
+        </FixedSizeList>
     )
 }
+
 
 const groupedItems = (items) => {
     var it = []
     var group = ''
     for (var i = 0; i < items.length; i++) {
-        if (items[i].group !== group) {
-            group = items[i].group
-            it.push({ groupHeader: group })
+        const item = items[i]
+        if (item.key !== greenNumberIconKey) {
+            const itemGroup = items[i].isMru ? 'Recently used' : items[i].root + ': ' + items[i].group
+            if (itemGroup !== group) {
+                group = itemGroup
+                it.push({ groupHeader: itemGroup })
+            }
         }
         it.push(items[i])
     }
@@ -246,23 +246,40 @@ const groupedItems = (items) => {
 
 // Filter node items based on root and filter
 // This filter uses implicit 'AND' between words in the search filter
-const filterItems = (root, filter) => {
+const filterItems = (mru, roots, filter) => {
     const filterWords = filter.split(' ')
 
     const items = allIcons.filter(item => {
         // Check if root items match (e.g. searching Azure or Aws)
-        if (item.root !== root) {
+        if (!roots.includes(item.root)) {
             return false
         }
 
         return isItemInFilterWords(item, filterWords)
     })
 
+
     // Some icons exist in multiple groups, lets get unique items
     const uniqueItems = items.filter(
         (item, index) => index === items.findIndex(it => it.src === item.src && it.name === item.name))
 
-    return uniqueItems
+    console.log('mru', mru)
+    const mruItems = mru.filter(mruItem => {
+
+        if (mruItem === defaultIconKey || mruItem === greenNumberIconKey) {
+            return false
+        }
+
+        console.log('mruItem', mruItem)
+        const item = icons.getIcon(mruItem)
+        console.log('mruItem icon', item)
+
+        return isItemInFilterWords(item, filterWords)
+    })
+        .map(item => ({ ...icons.getIcon(item), isMru: true }))
+
+    const numberItem = icons.getIcon(greenNumberIconKey)
+    return [numberItem].concat(mruItems, uniqueItems)
 }
 
 const isItemInFilterWords = (item, filterWords) => {
