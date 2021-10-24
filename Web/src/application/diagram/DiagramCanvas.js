@@ -248,7 +248,6 @@ export default class DiagramCanvas {
             return
         }
 
-        console.log('add', data)
         if (data.icon === greenNumberIconKey) {
             this.addNumber(data)
             return

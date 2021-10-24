@@ -64,7 +64,6 @@ export default function Nodes() {
     useEffect(() => {
         // Listen for nodes.showDialog commands to show this Nodes dialog
         PubSub.subscribe('nodes.showDialog', (_, data) => {
-            console.log('data', data)
             setShow(data)
             setGroupType(!!data.group)
         })
@@ -84,15 +83,12 @@ export default function Nodes() {
     const title = !!show && show.add ? `Add ${titleType}` : `Change Icon`
 
     const addToMru = (list, key) => {
-        console.log('before', list)
         const newList = [key, ...list.filter(k => k !== key && k !== defaultIconKey)]
             .slice(0, mruSize)
-        console.log('after', newList)
         return newList
     }
 
     const clickedItem = (item) => {
-        console.log('clicked', item)
         setShow(false)
         setGroupType(false)
         setMru(addToMru(mru, item.key))
@@ -110,7 +106,6 @@ export default function Nodes() {
             position = { x: show.x, y: show.y }
         }
 
-        console.log('Icon', item.key)
         PubSub.publish('canvas.AddNode', { icon: item.key, position: position, group: groupType })
     }
 
@@ -263,17 +258,12 @@ const filterItems = (mru, roots, filter) => {
     const uniqueItems = items.filter(
         (item, index) => index === items.findIndex(it => it.src === item.src && it.name === item.name))
 
-    console.log('mru', mru)
     const mruItems = mru.filter(mruItem => {
-
         if (mruItem === defaultIconKey || mruItem === greenNumberIconKey) {
             return false
         }
 
-        console.log('mruItem', mruItem)
         const item = icons.getIcon(mruItem)
-        console.log('mruItem icon', item)
-
         return isItemInFilterWords(item, filterWords)
     })
         .map(item => ({ ...icons.getIcon(item), isMru: true }))
