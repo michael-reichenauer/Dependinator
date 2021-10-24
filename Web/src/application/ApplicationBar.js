@@ -24,6 +24,7 @@ import { useAtom } from "jotai";
 // import { useConnection } from "./diagram/Api";
 import PostAddIcon from '@material-ui/icons/PostAdd';
 import { showPrompt } from './../common/PromptDialog';
+import { padding } from "@mui/system";
 
 
 export default function ApplicationBar({ height }) {
@@ -96,10 +97,10 @@ export default function ApplicationBar({ height }) {
 
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 
-                <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={style()} />} className={style()}
-                    onClick={() => PubSub.publish('nodes.showDialog', { add: true })} />
-                <Button tooltip="Add group" icon={<PostAddIcon className={style()} />} className={style()}
-                    onClick={() => PubSub.publish('nodes.showDialog', { add: true, group: true })} />
+                <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={styleAlways()} />}
+                    onClick={(e) => { PubSub.publish('nodes.showDialog', { add: true }) }} />
+                <Button tooltip="Add group" icon={<PostAddIcon className={styleAlways()} />}
+                    onClick={(e) => { PubSub.publish('nodes.showDialog', { add: true, group: true }) }} />
                 <Button tooltip="Tune selected item" disabled={!selectMode} icon={<TuneIcon className={styleAlways(!selectMode)} />}
                     onClick={(e) => { PubSub.publish('canvas.TuneSelected', { x: e.pageX - 20, y: 50 }) }} />
 
@@ -129,7 +130,7 @@ export default function ApplicationBar({ height }) {
 const Button = ({ icon, tooltip, disabled, onClick, className }) => {
     return (
         <Tooltip title={tooltip} className={className}><span>
-            <IconButton disabled={disabled} onClick={onClick}>
+            <IconButton disabled={disabled} onClick={onClick} style={{ padding: 5, }}>
                 {icon}</IconButton></span></Tooltip>
     )
 }
