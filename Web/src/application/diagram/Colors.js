@@ -1,13 +1,16 @@
 import draw2d from "draw2d";
 import {
     blueGrey, deepPurple, indigo, pink, purple, blue, cyan,
-    teal, green, brown, lightGreen, deepOrange, grey
+    teal, green, brown, lightGreen, deepOrange, grey, red, yellow
 } from '@material-ui/core/colors';
 
 
 const shade = 600
+const background = 50
+const darkerBackground = 100
 const diagramBackgroundShade = 50
 const darkerBorder = 0.3
+
 
 
 export default class Colors {
@@ -15,7 +18,10 @@ export default class Colors {
     static canvasBackground = new draw2d.util.Color(Colors.canvasDivBackground)
     static canvasText = Colors.canvasBackground.getIdealTextColor()
     static canvasGridRgb = Colors.canvasBackground.darker(0.1).rgba()
-    static connectionColor = Colors.canvasText
+    static connectionColor = Colors.canvasText.lighter(0.5).rgba()
+    static labelColor = Colors.canvasText
+    static nodeBorderColor = Colors.canvasBackground.darker(0.1).rgba()
+
 
     static NodeColors = {
         Pink: new draw2d.util.Color(pink[shade]),
@@ -33,6 +39,16 @@ export default class Colors {
         BlueGrey: new draw2d.util.Color(blueGrey[shade])
     }
 
+    static BackgroundColors = {
+        None: new draw2d.util.Color(blueGrey[background]),
+        Grey: new draw2d.util.Color(blueGrey[darkerBackground]),
+        Red: new draw2d.util.Color(red[background]),
+        Purple: new draw2d.util.Color(deepPurple[background]),
+        Blue: new draw2d.util.Color(blue[background]),
+        Green: new draw2d.util.Color(green[background]),
+        Yellow: new draw2d.util.Color(yellow[background]),
+    }
+
     static NodeFontColors = Colors.createNodeFontColors()
     static NodeBorderColors = Colors.createNodeBorderColors()
     static NodeHexColors = Colors.createNodeHexColors()
@@ -42,8 +58,14 @@ export default class Colors {
     static nodeColorNames() {
         return Object.entries(Colors.NodeColors).map(e => e[0])
     }
+    static backgroundColorNames() {
+        return Object.entries(Colors.BackgroundColors).map(e => e[0])
+    }
     static getNodeColor(name) {
         return Colors.NodeColors[name]
+    }
+    static getBackgroundColor(name) {
+        return Colors.BackgroundColors[name]
     }
     static getNodeFontColor(name) {
         return Colors.NodeFontColors[name]
@@ -68,6 +90,7 @@ export default class Colors {
         Colors.nodeColorNames().forEach(name => colors[name] = Colors.getNodeColor(name).darker(darkerBorder))
         return colors
     }
+
 
     static createNodeFontColors() {
         const colors = {}

@@ -1,5 +1,6 @@
 import draw2d from "draw2d";
 import Node from "./Node";
+import NodeGroup from "./NodeGroup";
 
 export default class CommandChangeColor extends draw2d.command.Command {
     NAME = "CommandChangeColor"
@@ -9,6 +10,7 @@ export default class CommandChangeColor extends draw2d.command.Command {
         this.figure = this.getFigure(figure)
         this.oldColorName = figure?.colorName ?? ""
         this.colorName = colorName
+      
     }
 
 
@@ -37,6 +39,9 @@ export default class CommandChangeColor extends draw2d.command.Command {
             return null
         }
         if (figure instanceof Node) {
+            return figure
+        }
+        if (figure instanceof NodeGroup) {
             return figure
         }
         return figure.getParent()

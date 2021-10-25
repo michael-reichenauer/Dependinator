@@ -1,42 +1,42 @@
 import React from "react";
 import PubSub from 'pubsub-js'
 import { Typography, AppBar, Toolbar, IconButton, Tooltip, Box, } from "@material-ui/core";
-import { ToggleButton, ToggleButtonGroup } from "@material-ui/lab";
+
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import { ApplicationMenu } from "./ApplicationMenu"
-import PersonAddIcon from '@material-ui/icons/PersonAdd';
-import LibraryAddOutlinedIcon from '@material-ui/icons/LibraryAddOutlined';
 import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
-import SyncIcon from '@material-ui/icons/Sync';
-import SyncProblemIcon from '@material-ui/icons/SyncProblem';
-import SyncDisabledIcon from '@material-ui/icons/SyncDisabled';
+
+// import SyncIcon from '@material-ui/icons/Sync';
+// import SyncProblemIcon from '@material-ui/icons/SyncProblem';
+// import SyncDisabledIcon from '@material-ui/icons/SyncDisabled';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
-import ControlCameraIcon from '@material-ui/icons/ControlCamera';
-import EditIcon from '@material-ui/icons/Edit';
+import TuneIcon from '@material-ui/icons/Tune';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
-import SaveAltIcon from '@material-ui/icons/SaveAlt';
-import { canPopDiagramAtom, canRedoAtom, canUndoAtom, editModeAtom, titleAtom } from "./Diagram";
+
+import { canRedoAtom, canUndoAtom, selectModeAtom, titleAtom } from "./Diagram";
 import { useAtom } from "jotai";
-import { store } from "./diagram/Store";
-import { useLogin } from "./Login";
-import { useSyncMode } from './Online'
-import { useConnection } from "./diagram/Api";
+// import { store } from "./diagram/Store";
+//import { useLogin } from "./Login";
+// import { useSyncMode } from './Online'
+// import { useConnection } from "./diagram/Api";
+import PostAddIcon from '@material-ui/icons/PostAdd';
+import { showPrompt } from './../common/PromptDialog';
 
 
 
 export default function ApplicationBar({ height }) {
     const classes = useAppBarStyles();
     const [titleText] = useAtom(titleAtom)
-    const [editMode, setEditMode] = useAtom(editModeAtom);
-    const [syncMode] = useSyncMode()
+    const [selectMode] = useAtom(selectModeAtom);
+    // const [syncMode] = useSyncMode()
     const [canUndo] = useAtom(canUndoAtom)
     const [canRedo] = useAtom(canRedoAtom)
-    const [canPopDiagram] = useAtom(canPopDiagramAtom)
-    const [, setShowLogin] = useLogin()
-    const [connection] = useConnection()
+    // const [canPopDiagram] = useAtom(canPopDiagramAtom)
+    //const [, setShowLogin] = useLogin()
+    //const [connection] = useConnection()
 
-    const syncState = syncMode && connection ? true : syncMode && !connection ? false : null
+    // const syncState = syncMode && connection ? true : syncMode && !connection ? false : null
 
     const style = (disabled) => {
         return !disabled ? classes.icons : classes.iconsDisabled
@@ -45,37 +45,30 @@ export default function ApplicationBar({ height }) {
     const styleAlways = (disabled) => {
         return !disabled ? classes.iconsAlways : classes.iconsAlwaysDisabled
     }
-    const editStyleAlways = (disabled) => {
-        return !disabled ? classes.iconsAlways : classes.iconsAlwaysDarker
-    }
 
-    const editToggle = editMode ? ['edit'] : ['pan']
+    const renameDiagram = () => {
 
-    const handleEditToggleChange = (_, newMode) => {
-        if (!editMode && newMode.includes('edit')) {
-            setEditMode(true)
-            PubSub.publish('canvas.SetEditMode', true)
-            return
+        var name = titleText
+        const index = titleText.lastIndexOf(' - ')
+        if (index > -1) {
+            name = name.substring(0, index)
         }
-        if (editMode && newMode.includes('pan')) {
-            setEditMode(false)
-            PubSub.publish('canvas.SetEditMode', false)
-            return
-        }
-    }
 
-    const { details, provider } = store.getSync()
+        showPrompt('Rename Diagram', null, name,
+            (name) => PubSub.publish('canvas.RenameDiagram', name))
+    };
+
 
     return (
         <AppBar position="static" style={{ height: height }}>
             <Toolbar>
                 <ApplicationMenu />
-                {syncState === true && <Button tooltip={`Cloud sync enabled and OK for ${details}, ${provider}, click to check cloud connection`} icon={<SyncIcon style={{ color: 'Lime' }} />}
+                {/* {syncState === true && <Button  tooltip={`Cloud sync enabled and OK for ${details}, ${provider}, click to check cloud connection`} icon={<SyncIcon style={{ color: 'Lime' }} />}
                     onClick={() => store.checkCloudConnection()} />}
-                {syncState === false && <Button tooltip="Cloud connection error, sync disabled, click to retry" icon={<SyncProblemIcon style={{ color: '#FF3366' }} />}
+                {syncState === false && <Button  tooltip="Cloud connection error, sync disabled, click to retry" icon={<SyncProblemIcon style={{ color: '#FF3366' }} />}
                     onClick={() => store.checkCloudConnection()} />}
-                {syncState === null && <Button tooltip="Cloud sync disabled, click to enable" icon={<SyncDisabledIcon style={{ color: '#FFFF66' }} />}
-                    onClick={() => setShowLogin(true)} />}
+                {syncState === null && <Button  tooltip="Cloud sync disabled, click to enable" icon={<SyncDisabledIcon style={{ color: '#FFFF66' }} />}
+                    onClick={() => setShowLogin(true)} />} */}
 
                 <Button tooltip="Undo" disabled={!canUndo} icon={<UndoIcon className={styleAlways(!canUndo)} />}
                     onClick={() => PubSub.publish('canvas.Undo')} />
@@ -84,31 +77,31 @@ export default function ApplicationBar({ height }) {
 
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 
-                <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={style()} />} className={style()}
-                    onClick={() => PubSub.publish('canvas.AddNode')} />
-                <Button tooltip="Add external user" icon={<PersonAddIcon className={style()} />} className={style()}
-                    onClick={() => PubSub.publish('canvas.AddUserNode')} />
-                <Button tooltip="Add external system" icon={<LibraryAddOutlinedIcon className={style()} />} className={style()}
-                    onClick={() => PubSub.publish('canvas.AddExternalNode')} />
+                <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={styleAlways()} />}
+                    onClick={(e) => { PubSub.publish('nodes.showDialog', { add: true }) }} />
+                <Button tooltip="Add group" icon={<PostAddIcon className={styleAlways()} />}
+                    onClick={(e) => { PubSub.publish('nodes.showDialog', { add: true, group: true }) }} />
+                <Button tooltip="Tune selected item" disabled={!selectMode} icon={<TuneIcon className={styleAlways(!selectMode)} />}
+                    onClick={(e) => { PubSub.publish('canvas.TuneSelected', { x: e.pageX - 20, y: 50 }) }} />
 
                 <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 
                 <Button tooltip="Scroll and zoom to show all of the diagram" icon={<FilterCenterFocusIcon className={styleAlways()} />}
                     onClick={() => PubSub.publish('canvas.ShowTotalDiagram')} />
-                <Button tooltip="Pop to surrounding diagram" disabled={!canPopDiagram} icon={<SaveAltIcon className={styleAlways(!canPopDiagram)} style={{ transform: 'rotate(180deg)' }} />}
-                    onClick={() => PubSub.publish('canvas.PopInnerDiagram')} />
+                {/* <Button tooltip="Pop to surrounding diagram" disabled={!canPopDiagram} icon={<SaveAltIcon className={styleAlways(!canPopDiagram)} style={{ transform: 'rotate(180deg)' }} />}
+                    onClick={() => PubSub.publish('canvas.PopInnerDiagram')} /> */}
 
-                <ToggleButtonGroup
+                {/* <ToggleButtonGroup
                     size="small"
                     value={editToggle}
                     onChange={handleEditToggleChange}
                 >
                     <ToggleButton value="pan" ><Tooltip title="Enable pan mode"><ControlCameraIcon className={editStyleAlways(editMode)} /></Tooltip></ToggleButton>
                     <ToggleButton value="edit" ><Tooltip title="Enable edit mode"><EditIcon className={editStyleAlways(!editMode)} /></Tooltip></ToggleButton>
-                </ToggleButtonGroup>
+                </ToggleButtonGroup> */}
 
                 <Box m={2} className={style()} />
-                <Typography className={classes.title} variant="h6" noWrap>{titleText}</Typography>
+                <Typography className={classes.title} variant="h6" noWrap onClick={renameDiagram}>{titleText}</Typography>
             </Toolbar>
         </AppBar >
     )
@@ -116,9 +109,9 @@ export default function ApplicationBar({ height }) {
 
 const Button = ({ icon, tooltip, disabled, onClick, className }) => {
     return (
-        <Tooltip title={!disabled ? tooltip : ''} className={className}>
-            <IconButton disabled={disabled} onClick={onClick}>
-                {icon}</IconButton></Tooltip>
+        <Tooltip title={tooltip} className={className}><span>
+            <IconButton disabled={disabled} onClick={onClick} style={{ padding: 5, }}>
+                {icon}</IconButton></span></Tooltip>
     )
 }
 

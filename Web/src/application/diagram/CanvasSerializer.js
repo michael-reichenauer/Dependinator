@@ -4,6 +4,7 @@ import Colors from "./Colors";
 import Group from "./Group";
 import Node from "./Node";
 import NodeGroup from "./NodeGroup";
+import NodeNumber from "./NodeNumber";
 
 
 
@@ -21,6 +22,7 @@ export default class CanvasSerializer {
 
         const canvasData = {
             diagramId: this.canvas.diagramId,
+            diagramName: this.canvas.diagramName,
             canvasId: this.canvas.canvasId,
             mainNodeId: this.canvas.mainNodeId,
             box: this.canvas.getFiguresRect(),
@@ -31,15 +33,24 @@ export default class CanvasSerializer {
 
         // Unmark all nodes 
         this.canvas.getFigures().each((i, f) => f.group = null)
+        // console.log('data', canvasData)
         return canvasData
     }
 
 
     deserialize(canvasData) {
+        // console.log('data', canvasData)
         this.canvas.diagramId = canvasData.diagramId
+        this.canvas.diagramName = canvasData.diagramName
         this.canvas.canvasId = canvasData.canvasId
         this.canvas.mainNodeId = canvasData.mainNodeId
+        // const figures = this.deserializeFigures(canvasData.figures)
+        // figures.forEach(figure => this.canvas.add(figure));
+
+        // const connection = this.deserializeConnections(canvasData.connections)
+        // connection.forEach(connection => this.canvas.add(connection));
         this.canvas.addAll(this.deserializeFigures(canvasData.figures))
+
         this.canvas.addAll(this.deserializeConnections(canvasData.connections))
     }
 
@@ -91,7 +102,14 @@ export default class CanvasSerializer {
 
 
     serializeFigures = () => {
-        return this.canvas.getFigures().asArray().map((figure) => figure.serialize());
+        const figures = this.canvas.getFigures().clone()
+        figures.sort(function (a, b) {
+            // return 1  if a before b
+            // return -1 if b before a
+            return a.getZOrder() > b.getZOrder() ? 1 : -1;
+        });
+
+        return figures.asArray().map((figure) => figure.serialize());
     }
 
     deserializeFigures = (figures) => {
@@ -104,6 +122,8 @@ export default class CanvasSerializer {
             figure = Group.deserialize(f)
         } else if (f.type === NodeGroup.nodeType) {
             figure = NodeGroup.deserialize(f)
+        } else if (f.type === NodeNumber.nodeType) {
+            figure = NodeNumber.deserialize(f)
         } else {
             figure = Node.deserialize(f)
         }

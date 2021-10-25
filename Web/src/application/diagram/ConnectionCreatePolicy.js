@@ -1,7 +1,5 @@
 import draw2d from "draw2d";
 import Connection from './Connection'
-import Node from './Node'
-import { distance } from './../../common/utils'
 
 export default class ConnectionCreatePolicy extends draw2d.policy.connection.ConnectionCreatePolicy {
     NAME = "ConnectionCreatePolicy"
@@ -144,52 +142,6 @@ export default class ConnectionCreatePolicy extends draw2d.policy.connection.Con
 
             // fire an event
             de.fireEvent("dragend", { x: x, y: y, shiftKey: shiftKey, ctrlKey: ctrlKey });
-
-
-            if (this.currentDropTarget === null) {
-                // No drop target, lets create a node first to connect to
-                const ox = this.mouseDraggingElement.parent.x + this.mouseDraggingElement.x
-                const oy = this.mouseDraggingElement.parent.y + this.mouseDraggingElement.y
-                const dist = distance(ox, oy, x, y)
-
-                if (dist > 100) {
-                    const figure = new Node(Node.nodeType)
-
-                    // Determine figure point and port name
-                    let p = null
-                    let targetPortName = null
-                    switch (this.mouseDraggingElement.name) {
-                        case "output0":
-                            p = { x: x, y: y - figure.height / 2 }
-                            targetPortName = 'input0'
-                            break
-                        case "output1":
-                            p = { x: x - figure.width / 2, y: y }
-                            targetPortName = 'input1'
-                            break
-                        case "input0":
-                            p = { x: x - figure.width, y: y - figure.height / 2 }
-                            targetPortName = 'output0'
-                            break
-                        case "input1":
-                            p = { x: x - figure.width / 2, y: y - figure.height }
-                            targetPortName = 'output1'
-                            break
-                        default:
-                            throw new Error('Unknown port name' + this.mouseDraggingElement.name)
-                    }
-
-
-                    // Add node first so connection can be added in next command
-                    const command = new draw2d.command.CommandAdd(canvas, figure, p.x, p.y);
-                    canvas.getCommandStack().execute(command);
-                    canvas.getCommandStack().commitTransaction();
-
-                    // Prepare to add connection in next command
-                    this.currentDropTarget = figure.getPort(targetPortName);
-                    canvas.getCommandStack().startTransaction();
-                }
-            }
 
             // check if we drop the port onto a valid
             // drop target and create a connection if possible

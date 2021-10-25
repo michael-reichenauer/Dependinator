@@ -7,8 +7,11 @@ import { AppMenu, menuItem, menuParentItem } from "../common/Menus";
 import { store } from "./diagram/Store";
 import Printer from "../common/Printer";
 import { useAbout } from "./About";
-import { useLogin } from "./Login";
+// import { useLogin } from "./Login";
 import { showConfirmAlert } from "../common/AlertDialog";
+import { showPrompt } from './../common/PromptDialog';
+import { useAtom } from 'jotai';
+import { titleAtom } from './Diagram';
 
 
 const getDiagramsMenuItems = () => {
@@ -19,7 +22,8 @@ const getDiagramsMenuItems = () => {
 export function ApplicationMenu() {
     const [menu, setMenu] = useState(null);
     const [, setShowAbout] = useAbout()
-    const [, setShowLogin] = useLogin()
+    //const [, setShowLogin] = useLogin()
+    const [titleText] = useAtom(titleAtom)
 
     useEffect(() => {
         const handler = Printer.registerPrintKey(() => PubSub.publish('canvas.Print'))
@@ -30,6 +34,17 @@ export function ApplicationMenu() {
     const deleteDiagram = () => {
         showConfirmAlert('Delete', 'Do you really want to delete the current diagram?',
             () => PubSub.publish('canvas.DeleteDiagram'))
+    };
+
+    const renameDiagram = () => {
+        var name = titleText
+        const index = titleText.lastIndexOf(' - ')
+        if (index > -1) {
+            name = name.substring(0, index)
+        }
+
+        showPrompt('Rename Diagram', null, name,
+            (name) => PubSub.publish('canvas.RenameDiagram', name))
     };
 
 
@@ -62,10 +77,11 @@ export function ApplicationMenu() {
     const menuItems = [
         menuItem('New Diagram', () => PubSub.publish('canvas.NewDiagram')),
         menuParentItem('Open Recent', diagrams, diagrams.length > 0),
-        menuItem('Print', () => PubSub.publish('canvas.Print')),
+        menuItem('Rename', renameDiagram),
+        menuItem('Print', () => PubSub.publish('canvas.Print'), false),
         menuItem('Delete', deleteDiagram),
-        menuItem('Enable cloud sync', () => setShowLogin(true), true, !store.isCloudSyncEnabled()),
-        menuItem('Disable cloud sync', () => store.disableCloudSync(), true, store.isCloudSyncEnabled()),
+        // menuItem('Enable cloud sync', () => setShowLogin(true), false, !store.isCloudSyncEnabled()),
+        // menuItem('Disable cloud sync', () => store.disableCloudSync(), false, store.isCloudSyncEnabled()),
         menuParentItem('Files', [
             menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
             menuItem('Save diagram to file', () => PubSub.publish('canvas.SaveDiagramToFile')),

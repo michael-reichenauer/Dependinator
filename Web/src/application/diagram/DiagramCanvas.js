@@ -7,7 +7,6 @@ import { random } from '../../common/utils'
 import Node from './Node'
 import { store } from "./Store";
 import Canvas from "./Canvas";
-import { menuItem } from "../../common/Menus";
 import CanvasStack from "./CanvasStack";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
 import { addDefaultNewDiagram, addFigureToCanvas } from "./addDefault";
@@ -15,7 +14,10 @@ import InnerDiagramCanvas from "./InnerDiagramCanvas";
 import Printer from "../../common/Printer";
 import { setProgress } from "../../common/Progress";
 import { setErrorMessage } from "../../common/MessageSnackbar";
-import NodeGroup from "./NodeGroup";
+import NodeGroup from './NodeGroup';
+import { greenNumberIconKey } from "../../common/icons";
+import NodeNumber from "./NodeNumber";
+
 
 
 export default class DiagramCanvas {
@@ -31,7 +33,7 @@ export default class DiagramCanvas {
 
     constructor(htmlElementId, callbacks) {
         this.callbacks = callbacks
-        this.canvas = new Canvas(htmlElementId, this.onEditMode, DiagramCanvas.defaultWidth, DiagramCanvas.defaultHeight)
+        this.canvas = new Canvas(this, htmlElementId, this.onEditMode, DiagramCanvas.defaultWidth, DiagramCanvas.defaultHeight)
         this.canvasStack = new CanvasStack(this.canvas)
         this.inner = new InnerDiagramCanvas(this.canvas, this.canvasStack, this.store)
     }
@@ -41,6 +43,7 @@ export default class DiagramCanvas {
 
         this.handleDoubleClick(this.canvas)
         this.handleEditChanges(this.canvas)
+        this.handleSelect(this.canvas)
         this.handleCommands()
     }
 
@@ -52,39 +55,27 @@ export default class DiagramCanvas {
         PubSub.subscribe('canvas.Undo', () => this.commandUndo())
         PubSub.subscribe('canvas.Redo', () => this.commandRedo())
 
-        PubSub.subscribe('canvas.AddNode', () => this.addNode(Node.nodeType, this.getCenter()))
-        PubSub.subscribe('canvas.AddUserNode', () => this.addNode(Node.userType, this.getCenter()))
-        PubSub.subscribe('canvas.AddExternalNode', () => this.addNode(Node.externalType, this.getCenter()))
-        PubSub.subscribe('canvas.AddDefaultNode', (_, p) => this.addNode(Node.nodeType, p))
+        PubSub.subscribe('canvas.AddNode', (_, data) => this.addNode(data))
+        PubSub.subscribe('canvas.AddGroup', (_, data) => this.addGroup(data.position))
 
         PubSub.subscribe('canvas.ShowTotalDiagram', this.showTotalDiagram)
 
         PubSub.subscribe('canvas.EditInnerDiagram', this.commandEditInnerDiagram)
+        PubSub.subscribe('canvas.TuneSelected', (_, data) => this.commandTuneSelected(data.x, data.y))
         PubSub.subscribe('canvas.PopInnerDiagram', this.commandPopFromInnerDiagram)
 
         PubSub.subscribe('canvas.SetEditMode', (_, isEditMode) => this.canvas.panPolicy.setEditMode(isEditMode))
         PubSub.subscribe('canvas.NewDiagram', this.commandNewDiagram)
         PubSub.subscribe('canvas.OpenDiagram', this.commandOpenDiagram)
+        PubSub.subscribe('canvas.RenameDiagram', (_, name) => this.commandRenameDiagram(name))
         PubSub.subscribe('canvas.DeleteDiagram', this.commandDeleteDiagram)
         PubSub.subscribe('canvas.SaveDiagramToFile', this.commandSaveToFile)
+        PubSub.subscribe('canvas.Save', () => this.save())
         PubSub.subscribe('canvas.OpenFile', this.commandOpenFile)
         PubSub.subscribe('canvas.ArchiveToFile', this.commandArchiveToFile)
         PubSub.subscribe('canvas.Print', this.commandPrint)
     }
 
-
-    getContextMenuItems(x, y) {
-        const mouseXY = this.canvas.fromDocumentToCanvasCoordinate(x, y)
-
-        return [
-            menuItem('Add node', () => this.addNode(Node.nodeType, mouseXY)),
-            menuItem('Add external user', () => this.addNode(Node.userType, mouseXY)),
-            menuItem('Add external system', () => this.addNode(Node.externalType, mouseXY)),
-            menuItem('Add group', () => this.addNode(NodeGroup.nodeType, mouseXY)),
-            menuItem('Pop to surrounding diagram (dbl-click)', () => PubSub.publish('canvas.PopInnerDiagram'),
-                true, !this.canvasStack.isRoot()),
-        ]
-    }
 
     commandUndo = () => {
         this.canvas.getCommandStack().undo()
@@ -99,6 +90,7 @@ export default class DiagramCanvas {
         setProgress(true)
         try {
             //store.loadFile(file => console.log('File:', file))
+            this.canvas.diagramName = 'Name'
             this.canvas.clearDiagram()
             await this.createNewDiagram()
             this.callbacks.setTitle(this.getTitle())
@@ -130,6 +122,11 @@ export default class DiagramCanvas {
         finally {
             setProgress(false)
         }
+    }
+
+    commandRenameDiagram = async (name) => {
+        this.setName(name)
+        this.save()
     }
 
     commandDeleteDiagram = async () => {
@@ -203,6 +200,19 @@ export default class DiagramCanvas {
         });
     }
 
+    commandTuneSelected = (x, y) => {
+        // Get target figure or use canvas as target
+        let target = this.canvas.getSelection().primary
+
+        if (typeof target?.getContextMenuItems !== "function") {
+            // No context menu on target
+            return
+        }
+
+        const menuItems = target.getContextMenuItems()
+        this.callbacks.setContextMenu({ items: menuItems, x: x, y: y });
+    }
+
     commandPopFromInnerDiagram = () => {
         this.withWorkingIndicator(() => {
             this.inner.popFromInnerDiagram()
@@ -212,8 +222,14 @@ export default class DiagramCanvas {
         });
     }
 
+
+
+
     onEditMode = (isEditMode) => {
         this.callbacks.setEditMode(isEditMode)
+        if (!isEditMode) {
+            this.callbacks.setSelectMode(false)
+        }
 
         if (!isEditMode) {
             // Remove grid
@@ -226,15 +242,61 @@ export default class DiagramCanvas {
 
     showTotalDiagram = () => zoomAndMoveShowTotalDiagram(this.canvas)
 
-    addNode = (type, p) => {
-        if (type === NodeGroup.nodeType) {
-            const node = new NodeGroup()
-            addFigureToCanvas(this.canvas, node, p)
+    addNode = (data) => {
+        if (data.group) {
+            this.addGroup(data.icon, data.position)
             return
         }
 
-        const node = new Node(type)
-        addFigureToCanvas(this.canvas, node, p)
+        if (data.icon === greenNumberIconKey) {
+            this.addNumber(data)
+            return
+        }
+        var { icon, position } = data
+        if (!position) {
+            position = this.getCenter()
+        }
+
+        var options = null
+        if (icon) {
+            options = { icon: icon }
+        }
+
+        const node = new Node(Node.nodeType, options)
+        const x = position.x - node.width / 2
+        const y = position.y - node.height / 2
+
+        addFigureToCanvas(this.canvas, node, x, y)
+    }
+
+    addGroup = (icon, position) => {
+        const group = new NodeGroup({ icon: icon })
+        var x = 0
+        var y = 0
+
+        if (!position) {
+            position = this.getCenter()
+            x = position.x - group.width / 2
+            y = position.y - 20
+        } else {
+            x = position.x - 20
+            y = position.y - 20
+        }
+
+        addFigureToCanvas(this.canvas, group, x, y)
+    }
+
+    addNumber = (data) => {
+        var { position } = data
+        if (!position) {
+            position = this.getCenter()
+        }
+
+        const node = new NodeNumber()
+        const x = position.x - node.width / 2
+        const y = position.y - node.height / 2
+
+        addFigureToCanvas(this.canvas, node, x, y)
     }
 
     tryGetFigure = (x, y) => {
@@ -307,22 +369,25 @@ export default class DiagramCanvas {
     }
 
 
+
     handleEditChanges(canvas) {
         this.updateToolbarButtonsStates()
 
         canvas.commandStack.addEventListener(e => {
-            // console.log('event:', e)
+            // console.log('change event:', e)
             this.updateToolbarButtonsStates()
+
 
             if (e.isPostChangeEvent()) {
                 // console.log('event isPostChangeEvent:', e)
-                if (e.command?.figure?.parent?.id === this.canvas.mainNodeId) {
-                    // Update the title whenever the main node changes
-                    this.callbacks.setTitle(this.getTitle())
-                    this.store.setDiagramName(this.canvas.diagramId, this.getName())
-                }
+                // if (e.command?.figure?.parent?.id === this.canvas.mainNodeId) {
+                //     // Update the title whenever the main node changes
+                //     this.callbacks.setTitle(this.getTitle())
+                //     this.store.setDiagramName(this.canvas.diagramId, this.getName())
+                // }
 
                 if (e.action === "POST_EXECUTE") {
+                    // console.log('save')
                     this.save()
                 }
             }
@@ -333,7 +398,7 @@ export default class DiagramCanvas {
         const name = this.getName()
         switch (this.canvasStack.getLevel()) {
             case 0:
-                return name + ' - Context'
+                return name + ''
             case 1:
                 return name + ' - Container'
             case 2:
@@ -344,7 +409,12 @@ export default class DiagramCanvas {
     }
 
     getName() {
-        return this.canvas.getFigure(this.canvas.mainNodeId)?.getName() ?? ''
+        return this.canvas.diagramName ?? 'Name'
+    }
+
+    setName(name) {
+        this.canvas.diagramName = name
+        this.callbacks.setTitle(this.getTitle())
     }
 
     updateToolbarButtonsStates() {
@@ -364,8 +434,19 @@ export default class DiagramCanvas {
                 this.commandPopFromInnerDiagram()
                 return
             }
+            PubSub.publish('nodes.showDialog', { add: true, x: event.x, y: event.y })
+        });
+    }
 
-            PubSub.publish('canvas.AddDefaultNode', { x: event.x, y: event.y })
+
+    handleSelect(canvas) {
+        canvas.on('select', (emitter, event) => {
+            if (event.figure !== null) {
+                this.callbacks.setSelectMode(true)
+            }
+            else {
+                this.callbacks.setSelectMode(false)
+            }
         });
     }
 
