@@ -118,7 +118,7 @@ export default function Nodes() {
         setAnchorEl(null);
     };
 
-    const boxWidth = window.innerWidth > 600 ? 400 : 250
+    const boxWidth = window.innerWidth > 600 ? 400 : 270
     const menuX = boxWidth - 110
 
 
@@ -128,7 +128,7 @@ export default function Nodes() {
                 scrollPaper: classes.topScrollPaper,
                 paperScrollBody: classes.topPaperScrollBody,
             }} >
-            <Box style={{ width: boxWidth, height: 530, padding: 20 }}>
+            <Box style={{ width: boxWidth, height: 515, padding: 20 }}>
 
 
                 <Typography variant="h6" >{title}</Typography>
@@ -217,7 +217,7 @@ const NodesList = (roots, mru, filter, clickedItem) => {
     }
 
     return (
-        <FixedSizeList height={height} itemSize={subItemsHeight} itemCount={items.length} >
+        <FixedSizeList height={height} itemSize={subItemsHeight} itemCount={items.length} style={{ marginTop: 5 }}>
             {(props) => renderRow(props, items)}
         </FixedSizeList>
     )
