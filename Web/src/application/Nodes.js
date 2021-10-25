@@ -118,7 +118,7 @@ export default function Nodes() {
         setAnchorEl(null);
     };
 
-    const boxWidth = window.innerWidth > 600 ? 400 : 300
+    const boxWidth = window.innerWidth > 600 ? 400 : 250
     const menuX = boxWidth - 110
 
 
