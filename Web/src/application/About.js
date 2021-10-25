@@ -28,7 +28,7 @@ export default function About() {
 
     return (
         <Dialog open={show} onClose={() => { setShow(false) }} >
-            <Box style={{ width: 320, height: 330, padding: 20 }}>
+            <Box style={{ width: 300, height: 180, padding: 20 }}>
                 <Tooltip title={`version: ${localBuildTime} (${localSha.substring(0, 6)})`}>
                     <Typography variant="h5">About Dependitor</Typography>
                 </Tooltip>
