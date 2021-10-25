@@ -20,7 +20,7 @@ export default function About() {
     //         localStorage.setItem('hasShownAbout', 'true')
     //         setShow(true)
     //     }, 3000);
-    // }
+    // }//
 
     // const enableCloudSync = () => {
     //     setShowLogin(true);
