@@ -11,17 +11,16 @@ export default function About() {
     const [show, setShow] = useAbout()
     //const [, setShowLogin] = useLogin()
 
-    const hasShown = localStorage.getItem('hasShownAbout')
+    // const hasShown = localStorage.getItem('hasShownAbout')
 
-    if (!show && hasShown !== 'true') {
-        console.log('Set timeout')
+    // if (!show && hasShown !== 'true') {
+    //     console.log('Set timeout')
 
-        setTimeout(() => {
-            localStorage.setItem('hasShownAbout', 'true')
-            setShow(true)
-        }, 3000);
-
-    }
+    //     setTimeout(() => {
+    //         localStorage.setItem('hasShownAbout', 'true')
+    //         setShow(true)
+    //     }, 3000);
+    // }
 
     // const enableCloudSync = () => {
     //     setShowLogin(true);
