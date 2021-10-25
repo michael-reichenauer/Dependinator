@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { atom, useAtom } from "jotai"
 import PubSub from 'pubsub-js'
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Dialog, Button, ListItem, ListItemIcon, ListItemText, Typography, Menu, MenuItem } from "@material-ui/core";
+import { Box, Dialog, Button, ListItem, ListItemIcon, Typography, Menu, MenuItem } from "@material-ui/core";
 import SearchBar from "material-ui-search-bar";
 import { defaultIconKey, greenNumberIconKey, icons } from './../common/icons';
 import { FixedSizeList } from 'react-window';
@@ -118,17 +118,21 @@ export default function Nodes() {
         setAnchorEl(null);
     };
 
+    const boxWidth = window.innerWidth > 600 ? 400 : 300
+    const menuX = boxWidth - 110
+
+
     return (
         <Dialog open={!!show} onClose={() => { setShow(false); setGroupType(false) }}
             classes={{
                 scrollPaper: classes.topScrollPaper,
                 paperScrollBody: classes.topPaperScrollBody,
             }} >
-            <Box style={{ width: 400, height: 530, padding: 20 }}>
+            <Box style={{ width: boxWidth, height: 530, padding: 20 }}>
 
 
-                <Typography variant="subtitle1"  >{title}</Typography>
-                <Button style={{ position: 'absolute', top: 14, left: 170, paddingTop: 5, paddingBottom: 5 }}
+                <Typography variant="h6" >{title}</Typography>
+                <Button style={{ position: 'absolute', top: 14, left: menuX, paddingTop: 5, paddingBottom: 5 }}
                     variant="contained"
                     disableElevation
                     onClick={e => setAnchorEl(e.currentTarget)}
@@ -206,7 +210,8 @@ const NodesList = (roots, mru, filter, clickedItem) => {
                 <ListItemIcon>
                     <img src={item.src} alt='' width={iconsSize} height={iconsSize} />
                 </ListItemIcon>
-                <ListItemText primary={item.name} />
+                <Typography variant='body2' >{item.name}</Typography>
+
             </ListItem>
         );
     }
