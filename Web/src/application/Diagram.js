@@ -12,6 +12,7 @@ export const canUndoAtom = atom(false)
 export const canRedoAtom = atom(false)
 export const canPopDiagramAtom = atom(false)
 export const editModeAtom = atom(false)
+export const selectModeAtom = atom(false)
 
 
 export default function Diagram({ width, height }) {
@@ -25,6 +26,7 @@ export default function Diagram({ width, height }) {
     const [, setCanRedo] = useAtom(canRedoAtom)
     const [, setCanPopDiagram] = useAtom(canPopDiagramAtom)
     const [, setEditMode] = useAtom(editModeAtom)
+    const [, setSelectMode] = useAtom(selectModeAtom)
 
     useEffect(() => {
         const onActivityEvent = (activity) => {
@@ -40,6 +42,8 @@ export default function Diagram({ width, height }) {
             setCanRedo: setCanRedo,
             setCanPopDiagram: setCanPopDiagram,
             setEditMode: setEditMode,
+            setSelectMode: setSelectMode,
+            setContextMenu: setContextMenu
         }
 
         const canvas = new DiagramCanvas('canvas', callbacks);
@@ -59,7 +63,7 @@ export default function Diagram({ width, height }) {
             document.removeEventListener("longclick", contextMenuHandler);
             canvasRef.current.delete()
         }
-    }, [setCanUndo, setCanRedo, setCanPopDiagram, setEditMode, setTitle])
+    }, [setCanUndo, setCanRedo, setCanPopDiagram, setEditMode, setSelectMode, setTitle])
 
     return (
         <>
@@ -92,19 +96,19 @@ function enableContextMenu(elementId, setContextMenu, canvas) {
             event = getCommonEvent(event)
         }
 
-        const { x, y } = { x: event.clientX, y: event.clientY }
+        // const { x, y } = { x: event.clientX, y: event.clientY }
 
-        // Get target figure or use canvas as target
-        let figure = getFigure(canvas, event)
-        const target = figure ?? canvas
+        // // Get target figure or use canvas as target
+        // let figure = getFigure(canvas, event)
+        // const target = figure ?? canvas
 
-        if (typeof target.getContextMenuItems !== "function") {
-            // No context menu on target
-            return
-        }
+        // if (typeof target.getContextMenuItems !== "function") {
+        //     // No context menu on target
+        //     return
+        // }
 
-        const menuItems = target.getContextMenuItems(x, y)
-        setContextMenu({ items: menuItems, x: x, y: y });
+        // const menuItems = target.getContextMenuItems(x, y)
+        // setContextMenu({ items: menuItems, x: x, y: y });
     }
 
     var el = document.getElementById(elementId);
@@ -113,15 +117,16 @@ function enableContextMenu(elementId, setContextMenu, canvas) {
     return handleContextMenu
 }
 
-const getFigure = (canvas, event) => {
-    let figure = canvas.tryGetFigure(event.clientX, event.clientY)
-    if (figure == null) {
-        return null
-    }
-    if (typeof figure.getContextMenuItems !== "function" && figure.getParent() != null) {
-        // Figure did not have context menu, but has a parent (e.g. a label) lets try parent
-        figure = figure.getParent()
-    }
-    return figure
-}
+// const getFigure = (canvas, event) => {
+//     let figure = canvas.tryGetFigure(event.clientX, event.clientY)
+//     if (figure == null) {
+//         return null
+//     }
+
+//     if (typeof figure.getContextMenuItems !== "function" && figure.getParent() != null) {
+//         // Figure did not have context menu, but has a parent (e.g. a label) lets try parent
+//         figure = figure.getParent()
+//     }
+//     return figure
+// }
 

@@ -1,5 +1,6 @@
 import draw2d from "draw2d";
 import Node from "./Node";
+import NodeGroup from './NodeGroup';
 
 
 export default class CommandChangeIcon extends draw2d.command.Command {
@@ -33,6 +34,9 @@ export default class CommandChangeIcon extends draw2d.command.Command {
             return null
         }
         if (figure instanceof Node) {
+            return figure
+        }
+        if (figure instanceof NodeGroup) {
             return figure
         }
         return figure.getParent()

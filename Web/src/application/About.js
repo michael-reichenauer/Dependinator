@@ -1,7 +1,7 @@
 import { atom, useAtom } from "jotai"
-import { Box, Button, Dialog, Link, Tooltip, Typography } from "@material-ui/core";
+import { Box, Button, Dialog, Tooltip, Typography } from "@material-ui/core";
 import { localBuildTime, localSha } from "../common/appVersion";
-import { useLogin } from "./Login";
+//import { useLogin } from "./Login";
 
 const aboutAtom = atom(false)
 
@@ -9,45 +9,43 @@ export const useAbout = () => useAtom(aboutAtom)
 
 export default function About() {
     const [show, setShow] = useAbout()
-    const [, setShowLogin] = useLogin()
+    //const [, setShowLogin] = useLogin()
 
-    const hasShown = localStorage.getItem('hasShownAbout')
+    // const hasShown = localStorage.getItem('hasShownAbout')
 
-    if (!show && hasShown !== 'true') {
-        console.log('Set timeout')
+    // if (!show && hasShown !== 'true') {
+    //     console.log('Set timeout')
 
-        setTimeout(() => {
-            localStorage.setItem('hasShownAbout', 'true')
-            setShow(true)
-        }, 3000);
+    //     setTimeout(() => {
+    //         localStorage.setItem('hasShownAbout', 'true')
+    //         setShow(true)
+    //     }, 3000);
+    // }
 
-    }
-
-    const enableCloudSync = () => {
-        setShowLogin(true);
-    }
+    // const enableCloudSync = () => {
+    //     setShowLogin(true);
+    // }
 
     return (
-        <Dialog open={show} onClose={() => { }} >
-            <Box style={{ width: 320, height: 330, padding: 20 }}>
+        <Dialog open={show} onClose={() => { setShow(false) }} >
+            <Box style={{ width: 300, height: 180, padding: 20 }}>
                 <Tooltip title={`version: ${localBuildTime} (${localSha.substring(0, 6)})`}>
-                    <Typography variant="h5">About Dependinator</Typography>
+                    <Typography variant="h5">About Dependitor</Typography>
                 </Tooltip>
                 <Typography >
-                    A tool for modeling and visualizing software architecture inspired by map tools for
-                    navigation.
+                    A tool for modeling cloud architecture.
                 </Typography>
 
-                <Typography style={{ paddingTop: 10 }} >
+                {/* <Typography style={{ paddingTop: 10 }} >
                     Checkout the  "<Link href="https://c4model.com" target="_blank">C4 Model</Link>"
                     by Simon Brown  to better understand on how to use the tool.
                 </Typography>
                 <Typography style={{ paddingTop: 10 }} >
                     You can sync diagrams between different devices if you login to <Link onClick={enableCloudSync}>enable cloud sync</Link>
-                </Typography>
-                <Typography style={{ paddingTop: 30 }} variant="body2">
+                </Typography> */}
+                {/* <Typography style={{ paddingTop: 30 }} variant="body2">
                     Hint: Use context menus to access functionality.
-                </Typography>
+                </Typography> */}
 
                 <Box style={{ position: 'absolute', bottom: 20, left: '40%', }}
                     textAlign='center'> <Button onClick={() => setShow(false)} variant="contained" color="primary">Close</Button>

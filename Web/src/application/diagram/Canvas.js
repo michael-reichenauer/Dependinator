@@ -14,15 +14,18 @@ export default class Canvas extends draw2d.Canvas {
     serializer = null
 
     diagramId = null
+    diagramName = null
     canvasId = null
     mainNodeId = null
 
     touchStartTime = 0
     touchEndTime = 0
     previousPinchDiff = -1
+    coronaDecorationPolicy = null
 
-    constructor(htmlElementId, onEditMode, width, height) {
+    constructor(diagramCanvas, htmlElementId, onEditMode, width, height) {
         super(htmlElementId, width, height);
+        this.diagramCanvas = diagramCanvas
 
         this.serializer = new CanvasSerializer(this)
 
@@ -50,6 +53,8 @@ export default class Canvas extends draw2d.Canvas {
             cdp.startDragY = y
             cdp.updatePorts(canvas, x, y)
         }
+        this.coronaDecorationPolicy = cdp
+
         this.installEditPolicy(cdp);
 
         this.setNormalBackground()
@@ -71,6 +76,10 @@ export default class Canvas extends draw2d.Canvas {
 
     deserialize(canvasData) {
         this.serializer.deserialize(canvasData)
+    }
+
+    save() {
+        this.diagramCanvas.save()
     }
 
     exportAsSvg(canvasData) {
@@ -119,21 +128,21 @@ export default class Canvas extends draw2d.Canvas {
     }
 
     setGridBackground() {
-        // In edit mode, add a grid background.
-        const bgColor = Colors.canvasDivBackground
-        const gridColor = Colors.canvasGridRgb
-        const interval = 10
-        const gridStroke = 1
+        // // In edit mode, add a grid background.
+        // const bgColor = Colors.canvasDivBackground
+        // const gridColor = Colors.canvasGridRgb
+        // const interval = 10
+        // const gridStroke = 1
 
-        let background =
-            ` linear-gradient(to right,  ${gridColor} ${gridStroke}px, transparent ${gridStroke}px),
-              linear-gradient(to bottom, ${gridColor} ${gridStroke}px, ${bgColor}  ${gridStroke}px)`
-        let backgroundSize = `${interval}px ${interval}px`
+        // let background =
+        //     ` linear-gradient(to right,  ${gridColor} ${gridStroke}px, transparent ${gridStroke}px),
+        //       linear-gradient(to bottom, ${gridColor} ${gridStroke}px, ${bgColor}  ${gridStroke}px)`
+        // let backgroundSize = `${interval}px ${interval}px`
 
-        this.html.find("svg").css({
-            "background": background,
-            "background-size": backgroundSize
-        })
+        // this.html.find("svg").css({
+        //     "background": background,
+        //     "background-size": backgroundSize
+        // })
     }
 
     addAtApproximately(figure, x, y) {
@@ -208,7 +217,9 @@ export default class Canvas extends draw2d.Canvas {
             line.repaint();
 
         });
-        //t.log();
+
+        // Fix so that all ports are not shown at first start, only when mouse is moved close to node
+        this.coronaDecorationPolicy.updatePorts(this, 0, 0)
         return this;
     }
 

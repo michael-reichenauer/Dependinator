@@ -153,6 +153,7 @@ export default class InnerDiagramCanvas {
                 let connection = this.canvas.getLine(c.id)
                 if (connection != null) {
                     // Connection already exist, updating data
+                    connection.setName(c.name)
                     connection.setDescription(c.description)
                 } else {
                     let srcPort = null
@@ -202,7 +203,7 @@ export default class InnerDiagramCanvas {
                         isNewNode = false
                     }
                     // Connection needs to be added
-                    connection = new Connection(c.description, src, srcPort, trg, trgPort, c.id)
+                    connection = new Connection(c.name, c.description, src, srcPort, trg, trgPort, c.id)
                     this.canvas.add(connection)
                 }
             })
@@ -321,6 +322,7 @@ export default class InnerDiagramCanvas {
 
     addConnection(data, src, trg) {
         const id = data.connection.id
+        const name = data.connection.name
         const description = data.connection.description
         const srcPort = data.connection.srcPort
         const trgPort = data.connection.trgPort
@@ -328,10 +330,11 @@ export default class InnerDiagramCanvas {
         let connection = this.canvas.getLine(id)
         if (connection != null) {
             // Connection already exist, updating data
+            connection.setName(name)
             connection.setDescription(description)
         } else {
             // Connection needs to be added
-            connection = new Connection(description, src, srcPort, trg, trgPort, id)
+            connection = new Connection(name, description, src, srcPort, trg, trgPort, id)
             this.canvas.add(connection)
         }
 

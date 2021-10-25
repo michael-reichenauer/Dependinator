@@ -33,7 +33,6 @@ const Enable = () => {
             const sb = enqueueSnackbar(errorMsg, {
                 variant: "error",
                 onClick: () => closeSnackbar(sb),
-                autoHideDuration: null
             })
         }
         setInfoFunc = msg => {
@@ -43,9 +42,10 @@ const Enable = () => {
             })
         }
         setSuccessFunc = msg => {
+            console.log('Success snackbar')
             const sb = enqueueSnackbar(msg, {
                 variant: "success",
-                onClick: () => closeSnackbar(sb),
+                onClick: () => { console.log('close success'); closeSnackbar(sb) },
                 autoHideDuration: 3000,
             })
         }

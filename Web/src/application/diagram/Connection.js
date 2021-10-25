@@ -3,18 +3,26 @@ import cuid from 'cuid'
 import { menuItem } from "../../common/Menus";
 import Colors from "./Colors";
 import Label from "./Label";
+import { LabelEditor } from './LabelEditor';
 
 
 const defaultTextWidth = 230
 
 export default class Connection extends draw2d.Connection {
+    nameLabel = null
     descriptionLabel = null
 
-    constructor(description, src, srcPortName, dst, dstPortName, id) {
-        id = id ?? cuid()
-        super({ id: id })
+    getName = () => this.nameLabel?.text ?? ''
+    getDescription = () => this.descriptionLabel?.text ?? ''
 
-        description = description ?? 'Description'
+
+    constructor(name, description, src, srcPortName, dst, dstPortName, id) {
+        id = id ?? cuid()
+        super({ id: id, stroke: 1 })
+
+        name = name ?? ''
+        description = description ?? ''
+
         if (src !== undefined) {
             const srcPort = src.getPort(srcPortName)
             const dstPort = dst.getPort(dstPortName)
@@ -22,26 +30,35 @@ export default class Connection extends draw2d.Connection {
             this.setTarget(dstPort)
         }
 
-        this.setColor(Colors.connectionColor)
-        const router = new draw2d.layout.connection.VertexRouter()
-        router.onDrag = () => { }
-        this.setRouter(router);
-        // this.setRouter(new draw2d.layout.connection.DirectRouter())
-        this.installEditPolicy(new VertexSelectionFeedbackPolicy())
+        this.on("contextmenu", (s, e) => { })
 
+        this.setColor(Colors.connectionColor)
+        const cr = new draw2d.layout.connection.InteractiveManhattanConnectionRouter()
+        this.setRouter(cr);
+
+        // const selectionPolicy = cr.editPolicy.find(p => p instanceof draw2d.policy.figure.RectangleSelectionFeedbackPolicy)
+        // if (selectionPolicy != null) {
+        //     selectionPolicy.createResizeHandle = (owner, type) => {
+        //         return new draw2d.ResizeHandle({ owner: owner, type: type, width: 15, height: 15 });
+        //     }
+        // }
         this.addArrow()
-        this.addLabels(description)
+        this.addLabels(name, description)
     }
 
     static deserialize(canvas, c) {
+        // console.log('Deserialize', c)
         const src = canvas.getFigure(c.src)
         const trg = canvas.getFigure(c.trg)
-        const connection = new Connection(c.description, src, c.srcPort, trg, c.trgPort, c.id)
+        const connection = new Connection(c.name, c.description, src, c.srcPort, trg, c.trgPort, c.id)
 
+        // Restore vertices
         for (let i = 1; i < c.v.length - 1; i++) {
             const v = c.v[i];
             connection.insertVertexAt(i, v.x, v.y)
         }
+        connection.getRouter().verticesSet(connection)
+
         return connection
     }
 
@@ -49,7 +66,23 @@ export default class Connection extends draw2d.Connection {
         const srcGrp = this.sourcePort.parent.group != null
         const trgGrp = this.targetPort.parent.group != null
 
-        return {
+        // Serializing the vertices
+        let v = this.vertices.asArray().map(v => ({ x: v.x, y: v.y }))
+        if (v.length === 2) {
+            // For some reason, serializing InteractiveManhattanConnectionRouter with a straight line
+            // will cause bug when deserializing. So a middle point is inserted.
+            if (v[0].x === v[1].x) {
+                const mp = { x: v[0].x, y: (v[0].y + v[1].y) / 2 }
+                v.splice(1, 0, mp)
+                v.splice(1, 0, mp)
+            } else if (v[0].y === v[1].y) {
+                const mp = { x: (v[0].x + v[1].x) / 2, y: v[0].y }
+                v.splice(1, 0, mp)
+                v.splice(1, 0, mp)
+            }
+        }
+
+        const c = {
             id: this.id,
             src: this.sourcePort.parent.id,
             srcPort: this.sourcePort.name,
@@ -57,27 +90,41 @@ export default class Connection extends draw2d.Connection {
             trg: this.targetPort.parent.id,
             trgPort: this.targetPort.name,
             trgGrp: trgGrp,
-            v: this.vertices.asArray().map(v => ({ x: v.x, y: v.y })),
-            description: this.descriptionLabel?.text ?? ''
+            v: v,
+            name: this.getName(),
+            description: this.getDescription()
         }
+        //console.log('Serialize', c)
+        return c
     }
 
-    addLabels(description) {
+    addLabels(name, description) {
+        const nameBackground = !name ? 'none' : Colors.canvasBackground
+        const descriptionBackground = !description ? 'none' : Colors.canvasBackground
+
+        this.nameLabel = new Label(defaultTextWidth, {
+            text: name, stroke: 0,
+            fontSize: 9, bold: true,
+            fontColor: Colors.canvasText, bgColor: nameBackground,
+        })
+
+        this.nameLabel.installEditor(new LabelEditor(this));
+        this.add(this.nameLabel, new ConnectionNameLabelLocator(this));
+
         this.descriptionLabel = new Label(defaultTextWidth, {
             text: description, stroke: 0,
-            fontSize: 14, bold: false,
-            fontColor: Colors.canvasText, bgColor: Colors.canvasBackground,
+            fontSize: 9, bold: false,
+            fontColor: Colors.canvasText, bgColor: descriptionBackground,
         })
-        // this.descriptionLabel.setResizeable(true)
-        // this.descriptionLabel.setSelectable(true)
-        this.descriptionLabel.installEditor(new draw2d.ui.LabelInplaceEditor());
-        this.add(this.descriptionLabel, new ConnectionLabelLocator(this));
+
+        this.descriptionLabel.installEditor(new LabelEditor(this));
+        this.add(this.descriptionLabel, new ConnectionDescriptionLabelLocator(this));
     }
 
     addArrow() {
         const arrow = new draw2d.decoration.connection.ArrowDecorator()
         arrow.setBackgroundColor(this.getColor())
-        arrow.setDimension(12, 12)
+        arrow.setDimension(8, 8)
         this.targetDecorator = arrow
     }
 
@@ -85,8 +132,7 @@ export default class Connection extends draw2d.Connection {
         return [
             menuItem('To front', () => this.toFront()),
             menuItem('To back', () => this.toBack()),
-            menuItem('Add segment', () => this.addSegmentAt(x, y)),
-            menuItem('Remove segment', () => this.removeSegmentAt(x, y), this.getVertices().asArray().length > 2),
+            menuItem('Edit label', () => this.nameLabel.editor.start(this)),
             menuItem('Delete connection', () => this.deleteConnection())
         ]
     }
@@ -174,7 +220,7 @@ export default class Connection extends draw2d.Connection {
 }
 
 
-class ConnectionLabelLocator extends draw2d.layout.locator.ConnectionLocator {
+class ConnectionNameLabelLocator extends draw2d.layout.locator.ConnectionLocator {
     relocate(index, target) {
         let conn = target.getParent()
         let points = conn.getVertices()
@@ -186,43 +232,65 @@ class ConnectionLabelLocator extends draw2d.layout.locator.ConnectionLocator {
         let p1 = points.get(segmentIndex)
         let p2 = points.get(segmentIndex + 1)
 
-        target.setPosition(
-            ((p2.x - p1.x) / 2 + p1.x - target.getWidth() / 2) | 0,
-            ((p2.y - p1.y) / 2 + p1.y - target.getHeight() / 2) | 0)
+        const x = ((p2.x - p1.x) / 2 + p1.x - target.getWidth() / 2) | 0
+        const y = ((p2.y - p1.y) / 2 + p1.y - target.getHeight() / 2) | 0
+        const yOffset = conn.getDescription() === '' ? 0 : 6
+
+        target.setPosition(x, y - yOffset)
+    }
+}
+
+class ConnectionDescriptionLabelLocator extends draw2d.layout.locator.ConnectionLocator {
+    relocate(index, target) {
+        let conn = target.getParent()
+        let points = conn.getVertices()
+
+        let segmentIndex = Math.floor((points.getSize() - 2) / 2)
+        if (points.getSize() <= segmentIndex + 1)
+            return
+
+        let p1 = points.get(segmentIndex)
+        let p2 = points.get(segmentIndex + 1)
+
+        const x = ((p2.x - p1.x) / 2 + p1.x - target.getWidth() / 2) | 0
+        const y = ((p2.y - p1.y) / 2 + p1.y - target.getHeight() / 2) | 0
+
+        const yOffset = conn.getName() === '' ? 0 : +7
+        target.setPosition(x, y + yOffset)
     }
 }
 
 
-class VertexSelectionFeedbackPolicy extends draw2d.policy.line.LineSelectionFeedbackPolicy {
-    NAME = "VertexSelectionFeedbackPolicy"
+// class VertexSelectionFeedbackPolicy extends draw2d.policy.line.LineSelectionFeedbackPolicy {
+//     NAME = "VertexSelectionFeedbackPolicy"
 
-    onSelect(canvas, figure, isPrimarySelection) {
-        let startHandle = new draw2d.shape.basic.LineStartResizeHandle(figure)
-        startHandle.setMinWidth(15)
+//     onSelect(canvas, figure, isPrimarySelection) {
+//         let startHandle = new draw2d.shape.basic.LineStartResizeHandle(figure)
+//         startHandle.setMinWidth(15)
 
-        let endHandle = new draw2d.shape.basic.LineEndResizeHandle(figure)
-        endHandle.setMinWidth(15)
+//         let endHandle = new draw2d.shape.basic.LineEndResizeHandle(figure)
+//         endHandle.setMinWidth(15)
 
-        figure.selectionHandles.add(startHandle)
-        figure.selectionHandles.add(endHandle)
+//         figure.selectionHandles.add(startHandle)
+//         figure.selectionHandles.add(endHandle)
 
-        let points = figure.getVertices()
-        let count = points.getSize() - 1
-        let i = 1
-        for (; i < count; i++) {
-            const handle = new draw2d.shape.basic.VertexResizeHandle(figure, i)
-            handle.setMinWidth(15)
-            handle.setMinHeight(15)
-            figure.selectionHandles.add(handle)
-            //figure.selectionHandles.add(new draw2d.shape.basic.GhostVertexResizeHandle(figure, i - 1))
-        }
+//         let points = figure.getVertices()
+//         let count = points.getSize() - 1
+//         let i = 1
+//         for (; i < count; i++) {
+//             const handle = new draw2d.shape.basic.VertexResizeHandle(figure, i)
+//             handle.setMinWidth(15)
+//             handle.setMinHeight(15)
+//             figure.selectionHandles.add(handle)
+//             //figure.selectionHandles.add(new draw2d.shape.basic.GhostVertexResizeHandle(figure, i - 1))
+//         }
 
-        // figure.selectionHandles.add(new draw2d.shape.basic.GhostVertexResizeHandle(figure, i - 1))
-        figure.selectionHandles.each((i, e) => {
-            e.setDraggable(figure.isResizeable())
-            e.show(canvas)
-        })
+//         // figure.selectionHandles.add(new draw2d.shape.basic.GhostVertexResizeHandle(figure, i - 1))
+//         figure.selectionHandles.each((i, e) => {
+//             e.setDraggable(figure.isResizeable())
+//             e.show(canvas)
+//         })
 
-        this.moved(canvas, figure)
-    }
-}
+//         this.moved(canvas, figure)
+//     }
+// }
