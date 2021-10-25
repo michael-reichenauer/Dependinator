@@ -28,13 +28,13 @@ export default function About() {
     // }
 
     return (
-        <Dialog open={show} onClose={() => { }} >
+        <Dialog open={show} onClose={() => { setShow(false) }} >
             <Box style={{ width: 320, height: 330, padding: 20 }}>
                 <Tooltip title={`version: ${localBuildTime} (${localSha.substring(0, 6)})`}>
                     <Typography variant="h5">About Dependitor</Typography>
                 </Tooltip>
                 <Typography >
-                    A tool for modeling software architecture.
+                    A tool for modeling cloud architecture.
                 </Typography>
 
                 {/* <Typography style={{ paddingTop: 10 }} >
@@ -44,9 +44,9 @@ export default function About() {
                 <Typography style={{ paddingTop: 10 }} >
                     You can sync diagrams between different devices if you login to <Link onClick={enableCloudSync}>enable cloud sync</Link>
                 </Typography> */}
-                <Typography style={{ paddingTop: 30 }} variant="body2">
+                {/* <Typography style={{ paddingTop: 30 }} variant="body2">
                     Hint: Use context menus to access functionality.
-                </Typography>
+                </Typography> */}
 
                 <Box style={{ position: 'absolute', bottom: 20, left: '40%', }}
                     textAlign='center'> <Button onClick={() => setShow(false)} variant="contained" color="primary">Close</Button>
