@@ -85,12 +85,17 @@ export default class Node extends draw2d.shape.node.Between {
 
         this.addLabels(o.name, o.description)
         this.addIcon(o.icon);
+        this.addConfigIcon()
+        this.hideConfig()
         this.addPorts()
         //this.addInnerDiagramIcon()
 
         // this.on("click", (s, e) => console.log('click node'))
-        this.on("dblclick", (s, e) => this.editInnerDiagram())
+        this.on("dblclick", (s, e) => { })
         this.on('resize', (s, e) => this.handleResize())
+
+        this.on('select', () => this.showConfig())
+        this.on('unselect', () => this.hideConfig())
 
         // Adjust selection handle sizes
         this.installEditPolicy(new NodeSelectionFeedbackPolicy())
@@ -329,6 +334,37 @@ export default class Node extends draw2d.shape.node.Between {
         this.add(icon, new NodeIconLocator())
     }
 
+    addConfigIcon() {
+        const iconColor = Colors.getNodeFontColor(this.colorName)
+        this.configIcon = new draw2d.shape.icon.Run({
+            width: 16, height: 16, color: iconColor, bgColor: 'none',
+        })
+        //this.configIcon.on("click", () => { console.log('click') })
+
+        this.configBkr = new draw2d.shape.basic.Rectangle({
+            bgColor: Colors.buttonBackground, alpha: 0.7, width: 20, height: 20, radius: 3, stroke: 0.1,
+        });
+        this.configBkr.on("click", this.showConfigMenu)
+
+        this.add(this.configBkr, new ConfigBackgroundLocator())
+        this.add(this.configIcon, new ConfigIconLocator())
+    }
+
+    showConfigMenu = () => {
+        const { x, y } = this.canvas.fromCanvasToDocumentCoordinate(this.x + this.getWidth(), this.y)
+        PubSub.publish('canvas.TuneSelected', { x: x - 20, y: y - 20 })
+    }
+
+    showConfig() {
+        this.configBkr?.setVisible(true)
+        this.configIcon?.setVisible(true)
+    }
+
+    hideConfig() {
+        this.configBkr?.setVisible(false)
+        this.configIcon?.setVisible(false)
+    }
+
 
     addInnerDiagramIcon() {
         const iconColor = Colors.getNodeFontColor(this.colorName)
@@ -389,6 +425,20 @@ class InnerDiagramIconLocator extends draw2d.layout.locator.PortLocator {
     relocate(index, figure) {
         const parent = figure.getParent()
         this.applyConsiderRotation(figure, 3, parent.getHeight() - 18);
+    }
+}
+
+class ConfigIconLocator extends draw2d.layout.locator.PortLocator {
+    relocate(index, figure) {
+        const parent = figure.getParent()
+        this.applyConsiderRotation(figure, parent.getWidth() - 11, - 28);
+    }
+}
+
+class ConfigBackgroundLocator extends draw2d.layout.locator.PortLocator {
+    relocate(index, figure) {
+        const parent = figure.getParent()
+        this.applyConsiderRotation(figure, parent.getWidth() - 13, - 30);
     }
 }
 

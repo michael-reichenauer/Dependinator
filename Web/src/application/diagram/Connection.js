@@ -1,5 +1,6 @@
 import draw2d from "draw2d";
 import cuid from 'cuid'
+import PubSub from 'pubsub-js'
 import { menuItem } from "../../common/Menus";
 import Colors from "./Colors";
 import Label from "./Label";
@@ -31,6 +32,8 @@ export default class Connection extends draw2d.Connection {
         }
 
         this.on("contextmenu", (s, e) => { })
+        this.on('select', () => this.showConfig())
+        this.on('unselect', () => this.hideConfig())
 
         this.setColor(Colors.connectionColor)
         const cr = new draw2d.layout.connection.InteractiveManhattanConnectionRouter()
@@ -44,6 +47,8 @@ export default class Connection extends draw2d.Connection {
         // }
         this.addArrow()
         this.addLabels(name, description)
+        this.addConfigIcon()
+        this.hideConfig()
     }
 
     static deserialize(canvas, c) {
@@ -145,6 +150,40 @@ export default class Connection extends draw2d.Connection {
     setDescription(description) {
         this.descriptionLabel?.setText(description)
     }
+
+    addConfigIcon() {
+        const iconColor = Colors.getNodeFontColor(this.colorName)
+        this.configIcon = new draw2d.shape.icon.Run({
+            width: 16, height: 16, color: iconColor, bgColor: 'none',
+        })
+        //this.configIcon.on("click", () => { console.log('click') })
+
+        this.configBkr = new draw2d.shape.basic.Rectangle({
+            bgColor: Colors.buttonBackground, alpha: 0.7, width: 20, height: 20, radius: 3, stroke: 0.1,
+        });
+        this.configBkr.on("click", this.showConfigMenu)
+
+        this.add(this.configBkr, new ConfigBackgroundLocator())
+        this.add(this.configIcon, new ConfigIconLocator())
+    }
+
+    showConfigMenu = () => {
+        const f = this.configIcon
+        const { x, y } = this.canvas.fromCanvasToDocumentCoordinate(f.x + f.getWidth(), f.y)
+        PubSub.publish('canvas.TuneSelected', { x: x - 20, y: y + 5 })
+    }
+
+    showConfig() {
+        this.configBkr?.setVisible(true)
+        this.configIcon?.setVisible(true)
+    }
+
+    hideConfig() {
+        this.configBkr?.setVisible(false)
+        this.configIcon?.setVisible(false)
+    }
+
+
 
     addSegmentAt(x, y) {
         const cp = this.getCanvas().fromDocumentToCanvasCoordinate(x, y)
@@ -259,6 +298,66 @@ class ConnectionDescriptionLabelLocator extends draw2d.layout.locator.Connection
         target.setPosition(x, y + yOffset)
     }
 }
+
+class ConfigIconLocator extends draw2d.layout.locator.ConnectionLocator {
+    relocate(index, target) {
+        let conn = target.getParent()
+        let points = conn.getVertices()
+
+        let segmentIndex = points.getSize() - 2
+        if (points.getSize() <= segmentIndex + 1)
+            return
+
+        let p1 = points.get(segmentIndex)
+        let p2 = points.get(segmentIndex + 1)
+
+        const x = p2.x
+        const y = p2.y
+
+        let xOffset = -27
+        let yOffset = -25
+        if (p1.y !== p2.y) {
+            xOffset = -26
+            yOffset = -30
+        }
+
+        target.setPosition(x + xOffset, y + yOffset)
+    }
+}
+
+class ConfigBackgroundLocator extends draw2d.layout.locator.ConnectionLocator {
+    relocate(index, target) {
+        let conn = target.getParent()
+        let points = conn.getVertices()
+
+        let segmentIndex = points.getSize() - 2
+        if (points.getSize() <= segmentIndex + 1)
+            return
+
+        let p1 = points.get(segmentIndex)
+        let p2 = points.get(segmentIndex + 1)
+
+        const x = p2.x
+        const y = p2.y
+
+        let xOffset = -27
+        let yOffset = -25
+        if (p1.y !== p2.y) {
+            xOffset = -26
+            yOffset = -30
+        }
+        console.log('offset', xOffset, yOffset, p1, p2)
+        target.setPosition(x + xOffset - 2, y + yOffset - 2)
+    }
+}
+
+
+// class ConfigIconLocator extends draw2d.layout.locator.PortLocator {
+//     relocate(index, figure) {
+//         const parent = figure.getParent()
+//         this.applyConsiderRotation(figure, parent.getWidth() - 11, - 28);
+//     }
+// }
 
 
 // class VertexSelectionFeedbackPolicy extends draw2d.policy.line.LineSelectionFeedbackPolicy {

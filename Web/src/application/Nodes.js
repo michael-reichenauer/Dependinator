@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { atom, useAtom } from "jotai"
 import PubSub from 'pubsub-js'
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Dialog, Button, ListItem, ListItemIcon, Typography, Menu, Grid, MenuItem } from "@material-ui/core";
+import { Box, Dialog, Button, ListItem, ListItemIcon, Typography, Menu, MenuItem } from "@material-ui/core";
 import SearchBar from "material-ui-search-bar";
 import { defaultIconKey, greenNumberIconKey, icons } from './../common/icons';
 import { FixedSizeList } from 'react-window';

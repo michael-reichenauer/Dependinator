@@ -201,6 +201,7 @@ export default class DiagramCanvas {
     }
 
     commandTuneSelected = (x, y) => {
+        console.log('tune')
         // Get target figure or use canvas as target
         let target = this.canvas.getSelection().primary
 
