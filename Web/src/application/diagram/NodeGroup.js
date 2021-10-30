@@ -294,7 +294,9 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
 
     showConfig() {
         this.configBkr?.setVisible(true)
+        this.configBkr.toFront()
         this.configIcon?.setVisible(true)
+        this.configIcon.toFront()
     }
 
     hideConfig() {

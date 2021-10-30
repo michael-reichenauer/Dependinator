@@ -175,7 +175,9 @@ export default class Connection extends draw2d.Connection {
 
     showConfig() {
         this.configBkr?.setVisible(true)
+        this.configBkr.toFront()
         this.configIcon?.setVisible(true)
+        this.configIcon.toFront()
     }
 
     hideConfig() {
@@ -346,7 +348,7 @@ class ConfigBackgroundLocator extends draw2d.layout.locator.ConnectionLocator {
             xOffset = -26
             yOffset = -30
         }
-        console.log('offset', xOffset, yOffset, p1, p2)
+
         target.setPosition(x + xOffset - 2, y + yOffset - 2)
     }
 }
