@@ -357,7 +357,9 @@ export default class Node extends draw2d.shape.node.Between {
 
     showConfig() {
         this.configBkr?.setVisible(true)
+        this.configBkr.toFront()
         this.configIcon?.setVisible(true)
+        this.configIcon.toFront()
     }
 
     hideConfig() {
