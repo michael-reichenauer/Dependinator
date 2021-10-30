@@ -19,7 +19,6 @@ import { useAtom } from "jotai";
 //import { useLogin } from "./Login";
 // import { useSyncMode } from './Online'
 // import { useConnection } from "./diagram/Api";
-import PostAddIcon from '@material-ui/icons/PostAdd';
 import { showPrompt } from './../common/PromptDialog';
 
 
@@ -73,14 +72,8 @@ export default function ApplicationBar({ height }) {
                 <Button tooltip="Redo" disabled={!canRedo} icon={<RedoIcon className={styleAlways(!canRedo)} />}
                     onClick={() => PubSub.publish('canvas.Redo')} />
 
-                <Typography className={classes.title} variant="h5" noWrap>|</Typography>
-
                 <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={styleAlways()} />}
                     onClick={(e) => { PubSub.publish('nodes.showDialog', { add: true }) }} />
-                <Button tooltip="Add group" icon={<PostAddIcon className={styleAlways()} />}
-                    onClick={(e) => { PubSub.publish('nodes.showDialog', { add: true, group: true }) }} />
-
-                <Typography className={classes.title} variant="h5" noWrap>|</Typography>
 
                 <Button tooltip="Scroll and zoom to show all of the diagram" icon={<FilterCenterFocusIcon className={styleAlways()} />}
                     onClick={() => PubSub.publish('canvas.ShowTotalDiagram')} />
@@ -96,7 +89,7 @@ export default function ApplicationBar({ height }) {
                     <ToggleButton value="edit" ><Tooltip title="Enable edit mode"><EditIcon className={editStyleAlways(!editMode)} /></Tooltip></ToggleButton>
                 </ToggleButtonGroup> */}
 
-                <Box m={2} className={style()} />
+                <Box m={1} className={style()} />
                 <Typography className={classes.title} variant="h6" noWrap onClick={renameDiagram}>{titleText}</Typography>
             </Toolbar>
         </AppBar >
@@ -118,10 +111,10 @@ const useAppBarStyles = makeStyles((theme) => ({
     },
     title: {
         //flexGrow: 1,
-        display: 'none',
-        [theme.breakpoints.up('sm')]: {
-            display: 'block',
-        },
+        display: 'block',
+        // [theme.breakpoints.up('sm')]: {
+        //     display: 'block',
+        // },
     },
     space: {
         flexGrow: 1,

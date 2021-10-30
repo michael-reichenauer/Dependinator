@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { atom, useAtom } from "jotai"
 import PubSub from 'pubsub-js'
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Dialog, Button, ListItem, ListItemIcon, Typography, Menu, MenuItem } from "@material-ui/core";
+import { Box, Dialog, Button, ListItem, ListItemIcon, Typography, Menu, MenuItem, Switch, FormControlLabel } from "@material-ui/core";
 import SearchBar from "material-ui-search-bar";
 import { defaultIconKey, greenNumberIconKey, icons } from './../common/icons';
 import { FixedSizeList } from 'react-window';
@@ -119,7 +119,8 @@ export default function Nodes() {
     };
 
     const boxWidth = window.innerWidth > 600 ? 400 : 270
-    const menuX = boxWidth - 110
+    const menuX = boxWidth - 63
+    const switchX = boxWidth - 140
 
 
     return (
@@ -130,15 +131,26 @@ export default function Nodes() {
             }} >
             <Box style={{ width: boxWidth, height: 515, padding: 20 }}>
 
-
                 <Typography variant="h6" >{title}</Typography>
-                <Button style={{ position: 'absolute', top: 14, left: menuX, paddingTop: 5, paddingBottom: 5 }}
-                    variant="contained"
+                <FormControlLabel style={{ position: 'absolute', top: 24, left: switchX, }}
+                    control={
+                        <Switch
+                            size="small"
+                            checked={groupType}
+                            onChange={() => setGroupType(!groupType)}
+                            name="group"
+                            color="primary"
+                        />
+                    }
+                    label="Group"
+                />
+                <Button style={{ position: 'absolute', top: 20, left: menuX, paddingTop: 5, paddingBottom: 5 }}
+
                     disableElevation
                     onClick={e => setAnchorEl(e.currentTarget)}
                     endIcon={<KeyboardArrowDownIcon />}
                 >
-                    Icon sets
+                    Icons
                 </Button>
 
                 <Menu
