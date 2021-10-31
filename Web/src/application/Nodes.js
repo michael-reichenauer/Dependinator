@@ -4,7 +4,7 @@ import PubSub from 'pubsub-js'
 import { makeStyles } from '@material-ui/core/styles';
 import { Box, Dialog, Button, ListItem, ListItemIcon, Typography, Menu, MenuItem, Switch, FormControlLabel } from "@material-ui/core";
 import SearchBar from "material-ui-search-bar";
-import { defaultIconKey, greenNumberIconKey, icons } from './../common/icons';
+import { defaultIconKey, greenNumberIconKey, noImageIconKey, icons } from './../common/icons';
 import { FixedSizeList } from 'react-window';
 import { useLocalStorage } from "../common/useLocalStorage";
 import CheckIcon from '@material-ui/icons/Check';
@@ -192,7 +192,7 @@ export default function Nodes() {
                     onCancelSearch={() => cancelSearch()}
                 />
 
-                {NodesList(iconSets, mru, filter, clickedItem)}
+                {NodesList(iconSets, mru, filter, groupType, clickedItem)}
 
             </Box >
         </Dialog >
@@ -200,8 +200,8 @@ export default function Nodes() {
 }
 
 
-const NodesList = (roots, mru, filter, clickedItem) => {
-    const filteredItems = filterItems(mru, roots, filter)
+const NodesList = (roots, mru, filter, groupType, clickedItem) => {
+    const filteredItems = filterItems(mru, roots, filter, groupType)
     const items = groupedItems(filteredItems)
     const height = Math.min(items.length, subItemsSize) * subItemsHeight
 
@@ -241,7 +241,7 @@ const groupedItems = (items) => {
     var group = ''
     for (var i = 0; i < items.length; i++) {
         const item = items[i]
-        if (item.key !== greenNumberIconKey) {
+        if (item.key !== greenNumberIconKey && item.key !== noImageIconKey) {
             const itemGroup = items[i].isMru ? 'Recently used' : items[i].root + ': ' + items[i].group
             if (itemGroup !== group) {
                 group = itemGroup
@@ -256,7 +256,7 @@ const groupedItems = (items) => {
 
 // Filter node items based on root and filter
 // This filter uses implicit 'AND' between words in the search filter
-const filterItems = (mru, roots, filter) => {
+const filterItems = (mru, roots, filter, groupType) => {
     const filterWords = filter.split(' ')
 
     const items = allIcons.filter(item => {
@@ -283,8 +283,13 @@ const filterItems = (mru, roots, filter) => {
     })
         .map(item => ({ ...icons.getIcon(item), isMru: true }))
 
-    const numberItem = icons.getIcon(greenNumberIconKey)
-    return [numberItem].concat(mruItems, uniqueItems)
+    if (groupType) {
+        const noneItem = icons.getIcon(noImageIconKey)
+        return [noneItem].concat(mruItems, uniqueItems)
+    } else {
+        const numberItem = icons.getIcon(greenNumberIconKey)
+        return [numberItem].concat(mruItems, uniqueItems)
+    }
 }
 
 const isItemInFilterWords = (item, filterWords) => {
