@@ -48,10 +48,11 @@ export function ContextMenu({ menu, onClose }) {
     }
 
     const onClick = (item) => {
+        onClose()
+
         if (!(item instanceof Item)) {
             return
         }
-        onClose()
         item?.action()
     }
 
@@ -62,7 +63,6 @@ export function ContextMenu({ menu, onClose }) {
             anchorReference="anchorPosition"
             anchorPosition={{ left: menu.x - 2, top: menu.y - 2 }}
             PaperProps={{}}
-            keepMounted
         >
             {getMenuItems(menu.items, onClick)}
         </Menu>

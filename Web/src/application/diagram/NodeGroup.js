@@ -127,6 +127,7 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
         return [
             menuItem('To front', () => this.moveToFront()),
             menuItem('To back', () => this.moveToBack()),
+            menuItem('Edit label ...', () => this.nameLabel.editor.start(this)),
             menuItem('Change icon ...', () => PubSub.publish('nodes.showDialog', { add: false, group: true, action: (iconKey) => this.changeIcon(iconKey) })),
             menuParentItem('Set background color', colorItems),
             menuItem(stickyText, () => this.toggleStickySubItems()),

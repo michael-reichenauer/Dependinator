@@ -134,7 +134,7 @@ export default class Node extends draw2d.shape.node.Between {
         return [
             menuItem('To front', () => this.moveToFront()),
             menuItem('To back', () => this.moveToBack()),
-            menuItem('Edit label', () => this.nameLabel.editor.start(this)),
+            menuItem('Edit label ...', () => this.nameLabel.editor.start(this)),
             // menuParentItem('Inner diagram', [
             //     menuItem('Show', () => this.showInnerDiagram(), this.innerDiagram == null, hasDiagramIcon),
             //     menuItem('Hide (click)', () => this.hideInnerDiagram(), this.innerDiagram != null, hasDiagramIcon),

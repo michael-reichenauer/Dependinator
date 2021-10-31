@@ -11,9 +11,10 @@ import AddBoxOutlinedIcon from '@material-ui/icons/AddBoxOutlined';
 // import SyncDisabledIcon from '@material-ui/icons/SyncDisabled';
 import UndoIcon from '@material-ui/icons/Undo';
 import RedoIcon from '@material-ui/icons/Redo';
+import TuneIcon from '@material-ui/icons/Tune';
 import FilterCenterFocusIcon from '@material-ui/icons/FilterCenterFocus';
 
-import { canRedoAtom, canUndoAtom, titleAtom } from "./Diagram";
+import { canRedoAtom, canUndoAtom, selectModeAtom, titleAtom } from "./Diagram";
 import { useAtom } from "jotai";
 // import { store } from "./diagram/Store";
 //import { useLogin } from "./Login";
@@ -26,6 +27,8 @@ import { showPrompt } from './../common/PromptDialog';
 export default function ApplicationBar({ height }) {
     const classes = useAppBarStyles();
     const [titleText] = useAtom(titleAtom)
+    const [selectMode] = useAtom(selectModeAtom);
+
     // const [syncMode] = useSyncMode()
     const [canUndo] = useAtom(canUndoAtom)
     const [canRedo] = useAtom(canRedoAtom)
@@ -74,6 +77,8 @@ export default function ApplicationBar({ height }) {
 
                 <Button tooltip="Add node" icon={<AddBoxOutlinedIcon className={styleAlways()} />}
                     onClick={(e) => { PubSub.publish('nodes.showDialog', { add: true }) }} />
+                <Button tooltip="Tune selected item" disabled={!selectMode} icon={<TuneIcon className={styleAlways(!selectMode)} />}
+                    onClick={(e) => { PubSub.publish('canvas.TuneSelected', { x: e.pageX - 20, y: 50 }) }} />
 
                 <Button tooltip="Scroll and zoom to show all of the diagram" icon={<FilterCenterFocusIcon className={styleAlways()} />}
                     onClick={() => PubSub.publish('canvas.ShowTotalDiagram')} />
