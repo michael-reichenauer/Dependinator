@@ -78,7 +78,7 @@ export function ApplicationMenu() {
         menuItem('New Diagram', () => PubSub.publish('canvas.NewDiagram')),
         menuParentItem('Open Recent', diagrams, diagrams.length > 0),
         menuItem('Rename', renameDiagram),
-        menuItem('Print', () => PubSub.publish('canvas.Print'), false),
+        menuItem('Print', () => PubSub.publish('canvas.Print'), true),
         menuItem('Delete', deleteDiagram),
         // menuItem('Enable cloud sync', () => setShowLogin(true), false, !store.isCloudSyncEnabled()),
         // menuItem('Disable cloud sync', () => store.disableCloudSync(), false, store.isCloudSyncEnabled()),
