@@ -53,7 +53,6 @@ export const fetchFiles = (paths, result) => {
         .then(responses => {
             // Get the file for each response
             return Promise.all(responses.map(response => {
-                console.log('res', response)
                 return response.text();
             }));
         }).then(files => {

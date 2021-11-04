@@ -55,49 +55,44 @@ export default class CanvasSerializer {
     }
 
 
-
-    export(rect, resultHandler) {
-        const a4margin = -70
-        const a4Width = 793.7007874 - a4margin
-        const a4Height = 1122.519685 - a4margin
-
+    export(rect, width, height, margin, resultHandler) {
         var writer = new draw2d.io.svg.Writer();
         writer.marshal(this.canvas, (svg) => {
             // console.log('svg org:', svg)
 
-            // Show diagram with some margin
-            const margin = 0
-            const r = {
-                x: rect.x - margin,
-                y: rect.y - margin,
-                w: rect.w + margin * 2,
-                h: rect.h + margin * 2
+            const areaWidth = width + margin * 2
+            const areaHeight = height + margin * 2
+            if (rect.w < areaWidth && rect.h < areaHeight) {
+                // Image smaller than area; Center image and resize to normal size
+                const xd = areaWidth - rect.w
+                const yd = areaHeight - rect.h
+
+                rect.x = rect.x - xd / 2
+                rect.y = rect.y - yd / 2
+                rect.w = rect.w + xd
+                rect.h = rect.h + yd
+            } else {
+                // Image larger than area; Resize and add margin for image larger than area
+                rect.x = rect.x - margin
+                rect.y = rect.y - margin
+                rect.w = rect.w + margin * 2
+                rect.h = rect.h + margin * 2
             }
-
-            if (r.w < a4Width && r.h < a4Height) {
-                const xd = a4Width - r.w
-                const yd = a4Height - r.h
-
-                r.w = r.w + xd
-                r.x = r.x - xd / 2
-                r.h = r.h + yd
-                r.y = r.y - yd / 2
-            }
-
-            console.log('pre ', svg)
 
             // Export size (A4) and view box
-            const prefix = `<svg width="210mm" height="277mm" version="1.1" viewBox="${r.x} ${r.y} ${r.w} ${r.h}" `
+            const prefix = `<svg width="${width}" height="${height}" version="1.1" viewBox="${rect.x} ${rect.y} ${rect.w} ${rect.h}" `
 
             // Replace svg size with A4 size and view box
             const index = svg.indexOf('xmlns="http://www.w3.org/2000/svg"')
             let res = prefix + svg.substr(index)
 
-            // Remove org view box (if it exists)
-            res = res.replace('viewBox="0 0 10000 10000"', '')
+            // Adjust style for color and page brake
             res = res.replace('style="', `style="background-color:${Colors.canvasDivBackground};`)
             res = res.replace('style="', `style="page-break-after: always;`)
-            console.log('post', res)
+
+            // Remove org view box (if it exists)
+            res = res.replace('viewBox="0 0 10000 10000"', '')
+
             resultHandler(res)
         });
     }

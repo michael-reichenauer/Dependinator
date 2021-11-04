@@ -82,33 +82,22 @@ export default class Canvas extends draw2d.Canvas {
         this.diagramCanvas.save()
     }
 
-    exportAsSvg(canvasData) {
-        const width = this.getDimension().getWidth()
-        const height = this.getDimension().getHeight()
+    exportAsSvg(canvasData, width, height, margin) {
+        const canvasWidth = this.getDimension().getWidth()
+        const canvasHeight = this.getDimension().getHeight()
         let svgResult = null
-        const canvas = new Canvas(null, 'canvasPrint', null, width, height)
+
+        const canvas = new Canvas(null, 'canvasPrint', null, canvasWidth, canvasHeight)
         canvas.deserialize(canvasData)
-        canvas.export(svg => svgResult = svg)
+        canvas.export(width, height, margin, svg => svgResult = svg)
         canvas.destroy()
         return svgResult
     }
 
-    exportAsPng(canvasData) {
-        const width = this.getDimension().getWidth()
-        const height = this.getDimension().getHeight()
-        let pngResult = null
-        const canvas = new Canvas(null, 'canvasPrint', null, width, height)
-        canvas.deserialize(canvasData)
-        var writer = new draw2d.io.png.Writer();
-        writer.marshal(canvas, png => pngResult = png);
-        console.log('png', pngResult)
-        canvas.destroy()
-        return pngResult
-    }
 
-    export(resultHandler) {
+    export(width, height, margin, resultHandler) {
         const rect = this.getFiguresRect()
-        this.serializer.export(rect, resultHandler)
+        this.serializer.export(rect, width, height, margin, resultHandler)
     }
 
     clearDiagram = () => {
