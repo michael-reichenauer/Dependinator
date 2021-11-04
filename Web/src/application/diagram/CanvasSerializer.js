@@ -84,10 +84,10 @@ export default class CanvasSerializer {
                 r.y = r.y - yd / 2
             }
 
+            console.log('pre ', svg)
 
             // Export size (A4) and view box
-            const prefix = `<svg width="210mm" height="277mm" version="1.1 style="page-break-after: always;"
-             viewBox="${r.x} ${r.y} ${r.w} ${r.h}" style="background-color:${Colors.canvasDivBackground}" `
+            const prefix = `<svg width="210mm" height="277mm" version="1.1" viewBox="${r.x} ${r.y} ${r.w} ${r.h}" `
 
             // Replace svg size with A4 size and view box
             const index = svg.indexOf('xmlns="http://www.w3.org/2000/svg"')
@@ -95,7 +95,9 @@ export default class CanvasSerializer {
 
             // Remove org view box (if it exists)
             res = res.replace('viewBox="0 0 10000 10000"', '')
-
+            res = res.replace('style="', `style="background-color:${Colors.canvasDivBackground};`)
+            res = res.replace('style="', `style="page-break-after: always;`)
+            console.log('post', res)
             resultHandler(res)
         });
     }

@@ -17,7 +17,7 @@ import { setErrorMessage } from "../../common/MessageSnackbar";
 import NodeGroup from './NodeGroup';
 import { greenNumberIconKey } from "../../common/icons";
 import NodeNumber from "./NodeNumber";
-
+import FileSaver from 'file-saver'
 
 
 export default class DiagramCanvas {
@@ -74,6 +74,7 @@ export default class DiagramCanvas {
         PubSub.subscribe('canvas.OpenFile', this.commandOpenFile)
         PubSub.subscribe('canvas.ArchiveToFile', this.commandArchiveToFile)
         PubSub.subscribe('canvas.Print', this.commandPrint)
+        PubSub.subscribe('canvas.Export', (_, data) => this.commandExport(data))
     }
 
 
@@ -189,6 +190,219 @@ export default class DiagramCanvas {
             const printer = new Printer()
             printer.print(pages)
         })
+    }
+
+    commandExport = (data) => {
+        this.withWorkingIndicator(() => {
+            const diagram = this.store.getDiagram(this.canvas.diagramId)
+
+            console.log('diagram', diagram)
+            let pages = []
+            if (data.type === 'svg') {
+                pages = diagram.canvases.map(d => this.canvas.exportAsSvg(d))
+            } else if (data.type === 'png') {
+                var svgElement = document.getElementById('canvas').firstElementChild
+                let { width, height } = svgElement.getBBox();
+                //  console.log('svg', svgElement, width, height)
+                let clonedSvgElement = svgElement.cloneNode(true);
+                let outerHTML = clonedSvgElement.outerHTML
+                //console.log('html', outerHTML)
+
+                let iconImage = new Image();
+                iconImage.onload = () => {
+                    console.log('iconImage', iconImage)
+                    let canvas = document.createElement('canvas');
+                    canvas.width = 30;
+                    canvas.height = 30;
+                    let context = canvas.getContext('2d');
+                    // draw image in canvas starting left-0 , top - 0  
+                    context.drawImage(iconImage, 0, 0, width, height);
+                    //  downloadImage(canvas); need to implement
+
+                    // let png = canvas.toDataURL(); // default png
+                    console.log('icon:', canvas.innerHTML)
+
+                }
+                iconImage.src = '/static/media/10035-icon-service-App-Services.bdfe9ddd.svg'
+
+
+                fetch('/static/media/10035-icon-service-App-Services.bdfe9ddd.svg').then(f => {
+                    f.text().then(t => {
+                        const fileData = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(t)
+
+                        console.log('parse')
+                        const paths = this.parsePaths(outerHTML)
+                        console.log('paths', paths)
+                        this.getFiles(paths, icons => {
+                            console.log('files', icons)
+                            for (let i = 0; i < paths.length; i++) {
+                                const path = paths[i];
+                                const icon = icons[i]
+                                const iconUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(icon)
+                                console.log('path', path)
+                                console.log('url', iconUrl)
+
+                                outerHTML = outerHTML.replaceAll(`xlink:href="${path}"`, `xlink:href="${iconUrl}"`)
+                            }
+
+                            outerHTML = outerHTML.replace('<svg height="100000" version="1.1" width="100000" ',
+                                '<svg width="210mm" height="277mm" version="1.1" viewBox="48499.25921624277 48791.66970379388 863.7007874 1192.519685" ')
+
+                            let blob = new Blob([outerHTML], { type: 'image/svg+xml;charset=utf-8' });
+                            let URL = window.URL || window.webkitURL || window;
+                            let blobURL = URL.createObjectURL(blob);
+                            let image = new Image();
+                            image.onload = () => {
+                                let canvas = document.createElement('canvas');
+                                canvas.width = 793.7007874;
+                                canvas.height = 1046.9291339;
+                                let context = canvas.getContext('2d');
+                                // draw image in canvas starting left-0 , top - 0  
+                                context.drawImage(image, 0, 0, canvas.width, canvas.height);
+                                //  downloadImage(canvas); need to implement
+
+                                let png = canvas.toDataURL(); // default png
+                                //console.log('png', png)
+
+                                var newWindow = window.open("");
+                                newWindow.document.open();
+                                newWindow.document.write(`<html><body>${outerHTML}</body></html>`);
+                                newWindow.document.close();
+
+                                var download = function (href, name) {
+                                    var link = document.createElement('a');
+                                    link.download = name;
+                                    link.style.opacity = "0";
+                                    document.body.append(link);
+                                    link.href = href;
+                                    link.click();
+                                    link.remove();
+                                }
+                                download(png, "image.png");
+                            };
+
+                            image.src = blobURL;
+
+                        })
+
+                        // outerHTML = outerHTML.replace('xlink:href="/static/media/10035-icon-service-App-Services.bdfe9ddd.svg"',
+                        //     `xlink:href="${fileData}"`)
+                        // outerHTML = outerHTML.replace('xlink:href="/static/media/10162-icon-service-Cognitive-Services.d5e477dc.svg"',
+                        //     `xlink:href="${fileData}"`)
+                        //  outerHTML = outerHTML.replace('<svg height="100000" version="1.1" width="100000" ',
+                        //     '<svg width="210mm" height="277mm" version="1.1" viewBox="48499.25921624277 48791.66970379388 863.7007874 1192.519685" ')
+                        // //console.log('html', outerHTML)
+
+                        let blob = new Blob([outerHTML], { type: 'image/svg+xml;charset=utf-8' });
+                        let URL = window.URL || window.webkitURL || window;
+                        let blobURL = URL.createObjectURL(blob);
+                        let image = new Image();
+                        image.onload = () => {
+                            let canvas = document.createElement('canvas');
+                            canvas.widht = width;
+                            canvas.height = height;
+                            let context = canvas.getContext('2d');
+                            // draw image in canvas starting left-0 , top - 0  
+                            context.drawImage(image, 0, 0, width, height);
+                            //  downloadImage(canvas); need to implement
+
+                            let png = canvas.toDataURL(); // default png
+                            //console.log('png', png)
+
+                            // var newWindow = window.open("");
+                            // newWindow.document.open();
+                            // newWindow.document.write(`<html><body>${outerHTML}</body></html>`);
+                            // newWindow.document.close();
+
+                            // var download = function (href, name) {
+                            //     var link = document.createElement('a');
+                            //     link.download = name;
+                            //     link.style.opacity = "0";
+                            //     document.body.append(link);
+                            //     link.href = href;
+                            //     link.click();
+                            //     link.remove();
+                            // }
+                            // download(png, "image.png");
+
+                        };
+                        image.src = blobURL;
+
+                    })
+                })
+
+
+
+                // pages = diagram.canvases.map(d => this.canvas.exportAsSvg(d))
+                // console.log('png')
+                // let canvas = document.createElement('canvas');
+                // let ctx = canvas.getContext('2d')
+                // //var canvas = document.getElementById("canvas");
+                // var img1 = new Image();
+                // img1.onload = function () {
+                //     ctx.drawImage(img1, 30, 30);
+                // }
+                // img1.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(pages[0])
+
+                // var img = canvas.toDataURL("image/png");
+                // //   img = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==`
+                // pages[0] = `<html><body><img src="${img}" height="500" width="500"/></body></html>`
+
+                // console.log('pages', pages)
+                // pages = diagram.canvases.map(d => this.canvas.exportAsPng(d))
+            }
+
+            if (data.target === 'tab') {
+                console.log('pages', pages)
+                // var newWindow = window.open("",);
+                // newWindow.document.open();
+                // newWindow.document.write(`<html><body>${pages[0]}</body></html>`);
+                // newWindow.document.close();
+
+                // pages.forEach(p => newWindow.document.write(p))
+            } else if (data.target === 'file') {
+                pages.forEach((p, i) => {
+                    const blob = new Blob([p], { type: "text/plain;charset=utf-8" });
+                    let name = i === 0 ? diagram.diagramInfo.name : diagram.diagramInfo.name + '-' + i
+                    name = name + '.' + data.type
+                    FileSaver.saveAs(blob, name);
+                })
+            }
+        })
+    }
+
+    parsePaths(text, result) {
+        const regexp = new RegExp('xlink:href="/static/media[^"]*', 'g');
+
+        let uniquePaths = []
+
+        let match;
+        while ((match = regexp.exec(text)) !== null) {
+            const ref = `${match[0]}`
+            const path = ref.substring(12)
+            if (!uniquePaths.includes(path)) {
+                uniquePaths.push(path)
+            }
+        }
+        return uniquePaths
+    }
+
+    getFiles(paths, result) {
+        Promise
+            .all(paths.map(path => fetch(path)))
+            .then(responses => {
+                // Get the file for each response
+                return Promise.all(responses.map(response => {
+                    console.log('res', response)
+                    return response.text();
+                }));
+            }).then(files => {
+                result(files)
+            }).catch(error => {
+                // if there's an error, log it
+                result([])
+                console.log(error);
+            });
     }
 
     commandEditInnerDiagram = (msg, figure) => {

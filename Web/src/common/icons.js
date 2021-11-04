@@ -7,7 +7,18 @@ export const noImageIconKey = 'none'
 class Icons {
     svgIcons = []
 
+
     constructor() {
+
+
+
+        // (context => {
+
+
+        //     // now, load up the html fragments and add them to the page
+        //     context.keys().forEach(key => this.outerHtml += context(key).readFile(key));
+        // })(svgFiles);
+
 
         // Parse all svg files into an array of objects
         this.svgIcons = svgFiles
