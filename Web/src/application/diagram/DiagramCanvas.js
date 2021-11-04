@@ -200,7 +200,7 @@ export default class DiagramCanvas {
             let pages = diagram.canvases.map(d => this.canvas.exportAsSvg(d))
             let svgText = pages[0]
 
-            const nestedSvgPaths = this.parseNestedSvgPaths(pages[0])
+            const nestedSvgPaths = this.parseNestedSvgPaths(svgText)
 
             fetchFiles(nestedSvgPaths, files => {
                 console.log('files', files)
@@ -375,23 +375,6 @@ export default class DiagramCanvas {
 
                 // console.log('pages', pages)
                 // pages = diagram.canvases.map(d => this.canvas.exportAsPng(d))
-            }
-
-            if (data.target === 'tab') {
-                console.log('pages', pages)
-                // var newWindow = window.open("",);
-                // newWindow.document.open();
-                // newWindow.document.write(`<html><body>${pages[0]}</body></html>`);
-                // newWindow.document.close();
-
-                // pages.forEach(p => newWindow.document.write(p))
-            } else if (data.target === 'file') {
-                // pages.forEach((p, i) => {
-                //     const blob = new Blob([p], { type: "text/plain;charset=utf-8" });
-                //     let name = i === 0 ? diagram.diagramInfo.name : diagram.diagramInfo.name + '-' + i
-                //     name = name + '.' + data.type
-                //     FileSaver.saveAs(blob, name);
-                // })
             }
         })
     }
