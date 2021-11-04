@@ -81,11 +81,7 @@ export function ApplicationMenu() {
         menuItem('Print', () => PubSub.publish('canvas.Print'), true),
         menuParentItem('Export', [
             menuItem('As png file', () => PubSub.publish('canvas.Export', { type: 'png', target: 'file' })),
-            menuItem('As png in new tab', () => PubSub.publish('canvas.Export', { type: 'png', target: 'tab' })),
-
             menuItem('As svg file', () => PubSub.publish('canvas.Export', { type: 'svg', target: 'file' })),
-            menuItem('As svg in new tab', () => PubSub.publish('canvas.Export', { type: 'svg', target: 'tab' })),
-
         ]),
         menuItem('Delete', deleteDiagram),
         // menuItem('Enable cloud sync', () => setShowLogin(true), false, !store.isCloudSyncEnabled()),
