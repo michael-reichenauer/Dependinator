@@ -90,7 +90,7 @@ export function ApplicationMenu() {
             menuItem('Open file ...', () => PubSub.publish('canvas.OpenFile')),
             menuItem('Save diagram to file', () => PubSub.publish('canvas.SaveDiagramToFile')),
             menuItem('Save/Archive all to file', () => PubSub.publish('canvas.ArchiveToFile')),
-        ]),
+        ], false),
         menuItem('Reload web page', () => window.location.reload(), true, isInStandaloneMode()),
         menuItem('About', () => setShowAbout(true)),
         // menuParentItem('Advanced', [

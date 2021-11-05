@@ -482,6 +482,7 @@ export default class DiagramCanvas {
 
     setName(name) {
         this.canvas.diagramName = name
+        this.store.setDiagramName(this.canvas.diagramId, name)
         this.callbacks.setTitle(this.getTitle())
     }
 
