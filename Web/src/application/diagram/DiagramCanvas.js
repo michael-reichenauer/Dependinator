@@ -202,8 +202,9 @@ export default class DiagramCanvas {
         this.withWorkingIndicator(() => {
             const diagram = this.store.getDiagram(this.canvas.diagramId)
             const diagramName = diagram.diagramInfo.name
-            const imgWidth = diagram.canvases[0].box.w + imgMargin * 2
-            const imgHeight = diagram.canvases[0].box.h + imgMargin * 2
+            const rect = this.canvas.getFiguresRect()
+            const imgWidth = rect.w + imgMargin * 2
+            const imgHeight = rect.h + imgMargin * 2
 
             let pages = diagram.canvases.map(d => this.canvas.exportAsSvg(d, imgWidth, imgHeight, imgMargin))
             let svgText = pages[0]
