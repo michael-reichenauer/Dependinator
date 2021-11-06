@@ -47,8 +47,6 @@ export default class Connection extends draw2d.Connection {
         // }
         this.addArrow()
         this.addLabels(name, description)
-        this.addConfigIcon()
-        this.hideConfig()
     }
 
     static deserialize(canvas, c) {
@@ -174,17 +172,27 @@ export default class Connection extends draw2d.Connection {
     }
 
     showConfig() {
-        this.configBkr?.setVisible(true)
-        this.configBkr.toFront()
-        this.configIcon?.setVisible(true)
-        this.configIcon.toFront()
+        const iconColor = Colors.getNodeFontColor(this.colorName)
+        this.configIcon = new draw2d.shape.icon.Run({
+            width: 16, height: 16, color: iconColor, bgColor: 'none',
+        })
+        //this.configIcon.on("click", () => { console.log('click') })
+
+        this.configBkr = new draw2d.shape.basic.Rectangle({
+            bgColor: Colors.buttonBackground, alpha: 0.7, width: 20, height: 20, radius: 3, stroke: 0.1,
+        });
+        this.configBkr.on("click", this.showConfigMenu)
+
+        this.add(this.configBkr, new ConfigBackgroundLocator())
+        this.add(this.configIcon, new ConfigIconLocator())
+        this.repaint()
     }
 
     hideConfig() {
-        this.configBkr?.setVisible(false)
-        this.configIcon?.setVisible(false)
+        this.remove(this.configBkr)
+        this.remove(this.configIcon)
+        this.repaint()
     }
-
 
 
     addSegmentAt(x, y) {

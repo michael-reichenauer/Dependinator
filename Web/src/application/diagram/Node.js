@@ -85,8 +85,8 @@ export default class Node extends draw2d.shape.node.Between {
 
         this.addLabels(o.name, o.description)
         this.addIcon(o.icon);
-        this.addConfigIcon()
-        this.hideConfig()
+        // this.addConfigIcon()
+        // this.hideConfig()
         this.addPorts()
         //this.addInnerDiagramIcon()
 
@@ -334,21 +334,6 @@ export default class Node extends draw2d.shape.node.Between {
         this.add(icon, new NodeIconLocator())
     }
 
-    addConfigIcon() {
-        const iconColor = Colors.getNodeFontColor(this.colorName)
-        this.configIcon = new draw2d.shape.icon.Run({
-            width: 16, height: 16, color: iconColor, bgColor: 'none',
-        })
-        //this.configIcon.on("click", () => { console.log('click') })
-
-        this.configBkr = new draw2d.shape.basic.Rectangle({
-            bgColor: Colors.buttonBackground, alpha: 0.7, width: 20, height: 20, radius: 3, stroke: 0.1,
-        });
-        this.configBkr.on("click", this.showConfigMenu)
-
-        this.add(this.configBkr, new ConfigBackgroundLocator())
-        this.add(this.configIcon, new ConfigIconLocator())
-    }
 
     showConfigMenu = () => {
         const { x, y } = this.canvas.fromCanvasToDocumentCoordinate(this.x + this.getWidth(), this.y)
@@ -356,15 +341,26 @@ export default class Node extends draw2d.shape.node.Between {
     }
 
     showConfig() {
-        this.configBkr?.setVisible(true)
-        this.configBkr.toFront()
-        this.configIcon?.setVisible(true)
-        this.configIcon.toFront()
+        const iconColor = Colors.getNodeFontColor(this.colorName)
+        this.configIcon = new draw2d.shape.icon.Run({
+            width: 16, height: 16, color: iconColor, bgColor: Colors.buttonBackground,
+        })
+        //this.configIcon.on("click", () => { console.log('click') })
+
+        this.configBkr = new draw2d.shape.basic.Rectangle({
+            bgColor: Colors.buttonBackground, alpha: 1, width: 20, height: 20, radius: 3, stroke: 0.1,
+        });
+        this.configBkr.on("click", this.showConfigMenu)
+
+        this.add(this.configBkr, new ConfigBackgroundLocator())
+        this.add(this.configIcon, new ConfigIconLocator())
+        this.repaint()
     }
 
     hideConfig() {
-        this.configBkr?.setVisible(false)
-        this.configIcon?.setVisible(false)
+        this.remove(this.configIcon)
+        this.remove(this.configBkr)
+        this.repaint()
     }
 
 
@@ -430,17 +426,17 @@ class InnerDiagramIconLocator extends draw2d.layout.locator.PortLocator {
     }
 }
 
-class ConfigIconLocator extends draw2d.layout.locator.PortLocator {
+class ConfigIconLocator extends draw2d.layout.locator.Locator {
     relocate(index, figure) {
         const parent = figure.getParent()
-        this.applyConsiderRotation(figure, parent.getWidth() - 11, - 28);
+        figure.setPosition(parent.getWidth() - 11, - 28);
     }
 }
 
-class ConfigBackgroundLocator extends draw2d.layout.locator.PortLocator {
+class ConfigBackgroundLocator extends draw2d.layout.locator.Locator {
     relocate(index, figure) {
         const parent = figure.getParent()
-        this.applyConsiderRotation(figure, parent.getWidth() - 13, - 30);
+        figure.setPosition(parent.getWidth() - 13, - 30);
     }
 }
 
