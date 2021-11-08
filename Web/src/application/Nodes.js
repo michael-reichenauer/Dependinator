@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { atom, useAtom } from "jotai"
 import PubSub from 'pubsub-js'
 import { makeStyles } from '@material-ui/core/styles';
-import { Box, Dialog, Button, ListItem, ListItemIcon, Typography, Menu, MenuItem } from "@material-ui/core";
+import { Box, Dialog, Button, ListItem, ListItemIcon, Typography, Menu, MenuItem, Switch, FormControlLabel } from "@material-ui/core";
 import SearchBar from "material-ui-search-bar";
-import { defaultIconKey, greenNumberIconKey, icons } from './../common/icons';
+import { defaultIconKey, greenNumberIconKey, noImageIconKey, icons } from './../common/icons';
 import { FixedSizeList } from 'react-window';
 import { useLocalStorage } from "../common/useLocalStorage";
 import CheckIcon from '@material-ui/icons/Check';
@@ -119,7 +119,8 @@ export default function Nodes() {
     };
 
     const boxWidth = window.innerWidth > 600 ? 400 : 270
-    const menuX = boxWidth - 110
+    const menuX = boxWidth - 63
+    const switchX = boxWidth - 140
 
 
     return (
@@ -130,15 +131,26 @@ export default function Nodes() {
             }} >
             <Box style={{ width: boxWidth, height: 515, padding: 20 }}>
 
-
                 <Typography variant="h6" >{title}</Typography>
-                <Button style={{ position: 'absolute', top: 14, left: menuX, paddingTop: 5, paddingBottom: 5 }}
-                    variant="contained"
+                <FormControlLabel style={{ position: 'absolute', top: 24, left: switchX, }}
+                    control={
+                        <Switch
+                            size="small"
+                            checked={groupType}
+                            onChange={() => setGroupType(!groupType)}
+                            name="group"
+                            color="primary"
+                        />
+                    }
+                    label="Group"
+                />
+                <Button style={{ position: 'absolute', top: 20, left: menuX, paddingTop: 5, paddingBottom: 5 }}
+
                     disableElevation
                     onClick={e => setAnchorEl(e.currentTarget)}
                     endIcon={<KeyboardArrowDownIcon />}
                 >
-                    Icon sets
+                    Icons
                 </Button>
 
                 <Menu
@@ -180,7 +192,7 @@ export default function Nodes() {
                     onCancelSearch={() => cancelSearch()}
                 />
 
-                {NodesList(iconSets, mru, filter, clickedItem)}
+                {NodesList(iconSets, mru, filter, groupType, clickedItem)}
 
             </Box >
         </Dialog >
@@ -188,8 +200,8 @@ export default function Nodes() {
 }
 
 
-const NodesList = (roots, mru, filter, clickedItem) => {
-    const filteredItems = filterItems(mru, roots, filter)
+const NodesList = (roots, mru, filter, groupType, clickedItem) => {
+    const filteredItems = filterItems(mru, roots, filter, groupType)
     const items = groupedItems(filteredItems)
     const height = Math.min(items.length, subItemsSize) * subItemsHeight
 
@@ -210,7 +222,7 @@ const NodesList = (roots, mru, filter, clickedItem) => {
                 <ListItemIcon>
                     <img src={item.src} alt='' width={iconsSize} height={iconsSize} />
                 </ListItemIcon>
-                <Typography variant='body2' >{item.name}</Typography>
+                <Typography variant='body2' style={{ lineHeight: '95%' }}>{item.name}</Typography>
 
             </ListItem>
         );
@@ -229,7 +241,7 @@ const groupedItems = (items) => {
     var group = ''
     for (var i = 0; i < items.length; i++) {
         const item = items[i]
-        if (item.key !== greenNumberIconKey) {
+        if (item.key !== greenNumberIconKey && item.key !== noImageIconKey) {
             const itemGroup = items[i].isMru ? 'Recently used' : items[i].root + ': ' + items[i].group
             if (itemGroup !== group) {
                 group = itemGroup
@@ -244,7 +256,7 @@ const groupedItems = (items) => {
 
 // Filter node items based on root and filter
 // This filter uses implicit 'AND' between words in the search filter
-const filterItems = (mru, roots, filter) => {
+const filterItems = (mru, roots, filter, groupType) => {
     const filterWords = filter.split(' ')
 
     const items = allIcons.filter(item => {
@@ -271,8 +283,13 @@ const filterItems = (mru, roots, filter) => {
     })
         .map(item => ({ ...icons.getIcon(item), isMru: true }))
 
-    const numberItem = icons.getIcon(greenNumberIconKey)
-    return [numberItem].concat(mruItems, uniqueItems)
+    if (groupType) {
+        const noneItem = icons.getIcon(noImageIconKey)
+        return [noneItem].concat(mruItems, uniqueItems)
+    } else {
+        const numberItem = icons.getIcon(greenNumberIconKey)
+        return [numberItem].concat(mruItems, uniqueItems)
+    }
 }
 
 const isItemInFilterWords = (item, filterWords) => {

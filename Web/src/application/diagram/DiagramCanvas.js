@@ -3,7 +3,7 @@ import "jquery-ui-bundle";
 import "jquery-ui-bundle/jquery-ui.css";
 import PubSub from 'pubsub-js'
 import cuid from 'cuid'
-import { random } from '../../common/utils'
+import { imgDataUrlToPngDataUrl, publishAsDownload, random } from '../../common/utils'
 import Node from './Node'
 import { store } from "./Store";
 import Canvas from "./Canvas";
@@ -17,7 +17,13 @@ import { setErrorMessage } from "../../common/MessageSnackbar";
 import NodeGroup from './NodeGroup';
 import { greenNumberIconKey } from "../../common/icons";
 import NodeNumber from "./NodeNumber";
+import { svgToSvgDataUrl, fetchFiles } from './../../common/utils';
 
+
+const a4Width = 793.7007874   // "210mm" A4
+const a4Height = 1046.9291339 // "277mm" A4
+const a4Margin = 50
+const imgMargin = 5
 
 
 export default class DiagramCanvas {
@@ -74,6 +80,7 @@ export default class DiagramCanvas {
         PubSub.subscribe('canvas.OpenFile', this.commandOpenFile)
         PubSub.subscribe('canvas.ArchiveToFile', this.commandArchiveToFile)
         PubSub.subscribe('canvas.Print', this.commandPrint)
+        PubSub.subscribe('canvas.Export', (_, data) => this.commandExport(data))
     }
 
 
@@ -185,10 +192,71 @@ export default class DiagramCanvas {
         this.withWorkingIndicator(() => {
             const diagram = this.store.getDiagram(this.canvas.diagramId)
 
-            const pages = diagram.canvases.map(d => this.canvas.exportAsSvg(d))
+            const pages = diagram.canvases.map(d => this.canvas.exportAsSvg(d, a4Width, a4Height, a4Margin))
             const printer = new Printer()
             printer.print(pages)
         })
+    }
+
+    commandExport = (data) => {
+        this.withWorkingIndicator(() => {
+            const diagram = this.store.getDiagram(this.canvas.diagramId)
+            const diagramName = diagram.diagramInfo.name
+            const rect = this.canvas.getFiguresRect()
+            const imgWidth = rect.w + imgMargin * 2
+            const imgHeight = rect.h + imgMargin * 2
+
+            let pages = diagram.canvases.map(d => this.canvas.exportAsSvg(d, imgWidth, imgHeight, imgMargin))
+            let svgText = pages[0]
+
+            // Since icons are nested svg with external links, the links must be replaced with
+            // the actual icon image as an dataUrl. Let pars unique urls
+            const nestedSvgPaths = this.parseNestedSvgPaths(svgText)
+
+            // Fetch the actual icon svg files
+            fetchFiles(nestedSvgPaths, files => {
+                // Replace all the links with dataUrl of the files.
+                svgText = this.replacePathsWithSvgDataUrls(svgText, nestedSvgPaths, files)
+
+                // Make one svgDataUrl of the diagram
+                let svgDataUrl = svgToSvgDataUrl(svgText)
+
+                if (data.type === 'png') {
+
+                    imgDataUrlToPngDataUrl(svgDataUrl, imgWidth, imgHeight, pngDataUrl => {
+                        publishAsDownload(pngDataUrl, `${diagramName}.png`);
+                    })
+                } else if (data.type === 'svg') {
+                    publishAsDownload(svgDataUrl, `${diagramName}.svg`);
+                }
+            })
+        })
+    }
+
+    parseNestedSvgPaths(text) {
+        const regexp = new RegExp('xlink:href="/static/media[^"]*', 'g');
+
+        let uniquePaths = []
+
+        let match;
+        while ((match = regexp.exec(text)) !== null) {
+            const ref = `${match[0]}`
+            const path = ref.substring(12)
+            if (!uniquePaths.includes(path)) {
+                uniquePaths.push(path)
+            }
+        }
+        return uniquePaths
+    }
+
+    replacePathsWithSvgDataUrls(svgText, paths, svgImages) {
+        for (let i = 0; i < paths.length; i++) {
+            const path = paths[i];
+            const svgImage = svgImages[i]
+            const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgImage)
+            svgText = svgText.replaceAll(`xlink:href="${path}"`, `xlink:href="${svgDataUrl}"`)
+        }
+        return svgText
     }
 
     commandEditInnerDiagram = (msg, figure) => {
@@ -201,6 +269,7 @@ export default class DiagramCanvas {
     }
 
     commandTuneSelected = (x, y) => {
+        console.log('tune')
         // Get target figure or use canvas as target
         let target = this.canvas.getSelection().primary
 
@@ -414,6 +483,7 @@ export default class DiagramCanvas {
 
     setName(name) {
         this.canvas.diagramName = name
+        this.store.setDiagramName(this.canvas.diagramId, name)
         this.callbacks.setTitle(this.getTitle())
     }
 

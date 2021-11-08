@@ -6,6 +6,7 @@ export default class NodeSelectionFeedbackPolicy extends draw2d.policy.figure.Se
 
     onSelect(canvas, figure, isPrimarySelection) {
         if (figure.selectionHandles.isEmpty()) {
+
             // Add a dotted line rectangle to the figure. Override the show/hide method of the standard
             // figure to avoid adding these element to the hit test of the canvas. In this case the element
             // is just visible but not part of the model or responsible for any drag/drop operation
@@ -85,9 +86,7 @@ export default class NodeSelectionFeedbackPolicy extends draw2d.policy.figure.Se
     }
 
 
-
     moved(canvas, figure) {
-
         if (figure.selectionHandles.isEmpty()) {
             return // silently
         }

@@ -21,6 +21,7 @@ export default class Colors {
     static connectionColor = Colors.canvasText.lighter(0.5).rgba()
     static labelColor = Colors.canvasText
     static nodeBorderColor = Colors.canvasBackground.darker(0.1).rgba()
+    static buttonBackground = new draw2d.util.Color(grey[50])
 
 
     static NodeColors = {
