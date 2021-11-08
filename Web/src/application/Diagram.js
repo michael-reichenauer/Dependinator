@@ -79,7 +79,7 @@ export default function Diagram({ width, height }) {
                 }} />
             </div>
 
-            <ContextMenu menu={contextMenu} onClose={setContextMenu} />
+            <ContextMenu menu={contextMenu} onClose={() => setContextMenu(null)} />
         </>
     )
 }

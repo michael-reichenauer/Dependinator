@@ -82,20 +82,22 @@ export default class Canvas extends draw2d.Canvas {
         this.diagramCanvas.save()
     }
 
-    exportAsSvg(canvasData) {
-        const width = this.getDimension().getWidth()
-        const height = this.getDimension().getHeight()
+    exportAsSvg(canvasData, width, height, margin) {
+        const canvasWidth = this.getDimension().getWidth()
+        const canvasHeight = this.getDimension().getHeight()
         let svgResult = null
-        const canvas = new Canvas('canvasPrint', null, width, height)
+
+        const canvas = new Canvas(null, 'canvasPrint', null, canvasWidth, canvasHeight)
         canvas.deserialize(canvasData)
-        canvas.export(svg => svgResult = svg)
+        canvas.export(width, height, margin, svg => svgResult = svg)
         canvas.destroy()
         return svgResult
     }
 
-    export(resultHandler) {
+
+    export(width, height, margin, resultHandler) {
         const rect = this.getFiguresRect()
-        this.serializer.export(rect, resultHandler)
+        this.serializer.export(rect, width, height, margin, resultHandler)
     }
 
     clearDiagram = () => {
@@ -237,41 +239,38 @@ export default class Canvas extends draw2d.Canvas {
             let fy2 = fy + f.getHeight()
 
             if (i === 0) {
+                // First figure sets min/max which other figures can adjust
                 minX = fx
                 minY = fy
                 maxX = fx2
                 maxY = fy2
-                return
             }
 
-            if (fx < minX) {
-                minX = fx
-            }
-            if (fy < minY) {
-                minY = fy
-            }
-            if (fx2 > maxX) {
-                maxX = fx2
-            }
-            if (fy2 > maxY) {
-                maxY = fy2
-            }
+            minX = fx < minX ? fx : minX
+            minY = fy < minY ? fy : minY
+            maxX = fx2 > maxX ? fx2 : maxX
+            maxY = fy2 > maxY ? fy2 : maxY
+
+            // A figure can have children like labels that extend beyond the figure...
+            f.getChildren().each((i, c) => {
+                let fx = c.getAbsoluteX()
+                let fy = c.getAbsoluteY()
+                let fx2 = fx + c.getWidth()
+                let fy2 = fy + c.getHeight()
+
+                minX = fx < minX ? fx : minX
+                minY = fy < minY ? fy : minY
+                maxX = fx2 > maxX ? fx2 : maxX
+                maxY = fy2 > maxY ? fy2 : maxY
+            })
         })
 
         this.getLines().each((i, l) => {
             l.vertices.each((i, v) => {
-                if (v.x < minX) {
-                    minX = v.x
-                }
-                if (v.y < minY) {
-                    minY = v.y
-                }
-                if (v.x > maxX) {
-                    maxX = v.x
-                }
-                if (v.y > maxY) {
-                    maxY = v.y
-                }
+                minX = v.x < minX ? v.x : minX
+                minY = v.y < minY ? v.y : minY
+                maxX = v.x > maxX ? v.x : maxX
+                maxY = v.y > maxY ? v.y : maxY
             })
         })
 

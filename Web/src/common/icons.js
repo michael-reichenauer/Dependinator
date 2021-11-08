@@ -2,11 +2,23 @@
 const svgFiles = require.context("../resources/icons", true, /\.(svg)$/)
 export const defaultIconKey = 'defaultIcon'
 export const greenNumberIconKey = 'greenNumberIcon'
+export const noImageIconKey = 'none'
 
 class Icons {
     svgIcons = []
 
+
     constructor() {
+
+
+
+        // (context => {
+
+
+        //     // now, load up the html fragments and add them to the page
+        //     context.keys().forEach(key => this.outerHtml += context(key).readFile(key));
+        // })(svgFiles);
+
 
         // Parse all svg files into an array of objects
         this.svgIcons = svgFiles
@@ -25,6 +37,9 @@ class Icons {
                 }
                 if (path.startsWith('./green_number-1')) {
                     svg = this._getGreenNumberSvg(svg)
+                }
+                if (path.startsWith('./no_image')) {
+                    svg = this._getNoImageSvg(svg)
                 }
                 else if (path.startsWith('./Azure')) {
                     svg = this._getAzureSvg(svg, path)
@@ -48,6 +63,9 @@ class Icons {
 
     _getGreenNumberSvg(svg) {
         return { ...svg, key: greenNumberIconKey, name: 'Number Label', fullName: 'Number Label' }
+    }
+    _getNoImageSvg(svg) {
+        return { ...svg, key: noImageIconKey, name: 'No icon', fullName: 'No icon' }
     }
 
     _getAzureSvg(svg, path) {
