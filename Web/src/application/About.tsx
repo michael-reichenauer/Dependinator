@@ -1,3 +1,4 @@
+import React from 'react'
 import { atom, useAtom } from "jotai"
 import { Box, Button, Dialog, Tooltip, Typography } from "@material-ui/core";
 import { localBuildTime, localSha } from "../common/appVersion";
@@ -6,8 +7,7 @@ import { localBuildTime, localSha } from "../common/appVersion";
 const aboutAtom = atom(false)
 
 export const useAbout = () => useAtom(aboutAtom)
-
-export default function About() {
+ const About: React.FC = () =>{
     const [show, setShow] = useAbout()
     //const [, setShowLogin] = useLogin()
 
@@ -54,3 +54,4 @@ export default function About() {
         </Dialog>
     )
 }
+export default About

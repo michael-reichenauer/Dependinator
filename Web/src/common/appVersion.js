@@ -8,7 +8,7 @@ const retryFailedRemoteInterval = 5 * 60 * 1000
 
 
 export const startTime = dateToLocalISO(new Date().toISOString())
-export const localSha = process.env.REACT_APP_SHA === '%REACT_APP_SHA%' ? '000000' : process.env.REACT_APP_SHA
+export const localSha = process.env.REACT_APP_SHA === '%REACT_APP_SHA%' ? '000000' : process.env.REACT_APP_SHA ?? '000000'
 export const localShortSha = process.env.REACT_APP_SHA === '%REACT_APP_SHA%' ? '000000' : process.env.REACT_APP_SHA?.substring(0, 6)
 export const localBuildTime = process.env.REACT_APP_BUILD_TIME === '%REACT_APP_BUILD_TIME%' ? startTime : dateToLocalISO(process.env.REACT_APP_BUILD_TIME)
 
