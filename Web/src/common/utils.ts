@@ -47,7 +47,7 @@ export async function sha256Hash(text:string) {
 // Returns if build is developer mode (running on local machine)
 export const isDeveloperMode = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
 
-export const fetchFiles = (paths, result) => {
+export const fetchFiles = (paths:string[], result:(files:string[])=>void):void => {
     Promise
         .all(paths.map(path => fetch(path)))
         .then(responses => {
@@ -65,11 +65,11 @@ export const fetchFiles = (paths, result) => {
 }
 
 
-export const svgToSvgDataUrl = svg => {
+export const svgToSvgDataUrl = (svg:string):string => {
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
 }
 
-export const publishAsDownload = (dataUrl, name) => {
+export const publishAsDownload = (dataUrl:string, name:string) => {
     var link = document.createElement('a');
     link.download = name;
     link.style.opacity = "0";
@@ -80,7 +80,8 @@ export const publishAsDownload = (dataUrl, name) => {
 }
 
 
-export const imgDataUrlToPngDataUrl = (imgDataUrl, width, height, result) => {
+export const imgDataUrlToPngDataUrl =
+    (imgDataUrl:string, width:number, height:number, result:(url:string)=>void) => {
     const image = new Image();
     image.onload = () => {
         const canvas = document.createElement('canvas');
@@ -88,7 +89,7 @@ export const imgDataUrlToPngDataUrl = (imgDataUrl, width, height, result) => {
         canvas.height = height;
 
         const context = canvas.getContext('2d');
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        context?.drawImage(image, 0, 0, canvas.width, canvas.height);
 
         const pngDataUrl = canvas.toDataURL(); // default png
 
