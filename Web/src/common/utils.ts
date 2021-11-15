@@ -45,7 +45,7 @@ export async function sha256Hash(text:string) {
 }
 
 // Returns if build is developer mode (running on local machine)
-export const isDeveloperMode = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+export const isDeveloperMode :boolean = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
 
 export const fetchFiles = (paths:string[], result:(files:string[])=>void):void => {
     Promise

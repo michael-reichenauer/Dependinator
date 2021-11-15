@@ -1,36 +1,42 @@
 
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import timing from '../../common/timing';
 import { atom, useAtom } from "jotai"
 import { setErrorMessage, setSuccessMessage } from '../../common/MessageSnackbar';
-import { keyVault } from './../../common/keyVault';
+import { keyVault } from '../../common/keyVault';
 
 const connectionAtom = atom(false)
-let setConnectionFunc = null
-let isConnectionOK = null
+let setConnectionFunc:(flag:boolean)=>void = (_:boolean)=>{};
+let isConnectionOK :boolean|null= null;
 let isFirstCheck = true
 
-const setConnection = flag => setConnectionFunc?.(flag)
+const setConnection:(flag:boolean)=>void = (flag:boolean) => setConnectionFunc(flag)
+
+type Data = any
+
+export interface User{
+     username: string
+     password: string
+}
+
 
 export const useConnection = () => {
     const [connection, setConnection] = useAtom(connectionAtom)
-    if (!setConnectionFunc) {
-        setConnectionFunc = setConnection
-    }
+    setConnectionFunc = setConnection    
     return [connection]
 }
 
 
 export default class Api {
     apiKey = '0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade'  // Must be same as in server side api
-    onInvalidToken = null
+    onInvalidToken:()=>void 
+    getToken = () => keyVault.getToken()
 
-    constructor(onInvalidToken) {
+    constructor(onInvalidToken:()=>void ) {
         this.onInvalidToken = onInvalidToken
     }
 
 
-    getToken = () => keyVault.getToken()
 
     // async getCurrentUser() {
     //     console.log('host', window.location.hostname)
@@ -62,11 +68,11 @@ export default class Api {
     // }
 
 
-    async createUser(user) {
+    async createUser(user:User) {
         return this.post('/api/CreateUser', user)
     }
 
-    async connectUser(user) {
+    async connectUser(user:User) {
         return this.post('/api/ConnectUser', user)
     }
 
@@ -80,27 +86,27 @@ export default class Api {
         return this.get(`/api/GetAllDiagramsData`);
     }
 
-    async newDiagram(diagram) {
+    async newDiagram(diagram:Data) {
         return this.post('/api/NewDiagram', diagram);
     }
 
-    async setCanvas(canvas) {
+    async setCanvas(canvas:Data) {
         return this.post('/api/SetCanvas', canvas);
     }
 
-    async getDiagram(diagramId) {
+    async getDiagram(diagramId:string) {
         return this.get(`/api/GetDiagram?diagramId=${diagramId}`)
     }
 
-    async deleteDiagram(diagramId) {
+    async deleteDiagram(diagramId:string) {
         return this.post(`/api/DeleteDiagram`, { diagramId: diagramId })
     }
 
-    async updateDiagram(diagram) {
+    async updateDiagram(diagram:Data) {
         return this.post(`/api/UpdateDiagram`, diagram)
     }
 
-    async uploadDiagrams(diagrams) {
+    async uploadDiagrams(diagrams:Data) {
         return this.post(`/api/UploadDiagrams`, diagrams)
     }
 
@@ -109,7 +115,7 @@ export default class Api {
     }
 
     // api helper functions ---------------------------------
-    async get(uri) {
+    async get(uri:string) {
         this.handleRequest('get', uri)
         const t = timing()
         try {
@@ -125,7 +131,7 @@ export default class Api {
         }
     }
 
-    async post(uri, data) {
+    async post(uri:string, data:Data) {
         this.handleRequest('post', uri, data)
         const t = timing()
         try {
@@ -141,11 +147,11 @@ export default class Api {
         }
     }
 
-    handleRequest(method, uri, postData) {
+    handleRequest(method:string, uri:string, postData?:Data) {
         console.log('Request:', method, uri, postData)
     }
 
-    handleOK(method, uri, postData, rsp) {
+    handleOK(method:string, uri:string, postData:any, rsp:AxiosResponse<any>) {
         if (isConnectionOK !== true) {
             console.log('Connection OK')
             setConnection(true)
@@ -158,7 +164,7 @@ export default class Api {
         console.log('OK:', method, uri, postData, rsp)
     }
 
-    handleError(method, error, uri, postData) {
+    handleError(method:any, error:any, uri:string, postData?:Data) {
         //console.log('Failed:', method, uri, postData, error)
         if (error.response) {
             // Request made and server responded

@@ -14,7 +14,7 @@ import NodeLabelDialog from "./application/diagram/LabelEditor";
 
 
 
-function App() {
+const App: React.FC = () => {
   const [size] = useWindowSize()
 
   // Enable user activity detection (e.g. moving mouse ) and new available web site at server detection
