@@ -1,5 +1,7 @@
 import draw2d from "draw2d";
+import Canvas from "./Canvas";
 import Connection from "./Connection";
+import { Figure, Point } from "./draw2dTypes";
 import Group from "./Group";
 import Node from "./Node";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
@@ -7,12 +9,11 @@ import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
 const marginY = 200
 
 
-export const addFigureToCanvas = (canvas, figure, x, y) => {
-
+export const addFigureToCanvas = (canvas:Canvas, figure:Figure, x:number, y:number):void => {
     canvas.runCmd(new draw2d.command.CommandAdd(canvas, figure, x, y))
 }
 
-export const addDefaultNewDiagram = (canvas) => {
+export const addDefaultNewDiagram = (canvas:Canvas) => { 
     // Add a system node with a connected external user and external system
     const system = new Node(Node.systemType)
     const user = new Node(Node.userType)
@@ -31,13 +32,14 @@ export const addDefaultNewDiagram = (canvas) => {
     addConnection(canvas, user, system)
     addConnection(canvas, system, external)
 
+    // @ts-ignore
     canvas.canvasId = 'root'
     canvas.mainNodeId = system.id
 
     zoomAndMoveShowTotalDiagram(canvas)
 }
 
-export const addDefaultInnerDiagram = (canvas, name, description) => {
+export const addDefaultInnerDiagram = (canvas:Canvas, name:string, description:string) => {
     console.log('canvas', canvas)
     // Add a default group at the center of the canvas
     const group = new Group(name, description)
@@ -54,12 +56,12 @@ export const addDefaultInnerDiagram = (canvas, name, description) => {
 }
 
 
-const addNode = (canvas, node, p) => {
+const addNode = (canvas:Canvas, node:Node, p:Point) => {
     const x = p.x - node.width / 2
     const y = p.y - node.height / 2
     canvas.add(node, x, y)
 }
 
-const addConnection = (canvas, src, trg) => {
+const addConnection = (canvas:Canvas, src:Node, trg:Node) => {
     canvas.add(new Connection(null, null, src, 'output1', trg, 'input1'))
 }

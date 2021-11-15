@@ -5,31 +5,31 @@ const humanizeDuration = require("humanize-duration");
 
 
 // Returns a duration as a nice human readable string
-export const durationString = duration => {
+export const durationString = (duration:number):string => {
     return humanizeDuration(duration)
 }
 
 // Returns a random number between min and max
-export const random = (min, max) => {
+export const random = (min:number, max:number):number => {
     min = Math.ceil(min);
     max = Math.floor(max) + 1;
     return Math.floor(Math.random() * (max - min) + min);
 }
 
 // Returns the distance between 2 points
-export const distance = (x1, y1, x2, y2) => {
+export const distance = (x1:number, y1:number, x2:number, y2:number):number => {
     return Math.sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2))
 }
 
 // Async sleep/delay
-export async function delay(time) {
+export async function delay(time:number) {
     return new Promise(res => {
         setTimeout(res, time)
     })
 }
 
 // Returns the sha 256 hash of the string
-export async function sha256Hash(text) {
+export async function sha256Hash(text:string) {
     // encode as UTF-8
     const msgBuffer = new TextEncoder().encode(text);
 
@@ -45,9 +45,9 @@ export async function sha256Hash(text) {
 }
 
 // Returns if build is developer mode (running on local machine)
-export const isDeveloperMode = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
+export const isDeveloperMode :boolean = !process.env.NODE_ENV || process.env.NODE_ENV === 'development';
 
-export const fetchFiles = (paths, result) => {
+export const fetchFiles = (paths:string[], result:(files:string[])=>void):void => {
     Promise
         .all(paths.map(path => fetch(path)))
         .then(responses => {
@@ -65,11 +65,11 @@ export const fetchFiles = (paths, result) => {
 }
 
 
-export const svgToSvgDataUrl = svg => {
+export const svgToSvgDataUrl = (svg:string):string => {
     return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
 }
 
-export const publishAsDownload = (dataUrl, name) => {
+export const publishAsDownload = (dataUrl:string, name:string) => {
     var link = document.createElement('a');
     link.download = name;
     link.style.opacity = "0";
@@ -80,7 +80,8 @@ export const publishAsDownload = (dataUrl, name) => {
 }
 
 
-export const imgDataUrlToPngDataUrl = (imgDataUrl, width, height, result) => {
+export const imgDataUrlToPngDataUrl =
+    (imgDataUrl:string, width:number, height:number, result:(url:string)=>void) => {
     const image = new Image();
     image.onload = () => {
         const canvas = document.createElement('canvas');
@@ -88,7 +89,7 @@ export const imgDataUrlToPngDataUrl = (imgDataUrl, width, height, result) => {
         canvas.height = height;
 
         const context = canvas.getContext('2d');
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        context?.drawImage(image, 0, 0, canvas.width, canvas.height);
 
         const pngDataUrl = canvas.toDataURL(); // default png
 

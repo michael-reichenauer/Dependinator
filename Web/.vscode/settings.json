@@ -1,24 +1,25 @@
 {
-	"editor.formatOnSave": true,
-    "cSpell.words": [
-        "bbox",
-        "Deleteable",
-        "Dependitor",
-        "Inplace",
-        "longclick",
-        "Resizeable",
-        "Tweenable"
-    ],
-    "azureFunctions.deploySubpath": "api",
-    "azureFunctions.postDeployTask": "npm install",
-    "azureFunctions.projectLanguage": "JavaScript",
-    "azureFunctions.projectRuntime": "~3",
-    "debug.internalConsoleOptions": "neverOpen",
-    "azureFunctions.preDeployTask": "npm prune",
-    
-    "liveServer.settings.proxy": {
-        "enable": true,
-        "baseUri": "/api",
-        "proxyUri": "http://127.0.0.1:7071/api"
-     }
+  "editor.formatOnSave": true,
+  "cSpell.words": [
+    "bbox",
+    "Deleteable",
+    "Dependitor",
+    "Inplace",
+    "longclick",
+    "Resizeable",
+    "Tweenable",
+    "xtoken"
+  ],
+  "azureFunctions.deploySubpath": "api",
+  "azureFunctions.postDeployTask": "npm install",
+  "azureFunctions.projectLanguage": "JavaScript",
+  "azureFunctions.projectRuntime": "~3",
+  "debug.internalConsoleOptions": "neverOpen",
+  "azureFunctions.preDeployTask": "npm prune",
+
+  "liveServer.settings.proxy": {
+    "enable": true,
+    "baseUri": "/api",
+    "proxyUri": "http://127.0.0.1:7071/api"
+  }
 }
