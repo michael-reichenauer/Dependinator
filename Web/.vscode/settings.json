@@ -4,6 +4,7 @@
     "bbox",
     "Deleteable",
     "Dependitor",
+    "Dtos",
     "Inplace",
     "longclick",
     "Resizeable",
