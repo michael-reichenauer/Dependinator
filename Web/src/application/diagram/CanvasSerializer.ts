@@ -6,7 +6,7 @@ import Node from "./Node";
 import NodeGroup from "./NodeGroup";
 import NodeNumber from "./NodeNumber";
 import Canvas from "./Canvas";
-import { Figure, Line, Box } from "./draw2dTypes";
+import { Figure2d, Line2d, Box } from "./draw2dTypes";
 
 export interface FigureDto{
     y: any;
@@ -40,7 +40,7 @@ export default class CanvasSerializer {
         // If canvas is a group, mark all nodes within the group as group to be included in data
         const node = this.canvas.getFigure(this.canvas.mainNodeId)
         if (node instanceof Group) {
-            node.getAboardFigures(true).each((_:number, f:Figure) => f.group = node)
+            node.getAboardFigures(true).each((_:number, f:Figure2d) => f.group = node)
         }
 
         const canvasDto:CanvasDto = {
@@ -55,7 +55,7 @@ export default class CanvasSerializer {
         }
 
         // Unmark all nodes 
-        this.canvas.getFigures().each((_:number, f:Figure) => f.group = null)
+        this.canvas.getFigures().each((_:number, f:Figure2d) => f.group = null)
         // console.log('data', canvasData)
         return canvasDto
     }
@@ -127,20 +127,20 @@ export default class CanvasSerializer {
 
     serializeFigures = ():FigureDto[] => {
         const figures = this.canvas.getFigures().clone()
-        figures.sort( (a:Figure, b:Figure)=> {
+        figures.sort( (a:Figure2d, b:Figure2d)=> {
             // return 1  if a before b
             // return -1 if b before a
             return a.getZOrder() > b.getZOrder() ? 1 : -1;
         });
 
-        return figures.asArray().map((figure:Figure):FigureDto => figure.serialize());
+        return figures.asArray().map((figure:Figure2d):FigureDto => figure.serialize());
     }
 
-    deserializeFigures = (figures:FigureDto[]):Figure[] => {
-        return figures.map((f:FigureDto) :Figure => this.deserializeFigure(f)).filter((f:Figure) => f != null)
+    deserializeFigures = (figures:FigureDto[]):Figure2d[] => {
+        return figures.map((f:FigureDto) :Figure2d => this.deserializeFigure(f)).filter((f:Figure2d) => f != null)
     }
 
-    deserializeFigure = (f:FigureDto) :Figure=> {
+    deserializeFigure = (f:FigureDto) :Figure2d=> {
         let figure
         if (f.type === Group.groupType) {
             figure = Group.deserialize(f)
@@ -158,10 +158,10 @@ export default class CanvasSerializer {
     }
 
     serializeConnections() : ConnectionDto[]{
-        return this.canvas.getLines().asArray().map((connection:Line) => connection.serialize())
+        return this.canvas.getLines().asArray().map((connection:Line2d) => connection.serialize())
     }
 
-    deserializeConnections(connections:ConnectionDto[]) : Line[]{
-        return connections.map((c:ConnectionDto) => Connection.deserialize(this.canvas, c)).filter((c:Line) => c != null)
+    deserializeConnections(connections:ConnectionDto[]) : Line2d[]{
+        return connections.map((c:ConnectionDto) => Connection.deserialize(this.canvas, c)).filter((c:Line2d) => c != null)
     }
 }

@@ -1,7 +1,7 @@
 import draw2d from "draw2d";
 import Canvas from "./Canvas";
 import Connection from "./Connection";
-import { Figure, Point } from "./draw2dTypes";
+import { Figure2d, Point } from "./draw2dTypes";
 import Group from "./Group";
 import Node from "./Node";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
@@ -9,7 +9,7 @@ import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
 const marginY = 200
 
 
-export const addFigureToCanvas = (canvas:Canvas, figure:Figure, x:number, y:number):void => {
+export const addFigureToCanvas = (canvas:Canvas, figure:Figure2d, x:number, y:number):void => {
     canvas.runCmd(new draw2d.command.CommandAdd(canvas, figure, x, y))
 }
 

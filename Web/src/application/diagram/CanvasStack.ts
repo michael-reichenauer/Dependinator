@@ -1,20 +1,20 @@
 import draw2d from "draw2d";
 import Canvas from "./Canvas";
-import { ArrayList, CommandStack, Figure, Line } from "./draw2dTypes";
+import { ArrayList2d, CommandStack2d, Figure2d, Line2d } from "./draw2dTypes";
 
 export interface CanvasData{
     diagramId: string;
     mainNodeId: string;
     canvasId: string;
-    commandStack: CommandStack;
+    commandStack: CommandStack2d;
     commonPorts: any;
-    lines: ArrayList;
-    figures: ArrayList;
+    lines: ArrayList2d;
+    figures: ArrayList2d;
     y:number;
     x:number;
     zoom:number;
-    linesToRepaintAfterDragDrop:ArrayList;
-    lineIntersections:ArrayList;
+    linesToRepaintAfterDragDrop:ArrayList2d;
+    lineIntersections:ArrayList2d;
 }
 
 
@@ -60,8 +60,8 @@ export default class CanvasStack {
 
     clearCanvas(canvas:Canvas):void {
         // Remove all connections and nodes
-        canvas.lines.each((_:number, e:Line) => e.setCanvas(null))
-        canvas.figures.each((_:number, e:Figure) => e.setCanvas(null))
+        canvas.lines.each((_:number, e:Line2d) => e.setCanvas(null))
+        canvas.figures.each((_:number, e:Figure2d) => e.setCanvas(null))
         // Clear all canvas data
         canvas.selection.clear()
         canvas.currentDropTarget = null
@@ -112,13 +112,13 @@ export default class CanvasStack {
         canvas.commandStack = canvasData.commandStack
 
         // Set canvas first in lines (needed to restore e.g group)
-        canvasData.lines.each((_:number, e:Line) => e.setCanvas(canvas))
+        canvasData.lines.each((_:number, e:Line2d) => e.setCanvas(canvas))
 
         // Set canvas for figures (group need that lines have been set)
-        canvasData.figures.each((_:number, e:Figure) => e.setCanvas(canvas))
+        canvasData.figures.each((_:number, e:Figure2d) => e.setCanvas(canvas))
 
         // Repaint lines and figures
-        canvasData.lines.each((_:number, e:Line) => e.repaint())
-        canvasData.figures.each((_:number, e:Figure) => e.repaint())
+        canvasData.lines.each((_:number, e:Line2d) => e.repaint())
+        canvasData.figures.each((_:number, e:Figure2d) => e.repaint())
     }
 }

@@ -1,8 +1,12 @@
-export type Figure = any
-export type Line= any
-export type ArrayList= any
-export type CommandStack = any
 
+// draw2d typed
+export type Figure2d = any
+export type Line2d= any
+export type ArrayList2d= any
+export type CommandStack2d = any
+
+
+// Types used close to draw2d
 export interface Point{
     x:number,
     y:number
