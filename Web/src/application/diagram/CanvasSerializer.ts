@@ -5,26 +5,49 @@ import Group from "./Group";
 import Node from "./Node";
 import NodeGroup from "./NodeGroup";
 import NodeNumber from "./NodeNumber";
+import Canvas from "./Canvas";
+import { Figure, Line, Box } from "./draw2dTypes";
 
+export interface FigureDto{
+    y: any;
+    x: any;
+    type: string;
 
+}
+export interface ConnectionDto{
+    
+}
+
+export interface CanvasDto{
+    diagramId: string,
+    diagramName: string,
+    canvasId: string,
+    mainNodeId: string,
+    box: Box,
+    figures: FigureDto[],
+    connections: ConnectionDto[],
+    zoom: number
+}
 
 export default class CanvasSerializer {
-    constructor(canvas) {
+    canvas:Canvas;
+    
+    constructor(canvas:Canvas) {
         this.canvas = canvas
     }
 
-    serialize() {
+    serialize(): CanvasDto {
         // If canvas is a group, mark all nodes within the group as group to be included in data
         const node = this.canvas.getFigure(this.canvas.mainNodeId)
         if (node instanceof Group) {
-            node.getAboardFigures(true).each((i, f) => f.group = node)
+            node.getAboardFigures(true).each((_:number, f:Figure) => f.group = node)
         }
 
-        const canvasData = {
-            diagramId: this.canvas.diagramId,
-            diagramName: this.canvas.diagramName,
-            canvasId: this.canvas.canvasId,
-            mainNodeId: this.canvas.mainNodeId,
+        const canvasDto:CanvasDto = {
+            diagramId: this.canvas.diagramId??'',
+            diagramName: this.canvas.diagramName??'',
+            canvasId: this.canvas.canvasId??'',
+            mainNodeId: this.canvas.mainNodeId??'',
             box: this.canvas.getFiguresRect(),
             figures: this.serializeFigures(),
             connections: this.serializeConnections(),
@@ -32,32 +55,36 @@ export default class CanvasSerializer {
         }
 
         // Unmark all nodes 
-        this.canvas.getFigures().each((i, f) => f.group = null)
+        this.canvas.getFigures().each((_:number, f:Figure) => f.group = null)
         // console.log('data', canvasData)
-        return canvasData
+        return canvasDto
     }
 
 
-    deserialize(canvasData) {
+    deserialize(canvasDto:CanvasDto) : void{
         // console.log('data', canvasData)
-        this.canvas.diagramId = canvasData.diagramId
-        this.canvas.diagramName = canvasData.diagramName
-        this.canvas.canvasId = canvasData.canvasId
-        this.canvas.mainNodeId = canvasData.mainNodeId
+        // @ts-ignore
+        this.canvas.diagramId = canvasDto.diagramId
+        // @ts-ignore
+        this.canvas.diagramName = canvasDto.diagramName
+        // @ts-ignore
+        this.canvas.canvasId = canvasDto.canvasId
+        // @ts-ignore
+        this.canvas.mainNodeId = canvasDto.mainNodeId
         // const figures = this.deserializeFigures(canvasData.figures)
         // figures.forEach(figure => this.canvas.add(figure));
 
         // const connection = this.deserializeConnections(canvasData.connections)
         // connection.forEach(connection => this.canvas.add(connection));
-        this.canvas.addAll(this.deserializeFigures(canvasData.figures))
+        this.canvas.addAll(this.deserializeFigures(canvasDto.figures))
 
-        this.canvas.addAll(this.deserializeConnections(canvasData.connections))
+        this.canvas.addAll(this.deserializeConnections(canvasDto.connections))
     }
 
 
-    export(rect, width, height, margin, resultHandler) {
+    export(rect:Box, width:number, height:number, margin:number, resultHandler:(svgText:string)=>void):void {
         var writer = new draw2d.io.svg.Writer();
-        writer.marshal(this.canvas, (svg) => {
+        writer.marshal(this.canvas, (svg:string) => {
             // console.log('svg org:', svg)
 
             const areaWidth = width + margin * 2
@@ -98,22 +125,22 @@ export default class CanvasSerializer {
     }
 
 
-    serializeFigures = () => {
+    serializeFigures = ():FigureDto[] => {
         const figures = this.canvas.getFigures().clone()
-        figures.sort(function (a, b) {
+        figures.sort( (a:Figure, b:Figure)=> {
             // return 1  if a before b
             // return -1 if b before a
             return a.getZOrder() > b.getZOrder() ? 1 : -1;
         });
 
-        return figures.asArray().map((figure) => figure.serialize());
+        return figures.asArray().map((figure:Figure):FigureDto => figure.serialize());
     }
 
-    deserializeFigures = (figures) => {
-        return figures.map(f => this.deserializeFigure(f)).filter(f => f != null)
+    deserializeFigures = (figures:FigureDto[]):Figure[] => {
+        return figures.map((f:FigureDto) :Figure => this.deserializeFigure(f)).filter((f:Figure) => f != null)
     }
 
-    deserializeFigure = (f) => {
+    deserializeFigure = (f:FigureDto) :Figure=> {
         let figure
         if (f.type === Group.groupType) {
             figure = Group.deserialize(f)
@@ -130,11 +157,11 @@ export default class CanvasSerializer {
         return figure
     }
 
-    serializeConnections() {
-        return this.canvas.getLines().asArray().map((connection) => connection.serialize())
+    serializeConnections() : ConnectionDto[]{
+        return this.canvas.getLines().asArray().map((connection:Line) => connection.serialize())
     }
 
-    deserializeConnections(connections) {
-        return connections.map(c => Connection.deserialize(this.canvas, c)).filter(c => c != null)
+    deserializeConnections(connections:ConnectionDto[]) : Line[]{
+        return connections.map((c:ConnectionDto) => Connection.deserialize(this.canvas, c)).filter((c:Line) => c != null)
     }
 }
