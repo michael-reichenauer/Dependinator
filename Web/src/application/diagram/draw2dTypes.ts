@@ -4,6 +4,7 @@ export type Figure2d = any
 export type Line2d= any
 export type ArrayList2d= any
 export type CommandStack2d = any
+export type Color2d = any
 
 
 // Types used close to draw2d

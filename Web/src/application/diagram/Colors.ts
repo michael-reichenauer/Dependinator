@@ -3,6 +3,7 @@ import {
     blueGrey, deepPurple, indigo, pink, purple, blue, cyan,
     teal, green, brown, lightGreen, deepOrange, grey, red, yellow
 } from '@material-ui/core/colors';
+import { Color2d } from "./draw2dTypes";
 
 
 const shade = 600
@@ -11,6 +12,31 @@ const darkerBackground = 100
 const diagramBackgroundShade = 50
 const darkerBorder = 0.3
 
+interface NodeColors{
+    Pink: Color2d,
+    Purple: Color2d,
+    DeepPurple: Color2d,
+    Indigo: Color2d,
+    Blue: Color2d,
+    Cyan: Color2d,
+    Teal: Color2d,
+    Green: Color2d,
+    LightGreen: Color2d,
+    DeepOrange: Color2d,
+    Brown: Color2d,
+    Grey: Color2d,
+    BlueGrey: Color2d,
+}
+
+interface BackgroundColors{
+    None: Color2d,
+    Grey: Color2d,
+    Red: Color2d,
+    Purple: Color2d,
+    Blue: Color2d,
+    Green: Color2d,
+    Yellow: Color2d,
+}
 
 
 export default class Colors {
@@ -24,7 +50,7 @@ export default class Colors {
     static buttonBackground = new draw2d.util.Color(grey[50])
 
 
-    static NodeColors = {
+    static nodeColors:NodeColors = {
         Pink: new draw2d.util.Color(pink[shade]),
         Purple: new draw2d.util.Color(purple[shade]),
         DeepPurple: new draw2d.util.Color(deepPurple[shade]),
@@ -40,7 +66,7 @@ export default class Colors {
         BlueGrey: new draw2d.util.Color(blueGrey[shade])
     }
 
-    static BackgroundColors = {
+    static backgroundColors:BackgroundColors = {
         None: new draw2d.util.Color(blueGrey[background]),
         Grey: new draw2d.util.Color(blueGrey[darkerBackground]),
         Red: new draw2d.util.Color(red[background]),
@@ -57,62 +83,64 @@ export default class Colors {
     static NodeFontHexColors = Colors.createNodeFontHexColors()
 
     static nodeColorNames() {
-        return Object.entries(Colors.NodeColors).map(e => e[0])
+        return Object.entries(Colors.nodeColors).map(e => e[0])
     }
     static backgroundColorNames() {
-        return Object.entries(Colors.BackgroundColors).map(e => e[0])
+        return Object.entries(Colors.backgroundColors).map(e => e[0])
     }
-    static getNodeColor(name) {
-        return Colors.NodeColors[name]
+    static getNodeColor(name:string) :Color2d {
+        // @ts-ignore
+        return Colors.nodeColors[name] 
     }
-    static getBackgroundColor(name) {
-        return Colors.BackgroundColors[name]
+    static getBackgroundColor(name:string):Color2d {
+        // @ts-ignore
+        return Colors.backgroundColors[name]
     }
-    static getNodeFontColor(name) {
+    static getNodeFontColor(name:string) {
         return Colors.NodeFontColors[name]
     }
-    static getNodeBorderColor(name) {
+    static getNodeBorderColor(name:string) {
         return Colors.NodeBorderColors[name]
     }
-    static getNodeHexColor(name) {
+    static getNodeHexColor(name:string) {
         return Colors.NodeHexColors[name]
     }
-    static getNodeBorderHexColor(name) {
+    static getNodeBorderHexColor(name:string) {
         return Colors.NodeBorderHexColors[name]
     }
-    static getNodeFontHexColor(name) {
+    static getNodeFontHexColor(name:string) {
         return Colors.NodeFontHexColors[name]
     }
 
 
 
     static createNodeBorderColors() {
-        const colors = {}
+        const colors :any= {}
         Colors.nodeColorNames().forEach(name => colors[name] = Colors.getNodeColor(name).darker(darkerBorder))
         return colors
     }
 
 
     static createNodeFontColors() {
-        const colors = {}
+        const colors :any = {}
         Colors.nodeColorNames().forEach(name => colors[name] = Colors.getNodeColor(name).getIdealTextColor())
         return colors
     }
 
     static createNodeHexColors() {
-        const colors = {}
+        const colors  :any= {}
         Colors.nodeColorNames().forEach(name => colors[name] = '#' + Colors.getNodeColor(name).hex())
         return colors
     }
 
     static createNodeBorderHexColors() {
-        const colors = {}
+        const colors  :any= {}
         Colors.nodeColorNames().forEach(name => colors[name] = '#' + Colors.getNodeBorderColor(name).hex())
         return colors
     }
 
     static createNodeFontHexColors() {
-        const colors = {}
+        const colors  :any= {}
         Colors.nodeColorNames().forEach(name => colors[name] = '#' + Colors.getNodeFontColor(name).hex())
         return colors
     }
