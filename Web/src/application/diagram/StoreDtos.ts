@@ -5,6 +5,7 @@ export interface FigureDto {
   x: any;
   type: string;
 }
+
 export interface ConnectionDto {}
 
 export interface CanvasDto {
@@ -18,12 +19,20 @@ export interface CanvasDto {
   zoom: number;
 }
 
-export interface SyncDto {}
+export interface SyncDto {
+  isConnected: boolean;
+  token: string | null;
+  isConnecting: boolean;
+  provider: string | null;
+  details: string | null;
+}
+
 export interface DiagramInfoDto {
   diagramId: string;
   accessed: number;
   written: number;
 }
+
 export interface DiagramDto {
   diagramInfo: DiagramInfoDto;
   canvases: CanvasDto[];

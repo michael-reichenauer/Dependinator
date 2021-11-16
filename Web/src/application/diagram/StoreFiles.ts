@@ -7,7 +7,7 @@ export default class StoreFiles {
     return JSON.parse(fileText);
   }
 
-  saveFile(fileName: string, file: Dto) {
+  saveFile(fileName: string, file: Dto): void {
     const fileText = JSON.stringify(file, null, 2);
     const blob = new Blob([fileText], { type: "text/plain;charset=utf-8" });
     FileSaver.saveAs(blob, fileName);

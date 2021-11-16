@@ -21,10 +21,11 @@ export default class StoreLocal {
   }
 
   getSync(): SyncDto {
-    return this.readData(syncKey) ?? {};
+    return { token: null } as SyncDto;
+    // return this.readData(syncKey) as SyncDto;
   }
 
-  updateSync(data: SyncDto): SyncDto {
+  updateSync(data: Dto): SyncDto {
     const sync = { ...this.getSync(), ...data };
     this.writeData(syncKey, sync);
     return sync;

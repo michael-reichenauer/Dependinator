@@ -1,12 +1,9 @@
 import StoreFiles from "./StoreFiles"
 import StoreLocal from "./StoreLocal"
 import StoreSync, { rootCanvasId } from "./StoreSync"
-// import { delay } from '../../common/utils'
 
 
-
-
-class Store {
+export class Store {
     files = new StoreFiles()
     local = new StoreLocal()
     sync = null
