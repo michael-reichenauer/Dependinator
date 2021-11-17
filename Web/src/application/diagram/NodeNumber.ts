@@ -32,7 +32,7 @@ export default class NodeNumber extends draw2d.shape.basic.Circle {
   getName = () => this.nameLabel?.text ?? "";
   getDescription = () => this.descriptionLabel?.text ?? "";
 
-  constructor(type: string = NodeNumber.nodeType, options?: any) {
+  constructor(options?: any) {
     super({
       id: options?.id ?? cuid(),
       diameter: 23,
@@ -48,7 +48,6 @@ export default class NodeNumber extends draw2d.shape.basic.Circle {
       o.name = this.generateName();
     }
 
-    this.type = type;
     this.colorName = o.colorName;
 
     this.addLabels(o.name, o.description);
@@ -61,7 +60,7 @@ export default class NodeNumber extends draw2d.shape.basic.Circle {
   }
 
   static deserialize(dto: FigureDto) {
-    return new NodeNumber(dto.type, {
+    return new NodeNumber({
       id: dto.id,
       width: dto.w,
       height: dto.h,
