@@ -74,7 +74,7 @@ export default class StoreLocal {
     keys.forEach((key) => this.removeData(key));
   }
 
-  readAllDiagramsInfos() {
+  readAllDiagramsInfos(): DiagramInfoDto[] {
     const diagrams = [];
     for (var i = 0, len = localStorage.length; i < len; i++) {
       var key = localStorage.key(i);

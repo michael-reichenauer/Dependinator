@@ -28,6 +28,9 @@ export interface SyncDto {
 }
 
 export interface DiagramInfoDto {
+  etag: string;
+  timestamp: number;
+  name: string;
   diagramId: string;
   accessed: number;
   written: number;
