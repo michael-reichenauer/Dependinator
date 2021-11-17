@@ -1,9 +1,18 @@
 import { Box } from "./draw2dTypes";
 
 export interface FigureDto {
-  y: any;
-  x: any;
-  type: string;
+  type: string | undefined;
+  color: string;
+  description: string;
+  name: string;
+  x: number;
+
+  y: number;
+  h: number;
+  w: number;
+  id: string;
+
+  hasGroup: boolean;
 }
 
 export interface ConnectionDto {}

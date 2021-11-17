@@ -82,6 +82,7 @@
   },
   "proxy": "http://localhost:7071/",
   "devDependencies": {
-    "@types/file-saver": "^2.0.3"
+    "@types/file-saver": "^2.0.3",
+    "@types/pubsub-js": "^1.8.3"
   }
 }
