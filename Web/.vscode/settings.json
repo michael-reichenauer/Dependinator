@@ -4,10 +4,13 @@
     "bbox",
     "Deleteable",
     "Dependitor",
+    "Dtos",
     "Inplace",
     "longclick",
+    "nocheck",
     "Resizeable",
     "Tweenable",
+    "Ungroup",
     "xtoken"
   ],
   "azureFunctions.deploySubpath": "api",

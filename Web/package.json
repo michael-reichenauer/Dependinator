@@ -50,6 +50,22 @@
     "extends": [
       "react-app",
       "react-app/jest"
+    ],
+    "rules": {
+      "@typescript-eslint/explicit-function-return-type": "off"
+    },
+    "overrides": [
+      {
+        "files": [
+          "*.ts",
+          "*.tsx"
+        ],
+        "rules": {
+          "@typescript-eslint/explicit-function-return-type": [
+            "off"
+          ]
+        }
+      }
     ]
   },
   "browserslist": {
@@ -64,5 +80,9 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:7071/"
+  "proxy": "http://localhost:7071/",
+  "devDependencies": {
+    "@types/file-saver": "^2.0.3",
+    "@types/pubsub-js": "^1.8.3"
+  }
 }

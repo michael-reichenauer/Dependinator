@@ -1,11 +1,16 @@
 import draw2d from "draw2d";
+import { Figure2d } from "./draw2dTypes";
 import Node from "./Node";
 import NodeGroup from "./NodeGroup";
 
 export default class CommandChangeColor extends draw2d.command.Command {
-    NAME = "CommandChangeColor"
+    NAME:string = "CommandChangeColor"
 
-    constructor(figure, colorName) {
+    figure:Figure2d
+    colorName:string
+    oldColorName:string
+
+    constructor(figure:Figure2d, colorName:string) {
         super("change color")
         this.figure = this.getFigure(figure)
         this.oldColorName = figure?.colorName ?? ""
@@ -14,27 +19,27 @@ export default class CommandChangeColor extends draw2d.command.Command {
     }
 
 
-    canExecute() {
+    canExecute():boolean {
         // return false if we doesn't modify the model => NOP Command
         return this.figure != null && this.oldColorName !== this.colorName
     }
 
 
-    execute() {
+    execute():void {
         this.redo()
     }
 
 
-    undo() {
+    undo():void {
         this.figure.setNodeColor(this.oldColorName)
     }
 
 
-    redo() {
+    redo():void {
         this.figure.setNodeColor(this.colorName)
     }
 
-    getFigure(figure) {
+    getFigure(figure:Figure2d):Figure2d {
         if (figure == null) {
             return null
         }

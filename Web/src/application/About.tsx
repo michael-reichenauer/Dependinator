@@ -2,12 +2,14 @@ import React from 'react'
 import { atom, useAtom } from "jotai"
 import { Box, Button, Dialog, Tooltip, Typography } from "@material-ui/core";
 import { localBuildTime, localSha } from "../common/appVersion";
+import { SetAtom } from 'jotai/core/types';
 //import { useLogin } from "./Login";
 
 const aboutAtom = atom(false)
 
-export const useAbout = () => useAtom(aboutAtom)
- const About: React.FC = () =>{
+export const useAbout:()=> [boolean, SetAtom<boolean>] = () => useAtom(aboutAtom)
+ 
+const About: React.FC = () =>{
     const [show, setShow] = useAbout()
     //const [, setShowLogin] = useLogin()
 
