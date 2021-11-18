@@ -14,8 +14,23 @@ export interface FigureDto {
 
   hasGroup: boolean;
 }
+export interface VertexDto {
+  x: number;
+  y: number;
+}
 
-export interface ConnectionDto {}
+export interface ConnectionDto {
+  id: string;
+  src: string;
+  srcPort: string;
+  srcGrp: boolean;
+  trg: string;
+  trgPort: string;
+  trgGrp: boolean;
+  v: VertexDto[];
+  name: string;
+  description: string;
+}
 
 export interface CanvasDto {
   diagramId: string;
