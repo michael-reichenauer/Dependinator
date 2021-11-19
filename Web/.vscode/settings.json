@@ -11,6 +11,7 @@
     "Resizeable",
     "Tweenable",
     "Ungroup",
+    "xlink",
     "xtoken"
   ],
   "azureFunctions.deploySubpath": "api",
