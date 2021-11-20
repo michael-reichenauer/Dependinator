@@ -82,7 +82,6 @@ export default class NodeNumber extends draw2d.shape.basic.Circle {
       description: this.getDescription(),
       color: this.colorName,
       hasGroup: this.group != null,
-      icon: "none",
     };
   }
 
