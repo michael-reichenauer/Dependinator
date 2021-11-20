@@ -1,6 +1,7 @@
 import { Box } from "./draw2dTypes";
 
 export interface FigureDto {
+  icon: string | undefined;
   type: string | undefined;
   color: string;
   description: string;

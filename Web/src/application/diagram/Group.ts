@@ -86,6 +86,7 @@ export default class Group extends draw2d.shape.composite.Raft {
       description: this.getDescription(),
       color: this.colorName,
       hasGroup: false,
+      icon: "none",
     };
   }
 
