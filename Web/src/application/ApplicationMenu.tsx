@@ -48,7 +48,7 @@ export function ApplicationMenu() {
       name = name.substring(0, index);
     }
 
-    showPrompt("Rename Diagram", null, name, (name: string) =>
+    showPrompt("Rename Diagram", "", name, (name: string) =>
       PubSub.publish("canvas.RenameDiagram", name)
     );
   };
