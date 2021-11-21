@@ -204,7 +204,7 @@ export default class DiagramCanvas {
 
       const pages = diagram?.canvases.map((d) =>
         this.canvas.exportAsSvg(d, a4Width, a4Height, a4Margin)
-      );
+      ) as string[];
       const printer = new Printer();
       printer.print(pages);
     });
