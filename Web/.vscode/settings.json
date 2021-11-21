@@ -5,6 +5,7 @@
     "Deleteable",
     "Dependitor",
     "Dtos",
+    "Formik",
     "Inplace",
     "longclick",
     "nocheck",
