@@ -1,18 +1,18 @@
 import draw2d from "draw2d";
 import PubSub from "pubsub-js";
-import Canvas from "./Canvas";
+import { Canvas2d } from "./draw2dTypes";
 
 export default class KeyboardPolicy extends draw2d.policy.canvas
   .KeyboardPolicy {
   onKeyDown(
-    canvas: Canvas,
+    canvas: Canvas2d,
     keyCode: number,
     shiftKey: boolean,
     ctrlKey: boolean
   ): void {
     // console.log('Key', keyCode, shiftKey, ctrlKey)
 
-    const handleKey = (keys: any) => {
+    const handleKey = (keys: any): void => {
       // Get key definition for keyCode and predicate (ctrl, ...)
       const keyDef = keys.find(
         (key: any) => keyCode === key[0].charCodeAt(0) && key[1]

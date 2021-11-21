@@ -1,6 +1,8 @@
 import { Box } from "./draw2dTypes";
 
 export interface FigureDto {
+  sticky?: boolean;
+  icon?: string;
   type: string | undefined;
   color: string;
   description: string;
@@ -14,6 +16,7 @@ export interface FigureDto {
 
   hasGroup: boolean;
 }
+
 export interface VertexDto {
   x: number;
   y: number;

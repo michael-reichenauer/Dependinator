@@ -6,7 +6,7 @@ export default class ConnectionCreatePolicy extends draw2d.policy.connection
   .ConnectionCreatePolicy {
   NAME = "ConnectionCreatePolicy";
 
-  constructor(attr: any, setter: any, getter: any) {
+  constructor(attr?: any, setter?: any, getter?: any) {
     super(attr, setter, getter);
 
     this.mouseDraggingElement = null;
