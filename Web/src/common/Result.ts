@@ -1,9 +1,18 @@
+// The Result type, which can be either the expected value or an Error value. The caller can use
+// Narrowing using either the isError(result) function or the instanceof Error operator
 type Result<T, E = Error> = T | E;
 export default Result;
 
-export function orDefault<T, E>(value: Result<T, E>, defaultValue: T): T {
-  if (value instanceof Error) {
+// isError(result) returns true if result is an Error and can be used in narrowing by the caller
+export function isError<T, E>(result: Result<T, E>): result is E {
+  return result instanceof Error;
+}
+
+// orDefault() returns the result or the default value if result is an Error
+export function orDefault<T, E>(result: Result<T, E>, defaultValue: T): T {
+  if (result instanceof Error) {
     return defaultValue;
   }
-  return value as T;
+
+  return result as T;
 }
