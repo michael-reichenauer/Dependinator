@@ -1,11 +1,11 @@
-import StoreFiles from "./StoreFiles";
+import LocalFiles from "../../common/LocalFiles";
 import StoreLocal from "./StoreLocal";
 import StoreSync, { rootCanvasId } from "./StoreSync";
 import { User } from "./Api";
 import { CanvasDto, DiagramDto, DiagramInfoDto, SyncDto } from "./StoreDtos";
 
 export class Store {
-  files: StoreFiles = new StoreFiles();
+  files: LocalFiles = new LocalFiles();
   local: StoreLocal = new StoreLocal();
   sync: StoreSync;
 
@@ -159,14 +159,15 @@ export class Store {
   }
 
   async loadDiagramFromFile(): Promise<string> {
-    const file = await this.files.loadFile();
+    const fileText = await this.files.loadFile();
+    const fileDto = JSON.parse(fileText);
 
-    if (!(await this.sync.uploadDiagrams(file.diagrams))) {
+    if (!(await this.sync.uploadDiagrams(fileDto.diagrams))) {
       // save locally
-      file.diagrams.forEach((d: DiagramDto) => this.local.writeDiagram(d));
+      fileDto.diagrams.forEach((d: DiagramDto) => this.local.writeDiagram(d));
     }
 
-    const firstDiagramId = file.diagrams[0]?.diagramInfo.diagramId;
+    const firstDiagramId = fileDto.diagrams[0]?.diagramInfo.diagramId;
     if (!firstDiagramId) {
       throw new Error("No diagram in file");
     }
@@ -179,8 +180,9 @@ export class Store {
       return;
     }
 
-    const file = { diagrams: [diagram] };
-    this.files.saveFile(`${diagram.diagramInfo.name}.json`, file);
+    const fileDto = { diagrams: [diagram] };
+    const fileText = JSON.stringify(fileDto, null, 2);
+    this.files.saveFile(`${diagram.diagramInfo.name}.json`, fileText);
   }
 
   async saveAllDiagramsToFile(): Promise<void> {
@@ -190,8 +192,9 @@ export class Store {
       diagrams = this.local.readAllDiagrams();
     }
 
-    const file = { diagrams: diagrams };
-    this.files.saveFile(`diagrams.json`, file);
+    const fileDto = { diagrams: diagrams };
+    const fileText = JSON.stringify(fileDto, null, 2);
+    this.files.saveFile(`diagrams.json`, fileText);
   }
 
   clearLocalData(): void {
