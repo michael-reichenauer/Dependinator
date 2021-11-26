@@ -59,51 +59,44 @@ export default class StoreLocal implements IStoreLocal {
   }
 
   readCanvases(diagramId: string): CanvasDto[] {
-    const keys = [];
-
-    for (var i = 0, len = localStorage.length; i < len; i++) {
-      var key = localStorage.key(i);
-      if (key?.startsWith(diagramKey)) {
-        const parts = key.split(".");
-        const id = parts[1];
-        const name = parts[2];
-        if (id === diagramId && name !== diagramInfoKey) {
-          keys.push(key);
-        }
+    const keys = this.localData.keys().filter((key: string) => {
+      if (!key.startsWith(diagramKey)) {
+        return false;
       }
-    }
+      const parts = key.split(".");
+      const id = parts[1];
+      const name = parts[2];
+      return id === diagramId && name !== diagramInfoKey;
+    });
 
-    return keys.map((key) => this.localData.read<CanvasDto>(key));
+    return this.localData
+      .tryReadBatch<CanvasDto>(keys)
+      .filter((dto: Result<CanvasDto>) => !isError(dto)) as CanvasDto[];
   }
 
   removeDiagram(diagramId: string): void {
-    let keys = [];
-
-    for (var i = 0, len = localStorage.length; i < len; i++) {
-      var key = localStorage.key(i);
-      if (key?.startsWith(diagramKey)) {
-        const parts = key.split(".");
-        const id = parts[1];
-        if (id === diagramId) {
-          keys.push(key);
-        }
+    const keys = this.localData.keys().filter((key: string) => {
+      if (!key.startsWith(diagramKey)) {
+        return false;
       }
-    }
+      const parts = key.split(".");
+      const id = parts[1];
+      return id === diagramId;
+    });
 
-    keys.forEach((key) => this.localData.remove(key));
+    this.localData.removeBatch(keys);
   }
 
   readAllDiagramsInfos(): DiagramInfoDto[] {
-    const diagrams = [];
-    for (var i = 0, len = localStorage.length; i < len; i++) {
-      var key = localStorage.key(i);
-      if (key?.endsWith(diagramInfoKey)) {
-        const diagramInfo = JSON.parse(localStorage[key]);
-        diagrams.push(diagramInfo);
-      }
-    }
+    const keys = this.localData
+      .keys()
+      .filter((key: string) => key.endsWith(diagramInfoKey));
 
-    return diagrams;
+    return this.localData
+      .tryReadBatch<DiagramInfoDto>(keys)
+      .filter(
+        (dto: Result<DiagramInfoDto>) => !isError(dto)
+      ) as DiagramInfoDto[];
   }
 
   updateAccessedDiagram(diagramId: string): void {

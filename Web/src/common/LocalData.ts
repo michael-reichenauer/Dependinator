@@ -1,68 +1,65 @@
 import Result from "./Result";
-import trust from "./trust";
+
+export interface DataPair<T> {
+  key: string;
+  data: T;
+}
 
 export interface ILocalData {
-  exists(key: string): boolean;
-  read<T = any>(key: string): T;
-  tryRead<T = any>(key: string): Result<T>;
-  write<T = any>(key: string, data: T): void;
+  tryRead<T>(key: string): Result<T>;
+  tryReadBatch<T>(keys: string[]): Result<T>[];
+  write<T>(key: string, data: T): void;
+  writeBatch<T>(pairs: DataPair<T>[]): void;
   remove(key: string): void;
-
-  forEach<T = any>(callbackfn: (value: T, key: string) => void): void;
-  whereKey<T = any>(
-    keyFilter: (key: string) => boolean,
-    callbackfn: (value: T, key: string) => void
-  ): void;
+  removeBatch(keys: string[]): void;
+  keys(): string[];
   count(): number;
-
   clear(): void;
 }
 
 export default class LocalData implements ILocalData {
-  exists(key: string): boolean {
-    return localStorage.getItem(key) !== null;
+  tryRead<T>(key: string): Result<T> {
+    return this.tryReadBatch<T>([key])[0];
   }
 
-  read<T = any>(key: string): T {
-    let text = localStorage.getItem(key);
-    trust(text !== null);
-    return JSON.parse(text);
+  tryReadBatch<T>(keys: string[]): Result<T>[] {
+    return keys.map((key: string) => {
+      let text = localStorage.getItem(key);
+      if (text == null) {
+        return new RangeError(`No such key: ${key}`);
+      }
+      return JSON.parse(text);
+    });
   }
 
-  tryRead<T = any>(key: string): Result<T> {
-    let text = localStorage.getItem(key);
-    if (text == null) {
-      return new RangeError(`No such key: ${key}`);
-    }
-    return JSON.parse(text);
+  write<T>(key: string, data: T): void {
+    this.writeBatch([{ key: key, data: data }]);
   }
 
-  write<T = any>(key: string, data: T): void {
-    const text = JSON.stringify(data);
-    localStorage.setItem(key, text);
+  writeBatch<T>(pairs: DataPair<T>[]): void {
+    pairs.forEach((pair: DataPair<T>) => {
+      const text = JSON.stringify(pair.data);
+      localStorage.setItem(pair.key, text);
+    });
   }
 
   remove(key: string): void {
-    localStorage.removeItem(key);
+    this.removeBatch([key]);
   }
 
-  forEach<T = any>(callbackfn: (value: T, key: string) => void): void {
-    this.whereKey((_key: string) => true, callbackfn);
+  removeBatch(keys: string[]): void {
+    keys.forEach((key: string) => {
+      localStorage.removeItem(key);
+    });
   }
 
-  whereKey<T = any>(
-    keyFilter: (key: string) => boolean,
-    callbackfn: (value: T, key: string) => void
-  ): void {
+  keys(): string[] {
+    const keys: string[] = [];
     for (var i = 0, len = localStorage.length; i < len; i++) {
       const key: string = localStorage.key(i) as string;
-      if (!keyFilter(key)) {
-        // Item excluded
-        continue;
-      }
-      const value: T = this.read<T>(key);
-      callbackfn(value, key);
+      keys.push(key);
     }
+    return keys;
   }
 
   count(): number {
