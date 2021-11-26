@@ -7,21 +7,22 @@ import { setProgress } from "../../common/Progress";
 import { setSyncMode } from "../Online";
 import Api, { User } from "./Api";
 import { keyVault } from "../../common/keyVault";
-import StoreLocal from "./StoreLocal";
+import { IStoreLocal } from "./StoreLocal";
 import { Store } from "./Store";
 import { CanvasDto, DiagramDto } from "./StoreDtos";
+import { orDefault } from "../../common/Result";
 
 export const rootCanvasId = "root";
 
 export default class StoreSync {
   store: Store;
-  local: StoreLocal;
+  local: IStoreLocal;
   api: Api;
   isSyncEnabled: boolean = false;
 
-  constructor(store: Store) {
+  constructor(store: Store, local: IStoreLocal) {
     this.store = store;
-    this.local = store.local;
+    this.local = local;
     this.api = new Api(this.onInvalidToken);
   }
 
@@ -169,7 +170,7 @@ export default class StoreSync {
     setInfoMessage("Cloud sync is disabled");
   }
 
-  async openDiagramRootCanvas(diagramId: string) {
+  async openDiagramRootCanvas(diagramId: string): Promise<CanvasDto | null> {
     if (!this.isSyncEnabled) {
       return null;
     }
@@ -180,7 +181,10 @@ export default class StoreSync {
     try {
       // Now read the root canvas from local store
       console.log("getting", diagramId);
-      const d = this.local.readCanvas(diagramId, rootCanvasId);
+      const d = orDefault(
+        this.local.tryReadCanvas(diagramId, rootCanvasId),
+        null
+      );
       console.log("got", d);
       return d;
     } catch (error) {

@@ -1,23 +1,27 @@
-import LocalFiles from "../../common/LocalFiles";
-import StoreLocal from "./StoreLocal";
+import LocalFiles, { ILocalFiles } from "../../common/LocalFiles";
+import StoreLocal, { IStoreLocal } from "./StoreLocal";
 import StoreSync, { rootCanvasId } from "./StoreSync";
 import { User } from "./Api";
 import { CanvasDto, DiagramDto, DiagramInfoDto, SyncDto } from "./StoreDtos";
+import Result, { isError } from "../../common/Result";
 
 export class Store {
-  files: LocalFiles = new LocalFiles();
-  local: StoreLocal = new StoreLocal();
-  sync: StoreSync;
+  private localFiles: ILocalFiles;
+  private local: IStoreLocal;
+  private sync: StoreSync;
 
-  isSyncEnabled = false;
+  //private isSyncEnabled = false;
 
-  isCloudSyncEnabled = () => this.sync.isSyncEnabled;
-  isLocal = () =>
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1";
+  // private isCloudSyncEnabled = () => this.sync.isSyncEnabled;
+  // private isLocal = () =>
+  //   window.location.hostname === "localhost" ||
+  //   window.location.hostname === "127.0.0.1";
 
-  constructor() {
-    this.sync = new StoreSync(this);
+  constructor();
+  constructor(localFiles?: ILocalFiles, storeLocal?: IStoreLocal) {
+    this.localFiles = localFiles ?? new LocalFiles();
+    this.local = storeLocal ?? new StoreLocal();
+    this.sync = new StoreSync(this, this.local);
   }
 
   async initialize(): Promise<void> {
@@ -67,13 +71,13 @@ export class Store {
       }
 
       // Local mode: read the root canvas from local store
-      canvas = this.local.readCanvas(diagramId, rootCanvasId);
-      if (!canvas) {
+      const canvasX = this.local.tryReadCanvas(diagramId, rootCanvasId);
+      if (isError(canvasX)) {
         throw new Error("Diagram not found");
       }
 
-      this.local.updateAccessedDiagram(canvas.diagramId);
-      return canvas;
+      this.local.updateAccessedDiagram(canvasX.diagramId);
+      return canvasX;
     } catch (error) {
       this.local.removeDiagram(diagramId);
       throw error;
@@ -145,8 +149,8 @@ export class Store {
     this.sync.setDiagramName(diagramId, name);
   }
 
-  getCanvas(diagramId: string, canvasId: string): CanvasDto {
-    return this.local.readCanvas(diagramId, canvasId);
+  tryGetCanvas(diagramId: string, canvasId: string): Result<CanvasDto> {
+    return this.local.tryReadCanvas(diagramId, canvasId);
   }
 
   getRecentDiagramInfos(): DiagramInfoDto[] {
@@ -159,7 +163,7 @@ export class Store {
   }
 
   async loadDiagramFromFile(): Promise<string> {
-    const fileText = await this.files.loadFile();
+    const fileText = await this.localFiles.loadFile();
     const fileDto = JSON.parse(fileText);
 
     if (!(await this.sync.uploadDiagrams(fileDto.diagrams))) {
@@ -182,7 +186,7 @@ export class Store {
 
     const fileDto = { diagrams: [diagram] };
     const fileText = JSON.stringify(fileDto, null, 2);
-    this.files.saveFile(`${diagram.diagramInfo.name}.json`, fileText);
+    this.localFiles.saveFile(`${diagram.diagramInfo.name}.json`, fileText);
   }
 
   async saveAllDiagramsToFile(): Promise<void> {
@@ -194,7 +198,7 @@ export class Store {
 
     const fileDto = { diagrams: diagrams };
     const fileText = JSON.stringify(fileDto, null, 2);
-    this.files.saveFile(`diagrams.json`, fileText);
+    this.localFiles.saveFile(`diagrams.json`, fileText);
   }
 
   clearLocalData(): void {

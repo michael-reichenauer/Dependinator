@@ -1,6 +1,11 @@
 import FileSaver from "file-saver";
 
-export default class LocalFiles {
+export interface ILocalFiles {
+  saveFile(fileName: string, fileText: string): void;
+  loadFile(): Promise<string>;
+}
+
+export default class LocalFiles implements ILocalFiles {
   saveFile(fileName: string, fileText: string): void {
     const blob = new Blob([fileText], { type: "text/plain;charset=utf-8" });
     FileSaver.saveAs(blob, fileName);
