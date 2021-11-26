@@ -110,7 +110,7 @@ export default class StoreLocal implements IStoreLocal {
 
   writeDiagram(diagram: DiagramDto): void {
     this.writeDiagramInfo(diagram.diagramInfo);
-    diagram.canvases.forEach((canvas) => this.writeCanvas(canvas));
+    this.writeCanvases(diagram.canvases);
   }
 
   readDiagram(diagramId: string): DiagramDto | null {
@@ -152,5 +152,13 @@ export default class StoreLocal implements IStoreLocal {
   writeCanvas(canvas: CanvasDto): void {
     const { diagramId, canvasId } = canvas;
     this.localData.write(this.canvasKey(diagramId, canvasId), canvas);
+  }
+
+  writeCanvases(canvasDtos: CanvasDto[]): void {
+    const pairs = canvasDtos.map((canvasDto: CanvasDto) => {
+      const { diagramId, canvasId } = canvasDto;
+      return { key: this.canvasKey(diagramId, canvasId), data: canvasDto };
+    });
+    this.localData.writeBatch(pairs);
   }
 }
