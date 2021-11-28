@@ -109,6 +109,7 @@ export default function Nodes() {
   };
 
   const clickedItem = (item: any) => {
+    console.log("obj:", new Error());
     setShow(false);
     setGroupType(false);
     setMru(addToMru(mru, item.key));

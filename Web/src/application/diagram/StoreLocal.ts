@@ -1,3 +1,5 @@
+import LocalData, { ILocalData } from "../../common/LocalData";
+import Result, { isError } from "../../common/Result";
 import {
   CanvasDto,
   DiagramDto,
@@ -10,14 +12,33 @@ const diagramKey = "diagram";
 const diagramInfoKey = "diagramInfo";
 const syncKey = "sync";
 
-export default class StoreLocal {
+export interface IStoreLocal {
+  getSync(): SyncDto;
+  updateSync(data: Dto): SyncDto;
+  tryReadCanvas(diagramId: string, canvasId: string): Result<CanvasDto>;
+  updateAccessedDiagram(diagramId: string): void;
+  removeDiagram(key: string): void;
+  writeDiagram(diagram: DiagramDto): void;
+  writeCanvas(canvas: CanvasDto): void;
+  writeDiagramInfo(diagramInfo: DiagramInfoDto): void;
+  updateWrittenDiagram(diagramId: string): void;
+  updateDiagramInfo(diagramId: string, data: Dto): void;
+  readAllDiagramsInfos(): DiagramInfoDto[];
+  readDiagram(diagramId: string): DiagramDto | null;
+  readAllDiagrams(): DiagramDto[];
+  clearAllData(): void;
+}
+
+export default class StoreLocal implements IStoreLocal {
   canvasKey = (diagramId: string, canvasId: string) =>
     `${diagramKey}.${diagramId}.${canvasId}`;
   diagramKey = (diagramId: string) =>
     `${diagramKey}.${diagramId}.${diagramInfoKey}`;
 
+  private localData: ILocalData = new LocalData();
+
   clearAllData(): void {
-    localStorage.clear();
+    this.localData.clear();
   }
 
   getSync(): SyncDto {
@@ -27,7 +48,7 @@ export default class StoreLocal {
 
   updateSync(data: Dto): SyncDto {
     const sync = { ...this.getSync(), ...data };
-    this.writeData(syncKey, sync);
+    this.localData.write(syncKey, sync);
     return sync;
   }
 
@@ -38,53 +59,44 @@ export default class StoreLocal {
   }
 
   readCanvases(diagramId: string): CanvasDto[] {
-    const keys = [];
-
-    for (var i = 0, len = localStorage.length; i < len; i++) {
-      var key = localStorage.key(i);
-      if (key?.startsWith(diagramKey)) {
-        const parts = key.split(".");
-        const id = parts[1];
-        const name = parts[2];
-        if (id === diagramId && name !== diagramInfoKey) {
-          keys.push(key);
-        }
+    const keys = this.localData.keys().filter((key: string) => {
+      if (!key.startsWith(diagramKey)) {
+        return false;
       }
-    }
+      const parts = key.split(".");
+      const id = parts[1];
+      const name = parts[2];
+      return id === diagramId && name !== diagramInfoKey;
+    });
 
-    return keys
-      .map((key) => this.readData(key))
-      .filter((data) => data != null) as CanvasDto[];
+    return this.localData
+      .tryReadBatch<CanvasDto>(keys)
+      .filter((dto: Result<CanvasDto>) => !isError(dto)) as CanvasDto[];
   }
 
   removeDiagram(diagramId: string): void {
-    let keys = [];
-
-    for (var i = 0, len = localStorage.length; i < len; i++) {
-      var key = localStorage.key(i);
-      if (key?.startsWith(diagramKey)) {
-        const parts = key.split(".");
-        const id = parts[1];
-        if (id === diagramId) {
-          keys.push(key);
-        }
+    const keys = this.localData.keys().filter((key: string) => {
+      if (!key.startsWith(diagramKey)) {
+        return false;
       }
-    }
+      const parts = key.split(".");
+      const id = parts[1];
+      return id === diagramId;
+    });
 
-    keys.forEach((key) => this.removeData(key));
+    this.localData.removeBatch(keys);
   }
 
   readAllDiagramsInfos(): DiagramInfoDto[] {
-    const diagrams = [];
-    for (var i = 0, len = localStorage.length; i < len; i++) {
-      var key = localStorage.key(i);
-      if (key?.endsWith(diagramInfoKey)) {
-        const diagramInfo = JSON.parse(localStorage[key]);
-        diagrams.push(diagramInfo);
-      }
-    }
+    const keys = this.localData
+      .keys()
+      .filter((key: string) => key.endsWith(diagramInfoKey));
 
-    return diagrams;
+    return this.localData
+      .tryReadBatch<DiagramInfoDto>(keys)
+      .filter(
+        (dto: Result<DiagramInfoDto>) => !isError(dto)
+      ) as DiagramInfoDto[];
   }
 
   updateAccessedDiagram(diagramId: string): void {
@@ -98,12 +110,12 @@ export default class StoreLocal {
 
   writeDiagram(diagram: DiagramDto): void {
     this.writeDiagramInfo(diagram.diagramInfo);
-    diagram.canvases.forEach((canvas) => this.writeCanvas(canvas));
+    this.writeCanvases(diagram.canvases);
   }
 
   readDiagram(diagramId: string): DiagramDto | null {
     const diagramInfo = this.readDiagramInfo(diagramId);
-    if (diagramInfo == null) {
+    if (isError(diagramInfo)) {
       return null;
     }
     const canvases = this.readCanvases(diagramId);
@@ -115,45 +127,38 @@ export default class StoreLocal {
     return diagram;
   }
 
-  readDiagramInfo(diagramId: string): DiagramInfoDto {
-    return this.readData(this.diagramKey(diagramId)) as DiagramInfoDto;
+  readDiagramInfo(diagramId: string): Result<DiagramInfoDto> {
+    return this.localData.tryRead<DiagramInfoDto>(this.diagramKey(diagramId));
   }
 
   writeDiagramInfo(diagramInfo: DiagramInfoDto): void {
-    this.writeData(this.diagramKey(diagramInfo.diagramId), diagramInfo);
+    this.localData.write(this.diagramKey(diagramInfo.diagramId), diagramInfo);
   }
 
   updateDiagramInfo(diagramId: string, data: Dto): void {
     const diagramInfo = this.readDiagramInfo(diagramId);
-    if (diagramInfo == null) {
+    if (isError(diagramInfo)) {
       return;
     }
     this.writeDiagramInfo({ ...diagramInfo, ...data });
   }
 
-  readCanvas(diagramId: string, canvasId: string): CanvasDto {
-    return this.readData(this.canvasKey(diagramId, canvasId)) as CanvasDto;
+  tryReadCanvas(diagramId: string, canvasId: string): Result<CanvasDto> {
+    return this.localData.tryRead<CanvasDto>(
+      this.canvasKey(diagramId, canvasId)
+    );
   }
 
-  writeCanvas(canvas: CanvasDto) {
+  writeCanvas(canvas: CanvasDto): void {
     const { diagramId, canvasId } = canvas;
-    this.writeData(this.canvasKey(diagramId, canvasId), canvas);
+    this.localData.write(this.canvasKey(diagramId, canvasId), canvas);
   }
 
-  readData(key: string): Dto | null {
-    let text = localStorage.getItem(key);
-    if (text == null) {
-      return null;
-    }
-    return JSON.parse(text);
-  }
-
-  writeData(key: string, data: Dto) {
-    const text = JSON.stringify(data);
-    localStorage.setItem(key, text);
-  }
-
-  removeData(key: string): void {
-    localStorage.removeItem(key);
+  writeCanvases(canvasDtos: CanvasDto[]): void {
+    const pairs = canvasDtos.map((canvasDto: CanvasDto) => {
+      const { diagramId, canvasId } = canvasDto;
+      return { key: this.canvasKey(diagramId, canvasId), data: canvasDto };
+    });
+    this.localData.writeBatch(pairs);
   }
 }

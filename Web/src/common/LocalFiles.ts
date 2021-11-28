@@ -1,19 +1,17 @@
 import FileSaver from "file-saver";
-import { Dto } from "./StoreDtos";
 
-export default class StoreFiles {
-  async loadFile() {
-    const fileText = await this.load();
-    return JSON.parse(fileText);
-  }
+export interface ILocalFiles {
+  saveFile(fileName: string, fileText: string): void;
+  loadFile(): Promise<string>;
+}
 
-  saveFile(fileName: string, file: Dto): void {
-    const fileText = JSON.stringify(file, null, 2);
+export default class LocalFiles implements ILocalFiles {
+  saveFile(fileName: string, fileText: string): void {
     const blob = new Blob([fileText], { type: "text/plain;charset=utf-8" });
     FileSaver.saveAs(blob, fileName);
   }
 
-  load(): Promise<string> {
+  loadFile(): Promise<string> {
     return new Promise((resolve, reject) => {
       const readFile = this.buildFileSelector((e: any) => {
         var file = e.path[0].files[0];
@@ -23,8 +21,8 @@ export default class StoreFiles {
         }
 
         const reader = new FileReader();
-        // @ts-ignore
-        reader.onload = (e) => resolve(e.target.result);
+
+        reader.onload = (e: any) => resolve(e.target.result);
         reader.onerror = (_) => reject(reader.error);
 
         reader.readAsText(file);

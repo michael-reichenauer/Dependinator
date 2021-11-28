@@ -112,7 +112,7 @@ export default class Api {
   }
 
   // api helper functions ---------------------------------
-  async get(uri: string) {
+  async get(uri: string): Promise<any> {
     this.handleRequest("get", uri);
     const t = timing();
     try {
@@ -131,7 +131,7 @@ export default class Api {
     }
   }
 
-  async post(uri: string, data: Data) {
+  async post(uri: string, data: Data): Promise<any> {
     this.handleRequest("post", uri, data);
     const t = timing();
     try {

@@ -16,6 +16,7 @@ import NodeGroup from "./NodeGroup";
 import NodeSelectionFeedbackPolicy from "./NodeSelectionFeedbackPolicy";
 import { Canvas2d, Figure2d } from "./draw2dTypes";
 import { FigureDto } from "./StoreDtos";
+import { isError } from "../../common/Result";
 
 const defaultIconKey = "Azure/General/Module";
 
@@ -274,11 +275,14 @@ export default class Node extends draw2d.shape.node.Between {
 
     this.setChildrenVisible(false);
 
-    const canvasData = store.getCanvas(
+    const canvasDto = store.tryGetCanvas(
       this.getCanvas().diagramId,
       this.getId()
     );
-    this.innerDiagram = new InnerDiagramFigure(this, canvasData);
+    if (isError(canvasDto)) {
+      return;
+    }
+    this.innerDiagram = new InnerDiagramFigure(this, canvasDto);
     this.innerDiagram.onClick = clickHandler(
       () => this.hideInnerDiagram(),
       () => this.editInnerDiagram()
