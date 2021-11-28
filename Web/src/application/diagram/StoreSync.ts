@@ -57,6 +57,14 @@ export default class StoreSync {
 
   async initialize() {
     console.log("initialize");
+    try {
+      console.log("Checking ...");
+      await this.api.check();
+      console.log("Checked ok");
+    } catch (error) {
+      console.log("Checked error", error);
+    }
+
     let sync = this.local.getSync();
 
     console.log("sync", sync);
