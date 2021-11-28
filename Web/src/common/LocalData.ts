@@ -18,11 +18,11 @@ export interface ILocalData {
 }
 
 export default class LocalData implements ILocalData {
-  tryRead<T>(key: string): Result<T> {
+  public tryRead<T>(key: string): Result<T> {
     return this.tryReadBatch<T>([key])[0];
   }
 
-  tryReadBatch<T>(keys: string[]): Result<T>[] {
+  public tryReadBatch<T>(keys: string[]): Result<T>[] {
     return keys.map((key: string) => {
       let text = localStorage.getItem(key);
       if (text == null) {
@@ -32,28 +32,28 @@ export default class LocalData implements ILocalData {
     });
   }
 
-  write<T>(key: string, data: T): void {
+  public write<T>(key: string, data: T): void {
     this.writeBatch([{ key: key, data: data }]);
   }
 
-  writeBatch<T>(pairs: DataPair<T>[]): void {
+  public writeBatch<T>(pairs: DataPair<T>[]): void {
     pairs.forEach((pair: DataPair<T>) => {
       const text = JSON.stringify(pair.data);
       localStorage.setItem(pair.key, text);
     });
   }
 
-  remove(key: string): void {
+  public remove(key: string): void {
     this.removeBatch([key]);
   }
 
-  removeBatch(keys: string[]): void {
+  public removeBatch(keys: string[]): void {
     keys.forEach((key: string) => {
       localStorage.removeItem(key);
     });
   }
 
-  keys(): string[] {
+  public keys(): string[] {
     const keys: string[] = [];
     for (var i = 0, len = localStorage.length; i < len; i++) {
       const key: string = localStorage.key(i) as string;
@@ -62,11 +62,11 @@ export default class LocalData implements ILocalData {
     return keys;
   }
 
-  count(): number {
+  public count(): number {
     return localStorage.length;
   }
 
-  clear(): void {
+  public clear(): void {
     localStorage.clear();
   }
 }
