@@ -1,5 +1,5 @@
 import Api from "../application/diagram/Api";
-import { store } from "../application/diagram/Store";
+//import { store } from "../application/diagram/Store";
 import { User } from "./../application/diagram/Api";
 
 class Authenticate {
@@ -12,9 +12,9 @@ class Authenticate {
     await this.api.createUser(user);
   }
 
-  async connectUser(user: User) {
+  async connectUser(user: User): Promise<void> {
     user.password = await authenticate.passwordHash(user.password);
-    return await store.connectUser(user);
+    //  return await store.connectUser(user);
   }
 
   async passwordHash(text: string) {

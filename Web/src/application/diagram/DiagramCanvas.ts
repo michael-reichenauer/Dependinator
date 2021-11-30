@@ -405,7 +405,7 @@ export default class DiagramCanvas {
   save() {
     // Serialize canvas figures and connections into canvas data object
     const canvasData = this.canvas.serialize();
-    this.store.setCanvas(canvasData);
+    this.store.writeCanvas(canvasData);
   }
 
   async loadInitialDiagram() {
@@ -431,21 +431,19 @@ export default class DiagramCanvas {
   }
 
   async activated() {
-    try {
-      if (!(await this.store.serverHadChanges())) {
-        return;
-      }
-
-      const diagramId = this.store.getMostResentDiagramId();
-      if (!diagramId) {
-        throw new Error("No resent diagram");
-      }
-
-      this.commandOpenDiagram("", diagramId);
-    } catch (error) {
-      // No resent diagram data, lets create new diagram
-      setErrorMessage("Activation error");
-    }
+    // try {
+    //   if (!(await this.store.serverHadChanges())) {
+    //     return;
+    //   }
+    //   const diagramId = this.store.getMostResentDiagramId();
+    //   if (!diagramId) {
+    //     throw new Error("No resent diagram");
+    //   }
+    //   this.commandOpenDiagram("", diagramId);
+    // } catch (error) {
+    //   // No resent diagram data, lets create new diagram
+    //   setErrorMessage("Activation error");
+    // }
   }
 
   createNewDiagram = async () => {
