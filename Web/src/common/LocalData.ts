@@ -28,6 +28,7 @@ export default class LocalData implements ILocalData {
       if (text == null) {
         return new RangeError(`No such key: ${key}`);
       }
+      console.log(`Read key: ${key}, ${text.length} bytes`);
       return JSON.parse(text);
     });
   }
@@ -38,8 +39,10 @@ export default class LocalData implements ILocalData {
 
   public writeBatch<T>(pairs: DataPair<T>[]): void {
     pairs.forEach((pair: DataPair<T>) => {
+      const key = pair.key;
       const text = JSON.stringify(pair.data);
       localStorage.setItem(pair.key, text);
+      console.log(`Wrote key: ${key}, ${text.length} bytes`);
     });
   }
 

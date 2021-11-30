@@ -6,16 +6,16 @@ import Group from "./Group";
 import Node from "./Node";
 import Canvas from "./Canvas";
 import CanvasStack from "./CanvasStack";
-import { Store } from "./Store";
+import { IStore } from "./Store";
 import { Figure2d } from "./draw2dTypes";
 import { isError } from "../../common/Result";
 
 export default class InnerDiagramCanvas {
   canvas: Canvas;
   canvasStack: CanvasStack;
-  store: Store;
+  store: IStore;
 
-  constructor(canvas: Canvas, canvasStack: CanvasStack, store: Store) {
+  constructor(canvas: Canvas, canvasStack: CanvasStack, store: IStore) {
     this.canvas = canvas;
     this.canvasStack = canvasStack;
     this.store = store;

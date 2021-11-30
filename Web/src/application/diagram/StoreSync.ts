@@ -8,19 +8,19 @@ import { setSyncMode } from "../Online";
 import Api, { User } from "./Api";
 import { keyVault } from "../../common/keyVault";
 import { IStoreLocal } from "./StoreLocal";
-import { Store } from "./Store";
+import { IStore } from "./Store";
 import { CanvasDto, DiagramDto } from "./StoreDtos";
 import { orDefault } from "../../common/Result";
 
 export const rootCanvasId = "root";
 
 export default class StoreSync {
-  store: Store;
+  store: IStore;
   local: IStoreLocal;
   api: Api;
   isSyncEnabled: boolean = false;
 
-  constructor(store: Store, local: IStoreLocal) {
+  constructor(store: IStore, local: IStoreLocal) {
     this.store = store;
     this.local = local;
     this.api = new Api(this.onInvalidToken);
@@ -56,14 +56,14 @@ export default class StoreSync {
   }
 
   async initialize() {
-    console.log("initialize");
-    try {
-      console.log("Checking ...");
-      await this.api.check();
-      console.log("Checked ok");
-    } catch (error) {
-      console.log("Checked error", error);
-    }
+    // console.log("initialize");
+    // try {
+    //   console.log("Checking ...");
+    //   await this.api.check();
+    //   console.log("Checked ok");
+    // } catch (error) {
+    //   console.log("Checked error", error);
+    // }
 
     let sync = this.local.getSync();
 

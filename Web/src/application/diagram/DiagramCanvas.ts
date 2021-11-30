@@ -9,7 +9,7 @@ import {
   random,
 } from "../../common/utils";
 import Node from "./Node";
-import { Store, store } from "./Store";
+import { IStore, store } from "./Store";
 import Canvas from "./Canvas";
 import CanvasStack from "./CanvasStack";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
@@ -34,7 +34,7 @@ export default class DiagramCanvas {
   static defaultHeight = 100000;
 
   canvasStack: CanvasStack;
-  store: Store = store;
+  store: IStore = store;
   inner: InnerDiagramCanvas;
 
   canvas: Canvas;

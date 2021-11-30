@@ -5,7 +5,43 @@ import { User } from "./Api";
 import { CanvasDto, DiagramDto, DiagramInfoDto, SyncDto } from "./StoreDtos";
 import Result, { isError } from "../../common/Result";
 
-export class Store {
+// User
+// State
+// - mru diagram
+//
+// Diagrams
+// - id
+// - name
+// - write stamp
+//
+// Diagram
+// - Info
+// - Canvases
+// - - Canvas
+
+export interface IStore {
+  initialize(): Promise<void>;
+
+  getRecentDiagramInfos(): DiagramInfoDto[];
+  openDiagramRootCanvas(diagramId: string): Promise<CanvasDto>;
+  openMostResentDiagramCanvas(): Promise<CanvasDto>;
+  newDiagram(diagramId: string, name: string, canvas: CanvasDto): Promise<void>;
+  setDiagramName(diagramId: string, name: string): void;
+  getDiagram(diagramId: string): DiagramDto | null;
+  getMostResentDiagramId(): string | null;
+  setCanvas(canvas: CanvasDto): void;
+  tryGetCanvas(diagramId: string, canvasId: string): Result<CanvasDto>;
+  deleteDiagram(diagramId: string): Promise<void>;
+
+  saveDiagramToFile(diagramId: string): void;
+  loadDiagramFromFile(): Promise<string>;
+  saveAllDiagramsToFile(): Promise<void>;
+
+  serverHadChanges(): Promise<boolean>;
+  connectUser(user: User): Promise<void>;
+}
+
+class Store implements IStore {
   private localFiles: ILocalFiles;
   private local: IStoreLocal;
   private sync: StoreSync;
