@@ -1,6 +1,48 @@
 import { Box } from "./draw2dTypes";
 
+// export interface SyncDto {
+//   isConnected: boolean;
+//   token: string | null;
+//   isConnecting: boolean;
+//   provider: string | null;
+//   details: string | null;
+// }
+
+export const applicationKey = "application";
+
+export interface ApplicationDto {
+  id: string;
+  timestamp?: number;
+  diagramInfos: DiagramInfoDto[];
+}
+
+export interface DiagramInfoDto {
+  id: string;
+  name: string;
+  accessed: number;
+  written: number;
+}
+
+export interface DiagramDto {
+  id: string;
+  timestamp?: number;
+  diagramInfo: DiagramInfoDto;
+  canvases: CanvasDto[];
+}
+
+export interface CanvasDto {
+  diagramId: string;
+  diagramName: string;
+  canvasId: string;
+  mainNodeId: string;
+  box: Box;
+  figures: FigureDto[];
+  connections: ConnectionDto[];
+  zoom: number;
+}
+
 export interface FigureDto {
+  id: string;
   sticky?: boolean;
   icon?: string;
   type: string | undefined;
@@ -8,11 +50,9 @@ export interface FigureDto {
   description: string;
   name: string;
   x: number;
-
   y: number;
-  h: number;
   w: number;
-  id: string;
+  h: number;
 
   hasGroup: boolean;
 }
@@ -35,37 +75,12 @@ export interface ConnectionDto {
   description: string;
 }
 
-export interface CanvasDto {
-  diagramId: string;
-  diagramName: string;
-  canvasId: string;
-  mainNodeId: string;
-  box: Box;
-  figures: FigureDto[];
-  connections: ConnectionDto[];
-  zoom: number;
-}
-
-export interface SyncDto {
-  isConnected: boolean;
-  token: string | null;
-  isConnecting: boolean;
-  provider: string | null;
-  details: string | null;
-}
-
-export interface DiagramInfoDto {
-  etag: string;
-  timestamp: number;
-  name: string;
-  diagramId: string;
-  accessed: number;
-  written: number;
-}
-
-export interface DiagramDto {
-  diagramInfo: DiagramInfoDto;
-  canvases: CanvasDto[];
-}
+// export interface SyncDto {
+//   isConnected: boolean;
+//   token: string | null;
+//   isConnecting: boolean;
+//   provider: string | null;
+//   details: string | null;
+// }
 
 export interface Dto {}

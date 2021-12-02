@@ -309,13 +309,18 @@ export default class Canvas extends draw2d.Canvas {
       });
     });
 
+    const w = Math.max(maxX - minX, 0);
+    const h = Math.max(maxY - minY, 0);
+    const x2 = minX + w;
+    const y2 = minY + h;
+
     return {
       x: minX,
       y: minY,
-      w: maxX - minX,
-      h: maxY - minY,
-      x2: maxX,
-      y2: maxY,
+      w: w,
+      h: h,
+      x2: x2,
+      y2: y2,
     };
   }
 

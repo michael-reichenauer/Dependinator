@@ -271,26 +271,23 @@ export default class Node extends draw2d.shape.node.Between {
   }
 
   showInnerDiagram(): void {
-    const t = timing();
-
-    this.setChildrenVisible(false);
-
-    const canvasDto = store.tryGetCanvas(
-      this.getCanvas().diagramId,
-      this.getId()
-    );
-    if (isError(canvasDto)) {
-      return;
-    }
-    this.innerDiagram = new InnerDiagramFigure(this, canvasDto);
-    this.innerDiagram.onClick = clickHandler(
-      () => this.hideInnerDiagram(),
-      () => this.editInnerDiagram()
-    );
-
-    this.add(this.innerDiagram, new InnerDiagramLocator());
-    this.repaint();
-    t.log();
+    // const t = timing();
+    // this.setChildrenVisible(false);
+    // const canvasDto = store.tryGetCanvas(
+    //   this.getCanvas().diagramId,
+    //   this.getId()
+    // );
+    // if (isError(canvasDto)) {
+    //   return;
+    // }
+    // this.innerDiagram = new InnerDiagramFigure(this, canvasDto);
+    // this.innerDiagram.onClick = clickHandler(
+    //   () => this.hideInnerDiagram(),
+    //   () => this.editInnerDiagram()
+    // );
+    // this.add(this.innerDiagram, new InnerDiagramLocator());
+    // this.repaint();
+    // t.log();
   }
 
   hideInnerDiagram(): void {

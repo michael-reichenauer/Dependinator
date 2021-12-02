@@ -8,7 +8,6 @@ import Canvas from "./Canvas";
 import CanvasStack from "./CanvasStack";
 import { IStore } from "./Store";
 import { Figure2d } from "./draw2dTypes";
-import { isError } from "../../common/Result";
 
 export default class InnerDiagramCanvas {
   canvas: Canvas;
@@ -445,17 +444,18 @@ export default class InnerDiagramCanvas {
     return { x: g.x, y: g.y, w: g.width, h: g.heigh };
   }
 
-  load = (canvasId: string) => {
+  load = (canvasId: string): boolean => {
     console.log("load", canvasId);
-    // @ts-ignore
-    const canvasDto = this.store.tryGetCanvas(this.canvas.diagramId, canvasId);
-    if (isError(canvasDto)) {
-      return false;
-    }
+    // // @ts-ignore
+    // const canvasDto = this.store.tryGetCanvas(this.canvas.diagramId, canvasId);
+    // if (isError(canvasDto)) {
+    //   return false;
+    // }
 
-    // Deserialize canvas
-    this.canvas.deserialize(canvasDto);
-    return true;
+    return false;
+    // // Deserialize canvas
+    // this.canvas.deserialize(canvasDto);
+    // return true;
   };
 
   sortNodesOnX(nodes: any) {
