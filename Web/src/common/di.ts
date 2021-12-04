@@ -1,38 +1,90 @@
 export {};
+import assert from "assert";
 
-function cleanseAssertionOperators(parsedName: string): string {
-  return parsedName.replace(/[?!]/g, "");
+// The container registry tha contains mapping from interface symbol to registered classes
+const registry = new Map<Symbol, registryItem>();
+
+// Items registered in the container registry
+interface registryItem {
+  instance?: any; // the singleton instance after first reference
+  factory?: () => any; // the instance factory registered using @singleton(interfaceKey)
 }
 
-export function nameof2<T>(c: T) {
-  console.log("p:", (c as any).toString());
-  return "test";
+// Specified a class type with a constructor (when registering classes)
+type Class = { new (...args: any[]): any };
+
+// A typed symbol used to define interface keys
+type InterfaceKey<TInterface> = Symbol;
+
+// Every interface that is used in DI must have a defined DiKey<TInterface>, which can be
+// specified when registering classes and resolving instances
+export function diKey<TInterface>(): InterfaceKey<TInterface> {
+  return Symbol();
 }
 
-export function nameof<T extends Object>(
-  nameFunction: ((obj: T, r: any) => any) | { new (...params: any[]): T }
-): string {
-  const fnStr = nameFunction.toString();
-  console.log("fnStr", fnStr);
+// The @singleton(key) decorator used when registering classes
+export function singleton<TInterface>(key: InterfaceKey<TInterface>): any {
+  return function <TClass extends Class>(targetClass: TClass) {
+    registerSingleton(key, targetClass);
+  };
+}
 
-  // ES6 class name:
-  // "class ClassName { ..."
-  if (
-    fnStr.startsWith("class ") &&
-    // Theoretically could, for some ill-advised reason, be "class => class.prop".
-    !fnStr.startsWith("class =>")
-  ) {
-    return cleanseAssertionOperators(
-      fnStr.substring("class ".length, fnStr.indexOf(" {"))
+// The resolver for class instances, when specifying interface types defined using diKey() function
+// Class instance is created at first reference
+export function di<TInterface>(key: InterfaceKey<TInterface>): TInterface {
+  if (!registry.has(key)) {
+    assert.fail(
+      `DI key has not been registered. Implementation must specify a @singleton(interfaceKey) decorator`
     );
   }
-
-  // ES6 prop selector:
-  // "x => x.prop"
-  if (fnStr.includes("=>")) {
-    return cleanseAssertionOperators(fnStr.substring(fnStr.indexOf(".") + 1));
+  const item = registry.get(key);
+  if (item?.instance === undefined) {
+    if (!item?.factory) {
+      assert.fail(
+        `DI class instance factory has not been registered. Implementation must specify a @singleton(interfaceKey) decorator`
+      );
+    }
+    item.instance = item.factory();
+    item.factory = undefined;
+    if (!item?.instance) {
+      assert.fail(
+        `DI class instance factory did not create an instance. Implementation must specify a @singleton(interfaceKey) decorator`
+      );
+    }
   }
 
-  // Invalid function.
-  throw new Error("ts-simple-nameof: Invalid function.");
+  return item.instance;
 }
+
+// Registers a class as a single instance
+function registerSingleton<TInterface>(
+  key: InterfaceKey<TInterface>,
+  classType: Class
+) {
+  const item: registryItem = {
+    factory: () => new classType(),
+  };
+
+  registry.set(key, item);
+}
+
+// function cleanseAssertionOperators(parsedName: string): string {
+//   return parsedName.replace(/[?!]/g, "");
+// }
+
+// export function nameof<T>(classType: { new (...params: any[]): T }): string {
+//   const fnStr = classType.toString();
+//   console.log("fn:", fnStr);
+
+//   if (
+//     fnStr.startsWith("class ") &&
+//     // Theoretically could, for some ill-advised reason, be "class => class.prop".
+//     !fnStr.startsWith("class =>")
+//   ) {
+//     return cleanseAssertionOperators(
+//       fnStr.substring("class ".length, fnStr.indexOf(" {"))
+//     );
+//   }
+
+//   throw new Error("Invalid");
+// }
