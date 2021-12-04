@@ -1,10 +1,13 @@
 import FileSaver from "file-saver";
+import { diKey, singleton } from "./di";
 
+export const ILocalFilesKey = diKey<ILocalFiles>();
 export interface ILocalFiles {
   saveFile(fileName: string, fileText: string): void;
   loadFile(): Promise<string>;
 }
 
+@singleton(ILocalFilesKey)
 export default class LocalFiles implements ILocalFiles {
   saveFile(fileName: string, fileText: string): void {
     const blob = new Blob([fileText], { type: "text/plain;charset=utf-8" });

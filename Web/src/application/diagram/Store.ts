@@ -1,4 +1,4 @@
-import LocalFiles, { ILocalFiles } from "../../common/LocalFiles";
+import { ILocalFiles, ILocalFilesKey } from "../../common/LocalFiles";
 import {
   ApplicationDto,
   applicationKey,
@@ -7,7 +7,8 @@ import {
   DiagramInfoDto,
 } from "./StoreDtos";
 import Result, { expectValue, isError } from "../../common/Result";
-import LocalData, { ILocalData } from "../../common/LocalData";
+import { ILocalData, ILocalDataKey } from "../../common/LocalData";
+import { di } from "../../common/di";
 
 // SyncDto
 // - isEnabled
@@ -54,13 +55,12 @@ export interface IStore {
 }
 
 class Store implements IStore {
-  private localFiles: ILocalFiles;
-  // private local: IStoreLocal;
-  private localData: ILocalData = new LocalData();
-
-  constructor(localFiles?: ILocalFiles) {
-    this.localFiles = localFiles ?? new LocalFiles();
-    //   this.local = storeLocal ?? new StoreLocal();
+  constructor(
+    private localData: ILocalData = di(ILocalDataKey),
+    private localFiles: ILocalFiles = di(ILocalFilesKey)
+  ) {
+    this.localData = localData;
+    this.localFiles = localFiles;
   }
 
   async initialize(): Promise<void> {

@@ -1,4 +1,5 @@
 import Result from "./Result";
+import { diKey, singleton } from "./di";
 
 export interface Data<T> {
   id: string;
@@ -6,6 +7,7 @@ export interface Data<T> {
   data: T;
 }
 
+export const ILocalDataKey = diKey<ILocalData>();
 export interface ILocalData {
   tryRead<T>(key: string): Result<T>;
   tryReadBatch<T>(ids: string[]): Result<T>[];
@@ -18,6 +20,7 @@ export interface ILocalData {
   clear(): void;
 }
 
+@singleton(ILocalDataKey)
 export default class LocalData implements ILocalData {
   public tryRead<T>(id: string): Result<T> {
     return this.tryReadBatch<T>([id])[0];

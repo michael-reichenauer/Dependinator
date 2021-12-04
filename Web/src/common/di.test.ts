@@ -20,10 +20,9 @@ class A implements IA {
 
 @singleton(IBKey)
 class B implements IB {
-  a: IA;
   bId: string;
-  constructor(a: IA = di(IAKey)) {
-    this.a = a;
+
+  constructor(private a: IA = di(IAKey)) {
     this.bId = "bb" + a.aId;
   }
 }

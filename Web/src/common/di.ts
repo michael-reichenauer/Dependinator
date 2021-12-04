@@ -1,4 +1,3 @@
-export {};
 import assert from "assert";
 
 // The container registry tha contains mapping from interface symbol to registered classes
@@ -13,13 +12,17 @@ interface registryItem {
 // Specified a class type with a constructor (when registering classes)
 type Class = { new (...args: any[]): any };
 
-// A typed symbol used to define interface keys
-type InterfaceKey<TInterface> = Symbol;
+// A typed symbol used to define interface keys, (TInterface is not used directly, but indirectly
+// when registering class in decorator and when resolving instance using di<T>(key))
+// eslint-disable-next-line
+class InterfaceKey<TInterface> {
+  id = Symbol();
+}
 
 // Every interface that is used in DI must have a defined DiKey<TInterface>, which can be
 // specified when registering classes and resolving instances
 export function diKey<TInterface>(): InterfaceKey<TInterface> {
-  return Symbol();
+  return new InterfaceKey<TInterface>();
 }
 
 // The @singleton(key) decorator used when registering classes
@@ -32,12 +35,12 @@ export function singleton<TInterface>(key: InterfaceKey<TInterface>): any {
 // The resolver for class instances, when specifying interface types defined using diKey() function
 // Class instance is created at first reference
 export function di<TInterface>(key: InterfaceKey<TInterface>): TInterface {
-  if (!registry.has(key)) {
+  if (!registry.has(key.id)) {
     assert.fail(
       `DI key has not been registered. Implementation must specify a @singleton(interfaceKey) decorator`
     );
   }
-  const item = registry.get(key);
+  const item = registry.get(key.id);
   if (item?.instance === undefined) {
     if (!item?.factory) {
       assert.fail(
@@ -65,7 +68,7 @@ function registerSingleton<TInterface>(
     factory: () => new classType(),
   };
 
-  registry.set(key, item);
+  registry.set(key.id, item);
 }
 
 // function cleanseAssertionOperators(parsedName: string): string {
