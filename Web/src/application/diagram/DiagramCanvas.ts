@@ -153,7 +153,7 @@ export default class DiagramCanvas {
   commandDeleteDiagram = async () => {
     setProgress(true);
 
-    await this.store.deleteDiagram(this.canvas.diagramId);
+    this.store.deleteDiagram(this.canvas.diagramId);
     this.canvas.clearDiagram();
 
     // Try get first diagram to open

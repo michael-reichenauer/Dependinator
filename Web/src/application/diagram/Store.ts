@@ -46,7 +46,7 @@ export interface IStore {
 
   writeCanvas(canvas: CanvasDto): void;
 
-  deleteDiagram(diagramId: string): Promise<void>;
+  deleteDiagram(diagramId: string): void;
 
   saveDiagramToFile(diagramId: string): void;
   loadDiagramFromFile(): Promise<string>;
@@ -138,7 +138,7 @@ class Store implements IStore {
     this.localData.writeBatch([applicationDto, diagramDto]);
   }
 
-  public async deleteDiagram(diagramId: string): Promise<void> {
+  public deleteDiagram(diagramId: string): void {
     console.log("Delete diagram", diagramId);
 
     const applicationDto = this.getApplicationDto();

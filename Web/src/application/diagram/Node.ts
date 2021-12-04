@@ -2,21 +2,17 @@ import draw2d from "draw2d";
 import PubSub from "pubsub-js";
 import cuid from "cuid";
 import { menuItem } from "../../common/Menus";
-import { clickHandler } from "../../common/mouseClicks";
 import timing from "../../common/timing";
 import Colors from "./Colors";
 import CommandChangeIcon from "./CommandChangeIcon";
 import NodeIcons from "./NodeIcons";
-import InnerDiagramFigure from "./InnerDiagramFigure";
 import Label from "./Label";
-import { store } from "./Store";
 import { icons } from "../../common/icons";
 import { LabelEditor } from "./LabelEditor";
 import NodeGroup from "./NodeGroup";
 import NodeSelectionFeedbackPolicy from "./NodeSelectionFeedbackPolicy";
 import { Canvas2d, Figure2d } from "./draw2dTypes";
 import { FigureDto } from "./StoreDtos";
-import { isError } from "../../common/Result";
 
 const defaultIconKey = "Azure/General/Module";
 
@@ -500,8 +496,8 @@ class ConfigBackgroundLocator extends draw2d.layout.locator.Locator {
   }
 }
 
-class InnerDiagramLocator extends draw2d.layout.locator.Locator {
-  relocate(_index: number, target: Figure2d) {
-    target.setPosition(2, 2);
-  }
-}
+// class InnerDiagramLocator extends draw2d.layout.locator.Locator {
+//   relocate(_index: number, target: Figure2d) {
+//     target.setPosition(2, 2);
+//   }
+// }
