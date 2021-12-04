@@ -1,4 +1,4 @@
-import { ILocalFiles, ILocalFilesKey } from "../../common/LocalFiles";
+import { ILocalFilesKey } from "../../common/LocalFiles";
 import {
   ApplicationDto,
   applicationKey,
@@ -7,7 +7,7 @@ import {
   DiagramInfoDto,
 } from "./StoreDtos";
 import Result, { expectValue, isError } from "../../common/Result";
-import { ILocalData, ILocalDataKey } from "../../common/LocalData";
+import { ILocalDataKey } from "../../common/LocalData";
 import { di } from "../../common/di";
 
 // SyncDto
@@ -40,12 +40,14 @@ export interface IStore {
   getMostResentDiagramId(): Result<string>;
   getRecentDiagrams(): ResentDiagram[];
 
-  tryOpenDiagramRootCanvas(diagramId: string): Promise<Result<CanvasDto>>;
-  newDiagram(diagramId: string, name: string, canvas: CanvasDto): void;
+  tryOpenDiagram(diagramId: string): Promise<Result<DiagramDto>>;
+  newDiagram(diagramId: string, name: string): void;
   setDiagramName(diagramId: string, name: string): void;
   tryGetDiagram(diagramId: string): Result<DiagramDto>; // Used for print or export
 
-  writeCanvas(canvas: CanvasDto): void;
+  getRootCanvas(diagramId: string): CanvasDto;
+  getCanvas(diagramId: string, canvasId: string): CanvasDto;
+  writeCanvas(diagramId: string, canvas: CanvasDto): void;
 
   deleteDiagram(diagramId: string): void;
 
@@ -56,18 +58,15 @@ export interface IStore {
 
 class Store implements IStore {
   constructor(
-    private localData: ILocalData = di(ILocalDataKey),
-    private localFiles: ILocalFiles = di(ILocalFilesKey)
-  ) {
-    this.localData = localData;
-    this.localFiles = localFiles;
-  }
+    private localData = di(ILocalDataKey),
+    private localFiles = di(ILocalFilesKey)
+  ) {}
 
   async initialize(): Promise<void> {
     // return await this.sync.initialize();
   }
 
-  public newDiagram(diagramId: string, name: string, canvas: CanvasDto): void {
+  public newDiagram(diagramId: string, name: string): void {
     console.log("new diagram", diagramId, name);
     const now = Date.now();
 
@@ -97,17 +96,10 @@ class Store implements IStore {
     }));
   }
 
-  public async tryOpenDiagramRootCanvas(
-    diagramId: string
-  ): Promise<Result<CanvasDto>> {
+  public async tryOpenDiagram(diagramId: string): Promise<Result<DiagramDto>> {
     const diagramDto = this.localData.tryRead<DiagramDto>(diagramId);
     if (isError(diagramDto)) {
       return diagramDto;
-    }
-
-    const canvasDto = this.tryGetDiagramCanvas(diagramDto, rootCanvasId);
-    if (isError(canvasDto)) {
-      return canvasDto;
     }
 
     const now = Date.now();
@@ -119,11 +111,46 @@ class Store implements IStore {
     this.localData.writeBatch([applicationDto, diagramDto]);
 
     // this.local.updateAccessedDiagram(canvasX.diagramId);
-    return canvasDto;
+    return diagramDto;
   }
 
-  public writeCanvas(canvasDto: CanvasDto): void {
-    const diagramId = canvasDto.diagramId;
+  public getRootCanvas(diagramId: string): CanvasDto {
+    return this.getCanvas(diagramId, rootCanvasId);
+  }
+
+  public getCanvas(diagramId: string, canvasId: string): CanvasDto {
+    const diagramDto = expectValue(
+      this.localData.tryRead<DiagramDto>(diagramId)
+    );
+    return expectValue(this.tryGetDiagramCanvas(diagramDto, canvasId));
+  }
+
+  // public async tryOpenDiagramRootCanvas(
+  //   diagramId: string
+  // ): Promise<Result<CanvasDto>> {
+  //   const diagramDto = this.localData.tryRead<DiagramDto>(diagramId);
+  //   if (isError(diagramDto)) {
+  //     return diagramDto;
+  //   }
+
+  //   const canvasDto = this.tryGetDiagramCanvas(diagramDto, rootCanvasId);
+  //   if (isError(canvasDto)) {
+  //     return canvasDto;
+  //   }
+
+  //   const now = Date.now();
+  //   diagramDto.diagramInfo.accessed = now;
+
+  //   const applicationDto = this.getApplicationDto();
+  //   this.setApplicationDiagramInfo(applicationDto, diagramDto.diagramInfo);
+
+  //   this.localData.writeBatch([applicationDto, diagramDto]);
+
+  //   // this.local.updateAccessedDiagram(canvasX.diagramId);
+  //   return canvasDto;
+  // }
+
+  public writeCanvas(diagramId: string, canvasDto: CanvasDto): void {
     const diagramDto = this.getDiagramDto(diagramId);
 
     this.setDiagramCanvas(diagramDto, canvasDto);

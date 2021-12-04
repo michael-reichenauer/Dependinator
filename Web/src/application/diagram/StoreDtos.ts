@@ -31,10 +31,7 @@ export interface DiagramDto {
 }
 
 export interface CanvasDto {
-  diagramId: string;
-  diagramName: string;
   canvasId: string;
-  mainNodeId: string;
   box: Box;
   figures: FigureDto[];
   connections: ConnectionDto[];

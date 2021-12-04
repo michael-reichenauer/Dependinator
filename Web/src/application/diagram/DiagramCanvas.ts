@@ -128,12 +128,14 @@ export default class DiagramCanvas {
   commandOpenDiagram = async (_msg: string, diagramId: string) => {
     setProgress(true);
     console.log("open", diagramId);
-    const canvasDto = await this.store.tryOpenDiagramRootCanvas(diagramId);
-    if (isError(canvasDto)) {
+    const diagramDto = await this.store.tryOpenDiagram(diagramId);
+    if (isError(diagramDto)) {
       setProgress(false);
       setErrorMessage("Failed to load diagram");
       return;
     }
+
+    const canvasDto = this.store.getRootCanvas(diagramId);
 
     this.canvas.clearDiagram();
 
@@ -158,10 +160,12 @@ export default class DiagramCanvas {
 
     // Try get first diagram to open
     const diagramId = orDefault(this.store.getMostResentDiagramId(), "");
-    const canvasDto = await this.store.tryOpenDiagramRootCanvas(diagramId);
-    if (isError(canvasDto)) {
+    const diagramDto = await this.store.tryOpenDiagram(diagramId);
+
+    if (isError(diagramDto)) {
       this.createNewDiagram();
     } else {
+      const canvasDto = this.store.getRootCanvas(diagramId);
       this.canvas.deserialize(canvasDto);
     }
 
@@ -410,7 +414,7 @@ export default class DiagramCanvas {
   save() {
     // Serialize canvas figures and connections into canvas data object
     const canvasData = this.canvas.serialize();
-    this.store.writeCanvas(canvasData);
+    this.store.writeCanvas(this.canvas.diagramId, canvasData);
   }
 
   async loadInitialDiagram() {
@@ -420,13 +424,18 @@ export default class DiagramCanvas {
 
     // Get the last used diagram and show
     const diagramId = orDefault(this.store.getMostResentDiagramId(), "");
-    const canvasDto = await this.store.tryOpenDiagramRootCanvas(diagramId);
-    if (isError(canvasDto)) {
+    const diagramDto = await this.store.tryOpenDiagram(diagramId);
+    if (isError(diagramDto)) {
       this.createNewDiagram();
     } else {
+      this.canvas.diagramId = diagramId;
+      this.canvas.diagramName = diagramDto.diagramInfo.name;
+      const canvasDto = this.store.getRootCanvas(diagramId);
+
       this.canvas.deserialize(canvasDto);
-      this.callbacks.setTitle(this.getTitle());
     }
+
+    this.callbacks.setTitle(this.getTitle());
 
     this.showTotalDiagram();
     setProgress(false);
@@ -450,12 +459,13 @@ export default class DiagramCanvas {
 
   createNewDiagram = () => {
     const diagramId = cuid();
-    this.canvas.diagramId = diagramId;
-    this.canvas.diagramName = "Name";
-    addDefaultNewDiagram(this.canvas);
+    const name = "Name";
+    this.store.newDiagram(diagramId, name);
 
-    const canvasDto = this.canvas.serialize();
-    this.store.newDiagram(diagramId, this.getName(), canvasDto);
+    this.canvas.diagramId = diagramId;
+    this.canvas.diagramName = name;
+    addDefaultNewDiagram(this.canvas);
+    this.save();
   };
 
   getCenter() {

@@ -95,8 +95,8 @@ export default class Canvas extends draw2d.Canvas {
     return this.serializer.serialize();
   }
 
-  deserialize(canvasData: CanvasDto): void {
-    this.serializer.deserialize(canvasData);
+  deserialize(canvasDto: CanvasDto): void {
+    this.serializer.deserialize(canvasDto);
   }
 
   save(): void {

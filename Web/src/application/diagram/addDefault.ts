@@ -38,7 +38,6 @@ export const addDefaultNewDiagram = (canvas: Canvas) => {
 
   // @ts-ignore
   canvas.canvasId = "root";
-  canvas.mainNodeId = system.id;
 
   zoomAndMoveShowTotalDiagram(canvas);
 };
