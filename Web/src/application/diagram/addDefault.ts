@@ -36,9 +36,6 @@ export const addDefaultNewDiagram = (canvas: Canvas) => {
   addConnection(canvas, user, system);
   addConnection(canvas, system, external);
 
-  // @ts-ignore
-  canvas.canvasId = "root";
-
   zoomAndMoveShowTotalDiagram(canvas);
 };
 

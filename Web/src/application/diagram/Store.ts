@@ -271,7 +271,7 @@ class Store implements IStore {
     canvasId: string
   ): Result<CanvasDto> {
     const canvasDto = diagramDto.canvases.find(
-      (c: CanvasDto) => c.canvasId === canvasId
+      (c: CanvasDto) => c.id === canvasId
     );
     if (canvasDto === null) {
       return new RangeError(
@@ -283,7 +283,7 @@ class Store implements IStore {
 
   private removeDiagramCanvas(diagramDto: DiagramDto, canvasId: string): void {
     const index = diagramDto.canvases.findIndex(
-      (c: CanvasDto) => c.canvasId === canvasId
+      (c: CanvasDto) => c.id === canvasId
     );
     if (index === -1) {
       return;
@@ -293,7 +293,7 @@ class Store implements IStore {
 
   private setDiagramCanvas(diagramDto: DiagramDto, canvasDto: CanvasDto): void {
     const index = diagramDto.canvases.findIndex(
-      (c: CanvasDto) => c.canvasId === canvasDto.canvasId
+      (c: CanvasDto) => c.id === canvasDto.id
     );
     if (index === -1) {
       diagramDto.canvases.push(canvasDto);

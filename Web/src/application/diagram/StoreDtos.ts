@@ -31,7 +31,7 @@ export interface DiagramDto {
 }
 
 export interface CanvasDto {
-  canvasId: string;
+  id: string;
   box: Box;
   figures: FigureDto[];
   connections: ConnectionDto[];

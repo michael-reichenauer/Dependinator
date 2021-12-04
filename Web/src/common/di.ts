@@ -35,19 +35,21 @@ export function singleton<TInterface>(key: InterfaceKey<TInterface>): any {
 // The resolver for class instances, when specifying interface types defined using diKey() function
 // Class instance is created at first reference
 export function di<TInterface>(key: InterfaceKey<TInterface>): TInterface {
-  if (!registry.has(key.id)) {
-    assert.fail(
-      `DI key has not been registered. Implementation must specify a @singleton(interfaceKey) decorator`
-    );
-  }
+  assert(
+    registry.has(key.id),
+    `DI key has not been registered. Implementation must specify a @singleton(interfaceKey) decorator`
+  );
+
   const item = registry.get(key.id);
   if (item?.instance === undefined) {
-    if (!item?.factory) {
-      assert.fail(
-        `DI class instance factory has not been registered. Implementation must specify a @singleton(interfaceKey) decorator`
-      );
-    }
+    // First resolve, lets use factory to create instance
+    assert(
+      item?.factory,
+      `DI class instance factory has not been registered. Implementation must specify a @singleton(interfaceKey) decorator`
+    );
+
     item.instance = item.factory();
+
     item.factory = undefined;
     if (!item?.instance) {
       assert.fail(

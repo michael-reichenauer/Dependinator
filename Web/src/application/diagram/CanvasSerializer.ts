@@ -26,7 +26,7 @@ export default class CanvasSerializer {
     }
 
     const canvasDto: CanvasDto = {
-      canvasId: this.canvas.canvasId ?? "",
+      id: this.canvas.canvasId ?? "",
       box: this.canvas.getFiguresRect(),
       figures: this.serializeFigures(),
       connections: this.serializeConnections(),
@@ -41,8 +41,7 @@ export default class CanvasSerializer {
 
   deserialize(canvasDto: CanvasDto): void {
     // console.log('data', canvasData)
-    // @ts-ignore
-    this.canvas.canvasId = canvasDto.canvasId;
+    this.canvas.canvasId = canvasDto.id;
 
     // const figures = this.deserializeFigures(canvasData.figures)
     // figures.forEach(figure => this.canvas.add(figure));

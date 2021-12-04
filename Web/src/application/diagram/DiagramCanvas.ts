@@ -431,11 +431,10 @@ export default class DiagramCanvas {
       this.canvas.diagramId = diagramId;
       this.canvas.diagramName = diagramDto.diagramInfo.name;
       const canvasDto = this.store.getRootCanvas(diagramId);
-
       this.canvas.deserialize(canvasDto);
     }
 
-    this.callbacks.setTitle(this.getTitle());
+    this.callbacks.setTitle(this.canvas.diagramName);
 
     this.showTotalDiagram();
     setProgress(false);
@@ -464,6 +463,8 @@ export default class DiagramCanvas {
 
     this.canvas.diagramId = diagramId;
     this.canvas.diagramName = name;
+    this.canvas.canvasId = "root";
+
     addDefaultNewDiagram(this.canvas);
     this.save();
   };
