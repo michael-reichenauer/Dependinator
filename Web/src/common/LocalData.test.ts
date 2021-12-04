@@ -6,13 +6,13 @@ describe("Test LocalData", () => {
     const local: ILocalData = new LocalData();
     expect(local.count()).toEqual(0);
 
-    local.write("0", "aa");
+    local.write({ id: "0", data: "aa" });
     expect(local.count()).toEqual(1);
     expect(local.keys()).toEqual(["0"]);
     expect(orDefault(local.tryRead("0"), "")).toEqual("aa");
     expect(orDefault(local.tryRead("1"), "")).toEqual("");
 
-    local.write("1", "bb");
+    local.write({ id: "1", data: "bb" });
     expect(local.count()).toEqual(2);
     expect(local.keys()).toEqual(["0", "1"]);
     expect(orDefault(local.tryRead("0"), "")).toEqual("aa");
@@ -29,7 +29,7 @@ describe("Test LocalData", () => {
     expect(orDefault(local.tryRead("0"), "")).toEqual("");
     expect(orDefault(local.tryRead("1"), "")).toEqual("bb");
 
-    local.write("0", "aa");
+    local.write({ id: "0", data: "aa" });
     expect(local.count()).toEqual(2);
     expect(local.keys().sort()).toEqual(["0", "1"]);
 
@@ -38,8 +38,8 @@ describe("Test LocalData", () => {
     expect(orDefault(local.tryRead("0"), "")).toEqual("");
     expect(orDefault(local.tryRead("1"), "")).toEqual("");
 
-    local.write("0", "aa");
-    local.write("1", "bb");
+    local.write({ id: "0", data: "aa" });
+    local.write({ id: "1", data: "bb" });
     expect(local.count()).toEqual(2);
 
     local.clear();

@@ -1,9 +1,10 @@
 import Result from "./Result";
 
-// export interface Data<T> {
-//   key: string;
-//   data: T;
-// }
+export interface Data<T> {
+  id: string;
+  timestamp?: number;
+  data: T;
+}
 
 export interface ILocalData {
   tryRead<T>(key: string): Result<T>;
@@ -29,15 +30,16 @@ export default class LocalData implements ILocalData {
         return new RangeError(`No data for id: ${id}`);
       }
       // console.log(`Read key: ${key}, ${text.length} bytes`);
-      return JSON.parse(text);
+      const data: Data<T> = JSON.parse(text);
+      return data.data;
     });
   }
 
-  public write(data: any): void {
-    this.writeBatch([data]);
+  public write<T = any>(data: Data<T>): void {
+    this.writeBatch<T>([data]);
   }
 
-  public writeBatch(batch: any[]): void {
+  public writeBatch<T = any>(batch: Data<T>[]): void {
     const now = Date.now();
     batch.forEach((data: any) => {
       const key = data.id;
