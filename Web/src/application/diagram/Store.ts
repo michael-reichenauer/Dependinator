@@ -40,8 +40,8 @@ export interface IStore {
   getMostResentDiagramId(): Result<string>;
   getRecentDiagrams(): ResentDiagram[];
 
-  tryOpenDiagram(diagramId: string): Promise<Result<DiagramDto>>;
   newDiagram(diagramId: string, name: string): void;
+  tryOpenDiagram(diagramId: string): Promise<Result<DiagramDto>>;
   setDiagramName(diagramId: string, name: string): void;
   tryGetDiagram(diagramId: string): Result<DiagramDto>; // Used for print or export
 
@@ -67,7 +67,7 @@ class Store implements IStore {
   }
 
   public newDiagram(diagramId: string, name: string): void {
-    console.log("new diagram", diagramId, name);
+    console.trace("new diagram xxx", diagramId, name);
     const now = Date.now();
 
     const diagramInfoDto: DiagramInfoDto = {
@@ -257,8 +257,12 @@ class Store implements IStore {
       // First access, lets store default data for future access
       dto = { id: applicationKey, diagramInfos: [] };
       this.localData.write(dto);
+      console.log("wrote", dto);
+      let d = this.localData.tryRead<ApplicationDto>(applicationKey);
+      console.log("d", d);
     }
 
+    console.log("dto", dto);
     return dto;
   }
 

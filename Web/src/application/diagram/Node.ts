@@ -124,8 +124,8 @@ export default class Node extends draw2d.shape.node.Between {
   static deserialize(data: FigureDto) {
     return new Node(data.type, {
       id: data.id,
-      width: data.w,
-      height: data.h,
+      width: data.rect.w,
+      height: data.rect.h,
       name: data.name,
       description: data.description,
       colorName: data.color,
@@ -137,15 +137,11 @@ export default class Node extends draw2d.shape.node.Between {
     return {
       type: this.type,
       id: this.id,
-      x: this.x,
-      y: this.y,
-      w: this.width,
-      h: this.height,
+      rect: { x: this.x, y: this.y, w: this.width, h: this.height },
       name: this.getName(),
       description: this.getDescription(),
       color: this.colorName,
       icon: this.iconName,
-      hasGroup: this.group != null,
     };
   }
 

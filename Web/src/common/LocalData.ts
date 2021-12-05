@@ -1,10 +1,10 @@
 import Result from "./Result";
 import { diKey, singleton } from "./di";
 
+// eslint-disable-next-line
 export interface Data<T> {
   id: string;
   timestamp?: number;
-  data: T;
 }
 
 export const ILocalDataKey = diKey<ILocalData>();
@@ -33,8 +33,8 @@ export default class LocalData implements ILocalData {
         return new RangeError(`No data for id: ${id}`);
       }
       // console.log(`Read key: ${key}, ${text.length} bytes`);
-      const data: Data<T> = JSON.parse(text);
-      return data.data;
+      const data: any = JSON.parse(text);
+      return data as T;
     });
   }
 

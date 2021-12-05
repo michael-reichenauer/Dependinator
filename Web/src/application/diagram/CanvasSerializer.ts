@@ -27,10 +27,9 @@ export default class CanvasSerializer {
 
     const canvasDto: CanvasDto = {
       id: this.canvas.canvasId ?? "",
-      box: this.canvas.getFiguresRect(),
+      rect: this.canvas.getFiguresRect(),
       figures: this.serializeFigures(),
       connections: this.serializeConnections(),
-      zoom: this.canvas.getZoom(),
     };
 
     // Unmark all nodes
@@ -135,8 +134,8 @@ export default class CanvasSerializer {
       figure = Node.deserialize(f);
     }
 
-    figure.x = f.x;
-    figure.y = f.y;
+    figure.x = f.rect.x;
+    figure.y = f.rect.y;
     return figure;
   };
 

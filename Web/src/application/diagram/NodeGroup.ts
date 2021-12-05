@@ -96,8 +96,8 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
   static deserialize(data: FigureDto) {
     return new NodeGroup({
       id: data.id,
-      width: data.w,
-      height: data.h,
+      width: data.rect.w,
+      height: data.rect.h,
       name: data.name,
       description: data.description,
       colorName: data.color,
@@ -112,14 +112,10 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
     return {
       type: this.type,
       id: this.id,
-      x: this.x,
-      y: this.y,
-      w: this.width,
-      h: this.height,
+      rect: { x: this.x, y: this.y, w: this.width, h: this.height },
       name: this.getName(),
       description: this.getDescription(),
       color: this.colorName,
-      hasGroup: this.group != null,
       icon: this.iconName,
       sticky: sticky,
     };

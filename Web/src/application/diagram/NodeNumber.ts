@@ -62,8 +62,8 @@ export default class NodeNumber extends draw2d.shape.basic.Circle {
   static deserialize(dto: FigureDto) {
     return new NodeNumber({
       id: dto.id,
-      width: dto.w,
-      height: dto.h,
+      width: dto.rect.w,
+      height: dto.rect.h,
       name: dto.name,
       description: dto.description,
       colorName: dto.color,
@@ -74,14 +74,10 @@ export default class NodeNumber extends draw2d.shape.basic.Circle {
     return {
       type: this.type,
       id: this.id,
-      x: this.x,
-      y: this.y,
-      w: this.width,
-      h: this.height,
+      rect: { x: this.x, y: this.y, w: this.width, h: this.height },
       name: this.getName(),
       description: this.getDescription(),
       color: this.colorName,
-      hasGroup: this.group != null,
     };
   }
 

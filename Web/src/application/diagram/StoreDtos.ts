@@ -1,5 +1,3 @@
-import { Box } from "./draw2dTypes";
-
 // export interface SyncDto {
 //   isConnected: boolean;
 //   token: string | null;
@@ -32,31 +30,32 @@ export interface DiagramDto {
 
 export interface CanvasDto {
   id: string;
-  box: Box;
+  rect: RectDto;
   figures: FigureDto[];
   connections: ConnectionDto[];
-  zoom: number;
 }
 
 export interface FigureDto {
   id: string;
-  sticky?: boolean;
-  icon?: string;
   type: string | undefined;
-  color: string;
-  description: string;
   name: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-
-  hasGroup: boolean;
+  description: string;
+  rect: RectDto;
+  color: string;
+  icon?: string;
+  sticky?: boolean;
 }
 
 export interface VertexDto {
   x: number;
   y: number;
+}
+
+export interface RectDto {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 
 export interface ConnectionDto {
@@ -79,5 +78,3 @@ export interface ConnectionDto {
 //   provider: string | null;
 //   details: string | null;
 // }
-
-export interface Dto {}
