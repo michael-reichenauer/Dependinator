@@ -11,26 +11,9 @@ import { ILocalDataKey } from "../../common/LocalData";
 import { di } from "../../common/di";
 import cuid from "cuid";
 
-// SyncDto
-// - isEnabled
-// - user, token, ...
-//
-// ApplicationDto (synced)
-//   write stamp
-//   State
-//   - mru diagram state (canvas id, zoom, center, ...)
-//   Diagrams
-//   - id
-//   - name
-//   - read/write stamps
-//
-// DiagramDto
-// - Info
-// - Canvases
-// - - Canvas
 const rootCanvasId = "root";
 
-export interface ResentDiagram {
+export interface RecentDiagram {
   id: string;
   name: string;
 }
@@ -39,10 +22,11 @@ export interface IStore {
   initialize(): Promise<void>;
 
   getMostResentDiagramId(): Result<string>;
-  getRecentDiagrams(): ResentDiagram[];
+  getRecentDiagrams(): RecentDiagram[];
 
   newDiagram(): DiagramDto;
   tryOpenDiagram(diagramId: string): Promise<Result<DiagramDto>>;
+
   setDiagramName(diagramId: string, name: string): void;
   tryGetDiagram(diagramId: string): Result<DiagramDto>; // Used for print or export
 
@@ -63,7 +47,7 @@ class Store implements IStore {
     private localFiles = di(ILocalFilesKey)
   ) {}
 
-  async initialize(): Promise<void> {
+  public async initialize(): Promise<void> {
     // return await this.sync.initialize();
   }
 
@@ -94,7 +78,7 @@ class Store implements IStore {
     return diagramDto;
   }
 
-  public getRecentDiagrams(): ResentDiagram[] {
+  public getRecentDiagrams(): RecentDiagram[] {
     return this.getRecentDiagramInfos().map((d) => ({
       id: d.id,
       name: d.name,
@@ -114,8 +98,6 @@ class Store implements IStore {
     this.setApplicationDiagramInfo(applicationDto, diagramDto.diagramInfo);
 
     this.localData.writeBatch([applicationDto, diagramDto]);
-
-    // this.local.updateAccessedDiagram(canvasX.diagramId);
     return diagramDto;
   }
 
@@ -129,31 +111,6 @@ class Store implements IStore {
     );
     return expectValue(this.tryGetDiagramCanvas(diagramDto, canvasId));
   }
-
-  // public async tryOpenDiagramRootCanvas(
-  //   diagramId: string
-  // ): Promise<Result<CanvasDto>> {
-  //   const diagramDto = this.localData.tryRead<DiagramDto>(diagramId);
-  //   if (isError(diagramDto)) {
-  //     return diagramDto;
-  //   }
-
-  //   const canvasDto = this.tryGetDiagramCanvas(diagramDto, rootCanvasId);
-  //   if (isError(canvasDto)) {
-  //     return canvasDto;
-  //   }
-
-  //   const now = Date.now();
-  //   diagramDto.diagramInfo.accessed = now;
-
-  //   const applicationDto = this.getApplicationDto();
-  //   this.setApplicationDiagramInfo(applicationDto, diagramDto.diagramInfo);
-
-  //   this.localData.writeBatch([applicationDto, diagramDto]);
-
-  //   // this.local.updateAccessedDiagram(canvasX.diagramId);
-  //   return canvasDto;
-  // }
 
   public writeCanvas(diagramId: string, canvasDto: CanvasDto): void {
     const diagramDto = this.getDiagramDto(diagramId);

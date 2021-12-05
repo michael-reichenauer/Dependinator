@@ -112,18 +112,17 @@ export default class DiagramCanvas {
     setProgress(true);
 
     //store.loadFile(file => console.log('File:', file))
-    console.log("new diagram");
+    console.log("Command new diagram");
     this.canvas.clearDiagram();
 
-    const d = this.createNewDiagram();
-    this.callbacks.setTitle(d.diagramInfo.name);
-    this.showTotalDiagram();
+    this.showNewDiagram();
 
     setProgress(false);
   };
 
   commandOpenDiagram = async (_msg: string, diagramId: string) => {
     setProgress(true);
+
     console.log("open", diagramId);
     const diagramDto = await this.store.tryOpenDiagram(diagramId);
     if (isError(diagramDto)) {
@@ -132,16 +131,8 @@ export default class DiagramCanvas {
       return;
     }
 
-    const canvasDto = this.store.getRootCanvas(diagramId);
-
     this.canvas.clearDiagram();
-
-    this.canvas.deserialize(canvasDto);
-    this.canvas.diagramId = diagramDto.id;
-    this.canvas.diagramName = diagramDto.diagramInfo.name;
-    this.callbacks.setTitle(diagramDto.diagramInfo.name);
-
-    this.showTotalDiagram();
+    this.showDiagram(diagramDto);
     setProgress(false);
   };
 
@@ -156,24 +147,7 @@ export default class DiagramCanvas {
     this.store.deleteDiagram(this.canvas.diagramId);
     this.canvas.clearDiagram();
 
-    // Try get first diagram to open
-    const diagramId = orDefault(this.store.getMostResentDiagramId(), "");
-    const diagramDto = await this.store.tryOpenDiagram(diagramId);
-
-    if (isError(diagramDto)) {
-      const d = this.createNewDiagram();
-      this.canvas.diagramId = d.id;
-      this.canvas.diagramName = d.diagramInfo.name;
-      this.callbacks.setTitle(d.diagramInfo.name);
-    } else {
-      const canvasDto = this.store.getRootCanvas(diagramId);
-      this.canvas.deserialize(canvasDto);
-      this.canvas.diagramId = diagramDto.id;
-      this.canvas.diagramName = diagramDto.diagramInfo.name;
-      this.callbacks.setTitle(diagramDto.diagramInfo.name);
-    }
-
-    this.showTotalDiagram();
+    await this.showRecentDiagramOrNew();
     setProgress(false);
   };
 
@@ -425,23 +399,63 @@ export default class DiagramCanvas {
 
     await store.initialize();
 
-    // Get the last used diagram and show
-    const diagramId = orDefault(this.store.getMostResentDiagramId(), "");
-    const diagramDto = await this.store.tryOpenDiagram(diagramId);
-    if (isError(diagramDto)) {
-      this.createNewDiagram();
-    } else {
-      this.canvas.diagramId = diagramId;
-      this.canvas.diagramName = diagramDto.diagramInfo.name;
-      const canvasDto = this.store.getRootCanvas(diagramId);
-      this.canvas.deserialize(canvasDto);
-    }
+    await this.showRecentDiagramOrNew();
 
-    this.callbacks.setTitle(this.canvas.diagramName);
-
-    this.showTotalDiagram();
     setProgress(false);
   }
+
+  async showRecentDiagramOrNew(): Promise<void> {
+    // Get the last used diagram and show
+    const diagramId = this.store.getMostResentDiagramId();
+    if (isError(diagramId)) {
+      this.showNewDiagram();
+      return;
+    }
+
+    const diagramDto = await this.store.tryOpenDiagram(diagramId);
+    if (isError(diagramDto)) {
+      this.showNewDiagram();
+      return;
+    }
+
+    this.showDiagram(diagramDto);
+  }
+
+  showDiagram(diagramDto: DiagramDto) {
+    const canvasDto = this.store.getRootCanvas(diagramDto.id);
+    this.canvas.deserialize(canvasDto);
+    this.canvas.diagramId = diagramDto.id;
+    this.canvas.diagramName = diagramDto.diagramInfo.name;
+    this.callbacks.setTitle(diagramDto.diagramInfo.name);
+
+    this.showTotalDiagram();
+  }
+
+  async showNewDiagram() {
+    const diagramDto = this.store.newDiagram();
+
+    this.canvas.diagramId = diagramDto.id;
+    this.canvas.diagramName = diagramDto.diagramInfo.name;
+    this.canvas.canvasId = "root";
+
+    addDefaultNewDiagram(this.canvas);
+    this.save();
+
+    this.callbacks.setTitle(this.canvas.diagramName);
+    this.showTotalDiagram();
+  }
+
+  // xxcreateNewDiagram = (): DiagramDto => {
+  //   const diagramDto = this.store.newDiagram();
+
+  //   this.canvas.diagramId = diagramDto.id;
+  //   this.canvas.diagramName = diagramDto.diagramInfo.name;
+  //   this.canvas.canvasId = "root";
+
+  //   addDefaultNewDiagram(this.canvas);
+  //   this.save();
+  //   return diagramDto;
+  // };
 
   async activated() {
     // try {
@@ -458,18 +472,6 @@ export default class DiagramCanvas {
     //   setErrorMessage("Activation error");
     // }
   }
-
-  createNewDiagram = (): DiagramDto => {
-    const diagramDto = this.store.newDiagram();
-
-    this.canvas.diagramId = diagramDto.id;
-    this.canvas.diagramName = diagramDto.diagramInfo.name;
-    this.canvas.canvasId = "root";
-
-    addDefaultNewDiagram(this.canvas);
-    this.save();
-    return diagramDto;
-  };
 
   getCenter() {
     let x =
