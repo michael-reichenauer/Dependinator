@@ -2,7 +2,6 @@ import "import-jquery";
 import "jquery-ui-bundle";
 import "jquery-ui-bundle/jquery-ui.css";
 import PubSub from "pubsub-js";
-import cuid from "cuid";
 import {
   imgDataUrlToPngDataUrl,
   publishAsDownload,
@@ -24,6 +23,7 @@ import NodeNumber from "./NodeNumber";
 import { svgToSvgDataUrl, fetchFiles } from "../../common/utils";
 import { Canvas2d } from "./draw2dTypes";
 import { isError, orDefault } from "../../common/Result";
+import { DiagramDto } from "./StoreDtos";
 
 const a4Width = 793.7007874; // "210mm" A4
 const a4Height = 1046.9291339; // "277mm" A4
@@ -110,19 +110,16 @@ export default class DiagramCanvas {
 
   commandNewDiagram = async () => {
     setProgress(true);
-    try {
-      //store.loadFile(file => console.log('File:', file))
-      console.log("new diagram");
-      this.canvas.diagramName = "Name";
-      this.canvas.clearDiagram();
-      this.createNewDiagram();
-      this.callbacks.setTitle(this.getTitle());
-      this.showTotalDiagram();
-    } catch (error) {
-      setErrorMessage("Failed to create new diagram");
-    } finally {
-      setProgress(false);
-    }
+
+    //store.loadFile(file => console.log('File:', file))
+    console.log("new diagram");
+    this.canvas.clearDiagram();
+
+    const d = this.createNewDiagram();
+    this.callbacks.setTitle(d.diagramInfo.name);
+    this.showTotalDiagram();
+
+    setProgress(false);
   };
 
   commandOpenDiagram = async (_msg: string, diagramId: string) => {
@@ -140,10 +137,11 @@ export default class DiagramCanvas {
     this.canvas.clearDiagram();
 
     this.canvas.deserialize(canvasDto);
+    this.canvas.diagramId = diagramDto.id;
+    this.canvas.diagramName = diagramDto.diagramInfo.name;
+    this.callbacks.setTitle(diagramDto.diagramInfo.name);
 
-    this.callbacks.setTitle(this.getTitle());
     this.showTotalDiagram();
-
     setProgress(false);
   };
 
@@ -163,13 +161,18 @@ export default class DiagramCanvas {
     const diagramDto = await this.store.tryOpenDiagram(diagramId);
 
     if (isError(diagramDto)) {
-      this.createNewDiagram();
+      const d = this.createNewDiagram();
+      this.canvas.diagramId = d.id;
+      this.canvas.diagramName = d.diagramInfo.name;
+      this.callbacks.setTitle(d.diagramInfo.name);
     } else {
       const canvasDto = this.store.getRootCanvas(diagramId);
       this.canvas.deserialize(canvasDto);
+      this.canvas.diagramId = diagramDto.id;
+      this.canvas.diagramName = diagramDto.diagramInfo.name;
+      this.callbacks.setTitle(diagramDto.diagramInfo.name);
     }
 
-    this.callbacks.setTitle(this.getTitle());
     this.showTotalDiagram();
     setProgress(false);
   };
@@ -456,17 +459,16 @@ export default class DiagramCanvas {
     // }
   }
 
-  createNewDiagram = () => {
-    const diagramId = cuid();
-    const name = "Name";
-    this.store.newDiagram(diagramId, name);
+  createNewDiagram = (): DiagramDto => {
+    const diagramDto = this.store.newDiagram();
 
-    this.canvas.diagramId = diagramId;
-    this.canvas.diagramName = name;
+    this.canvas.diagramId = diagramDto.id;
+    this.canvas.diagramName = diagramDto.diagramInfo.name;
     this.canvas.canvasId = "root";
 
     addDefaultNewDiagram(this.canvas);
     this.save();
+    return diagramDto;
   };
 
   getCenter() {

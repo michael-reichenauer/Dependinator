@@ -9,6 +9,7 @@ import {
 import Result, { expectValue, isError } from "../../common/Result";
 import { ILocalDataKey } from "../../common/LocalData";
 import { di } from "../../common/di";
+import cuid from "cuid";
 
 // SyncDto
 // - isEnabled
@@ -40,7 +41,7 @@ export interface IStore {
   getMostResentDiagramId(): Result<string>;
   getRecentDiagrams(): ResentDiagram[];
 
-  newDiagram(diagramId: string, name: string): void;
+  newDiagram(): DiagramDto;
   tryOpenDiagram(diagramId: string): Promise<Result<DiagramDto>>;
   setDiagramName(diagramId: string, name: string): void;
   tryGetDiagram(diagramId: string): Result<DiagramDto>; // Used for print or export
@@ -66,8 +67,12 @@ class Store implements IStore {
     // return await this.sync.initialize();
   }
 
-  public newDiagram(diagramId: string, name: string): void {
-    console.trace("new diagram xxx", diagramId, name);
+  public newDiagram(): DiagramDto {
+    const applicationDto = this.getApplicationDto();
+
+    const diagramId = cuid();
+    const name = this.getUniqueName(applicationDto);
+    console.log("new diagram", diagramId, name);
     const now = Date.now();
 
     const diagramInfoDto: DiagramInfoDto = {
@@ -83,10 +88,10 @@ class Store implements IStore {
       canvases: [],
     };
 
-    const applicationDto = this.getApplicationDto();
     this.setApplicationDiagramInfo(applicationDto, diagramInfoDto);
 
     this.localData.writeBatch([applicationDto, diagramDto]);
+    return diagramDto;
   }
 
   public getRecentDiagrams(): ResentDiagram[] {
@@ -257,12 +262,7 @@ class Store implements IStore {
       // First access, lets store default data for future access
       dto = { id: applicationKey, diagramInfos: [] };
       this.localData.write(dto);
-      console.log("wrote", dto);
-      let d = this.localData.tryRead<ApplicationDto>(applicationKey);
-      console.log("d", d);
     }
-
-    console.log("dto", dto);
     return dto;
   }
 
@@ -292,7 +292,7 @@ class Store implements IStore {
     if (index === -1) {
       return;
     }
-    diagramDto.canvases = diagramDto.canvases.splice(index, 1);
+    diagramDto.canvases.splice(index, 1);
   }
 
   private setDiagramCanvas(diagramDto: DiagramDto, canvasDto: CanvasDto): void {
@@ -329,10 +329,22 @@ class Store implements IStore {
       (d: DiagramInfoDto) => d.id === diagramId
     );
     if (index === -1) {
+      console.log("already removed");
       return;
     }
 
-    applicationDto.diagramInfos = applicationDto.diagramInfos.splice(index, 1);
+    applicationDto.diagramInfos.splice(index, 1);
+  }
+
+  private getUniqueName(applicationDto: ApplicationDto): string {
+    for (let i = 0; i < 99; i++) {
+      const name = "Name" + (i > 0 ? ` (${i})` : "");
+      if (!applicationDto.diagramInfos.find((d) => d.name === name)) {
+        return name;
+      }
+    }
+
+    return "Name";
   }
 }
 
