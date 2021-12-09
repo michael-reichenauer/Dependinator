@@ -22,7 +22,7 @@ import { greenNumberIconKey } from "../../common/icons";
 import NodeNumber from "./NodeNumber";
 import { svgToSvgDataUrl, fetchFiles } from "../../common/utils";
 import { Canvas2d } from "./draw2dTypes";
-import { isError, orDefault } from "../../common/Result";
+import { isError } from "../../common/Result";
 import { DiagramDto } from "./StoreDtos";
 
 const a4Width = 793.7007874; // "210mm" A4
@@ -37,6 +37,8 @@ export default class DiagramCanvas {
   canvasStack: CanvasStack;
   store: IStore = store;
   inner: InnerDiagramCanvas;
+  diagramId: string = "";
+  diagramName: string = "";
 
   canvas: Canvas;
   callbacks: any;
@@ -44,7 +46,6 @@ export default class DiagramCanvas {
   constructor(htmlElementId: string, callbacks: any) {
     this.callbacks = callbacks;
     this.canvas = new Canvas(
-      this,
       htmlElementId,
       this.onEditMode,
       DiagramCanvas.defaultWidth,
@@ -144,7 +145,7 @@ export default class DiagramCanvas {
   commandDeleteDiagram = async () => {
     setProgress(true);
 
-    this.store.deleteDiagram(this.canvas.diagramId);
+    this.store.deleteDiagram(this.diagramId);
     this.canvas.clearDiagram();
 
     await this.showRecentDiagramOrNew();
@@ -152,19 +153,22 @@ export default class DiagramCanvas {
   };
 
   commandSaveToFile = () => {
-    this.store.saveDiagramToFile(this.canvas.diagramId);
+    this.store.saveDiagramToFile();
   };
 
   commandOpenFile = async () => {
     setProgress(true);
-    try {
-      const diagramId = await this.store.loadDiagramFromFile();
-      this.commandOpenDiagram("", diagramId);
-    } catch (error) {
+
+    const diagramId = await this.store.loadDiagramFromFile();
+    if (isError(diagramId)) {
       setErrorMessage("Failed to load file");
-    } finally {
       setProgress(false);
+      return;
     }
+
+    this.commandOpenDiagram("", diagramId);
+
+    setProgress(false);
   };
 
   commandArchiveToFile = async () => {
@@ -180,12 +184,9 @@ export default class DiagramCanvas {
 
   commandPrint = () => {
     this.withWorkingIndicator(() => {
-      const diagram = orDefault(
-        this.store.tryGetDiagram(this.canvas.diagramId),
-        null
-      );
+      const diagram = this.store.exportDiagram();
 
-      const pages = diagram?.canvases.map((d) =>
+      const pages = diagram.canvases.map((d) =>
         this.canvas.exportAsSvg(d, a4Width, a4Height, a4Margin)
       ) as string[];
       const printer = new Printer();
@@ -195,17 +196,14 @@ export default class DiagramCanvas {
 
   commandExport = (data: any) => {
     this.withWorkingIndicator(() => {
-      const diagram = orDefault(
-        this.store.tryGetDiagram(this.canvas.diagramId),
-        null
-      );
-      const diagramName = diagram?.diagramInfo.name;
+      const diagram = this.store.exportDiagram();
+      const diagramName = diagram.diagramInfo.name;
       const rect = this.canvas.getFiguresRect();
       const imgWidth = rect.w + imgMargin * 2;
       const imgHeight = rect.h + imgMargin * 2;
 
       let pages =
-        diagram?.canvases.map((d) =>
+        diagram.canvases.map((d) =>
           this.canvas.exportAsSvg(d, imgWidth, imgHeight, imgMargin)
         ) ?? [];
       let svgText = pages[0];
@@ -279,7 +277,7 @@ export default class DiagramCanvas {
   commandEditInnerDiagram = (_msg: string, figure: any) => {
     this.withWorkingIndicator(() => {
       this.inner.editInnerDiagram(figure);
-      this.callbacks.setTitle(this.getTitle());
+      this.callbacks.setTitle(this.diagramName);
       this.updateToolbarButtonsStates();
       this.save();
     });
@@ -302,7 +300,7 @@ export default class DiagramCanvas {
   commandPopFromInnerDiagram = () => {
     this.withWorkingIndicator(() => {
       this.inner.popFromInnerDiagram();
-      this.callbacks.setTitle(this.getTitle());
+      this.callbacks.setTitle(this.diagramName);
       this.updateToolbarButtonsStates();
       this.save();
     });
@@ -319,8 +317,6 @@ export default class DiagramCanvas {
       this.canvas.setNormalBackground();
       return;
     }
-
-    this.canvas.setGridBackground();
   };
 
   showTotalDiagram = () => zoomAndMoveShowTotalDiagram(this.canvas);
@@ -391,7 +387,7 @@ export default class DiagramCanvas {
   save() {
     // Serialize canvas figures and connections into canvas data object
     const canvasData = this.canvas.serialize();
-    this.store.writeCanvas(this.canvas.diagramId, canvasData);
+    this.store.writeCanvas(canvasData);
   }
 
   async loadInitialDiagram() {
@@ -417,31 +413,31 @@ export default class DiagramCanvas {
       this.showNewDiagram();
       return;
     }
-
     this.showDiagram(diagramDto);
   }
 
   showDiagram(diagramDto: DiagramDto) {
-    const canvasDto = this.store.getRootCanvas(diagramDto.id);
+    const canvasDto = this.store.getRootCanvas();
     this.canvas.deserialize(canvasDto);
-    this.canvas.diagramId = diagramDto.id;
-    this.canvas.diagramName = diagramDto.diagramInfo.name;
+    this.diagramId = diagramDto.id;
+    this.diagramName = diagramDto.diagramInfo.name;
+    this.canvas.canvasId = "root";
     this.callbacks.setTitle(diagramDto.diagramInfo.name);
 
     this.showTotalDiagram();
   }
 
   async showNewDiagram() {
-    const diagramDto = this.store.newDiagram();
+    const diagramDto = this.store.openNewDiagram();
 
-    this.canvas.diagramId = diagramDto.id;
-    this.canvas.diagramName = diagramDto.diagramInfo.name;
+    this.diagramId = diagramDto.id;
+    this.diagramName = diagramDto.diagramInfo.name;
     this.canvas.canvasId = "root";
 
     addDefaultNewDiagram(this.canvas);
     this.save();
 
-    this.callbacks.setTitle(this.canvas.diagramName);
+    this.callbacks.setTitle(this.diagramName);
     this.showTotalDiagram();
   }
 
@@ -509,31 +505,10 @@ export default class DiagramCanvas {
     });
   }
 
-  getTitle() {
-    const name = this.getName();
-    switch (this.canvasStack.getLevel()) {
-      case 0:
-        return name + "";
-      case 1:
-        return name + " - Container";
-      case 2:
-        return name + " - Component";
-      default:
-        return name + " - Code";
-    }
-  }
-
-  getName() {
-    if (!this.canvas.diagramName) {
-      return "Name";
-    }
-    return this.canvas.diagramName;
-  }
-
   setName(name: string) {
-    this.canvas.diagramName = name;
-    this.store.setDiagramName(this.canvas.diagramId, name);
-    this.callbacks.setTitle(this.getTitle());
+    this.diagramName = name;
+    this.store.setDiagramName(name);
+    this.callbacks.setTitle(name);
   }
 
   updateToolbarButtonsStates() {

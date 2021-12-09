@@ -3,7 +3,7 @@ import Canvas from "./Canvas";
 import { ArrayList2d, CommandStack2d, Figure2d, Line2d } from "./draw2dTypes";
 
 export interface CanvasData {
-  diagramId: string;
+  // diagramId: string;
   mainNodeId: string;
   canvasId: string;
   commandStack: CommandStack2d;
@@ -75,7 +75,6 @@ export default class CanvasStack {
   getCanvasData(canvas: Canvas): CanvasData {
     const area = canvas.getScrollArea();
     return {
-      diagramId: canvas.diagramId ?? "",
       canvasId: canvas.canvasId ?? "",
       mainNodeId: canvas.mainNodeId ?? "",
       zoom: canvas.zoomFactor,

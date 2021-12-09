@@ -71,6 +71,10 @@ export interface ConnectionDto {
   description: string;
 }
 
+export interface FileDto {
+  diagrams: DiagramDto[];
+}
+
 // export interface SyncDto {
 //   isConnected: boolean;
 //   token: string | null;

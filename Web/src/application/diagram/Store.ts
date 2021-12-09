@@ -1,15 +1,19 @@
-import { ILocalFilesKey } from "../../common/LocalFiles";
+import { ILocalFiles, ILocalFilesKey } from "../../common/LocalFiles";
 import {
   ApplicationDto,
   applicationKey,
   CanvasDto,
   DiagramDto,
   DiagramInfoDto,
+  FileDto,
 } from "./StoreDtos";
 import Result, { expectValue, isError } from "../../common/Result";
 import { ILocalDataKey } from "../../common/LocalData";
-import { di } from "../../common/di";
+import { di, singleton } from "../../common/di";
 import cuid from "cuid";
+import { ILocalData } from "./../../common/LocalData";
+import assert from "assert";
+import { diKey } from "./../../common/di";
 
 const rootCanvasId = "root";
 
@@ -18,64 +22,110 @@ export interface RecentDiagram {
   name: string;
 }
 
+export const IStoreKey = diKey<IStore>();
 export interface IStore {
   initialize(): Promise<void>;
+
+  openNewDiagram(): DiagramDto;
+  tryOpenDiagram(diagramId: string): Promise<Result<DiagramDto>>;
+
+  setDiagramName(name: string): void;
+  exportDiagram(): DiagramDto; // Used for print or export
+
+  getRootCanvas(): CanvasDto;
+  getCanvas(canvasId: string): CanvasDto;
+  writeCanvas(canvas: CanvasDto): void;
 
   getMostResentDiagramId(): Result<string>;
   getRecentDiagrams(): RecentDiagram[];
 
-  newDiagram(): DiagramDto;
-  tryOpenDiagram(diagramId: string): Promise<Result<DiagramDto>>;
-
-  setDiagramName(diagramId: string, name: string): void;
-  tryGetDiagram(diagramId: string): Result<DiagramDto>; // Used for print or export
-
-  getRootCanvas(diagramId: string): CanvasDto;
-  getCanvas(diagramId: string, canvasId: string): CanvasDto;
-  writeCanvas(diagramId: string, canvas: CanvasDto): void;
-
   deleteDiagram(diagramId: string): void;
 
-  saveDiagramToFile(diagramId: string): void;
-  loadDiagramFromFile(): Promise<string>;
+  saveDiagramToFile(): void;
+  loadDiagramFromFile(): Promise<Result<string>>;
   saveAllDiagramsToFile(): Promise<void>;
 }
 
+@singleton(IStoreKey)
 class Store implements IStore {
+  private currentDiagramId: string = "";
+
   constructor(
-    private localData = di(ILocalDataKey),
-    private localFiles = di(ILocalFilesKey)
+    private localData: ILocalData = di(ILocalDataKey),
+    private localFiles: ILocalFiles = di(ILocalFilesKey)
   ) {}
 
   public async initialize(): Promise<void> {
     // return await this.sync.initialize();
   }
 
-  public newDiagram(): DiagramDto {
-    const applicationDto = this.getApplicationDto();
-
-    const diagramId = cuid();
-    const name = this.getUniqueName(applicationDto);
-    console.log("new diagram", diagramId, name);
+  public openNewDiagram(): DiagramDto {
     const now = Date.now();
+    const id = cuid();
+    const name = this.getUniqueName();
+    console.log("new diagram", id, name);
 
     const diagramInfoDto: DiagramInfoDto = {
-      id: diagramId,
+      id: id,
       name: name,
       accessed: now,
       written: now,
     };
 
     const diagramDto: DiagramDto = {
-      id: diagramId,
+      id: id,
       diagramInfo: diagramInfoDto,
       canvases: [],
     };
 
-    this.setApplicationDiagramInfo(applicationDto, diagramInfoDto);
-
-    this.localData.writeBatch([applicationDto, diagramDto]);
+    this.storeDiagram(diagramDto);
+    this.currentDiagramId = id;
     return diagramDto;
+  }
+
+  public async tryOpenDiagram(id: string): Promise<Result<DiagramDto>> {
+    const diagramDto = this.localData.tryRead<DiagramDto>(id);
+    if (isError(diagramDto)) {
+      return diagramDto;
+    }
+
+    // Mark diagram as accessed now, to support most recently used diagram feature
+    diagramDto.diagramInfo.accessed = Date.now();
+    this.storeDiagram(diagramDto);
+
+    this.currentDiagramId = id;
+    return diagramDto;
+  }
+
+  public getRootCanvas(): CanvasDto {
+    return this.getCanvas(rootCanvasId);
+  }
+
+  public getCanvas(canvasId: string): CanvasDto {
+    const diagramDto = this.getDiagramDto();
+
+    const canvasDto = diagramDto.canvases.find((c) => c.id === canvasId);
+    assert(canvasDto, `Canvas ${canvasId} not found ${this.currentDiagramId}`);
+
+    return canvasDto as CanvasDto;
+  }
+
+  public writeCanvas(canvasDto: CanvasDto): void {
+    const diagramDto = this.getDiagramDto();
+
+    this.setDiagramCanvas(diagramDto, canvasDto);
+
+    const now = Date.now();
+    diagramDto.diagramInfo.accessed = now;
+    diagramDto.diagramInfo.written = now;
+
+    this.storeDiagram(diagramDto);
+  }
+
+  private storeDiagram(diagramDto: DiagramDto): void {
+    const applicationDto = this.getApplicationDto();
+    this.setApplicationDiagramInfo(applicationDto, diagramDto.diagramInfo);
+    this.localData.writeBatch([applicationDto, diagramDto]);
   }
 
   public getRecentDiagrams(): RecentDiagram[] {
@@ -85,46 +135,9 @@ class Store implements IStore {
     }));
   }
 
-  public async tryOpenDiagram(diagramId: string): Promise<Result<DiagramDto>> {
-    const diagramDto = this.localData.tryRead<DiagramDto>(diagramId);
-    if (isError(diagramDto)) {
-      return diagramDto;
-    }
-
-    const now = Date.now();
-    diagramDto.diagramInfo.accessed = now;
-
-    const applicationDto = this.getApplicationDto();
-    this.setApplicationDiagramInfo(applicationDto, diagramDto.diagramInfo);
-
-    this.localData.writeBatch([applicationDto, diagramDto]);
-    return diagramDto;
-  }
-
-  public getRootCanvas(diagramId: string): CanvasDto {
-    return this.getCanvas(diagramId, rootCanvasId);
-  }
-
-  public getCanvas(diagramId: string, canvasId: string): CanvasDto {
-    const diagramDto = expectValue(
-      this.localData.tryRead<DiagramDto>(diagramId)
-    );
-    return expectValue(this.tryGetDiagramCanvas(diagramDto, canvasId));
-  }
-
-  public writeCanvas(diagramId: string, canvasDto: CanvasDto): void {
-    const diagramDto = this.getDiagramDto(diagramId);
-
-    this.setDiagramCanvas(diagramDto, canvasDto);
-
-    const now = Date.now();
-    diagramDto.diagramInfo.accessed = now;
-    diagramDto.diagramInfo.written = now;
-
-    const applicationDto = this.getApplicationDto();
-    this.setApplicationDiagramInfo(applicationDto, diagramDto.diagramInfo);
-
-    this.localData.writeBatch([applicationDto, diagramDto]);
+  // For printing/export
+  public exportDiagram(): DiagramDto {
+    return this.getDiagramDto();
   }
 
   public deleteDiagram(diagramId: string): void {
@@ -137,23 +150,20 @@ class Store implements IStore {
     this.localData.remove(diagramId);
   }
 
-  public setDiagramName(diagramId: string, name: string): void {
+  public setDiagramName(name: string): void {
     const now = Date.now();
 
-    const diagramDto = this.getDiagramDto(diagramId);
+    const diagramDto = this.getDiagramDto();
     diagramDto.diagramInfo.name = name;
     diagramDto.diagramInfo.accessed = now;
     diagramDto.diagramInfo.written = now;
 
-    const applicationDto = this.getApplicationDto();
-    this.setApplicationDiagramInfo(applicationDto, diagramDto.diagramInfo);
-
-    this.localData.writeBatch([applicationDto, diagramDto]);
+    this.storeDiagram(diagramDto);
   }
 
-  public async loadDiagramFromFile(): Promise<string> {
+  public async loadDiagramFromFile(): Promise<Result<string>> {
     const fileText = await this.localFiles.loadFile();
-    const fileDto = JSON.parse(fileText);
+    const fileDto: FileDto = JSON.parse(fileText);
 
     // if (!(await this.sync.uploadDiagrams(fileDto.diagrams))) {
     //   // save locally
@@ -162,21 +172,19 @@ class Store implements IStore {
 
     //fileDto.diagrams.forEach((d: DiagramDto) => this.local.writeDiagram(d));
 
-    const firstDiagramId = fileDto.diagrams[0]?.diagramInfo.diagramId;
+    const firstDiagramId = fileDto.diagrams[0]?.diagramInfo?.id;
     if (!firstDiagramId) {
-      throw new Error("No diagram in file");
+      return new Error("No valid diagram in file");
     }
     return firstDiagramId;
   }
 
-  public saveDiagramToFile(diagramId: string): void {
-    // const diagram = this.local.readDiagram(diagramId);
-    // if (diagram == null) {
-    //   return;
-    // }
-    // const fileDto = { diagrams: [diagram] };
-    // const fileText = JSON.stringify(fileDto, null, 2);
-    // this.localFiles.saveFile(`${diagram.diagramInfo.name}.json`, fileText);
+  public saveDiagramToFile(): void {
+    const diagramDto = this.getDiagramDto();
+
+    const fileDto: FileDto = { diagrams: [diagramDto] };
+    const fileText = JSON.stringify(fileDto, null, 2);
+    this.localFiles.saveFile(`${diagramDto.diagramInfo.name}.json`, fileText);
   }
 
   public async saveAllDiagramsToFile(): Promise<void> {
@@ -189,11 +197,6 @@ class Store implements IStore {
     //   const fileDto = { diagrams: diagrams };
     //   const fileText = JSON.stringify(fileDto, null, 2);
     //   this.localFiles.saveFile(`diagrams.json`, fileText);
-  }
-
-  // For printing/export
-  public tryGetDiagram(diagramId: string): Result<DiagramDto> {
-    return this.localData.tryRead<DiagramDto>(diagramId);
   }
 
   private getRecentDiagramInfos(): DiagramInfoDto[] {
@@ -223,23 +226,10 @@ class Store implements IStore {
     return dto;
   }
 
-  private getDiagramDto(diagramId: string): DiagramDto {
-    return expectValue(this.localData.tryRead<DiagramDto>(diagramId));
-  }
-
-  private tryGetDiagramCanvas(
-    diagramDto: DiagramDto,
-    canvasId: string
-  ): Result<CanvasDto> {
-    const canvasDto = diagramDto.canvases.find(
-      (c: CanvasDto) => c.id === canvasId
+  private getDiagramDto(): DiagramDto {
+    return expectValue(
+      this.localData.tryRead<DiagramDto>(this.currentDiagramId)
     );
-    if (canvasDto === null) {
-      return new RangeError(
-        `Canvas ${canvasId} for not found in ${diagramDto.diagramInfo.id}`
-      );
-    }
-    return canvasDto as CanvasDto;
   }
 
   private removeDiagramCanvas(diagramDto: DiagramDto, canvasId: string): void {
@@ -270,6 +260,7 @@ class Store implements IStore {
     const index = applicationDto.diagramInfos.findIndex(
       (d: DiagramInfoDto) => d.id === diagramInfoDto.id
     );
+
     if (index === -1) {
       applicationDto.diagramInfos.push(diagramInfoDto);
       return;
@@ -293,7 +284,8 @@ class Store implements IStore {
     applicationDto.diagramInfos.splice(index, 1);
   }
 
-  private getUniqueName(applicationDto: ApplicationDto): string {
+  private getUniqueName(): string {
+    const applicationDto = this.getApplicationDto();
     for (let i = 0; i < 99; i++) {
       const name = "Name" + (i > 0 ? ` (${i})` : "");
       if (!applicationDto.diagramInfos.find((d) => d.name === name)) {
