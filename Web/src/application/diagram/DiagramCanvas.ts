@@ -8,7 +8,7 @@ import {
   random,
 } from "../../common/utils";
 import Node from "./Node";
-import { IStore, store } from "./Store";
+import { IStore, IStoreKey } from "./Store";
 import Canvas from "./Canvas";
 import CanvasStack from "./CanvasStack";
 import { zoomAndMoveShowTotalDiagram } from "./showTotalDiagram";
@@ -24,6 +24,7 @@ import { svgToSvgDataUrl, fetchFiles } from "../../common/utils";
 import { Canvas2d } from "./draw2dTypes";
 import { isError } from "../../common/Result";
 import { DiagramDto } from "./StoreDtos";
+import { di } from "./../../common/di";
 
 const a4Width = 793.7007874; // "210mm" A4
 const a4Height = 1046.9291339; // "277mm" A4
@@ -35,7 +36,7 @@ export default class DiagramCanvas {
   static defaultHeight = 100000;
 
   canvasStack: CanvasStack;
-  store: IStore = store;
+  private store: IStore = di(IStoreKey);
   inner: InnerDiagramCanvas;
   diagramId: string = "";
   diagramName: string = "";
@@ -197,7 +198,7 @@ export default class DiagramCanvas {
   commandExport = (data: any) => {
     this.withWorkingIndicator(() => {
       const diagram = this.store.exportDiagram();
-      const diagramName = diagram.diagramInfo.name;
+      const diagramName = diagram.name;
       const rect = this.canvas.getFiguresRect();
       const imgWidth = rect.w + imgMargin * 2;
       const imgHeight = rect.h + imgMargin * 2;
@@ -393,7 +394,7 @@ export default class DiagramCanvas {
   async loadInitialDiagram() {
     setProgress(true);
 
-    await store.initialize();
+    await this.store.initialize();
 
     await this.showRecentDiagramOrNew();
 
@@ -420,9 +421,9 @@ export default class DiagramCanvas {
     const canvasDto = this.store.getRootCanvas();
     this.canvas.deserialize(canvasDto);
     this.diagramId = diagramDto.id;
-    this.diagramName = diagramDto.diagramInfo.name;
+    this.diagramName = diagramDto.name;
     this.canvas.canvasId = "root";
-    this.callbacks.setTitle(diagramDto.diagramInfo.name);
+    this.callbacks.setTitle(diagramDto.name);
 
     this.showTotalDiagram();
   }
@@ -431,7 +432,7 @@ export default class DiagramCanvas {
     const diagramDto = this.store.openNewDiagram();
 
     this.diagramId = diagramDto.id;
-    this.diagramName = diagramDto.diagramInfo.name;
+    this.diagramName = diagramDto.name;
     this.canvas.canvasId = "root";
 
     addDefaultNewDiagram(this.canvas);

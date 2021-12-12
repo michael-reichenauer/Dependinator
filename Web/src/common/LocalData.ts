@@ -1,18 +1,16 @@
 import Result from "./Result";
 import { diKey, singleton } from "./di";
 
-// eslint-disable-next-line
-export interface Data<T> {
+export interface Item {
   id: string;
-  timestamp?: number;
 }
 
 export const ILocalDataKey = diKey<ILocalData>();
 export interface ILocalData {
   tryRead<T>(key: string): Result<T>;
   tryReadBatch<T>(ids: string[]): Result<T>[];
-  write(data: any): void;
-  writeBatch(datas: any[]): void;
+  write(data: Item): void;
+  writeBatch(batch: Item[]): void;
   remove(key: string): void;
   removeBatch(keys: string[]): void;
   keys(): string[];
@@ -38,15 +36,13 @@ export default class LocalData implements ILocalData {
     });
   }
 
-  public write<T = any>(data: Data<T>): void {
-    this.writeBatch<T>([data]);
+  public write(item: Item): void {
+    this.writeBatch([item]);
   }
 
-  public writeBatch<T = any>(batch: Data<T>[]): void {
-    const now = Date.now();
-    batch.forEach((data: any) => {
+  public writeBatch(batch: Item[]): void {
+    batch.forEach((data: Item) => {
       const key = data.id;
-      data.timestamp = now;
       const text = JSON.stringify(data);
       localStorage.setItem(key, text);
       // console.log(`Wrote key: ${key}, ${text.length} bytes`);
@@ -58,8 +54,8 @@ export default class LocalData implements ILocalData {
   }
 
   public removeBatch(ids: string[]): void {
-    ids.forEach((key: string) => {
-      localStorage.removeItem(key);
+    ids.forEach((id: string) => {
+      localStorage.removeItem(id);
     });
   }
 

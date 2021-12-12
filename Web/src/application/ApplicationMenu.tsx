@@ -4,16 +4,17 @@ import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
 import Tooltip from "@material-ui/core/Tooltip";
 import { AppMenu, menuItem, menuParentItem } from "../common/Menus";
-import { RecentDiagram, store } from "./diagram/Store";
+import { IStoreKey, RecentDiagram } from "./diagram/Store";
 import Printer from "../common/Printer";
 import { useAbout } from "./About";
-// import { useLogin } from "./Login";
 import { showConfirmAlert } from "../common/AlertDialog";
 import { showPrompt } from "../common/PromptDialog";
 import { useAtom } from "jotai";
 import { titleAtom } from "./Diagram";
+import { di } from "../common/di";
 
 const getDiagramsMenuItems = () => {
+  const store = di(IStoreKey);
   const diagrams = store.getRecentDiagrams().slice(1);
   return diagrams.map((d: RecentDiagram) =>
     menuItem(d.name, () => PubSub.publish("canvas.OpenDiagram", d.id))
@@ -52,26 +53,6 @@ export function ApplicationMenu() {
       PubSub.publish("canvas.RenameDiagram", name)
     );
   };
-
-  // const clearLocalData = () => {
-  //     if (!confirm('Do you really want to clear all local data?')) {//eslint-disable-line
-  //         return
-  //     }
-
-  //     store.clearLocalData()
-  //     window.location.reload()
-  // };
-
-  // const clearAllData = async () => {
-  //     if (!confirm('Do you really want to clear all local and remote data?')) {//eslint-disable-line
-  //         return
-  //     }
-
-  //     if (await store.clearRemoteData()) {
-  //         store.clearLocalData()
-  //         window.location.reload()
-  //     }
-  // };
 
   const diagrams = menu == null ? [] : getDiagramsMenuItems();
   const isInStandaloneMode = () =>
