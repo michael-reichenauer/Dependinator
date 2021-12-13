@@ -11,6 +11,7 @@ export interface Item {
 
 export const IStoreSyncKey = diKey<IStoreSync>();
 export interface IStoreSync {
+  initialize(): void;
   getApplicationDto(): ApplicationDto;
   writeBatch(data: Item[]): void;
   removeBatch(ids: string[]): void;
@@ -24,6 +25,16 @@ class StoreSync implements IStoreSync {
     private localData: ILocalData = di(ILocalDataKey),
     private remoteData: IRemoteData = di(IRemoteDataKey)
   ) {}
+
+  initialize(): void {
+    let dto = this.localData.tryRead<ApplicationDto>(applicationKey);
+    if (isError(dto)) {
+      // First access, lets store default data for future access
+      dto = { id: applicationKey, diagramInfos: {} };
+      dto.timestamp = Date.now();
+      this.localData.writeBatch([dto]);
+    }
+  }
 
   public read<T>(id: string): T {
     return expectValue(this.localData.tryRead<T>(id));
@@ -64,15 +75,7 @@ class StoreSync implements IStoreSync {
   }
 
   public getApplicationDto(): ApplicationDto {
-    let dto = this.localData.tryRead<ApplicationDto>(applicationKey);
-    if (isError(dto)) {
-      // First access, lets store default data for future access
-      dto = { id: applicationKey, diagramInfos: {} };
-      dto.timestamp = Date.now();
-      this.localData.writeBatch([dto]);
-    }
-
-    return dto;
+    return expectValue(this.localData.tryRead<ApplicationDto>(applicationKey));
   }
 
   public async triggerSyncCheck(): Promise<void> {

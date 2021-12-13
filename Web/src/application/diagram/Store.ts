@@ -9,12 +9,6 @@ import { IStoreSync, IStoreSyncKey } from "./StoreSync";
 
 const rootCanvasId = "root";
 
-export interface RecentDiagram {
-  id: string;
-  name: string;
-  accessed: number;
-}
-
 export const IStoreKey = diKey<IStore>();
 export interface IStore {
   initialize(): Promise<void>;
@@ -30,7 +24,7 @@ export interface IStore {
   writeCanvas(canvas: CanvasDto): void;
 
   getMostResentDiagramId(): Result<string>;
-  getRecentDiagrams(): RecentDiagram[];
+  getRecentDiagrams(): DiagramInfoDto[];
 
   deleteDiagram(diagramId: string): void;
 
@@ -50,7 +44,7 @@ class Store implements IStore {
   ) {}
 
   public async initialize(): Promise<void> {
-    // return await this.sync.initialize();
+    this.storeSync.initialize();
   }
 
   public openNewDiagram(): DiagramDto {
@@ -62,11 +56,12 @@ class Store implements IStore {
     const diagramDto: DiagramDto = {
       id: id,
       name: name,
-      canvases: [],
+      canvases: {},
     };
 
     const applicationDto = this.storeSync.getApplicationDto();
     applicationDto.diagramInfos[id] = {
+      id: id,
       name: name,
       accessed: now,
       written: now,
@@ -104,17 +99,17 @@ class Store implements IStore {
   public getCanvas(canvasId: string): CanvasDto {
     const diagramDto = this.getDiagramDto();
 
-    const canvasDto = diagramDto.canvases.find((c) => c.id === canvasId);
-    assert(canvasDto, `Canvas ${canvasId} not found ${this.currentDiagramId}`);
+    const canvasDto = diagramDto.canvases[canvasId];
+    assert(canvasDto);
 
-    return canvasDto as CanvasDto;
+    return canvasDto;
   }
 
   public writeCanvas(canvasDto: CanvasDto): void {
     const diagramDto = this.getDiagramDto();
     const id = diagramDto.id;
 
-    this.setDiagramCanvas(diagramDto, canvasDto);
+    diagramDto.canvases[canvasDto.id] = canvasDto;
 
     const now = Date.now();
     const applicationDto = this.storeSync.getApplicationDto();
@@ -127,20 +122,11 @@ class Store implements IStore {
     this.storeSync.writeBatch([applicationDto, diagramDto]);
   }
 
-  public getRecentDiagrams(): RecentDiagram[] {
-    const diagramInfos = this.storeSync.getApplicationDto().diagramInfos;
-
-    const sortedList = Object.keys(diagramInfos)
-      .map((key) => ({ id: key, ...diagramInfos[key] }))
-      .sort((i1, i2) =>
+  public getRecentDiagrams(): DiagramInfoDto[] {
+    return Object.values(this.storeSync.getApplicationDto().diagramInfos).sort(
+      (i1, i2) =>
         i1.accessed < i2.accessed ? 1 : i1.accessed > i2.accessed ? -1 : 0
-      );
-
-    return sortedList.map((d) => ({
-      id: d.id,
-      name: d.name,
-      accessed: d.accessed,
-    }));
+    );
   }
 
   // For printing/export
@@ -216,13 +202,6 @@ class Store implements IStore {
     //   this.localFiles.saveFile(`diagrams.json`, fileText);
   }
 
-  // public storeDiagram(diagramDto: DiagramDto, diagramInfoDto: DiagramInfoDto): void {
-  //   const applicationDto = this.storeSync.getApplicationDto();
-  //   this.setApplicationDiagramInfo(applicationDto, diagramInfoDto);
-
-  //   this.storeSync.writeBatch([applicationDto, diagramDto]);
-  // }
-
   public getMostResentDiagramId(): Result<string> {
     const resentDiagrams = this.getRecentDiagrams();
     if (resentDiagrams.length === 0) {
@@ -236,19 +215,10 @@ class Store implements IStore {
     return this.storeSync.read<DiagramDto>(this.currentDiagramId);
   }
 
-  private setDiagramCanvas(diagramDto: DiagramDto, canvasDto: CanvasDto): void {
-    const index = diagramDto.canvases.findIndex(
-      (c: CanvasDto) => c.id === canvasDto.id
-    );
-    if (index === -1) {
-      diagramDto.canvases.push(canvasDto);
-      return;
-    }
-    diagramDto.canvases[index] = canvasDto;
-  }
-
   private getUniqueName(): string {
-    const diagrams = this.getRecentDiagrams();
+    const diagrams = Object.values(
+      this.storeSync.getApplicationDto().diagramInfos
+    );
 
     for (let i = 0; i < 99; i++) {
       const name = "Name" + (i > 0 ? ` (${i})` : "");

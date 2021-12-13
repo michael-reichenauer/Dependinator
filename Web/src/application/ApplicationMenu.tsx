@@ -4,7 +4,7 @@ import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
 import Tooltip from "@material-ui/core/Tooltip";
 import { AppMenu, menuItem, menuParentItem } from "../common/Menus";
-import { IStoreKey, RecentDiagram } from "./diagram/Store";
+import { IStoreKey } from "./diagram/Store";
 import Printer from "../common/Printer";
 import { useAbout } from "./About";
 import { showConfirmAlert } from "../common/AlertDialog";
@@ -16,7 +16,7 @@ import { di } from "../common/di";
 const getDiagramsMenuItems = () => {
   const store = di(IStoreKey);
   const diagrams = store.getRecentDiagrams().slice(1);
-  return diagrams.map((d: RecentDiagram) =>
+  return diagrams.map((d) =>
     menuItem(d.name, () => PubSub.publish("canvas.OpenDiagram", d.id))
   );
 };

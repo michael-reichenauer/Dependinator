@@ -187,9 +187,9 @@ export default class DiagramCanvas {
     this.withWorkingIndicator(() => {
       const diagram = this.store.exportDiagram();
 
-      const pages = diagram.canvases.map((d) =>
+      const pages: string[] = Object.values(diagram.canvases).map((d) =>
         this.canvas.exportAsSvg(d, a4Width, a4Height, a4Margin)
-      ) as string[];
+      );
       const printer = new Printer();
       printer.print(pages);
     });
@@ -203,10 +203,9 @@ export default class DiagramCanvas {
       const imgWidth = rect.w + imgMargin * 2;
       const imgHeight = rect.h + imgMargin * 2;
 
-      let pages =
-        diagram.canvases.map((d) =>
-          this.canvas.exportAsSvg(d, imgWidth, imgHeight, imgMargin)
-        ) ?? [];
+      let pages: string[] = Object.values(diagram.canvases).map((d) =>
+        this.canvas.exportAsSvg(d, imgWidth, imgHeight, imgMargin)
+      );
       let svgText = pages[0];
 
       // Since icons are nested svg with external links, the links must be replaced with

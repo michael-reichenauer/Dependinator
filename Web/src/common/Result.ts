@@ -19,9 +19,9 @@ export function orDefault<T, E>(result: Result<T, E>, defaultValue: T): T {
 }
 
 export function expectValue<T, E>(result: Result<T, E>): T {
-  if (result instanceof Error) {
+  if (isError(result)) {
     assert.fail(`Expected value, but was error ${result}`);
   }
 
-  return result as T;
+  return result;
 }

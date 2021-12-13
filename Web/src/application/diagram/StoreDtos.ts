@@ -8,14 +8,16 @@
 
 export const applicationKey = "application";
 
-type DiagramInfos = { [id: string]: DiagramInfoDto };
+type DiagramInfoDtos = { [id: string]: DiagramInfoDto };
+type CanvasDtos = { [id: string]: CanvasDto };
 export interface ApplicationDto {
   id: string;
   timestamp?: number;
-  diagramInfos: DiagramInfos;
+  diagramInfos: DiagramInfoDtos;
 }
 
 export interface DiagramInfoDto {
+  id: string;
   name: string;
   accessed: number;
   written: number;
@@ -25,7 +27,7 @@ export interface DiagramDto {
   id: string;
   timestamp?: number;
   name: string;
-  canvases: CanvasDto[];
+  canvases: CanvasDtos;
 }
 
 export interface CanvasDto {
