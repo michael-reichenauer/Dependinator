@@ -2,20 +2,22 @@ import { ILocalData, ILocalDataKey } from "../../common/LocalData";
 import { IRemoteData, IRemoteDataKey } from "../../common/remoteData";
 import Result, { expectValue, isError } from "../../common/Result";
 import { di, diKey, singleton } from "./../../common/di";
-import { ApplicationDto, applicationKey } from "./StoreDtos";
 
-export interface Item {
+export interface Entity {
   id: string;
   timestamp?: number;
+}
+
+interface LocalItem extends Entity {
+  synced?: number;
 }
 
 export const IStoreSyncKey = diKey<IStoreSync>();
 export interface IStoreSync {
   initialize(): void;
-  getApplicationDto(): ApplicationDto;
-  writeBatch(data: Item[]): void;
+  writeBatch(data: Entity[]): void;
   removeBatch(ids: string[]): void;
-  tryReadAsync<T extends Item>(id: string): Promise<Result<T>>;
+  tryReadAsync<T extends Entity>(id: string): Promise<Result<T>>;
   read<T>(id: string): T;
 }
 
@@ -26,38 +28,32 @@ class StoreSync implements IStoreSync {
     private remoteData: IRemoteData = di(IRemoteDataKey)
   ) {}
 
-  initialize(): void {
-    let dto = this.localData.tryRead<ApplicationDto>(applicationKey);
-    if (isError(dto)) {
-      // First access, lets store default data for future access
-      dto = { id: applicationKey, diagramInfos: {} };
-      dto.timestamp = Date.now();
-      this.localData.writeBatch([dto]);
-    }
-  }
+  initialize(): void {}
 
   public read<T>(id: string): T {
     return expectValue(this.localData.tryRead<T>(id));
   }
 
-  public async tryReadAsync<T extends Item>(id: string): Promise<Result<T>> {
+  public async tryReadAsync<T extends Entity>(id: string): Promise<Result<T>> {
     const localDto = this.localData.tryRead<T>(id);
     if (isError(localDto)) {
       // Dto not cached locally, lets try get from remote location
-      const remoteDto = await this.remoteData.tryRead<T>(id);
+      const remoteDto = await this.remoteData.tryRead<T>({ id: id });
       if (isError(remoteDto)) {
         return new RangeError(`id ${id} not found,` + remoteDto);
       }
 
-      // Cache remote data locally
-      this.localData.write(remoteDto);
+      // Cache remote data locally as synced
+      const item = remoteDto as LocalItem;
+      item.synced = remoteDto.timestamp;
+      this.localData.write(item);
       return remoteDto;
     }
 
     return localDto;
   }
 
-  public writeBatch(items: Item[]): void {
+  public writeBatch(items: Entity[]): void {
     const now = Date.now();
     items.forEach((item) => {
       item.timestamp = now;
@@ -67,22 +63,41 @@ class StoreSync implements IStoreSync {
     this.localData.writeBatch(items);
 
     // Sync data to server
-    this.remoteData.writeBatch(items);
+    this.remoteData.writeBatch(items).then((response) => {
+      if (isError(response)) {
+        // Signal sync error !!!!!!!
+        console.warn("Sync error while writing");
+        return;
+      }
+
+      // Stamp existing local items with synced time stamp and
+      const ids = items.map((item) => item.id);
+      const existingItems = this.localData
+        .tryReadBatch<LocalItem>(ids)
+        .filter((r) => !isError(r)) as LocalItem[];
+      const syncedItems = existingItems.map((item) => ({
+        ...item,
+        synced: now,
+      }));
+
+      this.localData.writeBatch(syncedItems);
+    });
   }
 
   public removeBatch(ids: string[]): void {
     this.localData.removeBatch(ids);
   }
 
-  public getApplicationDto(): ApplicationDto {
-    return expectValue(this.localData.tryRead<ApplicationDto>(applicationKey));
-  }
-
   public async triggerSyncCheck(): Promise<void> {
-    const dto = await this.remoteData.tryRead<ApplicationDto>(applicationKey);
-    if (isError(dto)) {
-      // Signal error check
-      return;
-    }
+    //   const dto = await this.remoteData.tryRead<ApplicationDto>({
+    //     id: applicationKey,
+    //   });
+    //   if (isError(dto)) {
+    //     // Signal error check !!!!!!
+    //     console.warn("Sync error while reading app");
+    //     return;
+    //   }
+    //   // Merge local app and remote app
+    //   //
   }
 }

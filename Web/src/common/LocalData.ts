@@ -1,16 +1,16 @@
 import Result from "./Result";
 import { diKey, singleton } from "./di";
 
-export interface Item {
+export interface Entity {
   id: string;
 }
 
 export const ILocalDataKey = diKey<ILocalData>();
 export interface ILocalData {
   tryRead<T>(key: string): Result<T>;
-  tryReadBatch<T>(ids: string[]): Result<T>[];
-  write(data: Item): void;
-  writeBatch(batch: Item[]): void;
+  tryReadBatch<T>(keys: string[]): Result<T>[];
+  write<T extends Entity>(entity: T): void;
+  writeBatch(entities: Entity[]): void;
   remove(key: string): void;
   removeBatch(keys: string[]): void;
   keys(): string[];
@@ -24,37 +24,37 @@ export default class LocalData implements ILocalData {
     return this.tryReadBatch<T>([id])[0];
   }
 
-  public tryReadBatch<T>(ids: string[]): Result<T>[] {
-    return ids.map((id: string) => {
-      let text = localStorage.getItem(id);
-      if (text == null) {
-        return new RangeError(`No data for id: ${id}`);
+  public tryReadBatch<T>(keys: string[]): Result<T>[] {
+    return keys.map((key: string) => {
+      let textValue = localStorage.getItem(key);
+      if (textValue == null) {
+        return new RangeError(`No data for id: ${key}`);
       }
       // console.log(`Read key: ${key}, ${text.length} bytes`);
-      const data: any = JSON.parse(text);
-      return data as T;
+      const entity: any = JSON.parse(textValue);
+      return entity as T;
     });
   }
 
-  public write(item: Item): void {
-    this.writeBatch([item]);
+  public write<T extends Entity>(entity: T): void {
+    this.writeBatch([entity]);
   }
 
-  public writeBatch(batch: Item[]): void {
-    batch.forEach((data: Item) => {
-      const key = data.id;
-      const text = JSON.stringify(data);
-      localStorage.setItem(key, text);
+  public writeBatch<T extends Entity>(entities: T[]): void {
+    entities.forEach((entity) => {
+      const key = entity.id;
+      const textValue = JSON.stringify(entity);
+      localStorage.setItem(key, textValue);
       // console.log(`Wrote key: ${key}, ${text.length} bytes`);
     });
   }
 
-  public remove(id: string): void {
-    this.removeBatch([id]);
+  public remove(key: string): void {
+    this.removeBatch([key]);
   }
 
-  public removeBatch(ids: string[]): void {
-    ids.forEach((id: string) => {
+  public removeBatch(keys: string[]): void {
+    keys.forEach((id: string) => {
       localStorage.removeItem(id);
     });
   }

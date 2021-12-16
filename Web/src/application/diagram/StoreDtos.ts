@@ -8,8 +8,10 @@
 
 export const applicationKey = "application";
 
-type DiagramInfoDtos = { [id: string]: DiagramInfoDto };
-type CanvasDtos = { [id: string]: CanvasDto };
+export type DiagramInfoDtos = { [id: string]: DiagramInfoDto };
+
+export type CanvasDtos = { [id: string]: CanvasDto };
+
 export interface ApplicationDto {
   id: string;
   timestamp?: number;
@@ -76,11 +78,3 @@ export interface ConnectionDto {
 export interface FileDto {
   diagrams: DiagramDto[];
 }
-
-// export interface SyncDto {
-//   isConnected: boolean;
-//   token: string | null;
-//   isConnecting: boolean;
-//   provider: string | null;
-//   details: string | null;
-// }

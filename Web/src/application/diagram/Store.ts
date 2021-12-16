@@ -1,13 +1,31 @@
 import { ILocalFiles, ILocalFilesKey } from "../../common/LocalFiles";
-import { CanvasDto, DiagramDto, DiagramInfoDto, FileDto } from "./StoreDtos";
+import {
+  ApplicationDto,
+  applicationKey,
+  CanvasDto,
+  DiagramDto,
+  DiagramInfoDto,
+  FileDto,
+} from "./StoreDtos";
 import Result, { isError } from "../../common/Result";
 import { di, singleton } from "../../common/di";
 import cuid from "cuid";
 import assert from "assert";
 import { diKey } from "./../../common/di";
 import { IStoreSync, IStoreSyncKey } from "./StoreSync";
+import { ILocalData, ILocalDataKey } from "./../../common/LocalData";
 
 const rootCanvasId = "root";
+
+// Init
+// get app => new empty app
+// new diagram
+// edit diagram
+// enable sync
+// get remote app => merge local and remote => sync app, sync local diagrams
+// edit diagram
+// get remote app => merge local and remote => sync app, sync local diagrams
+// get remote app => merge local and remote => sync app, sync local diagrams
 
 export const IStoreKey = diKey<IStore>();
 export interface IStore {
@@ -40,10 +58,19 @@ class Store implements IStore {
   constructor(
     // private localData: ILocalData = di(ILocalDataKey),
     private localFiles: ILocalFiles = di(ILocalFilesKey),
+    private localData: ILocalData = di(ILocalDataKey),
     private storeSync: IStoreSync = di(IStoreSyncKey)
   ) {}
 
   public async initialize(): Promise<void> {
+    let dto = this.localData.tryRead<ApplicationDto>(applicationKey);
+    if (isError(dto)) {
+      // First access, lets store default data for future access
+      dto = { id: applicationKey, diagramInfos: {} };
+      dto.timestamp = Date.now();
+      this.localData.writeBatch([dto]);
+    }
+
     this.storeSync.initialize();
   }
 
@@ -59,7 +86,7 @@ class Store implements IStore {
       canvases: {},
     };
 
-    const applicationDto = this.storeSync.getApplicationDto();
+    const applicationDto = this.getApplicationDto();
     applicationDto.diagramInfos[id] = {
       id: id,
       name: name,
@@ -80,7 +107,7 @@ class Store implements IStore {
     }
 
     // Mark diagram as accessed now, to support most recently used diagram feature
-    const applicationDto = this.storeSync.getApplicationDto();
+    const applicationDto = this.getApplicationDto();
     applicationDto.diagramInfos[id] = {
       ...applicationDto.diagramInfos[id],
       accessed: Date.now(),
@@ -112,7 +139,7 @@ class Store implements IStore {
     diagramDto.canvases[canvasDto.id] = canvasDto;
 
     const now = Date.now();
-    const applicationDto = this.storeSync.getApplicationDto();
+    const applicationDto = this.getApplicationDto();
     applicationDto.diagramInfos[id] = {
       ...applicationDto.diagramInfos[id],
       accessed: now,
@@ -123,9 +150,8 @@ class Store implements IStore {
   }
 
   public getRecentDiagrams(): DiagramInfoDto[] {
-    return Object.values(this.storeSync.getApplicationDto().diagramInfos).sort(
-      (i1, i2) =>
-        i1.accessed < i2.accessed ? 1 : i1.accessed > i2.accessed ? -1 : 0
+    return Object.values(this.getApplicationDto().diagramInfos).sort((i1, i2) =>
+      i1.accessed < i2.accessed ? 1 : i1.accessed > i2.accessed ? -1 : 0
     );
   }
 
@@ -139,7 +165,7 @@ class Store implements IStore {
 
     console.log("Delete diagram", diagramId);
 
-    const applicationDto = this.storeSync.getApplicationDto();
+    const applicationDto = this.getApplicationDto();
     delete applicationDto.diagramInfos[diagramId];
 
     this.storeSync.writeBatch([applicationDto]);
@@ -153,7 +179,7 @@ class Store implements IStore {
     const id = diagramDto.id;
     diagramDto.name = name;
 
-    const applicationDto = this.storeSync.getApplicationDto();
+    const applicationDto = this.getApplicationDto();
     applicationDto.diagramInfos[id] = {
       ...applicationDto.diagramInfos[id],
       name: name,
@@ -211,14 +237,16 @@ class Store implements IStore {
     return resentDiagrams[0].id;
   }
 
+  public getApplicationDto(): ApplicationDto {
+    return this.storeSync.read<ApplicationDto>(applicationKey);
+  }
+
   private getDiagramDto(): DiagramDto {
     return this.storeSync.read<DiagramDto>(this.currentDiagramId);
   }
 
   private getUniqueName(): string {
-    const diagrams = Object.values(
-      this.storeSync.getApplicationDto().diagramInfos
-    );
+    const diagrams = Object.values(this.getApplicationDto().diagramInfos);
 
     for (let i = 0; i < 99; i++) {
       const name = "Name" + (i > 0 ? ` (${i})` : "");
