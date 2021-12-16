@@ -63,12 +63,13 @@ class Store implements IStore {
   ) {}
 
   public async initialize(): Promise<void> {
-    let dto = this.localData.tryRead<ApplicationDto>(applicationKey);
-    if (isError(dto)) {
+    let entity = this.localData.tryRead<ApplicationDto>(applicationKey);
+    if (isError(entity)) {
       // First access, lets store default data for future access
-      dto = { id: applicationKey, diagramInfos: {} };
-      dto.timestamp = Date.now();
-      this.localData.writeBatch([dto]);
+      const dto: ApplicationDto = { diagramInfos: {} };
+      this.localData.writeBatch([
+        { key: applicationKey, timestamp: Date.now(), synced: 0, value: dto },
+      ]);
     }
 
     this.storeSync.initialize();
@@ -94,7 +95,10 @@ class Store implements IStore {
       written: now,
     };
 
-    this.storeSync.writeBatch([applicationDto, diagramDto]);
+    this.storeSync.writeBatch<any>([
+      { key: applicationKey, value: applicationDto },
+      { key: id, value: diagramDto },
+    ]);
 
     this.currentDiagramId = id;
     return diagramDto;
@@ -113,7 +117,7 @@ class Store implements IStore {
       accessed: Date.now(),
     };
 
-    this.storeSync.writeBatch([applicationDto]);
+    this.storeSync.writeBatch([{ key: applicationKey, value: applicationDto }]);
 
     this.currentDiagramId = id;
     return diagramDto;
@@ -146,7 +150,10 @@ class Store implements IStore {
       written: now,
     };
 
-    this.storeSync.writeBatch([applicationDto, diagramDto]);
+    this.storeSync.writeBatch<any>([
+      { key: applicationKey, value: applicationDto },
+      { key: id, value: diagramDto },
+    ]);
   }
 
   public getRecentDiagrams(): DiagramInfoDto[] {
@@ -168,7 +175,7 @@ class Store implements IStore {
     const applicationDto = this.getApplicationDto();
     delete applicationDto.diagramInfos[diagramId];
 
-    this.storeSync.writeBatch([applicationDto]);
+    this.storeSync.writeBatch([{ key: applicationKey, value: applicationDto }]);
     this.storeSync.removeBatch([diagramId]);
   }
 
@@ -187,7 +194,10 @@ class Store implements IStore {
       written: now,
     };
 
-    this.storeSync.writeBatch([applicationDto, diagramDto]);
+    this.storeSync.writeBatch<any>([
+      { key: applicationKey, value: applicationDto },
+      { key: id, value: diagramDto },
+    ]);
   }
 
   public async loadDiagramFromFile(): Promise<Result<string>> {

@@ -1,55 +1,50 @@
-import LocalData, { ILocalData } from "./LocalData";
+import LocalData, { Entity, ILocalData } from "./LocalData";
 import { expectValue, isError, orDefault } from "./Result";
-
-interface data {
-  id: string;
-  data: string;
-}
 
 describe("Test LocalData", () => {
   test("Test", () => {
     const local: ILocalData = new LocalData();
     expect(local.count()).toEqual(0);
 
-    local.write({ id: "0", data: "aa" });
+    local.write({ key: "0", timestamp: 0, synced: 0, value: "aa" });
     expect(local.count()).toEqual(1);
     expect(local.keys()).toEqual(["0"]);
-    expect(expectValue(local.tryRead<data>("0")).data).toEqual("aa");
-    expect(isError(local.tryRead<data>("1"))).toEqual(true);
+    expect(expectValue(local.tryRead<string>("0")).value).toEqual("aa");
+    expect(isError(local.tryRead<string>("1"))).toEqual(true);
 
-    local.write({ id: "1", data: "bb" });
+    local.write({ key: "1", timestamp: 0, synced: 0, value: "bb" });
     expect(local.count()).toEqual(2);
     expect(local.keys()).toEqual(["0", "1"]);
-    expect(expectValue(local.tryRead<data>("0")).data).toEqual("aa");
-    expect(expectValue(local.tryRead<data>("1")).data).toEqual("bb");
+    expect(expectValue(local.tryRead<string>("0")).value).toEqual("aa");
+    expect(expectValue(local.tryRead<string>("1")).value).toEqual("bb");
 
-    const all = local.tryReadBatch<data>(["0", "1", "2"]);
-    expect(expectValue(all[0]).data).toEqual("aa");
-    expect(expectValue(all[1]).data).toEqual("bb");
+    const all = local.tryReadBatch<string>(["0", "1", "2"]);
+    expect(expectValue(all[0]).value).toEqual("aa");
+    expect(expectValue(all[1]).value).toEqual("bb");
     expect(isError(all[2])).toEqual(true);
 
     local.remove("0");
     expect(local.count()).toEqual(1);
     expect(local.keys()).toEqual(["1"]);
-    expect(isError(local.tryRead<data>("0"))).toEqual(true);
-    expect(expectValue(local.tryRead<data>("1")).data).toEqual("bb");
+    expect(isError(local.tryRead<string>("0"))).toEqual(true);
+    expect(expectValue(local.tryRead<string>("1")).value).toEqual("bb");
 
-    local.write({ id: "0", data: "aa" });
+    local.write({ key: "0", timestamp: 0, synced: 0, value: "aa" });
     expect(local.count()).toEqual(2);
     expect(local.keys().sort()).toEqual(["0", "1"]);
 
     local.removeBatch(["0", "1"]);
     expect(local.count()).toEqual(0);
-    expect(isError(local.tryRead<data>("0"))).toEqual(true);
-    expect(isError(local.tryRead<data>("1"))).toEqual(true);
+    expect(isError(local.tryRead<string>("0"))).toEqual(true);
+    expect(isError(local.tryRead<string>("1"))).toEqual(true);
 
-    local.write({ id: "0", data: "aa" });
-    local.write({ id: "1", data: "bb" });
+    local.write({ key: "0", timestamp: 0, synced: 0, value: "aa" });
+    local.write({ key: "1", timestamp: 0, synced: 0, value: "bb" });
     expect(local.count()).toEqual(2);
 
     local.clear();
     expect(local.count()).toEqual(0);
-    expect(isError(local.tryRead<data>("0"))).toEqual(true);
-    expect(isError(local.tryRead<data>("1"))).toEqual(true);
+    expect(isError(local.tryRead<string>("0"))).toEqual(true);
+    expect(isError(local.tryRead<string>("1"))).toEqual(true);
   });
 });

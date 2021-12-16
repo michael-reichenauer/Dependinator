@@ -1,16 +1,20 @@
 import Result from "./Result";
 import { diKey, singleton } from "./di";
 
-export interface Entity {
-  id: string;
+export interface Entity<T> {
+  key: string;
+  timestamp: number;
+  synced: number;
+
+  value: T;
 }
 
 export const ILocalDataKey = diKey<ILocalData>();
 export interface ILocalData {
-  tryRead<T>(key: string): Result<T>;
-  tryReadBatch<T>(keys: string[]): Result<T>[];
-  write<T extends Entity>(entity: T): void;
-  writeBatch(entities: Entity[]): void;
+  tryRead<T>(key: string): Result<Entity<T>>;
+  tryReadBatch<T>(keys: string[]): Result<Entity<T>>[];
+  write<T>(entity: Entity<T>): void;
+  writeBatch<T>(entities: Entity<T>[]): void;
   remove(key: string): void;
   removeBatch(keys: string[]): void;
   keys(): string[];
@@ -20,31 +24,31 @@ export interface ILocalData {
 
 @singleton(ILocalDataKey)
 export default class LocalData implements ILocalData {
-  public tryRead<T>(id: string): Result<T> {
-    return this.tryReadBatch<T>([id])[0];
+  public tryRead<T>(key: string): Result<Entity<T>> {
+    return this.tryReadBatch<T>([key])[0];
   }
 
-  public tryReadBatch<T>(keys: string[]): Result<T>[] {
+  public tryReadBatch<T>(keys: string[]): Result<Entity<T>>[] {
     return keys.map((key: string) => {
-      let textValue = localStorage.getItem(key);
-      if (textValue == null) {
+      let entityText = localStorage.getItem(key);
+      if (entityText == null) {
         return new RangeError(`No data for id: ${key}`);
       }
       // console.log(`Read key: ${key}, ${text.length} bytes`);
-      const entity: any = JSON.parse(textValue);
-      return entity as T;
+      const entity: any = JSON.parse(entityText);
+      return entity as Entity<T>;
     });
   }
 
-  public write<T extends Entity>(entity: T): void {
+  public write<T>(entity: Entity<T>): void {
     this.writeBatch([entity]);
   }
 
-  public writeBatch<T extends Entity>(entities: T[]): void {
+  public writeBatch<T>(entities: Entity<T>[]): void {
     entities.forEach((entity) => {
-      const key = entity.id;
-      const textValue = JSON.stringify(entity);
-      localStorage.setItem(key, textValue);
+      const key = entity.key;
+      const entityText = JSON.stringify(entity);
+      localStorage.setItem(key, entityText);
       // console.log(`Wrote key: ${key}, ${text.length} bytes`);
     });
   }

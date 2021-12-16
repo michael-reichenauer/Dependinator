@@ -13,8 +13,6 @@ export type DiagramInfoDtos = { [id: string]: DiagramInfoDto };
 export type CanvasDtos = { [id: string]: CanvasDto };
 
 export interface ApplicationDto {
-  id: string;
-  timestamp?: number;
   diagramInfos: DiagramInfoDtos;
 }
 
@@ -27,7 +25,6 @@ export interface DiagramInfoDto {
 
 export interface DiagramDto {
   id: string;
-  timestamp?: number;
   name: string;
   canvases: CanvasDtos;
 }
