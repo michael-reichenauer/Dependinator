@@ -3,13 +3,22 @@ import {
   ILocalDataKey,
   Entity as LocalEntity,
 } from "../../common/LocalData";
-import { IRemoteData, IRemoteDataKey } from "../../common/remoteData";
+import {
+  IRemoteData,
+  IRemoteDataKey,
+  Entity as RemoteEntity,
+} from "../../common/remoteData";
 import Result, { expectValue, isError } from "../../common/Result";
 import { di, diKey, singleton } from "./../../common/di";
 
 export interface Entity<T> {
   key: string;
   value: T;
+}
+
+export interface SyncRequest<T> {
+  key: string;
+  onConflict: (local: LocalEntity<T>, remote: RemoteEntity<T>) => T;
 }
 
 export const IStoreSyncKey = diKey<IStoreSync>();
@@ -95,7 +104,75 @@ class StoreSync implements IStoreSync {
     this.localData.removeBatch(keys);
   }
 
-  public async triggerSyncCheck(): Promise<void> {
+  public async triggerSyncCheck<T = any>(
+    requests: SyncRequest<T>[]
+  ): Promise<void> {
+    const keys = requests.map((request) => request.key);
+    const localEntities = this.localData.tryReadBatch<T>(keys);
+
+    const queries = localEntities.map((entity, index) => {
+      if (!isError(entity) && entity.synced) {
+        // Local entity exists and is synced, skip remote if not changed
+        return { key: keys[index], IfNoneMatch: entity.synced };
+      }
+
+      // Get entity regardless of matched timestamp
+      return { key: keys[index] };
+    });
+
+    const remoteEntities = await this.remoteData.tryReadBatch<T>(queries);
+
+    const remoteToLocalEntities: RemoteEntity<T>[] = [];
+    const localToRemoteEntities: LocalEntity<T>[] = [];
+    const mergedEntities: Entity<T>[] = [];
+
+    remoteEntities.forEach((remoteEntity, index) => {
+      const localEntity = localEntities[index];
+      if (isError(localEntity) && isError(remoteEntity)) {
+        // Both local and remote items are missing, (both have been removed and nothing to sync)
+        return;
+      }
+      if (isError(remoteEntity)) {
+        // Remote entity is missing, lets upload local to remote
+        if (!isError(localEntity)) {
+          localToRemoteEntities.push(localEntity);
+        }
+        return;
+      }
+      if (isError(localEntity)) {
+        // Local entity is missing, lets store remote to local
+        remoteToLocalEntities.push(remoteEntity);
+        return;
+      }
+
+      // Both local and remote entity exist, lets check time stamps
+      if (localEntity.timestamp === remoteEntity.timestamp) {
+        // Both local and remote entity have same timestamp, already same (nothing to sync)
+        return;
+      }
+
+      if (localEntity.synced === remoteEntity.timestamp) {
+        // Local entity has changed and remote entity same as uploaded previously by this client, lets sync new local up to remote
+        localToRemoteEntities.push(localEntity);
+        return;
+      }
+
+      if (localEntity.synced === localEntity.timestamp) {
+        // Local entity has not changed, while remote has been changed by some other client, lets store new remote
+        remoteToLocalEntities.push(remoteEntity);
+        return;
+      }
+
+      // Both local and remote entity has been changed by some other client, lets merge the entities
+      const mergedEntity = requests[index].onConflict(
+        localEntity,
+        remoteEntity
+      );
+      mergedEntities.push({ key: localEntity.key, value: mergedEntity });
+    });
+
+    //const localSynced = remoteToLocalEntities.map
+
     //   const dto = await this.remoteData.tryRead<ApplicationDto>({
     //     id: applicationKey,
     //   });
