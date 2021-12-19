@@ -1,4 +1,9 @@
+import cuid from "cuid";
+import Result, { isError } from "../../common/Result";
+import assert from "assert";
+import { di, singleton, diKey } from "../../common/di";
 import { ILocalFiles, ILocalFilesKey } from "../../common/LocalFiles";
+import { IStoreSync, IStoreSyncKey, SyncRequest } from "./StoreSync";
 import {
   ApplicationDto,
   applicationKey,
@@ -7,25 +12,12 @@ import {
   DiagramInfoDto,
   FileDto,
 } from "./StoreDtos";
-import Result, { isError } from "../../common/Result";
-import { di, singleton } from "../../common/di";
-import cuid from "cuid";
-import assert from "assert";
-import { diKey } from "./../../common/di";
-import { IStoreSync, IStoreSyncKey } from "./StoreSync";
-import { ILocalData, ILocalDataKey } from "./../../common/LocalData";
+import { Entity as LocalEntity } from "../../common/LocalData";
+import { Entity as RemoteEntity } from "../../common/remoteData";
 
 const rootCanvasId = "root";
-
-// Init
-// get app => new empty app
-// new diagram
-// edit diagram
-// enable sync
-// get remote app => merge local and remote => sync app, sync local diagrams
-// edit diagram
-// get remote app => merge local and remote => sync app, sync local diagrams
-// get remote app => merge local and remote => sync app, sync local diagrams
+const defaultApplicationDto: ApplicationDto = { diagramInfos: {} };
+const defaultDiagramDto: DiagramDto = { id: "", name: "", canvases: {} };
 
 export const IStoreKey = diKey<IStore>();
 export interface IStore {
@@ -58,21 +50,21 @@ class Store implements IStore {
   constructor(
     // private localData: ILocalData = di(ILocalDataKey),
     private localFiles: ILocalFiles = di(ILocalFilesKey),
-    private localData: ILocalData = di(ILocalDataKey),
     private storeSync: IStoreSync = di(IStoreSyncKey)
   ) {}
 
   public async initialize(): Promise<void> {
-    let entity = this.localData.tryRead<ApplicationDto>(applicationKey);
-    if (isError(entity)) {
-      // First access, lets store default data for future access
-      const dto: ApplicationDto = { diagramInfos: {} };
-      this.localData.writeBatch([
-        { key: applicationKey, timestamp: Date.now(), synced: 0, value: dto },
-      ]);
-    }
-
     this.storeSync.initialize();
+
+    const requests = Object.keys(this.getApplicationDto().diagramInfos).map(
+      (key) => ({ key: key, onConflict: this.onDiagramConflict })
+    ) as SyncRequest<any>[];
+    requests.push({
+      key: applicationKey,
+      onConflict: this.onApplicationConflict,
+    });
+
+    this.storeSync.triggerSync(requests, false);
   }
 
   public openNewDiagram(): DiagramDto {
@@ -100,12 +92,15 @@ class Store implements IStore {
       { key: id, value: diagramDto },
     ]);
 
+    this.triggerSync(id);
+
     this.currentDiagramId = id;
     return diagramDto;
   }
 
   public async tryOpenDiagram(id: string): Promise<Result<DiagramDto>> {
-    const diagramDto = await this.storeSync.tryReadAsync<DiagramDto>(id);
+    const diagramDto =
+      await this.storeSync.tryReadLocalThenRemoteAsync<DiagramDto>(id);
     if (isError(diagramDto)) {
       return diagramDto;
     }
@@ -118,6 +113,8 @@ class Store implements IStore {
     };
 
     this.storeSync.writeBatch([{ key: applicationKey, value: applicationDto }]);
+
+    this.triggerSync(id);
 
     this.currentDiagramId = id;
     return diagramDto;
@@ -154,6 +151,8 @@ class Store implements IStore {
       { key: applicationKey, value: applicationDto },
       { key: id, value: diagramDto },
     ]);
+
+    this.triggerSync(id);
   }
 
   public getRecentDiagrams(): DiagramInfoDto[] {
@@ -167,16 +166,16 @@ class Store implements IStore {
     return this.getDiagramDto();
   }
 
-  public deleteDiagram(diagramId: string): void {
-    console.log("Delete diagram", diagramId);
-
-    console.log("Delete diagram", diagramId);
+  public deleteDiagram(id: string): void {
+    console.log("Delete diagram", id);
 
     const applicationDto = this.getApplicationDto();
-    delete applicationDto.diagramInfos[diagramId];
+    delete applicationDto.diagramInfos[id];
 
     this.storeSync.writeBatch([{ key: applicationKey, value: applicationDto }]);
-    this.storeSync.removeBatch([diagramId]);
+    this.storeSync.removeBatch([id]);
+
+    this.triggerSync(id);
   }
 
   public setDiagramName(name: string): void {
@@ -198,6 +197,8 @@ class Store implements IStore {
       { key: applicationKey, value: applicationDto },
       { key: id, value: diagramDto },
     ]);
+
+    this.triggerSync(id);
   }
 
   public async loadDiagramFromFile(): Promise<Result<string>> {
@@ -248,11 +249,42 @@ class Store implements IStore {
   }
 
   public getApplicationDto(): ApplicationDto {
-    return this.storeSync.read<ApplicationDto>(applicationKey);
+    return this.storeSync.readLocal<ApplicationDto>(
+      applicationKey,
+      defaultApplicationDto
+    );
+  }
+
+  private triggerSync(diagramId: string) {
+    this.storeSync.triggerSync<any>(
+      [
+        { key: applicationKey, onConflict: this.onApplicationConflict },
+        { key: diagramId, onConflict: this.onDiagramConflict },
+      ],
+      true
+    );
+  }
+
+  private onApplicationConflict(
+    local: LocalEntity<ApplicationDto>,
+    remote: RemoteEntity<ApplicationDto>
+  ): ApplicationDto {
+    console.log("Application conflict");
+    return local.value;
+  }
+  private onDiagramConflict(
+    local: LocalEntity<DiagramDto>,
+    remote: RemoteEntity<DiagramDto>
+  ): DiagramDto {
+    console.log("Diagram conflict");
+    return local.value;
   }
 
   private getDiagramDto(): DiagramDto {
-    return this.storeSync.read<DiagramDto>(this.currentDiagramId);
+    return this.storeSync.readLocal<DiagramDto>(
+      this.currentDiagramId,
+      defaultDiagramDto
+    );
   }
 
   private getUniqueName(): string {
