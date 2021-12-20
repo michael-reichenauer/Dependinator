@@ -25,7 +25,7 @@ export const distance = (
 };
 
 // Async sleep/delay
-export async function delay(time: number) {
+export async function delay(time: number): Promise<void> {
   return new Promise((res) => {
     setTimeout(res, time);
   });

@@ -6,6 +6,7 @@ import { CustomError } from "./CustomError";
 export interface Entity<T> {
   key: string;
   timestamp: number;
+  version: number;
 
   value: T;
 }

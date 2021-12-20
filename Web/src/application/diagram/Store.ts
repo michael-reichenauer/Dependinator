@@ -84,7 +84,6 @@ class Store implements IStore {
       id: id,
       name: name,
       accessed: now,
-      written: now,
     };
 
     this.storeSync.writeBatch<any>([
@@ -139,18 +138,7 @@ class Store implements IStore {
 
     diagramDto.canvases[canvasDto.id] = canvasDto;
 
-    const now = Date.now();
-    const applicationDto = this.getApplicationDto();
-    applicationDto.diagramInfos[id] = {
-      ...applicationDto.diagramInfos[id],
-      accessed: now,
-      written: now,
-    };
-
-    this.storeSync.writeBatch<any>([
-      { key: applicationKey, value: applicationDto },
-      { key: id, value: diagramDto },
-    ]);
+    this.storeSync.writeBatch<any>([{ key: id, value: diagramDto }]);
 
     this.triggerSync(id);
   }
@@ -179,8 +167,6 @@ class Store implements IStore {
   }
 
   public setDiagramName(name: string): void {
-    const now = Date.now();
-
     const diagramDto = this.getDiagramDto();
     const id = diagramDto.id;
     diagramDto.name = name;
@@ -189,8 +175,6 @@ class Store implements IStore {
     applicationDto.diagramInfos[id] = {
       ...applicationDto.diagramInfos[id],
       name: name,
-      accessed: now,
-      written: now,
     };
 
     this.storeSync.writeBatch<any>([
@@ -268,16 +252,17 @@ class Store implements IStore {
   private onApplicationConflict(
     local: LocalEntity<ApplicationDto>,
     remote: RemoteEntity<ApplicationDto>
-  ): ApplicationDto {
-    console.log("Application conflict");
-    return local.value;
+  ): LocalEntity<ApplicationDto> {
+    console.log("Application conflict", local, remote);
+    return local;
   }
+
   private onDiagramConflict(
     local: LocalEntity<DiagramDto>,
     remote: RemoteEntity<DiagramDto>
-  ): DiagramDto {
-    console.log("Diagram conflict");
-    return local.value;
+  ): LocalEntity<DiagramDto> {
+    console.log("Diagram conflict", local, remote);
+    return local;
   }
 
   private getDiagramDto(): DiagramDto {

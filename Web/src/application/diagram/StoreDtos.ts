@@ -20,7 +20,6 @@ export interface DiagramInfoDto {
   id: string;
   name: string;
   accessed: number;
-  written: number;
 }
 
 export interface DiagramDto {

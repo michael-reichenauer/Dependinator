@@ -4,6 +4,7 @@ import { diKey, singleton } from "./di";
 export interface Entity<T> {
   key: string;
   timestamp: number;
+  version: number;
   synced: number;
 
   value: T;
