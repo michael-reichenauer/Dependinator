@@ -2,6 +2,7 @@ import { di, diKey, singleton } from "./di";
 import Result, { isError } from "./Result";
 import { ILocalData, ILocalDataKey } from "./LocalData";
 import { CustomError } from "./CustomError";
+import { delay } from "./utils";
 
 export interface Entity<T> {
   key: string;
@@ -43,12 +44,23 @@ class RemoteData implements IRemoteData {
       synced: 0,
     }));
 
+    await delay(850); // Simulate network delay !!!!!!!!!!!!!
+
     this.api.writeBatch(remoteEntities);
   }
 
   async tryReadBatch<T>(queries: Query[]): Promise<Result<Entity<T>>[]> {
     const remoteKeys = queries.map((query) => this.remoteKey(query.key));
-    const entities = this.api.tryReadBatch<T>(remoteKeys);
+
+    await delay(850); // Simulate network delay !!!!!!!!!!!!!
+
+    const remoteEntities = this.api.tryReadBatch<T>(remoteKeys);
+    const entities = remoteEntities.map((entity) => {
+      if (isError(entity)) {
+        return entity;
+      }
+      return { ...entity, key: this.localKey(entity.key) };
+    });
 
     // skipNotModifiedEntities will be handled by server
     return this.skipNotModifiedEntities(queries, entities);
@@ -69,7 +81,11 @@ class RemoteData implements IRemoteData {
     });
   }
 
-  remoteKey(key: string): string {
-    return prefix + key;
+  remoteKey(localKey: string): string {
+    return prefix + localKey;
+  }
+
+  localKey(remoteKey: string): string {
+    return remoteKey.substring(prefix.length);
   }
 }

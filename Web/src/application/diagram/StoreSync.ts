@@ -38,7 +38,6 @@ export interface IStoreSync {
 @singleton(IStoreSyncKey) // eslint-disable-next-line
 class StoreSync implements IStoreSync {
   private syncPromise = Promise.resolve();
-  private syncStartTime: number = 0;
 
   constructor(
     private localData: ILocalData = di(ILocalDataKey),
@@ -113,14 +112,10 @@ class StoreSync implements IStoreSync {
   }
 
   public triggerSync<T = any>(requests: SyncRequest<T>[]): void {
-    console.log("Trigger sync");
+    // Trigger sync, but ensure syncs are run in sequence awaiting previous sync
     this.syncPromise = this.syncPromise.then(async () => {
-      console.log("Start sync", requests);
-      this.syncStartTime = Date.now();
       await this.syncLocalAndRemote<any>(requests);
-      console.log("Done sync", Date.now() - this.syncStartTime, requests);
     });
-    console.log("Triggered sync");
   }
 
   public async syncLocalAndRemote<T = any>(
@@ -242,14 +237,10 @@ class StoreSync implements IStoreSync {
       });
     });
 
-    console.log("update local", localEntitiesToUpdate);
     // Cache local entities
     this.localData.writeBatch<any>(localEntitiesToUpdate);
 
-    console.log("Upload remote", remoteEntitiesToUpload);
-
     if (!remoteEntitiesToUpload.length) {
-      console.log("Nothing to upload !!");
       return;
     }
 
@@ -265,7 +256,6 @@ class StoreSync implements IStoreSync {
 
     // Stamp existing local items with synced time stamp
     const uploadKeys = remoteEntitiesToUpload.map((entity) => entity.key);
-    console.log("upload keys", uploadKeys);
     const syncedItems: { [key: string]: number } = {};
     remoteEntitiesToUpload.forEach(
       (item) => (syncedItems[item.key] = item.timestamp)
@@ -294,6 +284,7 @@ class StoreSync implements IStoreSync {
   }
 
   private cacheRemoteEntity<T>(remoteEntity: RemoteEntity<T>) {
+    console.log("cache remote entity", remoteEntity);
     const entity = {
       key: remoteEntity.key,
       timestamp: remoteEntity.timestamp,
