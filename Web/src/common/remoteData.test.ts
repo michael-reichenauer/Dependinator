@@ -5,7 +5,9 @@ describe("Test IRemoteData", () => {
   test("Test", async () => {
     const remote: IRemoteData = di(IRemoteDataKey);
 
-    await remote.writeBatch([{ key: "0", value: "aa", timestamp: 10 }]);
+    await remote.writeBatch([
+      { key: "0", value: "aa", timestamp: 10, version: 1 },
+    ]);
 
     // Get value if not specify timestamp
     await expect(remote.tryRead<string>({ key: "0" })).resolves.toHaveProperty(

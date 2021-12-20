@@ -10,6 +10,7 @@ import {
   CanvasDto,
   DiagramDto,
   DiagramInfoDto,
+  DiagramInfoDtos,
   FileDto,
 } from "./StoreDtos";
 import { Entity as LocalEntity } from "../../common/LocalData";
@@ -254,7 +255,46 @@ class Store implements IStore {
     remote: RemoteEntity<ApplicationDto>
   ): LocalEntity<ApplicationDto> {
     console.log("Application conflict", local, remote);
-    return local;
+
+    const mergeDiagramInfos = (
+      newerDiagrams: DiagramInfoDtos,
+      olderDiagrams: DiagramInfoDtos
+    ): DiagramInfoDtos => {
+      let mergedDiagrams = { ...olderDiagrams, ...newerDiagrams };
+      Object.keys(newerDiagrams).forEach((key) => {
+        if (!(key in newerDiagrams)) {
+          delete mergedDiagrams[key];
+        }
+      });
+      return mergedDiagrams;
+    };
+
+    if (local.version >= remote.version) {
+      // Local entity has more edits
+      const applicationDto: ApplicationDto = {
+        diagramInfos: mergeDiagramInfos(
+          local.value.diagramInfos,
+          remote.value.diagramInfos
+        ),
+      };
+      return { ...local, value: applicationDto };
+    }
+
+    // Remote entity since that has more edits
+    const applicationDto: ApplicationDto = {
+      diagramInfos: mergeDiagramInfos(
+        remote.value.diagramInfos,
+        local.value.diagramInfos
+      ),
+    };
+
+    return {
+      key: remote.key,
+      timestamp: remote.timestamp,
+      version: remote.version,
+      synced: remote.timestamp,
+      value: applicationDto,
+    };
   }
 
   private onDiagramConflict(
@@ -262,7 +302,19 @@ class Store implements IStore {
     remote: RemoteEntity<DiagramDto>
   ): LocalEntity<DiagramDto> {
     console.log("Diagram conflict", local, remote);
-    return local;
+    if (local.version >= remote.version) {
+      // use local since it has more edits
+      return local;
+    }
+
+    // Use remote entity since that has more edits
+    return {
+      key: remote.key,
+      timestamp: remote.timestamp,
+      version: remote.version,
+      synced: remote.timestamp,
+      value: remote.value,
+    };
   }
 
   private getDiagramDto(): DiagramDto {
