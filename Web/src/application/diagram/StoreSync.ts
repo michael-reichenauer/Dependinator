@@ -1,13 +1,9 @@
-import {
-  ILocalDB,
-  ILocalDBKey,
-  Entity as LocalEntity,
-} from "../../common/LocalDB";
+import { ILocalDB, ILocalDBKey, LocalEntity } from "../../common/LocalDB";
 import {
   IRemoteDB,
   IRemoteDBKey,
   NotModifiedError,
-  Entity as RemoteEntity,
+  RemoteEntity,
 } from "../../common/remoteDB";
 import Result, { isError } from "../../common/Result";
 import { di, diKey, singleton } from "./../../common/di";

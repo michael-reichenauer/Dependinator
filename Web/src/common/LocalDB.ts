@@ -1,7 +1,7 @@
 import Result from "./Result";
 import { diKey, singleton } from "./di";
 
-export interface Entity<T> {
+export interface LocalEntity<T> {
   key: string;
   timestamp: number;
   version: number;
@@ -12,10 +12,10 @@ export interface Entity<T> {
 
 export const ILocalDBKey = diKey<ILocalDB>();
 export interface ILocalDB {
-  tryRead<T>(key: string): Result<Entity<T>>;
-  tryReadBatch<T>(keys: string[]): Result<Entity<T>>[];
-  write<T>(entity: Entity<T>): void;
-  writeBatch<T>(entities: Entity<T>[]): void;
+  tryRead<T>(key: string): Result<LocalEntity<T>>;
+  tryReadBatch<T>(keys: string[]): Result<LocalEntity<T>>[];
+  write<T>(entity: LocalEntity<T>): void;
+  writeBatch<T>(entities: LocalEntity<T>[]): void;
   remove(key: string): void;
   removeBatch(keys: string[]): void;
   keys(): string[];
@@ -25,11 +25,11 @@ export interface ILocalDB {
 
 @singleton(ILocalDBKey)
 export default class LocalDB implements ILocalDB {
-  public tryRead<T>(key: string): Result<Entity<T>> {
+  public tryRead<T>(key: string): Result<LocalEntity<T>> {
     return this.tryReadBatch<T>([key])[0];
   }
 
-  public tryReadBatch<T>(keys: string[]): Result<Entity<T>>[] {
+  public tryReadBatch<T>(keys: string[]): Result<LocalEntity<T>>[] {
     return keys.map((key: string) => {
       let entityText = localStorage.getItem(key);
       if (entityText == null) {
@@ -37,15 +37,15 @@ export default class LocalDB implements ILocalDB {
       }
       // console.log(`Read key: ${key}, ${text.length} bytes`);
       const entity: any = JSON.parse(entityText);
-      return entity as Entity<T>;
+      return entity as LocalEntity<T>;
     });
   }
 
-  public write<T>(entity: Entity<T>): void {
+  public write<T>(entity: LocalEntity<T>): void {
     this.writeBatch([entity]);
   }
 
-  public writeBatch<T>(entities: Entity<T>[]): void {
+  public writeBatch<T>(entities: LocalEntity<T>[]): void {
     entities.forEach((entity) => {
       const key = entity.key;
       const entityText = JSON.stringify(entity);

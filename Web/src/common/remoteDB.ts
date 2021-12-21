@@ -4,7 +4,7 @@ import { ILocalDB, ILocalDBKey } from "./LocalDB";
 import { CustomError } from "./CustomError";
 import { delay } from "./utils";
 
-export interface Entity<T> {
+export interface RemoteEntity<T> {
   key: string;
   timestamp: number;
   version: number;
@@ -23,21 +23,21 @@ const prefix = "remote-";
 
 export const IRemoteDBKey = diKey<IRemoteDB>();
 export interface IRemoteDB {
-  writeBatch<T>(entities: Entity<T>[]): Promise<Result<void>>;
-  tryReadBatch<T>(queries: Query[]): Promise<Result<Entity<T>>[]>;
-  tryRead<T>(query: Query): Promise<Result<Entity<T>>>;
+  writeBatch<T>(entities: RemoteEntity<T>[]): Promise<Result<void>>;
+  tryReadBatch<T>(queries: Query[]): Promise<Result<RemoteEntity<T>>[]>;
+  tryRead<T>(query: Query): Promise<Result<RemoteEntity<T>>>;
 }
 
 @singleton(IRemoteDBKey) // eslint-disable-next-line
 class RemoteDB implements IRemoteDB {
   constructor(private api: ILocalDB = di(ILocalDBKey)) {}
 
-  async tryRead<T>(query: Query): Promise<Result<Entity<T>>> {
+  async tryRead<T>(query: Query): Promise<Result<RemoteEntity<T>>> {
     const responses = await this.tryReadBatch<T>([query]);
     return responses[0];
   }
 
-  async writeBatch<T>(entities: Entity<T>[]): Promise<Result<void>> {
+  async writeBatch<T>(entities: RemoteEntity<T>[]): Promise<Result<void>> {
     const remoteEntities = entities.map((entity) => ({
       ...entity,
       key: this.remoteKey(entity.key),
@@ -49,7 +49,7 @@ class RemoteDB implements IRemoteDB {
     this.api.writeBatch(remoteEntities);
   }
 
-  async tryReadBatch<T>(queries: Query[]): Promise<Result<Entity<T>>[]> {
+  async tryReadBatch<T>(queries: Query[]): Promise<Result<RemoteEntity<T>>[]> {
     const remoteKeys = queries.map((query) => this.remoteKey(query.key));
 
     await delay(850); // Simulate network delay !!!!!!!!!!!!!
@@ -66,7 +66,10 @@ class RemoteDB implements IRemoteDB {
     return this.skipNotModifiedEntities(queries, entities);
   }
 
-  skipNotModifiedEntities<T>(queries: Query[], entities: Result<Entity<T>>[]) {
+  skipNotModifiedEntities<T>(
+    queries: Query[],
+    entities: Result<RemoteEntity<T>>[]
+  ) {
     // If a query specifies IfNoneMatch, then matching existing entities are replaced by NotModifiedError
     return entities.map((entity, i) => {
       if (

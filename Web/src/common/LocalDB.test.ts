@@ -1,4 +1,4 @@
-import LocalDB, { Entity, ILocalDB } from "./LocalDB";
+import LocalDB, { LocalEntity, ILocalDB } from "./LocalDB";
 import { expectValue, isError, orDefault } from "./Result";
 
 describe("Test LocalData", () => {
