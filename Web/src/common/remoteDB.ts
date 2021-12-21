@@ -1,6 +1,6 @@
 import { di, diKey, singleton } from "./di";
 import Result, { isError } from "./Result";
-import { ILocalData, ILocalDataKey } from "./LocalData";
+import { ILocalDB, ILocalDBKey } from "./LocalDB";
 import { CustomError } from "./CustomError";
 import { delay } from "./utils";
 
@@ -21,16 +21,16 @@ export class NotModifiedError extends CustomError {}
 
 const prefix = "remote-";
 
-export const IRemoteDataKey = diKey<IRemoteData>();
-export interface IRemoteData {
+export const IRemoteDBKey = diKey<IRemoteDB>();
+export interface IRemoteDB {
   writeBatch<T>(entities: Entity<T>[]): Promise<Result<void>>;
   tryReadBatch<T>(queries: Query[]): Promise<Result<Entity<T>>[]>;
   tryRead<T>(query: Query): Promise<Result<Entity<T>>>;
 }
 
-@singleton(IRemoteDataKey) // eslint-disable-next-line
-class RemoteData implements IRemoteData {
-  constructor(private api: ILocalData = di(ILocalDataKey)) {}
+@singleton(IRemoteDBKey) // eslint-disable-next-line
+class RemoteDB implements IRemoteDB {
+  constructor(private api: ILocalDB = di(ILocalDBKey)) {}
 
   async tryRead<T>(query: Query): Promise<Result<Entity<T>>> {
     const responses = await this.tryReadBatch<T>([query]);

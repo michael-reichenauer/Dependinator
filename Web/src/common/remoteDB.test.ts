@@ -1,9 +1,9 @@
 import { di } from "./di";
-import { IRemoteData, IRemoteDataKey, NotModifiedError } from "./remoteData";
+import { IRemoteDB, IRemoteDBKey, NotModifiedError } from "./remoteDB";
 
 describe("Test IRemoteData", () => {
   test("Test", async () => {
-    const remote: IRemoteData = di(IRemoteDataKey);
+    const remote: IRemoteDB = di(IRemoteDBKey);
 
     await remote.writeBatch([
       { key: "0", value: "aa", timestamp: 10, version: 1 },

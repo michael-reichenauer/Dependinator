@@ -1,18 +1,18 @@
-import LocalData, { Entity, ILocalData } from "./LocalData";
+import LocalDB, { Entity, ILocalDB } from "./LocalDB";
 import { expectValue, isError, orDefault } from "./Result";
 
 describe("Test LocalData", () => {
   test("Test", () => {
-    const local: ILocalData = new LocalData();
+    const local: ILocalDB = new LocalDB();
     expect(local.count()).toEqual(0);
 
-    local.write({ key: "0", timestamp: 0, synced: 0, value: "aa" });
+    local.write({ key: "0", timestamp: 0, synced: 0, version: 0, value: "aa" });
     expect(local.count()).toEqual(1);
     expect(local.keys()).toEqual(["0"]);
     expect(expectValue(local.tryRead<string>("0")).value).toEqual("aa");
     expect(isError(local.tryRead<string>("1"))).toEqual(true);
 
-    local.write({ key: "1", timestamp: 0, synced: 0, value: "bb" });
+    local.write({ key: "1", timestamp: 0, synced: 0, version: 0, value: "bb" });
     expect(local.count()).toEqual(2);
     expect(local.keys()).toEqual(["0", "1"]);
     expect(expectValue(local.tryRead<string>("0")).value).toEqual("aa");
@@ -29,7 +29,7 @@ describe("Test LocalData", () => {
     expect(isError(local.tryRead<string>("0"))).toEqual(true);
     expect(expectValue(local.tryRead<string>("1")).value).toEqual("bb");
 
-    local.write({ key: "0", timestamp: 0, synced: 0, value: "aa" });
+    local.write({ key: "0", timestamp: 0, synced: 0, version: 0, value: "aa" });
     expect(local.count()).toEqual(2);
     expect(local.keys().sort()).toEqual(["0", "1"]);
 
@@ -38,8 +38,8 @@ describe("Test LocalData", () => {
     expect(isError(local.tryRead<string>("0"))).toEqual(true);
     expect(isError(local.tryRead<string>("1"))).toEqual(true);
 
-    local.write({ key: "0", timestamp: 0, synced: 0, value: "aa" });
-    local.write({ key: "1", timestamp: 0, synced: 0, value: "bb" });
+    local.write({ key: "0", timestamp: 0, synced: 0, version: 0, value: "aa" });
+    local.write({ key: "1", timestamp: 0, synced: 0, version: 0, value: "bb" });
     expect(local.count()).toEqual(2);
 
     local.clear();

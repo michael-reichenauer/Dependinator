@@ -1,14 +1,14 @@
 import {
-  ILocalData,
-  ILocalDataKey,
+  ILocalDB,
+  ILocalDBKey,
   Entity as LocalEntity,
-} from "../../common/LocalData";
+} from "../../common/LocalDB";
 import {
-  IRemoteData,
-  IRemoteDataKey,
+  IRemoteDB,
+  IRemoteDBKey,
   NotModifiedError,
   Entity as RemoteEntity,
-} from "../../common/remoteData";
+} from "../../common/remoteDB";
 import Result, { isError } from "../../common/Result";
 import { di, diKey, singleton } from "./../../common/di";
 
@@ -40,8 +40,8 @@ class StoreSync implements IStoreSync {
   private syncPromise = Promise.resolve();
 
   constructor(
-    private localData: ILocalData = di(ILocalDataKey),
-    private remoteData: IRemoteData = di(IRemoteDataKey)
+    private localData: ILocalDB = di(ILocalDBKey),
+    private remoteData: IRemoteDB = di(IRemoteDBKey)
   ) {}
 
   initialize(): void {}

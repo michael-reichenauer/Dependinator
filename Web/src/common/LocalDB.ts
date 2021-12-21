@@ -10,8 +10,8 @@ export interface Entity<T> {
   value: T;
 }
 
-export const ILocalDataKey = diKey<ILocalData>();
-export interface ILocalData {
+export const ILocalDBKey = diKey<ILocalDB>();
+export interface ILocalDB {
   tryRead<T>(key: string): Result<Entity<T>>;
   tryReadBatch<T>(keys: string[]): Result<Entity<T>>[];
   write<T>(entity: Entity<T>): void;
@@ -23,8 +23,8 @@ export interface ILocalData {
   clear(): void;
 }
 
-@singleton(ILocalDataKey)
-export default class LocalData implements ILocalData {
+@singleton(ILocalDBKey)
+export default class LocalDB implements ILocalDB {
   public tryRead<T>(key: string): Result<Entity<T>> {
     return this.tryReadBatch<T>([key])[0];
   }

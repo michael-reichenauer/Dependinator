@@ -13,8 +13,8 @@ import {
   DiagramInfoDtos,
   FileDto,
 } from "./StoreDtos";
-import { Entity as LocalEntity } from "../../common/LocalData";
-import { Entity as RemoteEntity } from "../../common/remoteData";
+import { Entity as LocalEntity } from "../../common/LocalDB";
+import { Entity as RemoteEntity } from "../../common/remoteDB";
 
 const rootCanvasId = "root";
 const defaultApplicationDto: ApplicationDto = { diagramInfos: {} };
