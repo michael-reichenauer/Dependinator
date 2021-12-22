@@ -3,11 +3,7 @@ import Result, { isError } from "../../common/Result";
 import assert from "assert";
 import { di, singleton, diKey } from "../../common/di";
 import { ILocalFiles, ILocalFilesKey } from "../../common/LocalFiles";
-import {
-  IStoreSync,
-  IStoreSyncKey,
-  SyncRequest,
-} from "../../common/db/StoreSync";
+import { IStoreDB, IStoreDBKey, SyncRequest } from "../../common/db/StoreDB";
 import {
   ApplicationDto,
   applicationKey,
@@ -48,18 +44,18 @@ export interface IStore {
   saveAllDiagramsToFile(): Promise<void>;
 }
 
-@singleton(IStoreKey) // eslint-disable-next-line
-class Store implements IStore {
+@singleton(IStoreKey)
+export class Store implements IStore {
   private currentDiagramId: string = "";
 
   constructor(
     // private localData: ILocalData = di(ILocalDataKey),
     private localFiles: ILocalFiles = di(ILocalFilesKey),
-    private storeSync: IStoreSync = di(IStoreSyncKey)
+    private db: IStoreDB = di(IStoreDBKey)
   ) {}
 
   public async initialize(): Promise<void> {
-    this.storeSync.initialize();
+    this.db.initialize();
 
     const requests = Object.keys(this.getApplicationDto().diagramInfos).map(
       (key) => ({ key: key, onConflict: this.onDiagramConflict })
@@ -69,7 +65,7 @@ class Store implements IStore {
       onConflict: this.onApplicationConflict,
     });
 
-    this.storeSync.triggerSync(requests, false);
+    this.db.triggerSync(requests, false);
   }
 
   public openNewDiagram(): DiagramDto {
@@ -91,7 +87,7 @@ class Store implements IStore {
       accessed: now,
     };
 
-    this.storeSync.writeBatch([
+    this.db.writeBatch([
       { key: applicationKey, value: applicationDto },
       { key: id, value: diagramDto },
     ]);
@@ -103,8 +99,9 @@ class Store implements IStore {
   }
 
   public async tryOpenDiagram(id: string): Promise<Result<DiagramDto>> {
-    const diagramDto =
-      await this.storeSync.tryReadLocalThenRemoteAsync<DiagramDto>(id);
+    const diagramDto = await this.db.tryReadLocalThenRemoteAsync<DiagramDto>(
+      id
+    );
     if (isError(diagramDto)) {
       return diagramDto;
     }
@@ -116,7 +113,7 @@ class Store implements IStore {
       accessed: Date.now(),
     };
 
-    this.storeSync.writeBatch([{ key: applicationKey, value: applicationDto }]);
+    this.db.writeBatch([{ key: applicationKey, value: applicationDto }]);
 
     this.triggerSync(id);
 
@@ -143,7 +140,7 @@ class Store implements IStore {
 
     diagramDto.canvases[canvasDto.id] = canvasDto;
 
-    this.storeSync.writeBatch([{ key: id, value: diagramDto }]);
+    this.db.writeBatch([{ key: id, value: diagramDto }]);
 
     this.triggerSync(id);
   }
@@ -165,8 +162,8 @@ class Store implements IStore {
     const applicationDto = this.getApplicationDto();
     delete applicationDto.diagramInfos[id];
 
-    this.storeSync.writeBatch([{ key: applicationKey, value: applicationDto }]);
-    this.storeSync.removeBatch([id]);
+    this.db.writeBatch([{ key: applicationKey, value: applicationDto }]);
+    this.db.removeBatch([id]);
 
     this.triggerSync(id);
   }
@@ -182,7 +179,7 @@ class Store implements IStore {
       name: name,
     };
 
-    this.storeSync.writeBatch([
+    this.db.writeBatch([
       { key: applicationKey, value: applicationDto },
       { key: id, value: diagramDto },
     ]);
@@ -238,14 +235,14 @@ class Store implements IStore {
   }
 
   public getApplicationDto(): ApplicationDto {
-    return this.storeSync.readLocal<ApplicationDto>(
+    return this.db.readLocal<ApplicationDto>(
       applicationKey,
       defaultApplicationDto
     );
   }
 
   private triggerSync(diagramId: string) {
-    this.storeSync.triggerSync(
+    this.db.triggerSync(
       [
         { key: applicationKey, onConflict: this.onApplicationConflict },
         { key: diagramId, onConflict: this.onDiagramConflict },
@@ -324,7 +321,7 @@ class Store implements IStore {
   }
 
   private getDiagramDto(): DiagramDto {
-    return this.storeSync.readLocal<DiagramDto>(
+    return this.db.readLocal<DiagramDto>(
       this.currentDiagramId,
       defaultDiagramDto
     );

@@ -18,8 +18,8 @@ export interface SyncRequest {
   onConflict: (local: LocalEntity, remote: RemoteEntity) => LocalEntity;
 }
 
-export const IStoreSyncKey = diKey<IStoreSync>();
-export interface IStoreSync {
+export const IStoreDBKey = diKey<IStoreDB>();
+export interface IStoreDB {
   initialize(): void;
   readLocal<T>(key: string, defaultValue: T): T;
   tryReadLocalThenRemoteAsync<T>(key: string): Promise<Result<T>>;
@@ -28,8 +28,8 @@ export interface IStoreSync {
   triggerSync(requests: SyncRequest[], syncNonLocal: boolean): void;
 }
 
-@singleton(IStoreSyncKey)
-export class StoreSync implements IStoreSync {
+@singleton(IStoreDBKey)
+export class StoreDB implements IStoreDB {
   private syncPromise = Promise.resolve();
 
   constructor(
