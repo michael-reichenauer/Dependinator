@@ -1,6 +1,6 @@
-import { di } from "./di";
+import { di } from "../di";
 import { IRemoteDB, NotModifiedError, RemoteDB } from "./remoteDB";
-import { ILocalStoreKey } from "./LocalStore";
+import { ILocalStoreKey } from "../LocalStore";
 
 describe("Test IRemoteData", () => {
   test("Test", async () => {

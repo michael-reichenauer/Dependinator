@@ -1,5 +1,5 @@
 import { ILocalDB, LocalDB } from "./LocalDB";
-import { expectValue, isError } from "./Result";
+import { expectValue, isError } from "../Result";
 
 describe("Test LocalData", () => {
   test("Test", () => {

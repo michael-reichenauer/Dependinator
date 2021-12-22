@@ -3,7 +3,11 @@ import Result, { isError } from "../../common/Result";
 import assert from "assert";
 import { di, singleton, diKey } from "../../common/di";
 import { ILocalFiles, ILocalFilesKey } from "../../common/LocalFiles";
-import { IStoreSync, IStoreSyncKey, SyncRequest } from "./StoreSync";
+import {
+  IStoreSync,
+  IStoreSyncKey,
+  SyncRequest,
+} from "../../common/db/StoreSync";
 import {
   ApplicationDto,
   applicationKey,
@@ -13,8 +17,8 @@ import {
   DiagramInfoDtos,
   FileDto,
 } from "./StoreDtos";
-import { LocalEntity } from "../../common/LocalDB";
-import { RemoteEntity } from "../../common/remoteDB";
+import { LocalEntity } from "../../common/db/LocalDB";
+import { RemoteEntity } from "../../common/db/remoteDB";
 
 const rootCanvasId = "root";
 const defaultApplicationDto: ApplicationDto = { diagramInfos: {} };

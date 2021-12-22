@@ -1,12 +1,12 @@
-import { ILocalDB, ILocalDBKey, LocalEntity } from "../../common/LocalDB";
+import { ILocalDB, ILocalDBKey, LocalEntity } from "./LocalDB";
 import {
   IRemoteDB,
   IRemoteDBKey,
   NotModifiedError,
   RemoteEntity,
-} from "../../common/remoteDB";
-import Result, { isError } from "../../common/Result";
-import { di, diKey, singleton } from "./../../common/di";
+} from "./remoteDB";
+import Result, { isError } from "../Result";
+import { di, diKey, singleton } from "../di";
 
 export interface Entity {
   key: string;
@@ -28,8 +28,8 @@ export interface IStoreSync {
   triggerSync(requests: SyncRequest[], syncNonLocal: boolean): void;
 }
 
-@singleton(IStoreSyncKey) // eslint-disable-next-line
-class StoreSync implements IStoreSync {
+@singleton(IStoreSyncKey)
+export class StoreSync implements IStoreSync {
   private syncPromise = Promise.resolve();
 
   constructor(

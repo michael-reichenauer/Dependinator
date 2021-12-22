@@ -1,7 +1,7 @@
-import Result, { isError, orDefault } from "./Result";
-import { di, diKey, singleton } from "./di";
-import { ILocalStore, ILocalStoreKey } from "./LocalStore";
-import { CustomError } from "./CustomError";
+import Result, { isError, orDefault } from "../Result";
+import { di, diKey, singleton } from "../di";
+import { ILocalStore, ILocalStoreKey } from "../LocalStore";
+import { CustomError } from "../CustomError";
 
 export interface LocalEntity {
   key: string;

@@ -1,8 +1,8 @@
-import { di, diKey, singleton } from "./di";
-import Result, { isError } from "./Result";
-import { CustomError } from "./CustomError";
-import { delay } from "./utils";
-import { ILocalStore, ILocalStoreKey } from "./LocalStore";
+import { di, diKey, singleton } from "../di";
+import Result, { isError } from "../Result";
+import { CustomError } from "../CustomError";
+import { delay } from "../utils";
+import { ILocalStore, ILocalStoreKey } from "../LocalStore";
 
 export interface RemoteEntity {
   key: string;
