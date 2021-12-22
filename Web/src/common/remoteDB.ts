@@ -1,15 +1,15 @@
 import { di, diKey, singleton } from "./di";
 import Result, { isError } from "./Result";
-import { ILocalDB, ILocalDBKey } from "./LocalDB";
 import { CustomError } from "./CustomError";
 import { delay } from "./utils";
+import { ILocalStore, ILocalStoreKey } from "./LocalStore";
 
-export interface RemoteEntity<T> {
+export interface RemoteEntity {
   key: string;
   timestamp: number;
   version: number;
 
-  value: T;
+  value: any;
 }
 
 export interface Query {
@@ -23,53 +23,55 @@ const prefix = "remote-";
 
 export const IRemoteDBKey = diKey<IRemoteDB>();
 export interface IRemoteDB {
-  writeBatch<T>(entities: RemoteEntity<T>[]): Promise<Result<void>>;
-  tryReadBatch<T>(queries: Query[]): Promise<Result<RemoteEntity<T>>[]>;
-  tryRead<T>(query: Query): Promise<Result<RemoteEntity<T>>>;
+  tryRead(query: Query): Promise<Result<RemoteEntity>>;
+  tryReadBatch(queries: Query[]): Promise<Result<RemoteEntity>[]>;
+  writeBatch(entities: RemoteEntity[]): Promise<Result<void>>;
+  removeBatch(keys: string[]): Promise<Result<void>>;
 }
 
 @singleton(IRemoteDBKey) // eslint-disable-next-line
-class RemoteDB implements IRemoteDB {
-  constructor(private api: ILocalDB = di(ILocalDBKey)) {}
+export class RemoteDB implements IRemoteDB {
+  constructor(
+    private api: ILocalStore = di(ILocalStoreKey),
+    private testDelay = 850
+  ) {}
 
-  async tryRead<T>(query: Query): Promise<Result<RemoteEntity<T>>> {
-    const responses = await this.tryReadBatch<T>([query]);
-    return responses[0];
+  public async tryRead(query: Query): Promise<Result<RemoteEntity>> {
+    const entities = await this.tryReadBatch([query]);
+    return entities[0];
   }
 
-  async writeBatch<T>(entities: RemoteEntity<T>[]): Promise<Result<void>> {
+  public async writeBatch(entities: RemoteEntity[]): Promise<Result<void>> {
     const remoteEntities = entities.map((entity) => ({
-      ...entity,
       key: this.remoteKey(entity.key),
-      synced: 0,
+      value: entity,
     }));
 
-    await delay(850); // Simulate network delay !!!!!!!!!!!!!
+    await delay(this.testDelay); // Simulate network delay !!!!!!!!!!!!!
 
     this.api.writeBatch(remoteEntities);
   }
 
-  async tryReadBatch<T>(queries: Query[]): Promise<Result<RemoteEntity<T>>[]> {
+  public async tryReadBatch(queries: Query[]): Promise<Result<RemoteEntity>[]> {
     const remoteKeys = queries.map((query) => this.remoteKey(query.key));
 
-    await delay(850); // Simulate network delay !!!!!!!!!!!!!
+    await delay(this.testDelay); // Simulate network delay !!!!!!!!!!!!!
 
-    const remoteEntities = this.api.tryReadBatch<T>(remoteKeys);
-    const entities = remoteEntities.map((entity) => {
-      if (isError(entity)) {
-        return entity;
-      }
-      return { ...entity, key: this.localKey(entity.key) };
-    });
+    const remoteEntities = this.api.tryReadBatch(remoteKeys);
 
-    // skipNotModifiedEntities will be handled by server
-    return this.skipNotModifiedEntities(queries, entities);
+    // skipNotModifiedEntities will be handled by server !!!
+    return this.skipNotModifiedEntities(queries, remoteEntities);
   }
 
-  skipNotModifiedEntities<T>(
-    queries: Query[],
-    entities: Result<RemoteEntity<T>>[]
-  ) {
+  public async removeBatch(keys: string[]): Promise<Result<void>> {
+    const remoteKeys = keys.map((key) => this.remoteKey(key));
+
+    await delay(this.testDelay); // Simulate network delay !!!!!!!!!!!!!
+
+    this.api.removeBatch(remoteKeys);
+  }
+
+  skipNotModifiedEntities(queries: Query[], entities: Result<RemoteEntity>[]) {
     // If a query specifies IfNoneMatch, then matching existing entities are replaced by NotModifiedError
     return entities.map((entity, i) => {
       if (

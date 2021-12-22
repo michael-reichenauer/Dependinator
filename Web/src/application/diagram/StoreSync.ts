@@ -8,17 +8,14 @@ import {
 import Result, { isError } from "../../common/Result";
 import { di, diKey, singleton } from "./../../common/di";
 
-export interface Entity<T> {
+export interface Entity {
   key: string;
-  value: T;
+  value: any;
 }
 
-export interface SyncRequest<T> {
+export interface SyncRequest {
   key: string;
-  onConflict: (
-    local: LocalEntity<T>,
-    remote: RemoteEntity<T>
-  ) => LocalEntity<T>;
+  onConflict: (local: LocalEntity, remote: RemoteEntity) => LocalEntity;
 }
 
 export const IStoreSyncKey = diKey<IStoreSync>();
@@ -26,9 +23,9 @@ export interface IStoreSync {
   initialize(): void;
   readLocal<T>(key: string, defaultValue: T): T;
   tryReadLocalThenRemoteAsync<T>(key: string): Promise<Result<T>>;
-  writeBatch<T>(entities: Entity<T>[]): void;
+  writeBatch(entities: Entity[]): void;
   removeBatch(keys: string[]): void;
-  triggerSync<T = any>(requests: SyncRequest<T>[], syncNonLocal: boolean): void;
+  triggerSync(requests: SyncRequest[], syncNonLocal: boolean): void;
 }
 
 @singleton(IStoreSyncKey) // eslint-disable-next-line
@@ -36,28 +33,28 @@ class StoreSync implements IStoreSync {
   private syncPromise = Promise.resolve();
 
   constructor(
-    private localData: ILocalDB = di(ILocalDBKey),
-    private remoteData: IRemoteDB = di(IRemoteDBKey)
+    private localDB: ILocalDB = di(ILocalDBKey),
+    private remoteDB: IRemoteDB = di(IRemoteDBKey)
   ) {}
 
   initialize(): void {}
 
   public readLocal<T>(key: string, defaultValue: T): T {
-    const localEntity = this.localData.tryRead<T>(key);
-    if (isError(localEntity)) {
+    const localValue = this.localDB.tryReadValue<T>(key);
+    if (isError(localValue)) {
       // Entity not cached locally, lets cache default value
       this.cacheLocalValueOnly(key, defaultValue);
       return defaultValue;
     }
 
-    return localEntity.value;
+    return localValue;
   }
 
   public async tryReadLocalThenRemoteAsync<T>(key: string): Promise<Result<T>> {
-    const localEntity = this.localData.tryRead<T>(key);
-    if (isError(localEntity)) {
+    const localValue = this.localDB.tryReadValue<T>(key);
+    if (isError(localValue)) {
       // Entity not cached locally, lets try get from remote location
-      const remoteEntity = await this.remoteData.tryRead<T>({ key: key });
+      const remoteEntity = await this.remoteDB.tryRead({ key: key });
       if (isError(remoteEntity)) {
         // If network error, signal !!!!!!!!
         return new RangeError(`id ${key} not found,` + remoteEntity);
@@ -68,12 +65,12 @@ class StoreSync implements IStoreSync {
       return remoteEntity.value;
     }
 
-    return localEntity.value;
+    return localValue;
   }
 
-  public writeBatch<T>(entities: Entity<T>[]): void {
+  public writeBatch(entities: Entity[]): void {
     const keys = entities.map((entity) => entity.key);
-    const localEntities = this.localData.tryReadBatch(keys);
+    const localEntities = this.localDB.tryReadBatch(keys);
 
     const updatedLocalEntities = entities.map((entity, index) => {
       const localEntity = localEntities[index];
@@ -84,6 +81,7 @@ class StoreSync implements IStoreSync {
           timestamp: Date.now(),
           version: 1,
           synced: 0,
+          isRemoved: false,
           value: entity.value,
         };
       }
@@ -94,33 +92,37 @@ class StoreSync implements IStoreSync {
         timestamp: Date.now(),
         version: localEntity.version + 1,
         synced: localEntity.synced,
+        isRemoved: false,
         value: entity.value,
       };
     });
 
     // Cache data locally
     console.log("Write local", updatedLocalEntities);
-    this.localData.writeBatch(updatedLocalEntities);
+    this.localDB.writeBatch(updatedLocalEntities);
   }
 
   public removeBatch(keys: string[]): void {
-    this.localData.removeBatch(keys);
+    this.localDB.removeBatch(keys, false);
+    const requests = keys.map((key) => ({
+      key: key,
+      onConflict: (): any => {},
+    }));
+    this.triggerSync(requests);
   }
 
-  public triggerSync<T = any>(requests: SyncRequest<T>[]): void {
+  public triggerSync(requests: SyncRequest[]): void {
     // Trigger sync, but ensure syncs are run in sequence awaiting previous sync
     this.syncPromise = this.syncPromise.then(async () => {
-      await this.syncLocalAndRemote<any>(requests);
+      await this.syncLocalAndRemote(requests);
     });
   }
 
-  public async syncLocalAndRemote<T = any>(
-    requests: SyncRequest<T>[]
-  ): Promise<void> {
+  public async syncLocalAndRemote(requests: SyncRequest[]): Promise<void> {
     console.log("syncLocalAndRemote", requests);
 
     const keys = requests.map((request) => request.key);
-    let preLocalEntities = this.localData.tryReadBatch<T>(keys);
+    let preLocalEntities = this.localDB.tryReadBatch(keys);
 
     const queries = preLocalEntities
       .filter((entity) => !isError(entity))
@@ -139,14 +141,12 @@ class StoreSync implements IStoreSync {
       return;
     }
 
-    const currentRemoteEntities = await this.remoteData.tryReadBatch<T>(
-      queries
-    );
-    const currentLocalEntities = this.localData.tryReadBatch<T>(keys);
+    const currentRemoteEntities = await this.remoteDB.tryReadBatch(queries);
+    const currentLocalEntities = this.localDB.tryReadBatch(keys);
 
-    const remoteToLocalEntities: RemoteEntity<T>[] = [];
-    const localToRemoteEntities: LocalEntity<T>[] = [];
-    const mergedEntities: LocalEntity<T>[] = [];
+    const remoteToLocalEntities: RemoteEntity[] = [];
+    const localToRemoteEntities: LocalEntity[] = [];
+    const mergedEntities: LocalEntity[] = [];
 
     currentRemoteEntities.forEach((remoteEntity, index) => {
       const currentLocalEntity = currentLocalEntities[index];
@@ -195,18 +195,19 @@ class StoreSync implements IStoreSync {
     });
 
     // Convert remote entity to LocalEntity with synced=<remote timestamp>
-    const localEntitiesToUpdate: LocalEntity<T>[] = remoteToLocalEntities.map(
+    const localEntitiesToUpdate: LocalEntity[] = remoteToLocalEntities.map(
       (remoteEntity) => ({
         key: remoteEntity.key,
         timestamp: remoteEntity.timestamp,
         version: remoteEntity.version,
         synced: remoteEntity.timestamp,
+        isRemoved: false,
         value: remoteEntity.value,
       })
     );
 
     // Convert local entity to remote entity to be uploaded
-    const remoteEntitiesToUpload: RemoteEntity<T>[] = localToRemoteEntities.map(
+    const remoteEntitiesToUpload: RemoteEntity[] = localToRemoteEntities.map(
       (localEntity) => ({
         key: localEntity.key,
         timestamp: localEntity.timestamp,
@@ -223,6 +224,7 @@ class StoreSync implements IStoreSync {
         timestamp: now,
         version: mergedEntity.version + 1,
         synced: mergedEntity.synced,
+        isRemoved: false,
         value: mergedEntity.value,
       });
       remoteEntitiesToUpload.push({
@@ -234,19 +236,28 @@ class StoreSync implements IStoreSync {
     });
 
     // Cache local entities
-    this.localData.writeBatch<any>(localEntitiesToUpdate);
+    this.localDB.writeBatch(localEntitiesToUpdate);
 
+    await this.uploadEntities(remoteEntitiesToUpload);
+
+    await this.syncRemovedEntities();
+  }
+
+  private async uploadEntities(
+    remoteEntitiesToUpload: RemoteEntity[]
+  ): Promise<void> {
     if (!remoteEntitiesToUpload.length) {
+      // Nothing to upload
       return;
     }
 
-    const uploadResponse = await this.remoteData.writeBatch<any>(
+    const uploadResponse = await this.remoteDB.writeBatch(
       remoteEntitiesToUpload
     );
 
     if (isError(uploadResponse)) {
       // Signal sync error !!!!!!!
-      console.warn("Sync error while writing");
+      console.warn("Sync error while writing entities");
       return;
     }
 
@@ -257,37 +268,49 @@ class StoreSync implements IStoreSync {
       (item) => (syncedItems[item.key] = item.timestamp)
     );
 
-    const postLocalEntities = this.localData
-      .tryReadBatch<T>(uploadKeys)
-      .filter((r) => !isError(r)) as LocalEntity<T>[];
+    const postLocalEntities = this.localDB
+      .tryReadBatch(uploadKeys)
+      .filter((r) => !isError(r)) as LocalEntity[];
 
     const syncedEntities = postLocalEntities.map((entity) => ({
       ...entity,
       synced: syncedItems[entity.key],
     }));
-    this.localData.writeBatch(syncedEntities);
+    this.localDB.writeBatch(syncedEntities);
+  }
+
+  private async syncRemovedEntities() {
+    const removedKeys = this.localDB.getRemovedKeys();
+    const response = await this.remoteDB.removeBatch(removedKeys);
+    if (isError(response)) {
+      console.warn("Sync error while removing entities");
+      return;
+    }
+
+    this.localDB.confirmRemoved(removedKeys);
   }
 
   private cacheLocalValueOnly<T>(key: string, value: T) {
-    const entity = {
+    const entity: LocalEntity = {
       key: key,
       timestamp: Date.now(),
       version: 1,
       synced: 0,
+      isRemoved: false,
       value: value,
     };
-    this.localData.write(entity);
+    this.localDB.write(entity);
   }
 
-  private cacheRemoteEntity<T>(remoteEntity: RemoteEntity<T>) {
-    console.log("cache remote entity", remoteEntity);
+  private cacheRemoteEntity(remoteEntity: RemoteEntity) {
     const entity = {
       key: remoteEntity.key,
       timestamp: remoteEntity.timestamp,
       version: remoteEntity.version,
       synced: remoteEntity.timestamp,
+      isRemoved: false,
       value: remoteEntity.value,
     };
-    this.localData.write(entity);
+    this.localDB.write(entity);
   }
 }

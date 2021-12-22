@@ -59,7 +59,7 @@ class Store implements IStore {
 
     const requests = Object.keys(this.getApplicationDto().diagramInfos).map(
       (key) => ({ key: key, onConflict: this.onDiagramConflict })
-    ) as SyncRequest<any>[];
+    ) as SyncRequest[];
     requests.push({
       key: applicationKey,
       onConflict: this.onApplicationConflict,
@@ -87,7 +87,7 @@ class Store implements IStore {
       accessed: now,
     };
 
-    this.storeSync.writeBatch<any>([
+    this.storeSync.writeBatch([
       { key: applicationKey, value: applicationDto },
       { key: id, value: diagramDto },
     ]);
@@ -139,7 +139,7 @@ class Store implements IStore {
 
     diagramDto.canvases[canvasDto.id] = canvasDto;
 
-    this.storeSync.writeBatch<any>([{ key: id, value: diagramDto }]);
+    this.storeSync.writeBatch([{ key: id, value: diagramDto }]);
 
     this.triggerSync(id);
   }
@@ -178,7 +178,7 @@ class Store implements IStore {
       name: name,
     };
 
-    this.storeSync.writeBatch<any>([
+    this.storeSync.writeBatch([
       { key: applicationKey, value: applicationDto },
       { key: id, value: diagramDto },
     ]);
@@ -241,7 +241,7 @@ class Store implements IStore {
   }
 
   private triggerSync(diagramId: string) {
-    this.storeSync.triggerSync<any>(
+    this.storeSync.triggerSync(
       [
         { key: applicationKey, onConflict: this.onApplicationConflict },
         { key: diagramId, onConflict: this.onDiagramConflict },
@@ -251,9 +251,9 @@ class Store implements IStore {
   }
 
   private onApplicationConflict(
-    local: LocalEntity<ApplicationDto>,
-    remote: RemoteEntity<ApplicationDto>
-  ): LocalEntity<ApplicationDto> {
+    local: LocalEntity,
+    remote: RemoteEntity
+  ): LocalEntity {
     console.log("Application conflict", local, remote);
 
     const mergeDiagramInfos = (
@@ -293,14 +293,15 @@ class Store implements IStore {
       timestamp: remote.timestamp,
       version: remote.version,
       synced: remote.timestamp,
+      isRemoved: false,
       value: applicationDto,
     };
   }
 
   private onDiagramConflict(
-    local: LocalEntity<DiagramDto>,
-    remote: RemoteEntity<DiagramDto>
-  ): LocalEntity<DiagramDto> {
+    local: LocalEntity,
+    remote: RemoteEntity
+  ): LocalEntity {
     console.log("Diagram conflict", local, remote);
     if (local.version >= remote.version) {
       // use local since it has more edits
@@ -313,6 +314,7 @@ class Store implements IStore {
       timestamp: remote.timestamp,
       version: remote.version,
       synced: remote.timestamp,
+      isRemoved: false,
       value: remote.value,
     };
   }
