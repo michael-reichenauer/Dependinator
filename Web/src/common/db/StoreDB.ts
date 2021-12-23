@@ -24,7 +24,8 @@ export interface SyncRequest {
 
 export const IStoreDBKey = diKey<IStoreDB>();
 export interface IStoreDB {
-  enableSync(isSyncEnabled: boolean, onConflict: OnConflict): void;
+  configure(isSyncEnabled: boolean): void;
+  initialize(onConflict: OnConflict, onRemoteChanged: () => void): void;
   monitorRemoteEntities(keys: string[]): void;
   readLocal<T>(key: string, defaultValue: T): T;
   tryReadLocalThenRemoteAsync<T>(key: string): Promise<Result<T>>;
@@ -32,28 +33,38 @@ export interface IStoreDB {
   removeBatch(keys: string[]): void;
 }
 
+const autoSyncInterval = 30000;
+
 @singleton(IStoreDBKey)
 export class StoreDB implements IStoreDB {
   private syncPromise = Promise.resolve();
   private isSyncEnabled: boolean = false;
+  private syncedTime: number = 0;
   private onConflict: OnConflict = (): any => {};
   private monitorKeys: string[] = [];
+  private onRemoteChanged: () => void = () => {};
 
   constructor(
     private localDB: ILocalDB = di(ILocalDBKey),
     private remoteDB: IRemoteDB = di(IRemoteDBKey)
   ) {}
 
+  initialize(onConflict: OnConflict, onRemoteChanged: () => void): void {
+    this.onConflict = onConflict;
+    this.onRemoteChanged = onRemoteChanged;
+  }
+
   monitorRemoteEntities(keys: string[]): void {
     this.monitorKeys = [...keys];
   }
 
-  enableSync(isSyncEnabled: boolean, onConflict: OnConflict): void {
+  configure(isSyncEnabled: boolean): void {
     this.isSyncEnabled = isSyncEnabled;
-    this.onConflict = onConflict;
+    console.log("Syncing:", isSyncEnabled);
 
     if (isSyncEnabled) {
       this.triggerSync();
+      setTimeout(() => this.autoSync(), autoSyncInterval);
     }
   }
 
@@ -139,15 +150,34 @@ export class StoreDB implements IStoreDB {
     // Trigger sync, but ensure syncs are run in sequence awaiting previous sync
     this.syncPromise = this.syncPromise.then(async () => {
       await this.syncLocalAndRemote();
+      this.syncedTime = Date.now();
     });
   }
 
-  public async syncLocalAndRemote(): Promise<void> {
-    console.log("syncLocalAndRemote");
+  private autoSync() {
+    if (!this.isSyncEnabled) {
+      return;
+    }
+
+    const delay = Math.max(0, Date.now() - this.syncedTime);
+    if (delay < autoSyncInterval) {
+      setTimeout(() => this.autoSync(), autoSyncInterval - delay + 1000);
+      return;
+    }
+
+    // Time to auto sync and schedule next auto sync
+    this.triggerSync();
+    setTimeout(() => this.autoSync(), autoSyncInterval);
+  }
+
+  private async syncLocalAndRemote(): Promise<void> {
+    console.log("Syncing ...");
 
     const syncKeys: string[] = [...this.monitorKeys];
 
-    const unSyncedKeys = this.localDB.getUnsyncedKeys();
+    const unSyncedKeys = this.localDB
+      .getUnsyncedKeys()
+      .filter((key) => !syncKeys.includes(key));
     syncKeys.push(...unSyncedKeys);
 
     let preLocalEntities = this.localDB.tryReadBatch(syncKeys);
@@ -214,7 +244,6 @@ export class StoreDB implements IStoreDB {
         if (this.monitorKeys.includes(currentLocalEntity.key)) {
           // Monitored entities update local even if local has not changed
           remoteToLocalEntities.push(remoteEntity);
-          // Signal updated local entity by remote entity !!!!
         }
 
         return;
@@ -263,8 +292,16 @@ export class StoreDB implements IStoreDB {
       });
     });
 
+    console.log(
+      `Synced to local: ${localEntitiesToUpdate.length}, to remote: ${remoteEntitiesToUpload.length}`
+    );
+
     // Cache local entities
     this.localDB.writeBatch(localEntitiesToUpdate);
+    if (localEntitiesToUpdate.length > 0) {
+      console.log("Remote updated local entities !!!");
+      setTimeout(() => this.onRemoteChanged(), 0);
+    }
 
     await this.uploadEntities(remoteEntitiesToUpload);
 
@@ -305,12 +342,16 @@ export class StoreDB implements IStoreDB {
 
   private async syncRemovedEntities() {
     const removedKeys = this.localDB.getRemovedKeys();
+    if (removedKeys.length === 0) {
+      return;
+    }
     const response = await this.remoteDB.removeBatch(removedKeys);
     if (isError(response)) {
       console.warn("Sync error while removing entities");
       return;
     }
 
+    console.log(`Remove confirmed of ${removedKeys.length} entities`);
     this.localDB.confirmRemoved(removedKeys);
   }
 

@@ -33,6 +33,9 @@ export default function Diagram({ width, height }) {
       if (!activeRef.current && activity.detail) {
         // @ts-ignore
         canvasRef.current.activated();
+      } else if (activeRef.current && !activity.detail) {
+        // @ts-ignore
+        canvasRef.current.deactivated();
       }
       activeRef.current = activity.detail;
     };

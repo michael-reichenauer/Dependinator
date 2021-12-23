@@ -390,10 +390,18 @@ export default class DiagramCanvas {
     this.store.writeCanvas(canvasData);
   }
 
+  onRemoteChanged = async () => {
+    setProgress(true);
+    this.canvas.clearDiagram();
+
+    await this.showRecentDiagramOrNew();
+    setProgress(false);
+  };
+
   async loadInitialDiagram() {
     setProgress(true);
 
-    this.store.initialize(true);
+    this.store.initialize(this.onRemoteChanged);
 
     await this.showRecentDiagramOrNew();
 
@@ -453,7 +461,14 @@ export default class DiagramCanvas {
   //   return diagramDto;
   // };
 
+  async deactivated() {
+    console.log("Diagram deactivated");
+    this.store.configure(false);
+  }
+
   async activated() {
+    console.log("Diagram activated");
+    this.store.configure(true);
     // try {
     //   if (!(await this.store.serverHadChanges())) {
     //     return;

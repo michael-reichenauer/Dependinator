@@ -22,7 +22,8 @@ const defaultDiagramDto: DiagramDto = { id: "", name: "", canvases: {} };
 
 export const IStoreKey = diKey<IStore>();
 export interface IStore {
-  initialize(isSyncEnabled: boolean): void;
+  initialize(onRemoteChanged: () => void): void;
+  configure(isSyncEnabled: boolean): void;
 
   openNewDiagram(): DiagramDto;
   tryOpenDiagram(diagramId: string): Promise<Result<DiagramDto>>;
@@ -54,8 +55,14 @@ export class Store implements IStore {
     private db: IStoreDB = di(IStoreDBKey)
   ) {}
 
-  public initialize(isSyncEnabled: boolean): void {
-    this.db.enableSync(isSyncEnabled, this.onEntityConflict);
+  public initialize(onRemoteChanged: () => void): void {
+    this.db.initialize(this.onEntityConflict, onRemoteChanged);
+
+    this.configure(true);
+  }
+
+  configure(isSyncEnabled: boolean): void {
+    this.db.configure(isSyncEnabled);
   }
 
   public openNewDiagram(): DiagramDto {
@@ -77,6 +84,7 @@ export class Store implements IStore {
       accessed: now,
     };
 
+    this.db.monitorRemoteEntities([id, applicationKey]);
     this.db.writeBatch([
       { key: applicationKey, value: applicationDto },
       { key: id, value: diagramDto },
@@ -101,6 +109,7 @@ export class Store implements IStore {
       accessed: Date.now(),
     };
 
+    this.db.monitorRemoteEntities([id, applicationKey]);
     this.db.writeBatch([{ key: applicationKey, value: applicationDto }]);
 
     this.currentDiagramId = id;
