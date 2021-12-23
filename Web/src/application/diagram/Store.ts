@@ -3,7 +3,7 @@ import Result, { isError } from "../../common/Result";
 import assert from "assert";
 import { di, singleton, diKey } from "../../common/di";
 import { ILocalFiles, ILocalFilesKey } from "../../common/LocalFiles";
-import { IStoreDB, IStoreDBKey, SyncRequest } from "../../common/db/StoreDB";
+import { IStoreDB, IStoreDBKey } from "../../common/db/StoreDB";
 import {
   ApplicationDto,
   applicationKey,
@@ -22,7 +22,7 @@ const defaultDiagramDto: DiagramDto = { id: "", name: "", canvases: {} };
 
 export const IStoreKey = diKey<IStore>();
 export interface IStore {
-  initialize(): Promise<void>;
+  initialize(isSyncEnabled: boolean): void;
 
   openNewDiagram(): DiagramDto;
   tryOpenDiagram(diagramId: string): Promise<Result<DiagramDto>>;
@@ -54,18 +54,8 @@ export class Store implements IStore {
     private db: IStoreDB = di(IStoreDBKey)
   ) {}
 
-  public async initialize(): Promise<void> {
-    this.db.initialize();
-
-    const requests = Object.keys(this.getApplicationDto().diagramInfos).map(
-      (key) => ({ key: key, onConflict: this.onDiagramConflict })
-    ) as SyncRequest[];
-    requests.push({
-      key: applicationKey,
-      onConflict: this.onApplicationConflict,
-    });
-
-    this.db.triggerSync(requests, false);
+  public initialize(isSyncEnabled: boolean): void {
+    this.db.enableSync(isSyncEnabled, this.onEntityConflict);
   }
 
   public openNewDiagram(): DiagramDto {
@@ -92,8 +82,6 @@ export class Store implements IStore {
       { key: id, value: diagramDto },
     ]);
 
-    this.triggerSync(id);
-
     this.currentDiagramId = id;
     return diagramDto;
   }
@@ -114,8 +102,6 @@ export class Store implements IStore {
     };
 
     this.db.writeBatch([{ key: applicationKey, value: applicationDto }]);
-
-    this.triggerSync(id);
 
     this.currentDiagramId = id;
     return diagramDto;
@@ -141,8 +127,6 @@ export class Store implements IStore {
     diagramDto.canvases[canvasDto.id] = canvasDto;
 
     this.db.writeBatch([{ key: id, value: diagramDto }]);
-
-    this.triggerSync(id);
   }
 
   public getRecentDiagrams(): DiagramInfoDto[] {
@@ -164,8 +148,6 @@ export class Store implements IStore {
 
     this.db.writeBatch([{ key: applicationKey, value: applicationDto }]);
     this.db.removeBatch([id]);
-
-    this.triggerSync(id);
   }
 
   public setDiagramName(name: string): void {
@@ -183,8 +165,6 @@ export class Store implements IStore {
       { key: applicationKey, value: applicationDto },
       { key: id, value: diagramDto },
     ]);
-
-    this.triggerSync(id);
   }
 
   public async loadDiagramFromFile(): Promise<Result<string>> {
@@ -241,14 +221,14 @@ export class Store implements IStore {
     );
   }
 
-  private triggerSync(diagramId: string) {
-    this.db.triggerSync(
-      [
-        { key: applicationKey, onConflict: this.onApplicationConflict },
-        { key: diagramId, onConflict: this.onDiagramConflict },
-      ],
-      true
-    );
+  private onEntityConflict(
+    local: LocalEntity,
+    remote: RemoteEntity
+  ): LocalEntity {
+    if ("diagramInfos" in local.value) {
+      return this.onApplicationConflict(local, remote);
+    }
+    return this.onDiagramConflict(local, remote);
   }
 
   private onApplicationConflict(
@@ -294,7 +274,6 @@ export class Store implements IStore {
       timestamp: remote.timestamp,
       version: remote.version,
       synced: remote.timestamp,
-      isRemoved: false,
       value: applicationDto,
     };
   }
@@ -315,7 +294,6 @@ export class Store implements IStore {
       timestamp: remote.timestamp,
       version: remote.version,
       synced: remote.timestamp,
-      isRemoved: false,
       value: remote.value,
     };
   }

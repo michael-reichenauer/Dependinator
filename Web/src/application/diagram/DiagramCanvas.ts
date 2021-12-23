@@ -393,7 +393,7 @@ export default class DiagramCanvas {
   async loadInitialDiagram() {
     setProgress(true);
 
-    await this.store.initialize();
+    this.store.initialize(true);
 
     await this.showRecentDiagramOrNew();
 

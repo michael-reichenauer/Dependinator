@@ -10,7 +10,6 @@ describe("Test LocalData", () => {
       timestamp: 0,
       synced: 0,
       version: 0,
-      isRemoved: false,
       value: "aa",
     });
 
@@ -22,7 +21,6 @@ describe("Test LocalData", () => {
       timestamp: 0,
       synced: 0,
       version: 0,
-      isRemoved: false,
       value: "bb",
     });
     expect(expectValue(local.tryReadValue<string>("0"))).toEqual("aa");
@@ -42,7 +40,6 @@ describe("Test LocalData", () => {
       timestamp: 0,
       synced: 0,
       version: 0,
-      isRemoved: false,
       value: "aa",
     });
 
@@ -57,7 +54,6 @@ describe("Test LocalData", () => {
       timestamp: 0,
       synced: 0,
       version: 0,
-      isRemoved: false,
       value: "aa",
     });
     local.write({
@@ -65,7 +61,6 @@ describe("Test LocalData", () => {
       timestamp: 0,
       synced: 0,
       version: 0,
-      isRemoved: false,
       value: "bb",
     });
 

@@ -8,7 +8,6 @@ export interface LocalEntity {
   timestamp: number;
   version: number;
   synced: number;
-  isRemoved: boolean;
 
   value: any;
 }
@@ -19,6 +18,8 @@ export const ILocalDBKey = diKey<ILocalDB>();
 export interface ILocalDB {
   tryReadValue<T>(key: string): Result<T>;
   tryReadBatch(keys: string[]): Result<LocalEntity>[];
+  getUnsyncedKeys(): string[];
+  getAllEntities(): LocalEntity[];
   write(entity: LocalEntity): void;
   writeBatch(entities: LocalEntity[]): void;
   removeBatch(keys: string[], confirmed: boolean): void;
@@ -28,6 +29,16 @@ export interface ILocalDB {
 }
 
 const removedKey = "removedEntities";
+
+function isLocalEntity(obj: any): obj is LocalEntity {
+  return (
+    "key" in obj &&
+    "timestamp" in obj &&
+    "synced" in obj &&
+    "version" in obj &&
+    "value" in obj
+  );
+}
 
 @singleton(ILocalDBKey)
 export class LocalDB implements ILocalDB {
@@ -42,16 +53,26 @@ export class LocalDB implements ILocalDB {
   }
 
   public tryReadBatch(keys: string[]): Result<LocalEntity>[] {
-    const entities = this.localStore
-      .tryReadBatch(keys)
-      .map((entity: Result<LocalEntity>) =>
-        !isError(entity) && entity.isRemoved ? new RemovedError() : entity
-      );
-    return entities;
+    return this.localStore.tryReadBatch(keys);
   }
 
   public write(entity: LocalEntity): void {
     this.writeBatch([entity]);
+  }
+
+  public getUnsyncedKeys(): string[] {
+    const unSyncedKeys = this.getAllEntities()
+      .filter((entity) => entity.timestamp !== entity.synced)
+      .map((entity: LocalEntity) => entity.key);
+    return unSyncedKeys;
+  }
+
+  public getAllEntities(): LocalEntity[] {
+    const localValues = this.localStore.tryReadBatch(this.localStore.keys());
+    const existingEntities = localValues.filter((value) =>
+      isLocalEntity(value)
+    ) as LocalEntity[];
+    return existingEntities;
   }
 
   public writeBatch(entities: LocalEntity[]): void {
@@ -73,9 +94,14 @@ export class LocalDB implements ILocalDB {
       // Remove is confirmed, no need to store keys
       return;
     }
+
     // Store removed keys until confirmRemoved is called (after syncing)
     const removedKeys = this.getRemovedKeys();
-    removedKeys.push(...keys);
+    const newRemovedKeys = keys.filter((key) => !removedKeys.includes(key));
+    if (newRemovedKeys.length === 0) {
+      return;
+    }
+    removedKeys.push(...newRemovedKeys);
     this.localStore.write(removedKey, removedKeys);
   }
 
