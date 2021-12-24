@@ -2,6 +2,7 @@ import { ILocalDB, ILocalDBKey, LocalEntity } from "./LocalDB";
 import {
   IRemoteDB,
   IRemoteDBKey,
+  isNetworkError,
   NotModifiedError,
   RemoteEntity,
 } from "./remoteDB";
@@ -17,15 +18,15 @@ export type OnConflict = (
   local: LocalEntity,
   remote: RemoteEntity
 ) => LocalEntity;
-export interface SyncRequest {
-  key: string;
-  onConflict: OnConflict;
-}
 
 export const IStoreDBKey = diKey<IStoreDB>();
 export interface IStoreDB {
   configure(isSyncEnabled: boolean): void;
-  initialize(onConflict: OnConflict, onRemoteChanged: () => void): void;
+  initialize(
+    onConflict: OnConflict,
+    onRemoteChanged: () => void,
+    onSyncChanged: (connected: boolean) => void
+  ): void;
   monitorRemoteEntities(keys: string[]): void;
   readLocal<T>(key: string, defaultValue: T): T;
   tryReadLocalThenRemoteAsync<T>(key: string): Promise<Result<T>>;
@@ -39,19 +40,26 @@ const autoSyncInterval = 30000;
 export class StoreDB implements IStoreDB {
   private syncPromise = Promise.resolve();
   private isSyncEnabled: boolean = false;
+  private isConnected: boolean = true;
   private syncedTime: number = 0;
   private onConflict: OnConflict = (): any => {};
   private monitorKeys: string[] = [];
   private onRemoteChanged: () => void = () => {};
+  private onSyncChanged: (connected: boolean) => void = () => {};
 
   constructor(
     private localDB: ILocalDB = di(ILocalDBKey),
     private remoteDB: IRemoteDB = di(IRemoteDBKey)
   ) {}
 
-  initialize(onConflict: OnConflict, onRemoteChanged: () => void): void {
+  initialize(
+    onConflict: OnConflict,
+    onRemoteChanged: () => void,
+    onSyncChanged: (connected: boolean) => void
+  ): void {
     this.onConflict = onConflict;
     this.onRemoteChanged = onRemoteChanged;
+    this.onSyncChanged = onSyncChanged;
   }
 
   monitorRemoteEntities(keys: string[]): void {
@@ -88,11 +96,12 @@ export class StoreDB implements IStoreDB {
       }
       const remoteEntity = await this.remoteDB.tryRead({ key: key });
       if (isError(remoteEntity)) {
-        // Network error, signal !!!!!!!!
+        this.setIsConnected(false);
         return new RangeError(`id ${key} not found,` + remoteEntity);
       }
 
       // Cache remote data locally as synced
+      this.setIsConnected(true);
       this.cacheRemoteEntity(remoteEntity);
       return remoteEntity.value;
     }
@@ -200,6 +209,11 @@ export class StoreDB implements IStoreDB {
     }
 
     const currentRemoteEntities = await this.remoteDB.tryReadBatch(queries);
+    if (isNetworkError(currentRemoteEntities)) {
+      this.setIsConnected(false);
+      return;
+    }
+    this.setIsConnected(true);
     const currentLocalEntities = this.localDB.tryReadBatch(syncKeys);
 
     const remoteToLocalEntities: RemoteEntity[] = [];
@@ -308,6 +322,13 @@ export class StoreDB implements IStoreDB {
     await this.syncRemovedEntities();
   }
 
+  private setIsConnected(isConnected: boolean): void {
+    if (isConnected !== this.isConnected) {
+      this.isConnected = isConnected;
+      this.onSyncChanged(isConnected);
+    }
+  }
+
   private async uploadEntities(entities: RemoteEntity[]): Promise<void> {
     if (!entities.length) {
       // No entities to upload
@@ -316,11 +337,11 @@ export class StoreDB implements IStoreDB {
 
     const response = await this.remoteDB.writeBatch(entities);
     if (isError(response)) {
-      // Signal sync error !!!!!!!
-      console.warn("Sync error while writing entities");
+      this.setIsConnected(false);
       return;
     }
 
+    this.setIsConnected(true);
     // Set  existing local items with synced timestamp
     const keys = entities.map((entity) => entity.key);
 
@@ -347,10 +368,10 @@ export class StoreDB implements IStoreDB {
     }
     const response = await this.remoteDB.removeBatch(removedKeys);
     if (isError(response)) {
-      console.warn("Sync error while removing entities");
+      this.setIsConnected(false);
       return;
     }
-
+    this.setIsConnected(true);
     console.log(`Remove confirmed of ${removedKeys.length} entities`);
     this.localDB.confirmRemoved(removedKeys);
   }

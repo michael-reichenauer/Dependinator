@@ -22,7 +22,10 @@ const defaultDiagramDto: DiagramDto = { id: "", name: "", canvases: {} };
 
 export const IStoreKey = diKey<IStore>();
 export interface IStore {
-  initialize(onRemoteChanged: () => void): void;
+  initialize(
+    onRemoteChanged: () => void,
+    onSyncChanged: (connected: boolean) => void
+  ): void;
   configure(isSyncEnabled: boolean): void;
 
   openNewDiagram(): DiagramDto;
@@ -55,8 +58,11 @@ export class Store implements IStore {
     private db: IStoreDB = di(IStoreDBKey)
   ) {}
 
-  public initialize(onRemoteChanged: () => void): void {
-    this.db.initialize(this.onEntityConflict, onRemoteChanged);
+  public initialize(
+    onRemoteChanged: () => void,
+    onSyncChanged: (connected: boolean) => void
+  ): void {
+    this.db.initialize(this.onEntityConflict, onRemoteChanged, onSyncChanged);
 
     this.configure(true);
   }

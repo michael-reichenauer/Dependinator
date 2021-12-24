@@ -18,6 +18,11 @@ export interface Query {
 }
 
 export class NotModifiedError extends CustomError {}
+export class NetworkError extends CustomError {}
+
+export function isNetworkError(...responses: any[]) {
+  return responses.every((response) => response instanceof NetworkError);
+}
 
 const prefix = "remote-";
 
