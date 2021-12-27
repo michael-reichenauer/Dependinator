@@ -20,31 +20,21 @@ export interface Query {
 export class NotModifiedError extends CustomError {}
 export class NetworkError extends CustomError {}
 
-export function isNetworkError(...responses: any[]) {
-  return responses.every((response) => response instanceof NetworkError);
-}
-
 const prefix = "remote-";
 
 export const IRemoteDBKey = diKey<IRemoteDB>();
 export interface IRemoteDB {
-  tryRead(query: Query): Promise<Result<RemoteEntity>>;
-  tryReadBatch(queries: Query[]): Promise<Result<RemoteEntity>[]>;
+  tryReadBatch(queries: Query[]): Promise<Result<Result<RemoteEntity>[]>>;
   writeBatch(entities: RemoteEntity[]): Promise<Result<void>>;
   removeBatch(keys: string[]): Promise<Result<void>>;
 }
 
-@singleton(IRemoteDBKey) // eslint-disable-next-line
+@singleton(IRemoteDBKey)
 export class RemoteDB implements IRemoteDB {
   constructor(
     private api: ILocalStore = di(ILocalStoreKey),
     private testDelay = 850
   ) {}
-
-  public async tryRead(query: Query): Promise<Result<RemoteEntity>> {
-    const entities = await this.tryReadBatch([query]);
-    return entities[0];
-  }
 
   public async writeBatch(entities: RemoteEntity[]): Promise<Result<void>> {
     const remoteEntities = entities.map((entity) => ({
@@ -57,7 +47,9 @@ export class RemoteDB implements IRemoteDB {
     this.api.writeBatch(remoteEntities);
   }
 
-  public async tryReadBatch(queries: Query[]): Promise<Result<RemoteEntity>[]> {
+  public async tryReadBatch(
+    queries: Query[]
+  ): Promise<Result<Result<RemoteEntity>[]>> {
     const remoteKeys = queries.map((query) => this.remoteKey(query.key));
 
     await delay(this.testDelay); // Simulate network delay !!!!!!!!!!!!!
