@@ -174,14 +174,14 @@ export class StoreDB implements IStoreDB {
     let syncKeys: string[] = [...this.monitorKeys];
     syncKeys = this.addUnsyncedLocalKeys(syncKeys);
 
-    // Generating query, which is key and timestamp to skip known synced remote entities
-    const queries = this.makeRemoteQueries(syncKeys, localEntities);
+    // Generating query, which is key and timestamp to skip known unchanged remote entities
+    const queries = this.makeRemoteQueries(syncKeys);
     if (!queries.length) {
       console.log("Nothing to sync");
       return;
     }
 
-    // Getting remote entities to compare with local entities later
+    // Getting remote entities to compare with local entities
     const remoteEntities = await this.remoteDB.tryReadBatch(queries);
     if (isError(remoteEntities)) {
       // Failed to connect to remote server
@@ -190,117 +190,135 @@ export class StoreDB implements IStoreDB {
     }
 
     this.setIsConnected(true);
-    const currentLocalEntities = this.localDB.tryReadBatch(syncKeys);
+    const localEntities = this.localDB.tryReadBatch(syncKeys);
 
-    const remoteToLocalEntities: RemoteEntity[] = [];
-    const localToRemoteEntities: LocalEntity[] = [];
+    const remoteToLocal: RemoteEntity[] = [];
+    const localToRemote: LocalEntity[] = [];
     const mergedEntities: LocalEntity[] = [];
 
     remoteEntities.forEach((remoteEntity, index) => {
-      const currentLocalEntity = currentLocalEntities[index];
+      const localEntity = localEntities[index];
 
-      if (isError(currentLocalEntity)) {
+      if (isError(localEntity)) {
         // Local entity is missing, skip sync
         return;
       }
 
       if (remoteEntity instanceof NotModifiedError) {
-        // Remote entity was not changed since last sync, syncing if local has changed
-        if (currentLocalEntity.synced !== currentLocalEntity.timestamp) {
-          localToRemoteEntities.push(currentLocalEntity);
+        // Remote entity was not changed since last sync, lets upload local to remote if local has changed
+        if (localEntity.synced !== localEntity.timestamp) {
+          localToRemote.push(localEntity);
         }
         return;
       }
+
       if (isError(remoteEntity)) {
         // Remote entity is missing, lets upload local to remote
-        localToRemoteEntities.push(currentLocalEntity);
+        localToRemote.push(localEntity);
         return;
       }
 
-      // Both local and remote entity exist, lets check time stamps
-      if (currentLocalEntity.timestamp === remoteEntity.timestamp) {
+      if (localEntity.timestamp === remoteEntity.timestamp) {
         // Both local and remote entity have same timestamp, already same (nothing to sync)
         return;
       }
 
-      if (currentLocalEntity.synced === remoteEntity.timestamp) {
-        // Local entity has changed and remote entity same as uploaded previously by this client, lets sync new local up to remote
-        localToRemoteEntities.push(currentLocalEntity);
+      if (localEntity.synced === remoteEntity.timestamp) {
+        // Local entity has changed and remote entity same as uploaded previously by this client,
+        // lets upload local to remote
+        localToRemote.push(localEntity);
         return;
       }
 
-      if (currentLocalEntity.synced === currentLocalEntity.timestamp) {
-        // Local entity has not changed, while remote has been changed by some other client, lets store new remote
-        if (this.monitorKeys.includes(currentLocalEntity.key)) {
-          // Monitored entities update local even if local has not changed
-          remoteToLocalEntities.push(remoteEntity);
+      if (localEntity.synced === localEntity.timestamp) {
+        // Local entity has not changed, while remote has been changed by some other client,
+        // lets cache the updated remote entity if the entity is actively monitored
+        if (this.monitorKeys.includes(localEntity.key)) {
+          remoteToLocal.push(remoteEntity);
         }
-
         return;
       }
 
-      // Both local and remote entity has been changed by some other client, lets merge the entities
-      mergedEntities.push(this.onConflict(currentLocalEntity, remoteEntity));
+      // Local entity was chanced by this client and remote entity wad changed by some other client,
+      // lets merge the entities by resolving the conflict
+      const resolvedEntity = this.onConflict(localEntity, remoteEntity);
+      mergedEntities.push(resolvedEntity);
     });
 
     // Convert remote entity to LocalEntity with synced= 'remote timestamp'
-    const localEntitiesToUpdate: LocalEntity[] = remoteToLocalEntities.map(
-      (remoteEntity) => ({
-        key: remoteEntity.key,
-        timestamp: remoteEntity.timestamp,
-        version: remoteEntity.version,
-        synced: remoteEntity.timestamp,
-        value: remoteEntity.value,
-      })
-    );
+    const localToUpdate = this.convertRemoteToLocal(remoteToLocal);
 
     // Convert local entity to remote entity to be uploaded
-    const remoteEntitiesToUpload: RemoteEntity[] = localToRemoteEntities.map(
-      (localEntity) => ({
-        key: localEntity.key,
-        timestamp: localEntity.timestamp,
-        version: localEntity.version,
-        value: localEntity.value,
-      })
-    );
+    const remoteToUpload = this.convertLocalToRemote(localToRemote);
 
     // Add merged entity to both local and to be uploaded to remote
+    this.addMergedEntities(mergedEntities, localToUpdate, remoteToUpload);
+
+    console.log(
+      `Synced to local: ${localToUpdate.length}, to remote: ${remoteToUpload.length}`
+    );
+
+    this.updateLocalEntities(localToUpdate);
+
+    await this.uploadEntities(remoteToUpload);
+
+    await this.syncRemovedEntities();
+  }
+
+  private addMergedEntities(
+    merged: LocalEntity[],
+    toLocal: LocalEntity[],
+    toRemote: RemoteEntity[]
+  ) {
     const now = Date.now();
-    mergedEntities.forEach((mergedEntity) => {
-      localEntitiesToUpdate.push({
+    merged.forEach((mergedEntity) => {
+      toLocal.push({
         key: mergedEntity.key,
         timestamp: now,
         version: mergedEntity.version + 1,
         synced: mergedEntity.synced,
         value: mergedEntity.value,
       });
-      remoteEntitiesToUpload.push({
+      toRemote.push({
         key: mergedEntity.key,
         timestamp: now,
         version: mergedEntity.version + 1,
         value: mergedEntity.value,
       });
     });
+  }
 
-    console.log(
-      `Synced to local: ${localEntitiesToUpdate.length}, to remote: ${remoteEntitiesToUpload.length}`
-    );
-
-    // Cache local entities
-    this.localDB.writeBatch(localEntitiesToUpdate);
-    if (localEntitiesToUpdate.length > 0) {
+  private updateLocalEntities(localToUpdate: LocalEntity[]): void {
+    this.localDB.writeBatch(localToUpdate);
+    if (localToUpdate.length > 0) {
       console.log("Remote updated local entities !!!");
       setTimeout(() => this.onRemoteChanged(), 0);
     }
+  }
 
-    await this.uploadEntities(remoteEntitiesToUpload);
+  private convertRemoteToLocal(remoteEntities: RemoteEntity[]): LocalEntity[] {
+    return remoteEntities.map((remoteEntity) => ({
+      key: remoteEntity.key,
+      timestamp: remoteEntity.timestamp,
+      version: remoteEntity.version,
+      synced: remoteEntity.timestamp,
+      value: remoteEntity.value,
+    }));
+  }
 
-    await this.syncRemovedEntities();
+  private convertLocalToRemote(localEntities: LocalEntity[]): RemoteEntity[] {
+    return localEntities.map((localEntity) => ({
+      key: localEntity.key,
+      timestamp: localEntity.timestamp,
+      version: localEntity.version,
+      value: localEntity.value,
+    }));
   }
 
   private makeRemoteQueries(syncKeys: string[]): Query[] {
     const localEntities = this.localDB.tryReadBatch(syncKeys);
 
+    // creating queries based on key and synced timestamps to skip already known unchanged remote entities
     return localEntities
       .filter((entity) => !isError(entity))
       .map((entity, index) => {
