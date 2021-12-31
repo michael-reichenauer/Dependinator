@@ -1,4 +1,4 @@
-import React from "react";
+import React, { FC } from "react";
 import { useState } from "react";
 import { atom, useAtom } from "jotai";
 import {
@@ -12,18 +12,16 @@ import {
 } from "@material-ui/core";
 import { Formik, Form, Field } from "formik";
 import { TextField } from "formik-material-ui";
-import { authenticate } from "../common/authenticate";
 
-const loginAtom = atom(false);
 const usernameKey = "credential.userName";
-
+const loginAtom = atom(false);
 export const useLogin = () => useAtom(loginAtom);
 
-export default function Login() {
+export const Login: FC = () => {
   const [show, setShow] = useLogin();
   const [createAccount, setCreateAccount] = useState(false);
 
-  const handleEnter = (event: any) => {
+  const handleEnter = (event: any): void => {
     if (event.code === "Enter") {
       const okButton = document.getElementById("OKButton");
       okButton?.click();
@@ -31,7 +29,12 @@ export default function Login() {
   };
 
   return (
-    <Dialog open={show} onClose={() => {}}>
+    <Dialog
+      open={show}
+      onClose={() => {
+        setShow(false);
+      }}
+    >
       <Box style={{ width: 320, height: 330, padding: 20 }}>
         {!createAccount && (
           <Typography variant="h5" style={{ paddingBottom: 10 }}>
@@ -67,10 +70,10 @@ export default function Login() {
           onSubmit={async (values, { setErrors, setFieldValue }) => {
             if (createAccount) {
               try {
-                await authenticate.createUser({
-                  username: values.username,
-                  password: values.password,
-                });
+                // await authenticate.createUser({
+                //   username: values.username,
+                //   password: values.password,
+                // });
                 setDefaultUserName(values.username);
                 setCreateAccount(false);
                 setFieldValue("confirm", "", false);
@@ -83,10 +86,11 @@ export default function Login() {
             }
 
             try {
-              await authenticate.connectUser({
-                username: values.username,
-                password: values.password,
-              });
+              console.log("connect", values);
+              // await authenticate.connectUser({
+              //   username: values.username,
+              //   password: values.password,
+              // });
               setDefaultUserName(values.username);
             } catch (error) {
               setFieldValue("password", "", false);
@@ -166,7 +170,7 @@ export default function Login() {
       </Box>
     </Dialog>
   );
-}
+};
 
 const getDefaultUserName = () => localStorage.getItem(usernameKey) ?? "";
 

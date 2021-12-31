@@ -7,12 +7,20 @@ import { ContextMenu } from "../common/Menus";
 import Progress from "../common/Progress";
 import { activityEventName } from "../common/activity";
 
-export const titleAtom = atom("System");
-export const canUndoAtom = atom(false);
+const canUndoAtom = atom(false);
+export const useCanUndo = () => useAtom(canUndoAtom);
+
 export const canRedoAtom = atom(false);
+export const useCanRedo = () => useAtom(canRedoAtom);
+
 export const canPopDiagramAtom = atom(false);
 export const editModeAtom = atom(false);
-export const selectModeAtom = atom(false);
+
+const selectModeAtom = atom(false);
+export const useSelectMode = () => useAtom(selectModeAtom);
+
+const titleAtom = atom("System");
+export const useTitle = () => useAtom(titleAtom);
 
 // @ts-ignore
 export default function Diagram({ width, height }) {

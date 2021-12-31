@@ -6,8 +6,9 @@ import {
   setSuccessMessage,
 } from "../../common/MessageSnackbar";
 import { keyVault } from "../../common/keyVault";
+import Result from "../../common/Result";
+import { diKey, singleton } from "./../../common/di";
 
-const connectionAtom = atom(false);
 let setConnectionFunc: (flag: boolean) => void = (_: boolean) => {};
 let isConnectionOK: boolean | null = null;
 let isFirstCheck = true;
@@ -22,13 +23,34 @@ export interface User {
   password: string;
 }
 
+const connectionAtom = atom(false);
 export const useConnection = () => {
   const [connection, setConnection] = useAtom(connectionAtom);
   setConnectionFunc = setConnection;
   return [connection];
 };
 
-export default class Api {
+export const IApiKey = diKey<IApi>();
+export interface IApi {
+  login(user: User): Promise<Result<void>>;
+  createAccount(user: User): Promise<Result<void>>;
+  ping(): Promise<Result<void>>;
+}
+
+@singleton(IApiKey)
+export class Api implements IApi {
+  public async login(user: User): Promise<Result<void>> {
+    throw new Error("Method not implemented.");
+  }
+  public async createAccount(user: User): Promise<Result<void>> {
+    throw new Error("Method not implemented.");
+  }
+  public async ping(): Promise<Result<void>> {
+    throw new Error("Method not implemented.");
+  }
+}
+
+class ApiOld {
   apiKey = "0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade"; // Must be same as in server side api
   onInvalidToken: () => void;
   getToken = () => keyVault.getToken();

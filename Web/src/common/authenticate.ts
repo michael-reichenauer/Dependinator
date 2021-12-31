@@ -1,20 +1,29 @@
-import Api from "../application/diagram/Api";
+import { IApi, IApiKey } from "../application/diagram/Api";
 //import { store } from "../application/diagram/Store";
 import { User } from "./../application/diagram/Api";
+import { di, diKey, singleton } from "./di";
+import Result from "./Result";
 
-class Authenticate {
-  api: Api = new Api(() => {});
+export const IAuthenticateKey = diKey<IAuthenticate>();
+export interface IAuthenticate {
+  createUser(user: User): Promise<Result<void>>;
+  login(user: User): Promise<Result<void>>;
+}
 
-  async createUser(user: User) {
+@singleton(IAuthenticateKey)
+export class Authenticate implements IAuthenticate {
+  constructor(private api: IApi = di(IApiKey)) {}
+
+  async createUser(user: User): Promise<Result<void>> {
     // Reduce risk of clear text password logging
-    user.password = await authenticate.passwordHash(user.password);
+    user.password = await this.passwordHash(user.password);
 
-    await this.api.createUser(user);
+    await this.api.createAccount(user);
   }
 
-  async connectUser(user: User): Promise<void> {
-    user.password = await authenticate.passwordHash(user.password);
-    //  return await store.connectUser(user);
+  async login(user: User): Promise<Result<void>> {
+    user.password = await this.passwordHash(user.password);
+    return await this.api.login(user);
   }
 
   async passwordHash(text: string) {
@@ -34,5 +43,3 @@ class Authenticate {
     return hashHex;
   }
 }
-
-export const authenticate = new Authenticate();

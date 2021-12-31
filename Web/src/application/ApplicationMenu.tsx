@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PubSub from "pubsub-js";
 import IconButton from "@material-ui/core/IconButton";
 import MenuIcon from "@material-ui/icons/Menu";
@@ -9,23 +9,26 @@ import Printer from "../common/Printer";
 import { useAbout } from "./About";
 import { showConfirmAlert } from "../common/AlertDialog";
 import { showPrompt } from "../common/PromptDialog";
-import { useAtom } from "jotai";
-import { titleAtom } from "./Diagram";
 import { di } from "../common/di";
+import { useTitle } from "./Diagram";
+import { IOnlineKey, SyncState, useSyncMode } from "./Online";
+import { DiagramInfoDto } from "./diagram/StoreDtos";
 
-const getDiagramsMenuItems = () => {
-  const store = di(IStoreKey);
-  const diagrams = store.getRecentDiagrams().slice(1);
+const getDiagramsMenuItems = (recentDiagrams: DiagramInfoDto[]) => {
+  const diagrams = recentDiagrams.slice(1);
   return diagrams.map((d) =>
     menuItem(d.name, () => PubSub.publish("canvas.OpenDiagram", d.id))
   );
 };
 
 export function ApplicationMenu() {
+  const onlineRef = useRef(di(IOnlineKey));
+  const storeRef = useRef(di(IStoreKey));
+  const syncMode = useSyncMode();
   const [menu, setMenu] = useState(null);
   const [, setShowAbout] = useAbout();
-  //const [, setShowLogin] = useLogin()
-  const [titleText] = useAtom(titleAtom);
+
+  const [titleText] = useTitle();
 
   useEffect(() => {
     const handler = Printer.registerPrintKey(() =>
@@ -54,7 +57,10 @@ export function ApplicationMenu() {
     );
   };
 
-  const diagrams = menu == null ? [] : getDiagramsMenuItems();
+  const diagrams =
+    menu == null
+      ? []
+      : getDiagramsMenuItems(storeRef.current.getRecentDiagrams());
   const isInStandaloneMode = () =>
     window.matchMedia("(display-mode: standalone)").matches ||
     // @ts-ignore
@@ -75,8 +81,24 @@ export function ApplicationMenu() {
       ),
     ]),
     menuItem("Delete", deleteDiagram),
-    // menuItem('Enable cloud sync', () => setShowLogin(true), false, !store.isCloudSyncEnabled()),
-    // menuItem('Disable cloud sync', () => store.disableCloudSync(), false, store.isCloudSyncEnabled()),
+    menuItem(
+      "Enable cloud sync",
+      () => onlineRef.current.enableSync(),
+      syncMode !== SyncState.Progress,
+      syncMode === SyncState.Disabled
+    ),
+    menuItem(
+      "Retry cloud sync",
+      () => onlineRef.current.retrySync(),
+      syncMode !== SyncState.Progress,
+      syncMode === SyncState.Error
+    ),
+    menuItem(
+      "Disable cloud sync",
+      () => onlineRef.current.disableSync(),
+      syncMode !== SyncState.Progress,
+      syncMode !== SyncState.Disabled
+    ),
     menuParentItem(
       "Files",
       [

@@ -32,8 +32,11 @@ export default class LocalStore implements ILocalStore {
         return new RangeError(`No data for id: ${key}`);
       }
       // console.log(`Read key: ${key}, ${text.length} bytes`);
-      const value: any = JSON.parse(valueText);
-      return value;
+      try {
+        return JSON.parse(valueText);
+      } catch {
+        return {};
+      }
     });
   }
 
