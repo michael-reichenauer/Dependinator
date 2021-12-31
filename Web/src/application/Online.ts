@@ -3,6 +3,10 @@ import { di, diKey, singleton } from "./../common/di";
 import { useRef } from "react";
 import { SetAtom } from "jotai/core/types";
 import { delay } from "../common/utils";
+import { IAuthenticate, IAuthenticateKey } from "../common/authenticate";
+import { showLoginDlg } from "./Login";
+import { User } from "./diagram/Api";
+import Result from "../common/Result";
 
 export enum SyncState {
   Disabled = "Disabled",
@@ -30,20 +34,35 @@ export interface IOnline {
 @singleton(IOnlineKey)
 export class Online implements IOnline {
   private setSyncMode: SetAtom<SyncState> | null = null;
+  private currentState: SyncState = SyncState.Disabled;
+  private previousState: SyncState = SyncState.Disabled;
+  constructor(private authenticate: IAuthenticate = di(IAuthenticateKey)) {}
 
-  async enableSync(): Promise<void> {
-    this.setSyncMode?.(SyncState.Progress);
+  async createAccount(user: User): Promise<Result<void>> {
+    await delay(3000);
+  }
+
+  async login(user: User): Promise<Result<void>> {
     await delay(3000);
 
-    this.setSyncMode?.(SyncState.Enabled);
+    this.setState(SyncState.Enabled);
+  }
+
+  closed(): void {
+    this.restoreState();
+  }
+
+  async enableSync(): Promise<void> {
+    this.setState(SyncState.Progress);
+    showLoginDlg(this);
   }
 
   disableSync(): void {
-    this.setSyncMode?.(SyncState.Disabled);
+    this.setState(SyncState.Disabled);
   }
 
   async retrySync(): Promise<void> {
-    this.setSyncMode?.(SyncState.Progress);
+    this.setState(SyncState.Progress);
     await delay(3000);
 
     this.setSyncMode?.(SyncState.Error);
@@ -51,5 +70,16 @@ export class Online implements IOnline {
 
   setSetSyncMode(setSyncMode: SetAtom<SyncState>): void {
     this.setSyncMode = setSyncMode;
+  }
+
+  setState(state: SyncState): void {
+    this.previousState = this.currentState;
+    this.currentState = state;
+    this.setSyncMode?.(this.currentState);
+  }
+  restoreState(): void {
+    this.currentState = this.previousState;
+    this.previousState = SyncState.Disabled;
+    this.setSyncMode?.(this.currentState);
   }
 }

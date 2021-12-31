@@ -12,13 +12,30 @@ import {
 } from "@material-ui/core";
 import { Formik, Form, Field } from "formik";
 import { TextField } from "formik-material-ui";
+import { User } from "./diagram/Api";
+import Result from "../common/Result";
+import { SetAtom } from "jotai/core/types";
 
 const usernameKey = "credential.userName";
-const loginAtom = atom(false);
-export const useLogin = () => useAtom(loginAtom);
+
+export interface ILoginProvider {
+  createAccount(user: User): Promise<Result<void>>;
+  login(user: User): Promise<Result<void>>;
+  closed(): void;
+}
+
+export let showLoginDlg: SetAtom<ILoginProvider> = () => {};
+
+type loginProvider = ILoginProvider | null;
+const loginAtom = atom(null as loginProvider);
+export const useLogin = (): [loginProvider, SetAtom<loginProvider>] => {
+  const [login, setLogin] = useAtom(loginAtom);
+  showLoginDlg = setLogin;
+  return [login, setLogin];
+};
 
 export const Login: FC = () => {
-  const [show, setShow] = useLogin();
+  const [login, setLogin] = useLogin();
   const [createAccount, setCreateAccount] = useState(false);
 
   const handleEnter = (event: any): void => {
@@ -30,9 +47,10 @@ export const Login: FC = () => {
 
   return (
     <Dialog
-      open={show}
+      open={login !== null}
       onClose={() => {
-        setShow(false);
+        setLogin(null);
+        login?.closed();
       }}
     >
       <Box style={{ width: 320, height: 330, padding: 20 }}>
@@ -70,10 +88,10 @@ export const Login: FC = () => {
           onSubmit={async (values, { setErrors, setFieldValue }) => {
             if (createAccount) {
               try {
-                // await authenticate.createUser({
-                //   username: values.username,
-                //   password: values.password,
-                // });
+                await login?.createAccount({
+                  username: values.username,
+                  password: values.password,
+                });
                 setDefaultUserName(values.username);
                 setCreateAccount(false);
                 setFieldValue("confirm", "", false);
@@ -87,11 +105,12 @@ export const Login: FC = () => {
 
             try {
               console.log("connect", values);
-              // await authenticate.connectUser({
-              //   username: values.username,
-              //   password: values.password,
-              // });
+              await login?.login({
+                username: values.username,
+                password: values.password,
+              });
               setDefaultUserName(values.username);
+              setLogin(null);
             } catch (error) {
               setFieldValue("password", "", false);
               setErrors({ username: "Invalid username or password" });
@@ -158,7 +177,10 @@ export const Login: FC = () => {
                   variant="contained"
                   color="primary"
                   disabled={isSubmitting}
-                  onClick={() => setShow(false)}
+                  onClick={() => {
+                    setLogin(null);
+                    login?.closed();
+                  }}
                   style={{ margin: 5, width: 85 }}
                 >
                   Cancel
