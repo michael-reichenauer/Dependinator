@@ -3,6 +3,7 @@ var store = require('../shared/Store.js');
 module.exports = async function (context, req) {
     try {
         store.verifyApiKey(context)
+        store.verifyToken(context)
 
         context.res = { status: 200, body: '' };
     } catch (err) {

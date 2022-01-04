@@ -44,7 +44,6 @@ const Enable = () => {
       });
     };
     setSuccessFunc = (msg) => {
-      console.log("Success snackbar");
       const sb = enqueueSnackbar(msg, {
         variant: "success",
         onClick: () => {

@@ -477,12 +477,14 @@ export default class DiagramCanvas {
 
   async deactivated() {
     console.log("Diagram deactivated");
-    this.store.configure(false);
+    //setProgress(true);
+    // this.store.configure(false);
   }
 
   async activated() {
     console.log("Diagram activated");
-    this.store.configure(true);
+    //setProgress(false);
+    // this.store.configure(true);
     // try {
     //   if (!(await this.store.serverHadChanges())) {
     //     return;

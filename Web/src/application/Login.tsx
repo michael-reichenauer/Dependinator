@@ -12,7 +12,7 @@ import {
 } from "@material-ui/core";
 import { Formik, Form, Field } from "formik";
 import { TextField } from "formik-material-ui";
-import { User } from "./diagram/Api";
+import { User } from "../common/Api";
 import Result from "../common/Result";
 import { SetAtom } from "jotai/core/types";
 
@@ -104,7 +104,6 @@ export const Login: FC = () => {
             }
 
             try {
-              console.log("connect", values);
               await login?.login({
                 username: values.username,
                 password: values.password,

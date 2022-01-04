@@ -30,7 +30,7 @@ class Timing {
     }
   }
 
-  log(...properties: (string | undefined)[]) {
+  log(...properties: any[]) {
     const now = performance.now();
     let ci: number = now - this.current;
     let ti: number = now - this.start;

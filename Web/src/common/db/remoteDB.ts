@@ -18,7 +18,6 @@ export interface Query {
 }
 
 export class NotModifiedError extends CustomError {}
-export class NetworkError extends CustomError {}
 
 const prefix = "remote-";
 

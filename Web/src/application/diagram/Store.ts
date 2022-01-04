@@ -63,8 +63,6 @@ export class Store implements IStore {
     onSyncChanged: (connected: boolean) => void
   ): void {
     this.db.initialize(this.onEntityConflict, onRemoteChanged, onSyncChanged);
-
-    this.configure(true);
   }
 
   configure(isSyncEnabled: boolean): void {

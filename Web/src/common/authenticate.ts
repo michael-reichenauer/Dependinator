@@ -1,8 +1,9 @@
-import { IApi, IApiKey } from "../application/diagram/Api";
+import { IApi, IApiKey } from "./Api";
 //import { store } from "../application/diagram/Store";
-import { User } from "./../application/diagram/Api";
+import { User } from "./Api";
 import { di, diKey, singleton } from "./di";
-import Result from "./Result";
+import { IKeyVault, IKeyVaultKey } from "./keyVault";
+import Result, { isError } from "./Result";
 
 export const IAuthenticateKey = diKey<IAuthenticate>();
 export interface IAuthenticate {
@@ -12,7 +13,10 @@ export interface IAuthenticate {
 
 @singleton(IAuthenticateKey)
 export class Authenticate implements IAuthenticate {
-  constructor(private api: IApi = di(IApiKey)) {}
+  constructor(
+    private api: IApi = di(IApiKey),
+    private keyVault: IKeyVault = di(IKeyVaultKey)
+  ) {}
 
   async createUser(user: User): Promise<Result<void>> {
     // Reduce risk of clear text password logging
@@ -23,7 +27,13 @@ export class Authenticate implements IAuthenticate {
 
   async login(user: User): Promise<Result<void>> {
     user.password = await this.passwordHash(user.password);
-    return await this.api.login(user);
+
+    const tokenInfo = await this.api.login(user);
+    if (isError(tokenInfo)) {
+      return tokenInfo;
+    }
+
+    this.keyVault.setToken(tokenInfo.token);
   }
 
   async passwordHash(text: string) {

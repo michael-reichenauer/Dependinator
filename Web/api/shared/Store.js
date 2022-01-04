@@ -22,6 +22,14 @@ exports.verifyApiKey = context => {
     }
 }
 
+exports.verifyToken = context => {
+    const info = clientInfo.getInfo(context)
+    if (!info.token || info.token == null || info.token === 'null') {
+        throw new Error('Invalid token')
+    }
+}
+
+
 exports.createUser = async (context, data) => {
     const { username, password } = data
     if (!username || !password) {
@@ -47,6 +55,7 @@ exports.createUser = async (context, data) => {
 }
 
 exports.connectUser = async (context, data) => {
+    context.log('connect', context, data)
     const { username, password } = data
     if (!username || !password) {
         throw new Error('Invalid user')
@@ -59,27 +68,35 @@ exports.connectUser = async (context, data) => {
         userDetails: userDetails,
         identityProvider: 'Custom',
     }
+    context.log('user', user)
 
     const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
     if (entity.provider !== 'Custom') {
         // Only support custom identity provider users, other users use connect()
         throw new Error('Invalid user')
     }
+    context.log('entity', entity)
 
     const isMatch = await bcryptCompare(password, entity.passwordHash)
     if (!isMatch) {
         throw new Error('Invalid user')
     }
 
+    context.log('isMatch', isMatch)
+
     if (!entity.tableId) {
         throw new Error('Invalid user')
     }
+
+    context.log('tableId', entity.tableId)
 
     // context.log('got user', userId, entity)
     const tableName = baseTableName + entity.tableId
     await table.createTableIfNotExists(tableName)
 
+    context.log('tableName', tableName)
     await table.insertOrReplaceEntity(tableName, toTableUserItem(user))
+    context.log('insertOrReplaceEntity', user)
     return { token: entity.tableId, provider: user.identityProvider, details: user.userDetails }
 }
 

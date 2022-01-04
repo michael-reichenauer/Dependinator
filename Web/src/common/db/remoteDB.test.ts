@@ -10,7 +10,7 @@ import { ILocalStoreKey } from "../LocalStore";
 import Result, { isError } from "../Result";
 
 describe("Test IRemoteData", () => {
-  test("Test", async () => {
+  test("Test1", async () => {
     const remote: IRemoteDB = new RemoteDB(di(ILocalStoreKey), 0);
 
     const remoteTryRead = async (
