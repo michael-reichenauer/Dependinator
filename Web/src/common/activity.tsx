@@ -1,3 +1,5 @@
+import { Backdrop, makeStyles } from "@material-ui/core";
+import React from "react";
 import { useEffect, useState } from "react";
 import { durationString } from "./utils";
 
@@ -19,6 +21,18 @@ const monitorEvents = [
 ];
 
 export const activityEventName = "customActivityChange";
+
+export default function Activity() {
+  const classes = useStyles();
+  const [isActive] = useActivity();
+
+  return (
+    <Backdrop
+      className={classes.backdrop}
+      open={!isActive as boolean}
+    ></Backdrop>
+  );
+}
 
 // Activates the user activity monitor, which can be read using useActivity()
 export function useActivityMonitor() {
@@ -158,3 +172,11 @@ export function useActivityChanged() {
 
   return isChanged;
 }
+
+const useStyles = makeStyles((theme) => ({
+  backdrop: {
+    zIndex: theme.zIndex.drawer + 1,
+    color: "#ffff",
+    backgroundColor: "#00000044",
+  },
+}));

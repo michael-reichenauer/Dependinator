@@ -1,7 +1,7 @@
 import { ApplicationBar } from "./application/ApplicationBar";
 import React from "react";
 import useWindowSize from "./common/windowSize";
-import { useActivityMonitor } from "./common/activity";
+import Activity, { useActivityMonitor } from "./common/activity";
 import { useAppVersionMonitor } from "./common/appVersion";
 import Diagram from "./application/Diagram";
 import About from "./application/About";
@@ -46,6 +46,7 @@ const App: React.FC = () => {
       <AlertDialog />
       <PromptDialog />
       <NodeLabelDialog />
+      <Activity />
     </>
   );
 };
