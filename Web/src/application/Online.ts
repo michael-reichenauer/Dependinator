@@ -31,7 +31,6 @@ export const useSyncMode = (): SyncState => {
 export const IOnlineKey = diKey<IOnline>();
 export interface IOnline {
   enableSync(): Promise<void>;
-  retrySync(): Promise<void>;
   disableSync(): void;
   setSetSyncMode(setSyncMode: SetAtom<SyncState>): void;
 }
@@ -94,6 +93,7 @@ export class Online implements IOnline {
     const checkRsp = await this.api.check();
 
     if (isError(checkRsp, NoContactError)) {
+      // No contact with server,
       this.stopProgress();
       setErrorMessage(
         "No network contact with server, please retry in a while again."
@@ -106,30 +106,20 @@ export class Online implements IOnline {
       return;
     }
 
-    console.log("rsp", checkRsp);
     if (isError(checkRsp)) {
+      // Som unexpected error (neither contact nor authenticate error)
       this.stopProgress();
       setErrorMessage("Internal server error.");
       return;
     }
 
     this.setState(SyncState.Enabled);
-    setSuccessMessage("Device sync is enabled");
+    setSuccessMessage("Device sync is OK");
   }
 
   public disableSync(): void {
     this.setState(SyncState.Disabled);
     this.store.configure(false);
-  }
-
-  public async retrySync(): Promise<void> {
-    this.startProgress();
-    const checkRsp = await this.api.check();
-    if (isError(checkRsp)) {
-    }
-
-    this.stopProgress();
-    this.store.configure(true);
   }
 
   private onActivityEvent(activity: CustomEvent) {

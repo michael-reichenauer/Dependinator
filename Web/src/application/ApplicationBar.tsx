@@ -74,21 +74,21 @@ export const ApplicationBar: FC<ApplicationBarProps> = ({ height }) => {
         )}
         {syncMode === SyncState.Enabled && (
           <Button
-            tooltip={`Cloud sync enabled and OK, click to check cloud connection`}
+            tooltip={`Device sync enabled and OK, click to sync now`}
             icon={<SyncIcon style={{ color: "Lime" }} />}
-            onClick={() => onlineRef.current.retrySync()}
+            onClick={() => onlineRef.current.enableSync()}
           />
         )}
         {syncMode === SyncState.Error && (
           <Button
-            tooltip="Cloud connection error, sync disabled, click to retry"
+            tooltip="Device sync error, click to retry sync now"
             icon={<SyncProblemIcon style={{ color: "#FF3366" }} />}
             onClick={() => onlineRef.current.enableSync()}
           />
         )}
         {syncMode === SyncState.Disabled && (
           <Button
-            tooltip="Cloud sync disabled, click to enable"
+            tooltip="Device sync disabled, click to enable"
             icon={<SyncDisabledIcon style={{ color: "#FFFF66" }} />}
             onClick={() => onlineRef.current.enableSync()}
           />

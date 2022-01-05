@@ -82,19 +82,13 @@ export function ApplicationMenu() {
     ]),
     menuItem("Delete", deleteDiagram),
     menuItem(
-      "Enable cloud sync",
+      "Enable device sync",
       () => onlineRef.current.enableSync(),
       syncMode !== SyncState.Progress,
       syncMode === SyncState.Disabled
     ),
     menuItem(
-      "Retry cloud sync",
-      () => onlineRef.current.retrySync(),
-      syncMode !== SyncState.Progress,
-      syncMode === SyncState.Error
-    ),
-    menuItem(
-      "Disable cloud sync",
+      "Disable device sync",
       () => onlineRef.current.disableSync(),
       syncMode !== SyncState.Progress,
       syncMode !== SyncState.Disabled

@@ -69,7 +69,7 @@ export class StoreDB implements IStoreDB {
   }
 
   public configure(isSyncEnabled: boolean): void {
-    console.log("Syncing enabled:", isSyncEnabled);
+    console.log("Syncing set to", isSyncEnabled);
     this.isSyncEnabled = isSyncEnabled;
 
     if (isSyncEnabled) {
