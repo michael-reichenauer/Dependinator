@@ -43,7 +43,7 @@ export default class InnerDiagramCanvas {
 
     // Push current diagram to make room for new inner diagram
     this.canvasStack.pushDiagram();
-    t.log("pushed diagram");
+    console.log("pushed diagram", t());
 
     // Load inner diagram or a default group node if first time
     if (!this.load(node.id)) {
@@ -55,11 +55,11 @@ export default class InnerDiagramCanvas {
       );
     }
 
-    t.log("loaded diagram");
+    console.log("loaded diagram", t());
     const groupNode = this.canvas.getFigure(this.canvas.mainNodeId);
     this.updateGroup(groupNode, node);
     this.addOrUpdateConnectedNodes(groupNode, connectedNodes);
-    t.log("added connected nodes");
+    console.log("added connected nodes", t());
 
     // Zoom inner diagram to correspond to inner diagram image size in the outer node
     // @ts-ignore
@@ -73,7 +73,7 @@ export default class InnerDiagramCanvas {
       innerDiagramRect.y - innerDiagramViewPos.top * this.canvas.zoomFactor;
     this.setScrollInCanvasCoordinate(left, top);
 
-    t.log();
+    console.log("editInnerDiagram", t());
   };
 
   popFromInnerDiagram = (): void => {
@@ -118,7 +118,7 @@ export default class InnerDiagramCanvas {
 
     this.addOrUpdateExternalNodes(externalNodes, node);
 
-    t.log();
+    console.log("popFromInnerDiagram", t());
   };
 
   getNodesExternalToGroup(group: Group): any {

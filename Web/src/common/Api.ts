@@ -66,7 +66,7 @@ export class Api implements IApi {
   // api helper functions ---------------------------------
   private async get(uri: string): Promise<Result<any>> {
     this.requestCount++;
-    console.log(`Api.get: Request #${this.requestCount}: GET ${uri} ...`);
+    console.log(`Request #${this.requestCount}: GET ${uri} ...`);
     const t = timing();
     try {
       const rspData = (
@@ -75,37 +75,57 @@ export class Api implements IApi {
         })
       ).data;
 
-      t.log(`Request #${this.requestCount}: GET ${uri}: OK:`, rspData);
+      console.groupCollapsed(
+        `Request #${this.requestCount}: GET ${uri}: OK:`,
+        t()
+      );
+      console.log("Response", rspData);
+      console.groupEnd();
       this.onOK();
       return rspData;
     } catch (e) {
       const error = this.toError(e);
-      t.log(`Request #${this.requestCount}: GET ${uri}: Error:`, error);
+      console.groupCollapsed(
+        `%cRequest #${this.requestCount}: GET ${uri}: ERROR: ${error.name} ${error.message}`,
+        "color: #CD5C5C",
+        t()
+      );
+      console.log("%cError:", "color: #CD5C5C", error);
+      console.groupEnd();
       this.onError(error);
       return error;
     }
   }
 
-  async post(uri: string, data: any): Promise<Result<any>> {
+  async post(uri: string, requestData: any): Promise<Result<any>> {
     this.requestCount++;
-    console.log(
-      `Api.get: Request #${this.requestCount}: POST ${uri} ...`,
-      data
-    );
+    console.log(`Request #${this.requestCount}: POST ${uri} ...`);
     const t = timing();
     try {
       const rspData = (
-        await axios.post(uri, data, {
+        await axios.post(uri, requestData, {
           headers: { "x-api-key": this.apiKey, xtoken: this.getToken() },
         })
       ).data;
-
-      t.log(`Request #${this.requestCount}: POST ${uri}: OK:`, rspData);
+      console.groupCollapsed(
+        `Request #${this.requestCount}: POST ${uri}: OK:`,
+        t()
+      );
+      console.log("Request:", requestData);
+      console.log("Response:", rspData);
+      console.groupEnd();
       this.onOK();
       return rspData;
     } catch (e) {
       const error = this.toError(e);
-      t.log(`Request #${this.requestCount}: POST ${uri}: Error:`, error);
+      console.groupCollapsed(
+        `%cRequest #${this.requestCount}: POST ${uri}: ERROR: ${error.name} ${error.message}`,
+        "color: #CD5C5C",
+        t()
+      );
+      console.log("Request:", requestData);
+      console.log("%cError:", "color: #CD5C5C", error);
+      console.groupEnd();
       this.onError(error);
       return error;
     }

@@ -291,7 +291,7 @@ export default class Node extends draw2d.shape.node.Between {
     this.setChildrenVisible(true);
     this.remove(this.innerDiagram);
     this.innerDiagram = null;
-    t.log();
+    console.log("hideInnerDiagram", t());
   }
 
   editInnerDiagram(): void {

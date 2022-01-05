@@ -10,7 +10,7 @@ type ClassType<T> = { new (...args: any[]): T };
 // isError(result) returns true if result is an Error and can be used in narrowing by the caller
 // isError(result, ErrorType), with specified error type returns true if result is an
 // the specified error type and can be used in narrowing by the caller
-export function isError<T, E>(
+export function isError<T, E = Error>(
   result: Result<T, E>,
   errorClass?: ClassType<E>
 ): result is E {

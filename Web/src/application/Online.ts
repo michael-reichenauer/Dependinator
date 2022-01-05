@@ -93,7 +93,7 @@ export class Online implements IOnline {
     this.startProgress();
     const checkRsp = await this.api.check();
 
-    if (checkRsp instanceof NoContactError) {
+    if (isError(checkRsp, NoContactError)) {
       this.stopProgress();
       setErrorMessage(
         "No network contact with server, please retry in a while again."
@@ -101,7 +101,7 @@ export class Online implements IOnline {
       return;
     }
 
-    if (checkRsp instanceof AuthenticateError) {
+    if (isError(checkRsp, AuthenticateError)) {
       showLoginDlg(this);
       return;
     }
@@ -124,10 +124,12 @@ export class Online implements IOnline {
 
   public async retrySync(): Promise<void> {
     this.startProgress();
-    await delay(3000);
+    const checkRsp = await this.api.check();
+    if (isError(checkRsp)) {
+    }
 
-    this.store.configure(false);
-    this.setSyncMode?.(SyncState.Error);
+    this.stopProgress();
+    this.store.configure(true);
   }
 
   private onActivityEvent(activity: CustomEvent) {
