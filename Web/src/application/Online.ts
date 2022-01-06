@@ -113,6 +113,7 @@ export class Online implements IOnline {
       return;
     }
 
+    this.store.configure(true);
     this.setState(SyncState.Enabled);
     setSuccessMessage("Device sync is OK");
   }

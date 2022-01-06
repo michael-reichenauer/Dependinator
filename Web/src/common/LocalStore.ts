@@ -19,6 +19,8 @@ export interface ILocalStore {
   clear(): void;
 }
 
+const noValueError = new RangeError("No value for specified key");
+
 @singleton(ILocalStoreKey)
 export default class LocalStore implements ILocalStore {
   public tryRead<T>(key: string): Result<T> {
@@ -29,7 +31,7 @@ export default class LocalStore implements ILocalStore {
     return keys.map((key: string) => {
       let valueText = localStorage.getItem(key);
       if (valueText == null) {
-        return new RangeError(`No data for id: ${key}`);
+        return noValueError;
       }
       // console.log(`Read key: ${key}, ${text.length} bytes`);
       try {

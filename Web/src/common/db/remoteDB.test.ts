@@ -1,17 +1,17 @@
 import { di } from "../di";
 import {
   IRemoteDB,
+  IRemoteDBKey,
   NotModifiedError,
-  Query,
-  RemoteDB,
   RemoteEntity,
 } from "./remoteDB";
-import { ILocalStoreKey } from "../LocalStore";
 import Result, { isError } from "../Result";
+import { Query, RemoteApi } from "./RemoteApi";
 
 describe("Test IRemoteData", () => {
   test("Test1", async () => {
-    const remote: IRemoteDB = new RemoteDB(di(ILocalStoreKey), 0);
+    RemoteApi.testDelay = 0;
+    const remote: IRemoteDB = di(IRemoteDBKey);
 
     const remoteTryRead = async (
       query: Query
@@ -43,8 +43,6 @@ describe("Test IRemoteData", () => {
     ).resolves.toBeInstanceOf(NotModifiedError);
 
     // Get RangeError if key is wrong
-    await expect(remoteTryRead({ key: "1" })).resolves.toBeInstanceOf(
-      RangeError
-    );
+    await expect(remoteTryRead({ key: "1" })).resolves.toBeInstanceOf(Error);
   });
 });

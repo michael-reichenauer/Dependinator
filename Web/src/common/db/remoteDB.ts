@@ -1,8 +1,7 @@
 import { di, diKey, singleton } from "../di";
 import Result, { isError } from "../Result";
 import { CustomError } from "../CustomError";
-import { delay } from "../utils";
-import { ILocalStore, ILocalStoreKey } from "../LocalStore";
+import { ApiEntity, IRemoteApi, IRemoteApiKey, Query } from "./RemoteApi";
 
 export interface RemoteEntity {
   key: string;
@@ -12,14 +11,7 @@ export interface RemoteEntity {
   value: any;
 }
 
-export interface Query {
-  key: string;
-  IfNoneMatch?: number;
-}
-
 export class NotModifiedError extends CustomError {}
-
-const prefix = "remote-";
 
 export const IRemoteDBKey = diKey<IRemoteDB>();
 export interface IRemoteDB {
@@ -28,65 +20,57 @@ export interface IRemoteDB {
   removeBatch(keys: string[]): Promise<Result<void>>;
 }
 
+const noValueError = new RangeError("No value for key");
+const notModifiedError = new NotModifiedError();
+
 @singleton(IRemoteDBKey)
 export class RemoteDB implements IRemoteDB {
-  constructor(
-    private api: ILocalStore = di(ILocalStoreKey),
-    private testDelay = 850
-  ) {}
-
-  public async writeBatch(entities: RemoteEntity[]): Promise<Result<void>> {
-    const remoteEntities = entities.map((entity) => ({
-      key: this.remoteKey(entity.key),
-      value: entity,
-    }));
-
-    await delay(this.testDelay); // Simulate network delay !!!!!!!!!!!!!
-
-    this.api.writeBatch(remoteEntities);
-  }
+  constructor(private api: IRemoteApi = di(IRemoteApiKey)) {}
 
   public async tryReadBatch(
     queries: Query[]
   ): Promise<Result<Result<RemoteEntity>[]>> {
-    const remoteKeys = queries.map((query) => this.remoteKey(query.key));
+    const apiEntities = await this.api.tryReadBatch(queries);
+    if (isError(apiEntities)) {
+      return apiEntities;
+    }
 
-    await delay(this.testDelay); // Simulate network delay !!!!!!!!!!!!!
+    return this.toRemoteEntities(apiEntities);
+  }
 
-    const remoteEntities = this.api.tryReadBatch(remoteKeys);
+  public async writeBatch(entities: RemoteEntity[]): Promise<Result<void>> {
+    const apiEntities = this.toApiEntities(entities);
 
-    // skipNotModifiedEntities will be handled by server !!!
-    return this.skipNotModifiedEntities(queries, remoteEntities);
+    return await this.api.writeBatch(apiEntities);
   }
 
   public async removeBatch(keys: string[]): Promise<Result<void>> {
-    const remoteKeys = keys.map((key) => this.remoteKey(key));
-
-    await delay(this.testDelay); // Simulate network delay !!!!!!!!!!!!!
-
-    this.api.removeBatch(remoteKeys);
+    return await this.api.removeBatch(keys);
   }
 
-  skipNotModifiedEntities(queries: Query[], entities: Result<RemoteEntity>[]) {
-    // If a query specifies IfNoneMatch, then matching existing entities are replaced by NotModifiedError
-    return entities.map((entity, i) => {
-      if (
-        !isError(entity) &&
-        queries[i].IfNoneMatch &&
-        queries[i].IfNoneMatch === entity.timestamp
-      ) {
-        // The query specified a IfNoneMatch and entity has not been modified
-        return new NotModifiedError();
+  private toRemoteEntities(apiEntities: ApiEntity[]): Result<RemoteEntity>[] {
+    return apiEntities.map((entity) => {
+      if (entity.status === "noValue") {
+        return noValueError;
       }
-      return entity;
+      if (entity.status === "notModified") {
+        return notModifiedError;
+      }
+      return {
+        key: entity.key,
+        timestamp: entity.timestamp ?? 0,
+        version: entity.value?.version ?? 0,
+        value: entity.value?.value,
+      };
     });
   }
 
-  remoteKey(localKey: string): string {
-    return prefix + localKey;
-  }
-
-  localKey(remoteKey: string): string {
-    return remoteKey.substring(prefix.length);
+  private toApiEntities(remoteEntities: RemoteEntity[]): ApiEntity[] {
+    return remoteEntities.map((entity) => ({
+      key: entity.key,
+      status: "value",
+      timestamp: entity.timestamp,
+      value: { value: entity.value, version: entity.version },
+    }));
   }
 }

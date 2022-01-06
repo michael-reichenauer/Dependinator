@@ -3,11 +3,11 @@ import {
   IRemoteDB,
   IRemoteDBKey,
   NotModifiedError,
-  Query,
   RemoteEntity,
 } from "./remoteDB";
 import Result, { isError } from "../Result";
 import { di, diKey, singleton } from "../di";
+import { Query } from "./RemoteApi";
 
 export interface Entity {
   key: string;
