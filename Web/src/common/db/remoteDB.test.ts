@@ -4,7 +4,7 @@ import {
   IRemoteDBKey,
   NotModifiedError,
   RemoteEntity,
-} from "./remoteDB";
+} from "./RemoteDB";
 import Result, { isError } from "../Result";
 import { Query, RemoteApi } from "./RemoteApi";
 

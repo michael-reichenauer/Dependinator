@@ -1,7 +1,6 @@
 import Result, { isError, orDefault } from "../Result";
 import { di, diKey, singleton } from "../di";
 import { ILocalStore, ILocalStoreKey } from "../LocalStore";
-import { CustomError } from "../CustomError";
 
 export interface LocalEntity {
   key: string;
@@ -11,8 +10,6 @@ export interface LocalEntity {
 
   value: any;
 }
-
-export class RemovedError extends CustomError {}
 
 export const ILocalDBKey = diKey<ILocalDB>();
 export interface ILocalDB {
