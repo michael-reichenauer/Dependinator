@@ -31,6 +31,8 @@ export interface Query {
 
 export class NetworkError extends CustomError {}
 export class AuthenticateError extends NetworkError {}
+export class CredentialError extends AuthenticateError {}
+export class TokenError extends AuthenticateError {}
 export class NoContactError extends NetworkError {}
 export class RequestError extends NetworkError {}
 
@@ -188,7 +190,7 @@ export class Api implements IApi {
         if (
           rsp.data?.includes("The table specified does not exist") ||
           rsp.data?.includes("Invalid token") ||
-          rsp.data?.includes("Invalid api request")
+          rsp.data?.includes("Invalid user")
         ) {
           return new AuthenticateError(axiosError);
         }

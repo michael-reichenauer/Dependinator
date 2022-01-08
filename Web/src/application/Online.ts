@@ -62,27 +62,18 @@ export class Online implements IOnline {
 
     if (isError(loginRsp)) {
       let msg = "Failed to login. Internal server error";
-      if (loginRsp instanceof AuthenticateError) {
+      if (isError(loginRsp, AuthenticateError)) {
         msg =
           "Invalid credentials. Please try again with different credentials or create a new account";
-      } else if (loginRsp instanceof NoContactError) {
+      } else if (isError(loginRsp, NoContactError)) {
         msg = "No network contact with server. Please retry in a while again.";
       }
-
+      console.log("error msg", loginRsp, msg);
       setErrorMessage(msg);
       return;
     }
 
-    const checkRsp = await this.api.check();
-    if (isError(checkRsp)) {
-      setErrorMessage("Failed to login.  Credentials could not be verified");
-      return;
-    }
-
-    this.setState(SyncState.Enabled);
-    this.store.configure({ isSyncEnabled: true });
-    this.store.triggerSync();
-    setSuccessMessage("Device sync is enabled");
+    this.enableSync();
   }
 
   public closed(): void {
@@ -115,7 +106,15 @@ export class Online implements IOnline {
     }
 
     this.store.configure({ isSyncEnabled: true });
-    this.store.triggerSync();
+    const syncResult = await this.store.triggerSync();
+    if (isError(syncResult)) {
+      this.stopProgress();
+      setErrorMessage("Failed to enable sync. Internal server error.");
+      this.store.configure({ isSyncEnabled: false });
+      this.setState(SyncState.Disabled);
+      return;
+    }
+
     this.setState(SyncState.Enabled);
     setSuccessMessage("Device sync is OK");
   }

@@ -14,18 +14,22 @@ const userPartitionKey = 'users'
 const standardApiKey = '0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade'
 const saltRounds = 10
 
+const invalidUserError = 'Invalid user'
+const invalidTokenError = 'Invalid token'
+const invalidRequestError = 'Invalid request'
+
 exports.verifyApiKey = context => {
     const req = context.req
     const apiKey = req.headers['x-api-key']
     if (apiKey !== standardApiKey) {
-        throw new Error('Invalid api request')
+        throw new Error(invalidRequestError)
     }
 }
 
 exports.verifyToken = context => {
     const info = clientInfo.getInfo(context)
     if (!info.token || info.token == null || info.token === 'null') {
-        throw new Error('Invalid token')
+        throw new Error(invalidTokenError)
     }
 }
 
@@ -58,7 +62,7 @@ exports.connectUser = async (context, data) => {
     context.log('connect', context, data)
     const { username, password } = data
     if (!username || !password) {
-        throw new Error('Invalid user')
+        throw new Error(invalidUserError)
     }
 
     const userDetails = username
@@ -73,19 +77,19 @@ exports.connectUser = async (context, data) => {
     const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
     if (entity.provider !== 'Custom') {
         // Only support custom identity provider users, other users use connect()
-        throw new Error('Invalid user')
+        throw new Error(invalidUserError)
     }
     context.log('entity', entity)
 
     const isMatch = await bcryptCompare(password, entity.passwordHash)
     if (!isMatch) {
-        throw new Error('Invalid user')
+        throw new Error(invalidUserError)
     }
 
     context.log('isMatch', isMatch)
 
     if (!entity.tableId) {
-        throw new Error('Invalid user')
+        throw new Error(invalidUserError)
     }
 
     context.log('tableId', entity.tableId)
