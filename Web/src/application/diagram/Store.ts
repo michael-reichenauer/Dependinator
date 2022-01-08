@@ -16,17 +16,16 @@ import {
 import { LocalEntity } from "../../common/db/LocalDB";
 import { RemoteEntity } from "../../common/db/RemoteDB";
 
-const rootCanvasId = "root";
-const defaultApplicationDto: ApplicationDto = { diagramInfos: {} };
-const defaultDiagramDto: DiagramDto = { id: "", name: "", canvases: {} };
+export interface Configuration {
+  onRemoteChanged: () => void;
+  onSyncChanged: (isOK: boolean) => void;
+  isSyncEnabled: boolean;
+}
 
 export const IStoreKey = diKey<IStore>();
 export interface IStore {
-  initialize(
-    onRemoteChanged: () => void,
-    onSyncChanged: (connected: boolean) => void
-  ): void;
-  configure(isSyncEnabled: boolean): void;
+  configure(config: Partial<Configuration>): void;
+  triggerSync(): Promise<Result<void>>;
 
   openNewDiagram(): DiagramDto;
   tryOpenDiagram(diagramId: string): Promise<Result<DiagramDto>>;
@@ -48,9 +47,18 @@ export interface IStore {
   saveAllDiagramsToFile(): Promise<void>;
 }
 
+const rootCanvasId = "root";
+const defaultApplicationDto: ApplicationDto = { diagramInfos: {} };
+const defaultDiagramDto: DiagramDto = { id: "", name: "", canvases: {} };
+
 @singleton(IStoreKey)
 export class Store implements IStore {
   private currentDiagramId: string = "";
+  private config: Configuration = {
+    onRemoteChanged: () => {},
+    onSyncChanged: () => {},
+    isSyncEnabled: false,
+  };
 
   constructor(
     // private localData: ILocalData = di(ILocalDataKey),
@@ -58,15 +66,14 @@ export class Store implements IStore {
     private db: IStoreDB = di(IStoreDBKey)
   ) {}
 
-  public initialize(
-    onRemoteChanged: () => void,
-    onSyncChanged: (connected: boolean) => void
-  ): void {
-    this.db.initialize(this.onEntityConflict, onRemoteChanged, onSyncChanged);
+  public configure(config: Partial<Configuration>): void {
+    this.config = { ...this.config, ...config };
+
+    this.db.configure({ ...config });
   }
 
-  configure(isSyncEnabled: boolean): void {
-    this.db.configure(isSyncEnabled);
+  public triggerSync(): Promise<Result<void>> {
+    return this.db.triggerSync();
   }
 
   public openNewDiagram(): DiagramDto {

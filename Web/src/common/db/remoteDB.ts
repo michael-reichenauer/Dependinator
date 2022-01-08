@@ -1,7 +1,7 @@
 import { di, diKey, singleton } from "../di";
 import Result, { isError } from "../Result";
 import { CustomError } from "../CustomError";
-import { ApiEntity, IRemoteApi, IRemoteApiKey, Query } from "./RemoteApi";
+import { ApiEntity, IApi, IApiKey, Query } from "../Api";
 
 export interface RemoteEntity {
   key: string;
@@ -25,7 +25,7 @@ const notModifiedError = new NotModifiedError();
 
 @singleton(IRemoteDBKey)
 export class RemoteDB implements IRemoteDB {
-  constructor(private api: IRemoteApi = di(IRemoteApiKey)) {}
+  constructor(private api: IApi = di(IApiKey)) {}
 
   public async tryReadBatch(
     queries: Query[]

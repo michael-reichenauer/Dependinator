@@ -7,75 +7,66 @@ import {
 } from "./RemoteDB";
 import Result, { isError } from "../Result";
 import { di, diKey, singleton } from "../di";
-import { Query } from "./RemoteApi";
+import { Query } from "../Api";
 
 export interface Entity {
   key: string;
   value: any;
 }
 
-export type OnConflict = (
-  local: LocalEntity,
-  remote: RemoteEntity
-) => LocalEntity;
+export interface Configuration {
+  onConflict: (local: LocalEntity, remote: RemoteEntity) => LocalEntity;
+  onRemoteChanged: () => void;
+  onSyncChanged: (isOK: boolean) => void;
+  isSyncEnabled: boolean;
+}
 
 // Key-value database, that syncs locally stored entities with a remote server
 export const IStoreDBKey = diKey<IStoreDB>();
 export interface IStoreDB {
-  configure(isSyncEnabled: boolean): void;
-  initialize(
-    onConflict: OnConflict,
-    onRemoteChanged: () => void,
-    onSyncChanged: (connected: boolean) => void
-  ): void;
+  configure(options: Partial<Configuration>): void;
   monitorRemoteEntities(keys: string[]): void;
   readLocal<T>(key: string, defaultValue: T): T;
   tryReadLocalThenRemoteAsync<T>(key: string): Promise<Result<T>>;
   writeBatch(entities: Entity[]): void;
   removeBatch(keys: string[]): void;
+  triggerSync(): Promise<Result<void>>;
 }
 
 const autoSyncInterval = 30000;
 
 @singleton(IStoreDBKey)
 export class StoreDB implements IStoreDB {
-  private isSyncEnabled: boolean = false;
-  private syncPromise = Promise.resolve();
-  private isConnected: boolean = true;
-  private syncedTimestamp: number = 0;
+  private syncPromise = Promise.resolve<Result<void>>(undefined);
+  private isSyncOK: boolean = true;
+  private autoSyncTimeoutId: any = null;
   private monitorKeys: string[] = [];
-  private onConflict: OnConflict = (): any => {};
-  private onRemoteChanged: () => void = () => {};
-  private onSyncChanged: (connected: boolean) => void = () => {};
+  private configuration: Configuration = {
+    isSyncEnabled: false,
+    onConflict: (l, r) => l,
+    onSyncChanged: () => {},
+    onRemoteChanged: () => {},
+  };
 
   constructor(
     private localDB: ILocalDB = di(ILocalDBKey),
     private remoteDB: IRemoteDB = di(IRemoteDBKey)
   ) {}
 
-  public initialize(
-    onConflict: OnConflict,
-    onRemoteChanged: () => void,
-    onSyncChanged: (connected: boolean) => void
-  ): void {
-    this.onConflict = onConflict;
-    this.onRemoteChanged = onRemoteChanged;
-    this.onSyncChanged = onSyncChanged;
-  }
-
   // Called when remote entities should be monitored for changed by other clients
   public monitorRemoteEntities(keys: string[]): void {
     this.monitorKeys = [...keys];
   }
 
-  public configure(isSyncEnabled: boolean): void {
-    console.log("Syncing set to", isSyncEnabled);
-    this.isSyncEnabled = isSyncEnabled;
-
-    if (isSyncEnabled) {
-      this.triggerSync();
-      setTimeout(() => this.autoSync(), autoSyncInterval);
+  public configure(configuration: Partial<Configuration>): void {
+    if (
+      configuration.isSyncEnabled !== undefined &&
+      configuration.isSyncEnabled !== this.configuration.isSyncEnabled
+    ) {
+      console.log("Syncing - isSyncEnabled =", configuration.isSyncEnabled);
     }
+
+    this.configuration = { ...this.configuration, ...configuration };
   }
 
   // Reads local value or returns default value, (caches default value to be used for next access)
@@ -143,35 +134,44 @@ export class StoreDB implements IStoreDB {
   }
 
   // Called to trigger a sync, which are done in sequence (not parallel)
-  private triggerSync(): void {
-    if (!this.isSyncEnabled) {
+  public async triggerSync(): Promise<Result<void>> {
+    if (!this.configuration.isSyncEnabled) {
+      clearTimeout(this.autoSyncTimeoutId);
       return;
     }
 
     // Trigger sync, but ensure syncs are run in sequence awaiting previous sync
     this.syncPromise = this.syncPromise.then(async () => {
-      await this.syncLocalAndRemote();
-      this.syncedTimestamp = Date.now();
+      clearTimeout(this.autoSyncTimeoutId);
+      const syncResult = await this.syncLocalAndRemote();
+
+      this.autoSyncTimeoutId = setTimeout(
+        () => this.triggerSync(),
+        autoSyncInterval
+      );
+      return syncResult;
     });
+
+    return await this.syncPromise;
   }
 
-  // Scheduled to be called regularly to trigger sync with remote server
-  private autoSync() {
-    if (!this.isSyncEnabled) {
-      return;
-    }
+  // // Scheduled to be called regularly to trigger sync with remote server
+  // private autoSync() {
+  //   if (!this.configuration.isSyncEnabled) {
+  //     return;
+  //   }
 
-    const delay = Math.max(0, Date.now() - this.syncedTimestamp);
-    if (delay < autoSyncInterval - 100) {
-      // Not yet time to sync, schedule recheck after some time
-      setTimeout(() => this.autoSync(), autoSyncInterval - delay);
-      return;
-    }
+  //   const delay = Math.max(0, Date.now() - this.syncedTimestamp);
+  //   if (delay < autoSyncInterval - 100) {
+  //     // Not yet time to sync, schedule recheck after some time
+  //     setTimeout(() => this.autoSync(), autoSyncInterval - delay);
+  //     return;
+  //   }
 
-    // Time to auto sync and schedule next auto sync
-    this.triggerSync();
-    setTimeout(() => this.autoSync(), autoSyncInterval);
-  }
+  //   // Time to auto sync and schedule next auto sync
+  //   this.triggerSync();
+  //   setTimeout(() => this.autoSync(), autoSyncInterval);
+  // }
 
   // Syncs local and remote entities by retrieving changed remote entities and compare with
   // stored local entities.
@@ -179,7 +179,11 @@ export class StoreDB implements IStoreDB {
   // If local has changed but not remote, then entity is uploaded to remote,
   // If both local and remote has changed, the conflict is resolved and both local and remote are updated
   // Removed entities are synced as well
-  private async syncLocalAndRemote(): Promise<void> {
+  private async syncLocalAndRemote(): Promise<Result<void>> {
+    if (!this.configuration.isSyncEnabled) {
+      return;
+    }
+
     console.log("Syncing ...");
 
     // Always syncing monitored entities and unsynced local entities
@@ -197,11 +201,11 @@ export class StoreDB implements IStoreDB {
     const remoteEntities = await this.remoteDB.tryReadBatch(queries);
     if (isError(remoteEntities)) {
       // Failed to connect to remote server
-      this.setIsConnected(false);
-      return;
+      this.setSyncStatus(false);
+      return remoteEntities;
     }
 
-    this.setIsConnected(true);
+    this.setSyncStatus(true);
     const localEntities = this.localDB.tryReadBatch(syncKeys);
 
     const remoteToLocal: RemoteEntity[] = [];
@@ -253,7 +257,10 @@ export class StoreDB implements IStoreDB {
 
       // Local entity was chanced by this client and remote entity wad changed by some other client,
       // lets merge the entities by resolving the conflict
-      const resolvedEntity = this.onConflict(localEntity, remoteEntity);
+      const resolvedEntity = this.configuration.onConflict(
+        localEntity,
+        remoteEntity
+      );
       mergedEntities.push(resolvedEntity);
     });
 
@@ -272,9 +279,15 @@ export class StoreDB implements IStoreDB {
 
     this.updateLocalEntities(localToUpdate);
 
-    await this.uploadEntities(remoteToUpload);
+    const uploadResult = await this.uploadEntities(remoteToUpload);
+    if (isError(uploadResult)) {
+      return uploadResult;
+    }
 
-    await this.syncRemovedEntities();
+    const removeResult = await this.syncRemovedEntities();
+    if (isError(removeResult)) {
+      return removeResult;
+    }
   }
 
   // Entities merged by a conflict needs to update both local and remote
@@ -307,7 +320,7 @@ export class StoreDB implements IStoreDB {
     if (localToUpdate.length > 0) {
       // Signal that local entities where changed during sync so main app can reload ui
       console.log("Remote entity updated local entities");
-      setTimeout(() => this.onRemoteChanged(), 0);
+      setTimeout(() => this.configuration.onRemoteChanged(), 0);
     }
   }
 
@@ -358,15 +371,17 @@ export class StoreDB implements IStoreDB {
   }
 
   // Signal is connected changes (called when remote connections succeeds or fails)
-  private setIsConnected(isConnected: boolean): void {
-    if (isConnected !== this.isConnected) {
-      this.isConnected = isConnected;
-      this.onSyncChanged(isConnected);
+  private setSyncStatus(isOK: boolean): void {
+    if (isOK !== this.isSyncOK) {
+      this.isSyncOK = isOK;
+      this.configuration.onSyncChanged(isOK);
     }
   }
 
   // Upload remote entities to server. If ok, then local entities are marked as synced
-  private async uploadEntities(entities: RemoteEntity[]): Promise<void> {
+  private async uploadEntities(
+    entities: RemoteEntity[]
+  ): Promise<Result<void>> {
     if (!entities.length) {
       // No entities to upload
       return;
@@ -374,11 +389,11 @@ export class StoreDB implements IStoreDB {
 
     const response = await this.remoteDB.writeBatch(entities);
     if (isError(response)) {
-      this.setIsConnected(false);
-      return;
+      this.setSyncStatus(false);
+      return response;
     }
 
-    this.setIsConnected(true);
+    this.setSyncStatus(true);
 
     // Remember sync timestamps for uploaded entities
     const syncedItems = new Map<string, number>();
@@ -399,7 +414,7 @@ export class StoreDB implements IStoreDB {
 
   // Syncing removed local entities to be removed on remote server as well, if ok, then
   // local removed values are marked as confirmed removed (i.e. synced)
-  private async syncRemovedEntities() {
+  private async syncRemovedEntities(): Promise<Result<void>> {
     const removedKeys = this.localDB.getRemovedKeys();
     if (removedKeys.length === 0) {
       return;
@@ -407,10 +422,10 @@ export class StoreDB implements IStoreDB {
 
     const response = await this.remoteDB.removeBatch(removedKeys);
     if (isError(response)) {
-      this.setIsConnected(false);
-      return;
+      this.setSyncStatus(false);
+      return response;
     }
-    this.setIsConnected(true);
+    this.setSyncStatus(true);
 
     this.localDB.confirmRemoved(removedKeys);
     console.log(`Remove confirmed of ${removedKeys.length} entities`);
@@ -419,18 +434,18 @@ export class StoreDB implements IStoreDB {
   // Trying to read a remote value, if ok, the caching it locally as well
   private async tryReadRemote<T>(key: string): Promise<Result<T>> {
     // Entity not cached locally, lets try get from remote location
-    if (!this.isSyncEnabled) {
+    if (!this.configuration.isSyncEnabled) {
       // Since sync is disabled, the trying to read fails with not found error
       return new RangeError(`Local key ${key} not found`);
     }
 
     const remoteEntities = await this.remoteDB.tryReadBatch([{ key: key }]);
     if (isError(remoteEntities)) {
-      this.setIsConnected(false);
+      this.setSyncStatus(false);
       return remoteEntities;
     }
 
-    this.setIsConnected(true);
+    this.setSyncStatus(true);
     const remoteEntity = remoteEntities[0];
     if (isError(remoteEntity)) {
       return remoteEntity;

@@ -16,11 +16,7 @@ import { addDefaultNewDiagram, addFigureToCanvas } from "./addDefault";
 import InnerDiagramCanvas from "./InnerDiagramCanvas";
 import Printer from "../../common/Printer";
 import { setProgress } from "../../common/Progress";
-import {
-  setErrorMessage,
-  setInfoMessage,
-  setSuccessMessage,
-} from "../../common/MessageSnackbar";
+import { setErrorMessage, setInfoMessage } from "../../common/MessageSnackbar";
 import NodeGroup from "./NodeGroup";
 import { greenNumberIconKey } from "../../common/icons";
 import NodeNumber from "./NodeNumber";
@@ -403,19 +399,10 @@ export default class DiagramCanvas {
     setProgress(false);
   };
 
-  onSyncConnectionChange = async (connected: boolean) => {
-    if (!connected) {
-      setErrorMessage("Connection failed, device sync is disabled");
-      return;
-    }
-
-    setSuccessMessage("Connection OK, device sync enabled");
-  };
-
   async loadInitialDiagram() {
     setProgress(true);
 
-    this.store.initialize(this.onRemoteChanged, this.onSyncConnectionChange);
+    this.store.configure({ onRemoteChanged: this.onRemoteChanged });
 
     await this.showRecentDiagramOrNew();
 

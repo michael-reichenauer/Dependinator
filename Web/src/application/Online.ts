@@ -32,6 +32,7 @@ export const IOnlineKey = diKey<IOnline>();
 export interface IOnline {
   enableSync(): Promise<void>;
   disableSync(): void;
+
   setSetSyncMode(setSyncMode: SetAtom<SyncState>): void;
 }
 
@@ -57,9 +58,9 @@ export class Online implements IOnline {
 
   public async login(user: User): Promise<Result<void>> {
     const loginRsp = await this.authenticate.login(user);
+    this.stopProgress();
 
     if (isError(loginRsp)) {
-      this.stopProgress();
       let msg = "Failed to login. Internal server error";
       if (loginRsp instanceof AuthenticateError) {
         msg =
@@ -74,13 +75,13 @@ export class Online implements IOnline {
 
     const checkRsp = await this.api.check();
     if (isError(checkRsp)) {
-      this.stopProgress();
       setErrorMessage("Failed to login.  Credentials could not be verified");
       return;
     }
 
     this.setState(SyncState.Enabled);
-    this.store.configure(true);
+    this.store.configure({ isSyncEnabled: true });
+    this.store.triggerSync();
     setSuccessMessage("Device sync is enabled");
   }
 
@@ -113,14 +114,15 @@ export class Online implements IOnline {
       return;
     }
 
-    this.store.configure(true);
+    this.store.configure({ isSyncEnabled: true });
+    this.store.triggerSync();
     this.setState(SyncState.Enabled);
     setSuccessMessage("Device sync is OK");
   }
 
   public disableSync(): void {
     this.setState(SyncState.Disabled);
-    this.store.configure(false);
+    this.store.configure({ isSyncEnabled: false });
   }
 
   private onActivityEvent(activity: CustomEvent) {
@@ -128,7 +130,7 @@ export class Online implements IOnline {
     if (!this.isActive) {
       // No longer active, disable sync if enabled
       if (this.currentState !== SyncState.Disabled) {
-        this.store.configure(false);
+        this.store.configure({ isSyncEnabled: false });
         this.startProgress();
       }
 
@@ -138,7 +140,8 @@ export class Online implements IOnline {
     // Activated, lets enable sync if not disabled
     this.stopProgress();
     if (this.currentState !== SyncState.Disabled) {
-      this.store.configure(true);
+      this.store.configure({ isSyncEnabled: true });
+      this.store.triggerSync();
     }
   }
 

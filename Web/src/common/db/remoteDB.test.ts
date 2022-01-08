@@ -6,11 +6,11 @@ import {
   RemoteEntity,
 } from "./RemoteDB";
 import Result, { isError } from "../Result";
-import { Query, RemoteApi } from "./RemoteApi";
+import { Query } from "../Api";
 
 describe("Test IRemoteData", () => {
   test("Test1", async () => {
-    RemoteApi.testDelay = 0;
+    //;RemoteApi.testDelay = 0;
     const remote: IRemoteDB = di(IRemoteDBKey);
 
     const remoteTryRead = async (

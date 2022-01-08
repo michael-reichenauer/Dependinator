@@ -15,6 +15,20 @@ export interface TokenInfo {
   token: string;
 }
 
+export type ApiEntityStatus = "value" | "noValue" | "notModified";
+
+export interface ApiEntity {
+  key: string;
+  status: ApiEntityStatus;
+  timestamp?: number;
+  value?: any;
+}
+
+export interface Query {
+  key: string;
+  IfNoneMatch?: number;
+}
+
 export class NetworkError extends CustomError {}
 export class AuthenticateError extends NetworkError {}
 export class NoContactError extends NetworkError {}
@@ -26,6 +40,9 @@ export interface IApi {
   login(user: User): Promise<Result<TokenInfo>>;
   createAccount(user: User): Promise<Result<void>>;
   check(): Promise<Result<void>>;
+  tryReadBatch(queries: Query[]): Promise<Result<ApiEntity[]>>;
+  writeBatch(entities: ApiEntity[]): Promise<Result<void>>;
+  removeBatch(keys: string[]): Promise<Result<void>>;
 }
 
 @singleton(IApiKey)
@@ -56,7 +73,23 @@ export class Api implements IApi {
   }
 
   public async check(): Promise<Result<void>> {
-    return this.get("/api/Check");
+    return await this.get("/api/Check");
+  }
+
+  public async tryReadBatch(queries: Query[]): Promise<Result<ApiEntity[]>> {
+    const rsp = await this.post("/api/tryReadBatch", queries);
+    if (isError(rsp)) {
+      return rsp;
+    }
+    return rsp as ApiEntity[];
+  }
+
+  public async writeBatch(entities: ApiEntity[]): Promise<Result<void>> {
+    return await this.post("/api/writeBatch", entities);
+  }
+
+  public async removeBatch(keys: string[]): Promise<Result<void>> {
+    return await this.post("/api/removeBatch", keys);
   }
 
   private getToken() {
@@ -86,7 +119,7 @@ export class Api implements IApi {
     } catch (e) {
       const error = this.toError(e);
       console.groupCollapsed(
-        `%cRequest #${this.requestCount}: GET ${uri}: ERROR: ${error.name} ${error.message}`,
+        `%cRequest #${this.requestCount}: GET ${uri}: ERROR: ${error.name}: ${error.message}`,
         "color: #CD5C5C",
         t()
       );
@@ -119,7 +152,7 @@ export class Api implements IApi {
     } catch (e) {
       const error = this.toError(e);
       console.groupCollapsed(
-        `%cRequest #${this.requestCount}: POST ${uri}: ERROR: ${error.name} ${error.message}`,
+        `%cRequest #${this.requestCount}: POST ${uri}: ERROR: ${error.name}: ${error.message}`,
         "color: #CD5C5C",
         t()
       );
@@ -141,11 +174,14 @@ export class Api implements IApi {
       );
 
       if (rsp.status === 500 && rsp.data?.includes("(ECONNREFUSED)")) {
-        return new NoContactError(axiosError);
+        return new NoContactError(
+          "Local api server not started, Start local Azure functions server",
+          axiosError
+        );
       } else if (rsp.status === 400) {
         if (rsp.data?.includes("ECONNREFUSED 127.0.0.1:10002")) {
           return new RequestError(
-            "Local storage emulator not started",
+            "Local storage emulator not started. Call 'AzureStorageEmulator.exe start'",
             axiosError
           );
         }
@@ -157,15 +193,18 @@ export class Api implements IApi {
           return new AuthenticateError(axiosError);
         }
       }
+
+      return new RequestError("Invalid or unsupported request", axiosError);
     } else if (rspError.request) {
       // The request was made but no response was received
       return new NoContactError(rspError);
-    } else {
-      // Something happened in setting up the request that triggered an Error
-      return new RequestError(rspError);
     }
 
-    return new NetworkError(rspError);
+    // Something happened in setting up the request that triggered an Error
+    return new NetworkError(
+      "Failed to send request. Request setup error",
+      rspError
+    );
   }
 }
 
