@@ -13,8 +13,9 @@ import {
 import { Formik, Form, Field } from "formik";
 import { TextField } from "formik-material-ui";
 import { User } from "../common/Api";
-import Result from "../common/Result";
+import Result, { isError } from "../common/Result";
 import { SetAtom } from "jotai/core/types";
+import { AuthenticateError } from "./../common/Api";
 
 const usernameKey = "credential.userName";
 
@@ -87,33 +88,40 @@ export const Login: FC = () => {
           }}
           onSubmit={async (values, { setErrors, setFieldValue }) => {
             if (createAccount) {
-              try {
-                await login?.createAccount({
-                  username: values.username,
-                  password: values.password,
-                });
-                setDefaultUserName(values.username);
-                setCreateAccount(false);
-                setFieldValue("confirm", "", false);
-              } catch (error) {
+              const createResult = await login?.createAccount({
+                username: values.username,
+                password: values.password,
+              });
+
+              if (isError(createResult)) {
                 setFieldValue("password", "", false);
                 setFieldValue("confirm", "", false);
                 setErrors({ username: "User already exist" });
                 return;
               }
+
+              setDefaultUserName(values.username);
+              setCreateAccount(false);
+              setFieldValue("confirm", "", false);
             }
 
-            try {
-              await login?.login({
-                username: values.username,
-                password: values.password,
-              });
-              setDefaultUserName(values.username);
-              setLogin(null);
-            } catch (error) {
+            const loginResult = await login?.login({
+              username: values.username,
+              password: values.password,
+            });
+            if (isError(loginResult)) {
               setFieldValue("password", "", false);
-              setErrors({ username: "Invalid username or password" });
+              if (isError(loginResult, AuthenticateError)) {
+                setErrors({ username: "Invalid username or password" });
+              } else {
+                setErrors({ username: "Failed to enable device sync" });
+              }
+
+              return;
             }
+
+            setDefaultUserName(values.username);
+            setLogin(null);
           }}
         >
           {({ submitForm, isSubmitting }) => (

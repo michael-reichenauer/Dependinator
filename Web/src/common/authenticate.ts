@@ -1,21 +1,21 @@
 import { IApi, IApiKey } from "./Api";
-//import { store } from "../application/diagram/Store";
 import { User } from "./Api";
 import { di, diKey, singleton } from "./di";
-import { IKeyVault, IKeyVaultKey } from "./keyVault";
+import { IKeyVaultConfigure, IKeyVaultConfigureKey } from "./keyVault";
 import Result, { isError } from "./Result";
 
 export const IAuthenticateKey = diKey<IAuthenticate>();
 export interface IAuthenticate {
   createUser(user: User): Promise<Result<void>>;
   login(user: User): Promise<Result<void>>;
+  resetLogin(): void;
 }
 
 @singleton(IAuthenticateKey)
 export class Authenticate implements IAuthenticate {
   constructor(
     private api: IApi = di(IApiKey),
-    private keyVault: IKeyVault = di(IKeyVaultKey)
+    private keyVaultConfigure: IKeyVaultConfigure = di(IKeyVaultConfigureKey)
   ) {}
 
   async createUser(user: User): Promise<Result<void>> {
@@ -33,10 +33,14 @@ export class Authenticate implements IAuthenticate {
       return tokenInfo;
     }
 
-    this.keyVault.setToken(tokenInfo.token);
+    this.keyVaultConfigure.setToken(tokenInfo.token);
   }
 
-  async passwordHash(text: string) {
+  public resetLogin(): void {
+    this.keyVaultConfigure.setToken(null);
+  }
+
+  private async passwordHash(text: string) {
     // encode as UTF-8
     const msgBuffer = new TextEncoder().encode(text);
 

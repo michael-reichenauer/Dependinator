@@ -3,13 +3,17 @@ import { diKey, singleton } from "./di";
 export const IKeyVaultKey = diKey<IKeyVault>();
 export interface IKeyVault {
   getToken(): string | null;
+}
+
+export const IKeyVaultConfigureKey = diKey<IKeyVaultConfigure>();
+export interface IKeyVaultConfigure extends IKeyVault {
   setToken(token: string | null): void;
 }
 
-@singleton(IKeyVaultKey)
+@singleton(IKeyVaultKey, IKeyVaultConfigureKey)
 export class KeyVault {
-  kek: any = null;
-  token: string | null = null;
+  private kek: any = null;
+  private token: string | null = null;
 
   public getToken(): string | null {
     return this.token;

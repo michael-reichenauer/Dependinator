@@ -5,7 +5,13 @@ import { SetAtom } from "jotai/core/types";
 import { delay } from "../common/utils";
 import { IAuthenticate, IAuthenticateKey } from "../common/authenticate";
 import { showLoginDlg } from "./Login";
-import { IApi, User, IApiKey, NoContactError } from "../common/Api";
+import {
+  IApi,
+  User,
+  IApiKey,
+  NoContactError,
+  RequestError,
+} from "../common/Api";
 import Result, { isError } from "../common/Result";
 import { AuthenticateError } from "./../common/Api";
 import { setErrorMessage } from "../common/MessageSnackbar";
@@ -23,21 +29,24 @@ export enum SyncState {
 const syncModeAtom = atom(SyncState.Disabled);
 export const useSyncMode = (): SyncState => {
   const [syncMode, setSyncMode] = useAtom(syncModeAtom);
-  const ref = useRef(di(IOnlineKey));
+  const ref = useRef(di(ISyncModeKey));
   ref.current.setSetSyncMode(setSyncMode);
   return syncMode;
 };
 
 export const IOnlineKey = diKey<IOnline>();
 export interface IOnline {
-  enableSync(): Promise<void>;
+  enableSync(): Promise<Result<void>>;
   disableSync(): void;
+}
 
+const ISyncModeKey = diKey<ISyncMode>();
+interface ISyncMode {
   setSetSyncMode(setSyncMode: SetAtom<SyncState>): void;
 }
 
-@singleton(IOnlineKey)
-export class Online implements IOnline {
+@singleton(IOnlineKey, ISyncModeKey)
+export class Online implements IOnline, ISyncMode {
   private setSyncMode: SetAtom<SyncState> | null = null;
   private currentState: SyncState = SyncState.Disabled;
   private isActive: boolean = true;
@@ -70,17 +79,17 @@ export class Online implements IOnline {
       }
       console.log("error msg", loginRsp, msg);
       setErrorMessage(msg);
-      return;
+      return loginRsp;
     }
 
-    this.enableSync();
+    return await this.enableSync();
   }
 
   public closed(): void {
     this.stopProgress();
   }
 
-  public async enableSync(): Promise<void> {
+  public async enableSync(): Promise<Result<void>> {
     this.startProgress();
     const checkRsp = await this.api.check();
 
@@ -90,29 +99,38 @@ export class Online implements IOnline {
       setErrorMessage(
         "No network contact with server, please retry in a while again."
       );
-      return;
+      return checkRsp;
     }
 
     if (isError(checkRsp, AuthenticateError)) {
       showLoginDlg(this);
-      return;
+      return checkRsp;
     }
 
     if (isError(checkRsp)) {
       // Som unexpected error (neither contact nor authenticate error)
       this.stopProgress();
       setErrorMessage("Internal server error.");
-      return;
+      return checkRsp;
     }
 
     this.store.configure({ isSyncEnabled: true });
     const syncResult = await this.store.triggerSync();
     if (isError(syncResult)) {
+      // This should be unlikely
       this.stopProgress();
-      setErrorMessage("Failed to enable sync. Internal server error.");
+      if (isError(syncResult, RequestError)) {
+        setErrorMessage("Failed to enable sync. Internal server error.");
+      } else {
+        setErrorMessage(
+          "Failed to enable sync, please retry in a while again."
+        );
+      }
+      this.authenticate.resetLogin();
+
       this.store.configure({ isSyncEnabled: false });
       this.setState(SyncState.Disabled);
-      return;
+      return syncResult;
     }
 
     this.setState(SyncState.Enabled);

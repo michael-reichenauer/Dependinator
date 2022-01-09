@@ -25,10 +25,14 @@ export function diKey<TInterface>(): InterfaceKey<TInterface> {
   return new InterfaceKey<TInterface>();
 }
 
-// The @singleton(key) decorator used when registering classes
-export function singleton<TInterface>(key: InterfaceKey<TInterface>): any {
+// The @singleton(key) decorator used when registering classes, that implement one
+// or multiple interfaces specified with InterfaceKeys
+export function singleton<TInterface>(
+  key: InterfaceKey<TInterface>,
+  ...additionalKeys: InterfaceKey<TInterface>[]
+): any {
   return function <TClass extends Class>(targetClass: TClass) {
-    registerSingleton(key, targetClass);
+    registerSingleton(key, targetClass, additionalKeys);
   };
 }
 
@@ -64,13 +68,15 @@ export function di<TInterface>(key: InterfaceKey<TInterface>): TInterface {
 // Registers a class as a single instance
 function registerSingleton<TInterface>(
   key: InterfaceKey<TInterface>,
-  classType: Class
+  classType: Class,
+  additionalKeys: InterfaceKey<TInterface>[]
 ) {
   const item: registryItem = {
     factory: () => new classType(),
   };
 
   registry.set(key.id, item);
+  additionalKeys.forEach((key) => registry.set(key.id, item));
 }
 
 // function cleanseAssertionOperators(parsedName: string): string {
