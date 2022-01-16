@@ -23,9 +23,9 @@ describe("Test IRemoteData", () => {
       return entities[0];
     };
 
-    await remote.writeBatch([
-      { key: "0", value: "aa", timestamp: 10, version: 1 },
-    ]);
+    await expect(
+      remote.writeBatch([{ key: "0", value: "aa", timestamp: 10, version: 1 }])
+    ).resolves.not.toBeInstanceOf(Error);
 
     // Get value if not specify timestamp
     await expect(remoteTryRead({ key: "0" })).resolves.toHaveProperty(

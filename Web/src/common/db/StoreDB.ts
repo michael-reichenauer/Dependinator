@@ -187,6 +187,7 @@ export class StoreDB implements IStoreDB {
     console.log("Syncing ...");
 
     // Always syncing monitored entities and unsynced local entities
+    const unSyncedKeys = this.localDB.getUnsyncedKeys();
     let syncKeys: string[] = [...this.monitorKeys];
     syncKeys = this.addUnsyncedLocalKeys(syncKeys);
 

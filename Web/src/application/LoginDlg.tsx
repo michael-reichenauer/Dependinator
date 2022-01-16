@@ -15,7 +15,7 @@ import { TextField } from "formik-material-ui";
 import { User } from "../common/Api";
 import Result, { isError } from "../common/Result";
 import { SetAtom } from "jotai/core/types";
-import { AuthenticateError } from "./../common/Api";
+import { AuthenticateError } from "../common/Api";
 
 const usernameKey = "credential.userName";
 
@@ -35,7 +35,7 @@ export const useLogin = (): [loginProvider, SetAtom<loginProvider>] => {
   return [login, setLogin];
 };
 
-export const Login: FC = () => {
+export const LoginDlg: FC = () => {
   const [login, setLogin] = useLogin();
   const [createAccount, setCreateAccount] = useState(false);
 

@@ -5,7 +5,7 @@ import Activity, { useActivityMonitor } from "./common/activity";
 import { useAppVersionMonitor } from "./common/appVersion";
 import Diagram from "./application/Diagram";
 import About from "./application/About";
-import { Login } from "./application/Login";
+import { LoginDlg } from "./application/LoginDlg";
 import AlertDialog from "./common/AlertDialog";
 import PromptDialog from "./common/PromptDialog";
 // import { dataCrypt } from './common/dataCrypt';
@@ -41,7 +41,7 @@ const App: React.FC = () => {
       <ApplicationBar height={55} />
       <Diagram width={size.width} height={size.height - 55} />
       <About />
-      <Login />
+      <LoginDlg />
       <Nodes />
       <AlertDialog />
       <PromptDialog />

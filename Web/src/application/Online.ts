@@ -4,14 +4,8 @@ import { useRef } from "react";
 import { SetAtom } from "jotai/core/types";
 import { delay } from "../common/utils";
 import { IAuthenticate, IAuthenticateKey } from "../common/authenticate";
-import { showLoginDlg } from "./Login";
-import {
-  IApi,
-  User,
-  IApiKey,
-  NoContactError,
-  RequestError,
-} from "../common/Api";
+import { showLoginDlg } from "./LoginDlg";
+import { IApi, User, IApiKey, NoContactError } from "../common/Api";
 import Result, { isError } from "../common/Result";
 import { AuthenticateError } from "./../common/Api";
 import { setErrorMessage } from "../common/MessageSnackbar";
@@ -119,15 +113,9 @@ export class Online implements IOnline, ISyncMode {
     if (isError(syncResult)) {
       // This should be unlikely
       this.stopProgress();
-      if (isError(syncResult, RequestError)) {
-        setErrorMessage("Failed to enable sync. Internal server error.");
-      } else {
-        setErrorMessage(
-          "Failed to enable sync, please retry in a while again."
-        );
-      }
-      this.authenticate.resetLogin();
+      setErrorMessage("Failed to enable sync. Internal server error.");
 
+      this.authenticate.resetLogin();
       this.store.configure({ isSyncEnabled: false });
       this.setState(SyncState.Disabled);
       return syncResult;
