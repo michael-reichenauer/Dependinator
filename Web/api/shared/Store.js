@@ -11,6 +11,7 @@ const baseTableName = 'diagrams'
 const partitionKeyName = 'dep'
 const usersTableName = 'users'
 const userPartitionKey = 'users'
+const dataPartitionKey = 'data'
 const standardApiKey = '0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade'
 const saltRounds = 10
 
@@ -103,6 +104,35 @@ exports.connectUser = async (context, data) => {
     context.log('insertOrReplaceEntity', user)
     return { token: entity.tableId, provider: user.identityProvider, details: user.userDetails }
 }
+
+
+
+exports.tryReadBatch = async (context, body) => {
+    const tableName = getTableName(context)
+    context.log('body', body, tableName)
+    let keys = ['ckrreba7i00033r65aj66qhou.root', 'ckrreba7i00033r65aj66qhou']
+    if (keys.length === 0) {
+        return []
+    }
+    // keys = body.map(query => query.key)
+    // context.log('Keys', keys)
+
+    const rkq = ' (RowKey == ?string?' + ' || RowKey == ?string?'.repeat(keys.length - 1) + ')'
+
+    let tableQuery = new azure.TableQuery()
+        .where('PartitionKey == ?string? && ' + rkq,
+            'dep', ...keys);
+
+    const items = await table.queryEntities(tableName, tableQuery, null)
+    context.log(`queried: ${items.length}`)
+
+    context.log('table rsp, resp', items)
+
+    const responses = items.map(item => ({ ...item }))
+
+    return responses
+}
+
 
 exports.connect = async (context) => {
     const req = context.req

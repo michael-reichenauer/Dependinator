@@ -6,7 +6,9 @@ module.exports = async function (context, req) {
         store.verifyApiKey(context)
         store.verifyToken(context)
 
-        context.res = { status: 200, body: '[]' };
+        const entities = await store.tryReadBatch(context, req.body)
+
+        context.res = { status: 200, body: entities };
     } catch (err) {
         context.log.error('error:', err);
         context.res = { status: 400, body: `error: '${err.message}'` };

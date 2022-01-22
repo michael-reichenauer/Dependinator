@@ -19,8 +19,8 @@ export type ApiEntityStatus = "value" | "noValue" | "notModified";
 
 export interface ApiEntity {
   key: string;
-  status: ApiEntityStatus;
-  timestamp?: number;
+  timestamp: number;
+  status?: ApiEntityStatus;
   value?: any;
 }
 

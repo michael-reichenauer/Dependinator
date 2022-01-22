@@ -50,6 +50,10 @@ export class RemoteDB implements IRemoteDB {
 
   private toRemoteEntities(apiEntities: ApiEntity[]): Result<RemoteEntity>[] {
     return apiEntities.map((entity) => {
+      console.log("api entity", entity);
+      if (!entity.key || !entity.timestamp) {
+        return noValueError;
+      }
       if (entity.status === "noValue") {
         return noValueError;
       }
@@ -58,7 +62,7 @@ export class RemoteDB implements IRemoteDB {
       }
       return {
         key: entity.key,
-        timestamp: entity.timestamp ?? 0,
+        timestamp: entity.timestamp,
         version: entity.value?.version ?? 0,
         value: entity.value?.value,
       };
@@ -68,7 +72,6 @@ export class RemoteDB implements IRemoteDB {
   private toApiEntities(remoteEntities: RemoteEntity[]): ApiEntity[] {
     return remoteEntities.map((entity) => ({
       key: entity.key,
-      status: "value",
       timestamp: entity.timestamp,
       value: { value: entity.value, version: entity.version },
     }));

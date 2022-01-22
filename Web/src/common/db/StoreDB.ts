@@ -189,7 +189,7 @@ export class StoreDB implements IStoreDB {
     // Always syncing monitored entities and unsynced local entities
     const unSyncedKeys = this.localDB.getUnsyncedKeys();
     let syncKeys: string[] = [...this.monitorKeys];
-    syncKeys = this.addUnsyncedLocalKeys(syncKeys);
+    syncKeys = this.addKeys(syncKeys, unSyncedKeys);
 
     // Generating query, which is key and timestamp to skip known unchanged remote entities
     const queries = this.makeRemoteQueries(syncKeys);
@@ -216,6 +216,7 @@ export class StoreDB implements IStoreDB {
     remoteEntities.forEach((remoteEntity, index) => {
       const localEntity = localEntities[index];
 
+      console.log("sync:", localEntity, remoteEntity);
       if (isError(localEntity)) {
         // Local entity is missing, skip sync
         return;
@@ -232,6 +233,11 @@ export class StoreDB implements IStoreDB {
       if (isError(remoteEntity)) {
         // Remote entity is missing, lets upload local to remote
         localToRemote.push(localEntity);
+        return;
+      }
+      if (localEntity.key !== remoteEntity.key) {
+        // Not same entity
+        console.log("Not same entity");
         return;
       }
 
@@ -364,11 +370,9 @@ export class StoreDB implements IStoreDB {
   }
 
   // Add keys of unsynced entities
-  private addUnsyncedLocalKeys(syncKeys: string[]): string[] {
-    const unSyncedKeys = this.localDB
-      .getUnsyncedKeys()
-      .filter((key) => !syncKeys.includes(key));
-    return syncKeys.concat(unSyncedKeys);
+  private addKeys(syncKeys: string[], keys: string[]): string[] {
+    const addingKeys = keys.filter((key) => !syncKeys.includes(key));
+    return syncKeys.concat(addingKeys);
   }
 
   // Signal is connected changes (called when remote connections succeeds or fails)
