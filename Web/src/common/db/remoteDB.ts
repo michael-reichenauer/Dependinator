@@ -5,7 +5,7 @@ import { ApiEntity, IApi, IApiKey, Query } from "../Api";
 
 export interface RemoteEntity {
   key: string;
-  timestamp: number;
+  stamp: string;
   version: number;
 
   value: any;
@@ -35,7 +35,7 @@ export class RemoteDB implements IRemoteDB {
       return apiEntities;
     }
 
-    return this.toRemoteEntities(apiEntities);
+    return this.toRemoteEntities(queries, apiEntities);
   }
 
   public async writeBatch(entities: RemoteEntity[]): Promise<Result<void>> {
@@ -48,10 +48,19 @@ export class RemoteDB implements IRemoteDB {
     return await this.api.removeBatch(keys);
   }
 
-  private toRemoteEntities(apiEntities: ApiEntity[]): Result<RemoteEntity>[] {
-    return apiEntities.map((entity) => {
+  private toRemoteEntities(
+    queries: Query[],
+    apiEntities: ApiEntity[]
+  ): Result<RemoteEntity>[] {
+    return queries.map((query) => {
+      const entity = apiEntities.find((e) => e.key === query.key);
       console.log("api entity", entity);
-      if (!entity.key || !entity.timestamp) {
+      if (!entity) {
+        // The entity was never returned from remote server
+        return noValueError;
+      }
+      if (!entity.key || !entity.stamp) {
+        // The entity did not have expected properties
         return noValueError;
       }
       if (entity.status === "noValue") {
@@ -62,7 +71,7 @@ export class RemoteDB implements IRemoteDB {
       }
       return {
         key: entity.key,
-        timestamp: entity.timestamp,
+        stamp: entity.stamp,
         version: entity.value?.version ?? 0,
         value: entity.value?.value,
       };
@@ -72,7 +81,7 @@ export class RemoteDB implements IRemoteDB {
   private toApiEntities(remoteEntities: RemoteEntity[]): ApiEntity[] {
     return remoteEntities.map((entity) => ({
       key: entity.key,
-      timestamp: entity.timestamp,
+      stamp: entity.stamp,
       value: { value: entity.value, version: entity.version },
     }));
   }

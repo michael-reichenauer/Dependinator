@@ -19,14 +19,14 @@ export type ApiEntityStatus = "value" | "noValue" | "notModified";
 
 export interface ApiEntity {
   key: string;
-  timestamp: number;
+  stamp: string;
   status?: ApiEntityStatus;
   value?: any;
 }
 
 export interface Query {
   key: string;
-  IfNoneMatch?: number;
+  IfNoneMatch?: string;
 }
 
 export class NetworkError extends CustomError {}

@@ -7,7 +7,7 @@ describe("Test LocalData", () => {
 
     local.write({
       key: "0",
-      timestamp: 0,
+      stamp: 0,
       synced: 0,
       version: 0,
       value: "aa",
@@ -18,7 +18,7 @@ describe("Test LocalData", () => {
 
     local.write({
       key: "1",
-      timestamp: 0,
+      stamp: 0,
       synced: 0,
       version: 0,
       value: "bb",
@@ -37,7 +37,7 @@ describe("Test LocalData", () => {
 
     local.write({
       key: "0",
-      timestamp: 0,
+      stamp: 0,
       synced: 0,
       version: 0,
       value: "aa",
@@ -51,14 +51,14 @@ describe("Test LocalData", () => {
 
     local.write({
       key: "0",
-      timestamp: 0,
+      stamp: 0,
       synced: 0,
       version: 0,
       value: "aa",
     });
     local.write({
       key: "1",
-      timestamp: 0,
+      stamp: 0,
       synced: 0,
       version: 0,
       value: "bb",

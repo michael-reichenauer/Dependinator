@@ -98,10 +98,6 @@ exports.connectUser = async (context, data) => {
     // context.log('got user', userId, entity)
     const tableName = baseTableName + entity.tableId
     await table.createTableIfNotExists(tableName)
-
-    context.log('tableName', tableName)
-    await table.insertOrReplaceEntity(tableName, toTableUserItem(user))
-    context.log('insertOrReplaceEntity', user)
     return { token: entity.tableId, provider: user.identityProvider, details: user.userDetails }
 }
 
@@ -110,27 +106,41 @@ exports.connectUser = async (context, data) => {
 exports.tryReadBatch = async (context, body) => {
     const tableName = getTableName(context)
     context.log('body', body, tableName)
-    let keys = ['ckrreba7i00033r65aj66qhou.root', 'ckrreba7i00033r65aj66qhou']
+    keys = body.map(query => query.key)
+    context.log('Keys', keys)
     if (keys.length === 0) {
         return []
     }
-    // keys = body.map(query => query.key)
-    // context.log('Keys', keys)
+
 
     const rkq = ' (RowKey == ?string?' + ' || RowKey == ?string?'.repeat(keys.length - 1) + ')'
 
     let tableQuery = new azure.TableQuery()
         .where('PartitionKey == ?string? && ' + rkq,
-            'dep', ...keys);
+            dataPartitionKey, ...keys);
 
     const items = await table.queryEntities(tableName, tableQuery, null)
     context.log(`queried: ${items.length}`)
-
     context.log('table rsp, resp', items)
 
-    const responses = items.map(item => ({ ...item }))
+    const responses = items.map(item => toEntity(item))
 
     return responses
+}
+
+
+exports.writeBatch = async (context, body) => {
+    const tableName = getTableName(context)
+    context.log('body', body, tableName)
+
+    const entityItems = body.map(entity => toEntityItem(entity))
+
+    const batch = new azure.TableBatch()
+    entityItems.forEach(entity => batch.insertOrReplaceEntity(entity))
+
+    await table.executeBatch(tableName, batch)
+
+    return {}
 }
 
 
@@ -520,6 +530,26 @@ function toDiagramInfoItem(diagramInfo) {
     }
     return item
 }
+
+function toEntityItem(entity) {
+    const { key, stamp, value } = entity
+
+    const item = {
+        RowKey: entGen.String(key),
+        PartitionKey: entGen.String(dataPartitionKey),
+
+        stamp: entGen.String(stamp),
+        value: entGen.String(JSON.stringify(value)),
+    }
+
+    return item
+}
+
+toEntity = (item) => {
+    return { key: item.RowKey, stamp: item.stamp, value: JSON.parse(item.value ?? '{}') }
+}
+
+
 
 function toDiagramInfo(item) {
     return {

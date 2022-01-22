@@ -113,6 +113,15 @@ export class Store implements IStore {
       return diagramDto;
     }
 
+    this.db.monitorRemoteEntities([id, applicationKey]);
+    this.currentDiagramId = id;
+
+    const mostResentId = this.getMostResentDiagramId();
+    if (!isError(mostResentId) && mostResentId === id) {
+      // opening most resent diagram, no need to update resent list
+      return diagramDto;
+    }
+
     // Mark diagram as accessed now, to support most recently used diagram feature
     const applicationDto = this.getApplicationDto();
     applicationDto.diagramInfos[id] = {
@@ -120,10 +129,7 @@ export class Store implements IStore {
       accessed: Date.now(),
     };
 
-    this.db.monitorRemoteEntities([id, applicationKey]);
     this.db.writeBatch([{ key: applicationKey, value: applicationDto }]);
-
-    this.currentDiagramId = id;
     return diagramDto;
   }
 
@@ -291,9 +297,9 @@ export class Store implements IStore {
 
     return {
       key: remote.key,
-      timestamp: remote.timestamp,
+      stamp: remote.stamp,
       version: remote.version,
-      synced: remote.timestamp,
+      synced: remote.stamp,
       value: applicationDto,
     };
   }
@@ -311,9 +317,9 @@ export class Store implements IStore {
     // Use remote entity since that has more edits
     return {
       key: remote.key,
-      timestamp: remote.timestamp,
+      stamp: remote.stamp,
       version: remote.version,
-      synced: remote.timestamp,
+      synced: remote.stamp,
       value: remote.value,
     };
   }

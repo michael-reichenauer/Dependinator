@@ -4,9 +4,9 @@ import { ILocalStore, ILocalStoreKey } from "../LocalStore";
 
 export interface LocalEntity {
   key: string;
-  timestamp: number;
+  stamp: string;
   version: number;
-  synced: number;
+  synced: string;
 
   value: any;
 }
@@ -59,7 +59,7 @@ export class LocalDB implements ILocalDB {
 
   public getUnsyncedKeys(): string[] {
     const unSyncedKeys = this.getAllEntities()
-      .filter((entity) => entity.timestamp !== entity.synced)
+      .filter((entity) => entity.stamp !== entity.synced)
       .map((entity: LocalEntity) => entity.key);
     return unSyncedKeys;
   }

@@ -24,7 +24,7 @@ describe("Test IRemoteData", () => {
     };
 
     await expect(
-      remote.writeBatch([{ key: "0", value: "aa", timestamp: 10, version: 1 }])
+      remote.writeBatch([{ key: "0", value: "aa", stamp: "10", version: 1 }])
     ).resolves.not.toBeInstanceOf(Error);
 
     // Get value if not specify timestamp
@@ -34,12 +34,12 @@ describe("Test IRemoteData", () => {
     );
     // Get value if  IfNoneMatch=0
     await expect(
-      remoteTryRead({ key: "0", IfNoneMatch: 0 })
+      remoteTryRead({ key: "0", IfNoneMatch: "" })
     ).resolves.toHaveProperty("value", "aa");
 
     // Get NotModified if IfNoneMatch = 10
     await expect(
-      remoteTryRead({ key: "0", IfNoneMatch: 10 })
+      remoteTryRead({ key: "0", IfNoneMatch: "10" })
     ).resolves.toBeInstanceOf(NotModifiedError);
 
     // Get RangeError if key is wrong

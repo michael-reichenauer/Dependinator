@@ -94,7 +94,7 @@ export class StoreDB implements IStoreDB {
 
   public writeBatch(entities: Entity[]): void {
     const keys = entities.map((entity) => entity.key);
-    const now = Date.now();
+    const now = Date.now().toString();
 
     const localEntities = this.localDB.tryReadBatch(keys);
 
@@ -105,9 +105,9 @@ export class StoreDB implements IStoreDB {
         // First version of local entity (not yet cached)
         return {
           key: newEntity.key,
-          timestamp: now,
+          stamp: now,
           version: 1,
-          synced: 0,
+          synced: "",
           value: newEntity.value,
         };
       }
@@ -115,7 +115,7 @@ export class StoreDB implements IStoreDB {
       // Updating cached local entity with new value, timestamp and version
       return {
         key: newEntity.key,
-        timestamp: now,
+        stamp: now,
         version: localEntity.version + 1,
         synced: localEntity.synced,
         value: newEntity.value,
@@ -224,7 +224,7 @@ export class StoreDB implements IStoreDB {
 
       if (remoteEntity instanceof NotModifiedError) {
         // Remote entity was not changed since last sync, lets upload local to remote if local has changed
-        if (localEntity.synced !== localEntity.timestamp) {
+        if (localEntity.synced !== localEntity.stamp) {
           localToRemote.push(localEntity);
         }
         return;
@@ -241,23 +241,24 @@ export class StoreDB implements IStoreDB {
         return;
       }
 
-      if (localEntity.timestamp === remoteEntity.timestamp) {
+      if (localEntity.stamp === remoteEntity.stamp) {
         // Both local and remote entity have same timestamp, already same (nothing to sync)
         return;
       }
 
-      if (localEntity.synced === remoteEntity.timestamp) {
+      if (localEntity.synced === remoteEntity.stamp) {
         // Local entity has changed and remote entity same as uploaded previously by this client,
         // lets upload local to remote
         localToRemote.push(localEntity);
         return;
       }
 
-      if (localEntity.synced === localEntity.timestamp) {
+      if (localEntity.synced === localEntity.stamp) {
         // Local entity has not changed, while remote has been changed by some other client,
         // lets cache the updated remote entity if the entity is actively monitored
         if (this.monitorKeys.includes(localEntity.key)) {
           remoteToLocal.push(remoteEntity);
+          console.log("local, remote", localEntity, remoteEntity);
         }
         return;
       }
@@ -279,6 +280,7 @@ export class StoreDB implements IStoreDB {
 
     // Add merged entity to both local and to be uploaded to remote
     this.addMergedEntities(mergedEntities, localToUpdate, remoteToUpload);
+    console.log("merged", mergedEntities);
 
     console.log(
       `Synced to local: ${localToUpdate.length}, to remote: ${remoteToUpload.length}`
@@ -303,18 +305,18 @@ export class StoreDB implements IStoreDB {
     toLocal: LocalEntity[],
     toRemote: RemoteEntity[]
   ) {
-    const now = Date.now();
+    const now = Date.now().toString();
     merged.forEach((mergedEntity) => {
       toLocal.push({
         key: mergedEntity.key,
-        timestamp: now,
+        stamp: now,
         version: mergedEntity.version + 1,
         synced: mergedEntity.synced,
         value: mergedEntity.value,
       });
       toRemote.push({
         key: mergedEntity.key,
-        timestamp: now,
+        stamp: now,
         version: mergedEntity.version + 1,
         value: mergedEntity.value,
       });
@@ -334,9 +336,9 @@ export class StoreDB implements IStoreDB {
   private convertRemoteToLocal(remoteEntities: RemoteEntity[]): LocalEntity[] {
     return remoteEntities.map((remoteEntity) => ({
       key: remoteEntity.key,
-      timestamp: remoteEntity.timestamp,
+      stamp: remoteEntity.stamp,
       version: remoteEntity.version,
-      synced: remoteEntity.timestamp,
+      synced: remoteEntity.stamp,
       value: remoteEntity.value,
     }));
   }
@@ -344,7 +346,7 @@ export class StoreDB implements IStoreDB {
   private convertLocalToRemote(localEntities: LocalEntity[]): RemoteEntity[] {
     return localEntities.map((localEntity) => ({
       key: localEntity.key,
-      timestamp: localEntity.timestamp,
+      stamp: localEntity.stamp,
       version: localEntity.version,
       value: localEntity.value,
     }));
@@ -401,8 +403,8 @@ export class StoreDB implements IStoreDB {
     this.setSyncStatus(true);
 
     // Remember sync timestamps for uploaded entities
-    const syncedItems = new Map<string, number>();
-    entities.forEach((entity) => syncedItems.set(entity.key, entity.timestamp));
+    const syncedItems = new Map<string, string>();
+    entities.forEach((entity) => syncedItems.set(entity.key, entity.stamp));
 
     // Update local entities with synced timestamps
     const keys = entities.map((entity) => entity.key);
@@ -411,7 +413,7 @@ export class StoreDB implements IStoreDB {
       .filter((r) => !isError(r)) as LocalEntity[];
     const syncedLocalEntities = localEntities.map((entity) => ({
       ...entity,
-      synced: syncedItems.get(entity.key) ?? 0,
+      synced: syncedItems.get(entity.key) ?? "",
     }));
 
     this.localDB.writeBatch(syncedLocalEntities);
@@ -465,9 +467,9 @@ export class StoreDB implements IStoreDB {
   private cacheLocalValue<T>(key: string, value: T) {
     const entity: LocalEntity = {
       key: key,
-      timestamp: Date.now(),
+      stamp: Date.now().toString(),
       version: 1,
-      synced: 0,
+      synced: "",
       value: value,
     };
 
@@ -478,9 +480,9 @@ export class StoreDB implements IStoreDB {
   private cacheRemoteEntity(remoteEntity: RemoteEntity) {
     const entity = {
       key: remoteEntity.key,
-      timestamp: remoteEntity.timestamp,
+      stamp: remoteEntity.stamp,
       version: remoteEntity.version,
-      synced: remoteEntity.timestamp,
+      synced: remoteEntity.stamp,
       value: remoteEntity.value,
     };
 
