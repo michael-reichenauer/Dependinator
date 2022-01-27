@@ -106,7 +106,8 @@ exports.connectUser = async (context, data) => {
 exports.tryReadBatch = async (context, body) => {
     const tableName = getTableName(context)
     context.log('body', body, tableName)
-    keys = body.map(query => query.key)
+    const queries = body
+    keys = queries.map(query => query.key)
     context.log('Keys', keys)
     if (keys.length === 0) {
         return []
@@ -121,9 +122,17 @@ exports.tryReadBatch = async (context, body) => {
 
     const items = await table.queryEntities(tableName, tableQuery, null)
     context.log(`queried: ${items.length}`)
+
     context.log('table rsp, resp', items)
 
-    const responses = items.map(item => toEntity(item))
+    const entities = items.map(item => toEntity(item))
+    const responses = entities.map(entity => {
+        if (queries.find(query => query.key === entity.key && query.IfNoneMatch === entity.stamp)) {
+            return { key: entity.key, stamp: entity.stamp, status: 'notModified' }
+        }
+        return entity
+    })
+    context.log('responses', responses)
 
     return responses
 }
