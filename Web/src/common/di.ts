@@ -66,10 +66,10 @@ export function di<TInterface>(key: InterfaceKey<TInterface>): TInterface {
 }
 
 // Registers a class as a single instance
-function registerSingleton<TInterface>(
+export function registerSingleton<TInterface>(
   key: InterfaceKey<TInterface>,
   classType: Class,
-  additionalKeys: InterfaceKey<TInterface>[]
+  additionalKeys: InterfaceKey<TInterface>[] = []
 ) {
   const item: registryItem = {
     factory: () => new classType(),

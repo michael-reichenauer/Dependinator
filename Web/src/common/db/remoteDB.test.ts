@@ -1,4 +1,4 @@
-import { di } from "../di";
+import { di, registerSingleton } from "../di";
 import {
   IRemoteDB,
   IRemoteDBKey,
@@ -6,11 +6,15 @@ import {
   RemoteEntity,
 } from "./RemoteDB";
 import Result, { isError } from "../Result";
-import { Query } from "../Api";
+import { IApiKey, Query } from "../Api";
+import { ApiMock } from "./ApiMock";
+
+beforeAll(() => {
+  registerSingleton(IApiKey, ApiMock);
+});
 
 describe("Test IRemoteData", () => {
   test("Test1", async () => {
-    //;RemoteApi.testDelay = 0;
     const remote: IRemoteDB = di(IRemoteDBKey);
 
     const remoteTryRead = async (
