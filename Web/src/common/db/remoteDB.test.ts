@@ -10,6 +10,7 @@ import { IApiKey, Query } from "../Api";
 import { ApiMock } from "./ApiMock";
 
 beforeAll(() => {
+  // Mock api to use local store for tests
   registerSingleton(IApiKey, ApiMock);
 });
 
@@ -17,6 +18,7 @@ describe("Test IRemoteData", () => {
   test("Test1", async () => {
     const remote: IRemoteDB = di(IRemoteDBKey);
 
+    // Read one value function to make testing easier
     const remoteTryRead = async (
       query: Query
     ): Promise<Result<RemoteEntity>> => {
@@ -27,26 +29,31 @@ describe("Test IRemoteData", () => {
       return entities[0];
     };
 
-    await expect(
-      remote.writeBatch([{ key: "0", value: "aa", stamp: "10", version: 1 }])
-    ).resolves.not.toBeInstanceOf(Error);
+    // Write one entity
+    const rsp = await remote.writeBatch([
+      { key: "0", value: "aa", version: 1 },
+    ]);
+    expect(rsp).not.toBeInstanceOf(Error);
 
-    // Get value if not specify timestamp
+    // Extract the response etag needed in a query below
+    const rspEtag = isError(rsp) ? undefined : rsp[0].etag;
+
+    // Get value if not specify IfNoneMatch
     await expect(remoteTryRead({ key: "0" })).resolves.toHaveProperty(
       "value",
       "aa"
     );
-    // Get value if  IfNoneMatch=0
+    // Get value if  IfNoneMatch=dd (i.e. differs from server value (is modified))
     await expect(
-      remoteTryRead({ key: "0", IfNoneMatch: "" })
+      remoteTryRead({ key: "0", IfNoneMatch: "dd" })
     ).resolves.toHaveProperty("value", "aa");
 
-    // Get NotModified if IfNoneMatch = 10
+    // Get NotModified if IfNoneMatch = written etag (same as server value, i.e. not modified)
     await expect(
-      remoteTryRead({ key: "0", IfNoneMatch: "10" })
+      remoteTryRead({ key: "0", IfNoneMatch: rspEtag })
     ).resolves.toBeInstanceOf(NotModifiedError);
 
-    // Get RangeError if key is wrong
+    // Get Error if key is wrong
     await expect(remoteTryRead({ key: "1" })).resolves.toBeInstanceOf(Error);
   });
 });

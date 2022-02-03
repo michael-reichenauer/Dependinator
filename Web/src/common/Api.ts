@@ -15,13 +15,20 @@ export interface TokenInfo {
   token: string;
 }
 
-export type ApiEntityStatus = "value" | "noValue" | "notModified";
+export type ApiEntityStatus = "value" | "noValue" | "notModified" | "error";
 
 export interface ApiEntity {
   key: string;
-  stamp: string;
+  etag?: string;
+  // stamp: string;
   status?: ApiEntityStatus;
   value?: any;
+}
+
+export interface ApiEntityRsp {
+  key: string;
+  status?: string;
+  etag?: string;
 }
 
 export interface Query {
@@ -43,7 +50,7 @@ export interface IApi {
   createAccount(user: User): Promise<Result<void>>;
   check(): Promise<Result<void>>;
   tryReadBatch(queries: Query[]): Promise<Result<ApiEntity[]>>;
-  writeBatch(entities: ApiEntity[]): Promise<Result<void>>;
+  writeBatch(entities: ApiEntity[]): Promise<Result<ApiEntityRsp[]>>;
   removeBatch(keys: string[]): Promise<Result<void>>;
 }
 
@@ -86,7 +93,9 @@ export class Api implements IApi {
     return rsp as ApiEntity[];
   }
 
-  public async writeBatch(entities: ApiEntity[]): Promise<Result<void>> {
+  public async writeBatch(
+    entities: ApiEntity[]
+  ): Promise<Result<ApiEntityRsp[]>> {
     return await this.post("/api/writeBatch", entities);
   }
 
@@ -101,7 +110,7 @@ export class Api implements IApi {
   // api helper functions ---------------------------------
   private async get(uri: string): Promise<Result<any>> {
     this.requestCount++;
-    console.log(`Request #${this.requestCount}: GET ${uri} ...`);
+    // console.log(`Request #${this.requestCount}: GET ${uri} ...`);
     const t = timing();
     try {
       const rspData = (
@@ -134,7 +143,7 @@ export class Api implements IApi {
 
   async post(uri: string, requestData: any): Promise<Result<any>> {
     this.requestCount++;
-    console.log(`Request #${this.requestCount}: POST ${uri} ...`);
+    // console.log(`Request #${this.requestCount}: POST ${uri} ...`);
     const t = timing();
     try {
       const rspData = (

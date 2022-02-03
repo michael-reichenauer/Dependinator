@@ -127,8 +127,8 @@ exports.tryReadBatch = async (context, body) => {
 
     const entities = items.map(item => toEntity(item))
     const responses = entities.map(entity => {
-        if (queries.find(query => query.key === entity.key && query.IfNoneMatch === entity.stamp)) {
-            return { key: entity.key, stamp: entity.stamp, status: 'notModified' }
+        if (queries.find(query => query.key === entity.key && query.IfNoneMatch === entity.etag)) {
+            return { key: entity.key, etag: entity.etag, status: 'notModified' }
         }
         return entity
     })
@@ -139,17 +139,31 @@ exports.tryReadBatch = async (context, body) => {
 
 
 exports.writeBatch = async (context, body) => {
+    const entities = body
     const tableName = getTableName(context)
-    context.log('body', body, tableName)
+    context.log('entities:', entities, tableName)
 
-    const entityItems = body.map(entity => toEntityItem(entity))
+    const entityItems = entities.map(entity => toEntityItem(entity))
 
     const batch = new azure.TableBatch()
     entityItems.forEach(entity => batch.insertOrReplaceEntity(entity))
 
-    await table.executeBatch(tableName, batch)
+    const tableResponses = await table.executeBatch(tableName, batch)
+    const responses = tableResponses.map((rsp, i) => {
+        if (!rsp.response?.isSuccessful) {
+            return {
+                key: entities[i].key,
+                status: 'error'
+            }
+        }
 
-    return {}
+        return {
+            key: entities[i].key,
+            etag: rsp.entity['.metadata'].etag
+        }
+    })
+
+    return responses
 }
 
 
@@ -547,7 +561,6 @@ function toEntityItem(entity) {
         RowKey: entGen.String(key),
         PartitionKey: entGen.String(dataPartitionKey),
 
-        stamp: entGen.String(stamp),
         value: entGen.String(JSON.stringify(value)),
     }
 
@@ -555,7 +568,7 @@ function toEntityItem(entity) {
 }
 
 toEntity = (item) => {
-    return { key: item.RowKey, stamp: item.stamp, value: JSON.parse(item.value ?? '{}') }
+    return { key: item.RowKey, etag: item['odata.etag'], value: JSON.parse(item.value ?? '{}') }
 }
 
 

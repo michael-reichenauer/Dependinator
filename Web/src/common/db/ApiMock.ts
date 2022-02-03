@@ -1,9 +1,9 @@
-import { ApiEntity, IApi, TokenInfo, User, Query } from "../Api";
+import { ApiEntity, IApi, TokenInfo, User, Query, ApiEntityRsp } from "../Api";
 import { di } from "../di";
 import { ILocalStore, ILocalStoreKey } from "../LocalStore";
 import Result, { isError } from "../Result";
 
-const prefix = "remote-";
+const prefix = "ApiMock-";
 
 export class ApiMock implements IApi {
   constructor(private local: ILocalStore = di(ILocalStoreKey)) {}
@@ -29,15 +29,21 @@ export class ApiMock implements IApi {
     return this.skipNotModifiedEntities(queries, localEntities);
   }
 
-  public async writeBatch(entities: ApiEntity[]): Promise<Result<void>> {
-    const remoteEntities = entities.map((entity) => ({
-      key: this.remoteKey(entity.key),
-      status: "value",
-      timestamp: entity.stamp,
-      value: entity,
-    }));
+  public async writeBatch(
+    entities: ApiEntity[]
+  ): Promise<Result<ApiEntityRsp[]>> {
+    const etag = this.generateEtag();
+    const remoteEntities = entities.map((entity) => {
+      entity.etag = etag;
+      return { key: this.remoteKey(entity.key), value: entity };
+    });
 
     this.local.writeBatch(remoteEntities);
+
+    return remoteEntities.map((entity) => ({
+      key: entity.value.key,
+      etag: entity.value.etag,
+    }));
   }
 
   public async removeBatch(keys: string[]): Promise<Result<void>> {
@@ -54,18 +60,17 @@ export class ApiMock implements IApi {
     return entities.map((entity, i): ApiEntity => {
       const key = queries[i].key;
       if (isError(entity)) {
-        return { key: key, status: "noValue", stamp: "" };
+        return { key: key, status: "noValue" };
       }
 
-      if (queries[i].IfNoneMatch && queries[i].IfNoneMatch === entity.stamp) {
+      if (queries[i].IfNoneMatch && queries[i].IfNoneMatch === entity.etag) {
         // The query specified a IfNoneMatch and entity has not been modified
-        return { key: key, stamp: entity.stamp, status: "notModified" };
+        return { key: key, etag: entity.etag, status: "notModified" };
       }
 
       return {
         key: key,
-        status: "value",
-        stamp: entity.stamp,
+        etag: entity.etag,
         value: entity.value,
       };
     });
@@ -73,5 +78,9 @@ export class ApiMock implements IApi {
 
   private remoteKey(localKey: string): string {
     return prefix + localKey;
+  }
+
+  private generateEtag(): string {
+    return `W/"datetime'${new Date().toISOString()}'"`.replace(/:/g, "%3A");
   }
 }

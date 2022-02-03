@@ -8,14 +8,32 @@ import {
 import Result, { isError } from "../Result";
 import { di, diKey, singleton } from "../di";
 import { Query } from "../Api";
+import assert from "assert";
+import { lx } from "../utils";
 
 export interface Entity {
   key: string;
   value: any;
 }
 
+export type mergedType = "local" | "remote" | "merged";
+
+export interface MergeEntity {
+  key: string;
+  mergedType: mergedType;
+  value: any;
+  version: number;
+}
+
+export interface MergedEntity extends MergeEntity {
+  mergedType: mergedType;
+  localEtag: string;
+  remoteEtag: string;
+  syncedEtag: string;
+}
+
 export interface Configuration {
-  onConflict: (local: LocalEntity, remote: RemoteEntity) => LocalEntity;
+  onConflict: (local: LocalEntity, remote: RemoteEntity) => MergeEntity;
   onRemoteChanged: () => void;
   onSyncChanged: (isOK: boolean) => void;
   isSyncEnabled: boolean;
@@ -43,7 +61,7 @@ export class StoreDB implements IStoreDB {
   private monitorKeys: string[] = [];
   private configuration: Configuration = {
     isSyncEnabled: false,
-    onConflict: (l, r) => l,
+    onConflict: (l, r) => ({ ...l, mergedType: "local" }),
     onSyncChanged: () => {},
     onRemoteChanged: () => {},
   };
@@ -59,12 +77,7 @@ export class StoreDB implements IStoreDB {
   }
 
   public configure(configuration: Partial<Configuration>): void {
-    if (
-      configuration.isSyncEnabled !== undefined &&
-      configuration.isSyncEnabled !== this.configuration.isSyncEnabled
-    ) {
-      console.log("Syncing - isSyncEnabled =", configuration.isSyncEnabled);
-    }
+    this.logConfig(configuration);
 
     this.configuration = { ...this.configuration, ...configuration };
   }
@@ -94,31 +107,33 @@ export class StoreDB implements IStoreDB {
 
   public writeBatch(entities: Entity[]): void {
     const keys = entities.map((entity) => entity.key);
-    const now = Date.now().toString();
+    const etag = this.generateEtag();
 
     const localEntities = this.localDB.tryReadBatch(keys);
 
     // Updating current local entities with new data and setting timestamp and increase version
-    const updatedEntities = entities.map((newEntity, index) => {
+    const updatedEntities = entities.map((newEntity, index): LocalEntity => {
       const localEntity = localEntities[index];
       if (isError(localEntity)) {
-        // First version of local entity (not yet cached)
+        // First initial version of local entity
         return {
           key: newEntity.key,
-          stamp: now,
-          version: 1,
-          synced: "",
+          etag: etag,
+          syncedEtag: "",
+          remoteEtag: "",
           value: newEntity.value,
+          version: 1,
         };
       }
 
-      // Updating cached local entity with new value, timestamp and version
+      // Updating cached local entity with new value, etag and version
       return {
         key: newEntity.key,
-        stamp: now,
-        version: localEntity.version + 1,
-        synced: localEntity.synced,
+        etag: etag,
+        syncedEtag: localEntity.syncedEtag,
+        remoteEtag: localEntity.remoteEtag,
         value: newEntity.value,
+        version: localEntity.version + 1,
       };
     });
 
@@ -129,7 +144,11 @@ export class StoreDB implements IStoreDB {
   }
 
   public removeBatch(keys: string[]): void {
-    this.localDB.removeBatch(keys, false);
+    this.localDB.preRemoveBatch(keys);
+    if (!this.configuration.isSyncEnabled) {
+      // If not sync is enabled, the entities are just remove locally
+      this.localDB.confirmRemoved(keys);
+    }
     this.triggerSync();
   }
 
@@ -155,24 +174,6 @@ export class StoreDB implements IStoreDB {
     return await this.syncPromise;
   }
 
-  // // Scheduled to be called regularly to trigger sync with remote server
-  // private autoSync() {
-  //   if (!this.configuration.isSyncEnabled) {
-  //     return;
-  //   }
-
-  //   const delay = Math.max(0, Date.now() - this.syncedTimestamp);
-  //   if (delay < autoSyncInterval - 100) {
-  //     // Not yet time to sync, schedule recheck after some time
-  //     setTimeout(() => this.autoSync(), autoSyncInterval - delay);
-  //     return;
-  //   }
-
-  //   // Time to auto sync and schedule next auto sync
-  //   this.triggerSync();
-  //   setTimeout(() => this.autoSync(), autoSyncInterval);
-  // }
-
   // Syncs local and remote entities by retrieving changed remote entities and compare with
   // stored local entities.
   // If remote has changed but not local, then local is updated
@@ -191,7 +192,7 @@ export class StoreDB implements IStoreDB {
     let syncKeys: string[] = [...this.monitorKeys];
     syncKeys = this.addKeys(syncKeys, unSyncedKeys);
 
-    // Generating query, which is key and timestamp to skip known unchanged remote entities
+    // Generating query, which is key and remote etag to skip known not modified remote entities
     const queries = this.makeRemoteQueries(syncKeys);
     if (!queries.length) {
       console.log("Nothing to sync");
@@ -211,20 +212,21 @@ export class StoreDB implements IStoreDB {
 
     const remoteToLocal: RemoteEntity[] = [];
     const localToRemote: LocalEntity[] = [];
-    const mergedEntities: LocalEntity[] = [];
+    const mergedEntities: MergedEntity[] = [];
 
     remoteEntities.forEach((remoteEntity, index) => {
       const localEntity = localEntities[index];
 
-      console.log("sync:", localEntity, remoteEntity);
+      console.log("sync:", lx(localEntity), lx(remoteEntity));
       if (isError(localEntity)) {
         // Local entity is missing, skip sync
         return;
       }
 
       if (remoteEntity instanceof NotModifiedError) {
-        // Remote entity was not changed since last sync, lets upload local to remote if local has changed
-        if (localEntity.synced !== localEntity.stamp) {
+        // Remote entity was not changed since last sync,
+        if (localEntity.etag !== localEntity.syncedEtag) {
+          // local has changed since last upload
           localToRemote.push(localEntity);
         }
         return;
@@ -235,41 +237,52 @@ export class StoreDB implements IStoreDB {
         localToRemote.push(localEntity);
         return;
       }
-      if (localEntity.key !== remoteEntity.key) {
-        // Not same entity
-        console.log("Not same entity");
+
+      assert(localEntity.key === remoteEntity.key, "Not same entity");
+
+      if (
+        localEntity.etag === localEntity.syncedEtag &&
+        localEntity.remoteEtag === remoteEntity.etag
+      ) {
+        // Local entity has not changed and local entity is same as remote entity (nothing to sync)
         return;
       }
 
-      if (localEntity.stamp === remoteEntity.stamp) {
-        // Both local and remote entity have same timestamp, already same (nothing to sync)
+      if (
+        localEntity.etag === localEntity.syncedEtag &&
+        localEntity.remoteEtag !== remoteEntity.etag
+      ) {
+        // Local entity has not changed, while remote has been changed by some other client,
+        // lets update local entity if the entity is actively monitored
+        if (this.monitorKeys.includes(localEntity.key)) {
+          remoteToLocal.push(remoteEntity);
+        }
         return;
       }
 
-      if (localEntity.synced === remoteEntity.stamp) {
+      if (
+        localEntity.etag !== localEntity.syncedEtag &&
+        localEntity.remoteEtag === remoteEntity.etag
+      ) {
         // Local entity has changed and remote entity same as uploaded previously by this client,
         // lets upload local to remote
         localToRemote.push(localEntity);
         return;
       }
 
-      if (localEntity.synced === localEntity.stamp) {
-        // Local entity has not changed, while remote has been changed by some other client,
-        // lets cache the updated remote entity if the entity is actively monitored
-        if (this.monitorKeys.includes(localEntity.key)) {
-          remoteToLocal.push(remoteEntity);
-          console.log("local, remote", localEntity, remoteEntity);
-        }
-        return;
-      }
-
       // Local entity was chanced by this client and remote entity wad changed by some other client,
       // lets merge the entities by resolving the conflict
-      const resolvedEntity = this.configuration.onConflict(
+      const mergeEntity = this.configuration.onConflict(
         localEntity,
         remoteEntity
       );
-      mergedEntities.push(resolvedEntity);
+      const mergedEntity: MergedEntity = {
+        ...mergeEntity,
+        localEtag: localEntity.etag,
+        syncedEtag: localEntity.syncedEtag,
+        remoteEtag: remoteEntity.etag,
+      };
+      mergedEntities.push(mergedEntity);
     });
 
     // Convert remote entity to LocalEntity with synced= 'remote timestamp'
@@ -280,10 +293,9 @@ export class StoreDB implements IStoreDB {
 
     // Add merged entity to both local and to be uploaded to remote
     this.addMergedEntities(mergedEntities, localToUpdate, remoteToUpload);
-    console.log("merged", mergedEntities);
 
     console.log(
-      `Synced to local: ${localToUpdate.length}, to remote: ${remoteToUpload.length}`
+      `Synced to local: ${localToUpdate.length}, to remote: ${remoteToUpload.length}, (merged: ${mergedEntities.length})`
     );
 
     this.updateLocalEntities(localToUpdate);
@@ -299,89 +311,69 @@ export class StoreDB implements IStoreDB {
     }
   }
 
+  private convertRemoteToLocal(remoteEntities: RemoteEntity[]): LocalEntity[] {
+    const etag = this.generateEtag();
+    return remoteEntities.map(
+      (remoteEntity): LocalEntity => ({
+        key: remoteEntity.key,
+        etag: etag,
+        syncedEtag: etag,
+        remoteEtag: remoteEntity.etag,
+        value: remoteEntity.value,
+        version: remoteEntity.version,
+      })
+    );
+  }
+
+  private convertLocalToRemote(localEntities: LocalEntity[]): RemoteEntity[] {
+    return localEntities.map(
+      (localEntity): RemoteEntity => ({
+        key: localEntity.key,
+        etag: localEntity.remoteEtag,
+        localEtag: localEntity.etag,
+        value: localEntity.value,
+        version: localEntity.version,
+      })
+    );
+  }
+
   // Entities merged by a conflict needs to update both local and remote
   private addMergedEntities(
-    merged: LocalEntity[],
+    merged: MergedEntity[],
     toLocal: LocalEntity[],
     toRemote: RemoteEntity[]
   ) {
-    const now = Date.now().toString();
+    const etag = this.generateEtag();
     merged.forEach((mergedEntity) => {
       toLocal.push({
         key: mergedEntity.key,
-        stamp: now,
-        version: mergedEntity.version + 1,
-        synced: mergedEntity.synced,
+        etag: etag,
+        syncedEtag: mergedEntity.syncedEtag,
+        remoteEtag: mergedEntity.remoteEtag,
         value: mergedEntity.value,
+        version: mergedEntity.version + 1,
       });
       toRemote.push({
         key: mergedEntity.key,
-        stamp: now,
-        version: mergedEntity.version + 1,
+        etag: mergedEntity.remoteEtag,
+        localEtag: etag,
         value: mergedEntity.value,
+        version: mergedEntity.version + 1,
       });
     });
   }
 
   private updateLocalEntities(localToUpdate: LocalEntity[]): void {
+    if (!localToUpdate.length) {
+      // No entities to update
+    }
+
     this.localDB.writeBatch(localToUpdate);
 
     if (localToUpdate.length > 0) {
       // Signal that local entities where changed during sync so main app can reload ui
       console.log("Remote entity updated local entities");
       setTimeout(() => this.configuration.onRemoteChanged(), 0);
-    }
-  }
-
-  private convertRemoteToLocal(remoteEntities: RemoteEntity[]): LocalEntity[] {
-    return remoteEntities.map((remoteEntity) => ({
-      key: remoteEntity.key,
-      stamp: remoteEntity.stamp,
-      version: remoteEntity.version,
-      synced: remoteEntity.stamp,
-      value: remoteEntity.value,
-    }));
-  }
-
-  private convertLocalToRemote(localEntities: LocalEntity[]): RemoteEntity[] {
-    return localEntities.map((localEntity) => ({
-      key: localEntity.key,
-      stamp: localEntity.stamp,
-      version: localEntity.version,
-      value: localEntity.value,
-    }));
-  }
-
-  // Creates queries used when retrieving remote entities while syncing. But specifying
-  // IfNoneMatch property to exclude already known unchanged remote entities (synced by this client)
-  private makeRemoteQueries(syncKeys: string[]): Query[] {
-    const localEntities = this.localDB.tryReadBatch(syncKeys);
-
-    // creating queries based on key and synced timestamps to skip already known unchanged remote entities
-    return localEntities
-      .filter((entity) => !isError(entity))
-      .map((entity, index) => {
-        if (!isError(entity) && entity.synced) {
-          // Local entity exists and is synced, skip retrieving remote if not changed since last sync
-          return { key: syncKeys[index], IfNoneMatch: entity.synced };
-        }
-
-        // Get entity regardless of matched timestamp
-        return { key: syncKeys[index] };
-      });
-  }
-
-  // Add keys of unsynced entities
-  private addKeys(syncKeys: string[], keys: string[]): string[] {
-    const addingKeys = keys.filter((key) => !syncKeys.includes(key));
-    return syncKeys.concat(addingKeys);
-  }
-
-  // Signal is connected changes (called when remote connections succeeds or fails)
-  private setSyncStatus(isOK: boolean): void {
-    if (isOK !== this.isSyncOK) {
-      this.isSyncOK = isOK;
-      this.configuration.onSyncChanged(isOK);
     }
   }
 
@@ -394,27 +386,43 @@ export class StoreDB implements IStoreDB {
       return;
     }
 
-    const response = await this.remoteDB.writeBatch(entities);
-    if (isError(response)) {
+    const responses = await this.remoteDB.writeBatch(entities);
+    if (isError(responses)) {
       this.setSyncStatus(false);
-      return response;
+      return responses;
     }
 
     this.setSyncStatus(true);
 
-    // Remember sync timestamps for uploaded entities
-    const syncedItems = new Map<string, string>();
-    entities.forEach((entity) => syncedItems.set(entity.key, entity.stamp));
+    // Remember etags for uploaded entities
+    const uppLoadedEtags = new Map<string, string>();
+    responses.forEach((rsp) => {
+      if (rsp.etag) {
+        uppLoadedEtags.set(rsp.key, rsp.etag);
+      }
+    });
 
-    // Update local entities with synced timestamps
+    const syncingEtags = new Map<string, string>();
+    entities.forEach((entity) => {
+      if (entity.localEtag) {
+        syncingEtags.set(entity.key, entity.localEtag);
+      }
+    });
+
+    // Get local entities that correspond to the uploaded entities (skip just removed entities)
     const keys = entities.map((entity) => entity.key);
     const localEntities = this.localDB
       .tryReadBatch(keys)
       .filter((r) => !isError(r)) as LocalEntity[];
-    const syncedLocalEntities = localEntities.map((entity) => ({
-      ...entity,
-      synced: syncedItems.get(entity.key) ?? "",
-    }));
+
+    // Update local entities with syncedEtags and remote server etags
+    const syncedLocalEntities = localEntities.map(
+      (entity): LocalEntity => ({
+        ...entity,
+        remoteEtag: uppLoadedEtags.get(entity.key) ?? "",
+        syncedEtag: syncingEtags.get(entity.key) ?? "",
+      })
+    );
 
     this.localDB.writeBatch(syncedLocalEntities);
   }
@@ -463,14 +471,48 @@ export class StoreDB implements IStoreDB {
     return remoteEntity.value;
   }
 
+  // Creates queries used when retrieving remote entities while syncing. But specifying
+  // IfNoneMatch property to exclude already known unchanged remote entities (synced by this client)
+  private makeRemoteQueries(syncKeys: string[]): Query[] {
+    const localEntities = this.localDB.tryReadBatch(syncKeys);
+
+    // creating queries based on key and synced timestamps to skip already known unchanged remote entities
+    return localEntities
+      .filter((entity) => !isError(entity))
+      .map((entity, index) => {
+        if (isError(entity) || !entity.remoteEtag) {
+          // Local entity does not exist of has not been synced, get entity regardless of matched timestamp
+          return { key: syncKeys[index] };
+        }
+
+        // Local entity exists and is synced, skip retrieving remote if not changed since last sync
+        return { key: syncKeys[index], IfNoneMatch: entity.remoteEtag };
+      });
+  }
+
+  // Add keys of unsynced entities
+  private addKeys(syncKeys: string[], keys: string[]): string[] {
+    const addingKeys = keys.filter((key) => !syncKeys.includes(key));
+    return syncKeys.concat(addingKeys);
+  }
+
+  // Signal is connected changes (called when remote connections succeeds or fails)
+  private setSyncStatus(isOK: boolean): void {
+    if (isOK !== this.isSyncOK) {
+      this.isSyncOK = isOK;
+      this.configuration.onSyncChanged(isOK);
+    }
+  }
+
   // Caching a local value when storing a local value for the first time
   private cacheLocalValue<T>(key: string, value: T) {
     const entity: LocalEntity = {
       key: key,
-      stamp: Date.now().toString(),
-      version: 1,
-      synced: "",
+      etag: this.generateEtag(),
+      syncedEtag: "",
+      remoteEtag: "",
       value: value,
+      version: 1,
     };
 
     this.localDB.write(entity);
@@ -478,14 +520,29 @@ export class StoreDB implements IStoreDB {
 
   // Read a remote value and now caching it locally a well
   private cacheRemoteEntity(remoteEntity: RemoteEntity) {
-    const entity = {
+    const etag = this.generateEtag();
+    const entity: LocalEntity = {
       key: remoteEntity.key,
-      stamp: remoteEntity.stamp,
-      version: remoteEntity.version,
-      synced: remoteEntity.stamp,
+      etag: etag,
+      syncedEtag: etag,
+      remoteEtag: remoteEntity.etag,
       value: remoteEntity.value,
+      version: remoteEntity.version,
     };
 
     this.localDB.write(entity);
+  }
+
+  private generateEtag(): string {
+    return `W/"datetime'${new Date().toISOString()}'"`.replace(/:/g, "%3A");
+  }
+
+  private logConfig(configuration: Partial<Configuration>) {
+    if (
+      configuration.isSyncEnabled !== undefined &&
+      configuration.isSyncEnabled !== this.configuration.isSyncEnabled
+    ) {
+      console.log("Syncing - isSyncEnabled =", configuration.isSyncEnabled);
+    }
   }
 }

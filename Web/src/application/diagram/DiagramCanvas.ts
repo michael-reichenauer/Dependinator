@@ -391,7 +391,7 @@ export default class DiagramCanvas {
   }
 
   onRemoteChanged = async () => {
-    setInfoMessage("Diagram updated by other device");
+    setInfoMessage("Updated with changes form other devices");
     setProgress(true);
     this.canvas.clearDiagram();
 

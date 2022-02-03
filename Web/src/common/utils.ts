@@ -1,4 +1,5 @@
 // Some handy utility functions
+import { isError } from "./Result";
 
 const humanizeDuration = require("humanize-duration");
 
@@ -115,4 +116,12 @@ export const imgDataUrlToPngDataUrl = (
   };
 
   image.src = imgDataUrl;
+};
+
+export const lx = (obj: any): any => {
+  if (isError(obj)) {
+    const msg = obj.message ? `:${obj.message}` : "";
+    return `${obj.name}${msg}`;
+  }
+  return obj;
 };

@@ -3,7 +3,7 @@ import Result, { isError } from "../../common/Result";
 import assert from "assert";
 import { di, singleton, diKey } from "../../common/di";
 import { ILocalFiles, ILocalFilesKey } from "../../common/LocalFiles";
-import { IStoreDB, IStoreDBKey } from "../../common/db/StoreDB";
+import { IStoreDB, IStoreDBKey, MergeEntity } from "../../common/db/StoreDB";
 import {
   ApplicationDto,
   applicationKey,
@@ -69,7 +69,11 @@ export class Store implements IStore {
   public configure(config: Partial<Configuration>): void {
     this.config = { ...this.config, ...config };
 
-    this.db.configure({ ...config });
+    this.db.configure({
+      onConflict: (local: LocalEntity, remote: RemoteEntity) =>
+        this.onEntityConflict(local, remote),
+      ...config,
+    });
   }
 
   public triggerSync(): Promise<Result<void>> {
@@ -250,7 +254,7 @@ export class Store implements IStore {
   private onEntityConflict(
     local: LocalEntity,
     remote: RemoteEntity
-  ): LocalEntity {
+  ): MergeEntity {
     if ("diagramInfos" in local.value) {
       return this.onApplicationConflict(local, remote);
     }
@@ -260,8 +264,8 @@ export class Store implements IStore {
   private onApplicationConflict(
     local: LocalEntity,
     remote: RemoteEntity
-  ): LocalEntity {
-    console.log("Application conflict", local, remote);
+  ): MergeEntity {
+    console.warn("Application conflict", local, remote);
 
     const mergeDiagramInfos = (
       newerDiagrams: DiagramInfoDtos,
@@ -277,17 +281,23 @@ export class Store implements IStore {
     };
 
     if (local.version >= remote.version) {
-      // Local entity has more edits
+      // Local entity has more edits, merge diagram infos, but priorities remote
       const applicationDto: ApplicationDto = {
         diagramInfos: mergeDiagramInfos(
           local.value.diagramInfos,
           remote.value.diagramInfos
         ),
       };
-      return { ...local, value: applicationDto };
+
+      return {
+        key: local.key,
+        mergedType: "merged",
+        value: applicationDto,
+        version: local.version,
+      };
     }
 
-    // Remote entity since that has more edits
+    // Remote entity since that has more edits, merge diagram infos, but priorities local
     const applicationDto: ApplicationDto = {
       diagramInfos: mergeDiagramInfos(
         remote.value.diagramInfos,
@@ -297,30 +307,33 @@ export class Store implements IStore {
 
     return {
       key: remote.key,
-      stamp: remote.stamp,
-      version: remote.version,
-      synced: remote.stamp,
+      mergedType: "merged",
       value: applicationDto,
+      version: remote.version,
     };
   }
 
   private onDiagramConflict(
     local: LocalEntity,
     remote: RemoteEntity
-  ): LocalEntity {
-    console.log("Diagram conflict", local, remote);
+  ): MergeEntity {
+    console.warn("Diagram conflict", local, remote);
     if (local.version >= remote.version) {
       // use local since it has more edits
-      return local;
+      return {
+        key: local.key,
+        mergedType: "local",
+        value: local.value,
+        version: local.version,
+      };
     }
 
     // Use remote entity since that has more edits
     return {
       key: remote.key,
-      stamp: remote.stamp,
-      version: remote.version,
-      synced: remote.stamp,
+      mergedType: "remote",
       value: remote.value,
+      version: remote.version,
     };
   }
 
