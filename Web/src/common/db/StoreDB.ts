@@ -33,7 +33,7 @@ export interface MergedEntity extends MergeEntity {
 
 export interface Configuration {
   onConflict: (local: LocalEntity, remote: RemoteEntity) => MergeEntity;
-  onRemoteChanged: () => void;
+  onRemoteChanged: (keys: string[]) => void;
   onSyncChanged: (isOK: boolean) => void;
   isSyncEnabled: boolean;
 }
@@ -292,9 +292,11 @@ export class StoreDB implements IStoreDB {
 
     // Add merged entity to both local and to be uploaded to remote
     this.addMergedEntities(mergedEntities, localToUpdate, remoteToUpload);
+    const removedKeys = this.localDB.getRemovedKeys();
 
     console.log(
-      `Synced to local: ${localToUpdate.length}, to remote: ${remoteToUpload.length}, (merged: ${mergedEntities.length})`
+      `Syncing toLocal: ${localToUpdate.length}, toRemote: ${remoteToUpload.length},` +
+        ` toRemove: ${removedKeys.length}, (merged: ${mergedEntities.length})`
     );
 
     this.updateLocalEntities(localToUpdate);
@@ -304,7 +306,7 @@ export class StoreDB implements IStoreDB {
       return uploadResult;
     }
 
-    const removeResult = await this.syncRemovedEntities();
+    const removeResult = await this.syncRemovedEntities(removedKeys);
     if (isError(removeResult)) {
       return removeResult;
     }
@@ -372,7 +374,8 @@ export class StoreDB implements IStoreDB {
     if (localToUpdate.length > 0) {
       // Signal that local entities where changed during sync so main app can reload ui
       console.log("Remote entity updated local entities");
-      setTimeout(() => this.configuration.onRemoteChanged(), 0);
+      const keys = localToUpdate.map((entity) => entity.key);
+      setTimeout(() => this.configuration.onRemoteChanged(keys), 0);
     }
   }
 
@@ -428,8 +431,9 @@ export class StoreDB implements IStoreDB {
 
   // Syncing removed local entities to be removed on remote server as well, if ok, then
   // local removed values are marked as confirmed removed (i.e. synced)
-  private async syncRemovedEntities(): Promise<Result<void>> {
-    const removedKeys = this.localDB.getRemovedKeys();
+  private async syncRemovedEntities(
+    removedKeys: string[]
+  ): Promise<Result<void>> {
     if (removedKeys.length === 0) {
       return;
     }

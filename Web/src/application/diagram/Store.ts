@@ -15,9 +15,10 @@ import {
 } from "./StoreDtos";
 import { LocalEntity } from "../../common/db/LocalDB";
 import { RemoteEntity } from "../../common/db/RemoteDB";
+import { ThreeSixty } from "@material-ui/icons";
 
 export interface Configuration {
-  onRemoteChanged: () => void;
+  onRemoteChanged: (keys: string[]) => void;
   onSyncChanged: (isOK: boolean) => void;
   isSyncEnabled: boolean;
 }
@@ -73,6 +74,7 @@ export class Store implements IStore {
       onConflict: (local: LocalEntity, remote: RemoteEntity) =>
         this.onEntityConflict(local, remote),
       ...config,
+      onRemoteChanged: (keys: string[]) => this.onRemoteChange(keys),
     });
   }
 
@@ -249,6 +251,10 @@ export class Store implements IStore {
       applicationKey,
       defaultApplicationDto
     );
+  }
+
+  private onRemoteChange(keys: string[]) {
+    this.config.onRemoteChanged(keys);
   }
 
   private onEntityConflict(

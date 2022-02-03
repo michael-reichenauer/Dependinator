@@ -166,6 +166,20 @@ exports.writeBatch = async (context, body) => {
     return responses
 }
 
+exports.removeBatch = async (context, body) => {
+    const keys = body
+    const tableName = getTableName(context)
+    context.log('keys:', keys, tableName)
+
+    const entityItems = keys.map(key => toDeleteEntityItem(key))
+
+    const batch = new azure.TableBatch()
+    entityItems.forEach(entity => batch.deleteEntity(entity))
+
+    await table.executeBatch(tableName, batch)
+
+    return ''
+}
 
 exports.connect = async (context) => {
     const req = context.req
@@ -562,6 +576,15 @@ function toEntityItem(entity) {
         PartitionKey: entGen.String(dataPartitionKey),
 
         value: entGen.String(JSON.stringify(value)),
+    }
+
+    return item
+}
+
+function toDeleteEntityItem(key) {
+    const item = {
+        RowKey: entGen.String(key),
+        PartitionKey: entGen.String(dataPartitionKey),
     }
 
     return item
