@@ -9,7 +9,6 @@ import Result, { isError } from "../Result";
 import { di, diKey, singleton } from "../di";
 import { Query } from "../Api";
 import assert from "assert";
-import { lx } from "../utils";
 
 export interface Entity {
   key: string;
@@ -185,7 +184,7 @@ export class StoreDB implements IStoreDB {
       return;
     }
 
-    console.log("Syncing ...");
+    // console.log("Syncing ...");
 
     // Always syncing monitored entities and unsynced local entities
     const unSyncedKeys = this.localDB.getUnsyncedKeys();
@@ -217,7 +216,7 @@ export class StoreDB implements IStoreDB {
     remoteEntities.forEach((remoteEntity, index) => {
       const localEntity = localEntities[index];
 
-      console.log("sync:", lx(localEntity), lx(remoteEntity));
+      // console.log("sync:", lx(localEntity), lx(remoteEntity));
       if (isError(localEntity)) {
         // Local entity is missing, skip sync
         return;

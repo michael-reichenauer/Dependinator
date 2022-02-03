@@ -65,7 +65,7 @@ export class RemoteDB implements IRemoteDB {
   ): Result<RemoteEntity>[] {
     return queries.map((query) => {
       const entity = apiEntities.find((e) => e.key === query.key);
-      console.log("api entity from server", entity);
+      // console.log("api entity from server", entity);
       if (!entity) {
         // The entity was never returned from remote server
         return noValueError;

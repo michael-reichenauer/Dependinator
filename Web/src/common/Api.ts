@@ -113,17 +113,18 @@ export class Api implements IApi {
     // console.log(`Request #${this.requestCount}: GET ${uri} ...`);
     const t = timing();
     try {
-      const rspData = (
-        await axios.get(uri, {
-          headers: { "x-api-key": this.apiKey, xtoken: this.getToken() },
-        })
-      ).data;
+      const rsp = await axios.get(uri, {
+        headers: { "x-api-key": this.apiKey, xtoken: this.getToken() },
+      });
 
+      const rspData = rsp.data;
+      const rspBytes = ("" + rsp.request?.responseText).length;
       console.groupCollapsed(
-        `Request #${this.requestCount}: GET ${uri}: OK:`,
+        `Request #${this.requestCount}: GET ${uri}: OK: (0->${rspBytes} bytes)`,
         t()
       );
       console.log("Response", rspData);
+      console.log("#rsp", rsp);
       console.groupEnd();
       this.onOK();
       return rspData;
@@ -146,13 +147,14 @@ export class Api implements IApi {
     // console.log(`Request #${this.requestCount}: POST ${uri} ...`);
     const t = timing();
     try {
-      const rspData = (
-        await axios.post(uri, requestData, {
-          headers: { "x-api-key": this.apiKey, xtoken: this.getToken() },
-        })
-      ).data;
+      const rsp = await axios.post(uri, requestData, {
+        headers: { "x-api-key": this.apiKey, xtoken: this.getToken() },
+      });
+      const rspData = rsp.data;
+      const reqBytes = ("" + rsp.config.data).length;
+      const rspBytes = ("" + rsp.request?.responseText).length;
       console.groupCollapsed(
-        `Request #${this.requestCount}: POST ${uri}: OK:`,
+        `Request #${this.requestCount}: POST ${uri}: OK: (${reqBytes}->${rspBytes} bytes)`,
         t()
       );
       console.log("Request:", requestData);
