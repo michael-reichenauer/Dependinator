@@ -1,4 +1,4 @@
-//var store = require('../shared/Store.js');
+var store = require('../shared/Store.js');
 
 module.exports = async function (context, req) {
     try {
