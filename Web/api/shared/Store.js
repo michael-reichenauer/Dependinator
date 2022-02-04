@@ -589,9 +589,14 @@ function toDeleteEntityItem(key) {
     return item
 }
 
-// function toEntity(item) {
-//     return { key: item.RowKey, etag: item['odata.etag'], value: JSON.parse(item.value ?? '{}') }
-// }
+function toEntity(item) {
+    let valueText = '{}'
+    if (item.value) {
+        valueText = item.value
+    }
+    const value = JSON.parse(valueText)
+    return { key: item.RowKey, etag: item['odata.etag'], value: value }
+}
 
 
 function toDiagramInfo(item) {
