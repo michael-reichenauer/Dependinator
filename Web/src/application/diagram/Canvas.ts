@@ -6,36 +6,28 @@ import ConnectionCreatePolicy from "./ConnectionCreatePolicy";
 import Colors from "./Colors";
 import { random } from "../../common/utils";
 import CanvasSerializer from "./CanvasSerializer";
-import DiagramCanvas from "./DiagramCanvas";
 import { Canvas2d, Command2d, Figure2d, Line2d } from "./draw2dTypes";
 import { CanvasDto } from "./StoreDtos";
 
 const randomDist = 30;
 
 export default class Canvas extends draw2d.Canvas {
-  diagramCanvas: DiagramCanvas;
-  serializer: CanvasSerializer;
+  private serializer: CanvasSerializer;
 
-  diagramId: string = "";
-  diagramName: string = "";
-  canvasId: string = "";
-  mainNodeId: string = "";
+  private touchEndTime: number = 0;
+  private previousPinchDiff: number = -1;
+  private coronaDecorationPolicy: any = null;
 
-  touchStartTime: number = 0;
-  touchEndTime: number = 0;
-  previousPinchDiff: number = -1;
-  coronaDecorationPolicy: any = null;
+  public canvasId: string = "";
+  public mainNodeId: string = "";
 
   constructor(
-    diagramCanvas: DiagramCanvas,
     htmlElementId: string,
     onEditMode: (isEdit: boolean) => void,
     width: number,
     height: number
   ) {
     super(htmlElementId, width, height);
-
-    this.diagramCanvas = diagramCanvas;
     this.serializer = new CanvasSerializer(this);
 
     this.setScrollArea("#" + htmlElementId);
@@ -87,20 +79,14 @@ export default class Canvas extends draw2d.Canvas {
     this.installEditPolicy(new KeyboardPolicy());
 
     this.enableTouchSupport();
-
-    //canvas.installEditPolicy(new draw2d.policy.canvas.SnapToGridEditPolicy(10, false))
   }
 
   serialize(): CanvasDto {
     return this.serializer.serialize();
   }
 
-  deserialize(canvasData: CanvasDto): void {
-    this.serializer.deserialize(canvasData);
-  }
-
-  save(): void {
-    this.diagramCanvas.save();
+  deserialize(canvasDto: CanvasDto): void {
+    this.serializer.deserialize(canvasDto);
   }
 
   exportAsSvg(
@@ -114,7 +100,6 @@ export default class Canvas extends draw2d.Canvas {
     let svgResult: string = "";
 
     const canvas = new Canvas(
-      this.diagramCanvas,
       "canvasPrint",
       () => {},
       canvasWidth,
@@ -148,7 +133,6 @@ export default class Canvas extends draw2d.Canvas {
     canvas.commandStack.markSaveLocation();
     canvas.linesToRepaintAfterDragDrop = new draw2d.util.ArrayList();
     canvas.lineIntersections = new draw2d.util.ArrayList();
-    canvas.diagramId = "";
     canvas.canvasId = "";
   };
 
@@ -162,22 +146,6 @@ export default class Canvas extends draw2d.Canvas {
       background: Colors.canvasDivBackground,
       "background-size": 0,
     });
-  }
-
-  setGridBackground(): void {
-    // // In edit mode, add a grid background.
-    // const bgColor = Colors.canvasDivBackground
-    // const gridColor = Colors.canvasGridRgb
-    // const interval = 10
-    // const gridStroke = 1
-    // let background =
-    //     ` linear-gradient(to right,  ${gridColor} ${gridStroke}px, transparent ${gridStroke}px),
-    //       linear-gradient(to bottom, ${gridColor} ${gridStroke}px, ${bgColor}  ${gridStroke}px)`
-    // let backgroundSize = `${interval}px ${interval}px`
-    // this.html.find("svg").css({
-    //     "background": background,
-    //     "background-size": backgroundSize
-    // })
   }
 
   addAtApproximately(figure: Figure2d, x: number, y: number) {
@@ -309,13 +277,18 @@ export default class Canvas extends draw2d.Canvas {
       });
     });
 
+    const w = Math.max(maxX - minX, 0);
+    const h = Math.max(maxY - minY, 0);
+    const x2 = minX + w;
+    const y2 = minY + h;
+
     return {
       x: minX,
       y: minY,
-      w: maxX - minX,
-      h: maxY - minY,
-      x2: maxX,
-      y2: maxY,
+      w: w,
+      h: h,
+      x2: x2,
+      y2: y2,
     };
   }
 
@@ -354,7 +327,6 @@ export default class Canvas extends draw2d.Canvas {
             this.mouseDragDiffX = 0;
             this.mouseDragDiffY = 0;
             this.previousPinchDiff = -1;
-            this.touchStartTime = performance.now();
             this.startLongTouchDetection(event);
             pos = this.fromDocumentToCanvasCoordinate(
               event.clientX,

@@ -1,25 +1,61 @@
-import { Box } from "./draw2dTypes";
+// export interface SyncDto {
+//   isConnected: boolean;
+//   token: string | null;
+//   isConnecting: boolean;
+//   provider: string | null;
+//   details: string | null;
+// }
+
+export const applicationKey = "application";
+
+export type DiagramInfoDtos = { [id: string]: DiagramInfoDto };
+
+export type CanvasDtos = { [id: string]: CanvasDto };
+
+export interface ApplicationDto {
+  diagramInfos: DiagramInfoDtos;
+}
+
+export interface DiagramInfoDto {
+  id: string;
+  name: string;
+  accessed: number;
+}
+
+export interface DiagramDto {
+  id: string;
+  name: string;
+  canvases: CanvasDtos;
+}
+
+export interface CanvasDto {
+  id: string;
+  rect: RectDto;
+  figures: FigureDto[];
+  connections: ConnectionDto[];
+}
 
 export interface FigureDto {
-  sticky?: boolean;
-  icon?: string;
-  type: string | undefined;
-  color: string;
-  description: string;
-  name: string;
-  x: number;
-
-  y: number;
-  h: number;
-  w: number;
   id: string;
-
-  hasGroup: boolean;
+  type: string | undefined;
+  name: string;
+  description: string;
+  rect: RectDto;
+  color: string;
+  icon?: string;
+  sticky?: boolean;
 }
 
 export interface VertexDto {
   x: number;
   y: number;
+}
+
+export interface RectDto {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
 }
 
 export interface ConnectionDto {
@@ -35,37 +71,6 @@ export interface ConnectionDto {
   description: string;
 }
 
-export interface CanvasDto {
-  diagramId: string;
-  diagramName: string;
-  canvasId: string;
-  mainNodeId: string;
-  box: Box;
-  figures: FigureDto[];
-  connections: ConnectionDto[];
-  zoom: number;
+export interface FileDto {
+  diagrams: DiagramDto[];
 }
-
-export interface SyncDto {
-  isConnected: boolean;
-  token: string | null;
-  isConnecting: boolean;
-  provider: string | null;
-  details: string | null;
-}
-
-export interface DiagramInfoDto {
-  etag: string;
-  timestamp: number;
-  name: string;
-  diagramId: string;
-  accessed: number;
-  written: number;
-}
-
-export interface DiagramDto {
-  diagramInfo: DiagramInfoDto;
-  canvases: CanvasDto[];
-}
-
-export interface Dto {}

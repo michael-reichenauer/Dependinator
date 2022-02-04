@@ -26,14 +26,10 @@ export default class CanvasSerializer {
     }
 
     const canvasDto: CanvasDto = {
-      diagramId: this.canvas.diagramId ?? "",
-      diagramName: this.canvas.diagramName ?? "",
-      canvasId: this.canvas.canvasId ?? "",
-      mainNodeId: this.canvas.mainNodeId ?? "",
-      box: this.canvas.getFiguresRect(),
+      id: this.canvas.canvasId ?? "",
+      rect: this.canvas.getFiguresRect(),
       figures: this.serializeFigures(),
       connections: this.serializeConnections(),
-      zoom: this.canvas.getZoom(),
     };
 
     // Unmark all nodes
@@ -44,14 +40,8 @@ export default class CanvasSerializer {
 
   deserialize(canvasDto: CanvasDto): void {
     // console.log('data', canvasData)
-    // @ts-ignore
-    this.canvas.diagramId = canvasDto.diagramId;
-    // @ts-ignore
-    this.canvas.diagramName = canvasDto.diagramName;
-    // @ts-ignore
-    this.canvas.canvasId = canvasDto.canvasId;
-    // @ts-ignore
-    this.canvas.mainNodeId = canvasDto.mainNodeId;
+    this.canvas.canvasId = canvasDto.id;
+
     // const figures = this.deserializeFigures(canvasData.figures)
     // figures.forEach(figure => this.canvas.add(figure));
 
@@ -144,8 +134,8 @@ export default class CanvasSerializer {
       figure = Node.deserialize(f);
     }
 
-    figure.x = f.x;
-    figure.y = f.y;
+    figure.x = f.rect.x;
+    figure.y = f.rect.y;
     return figure;
   };
 

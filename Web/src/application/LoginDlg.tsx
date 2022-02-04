@@ -1,4 +1,4 @@
-import React from "react";
+import React, { FC } from "react";
 import { useState } from "react";
 import { atom, useAtom } from "jotai";
 import {
@@ -12,18 +12,34 @@ import {
 } from "@material-ui/core";
 import { Formik, Form, Field } from "formik";
 import { TextField } from "formik-material-ui";
-import { authenticate } from "../common/authenticate";
+import { User } from "../common/Api";
+import Result, { isError } from "../common/Result";
+import { SetAtom } from "jotai/core/types";
+import { AuthenticateError } from "../common/Api";
 
-const loginAtom = atom(false);
 const usernameKey = "credential.userName";
 
-export const useLogin = () => useAtom(loginAtom);
+export interface ILoginProvider {
+  createAccount(user: User): Promise<Result<void>>;
+  login(user: User): Promise<Result<void>>;
+  closed(): void;
+}
 
-export default function Login() {
-  const [show, setShow] = useLogin();
+export let showLoginDlg: SetAtom<ILoginProvider> = () => {};
+
+type loginProvider = ILoginProvider | null;
+const loginAtom = atom(null as loginProvider);
+export const useLogin = (): [loginProvider, SetAtom<loginProvider>] => {
+  const [login, setLogin] = useAtom(loginAtom);
+  showLoginDlg = setLogin;
+  return [login, setLogin];
+};
+
+export const LoginDlg: FC = () => {
+  const [login, setLogin] = useLogin();
   const [createAccount, setCreateAccount] = useState(false);
 
-  const handleEnter = (event: any) => {
+  const handleEnter = (event: any): void => {
     if (event.code === "Enter") {
       const okButton = document.getElementById("OKButton");
       okButton?.click();
@@ -31,7 +47,13 @@ export default function Login() {
   };
 
   return (
-    <Dialog open={show} onClose={() => {}}>
+    <Dialog
+      open={login !== null}
+      onClose={() => {
+        setLogin(null);
+        login?.closed();
+      }}
+    >
       <Box style={{ width: 320, height: 330, padding: 20 }}>
         {!createAccount && (
           <Typography variant="h5" style={{ paddingBottom: 10 }}>
@@ -66,32 +88,40 @@ export default function Login() {
           }}
           onSubmit={async (values, { setErrors, setFieldValue }) => {
             if (createAccount) {
-              try {
-                await authenticate.createUser({
-                  username: values.username,
-                  password: values.password,
-                });
-                setDefaultUserName(values.username);
-                setCreateAccount(false);
-                setFieldValue("confirm", "", false);
-              } catch (error) {
+              const createResult = await login?.createAccount({
+                username: values.username,
+                password: values.password,
+              });
+
+              if (isError(createResult)) {
                 setFieldValue("password", "", false);
                 setFieldValue("confirm", "", false);
                 setErrors({ username: "User already exist" });
                 return;
               }
+
+              setDefaultUserName(values.username);
+              setCreateAccount(false);
+              setFieldValue("confirm", "", false);
             }
 
-            try {
-              await authenticate.connectUser({
-                username: values.username,
-                password: values.password,
-              });
-              setDefaultUserName(values.username);
-            } catch (error) {
+            const loginResult = await login?.login({
+              username: values.username,
+              password: values.password,
+            });
+            if (isError(loginResult)) {
               setFieldValue("password", "", false);
-              setErrors({ username: "Invalid username or password" });
+              if (isError(loginResult, AuthenticateError)) {
+                setErrors({ username: "Invalid username or password" });
+              } else {
+                setErrors({ username: "Failed to enable device sync" });
+              }
+
+              return;
             }
+
+            setDefaultUserName(values.username);
+            setLogin(null);
           }}
         >
           {({ submitForm, isSubmitting }) => (
@@ -154,7 +184,10 @@ export default function Login() {
                   variant="contained"
                   color="primary"
                   disabled={isSubmitting}
-                  onClick={() => setShow(false)}
+                  onClick={() => {
+                    setLogin(null);
+                    login?.closed();
+                  }}
                   style={{ margin: 5, width: 85 }}
                 >
                   Cancel
@@ -166,7 +199,7 @@ export default function Login() {
       </Box>
     </Dialog>
   );
-}
+};
 
 const getDefaultUserName = () => localStorage.getItem(usernameKey) ?? "";
 

@@ -1,23 +1,46 @@
-import Api from "../application/diagram/Api";
-import { store } from "../application/diagram/Store";
-import { User } from "./../application/diagram/Api";
+import { IApi, IApiKey } from "./Api";
+import { User } from "./Api";
+import { di, diKey, singleton } from "./di";
+import { IKeyVaultConfigure, IKeyVaultConfigureKey } from "./keyVault";
+import Result, { isError } from "./Result";
 
-class Authenticate {
-  api: Api = new Api(() => {});
+export const IAuthenticateKey = diKey<IAuthenticate>();
+export interface IAuthenticate {
+  createUser(user: User): Promise<Result<void>>;
+  login(user: User): Promise<Result<void>>;
+  resetLogin(): void;
+}
 
-  async createUser(user: User) {
+@singleton(IAuthenticateKey)
+export class Authenticate implements IAuthenticate {
+  constructor(
+    private api: IApi = di(IApiKey),
+    private keyVaultConfigure: IKeyVaultConfigure = di(IKeyVaultConfigureKey)
+  ) {}
+
+  async createUser(user: User): Promise<Result<void>> {
     // Reduce risk of clear text password logging
-    user.password = await authenticate.passwordHash(user.password);
+    user.password = await this.passwordHash(user.password);
 
-    await this.api.createUser(user);
+    await this.api.createAccount(user);
   }
 
-  async connectUser(user: User) {
-    user.password = await authenticate.passwordHash(user.password);
-    return await store.connectUser(user);
+  async login(user: User): Promise<Result<void>> {
+    user.password = await this.passwordHash(user.password);
+
+    const tokenInfo = await this.api.login(user);
+    if (isError(tokenInfo)) {
+      return tokenInfo;
+    }
+
+    this.keyVaultConfigure.setToken(tokenInfo.token);
   }
 
-  async passwordHash(text: string) {
+  public resetLogin(): void {
+    this.keyVaultConfigure.setToken(null);
+  }
+
+  private async passwordHash(text: string) {
     // encode as UTF-8
     const msgBuffer = new TextEncoder().encode(text);
 
@@ -34,5 +57,3 @@ class Authenticate {
     return hashHex;
   }
 }
-
-export const authenticate = new Authenticate();

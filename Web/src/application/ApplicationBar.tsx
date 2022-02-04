@@ -1,6 +1,4 @@
-// @ts-nocheck
-
-import React from "react";
+import React, { FC, useRef } from "react";
 import PubSub from "pubsub-js";
 import {
   Typography,
@@ -15,41 +13,39 @@ import makeStyles from "@material-ui/core/styles/makeStyles";
 import { ApplicationMenu } from "./ApplicationMenu";
 import AddBoxOutlinedIcon from "@material-ui/icons/AddBoxOutlined";
 
-// import SyncIcon from '@material-ui/icons/Sync';
-// import SyncProblemIcon from '@material-ui/icons/SyncProblem';
-// import SyncDisabledIcon from '@material-ui/icons/SyncDisabled';
+import SyncIcon from "@material-ui/icons/Sync";
+import SyncProblemIcon from "@material-ui/icons/SyncProblem";
+import SyncDisabledIcon from "@material-ui/icons/SyncDisabled";
+import HourglassEmptyIcon from "@material-ui/icons/HourglassEmpty";
 import UndoIcon from "@material-ui/icons/Undo";
 import RedoIcon from "@material-ui/icons/Redo";
 import TuneIcon from "@material-ui/icons/Tune";
 import FilterCenterFocusIcon from "@material-ui/icons/FilterCenterFocus";
 
-import { canRedoAtom, canUndoAtom, selectModeAtom, titleAtom } from "./Diagram";
-import { useAtom } from "jotai";
-// import { store } from "./diagram/Store";
-//import { useLogin } from "./Login";
-// import { useSyncMode } from './Online'
-// import { useConnection } from "./diagram/Api";
+import { useCanRedo, useCanUndo, useSelectMode, useTitle } from "./Diagram";
+import { IOnlineKey, SyncState, useSyncMode } from "./Online";
 import { showPrompt } from "./../common/PromptDialog";
+import { di } from "../common/di";
 
-export default function ApplicationBar({ height }) {
+type ApplicationBarProps = {
+  height: number;
+};
+
+export const ApplicationBar: FC<ApplicationBarProps> = ({ height }) => {
+  const onlineRef = useRef(di(IOnlineKey));
   const classes = useAppBarStyles();
-  const [titleText] = useAtom(titleAtom);
-  const [selectMode] = useAtom(selectModeAtom);
-
-  // const [syncMode] = useSyncMode()
-  const [canUndo] = useAtom(canUndoAtom);
-  const [canRedo] = useAtom(canRedoAtom);
+  const [titleText] = useTitle();
+  const [selectMode] = useSelectMode();
+  const syncMode = useSyncMode();
+  const [canUndo] = useCanUndo();
+  const [canRedo] = useCanRedo();
   // const [canPopDiagram] = useAtom(canPopDiagramAtom)
-  //const [, setShowLogin] = useLogin()
-  //const [connection] = useConnection()
 
-  // const syncState = syncMode && connection ? true : syncMode && !connection ? false : null
-
-  const style = (disabled) => {
+  const style = (disabled?: any) => {
     return !disabled ? classes.icons : classes.iconsDisabled;
   };
 
-  const styleAlways = (disabled) => {
+  const styleAlways = (disabled?: any) => {
     return !disabled ? classes.iconsAlways : classes.iconsAlwaysDisabled;
   };
 
@@ -60,7 +56,7 @@ export default function ApplicationBar({ height }) {
       name = name.substring(0, index);
     }
 
-    showPrompt("Rename Diagram", null, name, (name) =>
+    showPrompt("Rename Diagram", "", name, (name) =>
       PubSub.publish("canvas.RenameDiagram", name)
     );
   };
@@ -69,12 +65,34 @@ export default function ApplicationBar({ height }) {
     <AppBar position="static" style={{ height: height }}>
       <Toolbar>
         <ApplicationMenu />
-        {/* {syncState === true && <Button  tooltip={`Cloud sync enabled and OK for ${details}, ${provider}, click to check cloud connection`} icon={<SyncIcon style={{ color: 'Lime' }} />}
-                    onClick={() => store.checkCloudConnection()} />}
-                {syncState === false && <Button  tooltip="Cloud connection error, sync disabled, click to retry" icon={<SyncProblemIcon style={{ color: '#FF3366' }} />}
-                    onClick={() => store.checkCloudConnection()} />}
-                {syncState === null && <Button  tooltip="Cloud sync disabled, click to enable" icon={<SyncDisabledIcon style={{ color: '#FFFF66' }} />}
-                    onClick={() => setShowLogin(true)} />} */}
+        {syncMode === SyncState.Progress && (
+          <Button
+            tooltip={`Trying to connect, please wait`}
+            icon={<HourglassEmptyIcon style={{ color: "gray" }} />}
+            onClick={() => {}}
+          />
+        )}
+        {syncMode === SyncState.Enabled && (
+          <Button
+            tooltip={`Device sync enabled and OK, click to sync now`}
+            icon={<SyncIcon style={{ color: "Lime" }} />}
+            onClick={() => onlineRef.current.enableSync()}
+          />
+        )}
+        {syncMode === SyncState.Error && (
+          <Button
+            tooltip="Device sync error, click to retry sync now"
+            icon={<SyncProblemIcon style={{ color: "#FF3366" }} />}
+            onClick={() => onlineRef.current.enableSync()}
+          />
+        )}
+        {syncMode === SyncState.Disabled && (
+          <Button
+            tooltip="Device sync disabled, click to enable"
+            icon={<SyncDisabledIcon style={{ color: "#FFFF66" }} />}
+            onClick={() => onlineRef.current.enableSync()}
+          />
+        )}
 
         <Button
           tooltip="Undo"
@@ -134,9 +152,23 @@ export default function ApplicationBar({ height }) {
       </Toolbar>
     </AppBar>
   );
-}
+};
 
-const Button = ({ icon, tooltip, disabled, onClick, className }) => {
+type ButtonProps = {
+  icon: any;
+  tooltip: string;
+  disabled?: boolean;
+  onClick: (event: any) => void;
+  className?: any;
+};
+
+const Button: FC<ButtonProps> = ({
+  icon,
+  tooltip,
+  disabled = false,
+  onClick,
+  className,
+}) => {
   return (
     <Tooltip title={tooltip} className={className}>
       <span>

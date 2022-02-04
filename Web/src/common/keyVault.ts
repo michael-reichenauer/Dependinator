@@ -1,17 +1,33 @@
-class KeyVault {
-  kek: any = null;
-  token: string | null = null;
+import { diKey, singleton } from "./di";
 
-  getToken = () => this.token;
-  setToken = (token: string | null) => (this.token = token);
+export const IKeyVaultKey = diKey<IKeyVault>();
+export interface IKeyVault {
+  getToken(): string | null;
+}
 
-  getKek() {
+export const IKeyVaultConfigureKey = diKey<IKeyVaultConfigure>();
+export interface IKeyVaultConfigure extends IKeyVault {
+  setToken(token: string | null): void;
+}
+
+@singleton(IKeyVaultKey, IKeyVaultConfigureKey)
+export class KeyVault {
+  private kek: any = null;
+  private token: string | null = null;
+
+  public getToken(): string | null {
+    return this.token;
+  }
+
+  public setToken(token: string | null): void {
+    this.token = token;
+  }
+
+  getKek(): any {
     return this.kek;
   }
 
-  storeKek(kek: any) {
+  storeKek(kek: any): void {
     this.kek = kek;
   }
 }
-
-export const keyVault = new KeyVault();

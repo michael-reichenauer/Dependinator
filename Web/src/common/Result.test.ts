@@ -86,3 +86,22 @@ describe("Test Result<T> type using instanceof operator(value) for narrowing", (
     assert.fail();
   });
 });
+
+describe("Test isError() with specific error for narrowing", () => {
+  test("isError()", () => {
+    const e1 = new RangeError();
+    const e2 = new URIError();
+
+    // Verify that e1 isError, Error and RangeError, but not a URIError
+    expect(isError(e1)).toEqual(true);
+    expect(isError(e1, Error)).toEqual(true);
+    expect(isError(e1, RangeError)).toEqual(true);
+    expect(isError(e1, URIError)).toEqual(false);
+
+    // Verify that e2 isError, Error and URIError, but not a RangeError
+    expect(isError(e2)).toEqual(true);
+    expect(isError(e2, Error)).toEqual(true);
+    expect(isError(e2, URIError)).toEqual(true);
+    expect(isError(e2, RangeError)).toEqual(false);
+  });
+});

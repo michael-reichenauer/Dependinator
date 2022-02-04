@@ -11,16 +11,29 @@ const baseTableName = 'diagrams'
 const partitionKeyName = 'dep'
 const usersTableName = 'users'
 const userPartitionKey = 'users'
+const dataPartitionKey = 'data'
 const standardApiKey = '0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade'
 const saltRounds = 10
+
+const invalidUserError = 'Invalid user'
+const invalidTokenError = 'Invalid token'
+const invalidRequestError = 'Invalid request'
 
 exports.verifyApiKey = context => {
     const req = context.req
     const apiKey = req.headers['x-api-key']
     if (apiKey !== standardApiKey) {
-        throw new Error('Invalid api request')
+        throw new Error(invalidRequestError)
     }
 }
+
+exports.verifyToken = context => {
+    const info = clientInfo.getInfo(context)
+    if (!info.token || info.token == null || info.token === 'null') {
+        throw new Error(invalidTokenError)
+    }
+}
+
 
 exports.createUser = async (context, data) => {
     const { username, password } = data
@@ -47,9 +60,10 @@ exports.createUser = async (context, data) => {
 }
 
 exports.connectUser = async (context, data) => {
+    context.log('connect', context, data)
     const { username, password } = data
     if (!username || !password) {
-        throw new Error('Invalid user')
+        throw new Error(invalidUserError)
     }
 
     const userDetails = username
@@ -59,28 +73,112 @@ exports.connectUser = async (context, data) => {
         userDetails: userDetails,
         identityProvider: 'Custom',
     }
+    context.log('user', user)
 
     const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
     if (entity.provider !== 'Custom') {
         // Only support custom identity provider users, other users use connect()
-        throw new Error('Invalid user')
+        throw new Error(invalidUserError)
     }
+    context.log('entity', entity)
 
     const isMatch = await bcryptCompare(password, entity.passwordHash)
     if (!isMatch) {
-        throw new Error('Invalid user')
+        throw new Error(invalidUserError)
     }
 
+    context.log('isMatch', isMatch)
+
     if (!entity.tableId) {
-        throw new Error('Invalid user')
+        throw new Error(invalidUserError)
     }
+
+    context.log('tableId', entity.tableId)
 
     // context.log('got user', userId, entity)
     const tableName = baseTableName + entity.tableId
     await table.createTableIfNotExists(tableName)
-
-    await table.insertOrReplaceEntity(tableName, toTableUserItem(user))
     return { token: entity.tableId, provider: user.identityProvider, details: user.userDetails }
+}
+
+
+
+exports.tryReadBatch = async (context, body) => {
+    const tableName = getTableName(context)
+    context.log('body', body, tableName)
+    const queries = body
+    keys = queries.map(query => query.key)
+    context.log('Keys', keys)
+    if (keys.length === 0) {
+        return []
+    }
+
+
+    const rkq = ' (RowKey == ?string?' + ' || RowKey == ?string?'.repeat(keys.length - 1) + ')'
+
+    let tableQuery = new azure.TableQuery()
+        .where('PartitionKey == ?string? && ' + rkq,
+            dataPartitionKey, ...keys);
+
+    const items = await table.queryEntities(tableName, tableQuery, null)
+    context.log(`queried: ${items.length}`)
+
+    context.log('table rsp, resp', items)
+
+    const entities = items.map(item => toEntity(item))
+    const responses = entities.map(entity => {
+        if (queries.find(query => query.key === entity.key && query.IfNoneMatch === entity.etag)) {
+            return { key: entity.key, etag: entity.etag, status: 'notModified' }
+        }
+        return entity
+    })
+    context.log('responses', responses)
+
+    return responses
+}
+
+
+exports.writeBatch = async (context, body) => {
+    const entities = body
+    const tableName = getTableName(context)
+    context.log('entities:', entities, tableName)
+
+    const entityItems = entities.map(entity => toEntityItem(entity))
+
+    const batch = new azure.TableBatch()
+    entityItems.forEach(entity => batch.insertOrReplaceEntity(entity))
+
+    const tableResponses = await table.executeBatch(tableName, batch)
+    const responses = tableResponses.map((rsp, i) => {
+        if (!rsp.response?.isSuccessful) {
+            return {
+                key: entities[i].key,
+                status: 'error'
+            }
+        }
+
+        return {
+            key: entities[i].key,
+            etag: rsp.entity['.metadata'].etag
+        }
+    })
+
+    return responses
+}
+
+exports.removeBatch = async (context, body) => {
+    const keys = body
+    const tableName = getTableName(context)
+    context.log('keys:', keys, tableName)
+
+    const entityItems = keys.map(key => toDeleteEntityItem(key))
+
+    const batch = new azure.TableBatch()
+    entityItems.forEach(entity => batch.deleteEntity(entity))
+
+    await table.executeBatch(tableName, batch)
+
+    return ''
 }
 
 exports.connect = async (context) => {
@@ -469,6 +567,34 @@ function toDiagramInfoItem(diagramInfo) {
     }
     return item
 }
+
+function toEntityItem(entity) {
+    const { key, stamp, value } = entity
+
+    const item = {
+        RowKey: entGen.String(key),
+        PartitionKey: entGen.String(dataPartitionKey),
+
+        value: entGen.String(JSON.stringify(value)),
+    }
+
+    return item
+}
+
+function toDeleteEntityItem(key) {
+    const item = {
+        RowKey: entGen.String(key),
+        PartitionKey: entGen.String(dataPartitionKey),
+    }
+
+    return item
+}
+
+toEntity = (item) => {
+    return { key: item.RowKey, etag: item['odata.etag'], value: JSON.parse(item.value ?? '{}') }
+}
+
+
 
 function toDiagramInfo(item) {
     return {

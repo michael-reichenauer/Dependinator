@@ -2,21 +2,17 @@ import draw2d from "draw2d";
 import PubSub from "pubsub-js";
 import cuid from "cuid";
 import { menuItem } from "../../common/Menus";
-import { clickHandler } from "../../common/mouseClicks";
 import timing from "../../common/timing";
 import Colors from "./Colors";
 import CommandChangeIcon from "./CommandChangeIcon";
 import NodeIcons from "./NodeIcons";
-import InnerDiagramFigure from "./InnerDiagramFigure";
 import Label from "./Label";
-import { store } from "./Store";
 import { icons } from "../../common/icons";
 import { LabelEditor } from "./LabelEditor";
 import NodeGroup from "./NodeGroup";
 import NodeSelectionFeedbackPolicy from "./NodeSelectionFeedbackPolicy";
 import { Canvas2d, Figure2d } from "./draw2dTypes";
 import { FigureDto } from "./StoreDtos";
-import { isError } from "../../common/Result";
 
 const defaultIconKey = "Azure/General/Module";
 
@@ -128,8 +124,8 @@ export default class Node extends draw2d.shape.node.Between {
   static deserialize(data: FigureDto) {
     return new Node(data.type, {
       id: data.id,
-      width: data.w,
-      height: data.h,
+      width: data.rect.w,
+      height: data.rect.h,
       name: data.name,
       description: data.description,
       colorName: data.color,
@@ -141,15 +137,11 @@ export default class Node extends draw2d.shape.node.Between {
     return {
       type: this.type,
       id: this.id,
-      x: this.x,
-      y: this.y,
-      w: this.width,
-      h: this.height,
+      rect: { x: this.x, y: this.y, w: this.width, h: this.height },
       name: this.getName(),
       description: this.getDescription(),
       color: this.colorName,
       icon: this.iconName,
-      hasGroup: this.group != null,
     };
   }
 
@@ -271,26 +263,23 @@ export default class Node extends draw2d.shape.node.Between {
   }
 
   showInnerDiagram(): void {
-    const t = timing();
-
-    this.setChildrenVisible(false);
-
-    const canvasDto = store.tryGetCanvas(
-      this.getCanvas().diagramId,
-      this.getId()
-    );
-    if (isError(canvasDto)) {
-      return;
-    }
-    this.innerDiagram = new InnerDiagramFigure(this, canvasDto);
-    this.innerDiagram.onClick = clickHandler(
-      () => this.hideInnerDiagram(),
-      () => this.editInnerDiagram()
-    );
-
-    this.add(this.innerDiagram, new InnerDiagramLocator());
-    this.repaint();
-    t.log();
+    // const t = timing();
+    // this.setChildrenVisible(false);
+    // const canvasDto = store.tryGetCanvas(
+    //   this.getCanvas().diagramId,
+    //   this.getId()
+    // );
+    // if (isError(canvasDto)) {
+    //   return;
+    // }
+    // this.innerDiagram = new InnerDiagramFigure(this, canvasDto);
+    // this.innerDiagram.onClick = clickHandler(
+    //   () => this.hideInnerDiagram(),
+    //   () => this.editInnerDiagram()
+    // );
+    // this.add(this.innerDiagram, new InnerDiagramLocator());
+    // this.repaint();
+    // t.log();
   }
 
   hideInnerDiagram(): void {
@@ -302,7 +291,7 @@ export default class Node extends draw2d.shape.node.Between {
     this.setChildrenVisible(true);
     this.remove(this.innerDiagram);
     this.innerDiagram = null;
-    t.log();
+    console.log("hideInnerDiagram", t());
   }
 
   editInnerDiagram(): void {
@@ -503,8 +492,8 @@ class ConfigBackgroundLocator extends draw2d.layout.locator.Locator {
   }
 }
 
-class InnerDiagramLocator extends draw2d.layout.locator.Locator {
-  relocate(_index: number, target: Figure2d) {
-    target.setPosition(2, 2);
-  }
-}
+// class InnerDiagramLocator extends draw2d.layout.locator.Locator {
+//   relocate(_index: number, target: Figure2d) {
+//     target.setPosition(2, 2);
+//   }
+// }

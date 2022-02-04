@@ -6,16 +6,15 @@ import Group from "./Group";
 import Node from "./Node";
 import Canvas from "./Canvas";
 import CanvasStack from "./CanvasStack";
-import { Store } from "./Store";
+import { IStore } from "./Store";
 import { Figure2d } from "./draw2dTypes";
-import { isError } from "../../common/Result";
 
 export default class InnerDiagramCanvas {
   canvas: Canvas;
   canvasStack: CanvasStack;
-  store: Store;
+  store: IStore;
 
-  constructor(canvas: Canvas, canvasStack: CanvasStack, store: Store) {
+  constructor(canvas: Canvas, canvasStack: CanvasStack, store: IStore) {
     this.canvas = canvas;
     this.canvasStack = canvasStack;
     this.store = store;
@@ -44,7 +43,7 @@ export default class InnerDiagramCanvas {
 
     // Push current diagram to make room for new inner diagram
     this.canvasStack.pushDiagram();
-    t.log("pushed diagram");
+    console.log("pushed diagram", t());
 
     // Load inner diagram or a default group node if first time
     if (!this.load(node.id)) {
@@ -56,11 +55,11 @@ export default class InnerDiagramCanvas {
       );
     }
 
-    t.log("loaded diagram");
+    console.log("loaded diagram", t());
     const groupNode = this.canvas.getFigure(this.canvas.mainNodeId);
     this.updateGroup(groupNode, node);
     this.addOrUpdateConnectedNodes(groupNode, connectedNodes);
-    t.log("added connected nodes");
+    console.log("added connected nodes", t());
 
     // Zoom inner diagram to correspond to inner diagram image size in the outer node
     // @ts-ignore
@@ -74,7 +73,7 @@ export default class InnerDiagramCanvas {
       innerDiagramRect.y - innerDiagramViewPos.top * this.canvas.zoomFactor;
     this.setScrollInCanvasCoordinate(left, top);
 
-    t.log();
+    console.log("editInnerDiagram", t());
   };
 
   popFromInnerDiagram = (): void => {
@@ -119,7 +118,7 @@ export default class InnerDiagramCanvas {
 
     this.addOrUpdateExternalNodes(externalNodes, node);
 
-    t.log();
+    console.log("popFromInnerDiagram", t());
   };
 
   getNodesExternalToGroup(group: Group): any {
@@ -445,17 +444,18 @@ export default class InnerDiagramCanvas {
     return { x: g.x, y: g.y, w: g.width, h: g.heigh };
   }
 
-  load = (canvasId: string) => {
+  load = (canvasId: string): boolean => {
     console.log("load", canvasId);
-    // @ts-ignore
-    const canvasDto = this.store.tryGetCanvas(this.canvas.diagramId, canvasId);
-    if (isError(canvasDto)) {
-      return false;
-    }
+    // // @ts-ignore
+    // const canvasDto = this.store.tryGetCanvas(this.canvas.diagramId, canvasId);
+    // if (isError(canvasDto)) {
+    //   return false;
+    // }
 
-    // Deserialize canvas
-    this.canvas.deserialize(canvasDto);
-    return true;
+    return false;
+    // // Deserialize canvas
+    // this.canvas.deserialize(canvasDto);
+    // return true;
   };
 
   sortNodesOnX(nodes: any) {

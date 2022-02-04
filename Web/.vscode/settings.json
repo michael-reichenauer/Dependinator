@@ -2,9 +2,11 @@
   "editor.formatOnSave": true,
   "cSpell.words": [
     "bbox",
+    "datetime",
     "Deleteable",
     "Dependitor",
     "Dtos",
+    "etags",
     "Formik",
     "Inplace",
     "longclick",
@@ -13,6 +15,7 @@
     "Resizeable",
     "Tweenable",
     "Ungroup",
+    "Unsynced",
     "xlink",
     "xtoken"
   ],
