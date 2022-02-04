@@ -165,59 +165,59 @@ exports.writeBatch = async (context, body) => {
     return responses
 }
 
-// exports.removeBatch = async (context, body) => {
-//     const keys = body
-//     const tableName = getTableName(context)
-//     context.log('keys:', keys, tableName)
+exports.removeBatch = async (context, body) => {
+    const keys = body
+    const tableName = getTableName(context)
+    context.log('keys:', keys, tableName)
 
-//     const entityItems = keys.map(key => toDeleteEntityItem(key))
+    const entityItems = keys.map(key => toDeleteEntityItem(key))
 
-//     const batch = new azure.TableBatch()
-//     entityItems.forEach(entity => batch.deleteEntity(entity))
+    const batch = new azure.TableBatch()
+    entityItems.forEach(entity => batch.deleteEntity(entity))
 
-//     await table.executeBatch(tableName, batch)
+    await table.executeBatch(tableName, batch)
 
-//     return ''
-// }
+    return ''
+}
 
-// exports.connect = async (context) => {
-//     const req = context.req
-//     const user = auth.getClientPrincipal(req)
+exports.connect = async (context) => {
+    const req = context.req
+    const user = auth.getClientPrincipal(req)
 
-//     const userId = user.userId
-//     if (!userId) {
-//         throw new Error('No user id')
-//     }
+    const userId = user.userId
+    if (!userId) {
+        throw new Error('No user id')
+    }
 
-//     try {
-//         const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
-//         if (entity.tableId) {
-//             // context.log('got user', userId, entity)
-//             const tableName = baseTableName + entity.tableId
-//             await table.createTableIfNotExists(tableName)
-//             await table.insertOrReplaceEntity(tableName, toTableUserItem(user))
-//             return { token: entity.tableId, provider: user.identityProvider, details: user.userDetails }
-//         }
-//         context.log('Failed to get table id')
-//     } catch (err) {
-//         context.log('failed to get', userId, err)
-//         // User not yet added
-//     }
+    try {
+        const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
+        if (entity.tableId) {
+            // context.log('got user', userId, entity)
+            const tableName = baseTableName + entity.tableId
+            await table.createTableIfNotExists(tableName)
+            await table.insertOrReplaceEntity(tableName, toTableUserItem(user))
+            return { token: entity.tableId, provider: user.identityProvider, details: user.userDetails }
+        }
+        context.log('Failed to get table id')
+    } catch (err) {
+        context.log('failed to get', userId, err)
+        // User not yet added
+    }
 
-//     // Create a new random diagrams table id to be used for the user
-//     const tableId = makeRandomId()
-//     const tableName = baseTableName + tableId
+    // Create a new random diagrams table id to be used for the user
+    const tableId = makeRandomId()
+    const tableName = baseTableName + tableId
 
-//     // Create the actual diagram table
-//     await table.createTableIfNotExists(tableName)
-//     await table.insertOrReplaceEntity(tableName, toTableUserItem(user))
+    // Create the actual diagram table
+    await table.createTableIfNotExists(tableName)
+    await table.insertOrReplaceEntity(tableName, toTableUserItem(user))
 
-//     // Create a user in the users table
-//     await table.createTableIfNotExists(usersTableName)
-//     await table.insertOrReplaceEntity(usersTableName, toUserItem(user, tableId))
+    // Create a user in the users table
+    await table.createTableIfNotExists(usersTableName)
+    await table.insertOrReplaceEntity(usersTableName, toUserItem(user, tableId))
 
-//     return { token: tableId, provider: user.identityProvider, details: user.userDetails }
-// }
+    return { token: tableId, provider: user.identityProvider, details: user.userDetails }
+}
 
 
 // exports.clearAllData = async (context) => {
