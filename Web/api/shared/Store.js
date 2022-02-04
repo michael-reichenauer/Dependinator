@@ -148,19 +148,19 @@ exports.writeBatch = async (context, body) => {
     entityItems.forEach(entity => batch.insertOrReplaceEntity(entity))
 
     const tableResponses = await table.executeBatch(tableName, batch)
-    // const responses = tableResponses.map((rsp, i) => {
-    //     if (!rsp.response?.isSuccessful) {
-    //         return {
-    //             key: entities[i].key,
-    //             status: 'error'
-    //         }
-    //     }
+    const responses = tableResponses.map((rsp, i) => {
+        if (!rsp.response?.isSuccessful) {
+            return {
+                key: entities[i].key,
+                status: 'error'
+            }
+        }
 
-    //     return {
-    //         key: entities[i].key,
-    //         etag: rsp.entity['.metadata'].etag
-    //     }
-    // })
+        return {
+            key: entities[i].key,
+            etag: rsp.entity['.metadata'].etag
+        }
+    })
 
     return responses
 }
