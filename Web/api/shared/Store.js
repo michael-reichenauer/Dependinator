@@ -102,39 +102,39 @@ exports.connectUser = async (context, data) => {
 
 
 
-// exports.tryReadBatch = async (context, body) => {
-//     const tableName = getTableName(context)
-//     context.log('body', body, tableName)
-//     const queries = body
-//     keys = queries.map(query => query.key)
-//     context.log('Keys', keys)
-//     if (keys.length === 0) {
-//         return []
-//     }
+exports.tryReadBatch = async (context, body) => {
+    const tableName = getTableName(context)
+    context.log('body', body, tableName)
+    const queries = body
+    keys = queries.map(query => query.key)
+    context.log('Keys', keys)
+    if (keys.length === 0) {
+        return []
+    }
 
 
-//     const rkq = ' (RowKey == ?string?' + ' || RowKey == ?string?'.repeat(keys.length - 1) + ')'
+    const rkq = ' (RowKey == ?string?' + ' || RowKey == ?string?'.repeat(keys.length - 1) + ')'
 
-//     let tableQuery = new azure.TableQuery()
-//         .where('PartitionKey == ?string? && ' + rkq,
-//             dataPartitionKey, ...keys);
+    let tableQuery = new azure.TableQuery()
+        .where('PartitionKey == ?string? && ' + rkq,
+            dataPartitionKey, ...keys);
 
-//     const items = await table.queryEntities(tableName, tableQuery, null)
-//     context.log(`queried: ${items.length}`)
+    const items = await table.queryEntities(tableName, tableQuery, null)
+    context.log(`queried: ${items.length}`)
 
-//     context.log('table rsp, resp', items)
+    context.log('table rsp, resp', items)
 
-//     const entities = items.map(item => toEntity(item))
-//     const responses = entities.map(entity => {
-//         if (queries.find(query => query.key === entity.key && query.IfNoneMatch === entity.etag)) {
-//             return { key: entity.key, etag: entity.etag, status: 'notModified' }
-//         }
-//         return entity
-//     })
-//     context.log('responses', responses)
+    const entities = items.map(item => toEntity(item))
+    const responses = entities.map(entity => {
+        if (queries.find(query => query.key === entity.key && query.IfNoneMatch === entity.etag)) {
+            return { key: entity.key, etag: entity.etag, status: 'notModified' }
+        }
+        return entity
+    })
+    context.log('responses', responses)
 
-//     return responses
-// }
+    return responses
+}
 
 
 // exports.writeBatch = async (context, body) => {
