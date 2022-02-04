@@ -22,7 +22,7 @@ export class Authenticate implements IAuthenticate {
     // Reduce risk of clear text password logging
     user.password = await this.passwordHash(user.password);
 
-    await this.api.createAccount(user);
+    return await this.api.createAccount(user);
   }
 
   async login(user: User): Promise<Result<void>> {

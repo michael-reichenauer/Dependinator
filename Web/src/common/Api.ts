@@ -78,7 +78,7 @@ export class Api implements IApi {
   }
 
   public async createAccount(user: User): Promise<Result<void>> {
-    throw new Error("Method not implemented.");
+    return await this.post("/api/CreateUser", user);
   }
 
   public async check(): Promise<Result<void>> {

@@ -2,7 +2,6 @@ import { atom, useAtom } from "jotai";
 import { di, diKey, singleton } from "./../common/di";
 import { useRef } from "react";
 import { SetAtom } from "jotai/core/types";
-import { delay } from "../common/utils";
 import { IAuthenticate, IAuthenticateKey } from "../common/authenticate";
 import { showLoginDlg } from "./LoginDlg";
 import { IApi, User, IApiKey, NoContactError } from "../common/Api";
@@ -56,7 +55,12 @@ export class Online implements IOnline, ISyncMode {
   }
 
   public async createAccount(user: User): Promise<Result<void>> {
-    await delay(3000);
+    const createRsp = await this.authenticate.createUser(user);
+    if (isError(createRsp)) {
+      this.stopProgress();
+      setErrorMessage("Failed to create account");
+      return createRsp;
+    }
   }
 
   public async login(user: User): Promise<Result<void>> {
@@ -128,6 +132,7 @@ export class Online implements IOnline, ISyncMode {
   public disableSync(): void {
     this.setState(SyncState.Disabled);
     this.store.configure({ isSyncEnabled: false });
+    this.authenticate.resetLogin();
   }
 
   private onActivityEvent(activity: CustomEvent) {
