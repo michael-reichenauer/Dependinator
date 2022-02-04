@@ -568,7 +568,7 @@ function toDiagramInfoItem(diagramInfo) {
 }
 
 function toEntityItem(entity) {
-    const { key, stamp, value } = entity
+    const { key, value } = entity
 
     const item = {
         RowKey: entGen.String(key),
@@ -589,9 +589,9 @@ function toDeleteEntityItem(key) {
     return item
 }
 
-function toEntity(item) {
-    return { key: item.RowKey, etag: item['odata.etag'], value: JSON.parse(item.value ?? '{}') }
-}
+// function toEntity(item) {
+//     return { key: item.RowKey, etag: item['odata.etag'], value: JSON.parse(item.value ?? '{}') }
+// }
 
 
 function toDiagramInfo(item) {
