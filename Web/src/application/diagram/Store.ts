@@ -188,6 +188,7 @@ export class Store implements IStore {
     applicationDto.diagramInfos[id] = {
       ...applicationDto.diagramInfos[id],
       name: name,
+      accessed: Date.now(),
     };
 
     this.db.writeBatch([
