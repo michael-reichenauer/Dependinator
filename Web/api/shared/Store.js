@@ -137,48 +137,48 @@ exports.tryReadBatch = async (context, body) => {
 }
 
 
-// exports.writeBatch = async (context, body) => {
-//     const entities = body
-//     const tableName = getTableName(context)
-//     context.log('entities:', entities, tableName)
+exports.writeBatch = async (context, body) => {
+    const entities = body
+    const tableName = getTableName(context)
+    context.log('entities:', entities, tableName)
 
-//     const entityItems = entities.map(entity => toEntityItem(entity))
+    const entityItems = entities.map(entity => toEntityItem(entity))
 
-//     const batch = new azure.TableBatch()
-//     entityItems.forEach(entity => batch.insertOrReplaceEntity(entity))
+    const batch = new azure.TableBatch()
+    entityItems.forEach(entity => batch.insertOrReplaceEntity(entity))
 
-//     const tableResponses = await table.executeBatch(tableName, batch)
-//     const responses = tableResponses.map((rsp, i) => {
-//         if (!rsp.response?.isSuccessful) {
-//             return {
-//                 key: entities[i].key,
-//                 status: 'error'
-//             }
-//         }
+    const tableResponses = await table.executeBatch(tableName, batch)
+    const responses = tableResponses.map((rsp, i) => {
+        if (!rsp.response?.isSuccessful) {
+            return {
+                key: entities[i].key,
+                status: 'error'
+            }
+        }
 
-//         return {
-//             key: entities[i].key,
-//             etag: rsp.entity['.metadata'].etag
-//         }
-//     })
+        return {
+            key: entities[i].key,
+            etag: rsp.entity['.metadata'].etag
+        }
+    })
 
-//     return responses
-// }
+    return responses
+}
 
-// exports.removeBatch = async (context, body) => {
-//     const keys = body
-//     const tableName = getTableName(context)
-//     context.log('keys:', keys, tableName)
+exports.removeBatch = async (context, body) => {
+    const keys = body
+    const tableName = getTableName(context)
+    context.log('keys:', keys, tableName)
 
-//     const entityItems = keys.map(key => toDeleteEntityItem(key))
+    const entityItems = keys.map(key => toDeleteEntityItem(key))
 
-//     const batch = new azure.TableBatch()
-//     entityItems.forEach(entity => batch.deleteEntity(entity))
+    const batch = new azure.TableBatch()
+    entityItems.forEach(entity => batch.deleteEntity(entity))
 
-//     await table.executeBatch(tableName, batch)
+    await table.executeBatch(tableName, batch)
 
-//     return ''
-// }
+    return ''
+}
 
 // exports.connect = async (context) => {
 //     const req = context.req
