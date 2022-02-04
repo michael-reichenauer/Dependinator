@@ -15,7 +15,6 @@ import {
 } from "./StoreDtos";
 import { LocalEntity } from "../../common/db/LocalDB";
 import { RemoteEntity } from "../../common/db/RemoteDB";
-import { ThreeSixty } from "@material-ui/icons";
 
 export interface Configuration {
   onRemoteChanged: (keys: string[]) => void;
@@ -51,6 +50,7 @@ export interface IStore {
 const rootCanvasId = "root";
 const defaultApplicationDto: ApplicationDto = { diagramInfos: {} };
 const defaultDiagramDto: DiagramDto = { id: "", name: "", canvases: {} };
+const resentOpenedMargin = 30 * 1000; // 30 seconds
 
 @singleton(IStoreKey)
 export class Store implements IStore {
@@ -112,9 +112,7 @@ export class Store implements IStore {
   }
 
   public async tryOpenDiagram(id: string): Promise<Result<DiagramDto>> {
-    const diagramDto = await this.db.tryReadLocalThenRemoteAsync<DiagramDto>(
-      id
-    );
+    const diagramDto = await this.db.tryReadLocalThenRemote<DiagramDto>(id);
     if (isError(diagramDto)) {
       return diagramDto;
     }
@@ -122,20 +120,19 @@ export class Store implements IStore {
     this.db.monitorRemoteEntities([id, applicationKey]);
     this.currentDiagramId = id;
 
-    const mostResentId = this.getMostResentDiagramId();
-    if (!isError(mostResentId) && mostResentId === id) {
-      // opening most resent diagram, no need to update resent list
-      return diagramDto;
+    // Tto support most recently used diagram feature, we update accessed time if needed
+    const applicationDto = this.getApplicationDto();
+    const now = Date.now();
+    const diagramInfo = applicationDto.diagramInfos[id];
+
+    console.log(`Access time for ${id} is ${now - diagramInfo.accessed} ms`);
+    if (now - diagramInfo.accessed > resentOpenedMargin) {
+      // Update last lust update time, since it was a while ago
+      console.log(`Updating access time for ${id}`);
+      applicationDto.diagramInfos[id] = { ...diagramInfo, accessed: now };
+      this.db.writeBatch([{ key: applicationKey, value: applicationDto }]);
     }
 
-    // Mark diagram as accessed now, to support most recently used diagram feature
-    const applicationDto = this.getApplicationDto();
-    applicationDto.diagramInfos[id] = {
-      ...applicationDto.diagramInfos[id],
-      accessed: Date.now(),
-    };
-
-    this.db.writeBatch([{ key: applicationKey, value: applicationDto }]);
     return diagramDto;
   }
 
@@ -297,7 +294,6 @@ export class Store implements IStore {
 
       return {
         key: local.key,
-        mergedType: "merged",
         value: applicationDto,
         version: local.version,
       };
@@ -313,7 +309,6 @@ export class Store implements IStore {
 
     return {
       key: remote.key,
-      mergedType: "merged",
       value: applicationDto,
       version: remote.version,
     };
@@ -328,7 +323,6 @@ export class Store implements IStore {
       // use local since it has more edits
       return {
         key: local.key,
-        mergedType: "local",
         value: local.value,
         version: local.version,
       };
@@ -337,7 +331,6 @@ export class Store implements IStore {
     // Use remote entity since that has more edits
     return {
       key: remote.key,
-      mergedType: "remote",
       value: remote.value,
       version: remote.version,
     };

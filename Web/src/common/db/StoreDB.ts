@@ -15,17 +15,13 @@ export interface Entity {
   value: any;
 }
 
-export type mergedType = "local" | "remote" | "merged";
-
 export interface MergeEntity {
   key: string;
-  mergedType: mergedType;
   value: any;
   version: number;
 }
 
 export interface MergedEntity extends MergeEntity {
-  mergedType: mergedType;
   localEtag: string;
   remoteEtag: string;
   syncedEtag: string;
@@ -44,7 +40,7 @@ export interface IStoreDB {
   configure(options: Partial<Configuration>): void;
   monitorRemoteEntities(keys: string[]): void;
   readLocal<T>(key: string, defaultValue: T): T;
-  tryReadLocalThenRemoteAsync<T>(key: string): Promise<Result<T>>;
+  tryReadLocalThenRemote<T>(key: string): Promise<Result<T>>;
   writeBatch(entities: Entity[]): void;
   removeBatch(keys: string[]): void;
   triggerSync(): Promise<Result<void>>;
@@ -60,7 +56,7 @@ export class StoreDB implements IStoreDB {
   private monitorKeys: string[] = [];
   private configuration: Configuration = {
     isSyncEnabled: false,
-    onConflict: (l, r) => ({ ...l, mergedType: "local" }),
+    onConflict: (l, r) => ({ ...l }),
     onSyncChanged: () => {},
     onRemoteChanged: () => {},
   };
@@ -94,7 +90,7 @@ export class StoreDB implements IStoreDB {
   }
 
   // First tries to get local entity, but if not exists locally, then retrieving form remote server is tried
-  public async tryReadLocalThenRemoteAsync<T>(key: string): Promise<Result<T>> {
+  public async tryReadLocalThenRemote<T>(key: string): Promise<Result<T>> {
     const localValue = this.localDB.tryReadValue<T>(key);
     if (isError(localValue)) {
       // Entity not cached locally, lets try get from remote location
