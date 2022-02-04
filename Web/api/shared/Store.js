@@ -567,32 +567,31 @@ function toDiagramInfoItem(diagramInfo) {
     return item
 }
 
-// function toEntityItem(entity) {
-//     const { key, stamp, value } = entity
+function toEntityItem(entity) {
+    const { key, stamp, value } = entity
 
-//     const item = {
-//         RowKey: entGen.String(key),
-//         PartitionKey: entGen.String(dataPartitionKey),
+    const item = {
+        RowKey: entGen.String(key),
+        PartitionKey: entGen.String(dataPartitionKey),
 
-//         value: entGen.String(JSON.stringify(value)),
-//     }
+        value: entGen.String(JSON.stringify(value)),
+    }
 
-//     return item
-// }
+    return item
+}
 
-// function toDeleteEntityItem(key) {
-//     const item = {
-//         RowKey: entGen.String(key),
-//         PartitionKey: entGen.String(dataPartitionKey),
-//     }
+function toDeleteEntityItem(key) {
+    const item = {
+        RowKey: entGen.String(key),
+        PartitionKey: entGen.String(dataPartitionKey),
+    }
 
-//     return item
-// }
+    return item
+}
 
-// toEntity = (item) => {
-//     return { key: item.RowKey, etag: item['odata.etag'], value: JSON.parse(item.value ?? '{}') }
-// }
-
+function toEntity(item) {
+    return { key: item.RowKey, etag: item['odata.etag'], value: JSON.parse(item.value ?? '{}') }
+}
 
 
 function toDiagramInfo(item) {
