@@ -149,7 +149,7 @@ exports.writeBatch = async (context, body) => {
 
     const tableResponses = await table.executeBatch(tableName, batch)
     const responses = tableResponses.map((rsp, i) => {
-        if (!rsp.response?.isSuccessful) {
+        if (!rsp.response || !rsp.response.isSuccessful) {
             return {
                 key: entities[i].key,
                 status: 'error'
