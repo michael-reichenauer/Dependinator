@@ -429,52 +429,52 @@ exports.downloadAllDiagrams = async (context) => {
 
 // // // -----------------------------------------------------------------
 
-// const bcryptGenSalt = (saltRounds) => {
-//     return new Promise(function (resolve, reject) {
-//         bcrypt.genSalt(saltRounds, function (err, salt) {
-//             if (err) {
-//                 reject(err)
-//             } else {
-//                 resolve(salt)
-//             }
-//         })
-//     })
-// }
+const bcryptGenSalt = (saltRounds) => {
+    return new Promise(function (resolve, reject) {
+        bcrypt.genSalt(saltRounds, function (err, salt) {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(salt)
+            }
+        })
+    })
+}
 
 
-// const bcryptHash = (password, salt) => {
-//     return new Promise(function (resolve, reject) {
-//         bcrypt.hash(password, salt, function (err, hash) {
-//             if (err) {
-//                 reject(err)
-//             } else {
-//                 resolve(hash)
-//             }
-//         })
-//     })
-// }
+const bcryptHash = (password, salt) => {
+    return new Promise(function (resolve, reject) {
+        bcrypt.hash(password, salt, function (err, hash) {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(hash)
+            }
+        })
+    })
+}
 
-// const bcryptCompare = (password, hash) => {
-//     return new Promise(function (resolve, reject) {
-//         bcrypt.compare(password, hash, function (err, isMatch) {
-//             if (err) {
-//                 reject(err)
-//             } else {
-//                 resolve(isMatch)
-//             }
-//         })
-//     })
-// }
+const bcryptCompare = (password, hash) => {
+    return new Promise(function (resolve, reject) {
+        bcrypt.compare(password, hash, function (err, isMatch) {
+            if (err) {
+                reject(err)
+            } else {
+                resolve(isMatch)
+            }
+        })
+    })
+}
 
 
-// function makeRandomId() {
-//     let ID = "";
-//     let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-//     for (var i = 0; i < 12; i++) {
-//         ID += characters.charAt(Math.floor(Math.random() * 36));
-//     }
-//     return ID;
-// }
+function makeRandomId() {
+    let ID = "";
+    let characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    for (var i = 0; i < 12; i++) {
+        ID += characters.charAt(Math.floor(Math.random() * 36));
+    }
+    return ID;
+}
 
 // async function delay(time) {
 //     return new Promise(res => {
@@ -483,89 +483,89 @@ exports.downloadAllDiagrams = async (context) => {
 // }
 
 
-// function getTableName(context) {
-//     const info = clientInfo.getInfo(context)
-//     if (!info.token || info.token == null || info.token === 'null') {
-//         throw new Error('Invalid token')
-//     }
+function getTableName(context) {
+    const info = clientInfo.getInfo(context)
+    if (!info.token || info.token == null || info.token === 'null') {
+        throw new Error('Invalid token')
+    }
 
-//     return baseTableName + info.token
-// }
+    return baseTableName + info.token
+}
 
-// function canvasKey(diagramId, canvasId) {
-//     return `${diagramId}.${canvasId}`
-// }
+function canvasKey(diagramId, canvasId) {
+    return `${diagramId}.${canvasId}`
+}
 
-// function diagramKey(diagramId) {
-//     return `${diagramId}`
-// }
+function diagramKey(diagramId) {
+    return `${diagramId}`
+}
 
-// function toUserItem(user, tableId) {
-//     return {
-//         RowKey: entGen.String(user.userId),
-//         PartitionKey: entGen.String(userPartitionKey),
+function toUserItem(user, tableId) {
+    return {
+        RowKey: entGen.String(user.userId),
+        PartitionKey: entGen.String(userPartitionKey),
 
-//         userId: entGen.String(user.userId),
-//         tableId: entGen.String(tableId),
-//         userDetails: entGen.String(user.userDetails),
-//         provider: entGen.String(user.identityProvider),
-//         passwordHash: entGen.String(user.passwordHash)
-//     }
-// }
+        userId: entGen.String(user.userId),
+        tableId: entGen.String(tableId),
+        userDetails: entGen.String(user.userDetails),
+        provider: entGen.String(user.identityProvider),
+        passwordHash: entGen.String(user.passwordHash)
+    }
+}
 
 
-// function toTableUserItem(clientPrincipal) {
-//     return {
-//         RowKey: entGen.String(clientPrincipal.userId),
-//         PartitionKey: entGen.String(partitionKeyName),
+function toTableUserItem(clientPrincipal) {
+    return {
+        RowKey: entGen.String(clientPrincipal.userId),
+        PartitionKey: entGen.String(partitionKeyName),
 
-//         type: entGen.String('user'),
-//         userId: entGen.String(clientPrincipal.userId),
-//         name: entGen.String(clientPrincipal.userDetails),
-//         provider: entGen.String(clientPrincipal.identityProvider),
-//     }
-// }
+        type: entGen.String('user'),
+        userId: entGen.String(clientPrincipal.userId),
+        name: entGen.String(clientPrincipal.userDetails),
+        provider: entGen.String(clientPrincipal.identityProvider),
+    }
+}
 
-// function toCanvasItem(canvas) {
-//     const { diagramId, canvasId } = canvas
-//     return {
-//         RowKey: entGen.String(canvasKey(diagramId, canvasId)),
-//         PartitionKey: entGen.String(partitionKeyName),
+function toCanvasItem(canvas) {
+    const { diagramId, canvasId } = canvas
+    return {
+        RowKey: entGen.String(canvasKey(diagramId, canvasId)),
+        PartitionKey: entGen.String(partitionKeyName),
 
-//         type: entGen.String('canvas'),
-//         diagramId: entGen.String(diagramId),
-//         canvasId: entGen.String(canvasId),
-//         canvas: entGen.String(JSON.stringify(canvas))
-//     }
-// }
+        type: entGen.String('canvas'),
+        diagramId: entGen.String(diagramId),
+        canvasId: entGen.String(canvasId),
+        canvas: entGen.String(JSON.stringify(canvas))
+    }
+}
 
-// function toCanvas(item) {
-//     const canvas = JSON.parse(item.canvas)
-//     canvas.etag = item['odata.etag']
-//     canvas.timestamp = item.Timestamp
-//     return canvas
-// }
+function toCanvas(item) {
+    const canvas = JSON.parse(item.canvas)
+    canvas.etag = item['odata.etag']
+    canvas.timestamp = item.Timestamp
+    return canvas
+}
 
-// function toDiagramInfoItem(diagramInfo) {
-//     const { diagramId, name, accessed, written } = diagramInfo
-//     const item = {
-//         RowKey: entGen.String(diagramKey(diagramId)),
-//         PartitionKey: entGen.String(partitionKeyName),
+function toDiagramInfoItem(diagramInfo) {
+    const { diagramId, name, accessed, written } = diagramInfo
+    const item = {
+        RowKey: entGen.String(diagramKey(diagramId)),
+        PartitionKey: entGen.String(partitionKeyName),
 
-//         type: entGen.String('diagram'),
-//         diagramId: entGen.String(diagramId),
-//     }
-//     if (name != null) {
-//         item.name = entGen.String(name)
-//     }
-//     if (accessed != null) {
-//         item.accessed = entGen.Int64(accessed)
-//     }
-//     if (written != null) {
-//         item.written = entGen.Int64(written)
-//     }
-//     return item
-// }
+        type: entGen.String('diagram'),
+        diagramId: entGen.String(diagramId),
+    }
+    if (name != null) {
+        item.name = entGen.String(name)
+    }
+    if (accessed != null) {
+        item.accessed = entGen.Int64(accessed)
+    }
+    if (written != null) {
+        item.written = entGen.Int64(written)
+    }
+    return item
+}
 
 // function toEntityItem(entity) {
 //     const { key, stamp, value } = entity
