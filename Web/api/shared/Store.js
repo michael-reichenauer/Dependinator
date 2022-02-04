@@ -595,23 +595,23 @@ function toDiagramInfoItem(diagramInfo) {
 
 
 
-// function toDiagramInfo(item) {
-//     return {
-//         etag: item['odata.etag'],
-//         timestamp: item.Timestamp,
-//         diagramId: item.diagramId,
-//         name: item.name,
-//         accessed: item.accessed,
-//         written: item.written,
-//     }
-// }
+function toDiagramInfo(item) {
+    return {
+        etag: item['odata.etag'],
+        timestamp: item.Timestamp,
+        diagramId: item.diagramId,
+        name: item.name,
+        accessed: item.accessed,
+        written: item.written,
+    }
+}
 
-// function sha256(message) {
-//     return crypto.createHash("sha256")
-//         .update(message)
-//         .digest("hex");
-// }
+function sha256(message) {
+    return crypto.createHash("sha256")
+        .update(message)
+        .digest("hex");
+}
 
-// function toUserId(name) {
-//     return sha256(name.toLowerCase()).substr(0, 32)
-// }
+function toUserId(name) {
+    return sha256(name.toLowerCase()).substr(0, 32)
+}
