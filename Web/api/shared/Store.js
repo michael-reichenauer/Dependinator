@@ -1,104 +1,104 @@
-// const azure = require('azure-storage');
-// const crypto = require("crypto")
-// const bcrypt = require("bcryptjs")
-// var table = require('../shared/table.js');
-// var clientInfo = require('../shared/clientInfo.js');
-// var auth = require('../shared/auth.js');
+const azure = require('azure-storage');
+const crypto = require("crypto")
+const bcrypt = require("bcryptjs")
+var table = require('../shared/table.js');
+var clientInfo = require('../shared/clientInfo.js');
+var auth = require('../shared/auth.js');
 
-// const entGen = azure.TableUtilities.entityGenerator;
-// const baseTableName = 'diagrams'
-// const partitionKeyName = 'dep'
-// const usersTableName = 'users'
-// const userPartitionKey = 'users'
-// const dataPartitionKey = 'data'
-// const standardApiKey = '0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade'
-// const saltRounds = 10
+const entGen = azure.TableUtilities.entityGenerator;
+const baseTableName = 'diagrams'
+const partitionKeyName = 'dep'
+const usersTableName = 'users'
+const userPartitionKey = 'users'
+const dataPartitionKey = 'data'
+const standardApiKey = '0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade'
+const saltRounds = 10
 
-// const invalidUserError = 'Invalid user'
-// const invalidTokenError = 'Invalid token'
-// const invalidRequestError = 'Invalid request'
+const invalidUserError = 'Invalid user'
+const invalidTokenError = 'Invalid token'
+const invalidRequestError = 'Invalid request'
 
-// exports.verifyApiKey = context => {
-//     const req = context.req
-//     const apiKey = req.headers['x-api-key']
-//     if (apiKey !== standardApiKey) {
-//         throw new Error(invalidRequestError)
-//     }
-// }
+exports.verifyApiKey = context => {
+    const req = context.req
+    const apiKey = req.headers['x-api-key']
+    if (apiKey !== standardApiKey) {
+        throw new Error(invalidRequestError)
+    }
+}
 
-// exports.verifyToken = context => {
-//     const info = clientInfo.getInfo(context)
-//     if (!info.token || info.token == null || info.token === 'null') {
-//         throw new Error(invalidTokenError)
-//     }
-// }
+exports.verifyToken = context => {
+    const info = clientInfo.getInfo(context)
+    if (!info.token || info.token == null || info.token === 'null') {
+        throw new Error(invalidTokenError)
+    }
+}
 
 
-// exports.createUser = async (context, data) => {
-//     const { username, password } = data
-//     if (!username || !password) {
-//         throw new Error('Missing parameter')
-//     }
-//     const userDetails = username
-//     const userId = toUserId(username)
+exports.createUser = async (context, data) => {
+    const { username, password } = data
+    if (!username || !password) {
+        throw new Error('Missing parameter')
+    }
+    const userDetails = username
+    const userId = toUserId(username)
 
-//     // Hash the password using bcrypt
-//     const salt = await bcryptGenSalt(saltRounds)
-//     const passwordHash = await bcryptHash(password, salt)
+    // Hash the password using bcrypt
+    const salt = await bcryptGenSalt(saltRounds)
+    const passwordHash = await bcryptHash(password, salt)
 
-//     const user = {
-//         userId: userId,
-//         passwordHash: passwordHash,
-//         userDetails: userDetails,
-//         identityProvider: 'Custom',
-//     }
-//     const tableId = makeRandomId()
+    const user = {
+        userId: userId,
+        passwordHash: passwordHash,
+        userDetails: userDetails,
+        identityProvider: 'Custom',
+    }
+    const tableId = makeRandomId()
 
-//     await table.createTableIfNotExists(usersTableName)
-//     await table.insertEntity(usersTableName, toUserItem(user, tableId))
-// }
+    await table.createTableIfNotExists(usersTableName)
+    await table.insertEntity(usersTableName, toUserItem(user, tableId))
+}
 
-// exports.connectUser = async (context, data) => {
-//     context.log('connect', context, data)
-//     const { username, password } = data
-//     if (!username || !password) {
-//         throw new Error(invalidUserError)
-//     }
+exports.connectUser = async (context, data) => {
+    context.log('connect', context, data)
+    const { username, password } = data
+    if (!username || !password) {
+        throw new Error(invalidUserError)
+    }
 
-//     const userDetails = username
-//     const userId = toUserId(username)
-//     const user = {
-//         userId: userId,
-//         userDetails: userDetails,
-//         identityProvider: 'Custom',
-//     }
-//     context.log('user', user)
+    const userDetails = username
+    const userId = toUserId(username)
+    const user = {
+        userId: userId,
+        userDetails: userDetails,
+        identityProvider: 'Custom',
+    }
+    context.log('user', user)
 
-//     const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
-//     if (entity.provider !== 'Custom') {
-//         // Only support custom identity provider users, other users use connect()
-//         throw new Error(invalidUserError)
-//     }
-//     context.log('entity', entity)
+    const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
+    if (entity.provider !== 'Custom') {
+        // Only support custom identity provider users, other users use connect()
+        throw new Error(invalidUserError)
+    }
+    context.log('entity', entity)
 
-//     const isMatch = await bcryptCompare(password, entity.passwordHash)
-//     if (!isMatch) {
-//         throw new Error(invalidUserError)
-//     }
+    const isMatch = await bcryptCompare(password, entity.passwordHash)
+    if (!isMatch) {
+        throw new Error(invalidUserError)
+    }
 
-//     context.log('isMatch', isMatch)
+    context.log('isMatch', isMatch)
 
-//     if (!entity.tableId) {
-//         throw new Error(invalidUserError)
-//     }
+    if (!entity.tableId) {
+        throw new Error(invalidUserError)
+    }
 
-//     context.log('tableId', entity.tableId)
+    context.log('tableId', entity.tableId)
 
-//     // context.log('got user', userId, entity)
-//     const tableName = baseTableName + entity.tableId
-//     await table.createTableIfNotExists(tableName)
-//     return { token: entity.tableId, provider: user.identityProvider, details: user.userDetails }
-// }
+    // context.log('got user', userId, entity)
+    const tableName = baseTableName + entity.tableId
+    await table.createTableIfNotExists(tableName)
+    return { token: entity.tableId, provider: user.identityProvider, details: user.userDetails }
+}
 
 
 
