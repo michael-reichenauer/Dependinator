@@ -7,7 +7,7 @@ import Result, { isError } from "./Result";
 export const IAuthenticateKey = diKey<IAuthenticate>();
 export interface IAuthenticate {
   createUser(user: User): Promise<Result<void>>;
-  login(user: User): Promise<Result<void>>;
+  login(user: User, persist: boolean): Promise<Result<void>>;
   resetLogin(): void;
 }
 
@@ -25,7 +25,7 @@ export class Authenticate implements IAuthenticate {
     return await this.api.createAccount(user);
   }
 
-  async login(user: User): Promise<Result<void>> {
+  async login(user: User, persist: boolean): Promise<Result<void>> {
     user.password = await this.passwordHash(user.password);
 
     const tokenInfo = await this.api.login(user);
@@ -33,11 +33,11 @@ export class Authenticate implements IAuthenticate {
       return tokenInfo;
     }
 
-    this.keyVaultConfigure.setToken(tokenInfo.token);
+    this.keyVaultConfigure.setToken(tokenInfo.token, persist);
   }
 
   public resetLogin(): void {
-    this.keyVaultConfigure.setToken(null);
+    this.keyVaultConfigure.setToken(null, true);
   }
 
   private async passwordHash(text: string) {

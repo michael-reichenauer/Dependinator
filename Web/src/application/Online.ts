@@ -11,6 +11,8 @@ import { setErrorMessage } from "../common/MessageSnackbar";
 import { setSuccessMessage } from "./../common/MessageSnackbar";
 import { IStore, IStoreKey } from "./diagram/Store";
 import { activityEventName } from "../common/activity";
+import { ILocalStore, ILocalStoreKey } from "./../common/LocalStore";
+import { orDefault } from "./../common/Result";
 
 export enum SyncState {
   Disabled = "Disabled",
@@ -42,12 +44,14 @@ interface ISyncMode {
 export class Online implements IOnline, ISyncMode {
   private setSyncMode: SetAtom<SyncState> | null = null;
   private currentState: SyncState = SyncState.Disabled;
-  private isActive: boolean = true;
+  private isActive: boolean = false;
+  private firstActivate = true;
 
   constructor(
     private authenticate: IAuthenticate = di(IAuthenticateKey),
     private api: IApi = di(IApiKey),
-    private store: IStore = di(IStoreKey)
+    private store: IStore = di(IStoreKey),
+    private localStore: ILocalStore = di(ILocalStoreKey)
   ) {
     document.addEventListener(activityEventName, (activity: any) =>
       this.onActivityEvent(activity)
@@ -64,7 +68,7 @@ export class Online implements IOnline, ISyncMode {
   }
 
   public async login(user: User): Promise<Result<void>> {
-    const loginRsp = await this.authenticate.login(user);
+    const loginRsp = await this.authenticate.login(user, true);
     this.stopProgress();
 
     if (isError(loginRsp)) {
@@ -125,6 +129,7 @@ export class Online implements IOnline, ISyncMode {
       return syncResult;
     }
 
+    this.setTargetState(true);
     this.setState(SyncState.Enabled);
     setSuccessMessage("Device sync is OK");
   }
@@ -132,10 +137,13 @@ export class Online implements IOnline, ISyncMode {
   public disableSync(): void {
     this.setState(SyncState.Disabled);
     this.store.configure({ isSyncEnabled: false });
+    this.setTargetState(false);
     this.authenticate.resetLogin();
   }
 
   private onActivityEvent(activity: CustomEvent) {
+    console.log("activity", activity, this.isActive);
+    console.log("state", this.currentState);
     this.isActive = activity.detail;
     if (!this.isActive) {
       // No longer active, disable sync if enabled
@@ -145,6 +153,15 @@ export class Online implements IOnline, ISyncMode {
       }
 
       return;
+    }
+
+    if (this.firstActivate) {
+      // First activity signal, checking if sync should be enabled automatically
+      this.firstActivate = false;
+      if (this.getTargetState()) {
+        setTimeout(() => this.enableSync(), 0);
+        return;
+      }
     }
 
     // Activated, lets enable sync if not disabled
@@ -162,6 +179,13 @@ export class Online implements IOnline, ISyncMode {
   private setState(state: SyncState): void {
     this.currentState = state;
     this.setSyncMode?.(this.currentState);
+  }
+
+  private getTargetState() {
+    return orDefault(this.localStore.tryRead("syncState"), false);
+  }
+  private setTargetState(state: boolean) {
+    this.localStore.write("syncState", state);
   }
 
   private startProgress(): void {
