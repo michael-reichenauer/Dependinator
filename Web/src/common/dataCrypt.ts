@@ -1,12 +1,76 @@
 // import timing from './timing';
-import { crypt } from "./crypt";
 
-class DataCrypt {
-  async encryptText(text: string, kek: CryptoKey) {
+import { ICrypt, ICryptKey } from "./crypt";
+import { di, diKey, singleton } from "./di";
+
+export interface EncryptedData {}
+
+export const IDataCryptKey = diKey<IDataCrypt>();
+export interface IDataCrypt {
+  encryptWithPassword(
+    text: string,
+    username: string,
+    password: string
+  ): Promise<EncryptedData>;
+  decryptWithPassword(
+    ed: any,
+    username: string,
+    password: string
+  ): Promise<string>;
+  generateKek(username: string, password: string): Promise<CryptoKey>;
+}
+
+@singleton(IDataCryptKey)
+export class DataCrypt {
+  constructor(private crypt: ICrypt = di(ICryptKey)) {}
+
+  public async encryptWithPassword(
+    text: string,
+    username: string,
+    password: string
+  ): Promise<EncryptedData> {
+    // Kek handling
+    const kek = await this.generateKek(username, password);
+    console.log("kek", kek);
+
+    const eData = await this.encryptText(text, kek);
+    return eData;
+  }
+
+  public async decryptWithPassword(
+    eData: any,
+    username: string,
+    password: string
+  ): Promise<string> {
+    const kek = await this.generateKek(username, password);
+
+    const text = await this.decryptText(eData, kek);
+
+    return text;
+  }
+
+  public async generateKek(
+    username: string,
+    password: string
+  ): Promise<CryptoKey> {
+    // using hash of username as salt. Usually a salt is a random number, but in this case, it
+    // is sufficient and convenient to use the username
+    const salt = await this.crypt.sha256(username);
+    return await this.crypt.deriveKey(password, salt, [
+      "encrypt",
+      "wrapKey",
+      "decrypt",
+      "unwrapKey",
+    ]);
+  }
+
+  public async encryptText(text: string, kek: CryptoKey) {
+    const dek = await this.generateDek(kek);
+
     const data = new TextEncoder().encode(text);
 
-    const dek = await this.generateDek(kek);
-    const cipher = await crypt.encryptData(data, dek.key);
+    const cipher = await this.crypt.encryptData(data, dek.key);
+
     return {
       data: toBase64(cipher.data),
       iv: toBase64(cipher.iv),
@@ -23,56 +87,19 @@ class DataCrypt {
     const data = fromBase64(eData.data);
     const iv = fromBase64(eData.iv);
 
-    const dData = await crypt.decryptData(data, dek, iv);
+    const dData = await this.crypt.decryptData(data, dek, iv);
 
     const text = new TextDecoder().decode(dData);
     return text;
   }
 
-  async encryptWithPassword(text: string, password: string) {
-    // Kek handling
-    const kekSalt = crypt.generateSalt();
-    const kek = await this.generateKek(password, kekSalt);
-
-    const eData = await this.encryptText(text, kek);
-
-    return {
-      eData: eData,
-      kek: {
-        salt: toBase64(kekSalt),
-      },
-    };
-  }
-
-  async decryptWithPassword(
-    encryptedPacket: { eData: any; kek: { salt: string } },
-    password: string
-  ): Promise<string> {
-    const eData = encryptedPacket.eData;
-
-    const kekSalt = fromBase64(encryptedPacket.kek.salt);
-    const kek = await this.generateKek(password, kekSalt);
-
-    const text = await this.decryptText(eData, kek);
-    return text;
-  }
-
-  async generateKek(password: string, salt: Uint8Array): Promise<CryptoKey> {
-    return await crypt.deriveKey(password, salt, [
-      "encrypt",
-      "wrapKey",
-      "decrypt",
-      "unwrapKey",
-    ]);
-  }
-
   async generateDek(
     kek: CryptoKey
   ): Promise<{ key: CryptoKey; wDek: { key: string; iv: string } }> {
-    const dek = await crypt.generateKey();
+    const dek = await this.crypt.generateKey();
 
-    const wIv = crypt.generateIv();
-    const wKey = await crypt.wrapKey(dek, kek, wIv);
+    const wIv = this.crypt.generateIv();
+    const wKey = await this.crypt.wrapKey(dek, kek, wIv);
 
     return {
       key: dek,
@@ -89,11 +116,9 @@ class DataCrypt {
   ): Promise<CryptoKey> {
     const wrappedDek = fromBase64(wDek.key);
     const wrappedDekIv = fromBase64(wDek.iv);
-    return await crypt.unWrapKey(wrappedDek, kek, wrappedDekIv);
+    return await this.crypt.unWrapKey(wrappedDek, kek, wrappedDekIv);
   }
 }
-
-export const dataCrypt = new DataCrypt();
 
 const toBase64 = (buffer: any) =>
   // @ts-ignore

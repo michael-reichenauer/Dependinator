@@ -3,11 +3,12 @@ import { User } from "./Api";
 import { di, diKey, singleton } from "./di";
 import { IKeyVaultConfigure, IKeyVaultConfigureKey } from "./keyVault";
 import Result, { isError } from "./Result";
+import { IDataCrypt, IDataCryptKey } from "./DataCrypt";
 
 export const IAuthenticateKey = diKey<IAuthenticate>();
 export interface IAuthenticate {
   createUser(user: User): Promise<Result<void>>;
-  login(user: User, persist: boolean): Promise<Result<void>>;
+  login(user: User): Promise<Result<void>>;
   resetLogin(): void;
 }
 
@@ -15,7 +16,8 @@ export interface IAuthenticate {
 export class Authenticate implements IAuthenticate {
   constructor(
     private api: IApi = di(IApiKey),
-    private keyVaultConfigure: IKeyVaultConfigure = di(IKeyVaultConfigureKey)
+    private keyVaultConfigure: IKeyVaultConfigure = di(IKeyVaultConfigureKey),
+    private dataCrypt: IDataCrypt = di(IDataCryptKey)
   ) {}
 
   async createUser(user: User): Promise<Result<void>> {
@@ -25,7 +27,7 @@ export class Authenticate implements IAuthenticate {
     return await this.api.createAccount(user);
   }
 
-  async login(user: User, persist: boolean): Promise<Result<void>> {
+  async login(user: User): Promise<Result<void>> {
     user.password = await this.passwordHash(user.password);
 
     const tokenInfo = await this.api.login(user);
@@ -33,11 +35,31 @@ export class Authenticate implements IAuthenticate {
       return tokenInfo;
     }
 
-    this.keyVaultConfigure.setToken(tokenInfo.token, persist);
+    const org = "123456";
+    const password = "abcd";
+    const username = "kalle";
+
+    const ed = await this.dataCrypt.encryptWithPassword(
+      org,
+      username,
+      password
+    );
+
+    console.log("original: ", org);
+    console.log("encrypted:", ed);
+
+    const dd = await this.dataCrypt.decryptWithPassword(ed, username, password);
+
+    console.log("decrypted:", dd);
+    if (dd !== org) {
+      console.error("Not same data", dd, org);
+    }
+
+    this.keyVaultConfigure.setToken(tokenInfo.token, false);
   }
 
   public resetLogin(): void {
-    this.keyVaultConfigure.setToken(null, true);
+    this.keyVaultConfigure.setToken(null, false);
   }
 
   private async passwordHash(text: string) {

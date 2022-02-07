@@ -68,7 +68,7 @@ export class Online implements IOnline, ISyncMode {
   }
 
   public async login(user: User): Promise<Result<void>> {
-    const loginRsp = await this.authenticate.login(user, true);
+    const loginRsp = await this.authenticate.login(user);
     this.stopProgress();
 
     if (isError(loginRsp)) {

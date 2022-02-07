@@ -31,7 +31,7 @@ describe("Test IRemoteData", () => {
 
     // Write one entity
     const rsp = await remote.writeBatch([
-      { key: "0", value: "aa", version: 1 },
+      { key: "0", etag: "", localEtag: "", value: "aa", version: 1 },
     ]);
     expect(rsp).not.toBeInstanceOf(Error);
 

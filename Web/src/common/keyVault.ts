@@ -29,6 +29,7 @@ export class KeyVault {
 
   public setToken(token: string | null, persist: boolean): void {
     this.token = token;
+
     if (persist && this.token) {
       this.localStore.write(tokenKey, this.token);
     } else {

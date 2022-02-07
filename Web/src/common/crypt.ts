@@ -1,5 +1,7 @@
 // import timing from './timing';
 
+import { diKey, singleton } from "./di";
+
 const saltLength = 16;
 const keyLength = 256;
 const ivLength = 12;
@@ -7,16 +9,44 @@ const algorithm = "AES-GCM";
 const deriveAlgorithm = "PBKDF2";
 const deriveIterations = 250000;
 
-class Crypt {
-  generateSalt(): Uint8Array {
+export const ICryptKey = diKey<ICrypt>();
+export interface ICrypt {
+  generateSalt(): Uint8Array;
+  sha256(message: string): Promise<ArrayBuffer>;
+  deriveKey(passwordText: string, salt: any, keyUsage: any): Promise<CryptoKey>;
+  encryptData(
+    data: any,
+    key: CryptoKey
+  ): Promise<{ data: any; iv: Uint8Array }>;
+  decryptData(cipher: any, key: CryptoKey, iv: Buffer): Promise<any>;
+  generateKey(): Promise<CryptoKey>;
+  generateIv(): Uint8Array;
+  wrapKey(
+    key: CryptoKey,
+    wrappingKey: CryptoKey,
+    iv: Uint8Array
+  ): Promise<ArrayBuffer>;
+  unWrapKey(
+    wrapped: any,
+    wrappingKey: CryptoKey,
+    iv: Buffer
+  ): Promise<CryptoKey>;
+}
+
+@singleton(ICryptKey)
+export class Crypt {
+  public generateSalt(): Uint8Array {
     return crypto.getRandomValues(new Uint8Array(saltLength));
   }
 
-  generateIv(): Uint8Array {
-    return crypto.getRandomValues(new Uint8Array(ivLength));
+  async sha256(message: string): Promise<ArrayBuffer> {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(message);
+    const hash = await crypto.subtle.digest("SHA-256", data);
+    return hash;
   }
 
-  async deriveKey(
+  public async deriveKey(
     passwordText: string,
     salt: any,
     keyUsage: any
@@ -44,7 +74,7 @@ class Crypt {
     );
   }
 
-  async generateKey(): Promise<CryptoKey> {
+  public async generateKey(): Promise<CryptoKey> {
     return await crypto.subtle.generateKey(
       {
         name: algorithm,
@@ -55,7 +85,7 @@ class Crypt {
     );
   }
 
-  async encryptData(
+  public async encryptData(
     data: any,
     key: CryptoKey
   ): Promise<{ data: any; iv: Uint8Array }> {
@@ -68,7 +98,11 @@ class Crypt {
     return { data: encryptedData, iv: iv };
   }
 
-  async decryptData(cipher: any, key: CryptoKey, iv: Buffer): Promise<any> {
+  public async decryptData(
+    cipher: any,
+    key: CryptoKey,
+    iv: Buffer
+  ): Promise<any> {
     return await crypto.subtle.decrypt(
       { name: algorithm, iv: iv },
       key,
@@ -76,7 +110,11 @@ class Crypt {
     );
   }
 
-  async wrapKey(
+  public generateIv(): Uint8Array {
+    return crypto.getRandomValues(new Uint8Array(ivLength));
+  }
+
+  public async wrapKey(
     key: CryptoKey,
     wrappingKey: CryptoKey,
     iv: Uint8Array
@@ -88,7 +126,7 @@ class Crypt {
     });
   }
 
-  async unWrapKey(
+  public async unWrapKey(
     wrapped: any,
     wrappingKey: CryptoKey,
     iv: Buffer
@@ -112,5 +150,3 @@ class Crypt {
     );
   }
 }
-
-export const crypt = new Crypt();
