@@ -12,24 +12,28 @@ const deriveIterations = 250000;
 export const ICryptKey = diKey<ICrypt>();
 export interface ICrypt {
   generateSalt(): Uint8Array;
-  sha256(message: string): Promise<ArrayBuffer>;
-  deriveKey(passwordText: string, salt: any, keyUsage: any): Promise<CryptoKey>;
+  sha256(text: string): Promise<ArrayBuffer>;
+  deriveKey(
+    password: string,
+    salt: ArrayBuffer,
+    keyUsage: KeyUsage[]
+  ): Promise<CryptoKey>;
   encryptData(
-    data: any,
+    data: ArrayBuffer,
     key: CryptoKey
   ): Promise<{ data: any; iv: Uint8Array }>;
-  decryptData(cipher: any, key: CryptoKey, iv: Buffer): Promise<any>;
+  decryptData(cipher: any, iv: Buffer, key: CryptoKey): Promise<any>;
   generateKey(): Promise<CryptoKey>;
   generateIv(): Uint8Array;
   wrapKey(
     key: CryptoKey,
-    wrappingKey: CryptoKey,
-    iv: Uint8Array
+    iv: Uint8Array,
+    wrappingKey: CryptoKey
   ): Promise<ArrayBuffer>;
   unWrapKey(
     wrapped: any,
-    wrappingKey: CryptoKey,
-    iv: Buffer
+    iv: Buffer,
+    wrappingKey: CryptoKey
   ): Promise<CryptoKey>;
 }
 
@@ -39,22 +43,21 @@ export class Crypt {
     return crypto.getRandomValues(new Uint8Array(saltLength));
   }
 
-  async sha256(message: string): Promise<ArrayBuffer> {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(message);
-    const hash = await crypto.subtle.digest("SHA-256", data);
-    return hash;
+  async sha256(text: string): Promise<ArrayBuffer> {
+    const textBytes = new TextEncoder().encode(text);
+    const sha256Hash = await crypto.subtle.digest("SHA-256", textBytes);
+    return sha256Hash;
   }
 
   public async deriveKey(
-    passwordText: string,
-    salt: any,
-    keyUsage: any
+    password: string,
+    salt: ArrayBuffer,
+    keyUsage: KeyUsage[]
   ): Promise<CryptoKey> {
-    const password = new TextEncoder().encode(passwordText);
+    const passwordBytes = new TextEncoder().encode(password);
     const passwordKey = await crypto.subtle.importKey(
       "raw",
-      password,
+      passwordBytes,
       deriveAlgorithm,
       false,
       ["deriveKey"]
@@ -86,7 +89,7 @@ export class Crypt {
   }
 
   public async encryptData(
-    data: any,
+    data: ArrayBuffer,
     key: CryptoKey
   ): Promise<{ data: any; iv: Uint8Array }> {
     const iv = crypto.getRandomValues(new Uint8Array(ivLength));
@@ -100,8 +103,8 @@ export class Crypt {
 
   public async decryptData(
     cipher: any,
-    key: CryptoKey,
-    iv: Buffer
+    iv: Buffer,
+    key: CryptoKey
   ): Promise<any> {
     return await crypto.subtle.decrypt(
       { name: algorithm, iv: iv },
@@ -116,8 +119,8 @@ export class Crypt {
 
   public async wrapKey(
     key: CryptoKey,
-    wrappingKey: CryptoKey,
-    iv: Uint8Array
+    iv: Uint8Array,
+    wrappingKey: CryptoKey
   ): Promise<ArrayBuffer> {
     return await window.crypto.subtle.wrapKey("raw", key, wrappingKey, {
       name: algorithm,
@@ -128,8 +131,8 @@ export class Crypt {
 
   public async unWrapKey(
     wrapped: any,
-    wrappingKey: CryptoKey,
-    iv: Buffer
+    iv: Buffer,
+    wrappingKey: CryptoKey
   ): Promise<CryptoKey> {
     return await window.crypto.subtle.unwrapKey(
       "raw",

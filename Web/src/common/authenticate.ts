@@ -35,30 +35,15 @@ export class Authenticate implements IAuthenticate {
       return tokenInfo;
     }
 
-    const org = "123456";
-    const password = "abcd";
-    const username = "kalle";
+    // derive a KEK key used when encrypting data
+    const kek = await this.dataCrypt.deriveKeyEncryptionKey(user);
 
-    const ed = await this.dataCrypt.encryptWithPassword(
-      org,
-      username,
-      password
-    );
-
-    console.log("original: ", org);
-    console.log("encrypted:", ed);
-
-    const dd = await this.dataCrypt.decryptWithPassword(ed, username, password);
-
-    console.log("decrypted:", dd);
-    if (dd !== org) {
-      console.error("Not same data", dd, org);
-    }
-
+    this.keyVaultConfigure.setKek(kek);
     this.keyVaultConfigure.setToken(tokenInfo.token, false);
   }
 
   public resetLogin(): void {
+    this.keyVaultConfigure.setKek(null);
     this.keyVaultConfigure.setToken(null, false);
   }
 

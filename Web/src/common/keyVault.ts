@@ -5,17 +5,19 @@ import { orDefault } from "./Result";
 export const IKeyVaultKey = diKey<IKeyVault>();
 export interface IKeyVault {
   getToken(): string | null;
+  getKek(): any;
 }
 
 export const IKeyVaultConfigureKey = diKey<IKeyVaultConfigure>();
 export interface IKeyVaultConfigure extends IKeyVault {
   setToken(token: string | null, persist: boolean): void;
+  setKek(kek: any): void;
 }
 
 const tokenKey = "token";
 
 @singleton(IKeyVaultKey, IKeyVaultConfigureKey)
-export class KeyVault {
+export class KeyVault implements IKeyVault, IKeyVaultConfigure {
   private kek: any = null;
   private token: string | null = null;
 
@@ -41,7 +43,7 @@ export class KeyVault {
     return this.kek;
   }
 
-  storeKek(kek: any): void {
+  setKek(kek: any): void {
     this.kek = kek;
   }
 }
