@@ -7,7 +7,6 @@ var auth = require('../shared/auth.js');
 
 const entGen = azure.TableUtilities.entityGenerator;
 const baseTableName = 'diagrams'
-const partitionKeyName = 'dep'
 const usersTableName = 'users'
 const userPartitionKey = 'users'
 const dataPartitionKey = 'data'
@@ -54,7 +53,7 @@ exports.createUser = async (context, data) => {
 }
 
 exports.connectUser = async (context, data) => {
-    context.log('connect', context, data)
+    //context.log('connectUser', context, data)
     const { username, password } = data
     if (!username || !password) {
         throw new Error(invalidUserError)
@@ -63,20 +62,16 @@ exports.connectUser = async (context, data) => {
     const userId = toUserId(username)
 
     const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
-    context.log('entity', entity)
+    // context.log('entity', entity)
 
     const isMatch = await bcryptCompare(password, entity.passwordHash)
     if (!isMatch) {
         throw new Error(invalidUserError)
     }
 
-    context.log('isMatch', isMatch)
-
     if (!entity.tableId) {
         throw new Error(invalidUserError)
     }
-
-    context.log('tableId', entity.tableId)
 
     // context.log('got user', userId, entity)
     const tableName = baseTableName + entity.tableId
@@ -88,26 +83,21 @@ exports.connectUser = async (context, data) => {
 
 exports.tryReadBatch = async (context, body) => {
     const tableName = getTableName(context)
-    context.log('body', body, tableName)
+    // context.log('body', body, tableName)
     const queries = body
     keys = queries.map(query => query.key)
-    context.log('Keys', keys)
     if (keys.length === 0) {
         return []
     }
 
-
+    // Read all requested rows
     const rkq = ' (RowKey == ?string?' + ' || RowKey == ?string?'.repeat(keys.length - 1) + ')'
-
     let tableQuery = new azure.TableQuery()
         .where('PartitionKey == ?string? && ' + rkq,
             dataPartitionKey, ...keys);
-
     const items = await table.queryEntities(tableName, tableQuery, null)
-    context.log(`queried: ${items.length}`)
 
-    context.log('table rsp, resp', items)
-
+    // Replace not modified values with status=notModified 
     const entities = items.map(item => toEntity(item))
     const responses = entities.map(entity => {
         if (queries.find(query => query.key === entity.key && query.IfNoneMatch === entity.etag)) {
@@ -115,7 +105,6 @@ exports.tryReadBatch = async (context, body) => {
         }
         return entity
     })
-    context.log('responses', responses)
 
     return responses
 }
@@ -124,13 +113,14 @@ exports.tryReadBatch = async (context, body) => {
 exports.writeBatch = async (context, body) => {
     const entities = body
     const tableName = getTableName(context)
-    context.log('entities:', entities, tableName)
+    // context.log('entities:', entities, tableName)
 
+    // Write all entities
     const entityItems = entities.map(entity => toEntityItem(entity))
-
     const batch = new azure.TableBatch()
     entityItems.forEach(entity => batch.insertOrReplaceEntity(entity))
 
+    // Extract etags for written entities
     const tableResponses = await table.executeBatch(tableName, batch)
     const responses = tableResponses.map((rsp, i) => {
         if (!rsp.response || !rsp.response.isSuccessful) {
@@ -152,10 +142,9 @@ exports.writeBatch = async (context, body) => {
 exports.removeBatch = async (context, body) => {
     const keys = body
     const tableName = getTableName(context)
-    context.log('keys:', keys, tableName)
+    // context.log('keys:', keys, tableName)
 
     const entityItems = keys.map(key => toDeleteEntityItem(key))
-
     const batch = new azure.TableBatch()
     entityItems.forEach(entity => batch.deleteEntity(entity))
 
@@ -164,250 +153,24 @@ exports.removeBatch = async (context, body) => {
     return ''
 }
 
-exports.connect = async (context) => {
-    const req = context.req
-    const user = auth.getClientPrincipal(req)
+// exports.clearAllData = async (context) => {
+//     const req = context.req
+//     const clientPrincipal = auth.getClientPrincipal(req)
 
-    const userId = user.userId
-    if (!userId) {
-        throw new Error('No user id')
-    }
+//     const userId = clientPrincipal.userId
+//     if (!userId) {
+//         throw new Error('No user id')
+//     }
 
-    try {
-        const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
-        if (entity.tableId) {
-            // context.log('got user', userId, entity)
-            const tableName = baseTableName + entity.tableId
-            await table.createTableIfNotExists(tableName)
-            await table.insertOrReplaceEntity(tableName, toTableUserItem(user))
-            return { token: entity.tableId, provider: user.identityProvider, details: user.userDetails }
-        }
-        context.log('Failed to get table id')
-    } catch (err) {
-        context.log('failed to get', userId, err)
-        // User not yet added
-    }
+//     const tableName = getTableName(context)
+//     await table.deleteTableIfExists(tableName)
 
-    // Create a new random diagrams table id to be used for the user
-    const tableId = makeRandomId()
-    const tableName = baseTableName + tableId
-
-    // Create the actual diagram table
-    await table.createTableIfNotExists(tableName)
-    await table.insertOrReplaceEntity(tableName, toTableUserItem(user))
-
-    // Create a user in the users table
-    await table.createTableIfNotExists(usersTableName)
-    await table.insertOrReplaceEntity(usersTableName, toUserItem(user, tableId))
-
-    return { token: tableId, provider: user.identityProvider, details: user.userDetails }
-}
-
-
-exports.clearAllData = async (context) => {
-    const req = context.req
-    const clientPrincipal = auth.getClientPrincipal(req)
-
-    const userId = clientPrincipal.userId
-    if (!userId) {
-        throw new Error('No user id')
-    }
-
-    const tableName = getTableName(context)
-    await table.deleteTableIfExists(tableName)
-
-    try {
-        await table.deleteEntity(usersTableName, toUserItem(clientPrincipal, ''))
-    } catch (error) {
-        // No user, so done
-    }
-}
-
-
-exports.newDiagram = async (context, diagram) => {
-    const tableName = getTableName(context)
-    const { diagramId, name } = diagram.diagramInfo
-
-    const canvas = diagram.canvases ? diagram.canvases[0] : null
-    if (!diagramId || !name || !canvas) {
-        throw new Error('missing parameters: ');
-    }
-
-    const now = Date.now()
-    const diagramInfo = { diagramId: diagramId, name: name, accessed: now, written: now }
-
-    const batch = new azure.TableBatch()
-    batch.insertEntity(toDiagramInfoItem(diagramInfo))
-    batch.insertEntity(toCanvasItem(canvas))
-
-    await table.executeBatch(tableName, batch)
-
-    const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
-    return toDiagramInfo(entity)
-}
-
-exports.setCanvas = async (context, canvas) => {
-    const tableName = getTableName(context)
-    if (!canvas) {
-        throw new Error('missing parameters');
-    }
-
-    const { diagramId } = canvas
-    const now = Date.now()
-    const diagramInfo = { diagramId: diagramId, accessed: now, written: now }
-
-    const batch = new azure.TableBatch()
-    batch.mergeEntity(toDiagramInfoItem(diagramInfo))
-    batch.insertOrReplaceEntity(toCanvasItem(canvas))
-
-    await table.executeBatch(tableName, batch)
-
-    const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
-    return toDiagramInfo(entity)
-}
-
-exports.getAllDiagramsData = async (context) => {
-    const tableName = getTableName(context)
-
-    var tableQuery = new azure.TableQuery()
-        .where('type == ?string?', 'diagram');
-
-    const items = await table.queryEntities(tableName, tableQuery, null)
-    context.log(`queried: ${items.length}`)
-
-    return items.map(i => toDiagramInfo(i))
-}
-
-exports.getDiagram = async (context, diagramId) => {
-    const tableName = getTableName(context)
-    context.log('table name', tableName)
-
-    let tableQuery = new azure.TableQuery()
-        .where('diagramId == ?string?', diagramId);
-
-    const items = await table.queryEntities(tableName, tableQuery, null)
-
-    const diagram = { canvases: [] }
-
-    items.forEach(i => {
-        if (i.type === 'diagram') {
-            diagram.diagramInfo = toDiagramInfo(i)
-        } else if (i.type === 'canvas') {
-            diagram.canvases.push(toCanvas(i))
-        }
-    })
-
-    if (!diagram.diagramInfo || diagram.canvases.length == 0) {
-        throw new Error('NOTFOUND')
-    }
-
-    // Update accessed diagram time
-    const diagramInfo = { diagramId: diagramId, accessed: Date.now() }
-    const batch = new azure.TableBatch()
-    batch.mergeEntity(toDiagramInfoItem(diagramInfo))
-    await table.executeBatch(tableName, batch)
-
-    return diagram
-}
-
-exports.deleteDiagram = async (context, parameters) => {
-    const tableName = getTableName(context)
-    const { diagramId } = parameters
-    if (!diagramId) {
-        throw new Error('Missing parameter')
-    }
-
-    let tableQuery = new azure.TableQuery()
-        .where('diagramId == ?string?', diagramId);
-
-    const items = await table.queryEntities(tableName, tableQuery, null)
-    context.log(`queried: ${items.length}`)
-
-    const batch = new azure.TableBatch()
-    items.forEach(i => {
-        if (i.type === 'diagram') {
-            batch.deleteEntity(toDiagramInfoItem(toDiagramInfo(i)))
-        } else if (i.type === 'canvas') {
-            batch.deleteEntity(toCanvasItem(toCanvas(i)))
-        }
-    })
-
-    await table.executeBatch(tableName, batch)
-}
-
-exports.updateDiagram = async (context, diagram) => {
-    const tableName = getTableName(context)
-    const { diagramId } = diagram.diagramInfo
-    if (!diagramId) {
-        throw new Error('missing parameters: ');
-    }
-
-    const now = Date.now()
-    const diagramInfo = { ...diagram.diagramInfo, accessed: now, written: now }
-
-    const batch = new azure.TableBatch()
-    batch.mergeEntity(toDiagramInfoItem(diagramInfo))
-    if (diagram.canvases) {
-        diagram.canvases.forEach(canvas => batch.insertOrReplaceEntity(toCanvasItem(canvas)))
-    }
-
-
-    await table.executeBatch(tableName, batch)
-
-    const entity = await table.retrieveEntity(tableName, partitionKeyName, diagramKey(diagramId))
-    return toDiagramInfo(entity)
-}
-
-
-exports.uploadDiagrams = async (context, diagrams) => {
-    const tableName = getTableName(context)
-    if (!diagrams) {
-        throw new Error('missing parameters: ');
-    }
-    const now = Date.now()
-    const batch = new azure.TableBatch()
-    diagrams.forEach(diagram => {
-        const diagramInfo = { ...diagram.diagramInfo, accessed: now, written: now }
-        batch.insertOrMergeEntity(toDiagramInfoItem(diagramInfo))
-        if (diagram.canvases) {
-            diagram.canvases.forEach(canvas => batch.insertOrReplaceEntity(toCanvasItem(canvas)))
-        }
-    })
-
-    await table.executeBatch(tableName, batch)
-}
-
-exports.downloadAllDiagrams = async (context) => {
-    const tableName = getTableName(context)
-
-    let tableQuery = new azure.TableQuery()
-        .where('type == ?string? || type == ?string?', 'diagram', 'canvas');
-
-    const items = await table.queryEntities(tableName, tableQuery, null)
-
-    const diagrams = {}
-
-    items.forEach(i => {
-        if (i.type === 'diagram') {
-            const diagramInfo = toDiagramInfo(i)
-            const id = diagramInfo.diagramId
-            diagrams[id] = { ...diagrams[id], diagramInfo: diagramInfo }
-        } else if (i.type === 'canvas') {
-            const canvas = toCanvas(i)
-            const id = canvas.diagramId
-            if (diagrams[id] == null) {
-                diagrams[id] = { canvases: [canvas] }
-            } else {
-                const canvases = diagrams[id].canvases ? diagrams[id].canvases : []
-                canvases.push(canvas)
-                diagrams[id].canvases = canvases
-            }
-        }
-    })
-
-    return Object.entries(diagrams).map(e => e[1])
-}
-
+//     try {
+//         await table.deleteEntity(usersTableName, toUserItem(clientPrincipal, ''))
+//     } catch (error) {
+//         // No user, so done
+//     }
+// }
 
 
 
@@ -476,13 +239,6 @@ function getTableName(context) {
     return baseTableName + info.token
 }
 
-function canvasKey(diagramId, canvasId) {
-    return `${diagramId}.${canvasId}`
-}
-
-function diagramKey(diagramId) {
-    return `${diagramId}`
-}
 
 function toUserItem(userId, passwordHash, wDek, tableId) {
     return {
@@ -493,60 +249,6 @@ function toUserItem(userId, passwordHash, wDek, tableId) {
         tableId: entGen.String(tableId),
         wDek: entGen.String(wDek),
     }
-}
-
-
-function toTableUserItem(clientPrincipal) {
-    return {
-        RowKey: entGen.String(clientPrincipal.userId),
-        PartitionKey: entGen.String(partitionKeyName),
-
-        type: entGen.String('user'),
-        userId: entGen.String(clientPrincipal.userId),
-        name: entGen.String(clientPrincipal.userDetails),
-        provider: entGen.String(clientPrincipal.identityProvider),
-    }
-}
-
-function toCanvasItem(canvas) {
-    const { diagramId, canvasId } = canvas
-    return {
-        RowKey: entGen.String(canvasKey(diagramId, canvasId)),
-        PartitionKey: entGen.String(partitionKeyName),
-
-        type: entGen.String('canvas'),
-        diagramId: entGen.String(diagramId),
-        canvasId: entGen.String(canvasId),
-        canvas: entGen.String(JSON.stringify(canvas))
-    }
-}
-
-function toCanvas(item) {
-    const canvas = JSON.parse(item.canvas)
-    canvas.etag = item['odata.etag']
-    canvas.timestamp = item.Timestamp
-    return canvas
-}
-
-function toDiagramInfoItem(diagramInfo) {
-    const { diagramId, name, accessed, written } = diagramInfo
-    const item = {
-        RowKey: entGen.String(diagramKey(diagramId)),
-        PartitionKey: entGen.String(partitionKeyName),
-
-        type: entGen.String('diagram'),
-        diagramId: entGen.String(diagramId),
-    }
-    if (name != null) {
-        item.name = entGen.String(name)
-    }
-    if (accessed != null) {
-        item.accessed = entGen.Int64(accessed)
-    }
-    if (written != null) {
-        item.written = entGen.Int64(written)
-    }
-    return item
 }
 
 function toEntityItem(entity) {
@@ -580,17 +282,6 @@ function toEntity(item) {
     return { key: item.RowKey, etag: item['odata.etag'], value: value }
 }
 
-
-function toDiagramInfo(item) {
-    return {
-        etag: item['odata.etag'],
-        timestamp: item.Timestamp,
-        diagramId: item.diagramId,
-        name: item.name,
-        accessed: item.accessed,
-        written: item.written,
-    }
-}
 
 function sha256(message) {
     return crypto.createHash("sha256")
