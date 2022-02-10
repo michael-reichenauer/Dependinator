@@ -11,8 +11,14 @@ export interface User {
   password: string;
 }
 
-export interface TokenInfo {
+export interface CreateUserReq {
+  user: User;
+  wDek: string;
+}
+
+export interface LoginRsp {
   token: string;
+  wDek: string;
 }
 
 export type ApiEntityStatus = "value" | "noValue" | "notModified" | "error";
@@ -46,8 +52,8 @@ export class RequestError extends NetworkError {}
 export const IApiKey = diKey<IApi>();
 export interface IApi {
   config(onOK: () => void, onError: (error: Error) => void): void;
-  login(user: User): Promise<Result<TokenInfo>>;
-  createAccount(user: User): Promise<Result<void>>;
+  login(user: User): Promise<Result<LoginRsp>>;
+  createAccount(createUser: CreateUserReq): Promise<Result<void>>;
   check(): Promise<Result<void>>;
   tryReadBatch(queries: Query[]): Promise<Result<ApiEntity[]>>;
   writeBatch(entities: ApiEntity[]): Promise<Result<ApiEntityRsp[]>>;
@@ -69,16 +75,16 @@ export class Api implements IApi {
     this.onError = onError;
   }
 
-  public async login(user: User): Promise<Result<TokenInfo>> {
+  public async login(user: User): Promise<Result<LoginRsp>> {
     const rsp = await this.post("/api/ConnectUser", user);
     if (isError(rsp)) {
       return rsp;
     }
-    return rsp as TokenInfo;
+    return rsp as LoginRsp;
   }
 
-  public async createAccount(user: User): Promise<Result<void>> {
-    return await this.post("/api/CreateUser", user);
+  public async createAccount(createUser: CreateUserReq): Promise<Result<void>> {
+    return await this.post("/api/CreateUser", createUser);
   }
 
   public async check(): Promise<Result<void>> {

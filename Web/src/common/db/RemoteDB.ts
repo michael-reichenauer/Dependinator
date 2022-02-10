@@ -67,8 +67,8 @@ export class RemoteDB implements IRemoteDB {
     queries: Query[],
     apiEntities: ApiEntity[]
   ): Promise<Result<RemoteEntity>[]> {
-    // Get the KEK key to decrypt the unique DEK key for each package
-    const kek = this.keyVault.getKek();
+    // Get the DEK key to decrypt each package
+    const dek = this.keyVault.getDek();
 
     return Promise.all(
       queries.map(async (query) => {
@@ -90,7 +90,7 @@ export class RemoteDB implements IRemoteDB {
         }
 
         // Decrypt downloaded value
-        const value = await this.decryptValue(entity.value, kek);
+        const value = await this.decryptValue(entity.value, dek);
         return {
           key: entity.key,
           etag: entity.etag ?? "",
@@ -105,14 +105,14 @@ export class RemoteDB implements IRemoteDB {
   private async toUploadingApiEntities(
     remoteEntities: RemoteEntity[]
   ): Promise<ApiEntity[]> {
-    // Get the KEK key to encrypt the unique DEK key for each package
-    const kek = this.keyVault.getKek();
+    // Get the DEK key to encrypt each package
+    const dek = this.keyVault.getDek();
 
     return Promise.all(
       remoteEntities.map(async (entity) => {
         // Encrypt value before uploading
         const value = { value: entity.value, version: entity.version };
-        const encryptedValue = await this.encryptValue(value, kek);
+        const encryptedValue = await this.encryptValue(value, dek);
 
         return {
           key: entity.key,

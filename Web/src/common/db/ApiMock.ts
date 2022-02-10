@@ -1,4 +1,12 @@
-import { ApiEntity, IApi, TokenInfo, User, Query, ApiEntityRsp } from "../Api";
+import {
+  ApiEntity,
+  IApi,
+  User,
+  Query,
+  ApiEntityRsp,
+  LoginRsp,
+  CreateUserReq,
+} from "../Api";
 import { di } from "../di";
 import { ILocalStore, ILocalStoreKey } from "../LocalStore";
 import Result, { isError } from "../Result";
@@ -11,10 +19,10 @@ export class ApiMock implements IApi {
   config(onOK: () => void, onError: (error: Error) => void): void {
     throw new Error("Method not implemented.");
   }
-  login(user: User): Promise<Result<TokenInfo, Error>> {
+  login(user: User): Promise<Result<LoginRsp, Error>> {
     throw new Error("Method not implemented.");
   }
-  createAccount(user: User): Promise<Result<void, Error>> {
+  createAccount(createUser: CreateUserReq): Promise<Result<void, Error>> {
     throw new Error("Method not implemented.");
   }
   check(): Promise<Result<void, Error>> {

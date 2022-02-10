@@ -35,27 +35,22 @@ exports.verifyToken = context => {
 
 
 exports.createUser = async (context, data) => {
-    const { username, password } = data
-    if (!username || !password) {
+    const { user, wDek } = data
+    if (!user || !user.username || !user.password || !wDek) {
         throw new Error('Missing parameter')
     }
-    const userDetails = username
+    const { username, password } = user
+
     const userId = toUserId(username)
 
     // Hash the password using bcrypt
     const salt = await bcryptGenSalt(saltRounds)
     const passwordHash = await bcryptHash(password, salt)
 
-    const user = {
-        userId: userId,
-        passwordHash: passwordHash,
-        userDetails: userDetails,
-        identityProvider: 'Custom',
-    }
     const tableId = makeRandomId()
 
     await table.createTableIfNotExists(usersTableName)
-    await table.insertEntity(usersTableName, toUserItem(user, tableId))
+    await table.insertEntity(usersTableName, toUserItem(userId, passwordHash, wDek, tableId))
 }
 
 exports.connectUser = async (context, data) => {
@@ -65,20 +60,9 @@ exports.connectUser = async (context, data) => {
         throw new Error(invalidUserError)
     }
 
-    const userDetails = username
     const userId = toUserId(username)
-    const user = {
-        userId: userId,
-        userDetails: userDetails,
-        identityProvider: 'Custom',
-    }
-    context.log('user', user)
 
     const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
-    if (entity.provider !== 'Custom') {
-        // Only support custom identity provider users, other users use connect()
-        throw new Error(invalidUserError)
-    }
     context.log('entity', entity)
 
     const isMatch = await bcryptCompare(password, entity.passwordHash)
@@ -97,7 +81,7 @@ exports.connectUser = async (context, data) => {
     // context.log('got user', userId, entity)
     const tableName = baseTableName + entity.tableId
     await table.createTableIfNotExists(tableName)
-    return { token: entity.tableId, provider: user.identityProvider, details: user.userDetails }
+    return { token: entity.tableId, wDek: entity.wDek }
 }
 
 
@@ -500,16 +484,14 @@ function diagramKey(diagramId) {
     return `${diagramId}`
 }
 
-function toUserItem(user, tableId) {
+function toUserItem(userId, passwordHash, wDek, tableId) {
     return {
-        RowKey: entGen.String(user.userId),
+        RowKey: entGen.String(userId),
         PartitionKey: entGen.String(userPartitionKey),
 
-        userId: entGen.String(user.userId),
+        passwordHash: entGen.String(passwordHash),
         tableId: entGen.String(tableId),
-        userDetails: entGen.String(user.userDetails),
-        provider: entGen.String(user.identityProvider),
-        passwordHash: entGen.String(user.passwordHash)
+        wDek: entGen.String(wDek),
     }
 }
 

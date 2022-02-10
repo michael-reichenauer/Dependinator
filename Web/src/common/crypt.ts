@@ -23,7 +23,7 @@ export interface ICrypt {
     key: CryptoKey
   ): Promise<{ data: any; iv: Uint8Array }>;
   decryptData(cipher: any, iv: Buffer, key: CryptoKey): Promise<any>;
-  generateKey(): Promise<CryptoKey>;
+  generateKey(keyUsage: KeyUsage[]): Promise<CryptoKey>;
   generateIv(): Uint8Array;
   wrapKey(
     key: CryptoKey,
@@ -77,14 +77,14 @@ export class Crypt {
     );
   }
 
-  public async generateKey(): Promise<CryptoKey> {
+  public async generateKey(keyUsage: KeyUsage[]): Promise<CryptoKey> {
     return await crypto.subtle.generateKey(
       {
         name: algorithm,
         length: keyLength,
       },
       true, // Key is extractable so it kan be wrapped
-      ["encrypt", "decrypt"] // usage for key
+      keyUsage
     );
   }
 

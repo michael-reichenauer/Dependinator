@@ -24,26 +24,33 @@ export class Authenticate implements IAuthenticate {
     // Reduce risk of clear text password logging
     user.password = await this.passwordHash(user.password);
 
-    return await this.api.createAccount(user);
+    const wrappedDek = await this.dataCrypt.generateWrappedDataEncryptionKey(
+      user
+    );
+
+    return await this.api.createAccount({ user: user, wDek: wrappedDek });
   }
 
   async login(user: User): Promise<Result<void>> {
     user.password = await this.passwordHash(user.password);
 
-    const tokenInfo = await this.api.login(user);
-    if (isError(tokenInfo)) {
-      return tokenInfo;
+    const loginRsp = await this.api.login(user);
+    if (isError(loginRsp)) {
+      return loginRsp;
     }
 
-    // derive a KEK key used when encrypting data
-    const kek = await this.dataCrypt.deriveKeyEncryptionKey(user);
+    // Extract the data encryption key DEK from the wrapped/encrypted wDek
+    const dek = await this.dataCrypt.unwrapDataEncryptionKey(
+      loginRsp.wDek,
+      user
+    );
 
-    this.keyVaultConfigure.setKek(kek);
-    this.keyVaultConfigure.setToken(tokenInfo.token, false);
+    this.keyVaultConfigure.setDek(dek);
+    this.keyVaultConfigure.setToken(loginRsp.token, false);
   }
 
   public resetLogin(): void {
-    this.keyVaultConfigure.setKek(null);
+    this.keyVaultConfigure.setDek(null);
     this.keyVaultConfigure.setToken(null, false);
   }
 
