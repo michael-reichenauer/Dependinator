@@ -1,7 +1,6 @@
 import { ICrypt, ICryptKey } from "./crypt";
 import { di, diKey, singleton } from "./di";
 import { User } from "./Api";
-import timing from "./timing";
 
 export const IDataCryptKey = diKey<IDataCrypt>();
 export interface IDataCrypt {
