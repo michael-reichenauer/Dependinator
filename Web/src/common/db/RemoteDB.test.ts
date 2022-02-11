@@ -8,10 +8,25 @@ import {
 import Result, { isError } from "../Result";
 import { IApiKey, Query } from "../Api";
 import { ApiMock } from "./ApiMock";
+import { IDataCryptKey } from "./../DataCrypt";
+import { DataCryptMock } from "./../DataCryptMock";
+import { IKeyVaultKey, IKeyVaultConfigureKey } from "./../keyVault";
 
-beforeAll(() => {
-  // Mock api to use local store for tests
+beforeAll(async () => {
+  // Mock Api and DataCrypt for tests
   registerSingleton(IApiKey, ApiMock);
+  registerSingleton(IDataCryptKey, DataCryptMock);
+
+  // Simulate logging in to create mock DEK used for encryption
+  const user = { username: "test", password: "testPass" };
+  const wDek = await di(IDataCryptKey).generateWrappedDataEncryptionKey(user);
+  const dek = await di(IDataCryptKey).unwrapDataEncryptionKey(wDek, user);
+  di(IKeyVaultConfigureKey).setDek(dek);
+});
+
+afterAll(() => {
+  // Simulate logout and reset DEK
+  di(IKeyVaultConfigureKey).setDek(null);
 });
 
 describe("Test IRemoteData", () => {
