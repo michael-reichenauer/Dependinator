@@ -1,6 +1,7 @@
 import { ICrypt, ICryptKey } from "./crypt";
 import { di, diKey, singleton } from "./di";
 import { User } from "./Api";
+import timing from "./timing";
 
 export const IDataCryptKey = diKey<IDataCrypt>();
 export interface IDataCrypt {
@@ -8,6 +9,11 @@ export interface IDataCrypt {
   // key encryption key (KEK), which was derived from the username and password
   // The returned string is safe to store, since it is encrypted by the KEK (derived by user)
   generateWrappedDataEncryptionKey(user: User): Promise<string>;
+
+  // Expands a password by using a derive bits hash like e.g. PBKDF2, which makes it much harder to
+  // use brute force to hack the password. This is used both on the client side as well as the server
+  // side to reduce work load on server side and to ensure original password never leaves the client.
+  expandPassword(user: User): Promise<string>;
 
   // Unwraps/decrypts the wrapped data encryption key (DEK) using the
   // key encryption key (KEK), which was derived from the username and password
@@ -27,6 +33,12 @@ type EncryptedPacket = { data: string; iv: string };
 @singleton(IDataCryptKey)
 export class DataCrypt {
   constructor(private crypt: ICrypt = di(ICryptKey)) {}
+
+  public async expandPassword(user: User): Promise<string> {
+    const salt = await this.crypt.sha256(user.username);
+    const bits = await this.crypt.deriveBits(user.password, salt);
+    return toBase64(bits);
+  }
 
   public async generateWrappedDataEncryptionKey(user: User): Promise<string> {
     // Derive a key encryption key (KEK) to wrap/encrypt the DEK key

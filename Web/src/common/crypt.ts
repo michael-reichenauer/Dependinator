@@ -7,7 +7,8 @@ const keyLength = 256;
 const ivLength = 12;
 const algorithm = "AES-GCM";
 const deriveAlgorithm = "PBKDF2";
-const deriveIterations = 250000;
+const deriveKeyIterations = 250000;
+const deriveBitsIterations = 1000000;
 
 export const ICryptKey = diKey<ICrypt>();
 export interface ICrypt {
@@ -18,6 +19,7 @@ export interface ICrypt {
     salt: ArrayBuffer,
     keyUsage: KeyUsage[]
   ): Promise<CryptoKey>;
+  deriveBits(password: string, salt: ArrayBuffer): Promise<ArrayBuffer>;
   encryptData(
     data: ArrayBuffer,
     key: CryptoKey
@@ -67,7 +69,7 @@ export class Crypt {
       {
         name: deriveAlgorithm,
         salt: salt,
-        iterations: deriveIterations,
+        iterations: deriveKeyIterations,
         hash: "SHA-256",
       },
       passwordKey,
@@ -75,6 +77,33 @@ export class Crypt {
       false,
       keyUsage
     );
+  }
+
+  public async deriveBits(
+    password: string,
+    salt: ArrayBuffer
+  ): Promise<ArrayBuffer> {
+    const passwordBytes = new TextEncoder().encode(password);
+    const passwordKey = await crypto.subtle.importKey(
+      "raw",
+      passwordBytes,
+      { name: deriveAlgorithm },
+      false,
+      ["deriveBits", "deriveKey"]
+    );
+
+    const bits = await crypto.subtle.deriveBits(
+      {
+        name: "PBKDF2",
+        salt: salt,
+        iterations: deriveBitsIterations,
+        hash: "SHA-256",
+      },
+      passwordKey,
+      256
+    );
+
+    return bits;
   }
 
   public async generateKey(keyUsage: KeyUsage[]): Promise<CryptoKey> {

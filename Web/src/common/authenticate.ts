@@ -21,18 +21,19 @@ export class Authenticate implements IAuthenticate {
   ) {}
 
   async createUser(user: User): Promise<Result<void>> {
-    // Reduce risk of clear text password logging
-    user.password = await this.passwordHash(user.password);
-
     const wrappedDek = await this.dataCrypt.generateWrappedDataEncryptionKey(
       user
     );
 
+    // Expand/derive the password
+    user.password = await this.dataCrypt.expandPassword(user);
     return await this.api.createAccount({ user: user, wDek: wrappedDek });
   }
 
   async login(user: User): Promise<Result<void>> {
-    user.password = await this.passwordHash(user.password);
+    // Expand/derive the password
+    const hash = await this.dataCrypt.expandPassword(user);
+    user.password = hash;
 
     const loginRsp = await this.api.login(user);
     if (isError(loginRsp)) {
@@ -52,22 +53,5 @@ export class Authenticate implements IAuthenticate {
   public resetLogin(): void {
     this.keyVaultConfigure.setDek(null);
     this.keyVaultConfigure.setToken(null, false);
-  }
-
-  private async passwordHash(text: string) {
-    // encode as UTF-8
-    const msgBuffer = new TextEncoder().encode(text);
-
-    // hash the message
-    const hashBuffer = await crypto.subtle.digest("SHA-256", msgBuffer);
-
-    // convert ArrayBuffer to Array
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-
-    // convert bytes to hex string
-    const hashHex = hashArray
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-    return hashHex;
   }
 }
