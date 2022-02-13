@@ -1,4 +1,4 @@
-import { IApi, IApiKey } from "./Api";
+import { AuthenticateError, IApi, IApiKey } from "./Api";
 import { User } from "./Api";
 import { di, diKey, singleton } from "./di";
 import { IKeyVaultConfigure, IKeyVaultConfigureKey } from "./keyVault";
@@ -7,6 +7,7 @@ import { IDataCrypt, IDataCryptKey } from "./DataCrypt";
 
 export const IAuthenticateKey = diKey<IAuthenticate>();
 export interface IAuthenticate {
+  check(): Promise<Result<void>>;
   createUser(user: User): Promise<Result<void>>;
   login(user: User): Promise<Result<void>>;
   resetLogin(): void;
@@ -20,7 +21,16 @@ export class Authenticate implements IAuthenticate {
     private dataCrypt: IDataCrypt = di(IDataCryptKey)
   ) {}
 
-  async createUser(user: User): Promise<Result<void>> {
+  public async check(): Promise<Result<void>> {
+    if (!this.keyVaultConfigure.getDek()) {
+      console.log("No DEK");
+      return new AuthenticateError();
+    }
+
+    await this.api.check();
+  }
+
+  public async createUser(user: User): Promise<Result<void>> {
     const wrappedDek = await this.dataCrypt.generateWrappedDataEncryptionKey(
       user
     );
@@ -30,7 +40,7 @@ export class Authenticate implements IAuthenticate {
     return await this.api.createAccount({ user: user, wDek: wrappedDek });
   }
 
-  async login(user: User): Promise<Result<void>> {
+  public async login(user: User): Promise<Result<void>> {
     // Expand/derive the password
     const hash = await this.dataCrypt.expandPassword(user);
     user.password = hash;
@@ -47,11 +57,12 @@ export class Authenticate implements IAuthenticate {
     );
 
     this.keyVaultConfigure.setDek(dek);
-    this.keyVaultConfigure.setToken(loginRsp.token, false);
   }
 
   public resetLogin(): void {
     this.keyVaultConfigure.setDek(null);
-    this.keyVaultConfigure.setToken(null, false);
+
+    // Try to logoff from server ass well (but don't await result)
+    this.api.logoff();
   }
 }

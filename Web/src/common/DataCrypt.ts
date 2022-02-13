@@ -10,8 +10,8 @@ export interface IDataCrypt {
   generateWrappedDataEncryptionKey(user: User): Promise<string>;
 
   // Expands a password by using a derive bits hash like e.g. PBKDF2, which makes it much harder to
-  // use brute force to hack the password. This is used both on the client side as well as the server
-  // side to reduce work load on server side and to ensure original password never leaves the client.
+  // use brute force to hack the password. This is used first on the client side to ensure original
+  // password never leaves the client and then one more time on the server side as well.
   expandPassword(user: User): Promise<string>;
 
   // Unwraps/decrypts the wrapped data encryption key (DEK) using the

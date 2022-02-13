@@ -2,20 +2,23 @@ const azure = require('azure-storage');
 const crypto = require("crypto")
 const bcrypt = require("bcryptjs")
 var table = require('../shared/table.js');
-var clientInfo = require('../shared/clientInfo.js');
-var auth = require('../shared/auth.js');
+
 
 const entGen = azure.TableUtilities.entityGenerator;
-const baseTableName = 'diagrams'
+
+const dataBaseTableName = 'data'
 const usersTableName = 'users'
+const sessionsTableName = 'sessions'
+
 const userPartitionKey = 'users'
 const dataPartitionKey = 'data'
+const sessionsPartitionKey = 'sessions'
+
 const standardApiKey = '0624bc00-fcf7-4f31-8f3e-3bdc3eba7ade'
 const saltRounds = 10
 
-const invalidUserError = 'Invalid user'
-const invalidTokenError = 'Invalid token'
-const invalidRequestError = 'Invalid request'
+const invalidRequestError = 'InvalidRequestError'
+const authenticateError = 'AuthenticateError'
 
 exports.verifyApiKey = context => {
     const req = context.req
@@ -25,156 +28,282 @@ exports.verifyApiKey = context => {
     }
 }
 
-exports.verifyToken = context => {
-    const info = clientInfo.getInfo(context)
-    if (!info.token || info.token == null || info.token === 'null') {
-        throw new Error(invalidTokenError)
-    }
-}
-
 
 exports.createUser = async (context, data) => {
     const { user, wDek } = data
     if (!user || !user.username || !user.password || !wDek) {
-        throw new Error('Missing parameter')
+        throw new Error(invalidRequestError)
     }
-    const { username, password } = user
 
-    const userId = toUserId(username)
+    try {
+        const { username, password } = user
 
-    // Hash the password using bcrypt
-    const salt = await bcryptGenSalt(saltRounds)
-    const passwordHash = await bcryptHash(password, salt)
+        const userId = toUserId(username)
 
-    const tableId = makeRandomId()
+        // Hash the password using bcrypt
+        const salt = await bcryptGenSalt(saltRounds)
+        const passwordHash = await bcryptHash(password, salt)
 
-    await table.createTableIfNotExists(usersTableName)
-    await table.insertEntity(usersTableName, toUserItem(userId, passwordHash, wDek, tableId))
+        const userItem = toUserTableEntity(userId, passwordHash, wDek)
+
+        await table.createTableIfNotExists(usersTableName)
+        await table.insertEntity(usersTableName, userItem)
+    } catch (err) {
+        throw new Error(authenticateError)
+    }
 }
 
-exports.connectUser = async (context, data) => {
+exports.login = async (context, data) => {
     //context.log('connectUser', context, data)
     const { username, password } = data
     if (!username || !password) {
-        throw new Error(invalidUserError)
+        throw new Error(invalidRequestError)
     }
 
-    const userId = toUserId(username)
+    try {
+        // Verify user and password
+        const userId = toUserId(username)
+        const userTableEntity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
+        const isMatch = await bcryptCompare(password, userTableEntity.passwordHash)
+        if (!isMatch) {
+            throw new Error(authenticateError)
+        }
 
-    const entity = await table.retrieveEntity(usersTableName, userPartitionKey, userId)
-    // context.log('entity', entity)
+        // Create user data table if it does not already exist
+        const tableName = dataBaseTableName + userId
+        await table.createTableIfNotExists(tableName)
 
-    const isMatch = await bcryptCompare(password, entity.passwordHash)
-    if (!isMatch) {
-        throw new Error(invalidUserError)
+        await table.createTableIfNotExists(sessionsTableName)
+
+        // Clear previous sessions from this client
+        await clearClientSessions(context)
+
+        // Create new session id and store
+        const sessionId = makeRandomId()
+        const clientId = getClientId(context)
+        const sessionTableEntity = toSessionTableEntity(sessionId, userId, clientId)
+        await table.insertEntity(sessionsTableName, sessionTableEntity)
+
+        // Set session id and client id
+        const clientIdExpire = new Date(2030, 12, 31);
+        const cookies = [{
+            name: 'sessionId',
+            value: sessionId,
+            path: '/',
+            secure: true,
+            httpOnly: true,
+            sameSite: "Strict"
+        },
+        {
+            name: 'clientId',
+            value: clientId,
+            path: '/',
+            expires: clientIdExpire,
+            secure: true,
+            httpOnly: true,
+            sameSite: "Strict"
+        }]
+
+        return { data: { wDek: userTableEntity.wDek }, cookies: cookies }
+    } catch (err) {
+        throw new Error(authenticateError)
     }
+}
 
-    if (!entity.tableId) {
-        throw new Error(invalidUserError)
+exports.logoff = async (context, data) => {
+    await getUserId(context)
+
+    try {
+        await clearClientSessions(context)
+
+        const clientId = getClientId(context)
+        const clientIdExpire = new Date(2030, 12, 31);
+        const cookies = [
+            {
+                name: 'clientId',
+                value: clientId,
+                path: '/',
+                expires: clientIdExpire,
+                secure: true,
+                httpOnly: true,
+                sameSite: "Strict"
+            }]
+
+        return { cookies: cookies }
+    } catch (err) {
+        throw new Error(authenticateError)
     }
+}
 
-    // context.log('got user', userId, entity)
-    const tableName = baseTableName + entity.tableId
-    await table.createTableIfNotExists(tableName)
-    return { token: entity.tableId, wDek: entity.wDek }
+exports.check = async (context, body) => {
+    const userId = await getUserId(context)
+    context.log('userId', userId)
 }
 
 
-
 exports.tryReadBatch = async (context, body) => {
-    const tableName = getTableName(context)
-    // context.log('body', body, tableName)
-    const queries = body
-    keys = queries.map(query => query.key)
-    if (keys.length === 0) {
-        return []
-    }
+    const userId = await getUserId(context)
 
-    // Read all requested rows
-    const rkq = ' (RowKey == ?string?' + ' || RowKey == ?string?'.repeat(keys.length - 1) + ')'
-    let tableQuery = new azure.TableQuery()
-        .where('PartitionKey == ?string? && ' + rkq,
-            dataPartitionKey, ...keys);
-    const items = await table.queryEntities(tableName, tableQuery, null)
+    try {
+        const tableName = dataBaseTableName + userId
 
-    // Replace not modified values with status=notModified 
-    const entities = items.map(item => toEntity(item))
-    const responses = entities.map(entity => {
-        if (queries.find(query => query.key === entity.key && query.IfNoneMatch === entity.etag)) {
-            return { key: entity.key, etag: entity.etag, status: 'notModified' }
+        // context.log('body', body, tableName)
+        const queries = body
+        keys = queries.map(query => query.key)
+        if (keys.length === 0) {
+            return []
         }
-        return entity
-    })
 
-    return responses
+        // Read all requested rows
+        const rkq = ' (RowKey == ?string?' + ' || RowKey == ?string?'.repeat(keys.length - 1) + ')'
+        let tableQuery = new azure.TableQuery()
+            .where('PartitionKey == ?string? && ' + rkq,
+                dataPartitionKey, ...keys);
+        const items = await table.queryEntities(tableName, tableQuery, null)
+
+        // Replace not modified values with status=notModified 
+        const entities = items.map(item => toDataEntity(item))
+        const responses = entities.map(entity => {
+            if (queries.find(query => query.key === entity.key && query.IfNoneMatch === entity.etag)) {
+                return { key: entity.key, etag: entity.etag, status: 'notModified' }
+            }
+            return entity
+        })
+
+        return responses
+    } catch (err) {
+        throw new Error(invalidRequestError)
+    }
 }
 
 
 exports.writeBatch = async (context, body) => {
-    const entities = body
-    const tableName = getTableName(context)
-    // context.log('entities:', entities, tableName)
+    const userId = await getUserId(context)
 
-    // Write all entities
-    const entityItems = entities.map(entity => toEntityItem(entity))
-    const batch = new azure.TableBatch()
-    entityItems.forEach(entity => batch.insertOrReplaceEntity(entity))
+    try {
+        const entities = body
+        const tableName = dataBaseTableName + userId
+        // context.log('entities:', entities, tableName)
 
-    // Extract etags for written entities
-    const tableResponses = await table.executeBatch(tableName, batch)
-    const responses = tableResponses.map((rsp, i) => {
-        if (!rsp.response || !rsp.response.isSuccessful) {
+        // Write all entities
+        const entityItems = entities.map(entity => toDataTableEntity(entity))
+        const batch = new azure.TableBatch()
+        entityItems.forEach(entity => batch.insertOrReplaceEntity(entity))
+
+        // Extract etags for written entities
+        const tableResponses = await table.executeBatch(tableName, batch)
+        const responses = tableResponses.map((rsp, i) => {
+            if (!rsp.response || !rsp.response.isSuccessful) {
+                return {
+                    key: entities[i].key,
+                    status: 'error'
+                }
+            }
+
             return {
                 key: entities[i].key,
-                status: 'error'
+                etag: rsp.entity['.metadata'].etag
             }
-        }
+        })
 
-        return {
-            key: entities[i].key,
-            etag: rsp.entity['.metadata'].etag
-        }
-    })
-
-    return responses
+        return responses
+    } catch (err) {
+        throw new Error(invalidRequestError)
+    }
 }
 
 exports.removeBatch = async (context, body) => {
-    const keys = body
-    const tableName = getTableName(context)
-    // context.log('keys:', keys, tableName)
+    const userId = await getUserId(context)
 
-    const entityItems = keys.map(key => toDeleteEntityItem(key))
-    const batch = new azure.TableBatch()
-    entityItems.forEach(entity => batch.deleteEntity(entity))
+    try {
+        const keys = body
+        const tableName = dataBaseTableName + userId
+        // context.log('keys:', keys, tableName)
 
-    await table.executeBatch(tableName, batch)
+        const entityItems = keys.map(key => toDeleteEntityItem(key))
+        const batch = new azure.TableBatch()
+        entityItems.forEach(entity => batch.deleteEntity(entity))
 
-    return ''
+        await table.executeBatch(tableName, batch)
+
+        return ''
+    } catch (err) {
+        throw new Error(invalidRequestError)
+    }
 }
-
-// exports.clearAllData = async (context) => {
-//     const req = context.req
-//     const clientPrincipal = auth.getClientPrincipal(req)
-
-//     const userId = clientPrincipal.userId
-//     if (!userId) {
-//         throw new Error('No user id')
-//     }
-
-//     const tableName = getTableName(context)
-//     await table.deleteTableIfExists(tableName)
-
-//     try {
-//         await table.deleteEntity(usersTableName, toUserItem(clientPrincipal, ''))
-//     } catch (error) {
-//         // No user, so done
-//     }
-// }
-
 
 
 // // // -----------------------------------------------------------------
+
+function getClientId(context) {
+    let clientId = getCookie('clientId', context)
+    if (!clientId) {
+        clientId = makeRandomId()
+    }
+
+    return clientId
+}
+
+async function clearClientSessions(context) {
+    const clientId = getClientId(context)
+
+    // Get all existing sessions for the client
+    let tableQuery = new azure.TableQuery()
+        .where('PartitionKey == ?string? && clientId == ?string?',
+            sessionsPartitionKey, clientId);
+    const items = await table.queryEntities(sessionsTableName, tableQuery, null)
+    const keys = items.map(item => item.RowKey)
+    if (keys.length === 0) {
+        return
+    }
+
+    // Remove these sessions
+    const entityItems = keys.map(key => toSessionEntityItem(key))
+    const batch = new azure.TableBatch()
+    entityItems.forEach(entity => batch.deleteEntity(entity))
+    await table.executeBatch(sessionsTableName, batch)
+}
+
+
+// Set-Cookie: token=sty1z3kz11mpqxjv648mqwlx4ginpt6c; HttpOnly; Secure; Path=/; SameSite=Strict
+async function getUserId(context) {
+    try {
+        const sessionId = getCookie('sessionId', context)
+        if (!sessionId) {
+            throw new Error(authenticateError)
+        }
+
+        const sessionTableEntity = await table.retrieveEntity(sessionsTableName, sessionsPartitionKey, sessionId)
+        return sessionTableEntity.userId
+    } catch (err) {
+        throw new Error(authenticateError)
+    }
+}
+
+function getCookie(name, context) {
+    const cookie = context.req.headers["cookie"]
+    if (!cookie) {
+        return null
+    }
+    // Split cookie string and get all individual name=value pairs in an array
+    var cookieArr = cookie.split(";");
+
+    // Loop through the array elements
+    for (var i = 0; i < cookieArr.length; i++) {
+        var cookiePair = cookieArr[i].split("=");
+
+        // Removing whitespace at the beginning of the cookie name
+        /// and compare it with the given string 
+        if (name == cookiePair[0].trim()) {
+            // Decode the cookie value and return
+            return decodeURIComponent(cookiePair[1]);
+        }
+    }
+
+    // Return null if not found
+    return null;
+}
+
 
 const bcryptGenSalt = (saltRounds) => {
     return new Promise(function (resolve, reject) {
@@ -230,28 +359,27 @@ function makeRandomId() {
 // }
 
 
-function getTableName(context) {
-    const info = clientInfo.getInfo(context)
-    if (!info.token || info.token == null || info.token === 'null') {
-        throw new Error('Invalid token')
-    }
-
-    return baseTableName + info.token
-}
-
-
-function toUserItem(userId, passwordHash, wDek, tableId) {
+function toUserTableEntity(userId, passwordHash, wDek) {
     return {
         RowKey: entGen.String(userId),
         PartitionKey: entGen.String(userPartitionKey),
 
         passwordHash: entGen.String(passwordHash),
-        tableId: entGen.String(tableId),
         wDek: entGen.String(wDek),
     }
 }
 
-function toEntityItem(entity) {
+function toSessionTableEntity(sessionId, userId, clientId) {
+    return {
+        RowKey: entGen.String(sessionId),
+        PartitionKey: entGen.String(sessionsPartitionKey),
+
+        userId: entGen.String(userId),
+        clientId: entGen.String(clientId),
+    }
+}
+
+function toDataTableEntity(entity) {
     const { key, value } = entity
 
     const item = {
@@ -273,7 +401,16 @@ function toDeleteEntityItem(key) {
     return item
 }
 
-function toEntity(item) {
+function toSessionEntityItem(key) {
+    const item = {
+        RowKey: entGen.String(key),
+        PartitionKey: entGen.String(sessionsPartitionKey),
+    }
+
+    return item
+}
+
+function toDataEntity(item) {
     let valueText = '{}'
     if (item.value) {
         valueText = item.value

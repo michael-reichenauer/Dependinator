@@ -15,17 +15,19 @@ const prefix = "ApiMock-";
 
 export class ApiMock implements IApi {
   constructor(private local: ILocalStore = di(ILocalStoreKey)) {}
-
+  logoff(): Promise<Result<void>> {
+    throw new Error("Method not implemented.");
+  }
   config(onOK: () => void, onError: (error: Error) => void): void {
     throw new Error("Method not implemented.");
   }
-  login(user: User): Promise<Result<LoginRsp, Error>> {
+  login(user: User): Promise<Result<LoginRsp>> {
     throw new Error("Method not implemented.");
   }
-  createAccount(createUser: CreateUserReq): Promise<Result<void, Error>> {
+  createAccount(createUser: CreateUserReq): Promise<Result<void>> {
     throw new Error("Method not implemented.");
   }
-  check(): Promise<Result<void, Error>> {
+  check(): Promise<Result<void>> {
     throw new Error("Method not implemented.");
   }
 

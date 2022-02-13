@@ -93,7 +93,7 @@ export class Online implements IOnline, ISyncMode {
 
   public async enableSync(): Promise<Result<void>> {
     this.startProgress();
-    const checkRsp = await this.api.check();
+    const checkRsp = await this.authenticate.check();
 
     if (isError(checkRsp, NoContactError)) {
       // No contact with server,
