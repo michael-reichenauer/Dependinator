@@ -31,12 +31,13 @@ export class Authenticate implements IAuthenticate {
   }
 
   public async createUser(user: User): Promise<Result<void>> {
+    // Expand/derive the password
+    user.password = await this.dataCrypt.expandPassword(user);
+
     const wrappedDek = await this.dataCrypt.generateWrappedDataEncryptionKey(
       user
     );
 
-    // Expand/derive the password
-    user.password = await this.dataCrypt.expandPassword(user);
     return await this.api.createAccount({ user: user, wDek: wrappedDek });
   }
 
