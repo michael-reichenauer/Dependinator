@@ -19,6 +19,7 @@ const saltRounds = 10
 
 const invalidRequestError = 'InvalidRequestError'
 const authenticateError = 'AuthenticateError'
+const emulatorErrorText = "ECONNREFUSED 127.0.0.1:10002"
 const clientIdExpires = new Date(2040, 12, 31) // Persistent for a long time
 const deleteCookieExpires = new Date(1970, 01, 01) // past date to delete cookie
 
@@ -51,6 +52,9 @@ exports.createUser = async (context, data) => {
         await table.createTableIfNotExists(usersTableName)
         await table.insertEntity(usersTableName, userItem)
     } catch (err) {
+        if (err.message.includes(emulatorErrorText)) {
+            throw new Error(invalidRequestError + ': ' + emulatorErrorText)
+        }
         throw new Error(authenticateError)
     }
 }
@@ -107,6 +111,9 @@ exports.login = async (context, data) => {
 
         return { data: { wDek: userTableEntity.wDek }, cookies: cookies }
     } catch (err) {
+        if (err.message.includes(emulatorErrorText)) {
+            throw new Error(invalidRequestError + ': ' + emulatorErrorText)
+        }
         throw new Error(authenticateError)
     }
 }
@@ -145,8 +152,8 @@ exports.logoff = async (context, data) => {
 }
 
 exports.check = async (context, body) => {
-    const userId = await getUserId(context)
-    context.log('userId', userId)
+    // Verify authentication
+    await getUserId(context)
 }
 
 
@@ -274,7 +281,6 @@ async function clearClientSessions(context) {
 }
 
 
-// Set-Cookie: token=sty1z3kz11mpqxjv648mqwlx4ginpt6c; HttpOnly; Secure; Path=/; SameSite=Strict
 async function getUserId(context) {
     try {
         const sessionId = getCookie('sessionId', context)
@@ -285,6 +291,9 @@ async function getUserId(context) {
         const sessionTableEntity = await table.retrieveEntity(sessionsTableName, sessionsPartitionKey, sessionId)
         return sessionTableEntity.userId
     } catch (err) {
+        if (err.message.includes(emulatorErrorText)) {
+            throw new Error(invalidRequestError + ': ' + emulatorErrorText)
+        }
         throw new Error(authenticateError)
     }
 }
