@@ -50,7 +50,7 @@ export interface IStore {
 const rootCanvasId = "root";
 const defaultApplicationDto: ApplicationDto = { diagramInfos: {} };
 const defaultDiagramDto: DiagramDto = { id: "", name: "", canvases: {} };
-const resentOpenedMargin = 30 * 1000; // 30 seconds
+const resentOpenedMargin = 5 * 60 * 1000; // 5 min
 
 @singleton(IStoreKey)
 export class Store implements IStore {
@@ -118,6 +118,7 @@ export class Store implements IStore {
     }
 
     this.db.monitorRemoteEntities([id, applicationKey]);
+    const isSameDiagram = this.currentDiagramId === id;
     this.currentDiagramId = id;
 
     // Tto support most recently used diagram feature, we update accessed time if needed
@@ -126,8 +127,8 @@ export class Store implements IStore {
     const diagramInfo = applicationDto.diagramInfos[id];
 
     console.log(`Access time for ${id} is ${now - diagramInfo.accessed} ms`);
-    if (now - diagramInfo.accessed > resentOpenedMargin) {
-      // Update last lust update time, since it was a while ago
+    if (!isSameDiagram || now - diagramInfo.accessed > resentOpenedMargin) {
+      // Update last lust update time, since it a new diagram or was a while ago
       console.log(`Updating access time for ${id}`);
       applicationDto.diagramInfos[id] = { ...diagramInfo, accessed: now };
       this.db.writeBatch([{ key: applicationKey, value: applicationDto }]);
