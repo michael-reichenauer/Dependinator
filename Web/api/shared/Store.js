@@ -19,6 +19,8 @@ const saltRounds = 10
 
 const invalidRequestError = 'InvalidRequestError'
 const authenticateError = 'AuthenticateError'
+const clientIdExpires = new Date(2040, 12, 31) // Persistent for a long time
+const deleteCookieExpires = new Date(1970, 01, 01) // past date to delete cookie
 
 exports.verifyApiKey = context => {
     const req = context.req
@@ -85,20 +87,19 @@ exports.login = async (context, data) => {
         await table.insertEntity(sessionsTableName, sessionTableEntity)
 
         // Set session id and client id
-        const clientIdExpire = new Date(2030, 12, 31);
         const cookies = [{
             name: 'sessionId',
             value: sessionId,
             path: '/',
             secure: true,
             httpOnly: true,
-            sameSite: "Strict"
+            sameSite: "Strict",
         },
         {
             name: 'clientId',
             value: clientId,
             path: '/',
-            expires: clientIdExpire,
+            expires: clientIdExpires,  // Persistent for a long time
             secure: true,
             httpOnly: true,
             sameSite: "Strict"
@@ -117,13 +118,21 @@ exports.logoff = async (context, data) => {
         await clearClientSessions(context)
 
         const clientId = getClientId(context)
-        const clientIdExpire = new Date(2030, 12, 31);
         const cookies = [
+            {
+                name: 'sessionId',
+                value: '',
+                path: '/',
+                secure: true,
+                httpOnly: true,
+                sameSite: "Strict",
+                expires: deleteCookieExpires,  // Passed date to delete cookie
+            },
             {
                 name: 'clientId',
                 value: clientId,
                 path: '/',
-                expires: clientIdExpire,
+                expires: clientIdExpires,  // Persistent for a long time
                 secure: true,
                 httpOnly: true,
                 sameSite: "Strict"
