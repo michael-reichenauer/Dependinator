@@ -450,7 +450,7 @@ export default class DiagramCanvas {
     this.showTotalDiagram();
   }
 
-  // xxcreateNewDiagram = (): DiagramDto => {
+  // createNewDiagram = (): DiagramDto => {
   //   const diagramDto = this.store.newDiagram();
 
   //   this.canvas.diagramId = diagramDto.id;

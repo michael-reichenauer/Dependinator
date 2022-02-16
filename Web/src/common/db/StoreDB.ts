@@ -166,7 +166,11 @@ export class StoreDB implements IStoreDB {
       return syncResult;
     });
 
-    return await this.syncPromise;
+    const syncResult = await this.syncPromise;
+    if (isError(syncResult)) {
+      console.log("Error", syncResult);
+    }
+    return syncResult;
   }
 
   // Syncs local and remote entities by retrieving changed remote entities and compare with

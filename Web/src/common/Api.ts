@@ -47,6 +47,8 @@ export class CredentialError extends AuthenticateError {}
 export class TokenError extends AuthenticateError {}
 export class NoContactError extends NetworkError {}
 export class RequestError extends NetworkError {}
+export class LocalApiServerError extends NoContactError {}
+export class LocalEmulatorError extends NoContactError {}
 
 export const IApiKey = diKey<IApi>();
 export interface IApi {
@@ -194,13 +196,13 @@ export class Api implements IApi {
       );
 
       if (rsp.status === 500 && rsp.data?.includes("(ECONNREFUSED)")) {
-        return new NoContactError(
+        return new LocalApiServerError(
           "Local api server not started, Start local Azure functions server",
           axiosError
         );
       } else if (rsp.status === 400) {
         if (rsp.data?.includes("ECONNREFUSED 127.0.0.1:10002")) {
-          return new RequestError(
+          return new LocalEmulatorError(
             "Local storage emulator not started. Call 'AzureStorageEmulator.exe start'",
             axiosError
           );

@@ -27,7 +27,7 @@ export class Authenticate implements IAuthenticate {
       return new AuthenticateError();
     }
 
-    await this.api.check();
+    return await this.api.check();
   }
 
   public async createUser(user: User): Promise<Result<void>> {

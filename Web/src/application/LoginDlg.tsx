@@ -22,7 +22,6 @@ const usernameKey = "credential.userName";
 export interface ILoginProvider {
   createAccount(user: User): Promise<Result<void>>;
   login(user: User): Promise<Result<void>>;
-  closed(): void;
 }
 
 export let showLoginDlg: SetAtom<ILoginProvider> = () => {};
@@ -51,7 +50,6 @@ export const LoginDlg: FC = () => {
       open={login !== null}
       onClose={() => {
         setLogin(null);
-        login?.closed();
       }}
     >
       <Box style={{ width: 320, height: 330, padding: 20 }}>
@@ -186,7 +184,6 @@ export const LoginDlg: FC = () => {
                   disabled={isSubmitting}
                   onClick={() => {
                     setLogin(null);
-                    login?.closed();
                   }}
                   style={{ margin: 5, width: 85 }}
                 >

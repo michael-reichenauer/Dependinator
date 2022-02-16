@@ -1,10 +1,16 @@
 import { atom, useAtom } from "jotai";
 import { di, diKey, singleton } from "./../common/di";
-import { useRef } from "react";
 import { SetAtom } from "jotai/core/types";
 import { IAuthenticate, IAuthenticateKey } from "../common/authenticate";
-import { showLoginDlg } from "./LoginDlg";
-import { IApi, User, IApiKey, NoContactError } from "../common/Api";
+import { ILoginProvider, showLoginDlg } from "./LoginDlg";
+import {
+  IApi,
+  User,
+  IApiKey,
+  NoContactError,
+  LocalApiServerError,
+  LocalEmulatorError,
+} from "../common/Api";
 import Result, { isError } from "../common/Result";
 import { AuthenticateError } from "./../common/Api";
 import { setErrorMessage } from "../common/MessageSnackbar";
@@ -14,37 +20,47 @@ import { activityEventName } from "../common/activity";
 import { ILocalStore, ILocalStoreKey } from "./../common/LocalStore";
 import { orDefault } from "./../common/Result";
 
-export enum SyncState {
-  Disabled = "Disabled",
-  Enabled = "Enabled",
-  Error = "Error",
-  Progress = "Trying",
-}
-
-const syncModeAtom = atom(SyncState.Disabled);
-export const useSyncMode = (): SyncState => {
-  const [syncMode, setSyncMode] = useAtom(syncModeAtom);
-  const ref = useRef(di(ISyncModeKey));
-  ref.current.setSetSyncMode(setSyncMode);
-  return syncMode;
-};
-
 export const IOnlineKey = diKey<IOnline>();
 export interface IOnline {
   enableSync(): Promise<Result<void>>;
   disableSync(): void;
 }
 
-const ISyncModeKey = diKey<ISyncMode>();
-interface ISyncMode {
-  setSetSyncMode(setSyncMode: SetAtom<SyncState>): void;
+export enum SyncState {
+  Disabled = "Disabled", // Sync is disabled and inactive
+  Enabled = "Enabled", // Sync is enabled and active and ok
+  Error = "Error", // Sync is enabled, but not ok
+  Progress = "Progress", // Sync is in progress to try to be enabled and ok
 }
 
-@singleton(IOnlineKey, ISyncModeKey)
-export class Online implements IOnline, ISyncMode {
-  private setSyncMode: SetAtom<SyncState> | null = null;
-  private currentState: SyncState = SyncState.Disabled;
-  private isActive: boolean = false;
+// useSyncMode is used by ui read and be notified of current sync state
+const syncModeAtom = atom(SyncState.Disabled);
+let showSyncState: SetAtom<SyncState> = () => {};
+export const useSyncMode = (): SyncState => {
+  const [syncMode, setSyncModeFunc] = useAtom(syncModeAtom);
+  // Ensure that the Online service can set SyncState, so set the setSyncMode function
+  showSyncState = setSyncModeFunc;
+  return syncMode;
+};
+
+// enum CurrentState {
+//   Disabled = "Disabled", // Sync is disabled
+//   Enabled = "Enabled", // Sync is enabled, active and ok
+//   // Inactive = "Inactive", // Sync is enabled, but not active (no user activity for a while)
+//   Error = "Error", // Sync is enabled, but some error
+
+//   // Activating = "Activating", // In progress to try to be enabled from Inactive
+//   Enabling = "Enabling", // In progress to try to be enabled from Disabled
+//   Checking = "Checking", // In progress to try to check sync from Enabled
+//   Reenabling = "Reenabling", // In progress to try to be enabled from Error
+// }
+
+@singleton(IOnlineKey)
+export class Online implements IOnline, ILoginProvider {
+  // private currentState: CurrentState = CurrentState.Disabled;
+  private isEnabled = false;
+  private isError = false;
+
   private firstActivate = true;
 
   constructor(
@@ -59,101 +75,127 @@ export class Online implements IOnline, ISyncMode {
   }
 
   public async createAccount(user: User): Promise<Result<void>> {
-    const createRsp = await this.authenticate.createUser(user);
-    if (isError(createRsp)) {
-      this.stopProgress();
-      setErrorMessage("Failed to create account");
-      return createRsp;
+    try {
+      this.showProgress();
+      const createRsp = await this.authenticate.createUser(user);
+      if (isError(createRsp)) {
+        setErrorMessage("Failed to create account");
+        return createRsp;
+      }
+    } finally {
+      this.hideProgress();
     }
   }
 
   public async login(user: User): Promise<Result<void>> {
-    const loginRsp = await this.authenticate.login(user);
-    this.stopProgress();
+    try {
+      this.showProgress();
+      const loginRsp = await this.authenticate.login(user);
 
-    if (isError(loginRsp)) {
-      let msg = "Failed to login. Internal server error";
-      if (isError(loginRsp, AuthenticateError)) {
-        msg =
-          "Invalid credentials. Please try again with different credentials or create a new account";
-      } else if (isError(loginRsp, NoContactError)) {
-        msg = "No network contact with server. Please retry in a while again.";
+      if (isError(loginRsp)) {
+        setErrorMessage(this.toErrorMessage(loginRsp));
+        return loginRsp;
       }
-      console.log("error msg", loginRsp, msg);
-      setErrorMessage(msg);
-      return loginRsp;
+
+      return await this.enableSync();
+    } finally {
+      this.hideProgress();
     }
-
-    return await this.enableSync();
-  }
-
-  public closed(): void {
-    this.stopProgress();
   }
 
   public async enableSync(): Promise<Result<void>> {
-    this.startProgress();
-    const checkRsp = await this.authenticate.check();
+    try {
+      this.showProgress();
+      const checkRsp = await this.authenticate.check();
 
-    if (isError(checkRsp, NoContactError)) {
-      // No contact with server,
-      this.stopProgress();
-      setErrorMessage(
-        "No network contact with server, please retry in a while again."
-      );
-      return checkRsp;
+      if (checkRsp instanceof NoContactError) {
+        this.isError = true;
+        // No contact with server, cannot enable sync
+        setErrorMessage(this.toErrorMessage(checkRsp));
+        showSyncState(SyncState.Error);
+        return checkRsp;
+      }
+
+      if (checkRsp instanceof AuthenticateError) {
+        // Authentication is needed, showing the login dialog
+        showLoginDlg(this);
+        return checkRsp;
+      }
+
+      if (isError(checkRsp)) {
+        // Som unexpected error (neither contact nor authenticate error)
+        this.isError = true;
+        setErrorMessage(this.toErrorMessage(checkRsp));
+        showSyncState(SyncState.Error);
+        return checkRsp;
+      }
+
+      this.store.configure({
+        isSyncEnabled: true,
+        onSyncChanged: (f: boolean) => this.onSyncChanged(f),
+      });
+
+      const syncResult = await this.store.triggerSync();
+      if (isError(syncResult)) {
+        // This should be very unlikely
+        setErrorMessage(this.toErrorMessage(syncResult));
+        this.authenticate.resetLogin();
+        this.store.configure({ isSyncEnabled: false });
+        this.isError = true;
+        showSyncState(SyncState.Error);
+        return syncResult;
+      }
+
+      // Device sync successfully enabled
+      this.setTargetState(true);
+      this.isEnabled = true;
+      setSuccessMessage("Device sync is OK");
+      showSyncState(SyncState.Enabled);
+    } finally {
+      this.hideProgress();
     }
-
-    if (isError(checkRsp, AuthenticateError)) {
-      showLoginDlg(this);
-      return checkRsp;
-    }
-
-    if (isError(checkRsp)) {
-      // Som unexpected error (neither contact nor authenticate error)
-      this.stopProgress();
-      setErrorMessage("Internal server error.");
-      return checkRsp;
-    }
-
-    this.store.configure({ isSyncEnabled: true });
-    const syncResult = await this.store.triggerSync();
-    if (isError(syncResult)) {
-      // This should be unlikely
-      this.stopProgress();
-      setErrorMessage("Failed to enable sync. Internal server error.");
-
-      this.authenticate.resetLogin();
-      this.store.configure({ isSyncEnabled: false });
-      this.setState(SyncState.Disabled);
-      return syncResult;
-    }
-
-    this.setTargetState(true);
-    this.setState(SyncState.Enabled);
-    setSuccessMessage("Device sync is OK");
   }
 
   public disableSync(): void {
-    this.setState(SyncState.Disabled);
-    this.store.configure({ isSyncEnabled: false });
     this.setTargetState(false);
+    this.isEnabled = false;
+    this.isError = false;
+    this.store.configure({ isSyncEnabled: false });
     this.authenticate.resetLogin();
+    showSyncState(SyncState.Disabled);
+  }
+
+  private onSyncChanged(ok: boolean) {
+    console.log("Sync change", ok);
+    if (!ok) {
+      this.isError = true;
+      showSyncState(SyncState.Error);
+      setErrorMessage("Syncing failed");
+    } else if (this.isEnabled) {
+      this.isError = false;
+      setSuccessMessage("Device sync is OK");
+      showSyncState(SyncState.Enabled);
+    } else {
+      this.isError = false;
+      showSyncState(SyncState.Disabled);
+    }
   }
 
   private onActivityEvent(activity: CustomEvent) {
-    console.log("activity", activity, this.isActive);
-    console.log("state", this.currentState);
-    this.isActive = activity.detail;
-    if (!this.isActive) {
-      // No longer active, disable sync if enabled
-      if (this.currentState !== SyncState.Disabled) {
-        this.store.configure({ isSyncEnabled: false });
-        this.startProgress();
-      }
+    const isActive = activity.detail;
+    console.log(`onActivity: ${isActive}`);
 
+    if (!isActive) {
+      // User no longer active, inactivate sync if enabled
+      if (this.isEnabled) {
+        this.store.configure({ isSyncEnabled: false });
+        this.showProgress();
+      }
       return;
     }
+
+    // Activated
+    this.hideProgress();
 
     if (this.firstActivate) {
       // First activity signal, checking if sync should be enabled automatically
@@ -164,21 +206,10 @@ export class Online implements IOnline, ISyncMode {
       }
     }
 
-    // Activated, lets enable sync if not disabled
-    this.stopProgress();
-    if (this.currentState !== SyncState.Disabled) {
+    if (this.isEnabled) {
       this.store.configure({ isSyncEnabled: true });
       this.store.triggerSync();
     }
-  }
-
-  public setSetSyncMode(setSyncMode: SetAtom<SyncState>): void {
-    this.setSyncMode = setSyncMode;
-  }
-
-  private setState(state: SyncState): void {
-    this.currentState = state;
-    this.setSyncMode?.(this.currentState);
   }
 
   private getTargetState() {
@@ -188,11 +219,34 @@ export class Online implements IOnline, ISyncMode {
     this.localStore.write("syncState", state);
   }
 
-  private startProgress(): void {
-    this.setSyncMode?.(SyncState.Progress);
+  private showProgress(): void {
+    showSyncState(SyncState.Progress);
   }
 
-  private stopProgress(): void {
-    this.setSyncMode?.(this.currentState);
+  private hideProgress(): void {
+    if (!this.isEnabled) {
+      showSyncState(SyncState.Disabled);
+    } else if (this.isError) {
+      showSyncState(SyncState.Error);
+    } else {
+      showSyncState(SyncState.Enabled);
+    }
+  }
+
+  private toErrorMessage(error: Error): string {
+    if (isError(error, LocalApiServerError)) {
+      return "Local Azure functions api server is not started.";
+    }
+    if (isError(error, LocalEmulatorError)) {
+      return "Local Azure storage emulator not started.";
+    }
+    if (isError(error, AuthenticateError)) {
+      return "Invalid credentials. Please try again with different credentials or create a new account";
+    }
+    if (isError(error, NoContactError)) {
+      return "No network contact with server. Please retry again in a while.";
+    }
+
+    return "Internal server error";
   }
 }
