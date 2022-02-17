@@ -54,10 +54,8 @@ const deviseSyncOKMessage = "Device sync is OK";
 
 @singleton(IOnlineKey)
 export class Online implements IOnline, ILoginProvider {
-  // private currentState: CurrentState = CurrentState.Disabled;
   private isEnabled = false;
   private isError = false;
-
   private firstActivate = true;
 
   constructor(
@@ -76,7 +74,7 @@ export class Online implements IOnline, ILoginProvider {
     });
   }
 
-  // Called by LoginDlg when user wants to create an new user account
+  // createAccount called by LoginDlg when user wants to create an new user account
   public async createAccount(user: User): Promise<Result<void>> {
     try {
       this.showProgress();
@@ -91,11 +89,12 @@ export class Online implements IOnline, ILoginProvider {
     }
   }
 
+  // login called by LoginDlg when user wants to login and if successful, also enables device sync
   public async login(user: User): Promise<Result<void>> {
     try {
       this.showProgress();
-      const loginRsp = await this.authenticate.login(user);
 
+      const loginRsp = await this.authenticate.login(user);
       if (isError(loginRsp)) {
         setErrorMessage(this.toErrorMessage(loginRsp));
         return loginRsp;
@@ -108,14 +107,17 @@ export class Online implements IOnline, ILoginProvider {
     }
   }
 
+  // enableSync called when device sync should be enabled
   public async enableSync(): Promise<Result<void>> {
     try {
       this.showProgress();
+
+      // Check connection and authentication with server
       const checkRsp = await this.authenticate.check();
 
       if (checkRsp instanceof NoContactError) {
-        this.isError = true;
         // No contact with server, cannot enable sync
+        this.isError = true;
         setErrorMessage(this.toErrorMessage(checkRsp));
         showSyncState(SyncState.Error);
         return checkRsp;
@@ -128,23 +130,23 @@ export class Online implements IOnline, ILoginProvider {
       }
 
       if (isError(checkRsp)) {
-        // Som unexpected error (neither contact nor authenticate error)
+        // Som other unexpected error (neither contact nor authenticate error)
         this.isError = true;
         setErrorMessage(this.toErrorMessage(checkRsp));
         showSyncState(SyncState.Error);
         return checkRsp;
       }
 
+      // Enable database sync and verify that sync does work
       this.setDatabaseSync(true);
-
       const syncResult = await this.store.triggerSync();
       if (isError(syncResult)) {
-        // This should be very unlikely
+        // Database sync failed, it should nog happen in production but might during development
         setErrorMessage(this.toErrorMessage(syncResult));
-        this.authenticate.resetLogin();
-        this.store.configure({ isSyncEnabled: false });
-        this.isError = true;
         showSyncState(SyncState.Error);
+        this.isError = true;
+        this.setDatabaseSync(false);
+        this.authenticate.resetLogin();
         return syncResult;
       }
 
@@ -159,27 +161,24 @@ export class Online implements IOnline, ILoginProvider {
     }
   }
 
+  // disableSync called when disabling device sync
   public disableSync(): void {
     this.setPersistentIsEnabled(false);
     this.isEnabled = false;
     this.isError = false;
     this.setDatabaseSync(false);
     this.authenticate.resetLogin();
-    showSyncState(SyncState.Disabled);
     clearErrorMessages();
     setInfoMessage("Device sync is disabled");
+    showSyncState(SyncState.Disabled);
   }
 
-  private setDatabaseSync(flag: boolean): void {
-    this.store.configure({ isSyncEnabled: flag });
-  }
-
-  // Called by the StoreDB when ever sync changes to OK or to !OK with some error
+  // onSyncChanged called by the StoreDB whenever sync changes to OK or to !OK with some error
   private onSyncChanged(ok: boolean, error?: Error) {
     if (!this.isEnabled) {
       // Syncing is not enabled, just reset state
-      this.setDatabaseSync(false);
       this.isError = false;
+      this.setDatabaseSync(false);
       showSyncState(SyncState.Disabled);
       return;
     }
@@ -187,18 +186,18 @@ export class Online implements IOnline, ILoginProvider {
     if (!ok) {
       // StoreDB failed syncing, showing error
       this.isError = true;
-      showSyncState(SyncState.Error);
       setErrorMessage(this.toErrorMessage(error));
+      showSyncState(SyncState.Error);
       return;
     }
 
-    // StoreDB now can sync OK, show Success message
+    // StoreDB synced ok, show Success message
     this.isError = false;
     setSuccessMessage(deviseSyncOKMessage);
     showSyncState(SyncState.Enabled);
   }
 
-  // Called whenever user activity changes, e.g. not active or activated page
+  // onActivityEvent called whenever user activity changes, e.g. not active or activated page
   private onActivityEvent(activity: CustomEvent) {
     const isActive = activity.detail;
     console.log(`onActivity: ${isActive}`);
@@ -225,24 +224,32 @@ export class Online implements IOnline, ILoginProvider {
     }
 
     if (this.isEnabled) {
-      // Activate database sync again
+      // Sync is enabled, activate database sync again and trigger a sync now to check
       this.setDatabaseSync(true);
       this.store.triggerSync();
     }
   }
 
+  private setDatabaseSync(flag: boolean): void {
+    this.store.configure({ isSyncEnabled: flag });
+  }
+
+  // getPersistentIsEnabled returns true if sync should be automatically enabled after browser start
   private getPersistentIsEnabled() {
     return orDefault(this.localStore.tryRead(persistentSyncKeyName), false);
   }
 
+  // setPersistentIsEnabled stores if  sync should be automatically enabled after browser start
   private setPersistentIsEnabled(state: boolean) {
     this.localStore.write(persistentSyncKeyName, state);
   }
 
+  // showProgress notifies ui to show progress icon while trying to enable sync ot not active
   private showProgress(): void {
     showSyncState(SyncState.Progress);
   }
 
+  // hideProgress notifies ui to restore sync mode state
   private hideProgress(): void {
     if (!this.isEnabled) {
       showSyncState(SyncState.Disabled);
@@ -253,6 +260,7 @@ export class Online implements IOnline, ILoginProvider {
     }
   }
 
+  // toErrorMessage translate network and sync errors to ui messages
   private toErrorMessage(error?: Error): string {
     if (isError(error, LocalApiServerError)) {
       return "Local Azure functions api server is not started.";
