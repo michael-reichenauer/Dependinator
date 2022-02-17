@@ -28,6 +28,7 @@ export interface IStore {
   triggerSync(): Promise<Result<void>>;
 
   openNewDiagram(): DiagramDto;
+  tryOpenMostResentDiagram(): Promise<Result<DiagramDto>>;
   tryOpenDiagram(diagramId: string): Promise<Result<DiagramDto>>;
 
   setDiagramName(name: string): void;
@@ -50,7 +51,6 @@ export interface IStore {
 const rootCanvasId = "root";
 const defaultApplicationDto: ApplicationDto = { diagramInfos: {} };
 const defaultDiagramDto: DiagramDto = { id: "", name: "", canvases: {} };
-const resentOpenedMargin = 5 * 60 * 1000; // 5 min
 
 @singleton(IStoreKey)
 export class Store implements IStore {
@@ -111,6 +111,23 @@ export class Store implements IStore {
     return diagramDto;
   }
 
+  public async tryOpenMostResentDiagram(): Promise<Result<DiagramDto>> {
+    const id = this.getMostResentDiagramId();
+    if (isError(id)) {
+      return id;
+    }
+
+    const diagramDto = await this.db.tryReadLocalThenRemote<DiagramDto>(id);
+    if (isError(diagramDto)) {
+      return diagramDto;
+    }
+
+    this.db.monitorRemoteEntities([id, applicationKey]);
+    this.currentDiagramId = id;
+
+    return diagramDto;
+  }
+
   public async tryOpenDiagram(id: string): Promise<Result<DiagramDto>> {
     const diagramDto = await this.db.tryReadLocalThenRemote<DiagramDto>(id);
     if (isError(diagramDto)) {
@@ -118,21 +135,14 @@ export class Store implements IStore {
     }
 
     this.db.monitorRemoteEntities([id, applicationKey]);
-    const isSameDiagram = this.currentDiagramId === id;
     this.currentDiagramId = id;
 
-    // Tto support most recently used diagram feature, we update accessed time if needed
+    // Too support most recently used diagram feature, we update accessed time
     const applicationDto = this.getApplicationDto();
     const now = Date.now();
     const diagramInfo = applicationDto.diagramInfos[id];
-
-    console.log(`Access time for ${id} is ${now - diagramInfo.accessed} ms`);
-    if (!isSameDiagram || now - diagramInfo.accessed > resentOpenedMargin) {
-      // Update last lust update time, since it a new diagram or was a while ago
-      console.log(`Updating access time for ${id}`);
-      applicationDto.diagramInfos[id] = { ...diagramInfo, accessed: now };
-      this.db.writeBatch([{ key: applicationKey, value: applicationDto }]);
-    }
+    applicationDto.diagramInfos[id] = { ...diagramInfo, accessed: now };
+    this.db.writeBatch([{ key: applicationKey, value: applicationDto }]);
 
     return diagramDto;
   }

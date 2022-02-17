@@ -410,18 +410,14 @@ export default class DiagramCanvas {
   }
 
   async showRecentDiagramOrNew(): Promise<void> {
-    // Get the last used diagram and show
-    const diagramId = this.store.getMostResentDiagramId();
-    if (isError(diagramId)) {
+    // Try open most resent diagram
+    const diagramDto = await this.store.tryOpenMostResentDiagram();
+    if (isError(diagramDto)) {
+      // No resent diagram, show a new diagram
       this.showNewDiagram();
       return;
     }
 
-    const diagramDto = await this.store.tryOpenDiagram(diagramId);
-    if (isError(diagramDto)) {
-      this.showNewDiagram();
-      return;
-    }
     this.showDiagram(diagramDto);
   }
 
@@ -450,42 +446,9 @@ export default class DiagramCanvas {
     this.showTotalDiagram();
   }
 
-  // createNewDiagram = (): DiagramDto => {
-  //   const diagramDto = this.store.newDiagram();
+  async deactivated() {}
 
-  //   this.canvas.diagramId = diagramDto.id;
-  //   this.canvas.diagramName = diagramDto.diagramInfo.name;
-  //   this.canvas.canvasId = "root";
-
-  //   addDefaultNewDiagram(this.canvas);
-  //   this.save();
-  //   return diagramDto;
-  // };
-
-  async deactivated() {
-    // console.log("Diagram deactivated");
-    //setProgress(true);
-    // this.store.configure(false);
-  }
-
-  async activated() {
-    // console.log("Diagram activated");
-    //setProgress(false);
-    // this.store.configure(true);
-    // try {
-    //   if (!(await this.store.serverHadChanges())) {
-    //     return;
-    //   }
-    //   const diagramId = this.store.getMostResentDiagramId();
-    //   if (!diagramId) {
-    //     throw new Error("No resent diagram");
-    //   }
-    //   this.commandOpenDiagram("", diagramId);
-    // } catch (error) {
-    //   // No resent diagram data, lets create new diagram
-    //   setErrorMessage("Activation error");
-    // }
-  }
+  async activated() {}
 
   getCenter() {
     let x =
@@ -508,13 +471,6 @@ export default class DiagramCanvas {
       this.updateToolbarButtonsStates();
 
       if (e.isPostChangeEvent()) {
-        // console.log('event isPostChangeEvent:', e)
-        // if (e.command?.figure?.parent?.id === this.canvas.mainNodeId) {
-        //     // Update the title whenever the main node changes
-        //     this.callbacks.setTitle(this.getTitle())
-        //     this.store.setDiagramName(this.canvas.diagramId, this.getName())
-        // }
-
         if (e.action === "POST_EXECUTE") {
           // console.log('save')
           this.save();
