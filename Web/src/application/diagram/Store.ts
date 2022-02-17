@@ -114,7 +114,7 @@ export class Store implements IStore {
   public async tryOpenMostResentDiagram(): Promise<Result<DiagramDto>> {
     const id = this.getMostResentDiagramId();
     if (isError(id)) {
-      return id;
+      return id as Error;
     }
 
     const diagramDto = await this.db.tryReadLocalThenRemote<DiagramDto>(id);
