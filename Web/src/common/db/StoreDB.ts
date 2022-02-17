@@ -30,7 +30,7 @@ export interface MergedEntity extends MergeEntity {
 export interface Configuration {
   onConflict: (local: LocalEntity, remote: RemoteEntity) => MergeEntity;
   onRemoteChanged: (keys: string[]) => void;
-  onSyncChanged: (isOK: boolean) => void;
+  onSyncChanged: (isOK: boolean, error?: Error) => void;
   isSyncEnabled: boolean;
 }
 
@@ -166,11 +166,7 @@ export class StoreDB implements IStoreDB {
       return syncResult;
     });
 
-    const syncResult = await this.syncPromise;
-    if (isError(syncResult)) {
-      console.log("Error", syncResult);
-    }
-    return syncResult;
+    return await this.syncPromise;
   }
 
   // Syncs local and remote entities by retrieving changed remote entities and compare with
@@ -202,11 +198,11 @@ export class StoreDB implements IStoreDB {
     const remoteEntities = await this.remoteDB.tryReadBatch(queries);
     if (isError(remoteEntities)) {
       // Failed to connect to remote server
-      this.setSyncStatus(false);
+      this.setSyncStatus(remoteEntities);
       return remoteEntities;
     }
 
-    this.setSyncStatus(true);
+    this.setSyncStatus();
     const localEntities = this.localDB.tryReadBatch(syncKeys);
 
     const remoteToLocal: RemoteEntity[] = [];
@@ -390,11 +386,11 @@ export class StoreDB implements IStoreDB {
 
     const responses = await this.remoteDB.writeBatch(entities);
     if (isError(responses)) {
-      this.setSyncStatus(false);
+      this.setSyncStatus(responses);
       return responses;
     }
 
-    this.setSyncStatus(true);
+    this.setSyncStatus();
 
     // Remember etags for uploaded entities
     const uppLoadedEtags = new Map<string, string>();
@@ -440,10 +436,10 @@ export class StoreDB implements IStoreDB {
 
     const response = await this.remoteDB.removeBatch(removedKeys);
     if (isError(response)) {
-      this.setSyncStatus(false);
+      this.setSyncStatus(response);
       return response;
     }
-    this.setSyncStatus(true);
+    this.setSyncStatus();
 
     this.localDB.confirmRemoved(removedKeys);
     console.log(`Remove confirmed of ${removedKeys.length} entities`);
@@ -459,11 +455,11 @@ export class StoreDB implements IStoreDB {
 
     const remoteEntities = await this.remoteDB.tryReadBatch([{ key: key }]);
     if (isError(remoteEntities)) {
-      this.setSyncStatus(false);
+      this.setSyncStatus(remoteEntities);
       return remoteEntities;
     }
 
-    this.setSyncStatus(true);
+    this.setSyncStatus();
     const remoteEntity = remoteEntities[0];
     if (isError(remoteEntity)) {
       return remoteEntity;
@@ -500,10 +496,11 @@ export class StoreDB implements IStoreDB {
   }
 
   // Signal is connected changes (called when remote connections succeeds or fails)
-  private setSyncStatus(isOK: boolean): void {
-    if (isOK !== this.isSyncOK) {
-      this.isSyncOK = isOK;
-      this.configuration.onSyncChanged(isOK);
+  private setSyncStatus(error?: Error): void {
+    const isOk = !isError(error);
+    if (isOk !== this.isSyncOK) {
+      this.isSyncOK = isOk;
+      this.configuration.onSyncChanged(isOk, error);
     }
   }
 

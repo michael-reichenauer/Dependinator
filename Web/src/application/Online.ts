@@ -13,24 +13,30 @@ import {
 } from "../common/Api";
 import Result, { isError } from "../common/Result";
 import { AuthenticateError } from "./../common/Api";
-import { setErrorMessage } from "../common/MessageSnackbar";
+import {
+  clearErrorMessages,
+  setErrorMessage,
+  setInfoMessage,
+} from "../common/MessageSnackbar";
 import { setSuccessMessage } from "./../common/MessageSnackbar";
 import { IStore, IStoreKey } from "./diagram/Store";
 import { activityEventName } from "../common/activity";
 import { ILocalStore, ILocalStoreKey } from "./../common/LocalStore";
 import { orDefault } from "./../common/Result";
 
+// Online is uses to control if device database sync should and can be enable or not
 export const IOnlineKey = diKey<IOnline>();
 export interface IOnline {
   enableSync(): Promise<Result<void>>;
   disableSync(): void;
 }
 
+// Current sync state to be shown e.g. in ui
 export enum SyncState {
   Disabled = "Disabled", // Sync is disabled and inactive
   Enabled = "Enabled", // Sync is enabled and active and ok
-  Error = "Error", // Sync is enabled, but not ok
-  Progress = "Progress", // Sync is in progress to try to be enabled and ok
+  Error = "Error", // Sync is enabled, but not some error is preventing sync
+  Progress = "Progress", // Progress to try to be enabled and ok, will result in either enabled or error
 }
 
 // useSyncMode is used by ui read and be notified of current sync state
@@ -43,17 +49,8 @@ export const useSyncMode = (): SyncState => {
   return syncMode;
 };
 
-// enum CurrentState {
-//   Disabled = "Disabled", // Sync is disabled
-//   Enabled = "Enabled", // Sync is enabled, active and ok
-//   // Inactive = "Inactive", // Sync is enabled, but not active (no user activity for a while)
-//   Error = "Error", // Sync is enabled, but some error
-
-//   // Activating = "Activating", // In progress to try to be enabled from Inactive
-//   Enabling = "Enabling", // In progress to try to be enabled from Disabled
-//   Checking = "Checking", // In progress to try to check sync from Enabled
-//   Reenabling = "Reenabling", // In progress to try to be enabled from Error
-// }
+const persistentSyncKeyName = "syncState";
+const deviseSyncOKMessage = "Device sync is OK";
 
 @singleton(IOnlineKey)
 export class Online implements IOnline, ILoginProvider {
@@ -69,11 +66,17 @@ export class Online implements IOnline, ILoginProvider {
     private store: IStore = di(IStoreKey),
     private localStore: ILocalStore = di(ILocalStoreKey)
   ) {
+    // Listen for user activate events to control if device sync should be activated or deactivated
     document.addEventListener(activityEventName, (activity: any) =>
       this.onActivityEvent(activity)
     );
+    // Listen for StoreDB sync OK or error when syncing
+    this.store.configure({
+      onSyncChanged: (f: boolean, e?: Error) => this.onSyncChanged(f, e),
+    });
   }
 
+  // Called by LoginDlg when user wants to create an new user account
   public async createAccount(user: User): Promise<Result<void>> {
     try {
       this.showProgress();
@@ -82,6 +85,7 @@ export class Online implements IOnline, ILoginProvider {
         setErrorMessage("Failed to create account");
         return createRsp;
       }
+      clearErrorMessages();
     } finally {
       this.hideProgress();
     }
@@ -97,6 +101,7 @@ export class Online implements IOnline, ILoginProvider {
         return loginRsp;
       }
 
+      // Login successful, enable device sync
       return await this.enableSync();
     } finally {
       this.hideProgress();
@@ -130,10 +135,7 @@ export class Online implements IOnline, ILoginProvider {
         return checkRsp;
       }
 
-      this.store.configure({
-        isSyncEnabled: true,
-        onSyncChanged: (f: boolean) => this.onSyncChanged(f),
-      });
+      this.setDatabaseSync(true);
 
       const syncResult = await this.store.triggerSync();
       if (isError(syncResult)) {
@@ -147,9 +149,10 @@ export class Online implements IOnline, ILoginProvider {
       }
 
       // Device sync successfully enabled
-      this.setTargetState(true);
+      this.setPersistentIsEnabled(true);
       this.isEnabled = true;
-      setSuccessMessage("Device sync is OK");
+      this.isError = false;
+      setSuccessMessage(deviseSyncOKMessage);
       showSyncState(SyncState.Enabled);
     } finally {
       this.hideProgress();
@@ -157,38 +160,53 @@ export class Online implements IOnline, ILoginProvider {
   }
 
   public disableSync(): void {
-    this.setTargetState(false);
+    this.setPersistentIsEnabled(false);
     this.isEnabled = false;
     this.isError = false;
-    this.store.configure({ isSyncEnabled: false });
+    this.setDatabaseSync(false);
     this.authenticate.resetLogin();
     showSyncState(SyncState.Disabled);
+    clearErrorMessages();
+    setInfoMessage("Device sync is disabled");
   }
 
-  private onSyncChanged(ok: boolean) {
-    console.log("Sync change", ok);
-    if (!ok) {
-      this.isError = true;
-      showSyncState(SyncState.Error);
-      setErrorMessage("Syncing failed");
-    } else if (this.isEnabled) {
-      this.isError = false;
-      setSuccessMessage("Device sync is OK");
-      showSyncState(SyncState.Enabled);
-    } else {
+  private setDatabaseSync(flag: boolean): void {
+    this.store.configure({ isSyncEnabled: flag });
+  }
+
+  // Called by the StoreDB when ever sync changes to OK or to !OK with some error
+  private onSyncChanged(ok: boolean, error?: Error) {
+    if (!this.isEnabled) {
+      // Syncing is not enabled, just reset state
+      this.setDatabaseSync(false);
       this.isError = false;
       showSyncState(SyncState.Disabled);
+      return;
     }
+
+    if (!ok) {
+      // StoreDB failed syncing, showing error
+      this.isError = true;
+      showSyncState(SyncState.Error);
+      setErrorMessage(this.toErrorMessage(error));
+      return;
+    }
+
+    // StoreDB now can sync OK, show Success message
+    this.isError = false;
+    setSuccessMessage(deviseSyncOKMessage);
+    showSyncState(SyncState.Enabled);
   }
 
+  // Called whenever user activity changes, e.g. not active or activated page
   private onActivityEvent(activity: CustomEvent) {
     const isActive = activity.detail;
     console.log(`onActivity: ${isActive}`);
 
     if (!isActive) {
-      // User no longer active, inactivate sync if enabled
+      // User no longer active, inactivate database sync if enabled
       if (this.isEnabled) {
-        this.store.configure({ isSyncEnabled: false });
+        this.setDatabaseSync(false);
         this.showProgress();
       }
       return;
@@ -200,23 +218,25 @@ export class Online implements IOnline, ILoginProvider {
     if (this.firstActivate) {
       // First activity signal, checking if sync should be enabled automatically
       this.firstActivate = false;
-      if (this.getTargetState()) {
+      if (this.getPersistentIsEnabled()) {
         setTimeout(() => this.enableSync(), 0);
         return;
       }
     }
 
     if (this.isEnabled) {
-      this.store.configure({ isSyncEnabled: true });
+      // Activate database sync again
+      this.setDatabaseSync(true);
       this.store.triggerSync();
     }
   }
 
-  private getTargetState() {
-    return orDefault(this.localStore.tryRead("syncState"), false);
+  private getPersistentIsEnabled() {
+    return orDefault(this.localStore.tryRead(persistentSyncKeyName), false);
   }
-  private setTargetState(state: boolean) {
-    this.localStore.write("syncState", state);
+
+  private setPersistentIsEnabled(state: boolean) {
+    this.localStore.write(persistentSyncKeyName, state);
   }
 
   private showProgress(): void {
@@ -233,7 +253,7 @@ export class Online implements IOnline, ILoginProvider {
     }
   }
 
-  private toErrorMessage(error: Error): string {
+  private toErrorMessage(error?: Error): string {
     if (isError(error, LocalApiServerError)) {
       return "Local Azure functions api server is not started.";
     }

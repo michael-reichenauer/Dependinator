@@ -18,7 +18,7 @@ import { RemoteEntity } from "../../common/db/RemoteDB";
 
 export interface Configuration {
   onRemoteChanged: (keys: string[]) => void;
-  onSyncChanged: (isOK: boolean) => void;
+  onSyncChanged: (isOK: boolean, error?: Error) => void;
   isSyncEnabled: boolean;
 }
 
