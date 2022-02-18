@@ -84,6 +84,9 @@ export default class DiagramCanvas {
     PubSub.subscribe("canvas.TuneSelected", (_, data) =>
       this.commandTuneSelected(data.x, data.y)
     );
+    PubSub.subscribe("canvas.ShowContextMenu", (_, data) =>
+      this.commandShowContextMenu(data)
+    );
     PubSub.subscribe("canvas.PopInnerDiagram", this.commandPopFromInnerDiagram);
 
     PubSub.subscribe("canvas.SetEditMode", (_, isEditMode) =>
@@ -284,7 +287,6 @@ export default class DiagramCanvas {
   };
 
   commandTuneSelected = (x: number, y: number) => {
-    console.log("tune");
     // Get target figure or use canvas as target
     let target = this.canvas.getSelection().primary;
 
@@ -295,6 +297,11 @@ export default class DiagramCanvas {
 
     const menuItems = target.getContextMenuItems();
     this.callbacks.setContextMenu({ items: menuItems, x: x, y: y });
+  };
+
+  commandShowContextMenu = (menu: any) => {
+    console.log("commandShowContextMenu", menu);
+    this.callbacks.setContextMenu(menu);
   };
 
   commandPopFromInnerDiagram = () => {

@@ -139,9 +139,8 @@ export class Store implements IStore {
 
     // Too support most recently used diagram feature, we update accessed time
     const applicationDto = this.getApplicationDto();
-    const now = Date.now();
     const diagramInfo = applicationDto.diagramInfos[id];
-    applicationDto.diagramInfos[id] = { ...diagramInfo, accessed: now };
+    applicationDto.diagramInfos[id] = { ...diagramInfo, accessed: Date.now() };
     this.db.writeBatch([{ key: applicationKey, value: applicationDto }]);
 
     return diagramDto;

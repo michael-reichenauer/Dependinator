@@ -13,6 +13,7 @@ import NodeGroup from "./NodeGroup";
 import NodeSelectionFeedbackPolicy from "./NodeSelectionFeedbackPolicy";
 import { Canvas2d, Figure2d } from "./draw2dTypes";
 import { FigureDto } from "./StoreDtos";
+import { NodeToolbar } from "./NodeToolbar";
 
 const defaultIconKey = "Azure/General/Module";
 
@@ -106,8 +107,11 @@ export default class Node extends draw2d.shape.node.Between {
     this.on("dblclick", (_s: any, _e: any) => {});
     this.on("resize", (_s: any, _e: any) => this.handleResize());
 
-    this.on("select", () => this.showConfig());
-    this.on("unselect", () => this.hideConfig());
+    const nodeToolBar = new NodeToolbar(this, [
+      { icon: draw2d.shape.icon.Run, menu: () => this.getConfigMenuItems() },
+    ]);
+    this.on("select", () => nodeToolBar.showConfig());
+    this.on("unselect", () => nodeToolBar.hideConfig());
 
     // Adjust selection handle sizes
     this.installEditPolicy(new NodeSelectionFeedbackPolicy());
@@ -145,26 +149,19 @@ export default class Node extends draw2d.shape.node.Between {
     };
   }
 
-  getContextMenuItems(_x: number, _y: number) {
+  getConfigMenuItems() {
     //const hasDiagramIcon = this.diagramIcon != null
 
     return [
       menuItem("To front", () => this.moveToFront()),
       menuItem("To back", () => this.moveToBack()),
       menuItem("Edit label ...", () => this.nameLabel.editor.start(this)),
-      // menuParentItem('Inner diagram', [
-      //     menuItem('Show', () => this.showInnerDiagram(), this.innerDiagram == null, hasDiagramIcon),
-      //     menuItem('Hide (click)', () => this.hideInnerDiagram(), this.innerDiagram != null, hasDiagramIcon),
-      //     menuItem('Edit (dbl-click)', () => this.editInnerDiagram(), true, hasDiagramIcon),
-      // ], true, hasDiagramIcon),
-
       menuItem("Edit icon ...", () =>
         PubSub.publish("nodes.showDialog", {
           add: false,
           action: (iconKey: string) => this.changeIcon(iconKey),
         })
       ),
-      //  menuItem('Set default size', () => this.setDefaultSize()),
       menuItem(
         "Delete node",
         () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)),
@@ -374,45 +371,6 @@ export default class Node extends draw2d.shape.node.Between {
     this.add(icon, new NodeIconLocator());
   }
 
-  showConfigMenu = (): void => {
-    const { x, y } = this.canvas.fromCanvasToDocumentCoordinate(
-      this.x + this.getWidth(),
-      this.y
-    );
-    PubSub.publish("canvas.TuneSelected", { x: x - 20, y: y - 20 });
-  };
-
-  showConfig(): void {
-    const iconColor = Colors.getNodeFontColor(this.colorName);
-    this.configIcon = new draw2d.shape.icon.Run({
-      width: 16,
-      height: 16,
-      color: iconColor,
-      bgColor: Colors.buttonBackground,
-    });
-    //this.configIcon.on("click", () => { console.log('click') })
-
-    this.configBkr = new draw2d.shape.basic.Rectangle({
-      bgColor: Colors.buttonBackground,
-      alpha: 1,
-      width: 20,
-      height: 20,
-      radius: 3,
-      stroke: 0.1,
-    });
-    this.configBkr.on("click", this.showConfigMenu);
-
-    this.add(this.configBkr, new ConfigBackgroundLocator());
-    this.add(this.configIcon, new ConfigIconLocator());
-    this.repaint();
-  }
-
-  hideConfig(): void {
-    this.remove(this.configIcon);
-    this.remove(this.configBkr);
-    this.repaint();
-  }
-
   addInnerDiagramIcon(): void {
     const iconColor = Colors.getNodeFontColor(this.colorName);
     this.diagramIcon = new draw2d.shape.icon.Diagram({
@@ -478,19 +436,19 @@ class InnerDiagramIconLocator extends draw2d.layout.locator.PortLocator {
   }
 }
 
-class ConfigIconLocator extends draw2d.layout.locator.Locator {
-  relocate(_index: number, figure: Figure2d) {
-    const parent = figure.getParent();
-    figure.setPosition(parent.getWidth() - 11, -28);
-  }
-}
+// class ConfigIconLocator extends draw2d.layout.locator.Locator {
+//   relocate(_index: number, figure: Figure2d) {
+//     const parent = figure.getParent();
+//     figure.setPosition(parent.getWidth() - 11, -28);
+//   }
+// }
 
-class ConfigBackgroundLocator extends draw2d.layout.locator.Locator {
-  relocate(_index: number, figure: Figure2d) {
-    const parent = figure.getParent();
-    figure.setPosition(parent.getWidth() - 13, -30);
-  }
-}
+// class ConfigBackgroundLocator extends draw2d.layout.locator.Locator {
+//   relocate(_index: number, figure: Figure2d) {
+//     const parent = figure.getParent();
+//     figure.setPosition(parent.getWidth() - 13, -30);
+//   }
+// }
 
 // class InnerDiagramLocator extends draw2d.layout.locator.Locator {
 //   relocate(_index: number, target: Figure2d) {
