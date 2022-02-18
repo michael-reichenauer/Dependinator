@@ -19,10 +19,9 @@ import SyncDisabledIcon from "@material-ui/icons/SyncDisabled";
 import HourglassEmptyIcon from "@material-ui/icons/HourglassEmpty";
 import UndoIcon from "@material-ui/icons/Undo";
 import RedoIcon from "@material-ui/icons/Redo";
-import TuneIcon from "@material-ui/icons/Tune";
 import FilterCenterFocusIcon from "@material-ui/icons/FilterCenterFocus";
 
-import { useCanRedo, useCanUndo, useSelectMode, useTitle } from "./Diagram";
+import { useCanRedo, useCanUndo, useTitle } from "./Diagram";
 import { IOnlineKey, SyncState, useSyncMode } from "./Online";
 import { showPrompt } from "./../common/PromptDialog";
 import { di } from "../common/di";
@@ -35,7 +34,6 @@ export const ApplicationBar: FC<ApplicationBarProps> = ({ height }) => {
   const onlineRef = useRef(di(IOnlineKey));
   const classes = useAppBarStyles();
   const [titleText] = useTitle();
-  const [selectMode] = useSelectMode();
   const syncMode = useSyncMode();
   const [canUndo] = useCanUndo();
   const [canRedo] = useCanRedo();

@@ -1,6 +1,6 @@
 import draw2d from "draw2d";
 import cuid from "cuid";
-import { menuItem, menuParentItem } from "../../common/Menus";
+import { menuItem } from "../../common/Menus";
 import Colors from "./Colors";
 import { icons } from "../../common/icons";
 import CommandChangeIcon from "./CommandChangeIcon";
@@ -143,12 +143,6 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
   }
 
   getConfigMenuItems() {
-    const colorItems = Colors.backgroundColorNames().map((name) => {
-      return menuItem(name, () =>
-        this.canvas.runCmd(new CommandChangeColor(this, name))
-      );
-    });
-
     const stickyText =
       this.getAboardFigures === this.getAboardFiguresOrg
         ? "Disable sticky sub items"
