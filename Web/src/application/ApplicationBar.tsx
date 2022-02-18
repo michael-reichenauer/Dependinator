@@ -114,14 +114,6 @@ export const ApplicationBar: FC<ApplicationBarProps> = ({ height }) => {
             PubSub.publish("nodes.showDialog", { add: true });
           }}
         />
-        <Button
-          tooltip="Tune selected item"
-          disabled={!selectMode}
-          icon={<TuneIcon className={styleAlways(!selectMode)} />}
-          onClick={(e) => {
-            PubSub.publish("canvas.TuneSelected", { x: e.pageX - 20, y: 50 });
-          }}
-        />
 
         <Button
           tooltip="Scroll and zoom to show all of the diagram"

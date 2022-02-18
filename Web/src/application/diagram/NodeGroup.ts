@@ -9,6 +9,7 @@ import { LabelEditor } from "./LabelEditor";
 import CommandChangeColor from "./CommandChangeColor";
 import { Canvas2d, Figure2d } from "./draw2dTypes";
 import { FigureDto } from "./StoreDtos";
+import { NodeToolbar } from "./NodeToolbar";
 
 const defaultOptions = () => {
   return {
@@ -68,8 +69,15 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
     this.on("dblclick", (_s: any, _e: any) => {});
     this.on("resize", (_s: any, _e: any) => {});
 
-    this.on("select", () => this.showConfig());
-    this.on("unselect", () => this.hideConfig());
+    const nodeToolBar = new NodeToolbar(this, [
+      { icon: draw2d.shape.icon.Run, menu: () => this.getConfigMenuItems() },
+      {
+        icon: draw2d.shape.icon.Pallete,
+        menu: () => this.getPalleteMenuItems(),
+      },
+    ]);
+    this.on("select", () => nodeToolBar.showConfig());
+    this.on("unselect", () => nodeToolBar.hideConfig());
 
     // Adjust selection handle sizes
     const selectionPolicy = this.editPolicy.find(
@@ -134,7 +142,7 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
     this.canvas.runCmd(new CommandChangeIcon(this, iconKey));
   }
 
-  getContextMenuItems(_x: number, _y: number) {
+  getConfigMenuItems() {
     const colorItems = Colors.backgroundColorNames().map((name) => {
       return menuItem(name, () =>
         this.canvas.runCmd(new CommandChangeColor(this, name))
@@ -156,7 +164,6 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
           action: (iconKey: string) => this.changeIcon(iconKey),
         })
       ),
-      menuParentItem("Set background color", colorItems),
       menuItem(stickyText, () => this.toggleStickySubItems()),
       menuItem(
         "Delete node",
@@ -164,6 +171,14 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
         this.canDelete
       ),
     ];
+  }
+
+  getPalleteMenuItems() {
+    return Colors.backgroundColorNames().map((name) => {
+      return menuItem(name, () =>
+        this.canvas.runCmd(new CommandChangeColor(this, name))
+      );
+    });
   }
 
   moveToBack() {
