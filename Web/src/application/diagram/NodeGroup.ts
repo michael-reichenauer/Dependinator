@@ -7,7 +7,7 @@ import CommandChangeIcon from "./CommandChangeIcon";
 import PubSub from "pubsub-js";
 import { LabelEditor } from "./LabelEditor";
 import CommandChangeColor from "./CommandChangeColor";
-import { Canvas2d, Figure2d } from "./draw2dTypes";
+import { Canvas2d, Figure2d, Point } from "./draw2dTypes";
 import { FigureDto } from "./StoreDtos";
 import { NodeToolbar } from "./NodeToolbar";
 
@@ -24,7 +24,6 @@ const defaultOptions = () => {
 };
 
 export default class NodeGroup extends draw2d.shape.composite.Raft {
-  //export default class NodeGroup extends draw2d.shape.basic.Rectangle {
   static nodeType = "nodeGroup";
   static defaultWidth = 300;
   static defaultHeight = 200;
@@ -33,6 +32,7 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
   nameLabel: Figure2d;
   descriptionLabel: Figure2d;
   colorName: string;
+  getAboardFiguresOrg: boolean;
 
   getName = () => this.nameLabel?.text ?? "";
   getDescription = () => this.descriptionLabel?.text ?? "";
@@ -73,11 +73,11 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
       { icon: draw2d.shape.icon.Run, menu: () => this.getConfigMenuItems() },
       {
         icon: draw2d.shape.icon.Pallete,
-        menu: () => this.getPalleteMenuItems(),
+        menu: () => this.getBackgroundColorMenuItems(),
       },
     ]);
-    this.on("select", () => nodeToolBar.showConfig());
-    this.on("unselect", () => nodeToolBar.hideConfig());
+    this.on("select", () => nodeToolBar.show());
+    this.on("unselect", () => nodeToolBar.hide());
 
     // Adjust selection handle sizes
     const selectionPolicy = this.editPolicy.find(
@@ -129,7 +129,7 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
     };
   }
 
-  toggleStickySubItems() {
+  toggleGroupSubItems() {
     if (this.getAboardFigures === this.getAboardFiguresOrg) {
       this.getAboardFigures = () => new draw2d.util.ArrayList();
     } else {
@@ -143,10 +143,11 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
   }
 
   getConfigMenuItems() {
-    const stickyText =
+    const groupText =
       this.getAboardFigures === this.getAboardFiguresOrg
-        ? "Disable sticky sub items"
-        : "Enable sticky sub items";
+        ? "Ungroup contained items"
+        : "Group contained items";
+
     return [
       menuItem("To front", () => this.moveToFront()),
       menuItem("To back", () => this.moveToBack()),
@@ -158,7 +159,7 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
           action: (iconKey: string) => this.changeIcon(iconKey),
         })
       ),
-      menuItem(stickyText, () => this.toggleStickySubItems()),
+      menuItem(groupText, () => this.toggleGroupSubItems()),
       menuItem(
         "Delete node",
         () => this.canvas.runCmd(new draw2d.command.CommandDelete(this)),
@@ -167,12 +168,16 @@ export default class NodeGroup extends draw2d.shape.composite.Raft {
     ];
   }
 
-  getPalleteMenuItems() {
+  getBackgroundColorMenuItems() {
     return Colors.backgroundColorNames().map((name) => {
       return menuItem(name, () =>
         this.canvas.runCmd(new CommandChangeColor(this, name))
       );
     });
+  }
+
+  public getToolbarLocation(): Point {
+    return { x: 0, y: -35 };
   }
 
   moveToBack() {

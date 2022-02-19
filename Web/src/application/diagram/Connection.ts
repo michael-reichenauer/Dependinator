@@ -1,6 +1,5 @@
 import draw2d from "draw2d";
 import cuid from "cuid";
-import PubSub from "pubsub-js";
 import { menuItem } from "../../common/Menus";
 import Colors from "./Colors";
 import Label from "./Label";
@@ -8,6 +7,7 @@ import { LabelEditor } from "./LabelEditor";
 import { Figure2d, Point } from "./draw2dTypes";
 import Canvas from "./Canvas";
 import { ConnectionDto, VertexDto } from "./StoreDtos";
+import { NodeToolbar } from "./NodeToolbar";
 
 const defaultTextWidth = 230;
 
@@ -41,8 +41,12 @@ export default class Connection extends draw2d.Connection {
     }
 
     this.on("contextmenu", () => {});
-    this.on("select", () => this.showConfig());
-    this.on("unselect", () => this.hideConfig());
+
+    const nodeToolBar = new NodeToolbar(this, [
+      { icon: draw2d.shape.icon.Run, menu: () => this.getConfigMenuItems() },
+    ]);
+    this.on("select", () => nodeToolBar.show());
+    this.on("unselect", () => nodeToolBar.hide());
 
     this.setColor(Colors.connectionColor);
     const cr =
@@ -121,6 +125,30 @@ export default class Connection extends draw2d.Connection {
     return c;
   }
 
+  public getToolbarLocation(): Point {
+    let points = this.getVertices();
+
+    let segmentIndex = Math.floor((points.getSize() - 2) / 2);
+    if (points.getSize() <= segmentIndex + 1) {
+      return { x: 0, y: 0 };
+    }
+
+    let p1 = points.get(segmentIndex);
+    let p2 = points.get(segmentIndex + 1);
+
+    const width = 23;
+    const x = ((p2.x - p1.x) / 2 + p1.x - width / 2) | 0;
+    const y = ((p2.y - p1.y) / 2 + p1.y - 20 / 2) | 0;
+
+    let xOffset = 0;
+    let yOffset = -16;
+    if (this.getName() !== "" && this.getDescription() !== "") {
+      yOffset = -23;
+    }
+
+    return { x: x + xOffset, y: y + yOffset };
+  }
+
   addLabels(name: string, description: string): void {
     const nameBackground = !name ? "none" : Colors.canvasBackground;
     const descriptionBackground = !description
@@ -159,7 +187,7 @@ export default class Connection extends draw2d.Connection {
     this.targetDecorator = arrow;
   }
 
-  getContextMenuItems() {
+  getConfigMenuItems() {
     return [
       menuItem("To front", () => this.toFront()),
       menuItem("To back", () => this.toBack()),
@@ -201,45 +229,45 @@ export default class Connection extends draw2d.Connection {
     this.add(this.configIcon, new ConfigIconLocator());
   }
 
-  showConfigMenu = () => {
-    const f = this.configIcon;
-    const { x, y } = this.canvas.fromCanvasToDocumentCoordinate(
-      f.x + f.getWidth(),
-      f.y
-    );
-    PubSub.publish("canvas.TuneSelected", { x: x - 20, y: y + 5 });
-  };
+  // showConfigMenu = () => {
+  //   const f = this.configIcon;
+  //   const { x, y } = this.canvas.fromCanvasToDocumentCoordinate(
+  //     f.x + f.getWidth(),
+  //     f.y
+  //   );
+  //   PubSub.publish("canvas.TuneSelected", { x: x - 20, y: y + 5 });
+  // };
 
-  showConfig(): void {
-    const iconColor = Colors.getNodeFontColor(this.colorName);
-    this.configIcon = new draw2d.shape.icon.Run({
-      width: 16,
-      height: 16,
-      color: iconColor,
-      bgColor: "none",
-    });
-    //this.configIcon.on("click", () => { console.log('click') })
+  // showConfig(): void {
+  //   const iconColor = Colors.getNodeFontColor(this.colorName);
+  //   this.configIcon = new draw2d.shape.icon.Run({
+  //     width: 16,
+  //     height: 16,
+  //     color: iconColor,
+  //     bgColor: "none",
+  //   });
+  //   //this.configIcon.on("click", () => { console.log('click') })
 
-    this.configBkr = new draw2d.shape.basic.Rectangle({
-      bgColor: Colors.buttonBackground,
-      alpha: 0.7,
-      width: 20,
-      height: 20,
-      radius: 3,
-      stroke: 0.1,
-    });
-    this.configBkr.on("click", this.showConfigMenu);
+  //   this.configBkr = new draw2d.shape.basic.Rectangle({
+  //     bgColor: Colors.buttonBackground,
+  //     alpha: 0.7,
+  //     width: 20,
+  //     height: 20,
+  //     radius: 3,
+  //     stroke: 0.1,
+  //   });
+  //   this.configBkr.on("click", this.showConfigMenu);
 
-    this.add(this.configBkr, new ConfigBackgroundLocator());
-    this.add(this.configIcon, new ConfigIconLocator());
-    this.repaint();
-  }
+  //   this.add(this.configBkr, new ConfigBackgroundLocator());
+  //   this.add(this.configIcon, new ConfigIconLocator());
+  //   this.repaint();
+  // }
 
-  hideConfig(): void {
-    this.remove(this.configBkr);
-    this.remove(this.configIcon);
-    this.repaint();
-  }
+  // hideConfig(): void {
+  //   this.remove(this.configBkr);
+  //   this.remove(this.configIcon);
+  //   this.repaint();
+  // }
 
   addSegmentAt(x: number, y: number): void {
     const cp = this.getCanvas().fromDocumentToCanvasCoordinate(x, y);

@@ -1,12 +1,12 @@
 import draw2d from "draw2d";
 import PubSub from "pubsub-js";
 import Colors from "./Colors";
-
-import { Figure2d, Icon2d, Rectangle2d } from "./draw2dTypes";
+import { Figure2d, Icon2d } from "./draw2dTypes";
+import Connection from "./Connection";
 
 export interface INodeToolbar {
-  showConfig(): void;
-  hideConfig(): void;
+  show(): void;
+  hide(): void;
 }
 
 export interface Button {
@@ -22,24 +22,34 @@ interface IconButton {
 export class NodeToolbar implements INodeToolbar {
   IconButtons: IconButton[] = [];
 
-  constructor(private node: Rectangle2d, private buttons: Button[]) {}
+  constructor(private figure: Figure2d, private buttons: Button[]) {}
 
-  public showConfig(): void {
+  public show(): void {
     this.IconButtons = this.buttons.map((button, index) =>
       this.toIconButton(button, index)
     );
 
     this.IconButtons.forEach((buttonIcon) => {
-      this.node.add(buttonIcon.button, buttonIcon.button.locator);
-      this.node.add(buttonIcon.icon, buttonIcon.icon.locator);
+      this.figure.add(buttonIcon.button, buttonIcon.button.locator);
+      this.figure.add(buttonIcon.icon, buttonIcon.icon.locator);
     });
 
-    this.node.repaint();
+    this.figure.repaint();
+  }
+
+  public hide(): void {
+    this.IconButtons.forEach((buttonIcon) => {
+      this.figure.remove(buttonIcon.icon);
+      this.figure.remove(buttonIcon.button);
+    });
+    this.IconButtons = [];
+
+    this.figure.repaint();
   }
 
   private toIconButton(button: Button, index: number): IconButton {
     const x = index * 23;
-    const y = -35;
+    const y = 0;
 
     const buttonRect = new draw2d.shape.basic.Rectangle({
       bgColor: Colors.buttonBackground,
@@ -49,8 +59,10 @@ export class NodeToolbar implements INodeToolbar {
       radius: 3,
       stroke: 0.1,
     });
-    buttonRect.locator = new IconLocator(x, y);
-    buttonRect.on("click", () => this.showMenu(x + 6, y + 5, button.menu));
+    buttonRect.locator = this.makeLocator(x, y);
+    buttonRect.on("click", () =>
+      this.showButtonMenu(x + 6, y + 5, button.menu)
+    );
 
     const icon = new button.icon({
       width: 16,
@@ -58,26 +70,25 @@ export class NodeToolbar implements INodeToolbar {
       color: Colors.button,
       bgColor: Colors.buttonBackground,
     });
-    icon.locator = new IconLocator(x + 2, y + 2);
+    icon.locator = this.makeLocator(x + 2, y + 2);
 
     return { button: buttonRect, icon: icon };
   }
 
-  public hideConfig(): void {
-    this.IconButtons.forEach((buttonIcon) => {
-      this.node.remove(buttonIcon.icon);
-      this.node.remove(buttonIcon.button);
-    });
-    this.IconButtons = [];
+  private makeLocator(x: number, y: number) {
+    if (this.figure instanceof Connection) {
+      return new ConnectionButtonLocator(x, y);
+    }
 
-    this.node.repaint();
+    return new NodeButtonLocator(x, y);
   }
 
-  private showMenu(x: number, y: number, menu: () => any): void {
-    const cx = this.node.x + x;
-    const cy = this.node.y + y;
+  private showButtonMenu(x: number, y: number, menu: () => any): void {
+    const tp = this.figure.getToolbarLocation();
 
-    const cc = this.node.canvas.fromCanvasToDocumentCoordinate(cx, cy);
+    const cx = this.figure.x + tp.x + x;
+    const cy = this.figure.y + tp.y + y;
+    const cc = this.figure.canvas.fromCanvasToDocumentCoordinate(cx, cy);
 
     const menuItems = menu();
     PubSub.publish("canvas.ShowContextMenu", {
@@ -88,11 +99,22 @@ export class NodeToolbar implements INodeToolbar {
   }
 }
 
-class IconLocator extends draw2d.layout.locator.Locator {
-  constructor(public x: number, public y: number) {
+class NodeButtonLocator extends draw2d.layout.locator.Locator {
+  constructor(private ox: number, private oy: number) {
     super();
   }
-  relocate(_index: number, figure: Figure2d) {
-    figure.setPosition(this.x, this.y);
+  relocate(_index: number, target: Figure2d) {
+    const { x, y } = target.getParent().getToolbarLocation();
+    target.setPosition(x + this.ox, y + this.oy);
+  }
+}
+
+class ConnectionButtonLocator extends draw2d.layout.locator.ConnectionLocator {
+  constructor(private ox: number, private oy: number) {
+    super();
+  }
+  relocate(_index: number, target: Figure2d) {
+    const { x, y } = target.getParent().getToolbarLocation();
+    target.setPosition(x + this.ox, y + this.oy);
   }
 }

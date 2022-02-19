@@ -11,7 +11,7 @@ import { icons } from "../../common/icons";
 import { LabelEditor } from "./LabelEditor";
 import NodeGroup from "./NodeGroup";
 import NodeSelectionFeedbackPolicy from "./NodeSelectionFeedbackPolicy";
-import { Canvas2d, Figure2d } from "./draw2dTypes";
+import { Canvas2d, Figure2d, Point } from "./draw2dTypes";
 import { FigureDto } from "./StoreDtos";
 import { NodeToolbar } from "./NodeToolbar";
 
@@ -110,11 +110,15 @@ export default class Node extends draw2d.shape.node.Between {
     const nodeToolBar = new NodeToolbar(this, [
       { icon: draw2d.shape.icon.Run, menu: () => this.getConfigMenuItems() },
     ]);
-    this.on("select", () => nodeToolBar.showConfig());
-    this.on("unselect", () => nodeToolBar.hideConfig());
+    this.on("select", () => nodeToolBar.show());
+    this.on("unselect", () => nodeToolBar.hide());
 
     // Adjust selection handle sizes
     this.installEditPolicy(new NodeSelectionFeedbackPolicy());
+  }
+
+  public getToolbarLocation(): Point {
+    return { x: 0, y: -35 };
   }
 
   setCanvas(canvas: Canvas2d) {
