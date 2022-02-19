@@ -19,6 +19,7 @@ interface IconButton {
   icon: Figure2d;
 }
 
+//
 export class NodeToolbar implements INodeToolbar {
   IconButtons: IconButton[] = [];
 

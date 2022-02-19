@@ -300,7 +300,6 @@ export default class DiagramCanvas {
   };
 
   commandShowContextMenu = (menu: any) => {
-    console.log("commandShowContextMenu", menu);
     this.callbacks.setContextMenu(menu);
   };
 
