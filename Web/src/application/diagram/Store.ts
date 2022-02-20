@@ -131,6 +131,7 @@ export class Store implements IStore {
   public async tryOpenDiagram(id: string): Promise<Result<DiagramDto>> {
     const diagramDto = await this.db.tryReadLocalThenRemote<DiagramDto>(id);
     if (isError(diagramDto)) {
+      this.deleteDiagram(id);
       return diagramDto;
     }
 
