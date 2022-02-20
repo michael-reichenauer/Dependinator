@@ -203,11 +203,12 @@ class Icons {
 
     // Azure icons have a pattern like ./OSA/osa_cloud.svg
     const parts = path.split("/").slice(1);
-    const name = parts[1]
+    let name = parts[1]
       .slice(4) // Skip prefix e.g. 'osa_'
       .slice(0, -4) // Skip sufic e.g. '.svg'
       .replaceAll("-", " ")
       .replaceAll("_", " ");
+    name = toTitleCase(name);
     const root = "OSA";
     const group = "General";
     const fullName = `${root}/${group}/${name}`;
