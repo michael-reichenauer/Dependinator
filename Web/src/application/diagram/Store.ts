@@ -15,6 +15,7 @@ import {
 } from "./StoreDtos";
 import { LocalEntity } from "../../common/db/LocalDB";
 import { RemoteEntity } from "../../common/db/RemoteDB";
+import { NetworkError } from "../../common/Api";
 
 export interface Configuration {
   onRemoteChanged: (keys: string[]) => void;
@@ -131,7 +132,6 @@ export class Store implements IStore {
   public async tryOpenDiagram(id: string): Promise<Result<DiagramDto>> {
     const diagramDto = await this.db.tryReadLocalThenRemote<DiagramDto>(id);
     if (isError(diagramDto)) {
-      this.deleteDiagram(id);
       return diagramDto;
     }
 
