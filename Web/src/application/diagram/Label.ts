@@ -9,6 +9,11 @@ export default class Label extends draw2d.shape.basic.Text {
     this.textWidth = textWidth;
   }
 
+  attr(name: any, value: any) {
+    super.attr(name, value);
+    this.cachedWrappedAttr = null;
+  }
+
   calculateTextAttr(): any {
     let attr: any = {
       "text-anchor": "middle",
