@@ -24,11 +24,13 @@ import {
 import { FixedSizeList } from "react-window";
 import { useLocalStorage } from "../common/useLocalStorage";
 import CheckIcon from "@material-ui/icons/Check";
+import CheckBoxOutlineBlank from "@material-ui/icons/CheckBoxOutlineBlank";
 import KeyboardArrowDownIcon from "@material-ui/icons/KeyboardArrowDown";
 
 const subItemsSize = 12;
 const mruSize = 8;
 const iconsSize = 30;
+const selectIconSize = 20;
 const subItemsHeight = iconsSize + 6;
 const allIcons = icons.getAllIcons();
 
@@ -210,18 +212,60 @@ export default function Nodes() {
           <MenuItem onClick={() => handleMenuSelect("Azure")}>
             <ListItemIcon>
               {iconSets.includes("Azure") && <CheckIcon fontSize="small" />}
+              {!iconSets.includes("Azure") && (
+                <CheckBoxOutlineBlank fontSize="small" />
+              )}
+              <img
+                src={icons.getIcon("Azure").src}
+                alt=""
+                width={selectIconSize}
+                height={selectIconSize}
+              />
             </ListItemIcon>
             Azure
           </MenuItem>
           <MenuItem onClick={() => handleMenuSelect("Aws")}>
             <ListItemIcon>
               {iconSets.includes("Aws") && <CheckIcon fontSize="small" />}
+              {!iconSets.includes("Aws") && (
+                <CheckBoxOutlineBlank fontSize="small" />
+              )}
+              <img
+                src={icons.getIcon("Aws").src}
+                alt=""
+                width={selectIconSize}
+                height={selectIconSize}
+              />
             </ListItemIcon>
             Aws
+          </MenuItem>
+          <MenuItem onClick={() => handleMenuSelect("Google")}>
+            <ListItemIcon>
+              {iconSets.includes("Google") && <CheckIcon fontSize="small" />}
+              {!iconSets.includes("Google") && (
+                <CheckBoxOutlineBlank fontSize="small" />
+              )}
+              <img
+                src={icons.getIcon("Google").src}
+                alt=""
+                width={selectIconSize}
+                height={selectIconSize}
+              />
+            </ListItemIcon>
+            Google
           </MenuItem>
           <MenuItem onClick={() => handleMenuSelect("OSA")}>
             <ListItemIcon>
               {iconSets.includes("OSA") && <CheckIcon fontSize="small" />}
+              {!iconSets.includes("OSA") && (
+                <CheckBoxOutlineBlank fontSize="small" />
+              )}
+              <img
+                src={icons.getIcon("OSA").src}
+                alt=""
+                width={selectIconSize}
+                height={selectIconSize}
+              />
             </ListItemIcon>
             OSA
           </MenuItem>

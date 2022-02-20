@@ -46,6 +46,8 @@ class Icons {
         svg = this._getAzureSvg(svg, path);
       } else if (path.startsWith("./Aws")) {
         svg = this._getAwsSvg(svg, path);
+      } else if (path.startsWith("./Google")) {
+        svg = this._getGoogleSvg(svg, path);
       } else if (path.startsWith("./OSA")) {
         svg = this._getOsaSvg(svg, path);
       }
@@ -167,6 +169,33 @@ class Icons {
     };
   }
 
+  _getGoogleSvg(svg: IconType, path: string): IconType {
+    if (path.startsWith("./Google/root-icon.svg")) {
+      return { ...svg, key: "Google", name: "Google", fullName: "Google" };
+    }
+
+    // Google icons have a pattern like ./Google/folder/HCP-Cache.svg
+    const parts = path.split("/").slice(1);
+    let name = parts[2]
+      .slice(0, -4) // Skip sufic e.g. '.svg'
+      .replaceAll("-", " ")
+      .replaceAll("_", " ");
+    name = toTitleCase(name);
+    const root = "Google";
+    const group = "Cloud";
+    const fullName = `${root}/${group}/${name}`;
+    const key = `${root}/${group}/${name}`.replaceAll(" ", "");
+
+    return {
+      ...svg,
+      key: key,
+      root: root,
+      group: group,
+      name: name,
+      fullName: fullName,
+    };
+  }
+
   _getOsaSvg(svg: IconType, path: string): IconType {
     if (path.startsWith("./OSA/root-icon.svg")) {
       return { ...svg, key: "OSA", name: "OSA", fullName: "OSA" };
@@ -237,3 +266,9 @@ class Icons {
 }
 
 export const icons = new Icons();
+
+function toTitleCase(str: string): string {
+  return str.replace(/\w\S*/g, function (txt) {
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+  });
+}
