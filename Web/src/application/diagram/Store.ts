@@ -15,7 +15,6 @@ import {
 } from "./StoreDtos";
 import { LocalEntity } from "../../common/db/LocalDB";
 import { RemoteEntity } from "../../common/db/RemoteDB";
-import { NetworkError } from "../../common/Api";
 
 export interface Configuration {
   onRemoteChanged: (keys: string[]) => void;
