@@ -6,13 +6,14 @@ exports.getInfo = (context) => {
     const forwardedFor = req.headers["x-forwarded-for"];
     const clientIp = req.headers["client-ip"];
     const host = req.headers["host"];
+    const cookie = req.headers["cookie"]
 
     return {
-        token: req.headers['xtoken'],
         userAgent: userAgent,
         clientIp: clientIp,
         forwardedHost: forwardedHost,
         forwardedFor: forwardedFor,
         host: host,
+        cookie: cookie
     }
 }

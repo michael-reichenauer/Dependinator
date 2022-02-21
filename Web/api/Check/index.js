@@ -4,6 +4,8 @@ module.exports = async function (context, req) {
     try {
         store.verifyApiKey(context)
 
+        await store.check(context, req.body)
+
         context.res = { status: 200, body: '' };
     } catch (err) {
         context.log.error('error:', err);
