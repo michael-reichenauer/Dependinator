@@ -5,6 +5,7 @@ import { IKeyVaultConfigure, IKeyVaultConfigureKey } from "./keyVault";
 import Result, { isError } from "./Result";
 import { IDataCrypt, IDataCryptKey } from "./DataCrypt";
 
+// IAuthenticate provides crate account and login functionality
 export const IAuthenticateKey = diKey<IAuthenticate>();
 export interface IAuthenticate {
   check(): Promise<Result<void>>;
@@ -39,6 +40,7 @@ export class Authenticate implements IAuthenticate {
       return user;
     }
 
+    // Generate the data encryption key DEK and wrap/encrypt into a wDek
     const wrappedDek = await this.dataCrypt.generateWrappedDataEncryptionKey(
       user
     );
@@ -63,6 +65,7 @@ export class Authenticate implements IAuthenticate {
       user
     );
 
+    // Make the DEK available to be used when encrypting/decrypting data when accessing server
     this.keyVaultConfigure.setDek(dek);
   }
 
@@ -75,7 +78,6 @@ export class Authenticate implements IAuthenticate {
 
   private async hashAndExpandUser(enteredUser: User): Promise<Result<User>> {
     let { username, password } = enteredUser;
-    console.log(`org '${username}', '${password}'`);
 
     if (
       !username ||
@@ -90,18 +92,16 @@ export class Authenticate implements IAuthenticate {
     username = username.trim().toLowerCase();
     password = password.trim();
 
-    console.log(`norm '${username}', '${password}'`);
-
     // Hash username to ensure original username is hidden from server
     username = await this.toSha256(username);
 
     // Expand/derive the password to ensure that password is hard to crack using brute force
+    // This hashing is done first on client side and then one more time on server side on the
+    // already client side hashed password.
     password = await this.dataCrypt.expandPassword({
       username: username,
       password: password,
     });
-
-    console.log(`hash '${username}', '${password}'`);
 
     return { username: username, password: password };
   }
