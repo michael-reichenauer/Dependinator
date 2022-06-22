@@ -61,7 +61,7 @@
     <PackageReference Include="ICSharpCode.Decompiler" Version="3.2.0.3856" />
     <PackageReference Include="ICSharpCode.NRefactory" Version="5.5.1" />
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.6.4" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="protobuf-net" Version="2.3.13" />
   </ItemGroup>
 
