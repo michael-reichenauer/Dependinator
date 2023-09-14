@@ -15,7 +15,7 @@
     }
   },
 
-  "postCreateCommand": "dotnet restore workload ./Dependinator/Dependinator && dotnet restore ./Dependinator/Dependinator/Dependinator.csproj",
+  "postCreateCommand": "dotnet restore workload ./Dependinator/Dependinator/Dependinator.csproj && dotnet restore ./Dependinator/Dependinator/Dependinator.csproj",
 
   //"postCreateCommand": "dotnet restore ./Dependinator/Dependinator/Dependinator.csproj && dotnet restore ./DependinatorTes/gmdTest.csproj",
 
