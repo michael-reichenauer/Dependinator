@@ -15,7 +15,9 @@
     }
   },
 
-  // "postCreateCommand": "dotnet restore ./gmd/gmd.csproj && dotnet restore ./gmdTest/gmdTest.csproj",
+  "postCreateCommand": "dotnet restore workload ./Dependinator/Dependinator && dotnet restore ./Dependinator/Dependinator/Dependinator.csproj",
+
+  //"postCreateCommand": "dotnet restore ./Dependinator/Dependinator/Dependinator.csproj && dotnet restore ./DependinatorTes/gmdTest.csproj",
 
   // Comment out to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
   "remoteUser": "vscode"
