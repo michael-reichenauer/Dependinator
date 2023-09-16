@@ -8,6 +8,7 @@
            "name": ".NET Core Launch (web)",
            "type": "coreclr",
            "request": "launch",
+           "preLaunchTask": "build",
            // If you have changed target frameworks, make sure to update the program path.
            "program": "${workspaceFolder}/Dependinator/DependinatorWeb/bin/Debug/net7.0/DependinatorWeb.dll",
            "args": [],

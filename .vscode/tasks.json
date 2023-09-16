@@ -1,0 +1,54 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "run",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "run",
+                "--project",
+                "gmd/gmd.csproj",
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/Dependinator/DependinatorWeb/DependinatorWeb.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "publish",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "publish",
+                "${workspaceFolder}/gmd/gmd.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "watch",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "watch",
+                "run",
+                "${workspaceFolder}/Dependinator/DependinatorWeb/DependinatorWeb.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"       
+            ],
+            "options": {"cwd":  "${workspaceFolder}/Dependinator/DependinatorWeb/"},
+            "problemMatcher": "$msCompile"
+        }
+    ]
+}
