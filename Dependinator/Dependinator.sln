@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Dependinator", "Dependinato
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependinatorWasm", "DependinatorWasm\DependinatorWasm.csproj", "{8044411C-FC56-48DE-BB32-770E0BCE5F1B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DependinatorWeb", "DependinatorWeb\DependinatorWeb.csproj", "{3348A917-AE5C-47B8-9424-521AD6E92C2B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +25,10 @@ Global
 		{8044411C-FC56-48DE-BB32-770E0BCE5F1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8044411C-FC56-48DE-BB32-770E0BCE5F1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8044411C-FC56-48DE-BB32-770E0BCE5F1B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3348A917-AE5C-47B8-9424-521AD6E92C2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3348A917-AE5C-47B8-9424-521AD6E92C2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3348A917-AE5C-47B8-9424-521AD6E92C2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3348A917-AE5C-47B8-9424-521AD6E92C2B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
