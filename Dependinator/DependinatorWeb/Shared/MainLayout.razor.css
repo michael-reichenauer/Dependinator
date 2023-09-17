@@ -21,17 +21,18 @@ main {
     align-items: center;
 }
 
-    .top-row ::deep a, .top-row .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
-    }
+.top-row ::deep a,
+.top-row .btn-link {
+    white-space: nowrap;
+    margin-left: 1.5rem;
+}
 
-    .top-row a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+.top-row a:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
 
-@media (max-width: 640.98px) {
+@media(max-width: 640.98px) {
     .top-row:not(.auth) {
         display: none;
     }
@@ -40,12 +41,13 @@ main {
         justify-content: space-between;
     }
 
-    .top-row a, .top-row .btn-link {
+    .top-row a,
+    .top-row .btn-link {
         margin-left: 0;
     }
 }
 
-@media (min-width: 641px) {
+@media(min-width: 641px) {
     .page {
         flex-direction: row;
     }
@@ -63,7 +65,8 @@ main {
         z-index: 1;
     }
 
-    .top-row, article {
+    .top-row,
+    article {
         padding-left: 2rem !important;
         padding-right: 1.5rem !important;
     }
