@@ -1,8 +1,5 @@
-using DependinatorWeb.Data;
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using DependinatorLib.Areas.Canvas;
 using DependinatorLib.Utils;
+using DependinatorLib.Utils.Logging;
 
 namespace DependinatorWeb
 {
@@ -10,6 +7,8 @@ namespace DependinatorWeb
     {
         public static void Main(string[] args)
         {
+            Log.Info($"Starting Dependinator ...");
+
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
