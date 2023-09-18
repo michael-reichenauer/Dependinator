@@ -2,6 +2,7 @@ using DependinatorWeb.Data;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using DependinatorLib.Areas.Canvas;
+using DependinatorLib.Utils;
 
 namespace DependinatorWeb
 {
@@ -14,7 +15,29 @@ namespace DependinatorWeb
             // Add services to the container.
             builder.Services.AddRazorPages();
             builder.Services.AddServerSideBlazor();
-            builder.Services.AddSingleton<ICanvasService, CanvasService>();
+
+            builder.Services.Scan(i =>
+                i.FromAssembliesOf(typeof(DependinatorLib.Main))
+                    .AddClasses(c => c.WithAttribute<SingletonAttribute>())
+                    .AsImplementedInterfaces()
+                    .WithSingletonLifetime()
+
+                    .AddClasses(c => c.WithAttribute<ScopedAttribute>())
+                    .AsImplementedInterfaces()
+                    .WithScopedLifetime()
+
+                    .AddClasses(c => c.WithAttribute<TransientAttribute>())
+                    .AsImplementedInterfaces()
+                    .WithTransientLifetime()
+
+                    .AddClasses(c => c.Where((Type t) =>
+                        !t.HasAttribute<TransientAttribute>() &&
+                        !t.HasAttribute<SingletonAttribute>() &&
+                        !t.HasAttribute<ScopedAttribute>()))
+                    .AsImplementedInterfaces()
+                    .WithTransientLifetime()
+            );
+
 
             var app = builder.Build();
 
