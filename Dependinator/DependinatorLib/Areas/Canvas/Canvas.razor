@@ -1,5 +1,5 @@
 @namespace DependinatorLib.Areas.Canvas
 
+@inject DependinatorLib.Areas.Canvas.ICanvasService canvasService
 
-
-@((MarkupString)Data)
+@((MarkupString)canvasService.Get())

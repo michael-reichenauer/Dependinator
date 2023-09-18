@@ -1,6 +1,7 @@
 using DependinatorWeb.Data;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using DependinatorLib.Areas.Canvas;
 
 namespace DependinatorWeb
 {
@@ -13,7 +14,7 @@ namespace DependinatorWeb
             // Add services to the container.
             builder.Services.AddRazorPages();
             builder.Services.AddServerSideBlazor();
-            builder.Services.AddSingleton<WeatherForecastService>();
+            builder.Services.AddSingleton<ICanvasService, CanvasService>();
 
             var app = builder.Build();
 
