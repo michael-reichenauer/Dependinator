@@ -1,9 +1,14 @@
+using Microsoft.AspNetCore.Components.Web;
+
 namespace DependinatorLib.Areas.Canvas;
 
 
 public interface ICanvasService
 {
     string Get();
+
+    void MouseMove(object obj, MouseEventArgs evt);
+    void MouseUp(object obj, MouseEventArgs evt);
 }
 
 
@@ -15,13 +20,22 @@ public class CanvasService : ICanvasService
         Log.Debug("Get");
 
         return """
-            <svg xmlns="http://www.w3.org/2000/svg" width="300" height="800" viewBox="0 0 300 800">
-
                 <circle cx="80" cy="100" r="20" fill="#00aade" stroke="#fff" />
                 <circle cx="180" cy="180" r="20" fill="#00aa00" stroke="#fff" />
 
                 <path d="M100 100 160 180" stroke="rgb(108, 117, 125)" stroke-width="1.5" fill="transparent" style="pointer-events:none !important;"/>
-            </svg>
          """;
+    }
+
+    public void MouseMove(object obj, MouseEventArgs e)
+    {
+        Log.Info($"FireMove {e.Type}: {e.OffsetX},{e.OffsetY}");
+        // OnMove?.Invoke(obj, e);
+    }
+
+    public void MouseUp(object obj, MouseEventArgs e)
+    {
+        Log.Info($"FireUp {e.Type}: {e.OffsetX},{e.OffsetY}");
+        // OnUp?.Invoke(obj, e);
     }
 }
