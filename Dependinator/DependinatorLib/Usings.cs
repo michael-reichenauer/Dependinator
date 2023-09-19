@@ -7,3 +7,7 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("DependinatorWeb")]
 [assembly: InternalsVisibleTo("DependinatorLibTest")]
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]  // DI access
+
+
+namespace DependinatorLib;
+class RootClass { }
