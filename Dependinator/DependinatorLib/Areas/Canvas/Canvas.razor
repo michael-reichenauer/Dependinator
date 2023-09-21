@@ -1,8 +1,10 @@
 @namespace DependinatorLib.Areas.Canvas
 
-@inject DependinatorLib.Areas.Canvas.ICanvasService canvasService
+@inject DependinatorLib.Areas.Canvas.ICanvasService srv
 
-<svg xmlns="http://www.w3.org/2000/svg" width="300" height="800" viewBox="0 0 300 800" @onmousemove=@(e =>
-    canvasService.MouseMove(this, e)) @onmouseup=@(e => canvasService.MouseUp(this, e))>
-    @((MarkupString)canvasService.Get())
-</svg>
+<div height="100%" width="100%">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 240" @onmousemove=@(e => srv.OnMouse(e)) @onmouseup=@(e
+        => srv.OnMouse(e)) @onmousedown=@(e => srv.OnMouse(e)) @onmousewheel=@(e => srv.OnMouseWheel(e))>
+        @((MarkupString)srv.GetContent())
+    </svg>
+</div>
