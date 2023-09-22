@@ -74,13 +74,13 @@ class Node : IElement
     public int H { get; set; }
     public int RX { get; set; } = 5;
     public string Color { get; set; } = "";
-    public string Background { get; set; } = "transparent";
+    public string Background { get; set; } = "green";
 
     public string Svg { get; private set; } = "";
 
     public void Update()
     {
-        Svg = $"""<rect x="{X}" y="{Y}" width="{W}" height="{H}" rx="{RX}" fill="{Background}" stroke="{Color}" />""";
+        Svg = $"""<rect x="{X}" y="{Y}" width="{W}" height="{H}" rx="{RX}" fill="{Background}" fill-opacity="0.2" stroke="{Color}" stroke-width="2"/>""";
     }
 }
 class Connector : IElement
@@ -97,6 +97,6 @@ class Connector : IElement
 
     public void Update()
     {
-        Svg = $"""<path d="M{X1} {Y1} {X2} {Y2}" stroke="{Color}" stroke-width="1.5" fill="transparent" style="pointer-events:none !important;"/>""";
+        Svg = $"""<polyline points="{X1} {Y1} {X1} {Y1 + 20} {X2} {Y2}" stroke="{Color}" stroke-width="1.5" fill="transparent" style="pointer-events:none !important;" stroke-width="3"/ stroke-linejoin="round">""";
     }
 }
