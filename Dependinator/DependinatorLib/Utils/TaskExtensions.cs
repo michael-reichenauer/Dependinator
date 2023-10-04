@@ -49,6 +49,15 @@ public static class TaskExtensions
             TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnFaulted);
     }
 
+    // RunInBackground ignores the return value of the task and logs any exceptions.
+    // Useful for tasks that should just be started and results are ignored.
+    public static void RunInBackground(this ValueTask task)
+    {
+        task.AsTask().ContinueWith(
+            FailedBackgroundTask,
+            TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnFaulted);
+    }
+
 
     private static void FailedBackgroundTask(Task task)
     {

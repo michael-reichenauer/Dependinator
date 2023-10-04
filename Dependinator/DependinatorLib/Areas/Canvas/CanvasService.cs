@@ -5,30 +5,53 @@ namespace DependinatorLib.Areas.Canvas;
 
 public interface ICanvasService
 {
+    string ViewBox { get; }
     string GetContent();
+
+
+    Task InitJsAsync();
 
     void OnMouse(MouseEventArgs evt);
     void OnMouseWheel(WheelEventArgs e);
 }
 
 
-[Singleton]
+[Scoped]
 public class CanvasService : ICanvasService
 {
     readonly List<IElement> elements = new List<IElement>();
+    private readonly IJSInteropCoreService jSInteropCoreService;
     string svg = "";
+    double zoom = 1;
 
-    public CanvasService()
+
+    public string ViewBox => "0 0 300 300";
+
+    public CanvasService(IJSInteropCoreService jSInteropCoreService)
     {
         elements.Add(new Node { X = 90, Y = 90, W = 60, H = 40, Color = "#00aa00" });
         elements.Add(new Node { X = 190, Y = 190, W = 60, H = 40, Color = "#00aa00" });
         elements.Add(new Connector { X1 = 120, Y1 = 130, X2 = 220, Y2 = 190, Color = "#555555" });
         Update();
+        this.jSInteropCoreService = jSInteropCoreService;
+        jSInteropCoreService.OnResize += () => OnResize();
+        jSInteropCoreService.OnResizing += (r) => OnResizing(r);
+    }
+
+    private void OnResizing(bool r)
+    {
+        Log.Info($"OnResizing: {r}, ({jSInteropCoreService.BrowserSizeDetails.InnerWidth}, {jSInteropCoreService.BrowserSizeDetails.InnerHeight})");
+    }
+
+    private void OnResize()
+    {
+        Log.Info($"OnResize ({jSInteropCoreService.BrowserSizeDetails.InnerWidth}, {jSInteropCoreService.BrowserSizeDetails.InnerHeight})");
     }
 
     public string GetContent()
     {
         //Log.Debug($"Get\n{svg}");
+        Log.Info($"GetContent ({jSInteropCoreService.BrowserSizeDetails.InnerWidth}, {jSInteropCoreService.BrowserSizeDetails.InnerHeight})");
         return svg;
 
         // return """
@@ -56,6 +79,12 @@ public class CanvasService : ICanvasService
         Log.Info($"Wheel {e.Type}: {e.OffsetX},{e.OffsetY},{e.DeltaY},,{e.DeltaX}, {e.DeltaMode}");
         // OnMove?.Invoke(obj, e);
     }
+
+    public async Task InitJsAsync()
+    {
+        Log.Info("InitJsAsync");
+        await this.jSInteropCoreService.InitializeAsync();
+    }
 }
 
 interface IElement
@@ -64,6 +93,14 @@ interface IElement
     void Update() { }
 }
 
+
+// https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Fills_and_Strokes
+// Use <defs> and style to create hoover effects and global styles to avoid repeating
+// Gradients 
+// https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Texts 
+// for texts
+// Embedding SVG in HTML
+// https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Basic_Transformations
 class Node : IElement
 {
     string Id { get; set; } = "";
@@ -83,6 +120,8 @@ class Node : IElement
         Svg = $"""<rect x="{X}" y="{Y}" width="{W}" height="{H}" rx="{RX}" fill="{Background}" fill-opacity="0.2" stroke="{Color}" stroke-width="2"/>""";
     }
 }
+
+
 class Connector : IElement
 {
     string Id { get; set; } = "";

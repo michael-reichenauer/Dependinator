@@ -5,6 +5,7 @@
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -12,9 +13,47 @@
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     <link href="css/site.css" rel="stylesheet" />
     <link href="DependinatorWeb.styles.css" rel="stylesheet" />
-    <link rel="icon" type="image/png" href="favicon.png"/>
+    <link rel="icon" type="image/png" href="favicon.png" />
     <component type="typeof(HeadOutlet)" render-mode="ServerPrerendered" />
 </head>
+
+<script>
+    export function listenToWindowResize(dotNetHelper) {
+
+        function resizeEventHandler() {
+            dotNetHelper.invokeMethodAsync('WindowResizeEvent');
+        }
+
+        window.addEventListener("resize", resizeEventHandler);
+
+        dotNetHelper.invokeMethodAsync('WindowResizeEvent');
+    }
+
+    export function getBoundingRectangle(element, parm) {
+        return element.getBoundingClientRect();
+    }
+
+    export function getWindowSizeDetails(parm) {
+
+        var e = window, a = 'inner';
+
+        if (!('innerWidth' in window)) {
+            a = 'client';
+            e = document.documentElement || document.body;
+        }
+
+        let windowSize =
+        {
+            innerWidth: e[a + 'Width'],
+            innerHeight: e[a + 'Height'],
+            screenWidth: window.screen.width,
+            screenHeight: window.screen.height
+        };
+
+        return windowSize;
+    }
+</script>
+
 <body>
     <component type="typeof(App)" render-mode="ServerPrerendered" />
 
@@ -31,4 +70,5 @@
 
     <script src="_framework/blazor.server.js"></script>
 </body>
+
 </html>
