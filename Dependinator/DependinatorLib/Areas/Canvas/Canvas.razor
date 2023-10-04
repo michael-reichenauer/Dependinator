@@ -2,20 +2,26 @@
 
 @inject DependinatorLib.Areas.Canvas.ICanvasService srv
 
-<div class="container">
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="@srv.ViewBox" @onmousemove=@(e => srv.OnMouse(e)) @onmouseup=@(e
-        => srv.OnMouse(e)) @onmousedown=@(e => srv.OnMouse(e)) @onmousewheel=@(e => srv.OnMouseWheel(e))>
+<div>
+    <svg xmlns="http://www.w3.org/2000/svg" width="@srv.Width" height="@srv.Height" viewBox="@srv.ViewBox"
+        @onmousemove=@(e => srv.OnMouse(e)) @onmouseup=@(e => srv.OnMouse(e)) @onmousedown=@(e => srv.OnMouse(e))
+        @onmousewheel=@(e => srv.OnMouseWheel(e))>
         @((MarkupString)srv.GetContent())
     </svg>
 </div>
 
 @code {
-    
+
+    public void CallStateHasChanged()
+    {
+        InvokeAsync(() => StateHasChanged());
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
-        {         
-            await srv.InitJsAsync();
+        {
+            await srv.InitJsAsync(this);
             StateHasChanged();
         }
     }

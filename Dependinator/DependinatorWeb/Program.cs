@@ -29,12 +29,12 @@ namespace DependinatorWeb
                     .AsImplementedInterfaces()
                     .WithTransientLifetime()
 
-                    .AddClasses(c => c.Where((Type t) =>
-                        !t.HasAttribute<TransientAttribute>() &&
-                        !t.HasAttribute<SingletonAttribute>() &&
-                        !t.HasAttribute<ScopedAttribute>()))
-                    .AsImplementedInterfaces()
-                    .WithTransientLifetime()
+            // .AddClasses(c => c.Where((Type t) =>
+            //     !t.HasAttribute<TransientAttribute>() &&
+            //     !t.HasAttribute<SingletonAttribute>() &&
+            //     !t.HasAttribute<ScopedAttribute>()))
+            // .AsImplementedInterfaces()
+            // .WithTransientLifetime()
             );
 
 
