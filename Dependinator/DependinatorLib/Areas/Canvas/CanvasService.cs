@@ -12,7 +12,9 @@ public interface ICanvasService
     string GetContent();
 
     Task OnMouseWheel(WheelEventArgs e);
-    void OnMouse(MouseEventArgs e);
+    void OnMouseMove(MouseEventArgs e);
+    void OnMouseDown(MouseEventArgs e);
+    void OnMouseUp(MouseEventArgs e);
 
     Task InitJsAsync(Canvas canvas);
 }
@@ -24,7 +26,8 @@ record Rect(double X, double Y, double W, double H);
 [Scoped]
 public class CanvasService : ICanvasService
 {
-    const double zoomSpeed = 0.1;
+    const double ZoomSpeed = 0.1;
+    const int LeftMouseBtn = 1;
 
     readonly List<IElement> elements = new List<IElement>();
     private readonly IJSInteropCoreService jSInteropCoreService;
@@ -48,6 +51,7 @@ public class CanvasService : ICanvasService
     public double Width => width;
     public double Height => height;
 
+
     public CanvasService(IJSInteropCoreService jSInteropCoreService, IJsInterop jsInterop)
     {
         elements.Add(new Node { X = 90, Y = 90, W = 40, H = 40, Color = "#00aa00" });
@@ -64,9 +68,9 @@ public class CanvasService : ICanvasService
     {
         if (e.DeltaY == 0) return;
 
-        double z = 1 - (e.DeltaY > 0 ? zoomSpeed : -zoomSpeed);
+        double z = 1 - (e.DeltaY > 0 ? -ZoomSpeed : ZoomSpeed);
 
-        var svgRect = await jsInterop.GetBoundingRectangle("canvasid");
+        var svgRect = await jsInterop.GetBoundingRectangle(Canvas.Id);
 
         double mouseX = e.ClientX - svgRect.Left;
         double mouseY = e.ClientY - svgRect.Top;
@@ -78,14 +82,41 @@ public class CanvasService : ICanvasService
         var x = svgX - mouseX / svgRect.Width * w;
         var y = svgY - mouseY / svgRect.Height * h;
         this.viewBoxRect = new Rect(x, y, w, h);
-
+        zoom = w / svgRect.Width;
         canvas?.TriggerStateHasChanged();
     }
 
+    public void OnMouseMove(MouseEventArgs e)
+    {
+        if (e.Buttons == LeftMouseBtn && isDrag)
+        {
+            var dx = (e.OffsetX - lastMouse.X) * zoom;
+            var dy = (e.OffsetY - lastMouse.Y) * zoom;
+            viewBoxRect = viewBoxRect with { X = viewBoxRect.X - dx, Y = viewBoxRect.Y - dy };
+            lastMouse = new Pos(e.OffsetX, e.OffsetY);
+            canvas?.TriggerStateHasChanged();
+
+        }
+    }
+    public void OnMouseDown(MouseEventArgs e)
+    {
+        if (e.Buttons == LeftMouseBtn)
+        {
+            isDrag = true;
+            lastMouse = new Pos(e.OffsetX, e.OffsetY);
+        }
+    }
+
+    public void OnMouseUp(MouseEventArgs e)
+    {
+        if (e.Buttons == LeftMouseBtn)
+        {
+            isDrag = false;
+        }
+    }
 
     private void OnResizing(bool r)
     {
-        //Log.Info($"OnResizing: {r}, ({jSInteropCoreService.BrowserSizeDetails.InnerWidth}, {jSInteropCoreService.BrowserSizeDetails.InnerHeight})");
     }
 
     private void OnResize()
@@ -98,7 +129,6 @@ public class CanvasService : ICanvasService
             height = h;
             canvas.TriggerStateHasChanged();
         }
-        Log.Info($"OnResize ({jSInteropCoreService.BrowserSizeDetails.InnerWidth}, {jSInteropCoreService.BrowserSizeDetails.InnerHeight})");
     }
 
     public string GetContent()
@@ -112,30 +142,6 @@ public class CanvasService : ICanvasService
         svg = elements.Select(n => n.Svg).Join("\n");
     }
 
-    public void OnMouse(MouseEventArgs e)
-    {
-        // Log.Info($"FireMove {e.Type}: {e.Button} ({e.Buttons}) {e.OffsetX},{e.OffsetY} {e.Type}");
-        if (e.Buttons == 1)
-        {
-            if (e.Type == "mousedown")
-            {
-                isDrag = true;
-                lastMouse = new Pos(e.OffsetX, e.OffsetY);
-            }
-            else if (e.Type == "mouseup")
-            {
-                isDrag = false;
-            }
-            else if (e.Type == "mousemove" && isDrag)
-            {
-                var dx = e.OffsetX - lastMouse.X;
-                var dy = e.OffsetY - lastMouse.Y;
-                viewBoxRect = viewBoxRect with { X = viewBoxRect.X - dx, Y = viewBoxRect.Y - dy };
-                lastMouse = new Pos(e.OffsetX, e.OffsetY);
-                canvas?.TriggerStateHasChanged();
-            }
-        }
-    }
 
 
     public async Task InitJsAsync(Canvas canvas)
@@ -143,6 +149,8 @@ public class CanvasService : ICanvasService
         Log.Info("InitJsAsync");
         this.canvas = canvas;
         await this.jSInteropCoreService.InitializeAsync();
+        var svgRect = await jsInterop.GetBoundingRectangle(Canvas.Id);
+        zoom = viewBoxRect.W / svgRect.Width;
     }
 }
 
