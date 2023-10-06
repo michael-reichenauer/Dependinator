@@ -95,9 +95,9 @@ public class CanvasService : ICanvasService
             viewBoxRect = viewBoxRect with { X = viewBoxRect.X - dx, Y = viewBoxRect.Y - dy };
             lastMouse = new Pos(e.OffsetX, e.OffsetY);
             canvas?.TriggerStateHasChanged();
-
         }
     }
+
     public void OnMouseDown(MouseEventArgs e)
     {
         if (e.Buttons == LeftMouseBtn)
