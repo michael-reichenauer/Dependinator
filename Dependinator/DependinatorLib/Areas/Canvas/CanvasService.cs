@@ -1,4 +1,3 @@
-using System.Drawing;
 using Microsoft.AspNetCore.Components.Web;
 
 namespace DependinatorLib.Areas.Canvas;
@@ -12,48 +11,77 @@ public interface ICanvasService
 
     string GetContent();
 
+    Task OnMouseWheel(WheelEventArgs e);
+    void OnMouse(MouseEventArgs e);
 
     Task InitJsAsync(Canvas canvas);
-
-    void OnMouse(MouseEventArgs evt);
-    void OnMouseWheel(WheelEventArgs e);
 }
 
 record Pos(double X, double Y);
+record Size(double W, double H);
+record Rect(double X, double Y, double W, double H);
 
 [Scoped]
 public class CanvasService : ICanvasService
 {
+    const double zoomSpeed = 0.1;
+
     readonly List<IElement> elements = new List<IElement>();
     private readonly IJSInteropCoreService jSInteropCoreService;
+    private readonly IJsInterop jsInterop;
     string svg = "";
 
-    double x = 0;
-    double y = 0;
     double width = 0;
     double height = 0;
-    double zoom = 0.84;
+    double zoom = 0;
     Canvas? canvas;
     Pos lastMouse = new Pos(0, 0);
     bool isDrag = false;
 
+    private Rect viewBoxRect = new Rect(0, 0, 400, 400);
+
     public double Zoom => zoom;
-    public string ViewBox => $"{x} {y} {Zoom * Width} {Zoom * Height}";
+    public string ViewBox => $"{viewBoxRect.X} {viewBoxRect.Y} {viewBoxRect.W} {viewBoxRect.H}";
+    public double ViewWidth => Zoom * Width;
+    public double ViewHeight => Zoom * Height;
 
-    public double Width => width - 0;
+    public double Width => width;
+    public double Height => height;
 
-    public double Height => height - 0;
-
-    public CanvasService(IJSInteropCoreService jSInteropCoreService)
+    public CanvasService(IJSInteropCoreService jSInteropCoreService, IJsInterop jsInterop)
     {
         elements.Add(new Node { X = 90, Y = 90, W = 40, H = 40, Color = "#00aa00" });
         elements.Add(new Node { X = 190, Y = 190, W = 40, H = 40, Color = "#00aa00" });
         elements.Add(new Connector { X1 = 120, Y1 = 130, X2 = 220, Y2 = 190, Color = "#555555" });
         Update();
         this.jSInteropCoreService = jSInteropCoreService;
+        this.jsInterop = jsInterop;
         jSInteropCoreService.OnResize += () => OnResize();
         jSInteropCoreService.OnResizing += (r) => OnResizing(r);
     }
+
+    public async Task OnMouseWheel(WheelEventArgs e)
+    {
+        if (e.DeltaY == 0) return;
+
+        double z = 1 - (e.DeltaY > 0 ? zoomSpeed : -zoomSpeed);
+
+        var svgRect = await jsInterop.GetBoundingRectangle("canvasid");
+
+        double mouseX = e.ClientX - svgRect.Left;
+        double mouseY = e.ClientY - svgRect.Top;
+        double svgX = mouseX / svgRect.Width * this.viewBoxRect.W + this.viewBoxRect.X;
+        double svgY = mouseY / svgRect.Height * this.viewBoxRect.H + this.viewBoxRect.Y;
+
+        var w = this.viewBoxRect.W * z;
+        var h = this.viewBoxRect.H * z;
+        var x = svgX - mouseX / svgRect.Width * w;
+        var y = svgY - mouseY / svgRect.Height * h;
+        this.viewBoxRect = new Rect(x, y, w, h);
+
+        canvas?.TriggerStateHasChanged();
+    }
+
 
     private void OnResizing(bool r)
     {
@@ -68,23 +96,14 @@ public class CanvasService : ICanvasService
         {
             width = w;
             height = h;
-            canvas.CallStateHasChanged();
+            canvas.TriggerStateHasChanged();
         }
         Log.Info($"OnResize ({jSInteropCoreService.BrowserSizeDetails.InnerWidth}, {jSInteropCoreService.BrowserSizeDetails.InnerHeight})");
     }
 
     public string GetContent()
     {
-        //Log.Debug($"Get\n{svg}");
-        // Log.Info($"GetContent ({jSInteropCoreService.BrowserSizeDetails.InnerWidth}, {jSInteropCoreService.BrowserSizeDetails.InnerHeight})");
         return svg;
-
-        // return """
-        //         <rect x="90" y="90" width="60" height="40" rx="5" fill="transparent "stroke="#00aa00" />
-        //         <rect x="190" y="190" width="60" height="40" rx="5" fill="transparent "stroke="#00aa00" />
-
-        //         <path d="M120 130 220 190" stroke="rgb(108, 117, 125)" stroke-width="1.5" fill="transparent" style="pointer-events:none !important;"/>
-        //  """;
     }
 
     public void Update()
@@ -111,38 +130,13 @@ public class CanvasService : ICanvasService
             {
                 var dx = e.OffsetX - lastMouse.X;
                 var dy = e.OffsetY - lastMouse.Y;
-                x += -dx;
-                y += -dy;
+                viewBoxRect = viewBoxRect with { X = viewBoxRect.X - dx, Y = viewBoxRect.Y - dy };
                 lastMouse = new Pos(e.OffsetX, e.OffsetY);
-                canvas?.CallStateHasChanged();
+                canvas?.TriggerStateHasChanged();
             }
         }
-        // OnMove?.Invoke(obj, e);
     }
 
-    public void OnMouseWheel(WheelEventArgs e)
-    {
-        Log.Info($"Wheel {e.Type}: {e.OffsetX - x} {e.OffsetY - y} {e.DeltaY}");
-        Log.Info($"({x},{y})");
-        if (e.DeltaY > 0)
-        {
-            zoom *= 1.1;
-            // x and y needs to be adjusted to keep the mouse position in the same place
-            x -= (e.OffsetX - x) * 0.1;
-            y -= (e.OffsetY - y) * 0.1;
-
-        }
-        else
-        {
-            zoom *= 0.9;
-            // x and y needs to be adjusted to keep the mouse position in the same place
-            x += (e.OffsetX - x) * 0.1;
-            y += (e.OffsetY - y) * 0.1;
-            // x += (e.OffsetX - x) * zoom;
-            // y += (e.OffsetY - y) * zoom;
-
-        }
-    }
 
     public async Task InitJsAsync(Canvas canvas)
     {

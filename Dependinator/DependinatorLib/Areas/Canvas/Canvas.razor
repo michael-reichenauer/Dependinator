@@ -3,16 +3,14 @@
 @inject DependinatorLib.Areas.Canvas.ICanvasService srv
 
 <div>
-    <svg xmlns="http://www.w3.org/2000/svg" width="@srv.Width" height="@srv.Height" viewBox="@srv.ViewBox"
-        @onmousemove=@(e => srv.OnMouse(e)) @onmouseup=@(e => srv.OnMouse(e)) @onmousedown=@(e => srv.OnMouse(e))
-        @onmousewheel=@(e => srv.OnMouseWheel(e))>
+    <svg id="canvasid" xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="@srv.ViewBox"
+        @onwheel="@srv.OnMouseWheel" @onmousemove="@srv.OnMouse" @onmouseup="@srv.OnMouse" @onmousedown="@srv.OnMouse">
         @((MarkupString)srv.GetContent())
     </svg>
 </div>
 
 @code {
-
-    public void CallStateHasChanged()
+    public void TriggerStateHasChanged()
     {
         InvokeAsync(() => StateHasChanged());
     }
