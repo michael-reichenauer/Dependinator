@@ -25,4 +25,6 @@ class Node : IElement
     {
         Svg = $"""<rect x="{X}" y="{Y}" width="{W}" height="{H}" rx="{RX}" fill="{Background}" fill-opacity="0.2" stroke="{Color}" stroke-width="2"/>""";
     }
+
+    public override string ToString() => $"({X},{Y}, {W},{H})";
 }

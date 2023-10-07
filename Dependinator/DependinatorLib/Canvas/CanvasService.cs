@@ -1,6 +1,5 @@
 using DependinatorLib.Diagrams.Elements;
 
-
 namespace DependinatorLib.Diagrams;
 
 
@@ -14,11 +13,14 @@ public interface ICanvasService
 [Scoped]
 class CanvasService : ICanvasService
 {
+    readonly IPanZoomService panZoomService;
     readonly List<IElement> elements = new List<IElement>();
+    Rect bounds = new(0, 0, 0, 0);
     Canvas canvas = null!;
 
-    public CanvasService()
+    public CanvasService(IPanZoomService panZoomService)
     {
+        this.panZoomService = panZoomService;
     }
 
     public string SvgContent { get; private set; } = "";
@@ -26,10 +28,8 @@ class CanvasService : ICanvasService
     public Task InitAsync(Canvas canvas)
     {
         this.canvas = canvas;
+        GenerateElements();
 
-        elements.Add(new Node { X = 90, Y = 90, W = 40, H = 40, Color = "#00aa00" });
-        elements.Add(new Node { X = 190, Y = 190, W = 40, H = 40, Color = "#00aa00" });
-        elements.Add(new Connector { X1 = 120, Y1 = 130, X2 = 220, Y2 = 190, Color = "#555555" });
         Update();
 
         return Task.CompletedTask;
@@ -39,7 +39,50 @@ class CanvasService : ICanvasService
     public void Update()
     {
         elements.ForEach(n => n.Update());
+        bounds = new Rect(
+            elements.Select(n => n.X).Min(),
+            elements.Select(n => n.Y).Min(),
+            elements.Select(n => n.X + n.W).Max(),
+            elements.Select(n => n.Y + n.H).Max());
+
         SvgContent = elements.Select(n => n.Svg).Join("\n");
+
+        panZoomService.PanZoomToFit(bounds);
         canvas?.TriggerStateHasChanged();
+    }
+
+    void GenerateElements()
+    {
+        // Generating random elements and connectors
+        var random = new Random();
+        for (int i = 0; i < 100; i++)
+        {
+            AddElement(new Node
+            {
+                X = random.Next(0, 1000),
+                Y = random.Next(0, 1000),
+                W = random.Next(20, 100),
+                H = random.Next(20, 100),
+                Color = $"#{random.Next(0, 256):x2}{random.Next(0, 256):x2}{random.Next(0, 256):x2}",
+                Background = $"#{random.Next(0, 256):x2}{random.Next(0, 256):x2}{random.Next(0, 256):x2}"
+            });
+        }
+
+        for (int i = 0; i < 30; i++)
+        {
+            AddElement(new Connector
+            {
+                X1 = random.Next(0, 1000),
+                Y1 = random.Next(0, 1000),
+                X2 = random.Next(0, 1000),
+                Y2 = random.Next(0, 1000),
+                Color = $"#{random.Next(0, 256):x2}{random.Next(0, 256):x2}{random.Next(0, 256):x2}"
+            });
+        }
+    }
+
+    void AddElement(IElement element)
+    {
+        elements.Add(element);
     }
 }

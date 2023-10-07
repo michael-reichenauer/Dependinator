@@ -60,7 +60,7 @@ static class Log
 
     public static void Exception(
         Exception e,
-        StopParameter stop = default(StopParameter),
+        int stop = 0,  // No used, but needed to separate from other Exception function
         [CallerMemberName] string memberName = "",
         [CallerFilePath] string sourceFilePath = "",
         [CallerLineNumber] int sourceLineNumber = 0)
@@ -84,9 +84,5 @@ static class Log
         int sourceLineNumber)
     {
         ConfigLogger.Write(level, msg, memberName, sourceFilePath, sourceLineNumber);
-    }
-
-    public struct StopParameter
-    {
     }
 }
