@@ -5,9 +5,13 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Dependinator.Utils;
 
-
+[AttributeUsage(AttributeTargets.Class)]
 public class SingletonAttribute : Attribute { }
+
+[AttributeUsage(AttributeTargets.Class)]
 public class ScopedAttribute : Attribute { }
+
+[AttributeUsage(AttributeTargets.Class)]
 public class TransientAttribute : Attribute { }
 
 

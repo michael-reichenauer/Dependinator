@@ -1,4 +1,5 @@
 using Dependinator.Diagrams.Elements;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace Dependinator.Diagrams;
 
@@ -7,6 +8,9 @@ public interface ICanvasService
 {
     string SvgContent { get; }
     Task InitAsync(Canvas canvas);
+    Task OnKeyUp(KeyboardEventArgs e);
+
+    void Refresh();
 }
 
 
@@ -51,6 +55,14 @@ class CanvasService : ICanvasService
         canvas?.TriggerStateHasChanged();
     }
 
+
+    public Task OnKeyUp(KeyboardEventArgs e)
+    {
+        Log.Info($"Key: {e.Key}");
+
+        return Task.CompletedTask;
+    }
+
     void GenerateElements()
     {
         // Generating random elements and connectors
@@ -90,5 +102,11 @@ class CanvasService : ICanvasService
     void AddElement(IElement element)
     {
         elements.Add(element);
+    }
+
+    public void Refresh()
+    {
+        Log.Info("Refresh");
+        Update();
     }
 }

@@ -3,7 +3,7 @@
 @inject ICanvasService srv
 @inject IPanZoomService pzs
 
-<div>
+<div @onkeyup="@srv.OnKeyUp">
     <svg @ref=Ref xmlns="http://www.w3.org/2000/svg" width="@pzs.Width" height="@pzs.Height" viewBox="@pzs.ViewBox"
         @onwheel="@pzs.OnMouseWheel" @onmousemove="@pzs.OnMouseMove" @onmouseup="@pzs.OnMouseUp"
         @onmousedown="@pzs.OnMouseDown">

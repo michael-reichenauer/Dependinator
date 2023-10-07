@@ -67,8 +67,8 @@ class PanZoomService : IPanZoomService
         if (e.DeltaY == 0) return;
 
         double z = 1 - (e.DeltaY > 0 ? -ZoomSpeed : ZoomSpeed);
-        double mouseX = e.ClientX - svgRect.X - 5;     // Why 5 and 10 ????
-        double mouseY = e.ClientY - svgRect.Y + 10;
+        double mouseX = e.ClientX - svgRect.X;     // Why 5 and 10 ????
+        double mouseY = e.ClientY - svgRect.Y;
         double svgX = mouseX / svgRect.W * this.viewBoxRect.W + this.viewBoxRect.X;
         double svgY = mouseY / svgRect.H * this.viewBoxRect.H + this.viewBoxRect.Y;
 

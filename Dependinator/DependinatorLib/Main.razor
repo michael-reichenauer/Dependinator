@@ -1,5 +1,14 @@
 ﻿@using Dependinator.Diagrams
 
+@inject ICanvasService canvasService
+
+<div class="top-row px-4">
+    <button @onclick="@canvasService.Refresh">R </button>
+</div>
+
 <div class="my-main" heigh>
     <Canvas />
 </div>
+
+
+
