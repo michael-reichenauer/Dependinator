@@ -1,4 +1,4 @@
-namespace DependinatorLib.Diagrams.Elements;
+namespace Dependinator.Diagrams.Elements;
 
 // https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Fills_and_Strokes
 // Use <defs> and style to create hoover effects and global styles to avoid repeating

@@ -1,4 +1,4 @@
-namespace DependinatorLib.Diagrams.Elements;
+namespace Dependinator.Diagrams.Elements;
 
 interface IElement
 {

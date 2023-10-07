@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
-namespace DependinatorLib.Utils;
+namespace Dependinator.Utils;
 
 public class ElementBoundingRectangle
 {

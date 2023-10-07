@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Reflection;
 
 
-namespace DependinatorLib.Utils;
+namespace Dependinator.Utils;
 
 // Result contains a few Try methods that return either a value or an error for functions
 // that return a R or R<T> type. This makes it possible to avoid using exceptions for flow control.

@@ -1,4 +1,4 @@
-namespace DependinatorLib.Diagrams.Elements;
+namespace Dependinator.Diagrams.Elements;
 
 class Connector : IElement
 {
@@ -25,8 +25,9 @@ class Connector : IElement
         Y = More.Select(p => Y).Add(Y1, Y2).Min();
         W = More.Select(p => X).Add(X1, X2).Max() - X;
         H = More.Select(p => Y).Add(Y1, Y2).Max() - Y;
+        var m = More.Any() ? More.Select(p => $"{p.X},{p.Y}").Join(" ") : "";
 
-        Svg = $"""<polyline points="{X1},{Y1} {X1 + 10},{Y1 + 10} {X2},{Y2}" fill="none" stroke="{Color}" />""";
+        Svg = $"""<polyline points="{X1},{Y1} {m} {X2},{Y2}" fill="none" stroke="{Color}" />""";
     }
 
     public override string ToString() => $"({X},{Y}, {W},{H})";

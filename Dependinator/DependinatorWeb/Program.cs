@@ -1,5 +1,5 @@
-using DependinatorLib.Utils;
-using DependinatorLib.Utils.Logging;
+using Dependinator.Utils;
+using Dependinator.Utils.Logging;
 
 namespace DependinatorWeb
 {
@@ -16,7 +16,7 @@ namespace DependinatorWeb
             builder.Services.AddServerSideBlazor();
 
             builder.Services.Scan(i =>
-                i.FromAssembliesOf(typeof(DependinatorLib.RootClass))
+                i.FromAssembliesOf(typeof(Dependinator.RootClass))
                     .AddClasses(c => c.WithAttribute<SingletonAttribute>())
                     .AsImplementedInterfaces()
                     .WithSingletonLifetime()

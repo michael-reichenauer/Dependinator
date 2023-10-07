@@ -1,4 +1,4 @@
-namespace DependinatorLib.Diagrams;
+namespace Dependinator.Diagrams;
 
 record Pos(double X, double Y);
 record Size(double W, double H);

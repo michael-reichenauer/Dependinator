@@ -1,6 +1,6 @@
-global using DependinatorLib.Utils;
-global using DependinatorLib.Utils.Logging;
-global using static DependinatorLib.Utils.Result;
+global using Dependinator.Utils;
+global using Dependinator.Utils.Logging;
+global using static Dependinator.Utils.Result;
 
 using System.Runtime.CompilerServices;
 
@@ -9,5 +9,5 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]  // DI access
 
 
-namespace DependinatorLib;
+namespace Dependinator;
 class RootClass { }

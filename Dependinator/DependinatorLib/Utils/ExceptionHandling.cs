@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 
 
-namespace DependinatorLib.Utils;
+namespace Dependinator.Utils;
 
 
 // Handles unhandled exceptions top ensure they are logged and program is restarted or shut down

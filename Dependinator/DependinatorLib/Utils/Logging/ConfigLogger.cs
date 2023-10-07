@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using static System.Environment;
 
-namespace DependinatorLib.Utils.Logging;
+namespace Dependinator.Utils.Logging;
 
 static class ConfigLogger
 {

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 
-namespace DependinatorLib.Utils;
+namespace Dependinator.Utils;
 
 public class AsserterEventArgs : EventArgs
 {

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components.Web;
 
-namespace DependinatorLib.Diagrams;
+namespace Dependinator.Diagrams;
 
 interface IPanZoomService
 {

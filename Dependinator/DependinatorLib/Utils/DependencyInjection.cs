@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
 
-namespace DependinatorLib.Utils;
+namespace Dependinator.Utils;
 
 
 public class SingletonAttribute : Attribute { }

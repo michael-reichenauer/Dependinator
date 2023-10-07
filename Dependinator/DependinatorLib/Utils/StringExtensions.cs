@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace DependinatorLib.Utils;
+namespace Dependinator.Utils;
 
 
 public static class StringExtensions

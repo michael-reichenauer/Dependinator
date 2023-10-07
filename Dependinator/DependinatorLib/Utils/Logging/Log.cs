@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace DependinatorLib.Utils.Logging;
+namespace Dependinator.Utils.Logging;
 
 
 static class Log

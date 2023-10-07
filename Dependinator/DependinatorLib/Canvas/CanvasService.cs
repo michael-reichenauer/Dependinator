@@ -1,6 +1,6 @@
-using DependinatorLib.Diagrams.Elements;
+using Dependinator.Diagrams.Elements;
 
-namespace DependinatorLib.Diagrams;
+namespace Dependinator.Diagrams;
 
 
 public interface ICanvasService
@@ -68,7 +68,7 @@ class CanvasService : ICanvasService
             });
         }
 
-        for (int i = 0; i < 30; i++)
+        for (int i = 0; i < 10; i++)
         {
             AddElement(new Connector
             {
@@ -76,6 +76,12 @@ class CanvasService : ICanvasService
                 Y1 = random.Next(0, 1000),
                 X2 = random.Next(0, 1000),
                 Y2 = random.Next(0, 1000),
+                More = new List<Pos>
+                {
+                    new Pos(random.Next(0, 1000), random.Next(0, 1000)),
+                    new Pos(random.Next(0, 1000), random.Next(0, 1000)),
+                    new Pos(random.Next(0, 1000), random.Next(0, 1000)),
+                },
                 Color = $"#{random.Next(0, 256):x2}{random.Next(0, 256):x2}{random.Next(0, 256):x2}"
             });
         }

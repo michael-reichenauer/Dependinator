@@ -4,8 +4,8 @@
     <TargetFramework>net7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Dependinator</RootNamespace>
   </PropertyGroup>
-
 
   <ItemGroup>
     <SupportedPlatform Include="browser" />
