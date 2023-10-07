@@ -30,9 +30,6 @@ public class CanvasService : ICanvasService
 
     readonly List<IElement> elements = new List<IElement>();
 
-
-    double width = 0;
-    double height = 0;
     Canvas canvas = null!;
     Pos lastMouse = new(0, 0);
     bool isDrag = false;
@@ -43,8 +40,8 @@ public class CanvasService : ICanvasService
     public double ViewWidth => Zoom * Width;
     public double ViewHeight => Zoom * Height;
 
-    public double Width => width;
-    public double Height => height;
+    public double Width { get; private set; } = 400;
+    public double Height { get; private set; } = 400;
 
 
     public CanvasService(IJSInteropService jSInteropCoreService)
@@ -136,14 +133,14 @@ public class CanvasService : ICanvasService
     void OnResize()
     {
         Log.Info("OnResize");
-        // var w = jSInteropCoreService.BrowserSizeDetails.InnerWidth;
-        // var h = jSInteropCoreService.BrowserSizeDetails.InnerHeight;
-        // if (canvas != null && (w != width || h != height))
-        // {
-        //     width = w;
-        //     height = h;
-        //     canvas.TriggerStateHasChanged();
-        // }
+        var w = jSInteropCoreService.BrowserSizeDetails.InnerWidth;
+        var h = jSInteropCoreService.BrowserSizeDetails.InnerHeight;
+        if (canvas != null && (w != Width || h != Height))
+        {
+            Width = w;
+            Height = h;
+            canvas.TriggerStateHasChanged();
+        }
     }
 }
 

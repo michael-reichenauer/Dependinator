@@ -3,7 +3,7 @@
 @inject DependinatorLib.Areas.Canvas.ICanvasService srv
 
 <div>
-    <svg @ref=Ref xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="@srv.ViewBox"
+    <svg @ref=Ref xmlns="http://www.w3.org/2000/svg" width="@srv.Width" height="@srv.Height" viewBox="@srv.ViewBox"
         @onwheel="@srv.OnMouseWheel" @onmousemove="@srv.OnMouseMove" @onmouseup="@srv.OnMouseUp"
         @onmousedown="@srv.OnMouseDown">
         @((MarkupString)srv.SvgContent)
