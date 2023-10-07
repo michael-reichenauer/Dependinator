@@ -14,6 +14,7 @@ public class ElementBoundingRectangle
     public double Bottom { get; set; }
     public double Left { get; set; }
 }
+
 public class BrowserSizeDetails
 {
     public double InnerWidth { get; set; }
@@ -23,32 +24,34 @@ public class BrowserSizeDetails
 }
 
 
-public interface IJSInteropCoreService
+public interface IJSInteropService
 {
     event Action<bool> OnResizing;
     event Action OnResize;
     ValueTask InitializeAsync();
     ValueTask<BrowserSizeDetails> GetWindowSizeAsync();
-    ValueTask<ElementBoundingRectangle> GetElementBoundingRectangleAsync(ElementReference elementReference);
+    ValueTask<ElementBoundingRectangle> GetBoundingRectangle(ElementReference elementReference);
     BrowserSizeDetails BrowserSizeDetails { get; }
+
+    ValueTask<string> Prompt(string message);
 }
 
+// Inspired from https://stackoverflow.com/questions/75114524/getting-the-size-of-a-blazor-page-with-javascript
 [Scoped]
-public class JSInteropCoreService : IJSInteropCoreService
+public class JSInteropService : IJSInteropService, IAsyncDisposable
 {
     private readonly Lazy<Task<IJSObjectReference>> moduleTask;
-    private bool isResizing;
+    private DotNetObjectReference<JSInteropService> instanceRef = null!;
+    private bool isResizing = false;
     private System.Timers.Timer resizeTimer;
-    private DotNetObjectReference<JSInteropCoreService> jsInteropCoreServiceRef = null!;
 
-    public JSInteropCoreService(IJSRuntime jsRuntime)
+    public JSInteropService(IJSRuntime jsRuntime)
     {
-        this.resizeTimer = new System.Timers.Timer(interval: 25);
-        this.isResizing = false;
-        this.resizeTimer.Elapsed += async (sender, elapsedEventArgs) => await DimensionsChanged(sender!, elapsedEventArgs);
-
         this.moduleTask = new(() => jsRuntime.InvokeAsync<IJSObjectReference>(
-          identifier: "import", args: "./bCore.js").AsTask());
+            identifier: "import", args: "./_content/DependinatorLib/jsInterop.js").AsTask());
+
+        this.resizeTimer = new System.Timers.Timer(interval: 25);
+        this.resizeTimer.Elapsed += async (sender, elapsedEventArgs) => await DimensionsChanged(sender!, elapsedEventArgs);
     }
 
     public event Action<bool>? OnResizing;
@@ -58,12 +61,11 @@ public class JSInteropCoreService : IJSInteropCoreService
     {
         IJSObjectReference module = await GetModuleAsync();
 
-        this.jsInteropCoreServiceRef = DotNetObjectReference.Create(this);
+        this.instanceRef = DotNetObjectReference.Create(this);
 
-        await module.InvokeVoidAsync(identifier: "listenToWindowResize", this.jsInteropCoreServiceRef);
+        await module.InvokeVoidAsync(identifier: "listenToWindowResize", this.instanceRef);
 
         this.BrowserSizeDetails = await module.InvokeAsync<BrowserSizeDetails>(identifier: "getWindowSizeDetails");
-
     }
 
     public async ValueTask<BrowserSizeDetails> GetWindowSizeAsync()
@@ -72,7 +74,7 @@ public class JSInteropCoreService : IJSInteropCoreService
         return await module.InvokeAsync<BrowserSizeDetails>(identifier: "getWindowSizeDetails");
     }
 
-    public async ValueTask<ElementBoundingRectangle> GetElementBoundingRectangleAsync(ElementReference elementReference)
+    public async ValueTask<ElementBoundingRectangle> GetBoundingRectangle(ElementReference elementReference)
     {
         IJSObjectReference module = await GetModuleAsync();
         return await module.InvokeAsync<ElementBoundingRectangle>(identifier: "getBoundingRectangle", elementReference);
@@ -91,6 +93,12 @@ public class JSInteropCoreService : IJSInteropCoreService
     }
 
     public BrowserSizeDetails BrowserSizeDetails { get; private set; } = new BrowserSizeDetails();
+
+    public async ValueTask<string> Prompt(string message)
+    {
+        var module = await moduleTask.Value;
+        return await module.InvokeAsync<string>("showPrompt", message);
+    }
 
     private void DebounceResizeEvent()
     {
