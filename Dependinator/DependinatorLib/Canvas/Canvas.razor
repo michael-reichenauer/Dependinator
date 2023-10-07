@@ -1,11 +1,12 @@
 @namespace DependinatorLib.Diagrams
 
-@inject DependinatorLib.Diagrams.ICanvasService srv
+@inject ICanvasService srv
+@inject IPanZoomService pzs
 
 <div>
-    <svg @ref=Ref xmlns="http://www.w3.org/2000/svg" width="@srv.Width" height="@srv.Height" viewBox="@srv.ViewBox"
-        @onwheel="@srv.OnMouseWheel" @onmousemove="@srv.OnMouseMove" @onmouseup="@srv.OnMouseUp"
-        @onmousedown="@srv.OnMouseDown">
+    <svg @ref=Ref xmlns="http://www.w3.org/2000/svg" width="@pzs.Width" height="@pzs.Height" viewBox="@pzs.ViewBox"
+        @onwheel="@pzs.OnMouseWheel" @onmousemove="@pzs.OnMouseMove" @onmouseup="@pzs.OnMouseUp"
+        @onmousedown="@pzs.OnMouseDown">
         @((MarkupString)srv.SvgContent)
     </svg>
 </div>
@@ -20,6 +21,10 @@
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender) await srv.InitAsync(this);
+        if (firstRender)
+        {
+            await pzs.InitAsync(this);
+            await srv.InitAsync(this);
+        }
     }
 }
