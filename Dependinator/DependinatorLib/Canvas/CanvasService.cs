@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Components.Web;
 
-namespace DependinatorLib.Areas.Canvas;
+namespace DependinatorLib.Diagrams;
 
 
 public interface ICanvasService
