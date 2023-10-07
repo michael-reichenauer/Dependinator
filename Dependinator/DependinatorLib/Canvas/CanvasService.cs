@@ -8,7 +8,6 @@ public interface ICanvasService
 {
     string SvgContent { get; }
     Task InitAsync(Canvas canvas);
-    Task OnKeyUp(KeyboardEventArgs e);
 
     void Refresh();
 }
@@ -53,14 +52,6 @@ class CanvasService : ICanvasService
 
         panZoomService.PanZoomToFit(bounds);
         canvas?.TriggerStateHasChanged();
-    }
-
-
-    public Task OnKeyUp(KeyboardEventArgs e)
-    {
-        Log.Info($"Key: {e.Key}");
-
-        return Task.CompletedTask;
     }
 
     void GenerateElements()
