@@ -21,12 +21,9 @@ internal class XmlDocParser
         // Adjust for inner types using '/' as separators
         nodeName = nodeName.Replace("/", ".");
 
-        if (descriptions.Value.TryGetValue(nodeName, out string description))
-        {
-            return description;
-        }
+        if (descriptions.Value.TryGetValue(nodeName, out string? description)) return description;
 
-        return null;
+        return "";
     }
 
 
@@ -35,7 +32,7 @@ internal class XmlDocParser
         Dictionary<string, string> items = new Dictionary<string, string>();
         try
         {
-            string directoryName = Path.GetDirectoryName(assemblyPath);
+            string directoryName = Path.GetDirectoryName(assemblyPath) ?? "";
             string xmlFileName = Path.GetFileNameWithoutExtension(assemblyPath) + ".xml";
             string xmlFilePath = Path.Combine(directoryName, xmlFileName);
 
@@ -73,8 +70,7 @@ internal class XmlDocParser
     {
         // Trim type marker "M:" and "T:" in member name.
         bool isMethod = memberName?.StartsWith("M:") ?? false;
-        memberName = memberName.Substring(2)
-            .Replace("``", "`");
+        memberName = memberName?[2..].Replace("``", "`") ?? "";
 
         int index1 = memberName.IndexOf('(');
         int index2 = memberName.IndexOf(')');
@@ -112,9 +108,9 @@ internal class XmlDocParser
 
     private static string GetSummary(XElement member)
     {
-        XElement node = member.Descendants("summary").FirstOrDefault();
+        XElement? node = member.Descendants("summary").FirstOrDefault();
 
-        string summary = node?.ToString();
+        string? summary = node?.ToString();
 
         if (!string.IsNullOrEmpty(summary))
         {
@@ -131,25 +127,25 @@ internal class XmlDocParser
             summary = string.Join("\n", summary.Split("\n".ToCharArray()).Select(line => line.Trim()));
         }
 
-        return summary?.Trim();
+        return summary?.Trim() ?? "";
     }
 
 
     private static string GetMemberName(XElement member)
     {
-        string memberName = member.Attribute("name")?.Value;
+        string? memberName = member.Attribute("name")?.Value;
 
-        return memberName?.Trim();
+        return memberName?.Trim() ?? "";
     }
 
 
     private static string GetAssemblyName(XDocument doc)
     {
-        string assemblyName = doc
+        string? assemblyName = doc
             .Descendants("assembly")
             .Descendants("name").FirstOrDefault()?.Value;
 
-        return assemblyName;
+        return assemblyName ?? "";
     }
 }
 

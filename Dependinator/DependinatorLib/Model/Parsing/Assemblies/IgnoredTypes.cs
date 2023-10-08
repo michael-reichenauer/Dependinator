@@ -7,11 +7,6 @@ internal class IgnoredTypes
     public static bool IsIgnoredSystemType(TypeReference targetType)
     {
         return IsSystemIgnoredModuleName(targetType.Scope.Name);
-
-        //return
-        //	targetType.Namespace != null
-        //	&& (targetType.Namespace.StartsWithTxt("System")
-        //			|| targetType.Namespace.StartsWithTxt("Microsoft"));
     }
 
 

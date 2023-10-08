@@ -101,7 +101,7 @@ internal class MethodParser
     {
         if (!isMoveNext &&
             variable.VariableType.IsNested &&
-            asyncStates.TryGetValue(variable.VariableType.FullName, out TypeDefinition asyncType))
+            asyncStates.TryGetValue(variable.VariableType.FullName, out TypeDefinition? asyncType))
         {
             // There is a async state type with this name
             AddAsyncStateLinks(memberName, asyncType);
@@ -114,7 +114,7 @@ internal class MethodParser
     private void AddAsyncStateLinks(string memberName, TypeDefinition asyncType)
     {
         // Try to get the "MovNext method with contains the actual "async/await" code
-        MethodDefinition moveNextMethod = asyncType.Methods
+        MethodDefinition? moveNextMethod = asyncType.Methods
             .FirstOrDefault(method => method.Name == "MoveNext");
 
         if (moveNextMethod != null)

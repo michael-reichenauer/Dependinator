@@ -25,7 +25,7 @@ internal class TypeParser
     {
         bool isCompilerGenerated = Name.IsCompilerGenerated(type.Name);
         bool isAsyncStateType = false;
-        Node typeNode = null;
+        Node typeNode = null!;
 
         if (isCompilerGenerated)
         {
@@ -46,7 +46,7 @@ internal class TypeParser
             string name = Name.GetTypeFullName(type);
             bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
             string parent = isPrivate
-                ? $"{NodeName.From(name).ParentName.FullName}.$private" : null;
+                ? $"{NodeName.From(name).ParentName.FullName}.$private" : "";
             string description = xmlDockParser.GetDescription(name);
 
             if (IsNameSpaceDocType(type, description))
@@ -80,7 +80,7 @@ internal class TypeParser
             if (!string.IsNullOrEmpty(description))
             {
                 string name = Name.GetTypeNamespaceFullName(type);
-                Node node = new Node(name, null, Node.NameSpaceType, description);
+                Node node = new Node(name, "", Node.NameSpaceType, description);
                 nodeCallback(node);
             }
 

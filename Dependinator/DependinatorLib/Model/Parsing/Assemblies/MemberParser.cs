@@ -46,10 +46,6 @@ internal class MemberParser
         TypeDefinition type = typeData.Type;
         Node typeNode = typeData.Node;
 
-        if (typeNode?.Name?.Contains("Dependinator.Program") ?? false)
-        {
-
-        }
         if (typeData.IsAsyncStateType)
         {
             methodParser.AddAsyncStateType(typeData);
@@ -100,7 +96,7 @@ internal class MemberParser
         try
         {
             string memberName = Name.GetMemberFullName(memberInfo);
-            string parent = isPrivate ? $"{GetParentName(memberName)}.$private" : null;
+            string parent = isPrivate ? $"{GetParentName(memberName)}.$private" : "";
             string description = xmlDocParser.GetDescription(memberName);
 
 
@@ -142,11 +138,10 @@ internal class MemberParser
                     string baseName = memberName.Substring(startName + 1, endName - startName - 1);
 
                     // Find the corresponding base method (problem for overloads)
-                    MethodDefinition baseMethod = type.Methods.FirstOrDefault(m => m.Name == baseName);
+                    MethodDefinition? baseMethod = type.Methods.FirstOrDefault(m => m.Name == baseName);
                     if (baseMethod != null)
                     {
                         string baseMethodName = Name.GetMemberFullName(baseMethod);
-
                         methodParser.AddMethodBodyLinks(baseMethodName, memberInfo);
                     }
                 }

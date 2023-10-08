@@ -15,7 +15,7 @@ internal class ParsingAssemblyResolver : DefaultAssemblyResolver
             Log.Warn($"Failed to resolve {name}, {e.Message}");
         }
 
-        return null;
+        return null!;
     }
 
 
@@ -30,7 +30,7 @@ internal class ParsingAssemblyResolver : DefaultAssemblyResolver
             Log.Warn($"Failed to resolve {name}, {e.Message}");
         }
 
-        return null;
+        return null!;
     }
 }
 
