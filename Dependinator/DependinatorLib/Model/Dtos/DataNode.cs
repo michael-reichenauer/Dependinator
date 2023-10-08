@@ -1,4 +1,5 @@
 ﻿using System.Windows;
+using Dependinator.Diagrams;
 using Dependinator.Utils;
 
 
@@ -25,7 +26,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Dtos
 
 
         public string Description { get; set; }
-        public Rect Bounds { get; set; } = RectEx.Zero;
+        public Rect Bounds { get; set; } = new Rect(0, 0, 0, 0);
         public double Scale { get; set; }
         public string Color { get; set; }
         public string ShowState { get; set; }

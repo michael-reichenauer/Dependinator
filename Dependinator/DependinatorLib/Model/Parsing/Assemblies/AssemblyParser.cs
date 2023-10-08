@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private;
 using Dependinator.Utils;
-//using Dependinator.Utils.ErrorHandling;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
