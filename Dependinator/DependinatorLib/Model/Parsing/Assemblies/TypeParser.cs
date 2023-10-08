@@ -7,13 +7,13 @@ internal class TypeParser
 {
     private readonly LinkHandler linkHandler;
     private readonly XmlDocParser xmlDockParser;
-    private readonly Action<NodeData> nodeCallback;
+    private readonly Action<Node> nodeCallback;
 
 
     public TypeParser(
         LinkHandler linkHandler,
         XmlDocParser xmlDockParser,
-        Action<NodeData> nodeCallback)
+        Action<Node> nodeCallback)
     {
         this.linkHandler = linkHandler;
         this.xmlDockParser = xmlDockParser;
@@ -25,7 +25,7 @@ internal class TypeParser
     {
         bool isCompilerGenerated = Name.IsCompilerGenerated(type.Name);
         bool isAsyncStateType = false;
-        NodeData typeNode = null;
+        Node typeNode = null;
 
         if (isCompilerGenerated)
         {
@@ -55,7 +55,7 @@ internal class TypeParser
                 yield break;
             }
 
-            typeNode = new NodeData(name, parent, NodeData.TypeType, description);
+            typeNode = new Node(name, parent, Node.TypeType, description);
             nodeCallback(typeNode);
         }
 
@@ -80,7 +80,7 @@ internal class TypeParser
             if (!string.IsNullOrEmpty(description))
             {
                 string name = Name.GetTypeNamespaceFullName(type);
-                NodeData node = new NodeData(name, null, NodeData.NameSpaceType, description);
+                Node node = new Node(name, null, Node.NameSpaceType, description);
                 nodeCallback(node);
             }
 
@@ -106,7 +106,7 @@ internal class TypeParser
         }
 
         TypeDefinition type = typeData.Type;
-        NodeData sourceNode = typeData.Node;
+        Node sourceNode = typeData.Node;
 
         try
         {

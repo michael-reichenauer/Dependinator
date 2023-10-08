@@ -6,7 +6,7 @@ namespace Dependinator.Model.Parsers.Assemblies;
 
 internal class TypeData
 {
-    public TypeData(TypeDefinition type, NodeData node, bool isAsyncStateType)
+    public TypeData(TypeDefinition type, Node node, bool isAsyncStateType)
     {
         Type = type;
         Node = node;
@@ -15,7 +15,7 @@ internal class TypeData
 
 
     public TypeDefinition Type { get; }
-    public NodeData Node { get; }
+    public Node Node { get; }
     public bool IsAsyncStateType { get; }
 }
 

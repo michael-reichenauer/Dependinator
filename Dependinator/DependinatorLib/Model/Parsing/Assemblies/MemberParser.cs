@@ -10,16 +10,16 @@ internal class MemberParser
     private readonly LinkHandler linkHandler;
     private readonly MethodParser methodParser;
 
-    private readonly Dictionary<string, NodeData> sentNodes = new Dictionary<string, NodeData>();
+    private readonly Dictionary<string, Node> sentNodes = new Dictionary<string, Node>();
 
     private readonly XmlDocParser xmlDocParser;
-    private readonly Action<NodeData> nodeCallback;
+    private readonly Action<Node> nodeCallback;
 
 
     public MemberParser(
         LinkHandler linkHandler,
         XmlDocParser xmlDocParser,
-        Action<NodeData> nodeCallback)
+        Action<Node> nodeCallback)
     {
         this.linkHandler = linkHandler;
         this.xmlDocParser = xmlDocParser;
@@ -44,7 +44,7 @@ internal class MemberParser
     private void AddTypeMembers(TypeData typeData)
     {
         TypeDefinition type = typeData.Type;
-        NodeData typeNode = typeData.Node;
+        Node typeNode = typeData.Node;
 
         if (typeNode?.Name?.Contains("Dependinator.Program") ?? false)
         {
@@ -95,7 +95,7 @@ internal class MemberParser
     }
 
 
-    private void AddMember(IMemberDefinition memberInfo, NodeData parentTypeNode, bool isPrivate)
+    private void AddMember(IMemberDefinition memberInfo, Node parentTypeNode, bool isPrivate)
     {
         try
         {
@@ -104,7 +104,7 @@ internal class MemberParser
             string description = xmlDocParser.GetDescription(memberName);
 
 
-            NodeData memberNode = new NodeData(memberName, parent, NodeData.MemberType, description);
+            Node memberNode = new Node(memberName, parent, Node.MemberType, description);
 
             if (!sentNodes.ContainsKey(memberNode.Name))
             {
@@ -124,7 +124,7 @@ internal class MemberParser
 
 
     private void AddCompilerGeneratedMember(MethodDefinition memberInfo,
-        NodeData parentTypeNode, TypeDefinition type)
+        Node parentTypeNode, TypeDefinition type)
     {
         try
         {

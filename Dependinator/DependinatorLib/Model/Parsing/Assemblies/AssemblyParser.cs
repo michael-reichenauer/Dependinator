@@ -13,7 +13,7 @@ internal class AssemblyParser : IDisposable
     private readonly AssemblyReferencesParser assemblyReferencesParser;
     private readonly Decompiler decompiler = new Decompiler();
 
-    private readonly Action<NodeData> nodeCallback;
+    private readonly Action<Node> nodeCallback;
 
     private readonly MemberParser memberParser;
     private readonly string parentName;
@@ -27,8 +27,8 @@ internal class AssemblyParser : IDisposable
         string assemblyPath,
         string projectPath,
         string parentName,
-        Action<NodeData> nodeCallback,
-        Action<LinkData> linkCallback,
+        Action<Node> nodeCallback,
+        Action<Link> linkCallback,
         bool isReadSymbols)
     {
         ProjectPath = projectPath;
@@ -84,7 +84,7 @@ internal class AssemblyParser : IDisposable
     {
         string nodeName = Name.GetModuleName(assembly.Value);
         string assemblyDescription = GetAssemblyDescription(assembly.Value);
-        NodeData assemblyNode = new NodeData(nodeName, parentName, NodeData.AssemblyType, assemblyDescription);
+        Node assemblyNode = new Node(nodeName, parentName, Node.AssemblyType, assemblyDescription);
 
         nodeCallback(assemblyNode);
     }
@@ -127,7 +127,7 @@ internal class AssemblyParser : IDisposable
     }
 
 
-    public R<NodeDataSource> TryGetSource(string nodeName) =>
+    public R<Parsing.Source> TryGetSource(string nodeName) =>
         decompiler.TryGetSource(assembly.Value.MainModule, nodeName);
 
 

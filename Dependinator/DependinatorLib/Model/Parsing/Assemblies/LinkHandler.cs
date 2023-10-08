@@ -5,10 +5,10 @@ namespace Dependinator.Model.Parsers.Assemblies;
 
 internal class LinkHandler
 {
-    private readonly Action<LinkData> linkCallback;
+    private readonly Action<Link> linkCallback;
 
 
-    public LinkHandler(Action<LinkData> linkCallback)
+    public LinkHandler(Action<Link> linkCallback)
     {
         this.linkCallback = linkCallback;
     }
@@ -42,7 +42,7 @@ internal class LinkHandler
             return;
         }
 
-        SendLink(sourceName, targetNodeName, NodeData.TypeType);
+        SendLink(sourceName, targetNodeName, Node.TypeType);
     }
 
 
@@ -60,13 +60,13 @@ internal class LinkHandler
             return;
         }
 
-        SendLink(sourceName, targetNodeName, NodeData.MemberType);
+        SendLink(sourceName, targetNodeName, Node.MemberType);
     }
 
 
     private void SendLink(string source, string targetName, string targetType)
     {
-        LinkData dataLink = new LinkData(source, targetName, targetType);
+        Link dataLink = new Link(source, targetName, targetType);
         linkCallback(dataLink);
         LinksCount++;
     }

@@ -4,12 +4,12 @@ using Dependinator.Model.Parsing.Common;
 
 namespace Dependinator.Model.Parsers.Assemblies;
 
-internal class AssemblyFileParserService : IParser
+internal class AssemblyParserService : IParser
 {
     private readonly IDataMonitorService dataMonitorService;
 
 
-    public AssemblyFileParserService(IDataMonitorService dataMonitorService)
+    public AssemblyParserService(IDataMonitorService dataMonitorService)
     {
         this.dataMonitorService = dataMonitorService;
     }
@@ -31,38 +31,31 @@ internal class AssemblyFileParserService : IParser
 
     public async Task<R> ParseAsync(
         string path,
-        Action<NodeData> nodeCallback,
-        Action<LinkData> linkCallback)
+        Action<Node> nodeCallback,
+        Action<Link> linkCallback)
     {
-        NodeData fileNode = GetAssemblyFileNode(path);
-        nodeCallback(fileNode);
+        Node assemblyNode = CreateAssemblyNode(path);
+        nodeCallback(assemblyNode);
 
-        using (AssemblyParser assemblyParser = new AssemblyParser(
-            path, null, fileNode.Name, nodeCallback, linkCallback, false))
-        {
-            return await assemblyParser.ParseAsync();
-        }
+        using var parser = new AssemblyParser(path, "", assemblyNode.Name, nodeCallback, linkCallback, false);
+        return await parser.ParseAsync();
+    }
+
+    public async Task<R<Parsing.Source>> GetSourceAsync(string path, string nodeName)
+    {
+        using var parser = new AssemblyParser(path, "", "", _ => { }, _ => { }, true);
+        return await Task.Run(() => parser.TryGetSource(nodeName));
     }
 
 
-    public async Task<R<NodeDataSource>> GetSourceAsync(string path, string nodeName)
-    {
-        using (AssemblyParser assemblyParser = new AssemblyParser(
-            path, null, null, null, null, true))
-        {
-            return await Task.Run(() => assemblyParser.TryGetSource(nodeName));
-        }
-    }
-
-
-    public Task<string> GetNodeAsync(string path, NodeDataSource source) =>
-        Task.FromResult((string)null);
+    public Task<string> GetNodeAsync(string path, Parsing.Source source) =>
+        Task.FromResult("");
 
 
     public DateTime GetDataTime(string path) => File.GetLastWriteTime(path);
 
 
-    private static NodeData GetAssemblyFileNode(string path)
+    private static Node CreateAssemblyNode(string path)
     {
         string name = Path.GetFileName(path).Replace(".", "*");
         if (name == "Example*exe")
@@ -71,7 +64,7 @@ internal class AssemblyFileParserService : IParser
             name = "Dependinator*sln";
         }
 
-        return new NodeData(name, null, NodeData.AssemblyType, "Assembly file");
+        return new Node(name, "", Node.AssemblyType, "Assembly file");
     }
 }
 

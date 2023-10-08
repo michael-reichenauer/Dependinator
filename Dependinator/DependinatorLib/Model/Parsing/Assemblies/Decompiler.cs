@@ -6,34 +6,35 @@ using Dependinator.Model.Parsing;
 
 
 namespace Dependinator.Model.Parsers.Assemblies;
+
 internal class Decompiler
 {
     private static readonly string DecompiledText = "// Note: Decompiled code\n// ---------------------\n\n";
 
 
-    public R<NodeDataSource> TryGetSource(ModuleDefinition module, string nodeName)
+    public R<Parsing.Source> TryGetSource(ModuleDefinition module, string nodeName)
     {
         if (TryGetType(module, nodeName, out TypeDefinition type))
         {
             string codeText = GetDecompiledText(module, type);
 
-            if (TryGetFilePath(type, out NodeDataSource source))
+            if (TryGetFilePath(type, out Parsing.Source source))
             {
-                return new NodeDataSource(codeText, source.LineNumber, source.Path);
+                return new Parsing.Source(codeText, source.LineNumber, source.Path);
             }
 
-            return new NodeDataSource(codeText, 0, null);
+            return new Parsing.Source(codeText, 0, null);
         }
         else if (TryGetMember(module, nodeName, out IMemberDefinition member))
         {
             string codeText = GetDecompiledText(module, member);
 
-            if (TryGetFilePath(member, out NodeDataSource source))
+            if (TryGetFilePath(member, out Parsing.Source source))
             {
-                return new NodeDataSource(codeText, source.LineNumber, source.Path);
+                return new Parsing.Source(codeText, source.LineNumber, source.Path);
             }
 
-            return new NodeDataSource(codeText, 0, null);
+            return new Parsing.Source(codeText, 0, null);
         }
 
         Log.Debug($"Failed to locate source for:\n{nodeName}");
@@ -49,7 +50,7 @@ internal class Decompiler
     {
         foreach (TypeDefinition type in assemblyTypes)
         {
-            if (TryGetFilePath(type, out NodeDataSource source))
+            if (TryGetFilePath(type, out Parsing.Source source))
             {
                 if (source.Path.StartsWithIc(sourceFilePath))
                 {
@@ -179,7 +180,7 @@ internal class Decompiler
     }
 
 
-    private bool TryGetFilePath(TypeDefinition type, out NodeDataSource source)
+    private bool TryGetFilePath(TypeDefinition type, out Parsing.Source source)
     {
         foreach (MethodDefinition method in type.Methods)
         {
@@ -196,7 +197,7 @@ internal class Decompiler
     }
 
 
-    private bool TryGetFilePath(IMemberDefinition member, out NodeDataSource source)
+    private bool TryGetFilePath(IMemberDefinition member, out Parsing.Source source)
     {
         if (member is MethodDefinition method)
         {
@@ -212,8 +213,8 @@ internal class Decompiler
     }
 
 
-    private NodeDataSource ToFileLocation(SequencePoint sequencePoint) =>
-        new NodeDataSource(null, sequencePoint.StartLine, sequencePoint.Document.Url);
+    private Parsing.Source ToFileLocation(SequencePoint sequencePoint) =>
+        new Parsing.Source(null, sequencePoint.StartLine, sequencePoint.Document.Url);
 
 
     private static CSharpDecompiler GetDecompiler(ModuleDefinition module) =>

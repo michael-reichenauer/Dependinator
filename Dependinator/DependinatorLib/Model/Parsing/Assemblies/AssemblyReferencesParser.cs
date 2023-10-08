@@ -7,10 +7,10 @@ namespace Dependinator.Model.Parsers.Assemblies;
 internal class AssemblyReferencesParser
 {
     private readonly LinkHandler linkHandler;
-    private readonly Action<NodeData> nodeCallback;
+    private readonly Action<Node> nodeCallback;
 
 
-    public AssemblyReferencesParser(LinkHandler linkHandler, Action<NodeData> nodeCallback)
+    public AssemblyReferencesParser(LinkHandler linkHandler, Action<Node> nodeCallback)
     {
         this.linkHandler = linkHandler;
         this.nodeCallback = nodeCallback;
@@ -34,11 +34,11 @@ internal class AssemblyReferencesParser
                 string referenceName = Name.GetModuleName(reference);
                 string parent = GetReferenceParent(referencesRootName, referenceName);
 
-                NodeData referenceNode = new NodeData(referenceName, parent, NodeData.AssemblyType, null);
+                Node referenceNode = new Node(referenceName, parent, Node.AssemblyType, null);
 
                 nodeCallback(referenceNode);
 
-                linkHandler.AddLink(sourceAssemblyName, referenceName, NodeData.AssemblyType);
+                linkHandler.AddLink(sourceAssemblyName, referenceName, Node.AssemblyType);
             }
         }
     }
@@ -69,8 +69,8 @@ internal class AssemblyReferencesParser
     private string SendReferencesRootNode()
     {
         string referencesRootName = "$Externals";
-        NodeData referencesRootNode = new NodeData(
-            referencesRootName, null, NodeData.GroupType, "External references");
+        Node referencesRootNode = new Node(
+            referencesRootName, null, Node.GroupType, "External references");
 
         nodeCallback(referencesRootNode);
         return referencesRootName;
@@ -86,7 +86,7 @@ internal class AssemblyReferencesParser
             string name = string.Join(".", parts.Take(i + 1));
 
             string groupName = $"{parent}.{name}";
-            NodeData groupNode = new NodeData(groupName, parent, NodeData.GroupType, null);
+            Node groupNode = new Node(groupName, parent, Node.GroupType, null);
 
             nodeCallback(groupNode);
             parent = groupName;
