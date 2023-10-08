@@ -2,6 +2,8 @@
 
 internal class NodeName : Equatable<NodeName>
 {
+    record DisplayParts(string ShortName, string LongName);
+
     public static NodeName Root = From("");
     private static readonly char[] PartsSeparators = "./".ToCharArray();
     private readonly Lazy<DisplayParts> displayParts;
@@ -11,10 +13,6 @@ internal class NodeName : Equatable<NodeName>
 
     private NodeName(string fullName)
     {
-        if (fullName == null)
-        {
-        }
-
         FullName = fullName;
 
         parentName = new Lazy<NodeName>(GetParentName);
@@ -58,7 +56,7 @@ internal class NodeName : Equatable<NodeName>
 
     private DisplayParts GetDisplayParts()
     {
-        string name = null;
+        string name = "";
 
         string[] parts = FullName.Split(PartsSeparators);
 
@@ -90,11 +88,7 @@ internal class NodeName : Equatable<NodeName>
             fullName = ToNiceParameters(fullName);
         }
 
-        return new DisplayParts
-        {
-            ShortName = name,
-            LongName = fullName
-        };
+        return new DisplayParts(name, fullName);
     }
 
 
@@ -134,13 +128,6 @@ internal class NodeName : Equatable<NodeName>
             .Replace("`5", "<T,T,T,T,T>")
             .Replace("op_Equality", "==")
             .Replace("op_Inequality", "!=");
-    }
-
-
-    private class DisplayParts
-    {
-        public string ShortName { get; set; }
-        public string LongName { get; set; }
     }
 }
 

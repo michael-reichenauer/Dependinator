@@ -2,9 +2,9 @@ namespace Dependinator.Utils
 {
     internal interface IEquatable
     {
-        object __EqValue1 { get; }
-        object __EqValue2 { get; }
-        object __EqValue3 { get; }
+        object? __EqValue1 { get; }
+        object? __EqValue2 { get; }
+        object? __EqValue3 { get; }
     }
 
 
@@ -16,11 +16,11 @@ namespace Dependinator.Utils
     /// <typeparam name="T"></typeparam>
     public abstract class Equatable<T> : IEquatable<T>, IEquatable
     {
-        private object eqValue1;
-        private object eqValue2;
-        private object eqValue3;
+        private object? eqValue1;
+        private object? eqValue2;
+        private object? eqValue3;
         private int? hashCode;
-        private Func<T, bool> isEqualFunc;
+        private Func<T, bool>? isEqualFunc;
 
         /* Sample class, which inherits Equatable<T>:
          
@@ -37,12 +37,12 @@ namespace Dependinator.Utils
 
         */
 
-        object IEquatable.__EqValue1 => eqValue1;
-        object IEquatable.__EqValue2 => eqValue2;
-        object IEquatable.__EqValue3 => eqValue3;
+        object? IEquatable.__EqValue1 => eqValue1;
+        object? IEquatable.__EqValue2 => eqValue2;
+        object? IEquatable.__EqValue3 => eqValue3;
 
 
-        public bool Equals(T other)
+        public bool Equals(T? other)
         {
             if (isEqualFunc == null)
             {
@@ -136,7 +136,7 @@ namespace Dependinator.Utils
         }
 
 
-        public override bool Equals(object other) => other is T otherTyped && Equals(otherTyped);
+        public override bool Equals(object? other) => other is T otherTyped && Equals(otherTyped);
 
 
         public static bool operator ==(Equatable<T> obj1, Equatable<T> obj2) =>
