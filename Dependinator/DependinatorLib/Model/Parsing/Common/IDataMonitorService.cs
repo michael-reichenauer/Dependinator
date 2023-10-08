@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿namespace Dependinator.Model.Parsing.Common;
 
-
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Common
+internal interface IDataMonitorService
 {
-    internal interface IDataMonitorService
-    {
-        event EventHandler DataChangedOccurred; 
+    event EventHandler DataChangedOccurred;
 
-        void StartMonitorData(string mainPath, IReadOnlyList<string> dataPaths);
-    }
+    void StartMonitorData(string mainPath, IReadOnlyList<string> dataPaths);
 }
+

@@ -9,8 +9,7 @@
 // using Dependinator.Utils.UI;
 
 
-// namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Common
-// {
+// namespace Dependinator.Model.Parsing.Common;
 //     [SingleInstance]
 //     internal class DataMonitorService : IDataMonitorService
 //     {
@@ -128,4 +127,4 @@
 //             }
 //         }
 //     }
-// }
+

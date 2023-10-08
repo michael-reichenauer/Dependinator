@@ -1,5 +1,6 @@
+using Dependinator.Model.Parsers.Assemblies;
 using Dependinator.Model.Parsing;
-using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies;
+
 
 namespace DependinatorLib.Tests.Model.Parsing.Assemblies;
 

@@ -2,20 +2,20 @@
 using Dependinator.Model.Parsing;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private
+namespace Dependinator.Model.Parsers.Assemblies;
+
+internal class TypeData
 {
-    internal class TypeData
+    public TypeData(TypeDefinition type, NodeData node, bool isAsyncStateType)
     {
-        public TypeData(TypeDefinition type, NodeData node, bool isAsyncStateType)
-        {
-            Type = type;
-            Node = node;
-            IsAsyncStateType = isAsyncStateType;
-        }
-
-
-        public TypeDefinition Type { get; }
-        public NodeData Node { get; }
-        public bool IsAsyncStateType { get; }
+        Type = type;
+        Node = node;
+        IsAsyncStateType = isAsyncStateType;
     }
+
+
+    public TypeDefinition Type { get; }
+    public NodeData Node { get; }
+    public bool IsAsyncStateType { get; }
 }
+

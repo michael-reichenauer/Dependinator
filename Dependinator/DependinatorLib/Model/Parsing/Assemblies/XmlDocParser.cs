@@ -1,161 +1,155 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Xml.Linq;
-using Dependinator.Utils;
+﻿using System.Xml.Linq;
 
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private
+namespace Dependinator.Model.Parsers.Assemblies;
+internal class XmlDocParser
 {
-    internal class XmlDocParser
+    private readonly string assemblyPath;
+    private readonly Lazy<IReadOnlyDictionary<string, string>> descriptions;
+    private static readonly char[] ParameterSeparator = ",".ToCharArray();
+
+
+    public XmlDocParser(string assemblyPath)
     {
-        private readonly string assemblyPath;
-        private readonly Lazy<IReadOnlyDictionary<string, string>> descriptions;
-        private static readonly char[] ParameterSeparator = ",".ToCharArray();
+        this.assemblyPath = assemblyPath;
+        descriptions = new Lazy<IReadOnlyDictionary<string, string>>(GetDescriptions);
+    }
 
 
-        public XmlDocParser(string assemblyPath)
+    public string GetDescription(string nodeName)
+    {
+        // Adjust for inner types using '/' as separators
+        nodeName = nodeName.Replace("/", ".");
+
+        if (descriptions.Value.TryGetValue(nodeName, out string description))
         {
-            this.assemblyPath = assemblyPath;
-            descriptions = new Lazy<IReadOnlyDictionary<string, string>>(GetDescriptions);
+            return description;
         }
 
+        return null;
+    }
 
-        public string GetDescription(string nodeName)
+
+    private IReadOnlyDictionary<string, string> GetDescriptions()
+    {
+        Dictionary<string, string> items = new Dictionary<string, string>();
+        try
         {
-            // Adjust for inner types using '/' as separators
-            nodeName = nodeName.Replace("/", ".");
+            string directoryName = Path.GetDirectoryName(assemblyPath);
+            string xmlFileName = Path.GetFileNameWithoutExtension(assemblyPath) + ".xml";
+            string xmlFilePath = Path.Combine(directoryName, xmlFileName);
 
-            if (descriptions.Value.TryGetValue(nodeName, out string description))
+            if (File.Exists(xmlFilePath))
             {
-                return description;
-            }
+                XDocument doc = XDocument.Load(xmlFilePath);
 
-            return null;
-        }
+                string assemblyName = GetAssemblyName(doc);
 
-
-        private IReadOnlyDictionary<string, string> GetDescriptions()
-        {
-            Dictionary<string, string> items = new Dictionary<string, string>();
-            try
-            {
-                string directoryName = Path.GetDirectoryName(assemblyPath);
-                string xmlFileName = Path.GetFileNameWithoutExtension(assemblyPath) + ".xml";
-                string xmlFilePath = Path.Combine(directoryName, xmlFileName);
-
-                if (File.Exists(xmlFilePath))
+                var members = doc.Descendants("member");
+                foreach (var member in members)
                 {
-                    XDocument doc = XDocument.Load(xmlFilePath);
+                    string memberName = GetMemberName(member);
+                    string summary = GetSummary(member);
 
-                    string assemblyName = GetAssemblyName(doc);
-
-                    var members = doc.Descendants("member");
-                    foreach (var member in members)
-                    {
-                        string memberName = GetMemberName(member);
-                        string summary = GetSummary(member);
-
-                        Add(items, assemblyName, memberName, summary);
-                        Console.WriteLine(summary);
-                    }
+                    Add(items, assemblyName, memberName, summary);
+                    Console.WriteLine(summary);
                 }
             }
-            catch (Exception e) when (e.IsNotFatal())
-            {
-                Log.Exception(e, $"Failed to parse xml docs for {assemblyPath}");
-            }
-
-            return items;
         }
-
-
-        private void Add(
-            IDictionary<string, string> items,
-            string assemblyName,
-            string memberName,
-            string summary)
+        catch (Exception e) when (e.IsNotFatal())
         {
-            // Trim type marker "M:" and "T:" in member name.
-            bool isMethod = memberName?.StartsWith("M:") ?? false;
-            memberName = memberName.Substring(2)
-                .Replace("``", "`");
-
-            int index1 = memberName.IndexOf('(');
-            int index2 = memberName.IndexOf(')');
-
-            if (index1 > -1 && index2 > index1 + 1)
-            {
-                string parametersText = memberName.Substring(index1 + 1, index2 - index1 - 1);
-                string[] parts = parametersText.Split(ParameterSeparator);
-                parametersText = string.Join(",", parts.Select(ToShortTypeName));
-     
-                memberName = $"{memberName.Substring(0, index1)}({parametersText})";
-            }
-            else if (isMethod)
-            {
-                memberName = memberName + "()";
-            }
-
-            string fullName = memberName;
-
-            if (!string.IsNullOrEmpty(assemblyName))
-            {
-                fullName = $"{assemblyName}.{memberName}";
-            }
-
-            items[fullName] = summary;
+            Log.Exception(e, $"Failed to parse xml docs for {assemblyPath}");
         }
 
+        return items;
+    }
 
-        private static string ToShortTypeName(string fullName)
+
+    private void Add(
+        IDictionary<string, string> items,
+        string assemblyName,
+        string memberName,
+        string summary)
+    {
+        // Trim type marker "M:" and "T:" in member name.
+        bool isMethod = memberName?.StartsWith("M:") ?? false;
+        memberName = memberName.Substring(2)
+            .Replace("``", "`");
+
+        int index1 = memberName.IndexOf('(');
+        int index2 = memberName.IndexOf(')');
+
+        if (index1 > -1 && index2 > index1 + 1)
         {
-            int index = fullName.LastIndexOf('.');
-            return index == -1 ? fullName : fullName.Substring(index + 1);
+            string parametersText = memberName.Substring(index1 + 1, index2 - index1 - 1);
+            string[] parts = parametersText.Split(ParameterSeparator);
+            parametersText = string.Join(",", parts.Select(ToShortTypeName));
+
+            memberName = $"{memberName.Substring(0, index1)}({parametersText})";
         }
-
-
-        private static string GetSummary(XElement member)
+        else if (isMethod)
         {
-            XElement node = member.Descendants("summary").FirstOrDefault();
-
-            string summary = node?.ToString();
-
-            if (!string.IsNullOrEmpty(summary))
-            {
-                summary = summary
-                    .Replace("<summary>", "")
-                    .Replace("</summary>", "")
-                    .Replace("<see cref=\"T:", "")
-                    .Replace("<see cref=\"M:", "")
-                    .Replace("<see cref=\"P:", "")
-                    .Replace("<see cref=\"F:", "")
-                    .Replace("<see cref=\"F:", "")
-                    .Replace("\" />", "");
-
-                summary = string.Join("\n", summary.Split("\n".ToCharArray()).Select(line => line.Trim()));
-            }
-
-            return summary?.Trim();
+            memberName = memberName + "()";
         }
 
+        string fullName = memberName;
 
-        private static string GetMemberName(XElement member)
+        if (!string.IsNullOrEmpty(assemblyName))
         {
-            string memberName = member.Attribute("name")?.Value;
-
-            return memberName?.Trim();
+            fullName = $"{assemblyName}.{memberName}";
         }
 
+        items[fullName] = summary;
+    }
 
-        private static string GetAssemblyName(XDocument doc)
+
+    private static string ToShortTypeName(string fullName)
+    {
+        int index = fullName.LastIndexOf('.');
+        return index == -1 ? fullName : fullName.Substring(index + 1);
+    }
+
+
+    private static string GetSummary(XElement member)
+    {
+        XElement node = member.Descendants("summary").FirstOrDefault();
+
+        string summary = node?.ToString();
+
+        if (!string.IsNullOrEmpty(summary))
         {
-            string assemblyName = doc
-                .Descendants("assembly")
-                .Descendants("name").FirstOrDefault()?.Value;
+            summary = summary
+                .Replace("<summary>", "")
+                .Replace("</summary>", "")
+                .Replace("<see cref=\"T:", "")
+                .Replace("<see cref=\"M:", "")
+                .Replace("<see cref=\"P:", "")
+                .Replace("<see cref=\"F:", "")
+                .Replace("<see cref=\"F:", "")
+                .Replace("\" />", "");
 
-            return assemblyName;
+            summary = string.Join("\n", summary.Split("\n".ToCharArray()).Select(line => line.Trim()));
         }
+
+        return summary?.Trim();
+    }
+
+
+    private static string GetMemberName(XElement member)
+    {
+        string memberName = member.Attribute("name")?.Value;
+
+        return memberName?.Trim();
+    }
+
+
+    private static string GetAssemblyName(XDocument doc)
+    {
+        string assemblyName = doc
+            .Descendants("assembly")
+            .Descendants("name").FirstOrDefault()?.Value;
+
+        return assemblyName;
     }
 }
+

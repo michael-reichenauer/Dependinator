@@ -1,6 +1,4 @@
-﻿using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers;
-
-namespace Dependinator.Model.Parsing;
+﻿namespace Dependinator.Model.Parsing;
 
 public interface IParser
 {

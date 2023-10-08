@@ -1,112 +1,109 @@
-﻿using System;
-using System.Linq;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 using Dependinator.Model.Parsing;
 
+namespace Dependinator.Model.Parsers.Assemblies;
 
-namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private
+internal class LinkHandler
 {
-    internal class LinkHandler
+    private readonly Action<LinkData> linkCallback;
+
+
+    public LinkHandler(Action<LinkData> linkCallback)
     {
-        private readonly Action<LinkData> linkCallback;
+        this.linkCallback = linkCallback;
+    }
 
 
-        public LinkHandler(Action<LinkData> linkCallback)
+    public int LinksCount { get; private set; } = 0;
+
+
+    public void AddLink(string source, string target, string targetType)
+    {
+        SendLink(source, target, targetType);
+    }
+
+
+    public void AddLinkToType(string sourceName, TypeReference targetType)
+    {
+        if (targetType is GenericInstanceType genericType)
         {
-            this.linkCallback = linkCallback;
+            genericType.GenericArguments.ForEach(argType => AddLinkToType(sourceName, argType));
         }
 
-
-        public int LinksCount { get; private set; } = 0;
-
-
-        public void AddLink(string source, string target, string targetType)
+        if (IsIgnoredReference(targetType))
         {
-            SendLink(source, target, targetType);
+            return;
         }
 
+        string targetNodeName = Name.GetTypeFullName(targetType);
 
-        public void AddLinkToType(string sourceName, TypeReference targetType)
+        if (IsIgnoredTargetName(targetNodeName))
         {
-            if (targetType is GenericInstanceType genericType)
-            {
-                genericType.GenericArguments.ForEach(argType => AddLinkToType(sourceName, argType));
-            }
-
-            if (IsIgnoredReference(targetType))
-            {
-                return;
-            }
-
-            string targetNodeName = Name.GetTypeFullName(targetType);
-
-            if (IsIgnoredTargetName(targetNodeName))
-            {
-                return;
-            }
-
-            SendLink(sourceName, targetNodeName, NodeData.TypeType);
+            return;
         }
 
+        SendLink(sourceName, targetNodeName, NodeData.TypeType);
+    }
 
-        public void AddLinkToMember(string sourceName, IMemberDefinition memberInfo)
+
+    public void AddLinkToMember(string sourceName, IMemberDefinition memberInfo)
+    {
+        if (IsIgnoredTargetMember(memberInfo))
         {
-            if (IsIgnoredTargetMember(memberInfo))
-            {
-                return;
-            }
-
-            string targetNodeName = Name.GetMemberFullName(memberInfo);
-
-            if (IsIgnoredTargetName(targetNodeName))
-            {
-                return;
-            }
-
-            SendLink(sourceName, targetNodeName, NodeData.MemberType);
+            return;
         }
 
+        string targetNodeName = Name.GetMemberFullName(memberInfo);
 
-        private void SendLink(string source, string targetName, string targetType)
+        if (IsIgnoredTargetName(targetNodeName))
         {
-            LinkData dataLink = new LinkData(source, targetName, targetType);
-            linkCallback(dataLink);
-            LinksCount++;
+            return;
         }
 
-
-        private static bool IsIgnoredTargetMember(IMemberDefinition memberInfo)
-        {
-            return IgnoredTypes.IsIgnoredSystemType(memberInfo.DeclaringType)
-                   || IsGenericTypeArgument(memberInfo.DeclaringType);
-        }
+        SendLink(sourceName, targetNodeName, NodeData.MemberType);
+    }
 
 
-        private static bool IsIgnoredTargetName(string targetNodeName)
-        {
-            return Name.IsCompilerGenerated(targetNodeName) ||
-                   targetNodeName.StartsWith("mscorlib.");
-        }
+    private void SendLink(string source, string targetName, string targetType)
+    {
+        LinkData dataLink = new LinkData(source, targetName, targetType);
+        linkCallback(dataLink);
+        LinksCount++;
+    }
 
 
-        private static bool IsIgnoredReference(TypeReference targetType)
-        {
-            return targetType.FullName == "System.Void"
-                   || targetType.IsGenericParameter
-                   || IgnoredTypes.IsIgnoredSystemType(targetType)
-                   || IsGenericTypeArgument(targetType)
-                   || targetType is ByReferenceType refType && refType.ElementType.IsGenericParameter;
-        }
+    private static bool IsIgnoredTargetMember(IMemberDefinition memberInfo)
+    {
+        return IgnoredTypes.IsIgnoredSystemType(memberInfo.DeclaringType)
+               || IsGenericTypeArgument(memberInfo.DeclaringType);
+    }
 
 
-        /// <summary>
-        /// Return true if type is a generic type parameter T, as in e.g. Get'T'(T value)
-        /// </summary>
-        private static bool IsGenericTypeArgument(MemberReference targetType)
-        {
-            return
-                targetType.FullName == null
-                && targetType.DeclaringType == null;
-        }
+    private static bool IsIgnoredTargetName(string targetNodeName)
+    {
+        return Name.IsCompilerGenerated(targetNodeName) ||
+               targetNodeName.StartsWith("mscorlib.");
+    }
+
+
+    private static bool IsIgnoredReference(TypeReference targetType)
+    {
+        return targetType.FullName == "System.Void"
+               || targetType.IsGenericParameter
+               || IgnoredTypes.IsIgnoredSystemType(targetType)
+               || IsGenericTypeArgument(targetType)
+               || targetType is ByReferenceType refType && refType.ElementType.IsGenericParameter;
+    }
+
+
+    /// <summary>
+    /// Return true if type is a generic type parameter T, as in e.g. Get'T'(T value)
+    /// </summary>
+    private static bool IsGenericTypeArgument(MemberReference targetType)
+    {
+        return
+            targetType.FullName == null
+            && targetType.DeclaringType == null;
     }
 }
+
