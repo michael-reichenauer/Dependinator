@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Threading.Tasks;
+using Dependinator.Model.Parsing;
 using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Common;
-//using Dependinator.Utils.ErrorHandling;
 
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private
@@ -43,7 +43,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             using (AssemblyParser assemblyParser = new AssemblyParser(
                 path, null, fileNode.Name, nodeCallback, linkCallback, false))
             {
-                return await assemblyParser.ParseAsync();      
+                return await assemblyParser.ParseAsync();
             }
         }
 
@@ -53,7 +53,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
             using (AssemblyParser assemblyParser = new AssemblyParser(
                 path, null, null, null, null, true))
             {
-                return await Task.Run(() => assemblyParser.TryGetSource(nodeName));           
+                return await Task.Run(() => assemblyParser.TryGetSource(nodeName));
             }
         }
 

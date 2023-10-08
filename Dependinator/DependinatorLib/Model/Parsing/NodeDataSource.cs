@@ -1,17 +1,17 @@
-﻿namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers
+﻿namespace Dependinator.Model.Parsing;
+
+public class NodeDataSource
 {
-    public class NodeDataSource
+    public string Text { get; }
+    public int LineNumber { get; }
+    public string Path { get; }
+
+
+    public NodeDataSource(string text, int lineNumber, string path)
     {
-        public string Text { get; }
-        public int LineNumber { get; }
-        public string Path { get; }
-
-
-        public NodeDataSource(string text, int lineNumber, string path)
-        {
-            Text = text;
-            LineNumber = lineNumber;
-            Path = path;
-        }
+        Text = text;
+        LineNumber = lineNumber;
+        Path = path;
     }
 }
+

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Dependinator.Utils;
 using Mono.Cecil;
-
+using Dependinator.Model.Parsing;
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private
 {

@@ -9,7 +9,7 @@ using Dependinator.Utils;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
-
+using Dependinator.Model.Parsing;
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies
 {

@@ -1,6 +1,6 @@
-namespace Dependinator.ModelViewing.Private.DataHandling.Dtos
+namespace Dependinator.Model.Dtos;
+
+internal interface IDataItem
 {
-    internal interface IDataItem
-    {
-    }
 }
+

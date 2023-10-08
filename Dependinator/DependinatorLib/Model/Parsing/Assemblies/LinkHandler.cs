@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using Mono.Cecil;
+using Dependinator.Model.Parsing;
 
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private

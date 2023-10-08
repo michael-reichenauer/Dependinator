@@ -4,7 +4,7 @@ using System.Linq;
 using Dependinator.Utils;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-
+using Dependinator.Model.Parsing;
 
 namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies.Private
 {
@@ -51,7 +51,7 @@ namespace Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private
 
         public void AddMethodBodyLinks(string memberName, MethodDefinition method)
         {
-           methodBodyNodes.Add(new MethodBodyNode(memberName, method, false));
+            methodBodyNodes.Add(new MethodBodyNode(memberName, method, false));
         }
 
 

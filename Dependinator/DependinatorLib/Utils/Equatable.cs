@@ -1,6 +1,3 @@
-using System;
-
-
 namespace Dependinator.Utils
 {
     internal interface IEquatable

@@ -1,7 +1,7 @@
-namespace DependinatorLib.Tests.Model.Parsing.Assemblies;
-
-using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers;
+using Dependinator.Model.Parsing;
 using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Assemblies;
+
+namespace DependinatorLib.Tests.Model.Parsing.Assemblies;
 
 public class AssemblyParserTest
 {
@@ -21,6 +21,7 @@ public class AssemblyParserTest
 
         var r = await parser.ParseAsync();
 
-        Assert.Equal("hej", "hej");
+        Assert.True(nodes.Any());
+        Assert.True(links.Any());
     }
 }
