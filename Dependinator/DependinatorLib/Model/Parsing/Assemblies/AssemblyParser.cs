@@ -8,7 +8,7 @@ namespace Dependinator.Model.Parsers.Assemblies;
 
 internal class AssemblyParser : IDisposable
 {
-    private readonly Lazy<AssemblyDefinition> assembly;
+    private readonly Lazy<AssemblyDefinition?> assembly;
     private readonly string assemblyPath;
     private readonly AssemblyReferencesParser assemblyReferencesParser;
     private readonly Decompiler decompiler = new Decompiler();
@@ -43,12 +43,12 @@ internal class AssemblyParser : IDisposable
         typeParser = new TypeParser(linkHandler, xmlDockParser, nodeCallback);
         memberParser = new MemberParser(linkHandler, xmlDockParser, nodeCallback);
 
-        assembly = new Lazy<AssemblyDefinition>(() => GetAssembly(isReadSymbols));
+        assembly = new Lazy<AssemblyDefinition?>(() => GetAssembly(isReadSymbols));
     }
 
     public string ProjectPath { get; }
 
-    public string ModuleName => Name.GetModuleName(assembly.Value);
+    public string ModuleName => Name.GetModuleName(assembly.Value!);
 
     public int TypeCount => typeInfos.Count;
     public int MemberCount => memberParser.MembersCount;
@@ -82,8 +82,8 @@ internal class AssemblyParser : IDisposable
 
     public void ParseAssemblyModule()
     {
-        string nodeName = Name.GetModuleName(assembly.Value);
-        string assemblyDescription = GetAssemblyDescription(assembly.Value);
+        string nodeName = Name.GetModuleName(assembly.Value!);
+        string assemblyDescription = GetAssemblyDescription(assembly.Value!);
         Node assemblyNode = new Node(nodeName, parentName, Node.AssemblyType, assemblyDescription);
 
         nodeCallback(assemblyNode);
@@ -102,8 +102,8 @@ internal class AssemblyParser : IDisposable
 
 
     public IEnumerable<string> GetReferencePaths(IReadOnlyList<string> internalModules)
-        => assemblyReferencesParser.GetReferencesPaths(
-            assemblyPath, assembly.Value, internalModules);
+        => AssemblyReferencesParser.GetReferencesPaths(
+            assemblyPath, assembly.Value!, internalModules);
 
 
     public void ParseTypes()
@@ -128,7 +128,7 @@ internal class AssemblyParser : IDisposable
 
 
     public R<Parsing.Source> TryGetSource(string nodeName) =>
-        decompiler.TryGetSource(assembly.Value.MainModule, nodeName);
+        decompiler.TryGetSource(assembly.Value!.MainModule, nodeName);
 
 
     public bool TryGetNode(string sourceFilePath, out string nodeName)
@@ -136,11 +136,11 @@ internal class AssemblyParser : IDisposable
         IEnumerable<TypeDefinition> assemblyTypes = GetAssemblyTypes();
 
         return decompiler.TryGetNodeNameForSourceFile(
-            assembly.Value.MainModule, assemblyTypes, sourceFilePath, out nodeName);
+            assembly.Value!.MainModule, assemblyTypes, sourceFilePath, out nodeName);
     }
 
 
-    private AssemblyDefinition GetAssembly(bool isSymbols)
+    private AssemblyDefinition? GetAssembly(bool isSymbols)
     {
         try
         {
@@ -167,23 +167,23 @@ internal class AssemblyParser : IDisposable
 
 
     private IEnumerable<TypeDefinition> GetAssemblyTypes() =>
-        assembly.Value.MainModule.Types
+        assembly.Value!.MainModule.Types
             .Where(type =>
                 !Name.IsCompilerGenerated(type.Name) &&
-                !Name.IsCompilerGenerated(type.DeclaringType?.Name));
+                !Name.IsCompilerGenerated(type.DeclaringType?.Name ?? ""));
 
 
     private static string GetAssemblyDescription(AssemblyDefinition assembly)
     {
         Collection<CustomAttribute> attributes = assembly.CustomAttributes;
 
-        CustomAttribute descriptionAttribute = attributes.FirstOrDefault(attribute =>
+        CustomAttribute? descriptionAttribute = attributes.FirstOrDefault(attribute =>
             attribute.AttributeType.FullName == typeof(AssemblyDescriptionAttribute).FullName);
 
         CustomAttributeArgument? argument = descriptionAttribute?.ConstructorArguments
             .FirstOrDefault();
 
-        return argument?.Value as string;
+        return argument?.Value as string ?? "";
     }
 }
 

@@ -6,8 +6,8 @@ namespace Dependinator.Model.Parsers.Assemblies;
 
 internal class AssemblyReferencesParser
 {
-    private readonly LinkHandler linkHandler;
-    private readonly Action<Node> nodeCallback;
+    readonly LinkHandler linkHandler;
+    readonly Action<Node> nodeCallback;
 
 
     public AssemblyReferencesParser(LinkHandler linkHandler, Action<Node> nodeCallback)
@@ -34,7 +34,7 @@ internal class AssemblyReferencesParser
                 string referenceName = Name.GetModuleName(reference);
                 string parent = GetReferenceParent(referencesRootName, referenceName);
 
-                Node referenceNode = new Node(referenceName, parent, Node.AssemblyType, null);
+                var referenceNode = new Node(referenceName, parent, Node.AssemblyType, "");
 
                 nodeCallback(referenceNode);
 
@@ -44,12 +44,12 @@ internal class AssemblyReferencesParser
     }
 
 
-    public IReadOnlyList<string> GetReferencesPaths(
+    public static IReadOnlyList<string> GetReferencesPaths(
         string assemblyPath,
         AssemblyDefinition assembly,
         IReadOnlyList<string> internalModules)
     {
-        string folderPath = Path.GetDirectoryName(assemblyPath);
+        string folderPath = Path.GetDirectoryName(assemblyPath) ?? "";
         var assemblyReferences = GetExternalAssemblyReferences(assembly, internalModules);
 
         return assemblyReferences
@@ -58,26 +58,25 @@ internal class AssemblyReferencesParser
     }
 
 
-    private static string AssemblyFileName(AssemblyNameReference reference, string folderPath)
-        => Path.Combine(folderPath, $"{GetAssemblyName(reference)}.dll");
+    static string AssemblyFileName(AssemblyNameReference reference, string folderPath)
+       => Path.Combine(folderPath, $"{GetAssemblyName(reference)}.dll");
 
 
-    private static string GetAssemblyName(AssemblyNameReference reference)
-        => Name.GetModuleName(reference).Replace("*", ".");
+    static string GetAssemblyName(AssemblyNameReference reference)
+       => Name.GetModuleName(reference).Replace("*", ".");
 
 
-    private string SendReferencesRootNode()
+    string SendReferencesRootNode()
     {
         string referencesRootName = "$Externals";
-        Node referencesRootNode = new Node(
-            referencesRootName, null, Node.GroupType, "External references");
+        Node referencesRootNode = new Node(referencesRootName, "", Node.GroupType, "External references");
 
         nodeCallback(referencesRootNode);
         return referencesRootName;
     }
 
 
-    private string GetReferenceParent(string parent, string referenceName)
+    string GetReferenceParent(string parent, string referenceName)
     {
         string[] parts = referenceName.Split("*".ToCharArray());
 
@@ -86,7 +85,7 @@ internal class AssemblyReferencesParser
             string name = string.Join(".", parts.Take(i + 1));
 
             string groupName = $"{parent}.{name}";
-            Node groupNode = new Node(groupName, parent, Node.GroupType, null);
+            var groupNode = new Node(groupName, parent, Node.GroupType, "");
 
             nodeCallback(groupNode);
             parent = groupName;
@@ -96,9 +95,9 @@ internal class AssemblyReferencesParser
     }
 
 
-    private static IReadOnlyList<AssemblyNameReference> GetExternalAssemblyReferences(
-        AssemblyDefinition assembly,
-        IReadOnlyList<string> internalModules)
+    static IReadOnlyList<AssemblyNameReference> GetExternalAssemblyReferences(
+       AssemblyDefinition assembly,
+       IReadOnlyList<string> internalModules)
     {
         return assembly.MainModule.AssemblyReferences
             .Where(reference => !IgnoredTypes.IsSystemIgnoredModuleName(reference.Name))
