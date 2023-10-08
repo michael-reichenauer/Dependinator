@@ -59,4 +59,14 @@ public static class StringExtensions
         if (source == null) return "";
         return $"{source.Major}.{source.Minor} ({source.Build}.{source.Revision})";
     }
+
+    
+    public static bool IsSameIc(this string strA, string strB) =>
+        0 == string.Compare(strA, strB, StringComparison.OrdinalIgnoreCase);
+    
+    //  public static bool StartsWithTxt(this string text, string value) =>
+    //     text.StartsWith(value, StringComparison.Ordinal);
+
+    public static bool StartsWithIc(this string text, string value) =>
+        text.StartsWith(value, StringComparison.OrdinalIgnoreCase);
 }
