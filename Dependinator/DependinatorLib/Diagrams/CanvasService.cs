@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components.Web;
 namespace Dependinator.Diagrams;
 
 
-public interface ICanvasService
+interface ICanvasService
 {
     string SvgContent { get; }
     Task InitAsync(Canvas canvas);
@@ -17,8 +17,11 @@ public interface ICanvasService
 class CanvasService : ICanvasService
 {
     readonly IPanZoomService panZoomService;
+    
     readonly List<IElement> elements = new List<IElement>();
     Rect bounds = new(0, 0, 0, 0);
+    public string SvgContent { get; private set; } = "";
+
     Canvas canvas = null!;
 
     public CanvasService(IPanZoomService panZoomService)
@@ -26,7 +29,6 @@ class CanvasService : ICanvasService
         this.panZoomService = panZoomService;
     }
 
-    public string SvgContent { get; private set; } = "";
 
     public Task InitAsync(Canvas canvas)
     {
