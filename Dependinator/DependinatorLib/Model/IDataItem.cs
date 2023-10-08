@@ -1,4 +1,4 @@
-namespace Dependinator.Model.Dtos;
+namespace Dependinator.Model;
 
 internal interface IDataItem
 {

@@ -1,9 +1,9 @@
-﻿using System.Windows;
-using Dependinator.Diagrams;
-using Dependinator.Utils;
+﻿using Dependinator.Diagrams;
 
 
-namespace Dependinator.Model.Dtos;
+namespace Dependinator.Model;
+
+
 
 internal class DataNode : Equatable<DataNode>, IDataItem
 {

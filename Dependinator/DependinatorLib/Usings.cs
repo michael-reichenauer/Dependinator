@@ -1,7 +1,6 @@
 global using Dependinator.Utils;
 global using Dependinator.Utils.Logging;
 global using static Dependinator.Utils.Result;
-global using Dependinator.Model.Dtos;
 
 using System.Reflection;
 using System.Runtime.CompilerServices;
