@@ -7,10 +7,9 @@ using Dependinator.Model.Parsing;
 
 namespace Dependinator.Model.Parsers.Assemblies;
 
-internal class Decompiler
+class Decompiler
 {
-    private static readonly string DecompiledText = "// Note: Decompiled code\n// ---------------------\n\n";
-
+    static readonly string DecompiledText = "// Note: Decompiled code\n// ---------------------\n\n";
 
     public R<Parsing.Source> TryGetSource(ModuleDefinition module, string nodeName)
     {
@@ -23,7 +22,7 @@ internal class Decompiler
                 return new Parsing.Source(codeText, source.LineNumber, source.Path);
             }
 
-            return new Parsing.Source(codeText, 0, null);
+            return new Parsing.Source(codeText, 0, "");
         }
         else if (TryGetMember(module, nodeName, out IMemberDefinition member))
         {
@@ -34,7 +33,7 @@ internal class Decompiler
                 return new Parsing.Source(codeText, source.LineNumber, source.Path);
             }
 
-            return new Parsing.Source(codeText, 0, null);
+            return new Parsing.Source(codeText, 0, "");
         }
 
         Log.Debug($"Failed to locate source for:\n{nodeName}");
@@ -60,13 +59,13 @@ internal class Decompiler
             }
         }
 
-        nodeName = null;
+        nodeName = "";
         return false;
     }
 
 
-    private static bool TryGetType(
-        ModuleDefinition module, string nodeName, out TypeDefinition type)
+    static bool TryGetType(
+       ModuleDefinition module, string nodeName, out TypeDefinition type)
     {
         // The type starts after the module name, which is after the first '.'
         int typeIndex = nodeName.IndexOf(".");
@@ -79,13 +78,13 @@ internal class Decompiler
             return type != null;
         }
 
-        type = null;
+        type = default!;
         return false;
     }
 
 
-    private static bool TryGetMember(
-        ModuleDefinition module, string nodeName, out IMemberDefinition member)
+    static bool TryGetMember(
+       ModuleDefinition module, string nodeName, out IMemberDefinition member)
     {
         // The type starts after the module name, which is after the first '.'
         int typeIndex = nodeName.IndexOf(".");
@@ -111,63 +110,53 @@ internal class Decompiler
             }
         }
 
-        member = null;
+        member = default!;
         return false;
     }
 
 
-    private static bool TryGetMember(
-        TypeDefinition typeDefinition, string fullName, out IMemberDefinition member)
+    static bool TryGetMember(
+       TypeDefinition typeDefinition, string fullName, out IMemberDefinition member)
     {
-        if (TryGetMethod(typeDefinition, fullName, out member))
-        {
-            return true;
-        }
+        if (TryGetMethod(typeDefinition, fullName, out member)) return true;
 
-        if (TryGetProperty(typeDefinition, fullName, out member))
-        {
-            return true;
-        }
+        if (TryGetProperty(typeDefinition, fullName, out member)) return true;
 
-        if (TryGetField(typeDefinition, fullName, out member))
-        {
-            return true;
-        }
+        if (TryGetField(typeDefinition, fullName, out member)) return true;
 
-        member = null;
+        member = default!;
         return false;
     }
 
 
-    private static bool TryGetMethod(
-        TypeDefinition type, string fullName, out IMemberDefinition method)
+    static bool TryGetMethod(
+       TypeDefinition type, string fullName, out IMemberDefinition method)
     {
-        method = type.Methods.FirstOrDefault(m => Name.GetMethodFullName(m) == fullName);
+        method = type.Methods.FirstOrDefault(m => Name.GetMethodFullName(m) == fullName)!;
         return method != null;
     }
 
 
-    private static bool TryGetProperty(
-        TypeDefinition type, string fullName, out IMemberDefinition property)
+    static bool TryGetProperty(
+       TypeDefinition type, string fullName, out IMemberDefinition property)
     {
-        property = type.Properties.FirstOrDefault(m => Name.GetMemberFullName(m) == fullName);
+        property = type.Properties.FirstOrDefault(m => Name.GetMemberFullName(m) == fullName)!;
         return property != null;
     }
 
 
-    private static bool TryGetField(
-        TypeDefinition type, string fullName, out IMemberDefinition field)
+    static bool TryGetField(
+       TypeDefinition type, string fullName, out IMemberDefinition field)
     {
-        field = type.Fields.FirstOrDefault(m => Name.GetMemberFullName(m) == fullName);
+        field = type.Fields.FirstOrDefault(m => Name.GetMemberFullName(m) == fullName)!;
         return field != null;
     }
 
 
-    private static string GetDecompiledText(ModuleDefinition module, TypeDefinition type)
+    static string GetDecompiledText(ModuleDefinition module, TypeDefinition type)
     {
         return "";
         // CSharpDecompiler decompiler = GetDecompiler(module);
-
         // return DecompiledText + decompiler.DecompileTypesAsString(new[] { type }).Replace("\t", "  ");
     }
 
@@ -180,11 +169,11 @@ internal class Decompiler
     }
 
 
-    private bool TryGetFilePath(TypeDefinition type, out Parsing.Source source)
+    bool TryGetFilePath(TypeDefinition type, out Parsing.Source source)
     {
         foreach (MethodDefinition method in type.Methods)
         {
-            SequencePoint sequencePoint = method.DebugInformation.SequencePoints.ElementAtOrDefault(0);
+            SequencePoint? sequencePoint = method.DebugInformation.SequencePoints.ElementAtOrDefault(0);
             if (sequencePoint != null)
             {
                 source = ToFileLocation(sequencePoint);
@@ -192,16 +181,16 @@ internal class Decompiler
             }
         }
 
-        source = null;
+        source = default!;
         return false;
     }
 
 
-    private bool TryGetFilePath(IMemberDefinition member, out Parsing.Source source)
+    bool TryGetFilePath(IMemberDefinition member, out Parsing.Source source)
     {
         if (member is MethodDefinition method)
         {
-            SequencePoint sequencePoint = method.DebugInformation.SequencePoints.ElementAtOrDefault(0);
+            SequencePoint? sequencePoint = method.DebugInformation.SequencePoints.ElementAtOrDefault(0);
             if (sequencePoint != null)
             {
                 source = ToFileLocation(sequencePoint);
@@ -214,7 +203,7 @@ internal class Decompiler
 
 
     private Parsing.Source ToFileLocation(SequencePoint sequencePoint) =>
-        new Parsing.Source(null, sequencePoint.StartLine, sequencePoint.Document.Url);
+        new Parsing.Source("", sequencePoint.StartLine, sequencePoint.Document.Url);
 
 
     private static CSharpDecompiler GetDecompiler(ModuleDefinition module) =>
