@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.Build.Construction;
 
 
 namespace Dependinator.Model.Parsing.Solutions;
@@ -43,20 +44,33 @@ internal class Solution
 
     private IReadOnlyList<Project> GetProjects()
     {
-        VisualStudioSolutionParser solutionParser = new VisualStudioSolutionParser();
-
-        using (StreamReader streamReader = new StreamReader(SolutionFilePath))
-        {
-            solutionParser.SolutionReader = streamReader;
-            solutionParser.ParseSolution();
-        }
-
-        IReadOnlyList<VisualStudioProjectInSolution> solutionParserProjects = solutionParser.Projects;
+        var solutionFile = SolutionFile.Parse(SolutionFilePath);
+        var solutionParserProjects = solutionFile.ProjectsInOrder;
 
         return solutionParserProjects
-            .Where(p => !p.IsSolutionFolder && p.IsIncludedDebug)
-            .Select(p => new Project(p, SolutionDirectory))
-            .ToList();
+              .Select(p => new Project(p, SolutionDirectory))
+              .ToList();
+
+
+        //     .Where(p => !p.IsSolutionFolder && p.IsIncludedDebug)
+        //     .Select(p => new Project(p, SolutionDirectory))
+        //     .ToList();
+
+
+        // //VisualStudioSolutionParser solutionParser = new VisualStudioSolutionParser();
+
+        // using (StreamReader streamReader = new StreamReader(SolutionFilePath))
+        // {
+        //     solutionParser.SolutionReader = streamReader;
+        //     solutionParser.ParseSolution();
+        // }
+
+        // IReadOnlyList<VisualStudioProjectInSolution> solutionParserProjects = solutionParser.Projects;
+
+        // return solutionParserProjects
+        //     .Where(p => !p.IsSolutionFolder && p.IsIncludedDebug)
+        //     .Select(p => new Project(p, SolutionDirectory))
+        //     .ToList();
     }
 
 
@@ -65,7 +79,7 @@ internal class Solution
 
     private bool IsTestProject(Project project)
     {
-        if (project.ProjectName.EndsWith("Test"))
+        if (project.ProjectName.EndsWith("Test") || project.ProjectName.EndsWith("Tests"))
         {
             string name = project.ProjectName.Substring(0, project.ProjectName.Length - 4);
 

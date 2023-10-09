@@ -13,7 +13,7 @@ interface IParser
 
     Task<R<Source>> GetSourceAsync(string path, string nodeName);
 
-    Task<string> GetNodeAsync(string path, Source source);
+    Task<R<string>> GetNodeAsync(string path, Source source);
 
     DateTime GetDataTime(string path);
 }

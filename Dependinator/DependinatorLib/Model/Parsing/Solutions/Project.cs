@@ -1,13 +1,15 @@
-﻿namespace Dependinator.Model.Parsing.Solutions;
+﻿using Microsoft.Build.Construction;
+
+namespace Dependinator.Model.Parsing.Solutions;
 
 
 internal class Project
 {
-    private readonly VisualStudioProjectInSolution projectInSolution;
+    private readonly ProjectInSolution projectInSolution;
     private readonly string solutionDirectory;
 
 
-    public Project(VisualStudioProjectInSolution projectInSolution, string solutionDirectory)
+    public Project(ProjectInSolution projectInSolution, string solutionDirectory)
     {
         this.projectInSolution = projectInSolution;
         this.solutionDirectory = solutionDirectory;
@@ -22,7 +24,7 @@ internal class Project
 
     public string ProjectName => projectInSolution.ProjectName;
 
-    public string ProjectFullName => projectInSolution.UniqueProjectName;
+    public string ProjectFullName => projectInSolution.RelativePath;
 
     public string RelativeProjectDirectory => Path.GetDirectoryName(RelativePath) ?? "";
 

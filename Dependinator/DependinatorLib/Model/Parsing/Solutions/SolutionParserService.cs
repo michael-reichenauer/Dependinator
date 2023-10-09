@@ -2,8 +2,8 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Dependinator.ModelViewing.Private.DataHandling.Private.Parsing.Private.Parsers.Common;
-using Dependinator.Utils.ErrorHandling;
+using Dependinator.Model.Parsing.Common;
+
 
 
 namespace Dependinator.Model.Parsing.Solutions;
@@ -36,52 +36,31 @@ internal class SolutionParserService : IParser
     }
 
 
-    public async Task ParseAsync(
+    public async Task<R> ParseAsync(
         string path,
-        Action<NodeData> nodeCallback,
-        Action<LinkData> linkCallback)
+        Action<Node> nodeCallback,
+        Action<Link> linkCallback)
     {
-        using (SolutionParser solutionParser = new SolutionParser(path, nodeCallback, linkCallback, false))
-        {
-            M result = await solutionParser.ParseAsync();
-
-            if (result.IsFaulted)
-            {
-                throw new Exception(result.ErrorMessage);
-            }
-        }
+        using var solutionParser = new SolutionParser(path, nodeCallback, linkCallback, false);
+        if (!Try(out var e, await solutionParser.ParseAsync())) return e;
+        return R.Ok;
     }
 
 
-    public async Task<NodeDataSource> GetSourceAsync(string path, string nodeName)
+    public async Task<R<Source>> GetSourceAsync(string path, string nodeName)
     {
-        using (SolutionParser solutionParser = new SolutionParser(path, null, null, true))
-        {
-            M<NodeDataSource> source = await solutionParser.TryGetSourceAsync(nodeName);
+        using var solutionParser = new SolutionParser(path, _ => { }, _ => { }, true);
+        if (!Try(out var source, out var e, await solutionParser.TryGetSourceAsync(nodeName))) return e;
 
-            if (source.IsFaulted)
-            {
-                throw new Exception(source.ErrorMessage);
-            }
-
-            return source.Value;
-        }
+        return source;
     }
 
 
-    public async Task<string> GetNodeAsync(string path, NodeDataSource source)
+    public async Task<R<string>> GetNodeAsync(string path, Source source)
     {
-        using (SolutionParser solutionParser = new SolutionParser(path, null, null, true))
-        {
-            M<string> nodeName = await solutionParser.TryGetNodeAsync(source);
-
-            if (nodeName.IsFaulted)
-            {
-                throw new Exception(nodeName.ErrorMessage);
-            }
-
-            return nodeName.Value;
-        }
+        using var solutionParser = new SolutionParser(path, _ => { }, _ => { }, true);
+        if (!Try(out var nodeName, out var e, await solutionParser.TryGetNodeAsync(source))) return e;
+        return nodeName;
     }
 
 

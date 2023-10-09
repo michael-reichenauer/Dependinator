@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections;
-using Dependinator.Utils.Reflection;
+
 
 
 namespace Dependinator.Model.Parsing.Solutions;
@@ -15,9 +15,9 @@ internal class VisualStudioProjectInSolution
     public VisualStudioProjectInSolution(object instance)
     {
         Project = instance;
-        UniqueProjectName = instance.GetField<string>("uniqueProjectName");
+        UniqueProjectName = instance.GetField<string>("uniqueProjectName") ?? "";
         ProjectName = instance.GetProperty<string>("ProjectName");
-        ProjectType = instance.GetProperty<object>("ProjectType").ToString();
+        ProjectType = instance.GetProperty<object>("ProjectType").ToString() ?? "";
         RelativePath = instance.GetProperty<string>("RelativePath");
         IsIncludedDebug = GetIncludedInDebug(instance);
     }
@@ -39,7 +39,7 @@ internal class VisualStudioProjectInSolution
         object projectConfigurations;
         projectConfigurations = instance.GetField<object>("projectConfigurations");
 
-        IEnumerable configurations = projectConfigurations as IEnumerable;
+        IEnumerable? configurations = projectConfigurations as IEnumerable;
 
         if (configurations != null)
         {
