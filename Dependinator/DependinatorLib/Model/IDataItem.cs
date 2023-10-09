@@ -1,6 +1,6 @@
-namespace Dependinator.Model;
+// namespace Dependinator.Model;
 
-internal interface IDataItem
-{
-}
+// internal interface IDataItem
+// {
+// }
 

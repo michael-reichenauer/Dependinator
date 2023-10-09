@@ -1,14 +1,14 @@
-using Dependinator.Diagrams;
+// using Dependinator.Diagrams;
 
-namespace Dependinator.Model;
+// namespace Dependinator.Model;
 
-record DataLine(
-    DataNodeName Source,
-    DataNodeName Target,
-    IReadOnlyList<Pos> Points,
-    int LinkCount)
-    : IDataItem
-{
-    public override string ToString() => $"{Source}->{Target}";
-}
+// record DataLine(
+//     DataNodeName Source,
+//     DataNodeName Target,
+//     IReadOnlyList<Pos> Points,
+//     int LinkCount)
+//     : IDataItem
+// {
+//     public override string ToString() => $"{Source}->{Target}";
+// }
 

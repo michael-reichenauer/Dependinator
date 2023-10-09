@@ -127,7 +127,7 @@ internal class AssemblyParser : IDisposable
     }
 
 
-    public R<Parsing.Source> TryGetSource(string nodeName) =>
+    public R<Source> TryGetSource(string nodeName) =>
         decompiler.TryGetSource(assembly.Value!.MainModule, nodeName);
 
 

@@ -41,8 +41,8 @@ internal class NodeName : Equatable<NodeName>
 
     public override string ToString() => this != Root ? FullName : "<root>";
 
-    public static implicit operator NodeName(DataNodeName dataName) => new NodeName((string)dataName);
-    public static implicit operator DataNodeName(NodeName nodeName) => (DataNodeName)nodeName.FullName;
+    // public static implicit operator NodeName(DataNodeName dataName) => new NodeName((string)dataName);
+    // public static implicit operator DataNodeName(NodeName nodeName) => (DataNodeName)nodeName.FullName;
 
 
     private NodeName GetParentName()

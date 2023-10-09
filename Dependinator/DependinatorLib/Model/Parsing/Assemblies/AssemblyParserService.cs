@@ -41,14 +41,14 @@ internal class AssemblyParserService : IParser
         return await parser.ParseAsync();
     }
 
-    public async Task<R<Parsing.Source>> GetSourceAsync(string path, string nodeName)
+    public async Task<R<Source>> GetSourceAsync(string path, string nodeName)
     {
         using var parser = new AssemblyParser(path, "", "", _ => { }, _ => { }, true);
         return await Task.Run(() => parser.TryGetSource(nodeName));
     }
 
 
-    public Task<string> GetNodeAsync(string path, Parsing.Source source) =>
+    public Task<string> GetNodeAsync(string path, Source source) =>
         Task.FromResult("");
 
 

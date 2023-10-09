@@ -40,4 +40,4 @@ record Node(string Name, string Parent, string Type, string Description)
     public override string ToString() => Name;
 }
 
-record Source(string Text, int LineNumber, string Path);
+record Source(string Path, string Text, int LineNumber);

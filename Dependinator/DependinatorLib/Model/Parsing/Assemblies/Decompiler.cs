@@ -9,9 +9,9 @@ namespace Dependinator.Model.Parsers.Assemblies;
 
 class Decompiler
 {
-    static readonly string DecompiledText = "// Note: Decompiled code\n// ---------------------\n\n";
+    // static readonly string DecompiledText = "// Note: Decompiled code\n// ---------------------\n\n";
 
-    public R<Parsing.Source> TryGetSource(ModuleDefinition module, string nodeName)
+    public R<Source> TryGetSource(ModuleDefinition module, string nodeName)
     {
         if (TryGetType(module, nodeName, out TypeDefinition type))
         {
@@ -19,21 +19,21 @@ class Decompiler
 
             if (TryGetFilePath(type, out Parsing.Source source))
             {
-                return new Parsing.Source(codeText, source.LineNumber, source.Path);
+                return new Source(source.Path, codeText, source.LineNumber);
             }
 
-            return new Parsing.Source(codeText, 0, "");
+            return new Source("", codeText, 0);
         }
         else if (TryGetMember(module, nodeName, out IMemberDefinition member))
         {
             string codeText = GetDecompiledText(module, member);
 
-            if (TryGetFilePath(member, out Parsing.Source source))
+            if (TryGetFilePath(member, out Source source))
             {
-                return new Parsing.Source(codeText, source.LineNumber, source.Path);
+                return new Source(source.Path, codeText, source.LineNumber);
             }
 
-            return new Parsing.Source(codeText, 0, "");
+            return new Source("", codeText, 0);
         }
 
         Log.Debug($"Failed to locate source for:\n{nodeName}");
@@ -169,7 +169,7 @@ class Decompiler
     }
 
 
-    bool TryGetFilePath(TypeDefinition type, out Parsing.Source source)
+    bool TryGetFilePath(TypeDefinition type, out Source source)
     {
         foreach (MethodDefinition method in type.Methods)
         {
@@ -202,8 +202,8 @@ class Decompiler
     }
 
 
-    private Parsing.Source ToFileLocation(SequencePoint sequencePoint) =>
-        new Parsing.Source("", sequencePoint.StartLine, sequencePoint.Document.Url);
+    private Source ToFileLocation(SequencePoint sequencePoint) =>
+        new Source(sequencePoint.Document.Url, "", sequencePoint.StartLine);
 
 
     private static CSharpDecompiler GetDecompiler(ModuleDefinition module) =>

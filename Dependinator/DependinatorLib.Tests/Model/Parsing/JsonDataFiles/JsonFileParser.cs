@@ -70,7 +70,7 @@ class JsonFileParser : IParser
 
 
     public Task<R<Source>> GetSourceAsync(string path, string nodeName) =>
-        Task.FromResult((R<Source>)new Source("", 0, path));
+        Task.FromResult((R<Source>)new Source(path, "", 0));
 
 
     public Task<string> GetNodeAsync(string path, Source source) =>

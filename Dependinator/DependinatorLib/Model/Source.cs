@@ -1,3 +1,3 @@
-﻿namespace Dependinator.Model;
+﻿// namespace Dependinator.Model;
 
-record Source(string Path, string Text, int LineNumber);
+// record Source(string Path, string Text, int LineNumber);
