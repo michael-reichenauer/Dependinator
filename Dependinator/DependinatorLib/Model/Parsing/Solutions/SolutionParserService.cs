@@ -1,16 +1,11 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Dependinator.Model.Parsing.Common;
-
+﻿using Dependinator.Model.Parsing.Common;
 
 
 namespace Dependinator.Model.Parsing.Solutions;
 
 internal class SolutionParserService : IParser
 {
-    private readonly IDataMonitorService dataMonitorService;
+    readonly IDataMonitorService dataMonitorService;
 
 
     public SolutionParserService(IDataMonitorService dataMonitorService)

@@ -5,13 +5,13 @@ internal class NodeName : Equatable<NodeName>
     record DisplayParts(string ShortName, string LongName);
 
     public static NodeName Root = From("");
-    private static readonly char[] PartsSeparators = "./".ToCharArray();
-    private readonly Lazy<DisplayParts> displayParts;
+    static readonly char[] PartsSeparators = "./".ToCharArray();
+    readonly Lazy<DisplayParts> displayParts;
 
-    private readonly Lazy<NodeName> parentName;
+    readonly Lazy<NodeName> parentName;
 
 
-    private NodeName(string fullName)
+    NodeName(string fullName)
     {
         FullName = fullName;
 
@@ -45,7 +45,7 @@ internal class NodeName : Equatable<NodeName>
     // public static implicit operator DataNodeName(NodeName nodeName) => (DataNodeName)nodeName.FullName;
 
 
-    private NodeName GetParentName()
+    NodeName GetParentName()
     {
         // Split full name in name and parent name,
         int index = FullName.LastIndexOfAny(PartsSeparators);
@@ -54,7 +54,7 @@ internal class NodeName : Equatable<NodeName>
     }
 
 
-    private DisplayParts GetDisplayParts()
+    DisplayParts GetDisplayParts()
     {
         string name = "";
 
@@ -92,7 +92,7 @@ internal class NodeName : Equatable<NodeName>
     }
 
 
-    private static string ToNiceParameters(string fullName)
+    static string ToNiceParameters(string fullName)
     {
         int index1 = fullName.IndexOf('(');
         int index2 = fullName.IndexOf(')');
@@ -113,7 +113,7 @@ internal class NodeName : Equatable<NodeName>
     }
 
 
-    private static string ToNiceText(string name)
+    static string ToNiceText(string name)
     {
         return name.Replace("*", ".")
             .Replace("#", ".")
