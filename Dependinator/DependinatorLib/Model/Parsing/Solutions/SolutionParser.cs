@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Dependinator.Model.Parsers.Assemblies;
-using Dependinator.Utils;
-
-
+﻿using Dependinator.Model.Parsing.Assemblies;
 
 namespace Dependinator.Model.Parsing.Solutions;
 

@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil;
 using Dependinator.Model.Parsing;
 
-namespace Dependinator.Model.Parsers.Assemblies;
+namespace Dependinator.Model.Parsing.Assemblies;
 
 internal class MemberParser
 {

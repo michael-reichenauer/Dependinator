@@ -1,5 +1,5 @@
-using Dependinator.Model.Parsers.Assemblies;
 using Dependinator.Model.Parsing;
+using Dependinator.Model.Parsing.Assemblies;
 
 namespace DependinatorLib.Tests.Model.Parsing.Assemblies;
 

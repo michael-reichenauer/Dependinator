@@ -5,7 +5,7 @@ using Mono.Cecil.Cil;
 using Dependinator.Model.Parsing;
 
 
-namespace Dependinator.Model.Parsers.Assemblies;
+namespace Dependinator.Model.Parsing.Assemblies;
 
 class Decompiler
 {

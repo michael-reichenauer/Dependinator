@@ -2,7 +2,7 @@
 using Dependinator.Model.Parsing.Common;
 
 
-namespace Dependinator.Model.Parsers.Assemblies;
+namespace Dependinator.Model.Parsing.Assemblies;
 
 internal class AssemblyParserService : IParser
 {

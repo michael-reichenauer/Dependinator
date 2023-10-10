@@ -4,7 +4,7 @@ using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
 using Dependinator.Model.Parsing;
 
-namespace Dependinator.Model.Parsers.Assemblies;
+namespace Dependinator.Model.Parsing.Assemblies;
 
 internal class AssemblyParser : IDisposable
 {

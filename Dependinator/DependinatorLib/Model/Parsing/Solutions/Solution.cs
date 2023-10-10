@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Microsoft.Build.Construction;
+﻿using Microsoft.Build.Construction;
 
 
 namespace Dependinator.Model.Parsing.Solutions;
@@ -41,8 +37,9 @@ internal class Solution
     public IReadOnlyList<Project> GetSolutionProjects() =>
         projects.Value.Where(project => !IsTestProject(project)).ToList();
 
+    public override string ToString() => SolutionFilePath;
 
-    private IReadOnlyList<Project> GetProjects()
+    IReadOnlyList<Project> GetProjects()
     {
         var solutionFile = SolutionFile.Parse(SolutionFilePath);
         var solutionParserProjects = solutionFile.ProjectsInOrder;
@@ -50,34 +47,10 @@ internal class Solution
         return solutionParserProjects
               .Select(p => new Project(p, SolutionDirectory))
               .ToList();
-
-
-        //     .Where(p => !p.IsSolutionFolder && p.IsIncludedDebug)
-        //     .Select(p => new Project(p, SolutionDirectory))
-        //     .ToList();
-
-
-        // //VisualStudioSolutionParser solutionParser = new VisualStudioSolutionParser();
-
-        // using (StreamReader streamReader = new StreamReader(SolutionFilePath))
-        // {
-        //     solutionParser.SolutionReader = streamReader;
-        //     solutionParser.ParseSolution();
-        // }
-
-        // IReadOnlyList<VisualStudioProjectInSolution> solutionParserProjects = solutionParser.Projects;
-
-        // return solutionParserProjects
-        //     .Where(p => !p.IsSolutionFolder && p.IsIncludedDebug)
-        //     .Select(p => new Project(p, SolutionDirectory))
-        //     .ToList();
     }
 
 
-    public override string ToString() => SolutionFilePath;
-
-
-    private bool IsTestProject(Project project)
+    bool IsTestProject(Project project)
     {
         if (project.ProjectName.EndsWith("Test") || project.ProjectName.EndsWith("Tests"))
         {

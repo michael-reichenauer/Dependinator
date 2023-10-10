@@ -1,7 +1,8 @@
 ﻿using System.Xml.Linq;
 
 
-namespace Dependinator.Model.Parsers.Assemblies;
+namespace Dependinator.Model.Parsing.Assemblies;
+
 internal class XmlDocParser
 {
     private readonly string assemblyPath;
