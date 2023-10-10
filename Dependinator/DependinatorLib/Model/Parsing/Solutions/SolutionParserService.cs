@@ -1,34 +1,8 @@
-﻿using Dependinator.Model.Parsing.Common;
-
-
-namespace Dependinator.Model.Parsing.Solutions;
+﻿namespace Dependinator.Model.Parsing.Solutions;
 
 internal class SolutionParserService : IParser
 {
-    readonly IDataMonitorService dataMonitorService;
-
-
-    public SolutionParserService(IDataMonitorService dataMonitorService)
-    {
-        this.dataMonitorService = dataMonitorService;
-    }
-
-
-    public event EventHandler DataChanged
-    {
-        add => dataMonitorService.DataChangedOccurred += value;
-        remove => dataMonitorService.DataChangedOccurred -= value;
-    }
-
-
     public bool CanSupport(string path) => Path.GetExtension(path).IsSameIc(".sln");
-
-
-    public void StartMonitorDataChanges(string path)
-    {
-        var dataFilePaths = SolutionParser.GetDataFilePaths(path);
-        dataMonitorService.StartMonitorData(path, dataFilePaths);
-    }
 
 
     public async Task<R> ParseAsync(

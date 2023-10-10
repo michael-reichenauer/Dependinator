@@ -1,5 +1,4 @@
-﻿using Dependinator.Model.Parsing.Common;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 
 
@@ -15,28 +14,8 @@ class JsonFileParser : IParser
         DefaultValueHandling = DefaultValueHandling.Ignore
     };
 
-    private readonly IDataMonitorService dataMonitorService;
-
-
-    public JsonFileParser(IDataMonitorService dataMonitorService)
-    {
-        this.dataMonitorService = dataMonitorService;
-    }
-
-
-    public event EventHandler DataChanged
-    {
-        add => dataMonitorService.DataChangedOccurred += value;
-        remove => dataMonitorService.DataChangedOccurred -= value;
-    }
 
     public bool CanSupport(string path) => Path.GetExtension(path).IsSameIc(".json");
-
-
-    public void StartMonitorDataChanges(string path)
-    {
-        dataMonitorService.StartMonitorData(path, new[] { path });
-    }
 
 
     public Task<R> ParseAsync(string path, Action<Node> nodeCallback, Action<Link> linkCallback)

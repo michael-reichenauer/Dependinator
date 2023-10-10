@@ -8,7 +8,7 @@ public class AssemblyFileParserServiceTest
     [Fact]
     public async Task ParserTest()
     {
-        var parser = new AssemblyParserService(null!);
+        var parser = new AssemblyParserService();
 
         var nodes = new List<Node>();
         var links = new List<Link>();

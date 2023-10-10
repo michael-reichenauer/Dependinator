@@ -3,11 +3,7 @@
 
 interface IParser
 {
-    event EventHandler DataChanged;
-
     bool CanSupport(string path);
-
-    void StartMonitorDataChanges(string path);
 
     Task<R> ParseAsync(string path, Action<Node> nodeCallback, Action<Link> linkCallback);
 

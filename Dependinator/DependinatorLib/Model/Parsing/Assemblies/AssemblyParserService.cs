@@ -1,32 +1,10 @@
-﻿using Dependinator.Model.Parsing;
-using Dependinator.Model.Parsing.Common;
-
-
-namespace Dependinator.Model.Parsing.Assemblies;
+﻿namespace Dependinator.Model.Parsing.Assemblies;
 
 internal class AssemblyParserService : IParser
 {
-    private readonly IDataMonitorService dataMonitorService;
-
-
-    public AssemblyParserService(IDataMonitorService dataMonitorService)
-    {
-        this.dataMonitorService = dataMonitorService;
-    }
-
-    public event EventHandler DataChanged
-    {
-        add => dataMonitorService.DataChangedOccurred += value;
-        remove => dataMonitorService.DataChangedOccurred -= value;
-    }
-
-
     public bool CanSupport(string path) =>
         Path.GetExtension(path).IsSameIc(".exe") ||
         Path.GetExtension(path).IsSameIc(".dll");
-
-
-    public void StartMonitorDataChanges(string path) => dataMonitorService.StartMonitorData(path, new[] { path });
 
 
     public async Task<R> ParseAsync(

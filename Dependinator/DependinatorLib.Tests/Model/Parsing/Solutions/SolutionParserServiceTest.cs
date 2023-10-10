@@ -12,7 +12,7 @@ public class SolutionParserServiceTest
         var nodes = new List<Node>();
         var links = new List<Link>();
 
-        var parser = new SolutionParserService(null!);
+        var parser = new SolutionParserService();
 
         var path = GetSolutionPath();
 
