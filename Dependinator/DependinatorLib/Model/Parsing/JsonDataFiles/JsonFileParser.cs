@@ -1,12 +1,10 @@
 ﻿using Newtonsoft.Json;
 
-
-
 namespace Dependinator.Model.Parsing.JsonDataFiles;
 
 class JsonFileParser : IParser
 {
-    private static readonly JsonSerializer Serializer = new JsonSerializer
+    static readonly JsonSerializer Serializer = new JsonSerializer
     {
         Formatting = Formatting.Indented,
         ObjectCreationHandling = ObjectCreationHandling.Replace,
@@ -59,7 +57,7 @@ class JsonFileParser : IParser
     public DateTime GetDataTime(string path) => File.GetLastWriteTime(path);
 
 
-    private static void SkipToItemsStart(JsonReader reader)
+    static void SkipToItemsStart(JsonReader reader)
     {
         // Skip until start of array
         while (reader.Read() && reader.TokenType != JsonToken.StartArray)
@@ -68,10 +66,10 @@ class JsonFileParser : IParser
     }
 
 
-    private static int ReadItems(
-        JsonReader reader,
-        Action<Node> nodeCallback,
-        Action<Link> linkCallback)
+    static int ReadItems(
+       JsonReader reader,
+       Action<Node> nodeCallback,
+       Action<Link> linkCallback)
     {
         int itemCount = 0;
         while (reader.Read())
@@ -99,15 +97,15 @@ class JsonFileParser : IParser
     }
 
 
-    private static Node ToNodeData(JsonTypes.Node node) =>
-        new Node(node.Name, node.Parent, node.Type, node.Description);
+    static Node ToNodeData(JsonTypes.Node node) =>
+       new Node(node.Name, node.Parent, node.Type, node.Description);
 
 
-    private static Link ToLinkData(JsonTypes.Link link) =>
-        new Link(link.Source, link.Target, link.TargetType ?? JsonTypes.NodeType.Type);
+    static Link ToLinkData(JsonTypes.Link link) =>
+       new Link(link.Source, link.Target, link.TargetType ?? JsonTypes.NodeType.Type);
 
 
-    private static void ValidateVersion(JsonReader reader)
+    static void ValidateVersion(JsonReader reader)
     {
         // Look for first property "FormatVersion" and verify that the expected version is found
         if (reader.Read() && reader.TokenType == JsonToken.StartObject)
