@@ -100,7 +100,7 @@ internal class MemberParser
             string description = xmlDocParser.GetDescription(memberName);
 
 
-            Node memberNode = new Node(memberName, parent, Node.MemberType, description);
+            Node memberNode = new Node(memberName, parent, NodeType.MemberType, description);
 
             if (!sentNodes.ContainsKey(memberNode.Name))
             {

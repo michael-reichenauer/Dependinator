@@ -55,7 +55,7 @@ internal class TypeParser
                 yield break;
             }
 
-            typeNode = new Node(name, parent, Node.TypeType, description);
+            typeNode = new Node(name, parent, NodeType.TypeType, description);
             nodeCallback(typeNode);
         }
 
@@ -80,7 +80,7 @@ internal class TypeParser
             if (!string.IsNullOrEmpty(description))
             {
                 string name = Name.GetTypeNamespaceFullName(type);
-                Node node = new Node(name, "", Node.NameSpaceType, description);
+                Node node = new Node(name, "", NodeType.NameSpaceType, description);
                 nodeCallback(node);
             }
 

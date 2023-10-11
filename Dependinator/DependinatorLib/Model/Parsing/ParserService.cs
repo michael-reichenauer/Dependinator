@@ -1,12 +1,24 @@
-﻿
+﻿namespace Dependinator.Model.Parsing;
 
-namespace Dependinator.Model.Parsing;
+record ModelPaths(string ModelPath, string WorkFolderPath);
 
-[Singleton]
-internal class ParserService : IParserService
+
+internal interface IParserService
+{
+    DateTime GetDataTime(string path);
+
+    Task<R> ParseAsync(string path, Action<Node> nodeCallback, Action<Link> linkCallback);
+
+    Task<R<Source>> GetSourceAsync(string path, string nodeName);
+
+    Task<R<string>> TryGetNodeAsync(string path, Source source);
+}
+
+
+[Transient]
+class ParserService : IParserService
 {
     readonly IEnumerable<IParser> parsers;
-
 
     public ParserService(IEnumerable<IParser> parsers)
     {
@@ -14,41 +26,38 @@ internal class ParserService : IParserService
     }
 
 
-    public DateTime GetDataTime(ModelPaths modelPaths)
+    public DateTime GetDataTime(string path)
     {
-        if (!Try(out var parser, out var e, GetParser(modelPaths)))
-        {
-            return DateTime.MinValue;
-        }
+        if (!Try(out var parser, GetParser(path))) return DateTime.MinValue;
 
-        return parser.GetDataTime(modelPaths.ModelPath);
+        return parser.GetDataTime(path);
     }
 
 
-    public async Task<R> ParseAsync(ModelPaths modelPaths, Action<IItems> itemsCallback)
+    public async Task<R> ParseAsync(string path, Action<Node> nodeCallback, Action<Link> linkCallback)
     {
-        Log.Debug($"Parse {modelPaths} ...");
+        Log.Debug($"Parse {path} ...");
 
-        if (!Try(out var parser, out var e, GetParser(modelPaths)))
-            return R.Error($"File not supported: {modelPaths}", e);
+        if (!Try(out var parser, out var e, GetParser(path)))
+            return R.Error($"File not supported: {path}", e);
 
-        await parser.ParseAsync(modelPaths.ModelPath, n => itemsCallback(n), l => itemsCallback(l));
+        await parser.ParseAsync(path, nodeCallback, linkCallback);
         return R.Ok;
     }
 
 
-    public async Task<R<Source>> GetSourceAsync(ModelPaths modelPaths, string nodeName)
+    public async Task<R<Source>> GetSourceAsync(string path, string nodeName)
     {
-        Log.Debug($"Get source for {nodeName} in model {modelPaths}...");
+        Log.Debug($"Get source for {nodeName} in model {path}...");
 
-        if (!Try(out var parser, out var e, GetParser(modelPaths)))
-            return R.Error($"File not supported: {modelPaths}", e);
+        if (!Try(out var parser, out var e, GetParser(path)))
+            return R.Error($"File not supported: {path}", e);
 
-        return await parser.GetSourceAsync(modelPaths.ModelPath, nodeName);
+        return await parser.GetSourceAsync(path, nodeName);
     }
 
 
-    public Task<R<string>> TryGetNodeAsync(ModelPaths modelPaths, Source source)
+    public Task<R<string>> TryGetNodeAsync(string path, Source source)
     {
         throw new NotImplementedException();
         // Log.Debug($"Get node for {source} in model {modelPaths}...");
@@ -72,12 +81,12 @@ internal class ParserService : IParserService
 
 
 
-    private R<IParser> GetParser(ModelPaths modelPaths)
+    R<IParser> GetParser(string path)
     {
-        var parser = parsers.FirstOrDefault(p => p.CanSupport(modelPaths.ModelPath));
-        if (parser == null) return R.Error($"No supported parser for {modelPaths}");
+        var parser = parsers.FirstOrDefault(p => p.CanSupport(path));
+        if (parser == null) return R.Error($"No supported parser for {path}");
 
-        return (R<IParser>)parser;
+        return R<IParser>.From(parser);
     }
 
 

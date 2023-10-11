@@ -43,7 +43,7 @@ internal class AssemblyParserService : IParser
             name = "Dependinator*sln";
         }
 
-        return new Node(name, "", Node.AssemblyType, "Assembly file");
+        return new Node(name, "", NodeType.AssemblyType, "Assembly file");
     }
 }
 

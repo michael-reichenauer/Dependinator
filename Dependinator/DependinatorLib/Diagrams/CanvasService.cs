@@ -1,5 +1,5 @@
 using Dependinator.Diagrams.Elements;
-using Microsoft.AspNetCore.Components.Web;
+
 
 namespace Dependinator.Diagrams;
 
@@ -17,7 +17,6 @@ interface ICanvasService
 class CanvasService : ICanvasService
 {
     readonly IPanZoomService panZoomService;
-    
     readonly List<IElement> elements = new List<IElement>();
     Rect bounds = new(0, 0, 0, 0);
     public string SvgContent { get; private set; } = "";

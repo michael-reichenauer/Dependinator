@@ -287,6 +287,8 @@ public class R<T> : R
 
         return new R<T>(value);
     }
+
+    public static R<T> From(T value) => new R<T>(value);
 }
 
 

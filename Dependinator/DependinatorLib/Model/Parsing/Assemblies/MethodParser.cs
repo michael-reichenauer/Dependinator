@@ -148,7 +148,7 @@ internal class MethodParser
             return;
         }
 
-        linkHandler.AddLink(memberName, methodName, Node.MemberType);
+        linkHandler.AddLink(memberName, methodName, NodeType.MemberType);
 
         TypeReference returnType = method.ReturnType;
         linkHandler.AddLinkToType(memberName, returnType);

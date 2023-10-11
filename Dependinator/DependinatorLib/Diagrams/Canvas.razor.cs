@@ -12,7 +12,7 @@ partial class Canvas : ComponentBase
 
     public void TriggerStateHasChanged()
     {
-        InvokeAsync(() => StateHasChanged());
+        InvokeAsync(() => { StateHasChanged(); });
     }
 
     protected override void OnInitialized()

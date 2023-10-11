@@ -14,16 +14,12 @@ interface IParser
     DateTime GetDataTime(string path);
 }
 
-interface IItems { }
 
+record Link(string Source, string Target, string TargetType);
+record Node(string Name, string Parent, string Type, string Description);
+record Source(string Path, string Text, int LineNumber);
 
-record Link(string Source, string Target, string TargetType) : IItems
-{
-    public override string ToString() => $"{Source}->{Target}";
-}
-
-
-record Node(string Name, string Parent, string Type, string Description) : IItems
+static class NodeType
 {
     public const string SolutionType = "Solution";
     public const string AssemblyType = "Assembly";
@@ -34,8 +30,5 @@ record Node(string Name, string Parent, string Type, string Description) : IItem
     public const string TypeType = "Type";
     public const string MemberType = "Member";
     public const string SolutionFolderType = "SolutionFolder";
-
-    public override string ToString() => Name;
 }
 
-record Source(string Path, string Text, int LineNumber);

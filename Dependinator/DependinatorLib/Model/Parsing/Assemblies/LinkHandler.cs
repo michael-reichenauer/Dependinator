@@ -1,11 +1,10 @@
 ﻿using Mono.Cecil;
-using Dependinator.Model.Parsing;
 
 namespace Dependinator.Model.Parsing.Assemblies;
 
 internal class LinkHandler
 {
-    private readonly Action<Link> linkCallback;
+    readonly Action<Link> linkCallback;
 
 
     public LinkHandler(Action<Link> linkCallback)
@@ -42,7 +41,7 @@ internal class LinkHandler
             return;
         }
 
-        SendLink(sourceName, targetNodeName, Node.TypeType);
+        SendLink(sourceName, targetNodeName, NodeType.TypeType);
     }
 
 
@@ -60,7 +59,7 @@ internal class LinkHandler
             return;
         }
 
-        SendLink(sourceName, targetNodeName, Node.MemberType);
+        SendLink(sourceName, targetNodeName, NodeType.MemberType);
     }
 
 
@@ -72,21 +71,21 @@ internal class LinkHandler
     }
 
 
-    private static bool IsIgnoredTargetMember(IMemberDefinition memberInfo)
+    static bool IsIgnoredTargetMember(IMemberDefinition memberInfo)
     {
         return IgnoredTypes.IsIgnoredSystemType(memberInfo.DeclaringType)
                || IsGenericTypeArgument(memberInfo.DeclaringType);
     }
 
 
-    private static bool IsIgnoredTargetName(string targetNodeName)
+    static bool IsIgnoredTargetName(string targetNodeName)
     {
         return Name.IsCompilerGenerated(targetNodeName) ||
                targetNodeName.StartsWith("mscorlib.");
     }
 
 
-    private static bool IsIgnoredReference(TypeReference targetType)
+    static bool IsIgnoredReference(TypeReference targetType)
     {
         return targetType.FullName == "System.Void"
                || targetType.IsGenericParameter
@@ -99,7 +98,7 @@ internal class LinkHandler
     /// <summary>
     /// Return true if type is a generic type parameter T, as in e.g. Get'T'(T value)
     /// </summary>
-    private static bool IsGenericTypeArgument(MemberReference targetType)
+    static bool IsGenericTypeArgument(MemberReference targetType)
     {
         return
             targetType.FullName == null
