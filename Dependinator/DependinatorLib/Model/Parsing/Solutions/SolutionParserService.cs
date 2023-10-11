@@ -1,5 +1,6 @@
 ﻿namespace Dependinator.Model.Parsing.Solutions;
 
+[Transient]
 internal class SolutionParserService : IParser
 {
     public bool CanSupport(string path) => Path.GetExtension(path).IsSameIc(".sln");

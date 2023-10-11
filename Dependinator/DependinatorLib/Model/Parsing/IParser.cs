@@ -14,14 +14,16 @@ interface IParser
     DateTime GetDataTime(string path);
 }
 
+interface IItems { }
 
-record Link(string Source, string Target, string TargetType)
+
+record Link(string Source, string Target, string TargetType) : IItems
 {
     public override string ToString() => $"{Source}->{Target}";
 }
 
 
-record Node(string Name, string Parent, string Type, string Description)
+record Node(string Name, string Parent, string Type, string Description) : IItems
 {
     public const string SolutionType = "Solution";
     public const string AssemblyType = "Assembly";

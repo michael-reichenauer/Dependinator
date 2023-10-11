@@ -2,7 +2,8 @@
 
 namespace Dependinator.Model.Parsing.JsonDataFiles;
 
-class JsonFileParser : IParser
+[Transient]
+class JsonFileParserService : IParser
 {
     static readonly JsonSerializer Serializer = new JsonSerializer
     {

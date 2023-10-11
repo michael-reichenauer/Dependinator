@@ -6,7 +6,7 @@ namespace Dependinator.Model.Parsing.JsonDataFiles;
 
 public static class JsonTypes
 {
-    public static string Version = "4";
+    public static string Version = "1";
 
     // A model contains a list of nodes and links
     [Serializable]

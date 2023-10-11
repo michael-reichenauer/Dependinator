@@ -1,5 +1,6 @@
 ﻿namespace Dependinator.Model.Parsing.Assemblies;
 
+[Transient]
 internal class AssemblyParserService : IParser
 {
     public bool CanSupport(string path) =>

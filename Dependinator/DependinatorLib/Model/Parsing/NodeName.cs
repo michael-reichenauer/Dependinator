@@ -24,10 +24,7 @@ internal class NodeName : Equatable<NodeName>
 
     public string FullName { get; }
     public NodeName ParentName => parentName.Value;
-
-
     public string DisplayShortName => displayParts.Value.ShortName;
-
     public string DisplayLongName => displayParts.Value.LongName;
 
 
@@ -50,7 +47,7 @@ internal class NodeName : Equatable<NodeName>
         // Split full name in name and parent name,
         int index = FullName.LastIndexOfAny(PartsSeparators);
 
-        return index > -1 ? From(FullName.Substring(0, index)) : Root;
+        return index > -1 ? From(FullName[..index]) : Root;
     }
 
 
