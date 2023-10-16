@@ -52,17 +52,7 @@ internal class Solution
 
     bool IsTestProject(Project project)
     {
-        if (project.ProjectName.EndsWith("Test") || project.ProjectName.EndsWith("Tests"))
-        {
-            string name = project.ProjectName.Substring(0, project.ProjectName.Length - 4);
-
-            if (projects.Value.Any(p => p.ProjectName == name))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        return project.ProjectName.EndsWith("Test") || project.ProjectName.EndsWith(".Tests");
     }
 }
 

@@ -32,6 +32,7 @@ internal class SolutionParser : IDisposable
         parentNodesToSend.Add(CreateSolutionNode());
 
         if (!Try(out var e, CreateAssemblyParsers())) return e;
+        Log.Debug($"Solution: {assemblyParsers.Count} assemblies");
 
         parentNodesToSend.ForEach(async node => await items.WriteAsync(node));
 
@@ -250,6 +251,7 @@ internal class SolutionParser : IDisposable
         ParallelOptions option = GetParallelOptions();
 
         var internalModules = assemblyParsers.Select(p => p.ModuleName).ToList();
+        Log.Debug($"Solution: {internalModules.Count} internal modules:\n  {string.Join("\n  ", internalModules)}");
 
         await Task.Run(() =>
         {
