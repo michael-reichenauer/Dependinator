@@ -28,9 +28,9 @@ internal class XmlDocParser
     }
 
 
-    private IReadOnlyDictionary<string, string> GetDescriptions()
+    IReadOnlyDictionary<string, string> GetDescriptions()
     {
-        Dictionary<string, string> items = new Dictionary<string, string>();
+        var items = new Dictionary<string, string>();
         try
         {
             string directoryName = Path.GetDirectoryName(assemblyPath) ?? "";
@@ -63,7 +63,7 @@ internal class XmlDocParser
     }
 
 
-    private void Add(
+    void Add(
         IDictionary<string, string> items,
         string assemblyName,
         string memberName,
@@ -100,14 +100,14 @@ internal class XmlDocParser
     }
 
 
-    private static string ToShortTypeName(string fullName)
+    static string ToShortTypeName(string fullName)
     {
         int index = fullName.LastIndexOf('.');
         return index == -1 ? fullName : fullName.Substring(index + 1);
     }
 
 
-    private static string GetSummary(XElement member)
+    static string GetSummary(XElement member)
     {
         XElement? node = member.Descendants("summary").FirstOrDefault();
 
@@ -132,7 +132,7 @@ internal class XmlDocParser
     }
 
 
-    private static string GetMemberName(XElement member)
+    static string GetMemberName(XElement member)
     {
         string? memberName = member.Attribute("name")?.Value;
 
@@ -140,7 +140,7 @@ internal class XmlDocParser
     }
 
 
-    private static string GetAssemblyName(XDocument doc)
+    static string GetAssemblyName(XDocument doc)
     {
         string? assemblyName = doc
             .Descendants("assembly")

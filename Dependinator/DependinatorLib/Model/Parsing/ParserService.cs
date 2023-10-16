@@ -1,4 +1,6 @@
-﻿namespace Dependinator.Model.Parsing;
+﻿using System.Threading.Channels;
+
+namespace Dependinator.Model.Parsing;
 
 record ModelPaths(string ModelPath, string WorkFolderPath);
 
@@ -7,7 +9,7 @@ internal interface IParserService
 {
     DateTime GetDataTime(string path);
 
-    Task<R> ParseAsync(string path, Action<Node> nodeCallback, Action<Link> linkCallback);
+    R<ChannelReader<IItem>> Parse(string path);
 
     Task<R<Source>> GetSourceAsync(string path, string nodeName);
 
@@ -34,15 +36,22 @@ class ParserService : IParserService
     }
 
 
-    public async Task<R> ParseAsync(string path, Action<Node> nodeCallback, Action<Link> linkCallback)
+    public R<ChannelReader<IItem>> Parse(string path)
     {
         Log.Debug($"Parse {path} ...");
+        Channel<IItem> channel = Channel.CreateUnbounded<IItem>();
 
         if (!Try(out var parser, out var e, GetParser(path)))
             return R.Error($"File not supported: {path}", e);
 
-        await parser.ParseAsync(path, nodeCallback, linkCallback);
-        return R.Ok;
+        Task.Run(async () =>
+        {
+            using var t = Timing.Start();
+            await parser.ParseAsync(path, channel.Writer);
+            channel.Writer.Complete();
+        }).RunInBackground();
+
+        return channel.Reader;
     }
 
 

@@ -1,6 +1,8 @@
 using System.Runtime.CompilerServices;
+using System.Threading.Channels;
 using Dependinator.Model.Parsing;
 using Dependinator.Model.Parsing.Solutions;
+using ICSharpCode.Decompiler.IL;
 
 namespace DependinatorLib.Tests.Model.Parsing.Assemblies;
 
@@ -32,5 +34,66 @@ public class SolutionParserServiceTest
             Path.GetDirectoryName(sourceFilePath)))))!, "Dependinator.sln");
 
     }
+
+    [Fact]
+    public async Task Test()
+    {
+        int i = 0;
+        await foreach (var item in Scan())
+        {
+            Assert.Equal($"{i++}", item);
+        }
+
+        Assert.Equal(100, i);
+    }
+
+    IAsyncEnumerable<string> Scan()
+    {
+        var channel = Channel.CreateBounded<string>(10);
+        Task.Run(async () =>
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                await channel.Writer.WriteAsync($"{i}");
+            }
+            channel.Writer.Complete();
+        }).RunInBackground();
+
+        return channel.Reader.ReadAllAsync();
+    }
+
+    [Fact]
+    public async Task Test2()
+    {
+        int i = 0;
+        var reader = Scan2();
+        while (await reader.WaitToReadAsync())
+        {
+            for (int j = 0; j < 1000; j++)
+            {
+                if (!reader.TryRead(out string? item)) break;
+                Assert.Equal($"{i++}", item);
+                Console.WriteLine(item);
+            }
+        }
+
+        Assert.Equal(100, i);
+    }
+
+    ChannelReader<string> Scan2()
+    {
+        var channel = Channel.CreateBounded<string>(10);
+        Task.Run(async () =>
+        {
+            for (int i = 0; i < 100; i++)
+            {
+                await channel.Writer.WriteAsync($"{i}");
+            }
+            channel.Writer.Complete();
+        }).RunInBackground();
+
+        return channel.Reader;
+    }
+
 
 }

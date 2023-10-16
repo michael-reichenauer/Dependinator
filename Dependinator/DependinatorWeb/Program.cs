@@ -8,6 +8,7 @@ namespace DependinatorWeb
         public static void Main(string[] args)
         {
             Log.Info($"Starting Dependinator ...");
+            ExceptionHandling.HandleUnhandledExceptions(() => Environment.Exit(-1));
 
             var builder = WebApplication.CreateBuilder(args);
 

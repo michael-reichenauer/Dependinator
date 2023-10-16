@@ -1,29 +1,26 @@
 ﻿using Mono.Cecil;
-using Dependinator.Model.Parsing;
+using System.Threading.Channels;
 
 namespace Dependinator.Model.Parsing.Assemblies;
 
 internal class MemberParser
 {
-    private static readonly char[] PartsSeparators = "./".ToCharArray();
+    static readonly char[] PartsSeparators = "./".ToCharArray();
 
-    private readonly LinkHandler linkHandler;
-    private readonly MethodParser methodParser;
+    readonly LinkHandler linkHandler;
+    readonly MethodParser methodParser;
 
-    private readonly Dictionary<string, Node> sentNodes = new Dictionary<string, Node>();
+    readonly Dictionary<string, Node> sentNodes = new Dictionary<string, Node>();
 
-    private readonly XmlDocParser xmlDocParser;
-    private readonly Action<Node> nodeCallback;
+    readonly XmlDocParser xmlDocParser;
+    readonly ChannelWriter<IItem> items;
 
 
-    public MemberParser(
-        LinkHandler linkHandler,
-        XmlDocParser xmlDocParser,
-        Action<Node> nodeCallback)
+    public MemberParser(LinkHandler linkHandler, XmlDocParser xmlDocParser, ChannelWriter<IItem> items)
     {
         this.linkHandler = linkHandler;
         this.xmlDocParser = xmlDocParser;
-        this.nodeCallback = nodeCallback;
+        this.items = items;
 
         methodParser = new MethodParser(linkHandler);
     }
@@ -33,15 +30,15 @@ internal class MemberParser
     public int MembersCount { get; private set; } = 0;
 
 
-    public void AddTypesMembers(IEnumerable<TypeData> typeInfos)
+    public async Task AddTypesMembersAsync(IEnumerable<TypeData> typeInfos)
     {
-        typeInfos.ForEach(AddTypeMembers);
+        typeInfos.ForEach(async t => await AddTypeMembersAsync(t));
 
-        methodParser.AddAllMethodBodyLinks();
+        await methodParser.AddAllMethodBodyLinksAsync();
     }
 
 
-    private void AddTypeMembers(TypeData typeData)
+    Task AddTypeMembersAsync(TypeData typeData)
     {
         TypeDefinition type = typeData.Type;
         Node typeNode = typeData.Node;
@@ -49,19 +46,19 @@ internal class MemberParser
         if (typeData.IsAsyncStateType)
         {
             methodParser.AddAsyncStateType(typeData);
-            return;
+            return Task.CompletedTask;
         }
 
         try
         {
             type.Fields
                 .Where(member => !Name.IsCompilerGenerated(member.Name))
-                .ForEach(member => AddMember(
+                .ForEach(async member => await AddMemberAsync(
                     member, typeNode, member.Attributes.HasFlag(FieldAttributes.Private)));
 
             type.Events
                 .Where(member => !Name.IsCompilerGenerated(member.Name))
-                .ForEach(member => AddMember(
+                .ForEach(async member => await AddMemberAsync(
                     member,
                     typeNode,
                     (member.AddMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true) &&
@@ -69,7 +66,7 @@ internal class MemberParser
 
             type.Properties
                 .Where(member => !Name.IsCompilerGenerated(member.Name))
-                .ForEach(member => AddMember(
+                .ForEach(async member => await AddMemberAsync(
                     member,
                     typeNode,
                     (member.GetMethod?.Attributes.HasFlag(MethodAttributes.Private) ?? true) &&
@@ -77,21 +74,22 @@ internal class MemberParser
 
             type.Methods
                 .Where(member => !Name.IsCompilerGenerated(member.Name))
-                .ForEach(member => AddMember(
+                .ForEach(async member => await AddMemberAsync(
                     member, typeNode, member.Attributes.HasFlag(MethodAttributes.Private)));
 
             type.Methods
                 .Where(member => Name.IsCompilerGenerated(member.Name))
-                .ForEach(member => AddCompilerGeneratedMember(member, typeNode, type));
+                .ForEach(async member => await AddCompilerGeneratedMemberAsync(member, typeNode, type));
         }
         catch (Exception e) when (e.IsNotFatal())
         {
             Log.Exception(e, $"Failed to parse type members for {type}");
         }
+        return Task.CompletedTask;
     }
 
 
-    private void AddMember(IMemberDefinition memberInfo, Node parentTypeNode, bool isPrivate)
+    async Task AddMemberAsync(IMemberDefinition memberInfo, Node parentTypeNode, bool isPrivate)
     {
         try
         {
@@ -99,18 +97,17 @@ internal class MemberParser
             string parent = isPrivate ? $"{GetParentName(memberName)}.$private" : "";
             string description = xmlDocParser.GetDescription(memberName);
 
-
-            Node memberNode = new Node(memberName, parent, NodeType.MemberType, description);
+            var memberNode = new Node(memberName, parent, NodeType.MemberType, description);
 
             if (!sentNodes.ContainsKey(memberNode.Name))
             {
                 MembersCount++;
                 // Not yet sent this node name (properties get/set, events (add/remove) appear twice
                 sentNodes[memberNode.Name] = memberNode;
-                nodeCallback(memberNode);
+                await items.WriteAsync(memberNode);
             }
 
-            AddMemberLinks(memberName, memberInfo);
+            await AddMemberLinksAsync(memberName, memberInfo);
         }
         catch (Exception e)
         {
@@ -119,8 +116,8 @@ internal class MemberParser
     }
 
 
-    private void AddCompilerGeneratedMember(MethodDefinition memberInfo,
-        Node parentTypeNode, TypeDefinition type)
+    Task AddCompilerGeneratedMemberAsync(MethodDefinition memberInfo,
+      Node parentTypeNode, TypeDefinition type)
     {
         try
         {
@@ -142,7 +139,7 @@ internal class MemberParser
                     if (baseMethod != null)
                     {
                         string baseMethodName = Name.GetMemberFullName(baseMethod);
-                        methodParser.AddMethodBodyLinks(baseMethodName, memberInfo);
+                        methodParser.AddMethodBodyLink(baseMethodName, memberInfo);
                     }
                 }
             }
@@ -151,26 +148,28 @@ internal class MemberParser
         {
             Log.Exception(e, $"Failed to add member {memberInfo} in {parentTypeNode?.Name}");
         }
+
+        return Task.CompletedTask;
     }
 
 
-    private void AddMemberLinks(string sourceMemberName, IMemberDefinition member)
+    async Task AddMemberLinksAsync(string sourceMemberName, IMemberDefinition member)
     {
         try
         {
             switch (member)
             {
                 case FieldDefinition field:
-                    linkHandler.AddLinkToType(sourceMemberName, field.FieldType);
+                    await linkHandler.AddLinkToTypeAsync(sourceMemberName, field.FieldType);
                     break;
                 case PropertyDefinition property:
-                    linkHandler.AddLinkToType(sourceMemberName, property.PropertyType);
+                    await linkHandler.AddLinkToTypeAsync(sourceMemberName, property.PropertyType);
                     break;
                 case EventDefinition eventInfo:
-                    linkHandler.AddLinkToType(sourceMemberName, eventInfo.EventType);
+                    await linkHandler.AddLinkToTypeAsync(sourceMemberName, eventInfo.EventType);
                     break;
                 case MethodDefinition method:
-                    methodParser.AddMethodLinks(sourceMemberName, method);
+                    await methodParser.AddMethodLinksAsync(sourceMemberName, method);
                     break;
                 default:
                     Log.Warn($"Unknown member type {member.DeclaringType}.{member.Name}");
@@ -184,7 +183,7 @@ internal class MemberParser
     }
 
 
-    private static string GetParentName(string fullName)
+    static string GetParentName(string fullName)
     {
         // Split full name in name and parent name,
         int index = fullName.LastIndexOfAny(PartsSeparators);

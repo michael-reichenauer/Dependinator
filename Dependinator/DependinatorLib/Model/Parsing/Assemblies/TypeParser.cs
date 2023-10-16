@@ -1,27 +1,24 @@
 ﻿using Mono.Cecil;
-using Dependinator.Model.Parsing;
+using System.Threading.Channels;
 
 namespace Dependinator.Model.Parsing.Assemblies;
 
 internal class TypeParser
 {
-    private readonly LinkHandler linkHandler;
-    private readonly XmlDocParser xmlDockParser;
-    private readonly Action<Node> nodeCallback;
+    readonly LinkHandler linkHandler;
+    readonly XmlDocParser xmlDockParser;
+    readonly ChannelWriter<IItem> items;
 
 
-    public TypeParser(
-        LinkHandler linkHandler,
-        XmlDocParser xmlDockParser,
-        Action<Node> nodeCallback)
+    public TypeParser(LinkHandler linkHandler, XmlDocParser xmlDockParser, ChannelWriter<IItem> items)
     {
         this.linkHandler = linkHandler;
         this.xmlDockParser = xmlDockParser;
-        this.nodeCallback = nodeCallback;
+        this.items = items;
     }
 
 
-    public IEnumerable<TypeData> AddType(AssemblyDefinition assembly, TypeDefinition type)
+    public async IAsyncEnumerable<TypeData> AddTypeAsync(AssemblyDefinition assembly, TypeDefinition type)
     {
         bool isCompilerGenerated = Name.IsCompilerGenerated(type.Name);
         bool isAsyncStateType = false;
@@ -49,14 +46,14 @@ internal class TypeParser
                 ? $"{NodeName.From(name).ParentName.FullName}.$private" : "";
             string description = xmlDockParser.GetDescription(name);
 
-            if (IsNameSpaceDocType(type, description))
+            if (await IsNameSpaceDocTypeAsync(type, description))
             {
                 // Type was a namespace doc type, extract it and move to next type
                 yield break;
             }
 
             typeNode = new Node(name, parent, NodeType.TypeType, description);
-            nodeCallback(typeNode);
+            await items.WriteAsync(typeNode);
         }
 
         yield return new TypeData(type, typeNode, isAsyncStateType);
@@ -65,7 +62,7 @@ internal class TypeParser
         foreach (var nestedType in type.NestedTypes)
         {
             // Adding a type could result in multiple types
-            foreach (var types in AddType(assembly, nestedType))
+            await foreach (var types in AddTypeAsync(assembly, nestedType))
             {
                 yield return types;
             }
@@ -73,7 +70,7 @@ internal class TypeParser
     }
 
 
-    private bool IsNameSpaceDocType(TypeDefinition type, string description)
+    private async Task<bool> IsNameSpaceDocTypeAsync(TypeDefinition type, string description)
     {
         if (type.Name.IsSameIc("NamespaceDoc"))
         {
@@ -81,7 +78,7 @@ internal class TypeParser
             {
                 string name = Name.GetTypeNamespaceFullName(type);
                 Node node = new Node(name, "", NodeType.NameSpaceType, description);
-                nodeCallback(node);
+                await items.WriteAsync(node);
             }
 
             return true;
@@ -91,19 +88,16 @@ internal class TypeParser
     }
 
 
-    public void AddTypesLinks(IEnumerable<TypeData> typeInfos)
+    public Task AddTypesLinksAsync(IEnumerable<TypeData> typeInfos)
     {
-        typeInfos.ForEach(AddLinksToBaseTypes);
+        typeInfos.ForEach(async t => await AddLinksToBaseTypesAsync(t));
+        return Task.CompletedTask;
     }
 
 
-    private void AddLinksToBaseTypes(TypeData typeData)
+    async Task AddLinksToBaseTypesAsync(TypeData typeData)
     {
-        if (typeData.IsAsyncStateType)
-        {
-            // Internal async/await helper type,
-            return;
-        }
+        if (typeData.IsAsyncStateType) return; // Internal async/await helper type, which is ignored
 
         TypeDefinition type = typeData.Type;
         Node sourceNode = typeData.Node;
@@ -113,11 +107,11 @@ internal class TypeParser
             TypeReference baseType = type.BaseType;
             if (baseType != null && baseType.FullName != "System.Object")
             {
-                linkHandler.AddLinkToType(sourceNode.Name, baseType);
+                await linkHandler.AddLinkToTypeAsync(sourceNode.Name, baseType);
             }
 
             type.Interfaces
-                .ForEach(interfaceType => linkHandler.AddLinkToType(sourceNode.Name, interfaceType.InterfaceType));
+                .ForEach(async interfaceType => await linkHandler.AddLinkToTypeAsync(sourceNode.Name, interfaceType.InterfaceType));
         }
         catch (Exception e)
         {

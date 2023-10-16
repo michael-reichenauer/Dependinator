@@ -1,4 +1,5 @@
-﻿using Dependinator.Model.Parsing.Assemblies;
+﻿using System.Threading.Channels;
+using Dependinator.Model.Parsing.Assemblies;
 
 namespace Dependinator.Model.Parsing.Solutions;
 
@@ -11,19 +12,13 @@ internal class SolutionParser : IDisposable
 
     readonly List<Node> parentNodesToSend = new List<Node>();
     readonly string solutionFilePath;
-    readonly Action<Node> nodeCallback;
-    readonly Action<Link> linkCallback;
+    readonly ChannelWriter<IItem> items;
 
 
-    public SolutionParser(
-        string solutionFilePath,
-        Action<Node> nodeCallback,
-        Action<Link> linkCallback,
-        bool isReadSymbols)
+    public SolutionParser(string solutionFilePath, ChannelWriter<IItem> items, bool isReadSymbols)
     {
         this.solutionFilePath = solutionFilePath;
-        this.nodeCallback = nodeCallback;
-        this.linkCallback = linkCallback;
+        this.items = items;
         this.isReadSymbols = isReadSymbols;
     }
 
@@ -38,7 +33,7 @@ internal class SolutionParser : IDisposable
 
         if (!Try(out var e, CreateAssemblyParsers())) return e;
 
-        parentNodesToSend.ForEach(node => nodeCallback(node));
+        parentNodesToSend.ForEach(async node => await items.WriteAsync(node));
 
         await ParseSolutionAssembliesAsync();
         int typeCount = assemblyParsers.Sum(parser => parser.TypeCount);
@@ -107,10 +102,10 @@ internal class SolutionParser : IDisposable
     }
 
 
-    private Node CreateSolutionNode() => new Node(SolutionNodeName, "", NodeType.SolutionType, "Solution file");
+    Node CreateSolutionNode() => new Node(SolutionNodeName, "", NodeType.SolutionType, "Solution file");
 
 
-    private R CreateAssemblyParsers(bool includeReferences = false)
+    R CreateAssemblyParsers(bool includeReferences = false)
     {
         string solutionName = SolutionNodeName;
 
@@ -127,7 +122,7 @@ internal class SolutionParser : IDisposable
             string parent = GetProjectParentName(solutionName, project);
 
             var assemblyParser = new AssemblyParser(
-                assemblyPath, project.ProjectFilePath, parent, nodeCallback, linkCallback, isReadSymbols);
+                assemblyPath, project.ProjectFilePath, parent, items, isReadSymbols);
 
             assemblyParsers.Add(assemblyParser);
         }
@@ -143,7 +138,7 @@ internal class SolutionParser : IDisposable
 
             foreach (string referencePath in referencePaths)
             {
-                var assemblyParser = new AssemblyParser(referencePath, "", "", nodeCallback, linkCallback, isReadSymbols);
+                var assemblyParser = new AssemblyParser(referencePath, "", "", items, isReadSymbols);
 
                 assemblyParsers.Add(assemblyParser);
             }
@@ -153,7 +148,7 @@ internal class SolutionParser : IDisposable
     }
 
 
-    private string GetProjectParentName(string solutionName, Project project)
+    string GetProjectParentName(string solutionName, Project project)
     {
         string parent = solutionName;
         string projectName = project.ProjectName;
@@ -182,7 +177,7 @@ internal class SolutionParser : IDisposable
     }
 
 
-    private static string GetModuleName(string nodeName)
+    static string GetModuleName(string nodeName)
     {
         while (true)
         {
@@ -197,7 +192,7 @@ internal class SolutionParser : IDisposable
     }
 
 
-    private static string GetParentName(string nodeName)
+    static string GetParentName(string nodeName)
     {
         // Split full name in name and parent name,
         var fullName = (string)nodeName;
@@ -258,10 +253,10 @@ internal class SolutionParser : IDisposable
 
         await Task.Run(() =>
         {
-            Parallel.ForEach(assemblyParsers, option, parser => parser.ParseAssemblyModule());
-            Parallel.ForEach(assemblyParsers, option, parser => parser.ParseAssemblyReferences(internalModules));
+            Parallel.ForEach(assemblyParsers, option, async parser => await parser.ParseAssemblyModuleAsync());
+            Parallel.ForEach(assemblyParsers, option, async parser => await parser.ParseAssemblyReferencesAsync(internalModules));
             Parallel.ForEach(assemblyParsers, option, parser => parser.ParseTypes());
-            Parallel.ForEach(assemblyParsers, option, parser => parser.ParseTypeMembers());
+            Parallel.ForEach(assemblyParsers, option, async parser => await parser.ParseTypeMembersAsync());
         });
     }
 

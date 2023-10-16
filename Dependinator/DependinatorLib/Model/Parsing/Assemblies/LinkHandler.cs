@@ -1,72 +1,61 @@
-﻿using Mono.Cecil;
+﻿using System.Threading.Channels;
+using Mono.Cecil;
 
 namespace Dependinator.Model.Parsing.Assemblies;
 
 internal class LinkHandler
 {
-    readonly Action<Link> linkCallback;
+    readonly ChannelWriter<IItem> items;
 
 
-    public LinkHandler(Action<Link> linkCallback)
+    public LinkHandler(ChannelWriter<IItem> items)
     {
-        this.linkCallback = linkCallback;
+        this.items = items;
     }
 
 
     public int LinksCount { get; private set; } = 0;
 
 
-    public void AddLink(string source, string target, string targetType)
+    public Task AddLinkAsync(string source, string target, string targetType)
     {
-        SendLink(source, target, targetType);
+        return SendLinkAsync(source, target, targetType);
     }
 
 
-    public void AddLinkToType(string sourceName, TypeReference targetType)
+    public async Task AddLinkToTypeAsync(string sourceName, TypeReference targetType)
     {
         if (targetType is GenericInstanceType genericType)
         {
-            genericType.GenericArguments.ForEach(argType => AddLinkToType(sourceName, argType));
+            genericType.GenericArguments.ForEach(async argType => await AddLinkToTypeAsync(sourceName, argType));
         }
 
-        if (IsIgnoredReference(targetType))
-        {
-            return;
-        }
+        if (IsIgnoredReference(targetType)) return;
 
         string targetNodeName = Name.GetTypeFullName(targetType);
 
-        if (IsIgnoredTargetName(targetNodeName))
-        {
-            return;
-        }
+        if (IsIgnoredTargetName(targetNodeName)) return;
 
-        SendLink(sourceName, targetNodeName, NodeType.TypeType);
+        await SendLinkAsync(sourceName, targetNodeName, NodeType.TypeType);
     }
 
 
-    public void AddLinkToMember(string sourceName, IMemberDefinition memberInfo)
+    public async Task AddLinkToMemberAsync(string sourceName, IMemberDefinition memberInfo)
     {
-        if (IsIgnoredTargetMember(memberInfo))
-        {
-            return;
-        }
+        if (IsIgnoredTargetMember(memberInfo)) return;
 
         string targetNodeName = Name.GetMemberFullName(memberInfo);
 
-        if (IsIgnoredTargetName(targetNodeName))
-        {
-            return;
-        }
+        if (IsIgnoredTargetName(targetNodeName)) return;
 
-        SendLink(sourceName, targetNodeName, NodeType.MemberType);
+        await SendLinkAsync(sourceName, targetNodeName, NodeType.MemberType);
     }
 
 
-    private void SendLink(string source, string targetName, string targetType)
+    private async Task SendLinkAsync(string source, string targetName, string targetType)
     {
         Link dataLink = new Link(source, targetName, targetType);
-        linkCallback(dataLink);
+        await items.WriteAsync(dataLink);
         LinksCount++;
     }
 
@@ -74,14 +63,14 @@ internal class LinkHandler
     static bool IsIgnoredTargetMember(IMemberDefinition memberInfo)
     {
         return IgnoredTypes.IsIgnoredSystemType(memberInfo.DeclaringType)
-               || IsGenericTypeArgument(memberInfo.DeclaringType);
+            || IsGenericTypeArgument(memberInfo.DeclaringType);
     }
 
 
     static bool IsIgnoredTargetName(string targetNodeName)
     {
         return Name.IsCompilerGenerated(targetNodeName) ||
-               targetNodeName.StartsWith("mscorlib.");
+            targetNodeName.StartsWith("mscorlib.");
     }
 
 
@@ -95,9 +84,7 @@ internal class LinkHandler
     }
 
 
-    /// <summary>
-    /// Return true if type is a generic type parameter T, as in e.g. Get'T'(T value)
-    /// </summary>
+    // Return true if type is a generic type parameter T, as in e.g. Get'T'(T value)s
     static bool IsGenericTypeArgument(MemberReference targetType)
     {
         return

@@ -61,37 +61,21 @@ internal static class ExceptionHandling
 
     static void HandleException(string errorType, Exception exception)
     {
-        if (hasFailed)
-        {
-            return;
-        }
-
+        if (hasFailed) return;
         hasFailed = true;
 
         string errorMessage = $"Unhandled {errorType}";
         Log.Exception(exception, errorMessage);
 
-        if (Debugger.IsAttached)
-        {
-            // NOTE: If you end up here a task resulted in an unhandled exception
-            Debugger.Break();
-        }
-        else
-        {
-            Shutdown(errorMessage, exception);
-        }
+        Shutdown(errorMessage, exception);
     }
 
 
     static void Shutdown(string message, Exception e)
     {
-        if (hasShutdown)
-        {
-            // Shutdown already in progress
-            return;
-        }
-
+        if (hasShutdown) return;
         hasShutdown = true;
+
 
         // if (isDispatcherInitialized)
         // {
@@ -108,12 +92,14 @@ internal static class ExceptionHandling
 
         if (Debugger.IsAttached)
         {
+            // NOTE: If you end up here a task resulted in an unhandled exception
             Debugger.Break();
         }
 
-        ConfigLogger.CloseAsync().Wait();
+        ConfigLogger.CloseAsync().ContinueWith(t => shutdown());
 
-        shutdown();
+
+        // shutdown();
 
         // if (DateTime.Now - StartTime >= MinTimeBeforeAutoRestart)
         // {
@@ -150,5 +136,4 @@ internal static class ExceptionHandling
 
     // private static Dispatcher GetApplicationDispatcher() =>
     // 	Application.Current?.Dispatcher ?? Dispatcher.CurrentDispatcher;
-
 }

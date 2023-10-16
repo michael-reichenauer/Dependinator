@@ -79,19 +79,19 @@ internal static class Name
     }
 
 
-    private static string GetModuleNameImpl(AssemblyDefinition assembly)
+    static string GetModuleNameImpl(AssemblyDefinition assembly)
     {
         return GetAdjustedName(assembly.Name.Name);
     }
 
 
-    private static string GetModuleNameImpl(AssemblyNameReference reference)
+    static string GetModuleNameImpl(AssemblyNameReference reference)
     {
         return GetAdjustedName(reference.Name);
     }
 
 
-    private static string GetTypeFullNameImpl(TypeReference type)
+    static string GetTypeFullNameImpl(TypeReference type)
     {
         if (type is TypeSpecification typeSpecification)
         {
@@ -112,7 +112,7 @@ internal static class Name
     }
 
 
-    private static string GetTypeNamespaceFullNameImpl(TypeDefinition type)
+    static string GetTypeNamespaceFullNameImpl(TypeDefinition type)
     {
         string module = GetModuleName(type);
         string nameSpace = type.Namespace;
@@ -120,7 +120,7 @@ internal static class Name
     }
 
 
-    private static string GetMemberFullNameImpl(IMemberDefinition memberInfo)
+    static string GetMemberFullNameImpl(IMemberDefinition memberInfo)
     {
         if (memberInfo is MethodReference methodReference)
         {
@@ -135,7 +135,7 @@ internal static class Name
     }
 
 
-    private static string GetMethodFullNameImpl(MethodReference methodInfo)
+    static string GetMethodFullNameImpl(MethodReference methodInfo)
     {
         if (methodInfo is GenericInstanceMethod genericInstanceMethod)
         {
@@ -152,17 +152,14 @@ internal static class Name
             parameters = "";
         }
 
-        if (!methodInfo.HasGenericParameters)
-        {
-            return $"{typeName}.{methodName}{parameters}";
-        }
+        if (!methodInfo.HasGenericParameters) return $"{typeName}.{methodName}{parameters}";
 
         string genericParameters = $"`{methodInfo.GenericParameters.Count}";
         return $"{typeName}.{methodName}{genericParameters}{parameters}";
     }
 
 
-    private static string GetMethodFullNameImpl(GenericInstanceMethod methodInfo)
+    static string GetMethodFullNameImpl(GenericInstanceMethod methodInfo)
     {
         string typeName = GetTypeFullNameImpl(methodInfo.DeclaringType);
         string methodName = GetMethodName(methodInfo);
@@ -174,32 +171,24 @@ internal static class Name
             parameters = "";
         }
 
-        if (!methodInfo.GenericArguments.Any())
-        {
-            return $"{typeName}.{methodName}{parameters}";
-        }
+        if (!methodInfo.GenericArguments.Any()) return $"{typeName}.{methodName}{parameters}";
 
         string genericParameters = $"`{methodInfo.GenericArguments.Count}";
         return $"{typeName}.{methodName}{genericParameters}{parameters}";
     }
 
 
-    private static string GetMethodName(MethodReference methodInfo)
+    static string GetMethodName(MethodReference methodInfo)
     {
         string methodName = methodInfo.Name;
 
         int index = methodName.LastIndexOf('.');
-        if (index > -1)
-        {
-            // Fix names with explicit interface implementation
-            methodName = methodName.Substring(index + 1);
-        }
-
+        if (index > -1) methodName = methodName.Substring(index + 1);  // Fix names with explicit interface implementation
         return methodName;
     }
 
 
-    private static string GetTypeName(TypeReference typeInfo)
+    static string GetTypeName(TypeReference typeInfo)
     {
         string name = typeInfo.FullName;
         //string fixedName = name.Replace("/", "."); // Nested types
@@ -212,7 +201,7 @@ internal static class Name
     }
 
 
-    private static string GetParametersText(MethodReference methodInfo)
+    static string GetParametersText(MethodReference methodInfo)
     {
         var parameterTypesTexts = methodInfo.Parameters.Select(GetParameterTypeName);
         string parametersText = string.Join(",", parameterTypesTexts);
@@ -222,21 +211,18 @@ internal static class Name
     }
 
 
-    private static string GetParameterTypeName(ParameterDefinition p)
+    static string GetParameterTypeName(ParameterDefinition p)
     {
         string typeName = GetTypeFullNameImpl(p.ParameterType);
 
         int index = typeName.LastIndexOf('.');
-        if (index > -1)
-        {
-            typeName = typeName.Substring(index + 1);
-        }
+        if (index > -1) typeName = typeName.Substring(index + 1);
 
         return typeName;
     }
 
 
-    private static string GetModuleName(TypeReference typeInfo)
+    static string GetModuleName(TypeReference typeInfo)
     {
         if (typeInfo.Scope is ModuleDefinition moduleDefinition)
         {
@@ -249,7 +235,7 @@ internal static class Name
     }
 
 
-    private static string GetAdjustedName(string name)
+    static string GetAdjustedName(string name)
     {
         return $"{name.Replace(".", "*")}";
     }

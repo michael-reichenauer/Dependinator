@@ -1,5 +1,5 @@
 ﻿using Mono.Cecil;
-using Dependinator.Model.Parsing;
+using System.Threading.Channels;
 
 
 namespace Dependinator.Model.Parsing.Assemblies;
@@ -7,17 +7,17 @@ namespace Dependinator.Model.Parsing.Assemblies;
 internal class AssemblyReferencesParser
 {
     readonly LinkHandler linkHandler;
-    readonly Action<Node> nodeCallback;
+    readonly ChannelWriter<IItem> items;
 
 
-    public AssemblyReferencesParser(LinkHandler linkHandler, Action<Node> nodeCallback)
+    public AssemblyReferencesParser(LinkHandler linkHandler, ChannelWriter<IItem> items)
     {
         this.linkHandler = linkHandler;
-        this.nodeCallback = nodeCallback;
+        this.items = items;
     }
 
 
-    public void AddReferences(
+    public async Task AddReferencesAsync(
         AssemblyDefinition assembly,
         IReadOnlyList<string> internalModules)
     {
@@ -25,21 +25,19 @@ internal class AssemblyReferencesParser
 
         var externalReferences = GetExternalAssemblyReferences(assembly, internalModules);
 
-        if (externalReferences.Any())
+        if (!externalReferences.Any()) return;
+
+        string referencesRootName = await SendReferencesRootNodeAsync();
+        foreach (AssemblyNameReference reference in externalReferences)
         {
-            string referencesRootName = SendReferencesRootNode();
+            string referenceName = Name.GetModuleName(reference);
+            string parent = await GetReferenceParentAsync(referencesRootName, referenceName);
 
-            foreach (AssemblyNameReference reference in externalReferences)
-            {
-                string referenceName = Name.GetModuleName(reference);
-                string parent = GetReferenceParent(referencesRootName, referenceName);
+            var referenceNode = new Node(referenceName, parent, NodeType.AssemblyType, "");
 
-                var referenceNode = new Node(referenceName, parent, NodeType.AssemblyType, "");
+            await items.WriteAsync(referenceNode);
 
-                nodeCallback(referenceNode);
-
-                linkHandler.AddLink(sourceAssemblyName, referenceName, NodeType.AssemblyType);
-            }
+            await linkHandler.AddLinkAsync(sourceAssemblyName, referenceName, NodeType.AssemblyType);
         }
     }
 
@@ -66,17 +64,17 @@ internal class AssemblyReferencesParser
        => Name.GetModuleName(reference).Replace("*", ".");
 
 
-    string SendReferencesRootNode()
+    async Task<string> SendReferencesRootNodeAsync()
     {
         string referencesRootName = "$Externals";
         Node referencesRootNode = new Node(referencesRootName, "", NodeType.GroupType, "External references");
 
-        nodeCallback(referencesRootNode);
+        await items.WriteAsync(referencesRootNode);
         return referencesRootName;
     }
 
 
-    string GetReferenceParent(string parent, string referenceName)
+    async Task<string> GetReferenceParentAsync(string parent, string referenceName)
     {
         string[] parts = referenceName.Split("*".ToCharArray());
 
@@ -87,7 +85,7 @@ internal class AssemblyReferencesParser
             string groupName = $"{parent}.{name}";
             var groupNode = new Node(groupName, parent, NodeType.GroupType, "");
 
-            nodeCallback(groupNode);
+            await items.WriteAsync(groupNode);
             parent = groupName;
         }
 

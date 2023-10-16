@@ -1,11 +1,13 @@
-﻿namespace Dependinator.Model.Parsing;
+﻿using System.Threading.Channels;
+
+namespace Dependinator.Model.Parsing;
 
 
 interface IParser
 {
     bool CanSupport(string path);
 
-    Task<R> ParseAsync(string path, Action<Node> nodeCallback, Action<Link> linkCallback);
+    Task<R> ParseAsync(string path, ChannelWriter<IItem> items);
 
     Task<R<Source>> GetSourceAsync(string path, string nodeName);
 
@@ -14,9 +16,9 @@ interface IParser
     DateTime GetDataTime(string path);
 }
 
-
-record Link(string Source, string Target, string TargetType);
-record Node(string Name, string Parent, string Type, string Description);
+interface IItem { }
+record Link(string Source, string Target, string TargetType) : IItem;
+record Node(string Name, string Parent, string Type, string Description) : IItem;
 record Source(string Path, string Text, int LineNumber);
 
 static class NodeType

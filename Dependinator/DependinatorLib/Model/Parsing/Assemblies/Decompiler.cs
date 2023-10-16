@@ -168,8 +168,7 @@ class Decompiler
         // return DecompiledText + decompiler.DecompileAsString(member).Replace("\t", "  ");
     }
 
-
-    bool TryGetFilePath(TypeDefinition type, out Source source)
+    static bool TryGetFilePath(TypeDefinition type, out Source source)
     {
         foreach (MethodDefinition method in type.Methods)
         {
@@ -202,11 +201,11 @@ class Decompiler
     }
 
 
-    private Source ToFileLocation(SequencePoint sequencePoint) =>
+    static Source ToFileLocation(SequencePoint sequencePoint) =>
         new Source(sequencePoint.Document.Url, "", sequencePoint.StartLine);
 
 
-    private static CSharpDecompiler GetDecompiler(ModuleDefinition module) =>
+    static CSharpDecompiler GetDecompiler(ModuleDefinition module) =>
         new CSharpDecompiler(module.FileName, new DecompilerSettings(LanguageVersion.Latest));
 }
 

@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using System.Drawing;
+using System.Threading.Channels;
+using Newtonsoft.Json;
 
 namespace Dependinator.Model.Parsing.JsonDataFiles;
 
@@ -17,9 +19,9 @@ class JsonFileParserService : IParser
     public bool CanSupport(string path) => Path.GetExtension(path).IsSameIc(".json");
 
 
-    public Task<R> ParseAsync(string path, Action<Node> nodeCallback, Action<Link> linkCallback)
+    public Task<R> ParseAsync(string path, ChannelWriter<IItem> items)
     {
-        return Task.Run(() =>
+        return Task.Run(async () =>
         {
             try
             {
@@ -32,7 +34,7 @@ class JsonFileParserService : IParser
 
                     SkipToItemsStart(reader);
 
-                    itemCount = ReadItems(reader, nodeCallback, linkCallback);
+                    itemCount = await ReadItemsAsync(reader, items);
                 }
 
                 Log.Debug($"Read {itemCount} items");
@@ -67,10 +69,7 @@ class JsonFileParserService : IParser
     }
 
 
-    static int ReadItems(
-       JsonReader reader,
-       Action<Node> nodeCallback,
-       Action<Link> linkCallback)
+    static async Task<int> ReadItemsAsync(JsonReader reader, ChannelWriter<IItem> items)
     {
         int itemCount = 0;
         while (reader.Read())
@@ -82,12 +81,12 @@ class JsonFileParserService : IParser
                 if (jsonItem?.Node != null)
                 {
                     var nodeData = ToNodeData(jsonItem.Node);
-                    nodeCallback(nodeData);
+                    await items.WriteAsync(nodeData);
                 }
                 else if (jsonItem?.Link != null)
                 {
                     var linkData = ToLinkData(jsonItem.Link);
-                    linkCallback(linkData);
+                    await items.WriteAsync(linkData);
                 }
 
                 itemCount++;

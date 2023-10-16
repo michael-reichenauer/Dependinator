@@ -12,6 +12,15 @@ public static class EnumerableExtensions
         }
     }
 
+    // Calls acton for each item in the enumeration
+    public static async Task ForEachAsync<T>(this IAsyncEnumerable<T> enumeration, Action<T> action)
+    {
+        await foreach (T item in enumeration)
+        {
+            action(item);
+        }
+    }
+
     // Calls acton for each item in the enumeration (includes index)
     public static void ForEach<T>(this IEnumerable<T> enumeration, Action<T, int> action)
     {

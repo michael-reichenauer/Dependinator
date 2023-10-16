@@ -1,4 +1,6 @@
-﻿namespace Dependinator.Model.Parsing.Assemblies;
+﻿using System.Threading.Channels;
+
+namespace Dependinator.Model.Parsing.Assemblies;
 
 [Transient]
 internal class AssemblyParserService : IParser
@@ -8,21 +10,18 @@ internal class AssemblyParserService : IParser
         Path.GetExtension(path).IsSameIc(".dll");
 
 
-    public async Task<R> ParseAsync(
-        string path,
-        Action<Node> nodeCallback,
-        Action<Link> linkCallback)
+    public async Task<R> ParseAsync(string path, ChannelWriter<IItem> items)
     {
         Node assemblyNode = CreateAssemblyNode(path);
-        nodeCallback(assemblyNode);
+        await items.WriteAsync(assemblyNode);
 
-        using var parser = new AssemblyParser(path, "", assemblyNode.Name, nodeCallback, linkCallback, false);
+        using var parser = new AssemblyParser(path, "", assemblyNode.Name, items, false);
         return await parser.ParseAsync();
     }
 
     public async Task<R<Source>> GetSourceAsync(string path, string nodeName)
     {
-        using var parser = new AssemblyParser(path, "", "", _ => { }, _ => { }, true);
+        using var parser = new AssemblyParser(path, "", "", null!, true);
         return await Task.Run(() => parser.TryGetSource(nodeName));
     }
 
@@ -38,8 +37,7 @@ internal class AssemblyParserService : IParser
     {
         string name = Path.GetFileName(path).Replace(".", "*");
         if (name == "Example*exe")
-        {
-            // Special case for the example project to fix layout problem
+        {   // Special case for the example project to fix layout problem
             name = "Dependinator*sln";
         }
 
