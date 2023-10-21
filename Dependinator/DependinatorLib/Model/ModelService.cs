@@ -1,64 +1,69 @@
-using Dependinator.Diagrams;
+using System.Diagnostics;
+using System.Threading.Channels;
 
 
 namespace Dependinator.Model;
 
 
-record Node(string Name, string Parent, string Type, string Description);
-record Link(string Source, string Target);
+interface IItem { }
+record Node(string Name, string Parent, string Type, string Description) : IItem;
+record Link(string Source, string Target) : IItem;
 record Source(string Path, string Text, int LineNumber);
 
 interface IModelService
 {
-    void TriggerRefresh();
+    void Refresh2();
+    R<ChannelReader<IItem>> Refresh();
 }
+
 
 
 [Scoped]
 class ModelService : IModelService
 {
-    readonly ICanvasService canvasService;
+    const int BatchTimeMs = 300;
     readonly Parsing.IParserService parserService;
+    private readonly IModelDb modelDb;
 
-    Dictionary<string, Parsing.Node> nodes = new Dictionary<string, Parsing.Node>();
-    Dictionary<string, Parsing.Link> links = new Dictionary<string, Parsing.Link>();
 
-    public ModelService(ICanvasService canvasService, Parsing.IParserService parserService)
+    public ModelService(Parsing.IParserService parserService, IModelDb modelDb)
     {
-        this.canvasService = canvasService;
         this.parserService = parserService;
+        this.modelDb = modelDb;
     }
 
-    public async void TriggerRefresh()
+    public void Refresh2()
     {
-        using Timing t = Timing.Start();
+        Refresh();
+    }
 
+    public R<ChannelReader<IItem>> Refresh()
+    {
         var path = "/workspaces/Dependinator/Dependinator/Dependinator.sln";
-        if (!Try(out var reader, out var e, parserService.Parse(path)))
-        {
-            Log.Warn($"Failed to parse file '{path}': {e}");
-            return;
-        }
+        Channel<IItem> channel = Channel.CreateUnbounded<IItem>();
 
-        await foreach (var item in reader.ReadAllAsync())
+        if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
+
+        Task.Run(async () =>
         {
-            switch (item)
+            using var _ = Timing.Start();
+
+            while (await reader.WaitToReadAsync())
             {
-                case Parsing.Node node: OnNodeEvent(node); break;
-                case Parsing.Link link: OnLinkEvent(link); break;
-                default: Asserter.FailFast($"Unknown item type: {item}"); break;
+                var batchStart = Stopwatch.StartNew();
+                var batchItems = new List<Parsing.IItem>();
+                while (batchStart.ElapsedMilliseconds < BatchTimeMs && reader.TryRead(out var item))
+                {
+                    batchItems.Add(item);
+                }
+
+                var updatedItems = modelDb.AddOrUpdate(batchItems);
+                foreach (var item in updatedItems) await channel.Writer.WriteAsync(item);
             }
-        }
-        Log.Info($"Parsed: {nodes.Count} nodes, {links.Count} links");
-    }
 
-    void OnNodeEvent(Parsing.Node node)
-    {
-        nodes[node.Name] = node;
-    }
+            channel.Writer.Complete();
+        });
 
-    void OnLinkEvent(Parsing.Link link)
-    {
-        links[link.Source + link.Target] = link;
+        return channel.Reader;
     }
 }

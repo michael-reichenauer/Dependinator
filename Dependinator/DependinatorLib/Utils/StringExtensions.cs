@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 
 namespace Dependinator.Utils;
@@ -54,16 +56,23 @@ public static class StringExtensions
         return json;
     }
 
+    public static string ToSha2(this string text)
+    {
+        using var sha256 = SHA256.Create();
+        var hash = sha256.ComputeHash(Encoding.UTF8.GetBytes(text));
+        return BitConverter.ToString(hash).Replace("-", "");
+    }
+
     public static string Txt(this Version? source)
     {
         if (source == null) return "";
         return $"{source.Major}.{source.Minor} ({source.Build}.{source.Revision})";
     }
 
-    
+
     public static bool IsSameIc(this string strA, string strB) =>
         0 == string.Compare(strA, strB, StringComparison.OrdinalIgnoreCase);
-    
+
     //  public static bool StartsWithTxt(this string text, string value) =>
     //     text.StartsWith(value, StringComparison.Ordinal);
 
