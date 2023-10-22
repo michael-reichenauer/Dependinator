@@ -1,4 +1,4 @@
-namespace Dependinator.Model;
+namespace Dependinator.Models;
 
 interface IModelDb
 {

@@ -19,7 +19,7 @@ interface ICanvasService
 class CanvasService : ICanvasService
 {
     readonly IPanZoomService panZoomService;
-    private readonly Model.IModelService modelService;
+    private readonly Models.IModelService modelService;
     readonly List<IElement> elements = new List<IElement>();
     Rect bounds = new(0, 0, 0, 0);
 
@@ -40,7 +40,7 @@ class CanvasService : ICanvasService
 
     Canvas canvas = null!;
 
-    public CanvasService(IPanZoomService panZoomService, Model.IModelService modelService)
+    public CanvasService(IPanZoomService panZoomService, Models.IModelService modelService)
     {
         this.panZoomService = panZoomService;
         this.modelService = modelService;

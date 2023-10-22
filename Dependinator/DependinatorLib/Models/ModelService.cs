@@ -2,7 +2,7 @@ using System.Diagnostics;
 using System.Threading.Channels;
 
 
-namespace Dependinator.Model;
+namespace Dependinator.Models;
 
 
 interface IItem { }
