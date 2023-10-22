@@ -2,11 +2,10 @@
 @using Dependinator.Model;
 
 @inject ICanvasService canvasService
-@inject IModelService modelService;
 
 <div class="top-row px-1">
     <button @onclick="@canvasService.Refresh">R</button>
-    <button @onclick="@modelService.Refresh2">Scan</button>
+    <button @onclick="@canvasService.Refresh2">Scan</button>
 </div>
 
 <div class="my-main">

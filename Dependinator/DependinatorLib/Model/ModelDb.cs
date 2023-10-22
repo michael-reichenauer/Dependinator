@@ -97,6 +97,8 @@ class ModelDb : IModelDb
 
     void EnsureParentExists(Parsing.Node parsedNode, List<IItem> updatedItems)
     {
+        if (parsedNode.Name == "") return; // Root node has no parent
+
         var parentName = parsedNode.Parent != "" ? parsedNode.Parent : GetParentName(parsedNode.Name);
         if (!items.ContainsKey(parentName))
         {

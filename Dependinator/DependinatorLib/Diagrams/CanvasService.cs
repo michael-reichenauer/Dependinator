@@ -1,6 +1,7 @@
 using Dependinator.Diagrams.Elements;
 
 
+
 namespace Dependinator.Diagrams;
 
 
@@ -10,6 +11,7 @@ interface ICanvasService
     Task InitAsync(Canvas canvas);
 
     void Refresh();
+    void Refresh2();
 }
 
 
@@ -17,15 +19,31 @@ interface ICanvasService
 class CanvasService : ICanvasService
 {
     readonly IPanZoomService panZoomService;
+    private readonly Model.IModelService modelService;
     readonly List<IElement> elements = new List<IElement>();
     Rect bounds = new(0, 0, 0, 0);
-    public string SvgContent { get; private set; } = "";
+
+    string svgContent = "";
+    public string SvgContent
+    {
+        get
+        {
+            Log.Info("Get SvgContent");
+            return svgContent;
+        }
+        private set
+        {
+            Log.Info("Set SvgContent");
+            svgContent = value;
+        }
+    }
 
     Canvas canvas = null!;
 
-    public CanvasService(IPanZoomService panZoomService)
+    public CanvasService(IPanZoomService panZoomService, Model.IModelService modelService)
     {
         this.panZoomService = panZoomService;
+        this.modelService = modelService;
     }
 
 
@@ -37,6 +55,18 @@ class CanvasService : ICanvasService
         Update();
 
         return Task.CompletedTask;
+    }
+
+
+    public void Refresh()
+    {
+        Log.Info("Refresh");
+        Update();
+    }
+
+    public void Refresh2()
+    {
+        modelService.Refresh();
     }
 
 
@@ -94,11 +124,5 @@ class CanvasService : ICanvasService
     void AddElement(IElement element)
     {
         elements.Add(element);
-    }
-
-    public void Refresh()
-    {
-        Log.Info("Refresh");
-        Update();
     }
 }

@@ -12,7 +12,6 @@ record Source(string Path, string Text, int LineNumber);
 
 interface IModelService
 {
-    void Refresh2();
     R<ChannelReader<IItem>> Refresh();
 }
 
@@ -32,10 +31,6 @@ class ModelService : IModelService
         this.modelDb = modelDb;
     }
 
-    public void Refresh2()
-    {
-        Refresh();
-    }
 
     public R<ChannelReader<IItem>> Refresh()
     {
