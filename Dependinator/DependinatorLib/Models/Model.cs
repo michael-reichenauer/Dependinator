@@ -58,6 +58,13 @@ class Model
         itemsDictionary.Add(Root.Name, Root);
     }
 
+    public void Clear()
+    {
+        itemsDictionary.Clear();
+        Root = new Node("", null!, this) { Type = NodeType.Root };
+        itemsDictionary.Add(Root.Name, Root);
+    }
+
 
     public void AddOrUpdateNode(Parsing.Node parsedNode)
     {

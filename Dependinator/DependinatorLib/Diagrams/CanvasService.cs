@@ -1,7 +1,4 @@
-using Dependinator.Diagrams.Elements;
 using Dependinator.Models;
-
-
 
 namespace Dependinator.Diagrams;
 
@@ -12,7 +9,7 @@ interface ICanvasService
     Task InitAsync(Canvas canvas);
 
     void Refresh();
-    void Refresh2();
+    void Clear();
 }
 
 
@@ -20,9 +17,9 @@ interface ICanvasService
 class CanvasService : ICanvasService
 {
     readonly IPanZoomService panZoomService;
-    private readonly Models.IModelService modelService;
+    private readonly IModelService modelService;
     private readonly IModelDb modelDb;
-    readonly List<IElement> elements = new List<IElement>();
+
     Rect bounds = new(0, 0, 0, 0);
 
     string svgContent = "";
@@ -53,21 +50,21 @@ class CanvasService : ICanvasService
     public Task InitAsync(Canvas canvas)
     {
         this.canvas = canvas;
-        //GenerateElements();
-
-        Update();
 
         return Task.CompletedTask;
     }
 
 
-    public void Refresh()
+    public void Clear()
     {
-        Log.Info("Refresh");
-        Update();
+        using var _ = Timing.Start();
+        using var context = modelDb.GetModel();
+        context.Model.Clear();
+        SvgContent = context.Model.Root.ContentSvg;
+        canvas?.TriggerStateHasChanged();
     }
 
-    public async void Refresh2()
+    public async void Refresh()
     {
         using var _ = Timing.Start();
         await modelService.RefreshAsync();
@@ -77,27 +74,10 @@ class CanvasService : ICanvasService
             using var __ = Timing.Start("Generate elements");
             var model = context.Model;
             var root = model.Root;
+
             SvgContent = root.ContentSvg;
-
-            var nodes = model.Items.Values.OfType<Models.Node>().ToList();
-
-            bounds = new Rect(
-                nodes.Select(n => n.Rect.X).Min(),
-                nodes.Select(n => n.Rect.Y).Min(),
-                nodes.Select(n => n.Rect.X + n.Rect.Width).Max(),
-                nodes.Select(n => n.Rect.Y + n.Rect.Height).Max());
+            bounds = model.Root.TotalRect;
         }
-
-        panZoomService.PanZoomToFit(bounds);
-        canvas?.TriggerStateHasChanged();
-    }
-
-
-    public void Update()
-    {
-        bounds = new Rect(0, 0, 30, 30);
-
-        SvgContent = elements.Select(n => n.Svg).Join("\n");
 
         panZoomService.PanZoomToFit(bounds);
         canvas?.TriggerStateHasChanged();
