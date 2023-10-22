@@ -28,7 +28,7 @@ class CanvasService : ICanvasService
     {
         get
         {
-            Log.Info("Get SvgContent");
+            //Log.Info("Get SvgContent");
             return svgContent;
         }
         private set

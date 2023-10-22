@@ -12,7 +12,7 @@ class ModelDb : IModelDb
     static readonly char[] PartsSeparators = "./".ToCharArray();
 
     readonly object root = new object();
-    IDictionary<string, IItem> items = new Dictionary<string, IItem>();
+    readonly IDictionary<string, IItem> items = new Dictionary<string, IItem>();
 
 
     public IReadOnlyList<IItem> AddOrUpdate(IReadOnlyList<Parsing.IItem> parsedItems)
