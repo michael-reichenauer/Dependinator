@@ -6,12 +6,19 @@ interface IModelDb
 }
 
 
+[Singleton]
+class ModelDb : IModelDb
+{
+    readonly Model model = new();
+
+    public ModelContext GetModel() => new(model);
+}
 
 class ModelContext : IDisposable
 {
     public ModelContext(Model model)
     {
-        Monitor.Enter(model);
+        Monitor.Enter(model.SyncRoot);
         Model = model;
     }
 
@@ -20,18 +27,9 @@ class ModelContext : IDisposable
     public void Dispose()
     {
         if (Model == null) return;
-        Monitor.Exit(Model.SyncRoot);
+        var syncRoot = Model.SyncRoot;
         Model = null!;
+        Monitor.Exit(syncRoot);
     }
-}
-
-
-
-[Singleton]
-class ModelDb : IModelDb
-{
-    readonly Model model = new();
-
-    public ModelContext GetModel() => new(model);
 }
 

@@ -3,9 +3,9 @@ namespace Dependinator.Models;
 
 class Model
 {
-    static readonly char[] PartsSeparators = "./".ToCharArray();
+    static readonly char[] NamePartsSeparators = "./".ToCharArray();
 
-    public object SyncRoot { get; } = new object();
+    readonly object syncRoot = new();
     readonly IDictionary<string, IItem> itemsDictionary = new Dictionary<string, IItem>();
     IDictionary<string, IItem> items
     {
@@ -16,15 +16,35 @@ class Model
         }
     }
 
+    public object SyncRoot => syncRoot;
     public Node Root { get; internal set; }
 
-    public bool TryGetNode(string name, out Node node) => (node = (Node)items[name]) != null;
-    public Node Node(string name) => (Node)items[name];
-    public void AddNode(Node node) => items[node.Name] = node;
 
-    public bool TryGetLink(string id, out Link link) => (link = (Link)items[id]) != null;
-    public Link Link(string id) => (Link)items[id];
+    public void AddNode(Node node) => items[node.Name] = node;
+    public Node Node(string name) => (Node)items[name];
+    public bool TryGetNode(string name, out Node node)
+    {
+        if (!items.TryGetValue(name, out var item))
+        {
+            node = null!;
+            return false;
+        }
+        node = (Node)item;
+        return true;
+    }
+
     public void AddLink(string id, Link link) => items[id] = link;
+    public Link Link(string id) => (Link)items[id];
+    public bool TryGetLink(string id, out Link link)
+    {
+        if (!items.TryGetValue(id, out var item))
+        {
+            link = null!;
+            return false;
+        }
+        link = (Link)item;
+        return true;
+    }
 
 
     public Model()
@@ -55,7 +75,6 @@ class Model
     public void AddOrUpdateLink(Parsing.Link parsedLink)
     {
         var linkId = parsedLink.Source + parsedLink.Target;
-
         if (items.ContainsKey(linkId)) return;
 
         EnsureSourceAndTargetExists(parsedLink);
@@ -74,12 +93,12 @@ class Model
     {
         if (!items.ContainsKey(parsedLink.Source))
         {
-            AddOrUpdateNode(Parsing.Node.Default(parsedLink.Source));
+            AddOrUpdateNode(DefaultNode(parsedLink.Source));
         }
 
         if (!items.ContainsKey(parsedLink.Target))
         {
-            AddOrUpdateNode(Parsing.Node.Default(parsedLink.Target));
+            AddOrUpdateNode(DefaultNode(parsedLink.Target));
         }
     }
 
@@ -89,7 +108,7 @@ class Model
         var parentName = GetParentName(parsedNode);
         if (!items.TryGetValue(parentName, out var item))
         {
-            var parent = Parsing.Node.Default(parentName);
+            var parent = DefaultNode(parentName);
             AddOrUpdateNode(parent);
             return (Node)items[parentName];
         }
@@ -105,9 +124,11 @@ class Model
     static string GetParentName(string name)
     {
         // Split full name in name and parent name,
-        int index = name.LastIndexOfAny(PartsSeparators);
+        int index = name.LastIndexOfAny(NamePartsSeparators);
         return index > -1 ? name[..index] : "";
     }
+
+    static Parsing.Node DefaultNode(string name) => new Parsing.Node(name, "", "", "");
 }
 
 
