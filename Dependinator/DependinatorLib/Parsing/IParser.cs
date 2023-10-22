@@ -18,7 +18,11 @@ interface IParser
 
 interface IItem { }
 record Link(string Source, string Target, string TargetType) : IItem;
-record Node(string Name, string Parent, string Type, string Description) : IItem;
+record Node(string Name, string Parent, string Type, string Description) : IItem
+{
+    public static Node Default(string name) => new Node(name, "", "", "");
+}
+
 record Source(string Path, string Text, int LineNumber);
 
 static class NodeType

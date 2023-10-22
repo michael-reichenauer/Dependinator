@@ -3,6 +3,7 @@ namespace Dependinator.Models;
 internal enum NodeType
 {
     None,
+    Root,
     Solution,
     SolutionFolder,
     Assembly,

@@ -2,34 +2,36 @@ namespace Dependinator.Models;
 
 interface IModelDb
 {
-    Model GetModel();
+    ModelContext GetModel();
 }
 
-class Model : IDisposable
-{
-    readonly Action release;
 
-    public Model(IDictionary<string, IItem> items, Action release)
+
+class ModelContext : IDisposable
+{
+    public ModelContext(Model model)
     {
-        Items = items;
-        this.release = release;
+        Monitor.Enter(model);
+        Model = model;
     }
 
-    public IDictionary<string, IItem> Items { get; }
+    public Model Model { get; private set; }
 
-    public void Dispose() => release();
+    public void Dispose()
+    {
+        if (Model == null) return;
+        Monitor.Exit(Model.SyncRoot);
+        Model = null!;
+    }
 }
+
 
 
 [Singleton]
 class ModelDb : IModelDb
 {
-    readonly object rootLock = new object();
-    readonly IDictionary<string, IItem> items = new Dictionary<string, IItem>();
+    readonly Model model = new();
 
-    public Model GetModel()
-    {
-        Monitor.Enter(rootLock);
-        return new Model(items, () => Monitor.Exit(rootLock));
-    }
+    public ModelContext GetModel() => new(model);
 }
+
