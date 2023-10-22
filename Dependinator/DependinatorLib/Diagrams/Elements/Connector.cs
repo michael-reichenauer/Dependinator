@@ -1,3 +1,5 @@
+using Dependinator.Models;
+
 namespace Dependinator.Diagrams.Elements;
 
 class Connector : IElement

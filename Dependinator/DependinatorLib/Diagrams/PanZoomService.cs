@@ -1,3 +1,4 @@
+using Dependinator.Models;
 using Microsoft.AspNetCore.Components.Web;
 
 namespace Dependinator.Diagrams;
@@ -52,14 +53,14 @@ class PanZoomService : IPanZoomService
         await this.jSInteropService.InitializeAsync();
 
         svgRect = await GetSvgRectAsync();
-        Zoom = viewBoxRect.W / svgRect.W;
+        Zoom = viewBoxRect.Width / svgRect.Width;
     }
 
     public void PanZoomToFit(Rect bounds)
     {
-        viewBoxRect = new Rect(bounds.X - Margin, bounds.Y - Margin, bounds.W + Margin, bounds.H + Margin);
-        ViewBox = $"{viewBoxRect.X} {viewBoxRect.Y} {viewBoxRect.W} {viewBoxRect.H}";
-        Zoom = viewBoxRect.W / svgRect.W;
+        viewBoxRect = new Rect(bounds.X - Margin, bounds.Y - Margin, bounds.Width + Margin, bounds.Height + Margin);
+        ViewBox = $"{viewBoxRect.X} {viewBoxRect.Y} {viewBoxRect.Width} {viewBoxRect.Height}";
+        Zoom = viewBoxRect.Width / svgRect.Width;
     }
 
     public void OnMouseWheel(WheelEventArgs e)
@@ -69,17 +70,17 @@ class PanZoomService : IPanZoomService
         double z = 1 - (e.DeltaY > 0 ? -ZoomSpeed : ZoomSpeed);
         double mouseX = e.ClientX - svgRect.X;     // Why 5 and 10 ????
         double mouseY = e.ClientY - svgRect.Y;
-        double svgX = mouseX / svgRect.W * this.viewBoxRect.W + this.viewBoxRect.X;
-        double svgY = mouseY / svgRect.H * this.viewBoxRect.H + this.viewBoxRect.Y;
+        double svgX = mouseX / svgRect.Width * this.viewBoxRect.Width + this.viewBoxRect.X;
+        double svgY = mouseY / svgRect.Height * this.viewBoxRect.Height + this.viewBoxRect.Y;
 
-        var w = this.viewBoxRect.W * z;
-        var h = this.viewBoxRect.H * z;
-        var x = svgX - mouseX / svgRect.W * w;
-        var y = svgY - mouseY / svgRect.H * h;
+        var w = this.viewBoxRect.Width * z;
+        var h = this.viewBoxRect.Height * z;
+        var x = svgX - mouseX / svgRect.Width * w;
+        var y = svgY - mouseY / svgRect.Height * h;
 
         viewBoxRect = new Rect(x, y, w, h);
-        ViewBox = $"{viewBoxRect.X} {viewBoxRect.Y} {viewBoxRect.W} {viewBoxRect.H}";
-        Zoom = viewBoxRect.W / svgRect.W;
+        ViewBox = $"{viewBoxRect.X} {viewBoxRect.Y} {viewBoxRect.Width} {viewBoxRect.Height}";
+        Zoom = viewBoxRect.Width / svgRect.Width;
     }
 
     public void OnMouseMove(MouseEventArgs e)
@@ -91,7 +92,7 @@ class PanZoomService : IPanZoomService
             lastMouse = new Pos(e.OffsetX, e.OffsetY);
 
             viewBoxRect = viewBoxRect with { X = viewBoxRect.X - dx, Y = viewBoxRect.Y - dy };
-            ViewBox = $"{viewBoxRect.X} {viewBoxRect.Y} {viewBoxRect.W} {viewBoxRect.H}";
+            ViewBox = $"{viewBoxRect.X} {viewBoxRect.Y} {viewBoxRect.Width} {viewBoxRect.Height}";
         }
     }
 

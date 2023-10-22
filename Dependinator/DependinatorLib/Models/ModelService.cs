@@ -13,7 +13,7 @@ record Source(string Path, string Text, int LineNumber);
 
 interface IModelService
 {
-    R<ChannelReader<IItem>> Refresh();
+    Task<R> RefreshAsync();
 }
 
 
@@ -21,7 +21,6 @@ interface IModelService
 [Scoped]
 class ModelService : IModelService
 {
-
     const int BatchTimeMs = 300;
     readonly Parsing.IParserService parserService;
     private readonly IModelDb modelDb;
@@ -34,14 +33,13 @@ class ModelService : IModelService
     }
 
 
-    public R<ChannelReader<IItem>> Refresh()
+    public async Task<R> RefreshAsync()
     {
         var path = "/workspaces/Dependinator/Dependinator/Dependinator.sln";
-        Channel<IItem> channel = Channel.CreateUnbounded<IItem>();
 
         if (!Try(out var reader, out var e, parserService.Parse(path))) return e;
 
-        Task.Run(async () =>
+        await Task.Run(async () =>
         {
             using var _ = Timing.Start();
 
@@ -54,21 +52,17 @@ class ModelService : IModelService
                     batchItems.Add(item);
                 }
 
-                var updatedItems = AddOrUpdate(batchItems);
-                foreach (var item in updatedItems) await channel.Writer.WriteAsync(item);
+                AddOrUpdate(batchItems);
             }
-
-            channel.Writer.Complete();
         });
 
-        return channel.Reader;
+        return R.Ok;
     }
 
-    public IReadOnlyList<IItem> AddOrUpdate(IReadOnlyList<Parsing.IItem> parsedItems)
+    public void AddOrUpdate(IReadOnlyList<Parsing.IItem> parsedItems)
     {
         using var context = modelDb.GetModel();
 
-        var updatedItems = new List<IItem>();
         foreach (var parsedItem in parsedItems)
         {
             switch (parsedItem)
@@ -84,7 +78,5 @@ class ModelService : IModelService
                     break;
             }
         }
-
-        return updatedItems;
     }
 }

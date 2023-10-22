@@ -6,8 +6,8 @@ class Model
     static readonly char[] NamePartsSeparators = "./".ToCharArray();
 
     readonly object syncRoot = new();
-    readonly IDictionary<string, IItem> itemsDictionary = new Dictionary<string, IItem>();
-    IDictionary<string, IItem> items
+    readonly Dictionary<string, IItem> itemsDictionary = new();
+    Dictionary<string, IItem> items
     {
         get
         {
@@ -16,8 +16,13 @@ class Model
         }
     }
 
+    readonly Random random = new Random();
+
+
     public object SyncRoot => syncRoot;
     public Node Root { get; internal set; }
+    public Random Random => random;
+    public IReadOnlyDictionary<string, IItem> Items => items;
 
 
     public void AddNode(Node node) => items[node.Name] = node;
