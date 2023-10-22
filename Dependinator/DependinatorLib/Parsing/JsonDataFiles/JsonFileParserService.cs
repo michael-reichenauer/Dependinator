@@ -2,7 +2,7 @@
 using System.Threading.Channels;
 using Newtonsoft.Json;
 
-namespace Dependinator.Model.Parsing.JsonDataFiles;
+namespace Dependinator.Parsing.JsonDataFiles;
 
 [Transient]
 class JsonFileParserService : IParser

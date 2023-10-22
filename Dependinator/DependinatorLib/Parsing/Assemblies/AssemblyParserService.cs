@@ -1,6 +1,6 @@
 ﻿using System.Threading.Channels;
 
-namespace Dependinator.Model.Parsing.Assemblies;
+namespace Dependinator.Parsing.Assemblies;
 
 [Transient]
 internal class AssemblyParserService : IParser

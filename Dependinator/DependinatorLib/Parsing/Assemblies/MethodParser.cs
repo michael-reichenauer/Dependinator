@@ -1,8 +1,8 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Dependinator.Model.Parsing;
+using Dependinator.Parsing;
 
-namespace Dependinator.Model.Parsing.Assemblies;
+namespace Dependinator.Parsing.Assemblies;
 
 internal class MethodParser
 {

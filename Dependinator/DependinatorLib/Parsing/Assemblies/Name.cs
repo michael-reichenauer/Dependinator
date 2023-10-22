@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil;
 
 
-namespace Dependinator.Model.Parsing.Assemblies;
+namespace Dependinator.Parsing.Assemblies;
 
 internal static class Name
 {

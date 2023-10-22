@@ -1,4 +1,4 @@
-﻿namespace Dependinator.Model.Parsing;
+﻿namespace Dependinator.Parsing;
 
 internal class NodeName : Equatable<NodeName>
 {

@@ -1,6 +1,6 @@
 ﻿using System.Threading.Channels;
 
-namespace Dependinator.Model.Parsing;
+namespace Dependinator.Parsing;
 
 
 interface IParser

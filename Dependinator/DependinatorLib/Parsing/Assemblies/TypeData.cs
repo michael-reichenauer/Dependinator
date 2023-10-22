@@ -1,5 +1,5 @@
 ﻿using Mono.Cecil;
 
-namespace Dependinator.Model.Parsing.Assemblies;
+namespace Dependinator.Parsing.Assemblies;
 
 record TypeData(TypeDefinition Type, Node Node, bool IsAsyncStateType);

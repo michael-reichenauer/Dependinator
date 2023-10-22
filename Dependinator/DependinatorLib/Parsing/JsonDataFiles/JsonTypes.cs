@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 
-namespace Dependinator.Model.Parsing.JsonDataFiles;
+namespace Dependinator.Parsing.JsonDataFiles;
 
 public static class JsonTypes
 {

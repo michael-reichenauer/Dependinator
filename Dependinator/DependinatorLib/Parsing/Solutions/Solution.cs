@@ -1,7 +1,7 @@
 ﻿using Microsoft.Build.Construction;
 
 
-namespace Dependinator.Model.Parsing.Solutions;
+namespace Dependinator.Parsing.Solutions;
 
 /// <summary>
 ///     Represents the solution loaded from a sln file.

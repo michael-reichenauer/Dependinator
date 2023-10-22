@@ -2,10 +2,10 @@
 using ICSharpCode.Decompiler.CSharp;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Dependinator.Model.Parsing;
+using Dependinator.Parsing;
 
 
-namespace Dependinator.Model.Parsing.Assemblies;
+namespace Dependinator.Parsing.Assemblies;
 
 class Decompiler
 {

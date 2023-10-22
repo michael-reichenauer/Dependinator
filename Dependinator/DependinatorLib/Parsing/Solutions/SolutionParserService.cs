@@ -1,6 +1,6 @@
 ﻿using System.Threading.Channels;
 
-namespace Dependinator.Model.Parsing.Solutions;
+namespace Dependinator.Parsing.Solutions;
 
 [Transient]
 internal class SolutionParserService : IParser
