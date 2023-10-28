@@ -72,7 +72,7 @@ class CanvasService : ICanvasService
         Log.Info($"Nodes: {nodeCount}, Links: {linkCount}, Items: {itemCount}");
         Log.Info($"Length: {canvas.SvgContent.Length}");
 
-        //panZoomService.PanZoomToFit(bounds);
+        panZoomService.PanZoomToFit(bounds);
         await canvas.TriggerStateHasChangedAsync();
     }
 }
