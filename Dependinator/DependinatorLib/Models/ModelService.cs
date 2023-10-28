@@ -1,13 +1,7 @@
 using System.Diagnostics;
-using System.Threading.Channels;
 
 
 namespace Dependinator.Models;
-
-
-interface IItem { }
-
-record Source(string Path, string Text, int LineNumber);
 
 
 
@@ -17,13 +11,12 @@ interface IModelService
 }
 
 
-
 [Scoped]
 class ModelService : IModelService
 {
     const int BatchTimeMs = 300;
     readonly Parsing.IParserService parserService;
-    private readonly IModelDb modelDb;
+    readonly IModelDb modelDb;
 
 
     public ModelService(Parsing.IParserService parserService, IModelDb modelDb)
@@ -61,20 +54,18 @@ class ModelService : IModelService
 
     public void AddOrUpdate(IReadOnlyList<Parsing.IItem> parsedItems)
     {
-        using var context = modelDb.GetModel();
+        using var model = modelDb.GetModel();
 
         foreach (var parsedItem in parsedItems)
         {
             switch (parsedItem)
             {
                 case Parsing.Node parsedNode:
-                    context.Model.AddOrUpdateNode(parsedNode);
-                    //Log.Info($"Node: {parsedNode}");
+                    model.AddOrUpdateNode(parsedNode);
                     break;
 
                 case Parsing.Link parsedLink:
-                    context.Model.AddOrUpdateLink(parsedLink);
-                    // Log.Info($"Link: {parsedLink}");
+                    model.AddOrUpdateLink(parsedLink);
                     break;
             }
         }

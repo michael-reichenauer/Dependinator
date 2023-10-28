@@ -2,34 +2,50 @@ namespace Dependinator.Models;
 
 interface IModelDb
 {
-    ModelContext GetModel();
+    Model GetModel();
 }
 
 
 [Singleton]
 class ModelDb : IModelDb
 {
-    readonly Model model = new();
+    readonly RootModel model = new();
 
-    public ModelContext GetModel() => new(model);
+    public Model GetModel() => new(model);
 }
 
-class ModelContext : IDisposable
+
+
+class Model : IDisposable
 {
-    public ModelContext(Model model)
+    RootModel rootModel;
+
+    public Model(RootModel rootModel)
     {
-        Monitor.Enter(model.SyncRoot);
-        Model = model;
+        Monitor.Enter(rootModel.SyncRoot);
+        this.rootModel = rootModel;
     }
 
-    public Model Model { get; private set; }
+    public object SyncRoot => rootModel.SyncRoot;
+    public Node Root => rootModel.Root;
+    public int NodeCount => rootModel.NodeCount;
+    public int LinkCount => rootModel.LinkCount;
+    public int ItemCount => rootModel.Items.Count;
+
+    public void AddOrUpdateLink(Parsing.Link parsedLink) => rootModel.AddOrUpdateLink(parsedLink);
+    public void AddOrUpdateNode(Parsing.Node parsedNode) => rootModel.AddOrUpdateNode(parsedNode);
+    internal void Clear() => rootModel.Clear();
 
     public void Dispose()
     {
-        if (Model == null) return;
-        var syncRoot = Model.SyncRoot;
-        Model = null!;
+        if (rootModel == null) return;
+        var syncRoot = rootModel.SyncRoot;
+        rootModel = null!;
         Monitor.Exit(syncRoot);
     }
-}
 
+    internal static void SetIsModified()
+    {
+        throw new NotImplementedException();
+    }
+}

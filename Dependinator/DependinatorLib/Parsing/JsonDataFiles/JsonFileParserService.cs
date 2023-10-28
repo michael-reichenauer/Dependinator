@@ -98,7 +98,7 @@ class JsonFileParserService : IParser
 
 
     static Node ToNodeData(JsonTypes.Node node) =>
-       new Node(node.Name, node.Parent, node.Type, node.Description);
+       new Node(node.Name, node.Parent, node.Type, node.Description, true);
 
 
     static Link ToLinkData(JsonTypes.Link link) =>

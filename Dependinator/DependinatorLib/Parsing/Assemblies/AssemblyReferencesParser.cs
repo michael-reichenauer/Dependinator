@@ -33,7 +33,7 @@ internal class AssemblyReferencesParser
             string referenceName = Name.GetModuleName(reference);
             string parent = await GetReferenceParentAsync(referencesRootName, referenceName);
 
-            var referenceNode = new Node(referenceName, parent, NodeType.AssemblyType, "");
+            var referenceNode = new Node(referenceName, parent, NodeType.AssemblyType, "", true);
 
             await items.WriteAsync(referenceNode);
 
@@ -67,7 +67,7 @@ internal class AssemblyReferencesParser
     async Task<string> SendReferencesRootNodeAsync()
     {
         string referencesRootName = "$Externals";
-        Node referencesRootNode = new Node(referencesRootName, "", NodeType.GroupType, "External references");
+        Node referencesRootNode = new Node(referencesRootName, "", NodeType.GroupType, "External references", true);
 
         await items.WriteAsync(referencesRootNode);
         return referencesRootName;
@@ -83,7 +83,7 @@ internal class AssemblyReferencesParser
             string name = string.Join(".", parts.Take(i + 1));
 
             string groupName = $"{parent}.{name}";
-            var groupNode = new Node(groupName, parent, NodeType.GroupType, "");
+            var groupNode = new Node(groupName, parent, NodeType.GroupType, "", true);
 
             await items.WriteAsync(groupNode);
             parent = groupName;

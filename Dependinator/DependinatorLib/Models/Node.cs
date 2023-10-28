@@ -5,7 +5,7 @@ class Node : IItem
     readonly List<Node> children = new();
     readonly List<Link> sourceLinks = new();
     readonly List<Link> targetLinks = new();
-    readonly Model model;
+    readonly RootModel model;
     string typeName = "";
     string cachedSvg = "";
     bool isCached = false;
@@ -22,13 +22,16 @@ class Node : IItem
     public int RX { get; set; } = 5;
     public string Color { get; set; } = "";
     public string Background { get; set; } = "green";
+    public double FillOpacity { get; set; } = 0.2;
+    public double StrokeWidth { get; set; } = 1;
+    public bool IsRoot => Type == NodeType.Root;
 
     public IReadOnlyList<Node> Children => children;
     public IReadOnlyList<Link> SourceLinks => sourceLinks;
     public IReadOnlyList<Link> TargetLinks => targetLinks;
 
 
-    public Node(string name, Node parent, Model model)
+    public Node(string name, Node parent, RootModel model)
     {
         this.Name = name;
         Parent = parent;
@@ -52,9 +55,8 @@ class Node : IItem
             Height = Math.Max(TotalRect.Height, child.Rect.Y + child.Rect.Height)
         };
 
-        Updated();
+        SetIsModified();
     }
-
 
 
     public void RemoveChild(Node child)
@@ -75,12 +77,15 @@ class Node : IItem
 
     public void Update(Parsing.Node node)
     {
-        if (IsEqual(node)) return;
+        //if (IsEqual(node)) return;
+        Color = RandomColor();
+        Background = RandomColor();
 
-        if (Parent.Name != node.Parent)
+        var parentName = node.ParentName;
+        if (Parent.Name != parentName)
         {   // The node has changed parent, remove it from the old parent and add it to the new parent
             Parent.RemoveChild(this);
-            Parent = model.Node(node.Parent);
+            Parent = model.GetOrCreateNode(parentName);
             Parent.AddChild(this);
         }
 
@@ -88,23 +93,34 @@ class Node : IItem
         Type = ToNodeType(typeName);
         Description = node.Description;
 
-        Updated();
+        SetIsModified();
     }
 
 
-    public void Updated()
+    public void SetIsModified()
     {
         isCached = false;
-        Parent?.Updated();
+        Parent?.SetIsModified();
     }
 
     string GenerateAndCacheSvg()
     {
-        var svg = $"""<rect x="{Rect.X}" y="{Rect.Y}" width="{Rect.Width}" height="{Rect.Height}" rx="{RX}" fill="{Background}" fill-opacity="0.2" stroke="{Color}" stroke-width="2"/>""";
+        Timing t = IsRoot ? Timing.Start() : null!;
+        try
+        {
+            var svg = IsRoot ? "" :
+                $"""<rect x="{Rect.X}" y="{Rect.Y}" width="{Rect.Width}" height="{Rect.Height}" rx="{RX}" fill="{Background}" fill-opacity="{FillOpacity}" stroke="{Color}" stroke-width="{StrokeWidth}"/>""";
 
-        cachedSvg = children.Select(n => n.ContentSvg).Prepend(svg).Join("\n");
-        isCached = true;
-        return cachedSvg;
+            cachedSvg = children.Select(n => n.ContentSvg).Prepend(svg).Join("\n");
+            // cachedSvg = $"""<rect x="{100}" y="{100}" width="{100}" height="{100}" rx="{RX}" fill="{Background}" fill-opacity="0.2" stroke="{Color}" stroke-width="0.001"/>""";
+
+            isCached = true;
+            return cachedSvg;
+        }
+        finally
+        {
+            t?.Dispose();
+        }
     }
 
 
@@ -128,7 +144,7 @@ class Node : IItem
     }
 
     bool IsEqual(Parsing.Node n) =>
-        Parent.Name == n.Parent &&
+        Parent.Name == n.ParentName &&
         typeName == n.Type &&
         Description == n.Description;
 

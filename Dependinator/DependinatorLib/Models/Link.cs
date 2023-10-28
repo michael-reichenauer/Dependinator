@@ -1,3 +1,3 @@
 namespace Dependinator.Models;
 
-record Link(Node Source, Node Target) : IItem;
+record Link(Node SourceName, Node TargetName) : IItem;

@@ -42,8 +42,8 @@ internal class TypeParser
         {
             string name = Name.GetTypeFullName(type);
             bool isPrivate = type.Attributes.HasFlag(TypeAttributes.NestedPrivate);
-            string parent = isPrivate
-                ? $"{NodeName.From(name).ParentName.FullName}.$private" : "";
+            string parentName = isPrivate
+                ? $"{NodeName.From(name).ParentName.FullName}.$private" : NodeName.From(name).ParentName.FullName;
             string description = xmlDockParser.GetDescription(name);
 
             if (await IsNameSpaceDocTypeAsync(type, description))
@@ -52,7 +52,7 @@ internal class TypeParser
                 yield break;
             }
 
-            typeNode = new Node(name, parent, NodeType.TypeType, description);
+            typeNode = new Node(name, parentName, NodeType.TypeType, description, true);
             await items.WriteAsync(typeNode);
         }
 
@@ -77,7 +77,7 @@ internal class TypeParser
             if (!string.IsNullOrEmpty(description))
             {
                 string name = Name.GetTypeNamespaceFullName(type);
-                Node node = new Node(name, "", NodeType.NameSpaceType, description);
+                Node node = new Node(name, Node.ParseParentName(name), NodeType.NameSpaceType, description, true);
                 await items.WriteAsync(node);
             }
 

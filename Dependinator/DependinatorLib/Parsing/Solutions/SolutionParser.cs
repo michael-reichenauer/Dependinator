@@ -103,7 +103,7 @@ internal class SolutionParser : IDisposable
     }
 
 
-    Node CreateSolutionNode() => new Node(SolutionNodeName, "", NodeType.SolutionType, "Solution file");
+    Node CreateSolutionNode() => new Node(SolutionNodeName, "", NodeType.SolutionType, "Solution file", true);
 
 
     R CreateAssemblyParsers(bool includeReferences = false)
@@ -151,13 +151,13 @@ internal class SolutionParser : IDisposable
 
     string GetProjectParentName(string solutionName, Project project)
     {
-        string parent = solutionName;
+        string parentName = solutionName;
         string projectName = project.ProjectName;
 
         string[] parts = projectName.Split("\\".ToCharArray());
         if (parts.Length == 1)
         {
-            return parent;
+            return parentName;
         }
 
         for (int i = 0; i < parts.Length - 1; i++)
@@ -167,14 +167,14 @@ internal class SolutionParser : IDisposable
 
             if (!parentNodesToSend.Any(n => n.Name == folderName))
             {
-                var folderNode = new Node(folderName, parent, NodeType.SolutionFolderType, "");
+                var folderNode = new Node(folderName, parentName, NodeType.SolutionFolderType, "", true);
                 parentNodesToSend.Add(folderNode);
             }
 
-            parent = folderName;
+            parentName = folderName;
         }
 
-        return parent;
+        return parentName;
     }
 
 

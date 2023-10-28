@@ -1,7 +1,8 @@
 namespace Dependinator.Models;
 
 
-class Model
+
+class RootModel
 {
     static readonly char[] NamePartsSeparators = "./".ToCharArray();
 
@@ -18,14 +19,30 @@ class Model
 
     readonly Random random = new Random();
 
+    public RootModel()
+    {
+        Root = new Node("", null!, this) { Type = NodeType.Root };
+        itemsDictionary.Add(Root.Name, Root);
+        NodeCount = 1;
+    }
+
+
 
     public object SyncRoot => syncRoot;
     public Node Root { get; internal set; }
     public Random Random => random;
+    public bool IsModified { get; internal set; }
     public IReadOnlyDictionary<string, IItem> Items => items;
+    public int NodeCount { get; internal set; } = 0;
+    public int LinkCount { get; internal set; } = 0;
 
 
-    public void AddNode(Node node) => items[node.Name] = node;
+    public void AddNode(Node node)
+    {
+        if (!items.ContainsKey(node.Name)) NodeCount++;
+        items[node.Name] = node;
+    }
+
     public Node Node(string name) => (Node)items[name];
     public bool TryGetNode(string name, out Node node)
     {
@@ -38,7 +55,12 @@ class Model
         return true;
     }
 
-    public void AddLink(string id, Link link) => items[id] = link;
+    public void AddLink(string id, Link link)
+    {
+        if (!items.ContainsKey(id)) LinkCount++;
+        items[id] = link;
+    }
+
     public Link Link(string id) => (Link)items[id];
     public bool TryGetLink(string id, out Link link)
     {
@@ -52,10 +74,16 @@ class Model
     }
 
 
-    public Model()
+    public Node GetOrCreateNode(string name)
     {
-        Root = new Node("", null!, this) { Type = NodeType.Root };
-        itemsDictionary.Add(Root.Name, Root);
+        if (!items.TryGetValue(name, out var item))
+        {
+            var parent = DefaultNode(name);
+            AddOrUpdateNode(parent);
+            return (Node)items[name];
+        }
+
+        return (Node)item;
     }
 
     public void Clear()
@@ -63,6 +91,8 @@ class Model
         itemsDictionary.Clear();
         Root = new Node("", null!, this) { Type = NodeType.Root };
         itemsDictionary.Add(Root.Name, Root);
+        NodeCount = 1;
+        LinkCount = 0;
     }
 
 
@@ -70,7 +100,8 @@ class Model
     {
         if (!TryGetNode(parsedNode.Name, out var node))
         {   // New node, add it to the model and parent
-            var parent = GetParent(parsedNode);
+            var parentName = parsedNode.ParentName;
+            var parent = GetOrCreateNode(parentName);
             node = new Node(parsedNode.Name, parent, this)
             {
                 Description = parsedNode.Description
@@ -115,24 +146,6 @@ class Model
     }
 
 
-    Node GetParent(Parsing.Node parsedNode)
-    {
-        var parentName = GetParentName(parsedNode);
-        if (!items.TryGetValue(parentName, out var item))
-        {
-            var parent = DefaultNode(parentName);
-            AddOrUpdateNode(parent);
-            return (Node)items[parentName];
-        }
-
-        return (Node)item;
-    }
-
-
-    static string GetParentName(Parsing.Node node) =>
-        node.Parent != "" ? node.Parent : GetParentName(node.Name);
-
-
     static string GetParentName(string name)
     {
         // Split full name in name and parent name,
@@ -140,7 +153,7 @@ class Model
         return index > -1 ? name[..index] : "";
     }
 
-    static Parsing.Node DefaultNode(string name) => new Parsing.Node(name, "", "", "");
+    static Parsing.Node DefaultNode(string name) => new Parsing.Node(name, Parsing.Node.ParseParentName(name), "", "", true);
 }
 
 

@@ -8,6 +8,7 @@ interface IPanZoomService
     string ViewBox { get; }
     double Width { get; }
     double Height { get; }
+    double Zoom { get; set; }
 
     Task InitAsync(Canvas canvas);
     void OnMouseWheel(WheelEventArgs e);
@@ -137,7 +138,7 @@ class PanZoomService : IPanZoomService
             Width = w;
             Height = h;
             svgRect = await GetSvgRectAsync();
-            canvas.TriggerStateHasChanged();
+            await canvas.TriggerStateHasChangedAsync();
         }
     }
 }

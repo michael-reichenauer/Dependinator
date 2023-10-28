@@ -9,10 +9,12 @@ partial class Canvas : ComponentBase
 
     public ElementReference Ref { get; protected set; }
 
+    public string SvgContent { get; set; } = "";
 
-    public void TriggerStateHasChanged()
+
+    public Task TriggerStateHasChangedAsync()
     {
-        InvokeAsync(() => { StateHasChanged(); });
+        return InvokeAsync(() => { StateHasChanged(); });
     }
 
     protected override void OnInitialized()
@@ -26,6 +28,17 @@ partial class Canvas : ComponentBase
         base.OnParametersSet();
         // Add parameter set logic here
     }
+
+
+    // protected override bool ShouldRender()
+    // {
+    //     if (shouldReload)
+    //     {
+    //         return true;
+    //     }
+    //     return false;
+    // }
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

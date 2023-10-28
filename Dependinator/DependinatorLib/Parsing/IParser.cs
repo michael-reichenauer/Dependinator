@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.Security.Permissions;
+using System.Threading.Channels;
 
 namespace Dependinator.Parsing;
 
@@ -18,7 +19,19 @@ interface IParser
 
 interface IItem { }
 record Link(string Source, string Target, string TargetType) : IItem;
-record Node(string Name, string Parent, string Type, string Description) : IItem;
+
+record Node(string Name, string ParentName, string Type, string Description, bool count) : IItem
+{
+    static readonly char[] NamePartsSeparators = "./".ToCharArray();
+
+    static public string ParseParentName(string name)
+    {
+        int index = name.LastIndexOfAny(NamePartsSeparators);
+        return index > -1 ? name[..index] : "";
+    }
+}
+
+
 record Source(string Path, string Text, int LineNumber);
 
 static class NodeType

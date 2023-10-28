@@ -5,11 +5,12 @@ namespace Dependinator.Diagrams;
 
 interface ICanvasService
 {
-    string SvgContent { get; }
     Task InitAsync(Canvas canvas);
 
     void Refresh();
     void Clear();
+
+    string ZoomTxt { get; }
 }
 
 
@@ -17,35 +18,20 @@ interface ICanvasService
 class CanvasService : ICanvasService
 {
     readonly IPanZoomService panZoomService;
-    private readonly IModelService modelService;
-    private readonly IModelDb modelDb;
-
-    Rect bounds = new(0, 0, 0, 0);
-
-    string svgContent = "";
-    public string SvgContent
-    {
-        get
-        {
-            //Log.Info("Get SvgContent");
-            return svgContent;
-        }
-        private set
-        {
-            Log.Info("Set SvgContent");
-            svgContent = value;
-        }
-    }
+    readonly IModelService modelService;
+    readonly IModelDb modelDb;
 
     Canvas canvas = null!;
+    Rect bounds = new(0, 0, 0, 0);
 
-    public CanvasService(IPanZoomService panZoomService, Models.IModelService modelService, IModelDb modelDb)
+    public CanvasService(IPanZoomService panZoomService, IModelService modelService, IModelDb modelDb)
     {
         this.panZoomService = panZoomService;
         this.modelService = modelService;
         this.modelDb = modelDb;
     }
 
+    public string ZoomTxt => $"{panZoomService.Zoom}";
 
     public Task InitAsync(Canvas canvas)
     {
@@ -55,31 +41,38 @@ class CanvasService : ICanvasService
     }
 
 
-    public void Clear()
+    public async void Clear()
     {
         using var _ = Timing.Start();
-        using var context = modelDb.GetModel();
-        context.Model.Clear();
-        SvgContent = context.Model.Root.ContentSvg;
-        canvas?.TriggerStateHasChanged();
+        using var model = modelDb.GetModel();
+        model.Clear();
+        canvas.SvgContent = model.Root.ContentSvg;
+        await canvas.TriggerStateHasChangedAsync();
     }
+
 
     public async void Refresh()
     {
         using var _ = Timing.Start();
         await modelService.RefreshAsync();
 
-        using (var context = modelDb.GetModel())
+        int nodeCount = 0;
+        int linkCount = 0;
+        int itemCount = 0;
+        using (var model = modelDb.GetModel())
         {
             using var __ = Timing.Start("Generate elements");
-            var model = context.Model;
-            var root = model.Root;
-
-            SvgContent = root.ContentSvg;
+            canvas.SvgContent = model.Root.ContentSvg;
             bounds = model.Root.TotalRect;
+            nodeCount = model.NodeCount;
+            linkCount = model.LinkCount;
+            itemCount = model.ItemCount;
         }
 
-        panZoomService.PanZoomToFit(bounds);
-        canvas?.TriggerStateHasChanged();
+        Log.Info($"Nodes: {nodeCount}, Links: {linkCount}, Items: {itemCount}");
+        Log.Info($"Length: {canvas.SvgContent.Length}");
+
+        //panZoomService.PanZoomToFit(bounds);
+        await canvas.TriggerStateHasChangedAsync();
     }
 }
