@@ -57,8 +57,10 @@ class PanZoomService : IPanZoomService
         await this.jSInteropService.InitializeAsync();
 
         svgRect = await GetSvgRectAsync();
-        viewBoxRect = new Rect(0, 0, svgRect.Width, svgRect.Height);
+        viewBoxRect = svgRect;
+        ViewBox = $"{viewBoxRect.X} {viewBoxRect.Y} {viewBoxRect.Width} {viewBoxRect.Height}";
         Zoom = viewBoxRect.Width / svgRect.Width;
+        Log.Info($"Inti: Svg: {svgRect}, View: {viewBoxRect}, Zoom: {Zoom}");
     }
 
     public void PanZoomToFit(Rect bounds)
@@ -66,15 +68,17 @@ class PanZoomService : IPanZoomService
         viewBoxRect = new Rect(bounds.X - Margin, bounds.Y - Margin, bounds.Width + Margin, bounds.Height + Margin);
         ViewBox = $"{viewBoxRect.X} {viewBoxRect.Y} {viewBoxRect.Width} {viewBoxRect.Height}";
         Zoom = viewBoxRect.Width / svgRect.Width;
+        Log.Info($"Fit: Svg: {svgRect}, View: {viewBoxRect}, Zoom: {Zoom}");
     }
 
     public void OnMouseWheel(WheelEventArgs e)
     {
         if (e.DeltaY == 0) return;
+        var (mx, my) = (e.OffsetX, e.OffsetY);
 
         double z = 1 - (e.DeltaY > 0 ? -ZoomSpeed : ZoomSpeed);
-        double mouseX = e.ClientX - svgRect.X;     // Why 5 and 10 ????
-        double mouseY = e.ClientY - svgRect.Y;
+        double mouseX = mx - svgRect.X;     // Why 5 and 10 ????
+        double mouseY = my - svgRect.Y;
         double svgX = mouseX / svgRect.Width * this.viewBoxRect.Width + this.viewBoxRect.X;
         double svgY = mouseY / svgRect.Height * this.viewBoxRect.Height + this.viewBoxRect.Y;
 
@@ -90,11 +94,14 @@ class PanZoomService : IPanZoomService
 
     public void OnMouseMove(MouseEventArgs e)
     {
+        var (mx, my) = (e.OffsetX, e.OffsetY);
+        // Log.Info($"Mouse: {mx},{my}");
+
         if (e.Buttons == LeftMouseBtn && isDrag)
         {
-            var dx = (e.OffsetX - lastMouse.X) * Zoom;
-            var dy = (e.OffsetY - lastMouse.Y) * Zoom;
-            lastMouse = new Pos(e.OffsetX, e.OffsetY);
+            var dx = (mx - lastMouse.X) * Zoom;
+            var dy = (my - lastMouse.Y) * Zoom;
+            lastMouse = new Pos(mx, my);
 
             viewBoxRect = viewBoxRect with { X = viewBoxRect.X - dx, Y = viewBoxRect.Y - dy };
             ViewBox = $"{viewBoxRect.X} {viewBoxRect.Y} {viewBoxRect.Width} {viewBoxRect.Height}";
@@ -103,10 +110,11 @@ class PanZoomService : IPanZoomService
 
     public void OnMouseDown(MouseEventArgs e)
     {
+        var (mx, my) = (e.OffsetX, e.OffsetY);
         if (e.Buttons == LeftMouseBtn)
         {
             isDrag = true;
-            lastMouse = new Pos(e.OffsetX, e.OffsetY);
+            lastMouse = new Pos(mx, my);
         }
     }
 
@@ -123,7 +131,7 @@ class PanZoomService : IPanZoomService
         var r = await jSInteropService.GetBoundingRectangle(canvas.Ref);
 
         // Not sure why +20 is needed !!!
-        return new Rect(r.Left, r.Top, r.Width, r.Height);
+        return new Rect(0, 0, r.Width, r.Height);
     }
 
 

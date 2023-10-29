@@ -1,10 +1,7 @@
 namespace Dependinator.Models;
 
-
 class Node : NodeBase
 {
-    static readonly char[] PartsSeparators = "./".ToCharArray();
-
     const double DefaultWidth = 100;
     const double DefaultHeight = 50;
     public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
@@ -28,7 +25,7 @@ class Node : NodeBase
     {
         Color = RandomColor();
         Background = RandomColor();
-        (LongName, ShortName) = GetDisplayNames(name);
+        (LongName, ShortName) = NodeName.GetDisplayNames(name);
     }
 
 
@@ -37,14 +34,14 @@ class Node : NodeBase
         if (IsRoot) return GetChildrenSvg(parentCanvasBounds, zoom).Join("\n");
 
         var nodeCanvasBounds = GetCanvasBounds(parentCanvasBounds, zoom);
-        if (nodeCanvasBounds.Width < 5 || nodeCanvasBounds.Height < 5) return "";   // Too small to be seen
+        //if (nodeCanvasBounds.Width < 5 || nodeCanvasBounds.Height < 5) return "";   // Too small to be seen
 
         // Adjust bound to be intersection of parent and node bounds     #####
         // Skip if node is outside parent canvas bounds and not visible  #####
 
         var nodeSvg = GetNodeSvg(nodeCanvasBounds, zoom);
 
-        if (nodeCanvasBounds.Width < 50 || nodeCanvasBounds.Height < 50) return nodeSvg;  // To small for children to be seen
+        // if (nodeCanvasBounds.Width < 50 || nodeCanvasBounds.Height < 50) return nodeSvg;  // To small for children to be seen
 
         var svg = GetChildrenSvg(nodeCanvasBounds, zoom).Prepend(nodeSvg).Join("\n");
 
@@ -52,52 +49,32 @@ class Node : NodeBase
     }
 
 
-    public Rect GetNextChildRect(Size size)
-    {
-        var x = Boundary.X + size.Width * (Children.Count % 7);
-        var y = Boundary.Y + size.Height * (Children.Count / 7);
-        return new Rect(x, y, size.Width, size.Height);
-
-        // while (true)
-        // {
-        //     double x = 0;
-        //     double y = 0;
-        //     for (var i = 0; i < 7; i++)
-        //     {
-        //         var r = new Rect(x + i * size.Width, y, size.Width, size.Height);
-        //         if (Children.All(c => !IsOverlap(c.Boundary, r)))
-        //         {
-        //             return r;
-        //         }
-        //         y += size.Height;
-        //     }
-        // }
-    }
 
 
     string GetNodeSvg(Rect canvasBounds, double zoom)
     {
-        var s = StrokeWidth;
+        var s = StrokeWidth * zoom;
         var (x, y, w, h) = canvasBounds;
         var (tx, ty) = (x, y + h / 2);
         var fz = 8 * zoom;
 
         return
             $"""
-            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="5" fill="{Background}" fill-opacity="{FillOpacity}" stroke="{Color}"/>
-            <text x="{tx}" y="{ty}" font-size="{fz}px" fill="white">{ShortName}</text>
+            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="0" fill="{Background}" fill-opacity="{FillOpacity}" stroke="{Color}"/>
+            <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{ShortName}</text>
             """;
     }
 
     IEnumerable<string> GetChildrenSvg(Rect nodeCanvasBounds, double zoom)
     {
         var childrenZoom = zoom * ContainerZoom;
-        var childrenCanvasBounds = nodeCanvasBounds with
-        {
-            Width = nodeCanvasBounds.Width / ContainerZoom,
-            Height = nodeCanvasBounds.Height / ContainerZoom
-        };
 
+        var childrenCanvasBounds = new Rect(
+            nodeCanvasBounds.X,
+            nodeCanvasBounds.Y,
+            nodeCanvasBounds.Width / ContainerZoom,
+            nodeCanvasBounds.Height / ContainerZoom
+        );
 
         return Children.Select(n => n.GetSvg(childrenCanvasBounds, childrenZoom));
     }
@@ -107,7 +84,7 @@ class Node : NodeBase
         var w = Boundary.Width * zoom;
         var h = Boundary.Height * zoom;
         var x = parentCanvasBounds.X + Boundary.X * zoom;
-        var y = parentCanvasBounds.Y * Boundary.Y * zoom;
+        var y = parentCanvasBounds.Y + Boundary.Y * zoom;
         return new Rect(x, y, w, h);
     }
 
@@ -153,65 +130,8 @@ class Node : NodeBase
         return Rect.None;
     }
 
-    static (string longName, string shortName) GetDisplayNames(string nodeName)
-    {
-        string[] parts = nodeName.Split(PartsSeparators);
-
-        string namePart = parts[^1];
-        int index = namePart.IndexOf('(');
-        string shortName = ToNiceText(index > -1 ? namePart[..index] : namePart);
-
-        var subParts = nodeName.StartsWith("$") ? parts : parts.Skip(1);
-        string longName = string.Join(".", subParts
-            .Where(part => !part.StartsWith("?")));
-
-        if (string.IsNullOrEmpty(longName))
-        {
-            longName = ToNiceText(nodeName);
-        }
-        else
-        {
-            longName = ToNiceParameters(ToNiceText(longName));
-        }
-
-        return (shortName, longName);
-    }
-
-
-    static string ToNiceParameters(string fullName)
-    {
-        int index1 = fullName.IndexOf('(');
-        int index2 = fullName.IndexOf(')');
-
-        if (index1 <= -1 || index2 <= index1 + 1) return fullName;
-
-        string parameters = fullName.Substring(index1 + 1, index2 - index1 - 1);
-        string[] parametersParts = parameters.Split(",".ToCharArray());
-
-        // Simplify parameter types to just get last part of each type
-        parameters = string.Join(",", parametersParts
-            .Select(part => part.Split(".".ToCharArray()).Last()));
-
-        return $"{fullName.Substring(0, index1)}({parameters})";
-    }
-
-
-    static string ToNiceText(string name) =>
-        name.Replace("*", ".")
-            .Replace("#", ".")
-            .Replace("?", "")
-            .Replace("$", "")
-            .Replace("%", "")
-            .Replace("/", ".")
-            .Replace("`1", "<T>")
-            .Replace("`2", "<T,T>")
-            .Replace("`3", "<T,T,T>")
-            .Replace("`4", "<T,T,T,T>")
-            .Replace("`5", "<T,T,T,T,T>")
-            .Replace("op_Equality", "==")
-            .Replace("op_Inequality", "!=");
-
 
     string RandomColor() => $"#{model.Random.Next(0, 256):x2}{model.Random.Next(0, 256):x2}{model.Random.Next(0, 256):x2}";
+    public override string ToString() => IsRoot ? "<root>" : LongName;
 }
 

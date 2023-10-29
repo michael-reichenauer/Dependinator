@@ -103,7 +103,7 @@ class ModelBase
             var parentName = parsedNode.ParentName;
             var parent = GetOrCreateNode(parentName);
 
-            var boundary = parent.GetNextChildRect(Node.DefaultSize);
+            var boundary = NodeLayout.GetNextChildRect(parent);
             node = new Node(parsedNode.Name, parent, this)
             {
                 Description = parsedNode.Description,
@@ -151,7 +151,7 @@ class ModelBase
 
 
     static Parsing.Node DefaultParsingNode(string name) =>
-        new(name, Parsing.Node.ParseParentName(name), "", "", true);
+        new(name, Parsing.Node.ParseParentName(name), "", "");
 
     static Node DefaultRootNode(ModelBase model) => new("", null!, model)
     {

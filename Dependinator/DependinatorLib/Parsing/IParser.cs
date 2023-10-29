@@ -20,7 +20,7 @@ interface IParser
 interface IItem { }
 record Link(string Source, string Target, string TargetType) : IItem;
 
-record Node(string Name, string ParentName, string Type, string Description, bool count) : IItem
+record Node(string Name, string ParentName, string Type, string Description) : IItem
 {
     static readonly char[] NamePartsSeparators = "./".ToCharArray();
 

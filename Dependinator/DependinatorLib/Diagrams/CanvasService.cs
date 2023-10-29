@@ -64,7 +64,7 @@ class CanvasService : ICanvasService
         using (var model = modelDb.GetModel())
         {
             using var __ = Timing.Start("Generate elements");
-            canvas.SvgContent = model.GetSvg(panZoomService.ViewRect, panZoomService.Zoom);
+            canvas.SvgContent = model.GetSvg(panZoomService.ViewRect, 1);
             bounds = model.Root.TotalBoundary;
             nodeCount = model.NodeCount;
             linkCount = model.LinkCount;
@@ -74,7 +74,7 @@ class CanvasService : ICanvasService
         Log.Info($"Nodes: {nodeCount}, Links: {linkCount}, Items: {itemCount}");
         Log.Info($"Length: {canvas.SvgContent.Length}");
 
-        //panZoomService.PanZoomToFit(bounds);
+        panZoomService.PanZoomToFit(bounds);
         await canvas.TriggerStateHasChangedAsync();
     }
 }

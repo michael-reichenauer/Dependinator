@@ -52,7 +52,7 @@ internal class TypeParser
                 yield break;
             }
 
-            typeNode = new Node(name, parentName, NodeType.TypeType, description, true);
+            typeNode = new Node(name, parentName, NodeType.TypeType, description);
             await items.WriteAsync(typeNode);
         }
 
@@ -77,7 +77,7 @@ internal class TypeParser
             if (!string.IsNullOrEmpty(description))
             {
                 string name = Name.GetTypeNamespaceFullName(type);
-                Node node = new Node(name, Node.ParseParentName(name), NodeType.NameSpaceType, description, true);
+                Node node = new Node(name, Node.ParseParentName(name), NodeType.NameSpaceType, description);
                 await items.WriteAsync(node);
             }
 

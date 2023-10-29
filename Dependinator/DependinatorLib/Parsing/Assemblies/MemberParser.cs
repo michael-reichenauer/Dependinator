@@ -97,7 +97,7 @@ internal class MemberParser
             string parent = isPrivate ? $"{GetParentName(memberName)}.$private" : GetParentName(memberName);
             string description = xmlDocParser.GetDescription(memberName);
 
-            var memberNode = new Node(memberName, parent, NodeType.MemberType, description, true);
+            var memberNode = new Node(memberName, parent, NodeType.MemberType, description);
 
             if (!sentNodes.ContainsKey(memberNode.Name))
             {
