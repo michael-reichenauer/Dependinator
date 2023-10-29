@@ -7,5 +7,14 @@
         @onwheel="@pzs.OnMouseWheel" @onmousemove="@pzs.OnMouseMove" @onmouseup="@pzs.OnMouseUp"
         @onmousedown="@pzs.OnMouseDown">
         @((MarkupString)SvgContent)
+        <style>
+            <![CDATA[
+            text {
+                dominant-baseline: hanging;
+                font: Verdana, Helvetica, Arial, sans-serif;
+                color: white;
+            }
+            ]]>
+        </style>
     </svg>
 </div>

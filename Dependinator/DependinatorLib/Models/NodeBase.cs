@@ -1,3 +1,4 @@
+
 namespace Dependinator.Models;
 
 abstract class NodeBase : IItem
@@ -11,7 +12,7 @@ abstract class NodeBase : IItem
 
     public NodeBase(string name, Node parent, ModelBase model)
     {
-        this.Name = name;
+        Name = name;
         Parent = parent;
         this.model = model;
     }

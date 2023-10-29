@@ -3,6 +3,8 @@ namespace Dependinator.Models;
 
 class Node : NodeBase
 {
+    static readonly char[] PartsSeparators = "./".ToCharArray();
+
     const double DefaultWidth = 100;
     const double DefaultHeight = 50;
     public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
@@ -10,6 +12,8 @@ class Node : NodeBase
 
     public string Color { get; set; } = "";
     public string Background { get; set; } = "green";
+    public string LongName { get; }
+    public string ShortName { get; }
     public double FillOpacity { get; set; } = 0.2;
     public double StrokeWidth { get; set; } = 1.0;
 
@@ -24,6 +28,7 @@ class Node : NodeBase
     {
         Color = RandomColor();
         Background = RandomColor();
+        (LongName, ShortName) = GetDisplayNames(name);
     }
 
 
@@ -37,7 +42,7 @@ class Node : NodeBase
         // Adjust bound to be intersection of parent and node bounds     #####
         // Skip if node is outside parent canvas bounds and not visible  #####
 
-        var nodeSvg = GetNodeSvg(nodeCanvasBounds);
+        var nodeSvg = GetNodeSvg(nodeCanvasBounds, zoom);
 
         if (nodeCanvasBounds.Width < 50 || nodeCanvasBounds.Height < 50) return nodeSvg;  // To small for children to be seen
 
@@ -70,12 +75,18 @@ class Node : NodeBase
     }
 
 
-    string GetNodeSvg(Rect canvasBounds)
+    string GetNodeSvg(Rect canvasBounds, double zoom)
     {
         var s = StrokeWidth;
         var (x, y, w, h) = canvasBounds;
+        var (tx, ty) = (x, y + h / 2);
+        var fz = 8 * zoom;
 
-        return $"""<rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="5" fill="{Background}" fill-opacity="{FillOpacity}" stroke="{Color}"/>""";
+        return
+            $"""
+            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="5" fill="{Background}" fill-opacity="{FillOpacity}" stroke="{Color}"/>
+            <text x="{tx}" y="{ty}" font-size="{fz}px" fill="white">{ShortName}</text>
+            """;
     }
 
     IEnumerable<string> GetChildrenSvg(Rect nodeCanvasBounds, double zoom)
@@ -142,6 +153,63 @@ class Node : NodeBase
         return Rect.None;
     }
 
+    static (string longName, string shortName) GetDisplayNames(string nodeName)
+    {
+        string[] parts = nodeName.Split(PartsSeparators);
+
+        string namePart = parts[^1];
+        int index = namePart.IndexOf('(');
+        string shortName = ToNiceText(index > -1 ? namePart[..index] : namePart);
+
+        var subParts = nodeName.StartsWith("$") ? parts : parts.Skip(1);
+        string longName = string.Join(".", subParts
+            .Where(part => !part.StartsWith("?")));
+
+        if (string.IsNullOrEmpty(longName))
+        {
+            longName = ToNiceText(nodeName);
+        }
+        else
+        {
+            longName = ToNiceParameters(ToNiceText(longName));
+        }
+
+        return (shortName, longName);
+    }
+
+
+    static string ToNiceParameters(string fullName)
+    {
+        int index1 = fullName.IndexOf('(');
+        int index2 = fullName.IndexOf(')');
+
+        if (index1 <= -1 || index2 <= index1 + 1) return fullName;
+
+        string parameters = fullName.Substring(index1 + 1, index2 - index1 - 1);
+        string[] parametersParts = parameters.Split(",".ToCharArray());
+
+        // Simplify parameter types to just get last part of each type
+        parameters = string.Join(",", parametersParts
+            .Select(part => part.Split(".".ToCharArray()).Last()));
+
+        return $"{fullName.Substring(0, index1)}({parameters})";
+    }
+
+
+    static string ToNiceText(string name) =>
+        name.Replace("*", ".")
+            .Replace("#", ".")
+            .Replace("?", "")
+            .Replace("$", "")
+            .Replace("%", "")
+            .Replace("/", ".")
+            .Replace("`1", "<T>")
+            .Replace("`2", "<T,T>")
+            .Replace("`3", "<T,T,T>")
+            .Replace("`4", "<T,T,T,T>")
+            .Replace("`5", "<T,T,T,T,T>")
+            .Replace("op_Equality", "==")
+            .Replace("op_Inequality", "!=");
 
 
     string RandomColor() => $"#{model.Random.Next(0, 256):x2}{model.Random.Next(0, 256):x2}{model.Random.Next(0, 256):x2}";
