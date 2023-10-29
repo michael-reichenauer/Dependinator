@@ -57,6 +57,7 @@ class PanZoomService : IPanZoomService
         await this.jSInteropService.InitializeAsync();
 
         svgRect = await GetSvgRectAsync();
+        viewBoxRect = new Rect(0, 0, svgRect.Width, svgRect.Height);
         Zoom = viewBoxRect.Width / svgRect.Width;
     }
 

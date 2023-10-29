@@ -11,12 +11,12 @@ class Node : NodeBase
     public string Color { get; set; } = "";
     public string Background { get; set; } = "green";
     public double FillOpacity { get; set; } = 0.2;
-    public double StrokeWidth { get; set; } = 1;
+    public double StrokeWidth { get; set; } = 1.0;
 
     public Rect Boundary { get; set; } = Rect.None;
     public Rect TotalBoundary => GetTotalBoundary();
 
-    public Double ContainerZoom { get; set; } = 1 / 7;
+    public Double ContainerZoom { get; set; } = 1.0 / 7;
     //public Pos ContainerOffset { get; set; } = Pos.Zero;
 
     public Node(string name, Node parent, ModelBase model)
@@ -41,7 +41,7 @@ class Node : NodeBase
 
         if (nodeCanvasBounds.Width < 50 || nodeCanvasBounds.Height < 50) return nodeSvg;  // To small for children to be seen
 
-        var svg = GetChildrenSvg(nodeCanvasBounds, zoom * ContainerZoom).Prepend(nodeSvg).Join("\n");
+        var svg = GetChildrenSvg(nodeCanvasBounds, zoom).Prepend(nodeSvg).Join("\n");
 
         return svg;
     }
@@ -49,8 +49,8 @@ class Node : NodeBase
 
     public Rect GetNextChildRect(Size size)
     {
-        var x = Boundary.X + size.Width * Children.Count % 7;
-        var y = Boundary.Y + size.Height * Children.Count / 7;
+        var x = Boundary.X + size.Width * (Children.Count % 7);
+        var y = Boundary.Y + size.Height * (Children.Count / 7);
         return new Rect(x, y, size.Width, size.Height);
 
         // while (true)
@@ -78,9 +78,17 @@ class Node : NodeBase
         return $"""<rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="5" fill="{Background}" fill-opacity="{FillOpacity}" stroke="{Color}"/>""";
     }
 
-    IEnumerable<string> GetChildrenSvg(Rect parentCanvasBounds, double zoom)
+    IEnumerable<string> GetChildrenSvg(Rect nodeCanvasBounds, double zoom)
     {
-        return Children.Select(n => n.GetSvg(parentCanvasBounds, zoom * ContainerZoom));
+        var childrenZoom = zoom * ContainerZoom;
+        var childrenCanvasBounds = nodeCanvasBounds with
+        {
+            Width = nodeCanvasBounds.Width / ContainerZoom,
+            Height = nodeCanvasBounds.Height / ContainerZoom
+        };
+
+
+        return Children.Select(n => n.GetSvg(childrenCanvasBounds, childrenZoom));
     }
 
     Rect GetCanvasBounds(Rect parentCanvasBounds, double zoom)
