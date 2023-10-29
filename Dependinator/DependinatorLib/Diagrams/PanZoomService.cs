@@ -5,6 +5,8 @@ namespace Dependinator.Diagrams;
 
 interface IPanZoomService
 {
+    Rect ViewRect { get; }
+
     string ViewBox { get; }
     double Width { get; }
     double Height { get; }
@@ -36,6 +38,7 @@ class PanZoomService : IPanZoomService
     Pos lastMouse = new(0, 0);
     bool isDrag = false;
 
+    public Rect ViewRect => viewBoxRect;
     public double Zoom { get; set; } = 1;
     public double Width { get; private set; } = DefaultSize;
     public double Height { get; private set; } = DefaultSize;

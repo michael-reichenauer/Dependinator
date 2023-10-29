@@ -1,168 +1,140 @@
 namespace Dependinator.Models;
 
-class Node : IItem
+
+class Node : NodeBase
 {
-    readonly List<Node> children = new();
-    readonly List<Link> sourceLinks = new();
-    readonly List<Link> targetLinks = new();
-    readonly RootModel model;
-    string typeName = "";
-    string cachedSvg = "";
-    bool isCached = false;
+    const double DefaultWidth = 100;
+    const double DefaultHeight = 50;
+    public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
+    const double MinZoom = 0.001;
 
-    public string ContentSvg => isCached ? cachedSvg : GenerateAndCacheSvg();
-
-    public string Name { get; }
-    public Node Parent { get; private set; }
-    public NodeType Type { get; set; } = NodeType.None;
-
-    public Rect Rect { get; set; } = new(0, 0, 0, 0);
-    public Rect TotalRect { get; set; } = new(0, 0, 0, 0);
-    public string Description { get; set; } = "";
-    public int RX { get; set; } = 5;
     public string Color { get; set; } = "";
     public string Background { get; set; } = "green";
     public double FillOpacity { get; set; } = 0.2;
     public double StrokeWidth { get; set; } = 1;
-    public bool IsRoot => Type == NodeType.Root;
 
-    public IReadOnlyList<Node> Children => children;
-    public IReadOnlyList<Link> SourceLinks => sourceLinks;
-    public IReadOnlyList<Link> TargetLinks => targetLinks;
+    public Rect Boundary { get; set; } = Rect.None;
+    public Rect TotalBoundary => GetTotalBoundary();
 
+    public Double ContainerZoom { get; set; } = 1 / 7;
+    //public Pos ContainerOffset { get; set; } = Pos.Zero;
 
-    public Node(string name, Node parent, RootModel model)
+    public Node(string name, Node parent, ModelBase model)
+    : base(name, parent, model)
     {
-        this.Name = name;
-        Parent = parent;
-        this.model = model;
-
         Color = RandomColor();
         Background = RandomColor();
     }
 
-    public void AddChild(Node child)
-    {
-        AdjustChildPosition(child);
 
-        children.Add(child);
-        child.Parent = this;
-        TotalRect = TotalRect with
+    public string GetSvg(Rect parentCanvasBounds, double zoom)
+    {
+        if (IsRoot) return GetChildrenSvg(parentCanvasBounds, zoom).Join("\n");
+
+        var nodeCanvasBounds = GetCanvasBounds(parentCanvasBounds, zoom);
+        if (nodeCanvasBounds.Width < 5 || nodeCanvasBounds.Height < 5) return "";   // Too small to be seen
+
+        // Adjust bound to be intersection of parent and node bounds     #####
+        // Skip if node is outside parent canvas bounds and not visible  #####
+
+        var nodeSvg = GetNodeSvg(nodeCanvasBounds);
+
+        if (nodeCanvasBounds.Width < 50 || nodeCanvasBounds.Height < 50) return nodeSvg;  // To small for children to be seen
+
+        var svg = GetChildrenSvg(nodeCanvasBounds, zoom * ContainerZoom).Prepend(nodeSvg).Join("\n");
+
+        return svg;
+    }
+
+
+    public Rect GetNextChildRect(Size size)
+    {
+        var x = Boundary.X + size.Width * Children.Count % 7;
+        var y = Boundary.Y + size.Height * Children.Count / 7;
+        return new Rect(x, y, size.Width, size.Height);
+
+        // while (true)
+        // {
+        //     double x = 0;
+        //     double y = 0;
+        //     for (var i = 0; i < 7; i++)
+        //     {
+        //         var r = new Rect(x + i * size.Width, y, size.Width, size.Height);
+        //         if (Children.All(c => !IsOverlap(c.Boundary, r)))
+        //         {
+        //             return r;
+        //         }
+        //         y += size.Height;
+        //     }
+        // }
+    }
+
+
+    string GetNodeSvg(Rect canvasBounds)
+    {
+        var s = StrokeWidth;
+        var (x, y, w, h) = canvasBounds;
+
+        return $"""<rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="5" fill="{Background}" fill-opacity="{FillOpacity}" stroke="{Color}"/>""";
+    }
+
+    IEnumerable<string> GetChildrenSvg(Rect parentCanvasBounds, double zoom)
+    {
+        return Children.Select(n => n.GetSvg(parentCanvasBounds, zoom * ContainerZoom));
+    }
+
+    Rect GetCanvasBounds(Rect parentCanvasBounds, double zoom)
+    {
+        var w = Boundary.Width * zoom;
+        var h = Boundary.Height * zoom;
+        var x = parentCanvasBounds.X + Boundary.X * zoom;
+        var y = parentCanvasBounds.Y * Boundary.Y * zoom;
+        return new Rect(x, y, w, h);
+    }
+
+
+    Rect GetTotalBoundary()
+    {
+        (double x, double y, double width, double height) = (0, 0, 0, 0);
+        foreach (var child in Children)
         {
-            X = Math.Min(TotalRect.X, child.Rect.X),
-            Y = Math.Min(TotalRect.Y, child.Rect.Y),
-            Width = Math.Max(TotalRect.Width, child.Rect.X + child.Rect.Width),
-            Height = Math.Max(TotalRect.Height, child.Rect.Y + child.Rect.Height)
-        };
-
-        SetIsModified();
-    }
-
-
-    public void RemoveChild(Node child)
-    {
-        children.Remove(child);
-        child.Parent = null!;
-    }
-
-    public void AddSourceLink(Link link)
-    {
-        if (!sourceLinks.Contains(link)) sourceLinks.Add(link);
-    }
-
-    public void AddTargetLink(Link link)
-    {
-        if (!targetLinks.Contains(link)) targetLinks.Add(link);
-    }
-
-    public void Update(Parsing.Node node)
-    {
-        //if (IsEqual(node)) return;
-        Color = RandomColor();
-        Background = RandomColor();
-
-        var parentName = node.ParentName;
-        if (Parent.Name != parentName)
-        {   // The node has changed parent, remove it from the old parent and add it to the new parent
-            Parent.RemoveChild(this);
-            Parent = model.GetOrCreateNode(parentName);
-            Parent.AddChild(this);
+            var b = child.Boundary;
+            x = Math.Min(x, b.X);
+            y = Math.Min(y, b.Y);
+            width = Math.Max(width, b.X + b.Width);
+            height = Math.Max(height, b.Y + b.Height);
         }
 
-        typeName = node.Type;
-        Type = ToNodeType(typeName);
-        Description = node.Description;
-
-        SetIsModified();
+        return new Rect(x, y, width, height);
     }
 
 
-    public void SetIsModified()
+    static bool IsOverlap(Rect r1, Rect r2)
     {
-        isCached = false;
-        Parent?.SetIsModified();
+        // Check if one rectangle is to the left or above the other
+        if (r1.X + r1.Width < r2.X || r2.X + r2.Width < r1.X) return false;
+        if (r1.Y + r1.Height < r2.Y || r2.Y + r2.Height < r1.Y) return false;
+
+        return true;
     }
 
-    string GenerateAndCacheSvg()
+    static Rect GetIntersection(Rect rect1, Rect rect2)
     {
-        Timing t = IsRoot ? Timing.Start() : null!;
-        try
+        double x1 = Math.Max(rect1.X, rect2.X);
+        double y1 = Math.Max(rect1.Y, rect2.Y);
+        double x2 = Math.Min(rect1.X + rect1.Width, rect2.X + rect2.Width);
+        double y2 = Math.Min(rect1.Y + rect1.Height, rect2.Y + rect2.Height);
+
+        // Check if there is a valid intersection
+        if (x1 < x2 && y1 < y2)
         {
-            var svg = IsRoot ? "" :
-                $"""<rect x="{Rect.X}" y="{Rect.Y}" width="{Rect.Width}" height="{Rect.Height}" rx="{RX}" fill="{Background}" fill-opacity="{FillOpacity}" stroke="{Color}" stroke-width="{StrokeWidth}"/>""";
-
-            cachedSvg = children.Select(n => n.ContentSvg).Prepend(svg).Join("\n");
-            // cachedSvg = $"""<rect x="{100}" y="{100}" width="{100}" height="{100}" rx="{RX}" fill="{Background}" fill-opacity="0.2" stroke="{Color}" stroke-width="0.001"/>""";
-
-            isCached = true;
-            return cachedSvg;
+            return new Rect(x1, y1, x2 - x1, y2 - y1);
         }
-        finally
-        {
-            t?.Dispose();
-        }
+
+        return Rect.None;
     }
 
 
-    IEnumerable<Node> Ancestors()
-    {
-        var node = this;
-        while (node.Parent != null)
-        {
-            yield return node.Parent;
-            node = node.Parent;
-        }
-    }
-
-    void AdjustChildPosition(Node child)
-    {
-        child.Rect = new Rect(
-          X: model.Random.Next(0, 1000),
-          Y: model.Random.Next(0, 1000),
-          Width: model.Random.Next(20, 100),
-          Height: model.Random.Next(20, 100));
-    }
-
-    bool IsEqual(Parsing.Node n) =>
-        Parent.Name == n.ParentName &&
-        typeName == n.Type &&
-        Description == n.Description;
-
-    static NodeType ToNodeType(string nodeTypeName) => nodeTypeName switch
-    {
-        "" => NodeType.None,
-        "Solution" => NodeType.Solution,
-        "SolutionFolder" => NodeType.SolutionFolder,
-        "Assembly" => NodeType.Assembly,
-        "Group" => NodeType.Group,
-        "Dll" => NodeType.Dll,
-        "Exe" => NodeType.Exe,
-        "NameSpace" => NodeType.NameSpace,
-        "Type" => NodeType.Type,
-        "Member" => NodeType.Member,
-        "PrivateMember" => NodeType.PrivateMember,
-        _ => throw Asserter.FailFast($"Unexpected type {nodeTypeName}")
-    };
 
     string RandomColor() => $"#{model.Random.Next(0, 256):x2}{model.Random.Next(0, 256):x2}{model.Random.Next(0, 256):x2}";
 }

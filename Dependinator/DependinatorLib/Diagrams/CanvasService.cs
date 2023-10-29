@@ -43,10 +43,12 @@ class CanvasService : ICanvasService
 
     public async void Clear()
     {
-        using var _ = Timing.Start();
-        using var model = modelDb.GetModel();
-        model.Clear();
-        canvas.SvgContent = model.Root.ContentSvg;
+        using (var model = modelDb.GetModel())
+        {
+            model.Clear();
+            canvas.SvgContent = "";
+        }
+
         await canvas.TriggerStateHasChangedAsync();
     }
 
@@ -62,8 +64,8 @@ class CanvasService : ICanvasService
         using (var model = modelDb.GetModel())
         {
             using var __ = Timing.Start("Generate elements");
-            canvas.SvgContent = model.Root.ContentSvg;
-            bounds = model.Root.TotalRect;
+            canvas.SvgContent = model.GetSvg(panZoomService.ViewRect, panZoomService.Zoom);
+            bounds = model.Root.TotalBoundary;
             nodeCount = model.NodeCount;
             linkCount = model.LinkCount;
             itemCount = model.ItemCount;
@@ -72,7 +74,7 @@ class CanvasService : ICanvasService
         Log.Info($"Nodes: {nodeCount}, Links: {linkCount}, Items: {itemCount}");
         Log.Info($"Length: {canvas.SvgContent.Length}");
 
-        panZoomService.PanZoomToFit(bounds);
+        //panZoomService.PanZoomToFit(bounds);
         await canvas.TriggerStateHasChangedAsync();
     }
 }

@@ -1,160 +1,34 @@
 namespace Dependinator.Models;
 
 
-
-class RootModel
+class Model : IDisposable
 {
-    static readonly char[] NamePartsSeparators = "./".ToCharArray();
+    ModelBase rootModel;
 
-    readonly object syncRoot = new();
-    readonly Dictionary<string, IItem> itemsDictionary = new();
-    Dictionary<string, IItem> items
+    public Model(ModelBase rootModel)
     {
-        get
-        {
-            if (!Monitor.IsEntered(SyncRoot)) throw Asserter.FailFast("Model access outside lock");
-            return itemsDictionary;
-        }
+        Monitor.Enter(rootModel.SyncRoot);
+        this.rootModel = rootModel;
     }
 
-    readonly Random random = new Random();
+    public object SyncRoot => rootModel.SyncRoot;
+    public Node Root => rootModel.Root;
+    public int NodeCount => rootModel.NodeCount;
+    public int LinkCount => rootModel.LinkCount;
+    public int ItemCount => rootModel.Items.Count;
 
-    public RootModel()
+    public void AddOrUpdateLink(Parsing.Link parsedLink) => rootModel.AddOrUpdateLink(parsedLink);
+    public void AddOrUpdateNode(Parsing.Node parsedNode) => rootModel.AddOrUpdateNode(parsedNode);
+    internal void Clear() => rootModel.Clear();
+
+    public void Dispose()
     {
-        Root = new Node("", null!, this) { Type = NodeType.Root };
-        itemsDictionary.Add(Root.Name, Root);
-        NodeCount = 1;
+        if (rootModel == null) return;
+        var syncRoot = rootModel.SyncRoot;
+        rootModel = null!;
+        Monitor.Exit(syncRoot);
     }
 
-
-
-    public object SyncRoot => syncRoot;
-    public Node Root { get; internal set; }
-    public Random Random => random;
-    public bool IsModified { get; internal set; }
-    public IReadOnlyDictionary<string, IItem> Items => items;
-    public int NodeCount { get; internal set; } = 0;
-    public int LinkCount { get; internal set; } = 0;
-
-
-    public void AddNode(Node node)
-    {
-        if (!items.ContainsKey(node.Name)) NodeCount++;
-        items[node.Name] = node;
-    }
-
-    public Node Node(string name) => (Node)items[name];
-    public bool TryGetNode(string name, out Node node)
-    {
-        if (!items.TryGetValue(name, out var item))
-        {
-            node = null!;
-            return false;
-        }
-        node = (Node)item;
-        return true;
-    }
-
-    public void AddLink(string id, Link link)
-    {
-        if (!items.ContainsKey(id)) LinkCount++;
-        items[id] = link;
-    }
-
-    public Link Link(string id) => (Link)items[id];
-    public bool TryGetLink(string id, out Link link)
-    {
-        if (!items.TryGetValue(id, out var item))
-        {
-            link = null!;
-            return false;
-        }
-        link = (Link)item;
-        return true;
-    }
-
-
-    public Node GetOrCreateNode(string name)
-    {
-        if (!items.TryGetValue(name, out var item))
-        {
-            var parent = DefaultNode(name);
-            AddOrUpdateNode(parent);
-            return (Node)items[name];
-        }
-
-        return (Node)item;
-    }
-
-    public void Clear()
-    {
-        itemsDictionary.Clear();
-        Root = new Node("", null!, this) { Type = NodeType.Root };
-        itemsDictionary.Add(Root.Name, Root);
-        NodeCount = 1;
-        LinkCount = 0;
-    }
-
-
-    public void AddOrUpdateNode(Parsing.Node parsedNode)
-    {
-        if (!TryGetNode(parsedNode.Name, out var node))
-        {   // New node, add it to the model and parent
-            var parentName = parsedNode.ParentName;
-            var parent = GetOrCreateNode(parentName);
-            node = new Node(parsedNode.Name, parent, this)
-            {
-                Description = parsedNode.Description
-            };
-
-            AddNode(node);
-            parent.AddChild(node);
-            return;
-        }
-
-        node.Update(parsedNode);
-    }
-
-    public void AddOrUpdateLink(Parsing.Link parsedLink)
-    {
-        var linkId = parsedLink.Source + parsedLink.Target;
-        if (items.ContainsKey(linkId)) return;
-
-        EnsureSourceAndTargetExists(parsedLink);
-
-        var source = Node(parsedLink.Source);
-        var target = Node(parsedLink.Target);
-        var link = new Link(source, target);
-
-        AddLink(linkId, link);
-        source.AddSourceLink(link);
-        target.AddTargetLink(link);
-        return;
-    }
-
-    void EnsureSourceAndTargetExists(Parsing.Link parsedLink)
-    {
-        if (!items.ContainsKey(parsedLink.Source))
-        {
-            AddOrUpdateNode(DefaultNode(parsedLink.Source));
-        }
-
-        if (!items.ContainsKey(parsedLink.Target))
-        {
-            AddOrUpdateNode(DefaultNode(parsedLink.Target));
-        }
-    }
-
-
-    static string GetParentName(string name)
-    {
-        // Split full name in name and parent name,
-        int index = name.LastIndexOfAny(NamePartsSeparators);
-        return index > -1 ? name[..index] : "";
-    }
-
-    static Parsing.Node DefaultNode(string name) => new Parsing.Node(name, Parsing.Node.ParseParentName(name), "", "", true);
+    internal string GetSvg(Rect boundary, double zoom) => rootModel.GetSvg(boundary, zoom);
 }
-
-
 
