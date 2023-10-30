@@ -156,7 +156,7 @@ class PanZoomService : IPanZoomService
         {
             Log.Info($"Resize ({Width},{Height}) => ({w},{h})");
             Width = w;
-            Height = h;
+            Height = h - 60;
             svgRect = await GetSvgRectAsync();
             await canvas.TriggerStateHasChangedAsync();
         }
