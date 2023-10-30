@@ -1,8 +1,6 @@
 ﻿.my-main {
-    border: 1px dashed rgb(56, 151, 246);
-    padding: 2px;
-    margin: 1px;
     background-color: rgb(00, 00, 00);
+    margin: 1px;
 }
 
 .my-top-row {

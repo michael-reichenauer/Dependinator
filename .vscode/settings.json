@@ -14,6 +14,7 @@
     "mscorlib",
     "Newtonsoft",
     "polyline",
+    "Svgs",
     "uninstallation"
   ],
   "dotnet-test-explorer.testProjectPath":"**/*Tests.@(csproj|vbproj|fsproj)"

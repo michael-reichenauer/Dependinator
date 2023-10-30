@@ -7,7 +7,7 @@ interface IPanZoomService
 {
     Rect ViewRect { get; }
 
-    string ViewBox { get; }
+    string ViewRectText { get; }
     double Width { get; }
     double Height { get; }
     double Zoom { get; set; }
@@ -34,15 +34,15 @@ class PanZoomService : IPanZoomService
     Canvas canvas = null!;
 
     Rect svgRect = new(0, 0, DefaultSize, DefaultSize);
-    Rect viewBoxRect = new(0, 0, DefaultSize, DefaultSize);
+    Rect viewRect = new(0, 0, DefaultSize, DefaultSize);
     Pos lastMouse = new(0, 0);
     bool isDrag = false;
 
-    public Rect ViewRect => viewBoxRect;
+    public Rect ViewRect => viewRect;
     public double Zoom { get; set; } = 1;
     public double Width { get; private set; } = DefaultSize;
     public double Height { get; private set; } = DefaultSize;
-    public string ViewBox { get; private set; } = $"0 0 400 400";
+    public string ViewRectText { get; private set; } = $"0 0 400 400";
 
     public PanZoomService(IJSInteropService jSInteropService)
     {
@@ -57,45 +57,46 @@ class PanZoomService : IPanZoomService
         await this.jSInteropService.InitializeAsync();
 
         svgRect = await GetSvgRectAsync();
-        viewBoxRect = svgRect;
-        ViewBox = $"{viewBoxRect.X} {viewBoxRect.Y} {viewBoxRect.Width} {viewBoxRect.Height}";
-        Zoom = viewBoxRect.Width / svgRect.Width;
-        Log.Info($"Inti: Svg: {svgRect}, View: {viewBoxRect}, Zoom: {Zoom}");
+        viewRect = svgRect;
+        ViewRectText = $"{viewRect.X} {viewRect.Y} {viewRect.Width} {viewRect.Height}";
+        Zoom = viewRect.Width / svgRect.Width;
+        Log.Info($"Init: Svg: {svgRect}, View: {viewRect}, Zoom: {Zoom}");
     }
 
     public void PanZoomToFit(Rect bounds)
     {
-        viewBoxRect = new Rect(bounds.X - Margin, bounds.Y - Margin, bounds.Width + Margin, bounds.Height + Margin);
-        ViewBox = $"{viewBoxRect.X} {viewBoxRect.Y} {viewBoxRect.Width} {viewBoxRect.Height}";
-        Zoom = viewBoxRect.Width / svgRect.Width;
-        Log.Info($"Fit: Svg: {svgRect}, View: {viewBoxRect}, Zoom: {Zoom}");
+        viewRect = new Rect(bounds.X - Margin, bounds.Y - Margin, bounds.Width + Margin, bounds.Height + Margin);
+        ViewRectText = $"{viewRect.X} {viewRect.Y} {viewRect.Width} {viewRect.Height}";
+        Zoom = viewRect.Width / svgRect.Width;
+        Log.Info($"Fit: Svg: {svgRect}, View: {viewRect}, Zoom: {Zoom}");
     }
 
     public void OnMouseWheel(WheelEventArgs e)
     {
         if (e.DeltaY == 0) return;
         var (mx, my) = (e.OffsetX, e.OffsetY);
+        //Log.Info($"Mouse: ({mx},{my}) Svg: {svgRect}, View: {viewRect}, Zoom {Zoom}");
 
         double z = 1 - (e.DeltaY > 0 ? -ZoomSpeed : ZoomSpeed);
-        double mouseX = mx - svgRect.X;     // Why 5 and 10 ????
+        double mouseX = mx - svgRect.X;
         double mouseY = my - svgRect.Y;
-        double svgX = mouseX / svgRect.Width * this.viewBoxRect.Width + this.viewBoxRect.X;
-        double svgY = mouseY / svgRect.Height * this.viewBoxRect.Height + this.viewBoxRect.Y;
+        double svgX = mouseX / svgRect.Width * this.viewRect.Width + this.viewRect.X;
+        double svgY = mouseY / svgRect.Height * this.viewRect.Height + this.viewRect.Y;
 
-        var w = this.viewBoxRect.Width * z;
-        var h = this.viewBoxRect.Height * z;
+        var w = this.viewRect.Width * z;
+        var h = this.viewRect.Height * z;
         var x = svgX - mouseX / svgRect.Width * w;
         var y = svgY - mouseY / svgRect.Height * h;
 
-        viewBoxRect = new Rect(x, y, w, h);
-        ViewBox = $"{viewBoxRect.X} {viewBoxRect.Y} {viewBoxRect.Width} {viewBoxRect.Height}";
-        Zoom = viewBoxRect.Width / svgRect.Width;
+        viewRect = new Rect(x, y, w, h);
+        ViewRectText = $"{viewRect.X} {viewRect.Y} {viewRect.Width} {viewRect.Height}";
+        Zoom = viewRect.Width / svgRect.Width;
     }
 
     public void OnMouseMove(MouseEventArgs e)
     {
         var (mx, my) = (e.OffsetX, e.OffsetY);
-        // Log.Info($"Mouse: {mx},{my}");
+        //Log.Info($"Mouse: ({mx},{my}) Svg: {svgRect}, View: {viewRect}, Zoom {Zoom}");
 
         if (e.Buttons == LeftMouseBtn && isDrag)
         {
@@ -103,8 +104,8 @@ class PanZoomService : IPanZoomService
             var dy = (my - lastMouse.Y) * Zoom;
             lastMouse = new Pos(mx, my);
 
-            viewBoxRect = viewBoxRect with { X = viewBoxRect.X - dx, Y = viewBoxRect.Y - dy };
-            ViewBox = $"{viewBoxRect.X} {viewBoxRect.Y} {viewBoxRect.Width} {viewBoxRect.Height}";
+            viewRect = viewRect with { X = viewRect.X - dx, Y = viewRect.Y - dy };
+            ViewRectText = $"{viewRect.X} {viewRect.Y} {viewRect.Width} {viewRect.Height}";
         }
     }
 
@@ -129,9 +130,16 @@ class PanZoomService : IPanZoomService
     public async Task<Rect> GetSvgRectAsync()
     {
         var r = await jSInteropService.GetBoundingRectangle(canvas.Ref);
+        var windowWidth = jSInteropService.BrowserSizeDetails.InnerWidth;
+        var windowHeight = jSInteropService.BrowserSizeDetails.InnerHeight;
+        var x = r.X;
+        var y = r.Y;
+        var w = r.Width;
+        var margin = 3;//windowWidth - w + x;
+        var h = windowHeight - y - margin;
 
-        // Not sure why +20 is needed !!!
-        return new Rect(0, 0, r.Width, r.Height);
+        Log.Info($"js r: {r.ToJson()}");
+        return new Rect(0, 0, w, h);
     }
 
 

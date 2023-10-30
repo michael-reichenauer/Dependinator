@@ -37,6 +37,8 @@ class CanvasService : ICanvasService
     {
         this.canvas = canvas;
 
+        Task.Delay(1000).ContinueWith(_ => Refresh());
+
         return Task.CompletedTask;
     }
 
@@ -64,6 +66,7 @@ class CanvasService : ICanvasService
         using (var model = modelDb.GetModel())
         {
             using var __ = Timing.Start("Generate elements");
+            Log.Info($"Get {panZoomService.ViewRect}, {panZoomService.Zoom}");
             canvas.SvgContent = model.GetSvg(panZoomService.ViewRect, 1);
             bounds = model.Root.TotalBoundary;
             nodeCount = model.NodeCount;

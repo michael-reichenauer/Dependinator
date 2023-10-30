@@ -31,8 +31,6 @@ class Node : NodeBase
 
     public string GetSvg(Rect parentCanvasBounds, double zoom)
     {
-        if (IsRoot) return GetChildrenSvg(parentCanvasBounds, zoom).Join("\n");
-
         var nodeCanvasBounds = GetCanvasBounds(parentCanvasBounds, zoom);
         //if (nodeCanvasBounds.Width < 5 || nodeCanvasBounds.Height < 5) return "";   // Too small to be seen
 
@@ -43,16 +41,16 @@ class Node : NodeBase
 
         // if (nodeCanvasBounds.Width < 50 || nodeCanvasBounds.Height < 50) return nodeSvg;  // To small for children to be seen
 
-        var svg = GetChildrenSvg(nodeCanvasBounds, zoom).Prepend(nodeSvg).Join("\n");
+        var svg = GetChildrenSvgs(nodeCanvasBounds, zoom).Prepend(nodeSvg).Join("\n");
 
         return svg;
     }
 
 
-
-
     string GetNodeSvg(Rect canvasBounds, double zoom)
     {
+        if (IsRoot) return "";
+
         var s = StrokeWidth * zoom;
         var (x, y, w, h) = canvasBounds;
         var (tx, ty) = (x, y + h / 2);
@@ -65,7 +63,7 @@ class Node : NodeBase
             """;
     }
 
-    IEnumerable<string> GetChildrenSvg(Rect nodeCanvasBounds, double zoom)
+    IEnumerable<string> GetChildrenSvgs(Rect nodeCanvasBounds, double zoom)
     {
         var childrenZoom = zoom * ContainerZoom;
 
