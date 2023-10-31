@@ -10,14 +10,16 @@ static class ConfigLogger
     static readonly string LevelInfo = "INFO ";
     static readonly int MaxLogFileSize = 2000000;
 
-    static readonly Channel<string> logTexts = Channel.CreateUnbounded<string>(new UnboundedChannelOptions
+    record LogMsg(string Level, string Msg, string MemberName, string SourceFilePath, int SourceLineNumber);
+
+    static readonly Channel<LogMsg> logMessages = Channel.CreateUnbounded<LogMsg>(new UnboundedChannelOptions
     {
         SingleWriter = false,
         SingleReader = true,
         AllowSynchronousContinuations = true
     });
 
-    static readonly ChannelReader<string> reader = logTexts.Reader;
+    static readonly ChannelReader<LogMsg> reader = logMessages.Reader;
 
 
     static readonly object syncRoot = new object();
@@ -40,7 +42,7 @@ static class ConfigLogger
     {
         try
         {
-            logTexts.Writer.TryComplete();
+            logMessages.Writer.TryComplete();
         }
         catch
         {
@@ -57,12 +59,7 @@ static class ConfigLogger
        string sourceFilePath,
        int sourceLineNumber)
     {
-        var msgLines = msg.Split('\n');
-        foreach (var msgLine in msgLines)
-        {
-            string text = ToLogLine(level, msgLine, memberName, sourceFilePath, sourceLineNumber);
-            QueueLogLine(text);
-        }
+        QueueLogMessage(new LogMsg(level, msg, memberName, sourceFilePath, sourceLineNumber));
     }
 
 
@@ -93,16 +90,21 @@ static class ConfigLogger
         {
             while (await reader.WaitToReadAsync())
             {
-                List<string> batchedTexts = new List<string>();
+                var batchedLines = new List<string>();
 
-                while (reader.TryRead(out string? logText))
+                while (reader.TryRead(out LogMsg? l))
                 {
-                    batchedTexts.Add(logText);
+                    var msgLines = l.Msg.Split('\n');
+                    foreach (var msgLine in msgLines)
+                    {
+                        string logLine = ToLogLine(l.Level, msgLine, l.MemberName, l.SourceFilePath, l.SourceLineNumber);
+                        batchedLines.Add(logLine);
+                    }
                 }
 
                 try
                 {
-                    WriteToFile(batchedTexts);
+                    WriteToFile(batchedLines);
                 }
                 catch (ThreadAbortException)
                 {
@@ -166,11 +168,11 @@ static class ConfigLogger
     }
 
 
-    private static void QueueLogLine(string text)
+    private static void QueueLogMessage(LogMsg item)
     {
         try
         {
-            logTexts.Writer.TryWrite(text);
+            logMessages.Writer.TryWrite(item);
         }
         catch
         {
@@ -250,14 +252,15 @@ static class ConfigLogger
                 }
                 catch (Exception e)
                 {
-                    QueueLogLine("ERROR Failed to move temp to second log file: " + e);
+
+                    QueueLogMessage(new LogMsg("FATAL", "Failed to move temp to second log file" + e, "", "", 0));
                 }
 
             }).RunInBackground();
         }
         catch (Exception e)
         {
-            QueueLogLine("ERROR Failed to move large log file: " + e);
+            QueueLogMessage(new LogMsg("FATAL", "ERROR Failed to move large log file: " + e, "", "", 0));
         }
     }
 }
