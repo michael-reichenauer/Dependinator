@@ -7,11 +7,11 @@ class Node : NodeBase
     public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
     const double MinZoom = 0.001;
 
-    public string Color { get; set; } = "";
+    public string StrokeColor { get; set; } = "";
     public string Background { get; set; } = "green";
     public string LongName { get; }
     public string ShortName { get; }
-    public double FillOpacity { get; set; } = 0.2;
+    public double FillOpacity { get; set; } = 1;
     public double StrokeWidth { get; set; } = 1.0;
 
     public Rect Boundary { get; set; } = Rect.None;
@@ -23,8 +23,9 @@ class Node : NodeBase
     public Node(string name, Node parent, ModelBase model)
     : base(name, parent, model)
     {
-        Color = RandomColor();
-        Background = RandomColor();
+        var color = Color.Random();
+        StrokeColor = color.ToString();
+        Background = color.VeryDark().ToString();
         (LongName, ShortName) = NodeName.GetDisplayNames(name);
     }
 
@@ -58,7 +59,7 @@ class Node : NodeBase
 
         return
             $"""
-            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="0" fill="{Background}" fill-opacity="{FillOpacity}" stroke="{Color}"/>
+            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="0" fill="{Background}" fill-opacity="{FillOpacity}" stroke="{StrokeColor}"/>
             <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{ShortName}</text>
             """;
     }
@@ -129,7 +130,6 @@ class Node : NodeBase
     }
 
 
-    string RandomColor() => $"#{model.Random.Next(0, 256):x2}{model.Random.Next(0, 256):x2}{model.Random.Next(0, 256):x2}";
     public override string ToString() => IsRoot ? "<root>" : LongName;
 }
 

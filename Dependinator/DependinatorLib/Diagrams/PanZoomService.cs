@@ -112,6 +112,7 @@ class PanZoomService : IPanZoomService
     public void OnMouseDown(MouseEventArgs e)
     {
         var (mx, my) = (e.OffsetX, e.OffsetY);
+        Log.Info($"Mouse: ({mx},{my}) Svg: {svgRect}, View: {viewRect}, Zoom {Zoom}");
         if (e.Buttons == LeftMouseBtn)
         {
             isDrag = true;
@@ -138,7 +139,7 @@ class PanZoomService : IPanZoomService
         var margin = 3;//windowWidth - w + x;
         var h = windowHeight - y - margin;
 
-        Log.Info($"js r: {r.ToJson()}");
+        // Log.Info($"js r: {r.ToJson()}");
         return new Rect(0, 0, w, h);
     }
 

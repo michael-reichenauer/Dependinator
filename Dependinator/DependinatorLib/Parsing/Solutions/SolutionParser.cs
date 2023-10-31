@@ -32,7 +32,7 @@ internal class SolutionParser : IDisposable
         parentNodesToSend.Add(CreateSolutionNode());
 
         if (!Try(out var e, CreateAssemblyParsers())) return e;
-        Log.Debug($"Solution: {assemblyParsers.Count} assemblies");
+        //Log.Debug($"Solution: {assemblyParsers.Count} assemblies");
 
         parentNodesToSend.ForEach(async node => await items.WriteAsync(node));
 
@@ -42,7 +42,7 @@ internal class SolutionParser : IDisposable
         int ilCount = assemblyParsers.Sum(parser => parser.IlCount);
         int linksCount = assemblyParsers.Sum(parser => parser.LinksCount);
 
-        Log.Debug($"Solution: {typeCount} types, {memberCount} members, {ilCount} il-instructions, {linksCount} links");
+        // Log.Debug($"Solution: {typeCount} types, {memberCount} members, {ilCount} il-instructions, {linksCount} links");
         return R.Ok;
     }
 
@@ -251,7 +251,7 @@ internal class SolutionParser : IDisposable
         ParallelOptions option = GetParallelOptions();
 
         var internalModules = assemblyParsers.Select(p => p.ModuleName).ToList();
-        Log.Debug($"Solution: {internalModules.Count} internal modules:\n  {string.Join("\n  ", internalModules)}");
+        // Log.Debug($"Solution: {internalModules.Count} internal modules:\n  {string.Join("\n  ", internalModules)}");
 
         await Task.Run(() =>
         {
@@ -270,7 +270,7 @@ internal class SolutionParser : IDisposable
 
         // workerThreadsCount = 1;
         var option = new ParallelOptions { MaxDegreeOfParallelism = workerThreadsCount };
-        Log.Debug($"Parallelism: {workerThreadsCount}");
+        // Log.Debug($"Parallelism: {workerThreadsCount}");
         return option;
     }
 }
