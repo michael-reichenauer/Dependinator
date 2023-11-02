@@ -23,7 +23,7 @@ class Node : NodeBase
     public Node(string name, Node parent, ModelBase model)
     : base(name, parent, model)
     {
-        var color = Color.Random();
+        var color = Color.BrightRandom();
         StrokeColor = color.ToString();
         Background = color.VeryDark().ToString();
         (LongName, ShortName) = NodeName.GetDisplayNames(name);
@@ -90,17 +90,18 @@ class Node : NodeBase
 
     Rect GetTotalBoundary()
     {
-        (double x, double y, double width, double height) = (0, 0, 0, 0);
+        (double x1, double y1, double x2, double y2) =
+            (double.MaxValue, double.MaxValue, double.MinValue, double.MinValue);
         foreach (var child in Children)
         {
             var b = child.Boundary;
-            x = Math.Min(x, b.X);
-            y = Math.Min(y, b.Y);
-            width = Math.Max(width, b.X + b.Width);
-            height = Math.Max(height, b.Y + b.Height);
+            x1 = Math.Min(x1, b.X);
+            y1 = Math.Min(y1, b.Y);
+            x2 = Math.Max(x2, b.X + b.Width);
+            y2 = Math.Max(y2, b.Y + b.Height);
         }
 
-        return new Rect(x, y, width, height);
+        return new Rect(x1, y1, x2 - x1, y2 - y1);
     }
 
 
