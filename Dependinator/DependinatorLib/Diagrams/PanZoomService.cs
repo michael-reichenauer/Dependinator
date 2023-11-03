@@ -25,7 +25,7 @@ interface IPanZoomService
 [Scoped]
 class PanZoomService : IPanZoomService
 {
-    const double Margin = 0;
+    const double Margin = 10;
     const double ZoomSpeed = 0.1;
     const int LeftMouseBtn = 1;
     const int DefaultSize = 400;
@@ -81,31 +81,32 @@ class PanZoomService : IPanZoomService
         Log.Info($"Init: Svg: {SvgRect}, View: {ViewRect}, Zoom: {Zoom}");
     }
 
-    public void PanZoomToFit(Rect bounds)
+    public void PanZoomToFit(Rect totalBounds)
     {
+        Rect b = totalBounds;
+        b = new Rect(b.X, b.Y, b.Width, b.Height);
 
-        var zx = bounds.Width / SvgRect.Width;
-        var zy = bounds.Height / SvgRect.Height;
+        // Determine the X or y zoom that best fits the bounds (including margin)
+        var zx = (b.Width + 2 * Margin) / SvgRect.Width;
+        var zy = (b.Height + 2 * Margin) / SvgRect.Height;
         var z = Math.Max(zx, zy);
-        Log.Info($"Bounds: {bounds}, ZX: {zx}, ZY: {zy}");
 
+        // Zoom width and height to fit the bounds
         var w = ViewRect.Width * z;
         var h = ViewRect.Height * z;
-        var x = w / 2;
 
-        ViewRect = new Rect(ViewRect.X, ViewRect.Y, ViewRect.Width * z, ViewRect.Height * z);
+        // Pan to center the bounds
+        var x = (b.Width < w) ? b.X - (w - b.Width) / 2 : b.X;
+        var y = (b.Height < h) ? b.Y - (h - b.Height) / 2 : b.Y;
+
+        ViewRect = new Rect(x, y, w, h);
         Zoom = ViewRect.Width / SvgRect.Width;
-
-        // ViewRect = new Rect(bounds.X - Margin, bounds.Y - Margin, bounds.Width + Margin, bounds.Height + Margin);
-        // Log.Info($"Fit: Svg: {SvgRect}, View: {ViewRect}, Zoom: {Zoom}");
     }
 
     public void OnMouseWheel(WheelEventArgs e)
     {
         if (e.DeltaY == 0) return;
         var (mx, my) = (e.OffsetX, e.OffsetY);
-        Log.Info("-------------------");
-        Log.Info($"Mouse: ({mx},{my}) Svg: {SvgRect}, View: {ViewRect}, Zoom {Zoom}");
 
         double z = 1 - (e.DeltaY > 0 ? -ZoomSpeed : ZoomSpeed);
 
@@ -114,7 +115,6 @@ class PanZoomService : IPanZoomService
 
         double svgX = mouseX / SvgRect.Width * ViewRect.Width + ViewRect.X;
         double svgY = mouseY / SvgRect.Height * ViewRect.Height + ViewRect.Y;
-        Log.Info($"mouseXY: ({mouseX},{mouseY}) svgxy: ({svgX},{svgY})");
 
         var w = ViewRect.Width * z;
         var h = ViewRect.Height * z;
@@ -124,7 +124,6 @@ class PanZoomService : IPanZoomService
 
         ViewRect = new Rect(x, y, w, h);
         Zoom = ViewRect.Width / SvgRect.Width;
-        Log.Info($"View: {ViewRect}, Zoom: {Zoom}");
     }
 
     public void OnMouseMove(MouseEventArgs e)
@@ -145,7 +144,7 @@ class PanZoomService : IPanZoomService
     public void OnMouseDown(MouseEventArgs e)
     {
         var (mx, my) = (e.OffsetX, e.OffsetY);
-        Log.Info($"Mouse: ({mx},{my}) Svg: {SvgRect}, View: {ViewRect}, Zoom {Zoom}");
+        Log.Info($"Mouse: ({mx},{my}) Svg: {SvgRect}, View: {ViewRect}, Zoom: {Zoom}");
         if (e.Buttons == LeftMouseBtn)
         {
             isDrag = true;
