@@ -28,8 +28,8 @@ class PanZoomService : IPanZoomService
     const double Margin = 10;
     const double ZoomSpeed = 0.1;
     const int LeftMouseBtn = 1;
-    const int DefaultSize = 400;
-
+    const int DefaultSvgSize = 1000;
+    private const int SvgPageMargin = 2;
     readonly IJSInteropService jSInteropService;
     Canvas canvas = null!;
 
@@ -51,10 +51,10 @@ class PanZoomService : IPanZoomService
         }
     }
 
-    public double Width => 1000;
-    public double Height => 1000;
-    Rect SvgRect => new(0, 0, Width, Height);
+    Rect SvgRect { get; set; } = new(0, 0, DefaultSvgSize, DefaultSvgSize);
 
+    public double Width => SvgRect.Width;
+    public double Height => SvgRect.Height;
 
 
     public double Zoom { get; set; } = 1;
@@ -184,15 +184,28 @@ class PanZoomService : IPanZoomService
 
     async void OnResize()
     {
+        // Get window width and height
         var w = Math.Floor(jSInteropService.BrowserSizeDetails.InnerWidth);
         var h = Math.Floor(jSInteropService.BrowserSizeDetails.InnerHeight);
 
         if (canvas != null && (w != windowSize.Width || h != windowSize.Height))
-        {
-            var newSize = new Size(w, h);
-            Log.Info($"Resize ({windowSize}) => ({newSize})");
-            windowSize = newSize;
+        {   // Window size has changed => resize the canvas as well
 
+            var newWindowSize = new Size(w, h);
+            Log.Info($"Window ({windowSize}) => ({newWindowSize})");
+
+            var svg = await jSInteropService.GetBoundingRectangle(canvas.Ref);
+            var (x, y) = (svg.X, svg.Y);
+            var svgWidth = w - x - SvgPageMargin * 2;
+            var svgHeight = h - y - SvgPageMargin * 2;
+
+            // Adjust SVG to fit the window
+            SvgRect = new Rect(0, 0, svgWidth, svgHeight);
+            ViewRect = SvgRect;
+            Zoom = ViewRect.Width / SvgRect.Width;
+
+            // Remember the new window size to detect next resize
+            windowSize = newWindowSize;
             await canvas.TriggerStateHasChangedAsync();
         }
     }
