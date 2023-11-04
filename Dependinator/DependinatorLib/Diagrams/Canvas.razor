@@ -5,8 +5,6 @@
 </div>
 
 <div>
-
-
     <svg @ref=@Ref xmlns="http://www.w3.org/2000/svg" width="@pzs.Width" height="@pzs.Height"
         viewBox="@pzs.ViewRectText" @onwheel="@pzs.OnMouseWheel" @onmousemove="@pzs.OnMouseMove"
         @onmouseup="@pzs.OnMouseUp" @onmousedown="@pzs.OnMouseDown">
@@ -20,8 +18,8 @@
                 fill: white;
             }
         </style>
+
         @((MarkupString)SvgContent)
 
     </svg>
-
 </div>

@@ -14,37 +14,28 @@ partial class Canvas : ComponentBase
 
     public Task TriggerStateHasChangedAsync()
     {
+        Log.Info("TriggerStateHasChangedAsync");
         return InvokeAsync(() => { StateHasChanged(); });
     }
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        // Add initialization logic here
+        Log.Info("Canvas.OnInitialized");
     }
 
     protected override void OnParametersSet()
     {
         base.OnParametersSet();
-        // Add parameter set logic here
     }
-
-
-    // protected override bool ShouldRender()
-    // {
-    //     if (shouldReload)
-    //     {
-    //         return true;
-    //     }
-    //     return false;
-    // }
-
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
+
         if (firstRender)
         {
+            Log.Info("OnAfterRenderAsync: FirstRender");
             await pzs.InitAsync(this);
             await srv.InitAsync(this);
         }
