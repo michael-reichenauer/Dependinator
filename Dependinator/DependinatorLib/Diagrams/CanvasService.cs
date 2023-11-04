@@ -17,6 +17,8 @@ interface ICanvasService
 
     void Refresh();
     void Clear();
+    void PanZoomToFit();
+    void InitialShow();
 }
 
 
@@ -28,7 +30,6 @@ class CanvasService : ICanvasService
     readonly IModelDb modelDb;
 
     Canvas canvas = null!;
-    Rect bounds = new(0, 0, 0, 0);
 
     public CanvasService(IPanZoomService panZoomService, IModelService modelService, IModelDb modelDb)
     {
@@ -46,11 +47,33 @@ class CanvasService : ICanvasService
     {
         this.canvas = canvas;
         await panZoomService.InitAsync(canvas);
-
-        Refresh();
     }
 
     public void OnMouse(MouseEventArgs e) => panZoomService.OnMouse(e);
+
+    public async void InitialShow()
+    {
+        await panZoomService.CheckResizeAsync();
+
+        var (content, bounds) = await RefreshAsync(panZoomService.SvgRect, 1);
+        SvgContent = content;
+        panZoomService.PanZoomToFit(bounds);
+        await canvas.TriggerStateHasChangedAsync();
+    }
+
+    public void PanZoomToFit()
+    {
+
+    }
+
+    public async void Refresh()
+    {
+        var (content, bounds) = await RefreshAsync(panZoomService.SvgRect, 1);
+        SvgContent = content;
+        panZoomService.PanZoomToFit(bounds);
+        await canvas.TriggerStateHasChangedAsync();
+    }
+
 
     public async void Clear()
     {
@@ -64,29 +87,11 @@ class CanvasService : ICanvasService
     }
 
 
-    public async void Refresh()
+    // panZoomService.ViewRect
+    public async Task<(string, Rect)> RefreshAsync(Rect viewRect, double zoom)
     {
-        using var _ = Timing.Start();
         await modelService.RefreshAsync();
-
-        int nodeCount = 0;
-        int linkCount = 0;
-        int itemCount = 0;
-        using (var model = modelDb.GetModel())
-        {
-            using var __ = Timing.Start("Generate elements");
-            Log.Info($"Get {panZoomService.ViewRect}, {panZoomService.Zoom}");
-            SvgContent = model.GetSvg(panZoomService.ViewRect, 1);
-            bounds = model.Root.TotalBoundary;
-            nodeCount = model.NodeCount;
-            linkCount = model.LinkCount;
-            itemCount = model.ItemCount;
-        }
-
-        Log.Info($"Nodes: {nodeCount}, Links: {linkCount}, Items: {itemCount}");
-        Log.Info($"Length: {SvgContent.Length}");
-
-        panZoomService.PanZoomToFit(bounds);
-        await canvas.TriggerStateHasChangedAsync();
+        using var model = modelDb.GetModel();
+        return model.GetSvg(viewRect, zoom);
     }
 }

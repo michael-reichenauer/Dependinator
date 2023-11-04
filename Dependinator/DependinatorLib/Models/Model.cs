@@ -29,6 +29,6 @@ class Model : IDisposable
         Monitor.Exit(syncRoot);
     }
 
-    internal string GetSvg(Rect boundary, double zoom) => rootModel.GetSvg(boundary, zoom);
+    internal (string, Rect) GetSvg(Rect boundary, double zoom) => rootModel.GetSvg(boundary, zoom);
 }
 

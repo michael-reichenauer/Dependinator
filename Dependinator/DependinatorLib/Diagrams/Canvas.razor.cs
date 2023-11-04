@@ -17,7 +17,7 @@ partial class Canvas : ComponentBase
 
     void OnMouse(MouseEventArgs e) => srv.OnMouse(e);
 
-    public Task TriggerStateHasChangedAsync() => InvokeAsync(() => { StateHasChanged(); });
+    public Task TriggerStateHasChangedAsync() => InvokeAsync(StateHasChanged);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -26,6 +26,7 @@ partial class Canvas : ComponentBase
         if (firstRender)
         {
             await srv.InitAsync(this);
+            await InvokeAsync(srv.InitialShow);
         }
     }
 }

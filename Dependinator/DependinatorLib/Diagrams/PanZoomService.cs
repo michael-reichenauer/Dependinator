@@ -12,6 +12,7 @@ interface IPanZoomService
     Task InitAsync(Canvas canvas);
     void OnMouse(MouseEventArgs e);
     void PanZoomToFit(Rect bounds);
+    Task CheckResizeAsync();
 }
 
 
@@ -24,11 +25,10 @@ class PanZoomService : IPanZoomService
     const int SvgPageMargin = 2;
 
     readonly IJSInteropService jSInteropService;
+
     readonly object syncRoot = new();
     Canvas canvas = null!;
-
-
-    Pos lastMouse = new(0, 0);
+    Pos lastMouse = Pos.Zero;
     bool isDrag = false;
 
 
@@ -140,9 +140,11 @@ class PanZoomService : IPanZoomService
         }
     }
 
+    void OnResize() => CheckResizeAsync().RunInBackground();
 
 
-    async void OnResize()
+
+    public async Task CheckResizeAsync()
     {
         // Get Svg position (width and height are unreliable)
         var svg = await jSInteropService.GetBoundingRectangle(canvas.Ref);
@@ -176,6 +178,7 @@ class PanZoomService : IPanZoomService
                 SvgRect = newSwgRect;
                 ViewRect = newViewRect;
 
+                Log.Info($"Resized: {SvgRect} {ViewRect} {Zoom}");
                 canvas.TriggerStateHasChangedAsync().RunInBackground();
             }
         }
