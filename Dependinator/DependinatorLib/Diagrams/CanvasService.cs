@@ -9,11 +9,10 @@ interface ICanvasService
     Task InitAsync(Canvas canvas);
 
     string SvgContent { get; }
+    Rect SvgRect { get; }
+    Pos Offset { get; }
     double Zoom { get; }
     int ZCount { get; }
-
-    Rect SvgRect { get; }
-    Rect ViewRect { get; }
 
     void OnMouse(MouseEventArgs e);
 
@@ -42,7 +41,7 @@ class CanvasService : ICanvasService
 
     public string SvgContent { get; private set; } = "";
     public Rect SvgRect => panZoomService.SvgRect;
-    public Rect ViewRect => panZoomService.ViewRect;
+    public Pos Offset => panZoomService.Offset;
     public double Zoom => panZoomService.Zoom;
     public int ZCount => panZoomService.ZCount;
 
@@ -60,7 +59,7 @@ class CanvasService : ICanvasService
 
         var (content, bounds) = await RefreshAsync(panZoomService.SvgRect, 1);
         SvgContent = content;
-        //panZoomService.PanZoomToFit(bounds);
+        panZoomService.PanZoomToFit(bounds);
         await canvas.TriggerStateHasChangedAsync();
     }
 
@@ -89,8 +88,6 @@ class CanvasService : ICanvasService
         await canvas.TriggerStateHasChangedAsync();
     }
 
-
-    // panZoomService.ViewRect
     public async Task<(string, Rect)> RefreshAsync(Rect viewRect, double zoom)
     {
         await modelService.RefreshAsync();

@@ -6,7 +6,7 @@ namespace Dependinator.Diagrams;
 interface IPanZoomService
 {
     Rect SvgRect { get; }
-    Rect ViewRect { get; }
+    Pos Offset { get; }
     double Zoom { get; set; }
     int ZCount { get; }
 
@@ -33,8 +33,6 @@ class PanZoomService : IPanZoomService
     bool isDrag = false;
     public int ZCount { get; private set; } = 0;
 
-
-    public Rect ViewRect { get; private set; } = Rect.Zero;
     public Pos Offset { get; private set; } = Pos.Zero;
     public Rect SvgRect { get; private set; } = Rect.Zero;
 
@@ -67,48 +65,56 @@ class PanZoomService : IPanZoomService
 
     public void PanZoomToFit(Rect totalBounds)
     {
-        Rect b = totalBounds;
-        b = new Rect(b.X, b.Y, b.Width, b.Height);
+        lock (syncRoot)
+        {
+            Rect b = totalBounds;
+            b = new Rect(b.X, b.Y, b.Width, b.Height);
 
-        // Determine the X or y zoom that best fits the bounds (including margin)
-        var zx = (b.Width + 2 * Margin) / SvgRect.Width;
-        var zy = (b.Height + 2 * Margin) / SvgRect.Height;
-        var z = Math.Max(zx, zy);
+            // Determine the X or y zoom that best fits the bounds (including margin)
+            var zx = (b.Width + 2 * Margin) / SvgRect.Width;
+            var zy = (b.Height + 2 * Margin) / SvgRect.Height;
+            var newZoom = Math.Max(zx, zy);
 
-        // Zoom width and height to fit the bounds
-        var w = ViewRect.Width * z;
-        var h = ViewRect.Height * z;
+            // Zoom width and height to fit the bounds
+            var w = SvgRect.Width * newZoom;
+            var h = SvgRect.Height * newZoom;
 
-        // Pan to center the bounds
-        var x = (b.Width < w) ? b.X - (w - b.Width) / 2 : b.X;
-        var y = (b.Height < h) ? b.Y - (h - b.Height) / 2 : b.Y;
+            // Pan to center the bounds
+            var x = (b.Width < w) ? b.X - (w - b.Width) / 2 : b.X;
+            var y = (b.Height < h) ? b.Y - (h - b.Height) / 2 : b.Y;
 
-        ViewRect = new Rect(x, y, w, h);
-        Zoom = ViewRect.Width / SvgRect.Width;
+            Offset = new Pos(x, y);
+            Zoom = newZoom;
+        }
     }
 
     void OnMouseWheel(WheelEventArgs e)
     {
-        if (e.DeltaY == 0) return;
-        var (mx, my) = (e.OffsetX, e.OffsetY);
+        lock (syncRoot)
+        {
+            if (e.DeltaY == 0) return;
+            var (mx, my) = (e.OffsetX, e.OffsetY);
 
-        double z = 1 - (e.DeltaY > 0 ? -ZoomSpeed : ZoomSpeed);
-        if (e.DeltaY > 0) ZCount--; else ZCount++;
+            double z = 1 - (e.DeltaY > 0 ? -ZoomSpeed : ZoomSpeed);
+            if (e.DeltaY > 0) ZCount--; else ZCount++;
 
-        double mouseX = mx - SvgRect.X;
-        double mouseY = my - SvgRect.Y;
+            var newZoom = Zoom * z;
 
-        double svgX = mouseX / SvgRect.Width * ViewRect.Width + ViewRect.X;
-        double svgY = mouseY / SvgRect.Height * ViewRect.Height + ViewRect.Y;
+            double mouseX = mx - SvgRect.X;
+            double mouseY = my - SvgRect.Y;
 
-        var w = ViewRect.Width * z;
-        var h = ViewRect.Height * z;
+            double svgX = mouseX * Zoom + Offset.X;
+            double svgY = mouseY * Zoom + Offset.Y;
 
-        var x = svgX - mouseX / SvgRect.Width * w;
-        var y = svgY - mouseY / SvgRect.Height * h;
+            var w = SvgRect.Width * newZoom;
+            var h = SvgRect.Height * newZoom;
 
-        ViewRect = new Rect(x, y, w, h);
-        Zoom = ViewRect.Width / SvgRect.Width;
+            var x = svgX - mouseX / SvgRect.Width * w;
+            var y = svgY - mouseY / SvgRect.Height * h;
+
+            Offset = new Pos(x, y);
+            Zoom = newZoom;
+        }
     }
 
     void OnMouseMove(MouseEventArgs e)
@@ -121,7 +127,7 @@ class PanZoomService : IPanZoomService
             var dy = (my - lastMouse.Y) * Zoom;
             lastMouse = new Pos(mx, my);
 
-            ViewRect = ViewRect with { X = ViewRect.X - dx, Y = ViewRect.Y - dy };
+            Offset = new Pos(Offset.X - dx, Offset.Y - dy);
         }
     }
 
@@ -164,25 +170,17 @@ class PanZoomService : IPanZoomService
             var svgHeight = wh - svg.Y - SvgPageMargin * 2;
 
             if (svgWidth != SvgRect.Width || svgHeight != SvgRect.Height)
-            {   // Svg size has changed, adjust svg and view to fit new window size window
+            {   // Svg size has changed, adjust svg to fit new window size window
                 var newSwgRect = new Rect(0, 0, svgWidth, svgHeight);
-
-                if (ViewRect == Rect.Zero) ViewRect = newSwgRect;  // Init view first time
 
                 // Match the view rect size for the adjusted Svg size, but keep the zoom level
                 var vw = newSwgRect.Width * Zoom;
                 var vh = newSwgRect.Height * Zoom;
 
-                // Adjust view coordinates   // to fit the new Svg and keep relative position
-                var vx = ViewRect.X;         // ViewRect.X + (ViewRect.Width - vw) / 2;
-                var vy = ViewRect.Y;         // ViewRect.Y + (ViewRect.Height - vh) / 2;
-                var newViewRect = new Rect(vx, vy, vw, vh);
-
-                // Adjust SVG and ViewRect to fit the window
+                // Adjust SVG to fit the window
                 SvgRect = newSwgRect;
-                ViewRect = newViewRect;
 
-                Log.Info($"Resized: {SvgRect} {ViewRect} {Zoom}");
+                Log.Info($"Resized: {SvgRect} {Zoom}");
                 canvas.TriggerStateHasChangedAsync().RunInBackground();
             }
         }
