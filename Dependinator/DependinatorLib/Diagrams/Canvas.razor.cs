@@ -13,7 +13,7 @@ partial class Canvas : ComponentBase
     string SvgContent => srv.SvgContent;
     double Width => srv.SvgRect.Width;
     double Height => srv.SvgRect.Height;
-    string ViewRectText => $"{srv.ViewRect.X} {srv.ViewRect.Y} {srv.ViewRect.Width} {srv.ViewRect.Height}";
+    string viewBox => $"{srv.ViewRect.X} {srv.ViewRect.Y} {srv.ViewRect.Width} {srv.ViewRect.Height}";
 
     void OnMouse(MouseEventArgs e) => srv.OnMouse(e);
 
