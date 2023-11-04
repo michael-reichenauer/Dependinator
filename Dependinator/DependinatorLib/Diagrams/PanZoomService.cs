@@ -5,18 +5,12 @@ namespace Dependinator.Diagrams;
 
 interface IPanZoomService
 {
+    Rect SvgRect { get; }
     Rect ViewRect { get; }
-
-    string ViewRectText { get; }
-    double Width { get; }
-    double Height { get; }
     double Zoom { get; set; }
 
     Task InitAsync(Canvas canvas);
-    void OnMouseWheel(WheelEventArgs e);
-    void OnMouseMove(MouseEventArgs e);
-    void OnMouseDown(MouseEventArgs e);
-    void OnMouseUp(MouseEventArgs e);
+    void OnMouse(MouseEventArgs e);
     void PanZoomToFit(Rect bounds);
 }
 
@@ -34,33 +28,38 @@ class PanZoomService : IPanZoomService
     Canvas canvas = null!;
 
 
-    // Rect viewRect = new(0, 0, DefaultSize, DefaultSize);
     Pos lastMouse = new(0, 0);
     bool isDrag = false;
 
 
     public Rect ViewRect { get; private set; } = Rect.Zero;
-    Rect SvgRect { get; set; } = Rect.Zero;
-
-    public double Width => SvgRect.Width;
-    public double Height => SvgRect.Height;
-
+    public Rect SvgRect { get; private set; } = Rect.Zero;
 
     public double Zoom { get; set; } = 1;
 
-    public string ViewRectText => $"{ViewRect.X} {ViewRect.Y} {ViewRect.Width} {ViewRect.Height}";
 
     public PanZoomService(IJSInteropService jSInteropService)
     {
         this.jSInteropService = jSInteropService;
         jSInteropService.OnResize += OnResize;
-        jSInteropService.OnResizing += OnResizing;
     }
 
     public async Task InitAsync(Canvas canvas)
     {
         this.canvas = canvas;
         await this.jSInteropService.InitializeAsync();
+    }
+
+    public void OnMouse(MouseEventArgs e)
+    {
+        switch (e.Type)
+        {
+            case "wheel": OnMouseWheel((WheelEventArgs)e); break;
+            case "mousemove": OnMouseMove(e); break;
+            case "mousedown": OnMouseDown(e); break;
+            case "mouseup": OnMouseUp(e); break;
+            default: throw Asserter.FailFast($"Unknown mouse event type: {e.Type}");
+        }
     }
 
     public void PanZoomToFit(Rect totalBounds)
@@ -85,7 +84,7 @@ class PanZoomService : IPanZoomService
         Zoom = ViewRect.Width / SvgRect.Width;
     }
 
-    public void OnMouseWheel(WheelEventArgs e)
+    void OnMouseWheel(WheelEventArgs e)
     {
         if (e.DeltaY == 0) return;
         var (mx, my) = (e.OffsetX, e.OffsetY);
@@ -108,10 +107,9 @@ class PanZoomService : IPanZoomService
         Zoom = ViewRect.Width / SvgRect.Width;
     }
 
-    public void OnMouseMove(MouseEventArgs e)
+    void OnMouseMove(MouseEventArgs e)
     {
         var (mx, my) = (e.OffsetX, e.OffsetY);
-        //Log.Info($"Mouse: ({mx},{my}) Svg: {svgRect}, View: {viewRect}, Zoom {Zoom}");
 
         if (e.Buttons == LeftMouseBtn && isDrag)
         {
@@ -123,10 +121,10 @@ class PanZoomService : IPanZoomService
         }
     }
 
-    public void OnMouseDown(MouseEventArgs e)
+    void OnMouseDown(MouseEventArgs e)
     {
         var (mx, my) = (e.OffsetX, e.OffsetY);
-        Log.Info($"Mouse: ({mx},{my}) Svg: {SvgRect}, View: {ViewRect}, Zoom: {Zoom}");
+        // Log.Info($"Mouse: ({mx},{my}) Svg: {SvgRect}, View: {ViewRect}, Zoom: {Zoom}");
         if (e.Buttons == LeftMouseBtn)
         {
             isDrag = true;
@@ -134,7 +132,7 @@ class PanZoomService : IPanZoomService
         }
     }
 
-    public void OnMouseUp(MouseEventArgs e)
+    void OnMouseUp(MouseEventArgs e)
     {
         if (e.Buttons == LeftMouseBtn)
         {
@@ -142,27 +140,7 @@ class PanZoomService : IPanZoomService
         }
     }
 
-    public async Task<Rect> GetSvgRectAsyncZZ()
-    {
-        var r = await jSInteropService.GetBoundingRectangle(canvas.Ref);
-        var windowWidth = Math.Floor(jSInteropService.BrowserSizeDetails.InnerWidth);
-        var windowHeight = Math.Floor(jSInteropService.BrowserSizeDetails.InnerHeight);
-        var x = r.X;
-        var y = r.Y;
-        var w = r.Width;
-        var margin = 3;//windowWidth - w + x;
-        var h = windowHeight - y - margin;
 
-        // Log.Info($"js r: {r.ToJson()}");
-        var svgRect = new Rect(0, 0, Math.Floor(w), Math.Floor(h));
-        Log.Info($"SvgXX: {svgRect}");
-        return svgRect;
-    }
-
-
-    void OnResizing(bool r)
-    {
-    }
 
     async void OnResize()
     {
@@ -185,16 +163,14 @@ class PanZoomService : IPanZoomService
 
                 if (ViewRect == Rect.Zero) ViewRect = newSwgRect;  // Init view first time
 
-                // Re-calculate the view rect for the adjusted SVG, but keep the zoom
+                // Match the view rect size for the adjusted Svg size, but keep the zoom level
                 var vw = newSwgRect.Width * Zoom;
                 var vh = newSwgRect.Height * Zoom;
 
-                // Adjust view coordinates to fit the new Svg and keep relative position
-                var vx = ViewRect.X + (ViewRect.Width - vw) / 2;
-                var vy = ViewRect.Y + (ViewRect.Height - vh) / 2;
+                // Adjust view coordinates   // to fit the new Svg and keep relative position
+                var vx = ViewRect.X;         // ViewRect.X + (ViewRect.Width - vw) / 2;
+                var vy = ViewRect.Y;         // ViewRect.Y + (ViewRect.Height - vh) / 2;
                 var newViewRect = new Rect(vx, vy, vw, vh);
-
-                Log.Info($"Svg {SvgRect} => {newSwgRect}, View: {ViewRect} => {newViewRect}, Zoom: {Zoom}");
 
                 // Adjust SVG and ViewRect to fit the window
                 SvgRect = newSwgRect;

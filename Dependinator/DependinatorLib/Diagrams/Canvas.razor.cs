@@ -1,33 +1,23 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Web;
 
 namespace Dependinator.Diagrams;
 
 partial class Canvas : ComponentBase
 {
     [Inject] ICanvasService srv { get; init; } = null!;
-    [Inject] IPanZoomService pzs { get; init; } = null!;
 
-    public ElementReference Ref { get; protected set; }
+    public ElementReference Ref { get; private set; }
 
-    public string SvgContent { get; set; } = "";
+    string Zoom => $"{srv.Zoom}";
+    string SvgContent => srv.SvgContent;
+    double Width => srv.SvgRect.Width;
+    double Height => srv.SvgRect.Height;
+    string ViewRectText => $"{srv.ViewRect.X} {srv.ViewRect.Y} {srv.ViewRect.Width} {srv.ViewRect.Height}";
 
+    void OnMouse(MouseEventArgs e) => srv.OnMouse(e);
 
-    public Task TriggerStateHasChangedAsync()
-    {
-        Log.Info("TriggerStateHasChangedAsync");
-        return InvokeAsync(() => { StateHasChanged(); });
-    }
-
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        Log.Info("Canvas.OnInitialized");
-    }
-
-    protected override void OnParametersSet()
-    {
-        base.OnParametersSet();
-    }
+    public Task TriggerStateHasChangedAsync() => InvokeAsync(() => { StateHasChanged(); });
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -35,8 +25,6 @@ partial class Canvas : ComponentBase
 
         if (firstRender)
         {
-            Log.Info("OnAfterRenderAsync: FirstRender");
-            await pzs.InitAsync(this);
             await srv.InitAsync(this);
         }
     }

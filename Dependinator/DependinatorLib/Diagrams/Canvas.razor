@@ -1,13 +1,12 @@
 @namespace Dependinator.Diagrams
 
 <div>
-    <code>@srv.ZoomTxt</code>
+    <code>@Zoom</code>
 </div>
 
 <div>
-    <svg @ref=@Ref xmlns="http://www.w3.org/2000/svg" width="@pzs.Width" height="@pzs.Height"
-        viewBox="@pzs.ViewRectText" @onwheel="@pzs.OnMouseWheel" @onmousemove="@pzs.OnMouseMove"
-        @onmouseup="@pzs.OnMouseUp" @onmousedown="@pzs.OnMouseDown">
+    <svg @ref=@Ref xmlns="http://www.w3.org/2000/svg" width="@Width" height="@Height" viewBox="@ViewRectText"
+        @onwheel="@OnMouse" @onmousemove="@OnMouse" @onmouseup="@OnMouse" @onmousedown="@OnMouse">
         <style>
             svg {
                 cursor: default;
