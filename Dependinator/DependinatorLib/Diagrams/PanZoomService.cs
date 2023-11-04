@@ -8,6 +8,7 @@ interface IPanZoomService
     Rect SvgRect { get; }
     Rect ViewRect { get; }
     double Zoom { get; set; }
+    int ZCount { get; }
 
     Task InitAsync(Canvas canvas);
     void OnMouse(MouseEventArgs e);
@@ -30,9 +31,11 @@ class PanZoomService : IPanZoomService
     Canvas canvas = null!;
     Pos lastMouse = Pos.Zero;
     bool isDrag = false;
+    public int ZCount { get; private set; } = 0;
 
 
     public Rect ViewRect { get; private set; } = Rect.Zero;
+    public Pos Offset { get; private set; } = Pos.Zero;
     public Rect SvgRect { get; private set; } = Rect.Zero;
 
     public double Zoom { get; set; } = 1;
@@ -90,6 +93,7 @@ class PanZoomService : IPanZoomService
         var (mx, my) = (e.OffsetX, e.OffsetY);
 
         double z = 1 - (e.DeltaY > 0 ? -ZoomSpeed : ZoomSpeed);
+        if (e.DeltaY > 0) ZCount--; else ZCount++;
 
         double mouseX = mx - SvgRect.X;
         double mouseY = my - SvgRect.Y;

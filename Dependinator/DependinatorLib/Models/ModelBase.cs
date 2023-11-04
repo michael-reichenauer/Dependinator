@@ -33,6 +33,7 @@ class ModelBase
 
     internal (string, Rect) GetSvg(Rect boundary, double zoom)
     {
+        using var t = Timing.Start();
         var svg = Root.GetSvg(boundary, zoom);
         var totalBoundary = Root.TotalBoundary;
         return (svg, totalBoundary);

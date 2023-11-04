@@ -3,7 +3,7 @@ namespace Dependinator.Models;
 class Node : NodeBase
 {
     const double DefaultWidth = 100;
-    const double DefaultHeight = 50;
+    const double DefaultHeight = 100;
     public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
     const double MinZoom = 0.001;
 

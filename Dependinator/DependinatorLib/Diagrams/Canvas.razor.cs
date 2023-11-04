@@ -9,7 +9,7 @@ partial class Canvas : ComponentBase
 
     public ElementReference Ref { get; private set; }
 
-    string Zoom => $"{srv.Zoom}";
+    string Zoom => $"{srv.Zoom}, {srv.ZCount}";
     string SvgContent => srv.SvgContent;
     double Width => srv.SvgRect.Width;
     double Height => srv.SvgRect.Height;
