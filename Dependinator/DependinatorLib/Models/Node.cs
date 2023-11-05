@@ -2,22 +2,23 @@ namespace Dependinator.Models;
 
 class Node : NodeBase
 {
+    const double DefaultContainerZoom = 1.0 / 7;
     const double DefaultWidth = 100;
     const double DefaultHeight = 100;
     public static readonly Size DefaultSize = new(DefaultWidth, DefaultHeight);
-    const double MinZoom = 0.001;
+    const double MinZoom = 0.1;
+    const double MaxZoom = 5.0;
 
     public string StrokeColor { get; set; } = "";
     public string Background { get; set; } = "green";
     public string LongName { get; }
     public string ShortName { get; }
-    public double FillOpacity { get; set; } = 1;
     public double StrokeWidth { get; set; } = 1.0;
 
     public Rect Boundary { get; set; } = Rect.None;
     public Rect TotalBoundary => GetTotalBoundary();
 
-    public Double ContainerZoom { get; set; } = 1.0 / 7;
+    public Double ContainerZoom { get; set; } = DefaultContainerZoom;
     //public Pos ContainerOffset { get; set; } = Pos.Zero;
 
     public Node(string name, Node parent, ModelBase model)
@@ -30,62 +31,67 @@ class Node : NodeBase
     }
 
 
-    public string GetSvg(Pos parentOffset, double zoom)
+    public string GetSvg(Pos containerCanvasPos, double zoom)
     {
-        var nodeCanvasBounds = GetCanvasBounds(parentOffset, zoom);
-        //if (nodeCanvasBounds.Width < 5 || nodeCanvasBounds.Height < 5) return "";   // Too small to be seen
+        if (zoom < MinZoom) return "";  // Too small to be seen
 
-        // Adjust bound to be intersection of parent and node bounds     #####
-        // Skip if node is outside parent canvas bounds and not visible  #####
+        var nodeCanvasPos = GetNodeCanvasPos(containerCanvasPos, zoom);
+        if (zoom < 1) return GetIconSvg(nodeCanvasPos, zoom);   // No children can be seen
 
-        var nodeSvg = GetNodeSvg(nodeCanvasBounds, zoom);
-
-        // if (nodeCanvasBounds.Width < 50 || nodeCanvasBounds.Height < 50) return nodeSvg;  // To small for children to be seen
-
-        var svg = GetChildrenSvgs(nodeCanvasBounds, zoom).Prepend(nodeSvg).Join("\n");
-
-        return svg;
+        var containerSvg = GetContainerSvg(nodeCanvasPos, zoom);
+        var nodeSvg = GetChildrenSvgs(nodeCanvasPos, zoom).Prepend(containerSvg).Join("\n");
+        return nodeSvg;
     }
 
+    Pos GetNodeCanvasPos(Pos containerCanvasPos, double zoom) => new(
+        containerCanvasPos.X + Boundary.X * zoom,
+        containerCanvasPos.Y + Boundary.Y * zoom);
 
-    string GetNodeSvg(Rect canvasBounds, double zoom)
+
+    string GetIconSvg(Pos nodeCanvasPos, double zoom)
     {
         if (IsRoot) return "";
 
-        var s = StrokeWidth * zoom;
-        var (x, y, w, h) = canvasBounds;
-        var (tx, ty) = (x, y + h / 2);
+        var (x, y) = nodeCanvasPos;
+        var (w, h) = (Boundary.Width * zoom, Boundary.Height * zoom);
+
+        var (tx, ty) = (x + 2, y + h + 1);
         var fz = 8 * zoom;
 
         return
             $"""
-            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="0" fill="{Background}" fill-opacity="{FillOpacity}" stroke="{StrokeColor}"/>
+            <use href="#DefaultIcon" x="{x}" y="{y}" width="{w}" height="{h}" />
             <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{ShortName}</text>
             """;
     }
 
-    IEnumerable<string> GetChildrenSvgs(Rect nodeCanvasBounds, double zoom)
+
+    string GetContainerSvg(Pos nodeCanvasPos, double zoom)
+    {
+        if (IsRoot) return "";
+        if (zoom > MaxZoom) return "";  // To large to be seen
+
+        var s = StrokeWidth * zoom;
+        var (x, y) = nodeCanvasPos;
+        var (w, h) = (Boundary.Width * zoom, Boundary.Height * zoom);
+
+        var (tx, ty) = (x, y + h / 2);
+        var fz = 8 * zoom;
+        var background = Background;
+
+        return
+            $"""
+            <rect x="{x}" y="{y}" width="{w}" height="{h}" stroke-width="{s}" rx="0" fill="{background}" fill-opacity="1" stroke="{StrokeColor}"/>
+            <text x="{tx}" y="{ty}" class="nodeName" font-size="{fz}px">{ShortName}</text>
+            """;
+    }
+
+
+    IEnumerable<string> GetChildrenSvgs(Pos nodeCanvasPos, double zoom)
     {
         var childrenZoom = zoom * ContainerZoom;
 
-        // var childrenCanvasBounds = new Rect(
-        //     nodeCanvasBounds.X,
-        //     nodeCanvasBounds.Y,
-        //     nodeCanvasBounds.Width / ContainerZoom,
-        //     nodeCanvasBounds.Height / ContainerZoom
-        // );
-        var childrenOffset = new Pos(nodeCanvasBounds.X, nodeCanvasBounds.Y);
-
-        return Children.Select(n => n.GetSvg(childrenOffset, childrenZoom));
-    }
-
-    Rect GetCanvasBounds(Pos parentOffset, double zoom)
-    {
-        var w = Boundary.Width * zoom;
-        var h = Boundary.Height * zoom;
-        var x = parentOffset.X + Boundary.X * zoom;
-        var y = parentOffset.Y + Boundary.Y * zoom;
-        return new Rect(x, y, w, h);
+        return Children.Select(n => n.GetSvg(nodeCanvasPos, childrenZoom));
     }
 
 

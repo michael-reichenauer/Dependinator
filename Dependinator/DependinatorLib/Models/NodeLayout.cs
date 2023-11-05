@@ -4,9 +4,9 @@ class NodeLayout
 {
     const int margin = 10;
 
-    public static Rect GetNextChildRect(Node node, Size? childSize = null)
+    public static Rect GetNextChildRect(Node node)
     {
-        childSize ??= Node.DefaultSize;
+        var childSize = Node.DefaultSize;
         var b = node.Boundary;
         int columns = (int)Math.Floor((b.Width / node.ContainerZoom) / (childSize.Width + margin));
 

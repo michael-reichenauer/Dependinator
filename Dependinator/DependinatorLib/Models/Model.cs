@@ -29,6 +29,6 @@ class Model : IDisposable
         Monitor.Exit(syncRoot);
     }
 
-    internal (string, Rect) GetSvg(Pos offset, double zoom) => rootModel.GetSvg(offset, zoom);
+    internal (string, Rect) GetSvg() => rootModel.GetSvg();
 }
 

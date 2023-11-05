@@ -58,9 +58,9 @@ class CanvasService : ICanvasService
     {
         await panZoomService.CheckResizeAsync();
 
-        var (content, bounds) = await RefreshAsync(panZoomService.Offset, 1);
+        var (content, bounds) = await RefreshAsync();
         SetSvgContent(content);
-        panZoomService.PanZoomToFit(bounds);
+        //panZoomService.PanZoomToFit(bounds);
         await canvas.TriggerStateHasChangedAsync();
     }
 
@@ -71,7 +71,7 @@ class CanvasService : ICanvasService
 
     public async void Refresh()
     {
-        var (content, bounds) = await RefreshAsync(panZoomService.Offset, 1);
+        var (content, bounds) = await RefreshAsync();
         SetSvgContent(content);
         panZoomService.PanZoomToFit(bounds);
         await canvas.TriggerStateHasChangedAsync();
@@ -89,16 +89,16 @@ class CanvasService : ICanvasService
         await canvas.TriggerStateHasChangedAsync();
     }
 
-    public async Task<(string, Rect)> RefreshAsync(Pos offset, double zoom)
+    public async Task<(string, Rect)> RefreshAsync()
     {
         await modelService.RefreshAsync();
         using var model = modelDb.GetModel();
-        return model.GetSvg(offset, zoom);
+        return model.GetSvg();
     }
 
     string GetSvgContent()
     {
-        Log.Info($"GetSvgContent: Zoom: {panZoomService.Zoom}, Offset: {panZoomService.Offset}, SvgRect: {panZoomService.SvgRect}");
+        //Log.Info($"GetSvgContent: Zoom: {panZoomService.Zoom}, Offset: {panZoomService.Offset}, SvgRect: {panZoomService.SvgRect}");
         return svgContentData;
     }
 
